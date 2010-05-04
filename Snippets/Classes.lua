@@ -7,7 +7,7 @@ error("do not run this file. read and copy/paste from it only...")
 --[[
 
 Renoises lua API has a simple OO support inbuilt -> class "MyClass". All 
-Renoise API object use such classes.
+Renoise API objects use such classes.
 
 See http://www.rasterbar.com/products/luabind/docs.html#defining-classes-in-lua
 for more technical info and bolow for a simple example
@@ -15,13 +15,15 @@ for more technical info and bolow for a simple example
 Something to keep in mind:
 
 * constructor "function MyClass:__init(args)" must be defined for each class, 
-  or the classcan't be used to instantiate objects
+  or the class can't be used to instantiate objects
   
 * class defs are always global, so even locally defined classes will be 
   registered globally...
 
 --]]
 
+
+-------------------------------------------------------------------------------
 
 -- abstract class
 
@@ -33,11 +35,9 @@ class 'Animal'
 
   function Animal:__tostring()
     assert(self.can_fly ~= nil, "I don't know if I can fly or not")
-    if self.can_fly then
-      return ("I am a %s (%s) and I can fly"):format(self.name, type(self))
-    else
-      return ("I am a %s (%s) and I can not fly"):format(self.name, type(self))
-    end
+    
+    return ("I am a %s (%s) and I %s fly"):format(self.name, type(self), 
+      (self.can_fly and "can fly" or "can not fly"))
   end
 
 
@@ -46,23 +46,21 @@ class 'Animal'
 -- MAMMAL
 class 'Mammal' (Animal)
   function Mammal:__init(str)
-    Animal.__init(self,str)
+    Animal.__init(self, str)
     self.can_fly = false
   end
 
-  
 -- BIRD
 class 'Bird' (Animal)
   function Bird:__init(str)
-    Animal.__init(self,str)
+    Animal.__init(self, str)
     self.can_fly = true
   end
-
 
 -- FISH
 class 'Fish' (Animal)
   function Fish:__init(str)
-    Animal.__init(self,str)
+    Animal.__init(self, str)
     self.can_fly = false
   end
 
