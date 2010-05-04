@@ -97,7 +97,7 @@ RENOISE_PREFERENCES/Scripts/Test.lua ->
 
 ]]
 
-    > lua RENOISE_RESOURCE_FOLDER/Scripts/Library/remdebug/controller.lua
+    > lua RENOISE_RESOURCE_FOLDER/Scripts/Libraries/remdebug/controller.lua
     -- when lua and luasocket is correctly installed you will see
     > "Lua Remote Debugger"
     > "Run the program you wish to debug with 'remdebug.engine.start()' now"
