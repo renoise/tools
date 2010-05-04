@@ -1,4 +1,4 @@
--[[----------------------------------------------------------------------------
+--[[---------------------------------------------------------------------------
 -- renoise.Socket
 ---------------------------------------------------------------------------]]--
 
@@ -75,13 +75,13 @@ end
 
 
 -------------------------------------------------------------------------------
--- echo TCP server (using a class as notifier):
+-- echo TCP server (using a class as notifier, and allowing any addresses 
+-- to connect by not specifying an address):
 
 class "EchoServer"
   function EchoServer:__init(port)
    -- create a server socket
-   local server, socket_error = 
-     renoise.Socket.create_server("localhost", port)
+   local server, socket_error = renoise.Socket.create_server(port)
      
    if socket_error then 
      app:show_warning(
