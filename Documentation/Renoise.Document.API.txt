@@ -4,7 +4,7 @@
 
 --[[
 
-WORK IN PROGRESS. DO NOT USE ANY OF THE DOCUMENT CLASSES FOR NOW, EXCEPT THE 
+WORK IN PROGRESS. DO NOT USE ANY OF THE DOCUMENT CLASSES FOR NOW, EXCEPT THE
 renoise.Document.Observable INTERFACES TO LISTEN TO VALUE CHANGES...
 
 renoise.Document will later on be used to:
@@ -13,7 +13,7 @@ renoise.Document will later on be used to:
 - create observable values, bind document values to views
 
 Please read the INTRODUCTION.txt first to get an overview about the complete
-API and scripting in Renoise in general... 
+API, and scripting in Renoise in general...
 
 --]]
 
@@ -28,18 +28,18 @@ API and scripting in Renoise in general...
 -- renoise.Document.create()
 
 -- create a renoise.Document tree, modeled after the passed table
--- renoise.Document.create{ 
---   value1 = 1, 
---   value2 = "bla", 
+-- renoise.Document.create{
+--   value1 = 1,
+--   value2 = "bla",
 --   value3 = False,
 --   list = {1, 2, 3},
 --   node = {
---     sub_value1 = 2, 
+--     sub_value1 = 2,
 --     sub_value2 = "bla2"
---   } 
+--   }
 -- }
-  
-  
+
+
 "------------------------------------------------------------------------------"
 "-- renoise.Document.Serializable"
 "------------------------------------------------------------------------------"
@@ -48,7 +48,7 @@ API and scripting in Renoise in general...
 
 serializable:to_string() -> [string]
 serializable:from_string(string)
-    
+
 
 "------------------------------------------------------------------------------"
 "-- renoise.Document.Observable"
@@ -60,11 +60,11 @@ serializable:from_string(string)
 observable:has_notifier(
   function or (object, function) or (function, object)) -> [boolean]
 
--- register a function or method as notifer, which will be called as soon as 
+-- register a function or method as notifer, which will be called as soon as
 -- the observables value changed
 observable:add_notifier(
   function or (object, function) or (function, object))
-  
+
 -- unregister a previously registered notifier
 observable:remove_notifier(
   function or (object, function) or (function, object))
@@ -95,10 +95,10 @@ observable_list[Number] -> [Observable]
 -- notifiers
 
 -- notifiers from observable are avilable as well with the Document.Observable
--- interface, but will not broadcast changes made to the items, but only 
--- changes to the list layout. 
+-- interface, but will not broadcast changes made to the items, but only
+-- changes to the list layout.
 -- This means you will get notified as soon as an element was added, removed or
--- changed its position, but not if an elements value changed. To do so, attach 
+-- changed its position, but not if an elements value changed. To do so, attach
 -- to the element(s) itself, not the list...
 
 
@@ -107,14 +107,14 @@ observable_list[Number] -> [Observable]
 -- number of entries
 observable_list:size()
 
--- item access 
+-- item access
 observable_list:property(index)
 
--- find a value, by comparing the list values with the passed value. first 
+-- find a value, by comparing the list values with the passed value. first
 -- match is returned or nil
 Observable_list:find([start_pos,] value) -> [nil or pos]
 
--- insert a new item to the end of the list or at the specified pos. returns 
+-- insert a new item to the end of the list or at the specified pos. returns
 -- the newly created and inserted Observable
 Observable_list:insert([pos,] value) -> [inserted ObservableNumber]
 
