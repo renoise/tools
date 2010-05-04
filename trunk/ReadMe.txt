@@ -41,3 +41,8 @@ Folder/File Structure:
   Some useful (or not) Renoise related LUA code that does not make up a "tool",
   but still might be interesting to share with other.
 
+
+"Documentation"
+ 
+  "Official" Renoise Scripting Dev docs on can be found here.
+  
