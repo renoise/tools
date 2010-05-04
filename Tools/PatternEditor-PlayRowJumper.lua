@@ -5,7 +5,7 @@
 
 manifest = {}
 manifest.api_version = 0.2
-manifest.author = "Vincent Voois [vincent.voois@gmail.com]"
+manifest.author = "Vincent Voois [ http://tinyurl.com/vvrns ]"
 manifest.description = "[Idea & suggestion implementation]Custom row jump"
 
 manifest.notifications = {}
