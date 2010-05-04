@@ -3,12 +3,14 @@
 This procedure sorts instruments from biggest to smallest using the Bubble
 Sort algorithm.
 
-Honestly? This is a horrible idea. But, as bubble sort is Computer Science 101
-material, it is included as a code snippet for educational purposes.
+Bubble sort is Computer Science 101 material. It is included as a code snippet
+for learning purposes. But to be honest, this is a horrible idea. The
+procedure "works" but will take a long time to finish. This is not a practical
+solution, only educational
 
 ]]--
 
--- Set up a table named 'placeholder' 
+-- Set up a table named 'placeholder'
 -- The key is the instrument position
 -- The value is the size of the sample(s) contained within
 
@@ -35,7 +37,7 @@ end
 -- Debug: Before
 -- rprint(placeholder)
 
--- Bubble Sort 
+-- Bubble Sort
 
 local num_swaps = 0
 local i = 1
@@ -51,7 +53,7 @@ while( i < total ) do
     end
     j = j + 1;
   end
-i = i + 1;
+  i = i + 1;
 end
 
 -- Debug: After
