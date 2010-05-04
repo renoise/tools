@@ -5,15 +5,15 @@
 
 manifest = {}
 manifest.api_version = 0.2
-manifest.author = "Vincent Voois [vincent.voois@gmail.com]"
+manifest.author = "Vincent Voois [ http://tinyurl.com/vvrns ]"
 manifest.description = "Epic Arpeggiator V1.97"
 
 manifest.notifications = {}
 
 manifest.actions = {}
 manifest.actions[#manifest.actions + 1] = {
---name = "MainMenu:Tools:Epic Arpeggiator",
-name = "MainMenu:Options:Epic Arpeggiator",
+name = "MainMenu:Tools:Epic Arpeggiator",
+--name = "MainMenu:Options:Epic Arpeggiator",
 description = "Design note patterns using a note matrix and powerful arpeggiator features",
 invoke = function() 
    open_arp_dialog()

@@ -5,7 +5,7 @@
 
 manifest = {}
 manifest.api_version = 0.2
-manifest.author = "Vincent Voois [vincent.voois@gmail.com]"
+manifest.author = "Vincent Voois [ http://tinyurl.com/vvrns ]"
 manifest.description = "Extended split-map manager V1.2"
 
 manifest.notifications = {}
