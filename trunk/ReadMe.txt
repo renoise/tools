@@ -7,11 +7,11 @@ tags/ folder.
 
 --
 
-To work with the trunk in your user script folder, you can co the trunk 
+To work with the trunk in your user script folder, you can checkout the trunk 
 directly to the Renoise prefs folder:
 
-cd RENOISE_PREFERENCE_PATH/Scripts
-svn co https://xrnx.googlecode.com/svn/trunk/ xrnx --username GOOGLE_USERNAME
+cd RENOISE_PREFERENCES/Scripts
+svn co https://xrnx.googlecode.com/svn/trunk/ . --username GOOGLE_USERNAME
 
 --
 
