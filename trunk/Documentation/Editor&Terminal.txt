@@ -4,7 +4,7 @@ Console.txt
 
 --[[
 
-The built in Scrpt Terminal and Editor in Renoise can be opened by clicking 
+The built in Script Terminal and Editor in Renoise can be opened by clicking
 on the "Scripting Terminal & Editor..." menu entry in the "Tools" menu.
 
 It allows you to:
@@ -14,7 +14,7 @@ It allows you to:
 * Watch any scripts output -> Terminal
   all "print"s and errors from scripts will be redirected here
 
-* Create, view and edit LUA and installed txt, xml and lua files -> Editor
+* Create, view and edit LUA, text, and XML files -> Editor
 ]]
 
 

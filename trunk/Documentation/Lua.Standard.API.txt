@@ -4,13 +4,13 @@
 
 --[[
 
-This is a reference of standard global LUA functions and tools that got 
-added or change by Renoise, in order to extend the functionality of LUAs 
-standard library. 
+This is a reference of standard global LUA functions and tools that where
+added or changed by Renoise, in order to extend the functionality of LUAs
+standard library.
 
-All standard LUA libraries are included in Renoise as well. You can find a 
+All standard LUA libraries are included in Renoise as well. You can find a
 full reference here: http://www.lua.org/pil/18.html
- 
+
 --]]
 
 
@@ -37,9 +37,9 @@ oprint(table)
 
 -- changed
 
--- returns a LUA class objects name. for all other types the standard 
+-- returns a LUA class objects name. for all other types the standard
 -- lua type function is used
--- examples: class "MyClass"; function MyClass:__init() end 
+-- examples: class "MyClass"; function MyClass:__init() end
 --           print(type(MyClass)) -> "MyClass class"
 --           print(type(MyClass())) -> "MyClass"
 type(class_object or class or anything else) -> [string]
@@ -51,52 +51,52 @@ type(class_object or class or anything else) -> [string]
 
 -- added
 
--- create a new, or convert an exiting table to an object that uses the global 
--- 'table.XXX' functions as methods, just like strings in LUA do. 
+-- create a new, or convert an exiting table to an object that uses the global
+-- 'table.XXX' functions as methods, just like strings in LUA do.
 -- examples: t = table.create(); t:insert("a"); rprint(t) -> [1] = a;
 --           t = table.create{1,2,3}; print(t:concat("|")); -> "1|2|3";
 table.create([t]) -> [table]
-  
+
 -- recursively clears and removes all table elements
 table.clear(t)
-    
--- returns true when the table is empty, else false and will also work 
+
+-- returns true when the table is empty, else false and will also work
 -- for non indexed tables
 -- examples: t = {};          print(table.is_empty(t)); -> true;
 --           t = {66};        print(table.is_empty(t)); -> false;
 --           t = {["a"] = 1}; print(table.is_empty(t)); -> false;
 table.is_empty(t) -> [boolean]
-  
--- find first match of 'value' in the given table, starting from element 
+
+-- find first match of 'value' in the given table, starting from element
 -- number 'start_index'. returns the first !key! that matches the value or nil
--- examples: t = {"a", "b"}; table.find(t, "a") -> 1; 
+-- examples: t = {"a", "b"}; table.find(t, "a") -> 1;
 --           t = {a=1, b=2}; table.find(t, 2) -> "b"
 --           t = {"a", "b", "a"}; table.find(t, "a", 2) -> "3"
 --           t = {"a", "b"}; table.find(t, "c") -> nil
 table.find(table, value [,start_index]) -> [key or nil]
-  
+
 -- return an indexed table of all keys that are used in the table
 -- examples: t = {a="aa", b="bb"}; rprint(table.keys(t)); -> "a", "b"
 --           t = {"a", "b"};       rprint(table.keys(t)); -> 1, 2
 table.keys(table) -> [table]
-  
+
 -- return an indexed table of all values that are used in the table
 -- examples: t = {a="aa", b="bb"}; rprint(table.values(t)); -> "aa", "bb"
 --           t = {"a", "b"};       rprint(table.values(t)); -> "a", "b"
 table.values(table) -> [table]
 
-  
+
 "------------------------------------------------------------------------------"
 "-- os"
 "------------------------------------------------------------------------------"
 
 -- added
 
--- returns the platform the script is running on: 
+-- returns the platform the script is running on:
 -- "WINDOWS", "MACINTOSH" or "LINUX"
 os.platform() -> [string]
 
--- returns the current working dir. will always be the scripts directory 
+-- returns the current working dir. will always be the scripts directory
 -- when executing a script from a file
 os.currentdir() -> [string]
 
@@ -137,51 +137,51 @@ math.infdb -> [-200]
 "-- bit (added)"
 "------------------------------------------------------------------------------"
 
---[[ 
+--[[
 
 Integer, Bit Operations, provided by http://bitop.luajit.org/
 
-Take a look at http://bitop.luajit.org/api.html for the complete reference 
+Take a look at http://bitop.luajit.org/api.html for the complete reference
 and examples please...
 
 --]]
 
--- Normalizes a number to the numeric range for bit operations and returns it. 
--- This function is usually not needed since all bit operations already 
+-- Normalizes a number to the numeric range for bit operations and returns it.
+-- This function is usually not needed since all bit operations already
 -- normalize all of their input arguments.
 bit.tobit(x) -> [number]
 
--- Converts its first argument to a hex string. The number of hex digits is 
--- given by the absolute value of the optional second argument. Positive 
--- numbers between 1 and 8 generate lowercase hex digits. Negative numbers 
--- generate uppercase hex digits. Only the least-significant 4*|n| bits are 
--- used. The default is to generate 8 lowercase hex digits. 
+-- Converts its first argument to a hex string. The number of hex digits is
+-- given by the absolute value of the optional second argument. Positive
+-- numbers between 1 and 8 generate lowercase hex digits. Negative numbers
+-- generate uppercase hex digits. Only the least-significant 4*|n| bits are
+-- used. The default is to generate 8 lowercase hex digits.
 bit.tohex(x [,n]) -> [string]
 
--- Returns the bitwise not of its argument. 
+-- Returns the bitwise not of its argument.
 bit.bnot(x) -> [number]
 
--- Returns either the bitwise or, bitwise and, or bitwise xor of all of its 
--- arguments. Note that more than two arguments are allowed. 
+-- Returns either the bitwise or, bitwise and, or bitwise xor of all of its
+-- arguments. Note that more than two arguments are allowed.
 bit.bor(x1 [,x2...]) -> [number]
 bit.band(x1 [,x2...]) -> [number]
 bit.bxor(x1 [,x2...]) -> [number]
 
--- Returns either the bitwise logical left-shift, bitwise logical right-shift, 
--- or bitwise arithmetic right-shift of its first argument by the number of 
--- bits given by the second argument. 
+-- Returns either the bitwise logical left-shift, bitwise logical right-shift,
+-- or bitwise arithmetic right-shift of its first argument by the number of
+-- bits given by the second argument.
 bit.lshift(x, n) -> [number]
 bit.rshift(x, n) -> [number]
 bit.arshift(x, n) -> [number]
 
--- Returns either the bitwise left rotation, or bitwise right rotation of its 
--- first argument by the number of bits given by the second argument. Bits 
+-- Returns either the bitwise left rotation, or bitwise right rotation of its
+-- first argument by the number of bits given by the second argument. Bits
 -- shifted out on one side are shifted back in on the other side.
 bit.rol(x, n) -> [number]
 bit.ror(x, n) -> [number]
 
--- Swaps the bytes of its argument and returns it. This can be used to convert 
--- little-endian 32 bit numbers to big-endian 32 bit numbers or vice versa. 
+-- Swaps the bytes of its argument and returns it. This can be used to convert
+-- little-endian 32 bit numbers to big-endian 32 bit numbers or vice versa.
 bit.bswap(x) -> [number]
 
 --[[----------------------------------------------------------------------------
