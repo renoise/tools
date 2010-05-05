@@ -163,6 +163,7 @@ manifest.description = "Randomize Notes, Version 0.2"
 
 manifest.actions = {}
 
+
 --[[ Song ]]--
 
 -- Randomize song
@@ -253,7 +254,7 @@ manifest.actions[#manifest.actions + 1] = {
 -- Randomize track
 for mode,_ in pairs(Random.valid_modes) do
   manifest.actions[mode .. #manifest.actions + 1] = {
-    name = "PatternEditor:Track:Randomize Notes:" .. mode,
+    name = "MainMenu:Tools:Randomize:Track In Pattern:" .. mode,
     description = "Randomize selected track using mode: " .. mode,
     invoke = function()
       local song = renoise.song()
@@ -267,7 +268,7 @@ end
 
 -- Shuffle track
 manifest.actions[#manifest.actions + 1] = {
-  name = "PatternEditor:Track:Randomize Notes:Shuffle",
+  name = "MainMenu:Tools:Randomize:Track In Pattern:Shuffle",
   description = 'Shuffle selected track',
   invoke = function()
     local song = renoise.song()
@@ -284,7 +285,7 @@ manifest.actions[#manifest.actions + 1] = {
 -- Randomize selected notes in pattern
 for mode,_ in pairs(Random.valid_modes) do
   manifest.actions[mode .. #manifest.actions + 1] = {
-    name = "PatternEditor:Selection:Randomize Notes:" .. mode,
+    name = "MainMenu:Tools:Randomize:Selection:" .. mode,
     description = "Randomize selected notes using mode: " .. mode,
     invoke = function()
       local song = renoise.song()
@@ -297,7 +298,7 @@ end
 
 -- Shuffle selected notes in pattern
 manifest.actions[#manifest.actions + 1] = {
-  name = "PatternEditor:Selection:Randomize Notes:Shuffle",
+  name = "MainMenu:Tools:Randomize:Selection:Shuffle",
   description = 'Shuffle selected notes',
   invoke = function()
     local song = renoise.song()
