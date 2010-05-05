@@ -696,44 +696,6 @@ slider.notifier -> (function(number))
 
 
 
-"------------------------------------------------------------------------------"
-"-- renoise.Views.RotaryEncoder (inherits from View, 'rotary' in ViewBuilder)"
-"------------------------------------------------------------------------------"
-
---[[
-   +-+
- / \   \
-|   o   |
- \  |  /
-   +-+
---]]
-
--- Note: when changing the size, the min of the width and height will be used
--- to draw and control the rotary control, so you should always set both equally.
-
-
--- functions
-
--- add/remove value change notifiers
-rotary:add_notifier(function or {object, function} or {object, function})
-rotary:remove_notifier(function or {object, function} or {object, function})
-
-
--- properties
-
--- get/set the min/max values that are expected, allowed.
--- by default 0.0 and 1.0
-rotary.min -> [number]
-rotary.max -> [number]
-
--- get/set the current value
-rotary.value
-
--- valid in the construction table only: set up a value notifier
-rotary.notifier -> (function(number))
-
-
-
 "=============================================================================="
 "-- renoise.Dialog"
 "=============================================================================="
@@ -829,8 +791,6 @@ vb:valuefield { ValueField Properties }
 
 vb:slider { Slider Properties }
 vb:minislider { MiniSlider Properties }
-
-vb:rotary { RotaryEncoder Properties }
 
 
 -- properties
