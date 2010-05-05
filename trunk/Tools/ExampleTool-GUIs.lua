@@ -889,26 +889,6 @@ function available_controls()
     }
   }
   
-      
-  -- rotary
-  local rotary_row = vb:row {
-    vb:text {
-      width = TEXT_ROW_WIDTH,
-      text = "vb:rotary"
-    },
-    vb:rotary {
-      min = 2,
-      max = 4,
-      value = 3.5,
-      width = 36,
-      height = 36,
-      notifier = function(value)
-        show_status(("rotaty encoder value changed to '%.1f'"):
-          format(value))
-      end
-    }
-  }
-  
   
   -- CLOSE BUTTON
     
@@ -944,7 +924,6 @@ function available_controls()
     valuebox_row, 
     slider_row,
     minislider_row,
-    rotary_row,
     
     -- space
     vb:space { height = 2*CONTENT_SPACING },

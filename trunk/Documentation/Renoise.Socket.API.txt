@@ -79,12 +79,6 @@ renoise.Socket.PROTOCOL_UDP
 renoise.Socket.create_server(server_address, server_port [, protocol]) ->
   [server (SocketServer or nil), socket_error (string or nil)]
 
--- using the create function with no server_address, allows you to create a 
--- server which allows connections to any address (for example localhost 
--- and some IP)
-renoise.Socket.create_server(server_port [, protocol]) -> 
-  [server (SocketServer or nil), socket_error (string or nil)]
-
 
 -- Creating Socket Clients
 
