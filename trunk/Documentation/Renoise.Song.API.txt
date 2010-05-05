@@ -790,26 +790,26 @@ renoise.song().patterns[].tracks[] -> [read-only, array of renoise.PatternTrack]
 -- functions
 
 -- deletes all lines & automation
-renoise.song().patterns[].track[]:clear()
+renoise.song().patterns[].tracks[]:clear()
 
 -- copy contents from other pattern track, including automation, when possible
-renoise.song().patterns[].track[]:copy_from(other_pattern_track object)
+renoise.song().patterns[].tracks[]:copy_from(other_pattern_track object)
 
 -- get a specific line (line must be [1 - Pattern.MAX_NUMBER_OF_LINES])
-renoise.song().patterns[].track[]:line(index) ->
+renoise.song().patterns[].tracks[]:line(index) ->
   [renoise.PatternTrackLine]
 
 -- get a specific line range (index must be [1 - Pattern.MAX_NUMBER_OF_LINES])
-renoise.song().patterns[].track[]:lines_in_range(index_from, index_to) ->
+renoise.song().patterns[].tracks[]:lines_in_range(index_from, index_to) ->
   [array of renoise.PatternTrackLine]
 
 
 -- properties
 
-renoise.song().patterns[].track[].is_empty -> [read-only, boolean]
+renoise.song().patterns[].tracks[].is_empty -> [read-only, boolean]
 
 -- get all lines in range [1, number_of_lines_in_pattern]
-renoise.song().patterns[].track[].lines[] ->
+renoise.song().patterns[].tracks[].lines[] ->
   [read-only, array of renoise.PatternTrackLine objects]
 
 
@@ -834,20 +834,20 @@ renoise.PatternLine.EMPTY_EFFECT_AMOUNT
 -- functions
 
 -- clear all note and effect columns
-renoise.song().patterns[].track[].lines[]:clear()
+renoise.song().patterns[].tracks[].lines[]:clear()
 
 -- copy contents from other_line, trashing column content
-renoise.song().patterns[].track[].lines[]:copy_from(other_line object)
+renoise.song().patterns[].tracks[].lines[]:copy_from(other_line object)
 
 
 -- properties
 
-renoise.song().patterns[].track[].lines[].is_empty -> [boolean]
+renoise.song().patterns[].tracks[].lines[].is_empty -> [boolean]
 
-renoise.song().patterns[].track[].lines[].note_columns ->
+renoise.song().patterns[].tracks[].lines[].note_columns ->
   [read-only, array of renoise.NoteColumn objects]
 
-renoise.song().patterns[].track[].lines[].effect_columns ->
+renoise.song().patterns[].tracks[].lines[].effect_columns ->
   [read-only, array of renoise.EffectColumn objects]
 
 
@@ -858,48 +858,48 @@ renoise.song().patterns[].track[].lines[].effect_columns ->
 -- functions
 
 -- clear the note column
-renoise.song().patterns[].track[].lines[].note_columns[]:clear()
+renoise.song().patterns[].tracks[].lines[].note_columns[]:clear()
 
 -- copy the columns content from another column
-renoise.song().patterns[].track[].lines[].note_columns[]:copy_from(other_column object)
+renoise.song().patterns[].tracks[].lines[].note_columns[]:copy_from(other_column object)
 
 
 -- properties
 
 -- true, when all properties are empty
-renoise.song().patterns[].track[].lines[].note_columns[].is_empty ->
+renoise.song().patterns[].tracks[].lines[].note_columns[].is_empty ->
   [read-only, boolean]
 -- true, when this column is selected in the pattern_editors current pattern
-renoise.song().patterns[].track[].lines[].note_columns[].is_selected ->
+renoise.song().patterns[].tracks[].lines[].note_columns[].is_selected ->
   [read-only, boolean]
 
 -- access note column properties either by values (numbers) or by strings
 -- the string representation uses exactly the same notation as you see them
 -- in Renoise's pattern editor
 
-renoise.song().patterns[].track[].lines[].note_columns[].note_value ->
+renoise.song().patterns[].tracks[].lines[].note_columns[].note_value ->
   [number, 0-119, 120=Off, 121=Empty]
-renoise.song().patterns[].track[].lines[].note_columns[].note_string ->
+renoise.song().patterns[].tracks[].lines[].note_columns[].note_string ->
   [string, 'C-0' - 'G-9', 'Off' or '---']
 
-renoise.song().patterns[].track[].lines[].note_columns[].instrument_value ->
+renoise.song().patterns[].tracks[].lines[].note_columns[].instrument_value ->
   [number, 0-254, 255==Empty]
-renoise.song()patterns[].track[].lines[].note_columns[].instrument_string ->
+renoise.song()patterns[].tracks[].lines[].note_columns[].instrument_string ->
   [string, '00' - 'FE' or '..']
 
-renoise.song()patterns[].track[].lines[].note_columns[].volume_value ->
+renoise.song()patterns[].tracks[].lines[].note_columns[].volume_value ->
   [number, 0-254, 255==Empty]
-renoise.song().patterns[].track[].lines[].note_columns[].volume_string ->
+renoise.song().patterns[].tracks[].lines[].note_columns[].volume_string ->
   [string, '00' - 'FE' or '..']
 
-renoise.song().patterns[].track[].lines[].note_columns[].panning_value ->
+renoise.song().patterns[].tracks[].lines[].note_columns[].panning_value ->
   [number, 0-254, 255==Empty]
-renoise.song().patterns[].track[].lines[].note_columns[].panning_string ->
+renoise.song().patterns[].tracks[].lines[].note_columns[].panning_string ->
   [string, '00' - 'FE' or '..']
 
-renoise.song().patterns[].track[].lines[].note_columns[].delay_value ->
+renoise.song().patterns[].tracks[].lines[].note_columns[].delay_value ->
   [number, 0-255]
-renoise.song().patterns[].track[].lines[].note_columns[].delay_string ->
+renoise.song().patterns[].tracks[].lines[].note_columns[].delay_string ->
   [string, '00' - 'FF' or '..']
 
 
@@ -910,31 +910,31 @@ renoise.song().patterns[].track[].lines[].note_columns[].delay_string ->
 -- functions
 
 -- clear the effect column
-renoise.song().patterns[].track[].lines[].effect_columns[]:clear()
+renoise.song().patterns[].tracks[].lines[].effect_columns[]:clear()
 
 -- copy the columns content from another column
-renoise.song().patterns[].track[].lines[].effect_columns[]:copy_from(other_column object)
+renoise.song().patterns[].tracks[].lines[].effect_columns[]:copy_from(other_column object)
 
 
 -- properties
 
 -- true, when all properties are empty
-renoise.song().patterns[].track[].lines[].effect_columns[].is_empty ->
+renoise.song().patterns[].tracks[].lines[].effect_columns[].is_empty ->
   [read-only, boolean]
 -- true, when this column is selected in the pattern_editors current pattern
-renoise.song().patterns[].track[].lines[].effect_columns[].is_selected ->
+renoise.song().patterns[].tracks[].lines[].effect_columns[].is_selected ->
   [read-only, boolean]
 
 -- access effect column properties either by values (numbers) or by strings
 
-renoise.song().patterns[].track[].lines[].effect_columns[].number_value ->
+renoise.song().patterns[].tracks[].lines[].effect_columns[].number_value ->
   [number, 0-255]
-renoise.song().patterns[].track[].lines[].effect_columns[].number_string ->
+renoise.song().patterns[].tracks[].lines[].effect_columns[].number_string ->
   [string, '00' - 'FF']
 
-renoise.song().patterns[].track[].lines[].effect_columns[].amount_value ->
+renoise.song().patterns[].tracks[].lines[].effect_columns[].amount_value ->
  [number, 0-255]
-renoise.song().patterns[].track[].lines[].effect_columns[].amount_string ->
+renoise.song().patterns[].tracks[].lines[].effect_columns[].amount_string ->
   [string, '00' - 'FF']
 
 
