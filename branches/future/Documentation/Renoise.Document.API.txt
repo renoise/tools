@@ -1,0 +1,147 @@
+--[[----------------------------------------------------------------------------
+-- Renoise Document API Reference
+----------------------------------------------------------------------------]]--
+
+--[[
+
+WORK IN PROGRESS. DO NOT USE ANY OF THE DOCUMENT CLASSES FOR NOW, EXCEPT THE
+renoise.Document.Observable INTERFACES TO LISTEN TO VALUE CHANGES...
+
+renoise.Document will later on be used to:
+- preferences or other custom XML file data persistance for scripts
+- add script data into songs
+- create observable values, bind document values to views
+
+Please read the INTRODUCTION.txt first to get an overview about the complete
+API, and scripting in Renoise in general...
+
+--]]
+
+
+"=============================================================================="
+"-- Document"
+"=============================================================================="
+
+-- construction
+
+-- create an empty renoise.Document.DocumentNode
+-- renoise.Document.create()
+
+-- create a renoise.Document tree, modeled after the passed table
+-- renoise.Document.create{
+--   value1 = 1,
+--   value2 = "bla",
+--   value3 = False,
+--   list = {1, 2, 3},
+--   node = {
+--     sub_value1 = 2,
+--     sub_value2 = "bla2"
+--   }
+-- }
+
+
+"------------------------------------------------------------------------------"
+"-- renoise.Document.Serializable"
+"------------------------------------------------------------------------------"
+
+-- functions
+
+serializable:to_string() -> [string]
+serializable:from_string(string)
+
+
+"------------------------------------------------------------------------------"
+"-- renoise.Document.Observable"
+"------------------------------------------------------------------------------"
+
+-- notifiers
+
+-- check if the given funcion, method was already registered as notifier
+observable:has_notifier(
+  function or (object, function) or (function, object)) -> [boolean]
+
+-- register a function or method as notifer, which will be called as soon as
+-- the observables value changed
+observable:add_notifier(
+  function or (object, function) or (function, object))
+
+-- unregister a previously registered notifier
+observable:remove_notifier(
+  function or (object, function) or (function, object))
+
+
+"------------------------------------------------------------------------------"
+"-- renoise.Document.ObservableBoolean/Number/String"
+"------------------------------------------------------------------------------"
+
+-- properties
+
+observable.value -> [boolean, number or string]
+
+
+"------------------------------------------------------------------------------"
+"-- renoise.Document.ObservableBoolean/String/NumberList"
+"------------------------------------------------------------------------------"
+
+-- operators
+
+-- query the lsits size
+#observable_list -> [Number]
+
+-- access a observable by index
+observable_list[Number] -> [Observable]
+
+
+-- notifiers
+
+-- notifiers from observable are avilable as well with the Document.Observable
+-- interface, but will not broadcast changes made to the items, but only
+-- changes to the list layout.
+-- This means you will get notified as soon as an element was added, removed or
+-- changed its position, but not if an elements value changed. To do so, attach
+-- to the element(s) itself, not the list...
+
+
+-- functions
+
+-- number of entries
+observable_list:size()
+
+-- item access
+observable_list:property(index)
+
+-- find a value, by comparing the list values with the passed value. first
+-- match is returned or nil
+Observable_list:find([start_pos,] value) -> [nil or pos]
+
+-- insert a new item to the end of the list or at the specified pos. returns
+-- the newly created and inserted Observable
+Observable_list:insert([pos,] value) -> [inserted ObservableNumber]
+
+-- remove the last item from the list or the one at the specified pos
+Observable_list:remove([pos])
+
+
+"------------------------------------------------------------------------------"
+"-- renoise.Document.DocumentNode"
+"------------------------------------------------------------------------------"
+
+-- functions
+
+doc:has_property(property_name)
+doc:property(property_name) -> [nil or (Observable or DocumentNode)]
+
+doc:add(name, boolean_value) -> [ObservableBoolean]
+doc:add(name, number_value) -> [ObservableNumber]
+doc:add(name, string_value) -> [ObservableString]
+doc:add(name, list) -> [ObservableList]
+doc:add(name, node) -> [DocumentNode]
+
+doc:remove(document or observable)
+
+doc:save_as(document_type_name, file_name) -> [boolean, error_string]
+doc:load_from(document_type_name, file_name) -> [boolean, error_string]
+
+
+--[[----------------------------------------------------------------------------
+----------------------------------------------------------------------------]]--

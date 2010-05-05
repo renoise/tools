@@ -1,0 +1,252 @@
+--[[----------------------------------------------------------------------------
+-- Debugging HowTo
+----------------------------------------------------------------------------]]--
+
+--[[
+
+Besides the usual print & trace stuff via the Renoise scripting console
+(all 'print's will be dumped there), Renoise also offers a simple command-line
+debugger which can even debug scripts remotely: scripts running on other
+computers.
+
+Please read the INTRODUCTION.txt first to get an overview about the complete
+API, and scripting in Renoise in general...
+
+]]
+
+
+================================================================================
+"Remdebug"
+================================================================================
+
+--[[
+
+Remdebug is a command-line based remote debugger for LUA, which is included in
+Renoise. It can debug scripts running on other computers (over the network) or
+on the same machine.
+
+]]
+
+
+--------------------------------------------------------------------------------
+"1. Prerequisites"
+--------------------------------------------------------------------------------
+
+--[[
+
+* Renoise's "remdebug" module, which can be found in "Scripts/Libraries/remdebug"
+  (no installation required - included in Renoise)
+
+* LUA support on your systems command-line with the LUA "socket" module
+  (Windows: http://code.google.com/p/luaforwindows/)
+  (OSX, Linux: http://luabinaries.luaforge.net/ and
+               http://luaforge.net/projects/luasocket/) or
+  (Linux: apt-get install lua5.1 liblua5.1-socket2)
+
+]]
+
+
+--------------------------------------------------------------------------------
+"2. Overview"
+--------------------------------------------------------------------------------
+
+--[[
+
+* The debugger will be controlled via a system command-line LUA interpreter,
+  outside of Renoise, via the remdebug/controller.lua script. To attach to
+  such a running controller you can start remdebug from your scripts in
+  Renoise by adding:
+
+]]
+
+  -- load remdebug module
+  require "remdebug.engine"
+  -- connect to a running debugger controller
+  remdebug.engine.start()
+
+--[[
+
+  where you would like to attach to the debugger, for example your tools
+  main.lua file.
+
+]]
+
+
+--------------------------------------------------------------------------------
+"3. Step By Step Guide"
+--------------------------------------------------------------------------------
+
+--[[
+
+Let's debug the following small test script "Test.lua" that we've created in
+RENOISE_PREFERENCES/Scripts/Test.lua ->
+
+]]
+
+  local function sum(a, b)
+    return a + b
+  end
+
+  local c = sum(1, 2)
+  print(c)
+
+--[[
+
+* first we start the debugger controller. To do so, open a command-line on your
+  system and invoke the remdebug/controller.lua script via
+
+]]
+
+    > lua RENOISE_RESOURCE_FOLDER/Scripts/Libraries/remdebug/controller.lua
+    -- when lua and luasocket is correctly installed you will see
+    > "Lua Remote Debugger"
+    > "Run the program you wish to debug with 'remdebug.engine.start()' now"
+
+--[[
+
+* launch Renoise's scripting editor, open "Test.lua", load and start
+  remdebug in your script where you want to break into your script:
+
+]]
+
+  require "remdebug.engine"
+  remdebug.engine.start() -- debugger will connect and initially break here
+
+  local function sum(a, b)
+    return a + b
+  end
+
+  local c = sum(1, 2)
+  print(c)
+
+  remdebug.engine.stop() -- cleanly stop debugger and exit...
+
+
+--[[
+
+* now run the "Test.lua" script (hit "Run Script" in Renoise). Renoise should
+  be frozen now, because the debugger has halted execution of the script and
+  thus also Renoise's GUI
+
+
+* switch over to your system console with the running controller.lua script.
+  If all went well you will see that the debugger is connected
+
+]]
+
+  > "Lua Remote Debugger"
+  > "Paused at file RENOISE_PREFERENCES_FOLDER/Scripts/Test.lua line 6"
+  >
+  > 1    require "remdebug.engine"
+  > 2    remdebug.engine.start()
+  > 3
+  > 4    local function sum(a, b)
+  > 5      return a + b
+  > 6*** end
+  > 7
+  > 8    local c = sum(1, 2)
+  > 9    print(c)
+  > 10
+  > 11   remdebug.engine.stop()
+  >
+  >" Base directory is RENOISE_PREFERENCES_FOLDER/Scripts/"
+  >" Type 'help' for commands"
+  >>
+
+--[[
+
+Enter "s" as command for now, to step through the code, then hit return over
+and over again to repeat the step command until it finished. type 'help' for
+a description of all available commands...
+
+You will be able to set break and watchpoints, and also be able to print the
+current contexts values or change them. Those who are familiar with gdb on the
+command-line, may be able to quickly use it as usual when using the most common
+shortcuts (c,b,q and so on...)
+
+Please note that although "remdebug.engine.stop()" is not necessary (you can
+simply quit the controller at any time to exit, its recommended and will be
+more comfortable when running a session over and over again...)
+
+]]
+
+
+--------------------------------------------------------------------------------
+"4. Remote and LUA Editor debugging"
+--------------------------------------------------------------------------------
+
+--[[
+
+Renoise's remdebug is fully compatible with the original remdebug controller from
+kepler project. This means you can in theory also use debugger GUIs that use the
+original remdebug. like LUA eclipse or SciTE for LUA.
+This often is really hard to setup and configure, and thus might not be
+worth the trouble. Try if this works for you...
+
+To attach a controller to a script that is running on a different computer,
+you can configure the socket host and port you would like to attach to. This
+can be done via:
+
+]]
+
+  require "remdebug.engine"
+  -- default config is "localhost" on port 8171
+  remdebug.engine.configure {host="some_host", port=1234}
+  remdebug.engine.start()
+
+
+
+
+================================================================================
+"Autoreloading Tool Scripts"
+================================================================================
+
+--[[
+
+When working with Renoise's Scripting Editor, saving a tool script will
+automatically reload the tool that belongs to the file. This way you can simply
+change your files and immediately test the changes.
+
+When working with an external text editor, you can enable a debug option
+via the tools manifests:
+
+]]
+
+  manifest.notifications.auto_reload_debug = function()
+    -- do tests like showing a dialog, prompts whatever, or simply do nothing
+  end
+
+
+--[[
+
+As soon as you save your script outside of Renoise, and then focus Renoise again
+(alt-tab to Renoise for example), your script will instantly get reloaded and
+this notifier is called with this notifier set.
+
+You can put a test function into this notifier, or attach to a debugger or
+simply nothing, just enable the auto-reload functionality of focus changes.
+
+]]
+
+
+================================================================================
+"Debugging with Decoda (Windows only)"
+================================================================================
+
+--[[
+
+Decoda, a commercial LUA editor and debugger will also work with Renoise:
+see http://www.unknownworlds.com/decoda for more info.
+
+All you have to do to get it running is use the "Renoise.exe" in decodas
+debugger command settings as executable. Starting to debug will then
+automatically launch Renoise, and list all scripts that are currently running
+(all tools, or all files that you've launched in the scripting editor). You
+then can set breakpoints, step through to them and watch variables and so on.
+Sounds magically, but works!
+
+]]
+
+
+--[[----------------------------------------------------------------------------
+----------------------------------------------------------------------------]]--

@@ -1,0 +1,37 @@
+--[[----------------------------------------------------------------------------
+-- Renoise Application API Reference
+----------------------------------------------------------------------------]]--
+
+--[[
+
+This reference lists the content of the main "renoise" namespace. All renoise
+related functions and classes are nested in this namespace.
+
+Please read the INTRODUCTION.txt first to get an overview about the complete
+API, and scripting in Renoise in general... 
+
+--]]
+
+
+"------------------------------------------------------------------------------"
+"-- renoise"
+"------------------------------------------------------------------------------"
+
+-- consts
+
+-- currently 0.3
+renoise.API_VERSION -> [number]
+
+
+-- functions
+
+renoise.app() -> [renoise.Application object]
+renoise.song() -> [renoise.Song object]
+
+-- not much going on here:
+-- for renoise.Application, see Renoise.Application.API.txt
+-- for renoise.Song, see Renoise.Song.API.txt
+
+
+--[[----------------------------------------------------------------------------
+----------------------------------------------------------------------------]]--
