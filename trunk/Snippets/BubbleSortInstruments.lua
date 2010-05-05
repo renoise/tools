@@ -4,9 +4,9 @@ This procedure sorts instruments from biggest to smallest using the Bubble
 Sort algorithm.
 
 Bubble sort is Computer Science 101 material. It is included as a code snippet
-for learning purposes. But to be honest, this is a horrible idea. The
+for learning purposes, but to be honest, this is a horrible idea. The
 procedure "works" but will take a long time to finish. This is not a practical
-solution, only educational
+solution, only educational.
 
 ]]--
 
