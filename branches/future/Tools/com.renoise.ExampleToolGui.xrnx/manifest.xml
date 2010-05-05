@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<RenoiseScriptingTool>
+  <Id>com.renoise.ExampleToolGui</Id>
+  <Name>Renoise ViewoBuilder API Example</Name>
+  <Author>taktik [taktik@renoise.com]</Author>
+  <Description>Set of small tools that show how to create custom Renoise GUIs for your tools</Description>
+  <Category></Category>
+  <ApiVersion>0.3</ApiVersion>
+  <Icon></Icon>
+</RenoiseScriptingTool>
+

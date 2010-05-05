@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<RenoiseScriptingTool>
+  <Id>com.renoise.FindAndReplace.xrnx</Id>
+  <Name>PatternEditor Find And Replace</Name>
+  <Author>taktik [taktik@renoise.com]</Author>
+  <Description>Tool for finding &amp; replacing pattern data, with simple wildcard support...</Description>
+  <Category></Category>
+  <ApiVersion>0.3</ApiVersion>
+  <Icon></Icon>
+</RenoiseScriptingTool>
+

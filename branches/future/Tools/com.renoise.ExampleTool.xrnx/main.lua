@@ -1,30 +1,60 @@
 --[[----------------------------------------------------------------------------
-ExampleTool.lua
+com.renoise.ExampleTool.xrnx/main.lua
 ----------------------------------------------------------------------------]]--
 
--- manifest header (required)
+-- tool scripts must describe itself through a manifest XML, to let Renoise
+-- know which API version it relies on, what "it can do" without actually
+-- loading it. this is done in the manifest.xml
+-- when the manifest looks OK, the main file of the tool will be loaded.
+-- This is this file, main.lua.
+-- You can load other files from here via LUAs require, or simply put
+-- all the tools code in here. Just like you want...
+-- Please note that your tool loaded only once when the application starts,
+-- and will run in the background until the application quits
+ 
+ 
+--------------------------------------------------------------------------------
+-- manifest.mxl (required)
 
--- tool scripts must describe itself through a manifest, to let Renoise
--- know which API version it relies on, what "it can do" (what actions it
--- performs) and to attach to some optional notifiers from the app.
--- Your tool is loaded only once when the application starts, and will
--- run in the background until the application quits
-manifest = {}
+--[[
 
 -- this is the API version the script relies on. The API is backwards
 -- compatible (from version 1.0 on), but not forwards compatible.
 -- So you can ensure that all API functions you use are available.
 -- The current version is defined at 'renoise.API_VERSION'
-manifest.api_version = 0.2
+<ApiVersion>
+
+-- Unique identifier for your tool. The identidier must match the bundle name
+-- of the tool (without the extension xrnx), and is used by Renoise to make sure
+-- that only one version of a tool is present, to be able to auto-update it and
+-- to create a default filename for it in case the tool was drag and dropped
+-- to get installed. The id should be a string with 3 parts, separated by dots,
+-- like org.superduper.tool. You don't have to use prefixes like com/org and so
+-- on, but please try to use something personal, like your name or URL or
+-- company name in order to make it as unique as possible.
+<Id>
+
+
+-- Name of the tool as visible to the user in for example tool browsers
+<Name>
 
 -- the author field is only used in descriptions of the tools in the app
 -- or when a script fails. Providing an email is not necessary, but
 -- recommended.
-manifest.author = "taktik [taktik@renoise.com]"
+<Author>
 
 -- the description is curently unused, but may be useful in some kind of
 -- a tools editor for users, where they can see what the scripts are doing...
-manifest.description = "This tool explains how to write & debug tool scripts"
+<Description>
+
+--]]
+
+
+
+--------------------------------------------------------------------------------
+-- main.lua manifest (optional)
+
+manifest = {}
 
 
 -- manifest.actions (optional)
@@ -50,13 +80,13 @@ manifest.actions = {}
 --     a menu gets visible
 --
 -- Placing menu entries in other places than the global menu:
--- 
+--
 -- You can place your entries in any context menu or any window menu in Renoise.
 -- to to so, simply use one of the specified prefix strings:
 -- "WindowMenu"
--- "MainMenu:File", "MainMenu:Edit", "MainMenu:View", 
+-- "MainMenu:File", "MainMenu:Edit", "MainMenu:View",
 --   "MainMenu:Tools", "MainMenu:Help"
--- "DspDevice", "DspDeviceChain", "DspDeviceChainList", 
+-- "DspDevice", "DspDeviceChain", "DspDeviceChainList",
 --    "DspDeviceHeader", "DspParameterAutomation", "DspAutomationList"
 -- "EnvelopeEditor"
 -- "InstrumentBox", "InstrumentBoxSample"
@@ -66,7 +96,7 @@ manifest.actions = {}
 -- "SampleEditor", "SampleEditorRuler"
 -- "DiskBrowserDirectoryList", "DiskBrowserFileList"
 -- "MixerDspDeviceChain"
-  
+
 manifest.actions[#manifest.actions + 1] = {
   name = "MainMenu:Tools:Example Tools:Example Tool:Show Dialog",
   description = "Shows a totally useless dialog!",

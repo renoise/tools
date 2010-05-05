@@ -5,12 +5,6 @@ FindAndReplace.lua
 -- manifest
 
 manifest = {}
-manifest.api_version = 0.2
-
-manifest.author = "taktik [taktik@renoise.com]"
-manifest.description = "Tool for finding & replacing pattern data, " ..
-"with simple wildcard support..."
-
 manifest.actions = {}
 manifest.actions[#manifest.actions + 1] = {
   name = "PatternEditor:Find and Replace...",

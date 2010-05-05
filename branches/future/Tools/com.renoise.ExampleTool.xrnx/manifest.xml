@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<RenoiseScriptingTool>
+  <Id>com.renoise.ExampleTool</Id>
+  <Name>Renoise Tool Script Example</Name>
+  <Author>taktik [taktik@renoise.com]</Author>
+  <Description>Set of small tools that describe how to create a scripting tool</Description>
+  <Category></Category>
+  <ApiVersion>0.3</ApiVersion>
+  <Icon></Icon>
+</RenoiseScriptingTool>
+
