@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <RenoiseScriptingTool>
-  <Id>com.renoise.FindAndReplace.xrnx</Id>
+  <Id>com.renoise.FindAndReplace</Id>
   <Name>PatternEditor Find And Replace</Name>
   <Author>taktik [taktik@renoise.com]</Author>
   <Category>Pattern Editor</Category>
