@@ -4,8 +4,8 @@
 
 --[[
 
-This reference lists all available LUA functions and classes that control
-the Renoise application. The Application is the LUA interface to Renoise's main
+This reference lists all available Lua functions and classes that control
+the Renoise application. The Application is the Lua interface to Renoise's main
 GUI and window (Application and ApplicationWindow).
 
 Please read the INTRODUCTION.txt first to get an overview about the complete
