@@ -19,6 +19,12 @@ manifest.actions[#manifest.actions + 1] = {
   invoke = function() show_stretch_dialog() end
 }
 
+manifest.actions[#manifest.actions + 1] = {
+  name = "SampleEditor:Process:Pitch Shift",
+  description = 'Changes sample pitch without chaning  length',
+  invoke = function() show_shift_dialog() end
+}
+
 -- Does file exist?
 function exists(filename)
   local file = io.open(filename)
@@ -30,7 +36,6 @@ function exists(filename)
   end
 end
 
-
 function display_error() 
   local res = renoise.app():show_prompt('Rubberband missing!',
   "To use this feature you must download Rubberband executable and\n"..
@@ -40,30 +45,19 @@ function display_error()
   "http://www.breakfastquay.com/rubberband/"
   , {'Visit website', 'Ok'})
   
-  
   if res == 'Visit website' then
-    local urlopencmd; 
-    if os.platform() == 'WINDOWS' then urlopencmd = 'start'; end
-    if os.platform() == 'MACINTOSH' then urlopencmd = 'open'; end
-    if os.platform() == 'LINUX' then urlopencmd = 'xdg-open'; end
-    
-    os.execute(urlopencmd .. ' http://www.breakfastquay.com/rubberband/');
+    renoise.app():open_url('http://www.breakfastquay.com/rubberband/');
   end
 end
 
-function processRubberBand(stretch, crisp)
-
+function process_rubberband(cmd)
+  print(cmd);
   local ofile = os.tmpname()
   local ifile = os.tmpname()..'.wav'
 
   renoise.song().selected_sample.sample_buffer:save_as(ofile, 'wav')
 
-
-  print('Input is: ' .. ifile)
-  print('Output is: ' .. ofile)
-  
-  os.execute("rubberband --time "..stretch.." --crisp "..crisp..
-         " "..ofile.." "..ifile);
+  os.execute(cmd .. " "..ofile.." "..ifile);
          
   if not exists(ifile) then
     display_error()
@@ -76,6 +70,67 @@ function processRubberBand(stretch, crisp)
   os.remove(ifile)
 end
 
+
+function process_stretch(stretch, crisp)
+  process_rubberband("rubberband --time "..stretch.." --crisp "..crisp);
+end
+
+function process_shift(shift, crisp, preserve_formant)
+  local cmd = "rubberband --pitch "..shift.." --crisp "..crisp;
+  if preserve_formant then
+    cmd = cmd .. ' -F'
+  end
+  process_rubberband(cmd);
+end
+
+function show_shift_dialog()
+
+  local vb = renoise.ViewBuilder()
+  
+  local semitone_selector = vb:valuebox { min = -48, max = 48, value = 0 }
+  local cent_selector = vb:valuebox { min = -100, max = 100, value = 0 }
+  local crisp_selector = vb:popup { 
+    items = {'1', '2', '3', '4', '5'},
+    value = 4 
+  }
+  local formant_selector = vb:checkbox {}
+  
+  local view = 
+  vb:vertical_aligner {
+    margin = 10,
+    vb:horizontal_aligner{
+      spacing = 10,
+      vb:vertical_aligner{
+        vb:text{text = 'Semitones:' },
+        semitone_selector,
+      },
+      vb:vertical_aligner{
+        vb:text{text = 'Cents:' },
+        cent_selector,
+      },
+      vb:vertical_aligner{
+        vb:text{text = 'Crispness:' },
+        crisp_selector
+      },
+    },
+    vb:horizontal_aligner{
+      margin = 10,
+      spacing = 5,
+      formant_selector,
+      vb:text{text = 'Preserve formant' },
+    }
+  }
+  
+  local res = renoise.app():show_custom_prompt  (
+    "Pitch Shift",
+    view,
+    {'Shift', 'Cancel'}
+  );
+    
+  if res == 'Shift' then
+    process_shift(semitone_selector.value + (cent_selector.value / 100), crisp_selector.value, formant_selector.value)
+  end;
+end
 
 function show_stretch_dialog()
   local bpm = renoise.song().transport.bpm
@@ -117,7 +172,6 @@ function show_stretch_dialog()
       crisp_selector
     },
   }
-   
   
   local res = renoise.app():show_custom_prompt  (
     "Time Stretch",
@@ -136,7 +190,7 @@ function show_stretch_dialog()
   end;
   
   if res == 'Stretch' then
-    processRubberBand(stime, crisp_selector.value)
+    process_stretch(stime, crisp_selector.value)
   end;
 end
 
