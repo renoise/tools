@@ -6,58 +6,51 @@ ExampleTool_GUIs.lua
 
 -- (see ExampleTool.lua for a description of this header and tools in general)
 
-manifest = {}
-manifest.api_version = 0.2
-manifest.author = "taktik [taktik@renoise.com]"
+_MENU_ENTRIES = table.create()
 
-manifest.description = "This tool explains, step by step, how to write " ..
-"custom GUIs with the Renoise scripting API..."
-
-manifest.actions = {}
-
-manifest.actions[#manifest.actions + 1] = {
+_MENU_ENTRIES:insert {
   name = "MainMenu:Tools:Example Tools:Custom GUIs:1. Hello World",
   description = "Create a very simple custom dialog.",
   invoke = function() hello_world() end
 }
 
-manifest.actions[#manifest.actions + 1] = {
+_MENU_ENTRIES:insert {
   name = "MainMenu:Tools:Example Tools:Custom GUIs:2. Pretty Hello World",
   description = "Create a bit more advanced custom dialog.",
   invoke = function() pretty_hello_world() end
 }
 
-manifest.actions[#manifest.actions + 1] = {
+_MENU_ENTRIES:insert {
   name = "MainMenu:Tools:Example Tools:Custom GUIs:3. Dynamic Content & Ids",
   description = "Explains how to use ids and how to dynamically change views.",
   invoke = function() dynamic_content() end
 }
 
-manifest.actions[#manifest.actions + 1] = {
+_MENU_ENTRIES:insert {
   name = "MainMenu:Tools:Example Tools:Custom GUIs:4. Batch Building Views",
   description = "Shows how to batch build/add views.",
   invoke = function() dynamic_building() end
 }
 
-manifest.actions[#manifest.actions + 1] = {
+_MENU_ENTRIES:insert {
   name = "MainMenu:Tools:Example Tools:Custom GUIs:5. Aligning & Auto Sizing",
   description = ";ore about auto sizes, columns,rows and aligners.",
   invoke = function() aligners_and_auto_sizing() end
 }
 
-manifest.actions[#manifest.actions + 1] = {
+_MENU_ENTRIES:insert {
   name = "MainMenu:Tools:Example Tools:Custom GUIs:6. Available Backgrounds & Text",
   description = "Shows all available background styles.",
   invoke = function() available_backgrounds() end
 }
 
-manifest.actions[#manifest.actions + 1] = {
+_MENU_ENTRIES:insert {
   name = "MainMenu:Tools:Example Tools:Custom GUIs:7. Available Controls",
   description = "Shows all available controls.",
   invoke = function() available_controls() end
 }
 
-manifest.actions[#manifest.actions + 1] = {
+_MENU_ENTRIES:insert {
   name = "MainMenu:Tools:Example Tools:Custom GUIs:8. Keyboard Events",
   description = "Shows how to handle key envents in dialogs.",
   invoke = function() handle_key_events() end

@@ -4,13 +4,16 @@ FindAndReplace.lua
 
 -- manifest
 
-manifest = {}
-manifest.actions = {}
-manifest.actions[#manifest.actions + 1] = {
+_MENU_ENTRIES = { {
   name = "PatternEditor:Find and Replace...",
   description = "Open the Find & Replace Dialog",
   invoke = function() show_dialog() end
-}
+} }
+
+_KEY_BINDINGS = { {
+  name = "PatternEditor:Find and Replace...",
+  invoke = function() show_dialog() end
+} }
 
 
 -------------------------------------------------------------------------------

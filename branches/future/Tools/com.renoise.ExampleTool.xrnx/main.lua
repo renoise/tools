@@ -52,21 +52,18 @@ com.renoise.ExampleTool.xrnx/main.lua
 
 
 --------------------------------------------------------------------------------
--- main.lua manifest (optional)
+-- main.lua
 
-manifest = {}
+-- _MENU_ENTRIES and _key_bindings (optional)
 
+-- optional list of menu and keyboard shortcut entries this script exposes to 
+-- the user. when no entries and shorcuts are defined, only the "globals" and 
+-- notifiers of the script are invoked. This may be useful for a script which 
+-- only needs to run in the background, like for example an OSC tool, or auto-
+-- backup script extension or whatever else you can imagine...
+_MENU_ENTRIES = table.create()
 
--- manifest.actions (optional)
-
--- optional list of functions, that this script exposes to the user as menu
--- entries or keyboard shortcuts. when no actions are defined, only the
--- "globals" and notifiers of the script are invoked. This may be useful for
--- a script which only needs to run in the background, like for example an
--- OSC tool, or auto-backup script extension...
-manifest.actions = {}
-
--- when an actions table is available, each each action must define:
+-- menu entry items are defined as:
 --
 -- * required fields
 --   ["name"] = a string which is shown in the menu. use ":" for sub groups
@@ -97,7 +94,7 @@ manifest.actions = {}
 -- "DiskBrowserDirectoryList", "DiskBrowserFileList"
 -- "MixerDspDeviceChain"
 
-manifest.actions[#manifest.actions + 1] = {
+_MENU_ENTRIES:insert {
   name = "MainMenu:Tools:Example Tools:Example Tool:Show Dialog",
   description = "Shows a totally useless dialog!",
   invoke = function() show_dialog() end
@@ -105,71 +102,72 @@ manifest.actions[#manifest.actions + 1] = {
 
 -- note: "show_status_message" is wrapped into a local function(), because
 -- show_status_message is not yet know here. Its defined below...
-manifest.actions[#manifest.actions + 1] = {
+_MENU_ENTRIES:insert {
   name = "MainMenu:Tools:Example Tools:Example Tool:Show Status Message",
   description = "prints something to the status bar...",
   invoke = function() show_status_message() end
 }
 
 
--- manifest.notifications (optional)
+-- _notifications (optional)
 
 -- optional list of notifications/events that the app forwards to
 -- your running script
-manifest.notifications = {}
+_NOTIFICATIONS = {
 
--- invoked, as soon as the application became the foreground window,
--- for example when you alt-tab'ed to it, or switched with the mouse
--- from another app to Renoise
-manifest.notifications.app_became_active = function()
-  handle_app_became_active_notification()
-end
-
--- invoked, as soon as the application looses focus, another app
--- became the foreground window
-manifest.notifications.app_resigned_active = function()
-  handle_app_resigned_active_notification()
-end
-
--- invoked periodically in the background, more often when the work load
--- is low. less often when Renoises work load is high.
--- The exact interval is not defined and can not be relied on, but will be
--- around 10 times per sec.
--- You can do stuff in the background without blocking the application here.
--- Be gentle and don't do CPU heavy stuff in your notifier!
-manifest.notifications.app_idle = function()
-  handle_app_idle_notification()
-end
-
--- invoked each time a new document (song) was created or loaded
-manifest.notifications.app_new_document = function()
-  handle_app_new_document_notification()
-end
-
--- This notifier helps you testing & debugging your script while editing
--- it with an external editor or with Renoises built in script editor:
---
--- As soon as you save your script outside of the application, and then
--- focus the app (alt-tab to it for example), your script will get instantly
--- reloaded and this notifier is called with this notifier set.
--- You can put a test function into this notifier, or attach to a remote
--- debugger like RemDebug or simply nothing, just enable the auto-reload
--- functionality.
---
--- When editing script with Renoises built in editor, tools will automatically
--- reload as soon as you hit "Run Script", even if you don't have this notifier
--- set, but you nevertheless can use this to automatically invoke a test
--- function.
----
--- Note: When reloading the script causes an error, the old, last running
--- script instance will continue to run.
---
--- Another note: Changes in the actions menu will not be updated unless
--- you reload all tools manually with 'Reload Tools' in the menu.
-
-manifest.notifications.auto_reload_debug = function()
-  handle_auto_reload_debug_notification()
-end
+  -- invoked, as soon as the application became the foreground window,
+  -- for example when you alt-tab'ed to it, or switched with the mouse
+  -- from another app to Renoise
+  app_became_active = function()
+    handle_app_became_active_notification()
+  end,
+  
+  -- invoked, as soon as the application looses focus, another app
+  -- became the foreground window
+  app_resigned_active = function()
+    handle_app_resigned_active_notification()
+  end,
+  
+  -- invoked periodically in the background, more often when the work load
+  -- is low. less often when Renoises work load is high.
+  -- The exact interval is not defined and can not be relied on, but will be
+  -- around 10 times per sec.
+  -- You can do stuff in the background without blocking the application here.
+  -- Be gentle and don't do CPU heavy stuff in your notifier!
+  app_idle = function()
+    handle_app_idle_notification()
+  end,
+  
+  -- invoked each time a new document (song) was created or loaded
+  app_new_document = function()
+    handle_app_new_document_notification()
+  end,
+  
+  -- This notifier helps you testing & debugging your script while editing
+  -- it with an external editor or with Renoises built in script editor:
+  --
+  -- As soon as you save your script outside of the application, and then
+  -- focus the app (alt-tab to it for example), your script will get instantly
+  -- reloaded and this notifier is called with this notifier set.
+  -- You can put a test function into this notifier, or attach to a remote
+  -- debugger like RemDebug or simply nothing, just enable the auto-reload
+  -- functionality.
+  --
+  -- When editing script with Renoises built in editor, tools will automatically
+  -- reload as soon as you hit "Run Script", even if you don't have this notifier
+  -- set, but you nevertheless can use this to automatically invoke a test
+  -- function.
+  ---
+  -- Note: When reloading the script causes an error, the old, last running
+  -- script instance will continue to run.
+  --
+  -- Another note: Changes in the actions menu will not be updated unless
+  -- you reload all tools manually with 'Reload Tools' in the menu.
+  
+  auto_reload_debug = function()
+    handle_auto_reload_debug_notification()
+  end
+}
 
 
 -------------------------------------------------------------------------------
