@@ -4,7 +4,7 @@
   <Name>Renoise ViewoBuilder API Example</Name>
   <Author>taktik [taktik@renoise.com]</Author>
   <Description>Set of small tools that show how to create custom Renoise GUIs for your tools</Description>
-  <Category></Category>
+  <Category>Tool Development</Category>
   <ApiVersion>0.3</ApiVersion>
   <Icon></Icon>
 </RenoiseScriptingTool>

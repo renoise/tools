@@ -1,17 +1,16 @@
 --[[---------------------------------------------------------------------------
-FindAndReplace.lua
+com.renoise.FindAndReplace.xrnx/main.lua
 ---------------------------------------------------------------------------]]--
 
 -- manifest
 
 _MENU_ENTRIES = { {
-  name = "PatternEditor:Find and Replace...",
-  description = "Open the Find & Replace Dialog",
+  name = "Pattern Editor:Find and Replace...",
   invoke = function() show_dialog() end
 } }
 
 _KEY_BINDINGS = { {
-  name = "PatternEditor:Find and Replace...",
+  name = "Pattern Editor:Tools:Find and Replace",
   invoke = function() show_dialog() end
 } }
 

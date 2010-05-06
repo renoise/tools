@@ -1,59 +1,36 @@
 --[[----------------------------------------------------------------------------
-ExampleTool_GUIs.lua
+com.renoise.ExampleToolGui.xrnx/main.lua
 ----------------------------------------------------------------------------]]--
 
--- manifest
+-- _MENU_ENTRIES
 
--- (see ExampleTool.lua for a description of this header and tools in general)
+-- (see com.renoise.ExampleTool.xrns/main.lua for a description of this 
+--  header and tools in general)
 
-_MENU_ENTRIES = table.create()
-
-_MENU_ENTRIES:insert {
-  name = "MainMenu:Tools:Example Tools:Custom GUIs:1. Hello World",
-  description = "Create a very simple custom dialog.",
-  invoke = function() hello_world() end
-}
-
-_MENU_ENTRIES:insert {
-  name = "MainMenu:Tools:Example Tools:Custom GUIs:2. Pretty Hello World",
-  description = "Create a bit more advanced custom dialog.",
-  invoke = function() pretty_hello_world() end
-}
-
-_MENU_ENTRIES:insert {
-  name = "MainMenu:Tools:Example Tools:Custom GUIs:3. Dynamic Content & Ids",
-  description = "Explains how to use ids and how to dynamically change views.",
-  invoke = function() dynamic_content() end
-}
-
-_MENU_ENTRIES:insert {
-  name = "MainMenu:Tools:Example Tools:Custom GUIs:4. Batch Building Views",
-  description = "Shows how to batch build/add views.",
-  invoke = function() dynamic_building() end
-}
-
-_MENU_ENTRIES:insert {
-  name = "MainMenu:Tools:Example Tools:Custom GUIs:5. Aligning & Auto Sizing",
-  description = ";ore about auto sizes, columns,rows and aligners.",
-  invoke = function() aligners_and_auto_sizing() end
-}
-
-_MENU_ENTRIES:insert {
-  name = "MainMenu:Tools:Example Tools:Custom GUIs:6. Available Backgrounds & Text",
-  description = "Shows all available background styles.",
-  invoke = function() available_backgrounds() end
-}
-
-_MENU_ENTRIES:insert {
-  name = "MainMenu:Tools:Example Tools:Custom GUIs:7. Available Controls",
-  description = "Shows all available controls.",
-  invoke = function() available_controls() end
-}
-
-_MENU_ENTRIES:insert {
-  name = "MainMenu:Tools:Example Tools:Custom GUIs:8. Keyboard Events",
-  description = "Shows how to handle key envents in dialogs.",
-  invoke = function() handle_key_events() end
+_MENU_ENTRIES = { 
+  { name = "Main Menu:Tools:Example Tool GUI:1. Hello World",
+    invoke = function() hello_world() end },
+  
+  { name = "Main Menu:Tools:Example Tool GUI:2. Pretty Hello World",
+    invoke = function() pretty_hello_world() end },
+  
+  { name = "Main Menu:Tools:Example Tool GUI:3. Dynamic Content & Ids",
+    invoke = function() dynamic_content() end },
+  
+  { name = "Main Menu:Tools:Example Tool GUI:4. Batch Building Views",
+    invoke = function() dynamic_building() end },
+  
+  { name = "Main Menu:Tools:Example Tool GUI:5. Aligning & Auto Sizing",
+    invoke = function() aligners_and_auto_sizing() end },
+  
+  { name = "Main Menu:Tools:Example Tool GUI:6. Available Backgrounds & Text",
+    invoke = function() available_backgrounds() end },
+  
+  { name = "Main Menu:Tools:Example Tool GUI:7. Available Controls",
+    invoke = function() available_controls() end },
+  
+  { name = "Main Menu:Tools:Example Tool GUI:8. Keyboard Events",
+    invoke = function() handle_key_events() end } 
 }
 
 

@@ -2,72 +2,44 @@
 com.renoise.ExampleTool.xrnx/main.lua
 ----------------------------------------------------------------------------]]--
 
--- tool scripts must describe itself through a manifest XML, to let Renoise
--- know which API version it relies on, what "it can do" without actually
--- loading it. this is done in the manifest.xml
--- when the manifest looks OK, the main file of the tool will be loaded.
--- This is this file, main.lua.
--- You can load other files from here via LUAs require, or simply put
--- all the tools code in here. Just like you want...
--- Please note that your tool loaded only once when the application starts,
--- and will run in the background until the application quits
+-- XRNX Bundle Layout:
+
+-- Tool scripts must describe itself through a manifest XML, to let Renoise
+-- know which API version it relies on, what "it can do" and so on, without 
+-- actually loading it. This is done in the manifest.xml
+--
+-- When the manifest looks OK, the main file of the tool will be loaded. This 
+-- is this file -> "main.lua".
+-- You can load other files from here via LUAs 'require', or simply put
+-- all the code in here. 
  
  
 --------------------------------------------------------------------------------
 -- manifest.mxl (required)
 
---[[
-
--- this is the API version the script relies on. The API is backwards
--- compatible (from version 1.0 on), but not forwards compatible.
--- So you can ensure that all API functions you use are available.
--- The current version is defined at 'renoise.API_VERSION'
-<ApiVersion>
-
--- Unique identifier for your tool. The identidier must match the bundle name
--- of the tool (without the extension xrnx), and is used by Renoise to make sure
--- that only one version of a tool is present, to be able to auto-update it and
--- to create a default filename for it in case the tool was drag and dropped
--- to get installed. The id should be a string with 3 parts, separated by dots,
--- like org.superduper.tool. You don't have to use prefixes like com/org and so
--- on, but please try to use something personal, like your name or URL or
--- company name in order to make it as unique as possible.
-<Id>
-
-
--- Name of the tool as visible to the user in for example tool browsers
-<Name>
-
--- the author field is only used in descriptions of the tools in the app
--- or when a script fails. Providing an email is not necessary, but
--- recommended.
-<Author>
-
--- the description is curently unused, but may be useful in some kind of
--- a tools editor for users, where they can see what the scripts are doing...
-<Description>
-
---]]
-
+-- see 'manifest.mxl' for a description please
 
 
 --------------------------------------------------------------------------------
--- main.lua
+-- main.lua  (required)
 
--- _MENU_ENTRIES and _key_bindings (optional)
+-- _MENU_ENTRIES and _KEY_BINDINGS (optional)
 
--- optional list of menu and keyboard shortcut entries this script exposes to 
--- the user. when no entries and shorcuts are defined, only the "globals" and 
--- notifiers of the script are invoked. This may be useful for a script which 
--- only needs to run in the background, like for example an OSC tool, or auto-
--- backup script extension or whatever else you can imagine...
+-- Optional list of menu and keyboard shortcut entries this script exposes to 
+-- the user. When no entries and key bindings are defined, only the "globals" 
+-- and notifiers of the script are invoked. This may be useful for a script 
+-- which only needs to run in the background, like for example an OSC tool, or 
+-- autobackup script extension or whatever else you can imagine...
+
+
+-- _MENU_ENTRIES (optional)
+
 _MENU_ENTRIES = table.create()
 
--- menu entry items are defined as:
+-- a _MENU_ENTRIES entry is defined as:
 --
 -- * required fields
---   ["name"] = a string which is shown in the menu. use ":" for sub groups
---   ["description"] = a string of what this action does
+--   ["name"] = name of the entry and its path as shown in the menu to the user
 --   ["invoke"] = a function that is called to invoke the action
 --
 -- * optional fields:
@@ -76,43 +48,90 @@ _MENU_ENTRIES = table.create()
 --     is called every time before "invoke" is called and every time before
 --     a menu gets visible
 --
--- Placing menu entries in other places than the global menu:
+-- Placing menu entries:
 --
 -- You can place your entries in any context menu or any window menu in Renoise.
--- to to so, simply use one of the specified prefix strings:
--- "WindowMenu"
--- "MainMenu:File", "MainMenu:Edit", "MainMenu:View",
---   "MainMenu:Tools", "MainMenu:Help"
--- "DspDevice", "DspDeviceChain", "DspDeviceChainList",
---    "DspDeviceHeader", "DspParameterAutomation", "DspAutomationList"
--- "EnvelopeEditor"
--- "InstrumentBox", "InstrumentBoxSample"
--- "PatternSequencer"
--- "PatternEditor"
--- "PatternMatrix", "PatternMatrixHeader"
--- "SampleEditor", "SampleEditorRuler"
--- "DiskBrowserDirectoryList", "DiskBrowserFileList"
--- "MixerDspDeviceChain"
+-- To to so, simply use one of the specified categories:
+-- "Window Menu"
+-- "Main Menu" (:File", ":Edit", ":View", ":Tools" or ":Help")
+-- "Disk Browser Directories"
+-- "Disk Browser Files"
+-- "Instrument Box" 
+-- "Instrument Box Samples" 
+-- "Pattern Sequencer"
+-- "Pattern Editor"
+-- "Pattern Matrix"
+-- "Pattern Matrix Header"
+-- "Pattern Matrix",
+-- "Sample Editor"
+-- "Sample Editor Ruler"
+-- "Mixer"
+-- "Track DSPs Chain"
+-- "Track DSPs Chain List"
+-- "Automation" 
+-- "Automation List"
+-- "DSP Device"
+-- "DSP Device Header"
+-- "DSP Device Automation" 
 
 _MENU_ENTRIES:insert {
-  name = "MainMenu:Tools:Example Tools:Example Tool:Show Dialog",
-  description = "Shows a totally useless dialog!",
+  name = "Main Menu:Tools:Example Tool:Show Dialog",
   invoke = function() show_dialog() end
 }
 
--- note: "show_status_message" is wrapped into a local function(), because
--- show_status_message is not yet know here. Its defined below...
+-- note: "show_status_message" is wrapped into a local function() below, 
+-- because show_status_message is not yet know here. Its defined below...
 _MENU_ENTRIES:insert {
-  name = "MainMenu:Tools:Example Tools:Example Tool:Show Status Message",
-  description = "prints something to the status bar...",
+  name = "Main Menu:Tools:Example Tool:Show Status Message",
   invoke = function() show_status_message() end
 }
 
 
--- _notifications (optional)
+-- _KEY_BINDINGS (optional)
+
+_KEY_BINDINGS = table.create()
+
+-- An _KEY_BINDINGS entry is defined as:
+--
+-- * required fields
+--   ["name"] = the scope, name and category of the key binding
+--   ["invoke"] = a function that is called as soon as the mapped key was pressed
+--
+-- You can define key mappings anywhere in Renoise where Renoise can place them.
+-- Aka, you can use any of the categories that is listed in Renoises keyboard 
+-- assigment preferences pane.
+--
+-- The key binding 'name' must have 3 parts, separated with :'s
+-- <scope:topic_name:binding_name>
+-- * 'scope' is where the shortcut will be applied, again just like you see them 
+-- in the categories list in the keyboard assigment preferences pane
+-- * 'topic_name' is useful to group multiple entries in the key assignemnt pane
+-- use "tool" if you can not image something useful.
+-- * 'binding_name' finally is the name of the binding
+--
+-- currently available scopes are:
+-- "Global", "Automation", "Disk Browser", "Instrument Box", "Mixer", 
+-- "Pattern Editor", "Pattern Matrix", "Pattern Sequencer", "Sample Editor"
+-- "Track DSPs Chain"
+--
+-- Using a non avilable scope, will drive the shortcut useless. It will be 
+-- listed, but can never be invoked.
+-- Theres no way to define a default keyboard shortcut for your entry. Users 
+-- manually have to bind them in the keyboard prefs pane. As soon as they did,
+-- they get saved just like any other key binding in Renoise.
+
+_KEY_BINDINGS:insert {
+  name = "Global:Tools:Example Script Shortcut",
+  invoke = function() show_key_binding_dialog() end
+}
+
+
+--------------------------------------------------------------------------------
+
+-- _NOTIFICATIONS (optional)
 
 -- optional list of notifications/events that the app forwards to
--- your running script
+-- your tool script
 _NOTIFICATIONS = {
 
   -- invoked, as soon as the application became the foreground window,
@@ -163,96 +182,123 @@ _NOTIFICATIONS = {
   --
   -- Another note: Changes in the actions menu will not be updated unless
   -- you reload all tools manually with 'Reload Tools' in the menu.
-  
   auto_reload_debug = function()
     handle_auto_reload_debug_notification()
-  end
+  end,
 }
 
 
+
 -------------------------------------------------------------------------------
 
--- globals
+-- global variables
 
 -- set this to true, to print notification status to the console, to
 -- see when which notifier gets called...
-print_notifications = false
-
--- the script is loaded once, but the actions may be invoked several
--- times, so you can use global variables to memorize stuff...
-status_message_count = 0
-
+local print_notifications = false
 
 -- if you want to do something each time the script gets loaded, then
--- simply do it here, in the global namespace
--- IMPORTANT: there will be no song (yet) when this script initializes, so
--- any access to app().current_document() or song() will fail here.
+-- simply do it here, in the global namespace. The script will start running
+-- as soon as Renoise started, and stop running as soon as it closes. 
+-- IMPORTANT: this also means that there will be no song (yet) when this script 
+-- initializes, so any access to app().current_document() or song() will fail 
+-- here.
 -- if you really need the song to initialize your application, do this in
--- the notifications.app_new_document functions or in your actions...
+-- the notifications.app_new_document functions or in your action callbacks...
 if print_notifications then
-  print("ExampleTool.lua: script was loaded...")
+  print("com.renoise.ExampleTool: script was loaded...")
 end
+
 
 -------------------------------------------------------------------------------
 
--- actions
+-- show_dialog
 
--- this is the action which gets invoked when hitting
--- "Example Tool:Show Dialog". see the manifest description above
 function show_dialog()
   renoise.app():show_warning(
-    string.format(
-      "This example does nothing more beside showing a warning message " ..
-      "and the current BPM, which has an amazing value of '%s'!",
-      renoise.song().transport.bpm)
+    ("This example does nothing more beside showing a warning message " ..
+     "and the current BPM, which has an amazing value of '%s'!"):format(
+     renoise.song().transport.bpm)
   )
 end
+
+
+-- show_status_message
+
+local status_message_count = 0
 
 function show_status_message()
   status_message_count = status_message_count + 1
 
   renoise.app():show_status(
-    string.format("ExampleTool.lua: Status message no. %d...",
-      status_message_count)
+    ("com.renoise.ExampleTool: Status message no. %d..."):format(
+     status_message_count)
   )
 end
 
 
+-- show_key_binding_dialog
+
+function show_key_binding_dialog()
+  renoise.app():show_prompt(
+    "Congrats!",
+    "You've pressed a magic keyboard combo "..
+    "which was defined by a script example tool.",
+    {"OK?"}
+  )
+end  
+
+
 -------------------------------------------------------------------------------
 
--- notifications
+-- implementation if the nofification callbacks, as used above...
+
+-- handle_app_became_active_notification
 
 function handle_app_became_active_notification()
   if print_notifications then
-    print("ExampleTool.lua: >> app_became_active notification")
+    print("com.renoise.ExampleTool: >> app_became_active notification")
   end
 end
+
+
+-- handle_app_resigned_active_notification
 
 function handle_app_resigned_active_notification()
   if print_notifications then
-    print("ExampleTool.lua: << app_resigned_active notification")
+    print("com.renoise.ExampleTool: << app_resigned_active notification")
   end
 end
 
-last_idle_time = os.clock()
+
+-- handle_app_idle_notification
+
+local last_idle_time = os.clock()
+
 function handle_app_idle_notification()
   if os.clock() - last_idle_time >= 10 then
     last_idle_time = os.clock()
       if print_notifications then
-        print("ExampleTool.lua: 10 second idle notification")
+        print("com.renoise.ExampleTool: 10 second idle notification")
       end
    end
 end
 
+
+-- handle_app_new_document_notification
+
 function handle_app_new_document_notification()
   if print_notifications then
-    print("ExampleTool.lua: !! app_new_document notification")
+    print("com.renoise.ExampleTool: !! app_new_document notification")
   end
 end
 
+
+-- handle_auto_reload_debug_notification
+
 function handle_auto_reload_debug_notification()
   if print_notifications then
-    print("ExampleTool.lua: ** auto_reload_debug notification")
+    print("com.renoise.ExampleTool: ** auto_reload_debug notification")
   end
 end
 

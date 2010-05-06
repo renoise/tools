@@ -1,11 +1,44 @@
 <?xml version="1.0" encoding="UTF-8"?>
+
 <RenoiseScriptingTool>
-  <Id>com.renoise.ExampleTool</Id>
-  <Name>Renoise Tool Script Example</Name>
-  <Author>taktik [taktik@renoise.com]</Author>
-  <Description>Set of small tools that describe how to create a scripting tool</Description>
-  <Category></Category>
+  
+  <!-- this is the API version the script relies on. The API is backwards -->
+  <!-- compatible (from version 1.0 on), but not forwards compatible. -->
+  <!-- So you can ensure that all API functions you use are available. -->
+  <!-- The current version is defined at 'renoise.API_VERSION' -->
   <ApiVersion>0.3</ApiVersion>
-  <Icon></Icon>
+  
+  <!-- Unique identifier for your tool. The identidier must match the bundle name -->
+  <!-- of the tool (without the extension xrnx), and is used by Renoise to make sure -->
+  <!-- that only one version of a tool is present, to be able to auto-update it and -->
+  <!-- to create a default filename for it in case the tool was drag and dropped -->
+  <!-- to get installed. The id should be a string with 3 parts, separated by dots, -->
+  <!-- like org.superduper.tool. You don't have to use prefixes like com/org and so -->
+  <!-- on, but please try to use something personal, like your name or URL or -->
+  <!-- company name in order to make it as unique as possible. -->
+  <Id>com.renoise.ExampleTool</Id>
+  
+  
+  <!-- the author field is only used in descriptions of the tools in the app -->
+  <!-- or when a script fails. Providing an email is not necessary, but -->
+  <!-- recommended. -->
+  <Author>taktik [taktik@renoise.com]</Author>
+  
+  <!-- Name of the tool as visible to the user in for example tool browsers -->
+  <Name>Renoise Tool Script Example</Name>
+  
+  <!-- main topic, tag of this tool, like "Pattern Editor, Sample Editor and so on -->
+  <!-- currently unused, except when using "Tool Development". Such tools will only be -->
+  <!-- shown when the scripting development tools are enabled in Renoise -->  
+  <Category>Tool Development</Category>
+  
+  <!-- the description is curently unused, but may be useful in some kind of -->
+  <!-- a tools editor for users, where they can see what the scripts are doing... -->
+  <Description>Set of small tools that describe how to create a scripting tool</Description>
+
+  <!-- relative path and name of an optional icon file, which could be shown later on  -->
+  <!-- in app browsers... -->  
+  <Icon />
+
 </RenoiseScriptingTool>
 
