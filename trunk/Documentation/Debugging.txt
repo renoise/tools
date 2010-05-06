@@ -21,7 +21,7 @@ API, and scripting in Renoise in general...
 
 --[[
 
-Remdebug is a command-line based remote debugger for LUA, which is included in
+Remdebug is a command-line based remote debugger for Lua, which is included in
 Renoise. It can debug scripts running on other computers (over the network) or
 on the same machine.
 
@@ -37,7 +37,7 @@ on the same machine.
 * Renoise's "remdebug" module, which can be found in "Scripts/Libraries/remdebug"
   (no installation required - included in Renoise)
 
-* LUA support on your systems command-line with the LUA "socket" module
+* Lua support on your systems command-line with the Lua "socket" module
   (Windows: http://code.google.com/p/luaforwindows/)
   (OSX, Linux: http://luabinaries.luaforge.net/ and
                http://luaforge.net/projects/luasocket/) or
@@ -52,7 +52,7 @@ on the same machine.
 
 --[[
 
-* The debugger will be controlled via a system command-line LUA interpreter,
+* The debugger will be controlled via a system command-line Lua interpreter,
   outside of Renoise, via the remdebug/controller.lua script. To attach to
   such a running controller you can start remdebug from your scripts in
   Renoise by adding:
@@ -172,14 +172,14 @@ more comfortable when running a session over and over again...)
 
 
 --------------------------------------------------------------------------------
-"4. Remote and LUA Editor debugging"
+"4. Remote and Lua Editor debugging"
 --------------------------------------------------------------------------------
 
 --[[
 
 Renoise's remdebug is fully compatible with the original remdebug controller from
 kepler project. This means you can in theory also use debugger GUIs that use the
-original remdebug. like LUA eclipse or SciTE for LUA.
+original remdebug. like Lua eclipse or SciTE for Lua.
 This often is really hard to setup and configure, and thus might not be
 worth the trouble. Try if this works for you...
 
@@ -235,7 +235,7 @@ simply nothing, just enable the auto-reload functionality of focus changes.
 
 --[[
 
-Decoda, a commercial LUA editor and debugger will also work with Renoise:
+Decoda, a commercial Lua editor and debugger will also work with Renoise:
 see http://www.unknownworlds.com/decoda for more info.
 
 All you have to do to get it running is use the "Renoise.exe" in decodas

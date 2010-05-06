@@ -14,7 +14,7 @@ It allows you to:
 * Watch any scripts output -> Terminal
   all "print"s and errors from scripts will be redirected here
 
-* Create, view and edit LUA, text, and XML files -> Editor
+* Create, view and edit Lua, text, and XML files -> Editor
 ]]
 
 
@@ -105,7 +105,7 @@ It allows you to:
 * To enter multiple lines in the terminal, end a line with a \
   The terminal will then prompt for another line until you hit enter twice
 
-* oprint(some_object) prints out info about a LUA class object:
+* oprint(some_object) prints out info about a Lua class object:
   try for example 'oprint(renoise.song())' to see all properties
   and methods for song().
   To list all available modules, try 'rprint(renoise)' or 'rprint(_G)'

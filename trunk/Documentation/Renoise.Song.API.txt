@@ -4,7 +4,7 @@
 
 --[[
 
-This reference lists all available LUA functions and classes that control
+This reference lists all available Lua functions and classes that control
 the Renoise main document - the song - with all its components like instruments,
 tracks, patterns, and so on.
 
@@ -343,7 +343,7 @@ renoise.song().sequencer.pattern_slot_mutes_observable
 "------------------------------------------------------------------------------"
 
 -- general remarks: the iterators can only be use in "for" loops, like you use
--- for example pairs in LUA: 'for pos, line in pattern_iterator:lines_in_song do'
+-- for example pairs in Lua: 'for pos, line in pattern_iterator:lines_in_song do'
 
 -- the returned 'pos' is a table with "pattern", "track", "line" fields for
 -- all iterators, and an additional "column" field for the note/effect columns

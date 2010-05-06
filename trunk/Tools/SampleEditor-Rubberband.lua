@@ -21,13 +21,7 @@ manifest.actions[#manifest.actions + 1] = {
 
 -- Does file exist?
 function exists(filename)
-  local file = io.open(filename)
-  if file then
-    io.close(file)
-    return true
-  else
-    return false
-  end
+  return true
 end
 
 
@@ -62,7 +56,7 @@ function processRubberBand(stretch, crisp)
   print('Input is: ' .. ifile)
   print('Output is: ' .. ofile)
   
-  os.execute("rubberband --time "..stretch.." --crisp "..crisp..
+  os.execute("/Users/dac514/bin/rubberband --time "..stretch.." --crisp "..crisp..
          " "..ofile.." "..ifile);
          
   if not exists(ifile) then

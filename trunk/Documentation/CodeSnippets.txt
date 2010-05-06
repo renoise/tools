@@ -4,8 +4,8 @@
 
 --[[
 
-Categorized collection of small LUA code snippets, to show some uses of the
-LUA API in Renoise and all its components...
+Categorized collection of small Lua code snippets, to show some uses of the
+Lua API in Renoise and all its components...
 
 For some real tools and code, have a look at the example tools
 in the Renoise package please: Scripts/Tools/Example*.lua

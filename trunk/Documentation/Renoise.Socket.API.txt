@@ -4,7 +4,7 @@
 
 --[[
 
-This reference describes the built-in socket support for LUA scripts in Renoise.
+This reference describes the built-in socket support for Lua scripts in Renoise.
 Sockets can be used to send/receive data over process boundaries or exchange
 data across computers in a network (Internet). The socket API in Renoise has
 server support (which can respond to multiple connected clients) and client
@@ -36,12 +36,12 @@ from the server.
 -- Error handling
 
 All socket functions which can fail, will return an error string as an optional
-second return value. They do not call LUAs error() handler, so you can decide on
+second return value. They do not call Luas error() handler, so you can decide on
 your own how to deal with expected errors like connection timeouts, connection
 failures and so on. This also means you don't have to "pcall" all socket functions
 to handle "expected" errors.
 Logic errors (setting invalid addresses, using disconnected sockets, passing
-invalid timeouts and so on) will, as usual, fire the LUAs error handlers (abort
+invalid timeouts and so on) will, as usual, fire the Luas error handlers (abort
 your scripts and spit out an error). If you get such an error, then this usually
 means that you did something wrong, have fed or used the sockets in a way that
 does not make sense. Do not "pcall" such errors, but fix the problems instead.
