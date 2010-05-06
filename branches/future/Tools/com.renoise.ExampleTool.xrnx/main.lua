@@ -39,7 +39,8 @@ _MENU_ENTRIES = table.create()
 -- a _MENU_ENTRIES entry is defined as:
 --
 -- * required fields
---   ["name"] = name of the entry and its path as shown in the menu to the user
+--   ["name"] = name an dpath of the entry and its path as shown in the menu 
+--     to the user. Start the name with one ore more '-'s to start a new group
 --   ["invoke"] = a function that is called to invoke the action
 --
 -- * optional fields:
@@ -47,6 +48,8 @@ _MENU_ENTRIES = table.create()
 --     the action will not be invoked and "grayed out" in menus. the function
 --     is called every time before "invoke" is called and every time before
 --     a menu gets visible
+--   ["selected"] =  a function that should return true or false. when true
+--     the entry will be marked as "selected option"
 --
 -- Placing menu entries:
 --
@@ -84,6 +87,12 @@ _MENU_ENTRIES:insert {
 _MENU_ENTRIES:insert {
   name = "Main Menu:Tools:Example Tool:Show Status Message",
   invoke = function() show_status_message() end
+}
+
+_MENU_ENTRIES:insert {
+  name = "--- Main Menu:Tools:Example Tool:Enable Example Debug Prints",
+  selected = function() return print_notifications end,
+  invoke = function() print_notifications = not print_notifications end
 }
 
 
@@ -195,7 +204,7 @@ _NOTIFICATIONS = {
 
 -- set this to true, to print notification status to the console, to
 -- see when which notifier gets called...
-local print_notifications = false
+print_notifications = false
 
 -- if you want to do something each time the script gets loaded, then
 -- simply do it here, in the global namespace. The script will start running
