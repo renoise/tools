@@ -104,13 +104,30 @@ os.currentdir() -> [string]
 -- changed
 
 -- replaced with a temp directory and name which renoise will clean up on exit
-os.tmpname() -> [string]
+-- extension will be ".tmp" when not specified
+os.tmpname([extension]) -> [string]
 
 -- replaced with a high precision timer (still expressed in milliseconds)
 os.clock() -> [number]
 
 -- will not exit, but fire an error that os.exit() can not be called
 os.exit()
+
+
+"------------------------------------------------------------------------------"
+"-- io"
+"------------------------------------------------------------------------------"
+
+-- added
+
+-- returns true when a file at the given path and name exists, else false
+io.exists(filename) -> [boolean]
+
+
+-- changed
+
+-- all io functions use UTF8 as encoding for the file names and paths. UTF8
+-- is used for LUA in the whole API as default string encoding...
 
 
 "------------------------------------------------------------------------------"
