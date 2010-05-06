@@ -3,7 +3,7 @@
   Script        : Rubberband.lua
   Creation Date : 2010-05-05
   Last modified : 2010-05-05
-  Version       : 0.1
+  Version       : 0.2
 
 ----------------------------------------------------------------------------]]--
 
@@ -19,35 +19,19 @@ manifest.actions[#manifest.actions + 1] = {
   invoke = function() show_stretch_dialog() end
 }
 
-function processRubberBand(stretch, crisp)
-
-  local ofile = os.tmpname()
-  local ifile = os.tmpname()..'.wav'
-
-  renoise.song().selected_sample.sample_buffer:save_as(ofile, 'wav')
-
-
-  print('Input is: ' .. ifile)
-  print('Output is: ' .. ofile)
-  
-  os.execute("rubberband --time "..stretch.." --crisp "..crisp..
-         " "..ofile.." "..ifile);
-          
-  renoise.song().selected_sample.sample_buffer:load_from(ifile)
-  
-  os.remove(ofile)
-  os.remove(ifile)
-  
-  --]]
-
+-- Does file exist?
+function exists(filename)
+  local file = io.open(filename)
+  if file then
+    io.close(file)
+    return true
+  else
+    return false
+  end
 end
 
-function detect_rubberband()
-  local exitvalue = os.execute('rubberband --version');
-  if exitvalue == 0 then
-    return true; -- Everything is fine
-  end
-  
+
+function display_error() 
   local res = renoise.app():show_prompt('Rubberband missing!',
   "To use this feature you must download Rubberband executable and\n"..
   "copy it to your operating system path!\n\n"..
@@ -65,29 +49,47 @@ function detect_rubberband()
     
     os.execute(urlopencmd .. ' http://www.breakfastquay.com/rubberband/');
   end
-  
-  return false;
-  
 end
 
-function show_stretch_dialog() 
+function processRubberBand(stretch, crisp)
 
-  if not detect_rubberband() then
-    return 0;
-  end;
+  local ofile = os.tmpname()
+  local ifile = os.tmpname()..'.wav'
 
-  local bpm = renoise.song().transport.bpm;
-  local lpb = renoise.song().transport.lpb;
-  local coef = bpm * lpb / 60.0;
+  renoise.song().selected_sample.sample_buffer:save_as(ofile, 'wav')
+
+
+  print('Input is: ' .. ifile)
+  print('Output is: ' .. ofile)
+  
+  os.execute("rubberband --time "..stretch.." --crisp "..crisp..
+         " "..ofile.." "..ifile);
+         
+  if not exists(ifile) then
+    display_error()
+    return
+  end
+          
+  renoise.song().selected_sample.sample_buffer:load_from(ifile)
+  
+  os.remove(ofile)
+  os.remove(ifile)
+end
+
+
+function show_stretch_dialog()
+  local bpm = renoise.song().transport.bpm
+  local lpb = renoise.song().transport.lpb
+  local coef = bpm * lpb / 60.0
 
   local selSample = renoise.song().selected_sample
-  local nframes = selSample.sample_buffer.number_of_frames;
-  local srate = selSample.sample_buffer.sample_rate;
+  local nframes = selSample.sample_buffer.number_of_frames
+  local srate = selSample.sample_buffer.sample_rate
 
-  local slength = nframes / srate;
-  local rows = slength * coef;
+  local slength = nframes / srate
+  local rows = slength * coef
 
-  local vb = renoise.ViewBuilder();
+  local vb = renoise.ViewBuilder()
   
   local numLinesSelector = vb:valuebox { min = 1, value = 16 }
   local crispSelector = vb:popup { 
@@ -134,8 +136,7 @@ function show_stretch_dialog()
   end;
   
   if res == 'Stretch' then
-    print(numLinesSelector.value);
-    processRubberBand(stime, crispSelector.value);
+    processRubberBand(stime, crispSelector.value)
   end;
 end
 
