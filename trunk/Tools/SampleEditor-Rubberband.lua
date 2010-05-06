@@ -21,7 +21,13 @@ manifest.actions[#manifest.actions + 1] = {
 
 -- Does file exist?
 function exists(filename)
-  return true
+  local file = io.open(filename)
+  if file then
+    io.close(file)
+    return true
+  else
+    return false
+  end
 end
 
 
@@ -56,7 +62,7 @@ function processRubberBand(stretch, crisp)
   print('Input is: ' .. ifile)
   print('Output is: ' .. ofile)
   
-  os.execute("/Users/dac514/bin/rubberband --time "..stretch.." --crisp "..crisp..
+  os.execute("rubberband --time "..stretch.." --crisp "..crisp..
          " "..ofile.." "..ifile);
          
   if not exists(ifile) then
@@ -76,21 +82,21 @@ function show_stretch_dialog()
   local lpb = renoise.song().transport.lpb
   local coef = bpm * lpb / 60.0
 
-  local selSample = renoise.song().selected_sample
-  local nframes = selSample.sample_buffer.number_of_frames
-  local srate = selSample.sample_buffer.sample_rate
+  local sel_sample = renoise.song().selected_sample
+  local nframes = sel_sample.sample_buffer.number_of_frames
+  local srate = sel_sample.sample_buffer.sample_rate
 
   local slength = nframes / srate
   local rows = slength * coef
 
   local vb = renoise.ViewBuilder()
   
-  local numLinesSelector = vb:valuebox { min = 1, value = 16 }
-  local crispSelector = vb:popup { 
+  local nlines_selector = vb:valuebox { min = 1, value = 16 }
+  local crisp_selector = vb:popup { 
     items = {'1', '2', '3', '4', '5'},
     value = 4 
   }
-  local typeSelector = vb:popup {
+  local type_selector = vb:popup {
     items = {'lines', 'beats', 'seconds'},
     value = 2
   }
@@ -100,15 +106,15 @@ function show_stretch_dialog()
     spacing = 10,
     vb:vertical_aligner{
       vb:text{text = 'Length:' },
-      numLinesSelector,
+      nlines_selector,
     },
     vb:vertical_aligner{
       vb:text{text = 'Units:' },
-      typeSelector,
+      type_selector,
     },
     vb:vertical_aligner{
       vb:text{text = 'Crispness:' },
-      crispSelector
+      crisp_selector
     },
   }
    
@@ -121,16 +127,16 @@ function show_stretch_dialog()
   
   -- How long we stretch?
   local stime
-  if typeSelector.value == 1 then
-    stime = numLinesSelector.value / rows
-  elseif typeSelector.value == 2 then
-    stime = (numLinesSelector.value * lpb) / rows
-  elseif typeSelector.value == 3 then
-    stime = numLinesSelector.value / slength 
+  if type_selector.value == 1 then
+    stime = nlines_selector.value / rows
+  elseif type_selector.value == 2 then
+    stime = (nlines_selector.value * lpb) / rows
+  elseif type_selector.value == 3 then
+    stime = nlines_selector.value / slength 
   end;
   
   if res == 'Stretch' then
-    processRubberBand(stime, crispSelector.value)
+    processRubberBand(stime, crisp_selector.value)
   end;
 end
 
