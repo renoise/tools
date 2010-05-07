@@ -30,7 +30,7 @@ users problem.
 
 That's also the reason why none of the Midi API functions return error codes.
 All other logic errors, like sending MIDI to a manually closed devices, sending
-bogus messages and so on, will be fired as as usual as LUA runtime errors.
+bogus messages and so on, will be fired as as usual as Lua runtime errors.
 
 
 -- Examples

@@ -2,11 +2,11 @@
 -- Lua Standard Library and Extensions
 ----------------------------------------------------------------------------]]--
 
-This is a reference of standard global LUA functions and tools that where
-added or changed by Renoise, in order to extend the functionality of LUAs
+This is a reference of standard global Lua functions and tools that where
+added or changed by Renoise, in order to extend the functionality of Luas
 standard library.
 
-All standard LUA libraries are included in Renoise as well. You can find a
+All standard Lua libraries are included in Renoise as well. You can find a
 full reference here: http://www.lua.org/pil/18.html
 
 
@@ -21,19 +21,19 @@ full reference here: http://www.lua.org/pil/18.html
 -- for k,v in ripairs(t) do print(k, v) end -> "3 c, 2 b, 1 a"
 ripairs(table) -> [iterator function]
 
--- return a string which lists properties and methods of a LUA class Objects
+-- return a string which lists properties and methods of a Lua class Objects
 objinfo(class_object) -> [string]
 
 -- recursively dumps a table and all its members to the std out (console)
 rprint(table)
 
--- dumps properties and methods of a LUA class objects (like renoise.app())
+-- dumps properties and methods of a Lua class objects (like renoise.app())
 oprint(table)
 
 
 -- changed
 
--- returns a LUA class objects name. for all other types the standard
+-- returns a Lua class objects name. for all other types the standard
 -- lua type function is used
 -- examples: class "MyClass"; function MyClass:__init() end
 --           print(type(MyClass)) -> "MyClass class"
@@ -48,7 +48,7 @@ type(class_object or class or anything else) -> [string]
 -- added
 
 -- create a new, or convert an exiting table to an object that uses the global
--- 'table.XXX' functions as methods, just like strings in LUA do.
+-- 'table.XXX' functions as methods, just like strings in Lua do.
 -- examples: t = table.create(); t:insert("a"); rprint(t) -> [1] = a;
 --           t = table.create{1,2,3}; print(t:concat("|")); -> "1|2|3";
 table.create([t]) -> [table]

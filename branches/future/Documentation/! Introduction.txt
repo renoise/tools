@@ -36,7 +36,7 @@ entries there if it already exists). In the "Tools" menu you will find:
   + Evaluate scripts or commands in realtime with a small terminal (command-line)
   + Watch any scripts output (all "print"s and errors from scripts will be
     redirected here)
-  + Create, view and edit LUA, text, and XML files that will
+  + Create, view and edit Lua, text, and XML files that will
     make up tools / extensions for Renoise. More about this later...
 
 - "Example Tools" and other tools that target script developers only.
@@ -54,7 +54,7 @@ following places:
   do and how you will start getting into all this...
 
 - Create Tools, Extensions: Add new and custom functionality to Renoise.
-  Tools are small file bundles with a LUA script and a description file
+  Tools are small file bundles with a Lua script and a description file
   (manifest.xml) that make use of the Renoise API; described below.
   Such tools can be distributed and installed via drag and drop (by bundling
   them and hiding the code). This way, not only developers can use them, but
@@ -112,10 +112,10 @@ What you can *NOT* do with Renoise tools and extensions:
 
 
 --------------------------------------------------------------------------------
--- Renoise LUA API overview
+-- Renoise Lua API overview
 --------------------------------------------------------------------------------
 
-The XXX.API.txt files in this documentation folder will list all available LUA
+The XXX.API.txt files in this documentation folder will list all available Lua
 functions and classes that you can access from scripts in Renoise.
 If you are familiar with Renoise, the names of the classes, functions and
 properties should hopefully explain themselves (WYSIWYG).
@@ -145,7 +145,7 @@ Here is a small overview of the whole API that Renoise exposes:
 
 Some notes about the used notation in !all xxxAPI.txt! files:
 
-* All classes, functions are nested in a namespace (LUA table) "renoise". e.g:
+* All classes, functions are nested in a namespace (Lua table) "renoise". e.g:
   to get the application object, you will have to type "renoise.app()"
 
 * The API is object orientated, and thus split into classes. The references
@@ -160,7 +160,7 @@ Some notes about the used notation in !all xxxAPI.txt! files:
 
 * Nearly are functions are actually "methods", so you have to invoke them
   via the colon operator ":" 'renoise.app():show_status("Status Message")'
-  If you're new to LUA, this takes a while to get used to. Don't worry, this
+  If you're new to Lua, this takes a while to get used to. Don't worry, this
   will make sense sooner or later ;)
 
 * Properties are syntactic sugar for get/set functions. "song().comments"
