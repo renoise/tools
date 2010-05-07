@@ -248,9 +248,11 @@ multiline_text:clear()
 -- properties
 
 -- the currently shown value. the value will not be updated while editing,
--- but only after editing finished
+-- but only after editing finished.
 -- by default empty
 textfield.value -> [string]
+-- exactly the same as "value"; provided for consistency
+textfield.text -> [string]
 
 -- setup the text fields text alignment
 -- "left", "right" or "center" are valid align values
