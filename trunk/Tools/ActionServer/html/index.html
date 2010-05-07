@@ -3,8 +3,7 @@
       <head>
         <title>Renoise Live!</title>
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-        <base href="http://~{L:get_address()}" />
-        <link type="text/css" href="default.css" rel="stylesheet" />
+        <link type="text/css" href="/default.css" rel="stylesheet" />
       </head>
       <body>
             <h1>Welcome to Renoise live</h1>
@@ -13,7 +12,7 @@
             <p>BPM: ~{renoise.song().transport.bpm}</p>
 
             <h2>Control Renoise through asynchronous POST request</h2>
-            <form id="async-form" method="post" action="http://~{L:get_address()}">
+            <form id="async-form" method="post" action="/">
               <p>Form data is sent to the server in the background, while the current page is updated with JQuery.</p>
               <p>
                  <input type="hidden" id="myvar" name="myvar" value="woot" />
@@ -46,7 +45,7 @@
             <p>Values</p>
             <p><a href="http://~{L:get_address()}/Transport/Playback/Start//Stop%20Playing%20%5BSet%5D">/Transport/Playback/Start//Stop Playing [Set]</a> (escape slash?)</p>
 
-            <script type="text/javascript" src="jquery.js"></script>
+            <script type="text/javascript" src="/jquery.js"></script>
             <script type="text/javascript">
                 $(document).ready(function(){
                   $("#async-form button").click(function(){

@@ -3,8 +3,8 @@
   <head>
       <title>Plain Form Handler</title>
       <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-      <meta http-equiv="refresh" content="1;url=http://~{L:get_address()}" />
-      <link type="text/css" href="default.css" rel="stylesheet" />
+      <meta http-equiv="refresh" content="1;url=/" />
+      <link type="text/css" href="/default.css" rel="stylesheet" />
     </head>
     <body>
       <p style="font-weight: bold">
@@ -20,7 +20,8 @@
    else 
       OUT = "No action received."
    end
-end}  </p>
-      <p>Thanks for submitting the form! Redirecting in 1 second. Or <a href="/">return to index now<a/>.</p>
+end}  
+      </p>
+      <p>Thanks for submitting the form! Redirecting in 1 second. Or <a href="/">return to index now</a>.</p>
    </body>
 </html>
