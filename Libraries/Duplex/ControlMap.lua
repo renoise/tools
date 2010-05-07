@@ -38,12 +38,12 @@ end
 -- @param file_path (string) the name of the file, e.g. "my_map.xml"
 
 function ControlMap:load_definition(file_path)
---print("ControlMap:load_definition:",file_path)
+print("ControlMap:load_definition:",MODULE_PATH..file_path)
 	local xml_string = self.read_file(self,MODULE_PATH..file_path)
 	self.parse_definition(self,xml_string)
 end
 
-
+-- parse the supplied xml string (reset the counter first)
 function ControlMap:parse_definition(xml_string)
 	self.id = 0
 	self.definition = self.parse_xml(self,xml_string)
