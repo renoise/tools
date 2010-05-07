@@ -1,5 +1,5 @@
 ~{"Server responds: "}
-~{do L:header("MyCustomHeader", "Woot!") end}
+~{do L:set_header("MyCustomHeader", "Woot!") end}
 ~{do
    local myvar = P.myvar or ""
    local action = myvar:upper()

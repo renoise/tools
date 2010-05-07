@@ -80,13 +80,25 @@ function Util:split_lines(str)
 end
 
 function Util:parse_message(m)
-  local header = ""
-  local body = ""
   local lines = Util:split_lines(m)
   local s = false
-  for _,l in pairs(lines) do
-    if s then body=body..l.."\r\n" else header=header..l.."\r\n" end
-    if l:match("^$") then s = true end
+  local header = table.create()
+  local body = ""
+  header["Content-Length"] = 0
+  local t = {}
+  for k,v in ipairs(lines) do
+     if v:match("^$") then s = true end
+     if not s then
+        t = Util:split(v,": ")
+        if #t == 2 then
+           header[t[1]] = t[2]
+        else
+           header[k] = v
+        end
+     else
+        --body[k] = v
+        body=body..v.."\r\n"
+     end
   end
   return header, body
 end
@@ -274,7 +286,7 @@ class "ActionServer"
     return extensions:find(path_ext)
   end
 
-  function ActionServer:header(k,v)
+  function ActionServer:set_header(k,v)
    self.header_map[k] = v
   end
 
@@ -289,8 +301,7 @@ class "ActionServer"
   function ActionServer:send_htdoc(socket, path, status, parameters)
      status = status or "200 OK"
 
-     self:init_header()
-     self:header("Content-Type", self:get_MIME(path))
+     self:set_header("Content-Type", self:get_MIME(path))
 
      parameters = parameters or {}
      local fullpath = self:get_htdoc(path)
@@ -298,14 +309,14 @@ class "ActionServer"
      local page = nil
 
      if self:is_expandable(path) then
-       self:header("Cache-Control", "private, max-age=0")
+       self:set_header("Cache-Control", "private, max-age=0")
        page = expand(template, {L=self, renoise=renoise, P=parameters, Util=Util}, _G)
      else
-       self:header("Cache-Control", "private, max-age=3600")
+       self:set_header("Cache-Control", "private, max-age=3600")
        page = template
      end
 
-     self:header("Content-Length", #page)
+     self:set_header("Content-Length", #page)
 
      local header = "HTTP/1.1 " .. status .. "\r\n"
      for k,v in pairs(self.header_map) do
@@ -316,19 +327,41 @@ class "ActionServer"
      socket:send(page)
   end
 
+  ActionServer.chunked = false
+
   function ActionServer:socket_message(socket, message)
+      self.remote_addr = socket.peer_address .. ":" .. socket.peer_port
+      log:info("Remote Addr: " .. self.remote_addr)
       print("\r\n----------MESSAGE RECEIVED----------")
-      local header, body = Util:parse_message(message)
+
+      local header, body = nil
+      if self.chunked then
+         header = self.header
+         body = message
+         self.chunked = false
+      else
+         header, body = Util:parse_message(message)
+         self.header = nil
+      end
+      
+      if #body < tonumber(header["Content-Length"]) then
+        self.chunked = true
+        self.header = header
+        return
+      end
+
+      self:init_header()
+
       local parameters = nil -- POST and GET variables
       if #Util:trim(body) > 0 then log:info("Body:" .. body) end
       local path = nil
       local methods = table.create{"GET","POST","HEAD",
         "OPTIONS", "CONNECT", "PUT", "DELETE", "TRACE"}
-      local method = header:match("^(%w+)%s")
+      local method = header[1]:match("^(%w+)%s")
 
       if method ~= nil then
         method = method:upper()
-        path = header:match("%s(.-)%s")
+        path = header[1]:match("%s(.-)%s")
         path = Util:trim(Util:html_entity_decode(path))
       else
         log:warn("No HTTP method received")
@@ -363,6 +396,7 @@ class "ActionServer"
           log:info ("Requested action:" .. action_name)
           local found = self:find_action(action_name)
           if found then
+             self:set_header("Cache-Control", "private, max-age=0")
              self:send_htdoc(socket, index_pages[1], nil, parameters)
              return
           end
@@ -452,9 +486,9 @@ function configure_server()
             notifier = function(value)
                INADDR_ANY = value
                if value then
-                 vb.views.address_field.text = "0.0.0.0"
+                 vb.views.address_field.value = "0.0.0.0"
                else
-                 vb.views.address_field.text = temp
+                 vb.views.address_field.value = temp
                end
             end
           },
