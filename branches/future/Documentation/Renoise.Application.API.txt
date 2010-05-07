@@ -2,8 +2,6 @@
 -- Renoise Application API Reference
 ----------------------------------------------------------------------------]]--
 
---[[
-
 This reference lists all available LUA functions and classes that control
 the Renoise application. The Application is the LUA interface to Renoise's main
 GUI and window (Application and ApplicationWindow).
@@ -11,21 +9,19 @@ GUI and window (Application and ApplicationWindow).
 Please read the INTRODUCTION.txt first to get an overview about the complete
 API, and scripting in Renoise in general...
 
---]]
 
-
-"------------------------------------------------------------------------------"
-"-- renoise"
-"------------------------------------------------------------------------------"
+--------------------------------------------------------------------------------
+-- renoise
+--------------------------------------------------------------------------------
 
 -- functions
 
 renoise.app() -> [renoise.Application object]
 
 
-"------------------------------------------------------------------------------"
-"-- renoise.Application"
-"------------------------------------------------------------------------------"
+--------------------------------------------------------------------------------
+-- renoise.Application
+--------------------------------------------------------------------------------
 
 -- functions
 
@@ -111,9 +107,9 @@ renoise.app().active_clipboard_index -> [number, 1-4]
 renoise.app().window -> [read-only, renoise.ApplicationWindow object]
 
 
-"------------------------------------------------------------------------------"
-"-- renoise.ApplicationWindow"
-"------------------------------------------------------------------------------"
+--------------------------------------------------------------------------------
+-- renoise.ApplicationWindow
+--------------------------------------------------------------------------------
 
 -- consts
 

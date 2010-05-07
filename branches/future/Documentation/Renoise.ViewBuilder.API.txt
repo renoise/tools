@@ -2,8 +2,6 @@
 -- Renoise ViewBuilder API Reference
 ----------------------------------------------------------------------------]]--
 
---[[
-
 This reference lists all "View" related functions in the API. "View" means
 classes and functions that are used to build custom GUIs; GUIs for your
 scripts in Renoise.
@@ -31,18 +29,16 @@ function my_keyhandler_func(dialog, mod_string, key_string) end
 -- the corresponding button
 
 For a small tutorial, and more detials on how to createand use views, take
--- a look at the  "Tools/ExampleTool_GUI.lua" file please.
-
---]]
+a look at the  "Tools/ExampleTool_GUI.lua" file please.
 
 
-"=============================================================================="
-"-- Views"
-"=============================================================================="
+--==============================================================================
+-- Views
+--==============================================================================
 
-"------------------------------------------------------------------------------"
-"-- renoise.Views.View"
-"------------------------------------------------------------------------------"
+--------------------------------------------------------------------------------
+-- renoise.Views.View
+--------------------------------------------------------------------------------
 
 -- a View is the base class for all following specialized views. So all
 -- View properties can be applied to any of the following views
@@ -77,9 +73,9 @@ view.height -> [number]
 view.tooltip -> [string]
 
 
-"------------------------------------------------------------------------------"
-"-- renoise.Views.Rack (inherits from View, 'column' or 'row' in ViewBuilder)"
-"------------------------------------------------------------------------------"
+--------------------------------------------------------------------------------
+-- renoise.Views.Rack (inherits from View, 'column' or 'row' in ViewBuilder)
+--------------------------------------------------------------------------------
 
 -- a Rack has no content by its own, but stacks its child views either
 -- vertically (ViewBuilder.column) or horizontally (ViewBuilder.row)
@@ -112,10 +108,10 @@ rack.style -> [string]
 rack.uniform -> [boolean]
 
 
-"------------------------------------------------------------------------------"
-"-- renoise.Views.Aligner (inherits from View, 'horizontal_aligner' or"
-"--   'vertical_aligner' in ViewBuilder)"
-"------------------------------------------------------------------------------"
+--------------------------------------------------------------------------------
+-- renoise.Views.Aligner (inherits from View, 'horizontal_aligner' or
+--   'vertical_aligner' in ViewBuilder)
+--------------------------------------------------------------------------------
 
 -- like the Rack, the Aligner has no content by its own, but aligns its
 -- child(s) either vertically or horizontally. When childs are added, it will
@@ -148,9 +144,9 @@ aligner.spacing -> [number]
 aligner.mode -> [string]
 
 
-"-----------------------------------------------------------------------------"
-"-- renoise.Views.Text (inherits from View, 'text' in ViewBuilder)"
-"-----------------------------------------------------------------------------"
+-----------------------------------------------------------------------------"
+-- renoise.Views.Text (inherits from View, 'text' in ViewBuilder)
+-----------------------------------------------------------------------------"
 
 -- a view which simply shows a static text string. Static just means that
 -- its not linked to some value. You can of course change the text at runtime...
@@ -178,10 +174,9 @@ text.font -> [string]
 text.align -> [string]
 
 
-"------------------------------------------------------------------------------"
-"-- renoise.Views.MultiLineText (inherits from View,"
-"-- 'multiline_text' in ViewBuilder)"
-"------------------------------------------------------------------------------"
+--------------------------------------------------------------------------------
+-- renoise.Views.MultiLineText (inherits from View, 'multiline_text' in the builder)
+--------------------------------------------------------------------------------
 
 -- a view which shows multiple lines of text, auto formatting those line by
 -- line. size is not automatically set. when the text does not fit into the view,
@@ -237,9 +232,9 @@ multiline_text:add_line(text)
 multiline_text:clear()
 
 
-"------------------------------------------------------------------------------"
-"-- renoise.Views.TextField (inherits from View, 'textfield' in ViewBuilder)"
-"------------------------------------------------------------------------------"
+--------------------------------------------------------------------------------
+-- renoise.Views.TextField (inherits from View, 'textfield' in the builder)
+--------------------------------------------------------------------------------
 
 -- a view which shows a user editable text string
 
@@ -263,9 +258,9 @@ textfield.value -> [string]
 textfield.align
 
 
-"------------------------------------------------------------------------------"
-"-- renoise.Views.Bitmap (inherits from View, 'bitmap' in ViewBuilder)"
-"------------------------------------------------------------------------------"
+--------------------------------------------------------------------------------
+-- renoise.Views.Bitmap (inherits from View, 'bitmap' in the builder)
+--------------------------------------------------------------------------------
 
 --[[    *
        ***
@@ -317,9 +312,9 @@ bitmapview.bitmap -> [string]
 bitmapview.notifier -> (function())
 
 
-"------------------------------------------------------------------------------"
-"-- renoise.Views.Button (inherits from View, 'button' in ViewBuilder)"
-"------------------------------------------------------------------------------"
+--------------------------------------------------------------------------------
+-- renoise.Views.Button (inherits from View, 'button' in the builder)
+--------------------------------------------------------------------------------
 
 -- a simple button, which will call a supplied notifier when clicked.
 -- supports text or bitmap labels
@@ -359,9 +354,9 @@ button.bitmap -> [string]
 button.notifier -> (function())
 
 
-"------------------------------------------------------------------------------"
-"-- renoise.Views.CheckBox (inherits from View, 'checkbox' in ViewBuilder)"
-"------------------------------------------------------------------------------"
+--------------------------------------------------------------------------------
+-- renoise.Views.CheckBox (inherits from View, 'checkbox' in the builder)
+--------------------------------------------------------------------------------
 
 -- a single button, which can be toggled on/off
 
@@ -389,9 +384,9 @@ checkbox.value -> [boolen]
 checkbox.notifier -> (function(value))
 
 
-"------------------------------------------------------------------------------"
-"-- renoise.Views.Switch (inherits from View, 'switch' in ViewBuilder)"
-"------------------------------------------------------------------------------"
+--------------------------------------------------------------------------------
+-- renoise.Views.Switch (inherits from View, 'switch' in the builder)
+--------------------------------------------------------------------------------
 
 -- a set of horizontal buttons, where exactly one button is switched on at
 -- the same time
@@ -422,9 +417,9 @@ switch.value
 switch.notifier -> (function(value))
 
 
-"------------------------------------------------------------------------------"
-"-- renoise.Views.Popup (inherits from View, 'popup' in ViewBuilder)"
-"------------------------------------------------------------------------------"
+--------------------------------------------------------------------------------
+-- renoise.Views.Popup (inherits from View, 'popup' in the builder)
+--------------------------------------------------------------------------------
 
 -- a dropdown menu, which shows the currently selected value when closed,
 -- when clicked offers a list of items
@@ -456,9 +451,9 @@ popup.value
 popup.notifier -> (function(value))
 
 
-"------------------------------------------------------------------------------"
-"-- renoise.Views.Chooser (inherits from View, 'chooser' in ViewBuilder)"
-"------------------------------------------------------------------------------"
+--------------------------------------------------------------------------------
+-- renoise.Views.Chooser (inherits from View, 'chooser' in the builder)
+--------------------------------------------------------------------------------
 
 -- a radio button alike set of vertically stacked items, where only
 -- one value can be selected at the same time
@@ -489,9 +484,9 @@ chooser.value
 chooser.notifier -> (function(value))
 
 
-"------------------------------------------------------------------------------"
-"-- renoise.Views.ValueBox (inherits from View, 'valuebox' in ViewBuilder)"
-"------------------------------------------------------------------------------"
+--------------------------------------------------------------------------------
+-- renoise.Views.ValueBox (inherits from View, 'valuebox' in the builder)
+--------------------------------------------------------------------------------
 
 -- a box with <> buttons and a editable value field, which allows showing /
 -- editing number values in a custom range
@@ -524,9 +519,9 @@ valuebox.value
 valuebox.notifier -> (function(value))
 
 
-"------------------------------------------------------------------------------"
-"-- renoise.Views.Value (inherits from View, 'value' in ViewBuilder)"
-"------------------------------------------------------------------------------"
+--------------------------------------------------------------------------------
+-- renoise.Views.Value (inherits from View, 'value' in the builder)
+--------------------------------------------------------------------------------
 
 -- a readonly text with a number getter/setters and custom string conversion
 -- see also 'Views.ValueField'
@@ -573,9 +568,9 @@ value.tostring -> (function(number) -> [string])
 value.notifier -> (function(number))
 
 
-"------------------------------------------------------------------------------"
-"-- renoise.Views.ValueField (inherits from View, 'valuefield' in ViewBuilder)"
-"------------------------------------------------------------------------------"
+--------------------------------------------------------------------------------
+-- renoise.Views.ValueField (inherits from View, 'valuefield' in the builder)
+--------------------------------------------------------------------------------
 
 -- a value which has an editfield to show and edit the double value as string
 
@@ -628,9 +623,9 @@ valuefield.tovalue -> (function(string) -> [number])
 valuefield.notifier -> (function(number))
 
 
-"------------------------------------------------------------------------------"
-"-- renoise.Views.Slider (inherits from View, 'slider' in ViewBuilder)"
-"------------------------------------------------------------------------------"
+--------------------------------------------------------------------------------
+-- renoise.Views.Slider (inherits from View, 'slider' in the builder)
+--------------------------------------------------------------------------------
 
 -- a slider with <> buttons, which allows showing / editing real values in
 -- a custom range
@@ -663,9 +658,9 @@ slider.value
 slider.notifier -> (function(number))
 
 
-"------------------------------------------------------------------------------"
-"-- renoise.Views.MiniSlider (inherits from View, 'minislider' in ViewBuilder)"
-"------------------------------------------------------------------------------"
+--------------------------------------------------------------------------------
+-- renoise.Views.MiniSlider (inherits from View, 'minislider' in the builder)
+--------------------------------------------------------------------------------
 
 -- same as a slider, but without <> buttons and a really tiny height
 
@@ -696,9 +691,9 @@ slider.notifier -> (function(number))
 
 
 
-"------------------------------------------------------------------------------"
-"-- renoise.Views.RotaryEncoder (inherits from View, 'rotary' in ViewBuilder)"
-"------------------------------------------------------------------------------"
+--------------------------------------------------------------------------------
+-- renoise.Views.RotaryEncoder (inherits from View, 'rotary' in the builder)
+--------------------------------------------------------------------------------
 
 --[[
    +-+
@@ -734,9 +729,9 @@ rotary.notifier -> (function(number))
 
 
 
-"=============================================================================="
-"-- renoise.Dialog"
-"=============================================================================="
+--==============================================================================
+-- renoise.Dialog
+--==============================================================================
 
 -- a dialog can not created with the viewbuilder, but you may want to control it
 -- close it after having passed it to a dialog. The apps non modal dialog
@@ -753,9 +748,9 @@ dialog:close()
 dialog.visible -> [read-only, boolean]
 
 
-"=============================================================================="
-"-- renoise.ViewBuilder"
-"=============================================================================="
+--==============================================================================
+-- renoise.ViewBuilder
+--==============================================================================
 
 -- class which is used to construct new Views. All views properties, as listed
 -- above, can optionally be inlined in a passed construction table:
