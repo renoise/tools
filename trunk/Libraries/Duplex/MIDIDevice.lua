@@ -46,11 +46,17 @@ end
 function MidiDevice:release()
 print("MidiDevice:release()")
 
-	if self.midi_in.is_open then
-		self.midi_in.close(self.midi_in)
-		self.midi_out.close(self.midi_out)
+	if self.midi_in and self.midi_in.is_open then
+		self.midi_in:close()
 	end
 	
+	if self.midi_out and self.midi_out.is_open then
+		self.midi_out:close()
+	end
+
+	self.midi_in = nil
+	self.midi_out = nil
+
 end
 
 function MidiDevice:midi_callback(message)
