@@ -42,8 +42,7 @@ manifest.notifications.app_idle = function() handle_app_idle_notification() end
 
 --print(os.currentdir())
 
--- included files
-
+-- core files
 require "Duplex/Application"
 require "Duplex/MixConsole"
 require "Duplex/Browser"
@@ -59,8 +58,11 @@ require "Duplex/Slider"
 require "Duplex/ControlMap"
 require "Duplex/Device"
 require "Duplex/MIDIDevice"
-require "Duplex/Launchpad"
 require "Duplex/PatternMatrix"
+
+-- additional files
+require "Duplex/Controllers/Launchpad/Launchpad"
+
 
 local app = nil
 

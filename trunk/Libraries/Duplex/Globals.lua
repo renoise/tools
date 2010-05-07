@@ -2,7 +2,7 @@
 -- Duplex.Globals
 ----------------------------------------------------------------------------]]--
 
-MODULE_PATH = os.currentdir().."Duplex\\" 
+MODULE_PATH = "./Duplex/"	
 NOTE_ARRAY = {"C-","C#","D-","D#","E-","F-","F#","G-","G#","A-","A#","B-"}
 
 DEVICE_OSC_PROTOCOL = 0
@@ -31,12 +31,6 @@ MUTE_STATE_OFF = 2
 MUTE_STATE_ACTIVE = 1
 
 -- compare two numbers with variable precision
-
-function alert(message)
-	renoise.app():show_warning(message)
-end
-
-
 function compare(val1,val2,precision)
 	val1 = math.floor(val1*precision)
 	val2 = math.floor(val2*precision)

@@ -25,6 +25,9 @@ print("PatternMatrix:__init",display)
 	self.display = display
 	self.init_app(self)
 
+	self.observable_firing = false
+
+
 	--self.offset = 0
 
 	-- observables tell only a little bit, 
@@ -32,14 +35,18 @@ print("PatternMatrix:__init",display)
 
 	local function pattern_assignment(e)
 		print("pattern_assignments_observable fired...",e)
-		self.update_slots(self)
+		--self.update_slots(self)
+		self.observable_firing = true
+
 	end
 	self.observable = renoise.song().sequencer.pattern_assignments_observable
 	self.observable:add_notifier(pattern_assignment)
 
 	local function pattern_sequence(e)
 		print("pattern_sequence_observable fired...",e)
-		self.update_slots(self)
+		--self.update_slots(self)
+		self.observable_firing = true
+
 	end
 	self.observable2 = renoise.song().sequencer.pattern_sequence_observable
 	self.observable2:add_notifier(pattern_sequence)
@@ -47,20 +54,23 @@ print("PatternMatrix:__init",display)
 	self.observable3 = renoise.song().sequencer.pattern_slot_mutes_observable 
 	local function mute_state_changed(e)
 		print("pattern_slot_mutes_observable fired...",e)
-		self.update_slots(self)
+		--self.update_slots(self)
+		self.observable_firing = true
 	end
 	self.observable3:add_notifier(mute_state_changed)
 
 	local function tracks(e)
 		print("tracks_observable fired...",e)
-		self.update_slots(self)
+		--self.update_slots(self)
+		self.observable_firing = true
 	end
 	self.observable4 = renoise.song().tracks_observable
 	self.observable4:add_notifier(tracks)
 	
 	local function patterns(e)
 		print("patterns_observable fired...",e)
-		self.update_slots(self)
+		--self.update_slots(self)
+		self.observable_firing = true
 	end
 	self.observable5 = renoise.song().patterns_observable
 	self.observable5:add_notifier(patterns)
@@ -98,9 +108,9 @@ function PatternMatrix:init_app()
 	Application.init_app(self)
 
 	local observable = nil
-	local seq = renoise.song().sequencer.pattern_sequence
 
-	-- TODO make a proper sequence selector
+	-- TODO quick hack to make a Slider appear like a selector
+	-- (make proper Selector class)
 	self.position = Slider(self.display)
 	self.position.group_name = "Triggers"
 	self.position.x_pos = 1
@@ -128,7 +138,7 @@ function PatternMatrix:init_app()
 			renoise.song().transport.playback_pos = new_pos
 			-- start playback if not playing
 			if not renoise.song().transport.playing then
-				renoise.song().transport.start(renoise.song().transport,renoise.Transport.PLAYMODE_CONTINUE_PATTERN)
+				renoise.song().transport.start(renoise.song().transport,renoise.Transport.PLAYMODE_RESTART_PATTERN)
 			end
 		end
 	end
@@ -142,6 +152,7 @@ function PatternMatrix:init_app()
 
 		for y=1,8 do
 
+
 			self.buttons[x][y] = ToggleButton(self.display)
 			self.buttons[x][y].group_name = "Grid"
 			self.buttons[x][y].x_pos = x
@@ -150,7 +161,9 @@ function PatternMatrix:init_app()
 
 			-- mute state changed from controller
 			self.buttons[x][y].on_change = function(obj) 
-				
+
+				local seq = renoise.song().sequencer.pattern_sequence
+
 				if not self.active then
 					print('Application is sleeping')
 				elseif not renoise.song().tracks[x] then
@@ -173,6 +186,10 @@ end
 -- function to update all slots' visual appeareance
 
 function PatternMatrix:update_slots()
+	if self.observable_firing then
+		return
+	end
+print("PatternMatrix:update_slots()",self.observable_firing)
 
 	--local master_idx = get_master_track_index() 
 	local seq = renoise.song().sequencer.pattern_sequence
@@ -182,9 +199,11 @@ function PatternMatrix:update_slots()
 	local bt = nil
 	local value = nil
 
+
 	for track_idx=1,8 do
 		if renoise.song().tracks[track_idx] then
 			for seq_index=1,8 do
+				
 				if seq[seq_index] then
 					patt_idx = seq[seq_index]
 					muted = renoise.song().sequencer.track_sequence_slot_is_muted(renoise.song().sequencer,track_idx, seq_index)
@@ -266,8 +285,14 @@ end
 -- periodic updates: handle "un-observable" things here
 
 function PatternMatrix:idle_app()
-
+print("PatternMatrix:idle_app()",self.observable_firing)
 	if not self.active then return false end
+
+	--if not self.dirty then return false end
+	if self.observable_firing then
+		self.observable_firing = false
+		self.update_slots(self)
+	end
 
 	local pos = renoise.song().transport.playback_pos
 	-- changed pattern?
