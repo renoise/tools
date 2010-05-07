@@ -11,8 +11,8 @@ manifest.description = "Exposes Renoise functions through networking"
 
 manifest.actions = {}
 manifest.actions[#manifest.actions + 1] = {
-  name = "MainMenu:Tools:WebServer",
-  description = "Webserver",
+  name = "MainMenu:Tools:ActionServer",
+  description = "ActionServer",
   invoke = function()
 --    remdebug.engine.start() -- debugger will connect and initially break here
     start_server()
@@ -36,13 +36,15 @@ end
 local package_path = package.path
 package.path  = package.path:gsub("[\\/]Libraries", "")
 
+local root = "./ActionServer/"
+
 require "GlobalMidiActions"
 package.path = package_path
 
-require "WebServer.Log"
+require "ActionServer.Log"
 local log = Log(Log.ALL)
 
-local expand = require "WebServer.Expand"
+local expand = require "ActionServer.Expand"
 
 local echo_server = nil
 local errors = {}
@@ -165,7 +167,7 @@ local function split(str, pat)
    local s, e, cap = str:find(fpat, 1)
    while s do
       if s ~= 1 or cap ~= "" then
-	 table.insert(t,cap)
+   table.insert(t,cap)
       end
       last_end = e+1
       s, e, cap = str:find(fpat, last_end)
@@ -177,11 +179,9 @@ local function split(str, pat)
    return t
 end
 
-local config_dir = "./WebServer/"
-
 -- Assumes "#comment" is a comment, "value  key_1 key_2"
 local function parse_config_file(filename)
-   local str = read_file(config_dir .. filename)
+   local str = read_file(root .. filename)
    local lines = split_lines(str)
    local t = {}
    local k, v = nil
@@ -202,7 +202,7 @@ end
 
 class "ActionServer"
 
-  ActionServer.document_root = "./WebServer/html"
+  ActionServer.document_root = root .. "html"
   
   function ActionServer:__init(address,port)
    self.renoise = renoise 
