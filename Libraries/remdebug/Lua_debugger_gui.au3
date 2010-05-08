@@ -16,9 +16,15 @@ Opt("GUIResizeMode", 1)
 	Local $szIPADDRESS = "127.0.0.1"
 	Local $nPORT = 8171
 	Local $MainSocket, $serverwindow, $stepperwindow, $steppercode, $edit, $ConnectedSocket, $szIP_Accepted
-	Local $msg, $recv, $lineinput
-	local $codeloaded, $file, $location
-Example()
+	Local $msg, $recv, $lineinput,$varwindow, $varlist
+	local $codeloaded, $file,$bufferfile, $location, $pauseline
+	local $forever = 1
+Do
+	$codeloaded = 0
+	Example()
+	MsgBox(0,"Program Termination", "Your lua program has ended")
+
+Until $forever == 0
 
 Func Example()
 	; Set Some reusable info
@@ -43,22 +49,34 @@ Func Example()
 
 	; Create a GUI for messages
 	;==============================================
-	$serverwindow = GUICreate("Lua Debug server (IP: " & $szIPADDRESS & ")", 400, 200)
-	$edit = GUICtrlCreateEdit("", 10, 10, 380, 180)
-	GUISetState()
+	If $serverwindow < 1 Then
+		$serverwindow = GUICreate("Lua Debug server (IP: " & $szIPADDRESS & ")", 400, 200,10,10,BitOR($WS_SYSMENU, $WS_CAPTION,$WS_MAXIMIZEBOX,$WS_MINIMIZEBOX,$WS_THICKFRAME))
+		GUISetOnEvent($GUI_EVENT_CLOSE, "closeprogram")
+		$edit = GUICtrlCreateEdit("", 10, 10, 380, 180)
+		GUISetState()
+	EndIf
+	If $varwindow < 1 Then
+		$varwindow = GUICreate("Varwindow", 500, 300,10,300,BitOR($WS_SYSMENU, $WS_CAPTION,$WS_MAXIMIZEBOX,$WS_MINIMIZEBOX,$WS_THICKFRAME))
+		$varlist = GUICtrlCreateEdit("", 10, 10, 480, 280)
+		GUISetState()
+	EndIf
 
-	$stepperwindow = GUICreate("Code step Output frame", 600, 500)
-	$steppercode = GUICtrlCreateList("", 10, 10, 580, 450,BitOR($WS_BORDER, $WS_VSCROLL, $LBS_NOTIFY, $LBS_DISABLENOSCROLL, $WS_HSCROLL))
-	$lineinput = GUICtrlCreateInput("", 10, 460, 280, 20)
-	GUICtrlSetOnEvent(-1, "sendcommand")
-	local $button_step = GUICtrlCreateButton("Run", 10, 480, 94, 20)
-	GUICtrlSetOnEvent(-1, "steprun")
-	local $button_step = GUICtrlCreateButton("Step into", 104, 480, 94, 20)
-	GUICtrlSetOnEvent(-1, "stepinto")
-	local $button_step = GUICtrlCreateButton("Step over", 198, 480, 94, 20)
-	GUICtrlSetOnEvent(-1, "stepover")
-	GUISetState()
-
+	If $stepperwindow < 1 Then
+		$stepperwindow = GUICreate("Code step Output frame", 600, 500,-1,-1,BitOR($WS_SYSMENU, $WS_CAPTION,$WS_MAXIMIZEBOX,$WS_MINIMIZEBOX,$WS_THICKFRAME))
+		$steppercode = GUICtrlCreateList("", 10, 10, 580, 450,BitOR($WS_BORDER, $WS_VSCROLL, $LBS_NOTIFY, $LBS_DISABLENOSCROLL, $WS_HSCROLL))
+		$lineinput = GUICtrlCreateLabel("Send direct command:", 10, 460, 280, 20)
+		$lineinput = GUICtrlCreateInput("", 120, 460, 280, 20)
+		GUICtrlSetOnEvent(-1, "sendcommand")
+		local $button_step = GUICtrlCreateButton("Run", 120, 480, 94, 20)
+		GUICtrlSetOnEvent(-1, "steprun")
+		local $button_step = GUICtrlCreateButton("Step into", 214, 480, 94, 20)
+		GUICtrlSetOnEvent(-1, "stepinto")
+		local $button_step = GUICtrlCreateButton("Step over", 308, 480, 94, 20)
+		GUICtrlSetOnEvent(-1, "stepover")
+		local $button_step = GUICtrlCreateButton("Set Breakpoint on current line", 402, 480, 188, 20)
+		GUICtrlSetOnEvent(-1, "breakpoint")
+		GUISetState()
+	EndIf
 
 	; Initialize a variable to represent a connection
 	;==============================================
@@ -90,45 +108,18 @@ Func Example()
 
 		; If the receive failed with @error then the socket has disconnected
 		;----------------------------------------------------------------
-		If @error Then ExitLoop
+		If @error Then 
+			SetError(0)
+			ExitLoop
+		EndIf
 
 		; Update the edit control with what we have received
 		;----------------------------------------------------------------
 		If $recv <> "" Then 
 			$location = StringInStr($recv, "202 paused", 0)
 			$file = StringMid($recv,$location+11)
-			local $pauselocation = StringInStr($file, ".lua", 0) +5
-			local $pauseline = StringMid($file,$pauselocation)
-			$pauseline = StringMid($pauseline, 1, StringLen($pauseline)-1)
-			if $codeloaded <> 1 Then
-				local $lualocation = StringInStr($file, ".lua", 0)
-				local $tend = ($lualocation+3)
-				local $linenum = 1
-				if $location > 0 Then
-					$file = StringMid($file,1,$tend)
-					local $fileh = FileOpen($file, 0)
-
-					; Check if file opened for reading OK
-					If $fileh = -1 Then
-						MsgBox(0, "Error", "Unable to open file.")
-					EndIf
-
-					local $buffer = ""
-					_GUICtrlListBox_BeginUpdate($steppercode)
-					While 1
-						local $line = FileReadLine($fileh)
-						If @error = -1 Then ExitLoop
-						$buffer = $linenum &"   " &$line ;& @CRLF
-						_GUICtrlListBox_AddString($steppercode, $buffer)								
-						$linenum = $linenum + 1
-					Wend
-					_GUICtrlListBox_UpdateHScroll($steppercode)
-					_GUICtrlListBox_EndUpdate($steppercode)
-					FileClose($fileh)
-					$codeloaded = 1
-				EndIf
-			EndIf
-			if Number($pauseline) > 0 then
+			processluasource()
+			if (Number($pauseline) > 0) & ($codeloaded == 1) then
 				_GUICtrlListBox_SetCurSel($steppercode, Number($pauseline)-1)
 			endif
 			GUICtrlSetData($edit, _
@@ -140,7 +131,7 @@ Func Example()
 	If $ConnectedSocket <> -1 Then TCPCloseSocket($ConnectedSocket)
 
 	TCPShutdown()
-EndFunc   ;==>Example
+EndFunc   
 
 Func sendcommand()
 	TCPSend($ConnectedSocket, GUICtrlRead(@GUI_CtrlId))
@@ -156,7 +147,55 @@ EndFunc
 Func steprun()
 	TCPSend($ConnectedSocket, "RUN\n")
 EndFunc
+Func breakpoint()
+	local $array = StringSplit($bufferfile, '/', 1)	
+	local $breakpointfile = $array[UBound($array)-1]
+	local $newbreakpoint = _GUICtrlListBox_GetCurSel($steppercode) + 1
+	local $message = "SETB " &Chr(34)& $breakpointfile & CHR(34)&" " & $newbreakpoint
+;	local $message = "SETB " & $bufferfile &" " & String($newbreakpoint)
+	GUICtrlSetData($edit, _
+	$szIP_Accepted & " > " & $message & @CRLF & GUICtrlRead($edit))
+	TCPSend($ConnectedSocket, $message)
+EndFunc
+Func closeprogram()
+	exit
+EndFunc
+Func processluasource()
+	local $pauselocation = StringInStr($file, ".lua", 0) +5
+	$pauseline = StringMid($file,$pauselocation)
+	$pauseline = StringMid($pauseline, 1, StringLen($pauseline)-1)
+	if $codeloaded <> 1 Then
+		local $lualocation = StringInStr($file, ".lua", 0)
+		local $tend = ($lualocation+3)
+		local $linenum = 1
+		if $location > 0 Then
+			$file = StringMid($file,1,$tend)
+			local $fileh = FileOpen($file, 0)
 
+			; Check if file opened for reading OK
+			If $fileh = -1 Then
+				MsgBox(0, "Error", "Unable to open file.")
+				return 
+			Else
+				$bufferfile = $file
+			EndIf
+
+			local $buffer = ""
+			_GUICtrlListBox_BeginUpdate($steppercode)
+			While 1
+				local $line = FileReadLine($fileh)
+				If @error = -1 Then ExitLoop
+				$buffer = $linenum &"   " &$line ;& @CRLF
+				_GUICtrlListBox_AddString($steppercode, $buffer)								
+				$linenum = $linenum + 1
+			Wend
+			_GUICtrlListBox_UpdateHScroll($steppercode)
+			_GUICtrlListBox_EndUpdate($steppercode)
+			FileClose($fileh)
+			$codeloaded = 1
+		EndIf
+	EndIf
+EndFunc
 ; Function to return IP Address from a connected socket.
 ;----------------------------------------------------------------------
 Func SocketToIP($SHOCKET)
