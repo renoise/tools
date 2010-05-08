@@ -100,12 +100,16 @@ function Iterator:go(iter)
     if not line.is_empty then
       for _,note_col in ipairs(line.note_columns) do
         if
+        (
           not self.constrain_to_selected or
           self.constrain_to_selected and note_col.is_selected
+        )
         and
+        (
           not note_col.is_empty and
           note_col.note_value ~= renoise.PatternTrackLine.NOTE_OFF and
           note_col.note_value ~= renoise.PatternTrackLine.EMPTY_NOTE
+        )
         then
           note_col.note_string = self.callback(note_col.note_string)
         end
@@ -146,7 +150,7 @@ function invoke_shuffle(pattern_iterator, constrain)
 
   iterator:set_callback(function(x) shuffle:push(x); return x end)
   iterator:go(pattern_iterator)
-
+  
   iterator:set_callback(function(x) return shuffle:pop(x); end)
   iterator:go(pattern_iterator)
 end
