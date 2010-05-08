@@ -113,7 +113,7 @@ function Browser:set_device(name)
 				--print("Control-mapped support",class_name)
 				self.instantiate_device(self,class_name)
 			else
-				alert("Whoops! This device needs a control-map")
+				renoise.app():show_warning("Whoops! This device needs a control-map")
 			end
 		end
 		
@@ -131,7 +131,7 @@ function Browser:instantiate_device(class_name)
 	if class_name == 'Launchpad' then
 
 		self.device = Launchpad('Launchpad')
-		self.device:set_controller_map("launchpad.xml")
+		self.device:set_controller_map("Controllers/Launchpad/launchpad.xml")
 		self.device.message_stream = self.stream
 
 		self.display = Display(self.device)
@@ -161,7 +161,6 @@ function Browser:get_devices()
 	local input_devices = renoise.Midi.available_input_devices()
 	local custom_devices = self.get_custom_devices(self)
 
-	-- add custom devices 
 	--table.insert(rslt, "--------  custom devices  ---------")
 	for idx,t in ipairs(custom_devices) do
 		for _,k in ripairs(input_devices) do
@@ -171,9 +170,7 @@ function Browser:get_devices()
 			end
 		end
 	end
-	-- seperator
 	--table.insert(rslt, "----  control-mapped devices  -----")
-	-- add control-mapped devices 
 	for _,t in ipairs(custom_devices) do
 		if (t.control_map) then
 			table.insert(rslt, t.display_name)
@@ -184,6 +181,8 @@ function Browser:get_devices()
 
 end
 
+-- helper : get the currently selected index of a list
+
 function Browser:get_list_index(view_elm,name)
 
 	local elm = self.vb.views[view_elm]
@@ -192,17 +191,20 @@ function Browser:get_list_index(view_elm,name)
 			return idx
 		end
 	end
-	print("could not load the item "..name)
+	print("could not locate the item "..name)
 	return 1
 
 end
 
 
 --	todo: check for "real" device config-files
---	@class_name : determine the class to instantiate
---	@display_name : the name listed in the popup 
---	@device_name : the device name, as reported by the os
+--	@class_name : (optional) indicates that device has a custom implementation
+--	@display_name : the name we list in the popup, can contain additional 
+--	 information, such as number and status (e.g. "Launchpad [2] (active)"
+--	@device_name : the device name, as reported by the os 
+--	 (we should allow different names for different platforms)
 --	@control_map : name of the default control-map
+--	@protocol : if we instantiate a "generic" class, this is needed
 
 function Browser:get_custom_devices()
 
@@ -213,7 +215,7 @@ function Browser:get_custom_devices()
 			class_name="Launchpad",			
 			display_name="Launchpad",
 			device_name="Launchpad",
-			control_map="launchpad.xml",
+			control_map="Controllers/Launchpad/launchpad.xml",
 			protocol=DEVICE_MIDI_PROTOCOL,
 		},
 		--	here, device_name is different from display_name 
@@ -461,10 +463,11 @@ function Browser:idle_app()
 		return
 	end
 
+	-- always modify objects 
 	if self.display then
 		self.display.update(self.display)
 	end
-
+	-- .... before the display update
 	if self.application then
 		self.application.idle_app(self.application,self.display)
 	end

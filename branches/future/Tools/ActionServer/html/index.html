@@ -1,0 +1,63 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" dir="ltr">
+      <head>
+        <title>Renoise Live!</title>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+        <link type="text/css" href="/default.css" rel="stylesheet" />
+      </head>
+      <body>
+            <h1>Welcome to Renoise live</h1>
+            <p>Date: ~{L:get_date()}</p>
+            <p>Connected to Renoise instance: ~{L:get_address()}</p>
+            <p>BPM: ~{renoise.song().transport.bpm}</p>
+
+            <h2>Control Renoise through asynchronous POST request</h2>
+            <form id="async-form" method="post" action="/">
+              <p>Form data is sent to the server in the background, while the current page is updated with JQuery.</p>
+              <p>
+                 <input type="hidden" id="myvar" name="myvar" value="woot" />
+                 <button>Play</button>
+                 <button>Stop</button>
+              </p>
+            </form>
+            <p id="result"></p>
+
+            <h2>Control Renoise through plain POST request</h2>
+            <form id="plain-form" method="post" action="/plainform.lua">
+              <p>Form is submitted as usual, forcing a whole page reload.</p>
+              <p>
+                 <input type="submit" name="submit_button" value="Play" />
+                 <input type="submit" name="submit_button" value="Stop" />
+              </p>
+            </form>
+
+            <h2>Control Renoise with virtual links</h2>
+            <p>The virtual links don't resolve to actual files on disk, but are directly handled by the server.
+            Similar to the Pretty URL mechanism of a CMS, the path component is translated into a Renoise Action.</p>
+
+            ~{do playing = "stopped"
+                  if (renoise.song().transport.playing) then playing = "playing" end
+            end}
+            <p>Playback status: ~{playing}  (usually stopping takes too long to display here immediately)</p>
+            <p><a href="/Transport/Playback/Start%20Playing%20%5BTrigger%5D">/Transport/Playback/Start Playing [Trigger]</a></p>
+            <p><a href="/Transport/Playback/Stop%20Playing%20%5BTrigger%5D">/Transport/Playback/Stop Playing [Trigger]</a></p>
+            <h3>Todo</h3>
+            <p>Values</p>
+            <p><a href="http://~{L:get_address()}/Transport/Playback/Start//Stop%20Playing%20%5BSet%5D">/Transport/Playback/Start//Stop Playing [Set]</a> (escape slash?)</p>
+
+            <script type="text/javascript" src="/jquery.js"></script>
+            <script type="text/javascript">
+                $(document).ready(function(){
+                  $("#async-form button").click(function(){
+                       $("#myvar").val($(this).text());
+                  });
+                	$("#async-form").submit(function(){
+                              	$.post("http://" + document.domain + "/ajax.lua", $(this).serialize(), function(data){
+                                   $("#result").text(data);
+                              	}, "text");
+                		return false;
+                	});
+                });
+            </script>
+      </body>
+</html>

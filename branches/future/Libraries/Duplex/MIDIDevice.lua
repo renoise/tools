@@ -19,8 +19,26 @@ print("MidiDevice:__init("..name..")")
 
 	Device.__init(self, name, DEVICE_MIDI_PROTOCOL)
 
-	self.midi_in = renoise.Midi.create_input_device(name, {self,MidiDevice.midi_callback},{self,MidiDevice.sysex_callback})
-	self.midi_out = renoise.Midi.create_output_device(name)
+	self.midi_in = nil
+	self.midi_out = nil
+
+	local input_devices = renoise.Midi.available_input_devices()
+	local output_devices = renoise.Midi.available_output_devices()
+
+	if table.find(input_devices, name) then
+	self.midi_in = renoise.Midi.create_input_device(name,
+	  {self, MidiDevice.midi_callback},
+	  {self, MidiDevice.sysex_callback}
+	)
+	else
+		print("Notice: Could not create MIDI input device "..name)
+	end
+
+	if table.find(output_devices, name) then
+		self.midi_out = renoise.Midi.create_output_device(name)
+	else
+		print("Notice: Could not create MIDI output device "..name)
+	end
 
 
 end
@@ -28,11 +46,17 @@ end
 function MidiDevice:release()
 print("MidiDevice:release()")
 
-	if self.midi_in.is_open then
-		self.midi_in.close(self.midi_in)
-		self.midi_out.close(self.midi_out)
+	if self.midi_in and self.midi_in.is_open then
+		self.midi_in:close()
 	end
 	
+	if self.midi_out and self.midi_out.is_open then
+		self.midi_out:close()
+	end
+
+	self.midi_in = nil
+	self.midi_out = nil
+
 end
 
 function MidiDevice:midi_callback(message)
@@ -93,7 +117,7 @@ end
 function MidiDevice:send_cc_message(number,value)
 --print("MidiDevice:send_cc_message",number,value)
 
-	if not self.midi_out.is_open then
+	if not self.midi_out or not self.midi_out.is_open then
 		return
 	end
 
@@ -106,7 +130,7 @@ end
 function MidiDevice:send_note_message(key,velocity)
 --print("MidiDevice:send_note_message",key,velocity)
 
-	if not self.midi_out.is_open then
+	if not self.midi_out or not self.midi_out.is_open then
 		return
 	end
 
@@ -170,11 +194,3 @@ function MidiDevice:extract_midi_cc(str)
 
 end
 
---[[
-function MidiDevice:enumerate_devices()
-
-	for 
-
-end
-
-]]
