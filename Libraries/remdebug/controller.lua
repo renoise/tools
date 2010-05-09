@@ -103,7 +103,7 @@ client:receive()
 local breakpoint = client:receive()
 
 local _, _, filename, line = 
-  breakpoint:find("^202 Paused%s+([%w%p]+)%s+(%d+)$")
+  breakpoint:find("^202 Paused%s+([%w%p%s]+)%s+(%d+)$")
 
 if (filename and line) then
   basefile = filename
@@ -180,7 +180,7 @@ while true do
     
     if (status == "202") then
       local _, _, file, line = 
-        breakpoint:find("^202 Paused%s+([%w%p]+)%s+(%d+)$")
+        breakpoint:find("^202 Paused%s+([%w%p%s]+)%s+(%d+)$")
       
       if (file and line) then 
         basefile = file
@@ -189,7 +189,7 @@ while true do
     
     elseif (status == "203") then
       local _, _, file, line, watch_idx = 
-        breakpoint:find("^203 Paused%s+([%w%p]+)%s+(%d+)%s+(%d+)$")
+        breakpoint:find("^203 Paused%s+([%w%p%s]+)%s+(%d+)%s+(%d+)$")
       
       if (file and line) and watch_idx then
         basefile = file       
@@ -225,7 +225,7 @@ while true do
   
   elseif (command == "setb") then
     local _, _, filename, line = 
-      commandline:find("^[a-z]+%s+([%w%p]+)%s+(%d+)$")
+      commandline:find("^[a-z]+%s+([%w%p%s]+)%s+(%d+)$")
     
     if (not filename and not line) then 
       _, _, line = commandline:find("^[a-z]+%s+(%d+)$")
@@ -238,7 +238,7 @@ while true do
       if (not breakpoints[filename]) then 
         breakpoints[filename] = {} 
       end
-      
+
       client:send("SETB " .. filename .. " " .. line .. "\n")
       if (client:receive() == "200 OK") then 
         breakpoints[filename][line] = true
@@ -275,7 +275,7 @@ while true do
   
   elseif (command == "delb") then
     local _, _, filename, line = 
-      commandline:find("^[a-z]+%s+([%w%p]+)%s+(%d+)$")
+      commandline:find("^[a-z]+%s+([%w%p%s]+)%s+(%d+)$")
     
     if (not filename and not line) then 
       _, _, line = commandline:find("^[a-z]+%s+(%d+)$")
