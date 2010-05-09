@@ -6,13 +6,21 @@
 
 Opt('MustDeclareVars', 1)
 Opt("GUIOnEventMode", 1)
-;Opt("GUICoordMode", 2)
 Opt("GUIResizeMode", 1)
+;==============================================
+;==============================================
+;controller_gui for Kepler's remote lua debugger
+;Requires adapted version that accepts spaces
+;in folder and file structures.
+;
+;Written by Vincent Voois, May 2010
+;( http://tinyurl.com/vvrns )
+;Copyright using Lua MIT license
+;==============================================
+;==============================================
 
 ;==============================================
-;==============================================
 ;SERVER!! Start Me First !!!!!!!!!!!!!!!
-;==============================================
 ;==============================================
 	Local $szIPADDRESS = "0.0.0.0"
 	Local $nPORT = 8171
@@ -25,16 +33,13 @@ Opt("GUIResizeMode", 1)
 Do
 	$codeloaded = 0
 	Controller()
+	GUICtrlSetData($edit, "Client disconnected" & @CRLF & GUICtrlRead($edit))
 	MsgBox(0,"Program Termination", "Your lua program has ended")
 
 Until $forever == 0
 
 Func Controller()
-	; Set Some reusable info
-	; Set your Public IP address (@IPAddress1) here.
-;	Local $szServerPC = @ComputerName
-;	Local $szIPADDRESS = TCPNameToIP($szServerPC)
-;	Local $szIPADDRESS = @IPAddress1
+;	Read inifile if it exists, else write a new one with default values.
 	If FileExists($inifile) Then
 		$szIPADDRESS = IniRead($inifile, "server_config", "ip-address", $szIPADDRESS)
 		$nPORT = IniRead($inifile, "server_config", "port", $nPORT)
@@ -62,9 +67,9 @@ Func Controller()
 		If $szIPADDRESS <> "0.0.0.0" Then
 			$inADDR = $szIPADDRESS
 		EndIf
-		$serverwindow = GUICreate("Lua Debug server (IP: " & $inADDR & " / port:" &$nPORT& ")", 400, 200,10,10,BitOR($WS_SYSMENU, $WS_CAPTION,$WS_MAXIMIZEBOX,$WS_MINIMIZEBOX,$WS_THICKFRAME))
+		$serverwindow = GUICreate("Lua Debug server (IP: " & $inADDR & " / port:" &$nPORT& ")", 450, 200,10,10,BitOR($WS_SYSMENU, $WS_CAPTION,$WS_MAXIMIZEBOX,$WS_MINIMIZEBOX,$WS_THICKFRAME))
 		GUISetOnEvent($GUI_EVENT_CLOSE, "closeprogram")
-		$edit = GUICtrlCreateEdit("", 10, 10, 380, 180)
+		$edit = GUICtrlCreateEdit("", 10, 10, 430, 180)
 		GUISetState()
 	EndIf
 	If $varwindow < 1 Then
@@ -104,6 +109,7 @@ Func Controller()
 
 	; Get IP of client connecting
 	$szIP_Accepted = SocketToIP($ConnectedSocket)
+	GUICtrlSetData($edit, "Client connected to:"&$szIP_Accepted & @CRLF & GUICtrlRead($edit))
 	TCPSend($ConnectedSocket, "STEP\n")
 
 	; GUI Message Loop
@@ -151,20 +157,42 @@ Func sendcommand()
 
 EndFunc
 Func stepinto()
-	TCPSend($ConnectedSocket, "STEP\n")
+	If $ConnectedSocket <> -1 Then
+		TCPSend($ConnectedSocket, "STEP\n")
+	Else
+		noconnecterror()
+	EndIf	
 EndFunc
 Func stepover()
-	TCPSend($ConnectedSocket, "OVER\n")
+	If $ConnectedSocket <> -1 Then
+		TCPSend($ConnectedSocket, "OVER\n")
+	Else
+		noconnecterror()
+	EndIf	
 EndFunc
 Func steprun()
-	TCPSend($ConnectedSocket, "RUN\n")
+	If $ConnectedSocket <> -1 Then
+		TCPSend($ConnectedSocket, "RUN\n")
+	Else
+		noconnecterror()
+	EndIf	
 EndFunc
 Func breakpoint()
-	local $newbreakpoint = _GUICtrlListBox_GetCurSel($steppercode) + 1
-	local $message = "SETB " & $bufferfile & " " & $newbreakpoint
-	GUICtrlSetData($edit, _
-	$szIP_Accepted & " > " & $message & @CRLF & GUICtrlRead($edit))
-	TCPSend($ConnectedSocket, $message)
+	If $ConnectedSocket <> -1 Then
+		local $newbreakpoint = _GUICtrlListBox_GetCurSel($steppercode) + 1
+		local $message = "SETB " & $bufferfile & " " & $newbreakpoint
+		GUICtrlSetData($edit, _
+		$szIP_Accepted & " > " & $message & @CRLF & GUICtrlRead($edit))
+		TCPSend($ConnectedSocket, $message)
+	Else
+		noconnecterror()
+	EndIf	
+EndFunc
+Func noconnecterror()
+	GUICtrlSetData($edit, "No clients connected!"& @CRLF & "Please insert a ' require "&Chr(34)&"remdebug.engine"&Chr(34) _
+	&" ' line in your Lua routine"&@CRLF&"and add a ' remdebug.engine.start() ' line into" & _
+	" your code where you want to break first."&@CRLF& "The run your Lua application until it hits the break." & _
+	GUICtrlRead($edit))
 EndFunc
 Func closeprogram()
 	exit
