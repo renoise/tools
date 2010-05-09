@@ -454,15 +454,16 @@ class "ActionServer"
       -- handle index pages quickly
       local index_pages = table.create{"/index.html","/index.lua","/"}
       if index_pages:find(path) then
-          if path == "/" then path = index_pages[1] end
-          self:send_htdoc(socket, path)
+          if path == "/" then path = index_pages[1] end          
+            self:send_htdoc(socket, path)          
           return
       end
 
       if method ~= "HEAD" then
+        parameters = self:parse_post_string(body)
         if  #path > 0 and self:is_htdoc(path) then
           if method == "POST" then
-             parameters = self:parse_post_string(body)
+             -- parameters = self:parse_post_string(body)
           end
           self:send_htdoc(socket, path, nil, parameters)
           return
@@ -470,9 +471,14 @@ class "ActionServer"
           local action_name = string.sub(path:gsub('\/', ':'), 2)
           log:info ("Requested action:" .. action_name)
           local found = ActionTree:find_action(action_name)
-          if found then
+          if found then            
+             if parameters and parameters.ajax == "true" then               
+               log:info("Action requested by Ajax")
+               self:send_htdoc(socket, "/empty.txt")         
+               return
+             end
              self:set_header("Cache-Control", "private, max-age=0")
-             self:send_htdoc(socket, index_pages[1], nil, parameters)
+             self:send_htdoc(socket, index_pages[1], nil, parameters)          
              return
           end
         end
