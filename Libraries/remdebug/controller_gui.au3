@@ -30,8 +30,10 @@ Opt("GUIResizeMode", 1)
 	local $codeloaded, $file,$bufferfile, $location, $pauseline
 	dim $filecontents
 	local $forever = 1
+	local $fromsession = False
 Do
 	$codeloaded = 0
+	checkcommandarg()
 	Controller()
 	GUICtrlSetData($edit, "Client disconnected" & @CRLF & GUICtrlRead($edit))
 	MsgBox(0,"Program Termination", "Your lua program has ended")
@@ -110,7 +112,9 @@ Func Controller()
 	; Get IP of client connecting
 	$szIP_Accepted = SocketToIP($ConnectedSocket)
 	GUICtrlSetData($edit, "Client connected to:"&$szIP_Accepted & @CRLF & GUICtrlRead($edit))
-	TCPSend($ConnectedSocket, "STEP\n")
+;	if $fromsession <> True Then
+		TCPSend($ConnectedSocket, "STEP\n")
+	;EndIf
 
 	; GUI Message Loop
 	;==============================================
@@ -123,7 +127,12 @@ Func Controller()
 		; Try to receive (up to) 2048 bytes
 		;----------------------------------------------------------------
 		$recv = TCPRecv($ConnectedSocket, 2048)
-
+		if $fromsession == True Then
+			TCPSend($ConnectedSocket, "STEP\n")
+			$recv = TCPRecv($ConnectedSocket, 2048)
+			$recv = TCPRecv($ConnectedSocket, 2048)
+			$fromsession = False
+		EndIf
 		; If the receive failed with @error then the socket has disconnected
 		;----------------------------------------------------------------
 		If @error Then 
@@ -135,11 +144,13 @@ Func Controller()
 		;----------------------------------------------------------------
 		If $recv <> "" Then 
 			$location = StringInStr($recv, "202 paused", 0)
-			$file = StringMid($recv,$location+11)
-			processluasource()
-			if (Number($pauseline) > 0) & ($codeloaded == 1) then
-				_GUICtrlListBox_SetCurSel($steppercode, Number($pauseline)-1)
-			endif
+			If $location > 0 Then
+				$file = StringMid($recv,$location+11)
+				processluasource()
+				if (Number($pauseline) > 0) & ($codeloaded == 1) then
+					_GUICtrlListBox_SetCurSel($steppercode, Number($pauseline)-1)
+				endif
+			EndIf
 			GUICtrlSetData($edit, _
 				$szIP_Accepted & " > " & $recv & @CRLF & GUICtrlRead($edit))
 		EndIf
@@ -208,7 +219,8 @@ Func processluasource()
 		if $location > 0 Then
 			$file = StringMid($file,1,$tend)
 			If Not _FileReadToArray($file,$filecontents) Then
-				MsgBox(4096,"Error", " Error while reading file     error:" & @error)
+				local $message = "Error while reading file " & $file & @CRLF & "error:" & @error
+				GUICtrlSetData($edit, $message & @CRLF & GUICtrlRead($edit))
 				Return
 			Else
 				$bufferfile = $file
@@ -235,6 +247,13 @@ Func grabvariables()
 		$buffer = $linenum &"   " &$line ;& @CRLF
 ;		_GUICtrlListBox_AddString($steppercode, $buffer)								
 	Next	
+EndFunc
+Func checkcommandarg()
+	For $x = 1 To $CmdLine[0]
+		If $CmdLine[$x] == "--from-session" Then
+			$fromsession = True
+		EndIf
+	Next
 EndFunc
 ; Function to return IP Address from a connected socket.
 ;----------------------------------------------------------------------
