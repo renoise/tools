@@ -154,8 +154,8 @@ Func breakpoint()
 	local $breakpointfile = $array[UBound($array)-1]
 	$breakpointfile = $bufferfile
 	local $newbreakpoint = _GUICtrlListBox_GetCurSel($steppercode) + 1
-	local $message = "SETB|" & $breakpointfile & "|" & $newbreakpoint
-;	local $message = "SETB " & Chr(34)& $breakpointfile & Chr(34)& " " & $newbreakpoint
+;	local $message = "SETB|" & $breakpointfile & "|" & $newbreakpoint
+	local $message = "SETB " & $breakpointfile & " " & $newbreakpoint
 ;	local $message = "SETB " & $bufferfile &" " & String($newbreakpoint)
 	GUICtrlSetData($edit, _
 	$szIP_Accepted & " > " & $message & @CRLF & GUICtrlRead($edit))
