@@ -243,10 +243,10 @@ function Menu(caller, options){
 	};
 	
 	this.chooseItem = function(item){
-		menu.kill();
 		// edit this for your own custom function/callback:
 		options.callback(item)
 		// location.href = $(item).attr('href');
+		menu.kill();
 	};
 };
 
