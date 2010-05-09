@@ -66,7 +66,7 @@ Func Example()
 	If $stepperwindow < 1 Then
 		$stepperwindow = GUICreate("Code step Output frame", 600, 500,-1,-1,BitOR($WS_SYSMENU, $WS_CAPTION,$WS_MAXIMIZEBOX,$WS_MINIMIZEBOX,$WS_THICKFRAME))
 		$steppercode = GUICtrlCreateList("", 10, 10, 580, 450,BitOR($WS_BORDER, $WS_VSCROLL, $LBS_NOTIFY, $LBS_DISABLENOSCROLL, $WS_HSCROLL))
-		$lineinput = GUICtrlCreateLabel("Send direct command:", 10, 460, 280, 20)
+		$lineinput = GUICtrlCreateLabel("Send direct command:", 10, 460, 110, 20)
 		$lineinput = GUICtrlCreateInput("", 120, 460, 280, 20)
 		GUICtrlSetOnEvent(-1, "sendcommand")
 		local $button_step = GUICtrlCreateButton("Run", 120, 480, 94, 20)
@@ -75,7 +75,7 @@ Func Example()
 		GUICtrlSetOnEvent(-1, "stepinto")
 		local $button_step = GUICtrlCreateButton("Step over", 308, 480, 94, 20)
 		GUICtrlSetOnEvent(-1, "stepover")
-		local $button_step = GUICtrlCreateButton("Set Breakpoint on current line", 402, 480, 188, 20)
+		local $button_step = GUICtrlCreateButton("Set Breakpoint on selected line", 402, 480, 188, 20)
 		GUICtrlSetOnEvent(-1, "breakpoint")
 		GUISetState()
 	EndIf
@@ -150,13 +150,8 @@ Func steprun()
 	TCPSend($ConnectedSocket, "RUN\n")
 EndFunc
 Func breakpoint()
-	local $array = StringSplit($bufferfile, '/', 1)	
-	local $breakpointfile = $array[UBound($array)-1]
-	$breakpointfile = $bufferfile
 	local $newbreakpoint = _GUICtrlListBox_GetCurSel($steppercode) + 1
-;	local $message = "SETB|" & $breakpointfile & "|" & $newbreakpoint
-	local $message = "SETB " & $breakpointfile & " " & $newbreakpoint
-;	local $message = "SETB " & $bufferfile &" " & String($newbreakpoint)
+	local $message = "SETB " & $bufferfile & " " & $newbreakpoint
 	GUICtrlSetData($edit, _
 	$szIP_Accepted & " > " & $message & @CRLF & GUICtrlRead($edit))
 	TCPSend($ConnectedSocket, $message)
