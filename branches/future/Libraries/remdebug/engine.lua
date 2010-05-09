@@ -289,8 +289,8 @@ local function debugger_loop(server)
     
     if (command == "SETB") then
       local _, _, filename, line = 
-        command_line:find("^[A-Z]+%s+([%w%p]+)%s+(%d+)%s*$")
-      
+        command_line:find("^[A-Z]+%s+([%w%p%s]+)%s+(%d+)%s*$")
+            
       if (filename and line) then
         set_breakpoint(filename, tonumber(line))
         server:send("200 OK\n")
@@ -303,7 +303,7 @@ local function debugger_loop(server)
     
     elseif (command == "DELB") then
       local _, _, filename, line = 
-        command_line:find("^[A-Z]+%s+([%w%p]+)%s+(%d+)%s*$")
+        command_line:find("^[A-Z]+%s+([%w%p%s]+)%s+(%d+)%s*$")
       
       if (filename and line) then
         remove_breakpoint(filename, tonumber(line))
