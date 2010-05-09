@@ -14,8 +14,9 @@ Opt("GUIResizeMode", 1)
 ;SERVER!! Start Me First !!!!!!!!!!!!!!!
 ;==============================================
 ;==============================================
-	Local $szIPADDRESS = "127.0.0.1"
+	Local $szIPADDRESS = "0.0.0.0"
 	Local $nPORT = 8171
+	Local $inifile = "controller_gui.ini"
 	Local $MainSocket, $serverwindow, $stepperwindow, $steppercode, $edit, $ConnectedSocket, $szIP_Accepted
 	Local $msg, $recv, $lineinput,$varwindow, $varlist
 	local $codeloaded, $file,$bufferfile, $location, $pauseline
@@ -23,19 +24,24 @@ Opt("GUIResizeMode", 1)
 	local $forever = 1
 Do
 	$codeloaded = 0
-	Example()
+	Controller()
 	MsgBox(0,"Program Termination", "Your lua program has ended")
 
 Until $forever == 0
 
-Func Example()
+Func Controller()
 	; Set Some reusable info
 	; Set your Public IP address (@IPAddress1) here.
 ;	Local $szServerPC = @ComputerName
 ;	Local $szIPADDRESS = TCPNameToIP($szServerPC)
 ;	Local $szIPADDRESS = @IPAddress1
-
-
+	If FileExists($inifile) Then
+		$szIPADDRESS = IniRead($inifile, "server_config", "ip-address", $szIPADDRESS)
+		$nPORT = IniRead($inifile, "server_config", "port", $nPORT)
+	Else
+		IniWrite($inifile, "server_config", "ip-address", $szIPADDRESS)
+		IniWrite($inifile, "server_config", "port", $nPORT)
+	EndIf
 	; Start The TCP Services
 	;==============================================
 	TCPStartup()
@@ -52,7 +58,11 @@ Func Example()
 	; Create a GUI for messages
 	;==============================================
 	If $serverwindow < 1 Then
-		$serverwindow = GUICreate("Lua Debug server (IP: " & $szIPADDRESS & ")", 400, 200,10,10,BitOR($WS_SYSMENU, $WS_CAPTION,$WS_MAXIMIZEBOX,$WS_MINIMIZEBOX,$WS_THICKFRAME))
+		local $inADDR = "ANY"
+		If $szIPADDRESS <> "0.0.0.0" Then
+			$inADDR = $szIPADDRESS
+		EndIf
+		$serverwindow = GUICreate("Lua Debug server (IP: " & $inADDR & " / port:" &$nPORT& ")", 400, 200,10,10,BitOR($WS_SYSMENU, $WS_CAPTION,$WS_MAXIMIZEBOX,$WS_MINIMIZEBOX,$WS_THICKFRAME))
 		GUISetOnEvent($GUI_EVENT_CLOSE, "closeprogram")
 		$edit = GUICtrlCreateEdit("", 10, 10, 380, 180)
 		GUISetState()
