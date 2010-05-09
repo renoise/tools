@@ -128,8 +128,9 @@ end
 
 function Util:html_entity_decode(str)
   local a,b = str:gsub("%%20", " ")
+   a,b = a:gsub("%+", " ")  
   a,b = a:gsub("%%5B", "[")
-  a,b = a:gsub("%%5D", "]")  
+  a,b = a:gsub("%%5D", "]")
   return a
 end
 
@@ -177,43 +178,122 @@ function Util:parse_config_file(filename)
    return t
 end
 
+
 -------------------------------------------
--- Classes
+--  Renoise Actions Tree
+-------------------------------------------
+
+class 'ActionTree'
+
+   ActionTree.message = {
+       boolean_value = nil,
+       int_value = nil,
+
+       value_min_scaling = 0.0,
+       value_max_scaling = 1.0,
+
+       is_trigger = function() return true end,
+       is_switch = function() return false end,
+       is_rel_value = function() return false end,
+       is_abs_value = function() return false end
+   }   
+
+   function ActionTree:find_action(action_name)
+       if table.find(ActionTree.action_names, action_name) then
+         log:info("Invoking: " .. action_name)
+         invoke_action(action_name, ActionTree.message)
+         return true
+       else
+         log:warn("Action not found: " .. action_name)
+       end
+       return false
+     end
+
+   function ActionTree:get_action_tree()
+    ActionTree.action_names = available_actions()    
+    local trees = table.create()
+    
+    local function add(t, v, is_last)        
+        if is_last then
+            table.insert(t,v)
+            return
+        elseif not t[v] then             
+            t[v] = {}                           
+        end        
+        return t[v]
+    end   
+    
+    local t,splits = {}
+    local s = 0
+    for _,name in ipairs(ActionTree.action_names) do
+        splits = Util:split(name,":")        
+        t = trees        
+        s = #splits
+        for l,v in ipairs(splits) do                          
+             t = add(t, v, s-l==0)            
+        end                
+    end
+    return trees    
+   end
+
+   -- Converts the complete tree or a subtree into a HTML list structure
+   -- @param t       table representing the action tree or subtree
+   -- @param depth   specifies the amount of nesting
+   -- @return string containing a nested HTML list
+   function ActionTree:to_html_list(t, depth)
+       t = t or {}
+       local list = "<ul>"
+       for k,v in pairs(t) do
+          if type(v) ~= "table" then
+             list = list .. "<li><a href='#'>"..v.."</a></li>"
+          else
+            list = list .. "<li><a href='#'>" .. k .. "</a>"
+            if depth and depth > 1 then
+                list = list .. ActionTree:to_html_list(v, depth-1)
+            end
+            list = list .. "</li>"
+          end
+       end
+       return list .. "</ul>"
+   end
+
+   -- Returns a portion of the tree
+   -- Example: get_subtree("Transport", "Playback")
+   -- @param ...  vararg representing the path to the subtree
+   -- @return table containing the subtree
+   function ActionTree:get_subtree(...)      
+      local path = {...}       
+      local t = ActionTree.action_tree      
+      for _,v in ipairs(path) do
+         t = t[v]
+      end
+      return t
+   end
+
+   ActionTree.action_tree = ActionTree:get_action_tree() 
+
+-------------------------------------------
+-- ActionServer
 -------------------------------------------
 
 class "ActionServer"
 
   ActionServer.document_root = root .. "html"
-  
-  local message = {
-    boolean_value = nil,
-    int_value = nil,
-
-    value_min_scaling = 0.0,
-    value_max_scaling = 1.0,
-
-    is_trigger = function() return true end,
-    is_switch = function() return false end,
-    is_rel_value = function() return false end,
-    is_abs_value = function() return false end
-  }
 
   function ActionServer:__init(address,port)
-   self:index_action_names()
+      -- create a server socket
+      local server, socket_error =
+        renoise.Socket.create_server(address, port)
 
-   -- create a server socket
-   local server, socket_error =
-     renoise.Socket.create_server(address, port)
-
-   if socket_error then
-     renoise.app():show_warning(
-       "Failed to start the echo server: " .. socket_error)
-   else
-     -- start running
-     self.server = server
-     self.server:run(self)
-     log:info("Server running at " .. self:get_address())
-   end
+      if socket_error then
+        renoise.app():show_warning(
+          "Failed to start the echo server: " .. socket_error)
+      else
+        -- start running
+        self.server = server
+        self.server:run(self)
+        log:info("Server running at " .. self:get_address())
+      end
   end
 
   function ActionServer:socket_error(socket_error)
@@ -232,31 +312,26 @@ class "ActionServer"
     log:info("Socket accepted")
   end
 
-  function ActionServer:find_action(action_name)
-    if table.find(ActionServer.action_names, action_name) then
-      log:info("Invoking: " .. action_name)
-      invoke_action(action_name, message)
-      return true
-    else
-      log:warn("Action not found: " .. action_name)
-    end
-    return false
-  end
-
-  function ActionServer:index_action_names()
-    ActionServer.action_names = available_actions()
-  end
-  
-  function ActionServer:get_action_names()
-   return ActionServer.action_names
-  end
+   function ActionServer:get_action_names()
+      return Action.action_names
+   end 
 
   function ActionServer:parse_post_string(body)
     if #Util:trim(body) == 0 then return {} end
      local p = {}
+     local key, val = nil
      for k,v in body:gmatch("([^=&]+)=([^=&]+)") do
-       p[Util:trim(k)] = Util:trim(v)
-     end
+       key = Util:html_entity_decode(Util:trim(k))
+       val = Util:html_entity_decode(Util:trim(v))                    
+       if key:match("%[%]$") then
+         if p[key] == nil then
+            p[key] = table.create()
+         end
+         p[key]:insert(val)
+       else
+         p[key] = val       
+       end
+     end     
      return p
   end
 
@@ -310,7 +385,7 @@ class "ActionServer"
 
      if self:is_expandable(path) then
        self:set_header("Cache-Control", "private, max-age=0")
-       page = expand(template, {L=self, renoise=renoise, P=parameters, Util=Util}, _G)
+       page = expand(template, {L=self, renoise=renoise, P=parameters, Util=Util, ActionTree=ActionTree}, _G)
      else
        self:set_header("Cache-Control", "private, max-age=3600")
        page = template
@@ -394,7 +469,7 @@ class "ActionServer"
         else
           local action_name = string.sub(path:gsub('\/', ':'), 2)
           log:info ("Requested action:" .. action_name)
-          local found = self:find_action(action_name)
+          local found = ActionTree:find_action(action_name)
           if found then
              self:set_header("Cache-Control", "private, max-age=0")
              self:send_htdoc(socket, index_pages[1], nil, parameters)
