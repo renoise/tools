@@ -6,6 +6,12 @@
 
 local socket = require"socket"
 
+local from_session = false
+
+if (#arg > 0 and arg[1] == "--from-session") then
+  from_session = true
+end
+
 
 -------------------------------------------------------------------------------
 -- clear_screen
@@ -102,6 +108,13 @@ client:receive()
 
 local breakpoint = client:receive()
 
+if (from_session) then
+  -- step out of the session.start call...
+  client:send("STEP\n")
+  client:receive()
+  breakpoint = client:receive()
+end
+  
 local _, _, filename, line = 
   breakpoint:find("^202 Paused%s+([%w%p%s]+)%s+(%d+)$")
 
