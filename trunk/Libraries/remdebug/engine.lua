@@ -30,6 +30,7 @@ local stack_level = 0
 
 local controller_host = "localhost"
 local controller_port = 8171
+--local controller_port = 22587
 
 
 -------------------------------------------------------------------------------
@@ -138,8 +139,8 @@ local function restore_vars(vars)
   end
   
   -- disable sctrict mode here, when enabled
-  local _strict = _G._STRICT
-  _G._STRICT = false
+  local _strict = _G.__STRICT
+  _G.__STRICT = false
     
   local func = debug.getinfo(3, "f").func
   local i = 1
@@ -170,7 +171,7 @@ local function restore_vars(vars)
     i = i + 1
   end
   
-  _G._STRICT = _strict
+  _G.__STRICT = _strict
 end
 
 
@@ -178,8 +179,8 @@ end
 
 local function capture_vars()
   -- disable sctrict mode here, when enabled
-  local _strict = _G._STRICT
-  _G._STRICT = false
+  local _strict = _G.__STRICT
+  _G.__STRICT = false
   
   
   local vars = {}
@@ -210,7 +211,7 @@ local function capture_vars()
     __newindex = getfenv(func) 
   })
   
-  _G._STRICT = _strict
+  _G.__STRICT = _strict
   
   return vars
 end
@@ -288,9 +289,10 @@ local function debugger_loop(server)
     -- setb
     
     if (command == "SETB") then
+        server:send("received:"..command_line.."\r\n")
       local _, _, filename, line = 
-        command_line:find("^[A-Z]+%s+([%w%p]+)%s+(%d+)%s*$")
-      
+        command_line:find("^[A-Z]+%s+([%w%p%s]+)%s+(%d+)%s*$")
+            
       if (filename and line) then
         set_breakpoint(filename, tonumber(line))
         server:send("200 OK\n")
@@ -303,7 +305,7 @@ local function debugger_loop(server)
     
     elseif (command == "DELB") then
       local _, _, filename, line = 
-        command_line:find("^[A-Z]+%s+([%w%p]+)%s+(%d+)%s*$")
+        command_line:find("^[A-Z]+%s+([%w%p%s]+)%s+(%d+)%s*$")
       
       if (filename and line) then
         remove_breakpoint(filename, tonumber(line))
