@@ -35,9 +35,19 @@ function start(command, controller_name)
   for _,path in pairs(package_paths) do
     local remdebug_controller = path:gsub("?.lua", "") .. 
       "/remdebug/" .. controller_name
-    
+
+    -- start the stand-alone controller (no interpreter) 
+    if controller_name == "" then
+      if (os.platform() == "WINDOWS") then
+        os.execute(('start %s --from-session'):format(command))
+      else
+        os.execute(('%s --from-session &'):format(command))
+      end
+      found_controller = true
+    end
+
     -- start the controller 
-    if io.open(remdebug_controller) then
+    if (io.open(remdebug_controller)) and (found_controller == false) then
       if (os.platform() == "WINDOWS") then
         os.execute(('start %s "%s" --from-session'):format(command, remdebug_controller))
       else
