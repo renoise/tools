@@ -180,7 +180,8 @@ while true do
   end
   
   local _, _, command = commandline:find("^([a-z]+)")
-  local _, _, command_arg = commandline:find("^[a-z]+%s+(.+)$")
+  local _, _, command_args = commandline:find("^[a-z]+(.+)$")
+  local _, _, separarated_command_args = commandline:find("^[a-z]+%s+(.+)$")
     
   if (command) then
     command = string.lower(command)
@@ -190,9 +191,10 @@ while true do
   
   -- run, step, over
   
-  if (command == "run" or 
-      command == "step" or 
-      command == "over") 
+  if ((command == "run" or 
+       command == "step" or 
+       command == "over") 
+      and not command_args)
   then
     client:send(string.upper(command) .. "\n")
     client:receive("*l")
@@ -269,14 +271,14 @@ while true do
     
   -- exit
   
-  elseif (command == "exit") then
+  elseif (command == "exit" and not commandarg) then
     client:close()
     os.exit()
   
   
   -- setb
   
-  elseif (command == "setb") then
+  elseif (command == "setb" and commandarg) then
     local _, _, filename, line = 
       commandline:find("^[a-z]+%s+([%w%p%s]+)%s+(%d+)$")
     
@@ -308,7 +310,7 @@ while true do
   
   -- setw
   
-  elseif (command == "setw") then
+  elseif (command == "setw" and commandarg) then
     local _, _, exp = commandline:find("^[a-z]+%s+(.+)$")
     
     if exp then
@@ -331,7 +333,7 @@ while true do
   
   -- delb
   
-  elseif (command == "delb") then
+  elseif (command == "delb" and commandarg) then
     local _, _, filename, line = 
       commandline:find("^[a-z]+%s+([%w%p%s]+)%s+(%d+)$")
     
@@ -361,7 +363,7 @@ while true do
   
   -- delballb
   
-  elseif (command == "delallb") then
+  elseif (command == "delallb" and not commandarg) then
     
     for filename, breaks in pairs(breakpoints) do
       for line, _ in pairs(breaks) do
@@ -379,7 +381,7 @@ while true do
   
   -- delw
   
-  elseif (command == "delw") then
+  elseif (command == "delw" and commandarg) then
     local _, _, index = commandline:find("^[a-z]+%s+(%d+)$")
     
     if (index) then
@@ -399,7 +401,7 @@ while true do
   
   -- delallw
   
-  elseif (command == "delallw") then
+  elseif (command == "delallw" and not commandarg) then
     
     for index, exp in pairs(watches) do
       client:send("DELW " .. index .. "\n")
@@ -415,7 +417,7 @@ while true do
   
   -- eval
   
-  elseif (command == "eval" and command_arg) then
+  elseif (command == "eval" and separarated_command_args) then
     local _, _, exp = commandline:find("^[a-z]+%s+(.+)$")
     
     if (exp) then 
@@ -445,7 +447,7 @@ while true do
   
   -- exec
   
-  elseif (command == "exec" and command_arg) then
+  elseif (command == "exec" and separarated_command_args) then
     local _, _, exp = commandline:find("^[a-z]+%s+(.+)$")
     
     if (exp) then 
@@ -476,7 +478,7 @@ while true do
   
   -- listb
   
-  elseif (command == "listb") then
+  elseif (command == "listb" and not commandarg) then
     for k, v in pairs(breakpoints) do
       io.write(k .. ": ")
       for k, v in pairs(v) do
@@ -488,7 +490,7 @@ while true do
 
   -- listw
     
-  elseif (command == "listw") then
+  elseif (command == "listw" and not commandarg) then
     for i, v in pairs(watches) do
       print("Watch exp. " .. i .. ": " .. v)
     end    
