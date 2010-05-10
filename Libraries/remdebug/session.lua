@@ -6,12 +6,33 @@
 
 module("remdebug.session", package.seeall)
 
+require "remdebug.engine"
+
 _COPYRIGHT = "2010 - Renoise.com"
 _DESCRIPTION = "Remote Debugger for Renoise Lua " ..
   "scripts, based on the Kepler Project remdebug"
 _VERSION = "1.0"
 
-require "remdebug.engine"
+local controller_host = "localhost"
+local controller_port = 8171
+
+
+-------------------------------------------------------------------------------
+-- remdebug.session.config(tab)
+-- Configures the engine and controller
+-------------------------------------------------------------------------------
+
+function config(t)
+  _assert(type(t) == "table")
+  
+  if t.host then
+    controller_host = t.host
+  end
+  
+  if t.port then
+    controller_port = t.port
+  end
+end
 
 
 -------------------------------------------------------------------------------
@@ -54,19 +75,52 @@ function start(command, controller_name)
         if (os.platform() == "WINDOWS") then
           os.execute(('start %s "%s" --from-session'):format(
             command, abs_controller_path))
+        
+        elseif (os.platform() == "MACINTOSH") then
+          
+          local tmp_command = ('%s "%s" --from-session || ' .. 
+            '(echo; echo "** Failed to lauch the controller. ' ..
+            'Please make sure that Lua for Max OSX is installed.")'):format(
+            command, abs_controller_path)
+            
+          local tmp_filename = os.tmpname() .. ".command"
+          local tmp_file = io.open(tmp_filename, "w")
+          
+          tmp_file:write(tmp_command)
+          tmp_file:close()
+          
+          os.execute(('chmod +x "%s" && open --new "%s"'):format(
+            tmp_filename, tmp_filename))
+          
+        elseif (os.platform() == "LINUX") then
+          local exec_line = 
+            ('$TERMINAL$ -e "%s "%s" --from-session"'):format(
+             command, abs_controller_path)
+            
+          local exec_command = 
+            "(" .. exec_line:gsub("$TERMINAL$", "$COLORTERM") .. ")".. "\n || " ..
+            "(" .. exec_line:gsub("$TERMINAL$", "$TERM") .. ")".. "\n || " ..
+            "(" .. exec_line:gsub("$TERMINAL$", "xterm") .. ")"
+            
+          os.execute(exec_command)
+          
         else
-          os.execute(('%s "%s" --from-session &'):format(
-            command, abs_controller_path))
+          error(("unexpected platform '%s'"):format(
+            os.platform()))
         end
+        
         found_controller = true
         break
       end  
     end
   end
   
-  -- and start debugging
+  
   if (found_controller) then
+    -- and start debugging
+    remdebug.engine.config { host=controller_host, port=controller_port }
     remdebug.engine.start()
+    
   else
     error(("remdebug/%s could not be found in the package.path. " ..
       "Please make sure remdebug is installed correctly."):format(controller_name))
