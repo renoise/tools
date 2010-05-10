@@ -94,13 +94,13 @@ function start(command, controller_name)
           
         elseif (os.platform() == "LINUX") then
           local exec_line = 
-            ('$TERMINAL$ -e "%s "%s" --from-session"'):format(
+            ('%%TERMINAL%% -e "%s "%s" --from-session"'):format(
              command, abs_controller_path)
             
           local exec_command = 
-            "(" .. exec_line:gsub("$TERMINAL$", "$COLORTERM") .. ")".. "\n || " ..
-            "(" .. exec_line:gsub("$TERMINAL$", "$TERM") .. ")".. "\n || " ..
-            "(" .. exec_line:gsub("$TERMINAL$", "xterm") .. ")"
+            "(" .. exec_line:gsub("%%TERMINAL%%", "$COLORTERM") .. ") || \n" ..
+            "(" .. exec_line:gsub("%%TERMINAL%%", "$TERM") .. ") || \n" ..
+            "(" .. exec_line:gsub("%%TERMINAL%%", "xterm") .. ")"
             
           os.execute(exec_command)
           
