@@ -7,10 +7,32 @@
 local socket = require"socket"
 
 local from_session = false
-
 if (#arg > 0 and arg[1] == "--from-session") then
   from_session = true
 end
+
+local server = nil
+local client = nil
+
+local breakpoints = {}
+local watches = {}
+
+local last_commandline = ""
+
+local basedir = ""
+local basefile = ""
+
+local command_shortcuts = {
+  ["b"] = "setb", ["db"] = "delb", ["dab"] = "delallb",
+  ["w"] = "setw", ["dw"] = "delw", ["daw"] = "delallw",
+  ["c"] = "run", ["r"] = "run",
+  ["s"] = "step", ["i"] = "step",
+  ["n"] = "over", ["o"] = "over",
+  ["lb"] = "listb", ["lw"] = "listw", ["lb"] = "listb",
+  ["print"] = "eval", ["p"] = "eval",
+  ["e"] = "exec",
+  ["q"] = "exit"
+}
 
 
 -------------------------------------------------------------------------------
@@ -86,74 +108,62 @@ end
 
 
 -------------------------------------------------------------------------------
--- main
+-- connect
 
 clear_screen()
 print("Run the program you wish to debug with 'remdebug.engine.start()' now")
 
+server = socket.bind("*", 8171)
+client = server:accept()
 
--- connect
-
-local breakpoints = {}
-local watches = {}
-
-local basedir = ""
-local basefile = ""
-
-local server = socket.bind("*", 8171)
-local client = server:accept()
-
-client:send("STEP\n")
-client:receive()
-
-local breakpoint = client:receive()
-
-if (from_session) then
-  -- step out of the session.start call...
+do
   client:send("STEP\n")
-  client:receive()
-  breakpoint = client:receive()
-end
+  client:receive("*l")
   
-local _, _, filename, line = 
-  breakpoint:find("^202 Paused%s+([%w%p%s]+)%s+(%d+)$")
-
-if (filename and line) then
-  basefile = filename
+  local breakpoint = client:receive("*l")
   
-  if filename:reverse():find("[/\\]+") then
-    basedir = filename:sub(1, -filename:reverse():find("[/\\]+"))
+  -- step out of the session.start call...
+  if (from_session) then
+    client:send("STEP\n")
+    client:receive("*l")
+    breakpoint = client:receive("*l")
   end
+    
+  local _, _, filename, line = 
+    breakpoint:find("^202 Paused%s+([%w%p%s]+)%s+(%d+)$")
   
-  show_file(filename, line)
-  print("Base directory is " .. basedir)
-  print("Type 'help' for commands")
-  
-else
-  local _, _, size = 
-    breakpoint:find("^401 Error in Execution (%d+)$")
-  
-  if size then
-    print("Error in remote application: ")
-    print(client:receive(size))
+  if (filename and line) then
+    basefile = filename
+    
+    if filename:reverse():find("[/\\]+") then
+      basedir = filename:sub(1, -filename:reverse():find("[/\\]+"))
+    end
+    
+    show_file(filename, line)
+    
+    if (basedir and basedir ~= "") then
+      print("Base directory is " .. basedir)
+    end 
+    
+    print("Type 'n' to step over, 's' to step into, 'help' for more commands.")
+    print("Any other expressions like 'print(my_var)' will be evaluated in " ..
+      "the debugged programm...")
+    print("")
+    
+  else
+    local _, _, size = breakpoint:find(
+      "^401 Error in Execution (%d+)$")
+    
+    if (size) then
+      print("Error in remote application: ")
+      print(client:receive(size))
+      error("error in execution")
+    end
   end
 end
 
-local last_commandline = ""
 
-local command_shortcuts = {
-  ["b"] = "setb", ["db"] = "delb", ["dab"] = "delallb",
-  ["w"] = "setw", ["dw"] = "delw", ["daw"] = "delallw",
-  ["c"] = "run", ["r"] = "run",
-  ["s"] = "step", ["i"] = "step",
-  ["n"] = "over", ["o"] = "over",
-  ["lb"] = "listb", ["lw"] = "listw", ["lb"] = "listb",
-  ["print"] = "eval", ["p"] = "eval",
-  ["e"] = "exec",
-  ["q"] = "exit"
-}
-
-
+-------------------------------------------------------------------------------
 -- command loop
 
 while true do
@@ -163,14 +173,15 @@ while true do
   io.write("> ")
   local commandline = io.read("*line")
   
-  if commandline == "" then 
+  if (commandline == "") then 
     commandline = last_commandline 
   else
     last_commandline = commandline
   end
   
   local _, _, command = commandline:find("^([a-z]+)")
-  
+  local _, _, command_arg = commandline:find("^[a-z]+%s+(.+)$")
+    
   if (command) then
     command = string.lower(command)
     command = command_shortcuts[command] or command
@@ -179,18 +190,24 @@ while true do
   
   -- run, step, over
   
-  if (command == "run" or command == "step" or command == "over") then
+  if (command == "run" or 
+      command == "step" or 
+      command == "over") 
+  then
     client:send(string.upper(command) .. "\n")
-    client:receive()
+    client:receive("*l")
     
-    local breakpoint = client:receive()
+    -- query current file and line position
+    local breakpoint = client:receive("*l")
+    
     if (not breakpoint) then
       print("Program finished")
       os.exit()
     end
     
     local _, _, status = breakpoint:find("^(%d+)")
-    
+    local break_succeeded = false
+        
     if (status == "202") then
       local _, _, file, line = 
         breakpoint:find("^202 Paused%s+([%w%p%s]+)%s+(%d+)$")
@@ -199,34 +216,57 @@ while true do
         basefile = file
         show_file(file, line)
       end
-    
+      break_succeeded = true
+          
     elseif (status == "203") then
       local _, _, file, line, watch_idx = 
         breakpoint:find("^203 Paused%s+([%w%p%s]+)%s+(%d+)%s+(%d+)$")
       
-      if (file and line) and watch_idx then
+      if (file and line and watch_idx) then
         basefile = file       
         watch_idx = tonumber(watch_idx) 
-        show_file(file, line, 
-          (" (watch expression %d: [%s])"):format(watch_idx, watches[watch_idx] or ""))
+        
+        show_file(file, line, (" (watch expression %d: [%s])"):format(
+          watch_idx, watches[watch_idx] or ""))
       end
-    
+      break_succeeded = true
+      
     elseif (status == "401") then 
       local _, _, size = 
         breakpoint:find("^401 Error in Execution (%d+)$")
       
-      if size then
+      if (size) then
         print("Error in remote application: ")
         print(client:receive(tonumber(size)))
         os.exit()
       end
-    
+
     else
       print("Unknown error")
       os.exit()
     end
   
-  
+    -- query std out from prints
+    if (break_succeeded) then
+      client:send("STDOUT\n")
+      
+      local line = client:receive("*l")
+      local _, _, status, len = line:find("^(%d+)[a-zA-Z ]+(%d+)$")
+             
+      if (status == "200") then
+        if (tonumber(len) > 0) then
+          local res = client:receive(tonumber(len))
+          print(res)
+        end
+      
+      else
+        status = status or "nil"
+        print("Unknown stdout error (" .. status .. ")")
+      end
+
+    end
+    
+    
   -- exit
   
   elseif (command == "exit") then
@@ -243,6 +283,7 @@ while true do
     if (not filename and not line) then 
       _, _, line = commandline:find("^[a-z]+%s+(%d+)$")
       filename = basefile   
+    
     else
       filename = basedir .. filename
     end
@@ -253,11 +294,13 @@ while true do
       end
 
       client:send("SETB " .. filename .. " " .. line .. "\n")
-      if (client:receive() == "200 OK") then 
+      
+      if (client:receive("*l") == "200 OK") then 
         breakpoints[filename][line] = true
       else
         print("Error: breakpoint not inserted")
       end
+    
     else
       print("Invalid command")
     end
@@ -266,19 +309,21 @@ while true do
   -- setw
   
   elseif (command == "setw") then
-    local _, _, exp = 
-      commandline:find("^[a-z]+%s+(.+)$")
+    local _, _, exp = commandline:find("^[a-z]+%s+(.+)$")
     
     if exp then
       client:send("SETW " .. exp .. "\n")
-      local answer = client:receive()
+      
+      local answer = client:receive("*l")
       local _, _, watch_idx = answer:find("^200 OK (%d+)$")
-      if watch_idx then
+      
+      if (watch_idx) then
         watches[watch_idx] = exp
         print("Inserted watch exp no. " .. watch_idx)
       else
         print("Error: Watch expression not inserted")
       end
+    
     else
       print("Invalid command")
     end
@@ -303,11 +348,12 @@ while true do
       end
       
       client:send("DELB " .. filename .. " " .. line .. "\n")
-      if client:receive() == "200 OK" then 
+      if (client:receive("*l") == "200 OK") then 
         breakpoints[filename][line] = nil
       else
         print("Error: breakpoint not removed")
       end
+    
     else
       print("Invalid command")
     end
@@ -316,13 +362,16 @@ while true do
   -- delballb
   
   elseif (command == "delallb") then
+    
     for filename, breaks in pairs(breakpoints) do
       for line, _ in pairs(breaks) do
         client:send("DELB " .. filename .. " " .. line .. "\n")
-        if client:receive() == "200 OK" then 
+        
+        if (client:receive("*l") == "200 OK") then 
           breakpoints[filename][line] = nil
         else
-          print(("Error: no breakpoint at file '%s' line %d"):format(filename, line))
+          print(("Error: no breakpoint at file '%s' line %d"):format(
+            filename, line))
         end
       end
     end
@@ -331,16 +380,18 @@ while true do
   -- delw
   
   elseif (command == "delw") then
-    local _, _, index = 
-      commandline:find("^[a-z]+%s+(%d+)$")
+    local _, _, index = commandline:find("^[a-z]+%s+(%d+)$")
     
-    if index then
+    if (index) then
       client:send("DELW " .. index .. "\n")
-      if client:receive() == "200 OK" then 
-      watches[index] = nil
+      
+      if (client:receive("*l") == "200 OK") then 
+        watches[index] = nil
+      
       else
         print("Error: watch expression not removed")
       end
+    
     else
       print("Invalid command")
     end
@@ -349,40 +400,44 @@ while true do
   -- delallw
   
   elseif (command == "delallw") then
+    
     for index, exp in pairs(watches) do
       client:send("DELW " .. index .. "\n")
-      if client:receive() == "200 OK" then 
-      watches[index] = nil
+      
+      if (client:receive("*l") == "200 OK") then 
+        watches[index] = nil
       else
-        print(("Error: no watch expression at index %d [%s]"):format(index, exp))
+        print(("Error: no watch expression at " .. 
+          "index %d [%s]"):format(index, exp))
       end
     end    
   
   
   -- eval
   
-  elseif (command == "eval") then
-    local _, _, exp = 
-      commandline:find("^[a-z]+%s+(.+)$")
+  elseif (command == "eval" and command_arg) then
+    local _, _, exp = commandline:find("^[a-z]+%s+(.+)$")
     
-    if exp then 
+    if (exp) then 
       client:send("EXEC return (" .. exp .. ")\n")
 
-      local line = client:receive()
+      local line = client:receive("*l")
       local _, _, status, len = line:find("^(%d+)[a-zA-Z ]+(%d+)$")
              
       if (status == "200") then
-        len = tonumber(len)
-        local res = client:receive(len)
+        local res = client:receive(tonumber(len))
         print(res)
+      
       elseif (status == "401") then
         local res = client:receive(tonumber(len))
         print("Error in expression:")
         print(res)
+      
       else
         status = status or "nil"
         print("Unknown eval error (" .. status .. ")")
       end
+    
     else
       print("Invalid eval command")
     end
@@ -390,27 +445,30 @@ while true do
   
   -- exec
   
-  elseif (command == "exec") then
+  elseif (command == "exec" and command_arg) then
     local _, _, exp = commandline:find("^[a-z]+%s+(.+)$")
     
-    if exp then 
+    if (exp) then 
       client:send("EXEC " .. exp .. "\n")
-      local line = client:receive()
-      local _, _, status, len = line:find("^(%d+)[%s%w]+(%d+)$")
+      local line = client:receive("*l")
+      local _, _, status, len = line:find("^(%d+)[a-zA-Z ]+(%d+)$")
       
       if (status == "200") then
         local res = client:receive(tonumber(len))
         if (res and res ~= "nil") then
           print(res)
         end
+      
       elseif (status == "401") then
-        local res = client:receive( tonumber(len))
+        local res = client:receive(tonumber(len))
         print("Error in expression:")
         print(res)
+      
       else
         status = status or "nil"
         print("Unknown exec error (" .. status .. ")")
       end
+    
     else
       print("Invalid expression")
     end
@@ -440,12 +498,14 @@ while true do
   
   elseif (command == "basedir") then
     local _, _, dir = commandline:find("^[a-z]+%s+(.+)$")
-    if dir then
+    
+    if (dir) then
       if not dir:find("/$") then 
         dir = dir .. "/"
       end
       basedir = dir
       print("New base directory is " .. basedir)
+    
     else
       print(basedir)
     end
@@ -473,16 +533,40 @@ basedir [<path>] -- sets the base path of the remote application, or shows the c
 exit, q -- exits debugger
 ]])
   
-  else
-    local _, _, spaces = 
-      commandline:find("^(%s*)$")
+  
+  -- evaluate an expression by default
     
-    if not spaces then
-      print("Invalid command")
+  else
+    local _, _, only_spaces = commandline:find("^(%s*)$")
+    
+    if (not only_spaces) then
+      client:send("EXEC " .. commandline .. "\n")
+      
+      local line = client:receive("*l")
+      local _, _, status, len = line:find("^(%d+)[a-zA-Z ]+(%d+)$")
+      
+      if (status == "200") then
+        local res = client:receive(tonumber(len))
+        if (res and res ~= "nil") then
+          print(res)
+        end
+      
+      elseif (status == "401") then
+        local res = client:receive(tonumber(len))
+        print("Error in expression:")
+        print(res)
+        
+      else
+        status = status or "nil"
+        print("Unknown exec error (" .. status .. ")")
+      end
+
     end
   end
+
 end
 
 
 --[[---------------------------------------------------------------------------
 ---------------------------------------------------------------------------]]--
+
