@@ -10,11 +10,14 @@ module("remdebug.engine", package.seeall)
 
 _COPYRIGHT = "2006 - Kepler Project, 2010 - Renoise.com"
 _DESCRIPTION = "Remote Debugger for Renoise Lua " ..
-  "scripts, based on the Kepler Projects remdebug"
+  "scripts, based on the Kepler Project remdebug"
 _VERSION = "1.0"
 
-local _assert = assert
+local _assert = _G.assert
+local _print = _G.print
     
+local stdout
+
 local coro_debugger
 local debug_server
 
@@ -76,18 +79,22 @@ end
 -- has_breakpoint
 
 local function has_breakpoint(file, line)
-  _assert(type(file) == 'string' and 
-    type(line) == 'number')
-  
-  local file_key
-  if (os.platform() == 'WINDOWS') then
-    file_key = file:lower()
+  if (file and line) then
+    _assert(type(file) == 'string' and 
+      type(line) == 'number')
+    
+    local file_key
+    if (os.platform() == 'WINDOWS') then
+      file_key = file:lower()
+    else
+      file_key = file
+    end
+    
+    return breakpoints[file_key] and 
+      breakpoints[file_key][line]
   else
-    file_key = file
+    return false
   end
-  
-  return breakpoints[file_key] and 
-    breakpoints[file_key][line]
 end
 
 
@@ -104,6 +111,19 @@ local function break_dir(path)
   end
   
   return paths
+end
+
+
+--  file_exists
+
+local function file_exists(filename)
+  local file = io.open(filename)
+  if (file ~= nil) then
+    file:close()
+    return true
+  else
+    return false
+  end
 end
 
 
@@ -233,7 +253,11 @@ local function debug_hook(event, line)
     if (file:find("@") == 1) then
 
       file = string.sub(file, 2)
-      file = merge_paths(os.currentdir(), file)
+      
+      if (not file_exists(file)) then
+        -- use an abs paths for file, if possible and necessary 
+        file = merge_paths(os.currentdir(), file)
+      end
      
       local vars = capture_vars()
         
@@ -322,16 +346,30 @@ local function debugger_loop(server)
       if chunk then
         local func = loadstring(chunk)
         local status, res
+        
         if func then
           setfenv(func, eval_env)
           status, res = xpcall(func, debug.traceback)
         end
+        
         res = tostring(res)
-        if status then
+        
+        -- also pass pending std out from print
+        if (stdout and stdout ~= "") then
+          if (res == "nil") then
+            res = stdout                      
+          else
+            res = res .. stdout
+          end
+          stdout = nil
+        end
+        
+        if (status) then
           server:send(("200 OK %d\n"):format(string.len(res)))
           server:send(res)
         else
-          server:send(("401 Error in Execution %d\n"):format(string.len(res)))
+          server:send(("401 Error in Execution %d\n"):format(
+            string.len(res)))
           server:send(res)
         end
       else
@@ -416,9 +454,20 @@ local function debugger_loop(server)
         server:send(file)
       end
    
+   
+    -- stdout
+    
+    elseif (command == "STDOUT") then
+      local res = stdout or ""
+      stdout = nil
+      
+      server:send(("200 OK %d\n"):format(string.len(res)))
+      server:send(res)
+    
     else
       server:send("400 Bad Request\n")
     end
+    
   end
 end
 
@@ -462,6 +511,8 @@ function start()
   step_level = 0
   stack_level = 0
   
+  stdout = nil
+  
   -- connect
   local server, server_error = renoise.Socket.create_client(
     controller_host, controller_port)
@@ -479,7 +530,8 @@ function start()
         _G.assert = _assert 
         
         local stack_trace =  debug.traceback(message)   
-        debug_server:send(("401 Error in Execution %d\n"):format(string.len(stack_trace)))
+        debug_server:send(("401 Error in Execution %d\n"):format(
+          string.len(stack_trace)))
         debug_server:send(stack_trace)
         debug_server:close()
         debug_server = nil
@@ -489,6 +541,26 @@ function start()
       return expression, message
     end
       
+    _print = _G.print
+    _G.print = function(...)
+      if (_print ~= _G.print) then
+        _print(...)
+      end
+      
+      stdout = stdout or ""
+
+      local n = select('#', ...)
+      for i = 1, n do
+        local value = tostring(select(i, ...))
+        stdout = stdout .. value
+        if (i ~= n) then 
+          stdout = stdout .. "\t"
+        end
+      end
+      
+      stdout = stdout .. "\n"
+    end
+    
     -- start running
     coro_debugger = coroutine.create(debugger_loop)
     return _assert(coroutine.resume(coro_debugger, server))
@@ -500,7 +572,7 @@ end
 
 -------------------------------------------------------------------------------
 -- remdebug.engine.stop()
--- stops a debug session by connectingdisconnecting from the controller
+-- stops a debug session by disconnecting from the controller
 -------------------------------------------------------------------------------
 
 function stop()
@@ -512,9 +584,10 @@ function stop()
     debug_server = nil
   end
 
-  -- disable the hooks
+  -- disable all hooks
   debug.sethook()
   _G.assert = _assert 
+  _G.print = _print
 end
 
 
