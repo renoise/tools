@@ -1,5 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<!-- Tool scripts must describe themself through a manifest XML, to let Renoise -->
+<!-- know which API version it relies on, what "it can do" and so on, without --> 
+<!-- actually loading it. This is done in the manifest.xml, in this file  -->
+
 <RenoiseScriptingTool>
   
   <!-- this is the API version the script relies on. The API is backwards -->

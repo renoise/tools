@@ -2,17 +2,20 @@
 com.renoise.FindAndReplace.xrnx/main.lua
 ---------------------------------------------------------------------------]]--
 
--- manifest
 
-_MENU_ENTRIES = { {
+-------------------------------------------------------------------------------
+-- tool setup
+-------------------------------------------------------------------------------
+
+renoise.tool():add_menu_entry {
   name = "Pattern Editor:Find and Replace...",
   invoke = function() show_dialog() end
-} }
+} 
 
-_KEY_BINDINGS = { {
+renoise.tool():add_keybinding {
   name = "Pattern Editor:Tools:Find and Replace",
   invoke = function() show_dialog() end
-} }
+}
 
 
 -------------------------------------------------------------------------------
@@ -754,6 +757,7 @@ function show_dialog()
   )
 
 end
+
 
 --[[---------------------------------------------------------------------------
 ---------------------------------------------------------------------------]]--
