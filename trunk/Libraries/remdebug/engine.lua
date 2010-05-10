@@ -514,9 +514,15 @@ function start()
   stdout = nil
   
   -- connect
-  local server, server_error = renoise.Socket.create_client(
-    controller_host, controller_port)
-
+  local server, server_error
+  local start_time = os.clock()
+  
+  repeat
+    server, server_error = renoise.Socket.create_client(
+      controller_host, controller_port)
+    -- wait a bit until the controller started...
+  until (server or os.clock() - start_time > 2.0) 
+  
   if server then
     debug_server = server
 
