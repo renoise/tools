@@ -2,6 +2,7 @@
 <RenoiseScriptingTool>
   <ApiVersion>0.3</ApiVersion>
   <Id>com.renoise.DuplexBrowser</Id>
+  <Version>0.1</Version>
   <Author>danoise [bjorn.nesby@googlemail.com]</Author>
   <Name>Duplex Browser</Name>
   <Category>Midi Controllers</Category>

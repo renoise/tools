@@ -1,48 +1,64 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<!-- Tool scripts must describe themself through a manifest XML, to let Renoise -->
-<!-- know which API version it relies on, what "it can do" and so on, without --> 
-<!-- actually loading it. This is done in the manifest.xml, in this file  -->
+<!-- Tool scripts must describe themselves through a manifest XML, to let Renoise -->
+<!-- and tool brwsers know which API version the tool relies on, what "it can do" -->
+<!-- and so on,  without actually loading/executing it. -->
 
+<!-- Root node name of the manifest.xml. Must be 'RenoiseScriptingTool' -->
 <RenoiseScriptingTool>
   
-  <!-- this is the API version the script relies on. The API is backwards -->
-  <!-- compatible (from version 1.0 on), but not forwards compatible. -->
-  <!-- So you can ensure that all API functions you use are available. -->
-  <!-- The current version is defined at 'renoise.API_VERSION' -->
+  <!-- === REQUIRED ENTRIES === -->
+  
+  <!-- This is the renoise.API_VERSION the script relies on. The API will be backwards -->
+  <!-- compatible from version 1.0 on, but not forwards compatible. -->
+  <!-- This way you can ensure that all API functions you use are available. -->
+  <!-- The current version is defined at 'renoise.API_VERSION' in the API -->
   <ApiVersion>0.3</ApiVersion>
   
-  <!-- Unique identifier for your tool. The identidier must match the bundle name -->
-  <!-- of the tool (without the extension xrnx), and is used by Renoise to make sure -->
-  <!-- that only one version of a tool is present, to be able to auto-update it and -->
-  <!-- to create a default filename for it in case the tool was drag and dropped -->
-  <!-- to get installed. The id should be a string with 3 parts, separated by dots, -->
-  <!-- like org.superduper.tool. You don't have to use prefixes like com/org and so -->
-  <!-- on, but please try to use something personal, like your name or URL or -->
-  <!-- company name in order to make it as unique as possible. -->
+  <!-- Version of your tool. Will be used to decide if (auto-)upgrading is necessary. -->
+  <!-- You should upgrade the version number every time you change the tool. -->
+  <!-- The version is evaluated as a double precision floating point value -->
+  <Version>1.0</Version>
+  
+  <!-- Unique identifier for your tool. The identidier must match the XRNX bundle name -->
+  <!-- without the extension .xrnx. This will be done automatically by Renoise -->
+  <!-- when installing tools -->
+  <!-- The Id should be a string with 3 parts, separated by dots, like org.superduper.tool.--> 
+  <!-- You don't have to use prefixes like com/org and so on, but please try to use -->
+  <!-- something personal, like your name, or your homepage domain or company name in -->
+  <!-- the Id in order to make it as unique as possible. -->
   <Id>com.renoise.ExampleTool</Id>
   
   
-  <!-- the author field is only used in descriptions of the tools in the app -->
-  <!-- or when a script fails. Providing an email is not necessary, but -->
-  <!-- recommended. -->
+  <!-- The author field is only used in descriptions of the tools, or in error messages  -->
+  <!-- from the script. Providing an email is not necessary, but recommended if you -->
+  <!-- want feedback. -->
   <Author>taktik [taktik@renoise.com]</Author>
   
-  <!-- Name of the tool as visible to the user in for example tool browsers -->
-  <Name>Renoise Tool Script Example</Name>
-  
-  <!-- main topic, tag of this tool, like "Pattern Editor, Sample Editor and so on -->
-  <!-- currently unused, except when using "Tool Development". Such tools will only be -->
-  <!-- shown when the scripting development tools are enabled in Renoise -->  
+  <!-- Main topic, tag of this tool, like "Pattern Editor, 'Sample Editor' and so on -->
+  <!-- as visible to the user -->  
   <Category>Tool Development</Category>
+
+  <!-- Name of the tool, as visible to the user -->
+  <Name>Renoise Scripting Tool Example</Name>
+
+  <!-- Description of the tool as visible to the users -->
+  <Description>A XRNX tools that describes how to create Renoise XRNX tools</Description>
   
-  <!-- the description is curently unused, but may be useful in some kind of -->
-  <!-- a tools editor for users, where they can see what the scripts are doing... -->
-  <Description>Set of small tools that describe how to create a scripting tool</Description>
+  
+  <!-- === OPTIONAL ENTRIES === -->
+  
+  <!-- Optional relative path and name of an icon file, which may be shown -->
+  <!-- in tool browsers. The icon must be provided as PNG file and should have -->
+  <!-- a size of 128x128 pixels -->
+  <Icon>./icon.png</Icon>
+  
+  <!-- Optional http:// based URL of the tools homepage, if available... -->
+  <Homepage>http://scripts.renoise.com</Homepage>
 
-  <!-- relative path and name of an optional icon file, which could be shown later on  -->
-  <!-- in app browsers... -->  
-  <Icon />
-
+   <!-- Supported platforms for the tool. When not specified, its asumed that the tool -->
+   <!-- is platform independent, else one or mode of "Windows, Mac, Linux" are expected -->
+  <Platform>Linux</Platform>
+  
 </RenoiseScriptingTool>
 
