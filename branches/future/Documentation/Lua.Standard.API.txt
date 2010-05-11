@@ -116,9 +116,27 @@ os.exit()
 
 -- added
 
--- returns true when a file at the given path and name exists, else false
+-- returns true when a file, folder or link at the given path and name exists
 io.exists(filename) -> [boolean]
 
+-- returns a table with status info about the file, folder or link at the given 
+-- path and name, else nil the error and the error code is returned.
+--
+-- the returned valid stat table contains the following fields:
+-- 'dev'    number: device number of filesystem
+-- 'ino'    number: inode number
+-- 'mode'   number: unix styled file permissions
+-- 'type'   string: type ("file", "directory", "link", "socket", 
+--            "named pipe", "char device" or "block device")
+-- 'nlink'  number: number of (hard) links to the file
+-- 'uid'    number: numeric user ID of file's owner
+-- 'gid'    number: numeric group ID of file's owner
+-- 'rdev'   number: the device identifier (special files only)
+-- 'size'   number: total size of file, in bytes
+-- 'atime'  number: last access time in seconds since the epoch
+-- 'mtime'  number: last modify time in seconds since the epoch
+-- 'ctime'  number: inode change time (NOT creation time!) in seconds
+io.stat(filename) -> [table or (nil, error, error no)]
 
 -- changed
 
@@ -192,6 +210,7 @@ bit.ror(x, n) -> [number]
 -- Swaps the bytes of its argument and returns it. This can be used to convert
 -- little-endian 32 bit numbers to big-endian 32 bit numbers or vice versa.
 bit.bswap(x) -> [number]
+
 
 --[[----------------------------------------------------------------------------
 ----------------------------------------------------------------------------]]--
