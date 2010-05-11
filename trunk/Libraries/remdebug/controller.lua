@@ -49,6 +49,19 @@ local function clear_screen()
 end
 
 
+-- fatal_error
+
+local function fatal_error(error_message)
+  if (from_session) then
+    print(error_message)
+    print(); print("Press return to exit...")
+    io.read("*line")
+  else
+    error(error_message)
+  end
+end
+
+
 -------------------------------------------------------------------------------
 -- show_file
 
@@ -110,20 +123,37 @@ end
 -------------------------------------------------------------------------------
 -- connect
 
-clear_screen()
-print("Run the program you wish to debug with 'remdebug.engine.start()' now")
-
-server = socket.bind("*", 8171)
-client = server:accept()
-
 do
+  if (from_session) then
+    server = socket.bind("*", 8171)
+  
+    -- wait up to 2 seconds for the connection
+    server:settimeout(2)
+    client = server:accept()
+    
+    if (not client) then
+      fatal_error("** Failed to connect the controller to the debugger engine. " ..
+        "Please check your firewall settings for Lua based programs.")
+    end
+  
+    -- block any socket operations from now on
+    server:settimeout(nil)
+    
+  else
+    clear_screen()
+    print("Run the program you wish to debug with 'remdebug.engine.start()' now")
+  
+    server = socket.bind("*", 8171)
+    client = server:accept()
+  end
+
   client:send("STEP\n")
   client:receive("*l")
   
   local breakpoint = client:receive("*l")
   
-  -- step out of the session.start call...
   if (from_session) then
+    -- step out of the session.start() call...
     client:send("STEP\n")
     client:receive("*l")
     breakpoint = client:receive("*l")
@@ -151,13 +181,10 @@ do
     print("")
     
   else
-    local _, _, size = breakpoint:find(
-      "^401 Error in Execution (%d+)$")
+    local _, _, size = breakpoint:find("^401 Error in Execution (%d+)$")
     
     if (size) then
-      print("Error in remote application: ")
-      print(client:receive(size))
-      error("error in execution")
+      fatal_error("Error in remote application:\n" .. client:receive(size))
     end
   end
 end
@@ -238,14 +265,12 @@ while true do
         breakpoint:find("^401 Error in Execution (%d+)$")
       
       if (size) then
-        print("Error in remote application: ")
-        print(client:receive(tonumber(size)))
-        os.exit()
+        fatal_error("Error in remote application:\n" .. 
+          client:receive(tonumber(size)))
       end
 
     else
-      print("Unknown error")
-      os.exit()
+      fatal_error("Unknown error in remote debugger")
     end
   
     -- query std out from prints

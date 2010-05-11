@@ -254,9 +254,10 @@ local function debug_hook(event, line)
 
       file = string.sub(file, 2)
       
-      if (not file_exists(file)) then
-        -- use an abs paths for file, if possible and necessary 
-        file = merge_paths(os.currentdir(), file)
+      -- use an abs paths for file, if possible and necessary 
+      local merged_file = merge_paths(os.currentdir(), file)
+      if file_exists(merged_file) then
+        file = merged_file
       end
      
       local vars = capture_vars()
@@ -535,7 +536,7 @@ function start()
         debug.sethook()
         _G.assert = _assert 
         
-        local stack_trace =  debug.traceback(message)   
+        local stack_trace =  debug.traceback(message) or ""
         debug_server:send(("401 Error in Execution %d\n"):format(
           string.len(stack_trace)))
         debug_server:send(stack_trace)

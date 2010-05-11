@@ -13,21 +13,18 @@ _DESCRIPTION = "Remote Debugger for Renoise Lua " ..
   "scripts, based on the Kepler Project remdebug"
 _VERSION = "1.0"
 
-local controller_host = "localhost"
 local controller_port = 8171
 
 
 -------------------------------------------------------------------------------
 -- remdebug.session.config(tab)
--- Configures the engine and controller
+-- Configures the engine and controllers port
 -------------------------------------------------------------------------------
 
 function config(t)
   _assert(type(t) == "table")
   
-  if t.host then
-    controller_host = t.host
-  end
+  -- ignore host settings. sessions are local always 
   
   if t.port then
     controller_port = t.port
@@ -118,7 +115,7 @@ function start(command, controller_name)
   
   if (found_controller) then
     -- and start debugging
-    remdebug.engine.config { host=controller_host, port=controller_port }
+    remdebug.engine.config { host="localhost", port=controller_port }
     remdebug.engine.start()
     
   else
