@@ -138,6 +138,12 @@ io.exists(filename) -> [boolean]
 -- 'ctime'  number: inode change time (NOT creation time!) in seconds
 io.stat(filename) -> [table or (nil, error, error no)]
 
+-- change permissions of a file, folder or link. mode is a unix permission 
+-- styled octal number (like 755 - WITHOUT a leading octal 0). executable, 
+-- group and others flags are ignored on windows and won't fire errors
+io.chmod(filename, mode) -> [true or (nil, error, error no)]
+
+
 -- changed
 
 -- all io functions use UTF8 as encoding for the file names and paths. UTF8
@@ -150,7 +156,8 @@ io.stat(filename) -> [table or (nil, error, error no)]
 
 -- added
 
--- converts a linear value to a db value. db values will be clipped to math.infdb
+-- converts a linear value to a db value. db values will be clipped to 
+-- math.infdb
 -- example: print(math.lin2db(1.0)) -> 0
 --          print(math.lin2db(0.0)) -> -200 (math.infdb)
 math.lin2db(number) -> [number]
