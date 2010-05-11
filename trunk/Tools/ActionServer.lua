@@ -54,6 +54,8 @@ package.path = package_path
 require "ActionServer.Log"
 local log = Log(Log.ALL)
 
+----local URL = require "ActionServer.URL"
+
 local expand = require "ActionServer.Expand"
 
 local action_server = nil
@@ -103,12 +105,62 @@ function Util:parse_message(m)
   return header, body
 end
 
-function Util:read_file(file_path)
-  local file_ref,err = io.open(file_path,"r")
+function Util:parse(url, default)
+    -- initialize default parameters
+    local parsed = {}
+    for i,v in pairs(default or parsed) do parsed[i] = v end
+    -- empty url is parsed to nil
+    if not url or url == "" then return nil, "invalid url" end
+    -- remove whitespace
+    -- url = string.gsub(url, "%s", "")
+    -- get fragment
+    url = string.gsub(url, "#(.*)$", function(f)
+        parsed.fragment = f
+        return ""
+    end)
+    -- get scheme
+    url = string.gsub(url, "^([%w][%w%+%-%.]*)%:",
+        function(s) parsed.scheme = s; return "" end)
+    -- get authority
+    url = string.gsub(url, "^//([^/]*)", function(n)
+        parsed.authority = n
+        return ""
+    end)
+    -- get query stringing
+    url = string.gsub(url, "%?(.*)", function(q)
+        parsed.query = q
+        return ""
+    end)
+    -- get params
+    url = string.gsub(url, "%;(.*)", function(p)
+        parsed.params = p
+        return ""
+    end)
+    -- path is whatever was left
+    if url ~= "" then parsed.path = url end
+    local authority = parsed.authority
+    if not authority then return parsed end
+    authority = string.gsub(authority,"^([^@]*)@",
+        function(u) parsed.userinfo = u; return "" end)
+    authority = string.gsub(authority, ":([^:]*)$",
+        function(p) parsed.port = p; return "" end)
+    if authority ~= "" then parsed.host = authority end
+    local userinfo = parsed.userinfo
+    if not userinfo then return parsed end
+    userinfo = string.gsub(userinfo, ":([^:]*)$",
+        function(p) parsed.password = p; return "" end)
+    parsed.user = userinfo
+    return parsed
+end
+
+function Util:read_file(file_path, binary)
+  local mode = "r"
+  if binary then mode = "rb" end
+  local file_ref,err = io.open(file_path, mode)
   if not err then
-    local result=file_ref:read("*all")
-    io.close(file_ref)
-    return result
+    local data=file_ref:read("*all")        
+    io.close(file_ref)    
+    return data
   else
     return nil,err;
   end
@@ -177,7 +229,6 @@ function Util:parse_config_file(filename)
    end
    return t
 end
-
 
 -------------------------------------------
 --  Renoise Actions Tree
@@ -380,7 +431,9 @@ class "ActionServer"
 
      parameters = parameters or {}
      local fullpath = self:get_htdoc(path)
-     local template = Util:read_file(fullpath)
+     --TODO if mime is of binary type, then binary = true
+     local binary = false
+     local template = Util:read_file(fullpath, binary)
      local page = nil
 
      if self:is_expandable(path) then
@@ -390,16 +443,26 @@ class "ActionServer"
        self:set_header("Cache-Control", "private, max-age=3600")
        page = template
      end
-
-     self:set_header("Content-Length", #page)
-
+     
+     local size =  #page; 
+     local unit = "B"
+     self:set_header("Content-Length", size)
+     if size > 1024 then 
+       unit = "KB"
+       size = string.format("%.1f", size / 1024) 
+     end 
+     log:info(string.format("Content-Length: %s %s", size, unit))
+    
      local header = "HTTP/1.1 " .. status .. "\r\n"
      for k,v in pairs(self.header_map) do
        header = string.format("%s%s: %s\r\n",header,k,v)
+     end     
+     header = header .. "\r\n"     
+     socket:send(header)               
+     local ok,err = socket:send(page)          
+     if not ok then
+       log:error("Failed to send data:\n".. err)
      end
-     header = header .. "\r\n"
-     socket:send(header)
-     socket:send(page)
   end
 
   ActionServer.chunked = false
@@ -429,15 +492,17 @@ class "ActionServer"
 
       local parameters = nil -- POST and GET variables
       if #Util:trim(body) > 0 then log:info("Body:" .. body) end
-      local path = nil
+      local path, url = nil
+      local url_parts = {}
       local methods = table.create{"GET","POST","HEAD",
         "OPTIONS", "CONNECT", "PUT", "DELETE", "TRACE"}
       local method = header[1]:match("^(%w+)%s")
 
-      if method ~= nil then
+      if method ~= nil then        
         method = method:upper()
-        path = header[1]:match("%s(.-)%s")
-        path = Util:trim(Util:html_entity_decode(path))
+        url = header[1]:match("%s(.-)%s")        
+        url_parts = Util:parse(url)                
+        path = Util:trim(Util:html_entity_decode(url_parts.path))
       else
         log:warn("No HTTP method received")
         return
