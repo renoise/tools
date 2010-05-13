@@ -18,6 +18,10 @@ Notes on the syntax of external XML :
 - - Note that orientation is then ignored (using grid layout)
 - Use "size" attribute with controls of certain type (sliders)
 
+Todo:
+- improve parsing of nested tags
+- <Page> nodes (present only a single page at a time)
+
 --]]
 
 module("Duplex", package.seeall);
@@ -27,9 +31,9 @@ class 'ControlMap'
 function ControlMap:__init()
 --print('"ControlMap"')
 
-	self.id = nil			-- unique id assigned to parameters
-	self.definition = nil	-- the xml parsed into a table
-	self.groups = {}		-- table: {"Group1"=>{0,1,2...},"Another group"=>{10,11}}
+	self.id = nil			-- unique id, assigned to parameters
+	self.definition = nil	-- control-map parsed into table
+	self.groups = {}		-- control-map groups by name
 
 end
 
@@ -68,7 +72,7 @@ function ControlMap:load_definition(file_path)
 		end
 	end
 			 
-	-- load the controller map
+	-- load the control-map
 	if file_exists(file_path) then
 		print("ControlMap:load_definition:", file_path)
 		local xml_string = self.read_file(self, file_path)
@@ -86,15 +90,17 @@ function ControlMap:parse_definition(xml_string)
 	self.definition = self.parse_xml(self,xml_string)
 end
 
-
+-- retrieve <param> by position within group
+-- @return the <param> attributes array
 function ControlMap:get_indexed_element(index,group_name)
-	if self.groups[group_name] then
+	if self.groups[group_name] and self.groups[group_name][index] then
 		return self.groups[group_name][index].xarg
 	end
 end
 
 -- get_element_by_value() 
--- this retrieves a parameter by it's value-string
+-- this retrieves a parameter by note/cc-value-string
+-- @param str (string) note/cc-value, e.g. "CC#10"
 -- @return table
 
 function ControlMap:get_param_by_value(str)

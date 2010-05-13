@@ -1,0 +1,37 @@
+<Device>
+	<Name>Novation Nocturn</Name>
+	<Author>Danoise</Author>
+	<Description>Controlmap for Novation Nocturn</Description>
+	<Parameters>
+		<Page>
+			<Column>
+				<Row>
+					<Group name="Dials" orientation="horizontal">
+						<Param value="CC#0" type="encoder" name="Dial #1"	maximum="127" minimum="0"/>
+						<Param value="CC#1" type="encoder" name="Dial #2"	maximum="127" minimum="0"/>
+						<Param value="CC#2" type="encoder" name="Dial #3"	maximum="127" minimum="0"/>
+						<Param value="CC#3" type="encoder" name="Dial #4"	maximum="127" minimum="0"/>
+						<Param value="CC#4" type="encoder" name="Dial #5"	maximum="127" minimum="0"/>
+						<Param value="CC#5" type="encoder" name="Dial #6"	maximum="127" minimum="0"/>
+						<Param value="CC#6" type="encoder" name="Dial #7"	maximum="127" minimum="0"/>
+						<Param value="CC#7" type="encoder" name="Dial #8"	maximum="127" minimum="0"/>
+					</Group>
+				</Row>
+				<Row>
+					<Group name="Buttons" orientation="horizontal">
+						<Param value="CC#8" type="button" name="Button #1"	maximum="127" minimum="0"/>
+						<Param value="CC#9" type="button" name="Button #2"	maximum="127" minimum="0"/>
+						<Param value="CC#10" type="button" name="Button #3"	maximum="127" minimum="0"/>
+						<Param value="CC#11" type="button" name="Button #4"	maximum="127" minimum="0"/>
+						<Param value="CC#12" type="button" name="Button #5"	maximum="127" minimum="0"/>
+						<Param value="CC#13" type="button" name="Button #6"	maximum="127" minimum="0"/>
+						<Param value="CC#14" type="button" name="Button #7"	maximum="127" minimum="0"/>
+						<Param value="CC#15" type="button" name="Button #8"	maximum="127" minimum="0"/>
+					</Group>
+				</Row>
+
+			</Column>
+		</Page>
+
+	</Parameters>
+</Device>

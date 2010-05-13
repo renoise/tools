@@ -13,7 +13,7 @@ module("Duplex", package.seeall);
 class 'Browser' (Application)
 
 function Browser:__init(device_name,app_name)
---print("Browser:__init",device_name,app_name)
+print("Browser:__init",device_name,app_name)
 
 	-- initialize
 	self.name = "Browser"
@@ -23,9 +23,21 @@ function Browser:__init(device_name,app_name)
 
 	self.application = nil	--	current application
 
-	self.init_app(self)
+	--self.init_app(self)
+	Application.__init(self)
 
-	-- apply arguments
+	--Application.init_app(self)
+
+	self.vb = renoise.ViewBuilder()
+
+	self.build_app(self)
+	-- hide after building
+	self.vb.views.dpx_browser_app_row.visible = false
+	--self.vb.views.dpx_browser_preset_row.visible = false
+	self.vb.views.dpx_browser_device_settings.visible = false
+	self.vb.views.dpx_browser_fix.visible = false
+
+	-- as last step, apply optional arguments
 	if device_name then
 		self.set_device_index(self,device_name)
 		if app_name then
@@ -33,8 +45,10 @@ function Browser:__init(device_name,app_name)
 		end
 	end
 
+
 end
 
+--[[
 function Browser:init_app()
 
 	Application.init_app(self)
@@ -49,6 +63,7 @@ function Browser:init_app()
 	self.vb.views.dpx_browser_fix.visible = false
 
 end
+]]
 
 -- changing the active input device list index will
 -- cause another method, "set_device" to become invoked
@@ -99,19 +114,18 @@ function Browser:set_device(name)
 		if (name==k.display_name) then
 			if k.classname then
 				--print("Dedicated class support",name)
-				self.instantiate_device(self,k.class_name)
+				self.instantiate_device(self,k.class_name,k.device_name,k.control_map)
 			elseif k.control_map then
 
 				local generic_class = nil
 				if(k.protocol == DEVICE_MIDI_PROTOCOL)then
-					generic_class = "MidiDevice"
+					generic_class = "MIDIDevice"
 				elseif(k.protocol == DEVICE_OSC_PROTOCOL)then
 					generic_class = "OSCDevice"
 				end
 
 				local class_name = k.class_name or generic_class
-				--print("Control-mapped support",class_name)
-				self.instantiate_device(self,class_name)
+				self.instantiate_device(self,class_name,k.device_name,k.control_map)
 			else
 				renoise.app():show_warning("Whoops! This device needs a control-map")
 			end
@@ -123,26 +137,33 @@ end
 
 
 -- instantiate a device from it's basic information
--- TODO on-the-fly loading of classes 
 
-function Browser:instantiate_device(class_name)
+function Browser:instantiate_device(class_name,device_name,control_map)
 --print("Browser:instantiate_device:",class_name)
 
-	if class_name == 'Launchpad' then
+	if class_name == "MIDIDevice" then
 
-		self.device = Launchpad('Launchpad')
-		self.device:set_controller_map("Controllers/Launchpad/launchpad.xml")
+		-- standard/generic MIDI device
+		-- always provide a device_name and control-map
+
+		self.device = MIDIDevice(device_name)
+
+	elseif class_name == 'Launchpad' then
+
+		-- TODO on-the-fly loading of classes 
+
+		self.device = Launchpad(device_name)
+	
+	end
+
+	if self.device then
+		self.device:set_control_map(control_map)
 		self.device.message_stream = self.stream
 
 		self.display = Display(self.device)
 		self.display.build_control_surface(self.display)
 		self.vb.views.dpx_browser_rootnode:add_child(self.display.view)
 		self.display.show_control_surface(self.display)
-
-	end
-	if class_name == 'Nocturn' then
-
-		
 
 	end
 
@@ -218,13 +239,21 @@ function Browser:get_custom_devices()
 			control_map="Controllers/Launchpad/launchpad.xml",
 			protocol=DEVICE_MIDI_PROTOCOL,
 		},
+		--  different controlmap
+		{
+			class_name="Launchpad",			
+			display_name="Launchpad (with encoders)",
+			device_name="Launchpad",
+			control_map="Controllers/Launchpad/launchpad_encoders.xml",
+			protocol=DEVICE_MIDI_PROTOCOL,
+		},
 		--	here, device_name is different from display_name 
 		--	it should load as a generic MIDI device
 		{
 			class_name=nil,
 			display_name="Nocturn",			
 			device_name="Automap MIDI",		
-			control_map="nocturn.xml",
+			control_map="Controllers/Nocturn/nocturn.xml",
 			protocol=DEVICE_MIDI_PROTOCOL,
 		},
 		--	this is a defunkt implementation (no control-map)
@@ -274,6 +303,7 @@ function Browser:get_applications(device_name)
 end
 
 --	return list of application presets
+--[[
 function Browser:get_presets()
 
 	return {
@@ -284,7 +314,7 @@ function Browser:get_presets()
 	}
 
 end
-
+]]
 
 -- set application as active item 
 -- currently, we display only a single app at a time
@@ -309,12 +339,33 @@ function Browser:set_application(name)
 		self.vb.views.dpx_browser_application_active.visible = true
 	end
 
-	-- TODO load classes dynamically
+	-- TODO: load classes dynamically
+
 	if name == "MixConsole" then
-		self.application = MixConsole(self.display)
+		
+		local elm = self.vb.views["dpx_browser_input_device"]
+		local device_display_name = elm.items[elm.value]
+		local sliders_group_name=""
+		local buttons_group_name=""
+
+		-- TODO: control-map groups should be user-configurable
+		-- make some sort of application preferences to solve this
+		if device_display_name == "Launchpad" then
+			sliders_group_name="Grid"
+			buttons_group_name="Controls"
+		elseif device_display_name == "Nocturn" then
+			sliders_group_name="Dials"
+			buttons_group_name="Buttons"
+		end
+
+		self.application = MixConsole(self.display,sliders_group_name,buttons_group_name)
 	end
+
 	if name == "PatternMatrix" then
+
+		-- currently only for use with launchpad...
 		self.application = PatternMatrix(self.display)
+
 	end
 
 
@@ -328,11 +379,13 @@ function Browser:set_preset()
 end
 
 -- construct the browser "view" 
-function Browser:build_browser()
+function Browser:build_app()
+
+	Application.build_app(self)
 
 	local input_devices = self.get_devices(self)
 	local applications = self.get_applications(self)
-	local presets = self.get_presets(self)
+	--local presets = self.get_presets(self)
 
 	--local vb = renoise.ViewBuilder()
 	vb = self.vb
@@ -398,6 +451,7 @@ function Browser:build_browser()
 				},
 			},
 		},
+		--[[
 		vb:row{
 			margin = DEFAULT_MARGIN,
 			id= 'dpx_browser_preset_row',
@@ -422,6 +476,7 @@ function Browser:build_browser()
 			},
 
 		},
+		]]
 		-- the following is used to control initial size of dialog
 		vb:button{
 			id='dpx_browser_fix',
@@ -471,5 +526,11 @@ function Browser:idle_app()
 	if self.application then
 		self.application.idle_app(self.application,self.display)
 	end
+
+end
+
+function Browser:on_new_document()
+
+	-- refresh notifiers 
 
 end

@@ -13,20 +13,22 @@ module("Duplex", package.seeall);
 
 class 'MixConsole' (Application)
 
-function MixConsole:__init(display)
+function MixConsole:__init(display,sliders_group_name,buttons_group_name)
 --print("MixConsole:__init",display)
 
 	-- constructor 
 	Application.__init(self)
 	
+	self.sliders_group_name=sliders_group_name
+	self.buttons_group_name=buttons_group_name
+
 	-- controls
 	self.master = nil
 	self.sliders = nil
 	self.buttons = nil
 	
 	self.display = display
-	self.init_app(self)
-	--self.start_app(self)
+	self.build_app(self)
 
 	self.add_observables(self)
 
@@ -57,40 +59,68 @@ function MixConsole:set_track_mute(idx,state)
 
 end
 
+
 function MixConsole:set_master_volume(value)
 	get_master_track().prefx_volume.value = value
 	self.master.set_value(self.master,value,true) -- skip on_change()  
 end
 
--- (re)building stuff & layout
 
-function MixConsole:init_app()
---print("MixConsole:init_app(")
+-- create UI layout : pretty flexible, to support many different configurations 
+-- there's a lot of control-map checking before the final layout is decided
 
-	Application.init_app(self)
+function MixConsole:build_app()
+--print("MixConsole:build_app(")
+
+	Application.build_app(self)
 
 	local observable = nil
-
 	self.master = nil
 	self.sliders = {}
 	self.buttons = {}
 
-	-- this should be done pretty flexible, to support
-	-- as many different configurations as possible
+
+	-- determine where we should put the volume levels...
+	-- master fader should always be a physical slider if possible
+	-- if one of the groups contain a "columns" attribute, we switch to grid controller mode
+	-- rotary encoders or sliders (if they exist) for individual tracks
+	-- as a last option, use toggle buttons 
+
+	local grid_mode = false
+
+	for group_name,group in pairs(self.display.device.control_map.groups)do
+		for attr,param in pairs(group) do
+			if(attr == "xarg")then
+				--rprint(param)
+				if(param["columns"])then
+					--sliders_group_name = param["name"]
+					grid_mode = true
+				end
+			end
+		end
+	end
+
+
+	local slider_vertical_units = 1
+
+	if grid_mode then
+		slider_vertical_units = 8
+	end
 
 	for i=1,8 do
 
 		-- sliders ---------------------------------------------------
 
 		self.sliders[i] = Slider(self.display)
-		self.sliders[i].group_name = "Grid"
+		self.sliders[i].group_name = self.sliders_group_name
 		self.sliders[i].x_pos = i
 		self.sliders[i].y_pos = 1
 		self.sliders[i].toggleable = true
 		self.sliders[i].inverted = false
-		self.sliders[i].ceiling = 1.4125375747681
+		self.sliders[i].ceiling = RENOISE_DECIBEL
 		self.sliders[i].orientation = VERTICAL
-		self.sliders[i].set_size(self.sliders[i],8)
+		--self.sliders[i].set_size(self.sliders[i],8)
+		self.sliders[i].set_size(self.sliders[i],slider_vertical_units)
 
 		-- slider changed from controller
 		self.sliders[i].on_change = function(obj) 
@@ -106,11 +136,10 @@ function MixConsole:init_app()
 		end
 		self.display.add(self.display,self.sliders[i])
 
-
 		-- buttons ---------------------------------------------------
 
 		self.buttons[i] = ToggleButton(self.display)
-		self.buttons[i].group_name = "Controls"
+		self.buttons[i].group_name = self.buttons_group_name
 		self.buttons[i].x_pos = i
 		self.buttons[i].y_pos = 1
 		self.buttons[i].active = false
@@ -146,14 +175,15 @@ function MixConsole:init_app()
 
 		-- apply customization -----------------------------------------------
 
-		if (i>6) then
-			self.sliders[i].colorize(self.sliders[i],{0x00,0xff,0x00})
-			self.buttons[i].colorize(self.buttons[i],{0x00,0xff,0x00})
-		elseif (i>3)then
-			self.sliders[i].colorize(self.sliders[i],{0xff,0x00,0x00})
-			self.buttons[i].colorize(self.buttons[i],{0xff,0x00,0x00})
-		end
-
+		--if self.sliders[i] then 
+			if (i>6) then
+				self.sliders[i].colorize(self.sliders[i],{0x00,0xff,0x00})
+				self.buttons[i].colorize(self.buttons[i],{0x00,0xff,0x00})
+			elseif (i>3)then
+				self.sliders[i].colorize(self.sliders[i],{0xff,0x00,0x00})
+				self.buttons[i].colorize(self.buttons[i],{0xff,0x00,0x00})
+			end
+		--end
 
 	end
 
@@ -212,6 +242,7 @@ end
 -- TODO update this list as more tracks are added
 
 function MixConsole:add_observables()
+--print("MixConsole:add_observables()")
 
 	local observable
 

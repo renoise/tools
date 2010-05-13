@@ -116,11 +116,21 @@ function Display:update()
 				for x = 1,obj.width do
 					for y = 1, obj.height do
 						if obj.canvas.delta[x][y] then
-							local columns = self.device.control_map.groups[obj.group_name].columns
-							local idx = (x+obj.x_pos-1)+((y+obj.y_pos-2)*columns)
-							local elm = self.device.control_map.get_indexed_element(self.device.control_map,idx,obj.group_name)
-							if elm then
-								self.set_parameter(self,elm,obj,obj.canvas.delta[x][y])
+							if not self.device.control_map.groups[obj.group_name] then
+								print("Warning: element not specified in control-map")
+							else
+	--[[
+	print(type(obj),obj.group_name)
+	rprint(self.device.control_map.groups,obj.group_name)
+	print(self.device.control_map.groups[obj.group_name])
+	print(self.device.control_map.groups[obj.group_name].columns)
+	]]
+								local columns = self.device.control_map.groups[obj.group_name].columns
+								local idx = (x+obj.x_pos-1)+((y+obj.y_pos-2)*columns)
+								local elm = self.device.control_map:get_indexed_element(idx,obj.group_name)
+								if elm then
+									self:set_parameter(elm,obj,obj.canvas.delta[x][y])
+								end
 							end
 						end
 					end
@@ -133,13 +143,6 @@ function Display:update()
 
 end
 
--- TODO set_device, 
---	update virtual control surface automatically
---[[
-function Display:set_device
-
-end
-]]
 
 -- set_parameter: update object states
 -- @elm : control-map definition of the element
@@ -157,19 +160,20 @@ function Display:set_parameter(elm,obj,point)
 	-- update hardware display
 
 	if self.device then 
-		local msg_type = self.device.control_map.determine_type(self.device.control_map,elm.value)
+		local msg_type = self.device.control_map:determine_type(elm.value)
 		if msg_type == MIDI_NOTE_MESSAGE then
-			num = self.device.extract_midi_note(self.device,elm.value)
-			value = self.device.color_to_value(self.device,point.color)
-			self.device.send_note_message(self.device,num,value)
+			num = self.device:extract_midi_note(elm.value)
+			value = self.device:point_to_value(point,elm.maximum,elm.minimum,obj.ceiling)
+			self.device:send_note_message(num,value)
 		elseif msg_type == MIDI_CC_MESSAGE then
-			num = self.device.extract_midi_cc(self.device,elm.value)
-			value = self.device.color_to_value(self.device,point.color)
-			self.device.send_cc_message(self.device,num,value)
+			num = self.device:extract_midi_cc(elm.value)
+			value = self.device:point_to_value(point,elm.maximum,elm.minimum,obj.ceiling)
+			self.device:send_cc_message(num,value)
 		end
 	end
 
 	-- update virtual control surface
+
 	if self.vb and self.vb.views then 
 		widget = self.vb.views[elm.id]
 	end
@@ -178,18 +182,7 @@ function Display:set_parameter(elm,obj,point)
 			widget.text = point.text
 		end
 		if type(widget)=="MiniSlider" then
-			if(type(point.val)=="boolean")then
-				if point.val then
-					value = elm.maximum
-				else
-					value = elm.minimum
-				end
-			else
-				-- scale the value from "local" to "external"
-				-- for instance, from Renoise dB range (1.4125375747681) 
-				-- to a 7-bit controller value (127)
-				value = math.floor((point.val*(1/obj.ceiling))*elm.maximum)
-			end
+			value = self.device:point_to_value(point,elm.maximum,elm.minimum,obj.ceiling)
 			widget.remove_notifier(widget,self.ui_notifiers[elm.id])
 			widget.value = value*1 -- toNumber
 			widget.add_notifier(widget,self.ui_notifiers[elm.id])
@@ -201,30 +194,15 @@ end
 function Display:show_control_surface()
 --print('Display:show_control_surface')
 
---[[
-	if self.dialog and self.dialog.visible then
-		self.dialog:show()
-		return
-	end
-]]
-	-- build the virtual control surface?
 	if not self.view then
-		self.build_control_surface(self)
+		self:build_control_surface()
 	end
---[[
-	self.dialog = renoise.app():show_custom_dialog(
-		"Duplex",self.view
-	)
-	self.dialog:show()
-]]
 	self.vb.views.display_rootnode.visible = true
 
 end
 
 
 function Display:hide_control_surface()
-
-	--self.dialog:close()
 	self.vb.views.display_rootnode.visible = false
 
 end
@@ -242,12 +220,12 @@ function Display:build_control_surface()
 		margin = DEFAULT_MARGIN,
 		spacing = 6,
 	}
-	self.walk_table(self,self.device.control_map.definition)
+	self:walk_table(self.device.control_map.definition)
 
 end
 
 
---	generate_message
+--	generate Message
 --	@value : the value
 --	@metadata : metadata table (min/max etc.)
 
@@ -255,7 +233,7 @@ function Display:generate_message(value, metadata)
 --print('Display:generate_message:'..value)
 
 	local msg = Message()
-	msg.context = self.device.control_map.determine_type(self.device.control_map,metadata.value)
+	msg.context = self.device.control_map:determine_type(metadata.value)
 	msg.value = value
 
 	-- input method
@@ -276,7 +254,7 @@ function Display:generate_message(value, metadata)
 	msg.row		= metadata.row
 	msg.timestamp = os.clock()
 
-	self.device.message_stream.input_message(self.device.message_stream,msg)
+	self.device.message_stream:input_message(msg)
 
 end
 
@@ -304,7 +282,7 @@ function Display:walk_table(t, done, deep)
 			if t[key].xarg.type == "button" then
 				notifier = function(value) 
 					-- output the maximum value
-					self.generate_message(self,view_obj.meta.maximum*1,view_obj.meta)
+					self:generate_message(view_obj.meta.maximum*1,view_obj.meta)
 				end
 				self.ui_notifiers[t[key].xarg.id] = notifier
 				view_obj.view = self.vb:button{
@@ -317,7 +295,7 @@ function Display:walk_table(t, done, deep)
 			elseif t[key].xarg.type == "encoder" then
 				notifier = function(value) 
 					-- output the current value
-					self.generate_message(self,value,view_obj.meta)
+					self:generate_message(value,view_obj.meta)
 				end
 				self.ui_notifiers[t[key].xarg.id] = notifier
 				view_obj.view = self.vb:minislider{
@@ -410,7 +388,7 @@ function Display:walk_table(t, done, deep)
 				self.view:add_child(view_obj.view)
 			end
 		end
-		self.walk_table (self,value, done, deep)
+		self:walk_table (value, done, deep)
 	end
   end
 end
