@@ -4,6 +4,10 @@
 
 --[[
 
+A functional pattern-matrix (basic mute/unmute operations)
+
+Recommended hardware: a monome/launchpad-style grid controller 
+
 
 --]]
 
@@ -21,9 +25,8 @@ print("PatternMatrix:__init",display)
 	
 	self.buttons = nil
 	self.position = nil
-	
 	self.display = display
-	self.init_app(self)
+	self.build_app(self)
 
 	self.observable_firing = false
 
@@ -102,10 +105,10 @@ end
 
 
 
-function PatternMatrix:init_app()
---print("PatternMatrix:init_app(")
+function PatternMatrix:build_app()
+--print("PatternMatrix:build_app(")
 
-	Application.init_app(self)
+	Application.build_app(self)
 
 	local observable = nil
 
@@ -130,7 +133,6 @@ function PatternMatrix:init_app()
 			renoise.song().transport.stop(renoise.song().transport)
 		elseif not renoise.song().sequencer.pattern_sequence[obj.selected_index] then
 			print('Pattern is out of bounds')
-		
 		else
 			-- instantly change to new song pos
 			local new_pos = renoise.song().transport.playback_pos
@@ -189,7 +191,7 @@ function PatternMatrix:update_slots()
 	if self.observable_firing then
 		return
 	end
-print("PatternMatrix:update_slots()",self.observable_firing)
+--print("PatternMatrix:update_slots()",self.observable_firing)
 
 	--local master_idx = get_master_track_index() 
 	local seq = renoise.song().sequencer.pattern_sequence
@@ -238,7 +240,7 @@ end
 
 
 -- locate a sequencer slot that differ from our representation ...
-
+--[[
 function PatternMatrix:get_changed_slot()
 
 	for seq_index,v in ipairs(renoise.song().patterns) do
@@ -247,7 +249,7 @@ function PatternMatrix:get_changed_slot()
 		end
 	end
 end
-
+]]
 
 -- playback-pos changed in renoise
 
@@ -285,7 +287,7 @@ end
 -- periodic updates: handle "un-observable" things here
 
 function PatternMatrix:idle_app()
-print("PatternMatrix:idle_app()",self.observable_firing)
+--print("PatternMatrix:idle_app()",self.observable_firing)
 	if not self.active then return false end
 
 	--if not self.dirty then return false end

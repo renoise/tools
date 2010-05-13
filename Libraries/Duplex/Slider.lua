@@ -23,14 +23,29 @@ function Slider:__init(display)
 
 	DisplayObject.__init(self,display)
 
+	-- 0 is empty (default)
+	self.size = 0
+
+	-- the selected index (0 is deselected)
+	self.selected_index = 0
+
+	-- if true, press twice to switch to deselected state*
+	self.toggleable = false
+
+	-- paint a dimmed version*
+	self.dimmed = false
+
+	-- current value (sliders/encoders offer more precision)
+	self.value = 0
+
+	-- the maximum value (between 0 and "ceiling")
+	self.ceiling = 1
+
+	-- slider is vertical or horizontal?
 	self.orientation = VERTICAL 
-	self.size = 0					-- 0 is empty (default)
-	self.selected_index = 0			-- 0 is deselected
-	self.toggleable = false			-- if true, press twice to switch to deselected state*
-	self.dimmed = false				-- paint a dimmed version*
-	self.value = 0					-- current value (sliders/encoders offer more precision)
-	self.ceiling = 1				-- the maximum value 
-	self.flipped = false			-- flip direction 
+
+	-- flip top/bottom direction 
+	self.flipped = false
 
 	--	* this only applies when input method is a button
 
@@ -80,6 +95,7 @@ end
 -- set index + precise value
 
 function Slider:do_change()
+--print("Slider:do_change()")
 
 	local msg = self.get_msg(self)
 
@@ -193,9 +209,6 @@ function Slider:draw()
 	if not self.flipped then
 		idx = self.size-idx+1
 	end
-
---print("self.palette")
---rprint(self.palette)
 
 	for i = 1,self.size do
 		

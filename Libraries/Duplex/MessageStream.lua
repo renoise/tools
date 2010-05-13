@@ -11,6 +11,8 @@ Interpret incoming (user-generated) messages, with built-in handlers for
 * detecting that a button was held for specified amount of time 
 * detecting multiple simultanously pressed buttons (combinations) with support for "any" or "all" 
 
+A Display use only a single MessageStream, but we can attach any device to it. 
+This also offers us a "brute-force" method for terminating device communication
 
 
 --]]
@@ -95,7 +97,11 @@ function MessageStream:input_message(msg)
 	if msg.input_method == CONTROLLER_ENCODER then
 		--print('MessageStream: event was recieved:',msg.value)
 		--if msg.value == msg.max then
-		for _,handler in ipairs(self.change_listeners)  do handler() end
+		for _,listener in ipairs(self.change_listeners)  do 
+			listener.handler() 
+		end
+
+		--for _,handler in ipairs(self.change_listeners)  do handler() end
 		--end		
 	elseif msg.input_method == CONTROLLER_BUTTON then
 		-- if it's listed in ignored_buttons

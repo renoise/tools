@@ -53,6 +53,7 @@ end
 -- user input via slider, encoder
 
 function ToggleButton:do_change()
+--print("ToggleButton:do_change()")
 
 	local msg = self.get_msg(self)
 

@@ -33,13 +33,14 @@ function Device:get_protocol()
 	return self.protocol
 end
 
-function Device:set_controller_map(xml_file)
+function Device:set_control_map(xml_file)
+--print("Device:set_control_map:",xml_file)
 	self.control_map.load_definition(self.control_map,xml_file)
 
 end
 
--- Converts the color to an output value
+-- Converts the point to an output value
 -- (override with device-specific implementation)
-function Device:color_to_value()
-
+function Device:point_to_value()
+	return 0
 end
