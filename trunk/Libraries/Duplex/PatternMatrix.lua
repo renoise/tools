@@ -18,7 +18,7 @@ class 'PatternMatrix' (Application)
 
 
 function PatternMatrix:__init(display)
-print("PatternMatrix:__init",display)
+--print("PatternMatrix:__init",display)
 
 	-- constructor 
 	Application.__init(self)
@@ -125,24 +125,26 @@ function PatternMatrix:build_app()
 	self.position.palette.medium.color={0x00,0x00,0x00}
 	self.position.set_size(self.position,8)
 	self.position.on_change = function(obj) 
---print("position.on_change",obj.selected_index)
+--print("position.on_change",obj.index)
 		if not self.active then
 			print('Application is sleeping')
-		elseif obj.selected_index==0 then
+		elseif obj.index==0 then
 			-- turn off playback
 			renoise.song().transport.stop(renoise.song().transport)
-		elseif not renoise.song().sequencer.pattern_sequence[obj.selected_index] then
+		elseif not renoise.song().sequencer.pattern_sequence[obj.index] then
 			print('Pattern is out of bounds')
+			return false
 		else
 			-- instantly change to new song pos
 			local new_pos = renoise.song().transport.playback_pos
-			new_pos.sequence = obj.selected_index
+			new_pos.sequence = obj.index
 			renoise.song().transport.playback_pos = new_pos
 			-- start playback if not playing
 			if not renoise.song().transport.playing then
 				renoise.song().transport.start(renoise.song().transport,renoise.Transport.PLAYMODE_RESTART_PATTERN)
 			end
 		end
+		return true
 	end
 	self.display.add(self.display,self.position)
 
@@ -168,13 +170,17 @@ function PatternMatrix:build_app()
 
 				if not self.active then
 					print('Application is sleeping')
+					return false
 				elseif not renoise.song().tracks[x] then
 					print('Track is outside bounds')
+					return false
 				elseif not seq[y] then
 					print('Pattern is outside bounds')
+					return false
 				else
 					renoise.song().sequencer.set_track_sequence_slot_is_muted(renoise.song().sequencer,x,y,(not obj.active))-- "active" is negated
 				end
+				return true
 			end
 
 			self.display.add(self.display,self.buttons[x][y])
@@ -298,7 +304,7 @@ function PatternMatrix:idle_app()
 
 	local pos = renoise.song().transport.playback_pos
 	-- changed pattern?
-	if not (pos.sequence==self.position.selected_index)then
+	if not (pos.sequence==self.position.index)then
 		self.set_offset(self,pos.sequence)
 	end
 	self.playback_line = pos.line

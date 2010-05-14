@@ -13,8 +13,8 @@ module("Duplex", package.seeall);
 
 class 'Display' 
 
-local BUTTON_HEIGHT = 32
-local BUTTON_WIDTH = 32
+local UNIT_HEIGHT = 32
+local UNIT_WIDTH = 32
 
 function Display:__init(device)
 --print('"Display"')
@@ -117,7 +117,7 @@ function Display:update()
 					for y = 1, obj.height do
 						if obj.canvas.delta[x][y] then
 							if not self.device.control_map.groups[obj.group_name] then
-								print("Warning: element not specified in control-map")
+								print("Warning: ",type(obj)," not specified in control-map group ",obj.group_name)
 							else
 	--[[
 	print(type(obj),obj.group_name)
@@ -181,7 +181,7 @@ function Display:set_parameter(elm,obj,point)
 		if type(widget)=="Button" then
 			widget.text = point.text
 		end
-		if type(widget)=="MiniSlider" then
+		if (type(widget)=="MiniSlider") or (type(widget)=="Slider") then
 			value = self.device:point_to_value(point,elm.maximum,elm.minimum,obj.ceiling)
 			widget.remove_notifier(widget,self.ui_notifiers[elm.id])
 			widget.value = value*1 -- toNumber
@@ -217,15 +217,19 @@ function Display:build_control_surface()
 	self.view = self.vb:column{
 		id="display_rootnode",
 		style="invisible",
+		width = 500,
+		height = 500,
 		margin = DEFAULT_MARGIN,
-		spacing = 6,
+		--spacing = 16,
 	}
-	self:walk_table(self.device.control_map.definition)
+	if self.device.control_map.definition then
+		self:walk_table(self.device.control_map.definition)
+	end
 
 end
 
 
---	generate Message
+--	generate message : used by virtual control-surface elements
 --	@value : the value
 --	@metadata : metadata table (min/max etc.)
 
@@ -233,17 +237,21 @@ function Display:generate_message(value, metadata)
 --print('Display:generate_message:'..value)
 
 	local msg = Message()
-	msg.context = self.device.control_map:determine_type(metadata.value)
 	msg.value = value
 
-	-- input method
+	-- the type of message (MIDI/OSC...)
+	msg.context = self.device.control_map:determine_type(metadata.value)
+
+	-- input method : make sure we're using the right handler 
 	if metadata.type == "button" then
 		msg.input_method = CONTROLLER_BUTTON
 	elseif metadata.type == "encoder" then
 		msg.input_method = CONTROLLER_ENCODER
+	elseif metadata.type == "fader" then
+		msg.input_method = CONTROLLER_FADER
 	end
 
-	-- include additional meta-properties
+	-- include additional useful meta-properties
 	msg.name	= metadata.name
 	msg.group_name = metadata.group_name
 	msg.max		= metadata.maximum+0
@@ -278,35 +286,72 @@ function Display:walk_table(t, done, deep)
 		if t[key].label=="Param" then
 			-- the parameters
 			local notifier = nil
-			local tooltip = string.format("%s (%s)",view_obj.meta.name,view_obj.meta.value)
-			if t[key].xarg.type == "button" then
-				notifier = function(value) 
-					-- output the maximum value
-					self:generate_message(view_obj.meta.maximum*1,view_obj.meta)
+
+--print("view_obj.meta:",view_obj.meta)
+--print("view_obj.meta.name:",view_obj.meta.name)
+	
+			if not view_obj.meta.type then
+
+				-- an empty parameter (placeholder unit)
+
+					view_obj.view = self.vb:column{
+						height=UNIT_HEIGHT,
+						width=UNIT_WIDTH,
+						style = "invisible"
+					}
+
+
+			else
+
+				-- a parameter unit
+
+				local tooltip = string.format("%s (%s)",view_obj.meta.name,view_obj.meta.value)
+				if t[key].xarg.type == "button" then
+					notifier = function(value) 
+						-- output the maximum value
+						self:generate_message(view_obj.meta.maximum*1,view_obj.meta)
+					end
+					self.ui_notifiers[t[key].xarg.id] = notifier
+					view_obj.view = self.vb:button{
+						id=t[key].xarg.id,
+						height=UNIT_HEIGHT,
+						width=UNIT_WIDTH,
+						tooltip = tooltip,
+						notifier = notifier
+					}
+				elseif t[key].xarg.type == "encoder" then
+					notifier = function(value) 
+						-- output the current value
+						self:generate_message(value,view_obj.meta)
+					end
+					self.ui_notifiers[t[key].xarg.id] = notifier
+					view_obj.view = self.vb:minislider{
+						id=t[key].xarg.id,
+						min = view_obj.meta.minimum+0,
+						max = view_obj.meta.maximum+0,
+						tooltip = tooltip,
+						height=UNIT_HEIGHT/1.5,
+						width = UNIT_WIDTH,
+						notifier = notifier
+					}
+				elseif t[key].xarg.type == "fader" then
+					notifier = function(value) 
+						-- output the current value
+--print("output the current value")
+--rprint(value,view_obj.meta)
+						self:generate_message(value,view_obj.meta)
+					end
+					self.ui_notifiers[t[key].xarg.id] = notifier
+					view_obj.view = self.vb:slider{
+						id=t[key].xarg.id,
+						min = view_obj.meta.minimum+0,
+						max = view_obj.meta.maximum+0,
+						tooltip = tooltip,
+						--height=UNIT_HEIGHT/1.5,
+						width = (UNIT_WIDTH*t[key].xarg.size)+(DEFAULT_SPACING*(t[key].xarg.size-1)),
+						notifier = notifier
+					}
 				end
-				self.ui_notifiers[t[key].xarg.id] = notifier
-				view_obj.view = self.vb:button{
-					id=t[key].xarg.id,
-					height=BUTTON_HEIGHT,
-					width=BUTTON_WIDTH,
-					tooltip = tooltip,
-					notifier = notifier
-				}
-			elseif t[key].xarg.type == "encoder" then
-				notifier = function(value) 
-					-- output the current value
-					self:generate_message(value,view_obj.meta)
-				end
-				self.ui_notifiers[t[key].xarg.id] = notifier
-				view_obj.view = self.vb:minislider{
-					id=t[key].xarg.id,
-					min = view_obj.meta.minimum+0,
-					max = view_obj.meta.maximum+0,
-					tooltip = tooltip,
-					height=BUTTON_HEIGHT/1.5,
-					width = BUTTON_WIDTH,
-					notifier = notifier
-				}
 			end
 		elseif t[key].label=="Column" then
 			view_obj.view = self.vb:column{
@@ -342,9 +387,21 @@ function Display:walk_table(t, done, deep)
 					spacing=DEFAULT_SPACING,
 				}
 			else
+			--[[
+				view_obj.view = self.vb:horizontal_aligner{
+					mode = "center",
+					self.vb:row{
+						style="group",
+						id=grid_id,
+						margin=DEFAULT_MARGIN,
+						spacing=DEFAULT_SPACING,
+					}
+				}
+			]]
 				view_obj.view = self.vb:row{
 					style="group",
 					id=grid_id,
+					width=500,
 					margin=DEFAULT_MARGIN,
 					spacing=DEFAULT_SPACING,
 				}

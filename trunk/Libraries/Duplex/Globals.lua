@@ -12,14 +12,15 @@ MIDI_CC_MESSAGE = 6
 MIDI_NOTE_MESSAGE = 7
 OSC_MESSAGE = 8
 
-DEVICE_EVENT_BUTTON_PRESSED = 10
-DEVICE_EVENT_BUTTON_RELEASED = 11
-DEVICE_EVENT_VALUE_CHANGED = 12		--	sliders, encoders
+DEVICE_EVENT_BUTTON_PRESSED = 10	--	button event
+DEVICE_EVENT_BUTTON_RELEASED = 11	--	button event
+DEVICE_EVENT_VALUE_CHANGED = 12		--	slider, encoder event
 
-CONTROLLER_BUTTON = 20
-CONTROLLER_ENCODER = 21
---CONTROLLER_FADER = 22
---CONTROLLER_POT = 22
+CONTROLLER_BUTTON = 20		--	bidirectional button (LED)
+CONTROLLER_ENCODER = 21		--	bidirectional encoder (LED)
+CONTROLLER_FADER = 22		--	manual fader (possibly with parameter-pickup, so we both recieve & transmit MIDI)
+--CONTROLLER_MFADER = 23		--	motorized fader
+--CONTROLLER_POT = 24			--	basic rotary encoder (MIDI input only)
 
 VERTICAL = 80
 HORIZONTAL = 81
