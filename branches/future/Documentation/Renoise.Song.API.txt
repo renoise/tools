@@ -802,7 +802,7 @@ renoise.song().patterns[].tracks[]:lines_in_range(index_from, index_to) ->
 
 -- properties
 
-renoise.song().patterns[].tracks[].is_empty -> [read-only, boolean]
+renoise.song().patterns[].tracks[].is_empty, _observable -> [read-only, boolean]
 
 -- get all lines in range [1, number_of_lines_in_pattern]
 renoise.song().patterns[].tracks[].lines[] ->
