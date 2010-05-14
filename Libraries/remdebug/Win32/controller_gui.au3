@@ -37,23 +37,18 @@ Opt("GUIResizeMode", 1)
 	Dim $filecontents, $statusandline, $filepath, $linecontents
 	Local $forever = 1
 	Local $fromsession = False
-;	local $regarray = StringRegExp("regex not", "regex|regex not",1)
-	_ArrayDisplay($regarray)
-;	for x = 1 To $regarray[0]
-		;local $t = $regarray[x]
-		;ConsoleWrite( $t )
-	;Next
 
-Do
-	$codeloaded = 0
-	checkcommandarg()
-	Controller()
-	GUICtrlSetData($edit, "Client disconnected" & @CRLF & GUICtrlRead($edit))
-	MsgBox(0,"Program Termination", "Your lua program has ended")
+	InitializeWindows()
+	Do
+		$codeloaded = 0
+		checkcommandarg()
+		Controller()
+		GUICtrlSetData($edit, "Client disconnected" & @CRLF & GUICtrlRead($edit))
+		MsgBox(0,"Program Termination", "Your lua program has ended")
 
-Until $forever == 0
+	Until $forever == 0
 
-Func Controller()
+Func InitializeWindows()
 ;	Read inifile if it exists, else write a new one with default values.
 	If FileExists($inifile) Then
 		$szIPADDRESS = IniRead($inifile, "server_config", "ip-address", $szIPADDRESS)
@@ -104,6 +99,8 @@ Func Controller()
 		GUICtrlSetOnEvent(-1, "breakpoint")
 		GUISetState()
 	EndIf
+EndFunc
+Func Controller()
 
 	; Create a Listening "SOCKET".
 	;   Using your IP Address and Port 33891.
@@ -168,7 +165,7 @@ Func Controller()
 				$linecontents = StringRegExp ($recv, "([0-9]{2,3}[\w]+)\b Error \b(.+\D)(\W[$0-9]{1,3})",3)
 			EndIf
 			
-			_ArrayDisplay($linecontents, "Reg expressions found")
+;			_ArrayDisplay($linecontents, "Reg expressions found")
 			If IsArray($linecontents) Then 
 				If UBound($linecontents) > 1 Then
 					Switch $linecontents[0]
@@ -185,9 +182,7 @@ Func Controller()
 			EndIf
 			ConsoleWrite("Status:"&$status&"< line:"&$pauseline&@CRLF)
 			ConsoleWrite("File:"&$file&"<"&@CRLF)
-;			$location = StringInStr($recv, "202 paused", 0)
 			If $status == "202" Then
-				;$file = StringMid($recv,$location+11)
 				processluasource()
 				if (Number($pauseline) > 0) & ($codeloaded == 1) then
 					_GUICtrlListBox_SetCurSel($steppercode, Number($pauseline)-1)
@@ -285,18 +280,10 @@ Func closeprogram()
 	exit
 EndFunc
 Func processluasource()
-;	local $pauselocation = StringInStr($file, ".lua", 0) +5
-;	$pauseline = StringMid($file,$pauselocation)
-;	$pauseline = StringMid($pauseline, 1, StringLen($pauseline)-1)
 	if $codeloaded <> 1 Then
-;		local $lualocation = StringInStr($file, ".lua", 0)
-;		local $tend = ($lualocation+3)
 		local $linenum = 1
-
-;		if $location > 0 Then
 		ConsoleWrite("file:"&$file&"<")
 		If FileExists($file) Then
-;			$file = StringMid($file,1,$tend)
 			If Not _FileReadToArray($file,$filecontents) Then
 				local $message = "Error while reading file " & $file & @CRLF & "error:" & @error
 				GUICtrlSetData($edit, $message & @CRLF & GUICtrlRead($edit))
