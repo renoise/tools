@@ -27,7 +27,7 @@ function Slider:__init(display)
 	self.size = 0
 
 	-- the selected index (0 is deselected)
-	self.selected_index = 0
+	self.index = 0
 
 	-- if true, press twice to switch to deselected state*
 	self.toggleable = false
@@ -49,6 +49,7 @@ function Slider:__init(display)
 
 	--	* this only applies when input method is a button
 
+
 	self.add_listeners(self)
 
 	self.palette = {
@@ -58,6 +59,10 @@ function Slider:__init(display)
 		medium = deepcopy(display.palette.color_2),
 		medium_dimmed = deepcopy(display.palette.color_2_dimmed),
 	}
+
+	-- internal values
+	self._cached_index = self.index
+	self._cached_value = self.value
 
 
 end
@@ -81,7 +86,7 @@ function Slider:do_press()
 	idx = self.determine_index_by_pos(self,msg.column,msg.row)
 
 	if self.toggleable then
-		if self.selected_index == idx then
+		if self.index == idx then
 			idx = 0
 		end
 	end
@@ -93,19 +98,17 @@ end
 
 -- user input via slider, encoder: 
 -- set index + precise value
+-- @return (boolean) false to revert changes
 
 function Slider:do_change()
 --print("Slider:do_change()")
-
 	local msg = self.get_msg(self)
-
 	if not (self.group_name == msg.group_name) then
 		return
 	end
 	if not self.test(self,msg.column,msg.row) then
 		return
 	end
-
 	local idx = self.determine_index_by_pos(self,msg.column,msg.row)
 	local tmp = (msg.value/msg.max)*self.ceiling/self.size
 	local rslt = (self.ceiling/self.size)*(idx-1)+tmp
@@ -153,22 +156,25 @@ function Slider:set_size(size)
 end
 
 
--- setting precise value will also set index
+-- setting value will also set index
 -- @val (float) 
 -- @silent (bool) - skip event
 
 function Slider:set_value(val,silent)
+--print("Slider:set_value:",val,silent)
 
-	self.value = val
 
 	local idx = math.ceil((self.size/self.ceiling)*val)
-
-	self.selected_index = idx
-	self.invalidate(self)
+	local rslt = false
+	self._cached_index = idx
+	self._cached_value = val
+	self.value = val
+	self.index = idx
 
 	if not silent and self.on_change then
-		self.on_change(self)
+		self:invoke_handler()
 	end
+
 
 end
 
@@ -180,18 +186,29 @@ function Slider:set_index(idx,silent)
 --print("Slider:set_index:",idx,silent)
 
 	-- todo: cap value
-
-	self.selected_index = idx
-	--self.invalidate(self)
+	local rslt = false
+	self._cached_index = idx
+	self._cached_value = self.value
+	self.index = idx
 	self.value = (self.ceiling/self.size)*idx
-	self.invalidate(self)
 
 	if not silent and self.on_change then
-		self.on_change(self)
+		self:invoke_handler()
 	end
-
 end
 
+-- trigger the external handler method
+-- (this can revert changes)
+function Slider:invoke_handler()
+	local rslt = self.on_change(self)
+	if not rslt then	-- revert
+		--print('revert to cached_index')		
+		self.index = self._cached_index		
+		self.value = self._cached_value	
+	else
+		self.invalidate(self)
+	end
+end
 
 function Slider:set_dimmed(bool)
 	self.dimmed = bool
@@ -199,23 +216,20 @@ function Slider:set_dimmed(bool)
 end
 
 
-
 function Slider:draw()
---print("Slider:draw:",self.selected_index)
+--print("Slider:draw:",self.index)
 	
 	local x,y,value
-	local idx = self.selected_index
+	local idx = self.index
 
 	if not self.flipped then
 		idx = self.size-idx+1
 	end
 
 	for i = 1,self.size do
-		
+
 		x,y = 1,1
-
 		point = Point()
-
 		point.apply(point,self.palette.background)
 
 		if idx then
@@ -225,7 +239,7 @@ function Slider:draw()
 				-- figure out the offset within the "step",
 				-- going from 0 to .ceiling value
 				local step = self.ceiling/self.size
-				local offset = self.value-(step*(self.selected_index-1))
+				local offset = self.value-(step*(self.index-1))
 				point.val = offset*(1/step)*self.ceiling
 
 				if self.dimmed then
@@ -244,7 +258,7 @@ function Slider:draw()
 					end
 				end
 
-			elseif ((self.size-i) < self.selected_index) then
+			elseif ((self.size-i) < self.index) then
 
 				point.val = true
 				if self.dimmed then

@@ -91,6 +91,8 @@ function MIDIDevice:midi_callback(message)
 			msg.input_method = CONTROLLER_BUTTON
 		elseif param["xarg"].type == "encoder" then
 			msg.input_method = CONTROLLER_ENCODER
+		elseif param["xarg"].type == "fader" then
+			msg.input_method = CONTROLLER_FADER
 		end
 		-- include additional meta-properties
 		msg.name	= param["xarg"].name
@@ -191,7 +193,8 @@ end
 -- @return #cc (integer) 
 
 function MIDIDevice:extract_midi_cc(str)
---print("MIDIDevice:extract_midi_cc",str)
+--print("MIDIDevice:extract_midi_cc",string.sub(str,4)+0)
+
 	return string.sub(str,4)+0
 
 end

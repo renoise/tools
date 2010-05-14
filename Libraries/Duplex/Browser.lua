@@ -13,7 +13,7 @@ module("Duplex", package.seeall);
 class 'Browser' (Application)
 
 function Browser:__init(device_name,app_name)
-print("Browser:__init",device_name,app_name)
+--print("Browser:__init",device_name,app_name)
 
 	-- initialize
 	self.name = "Browser"
@@ -345,20 +345,23 @@ function Browser:set_application(name)
 		
 		local elm = self.vb.views["dpx_browser_input_device"]
 		local device_display_name = elm.items[elm.value]
-		local sliders_group_name=""
-		local buttons_group_name=""
+		local sliders_group_name=nil
+		local buttons_group_name=nil
+		local master_group_name=nil
 
 		-- TODO: control-map groups should be user-configurable
 		-- make some sort of application preferences to solve this
 		if device_display_name == "Launchpad" then
 			sliders_group_name="Grid"
 			buttons_group_name="Controls"
+			master_group_name="Triggers"
 		elseif device_display_name == "Nocturn" then
-			sliders_group_name="Dials"
-			buttons_group_name="Buttons"
+			sliders_group_name="Encoders"
+			buttons_group_name="Pots"
+			master_group_name="XFader"
 		end
 
-		self.application = MixConsole(self.display,sliders_group_name,buttons_group_name)
+		self.application = MixConsole(self.display,sliders_group_name,buttons_group_name,master_group_name)
 	end
 
 	if name == "PatternMatrix" then

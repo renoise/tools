@@ -74,7 +74,7 @@ function ControlMap:load_definition(file_path)
 			 
 	-- load the control-map
 	if file_exists(file_path) then
-		print("ControlMap:load_definition:", file_path)
+		--print("ControlMap:load_definition:", file_path)
 		local xml_string = self.read_file(self, file_path)
 		self.parse_definition(self, xml_string)
 	else
