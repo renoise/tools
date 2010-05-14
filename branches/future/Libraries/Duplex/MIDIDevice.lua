@@ -1,10 +1,10 @@
 --[[----------------------------------------------------------------------------
--- Duplex.MidiDevice
+-- Duplex.MIDIDevice
 ----------------------------------------------------------------------------]]--
 
 --[[
 
-Inheritance: MidiDevice -> Device
+Inheritance: MIDIDevice -> Device
 
 Requires: Globals, ControlMap, Message
 
@@ -12,10 +12,10 @@ Requires: Globals, ControlMap, Message
 
 module("Duplex", package.seeall);
 
-class 'MidiDevice' (Device)
+class 'MIDIDevice' (Device)
 
-function MidiDevice:__init(name)
-print("MidiDevice:__init("..name..")")
+function MIDIDevice:__init(name)
+--print("MIDIDevice:__init("..name..")")
 
 	Device.__init(self, name, DEVICE_MIDI_PROTOCOL)
 
@@ -27,8 +27,8 @@ print("MidiDevice:__init("..name..")")
 
 	if table.find(input_devices, name) then
 	self.midi_in = renoise.Midi.create_input_device(name,
-	  {self, MidiDevice.midi_callback},
-	  {self, MidiDevice.sysex_callback}
+	  {self, MIDIDevice.midi_callback},
+	  {self, MIDIDevice.sysex_callback}
 	)
 	else
 		print("Notice: Could not create MIDI input device "..name)
@@ -43,8 +43,8 @@ print("MidiDevice:__init("..name..")")
 
 end
 
-function MidiDevice:release()
-print("MidiDevice:release()")
+function MIDIDevice:release()
+--print("MIDIDevice:release()")
 
 	if self.midi_in and self.midi_in.is_open then
 		self.midi_in:close()
@@ -59,7 +59,7 @@ print("MidiDevice:release()")
 
 end
 
-function MidiDevice:midi_callback(message)
+function MIDIDevice:midi_callback(message)
 
 	assert(#message == 3)
 	assert(message[1] >= 0 and message[1] <= 0xff)
@@ -104,31 +104,33 @@ function MidiDevice:midi_callback(message)
 		msg.timestamp = os.clock()
 	end
 
-	self.message_stream.input_message(self.message_stream,msg)
+	self.message_stream:input_message(msg)
 
 end
 
 
-function MidiDevice:sysex_callback(message)
+function MIDIDevice:sysex_callback(message)
 --print(("%s: MidiDumper got SYSEX with %d bytes"):format(self.device_name, #message))
 end
 
 
-function MidiDevice:send_cc_message(number,value)
---print("MidiDevice:send_cc_message",number,value)
+--	send CC message
+--	@param number (int) the control-number (0-127)
+--	@param value (int) the control-value (0-127)
+
+function MIDIDevice:send_cc_message(number,value)
+--print("MIDIDevice:send_cc_message",number,value)
 
 	if not self.midi_out or not self.midi_out.is_open then
 		return
 	end
 
-	key = math.floor(number)
-	velocity = math.floor(value)
 	self.midi_out:send({0xB0, number, value})
 end
 
 
-function MidiDevice:send_note_message(key,velocity)
---print("MidiDevice:send_note_message",key,velocity)
+function MIDIDevice:send_note_message(key,velocity)
+--print("MIDIDevice:send_note_message",key,velocity)
 
 	if not self.midi_out or not self.midi_out.is_open then
 		return
@@ -150,15 +152,15 @@ end
 -- @param key: the key (7-bit integer)
 -- @return string (e.g. "C#5")
 
-function MidiDevice:note_to_string(int)
---print("MidiDevice:note_to_string",int)
+function MIDIDevice:note_to_string(int)
+--print("MIDIDevice:note_to_string",int)
 	local key = (int%12)+1
 	local oct = math.floor(int/12)-1
 	return NOTE_ARRAY[key]..(oct)
 end
 
 
-function MidiDevice:midi_cc_to_string(int)
+function MIDIDevice:midi_cc_to_string(int)
 	return string.format("CC#%d",int)
 end
 
@@ -167,8 +169,8 @@ end
 -- @param str	- string, e.g. "C-4" or "F#-1"
 -- @return #note (7-bit integer)
 
-function MidiDevice:extract_midi_note(str) 
---print("MidiDevice:extract_midi_note",str)
+function MIDIDevice:extract_midi_note(str) 
+--print("MIDIDevice:extract_midi_note",str)
 	local rslt = nil
 	local note_segment = string.sub(str,0,2)
 	local octave_segment = string.sub(str,3)
@@ -188,9 +190,34 @@ end
 -- Extract MIDI CC number (range 0-127)
 -- @return #cc (integer) 
 
-function MidiDevice:extract_midi_cc(str)
---print("MidiDevice:extract_midi_cc",str)
+function MIDIDevice:extract_midi_cc(str)
+--print("MIDIDevice:extract_midi_cc",str)
 	return string.sub(str,4)+0
 
 end
 
+-- Convert the point to an output value
+-- (override with device-specific implementation)
+function MIDIDevice:point_to_value(pt,maximum,minimum,ceiling)
+--print("MIDIDevice:point_to_value:",pt,maximum,minimum,ceiling)
+
+	if not ceiling then
+		ceiling = 127
+	end
+
+	if(type(pt.val)=="boolean")then
+		if pt.val then
+			value = maximum
+		else
+			value = minimum
+		end
+	else
+		-- scale the value from "local" to "external"
+		-- for instance, from Renoise dB range (1.4125375747681) 
+		-- to a 7-bit controller value (127)
+		value = math.floor((pt.val*(1/ceiling))*maximum)
+	end
+
+	return value*1	-- toNumber
+
+end
