@@ -2,16 +2,6 @@
   com.renoise.flanger_example.lua
 ---------------------------------------------------------------------------]]--
 
-manifest = {
-  name = "Flanger (Example Plugin)",
-  identifier = "com.renoise.flanger_example",
-  author = "taktik [taktik@renoise.com]",
-  type = "Effect"
-}
-
-
--------------------------------------------------------------------------------
-
 -- consts
 
 local DELAY_BUFFER_SIZE = 16384

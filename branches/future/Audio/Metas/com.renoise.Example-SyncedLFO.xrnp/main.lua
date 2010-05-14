@@ -2,16 +2,6 @@
   com.renoise.synced_lfo_example.lua
 ---------------------------------------------------------------------------]]--
 
-manifest = {
-  name = "*Beat LFO (Example Plugin)",
-  identifier = "com.renoise.synced_lfo_example",
-  author = "taktik [taktik@renoise.com]",
-  type = "Meta"
-}
-
-
--------------------------------------------------------------------------------
-
 local parameters = {
   offset = 0,
   amount = 1,

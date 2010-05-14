@@ -2,16 +2,6 @@
   com.renoise.shape_example.lua
 ---------------------------------------------------------------------------]]--
 
-manifest = {
-  name = "Shape (Example Plugin)",
-  identifier = "com.renoise.shape_example",
-  author = "taktik [taktik@renoise.com]",
-  type = "Effect"
-}
-
-
--------------------------------------------------------------------------------
-
 local abs = math.abs
 
 local parameters = {
