@@ -2,8 +2,6 @@
 -- Lua Standard Library and Extensions
 ----------------------------------------------------------------------------]]--
 
---[[
-
 This is a reference of standard global Lua functions and tools that where
 added or changed by Renoise, in order to extend the functionality of Luas
 standard library.
@@ -11,12 +9,10 @@ standard library.
 All standard Lua libraries are included in Renoise as well. You can find a
 full reference here: http://www.lua.org/pil/18.html
 
---]]
 
-
-"------------------------------------------------------------------------------"
-"-- globals"
-"------------------------------------------------------------------------------"
+-------------------------------------------------------------------------------
+-- globals
+-------------------------------------------------------------------------------
 
 -- added
 
@@ -45,9 +41,9 @@ oprint(table)
 type(class_object or class or anything else) -> [string]
 
 
-"------------------------------------------------------------------------------"
-"-- table"
-"------------------------------------------------------------------------------"
+-------------------------------------------------------------------------------
+-- table
+-------------------------------------------------------------------------------
 
 -- added
 
@@ -86,9 +82,9 @@ table.keys(table) -> [table]
 table.values(table) -> [table]
 
 
-"------------------------------------------------------------------------------"
-"-- os"
-"------------------------------------------------------------------------------"
+-------------------------------------------------------------------------------
+-- os
+-------------------------------------------------------------------------------
 
 -- added
 
@@ -104,7 +100,8 @@ os.currentdir() -> [string]
 -- changed
 
 -- replaced with a temp directory and name which renoise will clean up on exit
-os.tmpname() -> [string]
+-- extension will be ".tmp" when not specified
+os.tmpname([extension]) -> [string]
 
 -- replaced with a high precision timer (still expressed in milliseconds)
 os.clock() -> [number]
@@ -113,13 +110,54 @@ os.clock() -> [number]
 os.exit()
 
 
-"------------------------------------------------------------------------------"
-"-- math"
-"------------------------------------------------------------------------------"
+-------------------------------------------------------------------------------
+-- io
+-------------------------------------------------------------------------------
 
 -- added
 
--- converts a linear value to a db value. db values will be clipped to math.infdb
+-- returns true when a file, folder or link at the given path and name exists
+io.exists(filename) -> [boolean]
+
+-- returns a table with status info about the file, folder or link at the given 
+-- path and name, else nil the error and the error code is returned.
+--
+-- the returned valid stat table contains the following fields:
+-- 'dev'    number: device number of filesystem
+-- 'ino'    number: inode number
+-- 'mode'   number: unix styled file permissions
+-- 'type'   string: type ("file", "directory", "link", "socket", 
+--            "named pipe", "char device" or "block device")
+-- 'nlink'  number: number of (hard) links to the file
+-- 'uid'    number: numeric user ID of file's owner
+-- 'gid'    number: numeric group ID of file's owner
+-- 'rdev'   number: the device identifier (special files only)
+-- 'size'   number: total size of file, in bytes
+-- 'atime'  number: last access time in seconds since the epoch
+-- 'mtime'  number: last modify time in seconds since the epoch
+-- 'ctime'  number: inode change time (NOT creation time!) in seconds
+io.stat(filename) -> [table or (nil, error, error no)]
+
+-- change permissions of a file, folder or link. mode is a unix permission 
+-- styled octal number (like 755 - WITHOUT a leading octal 0). executable, 
+-- group and others flags are ignored on windows and won't fire errors
+io.chmod(filename, mode) -> [true or (nil, error, error no)]
+
+
+-- changed
+
+-- all io functions use UTF8 as encoding for the file names and paths. UTF8
+-- is used for LUA in the whole API as default string encoding...
+
+
+-------------------------------------------------------------------------------
+-- math
+-------------------------------------------------------------------------------
+
+-- added
+
+-- converts a linear value to a db value. db values will be clipped to 
+-- math.infdb
 -- example: print(math.lin2db(1.0)) -> 0
 --          print(math.lin2db(0.0)) -> -200 (math.infdb)
 math.lin2db(number) -> [number]
@@ -133,18 +171,14 @@ math.db2lin(number) -> [number]
 math.infdb -> [-200]
 
 
-"------------------------------------------------------------------------------"
-"-- bit (added)"
-"------------------------------------------------------------------------------"
-
---[[
+-------------------------------------------------------------------------------
+-- bit (added)
+-------------------------------------------------------------------------------
 
 Integer, Bit Operations, provided by http://bitop.luajit.org/
-
 Take a look at http://bitop.luajit.org/api.html for the complete reference
 and examples please...
 
---]]
 
 -- Normalizes a number to the numeric range for bit operations and returns it.
 -- This function is usually not needed since all bit operations already
@@ -183,6 +217,7 @@ bit.ror(x, n) -> [number]
 -- Swaps the bytes of its argument and returns it. This can be used to convert
 -- little-endian 32 bit numbers to big-endian 32 bit numbers or vice versa.
 bit.bswap(x) -> [number]
+
 
 --[[----------------------------------------------------------------------------
 ----------------------------------------------------------------------------]]--

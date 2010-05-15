@@ -2,8 +2,6 @@
 -- CodeSnippets.txt
 -------------------------------------------------------------------------------
 
---[[
-
 Categorized collection of small Lua code snippets, to show some uses of the
 Lua API in Renoise and all its components...
 
@@ -15,8 +13,6 @@ API, and scripting in Renoise in general...
 
 Snippets are now included in the public XRNS source repository at:
 https://code.google.com/p/xrnx/source/browse/#svn/trunk/Snippets
-
---]]
 
 
 --[[---------------------------------------------------------------------------

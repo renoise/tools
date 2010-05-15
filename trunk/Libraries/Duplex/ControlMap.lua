@@ -42,38 +42,29 @@ end
 -- @param file_path (string) the name of the file, e.g. "my_map.xml"
 
 function ControlMap:load_definition(file_path)
-	-- temporary: to be removed with the impl of io.exists()
-	local function file_exists(name)
-		local f = io.open(name)
-		if (f ~= nil) then
-			f:close()
-			return true
-		end
-		return false
-	end
 	
-	-- try to find the controller definition in the package path
+  -- try to find the controller definition in the package path
 	local package_paths = {}
 	package.path:gsub("([^;]*)", function(str) 
-		table.insert(package_paths, str) return "" 
+		if (#str > 1) then table.insert(package_paths, str) end
 	end)
 	
 	for _,path in pairs(package_paths) do
 		local lib_path_base = path:gsub("?.lua", "")
-	 
-		if file_exists(lib_path_base .. "/Duplex/" .. file_path) then
+ 
+		if io.exists(lib_path_base .. "/Duplex/" .. file_path) then
 			file_path = lib_path_base .. "/Duplex/" .. file_path
 			break
 		end
 		
-		if (file_exists(lib_path_base .. file_path)) then
+		if (io.exists(lib_path_base .. file_path)) then
 			file_path = lib_path_base .. file_path
 			break
 		end
 	end
 			 
 	-- load the control-map
-	if file_exists(file_path) then
+	if io.exists(file_path) then
 		--print("ControlMap:load_definition:", file_path)
 		local xml_string = self.read_file(self, file_path)
 		self.parse_definition(self, xml_string)

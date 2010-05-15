@@ -1,20 +1,19 @@
 --[[---------------------------------------------------------------------------
-FindAndReplace.lua
+com.renoise.FindAndReplace.xrnx/main.lua
 ---------------------------------------------------------------------------]]--
 
--- manifest
 
-manifest = {}
-manifest.api_version = 0.2
+-------------------------------------------------------------------------------
+-- tool setup
+-------------------------------------------------------------------------------
 
-manifest.author = "taktik [taktik@renoise.com]"
-manifest.description = "Tool for finding & replacing pattern data, " ..
-"with simple wildcard support..."
+renoise.tool():add_menu_entry {
+  name = "Pattern Editor:Find and Replace...",
+  invoke = function() show_dialog() end
+} 
 
-manifest.actions = {}
-manifest.actions[#manifest.actions + 1] = {
-  name = "PatternEditor:Find and Replace...",
-  description = "Open the Find & Replace Dialog",
+renoise.tool():add_keybinding {
+  name = "Pattern Editor:Tools:Find and Replace",
   invoke = function() show_dialog() end
 }
 
@@ -758,6 +757,7 @@ function show_dialog()
   )
 
 end
+
 
 --[[---------------------------------------------------------------------------
 ---------------------------------------------------------------------------]]--
