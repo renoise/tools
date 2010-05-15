@@ -2,8 +2,6 @@
 -- Renoise Socket API Reference
 ----------------------------------------------------------------------------]]--
 
---[[
-
 This reference describes the built-in socket support for Lua scripts in Renoise.
 Sockets can be used to send/receive data over process boundaries or exchange
 data across computers in a network (Internet). The socket API in Renoise has
@@ -52,16 +50,14 @@ does not make sense. Do not "pcall" such errors, but fix the problems instead.
 -- for some small examples on how to use sockets in this API, have a look at the
 "CodeSnippets.txt" file please. There are two simple client/server examples...
 
---]]
 
+--==============================================================================
+-- Socket
+--==============================================================================
 
-"=============================================================================="
-"-- Socket"
-"=============================================================================="
-
-"------------------------------------------------------------------------------"
-"-- renoise.Socket"
-"------------------------------------------------------------------------------"
+--------------------------------------------------------------------------------
+-- renoise.Socket
+--------------------------------------------------------------------------------
 
 -- consts (renoise.Socket)
 
@@ -76,7 +72,10 @@ renoise.Socket.PROTOCOL_UDP
 -- renoise.Socket.PROTOCOL_TCP or renoise.Socket.PROTOCOL_UDP (by default TCP)
 -- when instantiation and connection succeeded, a valid server object is
 -- returned, else socket_error is set and the server object is nil.
-renoise.Socket.create_server(server_address, server_port [, protocol]) ->
+-- using the create function with no server_address, allows you to create a 
+-- server which allows connections to any address (for example localhost 
+-- and some IP)
+renoise.Socket.create_server( [server_address, ] server_port [, protocol]) ->
   [server (SocketServer or nil), socket_error (string or nil)]
 
 
@@ -91,9 +90,9 @@ renoise.Socket.create_client(server_address, server_port [, protocol] [, timeout
   [client (SocketClient or nil), socket_error (string or nil)]
 
 
-"------------------------------------------------------------------------------"
-"-- renoise.Socket.SocketBase"
-"------------------------------------------------------------------------------"
+--------------------------------------------------------------------------------
+-- renoise.Socket.SocketBase
+--------------------------------------------------------------------------------
 
 -- SocketBase is the base class for socket clients and servers. All
 -- SocketBase properties and functions are available for servers and clients.
@@ -120,9 +119,9 @@ socket.local_port -> [number]
 socket:close()
 
 
-"------------------------------------------------------------------------------"
-"-- renoise.Socket.SocketClient (inherits from SocketBase)"
-"------------------------------------------------------------------------------"
+--------------------------------------------------------------------------------
+-- renoise.Socket.SocketClient (inherits from SocketBase)
+--------------------------------------------------------------------------------
 
 -- a SocketClient can connect to other socket servers and send and
 -- receive data from them on request. Connections to a server can not
@@ -154,9 +153,9 @@ socket_client:receive(timeout_ms) ->
   [message (string or nil), error_message (string or nil)]
 
 
-"------------------------------------------------------------------------------"
-"-- renoise.Socket.SocketServer (inherits from SocketBase)"
-"------------------------------------------------------------------------------"
+--------------------------------------------------------------------------------
+-- renoise.Socket.SocketServer (inherits from SocketBase)
+--------------------------------------------------------------------------------
 
 -- a SocketServer handles one or more clients in the background, interacts
 -- only with callbacks with connected clients.

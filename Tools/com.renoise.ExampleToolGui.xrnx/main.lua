@@ -1,65 +1,49 @@
 --[[----------------------------------------------------------------------------
-ExampleTool_GUIs.lua
+com.renoise.ExampleToolGui.xrnx/main.lua
 ----------------------------------------------------------------------------]]--
 
--- manifest
+-- register menu entries
 
--- (see ExampleTool.lua for a description of this header and tools in general)
+-- (see com.renoise.ExampleTool.xrns/main.lua for a description of this 
+--  header and tools in general)
 
-manifest = {}
-manifest.api_version = 0.2
-manifest.author = "taktik [taktik@renoise.com]"
-
-manifest.description = "This tool explains, step by step, how to write " ..
-"custom GUIs with the Renoise scripting API..."
-
-manifest.actions = {}
-
-manifest.actions[#manifest.actions + 1] = {
-  name = "MainMenu:Tools:Example Tools:Custom GUIs:1. Hello World",
-  description = "Create a very simple custom dialog.",
-  invoke = function() hello_world() end
+renoise.tool():add_menu_entry {
+  name = "Main Menu:Tools:Example Tool GUI:1. Hello World",
+  invoke = function() hello_world() end 
 }
 
-manifest.actions[#manifest.actions + 1] = {
-  name = "MainMenu:Tools:Example Tools:Custom GUIs:2. Pretty Hello World",
-  description = "Create a bit more advanced custom dialog.",
-  invoke = function() pretty_hello_world() end
+renoise.tool():add_menu_entry {
+  name = "Main Menu:Tools:Example Tool GUI:2. Pretty Hello World",
+  invoke = function() pretty_hello_world() end 
+}
+  
+renoise.tool():add_menu_entry {
+  name = "Main Menu:Tools:Example Tool GUI:3. Dynamic Content & Ids",
+  invoke = function() dynamic_content() end 
 }
 
-manifest.actions[#manifest.actions + 1] = {
-  name = "MainMenu:Tools:Example Tools:Custom GUIs:3. Dynamic Content & Ids",
-  description = "Explains how to use ids and how to dynamically change views.",
-  invoke = function() dynamic_content() end
+renoise.tool():add_menu_entry {
+  name = "Main Menu:Tools:Example Tool GUI:4. Batch Building Views",
+  invoke = function() dynamic_building() end 
 }
 
-manifest.actions[#manifest.actions + 1] = {
-  name = "MainMenu:Tools:Example Tools:Custom GUIs:4. Batch Building Views",
-  description = "Shows how to batch build/add views.",
-  invoke = function() dynamic_building() end
+renoise.tool():add_menu_entry {
+  name = "Main Menu:Tools:Example Tool GUI:5. Aligning & Auto Sizing",
+  invoke = function() aligners_and_auto_sizing() end 
 }
-
-manifest.actions[#manifest.actions + 1] = {
-  name = "MainMenu:Tools:Example Tools:Custom GUIs:5. Aligning & Auto Sizing",
-  description = ";ore about auto sizes, columns,rows and aligners.",
-  invoke = function() aligners_and_auto_sizing() end
+  
+renoise.tool():add_menu_entry {
+  name = "Main Menu:Tools:Example Tool GUI:6. Available Backgrounds & Text",
+  invoke = function() available_backgrounds() end 
 }
-
-manifest.actions[#manifest.actions + 1] = {
-  name = "MainMenu:Tools:Example Tools:Custom GUIs:6. Available Backgrounds & Text",
-  description = "Shows all available background styles.",
-  invoke = function() available_backgrounds() end
+  
+renoise.tool():add_menu_entry {
+  name = "Main Menu:Tools:Example Tool GUI:7. Available Controls",
+  invoke = function() available_controls() end 
 }
-
-manifest.actions[#manifest.actions + 1] = {
-  name = "MainMenu:Tools:Example Tools:Custom GUIs:7. Available Controls",
-  description = "Shows all available controls.",
-  invoke = function() available_controls() end
-}
-
-manifest.actions[#manifest.actions + 1] = {
-  name = "MainMenu:Tools:Example Tools:Custom GUIs:8. Keyboard Events",
-  description = "Shows how to handle key envents in dialogs.",
+  
+renoise.tool():add_menu_entry {
+  name = "Main Menu:Tools:Example Tool GUI:8. Keyboard Events",
   invoke = function() handle_key_events() end
 }
 
@@ -539,7 +523,7 @@ end
 
 function available_backgrounds()
 
-  -- lets go on by simply demonstrating the available view, starting with all
+  -- lets go on by simply demonstrating the available views, starting with all
   -- background styles:
 
   local vb = renoise.ViewBuilder()
@@ -683,10 +667,10 @@ function available_controls()
       text = "vb:textfield"
     },
     vb:textfield {
-      value = "Edit me",
-      notifier = function(value)
+      text = "Edit me",
+      notifier = function(text)
         show_status(("textfield value changed to '%s'"):
-          format(value))
+          format(text))
       end
     }
   }
@@ -698,12 +682,22 @@ function available_controls()
       text = "vb:bitmap"
     },
     vb:bitmap {
+      -- recolor to match the GUI theme:
       mode = "body_color",
-      bitmap = "Logos/SmallLogoLetters.bmp",
+      -- bitmaps names should be specified with a relative path using
+      -- your tool script bundle path as base:
+      bitmap = "Bitmaps/RenoiseLua.bmp",
       notifier = function()
         show_status("bitmapview was pressed")
       end
-    }
+    },
+    --[[ TODO vb:bitmap {
+      mode = "alpha",
+      bitmap = "Bitmaps/RenoiseLua.png",
+      notifier = function()
+        show_status("bitmapview was pressed")
+      end
+    } ]]
   }
   
   -- button 
@@ -720,7 +714,8 @@ function available_controls()
       end,
     },
     vb:button {
-      bitmap = "Icons/Browser_RenoiseInstrumentFile.bmp",
+      -- buttons can also use bitmaps as icons:
+      bitmap = "Bitmaps/MiniPiano.bmp",
       width = 20,
       notifier = function()
         show_status("button with bitmap was hit")
@@ -842,7 +837,7 @@ function available_controls()
           return 0.0
         else
           local db = tonumber(str)
-          if db ~= nil then
+          if (db ~= nil) then
             return math.db2lin(db)
           end
         end
@@ -889,6 +884,26 @@ function available_controls()
     }
   }
   
+      
+  -- rotary
+  local rotary_row = vb:row {
+    vb:text {
+      width = TEXT_ROW_WIDTH,
+      text = "vb:rotary"
+    },
+    vb:rotary {
+      min = 2,
+      max = 4,
+      value = 3.5,
+      width = 36,
+      height = 36,
+      notifier = function(value)
+        show_status(("rotaty encoder value changed to '%.1f'"):
+          format(value))
+      end
+    }
+  }
+  
   
   -- CLOSE BUTTON
     
@@ -924,6 +939,7 @@ function available_controls()
     valuebox_row, 
     slider_row,
     minislider_row,
+    rotary_row,
     
     -- space
     vb:space { height = 2*CONTENT_SPACING },

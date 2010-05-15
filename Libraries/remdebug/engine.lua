@@ -158,8 +158,8 @@ local function restore_vars(vars)
   end
   
   -- disable sctrict mode here, when enabled
-  local _strict = _G.__STRICT
-  _G.__STRICT = false
+  local _strict = _G._STRICT
+  _G._STRICT = false
     
   local func = debug.getinfo(3, "f").func
   local i = 1
@@ -190,7 +190,7 @@ local function restore_vars(vars)
     i = i + 1
   end
   
-  _G.__STRICT = _strict
+  _G._STRICT = _strict
 end
 
 
@@ -198,8 +198,8 @@ end
 
 local function capture_vars()
   -- disable sctrict mode here, when enabled
-  local _strict = _G.__STRICT
-  _G.__STRICT = false
+  local _strict = _G._STRICT
+  _G._STRICT = false
   
   
   local vars = {}
@@ -230,7 +230,7 @@ local function capture_vars()
     __newindex = getfenv(func) 
   })
   
-  _G.__STRICT = _strict
+  _G._STRICT = _strict
   
   return vars
 end

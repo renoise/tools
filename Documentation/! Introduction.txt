@@ -2,22 +2,16 @@
 -- Renoise Scripting Reference and HOWTOs - Introduction
 ----------------------------------------------------------------------------]]--
 
---[[
-
 Welcome to the Renoise scripting Guide. In all the various files in this
 "Documentation" folder, we will give you an overview on how to write scripts
 and extensions for Renoise; how to debug them, what's possible to "script",
 what's not, and much more. Please read this introduction carefully, to get an
 idea how to get started, and to avoid common pitfalls and questions.
 
-]]
-
 
 --------------------------------------------------------------------------------
-"Scripting Development Tools in Renoise"
+-- Scripting Development Tools in Renoise
 --------------------------------------------------------------------------------
-
---[[
 
 By default Renoise has all the scripting stuff hidden to keep things as easy as
 possible for those who don't want to mess around with code. If you want to write
@@ -47,14 +41,10 @@ entries there if it already exists). In the "Tools" menu you will find:
 
 - "Example Tools" and other tools that target script developers only.
 
-]]
-
 
 --------------------------------------------------------------------------------
-"What can be 'scripted', what can't? What is all this 'scripting' about?"
+-- What can be 'scripted', what can't? What is all this 'scripting' about?
 --------------------------------------------------------------------------------
-
---[[
 
 Right now (in this Renoise release), you can make use of scripts in the
 following places:
@@ -120,14 +110,10 @@ What you can *NOT* do with Renoise tools and extensions:
     samples or manipulates existing samples. This limitation might change in
     future. For now make a VST or AudioUnit. One thing after the other please.
 
-]]
-
 
 --------------------------------------------------------------------------------
-"Renoise Lua API overview"
+-- Renoise Lua API overview
 --------------------------------------------------------------------------------
-
---[[
 
 The XXX.API.txt files in this documentation folder will list all available Lua
 functions and classes that you can access from scripts in Renoise.
@@ -222,35 +208,25 @@ Some notes about the used notation in !all xxxAPI.txt! files:
   via the global function 'oprint(some_object)' - i.g 'oprint(renoise.song())'
   To dump the renoise module/class layout, use 'rprint(renoise)'
 
-]]
-
 
 --------------------------------------------------------------------------------
-"Creating Renoise Tools, Extensions"
+-- Creating Renoise Tools, Extensions
 --------------------------------------------------------------------------------
-
---[[
 
 TODO: After the Bundle Format changes
 
-]]
 
 
 --------------------------------------------------------------------------------
-"Debugging Renoise Scripts"
+-- Debugging Renoise Scripts
 --------------------------------------------------------------------------------
-
---[[
 
 If tracing / debugging in the console with print, oprint and rprint isn't
 enough, you can also attach a command-line based debugger to your script. Please
 have a look at Debugging.txt for more information and a small tutorial.
 
-]]
 
-
-"Enjoy extending, customizing and automating Renoise ;)"
-
+-- Enjoy extending, customizing and automating Renoise ;)
 
 --[[----------------------------------------------------------------------------
 ----------------------------------------------------------------------------]]--

@@ -2,8 +2,6 @@
 Console.txt
 ----------------------------------------------------------------------------]]--
 
---[[
-
 The built in Script Terminal and Editor in Renoise can be opened by clicking
 on the "Scripting Terminal & Editor..." menu entry in the "Tools" menu.
 
@@ -15,12 +13,10 @@ It allows you to:
   all "print"s and errors from scripts will be redirected here
 
 * Create, view and edit Lua, text, and XML files -> Editor
-]]
-
 
 --------------------------------------------------------------------------------
 
-'"Command" below is the Control key on Windows and Linux, Command on OSX'
+-- Command" below is the Control key on Windows and Linux, Command on OSX
 
 
 --------------------------------------------------------------------------------
@@ -100,8 +96,6 @@ It allows you to:
 -- Tips & Tricks:
 --------------------------------------------------------------------------------
 
---[[
-
 * To enter multiple lines in the terminal, end a line with a \
   The terminal will then prompt for another line until you hit enter twice
 
@@ -121,9 +115,7 @@ It allows you to:
 
 * The full Renoise API reference is included in the left tree view
   as well, in case you want to lookup something without leaving Renoise
-
---]]
-
+  
 
 --[[----------------------------------------------------------------------------
 ----------------------------------------------------------------------------]]--
