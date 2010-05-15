@@ -49,9 +49,9 @@ function process_rubberband(cmd)
   local exe
 
   if os.platform() == 'WINDOWS' then
-    exe = './bin/win32/rubberband.exe'
+    exe = 'START /W /M CMD /C ' .. renoise.tool().bundle_path .. 'bin/win32/rubberband.exe'
   elseif os.platform() == 'MACINTOSH' then
-    exe = './bin/osx/rubberband'
+    exe = renoise.tool().bundle_path .. 'bin/osx/rubberband'
   else
     exe = 'rubberband'
   end
