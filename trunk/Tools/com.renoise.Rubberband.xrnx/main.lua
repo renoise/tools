@@ -34,13 +34,20 @@ function display_error()
 end
 
 function process_rubberband(cmd)
-  print(cmd);
+  local exe
+
+  if os.platform() == 'WINDOWS' then
+    exe = './bin/win32/rubberband.exe'
+  else
+    exe = 'rubberband'
+  end
+
   local ofile = os.tmpname('wav')
   local ifile = os.tmpname('wav')
 
   renoise.song().selected_sample.sample_buffer:save_as(ofile, 'wav')
 
-  os.execute(cmd .. " "..ofile.." "..ifile);
+  os.execute(exe .. " " .. cmd .. " "..ofile.." "..ifile);
          
   if not io.exists(ifile) then
     display_error()
@@ -55,11 +62,11 @@ end
 
 
 function process_stretch(stretch, crisp)
-  process_rubberband("rubberband --time "..stretch.." --crisp "..crisp);
+  process_rubberband("--time "..stretch.." --crisp "..crisp);
 end
 
 function process_shift(shift, crisp, preserve_formant)
-  local cmd = "rubberband --pitch "..shift.." --crisp "..crisp;
+  local cmd = "--pitch "..shift.." --crisp "..crisp;
   if preserve_formant then
     cmd = cmd .. ' -F'
   end
