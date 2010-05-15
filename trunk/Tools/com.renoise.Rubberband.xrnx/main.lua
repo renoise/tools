@@ -7,6 +7,11 @@
 
 ----------------------------------------------------------------------------]]--
 
+
+if os.platform() == 'MACINTOSH' then
+    chmod('./bin/osx/rubberband', 755);
+end
+
 renoise.tool():add_menu_entry {
   name = "Sample Editor:Process:Timestretch",
   invoke = function()
@@ -20,16 +25,23 @@ renoise.tool():add_menu_entry {
 }
 
 function display_error() 
-  local res = renoise.app():show_prompt('Rubberband missing!',
-  "To use this feature you must download Rubberband executable and\n"..
-  "copy it to your operating system path!\n\n"..
-  "On Ubuntu you must install package rubberband-cli\n\n"..
-  "On other systems, you can download binaries or the source code from:\n"..
-  "http://www.breakfastquay.com/rubberband/"
-  , {'Visit website', 'Ok'})
-  
-  if res == 'Visit website' then
-    renoise.app():open_url('http://www.breakfastquay.com/rubberband/');
+  if os.platform() == 'LINUX' then
+    renoise.app():show_prompt('Rubberband missing, or bad command!',
+    "To use this feature you must install Rubberband command line utility\n"..
+    "On Ubuntu you must install package rubberband-cli, you can do this by\n"..
+    "issuing a command: sudo apt-get install rubberband-cli\n\n"..
+    "This error may also be triggered when you are trying to make too heavy\n"..
+    "stretch which overloads the system, if you are sure you have rubberband\n"..
+    "installed then try again with more reasonable input parameters."
+    , {'Ok'})
+  else
+    renoise.app():show_prompt('Something went wrong!',
+    "There is something wrong with installation or your system. Try reinstalling\n"..
+    "the script or see Renoise error logs for more information.\n"..
+    "This error may also be triggered when you are trying to make too heavy\n"..
+    "stretch which overloads the system, if you can try again with more\n"..
+    "reasonable input parameters."
+    , {'Ok'})
   end
 end
 
@@ -38,6 +50,8 @@ function process_rubberband(cmd)
 
   if os.platform() == 'WINDOWS' then
     exe = './bin/win32/rubberband.exe'
+  elseif os.platform() == 'MACINTOSH' then
+    exe = './bin/osx/rubberband'
   else
     exe = 'rubberband'
   end
