@@ -33,6 +33,9 @@ function ToggleButton:__init(display)
 
 	self.add_listeners(self)
 
+
+	self._cached_active = self.active
+
 end
 
 -- user input via button
@@ -78,8 +81,9 @@ end
 function ToggleButton:toggle(silent)
 --print("ToggleButton:toggle")
 
+	self._cached_active = self.active
 	self.active = not self.active
-	self.invalidate(self)
+	--self.invalidate(self)
 	if not silent and self.on_change then
 		self.on_change(self)
 	end
@@ -91,13 +95,26 @@ function ToggleButton:set(value,silent)
 	self.active = value
 	self.invalidate(self)
 	if not silent and self.on_change then
-		self.on_change(self)
+		--self.on_change(self)
+		self:invoke_handler()
 	end
 end
 
 function ToggleButton:set_dimmed(bool)
 	self.dimmed = bool
 	self.invalidate(self)
+end
+
+
+-- trigger the external handler method
+-- (this can revert changes)
+function ToggleButton:invoke_handler()
+	local rslt = self.on_change(self)
+	if not rslt then	-- revert
+		self.active = self._cached_active
+	else
+		self.invalidate(self)
+	end
 end
 
 

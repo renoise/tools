@@ -91,10 +91,9 @@ end
 
 
 function MessageStream:input_message(msg)
---print('MessageStream: event was recieved:')
+--print('MessageStream: event was recieved:',msg)
 	self.current_message = msg
-
-	if msg.input_method == CONTROLLER_ENCODER then
+	if (msg.input_method == CONTROLLER_ENCODER) or (msg.input_method == CONTROLLER_FADER) then
 		--print('MessageStream: event was recieved:',msg.value)
 		--if msg.value == msg.max then
 		for _,listener in ipairs(self.change_listeners)  do 

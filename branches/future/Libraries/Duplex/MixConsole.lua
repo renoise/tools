@@ -13,20 +13,24 @@ module("Duplex", package.seeall);
 
 class 'MixConsole' (Application)
 
-function MixConsole:__init(display,sliders_group_name,buttons_group_name)
---print("MixConsole:__init",display)
+function MixConsole:__init(display,sliders_group_name,buttons_group_name,master_group_name)
+--print("MixConsole:__init",display,sliders_group_name,buttons_group_name,master_group_name)
 
 	-- constructor 
 	Application.__init(self)
 	
 	self.sliders_group_name=sliders_group_name
 	self.buttons_group_name=buttons_group_name
+	self.master_group_name=master_group_name
 
 	-- controls
 	self.master = nil
 	self.sliders = nil
 	self.buttons = nil
-	
+
+	-- the number of tracks displayed
+	self.horizontal_size = nil
+
 	self.display = display
 	self.build_app(self)
 
@@ -74,11 +78,12 @@ function MixConsole:build_app()
 
 	Application.build_app(self)
 
+	self.horizontal_size = 8
+
 	local observable = nil
 	self.master = nil
 	self.sliders = {}
 	self.buttons = {}
-
 
 	-- determine where we should put the volume levels...
 	-- master fader should always be a physical slider if possible
@@ -100,14 +105,16 @@ function MixConsole:build_app()
 		end
 	end
 
-
+	-- this is where we specify the size of the slider
+	-- size is 1 by default, this is good for encoders and faders
 	local slider_vertical_units = 1
 
 	if grid_mode then
+		-- slider is composed from several smaller units (buttons)
 		slider_vertical_units = 8
 	end
 
-	for i=1,8 do
+	for i=1,self.horizontal_size do
 
 		-- sliders ---------------------------------------------------
 
@@ -125,14 +132,17 @@ function MixConsole:build_app()
 		-- slider changed from controller
 		self.sliders[i].on_change = function(obj) 
 			if not self.active then
-				print("Application is sleeping")
-			elseif i == get_master_track_index() then
-				return
+				return false
+			--elseif i == get_master_track_index() then
+			--	print('Track is controlled seperately')
+			--	return false
 			elseif not renoise.song().tracks[i] then
 				print('Track is outside bounds')
+				return false
 			else
 				renoise.song().tracks[i].prefx_volume.value = obj.value
 			end
+			return true
 		end
 		self.display.add(self.display,self.sliders[i])
 
@@ -148,14 +158,13 @@ function MixConsole:build_app()
 		self.buttons[i].on_change = function(obj) 
 			--print("self.buttons[",i,"]:on_change",obj.x_pos)
 			if not self.active then
-				print("Application is sleeping")
-				return
+				return false
 			elseif i == get_master_track_index() then
 				print("Can't mute the master track")
-				return
+				return false
 			elseif not renoise.song().tracks[i] then
 				print('Track is outside bounds')
-				return
+				return false
 			end
 			local mute_state = nil
 			local dimmed = nil
@@ -168,35 +177,42 @@ function MixConsole:build_app()
 			end
 			renoise.song().tracks[i].mute_state = mute_state
 			self.sliders[i].set_dimmed(self.sliders[i],dimmed)
+			return true
 		end
 		self.display.add(self.display,self.buttons[i])
 
 
+		-- apply customization (this will only affect 
+		-- controllers that use color to represent values) : 
 
-		-- apply customization -----------------------------------------------
-
-		--if self.sliders[i] then 
-			if (i>6) then
-				self.sliders[i].colorize(self.sliders[i],{0x00,0xff,0x00})
-				self.buttons[i].colorize(self.buttons[i],{0x00,0xff,0x00})
-			elseif (i>3)then
-				self.sliders[i].colorize(self.sliders[i],{0xff,0x00,0x00})
-				self.buttons[i].colorize(self.buttons[i],{0xff,0x00,0x00})
-			end
-		--end
+		if (i>6) then
+			self.sliders[i].colorize(self.sliders[i],{0x00,0xff,0x00})
+			self.buttons[i].colorize(self.buttons[i],{0x00,0xff,0x00})
+		elseif (i>3)then
+			self.sliders[i].colorize(self.sliders[i],{0xff,0x00,0x00})
+			self.buttons[i].colorize(self.buttons[i],{0xff,0x00,0x00})
+		end
 
 	end
 
+	-- master fader 
+	--	todo: skip if no group is supplied as argument, 
+	--	otherwise attempt to locate the best suited 
+
 	self.master = Slider(self.display)
-	self.master.group_name = "Triggers"
+	self.master.group_name = self.master_group_name
 	self.master.x_pos = 1
 	self.master.y_pos = 1
 	self.master.toggleable = true
 	self.master.ceiling = 1.4125375747681
-	self.master.set_size(self.master,8)
+	self.master.set_size(self.master,slider_vertical_units)
 	self.master.on_change = function(obj) 
-		--print("self.master:on_change",obj.value)
+--print("self.master:on_change",obj.value)
+		if not self.active then
+			return false
+		end
 		get_master_track().prefx_volume.value = obj.value
+		return true
 	end
 	self.display.add(self.display,self.master)
 
@@ -211,7 +227,7 @@ function MixConsole:start_app()
 
 	-- set controls to current values
 	local value = nil
-	for i=1,8 do
+	for i=1,self.horizontal_size do
 		if renoise.song().tracks[i] then
 			value = renoise.song().tracks[i].prefx_volume.value
 			self.set_track_volume(self,i,value)
@@ -239,14 +255,14 @@ function MixConsole:destroy_app()
 end
 
 -- add observables to renoise parameters
--- TODO update this list as more tracks are added
+-- TODO keep this list up-to-date as tracks are added/removed
 
 function MixConsole:add_observables()
 --print("MixConsole:add_observables()")
 
 	local observable
 
-	for i=1,8 do
+	for i=1,self.horizontal_size do
 
 		-- slider changed from Renoise
 		if renoise.song().tracks[i] then

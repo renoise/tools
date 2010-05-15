@@ -3,6 +3,10 @@
 #include <WindowsConstants.au3>
 #include <Constants.au3>
 #Include <File.au3>
+#include <Array.au3>
+#include <GuiStatusBar.au3>
+#include <GuiEdit.au3>
+#include <ScrollBarConstants.au3>
 
 Opt('MustDeclareVars', 1)
 Opt("GUIOnEventMode", 1)
@@ -24,23 +28,27 @@ Opt("GUIResizeMode", 1)
 ;==============================================
 	Local $szIPADDRESS = "0.0.0.0"
 	Local $nPORT = 8171
+	Local $usertermination = False
 	Local $inifile = "controller_gui.ini"
-	Local $MainSocket, $serverwindow, $stepperwindow, $steppercode, $edit, $ConnectedSocket, $szIP_Accepted
-	Local $msg, $recv, $lineinput,$varwindow, $varlist
-	local $codeloaded, $file,$bufferfile, $location, $pauseline
-	dim $filecontents
-	local $forever = 1
-	local $fromsession = False
-Do
-	$codeloaded = 0
-	checkcommandarg()
-	Controller()
-	GUICtrlSetData($edit, "Client disconnected" & @CRLF & GUICtrlRead($edit))
-	MsgBox(0,"Program Termination", "Your lua program has ended")
+	Local $MainSocket, $serverwindow, $ConnectedSocket, $szIP_Accepted, $recv
+	Local $stepperwindow, $steppercode, $edit, $msg, $lineinput,$varwindow, $varlist
+	Local $codeloaded, $file,$bufferfile, $location, $pauseline
+	Local $regarray, $status, $watchidx
+	Dim $filecontents, $statusandline, $filepath, $linecontents
+	Local $forever = 1
+	Local $fromsession = False
 
-Until $forever == 0
+	InitializeWindows()
+	Do
+		$codeloaded = 0
+		checkcommandarg()
+		Controller()
+		GUICtrlSetData($edit, "Client disconnected" & @CRLF & GUICtrlRead($edit))
+		MsgBox(0,"Program Termination", "Your lua program has ended")
 
-Func Controller()
+	Until $forever == 0
+
+Func InitializeWindows()
 ;	Read inifile if it exists, else write a new one with default values.
 	If FileExists($inifile) Then
 		$szIPADDRESS = IniRead($inifile, "server_config", "ip-address", $szIPADDRESS)
@@ -53,15 +61,6 @@ Func Controller()
 	;==============================================
 	TCPStartup()
 
-	; Create a Listening "SOCKET".
-	;   Using your IP Address and Port 33891.
-	;==============================================
-	$MainSocket = TCPListen($szIPADDRESS, $nPORT)
-
-	; If the Socket creation fails, exit.
-	If $MainSocket = -1 Then Exit
-
-
 	; Create a GUI for messages
 	;==============================================
 	If $serverwindow < 1 Then
@@ -69,9 +68,13 @@ Func Controller()
 		If $szIPADDRESS <> "0.0.0.0" Then
 			$inADDR = $szIPADDRESS
 		EndIf
-		$serverwindow = GUICreate("Lua Debug server (IP: " & $inADDR & " / port:" &$nPORT& ")", 450, 200,10,10,BitOR($WS_SYSMENU, $WS_CAPTION,$WS_MAXIMIZEBOX,$WS_MINIMIZEBOX,$WS_THICKFRAME))
+		$serverwindow = GUICreate("Lua Debug server (IP: " & $inADDR & " / port:" &$nPORT& ")", 450, 220,10,10,BitOR($WS_SYSMENU, $WS_CAPTION,$WS_MAXIMIZEBOX,$WS_MINIMIZEBOX,$WS_THICKFRAME))
 		GUISetOnEvent($GUI_EVENT_CLOSE, "closeprogram")
 		$edit = GUICtrlCreateEdit("", 10, 10, 430, 180)
+		local $button_clear_log = GUICtrlCreateButton("Clear logwindow", 20, 195, 94, 20)
+		GUICtrlSetOnEvent(-1, "clearlog")
+		local $button_handle_connect = GUICtrlCreateButton("Start/stop server", 178, 195, 94, 20)
+		GUICtrlSetOnEvent(-1, "handleconnect")
 		GUISetState()
 	EndIf
 	If $varwindow < 1 Then
@@ -96,25 +99,28 @@ Func Controller()
 		GUICtrlSetOnEvent(-1, "breakpoint")
 		GUISetState()
 	EndIf
+EndFunc
+Func Controller()
+
+	; Create a Listening "SOCKET".
+	;   Using your IP Address and Port 33891.
+	;==============================================
+	$MainSocket = TCPListen($szIPADDRESS, $nPORT)
+
+	; If the Socket creation fails, exit.
+	If $MainSocket = -1 Then 
+		MsgBox(0,"Network Error", "Error creating socket on port " & $nPORT & _
+		@CRLF & "Please check your network configuration"&@CRLF& _
+		@CRLF&"This application will now be closed")
+		Exit
+	EndIf
 
 	; Initialize a variable to represent a connection
 	;==============================================
 	$ConnectedSocket = -1
 
-
-	;Wait for and Accept a connection
-	;==============================================
-	Do
-		$ConnectedSocket = TCPAccept($MainSocket)
-	Until $ConnectedSocket <> -1
-
-
-	; Get IP of client connecting
-	$szIP_Accepted = SocketToIP($ConnectedSocket)
-	GUICtrlSetData($edit, "Client connected to:"&$szIP_Accepted & @CRLF & GUICtrlRead($edit))
-;	if $fromsession <> True Then
-		TCPSend($ConnectedSocket, "STEP\n")
-	;EndIf
+	GUICtrlSetData($edit, "Server listening on port > " & $nPORT & @CRLF & GUICtrlRead($edit))
+	listen()
 
 	; GUI Message Loop
 	;==============================================
@@ -124,10 +130,16 @@ Func Controller()
 		; GUI Closed
 		;--------------------
 		If $msg = $GUI_EVENT_CLOSE Then ExitLoop
-		; Try to receive (up to) 2048 bytes
-		;----------------------------------------------------------------
-		$recv = TCPRecv($ConnectedSocket, 2048)
-		if $fromsession == True Then
+		If 	$ConnectedSocket <> -1 Then
+			; Try to receive (up to) 2048 bytes
+			;----------------------------------------------------------------
+			$recv = TCPRecv($ConnectedSocket, 2048)
+		EndIf
+
+		If $fromsession == True Then
+			GUICtrlSetData($edit, $szIP_Accepted & " > Started from within session" & _
+			@CRLF& $recv & @CRLF & GUICtrlRead($edit))
+			Sleep(2000)
 			TCPSend($ConnectedSocket, "STEP\n")
 			$recv = TCPRecv($ConnectedSocket, 2048)
 			$recv = TCPRecv($ConnectedSocket, 2048)
@@ -143,21 +155,46 @@ Func Controller()
 		; Update the edit control with what we have received
 		;----------------------------------------------------------------
 		If $recv <> "" Then 
-			$location = StringInStr($recv, "202 paused", 0)
-			If $location > 0 Then
-				$file = StringMid($recv,$location+11)
+			$recv = StringLeft($recv, StringLen($recv)-1)
+			$recv = StringRegExpReplace ( $recv, "\n", @CRLF)
+			$linecontents = StringRegExp ($recv, "([0-9]{2,3}[\w]+)\b Paused \b(.+\D)(\W[$0-9]{1,3})(\W[$0-9]{1,3})",3)
+			If Not IsArray($linecontents) Then
+				$linecontents = StringRegExp ($recv, "([0-9]{2,3}[\w]+)\b Paused \b(.+\D)(\W[$0-9]{1,3})",3)
+			EndIf
+			If Not IsArray($linecontents) Then
+				$linecontents = StringRegExp ($recv, "([0-9]{2,3}[\w]+)\b Error \b(.+\D)(\W[$0-9]{1,3})",3)
+			EndIf
+			
+;			_ArrayDisplay($linecontents, "Reg expressions found")
+			If IsArray($linecontents) Then 
+				If UBound($linecontents) > 1 Then
+					Switch $linecontents[0]
+						Case "202"
+							$file = $linecontents[1]
+							$pauseline = $linecontents[2]
+						Case "203"
+							$file = $linecontents[1]
+							$pauseline = $linecontents[2]
+							$watchidx = $linecontents[3]
+					EndSwitch
+				EndIf
+				$status = $linecontents[0]
+			EndIf
+			ConsoleWrite("Status:"&$status&"< line:"&$pauseline&@CRLF)
+			ConsoleWrite("File:"&$file&"<"&@CRLF)
+			If $status == "202" Then
 				processluasource()
 				if (Number($pauseline) > 0) & ($codeloaded == 1) then
 					_GUICtrlListBox_SetCurSel($steppercode, Number($pauseline)-1)
 				endif
 			EndIf
-			GUICtrlSetData($edit, _
-				$szIP_Accepted & " > " & $recv & @CRLF & GUICtrlRead($edit))
+			WriteToConsole($recv)
+			
 		EndIf
 	WEnd
 
 
-	If $ConnectedSocket <> -1 Then TCPCloseSocket($ConnectedSocket)
+	If $ConnectedSocket <> -1 & $usertermination == False Then TCPCloseSocket($ConnectedSocket)
 
 	TCPShutdown()
 EndFunc   
@@ -166,6 +203,41 @@ Func sendcommand()
 	TCPSend($ConnectedSocket, GUICtrlRead(@GUI_CtrlId))
 	GUICtrlSetData(3, "Sending ->" & GUICtrlRead(@GUI_CtrlId) & @CRLF & GUICtrlRead(3))
 
+EndFunc
+Func WriteToConsole($contents)
+; Write to our own console window and automatically scroll down.
+	GUICtrlSetData($edit, GUICtrlRead($edit) &@CRLF&  $szIP_Accepted & " > " & $contents)
+	_GUICtrlEdit_LineScroll($Edit, 0, _GUICtrlEdit_GetLineCount($Edit))
+EndFunc
+Func Listen()
+	;Wait for and Accept a connection
+	;==============================================
+	Do
+		$ConnectedSocket = TCPAccept($MainSocket)
+	Until $ConnectedSocket <> -1
+
+
+	; Get IP of client connecting
+	$szIP_Accepted = SocketToIP($ConnectedSocket)
+	WriteToConsole($szIP_Accepted)
+	TCPSend($ConnectedSocket, "STEP\n")
+
+EndFunc
+Func handleconnect()
+	If $ConnectedSocket <> -1 Then
+		TCPCloseSocket($ConnectedSocket)
+		TCPShutdown()
+		$ConnectedSocket = -1
+		$usertermination = True
+	Else
+		TCPStartup()
+		$MainSocket = TCPListen($szIPADDRESS, $nPORT)
+		$usertermination = False
+	EndIf	
+EndFunc
+
+Func clearlog()
+	GUICtrlSetData(3, "")
 EndFunc
 Func stepinto()
 	If $ConnectedSocket <> -1 Then
@@ -192,32 +264,26 @@ Func breakpoint()
 	If $ConnectedSocket <> -1 Then
 		local $newbreakpoint = _GUICtrlListBox_GetCurSel($steppercode) + 1
 		local $message = "SETB " & $bufferfile & " " & $newbreakpoint
-		GUICtrlSetData($edit, _
-		$szIP_Accepted & " > " & $message & @CRLF & GUICtrlRead($edit))
+		WriteToConsole($message)
 		TCPSend($ConnectedSocket, $message)
 	Else
 		noconnecterror()
 	EndIf	
 EndFunc
 Func noconnecterror()
-	GUICtrlSetData($edit, "No clients connected!"& @CRLF & "Please insert a ' require "&Chr(34)&"remdebug.engine"&Chr(34) _
+	local $message = "No clients connected!"& @CRLF & "Please insert a ' require "&Chr(34)&"remdebug.engine"&Chr(34) _
 	&" ' line in your Lua routine"&@CRLF&"and add a ' remdebug.engine.start() ' line into" & _
-	" your code where you want to break first."&@CRLF& "The run your Lua application until it hits the break." & _
-	GUICtrlRead($edit))
+	" your code where you want to break first."&@CRLF& "The run your Lua application until it hits the break."
+	WriteToConsole($message)
 EndFunc
 Func closeprogram()
 	exit
 EndFunc
 Func processluasource()
-	local $pauselocation = StringInStr($file, ".lua", 0) +5
-	$pauseline = StringMid($file,$pauselocation)
-	$pauseline = StringMid($pauseline, 1, StringLen($pauseline)-1)
 	if $codeloaded <> 1 Then
-		local $lualocation = StringInStr($file, ".lua", 0)
-		local $tend = ($lualocation+3)
 		local $linenum = 1
-		if $location > 0 Then
-			$file = StringMid($file,1,$tend)
+		ConsoleWrite("file:"&$file&"<")
+		If FileExists($file) Then
 			If Not _FileReadToArray($file,$filecontents) Then
 				local $message = "Error while reading file " & $file & @CRLF & "error:" & @error
 				GUICtrlSetData($edit, $message & @CRLF & GUICtrlRead($edit))
