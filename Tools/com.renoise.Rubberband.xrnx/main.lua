@@ -7,34 +7,17 @@
 
 ----------------------------------------------------------------------------]]--
 
-manifest = {}
-manifest.api_version = 0.2
-manifest.author = "ClySuva | clysuva@gmail.com"
-manifest.description = "adds rubberband interface to Renoise"
-manifest.actions = {}
-
-manifest.actions[#manifest.actions + 1] = {
-  name = "SampleEditor:Process:Timestretch",
-  description = 'Stretches sample length without changing pitch',
-  invoke = function() show_stretch_dialog() end
+renoise.tool():add_menu_entry {
+  name = "Sample Editor:Process:Timestretch",
+  invoke = function()
+      show_stretch_dialog()
+  end
 }
 
-manifest.actions[#manifest.actions + 1] = {
-  name = "SampleEditor:Process:Pitch Shift",
-  description = 'Changes sample pitch without chaning  length',
+renoise.tool():add_menu_entry {
+  name = "Sample Editor:Process:Pitch Shift",
   invoke = function() show_shift_dialog() end
 }
-
--- Does file exist?
-function exists(filename)
-  local file = io.open(filename)
-  if file then
-    io.close(file)
-    return true
-  else
-    return false
-  end
-end
 
 function display_error() 
   local res = renoise.app():show_prompt('Rubberband missing!',
@@ -52,14 +35,14 @@ end
 
 function process_rubberband(cmd)
   print(cmd);
-  local ofile = os.tmpname()
-  local ifile = os.tmpname()..'.wav'
+  local ofile = os.tmpname('wav')
+  local ifile = os.tmpname('wav')
 
   renoise.song().selected_sample.sample_buffer:save_as(ofile, 'wav')
 
   os.execute(cmd .. " "..ofile.." "..ifile);
          
-  if not exists(ifile) then
+  if not io.exists(ifile) then
     display_error()
     return
   end
