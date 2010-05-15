@@ -3,7 +3,7 @@ GUI
 ----------------------------------------------------------------------------]]--
 
 -- Copy Random.mode_names table for local use
-randomize_modes = table.create()
+local randomize_modes = table.create()
 for k,v in pairs(Random.mode_names) do randomize_modes[k] = v end
 table.insert(randomize_modes, 1, "Shuffle")
 
