@@ -318,12 +318,12 @@ function randomize_gui()
       invoke_current_random()
 
     elseif (key_name == "up") then
-      mode_selector.value = math.min(
-        #randomize_modes, mode_selector.value + 1)
-      
-    elseif (key_name == "down") then
       mode_selector.value = math.max(
         1, mode_selector.value - 1)
+      
+    elseif (key_name == "down") then
+      mode_selector.value = math.min(
+        #randomize_modes, mode_selector.value + 1)
     end
   end
   
