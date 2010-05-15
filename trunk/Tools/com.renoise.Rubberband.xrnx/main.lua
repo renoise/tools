@@ -9,7 +9,7 @@
 
 
 if os.platform() == 'MACINTOSH' then
-    chmod('./bin/osx/rubberband', 755);
+    io.chmod('./bin/osx/rubberband', 755);
 end
 
 renoise.tool():add_menu_entry {
