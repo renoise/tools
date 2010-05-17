@@ -283,15 +283,23 @@ function Browser:get_custom_devices()
       control_map=nil,
       protocol=DEVICE_MIDI_PROTOCOL,
     },
-    --  another generic implementation (no class-name)
-    --  should load as a generic MIDI device
+    --  TODO: implement class
     {
       class_name=nil,          
-      display_name="Behringer BCF2000",
-      device_name="BCF2000",  -- ? 
-      control_map="bcf2000.xml",
+      display_name="Behringer BCF-2000",
+      device_name="BCF-2000",  -- ???
+      control_map="Controllers/BCF-2000/bcf-2000.xml",
       protocol=DEVICE_MIDI_PROTOCOL,
     },
+    --  TODO: implement class
+    {
+      class_name=nil,          
+      display_name="Behringer BCR-2000",
+      device_name="BCR-2000", -- ??? 
+      control_map="Controllers/BCR-2000/bcr-2000.xml",
+      protocol=DEVICE_MIDI_PROTOCOL,
+    },
+
     --  and here I don't really know how to list osc clients?
     {
       class_name=nil,          
