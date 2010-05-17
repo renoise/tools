@@ -48,7 +48,7 @@ end
 --------------------------------------------------------------------------------
 
 function Message:__tostring()
-  return string.format("message: context:%d, group_name:%s",
-    self.context, self.group_name)
+  return string.format("message: context:%s, group_name:%s",
+    totring(self.context), tostring(self.group_name))
 end
 
