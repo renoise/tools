@@ -4,7 +4,6 @@
 
 --[[
 
-
 Inheritance: DisplayObject 
 
 The base class for UI objects
@@ -140,13 +139,15 @@ end
 
 --------------------------------------------------------------------------------
 
-function DisplayObject:__eq()
+function DisplayObject:__eq(other)
+  -- only check for object identity
+  return rawequal(self, other)
 end  
 
 
 --------------------------------------------------------------------------------
 
 function DisplayObject:__tostring()
-  return "DisplayObject"
+  return type(self)
 end  
 
