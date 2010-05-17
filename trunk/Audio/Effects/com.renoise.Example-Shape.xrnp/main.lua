@@ -1,8 +1,9 @@
 --[[---------------------------------------------------------------------------
-  com.renoise.shape_example.lua
+  com.renoise.Example-Shape.xrnp/main.lua
 ---------------------------------------------------------------------------]]--
 
 local abs = math.abs
+
 
 local function shape_factors(amount)
   return (2 * amount / (1 - amount)), (1.0 - (amount*0.5))
@@ -39,7 +40,6 @@ end
 -- name: name of the parameter as it was registered
 -- value: new value name of the parameter
 
-
 function __process_input(name, value)
   if (name == "Amount") then
     parameters.amount = value
@@ -62,6 +62,18 @@ function __process_audio(left, right, num_frames)
     right[i] = shape(right[i], factor) * comp_gain
   end
 end
+
+
+-------------------------------------------------------------------------------
+
+-- __flush_audio
+
+-- called on panic and when suspending the plugin. flush all your buffers here
+
+function __flush_audio()
+  -- nothing to do in this example
+end
+
 
 
 --[[---------------------------------------------------------------------------
