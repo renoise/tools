@@ -4,6 +4,7 @@ Random Class
 
 class "Random"
 
+-- Helper structure
 Random.modes = {
   { name = 'Chaos', notes = {'C-','C#','D-','D#','E-','F-','F#','G-','G#','A-','A#','B-'} },
   { name = 'Harmonic Minor', notes = {'C-','D-','D#','F-','G-','G#'} },
@@ -16,11 +17,13 @@ Random.modes = {
   { name = 'Pentatonic Neutral', notes = {'C-','D-','F-','G-','A#'} },
 }
 
+-- Populate mode_names table with integers for keys
 Random.mode_names = {}
 for _,v in pairs(Random.modes) do
   table.insert(Random.mode_names, v.name)
 end
 
+-- Populate notes_sets table
 Random.note_sets = {}
 for _,v in pairs(Random.modes) do
   Random.note_sets[v.name] = v.notes
@@ -134,12 +137,12 @@ Randomize notes
 ----------------------------------------------------------------------------]]--
 
 function invoke_random(mode, pattern_iterator, constrain, preserve_octave)
-  
+
   if (preserve_octave == nil) then
-    preserve_octave = (renoise.app():show_prompt('Randomizer', 
+    preserve_octave = (renoise.app():show_prompt('Randomizer',
      'Preserve the octave of each note?', {'No', 'Yes'}) == "Yes")
   end
-  
+
   local randomizer = Random(mode, preserve_octave)
   local iterator = Iterator(constrain)
 
@@ -159,7 +162,7 @@ function invoke_shuffle(pattern_iterator, constrain)
 
   iterator:set_callback(function(x) shuffle:push(x); return x end)
   iterator:go(pattern_iterator)
-  
+
   iterator:set_callback(function(x) return shuffle:pop(x); end)
   iterator:go(pattern_iterator)
 end
