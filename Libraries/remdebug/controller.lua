@@ -274,7 +274,26 @@ while true do
       fatal_error("Unknown error in remote debugger")
     end
   
-    -- query std out from prints
+    -- query and dump current locals
+    if (break_succeeded) then
+      client:send("LOCALS\n")
+       
+      local line = client:receive("*l")
+      local _, _, status, len = line:find("^(%d+)[a-zA-Z ]+(%d+)$")
+             
+      if (status == "200") then
+        if (tonumber(len) > 0) then
+          local res = client:receive(tonumber(len))
+          print("-- Locals --\n" .. res)
+        end
+      
+      else
+        status = status or "nil"
+        print("Unknown locals error (" .. status .. ")")
+      end
+    end
+    
+    -- query and dump std out
     if (break_succeeded) then
       client:send("STDOUT\n")
       
