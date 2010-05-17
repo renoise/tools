@@ -32,10 +32,9 @@ class 'ControlMap'
 function ControlMap:__init()
   TRACE("ControlMap:__init")
 
-  self.id = nil      -- unique id, assigned to parameters
-  self.definition = nil  -- control-map parsed into table
-  self.groups = {}    -- control-map groups by name
-
+  self.id = nil -- unique id, assigned to parameters
+  self.definition = nil -- control-map parsed into table
+  self.groups = {} -- control-map groups by name
 end
 
 
@@ -45,6 +44,8 @@ end
 -- @param file_path (string) the name of the file, e.g. "my_map.xml"
 
 function ControlMap:load_definition(file_path)
+  
+  local control_map_name = file_path
   
   -- try to find the controller definition in the package path
   local package_paths = {}
@@ -71,11 +72,12 @@ function ControlMap:load_definition(file_path)
     TRACE("ControlMap:load_definition:", file_path)
     
     local xml_string = self.read_file(self, file_path)
-    self.parse_definition(self, xml_string)
+    self:parse_definition(control_map_name, xml_string)
+  
   else
     renoise.app():show_error(
       ("Failed to load controller definition file: '%s'. " ..
-       "The controller is not available."):format(file_path))
+       "The controller is not available."):format(control_map_name))
   end
 end
 
@@ -84,9 +86,25 @@ end
 
 -- parse the supplied xml string (reset the counter first)
 
-function ControlMap:parse_definition(xml_string)
+function ControlMap:parse_definition(control_map_name, xml_string)
   self.id = 0
-  self.definition = self.parse_xml(self,xml_string)
+
+  -- must guard any file io access. may fail, and we don't want to bother
+  -- the user with cryptic LUA error messages then...
+  local succeeded, result = pcall(function() 
+    return self:parse_xml(xml_string) 
+  end)
+  
+  if (succeeded) then
+    self.definition = result
+  
+  else
+    print("Notice! ControlMap:parse_definition FAILED:", result)
+    
+    renoise.app():show_error(
+      ("Failed to parse the controller definition file: '%s'. " ..
+       "The controller is not available."):format(control_map_name))       
+  end
 end
 
 
@@ -96,7 +114,7 @@ end
 -- @return the <param> attributes array
 
 function ControlMap:get_indexed_element(index,group_name)
-  if self.groups[group_name] and self.groups[group_name][index] then
+  if (self.groups[group_name] and self.groups[group_name][index]) then
     return self.groups[group_name][index].xarg
   end
 end
@@ -112,9 +130,9 @@ end
 function ControlMap:get_param_by_value(str)
   TRACE("ControlMap:get_param_by_value",str)
 
-  for _,__ in pairs(self.groups) do
-    for k,v in ipairs(__) do
-      if v["xarg"]["value"] == str then
+  for _,group in pairs(self.groups) do
+    for k,v in ipairs(group) do
+      if (v["xarg"]["value"] == str) then
         return v
       end
     end
@@ -131,7 +149,7 @@ function ControlMap:read_file(file_path)
     io.close(file_ref)
     return rslt
   else
-    return nil,err;
+    return nil,err
   end
 end
 
@@ -146,12 +164,13 @@ function ControlMap:determine_type(str)
   
   if string.sub(str,0,1)=="/" then
     return OSC_MESSAGE
+  
   elseif string.sub(str,1,2)=="CC" then
     return MIDI_CC_MESSAGE
+  
   elseif string.sub(str,2,2)=="#" or string.sub(str,2,2)=="-" then
     return MIDI_NOTE_MESSAGE
   end
-
 end
 
 
@@ -165,10 +184,12 @@ function ControlMap:parse_xml(s)
 
   local stack = {}
   local top = {}
-  table.insert(stack, top)
   local ni,c,label,xarg, empty
   local i, j = 1, 1
   local index = 1
+  
+  table.insert(stack, top)
+  
   local function parseargs(s)
     local arg = {}
     string.gsub(s, "(%w+)=([\"'])(.-)%2", function (w, _, a)
@@ -181,6 +202,7 @@ function ControlMap:parse_xml(s)
 
     return arg
   end
+  
   while true do
     ni,j,c,label,xarg, empty = string.find(s, "<(%/?)([%w:]+)(.-)(%/?)>", i)
     if not ni then break end
