@@ -18,92 +18,22 @@ class 'PatternMatrix' (Application)
 function PatternMatrix:__init(display)
   TRACE("PatternMatrix:__init",display)
 
-  -- constructor 
   Application.__init(self)
   
   self.buttons = nil
   self.position = nil
   self.display = display
-  self.build_app(self)
+  self:build_app()
 
-  self.observable_firing = false
-
-  --self.offset = 0
-
-  -- observables tell only a little bit, 
-  -- search for changes manually?
-  local function pattern_assignment(e)
-    TRACE("PatternMatrix: pattern_assignments_observable fired...", e)
-    --self.update_slots(self)
-    self.observable_firing = true
-
-  end
-  self.observable = renoise.song().sequencer.pattern_assignments_observable
-  self.observable:add_notifier(pattern_assignment)
-
-  local function pattern_sequence(e)
-    TRACE("PatternMatrix: pattern_sequence_observable fired...", e)
-    --self.update_slots(self)
-    self.observable_firing = true
-
-  end
-  self.observable2 = renoise.song().sequencer.pattern_sequence_observable
-  self.observable2:add_notifier(pattern_sequence)
-
-  self.observable3 = renoise.song().sequencer.pattern_slot_mutes_observable 
-  local function mute_state_changed(e)
-    TRACE("PatternMatrix:pattern_slot_mutes_observable fired...",e)
-    --self.update_slots(self)
-    self.observable_firing = true
-  end
-  self.observable3:add_notifier(mute_state_changed)
-
-  local function tracks(e)
-    TRACE("PatternMatrix:tracks_observable fired...",e)
-    --self.update_slots(self)
-    self.observable_firing = true
-  end
-  self.observable4 = renoise.song().tracks_observable
-  self.observable4:add_notifier(tracks)
-  
-  local function patterns(e)
-    TRACE("PatternMatrix:patterns_observable fired...",e)
-    --self.update_slots(self)
-    self.observable_firing = true
-  end
-  self.observable5 = renoise.song().patterns_observable
-  self.observable5:add_notifier(patterns)
-  
-
---[[
-  self.palette = {
-    empty = {
-      text="▪",
-      color={0x00,0x00,0x00},
-    },
-    empty_muted = {
-      text="▫",
-      color={0xc0,0xc0,0x00},
-    },
-    track = {
-      text="■",
-      color={0xc0,0xc0,0x00},
-    },
-    track_muted = {
-      text="□",
-      color={0xc0,0xc0,0x00},
-    }
-
-  }
-]]
-
+  self.__update_slots_requested = false
+  self:__attach_to_song(renoise.song())
 end
 
 
 --------------------------------------------------------------------------------
 
 function PatternMatrix:build_app()
-  TRACE("PatternMatrix:build_app(")
+  TRACE("PatternMatrix:build_app()")
 
   Application.build_app(self)
 
@@ -162,7 +92,6 @@ function PatternMatrix:build_app()
 
       -- mute state changed from controller
       self.buttons[x][y].on_change = function(obj) 
-
         local seq = renoise.song().sequencer.pattern_sequence
 
         if not self.active then
@@ -193,71 +122,50 @@ end
 -- function to update all slots' visual appeareance
 
 function PatternMatrix:update_slots()
-  if self.observable_firing then
+  if self.__update_slots_requested then
+    -- do a lazy updates in idle...
     return
   end
 
-  TRACE("PatternMatrix:update_slots()",self.observable_firing)
+  TRACE("PatternMatrix:update_slots()",self.__update_slots_requested)
 
-  --local master_idx = get_master_track_index() 
-  local seq = renoise.song().sequencer.pattern_sequence
-  local patt_idx = nil
-  local muted = nil
-  local empty = nil
-  local bt = nil
-  local value = nil
+  local sequence = renoise.song().sequencer.pattern_sequence
+  local tracks = renoise.song().tracks
+  
+  for track_idx = 1,math.min(#tracks, 8) do
+    for seq_index = 1,math.min(#sequence, 8) do
+      local patt_idx = sequence[seq_index]
+      
+      local slot_muted = renoise.song().sequencer:track_sequence_slot_is_muted(
+        track_idx, seq_index)
+      
+      local slot_empty = renoise.song().patterns[patt_idx].tracks[track_idx].is_empty
+      
+      -- custom palettes for toggle-buttons: 
+      local button = self.buttons[track_idx][seq_index]
 
-  for track_idx=1,8 do
-    if renoise.song().tracks[track_idx] then
-      for seq_index=1,8 do
-        
-        if seq[seq_index] then
-          patt_idx = seq[seq_index]
-          muted = renoise.song().sequencer.track_sequence_slot_is_muted(
-            renoise.song().sequencer, track_idx, seq_index)
-          empty = renoise.song().patterns[patt_idx].tracks[track_idx].is_empty
-          bt = self.buttons[track_idx][seq_index]
-
-          -- custom palettes for toggle-buttons: 
-          if not empty then
-            bt.palette.foreground.text="■"
-            bt.palette.foreground.color={0xff,0xff,0x00}
-            bt.palette.foreground_dimmed.text="■"
-            bt.palette.foreground_dimmed.color={0xff,0xff,0x00}
-            bt.palette.background.text="□"
-            bt.palette.background.color={0x80,0x40,0x00}
-          else
-            bt.palette.foreground.text="·"
-            bt.palette.foreground.color={0x00,0x00,0x00}
-            bt.palette.foreground_dimmed.text="·"
-            bt.palette.foreground_dimmed.color={0x00,0x00,0x00}
-            bt.palette.background.text="▫"
-            bt.palette.background.color={0x40,0x00,0x00}
-          end
-
-          bt.set_dimmed(bt,empty)
-          bt.active = (not muted)
-        end
+      if (not slot_empty) then
+        button.palette.foreground.text="■"
+        button.palette.foreground.color={0xff,0xff,0x00}
+        button.palette.foreground_dimmed.text="■"
+        button.palette.foreground_dimmed.color={0xff,0xff,0x00}
+        button.palette.background.text="□"
+        button.palette.background.color={0x80,0x40,0x00}
+     
+      else
+        button.palette.foreground.text="·"
+        button.palette.foreground.color={0x00,0x00,0x00}
+        button.palette.foreground_dimmed.text="·"
+        button.palette.foreground_dimmed.color={0x00,0x00,0x00}
+        button.palette.background.text="▫"
+        button.palette.background.color={0x40,0x00,0x00}
       end
-    end
-  end
 
-end
-
-
---------------------------------------------------------------------------------
-
--- locate a sequencer slot that differ from our representation ...
---[[
-function PatternMatrix:get_changed_slot()
-
-  for seq_index,v in ipairs(renoise.song().patterns) do
-    for track_idx,val in ipairs(v.tracks) do
-      -- do something clever...
+      button:set_dimmed(slot_empty)
+      button.active = (not slot_muted)
     end
   end
 end
-]]
 
 
 --------------------------------------------------------------------------------
@@ -269,12 +177,14 @@ function PatternMatrix:set_offset(val)
   self.position.set_index(self.position,val,true)
 end
 
+
+--------------------------------------------------------------------------------
+
 function PatternMatrix:start_app()
   TRACE("PatternMatrix.start_app()")
 
   Application.start_app(self)
   self.update_slots(self)
-
 end
 
 
@@ -300,22 +210,114 @@ end
 -- periodic updates: handle "un-observable" things here
 
 function PatternMatrix:idle_app()
-  TRACE("PatternMatrix:idle_app()",self.observable_firing)
+  TRACE("PatternMatrix:idle_app()",self.__update_slots_requested)
   
-  if not self.active then return false end
-
-  --if not self.dirty then return false end
-  if self.observable_firing then
-    self.observable_firing = false
-    self.update_slots(self)
+  if (not self.active) then 
+    return false 
   end
 
-  local pos = renoise.song().transport.playback_pos
+  -- updated slots?
+  if (self.__update_slots_requested) then
+    self.__update_slots_requested = false
+    self.update_slots(self)
+  end
+  
   -- changed pattern?
-  if not (pos.sequence==self.position.index)then
+  local pos = renoise.song().transport.playback_pos
+  if not (pos.sequence == self.position.index)then
     self.set_offset(self,pos.sequence)
   end
 
   self.playback_line = pos.line
+end
+
+
+--------------------------------------------------------------------------------
+
+-- adds notifiers to slot relevant states
+
+function PatternMatrix:__attach_to_song(song)
+  TRACE("PatternMatrix:__attach_to_song()")
+  
+  -- song notifiers
+
+  renoise.song().sequencer.pattern_assignments_observable:add_notifier(
+    function()
+      TRACE("PatternMatrix: pattern_assignments_observable fired...")
+      self.__update_slots_requested = true
+    end
+  )
+  
+  song.sequencer.pattern_sequence_observable:add_notifier(
+    function(e)
+      TRACE("PatternMatrix: pattern_sequence_observable fired...")
+      self.__update_slots_requested = true
+    end
+  )
+
+  song.sequencer.pattern_slot_mutes_observable:add_notifier(
+    function()
+      TRACE("PatternMatrix:pattern_slot_mutes_observable fired...")
+      self.__update_slots_requested = true
+    end
+  )
+
+  song.tracks_observable:add_notifier(
+    function()
+      TRACE("PatternMatrix:tracks_observable fired...")
+      self.__update_slots_requested = true
+    end
+  )
+  
+  song.patterns_observable:add_notifier(
+    function()
+      TRACE("PatternMatrix:patterns_observable fired...")
+      self.__update_slots_requested = true
+    end
+  )
+
+  
+  -- slot notifiers
+  
+  local function slot_changed()
+    TRACE("PatternMatrix:slot_changed fired...")
+    self.__update_slots_requested = true
+  end
+
+  local function attach_slot_notifiers()
+    local patterns = song.patterns
+
+    for _,pattern in pairs(patterns) do
+      local pattern_tracks = pattern.tracks
+      
+      for _,pattern_track in pairs(pattern_tracks) do
+        local observable = pattern_track.is_empty_observable
+        
+        if (not observable:has_notifier(slot_changed)) then
+          observable:add_notifier(slot_changed)
+        end
+      end
+    end
+  end
+
+  -- attach to the initial slot set
+  attach_slot_notifiers()
+  
+  -- and to new slots  
+  song.tracks_observable:add_notifier(
+    function()
+      TRACE("PatternMatrix:tracks_changed fired...")
+      self.__update_slots_requested = true
+      attach_slot_notifiers()
+    end
+  )
+
+  song.patterns_observable:add_notifier(
+    function()
+      TRACE("PatternMatrix:patterns_changed fired...")
+      self.__update_slots_requested = true
+      attach_slot_notifiers()
+    end
+  )
 end
 
