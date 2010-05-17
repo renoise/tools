@@ -53,3 +53,10 @@ function Device:point_to_value()
   return 0
 end
 
+
+--------------------------------------------------------------------------------
+
+function Device:__tostring()
+  return type(self)
+end  
+

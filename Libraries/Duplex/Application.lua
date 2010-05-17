@@ -131,3 +131,10 @@ function Application:__create_dialog()
   )
 end
 
+
+--------------------------------------------------------------------------------
+
+function Application:__tostring()
+  return type(self)
+end  
+

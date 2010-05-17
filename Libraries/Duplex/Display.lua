@@ -464,3 +464,10 @@ function Display:walk_table(t, done, deep)
   end
 end
 
+
+--------------------------------------------------------------------------------
+
+function Display:__tostring()
+  return type(self)
+end
+
