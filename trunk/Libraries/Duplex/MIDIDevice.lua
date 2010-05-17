@@ -95,7 +95,12 @@ function MIDIDevice:midi_callback(message)
       msg.input_method = CONTROLLER_ENCODER
     elseif param["xarg"].type == "fader" then
       msg.input_method = CONTROLLER_FADER
+    elseif param["xarg"].type == "dial" then
+      msg.input_method = CONTROLLER_POT
+    else
+      error("unknown msg.input_method")
     end
+    
     -- include additional meta-properties
     msg.name = param["xarg"].name
     msg.group_name = param["xarg"].group_name

@@ -25,20 +25,20 @@ class 'MessageStream'
 function MessageStream:__init()
   TRACE('MessageStream:__init')
 
-  self.button_hold_time = 300  -- milliseconds
+  self.button_hold_time = 300 -- milliseconds
   self.double_press_time = 100 -- milliseconds
 
-  self.change_listeners = {}    -- sliders,encoders
-  self.press_listeners = {}    -- buttons
+  self.change_listeners = {} -- sliders,encoders
+  self.press_listeners = {} -- buttons
   --self.release_listeners = {}    
   --self.double_press_listeners = {}    
   --self.hold_listeners = {}  
   --self.combo_listeners = {}    
 
-  self.current_message = nil  -- most recent message (event handlers check this)
-  self.button_cache = nil    -- cache of recent events (used for double-press detection)
-  self.ignored_buttons = nil  -- temporarily exclude from interpretation
-  self.pressed_buttons = {}  -- currently pressed buttons, in order of arrival
+  self.current_message = nil -- most recent message (event handlers check this)
+  self.button_cache = nil -- cache of recent events (used for double-press detection)
+  self.ignored_buttons = nil -- temporarily exclude from interpretation
+  self.pressed_buttons = {} -- currently pressed buttons, in order of arrival
 
 end
 
@@ -106,8 +106,11 @@ function MessageStream:input_message(msg)
   TRACE('MessageStream: event was recieved:',msg)
   
   self.current_message = msg
+  
   if (msg.input_method == CONTROLLER_ENCODER) or 
-     (msg.input_method == CONTROLLER_FADER) then
+     (msg.input_method == CONTROLLER_FADER or 
+      msg.input_method == CONTROLLER_POT) then
+    
     --if msg.value == msg.max then
     for _,listener in ipairs(self.change_listeners)  do 
       listener.handler() 
@@ -115,6 +118,7 @@ function MessageStream:input_message(msg)
 
     --for _,handler in ipairs(self.change_listeners)  do handler() end
     --end    
+  
   elseif msg.input_method == CONTROLLER_BUTTON then
     -- if it's listed in ignored_buttons
       -- remove from ignored_buttons and exit
@@ -143,6 +147,9 @@ function MessageStream:input_message(msg)
           -- remove from pressed_buttons
       end
     end
+
+  else
+    error("unknown msg.input_method")
   end
 end
 
