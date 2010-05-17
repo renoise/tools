@@ -382,6 +382,8 @@ function Display:walk_table(t, done, deep)
               self:generate_message(value,view_obj.meta)
             end
             
+            -- TODO: t[key].xarg.orientation=="vertical","horizontal" 
+            
             self.ui_notifiers[t[key].xarg.id] = notifier
             view_obj.view = self.vb:slider{
               id=t[key].xarg.id,
