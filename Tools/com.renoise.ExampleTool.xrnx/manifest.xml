@@ -57,8 +57,8 @@
   <Homepage>http://scripts.renoise.com</Homepage>
 
    <!-- Supported platforms for the tool. When not specified, its asumed that the tool -->
-   <!-- is platform independent, else one or mode of "Windows, Mac, Linux" are expected -->
-  <Platform>Linux</Platform>
+   <!-- is platform independent, else one or more of "Windows, Mac, Linux" are expected -->
+  <Platform>Windows, Mac, Linux</Platform>
   
 </RenoiseScriptingTool>
 

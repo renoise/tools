@@ -1,5 +1,5 @@
 --[[---------------------------------------------------------------------------
-  com.renoise.synced_lfo_example.lua
+  com.renoise.Example-SyncedLFO.xrnp/main.lua
 ---------------------------------------------------------------------------]]--
 
 local parameters = {
@@ -45,7 +45,6 @@ function __process_input(name, value)
 end
 
 
-
 -------------------------------------------------------------------------------
 
 -- __process_event (note, instrument, volume, panning)
@@ -59,7 +58,6 @@ function __process_event(left, right, num_frames)
 end
 
 
-
 -------------------------------------------------------------------------------
 
 -- __process_output (calc value for linked destination)
@@ -69,7 +67,7 @@ end
 --   beat_pos (number),
 --   sample_pos (number),
 --   tick_pos (number),
---   playing (number),
+--   playing (boolean),
 --   bpm (number),
 --   lpb (number),
 --   tbl (number),
@@ -87,4 +85,3 @@ end
 
 --[[---------------------------------------------------------------------------
 ---------------------------------------------------------------------------]]--
-
