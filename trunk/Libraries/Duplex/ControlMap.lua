@@ -30,7 +30,7 @@ Todo:
 class 'ControlMap' 
 
 function ControlMap:__init()
---print('"ControlMap"')
+  TRACE("ControlMap:__init")
 
   self.id = nil      -- unique id, assigned to parameters
   self.definition = nil  -- control-map parsed into table
@@ -68,7 +68,8 @@ function ControlMap:load_definition(file_path)
        
   -- load the control-map
   if io.exists(file_path) then
-    --print("ControlMap:load_definition:", file_path)
+    TRACE("ControlMap:load_definition:", file_path)
+    
     local xml_string = self.read_file(self, file_path)
     self.parse_definition(self, xml_string)
   else
@@ -109,7 +110,7 @@ end
 -- @return table
 
 function ControlMap:get_param_by_value(str)
---print("ControlMap:get_param_by_value",str)
+  TRACE("ControlMap:get_param_by_value",str)
 
   for _,__ in pairs(self.groups) do
     for k,v in ipairs(__) do
@@ -160,7 +161,7 @@ end
 -- information (element id's and group names)
 
 function ControlMap:parse_xml(s)
---print('ControlMap:parse_xml(...)')
+  TRACE('ControlMap:parse_xml(...)')
 
   local stack = {}
   local top = {}

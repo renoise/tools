@@ -17,7 +17,7 @@ ToggleButton is a simple rectangular toggle button
 class 'ToggleButton' (DisplayObject)
 
 function ToggleButton:__init(display)
---print('"ToggleButton"')
+  TRACE('ToggleButton:__init')
 
   DisplayObject.__init(self,display)
 
@@ -40,7 +40,8 @@ end
 -- user input via button
 
 function ToggleButton:do_press()
---print("ToggleButton:do_press")
+  TRACE("ToggleButton:do_press")
+  
   local msg = self.get_msg(self)
   if not (self.group_name == msg.group_name) then
     return 
@@ -58,7 +59,7 @@ end
 -- user input via slider, encoder
 
 function ToggleButton:do_change()
---print("ToggleButton:do_change()")
+  TRACE("ToggleButton:do_change()")
 
   local msg = self.get_msg(self)
 
@@ -83,7 +84,7 @@ end
 --------------------------------------------------------------------------------
 
 function ToggleButton:toggle(silent)
---print("ToggleButton:toggle")
+  TRACE("ToggleButton:toggle")
 
   self._cached_active = self.active
   self.active = not self.active
@@ -133,7 +134,7 @@ end
 --------------------------------------------------------------------------------
 
 function ToggleButton:draw()
---print("ToggleButton:draw")
+  TRACE("ToggleButton:draw")
 
   local point = Point()
 

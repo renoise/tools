@@ -23,7 +23,7 @@ This also offers us a "brute-force" method for terminating device communication
 class 'MessageStream' 
 
 function MessageStream:__init()
---print('"MessageStream"')
+  TRACE('MessageStream:__init')
 
   self.button_hold_time = 300  -- milliseconds
   self.double_press_time = 100 -- milliseconds
@@ -48,24 +48,25 @@ end
 function MessageStream:idle_check()
   -- flush cached messages when considered obsolete
   -- check if pressed_buttons have been pressed for specified amount of time 
-  -- print("MessageStream:idle_check()")
+  TRACE("MessageStream:idle_check()")
 end
 
 
 --------------------------------------------------------------------------------
 
 function MessageStream:add_listener(obj,evt_type,handler)
---print('MessageStream: attaching event listener:'..evt_type)
+  TRACE('MessageStream:add_listener:'..evt_type)
+  
   if evt_type == DEVICE_EVENT_BUTTON_PRESSED then
     table.insert(self.press_listeners,#self.press_listeners+1,{handler=handler,obj=obj})
-    --print("onpress handler added")
+    TRACE("MessageStream:onpress handler added")
   end
   if evt_type == DEVICE_EVENT_VALUE_CHANGED then
     table.insert(self.change_listeners,#self.change_listeners+1,{handler=handler,obj=obj})
-    --print("onpress handler added")
+    TRACE("MessageStream:onpress handler added")
   end
 
---print("Number of listeners after addition:", #self.press_listeners,#self.change_listeners)
+  TRACE("MessageStream:Number of listeners after addition:", #self.press_listeners,#self.change_listeners)
 
 end
 
@@ -76,7 +77,7 @@ end
 -- @return (boolean) true if successfull. false if not
 
 function MessageStream:remove_listener(obj,evt_type)
---print("MessageStream:remove_listener:",obj,evt_type)
+  TRACE("MessageStream:remove_listener:",obj,evt_type)
 
   if evt_type == DEVICE_EVENT_BUTTON_PRESSED then
     for i,listener in ipairs(self.press_listeners) do
@@ -102,11 +103,11 @@ end
 --------------------------------------------------------------------------------
 
 function MessageStream:input_message(msg)
---print('MessageStream: event was recieved:',msg)
+  TRACE('MessageStream: event was recieved:',msg)
+  
   self.current_message = msg
   if (msg.input_method == CONTROLLER_ENCODER) or 
      (msg.input_method == CONTROLLER_FADER) then
-    --print('MessageStream: event was recieved:',msg.value)
     --if msg.value == msg.max then
     for _,listener in ipairs(self.change_listeners)  do 
       listener.handler() 

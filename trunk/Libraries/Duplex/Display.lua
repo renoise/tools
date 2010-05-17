@@ -21,7 +21,7 @@ local UNIT_WIDTH = 32
 class 'Display' 
 
 function Display:__init(device)
---print('"Display"')
+  TRACE('Display:__init')
 
   self.device = device  
 
@@ -71,7 +71,7 @@ end
 --------------------------------------------------------------------------------
 
 function Display:add(obj_instance)
---print('Display.add:')
+  TRACE('Display:add')
   table.insert(self.ui_objects,#self.ui_objects+1,obj_instance)
 end
 
@@ -82,12 +82,10 @@ end
 -- use hardware-specific feature if possible
 
 function Display:clear()
---print("Display:clear()")
+  TRACE("Display:clear()")
+  
   for _,group in pairs(self.device.control_map.groups)do
-
     for __,param in ipairs(group) do
-
-      --rprint(param)
 -- @elm : control-map definition of the element
 -- @obj : reference to the DisplayObject instance
 -- @point : canvas point containing text/value/color 
@@ -98,9 +96,7 @@ function Display:clear()
 --rprint(param)      
 ]]
     end
-
   end
-
 end
 
 
@@ -161,8 +157,8 @@ end
 -- @point : canvas point containing text/value/color 
 
 function Display:set_parameter(elm,obj,point)
---print('Display:set_parameter',elm.name,elm.value,point.text)
---objinfo(point)
+  TRACE('Display:set_parameter',elm.name,elm.value,point.text)
+  --objinfo(point)
 
   local widget = nil
   local value = nil
@@ -205,7 +201,7 @@ end
 --------------------------------------------------------------------------------
 
 function Display:show_control_surface()
---print('Display:show_control_surface')
+  TRACE('Display:show_control_surface')
 
   if (not self.view) then
     self:build_control_surface()
@@ -228,7 +224,7 @@ end
 --  based on the parsed control-map
 
 function Display:build_control_surface()
---print('Display:build_control_surface')
+  TRACE('Display:build_control_surface')
 
   self.view = self.vb:column{
     id="display_rootnode",
@@ -252,7 +248,7 @@ end
 --  @metadata : metadata table (min/max etc.)
 
 function Display:generate_message(value, metadata)
---print('Display:generate_message:'..value)
+  TRACE('Display:generate_message:'..value)
 
   local msg = Message()
   msg.value = value
@@ -307,8 +303,8 @@ function Display:walk_table(t, done, deep)
       -- the parameters
       local notifier = nil
 
---print("view_obj.meta:",view_obj.meta)
---print("view_obj.meta.name:",view_obj.meta.name)
+      TRACE("Display:view_obj.meta:",view_obj.meta)
+      TRACE("Display:view_obj.meta.name:",view_obj.meta.name)
   
       if not view_obj.meta.type then
 
@@ -357,8 +353,6 @@ function Display:walk_table(t, done, deep)
         elseif t[key].xarg.type == "fader" then
           notifier = function(value) 
             -- output the current value
---print("output the current value")
---rprint(value,view_obj.meta)
             self:generate_message(value,view_obj.meta)
           end
           self.ui_notifiers[t[key].xarg.id] = notifier

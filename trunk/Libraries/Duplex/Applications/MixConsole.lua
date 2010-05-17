@@ -19,8 +19,8 @@ function MixConsole:__init(
   buttons_group_name, 
   master_group_name)
   
---print("MixConsole:__init",display,
---  sliders_group_name,buttons_group_name,master_group_name)
+  TRACE("MixConsole:__init",display,
+    sliders_group_name,buttons_group_name,master_group_name)
 
   -- constructor 
   Application.__init(self)
@@ -48,7 +48,8 @@ end
 --------------------------------------------------------------------------------
 
 function MixConsole:set_track_volume(idx,value)
---print("set_track_volume",idx,value)
+  TRACE("MixConsole:set_track_volume",idx,value)
+
   if not self.active then
     return
   end
@@ -60,7 +61,8 @@ end
 --------------------------------------------------------------------------------
 
 function MixConsole:set_track_mute(idx,state)
---print("set_track_mute",idx,state)
+  TRACE("MixConsole:set_track_mute",idx,state)
+
   if not self.active then
     return
   end
@@ -88,7 +90,7 @@ end
 -- there's a lot of control-map checking before the final layout is decided
 
 function MixConsole:build_app()
---print("MixConsole:build_app(")
+  TRACE("MixConsole:build_app(")
 
   Application.build_app(self)
 
@@ -171,11 +173,10 @@ function MixConsole:build_app()
 
     -- mute state changed from controller
     self.buttons[i].on_change = function(obj) 
-      --print("self.buttons[",i,"]:on_change",obj.x_pos)
       if not self.active then
         return false
       elseif i == get_master_track_index() then
-        print("Can't mute the master track")
+        print("Notice: Can't mute the master track")
         return false
       elseif not renoise.song().tracks[i] then
         print('Track is outside bounds')
@@ -222,7 +223,6 @@ function MixConsole:build_app()
   self.master.ceiling = 1.4125375747681
   self.master.set_size(self.master,slider_vertical_units)
   self.master.on_change = function(obj) 
---print("self.master:on_change",obj.value)
     if not self.active then
       return false
     end
@@ -239,7 +239,7 @@ end
 -- start/resume application
 
 function MixConsole:start_app()
---print("MixConsole.start_app()")
+  TRACE("MixConsole.start_app()")
 
   Application.start_app(self)
 
@@ -260,7 +260,7 @@ end
 --------------------------------------------------------------------------------
 
 function MixConsole:destroy_app()
---print("MixConsole:destroy_app")
+  TRACE("MixConsole:destroy_app")
 
   self.master.remove_listeners(self.master)
   for _,obj in ipairs(self.sliders) do
@@ -281,7 +281,7 @@ end
 -- TODO keep this list up-to-date as tracks are added/removed
 
 function MixConsole:add_observables()
---print("MixConsole:add_observables()")
+  TRACE("MixConsole:add_observables()")
 
   local observable
 

@@ -19,7 +19,7 @@ Use a Canvas class to represent values in a 2-dimensional space
 class 'Canvas' 
 
 function Canvas:__init(device)
---print('"Canvas"')
+  TRACE("Canvas:__init")
 
   self.has_changed = false
   self.width = 0
@@ -35,7 +35,8 @@ end
 -- to ensure that write() will not throw an error
 
 function Canvas:set_size(width,height)
---print('Canvas:set_size',width,height)
+  TRACE('Canvas:set_size',width,height)
+  
   self.width = width
   self.height = height
   for x = 1,width do
@@ -53,7 +54,8 @@ end
 --------------------------------------------------------------------------------
 
 function Canvas:write(point,x,y)
---print("Canvas:write:",point,x,y)
+  TRACE("Canvas:write", point, x, y)
+  
   if not y then y = 1 end -- if one-dimensional 
   self.check_delta(self,point,x,y)
   self.buffer[x][y] = point

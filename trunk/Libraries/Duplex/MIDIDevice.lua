@@ -16,7 +16,7 @@ Requires: Globals, ControlMap, Message
 class 'MIDIDevice' (Device)
 
 function MIDIDevice:__init(name)
---print("MIDIDevice:__init("..name..")")
+  TRACE("MIDIDevice:__init("..name..")")
 
   Device.__init(self, name, DEVICE_MIDI_PROTOCOL)
 
@@ -47,7 +47,7 @@ end
 --------------------------------------------------------------------------------
 
 function MIDIDevice:release()
---print("MIDIDevice:release()")
+  TRACE("MIDIDevice:release()")
 
   if self.midi_in and self.midi_in.is_open then
     self.midi_in:close()
@@ -66,14 +66,8 @@ end
 --------------------------------------------------------------------------------
 
 function MIDIDevice:midi_callback(message)
-
-  assert(#message == 3)
-  assert(message[1] >= 0 and message[1] <= 0xff)
-  assert(message[2] >= 0 and message[2] <= 0xff)    
-  assert(message[3] >= 0 and message[3] <= 0xff)
-
-  --print(("%s: func got MIDI %X %X %X"):format(
-  -- self.name,message[1], message[2], message[3]))
+  TRACE(("MIDIDevice: %s got MIDI %X %X %X"):format(
+    self.name, message[1], message[2], message[3]))
 
   local msg = Message()
   local value_str = nil
@@ -120,7 +114,7 @@ end
 --------------------------------------------------------------------------------
 
 function MIDIDevice:sysex_callback(message)
---print(("%s: MidiDumper got SYSEX with %d bytes"):format(self.device_name, #message))
+  TRACE(("MIDIDevice: %s got SYSEX with %d bytes"):format(self.device_name, #message))
 end
 
 
@@ -131,7 +125,7 @@ end
 --  @param value (int) the control-value (0-127)
 
 function MIDIDevice:send_cc_message(number,value)
---print("MIDIDevice:send_cc_message",number,value)
+  TRACE("MIDIDevice:send_cc_message",number,value)
 
   if not self.midi_out or not self.midi_out.is_open then
     return
@@ -144,7 +138,7 @@ end
 --------------------------------------------------------------------------------
 
 function MIDIDevice:send_note_message(key,velocity)
---print("MIDIDevice:send_note_message",key,velocity)
+  TRACE("MIDIDevice:send_note_message",key,velocity)
 
   if not self.midi_out or not self.midi_out.is_open then
     return
@@ -152,10 +146,8 @@ function MIDIDevice:send_note_message(key,velocity)
 
   key = math.floor(key)
   velocity = math.floor(velocity)
---print("velocity",velocity)
   if velocity == 0 then
     self.midi_out:send({0x80, key, velocity})
---print("send note-off")
   else
     self.midi_out:send({0x90, key, velocity})
   end
@@ -169,7 +161,8 @@ end
 -- @return string (e.g. "C#5")
 
 function MIDIDevice:note_to_string(int)
---print("MIDIDevice:note_to_string",int)
+  TRACE("MIDIDevice:note_to_string",int)
+  
   local key = (int%12)+1
   local oct = math.floor(int/12)-1
   return NOTE_ARRAY[key]..(oct)
@@ -190,7 +183,8 @@ end
 -- @return #note (7-bit integer)
 
 function MIDIDevice:extract_midi_note(str) 
---print("MIDIDevice:extract_midi_note",str)
+  TRACE("MIDIDevice:extract_midi_note",str)
+  
   local rslt = nil
   local note_segment = string.sub(str,0,2)
   local octave_segment = string.sub(str,3)
@@ -213,7 +207,8 @@ end
 -- @return #cc (integer) 
 
 function MIDIDevice:extract_midi_cc(str)
---print("MIDIDevice:extract_midi_cc",string.sub(str,4)+0)
+  TRACE("MIDIDevice:extract_midi_cc",string.sub(str,4)+0)
+
   return string.sub(str,4)+0
 end
 
@@ -223,7 +218,7 @@ end
 -- Convert the point to an output value
 -- (override with device-specific implementation)
 function MIDIDevice:point_to_value(pt,maximum,minimum,ceiling)
---print("MIDIDevice:point_to_value:",pt,maximum,minimum,ceiling)
+  TRACE("MIDIDevice:point_to_value:",pt,maximum,minimum,ceiling)
 
   if not ceiling then
     ceiling = 127

@@ -16,7 +16,7 @@ Recommended hardware: a monome/launchpad-style grid controller
 class 'PatternMatrix' (Application)
 
 function PatternMatrix:__init(display)
---print("PatternMatrix:__init",display)
+  TRACE("PatternMatrix:__init",display)
 
   -- constructor 
   Application.__init(self)
@@ -28,14 +28,12 @@ function PatternMatrix:__init(display)
 
   self.observable_firing = false
 
-
   --self.offset = 0
 
   -- observables tell only a little bit, 
   -- search for changes manually?
-
   local function pattern_assignment(e)
-    print("pattern_assignments_observable fired...",e)
+    TRACE("PatternMatrix: pattern_assignments_observable fired...", e)
     --self.update_slots(self)
     self.observable_firing = true
 
@@ -44,7 +42,7 @@ function PatternMatrix:__init(display)
   self.observable:add_notifier(pattern_assignment)
 
   local function pattern_sequence(e)
-    print("pattern_sequence_observable fired...",e)
+    TRACE("PatternMatrix: pattern_sequence_observable fired...", e)
     --self.update_slots(self)
     self.observable_firing = true
 
@@ -54,14 +52,14 @@ function PatternMatrix:__init(display)
 
   self.observable3 = renoise.song().sequencer.pattern_slot_mutes_observable 
   local function mute_state_changed(e)
-    print("pattern_slot_mutes_observable fired...",e)
+    TRACE("PatternMatrix:pattern_slot_mutes_observable fired...",e)
     --self.update_slots(self)
     self.observable_firing = true
   end
   self.observable3:add_notifier(mute_state_changed)
 
   local function tracks(e)
-    print("tracks_observable fired...",e)
+    TRACE("PatternMatrix:tracks_observable fired...",e)
     --self.update_slots(self)
     self.observable_firing = true
   end
@@ -69,7 +67,7 @@ function PatternMatrix:__init(display)
   self.observable4:add_notifier(tracks)
   
   local function patterns(e)
-    print("patterns_observable fired...",e)
+    TRACE("PatternMatrix:patterns_observable fired...",e)
     --self.update_slots(self)
     self.observable_firing = true
   end
@@ -105,7 +103,7 @@ end
 --------------------------------------------------------------------------------
 
 function PatternMatrix:build_app()
---print("PatternMatrix:build_app(")
+  TRACE("PatternMatrix:build_app(")
 
   Application.build_app(self)
 
@@ -124,7 +122,6 @@ function PatternMatrix:build_app()
   self.position.palette.medium.color={0x00,0x00,0x00}
   self.position.set_size(self.position,8)
   self.position.on_change = function(obj) 
---print("position.on_change",obj.index)
     if not self.active then
       print('Application is sleeping')
     elseif obj.index==0 then
@@ -199,7 +196,8 @@ function PatternMatrix:update_slots()
   if self.observable_firing then
     return
   end
---print("PatternMatrix:update_slots()",self.observable_firing)
+
+  TRACE("PatternMatrix:update_slots()",self.observable_firing)
 
   --local master_idx = get_master_track_index() 
   local seq = renoise.song().sequencer.pattern_sequence
@@ -267,13 +265,12 @@ end
 -- playback-pos changed in renoise
 
 function PatternMatrix:set_offset(val)
---print("PatternMatrix:set_offset",val)
+  TRACE("PatternMatrix:set_offset",val)
   self.position.set_index(self.position,val,true)
-
 end
 
 function PatternMatrix:start_app()
---print("PatternMatrix.start_app()")
+  TRACE("PatternMatrix.start_app()")
 
   Application.start_app(self)
   self.update_slots(self)
@@ -284,7 +281,8 @@ end
 --------------------------------------------------------------------------------
 
 function PatternMatrix:destroy_app()
---print("PatternMatrix:destroy_app")
+  TRACE("PatternMatrix:destroy_app")
+  
   Application.destroy_app(self)
 
   self.position.remove_listeners(self.position)
@@ -302,7 +300,8 @@ end
 -- periodic updates: handle "un-observable" things here
 
 function PatternMatrix:idle_app()
---print("PatternMatrix:idle_app()",self.observable_firing)
+  TRACE("PatternMatrix:idle_app()",self.observable_firing)
+  
   if not self.active then return false end
 
   --if not self.dirty then return false end
