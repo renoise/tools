@@ -16,7 +16,7 @@ Requires: Globals
 class 'OscDevice' (Device)
 
 function OscDevice:__init(name)
-  print("OscDevice:__init("..name..")")
+  TRACE("OscDevice:__init("..name..")")
   
   Device.__init(self, name, DEVICE_OSC_PROTOCOL)
 end
@@ -25,7 +25,7 @@ end
 --------------------------------------------------------------------------------
 
 function OscDevice:release()
-  print("OscDevice:release()")
+  TRACE("OscDevice:release()")
 end
 
 

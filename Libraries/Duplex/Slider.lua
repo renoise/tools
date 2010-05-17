@@ -19,7 +19,7 @@ Inheritance: DisplayObject > Slider
 class 'Slider' (DisplayObject)
 
 function Slider:__init(display)
---print('"Slider"')
+  TRACE('Slider:__init')
 
   DisplayObject.__init(self,display)
 
@@ -102,7 +102,8 @@ end
 -- @return (boolean) false to revert changes
 
 function Slider:do_change()
---print("Slider:do_change()")
+  TRACE("Slider:do_change()")
+
   local msg = self.get_msg(self)
   if not (self.group_name == msg.group_name) then
     return
@@ -168,7 +169,7 @@ end
 -- @silent (bool) - skip event
 
 function Slider:set_value(val,silent)
---print("Slider:set_value:",val,silent)
+  TRACE("Slider:set_value:",val,silent)
 
 
   local idx = math.ceil((self.size/self.ceiling)*val)
@@ -191,7 +192,7 @@ end
 -- @silent (bool) - skip event
 
 function Slider:set_index(idx,silent)
---print("Slider:set_index:",idx,silent)
+  TRACE("Slider:set_index:",idx,silent)
 
   -- todo: cap value
   local rslt = false
@@ -214,7 +215,6 @@ end
 function Slider:invoke_handler()
   local rslt = self.on_change(self)
   if not rslt then  -- revert
-    --print('revert to cached_index')    
     self.index = self._cached_index    
     self.value = self._cached_value  
   else
@@ -234,7 +234,7 @@ end
 --------------------------------------------------------------------------------
 
 function Slider:draw()
---print("Slider:draw:",self.index)
+  TRACE("Slider:draw:",self.index)
   
   local x,y,value
   local idx = self.index

@@ -16,7 +16,7 @@ The Message class is a container for messages, closely related to the ControlMap
 class 'Message' 
 
 function Message:__init(device)
---print('"Message"')
+  TRACE('Message:__init')
 
   -- the context control how the number/value is output,
   -- it might indicate a CC, or OSC message

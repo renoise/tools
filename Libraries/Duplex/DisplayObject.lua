@@ -54,7 +54,8 @@ end
 -- draw() - update the visual definition
 
 function DisplayObject:draw()
---print("DisplayObject:draw")
+  TRACE("DisplayObject:draw")
+
   self.dirty = false
 end
 
@@ -75,7 +76,8 @@ end
 -- of setting width/height directly (because of canvas)
 
 function DisplayObject:set_size(width,height)
---print("DisplayObject:set_size",width,height)
+  TRACE("DisplayObject:set_size",width,height)
+
   self.canvas.set_size(self.canvas,width,height)
   self.width = width      
   self.height = height
@@ -88,7 +90,7 @@ end
 -- @return (boolean) true if inside area
 
 function DisplayObject:test(x_pos,y_pos)
---print("DisplayObject:test(",x_pos,y_pos,")")
+  TRACE("DisplayObject:test(",x_pos,y_pos,")")
 
   -- pressed to the left or above?
   if x_pos < self.x_pos or y_pos < self.y_pos then
@@ -109,7 +111,7 @@ end
 -- store original color values as "_color"
 
 function DisplayObject:colorize(rgb)
---print("DisplayObject:colorize:",rgb)
+  TRACE("DisplayObject:colorize:",rgb)
 
   for k,v in pairs(self.palette) do
 

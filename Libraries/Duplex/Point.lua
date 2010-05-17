@@ -27,7 +27,8 @@ end
 -- todo: simply import text and color!
 
 function Point:apply(obj)
---print(obj)
+  TRACE("Point:apply", obj)
+  
   for k,v in pairs(obj) do
     if (k=="text")then
       self.text = v

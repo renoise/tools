@@ -16,7 +16,7 @@ A device-specific class
 class "Launchpad" (MIDIDevice)
 
 function Launchpad:__init(name)
---print("Launchpad:__init",name)
+  TRACE("Launchpad:__init",name)
 
   -- device_name needs to be matchable with what the device announces itself as
   -- but is it the same name on different platforms? 
@@ -40,7 +40,7 @@ end
 --------------------------------------------------------------------------------
 
 function Launchpad:point_to_value(pt)
---print("Launchpad:point_to_value")
+  TRACE("Launchpad:point_to_value")
 
 --rprint(color)
 
@@ -58,8 +58,7 @@ function Launchpad:point_to_value(pt)
   rslt = 16*green+red+12
 
   -- combine
---print(red,green,rslt)
-
+  
   return rslt
 
 end

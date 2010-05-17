@@ -14,7 +14,7 @@ The Browser class provides easy access to running scripts
 class 'Browser' (Application)
 
 function Browser:__init(device_name,app_name)
---print("Browser:__init",device_name,app_name)
+  TRACE("Browser:__init",device_name,app_name)
 
   -- initialize
   self.name = "Browser"
@@ -76,7 +76,7 @@ end
 -- cause another method, "set_device" to become invoked
 
 function Browser:set_device_index(name)
---print("Browser:set_device_index("..name..")")
+  TRACE("Browser:set_device_index("..name..")")
 
   local idx = self.get_list_index(self,"dpx_browser_input_device",name)
   self.vb.views.dpx_browser_input_device.value = idx
@@ -95,7 +95,7 @@ end
 -- @param silent (boolean) skip the 
 
 function Browser:set_device(name)
---print("Browser:set_device("..name..")")
+  TRACE("Browser:set_device("..name..")")
 
   local idx = self.get_list_index(self,"dpx_browser_input_device",name)
   self.vb.views.dpx_browser_input_device.value = idx
@@ -123,7 +123,6 @@ function Browser:set_device(name)
   
     if (name==k.display_name) then
       if k.classname then
-        --print("Dedicated class support",name)
         self.instantiate_device(self,k.class_name,k.device_name,k.control_map)
       elseif k.control_map then
 
@@ -151,7 +150,7 @@ end
 -- instantiate a device from it's basic information
 
 function Browser:instantiate_device(class_name,device_name,control_map)
---print("Browser:instantiate_device:",class_name)
+  TRACE("Browser:instantiate_device:",class_name)
 
   if class_name == "MIDIDevice" then
 
@@ -229,7 +228,7 @@ function Browser:get_list_index(view_elm,name)
       return idx
     end
   end
-  print("could not locate the item "..name)
+  print("Noteice: could not locate the item "..name)
   return 1
 
 end
@@ -348,7 +347,7 @@ end
 -- but it should be possible to run several apps!
 
 function Browser:set_application(name)
---print("Browser:set_application:",name)
+  TRACE("Browser:set_application:",name)
   --renoise.app():show_warning("not yet implemented")
 
   self.vb.views.dpx_browser_application.value = self.get_list_index(
