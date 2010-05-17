@@ -7,8 +7,6 @@ Duplex_browser.lua
 -- includes
 
 require "Duplex/Application"
-require "Duplex/MixConsole"
-require "Duplex/Browser"
 require "Duplex/Point"
 require "Duplex/Globals"
 require "Duplex/Message"
@@ -21,7 +19,11 @@ require "Duplex/Slider"
 require "Duplex/ControlMap"
 require "Duplex/Device"
 require "Duplex/MIDIDevice"
-require "Duplex/PatternMatrix"
+
+require "Duplex/Applications/Browser"
+require "Duplex/Applications/MixConsole"
+require "Duplex/Applications/PatternMatrix"
+
 require "Duplex/Controllers/Launchpad/Launchpad"
 
 
