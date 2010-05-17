@@ -53,8 +53,6 @@ type(class_object or class or anything else) -> [string]
 --           t = table.create{1,2,3}; print(t:concat("|")); -> "1|2|3";
 table.create([t]) -> [table]
 
--- recursively clears and removes all table elements
-table.clear(t)
 
 -- returns true when the table is empty, else false and will also work
 -- for non indexed tables
@@ -63,23 +61,42 @@ table.clear(t)
 --           t = {["a"] = 1}; print(table.is_empty(t)); -> false;
 table.is_empty(t) -> [boolean]
 
+-- count the number of items of a table, also works for non index  
+-- based tables (using pairs).
+-- examples:  t = {["a"]=1, ["b"]=1}; print(table.count(t))  -> 2
+table.count(t) -> [number]
+
 -- find first match of 'value' in the given table, starting from element
 -- number 'start_index'. returns the first !key! that matches the value or nil
 -- examples: t = {"a", "b"}; table.find(t, "a") -> 1;
 --           t = {a=1, b=2}; table.find(t, 2) -> "b"
 --           t = {"a", "b", "a"}; table.find(t, "a", 2) -> "3"
 --           t = {"a", "b"}; table.find(t, "c") -> nil
-table.find(table, value [,start_index]) -> [key or nil]
+table.find(t, value [,start_index]) -> [key or nil]
+
 
 -- return an indexed table of all keys that are used in the table
 -- examples: t = {a="aa", b="bb"}; rprint(table.keys(t)); -> "a", "b"
 --           t = {"a", "b"};       rprint(table.keys(t)); -> 1, 2
-table.keys(table) -> [table]
+table.keys(t) -> [table]
 
 -- return an indexed table of all values that are used in the table
 -- examples: t = {a="aa", b="bb"}; rprint(table.values(t)); -> "aa", "bb"
 --           t = {"a", "b"};       rprint(table.values(t)); -> "a", "b"
-table.values(table) -> [table]
+table.values(t) -> [table]
+
+
+-- copy the metatable and all first level elements of the given table into a 
+-- new table. Use table.rcopy to do a recursive copy of all elements
+function table.copy(t) -> [table]
+
+-- deeply copy the metatable and all elements of the given table recursively
+-- into a new table - create a clone with unique references.
+function table.rcopy(t) -> [table]
+
+
+-- recursively clears and removes all table elements
+table.clear(t)
 
 
 -------------------------------------------------------------------------------
