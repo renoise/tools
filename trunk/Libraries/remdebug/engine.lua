@@ -202,16 +202,21 @@ local function capture_vars()
   _G._STRICT = false
   
   
-  local vars = {}
+  local vars = { 
+    __locals = {},
+    __upvalues = {}
+  }
+  
   local func = debug.getinfo(3, "f").func
   
   local i = 1
   while true do
     local name, value = debug.getupvalue(func, i)
     if not name then break end
-    -- if string.sub(name,1,1) ~= '(' then
+    if string.sub(name,1,1) ~= '(' then
       vars[name] = value
-    -- end
+      vars.__upvalues[name] = value
+    end
     i = i + 1
   end
   
@@ -219,9 +224,10 @@ local function capture_vars()
   while true do
     local name, value = debug.getlocal(3, i)
     if not name then break end
-    -- if string.sub(name,1,1) ~= '(' then
+    if string.sub(name,1,1) ~= '(' then
       vars[name] = value
-   --  end
+      vars.__locals[name] = value
+    end
     i = i + 1
   end
   
@@ -461,14 +467,33 @@ local function debugger_loop(server)
     elseif (command == "STDOUT") then
       local res = stdout or ""
       stdout = nil
+
+      server:send(("200 OK %d\n"):format(string.len(res)))
+      server:send(res)
+    
+    
+    -- locals
+    
+    elseif (command == "LOCALS") then
+      local function _serialize(obj)
+        local succeeded, result = pcall(tostring, obj)
+        return succeeded and result or "???"
+      end
+      
+      local res = ""
+      for k,v in pairs(eval_env.__locals) do
+        res = res .. _serialize(k) .. ' = ' .. _serialize(v) .. '\n'
+      end
       
       server:send(("200 OK %d\n"):format(string.len(res)))
       server:send(res)
+
+    
+    -- default
     
     else
       server:send("400 Bad Request\n")
     end
-    
   end
 end
 
