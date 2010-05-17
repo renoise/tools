@@ -117,6 +117,8 @@ function ControlMap:get_indexed_element(index,group_name)
   if (self.groups[group_name] and self.groups[group_name][index]) then
     return self.groups[group_name][index].xarg
   end
+
+  return nil
 end
 
 
@@ -137,6 +139,8 @@ function ControlMap:get_param_by_value(str)
       end
     end
   end
+
+  return nil
 end
 
 
@@ -144,10 +148,12 @@ end
 
 function ControlMap:read_file(file_path)
   local file_ref,err = io.open(file_path,"r")
+  
   if (not err) then
     local rslt=file_ref:read("*a")
     io.close(file_ref)
     return rslt
+  
   else
     return nil,err
   end
@@ -184,11 +190,10 @@ function ControlMap:parse_xml(s)
 
   local stack = {}
   local top = {}
-  local ni,c,label,xarg, empty
-  local i, j = 1, 1
-  local index = 1
-  
   table.insert(stack, top)
+
+  local i, j = 1, 1
+  local parameter_index = 1
   
   local function parseargs(s)
     local arg = {}
@@ -204,80 +209,107 @@ function ControlMap:parse_xml(s)
   end
   
   while true do
-    ni,j,c,label,xarg, empty = string.find(s, "<(%/?)([%w:]+)(.-)(%/?)>", i)
-    if not ni then break end
-    local text = string.sub(s, i, ni-1)
-    if not string.find(text, "^%s*$") then
+    local ni,j,c,label,xarg, empty = string.find(
+      s, "<(%/?)([%w:]+)(.-)(%/?)>", i)
+
+    if (not ni) then 
+      break 
+    end
+    
+    local text = string.sub(s, i, ni - 1)
+    
+    if (not string.find(text, "^%s*$")) then
       table.insert(top, text)
     end
-    if empty == "/" then  -- empty element tag
-
+    
+    if (empty == "/") then  -- empty element tag
       local xargs=parseargs(xarg)
 
       -- meta-attr: index each <Param> node
-      if label=="Param" then
-        xargs.index = index
-        index = index+1
+      if (label == "Param") then
+        xargs.index = parameter_index
+        parameter_index = parameter_index + 1
       end
 
       table.insert(top, {label=label, xarg=xargs, empty=1})
-    elseif c == "" then   -- start tag
+    
+    elseif (c == "") then   -- start tag
       top = {label=label, xarg=parseargs(xarg)}
       table.insert(stack, top)   -- new level
+    
     else  -- end tag
-      local toclose = table.remove(stack)  -- remove top
+      local toclose = table.remove(stack) -- remove top
       top = stack[#stack]
-      if #stack < 1 then
+      
+      if (#stack < 1) then
         error("nothing to close with "..label)
       end
+      
       if toclose.label ~= label then
         error("trying to close "..toclose.label.." with "..label)
       end
+      
       table.insert(top, toclose)
 
       -- meta-attr : columns and rows
-      if label == "Group" then
+      if (label == "Group") then
         -- add "columns" attribute to *all* groups
         local columns = nil
-        if not toclose.xarg.columns then
-          if toclose.xarg.orientation and toclose.xarg.orientation == "vertical" then
+        
+        if (not toclose.xarg.columns) then
+          if (toclose.xarg.orientation and 
+              toclose.xarg.orientation == "vertical") 
+          then
             columns = 1
           else
             columns = #toclose
           end
+
         else 
-          columns =  toclose.xarg.columns*1  -- toNumber
+          columns = tonumber(toclose.xarg.columns)
         end
+        
         toclose.columns = columns
+        
         local counter = 0
         local row_counter = 0
+        
         for key,val in ipairs(toclose) do
           -- add "group_name" to all members
           toclose[key].xarg.group_name =  toclose.xarg.name
+          
           -- figure out active row/column
-          toclose[key].xarg.column = counter+1
-          toclose[key].xarg.row = math.floor(((toclose[key].xarg.index-1)/columns)+1)
+          toclose[key].xarg.column = counter + 1
+          toclose[key].xarg.row = math.floor(
+            ((toclose[key].xarg.index-1) / columns) + 1)
+          
           counter = counter+1
-          if counter >= columns then
+          if (counter >= columns) then
             row_counter = row_counter+1
             counter = 0
           end
         end
+        
         self.groups[toclose.xarg.name]=toclose
       end
-      -- reset index
-      index = 1
+
+      -- reset parameter_index
+      parameter_index = 1
 
     end
-    i = j+1
+    i = j + 1
   end
+  
   local text = string.sub(s, i)
-  if not string.find(text, "^%s*$") then
+  
+  if (not string.find(text, "^%s*$"))then
     table.insert(stack[#stack], text)
   end
-  if #stack > 1 then
+  
+  if (#stack > 1) then
     error("unclosed "..stack[stack.n].label)
   end
+  
   return stack[1]
 end
 
