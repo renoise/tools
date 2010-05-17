@@ -56,6 +56,7 @@ local function fatal_error(error_message)
     print(error_message)
     print(); print("Press return to exit...")
     io.read("*line")
+    os.exit()
   else
     error(error_message)
   end
@@ -296,14 +297,14 @@ while true do
     
   -- exit
   
-  elseif (command == "exit" and not commandarg) then
+  elseif (command == "exit" and not command_args) then
     client:close()
     os.exit()
   
   
   -- setb
   
-  elseif (command == "setb" and commandarg) then
+  elseif (command == "setb" and separarated_command_args) then
     local _, _, filename, line = 
       commandline:find("^[a-z]+%s+([%w%p%s]+)%s+(%d+)$")
     
@@ -335,7 +336,7 @@ while true do
   
   -- setw
   
-  elseif (command == "setw" and commandarg) then
+  elseif (command == "setw" and separarated_command_args) then
     local _, _, exp = commandline:find("^[a-z]+%s+(.+)$")
     
     if exp then
@@ -358,7 +359,7 @@ while true do
   
   -- delb
   
-  elseif (command == "delb" and commandarg) then
+  elseif (command == "delb" and separarated_command_args) then
     local _, _, filename, line = 
       commandline:find("^[a-z]+%s+([%w%p%s]+)%s+(%d+)$")
     
@@ -388,7 +389,7 @@ while true do
   
   -- delballb
   
-  elseif (command == "delallb" and not commandarg) then
+  elseif (command == "delallb" and not command_args) then
     
     for filename, breaks in pairs(breakpoints) do
       for line, _ in pairs(breaks) do
@@ -406,7 +407,7 @@ while true do
   
   -- delw
   
-  elseif (command == "delw" and commandarg) then
+  elseif (command == "delw" and separarated_command_args) then
     local _, _, index = commandline:find("^[a-z]+%s+(%d+)$")
     
     if (index) then
@@ -426,7 +427,7 @@ while true do
   
   -- delallw
   
-  elseif (command == "delallw" and not commandarg) then
+  elseif (command == "delallw" and not command_args) then
     
     for index, exp in pairs(watches) do
       client:send("DELW " .. index .. "\n")
@@ -503,7 +504,7 @@ while true do
   
   -- listb
   
-  elseif (command == "listb" and not commandarg) then
+  elseif (command == "listb" and not command_args) then
     for k, v in pairs(breakpoints) do
       io.write(k .. ": ")
       for k, v in pairs(v) do
@@ -515,7 +516,7 @@ while true do
 
   -- listw
     
-  elseif (command == "listw" and not commandarg) then
+  elseif (command == "listw" and not command_args) then
     for i, v in pairs(watches) do
       print("Watch exp. " .. i .. ": " .. v)
     end    
