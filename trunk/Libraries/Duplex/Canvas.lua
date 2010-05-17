@@ -99,3 +99,10 @@ function Canvas:clear_delta()
   self.has_changed = false
 end
 
+
+--------------------------------------------------------------------------------
+
+function Canvas:__tostring()
+  return type(self)
+end  
+

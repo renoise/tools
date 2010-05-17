@@ -39,3 +39,10 @@ function Point:apply(obj)
   end
 end
 
+
+--------------------------------------------------------------------------------
+
+function Point:__tostring()
+  return type(self)
+end  
+
