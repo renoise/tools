@@ -27,10 +27,10 @@ function MIDIDevice:__init(name)
   local output_devices = renoise.Midi.available_output_devices()
 
   if table.find(input_devices, name) then
-  self.midi_in = renoise.Midi.create_input_device(name,
-    {self, MIDIDevice.midi_callback},
-    {self, MIDIDevice.sysex_callback}
-  )
+    self.midi_in = renoise.Midi.create_input_device(name,
+      {self, MIDIDevice.midi_callback},
+      {self, MIDIDevice.sysex_callback}
+    )
   else
     print("Notice: Could not create MIDI input device "..name)
   end
@@ -49,11 +49,11 @@ end
 function MIDIDevice:release()
   TRACE("MIDIDevice:release()")
 
-  if self.midi_in and self.midi_in.is_open then
+  if (self.midi_in and self.midi_in.is_open) then
     self.midi_in:close()
   end
   
-  if self.midi_out and self.midi_out.is_open then
+  if (self.midi_out and self.midi_out.is_open) then
     self.midi_out:close()
   end
 
@@ -73,11 +73,12 @@ function MIDIDevice:midi_callback(message)
   local value_str = nil
 
   -- determine the type of signal : note/cc/etc
-  if message[1] == 144 then
+  if (message[1] == 144) then
     msg.context = MIDI_NOTE_MESSAGE
     msg.value = message[3]
     value_str = self.note_to_string(self,message[2])
-  elseif message[1] == 176 then
+  
+  elseif (message[1] == 176) then
     msg.context = MIDI_CC_MESSAGE
     msg.value = message[3]
     value_str = self.midi_cc_to_string(self,message[2])
@@ -127,7 +128,7 @@ end
 function MIDIDevice:send_cc_message(number,value)
   TRACE("MIDIDevice:send_cc_message",number,value)
 
-  if not self.midi_out or not self.midi_out.is_open then
+  if (not self.midi_out or not self.midi_out.is_open) then
     return
   end
 
@@ -140,12 +141,13 @@ end
 function MIDIDevice:send_note_message(key,velocity)
   TRACE("MIDIDevice:send_note_message",key,velocity)
 
-  if not self.midi_out or not self.midi_out.is_open then
+  if (not self.midi_out or not self.midi_out.is_open) then
     return
   end
 
   key = math.floor(key)
   velocity = math.floor(velocity)
+  
   if velocity == 0 then
     self.midi_out:send({0x80, key, velocity})
   else
@@ -189,8 +191,8 @@ function MIDIDevice:extract_midi_note(str)
   local note_segment = string.sub(str,0,2)
   local octave_segment = string.sub(str,3)
   for k,v in ipairs(NOTE_ARRAY) do 
-    if(NOTE_ARRAY[k]==note_segment)then 
-      if octave_segment == "-1" then
+    if (NOTE_ARRAY[k] == note_segment) then 
+      if (octave_segment == "-1") then
         rslt=(k-1)
       else
         rslt=(k-1)+(12*octave_segment)+12
@@ -220,24 +222,25 @@ end
 function MIDIDevice:point_to_value(pt,maximum,minimum,ceiling)
   TRACE("MIDIDevice:point_to_value:",pt,maximum,minimum,ceiling)
 
-  if not ceiling then
-    ceiling = 127
-  end
+  ceiling = ceiling or 127
 
-  if(type(pt.val)=="boolean")then
-    if pt.val then
+  local value
+  
+  if (type(pt.val) == "boolean") then
+    if (pt.val) then
       value = maximum
     else
       value = minimum
     end
+
   else
     -- scale the value from "local" to "external"
     -- for instance, from Renoise dB range (1.4125375747681) 
     -- to a 7-bit controller value (127)
-    value = math.floor((pt.val*(1/ceiling))*maximum)
+    value = math.floor((pt.val * (1 / ceiling)) * maximum)
   end
 
-  return value*1  -- toNumber
+  return tonumber(value)
 end
 
 
