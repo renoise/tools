@@ -13,7 +13,7 @@ renoise.tool():add_menu_entry {
 -- -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 -- content
 -- -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-
+local remote_session = false
 local start_sample = 1
 local base_note = 48
 local end_sample = 254
@@ -46,6 +46,7 @@ local obj_valuebox = 7
 local obj_slider = 8 
 local obj_minislider = 9 
 local obj_textfield = 10 
+local obj_valuefield = 11 
 
 local note_array = {}
 local valid_notes = {
@@ -111,13 +112,13 @@ function open_splitmap_dialog()
                object_slider('start_sample','start_sample_text','Start sample', 
                1,function(value)sample_textfield(value,vb,true)end,
                function(value) sample_slider(value,vb,true) end,
-               'start_sample_field',string.format("0x%X", start_sample), 
-               start_sample, end_sample),
+               'start_sample_field',string.format("0x%X", math.floor(start_sample-1)), 
+               math.floor(start_sample), math.floor(end_sample)),
 
                object_slider('end_sample','end_sample_text','End sample', 
                end_sample,function(value) sample_textfield(value,vb,false)end,
                function(value) sample_slider(value,vb,false) end,
-               'end_sample_field',string.format("0x%X", end_sample), start_sample, end_sample),
+               'end_sample_field',string.format("0x%X", math.floor(end_sample-1)), math.floor(start_sample), math.floor(end_sample)),
             },
             vb:row {
                object_slider('start_split','start_split_text','Split start', 
@@ -247,6 +248,7 @@ function shift_split_range(value,vb)
       end 
       low_split = vb.views.start_split.value
       high_split = vb.views.end_split.value
+      print (low_split, high_split)
       if low_split + value > 0 then
          target_low = low_split + value
          if high_split + value < 121 then
@@ -275,7 +277,7 @@ function shift_split_range(value,vb)
       for z = 1, 120 do
          temp_split_map[z] = cur_ins.split_map[z]
       end
-      for t = 1, split_distance do
+      for t = 1, (split_distance+1) do
          if (cur_ins.split_map[low_split+ t - 1] ~= nil) and (target_low+t-1 > 1) then
             temp_split_map[target_low+t-1] = cur_ins.split_map[low_split+ t - 1]
          end 
@@ -309,10 +311,10 @@ function sample_slider(value,vb, slider_one)
    end
    yield_operation = 1
    if slider_one == true then
-      vb.views.start_sample_field.value = string.format("0x%X", value) 
+      vb.views.start_sample_field.value = string.format("0x%X",  math.floor(value-1)) 
       start_sample = value
    else   
-      vb.views.end_sample_field.value = string.format("0x%X", value) 
+      vb.views.end_sample_field.value = string.format("0x%X",  math.floor(value-1)) 
       end_sample = value
    end
    yield_operation = 0
@@ -361,10 +363,10 @@ function split_textfield(value,vb,field_one)
       end
       if valid_note == nil then
          if field_one == true then
-            value = note_array[start_split]
+            value = 'C-4'--note_array[start_split]
             vb.views.start_split_field.value = value
          else
-            value = note_array[end_split]
+            value = 'C-4' --note_array[end_split]
             vb.views.end_split_field.value = value
          end
          note_num = 49
@@ -390,24 +392,32 @@ function sample_textfield(value,vb, field_one)
    if  #cur_ins.samples ~= vb.views.end_sample.max then
       vb.views.end_sample.max = #cur_ins.samples
    end
+   if (tonumber(value) == nil) or (tonumber(value) < 1) then
+      value = "0x0"
+   end
    if tonumber(value) > #cur_ins.samples then
-      value = string.format("0x%X", #cur_ins.samples) 
-      if field_one == true then
-         vb.views.start_sample_field.value = value
-      else
-         vb.views.end_sample_field.value = value
-      end
+      value = string.format("0x%X", #cur_ins.samples-1) 
    end
    if field_one == true then
-      start_sample = tonumber(value)
+    vb.views.start_sample_field.value = value
+    start_sample = math.floor(tonumber(value))
    else
-      end_sample = tonumber(value)
+    vb.views.end_sample_field.value = value
+    end_sample = math.floor(tonumber(value))
    end
    if yield_operation == 0 then 
       if field_one == true then
-         vb.views.start_sample.value = start_sample
+        if math.floor(start_sample+1) >= 1 then
+         vb.views.start_sample.value = math.floor(start_sample+1)
+        else
+          vb.views.start_sample.value = 1
+        end
       else
-         vb.views.end_sample.value = end_sample
+        if math.floor(end_sample + 1) <= #cur_ins.samples then
+           vb.views.end_sample.value = math.floor(end_sample+1)
+        else
+           vb.views.end_sample.value = math.floor(end_sample)
+        end
       end
    end
 end
@@ -447,6 +457,9 @@ function create_view(type,pa,pw,pmi,pma,pv,pid,ptt,ptx,pn,vb)
    if type == obj_textfield then
       return vb:textfield{id=pid,align=pa,width=pw,tooltip=ptt,value=pv,notifier=pn}
    end
+   if type == obj_valuefield then
+      return vb:valuefield{id=pid,align=pa,width=pw,tooltip=ptt,value=pv,notifier=pn}
+   end
 end
 
 
@@ -473,8 +486,10 @@ function map_sample_range()
    local split_position = start_split
    local s_instrument = 1
    local cur_ins = 1   
+   start_sample = math.floor(start_sample)
+   end_sample = math.floor(end_sample)   
    if sample_trail_start == true then --trail in if desired
-      layer_start = start_sample
+      layer_start = math.floor(start_sample)
    end
    if leave_existing == 0 then
       for z = 1, 120 do
@@ -488,9 +503,16 @@ function map_sample_range()
          temp_split_map[z] = cur_ins.split_map[z]
       end
    end
-   for z = start_sample, end_sample do
+   for z = math.floor(start_sample), math.floor(end_sample) do
       for t = 1, semi_tone_division do
-         temp_split_map[split_position] = z
+         local pos = z
+         if z > math.floor(end_sample) then
+           pos = pos-1
+         end
+         if z < 1 then
+           pos = 1
+         end
+         temp_split_map[split_position] = pos
          split_position = split_position + 1
       end      
       if split_position > end_split then
