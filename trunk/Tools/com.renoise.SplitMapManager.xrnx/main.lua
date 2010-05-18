@@ -248,7 +248,6 @@ function shift_split_range(value,vb)
       end 
       low_split = vb.views.start_split.value
       high_split = vb.views.end_split.value
-      print (low_split, high_split)
       if low_split + value > 0 then
          target_low = low_split + value
          if high_split + value < 121 then
