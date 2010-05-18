@@ -52,21 +52,21 @@ end
 -------------------------------------------------------------------------------
 
 renoise.tool():add_menu_entry {
-  name = "Main Menu:Tools:Duplex:Browser",
+  name = "Main Menu:Tools:Duplex:Browser...",
   invoke = function() 
     show_dialog() 
   end
 }
 
 renoise.tool():add_menu_entry {
-  name = "--- Main Menu:Tools:Duplex:MixConsole (Launchpad)",
+  name = "--- Main Menu:Tools:Duplex:MixConsole (Launchpad)...",
   invoke = function() 
     show_dialog("Launchpad","MixConsole") 
   end
 }
 
 renoise.tool():add_menu_entry {
-  name = "Main Menu:Tools:Duplex:PatternMatrix (Launchpad)",
+  name = "Main Menu:Tools:Duplex:PatternMatrix (Launchpad)...",
   invoke = function() 
     show_dialog("Launchpad","PatternMatrix") 
   end

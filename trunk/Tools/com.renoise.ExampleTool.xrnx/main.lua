@@ -40,7 +40,7 @@ renoise.tool():add_menu_entry {
 }
 
 renoise.tool():add_menu_entry {
-  name = "--- Main Menu:Tools:Example Tool:Show Dialog",
+  name = "--- Main Menu:Tools:Example Tool:Show Dialog...",
   invoke = function() 
     show_dialog() 
   end

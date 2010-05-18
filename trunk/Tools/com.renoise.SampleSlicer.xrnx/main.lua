@@ -27,7 +27,7 @@ local nLoopMode = LOOP_MODE_FORWARD
 --[[ menu registration ]]
 
 renoise.tool():add_menu_entry {
-  name = "Sample Editor:Process:Beatslicer",
+  name = "Sample Editor:Process:Beatslicer...",
   invoke = function() 
     show_dialog() 
   end
