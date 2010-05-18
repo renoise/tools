@@ -106,7 +106,7 @@ function open_sample_dialog(option)
                create_view(obj_textlabel,'',TEXT_ROW_WIDTH,0,0,'novalue','dobasenotetext',
                '','Basenote','',vb),
                create_view(obj_textfield,'',30,0,0,base_note_val,'base_note',
-               'Insert a full note-value like C-4 or A#3 or use semitones to shift\nthe whole map: -24 to shift two octaves down\n24 to shift everything two octaves up','',
+               'Insert a full note-value like C-4 or A#3 or use semitones to shift\nthe whole map:\n-24 to shift two octaves down\n24 to shift everything two octaves up\nany other [rubbish] value will be ignored','',
                function(value) base_note_val = value end,vb),
             },
             vb:row {
