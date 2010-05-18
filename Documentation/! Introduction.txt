@@ -22,7 +22,7 @@ that are built into Renoise. This can be done by:
 
 - open Renoise's config.xml file from the preferences folder, and set the
   <ShowScriptingDevelopmentTools> property to "true". This way, you don't have
-  to pass the above argument all the time...
+  to pass the above mentioned argument all the time...
 
 Enabling this option will add a new main menu entry "Tools" (or add new
 entries there if it already exists). In the "Tools" menu you will find:
@@ -39,7 +39,7 @@ entries there if it already exists). In the "Tools" menu you will find:
   + Create, view and edit Lua, text, and XML files that will
     make up tools / extensions for Renoise. More about this later...
 
-- "Example Tools" and other tools that target script developers only.
+- Show "Example Tools" and other tools that target script developers only.
 
 
 --------------------------------------------------------------------------------
@@ -82,8 +82,10 @@ following places:
 
   + Nibbles ;)
 
-- You can also create bidirectional MIDI, OSC implementations for any controller
-  hardware:
+
+- MIDI controller scripting: create bidirectional MIDI or OSC implementations 
+  for any controller hardware:
+  
   Make your Launchpad behave and do exactly what you want it to do, and share
   your settings with others. Such tools can be a simple auto mapping of your
   MIDI controller, like support for Mackie Controls, Behringer MIDI Mixers and
@@ -91,12 +93,24 @@ following places:
   Create MIDI mappings or an OSC implementation the way you need it for live
   sessions or other needs.
 
+  To make this easier, Renoise offers you a library called "Duplex", which 
+  already has support for the Launchpad and some other MIDI controllers. 
+  Duplex is a very flexible, object orientated approach to handle MIDI 
+  controllers in Renoise, and also offers vitual UIs the MIDI controllers 
+  that are supported by Duplex. This way you can virtually test and use such 
+  controllers in Renoise without owning the real ones ;)
+  
+  You don't have to use Duplex to write MIDI controller scripts in Renoise, 
+  but it already offers a lot of tools that will make this easier.
+  
+  
 - Create, configure, or override Renoise's default MIDI, OSC bindings:
   Renoise has a default set of MIDI mappings that can be assigned manually by
   the user. This set can be extended and tweaked to fit your needs, then via
   the MIDI Mapping Dialog in Renoise used and mapped as usual.
   Renoise also has a default OSC implementation which you can tweak and override
   to do "your stuff."
+  
 
 What you can *NOT* do with Renoise tools and extensions:
 
@@ -133,20 +147,40 @@ Here is a small overview of the whole API that Renoise exposes:
 
 -- generic "observer pattern" document creation and access, used by the
    song/app and also by you to create persistent data that can even be injected
-   into Renoise songs
+   into Renoise songs or preferences
 * Renoise.Document.API
+
+-- available to XRNX tools only: interact with Renoise; create menus, keybindings
+* Renoise.ScriptingTool.API
 
 -- inter-process and network communication functions and classes (also for OSC)
 * Renoise.Socket.API
 
--- "raw" MIDI device interaction (send, receive MIDI messages)
+-- "raw" MIDI device interaction (send, receive MIDI messages from any devices)
 * Renoise.Midi.API
 
 
+A note about the general API design:
+
+* Whatever you do with the API, you should never be able to crash Renoise. If 
+  you managed to do this, then please report this, so we can fix this. 
+  All errors, as stupid they might be, should always result in a clean error 
+  message from Lua. 
+  
+  What can right now not be avoided though, is that you create endless loops
+  in your scripts (loop forever). In such situations Renoise also can not 
+  save crash backups for documents, because it never gains control again.
+  
+  The Renoise Lua API also allows global File IO and external program execution 
+  (via os.execute()), which can do harm as well, so please special care of what 
+  you do there - well, as you do with programming in general...
+    
+
 Some notes about the used notation in !all xxxAPI.txt! files:
 
-* All classes, functions are nested in a namespace (Lua table) "renoise". e.g:
-  to get the application object, you will have to type "renoise.app()"
+* All classes, functions in the API are nested in a namespace (Lua table) 
+  "renoise". e.g: to get the application object, you will have to type 
+  "renoise.app()"
 
 * The API is object orientated, and thus split into classes. The references
   will first note the class name (i.g: 'renoise.Application'), then list its
@@ -213,10 +247,39 @@ Some notes about the used notation in !all xxxAPI.txt! files:
 -- Creating Renoise Tools, Extensions
 --------------------------------------------------------------------------------
 
-TODO: After the Bundle Format changes
+* Developing XRNX tools
+  As mentioned above, Renoise tools are file bundles with the extension .xrnx, 
+  and have the following layout: 
 
+  /some.bundle.id.xrnx/
+    manifest.xml -> XML file with information about the tool (author, id...)
+    main.xml -> entry point: loaded by Renoise to execute the tool
 
+  you can import other lua files into "main.lua" via Luas "require" function, 
+  if apropriate, and also include resource files (icons, bitmaps, text files 
+  or executables) into your bundles just as needed. 
+  
+  For a detailed description of the bundle layout and the main.lua, 
+  manifest.lua specification, have a look at the "com.renoise.Example.xrnx" 
+  tool please.  
+  
+* Distributing XRNX tools
+  To share your tools with others, you can create zip files out of your 
+  bundles, which then can simply be drag and droped into Renoise to be 
+  installed by the user:
+  To do so, zip all the bundle's content (!the content, not the bundle 
+  itself!), and rename this zip to "SomeName.xrnx". Renoise will accept such 
+  xrnx zips as drag and drop target, and copy, install and activate the tool 
+  automatically then. 
 
+  
+--------------------------------------------------------------------------------
+-- MIDI Controller Scripting with Duplex
+--------------------------------------------------------------------------------
+  
+TODO: Some overview, link to duplex related help
+
+  
 --------------------------------------------------------------------------------
 -- Debugging Renoise Scripts
 --------------------------------------------------------------------------------
