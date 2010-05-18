@@ -44,7 +44,7 @@ renoise.tool():add_menu_entry {
   end
 }
 renoise.tool():add_menu_entry {
-  name = "--- Main Menu:Tools:ActionServer:Configure",
+  name = "--- Main Menu:Tools:ActionServer:Configure...",
   invoke = function()
     configure_server()
   end

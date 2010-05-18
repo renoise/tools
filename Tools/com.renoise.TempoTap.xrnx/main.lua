@@ -3,7 +3,7 @@ main.lua
 ----------------------------------------------------------------------------]]--
 
 renoise.tool():add_menu_entry {
-  name = "Main Menu:Tools:Tempo Tap",
+  name = "Main Menu:Tools:Tempo Tap...",
   invoke = function() 
     show_dialog() 
   end

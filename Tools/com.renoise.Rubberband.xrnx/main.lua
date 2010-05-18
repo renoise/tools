@@ -13,14 +13,14 @@ if os.platform() == 'MACINTOSH' then
 end
 
 renoise.tool():add_menu_entry {
-  name = "Sample Editor:Process:Timestretch",
+  name = "Sample Editor:Process:Timestretch...",
   invoke = function()
       show_stretch_dialog()
   end
 }
 
 renoise.tool():add_menu_entry {
-  name = "Sample Editor:Process:Pitch Shift",
+  name = "Sample Editor:Process:Pitch Shift...",
   invoke = function() show_shift_dialog() end
 }
 

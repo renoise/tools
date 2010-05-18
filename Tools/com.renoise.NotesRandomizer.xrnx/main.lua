@@ -141,7 +141,7 @@ renoise.tool():add_keybinding {
 --[[ GUI ]]--
 
 renoise.tool():add_keybinding {
-  name = "Pattern Editor:Tools:Randomize Notes",
+  name = "Pattern Editor:Tools:Randomize Notes...",
   invoke = function()
     randomize_gui()
   end
