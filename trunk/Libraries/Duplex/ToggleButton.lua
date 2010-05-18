@@ -24,9 +24,9 @@ function ToggleButton:__init(display)
   self.active = true
 
   self.palette = {
-    foreground = deepcopy(display.palette.color_1),
-    foreground_dimmed = deepcopy(display.palette.color_1_dimmed),
-    background = deepcopy(display.palette.background)
+    foreground = table.copy(display.palette.color_1),
+    foreground_dimmed = table.copy(display.palette.color_1_dimmed),
+    background = table.copy(display.palette.background)
   }
 
   self.add_listeners(self)

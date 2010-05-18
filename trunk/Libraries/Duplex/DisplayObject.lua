@@ -116,7 +116,7 @@ function DisplayObject:colorize(rgb)
   for k,v in pairs(self.palette) do
 
     if not v._color then
-      self.palette[k]._color = deepcopy(v.color)
+      self.palette[k]._color = table.copy(v.color)
     end
     v.color[1]=v._color[1]*rgb[1]/255
     v.color[2]=v._color[2]*rgb[2]/255

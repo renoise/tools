@@ -52,11 +52,11 @@ function Slider:__init(display)
   self.add_listeners(self)
 
   self.palette = {
-    background = deepcopy(display.palette.background),
-    foreground = deepcopy(display.palette.color_1),
-    foreground_dimmed = deepcopy(display.palette.color_1_dimmed),
-    medium = deepcopy(display.palette.color_2),
-    medium_dimmed = deepcopy(display.palette.color_2_dimmed),
+    background = table.copy(display.palette.background),
+    foreground = table.copy(display.palette.color_1),
+    foreground_dimmed = table.copy(display.palette.color_1_dimmed),
+    medium = table.copy(display.palette.color_2),
+    medium_dimmed = table.copy(display.palette.color_2_dimmed),
   }
 
   -- internal values
