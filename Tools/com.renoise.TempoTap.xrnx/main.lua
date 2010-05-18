@@ -1,15 +1,9 @@
 --[[----------------------------------------------------------------------------
-TempoTap.lua
+main.lua
 ----------------------------------------------------------------------------]]--
 
-manifest = {}
-manifest.api_version = 0.2
-manifest.author = "marvin [marvin@renoise.com]"
-manifest.description = "Tap tempo for BPM"
-manifest.actions = {}
-manifest.actions[#manifest.actions + 1] = {
-  name = "MainMenu:Tools:Tempo Tap",
-  description = "Find out the BPM by tapping the tempo",
+renoise.tool():add_menu_entry {
+  name = "Main Menu:Tools:Tempo Tap",
   invoke = function() 
     show_dialog() 
   end
