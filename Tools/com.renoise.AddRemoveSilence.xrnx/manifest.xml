@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<RenoiseScriptingTool>
+  <ApiVersion>0.3</ApiVersion>
+  <Id>com.renoise.AddRemoveSilence</Id>
+  <Version>0.35</Version>
+  <Name>Sample Slicer</Name>
+  <Author>Fabio Napodano | It-Alien (it-alien@renoise.com)</Author>
+  <Description>add or remove silence from a sample by user definition</Description>
+  <Category>Sample Editor</Category>
+  <Homepage>http://scripts.renoise.com</Homepage>
+</RenoiseScriptingTool>
