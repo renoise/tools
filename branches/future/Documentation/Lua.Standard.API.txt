@@ -42,6 +42,21 @@ type(class_object or class or anything else) -> [string]
 
 
 -------------------------------------------------------------------------------
+-- debug
+-------------------------------------------------------------------------------
+
+-- added
+
+-- shortcut to remdebug.session.start(), which starts a debug session: 
+-- launches the debugger controller and breaks script execution. See 
+-- "Debugging.txt" in the documentation root folder for more info.
+debug.start() 
+
+-- shortcut to remdebug.session.stop: stops a running debug session
+debug.stop() 
+
+
+-------------------------------------------------------------------------------
 -- table
 -------------------------------------------------------------------------------
 
