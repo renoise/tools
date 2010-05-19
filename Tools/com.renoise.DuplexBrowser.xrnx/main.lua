@@ -66,6 +66,13 @@ renoise.tool():add_menu_entry {
 }
 
 renoise.tool():add_menu_entry {
+  name = "Main Menu:Tools:Duplex:MixConsole (Nocturn)...",
+  invoke = function() 
+    show_dialog("Nocturn","MixConsole") 
+  end
+}
+
+renoise.tool():add_menu_entry {
   name = "Main Menu:Tools:Duplex:PatternMatrix (Launchpad)...",
   invoke = function() 
     show_dialog("Launchpad","PatternMatrix") 

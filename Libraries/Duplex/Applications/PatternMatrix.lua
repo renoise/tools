@@ -10,14 +10,17 @@ Recommended hardware: a monome/launchpad-style grid controller
 
 --]]
 
+module("Duplex", package.seeall);
 
 --==============================================================================
 
 class 'PatternMatrix' (Application)
 
+
 function PatternMatrix:__init(display)
   TRACE("PatternMatrix:__init",display)
 
+  -- constructor 
   Application.__init(self)
   
   self.buttons = nil
@@ -50,7 +53,7 @@ function PatternMatrix:build_app()
   self.position.ceiling = 8
   self.position.palette.medium.text="·"
   self.position.palette.medium.color={0x00,0x00,0x00}
-  self.position.set_size(self.position,8)
+  self.position:set_size(8)
   self.position.on_change = function(obj) 
     if not self.active then
       print('Application is sleeping')
@@ -75,8 +78,7 @@ function PatternMatrix:build_app()
     
     return true
   end
-  
-  self.display.add(self.display,self.position)
+  self.display:add(self.position)
 
   self.buttons = {}
 
@@ -110,7 +112,8 @@ function PatternMatrix:build_app()
         return true
       end
 
-      self.display.add(self.display,self.buttons[x][y])
+      self.display:add(self.buttons[x][y])
+
     end  
   end
 end
@@ -140,8 +143,8 @@ function PatternMatrix:update_slots()
         track_idx, seq_index)
       
       local slot_empty = renoise.song().patterns[patt_idx].tracks[track_idx].is_empty
-      
-      -- custom palettes for toggle-buttons: 
+
+          -- custom palettes for toggle-buttons: 
       local button = self.buttons[track_idx][seq_index]
 
       if (not slot_empty) then
@@ -152,19 +155,19 @@ function PatternMatrix:update_slots()
         button.palette.background.text="□"
         button.palette.background.color={0x80,0x40,0x00}
      
-      else
+          else
         button.palette.foreground.text="·"
         button.palette.foreground.color={0x00,0x00,0x00}
         button.palette.foreground_dimmed.text="·"
         button.palette.foreground_dimmed.color={0x00,0x00,0x00}
         button.palette.background.text="▫"
         button.palette.background.color={0x40,0x00,0x00}
-      end
+          end
 
       button:set_dimmed(slot_empty)
       button.active = (not slot_muted)
+      end
     end
-  end
 end
 
 
@@ -174,7 +177,7 @@ end
 
 function PatternMatrix:set_offset(val)
   TRACE("PatternMatrix:set_offset",val)
-  self.position.set_index(self.position,val,true)
+  self.position:set_index(val,true)
 end
 
 
@@ -184,7 +187,8 @@ function PatternMatrix:start_app()
   TRACE("PatternMatrix.start_app()")
 
   Application.start_app(self)
-  self.update_slots(self)
+  self:update_slots()
+
 end
 
 
@@ -192,13 +196,13 @@ end
 
 function PatternMatrix:destroy_app()
   TRACE("PatternMatrix:destroy_app")
-  
+
   Application.destroy_app(self)
 
-  self.position.remove_listeners(self.position)
+  self.position:remove_listeners()
   for i=1,8 do
     for o=1,8 do
-      self.buttons[i][o].remove_listeners(self.buttons[i][o])
+      self.buttons[i][o]:remove_listeners()
     end
   end
 
@@ -221,7 +225,7 @@ function PatternMatrix:idle_app()
     self.__update_slots_requested = false
     self.update_slots(self)
   end
-  
+
   -- changed pattern?
   local pos = renoise.song().transport.playback_pos
   if not (pos.sequence == self.position.index)then
@@ -268,7 +272,7 @@ function PatternMatrix:__attach_to_song(song)
       self.__update_slots_requested = true
     end
   )
-  
+
   song.patterns_observable:add_notifier(
     function()
       TRACE("PatternMatrix:patterns_observable fired...")

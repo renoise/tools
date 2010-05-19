@@ -52,11 +52,11 @@ function Slider:__init(display)
   self.add_listeners(self)
 
   self.palette = {
-    background = table.copy(display.palette.background),
-    foreground = table.copy(display.palette.color_1),
-    foreground_dimmed = table.copy(display.palette.color_1_dimmed),
-    medium = table.copy(display.palette.color_2),
-    medium_dimmed = table.copy(display.palette.color_2_dimmed),
+    background = table.rcopy(display.palette.background),
+    foreground = table.rcopy(display.palette.color_1),
+    foreground_dimmed = table.rcopy(display.palette.color_1_dimmed),
+    medium = table.rcopy(display.palette.color_2),
+    medium_dimmed = table.rcopy(display.palette.color_2_dimmed),
   }
 
   -- internal values
@@ -78,6 +78,7 @@ function Slider:do_press()
   if not (self.group_name == msg.group_name) then
     return
   end
+
   if not self.test(self,msg.column,msg.row) then
     return
   end
@@ -168,20 +169,23 @@ end
 -- @val (float) 
 -- @silent (bool) - skip event
 
-function Slider:set_value(val,silent)
-  TRACE("Slider:set_value:",val,silent)
-
+function Slider:set_value(val)
+  TRACE("Slider:set_value:",val)
 
   local idx = math.ceil((self.size/self.ceiling)*val)
   local rslt = false
-  self._cached_index = idx
-  self._cached_value = val
-  self.value = val
-  self.index = idx
 
-  if not silent and self.on_change then
-    self:invoke_handler()
-  end
+  if (self._cached_index ~= idx or
+      self._cached_value ~= val) then
+    self._cached_index = idx
+    self._cached_value = val
+    self.value = val
+    self.index = idx
+
+    if (self.on_change ~= nil) then
+      self:invoke_handler()
+    end
+  end  
 end
 
 
@@ -191,18 +195,20 @@ end
 -- @idx (integer) 
 -- @silent (bool) - skip event
 
-function Slider:set_index(idx,silent)
-  TRACE("Slider:set_index:",idx,silent)
+function Slider:set_index(idx)
+  TRACE("Slider:set_index:",idx)
 
   -- todo: cap value
   local rslt = false
-  self._cached_index = idx
-  self._cached_value = self.value
-  self.index = idx
-  self.value = (self.ceiling/self.size)*idx
-
-  if not silent and self.on_change then
-    self:invoke_handler()
+  if (self._cached_index ~= idx) then
+    self._cached_index = idx
+    self._cached_value = self.value
+    self.index = idx
+    self.value = (self.ceiling/self.size)*idx
+  
+    if (self.on_change ~= nil) then
+      self:invoke_handler()
+    end
   end
 end
 
@@ -214,7 +220,8 @@ end
 
 function Slider:invoke_handler()
   local rslt = self.on_change(self)
-  if not rslt then  -- revert
+  
+  if (not rslt) then  -- revert
     self.index = self._cached_index    
     self.value = self._cached_value  
   else
@@ -239,7 +246,7 @@ function Slider:draw()
   local x,y,value
   local idx = self.index
 
-  if not self.flipped then
+  if (not self.flipped) then
     idx = self.size-idx+1
   end
 

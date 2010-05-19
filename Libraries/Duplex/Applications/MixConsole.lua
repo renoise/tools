@@ -47,18 +47,22 @@ end
 
 --------------------------------------------------------------------------------
 
+-- volume level changed from Renoise
+
 function MixConsole:set_track_volume(idx,value)
   TRACE("MixConsole:set_track_volume",idx,value)
 
   if not self.active then
     return
   end
-  renoise.song().tracks[idx].prefx_volume.value = value
-  self.sliders[idx].set_value(self.sliders[idx],value,true) -- skip on_change()  
+  --renoise.song().tracks[idx].prefx_volume.value = value
+  self.sliders[idx].set_value(self.sliders[idx],value)
 end
 
 
 --------------------------------------------------------------------------------
+
+-- mute state changed from Renoise
 
 function MixConsole:set_track_mute(idx,state)
   TRACE("MixConsole:set_track_mute",idx,state)
@@ -70,24 +74,27 @@ function MixConsole:set_track_mute(idx,state)
   if state == MUTE_STATE_ACTIVE then
     active = false
   end
-  self.buttons[idx].set(self.buttons[idx],active,true) -- skip on_change() 
-  self.sliders[idx].set_dimmed(self.sliders[idx],active)
+  self.buttons[idx]:set(active)
+  self.sliders[idx]:set_dimmed(active)
 
 end
 
-
 --------------------------------------------------------------------------------
 
+-- master volume level changed from Renoise
+--[[
 function MixConsole:set_master_volume(value)
-  get_master_track().prefx_volume.value = value
-  self.master.set_value(self.master,value,true) -- skip on_change()  
+  TRACE("MixConsole:set_master_volume",value)
+  if not self.active then
+    return
+  end
+  --get_master_track().prefx_volume.value = value
+  self.master:set_value(value)
 end
-
-
+]]
 --------------------------------------------------------------------------------
 
--- create UI layout : pretty flexible, to support many different configurations 
--- there's a lot of control-map checking before the final layout is decided
+-- create UI : grid or fader/encoder layout
 
 function MixConsole:build_app()
   TRACE("MixConsole:build_app(")
@@ -101,33 +108,22 @@ function MixConsole:build_app()
   self.sliders = {}
   self.buttons = {}
 
-  -- determine where we should put the volume levels...
-  -- master fader should always be a physical slider if possible
-  -- if one of the groups contain a "columns" attribute, we switch to 
-  -- grid controller mode
-  -- rotary encoders or sliders (if they exist) for individual tracks
-  -- as a last option, use toggle buttons 
-
   local grid_mode = false
 
+  -- check if the control-map describes a grid controller
   for group_name,group in pairs(self.display.device.control_map.groups)do
     for attr,param in pairs(group) do
       if(attr == "xarg")then
-        --rprint(param)
         if(param["columns"])then
-          --sliders_group_name = param["name"]
           grid_mode = true
         end
       end
     end
   end
 
-  -- this is where we specify the size of the slider
-  -- size is 1 by default, this is good for encoders and faders
   local slider_vertical_units = 1
-
   if grid_mode then
-    -- slider is composed from several smaller units (buttons)
+    -- slider is composed from individual buttons
     slider_vertical_units = 8
   end
 
@@ -143,12 +139,11 @@ function MixConsole:build_app()
     self.sliders[i].inverted = false
     self.sliders[i].ceiling = RENOISE_DECIBEL
     self.sliders[i].orientation = VERTICAL
-    --self.sliders[i].set_size(self.sliders[i],8)
-    self.sliders[i].set_size(self.sliders[i],slider_vertical_units)
+    self.sliders[i]:set_size(slider_vertical_units)
 
     -- slider changed from controller
     self.sliders[i].on_change = function(obj) 
-      if not self.active then
+      if (not self.active) then
         return false
       --elseif i == get_master_track_index() then
       --  print('Track is controlled seperately')
@@ -161,7 +156,7 @@ function MixConsole:build_app()
       end
       return true
     end
-    self.display.add(self.display,self.sliders[i])
+    self.display:add(self.sliders[i])
 
     -- buttons ---------------------------------------------------
 
@@ -172,7 +167,9 @@ function MixConsole:build_app()
     self.buttons[i].active = false
 
     -- mute state changed from controller
+    -- (update the slider.dimmed property)
     self.buttons[i].on_change = function(obj) 
+      print("self.buttons[",i,"]:on_change",obj.x_pos)
       if not self.active then
         return false
       elseif i == get_master_track_index() then
@@ -192,21 +189,21 @@ function MixConsole:build_app()
         dimmed = false
       end
       renoise.song().tracks[i].mute_state = mute_state
-      self.sliders[i].set_dimmed(self.sliders[i],dimmed)
+      self.sliders[i]:set_dimmed(dimmed)
       return true
     end
-    self.display.add(self.display,self.buttons[i])
+    self.display:add(self.buttons[i])
 
 
     -- apply customization (this will only affect 
     -- controllers that use color to represent values) : 
 
     if (i>6) then
-      self.sliders[i].colorize(self.sliders[i],{0x00,0xff,0x00})
-      self.buttons[i].colorize(self.buttons[i],{0x00,0xff,0x00})
+      self.sliders[i]:colorize({0x00,0xff,0x00})
+      self.buttons[i]:colorize({0x00,0xff,0x00})
     elseif (i>3)then
-      self.sliders[i].colorize(self.sliders[i],{0xff,0x00,0x00})
-      self.buttons[i].colorize(self.buttons[i],{0xff,0x00,0x00})
+      self.sliders[i]:colorize({0xff,0x00,0x00})
+      self.buttons[i]:colorize({0xff,0x00,0x00})
     end
 
   end
@@ -221,15 +218,16 @@ function MixConsole:build_app()
   self.master.y_pos = 1
   self.master.toggleable = true
   self.master.ceiling = 1.4125375747681
-  self.master.set_size(self.master,slider_vertical_units)
+  self.master:set_size(slider_vertical_units)
   self.master.on_change = function(obj) 
+--print("self.master:on_change",obj.value)
     if not self.active then
       return false
     end
     get_master_track().prefx_volume.value = obj.value
     return true
   end
-  self.display.add(self.display,self.master)
+  self.display:add(self.master)
 
 end
 
@@ -248,9 +246,9 @@ function MixConsole:start_app()
   for i=1,self.horizontal_size do
     if renoise.song().tracks[i] then
       value = renoise.song().tracks[i].prefx_volume.value
-      self.set_track_volume(self,i,value)
+      self:set_track_volume(i,value)
       value = renoise.song().tracks[i].mute_state
-      self.set_track_mute(self,i,value)
+      self:set_track_mute(i,value)
     end
   end
 
@@ -262,7 +260,7 @@ end
 function MixConsole:destroy_app()
   TRACE("MixConsole:destroy_app")
 
-  self.master.remove_listeners(self.master)
+  self.master:remove_listeners()
   for _,obj in ipairs(self.sliders) do
     obj.remove_listeners(obj)
   end
@@ -292,10 +290,14 @@ function MixConsole:add_observables()
 
       observable = renoise.song().tracks[i].prefx_volume.value_string_observable
       local function slider_set()
+        if not self.active then
+          return
+        end
         local value = renoise.song().tracks[i].prefx_volume.value
+
         -- compensate for loss of precision 
         if not compare(self.sliders[i].value,value,1000) then
-          self.set_track_volume(self,i,value)
+          self:set_track_volume(i,value)
         end
       end
       observable:add_notifier(slider_set)
@@ -303,11 +305,10 @@ function MixConsole:add_observables()
       -- mute state changed from Renoise
       observable = renoise.song().tracks[i].mute_state_observable
       local function button_set()
-        self.set_track_mute(self,i,renoise.song().tracks[i].mute_state)
+        self:set_track_mute(i,renoise.song().tracks[i].mute_state)
       end
       observable:add_notifier(button_set)
 
     end
   end
 end
-

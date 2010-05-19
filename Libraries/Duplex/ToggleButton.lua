@@ -24,9 +24,9 @@ function ToggleButton:__init(display)
   self.active = true
 
   self.palette = {
-    foreground = table.copy(display.palette.color_1),
-    foreground_dimmed = table.copy(display.palette.color_1_dimmed),
-    background = table.copy(display.palette.background)
+    foreground = table.rcopy(display.palette.color_1),
+    foreground_dimmed = table.rcopy(display.palette.color_1_dimmed),
+    background = table.rcopy(display.palette.background)
   }
 
   self.add_listeners(self)
@@ -83,27 +83,32 @@ end
 
 --------------------------------------------------------------------------------
 
-function ToggleButton:toggle(silent)
+function ToggleButton:toggle()
   TRACE("ToggleButton:toggle")
 
-  self._cached_active = self.active
   self.active = not self.active
-  --self.invalidate(self)
-  if not silent and self.on_change then
-    self.on_change(self)
+  self._cached_active = self.active
+  
+  if (self.on_change ~= nil) then
+    self:invoke_handler()
   end
 end
 
 
 --------------------------------------------------------------------------------
 
-function ToggleButton:set(value,silent)
+function ToggleButton:set(value)
+  TRACE("ToggleButton:set", value)
+  
+  if (self._cached_active ~= value) then
+    self._cached_active = value
 
-  self.active = value
-  self.invalidate(self)
-  if not silent and self.on_change then
-    --self.on_change(self)
-    self:invoke_handler()
+    self.active = value
+    self.invalidate(self)
+  
+    if (self.on_change ~= nil) then
+      self:invoke_handler()
+    end
   end
 end
 
@@ -178,3 +183,4 @@ function ToggleButton:remove_listeners()
   self.display.device.message_stream:remove_listener(
     self,DEVICE_EVENT_VALUE_CHANGED)
 end
+
