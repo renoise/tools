@@ -1,15 +1,16 @@
 -------------------------------------------
 -- Requires and initialization
 -------------------------------------------
+require "remdebug.engine"
 
--- Hack: load GlobalMidiActions.lua from Libraries/..
 local package_path = package.path
 package.path  = package.path:gsub("[\\/]Libraries", "")
 
 require "GlobalMidiActions"
 package.path = package_path
 
--- local URL = require "ActionServer.URL"
+require "URL"
+
 local expand = require "expand"
 
 require "log"
@@ -93,51 +94,7 @@ function Util:parse_message(m)
 end
 
 function Util:parse(url, default)
-    -- initialize default parameters
-    local parsed = {}
-    for i,v in pairs(default or parsed) do parsed[i] = v end
-    -- empty url is parsed to nil
-    if not url or url == "" then return nil, "invalid url" end
-    -- remove whitespace
-    -- url = string.gsub(url, "%s", "")
-    -- get fragment
-    url = string.gsub(url, "#(.*)$", function(f)
-        parsed.fragment = f
-        return ""
-    end)
-    -- get scheme
-    url = string.gsub(url, "^([%w][%w%+%-%.]*)%:",
-        function(s) parsed.scheme = s; return "" end)
-    -- get authority
-    url = string.gsub(url, "^//([^/]*)", function(n)
-        parsed.authority = n
-        return ""
-    end)
-    -- get query stringing
-    url = string.gsub(url, "%?(.*)", function(q)
-        parsed.query = q
-        return ""
-    end)
-    -- get params
-    url = string.gsub(url, "%;(.*)", function(p)
-        parsed.params = p
-        return ""
-    end)
-    -- path is whatever was left
-    if url ~= "" then parsed.path = url end
-    local authority = parsed.authority
-    if not authority then return parsed end
-    authority = string.gsub(authority,"^([^@]*)@",
-        function(u) parsed.userinfo = u; return "" end)
-    authority = string.gsub(authority, ":([^:]*)$",
-        function(p) parsed.port = p; return "" end)
-    if authority ~= "" then parsed.host = authority end
-    local userinfo = parsed.userinfo
-    if not userinfo then return parsed end
-    userinfo = string.gsub(userinfo, ":([^:]*)$",
-        function(p) parsed.password = p; return "" end)
-    parsed.user = userinfo
-    return parsed
+  return URL:parse(url, default)    
 end
 
 function Util:read_file(file_path, binary)
@@ -320,8 +277,12 @@ class "ActionServer"
 
   function ActionServer:__init(address,port)
       -- create a server socket
-      local server, socket_error =
-        renoise.Socket.create_server(address, port)
+      local server, socket_error = nil
+      if address == nil then
+        server, socket_error = renoise.Socket.create_server(port)
+      else
+        server, socket_error = renoise.Socket.create_server(address, port)
+      end        
 
       if socket_error then
         renoise.app():show_warning(
@@ -377,6 +338,7 @@ class "ActionServer"
     local ext = Util:get_extension(path)
     local mime = ActionServer.mime_types[ext] or "text/plain"
     log:info("Extension: " .. ext .. "; Content-Type: " .. mime)
+    return mime
   end
 
   function ActionServer:get_htdoc(path)
@@ -410,18 +372,33 @@ class "ActionServer"
    self.header_map["Cache-Control"] = "max-age=3600, must-revalidate"
    self.header_map["Accept-Ranges"] = "none"
   end
+  
+  function ActionServer:is_binary(str)    
+    return str ~= nil and str:match("^text") == nil
+  end  
+    
+  function ActionServer:is_image(str)    
+    return str ~= nil and str:match("^image") ~= nil
+  end
 
   function ActionServer:send_htdoc(socket, path, status, parameters)
      status = status or "200 OK"
-
-     self:set_header("Content-Type", self:get_MIME(path))
-
+     local mime = self:get_MIME(path)
+     
+     -- TODO remove image hack
+     if self:is_image(mime) then 
+       path = "/empty.txt"        
+     end
+     
+     self:set_header("Content-Type", mime)
+     
      parameters = parameters or {}
      local fullpath = self:get_htdoc(path)
-     --TODO if mime is of binary type, then binary = true
-     local binary = false
+
+     local binary = self:is_binary(mime)
+
      local template = Util:read_file(fullpath, binary)
-     assert(template, "failed to read the teplate file")
+     assert(template, "failed to read the template file")
      
      local page = nil
 
@@ -560,13 +537,13 @@ class "ActionServer"
    end
 
 -------------------------------------------
-local address = "localhost"
+local address = nil
 local port = 80
 local INADDR_ANY = false
 
 function restore_default_configuration()
     port = 80
-    address = "0.0.0.0"
+    address = nil
     INADDR_ANY = false
 end
 

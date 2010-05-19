@@ -18,42 +18,42 @@
     <link type="text/css" href="/fg-menu/fg.menu.css" media="screen" rel="stylesheet" />
 
     <!-- styles for this example page only -->
-	<style type="text/css">
-    	body { padding: 0px; margin: 0px ;  background-color: #aaa; height: 100%;}
-    	#center { height: 100%;  font-size:62.5%; border: 10% solid #333; padding: 10px 20px 20px 20px; width: 600px; margin: 0px auto; background-color: white;  }
-    	.fg-menu-container  { font-size:62.5%; }
-    	#menuLog { font-size:1.4em; margin:10px 20px 20px; }
-    	.hidden { position:absolute; top:0; left:-9999px; width:1px; height:1px; overflow:hidden; }
+  <style type="text/css">
+      body { padding: 0px; margin: 0px ;  background-color: #aaa; height: 100%;}
+      #center { height: 100%;  font-size:62.5%; border: 10% solid #333; padding: 10px 20px 20px 20px; width: 600px; margin: 0px auto; background-color: white;  }
+      .fg-menu-container  { font-size:62.5%; }
+      #menuLog { font-size:1.4em; margin:10px 20px 20px; }
+      .hidden { position:absolute; top:0; left:-9999px; width:1px; height:1px; overflow:hidden; }
     
-    	.fg-button { clear:left; margin:0 4px 40px 20px; padding: .4em 1em; text-decoration:none !important; cursor:pointer; position: relative; text-align: center; zoom: 1; }
-    	.fg-button .ui-icon { position: absolute; top: 50%; margin-top: -8px; left: 50%; margin-left: -8px; }
-    	a.fg-button { float:left;  }
-    	button.fg-button { width:auto; overflow:visible; } /* removes extra button width in IE */
+      .fg-button { clear:left; margin:0 4px 40px 20px; padding: .4em 1em; text-decoration:none !important; cursor:pointer; position: relative; text-align: center; zoom: 1; }
+      .fg-button .ui-icon { position: absolute; top: 50%; margin-top: -8px; left: 50%; margin-left: -8px; }
+      a.fg-button { float:left;  }
+      button.fg-button { width:auto; overflow:visible; } /* removes extra button width in IE */
     
-    	.fg-button-icon-left { padding-left: 2.1em; }
-    	.fg-button-icon-right { padding-right: 2.1em; }
-    	.fg-button-icon-left .ui-icon { right: auto; left: .2em; margin-left: 0; }
-    	.fg-button-icon-right .ui-icon { left: auto; right: .2em; margin-left: 0; }
-    	.fg-button-icon-solo { display:block; width:8px; text-indent: -9999px; }	 /* solo icon buttons must have block properties for the text-indent to work */
+      .fg-button-icon-left { padding-left: 2.1em; }
+      .fg-button-icon-right { padding-right: 2.1em; }
+      .fg-button-icon-left .ui-icon { right: auto; left: .2em; margin-left: 0; }
+      .fg-button-icon-right .ui-icon { left: auto; right: .2em; margin-left: 0; }
+      .fg-button-icon-solo { display:block; width:8px; text-indent: -9999px; }   /* solo icon buttons must have block properties for the text-indent to work */
     
-    	.fg-button.ui-state-loading .ui-icon { background: url(/fg-menu/spinner_bar.gif) no-repeat 0 0; }
+      .fg-button.ui-state-loading .ui-icon { background: url(/fg-menu/spinner_bar.gif) no-repeat 0 0; }
      .ui-widget-header, .ui-widget-header a { color: white; }
-  	
+    
      #droppable { width: 100px; height: 150px; padding: 0.5em; float: right; margin: 10px; }
      #rack { width: 300px; }
      .action_widget { height: 30px; border: 1px solid white; padding: 0.5em; margin: 3px;}
      .trashcan {  font-weight: bold; float: right; width: 10px; height: 10px; display: block;}
      .widget_elm { font-weight: bold; }
      .clearfix { clear: both; }
-	</style>
+  </style>
 
-	<!-- style exceptions for IE 6 -->
-	<!--[if IE]>
-	<style type="text/css">
-		.fg-menu-ipod .fg-menu li { width: 95%; }
-		.fg-menu-ipod .ui-widget-content { border:0; }
-	</style>
-	<![endif]-->	
+  <!-- style exceptions for IE 6 -->
+  <!--[if IE]>
+  <style type="text/css">
+    .fg-menu-ipod .fg-menu li { width: 95%; }
+    .fg-menu-ipod .ui-widget-content { border:0; }
+  </style>
+  <![endif]-->  
     
     <script type="text/javascript">
       var levels = 3;
@@ -95,50 +95,50 @@
       }
 
       // image deletion function
-			var recycle_icon = '<a href="link/to/recycle/script/when/we/have/js/off" title="Recycle this image" class="ui-icon ui-icon-refresh">Recycle image</a>';
-			function deleteImage($item) {
-				$item.fadeOut(function() {
-					var $list = $('ul',$trash).length ? $('ul',$trash) : $('<ul class="gallery ui-helper-reset"/>').appendTo($trash);
+      var recycle_icon = '<a href="link/to/recycle/script/when/we/have/js/off" title="Recycle this image" class="ui-icon ui-icon-refresh">Recycle image</a>';
+      function deleteImage($item) {
+        $item.fadeOut(function() {
+          var $list = $('ul',$trash).length ? $('ul',$trash) : $('<ul class="gallery ui-helper-reset"/>').appendTo($trash);
 
-					$item.find('a.ui-icon-trash').remove();
-					$item.append(recycle_icon).appendTo($list).fadeIn(function() {
-						$item.animate({ width: '48px' }).find('img').animate({ height: '36px' });
-					});
-				});
-			}
+          $item.find('a.ui-icon-trash').remove();
+          $item.append(recycle_icon).appendTo($list).fadeIn(function() {
+            $item.animate({ width: '48px' }).find('img').animate({ height: '36px' });
+          });
+        });
+      }
 
       // image recycle function
-			var trash_icon = '<a href="link/to/trash/script/when/we/have/js/off" title="Delete this image" class="ui-icon ui-icon-trash">Delete image</a>';
-			function recycleImage($item) {
-				$item.fadeOut(function() {
-					$item.find('a.ui-icon-refresh').remove();
-					$item.append(trash_icon).find('img').css('height','72px').end().appendTo($gallery).fadeIn();
-				});
-			}
-			
-			$('#rack > li').click(function(ev) {
-				var $item = $(this);
-				var $target = $(ev.target);
+      var trash_icon = '<a href="link/to/trash/script/when/we/have/js/off" title="Delete this image" class="ui-icon ui-icon-trash">Delete image</a>';
+      function recycleImage($item) {
+        $item.fadeOut(function() {
+          $item.find('a.ui-icon-refresh').remove();
+          $item.append(trash_icon).find('img').css('height','72px').end().appendTo($gallery).fadeIn();
+        });
+      }
+      
+      $('#rack > li').click(function(ev) {
+        var $item = $(this);
+        var $target = $(ev.target);
 
-				if ($target.is('a.ui-icon-trash')) {
-					deleteImage($item);
-				} else if ($target.is('a.ui-icon-zoomin')) {
-					viewLargerImage($target);
-				} else if ($target.is('a.ui-icon-refresh')) {
-					recycleImage($item);
-				}
+        if ($target.is('a.ui-icon-trash')) {
+          deleteImage($item);
+        } else if ($target.is('a.ui-icon-zoomin')) {
+          viewLargerImage($target);
+        } else if ($target.is('a.ui-icon-refresh')) {
+          recycleImage($item);
+        }
 
-				return false;
-			});
-			
-		function get_options(path){
-		   var str = "<option>True</option><option>False</option>";
-		   var i = 0;
+        return false;
+      });
+      
+    function get_options(path){
+       var str = "<option>True</option><option>False</option>";
+       var i = 0;
          while (i < 10){
             i++;
             str += "<option>"+i+"</option>";
          }
-		   return str;
+       return str;
       }
 
       function get_parent(path){
@@ -189,11 +189,11 @@
             $("#actions").html(subtree);
             $("#actions ul:first").attr('class','list_root');
 
-        		$('#hierarchybreadcrumb').menu({
-        			content : $("#actions").html(),
-        			backLink: false,
-        			callback: function(item){
-        			   branch = $(item).text();
+            $('#hierarchybreadcrumb').menu({
+              content : $("#actions").html(),
+              backLink: false,
+              callback: function(item){
+                 branch = $(item).text();
                   path.push(branch);
                   address = ""
                   $('.fg-menu-crumb').each(function(){
@@ -204,7 +204,7 @@
                   if (dynamic){ getMenu(); }
 
                }
-        		});
+            });
           });
       }
 
@@ -226,7 +226,6 @@
             var w_id = id.substring(2);
             var url = widgets[w_id];
             $.post(url, {ajax:true});
-            return false;
          });
 
          // MENU
@@ -250,11 +249,11 @@
              levels = $(this).val();
          });
   
-        	// BUTTONS
-        	$('.fg-button').hover(
-        		function(){ $(this).removeClass('ui-state-default').addClass('ui-state-focus'); },
-        		function(){ $(this).removeClass('ui-state-focus').addClass('ui-state-default'); }
-        	);
+          // BUTTONS
+          $('.fg-button').hover(
+            function(){ $(this).removeClass('ui-state-default').addClass('ui-state-focus'); },
+            function(){ $(this).removeClass('ui-state-focus').addClass('ui-state-default'); }
+          );
 
       });
     </script>
