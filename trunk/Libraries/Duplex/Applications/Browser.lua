@@ -50,29 +50,7 @@ function Browser:__init(device_name,app_name)
 end
 
 
---------------------------------------------------------------------------------
-
---[[
-function Browser:init_app()
-
-  Application.init_app(self)
-
-  self.vb = renoise.ViewBuilder()
-
-  self.build_browser(self)
-  -- hide after building
-  self.vb.views.dpx_browser_app_row.visible = false
-  --self.vb.views.dpx_browser_preset_row.visible = false
-  self.vb.views.dpx_browser_device_settings.visible = false
-  self.vb.views.dpx_browser_fix.visible = false
-
-end
-]]
-
-
---------------------------------------------------------------------------------
-
--- changing the active input device list index will
+-- note: changing the active input device list-index will
 -- cause another method, "set_device" to become invoked
 
 function Browser:set_device_index(name)
@@ -90,9 +68,7 @@ end
 -- * instantiate the new device 
 -- * load dedicated class if it exists
 -- * filter applications
--- @param name (string)  the name of the device, as it is printed
---            in the popup device selector list
--- @param silent (boolean) skip the 
+-- @param name (string)  the name of the device (display_name)
 
 function Browser:set_device(name)
   TRACE("Browser:set_device("..name..")")
@@ -228,7 +204,7 @@ function Browser:get_list_index(view_elm,name)
       return idx
     end
   end
-  print("Noteice: could not locate the item "..name)
+  print("Notice: could not locate the item "..name)
   return 1
 
 end
@@ -541,7 +517,7 @@ function Browser:start_app()
     self.application.start_app(self.application)
   end
 end
-
+  
 
 --------------------------------------------------------------------------------
 

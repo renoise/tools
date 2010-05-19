@@ -108,7 +108,9 @@ end
 --------------------------------------------------------------------------------
 
 -- simple color adjustment: 
--- store original color values as "_color"
+-- store original color values as "_color", so we are able 
+-- to call this method several times without loosing the 
+-- original color information
 
 function DisplayObject:colorize(rgb)
   TRACE("DisplayObject:colorize:",rgb)

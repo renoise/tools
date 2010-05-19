@@ -9,6 +9,7 @@ The Display is the base class for building device displays
 
 --]]
 
+module("Duplex", package.seeall);
 
 --==============================================================================
 
@@ -188,7 +189,9 @@ function Display:set_parameter(elm,obj,point)
     if type(widget)=="Button" then
       widget.text = point.text
     end
-    if (type(widget)=="MiniSlider") or (type(widget)=="Slider") then
+    if (type(widget)=="RotaryEncoder") or 
+      (type(widget)=="MiniSlider") or
+      (type(widget)=="Slider") then
       value = self.device:point_to_value(point,elm.maximum,elm.minimum,obj.ceiling)
       widget.remove_notifier(widget,self.ui_notifiers[elm.id])
       widget.value = value*1 -- toNumber
@@ -270,7 +273,7 @@ function Display:generate_message(value, metadata)
   else
     error("unknown metadata.type")
   end
-  
+
   -- include additional useful meta-properties
   msg.name  = metadata.name
   msg.group_name = metadata.group_name
@@ -299,54 +302,54 @@ function Display:walk_table(t, done, deep)
 
   for key, value in pairs (t) do
     if (type(value) == "table" and not done[value]) then
-      done [value] = true
+    done [value] = true
       
-      local grid_id = nil      
-      local view_obj = {
-        meta = t[key].xarg  -- xml attributes
-      }
+    local grid_id = nil
+    local view_obj = {
+      meta = t[key].xarg  -- xml attributes
+    }
       
-      if t[key].label=="Param" then
-        -- the parameters
-        local notifier = nil
-  
+    if t[key].label=="Param" then
+      -- the parameters
+      local notifier = nil
+
         TRACE("Display:view_obj.meta:",view_obj.meta)
         TRACE("Display:view_obj.meta.name:",view_obj.meta.name)
-    
+  
         -- empty parameter (placeholder unit)?
-        if not view_obj.meta.type then
+      if not view_obj.meta.type then
           view_obj.view = self.vb:column{
             height=UNIT_HEIGHT,
             width=UNIT_WIDTH,
             style = "invisible"
           }
-  
+
         -- a parameter unit
-        else
-  
+      else
+
           local tooltip = string.format("%s (%s)",
             view_obj.meta.name,view_obj.meta.value)
-          
-          if t[key].xarg.type == "button" then
-            notifier = function(value) 
-              -- output the maximum value
-              self:generate_message(view_obj.meta.maximum*1,view_obj.meta)
-            end
+
+        if t[key].xarg.type == "button" then
+          notifier = function(value) 
+            -- output the maximum value
+            self:generate_message(view_obj.meta.maximum*1,view_obj.meta)
+          end
             
-            self.ui_notifiers[t[key].xarg.id] = notifier
-            view_obj.view = self.vb:button{
-              id=t[key].xarg.id,
-              height=UNIT_HEIGHT,
-              width=UNIT_WIDTH,
-              tooltip = tooltip,
-              notifier = notifier
-            }
+          self.ui_notifiers[t[key].xarg.id] = notifier
+          view_obj.view = self.vb:button{
+            id=t[key].xarg.id,
+            height=UNIT_HEIGHT,
+            width=UNIT_WIDTH,
+            tooltip = tooltip,
+            notifier = notifier
+          }
             
-          elseif t[key].xarg.type == "encoder" then
-            notifier = function(value) 
-              -- output the current value
-              self:generate_message(value,view_obj.meta)
-            end
+        elseif t[key].xarg.type == "encoder" then
+          notifier = function(value) 
+            -- output the current value
+            self:generate_message(value,view_obj.meta)
+          end
             
             self.ui_notifiers[t[key].xarg.id] = notifier
             view_obj.view = self.vb:minislider{
@@ -365,139 +368,139 @@ function Display:walk_table(t, done, deep)
               self:generate_message(value,view_obj.meta)
             end
             
-            self.ui_notifiers[t[key].xarg.id] = notifier
-            view_obj.view = self.vb:rotary{
+          self.ui_notifiers[t[key].xarg.id] = notifier
+          view_obj.view = self.vb:rotary{
               id = t[key].xarg.id,
-              min = view_obj.meta.minimum+0,
-              max = view_obj.meta.maximum+0,
-              tooltip = tooltip,
-              width = UNIT_WIDTH,
+            min = view_obj.meta.minimum+0,
+            max = view_obj.meta.maximum+0,
+            tooltip = tooltip,
+            width = UNIT_WIDTH,
               height = UNIT_WIDTH,
-              notifier = notifier
-            }
+            notifier = notifier
+          }
           
-          elseif t[key].xarg.type == "fader" then
-            notifier = function(value) 
-              -- output the current value
-              self:generate_message(value,view_obj.meta)
-            end
+        elseif t[key].xarg.type == "fader" then
+          notifier = function(value) 
+            -- output the current value
+            self:generate_message(value,view_obj.meta)
+          end
             
             -- TODO: t[key].xarg.orientation=="vertical","horizontal" 
             
-            self.ui_notifiers[t[key].xarg.id] = notifier
-            view_obj.view = self.vb:slider{
-              id=t[key].xarg.id,
-              min = view_obj.meta.minimum+0,
-              max = view_obj.meta.maximum+0,
-              tooltip = tooltip,
-              --height=UNIT_HEIGHT/1.5,
+          self.ui_notifiers[t[key].xarg.id] = notifier
+          view_obj.view = self.vb:slider{
+            id=t[key].xarg.id,
+            min = view_obj.meta.minimum+0,
+            max = view_obj.meta.maximum+0,
+            tooltip = tooltip,
+            --height=UNIT_HEIGHT/1.5,
               width = (UNIT_WIDTH*t[key].xarg.size) + 
                 (DEFAULT_SPACING*(t[key].xarg.size-1)),
-              notifier = notifier
-            }
-          end
-        end
-      
-      elseif t[key].label=="Column" then
-        view_obj.view = self.vb:column{
-          style="invisible",
-          spacing=DEFAULT_SPACING
-        }
-        self.parents[deep] = view_obj
-      
-      elseif t[key].label=="Row" then
-        view_obj.view = self.vb:row{
-          style="invisible",
-          spacing=DEFAULT_SPACING,
-        }
-        self.parents[deep] = view_obj
-      
-      elseif t[key].label=="Group" then
-        -- the group
-        local orientation = t[key].xarg.orientation
-        local columns = t[key].xarg.columns
-        
-        if columns then
-          -- enter "grid mode": use current group as 
-          -- base object for inserting multiple rows
-          self.grid_count = self.grid_count+1
-          grid_id = string.format("grid_%i",self.grid_count)
-          orientation = "vertical"
-       
-        else
-          -- exit "grid mode"
-          self.grid_obj = nil
-        end
-        
-        if orientation=="vertical" then
-          view_obj.view = self.vb:column{
-            style="group",
-            id=grid_id,
-            margin=DEFAULT_MARGIN,
-            spacing=DEFAULT_SPACING,
-          }
-        
-        else
-          view_obj.view = self.vb:row{
-            style="group",
-            id=grid_id,
-            width=500,
-            margin=DEFAULT_MARGIN,
-            spacing=DEFAULT_SPACING,
+            notifier = notifier
           }
         end
-  
-        -- more grid mode stuff: remember the original view_obj
-        -- grid mode will otherwise loose this reference...
-        if grid_id then
-          self.grid_obj = view_obj
-        end
-        
-        self.parents[deep] = view_obj
       end
       
-      -- something was matched
-      if view_obj.view then
-        -- grid mode: create a(nother) row ?
-        local row_id = nil
+    elseif t[key].label=="Column" then
+      view_obj.view = self.vb:column{
+        style="invisible",
+        spacing=DEFAULT_SPACING
+      }
+      self.parents[deep] = view_obj
+      
+    elseif t[key].label=="Row" then
+      view_obj.view = self.vb:row{
+        style="invisible",
+        spacing=DEFAULT_SPACING,
+      }
+      self.parents[deep] = view_obj
+      
+    elseif t[key].label=="Group" then
+      -- the group
+      local orientation = t[key].xarg.orientation
+      local columns = t[key].xarg.columns
+        
+      if columns then
+        -- enter "grid mode": use current group as 
+        -- base object for inserting multiple rows
+        self.grid_count = self.grid_count+1
+        grid_id = string.format("grid_%i",self.grid_count)
+        orientation = "vertical"
+       
+      else
+        -- exit "grid mode"
+        self.grid_obj = nil
+      end
+        
+      if orientation=="vertical" then
+        view_obj.view = self.vb:column{
+          style="group",
+          id=grid_id,
+          margin=DEFAULT_MARGIN,
+          spacing=DEFAULT_SPACING,
+        }
+        
+      else
+        view_obj.view = self.vb:row{
+          style="group",
+          id=grid_id,
+          width=500,
+          margin=DEFAULT_MARGIN,
+          spacing=DEFAULT_SPACING,
+        }
+      end
   
-        if view_obj.meta.row then
+      -- more grid mode stuff: remember the original view_obj
+      -- grid mode will otherwise loose this reference...
+      if grid_id then
+        self.grid_obj = view_obj
+      end
+        
+      self.parents[deep] = view_obj
+    end
+      
+    -- something was matched
+    if view_obj.view then
+      -- grid mode: create a(nother) row ?
+      local row_id = nil
+  
+      if view_obj.meta.row then
           row_id = string.format("grid_%i_row_%i",
             self.grid_count,view_obj.meta.row)
-        end
+      end
   
         if (not grid_id and self.grid_obj and 
             not self.vb.views[row_id]) then
   
-          local row_obj = {
-            view = self.vb:row{
-              id=row_id,
-              spacing=DEFAULT_SPACING,
-            }
+        local row_obj = {
+          view = self.vb:row{
+            id=row_id,
+            spacing=DEFAULT_SPACING,
           }
-          -- assign grid objects to this row
-          self.grid_obj.view:add_child(row_obj.view)
-          self.parents[deep-1] = row_obj
-        end
+        }
+        -- assign grid objects to this row
+        self.grid_obj.view:add_child(row_obj.view)
+        self.parents[deep-1] = row_obj
+      end
         
-        -- attach to parent object (if it exists)
-        local added = false
+      -- attach to parent object (if it exists)
+      local added = false
   
-        for i = deep-1,1,-1 do
-          if self.parents[i] then
-            self.parents[i].view:add_child(view_obj.view)
-            added = true
-            break
-          end
-        end
-        
-        -- else, add to main view
-        if (not added) then
-          self.view:add_child(view_obj.view)
+      for i = deep-1,1,-1 do
+        if self.parents[i] then
+          self.parents[i].view:add_child(view_obj.view)
+          added = true
+          break
         end
       end
-      self:walk_table (value, done, deep)
-    end  
+        
+      -- else, add to main view
+        if (not added) then
+        self.view:add_child(view_obj.view)
+      end
+    end
+    self:walk_table (value, done, deep)
+  end
   end
 end
 

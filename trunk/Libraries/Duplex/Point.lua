@@ -4,7 +4,7 @@
 
 --[[
 
-Point represents a point in a canvas (text,color)
+Point represents a point in a canvas (text,color,value)
 
 --]]
 
