@@ -1,32 +1,22 @@
-
 -- -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
--- manifest
+-- menu registration
 -- -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
-manifest = {}
-manifest.api_version = 0.2
-manifest.author = "Vincent Voois [ http://tinyurl.com/vvrns ]"
-manifest.description = "Change Global Sample properties V1.23"
+local OPTION_CHANGE_SELECTED = 1
+local OPTION_CHANGE_ALL = 2
 
-manifest.notifications = {}
---manifest.notifications.auto_reload_debug = function() 
---   open_sample_dialog()
---end
-
-manifest.actions = {}
-manifest.actions[#manifest.actions + 1] = {
-name = "InstrumentBox:Edit all samples in current instrument",
-description = "Change properties of all samples",
-invoke = function() 
-   open_sample_dialog(1)
-end
+renoise.tool():add_menu_entry {
+  name = "Instrument Box:Edit all Samples in Current Instrument...",
+  invoke = function() 
+    open_sample_dialog(OPTION_CHANGE_SELECTED)
+  end
 }
-manifest.actions[#manifest.actions + 1] = {
-name = "InstrumentBox:Edit all samples in all instruments",
-description = "Change properties of all samples",
-invoke = function() 
-   open_sample_dialog(2)
-end
+
+renoise.tool():add_menu_entry {
+  name = "Instrument Box:Edit all Samples in All Instruments...",
+  invoke = function() 
+    open_sample_dialog(OPTION_CHANGE_ALL)
+  end
 }
 
 -- -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
@@ -70,6 +60,8 @@ valid_notes = {
    [1]='C-', [2]='C#', [3]='D-', [4]='D#', [5]='E-', [6]='F-',
    [7]='F#', [8]='G-', [9]='G#', [10]='A-', [11]='A#', [12]='B-'
 }
+
+
 -------------------------------------------------------------------------------
 
 function open_sample_dialog(option)
@@ -86,9 +78,10 @@ function open_sample_dialog(option)
       local song = renoise.song()
       local s_instrument = song.selected_instrument_index
       local win_title = ''
-      if option == 1 then
+      if option == OPTION_CHANGE_SELECTED then
          win_title = "Global sample properties (selected instrument)"
       else
+        assert(option == OPTION_CHANGE_ALL, "unexpected option")
          win_title = "Global sample properties (all instruments)"
       end
 
@@ -99,91 +92,91 @@ function open_sample_dialog(option)
             spacing = 1,
             uniform = true,
             vb:row {
-               create_object(obj_checkbox,'',18,0,0,do_nna,'id6',
+               create_view(obj_checkbox,'',18,0,0,do_nna,'id6',
                'Set NNA for all samples in instrument(s)?','',
                function(value) do_nna = value end,vb),
-               create_object(obj_textlabel,'',TEXT_ROW_WIDTH,0,0,'novalue','id7',
+               create_view(obj_textlabel,'',TEXT_ROW_WIDTH,0,0,'novalue','id7',
                '','NNA','',vb),
-               create_object(obj_popup,'',80,0,0,nna_index,
+               create_view(obj_popup,'',80,0,0,nna_index,
                'nna_mode','',{"Cut", "Noteoff", "Continue"}, 
                function(value) nna_index = value end,vb),
-               create_object(obj_checkbox,'',18,0,0,do_base_note,'dobasenote',
+               create_view(obj_checkbox,'',18,0,0,do_base_note,'dobasenote',
                'Set base note for all samples in selected instrument?','',
                function(value) do_base_note = value end,vb),
-               create_object(obj_textlabel,'',TEXT_ROW_WIDTH,0,0,'novalue','dobasenotetext',
+               create_view(obj_textlabel,'',TEXT_ROW_WIDTH,0,0,'novalue','dobasenotetext',
                '','Basenote','',vb),
-               create_object(obj_textfield,'',30,0,0,base_note_val,'base_note',
-               'Insert a full note-value like C-4 or A#3 or use semitones to shift\nthe whole map: -24 to shift two octaves down\n24 to shift everything two octaves up','',
+               create_view(obj_textfield,'',30,0,0,base_note_val,'base_note',
+               'Insert a full note-value like C-4 or A#3 or use semitones to shift\nthe whole map:\n-24 to shift two octaves down\n24 to shift everything two octaves up\nany other [rubbish] value will be ignored','',
                function(value) base_note_val = value end,vb),
             },
             vb:row {
-               create_object(obj_checkbox,'',18,0,0,do_loop,'doloop',
+               create_view(obj_checkbox,'',18,0,0,do_loop,'doloop',
                'Set loop for all samples in instrument(s)?','',
                function(value) do_loop = value end,vb),
-               create_object(obj_textlabel,'',TEXT_ROW_WIDTH,0,0,'novalue','id5',
+               create_view(obj_textlabel,'',TEXT_ROW_WIDTH,0,0,'novalue','id5',
                '','Loop','',vb),
-               create_object(obj_popup,'',80,0,0,loop_index,
+               create_view(obj_popup,'',80,0,0,loop_index,
                'loop_mode','',{"Off", "Forward", "Backward", "PingPong"}, 
                function(value) loop_index = value end,vb),
-               create_object(obj_checkbox,'',18,0,0,do_fine_tuning,'dofinetuning',
+               create_view(obj_checkbox,'',18,0,0,do_fine_tuning,'dofinetuning',
                'Set fine-tuning for all samples in selected instrument?','',
                function(value) do_fine_tuning = value end,vb),
-               create_object(obj_textlabel,'',TEXT_ROW_WIDTH,0,0,'novalue','dofinetuningtext',
+               create_view(obj_textlabel,'',TEXT_ROW_WIDTH,0,0,'novalue','dofinetuningtext',
                '','Finetuning','',vb),
-               create_object(obj_valuebox,'',60,-127,127,fine_tune_val,'fine_tune_val',
+               create_view(obj_valuebox,'',60,-127,127,fine_tune_val,'fine_tune_val',
                '','',function(value) fine_tune_val = value end,vb),
             },
             vb:row {
-               create_object(obj_checkbox,'',18,0,0,do_interpolate,'dointerpolate',
+               create_view(obj_checkbox,'',18,0,0,do_interpolate,'dointerpolate',
                'Set interpolation level for all samples in instrument(s)?','',
                function(value) do_interpolate = value end,vb),
-               create_object(obj_textlabel,'',TEXT_ROW_WIDTH,0,0,'novalue','id4',
+               create_view(obj_textlabel,'',TEXT_ROW_WIDTH,0,0,'novalue','id4',
                '','Interpolate','',vb),
-               create_object(obj_popup,'',80,0,0,interpolation_index,
+               create_view(obj_popup,'',80,0,0,interpolation_index,
                'interpolation_mode','',{"None", "Linear", "Cubic"}, 
                function(value) interpolation_index = value end,vb),
-               create_object(obj_checkbox,'',18,0,0,do_sync,'dosync',
+               create_view(obj_checkbox,'',18,0,0,do_sync,'dosync',
                'Set Sync for all samples in selected instrument?','',
                function(value) do_sync = value end,vb),
-               create_object(obj_textlabel,'',42,0,0,'novalue','dosynctext',
+               create_view(obj_textlabel,'',42,0,0,'novalue','dosynctext',
                '','Sync','',vb),
-               create_object(obj_checkbox,'',18,0,0,sync_mode,'do_sync_mode',
+               create_view(obj_checkbox,'',18,0,0,sync_mode,'do_sync_mode',
                '','',function(value) sync_mode = value end,vb),
-               create_object(obj_valuebox,'',60,0,512,sync_val,'sync_value',
+               create_view(obj_valuebox,'',60,0,512,sync_val,'sync_value',
                '','',function(value) sync_val = value end,vb),
             },         
             vb:space{height = 3*CONTENT_SPACING},
             vb:row {
-               create_object(obj_checkbox,'',18,0,0,do_panning,'id1',
+               create_view(obj_checkbox,'',18,0,0,do_panning,'id1',
                'Set amplification for all samples in selected instrument?','',
                function(value) do_amplify = value end,vb),
-               create_object(obj_textlabel,'',TEXT_ROW_WIDTH,0,0,'novalue','id2',
+               create_view(obj_textlabel,'',TEXT_ROW_WIDTH,0,0,'novalue','id2',
                '','Amplify','',vb),
-               create_object(obj_slider,'',140,0,4,1,'amplification_level',
+               create_view(obj_slider,'',140,0,4,1,'amplification_level',
                '','',function(value)slide_volume(vb, value)end,vb),
-               create_object(obj_textlabel,'',TEXT_ROW_WIDTH,0,0,'','db_value',
+               create_view(obj_textlabel,'',TEXT_ROW_WIDTH,0,0,'','db_value',
                '',string.format('%.1f',LinToDb(1)),'',vb),
             },
             vb:row {
-               create_object(obj_checkbox,'',18,0,0,do_panning,'dopanning',
+               create_view(obj_checkbox,'',18,0,0,do_panning,'dopanning',
                'Set panning for all samples in selected instrument?','',
                function(value) do_panning = value end,vb),
-               create_object(obj_textlabel,'',TEXT_ROW_WIDTH,0,0,'','dopanningtext',
+               create_view(obj_textlabel,'',TEXT_ROW_WIDTH,0,0,'','dopanningtext',
                '','Panning','',vb),
-               create_object(obj_slider,'',140,-50,50,0,'panning_level','','',
+               create_view(obj_slider,'',140,-50,50,0,'panning_level','','',
                function(value) slide_panning(vb, value) end,vb),
-               create_object(obj_textlabel,'',TEXT_ROW_WIDTH,0,0,'','pan_value',
+               create_view(obj_textlabel,'',TEXT_ROW_WIDTH,0,0,'','pan_value',
                '',tostring(vb.views.panning_level.value),'',vb),
             },
             vb:space{height = 3*CONTENT_SPACING},
             vb:row {
                vb:space {width = 70},
-               create_object(obj_button,'',60,0,0,0,'id8','','Change the selected properties',
+               create_view(obj_button,'',60,0,0,0,'id8','','Change the selected properties',
                function() change_sample_properties(option) end,vb),
                vb:space {width = 15},
-               create_object(obj_textlabel,'right',30,0,0,'novalue','id_safe_text',
+               create_view(obj_textlabel,'right',30,0,0,'novalue','id_safe_text',
                '','Safe','',vb),
-               create_object(obj_checkbox,'',18,0,0,safe_mode,'id_safe_mode',
+               create_view(obj_checkbox,'',18,0,0,safe_mode,'id_safe_mode',
                'Show/hide options that create unawarely subtile changes\nChanges that your are sure of to apply to *all* samples in *all* instruments','',
                function(value) toggle_safe_mode(value, vb) end,vb)
             }
@@ -206,6 +199,8 @@ function open_sample_dialog(option)
       sample_dialog:show()
    end
 end
+
+
 function toggle_safe_mode(value,vb)
   safe_mode = value
   if value == false then
@@ -214,6 +209,7 @@ function toggle_safe_mode(value,vb)
     disable_unsafe_options(vb)  
   end
 end
+
 
 function disable_unsafe_options(vb)
   vb.views.dopanning.visible = false
@@ -243,6 +239,7 @@ function disable_unsafe_options(vb)
   do_base_note = false
 end
 
+
 function enable_unsafe_options(vb)
   vb.views.dopanning.visible = true
   vb.views.dopanningtext.visible = true
@@ -262,6 +259,8 @@ function enable_unsafe_options(vb)
   vb.views.dobasenotetext.visible = true
   vb.views.base_note.visible = true
 end
+
+
 function slide_panning(vb, value)
    local disp_val = string.format('%.0f',value)
    if value == 0 then
@@ -274,6 +273,8 @@ function slide_panning(vb, value)
    vb.views.pan_value.text = disp_val
    pan_val = value
 end
+
+
 function slide_volume(vb,value)
    local disp_val = string.format('%.1f',LinToDb(value))
    if tonumber(disp_val) <= -200 then
@@ -284,7 +285,8 @@ function slide_volume(vb,value)
    amp_val = value
 end
 
-function create_object(type,palign,pwidth,pmin,pmax,pvalue, pid,ptooltip,ptext,pnotifier, vb)
+
+function create_view(type,palign,pwidth,pmin,pmax,pvalue, pid,ptooltip,ptext,pnotifier, vb)
     if palign == '' then
       palign = 'left'
     end
@@ -343,6 +345,7 @@ function LinToDb(Value)
   end
 end
 
+
 function DbToLin(Value)
   if (Value > MINUSINFDB) then
     return math.pow(10.0, Value * 0.05)
@@ -358,9 +361,10 @@ function change_sample_properties(option)
    local range_end = song.selected_instrument_index
    local cur_ins = nil --song.instruments[song.selected_instrument_index]
    local send = nil --#s_instrument.samples
-   if option == 1 then
+   if option == OPTION_CHANGE_SELECTED then
       range_start = song.selected_instrument_index
-   elseif option == 2 then
+   else
+       assert(option == OPTION_CHANGE_ALL, "unexpected option")
       range_end = #song.instruments
    end
 

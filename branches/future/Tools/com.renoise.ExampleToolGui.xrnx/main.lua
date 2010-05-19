@@ -8,42 +8,42 @@ com.renoise.ExampleToolGui.xrnx/main.lua
 --  header and tools in general)
 
 renoise.tool():add_menu_entry {
-  name = "Main Menu:Tools:Example Tool GUI:1. Hello World",
+  name = "Main Menu:Tools:Example Tool GUI:1. Hello World...",
   invoke = function() hello_world() end 
 }
 
 renoise.tool():add_menu_entry {
-  name = "Main Menu:Tools:Example Tool GUI:2. Pretty Hello World",
+  name = "Main Menu:Tools:Example Tool GUI:2. Pretty Hello World...",
   invoke = function() pretty_hello_world() end 
 }
   
 renoise.tool():add_menu_entry {
-  name = "Main Menu:Tools:Example Tool GUI:3. Dynamic Content & Ids",
+  name = "Main Menu:Tools:Example Tool GUI:3. Dynamic Content & Ids...",
   invoke = function() dynamic_content() end 
 }
 
 renoise.tool():add_menu_entry {
-  name = "Main Menu:Tools:Example Tool GUI:4. Batch Building Views",
+  name = "Main Menu:Tools:Example Tool GUI:4. Batch Building Views...",
   invoke = function() dynamic_building() end 
 }
 
 renoise.tool():add_menu_entry {
-  name = "Main Menu:Tools:Example Tool GUI:5. Aligning & Auto Sizing",
+  name = "Main Menu:Tools:Example Tool GUI:5. Aligning & Auto Sizing...",
   invoke = function() aligners_and_auto_sizing() end 
 }
   
 renoise.tool():add_menu_entry {
-  name = "Main Menu:Tools:Example Tool GUI:6. Available Backgrounds & Text",
+  name = "Main Menu:Tools:Example Tool GUI:6. Available Backgrounds & Text...",
   invoke = function() available_backgrounds() end 
 }
   
 renoise.tool():add_menu_entry {
-  name = "Main Menu:Tools:Example Tool GUI:7. Available Controls",
+  name = "Main Menu:Tools:Example Tool GUI:7. Available Controls...",
   invoke = function() available_controls() end 
 }
   
 renoise.tool():add_menu_entry {
-  name = "Main Menu:Tools:Example Tool GUI:8. Keyboard Events",
+  name = "Main Menu:Tools:Example Tool GUI:8. Keyboard Events...",
   invoke = function() handle_key_events() end
 }
 
