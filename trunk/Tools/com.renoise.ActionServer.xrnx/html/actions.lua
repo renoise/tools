@@ -1,4 +1,4 @@
-~{do L:set_header("Cache-Control", "no-cache, max-age: 3600") end}
+~{do L:set_header("Cache-Control", "no-cache, max-age: 0") end}
 ~{do
    local depth = 1
    local path = P["path[]"] or {}
