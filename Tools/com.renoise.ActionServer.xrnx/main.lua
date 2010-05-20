@@ -1,7 +1,6 @@
 -------------------------------------------
 -- Requires and initialization
 -------------------------------------------
-require "remdebug.engine"
 
 local package_path = package.path
 package.path  = package.path:gsub("[\\/]Libraries", "")
@@ -53,6 +52,18 @@ renoise.tool():add_menu_entry {
 
 
 -------------------------------------------
+--  Debug
+-------------------------------------------
+
+if true then 
+  require "remdebug.engine"
+  
+  _AUTO_RELOAD_DEBUG = function()
+    start_server()
+  end
+end  
+
+-------------------------------------------
 --  Util functions
 -------------------------------------------
 
@@ -79,7 +90,7 @@ function Util:parse_message(m)
   for k,v in ipairs(lines) do
      if v:match("^$") then s = true end
      if not s then
-        t = Util:split(v,": ")
+        t = Util:split(v,": ")        
         if #t == 2 then
            header[t[1]] = t[2]
         else
@@ -89,7 +100,7 @@ function Util:parse_message(m)
         --body[k] = v
         body=body..v.."\r\n"
      end
-  end
+  end  
   return header, body
 end
 
@@ -276,6 +287,8 @@ class "ActionServer"
   ActionServer.document_root = root .. "html"
 
   function ActionServer:__init(address,port)
+      self.chunked = false
+      
       -- create a server socket
       local server, socket_error = nil
       if address == nil then
@@ -295,22 +308,16 @@ class "ActionServer"
       end
   end
 
-  function ActionServer:socket_error(socket_error)
-    renoise.app():show_warning(socket_error)
-  end
+  
 
   function ActionServer:get_address()
     return self.server.local_address .. ':' .. self.server.local_port
   end
 
-  function ActionServer:get_date()
-    return os.date("%a, %d %b %Y %X " .. Util:get_tzoffset())
+  function ActionServer:get_date(time) 
+    return os.date("%a, %d %b %Y %X " .. Util:get_tzoffset(), time)
   end
-
-  function ActionServer:socket_accepted(socket)
-    log:info("Socket accepted")
-  end
-
+  
    function ActionServer:get_action_names()
       return Action.action_names
    end 
@@ -364,6 +371,10 @@ class "ActionServer"
   function ActionServer:set_header(k,v)
    self.header_map[k] = v
   end
+  
+  function ActionServer:remove_header(k)
+    self:set_header(k,nil)
+  end
 
   function ActionServer:init_header()
    self.header_map = table.create()
@@ -380,37 +391,84 @@ class "ActionServer"
   function ActionServer:is_image(str)    
     return str ~= nil and str:match("^image") ~= nil
   end
+  
+  function ActionServer:get_etag(fullpath)
+    local stat = io.stat(fullpath)
+    local last_modified = stat.mtime
+    return last_modified
+  end
 
   function ActionServer:send_htdoc(socket, path, status, parameters)
      status = status or "200 OK"
+     local buffer = nil
      local mime = self:get_MIME(path)
      
      -- TODO remove image hack
      if self:is_image(mime) then 
        path = "/empty.txt"        
+       mime = self:get_MIME(path)     
      end
-     
+
      self:set_header("Content-Type", mime)
      
      parameters = parameters or {}
      local fullpath = self:get_htdoc(path)
-
-     local binary = self:is_binary(mime)
-
-     local template = Util:read_file(fullpath, binary)
-     assert(template, "failed to read the template file")
+     local stat = io.stat(fullpath)
+     local size = stat.size
      
-     local page = nil
+     log:info("If-None-Match: " .. tostring(self.header["If-None-Match"]))
+     log:info("If-Modified-Since: " .. tostring(self.header["If-Modified-Since"]))     
+     
+     -- Conditional GET with ETag / If-None-Match
+     if self.header["If-None-Match"] and 
+       tonumber(self:get_etag(fullpath)) <= tonumber(self.header["If-None-Match"])
+     then
+      status = "304 Not Modified"
+      buffer = ""
+      size = 0
+      log:info("Serving empty body due to Conditional GET")
+      self:set_header("Cache-Control", "no-cache, no-store")       
+     else      
+       -- Read file into string buffer
+       local is_binary = self:is_binary(mime)     
+       is_binary = false
+       log:info("Is a binary file? " .. tostring(is_binary))
+       buffer = Util:read_file(fullpath, true)
+       assert(buffer, "Failed to read the requested file from disk")
+     end
+          
+     -- Create body
+     local body = nil          
+     -- Interpret any Lua code in the buffer (see expand.lua)     
+     if self:is_expandable(path) and #buffer > 0 then
 
-     if self:is_expandable(path) then
-       self:set_header("Cache-Control", "private, max-age=0")
-       page = expand(template, {L=self, renoise=renoise, P=parameters, Util=Util, ActionTree=ActionTree}, _G)
+       self:set_header("Content-Type", "text/html")
+       self:set_header("Cache-Control", "private, max-age=0, must-revalidate")
+      
+       local tic = os.clock()               
+       body = expand(
+         buffer,          
+         { L=self, 
+           renoise=renoise, 
+           P=parameters, 
+           Util=Util, 
+           ActionTree=ActionTree
+         },
+         _G
+       )       
+       local toc = os.clock()           
+       log:info(string.format("Expanding embedded Lua code took %d ms", 
+         (toc-tic) * 1000))             
+       size = #body -- interpreted size is different from filesize
+       self:set_header("ETag", os.time())
      else
-       self:set_header("Cache-Control", "private, max-age=3600")
-       page = template
+       self:set_header("Cache-Control", "private, max-age=3600, must-revalidate")
+       body = buffer
+       self:set_header("ETag", self:get_etag(fullpath))       
      end
      
-     local size =  #page; 
+     -- Format "Content-Length"
+     self:set_header("Content-Length", size)
      local unit = "B"
      self:set_header("Content-Length", size)
      if size > 1024 then 
@@ -418,20 +476,37 @@ class "ActionServer"
        size = string.format("%.1f", size / 1024) 
      end 
      log:info(string.format("Content-Length: %s %s", size, unit))
-    
+     
+     -- Create header string from header table    
      local header = "HTTP/1.1 " .. status .. "\r\n"
      for k,v in pairs(self.header_map) do
        header = string.format("%s%s: %s\r\n",header,k,v)
      end     
      header = header .. "\r\n"     
-     socket:send(header)               
-     local ok,err = socket:send(page)          
+     
+     -- Send header
+     local ok,err = socket:send(header)               
      if not ok then
-       log:error("Failed to send data:\n".. err)
+       log:error("Failed to send header:\n".. err)
      end
+     
+     -- Send body
+     local ok,err = socket:send(body)          
+     if not ok then
+       log:error("Failed to send body:\n".. err)
+     end
+     
+  end
+ 
+--Socket API Callbacks---------------------------   
+
+  function ActionServer:socket_error(socket_error)
+    renoise.app():show_warning(socket_error)
   end
 
-  ActionServer.chunked = false
+  function ActionServer:socket_accepted(socket)
+    log:info("Socket accepted")
+  end
 
   function ActionServer:socket_message(socket, message)
       self.remote_addr = socket.peer_address .. ":" .. socket.peer_port
@@ -444,13 +519,13 @@ class "ActionServer"
          body = message
          self.chunked = false
       else
-         header, body = Util:parse_message(message)
-         self.header = nil
+         header, body = Util:parse_message(message)         
       end
+      
+      self.header = header
       
       if #body < tonumber(header["Content-Length"]) then
         self.chunked = true
-        self.header = header
         return
       end
 
@@ -518,14 +593,6 @@ class "ActionServer"
     self:send_htdoc(socket, "/404.html", "404 Not Found", parameters)
 
     --- TODO: NON-HTTP (eg. Telnet, OSC)
---[[  if message == "p" then
-        song().transport:start(1)
-      elseif message == "s" then
-        song().transport:stop()
-      elseif #message > 0 then
-        song().transport:start(1)
-      end
-]]--
 
   end
   
@@ -537,8 +604,10 @@ class "ActionServer"
    end
 
 -------------------------------------------
+-- Start / Stop 
+-------------------------------------------
 local address = nil
-local port = 80
+local port = 8888
 local INADDR_ANY = false
 
 function restore_default_configuration()
