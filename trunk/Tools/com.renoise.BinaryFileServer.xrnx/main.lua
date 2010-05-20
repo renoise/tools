@@ -94,7 +94,7 @@ class "BinaryFileServer"
    self.header_map = table.create()
    self.header_map["Date"]  = "20-5-2010"
    self.header_map["Server"] = "Renoise Vx.xx"
-   self.header_map["Cache-Control"] = "max-age=3600, must-revalidate"
+   self.header_map["Cache-Control"] = "no-store, no-cache, must-revalidate"
    self.header_map["Accept-Ranges"] = "none"
    self.header_map["Content-Type"] = "image/png"   
   end
@@ -110,6 +110,7 @@ class "BinaryFileServer"
      -- Read binary file (image) into string buffer
      local buffer = Util:read_file(fullpath, true)
      assert(buffer, "failed to read the file")
+     rprint(buffer)
 
      -- Set filesize
      local stat = io.stat(fullpath)
