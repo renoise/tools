@@ -8,7 +8,7 @@ package.path  = package.path:gsub("[\\/]Libraries", "")
 require "GlobalMidiActions"
 package.path = package_path
 
-require "URL"
+require "url"
 
 local expand = require "expand"
 
