@@ -1,12 +1,16 @@
--------------------------------------------
+-------------------------------------------------------------------------------
 --  Requires
--------------------------------------------
+-------------------------------------------------------------------------------
 
+require "log"
 require "util"
+require "SocketReader"
 
--------------------------------------------
+local log = Log(Log.ALL)
+
+-------------------------------------------------------------------------------
 --  Menu registration
--------------------------------------------
+-------------------------------------------------------------------------------
 
 renoise.tool():add_menu_entry {
   name = "Main Menu:Tools:Update",
@@ -18,9 +22,9 @@ renoise.tool():add_menu_entry {
   end
 }
 
--------------------------------------------
+-------------------------------------------------------------------------------
 --  Debug
--------------------------------------------
+-------------------------------------------------------------------------------
 
 if true then 
   require "remdebug.engine"
@@ -30,79 +34,115 @@ if true then
   end
 end 
 
--------------------------------------------
---  Init
--------------------------------------------
-
-local socket_client = nil
-
--------------------------------------------
+-------------------------------------------------------------------------------
 --  Main
+-------------------------------------------------------------------------------
 
-local function try(f)
-   local ok,err = f
-   if err then 
-     renoise.app():show_warning(err)
-     return
-  end
+local readers = table.create()
+local contents = table.create()
+local callback = table.create()
+local active = true
+
+local function complete(key)
+  log:info(callback[key] .. " has completed.")
+  rprint(contents[key])
 end
+
+local function read()
+   -- read content
+    local content = table.create {}
+
+    for k,r in ipairs(readers) do
+      local buffer = r:read_bytes(1024*4, 200)
+      if (not buffer) then
+        readers[k] = nil
+        complete(k)
+      else
+        contents[k]:insert(buffer)
+      end
+    end
+    return true
+end
+
+--  request
 
 local function request(url, method)
-  local p = Util:parse(url)
-  local str = string.format(
+  
+  local parsed_url = Util:parse(url)
+  
+  local get_request = string.format(
     "GET %s HTTP/1.1\nHost: %s\r\n\r\n", 
-    p.path, p.host)
-  print(str)
+    parsed_url.path, parsed_url.host)
   
-  local ok, err = renoise.Socket.create_client(p.host, 80,  renoise.Socket.PROTOCOL_TCP)  
-  local client = ok
-  if err then 
-    renoise.app():show_warning(err)
-    return
-  end
+  local client = renoise.Socket.create_client(
+    parsed_url.host, 80,  renoise.Socket.PROTOCOL_TCP)        
   
-  ok,err = client:send(str)
+  local ok, err = client:send(get_request)
   
-  if err then 
-    renoise.app():show_warning(err)
-    return
-  end
+  if ok then
+    local reader = SocketReader(client)
+    
+    -- read header
+    local header = table.create {}
   
-  -- loop while receiving data within 100 ms
-  local content
-  local content_length = 0
-  local bytes_received = 0
-  local header,body,header_size,body_size = 0,0,0,0
-  local first_packet = true
-  repeat    
-    content = client:receive(100)
-    if content then
-      bytes_received = bytes_received + #content
-      if first_packet then
-        header,body,header_size,body_size = Util:parse_message(content)
-        content_length = header["Content-Length"]          
-        bytes_received = bytes_received - header_size
+    while true do 
+      local line = reader:read_line()
+      if (not line) then 
+        break -- unexpected EOF
       end
-    end  
-    first_packet = false      
-    print("--CONTENT START------------------------------------------------------------")    
-    print(content)
-    print("--CONTENT END--------------------------------------------------------------\r\n")    
-    print("==INFO START===============================================================")    
-    print (url)    
-    print ("Content Length = " .. content_length)  
-    print ("Bytes received = " .. bytes_received)
-    print("==INFO END=================================================================\r\n")
-  until (content == nil)  
+      
+      if (line == "") then 
+        break -- header ends with an empty line
+      end 
+      
+      header:insert(line)
+    end
+  
+    log:info("=== HEADER")
+    rprint(header)
+
+    -- read content
+    local content = table.create {}
+    contents:insert(content)
+    readers:insert(reader)
+    callback:insert(url)
+    
+    -- OR
+    -- content:insert(reader:read_bytes(content_lenght from header))
+    
+    log:info("=== CONTENT")
+    rprint(content)
+    
+  else
+    return err
+  end
 end
 
--- Do we have an internet connection?
+
+
+-------------------------------------------------------------------------------
+
+-- do we have an internet connection?
+
 function connected()
   return true
 end
 
+
+-------------------------------------------------------------------------------
+
 function start()  
-  -- request("http://nl.archive.ubuntu.com/ubuntu-cdimages/10.04/release/ubuntu-10.04-dvd-amd64.iso")    
-  request("http://www.renoise.com/")    
   request("http://www.renoise.com/download/checkversion.php")
+--  request("http://www.renoise.com/download/")
+--  request("http://nl.archive.ubuntu.com/ubuntu-cdimages/10.04/release/ubuntu-10.04-dvd-amd64.iso")
 end
+
+-------------------------------------------------------------------------------
+--  Idle notifier
+-------------------------------------------------------------------------------
+
+renoise.tool().app_idle_observable:add_notifier(function()
+  if (active and not read()) then
+     active = false;
+  end
+end)
