@@ -102,7 +102,7 @@ function connected()
 end
 
 function start()  
-  request("http://nl.archive.ubuntu.com/ubuntu-cdimages/10.04/release/ubuntu-10.04-dvd-amd64.iso")    
+  -- request("http://nl.archive.ubuntu.com/ubuntu-cdimages/10.04/release/ubuntu-10.04-dvd-amd64.iso")    
   request("http://www.renoise.com/")    
   request("http://www.renoise.com/download/checkversion.php")
 end
