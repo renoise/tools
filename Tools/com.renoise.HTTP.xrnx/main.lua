@@ -74,7 +74,7 @@ local function request(url, method)
   local bytes_received = 0
   local header,body,header_size,body_size = 0,0,0,0
   local first_packet = true
-  repeat
+  repeat    
     content = client:receive(100)
     if content then
       bytes_received = bytes_received + #content
@@ -84,11 +84,15 @@ local function request(url, method)
         bytes_received = bytes_received - header_size
       end
     end  
-    first_packet = false  
-    print (url)
-    print(body)
+    first_packet = false      
+    print("--CONTENT START------------------------------------------------------------")    
+    print(content)
+    print("--CONTENT END--------------------------------------------------------------")    
+    print("--INFO START---------------------------------------------------------------")    
+    print (url)    
     print ("Content Length = " .. content_length)  
     print ("Bytes received = " .. bytes_received)
+    print("--INFO END-----------------------------------------------------------------")        
   until (content == nil)  
 end
 
@@ -98,7 +102,7 @@ function connected()
 end
 
 function start()  
-  request("http://nl.archive.ubuntu.com/ubuntu-cdimages/10.04/release/ubuntu-10.04-dvd-amd64.iso")  
+  request("http://nl.archive.ubuntu.com/ubuntu-cdimages/10.04/release/ubuntu-10.04-dvd-amd64.iso")    
 --  request("http://www.renoise.com/")    
 --  request("http://www.renoise.com/download/checkversion.php")
 end
