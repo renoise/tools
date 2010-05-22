@@ -87,12 +87,12 @@ local function request(url, method)
     first_packet = false      
     print("--CONTENT START------------------------------------------------------------")    
     print(content)
-    print("--CONTENT END--------------------------------------------------------------")    
-    print("--INFO START---------------------------------------------------------------")    
+    print("--CONTENT END--------------------------------------------------------------\r\n")    
+    print("==INFO START===============================================================")    
     print (url)    
     print ("Content Length = " .. content_length)  
     print ("Bytes received = " .. bytes_received)
-    print("--INFO END-----------------------------------------------------------------")        
+    print("==INFO END=================================================================\r\n")
   until (content == nil)  
 end
 
@@ -103,6 +103,6 @@ end
 
 function start()  
   request("http://nl.archive.ubuntu.com/ubuntu-cdimages/10.04/release/ubuntu-10.04-dvd-amd64.iso")    
---  request("http://www.renoise.com/")    
---  request("http://www.renoise.com/download/checkversion.php")
+  request("http://www.renoise.com/")    
+  request("http://www.renoise.com/download/checkversion.php")
 end
