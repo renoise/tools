@@ -14,7 +14,7 @@ local log = Log(Log.ALL)
 
 renoise.tool():add_menu_entry {
   name = "Main Menu:Tools:Update",
-  active = function() 
+  active = function()
     return connected()
   end,
   invoke = function()
@@ -38,35 +38,11 @@ end
 --  Main
 -------------------------------------------------------------------------------
 
-local readers = table.create()
-local contents = table.create()
-local callback = table.create()
+local requests = table.create()
 local active = true
 
-local function complete(key)
-  log:info(callback[key] .. " has completed.")
-  rprint(contents[key])
-end
-
-local function read()
-   -- read content
-    local content = table.create {}
-
-    for k,r in ipairs(readers) do
-      local buffer = r:read_bytes(1024*4, 200)
-      if (not buffer) then
-        readers[k] = nil
-        complete(k)
-      else
-        contents[k]:insert(buffer)
-      end
-    end
-    return true
-end
-
---  request
-
-local function request(url, method)
+class "Request"
+function Request:__init(url, method)
   
   local parsed_url = Util:parse(url)
   
@@ -78,15 +54,20 @@ local function request(url, method)
     parsed_url.host, 80,  renoise.Socket.PROTOCOL_TCP)        
   
   local ok, err = client:send(get_request)
+
+  self.url = url
+  self.contents = table.create()
+  self.callback = function() end
+  self.reader = SocketReader(client)
+  self.length = 0
+  self.header = table.create {}  
   
-  if ok then
-    local reader = SocketReader(client)
-    
-    -- read header
-    local header = table.create {}
-  
+  self:get_header()  
+end
+
+function Request:get_header()      
     while true do 
-      local line = reader:read_line()
+      local line = self.reader:read_line()
       if (not line) then 
         break -- unexpected EOF
       end
@@ -95,46 +76,65 @@ local function request(url, method)
         break -- header ends with an empty line
       end 
       
-      header:insert(line)
+      self.header:insert(line)
     end
   
-    log:info("=== HEADER")
-    rprint(header)
+    log:info("=== HEADER ===")
+    rprint(self.header)
+end
 
-    -- read content
-    local content = table.create {}
-    contents:insert(content)
-    readers:insert(reader)
-    callback:insert(url)
-    
-    -- OR
-    -- content:insert(reader:read_bytes(content_lenght from header))
-    
-    log:info("=== CONTENT")
-    rprint(content)
-    
+function Request:do_callback()
+  log:info("=== CONTENT ===")
+  rprint(self.contents)
+  self.callback()
+  log:info(self.url .. " has completed.")  
+end
+
+function Request:inc_length(amt)
+  self.length = self.length + amt
+end
+
+function Request:get_content(mode, timeout)
+  local buffer, err = self.reader:read(mode, timeout)
+  if (not buffer) then
+    self:do_callback()
+    return false
   else
-    return err
+    self.contents:insert(buffer)
+    self:inc_length(#buffer)
+    log:info(string.format("%d bytes read", self.length))
+    return #buffer
   end
 end
 
 
+-------------------------------------------------------------------------------
+-- Idle handler
+
+-- Read a few bytes from every request
+local function read()
+    for k,request in ipairs(requests) do
+      local bytes_received = request:get_content(1460, 10)
+      if (not bytes_received) then
+        requests[k] = nil
+      end
+    end
+    return true
+end
 
 -------------------------------------------------------------------------------
-
 -- do we have an internet connection?
 
 function connected()
   return true
 end
 
-
 -------------------------------------------------------------------------------
 
-function start()  
-  request("http://www.renoise.com/download/checkversion.php")
+function start()
+  requests:insert(Request("http://www.renoise.com/download/checkversion.php"))
 --  request("http://www.renoise.com/download/")
---  request("http://nl.archive.ubuntu.com/ubuntu-cdimages/10.04/release/ubuntu-10.04-dvd-amd64.iso")
+  --request("http://nl.archive.ubuntu.com/ubuntu-cdimages/10.04/release/ubuntu-10.04-dvd-amd64.iso")
 end
 
 -------------------------------------------------------------------------------

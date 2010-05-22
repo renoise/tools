@@ -114,7 +114,7 @@ function SocketReader:read_bytes(num_bytes, timeout)
   while true do 
     if (#self.__buffer >= num_bytes) then
       local result = self.__buffer:sub(1, num_bytes)
-      self.__buffer = self.__buffer:sub(num_bytes)
+      self.__buffer = self.__buffer:sub(num_bytes + 1)
       return result, nil
     end
     
