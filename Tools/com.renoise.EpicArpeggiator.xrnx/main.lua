@@ -9,9 +9,7 @@ renoise.tool():add_menu_entry {
 
 
 
-require "header"
-require "helpers"
+require "globals"
 require "tone_matrix"
-require "pattern_sequencer"
 require "pattern_processing"
-require "gui_environment"
+require "gui"

@@ -3,6 +3,7 @@
 -- Processing functions
 -------------------------------------------------------------------------------
 
+
 function add_notes(n_column, c_line, vb)
 --[[ Start the processing, iterators are doing their work in this routine 
 Also the note-, instrument-, velocity- and octave-schemes are generated here 
@@ -176,7 +177,8 @@ Also the note-, instrument-, velocity- and octave-schemes are generated here
       if termination_index == NOTE_OFF_DISTANCE_LINES then
          cut_value = 0
       end
-      if custom_note_pos[1] == 0 or custom_note_pos[1] == nil and switch_arp_pattern_index == ARPEGGIO_PATTERN_CUSTOM then
+      if custom_note_pos[1] == 0 or custom_note_pos[1] == nil and 
+      switch_arp_pattern_index == ARPEGGIO_PATTERN_CUSTOM then
          switch_arp_pattern_index = ARPEGGIO_PATTERN_DISTANCE
          vb.views.switch_arp_pattern.value =  switch_arp_pattern_index
       end
@@ -302,6 +304,8 @@ Also the note-, instrument-, velocity- and octave-schemes are generated here
       renoise.app():show_warning("Cannot insert notes in master or send-track!")
    end
 end
+
+
 function clear_track_first()
 --[[ Clear area/track/song first --]]
    local song = renoise.song()
@@ -330,6 +334,8 @@ function clear_track_first()
       end
    end
 end
+
+
 function set_process_note(octave_order, vel_order)
 --[[ Pick a note from the stack and return for insertion --]]
    local ordnot = nil
@@ -390,6 +396,8 @@ function set_process_note(octave_order, vel_order)
    end
    return ordnot
 end
+
+
 function fix_full_note(tempvar)
    --[[Check if full note values are valid (start with note and end with figure]]
    local valid_note_found = false
@@ -419,6 +427,8 @@ function fix_full_note(tempvar)
    tempvar = string.sub(tempvar,1,3)
    return tempvar
 end
+
+
 function set_process_octave(octave_order)
 --[[ Pick an octave from the stack and return for insertion --]]
    local ordoct = nil
@@ -432,6 +442,8 @@ function set_process_octave(octave_order)
    end
    return ordoct
 end
+
+
 function set_process_instrument(ins_order)
 --[[ Pick an instrument number from the stack and return for insertion --]]
    local tempins = nil
@@ -444,6 +456,8 @@ function set_process_instrument(ins_order)
    end
    return tempins
 end
+
+
 function set_process_velocity(vel_order)
 --[[ Pick a velocity figure from the stack and return for insertion --]]
    local tempvel = nil
@@ -456,6 +470,8 @@ function set_process_velocity(vel_order)
    end
    return tempvel
 end
+
+
 function place_note(note_column, cur_line, octave_order, ins_order, vel_order, 
 current_column, track, pattern)
 --[[In here is determined if a note has to be placed on this line and if so then
@@ -516,7 +532,8 @@ from the stack. If a note-off has to be placed, this is calculated here as well.
                cut_value = 255
             end
             if note ~= nil then
-               if note_column.is_selected and area_to_process == OPTION_SELECTION_IN_TRACK or area_to_process ~= OPTION_SELECTION_IN_TRACK then
+               if note_column.is_selected and area_to_process == OPTION_SELECTION_IN_TRACK or 
+               area_to_process ~= OPTION_SELECTION_IN_TRACK then
                   note_column = fill_cells(note_column, note, tempins, tempvel, 
                   delay_apply, cut_value)
                   if area_to_process < OPTION_COLUMN_IN_PATTERN then
@@ -654,13 +671,16 @@ from the stack. If a note-off has to be placed, this is calculated here as well.
    --Place note off
    if current_column <= max_note_columns and termination_step > 0 then
       if cur_line == place_note_off[current_column] then
-         if note_column.is_selected and area_to_process == OPTION_SELECTION_IN_TRACK or area_to_process ~= OPTION_SELECTION_IN_TRACK then
+         if note_column.is_selected and area_to_process == OPTION_SELECTION_IN_TRACK or 
+         area_to_process ~= OPTION_SELECTION_IN_TRACK then
             note_column = fill_cells(note_column, 120, 255, 255, 0, 255)
             place_note_off[current_column] = 0
          end
       end
    end
 end
+
+
 function fill_cells(note_column, note, instrument, velocity, delay, cut_value)
 --[[Places a note, volume, panning and perhaps a delay value in the cell--]]
    --String 'OFF' was not yet supported when creating this source.
@@ -725,6 +745,7 @@ function fill_cells(note_column, note, instrument, velocity, delay, cut_value)
    return note_column
 end
 
+
 function fetch_notes_from_track(vb)
    local song = renoise.song()     
    local pattern_lines = song.selected_pattern.number_of_lines
@@ -773,7 +794,8 @@ function fetch_notes_from_track(vb)
                         end
                            cb[checkbox].value = true
                      end 
-                  elseif area_to_process == OPTION_COLUMN_IN_PATTERN and cur_column == column_offset or area_to_process == OPTION_COLUMN_IN_SONG and 
+                  elseif area_to_process == OPTION_COLUMN_IN_PATTERN and cur_column == column_offset or 
+                      area_to_process == OPTION_COLUMN_IN_SONG and 
                          cur_column == column_offset then
                      if string.sub(note_column.note_string,1,1)~="-" and 
                      string.sub(note_column.note_string,1,1)~="O" then
@@ -795,7 +817,8 @@ function fetch_notes_from_track(vb)
                         custom_note_field = custom_note_field..note_column.note_string..
                         ", "
                      end
-                  elseif area_to_process == OPTION_COLUMN_IN_PATTERN and cur_column == column_offset or area_to_process == OPTION_COLUMN_IN_SONG and
+                  elseif area_to_process == OPTION_COLUMN_IN_PATTERN and cur_column == column_offset or 
+                         area_to_process == OPTION_COLUMN_IN_SONG and
                          cur_column == column_offset then
                      if note_column.note_string ~= '---' and 
                      note_column.note_string ~= 'OFF' then
@@ -811,4 +834,126 @@ function fetch_notes_from_track(vb)
          cb.custom_note_profile.value = custom_note_field
       end
    end
+end
+
+
+function ferris_wheel(source_table, target_table, direction, repeat_mode)
+--[[
+   Copies one table into another depending on the desired order.
+   This routine is specifically designed when one does *not* want to 
+   sort out the original table, it is only to create a temporary table
+   using the contents of the other in different order or even in 
+   mirrored waves.
+   I made changes in the top/down/top and down/top/down schemes not to regenerate
+   the previous note if it would be the same. 
+--]]
+      local tend = #source_table
+
+      if repeat_mode == true then
+         repeat_mode = 0
+      elseif repeat_mode == false then
+         repeat_mode = 1
+      end
+      
+      if direction == PLACE_TOP_DOWN or direction == PLACE_RANDOM then --Top-Down / random
+         target_table = source_table
+      elseif direction == PLACE_DOWN_TOP then --Down-Top
+         local subt = #source_table
+
+         for t=1, #source_table do
+           target_table[t] = source_table[subt]
+           subt = subt - 1 
+         end
+
+      elseif direction == PLACE_TOP_DOWN_TOP then --Top-Down-Top
+
+         for t=1, #source_table do
+           target_table[t] = source_table[t]
+         end
+
+         local subt = #source_table 
+         local offc = repeat_mode
+
+         if repeat_mode == 0 then
+            target_table[#target_table+1] = source_table[#source_table]
+            tend = tend+1
+         else
+            offc = 2
+         end
+
+         for t=(tend), (tend*2-offc) do
+           target_table[t] = source_table[subt]
+           subt = subt - 1 
+         end
+      elseif direction == PLACE_DOWN_TOP_DOWN then --Down-Top-Down
+         local subt = #source_table 
+         local tend = #source_table
+         local offs = 2
+
+         for t=1, #source_table do
+           target_table[t] = source_table[subt]
+           subt = subt - 1
+         end
+
+         if repeat_mode == 0 then
+            target_table[#target_table+1] = source_table[subt]
+            tend = tend+1
+            offs = 1
+         else
+            tend = #source_table - 1
+         end
+
+         for t=offs, tend do
+            target_table[#target_table+1] = source_table[t]
+         end
+      end
+
+   return target_table
+end
+
+
+-------------------------------------------------------------------------------
+--                             Sequencer functions                           --
+-------------------------------------------------------------------------------
+function check_unique_pattern()
+--[[Checks if the song sequence has patterns that are repeated--]]
+   local song = renoise.song()
+   local double = {}
+   local doubles = 1
+   local add_one = 0
+   local hyve = 2
+   double[1] = song.sequencer.pattern_sequence[1]
+   local i = 2
+   local sp_bound = #song.sequencer.pattern_sequence
+   local return_val = 0
+
+   while i <= sp_bound do
+      for j = 1, #double do
+         if song.sequencer.pattern_sequence[i] == double[j] then
+            doubles = doubles + 1
+            add_one = 0
+            break
+         else
+            add_one = 1
+         end
+      end
+      if add_one == 1 then
+         double[hyve] = song.sequencer.pattern_sequence[i]
+         add_one = 0
+         hyve = hyve +1
+      end
+      i = i + 1
+   end
+   if doubles > 1 then
+      return_val = cross_write_dialog(-1, double, doubles) 
+   end      
+   return return_val
+end
+
+
+function make_unique_pattern()
+--[[Copies all repeated patterns to a unique pattern--]]
+   local song = renoise.song()
+   song.sequencer:make_range_unique(1, #song.sequencer.pattern_sequence)
+   return
 end
