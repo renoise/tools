@@ -241,9 +241,9 @@ Main Dialog
          'Repeat first and end sequence of the octave TdT and DtD sequence',0,
          function(value)
             if value == true then
-               repeat_se_octave = 0
+               repeat_se_octave = true
             else
-               repeat_se_octave = 1
+               repeat_se_octave = false
             end
          end,vb)
       )
@@ -281,9 +281,9 @@ Main Dialog
          'Repeat first and end sequence of the note scheme TdT and DtD sequence',
          0,function(value)
             if value == true then
-               repeat_se_note = false
-            else
                repeat_se_note = true
+            else
+               repeat_se_note = false
             end                  
          end,vb)
       )
@@ -752,7 +752,7 @@ function create_obj(type,pa,pw,pmi,pma,pv,pid,ptt,ptx,pn,vb)
       return vb:button {id=pid,width=pw,tooltip=ptt,text=ptx,notifier=pn}
    end
    if type == obj_checkbox then
-      return vb:checkbox {id=pid,width=pw,tooltip=ptt,value=pv,notifier=pn}
+     return vb:checkbox {id=pid,width=pw,tooltip=ptt,value=pv,notifier=pn}
    end
    if type == obj_switch then
       return vb:switch {id=pid,width=pw,tooltip=ptt,items=ptx,value=pv,notifier=pn}
