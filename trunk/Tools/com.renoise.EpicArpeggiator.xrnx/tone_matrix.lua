@@ -1,15 +1,23 @@
 -------------------------------------------------------------------------------
 -- tone matrix initialisation
 -------------------------------------------------------------------------------
+
+
 for i = 1, NUM_OCTAVES * NUM_NOTES do
    note_states[i] = false
 end
+
+
 function note_state(octave, note)
    return note_states[octave * NUM_NOTES + note]
 end
+
+
 function octave_state(octave)
    return octave_states[octave]
 end
+
+
 function set_note_state(octave, note, state)
    local octave_check = 0         
    note_states[octave * NUM_NOTES + note] = state
@@ -26,6 +34,8 @@ function set_note_state(octave, note, state)
       octave_check = 0
    end
 end
+
+
 --Toggle one full octave row
 function toggle_octave_row(vb, oct)
    oct = oct - 1
@@ -46,6 +56,7 @@ function toggle_octave_row(vb, oct)
    end
 end
 
+
 --Toggle one full note row
 function toggle_note_row(vb, note)
    local checkbox = nil
@@ -64,6 +75,8 @@ function toggle_note_row(vb, note)
       end
    end
 end
+
+
 function set_all_row_state(vb, btext)
    local checkbox = nil
    local cb = vb.views
@@ -89,6 +102,7 @@ function set_all_row_state(vb, btext)
       end
    end
 end
+
 
 function harvest_notes_in_octave(octave)
 --[[ Look which notes are set in the tone-matrix in one octave --]]

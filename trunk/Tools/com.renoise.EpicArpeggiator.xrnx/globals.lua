@@ -122,8 +122,8 @@ PLACE_RANDOM = 5
 OPTION_SELECTION_IN_TRACK = 1
 OPTION_TRACK_IN_PATTERN = 2
 OPTION_TRACK_IN_SONG = 3
-OPTION_COLUMN_IN_PATTERN = 3
-OPTION_COLUMN_IN_SONG = 3
+OPTION_COLUMN_IN_PATTERN = 4
+OPTION_COLUMN_IN_SONG = 5
 area_to_process = OPTION_TRACK_IN_PATTERN
 
 
@@ -144,3 +144,30 @@ note_states = {}
 octave_states = {}
 
 
+
+--[[----------------Helper functions-----------------------------]]
+
+function randomize(tstart, tend)
+   local number = tostring(os.clock())
+   if string.find(number,"%.") ~= nil then
+      number = string.sub(number, string.find(number,"%.")+1)
+   end
+   math.randomseed( tonumber(number))
+   number  = number + math.random(1, 7)
+   math.randomseed( tonumber(number))
+   math.random(tstart, tend); math.random(tstart, tend); math.random(tstart, tend)
+   local result = math.random(tstart, tend)
+   return result
+end
+
+
+string.split = function(str, pattern)
+  pattern = pattern or "[^%s]+"
+  if pattern:len() == 0 then pattern = "[^%s]+" end
+  local parts = {__index = table.insert}
+  setmetatable(parts, parts)
+  str:gsub(pattern, parts)
+  setmetatable(parts, nil)
+  parts.__index = nil
+  return parts
+end

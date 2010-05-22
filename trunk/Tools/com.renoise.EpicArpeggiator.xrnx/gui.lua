@@ -20,6 +20,7 @@ function open_arp_dialog()
       local CONTENT_SPACING = renoise.ViewBuilder.DEFAULT_CONTROL_SPACING
       local CHECKBOX_WIDTH = 30
       local TEXT_ROW_WIDTH = 80
+
 --[[------------------------------------------------------------------------
 Tone Matrix
 --------------------------------------------------------------------------]]
@@ -582,6 +583,8 @@ function change_distance_step(value, vb)
       vb.views.vbox_distance_step.max = 511
    end
 end
+
+
 function change_distance_mode(value,vb)
    popup_distance_mode_index = value
    if value == 2 then
@@ -593,6 +596,8 @@ function change_distance_mode(value,vb)
       vb.views.vbox_distance_step.max = 511
    end
 end
+
+
 function change_octave_order(value,vb)
    popup_octave_index = value
    if value >= 3 and value <= 4 then
@@ -603,6 +608,8 @@ function change_octave_order(value,vb)
       vb.views.octave_repeat_mode_text.visible = false
    end
 end
+
+
 function set_termination_step(value,vb)
    if termination_index == NOTE_OFF_DISTANCE_TICKS then
       if value > 15 then
@@ -616,6 +623,8 @@ function set_termination_step(value,vb)
    end
    termination_step = value
 end
+
+
 function set_termination_minmax(value,vb)
    termination_index = value
    if value == NOTE_DISTANCE_DELAY then
@@ -629,6 +638,8 @@ function set_termination_minmax(value,vb)
       vb.views.vbox_termination_step.max = 511
    end
 end
+
+
 function change_note_order(value,vb)
    popup_note_index = value
    if value >= PLACE_TOP_DOWN_TOP and value <= PLACE_DOWN_TOP_DOWN then
@@ -639,6 +650,8 @@ function change_note_order(value,vb)
       vb.views.repeat_note_title.visible = false
    end
 end
+
+
 function change_instrument_insertion(value,vb)
    instrument_insertion_index = value
    if value >= PLACE_TOP_DOWN_TOP and value <= PLACE_DOWN_TOP_DOWN then
@@ -649,6 +662,8 @@ function change_instrument_insertion(value,vb)
       vb.views.repeat_instrument_title.visible = false
    end
 end
+
+
 function change_velocity_insertion(value,vb)
    velocity_insertion_index = value
    if value >= PLACE_TOP_DOWN_TOP and value <= PLACE_DOWN_TOP_DOWN then
@@ -659,6 +674,8 @@ function change_velocity_insertion(value,vb)
       vb.views.repeat_velocity_title.visible = false
    end
 end
+
+
 function set_area_selection(value,vb)
    local chooser = vb.views.chooser
    if value==OPTION_TRACK_IN_SONG or value==OPTION_COLUMN_IN_SONG then
@@ -673,6 +690,8 @@ function set_area_selection(value,vb)
       area_to_process = value
    end
 end
+
+
 function toggle_custom_arpeggiator_profile_visibility(value, vb)
    switch_arp_pattern_index = value
    if value == ARPEGGIO_PATTERN_CUSTOM then
@@ -689,6 +708,8 @@ function toggle_custom_arpeggiator_profile_visibility(value, vb)
       vb.views.custom_arpeggiator_profile.visible = false
    end
 end
+
+
 function toggle_note_profile_visibility(show, vb)
    if show == true then
       vb.views.custom_note_profile_title.visible = true
@@ -698,6 +719,8 @@ function toggle_note_profile_visibility(show, vb)
       vb.views.custom_note_profile.visible = false
    end
 end
+
+
 function toggle_chord_mode_visibility(value,vb)
    max_note_columns = value
    if value < 2 then
@@ -714,6 +737,8 @@ function toggle_chord_mode_visibility(value,vb)
    end
 
 end
+
+
 function toggle_octave_visibility(show, vb)
    if show == true then
       vb.views.popup_octave_order_text.visible = true
@@ -734,6 +759,8 @@ function toggle_octave_visibility(show, vb)
       vb.views.octave_repeat_mode.visible = false
    end
 end
+
+
 function create_obj(type,pa,pw,pmi,pma,pv,pid,ptt,ptx,pn,vb)
 --This is the main GUI creation function
 --It is not necessary to have a function like this, you can always embed the below vb:code
@@ -776,6 +803,7 @@ function create_obj(type,pa,pw,pmi,pma,pv,pid,ptt,ptx,pn,vb)
       return vb:textfield{id=pid,align=pa,width=pw,tooltip=ptt,value=pv,notifier=pn}
    end
 end
+
 
 -------------------------------------------------------------------------------
 ---                     Warning dialog pattern sequence                    ----
@@ -825,6 +853,7 @@ function cross_write_dialog(return_val, double, doubles)
    end
    return return_val
 end
+
 
 -------------------------------------------------------------------------------
 ---                           Help dialog                                  ----
