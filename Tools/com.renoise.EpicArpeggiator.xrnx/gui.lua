@@ -417,9 +417,9 @@ Main Dialog
                'Repeat first and end sequence of the instrument TdT and DtD sequence',
                0,function(value)
                   if value == true then
-                     repeat_se_instrument = 0
+                     repeat_se_instrument = true
                   else
-                     repeat_se_instrument = 1
+                     repeat_se_instrument = false
                   end                  
                end,vb),
             },
@@ -440,9 +440,9 @@ Main Dialog
                'Repeat first and end sequence of the velocity TdT and DtD sequence',
                0,function(value)
                   if value == true then
-                     repeat_se_velocity = 0
+                     repeat_se_velocity = true
                   else
-                     repeat_se_velocity = 1
+                     repeat_se_velocity = false
                   end                  
                end,vb),
             },
