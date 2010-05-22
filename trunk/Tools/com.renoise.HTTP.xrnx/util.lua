@@ -21,6 +21,7 @@ function Util:parse_message(m)
   local s = false
   local header = table.create()
   local body = ""
+  local header_size, body_size = 0, 0
   header["Content-Length"] = 0
   local t = {}
   for k,v in ipairs(lines) do
@@ -32,12 +33,14 @@ function Util:parse_message(m)
         else
            header[k] = v
         end
-     else
+        header_size = header_size + #v
+     else        
         --body[k] = v
         body=body..v.."\r\n"
+        body_size = body_size + #v
      end
   end  
-  return header, body
+  return header, body, header_size, body_size
 end
 
 function Util:parse(url, default)
