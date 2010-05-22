@@ -37,15 +37,15 @@ function ferris_wheel(source_table, target_table, direction, repeat_mode)
       elseif repeat_mode == false then
          repeat_mode = 1
       end
-      if direction == 1 or direction == 5 then --Top-Down / random
+      if direction == PLACE_TOP_DOWN or direction == PLACE_RANDOM then --Top-Down / random
          target_table = source_table
-      elseif direction == 2 then --Down-Top
+      elseif direction == PLACE_DOWN_TOP then --Down-Top
          local subt = #source_table
          for t=1, #source_table do
            target_table[t] = source_table[subt]
            subt = subt - 1 
          end
-      elseif direction == 3 then --Top-Down-Top
+      elseif direction == PLACE_TOP_DOWN_TOP then --Top-Down-Top
          for t=1, #source_table do
            target_table[t] = source_table[t]
          end
@@ -61,7 +61,7 @@ function ferris_wheel(source_table, target_table, direction, repeat_mode)
            target_table[t] = source_table[subt]
            subt = subt - 1 
          end
-      elseif direction == 4 then --Down-Top-Down
+      elseif direction == PLACE_DOWN_TOP_DOWN then --Down-Top-Down
          local subt = #source_table 
          local tend = #source_table
          local offs = 2
