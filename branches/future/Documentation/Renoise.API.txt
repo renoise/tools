@@ -18,6 +18,9 @@ API, and scripting in Renoise in general...
 -- currently 0.3
 renoise.API_VERSION -> [number]
 
+-- renoise version "Major.Minor.Revision[ AlphaBetaRcVersion][ Demo]"
+renoise.RENOISE_VERSION -> [string]
+
 
 -- functions
 
