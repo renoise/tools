@@ -2,7 +2,9 @@
 -- tool setup
 -- -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
-local OPTION_SECECTION_IN_TRACK = 1
+-- menu options
+
+local OPTION_SELECTION_IN_PATTERN = 1
 local OPTION_TRACK_IN_PATTERN = 2
 local OPTION_TRACK_IN_SONG = 3
 
@@ -11,6 +13,9 @@ local range_options = {
   "Track in Pattern", 
   "Track in Song"
 }
+      
+
+-- menu entries
             
 renoise.tool():add_menu_entry {
    name = "Pattern Editor:Strum Notes...",
@@ -18,8 +23,8 @@ renoise.tool():add_menu_entry {
 }
 
 renoise.tool():add_menu_entry {
-  name = "Pattern Editor:Selection:Strum Notes",
-  invoke = function() execute_strum(OPTION_SECECTION_IN_TRACK) end
+  name = "Pattern Editor:Pattern:Strum Notes in Selection",
+  invoke = function() execute_strum(OPTION_SELECTION_IN_PATTERN) end
 }
 
 renoise.tool():add_menu_entry {
@@ -29,6 +34,24 @@ renoise.tool():add_menu_entry {
 
 renoise.tool():add_menu_entry {
   name = "Pattern Editor:Track:Strum Notes In Song",
+  invoke = function() execute_strum(OPTION_TRACK_IN_SONG) end
+}
+
+
+-- key bindings
+
+renoise.tool():add_keybinding {
+  name = "Pattern Editor:Pattern Operations:Strum Notes In Selection",
+  invoke = function() execute_strum(OPTION_SELECTION_IN_PATTERN) end
+}
+
+renoise.tool():add_keybinding {
+  name = "Pattern Editor:Track Operations:Strum Notes in Pattern",
+  invoke = function() execute_strum(OPTION_TRACK_IN_PATTERN) end
+}
+
+renoise.tool():add_keybinding {
+  name = "Pattern Editor:Track Operations:Strum Notes in Song",
   invoke = function() execute_strum(OPTION_TRACK_IN_SONG) end
 }
 
@@ -57,14 +80,14 @@ local strum_dialog = nil
 
 -----------------------------------------------------------------------------
 
-function open_strum_dialog(option)
+function open_strum_dialog(range_option)
    --Here we set the pop_index to a valid value, the "execute_strum" function
    --must know, if the Gui has been opened or not so the user always gets the
    --possibility to change options before executing the script using a hotkey
    --This means that pop_up index will always be 0 during the first start-up.
    popup_index = 1
-   if option ~= nil then
-      marker_area = option
+   if range_option ~= nil then
+      marker_area = range_option
    end
 
    if (strum_dialog and strum_dialog.visible) then
@@ -219,18 +242,18 @@ end
 
 -----------------------------------------------------------------------------
 
-function execute_strum(option)
+function execute_strum(range_option)
 
    if popup_index == 0 then
-      open_strum_dialog(option)
+      open_strum_dialog(range_option)
    elseif popup_index == 1 then
-      strum(down, option)
+      strum(down, range_option)
    elseif popup_index == 2 then
-      strum(up, option)
+      strum(up, range_option)
    elseif popup_index == 3 then
-      strum_two_ways(down_up, option)
+      strum_two_ways(down_up, range_option)
    elseif popup_index == 4 then
-      strum_two_ways(up_down, option)
+      strum_two_ways(up_down, range_option)
    else
       assert(false, "unexpected popup index")
    end
@@ -239,7 +262,7 @@ end
 
 -----------------------------------------------------------------------------
 
-function strum(direction, option)
+function strum(direction, range_option)
 
    -- Apply delay's upward or downward (one stroke)
    local line_count = 0
@@ -248,25 +271,29 @@ function strum(direction, option)
    local track_index = song.selected_track_index
    local track_type = song.selected_track.type
    local pattern_lines = song.selected_pattern.number_of_lines
-   local iter
-   if option ~= nil then
-      marker_area = option
+
+   if range_option ~= nil then
+      marker_area = range_option
    end   
 
    if track_type ~= renoise.Track.TRACK_TYPE_MASTER and
-   track_type ~= renoise.Track.TRACK_TYPE_SEND then
+      track_type ~= renoise.Track.TRACK_TYPE_SEND 
+   then
       --show delay column in case it is invisible      
       song.tracks[track_index].delay_column_visible = true
 
-      if marker_area == 1 then
-         iter = song.pattern_iterator:
-         lines_in_pattern(pattern_index)
+      local iter
+   
+      if marker_area == OPTION_SELECTION_IN_PATTERN then
+         iter = song.pattern_iterator:lines_in_pattern(pattern_index)
          renoise.app():show_status("Strumming Selection in Pattern...")
-      elseif marker_area == 2 then
-         iter = song.pattern_iterator:
-         lines_in_pattern_track(pattern_index, track_index)
+
+      elseif marker_area == OPTION_TRACK_IN_PATTERN then
+         iter = song.pattern_iterator:lines_in_pattern_track(
+           pattern_index, track_index)
          renoise.app():show_status("Strumming Track in Pattern...")
-      elseif marker_area == 3 then
+
+      elseif marker_area == OPTION_TRACK_IN_SONG then
          iter = song.pattern_iterator:lines_in_track(track_index)
          renoise.app():show_status("Strumming Track in Song...")
       end
@@ -277,14 +304,18 @@ function strum(direction, option)
          first_note = 0
          if not line.is_empty then
             if direction == down then
-               for __,note_column in ipairs(line.note_columns) do
-                  if marker_area == 1 and note_column.is_selected or option ~= 1 then
+               for _,note_column in ipairs(line.note_columns) do
+                  if marker_area ~= OPTION_SELECTION_IN_PATTERN or 
+                     note_column.is_selected 
+                  then
                      note_column = apply_strum_delay(note_column)
                   end 
                end
             else
-               for __,note_column in ripairs(line.note_columns) do
-                  if marker_area == 1 and note_column.is_selected or option ~= 1 then
+               for _,note_column in ripairs(line.note_columns) do
+                  if marker_area ~= OPTION_SELECTION_IN_PATTERN or 
+                     note_column.is_selected 
+                  then
                      note_column = apply_strum_delay(note_column)
                   end
                end
@@ -306,7 +337,7 @@ end
 
 -----------------------------------------------------------------------------
 
-function strum_two_ways(direction, option)
+function strum_two_ways(direction, range_option)
    --print ("direction ->" .. direction)
 
    -- Apply delay's according to the desired direction (e.g. double
@@ -316,29 +347,32 @@ function strum_two_ways(direction, option)
    local pattern_index = song.selected_pattern_index
    local track_index = song.selected_track_index
    local track_type = song.selected_track.type
-   local iter
    
-   if option ~= nil then
-     marker_area = option
+   if range_option ~= nil then
+      marker_area = range_option
    end   
    
    if track_type ~= renoise.Track.TRACK_TYPE_MASTER and
-   track_type ~= renoise.Track.TRACK_TYPE_SEND then
+      track_type ~= renoise.Track.TRACK_TYPE_SEND 
+   then
       --show delay column in case it is invisible      
       song.tracks[track_index].delay_column_visible = true
       
-         if marker_area == 1 then
-            iter = song.pattern_iterator:
-            lines_in_pattern(pattern_index)
-            renoise.app():show_status("Strumming Selection in Pattern...")
-         elseif marker_area == 2 then
-            iter = song.pattern_iterator:
-            lines_in_pattern_track(pattern_index, track_index)
-            renoise.app():show_status("Strumming Track in Pattern...")
-         elseif marker_area == 3 then
-            iter = song.pattern_iterator:lines_in_track(track_index)
-            renoise.app():show_status("Strumming Track in Song...")
-         end
+      local iter
+   
+      if marker_area == OPTION_SELECTION_IN_PATTERN then
+         iter = song.pattern_iterator:lines_in_pattern(pattern_index)
+         renoise.app():show_status("Strumming Selection in Pattern...")
+
+      elseif marker_area == OPTION_TRACK_IN_PATTERN then
+         iter = song.pattern_iterator:lines_in_pattern_track(
+           pattern_index, track_index)
+         renoise.app():show_status("Strumming Track in Pattern...")
+
+      elseif marker_area == OPTION_TRACK_IN_SONG then
+         iter = song.pattern_iterator:lines_in_track(track_index)
+         renoise.app():show_status("Strumming Track in Song...")
+      end
 
       local line_type = 0
 
@@ -353,14 +387,18 @@ function strum_two_ways(direction, option)
             line_type = line_type + 1
 
             if (round((line_type/2),0) - (line_type / 2)) ~= direction then
-               for __,note_column in ipairs(line.note_columns) do
-                  if marker_area == 1 and note_column.is_selected or option ~= 1 then
+               for _,note_column in ipairs(line.note_columns) do
+                  if marker_area ~= OPTION_SELECTION_IN_PATTERN or 
+                     note_column.is_selected 
+                  then
                      note_column = apply_strum_delay(note_column)
                   end
                end
             else
-               for __,note_column in ripairs(line.note_columns) do
-                  if marker_area == 1 and note_column.is_selected or option ~= 1 then
+               for _,note_column in ripairs(line.note_columns) do
+                  if marker_area ~= OPTION_SELECTION_IN_PATTERN or 
+                     note_column.is_selected 
+                  then
                      note_column = apply_strum_delay(note_column)
                   end
                end
@@ -387,12 +425,7 @@ end
 
 function apply_strum_delay(note_column)
   
-  function round(num, idp)
-    local mult = 10^(idp or 0)
-    return math.floor(num * mult + 0.5) / mult
-  end
-
-   if note_column.note_value ~= renoise.PatternTrackLine.EMPTY_NOTE and
+  if note_column.note_value ~= renoise.PatternTrackLine.EMPTY_NOTE and
       note_column.note_value ~= renoise.PatternTrackLine.NOTE_OFF then
 
       if first_note ~= 0 then
@@ -426,4 +459,11 @@ function apply_strum_delay(note_column)
    end
 end
 
+
+-----------------------------------------------------------------------------
+
+function round(num, idp)
+   local mult = 10^(idp or 0)
+   return math.floor(num * mult + 0.5) / mult
+end
 

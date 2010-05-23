@@ -13,6 +13,8 @@ pcall(require, "future")
 MODULE_PATH = "./Duplex/"  
 NOTE_ARRAY = { "C-","C#","D-","D#","E-","F-","F#","G-","G#","A-","A#","B-" }
 
+-- Protocols
+
 DEVICE_OSC_PROTOCOL = 0
 DEVICE_MIDI_PROTOCOL = 1
 
@@ -20,12 +22,18 @@ MIDI_CC_MESSAGE = 6
 MIDI_NOTE_MESSAGE = 7
 OSC_MESSAGE = 8
 
+-- Event types
+
 --  button event
 DEVICE_EVENT_BUTTON_PRESSED = 10  
 --  button event
 DEVICE_EVENT_BUTTON_RELEASED = 11  
 --  slider, encoder event
 DEVICE_EVENT_VALUE_CHANGED = 12    
+--  button event
+DEVICE_EVENT_BUTTON_HELD = 13
+
+-- Input methods
 
 -- bidirectional button (LED)
 CONTROLLER_BUTTON = 20    
@@ -57,7 +65,6 @@ MUTE_STATE_ACTIVE = 1
 -- helper functions
 --------------------------------------------------------------------------------
 
--- compare:
 -- compare two numbers with variable precision
 
 function compare(val1,val2,precision)
@@ -87,6 +94,7 @@ function get_master_track_index()
     end
   end
 end
+
 
 
 --------------------------------------------------------------------------------

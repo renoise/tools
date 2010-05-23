@@ -2,24 +2,23 @@
 -- Requires and initialization
 -------------------------------------------
 
--- Hack: load GlobalMidiActions.lua from Libraries/..
+local root = "./"
+local action_server = nil
+local errors = {}
+
 local package_path = package.path
 package.path  = package.path:gsub("[\\/]Libraries", "")
 
 require "GlobalMidiActions"
 package.path = package_path
 
--- local URL = require "ActionServer.URL"
 local expand = require "expand"
 
+require "util"
+Util.root = root
+
 require "log"
-
 local log = Log(Log.ALL)
-
-local root = "./"
-local action_server = nil
-local errors = {}
-
 
 -------------------------------------------
 --  Menu registration
@@ -52,170 +51,16 @@ renoise.tool():add_menu_entry {
 
 
 -------------------------------------------
---  Util functions
+--  Debug
 -------------------------------------------
 
-class 'Util'
-
-function Util:song()
-  return renoise.song()
-end
-
-function Util:split_lines(str)
-  local t = {}
-  local function helper(line) table.insert(t, line) return "" end
-  helper((str:gsub("(.-)\r?\n", helper)))
-  return t
-end
-
-function Util:parse_message(m)
-  local lines = Util:split_lines(m)
-  local s = false
-  local header = table.create()
-  local body = ""
-  header["Content-Length"] = 0
-  local t = {}
-  for k,v in ipairs(lines) do
-     if v:match("^$") then s = true end
-     if not s then
-        t = Util:split(v,": ")
-        if #t == 2 then
-           header[t[1]] = t[2]
-        else
-           header[k] = v
-        end
-     else
-        --body[k] = v
-        body=body..v.."\r\n"
-     end
+if true then 
+  require "remdebug.engine"
+  
+  _AUTO_RELOAD_DEBUG = function()
+    start_server()
   end
-  return header, body
-end
-
-function Util:parse(url, default)
-    -- initialize default parameters
-    local parsed = {}
-    for i,v in pairs(default or parsed) do parsed[i] = v end
-    -- empty url is parsed to nil
-    if not url or url == "" then return nil, "invalid url" end
-    -- remove whitespace
-    -- url = string.gsub(url, "%s", "")
-    -- get fragment
-    url = string.gsub(url, "#(.*)$", function(f)
-        parsed.fragment = f
-        return ""
-    end)
-    -- get scheme
-    url = string.gsub(url, "^([%w][%w%+%-%.]*)%:",
-        function(s) parsed.scheme = s; return "" end)
-    -- get authority
-    url = string.gsub(url, "^//([^/]*)", function(n)
-        parsed.authority = n
-        return ""
-    end)
-    -- get query stringing
-    url = string.gsub(url, "%?(.*)", function(q)
-        parsed.query = q
-        return ""
-    end)
-    -- get params
-    url = string.gsub(url, "%;(.*)", function(p)
-        parsed.params = p
-        return ""
-    end)
-    -- path is whatever was left
-    if url ~= "" then parsed.path = url end
-    local authority = parsed.authority
-    if not authority then return parsed end
-    authority = string.gsub(authority,"^([^@]*)@",
-        function(u) parsed.userinfo = u; return "" end)
-    authority = string.gsub(authority, ":([^:]*)$",
-        function(p) parsed.port = p; return "" end)
-    if authority ~= "" then parsed.host = authority end
-    local userinfo = parsed.userinfo
-    if not userinfo then return parsed end
-    userinfo = string.gsub(userinfo, ":([^:]*)$",
-        function(p) parsed.password = p; return "" end)
-    parsed.user = userinfo
-    return parsed
-end
-
-function Util:read_file(file_path, binary)
-  local mode = "r"
-  if binary then mode = "rb" end
-  local file_ref,err = io.open(file_path, mode)
-  if not err then
-    local data=file_ref:read("*all")        
-    io.close(file_ref)    
-    return data
-  else
-    return nil,err;
-  end
-end
-
--- Compute the difference in seconds between local time and UTC.
-function Util:get_timezone()
-  local now = os.time()
-  return os.difftime(now, os.time(os.date("!*t", now)))
-end
-
--- Return a timezone string in ISO 8601:2000 standard form (+hhmm or -hhmm)
-function Util:get_tzoffset()
-  local h, m = math.modf(Util:get_timezone() / 3600)
-  return string.format("%+.4d", 100 * h + 60 * m)
-end
-
-function Util:html_entity_decode(str)
-  local a,b = str:gsub("%%20", " ")
-   a,b = a:gsub("%+", " ")  
-  a,b = a:gsub("%%5B", "[")
-  a,b = a:gsub("%%5D", "]")
-  return a
-end
-
-function Util:get_extension(file)
-    return file:match("%.(%a+)$")
-end
-
-function Util:trim(s)
-  return (s:gsub("^%s*(.-)%s*$", "%1"))
-end
-
-function Util:split(str, pat)
-   local t = {}  -- NOTE: use {n = 0} in Lua-5.0
-   local fpat = "(.-)" .. pat
-   local last_end = 1
-   local s, e, cap = str:find(fpat, 1)
-   while s do
-      if s ~= 1 or cap ~= "" then
-   table.insert(t,cap)
-      end
-      last_end = e+1
-      s, e, cap = str:find(fpat, last_end)
-   end
-   if last_end <= #str then
-      cap = str:sub(last_end)
-      table.insert(t, cap)
-   end
-   return t
-end
-
--- Assumes "#comment" is a comment, "value  key_1 key_2"
-function Util:parse_config_file(filename)
-   local str = Util:read_file(root .. filename)
-   local lines = Util:split_lines(str)
-   local t = {}
-   local k, v = nil
-   for _,l in ipairs(lines) do
-      if not l:find("^(%s*)#") then
-        local a = Util:split(l, "%s+")
-           for i=2,#a do
-              t[a[i]] = a[1]
-           end
-      end
-   end
-   return t
-end
+end  
 
 -------------------------------------------
 --  Renoise Actions Tree
@@ -319,9 +164,15 @@ class "ActionServer"
   ActionServer.document_root = root .. "html"
 
   function ActionServer:__init(address,port)
+      self.chunked = false
+      
       -- create a server socket
-      local server, socket_error =
-        renoise.Socket.create_server(address, port)
+      local server, socket_error = nil
+      if address == nil then
+        server, socket_error = renoise.Socket.create_server(port)
+      else
+        server, socket_error = renoise.Socket.create_server(address, port)
+      end        
 
       if socket_error then
         renoise.app():show_warning(
@@ -334,22 +185,16 @@ class "ActionServer"
       end
   end
 
-  function ActionServer:socket_error(socket_error)
-    renoise.app():show_warning(socket_error)
-  end
+  
 
   function ActionServer:get_address()
     return self.server.local_address .. ':' .. self.server.local_port
   end
 
-  function ActionServer:get_date()
-    return os.date("%a, %d %b %Y %X " .. Util:get_tzoffset())
+  function ActionServer:get_date(time) 
+    return os.date("%a, %d %b %Y %X " .. Util:get_tzoffset(), time)
   end
-
-  function ActionServer:socket_accepted(socket)
-    log:info("Socket accepted")
-  end
-
+  
    function ActionServer:get_action_names()
       return Action.action_names
    end 
@@ -377,6 +222,7 @@ class "ActionServer"
     local ext = Util:get_extension(path)
     local mime = ActionServer.mime_types[ext] or "text/plain"
     log:info("Extension: " .. ext .. "; Content-Type: " .. mime)
+    return mime
   end
 
   function ActionServer:get_htdoc(path)
@@ -402,6 +248,10 @@ class "ActionServer"
   function ActionServer:set_header(k,v)
    self.header_map[k] = v
   end
+  
+  function ActionServer:remove_header(k)
+    self:set_header(k,nil)
+  end
 
   function ActionServer:init_header()
    self.header_map = table.create()
@@ -410,30 +260,92 @@ class "ActionServer"
    self.header_map["Cache-Control"] = "max-age=3600, must-revalidate"
    self.header_map["Accept-Ranges"] = "none"
   end
+  
+  function ActionServer:is_binary(str)    
+    return str ~= nil and str:match("^text") == nil
+  end  
+    
+  function ActionServer:is_image(str)    
+    return str ~= nil and str:match("^image") ~= nil
+  end
+  
+  function ActionServer:get_etag(fullpath)
+    local stat = io.stat(fullpath)
+    local last_modified = stat.mtime
+    return last_modified
+  end
 
   function ActionServer:send_htdoc(socket, path, status, parameters)
      status = status or "200 OK"
+     local buffer = nil
+     local mime = self:get_MIME(path)
+     
+     -- TODO remove image hack
+     if self:is_image(mime) then 
+       path = "/empty.txt"        
+       mime = self:get_MIME(path)     
+     end
 
-     self:set_header("Content-Type", self:get_MIME(path))
-
+     self:set_header("Content-Type", mime)
+     
      parameters = parameters or {}
      local fullpath = self:get_htdoc(path)
-     --TODO if mime is of binary type, then binary = true
-     local binary = false
-     local template = Util:read_file(fullpath, binary)
-     assert(template, "failed to read the teplate file")
+     local stat = io.stat(fullpath)
+     local size = stat.size
      
-     local page = nil
+     log:info("If-None-Match: " .. tostring(self.header["If-None-Match"]))
+     log:info("If-Modified-Since: " .. tostring(self.header["If-Modified-Since"]))     
+     
+     -- Conditional GET with ETag / If-None-Match
+     if self.header["If-None-Match"] and 
+       tonumber(self:get_etag(fullpath)) <= tonumber(self.header["If-None-Match"])
+     then
+      status = "304 Not Modified"
+      buffer = ""
+      size = 0
+      log:info("Serving empty body due to Conditional GET")
+      self:set_header("Cache-Control", "no-cache, no-store")       
+     else      
+       -- Read file into string buffer
+       local is_binary = self:is_binary(mime)     
+       is_binary = false
+       log:info("Is a binary file? " .. tostring(is_binary))
+       buffer = Util:read_file(fullpath, true)
+       assert(buffer, "Failed to read the requested file from disk")
+     end
+          
+     -- Create body
+     local body = nil          
+     -- Interpret any Lua code in the buffer (see expand.lua)     
+     if self:is_expandable(path) and #buffer > 0 then
 
-     if self:is_expandable(path) then
-       self:set_header("Cache-Control", "private, max-age=0")
-       page = expand(template, {L=self, renoise=renoise, P=parameters, Util=Util, ActionTree=ActionTree}, _G)
+       self:set_header("Content-Type", "text/html")
+       self:set_header("Cache-Control", "private, max-age=0, must-revalidate")
+      
+       local tic = os.clock()               
+       body = expand(
+         buffer,          
+         { L=self, 
+           renoise=renoise, 
+           P=parameters, 
+           Util=Util, 
+           ActionTree=ActionTree
+         },
+         _G
+       )       
+       local toc = os.clock()           
+       log:info(string.format("Expanding embedded Lua code took %d ms", 
+         (toc-tic) * 1000))             
+       size = #body -- interpreted size is different from filesize
+       self:set_header("ETag", os.time())
      else
-       self:set_header("Cache-Control", "private, max-age=3600")
-       page = template
+       self:set_header("Cache-Control", "private, max-age=3600, must-revalidate")
+       body = buffer
+       self:set_header("ETag", self:get_etag(fullpath))       
      end
      
-     local size =  #page; 
+     -- Format "Content-Length"
+     self:set_header("Content-Length", size)
      local unit = "B"
      self:set_header("Content-Length", size)
      if size > 1024 then 
@@ -441,20 +353,37 @@ class "ActionServer"
        size = string.format("%.1f", size / 1024) 
      end 
      log:info(string.format("Content-Length: %s %s", size, unit))
-    
+     
+     -- Create header string from header table    
      local header = "HTTP/1.1 " .. status .. "\r\n"
      for k,v in pairs(self.header_map) do
        header = string.format("%s%s: %s\r\n",header,k,v)
      end     
      header = header .. "\r\n"     
-     socket:send(header)               
-     local ok,err = socket:send(page)          
+     
+     -- Send header
+     local ok,err = socket:send(header)               
      if not ok then
-       log:error("Failed to send data:\n".. err)
+       log:error("Failed to send header:\n".. err)
      end
+     
+     -- Send body
+     local ok,err = socket:send(body)          
+     if not ok then
+       log:error("Failed to send body:\n".. err)
+     end
+     
+  end
+ 
+--Socket API Callbacks---------------------------   
+
+  function ActionServer:socket_error(socket_error)
+    renoise.app():show_warning(socket_error)
   end
 
-  ActionServer.chunked = false
+  function ActionServer:socket_accepted(socket)
+    log:info("Socket accepted")
+  end
 
   function ActionServer:socket_message(socket, message)
       self.remote_addr = socket.peer_address .. ":" .. socket.peer_port
@@ -467,13 +396,13 @@ class "ActionServer"
          body = message
          self.chunked = false
       else
-         header, body = Util:parse_message(message)
-         self.header = nil
+         header, body = Util:parse_message(message)         
       end
+      
+      self.header = header
       
       if #body < tonumber(header["Content-Length"]) then
         self.chunked = true
-        self.header = header
         return
       end
 
@@ -541,14 +470,6 @@ class "ActionServer"
     self:send_htdoc(socket, "/404.html", "404 Not Found", parameters)
 
     --- TODO: NON-HTTP (eg. Telnet, OSC)
---[[  if message == "p" then
-        song().transport:start(1)
-      elseif message == "s" then
-        song().transport:stop()
-      elseif #message > 0 then
-        song().transport:start(1)
-      end
-]]--
 
   end
   
@@ -560,13 +481,15 @@ class "ActionServer"
    end
 
 -------------------------------------------
-local address = "localhost"
-local port = 80
+-- Start / Stop 
+-------------------------------------------
+local address = nil
+local port = 8888
 local INADDR_ANY = false
 
 function restore_default_configuration()
     port = 80
-    address = "0.0.0.0"
+    address = nil
     INADDR_ANY = false
 end
 

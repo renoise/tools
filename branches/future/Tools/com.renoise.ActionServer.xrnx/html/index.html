@@ -54,7 +54,7 @@
                        $("#myvar").val($(this).text());
                   });
                 	$("#async-form").submit(function(){
-                              	$.post("http://" + document.domain + "/ajax.lua", $(this).serialize(), function(data){
+                              	$.post("/ajax.lua", $(this).serialize(), function(data){
                                    $("#result").text(data);
                               	}, "text");
                 		return false;

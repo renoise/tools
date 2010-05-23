@@ -6,10 +6,6 @@
 
 Use a Canvas class to represent values in a 2-dimensional space
 - incremental output: maintains a delta buffer with recent values
-- each point is represented by 
-- - value (as defined by the DisplayObject)
-- - text (replacement for color, for labelling buttons)
-- - color (not yet implemented)
 
 --]]
 
@@ -57,7 +53,7 @@ function Canvas:write(point,x,y)
   TRACE("Canvas:write", point, x, y)
   
   if not y then y = 1 end -- if one-dimensional 
-  self.check_delta(self,point,x,y)
+  self:check_delta(point,x,y)
   self.buffer[x][y] = point
 end
 
@@ -67,7 +63,7 @@ end
 function Canvas:fill(point)
   for x = 1,self.width do
     for y = 1, self.height do
-      self.check_delta(self,point,x,y)
+      self:check_delta(point,x,y)
       self.buffer[x][y] = point
     end
   end
@@ -103,6 +99,58 @@ end
 --------------------------------------------------------------------------------
 
 function Canvas:__tostring()
+  return type(self)
+end  
+
+
+--[[----------------------------------------------------------------------------
+-- Duplex.CanvasPoint
+----------------------------------------------------------------------------]]--
+
+--[[
+
+CanvasPoint represents a point in a canvas 
+- color (table of 8-bit r/g/b values)
+- text (replacement for color, for labelling buttons)
+- value (as defined by the UIComponent)
+
+--]]
+
+
+--==============================================================================
+
+class 'CanvasPoint' 
+
+function CanvasPoint:__init(text,color)
+  self.text = text or ""
+  self.color = color or {0x00,0x00,0x00}
+  self.val = false
+end
+
+
+--------------------------------------------------------------------------------
+
+-- apply(): import key/values pairs from external 
+-- object without replacing existing keys
+-- todo: simply import text and color!
+
+function CanvasPoint:apply(obj)
+  TRACE("CanvasPoint:apply", obj)
+  
+  for k,v in pairs(obj) do
+    if (k=="text")then
+      self.text = v
+    end
+    if (k=="color")then
+      self.color = v
+    end
+  end
+end
+
+
+--------------------------------------------------------------------------------
+
+function CanvasPoint:__tostring()
   return type(self)
 end  
 
