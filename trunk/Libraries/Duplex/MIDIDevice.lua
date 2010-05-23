@@ -88,7 +88,8 @@ function MIDIDevice:midi_callback(message)
   local param = self.control_map:get_param_by_value(value_str)
 
   if param then
-    -- input method
+
+    -- determine input method
     if param["xarg"].type == "button" then
       msg.input_method = CONTROLLER_BUTTON
     elseif param["xarg"].type == "encoder" then
@@ -101,7 +102,7 @@ function MIDIDevice:midi_callback(message)
       error("unknown msg.input_method")
     end
     
-    -- include additional meta-properties
+    -- include meta-properties
     msg.name = param["xarg"].name
     msg.group_name = param["xarg"].group_name
     msg.max = param["xarg"].maximum+0
@@ -111,9 +112,11 @@ function MIDIDevice:midi_callback(message)
     msg.column = param["xarg"].column
     msg.row = param["xarg"].row
     msg.timestamp = os.clock()
+
+    self.message_stream:input_message(msg)
+
   end
 
-  self.message_stream:input_message(msg)
 end
 
 

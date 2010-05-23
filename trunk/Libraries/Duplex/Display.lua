@@ -36,7 +36,7 @@ function Display:__init(device)
   self.grid_count = 0
   --self.grid_columns = nil
 
-  -- array of DisplayObject instances
+  -- array of UIComponent instances
   self.ui_objects = {}  
 
   -- each UI object notifier method is referenced by id, 
@@ -88,10 +88,10 @@ function Display:clear()
   for _,group in pairs(self.device.control_map.groups)do
     for __,param in ipairs(group) do
 -- @elm : control-map definition of the element
--- @obj : reference to the DisplayObject instance
+-- @obj : reference to the UIComponent instance
 -- @point : canvas point containing text/value/color 
 --[[
-      local pt = Point()
+      local pt = CanvasPoint()
       local obj = {ceiling=100}
       self.set_parameter(param,obj,pt)
 --rprint(param)      
@@ -115,7 +115,7 @@ function Display:update()
     if obj.dirty then
 
       -- update the object display
-      obj.draw(obj)
+      obj:draw()
 
       -- loop through the delta array - it contains all recent updates
       if obj.canvas.has_changed then
@@ -125,12 +125,7 @@ function Display:update()
               if not self.device.control_map.groups[obj.group_name] then
                 print("Warning: ",type(obj)," not specified in control-map group ",obj.group_name)
               else
-  --[[
-  print(type(obj),obj.group_name)
-  rprint(self.device.control_map.groups,obj.group_name)
-  print(self.device.control_map.groups[obj.group_name])
-  print(self.device.control_map.groups[obj.group_name].columns)
-  ]]
+
                 local columns = self.device.control_map.groups[obj.group_name].columns
                 local idx = (x+obj.x_pos-1)+((y+obj.y_pos-2)*columns)
                 local elm = self.device.control_map:get_indexed_element(idx,obj.group_name)
@@ -141,7 +136,7 @@ function Display:update()
             end
           end
         end
-        obj.canvas.clear_delta(obj.canvas)
+        obj.canvas:clear_delta()
       end
 
     end
@@ -154,7 +149,7 @@ end
 
 -- set_parameter: update object states
 -- @elm : control-map definition of the element
--- @obj : reference to the DisplayObject instance
+-- @obj : reference to the UIComponent instance
 -- @point : canvas point containing text/value/color 
 
 function Display:set_parameter(elm,obj,point)
@@ -193,9 +188,9 @@ function Display:set_parameter(elm,obj,point)
       (type(widget)=="MiniSlider") or
       (type(widget)=="Slider") then
       value = self.device:point_to_value(point,elm.maximum,elm.minimum,obj.ceiling)
-      widget.remove_notifier(widget,self.ui_notifiers[elm.id])
+      widget:remove_notifier(self.ui_notifiers[elm.id])
       widget.value = value*1 -- toNumber
-      widget.add_notifier(widget,self.ui_notifiers[elm.id])
+      widget:add_notifier(self.ui_notifiers[elm.id])
     end
   end
 end
@@ -284,6 +279,8 @@ function Display:generate_message(value, metadata)
   msg.column  = metadata.column
   msg.row    = metadata.row
   msg.timestamp = os.clock()
+
+  msg.is_virtual = true
 
   self.device.message_stream:input_message(msg)
 end
@@ -499,7 +496,7 @@ function Display:walk_table(t, done, deep)
         self.view:add_child(view_obj.view)
       end
     end
-    self:walk_table (value, done, deep)
+    self:walk_table(value,done,deep)
   end
   end
 end

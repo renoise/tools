@@ -1,10 +1,10 @@
 --[[----------------------------------------------------------------------------
--- Duplex.DisplayObject
+-- Duplex.UIComponent
 ----------------------------------------------------------------------------]]--
 
 --[[
 
-Inheritance: DisplayObject 
+Inheritance: UIComponent 
 
 The base class for UI objects
 
@@ -17,9 +17,9 @@ More methods:
 
 --==============================================================================
 
-class 'DisplayObject' 
+class 'UIComponent' 
 
-function DisplayObject:__init(display)
+function UIComponent:__init(display)
 
   self.canvas = Canvas()    -- 
   self.display = display    -- the parent display
@@ -35,7 +35,7 @@ function DisplayObject:__init(display)
 
   self.dirty = true      -- request refresh
 
-  self.set_size(self,self.width,self.width)
+  self:set_size(self.width,self.width)
 
 end
 
@@ -44,7 +44,7 @@ end
 
 --  request update on next refresh
 
-function DisplayObject:invalidate()
+function UIComponent:invalidate()
   self.dirty = true
 end
 
@@ -53,8 +53,8 @@ end
 
 -- draw() - update the visual definition
 
-function DisplayObject:draw()
-  TRACE("DisplayObject:draw")
+function UIComponent:draw()
+  TRACE("UIComponent:draw")
 
   self.dirty = false
 end
@@ -65,7 +65,7 @@ end
 -- get_msg()  returns the last broadcast event 
 --        (used by event handlers)
 
-function DisplayObject:get_msg()
+function UIComponent:get_msg()
   return self.display.device.message_stream.current_message
 end
 
@@ -75,10 +75,10 @@ end
 -- set_size()  important to use this instead 
 -- of setting width/height directly (because of canvas)
 
-function DisplayObject:set_size(width,height)
-  TRACE("DisplayObject:set_size",width,height)
+function UIComponent:set_size(width,height)
+  TRACE("UIComponent:set_size",width,height)
 
-  self.canvas.set_size(self.canvas,width,height)
+  self.canvas:set_size(width,height)
   self.width = width      
   self.height = height
 end
@@ -89,8 +89,8 @@ end
 -- perform simple "inside square" hit test
 -- @return (boolean) true if inside area
 
-function DisplayObject:test(x_pos,y_pos)
-  TRACE("DisplayObject:test(",x_pos,y_pos,")")
+function UIComponent:test(x_pos,y_pos)
+  TRACE("UIComponent:test(",x_pos,y_pos,")")
 
   -- pressed to the left or above?
   if x_pos < self.x_pos or y_pos < self.y_pos then
@@ -112,8 +112,8 @@ end
 -- to call this method several times without loosing the 
 -- original color information
 
-function DisplayObject:colorize(rgb)
-  TRACE("DisplayObject:colorize:",rgb)
+function UIComponent:colorize(rgb)
+  TRACE("UIComponent:colorize:",rgb)
 
   for k,v in pairs(self.palette) do
 
@@ -129,21 +129,21 @@ end
 
 --------------------------------------------------------------------------------
 
-function DisplayObject:add_listeners()
+function UIComponent:add_listeners()
   -- override to specify your own event handlers 
 end
 
 
 --------------------------------------------------------------------------------
 
-function DisplayObject:remove_listeners()
+function UIComponent:remove_listeners()
   -- override to remove specified event handlers 
 end
 
 
 --------------------------------------------------------------------------------
 
-function DisplayObject:__eq(other)
+function UIComponent:__eq(other)
   -- only check for object identity
   return rawequal(self, other)
 end  
@@ -151,7 +151,7 @@ end
 
 --------------------------------------------------------------------------------
 
-function DisplayObject:__tostring()
+function UIComponent:__tostring()
   return type(self)
 end  
 
