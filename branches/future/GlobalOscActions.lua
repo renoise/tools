@@ -62,16 +62,84 @@
  allowed funcitons and modules. 
  This is done to prevent that such custom expressions cause harm, because 
  in theory anyone/anthing could send messages to your opened OSC port.
- 
---------------------------------------------------------------------------]]--
 
--- Actions
-
--- TODO
+]]
 
 
 ------------------------------------------------------------------------------
--- Evaluate
+-- Message Registration
+------------------------------------------------------------------------------
+
+local message_map = table.create{}
+
+
+-- create a message argument
+-- name is only needed when generating a list of available messages for the user
+-- type is the expected lua type name for the OSC argument
+
+local function argument(name, type)
+  return { name = name, type = type }
+end
+
+
+-- register a message with the given optional arguments and a handler function
+
+local function add_message(message, arguments_or_handler, handler)
+  assert(message_map[message] == nil, 
+    "message is already registered")
+  
+  if (handler) then
+    message_map[message] = { 
+      handler = handler, 
+      arguments = arguments_or_handler 
+    }
+  
+  else
+    message_map[message] = { 
+      handler = arguments_or_handler, 
+      arguments = {}
+    }
+  end
+  
+end
+
+ 
+------------------------------------------------------------------------------
+-- Messages
+------------------------------------------------------------------------------
+
+-- transport
+
+add_message("/transport/start", 
+  function(arguments)
+    local play_mode = renoise.Transport.PLAYMODE_RESTART_PATTERN
+    renoise.song().transport:start(play_mode)
+  end
+)
+
+add_message("/transport/stop", 
+  function(arguments)
+    renoise.song().transport:stop()
+  end
+)
+
+add_message("/transport/bpm", { argument("bpm_value", "number") }, 
+  function(arguments)
+    local bpm = math.max(32, math.min(999, arguments[1].value))
+    renoise.song().transport.bpm = bpm
+  end
+)
+
+add_message("/transport/lpb", { argument("lpb_value", "number") }, 
+  function(arguments)
+    local lpb = math.max(1, math.min(255, arguments[1].value))
+    renoise.song().transport.lpb = lpb
+  end
+)
+
+
+------------------------------------------------------------------------------
+-- Evaluate Message
 ------------------------------------------------------------------------------
 
 -- environment for expressions. may only access a few safe globals and modules
@@ -118,11 +186,28 @@ end
 -- Interface
 ------------------------------------------------------------------------------
 
-function process_message(pattern, arguments)
+-- available_messages
 
+function available_messages()
+  local ret = table.create {}
+  
+  for name, message in pairs(message_map) do
+    ret.insert {
+      name = name,
+      arguments = message.arguments
+    }
+  end
+    
+  return ret
+end
+
+
+-- process_message
+
+function process_message(pattern, arguments)
   local handled = false
   
-  -- handle "evaluate" separately
+  -- handle "evaluate" messages
   if (pattern == "/evaluate") then
     if (#arguments == 1 and type(arguments[1].value) == "string") then
       print(("OSC Message: evaluating '%s'"):format(arguments[1].value))
@@ -135,16 +220,26 @@ function process_message(pattern, arguments)
       handled = true
     end
  
+  -- else find a matching message and apply it (TODO: pattern matching)
   else
-    -- apply messages (only trace them for now)
-    local arguments_string = ""
+    local match = message_map[pattern]
     
-    for _,arg in ipairs(arguments) do
-      arguments_string = arguments_string .. 
-        ("'%s'=%s "):format(arg.tag, tostring(arg.value))
+    if (match) then
+      if (#match.arguments == #arguments) then
+        local arguments_match = true
+        for i = 1, #arguments do
+          if (match.arguments[i].type ~= type(arguments[i].value)) then 
+            arguments_match = false
+            break
+          end
+        end
+        
+        if (arguments_match) then
+          match.handler(arguments)
+          handled = true
+        end
+      end
     end
-    
-    print(("OSC Message: '%s' %s"):format(pattern, arguments_string))
   end
     
   return handled
