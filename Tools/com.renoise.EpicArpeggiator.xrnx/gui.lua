@@ -499,7 +499,7 @@ Main Dialog
          spacing = CONTENT_SPACING,
          uniform = true,
       }
-      if switch_note_pattern_index == 2 then
+      if switch_note_pattern_index == NOTE_PATTERN_CUSTOM then
          --Make sure the "show matrix" button won't be visible if the main dialog
          --would be closed and then reopened
          total_layout:add_child(operation_area)
@@ -507,7 +507,7 @@ Main Dialog
          total_layout:add_child(figure_matrix)
          total_layout:add_child(operation_area)
       end
-      if switch_arp_pattern_index == 3 then
+      if switch_arp_pattern_index == ARPEGGIO_PATTERN_CUSTOM then
          toggle_custom_arpeggiator_profile_visibility(3, vb)         
       else
          toggle_custom_arpeggiator_profile_visibility(1, vb)         
@@ -517,28 +517,32 @@ Main Dialog
       else
          toggle_chord_mode_visibility(2,vb)
       end
-      if velocity_insertion_index >= 3 and velocity_insertion_index <= 4 then
+      if velocity_insertion_index >= PLACE_TOP_DOWN_TOP and 
+      velocity_insertion_index <= PLACE_DOWN_TOP_DOWN then
          vb.views.repeat_velocity.visible = true
          vb.views.repeat_velocity_title.visible = true
       else
          vb.views.repeat_velocity.visible = false
          vb.views.repeat_velocity_title.visible = false
       end      
-      if instrument_insertion_index >= 3 and instrument_insertion_index <= 4 then
+      if instrument_insertion_index >= PLACE_TOP_DOWN_TOP and 
+      instrument_insertion_index <= PLACE_DOWN_TOP_DOWN then
          vb.views.repeat_instrument.visible = true
          vb.views.repeat_instrument_title.visible = true
       else
          vb.views.repeat_instrument.visible = false
          vb.views.repeat_instrument_title.visible = false
       end
-      if popup_note_index >= 3 and popup_note_index <= 4 then
+      if popup_note_index >= PLACE_TOP_DOWN_TOP and 
+      popup_note_index <= PLACE_DOWN_TOP_DOWN then
             vb.views.repeat_note.visible = true
             vb.views.repeat_note_title.visible = true
       else
          vb.views.repeat_note.visible = false
          vb.views.repeat_note_title.visible = false
       end
-      if popup_octave_index >= 3 and popup_octave_index <= 4 then
+      if popup_octave_index >= PLACE_TOP_DOWN_TOP and 
+      popup_octave_index <= PLACE_DOWN_TOP_DOWN then
          if switch_note_pattern_index == 1 then
             vb.views.octave_repeat_mode.visible = true
             vb.views.octave_repeat_mode_text.visible = true
@@ -549,7 +553,7 @@ Main Dialog
          vb.views.octave_repeat_mode.visible = false
          vb.views.octave_repeat_mode_text.visible = false
       end
-      if switch_note_pattern_index == 1 then
+      if switch_note_pattern_index == NOTE_PATTERN_MATRIX then
          toggle_note_profile_visibility(false, vb)
          toggle_octave_visibility(true, vb)
       else
@@ -577,7 +581,7 @@ end
 -------------------------------------------------------------------------------
 function change_distance_step(value, vb)
    distance_step = value
-   if popup_distance_mode_index == 2 then
+   if popup_distance_mode_index == NOTE_DISTANCE_DELAY then
       vb.views.vbox_distance_step.max = 255
    else
       vb.views.vbox_distance_step.max = 511
@@ -587,7 +591,7 @@ end
 
 function change_distance_mode(value,vb)
    popup_distance_mode_index = value
-   if value == 2 then
+   if value == NOTE_DISTANCE_DELAY then
       vb.views.vbox_distance_step.max = 255
       if vb.views.vbox_distance_step.value > 255 then
          vb.views.vbox_distance_step.value = 255
@@ -600,7 +604,7 @@ end
 
 function change_octave_order(value,vb)
    popup_octave_index = value
-   if value >= 3 and value <= 4 then
+   if value >= PLACE_TOP_DOWN_TOP and value <= PLACE_DOWN_TOP_DOWN then
       vb.views.octave_repeat_mode.visible = true
       vb.views.octave_repeat_mode_text.visible = true
    else
