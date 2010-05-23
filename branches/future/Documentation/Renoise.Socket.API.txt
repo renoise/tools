@@ -36,13 +36,13 @@ from the server.
 All socket functions which can fail, will return an error string as an optional
 second return value. They do not call Luas error() handler, so you can decide on
 your own how to deal with expected errors like connection timeouts, connection
-failures and so on. This also means you don't have to "pcall" all socket functions
+failures and so on. This also means you don't have to "pcall" socket functions
 to handle "expected" errors.
 Logic errors (setting invalid addresses, using disconnected sockets, passing
-invalid timeouts and so on) will, as usual, fire the Luas error handlers (abort
+invalid timeouts and so on) will, as usual, fire a Luas runtime error (abort
 your scripts and spit out an error). If you get such an error, then this usually
 means that you did something wrong, have fed or used the sockets in a way that
-does not make sense. Do not "pcall" such errors, but fix the problems instead.
+does not make sense. Never "pcall" such errors, but fix the problems instead.
 
 
 -- Examples
@@ -99,9 +99,11 @@ renoise.Socket.create_client(server_address, server_port [, protocol] [, timeout
 
 -- ... properties
 
--- returns true when the object is a valid and connected socket (it was not
--- manually closed)
-socket.is_open -> [Boolean]
+-- returns true while the socket object is valid and connected. Sockets can be 
+-- manually closed (see socket:close()). client sockets can also get actively 
+-- closed/refused by its server. In this case the client:receive() calls will 
+-- fail and return an error
+socket.is_open -> [boolean]
 
 -- the sockets resolved local address (for example "127.0.0.1"
 -- when a socket was bound to "localhost")
@@ -115,7 +117,8 @@ socket.local_port -> [number]
 -- closes the socket connection and releases all its resources. this will make
 -- the socket useless, so any properties, calls to the socket will result in
 -- errors. Can be useful to explicitly release a connection without waiting for
--- the dead object to be garbage collected.
+-- the dead object to be garbage collected of if you want to actively refuse a 
+-- connection.
 socket:close()
 
 
@@ -131,7 +134,7 @@ socket:close()
 
 -- properties
 
--- address of the sockets peer, the socket this client is connected to
+-- address of the sockets peer, the socket address this client is connected to
 socket_client.peer_address -> [string]
 
 -- port of the sockets peer, the socket this client is connected to
@@ -147,8 +150,20 @@ socket_client:send(message) ->
 
 -- receive a message from the the connected server with the given timeout in
 -- milliseconds.
--- when receiving failed or timed-out, message will be nil and the returned
--- error_message is set
+-- when receiving failed or timed-out, the returned message will be nil and 
+-- the returned error_message is set. The error message is "timeout" on timeouts, 
+-- "disconnected" when the server actively refused/disconnected your client. 
+-- Any other errors are system dependent, and should only be used for display 
+-- purposes.
+-- please note that the server can refuse the connection at any time. once you
+-- got an error from receive, and this error is not a "timeout", the socket will 
+-- already be closed and thus must be recreted in order to retry the 
+-- communication. any attempts to use a closed socket connection will fire a 
+-- runtime error.
+-- The number of bytes that are read, retuned by receive, is simply what's 
+-- in the sockets current buffer queue, so you can not rely on this. multiple 
+-- calls to receive might be needed to get what you expect to get from the 
+-- server.
 socket_client:receive(timeout_ms) ->
   [message (string or nil), error_message (string or nil)]
 
