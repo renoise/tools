@@ -24,25 +24,21 @@ function Browser:__init(device_name,app_name)
 
   self.application = nil  --  current application
 
-  --self.init_app(self)
   Application.__init(self)
-
-  --Application.init_app(self)
 
   self.vb = renoise.ViewBuilder()
 
-  self.build_app(self)
+  self:build_app()
   -- hide after building
   self.vb.views.dpx_browser_app_row.visible = false
-  --self.vb.views.dpx_browser_preset_row.visible = false
   self.vb.views.dpx_browser_device_settings.visible = false
   self.vb.views.dpx_browser_fix.visible = false
 
   -- as last step, apply optional arguments
   if device_name then
-    self.set_device_index(self,device_name)
+    self:set_device_index(device_name)
     if app_name then
-      self.set_application(self,app_name)
+      self:set_application(app_name)
     end
   end
 
@@ -56,7 +52,7 @@ end
 function Browser:set_device_index(name)
   TRACE("Browser:set_device_index("..name..")")
 
-  local idx = self.get_list_index(self,"dpx_browser_input_device",name)
+  local idx = self:get_list_index("dpx_browser_input_device",name)
   self.vb.views.dpx_browser_input_device.value = idx
 
 end
@@ -73,16 +69,16 @@ end
 function Browser:set_device(name)
   TRACE("Browser:set_device("..name..")")
 
-  local idx = self.get_list_index(self,"dpx_browser_input_device",name)
+  local idx = self:get_list_index("dpx_browser_input_device",name)
   self.vb.views.dpx_browser_input_device.value = idx
 
   if self.device then
-    self.device.release(self.device)
-    self.display.hide_control_surface(self.display)
+    self.device:release()
+    self.display:hide_control_surface()
   end
 
   -- "cascading" effect
-  self.set_application(self,"None")
+  self:set_application("None")
 
   if (name == "None") then
     self.vb.views.dpx_browser_app_row.visible = false
@@ -94,12 +90,12 @@ function Browser:set_device(name)
 
   end
 
-  local custom_devices = self.get_custom_devices(self)
+  local custom_devices = self:get_custom_devices()
   for _,k in ipairs(custom_devices) do
   
     if (name==k.display_name) then
       if k.classname then
-        self.instantiate_device(self,k.class_name,k.device_name,k.control_map)
+        self:instantiate_device(k.class_name,k.device_name,k.control_map)
       elseif k.control_map then
 
         local generic_class = nil
@@ -110,7 +106,7 @@ function Browser:set_device(name)
         end
 
         local class_name = k.class_name or generic_class
-        self.instantiate_device(self,class_name,k.device_name,k.control_map)
+        self:instantiate_device(class_name,k.device_name,k.control_map)
       else
         renoise.app():show_warning("Whoops! This device needs a control-map")
       end
@@ -148,9 +144,9 @@ function Browser:instantiate_device(class_name,device_name,control_map)
     self.device.message_stream = self.stream
 
     self.display = Display(self.device)
-    self.display.build_control_surface(self.display)
+    self.display:build_control_surface()
     self.vb.views.dpx_browser_rootnode:add_child(self.display.view)
-    self.display.show_control_surface(self.display)
+    self.display:show_control_surface()
 
   end
 
@@ -169,7 +165,7 @@ function Browser:get_devices()
   local rslt = {"None"}
 
   local input_devices = renoise.Midi.available_input_devices()
-  local custom_devices = self.get_custom_devices(self)
+  local custom_devices = self:get_custom_devices()
 
   --table.insert(rslt, "--------  custom devices  ---------")
   for idx,t in ipairs(custom_devices) do
@@ -306,24 +302,6 @@ function Browser:get_applications(device_name)
   
 end
 
-
---------------------------------------------------------------------------------
-
---  return list of application presets
---[[
-function Browser:get_presets()
-
-  return {
-    "None",
-    "Normal (all buttons)",
-    "Grid only",
-    "Grid+Triggers"
-  }
-
-end
-]]
-
-
 --------------------------------------------------------------------------------
 
 -- set application as active item 
@@ -340,23 +318,23 @@ function Browser:set_application(name)
   self.vb.views.dpx_browser_application_checkbox.value = false
 
   if self.application then
-    self.application.destroy_app(self.application)
+    self.application:destroy_app()
   end
 
   -- hide/show the "run" option
   if self.vb.views.dpx_browser_application.value == 1 then
     self.vb.views.dpx_browser_application_active.visible = false
-    --self.display.clear(self.display)
+    --self.display:clear()
   else
     self.vb.views.dpx_browser_application_active.visible = true
   end
 
   -- TODO: load classes dynamically
+  local elm = self.vb.views["dpx_browser_input_device"]
+  local device_display_name = elm.items[elm.value]
 
   if name == "MixConsole" then
     
-    local elm = self.vb.views["dpx_browser_input_device"]
-    local device_display_name = elm.items[elm.value]
     local sliders_group_name=nil
     local buttons_group_name=nil
     local master_group_name=nil
@@ -379,7 +357,9 @@ function Browser:set_application(name)
 
   if name == "PatternMatrix" then
     -- currently only for use with launchpad...
-    self.application = PatternMatrix(self.display)
+    if device_display_name == "Launchpad" then
+      self.application = PatternMatrix(self.display,"Grid","Triggers")
+    end
   end
 end
 
@@ -401,9 +381,9 @@ end
 function Browser:build_app()
   Application.build_app(self)
 
-  local input_devices = self.get_devices(self)
-  local applications = self.get_applications(self)
-  --local presets = self.get_presets(self)
+  local input_devices = self:get_devices()
+  local applications = self:get_applications()
+  --local presets = self:get_presets()
 
   --local vb = renoise.ViewBuilder()
   local vb = self.vb
@@ -424,7 +404,7 @@ function Browser:build_app()
           --value=4,
           width=200,
           notifier=function(e)
-            self.set_device(self,input_devices[e])
+            self:set_device(input_devices[e])
           end
       },
       vb:button{
@@ -447,7 +427,7 @@ function Browser:build_app()
           value=1,
           width=200,
           notifier=function(e)
-            self.set_application(self,applications[e])
+            self:set_application(applications[e])
           end
       },
       vb:row{
@@ -458,9 +438,9 @@ function Browser:build_app()
             id='dpx_browser_application_checkbox',
             notifier=function(e)
               if e then
-                self.start_app(self)
+                self:start_app()
               else
-                self.stop_app(self)
+                self:stop_app()
               end
             end
         },
@@ -469,32 +449,7 @@ function Browser:build_app()
         },
       },
     },
-    --[[
-    vb:row{
-      margin = DEFAULT_MARGIN,
-      id= 'dpx_browser_preset_row',
-      visible=false,
-      vb:text{
-          text="Preset",
-          width=60,
-      },
-      vb:popup{
-          items=presets,
-          value=1,
-          width=200,
-          notifier=function(e)
-            self.set_preset(self,presets[e])
-          end
-      },
-      vb:checkbox{
-          value=false,
-      },
-      vb:text{
-          text="Edit",
-      },
 
-    },
-    ]]
     -- the following is used to control initial size of dialog
     vb:button{
       id='dpx_browser_fix',
@@ -514,7 +469,7 @@ function Browser:start_app()
   Application.start_app(self)
 
   if self.application then
-    self.application.start_app(self.application)
+    self.application:start_app()
   end
 end
   
@@ -525,7 +480,7 @@ function Browser:stop_app()
   Application.stop_app(self)
 
   if self.application then
-    self.application.stop_app(self.application)
+    self.application:stop_app()
   end
 end
 
@@ -536,15 +491,18 @@ function Browser:idle_app()
   if not self.active then
     return
   end
+  -- idle process for stream
+  self.stream:on_idle()
 
-  -- always modify objects 
+  -- modify ui components
   if self.display then
-    self.display.update(self.display)
+    self.display:update()
   end
-  -- .... before the display update
+  -- then update the display 
   if self.application then
-    self.application.idle_app(self.application,self.display)
+    self.application:idle_app()
   end
+
 
 end
 
@@ -552,5 +510,9 @@ end
 --------------------------------------------------------------------------------
 
 function Browser:on_new_document()
+  TRACE("Browser:on_new_document()")
   -- refresh notifiers 
+  if self.application then
+    self.application:on_new_document()
+  end
 end

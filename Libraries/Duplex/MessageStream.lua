@@ -25,34 +25,62 @@ class 'MessageStream'
 function MessageStream:__init()
   TRACE('MessageStream:__init')
 
-  self.button_hold_time = 300 -- milliseconds
-  self.double_press_time = 100 -- milliseconds
+  self.change_listeners = {} -- for faders,encoders
+  self.press_listeners = {} -- for buttons
+  self.hold_listeners = {}  -- buttons
+  --self.release_listeners = {}  -- buttons
+  --self.double_press_listeners = {}  -- buttons
+  --self.combo_listeners = {}  -- buttons
 
-  self.change_listeners = {} -- sliders,encoders
-  self.press_listeners = {} -- buttons
-  --self.release_listeners = {}    
-  --self.double_press_listeners = {}    
-  --self.hold_listeners = {}  
-  --self.combo_listeners = {}    
+  self.button_hold_time = 1 -- seconds
+  --self.double_press_time = 0.1 -- seconds
 
-  self.current_message = nil -- most recent message (event handlers check this)
-  self.button_cache = nil -- cache of recent events (used for double-press detection)
-  self.ignored_buttons = nil -- temporarily exclude from interpretation
-  self.pressed_buttons = {} -- currently pressed buttons, in order of arrival
+  -- most recent message (event handlers check this)
+  self.current_message = nil 
+
+  -- cache of recent events (used for double-press detection)
+  --self.button_cache = nil 
+
+  -- [Message,...] temporarily exclude from interpretation
+  self.ignored_buttons = nil 
+
+  -- [Message,...] - currently pressed buttons, in order of arrival
+  self.pressed_buttons = {} 
 
 end
 
 
 --------------------------------------------------------------------------------
 
-function MessageStream:idle_check()
-  -- flush cached messages when considered obsolete
-  -- check if pressed_buttons have been pressed for specified amount of time 
-  TRACE("MessageStream:idle_check()")
+  -- on_idle() : check if buttons have been pressed for some time 
+
+function MessageStream:on_idle()
+  TRACE("MessageStream:on_idle()")
+
+    for i,msg in ipairs(self.pressed_buttons) do
+      
+      --print(msg.timestamp,os.clock())
+      
+      if(not msg.__held_event_fired) and
+        (msg.timestamp+self.button_hold_time < os.clock()) then
+        -- broadcast to attached listeners
+        for _,listener in ipairs(self.hold_listeners)  do 
+          listener.handler() 
+        end
+        msg.__held_event_fired = true
+      end
+
+    end
+
 end
 
 
 --------------------------------------------------------------------------------
+
+-- add event listener 
+-- @param obj (UIComponent)
+-- @param evt_type (DEVICE_EVENT_[...])
+-- @param handler (function)
 
 function MessageStream:add_listener(obj,evt_type,handler)
   TRACE('MessageStream:add_listener:'..evt_type)
@@ -65,8 +93,12 @@ function MessageStream:add_listener(obj,evt_type,handler)
     table.insert(self.change_listeners,#self.change_listeners+1,{handler=handler,obj=obj})
     TRACE("MessageStream:onpress handler added")
   end
+  if evt_type == DEVICE_EVENT_BUTTON_HELD then
+    table.insert(self.hold_listeners,#self.hold_listeners+1,{handler=handler,obj=obj})
+    TRACE("MessageStream:hold handler added")
+  end
 
-  TRACE("MessageStream:Number of listeners after addition:", #self.press_listeners,#self.change_listeners)
+  TRACE("MessageStream:Number of listeners after addition:", #self.press_listeners,#self.change_listeners,#self.hold_listeners)
 
 end
 
@@ -87,6 +119,7 @@ function MessageStream:remove_listener(obj,evt_type)
       end
     end
   end
+
   if evt_type == DEVICE_EVENT_VALUE_CHANGED then
     for i,listener in ipairs(self.change_listeners) do
       if (obj == listener.obj) then
@@ -95,6 +128,7 @@ function MessageStream:remove_listener(obj,evt_type)
       end
     end
   end
+
   return false
 
 end
@@ -110,19 +144,20 @@ function MessageStream:input_message(msg)
   if (msg.input_method == CONTROLLER_ENCODER) or 
      (msg.input_method == CONTROLLER_FADER or 
       msg.input_method == CONTROLLER_POT) then
+
+      -- "analogue" input 
     
-    --if msg.value == msg.max then
     for _,listener in ipairs(self.change_listeners)  do 
       listener.handler() 
     end
-
-    --for _,handler in ipairs(self.change_listeners)  do handler() end
-    --end    
   
   elseif msg.input_method == CONTROLLER_BUTTON then
+
+    --  "binary" input
+
     -- if it's listed in ignored_buttons
       -- remove from ignored_buttons and exit
-    -- else if it's value match the min/max value..
+
     if msg.value == msg.max then
       -- interpret this as pressed
         -- check if this button has been pressed recently
@@ -130,22 +165,30 @@ function MessageStream:input_message(msg)
         -- else, add to pressed_buttons
         -- todo: check if already pressed, and skip adding
 
-        -- table.insert(self.pressed_buttons,#self.pressed_buttons+1,msg)
-        -- print_r(self.pressed_buttons)
+        -- if the input source was the virtual control surface, we do
+        -- not add the button to the list of pressed buttons (not while
+        -- the control surface doesn't have a release event)
+        if(not msg.is_virtual)then
+          table.insert(self.pressed_buttons,#self.pressed_buttons+1,msg)
+        end
 
         -- broadcast to listeners
         for _,listener in ipairs(self.press_listeners)  do 
           listener.handler() 
         end
 
+
       -- check other held buttons:
         -- if combination is matched, invoke combination_press, and add held buttons 
         -- to ignored_buttons (so the release won't trigger)
-    else 
-      if msg.value == msg.minimum then
+    elseif msg.value == msg.min then
         -- interpret this as release
-          -- remove from pressed_buttons
-      end
+        -- remove from pressed_buttons
+        for i,__ in ipairs(self.pressed_buttons) do
+          if(msg.id == __.id) then
+            table.remove(self.pressed_buttons,i)
+          end
+        end
     end
 
   else
@@ -153,4 +196,64 @@ function MessageStream:input_message(msg)
   end
 end
 
+
+--[[----------------------------------------------------------------------------
+-- Duplex.Message
+----------------------------------------------------------------------------]]--
+
+--[[
+
+The Message class is a container for messages, closely related to the ControlMap
+
+? use meta-table methods to control "undefined" values ?
+
+--]]
+
+
+--==============================================================================
+
+class 'Message' 
+
+function Message:__init(device)
+  TRACE('Message:__init')
+
+  -- the context control how the number/value is output,
+  -- it might indicate a CC, or OSC message
+  self.context = nil
+
+  -- the is the actual value for the chosen parameter
+  -- (not to be confused with the control-map value)
+  self.value = nil
+
+  -- meta values are useful for further refinement of messages,
+  -- for example by defining the expected/allowed range of values
+
+  self.id = nil --  unique id for each parameter
+  self.group_name = nil --  name of the parent group 
+  self.index = nil --  (int) index within control-map group, zero-based
+  self.column = nil --  (int) column, starting from 1
+  self.row = nil --  (int) row, starting from 1
+  self.timestamp = nil --  set by os.clock() 
+  self.name = nil --  the parameter name
+  self.max = nil --  maximum accepted/output value
+  self.min = nil --  minimum accepted/output value
+  
+  -- the input method type - CONTROLLER_BUTTON/ENCODER/etc. 
+  self.input_method = nil 
+
+  -- true once the button is held for a while
+  self.__held_event_fired = false
+
+  -- true when message is fired from the virtual control surface
+  self.__is_virtual = false
+
+end
+
+
+--------------------------------------------------------------------------------
+
+function Message:__tostring()
+  return string.format("message: context:%s, group_name:%s",
+    totring(self.context), tostring(self.group_name))
+end
 

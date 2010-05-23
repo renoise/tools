@@ -114,12 +114,28 @@ end
 
 --------------------------------------------------------------------------------
 
--- handle periodic updates 
+-- update visual appeareance
+
+function Application:update_app()
+	self:stop_app()
+end
+
+
+--------------------------------------------------------------------------------
+
+-- handle periodic updates (many times per second)
 
 function Application:idle_app()
 
 end
 
+--------------------------------------------------------------------------------
+
+-- called when a new document becomes available
+
+function Application:on_new_document()
+
+end
 
 --------------------------------------------------------------------------------
 
@@ -130,7 +146,6 @@ function Application:__create_dialog()
 		self.name,self.view
 	)
 end
-
 
 --------------------------------------------------------------------------------
 
