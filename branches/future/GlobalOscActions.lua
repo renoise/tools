@@ -20,7 +20,6 @@
  ---- Realtime Messages
  
  -- TODO: list all
- /renoise/transport/XXX
  /renoise/trigger/XXX
 
  
@@ -88,12 +87,14 @@ local function add_message(message, arguments_or_handler, handler)
   assert(message_map[message] == nil, 
     "message is already registered")
   
+  -- arguments + handler
   if (handler) then
     message_map[message] = { 
       handler = handler, 
       arguments = arguments_or_handler 
     }
   
+  -- no arguments + handler
   else
     message_map[message] = { 
       handler = arguments_or_handler, 
@@ -102,44 +103,10 @@ local function add_message(message, arguments_or_handler, handler)
   end
   
 end
-
  
-------------------------------------------------------------------------------
--- Messages
-------------------------------------------------------------------------------
-
--- transport
-
-add_message("/transport/start", 
-  function(arguments)
-    local play_mode = renoise.Transport.PLAYMODE_RESTART_PATTERN
-    renoise.song().transport:start(play_mode)
-  end
-)
-
-add_message("/transport/stop", 
-  function(arguments)
-    renoise.song().transport:stop()
-  end
-)
-
-add_message("/transport/bpm", { argument("bpm_value", "number") }, 
-  function(arguments)
-    local bpm = math.max(32, math.min(999, arguments[1].value))
-    renoise.song().transport.bpm = bpm
-  end
-)
-
-add_message("/transport/lpb", { argument("lpb_value", "number") }, 
-  function(arguments)
-    local lpb = math.max(1, math.min(255, arguments[1].value))
-    renoise.song().transport.lpb = lpb
-  end
-)
-
 
 ------------------------------------------------------------------------------
--- Evaluate Message
+-- Evaluate Environment
 ------------------------------------------------------------------------------
 
 -- environment for expressions. may only access a few safe globals and modules
@@ -183,6 +150,63 @@ end
 
 
 ------------------------------------------------------------------------------
+-- Message Helpers
+------------------------------------------------------------------------------
+
+-- clamp_value
+
+local function clamp_value(value, min_value, max_value)
+  return math.min(max_value, math.max(value, min_value))
+end
+
+
+------------------------------------------------------------------------------
+-- Messages
+------------------------------------------------------------------------------
+
+-- evaluate
+
+add_message("/evaluate", { argument("expression", "string") },  
+  function(expression)
+    print(("OSC Message: evaluating '%s'"):format(expression))
+
+    local succeeded, error_message = evaluate(expression)
+    if (not succeeded) then
+      print(("*** expression failed: '%s'"):format(error_message))
+    end
+  end
+)
+
+
+-- transport
+
+add_message("/transport/start", 
+  function()
+    local play_mode = renoise.Transport.PLAYMODE_RESTART_PATTERN
+    renoise.song().transport:start(play_mode)
+  end
+)
+
+add_message("/transport/stop", 
+  function()
+    renoise.song().transport:stop()
+  end
+)
+
+add_message("/transport/bpm", { argument("bpm_value", "number") }, 
+  function(bpm)
+    renoise.song().transport.bpm = clamp_value(bpm, 32, 999)
+  end
+)
+
+add_message("/transport/lpb", { argument("lpb_value", "number") }, 
+  function(lpb)
+    renoise.song().transport.lpb = clamp_value(bpm, 1, 255)
+  end
+)
+
+
+------------------------------------------------------------------------------
 -- Interface
 ------------------------------------------------------------------------------
 
@@ -190,9 +214,9 @@ end
 
 function available_messages()
   local ret = table.create {}
-  
+
   for name, message in pairs(message_map) do
-    ret.insert {
+    ret:insert {
       name = name,
       arguments = message.arguments
     }
@@ -206,39 +230,27 @@ end
 
 function process_message(pattern, arguments)
   local handled = false
+  local message = message_map[pattern]
   
-  -- handle "evaluate" messages
-  if (pattern == "/evaluate") then
-    if (#arguments == 1 and type(arguments[1].value) == "string") then
-      print(("OSC Message: evaluating '%s'"):format(arguments[1].value))
-      
-      local succeeded, error_message = evaluate(arguments[1].value)
-      if (not succeeded) then
-        print(("*** expression failed: '%s'"):format(error_message))
-      end
-
-      handled = true
-    end
- 
-  -- else find a matching message and apply it (TODO: pattern matching)
-  else
-    local match = message_map[pattern]
+  -- find message, compare argument count
+  if (message and #message.arguments == #arguments) then
+    local arguments_match = true
+    local argument_values = table.create{}
     
-    if (match) then
-      if (#match.arguments == #arguments) then
-        local arguments_match = true
-        for i = 1, #arguments do
-          if (match.arguments[i].type ~= type(arguments[i].value)) then 
-            arguments_match = false
-            break
-          end
-        end
-        
-        if (arguments_match) then
-          match.handler(arguments)
-          handled = true
-        end
+    -- check argument types
+    for i = 1, #arguments do
+      if (message.arguments[i].type == type(arguments[i].value)) then 
+        argument_values:insert(arguments[i].value)
+      else
+        arguments_match = false
+        break
       end
+    end
+    
+    -- invoke the message
+    if (arguments_match) then
+      message.handler(unpack(argument_values))
+      handled = true
     end
   end
     
