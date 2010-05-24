@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <!-- Tool scripts must describe themselves through a manifest XML, to let Renoise -->
-<!-- and tool brwsers know which API version the tool relies on, what "it can do" -->
+<!-- and tool browsers know which API version the tool relies on, what "it can do" -->
 <!-- and so on,  without actually loading/executing it. -->
 
 <!-- Root node name of the manifest.xml. Must be 'RenoiseScriptingTool' -->
@@ -20,7 +20,7 @@
   <!-- The version is evaluated as a double precision floating point value -->
   <Version>1.0</Version>
   
-  <!-- Unique identifier for your tool. The identidier must match the XRNX bundle name -->
+  <!-- Unique identifier for your tool. The identifier must match the XRNX bundle name -->
   <!-- without the extension .xrnx. This will be done automatically by Renoise -->
   <!-- when installing tools -->
   <!-- The Id should be a string with 3 parts, separated by dots, like org.superduper.tool.--> 
@@ -51,12 +51,12 @@
   <!-- Optional relative path and name of an icon file, which may be shown -->
   <!-- in tool browsers. The icon must be provided as PNG file and should have -->
   <!-- a size of 128x128 pixels -->
-  <Icon>./icon.png</Icon>
+  <Icon>icon.png</Icon>
   
   <!-- Optional http:// based URL of the tools homepage, if available... -->
   <Homepage>http://scripts.renoise.com</Homepage>
 
-   <!-- Supported platforms for the tool. When not specified, its asumed that the tool -->
+   <!-- Supported platforms for the tool. When not specified, its assumed that the tool -->
    <!-- is platform independent, else one or more of "Windows, Mac, Linux" are expected -->
   <Platform>Windows, Mac, Linux</Platform>
   
