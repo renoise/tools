@@ -805,6 +805,12 @@ function available_controls()
       min = 0,
       max = 55,
       value = 5,
+      tostring = function(value) 
+        return ("0x%.2X"):format(value)
+      end,
+      tonumber = function(str) 
+        return tonumber(str, 0x10)
+      end,
       notifier = function(value)
         show_status(("valuebox value changed to '%d'"):
           format(value))

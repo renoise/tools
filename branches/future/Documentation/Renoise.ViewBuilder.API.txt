@@ -517,6 +517,22 @@ valuebox.max -> [number]
 -- get/set the current value
 valuebox.value
 
+-- valid in the construction table only: setup custom rules on how the number
+-- should be displayed. both, 'tostring' and  'tovalue' must be set, or none
+-- of them. If none are set, a default string/number conversion is done, which
+-- simply shows the number with 3 digits after the decimal point.
+--
+-- when defined, 'tostring' must be a function with one parameter, the to be
+-- converted number, and must return a string or nil (nothing).
+-- 'tonumber' must be a function with one parameter and gets the to be
+-- converted string passed, returning a a number or nil. when returning nil,
+-- no conversion will be done and the value is not changed.
+--
+-- note: when any of the callbacks fails with an error, both will be disabled
+-- to avoid floods of error messages
+valuefield.tostring -> (function(number) -> [string])
+valuefield.tovalue -> (function(string) -> [number])
+
 -- valid in the construction table only: set up a value notifier
 valuebox.notifier -> (function(value))
 
