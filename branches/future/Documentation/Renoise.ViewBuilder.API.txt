@@ -646,7 +646,8 @@ valuefield.notifier -> (function(number))
 --------------------------------------------------------------------------------
 
 -- a slider with <> buttons, which allows showing / editing real values in
--- a custom range
+-- a custom range. a slider can be horizontal or vertical. will flip its layout 
+-- according to the set width and height and is by default horizontal.
 
 --[[
  +---+---------------+
@@ -680,7 +681,9 @@ slider.notifier -> (function(number))
 -- renoise.Views.MiniSlider (inherits from View, 'minislider' in the builder)
 --------------------------------------------------------------------------------
 
--- same as a slider, but without <> buttons and a really tiny height
+-- same as a slider, but without <> buttons and a really tiny height. just like
+-- the slider a mini slider can be horizontal or vertical. it will flip its layout 
+-- according to the set width and height and is by default horizontal.
 
 --[[
  --------[]
@@ -706,7 +709,6 @@ slider.value
 
 -- valid in the construction table only: set up a value notifier
 slider.notifier -> (function(number))
-
 
 
 --------------------------------------------------------------------------------
@@ -744,7 +746,6 @@ rotary.value
 
 -- valid in the construction table only: set up a value notifier
 rotary.notifier -> (function(number))
-
 
 
 --==============================================================================

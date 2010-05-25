@@ -654,7 +654,9 @@ function available_controls()
   local DIALOG_MARGIN = renoise.ViewBuilder.DEFAULT_DIALOG_MARGIN
   local CONTENT_SPACING = renoise.ViewBuilder.DEFAULT_CONTROL_SPACING
   local CONTENT_MARGIN = renoise.ViewBuilder.DEFAULT_CONTROL_MARGIN
-
+  local DEFAULT_CONTROL_HEIGHT = renoise.ViewBuilder.DEFAULT_CONTROL_HEIGHT
+  local DEFAULT_MINI_CONTROL_HEIGHT = renoise.ViewBuilder.DEFAULT_MINI_CONTROL_HEIGHT
+  
   local TEXT_ROW_WIDTH = 80
 
 
@@ -911,6 +913,38 @@ function available_controls()
   }
   
   
+  -- v sliders
+  local vslider_column = vb:column {
+    vb:text {
+      text = "vb:(mini)slider - flipped"
+    },
+    vb:row {
+      vb:slider {
+        min = 1.0,
+        max = 100,
+        value = 20.0,
+        width = DEFAULT_CONTROL_HEIGHT,
+        height = 120,
+        notifier = function(value)
+          show_status(("v slider value changed to '%.1f'"):
+            format(value))
+        end
+      },
+      vb:minislider {
+        min = 1.0,
+        max = 100,
+        value = 20.0,
+        width = DEFAULT_MINI_CONTROL_HEIGHT,
+        height = 60,
+        notifier = function(value)
+          show_status(("v mini slider value changed to '%.1f'"):
+            format(value))
+        end
+      }
+    }
+  }
+  
+  
   -- CLOSE BUTTON
     
   local close_button_row = vb:horizontal_aligner {
@@ -933,23 +967,25 @@ function available_controls()
     spacing = CONTENT_SPACING,
     uniform = true,
 
-    -- controls
-    textfield_row, 
-    bitmapview_row, 
-    button_row, 
-    checkbox_row, 
-    switch_row, 
-    popup_row, 
-    chooser_row, 
-    valuefield_row, 
-    valuebox_row, 
-    slider_row,
-    minislider_row,
-    rotary_row,
+    vb:column {
+      textfield_row, 
+      bitmapview_row, 
+      button_row, 
+      checkbox_row, 
+      switch_row, 
+      popup_row, 
+      chooser_row, 
+      valuefield_row, 
+      valuebox_row, 
+      slider_row,
+      minislider_row,
+      rotary_row,
+      
+      vb:space { height = 2*CONTENT_SPACING },
     
-    -- space
-    vb:space { height = 2*CONTENT_SPACING },
-
+      vslider_column
+    },
+    
     -- close
     close_button_row
   }
