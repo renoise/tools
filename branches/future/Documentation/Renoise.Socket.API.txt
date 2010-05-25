@@ -148,23 +148,38 @@ socket_client.peer_port -> [number]
 socket_client:send(message) ->
   [success (boolean), error_message (string or nil)]
 
--- receive a message from the the connected server with the given timeout in
--- milliseconds.
+-- receive a message string from the the connected server with the given 
+-- timeout in milliseconds. mode can be one of "*line", "*all" or a number > 0, 
+-- like Luas io.read's. \param timeout can be 0, which is useful for 
+-- receive("*all"). this will only check and read pending data from the 
+-- sockets queue.
+--
+-- mode "*line": will receive new data from the server or flush pending data 
+--   that makes up a "line": a string that ends with a newline. remaining data
+--   is kept buffered for upcoming receive calls and any kind of newlines 
+--   are supported. the returned line will not contain the newline characters.
+--
+-- mode "*all": reads all pending data from the peer socket and also flushes 
+--   internal buffers from previous receive line/byte calls (when present).
+--   This will NOT read the entire requested content, but only the current 
+--   buffer that is queued for the local socket from the peer. To read an 
+--   entire HTTP page or file you may have to call receive("*all") multiple 
+--   times until you got all you expect to get. 
+--
+-- mode "number > 0": tryies reading \param NumberOfBytes od data from the 
+--   peer. Note that the timeout may be applied more than once, if more than 
+-   one socket read is needed to receive the requested block.
+-- 
 -- when receiving failed or timed-out, the returned message will be nil and 
 -- the returned error_message is set. The error message is "timeout" on timeouts, 
 -- "disconnected" when the server actively refused/disconnected your client. 
--- Any other errors are system dependent, and should only be used for display 
+-- any other errors are system dependent, and should only be used for display 
 -- purposes.
--- please note that the server can refuse the connection at any time. once you
--- got an error from receive, and this error is not a "timeout", the socket will 
--- already be closed and thus must be recreted in order to retry the 
--- communication. any attempts to use a closed socket connection will fire a 
--- runtime error.
--- The number of bytes that are read, retuned by receive, is simply what's 
--- in the sockets current buffer queue, so you can not rely on this. multiple 
--- calls to receive might be needed to get what you expect to get from the 
--- server.
-socket_client:receive(timeout_ms) ->
+-- once you got an error from receive, and this error is not a "timeout", the 
+-- socket will already be closed and thus must be recreted in order to retry the 
+-- communication with the server. any attempts to use a closed socket will fire
+-- a runtime error.
+socket_client:receive(mode, timeout_ms) ->
   [message (string or nil), error_message (string or nil)]
 
 
