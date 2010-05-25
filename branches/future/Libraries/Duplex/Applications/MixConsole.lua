@@ -296,6 +296,8 @@ end
 --------------------------------------------------------------------------------
 
 function MixConsole:on_new_document()
+  TRACE("MixConsole:on_new_document")
+  
   self:__attach_to_song(renoise.song())
   self:update()
 
@@ -307,50 +309,63 @@ end
 -- invoked when a new document becomes available
 
 function MixConsole:__attach_to_song(song)
+
+  -- update on track changes in the song
   song.tracks_observable:add_notifier(
     function()
-      TRACE("PatternMatrix:tracks_changed fired...")
-      self:add_observables()
+      TRACE("MixConsole:tracks_changed fired...")
+      self:__attach_to_tracks()
       self:update()
     end
   )
-  self:add_observables()
 
+  -- and immediately attach to the current track set
+  self:__attach_to_tracks()
 end
+
 
 --------------------------------------------------------------------------------
 
 -- add notifiers to parameters
 -- invoked when tracks are added/removed/swapped
 
-function MixConsole:add_observables()
-  TRACE("MixConsole:add_observables()")
+function MixConsole:__attach_to_tracks()
+  TRACE("MixConsole:__attach_to_tracks()")
 
-  local observable
-  for i=1,self.horizontal_size do
-    if renoise.song().tracks[i] then
+  local tracks = renoise.song().tracks
 
-      -- track volume level 
-      observable = renoise.song().tracks[i].prefx_volume.value_string_observable
-      local function slider_set()
+  -- detach all previously added notifiers first
+  for _,track in pairs(tracks) do
+    track.prefx_volume.value_observable:remove_notifier(self)
+    track.mute_state_observable:remove_notifier(self) 
+  end
+  
+  -- attach to the new ones in the order we want them
+  for i=1,math.min(#tracks,self.horizontal_size) do
+    local track = tracks[i]
+    
+    -- track volume level 
+    track.prefx_volume.value_observable:add_notifier(
+      self, 
+      function()
         if not self.active then
           return
         end
-        local value = renoise.song().tracks[i].prefx_volume.value
+        local value = track.prefx_volume.value
         -- compensate for potential loss of precision 
         if not compare(self.sliders[i].value,value,1000) then
           self:set_track_volume(i,value)
         end
-      end
-      observable:add_notifier(slider_set)
+      end 
+    )
 
-      -- track mute-state 
-      observable = renoise.song().tracks[i].mute_state_observable
-      local function button_set()
-        self:set_track_mute(i,renoise.song().tracks[i].mute_state)
-      end
-      observable:add_notifier(button_set)
-
-    end
+    -- track mute-state 
+    track.mute_state_observable:add_notifier(
+      self, 
+      function()
+        self:set_track_mute(i, track.mute_state)
+      end 
+    )
   end
 end
+
