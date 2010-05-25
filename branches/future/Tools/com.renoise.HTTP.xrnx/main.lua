@@ -4,7 +4,6 @@
 
 require "log"
 require "util"
-require "SocketReader"
 
 local log = Log(Log.ALL)
 
@@ -22,6 +21,7 @@ renoise.tool():add_menu_entry {
   end
 }
 
+
 -------------------------------------------------------------------------------
 --  Debug
 -------------------------------------------------------------------------------
@@ -33,6 +33,7 @@ if true then
     start()
   end
 end 
+
 
 -------------------------------------------------------------------------------
 --  Main
@@ -50,69 +51,154 @@ Request.OPTIONS = "OPTIONS"
 
 function Request:__init(url, method)
   method = method or Request.GET
-  local parsed_url = Util:parse(url)
+  
+  self.method = method
+  self.url = url
+  
+  self.client = nil
+  self.contents = table.create {}
+  self.length = 0
+  self.complete = false
 
+  self.callback = function(socket_error) end
+end
+
+
+-- read_header
+
+function Request:read_header()  
+  
+  -- connect 
+  local parsed_url = Util:parse(self.url)
+
+  if not (parsed_url and parsed_url.host) then
+     return false, "Invalid URL"
+  end
+  
+  local client, socket_error = renoise.Socket.create_client(
+    parsed_url.host, 80, renoise.Socket.PROTOCOL_TCP)
+
+  self.client = client
+  
+  if not (client) then
+     return false, socket_error
+  end
+  
+  -- request content
   local get_request = string.format(
     "%s %s HTTP/1.1\nHost: %s\r\n\r\n",
-    method, parsed_url.path, parsed_url.host)
+    self.method, parsed_url.path, parsed_url.host)
 
-  local client = renoise.Socket.create_client(
-    parsed_url.host, 80,  renoise.Socket.PROTOCOL_TCP)
-
-  local ok, err = client:send(get_request)
-
-  self.complete = false
-  self.url = url
-  self.contents = table.create()
-  self.callback = function() end
-  self.reader = SocketReader(client)
-  self.length = 0
-  self.header = table.create {}
-
-  self:get_header()
-end
-
-function Request:get_header()      
-    while true do 
-      local line = self.reader:read_line()
-      if (not line) then 
-        break -- unexpected EOF
-      end
-      
-      if (line == "") then 
-        break -- header ends with an empty line
-      end 
-      
-      self.header:insert(line)
-    end
-
-    log:info("=== HEADER ===")
-    rprint(self.header)
-    print("\r\n")
-end
-
-function Request:do_callback()
---  log:info("=== CONTENT ===")
---  rprint(self.contents)
-  self.callback()
-  log:info(self.url .. " has completed.")  
-end
-
-function Request:inc_length(amt)
-  self.length = self.length + amt
-end
-
-function Request:get_content(mode, timeout)
-  local buffer, err = self.reader:read(mode, timeout)
-  if (not buffer) then
-    self:do_callback()
-    return false
-  else
-    self.contents:insert(buffer)
-    self:inc_length(#buffer)
-    log:info(string.format("%d bytes read (%s)", self.length, self.url))
-    return #buffer
+  local ok, socket_error = client:send(get_request)
+  
+  if not (ok) then
+    return false, socket_error
   end
+  
+  -- read the header
+  local header_lines = table.create {}
+     
+  while true do 
+    local line = self.client:receive("*l", 1000)
+    if (not line) then 
+      break -- unexpected EOF
+    end
+    
+    if (line == "") then 
+      break -- header ends with an empty line
+    end 
+    
+    header_lines:insert(line)
+  end
+
+  log:info(("=== HEADER (%s) ==="):format(self.url))
+  rprint(header_lines)
+  print("\n")
+  
+  self.header = Util:parse_message(header_lines:concat("\n"))
+  
+  if (self.header) then
+    return true
+  else
+    return false, "Invalid page header"
+  end
+end
+
+
+-- read_content
+
+function Request:read_content()
+  assert(self.client and self.header, 
+    "read_header failed or was not called")
+  
+  -- read all pending data
+  local timeout = 0
+  
+  local buffer, socket_error = 
+    self.client:receive("*all", timeout)
+  
+  if (buffer) then
+  -- got new data
+    self.contents:insert(buffer)
+    self.length = self.length + #buffer
+
+    -- log
+    if (self.length > 10 * 1024) then
+      log:info(string.format("%d kbytes read (%s)", 
+        self.length / 1024, self.url))
+    else
+      log:info(string.format("%d bytes read (%s)", 
+        self.length, self.url))
+    end
+    
+    if (#buffer >= tonumber(self.header["Content-Length"])) then
+      -- done
+      self:do_callback()
+      return false
+    else
+      -- continue reading
+      return true
+    end
+    
+  else
+  -- timeout or error
+    
+    if (socket_error == "timeout") then
+      -- retry next time (TODO: give up at soume point)
+      return true
+    else
+      -- cancel request
+      self:do_callback(socket_error)
+      return false
+    end
+  end
+end
+
+
+-- do_callback
+
+function Request:do_callback(socket_error)
+
+  -- log
+  log:info(("=== CONTENT (%s) ==="):format(self.url))
+  if (self.length <= 32 * 1024) then
+    rprint(self.contents)
+  else
+    print(" *** lots of content (> 32kB) *** ")
+  end
+  
+  if (socket_error) then
+    log:info(("%s failed with error: '%s'."):format(self.url, socket_error))
+  else
+    log:info(("%s has completed."):format(self.url))  
+  end
+  
+  -- close the connection and invalidate
+  self.client = nil
+  self.header = nil
+
+  -- invoke the external callback (if set)
+  self.callback(socket_error)
 end
 
 
@@ -121,16 +207,14 @@ end
 
 -- Read a few bytes from every request
 local function read()
-    for k,request in ipairs(requests) do
-      if not request.complete then
-        local bytes_received = request:get_content(1460, 10)
-        if (not bytes_received) then
-          request.complete = true
-        end
-      end
+  for k,request in ipairs(requests) do
+    if not (request.complete) then
+      request.complete = not (request:read_content())
     end
-    return true
+  end
+  return true
 end
+
 
 -------------------------------------------------------------------------------
 -- do we have an internet connection?
@@ -139,18 +223,33 @@ function connected()
   return true
 end
 
+
 -------------------------------------------------------------------------------
 
 function http(url, method)
-   requests:insert(Request(url, method))
+  local new_request = Request(url, method)
+  local succeeded, socket_error = new_request:read_header()
+
+  if (succeeded) then
+    requests:insert(new_request)
+  else
+     log:info(("%s failed: %s."):format(url, 
+       (socket_error or "[unknown error]")))
+  end
 end
 
 function start()
   http("http://www.renoise.com/download/checkversion.php")
   http("http://www.renoise.com/download/")
   http("http://www.renoise.com/")
-  --request("http://nl.archive.ubuntu.com/ubuntu-cdimages/10.04/release/ubuntu-10.04-dvd-amd64.iso")
+  
+  http("http://qwe.renoise.com/invalid_host_name.php")
+  http("htsj:invalid_url")
+  
+  -- http("http://mirror.renoise.com/download/Renoise_2_5_1_Demo.dmg")
+  -- http("http://nl.archive.ubuntu.com/ubuntu-cdimages/10.04/release/ubuntu-10.04-dvd-amd64.iso")
 end
+
 
 -------------------------------------------------------------------------------
 --  Idle notifier
@@ -161,3 +260,4 @@ renoise.tool().app_idle_observable:add_notifier(function()
      active = false;
   end
 end)
+
