@@ -38,13 +38,13 @@ function Browser:__init(device_name,app_name)
   if device_name then
     self:set_device_index(device_name)
     if app_name then
-      self:set_application(app_name)
+      self:set_application_index(app_name)
     end
   end
 
-
 end
 
+--------------------------------------------------------------------------------
 
 -- note: changing the active input device list-index will
 -- cause another method, "set_device" to become invoked
@@ -78,7 +78,7 @@ function Browser:set_device(name)
   end
 
   -- "cascading" effect
-  self:set_application("None")
+  self:set_application_index("None")
 
   if (name == "None") then
     self.vb.views.dpx_browser_app_row.visible = false
@@ -304,24 +304,32 @@ end
 
 --------------------------------------------------------------------------------
 
+-- note: changing the active application list-index will
+-- cause another method, "set_application" to become invoked
+
+function Browser:set_application_index(name)
+
+  self.vb.views.dpx_browser_application.value = self.get_list_index(
+    self, "dpx_browser_application", name)
+
+  self.vb.views.dpx_browser_application_checkbox.value = false
+
+end
+
+--------------------------------------------------------------------------------
+
 -- set application as active item 
 -- currently, we display only a single app at a time
 -- but it should be possible to run several apps!
 
 function Browser:set_application(name)
   TRACE("Browser:set_application:",name)
-  --renoise.app():show_warning("not yet implemented")
-
-  self.vb.views.dpx_browser_application.value = self.get_list_index(
-    self, "dpx_browser_application", name)
-    
-  self.vb.views.dpx_browser_application_checkbox.value = false
 
   if self.application then
     self.application:destroy_app()
   end
 
-  -- hide/show the "run" option
+  -- hide/show the "run" option?
   if self.vb.views.dpx_browser_application.value == 1 then
     self.vb.views.dpx_browser_application_active.visible = false
     --self.display:clear()

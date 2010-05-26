@@ -8,9 +8,6 @@ Inheritance: UIComponent
 
 The base class for UI objects
 
-More methods:
-  do_press()
-  do_change()
 
 --]]
 
