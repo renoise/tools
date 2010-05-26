@@ -14,8 +14,8 @@ module("Duplex", package.seeall);
 
 --==============================================================================
 
-class 'PatternMatrix' (Application)
 
+class 'PatternMatrix' (Application)
 
 function PatternMatrix:__init(
     display,
@@ -28,7 +28,21 @@ function PatternMatrix:__init(
 
   Application.__init(self)
 
+  -- options, when current pos is pressed again
+
+  self.PLAY_MODE_CONTINUE = 0  -- nothing happens
+  self.PLAY_MODE_TOGGLE = 1    -- toggle start & stop
+  self.PLAY_MODE_RETRIG = 2    -- retrig the pattern
+
+  -- options, when triggering a pattern "outside" the song
+
+  self.BOUNDS_MODE_STOP = 3     -- stop playback 
+  self.BOUNDS_MODE_IGNORE = 4   -- nothing happens
+
   -- apply arguments 
+
+  self.play_mode = self.PLAY_MODE_RETRIG
+  self.out_of_bounds = self.BOUNDS_MODE_STOP
 
   self.display = display
   self.matrix_group_name = matrix_group_name
@@ -39,15 +53,32 @@ function PatternMatrix:__init(
 
   self.blink_rate = 20
 
+
   -- internal stuff
 
   self.buttons = nil  -- [UIToggleButton,...]
   self.position = nil -- UISlider
 
+  self.__playing = nil
+  self.__play_page = nil  -- the currently playing page
+  self.__edit_page = nil  -- the currently editing page
+  self.__track_offset = 0  -- the track offset (0-#tracks)
+
+  -- the number of lines is used for determining the playback- 
+  -- position within the currently playing pattern (in lines)
+  --self.__num_lines = nil    -- 
+
+  -- the playback position is updated whenever we enter a pattern
   self.__playback_pos = nil
+
+  -- 
+  self.__update_slots_requested = false
+  self.__update_tracks_requested = false
+
+  -- todo: stuff that blinks!
   --self.__blinks = {}
   --self.__blink_count = 0
-  self.__update_slots_requested = false
+
 
   -- final steps
 
@@ -66,8 +97,52 @@ function PatternMatrix:build_app()
 
   local observable = nil
 
+  -- page selector
+
+  self.switcher = UISpinner(self.display)
+  self.switcher.group_name = "Controls"
+  self.switcher.index = 0
+  self.switcher.minimum = 0
+  self.switcher.maximum = 1 
+  self.switcher.palette.foreground_dec.text = "▲"
+  self.switcher.palette.foreground_inc.text = "▼"
+  self.switcher.on_press = function(obj) 
+    if(self.__edit_page~=obj.index)then
+      self.__edit_page = obj.index
+      self:update()
+      if(self.__edit_page~=self.__play_page) then
+        self:update_position(self.__playback_pos.sequence)
+      end
+      return true
+    end
+    return false
+  end
+  self.display:add(self.switcher)
+
+  -- track scrolling 
+
+  self.scroller = UISpinner(self.display)
+  self.scroller.group_name = "Controls"
+  self.scroller.index = 0
+  self.scroller.step_size = 2
+  self.scroller.minimum = 0
+  self.scroller.maximum = 10
+  self.scroller.x_pos = 3
+  self.scroller.palette.foreground_dec.text = "◄"
+  self.scroller.palette.foreground_inc.text = "►"
+  self.scroller.on_press = function(obj) 
+print("self.scroller.on_press:",obj.index)
+    self.__track_offset = obj.index
+    self:update()
+    return true
+  end
+  self.display:add(self.scroller)
+
+  -- play-position
+
   -- quick hack to make a UISlider appear like a selector
-  -- (TODO make proper Selector class)
+  -- (TODO make into proper/custom class, capable of displaying
+  --  the current position, looped range and scheduled pattern(s))
   self.position = UISlider(self.display)
   self.position.group_name = self.position_group_name
   self.position.x_pos = 1
@@ -75,52 +150,76 @@ function PatternMatrix:build_app()
   self.position.toggleable = true
   self.position.flipped = true
   self.position.ceiling = self.height
+  self.position.palette.foreground.text="►"
   self.position.palette.medium.text="·"
   self.position.palette.medium.color={0x00,0x00,0x00}
   self.position:set_size(self.height)
   self.position.on_change = function(obj) 
+
     -- position changed from controller
-    TRACE("position changed :",self.__playback_pos)
+
+    local seq_index = obj.index + (self.height*self.__edit_page)
+    local seq_offset = self.__playback_pos.sequence%self.height
 
     if not self.active then
       return false
     elseif obj.index==0 then
       
-      -- special case: the slider was "toggled"
+      -- the position was "toggled off"
 
-      -- turn off playback
-      --renoise.song().transport.stop(renoise.song().transport)
+      if (self.play_mode == self.PLAY_MODE_RETRIG) then
+        self:retrigger_pattern()
 
-      -- re-trigger the current pattern
-    TRACE("re-trigger the current pattern:",self.__playback_pos)
+      elseif (self.play_mode == self.PLAY_MODE_TOGGLE) then
+        renoise.song().transport:stop()
+      end
 
-      renoise.song().transport:trigger_sequence(self.__playback_pos.sequence)
+    elseif not renoise.song().sequencer.pattern_sequence[seq_index] then
 
-    elseif not renoise.song().sequencer.pattern_sequence[obj.index] then
-      print('Notice: Pattern is out of bounds')
+      -- position out of bounds
+
+      if (self.out_of_bounds == self.BOUNDS_MODE_STOP) then
+        renoise.song().transport:stop()
+        return true -- allow the button to flash briefly 
+      end
       return false
+
+    elseif(self.__playback_pos.sequence==seq_index)then
+
+      -- position toggled back on
+
+      if (self.play_mode == self.PLAY_MODE_RETRIG) then
+        self:retrigger_pattern()
+
+      end
+
     else
-
-      -- instantly change to new song pos
-      local new_pos = renoise.song().transport.playback_pos
-      new_pos.sequence = obj.index
-      renoise.song().transport.playback_pos = new_pos
-      self.__playback_pos = new_pos
-
-      -- start playback if not playing
+      -- switch to new position
       if (not renoise.song().transport.playing) then
-        renoise.song().transport:start(
-          renoise.Transport.PLAYMODE_RESTART_PATTERN)
+        -- start playback if stopped
+        if renoise.song().sequencer.pattern_sequence[seq_index] then
+          renoise.song().transport:trigger_sequence(seq_index)
+        end
+      else
+        -- already playing, instantly switch position
+        local new_pos = renoise.song().transport.playback_pos
+        new_pos.sequence = seq_index
+        -- if the desired pattern-line does not exist,start from 0
+        local patt_idx = renoise.song().sequencer.pattern_sequence[seq_index]
+        local num_lines = renoise.song().patterns[patt_idx].number_of_lines
+        if(new_pos.line>num_lines)then
+          new_pos.line = 1
+        end
+        renoise.song().transport.playback_pos = new_pos
       end
     end
-    
     return true
   end
   self.display:add(self.position)
 
+  -- grid buttons
+
   self.buttons = {}
-
-
   for x=1,self.width do
     self.buttons[x] = {}
 
@@ -150,21 +249,22 @@ function PatternMatrix:build_app()
 
         local seq = renoise.song().sequencer.pattern_sequence
         local master_idx = get_master_track_index()
+        local seq_offset = self.__edit_page*self.height
 
         if not self.active then
           return false
-        elseif x == master_idx then
+        elseif x+self.__track_offset == master_idx then
           print('Notice: Master-track cannot be muted')
           return false
-        elseif not renoise.song().tracks[x] then
+        elseif not renoise.song().tracks[x+self.__track_offset] then
           print('Notice: Track is outside bounds')
           return false
-        elseif not seq[y] then
+        elseif not seq[y+seq_offset] then
           print('Notice: Pattern is outside bounds')
           return false
         else
           renoise.song().sequencer:set_track_sequence_slot_is_muted(
-            x,y,(not obj.active))-- "active" is negated
+            (x+self.__track_offset),(y+seq_offset),(not obj.active))-- "active" is negated
         end
         return true
       end
@@ -177,7 +277,7 @@ end
 
 --------------------------------------------------------------------------------
 
--- update visual appeareance
+-- update slots visual appeareance 
 
 function PatternMatrix:update()
  
@@ -190,40 +290,192 @@ function PatternMatrix:update()
 
   local sequence = renoise.song().sequencer.pattern_sequence
   local tracks = renoise.song().tracks
+
+  local seq_offset = self.__edit_page*self.height
+  local master_idx = get_master_track_index()
   
-  for track_idx = 1,math.min(#tracks, self.width) do
-    for seq_index = 1,math.min(#sequence, self.height) do
-      local patt_idx = sequence[seq_index]
-      
-      local slot_muted = renoise.song().sequencer:track_sequence_slot_is_muted(
-        track_idx, seq_index)
-      
-      local slot_empty = renoise.song().patterns[patt_idx].tracks[track_idx].is_empty
+  local patt_idx = nil
+  local button = nil
+  local slot_muted = nil
+  local slot_empty = nil
 
-          -- custom palettes for toggle-buttons: 
-      local button = self.buttons[track_idx][seq_index]
+  -- loop through matrix
 
-      if (not slot_empty) then
-        button.palette.foreground.text="■"
-        button.palette.foreground.color={0xff,0xff,0x00}
-        button.palette.foreground_dimmed.text="■"
-        button.palette.foreground_dimmed.color={0xff,0xff,0x00}
-        button.palette.background.text="□"
-        button.palette.background.color={0x80,0x40,0x00}
-     
-          else
-        button.palette.foreground.text="·"
-        button.palette.foreground.color={0x00,0x00,0x00}
-        button.palette.foreground_dimmed.text="·"
-        button.palette.foreground_dimmed.color={0x00,0x00,0x00}
-        button.palette.background.text="▫"
-        button.palette.background.color={0x40,0x00,0x00}
+--  for track_idx = (1+self.__track_offset),(math.min(#tracks, self.width)+self.__track_offset) do
+  for track_idx = (1+self.__track_offset),(self.width+self.__track_offset) do
+    for seq_index = (1+seq_offset),(self.height+seq_offset) do
+
+      button = self.buttons[track_idx-self.__track_offset][seq_index-seq_offset]
+
+      if((sequence[seq_index]) and (renoise.song().tracks[track_idx]))then
+
+        patt_idx = sequence[seq_index]
+        slot_muted = renoise.song().sequencer:track_sequence_slot_is_muted(
+          track_idx, seq_index)
+
+        slot_empty = renoise.song().patterns[patt_idx].tracks[track_idx].is_empty
+
+        if (not slot_empty) then
+          -- slot with content
+          button.palette.foreground.text="■"
+          button.palette.foreground.color={0xff,0xff,0x00}
+          button.palette.foreground_dimmed.text="■"
+          button.palette.foreground_dimmed.color={0xff,0xff,0x00}
+          button.palette.background.text="□"
+          button.palette.background.color={0x80,0x40,0x00} 
+
+          if (track_idx==master_idx)then
+            button.palette.foreground.color={0x40,0xff,0x00}
           end
 
-      button:set_dimmed(slot_empty)
-      button.active = (not slot_muted)
+        else
+          -- empty slot 
+          button.palette.foreground.text="·"
+          button.palette.foreground.color={0x00,0x00,0x00}
+          button.palette.foreground_dimmed.text="·"
+          button.palette.background.text="▫"
+          --button.palette.background.color={0x40,0x00,0x00}
+
+          if (track_idx==master_idx)then -- master track
+            button.palette.foreground_dimmed.color={0x00,0x40,0x00}
+            button.palette.background.color={0x00,0x40,0x00}
+          --elseif(track_idx>master_idx)then -- send track
+          else -- normal track
+            button.palette.foreground_dimmed.color={0x00,0x00,0x00}
+            button.palette.background.color={0x40,0x00,0x00}
+          end
+
+        end
+
+        button:set_dimmed(slot_empty)
+        button.active = (not slot_muted)
+
+      elseif button then
+
+--print("out of bounds",track_idx,seq_index)
+
+        -- out-of-bounds space (below/next to song)
+
+        button.palette.background.text=""
+        button.palette.background.color={0x40,0x40,0x00}
+        button.active = false
+        button:set_dimmed(false)
+
       end
     end
+  end
+end
+
+--------------------------------------------------------------------------------
+
+-- update scroller (when tracks have been changed)
+-- + no event fired
+
+function PatternMatrix:update_track_offset()
+print("PatternMatrix:update_track_offset")
+
+  if((self.scroller.maximum>self.width) and (#renoise.song().tracks>self.width))then
+    -- single page to multiple pages
+print("single page to multiple pages")
+    self.scroller:invalidate()
+--  elseif((self.scroller.maximum>self.width) and (#renoise.song().tracks<self.width))then
+--    -- multiple to single
+--print("multiple to single")
+--    self.scroller:invalidate()
+  end
+  -- allow scrolling "a bit into the void"
+  self.scroller.maximum = #renoise.song().tracks  -- -math.floor(self.width/2)
+
+  -- adjust the index, if the current position is out-of-bounds
+  if(self.scroller.index>=#renoise.song().tracks)then
+print("got here")
+    self.scroller:set_index(#renoise.song().tracks-1)
+    --self:update()
+  end
+
+end
+
+--------------------------------------------------------------------------------
+
+-- update page switcher index 
+-- + no event fired
+
+function PatternMatrix:update_page_switcher()
+  TRACE("PatternMatrix:update_page_switcher()")
+
+  self.switcher:set_index(self.__play_page,true)
+  self.__edit_page = self.__play_page
+
+end
+
+--------------------------------------------------------------------------------
+
+-- update the switcher (when the number of pattern have changed)
+-- + no event fired
+
+function PatternMatrix:update_page_count()
+
+  local idx = self.switcher.index
+  local seq_len = #renoise.song().sequencer.pattern_sequence
+  local page_count = math.floor((seq_len-1)/self.height)
+
+  if((self.switcher.maximum==0) and (page_count>0))then
+    -- from single to multiple pages 
+    self.switcher:invalidate()
+  elseif((self.switcher.maximum>0) and (page_count==0))then
+    -- from multiple to single page  
+    self.switcher:invalidate()
+  --elseif 
+    -- sequence extended to more pages,
+    -- and we are not at the first
+
+  end
+  self.switcher.maximum = page_count
+  -- adjust the index, if the current position is out-of-bounds
+  if(self.switcher.index>page_count)then
+    self.switcher:set_index(page_count)
+  end
+end
+
+--------------------------------------------------------------------------------
+
+-- update position in sequence
+-- @idx: (integer) the index, 0 - song-end
+
+function PatternMatrix:update_position(idx)
+  local pos_idx = nil
+  local play_page = self:get_play_page()
+  -- we are at a visible page?
+  if(self.__edit_page == play_page)then
+    pos_idx = idx-(self.__play_page*self.height)
+  else
+    pos_idx = 0 -- no, hide playback 
+  end
+  self.position:set_index(pos_idx,true)
+  self.position:invalidate()
+
+end
+
+--------------------------------------------------------------------------------
+
+-- retrigger the current pattern
+
+function PatternMatrix:retrigger_pattern()
+
+  local play_pos = self.__playback_pos.sequence
+  if renoise.song().sequencer.pattern_sequence[play_pos] then
+    renoise.song().transport:trigger_sequence(play_pos)
+    self:update_position(play_pos)
+  end
+end
+
+--------------------------------------------------------------------------------
+
+function PatternMatrix:get_play_page()
+
+  local play_pos = renoise.song().transport.playback_pos
+  return math.floor((play_pos.sequence-1)/self.height)
+
 end
 
 --------------------------------------------------------------------------------
@@ -232,6 +484,15 @@ function PatternMatrix:start_app()
   TRACE("PatternMatrix.start_app()")
 
   Application.start_app(self)
+
+  self.__playing = renoise.song().transport.playing
+  self.__playback_pos = renoise.song().transport.playback_pos
+  self.__play_page = self:get_play_page()
+  -- update everything!
+  self:update_page_count()
+  self:update_page_switcher()
+  self:update_track_offset()
+  self:update_position(self.__playback_pos.sequence)
   self:update()
 
 end
@@ -283,22 +544,82 @@ function PatternMatrix:idle_app()
   end
 ]]
 
-  -- updated slots?
+  -- updated tracks/slots?
+  if (self.__update_tracks_requested) then
+    -- note: __update_slots_requested is true as well
+    self.__update_tracks_requested = false
+    self:update_track_offset()
+  end
+  -- 
   if (self.__update_slots_requested) then
     self.__update_slots_requested = false
     self:update()
+    self:update_page_count()
   end
 
-  -- changed pattern?
-  -- ??? this is sometimes triggered, even when we switch instantly?
-  local pos = renoise.song().transport.playback_pos
-  if not (pos.sequence == self.position.index)then
-    self.__playback_pos = pos
-    -- update the position, but do not trigger an event
-    self.position:set_index(pos.sequence,true)
-    self.position:invalidate()
-  end
 
+  if renoise.song().transport.playing then
+
+
+    local pos = renoise.song().transport.playback_pos
+--[[
+    if(self.__num_lines)then
+      -- figure out the progress
+      local complete = (pos.line/self.__num_lines)
+      local counter = math.floor(complete*self.height)
+      if (self.position.index == counter) then
+print("counter",counter)
+        self.progress:set_index(0,true)
+        self.progress:invalidate()
+      else
+        self.progress:set_index(counter,true)
+        self.progress:invalidate()
+      end
+
+    end
+]]
+
+    -- ??? playback_pos might briefly contain the wrong value
+    if (pos.sequence ~= self.__playback_pos.sequence)then
+
+      -- changed pattern
+      self.__playback_pos = pos
+
+      -- update number of lines (used for progress)
+      --local patt_idx = renoise.song().sequencer.pattern_sequence[renoise.song().selected_sequence_index]
+      --self.__num_lines = renoise.song().patterns[patt_idx].number_of_lines
+
+      -- check if we need to change page
+      local play_page = self:get_play_page()
+      if(play_page~=self.__play_page)then
+        self.__play_page = play_page
+        if(renoise.song().transport.follow_player)then
+          if(self.__play_page~=self.__edit_page)then
+            -- update only when following play-pos
+            self:update_page_switcher()
+            self:update()
+          end
+        end
+      end
+      self:update_position(pos.sequence)
+    elseif (not self.__playing) then
+      -- playback resumed
+      self:update_position(self.__playback_pos.sequence)
+    elseif (self.position.index == 0) and 
+      (self.__play_page==self.__edit_page) then
+      -- position now in play-range
+      self:update_position(self.__playback_pos.sequence)      
+    end
+
+    self.__playing = true
+
+  else
+    -- if we stopped playing, turn off position
+    if(self.__playing) then
+      self:update_position(0)
+      self.__playing = false
+    end
+  end
 end
 
 --------------------------------------------------------------------------------
@@ -308,6 +629,7 @@ end
 function PatternMatrix:on_new_document()
   TRACE("PatternMatrix:on_new_document()")
   self:__attach_to_song(renoise.song())
+  self:update_page_count()
   self:update()
 
 end
@@ -388,6 +710,7 @@ function PatternMatrix:__attach_to_song(song)
     function()
       TRACE("PatternMatrix:tracks_changed fired...")
       self.__update_slots_requested = true
+      self.__update_tracks_requested = true
       attach_slot_notifiers()
     end
   )

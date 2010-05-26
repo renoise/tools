@@ -5,15 +5,22 @@
 --[[
 
 Inheritance: UIComponent > UISlider
+Requires: Globals, Display, CanvasPoint
 
-- combine multiple input controls into a single slider
-- different input methods: buttons or sliders/encoders
+About
+
+The Slider supports different input methods: buttons or sliders/encoders
 - - use buttons to quantize the slider input
 - - use faders/encoders to divide value into smaller segments
 - display supports horizontal/vertical and axis flipping
-
+- display as normal/dimmed version
 - minimum unit size: 1x1
-- maximum unit size: unlimited?
+
+Events
+
+  on_change() - invoked whenever the slider recieve a new value
+
+
 
 --]]
 
@@ -170,6 +177,7 @@ end
 
 -- setting value will also set index
 -- @val (float) 
+-- @skip_event (boolean) skip event handler
 
 function UISlider:set_value(val,skip_event)
   TRACE("UISlider:set_value:",val)
@@ -196,6 +204,7 @@ end
 
 -- setting index will also set value
 -- @idx (integer) 
+-- @skip_event (boolean) skip event handler
 
 function UISlider:set_index(idx,skip_event)
   TRACE("UISlider:set_index:",idx)

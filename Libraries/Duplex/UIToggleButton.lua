@@ -7,7 +7,17 @@
 Inheritance: UIComponent > UIToggleButton
 Requires: Globals, Display, MessageStream, CanvasPoint
 
+About
+
 UIToggleButton is a simple rectangular toggle button
+- display as normal/dimmed version
+- minimum unit size: 1x1
+
+Events
+
+  on_change() - invoked whenever the button change it's active state
+  on_hold()   - (optional) invoked when the button is held for a while
+
 
 --]]
 
@@ -43,15 +53,19 @@ end
 function UIToggleButton:do_press()
   TRACE("UIToggleButton:do_press")
   
-  local msg = self.get_msg(self)
-  if not (self.group_name == msg.group_name) then
-    return 
-  end
-  if not self.test(self,msg.column,msg.row) then
-    return 
-  end
+  if (self.on_change ~= nil) then
 
-  self.toggle(self)
+    local msg = self.get_msg(self)
+    if not (self.group_name == msg.group_name) then
+      return 
+    end
+    if not self.test(self,msg.column,msg.row) then
+      return 
+    end
+
+    self.toggle(self)
+
+  end
 
 end
 
@@ -63,18 +77,20 @@ end
 function UIToggleButton:do_change()
   TRACE("UIToggleButton:do_change()")
 
-  local msg = self.get_msg(self)
-  if not (self.group_name == msg.group_name) then
-    return 
-  end
-  if not self.test(self,msg.column,msg.row) then
-    return 
-  end
-
-  if self.active and msg.value < msg.max then
-    self.toggle(self)
-  elseif not self.active and msg.value > msg.min then
-    self.toggle(self)
+  if (self.on_change ~= nil) then
+    local msg = self.get_msg(self)
+    if not (self.group_name == msg.group_name) then
+      return 
+    end
+    if not self.test(self,msg.column,msg.row) then
+      return 
+    end
+    -- toggle when moved away from min/max values
+    if self.active and msg.value < msg.max then
+      self.toggle(self)
+    elseif not self.active and msg.value > msg.min then
+      self.toggle(self)
+    end
   end
 
 end
@@ -82,18 +98,19 @@ end
 --------------------------------------------------------------------------------
 
 -- user input via (held) button
+-- on_hold() is the optional handler method
 
 function UIToggleButton:do_hold()
   TRACE("UIToggleButton:do_hold()")
 
-  local msg = self.get_msg(self)
-  if not (self.group_name == msg.group_name) then
-    return 
-  end
-  if not self.test(self,msg.column,msg.row) then
-    return 
-  end
   if (self.on_hold ~= nil) then
+    local msg = self.get_msg(self)
+    if not (self.group_name == msg.group_name) then
+      return 
+    end
+    if not self.test(self,msg.column,msg.row) then
+      return 
+    end
     self:on_hold()
   end
 
@@ -123,10 +140,10 @@ function UIToggleButton:set(value)
   TRACE("UIToggleButton:set", value)
   
   if (self._cached_active ~= value) then
-    self._cached_active = value
 
+    self._cached_active = value
     self.active = value
-    self.invalidate(self)
+    --self.invalidate(self)
   
     if (self.on_change ~= nil) then
       self:invoke_handler()

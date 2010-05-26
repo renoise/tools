@@ -14,6 +14,7 @@ require "Duplex/Canvas"
 require "Duplex/UIComponent"
 require "Duplex/UIToggleButton"
 require "Duplex/UISlider"
+require "Duplex/UISpinner"
 require "Duplex/ControlMap"
 require "Duplex/Device"
 require "Duplex/MIDIDevice"
@@ -45,7 +46,6 @@ function handle_app_idle_notification()
 end
 
 function handle_app_new_document()
-print("handle_app_new_document()")
   if app then
     app:on_new_document()
   end

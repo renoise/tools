@@ -27,8 +27,7 @@ end
 
 --------------------------------------------------------------------------------
 
--- called when changing the size of the parent display-object, 
--- to ensure that write() will not throw an error
+-- this should be called whenever the size of the parent UIComponent changes
 
 function Canvas:set_size(width,height)
   TRACE('Canvas:set_size',width,height)
@@ -49,6 +48,8 @@ end
 
 --------------------------------------------------------------------------------
 
+-- write a single point to the canvas
+
 function Canvas:write(point,x,y)
   TRACE("Canvas:write", point, x, y)
   
@@ -59,6 +60,8 @@ end
 
 
 --------------------------------------------------------------------------------
+
+-- fill entire canvas with given point
 
 function Canvas:fill(point)
   for x = 1,self.width do
@@ -72,6 +75,9 @@ end
 
 --------------------------------------------------------------------------------
 
+-- if point is different from existing value, mark the canvas as changed 
+-- both color, text and value are considered when doing the comparison
+
 function Canvas:check_delta(point,x,y)
   if not self.buffer[x][y] 
   or not(self.buffer[x][y].color == point.color) 
@@ -84,6 +90,9 @@ end
 
 
 --------------------------------------------------------------------------------
+
+-- after the display has finished drawing the object, this is called
+-- to clear the delta buffer and mark the canvas as unchanged
 
 function Canvas:clear_delta()
   self.delta = {{}}
@@ -130,9 +139,8 @@ end
 
 --------------------------------------------------------------------------------
 
--- apply(): import key/values pairs from external 
--- object without replacing existing keys
--- todo: simply import text and color!
+-- apply(): apply values from external table
+-- use this to quickly customize the look of a single point
 
 function CanvasPoint:apply(obj)
   TRACE("CanvasPoint:apply", obj)
