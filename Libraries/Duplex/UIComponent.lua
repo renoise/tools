@@ -40,8 +40,8 @@ function UIComponent:__init(display)
   -- request refresh
   self.dirty = true 
 
-  -- sync width, height with the canvas
-  self:set_size(self.width, self.width)
+  -- sync our width, height with the canvas
+  UIComponent.set_size(self, self.width, self.width)
 end
 
 
