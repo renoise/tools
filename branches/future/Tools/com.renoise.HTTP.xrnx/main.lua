@@ -49,11 +49,12 @@ Request.POST = "POST"
 Request.HEAD = "HEAD"
 Request.OPTIONS = "OPTIONS"
 
-function Request:__init(url, method)
+function Request:__init(url, method, save_file)
   method = method or Request.GET
   
-  self.method = method
   self.url = url
+  self.method = method
+  self.save_downloaded_file = save_file 
   
   self.client = nil
   self.contents = table.create {}
@@ -151,7 +152,7 @@ function Request:read_content()
         self.length, self.url))
     end
     
-    if (#buffer >= tonumber(self.header["Content-Length"])) then
+    if (self.length >= tonumber(self.header["Content-Length"])) then
       -- done
       self:do_callback()
       return false
@@ -165,6 +166,7 @@ function Request:read_content()
     
     if (socket_error == "timeout") then
       -- retry next time (TODO: give up at soume point)
+      log:info(string.format("read timeout (%s)", self.url))
       return true
     else
       -- cancel request
@@ -180,17 +182,40 @@ end
 function Request:do_callback(socket_error)
 
   -- log
-  log:info(("=== CONTENT (%s) ==="):format(self.url))
+  log:info(("=== CONTENT (%d bytes from %s) ==="):format(
+    self.length, self.url))
   if (self.length <= 32 * 1024) then
     rprint(self.contents)
   else
-    print(" *** lots of content (> 32kB) *** ")
+    print(" *** lots of content (> 32 kbytes) *** ")
   end
   
   if (socket_error) then
     log:info(("%s failed with error: '%s'."):format(self.url, socket_error))
   else
     log:info(("%s has completed."):format(self.url))  
+    
+    if (self.save_downloaded_file) then
+      local _, _, filename, extension = self.url:find(".+[/\\](.+)%.(.+)$")
+      assert(filename and extension, "failed to extract the filename")
+      
+      local file_name_and_path = renoise.app():prompt_for_filename_to_write(
+        extension, ("Save %s.%s as"):format(filename, extension))
+      
+      if (file_name_and_path and file_name_and_path ~= "") then
+        local file = io.open(file_name_and_path, "wb")
+        
+        if (file) then
+          for _,buffer in pairs(self.contents) do
+            file:write(buffer)
+          end
+          file:close()
+        else
+          log:info(("failed to open '%s' for writing."):format(
+            file_name_and_path))  
+        end
+      end
+    end
   end
   
   -- close the connection and invalidate
@@ -238,6 +263,19 @@ function http(url, method)
   end
 end
 
+function http_download_file(url)
+  local save_file = true
+  local new_request = Request(url, Request.GET, save_file)
+  local succeeded, socket_error = new_request:read_header()
+
+  if (succeeded) then
+    requests:insert(new_request)
+  else
+     log:info(("%s failed: %s."):format(url, 
+       (socket_error or "[unknown error]")))
+  end
+end
+
 function start()
   http("http://www.renoise.com/download/checkversion.php")
   http("http://www.renoise.com/download/")
@@ -246,7 +284,7 @@ function start()
   http("http://qwe.renoise.com/invalid_host_name.php")
   http("htsj:invalid_url")
   
-  -- http("http://mirror.renoise.com/download/Renoise_2_5_1_Demo.dmg")
+  -- http_download_file("http://mirror.renoise.com/download/Renoise_2_5_1_Demo.exe")
   -- http("http://nl.archive.ubuntu.com/ubuntu-cdimages/10.04/release/ubuntu-10.04-dvd-amd64.iso")
 end
 
