@@ -8,7 +8,6 @@ Inheritance: UIComponent
 
 The base class for UI objects
 
-
 --]]
 
 
@@ -17,23 +16,32 @@ The base class for UI objects
 class 'UIComponent' 
 
 function UIComponent:__init(display)
+  TRACE("UIComponent:__init")
+  
+  self.canvas = Canvas()
+  
+  -- the parent display
+  self.display = display 
+  
+  -- for indexed elements
+  self.group_name = nil
 
-  self.canvas = Canvas()    -- 
-  self.display = display    -- the parent display
-  self.group_name = nil    -- for indexed elements
-
-  self.width = 1        -- set through set_size()
-  self.height = 1        --
-
+  -- set through set_size()
+  self.width = 1 
+  self.height = 1 
+   
+  -- default palette
   self.palette = {}
 
+  -- pos in canvas
   self.x_pos = 1
   self.y_pos = 1
 
-  self.dirty = true      -- request refresh
+  -- request refresh
+  self.dirty = true 
 
-  self:set_size(self.width,self.width)
-
+  -- sync our width, height with the canvas
+  UIComponent.set_size(self, self.width, self.width)
 end
 
 
@@ -42,6 +50,8 @@ end
 --  request update on next refresh
 
 function UIComponent:invalidate()
+  TRACE("UIComponent:invalidate")
+
   self.dirty = true
 end
 
@@ -60,7 +70,7 @@ end
 --------------------------------------------------------------------------------
 
 -- get_msg()  returns the last broadcast event 
---        (used by event handlers)
+-- (used by event handlers)
 
 function UIComponent:get_msg()
   return self.display.device.message_stream.current_message
@@ -72,10 +82,10 @@ end
 -- set_size()  important to use this instead 
 -- of setting width/height directly (because of canvas)
 
-function UIComponent:set_size(width,height)
-  TRACE("UIComponent:set_size",width,height)
+function UIComponent:set_size(width, height)
+  TRACE("UIComponent:set_size", width, height)
 
-  self.canvas:set_size(width,height)
+  self.canvas:set_size(width, height)
   self.width = width      
   self.height = height
 end
@@ -86,16 +96,20 @@ end
 -- perform simple "inside square" hit test
 -- @return (boolean) true if inside area
 
-function UIComponent:test(x_pos,y_pos)
-  TRACE("UIComponent:test(",x_pos,y_pos,")")
+function UIComponent:test(x_pos, y_pos)
+  TRACE("UIComponent:test(",x_pos, y_pos,")")
 
   -- pressed to the left or above?
-  if x_pos < self.x_pos or y_pos < self.y_pos then
+  if (x_pos < self.x_pos) or 
+     (y_pos < self.y_pos) 
+  then
     return false
   end
+  
   -- pressed to the right or below?
-  if x_pos >= self.x_pos+self.width or 
-    y_pos >= self.y_pos+self.height then
+  if (x_pos >= self.x_pos + self.width) or 
+     (y_pos >= self.y_pos + self.height) 
+  then
     return false
   end
   return true
@@ -113,8 +127,7 @@ function UIComponent:colorize(rgb)
   TRACE("UIComponent:colorize:",rgb)
 
   for k,v in pairs(self.palette) do
-
-    if not v._color then
+    if not (v._color) then
       self.palette[k]._color = table.copy(v.color)
     end
     v.color[1]=v._color[1]*rgb[1]/255

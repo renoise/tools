@@ -258,16 +258,16 @@ function Browser:get_custom_devices()
     --  TODO: implement class
     {
       class_name=nil,          
-      display_name="Behringer BCF-2000",
-      device_name="BCF-2000",  -- ???
+      display_name="BCF-2000",
+      device_name="BCF2000",
       control_map="Controllers/BCF-2000/bcf-2000.xml",
       protocol=DEVICE_MIDI_PROTOCOL,
     },
     --  TODO: implement class
     {
       class_name=nil,          
-      display_name="Behringer BCR-2000",
-      device_name="BCR-2000", -- ??? 
+      display_name="BCR-2000",
+      device_name="BCR2000",
       control_map="Controllers/BCR-2000/bcr-2000.xml",
       protocol=DEVICE_MIDI_PROTOCOL,
     },
@@ -302,6 +302,7 @@ function Browser:get_applications(device_name)
   
 end
 
+
 --------------------------------------------------------------------------------
 
 -- note: changing the active application list-index will
@@ -316,6 +317,7 @@ function Browser:set_application_index(name)
 
 end
 
+
 --------------------------------------------------------------------------------
 
 -- set application as active item 
@@ -325,12 +327,13 @@ end
 function Browser:set_application(name)
   TRACE("Browser:set_application:",name)
 
-  if self.application then
+  if (self.application) then
+    -- rebuilt the app
     self.application:destroy_app()
   end
 
   -- hide/show the "run" option?
-  if self.vb.views.dpx_browser_application.value == 1 then
+  if (self.vb.views.dpx_browser_application.value == 1) then
     self.vb.views.dpx_browser_application_active.visible = false
     --self.display:clear()
   else
@@ -341,34 +344,46 @@ function Browser:set_application(name)
   local elm = self.vb.views["dpx_browser_input_device"]
   local device_display_name = elm.items[elm.value]
 
-  if name == "MixConsole" then
-    
-    local sliders_group_name=nil
-    local buttons_group_name=nil
-    local master_group_name=nil
+  -- MixConsole
+  
+  if (name == "MixConsole") then  
+    local sliders_group_name = nil
+    local encoders_group_name = nil
+    local buttons_group_name = nil
+    local master_group_name = nil
 
     -- TODO: control-map groups should be user-configurable
     -- make some sort of application preferences to solve this
-    if device_display_name == "Launchpad" then
+    if (device_display_name == "Launchpad") then
       sliders_group_name="Grid"
       buttons_group_name="Controls"
       master_group_name="Triggers"
-    elseif device_display_name == "Nocturn" then
-      sliders_group_name="Encoders"
-      buttons_group_name="Pots"
-      master_group_name="XFader"
+    
+    elseif (device_display_name == "Nocturn") then
+      sliders_group_name = "Encoders"
+      buttons_group_name = "Pots"
+      master_group_name = "XFader"
+    
+    elseif (device_display_name == "BCF-2000") then
+      buttons_group_name = "Buttons1"
+      encoders_group_name= "Encoders"
+      sliders_group_name = "Faders"
+      master_group_name = nil
     end
 
     self.application = MixConsole(self.display, sliders_group_name,
-      buttons_group_name, master_group_name)
-  end
+      encoders_group_name, buttons_group_name, master_group_name)
 
-  if name == "PatternMatrix" then
-    -- currently only for use with launchpad...
-    if device_display_name == "Launchpad" then
-      self.application = PatternMatrix(self.display,"Grid","Triggers")
+  -- PatternMatrix
+  
+  elseif (name == "PatternMatrix") then
+  
+  	-- pattern matrix currently only for the launchpad...
+    if (device_display_name == "Launchpad") then
+      self.application = PatternMatrix(self.display, "Grid", "Triggers")
     end
   end
+  
 end
 
 

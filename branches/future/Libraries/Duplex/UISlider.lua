@@ -40,10 +40,11 @@ function UISlider:__init(display)
   -- the selected index (0 is deselected)
   self.index = 0
 
-  -- if true, press twice to switch to deselected state*
+  -- if true, press twice to switch to deselected state
+  -- only applies when input method is a button
   self.toggleable = false
 
-  -- paint a dimmed version*
+  -- paint a dimmed version
   self.dimmed = false
 
   -- current value (sliders/encoders offer more precision)
@@ -58,10 +59,10 @@ function UISlider:__init(display)
   -- flip top/bottom direction 
   self.flipped = false
 
-  --  * this only applies when input method is a button
-
-  self.add_listeners(self)
-
+  -- default UIComponent size
+  self:set_size(1)
+  
+  -- default palette
   self.palette = {
     background = table.rcopy(display.palette.background),
     foreground = table.rcopy(display.palette.color_1),
@@ -73,6 +74,9 @@ function UISlider:__init(display)
   -- internal values
   self._cached_index = self.index
   self._cached_value = self.value
+
+  -- attach ouself to the display message stream
+  self:add_listeners()
 end
 
 
@@ -82,28 +86,22 @@ end
 -- set index
 
 function UISlider:do_press()
-
-  local idx = nil
   local msg = self.get_msg(self)
 
   if not (self.group_name == msg.group_name) then
     return
   end
 
-  if not self.test(self,msg.column,msg.row) then
+  if not (self:test(msg.column, msg.row)) then
     return
   end
 
-  idx = self.determine_index_by_pos(self,msg.column,msg.row)
-
-  if self.toggleable then
-    if self.index == idx then
-      idx = 0
-    end
+  local idx = self:determine_index_by_pos(msg.column, msg.row)
+  if (self.toggleable and self.index == idx) then
+    idx = 0
   end
 
   self.set_index(self,idx)
-
 end
 
 
@@ -116,16 +114,21 @@ function UISlider:do_change()
   TRACE("Slider:do_change()")
 
   local msg = self.get_msg(self)
+  
   if not (self.group_name == msg.group_name) then
     return
   end
+  
   if not self.test(self,msg.column,msg.row) then
     return
   end
-  local idx = self.determine_index_by_pos(self,msg.column,msg.row)
-  local tmp = (msg.value/msg.max)*self.ceiling/self.size
-  local rslt = (self.ceiling/self.size)*(idx-1)+tmp
-  self.set_value(self,rslt)
+  
+  -- scale from the message range to the sliders range
+  local idx = self:determine_index_by_pos(msg.column, msg.row)
+  local tmp = (msg.value / msg.max) * self.ceiling / self.size
+  local rslt = (self.ceiling / self.size) * (idx - 1) + tmp
+  
+  self:set_value(rslt)
 end
 
 
@@ -137,20 +140,22 @@ end
 
 function UISlider:determine_index_by_pos(column,row)
 
-  local pos,offset = nil,nil
+  local pos, offset
 
-  if self.orientation == VERTICAL then
+  if (self.orientation == VERTICAL) then
     pos = row
     offset = self.y_pos
   else
+    assert(self.orientation == HORIZONTAL)   
     pos = column
     offset = self.x_pos
   end
-  if not self.flipped then
-    pos = self.size-pos+1
+  
+  if not (self.flipped) then
+    pos = self.size - pos + 1
   end
-  local idx = pos-(offset-1)
-
+  
+  local idx = pos - (offset - 1)
   return idx
 end
 
@@ -161,15 +166,14 @@ end
 -- @size (integer)
 
 function UISlider:set_size(size)
-
   self.size = size
 
-  if self.orientation == VERTICAL then
-    UIComponent.set_size(self,1,size)
+  if (self.orientation == VERTICAL) then
+    UIComponent.set_size(self, 1, size)
   else
-    UIComponent.set_size(self,size,1)
+    assert(self.orientation == HORIZONTAL)   
+    UIComponent.set_size(self, size, 1)
   end
-
 end
 
 
@@ -185,12 +189,14 @@ function UISlider:set_value(val,skip_event)
   local idx = math.ceil((self.size/self.ceiling)*val)
   local rslt = false
 
-  if (self._cached_index ~= idx or
-      self._cached_value ~= val) then
+  if (self._cached_index ~= idx) or
+     (self._cached_value ~= val) 
+  then
     self._cached_index = idx
     self._cached_value = val
     self.value = val
     self.index = idx
+    
     self:invalidate()
 
     if (not skip_event) and (self.on_change ~= nil) then
@@ -236,7 +242,7 @@ function UISlider:invoke_handler()
     self.index = self._cached_index    
     self.value = self._cached_value  
   else
-    self.invalidate(self)
+    self:invalidate()
   end
 end
 
@@ -244,62 +250,51 @@ end
 --------------------------------------------------------------------------------
 
 function UISlider:set_dimmed(bool)
+  -- TODO: only invalidate if we can dimm
   self.dimmed = bool
-  self.invalidate(self)
+  self:invalidate()
 end
 
 
 --------------------------------------------------------------------------------
 
 function UISlider:draw()
-  TRACE("UISlider:draw:",self.index)
+  TRACE("UISlider:draw:", self.index)
   
-  local x,y,value
   local idx = self.index
 
   if (not self.flipped) then
-    idx = self.size-idx+1
+    idx = self.size - idx + 1
   end
 
   for i = 1,self.size do
-    x,y = 1,1
+    local x,y = 1,1
 
     local point = CanvasPoint()
     point:apply(self.palette.background)
 
-    if idx then
-      if i == idx then
+    if (idx) then
+      if (i == idx) then
         -- figure out the offset within the "step",
         -- going from 0 to .ceiling value
         local step = self.ceiling/self.size
         local offset = self.value-(step*(self.index-1))
-        point.val = offset*(1/step)*self.ceiling
+        
+        point.val = offset * (1 / step) * self.ceiling
+        point:apply((self.dimmed) and 
+          self.palette.foreground_dimmed or self.palette.foreground)
 
-        if self.dimmed then
-          point.apply(point,self.palette.foreground_dimmed)
-        else
-          point.apply(point,self.palette.foreground)
+      elseif (self.flipped) then
+        if (i <= idx)then
+          point.val = true        
+          point:apply((self.dimmed) and 
+            self.palette.medium_dimmed or self.palette.medium)
         end
 
-      elseif self.flipped then
-        if(i <= idx)then
-          point.val = true
-          if self.dimmed then
-            point.apply(point,self.palette.medium_dimmed)
-          else
-            point.apply(point,self.palette.medium)
-          end
-        end
-
-      elseif ((self.size-i) < self.index) then
-
-        point.val = true
-        if self.dimmed then
-          point.apply(point,self.palette.medium_dimmed)
-        else
-          point.apply(point,self.palette.medium)
-        end
-
+      elseif ((self.size - i) < self.index) then
+        point.val = true      
+        point:apply((self.dimmed) and 
+          self.palette.medium_dimmed or self.palette.medium)
       end
     end
 
@@ -308,7 +303,8 @@ function UISlider:draw()
     else
       x = i  
     end
-    self.canvas.write(self.canvas,point,x,y)
+    
+    self.canvas:write(point, x, y)
   end
 
   UIComponent.draw(self)
