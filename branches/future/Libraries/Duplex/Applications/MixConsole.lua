@@ -206,8 +206,6 @@ function MixConsole:build_app()
   -- TODO: get this from the control map?
   self.slider_vertical_units = (grid_mode) and 8 or 1
 
-  local tracks = renoise.song().tracks
-   
   for i=1,self.horizontal_size do
 
     -- sliders --------------------------------------------
@@ -232,16 +230,16 @@ function MixConsole:build_app()
           -- this will cause another event...
           self.master:set_value(obj.value)
         else
-          tracks[i].prefx_volume.value = obj.value
+          renoise.song().tracks[i].prefx_volume.value = obj.value
         end
         return true
 
-      elseif (i > #tracks) then
+      elseif (i > #renoise.song().tracks) then
         -- track is outside bounds
         return false
 
       else
-        tracks[i].prefx_volume.value = obj.value
+        renoise.song().tracks[i].prefx_volume.value = obj.value
         return true
       end
     end
@@ -266,12 +264,12 @@ function MixConsole:build_app()
       if (not self.active) then
         return false
       
-      elseif (i > #tracks) then
+      elseif (i > #renoise.song().tracks) then
         -- track is outside bounds
         return false
       
       else
-        tracks[i].prefx_panning.value = obj.value
+        renoise.song().tracks[i].prefx_panning.value = obj.value
         return true
       end
     end
@@ -297,7 +295,7 @@ function MixConsole:build_app()
         -- can't mute the master track
         return false
       
-      elseif (i > #tracks) then
+      elseif (i > #renoise.song().tracks) then
         -- track is outside bound
         return false
       end
@@ -306,7 +304,8 @@ function MixConsole:build_app()
         MUTE_STATE_ACTIVE or MUTE_STATE_OFF
       local dimmed = not obj.active
       
-      tracks[i].mute_state = mute_state
+      renoise.song().tracks[i].mute_state = mute_state
+      
       self.sliders[i]:set_dimmed(dimmed)
       self.encoders[i]:set_dimmed(dimmed)
       
