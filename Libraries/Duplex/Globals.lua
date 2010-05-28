@@ -110,7 +110,7 @@ end
 -- {"^Display:"} " -> show traces, starting with "Display:" only
 -- {"^ControlMap:", "^Display:"} -> show "Display:" and "ControlMap:"
 
-local __trace_filters = {}
+local __trace_filters = nil
 
 
 --------------------------------------------------------------------------------
@@ -178,7 +178,7 @@ if (__trace_filters ~= nil) then
   
 else
 
-  function TRACE(...)
+  function TRACE()
     -- do nothing
   end
     
