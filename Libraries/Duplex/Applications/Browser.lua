@@ -50,6 +50,8 @@ function Browser:__init(device_name, app_name)
     if (app_name) then
       self:__set_application_index(app_name)
     end
+    
+    self:start_app()
   end
 end
 
@@ -137,7 +139,7 @@ function Browser:set_device(name)
             generic_class = "MIDIDevice"
           
           elseif (k.protocol == DEVICE_OSC_PROTOCOL)then
-            generic_class = "OSCDevice"
+            generic_class = "OscDevice"
           
           else
             error(("device uses unexpected protocol: %d"):format(k.protoco))
@@ -247,12 +249,12 @@ end
 function Browser:build_app()
   Application.build_app(self)
 
-  local input_devices = self:available_devices()
+  local devices = self:available_devices()
   local applications = self:available_applications()
   --local presets = self:get_presets()
 
-  --local vb = renoise.ViewBuilder()
   local vb = self.vb
+  
   self.view = vb:column{
     --margin = DEFAULT_MARGIN,
     id = 'dpx_browser_rootnode',
@@ -266,11 +268,11 @@ function Browser:build_app()
       },
       vb:popup{
           id='dpx_browser_input_device',
-          items=input_devices,
+          items=devices,
           --value=4,
           width=200,
           notifier=function(e)
-            self:set_device(self:__strip_na_postfix(input_devices[e]))
+            self:set_device(self:__strip_na_postfix(devices[e]))
           end
       },
       vb:button{
@@ -326,6 +328,7 @@ function Browser:build_app()
   }
 end
 
+
 --------------------------------------------------------------------------------
 -------  Application class methods
 --------------------------------------------------------------------------------
@@ -334,7 +337,12 @@ function Browser:start_app()
   Application.start_app(self)
 
   if (self.application) then
-    self.application:start_app()
+    if (not self.vb.views.dpx_browser_application_checkbox.value) then
+      -- invokes start_app again
+      self.vb.views.dpx_browser_application_checkbox.value = true
+    else
+      self.application:start_app()
+    end
   end
 end
   
@@ -345,7 +353,12 @@ function Browser:stop_app()
   Application.stop_app(self)
 
   if (self.application) then
-    self.application:stop_app()
+    if (self.vb.views.dpx_browser_application_checkbox.value) then
+      -- invokes stop_app again
+      self.vb.views.dpx_browser_application_checkbox.value = false
+    else
+      self.application:stop_app()
+    end
   end
 end
 
@@ -362,11 +375,11 @@ function Browser:idle_app()
   self.stream:on_idle()
 
   -- modify ui components
-  if self.display then
+  if (self.display) then
     self.display:update()
   end
   -- then update the display 
-  if self.application then
+  if (self.application) then
     self.application:idle_app()
   end
 end
