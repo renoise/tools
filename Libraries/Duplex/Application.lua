@@ -17,20 +17,20 @@ class 'Application'
 function Application:__init()
   TRACE("Application:__init()")
   
-	self.name = "Application"
+  self.name = "Application"
 
-	-- the application is considered created once build_app() has been called
-	self.created = false
+  -- the application is considered created once build_app() has been called
+  self.created = false
 
-	-- the view is a viewbuilder object (optional) 
-	self.view = nil
+  -- the view is a viewbuilder object (optional) 
+  self.view = nil
 
-	-- when the application is inactive, it should 
-	-- sleep during idle time and ignore any user input
-	self.active = false
+  -- when the application is inactive, it should 
+  -- sleep during idle time and ignore any user input
+  self.active = false
 
-	-- the custom dialog is only created if show_app() is called 
-	self.dialog = nil
+  -- the custom dialog is only created if show_app() is called 
+  self.dialog = nil
 end
 
 
@@ -41,12 +41,13 @@ end
 function Application:build_app()
   TRACE("Application:build_app()")
   
-	local vb = renoise.ViewBuilder()
-	self.view = vb:text{
-		text="this is a blank application",
-	}
-	self.created = true
-
+  local vb = renoise.ViewBuilder()
+  
+  self.view = vb:text {
+    text = "this is a blank application",
+  }
+  
+  self.created = true
 end
 
 
@@ -57,9 +58,11 @@ end
 function Application:start_app()
   TRACE("Application:start_app()")
   
-	if not self.created then return false end
-	self.active = true
-
+  if not (self.created) then 
+    return false 
+  end
+  
+  self.active = true
 end
 
 
@@ -70,9 +73,11 @@ end
 function Application:stop_app()
   TRACE("Application:stop_app()")
   
-	if not self.created then return false end
-	self.active = false
-
+  if not (self.created) then 
+    return false 
+  end
+  
+  self.active = false
 end
 
 
@@ -83,12 +88,17 @@ end
 function Application:show_app()
   TRACE("Application:show_app()")
   
-	if not self.created then return false end
-	if (not self.dialog) or (not self.dialog.visible) then
-		self:__create_dialog()
-	end
-	self.dialog:show()
+  if not (self.created) then 
+    return false 
+  end
+  
+  if (not self.dialog) or (not self.dialog.visible) then
+    self:__create_dialog()
+  else
+    self.dialog:show()
+  end
 end
+
 
 --------------------------------------------------------------------------------
 
@@ -97,9 +107,12 @@ end
 function Application:hide_app()
   TRACE("Application:hide_app()")
   
-	if not self.dialog then return false end
-	self.dialog:close()
-	self.dialog = nil
+  if not (self.created) then 
+    return false 
+  end
+  
+  self.dialog:close()
+  self.dialog = nil
 end
 
 
@@ -108,7 +121,7 @@ end
 -- destroy application
 
 function Application:destroy_app()
-	self:stop_app()
+  return self:stop_app()
 end
 
 
@@ -117,7 +130,7 @@ end
 -- update visual appeareance
 
 function Application:update_app()
-	self:stop_app()
+ return self:stop_app()
 end
 
 
@@ -126,26 +139,29 @@ end
 -- handle periodic updates (many times per second)
 
 function Application:idle_app()
-
+  -- nothing done by default
 end
+
 
 --------------------------------------------------------------------------------
 
 -- called when a new document becomes available
 
 function Application:on_new_document()
-
+  -- nothing done by default
 end
+
 
 --------------------------------------------------------------------------------
 
 function Application:__create_dialog()
   TRACE("Application:__create_dialog()")
   
-	self.dialog = renoise.app():show_custom_dialog(
-		self.name,self.view
-	)
+  self.dialog = renoise.app():show_custom_dialog(
+    self.name, self.view
+  )
 end
+
 
 --------------------------------------------------------------------------------
 
