@@ -15,10 +15,10 @@ Requires: Globals
 
 class 'OscDevice' (Device)
 
-function OscDevice:__init(name)
+function OscDevice:__init(name, message_stream)
   TRACE("OscDevice:__init("..name..")")
   
-  Device.__init(self, name, DEVICE_OSC_PROTOCOL)
+  Device.__init(self, name, message_stream, DEVICE_OSC_PROTOCOL)
 end
 
 

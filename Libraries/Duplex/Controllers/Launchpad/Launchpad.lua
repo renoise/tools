@@ -15,8 +15,10 @@ A device-specific class
 
 class "Launchpad" (MIDIDevice)
 
-function Launchpad:__init(name)
-  TRACE("Launchpad:__init",name)
+function Launchpad:__init(name, message_stream)
+  TRACE("Launchpad:__init", name, message_stream)
+
+  MIDIDevice.__init(self, name, message_stream)
 
   -- device_name needs to be matchable with what the device announces itself as
   -- but is it the same name on different platforms? 
@@ -31,9 +33,6 @@ function Launchpad:__init(name)
   self.update = 0
   self.flash = 0
   self.copy = 0
-
-  MIDIDevice.__init(self, name)
-
 end
 
 

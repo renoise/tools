@@ -56,6 +56,7 @@ RENOISE_DECIBEL = 1.4125375747681
 
 DEFAULT_MARGIN = renoise.ViewBuilder.DEFAULT_CONTROL_MARGIN
 DEFAULT_SPACING = renoise.ViewBuilder.DEFAULT_CONTROL_SPACING
+DEFAULT_CONTROL_HEIGHT = renoise.ViewBuilder.DEFAULT_CONTROL_HEIGHT
 
 MUTE_STATE_OFF = 2
 MUTE_STATE_ACTIVE = 1
@@ -109,7 +110,7 @@ end
 -- {"^Display:"} " -> show traces, starting with "Display:" only
 -- {"^ControlMap:", "^Display:"} -> show "Display:" and "ControlMap:"
 
-local __trace_filters = nil
+local __trace_filters = {}
 
 
 --------------------------------------------------------------------------------

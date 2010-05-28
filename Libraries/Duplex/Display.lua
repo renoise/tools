@@ -6,10 +6,8 @@
 
 The Display is the base class for building device displays
 
-
 --]]
 
-module("Duplex", package.seeall);
 
 --==============================================================================
 
@@ -24,6 +22,7 @@ class 'Display'
 function Display:__init(device)
   TRACE('Display:__init')
 
+  assert(device, "expected a valid device for a display")
   self.device = device  
 
   --  viewbuilder stuff
@@ -34,14 +33,13 @@ function Display:__init(device)
   self.parents = {}
   self.grid_obj = nil    
   self.grid_count = 0
-  --self.grid_columns = nil
 
   -- array of UIComponent instances
-  self.ui_objects = {}  
+  self.ui_objects = table.create()
 
   -- each UI object notifier method is referenced by id, 
   -- so we can attach/detach the method when we need
-  self.ui_notifiers = {}  
+  self.ui_notifiers = table.create()
 
   -- "palette" is a table of named color-constants 
   self.palette = {
@@ -73,7 +71,8 @@ end
 
 function Display:add(obj_instance)
   TRACE('Display:add')
-  table.insert(self.ui_objects,#self.ui_objects+1,obj_instance)
+  
+  self.ui_objects:insert(obj_instance)
 end
 
 
@@ -85,19 +84,19 @@ end
 function Display:clear()
   TRACE("Display:clear()")
   
+--[[
   for _,group in pairs(self.device.control_map.groups)do
     for __,param in ipairs(group) do
--- @elm : control-map definition of the element
--- @obj : reference to the UIComponent instance
--- @point : canvas point containing text/value/color 
---[[
+      -- @elm : control-map definition of the element
+      -- @obj : reference to the UIComponent instance
+      -- @point : canvas point containing text/value/color 
       local pt = CanvasPoint()
       local obj = {ceiling=100}
       self.set_parameter(param,obj,pt)
---rprint(param)      
-]]
+      --rprint(param)      
     end
   end
+]]
 end
 
 
@@ -111,37 +110,43 @@ function Display:update()
     return
   end
 
-  for i,obj in ipairs(self.ui_objects) do
-    if obj.dirty then
+  local control_map = self.device.control_map
+  
+  for _,obj in ipairs(self.ui_objects) do
+    if (obj.dirty) then
 
       -- update the object display
       obj:draw()
 
       -- loop through the delta array - it contains all recent updates
-      if obj.canvas.has_changed then
+      if (obj.canvas.has_changed) then
         for x = 1,obj.width do
           for y = 1, obj.height do
-            if obj.canvas.delta[x][y] then
-              if not self.device.control_map.groups[obj.group_name] then
-                print("Warning: ",type(obj)," not specified in control-map group ",obj.group_name)
-              else
 
-                local columns = self.device.control_map.groups[obj.group_name].columns
+            if (obj.canvas.delta[x][y]) then
+              if not (control_map.groups[obj.group_name]) then
+                print(("Warning: '%s' is not specified in control-map "..
+                  "group '%s'"):format(type(obj), tostring(obj.group_name)))
+
+              else
+                local columns = control_map.groups[obj.group_name].columns
                 local idx = (x+obj.x_pos-1)+((y+obj.y_pos-2)*columns)
-                local elm = self.device.control_map:get_indexed_element(idx,obj.group_name)
-                if elm then
-                  self:set_parameter(elm,obj,obj.canvas.delta[x][y])
+
+                local elm = control_map:get_indexed_element(idx, obj.group_name)
+                
+                if (elm) then
+                  self:set_parameter(elm, obj, obj.canvas.delta[x][y])
                 end
               end
             end
           end
         end
+        
+        -- reset has_changed flag
         obj.canvas:clear_delta()
       end
-
     end
   end
-
 end
 
 
@@ -152,9 +157,8 @@ end
 -- @obj : reference to the UIComponent instance
 -- @point : canvas point containing text/value/color 
 
-function Display:set_parameter(elm,obj,point)
+function Display:set_parameter(elm, obj, point)
   TRACE('Display:set_parameter',elm.name,elm.value,point.text)
-  --objinfo(point)
 
   local widget = nil
   local value = nil
@@ -162,37 +166,70 @@ function Display:set_parameter(elm,obj,point)
 
   -- update hardware display
 
-  if self.device then 
+  if (self.device) then 
     local msg_type = self.device.control_map:determine_type(elm.value)
-    if msg_type == MIDI_NOTE_MESSAGE then
+    
+    local current_message = self.device.message_stream.current_message
+    
+    if (msg_type == MIDI_NOTE_MESSAGE) then
       num = self.device:extract_midi_note(elm.value)
-      value = self.device:point_to_value(point,elm.maximum,elm.minimum,obj.ceiling)
-      self.device:send_note_message(num,value)
-    elseif msg_type == MIDI_CC_MESSAGE then
+
+      value = self.device:point_to_value(
+        point, elm.maximum, elm.minimum, obj.ceiling)
+      
+      -- do not loop back the original value change back to the sender
+      if (not current_message) or
+         (current_message.context ~= MIDI_NOTE_MESSAGE) or
+         (current_message.id ~= elm.id) or
+         (current_message.value ~= value)
+      then
+        self.device:send_note_message(num,value)
+      end
+    
+    elseif (msg_type == MIDI_CC_MESSAGE) then
       num = self.device:extract_midi_cc(elm.value)
-      value = self.device:point_to_value(point,elm.maximum,elm.minimum,obj.ceiling)
-      self.device:send_cc_message(num,value)
+      
+      value = self.device:point_to_value(
+        point, elm.maximum, elm.minimum, obj.ceiling)
+
+      -- do not loop back the original value change back to the sender
+      if (not current_message) or
+         (current_message.context ~= MIDI_CC_MESSAGE) or
+         (current_message.id ~= elm.id) or
+         (current_message.value ~= value)
+      then
+        self.device:send_cc_message(num,value)
+      end
+    
+    else
+      error(("unknown or unhandled msg_type: %d"):format(msg_type))
     end
   end
+
 
   -- update virtual control surface
 
-  if self.vb and self.vb.views then 
+  if (self.vb and self.vb.views) then 
     widget = self.vb.views[elm.id]
   end
-  if widget then
-    if type(widget)=="Button" then
+
+  if (widget) then
+    if (type(widget) == "Button") then
       widget.text = point.text
     end
-    if (type(widget)=="RotaryEncoder") or 
-      (type(widget)=="MiniSlider") or
-      (type(widget)=="Slider") then
-      value = self.device:point_to_value(point,elm.maximum,elm.minimum,obj.ceiling)
+    
+    if (type(widget) == "RotaryEncoder") or 
+       (type(widget) == "MiniSlider") or
+       (type(widget) == "Slider")
+    then
+      value = self.device:point_to_value(
+        point, elm.maximum, elm.minimum, obj.ceiling)
+
       widget:remove_notifier(self.ui_notifiers[elm.id])
-      widget.value = value*1 -- toNumber
+      widget.value = tonumber(value)
       widget:add_notifier(self.ui_notifiers[elm.id])
     end
-  end
+  end 
 end
 
 
@@ -204,8 +241,8 @@ function Display:show_control_surface()
   if (not self.view) then
     self:build_control_surface()
   end
-  self.vb.views.display_rootnode.visible = true
 
+  self.vb.views.display_rootnode.visible = true
 end
 
 
@@ -218,26 +255,26 @@ end
 
 --------------------------------------------------------------------------------
 
---  build the virtual control-surface
---  based on the parsed control-map
+-- build the virtual control-surface based on the parsed control-map
 
 function Display:build_control_surface()
   TRACE('Display:build_control_surface')
 
   self.view = self.vb:column{
-    id="display_rootnode",
-    style="invisible",
+    id = "display_rootnode",
+    style = "invisible",
     width = 500,
     height = 500,
     margin = DEFAULT_MARGIN,
     --spacing = 16,
   }
   
-  -- loading may have failed...
+  -- loading may have failed. check if definition is valid...
   if (self.device.control_map.definition) then
     self:walk_table(self.device.control_map.definition)
   end
-
+  
+  return self.view
 end
 
 
@@ -257,31 +294,37 @@ function Display:generate_message(value, metadata)
   msg.context = self.device.control_map:determine_type(metadata.value)
 
   -- input method : make sure we're using the right handler 
-  if metadata.type == "button" then
+  if (metadata.type == "button") then
     msg.input_method = CONTROLLER_BUTTON
-  elseif metadata.type == "encoder" then
+
+  elseif (metadata.type == "encoder") then
     msg.input_method = CONTROLLER_ENCODER
-  elseif metadata.type == "fader" then
+
+  elseif (metadata.type == "fader") then
     msg.input_method = CONTROLLER_FADER
-  elseif metadata.type == "dial" then
+
+  elseif (metadata.type == "dial") then
     msg.input_method = CONTROLLER_POT
+
   else
     error("unknown metadata.type")
   end
 
   -- include additional useful meta-properties
-  msg.name  = metadata.name
+  msg.name = metadata.name
   msg.group_name = metadata.group_name
-  msg.max    = metadata.maximum+0
-  msg.min    = metadata.minimum+0
-  msg.id    = metadata.id
-  msg.index  = metadata.index
-  msg.column  = metadata.column
-  msg.row    = metadata.row
+  msg.max = tonumber(metadata.maximum)
+  msg.min = tonumber(metadata.minimum)
+  msg.id = metadata.id
+  msg.index = metadata.index
+  msg.column = metadata.column
+  msg.row = metadata.row
   msg.timestamp = os.clock()
 
+  -- mark as virtual generated message
   msg.is_virtual = true
 
+  -- send the message
   self.device.message_stream:input_message(msg)
 end
 
@@ -297,207 +340,250 @@ function Display:walk_table(t, done, deep)
   deep = deep and deep + 1 or 1  --  the nesting level
   done = done or {}
 
-  for key, value in pairs (t) do
+  for key, value in pairs(t) do
     if (type(value) == "table" and not done[value]) then
-    done [value] = true
-      
-    local grid_id = nil
-    local view_obj = {
-      meta = t[key].xarg  -- xml attributes
-    }
-      
-    if t[key].label=="Param" then
-      -- the parameters
-      local notifier = nil
-
+      done [value] = true
+        
+      local grid_id = nil
+      local view_obj = {
+        meta = t[key].xarg  -- xml attributes
+      }
+  
+      --- Param
+  
+      if (t[key].label == "Param") then
         TRACE("Display:view_obj.meta:",view_obj.meta)
         TRACE("Display:view_obj.meta.name:",view_obj.meta.name)
   
-        -- empty parameter (placeholder unit)?
-      if not view_obj.meta.type then
+          -- empty parameter (placeholder unit)?
+        if not (view_obj.meta.type) then
           view_obj.view = self.vb:column{
-            height=UNIT_HEIGHT,
-            width=UNIT_WIDTH,
+            height = UNIT_HEIGHT,
+            width = UNIT_WIDTH,
             style = "invisible"
           }
 
-        -- a parameter unit
-      else
-
+          -- a parameter unit
+        else
+  
           local tooltip = string.format("%s (%s)",
             view_obj.meta.name,view_obj.meta.value)
-
-        if t[key].xarg.type == "button" then
-          notifier = function(value) 
-            -- output the maximum value
-            self:generate_message(view_obj.meta.maximum*1,view_obj.meta)
-          end
-            
-          self.ui_notifiers[t[key].xarg.id] = notifier
-          view_obj.view = self.vb:button{
-            id=t[key].xarg.id,
-            height=UNIT_HEIGHT,
-            width=UNIT_WIDTH,
-            tooltip = tooltip,
-            notifier = notifier
-          }
-            
-        elseif t[key].xarg.type == "encoder" then
-          notifier = function(value) 
-            -- output the current value
-            self:generate_message(value,view_obj.meta)
-          end
-            
+  
+  
+          --- Param:button
+          
+          if (t[key].xarg.type == "button") then
+            local notifier = function(value) 
+              -- output the maximum value
+              self:generate_message(view_obj.meta.maximum*1,view_obj.meta)
+            end
+              
             self.ui_notifiers[t[key].xarg.id] = notifier
-            view_obj.view = self.vb:minislider{
-              id=t[key].xarg.id,
-              min = view_obj.meta.minimum+0,
-              max = view_obj.meta.maximum+0,
-              tooltip = tooltip,
-              height=UNIT_HEIGHT/1.5,
+            view_obj.view = self.vb:button{
+              id = t[key].xarg.id,
+              height = UNIT_HEIGHT,
               width = UNIT_WIDTH,
+              tooltip = tooltip,
               notifier = notifier
             }
+          
+          
+          --- Param:encoder
+              
+          elseif (t[key].xarg.type == "encoder") then
+            local notifier = function(value) 
+              -- output the current value
+              self:generate_message(value,view_obj.meta)
+            end
+              
+              self.ui_notifiers[t[key].xarg.id] = notifier
+              view_obj.view = self.vb:minislider{
+                id=t[key].xarg.id,
+                min = tonumber(view_obj.meta.minimum),
+                max = tonumber(view_obj.meta.maximum),
+                tooltip = tooltip,
+                height = UNIT_HEIGHT/1.5,
+                width = UNIT_WIDTH,
+                notifier = notifier
+              }
+              
             
-          elseif t[key].xarg.type == "dial" then
-            notifier = function(value) 
+          --- Param:dial
+          
+          elseif (t[key].xarg.type == "dial") then
+            local notifier = function(value) 
               -- output the current value
               self:generate_message(value,view_obj.meta)
             end
             
-          self.ui_notifiers[t[key].xarg.id] = notifier
-          view_obj.view = self.vb:rotary{
+            self.ui_notifiers[t[key].xarg.id] = notifier
+            view_obj.view = self.vb:rotary{
               id = t[key].xarg.id,
-            min = view_obj.meta.minimum+0,
-            max = view_obj.meta.maximum+0,
-            tooltip = tooltip,
-            width = UNIT_WIDTH,
+              min = tonumber(view_obj.meta.minimum),
+              max = tonumber(view_obj.meta.maximum),
+              tooltip = tooltip,
+              width = UNIT_WIDTH,
               height = UNIT_WIDTH,
-            notifier = notifier
-          }
-          
-        elseif t[key].xarg.type == "fader" then
-          notifier = function(value) 
-            -- output the current value
-            self:generate_message(value,view_obj.meta)
+              notifier = notifier
+            }
+            
+            
+          --- Param:fader
+                    
+          elseif (t[key].xarg.type == "fader") then
+            local notifier = function(value) 
+              -- output the current value
+              self:generate_message(value,view_obj.meta)
+            end
+              
+            self.ui_notifiers[t[key].xarg.id] = notifier
+  
+            if (t[key].xarg.orientation == "vertical") then
+              view_obj.view = self.vb:row {
+                -- padd with spaces to center DEFAULT_CONTROL_HEIGHT in UNIT_WIDTH
+                self.vb:space { 
+                  width = (UNIT_WIDTH -  DEFAULT_CONTROL_HEIGHT) / 2 
+                },
+                self.vb:slider{
+                  id = t[key].xarg.id,
+                  min = tonumber(view_obj.meta.minimum),
+                  max = tonumber(view_obj.meta.maximum),
+                  tooltip = tooltip,
+                  width = DEFAULT_CONTROL_HEIGHT,
+                  height = (UNIT_WIDTH * t[key].xarg.size) + 
+                    (DEFAULT_SPACING * (t[key].xarg.size - 1)),
+                  notifier = notifier
+                },
+                self.vb:space {
+                  width = (UNIT_WIDTH -  DEFAULT_CONTROL_HEIGHT) / 2 
+                }
+              }
+            else
+              assert(t[key].xarg.orientation == "horizontal", 
+                "unexpected orientation")
+              view_obj.view = self.vb:slider {
+                id  =t[key].xarg.id,
+                min = tonumber(view_obj.meta.minimum),
+                max = tonumber(view_obj.meta.maximum),
+                tooltip = tooltip,
+                width = (UNIT_WIDTH*t[key].xarg.size) + 
+                  (DEFAULT_SPACING*(t[key].xarg.size-1)),
+                notifier = notifier
+              }
+            end
           end
-            
-            -- TODO: t[key].xarg.orientation=="vertical","horizontal" 
-            
-          self.ui_notifiers[t[key].xarg.id] = notifier
-          view_obj.view = self.vb:slider{
-            id=t[key].xarg.id,
-            min = view_obj.meta.minimum+0,
-            max = view_obj.meta.maximum+0,
-            tooltip = tooltip,
-            --height=UNIT_HEIGHT/1.5,
-              width = (UNIT_WIDTH*t[key].xarg.size) + 
-                (DEFAULT_SPACING*(t[key].xarg.size-1)),
-            notifier = notifier
+        end
+        
+  
+      --- Column
+  
+      elseif (t[key].label == "Column") then
+        view_obj.view = self.vb:column{
+          style = "invisible",
+          spacing = DEFAULT_SPACING
+        }
+        self.parents[deep] = view_obj
+        
+  
+  
+      --- Row
+  
+      elseif (t[key].label == "Row") then
+        view_obj.view = self.vb:row{
+          style = "invisible",
+          spacing = DEFAULT_SPACING,
+        }
+        self.parents[deep] = view_obj
+        
+  
+      --- Group
+  
+      elseif (t[key].label == "Group") then
+        -- the group
+        local orientation = t[key].xarg.orientation
+        local columns = t[key].xarg.columns
+          
+        if (columns) then
+          -- enter "grid mode": use current group as 
+          -- base object for inserting multiple rows
+          self.grid_count = self.grid_count+1
+          grid_id = string.format("grid_%i",self.grid_count)
+          orientation = "vertical"
+        else
+          -- exit "grid mode"
+          self.grid_obj = nil
+        end
+          
+        if (orientation == "vertical") then
+          view_obj.view = self.vb:column{
+            style = "group",
+            id = grid_id,
+            margin = DEFAULT_MARGIN,
+            spacing = DEFAULT_SPACING,
+          }
+        else
+          assert(orientation == "horizontal",
+            "unexpected orientation")
+          view_obj.view = self.vb:row{
+            style = "group",
+            id = grid_id,
+            width = 500,
+            margin = DEFAULT_MARGIN,
+            spacing = DEFAULT_SPACING,
           }
         end
-      end
-      
-    elseif t[key].label=="Column" then
-      view_obj.view = self.vb:column{
-        style="invisible",
-        spacing=DEFAULT_SPACING
-      }
-      self.parents[deep] = view_obj
-      
-    elseif t[key].label=="Row" then
-      view_obj.view = self.vb:row{
-        style="invisible",
-        spacing=DEFAULT_SPACING,
-      }
-      self.parents[deep] = view_obj
-      
-    elseif t[key].label=="Group" then
-      -- the group
-      local orientation = t[key].xarg.orientation
-      local columns = t[key].xarg.columns
-        
-      if columns then
-        -- enter "grid mode": use current group as 
-        -- base object for inserting multiple rows
-        self.grid_count = self.grid_count+1
-        grid_id = string.format("grid_%i",self.grid_count)
-        orientation = "vertical"
-       
-      else
-        -- exit "grid mode"
-        self.grid_obj = nil
+    
+        -- more grid mode stuff: remember the original view_obj
+        -- grid mode will otherwise loose this reference...
+        if (grid_id) then
+          self.grid_obj = view_obj
+        end
+          
+        self.parents[deep] = view_obj
       end
         
-      if orientation=="vertical" then
-        view_obj.view = self.vb:column{
-          style="group",
-          id=grid_id,
-          margin=DEFAULT_MARGIN,
-          spacing=DEFAULT_SPACING,
-        }
-        
-      else
-        view_obj.view = self.vb:row{
-          style="group",
-          id=grid_id,
-          width=500,
-          margin=DEFAULT_MARGIN,
-          spacing=DEFAULT_SPACING,
-        }
-      end
-  
-      -- more grid mode stuff: remember the original view_obj
-      -- grid mode will otherwise loose this reference...
-      if grid_id then
-        self.grid_obj = view_obj
-      end
-        
-      self.parents[deep] = view_obj
-    end
-      
-    -- something was matched
-    if view_obj.view then
-      -- grid mode: create a(nother) row ?
-      local row_id = nil
-  
-      if view_obj.meta.row then
+      -- something was matched
+      if (view_obj.view) then
+        -- grid mode: create a(nother) row ?
+        local row_id = nil
+    
+        if (view_obj.meta.row) then
           row_id = string.format("grid_%i_row_%i",
             self.grid_count,view_obj.meta.row)
-      end
-  
-        if (not grid_id and self.grid_obj and 
-            not self.vb.views[row_id]) then
-  
-        local row_obj = {
-          view = self.vb:row{
-            id=row_id,
-            spacing=DEFAULT_SPACING,
+        end
+    
+          if (not grid_id and self.grid_obj and 
+              not self.vb.views[row_id]) then
+    
+          local row_obj = {
+            view = self.vb:row{
+              id=row_id,
+              spacing=DEFAULT_SPACING,
+            }
           }
-        }
-        -- assign grid objects to this row
-        self.grid_obj.view:add_child(row_obj.view)
-        self.parents[deep-1] = row_obj
-      end
-        
-      -- attach to parent object (if it exists)
-      local added = false
-  
-      for i = deep-1,1,-1 do
-        if self.parents[i] then
-          self.parents[i].view:add_child(view_obj.view)
-          added = true
-          break
+          -- assign grid objects to this row
+          self.grid_obj.view:add_child(row_obj.view)
+          self.parents[deep-1] = row_obj
+        end
+          
+        -- attach to parent object (if it exists)
+        local added = false
+    
+        for i = deep-1, 1, -1 do
+          if self.parents[i] then
+            self.parents[i].view:add_child(view_obj.view)
+            added = true
+            break
+          end
+        end
+          
+        -- else, add to main view
+        if (not added) then
+          self.view:add_child(view_obj.view)
         end
       end
-        
-      -- else, add to main view
-        if (not added) then
-        self.view:add_child(view_obj.view)
-      end
+      self:walk_table(value,done,deep)
     end
-    self:walk_table(value,done,deep)
-  end
   end
 end
 
@@ -507,4 +593,5 @@ end
 function Display:__tostring()
   return type(self)
 end
+
 

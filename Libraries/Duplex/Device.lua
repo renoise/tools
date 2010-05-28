@@ -16,12 +16,16 @@ A generic device class (OSC or MIDI based)
 
 class 'Device'
 
-function Device:__init(name, protocol)
+function Device:__init(name, message_stream, protocol)
   TRACE('Device:__init')
 
+  assert(name and message_stream and protocol, 
+    "expected a valid name sream and protocol for a device")
+
   self.name = name
+  self.message_stream = message_stream
   self.protocol = protocol
-  self.message_stream = nil
+  
   self.control_map = ControlMap()
 
   -- default palette is provided by the display
