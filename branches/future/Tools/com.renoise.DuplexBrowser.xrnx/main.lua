@@ -18,6 +18,7 @@ require "Duplex/UISpinner"
 require "Duplex/ControlMap"
 require "Duplex/Device"
 require "Duplex/MIDIDevice"
+require "Duplex/OscDevice"
 
 require "Duplex/Applications/Browser"
 require "Duplex/Applications/MixConsole"
@@ -32,28 +33,16 @@ require "Duplex/Controllers/Launchpad/Launchpad"
 
 local app = nil
 
-function show_dialog(device_name,app_name)
-  if not app then
-    app = Browser(device_name,app_name)
+function show_dialog(device_name, app_name)
+  if (not app or not app.dialog or not app.dialog.visible) then
+    app = Browser(device_name, app_name)
   end
   app:show_app()
 end
 
-function handle_app_idle_notification()
-  if app then
-    app:idle_app()
-  end
-end
-
-function handle_app_new_document()
-  if app then
-    app:on_new_document()
-  end
-end
-
 
 -------------------------------------------------------------------------------
--- tool setup
+-- Menu entries
 -------------------------------------------------------------------------------
 
 renoise.tool():add_menu_entry {
@@ -64,31 +53,48 @@ renoise.tool():add_menu_entry {
 }
 
 renoise.tool():add_menu_entry {
-  name = "--- Main Menu:Tools:Duplex:MixConsole (Launchpad)...",
+  name = "--- Main Menu:Tools:Duplex:Launchpad MixConsole...",
   invoke = function() 
-    show_dialog("Launchpad","MixConsole") 
+    show_dialog("Launchpad", "MixConsole") 
   end
 }
 
 renoise.tool():add_menu_entry {
-  name = "Main Menu:Tools:Duplex:MixConsole (Nocturn)...",
+  name = "Main Menu:Tools:Duplex:Nocturn MixConsole...",
   invoke = function() 
-    show_dialog("Nocturn","MixConsole") 
+    show_dialog("Nocturn", "MixConsole") 
   end
 }
 
 renoise.tool():add_menu_entry {
-  name = "Main Menu:Tools:Duplex:PatternMatrix (Launchpad)...",
+  name = "Main Menu:Tools:Duplex:BCF 2000 MixConsole...",
+  invoke = function() 
+    show_dialog("BCF-2000", "MixConsole") 
+  end
+}
+
+renoise.tool():add_menu_entry {
+  name = "--- Main Menu:Tools:Duplex:Launchpad PatternMatrix...",
   invoke = function() 
     show_dialog("Launchpad","PatternMatrix") 
   end
 }
 
-renoise.tool().app_idle_observable:add_notifier(
-  handle_app_idle_notification)
 
-renoise.tool().app_new_document_observable:add_notifier(
-  handle_app_new_document)
+-------------------------------------------------------------------------------
+-- Notifications
+-------------------------------------------------------------------------------
 
+renoise.tool().app_idle_observable:add_notifier(function()
+  if app then
+    app:idle_app()
+  end
+end)
+
+renoise.tool().app_idle_observable:add_notifier(function()
+  if app then
+    app:on_new_document()
+  end
+end)
 
 
