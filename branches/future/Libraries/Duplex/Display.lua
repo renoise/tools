@@ -22,6 +22,7 @@ class 'Display'
 function Display:__init(device)
   TRACE('Display:__init')
 
+  assert(device, "expected a valid device for a display")
   self.device = device  
 
   --  viewbuilder stuff
@@ -32,14 +33,13 @@ function Display:__init(device)
   self.parents = {}
   self.grid_obj = nil    
   self.grid_count = 0
-  --self.grid_columns = nil
 
   -- array of UIComponent instances
-  self.ui_objects = {}  
+  self.ui_objects = table.create()
 
   -- each UI object notifier method is referenced by id, 
   -- so we can attach/detach the method when we need
-  self.ui_notifiers = {}  
+  self.ui_notifiers = table.create()
 
   -- "palette" is a table of named color-constants 
   self.palette = {
@@ -71,7 +71,8 @@ end
 
 function Display:add(obj_instance)
   TRACE('Display:add')
-  table.insert(self.ui_objects,#self.ui_objects+1,obj_instance)
+  
+  self.ui_objects:insert(obj_instance)
 end
 
 
@@ -83,19 +84,19 @@ end
 function Display:clear()
   TRACE("Display:clear()")
   
+--[[
   for _,group in pairs(self.device.control_map.groups)do
     for __,param in ipairs(group) do
--- @elm : control-map definition of the element
--- @obj : reference to the UIComponent instance
--- @point : canvas point containing text/value/color 
---[[
+      -- @elm : control-map definition of the element
+      -- @obj : reference to the UIComponent instance
+      -- @point : canvas point containing text/value/color 
       local pt = CanvasPoint()
       local obj = {ceiling=100}
       self.set_parameter(param,obj,pt)
---rprint(param)      
-]]
+      --rprint(param)      
     end
   end
+]]
 end
 
 
@@ -109,37 +110,43 @@ function Display:update()
     return
   end
 
-  for i,obj in ipairs(self.ui_objects) do
-    if obj.dirty then
+  local control_map = self.device.control_map
+  
+  for _,obj in ipairs(self.ui_objects) do
+    if (obj.dirty) then
 
       -- update the object display
       obj:draw()
 
       -- loop through the delta array - it contains all recent updates
-      if obj.canvas.has_changed then
+      if (obj.canvas.has_changed) then
         for x = 1,obj.width do
           for y = 1, obj.height do
-            if obj.canvas.delta[x][y] then
-              if not self.device.control_map.groups[obj.group_name] then
-                print("Warning: ",type(obj)," not specified in control-map group ",obj.group_name)
-              else
 
-                local columns = self.device.control_map.groups[obj.group_name].columns
+            if (obj.canvas.delta[x][y]) then
+              if not (control_map.groups[obj.group_name]) then
+                print(("Warning: '%s' is not specified in control-map "..
+                  "group '%s'"):format(type(obj), tostring(obj.group_name)))
+
+              else
+                local columns = control_map.groups[obj.group_name].columns
                 local idx = (x+obj.x_pos-1)+((y+obj.y_pos-2)*columns)
-                local elm = self.device.control_map:get_indexed_element(idx,obj.group_name)
-                if elm then
-                  self:set_parameter(elm,obj,obj.canvas.delta[x][y])
+
+                local elm = control_map:get_indexed_element(idx, obj.group_name)
+                
+                if (elm) then
+                  self:set_parameter(elm, obj, obj.canvas.delta[x][y])
                 end
               end
             end
           end
         end
+        
+        -- reset has_changed flag
         obj.canvas:clear_delta()
       end
-
     end
   end
-
 end
 
 
@@ -150,9 +157,8 @@ end
 -- @obj : reference to the UIComponent instance
 -- @point : canvas point containing text/value/color 
 
-function Display:set_parameter(elm,obj,point)
+function Display:set_parameter(elm, obj, point)
   TRACE('Display:set_parameter',elm.name,elm.value,point.text)
-  --objinfo(point)
 
   local widget = nil
   local value = nil
@@ -160,37 +166,70 @@ function Display:set_parameter(elm,obj,point)
 
   -- update hardware display
 
-  if self.device then 
+  if (self.device) then 
     local msg_type = self.device.control_map:determine_type(elm.value)
-    if msg_type == MIDI_NOTE_MESSAGE then
+    
+    local current_message = self.device.message_stream.current_message
+    
+    if (msg_type == MIDI_NOTE_MESSAGE) then
       num = self.device:extract_midi_note(elm.value)
-      value = self.device:point_to_value(point,elm.maximum,elm.minimum,obj.ceiling)
-      self.device:send_note_message(num,value)
-    elseif msg_type == MIDI_CC_MESSAGE then
+
+      value = self.device:point_to_value(
+        point, elm.maximum, elm.minimum, obj.ceiling)
+      
+      -- do not loop back the original value change back to the sender
+      if (not current_message) or
+         (current_message.context ~= MIDI_NOTE_MESSAGE) or
+         (current_message.id ~= elm.id) or
+         (current_message.value ~= value)
+      then
+        self.device:send_note_message(num,value)
+      end
+    
+    elseif (msg_type == MIDI_CC_MESSAGE) then
       num = self.device:extract_midi_cc(elm.value)
-      value = self.device:point_to_value(point,elm.maximum,elm.minimum,obj.ceiling)
-      self.device:send_cc_message(num,value)
+      
+      value = self.device:point_to_value(
+        point, elm.maximum, elm.minimum, obj.ceiling)
+
+      -- do not loop back the original value change back to the sender
+      if (not current_message) or
+         (current_message.context ~= MIDI_CC_MESSAGE) or
+         (current_message.id ~= elm.id) or
+         (current_message.value ~= value)
+      then
+        self.device:send_cc_message(num,value)
+      end
+    
+    else
+      error(("unknown or unhandled msg_type: %d"):format(msg_type))
     end
   end
+
 
   -- update virtual control surface
 
-  if self.vb and self.vb.views then 
+  if (self.vb and self.vb.views) then 
     widget = self.vb.views[elm.id]
   end
-  if widget then
-    if type(widget)=="Button" then
+
+  if (widget) then
+    if (type(widget) == "Button") then
       widget.text = point.text
     end
-    if (type(widget)=="RotaryEncoder") or 
-      (type(widget)=="MiniSlider") or
-      (type(widget)=="Slider") then
-      value = self.device:point_to_value(point,elm.maximum,elm.minimum,obj.ceiling)
+    
+    if (type(widget) == "RotaryEncoder") or 
+       (type(widget) == "MiniSlider") or
+       (type(widget) == "Slider")
+    then
+      value = self.device:point_to_value(
+        point, elm.maximum, elm.minimum, obj.ceiling)
+
       widget:remove_notifier(self.ui_notifiers[elm.id])
-      widget.value = value*1 -- toNumber
+      widget.value = tonumber(value)
       widget:add_notifier(self.ui_notifiers[elm.id])
     end
-  end
+  end 
 end
 
 
@@ -202,8 +241,8 @@ function Display:show_control_surface()
   if (not self.view) then
     self:build_control_surface()
   end
-  self.vb.views.display_rootnode.visible = true
 
+  self.vb.views.display_rootnode.visible = true
 end
 
 
@@ -216,26 +255,26 @@ end
 
 --------------------------------------------------------------------------------
 
---  build the virtual control-surface
---  based on the parsed control-map
+-- build the virtual control-surface based on the parsed control-map
 
 function Display:build_control_surface()
   TRACE('Display:build_control_surface')
 
   self.view = self.vb:column{
-    id="display_rootnode",
-    style="invisible",
+    id = "display_rootnode",
+    style = "invisible",
     width = 500,
     height = 500,
     margin = DEFAULT_MARGIN,
     --spacing = 16,
   }
   
-  -- loading may have failed...
+  -- loading may have failed. check if definition is valid...
   if (self.device.control_map.definition) then
     self:walk_table(self.device.control_map.definition)
   end
-
+  
+  return self.view
 end
 
 
@@ -255,31 +294,37 @@ function Display:generate_message(value, metadata)
   msg.context = self.device.control_map:determine_type(metadata.value)
 
   -- input method : make sure we're using the right handler 
-  if metadata.type == "button" then
+  if (metadata.type == "button") then
     msg.input_method = CONTROLLER_BUTTON
-  elseif metadata.type == "encoder" then
+
+  elseif (metadata.type == "encoder") then
     msg.input_method = CONTROLLER_ENCODER
-  elseif metadata.type == "fader" then
+
+  elseif (metadata.type == "fader") then
     msg.input_method = CONTROLLER_FADER
-  elseif metadata.type == "dial" then
+
+  elseif (metadata.type == "dial") then
     msg.input_method = CONTROLLER_POT
+
   else
     error("unknown metadata.type")
   end
 
   -- include additional useful meta-properties
-  msg.name  = metadata.name
+  msg.name = metadata.name
   msg.group_name = metadata.group_name
-  msg.max    = metadata.maximum+0
-  msg.min    = metadata.minimum+0
-  msg.id    = metadata.id
-  msg.index  = metadata.index
-  msg.column  = metadata.column
-  msg.row    = metadata.row
+  msg.max = tonumber(metadata.maximum)
+  msg.min = tonumber(metadata.minimum)
+  msg.id = metadata.id
+  msg.index = metadata.index
+  msg.column = metadata.column
+  msg.row = metadata.row
   msg.timestamp = os.clock()
 
+  -- mark as virtual generated message
   msg.is_virtual = true
 
+  -- send the message
   self.device.message_stream:input_message(msg)
 end
 
@@ -548,4 +593,5 @@ end
 function Display:__tostring()
   return type(self)
 end
+
 

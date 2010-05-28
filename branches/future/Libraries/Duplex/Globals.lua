@@ -178,9 +178,8 @@ if (__trace_filters ~= nil) then
   
 else
 
-  function TRACE(...)
+  function TRACE()
     -- do nothing
   end
     
 end
-
