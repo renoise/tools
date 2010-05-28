@@ -1,33 +1,38 @@
 --[[----------------------------------------------------------------------------
--- Duplex.MessageStream
+-- Duplex.MessageStream and Message
 ----------------------------------------------------------------------------]]--
 
 --[[
+
 Requires: Globals
-
-Interpret incoming (user-generated) messages, with built-in handlers for 
-* detecting standard press/release events
-* detecting that a button was double-pressed (trigger on second press)
-* detecting that a button was held for specified amount of time 
-* detecting multiple simultanously pressed buttons (combinations) with support for "any" or "all" 
-
-A Display use only a single MessageStream, but we can attach any device to it. 
-This also offers us a "brute-force" method for terminating device communication
-
 
 --]]
 
 
 --==============================================================================
 
+--[[
+
+Interpret incoming (user-generated) messages, with built-in handlers for 
+* detecting standard press/release events
+* detecting that a button was double-pressed (trigger on second press)
+* detecting that a button was held for specified amount of time 
+* detecting multiple simultanously pressed buttons (combinations) with support 
+  for "any" or "all" 
+
+A Display use only a single MessageStream, but we can attach any device to it. 
+This also offers us a "brute-force" method for terminating device communication
+
+--]]
+
 class 'MessageStream' 
 
 function MessageStream:__init()
   TRACE('MessageStream:__init')
 
-  self.change_listeners = {} -- for faders,encoders
-  self.press_listeners = {} -- for buttons
-  self.hold_listeners = {}  -- buttons
+  self.change_listeners = table.create() -- for faders,encoders
+  self.press_listeners = table.create() -- for buttons
+  self.hold_listeners = table.create()  -- buttons
   --self.release_listeners = {}  -- buttons
   --self.double_press_listeners = {}  -- buttons
   --self.combo_listeners = {}  -- buttons
@@ -45,33 +50,28 @@ function MessageStream:__init()
   self.ignored_buttons = nil 
 
   -- [Message,...] - currently pressed buttons, in order of arrival
-  self.pressed_buttons = {} 
-
+  self.pressed_buttons = table.create() 
 end
 
 
 --------------------------------------------------------------------------------
 
-  -- on_idle() : check if buttons have been pressed for some time 
+-- on_idle() : check if buttons have been pressed for some time 
 
 function MessageStream:on_idle()
   TRACE("MessageStream:on_idle()")
 
-    for i,msg in ipairs(self.pressed_buttons) do
-      
-      --print(msg.timestamp,os.clock())
-      
-      if(not msg.__held_event_fired) and
-        (msg.timestamp+self.button_hold_time < os.clock()) then
-        -- broadcast to attached listeners
-        for _,listener in ipairs(self.hold_listeners)  do 
-          listener.handler() 
-        end
-        msg.__held_event_fired = true
+  for i,msg in ipairs(self.pressed_buttons) do
+    if (not msg.__held_event_fired) and
+       (msg.timestamp + self.button_hold_time < os.clock()) 
+    then
+      -- broadcast to attached listeners
+      for _,listener in ipairs(self.hold_listeners)  do 
+        listener.handler() 
       end
-
+      msg.__held_event_fired = true
     end
-
+  end
 end
 
 
@@ -85,21 +85,24 @@ end
 function MessageStream:add_listener(obj,evt_type,handler)
   TRACE('MessageStream:add_listener:'..evt_type)
   
-  if evt_type == DEVICE_EVENT_BUTTON_PRESSED then
-    table.insert(self.press_listeners,#self.press_listeners+1,{handler=handler,obj=obj})
+  if (evt_type == DEVICE_EVENT_BUTTON_PRESSED) then
+    self.press_listeners:insert({ handler = handler, obj = obj })
     TRACE("MessageStream:onpress handler added")
-  end
-  if evt_type == DEVICE_EVENT_VALUE_CHANGED then
-    table.insert(self.change_listeners,#self.change_listeners+1,{handler=handler,obj=obj})
+
+  elseif (evt_type == DEVICE_EVENT_VALUE_CHANGED) then
+    self.change_listeners:insert({ handler = handler, obj = obj })
     TRACE("MessageStream:onpress handler added")
-  end
-  if evt_type == DEVICE_EVENT_BUTTON_HELD then
-    table.insert(self.hold_listeners,#self.hold_listeners+1,{handler=handler,obj=obj})
+
+  elseif (evt_type == DEVICE_EVENT_BUTTON_HELD) then
+    self.hold_listeners:insert({ handler = handler, obj = obj })
     TRACE("MessageStream:hold handler added")
+  
+  else
+    error(("unknown evt_type %d"):format(evt_type))
   end
 
-  TRACE("MessageStream:Number of listeners after addition:", #self.press_listeners,#self.change_listeners,#self.hold_listeners)
-
+  TRACE("MessageStream:Number of listeners after addition:",
+     #self.press_listeners, #self.change_listeners, #self.hold_listeners)
 end
 
 
@@ -111,26 +114,35 @@ end
 function MessageStream:remove_listener(obj,evt_type)
   TRACE("MessageStream:remove_listener:",obj,evt_type)
 
-  if evt_type == DEVICE_EVENT_BUTTON_PRESSED then
+  if (evt_type == DEVICE_EVENT_BUTTON_PRESSED) then
     for i,listener in ipairs(self.press_listeners) do
       if (obj == listener.obj) then
-        table.remove(self.press_listeners,i)
+        self.press_listeners:remove(i)
         return true
       end
     end
-  end
 
-  if evt_type == DEVICE_EVENT_VALUE_CHANGED then
+  elseif (evt_type == DEVICE_EVENT_VALUE_CHANGED) then
     for i,listener in ipairs(self.change_listeners) do
       if (obj == listener.obj) then
-        table.remove(self.change_listeners,i)
+        self.change_listeners:remove(i)
         return true
       end
     end
+
+  elseif (evt_type == DEVICE_EVENT_BUTTON_HELD) then
+    for i,listener in ipairs(self.hold_listeners) do
+      if (obj == listener.obj) then
+        self.hold_listeners:remove(i)
+        return true
+      end
+    end 
+ 
+  else
+     error(("unknown evt_type %d"):format(evt_type))
   end
-
+    
   return false
-
 end
 
 
@@ -151,44 +163,45 @@ function MessageStream:input_message(msg)
       listener.handler() 
     end
   
-  elseif msg.input_method == CONTROLLER_BUTTON then
+  elseif (msg.input_method == CONTROLLER_BUTTON) then
 
     --  "binary" input
 
     -- if it's listed in ignored_buttons
-      -- remove from ignored_buttons and exit
+    -- remove from ignored_buttons and exit
 
-    if msg.value == msg.max then
+    if (msg.value == msg.max) then
       -- interpret this as pressed
-        -- check if this button has been pressed recently
-          -- invoke double_press, and add to ignored_buttons (so the release won't trigger as well)
-        -- else, add to pressed_buttons
-        -- todo: check if already pressed, and skip adding
+      -- check if this button has been pressed recently invoke double_press, and 
+      -- add to ignored_buttons (so the release won't trigger as well) else, add 
+      -- to pressed_buttons
+      -- todo: check if already pressed, and skip adding
 
-        -- if the input source was the virtual control surface, we do
-        -- not add the button to the list of pressed buttons (not while
-        -- the control surface doesn't have a release event)
-        if(not msg.is_virtual)then
-          table.insert(self.pressed_buttons,#self.pressed_buttons+1,msg)
-        end
+      -- if the input source was the virtual control surface, we do
+      -- not add the button to the list of pressed buttons (not while
+      -- the control surface doesn't have a release event)
+      if (not msg.is_virtual)then
+        self.pressed_buttons:insert(msg)
+      end
 
-        -- broadcast to listeners
-        for _,listener in ipairs(self.press_listeners)  do 
-          listener.handler() 
-        end
-
+      -- broadcast to listeners
+      for _,listener in ipairs(self.press_listeners) do 
+        listener.handler() 
+      end
 
       -- check other held buttons:
-        -- if combination is matched, invoke combination_press, and add held buttons 
-        -- to ignored_buttons (so the release won't trigger)
-    elseif msg.value == msg.min then
-        -- interpret this as release
-        -- remove from pressed_buttons
-        for i,__ in ipairs(self.pressed_buttons) do
-          if(msg.id == __.id) then
-            table.remove(self.pressed_buttons,i)
-          end
+      -- if combination is matched, invoke combination_press, and add held buttons 
+      -- to ignored_buttons (so the release won't trigger)
+      
+    elseif (msg.value == msg.min) then
+      -- interpret this as release
+      
+      -- remove from pressed_buttons
+      for i,button_msg in ipairs(self.pressed_buttons) do
+        if (msg.id == button_msg.id) then
+          self.pressed_buttons:remove(i)
         end
+      end
     end
 
   else
@@ -197,9 +210,7 @@ function MessageStream:input_message(msg)
 end
 
 
---[[----------------------------------------------------------------------------
--- Duplex.Message
-----------------------------------------------------------------------------]]--
+--==============================================================================
 
 --[[
 
@@ -209,8 +220,6 @@ The Message class is a container for messages, closely related to the ControlMap
 
 --]]
 
-
---==============================================================================
 
 class 'Message' 
 
