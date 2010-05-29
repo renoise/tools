@@ -28,22 +28,27 @@ renoise.tool():add_menu_entry {
 }
 
 renoise.tool():add_menu_entry {
-  name = "Main Menu:Tools:Example Tool GUI:5. Aligning & Auto Sizing...",
+  name = "Main Menu:Tools:Example Tool GUI:5. Batch Building Views 2 (keyboard)...",
+  invoke = function() dynamic_building_too() end 
+}
+
+renoise.tool():add_menu_entry {
+  name = "Main Menu:Tools:Example Tool GUI:6. Aligning & Auto Sizing...",
   invoke = function() aligners_and_auto_sizing() end 
 }
   
 renoise.tool():add_menu_entry {
-  name = "Main Menu:Tools:Example Tool GUI:6. Available Backgrounds & Text...",
+  name = "Main Menu:Tools:Example Tool GUI:7. Available Backgrounds & Text...",
   invoke = function() available_backgrounds() end 
 }
   
 renoise.tool():add_menu_entry {
-  name = "Main Menu:Tools:Example Tool GUI:7. Available Controls...",
+  name = "Main Menu:Tools:Example Tool GUI:8. Available Controls...",
   invoke = function() available_controls() end 
 }
   
 renoise.tool():add_menu_entry {
-  name = "Main Menu:Tools:Example Tool GUI:8. Keyboard Events...",
+  name = "Main Menu:Tools:Example Tool GUI:9. Keyboard Events...",
   invoke = function() handle_key_events() end
 }
 
@@ -320,6 +325,75 @@ function dynamic_building()
 end
 
 
+
+function dynamic_building_too()
+
+  -- here is an example that creates a virtual keyboard (3 octaves) using images on buttons
+
+  local vb = renoise.ViewBuilder()
+
+  local CONTENT_MARGIN = renoise.ViewBuilder.DEFAULT_CONTROL_MARGIN
+  local BUTTON_WIDTH = 15
+
+  local NUM_OCTAVES = 10
+  local NUM_NOTES = 12
+
+  local note_strings = {
+    "C\n-", "C\n#", "D\n-", "D\n#", "E\n-", "F\n-", 
+    "F\n#", "G\n-", "G\n#", "A\n-", "A\n#", "B\n-"
+  }
+
+  -- create the main content column, but don't add any views yet:
+  local dialog_content = vb:row {
+    margin = CONTENT_MARGIN
+  }
+
+  for octave = 5,7 do
+    -- create a row for each octave
+    local octave_row = vb:row {}
+
+    for note = 1,NUM_NOTES do
+      local note_button = 1
+      if note ~= 2 and note ~= 4 and note ~= 7 and note ~= 9 and note ~= 11 then
+        note_button = vb:button {
+          width = BUTTON_WIDTH,
+          height = 80,
+          bitmap = "Bitmaps/WhiteKey_"..tostring(octave)..".bmp",
+          notifier = function()
+            -- functions do memorize all values in the scope they are
+            -- nested in (upvalues), so we can simply access the note and 
+            -- octave from the loop here:
+            renoise.app():show_status(("note_button %s%d got pressed"):format(
+              note_strings[note], octave - 1))
+          end
+
+        }
+      else
+        note_button = vb:button {
+          width = BUTTON_WIDTH,
+          height = 60,
+          bitmap = "Bitmaps/BlackKey_"..tostring(octave)..".bmp",
+          notifier = function()
+            -- functions do memorize all values in the scope they are
+            -- nested in (upvalues), so we can simply access the note and 
+            -- octave from the loop here:
+            renoise.app():show_status(("note_button %s%d got pressed"):format(
+              note_strings[note], octave - 1))
+          end
+
+        }
+      end
+
+      -- add the button by "hand" into the octave_row
+      octave_row:add_child(note_button)
+    end
+    dialog_content:add_child(octave_row)
+
+  end
+
+  renoise.app():show_custom_dialog(
+    "Batch Building Views", dialog_content)
+end
 
 --------------------------------------------------------------------------------
 
@@ -658,7 +732,7 @@ function available_controls()
   local TEXT_ROW_WIDTH = 80
 
 
-  -- CONTOROL ROWS
+  -- CONTROL ROWS
   
   -- textfield
   local textfield_row = vb:row {
