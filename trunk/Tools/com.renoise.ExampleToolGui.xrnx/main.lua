@@ -358,10 +358,10 @@ function dynamic_building_too()
       local KEY_FILE = "Bitmaps/WhiteKey.BMP"
       
       if note ~= 2 and note ~= 4 and note ~= 7 and note ~= 9 and note ~= 11 then
-        KEY_FILE = "Bitmaps/WhiteKey_"..tostring(octave)..".bmp"
+        KEY_FILE = "Bitmaps/WhiteKey_"..tostring(octave-1)..".bmp"
       else
         KEY_SIZE = 60
-        KEY_FILE = "Bitmaps/BlackKey_"..tostring(octave)..".bmp"
+        KEY_FILE = "Bitmaps/BlackKey_"..tostring(octave-1)..".bmp"
       end
       note_button = vb:button {
           width = BUTTON_WIDTH,
