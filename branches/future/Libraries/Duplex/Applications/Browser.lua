@@ -211,6 +211,7 @@ function Browser:set_application(application_name)
     local encoders_group_name = nil
     local buttons_group_name = nil
     local master_group_name = nil
+    local page_scroll_group_name = nil
 
     if (device_display_name == "Launchpad") then
       sliders_group_name="Grid"
@@ -226,11 +227,12 @@ function Browser:set_application(application_name)
       buttons_group_name = "Buttons1"
       encoders_group_name= "Encoders"
       sliders_group_name = "Faders"
-      master_group_name = nil
+      page_scroll_group_name = "PageControls"
     end
 
-    self.application = MixConsole(self.display, sliders_group_name,
-      encoders_group_name, buttons_group_name, master_group_name)
+    self.application = MixConsole(self.display, 
+      sliders_group_name, encoders_group_name, buttons_group_name, 
+      master_group_name, page_scroll_group_name)
 
   elseif (application_name == "PatternMatrix") then
   

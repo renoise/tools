@@ -23,27 +23,32 @@ renoise.tool():add_menu_entry {
 }
 
 renoise.tool():add_menu_entry {
-  name = "Main Menu:Tools:Example Tool GUI:4. Batch Building Views...",
-  invoke = function() dynamic_building() end 
+  name = "Main Menu:Tools:Example Tool GUI:4. Batch Building Views (Matrix)...",
+  invoke = function() dynamic_building_matrix() end 
 }
 
 renoise.tool():add_menu_entry {
-  name = "Main Menu:Tools:Example Tool GUI:5. Aligning & Auto Sizing...",
+  name = "Main Menu:Tools:Example Tool GUI:5. Batch Building Views (Piano)...",
+  invoke = function() dynamic_building_piano() end 
+}
+
+renoise.tool():add_menu_entry {
+  name = "Main Menu:Tools:Example Tool GUI:6. Aligning & Auto Sizing...",
   invoke = function() aligners_and_auto_sizing() end 
 }
   
 renoise.tool():add_menu_entry {
-  name = "Main Menu:Tools:Example Tool GUI:6. Available Backgrounds & Text...",
+  name = "Main Menu:Tools:Example Tool GUI:7. Available Backgrounds & Text...",
   invoke = function() available_backgrounds() end 
 }
   
 renoise.tool():add_menu_entry {
-  name = "Main Menu:Tools:Example Tool GUI:7. Available Controls...",
+  name = "Main Menu:Tools:Example Tool GUI:8. Available Controls...",
   invoke = function() available_controls() end 
 }
   
 renoise.tool():add_menu_entry {
-  name = "Main Menu:Tools:Example Tool GUI:8. Keyboard Events...",
+  name = "Main Menu:Tools:Example Tool GUI:9. Keyboard Events...",
   invoke = function() handle_key_events() end
 }
 
@@ -262,9 +267,9 @@ end
 
 --------------------------------------------------------------------------------
 
--- dynamic_building
+-- dynamic_building_matrix
 
-function dynamic_building()
+function dynamic_building_matrix()
 
   -- as shown in dynamic_content(), you can build views either in the "nested"
   -- notation, or "by hand". You can of course also combine both ways, for 
@@ -319,6 +324,73 @@ function dynamic_building()
     "Batch Building Views", dialog_content)
 end
 
+
+--------------------------------------------------------------------------------
+
+-- dynamic_building_piano
+
+function dynamic_building_piano()
+
+  -- an example that creates a virtual keyboard (3 octaves) using 
+  -- images on buttons
+
+  local vb = renoise.ViewBuilder()
+
+  local CONTENT_MARGIN = renoise.ViewBuilder.DEFAULT_CONTROL_MARGIN
+  local BUTTON_WIDTH = 15
+
+  local NUM_OCTAVES = 10
+  local NUM_NOTES = 12
+
+  local note_strings = {
+    "C\n-", "C\n#", "D\n-", "D\n#", "E\n-", "F\n-", 
+    "F\n#", "G\n-", "G\n#", "A\n-", "A\n#", "B\n-"
+  }
+
+  local is_black_key = {
+    [2]=true, [4]=true, [7]=true, [9]=true, [11]=true
+  }
+  
+  -- create the main content column, but don't add any views yet:
+  local dialog_content = vb:row {
+    margin = CONTENT_MARGIN
+  }
+
+  for octave = 5,7 do
+    -- create a row for each octave
+    local octave_row = vb:row {}
+
+    for note = 1,NUM_NOTES do
+      local key_height, bitmap_name
+      
+      if (is_black_key[note]) then
+        key_height = 60
+        bitmap_name = ("Bitmaps/BlackKey_%d.bmp"):format(tostring(octave - 1))
+      else
+        key_height = 80
+        bitmap_name = ("Bitmaps/WhiteKey_%d.bmp"):format(tostring(octave - 1))
+      end
+      
+      local note_button = vb:button {
+        bitmap = bitmap_name,
+        width = BUTTON_WIDTH,
+        height = key_height,
+        notifier = function()
+          renoise.app():show_status(("note_button %s%d got pressed"):format(
+            note_strings[note], octave - 1))
+        end
+      }
+
+      -- add the button by "hand" into the octave_row
+      octave_row:add_child(note_button)
+    end
+    
+    dialog_content:add_child(octave_row)
+  end
+
+  renoise.app():show_custom_dialog(
+    "Batch Building Views", dialog_content)
+end
 
 
 --------------------------------------------------------------------------------
@@ -660,7 +732,7 @@ function available_controls()
   local TEXT_ROW_WIDTH = 80
 
 
-  -- CONTOROL ROWS
+  -- CONTROL ROWS
   
   -- textfield
   local textfield_row = vb:row {
