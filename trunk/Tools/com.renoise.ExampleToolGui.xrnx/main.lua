@@ -354,25 +354,19 @@ function dynamic_building_too()
 
     for note = 1,NUM_NOTES do
       local note_button = 1
+      local KEY_SIZE = 80
+      local KEY_FILE = "Bitmaps/WhiteKey.BMP"
+      
       if note ~= 2 and note ~= 4 and note ~= 7 and note ~= 9 and note ~= 11 then
-        note_button = vb:button {
-          width = BUTTON_WIDTH,
-          height = 80,
-          bitmap = "Bitmaps/WhiteKey_"..tostring(octave)..".bmp",
-          notifier = function()
-            -- functions do memorize all values in the scope they are
-            -- nested in (upvalues), so we can simply access the note and 
-            -- octave from the loop here:
-            renoise.app():show_status(("note_button %s%d got pressed"):format(
-              note_strings[note], octave - 1))
-          end
-
-        }
+        KEY_FILE = "Bitmaps/WhiteKey_"..tostring(octave)..".bmp"
       else
-        note_button = vb:button {
+        KEY_SIZE = 60
+        KEY_FILE = "Bitmaps/BlackKey_"..tostring(octave)..".bmp"
+      end
+      note_button = vb:button {
           width = BUTTON_WIDTH,
-          height = 60,
-          bitmap = "Bitmaps/BlackKey_"..tostring(octave)..".bmp",
+          height = KEY_SIZE,
+          bitmap = KEY_FILE,
           notifier = function()
             -- functions do memorize all values in the scope they are
             -- nested in (upvalues), so we can simply access the note and 
@@ -381,8 +375,7 @@ function dynamic_building_too()
               note_strings[note], octave - 1))
           end
 
-        }
-      end
+      }
 
       -- add the button by "hand" into the octave_row
       octave_row:add_child(note_button)
