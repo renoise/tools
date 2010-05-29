@@ -380,8 +380,8 @@ function MixConsole:build_app()
     self.page_scroller.maximum = math.max(0, 
       #renoise.song().tracks - self.horizontal_size)
     self.page_scroller.x_pos = 1
-    self.page_scroller.palette.foreground_dec.text = "?"
-    self.page_scroller.palette.foreground_inc.text = "?"
+    self.page_scroller.palette.foreground_dec.text = "◄"
+    self.page_scroller.palette.foreground_inc.text = "►"
     self.page_scroller.on_press = function(obj) 
       self.__track_offset = obj.index
       self:__attach_to_tracks()
