@@ -41,7 +41,7 @@ renoise.tool():add_menu_entry {
 -- key bindings
 
 renoise.tool():add_keybinding {
-  name = "Pattern Editor:Pattern Operations:Strum Notes In Selection",
+  name = "Pattern Editor:Block Operations:Strum Notes",
   invoke = function() execute_strum(OPTION_SELECTION_IN_PATTERN) end
 }
 
