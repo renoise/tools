@@ -2,12 +2,14 @@
 GUI
 ----------------------------------------------------------------------------]]--
 
--- Copy Random.mode_names table for local use
-local randomize_modes = table.create()
-for k,v in pairs(Random.mode_names) do randomize_modes[k] = v end
-table.insert(randomize_modes, 1, "Shuffle")
+module("gui", package.seeall)
 
-local range_modes = table.create {
+-- randomize_modes table, including shuffle
+randomize_modes = table.rcopy(Random.mode_names)
+table.insert(randomize_modes, "Shuffle")
+
+-- available iterator ranges
+range_modes = {
   "Whole Song",
   "Whole Pattern",
   "Track in Song",
@@ -15,15 +17,24 @@ local range_modes = table.create {
   "Selection"
 }
 
-local current_range = #range_modes
-local current_mode = 1
-local current_preserve_octaves = true
 
+--[[----------------------------------------------------------------------------
+Local Functions & States
+----------------------------------------------------------------------------]]--
+
+-- status
+
+local current_range = #range_modes
+local current_mode = nil
+local current_preserve_octaves = true
 local current_dialog = nil
 
--------------------------------------------------------------------------------
 
-function invoke_current_random()
+-- invoke_current_random
+
+local function invoke_current_random()
+  assert(current_range and current_mode, "mode or range was not yet set")
+  
   local range = range_modes[current_range]
   local mode = randomize_modes[current_mode]
 
@@ -59,22 +70,48 @@ function invoke_current_random()
   end
 
   if (mode == "Shuffle") then
-    invoke_shuffle(iter, selection_only)
+    randomizer.invoke_shuffle(iter, selection_only)
   else
-    invoke_random(mode, iter, selection_only, current_preserve_octaves)
+    randomizer.invoke_random(mode, iter, selection_only, current_preserve_octaves)
+  end
+end
+
+
+--[[----------------------------------------------------------------------------
+Public functions
+----------------------------------------------------------------------------]]--
+
+-- if a mode already was set, invoke this mode, else open the GUI 
+-- to let the user define a mode
+
+function invoke_random_in_range(range_string)
+  current_range = table.find(range_modes, range_string) or
+    error("expected param range to be one of 'range_string'")
+  
+  if not (current_mode) then
+    show_randomize_gui()
+  else
+    invoke_current_random()
   end
 end
 
 
 -------------------------------------------------------------------------------
 
-function randomize_gui()
+-- create and show the randomize GUI dialog or bring the existing one to front
 
+function show_randomize_gui()
+
+  -- check for already opened dialogs
   if (current_dialog and current_dialog.visible) then
     current_dialog:show()
     return
   end
 
+  -- initialize mode when opened the first time 
+  current_mode = current_mode or #randomize_modes
+
+  -- create and show a new dialog
   local DIALOG_MARGIN =
     renoise.ViewBuilder.DEFAULT_DIALOG_MARGIN
 
@@ -168,3 +205,4 @@ function randomize_gui()
   current_dialog = renoise.app():show_custom_dialog(
     "Notes Randomizer", content_view, key_handler)
 end
+
