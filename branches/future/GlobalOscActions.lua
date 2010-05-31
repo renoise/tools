@@ -40,7 +40,7 @@
  message examples are:
  
  /renoise/transport/play (handled internally)
- /renoise/track[1]/volume f=1.0 (handled here)
+ /renoise/track1/volume f=1.0 (handled here)
  /renoise/window/activate_gui_preset i=1 (handled here)
  ...
  
@@ -49,9 +49,8 @@
  
  With a special OSC message "/renoise/evaluate" you can evaluate Lua 
  expressions remotely, and thus do "anything" the Renoise Lua API offers 
- remotely. This way you don't need to edit this file here, in order
- to extend Renoises Osc implementation, but can completely do this in your 
- client.
+ remotely. This way you don't need to edit this file in order to extend 
+ Renoises Osc implementation, but can completely do this in your client.
 
  "/renoise/evaluate" expects exactly one argument, the to be evaluated 
  Lua expression, and will run the expression in a custom environment. This 
@@ -69,7 +68,7 @@
 -- Message Registration
 ------------------------------------------------------------------------------
 
-local message_map = table.create{}
+local action_pattern_map = table.create{}
 
 
 -- create a message argument
@@ -81,27 +80,28 @@ local function argument(name, type)
 end
 
 
--- register a message with the given optional arguments and a handler function
+-- register a message with the given optional arguments, handler 
+-- function and description
 
-local function add_message(message, arguments_or_handler, handler)
-  assert(message_map[message] == nil, 
-    "message is already registered")
+local function add_action(info)
   
-  -- arguments + handler
-  if (handler) then
-    message_map[message] = { 
-      handler = handler, 
-      arguments = arguments_or_handler 
-    }
+  assert(action_pattern_map[info.pattern] == nil, 
+    "pattern is already registered")
   
-  -- no arguments + handler
-  else
-    message_map[message] = { 
-      handler = arguments_or_handler, 
-      arguments = {}
-    }
-  end
+  assert(type(info.pattern) == "string" and 
+    type(info.handler) == "function", 
+    "info needs at least a pattern and handler")
+    
+  assert(not info.arguments or type(info.arguments) == "table", 
+    "arguments should not be specified or a table")
+    
+  assert(not info.description or type(info.description) == "string", 
+    "descriotion should not be specified or a table")
   
+  info.arguments = info.arguments or {}
+  info.description = info.description or "No descriotion available"
+  
+  action_pattern_map[info.pattern] = info
 end
  
 
@@ -166,44 +166,58 @@ end
 
 -- evaluate
 
-add_message("/evaluate", { argument("expression", "string") },  
-  function(expression)
+add_action { 
+  pattern = "/evaluate", 
+  arguments = { argument("expression", "string") },
+  description = "Evaluate a custom Lua expression, like i.g:\n" ..
+    "'renoise.song().transport.bpm = 234'",
+  handler = function(expression)
     print(("OSC Message: evaluating '%s'"):format(expression))
 
     local succeeded, error_message = evaluate(expression)
     if (not succeeded) then
       print(("*** expression failed: '%s'"):format(error_message))
     end
-  end
-)
+  end,
+}
 
 
 -- transport
 
-add_message("/transport/start", 
-  function()
+add_action { 
+  pattern = "/transport/start", 
+  description = "Start playback. No arguments avilable.",
+  handler = function()
     local play_mode = renoise.Transport.PLAYMODE_RESTART_PATTERN
     renoise.song().transport:start(play_mode)
-  end
-)
+  end,  
+}
 
-add_message("/transport/stop", 
-  function()
+add_action { 
+  pattern = "/transport/stop", 
+  description = "Stop playback. No arguments avilable.",
+  handler = function()
     renoise.song().transport:stop()
-  end
-)
+  end,
+}
 
-add_message("/transport/bpm", { argument("bpm_value", "number") }, 
-  function(bpm)
+add_action { 
+  pattern = "/transport/bpm", 
+  arguments = { argument("bpm_value", "number") }, 
+  description = "Set the songs current BPM [32-999]",
+  handler = function(bpm)
     renoise.song().transport.bpm = clamp_value(bpm, 32, 999)
-  end
-)
+  end,
+}
 
-add_message("/transport/lpb", { argument("lpb_value", "number") }, 
-  function(lpb)
-    renoise.song().transport.lpb = clamp_value(bpm, 1, 255)
-  end
-)
+add_action {
+  pattern = "/transport/lpb", 
+  arguments = { argument("lpb_value", "number") }, 
+  description = "Set the songs current Lines Per Peat [1-255]",
+  handler = function(lpb)
+    renoise.song().transport.lpb = clamp_value(lpb, 1, 255)
+  end,  
+}
 
 
 ------------------------------------------------------------------------------
@@ -213,12 +227,18 @@ add_message("/transport/lpb", { argument("lpb_value", "number") },
 -- available_messages
 
 function available_messages()
-  local ret = table.create {}
+  local ret = table.create()
 
-  for name, message in pairs(message_map) do
+  for _, action in pairs(action_pattern_map) do
+    local argument_types = table.create()
+    for _, argument in pairs(action.arguments) do
+      argument_types:insert(argument.type)
+    end
+    
     ret:insert {
-      name = name,
-      arguments = message.arguments
+      name = action.pattern,
+      arguments = argument_types,
+      description = action.description
     }
   end
     
@@ -230,16 +250,16 @@ end
 
 function process_message(pattern, arguments)
   local handled = false
-  local message = message_map[pattern]
+  local action = action_pattern_map[pattern]
   
   -- find message, compare argument count
-  if (message and #message.arguments == #arguments) then
+  if (action and #action.arguments == #arguments) then
     local arguments_match = true
     local argument_values = table.create{}
     
     -- check argument types
     for i = 1, #arguments do
-      if (message.arguments[i].type == type(arguments[i].value)) then 
+      if (action.arguments[i].type == type(arguments[i].value)) then 
         argument_values:insert(arguments[i].value)
       else
         arguments_match = false
@@ -247,9 +267,9 @@ function process_message(pattern, arguments)
       end
     end
     
-    -- invoke the message
+    -- invoke the action
     if (arguments_match) then
-      message.handler(unpack(argument_values))
+      action.handler(unpack(argument_values))
       handled = true
     end
   end
