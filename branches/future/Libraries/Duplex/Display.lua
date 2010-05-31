@@ -215,12 +215,19 @@ function Display:set_parameter(elm, obj, point)
 
   if (widget) then
     if (type(widget) == "Button") then
-      widget.text = point.text
-    end
+      -- either use text or colors for a button
+      local colorspace = self.device.colorspace
+      if (colorspace[1] or colorspace[2] or colorspace[3]) then
+        widget.color = self:__quantize_widget_color(point.color)
+        widget.text = ""
+      else
+        widget.color = { 0, 0, 0 }
+        widget.text = point.text
+      end
     
-    if (type(widget) == "RotaryEncoder") or 
-       (type(widget) == "MiniSlider") or
-       (type(widget) == "Slider")
+    elseif (type(widget) == "RotaryEncoder") or 
+      (type(widget) == "MiniSlider") or
+      (type(widget) == "Slider")
     then
       value = self.device:point_to_value(
         point, elm.maximum, elm.minimum, obj.ceiling)
@@ -228,6 +235,10 @@ function Display:set_parameter(elm, obj, point)
       widget:remove_notifier(self.ui_notifiers[elm.id])
       widget.value = tonumber(value)
       widget:add_notifier(self.ui_notifiers[elm.id])
+    
+    else
+      error(("internal error: unexpected or unknown "..
+        "widget type '%s'"):format(type(widget)))
     end
   end 
 end
@@ -260,11 +271,8 @@ end
 function Display:build_control_surface()
   TRACE('Display:build_control_surface')
 
-  self.view = self.vb:column{
+  self.view = self.vb:column {
     id = "display_rootnode",
-    style = "invisible",
-    width = 500,
-    height = 500,
     margin = DEFAULT_MARGIN,
     --spacing = 16,
   }
@@ -360,7 +368,6 @@ function Display:walk_table(t, done, deep)
           view_obj.view = self.vb:column{
             height = UNIT_HEIGHT,
             width = UNIT_WIDTH,
-            style = "invisible"
           }
 
           -- a parameter unit
@@ -479,7 +486,6 @@ function Display:walk_table(t, done, deep)
   
       elseif (t[key].label == "Column") then
         view_obj.view = self.vb:column{
-          style = "invisible",
           spacing = DEFAULT_SPACING
         }
         self.parents[deep] = view_obj
@@ -490,7 +496,6 @@ function Display:walk_table(t, done, deep)
   
       elseif (t[key].label == "Row") then
         view_obj.view = self.vb:row{
-          style = "invisible",
           spacing = DEFAULT_SPACING,
         }
         self.parents[deep] = view_obj
@@ -527,7 +532,7 @@ function Display:walk_table(t, done, deep)
           view_obj.view = self.vb:row{
             style = "group",
             id = grid_id,
-            width = 500,
+            width = 400,
             margin = DEFAULT_MARGIN,
             spacing = DEFAULT_SPACING,
           }
@@ -594,4 +599,24 @@ function Display:__tostring()
   return type(self)
 end
 
+
+--------------------------------------------------------------------------------
+
+function Display:__quantize_widget_color(color)
+
+  local function quantize_color(value, color_space)
+    if (color_space and color_space > 0) then
+      assert(color_space <= 256, "invalid device colorspace value")
+      return math.floor(value / (256 / color_space)) * (256 / color_space)
+    else
+      return 0
+    end
+  end
+  
+  return {
+    quantize_color(color[1], self.device.colorspace[1]),
+    quantize_color(color[2], self.device.colorspace[2]),
+    quantize_color(color[3], self.device.colorspace[3])
+  } 
+end
 

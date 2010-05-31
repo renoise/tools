@@ -35,14 +35,16 @@ function Browser:__init(device_name, app_name)
   self.application = nil  --  current application
 
   self.vb = renoise.ViewBuilder()
-
+  
   self:build_app()
   
-  -- hide after building
+  -- hide application popup and device settings after building
   self.vb.views.dpx_browser_app_row.visible = false
   self.vb.views.dpx_browser_device_settings.visible = false
-  self.vb.views.dpx_browser_fix.visible = false
 
+  -- update the main views and dialogs size
+  self.vb.views.dpx_browser_rootnode:resize()
+  
   -- as last step, apply optional arguments (autostart apps, devices)
   if (device_name) then
     self:__set_device_index(device_name)
@@ -154,6 +156,9 @@ function Browser:set_device(name)
       end
     end
   end
+  
+  -- update the main views and dialogs size
+  self.vb.views.dpx_browser_rootnode:resize()
 end
 
 
@@ -257,22 +262,19 @@ function Browser:build_app()
 
   local vb = self.vb
   
-  self.view = vb:column{
-    --margin = DEFAULT_MARGIN,
+  self.view = vb:column {
     id = 'dpx_browser_rootnode',
     style = "body",
-    width = 400,
     vb:row{
       margin = DEFAULT_MARGIN,
       vb:text{
           text="Device",
           width=60,
       },
-      vb:popup{
+      vb:popup {
           id='dpx_browser_input_device',
           items=devices,
-          --value=4,
-          width=200,
+          width=166,
           notifier=function(e)
             self:set_device(self:__strip_na_postfix(devices[e]))
           end
@@ -280,52 +282,42 @@ function Browser:build_app()
       vb:button{
           id='dpx_browser_device_settings',
           text="Settings",
-          --visible=false,
       },
     },
-    vb:row{
+    vb:row {
       margin = DEFAULT_MARGIN,
       id= 'dpx_browser_app_row',
-      --visible=false,
-      vb:text{
-          text="Application",
-          width=60,
+     vb:text {
+        text="Application",
+        width=60,
       },
-      vb:popup{
-          id='dpx_browser_application',
-          items=applications,
-          value=1,
-          width=200,
-          notifier=function(e)
-            self:set_application(applications[e])
-          end
+      vb:popup {
+        id='dpx_browser_application',
+        items=applications,
+        value=1,
+        width=166,
+        notifier=function(e)
+          self:set_application(applications[e])
+        end
       },
-      vb:row{
+      vb:row {
         id='dpx_browser_application_active',
         visible=false,
         vb:checkbox{
-            value=false,
-            id='dpx_browser_application_checkbox',
-            notifier=function(e)
-              if e then
-                self:start_app()
-              else
-                self:stop_app()
-              end
+          value=false,
+          id='dpx_browser_application_checkbox',
+          notifier=function(e)
+            if e then
+              self:start_app()
+            else
+              self:stop_app()
             end
+          end
         },
-        vb:text{
-            text="Run",
+        vb:text {
+          text="Run",
         },
       },
-    },
-
-    -- the following is used to control initial size of dialog
-    vb:button{
-      id='dpx_browser_fix',
-      width=400,
-      height=400,
-      text="BOOM",
     },
   }
 end
