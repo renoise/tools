@@ -91,7 +91,7 @@ renoise.tool().app_idle_observable:add_notifier(function()
   end
 end)
 
-renoise.tool().app_idle_observable:add_notifier(function()
+renoise.tool().app_new_document_observable:add_notifier(function()
   if app then
     app:on_new_document()
   end
