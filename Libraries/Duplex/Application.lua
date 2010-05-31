@@ -59,7 +59,7 @@ function Application:start_app()
   TRACE("Application:start_app()")
   
   if not (self.created) then 
-    return false 
+    return 
   end
   
   self.active = true
@@ -74,7 +74,7 @@ function Application:stop_app()
   TRACE("Application:stop_app()")
   
   if not (self.created) then 
-    return false 
+    return 
   end
   
   self.active = false
@@ -89,7 +89,7 @@ function Application:show_app()
   TRACE("Application:show_app()")
   
   if not (self.created) then 
-    return false 
+    return 
   end
   
   if (not self.dialog) or (not self.dialog.visible) then
@@ -108,7 +108,7 @@ function Application:hide_app()
   TRACE("Application:hide_app()")
   
   if not (self.created) then 
-    return false 
+    return 
   end
   
   self.dialog:close()
@@ -121,6 +121,7 @@ end
 -- destroy application
 
 function Application:destroy_app()
+  TRACE("Application:destroy_app()")
   return self:stop_app()
 end
 
@@ -137,9 +138,18 @@ end
 --------------------------------------------------------------------------------
 
 -- handle periodic updates (many times per second)
+-- nothing is done by default
 
 function Application:idle_app()
-  -- nothing done by default
+  --[[
+  -- it's a good idea to include this check 
+  -- when doing complex stuff:
+  if (not self.active) then 
+    return 
+  end
+  ]]
+
+
 end
 
 

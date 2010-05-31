@@ -74,6 +74,21 @@ function compare(val1,val2,precision)
   return val1==val2 
 end
 
+-- quick'n'dirty table compare, compares values (not keys)
+-- @table1,2 : indexed tables to compare
+-- @return boolean, true if identical
+
+function table_compare(table1,table2)
+  local to_string = function(t)
+    local rslt = ""
+    for _,__ in ipairs(table.values(t))do
+      rslt = rslt..tostring(__)..","
+    end
+    return rslt
+  end
+  return (to_string(table1)==to_string(table2))
+end
+
 
 -- get_master_track
 
@@ -110,6 +125,7 @@ end
 -- {"^Display:"} " -> show traces, starting with "Display:" only
 -- {"^ControlMap:", "^Display:"} -> show "Display:" and "ControlMap:"
 
+--local __trace_filters = {"^MIDIDevice"}
 local __trace_filters = nil
 
 

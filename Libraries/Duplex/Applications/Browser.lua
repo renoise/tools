@@ -6,9 +6,6 @@
 
 The Browser class provides easy access to running scripts
 
--- TODO apply preset to application
--- application needs to expose parameters somehow...
-
 --]]
 
 
@@ -49,9 +46,10 @@ function Browser:__init(device_name, app_name)
     
     if (app_name) then
       self:__set_application_index(app_name)
+      -- invokes start_app
+      self.vb.views.dpx_browser_application_checkbox.value = true
     end
     
-    self:start_app()
   end
 end
 
@@ -108,7 +106,7 @@ function Browser:set_device(name)
   end
 
   -- adjust device index, in case it was not fired from the GUI
-  local idx = self:__device_index(name)
+  local idx = self:__get_device_index(name)
   self.vb.views.dpx_browser_input_device.value = idx
 
   -- "cascading" effect
@@ -188,9 +186,10 @@ function Browser:set_application(application_name)
     -- rebuilt the app
     self.application:destroy_app()
     self.application = nil
+    self.vb.views.dpx_browser_application_checkbox.value = false
   end
 
-  -- hide/show the "run" option?
+  -- hide run option if no application is selected
   self.vb.views.dpx_browser_application_active.visible = 
     (self.vb.views.dpx_browser_application.value ~= 1)
 
@@ -202,9 +201,7 @@ function Browser:set_application(application_name)
 
 
   -- map control groups to the app 
-  
-  -- TODO: dynamically! control-map groups also should be user-configurable
-  -- make some sort of application preferences to solve this
+  -- todo: make group-names configurable
   
   if (application_name == "MixConsole") then  
     local sliders_group_name = nil
@@ -336,6 +333,8 @@ end
 --------------------------------------------------------------------------------
 
 function Browser:start_app()
+  TRACE("Browser:start_app()")
+
   Application.start_app(self)
 
   if (self.application) then
@@ -352,6 +351,8 @@ end
 --------------------------------------------------------------------------------
 
 function Browser:stop_app()
+  TRACE("Browser:stop_app()")
+
   Application.stop_app(self)
 
   if (self.application) then
@@ -418,7 +419,7 @@ end
 
 -- get the currently selected application popup index index for a app name
 
-function Browser:__application_index(app_name)
+function Browser:__get_application_index(app_name)
 
   local popup = self.vb.views.dpx_browser_application
   for idx,val in ipairs(popup.items)do
@@ -438,7 +439,7 @@ end
 
 function Browser:__set_application_index(name)
 
-  self.vb.views.dpx_browser_application.value = self:__application_index(name)
+  self.vb.views.dpx_browser_application.value = self:__get_application_index(name)
   self.vb.views.dpx_browser_application_checkbox.value = false
 end
 
@@ -447,7 +448,7 @@ end
 
 -- get the currently selected application popup index index for a device  name
 
-function Browser:__device_index(device_name)
+function Browser:__get_device_index(device_name)
   device_name = self:__strip_na_postfix(device_name)
   
   local popup = self.vb.views.dpx_browser_input_device
@@ -469,7 +470,7 @@ end
 function Browser:__set_device_index(device_name)
   TRACE("Browser:__set_device_index("..device_name..")")
   
-  local idx = self:__device_index(device_name)
+  local idx = self:__get_device_index(device_name)
   self.vb.views.dpx_browser_input_device.value = idx
 end
 

@@ -137,7 +137,7 @@ end
 -- set button state
 
 function UIToggleButton:set(value)
-  TRACE("UIToggleButton:set", value)
+--TRACE("UIToggleButton:set", value)
   
   if (self._cached_active ~= value) then
 
@@ -155,6 +155,9 @@ end
 --------------------------------------------------------------------------------
 
 function UIToggleButton:set_dimmed(bool)
+  if(self.dimmed == bool)then
+    return
+  end
   self.dimmed = bool
   self.invalidate(self)
 end
