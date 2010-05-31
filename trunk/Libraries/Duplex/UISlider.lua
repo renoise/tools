@@ -14,7 +14,7 @@ The Slider supports different input methods: buttons or sliders/encoders
 - - use faders/encoders to divide value into smaller segments
 - display supports horizontal/vertical and axis flipping
 - display as normal/dimmed version
-- minimum unit size: 1x1
+- minimum unit size: 1
 
 Events
 

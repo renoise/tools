@@ -23,6 +23,8 @@ function MixConsole:__init(display, sliders_group_name,
   -- constructor 
   Application.__init(self)
   
+  self.name = "MixConsole"
+
   self.display = display
 
   -- master level (always present)

@@ -61,7 +61,7 @@ end
 -- draw() - update the visual definition
 
 function UIComponent:draw()
-  TRACE("UIComponent:draw")
+  --TRACE("UIComponent:draw")
 
   self.dirty = false
 end
@@ -97,7 +97,7 @@ end
 -- @return (boolean) true if inside area
 
 function UIComponent:test(x_pos, y_pos)
-  TRACE("UIComponent:test(",x_pos, y_pos,")")
+--TRACE("UIComponent:test(",x_pos, y_pos,")")
 
   -- pressed to the left or above?
   if (x_pos < self.x_pos) or 
@@ -115,6 +115,38 @@ function UIComponent:test(x_pos, y_pos)
   return true
 end
 
+--------------------------------------------------------------------------------
+
+-- set palette, invalidate if changed
+-- @colors: a table of color values, e.g {background={color{0x00,0x00,0x00}}}
+
+function UIComponent:set_palette(palette)
+
+  local changed = false
+
+  for _,__ in pairs(palette)do
+    for ___,____ in pairs(palette[_])do
+      if(self.palette[_][___])then
+        if(type(____)=="table")then
+          if(not table_compare(self.palette[_][___],____))then
+            self.palette[_][___] = table.rcopy(____)
+            changed = true
+          end
+        elseif(type(____)=="string")then
+          if(self.palette[_][___] ~= ____)then
+            self.palette[_][___] = ____
+            changed = true
+          end
+        end
+      end
+    end
+  end
+
+  if(changed)then
+    self:invalidate()
+  end
+
+end
 
 --------------------------------------------------------------------------------
 

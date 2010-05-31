@@ -29,10 +29,12 @@ function Display:__init(device)
   self.vb = renoise.ViewBuilder()
   self.view = nil    
 
-  --  temp values used during construction of control surface
+  --  temp values (construction of control surface)
   self.parents = {}
   self.grid_obj = nil    
   self.grid_count = 0
+
+  --self.scheduler = Scheduler()
 
   -- array of UIComponent instances
   self.ui_objects = table.create()
@@ -113,9 +115,10 @@ function Display:update()
   local control_map = self.device.control_map
   
   for _,obj in ipairs(self.ui_objects) do
-    if (obj.dirty) then
 
-      -- update the object display
+    -- skip unused objects, object that doesn't need update
+    if (obj.group_name and obj.dirty) then
+
       obj:draw()
 
       -- loop through the delta array - it contains all recent updates
@@ -352,8 +355,6 @@ function Display:walk_table(t, done, deep)
       --- Param
   
       if (t[key].label == "Param") then
-        TRACE("Display:view_obj.meta:",view_obj.meta)
-        TRACE("Display:view_obj.meta.name:",view_obj.meta.name)
   
           -- empty parameter (placeholder unit)?
         if not (view_obj.meta.type) then

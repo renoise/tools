@@ -19,6 +19,7 @@ require "Duplex/ControlMap"
 require "Duplex/Device"
 require "Duplex/MIDIDevice"
 require "Duplex/OscDevice"
+--require "Duplex/Scheduler"
 
 require "Duplex/Applications/Browser"
 require "Duplex/Applications/MixConsole"
@@ -74,9 +75,9 @@ renoise.tool():add_menu_entry {
 }
 
 renoise.tool():add_menu_entry {
-  name = "--- Main Menu:Tools:Duplex:Launchpad PatternMatrix...",
+  name = "Main Menu:Tools:Duplex:Launchpad PatternMatrix...",
   invoke = function() 
-    show_dialog("Launchpad","PatternMatrix") 
+    show_dialog("Launchpad", "PatternMatrix") 
   end
 }
 

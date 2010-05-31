@@ -32,7 +32,7 @@ Events
 class 'UISpinner' (UIComponent)
 
 function UISpinner:__init(display)
-  TRACE('UISpinner:__init')
+  TRACE('UISpinner:__init',display)
 
   UIComponent.__init(self,display)
 
