@@ -416,6 +416,7 @@ function aligners_and_auto_sizing()
   -- lets create a simple dialog as usual, and align a few totally useless
   -- buttons & texts:
   local dialog_content = vb:column {
+    id = "dialog_content",
     margin = DIALOG_MARGIN,
     spacing = CONTENT_SPACING,
     
@@ -554,6 +555,7 @@ function aligners_and_auto_sizing()
       }
     },
     
+
     -- add a space before we start with a "new category"
     vb:space {
       height = 20
@@ -581,7 +583,40 @@ function aligners_and_auto_sizing()
         text = "80%",
         width = "80%"
       },
-    }
+    },
+    
+
+    -- again a space before we start with a "new category"
+    vb:space {
+      height = 20
+    },
+    
+    -- not lets create a button that toggles another view. when toggling, we 
+    -- do update the main racks size which also updates the dialogs size: 
+    vb:text {
+      text = "resize racks & dialogs",
+      width = "100%",
+      align = "center",
+      font = "bold"
+    },
+    
+    -- add a button that hides the other view:
+    vb:button {
+      text = "Click me",
+      notifier = function()
+        -- toggle visibility of the view on each click
+        vb.views.hide_me_text.visible = not vb.views.hide_me_text.visible
+
+        -- and update the main content view size and thus also the dialog size
+        vb.views.dialog_content:resize()
+      end,
+    },
+
+    -- the text view that we are going to show/hide
+    vb:text {
+      id = "hide_me_text",
+      text = "Click the button above to hide this view",
+    },
   }
   
  renoise.app():show_custom_dialog(
@@ -793,6 +828,20 @@ function available_controls()
       width = 20,
       notifier = function()
         show_status("button with bitmap was hit")
+      end,
+    },
+    
+    vb:button {
+      -- buttons can also have custom text/back colors
+      text = "Color",
+      width = 30,
+      color = {0x22, 0xaa, 0xff},
+      -- and we also can handle presses, releases separately
+      pressed = function()
+        show_status("button with custom colors was pressed")
+      end,
+      released = function()
+        show_status("button with custom colors was released")
       end,
     }
   }

@@ -26,15 +26,24 @@ do
   local function my_button_notifier() end
   local function my_button_notifier2() end
   local button = vb:button {}
-  button:add_notifier(my_button_notifier)
-  button:add_notifier(my_button_notifier2)
+  
+  -- add_pressed_notifier
+  button:add_pressed_notifier(my_button_notifier)
+  button:add_pressed_notifier(my_button_notifier2)
   assert_error(function() 
-    button:add_notifier(my_button_notifier)
+    button:add_pressed_notifier(my_button_notifier)
   end)
-  button:remove_notifier(my_button_notifier)
-  button:remove_notifier(my_button_notifier2)
+  
+  -- add/remove_released_notifier
+  button:add_released_notifier(my_button_notifier)
+  button:remove_released_notifier(my_button_notifier)
+  
+  
+  -- remove_pressed_notifier
+  button:remove_pressed_notifier(my_button_notifier)
+  button:remove_pressed_notifier(my_button_notifier2)
   assert_error(function() 
-    button:remove_notifier(my_button_notifier)
+    button:remove_pressed_notifier(my_button_notifier)
   end)
   
   
@@ -215,19 +224,25 @@ do
         
         vb:button {
           width = "10%",
-          text = "["
+          text = "[",
+          color = {0xff, 0xaa, 0x22},
         },
         vb:button {
           id = "test_button",
           width = "20%",
           text = "left",
-          notifier = function()
+          color = {0xaa, 0xff, 0x22},
+          pressed = function()
             vb.views.test_button.width = 25
+          end,
+          released = function()
+            vb.views.test_button.width = 50
           end
         },
         vb:button {
           width = "40%",
-          text = "]"
+          text = "]",
+          color = {0x22, 0xaa, 0xff},
         },
       },
       
