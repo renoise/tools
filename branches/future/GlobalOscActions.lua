@@ -19,8 +19,13 @@
  
  ---- Realtime Messages
  
- -- TODO: list all
- /renoise/trigger/XXX
+ /renoise/trigger/midi(message(u/int32/64))
+ 
+ /renoise/trigger/note_on(instr(int32/64), track(int32/64), 
+   note(int32/64), velocity(int32/64))
+   
+ /renoise/trigger/note_off(instr(int32/64), track(int32/64), 
+   note(int32/64))
 
  
  ---- Message Format
