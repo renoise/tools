@@ -17,10 +17,10 @@ A generic device class (OSC or MIDI based)
 class 'Device'
 
 function Device:__init(name, message_stream, protocol)
-  TRACE('Device:__init')
+  TRACE('Device:__init',name, message_stream, protocol)
 
   assert(name and message_stream and protocol, 
-    "expected a valid name sream and protocol for a device")
+    "expected a valid name, stream and protocol for a device")
 
   self.name = name
   self.message_stream = message_stream
