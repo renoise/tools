@@ -3,7 +3,7 @@
   <ApiVersion>0.3</ApiVersion>
   <Id>com.renoise.BinaryFileServer</Id>
   <Version>0.1</Version>
-  <Name>Binary File Server</Name>
+  <Name>Binary File Server Test</Name>
   <Author>bantai [marvin@renoise.com]</Author>
   <Description>Tests Socket API capability of serving a binary file</Description>
   <Category>Networking</Category>
