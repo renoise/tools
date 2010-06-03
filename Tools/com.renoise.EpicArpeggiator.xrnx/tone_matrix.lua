@@ -41,7 +41,7 @@ function toggle_octave_row(vb, oct)
    oct = oct - 1
    local checkbox = nil
    local cb = vb.views
-   for note = 1, 12 do
+   for note = 1, NUM_NOTES do
       if string.find(note_matrix[note], "#") then
          checkbox = note_matrix[note-1].."f"..tostring(oct)
       else
@@ -61,7 +61,7 @@ end
 function toggle_note_row(vb, note)
    local checkbox = nil
    local cb = vb.views
-   for oct = 0, 9 do
+   for oct = 0, NUM_OCTAVES-1 do
       if string.find(note_matrix[note], "#") then
          checkbox = note_matrix[note-1].."f"..tostring(oct)
       else
@@ -80,7 +80,7 @@ end
 function set_all_row_state(vb, btext)
    local checkbox = nil
    local cb = vb.views
-   for t = 0, 9 do
+   for t = 0, NUM_OCTAVES-1 do
       local oct = tostring(t)
       for i = 1, NUM_NOTES do
          if string.find(note_matrix[i], "#") then
