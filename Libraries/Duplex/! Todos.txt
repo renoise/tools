@@ -9,37 +9,29 @@ Bugs
 * Multiple grid/column group layouts are broken (use Ohm64 for testing). 
   Groups are not closed before the next one is encountered
 
-* Observable references disappear when loading new song. Implement & Test 
-  standard method for reassigning on new document notification
-  
 * Controls which are not or no longer assigned to document values, should 
   be cleared, reset (when for example using less than 8 tracks in Renoise)
     
-
+* Switching between Applications while the device is already running, 
+  sometimes does not update the UI properly although a display:clear is fired
+  
+  
 --------------------------------------------------------------------------------
 In Progress
 --------------------------------------------------------------------------------
 
-* Bjorn + Eduard: Use class:method syntax
-
 * Bjorn: Make MessageStream detect more event types: release, hold, etc.
-
-* Eduard: Rotary (UIComponent)
-  o meant to emulate rotary encoders on hardware
-  o takes up only a single unit-space in a control-map
-  o mode: absolute/relative (normal/endless)
-  o precision: change this for larger internal precision
 
 * Eduard: Implement Behringer BFC and BFR classes, finish the control maps
 
 * Eduard: Relative MIDI controller message support for encoders
+
 
 ================================================================================
 Planned / Todo
 ================================================================================
 
 * New Applications
-  o Common, non grid based Mixer 
   o FX parameter Mixer (control currently selected FX)
 
 * Multi-tasking browser: keep applications running, open multiple devices at 
@@ -189,4 +181,14 @@ Done
 
 * Fixed missing/bogus attaching to tracks in the mixer when the track count 
   changed or the tracks got reordered
-  
+ 
+* Observable references disappear when loading new song. Implement & Test 
+  standard method for reassigning on new document notification
+   
+* Use class:method syntax
+
+* Rotary (UIComponent)
+  o meant to emulate rotary encoders on hardware
+  o takes up only a single unit-space in a control-map
+  o mode: absolute/relative (normal/endless)
+  o precision: change this for larger internal precision
