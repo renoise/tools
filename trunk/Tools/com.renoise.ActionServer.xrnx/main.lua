@@ -256,7 +256,7 @@ class "ActionServer"
   function ActionServer:init_header()
    self.header_map = table.create()
    self.header_map["Date"]  = self:get_date()
-   self.header_map["Server"] = "Renoise Vx.xx"
+   self.header_map["Server"] = "Renoise " .. renoise.RENOISE_VERSION
    self.header_map["Cache-Control"] = "max-age=3600, must-revalidate"
    self.header_map["Accept-Ranges"] = "none"
   end
