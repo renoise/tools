@@ -389,11 +389,7 @@ Main Dialog
             margin = DIALOG_MARGIN,
             uniform = true,
             vb:row {
-               width = 325,
-               vb:row {
-                  width= (325/2)-(65)
-               },
-               create_obj(obj_textlabel, 'center', 225,0,0,0,'idpatl1','',
+               create_obj(obj_textlabel, 'center', 410,0,0,0,'idpatl1','',
                'Instrument & volume pool selection',0,vb),
             },
             vb:row {
