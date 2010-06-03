@@ -175,8 +175,8 @@ Main Dialog
       picker_row_contents:add_child(
          create_obj(obj_switch, '', 160,0,0,switch_note_pattern_index,
          'switch_note_pattern',
-         "Matrix:Pick note and octave order from the note-matrix.\n"..
-         "Custom:defined in the textfields below.",
+         "Matrix (pgUp):Pick note and octave order from the note-matrix.\n"..
+         "Custom (pgDn):defined in the textfields below.",
          {"Matrix", "Custom"},
          function(value)
             switch_note_pattern_index = value
@@ -576,8 +576,93 @@ Main Dialog
          first_show = true
       end
 
+      -------------------------------------------------------------------------------
+      ---                         Keyboard control handler                       ----
+      -------------------------------------------------------------------------------
+      local function key_control(dialog, mod, key)
+    
+        if (mod == "" and key == "next") then
+          switch_note_pattern_index = NOTE_PATTERN_CUSTOM
+          vb.views.switch_note_pattern.value = NOTE_PATTERN_CUSTOM
+          toggle_note_profile_visibility(true, vb)
+        end
+    
+        if (mod == "" and key == "prior") then
+          switch_note_pattern_index = NOTE_PATTERN_MATRIX
+          vb.views.switch_note_pattern.value = NOTE_PATTERN_MATRIX
+          toggle_note_profile_visibility(false, vb)
+        end
+        if (mod == "" and key == "numpad /") then
+          if renoise.song().transport.octave >0 then
+            renoise.song().transport.octave = renoise.song().transport.octave - 1
+          end
+        end
+
+        if (mod == "" and key == "numpad *") then
+          if renoise.song().transport.octave < 8 then
+            renoise.song().transport.octave = renoise.song().transport.octave +1
+          end
+        end
+
+        local cur_octave = renoise.song().transport.octave    
+        local fnote = cur_octave
+        if (mod == "" and key == "z") then
+          fnote = "C_"..fnote
+          vb.views[fnote].value = not (vb.views[fnote].value and true)
+        end
+        if (mod == "" and key == "s") then
+          fnote = "Cf"..fnote
+          vb.views[fnote].value = not (vb.views[fnote].value and true)
+        end
+        if (mod == "" and key == "x") then
+          fnote = "D_"..fnote
+          vb.views[fnote].value = not (vb.views[fnote].value and true)
+        end
+        if (mod == "" and key == "d") then
+          fnote = "Df"..fnote
+          vb.views[fnote].value = not (vb.views[fnote].value and true)
+        end
+        if (mod == "" and key == "c") then
+          fnote = "E_"..fnote
+          vb.views[fnote].value = not (vb.views[fnote].value and true)
+        end
+        if (mod == "" and key == "v") then
+          fnote = "F_"..fnote
+          vb.views[fnote].value = not (vb.views[fnote].value and true)
+        end
+        if (mod == "" and key == "g") then
+          fnote = "Ff"..fnote
+          vb.views[fnote].value = not (vb.views[fnote].value and true)
+        end
+        if (mod == "" and key == "b") then
+          fnote = "G_"..fnote
+          vb.views[fnote].value = not (vb.views[fnote].value and true)
+        end
+        if (mod == "" and key == "h") then
+          fnote = "Gf"..fnote
+          vb.views[fnote].value = not (vb.views[fnote].value and true)
+        end
+        if (mod == "" and key == "n") then
+          fnote = "A_"..fnote
+          vb.views[fnote].value = not (vb.views[fnote].value and true)
+        end
+        if (mod == "" and key == "j") then
+          fnote = "Af"..fnote
+          vb.views[fnote].value = not (vb.views[fnote].value and true)
+        end
+        if (mod == "" and key == "m") then
+          fnote = "B_"..fnote
+          vb.views[fnote].value = not (vb.views[fnote].value and true)
+        end
+
+        if (mod == "" and key == "esc") then
+          dialog:close()
+        end
+      end      
+
       arpeg_option_dialog = renoise.app():show_custom_dialog("Epic Arpeggiator", 
-      total_layout)
+      total_layout, key_control)
+      
 end
 
 
@@ -773,8 +858,10 @@ end
 function toggle_note_matrix_visibility(show,fm,vb)
   if show == NOTE_PATTERN_MATRIX then
     fm.visible = true
+    toggle_note_profile_visibility(false, vb)
   else
     fm.visible = false
+    toggle_note_profile_visibility(true, vb)
   end
   vb.views.total_dialog:resize()
 end
@@ -822,6 +909,7 @@ function create_obj(type,pa,pw,pmi,pma,pv,pid,ptt,ptx,pn,vb)
       return vb:textfield{id=pid,align=pa,width=pw,tooltip=ptt,value=pv,notifier=pn}
    end
 end
+
 
 
 -------------------------------------------------------------------------------
@@ -895,7 +983,15 @@ Each note can be toggled individually. Then you can click on each ">" button and
 each "^" button which invert the whole octave or note-row selection. This also
 means that what was turned on, will be turned off and vice versa. The "inv" 
 button will inverse the complete matrix, similar to what the octave or note-row 
-toggle buttons do.
+toggle buttons do. 
+
+Matrix shortcuts:
+Use the lower keyboard keys to toggle notes C to B. (same layout as when
+entering notes in the pattern editor where z = C and m = B)
+The actual selected octave in the song is being used to set the note in that 
+particular octave. Use the numpad "/" and "*" keys to change the octave
+Pageup and Pagedown (or Prior / Next) keys toggle the note-matrix or custom
+note entries.
 
 Custom note profile
 You can set notes in the note profile, they should all be full notes (meaning:
