@@ -305,7 +305,7 @@ local function debugger_loop(server)
 
     repeat
       local socket_timeout = 2000
-      command_line, status = server:receive(socket_timeout)
+      command_line, status = server:receive("*l", socket_timeout)
     until (command_line ~= nil or not server.is_open)
 
     if (not command_line) then 

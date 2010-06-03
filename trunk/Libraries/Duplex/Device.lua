@@ -28,8 +28,12 @@ function Device:__init(name, message_stream, protocol)
   
   self.control_map = ControlMap()
 
+  -- supported colors space for the device (r, g, b) or empty
+  -- todo: specify color-space per control-map group
+  self.colorspace = {}
+  
   -- default palette is provided by the display
-  self.palette = {}    
+  self.palette = {}   
 end
 
 

@@ -5,11 +5,11 @@ GUI
 module("gui", package.seeall)
 
 -- randomize_modes table, including shuffle
-randomize_modes = table.rcopy(Random.mode_names)
-table.insert(randomize_modes, "Shuffle")
+randomize_modes = table.create( table.rcopy(Random.mode_names) )
+randomize_modes:insert("Shuffle")
 
 -- available iterator ranges
-range_modes = {
+range_modes = table.create {
   "Whole Song",
   "Whole Pattern",
   "Track in Song",
@@ -139,6 +139,10 @@ function show_randomize_gui()
     value = current_mode,
     notifier = function(value)
       current_mode = value
+      -- hide preserve_octave with shuffle
+      vb.views.preserve_octave_row.visible = 
+        (current_mode ~= randomize_modes:find("Shuffle"))
+      vb.views.dialog_content:resize()
     end,
     width = POPUP_WIDTH
   }
@@ -158,6 +162,7 @@ function show_randomize_gui()
   }
 
   local content_view = vb:column {
+    id = "dialog_content",
     uniform = true,
     margin = DIALOG_MARGIN,
     spacing = CONTROL_SPACING,
@@ -173,6 +178,8 @@ function show_randomize_gui()
     },
 
     vb:row {
+      id = "preserve_octave_row",
+      visible = (current_mode ~= randomize_modes:find("Shuffle")),
       preserve_octave_switch,
       vb:text { text = 'Preserve Octaves' }
     },

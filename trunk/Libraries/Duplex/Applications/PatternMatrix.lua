@@ -67,9 +67,9 @@ function PatternMatrix:__init(
 
   -- internal stuff
 
-  self.__playing = nil
-  self.__play_page = nil  -- the currently playing page
-  self.__edit_page = nil  -- the currently editing page
+  self.__playing = false
+  self.__play_page = 0  -- the currently playing page
+  self.__edit_page = 0  -- the currently editing page
   self.__track_offset = 0  -- the track offset (0-#tracks)
 
   -- the number of lines is used for determining the playback- 
@@ -84,7 +84,6 @@ function PatternMatrix:__init(
 
   self:build_app()
   self:__attach_to_song(renoise.song())
-
 end
 
 

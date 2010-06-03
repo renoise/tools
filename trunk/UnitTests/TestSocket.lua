@@ -29,8 +29,19 @@ do
       "www.google.com", 80, protocol)
     assert(client and not socket_error)
     
+    -- bogus receives
+    assert_error(function()
+      client:receive("*nothing", receive_timeout)
+    end)
+    assert_error(function()
+      client:receive(0, receive_timeout)
+    end)
+    assert_error(function()
+      client:receive({}, receive_timeout)
+    end)
+
     -- nothing requested, nothing send
-    message, socket_error = client:receive(receive_timeout)
+    message, socket_error = client:receive("*all", receive_timeout)
     assert(not message and socket_error)
     
     -- send page request
@@ -38,7 +49,7 @@ do
     assert(succeeded and not socket_error)
     
     -- get page request
-    local message, socket_error = client:receive(receive_timeout)
+    local message, socket_error = client:receive(1024, receive_timeout)
     assert(message and not socket_error)
     
     -- status checks
@@ -50,7 +61,7 @@ do
     assert(client.peer_address ~= "")
     
     -- nothing pending, nothing received
-    message, socket_error = client:receive(receive_timeout)
+    message, socket_error = client:receive("*all", receive_timeout)
     assert(not message and socket_error)
     
     -- closed on error
@@ -61,7 +72,7 @@ do
       client:send("something")
     end)
      assert_error(function()
-      client:receive(receive_timeout)
+      client:receive("*all", receive_timeout)
     end)
   end 
   
@@ -87,7 +98,7 @@ do
       print(("client %s:%d sent '%s'"):format(
         socket.peer_address, socket.peer_port, message))
               
-      local succeeded, socket_error = socket:send("Hello Client!")
+      local succeeded, socket_error = socket:send("Hello Client!\r")
       assert(succeeded, socket_error)
     end
   
@@ -100,7 +111,7 @@ do
       print(("client %s:%d sent '%s'"):format(
         socket.peer_address, socket.peer_port, message))
               
-      local succeeded, socket_error = socket:send("Hello Client!")
+      local succeeded, socket_error = socket:send("Hello Client!\r\n")
       assert(succeeded, socket_error)
     end
   }
@@ -136,6 +147,11 @@ do
     client1:send(("Hello Server from %s:%d"):format(
       client1.local_address, client1.local_port))
    
+    -- hack: busy wait to split messages
+    for i=1,5000 do 
+      local wait = "wait"
+    end
+   
     client2:send(("Hello Server from %s:%d"):format(
       client2.local_address, client2.local_port))
       
@@ -143,14 +159,14 @@ do
     server:wait(receive_timeout)    
     
     -- and print the response from the server
-    message1, message_error1 = client1:receive(receive_timeout)
+    message1, message_error1 = client1:receive("*line", receive_timeout)
     assert(message1, message_error1)
     
     print(("client %s:%d got '%s' from server %s:%d"):format(
       client1.local_address, client1.local_port,  
       message1, client1.peer_address, client1.peer_port))
       
-    message2, message_error2 = client2:receive(receive_timeout)
+    message2, message_error2 = client2:receive("*line", receive_timeout)
     assert(message2, message_error2)
     
     print(("client %s:%d got '%s' from server %s:%d"):format(

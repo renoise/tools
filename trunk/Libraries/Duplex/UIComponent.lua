@@ -29,7 +29,7 @@ function UIComponent:__init(display)
   -- set through set_size()
   self.width = 1 
   self.height = 1 
-
+   
   -- default palette
   self.palette = {}
 

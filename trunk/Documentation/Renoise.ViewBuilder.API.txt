@@ -80,6 +80,15 @@ view.tooltip -> [string]
 -- a Rack has no content by its own, but stacks its child views either
 -- vertically (ViewBuilder.column) or horizontally (ViewBuilder.row)
 
+-- functions
+
+-- adding new views to a rack automatically enlarges it while the views got 
+-- stacked . by calling resize, you can let the rack recalc its size and set 
+-- it to exactly conver all child views. when resizeing a rack view that is 
+-- the main content view of a dialog, 'resize' will also update the dialogs 
+-- size...
+rack:resize()
+
 
 -- properties
 
@@ -330,9 +339,15 @@ bitmapview.notifier -> (function())
 
 -- functions
 
--- add/remove button hit notifiers
-button:add_notifier(function or {object, function} or {object, function})
-button:remove_notifier(function or {object, function} or {object, function})
+-- add/remove button hit/release notifiers. 
+-- when a pressed notifier is set, the release notifier is guaranteed to be 
+-- called as soon as the mouse was released, either on your button or anywhere
+-- else. when only release notifiers are set, those are only called when the 
+-- mouse button was pressed and released on your button
+button:add_pressed_notifier(function or {object, function} or {object, function})
+button:add_released_notifier(function or {object, function} or {object, function})
+button:remove_pressed_notifier(function or {object, function} or {object, function})
+button:remove_released_notifier(function or {object, function} or {object, function})
 
 
 -- properties
@@ -352,7 +367,20 @@ button.text -> [string]
 -- color. All colors inbetween are mapped according to their grey value.
 button.bitmap -> [string]
 
+-- table of rgb values like {0xff,0xff,0xff} -> white. when set, the
+-- unpressed button's background will be draw with the specified color. a 
+-- text color is automatically selected to make sure its always visible. 
+-- set a color of {0,0,0} to enable the theme colors for the button again...
+button.color -> [table with 3 numbers (0-255)]
+
+
 -- valid in the construction table only: set up a click notifier
+button.pressed -> (function())
+
+-- valid in the construction table only: set up a click release notifier
+button.released -> (function())
+
+-- synonymous for 'button.released'
 button.notifier -> (function())
 
 
@@ -517,6 +545,22 @@ valuebox.max -> [number]
 -- get/set the current value
 valuebox.value
 
+-- valid in the construction table only: setup custom rules on how the number
+-- should be displayed. both, 'tostring' and  'tovalue' must be set, or none
+-- of them. If none are set, a default string/number conversion is done, which
+-- simply shows the number with 3 digits after the decimal point.
+--
+-- when defined, 'tostring' must be a function with one parameter, the to be
+-- converted number, and must return a string or nil (nothing).
+-- 'tonumber' must be a function with one parameter and gets the to be
+-- converted string passed, returning a a number or nil. when returning nil,
+-- no conversion will be done and the value is not changed.
+--
+-- note: when any of the callbacks fails with an error, both will be disabled
+-- to avoid floods of error messages
+valuefield.tostring -> (function(number) -> [string])
+valuefield.tovalue -> (function(string) -> [number])
+
 -- valid in the construction table only: set up a value notifier
 valuebox.notifier -> (function(value))
 
@@ -630,7 +674,8 @@ valuefield.notifier -> (function(number))
 --------------------------------------------------------------------------------
 
 -- a slider with <> buttons, which allows showing / editing real values in
--- a custom range
+-- a custom range. a slider can be horizontal or vertical. will flip its layout 
+-- according to the set width and height and is by default horizontal.
 
 --[[
  +---+---------------+
@@ -664,7 +709,9 @@ slider.notifier -> (function(number))
 -- renoise.Views.MiniSlider (inherits from View, 'minislider' in the builder)
 --------------------------------------------------------------------------------
 
--- same as a slider, but without <> buttons and a really tiny height
+-- same as a slider, but without <> buttons and a really tiny height. just like
+-- the slider a mini slider can be horizontal or vertical. it will flip its layout 
+-- according to the set width and height and is by default horizontal.
 
 --[[
  --------[]
@@ -690,7 +737,6 @@ slider.value
 
 -- valid in the construction table only: set up a value notifier
 slider.notifier -> (function(number))
-
 
 
 --------------------------------------------------------------------------------
@@ -728,7 +774,6 @@ rotary.value
 
 -- valid in the construction table only: set up a value notifier
 rotary.notifier -> (function(number))
-
 
 
 --==============================================================================

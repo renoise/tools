@@ -486,13 +486,12 @@ function MixConsole:__attach_to_tracks()
     end
   end
     
-  --[[ available in branch future only
   -- detach all previously added notifiers first
   for _,track in pairs(tracks) do
     track.prefx_volume.value_observable:remove_notifier(self)
     track.prefx_panning.value_observable:remove_notifier(self)
     track.mute_state_observable:remove_notifier(self) 
-  end]] 
+  end  
   
   -- attach to the new ones in the order we want them
   for control_index=1,math.min(#tracks, self.horizontal_size) do

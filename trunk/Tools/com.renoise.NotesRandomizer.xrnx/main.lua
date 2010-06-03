@@ -2,8 +2,6 @@
 main.lua
 ============================================================================]]--
 
-pcall(require, "future")
-
 require "randomizer"
 require "gui"
 
