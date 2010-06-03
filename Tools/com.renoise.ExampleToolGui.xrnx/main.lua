@@ -23,13 +23,13 @@ renoise.tool():add_menu_entry {
 }
 
 renoise.tool():add_menu_entry {
-  name = "Main Menu:Tools:Example Tool GUI:4. Batch Building Views...",
-  invoke = function() dynamic_building() end 
+  name = "Main Menu:Tools:Example Tool GUI:4. Batch Building Views (Matrix)...",
+  invoke = function() dynamic_building_matrix() end 
 }
 
 renoise.tool():add_menu_entry {
-  name = "Main Menu:Tools:Example Tool GUI:5. Batch Building Views 2 (keyboard)...",
-  invoke = function() dynamic_building_too() end 
+  name = "Main Menu:Tools:Example Tool GUI:5. Batch Building Views (Piano)...",
+  invoke = function() dynamic_building_piano() end 
 }
 
 renoise.tool():add_menu_entry {
@@ -267,9 +267,9 @@ end
 
 --------------------------------------------------------------------------------
 
--- dynamic_building
+-- dynamic_building_matrix
 
-function dynamic_building()
+function dynamic_building_matrix()
 
   -- as shown in dynamic_content(), you can build views either in the "nested"
   -- notation, or "by hand". You can of course also combine both ways, for 
@@ -325,10 +325,14 @@ function dynamic_building()
 end
 
 
+--------------------------------------------------------------------------------
 
-function dynamic_building_too()
+-- dynamic_building_piano
 
-  -- here is an example that creates a virtual keyboard (3 octaves) using images on buttons
+function dynamic_building_piano()
+
+  -- an example that creates a virtual keyboard (3 octaves) using 
+  -- images on buttons
 
   local vb = renoise.ViewBuilder()
 
@@ -343,6 +347,10 @@ function dynamic_building_too()
     "F\n#", "G\n-", "G\n#", "A\n-", "A\n#", "B\n-"
   }
 
+  local is_black_key = {
+    [2]=true, [4]=true, [7]=true, [9]=true, [11]=true
+  }
+  
   -- create the main content column, but don't add any views yet:
   local dialog_content = vb:row {
     margin = CONTENT_MARGIN
@@ -353,40 +361,37 @@ function dynamic_building_too()
     local octave_row = vb:row {}
 
     for note = 1,NUM_NOTES do
-      local note_button = 1
-      local KEY_SIZE = 80
-      local KEY_FILE = "Bitmaps/WhiteKey.BMP"
+      local key_height, bitmap_name
       
-      if note ~= 2 and note ~= 4 and note ~= 7 and note ~= 9 and note ~= 11 then
-        KEY_FILE = "Bitmaps/WhiteKey_"..tostring(octave-1)..".bmp"
+      if (is_black_key[note]) then
+        key_height = 60
+        bitmap_name = ("Bitmaps/BlackKey_%d.bmp"):format(tostring(octave - 1))
       else
-        KEY_SIZE = 60
-        KEY_FILE = "Bitmaps/BlackKey_"..tostring(octave-1)..".bmp"
+        key_height = 80
+        bitmap_name = ("Bitmaps/WhiteKey_%d.bmp"):format(tostring(octave - 1))
       end
-      note_button = vb:button {
-          width = BUTTON_WIDTH,
-          height = KEY_SIZE,
-          bitmap = KEY_FILE,
-          notifier = function()
-            -- functions do memorize all values in the scope they are
-            -- nested in (upvalues), so we can simply access the note and 
-            -- octave from the loop here:
-            renoise.app():show_status(("note_button %s%d got pressed"):format(
-              note_strings[note], octave - 1))
-          end
-
+      
+      local note_button = vb:button {
+        bitmap = bitmap_name,
+        width = BUTTON_WIDTH,
+        height = key_height,
+        notifier = function()
+          renoise.app():show_status(("note_button %s%d got pressed"):format(
+            note_strings[note], octave - 1))
+        end
       }
 
       -- add the button by "hand" into the octave_row
       octave_row:add_child(note_button)
     end
+    
     dialog_content:add_child(octave_row)
-
   end
 
   renoise.app():show_custom_dialog(
     "Batch Building Views", dialog_content)
 end
+
 
 --------------------------------------------------------------------------------
 
@@ -411,6 +416,7 @@ function aligners_and_auto_sizing()
   -- lets create a simple dialog as usual, and align a few totally useless
   -- buttons & texts:
   local dialog_content = vb:column {
+    id = "dialog_content",
     margin = DIALOG_MARGIN,
     spacing = CONTENT_SPACING,
     
@@ -549,6 +555,7 @@ function aligners_and_auto_sizing()
       }
     },
     
+
     -- add a space before we start with a "new category"
     vb:space {
       height = 20
@@ -576,7 +583,40 @@ function aligners_and_auto_sizing()
         text = "80%",
         width = "80%"
       },
-    }
+    },
+    
+
+    -- again a space before we start with a "new category"
+    vb:space {
+      height = 20
+    },
+    
+    -- not lets create a button that toggles another view. when toggling, we 
+    -- do update the main racks size which also updates the dialogs size: 
+    vb:text {
+      text = "resize racks & dialogs",
+      width = "100%",
+      align = "center",
+      font = "bold"
+    },
+    
+    -- add a button that hides the other view:
+    vb:button {
+      text = "Click me",
+      notifier = function()
+        -- toggle visibility of the view on each click
+        vb.views.hide_me_text.visible = not vb.views.hide_me_text.visible
+
+        -- and update the main content view size and thus also the dialog size
+        vb.views.dialog_content:resize()
+      end,
+    },
+
+    -- the text view that we are going to show/hide
+    vb:text {
+      id = "hide_me_text",
+      text = "Click the button above to hide this view",
+    },
   }
   
  renoise.app():show_custom_dialog(
@@ -721,7 +761,9 @@ function available_controls()
   local DIALOG_MARGIN = renoise.ViewBuilder.DEFAULT_DIALOG_MARGIN
   local CONTENT_SPACING = renoise.ViewBuilder.DEFAULT_CONTROL_SPACING
   local CONTENT_MARGIN = renoise.ViewBuilder.DEFAULT_CONTROL_MARGIN
-
+  local DEFAULT_CONTROL_HEIGHT = renoise.ViewBuilder.DEFAULT_CONTROL_HEIGHT
+  local DEFAULT_MINI_CONTROL_HEIGHT = renoise.ViewBuilder.DEFAULT_MINI_CONTROL_HEIGHT
+  
   local TEXT_ROW_WIDTH = 80
 
 
@@ -786,6 +828,20 @@ function available_controls()
       width = 20,
       notifier = function()
         show_status("button with bitmap was hit")
+      end,
+    },
+    
+    vb:button {
+      -- buttons can also have custom text/back colors
+      text = "Color",
+      width = 30,
+      color = {0x22, 0xaa, 0xff},
+      -- and we also can handle presses, releases separately
+      pressed = function()
+        show_status("button with custom colors was pressed")
+      end,
+      released = function()
+        show_status("button with custom colors was released")
       end,
     }
   }
@@ -872,6 +928,12 @@ function available_controls()
       min = 0,
       max = 55,
       value = 5,
+      tostring = function(value) 
+        return ("0x%.2X"):format(value)
+      end,
+      tonumber = function(str) 
+        return tonumber(str, 0x10)
+      end,
       notifier = function(value)
         show_status(("valuebox value changed to '%d'"):
           format(value))
@@ -972,6 +1034,38 @@ function available_controls()
   }
   
   
+  -- v sliders
+  local vslider_column = vb:column {
+    vb:text {
+      text = "vb:(mini)slider - flipped"
+    },
+    vb:row {
+      vb:slider {
+        min = 1.0,
+        max = 100,
+        value = 20.0,
+        width = DEFAULT_CONTROL_HEIGHT,
+        height = 120,
+        notifier = function(value)
+          show_status(("v slider value changed to '%.1f'"):
+            format(value))
+        end
+      },
+      vb:minislider {
+        min = 1.0,
+        max = 100,
+        value = 20.0,
+        width = DEFAULT_MINI_CONTROL_HEIGHT,
+        height = 60,
+        notifier = function(value)
+          show_status(("v mini slider value changed to '%.1f'"):
+            format(value))
+        end
+      }
+    }
+  }
+  
+  
   -- CLOSE BUTTON
     
   local close_button_row = vb:horizontal_aligner {
@@ -994,23 +1088,25 @@ function available_controls()
     spacing = CONTENT_SPACING,
     uniform = true,
 
-    -- controls
-    textfield_row, 
-    bitmapview_row, 
-    button_row, 
-    checkbox_row, 
-    switch_row, 
-    popup_row, 
-    chooser_row, 
-    valuefield_row, 
-    valuebox_row, 
-    slider_row,
-    minislider_row,
-    rotary_row,
+    vb:column {
+      textfield_row, 
+      bitmapview_row, 
+      button_row, 
+      checkbox_row, 
+      switch_row, 
+      popup_row, 
+      chooser_row, 
+      valuefield_row, 
+      valuebox_row, 
+      slider_row,
+      minislider_row,
+      rotary_row,
+      
+      vb:space { height = 2*CONTENT_SPACING },
     
-    -- space
-    vb:space { height = 2*CONTENT_SPACING },
-
+      vslider_column
+    },
+    
     -- close
     close_button_row
   }

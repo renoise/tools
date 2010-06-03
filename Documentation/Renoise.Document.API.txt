@@ -61,9 +61,11 @@ observable:has_notifier(
 observable:add_notifier(
   function or (object, function) or (function, object))
 
--- unregister a previously registered notifier
+-- unregister a previously registered notifier. when only passing an object, all
+-- notifier functions that match the given object will be removed, aka all methods
+-- of the given object are removed. will not fire errors when none are attached.
 observable:remove_notifier(
-  function or (object, function) or (function, object))
+  function or (object, function) or (function, object) or (object))
 
 
 --------------------------------------------------------------------------------
