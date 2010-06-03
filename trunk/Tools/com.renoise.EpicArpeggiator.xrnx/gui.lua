@@ -180,8 +180,7 @@ Main Dialog
          {"Matrix", "Custom"},
          function(value)
             switch_note_pattern_index = value
-            arpeg_option_dialog:close()
-            open_arp_dialog()
+            toggle_note_matrix_visibility(value,figure_matrix,vb)
          end,vb)
       )
       picker_row_contents:add_child(
@@ -392,7 +391,7 @@ Main Dialog
             vb:row {
                width = 325,
                vb:row {
-                  width= ((325)/2)-(65)
+                  width= (170/2)-(65)
                },
                create_obj(obj_textlabel, 'center', 410,0,0,0,'idpatl1','',
                'Instrument & volume pool selection',0,vb),
@@ -495,28 +494,33 @@ Main Dialog
          property_area
       }
       local total_layout = vb:column {
+         id = "total_dialog",
          margin = CONTENT_MARGIN,
          spacing = CONTENT_SPACING,
          uniform = true,
       }
+
       if switch_note_pattern_index == NOTE_PATTERN_CUSTOM then
-         --Make sure the "show matrix" button won't be visible if the main dialog
-         --would be closed and then reopened
-         total_layout:add_child(operation_area)
+         figure_matrix.visible = false
       else
-         total_layout:add_child(figure_matrix)
-         total_layout:add_child(operation_area)
+         figure_matrix.visible = true
       end
+
+      total_layout:add_child(figure_matrix)
+      total_layout:add_child(operation_area)
+      
       if switch_arp_pattern_index == ARPEGGIO_PATTERN_CUSTOM then
          toggle_custom_arpeggiator_profile_visibility(3, vb)         
       else
          toggle_custom_arpeggiator_profile_visibility(1, vb)         
       end
+
       if max_note_columns < 2 then
          toggle_chord_mode_visibility(1,vb)
       else
          toggle_chord_mode_visibility(2,vb)
       end
+
       if velocity_insertion_index >= PLACE_TOP_DOWN_TOP and 
       velocity_insertion_index <= PLACE_DOWN_TOP_DOWN then
          vb.views.repeat_velocity.visible = true
@@ -525,6 +529,7 @@ Main Dialog
          vb.views.repeat_velocity.visible = false
          vb.views.repeat_velocity_title.visible = false
       end      
+
       if instrument_insertion_index >= PLACE_TOP_DOWN_TOP and 
       instrument_insertion_index <= PLACE_DOWN_TOP_DOWN then
          vb.views.repeat_instrument.visible = true
@@ -533,6 +538,7 @@ Main Dialog
          vb.views.repeat_instrument.visible = false
          vb.views.repeat_instrument_title.visible = false
       end
+
       if popup_note_index >= PLACE_TOP_DOWN_TOP and 
       popup_note_index <= PLACE_DOWN_TOP_DOWN then
             vb.views.repeat_note.visible = true
@@ -541,6 +547,7 @@ Main Dialog
          vb.views.repeat_note.visible = false
          vb.views.repeat_note_title.visible = false
       end
+
       if popup_octave_index >= PLACE_TOP_DOWN_TOP and 
       popup_octave_index <= PLACE_DOWN_TOP_DOWN then
          if switch_note_pattern_index == 1 then
@@ -553,6 +560,7 @@ Main Dialog
          vb.views.octave_repeat_mode.visible = false
          vb.views.octave_repeat_mode_text.visible = false
       end
+
       if switch_note_pattern_index == NOTE_PATTERN_MATRIX then
          toggle_note_profile_visibility(false, vb)
          toggle_octave_visibility(true, vb)
@@ -560,19 +568,16 @@ Main Dialog
          toggle_note_profile_visibility(true, vb)
          toggle_octave_visibility(false, vb)
       end
+
       if first_show == false then
          toggle_chord_mode_visibility(1,vb)
          toggle_custom_arpeggiator_profile_visibility(1, vb)         
          toggle_note_profile_visibility(false, vb)
          first_show = true
       end
-      if (arpeg_option_dialog and arpeg_option_dialog.visible) then
-         arpeg_option_dialog:show()
-      else 
-         arpeg_option_dialog = nil
-         arpeg_option_dialog = renoise.app():show_custom_dialog("Epic Arpeggiator", 
-         total_layout)
-      end
+
+      arpeg_option_dialog = renoise.app():show_custom_dialog("Epic Arpeggiator", 
+      total_layout)
 end
 
 
@@ -762,6 +767,16 @@ function toggle_octave_visibility(show, vb)
       vb.views.octave_repeat_mode_text.visible = false
       vb.views.octave_repeat_mode.visible = false
    end
+end
+
+
+function toggle_note_matrix_visibility(show,fm,vb)
+  if show == NOTE_PATTERN_MATRIX then
+    fm.visible = true
+  else
+    fm.visible = false
+  end
+  vb.views.total_dialog:resize()
 end
 
 
