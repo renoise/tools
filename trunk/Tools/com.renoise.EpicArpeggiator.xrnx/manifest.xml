@@ -6,7 +6,9 @@
   <Name>Epic Arpeggiator</Name>
   <Author>Vincent Voois [ http://tinyurl.com/vvrns ]</Author>
   <Description>Design note patterns using a note matrix and powerful arpeggiator features
--Arpeggiate notes, instruments,volume and pan/vol column effects</Description>
+-Arpeggiate notes, instruments,volume and pan/vol column effects
+Can be found in:"Tools" menu
+</Description>
   <Category>Pattern Editor</Category>
   <Homepage>http://scripts.renoise.com</Homepage>
 </RenoiseScriptingTool>
