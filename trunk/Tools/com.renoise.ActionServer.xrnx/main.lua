@@ -280,12 +280,6 @@ class "ActionServer"
      local buffer = nil
      local mime = self:get_MIME(path)
      
-     -- TODO remove image hack
-     if self:is_image(mime) then 
-       path = "/empty.txt"        
-       mime = self:get_MIME(path)     
-     end
-
      self:set_header("Content-Type", mime)
      
      parameters = parameters or {}
