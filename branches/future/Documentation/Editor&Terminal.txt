@@ -1,0 +1,121 @@
+--[[----------------------------------------------------------------------------
+Console.txt
+----------------------------------------------------------------------------]]--
+
+The built in Script Terminal and Editor in Renoise can be opened by clicking
+on the "Scripting Terminal & Editor..." menu entry in the "Tools" menu.
+
+It allows you to:
+
+* Evaluate scripts or commands in realtime -> Terminal
+
+* Watch any scripts output -> Terminal
+  all "print"s and errors from scripts will be redirected here
+
+* Create, view and edit Lua, text, and XML files -> Editor
+
+--------------------------------------------------------------------------------
+
+-- Command" below is the Control key on Windows and Linux, Command on OSX
+
+
+--------------------------------------------------------------------------------
+-- Browser Shortcuts
+--------------------------------------------------------------------------------
+
+'Command + E' Switch to Editor
+'Command + T' Switch to Terminal
+
+'Command + O' Open an existing File
+'Command + N' Create a new File
+
+
+--------------------------------------------------------------------------------
+-- Editor Shortcuts
+--------------------------------------------------------------------------------
+
+'Command + B' Switch to Browser
+'Command + T' Switch to Terminal
+
+'Command + O' Open an existing File
+'Command + N' Create a new File
+
+'Command + S' Save current File (Tool Scripts will automatically reload)
+'Command + Shift + S' Save all open files
+'Command + R' Save _and Run the current Tabs File
+
+'Command + W'  Close current tab
+'Command + F4' Close current tab
+'Command + Shift + W'  Close all except current Tab
+'Command + Shift + F4' Close all except current Tab
+
+'Command + Tab' Switch to Next Tab
+'Command + Shift + Tab' Switch to Previous Tab
+
+'Command + Z' Undo
+'Command + Y' Redo ('Command + Shift + Z' on OSX, LINUX)
+
+'Command + X' Cut
+'Command + C' Copy
+'Command + P' Paste
+'Command + D' Delete
+'Command + A' Select all
+
+'Command + L' Jump to Line
+
+'Command + F'  Open Find Dialog
+'Command + F3' Find Next under Cursor _or Selection
+'F3'           Find Next
+'Command + G'  Find Next
+'Command + E'  Set Find string from current selection
+'Command + H'  Replace Next
+
+'Tab' Indent Selection
+'Shift + Tab'  Unindent Selection
+
+
+--------------------------------------------------------------------------------
+-- Terminal Shortcuts
+--------------------------------------------------------------------------------
+
+'Command + B' Switch to Browser
+'Command + E' Switch to Editor
+
+'Command + O' Open an existing File
+'Command + N' Create a new File
+
+'Command + K' Clear Output
+'Command + L' Clear Output
+'Command + C' Copy Selection _in Output
+
+'Arrow Up'   Previous Command
+'Arrow Down' Next Command
+
+
+--------------------------------------------------------------------------------
+-- Tips & Tricks:
+--------------------------------------------------------------------------------
+
+* To enter multiple lines in the terminal, end a line with a \
+  The terminal will then prompt for another line until you hit enter twice
+
+* oprint(some_object) prints out info about a Lua class object:
+  try for example 'oprint(renoise.song())' to see all properties
+  and methods for song().
+  To list all available modules, try 'rprint(renoise)' or 'rprint(_G)'
+
+* Take a look at the example tools in the 'Resource Scripts' node on the
+  left for a detailed description of a tool scripts layout
+
+* If you just want to test out some code without writing a 'tool', create a new
+  script file in the 'Scripts' folder and not in the 'Scripts/Tools' folder.
+  Such Scripts can then be launched by hitting the 'Run Script' button or
+  via 'Command + R'. A default file called 'TestPad.lua' should already
+  be present which you can use for testing.
+
+* The full Renoise API reference is included in the left tree view
+  as well, in case you want to lookup something without leaving Renoise
+  
+
+--[[----------------------------------------------------------------------------
+----------------------------------------------------------------------------]]--

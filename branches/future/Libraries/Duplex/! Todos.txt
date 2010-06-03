@@ -1,0 +1,192 @@
+================================================================================
+Duplex Changelog, Notes & TODOs
+================================================================================
+
+--------------------------------------------------------------------------------
+Bugs
+--------------------------------------------------------------------------------
+
+* Multiple grid/column group layouts are broken (use Ohm64 for testing). 
+  Groups are not closed before the next one is encountered
+
+* Observable references disappear when loading new song. Implement & Test 
+  standard method for reassigning on new document notification
+  
+* Controls which are not or no longer assigned to document values, should 
+  be cleared, reset (when for example using less than 8 tracks in Renoise)
+    
+
+--------------------------------------------------------------------------------
+In Progress
+--------------------------------------------------------------------------------
+
+* Bjorn + Eduard: Use class:method syntax
+
+* Bjorn: Make MessageStream detect more event types: release, hold, etc.
+
+* Eduard: Rotary (UIComponent)
+  o meant to emulate rotary encoders on hardware
+  o takes up only a single unit-space in a control-map
+  o mode: absolute/relative (normal/endless)
+  o precision: change this for larger internal precision
+
+* Eduard: Implement Behringer BFC and BFR classes, finish the control maps
+
+* Eduard: Relative MIDI controller message support for encoders
+
+================================================================================
+Planned / Todo
+================================================================================
+
+* New Applications
+  o Common, non grid based Mixer 
+  o FX parameter Mixer (control currently selected FX)
+
+* Multi-tasking browser: keep applications running, open multiple devices at 
+  the same time
+  o If a device is selected
+    + If another device is already selected & running an application
+      # Keep the device/application running, and instantiate the new device
+    + If another device is already selected, but not running an application
+      # Close the other device, switch to the selected device
+  o If an application is selected
+    + If another application is running, offer to 
+    + If no application is running, start the selected application 
+  o * Definition of "running application" : application is selected and "run" 
+      is checked
+
+* Device control-panel: 
+  o set as standard settings / revert to...
+  o MIDIDevice: specify input port(s)
+  o save these settings with the song 
+  o select among available control-map layouts
+  o control custom setting (brightness, contrast)
+  o display descriptions form the controlmap in the Virtual UI (what is 
+    this, which preset is needed to use the device with Duplex)
+  o etc
+
+* OSC Device / protocol support
+
+* Adaptive color-space: set points in a canvas using available colors from the 
+  "device palette"
+  o The device color-space is a simple table which tell us the depth of R,G 
+    and B color channels
+  o From the device color-space, we can produce a swatch containing possible 
+    colors (minimum is two, maximum is millions, in which case we present 
+    only some of them)
+  o All scripts should come with defaults that degrade gracefully (not making
+    use of subtle shades for important features, to stay compatible with 
+    e.g. the monochromatic ohm64)
+  o It's always possible to customize/override the colors because they are 
+    token-based. Any UIComponent should present a list of colors (it's 
+    symbol-palette)
+
+* ControlMap: <Page> node, indicates that multiple pages with identical layout
+  can be expected (useful for access to the full mapping/MIDI implementation 
+  of e.g. the Nocturn controller). Question: could the <Page> node become 
+  problematic, in case that the controller doesn't switch ALL of it's parameters
+  when a new page is entered? (on the other hand, there's no reason we can't 
+  repeat values across pages?)
+
+* Display: z-index/stacking: methods like move_to_top, insert_above, 
+  insert_below
+
+* "Soft-validate" the control-map - warn when required elements are missing, 
+  but ignore unknown ones
+
+* Display:clear(): shoud use hardware-specific feature if possible
+
+
+--------------------------------------------------------------------------------
+Discuss
+--------------------------------------------------------------------------------
+
+* Application presets/mappings: for example, how to specify that the MixConsole
+  application needs to use certain control-map groups? 
+
+* Semantics for scripts (automatic detection of compatible scripts): 
+  o example of how a script could tell Duplex about it's requirements:
+    (>= 4 buttons AND >= 4 dials) OR (grid >= 2x4)
+  o The required controls could be grouped, so the user could select the group 
+    on a "dumped down" virtual control surface (custom mapping) 
+  
+* Ability to "discard" incoming messages after they have been processed (or 
+  the could be note-on and cc messages all over the place). 
+
+* Ability to perform automation recording using something like the MixConsole. 
+  link Renoise parameters to UIComponent instances, so that MIDI mapping the 
+  parameter will also change the UIComponent. 
+
+
+
+================================================================================
+Done
+================================================================================
+
+* Selective display updates: change only the values that are needed
+
+* Improved how meta-attributes are added to external control-map files. 
+  They are now added as the XML is parsed - previously it was the VirtualDisplay
+  class that did this.
+
+* Tooltips when hovering over controls: displays "name (value)"
+
+* Support rotary encoder and sliders as input method (via Mini/Slider 
+  widget in Renoise):
+  o Summing control values into a Slider's value, when the input method 
+    isn't "button"
+  o VirtualDisplay: when a slider is represented by several MiniSlider's, the 
+    only way to update the visual representation is to supply the MiniSlider's
+    with new values. However, we are also listening for those values, so 
+    there's a loop. This would not happen if we were able to set the value 
+    independently ? UPDATE: solved by having a table of notifier methods, so
+    we can add and remove listeners while updating values programatically. 
+    See also this thread: 
+    http://www.renoise.com/board/index.php?showtopic=24685&st=0&#entry194226
+    
+* Use os.currentdir for class paths
+
+* Basic MIDI input/output
+
+* Point class (represents a canvas point/unit (text,color) 
+
+* Merge Virtual/Hardware classes into the Display class
+
+* Application class methods for switching between applications/putting to 
+  sleep etc.
+
+* Convert existing tools into Application classes (MixConsole, PatternMatrix)
+
+* Dynamic switching of MIDI device and control-map 
+
+* MIDIDevice: improved implementation of "color-to-value" (now called 
+  point-to-value)
+
+* It's possible to spawn multiple dialog windows (and cause Renoise to crash)¨
+
+* Detect tool menu item arguments after the initial script has been 
+  launched (currently, the dialog is simply displayed)
+
+* ControlMap: <Param> @type="fader",  needed in order to emulate the 
+  Nocturn/Ohm64. It could work much like the "rotary", but will occupy more
+  units on the control surface (the "size" attribute) and have either a 
+  vertical or horizontal orientation
+
+* Make it possible to cancel events on the UIComponent level (implement a 
+  handler method that return a boolean value, and revert any changes to the 
+  UIComponent if the function returns a false value), Is there a smarter way to 
+  do this than manually rolling back to a previous state. Like, a way to 
+  define a "frozen state" of the UIComponent so we may simply do a 
+  self.revert() ?
+
+* Renamed Point class to CanvasPoint, merged with Canvas class
+
+* Merged Message class with MessageStream class
+
+* MessageStream: Hold event now detected
+
+* Branch future: Display: Add support for vertical faders in Virtual UIs
+
+* Fixed missing/bogus attaching to tracks in the mixer when the track count 
+  changed or the tracks got reordered
+  
