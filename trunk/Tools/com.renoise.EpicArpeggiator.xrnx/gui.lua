@@ -602,51 +602,89 @@ Main Dialog
 
         local cur_octave = renoise.song().transport.octave    
         local fnote = cur_octave
-        if (mod == "" and key == "z") then
+        print (key)
+        if (mod == "" and (key == "z" or key == "q" or key == "comma")) then
+          if (key == "q" or key == "comma") then 
+            fnote = fnote + 1
+          end
+          
           fnote = "C_"..fnote
           vb.views[fnote].value = not (vb.views[fnote].value and true)
         end
-        if (mod == "" and key == "s") then
+        if (mod == "" and (key == "s" or key == "l" or key =="2")) then
+          if (key == "l" or key == "2") then 
+            fnote = fnote + 1
+          end
           fnote = "Cf"..fnote
           vb.views[fnote].value = not (vb.views[fnote].value and true)
         end
-        if (mod == "" and key == "x") then
+        if (mod == "" and (key == "x" or key == "period" or key == "w")) then
+          if (key == "period" or key == "w") then 
+            fnote = fnote + 1
+          end
           fnote = "D_"..fnote
           vb.views[fnote].value = not (vb.views[fnote].value and true)
         end
-        if (mod == "" and key == "d") then
+        if (mod == "" and (key == "d" or key == ";" or key == "3")) then
+          if (key == ";" or key == "3") then 
+            fnote = fnote + 1
+          end
           fnote = "Df"..fnote
           vb.views[fnote].value = not (vb.views[fnote].value and true)
         end
-        if (mod == "" and key == "c") then
+        if (mod == "" and (key == "c" or key == "/" or key == "e")) then
+          if (key == "/" or key == "e") then 
+            fnote = fnote + 1
+          end
           fnote = "E_"..fnote
           vb.views[fnote].value = not (vb.views[fnote].value and true)
         end
-        if (mod == "" and key == "v") then
+        if (mod == "" and (key == "v" or key == "r")) then
+          if (key == "r") then 
+            fnote = fnote + 1
+          end
           fnote = "F_"..fnote
           vb.views[fnote].value = not (vb.views[fnote].value and true)
         end
-        if (mod == "" and key == "g") then
+        if (mod == "" and (key == "g" or key == "5")) then
+          if (key == "5") then 
+            fnote = fnote + 1
+          end
           fnote = "Ff"..fnote
           vb.views[fnote].value = not (vb.views[fnote].value and true)
         end
-        if (mod == "" and key == "b") then
+        if (mod == "" and (key == "b" or key == "t")) then
+          if (key == "t") then 
+            fnote = fnote + 1
+          end
           fnote = "G_"..fnote
           vb.views[fnote].value = not (vb.views[fnote].value and true)
         end
-        if (mod == "" and key == "h") then
+        if (mod == "" and (key == "h" or key == "6")) then
+          if (key == "6") then 
+            fnote = fnote + 1
+          end
           fnote = "Gf"..fnote
           vb.views[fnote].value = not (vb.views[fnote].value and true)
         end
-        if (mod == "" and key == "n") then
+        if (mod == "" and (key == "n" or key == "y")) then
+          if (key == "y") then 
+            fnote = fnote + 1
+          end
           fnote = "A_"..fnote
           vb.views[fnote].value = not (vb.views[fnote].value and true)
         end
-        if (mod == "" and key == "j") then
+        if (mod == "" and (key == "j" or key == "7")) then
+          if (key == "7") then 
+            fnote = fnote + 1
+          end
           fnote = "Af"..fnote
           vb.views[fnote].value = not (vb.views[fnote].value and true)
         end
-        if (mod == "" and key == "m") then
+        if (mod == "" and (key == "m" or key == "u")) then
+          if (key == "u") then 
+            fnote = fnote + 1
+          end
           fnote = "B_"..fnote
           vb.views[fnote].value = not (vb.views[fnote].value and true)
         end
@@ -982,8 +1020,8 @@ button will inverse the complete matrix, similar to what the octave or note-row
 toggle buttons do. 
 
 Matrix shortcuts:
-Use the lower keyboard keys to toggle notes C to B. (same layout as when
-entering notes in the pattern editor where z = C and m = B)
+Use the keyboard keys to toggle notes C to B, you have the same two octave layers.
+(where z = C and m = B and in the upper layer where q = C and u = B)
 The actual selected octave in the song is being used to set the note in that 
 particular octave. Use the numpad "/" and "*" keys to change the octave
 Pageup and Pagedown (or Prior / Next) keys toggle the note-matrix or custom
