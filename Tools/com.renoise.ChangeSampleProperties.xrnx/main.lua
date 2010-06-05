@@ -1,7 +1,6 @@
 -- -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 -- menu registration
 -- -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-
 local OPTION_CHANGE_SELECTED = 1
 local OPTION_CHANGE_ALL = 2
 
@@ -105,9 +104,33 @@ function open_sample_dialog(option)
                function(value) do_base_note = value end,vb),
                create_view(obj_textlabel,'',TEXT_ROW_WIDTH,0,0,'novalue','dobasenotetext',
                '','Basenote','',vb),
-               create_view(obj_textfield,'',30,0,0,base_note_val,'base_note',
-               'Insert a full note-value like C-4 or A#3 or use semitones to shift\nthe whole map:\n-24 to shift two octaves down\n24 to shift everything two octaves up\nany other [rubbish] value will be ignored','',
-               function(value) base_note_val = value end,vb),
+               vb:valuebox {
+                min = 0,
+                max = 119,
+                value = 48,
+                id='base_note',
+                tostring = function(value) 
+                  local octave_num = math.floor(value / 12)
+                  local note_num = value % 12
+                  note_num = note_num+1
+                  local base_note = valid_notes[note_num]
+                  base_note_val = base_note..tostring(octave_num)
+                  return (base_note_val)
+                end,
+                tonumber = function(str) 
+                  local octave = tonumber(str:sub(3, 3))
+                  if (octave) then
+                    local note_string = str:sub(1, 2)
+                    for val,str in pairs(valid_notes) do
+                      if (str:lower() == note_string:lower()) then
+                        return 12 * octave + val - 1
+                      end
+                    end
+                  end
+                  
+                  return nil -- can not convert
+                end,
+               },
             },
             vb:row {
                create_view(obj_checkbox,'',18,0,0,do_loop,'doloop',
