@@ -7,26 +7,23 @@ require "util"
 
 local log = Log(Log.ALL)
 
+
+
 -------------------------------------------------------------------------------
 --  Menu registration
 -------------------------------------------------------------------------------
 
-renoise.tool():add_menu_entry {
-  name = "Main Menu:Tools:Update",
-  active = function()
-    return connected()
-  end,
-  invoke = function()
-    start()
-  end
-}
-
+local entry = {}
+entry.name = "Main Menu:Tools:Update..." 
+entry.active = function() return connected() end
+entry.invoke = function() start() end
+renoise.tool():add_menu_entry(entry)
 
 -------------------------------------------------------------------------------
 --  Debug
 -------------------------------------------------------------------------------
 
-if true then 
+if false then 
   require "remdebug.engine"
   
   _AUTO_RELOAD_DEBUG = function()
@@ -250,14 +247,12 @@ local function read()
   return true
 end
 
-
 -------------------------------------------------------------------------------
 -- do we have an internet connection?
 
 function connected()
   return true
 end
-
 
 -------------------------------------------------------------------------------
 
