@@ -13,6 +13,7 @@ local current_dialog = nil
 local food_x = 6;
 local food_y = 6;
 local notifier_on = false
+local last_idle_time = os.clock()
 
 
 --[[----------------------------------------------------------------------------
@@ -162,8 +163,8 @@ function game()
 
   draw_snake()
 
-  local tempBlock = table.create{x=nil, y=nil} --Init with empty/useless coordinates
-  local t1 = table.create{x=nil, y=nil} --Ditto
+  local tmp1 = table.create{x=nil, y=nil} --Init with empty/useless coordinates
+  local tmp2 = table.create{x=nil, y=nil} --Ditto
 
   local col = get_cell_color(snake[1].x, snake[1].y);
 
@@ -175,8 +176,8 @@ function game()
 
   set_cell(food_x, food_y, "yellow")
 
-  tempBlock.x = snake[1].x
-  tempBlock.y = snake[1].y
+  tmp1.x = snake[1].x
+  tmp1.y = snake[1].y
 
   clear_cell(snake[1].x, snake[1].y)
 
@@ -201,7 +202,7 @@ function game()
     )
   then
     renoise.app():show_error("Game over! You're score is: " .. score)
-    -- TODO: Destroy notifier?
+    renoise.tool().app_idle_observable:remove_notifier(handle_app_idle_notification)
     main()
   end
 
@@ -217,15 +218,31 @@ function game()
 
   for i=2, table.count(snake) do
     clear_cell(snake[i].x, snake[i].y);
-    t1.x = snake[i].x;
-    t1.y = snake[i].y;
-    snake[i].x = tempBlock.x;
-    snake[i].y = tempBlock.y;
-    tempBlock.x = t1.x;
-    tempBlock.y = t1.y;
+    tmp2.x = snake[i].x;
+    tmp2.y = snake[i].y;
+    snake[i].x = tmp1.x;
+    snake[i].y = tmp1.y;
+    tmp1.x = tmp2.x;
+    tmp1.y = tmp2.y;
   end
 
   draw_snake()
+
+end
+
+
+-- Handler
+function handle_app_idle_notification()
+
+  if (not current_dialog or not current_dialog.visible) then
+    renoise.tool().app_idle_observable:remove_notifier(handle_app_idle_notification)
+    return
+  end
+
+  if os.clock() - last_idle_time >= 0.1 then
+    last_idle_time = os.clock()
+    game()
+   end
 
 end
 
@@ -235,10 +252,7 @@ function main()
 
   init()
   grid()
-  if not notifier_on then
-    renoise.tool().app_idle_observable:add_notifier(function() game() end)
-    notifier_on = true
-  end
+  renoise.tool().app_idle_observable:add_notifier(handle_app_idle_notification)
 
 end
 
