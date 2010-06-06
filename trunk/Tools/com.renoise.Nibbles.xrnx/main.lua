@@ -12,7 +12,6 @@ local current_direction = "up"
 local current_dialog = nil
 local food_x = 6;
 local food_y = 6;
-local notifier_on = false
 local last_idle_time = os.clock()
 
 
