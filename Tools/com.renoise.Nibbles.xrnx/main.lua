@@ -165,21 +165,20 @@ function game()
   local tmp1 = table.create{x=nil, y=nil} --Init with empty/useless coordinates
   local tmp2 = table.create{x=nil, y=nil} --Ditto
 
-  local col = get_cell_color(snake[1].x, snake[1].y);
+  local color = get_cell_color(snake[1].x, snake[1].y);
 
   -- Do not allow the food to be on snake's mouth
   while (food_x == snake[1].x and food_y == snake[1].y) do
     food_x = math.random(matrix_width)
     food_y = math.random(matrix_height)
   end
-
   set_cell(food_x, food_y, "yellow")
 
   tmp1.x = snake[1].x
   tmp1.y = snake[1].y
-
   clear_cell(snake[1].x, snake[1].y)
 
+  -- Check the direction
   if(current_direction == "up") then
     snake[1].y = snake[1].y - 1
   elseif(current_direction == "down") then
@@ -192,12 +191,13 @@ function game()
     return
   end
 
+  -- Snake crashed
   if(
     snake[1].x < 1 or
     snake[1].x > matrix_width or
     snake[1].y < 1 or
     snake[1].y > matrix_height or
-    col == get_cell_color(snake[1].x, snake[1].y)
+    color == get_cell_color(snake[1].x, snake[1].y)
     )
   then
     renoise.app():show_error("Game over! You're score is: " .. score)
@@ -205,16 +205,19 @@ function game()
     main()
   end
 
+  -- Snake ate some food, so he grows
   if(snake[1].x == food_x and snake[1].y == food_y) then
     clear_cell(food_x, food_y);
     snake[#snake + 1] = table.create{x=nil, y=nil}
     snake[#snake].x = snake[#snake-1].x + 1
     snake[#snake].y = snake[#snake-1].y
+    -- New food, increment score
     food_x = math.random(matrix_width)
     food_y = math.random(matrix_height)
     score = score + 1;
   end
 
+  -- Move the snake
   for i=2, table.count(snake) do
     clear_cell(snake[i].x, snake[i].y);
     tmp2.x = snake[i].x;
