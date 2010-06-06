@@ -12,6 +12,7 @@ local current_direction = "up"
 local current_dialog = nil
 local food_x = 6;
 local food_y = 6;
+local notifier_on = false
 
 
 --[[----------------------------------------------------------------------------
@@ -42,8 +43,10 @@ Where % is a wildcard for x,y coordinates on a grid. We use these vb
 variables throughout the program.
 ]]--
 function init()
+
   math.randomseed(os.time())
   reset()
+
   for x = 1, matrix_width do
     vb:column {
       id = "col_" .. x,
@@ -54,7 +57,7 @@ function init()
       }
       vb:bitmap {
         id = "bitmap_x" .. x .. "y" .. y,
-        bitmap = "Bitmaps/cell_black.png",
+        bitmap = "Bitmaps/cell_black.bmp",
       }
     end
   end
@@ -62,7 +65,7 @@ function init()
 end
 
 
--- This function uses vb.views[] which was populated by init_objects() to show
+-- This function uses vb.views[], which was populated by init(), to show
 -- our custom dialog.
 function grid()
 
@@ -87,13 +90,6 @@ function grid()
 
 end
 
-
--- Snake block
-function create_snake_block()
-  return {["x"] = nil, ["y"] = nil}
-end
-
-
 -- Draw snake
 function draw_snake()
   for i = 1,  table.count(snake) do
@@ -114,7 +110,7 @@ function set_cell(x, y, color)
   if color == nil then color = "blue" end
   local tmp = "bitmap_x" .. x .. "y" .. y
   if vb.views[tmp] ~= nil and table.find(matrix_colors, color) then
-    vb.views[tmp].bitmap = "Bitmaps/cell_" .. color .. ".png"
+    vb.views[tmp].bitmap = "Bitmaps/cell_" .. color .. ".bmp"
   end
 end
 
@@ -123,7 +119,7 @@ end
 function clear_cell(x, y)
   local tmp = "bitmap_x" .. x .. "y" .. y
   if vb.views[tmp] ~= nil then
-    vb.views[tmp].bitmap = "Bitmaps/cell_black.png"
+    vb.views[tmp].bitmap = "Bitmaps/cell_black.bmp"
   end
 end
 
@@ -134,7 +130,7 @@ function get_cell_color(x ,y)
   if vb.views[tmp] ~= nil then
     local pos = string.find(vb.views[tmp].bitmap, "Bitmaps/cell_")
     local color = string.sub(vb.views[tmp].bitmap, pos + 13)
-    pos = string.find(color, ".png")
+    pos = string.find(color, ".bmp")
     color = string.sub(color, 1, -pos)
     if (table.find(matrix_colors, color) ~= nil) then
       return color
@@ -156,9 +152,6 @@ function key_handler(dialog, mod_string, key_string)
   )
   then
     current_direction = key_string
-    -- TODO, game() doesn't belong here...
-    -- But I don't have a loop in main() that works yet..
-    game()
   end
 
 end
@@ -169,8 +162,8 @@ function game()
 
   draw_snake()
 
-  local tempBlock = create_snake_block() --Init with empty/useless coordinates
-  local t1 = create_snake_block() --Ditto
+  local tempBlock = table.create{x=nil, y=nil} --Init with empty/useless coordinates
+  local t1 = table.create{x=nil, y=nil} --Ditto
 
   local col = get_cell_color(snake[1].x, snake[1].y);
 
@@ -207,15 +200,14 @@ function game()
     col == get_cell_color(snake[1].x, snake[1].y)
     )
   then
-    -- TODO
     renoise.app():show_error("Game over! You're score is: " .. score)
-    current_dialog:close()
+    -- TODO: Destroy notifier?
     main()
   end
 
   if(snake[1].x == food_x and snake[1].y == food_y) then
     clear_cell(food_x, food_y);
-    snake[#snake + 1] = create_snake_block()
+    snake[#snake + 1] = table.create{x=nil, y=nil}
     snake[#snake].x = snake[#snake-1].x + 1
     snake[#snake].y = snake[#snake-1].y
     food_x = math.random(matrix_width)
@@ -243,12 +235,10 @@ function main()
 
   init()
   grid()
-
-  -- TODO, this loop doesn't work...
-  -- while true do
-    game()
-    -- sleep(1)
-  --end
+  if not notifier_on then
+    renoise.tool().app_idle_observable:add_notifier(function() game() end)
+    notifier_on = true
+  end
 
 end
 
