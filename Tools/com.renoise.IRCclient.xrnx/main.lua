@@ -26,10 +26,10 @@ function print_server_replies()
       rirc.views.console_frame:add_line(command_line)
       rirc.views.console_frame:scroll_to_last_line()
       dpos = string.find(command_line, "PING")
-    end
-    if  dpos ~= nil then
-      command_line = string.gsub(command_line, "PING", "PONG").."\r\n"
-      server:send(command_line)
+      if  dpos ~= nil then
+        command_line = string.gsub(command_line, "PING", "PONG").."\r\n"
+        server:send(command_line)
+      end
     end
   until command_line == nil
 
