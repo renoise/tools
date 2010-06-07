@@ -5,7 +5,12 @@
   <Version>1.2</Version>
   <Name>Splitmap Manager</Name>
   <Author>Vincent Voois [ http://tinyurl.com/vvrns ]</Author>
-  <Description>Extended split-map manager</Description>
+  <Description>Extended split-map manager (aka drumkit generator):
+-Assign each sample to multiple keys
+-Shift existing mappings 
+-Start from a different basenote than C-4
+Can be found in:Instrument list context menu (right-click on an instrument)
+</Description>
   <Category>Instrument Editor</Category>
   <Homepage>http://scripts.renoise.com</Homepage>
 </RenoiseScriptingTool>

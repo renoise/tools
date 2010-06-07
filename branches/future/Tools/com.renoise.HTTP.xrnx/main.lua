@@ -7,26 +7,23 @@ require "util"
 
 local log = Log(Log.ALL)
 
+
+
 -------------------------------------------------------------------------------
 --  Menu registration
 -------------------------------------------------------------------------------
 
-renoise.tool():add_menu_entry {
-  name = "Main Menu:Tools:Update",
-  active = function()
-    return connected()
-  end,
-  invoke = function()
-    start()
-  end
-}
-
+local entry = {}
+entry.name = "Main Menu:Tools:Update..." 
+entry.active = function() return connected() end
+entry.invoke = function() start() end
+renoise.tool():add_menu_entry(entry)
 
 -------------------------------------------------------------------------------
 --  Debug
 -------------------------------------------------------------------------------
 
-if true then 
+if false then 
   require "remdebug.engine"
   
   _AUTO_RELOAD_DEBUG = function()
@@ -85,10 +82,20 @@ function Request:read_header()
      return false, socket_error
   end
   
+  local query = " "
+  if (parsed_url.query) then
+    query = "?" .. parsed_url.query
+  end
+  
   -- request content
   local get_request = string.format(
-    "%s %s HTTP/1.1\nHost: %s\r\n\r\n",
-    self.method, parsed_url.path, parsed_url.host)
+    "%s %s%s HTTP/1.1\n" ..
+    "Host: %s\n" .. 
+    "User-Agent: Renoise %s (%s)" ..
+    "\r\n\r\n",
+    self.method, parsed_url.path, query,
+      parsed_url.host, renoise.RENOISE_VERSION, os.platform():lower())
+    log:info("=== REQUEST HEADERS ===\n" .. get_request)
 
   local ok, socket_error = client:send(get_request)
   
@@ -223,7 +230,7 @@ function Request:do_callback(socket_error)
   self.header = nil
 
   -- invoke the external callback (if set)
-  self.callback(socket_error)
+  self:callback(socket_error)
 end
 
 
@@ -240,7 +247,6 @@ local function read()
   return true
 end
 
-
 -------------------------------------------------------------------------------
 -- do we have an internet connection?
 
@@ -248,11 +254,13 @@ function connected()
   return true
 end
 
-
 -------------------------------------------------------------------------------
 
-function http(url, method)
+function http(url, method, callback)
   local new_request = Request(url, method)
+  if (callback) then 
+    new_request.callback = callback 
+  end
   local succeeded, socket_error = new_request:read_header()
 
   if (succeeded) then
@@ -276,15 +284,36 @@ function http_download_file(url)
   end
 end
 
+local function get_version_string()
+  local prod = "Renoise"
+  local version = renoise.RENOISE_VERSION:match(".+[%s?]")
+  local state = renoise.RENOISE_VERSION:match("(.+)[%s?]")
+--  local regged = 
+end
+
 function start()
-  http("http://www.renoise.com/download/checkversion.php")
-  http("http://www.renoise.com/download/")
-  http("http://www.renoise.com/")
+
+  -- Renoise Version Check; using HTTP Header "User-Agent"
+  http("http://www.renoise.com/download/checkversion.php?output=raw", "GET", 
+    function(self)  
+      if (self.contents) then
+        local buttons = table.create{"OK", "Go to downloads"}
+        local choice = renoise.app():show_prompt(
+          "Checking for Renoise updates", 
+          table.concat(self.contents), buttons)
+        if (choice == buttons[2]) then
+          renoise.app():open_url("http://www.renoise.com/download/renoise/")
+        end  
+      end
+    end)
   
-  http("http://qwe.renoise.com/invalid_host_name.php")
-  http("htsj:invalid_url")
+--  http("http://www.renoise.com/download/")
+--  http("http://www.renoise.com/")
   
-  -- http_download_file("http://mirror.renoise.com/download/Renoise_2_5_1_Demo.exe")
+--  http("http://qwe.renoise.com/invalid_host_name.php")
+--  http("htsj:invalid_url")
+  
+  --http_download_file("http://mirror.renoise.com/download/Renoise_2_5_1_Demo.exe")
   -- http("http://nl.archive.ubuntu.com/ubuntu-cdimages/10.04/release/ubuntu-10.04-dvd-amd64.iso")
 end
 

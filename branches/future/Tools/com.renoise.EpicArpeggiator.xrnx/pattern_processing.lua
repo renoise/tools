@@ -31,7 +31,7 @@ Also the note-, instrument-, velocity- and octave-schemes are generated here
       --show delay column in case it is invisible      
       song.tracks[track_index].delay_column_visible = true
       if switch_note_pattern_index ==1 then
-         for i = 1, NUM_OCTAVES * NUM_NOTES do
+         for i = 1, (NUM_OCTAVES+1) * NUM_NOTES do
             if note_states[i] == true then
                check_condition = 1
             end

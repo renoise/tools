@@ -11,10 +11,10 @@
 
 --[[--------------------------------------------------------------------------
 
- This file defines Renoise default OSC message set. Beside of the ones you 
- find listed here, Renoise already processes some realtime critical messages 
- internally. Those will never be trigger here, and thus can also not be 
- overloaded by this script:
+ This file defines Renoise's default OSC server implementation. Beside of the 
+ messages, patterns you find here, Renoise already processes a few realtime 
+ critical messages internally. Those will never be trigger here, and thus can
+ also not be overloaded here:
  
  
  ---- Realtime Messages
@@ -30,21 +30,21 @@
  
  ---- Message Format
  
- All other messages, received by Renoises global OSC server are handled 
- in this script. 
+ All other messages which are received by Renoise, are handled in this script. 
  
- message arguments are passes to the process function as a table (array) of:
+ The message arguments are passes to the process function as a table 
+ (array) of:
 
  argument = {
    tag, -- (OSC type tag. See http://opensoundcontrol.org/spec-1_0)
    value -- (OSC value as lua type: nil, boolean, number or a string)
  }
  
- In this file the patterns are strings !without! the "/renoise" prefix. But 
- the prefix must be specified when sending something to Renoise. Some valid 
- message examples are:
+ Please ote that the message patterns are strings !without! the "/renoise" 
+ prefix in this file. But the prefix must be specified when sending something 
+ to Renoise. Some valid message examples are:
  
- /renoise/transport/play (handled internally)
+ /renoise/trigger/midi (handled internally)
  /renoise/track1/volume f=1.0 (handled here)
  /renoise/window/activate_gui_preset i=1 (handled here)
  ...
@@ -52,20 +52,18 @@
  
  ---- Remote evaluation of Lua expressions via OSC
  
- With a special OSC message "/renoise/evaluate" you can evaluate Lua 
- expressions remotely, and thus do "anything" the Renoise Lua API offers 
- remotely. This way you don't need to edit this file in order to extend 
- Renoises Osc implementation, but can completely do this in your client.
-
+ With the OSC message "/renoise/evaluate" you can evaluate Lua expressions 
+ remotely, and thus do "anything" the Renoise Lua API offers remotely. This 
+ way you don't need to edit this file in order to extend Renoises OSC 
+ implementation, but can do so in your client.
+ 
  "/renoise/evaluate" expects exactly one argument, the to be evaluated 
- Lua expression, and will run the expression in a custom environment. This 
- custom environment is a sandbox which only allows access to some global 
- functions and the renoise.XXX modules. It can also not change anything 
- from this script. Please see below (evaluate_env) for the complete list of
- allowed funcitons and modules. 
- This is done to prevent that such custom expressions cause harm, because 
- in theory anyone/anthing could send messages to your opened OSC port.
-
+ Lua expression, and will run the expression in a custom, safe Lua environment. 
+ This custom environment is a sandbox which only allows access to some global 
+ Lua functions and the renoise.XXX modules, which means you can not change any 
+ globals or locals from this script. Please see below (evaluate_env) for the 
+ complete list of allowed funcitons and modules. 
+ 
 ]]
 
 
@@ -75,15 +73,14 @@
 
 local action_pattern_map = table.create{}
 
-
--- create a message argument
--- name is only needed when generating a list of available messages for the user
--- type is the expected lua type name for the OSC argument
+-- helper to define a message argument:
+-- name is only needed when generating a list of available messages for the 
+-- user. type is the expected lua type name for the OSC argument, NOT the OSC 
+-- type tag
 
 local function argument(name, type)
   return { name = name, type = type }
 end
-
 
 -- register a message with the given optional arguments, handler 
 -- function and description
@@ -95,16 +92,16 @@ local function add_action(info)
   
   assert(type(info.pattern) == "string" and 
     type(info.handler) == "function", 
-    "info needs at least a pattern and handler")
+    "action info needs at least a pattern and handler function")
     
   assert(not info.arguments or type(info.arguments) == "table", 
-    "arguments should not be specified or a table")
+    "arguments should not be specified or should be a table")
     
   assert(not info.description or type(info.description) == "string", 
-    "descriotion should not be specified or a table")
+    "description should not be specified or should be string")
   
   info.arguments = info.arguments or {}
-  info.description = info.description or "No descriotion available"
+  info.description = info.description or "No description available"
   
   action_pattern_map[info.pattern] = info
 end
@@ -114,7 +111,9 @@ end
 -- Evaluate Environment
 ------------------------------------------------------------------------------
 
--- environment for expressions. may only access a few safe globals and modules
+-- environment for custom expressions via OSC. such expressions can only 
+-- access a few "safe" globals and modules
+
 local evaluate_env = {
   _VERSION = _G._VERSION,
   
@@ -139,6 +138,7 @@ local evaluate_env = {
 }
 
 -- compile and evaluate an expression in the evaluate_env sandbox
+
 local function evaluate(expression)
   local eval_function, message = loadstring(expression)
   
@@ -191,7 +191,8 @@ add_action {
 
 add_action { 
   pattern = "/transport/start", 
-  description = "Start playback. No arguments avilable.",
+  description = "Start playback or restart playing the current pattern. "..
+    "No arguments available.",
   handler = function()
     local play_mode = renoise.Transport.PLAYMODE_RESTART_PATTERN
     renoise.song().transport:start(play_mode)
@@ -200,7 +201,7 @@ add_action {
 
 add_action { 
   pattern = "/transport/stop", 
-  description = "Stop playback. No arguments avilable.",
+  description = "Stop playback. No arguments available.",
   handler = function()
     renoise.song().transport:stop()
   end,
@@ -231,6 +232,9 @@ add_action {
 
 -- available_messages
 
+-- called by Renoise to show info about all avilable messages in the 
+-- OSC preferences pane
+
 function available_messages()
   local ret = table.create()
 
@@ -252,6 +256,13 @@ end
 
 
 -- process_message
+
+-- Called by Renoise in order to process a message that was not already handled
+-- by Renoises internal OSC hander (note, midi triggering)
+-- The returned boolean is only used for the OSC log view in the preferences 
+-- (handled = false will log messages as REJECTED)
+-- Lua runtime errors that may happen here, will never be shown as errors to 
+-- the user, but only dumped to the Lua terminal in Renoise.
 
 function process_message(pattern, arguments)
   local handled = false

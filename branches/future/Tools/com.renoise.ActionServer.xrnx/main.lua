@@ -256,7 +256,8 @@ class "ActionServer"
   function ActionServer:init_header()
    self.header_map = table.create()
    self.header_map["Date"]  = self:get_date()
-   self.header_map["Server"] = "Renoise Vx.xx"
+   self.header_map["Server"] = string.format(
+     "Renoise %s (%s)", renoise.RENOISE_VERSION, os.platform():lower())
    self.header_map["Cache-Control"] = "max-age=3600, must-revalidate"
    self.header_map["Accept-Ranges"] = "none"
   end
@@ -280,12 +281,6 @@ class "ActionServer"
      local buffer = nil
      local mime = self:get_MIME(path)
      
-     -- TODO remove image hack
-     if self:is_image(mime) then 
-       path = "/empty.txt"        
-       mime = self:get_MIME(path)     
-     end
-
      self:set_header("Content-Type", mime)
      
      parameters = parameters or {}
