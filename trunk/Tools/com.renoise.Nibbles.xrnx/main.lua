@@ -2,16 +2,19 @@
 Variables & Globals
 ----------------------------------------------------------------------------]]--
 
+local current_dialog = nil
+
 local matrix_width = 25
 local matrix_height = 25
 local matrix_colors = table.create{'black','blue','yellow'} --Bitmaps dir
+local matrix_cells = table.create{}
+local matrix_view = nil
+
 local score = 0
 local snake = table.create()
-local vb = renoise.ViewBuilder()
 local current_direction = "up"
-local current_dialog = nil
-local food_x = 6;
-local food_y = 6;
+local food_x = 6
+local food_y = 6
 local last_idle_time = os.clock()
 
 
@@ -19,123 +22,99 @@ local last_idle_time = os.clock()
 Functions
 ----------------------------------------------------------------------------]]--
 
--- Reset
+-- Reset Game
 function reset()
-  score = 0
-  vb = renoise.ViewBuilder()
+  math.randomseed(os.time())
+
+  for x = 1,#matrix_cells do
+    for y = 1,#matrix_cells[x] do
+      clear_cell(x, y)
+    end
+  end
+
   snake = table.create()
+  snake[1] = { x= 1, y= math.floor(matrix_height / 2) }
+  snake[2] = { x= 1, y= math.floor(matrix_height / 2) + 1 }
+  snake[3] = { x= 1, y= math.floor(matrix_height / 2) + 2 }
+
   current_direction = "up"
-  snake[1] = { x= 1, y= round(matrix_height / 2) }
-  snake[2] = { x= 1, y= round(matrix_height / 2) + 1 }
-  snake[3] = { x= 1, y= round(matrix_height / 2) + 2 }
+  score = 0
+
+  draw_snake()
 end
 
 
---[[
-This function initializes some graphics, scores, and uniquely
-identifies renoise.ViewBuilder() objects so they can be manipulated
-
-vb:column are identified as: col_%
-vb:row are identified as: cell_x%_y%
-vb:bitmap are identifed as: bitmap_x%_y%
-
-Where % is a wildcard for x,y coordinates on a grid. We use these vb
-variables throughout the program.
-]]--
-function init()
-
-  math.randomseed(os.time())
-  reset()
+-- Create main matrix cells
+function create_cells()
+  local vb = renoise.ViewBuilder()
+  matrix_view = vb:row { }
 
   for x = 1, matrix_width do
-    vb:column {
-      id = "col_" .. x,
-    }
+    local column = vb:column { }
+    matrix_cells[x] = table.create()
+
     for y = 1, matrix_height do
-      vb:row {
-        id = "cell_x" .. x .. "y" .. y,
-      }
-      vb:bitmap {
-        id = "bitmap_x" .. x .. "y" .. y,
+       matrix_cells[x][y] = vb:bitmap {
         bitmap = "Bitmaps/cell_black.bmp",
       }
+      column:add_child(matrix_cells[x][y])
     end
-  end
 
+    matrix_view:add_child(column)
+  end
 end
 
-
--- This function uses vb.views[], which was populated by init(), to show
--- our custom dialog.
-function grid()
-
-  if (current_dialog and current_dialog.visible) then
-    -- Reset
-    current_dialog:close()
-    current_dialog = nil
-  end
-
-  local dialog_content = vb:row { }
-  for x = 1, matrix_width do
-    local tmp = "col_" .. x
-    for y = 1, matrix_height do
-      local tmp2 = "cell_x" .. x .. "y" .. y
-      local tmp3 = "bitmap_x" .. x .. "y" .. y
-      vb.views[tmp2]:add_child(vb.views[tmp3])
-      vb.views[tmp]:add_child(vb.views[tmp2])
-    end
-    dialog_content:add_child(vb.views[tmp])
-  end
-  current_dialog = renoise.app():show_custom_dialog("Nibbles", dialog_content, key_handler)
-
-end
 
 -- Draw snake
 function draw_snake()
-  for i = 1,  table.count(snake) do
-    set_cell(snake[i].x, snake[i].y)
+  for _,point in pairs(snake) do
+    set_cell_color(point.x, point.y, "blue")
   end
 end
 
 
--- Round a number
-function round(num, idp)
-  local mult = 10^(idp or 0)
-  return math.floor(num * mult + 0.5) / mult
-end
-
-
--- Set a cell
-function set_cell(x, y, color)
-  if color == nil then color = "blue" end
-  local tmp = "bitmap_x" .. x .. "y" .. y
-  if vb.views[tmp] ~= nil and table.find(matrix_colors, color) then
-    vb.views[tmp].bitmap = "Bitmaps/cell_" .. color .. ".bmp"
-  end
-end
-
-
--- Clear a cell
-function clear_cell(x, y)
-  local tmp = "bitmap_x" .. x .. "y" .. y
-  if vb.views[tmp] ~= nil then
-    vb.views[tmp].bitmap = "Bitmaps/cell_black.bmp"
+-- Access a cell in the matrix view
+function matrix_cell(x, y)
+  if (matrix_cells[x] ~= nil) then
+    return matrix_cells[x][y]
+  else
+    return nil
   end
 end
 
 
 -- Get the color of a cell
 function get_cell_color(x ,y)
-  local tmp = "bitmap_x" .. x .. "y" .. y
-  if vb.views[tmp] ~= nil then
-    local pos = string.find(vb.views[tmp].bitmap, "Bitmaps/cell_")
-    local color = string.sub(vb.views[tmp].bitmap, pos + 13)
-    pos = string.find(color, ".bmp")
-    color = string.sub(color, 1, -pos)
-    if (table.find(matrix_colors, color) ~= nil) then
+  local cell = matrix_cell(x, y)
+
+  if (cell ~= nil) then
+    local pos = cell.bitmap:find("Bitmaps/cell_")
+    local color = cell.bitmap:sub(pos + 13)
+
+    pos = color:find(".bmp")
+    color = color:sub(1, -pos)
+
+    if (matrix_colors:find(color) ~= nil) then
       return color
     end
   end
+end
+
+
+-- Set a cells color
+function set_cell_color(x, y, color)
+  assert(matrix_colors:find(color), "invalid color")
+
+  local cell = matrix_cell(x, y)
+  if (cell ~= nil) then
+    matrix_cells[x][y].bitmap = "Bitmaps/cell_" .. color .. ".bmp"
+  end
+end
+
+
+-- Clear a cell
+function clear_cell(x, y)
+  set_cell_color(x, y, "black")
 end
 
 
@@ -144,6 +123,7 @@ function key_handler(dialog, mod_string, key_string)
 
   if (key_string == "esc") then
     dialog:close()
+
   elseif (
     key_string == "up" or
     key_string == "down" or
@@ -157,11 +137,37 @@ function key_handler(dialog, mod_string, key_string)
 end
 
 
--- Game logic
+-- Start running the game logic (frame timer)
+function run()
+  if not (renoise.tool().app_idle_observable:has_notifier(game)) then
+    renoise.tool().app_idle_observable:add_notifier(game)
+  end
+end
+
+
+-- Stop running the game (frame timer)
+function stop()
+  if (renoise.tool().app_idle_observable:has_notifier(game)) then
+    renoise.tool().app_idle_observable:remove_notifier(game)
+  end
+end
+
+
+-- Game logic (frame timer)
 function game()
 
-  draw_snake()
+  -- Game was closed?
+  if (not current_dialog or not current_dialog.visible) then
+    stop()
+    return
+  end
 
+  -- Only run every 0.1 seconds
+  if (os.clock() - last_idle_time < 0.1) then
+    return
+  end
+
+  -- Do frame stuff
   local tmp1 = table.create{x=nil, y=nil} --Init with empty/useless coordinates
   local tmp2 = table.create{x=nil, y=nil} --Ditto
 
@@ -172,20 +178,20 @@ function game()
     food_x = math.random(matrix_width)
     food_y = math.random(matrix_height)
   end
-  set_cell(food_x, food_y, "yellow")
+  set_cell_color(food_x, food_y, "yellow")
 
   tmp1.x = snake[1].x
   tmp1.y = snake[1].y
   clear_cell(snake[1].x, snake[1].y)
 
   -- Check the direction
-  if(current_direction == "up") then
+  if (current_direction == "up") then
     snake[1].y = snake[1].y - 1
-  elseif(current_direction == "down") then
+  elseif (current_direction == "down") then
     snake[1].y = snake[1].y + 1
-  elseif(current_direction == "left") then
+  elseif (current_direction == "left") then
     snake[1].x = snake[1].x - 1
-  elseif(current_direction == "right") then
+  elseif (current_direction == "right") then
     snake[1].x = snake[1].x + 1
   else
     return
@@ -201,19 +207,23 @@ function game()
     )
   then
     renoise.app():show_error("Game over! You're score is: " .. score)
-    renoise.tool().app_idle_observable:remove_notifier(handle_app_idle_notification)
-    main()
+    current_dialog:show()
+    reset()
+
+    return
   end
 
-  -- Snake ate some food, so he grows
-  if(snake[1].x == food_x and snake[1].y == food_y) then
+  -- Snake ate some food, so he grows
+  if (snake[1].x == food_x and snake[1].y == food_y) then
+    -- Grow
     clear_cell(food_x, food_y);
     snake[#snake + 1] = table.create{x=nil, y=nil}
     snake[#snake].x = snake[#snake-1].x + 1
     snake[#snake].y = snake[#snake-1].y
-    -- New food, increment score
+    -- New food
     food_x = math.random(matrix_width)
     food_y = math.random(matrix_height)
+    -- Increment score
     score = score + 1;
   end
 
@@ -228,33 +238,26 @@ function game()
     tmp1.y = tmp2.y;
   end
 
+  -- Update cells
   draw_snake()
 
+  -- Memorize time for the frame timer
+  last_idle_time = os.clock()
+
 end
 
 
--- Handler
-function handle_app_idle_notification()
+-- Initializes and shows the game
+function create_game()
 
   if (not current_dialog or not current_dialog.visible) then
-    renoise.tool().app_idle_observable:remove_notifier(handle_app_idle_notification)
-    return
+    create_cells()
+    reset()
+    run()
+
+    current_dialog = renoise.app():show_custom_dialog(
+      "Nibbles", matrix_view, key_handler)
   end
-
-  if os.clock() - last_idle_time >= 0.1 then
-    last_idle_time = os.clock()
-    game()
-   end
-
-end
-
-
--- Main
-function main()
-
-  init()
-  grid()
-  renoise.tool().app_idle_observable:add_notifier(handle_app_idle_notification)
 
 end
 
@@ -263,8 +266,7 @@ end
 Menu Registration
 ----------------------------------------------------------------------------]]--
 
--- Randomize GUI
 renoise.tool():add_menu_entry {
   name = "Main Menu:Tools:Nibbles...",
-  invoke = main
+  invoke = create_game
 }
