@@ -5,7 +5,8 @@
   <Version>2.303</Version>
   <Name>Custom Pattern Navigation</Name>
   <Author>Vincent Voois [ http://tinyurl.com/vvrns ]</Author>
-  <Description>Adds keybindings to jump an arbitrary amount of lines in the Pattern Editor. When activated, two new keybinding entries will show up in the Pattern Editor:Navigation:Custom Jump Lines Up/Down. Which can be configured with in the Tools menu.</Description>
+  <Description>Adds keybindings to jump an arbitrary amount of lines in the Pattern Editor. When activated, two new key binding entries will show up in 'Pattern Editor', 'Navigation': 
+'Custom Jump Lines Up' and Custom Jump Lines Down. Those keybindings can then be configured with in the 'Tools' menu.</Description>
   <Category>Pattern Editor</Category>
   <Homepage>http://scripts.renoise.com</Homepage>
 </RenoiseScriptingTool>

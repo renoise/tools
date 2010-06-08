@@ -5,7 +5,7 @@
   <Version>1.0</Version>
   <Name>Renoise ViewBuilder API Example</Name>
   <Author>taktik [taktik@renoise.com]</Author>
-  <Description>Set of small tools that show how to create custom Renoise GUIs for your tools</Description>
+  <Description>A XRNX tool which describes step by step how to create custom GUIs for your Renoise XRNX tools. Please have a look at the source files of this tool (manifest.xml and main.lua) for more info. Also creates a new menu 'Example Tool GUI' in the global 'Tools' menu.</Description>
   <Category>Tool Development</Category>
   <Icon>Bitmaps/RenoiseLua.png</Icon>
   <Homepage>http://scripts.renoise.com</Homepage>
