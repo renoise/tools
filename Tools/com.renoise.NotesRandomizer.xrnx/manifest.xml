@@ -5,6 +5,6 @@
   <Version>0.2</Version>
   <Name>Randomize Notes</Name>
   <Author>Dac Chartrand [dac@renoise.com]</Author>
-  <Description>Randomizes or shuffles exisitng notes in various tonal modes and ranges (for the whole song, notes in the selection and so one). Shows up as 'Randoimize Notes...' in the Pattern Editors context menu and also creates some shortcuts (look for 'randomize') in the Pattern Editor.</Description>
+  <Description>Randomizes or shuffles notes in various tonal modes and ranges, in order to create new random variations of existing sequences. Shows up as 'Randomize Notes...' in the Pattern Editors context menu and also creates some shortcuts (look for 'randomize') in the Pattern Editor. </Description>
   <Category>Pattern Editor</Category>
 </RenoiseScriptingTool>
