@@ -6,7 +6,7 @@
   <Name>PatternEditor Find And Replace</Name>
   <Author>taktik [taktik@renoise.com]</Author>
   <Category>Pattern Editor</Category>
-  <Description>A tool for finding &amp; replacing raw pattern data (notes, insturments, fx, ...) with simple wildcard support and the ability to batch replace all occurences. Shows up as 'Find And Replace...' in the Pattern Editor's context menu.</Description>
+  <Description>A tool for finding &amp; replacing raw pattern data (notes, instruments, fx, ...). Has simple wildcard support and the ability to batch replace all occurrences. Shows up as 'Find And Replace...' in the Pattern Editor's context menu.</Description>
   <Icon></Icon>
 </RenoiseScriptingTool>
 
