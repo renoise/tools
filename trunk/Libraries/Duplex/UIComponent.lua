@@ -29,7 +29,7 @@ function UIComponent:__init(display)
   -- set through set_size()
   self.width = 1 
   self.height = 1 
-   
+
   -- default palette
   self.palette = {}
 
@@ -124,17 +124,17 @@ function UIComponent:set_palette(palette)
 
   local changed = false
 
-  for _,__ in pairs(palette)do
-    for ___,____ in pairs(palette[_])do
-      if(self.palette[_][___])then
-        if(type(____)=="table")then
-          if(not table_compare(self.palette[_][___],____))then
-            self.palette[_][___] = table.rcopy(____)
+  for i,__ in pairs(palette)do
+    for k,v in pairs(palette[i])do
+      if(self.palette[i][k])then
+        if(type(v)=="table")then
+          if(not table_compare(self.palette[i][k],v))then
+            self.palette[i][k] = table.rcopy(v)
             changed = true
           end
-        elseif(type(____)=="string")then
-          if(self.palette[_][___] ~= ____)then
-            self.palette[_][___] = ____
+        elseif(type(v)=="string")then
+          if(self.palette[i][k] ~= v)then
+            self.palette[i][k] = v
             changed = true
           end
         end

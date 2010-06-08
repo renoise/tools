@@ -47,7 +47,7 @@ end
 --------------------------------------------------------------------------------
 
 function MIDIDevice:release()
-  TRACE("MIDIDevice:release()")
+print("MIDIDevice:release()")
 
   if (self.midi_in and self.midi_in.is_open) then
     self.midi_in:close()

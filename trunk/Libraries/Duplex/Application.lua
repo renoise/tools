@@ -17,8 +17,6 @@ class 'Application'
 function Application:__init()
   TRACE("Application:__init()")
   
-  self.name = "Application"
-
   -- the application is considered created once build_app() has been called
   self.created = false
 
@@ -168,7 +166,7 @@ function Application:__create_dialog()
   TRACE("Application:__create_dialog()")
   
   self.dialog = renoise.app():show_custom_dialog(
-    self.name, self.view
+    type(self), self.view
   )
 end
 
