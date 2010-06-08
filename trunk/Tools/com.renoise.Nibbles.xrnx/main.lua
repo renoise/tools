@@ -12,9 +12,8 @@ local matrix_view = nil
 
 local score = 0
 local snake = table.create()
+local food = { x= 6, y= 6 }
 local current_direction = "up"
-local food_x = 6
-local food_y = 6
 local last_idle_time = os.clock()
 
 
@@ -174,11 +173,11 @@ function game()
   local color = get_cell_color(snake[1].x, snake[1].y);
 
   -- Do not allow the food to be on snake's mouth
-  while (food_x == snake[1].x and food_y == snake[1].y) do
-    food_x = math.random(matrix_width)
-    food_y = math.random(matrix_height)
+  while (food.x == snake[1].x and food.y == snake[1].y) do
+    food.x = math.random(matrix_width)
+    food.y = math.random(matrix_height)
   end
-  set_cell_color(food_x, food_y, "yellow")
+  set_cell_color(food.x, food.y, "yellow")
 
   tmp1.x = snake[1].x
   tmp1.y = snake[1].y
@@ -198,7 +197,7 @@ function game()
   end
 
   -- Snake crashed
-  if(
+  if (
     snake[1].x < 1 or
     snake[1].x > matrix_width or
     snake[1].y < 1 or
@@ -214,15 +213,15 @@ function game()
   end
 
   -- Snake ate some food, so he grows
-  if (snake[1].x == food_x and snake[1].y == food_y) then
+  if (snake[1].x == food.x and snake[1].y == food.y) then
     -- Grow
-    clear_cell(food_x, food_y);
+    clear_cell(food.x, food.y);
     snake[#snake + 1] = table.create{x=nil, y=nil}
     snake[#snake].x = snake[#snake-1].x + 1
     snake[#snake].y = snake[#snake-1].y
     -- New food
-    food_x = math.random(matrix_width)
-    food_y = math.random(matrix_height)
+    food.x = math.random(matrix_width)
+    food.y = math.random(matrix_height)
     -- Increment score
     score = score + 1;
   end
