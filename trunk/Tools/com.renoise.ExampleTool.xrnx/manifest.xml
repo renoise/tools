@@ -43,7 +43,7 @@
   <Name>Renoise Scripting Tool Example</Name>
 
   <!-- Description of the tool as visible to the users -->
-  <Description>A XRNX tools that describes how to create Renoise XRNX tools</Description>
+  <Description>A XRNX tool which describes step by step and in depth how to create Renoise XRNX tools. Please have a look at the source files of this tool (manifest.xml and main.lua) for more info. Also creates a new menu 'Example Tool' in the global 'Tools' menu.</Description>
   
   
   <!-- === OPTIONAL ENTRIES === -->
