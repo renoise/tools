@@ -60,17 +60,27 @@ function Request:__init(url, method, data, callback, dataType, save_file)
   self.contents = table.create {}
   self.length = 0
   self.complete = false
+  self.post = ""
+  self.header_map = table.create {}
 
   self.callback = function( res, status ) print(type(res), type(status)) end
-  
+
+  self.data = Request:create_query_string(data)        
+
   if (method == Request.GET) then 
-    self.data = Request:create_query_string(data)
     if (not url_parts.query) then
       self.url = self.url .. "?" .. self.data
     else 
       self.url = self.url .. "&" .. self.data
     end
-  end
+  elseif (method == Request.POST) then 
+    self.post = self.data:gsub("%%20", "+")
+    self:set_header("Content-Type", "application/x-www-form-urlencoded")
+  end  
+end
+
+function Request:set_header(name, value)
+  self.header_map[name] = value
 end
 
 function Request:create_query_string(data)
@@ -81,7 +91,6 @@ function Request:create_query_string(data)
   return Util:html_entity_encode(str:sub(2))
 end
 
--- read_header
 
 function Request:read_header()  
   
@@ -105,19 +114,24 @@ function Request:read_header()
   if (parsed_url.query) then
     query = "?" .. parsed_url.query
   end
--- renoise.RENOISE_VERSION
-  -- request content
-  local get_request = string.format(
-    "%s %s%s HTTP/1.1\n" ..
-    "Host: %s\n" .. 
-    "User-Agent: Renoise %s (%s)" ..
-    "\r\n\r\n",
-    self.method, parsed_url.path, query,
-      parsed_url.host,"2" , os.platform():lower())
-    log:info("=== REQUEST HEADERS ===\n" .. get_request)
 
-  local ok, socket_error = client:send(get_request)
+  -- request content
+  local header = string.format("%s %s%s HTTP/1.1\r\n", self.method, parsed_url.path, query)
+  self:set_header("Host", parsed_url.host)
+  self:set_header("User-Agent",  
+    string.format( "Renoise %s (%s)", renoise.RENOISE_VERSION, os.platform():lower() )
+  )        
+  self:set_header("Connection", "keep-alive")
+  self:set_header("Content-Length", #self.post)
+  for k,v in pairs(self.header_map) do
+    header = string.format("%s%s: %s\r\n",header,k,v)
+  end     
+  header = header .. "\r\n" 
   
+  log:info("=== REQUEST HEADERS ===\n" .. header)
+  
+  local ok, socket_error = client:send(header)
+  local ok, socket_error = client:send(self.post)  
   if not (ok) then
     return false, socket_error
   end
@@ -290,6 +304,14 @@ function http(url, method, data, callback, dataType)
   end
 end
 
+function post(url, data, callback, dataType)
+  http(url, Request.POST, data, callback, dataType)
+end
+
+function get(url, data, callback, dataType)
+  http(url, Request.GET, data, callback, dataType)
+end
+
 function http_download_file(url)
   local save_file = true
   local new_request = Request(url, Request.GET, nil,nil,nil, save_file)
@@ -313,7 +335,7 @@ end
 function start()
 
   -- Renoise Version Check; using HTTP Header "User-Agent"
-  http("http://www.renoise.com/download/checkversion.php", "GET", {output="raw"}, 
+  post("http://www.renoise.com/download/checkversion.php", {output="raw"}, 
     function(self)  
       if (self.contents) then
         local buttons = table.create{"OK", "Go to downloads"}
