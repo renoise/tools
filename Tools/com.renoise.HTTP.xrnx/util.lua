@@ -75,11 +75,16 @@ end
 function Util:get_date(time) 
   return os.date("%a, %d %b %Y %X " .. Util:get_tzoffset(), time)
 end
-  
 
+-- TODO encode html entities
+function Util:html_entity_encode(str)
+  return str:gsub("[ %c]", "%%20")  
+end  
+
+-- TODO decode html entities
 function Util:html_entity_decode(str)
   local a,b = str:gsub("%%20", " ")
-   a,b = a:gsub("%+", " ")  
+  a,b = a:gsub("%+", " ")  
   a,b = a:gsub("%%5B", "[")
   a,b = a:gsub("%%5D", "]")
   return a
