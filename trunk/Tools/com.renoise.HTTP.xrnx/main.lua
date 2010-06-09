@@ -46,10 +46,13 @@ Request.POST = "POST"
 Request.HEAD = "HEAD"
 Request.OPTIONS = "OPTIONS"
 
-function Request:__init(url, method, save_file)
+function Request:__init(url, method, data, callback, dataType, save_file)
   method = method or Request.GET
   
+  local url_parts = URL:parse(url)
   self.url = url
+  self.data = data  
+  
   self.method = method
   self.save_downloaded_file = save_file 
   
@@ -58,9 +61,25 @@ function Request:__init(url, method, save_file)
   self.length = 0
   self.complete = false
 
-  self.callback = function(socket_error) end
+  self.callback = function( res, status ) print(type(res), type(status)) end
+  
+  if (method == Request.GET) then 
+    self.data = Request:create_query_string(data)
+    if (not url_parts.query) then
+      self.url = self.url .. "?" .. self.data
+    else 
+      self.url = self.url .. "&" .. self.data
+    end
+  end
 end
 
+function Request:create_query_string(data)
+  local str = ""
+  for k,v in pairs(data) do
+    str = str .. "&" .. k .. "=" .. v 
+  end
+  return Util:html_entity_encode(str:sub(2))
+end
 
 -- read_header
 
@@ -86,7 +105,7 @@ function Request:read_header()
   if (parsed_url.query) then
     query = "?" .. parsed_url.query
   end
-  
+-- renoise.RENOISE_VERSION
   -- request content
   local get_request = string.format(
     "%s %s%s HTTP/1.1\n" ..
@@ -94,7 +113,7 @@ function Request:read_header()
     "User-Agent: Renoise %s (%s)" ..
     "\r\n\r\n",
     self.method, parsed_url.path, query,
-      parsed_url.host, renoise.RENOISE_VERSION, os.platform():lower())
+      parsed_url.host,"2" , os.platform():lower())
     log:info("=== REQUEST HEADERS ===\n" .. get_request)
 
   local ok, socket_error = client:send(get_request)
@@ -177,7 +196,7 @@ function Request:read_content()
       return true
     else
       -- cancel request
-      self:do_callback(socket_error)
+      self:do_callback(self.content, socket_error)
       return false
     end
   end
@@ -256,8 +275,8 @@ end
 
 -------------------------------------------------------------------------------
 
-function http(url, method, callback)
-  local new_request = Request(url, method)
+function http(url, method, data, callback, dataType)
+  local new_request = Request(url, method, data, callback, dataType)
   if (callback) then 
     new_request.callback = callback 
   end
@@ -273,7 +292,7 @@ end
 
 function http_download_file(url)
   local save_file = true
-  local new_request = Request(url, Request.GET, save_file)
+  local new_request = Request(url, Request.GET, nil,nil,nil, save_file)
   local succeeded, socket_error = new_request:read_header()
 
   if (succeeded) then
@@ -294,7 +313,7 @@ end
 function start()
 
   -- Renoise Version Check; using HTTP Header "User-Agent"
-  http("http://www.renoise.com/download/checkversion.php?output=raw", "GET", 
+  http("http://www.renoise.com/download/checkversion.php", "GET", {output="raw"}, 
     function(self)  
       if (self.contents) then
         local buttons = table.create{"OK", "Go to downloads"}
