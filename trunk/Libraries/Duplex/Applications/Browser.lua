@@ -720,7 +720,7 @@ function Browser:__get_custom_devices()
     {
       class_name=nil,          
       display_name="OHM64",
-      device_name="Ohm64 Midi 1",
+      device_name="Ohm64 MIDI 1",
       control_map="Controllers/OHM64/ohm64.xml",
       protocol=DEVICE_MIDI_PROTOCOL,
       incompatible = table.create{"PatternMatrix"},
