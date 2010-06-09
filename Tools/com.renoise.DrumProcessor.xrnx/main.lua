@@ -134,8 +134,9 @@ function DrumPatternProcessor:process()
   local currentfx = 0
   local currentfxindex = 0
   
-  -- clear track and reset position
+  -- clear track (TODO: don't do it, let the effect handle this)
   self:clear(pattern, track)
+  -- reset sequencer position
   self.play_pos = 0
   
   --[[
@@ -337,7 +338,7 @@ function DrumPatternSlicer:on_process(pattern,
     end
     if line.note_columns[1].note_string ~= "---" then
       line.effect_columns[1].number_value = 0x09
-      if self.random > 0.0 then
+      if self.random then
         line.effect_columns[1].amount_value = math.random (0, 15) * 16
       else
         line.effect_columns[1].amount_value = (start_line / num_lines ) * 16
@@ -372,6 +373,7 @@ function DrumPatternSlicer:on_build_view(builder)
         text = "Example"
       },
       builder:slider {
+        width = DEFAULT_CELL_WIDTH - TEXT_ROW_WIDTH,
         min = 0.0,
         max = 1.0,
         value = 0.0,
@@ -444,6 +446,7 @@ function DrumPatternRepeater:on_build_view(builder)
         text = "Time"
       },
       builder:valuebox {
+        width = BUTTON_WIDTH,
         min = 0,
         max = 15,
         value = 0,
@@ -459,6 +462,7 @@ function DrumPatternRepeater:on_build_view(builder)
         text = "Repeat"
       },
       builder:valuebox {
+        width = BUTTON_WIDTH,
         min = 0,
         max = 15,
         value = 0,
@@ -518,7 +522,7 @@ class 'DrumPatternPitcher' (DrumPatternEffect)
 function DrumPatternPitcher:__init()
   DrumPatternEffect.__init(self, "Pitch", 4, { 0, 255, 255 })
   self.direction = 1
-  self.amount = 32
+  self.amount = 8
   self.increment = 1.0
 end
 
@@ -564,13 +568,47 @@ function DrumPatternPitcher:on_build_view(builder)
         text = "Direction"
       },
       builder:popup {
+        width = BUTTON_WIDTH,
         value = self.direction,
         items = {"Up", "Down"},
         notifier = function(new_index)
           self.direction = new_index
         end
       }
+    },
+    builder:row {
+      width = DEFAULT_CELL_WIDTH,
+      builder:text {
+        width = TEXT_ROW_WIDTH,
+        text = "Amount"
+      },
+      builder:valuebox {
+        width = BUTTON_WIDTH,
+        min = 1,
+        max = 64,
+        value = self.amount,
+        notifier = function(value)
+          self.amount = value
+        end
+      }
+    },
+    builder:row {
+      width = DEFAULT_CELL_WIDTH,
+      builder:text {
+        width = TEXT_ROW_WIDTH,
+        text = "Increment"
+      },
+      builder:slider {
+        width = DEFAULT_CELL_WIDTH - TEXT_ROW_WIDTH,
+        min = 1.0,
+        max = 4.0,
+        value = self.increment,
+        notifier = function(value)
+          self.increment = value
+        end
+      }
     }
+
   }
 end
 
@@ -602,10 +640,10 @@ function DrumPatternReversor:on_process(pattern,
       line.note_columns[1].instrument_value = self.processor.instrument_index
     end
     line.effect_columns[1].number_string = "B0"
-    line.effect_columns[1].amount_value = ".."
+    line.effect_columns[1].amount_string = ".."
   elseif line_index == (num_lines - 1) then
     line.effect_columns[1].number_string = "B1"
-    line.effect_columns[1].amount_value = ".."
+    line.effect_columns[1].amount_string = ".."
   end
 end
 
