@@ -26,7 +26,7 @@ function Launchpad:__init(name, message_stream)
 
   -- todo: specify color-space per control-map group
   -- (not all buttons may have the same abilities)
-  self.colorspace = {4, 4, 0}
+  self.colorspace={r=4,g=4}
 
   -- double-buffering
   self.display = 0
@@ -57,7 +57,9 @@ function Launchpad:point_to_value(pt)
   rslt = 16*green+red+12
 
   -- combine
+  
   return rslt
+
 end
 
 

@@ -13,46 +13,33 @@ A generic mixer class
 
 class 'MixConsole' (Application)
 
-function MixConsole:__init(display, sliders_group_name,
-  encoders_group_name, buttons_group_name, 
-  master_group_name, page_scroll_group_name)
-  
-  TRACE("MixConsole:__init",display, sliders_group_name, 
-    buttons_group_name, master_group_name)
+function MixConsole:__init(display, options)
+print("MixConsole:__init",display, options)
+rprint(options)
 
   -- constructor 
   Application.__init(self)
-  
-  self.name = "MixConsole"
 
   self.display = display
 
-  -- master level (always present)
+  -- apply control-maps groups 
   self.master = nil
-  self.master_group_name = master_group_name
-
-  -- track levels
+  self.master_group_name = options.master_group_name
   self.sliders = nil
-  self.sliders_group_name = sliders_group_name
-
-  -- track mutes 
+  self.levels_group_name = options.levels_group_name
   self.buttons = nil
-  self.buttons_group_name = buttons_group_name
-
-  -- pan levels
+  self.mute_group_name = options.mute_group_name
   self.encoders = nil
-  self.encoders_group_name = encoders_group_name
-      
+  self.panning_group_name = options.panning_group_name
   self.page_scroller = nil
-  self.page_scroll_group_name = page_scroll_group_name
-  
+  self.page_scroll_group_name = options.page_scroll_group_name
   
   -- the number of tracks displayed side-by-side
-  self.horizontal_size = nil
+  self.width = 4
 
   -- the number of units spanned vertically
   -- (more than one, if grid controller)
-  self.slider_vertical_units = 1
+  self.height = 1
 
   -- offset of the whole track mapping, controlled by the scroller
   self.__track_offset = 0
@@ -124,7 +111,7 @@ function MixConsole:update()
   local master_track_index = get_master_track_index()
   local tracks = renoise.song().tracks
 
-  for control_index=1, self.horizontal_size do
+  for control_index=1, self.width do
     local track_index = self.__track_offset + control_index
     local track = tracks[track_index]
       
@@ -185,16 +172,12 @@ end
 
 --------------------------------------------------------------------------------
 
--- create UI: create a grid or fader/encoder layout, based on the group 
--- names from the controllers controlmap
+-- build_app: create a grid or fader/encoder layout
 
 function MixConsole:build_app()
   TRACE("MixConsole:build_app(")
 
   Application.build_app(self)
-
-  -- TODO: get this from the control map?
-  self.horizontal_size = 8
 
   self.sliders = {}
   self.encoders = {}
@@ -202,38 +185,51 @@ function MixConsole:build_app()
   self.master = nil
 
   -- check if the control-map describes a grid controller
+  -- (slider is composed from individual buttons in grid mode)
   local grid_mode = false
   local control_map_groups = self.display.device.control_map.groups
-  
   for group_name, group in pairs(control_map_groups) do
     for attr, param in pairs(group) do
       if (attr == "xarg" and param["columns"]) then
         grid_mode = true
+        self.width = param["columns"]
+        self.height = math.ceil(#group/self.width)
       end
-      
       if grid_mode then break end
     end
-
     if grid_mode then break end
   end
 
-  -- slider is composed from individual buttons in grid mode
-  -- TODO: get this from the control map?
-  self.slider_vertical_units = (grid_mode) and 8 or 1
-  
-  for control_index=1, self.horizontal_size do
+  local slider_offset = 0
+  if grid_mode then
+    -- if certain group names are left out, place them the main grid 
+    if (not self.mute_group_name) then
+      -- place mute buttons in the topmost row
+      self.mute_group_name = self.levels_group_name
+      slider_offset = slider_offset+1
+    end
+    -- todo: place master volume on the rightmost side
+  else
+    -- extend width to the number of parameters in the levels group
+    local grp = control_map_groups[self.levels_group_name]
+    if grp then
+      self.width = #grp
+    end
+  end
+
+  for control_index=1, self.width do
 
     -- sliders --------------------------------------------
 
     local slider = UISlider(self.display)
-    slider.group_name = self.sliders_group_name
+    slider.group_name = self.levels_group_name
     slider.x_pos = control_index
-    slider.y_pos = 1
+    slider.y_pos = 1+slider_offset
     slider.toggleable = true
     slider.inverted = false
     slider.ceiling = RENOISE_DECIBEL
     slider.orientation = VERTICAL
-    slider:set_size(self.slider_vertical_units)
+    slider:set_size(self.height-slider_offset)
 
     -- slider changed from controller
     slider.on_change = function(obj) 
@@ -270,7 +266,7 @@ function MixConsole:build_app()
     -- encoders -------------------------------------------
 
     local encoder = UISlider(self.display)
-    encoder.group_name = self.encoders_group_name
+    encoder.group_name = self.panning_group_name
     encoder.x_pos = control_index
     encoder.y_pos = 1
     encoder.toggleable = true
@@ -304,7 +300,7 @@ function MixConsole:build_app()
     -- buttons --------------------------------------------
 
     local button = UIToggleButton(self.display)
-    button.group_name = self.buttons_group_name
+    button.group_name = self.mute_group_name
     button.x_pos = control_index
     button.y_pos = 1
     button.active = false
@@ -355,7 +351,7 @@ function MixConsole:build_app()
     self.master.y_pos = 1
     self.master.toggleable = true
     self.master.ceiling = RENOISE_DECIBEL
-    self.master:set_size(self.slider_vertical_units)
+    self.master:set_size(self.height)
     
     self.master.on_change = function(obj) 
       if (self.active) then
@@ -377,10 +373,10 @@ function MixConsole:build_app()
     self.page_scroller = UISpinner(self.display)
     self.page_scroller.group_name = self.page_scroll_group_name
     self.page_scroller.index = 0
-    self.page_scroller.step_size = self.horizontal_size
+    self.page_scroller.step_size = self.width
     self.page_scroller.minimum = 0
     self.page_scroller.maximum = math.max(0, 
-      #renoise.song().tracks - self.horizontal_size)
+      #renoise.song().tracks - self.width)
     self.page_scroller.x_pos = 1
     self.page_scroller.palette.foreground_dec.text = "◄"
     self.page_scroller.palette.foreground_inc.text = "►"
@@ -401,7 +397,7 @@ end
 -- start/resume application
 
 function MixConsole:start_app()
-  TRACE("MixConsole.start_app()")
+print("MixConsole.start_app()")
 
   Application.start_app(self)
   self:update()
@@ -411,7 +407,7 @@ end
 --------------------------------------------------------------------------------
 
 function MixConsole:destroy_app()
-  TRACE("MixConsole:destroy_app")
+  print("MixConsole:destroy_app")
 
   for _,obj in ipairs(self.sliders) do
     obj.remove_listeners(obj)
@@ -478,7 +474,7 @@ function MixConsole:__attach_to_tracks()
   -- validate the page scroller
   if (self.page_scroller) then
     self.page_scroller.maximum = math.max(0, 
-      #renoise.song().tracks - self.horizontal_size)
+      #renoise.song().tracks - self.width)
         
     if (self.__track_offset > self.page_scroller.maximum) then
       self.__track_offset = self.page_scroller.maximum
@@ -486,15 +482,16 @@ function MixConsole:__attach_to_tracks()
     end
   end
     
+  --[[ available in branch future only
   -- detach all previously added notifiers first
   for _,track in pairs(tracks) do
     track.prefx_volume.value_observable:remove_notifier(self)
     track.prefx_panning.value_observable:remove_notifier(self)
     track.mute_state_observable:remove_notifier(self) 
-  end  
+  end]] 
   
   -- attach to the new ones in the order we want them
-  for control_index=1,math.min(#tracks, self.horizontal_size) do
+  for control_index=1,math.min(#tracks, self.width) do
     local track_index = self.__track_offset + control_index
     local track = tracks[track_index]
     

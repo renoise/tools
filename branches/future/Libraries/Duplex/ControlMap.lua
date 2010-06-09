@@ -13,10 +13,13 @@ Notes on the syntax of external XML :
 - <Group> nodes cannot be nested 
 - Only <Param> node are supported inside a <Group> node
 - Use <Row> and <Column> nodes for controlling the layout 
-- Underscore not allowed in attribute names
+- - Use "orientation" attribute to control vertical/horizontal layout 
 - Indicate grid layout by supplying a "column" attribute for a <Group> node
 - - Note that orientation is then ignored (using grid layout)
-- Use "size" attribute with controls of certain type (sliders)
+- Use "size" attribute to control the unit size of certain controls*
+- Underscore not allowed in attribute names
+
+* Sliders
 
 Todo:
 - improve parsing of nested tags
@@ -32,9 +35,12 @@ class 'ControlMap'
 function ControlMap:__init()
   TRACE("ControlMap:__init")
 
-  self.id = nil -- unique id, assigned to parameters
+  self.groups = table.create() -- groups by name, e.g. self.groups["Triggers"]
+
+  -- internal stuff
+  self.id = nil -- unique id, reset each time a control-map is parsed
   self.definition = nil -- control-map parsed into table
-  self.groups = {} -- control-map groups by name
+
 end
 
 

@@ -5,7 +5,7 @@
   <Version>0.35</Version>
   <Name>Sample Slicer</Name>
   <Author>Fabio Napodano | It-Alien (it-alien@renoise.com)</Author>
-  <Description>add or remove silence from a sample by user definition</Description>
+  <Description>Adds the ability to either destructively remove silent parts of a sample (sounds that fall below a threshold), and the ability to add silence to the end or beginning of a sample. The latter can often be useful for FX processing. Shows up as 'Add Silence...' and 'Remove Silence...' in the Sample Editor's 'Process' context menu.</Description>
   <Category>Sample Editor</Category>
   <Homepage>http://scripts.renoise.com</Homepage>
 </RenoiseScriptingTool>

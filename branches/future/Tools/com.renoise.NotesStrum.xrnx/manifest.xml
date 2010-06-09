@@ -5,8 +5,8 @@
   <Version>2.303</Version>
   <Name>Strum Notes</Name>
   <Author>Vincent Voois [ http://tinyurl.com/vvrns ]</Author>
-  <Description>Adds delay values for notes on the same row, to get a plucked instrument alike effect.
-Can be found in:Pattern editor context menu (right click on pattern editor)  
+  <Description>Adds note delay values for notes on the same row, to get a plucked instrument alike effect.
+Can be found in the Pattern Editor's context menu (right click some where in the Pattern Editor). 
   </Description>
   <Category>Pattern Editor</Category>
   <Homepage>http://scripts.renoise.com</Homepage>

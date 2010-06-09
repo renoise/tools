@@ -6,7 +6,8 @@
   <Author>danoise [bjorn.nesby@googlemail.com]</Author>
   <Name>Duplex Browser</Name>
   <Category>Midi Controllers</Category>
-  <Description>Main UI for Duplex, which allows to select supported MIDI controller apps and controllers</Description>
+  <Description>Main userinterface for Duplex, Renoises official scripting API to add interactive, flexible support for MIDI controller devices.
+The Duplex browser allows you to select the currently supported MIDI controller applications (mixer, pattern matrix, ...) and devices (Launchpad, Novation, Behringer devices and more). Creates a new menu 'Duplex' in the global 'Tools' menu.</Description>
   <Icon />
 </RenoiseScriptingTool>
 
