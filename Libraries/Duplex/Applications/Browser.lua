@@ -723,8 +723,18 @@ function Browser:__get_custom_devices()
       device_name="Ohm64 MIDI 1",
       control_map="Controllers/OHM64/ohm64.xml",
       protocol=DEVICE_MIDI_PROTOCOL,
-      incompatible = table.create{"PatternMatrix"},
-      options = table.create()
+      -- TODO: this doesn't work
+      options = table.create{
+        MixConsole = table.create{
+          levels_group_name="VolumeLeft",
+          master_group_name="VolumeRight",
+        },
+        PatternMatrix = table.create{
+          matrix_group_name = "Grid",
+          trigger_group_name = "MuteLeft",
+          controls_group_name = "ControlsRight",
+        },
+      },
     },
     --  this is a defunkt implementation (no control-map)
     --  will cause a warning once it's opened
