@@ -126,7 +126,7 @@ end
 -- @param name (string)  device display-name, without postfix
 
 function Browser:set_device(name)
-  print("Browser:set_device("..name..")")
+  TRACE("Browser:set_device("..name..")")
   
   -- hide all control-maps
   for _,k in ipairs(self.__processes) do
@@ -230,13 +230,14 @@ end
 -- @param (string)  device name, as it's displayed in the device popup  
 
 function Browser:__get_available_apps()
-print("Browser:__get_available_apps:")
+  TRACE("Browser:__get_available_apps:")
 
   -- full list of available applications 
   local app_list = table.create{    
     "None",
     "MixConsole",
     "PatternMatrix",
+    "MatrixTest",
   }
 
   -- locate the device definition
@@ -257,7 +258,6 @@ print("Browser:__get_available_apps:")
       end
     end
   end
---rprint(app_list)
   return app_list
 
 end
@@ -269,7 +269,7 @@ end
 -- @app_list: list of strings (popup.items)
 
 function Browser:__decorate_app_list()
-print("Browser:__decorate_app_list:")
+  TRACE("Browser:__decorate_app_list:")
 
   local app_list = self.vb.views.dpx_browser_application.items
   for _,process in ipairs(self.__processes) do
@@ -298,7 +298,7 @@ end
 -- set to "None" to destroy all applications on the selected device
 
 function Browser:set_application(app_name)
-print("Browser:set_application:",app_name)
+  TRACE("Browser:set_application:",app_name)
 
   if (app_name=="None") then
 
@@ -472,7 +472,7 @@ end
 -- start the currently selected app
 
 function Browser:start_app()
-print("Browser:start_app()")
+  TRACE("Browser:start_app()")
 
   --Application.start_app(self)
 
@@ -493,7 +493,7 @@ end
 -- stop the currently selected app
 
 function Browser:stop_app()
-print("Browser:stop_app()")
+  TRACE("Browser:stop_app()")
 
   --Application.stop_app(self)
 
@@ -630,7 +630,7 @@ end
 -- cause another method, "set_device" to become invoked
 
 function Browser:__set_device_index(device_name)
-  print("Browser:__set_device_index("..device_name..")")
+  TRACE("Browser:__set_device_index("..device_name..")")
   
   local idx = self:__get_device_index_by_name(device_name)
   self.vb.views.dpx_browser_input_device.value = idx
@@ -670,6 +670,28 @@ function Browser:__get_custom_devices()
           trigger_group_name = "Triggers",
           controls_group_name = "Controls",
         },
+        MatrixTest = table.create{
+          matrix_group_name = "Grid",
+        },
+      },
+    },
+    -- alternate implementation for testing purposes
+    {
+      class_name="Launchpad",      
+      display_name="LaunchpadTest",
+      device_name="Launchpad",
+      control_map="Controllers/Launchpad/launchpad.xml",
+      protocol=DEVICE_MIDI_PROTOCOL,
+      options=table.create{
+        MixConsole = table.create{
+          levels_group_name="Grid",
+          master_group_name="Triggers",
+        },
+        PatternMatrix = table.create{
+          matrix_group_name = "Grid",
+          trigger_group_name = "Triggers",
+          controls_group_name = "Controls",
+        },
       },
     },
     --  the Nocturn should load as a generic MIDI device
@@ -680,7 +702,7 @@ function Browser:__get_custom_devices()
       device_name="Automap MIDI",    
       control_map="Controllers/Nocturn/nocturn.xml",
       protocol=DEVICE_MIDI_PROTOCOL,
-      incompatible = table.create{"PatternMatrix"},
+      incompatible = table.create{"PatternMatrix","MatrixTest"},
       options = table.create{
         MixConsole = table.create{
           levels_group_name = "Encoders",
@@ -696,7 +718,7 @@ function Browser:__get_custom_devices()
       device_name="BCF2000",
       control_map="Controllers/BCF-2000/bcf-2000.xml",
       protocol=DEVICE_MIDI_PROTOCOL,
-      incompatible = table.create{"PatternMatrix"},
+      incompatible = table.create{"PatternMatrix","MatrixTest"},
       options = table.create{
         MixConsole = table.create{
           mute_group_name = "Buttons1",
@@ -713,7 +735,7 @@ function Browser:__get_custom_devices()
       device_name="BCR2000",
       control_map="Controllers/BCR-2000/bcr-2000.xml",
       protocol=DEVICE_MIDI_PROTOCOL,
-      incompatible = table.create{"PatternMatrix"},
+      incompatible = table.create{"PatternMatrix","MatrixTest"},
       options = table.create()
     },
     --  TODO: implement class
@@ -723,7 +745,6 @@ function Browser:__get_custom_devices()
       device_name="Ohm64 MIDI 1",
       control_map="Controllers/OHM64/ohm64.xml",
       protocol=DEVICE_MIDI_PROTOCOL,
-      -- TODO: this doesn't work
       options = table.create{
         MixConsole = table.create{
           levels_group_name="VolumeLeft",
@@ -734,7 +755,10 @@ function Browser:__get_custom_devices()
           trigger_group_name = "MuteLeft",
           controls_group_name = "ControlsRight",
         },
-      },
+        MatrixTest = table.create{
+          matrix_group_name = "Grid",
+        },      
+      }
     },
     --  this is a defunkt implementation (no control-map)
     --  will cause a warning once it's opened
@@ -756,7 +780,7 @@ end
 -- @return table or nil
 
 function Browser:__get_selected_process()
-print("Browser:__get_selected_process()")
+  TRACE("Browser:__get_selected_process()")
 
   for _,k in ipairs(self.__processes) do
     if(k.name == self.__device_name) then
@@ -771,7 +795,7 @@ end
 -- @return Application or nil
 
 function Browser:__get_selected_app()
-print("Browser:__get_selected_app()")
+  TRACE("Browser:__get_selected_app()")
 
   local app_name = self.vb.views.dpx_browser_application.items[
     self.vb.views.dpx_browser_application.value]
@@ -793,7 +817,7 @@ end
 -- save this information into the "__processes" list
 
 function Browser:__instantiate_device(display_name,class_name, device_name, control_map)
-print("Browser:__instantiate_device:",display_name,class_name, device_name, control_map)
+  TRACE("Browser:__instantiate_device:",display_name,class_name, device_name, control_map)
 
   -- instantiate the device from the class name
   if (rawget(_G, class_name)) then

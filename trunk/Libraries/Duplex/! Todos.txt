@@ -14,6 +14,9 @@ Bugs
     
 * Switching between Applications while the device is already running, 
   sometimes does not update the UI properly although a display:clear is fired
+  Clarification: display.clear() should be used when shutting down a device,
+  applications need a different method for clearing the display, as they might
+  only occupy *some part* of the display (one or more groups)
   
   
 --------------------------------------------------------------------------------
@@ -73,8 +76,12 @@ Planned / Todo
 * "Soft-validate" the control-map - warn when required elements are missing, 
   but ignore unknown ones
 
-* Display:clear(): shoud use hardware-specific feature if possible
+* Display:clear(): should use hardware-specific feature if possible
 
+* Improve application performance by removing UIComponent listeners when
+  application is stopped, and re-attach on startup. This will also help to
+  simplify the code, as the numerous checks for "self.active" in event-handlers 
+  is no longer needed
 
 --------------------------------------------------------------------------------
 Discuss
@@ -192,4 +199,8 @@ Done
     + If no application is running, start the selected application 
   o * Definition of "running application" : application is selected and "run" 
       is checked
+
+* Fixed issue with UISlider (not getting right index value when flipped)
+
+* Fixed UISlider.inverted, wrong name, should be "flipped" (in MixConsole)
 

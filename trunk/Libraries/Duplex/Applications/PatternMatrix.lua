@@ -23,8 +23,7 @@ Todo
 class 'PatternMatrix' (Application)
 
 function PatternMatrix:__init(display,options)
-print("PatternMatrix:__init(",display,options)
-rprint(options)
+  TRACE("PatternMatrix:__init(",display,options)
 
   Application.__init(self)
 
@@ -130,7 +129,7 @@ function PatternMatrix:build_app()
   self.switcher.palette.foreground_inc.text = "▼"
   self.switcher.on_press = function(obj) 
     if (not self.active) then
-      return
+      return false
     end
     if(self.__edit_page~=obj.index)then
       self.__edit_page = obj.index
@@ -159,7 +158,7 @@ function PatternMatrix:build_app()
   self.scroller.on_press = function(obj) 
     TRACE("self.scroller.on_press:",obj.index)
     if (not self.active) then
-      return
+      return false
     end
     self.__track_offset = obj.index*self.width
     self:update()
@@ -350,7 +349,7 @@ end
 -- update slots visual appeareance 
 
 function PatternMatrix:update()
-print("PatternMatrix:update()")
+  TRACE("PatternMatrix:update()")
   if (not self.active) then
     return
   end
@@ -563,7 +562,7 @@ end
 --------------------------------------------------------------------------------
 
 function PatternMatrix:start_app()
-print("PatternMatrix.start_app()")
+  TRACE("PatternMatrix.start_app()")
 
   Application.start_app(self)
 
@@ -584,7 +583,7 @@ end
 --------------------------------------------------------------------------------
 
 function PatternMatrix:destroy_app()
-  print("PatternMatrix:destroy_app")
+  TRACE("PatternMatrix:destroy_app")
 
   Application.destroy_app(self)
 

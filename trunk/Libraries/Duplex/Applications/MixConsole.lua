@@ -14,8 +14,7 @@ A generic mixer class
 class 'MixConsole' (Application)
 
 function MixConsole:__init(display, options)
-print("MixConsole:__init",display, options)
-rprint(options)
+  TRACE("MixConsole:__init",display, options)
 
   -- constructor 
   Application.__init(self)
@@ -226,7 +225,7 @@ function MixConsole:build_app()
     slider.x_pos = control_index
     slider.y_pos = 1+slider_offset
     slider.toggleable = true
-    slider.inverted = false
+    slider.flipped = false
     slider.ceiling = RENOISE_DECIBEL
     slider.orientation = VERTICAL
     slider:set_size(self.height-slider_offset)
@@ -234,10 +233,9 @@ function MixConsole:build_app()
     -- slider changed from controller
     slider.on_change = function(obj) 
       local track_index = self.__track_offset + control_index
-      
+
       if (not self.active) then
         return false
-
       elseif (track_index == get_master_track_index()) then
         if (self.master) then
           -- this will cause another event...
@@ -247,11 +245,9 @@ function MixConsole:build_app()
           track.prefx_volume.value = obj.value
         end
         return true
-
       elseif (track_index > #renoise.song().tracks) then
         -- track is outside bounds
         return false
-
       else
         local track = renoise.song().tracks[track_index]
         track.prefx_volume.value = obj.value
@@ -270,7 +266,7 @@ function MixConsole:build_app()
     encoder.x_pos = control_index
     encoder.y_pos = 1
     encoder.toggleable = true
-    encoder.inverted = false
+    encoder.flipped = false
     encoder.ceiling = 1.0
     encoder.orientation = VERTICAL
     encoder:set_size(1)
@@ -278,14 +274,14 @@ function MixConsole:build_app()
     -- slider changed from controller
     encoder.on_change = function(obj) 
       local track_index = self.__track_offset + control_index
-      
+
       if (not self.active) then
         return false
-      
+
       elseif (track_index > #renoise.song().tracks) then
         -- track is outside bounds
         return false
-      
+
       else
         local track = renoise.song().tracks[track_index]
         track.prefx_panning.value = obj.value
@@ -354,12 +350,11 @@ function MixConsole:build_app()
     self.master:set_size(self.height)
     
     self.master.on_change = function(obj) 
-      if (self.active) then
+      if (not self.active) then
+        return false
+      else
         get_master_track().prefx_volume.value = obj.value
         return true
-      
-      else
-        return false
       end
     end 
      
@@ -381,10 +376,16 @@ function MixConsole:build_app()
     self.page_scroller.palette.foreground_dec.text = "◄"
     self.page_scroller.palette.foreground_inc.text = "►"
     self.page_scroller.on_press = function(obj) 
+
+      if (not self.active) then
+        return false
+      end
+
       self.__track_offset = obj.index
       self:__attach_to_tracks()
       self:update()
       return true
+
     end
     
     self.display:add(self.page_scroller)
@@ -397,7 +398,7 @@ end
 -- start/resume application
 
 function MixConsole:start_app()
-print("MixConsole.start_app()")
+  TRACE("MixConsole.start_app()")
 
   Application.start_app(self)
   self:update()
@@ -407,7 +408,7 @@ end
 --------------------------------------------------------------------------------
 
 function MixConsole:destroy_app()
-  print("MixConsole:destroy_app")
+  TRACE("MixConsole:destroy_app")
 
   for _,obj in ipairs(self.sliders) do
     obj.remove_listeners(obj)
