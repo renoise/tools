@@ -7,19 +7,47 @@
 Inheritance: UIComponent > UISlider
 Requires: Globals, Display, CanvasPoint
 
+-------------------------------------------------------------------------------
+
 About
 
 The Slider supports different input methods: buttons or sliders/encoders
 - - use buttons to quantize the slider input
 - - use faders/encoders to divide value into smaller segments
-- display supports horizontal/vertical and axis flipping
-- display as normal/dimmed version
-- minimum unit size: 1
+- supports horizontal/vertical and axis flipping
+- display as normal/dimmed version (if supported in hardware)
+- minimum size: 1
+
+-------------------------------------------------------------------------------
 
 Events
 
+  General notes for UIComponent events:
+  - if an event handler return false, we cancel/revert any changed values
+  - if an event handler return true, the value (and appearance) is updated
+
   on_change() - invoked whenever the slider recieve a new value
 
+-------------------------------------------------------------------------------
+
+Usage
+
+  -- create a vertical slider, 4 units in height
+
+  local slider = UISlider(self.display)
+  slider.group_name = "some_group_name"
+  slider.x_pos = 1
+  slider.y_pos = 1
+  slider.toggleable = true
+  slider.inverted = false
+  slider.ceiling = 10
+  slider.orientation = VERTICAL
+  slider:set_size(4)
+  slider.on_change = function(obj) 
+    -- on_change needs to be specified, if we
+    -- want the slider to respond to input
+  end
+  self.display:add(slider)
 
 
 --]]
@@ -140,23 +168,26 @@ end
 
 function UISlider:determine_index_by_pos(column,row)
 
-  local pos, offset
+  local idx,offset
 
   if (self.orientation == VERTICAL) then
-    pos = row
+    idx = row
     offset = self.y_pos
   else
-    assert(self.orientation == HORIZONTAL)   
-    pos = column
+    assert(self.orientation == HORIZONTAL)
+    idx = column
     offset = self.x_pos
   end
-  
+
   if not (self.flipped) then
-    pos = self.size - pos + 1
+    idx = (self.size-idx+offset)
+  else
+    idx = idx-offset+1
   end
-  
-  local idx = pos - (offset - 1)
+
   return idx
+
+
 end
 
 
@@ -234,12 +265,11 @@ end
 --------------------------------------------------------------------------------
 
 -- trigger the external handler method
--- (this can revert changes)
 
 function UISlider:invoke_handler()
-  local rslt = self.on_change(self)
-  
-  if (not rslt) then  -- revert
+
+  local rslt = self.on_change(self)  
+  if not rslt then  -- revert
     self.index = self._cached_index    
     self.value = self._cached_value  
   else

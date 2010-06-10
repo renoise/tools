@@ -24,6 +24,7 @@ require "Duplex/OscDevice"
 require "Duplex/Applications/Browser"
 require "Duplex/Applications/MixConsole"
 require "Duplex/Applications/PatternMatrix"
+require "Duplex/Applications/MatrixTest"
 
 require "Duplex/Controllers/Launchpad/Launchpad"
 
@@ -78,6 +79,20 @@ renoise.tool():add_menu_entry {
   name = "Main Menu:Tools:Duplex:Launchpad PatternMatrix...",
   invoke = function() 
     show_dialog("Launchpad", "PatternMatrix") 
+  end
+}
+--[[
+renoise.tool():add_menu_entry {
+  name = "--- Main Menu:Tools:Duplex:Launchpad MatrixTest...",
+  invoke = function() 
+    show_dialog("LaunchpadTest", "MatrixTest") 
+  end
+}
+]]
+renoise.tool():add_menu_entry {
+  name = "--- Main Menu:Tools:Duplex:OHM64 MatrixTest...",
+  invoke = function() 
+    show_dialog("OHM64", "MatrixTest") 
   end
 }
 
