@@ -36,7 +36,7 @@ require "Duplex/Controllers/Launchpad/Launchpad"
 local app = nil
 
 function show_dialog(device_name, app_name)
-  if (not app or not app.dialog or not app.dialog.visible) then
+  if (not app or not app.dialog) then
     app = Browser(device_name, app_name)
   end
   app:show_app()
