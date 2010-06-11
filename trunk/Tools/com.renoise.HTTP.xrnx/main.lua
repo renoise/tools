@@ -348,10 +348,22 @@ function update_start()
     end)
 end
 
+
+local search_cache = ""
+local has_results = false
+
+-- Don't query the derivative string if the search_cache
+-- didn't return any results;
+local function check_search_cache(str)  
+  print(string.format("^%s",search_cache))
+  return (type(str) == "string" and
+     str:match(string.format("^%s[.+]",search_cache)) and 
+     has_results)  
+end
   
-function autocomplete(str, callback)    
+local function autocomplete(str, callback)      
   local callback = callback or function(data) rprint(data) end
-  if (#str == 0) then 
+  if (#str == 0 or check_search_cache(str)) then 
     return
   end
   
@@ -359,9 +371,25 @@ function autocomplete(str, callback)
     {action="opensearch",search=str}, 
     function( res, err )          
       local data = json.decode(res:concat())
+      search_cache = str
+      has_results = #data[2] > 0
       callback(data)
-    end)
-    
+    end)    
+end
+
+local function search_callback(text)
+  autocomplete(text, 
+    function(data)
+      local str = ""
+      for _,v in ipairs(data[2]) do
+        str = str .. v .. "\r\n"
+      end
+      if (str == "") then 
+        str = "No results for '"..text.."'." 
+      end
+      renoise.app():show_status(table.concat(data[2]) or "No results") 
+      vb.views.results.text = str
+    end)      
 end
 
 function search_start()
@@ -374,38 +402,55 @@ function search_start()
       style = "group",
       margin = DEFAULT_MARGIN,
       width = "100%",
+      
+      vb:text {
+        id = "input",
+      },
                 
-      vb:textfield {
-        id = "textfield",
-        text = "Type keyword",
-        notifier = function(text)
-          autocomplete(text, 
-            function(data)
-              local str = ""
-              for _,v in ipairs(data[2]) do
-                str = str .. v .. "\r\n"
-              end
-              if (str == "") then 
-                str = "No results for '"..text.."'." 
-              end
-              renoise.app():show_status(table.concat(data[2]) or "No results") 
-              vb.views.results.text = str
-            end)        
-        end        
-      },      
+      
       vb:text {
           id = "results",
-          text = "Results here",
-          width = "100%"
-      },
-      
-      vb:button {
-        text = "Go"
-      }
+          text = "Results here",          
+      },          
     }
+
   }
+  
+  local function reset_input()
+    vb.views.input.text = "Type keyword"
+    vb.views.results.text = ""
+  end
+    
+  local function keyhandler(dialog, mod_string, key_string)    
+    local str = vb.views.input.text        
+    if (str == "Type keyword" or key_string == "esc") then
+        str = ""
+    end        
+    
+    if (key_string == "back") then
+      str = str:sub(1,-2)    
+    end
+    
+    if (#key_string == 1) then      
+      if (mod_string == "shift") then
+        key_string = key_string:upper()
+      end
+      str = str .. key_string
+    end        
+    
+    vb.views.input.text = str
+    
+    if (#str == 0) then
+      reset_input()
+    else
+      search_callback(str)
+    end    
+  end
+
+  reset_input()
+  
   renoise.app():show_custom_dialog("Search Online Manual", 
-    dialog_content);
+    dialog_content, keyhandler);
   
 end
 
