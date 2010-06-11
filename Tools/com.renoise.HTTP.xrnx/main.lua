@@ -59,6 +59,8 @@ function Request:__init(url, method, data, callback, dataType, save_file)
   local url_parts = URL:parse(url)
   self.url = url
   self.data = data  
+  self.dataType = dataType or "text"
+  self.dataType = self.dataType:lower()
   
   self.method = method
   self.save_downloaded_file = save_file 
@@ -268,9 +270,23 @@ function Request:do_callback(socket_error)
   -- close the connection and invalidate
   self.client = nil
   self.header = nil
-
+  
+  -- TODO process dataTypes
+  local data = self.contents
+  if (self.dataType == "json") then
+    data = json.decode(self.contents:concat())
+  elseif (self.dataType == "osc") then  
+  elseif (self.dataType == "lua_array") then 
+  elseif (self.dataType == "xml") then
+    -- parse XML into table
+  elseif (self.dataType == "lua") then 
+    -- evaluate Lua
+  elseif (self.dataType == "html") then 
+    -- parse HTML to text+layout
+  end
+    
   -- invoke the external callback (if set)
-  self.callback( self.contents, socket_error, self )
+  self.callback( data, socket_error, self )
 end
 
 
@@ -369,11 +385,10 @@ local function autocomplete(str, callback)
   get("http://tutorials.renoise.com/api.php", 
     {action="opensearch",search=str}, 
     function( res, err )          
-      local data = json.decode(res:concat())
       search_cache = str
-      has_results = #data[2] > 0
-      callback(data)
-    end)    
+      has_results = #res[2] > 0
+      callback(res)
+    end, "json")    
 end
 
 local function set_input(str)
@@ -405,8 +420,11 @@ local function search_callback(text)
 end
 
 local function open_url(str)
-   renoise.app():open_url("http://tutorials.renoise.com/wiki/"
-     .. get_selected_result())
+   if (str ~= "---") then
+     renoise.app():show_status("Opening help page for " .. str .. "...")
+     renoise.app():open_url("http://tutorials.renoise.com/wiki/"
+       .. get_selected_result())
+   end
 end
 
 function search_start()
@@ -452,7 +470,7 @@ function search_start()
     local str = get_input()
     local index = vb.views.results.value
     
-    if (key_string == "return" and get_selected_result() ~= "---") then
+    if (key_string == "return") then
       open_url(get_selected_result())
       return
     end
