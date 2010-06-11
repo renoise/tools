@@ -355,7 +355,6 @@ local has_results = false
 -- Don't query the derivative string if the search_cache
 -- didn't return any results;
 local function check_search_cache(str)  
-  print(string.format("^%s",search_cache))
   return (type(str) == "string" and
      str:match(string.format("^%s[.+]",search_cache)) and 
      has_results)  
@@ -377,19 +376,37 @@ local function autocomplete(str, callback)
     end)    
 end
 
+local function set_input(str)
+  vb.views.input.text = str
+end
+
+local function get_input()
+  return vb.views.input.text
+end
+  
+local function show_results(data)
+  while (#data < 2) do
+    table.insert(data,"---")
+  end 
+  -- TODO limit list size
+  vb.views.results.items = data
+end
+
+local function get_selected_result()
+  local index = vb.views.results.value
+  return vb.views.results.items[index]
+end
+
 local function search_callback(text)
   autocomplete(text, 
     function(data)
-      local str = ""
-      for _,v in ipairs(data[2]) do
-        str = str .. v .. "\r\n"
-      end
-      if (str == "") then 
-        str = "No results for '"..text.."'." 
-      end
-      renoise.app():show_status(table.concat(data[2]) or "No results") 
-      vb.views.results.text = str
+      show_results(data[2])
     end)      
+end
+
+local function open_url(str)
+   renoise.app():open_url("http://tutorials.renoise.com/wiki/"
+     .. get_selected_result())
 end
 
 function search_start()
@@ -405,24 +422,55 @@ function search_start()
       
       vb:text {
         id = "input",
+      },                
+      
+      vb:chooser {
+          id = "results",
+          items = {"--", "--"},
+          notifier = function(value)             
+            set_input(get_selected_result()) 
+          end   
       },
                 
-      
-      vb:text {
-          id = "results",
-          text = "Results here",          
-      },          
+      vb:button {
+        text = "Go",
+        notifier = function() 
+          open_url(get_selected_result())
+        end
+      }
     }
-
   }
   
   local function reset_input()
-    vb.views.input.text = "Type keyword"
-    vb.views.results.text = ""
+    set_input("Type keyword")
+    show_results{}
   end
+  
+  local arrows = table.create{"up","down","left","right"}
     
   local function keyhandler(dialog, mod_string, key_string)    
-    local str = vb.views.input.text        
+    local str = get_input()
+    local index = vb.views.results.value
+    
+    if (key_string == "return" and get_selected_result() ~= "---") then
+      open_url(get_selected_result())
+      return
+    end
+
+    if (key_string == "up") then    
+      index = index - 1
+    elseif (key_string == "down") then
+      index = index + 1
+    end
+    
+    if (index < 1) then
+      vb.views.results.value = 1
+    elseif (index > #vb.views.results.items) then
+      vb.views.results.value = #vb.views.results.items
+    else 
+      vb.views.results.value = index
+    end       
+    
     if (str == "Type keyword" or key_string == "esc") then
         str = ""
     end        
@@ -438,7 +486,7 @@ function search_start()
       str = str .. key_string
     end        
     
-    vb.views.input.text = str
+    set_input(str)
     
     if (#str == 0) then
       reset_input()
