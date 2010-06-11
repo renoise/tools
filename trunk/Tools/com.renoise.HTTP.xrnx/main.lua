@@ -4,19 +4,26 @@
 
 require "log"
 require "util"
+local json = require("json")
 
 local log = Log(Log.ALL)
 
-
+local vb = nil
 
 -------------------------------------------------------------------------------
 --  Menu registration
 -------------------------------------------------------------------------------
 
 local entry = {}
+
 entry.name = "Main Menu:Tools:Update..." 
 entry.active = function() return connected() end
-entry.invoke = function() start() end
+entry.invoke = function() update_start() end
+renoise.tool():add_menu_entry(entry)
+
+entry.name = "Main Menu:Tools:Search Online Manual..." 
+entry.active = function() return connected() end
+entry.invoke = function() search_start() end
 renoise.tool():add_menu_entry(entry)
 
 -------------------------------------------------------------------------------
@@ -27,7 +34,7 @@ if false then
   require "remdebug.engine"
   
   _AUTO_RELOAD_DEBUG = function()
-    start()
+    update_start()
   end
 end 
 
@@ -63,7 +70,7 @@ function Request:__init(url, method, data, callback, dataType, save_file)
   self.post = ""
   self.header_map = table.create {}
 
-  self.callback = function( res, status ) print(type(res), type(status)) end
+  self.callback = function( res, status, self ) print(type(res), type(status)) end
 
   self.data = Request:create_query_string(data)        
 
@@ -210,7 +217,7 @@ function Request:read_content()
       return true
     else
       -- cancel request
-      self:do_callback(self.content, socket_error)
+      self:do_callback(socket_error)
       return false
     end
   end
@@ -263,7 +270,7 @@ function Request:do_callback(socket_error)
   self.header = nil
 
   -- invoke the external callback (if set)
-  self:callback(socket_error)
+  self.callback( self.contents, socket_error, self )
 end
 
 
@@ -325,37 +332,81 @@ function http_download_file(url)
   end
 end
 
-local function get_version_string()
-  local prod = "Renoise"
-  local version = renoise.RENOISE_VERSION:match(".+[%s?]")
-  local state = renoise.RENOISE_VERSION:match("(.+)[%s?]")
---  local regged = 
-end
-
-function start()
-
+function update_start()
   -- Renoise Version Check; using HTTP Header "User-Agent"
   post("http://www.renoise.com/download/checkversion.php", {output="raw"}, 
-    function(self)  
-      if (self.contents) then
+    function(res, err)  
+      if (res) then
         local buttons = table.create{"OK", "Go to downloads"}
         local choice = renoise.app():show_prompt(
           "Checking for Renoise updates", 
-          table.concat(self.contents), buttons)
+          table.concat(res), buttons)
         if (choice == buttons[2]) then
           renoise.app():open_url("http://www.renoise.com/download/renoise/")
         end  
       end
     end)
+end
+
   
---  http("http://www.renoise.com/download/")
---  http("http://www.renoise.com/")
+function autocomplete(str, callback)    
+  local callback = callback or function(data) rprint(data) end
+  if (#str == 0) then 
+    return
+  end
   
---  http("http://qwe.renoise.com/invalid_host_name.php")
---  http("htsj:invalid_url")
+  get("http://tutorials.renoise.com/api.php", 
+    {action="opensearch",search=str}, 
+    function( res, err )          
+      local data = json.decode(res:concat())
+      callback(data)
+    end)
+    
+end
+
+function search_start()
+  vb = renoise.ViewBuilder()
+  local DEFAULT_MARGIN = renoise.ViewBuilder.DEFAULT_CONTROL_MARGIN
+  local buttons = table.create{"Go"}
+  local dialog_content =vb:horizontal_aligner {
+    margin = DEFAULT_MARGIN,
+    vb:column {
+      style = "group",
+      margin = DEFAULT_MARGIN,
+      width = "100%",
+                
+      vb:textfield {
+        id = "textfield",
+        text = "Type keyword",
+        notifier = function(text)
+          autocomplete(text, 
+            function(data)
+              local str = ""
+              for _,v in ipairs(data[2]) do
+                str = str .. v .. "\r\n"
+              end
+              if (str == "") then 
+                str = "No results for '"..text.."'." 
+              end
+              renoise.app():show_status(table.concat(data[2]) or "No results") 
+              vb.views.results.text = str
+            end)        
+        end        
+      },      
+      vb:text {
+          id = "results",
+          text = "Results here",
+          width = "100%"
+      },
+      
+      vb:button {
+        text = "Go"
+      }
+    }
+  }
+  renoise.app():show_custom_dialog("Search Online Manual", 
+    dialog_content);
   
-  --http_download_file("http://mirror.renoise.com/download/Renoise_2_5_1_Demo.exe")
-  -- http("http://nl.archive.ubuntu.com/ubuntu-cdimages/10.04/release/ubuntu-10.04-dvd-amd64.iso")
 end
 
 
