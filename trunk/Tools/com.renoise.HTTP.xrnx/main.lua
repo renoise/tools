@@ -392,7 +392,7 @@ local function autocomplete(str, callback)
 end
 
 local function set_input(str)
-  vb.views.input.text = str
+  vb.views.input.text = str  
 end
 
 local function get_input()
@@ -463,9 +463,7 @@ function search_start()
     set_input("Type keyword")
     show_results{}
   end
-  
-  local arrows = table.create{"up","down","left","right"}
-    
+      
   local function keyhandler(dialog, mod_string, key_string)    
     local str = get_input()
     local index = vb.views.results.value
@@ -487,7 +485,11 @@ function search_start()
       vb.views.results.value = #vb.views.results.items
     else 
       vb.views.results.value = index
-    end       
+    end
+    
+    if (key_string == "up" or key_string == "down") then    
+      return
+    end 
     
     if (str == "Type keyword" or key_string == "esc") then
         str = ""
