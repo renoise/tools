@@ -5,7 +5,8 @@
   <Version>0.1</Version>
   <Name>Pattern split</Name>
   <Author>Fabio Napodano | It-Alien (it-alien@renoise.com)</Author>
-  <Description>Splits the current pattern in two on the current row</Description>
+  <Description>Splits the current pattern in two on the current row.
+  --PAY ATTENTION! This script currently does NOT take in count automation!</Description>
   <Category>Sample Editor</Category>
   <Homepage>http://scripts.renoise.com</Homepage>
 </RenoiseScriptingTool>
