@@ -20,7 +20,7 @@ renoise.tool():add_keybinding {
 -- main content
 -- -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
-
+--PAY ATTENTION! This script currently does NOT take in count automation!
 
 -------------------------------------------------------------------------------
 
