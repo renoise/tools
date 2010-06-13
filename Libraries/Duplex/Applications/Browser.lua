@@ -347,12 +347,15 @@ function Browser:set_application(app_name)
             break
           end
         end
-        local options = nil
-        if device_config then
-          if device_config.options then
-            options = device_config.options[app_name] or nil
-          end
+        
+        local options = {}
+        if (device_config and 
+            device_config.options and 
+            device_config.options[app_name]) 
+        then
+          options = device_config.options[app_name]
         end
+
         app = _G[app_name](self.__process.display,options)
       end
 
