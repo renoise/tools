@@ -62,6 +62,26 @@ do
   
   
   ----------------------------------------------------------------------------
+  -- track color
+  
+  assert(#selected_track.color == 3)
+  selected_track.color = {255, 12, 88}
+  assert(selected_track.color[1] == 255)
+  assert(selected_track.color[2] == 12)
+  assert(selected_track.color[3] == 88)
+  
+  assert_error(function()
+    selected_track.color = {256, 12, 88}
+  end)
+  assert_error(function()
+    selected_track.color = {"255", 12, 88}
+  end)
+  assert_error(function()
+    selected_track.color = {"255", 12}
+  end)
+  
+  
+  ----------------------------------------------------------------------------
   -- track types
   
   local seq_tracks = {}
