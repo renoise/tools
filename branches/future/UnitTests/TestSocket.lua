@@ -147,11 +147,6 @@ do
     client1:send(("Hello Server from %s:%d"):format(
       client1.local_address, client1.local_port))
    
-    -- hack: busy wait to split messages
-    for i=1,5000 do 
-      local wait = "wait"
-    end
-   
     client2:send(("Hello Server from %s:%d"):format(
       client2.local_address, client2.local_port))
       
