@@ -457,7 +457,10 @@ renoise.song().tracks[].type
 renoise.song().tracks[].name, _observable
   -> [String]
 
- -- Not for the master
+renoise.song().tracks[].color, _observable 
+  -> [table with 3 numbers (0-0xFF), RGB]
+  
+ -- !not available for the master!
 renoise.song().tracks[].mute_state, _observable
   -> [enum = MUTE_STATE]
 
@@ -579,10 +582,10 @@ renoise.song().tracks[].devices[].parameters[].value_string, _observable
 
 -- functions
 
--- reset, clear all settigns including all samples
+-- reset, clear all settings including all samples
 renoise.song().instruments[]:clear()
 
--- copy all settigns from the other instrument, including all samples
+-- copy all settings from the other instrument, including all samples
 renoise.song().instruments[]:copy_from(other_instrument object)
 
 -- insert a new empty sample
@@ -631,10 +634,10 @@ renoise.Sample.LOOP_MODE_PING_PONG
 
 -- functions
 
--- reset, clear all settings and sample data
+-- reset, clear all sample settings and the sample data
 renoise.song().instruments[].samples[]:clear()
 
--- copy all settigns from other instrument
+-- copy all settings from other instrument
 renoise.song().instruments[].samples[]:copy_from(other_sample object)
 
 
@@ -802,7 +805,12 @@ renoise.song().patterns[].tracks[]:lines_in_range(index_from, index_to) ->
 
 -- properties
 
-renoise.song().patterns[].tracks[].is_empty, _observable -> [read-only, boolean]
+renoise.song().patterns[].tracks[].color, _observable 
+  -> [table with 3 numbers (0-0xFF, RGB) or nil when no custom slot color is set]
+
+-- returns true when all the track lines are empty. does not look at automation
+renoise.song().patterns[].tracks[].is_empty, _observable 
+  -> [read-only, boolean]
 
 -- get all lines in range [1, number_of_lines_in_pattern]
 renoise.song().patterns[].tracks[].lines[] ->
