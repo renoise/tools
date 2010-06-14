@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<RenoiseScriptingTool>
+  <ApiVersion>0.3</ApiVersion>
+  <Id>com.renoise.HTTPCheckVersion</Id>
+  <Version>0.1</Version>
+  <Name>Check Version</Name>
+  <Author>bantai [marvin@renoise.com]</Author>
+  <Description>Asks the renoise.com server for version information by comparing the version of the running Renoise process with the official release information.</Description>
+  <Category>Networking</Category>
+  <Homepage>http://scripts.renoise.com</Homepage>
+</RenoiseScriptingTool>
