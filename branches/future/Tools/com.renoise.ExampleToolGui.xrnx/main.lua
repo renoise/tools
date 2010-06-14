@@ -881,7 +881,7 @@ function available_controls()
   }
 
   -- popup 
-  local popup_row vb:row {
+  local popup_row = vb:row {
     vb:text {
       width = TEXT_ROW_WIDTH,
       text = "vb:popup"
@@ -900,7 +900,7 @@ function available_controls()
   }
 
   -- chooser 
-  local chooser_row vb:row {
+  local chooser_row = vb:row {
     vb:text {
       width = TEXT_ROW_WIDTH,
       text = "vb:chooser"

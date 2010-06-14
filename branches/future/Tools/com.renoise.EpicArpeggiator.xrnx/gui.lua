@@ -602,7 +602,7 @@ Main Dialog
 
         local cur_octave = renoise.song().transport.octave    
         local fnote = cur_octave
-        print (key)
+
         if (mod == "" and (key == "z" or key == "q" or key == "comma")) then
           if (key == "q" or key == "comma") then 
             fnote = fnote + 1

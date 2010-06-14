@@ -134,25 +134,44 @@ function DrumPatternProcessor:process()
   local currentfx = 0
   local currentfxindex = 0
   
+  -- clear track (TODO: don't do it, let the effect handle this)
   self:clear(pattern, track)
+  -- reset sequencer position
   self.play_pos = 0
   
+  --[[
+  -- update visible columns
+  if song.tracks[track].visible_effect_columns ~= #self.effects then
+    song.tracks[track].visible_effect_columns = #self.effects
+  end
+  ]]--
+  
+  -- iterate over lines in current track
   local iter = song.pattern_iterator:lines_in_pattern_track(pattern, track)
-
   for _,line in iter do
 
+    -- determine a new sequencer play position
     if pos % max_ilength == 0 then
       self.play_pos = self.play_pos + 1
       currentfxindex = 0
     end
 
+    -- which is our current fx
     currentfx = self.sequencer[self.play_pos]
     fx = self.effects[currentfx]
     
+    -- we should process an effect or silence
     if fx ~= nil then
-      fx:on_process(pattern, track, 1 + pos - currentfxindex, max_ilength, currentfxindex)
+      fx:on_process(pattern,
+                    track,
+                    instrument,
+                    (pos - currentfxindex) + 1,
+                    max_ilength,
+                    currentfxindex)
+                    
       currentfxindex = currentfxindex + 1
     else
+      -- TODO: clear the line as we are in no fx mode
     end
   
     pos = pos + 1
@@ -280,7 +299,12 @@ function DrumPatternEffect:on_build_view(builder)
   assert(false) -- cannot use this directly !
 end
 
-function DrumPatternEffect:on_process(pattern, track, line, index)
+function DrumPatternEffect:on_process(pattern,
+                                      track,
+                                      instrument,
+                                      start_line,
+                                      num_lines,
+                                      line_index)
   assert(false) -- cannot use this directly !
 end
 
@@ -294,26 +318,30 @@ function DrumPatternSlicer:__init()
   self.random = true
 end
 
-function DrumPatternSlicer:on_process(pattern, track, start_line, num_lines, line_index)
-  print (start_line .. " " .. num_lines .. " " .. line_index)
+function DrumPatternSlicer:on_process(pattern,
+                                      track,
+                                      instrument,
+                                      start_line,
+                                      num_lines,
+                                      line_index)
 
-  local l = renoise.song().patterns[pattern].tracks[track].lines[start_line + line_index]
+  local line = renoise.song().patterns[pattern].tracks[track].lines[start_line + line_index]
 
-  self:reset_notes_for_line(l)
-  self:reset_effect_in_column(l, self.column)
+  self:reset_notes_for_line(line)
+  self:reset_effect_in_column(line, 1)
   
   if line_index == 0 then
     if not self.processor.preserve_notes then
-      l.note_columns[1].note_string = self.processor.base_note
-      l.note_columns[1].volume_string = ".."
-      l.note_columns[1].instrument_value = self.processor.instrument_index
+      line.note_columns[1].note_string = self.processor.base_note
+      line.note_columns[1].volume_string = ".."
+      line.note_columns[1].instrument_value = self.processor.instrument_index
     end
-    if l.note_columns[1].note_string ~= "---" then
-      l.effect_columns[self.column].number_value = 0x09
+    if line.note_columns[1].note_string ~= "---" then
+      line.effect_columns[1].number_value = 0x09
       if self.random then
-        l.effect_columns[self.column].amount_value = math.random (0, 15) * 16
+        line.effect_columns[1].amount_value = math.random (0, 15) * 16
       else
-        l.effect_columns[self.column].amount_value = (start_line / num_lines ) * 16
+        line.effect_columns[1].amount_value = (start_line / num_lines ) * 16
       end
     end
   end
@@ -331,7 +359,21 @@ function DrumPatternSlicer:on_build_view(builder)
         width = TEXT_ROW_WIDTH,
         text = "Random"
       },
+      builder:checkbox {
+        value = self.random,
+        notifier = function(value)
+          self.random = value
+        end
+      }
+    },
+    builder:row {
+      width = DEFAULT_CELL_WIDTH,
+      builder:text {
+        width = TEXT_ROW_WIDTH,
+        text = "Example"
+      },
       builder:slider {
+        width = DEFAULT_CELL_WIDTH - TEXT_ROW_WIDTH,
         min = 0.0,
         max = 1.0,
         value = 0.0,
@@ -340,6 +382,7 @@ function DrumPatternSlicer:on_build_view(builder)
         end
       }
     }
+
   }
 end
 
@@ -350,24 +393,30 @@ class 'DrumPatternRepeater' (DrumPatternEffect)
 
 function DrumPatternRepeater:__init()
   DrumPatternEffect.__init(self, "Repeat", 2, { 0, 255, 0 })
-  self.time = 0
-  self.repeats = 0
+  self.time = "0"
+  self.repeats = "0"
 end
 
-function DrumPatternRepeater:on_process(pattern, track, start_line, num_lines, line_index)
-  local l = renoise.song().patterns[pattern].tracks[track].lines[start_line + line_index]
-
-  self:reset_notes_for_line(l)
-  self:reset_effect_in_column(l, self.column)
+function DrumPatternRepeater:on_process(pattern,
+                                        track,
+                                        instrument,
+                                        start_line,
+                                        num_lines,
+                                        line_index)
+ 
+  local line = renoise.song().patterns[pattern].tracks[track].lines[start_line + line_index]
 
   if not self.processor.preserve_notes then
-    l.note_columns[1].note_string = self.processor.base_note
-    l.note_columns[1].volume_string = ".."
-    l.note_columns[1].instrument_value = self.processor.instrument_index
+    self:reset_notes_for_line(line)
+    self:reset_effect_in_column(line, 1)
+    
+    line.note_columns[1].note_string = self.processor.base_note
+    line.note_columns[1].volume_string = ".."
+    line.note_columns[1].instrument_value = self.processor.instrument_index
   end
-  if l.note_columns[1].note_string ~= "---" then
-    l.effect_columns[self.column].number_string = "0E"
-    l.effect_columns[self.column].amount_string = self.time .. self.repeats
+  if line.note_columns[1].note_string ~= "---" then
+    line.effect_columns[1].number_string = "0E"
+    line.effect_columns[1].amount_string = self.time .. self.repeats
   end
 end
 
@@ -382,11 +431,9 @@ function DrumPatternRepeater:on_build_view(builder)
       builder:text {
         width = TEXT_ROW_WIDTH,
         text = "Random"
-      },
-      builder:slider {
-        min = 0.0,
-        max = 1.0,
-        value = 0.0,
+      }, 
+      builder:checkbox {
+        value = self.random,
         notifier = function(value)
           self.random = value
         end
@@ -399,9 +446,10 @@ function DrumPatternRepeater:on_build_view(builder)
         text = "Time"
       },
       builder:valuebox {
+        width = BUTTON_WIDTH,
         min = 0,
         max = 15,
-        value = 1,
+        value = 0,
         notifier = function(value)
           self.time = string.format("%x", value)
         end
@@ -414,9 +462,10 @@ function DrumPatternRepeater:on_build_view(builder)
         text = "Repeat"
       },
       builder:valuebox {
+        width = BUTTON_WIDTH,
         min = 0,
         max = 15,
-        value = 1,
+        value = 0,
         notifier = function(value)
           self.repeats = string.format("%x", value)
         end
@@ -434,20 +483,26 @@ function DrumPatternArpeggiator:__init()
   DrumPatternEffect.__init(self, "Arpeggiate", 3, { 0, 0, 255 })
 end
 
-function DrumPatternArpeggiator:on_process(pattern, track, start_line, num_lines, line_index)
-  local l = renoise.song().patterns[pattern].tracks[track].lines[start_line + line_index]
+function DrumPatternArpeggiator:on_process(pattern,
+                                           track,
+                                           instrument,
+                                           start_line,
+                                           num_lines,
+                                           line_index)
+                                      
+  local line = renoise.song().patterns[pattern].tracks[track].lines[start_line + line_index]
 
-  self:reset_notes_for_line(l)
-  self:reset_effect_in_column(l, self.column)
+  self:reset_notes_for_line(line)
+  self:reset_effect_in_column(line, 1)
   
   if not self.processor.preserve_notes then
-    l.note_columns[1].note_string = self.processor.base_note
-    l.note_columns[1].volume_string = ".."
-    l.note_columns[1].instrument_value = self.processor.instrument_index
+    line.note_columns[1].note_string = self.processor.base_note
+    line.note_columns[1].volume_string = ".."
+    line.note_columns[1].instrument_value = self.processor.instrument_index
   end
-  if l.note_columns[1].note_string ~= "---" then
-    l.effect_columns[self.column].number_string = "00"
-    l.effect_columns[self.column].amount_string = (line_index) .. line_index + 1
+  if line.note_columns[1].note_string ~= "---" then
+    line.effect_columns[1].number_string = "00"
+    line.effect_columns[1].amount_string = (line_index) .. line_index + 1
   end
 end
 
@@ -466,26 +521,37 @@ class 'DrumPatternPitcher' (DrumPatternEffect)
 
 function DrumPatternPitcher:__init()
   DrumPatternEffect.__init(self, "Pitch", 4, { 0, 255, 255 })
-  self.direction = "01"
-  self.amount = 32
+  self.direction = 1
+  self.amount = 8
   self.increment = 1.0
 end
 
-function DrumPatternPitcher:on_process(pattern, start_line, num_lines, line_index)
-  local l = renoise.song().patterns[pattern].tracks[track].lines[start_line + line_index]
+function DrumPatternPitcher:on_process(pattern,
+                                       track,
+                                       instrument,
+                                       start_line,
+                                       num_lines,
+                                       line_index)
 
-  self:reset_notes_for_line(l)
-  self:reset_effect_in_column(l, self.column)
+  local line = renoise.song().patterns[pattern].tracks[track].lines[start_line + line_index]
+
+  local direction = "01"
+  if self.direction == 2 then
+    direction = "02"
+  end
+
+  self:reset_notes_for_line(line)
+  self:reset_effect_in_column(line, 1)
   
   if line_index == 0 then
     if not self.processor.preserve_notes then
-      l.note_columns[1].note_string = self.processor.base_note
-      l.note_columns[1].volume_string = ".."
-      l.note_columns[1].instrument_value = self.processor.instrument_index
+      line.note_columns[1].note_string = self.processor.base_note
+      line.note_columns[1].volume_string = ".."
+      line.note_columns[1].instrument_value = self.processor.instrument_index
     end
   end
-  l.effect_columns[self.column].number_string = self.direction
-  l.effect_columns[self.column].amount_value = math.min(255, math.max(1, math.max(self.amount * self.increment)))
+  line.effect_columns[1].number_string = direction 
+  line.effect_columns[1].amount_value = math.min(255, math.max(1, math.max(self.amount * self.increment)))
   -- print ("processing " .. self.name .. " > " .. line_index .. " (" .. (start_line + line_index) .. ")")
 end
 
@@ -494,7 +560,55 @@ function DrumPatternPitcher:on_build_view(builder)
     style = "group",
     margin = DEFAULT_MARGIN,
     uniform = true,
-    self:build_default_controls(builder)
+    self:build_default_controls(builder),
+    builder:row {
+      width = DEFAULT_CELL_WIDTH,
+      builder:text {
+        width = TEXT_ROW_WIDTH,
+        text = "Direction"
+      },
+      builder:popup {
+        width = BUTTON_WIDTH,
+        value = self.direction,
+        items = {"Up", "Down"},
+        notifier = function(new_index)
+          self.direction = new_index
+        end
+      }
+    },
+    builder:row {
+      width = DEFAULT_CELL_WIDTH,
+      builder:text {
+        width = TEXT_ROW_WIDTH,
+        text = "Amount"
+      },
+      builder:valuebox {
+        width = BUTTON_WIDTH,
+        min = 1,
+        max = 64,
+        value = self.amount,
+        notifier = function(value)
+          self.amount = value
+        end
+      }
+    },
+    builder:row {
+      width = DEFAULT_CELL_WIDTH,
+      builder:text {
+        width = TEXT_ROW_WIDTH,
+        text = "Increment"
+      },
+      builder:slider {
+        width = DEFAULT_CELL_WIDTH - TEXT_ROW_WIDTH,
+        min = 1.0,
+        max = 4.0,
+        value = self.increment,
+        notifier = function(value)
+          self.increment = value
+        end
+      }
+    }
+
   }
 end
 
@@ -507,23 +621,29 @@ function DrumPatternReversor:__init()
   DrumPatternEffect.__init(self, "Reverse", 5, { 255, 255, 0 })
 end
 
-function DrumPatternReversor:on_process(pattern, start_line, num_lines, line_index)
-  local l = renoise.song().patterns[pattern].tracks[track].lines[start_line + line_index]
+function DrumPatternReversor:on_process(pattern,
+                                        track,
+                                        instrument,
+                                        start_line,
+                                        num_lines,
+                                        line_index)
 
-  self:reset_notes_for_line(l)
-  self:reset_effect_in_column(l, self.column)
+  local line = renoise.song().patterns[pattern].tracks[track].lines[start_line + line_index]
+
+  self:reset_notes_for_line(line)
+  self:reset_effect_in_column(line, 1)
   
   if line_index == 0 then
     if not self.processor.preserve_notes then
-      l.note_columns[1].note_string = self.processor.base_note
-      l.note_columns[1].volume_string = ".."
-      l.note_columns[1].instrument_value = self.processor.instrument_index
+      line.note_columns[1].note_string = self.processor.base_note
+      line.note_columns[1].volume_string = ".."
+      line.note_columns[1].instrument_value = self.processor.instrument_index
     end
-    l.effect_columns[self.column].number_string = "B0"
-    l.effect_columns[self.column].amount_value = ".."
+    line.effect_columns[1].number_string = "B0"
+    line.effect_columns[1].amount_string = ".."
   elseif line_index == (num_lines - 1) then
-    l.effect_columns[self.column].number_string = "B1"
-    l.effect_columns[self.column].amount_value = ".."
+    line.effect_columns[1].number_string = "B1"
+    line.effect_columns[1].amount_string = ".."
   end
 end
 

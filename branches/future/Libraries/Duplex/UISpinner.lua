@@ -186,12 +186,13 @@ end
 
 function UISpinner:invoke_handler()
   
-  if self.on_press(self) then 
-    self:invalidate()
-  
-  else -- revert
+  local rslt = self.on_press(self)
+  if not rslt then  -- revert
     self.index = self.__cached_index
+  else
+    self:invalidate()
   end
+
 end
 
 

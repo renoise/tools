@@ -24,6 +24,7 @@ require "Duplex/OscDevice"
 require "Duplex/Applications/Browser"
 require "Duplex/Applications/MixConsole"
 require "Duplex/Applications/PatternMatrix"
+require "Duplex/Applications/MatrixTest"
 
 require "Duplex/Controllers/Launchpad/Launchpad"
 
@@ -35,7 +36,7 @@ require "Duplex/Controllers/Launchpad/Launchpad"
 local app = nil
 
 function show_dialog(device_name, app_name)
-  if (not app or not app.dialog or not app.dialog.visible) then
+  if (not app or not app.dialog) then
     app = Browser(device_name, app_name)
   end
   app:show_app()
@@ -78,6 +79,20 @@ renoise.tool():add_menu_entry {
   name = "Main Menu:Tools:Duplex:Launchpad PatternMatrix...",
   invoke = function() 
     show_dialog("Launchpad", "PatternMatrix") 
+  end
+}
+--[[
+renoise.tool():add_menu_entry {
+  name = "--- Main Menu:Tools:Duplex:Launchpad MatrixTest...",
+  invoke = function() 
+    show_dialog("LaunchpadTest", "MatrixTest") 
+  end
+}
+]]
+renoise.tool():add_menu_entry {
+  name = "--- Main Menu:Tools:Duplex:OHM64 MatrixTest...",
+  invoke = function() 
+    show_dialog("OHM64", "MatrixTest") 
   end
 }
 
