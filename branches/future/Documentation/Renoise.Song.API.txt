@@ -528,6 +528,12 @@ renoise.song().tracks[].devices[].is_active, _observable
 renoise.song().tracks[].devices[].is_maximized, _observable
   -> [boolean]
 
+renoise.song().tracks[].devices[].active_preset, _observable 
+  -> [number, 0 when none is active or available]
+
+renoise.song().tracks[].devices[].presets[] 
+  -> [read-only, list of strings]
+  
 renoise.song().tracks[].devices[].parameters[]
   -> [read-only, array of renoise.DeviceParameter objects]
 
