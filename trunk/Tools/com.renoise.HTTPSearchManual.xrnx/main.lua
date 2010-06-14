@@ -25,6 +25,7 @@ local search_cache = ""
 local results = table.create()
 local vb = nil
 local dialog = nil
+local START_TEXT = "Start typing a keyword..."
 
 
 -- Don't query the derivative string if the search_cache
@@ -97,7 +98,7 @@ end
 
 
 local function open_url(str)
-   if (str ~= "---") then
+   if (str ~= "---" and str ~= "") then
      renoise.app():show_status("Opening help page for " .. str .. "...")
      renoise.app():open_url("http://tutorials.renoise.com/wiki/"
        .. get_selected_result())
@@ -128,12 +129,13 @@ function search_start()
 
       vb:text {
          id = "results_text",
-         visible = false
+         visible = false,
+         text = ""
       },
 
       vb:chooser {
           id = "results_chooser",
-          --visible = false,
+          visible = false,
           notifier = function(value)
             set_input(get_selected_result())
           end
@@ -149,14 +151,14 @@ function search_start()
   }
 
   local function reset_input()
-    set_input("Type keyword")
+    set_input(START_TEXT)
     show_results{}
   end
 
   local function keyhandler(dialog, mod_string, key_string)
     local str = get_input()
-    local index = vb.views.results_chooser.value
-    
+    local index = vb.views.results_chooser.value  
+   
     if (key_string == "return") then
       open_url(get_selected_result())
       return
@@ -180,7 +182,7 @@ function search_start()
       return
     end 
     
-    if (str == "Type keyword" or key_string == "esc") then
+    if (str == START_TEXT or key_string == "esc") then
         str = ""
     end        
     
@@ -204,7 +206,7 @@ function search_start()
     end    
   end
 
-  reset_input()
+  set_input(START_TEXT)
 
   dialog = renoise.app():show_custom_dialog("Search Online Manual",
     dialog_content, keyhandler);
