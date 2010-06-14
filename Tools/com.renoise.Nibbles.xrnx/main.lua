@@ -16,8 +16,6 @@ local food = { x= 6, y= 6 }
 local current_direction = "up"
 local last_idle_time = os.clock()
 
--- Test commit, to test JBL's svn
-
 
 --[[----------------------------------------------------------------------------
 Functions
