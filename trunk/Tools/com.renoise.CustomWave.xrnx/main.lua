@@ -366,7 +366,7 @@ function show_dialog()
 		vb:valuefield {
 			width = CONTROL_WIDTH,
 			value = 1,
-			min = 0,
+			min = 0.5,
 			max = SAMPLE_FREQUENCY,
 			notifier = function(new_text)
 				real_cycles = tonumber(new_text)
@@ -562,6 +562,8 @@ local function create_operator_gui()
 		vb:valuefield {
 			id = "txtMultiplier",
 			width = CONTROL_WIDTH,
+			min = 0,
+			max = 10,
 			value = 1,
 			notifier = function(new_value)
 				array_real_frequency_multipliers[int_operator_selected] = new_value
