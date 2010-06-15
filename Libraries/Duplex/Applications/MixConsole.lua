@@ -490,15 +490,10 @@ function MixConsole:__attach_to_tracks()
 
   local tracks = renoise.song().tracks
 
-  -- validate the page scroller
+  -- validate and update the page scroller and track offset
   if (self.page_controls) then
-    self.page_controls.maximum = math.max(0, 
-      #renoise.song().tracks - self.width)
-        
-    if (self.__track_offset > self.page_controls.maximum) then
-      self.__track_offset = self.page_controls.maximum
-      self.page_controls:set_index(self.__track_offset)
-    end
+    self.page_controls:set_maximum(math.max(0, 
+      #renoise.song().tracks - self.width))
   end
     
   -- detach all previously added notifiers first
