@@ -9,7 +9,7 @@ local irc_nick_name = "jdoe452"
 local irc_real_name = "J. dorkalong"
 local irc_channel = "#myhhchannel"
 local socket_timeout = 1000
-local server, server_error
+local client, client_error
 local rirc = nil
 local last_idle_time = 0
 local irc_dialog = nil
@@ -39,13 +39,13 @@ function print_server_replies()
 
 
   repeat 
-    local command_line, status = server:receive("*l", 0)
+    local command_line, status = client:receive("*l", 0)
     if command_line ~= nil then
       -- If a ping is received, reply immediately
       local pingpos = string.find(command_line, "PING")
       if pingpos ~= nil then
         command_line = string.gsub(command_line, "PING", "PONG").."\r\n"
-        server:send(command_line)
+        client:send(command_line)
       end
       local quit_reply = string.find(string.lower(command_line),"quit: ")
 
@@ -90,28 +90,28 @@ end
 function set_nick(nick)
   local COMMAND = "NICK "..nick.."\r\n"
   print (COMMAND)
- server:send(COMMAND)
+ client:send(COMMAND)
 end
 
 
 function register_user(user, real_name)
   local COMMAND = "USER "..user.." 8 * : "..real_name.."\r\n"
   print (COMMAND)
-  server:send(COMMAND)
+  client:send(COMMAND)
 end
 
 
 function join_channel(channel)
   local COMMAND = "JOIN "..channel.."\r\n"
   print (COMMAND)
-  server:send(COMMAND)
+  client:send(COMMAND)
 end
 
 
 function quit_irc()
   local COMMAND = "QUIT :Has left the building\r\n"
   print (COMMAND)
-  server:send(COMMAND)
+  client:send(COMMAND)
 end
 
 
@@ -201,7 +201,7 @@ function send_command (target, target_frame, command)
       vb_channel.views.channel_output_frame:add_line(local_echo)
       vb_channel.views.channel_output_frame:scroll_to_last_line()
     end
-    server:send(COMMAND)
+    client:send(COMMAND)
   end
 end
 
@@ -230,19 +230,21 @@ end
 function close_chat_session(session_no)
   table.remove(session,session_no)
 end
+
+
 function connect_to_server(vb)
-  server, server_error = renoise.Socket.create_client(vb.views.irc_server.text, 
+  client, client_error = renoise.Socket.create_client(vb.views.irc_server.text, 
   tonumber(vb.views.irc_server_port.text))
   rirc = status_dialog()
   
-  if server then
+  if client then
     set_nick(vb.views.irc_nick_name.text)            
     register_user(vb.views.irc_user_name.text, vb.views.irc_real_name.text)
-    --    server:send("PRIVMSG #channelname :"..irc_nick_name.." in da house!!\r\n")
+    --    client:send("PRIVMSG #channelname :"..irc_nick_name.." in da house!!\r\n")
     start_message_engine()          
    else
-     if server_error then
-       rirc.views.status_output_frame:addline(server_error)
+     if client_error then
+       rirc.views.status_output_frame:add_line(client_error)
      end
    end
   
