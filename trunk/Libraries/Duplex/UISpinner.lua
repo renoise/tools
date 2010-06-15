@@ -126,11 +126,53 @@ end
 
 --------------------------------------------------------------------------------
 
+-- set a new minimum value for the index, clipping the current index when needed
+
+function UISpinner:set_minimum(value)
+  if (self.minimum ~= value) then
+    self.minimum = value
+    
+    if (self.minimum > self.maximum) then
+      self.minimum, self.maximum = self.maximum, self.minimum
+    end
+
+    if (self.index < self.maximum) then
+      self:set_index(self.maximum)
+    end
+    
+    self:invalidate()
+  end
+end
+
+
+--------------------------------------------------------------------------------
+
+-- set a new maximum value for the index, clipping the current index when needed
+
+function UISpinner:set_maximum(value)
+  if (self.maximum ~= value) then
+    self.maximum = value
+    
+    if (self.minimum > self.maximum) then
+      self.minimum, self.maximum = self.maximum, self.minimum
+    end
+    
+    if (self.index > self.maximum) then
+      self:set_index(self.maximum)
+    end
+    
+    self:invalidate()
+  end
+end
+  
+  
+--------------------------------------------------------------------------------
+
 -- set index to specified value
 -- @idx (integer)
 -- @skip_event (boolean) skip event handler
 
-function UISpinner:set_index(idx, skip_event)
+function UISpinner:set_index(idx, skip_event_handler)
   assert(idx >= self.minimum and idx <= self.maximum, 
     "invalid spinner index")
   
@@ -143,10 +185,10 @@ function UISpinner:set_index(idx, skip_event)
   end
 
   if (changed) then
-    if (not skip_event) then
+    self:invalidate()
+
+    if (not skip_event_handler) then
       self:invoke_handler()
-    else
-      self:invalidate()
     end
   end
 end
