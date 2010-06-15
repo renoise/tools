@@ -76,23 +76,9 @@ renoise.tool():add_menu_entry {
 }
 
 renoise.tool():add_menu_entry {
-  name = "Main Menu:Tools:Duplex:Launchpad PatternMatrix...",
+  name = "--- Main Menu:Tools:Duplex:Launchpad PatternMatrix...",
   invoke = function() 
     show_dialog("Launchpad", "PatternMatrix") 
-  end
-}
---[[
-renoise.tool():add_menu_entry {
-  name = "--- Main Menu:Tools:Duplex:Launchpad MatrixTest...",
-  invoke = function() 
-    show_dialog("LaunchpadTest", "MatrixTest") 
-  end
-}
-]]
-renoise.tool():add_menu_entry {
-  name = "--- Main Menu:Tools:Duplex:OHM64 MatrixTest...",
-  invoke = function() 
-    show_dialog("OHM64", "MatrixTest") 
   end
 }
 
