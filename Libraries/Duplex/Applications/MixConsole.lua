@@ -166,6 +166,11 @@ function MixConsole:update()
       self.buttons[control_index]:colorize({0x00,0x00,0x00}) 
     end
   end
+  
+  -- update the master as well, if it has its own UI representation
+  if (self.master ~= nil) then
+     self.master:set_value(get_master_track().prefx_volume.value)
+  end
 end
 
 
@@ -191,7 +196,7 @@ function MixConsole:build_app()
     for attr, param in pairs(group) do
       if (attr == "xarg" and param["columns"]) then
         grid_mode = true
-        self.width = param["columns"]
+        self.width = tonumber(param["columns"])
         self.height = math.ceil(#group/self.width)
       end
       if grid_mode then break end
@@ -341,24 +346,37 @@ function MixConsole:build_app()
   -- master fader (optional) ------------------------------
 
   if (self.master_group_name) then
-    self.master = UISlider(self.display)
-    self.master.group_name = self.master_group_name
-    self.master.x_pos = 1
-    self.master.y_pos = 1
-    self.master.toggleable = true
-    self.master.ceiling = RENOISE_DECIBEL
-    self.master:set_size(self.height)
+    local slider = UISlider(self.display)
+    slider.group_name = self.master_group_name
+    slider.x_pos = 1
+    slider.y_pos = 1
+    slider.toggleable = true
+    slider.ceiling = RENOISE_DECIBEL
+    slider:set_size(self.height)
     
-    self.master.on_change = function(obj) 
+    slider.on_change = function(obj) 
       if (not self.active) then
         return false
       else
-        get_master_track().prefx_volume.value = obj.value
+        local master_control_index = 
+          get_master_track_index() - self.__track_offset
+        
+        if (self.sliders and 
+            master_control_index > 0 and 
+            master_control_index <= self.width) 
+        then
+          -- this will cause another event...
+          self.sliders[master_control_index]:set_value(obj.value)
+        else
+          get_master_track().prefx_volume.value = obj.value
+        end
+        
         return true
       end
     end 
      
-    self.display:add(self.master)
+    self.display:add(slider)
+    self.master = slider
   end
   
   
@@ -483,13 +501,12 @@ function MixConsole:__attach_to_tracks()
     end
   end
     
-  --[[ available in branch future only
   -- detach all previously added notifiers first
   for _,track in pairs(tracks) do
     track.prefx_volume.value_observable:remove_notifier(self)
     track.prefx_panning.value_observable:remove_notifier(self)
     track.mute_state_observable:remove_notifier(self) 
-  end]] 
+  end 
   
   -- attach to the new ones in the order we want them
   for control_index=1,math.min(#tracks, self.width) do
