@@ -3,9 +3,9 @@
 -- json Module.
 -- Author: Craig Mason-Jones
 -- Homepage: http://json.luaforge.net/
--- Version: 0.9.20
--- This module is released under the The GNU General Public License (GPL).
--- Please see LICENCE.txt for details.
+-- Version: 0.9.30
+-- This module is released under the MIT Consortium License (MIT).
+-- Please see LICENSE.txt for details.
 --
 -- USAGE:
 -- This module exposes two functions:

@@ -9,7 +9,7 @@
 
 --BEGIN: global constants
 local SAMPLE_BIT_DEPTH = 32
-local SAMPLE_FREQUENCY = 44100
+local SAMPLE_FREQUENCY = 44100 --this should be set to the driver' sample rate
 local SAMPLE_CHANS = 1
 	
 local OPERATORS = 6
@@ -186,7 +186,7 @@ function change_tab(int_operator_number)
 		vb.views.sldWidth.value = 0.5
 	end
 	vb.views.cmbWave.value = int_wave_type_selected
-	vb.views.txtMultiplier.value = tostring(real_frequency_multiplier)
+	vb.views.txtMultiplier.value = real_frequency_multiplier
 	
 	show_operator_parameters(int_wave_type)
 
@@ -363,9 +363,11 @@ function show_dialog()
 			text = "Cycles" ,
 			width = TEXT_LABEL_WIDTH
 		},
-		vb:textfield {
+		vb:valuefield {
 			width = CONTROL_WIDTH,
-			value = "1",
+			value = 1,
+			min = 0,
+			max = SAMPLE_FREQUENCY,
 			notifier = function(new_text)
 				real_cycles = tonumber(new_text)
 			end
@@ -557,12 +559,12 @@ local function create_operator_gui()
 			text = "Freq. Multiplier",
 			width = TEXT_LABEL_WIDTH
 		},
-		vb:textfield {
+		vb:valuefield {
 			id = "txtMultiplier",
 			width = CONTROL_WIDTH,
-			value = "1",
-			notifier = function(new_text)
-				array_real_frequency_multipliers[int_operator_selected] = tonumber(new_text)
+			value = 1,
+			notifier = function(new_value)
+				array_real_frequency_multipliers[int_operator_selected] = new_value
 			end
 		}
 	}

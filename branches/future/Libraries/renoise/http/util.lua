@@ -1,7 +1,23 @@
--------------------------------------------
---  Util functions
--------------------------------------------
-require "url"
+-------------------------------------------------------------------------------
+--  Description
+-------------------------------------------------------------------------------
+
+-- This Utility library offers various general purpose functions related to
+-- web, socket and Renoise programming.
+
+-- Author: bantai [marvin@renoise.com]
+
+
+-------------------------------------------------------------------------------
+--  Dependencies
+-------------------------------------------------------------------------------
+
+require "renoise.http.url"
+
+
+-------------------------------------------------------------------------------
+--  Util class
+-------------------------------------------------------------------------------
 
 class 'Util'
 
@@ -17,7 +33,11 @@ function Util:split_lines(str)
 end
 
 function Util:parse_message(m)
-  local lines = Util:split_lines(m)
+  local lines = m
+  if (type(m) == "string") then
+    lines = Util:split_lines(m)
+  end
+  assert(type(lines) == "table", "Variable 'lines' is not of type table.")
   local s = false
   local header = table.create()
   local body = ""

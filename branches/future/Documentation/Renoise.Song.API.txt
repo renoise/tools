@@ -800,6 +800,7 @@ renoise.song().patterns[].tracks[]:clear()
 -- copy contents from other pattern track, including automation, when possible
 renoise.song().patterns[].tracks[]:copy_from(other_pattern_track object)
 
+
 -- get a specific line (line must be [1 - Pattern.MAX_NUMBER_OF_LINES])
 renoise.song().patterns[].tracks[]:line(index) ->
   [renoise.PatternTrackLine]
@@ -807,6 +808,22 @@ renoise.song().patterns[].tracks[]:line(index) ->
 -- get a specific line range (index must be [1 - Pattern.MAX_NUMBER_OF_LINES])
 renoise.song().patterns[].tracks[]:lines_in_range(index_from, index_to) ->
   [array of renoise.PatternTrackLine]
+
+
+-- returns the automation for the given device parameter or nil 
+-- when there is none
+renoise.song().patterns[].tracks[]:find_automation(parameter)
+ -> [renoise.PatternTrackAutomation or nil]
+
+-- creates a new automation for the given device parameter. 
+-- fires and error when an automation already exists
+-- returns the newly created automation
+renoise.song().patterns[].tracks[]:create_automation(parameter)
+  -> [renoise.PatternTrackAutomation object]
+
+-- remove an existing automation the given device parameter. 
+-- automation must exist
+renoise.song().patterns[].tracks[]:delete_automation(parameter)
 
 
 -- properties
@@ -822,7 +839,33 @@ renoise.song().patterns[].tracks[].is_empty, _observable
 renoise.song().patterns[].tracks[].lines[] ->
   [read-only, array of renoise.PatternTrackLine objects]
 
+renoise.song().patterns[].tracks[]:automation[], _observable -> 
+  [read-only, list of renoise.PatternTrackAutomation]
 
+  
+--------------------------------------------------------------------------------
+-- renoise.PatternTrackAutomation
+--------------------------------------------------------------------------------
+  
+-- consts
+
+renoise.PatternTrackAutomation.PLAYMODE_POINTS
+renoise.PatternTrackAutomation.PLAYMODE_LINEAR
+renoise.PatternTrackAutomation.PLAYMODE_CUBIC
+
+
+-- properties
+
+renoise.song().patterns[].tracks[]:automation[].dest_device 
+  -> [renoise.TrackDevice]
+
+renoise.song().patterns[].tracks[]:automation[].dest_parameter 
+  -> [renoise.DeviceParameter]
+    
+renoise.song().patterns[].tracks[]:automation[].playmode, _observable
+  -> [enum PLAYMODE]
+
+  
 --------------------------------------------------------------------------------
 -- renoise.PatternTrackLine
 --------------------------------------------------------------------------------

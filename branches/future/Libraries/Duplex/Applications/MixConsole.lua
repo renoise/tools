@@ -30,8 +30,8 @@ function MixConsole:__init(display, options)
   self.mute_group_name = options.mute_group_name
   self.encoders = nil
   self.panning_group_name = options.panning_group_name
-  self.page_scroller = nil
-  self.page_scroll_group_name = options.page_scroll_group_name
+  self.page_controls = nil
+  self.page_controls_group_name = options.page_controls_group_name
   
   -- the number of tracks displayed side-by-side
   self.width = 4
@@ -166,6 +166,11 @@ function MixConsole:update()
       self.buttons[control_index]:colorize({0x00,0x00,0x00}) 
     end
   end
+  
+  -- update the master as well, if it has its own UI representation
+  if (self.master ~= nil) then
+     self.master:set_value(get_master_track().prefx_volume.value)
+  end
 end
 
 
@@ -191,7 +196,7 @@ function MixConsole:build_app()
     for attr, param in pairs(group) do
       if (attr == "xarg" and param["columns"]) then
         grid_mode = true
-        self.width = param["columns"]
+        self.width = tonumber(param["columns"])
         self.height = math.ceil(#group/self.width)
       end
       if grid_mode then break end
@@ -341,41 +346,54 @@ function MixConsole:build_app()
   -- master fader (optional) ------------------------------
 
   if (self.master_group_name) then
-    self.master = UISlider(self.display)
-    self.master.group_name = self.master_group_name
-    self.master.x_pos = 1
-    self.master.y_pos = 1
-    self.master.toggleable = true
-    self.master.ceiling = RENOISE_DECIBEL
-    self.master:set_size(self.height)
+    local slider = UISlider(self.display)
+    slider.group_name = self.master_group_name
+    slider.x_pos = 1
+    slider.y_pos = 1
+    slider.toggleable = true
+    slider.ceiling = RENOISE_DECIBEL
+    slider:set_size(self.height)
     
-    self.master.on_change = function(obj) 
+    slider.on_change = function(obj) 
       if (not self.active) then
         return false
       else
-        get_master_track().prefx_volume.value = obj.value
+        local master_control_index = 
+          get_master_track_index() - self.__track_offset
+        
+        if (self.sliders and 
+            master_control_index > 0 and 
+            master_control_index <= self.width) 
+        then
+          -- this will cause another event...
+          self.sliders[master_control_index]:set_value(obj.value)
+        else
+          get_master_track().prefx_volume.value = obj.value
+        end
+        
         return true
       end
     end 
      
-    self.display:add(self.master)
+    self.display:add(slider)
+    self.master = slider
   end
   
   
   -- track scrolling (optional) ---------------------------
 
-  if (self.page_scroll_group_name) then
-    self.page_scroller = UISpinner(self.display)
-    self.page_scroller.group_name = self.page_scroll_group_name
-    self.page_scroller.index = 0
-    self.page_scroller.step_size = self.width
-    self.page_scroller.minimum = 0
-    self.page_scroller.maximum = math.max(0, 
+  if (self.page_controls_group_name) then
+    self.page_controls = UISpinner(self.display)
+    self.page_controls.group_name = self.page_controls_group_name
+    self.page_controls.index = 0
+    self.page_controls.step_size = self.width
+    self.page_controls.minimum = 0
+    self.page_controls.maximum = math.max(0, 
       #renoise.song().tracks - self.width)
-    self.page_scroller.x_pos = 1
-    self.page_scroller.palette.foreground_dec.text = "◄"
-    self.page_scroller.palette.foreground_inc.text = "►"
-    self.page_scroller.on_press = function(obj) 
+    self.page_controls.x_pos = 1
+    self.page_controls.palette.foreground_dec.text = "◄"
+    self.page_controls.palette.foreground_inc.text = "►"
+    self.page_controls.on_press = function(obj) 
 
       if (not self.active) then
         return false
@@ -388,7 +406,7 @@ function MixConsole:build_app()
 
     end
     
-    self.display:add(self.page_scroller)
+    self.display:add(self.page_controls)
   end
 end
 
@@ -473,23 +491,22 @@ function MixConsole:__attach_to_tracks()
   local tracks = renoise.song().tracks
 
   -- validate the page scroller
-  if (self.page_scroller) then
-    self.page_scroller.maximum = math.max(0, 
+  if (self.page_controls) then
+    self.page_controls.maximum = math.max(0, 
       #renoise.song().tracks - self.width)
         
-    if (self.__track_offset > self.page_scroller.maximum) then
-      self.__track_offset = self.page_scroller.maximum
-      self.page_scroller:set_index(self.__track_offset)
+    if (self.__track_offset > self.page_controls.maximum) then
+      self.__track_offset = self.page_controls.maximum
+      self.page_controls:set_index(self.__track_offset)
     end
   end
     
-  --[[ available in branch future only
   -- detach all previously added notifiers first
   for _,track in pairs(tracks) do
     track.prefx_volume.value_observable:remove_notifier(self)
     track.prefx_panning.value_observable:remove_notifier(self)
     track.mute_state_observable:remove_notifier(self) 
-  end]] 
+  end 
   
   -- attach to the new ones in the order we want them
   for control_index=1,math.min(#tracks, self.width) do
