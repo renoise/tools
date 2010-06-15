@@ -28,6 +28,7 @@ multitasking todo:
 local DEVICE_NOT_AVAILABLE_POSTFIX = " (N/A)"
 local APPLICATION_RUNNING_POSTFIX = " (running)"
 
+
 --==============================================================================
 
 class 'Browser' (Application)
@@ -228,73 +229,6 @@ end
 
 --------------------------------------------------------------------------------
 
--- return list of supported applications: display names are class names
--- @param (string)  device name, as it's displayed in the device popup  
-
-function Browser:__get_available_apps()
-  TRACE("Browser:__get_available_apps:")
-
-  -- full list of available applications 
-  local app_list = table.create{    
-    "None",
-    "MixConsole",
-    "PatternMatrix",
-    "MatrixTest",
-  }
-
-  -- locate the device definition
-  local custom_device = nil
-  for _,k in ipairs(self.__devices) do 
-    if (self.__device_name == k.display_name) then
-      custom_device = k
-    end
-  end
-
-  -- remove apps that doesn't run on this device
-  if custom_device and custom_device.incompatible then
-    local matched_index = nil
-    for k,v in ipairs(custom_device.incompatible) do
-      matched_index = app_list:find(v)
-      if(matched_index)then
-        app_list:remove(matched_index)
-      end
-    end
-  end
-  
-  return app_list
-end
-
-
---------------------------------------------------------------------------------
-
--- add/remove the "running" postfix for relevant applications
--- - called when we start/stop apps, and choose a device
--- @app_list: list of strings (popup.items)
-
-function Browser:__decorate_app_list()
-  TRACE("Browser:__decorate_app_list:")
-
-  local app_list = self.vb.views.dpx_browser_application.items
-  for _,process in ipairs(self.__processes) do
-    if (process.name == self.__device_name) then
-      for __,app in ipairs(process.applications) do
-        for v,k in ipairs(app_list) do
-          k = self:__strip_running_postfix(k)
-          if (k == type(app)) then
-            app_list[v] = app.active and 
-              (k .. APPLICATION_RUNNING_POSTFIX) or k
-          end
-        end
-      end
-    end
-  end
-
-  self.vb.views.dpx_browser_application.items = app_list
-end
-
-
---------------------------------------------------------------------------------
-
 -- set application as active item 
 -- if the application hasn't been run before, it is instantiated
 -- if already running, switch focus to it (starting/stopping becomes possible)
@@ -390,6 +324,10 @@ end
 
 
 --------------------------------------------------------------------------------
+-------  Application class methods
+--------------------------------------------------------------------------------
+
+-- build and assign the application view
 
 function Browser:build_app()
   Application.build_app(self)
@@ -479,10 +417,6 @@ function Browser:build_app()
 end
 
 
---------------------------------------------------------------------------------
--------  Application class methods
---------------------------------------------------------------------------------
-
 -- start the currently selected app
 
 function Browser:start_app()
@@ -501,6 +435,7 @@ function Browser:start_app()
     end
   end
 end
+  
   
 --------------------------------------------------------------------------------
 
@@ -653,6 +588,73 @@ end
 
 --------------------------------------------------------------------------------
 
+-- add/remove the "running" postfix for relevant applications
+-- - called when we start/stop apps, and choose a device
+-- @app_list: list of strings (popup.items)
+
+function Browser:__decorate_app_list()
+  TRACE("Browser:__decorate_app_list:")
+
+  local app_list = self.vb.views.dpx_browser_application.items
+  for _,process in ipairs(self.__processes) do
+    if (process.name == self.__device_name) then
+      for __,app in ipairs(process.applications) do
+        for v,k in ipairs(app_list) do
+          k = self:__strip_running_postfix(k)
+          if (k == type(app)) then
+            app_list[v] = app.active and 
+              (k .. APPLICATION_RUNNING_POSTFIX) or k
+          end
+        end
+      end
+    end
+  end
+
+  self.vb.views.dpx_browser_application.items = app_list
+end
+
+
+--------------------------------------------------------------------------------
+
+-- return list of supported applications: display names are class names
+-- @param (string)  device name, as it's displayed in the device popup  
+
+function Browser:__get_available_apps()
+  TRACE("Browser:__get_available_apps:")
+
+  -- full list of available applications 
+  local app_list = table.create{    
+    "None",
+    "MixConsole",
+    "PatternMatrix",
+    "MatrixTest",
+  }
+
+  -- locate the device definition
+  local custom_device = nil
+  for _,k in ipairs(self.__devices) do 
+    if (self.__device_name == k.display_name) then
+      custom_device = k
+    end
+  end
+
+  -- remove apps that doesn't run on this device
+  if custom_device and custom_device.incompatible then
+    local matched_index = nil
+    for k,v in ipairs(custom_device.incompatible) do
+      matched_index = app_list:find(v)
+      if(matched_index)then
+        app_list:remove(matched_index)
+      end
+    end
+  end
+  
+  return app_list
+end
+
+
+--------------------------------------------------------------------------------
+
 -- duplex device definitions: 
 -- class_name : (optional) indicates a custom device implementation
 -- display_name : the "friendly" name that we assign to the device
@@ -797,11 +799,12 @@ function Browser:__get_selected_process()
   TRACE("Browser:__get_selected_process()")
 
   for _,k in ipairs(self.__processes) do
-    if(k.name == self.__device_name) then
+    if (k.name == self.__device_name) then
       return k
     end
   end
 end
+
 
 --------------------------------------------------------------------------------
 
@@ -814,16 +817,18 @@ function Browser:__get_selected_app()
   local app_name = self.vb.views.dpx_browser_application.items[
     self.vb.views.dpx_browser_application.value]
   app_name = self:__strip_running_postfix(app_name)
+  
   for _,k in ipairs(self.__processes) do
-    if(k.name == self.__device_name) then
+    if (k.name == self.__device_name) then
       for _,app in ipairs(k.applications) do
-        if(type(app) == app_name)then
+        if (type(app) == app_name) then
           return app
         end
       end
     end
   end
 end
+
 
 --------------------------------------------------------------------------------
 
@@ -855,7 +860,5 @@ function Browser:__instantiate_device(display_name,class_name, device_name, cont
     renoise.app():show_warning(("Whoops! This device uses " ..
       "unknown device class: '%s'"):format(class_name))
   end 
-
 end
-
 
