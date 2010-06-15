@@ -125,8 +125,8 @@ end
 -- - update the applications list (show only compatible apps)
 -- @param name (string)  device display-name, without postfix
 
-function Browser:set_device(name)
-  TRACE("Browser:set_device("..name..")")
+function Browser:set_device(device_name)
+  TRACE("Browser:set_device("..device_name..")")
   
   -- hide all control-maps
   for _,k in ipairs(self.__processes) do
@@ -136,10 +136,10 @@ function Browser:set_device(name)
   end
 
   -- adjust device index, in case it was not fired from the GUI
-  local idx = self:__get_device_index_by_name(name)
+  local idx = self:__get_device_index_by_name(device_name)
   self.vb.views.dpx_browser_input_device.value = idx
 
-  if (name == "None") then
+  if (device_name == "None") then
     
     -- release all devices & applications
     -- (in reverse, since we are removing entries)
@@ -167,14 +167,14 @@ function Browser:set_device(name)
 
     -- instantiate the new device
 
-    self.__device_name = self:__strip_na_postfix(name)
+    self.__device_name = self:__strip_na_postfix(device_name)
 
     self.vb.views.dpx_browser_app_row.visible = true
     self.vb.views.dpx_browser_device_settings.visible = true
 
     -- find our device among the supported ones
     for _,k in ipairs(self.__devices) do 
-      if (name == k.display_name) then
+      if (device_name == k.display_name) then
 
         -- update the applications list 
         local app_list = self:__get_available_apps()
@@ -214,13 +214,15 @@ function Browser:set_device(name)
         -- adjust dialog 
         self.vb.views.dpx_browser_rootnode:resize()
         self:__decorate_app_list()
-
       end
     end
   end
 
-  self.__device_index = self.vb.views.dpx_browser_input_device.value
+  -- memorize the currently active device
+  self.__device_index = self:__get_device_index_by_name(device_name)
 
+  -- keep GUI in sync in case this was not called from the GUI
+  self:__set_device_index(device_name)
 end
 
 
@@ -258,9 +260,10 @@ function Browser:__get_available_apps()
       end
     end
   end
+  
   return app_list
-
 end
+
 
 --------------------------------------------------------------------------------
 
@@ -277,7 +280,7 @@ function Browser:__decorate_app_list()
       for __,app in ipairs(process.applications) do
         for v,k in ipairs(app_list) do
           k = self:__strip_running_postfix(k)
-          if(k==type(app))then
+          if (k == type(app)) then
             app_list[v] = app.active and 
               (k .. APPLICATION_RUNNING_POSTFIX) or k
           end
@@ -286,21 +289,24 @@ function Browser:__decorate_app_list()
     end
   end
 
-  self.vb.views.dpx_browser_application.items=app_list
-
+  self.vb.views.dpx_browser_application.items = app_list
 end
+
 
 --------------------------------------------------------------------------------
 
 -- set application as active item 
 -- if the application hasn't been run before, it is instantiated
 -- if already running, switch focus to it (starting/stopping becomes possible)
+-- param 'start_running' only applies to newly activated apps
 -- set to "None" to destroy all applications on the selected device
 
-function Browser:set_application(app_name)
+function Browser:set_application(app_name, start_running)
   TRACE("Browser:set_application:",app_name)
-
-  if (app_name=="None") then
+  
+  start_running = start_running or false
+  
+  if (app_name == "None") then
 
     if self.__process and self.__process.applications then
       for idx,v in ripairs(self.__process.applications) do
@@ -308,6 +314,7 @@ function Browser:set_application(app_name)
         self.__process.applications:remove(idx)
       end
     end
+    
     local app_list = self:__get_available_apps()
     self.vb.views.dpx_browser_application.items = app_list
     self.__process.selected_app = 1
@@ -331,7 +338,8 @@ function Browser:set_application(app_name)
       -- at the same time, or they would "fight for the same space"
       -- (this is actually a sign of a bad application configuration)
 
-      self.vb.views.dpx_browser_application_checkbox.value = app.active
+      self.vb.views.dpx_browser_application_checkbox.value = 
+        (app.active or start_running)
 
     else
       -- instantiate application
@@ -359,22 +367,25 @@ function Browser:set_application(app_name)
         app = _G[app_name](self.__process.display,options)
       end
 
-      if(app)then
+      if (app) then
         self.__process.applications:insert(app)
       end
-
-      self.vb.views.dpx_browser_application_checkbox.value = false
-
     end
 
-    self.__process.selected_app = self.vb.views.dpx_browser_application.value
-
+    local app_index = self:__get_app_index_by_name(app_name)
+    self.__process.selected_app = app_index
+    
+    -- keep GUI in sync in case this was not called from the GUI
+    self:__set_application_index(app_name)
+  
+    if (app and start_running) then
+      self:start_app()
+    end
   end
 
   -- hide run option if no application is selected
   self.vb.views.dpx_browser_application_active.visible = 
     (self.vb.views.dpx_browser_application.value ~= 1)
-
 end
 
 
@@ -587,10 +598,10 @@ end
 
 function Browser:__get_app_index_by_name(app_name)
   app_name = self:__strip_running_postfix(app_name)
-
+  
   local popup = self.vb.views.dpx_browser_application
   for idx,val in ipairs(popup.items)do
-    if (app_name == val) then
+    if (app_name == self:__strip_running_postfix(val)) then
       return idx
     end
   end

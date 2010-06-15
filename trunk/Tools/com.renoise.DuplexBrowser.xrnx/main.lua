@@ -38,7 +38,17 @@ local app = nil
 function show_dialog(device_name, app_name)
   if (not app or not app.dialog) then
     app = Browser(device_name, app_name)
+  else
+    if (device_name) then
+      app:set_device(device_name)
+      
+      if (app_name) then
+        local start_running = true
+        app:set_application(app_name, start_running)
+      end
+    end
   end
+  
   app:show_app()
 end
 
