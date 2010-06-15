@@ -30,8 +30,8 @@ function MixConsole:__init(display, options)
   self.mute_group_name = options.mute_group_name
   self.encoders = nil
   self.panning_group_name = options.panning_group_name
-  self.page_scroller = nil
-  self.page_scroll_group_name = options.page_scroll_group_name
+  self.page_controls = nil
+  self.page_controls_group_name = options.page_controls_group_name
   
   -- the number of tracks displayed side-by-side
   self.width = 4
@@ -382,18 +382,18 @@ function MixConsole:build_app()
   
   -- track scrolling (optional) ---------------------------
 
-  if (self.page_scroll_group_name) then
-    self.page_scroller = UISpinner(self.display)
-    self.page_scroller.group_name = self.page_scroll_group_name
-    self.page_scroller.index = 0
-    self.page_scroller.step_size = self.width
-    self.page_scroller.minimum = 0
-    self.page_scroller.maximum = math.max(0, 
+  if (self.page_controls_group_name) then
+    self.page_controls = UISpinner(self.display)
+    self.page_controls.group_name = self.page_controls_group_name
+    self.page_controls.index = 0
+    self.page_controls.step_size = self.width
+    self.page_controls.minimum = 0
+    self.page_controls.maximum = math.max(0, 
       #renoise.song().tracks - self.width)
-    self.page_scroller.x_pos = 1
-    self.page_scroller.palette.foreground_dec.text = "◄"
-    self.page_scroller.palette.foreground_inc.text = "►"
-    self.page_scroller.on_press = function(obj) 
+    self.page_controls.x_pos = 1
+    self.page_controls.palette.foreground_dec.text = "◄"
+    self.page_controls.palette.foreground_inc.text = "►"
+    self.page_controls.on_press = function(obj) 
 
       if (not self.active) then
         return false
@@ -406,7 +406,7 @@ function MixConsole:build_app()
 
     end
     
-    self.display:add(self.page_scroller)
+    self.display:add(self.page_controls)
   end
 end
 
@@ -491,13 +491,13 @@ function MixConsole:__attach_to_tracks()
   local tracks = renoise.song().tracks
 
   -- validate the page scroller
-  if (self.page_scroller) then
-    self.page_scroller.maximum = math.max(0, 
+  if (self.page_controls) then
+    self.page_controls.maximum = math.max(0, 
       #renoise.song().tracks - self.width)
         
-    if (self.__track_offset > self.page_scroller.maximum) then
-      self.__track_offset = self.page_scroller.maximum
-      self.page_scroller:set_index(self.__track_offset)
+    if (self.__track_offset > self.page_controls.maximum) then
+      self.__track_offset = self.page_controls.maximum
+      self.page_controls:set_index(self.__track_offset)
     end
   end
     
