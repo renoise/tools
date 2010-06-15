@@ -112,8 +112,10 @@ function UIComponent:test(x_pos, y_pos)
   then
     return false
   end
+  
   return true
 end
+
 
 --------------------------------------------------------------------------------
 
@@ -142,11 +144,11 @@ function UIComponent:set_palette(palette)
     end
   end
 
-  if(changed)then
+  if (changed) then
     self:invalidate()
   end
-
 end
+
 
 --------------------------------------------------------------------------------
 
@@ -158,13 +160,24 @@ end
 function UIComponent:colorize(rgb)
   TRACE("UIComponent:colorize:",rgb)
 
+  local changed = false
+  
   for k,v in pairs(self.palette) do
     if not (v._color) then
       self.palette[k]._color = table.copy(v.color)
     end
-    v.color[1]=v._color[1]*rgb[1]/255
-    v.color[2]=v._color[2]*rgb[2]/255
-    v.color[3]=v._color[3]*rgb[3]/255
+
+    for c=1,3 do
+      local color_value = v._color[c] * rgb[c] / 255
+      if (color_value ~= v.color[c]) then
+        v.color[c] = color_value   
+        changed = true  
+      end
+    end
+  end
+
+  if (changed) then
+    self:invalidate()
   end
 end
 
