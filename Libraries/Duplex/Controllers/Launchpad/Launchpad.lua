@@ -26,7 +26,7 @@ function Launchpad:__init(name, message_stream)
 
   -- todo: specify color-space per control-map group
   -- (not all buttons may have the same abilities)
-  self.colorspace={r=4,g=4}
+  self.colorspace={4,4,0}
 
   -- double-buffering
   self.display = 0
