@@ -37,11 +37,14 @@ end
 local function submit(callback)
   local my_callback = callback or function(data) rprint(data) end
   
-  local topic = vb.views.topic_popup.items[vb.views.topic_popup.value] or 
-    vb.views.other_topic_textfield.text
+  local topic = vb.views.topic_popup.items[vb.views.topic_popup.value]
+  if (topic == "") then
+    topic = vb.views.other_topic_textfield.text
+  end
   local summary = vb.views.summary_textfield.text
   local description = vb.views.description_textfield.text
   local email = vb.views.email_textfield.text
+  local severe = vb.views.severe_checkbox.value
   local log = ""
 
   HTTP:post("http://www.renoise.com/bugs/index.php",
@@ -50,7 +53,8 @@ local function submit(callback)
       topic=topic, 
       summary=summary, 
       description=description, 
-      email=email
+      severe=severe,
+      email=email      
     },
     function( result, status, xhr )
       if (result.status == "OK") then      
