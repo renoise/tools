@@ -38,7 +38,7 @@ local function submit(callback)
   local my_callback = callback or function(data) rprint(data) end
   
   local topic = vb.views.topic_popup.items[vb.views.topic_popup.value]
-  if (topic == "") then
+  if (vb.views.topic_popup.value == #vb.views.topic_popup.items) then
     topic = vb.views.other_topic_textfield.text
   end
   local summary = vb.views.summary_textfield.text
