@@ -370,24 +370,14 @@ function show_remove_silence_dialog()
     spacing = DEFAULT_DIALOG_SPACING
   }
   
-  local button_process = vb:button {
-    text = "Apply",
-    tooltip = "Hit this button to delete data which is under the treshold level in amplitude.",
-    width = 140,
-    height = DEFAULT_DIALOG_BUTTON_HEIGHT,
-    notifier = function()
-      process_data()
-    end
-  }
-  
   main_rack:add_child(row_db)
   main_rack:add_child(column_slider)
   main_rack:add_child(row_time)
   main_rack:add_child(column_mode)
-  main_rack:add_child(button_process)
   
-  dialog = renoise.app():show_custom_dialog  (
+  dialog = renoise.app():show_custom_prompt  (
     "Delete Silence",
-    main_rack
+    main_rack,
+	{'Apply','Cancel'}
   )
 end
