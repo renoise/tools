@@ -2,25 +2,6 @@
 remove_silence.lua
 ----------------------------------------------------------------------------]]--
 
-local EPSILON = 1e-12
-local MINUSINFDB = -200.0
-
-function LinToDb(Value)
-   if (Value > EPSILON) then
-    return math.log10(Value) * 20.0
-  else
-    return MINUSINFDB
-  end
-end
-
-function DbToLin(Value)
-  if (Value > MINUSINFDB) then
-    return math.pow(10.0, Value * 0.05)
-  else
-    return 0.0
-  end
-end
-
 local MODE_ERASE = 1
 local MODE_SILENCE = 2
 local MODE_TRIMLEFT = 3
@@ -39,33 +20,30 @@ local int_chans = nil
 local int_mode = MODE_SILENCE
 
 
-local dialog
+--[[ Locals ]]
 
 local function is_under_threshold(int_frame)
-
-  local real_value = nil
-
-  if(buffer == nil) then return false, nil end
+  if (buffer == nil) then 
+    return false, nil 
+  end
   
+  local real_value = nil
   local bool_is_under_threshold = true
-  local int_chan
+  
   for int_chan = 1, int_chans do
-
     local real_value = math.abs(buffer:sample_data(int_chan,int_frame))
-    
     if (real_value > real_treshold) then
       return false, real_value
     end
-    
   end
   
   return true, real_value
-  
 end
+
 
 local function process_data()
 
-  if real_time == nil then
+  if (real_time == nil) then
     renoise.app():show_error("Invalid time value!")
     return
   end
@@ -280,12 +258,6 @@ end
 
 function show_remove_silence_dialog() 
 
-  if (dialog and dialog.visible) then
-    -- already showing a dialog. bring it to front:
-    dialog:show()
-    return
-  end
-  
   local vb = renoise.ViewBuilder()
 
   local DEFAULT_DIALOG_MARGIN = renoise.ViewBuilder.DEFAULT_DIALOG_MARGIN
@@ -311,12 +283,12 @@ function show_remove_silence_dialog()
      max = 1, -- 0 Decibels using log scale
      value = 0,
      notifier = function(value)
-    real_treshold = math.pow(value,3)
-    if(real_treshold==0) then
-      text_db.text = "-INF"
-    else
-      text_db.text = string.format("%.2f",LinToDb(real_treshold))      
-    end
+       real_treshold = math.pow(value,3)
+       if (real_treshold == 0) then
+         text_db.text = "-INF dB"
+       else
+         text_db.text = string.format("%.2f dB", math.lin2db(real_treshold))      
+       end
      end
   }
   
@@ -325,7 +297,6 @@ function show_remove_silence_dialog()
   local row_db = vb:row {
     text_lbl_treshold,
     text_db,
-    text_lbl_db
   }
   
   local column_slider = vb:column {
@@ -375,9 +346,13 @@ function show_remove_silence_dialog()
   main_rack:add_child(row_time)
   main_rack:add_child(column_mode)
   
-  dialog = renoise.app():show_custom_prompt  (
+  local choice = renoise.app():show_custom_prompt  (
     "Delete Silence",
     main_rack,
-	{'Apply','Cancel'}
+    {'Apply','Cancel'}
   )
+  
+  if (choice == 'Apply') then
+    process_data()
+  end
 end
