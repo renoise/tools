@@ -11,7 +11,7 @@ require "renoise.http"
 
 local entry = {}
 
-entry.name = "Main Menu:Tools:Report A Bug..."
+entry.name = "Main Menu:Help:Report a Bug..."
 entry.active = function() return true end
 entry.invoke = function() start() end
 renoise.tool():add_menu_entry(entry)
@@ -44,6 +44,7 @@ local function submit(callback)
   local summary = vb.views.summary_textfield.text
   local description = vb.views.description_textfield.text
   local email = vb.views.email_textfield.text
+  local name = vb.views.name_textfield.text  
   local severe = vb.views.severe_checkbox.value
   local log = ""
 
@@ -54,7 +55,8 @@ local function submit(callback)
       summary=summary, 
       description=description, 
       severe=severe,
-      email=email      
+      email=email,
+      name=name
     },
     function( result, status, xhr )
       if (result.status == "OK") then      
@@ -76,21 +78,25 @@ function start()
   vb = renoise.ViewBuilder()
   
   local DEFAULT_MARGIN = renoise.ViewBuilder.DEFAULT_CONTROL_MARGIN  
-  local DEFAULT_SPACING = 5
+  local DEFAULT_SPACING = 5   
   
   local topic_group = vb:column {
     style = "group",
     margin = DEFAULT_MARGIN,      
     spacing = DEFAULT_SPACING,
-    
+    uniform = true,  
+      
+    vb:text {
+      text = "I think this bug is related to:",
+      font = "bold"
+    },
+
     vb:row {
       spacing = DEFAULT_SPACING,
-      
-      vb:text {
-        text = "I think this bug is related to"
-      },           
+      width = "100%",
       
       vb:popup {
+        width = 120,
         id = "topic_popup",
         items = { 
           "",
@@ -108,26 +114,26 @@ function start()
           "File I/O",
           "Plugin",
           "Scripts", 
-          "Something Else..."
+          "Something else..."
         },
         notifier = function(value) 
-          local item = vb.views.topic_popup.items[value]          
-          vb.views.other_topic_text.visible = (item =="Something Else...")
-          vb.views.other_topic_textfield.visible = (item =="Something Else...")
+          local last = #vb.views.topic_popup.items
+          vb.views.other_topic_text.visible = (value == last)
+          vb.views.other_topic_textfield.visible = (value == last)
         end        
+      },
+    
+      vb:text {
+        id = "other_topic_text",
+        text = "namely:",
+        visible = false,        
+      },
+      
+      vb:textfield {
+        id = "other_topic_textfield",
+        visible = false,
       }
-    },
-    
-    vb:text {
-      id = "other_topic_text",
-      text = "Namely:",
-      visible = false
-    },
-    
-    vb:textfield {
-      id = "other_topic_textfield",
-      visible = false
-    },
+    }
   }  
   
   local form_group = vb:column {      
@@ -176,6 +182,7 @@ function start()
       uniform = true,
 
     vb:row {
+      width = "100%",
       spacing = DEFAULT_SPACING,    
       
       vb:checkbox {
@@ -195,11 +202,19 @@ function start()
     },
     
     vb:text {
-      text = "(Optional) Keep me up-to-date on this e-mail address:"        
+      text = "(Optional) Keep me up-to-date about this bug:"        
+    },    
+
+    vb:textfield {
+      id = "name_textfield",         
+      width = "75%",
+      text = "name"
     },
       
     vb:textfield {
       id = "email_textfield",         
+      width = "75%",
+      text = "email"
     }
   }  
   
