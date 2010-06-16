@@ -110,12 +110,6 @@ end
 
 function show_add_silence_dialog() 
 
-  if (dialog and dialog.visible) then
-      -- already showing a dialog. bring it to front:
-      dialog:show()
-      return
-  end
-
   local vb = renoise.ViewBuilder()
 
   local DEFAULT_DIALOG_MARGIN = renoise.ViewBuilder.DEFAULT_DIALOG_MARGIN
@@ -163,22 +157,12 @@ function show_add_silence_dialog()
     spacing = DEFAULT_DIALOG_SPACING
   }
   
-  local button_process = vb:button {
-    text = "Apply",
-    tooltip = "Hit this button to add silence to the current sample.",
-    width = 140,
-    height = DEFAULT_DIALOG_BUTTON_HEIGHT,
-    notifier = function()
-      process_data()
-    end
-  }
-  
   main_rack:add_child(row_where)
   main_rack:add_child(row_time)
-  main_rack:add_child(button_process)
   
-  dialog = renoise.app():show_custom_dialog  (
+  dialog = renoise.app():show_custom_prompt  (
     "Add Silence",
-    main_rack
+    main_rack,
+	{'Apply','Cancel'}
   )
 end
