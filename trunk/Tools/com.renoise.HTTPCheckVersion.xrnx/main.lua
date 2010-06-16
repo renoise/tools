@@ -11,7 +11,7 @@ require "renoise.http"
 
 local entry = {}
 
-entry.name = "Main Menu:Tools:Check version..."
+entry.name = "Main Menu:Tools:Check Version..."
 entry.active = function() return true end
 entry.invoke = function() update_start() end
 renoise.tool():add_menu_entry(entry)
