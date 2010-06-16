@@ -9,7 +9,7 @@ local DEFAULT_SPACING = renoise.ViewBuilder.DEFAULT_CONTROL_SPACING
 
 local BUTTON_HEIGHT = renoise.ViewBuilder.DEFAULT_DIALOG_BUTTON_HEIGHT
 local BUTTON_WIDTH = 86
-local SEQUENCER_BUTTON_SIZE = 32
+local SEQUENCER_BUTTON_SIZE = 35
 local HELP_BUTTON_WIDTH = 10
 
 local POPUP_WIDTH = 2*BUTTON_WIDTH - 2*DEFAULT_MARGIN
@@ -188,19 +188,32 @@ function DrumPatternProcessor:on_update_sequencer()
 end
 
 function DrumPatternProcessor:build_effect_racks(builder)
-  return builder:column {
-    margin = DEFAULT_MARGIN,
+  -- main view is a column
+  local main_column = builder:column {  
     spacing = DEFAULT_SPACING,
-    builder:row {
-      spacing = DEFAULT_SPACING,
-      self.effects[1]:on_build_view(builder),
-      self.effects[2]:on_build_view(builder),
-      self.effects[3]:on_build_view(builder),
-      self.effects[4]:on_build_view(builder),
-      self.effects[5]:on_build_view(builder)
-    },
-    self:build_sequencer(builder)
   }
+
+  -- the add a new row with up to 3 modules each
+  local effect_row
+  for i = 1,#self.effects do
+    if (not effect_row or ((i - 1) % 3) == 0) then
+      effect_row = builder:row {
+        uniform = true,
+        spacing = DEFAULT_SPACING
+      }
+      main_column:add_child(effect_row)
+    end
+    effect_row:add_child(
+      self.effects[i]:on_build_view(builder)
+    )
+  end
+
+  -- put the sequencer below
+  main_column:add_child(
+    builder:space{ height = DEFAULT_SPACING }
+  )
+
+  return main_column
 end
 
 function DrumPatternProcessor:build_sequencer(builder)
@@ -696,33 +709,21 @@ function show_dialog()
   maindialog = renoise.app():show_custom_dialog(
     TOOL_NAME,
     vb:column {
+      uniform = true,
       margin = DEFAULT_MARGIN,
       spacing = DEFAULT_MARGIN,
-      uniform = true,
 
---[[
-      vb:row {
-        style = "group",
-        margin = DEFAULT_MARGIN,
-        spacing = DEFAULT_SPACING,  
-        vb:switch {
-          id = "switch",
-          width = 2 * DEFAULT_MARGIN
-            + (2 * DEFAULT_MARGIN + DEFAULT_CELL_WIDTH)
-            * #drum_processor.effects,
-          value = 1,
-          items = drum_processor:get_effects_name(),
-          notifier = function(new_index)
-            local switch = vb.views.switch
-            show_status(("switch value changed to '%s'"):
-              format(switch.items[new_index]))
-          end
-        }
-      },
-]]--      
+      vb:text { text = "Modules", font = "bold", align = "left" },
       drum_processor:build_effect_racks(vb),
-      
-      vb:row {
+     
+      vb:text { text = "Sequencer", font = "bold", align = "left" },
+      drum_processor:build_sequencer(vb),
+     
+      vb:text{ text = "Options", font = "bold", align = "left" },
+       
+      vb:horizontal_aligner {
+        mode = "justify",
+        
         vb:button {
           text = "Process",
           width = BUTTON_WIDTH,
@@ -735,8 +736,9 @@ function show_dialog()
         vb:button {
            text = "?",
            width = HELP_BUTTON_WIDTH,
+           height = BUTTON_HEIGHT,
            notifier = show_help
-        }
+        },
       }
     }
   )
