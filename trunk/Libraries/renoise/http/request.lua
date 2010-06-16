@@ -272,7 +272,7 @@ end
 function Request:create_query_string(data)
   local str = ""
   for k,v in pairs(data) do
-    str = str .. "&" .. k .. "=" .. v
+    str = str .. "&" .. k .. "=" .. tostring(v)
   end
   return Util:html_entity_encode(str:sub(2))
 end
@@ -404,10 +404,12 @@ function Request:read_content()
     
     if (socket_error == "timeout") then
       -- retry next time (TODO: give up at soume point)
+      self.text_status = Request.TIMEOUT
       log:info(string.format("read timeout (%s)", self.url))
       return true
     else
       -- cancel request
+      self.text_status = Request.ERROR
       self:do_callback(socket_error)
       return false
     end
