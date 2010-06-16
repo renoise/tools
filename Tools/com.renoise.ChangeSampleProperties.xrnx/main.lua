@@ -84,7 +84,7 @@ function open_sample_dialog(option)
          win_title = "Global sample properties (all instruments)"
       end
 
-      sample_dialog = renoise.app():show_custom_dialog(
+      sample_dialog = renoise.app():show_custom_prompt(
          win_title,
          vb:column {
             margin = DIALOG_MARGIN,
@@ -203,7 +203,8 @@ function open_sample_dialog(option)
                'Show/hide options that create unawarely subtile changes\nChanges that your are sure of to apply to *all* samples in *all* instruments','',
                function(value) toggle_safe_mode(value, vb) end,vb)
             }
-         }
+         },
+        {}
       )
       if option == 2 then
          vb.views.id_safe_text.visible = true
