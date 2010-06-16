@@ -53,6 +53,7 @@ local obj_valuebox = 7
 local obj_slider = 8 
 local obj_minislider = 9 
 local obj_textfield = 10 
+local obj_valuefield = 11 
 
 note_array = {}
 valid_notes = {
@@ -90,6 +91,7 @@ function open_sample_dialog(option)
             margin = DIALOG_MARGIN,
             spacing = 1,
             uniform = true,
+            id = 'dialog_content',
             vb:row {
                create_view(obj_checkbox,'',18,0,0,do_nna,'id6',
                'Set NNA for all samples in instrument(s)?','',
@@ -177,8 +179,36 @@ function open_sample_dialog(option)
                '','Amplify','',vb),
                create_view(obj_slider,'',140,0,4,1,'amplification_level',
                '','',function(value)slide_volume(vb, value)end,vb),
-               create_view(obj_textlabel,'',TEXT_ROW_WIDTH,0,0,'','db_value',
-               '',string.format('%.1f',LinToDb(1)),'',vb),
+               vb:valuefield {
+                id = 'db_value',
+                min = 0.0,
+                max = math.db2lin(12.1),
+                value = 1.0,
+      
+                tostring = function(value) 
+                  local db = math.lin2db(value)
+                  if db > math.infdb then
+                    return ("%.03f dB"):format(db)
+                  else
+                    return "-INF dB"
+                  end
+                end,
+      
+                tonumber = function(str) 
+                  if str:lower():find("-inf") then
+                    return 0.0
+                  else
+                    local db = tonumber(str)
+                    if (db ~= nil) then
+                      return math.db2lin(db)
+                    end
+                  end
+                end,
+                
+                notifier = function(value)
+                  vb.views.amplification_level.value = value
+                end
+              }
             },
             vb:row {
                create_view(obj_checkbox,'',18,0,0,do_panning,'dopanning',
@@ -188,8 +218,38 @@ function open_sample_dialog(option)
                '','Panning','',vb),
                create_view(obj_slider,'',140,-50,50,0,'panning_level','','',
                function(value) slide_panning(vb, value) end,vb),
-               create_view(obj_textlabel,'',TEXT_ROW_WIDTH,0,0,'','pan_value',
-               '',tostring(vb.views.panning_level.value),'',vb),
+                
+               vb:valuefield {
+                id = 'pan_value',
+                min = -50.2,
+                max = math.db2lin(50.2),
+                value = 1.0,
+      
+                tostring = function(value) 
+                  if value ~= 0 then
+                    if value < 0 then
+                      return ("%dL"):format(value)
+                    else
+                      return ("%dR"):format(value)
+                    end 
+                  else
+                    return "Center"
+                  end
+                end,
+      
+                tonumber = function(str) 
+                  if str:lower():find("center") then
+                    return 0.0
+                  else
+                    print(str:sub(1,str:len()-1))
+                    return tonumber(str:sub(1))
+                  end
+                end,
+                
+                notifier = function(value)
+                  vb.views.panning_level.value = tonumber(value)
+                end
+              }
             },
             vb:space{height = 3*CONTENT_SPACING},
             vb:row {
@@ -232,6 +292,7 @@ function toggle_safe_mode(value,vb)
   else
     disable_unsafe_options(vb)  
   end
+    vb.views.dialog_content:resize()
 end
 
 
@@ -286,26 +347,13 @@ end
 
 
 function slide_panning(vb, value)
-   local disp_val = string.format('%.0f',value)
-   if value == 0 then
-      disp_val = 'Center'
-   elseif value < 0 then
-      disp_val = disp_val .. 'L'
-   elseif value > 0 then
-      disp_val = disp_val .. 'R'
-   end
-   vb.views.pan_value.text = disp_val
+   vb.views.pan_value.value = value
    pan_val = value
 end
 
 
 function slide_volume(vb,value)
-   local disp_val = string.format('%.1f',LinToDb(value))
-   if tonumber(disp_val) <= -200 then
-      disp_val = '-INF'
-   end
-   disp_val = disp_val .. ' dB'
-   vb.views.db_value.text = disp_val
+   vb.views.db_value.value = value
    amp_val = value
 end
 
@@ -351,6 +399,10 @@ function create_view(type,palign,pwidth,pmin,pmax,pvalue, pid,ptooltip,ptext,pno
    end
    if type == obj_textfield then
       return vb:textfield{id = pid, width = pwidth, tooltip = ptooltip,
+         value = pvalue, notifier = pnotifier}
+   end
+   if type == obj_valuefield then
+      return vb:valuefield{id = pid, width = pwidth, tooltip = ptooltip,
          value = pvalue, notifier = pnotifier}
    end
 end
