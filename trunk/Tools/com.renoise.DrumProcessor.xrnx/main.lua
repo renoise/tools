@@ -316,6 +316,7 @@ class 'DrumPatternSlicer' (DrumPatternEffect)
 function DrumPatternSlicer:__init()
   DrumPatternEffect.__init(self, "Slice", 1, { 255, 0, 0 })
   self.random = true
+  self.offset = 0
 end
 
 function DrumPatternSlicer:on_process(pattern,
@@ -339,9 +340,11 @@ function DrumPatternSlicer:on_process(pattern,
     if line.note_columns[1].note_string ~= "---" then
       line.effect_columns[1].number_value = 0x09
       if self.random then
-        line.effect_columns[1].amount_value = math.random (0, 15) * 16
+        line.effect_columns[1].amount_value =
+          ((self.offset + math.random (0, 15)) % 16) * 16
       else
-        line.effect_columns[1].amount_value = (start_line / num_lines ) * 16
+        line.effect_columns[1].amount_value =
+          (((start_line + line_index) / num_lines + self.offset) % 16) * 16
       end
     end
   end
@@ -370,15 +373,15 @@ function DrumPatternSlicer:on_build_view(builder)
       width = DEFAULT_CELL_WIDTH,
       builder:text {
         width = TEXT_ROW_WIDTH,
-        text = "Example"
+        text = "Offset"
       },
       builder:slider {
         width = DEFAULT_CELL_WIDTH - TEXT_ROW_WIDTH,
-        min = 0.0,
-        max = 1.0,
-        value = 0.0,
+        min = 0,
+        max = 15,
+        value = 0,
         notifier = function(value)
-          self.random = value
+          self.offset = value
         end
       }
     }
@@ -639,10 +642,11 @@ function DrumPatternReversor:on_process(pattern,
       line.note_columns[1].volume_string = ".."
       line.note_columns[1].instrument_value = self.processor.instrument_index
     end
-    line.effect_columns[1].number_string = "B0"
+    line.effect_columns[1].number_string = "0B"
     line.effect_columns[1].amount_string = ".."
   elseif line_index == (num_lines - 1) then
-    line.effect_columns[1].number_string = "B1"
+    line.note_columns[1].note_string = self.processor.base_note
+    line.effect_columns[1].number_string = "1B"
     line.effect_columns[1].amount_string = ".."
   end
 end
