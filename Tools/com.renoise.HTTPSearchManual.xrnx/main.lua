@@ -11,7 +11,7 @@ require "renoise.http"
 
 local entry = {}
 
-entry.name = "Main Menu:Tools:Search Online Manual..."
+entry.name = "Main Menu:Help:Search Online Manual..."
 entry.active = function() return true end
 entry.invoke = function() search_start() end
 renoise.tool():add_menu_entry(entry)
