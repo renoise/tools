@@ -126,12 +126,13 @@ function start()
       vb:text {
         id = "other_topic_text",
         text = "namely:",
-        visible = false,        
+        visible = false,                
       },
       
       vb:textfield {
         id = "other_topic_textfield",
         visible = false,
+        width = 116,        
       }
     }
   }  
@@ -179,7 +180,7 @@ function start()
       style = "group",
       margin = DEFAULT_MARGIN,      
       spacing = DEFAULT_SPACING,
-      uniform = true,
+
 
     vb:row {
       width = "100%",
@@ -207,13 +208,13 @@ function start()
 
     vb:textfield {
       id = "name_textfield",         
-      width = "75%",
+      width = "50%",
       text = "name"
     },
       
     vb:textfield {
       id = "email_textfield",         
-      width = "75%",
+      width = "50%",
       text = "email"
     }
   }  
