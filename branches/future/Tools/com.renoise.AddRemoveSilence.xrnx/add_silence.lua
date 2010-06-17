@@ -8,11 +8,12 @@ local WHERE_BOTH = 3
 local int_where = WHERE_END
 local real_time = 1.0
 
-local dialog
+
+--[[ Locals ]]
 
 local function process_data()
 
-  if real_time == nil then 
+  if (real_time == nil) then 
     renoise.app():show_error("Invalid duration value!")
     return
   end
@@ -110,12 +111,6 @@ end
 
 function show_add_silence_dialog() 
 
-  if (dialog and dialog.visible) then
-      -- already showing a dialog. bring it to front:
-      dialog:show()
-      return
-  end
-
   local vb = renoise.ViewBuilder()
 
   local DEFAULT_DIALOG_MARGIN = renoise.ViewBuilder.DEFAULT_DIALOG_MARGIN
@@ -135,9 +130,7 @@ function show_add_silence_dialog()
         int_where = new_index
       end
     }
-  
   }
-
   
   local row_time = vb:row {
     vb:text {
@@ -157,28 +150,21 @@ function show_add_silence_dialog()
     }
   }
   
-  
   local main_rack = vb:column {
     margin = DEFAULT_DIALOG_MARGIN,
     spacing = DEFAULT_DIALOG_SPACING
   }
   
-  local button_process = vb:button {
-    text = "Apply",
-    tooltip = "Hit this button to add silence to the current sample.",
-    width = 140,
-    height = DEFAULT_DIALOG_BUTTON_HEIGHT,
-    notifier = function()
-      process_data()
-    end
-  }
-  
   main_rack:add_child(row_where)
   main_rack:add_child(row_time)
-  main_rack:add_child(button_process)
   
-  dialog = renoise.app():show_custom_dialog  (
+  local choice = renoise.app():show_custom_prompt (
     "Add Silence",
-    main_rack
+    main_rack,
+    {'Apply','Cancel'}
   )
+  
+  if (choice == 'Apply') then
+    process_data()
+  end
 end

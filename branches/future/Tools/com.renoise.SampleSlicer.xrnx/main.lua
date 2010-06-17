@@ -143,21 +143,7 @@ function show_dialog()
     }
   }
 
-  local button_row = vb:horizontal_aligner {
-    mode = "center",
-    
-    vb:button {
-      text = "Slice!",
-      tooltip = "Hit this button to automatically slice the current sample.",
-      width = 130,
-      height = DEFAULT_DIALOG_BUTTON_HEIGHT,
-      notifier = function()
-        slice_it()
-      end
-    }
-  }   
-  
-  local dialog = renoise.app():show_custom_dialog  (
+  local dialog = renoise.app():show_custom_prompt  (
     "Auto Slicer",
     vb:column{
       margin = DEFAULT_DIALOG_MARGIN,
@@ -166,10 +152,15 @@ function show_dialog()
       row2,
       row3,
       row4,
-      vb:space { },    
-      button_row  
-    }
+      vb:space { }
+	},
+	{'Slice!','Cancel'}
   )
+  
+	if dialog == 'Slice!' then
+		slice_it()
+	end
+
   
 end
 

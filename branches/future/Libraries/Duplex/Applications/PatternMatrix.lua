@@ -453,23 +453,10 @@ end
 function PatternMatrix:update_track_count() 
   TRACE("PatternMatrix:update_track_count")
 
-  -- figure out the number of pages
   local count = math.floor((#renoise.song().tracks-1)/self.width)
-  local offset = #renoise.song().tracks%self.width
-
-  -- page count has changed?
-  if(self.scroller.maximum~=count)then
-    -- current index is outside bounds?
-    if(self.scroller.maximum>count)then
-      self.scroller.maximum = count
-      self.scroller:set_index(count)
-    else
-      self.scroller:invalidate()
-    end
-  end
-  self.scroller.maximum = count
-
+  self.scroller:set_maximum(count)
 end
+
 
 --------------------------------------------------------------------------------
 
@@ -479,9 +466,10 @@ end
 function PatternMatrix:update_page_switcher()
   TRACE("PatternMatrix:update_page_switcher()")
 
-  self.switcher:set_index(self.__play_page,true)
+  local skip_event_handler = true
+  self.switcher:set_index(self.__play_page, skip_event_handler)
+  
   self.__edit_page = self.__play_page
-
 end
 
 
@@ -492,27 +480,11 @@ end
 
 function PatternMatrix:update_page_count()
 
-  local idx = self.switcher.index
   local seq_len = #renoise.song().sequencer.pattern_sequence
   local page_count = math.floor((seq_len-1)/self.height)
-
-  if((self.switcher.maximum==0) and (page_count>0))then
-    -- from single to multiple pages 
-    self.switcher:invalidate()
-  elseif((self.switcher.maximum>0) and (page_count==0))then
-    -- from multiple to single page  
-    self.switcher:invalidate()
-  --elseif 
-    -- sequence extended to more pages,
-    -- and we are inbetween
-
-  end
-  self.switcher.maximum = page_count
-  -- adjust the index, if the current position is out-of-bounds
-  if(self.switcher.index>page_count)then
-    self.switcher:set_index(page_count)
-  end
+  self.switcher:set_maximum(page_count)
 end
+
 
 --------------------------------------------------------------------------------
 

@@ -38,14 +38,23 @@ Planned / Todo
   o FX parameter Mixer (control currently selected FX)
 
 * Device control-panel: 
-  o set as standard settings / revert to...
-  o MIDIDevice: specify input port(s)
-  o save these settings with the song 
-  o select among available control-map layouts
-  o control custom setting (brightness, contrast)
-  o display descriptions form the controlmap in the Virtual UI (what is 
-    this, which preset is needed to use the device with Duplex)
-  o etc
+  o Small (optional) thumbnail for device
+  o Release/initialize device
+  o Select among available control-map layouts (obtain list by scanning folder)
+  o Display controlmap info (author, name, description) 
+  o Reload control-map
+  o Set control-map as standard (persistent setting)
+  o MIDIDevice: specify input port - only for devices that 
+    doesn't have a dedicated class (remember the chosen port)
+  o OSCDevice: specify the prefix (could be /renoise or /duplex always?)
+  o Advanced settings tab (i.e. control brightness, contrast) - expose these 
+    settings via generic "options" table in the device class
+
+* Application configuration panel:
+  o List the names of application groups, each with "choose" button that open
+    a slightly smaller version of the virtual UI for choosing the relevant
+    control and/or group
+  o List other options 
 
 * OSC Device / protocol support
 
@@ -60,8 +69,8 @@ Planned / Todo
     use of subtle shades for important features, to stay compatible with 
     e.g. the monochromatic ohm64)
   o It's always possible to customize/override the colors because they are 
-    token-based. Any UIComponent should present a list of colors (it's 
-    token-palette)
+    token-based. Any UIComponent should present a list of colors (the
+    "token-palette")
 
 * ControlMap: <Page> node, indicates that multiple pages with identical layout
   can be expected (useful for access to the full mapping/MIDI implementation 
@@ -71,12 +80,13 @@ Planned / Todo
   repeat values across pages?)
 
 * Display: z-index/stacking: methods like move_to_top, insert_above, 
-  insert_below
+  insert_below (this is "nice to have", not "need to have")
 
 * "Soft-validate" the control-map - warn when required elements are missing, 
   but ignore unknown ones
 
-* Display:clear(): should use hardware-specific feature if possible
+* Display:clear(): when a device is closed, call this function (should use 
+  some hardware-specific feature if possible)
 
 * Improve application performance by removing UIComponent listeners when
   application is stopped, and re-attach on startup. This will also help to
@@ -87,15 +97,6 @@ Planned / Todo
 Discuss
 --------------------------------------------------------------------------------
 
-* Application presets/mappings: for example, how to specify that the MixConsole
-  application needs to use certain control-map groups? 
-
-* Semantics for scripts (automatic detection of compatible scripts): 
-  o example of how a script could tell Duplex about it's requirements:
-    (>= 4 buttons AND >= 4 dials) OR (grid >= 2x4)
-  o The required controls could be grouped, so the user could select the group 
-    on a "dumped down" virtual control surface (custom mapping) 
-  
 * Ability to "discard" incoming messages after they have been processed (or 
   the could be note-on and cc messages all over the place). 
 

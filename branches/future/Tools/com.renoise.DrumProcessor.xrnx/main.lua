@@ -9,15 +9,17 @@ local DEFAULT_SPACING = renoise.ViewBuilder.DEFAULT_CONTROL_SPACING
 
 local BUTTON_HEIGHT = renoise.ViewBuilder.DEFAULT_DIALOG_BUTTON_HEIGHT
 local BUTTON_WIDTH = 86
-local SEQUENCER_BUTTON_SIZE = 32
+local SEQUENCER_BUTTON_SIZE = 38
 local HELP_BUTTON_WIDTH = 10
 
 local POPUP_WIDTH = 2*BUTTON_WIDTH - 2*DEFAULT_MARGIN
 
 local NOTE_WIDTH = 40
 local NUMBER_WIDTH = 30
-local DEFAULT_CELL_WIDTH = 180
-local TEXT_ROW_WIDTH = 66
+local DEFAULT_CELL_WIDTH = 196
+local TEXT_ROW_WIDTH = 76
+
+local OFF_COLOR = { 0, 0, 0 }
 
 
 --  locals
@@ -31,14 +33,34 @@ local function show_status(message)
   renoise.app():show_status(message); print(message)
 end
 
-local function keys(t)
-  local keytable = {}
-  for k,v in pairs(t) do table.insert(keytable, k) end
-  return keytable
+local function clamp(value, min, max)
+  return math.max(min, math.min(max, value))
+end
+
+local function note_number_to_string(num)
+  local note_names = {
+    "C-", "C#", "D-", "D#", "E-", "F-", "F#", "G-", "G#", "A-", "A#", "B" }
+  local note = num % 12
+  local octave = (num - note) / 12
+  return note_names[note + 1] .. octave
+end
+
+local function note_string_to_number(str)
+  local note_names = {
+    "C-", "C#", "D-", "D#", "E-", "F-", "F#", "G-", "G#", "A-", "A#", "B" }
+  local octave = 0 + string.sub(str, 3, 3)
+  local note = table.find(note_names, string.sub(str, 1, 2))
+  if note ~= nil then
+    return octave * 12 + (note - 1)
+  else
+    return -1
+  end
 end
 
 
 -- ============================================================
+
+-- menu entries
 
 renoise.tool():add_menu_entry {
   name = "Main Menu:Tools:Drum Processor...",
@@ -54,33 +76,46 @@ renoise.tool():add_menu_entry {
 
 class 'DrumPatternProcessor'
 
+--------------------------------------------------------------
 function DrumPatternProcessor:__init()
   self.effects = {}
+  self.sequencer = {}
+
+  self.pattern_index = 1
+  self.use_selected_pattern = true
+
   self.track_index = 1
+  self.use_selected_track = true
+
   self.instrument_index = 0
-  self.instrument_type = 0
+  self.use_selected_instrument = true
+
   self.base_note = "C-4"
   self.preserve_notes = false
+
   self.play_pos = 0
-  self.selected_fx = 0
-  self.sequencer = {}
+  self.selected_fx = 1
 
   self:set_divisions(16)
 end
 
+--------------------------------------------------------------
 function DrumPatternProcessor:add_effect(effect)
   effect:set_processor(self)
   table.insert(self.effects, effect)
 end
 
+--------------------------------------------------------------
 function DrumPatternProcessor:get_effect(index)
   return self.effects[index]
 end
 
+--------------------------------------------------------------
 function DrumPatternProcessor:get_effects(name)
   return self.effects
 end
 
+--------------------------------------------------------------
 function DrumPatternProcessor:get_effects_name()
   local names = {}
   for k,v in pairs(self.effects) do
@@ -89,6 +124,7 @@ function DrumPatternProcessor:get_effects_name()
   return names
 end
 
+--------------------------------------------------------------
 function DrumPatternProcessor:set_track_index(track_index)
   if (track_index >= 0 and track_index < #renoise.song().tracks) then
     local track = renoise.song().tracks[track_index]
@@ -101,8 +137,9 @@ function DrumPatternProcessor:set_track_index(track_index)
   end
 end
 
+--------------------------------------------------------------
 function DrumPatternProcessor:set_divisions(divisions)
-  if (divisions >= 1 and divisions < 32) then
+  if (divisions >= 1 and divisions <= 16) then
     self.divisions = divisions
     self:on_update_sequencer()
   else
@@ -110,20 +147,39 @@ function DrumPatternProcessor:set_divisions(divisions)
   end
 end
 
+--------------------------------------------------------------
 function DrumPatternProcessor:clear(track, pattern)
   renoise.song().patterns[pattern].tracks[track]:clear()
 end
 
+--------------------------------------------------------------
 function DrumPatternProcessor:process()
 
   local song = renoise.song()
+  
+  -- choose the pattern
+  local pattern = self.pattern_index
+  if self.use_selected_pattern then
+    pattern = song.selected_pattern_index
+  end
+  
+  -- choose the track
   local track = self.track_index
-  local pattern = song.selected_pattern_index
+  if self.use_selected_track then
+    track = song.selected_track_index
+  end
+
+  -- choose the instrument  
   local instrument = self.instrument_index
-  local type = self.instrument_type
+  if self.use_selected_instrument then
+    instrument = song.selected_instrument_index
+  end
+  
+  -- choose options
   local basenote = self.base_note
   local length = self.effect_length
-  
+
+  -- running values    
   local pos = 0
   local lines = song.patterns[pattern].number_of_lines
 
@@ -133,11 +189,12 @@ function DrumPatternProcessor:process()
   local fx = nil
   local currentfx = 0
   local currentfxindex = 0
-  
-  -- clear track (TODO: don't do it, let the effect handle this)
-  self:clear(pattern, track)
+
   -- reset sequencer position
   self.play_pos = 0
+
+  -- TODO: don't do it, let the effect handle this in order to allow "preserve_notes"
+  self:clear(pattern, track)
   
   --[[
   -- update visible columns
@@ -164,7 +221,7 @@ function DrumPatternProcessor:process()
     if fx ~= nil then
       fx:on_process(pattern,
                     track,
-                    instrument,
+                    instrument - 1,
                     (pos - currentfxindex) + 1,
                     max_ilength,
                     currentfxindex)
@@ -178,6 +235,7 @@ function DrumPatternProcessor:process()
   end
 end
 
+--------------------------------------------------------------
 function DrumPatternProcessor:on_update_sequencer()
   if #self.sequencer < self.divisions then
     local new_table_size = (self.divisions - #self.sequencer)
@@ -187,22 +245,37 @@ function DrumPatternProcessor:on_update_sequencer()
   end
 end
 
+--------------------------------------------------------------
 function DrumPatternProcessor:build_effect_racks(builder)
-  return builder:column {
-    margin = DEFAULT_MARGIN,
+  -- main view is a column
+  local main_column = builder:column {  
     spacing = DEFAULT_SPACING,
-    builder:row {
-      spacing = DEFAULT_SPACING,
-      self.effects[1]:on_build_view(builder),
-      self.effects[2]:on_build_view(builder),
-      self.effects[3]:on_build_view(builder),
-      self.effects[4]:on_build_view(builder),
-      self.effects[5]:on_build_view(builder)
-    },
-    self:build_sequencer(builder)
   }
+
+  -- the add a new row with up to 3 modules each
+  local effect_row
+  for i = 1,#self.effects do
+    if (not effect_row or ((i - 1) % 3) == 0) then
+      effect_row = builder:row {
+        uniform = true,
+        spacing = DEFAULT_SPACING
+      }
+      main_column:add_child(effect_row)
+    end
+    effect_row:add_child(
+      self.effects[i]:on_build_view(builder)
+    )
+  end
+
+  -- put the sequencer below
+  main_column:add_child(
+    builder:space{ height = DEFAULT_SPACING }
+  )
+
+  return main_column
 end
 
+--------------------------------------------------------------
 function DrumPatternProcessor:build_sequencer(builder)
   local seq_row = builder:row {
     style = "group",
@@ -215,11 +288,11 @@ function DrumPatternProcessor:build_sequencer(builder)
         id = "__SEQ__" .. numstep,
         width = SEQUENCER_BUTTON_SIZE,
         height = SEQUENCER_BUTTON_SIZE,
-        color = {0, 0, 0},
+        color = OFF_COLOR,
         notifier = function ()
           local button = builder.views["__SEQ__" .. numstep]
           if self.selected_fx == 0 or self.sequencer[numstep] == self.selected_fx then
-            button.color = { 0, 0, 0 }
+            button.color = OFF_COLOR
             self.sequencer[numstep] = 0
           else
             button.color = self.effects[self.selected_fx].color
@@ -232,10 +305,71 @@ function DrumPatternProcessor:build_sequencer(builder)
   return seq_row
 end
 
+--------------------------------------------------------------
+function DrumPatternProcessor:build_options(builder)
+  local main_column = builder:column {  
+    style = "group",
+    spacing = DEFAULT_SPACING,
+    margin = DEFAULT_MARGIN,
+    uniform = true,
+
+    builder:row {
+      width = DEFAULT_CELL_WIDTH,
+      builder:text {
+        width = TEXT_ROW_WIDTH,
+        text = "Base note"
+      },
+      builder:valuebox {
+        --width = BUTTON_WIDTH,
+        min = 0,
+        max = 119,
+        value = note_string_to_number(self.base_note),
+        tostring = function(num)
+          return note_number_to_string(num)
+        end,
+        tonumber = function(str)
+          return note_string_to_number(str)
+        end,
+        notifier = function(value)
+          self.base_note = note_number_to_string(value)
+        end,
+      }
+    },
+
+    --[[
+    builder:row {
+      width = DEFAULT_CELL_WIDTH,
+      builder:text {
+        width = TEXT_ROW_WIDTH,
+        text = "Instrument"
+      },
+      builder:valuebox {
+        --width = BUTTON_WIDTH,
+        min = 0,
+        max = 255,
+        value = note_string_to_number(self.base_note),
+        tostring = function(num)
+          return note_number_to_string(num)
+        end,
+        tonumber = function(str)
+          return note_string_to_number(str)
+        end,
+        notifier = function(value)
+          self.base_note = note_number_to_string(value)
+        end,
+      }
+    }
+    ]]--
+  }
+  return main_column
+end
+
+
 -- ============================================================
 
 class 'DrumPatternEffect'
 
+--------------------------------------------------------------
 function DrumPatternEffect:__init(name, column, color)
   self.name = name
   self.column = column
@@ -243,10 +377,17 @@ function DrumPatternEffect:__init(name, column, color)
   self.color = color
 end
 
+--------------------------------------------------------------
 function DrumPatternEffect:set_processor(processor)
   self.processor = processor
 end
 
+--------------------------------------------------------------
+function DrumPatternEffect:get_processor()
+  return self.processor
+end
+
+--------------------------------------------------------------
 function DrumPatternEffect:reset_notes_for_line(line)
   if not self.processor.preserve_notes then
     for _,col in pairs(line.note_columns) do
@@ -257,6 +398,7 @@ function DrumPatternEffect:reset_notes_for_line(line)
   end
 end
 
+--------------------------------------------------------------
 function DrumPatternEffect:reset_effects_for_line(line)
   for _,col in pairs(line.effect_columns) do
     col.number_string = ".."
@@ -264,41 +406,70 @@ function DrumPatternEffect:reset_effects_for_line(line)
   end
 end
 
+--------------------------------------------------------------
 function DrumPatternEffect:reset_effect_in_column(line, col)
   line.effect_columns[col].number_string = ".."
   line.effect_columns[col].amount_string = ".."  
 end
 
+--------------------------------------------------------------
 function DrumPatternEffect:build_default_controls(builder)
+  local default_color = OFF_COLOR
+  local default_text = ""
+  
+  if self.processor.selected_fx == self.column then
+    default_color = self.color
+    default_text = ""
+  end
+  
+  return builder:column {
+    builder:row {
+      width = DEFAULT_CELL_WIDTH,
+      builder:text { width = TEXT_ROW_WIDTH, text = self.name, font = "bold", align = "left" },
+      builder:button {
+        width = DEFAULT_CELL_WIDTH - TEXT_ROW_WIDTH,
+        id = "__FXBUTTON__" .. self.column,
+        text = default_text,
+        color = default_color,
+        notifier = function()
+          for view = 1,#self.processor.effects do
+            local button_name = "__FXBUTTON__" .. view
+            builder.views[button_name].color = OFF_COLOR
+            builder.views[button_name].text = ""
+          end
+          if self.processor.selected_fx == self.column then
+            self.processor.selected_fx = 0
+          else
+            local button_name = "__FXBUTTON__" .. self.column
+            builder.views[button_name].color = self.color
+            builder.views[button_name].text = ""
+            self.processor.selected_fx = self.column
+          end
+        end
+      }
+    },
+    builder:space { height = 3 * DEFAULT_SPACING }
+  }
+end
+
+--------------------------------------------------------------
+function DrumPatternEffect:build_parameter_row(builder, name, control)
   return builder:row {
     width = DEFAULT_CELL_WIDTH,
     builder:text {
       width = TEXT_ROW_WIDTH,
-      text = self.name
+      text = name
     },
-    builder:button {
-      width = DEFAULT_CELL_WIDTH - TEXT_ROW_WIDTH,
-      id = "__FXBUTTON__" .. self.column,
-      notifier = function()
-        local button = builder.views["__FXBUTTON__" .. self.column]
-        for view = 1,#self.processor.effects do
-          builder.views["__FXBUTTON__" .. view].color = { 0, 0, 0 }
-        end
-        if self.processor.selected_fx == self.column then
-          self.processor.selected_fx = 0
-        else
-          self.processor.selected_fx = self.column
-          button.color = self.color
-        end
-      end
-    }
+    control
   }
 end
 
+--------------------------------------------------------------
 function DrumPatternEffect:on_build_view(builder)
   assert(false) -- cannot use this directly !
 end
 
+--------------------------------------------------------------
 function DrumPatternEffect:on_process(pattern,
                                       track,
                                       instrument,
@@ -313,11 +484,17 @@ end
 
 class 'DrumPatternSlicer' (DrumPatternEffect)
 
+--------------------------------------------------------------
 function DrumPatternSlicer:__init()
   DrumPatternEffect.__init(self, "Slice", 1, { 255, 0, 0 })
-  self.random = true
+  self.random = false
+  self.offset = 0
+  self.compression = 0.0
+  self.beat_reset = 8
+  self.quantize = true
 end
 
+--------------------------------------------------------------
 function DrumPatternSlicer:on_process(pattern,
                                       track,
                                       instrument,
@@ -326,63 +503,87 @@ function DrumPatternSlicer:on_process(pattern,
                                       line_index)
 
   local line = renoise.song().patterns[pattern].tracks[track].lines[start_line + line_index]
+  local processor = self:get_processor()
 
   self:reset_notes_for_line(line)
   self:reset_effect_in_column(line, 1)
   
   if line_index == 0 then
-    if not self.processor.preserve_notes then
-      line.note_columns[1].note_string = self.processor.base_note
+    if not processor.preserve_notes then
+      line.note_columns[1].note_string = processor.base_note
       line.note_columns[1].volume_string = ".."
-      line.note_columns[1].instrument_value = self.processor.instrument_index
+      line.note_columns[1].instrument_value = instrument
     end
     if line.note_columns[1].note_string ~= "---" then
       line.effect_columns[1].number_value = 0x09
-      if self.random then
-        line.effect_columns[1].amount_value = math.random (0, 15) * 16
+
+      local line_offset = start_line / num_lines % self.beat_reset
+      local slice = line_offset
+
+      if self.quantize then
+        slice = ((math.floor(slice * (1.0 + self.compression * 2.0)) % 16) + self.offset) * 16
       else
-        line.effect_columns[1].amount_value = (start_line / num_lines ) * 16
+        slice = (math.floor(slice * (1.0 + self.compression * 15.0)) % 255) + self.offset
       end
+
+      line.effect_columns[1].amount_value = clamp(slice, 0, 255)
     end
   end
 end
 
+--------------------------------------------------------------
 function DrumPatternSlicer:on_build_view(builder)
   return builder:column {
     style = "group",
     margin = DEFAULT_MARGIN,
     uniform = true,
+    
     self:build_default_controls(builder),
-    builder:row {
-      width = DEFAULT_CELL_WIDTH,
-      builder:text {
-        width = TEXT_ROW_WIDTH,
-        text = "Random"
-      },
-      builder:checkbox {
-        value = self.random,
+
+    self:build_parameter_row(builder,
+      "Offset", builder:valuebox {
+        --width = BUTTON_WIDTH,
+        min = 0,
+        max = 15,
+        value = self.offset,
         notifier = function(value)
-          self.random = value
+          self.offset = value
         end
       }
-    },
-    builder:row {
-      width = DEFAULT_CELL_WIDTH,
-      builder:text {
-        width = TEXT_ROW_WIDTH,
-        text = "Example"
-      },
-      builder:slider {
-        width = DEFAULT_CELL_WIDTH - TEXT_ROW_WIDTH,
+    ),
+
+    self:build_parameter_row(builder,
+      "Reset Beat", builder:valuebox {
+        --width = BUTTON_WIDTH,
+        min = 1,
+        max = 16,
+        value = self.beat_reset,
+        notifier = function(value)
+          self.beat_reset = value
+        end
+      }
+    ),
+    
+    self:build_parameter_row(builder,
+      "Compression", builder:slider {
+        --width = DEFAULT_CELL_WIDTH - TEXT_ROW_WIDTH,
         min = 0.0,
         max = 1.0,
-        value = 0.0,
+        value = self.compression,
         notifier = function(value)
-          self.random = value
+          self.compression = value
         end
       }
-    }
+    ),
 
+    self:build_parameter_row(builder,
+      "Quantize", builder:checkbox {
+        value = self.quantize,
+        notifier = function(value)
+          self.quantize = value
+        end
+      }
+    )
   }
 end
 
@@ -391,12 +592,15 @@ end
 
 class 'DrumPatternRepeater' (DrumPatternEffect)
 
+--------------------------------------------------------------
 function DrumPatternRepeater:__init()
   DrumPatternEffect.__init(self, "Repeat", 2, { 0, 255, 0 })
-  self.time = "0"
-  self.repeats = "0"
+  self.random = false
+  self.time = 0
+  self.repeats = 4
 end
 
+--------------------------------------------------------------
 function DrumPatternRepeater:on_process(pattern,
                                         track,
                                         instrument,
@@ -405,72 +609,74 @@ function DrumPatternRepeater:on_process(pattern,
                                         line_index)
  
   local line = renoise.song().patterns[pattern].tracks[track].lines[start_line + line_index]
-
-  if not self.processor.preserve_notes then
+  local processor = self:get_processor()
+  
+  if not processor.preserve_notes then
     self:reset_notes_for_line(line)
     self:reset_effect_in_column(line, 1)
     
-    line.note_columns[1].note_string = self.processor.base_note
+    line.note_columns[1].note_string = processor.base_note
     line.note_columns[1].volume_string = ".."
-    line.note_columns[1].instrument_value = self.processor.instrument_index
+    line.note_columns[1].instrument_value = instrument
   end
   if line.note_columns[1].note_string ~= "---" then
+    local repeats = self.repeats
+    local time = self.time
+
+    if self.random then
+      time = math.random(0, 15)
+      repeats = math.random(0, 15)
+    end
+    
+    time = string.format("%x", time)
+    repeats = string.format("%x", repeats)
+    
     line.effect_columns[1].number_string = "0E"
-    line.effect_columns[1].amount_string = self.time .. self.repeats
+    line.effect_columns[1].amount_string = time .. repeats
   end
 end
 
+--------------------------------------------------------------
 function DrumPatternRepeater:on_build_view(builder)
   return builder:column {
     style = "group",
     margin = DEFAULT_MARGIN,
     uniform = true,
+
     self:build_default_controls(builder),
-    builder:row {
-      width = DEFAULT_CELL_WIDTH,
-      builder:text {
-        width = TEXT_ROW_WIDTH,
-        text = "Random"
-      }, 
-      builder:checkbox {
+
+    self:build_parameter_row(builder,
+      "Random", builder:checkbox {
         value = self.random,
         notifier = function(value)
           self.random = value
         end
       }
-    },
-    builder:row {
-      width = DEFAULT_CELL_WIDTH,
-      builder:text {
-        width = TEXT_ROW_WIDTH,
-        text = "Time"
-      },
-      builder:valuebox {
-        width = BUTTON_WIDTH,
+    ),
+    
+    self:build_parameter_row(builder,
+      "Time", builder:valuebox {
+        --width = BUTTON_WIDTH,
         min = 0,
         max = 15,
-        value = 0,
+        value = self.time,
         notifier = function(value)
-          self.time = string.format("%x", value)
+          self.time = value
         end
       }
-    },
-    builder:row {
-      width = DEFAULT_CELL_WIDTH,
-      builder:text {
-        width = TEXT_ROW_WIDTH,
-        text = "Repeat"
-      },
-      builder:valuebox {
-        width = BUTTON_WIDTH,
+    ),
+    
+    self:build_parameter_row(builder,
+      "Repeat", builder:valuebox {
+        --width = BUTTON_WIDTH,
         min = 0,
         max = 15,
-        value = 0,
+        value = self.repeats,
         notifier = function(value)
-          self.repeats = string.format("%x", value)
+          self.repeats = value
         end
       }
-    }
+    )
   }
 end
 
@@ -483,6 +689,7 @@ function DrumPatternArpeggiator:__init()
   DrumPatternEffect.__init(self, "Arpeggiate", 3, { 0, 0, 255 })
 end
 
+--------------------------------------------------------------
 function DrumPatternArpeggiator:on_process(pattern,
                                            track,
                                            instrument,
@@ -491,14 +698,15 @@ function DrumPatternArpeggiator:on_process(pattern,
                                            line_index)
                                       
   local line = renoise.song().patterns[pattern].tracks[track].lines[start_line + line_index]
+  local processor = self:get_processor()
 
   self:reset_notes_for_line(line)
   self:reset_effect_in_column(line, 1)
   
-  if not self.processor.preserve_notes then
-    line.note_columns[1].note_string = self.processor.base_note
+  if not processor.preserve_notes then
+    line.note_columns[1].note_string = processor.base_note
     line.note_columns[1].volume_string = ".."
-    line.note_columns[1].instrument_value = self.processor.instrument_index
+    line.note_columns[1].instrument_value = instrument
   end
   if line.note_columns[1].note_string ~= "---" then
     line.effect_columns[1].number_string = "00"
@@ -506,11 +714,13 @@ function DrumPatternArpeggiator:on_process(pattern,
   end
 end
 
+--------------------------------------------------------------
 function DrumPatternArpeggiator:on_build_view(builder)
   return builder:column {
     style = "group",
     margin = DEFAULT_MARGIN,
     uniform = true,
+    
     self:build_default_controls(builder)
   }
 end
@@ -526,6 +736,7 @@ function DrumPatternPitcher:__init()
   self.increment = 1.0
 end
 
+--------------------------------------------------------------
 function DrumPatternPitcher:on_process(pattern,
                                        track,
                                        instrument,
@@ -534,6 +745,7 @@ function DrumPatternPitcher:on_process(pattern,
                                        line_index)
 
   local line = renoise.song().patterns[pattern].tracks[track].lines[start_line + line_index]
+  local processor = self:get_processor()
 
   local direction = "01"
   if self.direction == 2 then
@@ -544,10 +756,10 @@ function DrumPatternPitcher:on_process(pattern,
   self:reset_effect_in_column(line, 1)
   
   if line_index == 0 then
-    if not self.processor.preserve_notes then
-      line.note_columns[1].note_string = self.processor.base_note
+    if not processor.preserve_notes then
+      line.note_columns[1].note_string = processor.base_note
       line.note_columns[1].volume_string = ".."
-      line.note_columns[1].instrument_value = self.processor.instrument_index
+      line.note_columns[1].instrument_value = instrument
     end
   end
   line.effect_columns[1].number_string = direction 
@@ -555,35 +767,29 @@ function DrumPatternPitcher:on_process(pattern,
   -- print ("processing " .. self.name .. " > " .. line_index .. " (" .. (start_line + line_index) .. ")")
 end
 
+--------------------------------------------------------------
 function DrumPatternPitcher:on_build_view(builder)
   return builder:column {
     style = "group",
     margin = DEFAULT_MARGIN,
     uniform = true,
+    
     self:build_default_controls(builder),
-    builder:row {
-      width = DEFAULT_CELL_WIDTH,
-      builder:text {
-        width = TEXT_ROW_WIDTH,
-        text = "Direction"
-      },
-      builder:popup {
-        width = BUTTON_WIDTH,
+    
+    self:build_parameter_row(builder,
+      "Direction", builder:popup {
+        --width = BUTTON_WIDTH,
         value = self.direction,
         items = {"Up", "Down"},
         notifier = function(new_index)
           self.direction = new_index
         end
       }
-    },
-    builder:row {
-      width = DEFAULT_CELL_WIDTH,
-      builder:text {
-        width = TEXT_ROW_WIDTH,
-        text = "Amount"
-      },
-      builder:valuebox {
-        width = BUTTON_WIDTH,
+    ),
+    
+    self:build_parameter_row(builder,
+      "Amount", builder:valuebox {
+        --width = BUTTON_WIDTH,
         min = 1,
         max = 64,
         value = self.amount,
@@ -591,15 +797,11 @@ function DrumPatternPitcher:on_build_view(builder)
           self.amount = value
         end
       }
-    },
-    builder:row {
-      width = DEFAULT_CELL_WIDTH,
-      builder:text {
-        width = TEXT_ROW_WIDTH,
-        text = "Increment"
-      },
-      builder:slider {
-        width = DEFAULT_CELL_WIDTH - TEXT_ROW_WIDTH,
+    ),
+    
+    self:build_parameter_row(builder,
+      "Increment", builder:slider {
+        --width = DEFAULT_CELL_WIDTH - TEXT_ROW_WIDTH,
         min = 1.0,
         max = 4.0,
         value = self.increment,
@@ -607,8 +809,7 @@ function DrumPatternPitcher:on_build_view(builder)
           self.increment = value
         end
       }
-    }
-
+    )
   }
 end
 
@@ -617,10 +818,12 @@ end
 
 class 'DrumPatternReversor' (DrumPatternEffect)
 
+--------------------------------------------------------------
 function DrumPatternReversor:__init()
   DrumPatternEffect.__init(self, "Reverse", 5, { 255, 255, 0 })
 end
 
+--------------------------------------------------------------
 function DrumPatternReversor:on_process(pattern,
                                         track,
                                         instrument,
@@ -629,29 +832,84 @@ function DrumPatternReversor:on_process(pattern,
                                         line_index)
 
   local line = renoise.song().patterns[pattern].tracks[track].lines[start_line + line_index]
+  local processor = self:get_processor()
 
   self:reset_notes_for_line(line)
   self:reset_effect_in_column(line, 1)
   
   if line_index == 0 then
-    if not self.processor.preserve_notes then
-      line.note_columns[1].note_string = self.processor.base_note
+    if not processor.preserve_notes then
+      line.note_columns[1].note_string = processor.base_note
       line.note_columns[1].volume_string = ".."
-      line.note_columns[1].instrument_value = self.processor.instrument_index
+      line.note_columns[1].instrument_value = instrument
     end
-    line.effect_columns[1].number_string = "B0"
+    line.effect_columns[1].number_string = "0B"
     line.effect_columns[1].amount_string = ".."
   elseif line_index == (num_lines - 1) then
-    line.effect_columns[1].number_string = "B1"
+    line.note_columns[1].note_string = processor.base_note
+    line.note_columns[1].volume_string = ".."
+    line.note_columns[1].instrument_value = instrument
+    line.effect_columns[1].number_string = "1B"
     line.effect_columns[1].amount_string = ".."
   end
 end
 
+--------------------------------------------------------------
 function DrumPatternReversor:on_build_view(builder)
   return builder:column {
     style = "group",
     margin = DEFAULT_MARGIN,
     uniform = true,
+    
+    self:build_default_controls(builder)
+  }
+end
+
+
+-- ============================================================
+
+class 'DrumPatternRandomic' (DrumPatternEffect)
+
+--------------------------------------------------------------
+function DrumPatternRandomic:__init()
+  DrumPatternEffect.__init(self, "Random", 6, { 205, 155, 55 })
+  self.last_effect = 0
+  self.effect = nil
+end
+
+--------------------------------------------------------------
+function DrumPatternRandomic:on_process(pattern,
+                                        track,
+                                        instrument,
+                                        start_line,
+                                        num_lines,
+                                        line_index)
+
+  local processor = self:get_processor()
+
+  if line_index == 0 then
+    self.last_effect = math.random(0, #processor:get_effects())
+  end
+
+  local effect = processor:get_effects()[self.last_effect]
+  
+  if effect ~= nil then
+    effect:on_process(pattern,
+                      track,
+                      instrument,
+                      start_line,
+                      num_lines,
+                      line_index)
+  end
+end
+
+--------------------------------------------------------------
+function DrumPatternRandomic:on_build_view(builder)
+  return builder:column {
+    style = "group",
+    margin = DEFAULT_MARGIN,
+    uniform = true,
+    
     self:build_default_controls(builder)
   }
 end
@@ -676,11 +934,13 @@ function show_dialog()
   -- the real thang
   
   local drum_processor = DrumPatternProcessor()
+  
   drum_processor:add_effect(DrumPatternSlicer())
   drum_processor:add_effect(DrumPatternRepeater())
   drum_processor:add_effect(DrumPatternArpeggiator())
   drum_processor:add_effect(DrumPatternPitcher())
   drum_processor:add_effect(DrumPatternReversor())
+  drum_processor:add_effect(DrumPatternRandomic())
   
   drum_processor:set_track_index(1)
   drum_processor:set_divisions(16)
@@ -692,33 +952,24 @@ function show_dialog()
   maindialog = renoise.app():show_custom_dialog(
     TOOL_NAME,
     vb:column {
+      uniform = true,
       margin = DEFAULT_MARGIN,
       spacing = DEFAULT_MARGIN,
-      uniform = true,
 
---[[
-      vb:row {
-        style = "group",
-        margin = DEFAULT_MARGIN,
-        spacing = DEFAULT_SPACING,  
-        vb:switch {
-          id = "switch",
-          width = 2 * DEFAULT_MARGIN
-            + (2 * DEFAULT_MARGIN + DEFAULT_CELL_WIDTH)
-            * #drum_processor.effects,
-          value = 1,
-          items = drum_processor:get_effects_name(),
-          notifier = function(new_index)
-            local switch = vb.views.switch
-            show_status(("switch value changed to '%s'"):
-              format(switch.items[new_index]))
-          end
-        }
-      },
-]]--      
+      vb:text { text = "Modules", font = "bold", align = "left" },
       drum_processor:build_effect_racks(vb),
+     
+      vb:text { text = "Sequencer", font = "bold", align = "left" },
+      drum_processor:build_sequencer(vb),
+     
+      vb:text{ text = "Options", font = "bold", align = "left" },
+      drum_processor:build_options(vb),
       
-      vb:row {
+      vb:space{ height = 2 * DEFAULT_MARGIN },
+      
+      vb:horizontal_aligner {
+        mode = "justify",
+        
         vb:button {
           text = "Process",
           width = BUTTON_WIDTH,
@@ -731,8 +982,9 @@ function show_dialog()
         vb:button {
            text = "?",
            width = HELP_BUTTON_WIDTH,
+           height = BUTTON_HEIGHT,
            notifier = show_help
-        }
+        },
       }
     }
   )
