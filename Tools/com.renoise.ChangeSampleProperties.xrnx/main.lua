@@ -223,7 +223,7 @@ function open_sample_dialog(option)
                 id = 'pan_value',
                 min = -50.2,
                 max = math.db2lin(50.2),
-                value = 1.0,
+                value = 0.0,
       
                 tostring = function(value) 
                   if value ~= 0 then
@@ -266,7 +266,7 @@ function open_sample_dialog(option)
          },
         {}
       )
-      if option == 2 then
+      if option == OPTION_CHANGE_ALL then
          vb.views.id_safe_text.visible = true
          vb.views.id_safe_mode.visible = true
 
