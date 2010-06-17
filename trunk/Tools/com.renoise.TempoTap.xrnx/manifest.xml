@@ -4,7 +4,7 @@
   <Id>com.renoise.TempoTap</Id>
   <Version>0.2</Version>
   <Name>Tempo Tap</Name>
-  <Author>marvin [marvin@renoise.com]</Author>
+  <Author>bantai [marvin@renoise.com]</Author>
   <Description>Sets or finds a new BPM vaue by tapping the beat on a really big button. Adds a new context menu entry 'Tempo Tap' to the 'Tools' menu.</Description>
   <Category>Song</Category>
   <Homepage>http://scripts.renoise.com</Homepage>
