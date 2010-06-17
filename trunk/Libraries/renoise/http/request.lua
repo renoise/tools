@@ -254,8 +254,9 @@ function Request:enqueue()
     end
   else
     self.text_status = Request.ERROR
-    log:error(("%s failed: %s."):format(url,
+    log:error(("%s failed: %s."):format(self.url,
       (socket_error or "[unknown error]")))
+    self:do_callback()  
   end
 end
 
@@ -417,6 +418,33 @@ function Request:read_content()
 end
 
 
+---## decode ##---
+-- Processes data in a different data type
+ -- TODO process more data_types 
+function Request:decode(data)
+  local error = nil  
+  local data_type = self.settings.data_type:lower()
+  if (data_type == "json") then
+    log:info("Decoding JSON")
+    local succeeded, result = pcall(json.decode, data:concat())
+    if (succeeded) then
+      data = result
+    else
+      error = result
+    end    
+  elseif (data_type == "osc") then
+  elseif (data_type == "lua_array") then
+  elseif (data_type == "xml") then
+    -- parse XML into table
+  elseif (data_type == "lua") then
+    -- evaluate Lua
+  elseif (data_type == "html") then
+    -- parse HTML to text+layout
+  end
+  return data, error
+end
+
+
 ---## do_callback ##---
 -- Finalizes the transaction and executes the optional callback functions
 function Request:do_callback(socket_error)
@@ -464,26 +492,21 @@ function Request:do_callback(socket_error)
   self.client_socket = nil
   self.response_header = nil
   
-  -- TODO process more data_types
-  local data = self.contents
-  local data_type = self.settings.data_type:lower()
-  if (data_type == "json") then
-    log:info("Decoding JSON")
-    data = json.decode(data:concat())
-  elseif (data_type == "osc") then
-  elseif (data_type == "lua_array") then
-  elseif (data_type == "xml") then
-    -- parse XML into table
-  elseif (data_type == "lua") then
-    -- evaluate Lua
-  elseif (data_type == "html") then
-    -- parse HTML to text+layout
+  -- Decode data of non-plain datatypes
+  local data = self.contents 
+  local parser_error = nil
+  if (self.length > -1) then
+    data, parser_error = self:decode(data)
+    if (parser_error) then 
+      self.text_status = Request.PARSERERROR 
+    end
   end
   
   local xml_http_request = self;
 
   -- invoke the external callbacks (if set)
-  if (socket_error) then
+  if (socket_error or parser_error) then
+    -- TODO more errors
     self.settings.error( xml_http_request, self.text_status, socket_error)
   else
     self.settings.success( data, self.text_status, xml_http_request )
