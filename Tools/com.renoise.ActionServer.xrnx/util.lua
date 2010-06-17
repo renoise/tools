@@ -5,10 +5,6 @@ require "url"
 
 class 'Util'
 
-function Util:song()
-  return renoise.song()
-end
-
 function Util:split_lines(str)
   local t = {}
   local function helper(line) table.insert(t, line) return "" end
