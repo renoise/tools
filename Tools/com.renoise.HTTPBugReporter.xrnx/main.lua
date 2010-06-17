@@ -48,7 +48,7 @@ local function submit(callback)
   local severe = vb.views.severe_checkbox.value
   local log = ""
 
-  HTTP:post("http://www.renoise.com/bugs/index.php",
+  HTTP:post("http://wwew.renoise.com/bugs/index.php",
     { 
       action="submit", 
       topic=topic, 
@@ -202,20 +202,36 @@ function start()
       },        
     },
     
-    vb:text {
-      text = "(Optional) Keep me up-to-date about this bug:"        
-    },    
-
-    vb:textfield {
-      id = "name_textfield",         
-      width = "50%",
-      text = "name"
-    },
+    vb:row {
+    
+      vb:checkbox {
+        id = "subscribe_checkbox",
+        notifier = function(value)
+           vb.views.subscribe_column.visible = value
+           vb.views.subscribe_column:resize()
+        end
+      },
       
-    vb:textfield {
-      id = "email_textfield",         
-      width = "50%",
-      text = "email"
+      vb:text {
+        text = "Keep me up-to-date about this bug"        
+      },    
+    },
+    
+    vb:column {
+      id="subscribe_column",
+      visible = false,
+
+      vb:textfield {
+        id = "name_textfield",         
+        width = 150,
+        text = "name",     
+      },
+        
+      vb:textfield {
+        id = "email_textfield",         
+        width = 150,
+        text = "email",       
+      }
     }
   }  
   

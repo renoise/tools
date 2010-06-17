@@ -37,7 +37,6 @@ local function no_results(str)
    )
 end
 
-
 local function autocomplete(str, callback)
   local my_callback = callback or function(data) rprint(data) end
   if (#str ~= 1 and (#str == 0 or no_results(str))) then
@@ -68,6 +67,7 @@ end
 
 
 local function show_results(data)
+  data = data or ""
   local len = #data
   vb.views.results_chooser.items = {"",""}
   if (len == 0) then
