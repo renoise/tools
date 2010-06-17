@@ -5,7 +5,28 @@
 -- Homepage: http://json.luaforge.net/
 -- Version: 0.9.30
 -- This module is released under the MIT Consortium License (MIT).
--- Please see LICENSE.txt for details.
+--
+-- The MIT License
+--
+-- Copyright (c) 2009 Craig Mason-Jones
+-- 
+-- Permission is hereby granted, free of charge, to any person obtaining a copy
+-- of this software and associated documentation files (the "Software"), to deal
+-- in the Software without restriction, including without limitation the rights
+-- to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+-- copies of the Software, and to permit persons to whom the Software is
+-- furnished to do so, subject to the following conditions:
+-- 
+-- The above copyright notice and this permission notice shall be included in
+-- all copies or substantial portions of the Software.
+-- 
+-- THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+-- IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+-- FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+-- AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+-- LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+-- OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+-- THE SOFTWARE.
 --
 -- USAGE:
 -- This module exposes two functions:
@@ -20,7 +41,7 @@
 -- CHANGELOG
 --   0.9.20 Introduction of local Lua functions for private functions (removed _ function prefix). 
 --          Fixed Lua 5.1 compatibility issues.
---   		Introduced json.null to have null values in associative arrays.
+--       Introduced json.null to have null values in associative arrays.
 --          encode() performance improvement (more than 50%) through table.concat rather than ..
 --          Introduced decode ability to ignore /**/ comments in the JSON string.
 --   0.9.10 Fix to array encoding / decoding to correctly manage nil/null values in arrays.
@@ -70,7 +91,7 @@ function encode (v)
 
   -- Handle strings
   if vtype=='string' then    
-    return '"' .. encodeString(v) .. '"'	    -- Need to handle encoding in string
+    return '"' .. encodeString(v) .. '"'      -- Need to handle encoding in string
   end
   
   -- Handle booleans
@@ -87,7 +108,7 @@ function encode (v)
       for i = 1,maxCount do
         table.insert(rval, encode(v[i]))
       end
-    else	-- An object, not an array
+    else  -- An object, not an array
       for i,j in base.pairs(v) do
         if isEncodable(i) and isEncodable(j) then
           table.insert(rval, '"' .. encodeString(i) .. '":' .. encode(j))
@@ -162,7 +183,7 @@ end
 -- @param startPos The starting position for the scan.
 -- @return table, int The scanned array as a table, and the position of the next character to scan.
 function decode_scanArray(s,startPos)
-  local array = {}	-- The return value
+  local array = {}  -- The return value
   local stringLen = string.len(s)
   base.assert(string.sub(s,startPos,startPos)=='[','decode_scanArray called but array does not start at position ' .. startPos .. ' in string:\n'..s )
   startPos = startPos + 1
@@ -226,8 +247,8 @@ function decode_scanNumber(s,startPos)
   local stringLen = string.len(s)
   local acceptableChars = "+-0123456789.e"
   while (string.find(acceptableChars, string.sub(s,endPos,endPos), 1, true)
-	and endPos<=stringLen
-	) do
+  and endPos<=stringLen
+  ) do
     endPos = endPos + 1
   end
   local stringValue = 'return ' .. string.sub(s,startPos, endPos-1)
@@ -269,7 +290,7 @@ function decode_scanObject(s,startPos)
     base.assert(startPos<=stringLen, 'JSON string ended unexpectedly searching for value of key ' .. key)
     value, startPos = decode(s,startPos)
     object[key]=value
-  until false	-- infinite loop while key-value pairs are found
+  until false  -- infinite loop while key-value pairs are found
 end
 
 --- Scans a JSON string from the opening inverted comma or single quote to the
@@ -290,7 +311,7 @@ function decode_scanString(s,startPos)
   local stringLen = string.len(s)
   repeat
     local curChar = string.sub(s,endPos,endPos)
-    if not escaped then	
+    if not escaped then  
       if curChar==[[\]] then
         escaped = true
       else
@@ -350,8 +371,8 @@ function isArray(t)
   -- (with the possible exception of 'n')
   local maxIndex = 0
   for k,v in base.pairs(t) do
-    if (base.type(k)=='number' and math.floor(k)==k and 1<=k) then	-- k,v is an indexed pair
-      if (not isEncodable(v)) then return false end	-- All array elements must be encodable
+    if (base.type(k)=='number' and math.floor(k)==k and 1<=k) then  -- k,v is an indexed pair
+      if (not isEncodable(v)) then return false end  -- All array elements must be encodable
       maxIndex = math.max(maxIndex,k)
     else
       if (k=='n') then
