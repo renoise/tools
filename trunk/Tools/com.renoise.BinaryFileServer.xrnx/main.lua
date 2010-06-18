@@ -139,7 +139,6 @@ class "BinaryFileServer"
   
    function BinaryFileServer:stop()
      if self.server then
-       self.server:stop()
        self.server:close()
        self.server = nil
      end

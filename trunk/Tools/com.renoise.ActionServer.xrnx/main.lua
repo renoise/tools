@@ -470,7 +470,6 @@ class "ActionServer"
   
    function ActionServer:stop()
      if self.server then
-       self.server:stop()
        self.server:close()
        self.server = nil
      end
@@ -499,6 +498,8 @@ function start_server()
 
     ActionServer.mime_types = Util:parse_config_file("/mime.types")
     action_server = ActionServer(address, port)
+    
+    renoise.app():open_url("localhost:"..port)
 end
 
 function stop_server()
