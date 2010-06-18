@@ -201,6 +201,10 @@ function Request:__init(settings)
   for k,v in pairs(settings) do
     self.settings[k] = v;
   end
+  
+  -- Force uppercase on some settings
+  self.settings.method = self.settings.method:upper()
+  self.settings.data_type = self.settings.data_type:upper()  
 
   -- SocketClient object
   self.client_socket = nil
@@ -222,7 +226,7 @@ function Request:__init(settings)
 
   -- Possible values for the request status besides nil are
   -- "TIMEOUT", "ERROR", "NOTMODIFIED" and "PARSERERROR".
-  self.text_status = nil
+  self.text_status = nil 
 
   -- Build the URL based on request method
   self.url = self.settings.url
@@ -302,7 +306,8 @@ function Request:read_header()
   end
 
   -- Setup the header
-  local header = string.format("%s %s HTTP/1.1\r\n", self.settings.method, self.url)
+  local header = string.format("%s %s HTTP/1.1\r\n",
+     self.settings.method, self.url)
   self:set_header("Host", self.url_parts.host)
   self:set_header("Content-Type", self.settings.content_type)
   self:set_header("Content-Length", content_length)
@@ -423,24 +428,25 @@ end
  -- TODO process more data_types 
 function Request:decode(data)
   local error = nil  
-  local data_type = self.settings.data_type:lower()
-  if (data_type == "json") then
+  local data_type = self.settings.data_type
+  if (data_type == "JSON") then
     log:info("Decoding JSON")
     local succeeded, result = pcall(json.decode, data:concat())
     if (succeeded) then
       data = result
     else
       error = result
-    end    
-  elseif (data_type == "osc") then
-  elseif (data_type == "lua_array") then
-  elseif (data_type == "xml") then
+    end 
+  elseif (data_type == "OSC") then
+  elseif (data_type == "LUA_ARRAY") then
+  elseif (data_type == "XML") then
     -- parse XML into table
-  elseif (data_type == "lua") then
+  elseif (data_type == "LUA") then
     -- evaluate Lua
-  elseif (data_type == "html") then
+  elseif (data_type == "HTML") then
     -- parse HTML to text+layout
   end
+  rprint(data)
   return data, error
 end
 
@@ -495,7 +501,7 @@ function Request:do_callback(socket_error)
   -- Decode data of non-plain datatypes
   local data = self.contents 
   local parser_error = nil
-  if (self.length > -1) then
+  if (self.length > 0) then
     data, parser_error = self:decode(data)
     if (parser_error) then 
       self.text_status = Request.PARSERERROR 
