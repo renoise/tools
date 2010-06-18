@@ -101,7 +101,7 @@ local function open_url(str)
    if (str ~= "---" and str ~= "") then
      renoise.app():show_status("Opening help page for " .. str .. "...")
      renoise.app():open_url("http://tutorials.renoise.com/wiki/"
-       .. get_selected_result())
+       .. str:gsub(" ", "_"))
    end
 end
 
