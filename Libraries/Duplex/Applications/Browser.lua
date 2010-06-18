@@ -239,7 +239,7 @@ function Browser:set_application(app_name, start_running)
   TRACE("Browser:set_application:",app_name)
   
   start_running = start_running or false
-  
+
   if (app_name == "None") then
 
     if self.__process and self.__process.applications then
@@ -272,12 +272,9 @@ function Browser:set_application(app_name, start_running)
       -- at the same time, or they would "fight for the same space"
       -- (this is actually a sign of a bad application configuration)
 
-      self.vb.views.dpx_browser_application_checkbox.value = 
-        (app.active or start_running)
 
     else
       -- instantiate application
-      -- todo: make group-names user-configurable via special dialog
       
       if (rawget(_G, app_name)) then
 
@@ -307,13 +304,18 @@ function Browser:set_application(app_name, start_running)
     end
 
     local app_index = self:__get_app_index_by_name(app_name)
+    self.vb.views.dpx_browser_application.value = app_index
     self.__process.selected_app = app_index
     
-    -- keep GUI in sync in case this was not called from the GUI
-    self:__set_application_index(app_name)
   
-    if (app and start_running) then
-      self:start_app()
+    if (app) then
+    
+      if(start_running) then
+        self:start_app()
+        --self:__set_application_index(app_name)
+      else
+        self.vb.views.dpx_browser_application_checkbox.value = (app.active)
+      end
     end
   end
 
@@ -701,6 +703,7 @@ function Browser:__get_custom_devices()
       options=table.create{
         MixConsole = table.create{
           levels_group_name="Grid",
+          mute_group_name = "Controls",
           master_group_name="Triggers",
         },
         PatternMatrix = table.create{
@@ -711,7 +714,7 @@ function Browser:__get_custom_devices()
       },
     },
     --  the Nocturn should load as a generic MIDI device
-    --  note: device_name is different from display_name!
+    --  note: device_name is different from display_name
     {
       class_name=nil,
       display_name="Nocturn",      
@@ -778,6 +781,7 @@ function Browser:__get_custom_devices()
     },
     --  this is a defunkt implementation (no control-map)
     --  will cause a warning once it's opened
+    --[[
     {
       class_name=nil,          
       display_name="mrmr",
@@ -786,6 +790,7 @@ function Browser:__get_custom_devices()
       protocol=DEVICE_OSC_PROTOCOL,
       options = table.create()
     },
+    ]]
   }
 
 end
