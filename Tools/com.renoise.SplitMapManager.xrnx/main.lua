@@ -33,6 +33,7 @@ local safe_margins = true
 local leave_existing = 0
 local sample_trail_start = true
 local sample_trail_end = true
+local vb_splitmap = nil
 
 local splitmap_dialog = nil
 
@@ -63,6 +64,7 @@ function open_splitmap_dialog()
       splitmap_dialog = nil
       local song = renoise.song()
       local vb = renoise.ViewBuilder()
+      vb_splitmap = vb
       local DIALOG_MARGIN = renoise.ViewBuilder.DEFAULT_DIALOG_MARGIN
       local CONTENT_SPACING = renoise.ViewBuilder.DEFAULT_CONTROL_SPACING
       local CONTENT_MARGIN = renoise.ViewBuilder.DEFAULT_CONTROL_MARGIN
@@ -535,10 +537,17 @@ function update_instrument()
   local obs = renoise.song().selected_instrument_observable
   local ins = renoise.song().instruments
   local idx = renoise.song().selected_instrument_index
+  local cur_ins = renoise.song().instruments[idx]
+  end_sample = #cur_ins.samples
+
+  
   if not (splitmap_dialog and splitmap_dialog.visible) then
     print ("notifier removed")
     obs:remove_notifier(update_instrument)
     ins[idx].samples_observable:remove_notifier(update_samples)
+  else
+    vb_splitmap.views.end_sample_field.value = string.format("0x%X",  math.floor(end_sample-1)) 
+    vb_splitmap.views.end_sample.value = math.floor(end_sample)
   end
 end
 
