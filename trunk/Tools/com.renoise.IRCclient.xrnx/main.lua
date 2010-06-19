@@ -50,6 +50,19 @@ function print_server_replies()
               send_command(SERVER_ARRAY[3],'status', "/names "..active_channel)
             end
           end 
+          if SERVER_ARRAY[t] == "332" then  -- channel topic
+            local topic = ""
+            for y = 5, #SERVER_ARRAY do
+              topic = topic..SERVER_ARRAY[y]
+            end
+            if topic ~= "" then
+              topic = "Current channel topic"..topic
+            else
+              topic = "Current channel topic not set"
+            end
+            vb_channel.views.channel_output_frame:add_line(topic)
+            
+          end
           if SERVER_ARRAY[t] == "353" then -- Names list requested, enumerate the names for the channel list.
             update_channel_users(SERVER_ARRAY)
           end
@@ -165,6 +178,12 @@ function send_command (target, target_frame, command)
     if string.find(command,"NICK") == 1 then
       local new_nick = command:split("[^,%s]+")
         irc_nick_name = new_nick[2]
+    end
+    if string.find(command,"TOPIC") == 1 then -- Get / set local topic description
+      local topic_subject = command:split("[^,%s]+")
+        if #topic_subject == 1 then
+          command = command.." "..active_channel
+        end
     end
     
     if string.find(command,"JOIN") == 1 then

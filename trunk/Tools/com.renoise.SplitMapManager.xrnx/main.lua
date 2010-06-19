@@ -220,6 +220,7 @@ function open_splitmap_dialog()
    else
       splitmap_dialog:show()
    end
+   set_observers()
 end
 
 
@@ -527,4 +528,34 @@ function map_sample_range()
    end
    cur_ins.split_map = temp_split_map
    set_base_notes()
+end
+
+function update_instrument()
+  print ("change observed")
+  local obs = renoise.song().selected_instrument_observable
+  local ins = renoise.song().instruments
+  local idx = renoise.song().selected_instrument_index
+  if not (splitmap_dialog and splitmap_dialog.visible) then
+    print ("notifier removed")
+    obs:remove_notifier(update_instrument)
+    ins[idx].samples_observable:remove_notifier(update_samples)
+  end
+end
+
+function update_samples()
+  print ("sample change observed")
+end
+
+function set_observers()
+  local obs = renoise.song().selected_instrument_observable
+  local ins = renoise.song().instruments
+  local idx = renoise.song().selected_instrument_index
+  if not (splitmap_dialog and splitmap_dialog.visible) then
+    obs:remove_notifier(update_instrument)
+    ins[idx].samples_observable:remove_notifier(update_samples)
+  else
+    ins[idx].samples_observable:add_notifier(update_samples)
+    obs:add_notifier(update_instrument)
+  end
+  
 end
