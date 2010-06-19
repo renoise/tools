@@ -121,11 +121,6 @@ function set_nick(nick)
  client:send(COMMAND)
 end
 
-function ReturnWords(str)
-    local t = {string.gfind(str, "[%a+](%d3)")}
-    return t
-end
-
 
 function register_user(user, real_name)
   local COMMAND = "USER "..user.." 8 * : "..real_name.."\r\n"
@@ -264,16 +259,5 @@ function connect_to_server(vb)
      end
    end
   
-end
-
-
-function strip_illegal_chars(target)
-  string.gsub(target," ","_")
-
-  for y = 33,47 do
-    string.gsub(target,"!","")
-  end
-  
-  return target
 end
 
