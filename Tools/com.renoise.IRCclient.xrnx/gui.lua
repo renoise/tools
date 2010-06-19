@@ -284,7 +284,7 @@ function chat_dialog_control(target)
       vb:column {
         margin = CONTROL_MARGIN,
         vb:multiline_text{
-          width = 100,
+          width = 150,
           height = 300, 
           font = "mono",
           style = 'border',
@@ -318,7 +318,7 @@ function chat_dialog_control(target)
         width = 8,
       },
       vb:button {
-        width = 100,
+        width = 150,
         text = "Send",
         notifier = function(text)
           send_command(target, 'channel', text)
