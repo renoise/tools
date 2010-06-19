@@ -46,7 +46,9 @@ function print_server_replies()
           if SERVER_ARRAY[t] == "PART" or SERVER_ARRAY[t] == "JOIN" 
           or SERVER_ARRAY[t] == "QUIT" or SERVER_ARRAY[t] == "NICK" then 
             -- Any changes in the user-list?
-            send_command(SERVER_ARRAY[3],'status', "/names "..active_channel)
+            if active_channel ~= nil then
+              send_command(SERVER_ARRAY[3],'status', "/names "..active_channel)
+            end
           end 
           if SERVER_ARRAY[t] == "353" then -- Names list requested, enumerate the names for the channel list.
             update_channel_users(SERVER_ARRAY)
@@ -172,7 +174,7 @@ function send_command (target, target_frame, command)
     
     if string.find(command,"JOIN") == 1 then
       local new_channel = command:split("[^,%s]+")
-      if chat_dialog and chat_dialog.visible == true then
+      if chat_dialog and chat_dialog.visible == true and active_channel ~= nil then
         send_command('','status', "/part "..active_channel)
       end
       print ("Joining "..new_channel[2])
@@ -182,7 +184,7 @@ function send_command (target, target_frame, command)
       local new_channel = command:split("[^,%s]+")
       if chat_dialog and chat_dialog.visible == true then
         if new_channel ~= nil then
-          if #new_channel == 1 then --If only /part is given, then quit current channel
+          if #new_channel == 1 and active_channel ~= nil then --If only /part is given, then quit current channel
             new_channel[2] = active_channel
           end
           if new_channel[2] == active_channel then 
@@ -217,6 +219,15 @@ function send_command (target, target_frame, command)
       vb_channel.views.channel_output_frame:scroll_to_last_line()
     end
     client:send(COMMAND)
+  end
+end
+
+    
+function key_handler(dialog, mod, key)
+  -- update key_text to show what we got
+  -- close on escape...
+  if (mod == "" and key == "esc") then
+    dialog:close()
   end
 end
 

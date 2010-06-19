@@ -344,7 +344,7 @@ function chat_dialog_control(target)
   -- DIALOG
   if (not chat_dialog or not chat_dialog.visible) then
     chat_dialog = renoise.app():show_custom_dialog(
-      target, dialog_content
+      target, dialog_content, key_handler
     )
   end
   vb_channel = vb
