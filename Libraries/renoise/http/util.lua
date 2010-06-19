@@ -45,9 +45,9 @@ function Util:parse_message(m)
      if not s then
         t = Util:split(v,": ")        
         if #t == 2 then
-           header[t[1]] = t[2]
+           header[t[1]] = tostring(t[2]):lower()
         else
-           header[k] = v
+           header[k] = tostring(v):lower()
         end
         header_size = header_size + #v
      else        
