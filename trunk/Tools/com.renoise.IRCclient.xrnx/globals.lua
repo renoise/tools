@@ -21,8 +21,9 @@ sessions = 1
 target = nil
 vb_channel = nil
 vb_status = nil
-sirc_debug = false
+sirc_debug = true
 active_channel = nil
+quit_reply = nil
 
 channel_users = {}
 

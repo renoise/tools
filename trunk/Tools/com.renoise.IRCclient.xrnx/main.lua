@@ -36,13 +36,15 @@ function print_server_replies()
         command_line = string.gsub(command_line, "PING", "PONG").."\r\n"
         client:send(command_line)
       end
-      local quit_reply = string.find(string.lower(command_line),"quit: ")
+--      local quit_reply = string.find(string.lower(command_line),"quit: ")
       local SERVER_ARRAY = command_line:split( "[^,%s]+" )
+
       for t = 1, #SERVER_ARRAY do
         if sirc_debug then 
           print ("Word "..t..":"..SERVER_ARRAY[t])
         end
         if t == 2 then
+
           if SERVER_ARRAY[t] == "PART" or SERVER_ARRAY[t] == "JOIN" 
           or SERVER_ARRAY[t] == "QUIT" or SERVER_ARRAY[t] == "NICK" then 
             -- Any changes in the user-list?
@@ -50,6 +52,7 @@ function print_server_replies()
               send_command(SERVER_ARRAY[3],'status', "/names "..active_channel)
             end
           end 
+
           if SERVER_ARRAY[t] == "332" then  -- channel topic
             local topic = ""
             for y = 5, #SERVER_ARRAY do
@@ -63,9 +66,11 @@ function print_server_replies()
             vb_channel.views.channel_output_frame:add_line(topic)
             
           end
+
           if SERVER_ARRAY[t] == "353" then -- Names list requested, enumerate the names for the channel list.
             update_channel_users(SERVER_ARRAY)
           end
+
           if SERVER_ARRAY[t] == "376" then  -- End of MOTD, auto-join the channel
             active_channel = irc_channel
             join_channel(irc_channel)
@@ -73,14 +78,8 @@ function print_server_replies()
           end
         end
       end
-      if quit_reply ~= nil then
-        --Silently leave the arena when server returns a quit reply.
-        stop_message_engine()
-        local EOT = "Server disconnected ->"..command_line
-        vb_status.views.status_output_frame:add_line(EOT)
-        vb_channel.views.channel_output_frame:add_line(EOT)
-        return
-      end
+
+
 
       if sirc_debug then
         print (command_line)
@@ -191,9 +190,12 @@ function send_command (target, target_frame, command)
       if chat_dialog and chat_dialog.visible == true and active_channel ~= nil then
         send_command('','status', "/part "..active_channel)
       end
-      print ("Joining "..new_channel[2])
+      if sirc_debug then
+        print ("Joining "..new_channel[2])
+      end
       chat_dialog_control(new_channel[2])          
     end
+    
     if string.find(command,"PART") == 1 then
       local new_channel = command:split("[^,%s]+")
       if chat_dialog and chat_dialog.visible == true then
@@ -206,7 +208,9 @@ function send_command (target, target_frame, command)
             chat_dialog:close()
           end
          else 
+         if sirc_debug then
            print ("channel is nil")
+         end
         end
       end
     end
@@ -233,6 +237,16 @@ function send_command (target, target_frame, command)
       vb_channel.views.channel_output_frame:scroll_to_last_line()
     end
     client:send(COMMAND)
+
+    if string.find(command,"QUIT") == 1 then
+        --Silently leave the arena when server returns a quit reply.
+        stop_message_engine()
+        local EOT = "Server disconnected ->"..command
+        vb_status.views.status_output_frame:add_line(EOT)
+        vb_channel.views.channel_output_frame:add_line(EOT)
+        return
+    end
+
   end
 end
 
