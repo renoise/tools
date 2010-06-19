@@ -43,9 +43,10 @@ function print_server_replies()
           print ("Word "..t..":"..SERVER_ARRAY[t])
         end
         if t == 2 then
-          if SERVER_ARRAY[t] == "PART" or SERVER_ARRAY[t] == "JOIN" or SERVER_ARRAY[t] == "QUIT" then 
+          if SERVER_ARRAY[t] == "PART" or SERVER_ARRAY[t] == "JOIN" 
+          or SERVER_ARRAY[t] == "QUIT" or SERVER_ARRAY[t] == "NICK" then 
             -- Any changes in the user-list?
-            send_command(SERVER_ARRAY[3],'status', "/names "..SERVER_ARRAY[3])
+            send_command(SERVER_ARRAY[3],'status', "/names "..active_channel)
           end 
           if SERVER_ARRAY[t] == "353" then -- Names list requested, enumerate the names for the channel list.
             update_channel_users(SERVER_ARRAY)
