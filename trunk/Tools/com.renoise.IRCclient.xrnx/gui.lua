@@ -166,7 +166,7 @@ function client_login()
   -- DIALOG
   if (not login_dialog or not login_dialog.visible) then
     login_dialog = renoise.app():show_custom_dialog(
-      "Chat connect", dialog_content
+      "Chat connect", dialog_content, key_handler
     )
   end
 
@@ -244,7 +244,7 @@ function status_dialog()
   -- DIALOG
   if (not irc_dialog or not irc_dialog.visible) then
     irc_dialog = renoise.app():show_custom_dialog(
-      "Status", dialog_content
+      "Status", dialog_content, key_handler
     )
   end
   vb_status = vb
