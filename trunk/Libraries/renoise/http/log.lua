@@ -12,21 +12,24 @@ function Log:__init(v)
 end
 function Log:info(s)
    if self.level > Log.INFODEBUG then return end
-    print("[INFO] " .. s)
+    Log:output("INFO", s)
 end
 function Log:warn(s)
    if self.level > Log.WARN then return end
-   print("[WARNING] " .. s)
+   Log:output("WARNING", s)
 end
 function Log:error(s)
    if self.level > Log.ERROR then return end
-   print("[ERROR] " .. s)
+       Log:output("ERROR", s)
 end
 function Log:fatal(s)
    if self.level > Log.FATAL then return end
-   print("[FATAL] " .. s)
+   Log:output("FATAL", s)
 end
 function Log:set_level(v)
   assert(type(v)=="number")
   self.level = v or Log.ALL
+end
+function Log:output(level, str)
+  print(string.format("[%s] %s" , level,  tostring(str)))
 end
