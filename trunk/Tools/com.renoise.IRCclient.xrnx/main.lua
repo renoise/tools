@@ -165,6 +165,11 @@ function send_command (target, target_frame, command)
        break
      end
     end
+    if string.find(command,"NICK") == 1 then
+      local new_nick = command:split("[^,%s]+")
+        irc_nick_name = new_nick[2]
+    end
+    
     if string.find(command,"JOIN") == 1 then
       local new_channel = command:split("[^,%s]+")
       if chat_dialog and chat_dialog.visible == true then
