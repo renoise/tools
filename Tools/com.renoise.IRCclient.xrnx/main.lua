@@ -32,11 +32,12 @@ function print_server_replies()
     if command_line ~= nil then
       -- If a ping is received, reply immediately
       local pingpos = string.find(command_line, "PING")
+
       if pingpos ~= nil then
         command_line = string.gsub(command_line, "PING", "PONG").."\r\n"
         client:send(command_line)
       end
---      local quit_reply = string.find(string.lower(command_line),"quit: ")
+
       local SERVER_ARRAY = command_line:split( "[^,%s]+" )
 
       for t = 1, #SERVER_ARRAY do
@@ -168,16 +169,19 @@ function send_command (target, target_frame, command)
 
     -- replace /command with COMMAND
     for _,known_command in pairs(known_commands) do
+
      if (command:lower():find("/" .. known_command:lower()) == 1) then
        command = known_command:upper() .. command:sub(#known_command + 2)
        found = true
        break
      end
     end
+
     if string.find(command,"NICK") == 1 then
       local new_nick = command:split("[^,%s]+")
         irc_nick_name = new_nick[2]
     end
+
     if string.find(command,"TOPIC") == 1 then -- Get / set local topic description
       local topic_subject = command:split("[^,%s]+")
         if #topic_subject == 1 then
@@ -198,29 +202,39 @@ function send_command (target, target_frame, command)
     
     if string.find(command,"PART") == 1 then
       local new_channel = command:split("[^,%s]+")
+
       if chat_dialog and chat_dialog.visible == true then
+
         if new_channel ~= nil then
+
           if #new_channel == 1 and active_channel ~= nil then --If only /part is given, then quit current channel
             new_channel[2] = active_channel
           end
+
           if new_channel[2] == active_channel then 
             -- Make sure we are closing the dialog that is matching the active channel
             chat_dialog:close()
           end
+
          else 
-         if sirc_debug then
-           print ("channel is nil")
-         end
+
+           if sirc_debug then
+             print ("channel is nil")
+           end
+
         end
       end
     end
+
     if found == false then
       local_echo = "<"..irc_nick_name.."> "..command
+
       if string.find(command, "/me ") ~= nil then
         local_echo = irc_nick_name.." "..string.sub(command, 5)
         command = string.gsub(command,"/me ", "ACTION ")
         command = command..""
       end
+
       command = "PRIVMSG "..target.." :"..command
     end
 
@@ -229,6 +243,7 @@ function send_command (target, target_frame, command)
     if sirc_debug then
       print (COMMAND)
     end
+
     if target_frame == 'status' then
       vb_status.views.status_output_frame:add_line(local_echo)
       vb_status.views.status_output_frame:scroll_to_last_line()
@@ -236,6 +251,7 @@ function send_command (target, target_frame, command)
       vb_channel.views.channel_output_frame:add_line(local_echo)
       vb_channel.views.channel_output_frame:scroll_to_last_line()
     end
+
     client:send(COMMAND)
 
     if string.find(command,"QUIT") == 1 then

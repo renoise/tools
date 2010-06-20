@@ -533,38 +533,32 @@ function map_sample_range()
 end
 
 function update_instrument()
-  print ("change observed")
-  local obs = renoise.song().selected_instrument_observable
-  local ins = renoise.song().instruments
+  local instrument_observable = renoise.song().selected_instrument_observable
+  local sample_observable = renoise.song().selected_sample_observable
   local idx = renoise.song().selected_instrument_index
   local cur_ins = renoise.song().instruments[idx]
   end_sample = #cur_ins.samples
-
   
   if not (splitmap_dialog and splitmap_dialog.visible) then
-    print ("notifier removed")
-    obs:remove_notifier(update_instrument)
-    ins[idx].samples_observable:remove_notifier(update_samples)
+    instrument_observable:remove_notifier(update_instrument)
+    sample_observable:remove_notifier(update_instrument)
   else
     vb_splitmap.views.end_sample_field.value = string.format("0x%X",  math.floor(end_sample-1)) 
     vb_splitmap.views.end_sample.value = math.floor(end_sample)
   end
 end
 
-function update_samples()
-  print ("sample change observed")
-end
 
 function set_observers()
-  local obs = renoise.song().selected_instrument_observable
-  local ins = renoise.song().instruments
-  local idx = renoise.song().selected_instrument_index
+  local instrument_observable = renoise.song().selected_instrument_observable
+  local sample_observable = renoise.song().selected_sample_observable
+  
   if not (splitmap_dialog and splitmap_dialog.visible) then
-    obs:remove_notifier(update_instrument)
-    ins[idx].samples_observable:remove_notifier(update_samples)
+    instrument_observable:remove_notifier(update_instrument)
+    sample_observable:remove_notifier(update_instrument)
   else
-    ins[idx].samples_observable:add_notifier(update_samples)
-    obs:add_notifier(update_instrument)
+    sample_observable:add_notifier(update_instrument)
+    instrument_observable:add_notifier(update_instrument)
   end
   
 end
