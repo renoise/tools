@@ -192,16 +192,18 @@ function status_dialog()
   -- CONTROL ROWS
   
   -- textfield
-  local status_frame_row = vb:column{
+  local status_frame = vb:column{
+    id='status_dialog_content',
     vb:row {
       margin = CONTROL_MARGIN,
       vb:multiline_text{
         width = 700,
         height = 300, 
         font = "mono",
+        style = 'border',
         id = 'status_output_frame',
         text = ""
-      }
+      },
     },
     vb:row{
       vb:text {
@@ -227,19 +229,37 @@ function status_dialog()
       },
     }
   }
+  local minimize_button = vb:column{
+    vb:row{
+      vb:space{
+        width = 622,
+      },
+      vb:button {
+        id = 'minimizer',
+        width = TEXT_ROW_WIDTH,
+        text = "Minimize",
+        notifier = function(text)
+           if vb.views.minimizer.text == "Maximize" then
+             vb.views.minimizer.text = "Minimize"
+           else
+             vb.views.minimizer.text = "Maximize"
+           end
+          vb.views.status_dialog_content.visible = not vb.views.status_dialog_content.visible
+          vb.views.sdf:resize()
+        end
+      }
+    },
+  }
   
   local dialog_content = vb:column {
+    id = 'sdf',
     margin = DIALOG_MARGIN,
     spacing = CONTENT_SPACING,
     uniform = true,
-
-    vb:column {
-      status_frame_row, 
-      vb:space { height = 2*CONTENT_SPACING },
-    },
-    
+    status_frame, 
+    minimize_button
   }
-  
+      
   
   -- DIALOG
   if (not irc_dialog or not irc_dialog.visible) then
