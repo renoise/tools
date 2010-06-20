@@ -107,6 +107,8 @@ function client_login()
         id = 'irc_nick_name',
         notifier = function(text)
           irc_nick_name = text
+          connect_to_server(vb)
+          login_dialog:close()          
         end
       },
     },
