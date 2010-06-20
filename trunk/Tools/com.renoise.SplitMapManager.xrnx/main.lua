@@ -540,8 +540,10 @@ function update_instrument()
   end_sample = #cur_ins.samples
   
   if not (splitmap_dialog and splitmap_dialog.visible) then
-    instrument_observable:remove_notifier(update_instrument)
-    sample_observable:remove_notifier(update_instrument)
+    if instrument_observable:has_notifier(update_instrument) then
+      instrument_observable:remove_notifier(update_instrument)
+      sample_observable:remove_notifier(update_instrument)
+    end
   else
     vb_splitmap.views.end_sample_field.value = string.format("0x%X",  math.floor(end_sample-1)) 
     vb_splitmap.views.end_sample.value = math.floor(end_sample)
@@ -554,8 +556,10 @@ function set_observers()
   local sample_observable = renoise.song().selected_sample_observable
   
   if not (splitmap_dialog and splitmap_dialog.visible) then
-    instrument_observable:remove_notifier(update_instrument)
-    sample_observable:remove_notifier(update_instrument)
+    if instrument_observable:has_notifier(update_instrument) then
+      instrument_observable:remove_notifier(update_instrument)
+      sample_observable:remove_notifier(update_instrument)
+    end
   else
     sample_observable:add_notifier(update_instrument)
     instrument_observable:add_notifier(update_instrument)

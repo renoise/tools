@@ -3,7 +3,7 @@
   <ApiVersion>0.3</ApiVersion>
   <Id>com.renoise.IRCclient</Id>
   <Version>1.0</Version>
-  <Name>IRC Client</Name>
+  <Name>Simple IRC Client</Name>
   <Author>Vincent Voois ( http://tinyurl.com/vvrns )</Author>
   <Description>Log on to #renoise on espernet</Description>
   <Category>Tools</Category>
