@@ -76,6 +76,9 @@ function print_server_replies()
             active_channel = irc_channel
             join_channel(irc_channel)
             chat_dialog_control(irc_channel)          
+            vb_status.views.status_dialog_content.visible = false
+            vb_status.views.minimizer.text = "Maximize"
+            vb_status.views.sdf:resize()
           end
         end
       end
