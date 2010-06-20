@@ -99,13 +99,13 @@ function print_server_replies()
         local channel_line = "<"..user_say.."> "..say_text
         if string.find(say_text, "ACTION") == 2 then
           say_text = string.sub(say_text,8, #say_text-1)
-          channel_line = user_say..say_text
+          channel_line = os.date("%c")..user_say..say_text
         end
 
         vb_channel.views.channel_output_frame:add_line(channel_line)
         vb_channel.views.channel_output_frame:scroll_to_last_line()
       end
-
+       command_line = os.date("%c")..command_line
       rirc.views.status_output_frame:add_line(command_line)
       rirc.views.status_output_frame:scroll_to_last_line()
     end
@@ -227,10 +227,10 @@ function send_command (target, target_frame, command)
     end
 
     if found == false then
-      local_echo = "<"..irc_nick_name.."> "..command
+      local_echo = os.date("%c").."<"..irc_nick_name.."> "..command
 
       if string.find(command, "/me ") ~= nil then
-        local_echo = irc_nick_name.." "..string.sub(command, 5)
+        local_echo = os.date("%c")..irc_nick_name.." "..string.sub(command, 5)
         command = string.gsub(command,"/me ", "ACTION ")
         command = command..""
       end
