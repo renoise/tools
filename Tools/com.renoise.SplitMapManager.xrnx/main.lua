@@ -538,31 +538,45 @@ function update_instrument()
   local idx = renoise.song().selected_instrument_index
   local cur_ins = renoise.song().instruments[idx]
   end_sample = #cur_ins.samples
-  
+  print ("sample or instrument change")
   if not (splitmap_dialog and splitmap_dialog.visible) then
     if instrument_observable:has_notifier(update_instrument) then
       instrument_observable:remove_notifier(update_instrument)
       sample_observable:remove_notifier(update_instrument)
+renoise.tool().app_new_document_observable:remove_notifier(close_tool_dialog)
+      print ("removed notifiers in notice function")
     end
   else
     vb_splitmap.views.end_sample_field.value = string.format("0x%X",  math.floor(end_sample-1)) 
     vb_splitmap.views.end_sample.value = math.floor(end_sample)
   end
 end
+function close_tool_dialog()
+  local instrument_observable = renoise.song().selected_instrument_observable
+  local sample_observable = renoise.song().selected_sample_observable
 
+    if instrument_observable:has_notifier(update_instrument) then
+      instrument_observable:remove_notifier(update_instrument)
+      sample_observable:remove_notifier(update_instrument)
+renoise.tool().app_new_document_observable:remove_notifier(close_tool_dialog)
+      print ("removed notifiers in close function")
+    end
+    if splitmap_dialog.visible == true then
+      splitmap_dialog:close()
+    end
+end
 
 function set_observers()
   local instrument_observable = renoise.song().selected_instrument_observable
   local sample_observable = renoise.song().selected_sample_observable
   
-  if not (splitmap_dialog and splitmap_dialog.visible) then
-    if instrument_observable:has_notifier(update_instrument) then
-      instrument_observable:remove_notifier(update_instrument)
-      sample_observable:remove_notifier(update_instrument)
+  if renoise.tool().app_new_document_observable:has_notifier(set_observers) then
+    renoise.tool().app_new_document_observable:remove_notifier(close_tool_dialog)
+  end 
+    if not instrument_observable:has_notifier(update_instrument) then
+      renoise.tool().app_new_document_observable:add_notifier(close_tool_dialog)
+      sample_observable:add_notifier(update_instrument)
+      instrument_observable:add_notifier(update_instrument)
     end
-  else
-    sample_observable:add_notifier(update_instrument)
-    instrument_observable:add_notifier(update_instrument)
-  end
   
 end
