@@ -28,7 +28,6 @@ local base_note_val = 'C-4'
 local fine_tune_val = 0
 local sync_val = 0
 local pan_val = 0
-local amp_val = 0
 local nna_index = 1
 local loop_index = 1
 local interpolation_index = 1
@@ -85,9 +84,8 @@ function open_sample_dialog(option)
          win_title = "Global sample properties (all instruments)"
       end
 
-      sample_dialog = renoise.app():show_custom_prompt(
-         win_title,
-         vb:column {
+        
+      local sample_content = vb:column {
             margin = DIALOG_MARGIN,
             spacing = 1,
             uniform = true,
@@ -172,7 +170,7 @@ function open_sample_dialog(option)
             },         
             vb:space{height = 3*CONTENT_SPACING},
             vb:row {
-               create_view(obj_checkbox,'',18,0,0,do_panning,'id1',
+               create_view(obj_checkbox,'',18,0,0,do_amplify,'id1',
                'Set amplification for all samples in selected instrument?','',
                function(value) do_amplify = value end,vb),
                create_view(obj_textlabel,'',TEXT_ROW_WIDTH,0,0,'novalue','id2',
@@ -195,10 +193,13 @@ function open_sample_dialog(option)
                 end,
       
                 tonumber = function(str) 
+                  if str == nil then
+                    str = "0"
+                  end
                   if str:lower():find("-inf") then
                     return 0.0
                   else
-                    local db = tonumber(str)
+                    local db = tonumber(("%.01f"):format(tonumber(str)))
                     if (db ~= nil) then
                       return math.db2lin(db)
                     end
@@ -241,8 +242,7 @@ function open_sample_dialog(option)
                   if str:lower():find("center") then
                     return 0.0
                   else
-                    print(str:sub(1,str:len()-1))
-                    return tonumber(str:sub(1))
+                    return tonumber(str)
                   end
                 end,
                 
@@ -253,19 +253,14 @@ function open_sample_dialog(option)
             },
             vb:space{height = 3*CONTENT_SPACING},
             vb:row {
-               vb:space {width = 70},
-               create_view(obj_button,'',60,0,0,0,'id8','','Change the selected properties',
-               function() change_sample_properties(option) end,vb),
-               vb:space {width = 15},
+               vb:space {width = 250},
                create_view(obj_textlabel,'right',30,0,0,'novalue','id_safe_text',
                '','Safe','',vb),
                create_view(obj_checkbox,'',18,0,0,safe_mode,'id_safe_mode',
                'Show/hide options that create unawarely subtile changes\nChanges that your are sure of to apply to *all* samples in *all* instruments','',
                function(value) toggle_safe_mode(value, vb) end,vb)
             }
-         },
-        {}
-      )
+         }
       if option == OPTION_CHANGE_ALL then
          vb.views.id_safe_text.visible = true
          vb.views.id_safe_mode.visible = true
@@ -278,6 +273,15 @@ function open_sample_dialog(option)
          vb.views.id_safe_text.visible = false
          vb.views.id_safe_mode.visible = false
          enable_unsafe_options(vb)
+      end
+
+      sample_dialog = renoise.app():show_custom_prompt(win_title,sample_content,
+      {"Change the selected properties"})
+      if sample_dialog ~= nil then
+        if string.lower(sample_dialog) == "change the selected properties" then
+        
+          change_sample_properties(option, vb)
+        end
       end
    else
       sample_dialog:show()
@@ -347,14 +351,12 @@ end
 
 
 function slide_panning(vb, value)
-   vb.views.pan_value.value = value
-   pan_val = value
+     vb.views.pan_value.value = value
 end
 
 
 function slide_volume(vb,value)
-   vb.views.db_value.value = value
-   amp_val = value
+     vb.views.db_value.value = value
 end
 
 
@@ -431,7 +433,7 @@ function DbToLin(Value)
 end
 
 
-function change_sample_properties(option)
+function change_sample_properties(option, vb)
    local song = renoise.song()
    local range_start = 1
    local range_end = song.selected_instrument_index
@@ -513,10 +515,11 @@ function change_sample_properties(option)
             s_instrument.samples[t].beat_sync_lines = sync_val
          end
          if do_amplify == true then
-            s_instrument.samples[t].volume = amp_val
+            s_instrument.samples[t].volume = vb.views.db_value.value
          end
          if do_panning == true then
             local pan_result = 0.5
+            pan_val = vb.views.pan_value.value
             if pan_val > 0 then
                pan_result = pan_val / 100 + pan_result
             elseif pan_val < 0 then

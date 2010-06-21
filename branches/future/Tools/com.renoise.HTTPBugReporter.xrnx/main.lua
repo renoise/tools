@@ -47,9 +47,11 @@ local function submit(callback)
   local name = vb.views.name_textfield.text  
   local severe = vb.views.severe_checkbox.value
   local log = ""
-
-  HTTP:post("http://www.renoise.com/bugs/index.php",
-    { 
+  
+  local settings = table.create()
+  settings.url = "http://www.renoise.com/bugs/index.php"
+  settings.method = "post"
+  settings.data = { 
       action="submit", 
       topic=topic, 
       summary=summary, 
@@ -57,15 +59,19 @@ local function submit(callback)
       severe=severe,
       email=email,
       name=name
-    },
-    function( result, status, xhr )
+    }
+  settings.data_type = "json"  
+  settings.success = function( result, status, xhr )
       if (result.status == "OK") then      
-        show_confirmation()
-        rprint(result.formdata)
+        show_confirmation()        
       else
         show_error()
       end
-    end, "json")
+    end
+  --settings.content_type = "multipart/form-data"   
+
+  local r = Request(settings)
+  
 end
 
 function start()
@@ -202,20 +208,36 @@ function start()
       },        
     },
     
-    vb:text {
-      text = "(Optional) Keep me up-to-date about this bug:"        
-    },    
-
-    vb:textfield {
-      id = "name_textfield",         
-      width = "50%",
-      text = "name"
-    },
+    vb:row {
+    
+      vb:checkbox {
+        id = "subscribe_checkbox",
+        notifier = function(value)
+           vb.views.subscribe_column.visible = value
+           vb.views.subscribe_column:resize()
+        end
+      },
       
-    vb:textfield {
-      id = "email_textfield",         
-      width = "50%",
-      text = "email"
+      vb:text {
+        text = "Keep me up-to-date about this bug"        
+      },    
+    },
+    
+    vb:column {
+      id="subscribe_column",
+      visible = false,
+
+      vb:textfield {
+        id = "name_textfield",         
+        width = 150,
+        text = "name",     
+      },
+        
+      vb:textfield {
+        id = "email_textfield",         
+        width = 150,
+        text = "email",       
+      }
     }
   }  
   

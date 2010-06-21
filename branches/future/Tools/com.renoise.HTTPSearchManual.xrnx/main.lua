@@ -37,7 +37,6 @@ local function no_results(str)
    )
 end
 
-
 local function autocomplete(str, callback)
   local my_callback = callback or function(data) rprint(data) end
   if (#str ~= 1 and (#str == 0 or no_results(str))) then
@@ -68,6 +67,7 @@ end
 
 
 local function show_results(data)
+  data = data or ""
   local len = #data
   vb.views.results_chooser.items = {"",""}
   if (len == 0) then
@@ -98,10 +98,10 @@ end
 
 
 local function open_url(str)
-   if (str ~= "---" and str ~= "") then
+   if (str ~= "") then
      renoise.app():show_status("Opening help page for " .. str .. "...")
      renoise.app():open_url("http://tutorials.renoise.com/wiki/"
-       .. get_selected_result())
+       .. str:gsub(" ", "_"))
    end
 end
 
@@ -116,23 +116,31 @@ function search_start()
   vb = renoise.ViewBuilder()
   local DEFAULT_MARGIN = renoise.ViewBuilder.DEFAULT_CONTROL_MARGIN
   local buttons = table.create{"Go"}
-  local dialog_content =vb:horizontal_aligner {
-    margin = DEFAULT_MARGIN,
-    vb:column {
+  
+  local dialog_content = vb:row {
+     margin = DEFAULT_MARGIN,
+     height = 300, 
+     width = 400,
+     
+     vb:column {
       style = "group",
-      margin = DEFAULT_MARGIN,
-      width = "100%",
+      margin = DEFAULT_MARGIN,      
       
-      vb:text {
-        id = "input",
+      vb:row{
+        style = "border",
+        margin = 5,
+        spacing = 5,
+        vb:text {
+          id = "input",
+        }
       },
-
+      
       vb:text {
          id = "results_text",
          visible = false,
          text = ""
       },
-
+      
       vb:chooser {
           id = "results_chooser",
           visible = false,
@@ -140,7 +148,7 @@ function search_start()
             set_input(get_selected_result())
           end
       },
-
+      
       vb:button {
         text = "Go",
         notifier = function() 

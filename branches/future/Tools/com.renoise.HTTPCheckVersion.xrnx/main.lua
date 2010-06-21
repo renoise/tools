@@ -11,7 +11,7 @@ require "renoise.http"
 
 local entry = {}
 
-entry.name = "Main Menu:Tools:Check Version..."
+entry.name = "Main Menu:Help:Check for Updates..."
 entry.active = function() return true end
 entry.invoke = function() update_start() end
 renoise.tool():add_menu_entry(entry)
@@ -29,7 +29,7 @@ function update_start()
         local buttons = table.create{"OK", "Go to downloads"}
         local choice = renoise.app():show_prompt(
           "Checking for Renoise updates",
-          table.concat(res), buttons)
+          res, buttons)
         if (choice == buttons[2]) then
           renoise.app():open_url("http://www.renoise.com/download/renoise/")
         end

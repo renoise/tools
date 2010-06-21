@@ -54,7 +54,7 @@ renoise.tool():add_menu_entry {
 --  Debug
 -------------------------------------------
 
-if true then 
+if false then 
   require "remdebug.engine"
   
   _AUTO_RELOAD_DEBUG = function()
@@ -433,7 +433,7 @@ class "ActionServer"
       local index_pages = table.create{"/index.html","/index.lua","/"}
       if index_pages:find(path) then
           if path == "/" then path = index_pages[1] end          
-            self:send_htdoc(socket, path)          
+            self:send_htdoc(socket, path)
           return
       end
 
@@ -470,7 +470,7 @@ class "ActionServer"
   
    function ActionServer:stop()
      if self.server then
-       self.server:stop()
+       self.server:close()
        self.server = nil
      end
    end
@@ -498,6 +498,8 @@ function start_server()
 
     ActionServer.mime_types = Util:parse_config_file("/mime.types")
     action_server = ActionServer(address, port)
+    
+    renoise.app():open_url("localhost:"..port)
 end
 
 function stop_server()

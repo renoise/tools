@@ -33,6 +33,7 @@ local safe_margins = true
 local leave_existing = 0
 local sample_trail_start = true
 local sample_trail_end = true
+local vb_splitmap = nil
 
 local splitmap_dialog = nil
 
@@ -63,6 +64,7 @@ function open_splitmap_dialog()
       splitmap_dialog = nil
       local song = renoise.song()
       local vb = renoise.ViewBuilder()
+      vb_splitmap = vb
       local DIALOG_MARGIN = renoise.ViewBuilder.DEFAULT_DIALOG_MARGIN
       local CONTENT_SPACING = renoise.ViewBuilder.DEFAULT_CONTROL_SPACING
       local CONTENT_MARGIN = renoise.ViewBuilder.DEFAULT_CONTROL_MARGIN
@@ -220,6 +222,7 @@ function open_splitmap_dialog()
    else
       splitmap_dialog:show()
    end
+   set_observers()
 end
 
 
@@ -527,4 +530,39 @@ function map_sample_range()
    end
    cur_ins.split_map = temp_split_map
    set_base_notes()
+end
+
+function update_instrument()
+  local instrument_observable = renoise.song().selected_instrument_observable
+  local sample_observable = renoise.song().selected_sample_observable
+  local idx = renoise.song().selected_instrument_index
+  local cur_ins = renoise.song().instruments[idx]
+  end_sample = #cur_ins.samples
+  
+  if not (splitmap_dialog and splitmap_dialog.visible) then
+    if instrument_observable:has_notifier(update_instrument) then
+      instrument_observable:remove_notifier(update_instrument)
+      sample_observable:remove_notifier(update_instrument)
+    end
+  else
+    vb_splitmap.views.end_sample_field.value = string.format("0x%X",  math.floor(end_sample-1)) 
+    vb_splitmap.views.end_sample.value = math.floor(end_sample)
+  end
+end
+
+
+function set_observers()
+  local instrument_observable = renoise.song().selected_instrument_observable
+  local sample_observable = renoise.song().selected_sample_observable
+  
+  if not (splitmap_dialog and splitmap_dialog.visible) then
+    if instrument_observable:has_notifier(update_instrument) then
+      instrument_observable:remove_notifier(update_instrument)
+      sample_observable:remove_notifier(update_instrument)
+    end
+  else
+    sample_observable:add_notifier(update_instrument)
+    instrument_observable:add_notifier(update_instrument)
+  end
+  
 end
