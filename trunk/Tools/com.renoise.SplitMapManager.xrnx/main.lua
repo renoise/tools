@@ -48,6 +48,7 @@ local obj_slider = 8
 local obj_minislider = 9 
 local obj_textfield = 10 
 local obj_valuefield = 11 
+local smm_debug = nil
 
 local note_array = {}
 local valid_notes = {
@@ -536,15 +537,20 @@ function update_instrument()
   local instrument_observable = renoise.song().selected_instrument_observable
   local sample_observable = renoise.song().selected_sample_observable
   local idx = renoise.song().selected_instrument_index
+  local song_observable = renoise.tool().app_new_document_observable
   local cur_ins = renoise.song().instruments[idx]
   end_sample = #cur_ins.samples
-  print ("sample or instrument change")
+  if smm_debug then
+    print ("sample or instrument change")
+  end
   if not (splitmap_dialog and splitmap_dialog.visible) then
     if instrument_observable:has_notifier(update_instrument) then
       instrument_observable:remove_notifier(update_instrument)
       sample_observable:remove_notifier(update_instrument)
-renoise.tool().app_new_document_observable:remove_notifier(close_tool_dialog)
-      print ("removed notifiers in notice function")
+      song_observable:remove_notifier(close_tool_dialog)
+      if smm_debug then
+        print ("removed notifiers in notice function")
+      end
     end
   else
     vb_splitmap.views.end_sample_field.value = string.format("0x%X",  math.floor(end_sample-1)) 
@@ -554,12 +560,15 @@ end
 function close_tool_dialog()
   local instrument_observable = renoise.song().selected_instrument_observable
   local sample_observable = renoise.song().selected_sample_observable
+  local song_observable = renoise.tool().app_new_document_observable
 
     if instrument_observable:has_notifier(update_instrument) then
       instrument_observable:remove_notifier(update_instrument)
       sample_observable:remove_notifier(update_instrument)
-renoise.tool().app_new_document_observable:remove_notifier(close_tool_dialog)
-      print ("removed notifiers in close function")
+      song_observable:remove_notifier(close_tool_dialog)
+      if smm_debug then
+        print ("removed notifiers in close function")
+      end
     end
     if splitmap_dialog.visible == true then
       splitmap_dialog:close()
@@ -569,12 +578,13 @@ end
 function set_observers()
   local instrument_observable = renoise.song().selected_instrument_observable
   local sample_observable = renoise.song().selected_sample_observable
+  local song_observable = renoise.tool().app_new_document_observable
   
   if renoise.tool().app_new_document_observable:has_notifier(set_observers) then
-    renoise.tool().app_new_document_observable:remove_notifier(close_tool_dialog)
+    song_observable:remove_notifier(close_tool_dialog)
   end 
     if not instrument_observable:has_notifier(update_instrument) then
-      renoise.tool().app_new_document_observable:add_notifier(close_tool_dialog)
+      song_observable:add_notifier(close_tool_dialog)
       sample_observable:add_notifier(update_instrument)
       instrument_observable:add_notifier(update_instrument)
     end
