@@ -78,8 +78,6 @@ following places:
     whatever with any existing song data, like algorithmic composing, instrument
     creation, "automation", whatever you can imagine and need...
 
-  + Add custom file Import handlers (add support for new filetypes)
-
   + Nibbles ;)
 
 
