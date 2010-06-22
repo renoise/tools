@@ -784,6 +784,24 @@ function available_controls()
     }
   }
 
+  --- multiline_textfield row
+  local mltextfield_row = vb:row {
+    vb:text {
+      width = 80,
+      text = "vb:ml_textfield"
+    },
+    vb:multiline_textfield {
+      height = 80,
+      width = 120,
+      value = "I am a long text that can be edited.\n\nParagraphs are separated with "..
+        "\\n's.\n\nEdit me",
+      notifier = function(value)
+        show_status(("multiline_textfield value changed to '%s'"):
+          format(value))
+      end
+    },
+  }
+  
   -- bitmapview 
   local bitmapview_row = vb:row {
     vb:text {
@@ -1085,11 +1103,13 @@ function available_controls()
   
   local dialog_content = vb:column {
     margin = DIALOG_MARGIN,
-    spacing = CONTENT_SPACING,
     uniform = true,
 
     vb:column {
+      spacing = CONTENT_SPACING,
+      
       textfield_row, 
+      mltextfield_row,
       bitmapview_row, 
       button_row, 
       checkbox_row, 
