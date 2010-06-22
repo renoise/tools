@@ -77,30 +77,35 @@ renoise.song().patterns[], _observable
 renoise.song().tracks[], _observable
   -> [read-only, array of renoise.Track objects]
 
+-- selected in the instrument box. never nil
 renoise.song().selected_instrument, _observable
   -> [read-only, renoise.Instrument object]
 renoise.song().selected_instrument_index, _observable
   -> [number]
 
+-- selected in the instrument box. never nil
 renoise.song().selected_sample, _observable
   -> [read-only, array of renoise.Sample objects]
 renoise.song().selected_sample_index, _observable
   -> [number]
 
+-- selected in the pattern editor or mixer. never nil
 renoise.song().selected_track, _observable
   -> [read-only, renoise.Track object]
 renoise.song().selected_track_index, _observable
   -> [number]
 
+-- selected in the device chain editor. can be nil
 renoise.song().selected_device, _observable
   -> [read-only, renoise.TrackDevice object or nil]
 renoise.song().selected_device_index, _observable
   -> [number or 0 (when no device is selected)]
 
--- TODO: renoise.song().selected_parameter
---  -> [read-only, renoise.DeviceParameter or nil]
--- TODO: renoise.song().selected_parameter_index
---  -> [number]
+-- selected in the automation editor view. can be nil
+renoise.song().selected_parameter, _observable
+  -> [read-only, renoise.DeviceParameter or nil]
+renoise.song().selected_parameter_index, _observable
+  -> [read-only, number or 0 (when no parameter is selected)]
 
 renoise.song().selected_pattern TODO: , _observable
   -> [read-only, renoise.Pattern object]
@@ -109,19 +114,23 @@ renoise.song().selected_pattern_track  TODO: , _observable
 renoise.song().selected_pattern_index   TODO: , _observable
   -> [number]
 
+-- the currently edited sequence
 renoise.song().selected_sequence_index, _observable
   -> [number]
 
+-- the currently edited line in the edited sequence/pattern
 renoise.song().selected_line
   -> [read-only, renoise.PatternTrackLine object]
 renoise.song().selected_line_index
   -> [number]
 
+-- the currently edited column in the selected line in the edited sequence/pattern
 renoise.song().selected_note_column
   -> [read-only, renoise.NoteColumn object or nil], [renoise.Line object or nil]
 renoise.song().selected_note_column_index
   -> [number or nil (when an effect column is selected)]
 
+-- the currently edited column in the selected line in the edited sequence/pattern
 renoise.song().selected_effect_column
   -> [read-only, renoise.EffectColumn or nil], [renoise.Line object or nil]
 renoise.song().selected_effect_column_index
