@@ -865,6 +865,48 @@ renoise.song().patterns[].tracks[]:automation[].dest_parameter
 renoise.song().patterns[].tracks[]:automation[].playmode, _observable
   -> [enum PLAYMODE]
 
+
+-- max length (time) of the automation. will always fit the patterns length
+renoise.song().patterns[].tracks[]:automation[].length
+  -> [number]
+
+-- get all points of the automation. when setting a new list of points, 
+-- items may be unsorted by time, but there may not be multiple points 
+-- for the same time. returns a copy of the list, so changing 
+-- points[1].value will not do anything. change them via points = {
+-- something } instead....
+renoise.song().patterns[].tracks[]:automation[].points, _observable
+  -> [list of {time, value} tables]
+
+-- an automation points time in pattern lines
+renoise.song().patterns[].tracks[]:automation[].points[].time
+  -> [number, 1 - NUM_LINES_IN_PATTERN]
+-- an automation points value [0 - 1.0]
+renoise.song().patterns[].tracks[]:automation[].points[].value
+  -> [number, 0 - 1.0]
+
+
+-- functions
+  
+-- removes all points from the automation. will not delete the automation
+-- from tracks[]:automation, but it will not do anything at all...
+renoise.song().patterns[].tracks[]:automation[]:clear()
+
+-- copy all points and playback settings from another track automation
+renoise.song().patterns[].tracks[]:automation[]:copy_from()
+
+
+-- test if a point exists at the given time (in lines)
+renoise.song().patterns[].tracks[]:automation[]:has_point_at(time)
+   -> [boolean]
+   
+-- insert a new point, or change an existing one, if a point at the 
+-- time already exists   
+renoise.song().patterns[].tracks[]:automation[]:add_point_at(time, value)
+
+-- removes a point at the given time. point must exist
+renoise.song().patterns[].tracks[]:automation[]:remove_point_at(time)
+  
   
 --------------------------------------------------------------------------------
 -- renoise.PatternTrackLine
