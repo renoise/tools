@@ -13,6 +13,11 @@ renoise.tool():add_menu_entry {
 -- -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 -- content
 -- -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+
+
+local smm_debug = true
+
+
 local remote_session = false
 local start_sample = 1
 local base_note = 48
@@ -48,7 +53,9 @@ local obj_slider = 8
 local obj_minislider = 9 
 local obj_textfield = 10 
 local obj_valuefield = 11 
-local smm_debug = nil
+
+local last_attached_instrument = nil
+
 
 local note_array = {}
 local valid_notes = {
@@ -534,59 +541,92 @@ function map_sample_range()
 end
 
 function update_instrument()
-  local instrument_observable = renoise.song().selected_instrument_observable
-  local sample_observable = renoise.song().selected_sample_observable
   local idx = renoise.song().selected_instrument_index
-  local song_observable = renoise.tool().app_new_document_observable
   local cur_ins = renoise.song().instruments[idx]
   end_sample = #cur_ins.samples
-  if smm_debug then
-    print ("sample or instrument change")
-  end
-  if not (splitmap_dialog and splitmap_dialog.visible) then
-    if instrument_observable:has_notifier(update_instrument) then
-      instrument_observable:remove_notifier(update_instrument)
-      sample_observable:remove_notifier(update_instrument)
-      song_observable:remove_notifier(close_tool_dialog)
       if smm_debug then
-        print ("removed notifiers in notice function")
+        print ("updating GUI objects")
       end
+
+  if (splitmap_dialog and splitmap_dialog.visible) then
+    if smm_debug then
+      print ("Dialog is noticed...")
     end
-  else
     vb_splitmap.views.end_sample_field.value = string.format("0x%X",  math.floor(end_sample-1)) 
     vb_splitmap.views.end_sample.value = math.floor(end_sample)
   end
 end
-function close_tool_dialog()
-  local instrument_observable = renoise.song().selected_instrument_observable
-  local sample_observable = renoise.song().selected_sample_observable
-  local song_observable = renoise.tool().app_new_document_observable
 
-    if instrument_observable:has_notifier(update_instrument) then
-      instrument_observable:remove_notifier(update_instrument)
-      sample_observable:remove_notifier(update_instrument)
-      song_observable:remove_notifier(close_tool_dialog)
+
+
+
+function selected_instrument_changed()
+  -- detach from previously attached sample lists
+  if smm_debug then
+    print ("updating instrument")
+  end
+  if (last_attached_instrument) then
       if smm_debug then
-        print ("removed notifiers in close function")
+        print ("removing old sample notifier")
       end
-    end
-    if splitmap_dialog.visible == true then
-      splitmap_dialog:close()
-    end
+
+    last_attached_instrument.samples_observable:remove_notifier(selected_sample_list_changed)
+  end
+
+  -- attach to new sample list
+  last_attached_instrument = renoise.song().selected_instrument
+  
+  if (last_attached_instrument) then
+      if smm_debug then
+        print ("adding new sample notifier")
+      end
+    last_attached_instrument.samples_observable:add_notifier(selected_sample_list_changed)
+  end
+
+  -- and update  
+  update_instrument()
+end
+
+function selected_sample_list_changed()
+  -- only update
+  update_instrument()
+end
+
+
+function close_tool_dialog()
+  if smm_debug then
+    print ("closing dialog")
+  end
+--  if renoise.tool().app_new_document_observable:has_notifier(set_observers) then
+--    song_observable:remove_notifier(close_tool_dialog)
+--  end
+  if (last_attached_instrument) then
+--    last_attached_instrument.samples_observable:remove_notifier(selected_sample_list_changed)
+    last_attached_instrument = nil
+  end
+
+  if splitmap_dialog.visible == true then
+    splitmap_dialog:close()
+  end
 end
 
 function set_observers()
-  local instrument_observable = renoise.song().selected_instrument_observable
-  local sample_observable = renoise.song().selected_sample_observable
+  if smm_debug then
+    print ("setting observers")
+  end
+  local selected_instrument_observable = renoise.song().selected_instrument_observable
   local song_observable = renoise.tool().app_new_document_observable
-  
-  if renoise.tool().app_new_document_observable:has_notifier(set_observers) then
-    song_observable:remove_notifier(close_tool_dialog)
+
+  -- close the dialog as soon as a new song is loaded.
+  if not renoise.tool().app_new_document_observable:has_notifier(close_tool_dialog) then
+    song_observable:add_notifier(close_tool_dialog)
   end 
-    if not instrument_observable:has_notifier(update_instrument) then
-      song_observable:add_notifier(close_tool_dialog)
-      sample_observable:add_notifier(update_instrument)
-      instrument_observable:add_notifier(update_instrument)
-    end
+  -- get notified when the current instrument changed (the one we want to change)
+  if not (selected_instrument_observable:has_notifier(selected_instrument_changed)) then
+    selected_instrument_observable:add_notifier(selected_instrument_changed)
+  end
+  
+  -- and when the selected instruments sample list changed (selected_instrument_changed will attach)
+  selected_instrument_changed()
   
 end
