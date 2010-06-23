@@ -3,6 +3,12 @@
 ------------------------------------------------------------------------------
 
 
+sirc_debug = false
+
+DISCONNECTED = 0
+IN_PROGRESS = 1
+CONNECTED = 2
+
 irc_host = "canis.esper.net"
 irc_port = 6667
 irc_user = "guest"
@@ -16,21 +22,25 @@ rirc = nil
 last_idle_time = 0
 irc_dialog = nil
 chat_dialog = nil
+connect_progress_dialog = nil
 session = {}
 sessions = 1
 target = nil
 vb_channel = nil
 vb_status = nil
-sirc_debug = false
+vb_login = nil
 active_channel = nil
 quit_reply = nil
+status_dialog_mode = false
+switch_channel = true
+connection_status = DISCONNECTED
 
 channel_users = {}
 
 known_commands = {
  "join", "part", "nick", "list", "names", "topic", "invite", "stats",
  "kick", "links", "time", "trace", "connect", "admin", "info", "who",
- "whois", "whowas", "notice", "version", "quit", "oper", "mode"
+ "whois", "whowas", "notice", "version", "quit", "oper", "mode", "privmsg"
 }
 
 string.split = function(str, pattern)
