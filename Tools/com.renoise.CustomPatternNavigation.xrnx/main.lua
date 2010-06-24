@@ -44,7 +44,7 @@ function process_messages(message)
   local song = renoise.song()
   local pattern = song.patterns[song.selected_pattern_index]
   local line = song.selected_line_index
-  local instrument = song.selected_instrument_index
+  local instrument = song.selected_instrument_index -1
 
   if message[1] == 0x90 then
     if message[3] ~= 0 then
