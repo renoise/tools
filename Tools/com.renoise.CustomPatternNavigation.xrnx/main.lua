@@ -19,8 +19,14 @@ renoise.tool():add_keybinding {
 -- main content
 -- -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 require "mididevice"
+
+TYPE_TRACK = 1
+TYPE_MASTER = 2
+TYPE_SEND = 3
+
 midi_notes = {}
 note_table = {"C-", "C#","D-","D#","E-","F-","F#","G-","G#","A-","A#","B-"}
+
 -------------------------------------------------------------------------------
 
 function routing_dialog()
@@ -45,7 +51,8 @@ function process_messages(message)
   local pattern = song.patterns[song.selected_pattern_index]
   local line = song.selected_line_index
   local instrument = song.selected_instrument_index -1
-
+  local max_tracks = #song.tracks
+  
   if message[1] == 0x90 then
     if message[3] ~= 0 then
       print (midi_notes[tonumber(message[2])+1])
@@ -53,20 +60,22 @@ function process_messages(message)
       local cur_note = message[3] + 1
       local cur_note_string = midi_notes[tonumber(message[2])+1]
       for t = 1, 12 do
-        if string.sub(cur_note_string,1,2) == note_table[t] then
-          local visible_note_columns = song.tracks[t].visible_note_columns
+        if t <= max_tracks then
+          if song.tracks[t].type == TYPE_TRACK then
+            if string.sub(cur_note_string,1,2) == note_table[t] then
+              local visible_note_columns = song.tracks[t].visible_note_columns
 
-
-          pattern.tracks[t].lines[line].note_columns[1].note_string = midi_notes[(tonumber(message[2])+1)]
+              pattern.tracks[t].lines[line].note_columns[1].note_string = midi_notes[(tonumber(message[2])+1)]
           
-          pattern.tracks[t].lines[line].note_columns[1].instrument_value = instrument
-          pattern.tracks[t].lines[line].note_columns[1].volume_value = message[3]
-          break
+              pattern.tracks[t].lines[line].note_columns[1].instrument_value = instrument
+              pattern.tracks[t].lines[line].note_columns[1].volume_value = message[3]
+              break
+            end
+          end
         end
       end
-      
     else
-      print (string.lower(midi_notes[tonumber(message[2])+1]))
+      print ("OFF "..string.lower(midi_notes[tonumber(message[2])+1]))
 --      print ("OFF")
     end
   end
