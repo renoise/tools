@@ -1,12 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <RenoiseScriptingTool>
   <ApiVersion>0.3</ApiVersion>
-  <Id>com.renoise.NoteRouter</Id>
-  <Version>0.1</Version>
-  <Name>Key-note Router</Name>
+  <Id>com.renoise.CustomPatternNavigation</Id>
+  <Version>2.303</Version>
+  <Name>Custom Pattern Navigation</Name>
   <Author>Vincent Voois [ http://tinyurl.com/vvrns ]</Author>
-  <Description>Routes notes to programmed tracks based their mappings</Description>
+  <Description>Adds keybindings to jump an arbitrary amount of lines in the Pattern Editor. When activated, two new key binding entries will show up in 'Pattern Editor', 'Navigation': 
+'Custom Jump Lines Up' and Custom Jump Lines Down. Those keybindings can then be configured with in the 'Tools' menu.</Description>
   <Category>Pattern Editor</Category>
   <Homepage>http://scripts.renoise.com</Homepage>
 </RenoiseScriptingTool>
+
 
