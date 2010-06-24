@@ -132,6 +132,7 @@ function print_server_replies()
             active_channel = irc_channel
             if connect_progress_dialog ~= nil then
               connect_progress_dialog:close()
+              connect_progress_dialog = nil
               connection_status = CONNECTED
             end
 
