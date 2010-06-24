@@ -1,22 +1,8 @@
 -- -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
--- menu registration
--- -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-
-renoise.tool():add_menu_entry {
-  name = "Instrument Box:Split Map Manager...",
-  invoke = function() 
-     open_splitmap_dialog()
-  end
-}
-
-
--- -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 -- content
 -- -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
-
-local smm_debug = true
-
+local smm_debug = false
 
 local remote_session = false
 local start_sample = 1
@@ -128,7 +114,8 @@ function open_splitmap_dialog()
                object_slider('end_sample','end_sample_text','End sample', 
                end_sample,function(value) sample_textfield(value,vb,false)end,
                function(value) sample_slider(value,vb,false) end,
-               'end_sample_field',string.format("0x%X", math.floor(end_sample-1)), math.floor(start_sample), math.floor(end_sample)),
+               'end_sample_field',string.format("0x%X", math.floor(end_sample-1)), 
+               math.floor(start_sample), math.floor(end_sample)),
             },
             vb:row {
                object_slider('start_split','start_split_text','Split start', 
@@ -230,7 +217,9 @@ function open_splitmap_dialog()
    else
       splitmap_dialog:show()
    end
-   set_observers()
+   
+   -- get notified of changes that are done in the song while our dialog is open
+   attach_to_song()
 end
 
 
@@ -540,93 +529,115 @@ function map_sample_range()
    set_base_notes()
 end
 
-function update_instrument()
-  local idx = renoise.song().selected_instrument_index
-  local cur_ins = renoise.song().instruments[idx]
-  end_sample = #cur_ins.samples
-      if smm_debug then
-        print ("updating GUI objects")
-      end
 
+-----------------------------------------------------------------------------
+
+-- update the properties of the currently selected instrument in the dialog,
+-- when the isntument changed outside of the dialog, not from within our script
+
+function update_visible_instrument()
   if (splitmap_dialog and splitmap_dialog.visible) then
     if smm_debug then
-      print ("Dialog is noticed...")
+      print ("update_visible_instrument")
     end
-    vb_splitmap.views.end_sample_field.value = string.format("0x%X",  math.floor(end_sample-1)) 
+  
+    -- only ned to update, verify the end_sample in the split
+    end_sample = #renoise.song().selected_instrument.samples
+
+    vb_splitmap.views.end_sample_field.value = 
+      string.format("0x%X",  math.floor(end_sample-1)) 
+
     vb_splitmap.views.end_sample.value = math.floor(end_sample)
   end
 end
 
 
-
+-- called as soon as a new instrument was selected
 
 function selected_instrument_changed()
-  -- detach from previously attached sample lists
   if smm_debug then
-    print ("updating instrument")
+    print ("selected_instrument_changed")
   end
+  
+  -- detach from a previously attached sample list
   if (last_attached_instrument) then
-      if smm_debug then
-        print ("removing old sample notifier")
-      end
-
-    last_attached_instrument.samples_observable:remove_notifier(selected_sample_list_changed)
+    last_attached_instrument.samples_observable:remove_notifier(
+      selected_sample_list_changed)
   end
 
-  -- attach to new sample list
+  -- attach to the new sample list
   last_attached_instrument = renoise.song().selected_instrument
   
   if (last_attached_instrument) then
-      if smm_debug then
-        print ("adding new sample notifier")
-      end
-    last_attached_instrument.samples_observable:add_notifier(selected_sample_list_changed)
+    last_attached_instrument.samples_observable:add_notifier(
+      selected_sample_list_changed)
   end
 
   -- and update  
-  update_instrument()
+  update_visible_instrument()
 end
+
+
+-- called as soon as the sample list of the selected instrument changed
 
 function selected_sample_list_changed()
+  if smm_debug then
+    print ("selected_sample_list_changed")
+  end
+  
   -- only update
-  update_instrument()
+  update_visible_instrument()
 end
 
 
-function close_tool_dialog()
+-- add notifiers to the selected instruments sample list (the one we change)
+
+function attach_to_song()
   if smm_debug then
-    print ("closing dialog")
+    print ("attach_to_song")
   end
---  if renoise.tool().app_new_document_observable:has_notifier(set_observers) then
---    song_observable:remove_notifier(close_tool_dialog)
---  end
-  if (last_attached_instrument) then
---    last_attached_instrument.samples_observable:remove_notifier(selected_sample_list_changed)
-    last_attached_instrument = nil
+  
+  local selected_instrument_observable = 
+    renoise.song().selected_instrument_observable
+  
+  if not (selected_instrument_observable:has_notifier(
+      selected_instrument_changed)) then
+    
+    selected_instrument_observable:add_notifier(
+      selected_instrument_changed)
+  end
+  
+  -- attach to the sample list (selected_instrument_changed will do that)
+  selected_instrument_changed()
+end
+
+
+-- close the dialog as soon as a new song was loaded/created.
+  
+function handle_new_song_notification()
+  if smm_debug then
+    print ("handle_new_song_notification")
   end
 
-  if splitmap_dialog.visible == true then
+  -- old song is gone now, so we need to reattach
+  last_attached_instrument = nil
+  
+  if (splitmap_dialog and splitmap_dialog.visible) then
     splitmap_dialog:close()
   end
 end
 
-function set_observers()
-  if smm_debug then
-    print ("setting observers")
-  end
-  local selected_instrument_observable = renoise.song().selected_instrument_observable
-  local song_observable = renoise.tool().app_new_document_observable
 
-  -- close the dialog as soon as a new song is loaded.
-  if not renoise.tool().app_new_document_observable:has_notifier(close_tool_dialog) then
-    song_observable:add_notifier(close_tool_dialog)
-  end 
-  -- get notified when the current instrument changed (the one we want to change)
-  if not (selected_instrument_observable:has_notifier(selected_instrument_changed)) then
-    selected_instrument_observable:add_notifier(selected_instrument_changed)
+-- -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+-- tool registration
+-- -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+
+renoise.tool().app_new_document_observable:add_notifier(
+  handle_new_song_notification)
+
+renoise.tool():add_menu_entry {
+  name = "Instrument Box:Split Map Manager...",
+  invoke = function() 
+     open_splitmap_dialog()
   end
-  
-  -- and when the selected instruments sample list changed (selected_instrument_changed will attach)
-  selected_instrument_changed()
-  
-end
+}
