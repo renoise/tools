@@ -22,18 +22,22 @@ renoise.tool():add_keybinding {
   name = "Instrument Box:Navigation:Select previous sample",
   invoke = function() sample("selectprevious") end
 }
+
 renoise.tool():add_keybinding {
   name = "Instrument Box:Navigation:Select next sample",
   invoke = function() sample("selectnext") end
 }
+
 renoise.tool():add_keybinding {
   name = "Instrument Box:Edit:Move sample up",
   invoke = function() sample("moveup") end
 }
+
 renoise.tool():add_keybinding {
   name = "Instrument Box:Edit:Move sample down",
   invoke = function() sample("movedown") end
 }
+
 renoise.tool():add_keybinding {
   name = "Instrument Box:Edit:Insert new sample",
   invoke = function() sample("insert") end
@@ -66,43 +70,59 @@ function sample(choice)
   local selected_sample = song.selected_sample_index
 
   if choice == "selectprevious" then
+
     if song.selected_sample_index > 1 then
       song.selected_sample_index = song.selected_sample_index - 1
     end
+
   end
+
   if choice == "selectnext" then
     local max_samples = #song.instruments[selected_instrument].samples
+
     if song.selected_sample_index < max_samples then
       song.selected_sample_index = song.selected_sample_index +1
     end
+
   end
+
   if choice == "rename" then
     song.instruments[selected_instrument].samples[selected_sample].name = name_dialog(song.instruments[selected_instrument].samples[selected_sample].name, selected_sample)
   end
+
   if choice == "moveup" then
+
     if song.selected_sample_index > 2 then
       song.selected_sample_index = song.selected_sample_index - 1
       song.instruments[selected_instrument]:swap_samples_at(selected_sample, selected_sample - 1)
     end 
+
   end
+
   if choice == "movedown" then
     local max_samples = #song.instruments[selected_instrument].samples
+
     if song.selected_sample_index < max_samples-1 then
       song.selected_sample_index = song.selected_sample_index +1
       song.instruments[selected_instrument]:swap_samples_at(selected_sample, selected_sample +1)
     end
+
   end
+
   if choice == "insert" then
     song.instruments[selected_instrument]:insert_sample_at(selected_sample)
   end
+
   if choice == "delete" then
     song.instruments[selected_instrument]:delete_sample_at(selected_sample)
   end
+
   if choice == "clear" then
     song.instruments[selected_instrument].samples[selected_sample]:clear()
   end
   
 end
+
 
 function name_dialog(old_name, sample)
   local application = renoise.app()
@@ -131,6 +151,7 @@ function name_dialog(old_name, sample)
   
   return vb.views.sample_name.text
 end
+
 
 function key_handler(dialog, mod, key)
   if (mod == "" and key == "esc") or (mod == "" and key == "enter") then
