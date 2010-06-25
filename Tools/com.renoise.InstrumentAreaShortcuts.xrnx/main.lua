@@ -18,13 +18,6 @@
 --
 -- -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
-renoise.tool():add_menu_entry {
-  name = "Main Menu:Tools:Rename Samples...",
-  invoke = function() 
-     sample('niets')
-  end
-}
-
 renoise.tool():add_keybinding {
   name = "Instrument Box:Navigation:Select previous sample",
   invoke = function() sample("selectprevious") end
