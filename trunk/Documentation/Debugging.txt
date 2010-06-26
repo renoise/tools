@@ -162,7 +162,7 @@ When changing any files that are part of the "Libraries" folder, all scripts
 will get reloaded.
 
 When working with an external text editor, you can enable a debug option 
-somehwere in the tools man.lua file:
+somehwere in the tools main.lua file:
 
     _AUTO_RELOAD_DEBUG = function()
       -- do tests like showing a dialog, prompts whatever, or simply do nothing
