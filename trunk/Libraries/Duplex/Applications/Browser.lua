@@ -65,6 +65,9 @@ function Browser:__init(device_name, app_name)
   -- number, selected device index 
   self.__device_index = nil
 
+  -- registered menu entries
+  self.__menu_entries = table.create()
+
   self.stream = MessageStream()
   self.vb = renoise.ViewBuilder()
   self:build_app()
@@ -316,6 +319,7 @@ function Browser:set_application(app_name, start_running)
         if (device_config)then
           app.browser = self
           app.device_display_name = self.__device_name
+          app.app_display_name = app_name
         end
       end
 
@@ -369,22 +373,29 @@ end
 -- (re)build the menu, include pinned scripts 
 
 function Browser:build_menu()
+  TRACE("Browser:build_menu()")
 
   local HLINE = "--- "
   local prefix = HLINE
+  local entry_name = nil
+
+  -- start by removing existing entries
+  for k,v in ripairs(self.__menu_entries) do
+    renoise.tool():remove_menu_entry(v)
+    self.__menu_entries:remove(k)
+  end
 
   -- loop through duplex config
   for v,k in pairs(self.__devices) do
-
     prefix = HLINE
-
     -- for each pinned item
     if(k.pinned)then
       for v2,k2 in pairs(k.pinned) do
-      
-        -- create "pinned" device/app 
+        entry_name = ("Main Menu:Tools:Duplex:%s"):format(k2)
+        self.__menu_entries:insert(entry_name)
         renoise.tool():add_menu_entry {
-          name = prefix.."Main Menu:Tools:Duplex:"..k2,
+          name = ("%s%s"):format(prefix,entry_name),
+          --selected = 
           invoke = function() 
             show_dialog(k.display_name, v2) 
           end
@@ -394,8 +405,11 @@ function Browser:build_menu()
     end
   end
 
+  entry_name = "Main Menu:Tools:Duplex:Dump MIDI"
+  self.__menu_entries:insert(entry_name)
+
   renoise.tool():add_menu_entry {
-    name = "--- Main Menu:Tools:Duplex:Dump MIDI messages",
+    name = ("%s%s"):format(HLINE,entry_name),
     selected = function()
       return self.__dump_midi
     end,
@@ -495,8 +509,8 @@ function Browser:build_app()
         vb:checkbox{
             value=false,
             id='dpx_browser_application_checkbox',
-            notifier=function(e)
-              if e then
+            notifier=function(v)
+              if v then
                 self:start_app()
               else
                 self:stop_app()

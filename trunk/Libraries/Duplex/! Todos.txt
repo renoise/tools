@@ -42,7 +42,6 @@ Planned / Todo
   o FX parameter Mixer (control currently selected FX)
 
 * MixConsole: 
-  o Track delay? 
   o Support "OFF" and "MUTE" modes (which depend on Renoise preference)
 
 * Application configuration panel:
