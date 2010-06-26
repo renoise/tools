@@ -90,6 +90,23 @@ function client_login()
           irc_real_name = text
         end
       },
+    },
+    vb:row{
+      vb:checkbox {
+        width = 17,
+        value = status_dialog_mode,
+        id = 'irc_status_dialog_mode',
+        notifier = function(value)
+          status_dialog_mode = value
+        end
+      },
+      vb:space {
+        width = 62,
+      },
+      vb:text {
+        width = TEXT_ROW_WIDTH,
+        text = "Show status-window",
+      },
     }
   }
   
@@ -107,8 +124,6 @@ function client_login()
         id = 'irc_nick_name',
         notifier = function(text)
           irc_nick_name = text
-          connect_to_server(vb)
-          login_dialog:close()          
         end
       },
     },
@@ -164,11 +179,11 @@ function client_login()
   
   vb.views.login_dialog_content.visible = false
   vb.views.visible_login_dialog:resize()         
-  
+  vb_login = vb
   -- DIALOG
   if (not login_dialog or not login_dialog.visible) then
     login_dialog = renoise.app():show_custom_dialog(
-      "Chat connect", dialog_content, key_handler
+      "Chat connect", dialog_content, login_key_handler
     )
   end
 
@@ -190,6 +205,10 @@ function status_dialog()
     
   local TEXT_ROW_WIDTH = 80
 
+
+  if status_dialog_mode == false then
+    return
+  end
 
   -- CONTROL ROWS
   
@@ -290,6 +309,12 @@ function chat_dialog_control(target)
   local TEXT_ROW_WIDTH = 80
   local no_loop = 0
   
+  if irc_dialog == nil then
+    --If dialog is being closed now, the connection is broken
+    --yet only if the status window is not being used.
+    switch_channel = false 
+  end
+  
   local chat_frame_row = vb:column{
     vb:row{    
       vb:column {
@@ -370,4 +395,37 @@ function chat_dialog_control(target)
     )
   end
   vb_channel = vb
+end
+
+------------------------------------------------------------------------------
+----------------------       Connection progress frame     -------------------
+------------------------------------------------------------------------------
+
+function progress_dialog()
+  local vb = renoise.ViewBuilder()
+  
+  local DIALOG_MARGIN = renoise.ViewBuilder.DEFAULT_DIALOG_MARGIN
+  local CONTENT_SPACING = renoise.ViewBuilder.DEFAULT_CONTROL_SPACING
+  local CONTENT_MARGIN = renoise.ViewBuilder.DEFAULT_CONTROL_MARGIN
+  local DEFAULT_CONTROL_HEIGHT = renoise.ViewBuilder.DEFAULT_CONTROL_HEIGHT
+  local CONTROL_MARGIN = renoise.ViewBuilder.DEFAULT_CONTROL_MARGIN
+    
+  local TEXT_ROW_WIDTH = 80
+  
+  local message_row = vb:column{
+    vb:row{
+      vb:text {
+        width = TEXT_ROW_WIDTH,
+        text = "Please wait while connecting..."
+      },
+    }  
+  }
+  
+  
+  -- DIALOG
+  if (not connect_progress_dialog or not connect_progress_dialog.visible) then
+    connect_progress_dialog = renoise.app():show_custom_dialog(
+      'Connecting...', message_row, key_handler
+    )
+  end
 end

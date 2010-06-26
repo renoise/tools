@@ -12,15 +12,18 @@ pcall(require, "future")
 
 MODULE_PATH = "./Duplex/"  
 NOTE_ARRAY = { "C-","C#","D-","D#","E-","F-","F#","G-","G#","A-","A#","B-" }
+PITCH_BEND = "PITCHBEND"
 
 -- Protocols
 
 DEVICE_OSC_PROTOCOL = 0
 DEVICE_MIDI_PROTOCOL = 1
 
-MIDI_CC_MESSAGE = 6
-MIDI_NOTE_MESSAGE = 7
-OSC_MESSAGE = 8
+MIDI_CC_MESSAGE = 2
+MIDI_NOTE_MESSAGE = 3
+MIDI_PITCH_BEND = 4
+
+OSC_MESSAGE = 5
 
 -- Event types
 
@@ -38,13 +41,17 @@ DEVICE_EVENT_BUTTON_HELD = 13
 -- bidirectional button (LED)
 CONTROLLER_BUTTON = 20    
 --  bidirectional encoder (LED)
-CONTROLLER_ENCODER = 21  
--- manual fader (possibly with parameter-pickup, so we both recieve & transmit MIDI)  
+--CONTROLLER_ENCODER = 21  
+-- manual fader *
 CONTROLLER_FADER = 22    
 -- motorized fader
-CONTROLLER_MFADER = 23   
--- basic rotary encoder (MIDI input only) 
-CONTROLLER_POT = 24      
+--CONTROLLER_MFADER = 23   
+-- basic rotary encoder 
+CONTROLLER_DIAL = 24      
+
+-- * the fader possibly has parameter-pickup,
+-- so we choose to transmit MIDI anyway
+-- (assuming that the device supports input)
 
 VERTICAL = 80
 HORIZONTAL = 81
@@ -75,10 +82,9 @@ function compare(val1,val2,precision)
 end
 
 -- quick'n'dirty table compare, compares values (not keys)
--- @table1,2 : indexed tables to compare
 -- @return boolean, true if identical
 
-function table_compare(table1,table2)
+function table_compare(t1,t2)
   local to_string = function(t)
     local rslt = ""
     for _,__ in ipairs(table.values(t))do
@@ -86,9 +92,23 @@ function table_compare(table1,table2)
     end
     return rslt
   end
-  return (to_string(table1)==to_string(table2))
+  return (to_string(t1)==to_string(t2))
 end
 
+-- count table entries, including mixed types
+-- @return number or nil
+
+function table_count(t)
+  local n=0
+  if ("table" == type(t)) then
+    for key in pairs(t) do
+      n = n + 1
+    end
+    return n
+  else
+    return nil
+  end
+end
 
 -- get_master_track
 

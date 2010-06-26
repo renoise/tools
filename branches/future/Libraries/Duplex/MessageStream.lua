@@ -30,7 +30,7 @@ class 'MessageStream'
 function MessageStream:__init()
   TRACE('MessageStream:__init')
 
-  self.change_listeners = table.create() -- for faders,encoders
+  self.change_listeners = table.create() -- for faders,dials
   self.press_listeners = table.create() -- for buttons
   self.hold_listeners = table.create()  -- buttons
   --self.release_listeners = {}  -- buttons
@@ -153,11 +153,11 @@ function MessageStream:input_message(msg)
   
   self.current_message = msg
   
-  if (msg.input_method == CONTROLLER_ENCODER) or 
-     (msg.input_method == CONTROLLER_FADER or 
-      msg.input_method == CONTROLLER_POT) then
+--  if (msg.input_method == CONTROLLER_ENCODER) or 
+  if (msg.input_method == CONTROLLER_FADER or 
+      msg.input_method == CONTROLLER_DIAL) then
 
-      -- "analogue" input 
+      -- "analogue" input, value between max/min
     
     for _,listener in ipairs(self.change_listeners)  do 
       listener.handler() 
@@ -165,7 +165,7 @@ function MessageStream:input_message(msg)
   
   elseif (msg.input_method == CONTROLLER_BUTTON) then
 
-    --  "binary" input
+    --  "binary" input, value either max or min 
 
     -- if it's listed in ignored_buttons
     -- remove from ignored_buttons and exit
@@ -247,7 +247,7 @@ function Message:__init(device)
   self.max = nil --  maximum accepted/output value
   self.min = nil --  minimum accepted/output value
   
-  -- the input method type - CONTROLLER_BUTTON/ENCODER/etc. 
+  -- the input method type - CONTROLLER_BUTTON/DIAL/etc. 
   self.input_method = nil 
 
   -- true once the button is held for a while

@@ -33,6 +33,10 @@ function UIToggleButton:__init(display)
 
   -- initial state is nil
   self.active = nil
+
+  -- paint inverted
+  self.inverted = false
+
   self._cached_active = nil
 
   self.palette = {
@@ -183,17 +187,29 @@ end
 function UIToggleButton:draw()
   TRACE("UIToggleButton:draw")
 
+  local foreground,foreground_dimmed,background
+
+  if(self.inverted)then
+    foreground = self.palette.background
+    foreground_dimmed = self.palette.background
+    background = self.palette.foreground
+  else
+    foreground = self.palette.foreground
+    foreground_dimmed = self.palette.foreground_dimmed
+    background = self.palette.background
+  end
+  
   local point = CanvasPoint()
 
   if self.active then
     if self.dimmed then
-      point.apply(point,self.palette.foreground_dimmed)
+      point.apply(point,foreground_dimmed)
     else
-      point.apply(point,self.palette.foreground)
+      point.apply(point,foreground)
     end
     point.val = true
   else
-    point.apply(point,self.palette.background)
+    point.apply(point,background)
     point.val = false
   end
   self.canvas.fill(self.canvas,point)
