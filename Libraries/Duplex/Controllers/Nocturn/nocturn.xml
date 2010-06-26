@@ -1,7 +1,7 @@
 <Device>
   <Name>Novation Nocturn</Name>
   <Author>Danoise</Author>
-  <Description>Controlmap for Novation Nocturn. Before using the controller you need to edit the Automap user layout, so that the cross-fader is assigned to CC#127 and all buttons are working in "normal" mode. Otherwise, the Automap software might cause buttons to turn on and off when they shouldn't. Alternatively, you can simply download the automap definition from this address: [link]</Description>
+  <Description>Controlmap for Novation Nocturn. Before using the controller you need to ensure that the Automap user layout is identical to the default one. The cross-fader is assigned to CC#127 and all buttons are working in "normal" mode. Otherwise, if you have created some different preset yourself, the Automap software might cause buttons to turn on and off when they shouldn't.</Description>
   <Parameters>
     <Page>
       <Column>
@@ -31,7 +31,7 @@
         </Row>
         <Row>
           <Group name="XFader" orientation="horizontal" align="center">
-            <Param value="CC#127" type="fader" name="X-Fader" orientation="horizontal" size="8" maximum="127" minimum="0"/>
+            <Param value="PITCHBEND" type="fader" name="X-Fader" orientation="horizontal" size="8" maximum="127" minimum="0"/>
           </Group>
         </Row>
 

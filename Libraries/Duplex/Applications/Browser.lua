@@ -38,6 +38,9 @@ function Browser:__init(device_name, app_name)
 
   Application.__init(self)
 
+  -- dump midi information to console
+  self.__dump_midi = false
+
   -- processes is a table containing processes launched by the browser,
   -- each time a new device is selected, a process is started
   -- {
@@ -53,6 +56,7 @@ function Browser:__init(device_name, app_name)
   self.__process = nil 
 
   -- list of duplex device definitions
+  -- goes before build...
   self.__devices = table.create(self:__get_custom_devices())
 
   -- string, selected device display-name 
@@ -64,7 +68,8 @@ function Browser:__init(device_name, app_name)
   self.stream = MessageStream()
   self.vb = renoise.ViewBuilder()
   self:build_app()
-  
+  --self:build_menu()
+
   -- the browser is always active
   Application.start_app(self)
 
@@ -149,6 +154,7 @@ function Browser:set_device(device_name)
         for idx,v in ripairs(k.applications) do
           v:destroy_app()
           k.applications:remove(idx)
+          k.app_names:remove(idx)
         end
       end
       k.display = nil
@@ -191,7 +197,7 @@ function Browser:set_device(device_name)
           -- initialize new device/process 
           if (k.class_name) then
             -- device has its own class
-            self:__instantiate_device(k.display_name,k.class_name, k.device_name, k.control_map)
+            self:__instantiate_device(k.display_name,k.class_name, k.device_name, k.control_map,k.protocol)
           elseif (k.control_map) then
             -- device has a control map but no class. use a default one
             local generic_class = nil
@@ -246,6 +252,7 @@ function Browser:set_application(app_name, start_running)
       for idx,v in ripairs(self.__process.applications) do
         v:destroy_app()
         self.__process.applications:remove(idx)
+        self.__process.app_names:remove(idx)
       end
     end
     
@@ -258,7 +265,8 @@ function Browser:set_application(app_name, start_running)
     local app = nil
     if self.__process.applications then
       for _,k in ipairs(self.__process.applications) do
-          if (type(k) == app_name) then
+          --if (type(k) == app_name) then
+          if (self.__process.app_names[_] == app_name) then
             app = k
           end
       end
@@ -275,8 +283,10 @@ function Browser:set_application(app_name, start_running)
 
     else
       -- instantiate application
+
+      local raw_name = self:__strip_app_alias(app_name)
       
-      if (rawget(_G, app_name)) then
+      if (rawget(_G, raw_name)) then
 
         -- collect arguments
         local device_config = nil
@@ -287,6 +297,14 @@ function Browser:set_application(app_name, start_running)
           end
         end
         
+        local mappings = {}
+        if (device_config and 
+            device_config.mappings and 
+            device_config.mappings[app_name]) 
+        then
+          mappings = device_config.mappings[app_name]
+        end
+
         local options = {}
         if (device_config and 
             device_config.options and 
@@ -294,12 +312,16 @@ function Browser:set_application(app_name, start_running)
         then
           options = device_config.options[app_name]
         end
-
-        app = _G[app_name](self.__process.display,options)
+        app = _G[raw_name](self.__process.display,mappings,options)
+        if (device_config)then
+          app.browser = self
+          app.device_display_name = self.__device_name
+        end
       end
 
       if (app) then
         self.__process.applications:insert(app)
+        self.__process.app_names:insert(app_name)
       end
     end
 
@@ -309,21 +331,81 @@ function Browser:set_application(app_name, start_running)
     
   
     if (app) then
-    
       if(start_running) then
         self:start_app()
-        --self:__set_application_index(app_name)
       else
         self.vb.views.dpx_browser_application_checkbox.value = (app.active)
       end
     end
+
   end
 
-  -- hide run option if no application is selected
-  self.vb.views.dpx_browser_application_active.visible = 
-    (self.vb.views.dpx_browser_application.value ~= 1)
+
+  -- hide "run" option if no application is selected
+  local show_options = (self.vb.views.dpx_browser_application.value ~= 1)
+  self.vb.views.dpx_browser_application_options.visible = show_options
+  self.vb.views.dpx_browser_application_active.visible = show_options
+
 end
 
+--------------------------------------------------------------------------------
+
+-- start/stop device midi dump
+
+function Browser:__set_midi_dump(bool)
+
+  self.__dump_midi = bool
+  
+  for _,k in ipairs(self.__processes) do
+    if(k.device.protocol==DEVICE_MIDI_PROTOCOL)then
+      k.device.dump_midi = bool
+    end
+  end
+
+end
+
+--------------------------------------------------------------------------------
+
+-- (re)build the menu, include pinned scripts 
+
+function Browser:build_menu()
+
+  local HLINE = "--- "
+  local prefix = HLINE
+
+  -- loop through duplex config
+  for v,k in pairs(self.__devices) do
+
+    prefix = HLINE
+
+    -- for each pinned item
+    if(k.pinned)then
+      for v2,k2 in pairs(k.pinned) do
+      
+        -- create "pinned" device/app 
+        renoise.tool():add_menu_entry {
+          name = prefix.."Main Menu:Tools:Duplex:"..k2,
+          invoke = function() 
+            show_dialog(k.display_name, v2) 
+          end
+        }
+        prefix = ""
+      end
+    end
+  end
+
+  renoise.tool():add_menu_entry {
+    name = "--- Main Menu:Tools:Duplex:Dump MIDI messages",
+    selected = function()
+      return self.__dump_midi
+    end,
+    invoke = function() 
+      --self.__dump_midi = (not self.__dump_midi)
+      self:__set_midi_dump(not self.__dump_midi)
+    end
+  }
+
+end
 
 --------------------------------------------------------------------------------
 -------  Application class methods
@@ -371,6 +453,7 @@ function Browser:build_app()
       vb:button{
           id='dpx_browser_device_settings',
           text="Settings",
+          width=60,
           --visible=false,
           notifier=function(e)
             renoise.app():show_warning("Device settings not yet implemented")
@@ -390,11 +473,21 @@ function Browser:build_app()
           id='dpx_browser_application',
           items=table.create{"None"},
           value=1,
-          width=200,
+          width=140,
           notifier=function(e)
             local app_list = self:__get_available_apps()
             self:set_application(app_list[e])
           end
+      },
+      vb:button{
+        id="dpx_browser_application_options",
+        text = "Options",
+        width=60,
+        visible = false,
+        notifier=function(e)
+          --renoise.app():show_warning("Device settings not yet implemented")
+          self:show_app_options()
+        end
       },
       vb:row{
         id='dpx_browser_application_active',
@@ -419,6 +512,22 @@ function Browser:build_app()
 end
 
 
+--------------------------------------------------------------------------------
+
+-- bring up options dialog for the selected app
+
+function Browser:show_app_options()
+
+  local app = self:__get_selected_app()
+  if (app) then
+    app:build_options()
+    app:show_app()
+  end
+
+end
+
+--------------------------------------------------------------------------------
+
 -- start the currently selected app
 
 function Browser:start_app()
@@ -432,7 +541,10 @@ function Browser:start_app()
       -- invokes start_app again
       self.vb.views.dpx_browser_application_checkbox.value = true
     else
-      app:start_app()
+      if(app:start_app()==false)then
+        -- starting the app failed, probably due to missing/required parameters
+        self.vb.views.dpx_browser_application_checkbox.value = false
+      end
       self:__decorate_app_list()
     end
   end
@@ -507,6 +619,26 @@ end
 --------------------------------------------------------------------------------
 -------  private helper functions
 --------------------------------------------------------------------------------
+
+
+function Browser:__strip_app_alias(name)
+
+  local plain_find = true
+
+  -- check last three chars, up to 99 aliases are possible
+  local alias_index = string.match(name, "_(%d*)",-3)
+  if(alias_index==nil)then
+    return name
+  else
+    -- strip from name
+    return name:sub(1, #name - (#alias_index+1))
+  end
+
+end
+
+
+--------------------------------------------------------------------------------
+
 
 function Browser:__strip_na_postfix(name)
 
@@ -597,15 +729,18 @@ end
 function Browser:__decorate_app_list()
   TRACE("Browser:__decorate_app_list:")
 
+  local app_name 
   local app_list = self.vb.views.dpx_browser_application.items
   for _,process in ipairs(self.__processes) do
     if (process.name == self.__device_name) then
       for __,app in ipairs(process.applications) do
+        app_name = process.app_names[__]
         for v,k in ipairs(app_list) do
           k = self:__strip_running_postfix(k)
-          if (k == type(app)) then
+          --if (k == type(app)) then
+          if (k == app_name) then
             app_list[v] = app.active and 
-              (k .. APPLICATION_RUNNING_POSTFIX) or k
+              (app_name .. APPLICATION_RUNNING_POSTFIX) or app_name
           end
         end
       end
@@ -625,6 +760,8 @@ function Browser:__get_available_apps()
   TRACE("Browser:__get_available_apps:")
 
   -- full list of available applications 
+  -- allow you to create class aliases
+
   local app_list = table.create{    
     "None",
     "MixConsole",
@@ -637,6 +774,19 @@ function Browser:__get_available_apps()
   for _,k in ipairs(self.__devices) do 
     if (self.__device_name == k.display_name) then
       custom_device = k
+    end
+  end
+
+  -- add script aliases for existing applications
+  local stripped
+  if(custom_device.aliases)then
+    for v,alias in ipairs(custom_device.aliases)do
+      stripped = self:__strip_app_alias(alias)
+      for v2,k2 in ripairs(app_list) do
+        if(stripped == k2)then
+          app_list:insert(alias)
+        end
+      end
     end
   end
 
@@ -658,14 +808,16 @@ end
 --------------------------------------------------------------------------------
 
 -- duplex device definitions: 
--- class_name : (optional) indicates a custom device implementation
+-- class_name   : (optional) indicates a custom device implementation
 -- display_name : the "friendly" name that we assign to the device
--- device_name : the device name, as reported by the os (platform dependant?)
--- control_map : name of the default control-map
--- protocol : this is needed to instantiate a "generic" class
--- incompatible: list the applications that won't work with this device
--- options : the optional application arguments (groups-names)
--- @return table
+-- device_name  : the device name, as reported by the os (platform dependant?)
+-- control_map  : name of the default control-map
+-- protocol     : this is needed to instantiate a "generic" class
+-- incompatible : list the applications that won't work with this device
+-- mappings     : device-specific application mappings (group-names)
+-- pinned       : pinned to start menu
+-- aliases      : the aliases
+-- autostart    : start when duplex is loaded
 
 function Browser:__get_custom_devices()
 
@@ -675,22 +827,43 @@ function Browser:__get_custom_devices()
       class_name="Launchpad",      
       display_name="Launchpad",
       device_name="Launchpad",
-      --control_map="Controllers/Launchpad/launchpad.xml",
-      control_map="Controllers/Launchpad/launchpad_vertical_split.xml",
+      control_map="Controllers/Launchpad/launchpad.xml",
       protocol=DEVICE_MIDI_PROTOCOL,
-      options=table.create{
-        MixConsole = table.create{
-          levels_group_name="Grid2",
-          master_group_name="Triggers2",
+      mappings={
+        MixConsole = {
+          levels = {
+            group_name="Grid",
+          },
+          mute = {
+            group_name = "Controls",
+          },
+          master={
+            group_name="Triggers",
+          },
         },
-        PatternMatrix = table.create{
-          matrix_group_name = "Grid",
-          trigger_group_name = "Triggers",
-          controls_group_name = "Controls",
+        PatternMatrix = {
+          matrix = {
+            group_name = "Grid",
+          },
+          triggers = {
+            group_name = "Triggers",
+          },
+          sequence = {
+            group_name = "Controls",
+            index = 0,
+          },
+          track = {
+            group_name = "Controls",
+            index = 2,
+          },
         },
-        MatrixTest = table.create{
-          matrix_group_name = "Grid",
-        },
+      },
+      pinned = {
+        MixConsole = "Launchpad MixConsole...",
+        PatternMatrix = "Launchpad PatternMatrix...",
+      },
+      autostart = {
+        "PatternMatrix",
       },
     },
     -- alternate implementation for testing purposes
@@ -698,19 +871,53 @@ function Browser:__get_custom_devices()
       class_name="Launchpad",      
       display_name="LaunchpadTest",
       device_name="Launchpad",
-      control_map="Controllers/Launchpad/launchpad.xml",
+      --control_map="Controllers/Launchpad/launchpad.xml",
+      control_map="Controllers/Launchpad/launchpad_vertical_split.xml",
       protocol=DEVICE_MIDI_PROTOCOL,
-      options=table.create{
-        MixConsole = table.create{
-          levels_group_name="Grid",
-          mute_group_name = "Controls",
-          master_group_name="Triggers",
+      mappings={ 
+        MixConsole = {
+          levels = {
+            group_name="Grid",
+          }
         },
-        PatternMatrix = table.create{
-          matrix_group_name = "Grid",
-          trigger_group_name = "Triggers",
-          controls_group_name = "Controls",
+        -- here, the key refer to a class name alias
+        MixConsole_2 = {
+          levels = {
+            group_name="Grid2",
+          }
         },
+        PatternMatrix = {
+          matrix = {
+            group_name = "Grid",
+          },
+          triggers = {
+            group_name = nil,
+            --index = 0
+          },
+          sequence = {
+            group_name = "Controls",
+            index = 0
+          },
+          track = {
+            group_name = "Controls",
+            index = 2
+          },
+        },
+        MatrixTest = {
+          matrix = {
+            group_name = "Grid",
+          },
+        },
+      },
+      pinned = {
+        MixConsole = "LaunchpadTest MixConsole...",
+        MixConsole_2 = "LaunchpadTest MixConsole_2...",
+      },
+      aliases = {
+        "MixConsole_2",  --  an alias  
+      },
+      autostart = {
+        "MixConsole",
       },
     },
     --  the Nocturn should load as a generic MIDI device
@@ -721,14 +928,66 @@ function Browser:__get_custom_devices()
       device_name="Automap MIDI",    
       control_map="Controllers/Nocturn/nocturn.xml",
       protocol=DEVICE_MIDI_PROTOCOL,
-      incompatible = table.create{"PatternMatrix","MatrixTest"},
-      options = table.create{
-        MixConsole = table.create{
-          levels_group_name = "Encoders",
-          mute_group_name = "Pots",
-          master_group_name = "XFader",
+      incompatible = {"PatternMatrix","MatrixTest"},
+      mappings = {
+        MixConsole = {
+          levels = {
+            group_name = "Encoders",
+          },
+          mute = {
+            group_name = "Pots",
+          },
+          master = {
+            group_name = "XFader",
+          },
         },
       },
+      pinned = {
+        MixConsole = "Nocturn MixConsole...",
+      }
+    },
+    --  Novation Remote SL MKII
+    {
+      class_name=nil,
+      display_name="Remote SL MKII",      
+      device_name="SL MkII: Port 1",    
+      control_map="Controllers/Remote-SL-MKII/remote_default.xml",
+      protocol=DEVICE_MIDI_PROTOCOL,
+      incompatible = {"PatternMatrix","MatrixTest"},
+      mappings = {
+        MixConsole = {
+          levels = {
+            group_name = "Sliders",
+          },
+          mute = {
+            group_name = "SliderButtons",
+          },
+          --master_group_name = "XFader",
+        },
+      },
+    },
+    --  Novation Remote SL MKII
+    {
+      class_name=nil,
+      display_name="Remote SL MKII (Automap)",      
+      device_name="Automap MIDI",    
+      control_map="Controllers/Remote-SL-MKII/remote_default.xml",
+      protocol=DEVICE_MIDI_PROTOCOL,
+      incompatible = {"PatternMatrix","MatrixTest"},
+      mappings = {
+        MixConsole = {
+          levels = {
+            group_name = "Sliders",
+          },
+          mute = {
+            group_name = "SliderButtons",
+          }
+          --master_group_name = "XFader",
+        },
+      },
+      pinned = {
+        MixConsole = "Remote SL MKII (Automap) MixConsole...",
+      }
     },
     --  TODO: implement class
     {
@@ -737,15 +996,26 @@ function Browser:__get_custom_devices()
       device_name="BCF2000",
       control_map="Controllers/BCF-2000/bcf-2000.xml",
       protocol=DEVICE_MIDI_PROTOCOL,
-      incompatible = table.create{"PatternMatrix","MatrixTest"},
-      options = table.create{
-        MixConsole = table.create{
-          mute_group_name = "Buttons1",
-          panning_group_name= "Encoders",
-          levels_group_name = "Faders",
-          page_controls_group_name = "PageControls",
+      incompatible = {"PatternMatrix","MatrixTest"},
+      mappings = {
+        MixConsole = {
+          mute = {
+            group_name = "Buttons1",
+          },
+          panning = {
+            group_name= "Encoders",
+          },
+          levels = {
+            group_name = "Faders",
+          },
+          page = {
+            group_name = "PageControls",
+          }
         },
       },
+      pinned = {
+        MixConsole = "BCF-2000 MixConsole...",
+      }
     },
     --  TODO: implement class
     {
@@ -754,8 +1024,9 @@ function Browser:__get_custom_devices()
       device_name="BCR2000",
       control_map="Controllers/BCR-2000/bcr-2000.xml",
       protocol=DEVICE_MIDI_PROTOCOL,
-      incompatible = table.create{"PatternMatrix","MatrixTest"},
-      options = table.create()
+      incompatible = {"PatternMatrix","MatrixTest"},
+      mappings = {},
+
     },
     --  TODO: implement class
     {
@@ -764,20 +1035,36 @@ function Browser:__get_custom_devices()
       device_name="Ohm64 MIDI 1",
       control_map="Controllers/OHM64/ohm64.xml",
       protocol=DEVICE_MIDI_PROTOCOL,
-      options = table.create{
-        MixConsole = table.create{
-          levels_group_name="VolumeLeft",
-          master_group_name="VolumeRight",
+      mappings = {
+        MixConsole = {
+          levels = {
+            group_name="VolumeLeft",
+          },
+          master = {
+            group_name="VolumeRight",
+          },
         },
-        PatternMatrix = table.create{
-          matrix_group_name = "Grid",
-          trigger_group_name = "MuteLeft",
-          controls_group_name = "ControlsRight",
+        PatternMatrix = {
+          matrix = {
+            group_name = "Grid",
+          },
+          controls = {
+            group_name = "ControlsRight",
+          },
         },
-        MatrixTest = table.create{
-          matrix_group_name = "Grid",
+        MatrixTest = {
+          matrix = {
+            group_name = "Grid",
+          },
         },      
-      }
+      },
+      pinned = {
+        MixConsole = "OHM64 MixConsole...",
+        PatternMatrix = "OHM64 PatternMatrix...",
+      },
+      aliases = {
+        "MixConsole_2",  --  this is an alias  
+      },
     },
     --  this is a defunkt implementation (no control-map)
     --  will cause a warning once it's opened
@@ -788,7 +1075,7 @@ function Browser:__get_custom_devices()
       device_name="mrmr",
       control_map="mrmr.xml",
       protocol=DEVICE_OSC_PROTOCOL,
-      options = table.create()
+      mappings = {}
     },
     ]]
   }
@@ -822,11 +1109,11 @@ function Browser:__get_selected_app()
   local app_name = self.vb.views.dpx_browser_application.items[
     self.vb.views.dpx_browser_application.value]
   app_name = self:__strip_running_postfix(app_name)
-  
+
   for _,k in ipairs(self.__processes) do
     if (k.name == self.__device_name) then
       for _,app in ipairs(k.applications) do
-        if (type(app) == app_name) then
+        if (k.app_names[_] == app_name)then
           return app
         end
       end
@@ -840,8 +1127,8 @@ end
 -- instantiate a device from it's basic information,
 -- save this information into the "__processes" list
 
-function Browser:__instantiate_device(display_name,class_name, device_name, control_map)
-  TRACE("Browser:__instantiate_device:",display_name,class_name, device_name, control_map)
+function Browser:__instantiate_device(display_name,class_name, device_name, control_map,protocol)
+  TRACE("Browser:__instantiate_device:",display_name,class_name, device_name, control_map,protocol)
 
   -- instantiate the device from the class name
   if (rawget(_G, class_name)) then
@@ -852,7 +1139,13 @@ function Browser:__instantiate_device(display_name,class_name, device_name, cont
     process.device:set_control_map(control_map)
     process.display = Display(process.device)
     process.applications = table.create()
+    process.app_names = table.create()
     process.selected_app = 1  -- "None"
+
+    -- 
+    if(protocol==DEVICE_MIDI_PROTOCOL)then
+      process.device.dump_midi = self.__dump_midi
+    end
 
     self.vb.views.dpx_browser_rootnode:add_child(
       process.display:build_control_surface())
@@ -862,8 +1155,10 @@ function Browser:__instantiate_device(display_name,class_name, device_name, cont
     self.__processes:insert(process)
 
   else
-    renoise.app():show_warning(("Whoops! This device uses " ..
-      "unknown device class: '%s'"):format(class_name))
+    renoise.app():show_warning(("Cannot instantiate device with " ..
+      "unknown class: '%s'"):format(class_name))
   end 
 end
+
+
 

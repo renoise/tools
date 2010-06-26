@@ -4,7 +4,47 @@
 
 --[[
 
-A generic mixer class 
+  About
+
+  MixConsole is a generic class for controlling the Renoise mixer
+  - supported on a wide variety of hardware
+  - supports faders, buttons or dials for input
+
+  Btw: the applicetion uses colorize() to change the default colors
+
+  
+  ---------------------------------------------------------
+
+  Control-map assignments 
+
+  "master"  - specify this to control the master track seperately
+  "controls" - specify this to control the track offset
+
+  [][][][] []  [][][]     |
+  |||||||| []  [][][]     |
+  |||||||| []  [][][]   "levels" (optional)
+  |||||||| []  [][][]     |
+  [][][][] []  [][][]     |
+                   
+  [][][][] []  [][][]   "mute" (optional)
+                   
+  [][][][] []  [][][]   "panning" (optional)
+
+  normal  mst   send
+  tracks track tracks
+
+
+  ---------------------------------------------------------
+
+  Options
+
+  -- include the following track types:
+
+  - "include_normal_tracks"
+  - "include_send_tracks"
+  - "include_master_tracks"
+
+
 
 --]]
 
@@ -13,27 +53,87 @@ A generic mixer class
 
 class 'MixConsole' (Application)
 
-function MixConsole:__init(display, options)
-  TRACE("MixConsole:__init",display, options)
+function MixConsole:__init(display,mappings,options)
+  TRACE("MixConsole:__init",display,mappings,options)
 
   -- constructor 
   Application.__init(self)
 
   self.display = display
 
-  -- apply control-maps groups 
   self.master = nil
-  self.master_group_name = options.master_group_name
   self.sliders = nil
-  self.levels_group_name = options.levels_group_name
   self.buttons = nil
-  self.mute_group_name = options.mute_group_name
   self.encoders = nil
-  self.panning_group_name = options.panning_group_name
   self.page_controls = nil
+
+    -- define the options (with defaults)
+
+  self.INCLUDE_TRACKS = "Include these tracks"
+  self.IGNORE_TRACKS = "Ignore these tracks"
+  self.INCLUDE_TRACK = "Include this track"
+  self.IGNORE_TRACK = "Ignore this track"
+
+  self.options = {
+    include_normal = {
+      label = "Normal tracks",
+      items = {self.INCLUDE_TRACKS,self.IGNORE_TRACKS},
+      default = 1,
+    },
+    include_send = {
+      label = "Send tracks",
+      items = {self.INCLUDE_TRACKS,self.IGNORE_TRACKS},
+      default = 1,
+    },
+    include_master = {
+      label = "Master track",
+      items = {self.INCLUDE_TRACK,self.IGNORE_TRACK},
+      default = 1,
+    },
+  }
+
+  -- apply control-maps groups 
+  self.mappings = {
+    master = {
+      group_name = nil,
+      description = "Master level - assign to a dial, fader or group of buttons",
+      required = false,
+      index = nil,
+    },
+    levels = {
+      group_name = nil,
+      description = "Track levels - assign to a dial, fader or group of buttons",
+      required = false,
+      index = nil,
+    },
+    panning = {
+      group_name = nil,
+      description = "Panning - assign to a dial, fader or group of buttons",
+      required = false,
+      index = nil,
+    },
+    mute = {
+      group_name = nil,
+      description = "Mute - assign to a dial, fader or button",
+      required = false,
+      index = nil,
+    },
+    page = {
+      group_name = nil,
+      description = "Page selector - assign to a fader, dial or two buttons",
+      required = false,
+      index = nil,
+    },
+  }
+--[[
+  self.master_group_name = options.master_group_name
+  self.levels_group_name = options.levels_group_name
+  self.mute_group_name = options.mute_group_name
+  self.panning_group_name = options.panning_group_name
   self.page_controls_group_name = options.page_controls_group_name
-  
-  -- the number of tracks displayed side-by-side
+]]
+
+  -- the default number of tracks to display
   self.width = 4
 
   -- the number of units spanned vertically
@@ -43,9 +143,13 @@ function MixConsole:__init(display, options)
   -- offset of the whole track mapping, controlled by the scroller
   self.__track_offset = 0
   
+  -- apply arguments
+
+  self:apply_options(options)
+  self:apply_mappings(mappings)
+
   -- final steps
-  self:build_app()
-  self:__attach_to_song(renoise.song())
+  --self:build_app()
 end
 
 
@@ -124,7 +228,7 @@ function MixConsole:update()
       
       -- show that we can't change the master mute state
       if (track_index == get_master_track_index()) then
-        self:set_track_mute(control_index, MUTE_STATE_OFF)
+        self:set_track_mute(control_index, MUTE_STATE_ACTIVE)
       else
         self:set_track_mute(control_index, track.mute_state)
       end
@@ -136,10 +240,7 @@ function MixConsole:update()
       self:set_track_mute(control_index, MUTE_STATE_OFF)
     end
 
-  
-    -- colorize:
-    -- this will only affect controllers that use color to 
-    -- represent values
+    -- colorize: optimize this ...
     
     if (track_index < master_track_index) then
       -- normal tracks are green
@@ -207,15 +308,15 @@ function MixConsole:build_app()
   local slider_offset = 0
   if grid_mode then
     -- if certain group names are left out, place them the main grid 
-    if (not self.mute_group_name) then
+    if (not self.mappings.mute.group_name) then
       -- place mute buttons in the topmost row
-      self.mute_group_name = self.levels_group_name
+      self.mappings.mute.group_name = self.mappings.levels.group_name
       slider_offset = slider_offset+1
     end
     -- todo: place master volume on the rightmost side
   else
     -- extend width to the number of parameters in the levels group
-    local grp = control_map_groups[self.levels_group_name]
+    local grp = control_map_groups[self.mappings.levels.group_name]
     if grp then
       self.width = #grp
     end
@@ -226,7 +327,7 @@ function MixConsole:build_app()
     -- sliders --------------------------------------------
 
     local slider = UISlider(self.display)
-    slider.group_name = self.levels_group_name
+    slider.group_name = self.mappings.levels.group_name
     slider.x_pos = control_index
     slider.y_pos = 1+slider_offset
     slider.toggleable = true
@@ -267,7 +368,7 @@ function MixConsole:build_app()
     -- encoders -------------------------------------------
 
     local encoder = UISlider(self.display)
-    encoder.group_name = self.panning_group_name
+    encoder.group_name = self.mappings.panning.group_name
     encoder.x_pos = control_index
     encoder.y_pos = 1
     encoder.toggleable = true
@@ -301,9 +402,10 @@ function MixConsole:build_app()
     -- buttons --------------------------------------------
 
     local button = UIToggleButton(self.display)
-    button.group_name = self.mute_group_name
+    button.group_name = self.mappings.mute.group_name
     button.x_pos = control_index
     button.y_pos = 1
+    button.inverted = true
     button.active = false
 
     -- mute state changed from controller
@@ -345,9 +447,9 @@ function MixConsole:build_app()
 
   -- master fader (optional) ------------------------------
 
-  if (self.master_group_name) then
+  if (self.mappings.master.group_name) then
     local slider = UISlider(self.display)
-    slider.group_name = self.master_group_name
+    slider.group_name = self.mappings.master.group_name
     slider.x_pos = 1
     slider.y_pos = 1
     slider.toggleable = true
@@ -382,9 +484,9 @@ function MixConsole:build_app()
   
   -- track scrolling (optional) ---------------------------
 
-  if (self.page_controls_group_name) then
+  if (self.mappings.page.group_name) then
     self.page_controls = UISpinner(self.display)
-    self.page_controls.group_name = self.page_controls_group_name
+    self.page_controls.group_name = self.mappings.page.group_name
     self.page_controls.index = 0
     self.page_controls.step_size = self.width
     self.page_controls.minimum = 0
@@ -408,6 +510,11 @@ function MixConsole:build_app()
     
     self.display:add(self.page_controls)
   end
+
+  -- the finishing touch
+  self:__attach_to_song(renoise.song())
+
+
 end
 
 
@@ -417,6 +524,10 @@ end
 
 function MixConsole:start_app()
   TRACE("MixConsole.start_app()")
+
+  if not (self.created) then 
+    self:build_app()
+  end
 
   Application.start_app(self)
   self:update()
@@ -428,18 +539,21 @@ end
 function MixConsole:destroy_app()
   TRACE("MixConsole:destroy_app")
 
-  for _,obj in ipairs(self.sliders) do
-    obj.remove_listeners(obj)
+  if (self.sliders) then
+    for _,obj in ipairs(self.sliders) do
+      obj.remove_listeners(obj)
+    end
   end
-  
-  for _,obj in ipairs(self.encoders) do
-    obj.remove_listeners(obj)
+  if (self.encoders) then  
+    for _,obj in ipairs(self.encoders) do
+      obj.remove_listeners(obj)
+    end
   end
-  
-  for _,obj in ipairs(self.buttons) do
-    obj.remove_listeners(obj)
+  if (self.buttons) then
+    for _,obj in ipairs(self.buttons) do
+      obj.remove_listeners(obj)
+    end
   end
-
   if (self.master) then
     self.master:remove_listeners()
   end

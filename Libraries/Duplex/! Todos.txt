@@ -9,6 +9,8 @@ Bugs
 * Multiple grid/column group layouts are broken (use Ohm64 for testing). 
   Groups are not closed before the next one is encountered
 
+* MixConsole: Ohm64/VolumeLeft is used for mute switching? 
+
 * Controls which are not or no longer assigned to document values, should 
   be cleared, reset (when for example using less than 8 tracks in Renoise)
     
@@ -23,7 +25,9 @@ Bugs
 In Progress
 --------------------------------------------------------------------------------
 
-* Bjorn: Make MessageStream detect more event types: release, hold, etc.
+* Bjorn: Make MessageStream detect more event types: release, etc.
+
+* Bjorn: Build proper device/app configuration panels
 
 * Eduard: Implement Behringer BFC and BFR classes, finish the control maps
 
@@ -36,6 +40,16 @@ Planned / Todo
 
 * New Applications
   o FX parameter Mixer (control currently selected FX)
+
+* MixConsole: 
+  o Track delay? 
+  o Support "OFF" and "MUTE" modes (which depend on Renoise preference)
+
+* Application configuration panel:
+  o List the names of application groups, each with "choose" button that open
+    a slightly smaller version of the virtual UI for choosing the relevant
+    control and/or group
+  o Other options listed as a popup (the active choice 
 
 * Device control-panel: 
   o Small (optional) thumbnail for device
@@ -50,27 +64,7 @@ Planned / Todo
   o Advanced settings tab (i.e. control brightness, contrast) - expose these 
     settings via generic "options" table in the device class
 
-* Application configuration panel:
-  o List the names of application groups, each with "choose" button that open
-    a slightly smaller version of the virtual UI for choosing the relevant
-    control and/or group
-  o List other options 
-
 * OSC Device / protocol support
-
-* Adaptive color-space: set points in a canvas using available colors from the 
-  "device palette"
-  o The device color-space is a simple table which tell us the depth of R,G 
-    and B color channels
-  o From the device color-space, we can produce a swatch containing possible 
-    colors (minimum is two, maximum is millions, in which case we present 
-    only some of them)
-  o All scripts should come with defaults that degrade gracefully (not making
-    use of subtle shades for important features, to stay compatible with 
-    e.g. the monochromatic ohm64)
-  o It's always possible to customize/override the colors because they are 
-    token-based. Any UIComponent should present a list of colors (the
-    "token-palette")
 
 * ControlMap: <Page> node, indicates that multiple pages with identical layout
   can be expected (useful for access to the full mapping/MIDI implementation 
@@ -79,8 +73,7 @@ Planned / Todo
   when a new page is entered? (on the other hand, there's no reason we can't 
   repeat values across pages?)
 
-* Display: z-index/stacking: methods like move_to_top, insert_above, 
-  insert_below (this is "nice to have", not "need to have")
+* ControlMap: @IsBidirectional attribute, cancel output if false
 
 * "Soft-validate" the control-map - warn when required elements are missing, 
   but ignore unknown ones
@@ -93,19 +86,28 @@ Planned / Todo
   simplify the code, as the numerous checks for "self.active" in event-handlers 
   is no longer needed
 
+* Browser: option for keeping devices in separate streams
+
+* Specify color-space per control-map group (not all buttons are born equal)
+
+
 --------------------------------------------------------------------------------
 Discuss
 --------------------------------------------------------------------------------
 
+* MixConsole makes "MUTE" (not "OFF") impossible !!
+  Check when a track is muted, the type of mute and set mode accordingly
+
 * Ability to "discard" incoming messages after they have been processed (or 
-  the could be note-on and cc messages all over the place). 
+  there would be note-on and cc messages all over the place). 
 
 * Ability to perform automation recording (using global Renoise API switch)
+  Record any parameter exposed by the API?
 
 * When switching to an application that use identical group-names as another
   app running on the same device, we want to avoid that both apps produce 
   output at the same time, or they would "fight for the same space"
-  (to understand the context: see Browser:set_application)
+  (for some context: see Browser:set_application)
 
 ================================================================================
 Done
@@ -204,4 +206,27 @@ Done
 * Fixed issue with UISlider (not getting right index value when flipped)
 
 * Fixed UISlider.inverted, wrong name, should be "flipped" (in MixConsole)
+
+* Added support for pitch bend (specified as <param @type="PITCHBEND"> in control-map)
+
+* Removed references to "CONTROLLER_ENCODER" (it was never actually used)
+
+* Renamed constant CONTROLLER_POT to CONTROLLER_DIAL 
+
+* PatternMatrix: when trigger-group is an ampty string, embed into matrix 
+  (if the trigger-group is undefined, do not create triggers at all)
+
+* MixConsole/PatternMatrix: build_app() called when started, not loaded
+  (to avoid that UIComponents are created before they are actually used)
+
+* Dynamic menu entries (pinned scripts) - controlled from app options
+
+* Keyboard shortcut to Browser 
+
+* Application aliases - multiple instances of app on the same device
+
+* MIDI Dump (as menu option)
+
+* Application class : apply_mappings/options() methods
+
 
