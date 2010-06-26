@@ -43,7 +43,8 @@ function Display:__init(device)
   -- so we can attach/detach the method when we need
   self.ui_notifiers = table.create()
 
-  -- "palette" is a table of named color-constants 
+  -- this is the default palette for any display,
+  -- the UIComponents use these values as defaults
   self.palette = {
     background = {
       text="·",
@@ -51,19 +52,19 @@ function Display:__init(device)
     },
     color_1 = {
       text="■",
-      color={0xff,0xff,0x00}
+      color={0xff,0xff,0xff}
     },
     color_1_dimmed = {
       text="□",
-      color={0x40,0x40,0x00}
+      color={0x40,0x40,0x40}
     },
     color_2 = {
       text="▪",
-      color={0x80,0x80,0x00}
+      color={0x80,0x80,0x80}
     },
     color_2_dimmed = {
       text="▫",
-      color={0x40,0x40,0x00}
+      color={0x40,0x40,0x40}
     },
   }    
 end
@@ -179,6 +180,7 @@ function Display:set_parameter(elm, obj, point)
 
       value = self.device:point_to_value(
         point, elm.maximum, elm.minimum, obj.ceiling)
+    
       
       -- do not loop back the original value change back to the sender
       if (not current_message) or
@@ -204,6 +206,22 @@ function Display:set_parameter(elm, obj, point)
         self.device:send_cc_message(num,value)
       end
     
+    elseif (msg_type == MIDI_PITCH_BEND) then
+--print("MIDI_PITCH_BEND - elm.value",elm.value)
+
+--[[      
+      value = self.device:point_to_value(
+        point, elm.maximum, elm.minimum, obj.ceiling)
+
+      -- do not loop back the original value change back to the sender
+      if (not current_message) or
+         (current_message.context ~= MIDI_CC_MESSAGE) or
+         (current_message.id ~= elm.id) or
+         (current_message.value ~= value)
+      then
+        self.device:send_cc_message(num,value)
+      end
+]]    
     else
       error(("unknown or unhandled msg_type: %d"):format(msg_type))
     end
@@ -308,14 +326,14 @@ function Display:generate_message(value, metadata)
   if (metadata.type == "button") then
     msg.input_method = CONTROLLER_BUTTON
 
-  elseif (metadata.type == "encoder") then
-    msg.input_method = CONTROLLER_ENCODER
+--  elseif (metadata.type == "encoder") then
+--    msg.input_method = CONTROLLER_ENCODER
 
   elseif (metadata.type == "fader") then
     msg.input_method = CONTROLLER_FADER
 
   elseif (metadata.type == "dial") then
-    msg.input_method = CONTROLLER_POT
+    msg.input_method = CONTROLLER_DIAL
 
   else
     error("unknown metadata.type")
@@ -467,7 +485,10 @@ function Display:walk_table(t, done, deep)
                 }
               }
             else
-              assert(t[key].xarg.orientation == "horizontal", 
+
+--rprint(t[key].xarg)
+
+              assert(t[key].xarg.orientation == "horizontal",
                 "unexpected orientation")
               view_obj.view = self.vb:slider {
                 id  =t[key].xarg.id,

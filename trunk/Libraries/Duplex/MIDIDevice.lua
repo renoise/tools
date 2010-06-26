@@ -23,6 +23,9 @@ function MIDIDevice:__init(name, message_stream)
   self.midi_in = nil
   self.midi_out = nil
 
+  -- todo: update all MIDI devices when this setting change
+  self.dump_midi = false
+
   local input_devices = renoise.Midi.available_input_devices()
   local output_devices = renoise.Midi.available_output_devices()
 
@@ -47,7 +50,7 @@ end
 --------------------------------------------------------------------------------
 
 function MIDIDevice:release()
-print("MIDIDevice:release()")
+  TRACE("MIDIDevice:release()")
 
   if (self.midi_in and self.midi_in.is_open) then
     self.midi_in:close()
@@ -65,11 +68,16 @@ end
 --------------------------------------------------------------------------------
 
 function MIDIDevice:midi_callback(message)
-  TRACE(("MIDIDevice: %s got MIDI %X %X %X"):format(
+  TRACE(("MIDIDevice: %s received MIDI %X %X %X"):format(
     self.name, message[1], message[2], message[3]))
 
   local msg = Message()
   local value_str = nil
+
+  if(self.dump_midi)then
+    print(("MIDIDevice: %s received MIDI %X %X %X"):format(
+    self.name, message[1], message[2], message[3]))
+  end
 
   -- determine the type of signal : note/cc/etc
   if (message[1] == 144) then
@@ -81,6 +89,11 @@ function MIDIDevice:midi_callback(message)
     msg.context = MIDI_CC_MESSAGE
     msg.value = message[3]
     value_str = self.midi_cc_to_string(self,message[2])
+
+  elseif (message[1] == 224) then
+    msg.context = MIDI_PITCH_BEND
+    msg.value = message[3]
+    value_str = PITCH_BEND
   end
 
   if (value_str) then
@@ -93,16 +106,16 @@ function MIDIDevice:midi_callback(message)
       -- determine input method
       if (xarg.type == "button") then
         msg.input_method = CONTROLLER_BUTTON
-      elseif (xarg.type == "encoder") then
-        msg.input_method = CONTROLLER_ENCODER
+      --elseif (xarg.type == "encoder") then
+      --  msg.input_method = CONTROLLER_ENCODER
       elseif (xarg.type == "fader") then
         msg.input_method = CONTROLLER_FADER
       elseif (xarg.type == "dial") then
-        msg.input_method = CONTROLLER_POT
+        msg.input_method = CONTROLLER_DIAL
       else
         error("unknown msg.input_method")
       end
-      
+
       -- include meta-properties
       msg.name = xarg.name
       msg.group_name = xarg.group_name
@@ -152,6 +165,12 @@ function MIDIDevice:send_cc_message(number,value)
   TRACE(("MIDIDevice: %s send MIDI %X %X %X"):format(
     self.name, message[1], message[2], message[3]))
 
+  if(self.dump_midi)then
+    print(("MIDIDevice: %s send MIDI %X %X %X"):format(
+      self.name, message[1], message[2], message[3]))
+  end
+
+
   self.midi_out:send(message)
 end
 
@@ -178,6 +197,11 @@ function MIDIDevice:send_note_message(key,velocity)
   TRACE(("MIDIDevice: %s send MIDI %X %X %X"):format(
     self.name, message[1], message[2], message[3]))
     
+  if(self.dump_midi)then
+    print(("MIDIDevice: %s send MIDI %X %X %X"):format(
+      self.name, message[1], message[2], message[3]))
+  end
+
   self.midi_out:send(message) 
 end
 

@@ -4,15 +4,37 @@
 
 --[[
 
-The pattern-matrix is useful with grid controllers
-- buttons will mute/unmute track slots
-- paged navigation: up/down/left/right (when song follow is on, 
-  the matrix will automatically display the currently playing page)
-- flexible options for song-position control (switch/retrigger/etc)
-- minimum size: 4x4 (navigation + 3 tracks/patterns)
+  About
 
-Todo
-- track follow : automatically show the active track page
+  This application will take control of the pattern matrix in Renoise 
+  - hit matrix buttons to mute/unmute track slots
+  - navigation features (page up/down/left/right), when song follow is on, 
+    the matrix will automatically display the currently playing page
+  - flexible options for song-position control (switch/retrigger/etc)
+  - minimum size (all features enabled): 4x4 (navigation + 3 tracks/patterns)
+
+
+  ---------------------------------------------------------
+
+  Control-map assignments 
+
+  [][] <- "track" (any input)
+  [][] <- "sequence" (any input)
+
+  [][][][]  [<] <- "matrix"  "triggers" (button grid)
+  [][][][]  [<]
+  [][][][]  [<]
+  [][][][]  [<]
+
+  - triggers are "embedded" into the matrix if the
+    group_name is an empty string (not nil)
+
+  [] <- "play" (any input)
+  [] <- "loop" (any input)
+  [] <- "stop" (any input)
+  [] <- "rec" (any input)
+
+
 
 
 --]]
@@ -22,63 +44,160 @@ Todo
 
 class 'PatternMatrix' (Application)
 
-function PatternMatrix:__init(display,options)
-  TRACE("PatternMatrix:__init(",display,options)
+function PatternMatrix:__init(display,mappings,options)
+  TRACE("PatternMatrix:__init(",display,mappings,options)
 
   Application.__init(self)
 
-  -- "matrix_group_name" is required, other groups can be left out
-  if (not options.matrix_group_name) then
-    print("PatternMatrix: Warning - required parameter missing")
-    return
-  end
+  -- define the options (with defaults)
 
-  -- todo: map missing trigger/control groups onto the matrix
+  self.PLAY_MODE_PLAY = 1
+  self.PLAY_MODE_TOGGLE = 2
+  self.PLAY_MODE_RETRIG = 3
+  self.PLAY_MODE_SCHEDULE = 4
 
-  -- options, when current pos is pressed (again)
+  self.SWITCH_MODE_STOP = 1
+  self.SWITCH_MODE_SWITCH = 2
+  self.SWITCH_MODE_TRIG = 3
+  self.SWITCH_MODE_SCHEDULE = 4
 
-  self.PLAY_MODE_PLAY = 0       -- play/continue
-  self.PLAY_MODE_TOGGLE = 1     -- toggle start & stop
-  self.PLAY_MODE_RETRIG = 2     -- retrigger pattern
-  self.PLAY_MODE_SCHEDULE = 3   -- schedule pattern
+  self.BOUNDS_MODE_STOP = 1
+  self.BOUNDS_MODE_IGNORE = 2
 
-  -- options, when switching from one position to another
+  self.options = {
+    play_mode = {
+      label = "When triggered",
+      items = {"Play/continue","Toggle start & stop","Retrigger pattern","Schedule pattern"},
+      default = 3,
+    },
+    switch_mode = {
+      label = "When switching",
+      items = {"Stop playback","Switch to pattern","Trigger pattern","Schedule pattern"},
+      default = 2,
+    },
+    bounds_mode = {
+      label = "When outside",
+      items = {"Stop playback","Do nothing"},
+      default = 1,
+    },
+    sync_navigation = {
+      label = "Sync global sequence/track position",
+      items = {true,false},
+      default = 1,
+    },
+  }
+  self:__set_default_options(true)
 
-  self.SWITCH_MODE_STOP = 0     -- stop playback
-  self.SWITCH_MODE_SWITCH = 1   -- switch to pattern
-  self.SWITCH_MODE_TRIG = 2     -- trigger pattern
-  self.SWITCH_MODE_SCHEDULE = 3 -- schedule pattern
+  -- define the mappings (unassigned)
 
-  -- options, for empty matrix space below the song
+  self.mappings = {
+    matrix = {
+      group_name = nil,
+      description = "Use matrix group to toggle muted state for slots. Assign to a grid of buttons",
+      required = true,
+      index = nil,
+    },
+    triggers = {
+      group_name = nil,
+      description = "Next to the matrix is the pattern triggers. Assign to a row/column of buttons",
+      required = false,
+      index = nil,
+    },
+    sequence = { 
+      group_name = nil,
+      description = "Use this to flip through the song sequence. Assign to a fader, dial or two buttons",
+      required = false,
+      index = 0,
+    },
+    track = {
+      group_name = nil,
+      description = "Use this to flip through tracks. Assign to a fader, dial or two buttons",
+      required = false,
+      index = 2,
+    },
+    --[[
+    play = {
+      group_name = nil,
+      description = "Use this to include a 'start playback' feature. Assign to a button, fader or dial",
+      required = false,
+      index = 4,
+    },
+    loop = {
+      group_name = nil,
+      description = "Use this to include a 'pattern loop' feature. Assign to a button, fader or dial",
+      required = false,
+      index = 5,
+    },
+    stop = {
+      group_name = nil,
+      description = "Use this to include a 'stop playback' feature. Assign to a button, fader or dial",
+      required = false,
+      index = 6,
+    },
+    rec = {
+      group_name = nil,
+      description = "Use this to include a 'toggle recordmode' feature. Assign to a button, fader or dial",
+      required = false,
+      index = 7,
+    },
+    ]]
+  }
 
-  self.BOUNDS_MODE_STOP = 0     -- stop playback 
-  self.BOUNDS_MODE_IGNORE = 1   -- nothing happens
+  -- define default palette
 
-  -- apply arguments 
+  self.palette = {
+    out_of_bounds = {
+      color={0x40,0x40,0x00}, 
+      text="",
+    },
+    slot_empty = {
+      color={0x00,0x00,0x00},
+      text="·",
+    },
+    slot_empty_muted = {
+      color={0x40,0x00,0x00},
+      text="▫",
+    },
+    slot_filled = {
+      color={0xff,0xff,0x00},
+      text="■",
+    },
+    slot_filled_muted = {
+      color={0xff,0x40,0x00},
+      text="□",
+    },
+    slot_master_filled = {
+      color={0x00,0xff,0x00},
+      text="■",
+    },
+    slot_master_empty = {
+      color={0x00,0x40,0x00},
+      text="·",
+    },
+    trigger_active = {
+      color={0xff,0xff,0xff},
+      text="►",
+    },
+    trigger_loop = {
+      color={0x40,0x40,0xff},
+      text="·",
+    },
+    trigger_back = {
+      color={0x00,0x00,0x00},
+      text="",
+    },
+    
+  }
 
-  self.play_mode = self.PLAY_MODE_RETRIG
-  self.switch_mode = self.SWITCH_MODE_SWITCH
-  self.out_of_bounds = self.BOUNDS_MODE_STOP
-
-  self.display = display
-
-  -- useable control-map groups
-  -- matrix group : minimum of 2x2 buttons (8x8<)
-  -- trigger group: minimum of 2 buttons (8<)
-  -- controls group: 4 buttons 
-
-  self.matrix_group_name = options.matrix_group_name
-  self.trigger_group_name = options.trigger_group_name
-  self.controls_group_name = options.controls_group_name
-
-  -- default size (control-map should redefine this)
+  -- control-map should redefine this
   self.width = 4
   self.height = 4
 
   self.buttons = nil  -- [UIToggleButton,...]
   self.position = nil -- UISlider
 
-  -- internal stuff
+  self.display = display
+
 
   self.__playing = nil
   self.__play_page = nil  -- the currently playing page
@@ -93,10 +212,17 @@ function PatternMatrix:__init(display,options)
   self.__update_slots_requested = false
   self.__update_tracks_requested = false
 
+
+  -- apply arguments
+
+  self:apply_options(options)
+  self:apply_mappings(mappings)
+
+
   -- final steps
 
-  self:build_app()
-  self:__attach_to_song(renoise.song())
+  --self:build_app()
+
 
 end
 
@@ -109,20 +235,25 @@ function PatternMatrix:build_app()
   Application.build_app(self)
 
   -- determine matrix size by looking at the control-map
-  local control_map = self.display.device.control_map.groups[self.matrix_group_name]
+  local control_map = self.display.device.control_map.groups[self.mappings.matrix.group_name]
   if(control_map["columns"])then
       self.width = control_map["columns"]
       self.height = math.ceil(#control_map/self.width)
   end
 
+  -- if the trigger_group_name is not specified, put it in the matrix 
+  local embed_triggers = (not self.mappings.triggers.group_name)
+  if(embed_triggers)then
+    self.mappings.triggers.group_name = self.mappings.matrix.group_name
+    self.width = self.width-1
+  end
+
   local observable = nil
 
-  -- up/down (page selector)
-  -- occupies the first two units in the scroll-group
-
+  -- sequence (up/down scrolling)
   self.switcher = UISpinner(self.display)
-  self.switcher.group_name = self.controls_group_name
-  self.switcher.index = 0
+  self.switcher.group_name = self.mappings.sequence.group_name
+  self.switcher.index = self.mappings.track.index
   self.switcher.minimum = 0
   self.switcher.maximum = 1 
   self.switcher.palette.foreground_dec.text = "▲"
@@ -143,12 +274,10 @@ function PatternMatrix:build_app()
   end
   self.display:add(self.switcher)
 
-  -- sideways (track scrolling)
-  -- placed in same group as the page selector, to the right 
-
+  --  track (sideways scrolling)
   self.scroller = UISpinner(self.display)
-  self.scroller.group_name = self.controls_group_name
-  self.scroller.index = 0
+  self.scroller.group_name = self.mappings.track.group_name
+  self.scroller.index = self.mappings.track.index
   self.scroller.step_size = 1
   self.scroller.minimum = 0
   self.scroller.maximum = 1
@@ -167,25 +296,28 @@ function PatternMatrix:build_app()
   self.display:add(self.scroller)
 
   -- play-position (navigator)
-  -- 
-
   -- quick hack to make a UISlider appear like a selector
   -- (TODO make into proper/custom class, capable of displaying
   --  the current position, looped range and scheduled pattern)
+  local x_pos = 1
+  if(embed_triggers)then
+    x_pos = self.width+1
+  end
   self.position = UISlider(self.display)
-  self.position.group_name = self.trigger_group_name
-  self.position.x_pos = 1
+  self.position.group_name = self.mappings.triggers.group_name
+  self.position.x_pos = x_pos
   self.position.y_pos = 1
   self.position.toggleable = true
   self.position.flipped = true
   self.position.ceiling = self.height
-  self.position.palette.foreground.text="►"
-  self.position.palette.medium.text="·"
-  self.position.palette.medium.color={0x00,0x00,0x00}
+
+  self.position.palette.background = table.copy(self.palette.trigger_back)
+  self.position.palette.tip = table.rcopy(self.palette.trigger_active)
+  self.position.palette.track = table.rcopy(self.palette.trigger_back)
+
   self.position:set_size(self.height)
   -- position changed from controller
   self.position.on_change = function(obj) 
-
     if not self.active then
       return false
     end
@@ -196,13 +328,13 @@ function PatternMatrix:build_app()
     if obj.index==0 then
       
       -- the position was toggled off
-      if (self.play_mode == self.PLAY_MODE_RETRIG) then
+      if (self.options.play_mode.value == self.PLAY_MODE_RETRIG) then
         self:retrigger_pattern()
-      elseif (self.play_mode == self.PLAY_MODE_PLAY) then
+      elseif (self.options.play_mode.value == self.PLAY_MODE_PLAY) then
         return false
-      elseif (self.play_mode == self.PLAY_MODE_TOGGLE) then
+      elseif (self.options.play_mode.value == self.PLAY_MODE_TOGGLE) then
         renoise.song().transport:stop()
-      elseif (self.play_mode == self.PLAY_MODE_SCHEDULE) then
+      elseif (self.options.play_mode.value == self.PLAY_MODE_SCHEDULE) then
         seq_index = self.__playback_pos.sequence + 
           (self.height*self.__edit_page)
         if renoise.song().sequencer.pattern_sequence[seq_index] then
@@ -213,8 +345,7 @@ function PatternMatrix:build_app()
     elseif not renoise.song().sequencer.pattern_sequence[seq_index] then
 
       -- position out of bounds
-
-      if (self.out_of_bounds == self.BOUNDS_MODE_STOP) then
+      if (self.options.bounds_mode.value == self.BOUNDS_MODE_STOP) then
         renoise.song().transport:stop()
         return true -- allow the button to flash briefly 
       end
@@ -223,20 +354,19 @@ function PatternMatrix:build_app()
     elseif(self.__playback_pos.sequence==seq_index)then
 
       -- position toggled back on
-
-      if (self.play_mode == self.PLAY_MODE_RETRIG) then
+      if (self.options.play_mode.value == self.PLAY_MODE_RETRIG) then
         self:retrigger_pattern()
-      elseif (self.play_mode == self.PLAY_MODE_PLAY) then
+      elseif (self.options.play_mode.value == self.PLAY_MODE_PLAY) then
         if (not renoise.song().transport.playing) then
           if renoise.song().sequencer.pattern_sequence[seq_index] then
             renoise.song().transport:trigger_sequence(seq_index)
           end
         end
-      elseif (self.play_mode == self.PLAY_MODE_SCHEDULE) then
+      elseif (self.options.play_mode.value == self.PLAY_MODE_SCHEDULE) then
         if renoise.song().sequencer.pattern_sequence[seq_index] then
           renoise.song().transport:set_scheduled_sequence(seq_index)
         end
-      elseif (self.play_mode == self.PLAY_MODE_TOGGLE) then
+      elseif (self.options.play_mode.value == self.PLAY_MODE_TOGGLE) then
         if (not renoise.song().transport.playing) then
           if renoise.song().sequencer.pattern_sequence[seq_index] then
             renoise.song().transport:trigger_sequence(seq_index)
@@ -247,20 +377,19 @@ function PatternMatrix:build_app()
     else
 
       -- switch to new position
-
       if (not renoise.song().transport.playing) then
         -- start playback if stopped
         if renoise.song().sequencer.pattern_sequence[seq_index] then
           renoise.song().transport:trigger_sequence(seq_index)
         end
       else
-        if(self.switch_mode == self.SWITCH_MODE_SCHEDULE) then
+        if(self.options.switch_mode.value == self.SWITCH_MODE_SCHEDULE) then
           if renoise.song().sequencer.pattern_sequence[seq_index] then
             -- schedule, but do not update display
             renoise.song().transport:set_scheduled_sequence(seq_index)
             return false
           end
-        elseif(self.switch_mode == self.SWITCH_MODE_SWITCH) then
+        elseif(self.options.switch_mode.value == self.SWITCH_MODE_SWITCH) then
           -- instantly switch position:
           local new_pos = renoise.song().transport.playback_pos
           new_pos.sequence = seq_index
@@ -271,9 +400,9 @@ function PatternMatrix:build_app()
             new_pos.line = 1
           end
           renoise.song().transport.playback_pos = new_pos
-        elseif(self.switch_mode == self.SWITCH_MODE_STOP) then
+        elseif(self.options.switch_mode.value == self.SWITCH_MODE_STOP) then
           renoise.song().transport:stop()
-        elseif(self.switch_mode == self.SWITCH_MODE_TRIG) then
+        elseif(self.options.switch_mode.value == self.SWITCH_MODE_TRIG) then
           if renoise.song().sequencer.pattern_sequence[seq_index] then
             self.__playback_pos.sequence = seq_index
             self:retrigger_pattern()
@@ -286,14 +415,13 @@ function PatternMatrix:build_app()
   self.display:add(self.position)
 
   -- grid buttons
-
   self.buttons = {}
   for x=1,self.width do
     self.buttons[x] = {}
 
     for y=1,self.height do
       self.buttons[x][y] = UIToggleButton(self.display)
-      self.buttons[x][y].group_name = self.matrix_group_name
+      self.buttons[x][y].group_name = self.mappings.matrix.group_name
       self.buttons[x][y].x_pos = x
       self.buttons[x][y].y_pos = y
       self.buttons[x][y].active = false
@@ -313,6 +441,7 @@ function PatternMatrix:build_app()
 
       -- controller button was pressed
       self.buttons[x][y].on_change = function(obj) 
+        TRACE("controller button was pressed",x,y)
 
         if not self.active then
           return false
@@ -342,6 +471,10 @@ function PatternMatrix:build_app()
 
     end  
   end
+
+  -- the finishing touch
+  self:__attach_to_song(renoise.song())
+
 end
 
 --------------------------------------------------------------------------------
@@ -371,11 +504,7 @@ function PatternMatrix:update()
   local button = nil
   local slot_muted = nil
   local slot_empty = nil
-  local palette = {
-    foreground = table.create(),
-    foreground_dimmed = table.create(),
-    background = table.create(),
-  }
+  local palette = {}
 
   -- loop through matrix & buttons
 
@@ -390,48 +519,34 @@ function PatternMatrix:update()
         patt_idx = sequence[seq_index]
         slot_muted = renoise.song().sequencer:track_sequence_slot_is_muted(
           track_idx, seq_index)
-
         slot_empty = renoise.song().patterns[patt_idx].tracks[track_idx].is_empty
 
         if (not slot_empty) then
-
-          -- slot with content
-          palette.foreground.text="■"
-          palette.foreground.color={0xff,0xff,0x00}
-          palette.foreground_dimmed.text="■"
-          palette.foreground_dimmed.color={0xff,0xff,0x00}
-          palette.background.text="□"
-          palette.background.color={0x80,0x40,0x00} 
-          if (track_idx==master_idx)then -- master track is green
-            palette.foreground.color={0x40,0xff,0x00}
+          if (track_idx==master_idx)then -- master track
+            palette.foreground = table.rcopy(self.palette.slot_master_filled)
+            palette.background = table.rcopy(self.palette.slot_master_filled)
+          else
+            palette.foreground = table.rcopy(self.palette.slot_filled)
+            palette.background = table.rcopy(self.palette.slot_filled_muted)
           end
-
         else
-
           -- empty slot 
-          palette.foreground.text="·"
-          palette.foreground.color={0x00,0x00,0x00}
-          palette.foreground_dimmed.text="·"
-          palette.background.text="▫"
-          if (track_idx==master_idx)then -- master track is green
-            palette.foreground_dimmed.color={0x00,0x40,0x00}
-            palette.background.color={0x00,0x40,0x00}
-          --elseif(track_idx>master_idx)then -- send track
-          else -- normal track
-            palette.foreground_dimmed.color={0x00,0x00,0x00}
-            palette.background.color={0x40,0x00,0x00}
+          if (track_idx==master_idx)then
+            palette.foreground = table.rcopy(self.palette.slot_master_empty)
+            palette.background = table.rcopy(self.palette.slot_master_empty)
+          else
+            palette.foreground = table.rcopy(self.palette.slot_empty)
+            palette.background = table.rcopy(self.palette.slot_empty_muted)
           end
-
         end
 
-        button:set_dimmed(slot_empty)
+        --button:set_dimmed(slot_empty)
         button:set(not slot_muted)
 
       elseif button then
 
         -- out-of-bounds space (below/next to song)
-        palette.background.text=""
-        palette.background.color={0x40,0x40,0x00}
+        palette.background = table.rcopy(self.palette.out_of_bounds)
         button:set(false)
         button:set_dimmed(false)
 
@@ -443,6 +558,28 @@ function PatternMatrix:update()
 
     end
   end
+end
+
+
+--------------------------------------------------------------------------------
+
+-- call this method with an options table as argument
+
+function PatternMatrix:apply_options(options)
+
+  Application.apply_options(self,options)
+
+end
+
+--------------------------------------------------------------------------------
+
+-- call this method with an mappings table as argument
+-- todo: re-build the UI when mappings have changed
+
+function PatternMatrix:apply_mappings(mappings)
+
+  Application.apply_mappings(self,mappings)
+
 end
 
 --------------------------------------------------------------------------------
@@ -536,7 +673,50 @@ end
 function PatternMatrix:start_app()
   TRACE("PatternMatrix.start_app()")
 
+  -- "matrix_group_name" is required
+  if (not self.mappings.matrix.group_name) then
+
+  -- display some helpful advice
+  -- small issue: this dialog can become obscured by the main UI 
+
+    local vb = renoise.ViewBuilder()
+    local dlg_title = "PatternMatrix"
+    local dlg_text = vb:column{
+      margin=10,
+      spacing=10,
+      vb:text{
+        text="Required mapping parameters are missing"
+      },
+      vb:horizontal_aligner{
+        vb:row{
+          spacing=6,
+          vb:checkbox{
+            id="choice",
+            value=true
+          },
+          vb:text{
+            text="Open 'Options' dialog and correct this",
+          }
+        }
+      }
+    }
+    local dlg_buttons = {"OK"}
+    renoise.app():show_custom_prompt(dlg_title,dlg_text,dlg_buttons)
+
+    if (vb.views.choice.value) then
+      self:build_options()
+      self:show_app()
+    end
+
+    return false
+  end
+
+  if not (self.created) then 
+    self:build_app()
+  end
+
   Application.start_app(self)
+
 
   self.__playing = renoise.song().transport.playing
   self.__playback_pos = renoise.song().transport.playback_pos
@@ -559,12 +739,16 @@ function PatternMatrix:destroy_app()
 
   Application.destroy_app(self)
 
-  self.position:remove_listeners()
-  for i=1,self.width do
-    for o=1,self.height do
-      self.buttons[i][o]:remove_listeners()
-      self.buttons[i][o]:set(false)
+  if (self.position) then
+    self.position:remove_listeners()
+  end
 
+  if (self.buttons) then
+    for i=1,self.width do
+      for o=1,self.height do
+        self.buttons[i][o]:remove_listeners()
+        self.buttons[i][o]:set(false)
+      end
     end
   end
 
@@ -679,8 +863,6 @@ end
 function PatternMatrix:__attach_to_song(song)
   TRACE("PatternMatrix:__attach_to_song()")
   
-
-
   -- song notifiers
 
   song.sequencer.pattern_assignments_observable:add_notifier(
@@ -718,7 +900,6 @@ function PatternMatrix:__attach_to_song(song)
     end
   )
 
-  
   -- slot notifiers
   
   local function slot_changed()

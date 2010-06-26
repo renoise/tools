@@ -34,9 +34,12 @@ require "Duplex/Controllers/Launchpad/Launchpad"
 -------------------------------------------------------------------------------
 
 local app = nil
+local app = Browser()
+
 
 function show_dialog(device_name, app_name)
-  if (not app or not app.dialog) then
+  --if (not app or not app.dialog) then
+  if (not app) then
     app = Browser(device_name, app_name)
   else
     if (device_name) then
@@ -54,7 +57,7 @@ end
 
 
 -------------------------------------------------------------------------------
--- Menu entries
+-- Menu entries (the browser will expand this)
 -------------------------------------------------------------------------------
 
 renoise.tool():add_menu_entry {
@@ -64,6 +67,9 @@ renoise.tool():add_menu_entry {
   end
 }
 
+app:build_menu()
+
+--[[
 renoise.tool():add_menu_entry {
   name = "--- Main Menu:Tools:Duplex:Launchpad MixConsole...",
   invoke = function() 
@@ -91,7 +97,27 @@ renoise.tool():add_menu_entry {
     show_dialog("Launchpad", "PatternMatrix") 
   end
 }
+renoise.tool():add_menu_entry {
+  name = "--- Main Menu:Tools:Duplex:LaunchpadTest MixConsole",
+  invoke = function() 
+    show_dialog("LaunchpadTest", "MixConsole") 
+  end
+}
+renoise.tool():add_menu_entry {
+  name = "--- Main Menu:Tools:Duplex:OHM64 PatternMatrix",
+  invoke = function() 
+    show_dialog("OHM64", "PatternMatrix") 
+  end
+}
+]]
+-------------------------------------------------------------------------------
+-- Keybindings
+-------------------------------------------------------------------------------
 
+renoise.tool():add_keybinding {
+  name = "Global:Tools:Duplex Browser",
+  invoke = function() show_dialog() end
+}
 
 -------------------------------------------------------------------------------
 -- Notifications

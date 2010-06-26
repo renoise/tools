@@ -93,10 +93,10 @@ function UISlider:__init(display)
   -- default palette
   self.palette = {
     background = table.rcopy(display.palette.background),
-    foreground = table.rcopy(display.palette.color_1),
-    foreground_dimmed = table.rcopy(display.palette.color_1_dimmed),
-    medium = table.rcopy(display.palette.color_2),
-    medium_dimmed = table.rcopy(display.palette.color_2_dimmed),
+    tip = table.rcopy(display.palette.color_1),
+    tip_dimmed = table.rcopy(display.palette.color_1_dimmed),
+    track = table.rcopy(display.palette.color_2),
+    track_dimmed = table.rcopy(display.palette.color_2_dimmed),
   }
 
   -- internal values
@@ -313,19 +313,19 @@ function UISlider:draw()
         
         point.val = offset * (1 / step) * self.ceiling
         point:apply((self.dimmed) and 
-          self.palette.foreground_dimmed or self.palette.foreground)
+          self.palette.tip_dimmed or self.palette.tip)
 
       elseif (self.flipped) then
         if (i <= idx)then
           point.val = true        
           point:apply((self.dimmed) and 
-            self.palette.medium_dimmed or self.palette.medium)
+            self.palette.track_dimmed or self.palette.track)
         end
 
       elseif ((self.size - i) < self.index) then
         point.val = true      
         point:apply((self.dimmed) and 
-          self.palette.medium_dimmed or self.palette.medium)
+          self.palette.track_dimmed or self.palette.track)
       end
     end
 

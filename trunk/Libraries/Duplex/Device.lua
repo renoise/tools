@@ -22,18 +22,27 @@ function Device:__init(name, message_stream, protocol)
   assert(name and message_stream and protocol, 
     "expected a valid name, stream and protocol for a device")
 
+  -- for MIDI devices, name is equal to the port name 
   self.name = name
-  self.message_stream = message_stream
-  self.protocol = protocol
-  
-  self.control_map = ControlMap()
 
-  -- supported colors space for the device (r, g, b) or empty
-  -- todo: specify color-space per control-map group
-  self.colorspace = {}
-  
   -- default palette is provided by the display
   self.palette = {}   
+
+  -- specify a color-space like this: (r, g, b) or empty
+  -- example#1 : {4,4,0} - four degrees of red and grees
+  -- example#2 : {0,0,1} - monochrome display (blue)
+  -- example#2 : {} - no colors, display as text
+  self.colorspace = {}
+  
+  -- MIDI or OSC?
+  self.protocol = protocol
+
+  -- transmit messages through this stream
+  self.message_stream = message_stream
+
+  -- init control-map
+  self.control_map = ControlMap()
+
 end
 
 
@@ -66,5 +75,37 @@ end
 
 function Device:__tostring()
   return type(self)
+end  
+
+
+--------------------------------------------------------------------------------
+
+function Device:open_settings_dialog()
+  if not self.settings_dialog then
+    self.settings_dialog = DeviceSettings(self)
+  end
+
+  self.settings_dialog.show()
+
+end  
+
+
+--==============================================================================
+--[[
+
+Show dialog with configuration options 
++ Show device name + type (generic or custom)
++ (MIDIDevice) choose port
++ (MIDIDevice) choose channel
+
+
+--]]
+
+class "DeviceSettings"
+
+function DeviceSettings:__init(device)
+  
+  
+
 end  
 

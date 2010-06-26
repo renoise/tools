@@ -20,19 +20,17 @@ function Launchpad:__init(name, message_stream)
 
   MIDIDevice.__init(self, name, message_stream)
 
-  -- device_name needs to be matchable with what the device announces itself as
-  -- but is it the same name on different platforms? 
-  self.device_name = "Launchpad"
-
-  -- todo: specify color-space per control-map group
-  -- (not all buttons may have the same abilities)
+  -- this device has a color-space with 4 degrees of red and green
+  --self.colorspace={4,4,0}
   self.colorspace={4,4,0}
 
-  -- double-buffering
+  -- double-buffering features (not used)
+  --[[
   self.display = 0
   self.update = 0
   self.flash = 0
   self.copy = 0
+  ]]
 end
 
 
@@ -40,8 +38,6 @@ end
 
 function Launchpad:point_to_value(pt)
   TRACE("Launchpad:point_to_value")
-
---rprint(color)
 
   -- default color is light/yellow
   local rslt = 127
@@ -56,13 +52,11 @@ function Launchpad:point_to_value(pt)
   -- 12 for standard flags
   rslt = 16*green+red+12
 
-  -- combine
-  
   return rslt
 
 end
 
-
+--[[
 --------------------------------------------------------------------------------
 
 -- all LEDs are turned off, and the mapping mode, buffer settings, 
@@ -146,5 +140,5 @@ end
 function Launchpad:getCompositeBufferValue()
   local result = 32+display+(update*4)+(flash*8)+(copy*16)
 end
-
+]]
 
