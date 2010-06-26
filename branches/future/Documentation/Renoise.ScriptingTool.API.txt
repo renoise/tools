@@ -150,6 +150,15 @@ renoise.tool().app_idle_observable
 renoise.tool().app_new_document_observable
   -> [renoise.Document.Observable object]
 
-
+-- get or set an optional renoise.Document.DocumentNode object, which the
+-- tool wants to use as persistant set of "options" or "preferences". 
+-- by default nil. when set, the passed document object will be automatically 
+-- loaded and saved by Renoise, in order to retain the tools state over 
+-- multiple sessions, application launches or tool relaunches.
+-- please see Renoise.Document.API.txt for more info about the DocumentNode
+-- and documents in the Renoise API in general
+renoise.tool().preferences
+  -> [renoise.Document.DocumentNode object or nil]
+    
 --[[----------------------------------------------------------------------------
 ----------------------------------------------------------------------------]]--

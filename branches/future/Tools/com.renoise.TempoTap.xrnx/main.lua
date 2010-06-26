@@ -17,16 +17,20 @@ local counter = 0
 local last_clock = 0
 
 
--- options
+-- options (tool preferences)
 
-local sensitivity = 4
-local round_bpm = true
-local auto_save_bpm = true
+local options = renoise.Document.create {
+  sensitivity = 4,
+  round_bpm = true,
+  auto_save_bpm = true
+}
 
 
 -----------------------------------------------------------------------------
 
 -- tool setup
+
+renoise.tool().preferences = options
 
 renoise.tool():add_menu_entry {
   name = "Main Menu:Tools:Tempo Tap...",
@@ -44,10 +48,10 @@ local function set_sensitivity(value)
   
   local function resize_table(t, length)
     assert(type(t) == "table")
-    assert(length >= 0)
+    assert(length > 0)
 
     while (#t < length) do
-      table.insert(t, t[#t])
+      table.insert(t, t[#t] or 0)
     end
 
     while (#t > length) do 
@@ -55,7 +59,7 @@ local function set_sensitivity(value)
     end
   end
   
-  sensitivity = value
+  options.sensitivity.value = value
   resize_table(timetable, value)
   timetable_filled = false
   counter = 1
@@ -65,14 +69,14 @@ end
 -- set_round_bpm
 
 local function set_round_bpm(value)
-  round_bpm = value
+  options.round_bpm.value = value
 end
 
 
 -- set_auto_save_bpm
 
 local function set_auto_save_bpm(value)
-  auto_save_bpm = value
+  options.auto_save_bpm.value = value
 end
 
 
@@ -110,7 +114,7 @@ local function tap()
   
   local function increase_counter()  
     counter = counter + 1
-    if (counter > sensitivity) then
+    if (counter > options.sensitivity.value) then
       timetable_filled = true
       counter = 1
     end  
@@ -128,7 +132,7 @@ local function tap()
   
   last_clock = clock
   
-  if (#timetable > sensitivity) then
+  if (#timetable > options.sensitivity.value) then
     timetable:remove(1)
   end
   
@@ -137,7 +141,7 @@ local function tap()
     
     local field = "%.2f"
   
-    if (round_bpm) then
+    if (options.round_bpm.value) then
       tempo = math.floor(tempo + 0.5)
       field = "%d"
     end  
@@ -145,13 +149,14 @@ local function tap()
     vb.views.bpm_text.text = string.format("Tempo: ".. 
       field .. " BPM [%d/%d]", tempo, counter, #timetable)
     
-    if (counter == 1 and auto_save_bpm) then 
+    if (counter == 1 and options.auto_save_bpm.value) then 
       save_bpm(tempo)
     end  
 
   else 
     vb.views.bpm_text.text = string.
-      format("Keep tapping [%d/%d]...", counter, sensitivity)
+      format("Keep tapping [%d/%d]...", counter, 
+        options.sensitivity.value)
   end
 end  
 
@@ -204,7 +209,7 @@ function show_dialog()
           text = "Sensitivity"
         },
         vb:valuebox {
-          value = sensitivity,
+          value = options.sensitivity.value,
           min = 2,
           max = 10,
           notifier = function(value)
@@ -219,7 +224,7 @@ function show_dialog()
           text = "Round BPM"
         },
         vb:checkbox {
-          value = round_bpm, 
+          value = options.round_bpm.value, 
           notifier = function(value)
             set_round_bpm(value)
           end
@@ -232,7 +237,7 @@ function show_dialog()
           text = "Auto-Save BPM"
         },
         vb:checkbox {
-          value = auto_save_bpm, 
+          value = options.auto_save_bpm.value, 
           notifier = function(value)
             set_auto_save_bpm(value)
           end
