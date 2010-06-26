@@ -179,7 +179,7 @@ Func Controller()
 		If 	$ConnectedSocket <> -1 Then
 			; Try to receive (up to) 2048 bytes
 			;----------------------------------------------------------------
-			$recv = TCPRecv($ConnectedSocket, 2048)
+			$recv = TCPRecv($MainSocket, 2048)
 		EndIf
 
 		If $fromsession == True Then
@@ -188,9 +188,12 @@ Func Controller()
 ;			@CRLF& $recv)
 			Sleep(2000)
 			TCPSend($ConnectedSocket, "STEP\n")
-			$recv = TCPRecv($ConnectedSocket, 2048)
-			$recv = TCPRecv($ConnectedSocket, 2048)
+			$recv = TCPRecv($MainSocket, 2048)
+			$recv = TCPRecv($MainSocket, 2048)
 			$fromsession = False
+		Else
+			TCPSend($ConnectedSocket, "STEP\n")
+			$recv = TCPRecv($MainSocket, 2048)
 		EndIf
 		; If the receive failed with @error then the socket has disconnected
 		;----------------------------------------------------------------
@@ -253,7 +256,10 @@ Func Controller()
 		EndIf
 	WEnd
 	If $ConnectedSocket <> -1 & $usertermination == False Then 
-		TCPCloseSocket($ConnectedSocket)
+		local $berror = TCPCloseSocket($MainSocket)
+		if $berror <> 1 Then
+			MsgBox(0,"error"&@error,"failure by closing socket")
+		EndIf
 	Else
 		TCPShutdown()
 	EndIf
@@ -340,7 +346,7 @@ Func requestremotevariable($sendvar)
     
 		TCPSend($ConnectedSocket, $sendvar)
 		Sleep(10)
-		$recbuf = TCPRecv($ConnectedSocket, 2048)
+		$recbuf = TCPRecv($MainSocket, 2048)
 		$recbuf = StringRegExpReplace ( $recbuf, "\n", @CRLF)
 		If $DebugLevel=="1" Then
 			WriteToConsole("Fetchvar>"&$recbuf)
@@ -414,7 +420,11 @@ EndFunc
 
 Func handleconnect()
 	If $ServerUp <> 0 Then
-		TCPCloseSocket($ConnectedSocket)
+		local $berror = TCPCloseSocket($MainSocket)
+		if $berror <> 1 Then
+			MsgBox(0,"error"&@error,"failure by closing socket")
+		EndIf
+		
 		TCPShutdown()
 		$ConnectedSocket = -1
 		$usertermination = True
