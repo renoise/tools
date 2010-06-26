@@ -6,7 +6,7 @@
 
 A generic application class for Duplex
 - extend this class to build applications for the Duplex Browser
-- provides globally accesible configuration options 
+- provides globally accessible configuration options 
 - o start/stop applications
 - o edit control-map groups, change built-in options 
 - o browser integration: control autorun, aliases, pinned status
@@ -60,9 +60,18 @@ function Application:__init()
   -- define a palette to enable color-picker support
   self.palette = {}
 
-  -- global app settings 
-  self.browser = nil -- reference to the browser
-  self.device_display_name = nil -- config branch name
+  -- global app settings (reference to the browser)
+  self.browser = nil
+
+  -- browser config app branch, e.g. "MyDevice"
+  -- (needed in order to update the global config)
+  self.device_display_name = nil -- 
+
+  -- this is the app name, such as it appears in the browser
+  -- (needed in order to update the global config)
+  -- the name is the class name, with an optional postfix that
+  -- tell us that it's an alias (e.g. "MixConsole_2")
+  self.app_display_name = nil 
 
   -- the options dialog
   self.dialog = nil
@@ -101,7 +110,16 @@ function Application:start_app()
   if not (self.created) then 
     return 
   end
-  
+
+  if (self.active) then
+    return
+  end
+
+  if (self.dialog) then 
+    local elm = self.vb.views.dpx_app_options_running
+    elm.value = true
+  end
+
   self.active = true
 end
 
@@ -116,14 +134,23 @@ function Application:stop_app()
   if not (self.created) then 
     return 
   end
-  
+
+  if (not self.active) then
+    return
+  end
+
+  if (self.dialog) then 
+    local elm = self.vb.views.dpx_app_options_running
+    elm.value = false
+  end
+
   self.active = false
 end
 
 
 --------------------------------------------------------------------------------
 
--- display application
+-- display application options
 
 function Application:show_app()
   TRACE("Application:show_app()")
@@ -138,7 +165,7 @@ end
 
 --------------------------------------------------------------------------------
 
--- hide application
+-- hide application options
 
 function Application:hide_app()
   TRACE("Application:hide_app()")
@@ -314,6 +341,13 @@ end
 
 --------------------------------------------------------------------------------
 
+function Application:__eq(other)
+  -- only check for object identity
+  return rawequal(self, other)
+end  
+
+--------------------------------------------------------------------------------
+
 -- create application options dialog
 
 function Application:build_options()
@@ -376,6 +410,9 @@ function Application:build_options()
             self.vb:checkbox{
               value=true,
               width=18,
+              notifier = function(v)
+                self:set_pinned(v)
+              end
             },
             self.vb:text{
               text="Pinned to menu",
@@ -383,7 +420,7 @@ function Application:build_options()
           },
          self.vb:row{
             self.vb:checkbox{
-              value=true,
+              value=false,
               width=18,
             },
             self.vb:text{
@@ -411,8 +448,35 @@ function Application:build_options()
         self.vb:row{
           margin = DEFAULT_MARGIN,
           self.vb:checkbox{
+            id="dpx_app_options_running",
             value=true,
             width=18,
+            notifier = function(v)
+              -- update options dialog and browser (if present, and 
+              -- the current application is focused)
+              local app,cb = nil,nil
+              local is_current_app = false
+              if(self.browser)then
+                app = self.browser:__get_selected_app()
+                cb = self.browser.vb.views.dpx_browser_application_checkbox
+                if(app and app==self)then
+                  is_current_app = true
+                end
+              end
+
+              if v then
+                self:start_app()
+              else
+                self:stop_app()
+              end
+              if(is_current_app)then
+                -- update browser checkbox/list
+                cb.value = v
+              else
+                -- update the browser app list only
+                self.browser:__decorate_app_list()
+              end
+            end
           },
           self.vb:text{
             text="Running",
@@ -512,6 +576,37 @@ function Application:build_options()
         elm_group:add_child(self:__add_option_row(v,k))
       end
     end
+  end
+end
+
+--------------------------------------------------------------------------------
+
+-- update the "pinned" status of this application
+-- (requires that the browser is present)
+
+function Application:set_pinned(val)
+  if(self.browser)then
+    local matched = false
+    for k,v in ipairs(self.browser.__devices)do
+      if(matched)then break end
+      if(v.pinned) and
+        (v.display_name==self.device_display_name) then
+        for k2,v2 in pairs(v.pinned) do
+          if(k2==self.app_display_name)then
+            matched = true
+            if(not val)then
+              v.pinned[k2] = nil
+              break
+            end
+          end
+        end
+        if (val) and (not matched) then
+          v.pinned[self.app_display_name] = ("%s %s..."):format(self.device_display_name,self.app_display_name)
+          break
+        end
+      end
+    end
+    self.browser:build_menu()
   end
 end
 
