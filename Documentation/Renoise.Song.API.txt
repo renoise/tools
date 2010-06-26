@@ -479,7 +479,7 @@ renoise.song().tracks[].output_routing, _observable
   -> [number, 1 - #available_output_routings]
 
 renoise.song().tracks[].output_delay, _observable
-  -> [float, 0.0 - 100.0]
+  -> [float, -100.0 - 100.0]
 
 renoise.song().tracks[].max_effect_columns
   -> [read-only, number, 4 OR 0, depending on the track type]
