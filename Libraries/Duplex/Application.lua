@@ -373,8 +373,8 @@ function Application:build_options()
         self.vb:row{
           self.vb:text{
             id="dpx_app_mappings_header",
+            font="bold",
             text="",
-            width=200,
           },
         },
         -- mappings are inserted here
@@ -391,8 +391,8 @@ function Application:build_options()
       id = "dpx_app_options",
       self.vb:text{
         id="dpx_app_options_header",
+        font="bold",
         text="",
-        width=200,
       },
       -- options are inserted here
     },
@@ -401,7 +401,6 @@ function Application:build_options()
       visible=false,
       margin = DEFAULT_MARGIN,
       spacing = DEFAULT_SPACING,
-
       self.vb:horizontal_aligner{
         mode = "justify",
         width = 400,
@@ -415,16 +414,19 @@ function Application:build_options()
               end
             },
             self.vb:text{
-              text="Pinned to menu",
+              text="Pinned to Duplex menu",
             },
           },
          self.vb:row{
             self.vb:checkbox{
               value=false,
               width=18,
+              notifier = function()
+                renoise.app():show_warning("Autorun not yet implemented")
+              end
             },
             self.vb:text{
-              text="Auto-run",
+              text="Launch automatically",
             },
           },
         },
@@ -537,7 +539,7 @@ function Application:build_options()
   if (self.mappings) then
     -- update header text
     if (table_count(self.mappings)>0) then
-      elm_header.text = "Control-map assignments, valid for this device"
+      elm_header.text = "Control-map assignments"
     else
       elm_header.text = "No mappings are available"
     end
@@ -560,7 +562,7 @@ function Application:build_options()
   if (self.options)then
     -- update header text
     if (table_count(self.options)>0) then
-      elm_header.text = "Other options, valid for this instance"
+      elm_header.text = "Other options"
     else
       elm_header.text = "No options are available"
     end
@@ -628,6 +630,7 @@ function Application:__add_mapping_row(t,key)
   else
     elm = self.vb:checkbox{
       value=(t.group_name~=nil),
+      tooltip="Set this assignment as active/inactive",
       width=18,
     }
   end
@@ -635,19 +638,24 @@ function Application:__add_mapping_row(t,key)
   elm = self.vb:row{
     self.vb:text{
       text=key,
-      tooltip=t.description,
+      tooltip=("Assignment description: %s"):format(t.description),
       width=70,
     },
     self.vb:row{
       style="border",
       self.vb:text{
         text=t.group_name,
+        tooltip="The selected control-map group",
         font="mono",
         width=110,
       },
       self.vb:button{
         text="Choose",
+        tooltip="Click here to choose a control-map group for this assignment",
         width=60,
+        notifier = function()
+          renoise.app():show_warning("Mapping dialog not yet implemented")
+        end
       }
     }
   }

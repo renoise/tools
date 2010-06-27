@@ -74,6 +74,14 @@ Planned / Todo
 
 * ControlMap: @IsBidirectional attribute, cancel output if false
 
+* Scheduler class: for double-press detect, and stuff like blinking objects
+  o PatternMatrix: the scheduled pattern should blink
+
+* PatternMatrix: create a dedicated class for sequence triggers (UISeqTrigger)
+  o Active pattern index
+  o Scheduled pattern index
+  o Define a looped range (press button, hold and then press another button)
+
 * "Soft-validate" the control-map - warn when required elements are missing, 
   but ignore unknown ones
 
