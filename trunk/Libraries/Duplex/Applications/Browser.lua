@@ -1042,9 +1042,9 @@ function Browser:__get_custom_devices()
       mappings = {},
 
     },
-    --  TODO: implement class
+    -- Livid Instruments Ohm64
     {
-      class_name=nil,          
+      class_name="Ohm64",          
       display_name="OHM64",
       device_name="Ohm64 MIDI 1",
       control_map="Controllers/OHM64/ohm64.xml",
