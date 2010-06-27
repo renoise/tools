@@ -36,7 +36,7 @@ end
 
 --------------------------------------------------------------------------------
 
-function Launchpad:point_to_value(pt)
+function Launchpad:point_to_value(pt, maximum, minimum, ceiling)
   TRACE("Launchpad:point_to_value")
 
   -- default color is light/yellow
@@ -96,7 +96,7 @@ end
 
 --------------------------------------------------------------------------------
 
--- Set buffer 0 or buffer 1 as the new ‘displaying’ buffer. 
+-- Set buffer 0 or buffer 1 as the new "displaying" buffer. 
 
 function Launchpad:set_active_display(number)
   self.display = 0
@@ -106,7 +106,7 @@ end
 
 --------------------------------------------------------------------------------
 
--- Set buffer 0 or buffer 1 as the new ‘updating’ buffer
+-- Set buffer 0 or buffer 1 as the new "updating" buffer
 
 function Launchpad:set_update_display(number)
   self.update = 0
@@ -116,7 +116,7 @@ end
 
 --------------------------------------------------------------------------------
 
--- If 1: continually flip ‘displayed’ buffers to make selected LEDs flash
+-- If 1: continually flip "displayed" buffers to make selected LEDs flash
 
 function Launchpad:set_flash_mode(number)
   self.flash = 0
@@ -126,7 +126,7 @@ end
 
 --------------------------------------------------------------------------------
 
--- copy the LED states from the new ‘displayed’ buffer to the new ‘updating’ buffer
+-- copy the LED states from the new "displayed" buffer to the new "updating" buffer
 
 function Launchpad:copy_buffer()
   self.flash = 0
