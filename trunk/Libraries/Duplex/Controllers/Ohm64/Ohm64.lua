@@ -32,9 +32,9 @@ end
 
 --------------------------------------------------------------------------------
 
-function Ohm64:point_to_value(pt)
+function Ohm64:point_to_value(pt, maximum, minimum, ceiling)
   TRACE("Ohm64:point_to_value")
 
-  return MIDIDevice.point_to_value(pt)
+  return MIDIDevice.point_to_value(pt, maximum, minimum, ceiling)
 end
 
