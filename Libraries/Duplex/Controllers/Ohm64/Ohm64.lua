@@ -35,13 +35,6 @@ end
 function Ohm64:point_to_value(pt, maximum, minimum, ceiling)
   TRACE("Ohm64:point_to_value")
 
-  rprint(pt)
-  rprint(pt.val)
-  rprint(type(pt.val))
-  rprint(maximum)
-  rprint(minimum)
-  rprint(ceiling)
-
   return MIDIDevice.point_to_value(self, pt, maximum, minimum, ceiling)
 end
 
