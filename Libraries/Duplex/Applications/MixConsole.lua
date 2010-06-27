@@ -292,13 +292,24 @@ function MixConsole:build_app()
   -- check if the control-map describes a grid controller
   -- (slider is composed from individual buttons in grid mode)
   local grid_mode = false
+  local matched
   local control_map_groups = self.display.device.control_map.groups
   for group_name, group in pairs(control_map_groups) do
     for attr, param in pairs(group) do
-      if (attr == "xarg" and param["columns"]) then
-        grid_mode = true
-        self.width = tonumber(param["columns"])
-        self.height = math.ceil(#group/self.width)
+      
+      -- only enter grid mode if we are actually using those groups
+      matched = false
+      for k,v in pairs(self.mappings)do
+        if(v.group_name==group_name)then
+          matched = true
+        end
+      end
+      if(matched)then
+        if (attr == "xarg" and param["columns"]) then
+          grid_mode = true
+          self.width = tonumber(param["columns"])
+          self.height = math.ceil(#group/self.width)
+        end
       end
       if grid_mode then break end
     end
