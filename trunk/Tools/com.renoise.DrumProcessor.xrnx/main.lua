@@ -148,7 +148,7 @@ function DrumPatternProcessor:set_divisions(divisions)
 end
 
 --------------------------------------------------------------
-function DrumPatternProcessor:clear(track, pattern)
+function DrumPatternProcessor:clear(pattern, track)
   renoise.song().patterns[pattern].tracks[track]:clear()
 end
 
