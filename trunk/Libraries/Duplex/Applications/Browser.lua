@@ -1042,12 +1042,12 @@ function Browser:__get_custom_devices()
       mappings = {},
 
     },
-    -- Livid Instruments Ohm64
+    --  TODO: implement class
     {
-      class_name="Ohm64",          
-      display_name="Ohm64",
+      class_name=nil,          
+      display_name="OHM64",
       device_name="Ohm64 MIDI 1",
-      control_map="Controllers/Ohm64/ohm64.xml",
+      control_map="Controllers/OHM64/ohm64.xml",
       protocol=DEVICE_MIDI_PROTOCOL,
       mappings = {
         MixConsole = {
@@ -1073,8 +1073,8 @@ function Browser:__get_custom_devices()
         },      
       },
       pinned = {
-        MixConsole = "Ohm64 MixConsole...",
-        PatternMatrix = "Ohm64 PatternMatrix...",
+        MixConsole = "OHM64 MixConsole...",
+        PatternMatrix = "OHM64 PatternMatrix...",
       },
       aliases = {
         "MixConsole_2",  --  this is an alias  
