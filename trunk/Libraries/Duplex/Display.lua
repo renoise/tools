@@ -180,13 +180,14 @@ function Display:set_parameter(elm, obj, point)
 
       value = self.device:point_to_value(
         point, elm.maximum, elm.minimum, obj.ceiling)
-    
-      
-      -- do not loop back the original value change back to the sender
+
+      -- do not loop back the original value change back to the sender, unless the sender 
+      -- explicitly wants this
       if (not current_message) or
          (current_message.context ~= MIDI_NOTE_MESSAGE) or
          (current_message.id ~= elm.id) or
-         (current_message.value ~= value)
+         (current_message.value ~= value) or
+         (self.device.loopback_received_messages)
       then
         self.device:send_note_message(num,value)
       end
