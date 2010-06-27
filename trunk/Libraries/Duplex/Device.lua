@@ -39,6 +39,9 @@ function Device:__init(name, message_stream, protocol)
 
   -- transmit messages through this stream
   self.message_stream = message_stream
+  
+  -- allow midi loopback of messages to the real device
+  self.loopback_received_messages = false
 
   -- init control-map
   self.control_map = ControlMap()
