@@ -25,7 +25,16 @@ local options = renoise.Document.create {
   auto_save_bpm = true
 }
 
+-- notifiers
 
+options.sensitivity:add_notifier(function()
+  -- keep timetable in sync with the sensitivity
+  resize_table(timetable, options.sensitivity.value)
+  timetable_filled = false
+  counter = 1
+end)
+
+ 
 -----------------------------------------------------------------------------
 
 -- tool setup
@@ -40,60 +49,38 @@ renoise.tool():add_menu_entry {
 }
 
 
-------------------------------------------------------------------------------
+-----------------------------------------------------------------------------
 
--- set_sensitivity
- 
-local function set_sensitivity(value)
-  
-  local function resize_table(t, length)
-    assert(type(t) == "table")
-    assert(length > 0)
+-- helper functions
 
-    while (#t < length) do
-      table.insert(t, t[#t] or 0)
-    end
+function resize_table(t, length)
+  assert(type(t) == "table")
+  assert(length > 0)
 
-    while (#t > length) do 
-      table.remove(t, 1) 
-    end
+  while (#t < length) do
+    table.insert(t, t[#t] or 0)
   end
-  
-  options.sensitivity.value = value
-  resize_table(timetable, value)
-  timetable_filled = false
-  counter = 1
+
+  while (#t > length) do 
+    table.remove(t, 1) 
+  end
 end
 
 
--- set_round_bpm
-
-local function set_round_bpm(value)
-  options.round_bpm.value = value
-end
-
-
--- set_auto_save_bpm
-
-local function set_auto_save_bpm(value)
-  options.auto_save_bpm.value = value
-end
-
+------------------------------------------------------------------------------
 
 -- save_bpm
 
-local function save_bpm(bpm)
+function save_bpm(bpm)
   if (bpm >= 32 and bpm <= 999) then
     renoise.song().transport.bpm = bpm
   end
 end
 
 
-------------------------------------------------------------------------------
-
 -- tap
 
-local function tap()
+function tap()
   
   local function get_average(tb)
     return (tb[#tb] - tb[1]) / (#tb - 1)
@@ -160,7 +147,7 @@ local function tap()
   end
 end  
 
-  
+
 -----------------------------------------------------------------------------
 
 function show_dialog()
@@ -200,21 +187,18 @@ function show_dialog()
     },
     
     vb:column {
-       style = "invisible",
        margin = DEFAULT_DIALOG_MARGIN,
        spacing = DEFAULT_CONTROL_SPACING,
+
        vb:row {
         vb:text {
           width = TEXT_ROW_WIDTH,
           text = "Sensitivity"
         },
         vb:valuebox {
-          value = options.sensitivity.value,
+          bind = options.sensitivity,
           min = 2,
           max = 10,
-          notifier = function(value)
-            set_sensitivity(value)
-          end
         },
       },
       
@@ -224,10 +208,7 @@ function show_dialog()
           text = "Round BPM"
         },
         vb:checkbox {
-          value = options.round_bpm.value, 
-          notifier = function(value)
-            set_round_bpm(value)
-          end
+          bind = options.round_bpm, 
         },
       },       
     
@@ -237,10 +218,7 @@ function show_dialog()
           text = "Auto-Save BPM"
         },
         vb:checkbox {
-          value = options.auto_save_bpm.value, 
-          notifier = function(value)
-            set_auto_save_bpm(value)
-          end
+          bind = options.auto_save_bpm, 
         },
       }, 
     },      

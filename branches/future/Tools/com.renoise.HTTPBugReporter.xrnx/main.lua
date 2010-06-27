@@ -10,72 +10,93 @@ require "renoise.http"
 -------------------------------------------------------------------------------
 
 local entry = {}
-
 entry.name = "Main Menu:Help:Report a Bug..."
-entry.active = function() return true end
 entry.invoke = function() start() end
 renoise.tool():add_menu_entry(entry)
 
 
 -------------------------------------------------------------------------------
---  Main functions
+--  Document
 -------------------------------------------------------------------------------
 
-local vb = nil
-local dialog = nil
+local bug_report = renoise.Document.create {
+  topic = "",
+  summary = "what happened?",
+  description = {"please describe the problem as detailed as possible here"},
+  email = "your email",
+  name = "your name" ,
+  severe = false,
+  log = "",
+}
 
-local function show_confirmation()
-  vb.views.confirmation.visible = true
-  vb.views.confirmation.text = "Your bug report has been received. Thanks!"
-end
 
-local function show_error()
-  vb.views.confirmation.visible = true
-  vb.views.confirmation.text = "Error while sending your bug report. How ironic!"
-end
+-------------------------------------------------------------------------------
+--  Processing
+-------------------------------------------------------------------------------
 
-local function submit(callback)
+function submit(callback)
   local my_callback = callback or function(data) rprint(data) end
   
-  local topic = vb.views.topic_popup.items[vb.views.topic_popup.value]
-  if (vb.views.topic_popup.value == #vb.views.topic_popup.items) then
-    topic = vb.views.other_topic_textfield.text
+  local description = table.create()
+  for i=1,#bug_report.description do
+    description:insert(bug_report.description[i].value)
   end
-  local summary = vb.views.summary_textfield.text
-  local description = vb.views.description_textfield.text
-  local email = vb.views.email_textfield.text
-  local name = vb.views.name_textfield.text  
-  local severe = vb.views.severe_checkbox.value
-  local log = ""
   
   local settings = table.create()
   settings.url = "http://www.renoise.com/bugs/index.php"
   settings.method = "post"
   settings.data = { 
-      action="submit", 
-      topic=topic, 
-      summary=summary, 
-      description=description, 
-      severe=severe,
-      email=email,
-      name=name
-    }
+    action = "submit", 
+    topic = bug_report.topic.value, 
+    summary = bug_report.summary.value, 
+    description = description, 
+    severe = bug_report.severe.value,
+    email = bug_report.email.value,
+    name = bug_report.name.value
+  }
   settings.data_type = "json"  
   settings.success = function( result, status, xhr )
-      if (result.status == "OK") then      
-        show_confirmation()        
-      else
-        show_error()
-      end
+    if (result.status == "OK") then      
+      show_confirmation()        
+    else
+      show_error()
     end
+  end
   --settings.content_type = "multipart/form-data"   
-
-  local r = Request(settings)
   
+  Request(settings)
 end
 
+
+-------------------------------------------------------------------------------
+--  Gui
+-------------------------------------------------------------------------------
+
+local vb = nil
+local dialog = nil
+
+
+-- show_confirmation
+
+function show_confirmation()
+  vb.views.confirmation.visible = true
+  vb.views.confirmation.text = 
+    "Your bug report has been received. Thanks!"
+end
+
+
+-- show_error
+
+function show_error()
+  vb.views.confirmation.visible = true
+  vb.views.confirmation.text = 
+    "Error while sending your bug report. How ironic!"
+end
+
+
+-- start
+
 function start()
-  
   if dialog and dialog.visible then
     dialog:show()
     return
@@ -83,6 +104,8 @@ function start()
 
   vb = renoise.ViewBuilder()
   
+  local DIALOG_BUTTON_HEIGHT = renoise.ViewBuilder.DEFAULT_DIALOG_BUTTON_HEIGHT
+
   local DEFAULT_MARGIN = renoise.ViewBuilder.DEFAULT_CONTROL_MARGIN  
   local DEFAULT_SPACING = 5   
   
@@ -126,6 +149,12 @@ function start()
           local last = #vb.views.topic_popup.items
           vb.views.other_topic_text.visible = (value == last)
           vb.views.other_topic_textfield.visible = (value == last)
+
+          if (value == last) then
+            bug_report.topic.value = vb.views.other_topic_textfield.text
+          else
+            bug_report.topic.value = vb.views.topic_popup.items[value]
+          end
         end        
       },
     
@@ -155,7 +184,7 @@ function start()
     },
 
     vb:textfield {
-      id = "summary_textfield"
+      bind = bug_report.summary
     },           
 
     vb:text {
@@ -163,42 +192,39 @@ function start()
        text = "Description (textbox):"
     },
 
-    vb:textfield {
-       id = "description_textfield",
+    vb:multiline_textfield {
+       bind = bug_report.description,
+       height = 80,
     },      
     
     vb:row {       
-      spacing = DEFAULT_SPACING,
-      
       vb:checkbox {
-        id = "severe_checkbox",
+        bind = bug_report.severe,
         value = false
       },  
-      
       vb:text {
-        text  = "Renoise crashed or the system became unresponsive."
+        text = "Renoise crashed or the system became unresponsive."
       },
-          
     },
   }  
     
   local optional_group = vb:column {
-      style = "group",
-      margin = DEFAULT_MARGIN,      
-      spacing = DEFAULT_SPACING,
+    style = "group",
+    margin = DEFAULT_MARGIN,      
+    spacing = DEFAULT_SPACING,
 
 
-    vb:row {
-      width = "100%",
-      spacing = DEFAULT_SPACING,    
+    vb:horizontal_aligner {
+      mode = "justify",
       
-      vb:checkbox {
-        id = "add_log_checkbox",
-        value = true
-      },
-      
-      vb:text {
-        text = "Include log with bug report"
+      vb:row {
+        vb:checkbox {
+          id = "add_log_checkbox",
+          value = true
+        },
+        vb:text {
+          text = "Include log with bug report"
+        },
       },
       
       vb:button {
@@ -228,15 +254,13 @@ function start()
       visible = false,
 
       vb:textfield {
-        id = "name_textfield",         
+        bind = bug_report.name,
         width = 150,
-        text = "name",     
       },
         
       vb:textfield {
-        id = "email_textfield",         
+        bind = bug_report.email,
         width = 150,
-        text = "email",       
       }
     }
   }  
@@ -276,6 +300,7 @@ function start()
         spacing = 5,
         vb:button {
           text = "Submit",
+          height = DIALOG_BUTTON_HEIGHT,
           notifier = function() 
             submit()
           end
