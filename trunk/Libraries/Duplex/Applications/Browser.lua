@@ -1042,17 +1042,23 @@ function Browser:__get_custom_devices()
       mappings = {},
 
     },
-    --  TODO: implement class
+    --  LividInstruments Ohm64
     {
-      class_name=nil,          
+      class_name="Ohm64",          
       display_name="Ohm64",
       device_name="Ohm64 MIDI 1",
       control_map="Controllers/Ohm64/ohm64.xml",
       protocol=DEVICE_MIDI_PROTOCOL,
       mappings = {
         MixConsole = {
+          panning = {
+            group_name="PanningLeft",
+          },
           levels = {
             group_name="VolumeLeft",
+          },
+          mute = {
+            group_name = "MuteLeft",
           },
           master = {
             group_name="VolumeRight",
@@ -1076,9 +1082,9 @@ function Browser:__get_custom_devices()
         MixConsole = "Ohm64 MixConsole...",
         PatternMatrix = "Ohm64 PatternMatrix...",
       },
-      aliases = {
-        "MixConsole_2",  --  this is an alias  
-      },
+      --aliases = {
+      --  "MixConsole_2",  --  this is an alias  
+      --},
     },
     --  this is a defunkt implementation (no control-map)
     --  will cause a warning once it's opened
