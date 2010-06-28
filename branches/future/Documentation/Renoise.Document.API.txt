@@ -53,19 +53,19 @@ serializable:from_string(string)
 -- notifiers
 
 -- check if the given funcion, method was already registered as notifier
-observable:has_notifier(
-  function or (object, function) or (function, object)) -> [boolean]
+observable:has_notifier(function or (object, function) or (function, object)) 
+  -> [boolean]
 
 -- register a function or method as notifer, which will be called as soon as
 -- the observables value changed
-observable:add_notifier(
-  function or (object, function) or (function, object))
+observable:add_notifier(function or (object, function) or (function, object))
 
--- unregister a previously registered notifier. when only passing an object, all
--- notifier functions that match the given object will be removed, aka all methods
--- of the given object are removed. will not fire errors when none are attached.
-observable:remove_notifier(
-  function or (object, function) or (function, object) or (object))
+-- unregister a previously registered notifier. when only passing an object to 
+-- remove_notifier all notifier functions that match the given object will be 
+-- removed, aka all methods of the given object are removed. will not fire 
+-- errors when none are attached in this case.
+observable:remove_notifier(function or (object, function) or 
+  (function, object) or (object))
 
 
 --------------------------------------------------------------------------------
@@ -74,7 +74,8 @@ observable:remove_notifier(
 
 -- properties
 
-observable.value -> [boolean, number or string]
+observable.value 
+  -> [boolean, number or string]
 
 
 --------------------------------------------------------------------------------
@@ -84,10 +85,12 @@ observable.value -> [boolean, number or string]
 -- operators
 
 -- query the lsits size
-#observable_list -> [Number]
+#observable_list 
+  -> [Number]
 
 -- access a observable by index
-observable_list[Number] -> [Observable]
+observable_list[Number] 
+  -> [Observable object]
 
 
 -- notifiers
@@ -110,11 +113,13 @@ observable_list:property(index)
 
 -- find a value, by comparing the list values with the passed value. first
 -- match is returned or nil
-Observable_list:find([start_pos,] value) -> [nil or pos]
+Observable_list:find([start_pos,] value) 
+  -> [nil or pos as number]
 
 -- insert a new item to the end of the list or at the specified pos. returns
 -- the newly created and inserted Observable
-Observable_list:insert([pos,] value) -> [inserted ObservableNumber]
+Observable_list:insert([pos,] value) 
+  -> [inserted ObservableNumber]
 
 -- remove the last item from the list or the one at the specified pos
 Observable_list:remove([pos])
@@ -127,18 +132,27 @@ Observable_list:remove([pos])
 -- functions
 
 doc:has_property(property_name)
-doc:property(property_name) -> [nil or (Observable or DocumentNode)]
 
-doc:add(name, boolean_value) -> [ObservableBoolean]
-doc:add(name, number_value) -> [ObservableNumber]
-doc:add(name, string_value) -> [ObservableString]
-doc:add(name, list) -> [ObservableList]
-doc:add(name, node) -> [DocumentNode]
+doc:property(property_name) 
+  -> [nil or (Observable or DocumentNode object)]
+
+doc:add(name, boolean_value) 
+  -> [newly created ObservableBoolean object]
+doc:add(name, number_value) 
+  -> [newly created ObservableNumber object]
+doc:add(name, string_value) 
+  -> [newly created ObservableString object]
+doc:add(name, list) 
+  -> [newly created ObservableList object]
+doc:add(name, node) 
+  -> [newly created DocumentNode object]
 
 doc:remove(document or observable)
 
-doc:save_as(document_type_name, file_name) -> [boolean, error_string]
-doc:load_from(document_type_name, file_name) -> [boolean, error_string]
+doc:save_as(document_type_name, file_name) 
+  -> [success, error_string or nil on success]
+doc:load_from(document_type_name, file_name) 
+  -> [success, error_string or nil on success]
 
 
 --[[----------------------------------------------------------------------------
