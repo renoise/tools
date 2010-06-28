@@ -3,14 +3,14 @@
 -- -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
 renoise.tool():add_menu_entry {
-  name = "Main Menu:Tools:Note Mapper",
+  name = "Main Menu:Tools:Note Mapper...",
   invoke = function() 
      initialize()
   end
 }
 
 renoise.tool():add_keybinding {
-  name = "Global:Tools:Note Mapper",
+  name = "Global:Tools:Note Mapper...",
   invoke = function() initialize() end
 }
 
