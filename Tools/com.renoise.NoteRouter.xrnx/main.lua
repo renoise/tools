@@ -183,14 +183,13 @@ function build_note_table()
 end
 
 function get_track_index()
-
+  local song = renoise.song()
+  
   for t = 1, #song.tracks do
-
-    if song.tracks[t].type == TYPE_TRACK then
+    if renoise.song().tracks[t].type == TYPE_TRACK then
       tracks[t] = song.tracks[t].name
       note_to_track[t] = 'None'
     end
-
   end
 
   if #tracks ~= nil then

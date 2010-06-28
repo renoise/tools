@@ -5,12 +5,7 @@ device = {'none'}
 MAPPING = 1
 PATTERN_EDITOR = 2
 record_destination = MAPPING
-song = renoise.song()
-pattern = song.patterns[song.selected_pattern_index]
-instrument = song.selected_instrument_index -1
-max_tracks = #song.tracks
 tracks = {}
 note_to_track = {}
 nr_debug = false
-
 
