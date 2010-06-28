@@ -412,6 +412,27 @@ do
         },
       },
         
+      --- multiline_textfield row
+      vb:row {
+        margin = CONTENT_MARGIN,
+        style = "border",
+        
+        vb:text {
+          width = 80,
+          text = "vb:ml_textfield"
+        },
+        vb:multiline_textfield {
+          height = 80,
+          width = 120,
+          value = "I am a long text that can be editied.\nParagraphs are separated with "..
+            "\\n's.\n\nEdit me",
+          notifier = function(value)
+            show_status(("multiline_textfield value changed to '%s'"):
+              format(value))
+          end
+        },
+      },
+      
       --- button row
       vb:row {
         margin = CONTENT_MARGIN,

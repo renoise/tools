@@ -109,17 +109,7 @@ do
   doc.string_value.value = "foll!"
   assert(doc.string_value.value == "foll!")
   
-  assert_error(function()
-    resolved_number.unknown_property = 123 
-  end)
-  
-  assert_error(function()
-    doc.unknown_property = "something!" 
-  end)
-   
-  assert_error(function() 
-    print(doc.unknown_property == "foll!") 
-  end)
+  assert(doc.unknown_property == nil) 
   
   
   ----------------------------------------------------------------------------
@@ -186,11 +176,15 @@ do
     number_list:insert(3, 66)
   end)
   
-  
-  while #string_list > 0 do string_list:remove() end
+  while (#string_list > 0) do string_list:remove() end
   string_list:insert("olla")
   string_list:insert("wolla")
   assert(string_list[#string_list].value == "wolla")
+  
+  assert(string_list[1].value == "olla")
+  assert(string_list[2].value == "wolla")
+  assert(string_list[3] == nil)
+  assert(string_list[-1] == nil)
   
   
   ----------------------------------------------------------------------------

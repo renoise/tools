@@ -150,6 +150,35 @@ renoise.tool().app_idle_observable
 renoise.tool().app_new_document_observable
   -> [renoise.Document.Observable object]
 
-
+-- get or set an optional renoise.Document.DocumentNode object, which will be
+-- used as set of persistant "options" or preferences for your tool. 
+-- by default nil. when set, the assigned document object will be automatically 
+-- loaded and saved by Renoise, in order to retain the tools state.
+-- the preference xml file is saved/loaded within the tool bundle as 
+-- "com.example.your_tool.xrnx/preferences.xml".
+--
+-- a simple example:
+-- -- create a document first
+-- my_options = renoise.Document.create { 
+--  some_option = true, 
+--  some_value = "string_value"
+-- }
+--
+-- -- register the document as the tools preferences
+-- renoise.tool().preferences = my_options
+--
+-- -- values can be accessed (read, written) via 
+-- my_options.some_option.value, my_options.some_value.value
+--
+-- -- also notifiers can be added to listen to changes to the values
+-- -- done by you, or after new values got loaded or a view changed the value:
+-- my_options.some_option:add_notifier(function() end)
+--
+-- please see Renoise.Document.API.txt for more info about renoise.DocumentNode
+-- and documents in the Renoise API in general.
+renoise.tool().preferences
+  -> [renoise.Document.DocumentNode object or nil]
+    
 --[[----------------------------------------------------------------------------
 ----------------------------------------------------------------------------]]--
+

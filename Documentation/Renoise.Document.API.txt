@@ -2,16 +2,104 @@
 -- Renoise Document API Reference
 ----------------------------------------------------------------------------]]--
 
-WORK IN PROGRESS. DO NOT USE ANY OF THE DOCUMENT CLASSES FOR NOW, EXCEPT THE
-renoise.Document.Observable INTERFACES TO LISTEN TO VALUE CHANGES...
+The renoise.Document namespace covers all document related Renoise API
+functions. This is:
 
-renoise.Document will later on be used to:
-- preferences or other custom XML file data persistance for scripts
-- add script data into songs
-- create observable values, bind document values to views
+* accessing existing Renoise document objects, models. The whole renoise API
+  uses such document structs: all _observables in the other API docs are 
+  renoise.Document.Observable's
+
+* create new documents (i.g sets of options, presets), which can be loaded / 
+  saved as XML files by your scripts, and also bound to custom views or
+  "your own" document listeners -> see renoise.Document.create() 
 
 Please read the INTRODUCTION.txt first to get an overview about the complete
 API, and scripting in Renoise in general...
+
+
+-- Observables 
+
+Documents in the Renoise API are modeled after the observer pattern (have a 
+look at http://en.wikipedia.org/wiki/Observer_pattern if you have not heard
+about this yet). This means a "document" basically just is a set of some raw
+data (booleans, numbers, lists, nested nodes), which anyone can attach 
+notifier functions, listeners to. 
+
+This attaching and removing of notifiers is done with the functions
+'add_notifier', 'remove_notifier' and supports multiple kinds of callbacks. 
+please see renoise.Document.Observable for more info.
+
+If you only want to use the existing "_observables" in the API, this is all 
+you need to know. If you want to create your own documents, then read ahead:
+
+
+-- Document data organization & basetypes
+
+The basic types that can be in used a document node, are:
+- ObservableBoolean/Number/String ("raw" Lua base types)
+- ObservableBoolean/String/NumberList (each strongly typed)
+- other document nodes (to create trees)
+
+ObservableBoolean/Number/String are wrappers around the raw base types in Lua. 
+Basically they just hold the corresponding value (boolean, number, string) and 
+also maintain a list of notifiers that are attached to this value.
+
+Luas other fundamental type, the table, has no direct representation in the
+document API: You should either use the strongly typed lists instead, or use 
+Document nodes to get an associative table alike layout.
+
+ObservableBoolean/String/NumberList will behave more or less like Lua tables
+with number based indices (Arrays), so you can use the # operator or [] 
+operators, but can also query all info via methods (:size(), :property(name))
+and so on.
+
+
+-- Document creation
+
+Documents can either be constructed by explicitly and step by step adding new
+properties to a document node. This is done with the "add" and "remove"
+functions:
+
+-- my_document = renoise.Document.create()
+-- my_document:add("value1", 1) -- add a number with initial value 1
+-- my_document:add("value2", "bla") -- add a string
+-- my_document:add("nested_node", node) -- add another node
+
+but can also be created in a batch, using tables:
+
+-- my_document = renoise.Document.create{
+--   age = 1,
+--   name = "bla",
+--   is_valid = false,
+--   age_list = {1, 2, 3},
+--   sub_node = {
+--     sub_value1 = 2,
+--     sub_value2 = "bla2"
+--   }
+-- }
+
+this will create a document node, modeled after the the passed table. So the 
+table only is used to model the tree internally and no longer referenced
+afterward.
+
+Accessing such a renoise.Document can be done more or less just like you do 
+with tables in Lua, except that if you want to get/set the value of some 
+property, you have to query it explicitly. i.g: Using my_document from the
+example above:
+
+my_document.age -- this returns the ObservableNumber object, not the number!
+my_document.age.value = 2 -- this returns, sets the value of the object
+my_document.age:add_notifier(function() -- let's add a notifier
+  print("something changed 'age'!")
+end)
+
+my_document.age_list:insert(22) -- inserts a new entry to a list
+print(#my_document.age_list) -- query the length of the list
+print(#my_document.age_list) -- access list members
+my_document.age_list[2].value = 33 -- list members are observables as well
+
+For more details about the document construction and notifiers have a look 
+at the class docs below:
 
 
 --==============================================================================
@@ -23,17 +111,8 @@ API, and scripting in Renoise in general...
 -- create an empty renoise.Document.DocumentNode
 -- renoise.Document.create()
 
--- create a renoise.Document tree, modeled after the passed table
--- renoise.Document.create{
---   value1 = 1,
---   value2 = "bla",
---   value3 = False,
---   list = {1, 2, 3},
---   node = {
---     sub_value1 = 2,
---     sub_value2 = "bla2"
---   }
--- }
+-- create a renoise.Document tree, modeled after the passed table. 
+-- See general description above for more info
 
 
 --------------------------------------------------------------------------------
@@ -52,20 +131,20 @@ serializable:from_string(string)
 
 -- notifiers
 
--- check if the given funcion, method was already registered as notifier
-observable:has_notifier(
-  function or (object, function) or (function, object)) -> [boolean]
+-- check if the given function, method was already registered as notifier
+observable:has_notifier(function or (object, function) or (function, object)) 
+  -> [boolean]
 
--- register a function or method as notifer, which will be called as soon as
+-- register a function or method as notifier, which will be called as soon as
 -- the observables value changed
-observable:add_notifier(
-  function or (object, function) or (function, object))
+observable:add_notifier(function or (object, function) or (function, object))
 
--- unregister a previously registered notifier. when only passing an object, all
--- notifier functions that match the given object will be removed, aka all methods
--- of the given object are removed. will not fire errors when none are attached.
-observable:remove_notifier(
-  function or (object, function) or (function, object) or (object))
+-- unregister a previously registered notifier. when only passing an object to 
+-- remove_notifier all notifier functions that match the given object will be 
+-- removed, aka all methods of the given object are removed. will not fire 
+-- errors when none are attached in this case.
+observable:remove_notifier(function or (object, function) or 
+  (function, object) or (object))
 
 
 --------------------------------------------------------------------------------
@@ -74,7 +153,8 @@ observable:remove_notifier(
 
 -- properties
 
-observable.value -> [boolean, number or string]
+observable.value 
+  -> [boolean, number or string]
 
 
 --------------------------------------------------------------------------------
@@ -83,16 +163,18 @@ observable.value -> [boolean, number or string]
 
 -- operators
 
--- query the lsits size
-#observable_list -> [Number]
+-- query the lists size
+#observable_list 
+  -> [Number]
 
 -- access a observable by index
-observable_list[Number] -> [Observable]
+observable_list[Number] 
+  -> [Observable object]
 
 
 -- notifiers
 
--- notifiers from observable are avilable as well with the Document.Observable
+-- notifiers from observable are available as well with the Document.Observable
 -- interface, but will not broadcast changes made to the items, but only
 -- changes to the list layout.
 -- This means you will get notified as soon as an element was added, removed or
@@ -110,11 +192,13 @@ observable_list:property(index)
 
 -- find a value, by comparing the list values with the passed value. first
 -- match is returned or nil
-Observable_list:find([start_pos,] value) -> [nil or pos]
+Observable_list:find([start_pos,] value) 
+  -> [nil or pos as number]
 
 -- insert a new item to the end of the list or at the specified pos. returns
 -- the newly created and inserted Observable
-Observable_list:insert([pos,] value) -> [inserted ObservableNumber]
+Observable_list:insert([pos,] value) 
+  -> [inserted ObservableNumber]
 
 -- remove the last item from the list or the one at the specified pos
 Observable_list:remove([pos])
@@ -127,18 +211,27 @@ Observable_list:remove([pos])
 -- functions
 
 doc:has_property(property_name)
-doc:property(property_name) -> [nil or (Observable or DocumentNode)]
 
-doc:add(name, boolean_value) -> [ObservableBoolean]
-doc:add(name, number_value) -> [ObservableNumber]
-doc:add(name, string_value) -> [ObservableString]
-doc:add(name, list) -> [ObservableList]
-doc:add(name, node) -> [DocumentNode]
+doc:property(property_name) 
+  -> [nil or (Observable or DocumentNode object)]
+
+doc:add(name, boolean_value) 
+  -> [newly created ObservableBoolean object]
+doc:add(name, number_value) 
+  -> [newly created ObservableNumber object]
+doc:add(name, string_value) 
+  -> [newly created ObservableString object]
+doc:add(name, list) 
+  -> [newly created ObservableList object]
+doc:add(name, node) 
+  -> [newly created DocumentNode object]
 
 doc:remove(document or observable)
 
-doc:save_as(document_type_name, file_name) -> [boolean, error_string]
-doc:load_from(document_type_name, file_name) -> [boolean, error_string]
+doc:save_as(document_type_name, file_name) 
+  -> [success, error_string or nil on success]
+doc:load_from(document_type_name, file_name) 
+  -> [success, error_string or nil on success]
 
 
 --[[----------------------------------------------------------------------------

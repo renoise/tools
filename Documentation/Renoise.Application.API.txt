@@ -92,19 +92,29 @@ renoise.app():save_song_as(filename)
 
 -- properties
 
+-- access to the applications full log filename and path. will already be opened 
+-- for writing, but you neverthless should be able to read from it
+renoise.app().log_filename
+  -> [string]
+
 -- get the apps song document. the global "renoise.song()" function is actually
 -- just a shortcut for renoise.app().current_song
 renoise.app().current_song
+  -> [renoise.Song object]
 
 -- list of recently loaded/saved song files
-renoise.app().recently_loaded_song_files -> [array of strings, filenames]
-renoise.app().recently_saved_song_files -> [array of strings, filenames]
+renoise.app().recently_loaded_song_files 
+  -> [array of strings, filenames]
+renoise.app().recently_saved_song_files 
+  -> [array of strings, filenames]
 
 -- globally used clipboard "slots" in the application
-renoise.app().active_clipboard_index -> [number, 1-4]
+renoise.app().active_clipboard_index 
+  -> [number, 1-4]
 
 -- access to the application window
-renoise.app().window -> [read-only, renoise.ApplicationWindow object]
+renoise.app().window 
+  -> [read-only, renoise.ApplicationWindow object]
 
 
 --------------------------------------------------------------------------------

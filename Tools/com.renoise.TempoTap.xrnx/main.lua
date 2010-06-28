@@ -17,16 +17,29 @@ local counter = 0
 local last_clock = 0
 
 
--- options
+-- options (tool preferences)
 
-local sensitivity = 4
-local round_bpm = true
-local auto_save_bpm = true
+local options = renoise.Document.create {
+  sensitivity = 4,
+  round_bpm = true,
+  auto_save_bpm = true
+}
 
+-- notifiers
 
+options.sensitivity:add_notifier(function()
+  -- keep timetable in sync with the sensitivity
+  resize_table(timetable, options.sensitivity.value)
+  timetable_filled = false
+  counter = 1
+end)
+
+ 
 -----------------------------------------------------------------------------
 
 -- tool setup
+
+renoise.tool().preferences = options
 
 renoise.tool():add_menu_entry {
   name = "Main Menu:Tools:Tempo Tap...",
@@ -36,60 +49,38 @@ renoise.tool():add_menu_entry {
 }
 
 
-------------------------------------------------------------------------------
+-----------------------------------------------------------------------------
 
--- set_sensitivity
- 
-local function set_sensitivity(value)
-  
-  local function resize_table(t, length)
-    assert(type(t) == "table")
-    assert(length >= 0)
+-- helper functions
 
-    while (#t < length) do
-      table.insert(t, t[#t])
-    end
+function resize_table(t, length)
+  assert(type(t) == "table")
+  assert(length > 0)
 
-    while (#t > length) do 
-      table.remove(t, 1) 
-    end
+  while (#t < length) do
+    table.insert(t, t[#t] or 0)
   end
-  
-  sensitivity = value
-  resize_table(timetable, value)
-  timetable_filled = false
-  counter = 1
+
+  while (#t > length) do 
+    table.remove(t, 1) 
+  end
 end
 
 
--- set_round_bpm
-
-local function set_round_bpm(value)
-  round_bpm = value
-end
-
-
--- set_auto_save_bpm
-
-local function set_auto_save_bpm(value)
-  auto_save_bpm = value
-end
-
+------------------------------------------------------------------------------
 
 -- save_bpm
 
-local function save_bpm(bpm)
+function save_bpm(bpm)
   if (bpm >= 32 and bpm <= 999) then
     renoise.song().transport.bpm = bpm
   end
 end
 
 
-------------------------------------------------------------------------------
-
 -- tap
 
-local function tap()
+function tap()
   
   local function get_average(tb)
     return (tb[#tb] - tb[1]) / (#tb - 1)
@@ -110,7 +101,7 @@ local function tap()
   
   local function increase_counter()  
     counter = counter + 1
-    if (counter > sensitivity) then
+    if (counter > options.sensitivity.value) then
       timetable_filled = true
       counter = 1
     end  
@@ -128,7 +119,7 @@ local function tap()
   
   last_clock = clock
   
-  if (#timetable > sensitivity) then
+  if (#timetable > options.sensitivity.value) then
     timetable:remove(1)
   end
   
@@ -137,7 +128,7 @@ local function tap()
     
     local field = "%.2f"
   
-    if (round_bpm) then
+    if (options.round_bpm.value) then
       tempo = math.floor(tempo + 0.5)
       field = "%d"
     end  
@@ -145,17 +136,18 @@ local function tap()
     vb.views.bpm_text.text = string.format("Tempo: ".. 
       field .. " BPM [%d/%d]", tempo, counter, #timetable)
     
-    if (counter == 1 and auto_save_bpm) then 
+    if (counter == 1 and options.auto_save_bpm.value) then 
       save_bpm(tempo)
     end  
 
   else 
     vb.views.bpm_text.text = string.
-      format("Keep tapping [%d/%d]...", counter, sensitivity)
+      format("Keep tapping [%d/%d]...", counter, 
+        options.sensitivity.value)
   end
 end  
 
-  
+
 -----------------------------------------------------------------------------
 
 function show_dialog()
@@ -195,21 +187,18 @@ function show_dialog()
     },
     
     vb:column {
-       style = "invisible",
        margin = DEFAULT_DIALOG_MARGIN,
        spacing = DEFAULT_CONTROL_SPACING,
+
        vb:row {
         vb:text {
           width = TEXT_ROW_WIDTH,
           text = "Sensitivity"
         },
         vb:valuebox {
-          value = sensitivity,
+          bind = options.sensitivity,
           min = 2,
           max = 10,
-          notifier = function(value)
-            set_sensitivity(value)
-          end
         },
       },
       
@@ -219,10 +208,7 @@ function show_dialog()
           text = "Round BPM"
         },
         vb:checkbox {
-          value = round_bpm, 
-          notifier = function(value)
-            set_round_bpm(value)
-          end
+          bind = options.round_bpm, 
         },
       },       
     
@@ -232,10 +218,7 @@ function show_dialog()
           text = "Auto-Save BPM"
         },
         vb:checkbox {
-          value = auto_save_bpm, 
-          notifier = function(value)
-            set_auto_save_bpm(value)
-          end
+          bind = options.auto_save_bpm, 
         },
       }, 
     },      

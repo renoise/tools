@@ -90,15 +90,14 @@ local function add_action(info)
   assert(action_pattern_map[info.pattern] == nil, 
     "pattern is already registered")
   
-  assert(type(info.pattern) == "string" and 
-    type(info.handler) == "function", 
+  assert(type(info.pattern) == "string" and type(info.handler) == "function", 
     "action info needs at least a pattern and handler function")
     
   assert(not info.arguments or type(info.arguments) == "table", 
     "arguments should not be specified or should be a table")
     
   assert(not info.description or type(info.description) == "string", 
-    "description should not be specified or should be string")
+    "description should not be specified or should be a string")
   
   info.arguments = info.arguments or {}
   info.description = info.description or "No description available"
@@ -117,11 +116,10 @@ end
 local evaluate_env = {
   _VERSION = _G._VERSION,
   
-  math = table.rcopy(math),
-  renoise = table.rcopy(renoise),
-  string = table.rcopy(string),
-  table = table.rcopy(table),
-  
+  math = table.rcopy(_G.math),
+  renoise = table.rcopy(_G.renoise),
+  string = table.rcopy(_G.string),
+  table = table.rcopy(_G.table),
   assert = _G.assert,
   error = _G.error,
   ipairs = _G.ipairs,
@@ -257,8 +255,7 @@ end
 
 -- process_message
 
--- Called by Renoise in order to process a message that was not already handled
--- by Renoises internal OSC hander (note, midi triggering)
+-- Called by Renoise in order to process an OSC message.
 -- The returned boolean is only used for the OSC log view in the preferences 
 -- (handled = false will log messages as REJECTED)
 -- Lua runtime errors that may happen here, will never be shown as errors to 
