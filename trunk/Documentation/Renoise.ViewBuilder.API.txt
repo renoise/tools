@@ -270,6 +270,70 @@ textfield.align
 
 
 --------------------------------------------------------------------------------
+-- renoise.Views.MultilineTextField (inherits from View, 
+--   'multiline_textfield' in the builder)
+--------------------------------------------------------------------------------
+
+-- a view which shows a user editable larg text string with 
+-- paragraph autowrapping support
+
+--[[
+ +--------------------------+-+
+ | Editable Te|xt.          |+|
+ |                          | |
+ | With multiple paragraphs | |
+ | and autowrapping support |+|
+ +--------------------------+-+
+--]]					   
+
+
+-- properties
+
+-- the current text as single line, using usinx newlinesto separate paragraphs
+-- by default empty
+multiline_textfield.value -> [string]
+-- exactly the same as "value"; provided for consistency
+multiline_textfield.text -> [string]
+
+-- get/set a list/table of text lines, which will be converted to paragraphs
+-- by default empty
+multiline_textfield.pargraphs -> [string]
+
+-- get/set the font that the text should be displayed with.
+-- avilable font styles are: "normal", "big", "bold, "italic" and "mono"
+-- by default "normal"
+multiline_textfield.font -> [string]
+
+-- setup the text views background style
+-- "body"    -> simple body text color with no background
+-- "strong"  -> stronger body text color with no background
+-- "border"  -> text on a bordered background
+-- by default "border"
+multiline_textfield.style -> [string]
+
+
+-- functions
+
+-- add/remove text change notifiers
+multiline_textfield:add_notifier(function or {object, function} or {object, function})
+multiline_textfield:remove_notifier(function or {object, function} or {object, function})
+
+
+-- when a scroll bar is visible, scroll the text to show the last line
+multiline_textfield:scroll_to_last_line()
+
+-- when a scroll bar is visible, scroll the text to show the first line
+multiline_textfield:scroll_to_first_line()
+
+-- append a new text to the existing text. newlines in the text will
+-- create new paragraphs, else a single new paragraph is appended
+multiline_textfield:add_line(text)
+
+-- clear the whole text
+multiline_textfield:clear()
+
+
+--------------------------------------------------------------------------------
 -- renoise.Views.Bitmap (inherits from View, 'bitmap' in the builder)
 --------------------------------------------------------------------------------
 

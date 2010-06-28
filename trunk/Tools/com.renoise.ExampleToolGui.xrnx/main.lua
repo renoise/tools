@@ -28,25 +28,25 @@ renoise.tool():add_menu_entry {
 }
 
 renoise.tool():add_menu_entry {
-  name = "Main Menu:Tools:Example Tool GUI:5. Batch Building Views (Piano)...",
-  invoke = function() dynamic_building_piano() end 
-}
-
-renoise.tool():add_menu_entry {
-  name = "Main Menu:Tools:Example Tool GUI:6. Aligning & Auto Sizing...",
+  name = "Main Menu:Tools:Example Tool GUI:5. Aligning & Auto Sizing...",
   invoke = function() aligners_and_auto_sizing() end 
 }
   
 renoise.tool():add_menu_entry {
-  name = "Main Menu:Tools:Example Tool GUI:7. Available Backgrounds & Text...",
+  name = "Main Menu:Tools:Example Tool GUI:6. Available Backgrounds & Text...",
   invoke = function() available_backgrounds() end 
 }
   
 renoise.tool():add_menu_entry {
-  name = "Main Menu:Tools:Example Tool GUI:8. Available Controls...",
+  name = "Main Menu:Tools:Example Tool GUI:7. Available Controls...",
   invoke = function() available_controls() end 
 }
   
+renoise.tool():add_menu_entry {
+  name = "Main Menu:Tools:Example Tool GUI:8. Documents & Views...",
+  invoke = function() documents_and_views() end 
+}
+
 renoise.tool():add_menu_entry {
   name = "Main Menu:Tools:Example Tool GUI:9. Keyboard Events...",
   invoke = function() handle_key_events() end
@@ -317,74 +317,6 @@ function dynamic_building_matrix()
       octave_row:add_child(note_button)
     end
 
-    dialog_content:add_child(octave_row)
-  end
-
-  renoise.app():show_custom_dialog(
-    "Batch Building Views", dialog_content)
-end
-
-
---------------------------------------------------------------------------------
-
--- dynamic_building_piano
-
-function dynamic_building_piano()
-
-  -- an example that creates a virtual keyboard (3 octaves) using 
-  -- images on buttons
-
-  local vb = renoise.ViewBuilder()
-
-  local CONTENT_MARGIN = renoise.ViewBuilder.DEFAULT_CONTROL_MARGIN
-  local BUTTON_WIDTH = 15
-
-  local NUM_OCTAVES = 10
-  local NUM_NOTES = 12
-
-  local note_strings = {
-    "C\n-", "C\n#", "D\n-", "D\n#", "E\n-", "F\n-", 
-    "F\n#", "G\n-", "G\n#", "A\n-", "A\n#", "B\n-"
-  }
-
-  local is_black_key = {
-    [2]=true, [4]=true, [7]=true, [9]=true, [11]=true
-  }
-  
-  -- create the main content column, but don't add any views yet:
-  local dialog_content = vb:row {
-    margin = CONTENT_MARGIN
-  }
-
-  for octave = 5,7 do
-    -- create a row for each octave
-    local octave_row = vb:row {}
-
-    for note = 1,NUM_NOTES do
-      local key_height, bitmap_name
-      
-      if (is_black_key[note]) then
-        key_height = 60
-        bitmap_name = ("Bitmaps/BlackKey_%d.bmp"):format(tostring(octave - 1))
-      else
-        key_height = 80
-        bitmap_name = ("Bitmaps/WhiteKey_%d.bmp"):format(tostring(octave - 1))
-      end
-      
-      local note_button = vb:button {
-        bitmap = bitmap_name,
-        width = BUTTON_WIDTH,
-        height = key_height,
-        notifier = function()
-          renoise.app():show_status(("note_button %s%d got pressed"):format(
-            note_strings[note], octave - 1))
-        end
-      }
-
-      -- add the button by "hand" into the octave_row
-      octave_row:add_child(note_button)
-    end
-    
     dialog_content:add_child(octave_row)
   end
 
@@ -718,33 +650,44 @@ end
 
 function available_controls()
 
-  -- now create a dialog with all available controls (things that
-  -- let the user change values), so you get an idea how the views look like.
-
-  -- but one note about controls & values in general: as you'll see below, we
-  -- do attach notifiers to values of the controls. This is a bit awkward
-  -- and just a temporary solution. Later on it should be possible to create
-  -- a set of document alike values (which you maybe also want to save/load)
-  -- and then attach the controls to !these! values - not the other way around.
+  -- now we create a dialog with all available controls (things that let the 
+  -- user change "values"), so you get an idea how all the views look like, 
+  -- which views to choose from when creating a new custom GUIs.
   --
-  -- something like:
-  -- options.current_velocity = 0x7f
-  -- options.current_velocity.add_notifier(current_value_changed_function)
+  -- but one note about controls & "values" in general first: as you'll see 
+  -- below, we do attach notifiers to the values of the controls. Notifiers are
+  -- callback functions that are called as soon as the user changed the views 
+  -- value through the GUI. To maintain something like an external state that
+  -- you are going to use outside the view, make sure you do keep the views value
+  -- and "your" value in sync.
+  --
+  -- here is a somple example on how to sync an external value with "your" value:
+  --
+  -- current_velocity = 0x7f -- used in other places like your processing functions
+  --
   -- vb:slider {
-  --   bind_value = options.current_velocity,
+  --   value = current_velocity, -- initialize the GUI with your value
+  --   notifier = function(slider_value) -- update your value when the GUI changed
+  --     current_velocity = slider_value
+  --   end,
   --   min = 0,
   --   max = 0x7f
   -- }
   --
-  -- so, for now, you should use the notifiers to update your "document" values
-  -- and also initialize the views with that value while building them:
+  -- there is another way of dealing with "values", which we will describe in the 
+  -- next example more in detail. Basically you can also pass over an Observable 
+  -- object to the view (not the raw number, boolen), which then will be used by 
+  -- the view instead of its onw value. Any changes to this value can then tracked 
+  -- outside of this view. This often is very useful to seperate the GUI code from
+  -- the controller and data. Here is a simple example:
   --
+  -- -- (the controller part of your script)
   -- options.current_velocity = 0x7f
+  -- options.current_velocity.add_notifier(current_value_changed_function)
+  
+  -- -- (and the GUI)
   -- vb:slider {
-  --   value = options.current_velocity,
-  --   notifier = function(slider_value)
-  --     options.current_velocity = slider_value
-  --   end,
+  --   bind_value = options.current_velocity, -- only gets a reference passed
   --   min = 0,
   --   max = 0x7f
   -- }
@@ -784,6 +727,24 @@ function available_controls()
     }
   }
 
+  --- multiline_textfield row
+  local mltextfield_row = vb:row {
+    vb:text {
+      width = 80,
+      text = "vb:ml_textfield"
+    },
+    vb:multiline_textfield {
+      height = 80,
+      width = 120,
+      value = "I am a long text that can be edited.\n\nParagraphs are separated with "..
+        "\\n's.\n\nEdit me",
+      notifier = function(value)
+        show_status(("multiline_textfield value changed to '%s'"):
+          format(value))
+      end
+    },
+  }
+  
   -- bitmapview 
   local bitmapview_row = vb:row {
     vb:text {
@@ -1085,11 +1046,13 @@ function available_controls()
   
   local dialog_content = vb:column {
     margin = DIALOG_MARGIN,
-    spacing = CONTENT_SPACING,
     uniform = true,
 
     vb:column {
+      spacing = CONTENT_SPACING,
+      
       textfield_row, 
+      mltextfield_row,
       bitmapview_row, 
       button_row, 
       checkbox_row, 
@@ -1118,6 +1081,80 @@ function available_controls()
     "Controls", dialog_content
   )
 
+end
+
+
+--------------------------------------------------------------------------------
+
+-- documents_and_views
+
+-- as already noted in 'available_controls'. views can also be attached to 
+-- external document values, in order to seperate the controller code from the 
+-- view code. We're going to do this tight now and do start by create a very 
+-- simple example document. Please have a look at Renoise.Document.API for more 
+-- detail about such documents
+
+
+-- DOCUMENT
+
+-- create a simple document with two values
+local example_document = renoise.Document.create {
+  my_flag = false,
+  some_velocity = 127
+}
+
+-- we do place our notifications (if needed now outside of the GUI code)
+example_document.my_flag:add_notifier(function()
+  local new_value = example_document.my_flag.value
+  
+  print(("'my_flag' changed to '%s' by either the GUI "
+    .. "or something else..."):format(new_value and "True" or "False"))
+end)
+
+
+-- GUI
+
+function documents_and_views()
+
+  local vb = renoise.ViewBuilder()
+
+  local DIALOG_MARGIN = renoise.ViewBuilder.DEFAULT_DIALOG_MARGIN
+  local CONTENT_SPACING = renoise.ViewBuilder.DEFAULT_CONTROL_SPACING
+
+ 
+  -- now we pass over the document struct to the views
+  local checkbox_row = vb:row {
+    vb:text { 
+      text = "my_flag", width = 80 
+    },
+    vb:checkbox { 
+      bind = example_document.my_flag -- bind
+    }
+  }
+  
+  local valuebox_row = vb:row {
+    vb:text { 
+      text = "some_velocity", width = 80 
+    },
+    vb:valuebox{
+      bind = example_document.some_velocity, -- bind
+      min = 0, 
+      max = 0x7f
+    }
+  }
+  
+  renoise.app():show_custom_dialog("Documents & Views", 
+    vb:column {
+      margin = DIALOG_MARGIN,
+      uniform = true,
+ 
+      vb:column {
+        spacing = CONTENT_SPACING,
+        checkbox_row,
+        valuebox_row
+      }
+    }
+  )
 end
 
 

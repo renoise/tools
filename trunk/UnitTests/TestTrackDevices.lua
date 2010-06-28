@@ -92,6 +92,31 @@ do
   device_count = device_count - 2
   assert(device_count == #selected_track.devices)
   
+  
+  -- preset handing
+  
+  local trackvolpan = selected_track.devices[1]
+  assert(#trackvolpan.presets == 1) -- init
+  
+  selected_track:insert_device_at(new_device_name, 
+    #selected_track.devices + 1)
+    
+  local new_device = selected_track.devices[#selected_track.devices]
+  
+  assert(#new_device.presets >= 1)
+  assert(new_device.active_preset >= 1)
+
+  local new_preset = math.random(#new_device.presets)
+  new_device.active_preset = new_preset
+  assert(new_device.active_preset == new_preset)
+  
+  assert_error(function()
+    new_device.active_preset = 0
+  end)
+  assert_error(function()
+    new_device.active_preset = #new_device.presets + 1
+  end)
+
 end
 
 

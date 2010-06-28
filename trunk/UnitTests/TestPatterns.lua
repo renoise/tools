@@ -58,6 +58,21 @@ do
   assert(song.selected_pattern_track.lines[2].note_columns[1].note_value == 67)
   
   
+  ----------------------------------------------------------------------------
+  -- PatternTrack Custom Colors
+  
+  assert(first_pattern_track.color == nil or #first_pattern_track.color == 3)
+  first_pattern_track.color = {255, 12, 88}
+  
+  assert(first_pattern_track.color[1] == 255)
+  assert(first_pattern_track.color[2] == 12)
+  assert(first_pattern_track.color[3] == 88)
+  
+  first_pattern_track.color = nil
+  assert(first_pattern_track.color == nil)
+  
+  
+  
   ------------------------------------------------------------------------------
   -- PatternLine
   

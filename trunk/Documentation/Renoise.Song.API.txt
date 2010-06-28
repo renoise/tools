@@ -77,30 +77,35 @@ renoise.song().patterns[], _observable
 renoise.song().tracks[], _observable
   -> [read-only, array of renoise.Track objects]
 
+-- selected in the instrument box. never nil
 renoise.song().selected_instrument, _observable
   -> [read-only, renoise.Instrument object]
 renoise.song().selected_instrument_index, _observable
   -> [number]
 
+-- selected in the instrument box. never nil
 renoise.song().selected_sample, _observable
   -> [read-only, array of renoise.Sample objects]
 renoise.song().selected_sample_index, _observable
   -> [number]
 
+-- selected in the pattern editor or mixer. never nil
 renoise.song().selected_track, _observable
   -> [read-only, renoise.Track object]
 renoise.song().selected_track_index, _observable
   -> [number]
 
+-- selected in the device chain editor. can be nil
 renoise.song().selected_device, _observable
   -> [read-only, renoise.TrackDevice object or nil]
 renoise.song().selected_device_index, _observable
   -> [number or 0 (when no device is selected)]
 
--- TODO: renoise.song().selected_parameter
---  -> [read-only, renoise.DeviceParameter or nil]
--- TODO: renoise.song().selected_parameter_index
---  -> [number]
+-- selected in the automation editor view. can be nil
+renoise.song().selected_parameter, _observable
+  -> [read-only, renoise.DeviceParameter or nil]
+renoise.song().selected_parameter_index, _observable
+  -> [read-only, number or 0 (when no parameter is selected)]
 
 renoise.song().selected_pattern TODO: , _observable
   -> [read-only, renoise.Pattern object]
@@ -109,19 +114,23 @@ renoise.song().selected_pattern_track  TODO: , _observable
 renoise.song().selected_pattern_index   TODO: , _observable
   -> [number]
 
+-- the currently edited sequence
 renoise.song().selected_sequence_index, _observable
   -> [number]
 
+-- the currently edited line in the edited sequence/pattern
 renoise.song().selected_line
   -> [read-only, renoise.PatternTrackLine object]
 renoise.song().selected_line_index
   -> [number]
 
+-- the currently edited column in the selected line in the edited sequence/pattern
 renoise.song().selected_note_column
   -> [read-only, renoise.NoteColumn object or nil], [renoise.Line object or nil]
 renoise.song().selected_note_column_index
   -> [number or nil (when an effect column is selected)]
 
+-- the currently edited column in the selected line in the edited sequence/pattern
 renoise.song().selected_effect_column
   -> [read-only, renoise.EffectColumn or nil], [renoise.Line object or nil]
 renoise.song().selected_effect_column_index
@@ -457,7 +466,10 @@ renoise.song().tracks[].type
 renoise.song().tracks[].name, _observable
   -> [String]
 
- -- Not for the master
+renoise.song().tracks[].color, _observable 
+  -> [table with 3 numbers (0-0xFF), RGB]
+  
+ -- !not available for the master!
 renoise.song().tracks[].mute_state, _observable
   -> [enum = MUTE_STATE]
 
@@ -525,6 +537,12 @@ renoise.song().tracks[].devices[].is_active, _observable
 renoise.song().tracks[].devices[].is_maximized, _observable
   -> [boolean]
 
+renoise.song().tracks[].devices[].active_preset, _observable 
+  -> [number, 0 when none is active or available]
+
+renoise.song().tracks[].devices[].presets[] 
+  -> [read-only, list of strings]
+  
 renoise.song().tracks[].devices[].parameters[]
   -> [read-only, array of renoise.DeviceParameter objects]
 
@@ -579,10 +597,10 @@ renoise.song().tracks[].devices[].parameters[].value_string, _observable
 
 -- functions
 
--- reset, clear all settigns including all samples
+-- reset, clear all settings including all samples
 renoise.song().instruments[]:clear()
 
--- copy all settigns from the other instrument, including all samples
+-- copy all settings from the other instrument, including all samples
 renoise.song().instruments[]:copy_from(other_instrument object)
 
 -- insert a new empty sample
@@ -631,10 +649,10 @@ renoise.Sample.LOOP_MODE_PING_PONG
 
 -- functions
 
--- reset, clear all settings and sample data
+-- reset, clear all sample settings and the sample data
 renoise.song().instruments[].samples[]:clear()
 
--- copy all settigns from other instrument
+-- copy all settings from other instrument
 renoise.song().instruments[].samples[]:copy_from(other_sample object)
 
 
@@ -791,6 +809,7 @@ renoise.song().patterns[].tracks[]:clear()
 -- copy contents from other pattern track, including automation, when possible
 renoise.song().patterns[].tracks[]:copy_from(other_pattern_track object)
 
+
 -- get a specific line (line must be [1 - Pattern.MAX_NUMBER_OF_LINES])
 renoise.song().patterns[].tracks[]:line(index) ->
   [renoise.PatternTrackLine]
@@ -800,15 +819,104 @@ renoise.song().patterns[].tracks[]:lines_in_range(index_from, index_to) ->
   [array of renoise.PatternTrackLine]
 
 
+-- returns the automation for the given device parameter or nil 
+-- when there is none
+renoise.song().patterns[].tracks[]:find_automation(parameter)
+ -> [renoise.PatternTrackAutomation or nil]
+
+-- creates a new automation for the given device parameter. 
+-- fires and error when an automation already exists
+-- returns the newly created automation
+renoise.song().patterns[].tracks[]:create_automation(parameter)
+  -> [renoise.PatternTrackAutomation object]
+
+-- remove an existing automation the given device parameter. 
+-- automation must exist
+renoise.song().patterns[].tracks[]:delete_automation(parameter)
+
+
 -- properties
 
-renoise.song().patterns[].tracks[].is_empty, _observable -> [read-only, boolean]
+renoise.song().patterns[].tracks[].color, _observable 
+  -> [table with 3 numbers (0-0xFF, RGB) or nil when no custom slot color is set]
+
+-- returns true when all the track lines are empty. does not look at automation
+renoise.song().patterns[].tracks[].is_empty, _observable 
+  -> [read-only, boolean]
 
 -- get all lines in range [1, number_of_lines_in_pattern]
 renoise.song().patterns[].tracks[].lines[] ->
   [read-only, array of renoise.PatternTrackLine objects]
 
+renoise.song().patterns[].tracks[]:automation[], _observable -> 
+  [read-only, list of renoise.PatternTrackAutomation]
 
+  
+--------------------------------------------------------------------------------
+-- renoise.PatternTrackAutomation
+--------------------------------------------------------------------------------
+  
+-- consts
+
+renoise.PatternTrackAutomation.PLAYMODE_POINTS
+renoise.PatternTrackAutomation.PLAYMODE_LINEAR
+renoise.PatternTrackAutomation.PLAYMODE_CUBIC
+
+
+-- properties
+
+renoise.song().patterns[].tracks[]:automation[].dest_device 
+  -> [renoise.TrackDevice]
+
+renoise.song().patterns[].tracks[]:automation[].dest_parameter 
+  -> [renoise.DeviceParameter]
+    
+renoise.song().patterns[].tracks[]:automation[].playmode, _observable
+  -> [enum PLAYMODE]
+
+
+-- max length (time) of the automation. will always fit the patterns length
+renoise.song().patterns[].tracks[]:automation[].length
+  -> [number]
+
+-- get all points of the automation. when setting a new list of points, 
+-- items may be unsorted by time, but there may not be multiple points 
+-- for the same time. returns a copy of the list, so changing 
+-- points[1].value will not do anything. change them via points = {
+-- something } instead....
+renoise.song().patterns[].tracks[]:automation[].points, _observable
+  -> [list of {time, value} tables]
+
+-- an automation points time in pattern lines
+renoise.song().patterns[].tracks[]:automation[].points[].time
+  -> [number, 1 - NUM_LINES_IN_PATTERN]
+-- an automation points value [0 - 1.0]
+renoise.song().patterns[].tracks[]:automation[].points[].value
+  -> [number, 0 - 1.0]
+
+
+-- functions
+  
+-- removes all points from the automation. will not delete the automation
+-- from tracks[]:automation, but it will not do anything at all...
+renoise.song().patterns[].tracks[]:automation[]:clear()
+
+-- copy all points and playback settings from another track automation
+renoise.song().patterns[].tracks[]:automation[]:copy_from()
+
+
+-- test if a point exists at the given time (in lines)
+renoise.song().patterns[].tracks[]:automation[]:has_point_at(time)
+   -> [boolean]
+   
+-- insert a new point, or change an existing one, if a point at the 
+-- time already exists   
+renoise.song().patterns[].tracks[]:automation[]:add_point_at(time, value)
+
+-- removes a point at the given time. point must exist
+renoise.song().patterns[].tracks[]:automation[]:remove_point_at(time)
+  
+  
 --------------------------------------------------------------------------------
 -- renoise.PatternTrackLine
 --------------------------------------------------------------------------------
