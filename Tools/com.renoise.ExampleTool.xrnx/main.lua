@@ -20,6 +20,28 @@ com.renoise.ExampleTool.xrnx/main.lua
 
  
 --------------------------------------------------------------------------------
+-- preferences
+
+-- tools can have preferences, just like Renoise. To use them we first need 
+-- to create a renoise.Document object which holds the options that we want to 
+-- store/restore
+local options = renoise.Document.create {
+  show_debug_prints = false
+}
+
+-- then we simply register this document as the main preferences for the tool:
+renoise.tool().preferences = options
+
+-- show_debug_prints is now a persistent option which gets saved & restored 
+-- for upcoming Renoise seesions, program launches. 
+-- the preferences file for tools is saved inside the tools bundle as 
+-- "preferences.xml"
+
+-- please have a look at the Renoise.Tool.API.txt for more info and details 
+-- about documents and what else you can store this way...
+
+  
+--------------------------------------------------------------------------------
 -- menu entries
 
 -- you can add new menu entries into any existing context menues or the global 
@@ -33,9 +55,9 @@ com.renoise.ExampleTool.xrnx/main.lua
 
 renoise.tool():add_menu_entry {
   name = "Main Menu:Tools:Example Tool:Enable Example Debug Prints",
-  selected = function() return print_notifications end,
+  selected = function() return options.show_debug_prints.value end,
   invoke = function() 
-    print_notifications = not print_notifications 
+    options.show_debug_prints.value = not options.show_debug_prints.value 
   end
 }
 
@@ -92,7 +114,7 @@ renoise.tool():add_keybinding {
 
 
 --------------------------------------------------------------------------------
--- Notifications
+-- notifications
 
 -- You can attach and detach from a set of script related notifications at any 
 -- time. Please see renoise.Document.API.txt -> Observable for more info
@@ -125,9 +147,9 @@ renoise.tool().app_new_document_observable:add_notifier(function()
   handle_app_new_document_notification()
 end)
 
-  
+
 --------------------------------------------------------------------------------
--- Debug Hook
+-- debug hook
 
 -- This hook helps you testing & debugging your script while editing
 -- it with an external editor or with Renoises built in script editor:
@@ -159,12 +181,7 @@ end
 
 -------------------------------------------------------------------------------
 
--- Global variables
-
--- set print_notifications in this example tool to true, to print some 
--- notification info in the console, so you can see which notifier gets 
--- called when.
-print_notifications = false
+-- global variables
 
 -- if you want to do something, each time the script gets loaded, then
 -- simply do it here, in the global namespace when your tool gets loaded. 
@@ -177,7 +194,7 @@ print_notifications = false
 -- If you really need the song to initialize your application, do this in
 -- the notifications.app_new_document functions or in your action callbacks...
 
-if print_notifications then
+if (options.show_debug_prints.value) then
   print("com.renoise.ExampleTool: script was loaded...")
 end
 
@@ -271,7 +288,7 @@ end
 -- handle_app_became_active_notification
 
 function handle_app_became_active_notification()
-  if print_notifications then
+  if (options.show_debug_prints.value) then
     print("com.renoise.ExampleTool: >> app_became_active notification")
   end
 end
@@ -280,7 +297,7 @@ end
 -- handle_app_resigned_active_notification
 
 function handle_app_resigned_active_notification()
-  if print_notifications then
+  if (options.show_debug_prints.value) then
     print("com.renoise.ExampleTool: << app_resigned_active notification")
   end
 end
@@ -293,7 +310,7 @@ local last_idle_time = os.clock()
 function handle_app_idle_notification()
   if os.clock() - last_idle_time >= 10 then
     last_idle_time = os.clock()
-      if print_notifications then
+      if (options.show_debug_prints.value) then
         print("com.renoise.ExampleTool: 10 second idle notification")
       end
    end
@@ -303,7 +320,7 @@ end
 -- handle_app_new_document_notification
 
 function handle_app_new_document_notification()
-  if print_notifications then
+  if (options.show_debug_prints.value) then
     print("com.renoise.ExampleTool: !! app_new_document notification")
   end
 end
@@ -312,7 +329,7 @@ end
 -- handle_auto_reload_debug_notification
 
 function handle_auto_reload_debug_notification()
-  if print_notifications then
+  if (options.show_debug_prints.value) then
     print("com.renoise.ExampleTool: ** auto_reload_debug notification")
   end
 end
