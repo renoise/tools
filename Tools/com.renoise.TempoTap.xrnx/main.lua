@@ -2,9 +2,6 @@
 main.lua
 ----------------------------------------------------------------------------]]--
 
--- TODO: calc, show steadiness and deviation
-  
-
 -- internal state
 
 local dialog = nil
@@ -22,7 +19,8 @@ local last_clock = 0
 local options = renoise.Document.create {
   sensitivity = 4,
   round_bpm = true,
-  auto_save_bpm = true
+  auto_save_bpm = true,
+  tempo_track = false
 }
 
 -- notifiers
@@ -67,13 +65,75 @@ function resize_table(t, length)
 end
 
 
+-- get_tempo_track
+
+local function get_tempo_track()
+  -- find an existing tempo track (a dedicated send track)
+  -- optionally, use the master track
+  for k,t in ripairs(renoise.song().tracks) do
+    if (t.name == "Tempo") then
+      return k
+    end
+  end
+  
+  -- find master track
+  local master_track = nil
+  for k,t in ripairs(renoise.song().tracks) do  
+    if (t.type == renoise.Track.TRACK_TYPE_MASTER) then    
+      master_track = k
+    end
+  end
+    
+  -- create a new tempo track      
+  local index = master_track + 1
+  local t = renoise.song():insert_track_at(index)
+  t.name = "Tempo"
+  return index 
+end
+
+
+-- insert_bpm
+
+local function insert_bpm(bpm)
+  if (bpm > 255) then 
+     renoise.app():show_status( 
+       ("[TempoTap] Error: tempo exceeds max effect value 255: %d"):format(bpm)
+     )
+     return
+  end
+
+  local song = renoise.song()
+  
+  -- get the tempo track
+  local tempo_track = get_tempo_track()  
+  
+  -- get the sequence position and line number  
+  local seq_index = song.transport.playback_pos.sequence
+  local line_index = song.transport.playback_pos.line  
+  
+  -- convert current sequence_pos to pattern_index
+  local pattern_index = song.sequencer.pattern_sequence[seq_index]  
+ 
+  local fx = song.patterns[pattern_index].
+    tracks[tempo_track].
+    lines[line_index].
+    effect_columns[1]
+  
+  fx.number_string = "F0"
+  fx.amount_value = bpm    
+end
+
+
 ------------------------------------------------------------------------------
 
 -- save_bpm
 
 function save_bpm(bpm)
   if (bpm >= 32 and bpm <= 999) then
-    renoise.song().transport.bpm = bpm
+--    renoise.song().transport.bpm = bpm      
+    if (options.tempo_track.value) then
+      insert_bpm(bpm)      
+    end
   end
 end
 
@@ -219,8 +279,18 @@ function show_dialog()
         },
         vb:checkbox {
           bind = options.auto_save_bpm, 
+        }
+      },
+        
+      vb:row {
+        vb:text {
+          width = TEXT_ROW_WIDTH,
+          text = "Write Tempo Track"
         },
-      }, 
+        vb:checkbox {
+          bind = options.tempo_track, 
+        }
+      } 
     },      
     
     vb:text {
