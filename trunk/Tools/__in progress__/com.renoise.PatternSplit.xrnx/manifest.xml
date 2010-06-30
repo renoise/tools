@@ -2,12 +2,11 @@
 <RenoiseScriptingTool>
   <ApiVersion>0.3</ApiVersion>
   <Id>com.renoise.PatternSplit</Id>
-  <Version>0.1</Version>
+  <Version>0.2</Version>
   <Name>Pattern split</Name>
   <Author>Fabio Napodano | It-Alien (it-alien@renoise.com)</Author>
-  <Description>Splits the current pattern in two on the current row.
-  --PAY ATTENTION! This script currently does NOT take in count automation!</Description>
-  <Category>Sample Editor</Category>
+  <Description>Splits the current pattern in two on the current row, taking automations in count.</Description>
+  <Category>Pattern Editor</Category>
   <Homepage>http://scripts.renoise.com</Homepage>
 </RenoiseScriptingTool>
 
