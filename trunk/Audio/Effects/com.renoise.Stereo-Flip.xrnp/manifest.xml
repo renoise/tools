@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<RenoiseAudioScriptingPlugin>
+  <ApiVersion>0.1</ApiVersion>
+  <Type>Effect</Type>
+  <Id>com.renoise.Stereo-Flip</Id>
+  <Version>0.1</Version>
+  <Author>It-Alien [it-alien@renoise.com]</Author>
+  <Name>Flip stereo channels</Name>
+  <Description>Switch left and right stereo channels</Description>
+  <Icon />
+  <Homepage />
+</RenoiseAudioScriptingPlugin>
+
