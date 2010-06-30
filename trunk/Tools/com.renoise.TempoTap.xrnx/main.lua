@@ -130,7 +130,7 @@ end
 
 function save_bpm(bpm)
   if (bpm >= 32 and bpm <= 999) then
---    renoise.song().transport.bpm = bpm      
+    renoise.song().transport.bpm = bpm      
     if (options.tempo_track.value) then
       insert_bpm(bpm)      
     end
