@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <RenoiseScriptingTool>
   <ApiVersion>0.3</ApiVersion>
-  <Id>com.renoise.DuplexBrowser</Id>
+  <Id>com.renoise.Duplex</Id>
   <Version>0.1</Version>
   <Author>danoise [bjorn.nesby@googlemail.com]</Author>
   <Name>Duplex Browser</Name>
