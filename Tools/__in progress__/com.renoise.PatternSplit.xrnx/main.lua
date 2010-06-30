@@ -48,13 +48,38 @@ function split()
   --cut the current pattern at that line
   current_pattern.number_of_lines = current_line; 
   
-  --iterate through tracks of the new pattern to shift lines up
   local num_tracks = table.getn(new_pattern.tracks);
+
+  -- dealing with automation.
+  -- first of all, let's create an intermediate point between the last point of previous
+  -- pattern and the first of the new pattern, if it doesn't exists yet
+  for num_track = 1, num_tracks do
   
-  for t = 1, num_tracks do
+	for num_auto = 1, table.getn(new_pattern.tracks[num_track].automation) do
+
+		local points = new_pattern.tracks[num_track].automation[num_auto].points;
+		for point = 1, table.getn(points) do
+			
+			if points[point].time >= current_line then
+				points[point].time = points[point].time - current_line + 1
+			else
+				renoise.app():show_error(tostring(points[point].time,points[point].value))
+				points:remove_point_at(0)
+				renoise.app():show_error(tostring(points[point].time))
+				point = point - 1 --fix index after removal				
+			end
+			
+		end
+	
+	end
+	
+  end
+  
+  --iterate through tracks of the new pattern to shift lines up
+  for num_track = 1, num_tracks do
 
     for i = current_line+1,new_pattern.number_of_lines do
-      new_pattern.tracks[t].lines[i-current_line]:copy_from(new_pattern.tracks[t].lines[i]);      
+      new_pattern.tracks[num_track].lines[i-current_line]:copy_from(new_pattern.tracks[num_track].lines[i]);      
     end
   
   end
@@ -62,4 +87,5 @@ function split()
   -- cut the new pattern
   new_pattern.number_of_lines = new_pattern.number_of_lines - current_line;
   
+ 
 end
