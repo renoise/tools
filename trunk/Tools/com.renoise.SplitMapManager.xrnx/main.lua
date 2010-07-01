@@ -188,9 +188,16 @@ function open_splitmap_dialog()
             vb:horizontal_aligner {
                mode = "center",
                vb:row{
-                  create_view(obj_valuebox, '', 52,-120,120,tonumber(split_range),
-                  'split_range_shift','Value is applied immediately so watch the splitmap!',
-                  0,function(value)shift_split_range(value,vb) end,vb),
+                  create_view(obj_button, '', 52,0,0,0,
+                  'split_range_shift_left','Shift range to the left [left arrow] (See virtual keyboard)',
+                  '<',function(value)shift_split_range(-1,vb) end,vb),
+                  create_view(obj_button, '', 52,0,0,0,
+                  'split_range_shift_right','Shift range to the right [right arrow] (See virtual keyboard)',
+                  '>',function(value)shift_split_range(1,vb) end,vb),
+
+--                  create_view(obj_valuebox, '', 52,-120,120,tonumber(split_range),
+--                  'split_range_shift','Value is applied immediately so watch the splitmap!',
+--                  0,function(value)shift_split_range(value,vb) end,vb),
 --[[
                   vb:row{
                      vb:checkbox {
@@ -211,7 +218,7 @@ function open_splitmap_dialog()
                },
             },
          }
-      }
+      },key_handler
    )
 
    else
@@ -235,9 +242,9 @@ function shift_split_range(value,vb)
       local target_low = 0
       local target_high = 0
       low_split = vb.views.start_split.value
-      vb.views.split_range_shift.min = 0 - low_split
+--      vb.views.split_range_shift.min = 0 - low_split
       high_split = vb.views.end_split.value
-      vb.views.split_range_shift.max = 120 - high_split
+--      vb.views.split_range_shift.max = 120 - high_split
       split_distance = high_split - low_split
       value = tonumber(math.floor(value))
       if value < -120 then
@@ -281,9 +288,11 @@ function shift_split_range(value,vb)
             temp_split_map[target_low+t-1] = cur_ins.split_map[low_split+ t - 1]
          end 
       end
-      cur_ins.split_map = temp_split_map
+--      if table.exists(temp_split_map) then
+        cur_ins.split_map = temp_split_map
+--      end
       split_range = 0
-      vb.views.split_range_shift.value = 0
+--      vb.views.split_range_shift.value = 0
       yield_operation = 0
       local stop_shift = 0
       if (vb.views.start_split.value + value > 0) and 
@@ -525,8 +534,10 @@ function map_sample_range()
          end
       end
    end
-   cur_ins.split_map = temp_split_map
-   set_base_notes()
+--   if table.exists(temp_split_map) then
+     cur_ins.split_map = temp_split_map
+     set_base_notes()
+--   end
 end
 
 
@@ -641,3 +652,25 @@ renoise.tool():add_menu_entry {
      open_splitmap_dialog()
   end
 }
+
+
+
+function key_handler(dialog, mod, key)
+
+  if (mod == "" and key == "left") then
+    if (vb_splitmap.views.start_split.value -1 > 0) then
+      shift_split_range(-1,vb_splitmap)
+    end
+  end
+
+  if (mod == "" and key == "right") then
+    if (vb_splitmap.views.end_split.value + 1 <= 120) then
+       shift_split_range(1,vb_splitmap)
+    end
+  end
+
+  if (mod == "" and key == "esc") then
+      dialog:close()
+  end
+
+end
