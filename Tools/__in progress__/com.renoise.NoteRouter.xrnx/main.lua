@@ -37,16 +37,8 @@ function initialize()
   build_note_table()
   main_dialog()    
   get_track_index()
-  
+  get_device_index()
 
-end
-
-
-function key_handler(dialog, mod, key)
-    -- close on escape...
-  if (mod == "" and key == "esc") then
-    dialog:close()
-  end
 end
 
 
@@ -69,7 +61,7 @@ function process_messages(message)
        
       end
     else
-
+      --Need note-off support? then do you stuff here....
       if nr_debug then
         print ("OFF "..string.lower(midi_notes[tonumber(message[2])+1]))
       end
@@ -144,9 +136,18 @@ function midi_engine(MODE)
   local inputs = renoise.Midi.available_input_devices()
 
   if not table.is_empty(inputs) then
-    local device_name = inputs[1]
+    local device_index = note_map_dialog_vb.views.device_list.value
+    local device_name = note_map_dialog_vb.views.device_list.items[device_index]
+
+    if #inputs ~= device_index then
+     --Something changed in the midi-device list meanwhile? (OSX / Linux)
+      note_map_dialog_vb.views.device_list.items = inputs
+      device_index = note_map_dialog_vb.views.device_list.value
+      device_name = note_map_dialog_vb.views.device_list.items[device_index]
+    end
   
     local midi_dumper = MidiDumper(device_name)
+
     if MODE == 'start' then
       midi_dumper:start()
     else
@@ -156,6 +157,14 @@ function midi_engine(MODE)
     -- will dump till midi_dumper:stop() is called or the MidiDumber object 
     -- is garbage collected ...
   end
+
+  if MODE=='start' then
+    --Take care edit mode is always being turned off when learn mode
+    --gets enabled. If no midi device detected, this still has to be 
+    --triggered for PC keyboard mode!
+    renoise.song().transport.edit_mode = false
+  end
+
 end
 
 
@@ -182,6 +191,19 @@ function build_note_table()
 
 end
 
+
+function get_device_index()
+  local inputs = renoise.Midi.available_input_devices()
+
+  if not table.is_empty(inputs) then
+    note_map_dialog_vb.views.device_list.items = inputs
+  else
+    note_map_dialog_vb.views.device_list.items = {"None"}
+  end
+
+end
+
+
 function get_track_index()
   local song = renoise.song()
   
@@ -197,4 +219,184 @@ function get_track_index()
   end
 
 end
+
+
+-------------------------------------------------------------------------------
+---                         Keyboard control handler                       ----
+-------------------------------------------------------------------------------
+function key_handler(dialog, mod, key)
+  local message = {0x90,0,0x80}
+
+  if (mod == "" and key == "numpad /") then
+
+    if renoise.song().transport.octave >0 then
+      renoise.song().transport.octave = renoise.song().transport.octave - 1
+    end
+
+  end
+
+  if (mod == "" and key == "numpad *") then
+
+    if renoise.song().transport.octave < 8 then
+      renoise.song().transport.octave = renoise.song().transport.octave +1
+    end
+
+  end
+
+  local cur_octave = renoise.song().transport.octave    
+  local fnote = (cur_octave * 12)
+
+-- We have to do some special trickery because of the octave_derivate
+-- above in the midi message key translation:
+  if cur_octave > 4 then
+    fnote = fnote - (12* (cur_octave-4))
+  else 
+
+    if cur_octave < 4 then
+      fnote = fnote + (12* (4-cur_octave))
+    end
+
+  end
+
+--Now we translate our pc keyboard input to midi messages and send those to 
+--our midi message processor, clever huh?:
+  if (mod == "" and (key == "z" or key == "q" or key == "comma")) then
+
+    if (key == "q" or key == "comma") then 
+      fnote = fnote + 12
+    end
+
+    message[2] = fnote
+    process_messages(message)
+  end
+
+  if (mod == "" and (key == "s" or key == "l" or key =="2")) then
+      fnote = 1 + fnote   -- C# = note 1 + the current octave offset
+
+      if (key == "l" or key == "2") then 
+        fnote = fnote + 12
+      end
+
+      message[2] = fnote
+      process_messages(message)
+  end
+
+  if (mod == "" and (key == "x" or key == "period" or key == "w")) then
+      fnote = 2+fnote     -- D- = note 2 + the current octave offset
+
+      if (key == "period" or key == "w") then 
+        fnote = fnote + 12
+      end
+
+      message[2] = fnote
+      process_messages(message)
+  end
+
+  if (mod == "" and (key == "d" or key == ";" or key == "3")) then
+      fnote = 3+fnote     -- D# = note 3 + the current octave offset
+
+      if (key == ";" or key == "3") then 
+        fnote = fnote + 12
+      end
+
+      message[2] = fnote
+      process_messages(message)
+  end
+
+  if (mod == "" and (key == "c" or key == "/" or key == "e")) then
+      fnote = 4+fnote     -- You know the drill, look it up above.
+
+      if (key == "/" or key == "e") then 
+        fnote = fnote + 12
+      end
+
+      message[2] = fnote
+      process_messages(message)
+  end
+
+  if (mod == "" and (key == "v" or key == "r")) then
+      fnote = 5+fnote
+
+      if (key == "r") then 
+        fnote = fnote + 12
+      end
+
+      message[2] = fnote
+      process_messages(message)
+  end
+
+  if (mod == "" and (key == "g" or key == "5")) then
+      fnote = 6+fnote
+
+      if (key == "5") then 
+        fnote = fnote + 12
+      end
+
+      message[2] = fnote
+      process_messages(message)
+  end
+
+  if (mod == "" and (key == "b" or key == "t")) then
+      fnote = 7+fnote
+
+      if (key == "t") then 
+        fnote = fnote + 12
+      end
+
+      message[2] = fnote
+      process_messages(message)
+  end
+
+  if (mod == "" and (key == "h" or key == "6")) then
+      fnote = 8+fnote
+
+      if (key == "6") then 
+        fnote = fnote + 12
+      end
+
+      message[2] = fnote
+      process_messages(message)
+  end
+
+  if (mod == "" and (key == "n" or key == "y")) then
+      fnote = 9+fnote
+
+      if (key == "y") then 
+        fnote = fnote + 12
+      end
+
+      message[2] = fnote
+      process_messages(message)
+  end
+
+  if (mod == "" and (key == "j" or key == "7")) then
+      fnote = 10+fnote
+
+      if (key == "7") then 
+        fnote = fnote + 12
+      end
+
+      message[2] = fnote
+      process_messages(message)
+  end
+
+  if (mod == "" and (key == "m" or key == "u")) then
+      fnote = 11+fnote
+
+      if (key == "u") then 
+        fnote = fnote + 12
+      end
+
+      message[2] = fnote
+      process_messages(message)
+  end
+
+  if (mod == "" and key == "esc") then
+      dialog:close()
+  end
+
+end 
+
+
+
 
