@@ -7,5 +7,6 @@ PATTERN_EDITOR = 2
 record_destination = MAPPING
 tracks = {}
 note_to_track = {}
+
 nr_debug = false
 
