@@ -194,13 +194,18 @@ notes will unawarely end up in the pattern editor during learn mode and no
 double notes are recorded during recording mode.
 
 
-Limitations:
--You cannot record delay values (Quantize per line only)
+[Limitations]
+Limitations you cannot influence/alter/improve:
+-PC Keyboard input only works if dialog has focus.
 -At higher BPM values, precision is getting less reliable
+
+Limitations that you might be able to improve with scripting:
+-Only one note per track
+-No note-preview in the actual track.
+-You cannot record delay values (Quantize per line only)
 -Recording is only done on the first note-column of each track.
 -CC messages are not recorded in the effect column.
 -Note-off support for MIDI currently not programmed
--PC Keyboard input only works if dialog has focus.
 
 This script is not a definite solution to an existing problem, yet it offers
 an idea to add to the new XRNI structure. You are welcome to extend this script

@@ -441,12 +441,8 @@ function connect_to_server(vb)
          if connect_progress_dialog ~= nil then
            connect_progress_dialog:close()
          end
-         local buttons = {'ok'}
-         local err_msg = vb:text {
-            align = 'center',
-            text = "Could not connect to chat-server reason:\n["..client_error.."]\n Please check your network connection and try again "
-         }
-         local choice = renoise.app():show_custom_prompt("Socket error",err_msg,buttons)
+         local err_msg = "Could not connect to chat-server reason: ["..client_error.."]\n\nPlease check your network connection and try again "
+         local choice = renoise.app():show_prompt("Network error",err_msg,{'close'})
 
        end
      end
