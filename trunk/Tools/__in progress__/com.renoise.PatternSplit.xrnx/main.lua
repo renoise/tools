@@ -79,10 +79,6 @@ function split()
 		
 			end
 			
-			renoise.app():show_error(tostring(previous_point))
-			renoise.app():show_error(tostring(next_point))
-
-
 			-- now create the transition point
 			local transition_time = current_line
 			local transition_value
