@@ -6,7 +6,7 @@ require "globals"
 require "gui"
 
 renoise.tool():add_menu_entry {
-  name = "Main Menu:Help:Visit the Community Chatroom",
+  name = "Main Menu:Help:Visit the Community Chatroom...",
   invoke = function() client_login() end
 }
 
@@ -427,7 +427,7 @@ function connect_to_server(vb)
   else
     progress_dialog()
   end
-  
+
   if client then
     set_nick(vb_login.views.irc_nick_name.text)            
     register_user(vb_login.views.irc_user_name.text, vb_login.views.irc_real_name.text)
@@ -441,14 +441,13 @@ function connect_to_server(vb)
          if connect_progress_dialog ~= nil then
            connect_progress_dialog:close()
          end
-         local buttons = {'retry', 'exit'}
+         local buttons = {'ok'}
          local err_msg = vb:text {
-            text = "     Network error "..client_error
+            align = 'center',
+            text = "Could not connect to chat-server reason:\n["..client_error.."]\n Please check your network connection and try again "
          }
          local choice = renoise.app():show_custom_prompt("Socket error",err_msg,buttons)
-         if choice == "retry" then
-           connect_to_server(vb)
-         end
+
        end
      end
    end
