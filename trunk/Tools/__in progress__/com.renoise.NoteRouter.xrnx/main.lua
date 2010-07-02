@@ -260,135 +260,27 @@ function key_handler(dialog, mod, key)
 
 --Now we translate our pc keyboard input to midi messages and send those to 
 --our midi message processor, clever huh?:
-  if (mod == "" and (key == "z" or key == "q" or key == "comma")) then
 
-    if (key == "q" or key == "comma") then 
-      fnote = fnote + 12
+  if mod == "" then
+    local found = false
+    for ckey = 1, 12 do
+
+      if key == low_key[ckey] or key == high_key[ckey] or key == mid_key[ckey] then
+        fnote = (ckey -1) + fnote
+        found = true
+      end
+      if key == high_key[ckey] or key == mid_key[ckey] then
+        fnote = fnote + 12
+        break
+      end
+
     end
 
-    message[2] = fnote
-    process_messages(message)
-  end
-
-  if (mod == "" and (key == "s" or key == "l" or key =="2")) then
-      fnote = 1 + fnote   -- C# = note 1 + the current octave offset
-
-      if (key == "l" or key == "2") then 
-        fnote = fnote + 12
-      end
-
+    if found then
       message[2] = fnote
       process_messages(message)
-  end
+    end
 
-  if (mod == "" and (key == "x" or key == "period" or key == "w")) then
-      fnote = 2+fnote     -- D- = note 2 + the current octave offset
-
-      if (key == "period" or key == "w") then 
-        fnote = fnote + 12
-      end
-
-      message[2] = fnote
-      process_messages(message)
-  end
-
-  if (mod == "" and (key == "d" or key == ";" or key == "3")) then
-      fnote = 3+fnote     -- D# = note 3 + the current octave offset
-
-      if (key == ";" or key == "3") then 
-        fnote = fnote + 12
-      end
-
-      message[2] = fnote
-      process_messages(message)
-  end
-
-  if (mod == "" and (key == "c" or key == "/" or key == "e")) then
-      fnote = 4+fnote     -- You know the drill, look it up above.
-
-      if (key == "/" or key == "e") then 
-        fnote = fnote + 12
-      end
-
-      message[2] = fnote
-      process_messages(message)
-  end
-
-  if (mod == "" and (key == "v" or key == "r")) then
-      fnote = 5+fnote
-
-      if (key == "r") then 
-        fnote = fnote + 12
-      end
-
-      message[2] = fnote
-      process_messages(message)
-  end
-
-  if (mod == "" and (key == "g" or key == "5")) then
-      fnote = 6+fnote
-
-      if (key == "5") then 
-        fnote = fnote + 12
-      end
-
-      message[2] = fnote
-      process_messages(message)
-  end
-
-  if (mod == "" and (key == "b" or key == "t")) then
-      fnote = 7+fnote
-
-      if (key == "t") then 
-        fnote = fnote + 12
-      end
-
-      message[2] = fnote
-      process_messages(message)
-  end
-
-  if (mod == "" and (key == "h" or key == "6")) then
-      fnote = 8+fnote
-
-      if (key == "6") then 
-        fnote = fnote + 12
-      end
-
-      message[2] = fnote
-      process_messages(message)
-  end
-
-  if (mod == "" and (key == "n" or key == "y")) then
-      fnote = 9+fnote
-
-      if (key == "y") then 
-        fnote = fnote + 12
-      end
-
-      message[2] = fnote
-      process_messages(message)
-  end
-
-  if (mod == "" and (key == "j" or key == "7")) then
-      fnote = 10+fnote
-
-      if (key == "7") then 
-        fnote = fnote + 12
-      end
-
-      message[2] = fnote
-      process_messages(message)
-  end
-
-  if (mod == "" and (key == "m" or key == "u")) then
-      fnote = 11+fnote
-
-      if (key == "u") then 
-        fnote = fnote + 12
-      end
-
-      message[2] = fnote
-      process_messages(message)
   end
 
   if (mod == "" and key == "esc") then
