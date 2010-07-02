@@ -18,7 +18,6 @@ function client_login()
   
   local TEXT_ROW_WIDTH = 80
 
-
   local login_fields_generic = vb:column{
     id = 'login_dialog_content',
     vb:row {
