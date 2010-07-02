@@ -78,14 +78,24 @@ function split()
 				end
 		
 			end
+			
+			renoise.app():show_error(tostring(previous_point))
+			renoise.app():show_error(tostring(next_point))
+
 
 			-- now create the transition point
 			local transition_time = current_line
-			local transition_value = 
+			local transition_value
+
+			if previous_point == next_point then
+				transition_value = points[previous_point].value
+			else
+				transition_value = 
 					points[previous_point].value + 
 					(points[next_point].value - points[previous_point].value) *
 					(current_line - points[previous_point].time) /  
 					(points[next_point].time - points[previous_point].time)
+			end
 					
 			new_pattern.tracks[num_track].automation[num_auto]:add_point_at(current_line,transition_value)
 			current_pattern.tracks[num_track].automation[num_auto]:add_point_at(current_line,transition_value)
