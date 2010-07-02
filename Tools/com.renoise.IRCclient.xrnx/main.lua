@@ -441,14 +441,11 @@ function connect_to_server(vb)
          if connect_progress_dialog ~= nil then
            connect_progress_dialog:close()
          end
-         print (client_error)
          local buttons = {'retry', 'exit'}
---         local buttons = {'ok'}
---         local err_msg = 'hi'
---         local choice = renoise.app():show_custom_prompt('IRC error', 'Test',{'ok'})
--- For some reason the custom_prompt does not work here, i have no idea why, there is definately
--- nothing wrong with the layout or contents.
-         local choice = renoise.app():show_custom_prompt("Socker error",client_error,buttons)
+         local err_msg = vb:text {
+            text = "     Network error "..client_error
+         }
+         local choice = renoise.app():show_custom_prompt("Socket error",err_msg,buttons)
          if choice == "retry" then
            connect_to_server(vb)
          end
