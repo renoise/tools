@@ -183,8 +183,8 @@ function ControlMap:determine_type(str)
   elseif string.sub(str,2,2)=="#" or string.sub(str,2,2)=="-" then
     return MIDI_NOTE_MESSAGE
 
-  elseif str==PITCH_BEND then
-    return MIDI_PITCH_BEND
+  elseif string.sub(str,1,2)=="PB" then
+    return MIDI_PITCH_BEND_MESSAGE
 
   end
 

@@ -60,19 +60,6 @@ function Application:__init()
   -- define a palette to enable color-picker support
   self.palette = {}
 
-  -- global app settings (reference to the browser)
-  self.browser = nil
-
-  -- browser config app branch, e.g. "MyDevice"
-  -- (needed in order to update the global config)
-  self.device_display_name = nil -- 
-
-  -- this is the app name, such as it appears in the browser
-  -- (needed in order to update the global config)
-  -- the name is the class name, with an optional postfix that
-  -- tell us that it's an alias (e.g. "MixConsole_2")
-  self.app_display_name = nil 
-
   -- the options dialog
   self.dialog = nil
 
@@ -115,11 +102,6 @@ function Application:start_app()
     return
   end
 
-  if (self.dialog) then 
-    local elm = self.vb.views.dpx_app_options_running
-    elm.value = true
-  end
-
   self.active = true
 end
 
@@ -137,11 +119,6 @@ function Application:stop_app()
 
   if (not self.active) then
     return
-  end
-
-  if (self.dialog) then 
-    local elm = self.vb.views.dpx_app_options_running
-    elm.value = false
   end
 
   self.active = false
@@ -315,29 +292,15 @@ function Application:__set_option(name,value)
       self.options[k].value = value
     end
   end
-  -- set value in browser 
-  if (self.browser) and
-   (self.browser.__devices) then
-    for k,v in pairs(self.browser.__devices) do
-      if(v.display_name == self.device_display_name)then
-        if(not v.options)then
-          v.options = {}
-        end
-        v.options[name] = {
-          value = value
-        }
-        break
-      end
-    end
-  end
-
 end
+
 
 --------------------------------------------------------------------------------
 
 function Application:__tostring()
   return type(self)
 end  
+
 
 --------------------------------------------------------------------------------
 
@@ -346,13 +309,14 @@ function Application:__eq(other)
   return rawequal(self, other)
 end  
 
+
 --------------------------------------------------------------------------------
 
 -- create application options dialog
 
 function Application:build_options()
 
-  if(self.view)then
+  if (self.view)then
     return
   end
 
@@ -396,119 +360,11 @@ function Application:build_options()
       },
       -- options are inserted here
     },
-    self.vb:column{
-      id="dpx_app_advanced",
-      visible=false,
-      margin = DEFAULT_MARGIN,
-      spacing = DEFAULT_SPACING,
-      self.vb:horizontal_aligner{
-        mode = "justify",
-        width = 400,
-        self.vb:column{
-          self.vb:row{
-            self.vb:checkbox{
-              value=true,
-              width=18,
-              notifier = function(v)
-                self:set_pinned(v)
-              end
-            },
-            self.vb:text{
-              text="Pinned to Duplex menu",
-            },
-          },
-         self.vb:row{
-            self.vb:checkbox{
-              value=false,
-              width=18,
-              notifier = function()
-                renoise.app():show_warning("Autorun not yet implemented")
-              end
-            },
-            self.vb:text{
-              text="Launch automatically",
-            },
-          },
-        },
-          self.vb:space{
-            width=80,
-          },
-        self.vb:column{
-          self.vb:text{
-            text="#Aliases",
-          },
-          self.vb:valuebox{
-            value=1,
-          },
-        },
-      },
-    },
+
     self.vb:horizontal_aligner{
       mode = "justify",
 
       self.vb:row{
-        self.vb:row{
-          margin = DEFAULT_MARGIN,
-          self.vb:checkbox{
-            id="dpx_app_options_running",
-            value=true,
-            width=18,
-            notifier = function(v)
-              -- update options dialog and browser (if present, and 
-              -- the current application is focused)
-              local app,cb = nil,nil
-              local is_current_app = false
-              if(self.browser)then
-                app = self.browser:__get_selected_app()
-                cb = self.browser.vb.views.dpx_browser_application_checkbox
-                if(app and app==self)then
-                  is_current_app = true
-                end
-              end
-
-              if v then
-                self:start_app()
-              else
-                self:stop_app()
-              end
-              if(is_current_app)then
-                -- update browser checkbox/list
-                cb.value = v
-              else
-                -- update the browser app list only
-                self.browser:__decorate_app_list()
-              end
-            end
-          },
-          self.vb:text{
-            text="Running",
-          },
-        },
-      },
-
-      self.vb:row{
-        -- toggle the advanced controls
-        self.vb:row{
-          margin = DEFAULT_MARGIN,
-          self.vb:button{
-            id="dpx_app_pin",
-            text="▼",
-            width=18,
-            height=18,
-            pressed = function(e)
-              local elm = self.vb.views.dpx_app_pin
-              local elm2 = self.vb.views.dpx_app_advanced
-              if (elm.text == "▼") then
-                elm.text="▲"
-                elm2.visible=true
-              else
-                elm.text="▼"
-                elm2.visible=false
-              end
-              self.vb.views.dpx_app_rootnode:resize()
-            end
-          },
-        },
         self.vb:button{
           text="Reset",
           width=60,
@@ -581,36 +437,6 @@ function Application:build_options()
   end
 end
 
---------------------------------------------------------------------------------
-
--- update the "pinned" status of this application
--- (requires that the browser is present)
-
-function Application:set_pinned(val)
-  if(self.browser)then
-    local matched = false
-    for k,v in ipairs(self.browser.__devices)do
-      if(matched)then break end
-      if(v.pinned) and
-        (v.display_name==self.device_display_name) then
-        for k2,v2 in pairs(v.pinned) do
-          if(k2==self.app_display_name)then
-            matched = true
-            if(not val)then
-              v.pinned[k2] = nil
-              break
-            end
-          end
-        end
-        if (val) and (not matched) then
-          v.pinned[self.app_display_name] = ("%s %s..."):format(self.device_display_name,self.app_display_name)
-          break
-        end
-      end
-    end
-    self.browser:build_menu()
-  end
-end
 
 --------------------------------------------------------------------------------
 
@@ -691,6 +517,7 @@ function Application:__add_option_row(t,key)
         tooltip=t.description,
       },
     }
+  
   else
     -- choice
       elm = self.vb:row{
@@ -712,6 +539,6 @@ function Application:__add_option_row(t,key)
   end
 
   row:add_child(elm)
-  return row
 
+  return row
 end

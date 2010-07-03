@@ -74,7 +74,7 @@ function MIDIDevice:midi_callback(message)
   local msg = Message()
   local value_str = nil
 
-  if(self.dump_midi)then
+  if (self.dump_midi) then
     print(("MIDIDevice: %s received MIDI %X %X %X"):format(
     self.name, message[1], message[2], message[3]))
   end
@@ -91,7 +91,7 @@ function MIDIDevice:midi_callback(message)
     value_str = self.midi_cc_to_string(self,message[2])
 
   elseif (message[1] == 224) then
-    msg.context = MIDI_PITCH_BEND
+    msg.context = MIDI_PITCH_BEND_MESSAGE
     msg.value = message[3]
     value_str = PITCH_BEND
   end
@@ -106,8 +106,6 @@ function MIDIDevice:midi_callback(message)
       -- determine input method
       if (xarg.type == "button") then
         msg.input_method = CONTROLLER_BUTTON
-      --elseif (xarg.type == "encoder") then
-      --  msg.input_method = CONTROLLER_ENCODER
       elseif (xarg.type == "fader") then
         msg.input_method = CONTROLLER_FADER
       elseif (xarg.type == "dial") then

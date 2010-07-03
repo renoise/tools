@@ -31,7 +31,7 @@
         </Row>
         <Row>
           <Group name="XFader" orientation="horizontal" align="center">
-            <Param value="PITCHBEND" type="fader" name="X-Fader" orientation="horizontal" size="8" maximum="127" minimum="0"/>
+            <Param value="PB" type="fader" name="X-Fader" orientation="horizontal" size="8" maximum="127" minimum="0"/>
           </Group>
         </Row>
 

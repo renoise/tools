@@ -27,9 +27,45 @@ end
 
 --------------------------------------------------------------------------------
 
-function Ohm64:point_to_value(pt, maximum, minimum, ceiling)
-  TRACE("Ohm64:point_to_value", pt.val, maximum, minimum, ceiling)
+device_configurations:insert {
 
-  return MIDIDevice.point_to_value(self, pt, maximum, minimum, ceiling)
-end
+  -- configuration properties
+  name = "Default",
+  pinned = true,
+
+  -- device properties
+  device = {
+    class_name = "Ohm64",          
+    display_name = "Ohm64",
+    device_name = "Ohm64 MIDI 1",
+    control_map = "Controllers/Ohm64/ohm64.xml",
+    protocol = DEVICE_MIDI_PROTOCOL
+  },
+  
+  -- setup a "MixConsole" and "PatternMatrix" as apps
+  applications = {
+    MixConsole = {
+      panning = {
+        group_name="PanningLeft",
+      },
+      levels = {
+        group_name="VolumeLeft",
+      },
+      mute = {
+        group_name = "MuteLeft",
+      },
+      master = {
+        group_name="VolumeRight",
+      },
+    },
+    PatternMatrix = {
+      matrix = {
+        group_name = "Grid",
+      },
+      controls = {
+        group_name = "ControlsRight",
+      },
+    },
+  }
+}
 

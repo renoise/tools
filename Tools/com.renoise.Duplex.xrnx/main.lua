@@ -1,44 +1,43 @@
 --[[--------------------------------------------------------------------------
-
-Duplex_browser.lua
-
+main.lua
 --------------------------------------------------------------------------]]--
 
 -- includes
 
-require "Duplex/Duplex"
+require "Duplex"
 
 
 -------------------------------------------------------------------------------
--- functions
+-- locals
 -------------------------------------------------------------------------------
 
-local app = nil
-local app = Browser()
+-- the one and only browser
+local browser = nil
 
+-- dump MIDI debug option
+local dump_midi = false
 
-function show_dialog(device_name, app_name)
-  --if (not app or not app.dialog) then
-  if (not app) then
-    app = Browser(device_name, app_name)
-  else
-    if (device_name) then
-      app:set_device(device_name)
-      
-      if (app_name) then
-        local start_running = true
-        app:set_application(app_name, start_running)
-      end
-    end
+-- instantiate a new browser, or load a new controller configuration
+local function show_dialog(config)
+  if (not browser) then
+    browser = Browser()
+    browser:set_dump_midi(dump_midi)
+  end
+    
+  if (config) then
+    local start_running = true
+    browser:set_configuration(config, start_running)
   end
   
-  app:show_app()
+  browser:show_app()
 end
 
 
 -------------------------------------------------------------------------------
--- Menu entries (the browser will expand this)
+-- menu entries
 -------------------------------------------------------------------------------
+
+-- main browser entry
 
 renoise.tool():add_menu_entry {
   name = "Main Menu:Tools:Duplex:Browser...",
@@ -47,71 +46,80 @@ renoise.tool():add_menu_entry {
   end
 }
 
-app:build_menu()
 
---[[
+--  entries to quicklaunch all pinned configurations
+
+local device_configuration_map = table.create()
+
+for _,config in pairs(device_configurations) do
+  if (config.device and config.device.display_name) then
+    local device_name = config.device.display_name
+    if (not device_configuration_map[device_name]) then
+      device_configuration_map[device_name] = table.create{config}
+    else
+      device_configuration_map[device_name]:insert(config)
+    end
+  end
+end
+
+local avilable_devices = table.create(device_configuration_map:keys())
+avilable_devices:sort()
+
+for _,device_name in pairs(avilable_devices) do
+  local prefix = "--- "
+  for _,config in pairs(device_configuration_map[device_name]) do
+    if (config.pinned) then
+      local entry_name = ("Main Menu:Tools:Duplex: %s %s..."):format(
+        config.device.display_name, config.name)
+        
+      renoise.tool():add_menu_entry {
+        name = ("%s%s"):format(prefix,entry_name),
+        invoke = function() 
+          show_dialog(config) 
+        end
+      }
+      prefix = ""
+    end
+  end
+end
+
 renoise.tool():add_menu_entry {
-  name = "--- Main Menu:Tools:Duplex:Launchpad MixConsole...",
+  name = "--- Main Menu:Tools:Duplex:Dump MIDI",
+  selected = function()
+    return (browser ~= nil and browser:dump_midi() or dump_midi)
+  end,
   invoke = function() 
-    show_dialog("Launchpad", "MixConsole") 
+    dump_midi = not dump_midi
+    if (browser) then
+      browser:set_dump_midi(dump_midi)
+    end
   end
 }
 
-renoise.tool():add_menu_entry {
-  name = "Main Menu:Tools:Duplex:Nocturn MixConsole...",
-  invoke = function() 
-    show_dialog("Nocturn", "MixConsole") 
-  end
-}
 
-renoise.tool():add_menu_entry {
-  name = "Main Menu:Tools:Duplex:BCF 2000 MixConsole...",
-  invoke = function() 
-    show_dialog("BCF-2000", "MixConsole") 
-  end
-}
-
-renoise.tool():add_menu_entry {
-  name = "--- Main Menu:Tools:Duplex:Launchpad PatternMatrix...",
-  invoke = function() 
-    show_dialog("Launchpad", "PatternMatrix") 
-  end
-}
-renoise.tool():add_menu_entry {
-  name = "--- Main Menu:Tools:Duplex:LaunchpadTest MixConsole",
-  invoke = function() 
-    show_dialog("LaunchpadTest", "MixConsole") 
-  end
-}
-renoise.tool():add_menu_entry {
-  name = "--- Main Menu:Tools:Duplex:OHM64 PatternMatrix",
-  invoke = function() 
-    show_dialog("OHM64", "PatternMatrix") 
-  end
-}
-]]
 -------------------------------------------------------------------------------
--- Keybindings
+-- keybindings
 -------------------------------------------------------------------------------
 
 renoise.tool():add_keybinding {
-  name = "Global:Tools:Duplex Browser",
+  name = "Global:Tools:Duplex Browser...",
   invoke = function() show_dialog() end
 }
 
+
 -------------------------------------------------------------------------------
--- Notifications
+-- notifications
 -------------------------------------------------------------------------------
 
 renoise.tool().app_idle_observable:add_notifier(function()
-  if app then
-    app:idle_app()
+  if (browser) then
+    browser:idle_app()
   end
 end)
 
 renoise.tool().app_new_document_observable:add_notifier(function()
-  if app then
-    app:on_new_document()
+  if (browser) then
+    browser:on_new_document()
   end
 end)
 

@@ -26,7 +26,7 @@ function Display:__init(device)
   self.device = device  
 
   --  viewbuilder stuff
-  self.vb = renoise.ViewBuilder()
+  self.vb = nil
   self.view = nil    
 
   --  temp values (construction of control surface)
@@ -81,25 +81,24 @@ end
 
 --------------------------------------------------------------------------------
 
--- TODO: clear display
--- use hardware-specific feature if possible
+-- clear display. force an update of all UI components
+-- TODO: also use hardware-specific feature if possible
 
 function Display:clear()
   TRACE("Display:clear()")
   
---[[
-  for _,group in pairs(self.device.control_map.groups)do
-    for __,param in ipairs(group) do
-      -- @elm : control-map definition of the element
-      -- @obj : reference to the UIComponent instance
-      -- @point : canvas point containing text/value/color 
-      local pt = CanvasPoint()
-      local obj = {ceiling=100}
-      self.set_parameter(param,obj,pt)
-      --rprint(param)      
+  if (not self.view) then
+    return
+  end
+  
+  -- force updating all canvas for the next update
+  for _,obj in ipairs(self.ui_objects) do
+    if (obj.group_name) then
+      obj.canvas.delta = table.rcopy(obj.canvas.buffer)
+      obj.canvas.has_changed = true
+      obj:invalidate()
     end
   end
-]]
 end
 
 
@@ -115,7 +114,7 @@ function Display:update()
 
   local control_map = self.device.control_map
   
-  for _,obj in ipairs(self.ui_objects) do
+  for _,obj in pairs(self.ui_objects) do
 
     -- skip unused objects, object that doesn't need update
     if (obj.group_name and obj.dirty) then
@@ -181,8 +180,8 @@ function Display:set_parameter(elm, obj, point)
       value = self.device:point_to_value(
         point, elm.maximum, elm.minimum, obj.ceiling)
 
-      -- do not loop back the original value change back to the sender, unless the sender 
-      -- explicitly wants this
+      -- do not loop back the original value change back to the sender, 
+      -- unless the device explicitly wants this
       if (not current_message) or
          (current_message.context ~= MIDI_NOTE_MESSAGE) or
          (current_message.id ~= elm.id) or
@@ -198,33 +197,36 @@ function Display:set_parameter(elm, obj, point)
       value = self.device:point_to_value(
         point, elm.maximum, elm.minimum, obj.ceiling)
 
-      -- do not loop back the original value change back to the sender
+      -- do not loop back the original value change back to the sender, 
+      -- unless the device explicitly wants this
       if (not current_message) or
          (current_message.context ~= MIDI_CC_MESSAGE) or
          (current_message.id ~= elm.id) or
-         (current_message.value ~= value)
+         (current_message.value ~= value) or
+         (self.device.loopback_received_messages)
       then
         self.device:send_cc_message(num,value)
       end
     
-    elseif (msg_type == MIDI_PITCH_BEND) then
---print("MIDI_PITCH_BEND - elm.value",elm.value)
+    elseif (msg_type == MIDI_PITCH_BEND_MESSAGE) then
 
---[[      
+--[[ TODO      
       value = self.device:point_to_value(
         point, elm.maximum, elm.minimum, obj.ceiling)
 
-      -- do not loop back the original value change back to the sender
+      -- do not loop back the original value change back to the sender, 
+      -- unless the device explicitly wants this
       if (not current_message) or
-         (current_message.context ~= MIDI_CC_MESSAGE) or
+         (current_message.context ~= MIDI_PITCH_BEND_MESSAGE) or
          (current_message.id ~= elm.id) or
-         (current_message.value ~= value)
+         (current_message.value ~= value) or
+         (self.device.loopback_received_messages)
       then
-        self.device:send_cc_message(num,value)
+        self.device:send_pb_message(num,value)
       end
 ]]    
     else
-      error(("unknown or unhandled msg_type: %d"):format(msg_type))
+      error(("unknown or unhandled msg_type: %s"):format(msg_type or "nil"))
     end
   end
 
@@ -268,30 +270,12 @@ end
 
 --------------------------------------------------------------------------------
 
-function Display:show_control_surface()
-  TRACE('Display:show_control_surface')
-
-  if (not self.view) then
-    self:build_control_surface()
-  end
-
-  self.vb.views.display_rootnode.visible = true
-end
-
-
---------------------------------------------------------------------------------
-
-function Display:hide_control_surface()
-  self.vb.views.display_rootnode.visible = false
-end
-
-
---------------------------------------------------------------------------------
-
 -- build the virtual control-surface based on the parsed control-map
 
 function Display:build_control_surface()
   TRACE('Display:build_control_surface')
+
+  self.vb = renoise.ViewBuilder()
 
   self.view = self.vb:column {
     id = "display_rootnode",
