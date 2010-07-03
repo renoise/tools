@@ -4,7 +4,7 @@
 
 --[[
 
-Inheritance: Ohm64 > MIDIDevice > Device
+Inheritance: Ohm64 > MidiDevice > Device
 
 A device-specific class 
 
@@ -13,12 +13,12 @@ A device-specific class
 
 --==============================================================================
 
-class "Ohm64" (MIDIDevice)
+class "Ohm64" (MidiDevice)
 
 function Ohm64:__init(name, message_stream)
   TRACE("Ohm64:__init", name, message_stream)
 
-  MIDIDevice.__init(self, name, message_stream)
+  MidiDevice.__init(self, name, message_stream)
 
   -- send back a copy of the incming midi messages
   self.loopback_received_messages = true
@@ -38,7 +38,7 @@ device_configurations:insert {
     class_name = "Ohm64",          
     display_name = "Ohm64",
     device_name = "Ohm64 MIDI 1",
-    control_map = "Controllers/Ohm64/ohm64.xml",
+    control_map = "Controllers/Ohm64/Ohm64.xml",
     protocol = DEVICE_MIDI_PROTOCOL
   },
   

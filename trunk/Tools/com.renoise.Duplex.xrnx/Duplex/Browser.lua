@@ -806,7 +806,7 @@ function BrowserProcess:instantiate(configuration)
     
     -- use a generic class if the config does not specify one  
     if (protocol == DEVICE_MIDI_PROTOCOL)then
-      device_class_name = "MIDIDevice"
+      device_class_name = "MidiDevice"
     
     elseif (protocol == DEVICE_OSC_PROTOCOL)then
       device_class_name = "OscDevice"

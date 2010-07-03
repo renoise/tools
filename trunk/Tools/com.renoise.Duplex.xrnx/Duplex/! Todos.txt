@@ -53,7 +53,7 @@ Planned / Todo
   o Display controlmap info (author, name, description) 
   o Reload control-map
   o Set control-map as standard (persistent setting)
-  o MIDIDevice: specify input port - only for devices that 
+  o MidiDevice: specify input port - only for devices that 
     doesn't have a dedicated class (remember the chosen port)
   o OSCDevice: specify the prefix (could be /renoise or /duplex always?)
   o Advanced settings tab (i.e. control brightness, contrast) - expose these 
@@ -152,7 +152,7 @@ Done
 
 * Dynamic switching of MIDI device and control-map 
 
-* MIDIDevice: improved implementation of "color-to-value" (now called 
+* MidiDevice: improved implementation of "color-to-value" (now called 
   point-to-value)
 
 * It's possible to spawn multiple dialog windows (and cause Renoise to crash)¨

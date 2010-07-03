@@ -98,8 +98,8 @@ end
 
 Show dialog with configuration options 
 + Show device name + type (generic or custom)
-+ (MIDIDevice) choose port
-+ (MIDIDevice) choose channel
++ (MidiDevice) choose port
++ (MidiDevice) choose channel
 
 
 --]]

@@ -1,10 +1,10 @@
 --[[----------------------------------------------------------------------------
--- Duplex.MIDIDevice
+-- Duplex.MidiDevice
 ----------------------------------------------------------------------------]]--
 
 --[[
 
-Inheritance: MIDIDevice -> Device
+Inheritance: MidiDevice -> Device
 
 Requires: Globals, ControlMap, Message
 
@@ -13,10 +13,10 @@ Requires: Globals, ControlMap, Message
 
 --==============================================================================
 
-class 'MIDIDevice' (Device)
+class 'MidiDevice' (Device)
 
-function MIDIDevice:__init(name, message_stream)
-  TRACE("MIDIDevice:__init("..name..")")
+function MidiDevice:__init(name, message_stream)
+  TRACE("MidiDevice:__init("..name..")")
 
   Device.__init(self, name, message_stream, DEVICE_MIDI_PROTOCOL)
 
@@ -31,8 +31,8 @@ function MIDIDevice:__init(name, message_stream)
 
   if table.find(input_devices, name) then
     self.midi_in = renoise.Midi.create_input_device(name,
-      {self, MIDIDevice.midi_callback},
-      {self, MIDIDevice.sysex_callback}
+      {self, MidiDevice.midi_callback},
+      {self, MidiDevice.sysex_callback}
     )
   else
     print("Notice: Could not create MIDI input device "..name)
@@ -49,8 +49,8 @@ end
 
 --------------------------------------------------------------------------------
 
-function MIDIDevice:release()
-  TRACE("MIDIDevice:release()")
+function MidiDevice:release()
+  TRACE("MidiDevice:release()")
 
   if (self.midi_in and self.midi_in.is_open) then
     self.midi_in:close()
@@ -67,15 +67,15 @@ end
 
 --------------------------------------------------------------------------------
 
-function MIDIDevice:midi_callback(message)
-  TRACE(("MIDIDevice: %s received MIDI %X %X %X"):format(
+function MidiDevice:midi_callback(message)
+  TRACE(("MidiDevice: %s received MIDI %X %X %X"):format(
     self.name, message[1], message[2], message[3]))
 
   local msg = Message()
   local value_str = nil
 
   if (self.dump_midi) then
-    print(("MIDIDevice: %s received MIDI %X %X %X"):format(
+    print(("MidiDevice: %s received MIDI %X %X %X"):format(
     self.name, message[1], message[2], message[3]))
   end
 
@@ -140,8 +140,8 @@ end
 
 --------------------------------------------------------------------------------
 
-function MIDIDevice:sysex_callback(message)
-  TRACE(("MIDIDevice: %s got SYSEX with %d bytes"):format(
+function MidiDevice:sysex_callback(message)
+  TRACE(("MidiDevice: %s got SYSEX with %d bytes"):format(
     self.device_name, #message))
 end
 
@@ -152,7 +152,7 @@ end
 --  @param number (int) the control-number (0-127)
 --  @param value (int) the control-value (0-127)
 
-function MIDIDevice:send_cc_message(number,value)
+function MidiDevice:send_cc_message(number,value)
 
   if (not self.midi_out or not self.midi_out.is_open) then
     return
@@ -160,11 +160,11 @@ function MIDIDevice:send_cc_message(number,value)
 
   local message = {0xB0, number, value}
 
-  TRACE(("MIDIDevice: %s send MIDI %X %X %X"):format(
+  TRACE(("MidiDevice: %s send MIDI %X %X %X"):format(
     self.name, message[1], message[2], message[3]))
 
   if(self.dump_midi)then
-    print(("MIDIDevice: %s send MIDI %X %X %X"):format(
+    print(("MidiDevice: %s send MIDI %X %X %X"):format(
       self.name, message[1], message[2], message[3]))
   end
 
@@ -175,7 +175,7 @@ end
 
 --------------------------------------------------------------------------------
 
-function MIDIDevice:send_note_message(key,velocity)
+function MidiDevice:send_note_message(key,velocity)
 
   if (not self.midi_out or not self.midi_out.is_open) then
     return
@@ -192,11 +192,11 @@ function MIDIDevice:send_note_message(key,velocity)
     message[1] = 0x90 -- note-on
   end
   
-  TRACE(("MIDIDevice: %s send MIDI %X %X %X"):format(
+  TRACE(("MidiDevice: %s send MIDI %X %X %X"):format(
     self.name, message[1], message[2], message[3]))
     
   if(self.dump_midi)then
-    print(("MIDIDevice: %s send MIDI %X %X %X"):format(
+    print(("MidiDevice: %s send MIDI %X %X %X"):format(
       self.name, message[1], message[2], message[3]))
   end
 
@@ -210,7 +210,7 @@ end
 -- @param key: the key (7-bit integer)
 -- @return string (e.g. "C#5")
 
-function MIDIDevice:note_to_string(int)
+function MidiDevice:note_to_string(int)
   local key = (int%12)+1
   local oct = math.floor(int/12)-1
   return NOTE_ARRAY[key]..(oct)
@@ -219,7 +219,7 @@ end
 
 --------------------------------------------------------------------------------
 
-function MIDIDevice:midi_cc_to_string(int)
+function MidiDevice:midi_cc_to_string(int)
   return string.format("CC#%d",int)
 end
 
@@ -230,7 +230,7 @@ end
 -- @param str  - string, e.g. "C-4" or "F#-1"
 -- @return #note (7-bit integer)
 
-function MIDIDevice:extract_midi_note(str) 
+function MidiDevice:extract_midi_note(str) 
   local rslt = nil
   local note_segment = string.sub(str,0,2)
   local octave_segment = string.sub(str,3)
@@ -252,7 +252,7 @@ end
 -- Extract MIDI CC number (range 0-127)
 -- @return #cc (integer) 
 
-function MIDIDevice:extract_midi_cc(str)
+function MidiDevice:extract_midi_cc(str)
   return tonumber(string.sub(str, 4))
 end
 
@@ -261,7 +261,7 @@ end
 
 -- Convert the point to an output value
 -- (override with device-specific implementation)
-function MIDIDevice:point_to_value(pt,maximum,minimum,ceiling)
+function MidiDevice:point_to_value(pt,maximum,minimum,ceiling)
   ceiling = ceiling or 127
 
   local value
