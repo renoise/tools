@@ -21,8 +21,7 @@ function Launchpad:__init(name, message_stream)
   MIDIDevice.__init(self, name, message_stream)
 
   -- this device has a color-space with 4 degrees of red and green
-  --self.colorspace={4,4,0}
-  self.colorspace={4,4,0}
+  self.colorspace = {4, 4, 0}
 
   -- double-buffering features (not used)
   --[[
@@ -141,4 +140,133 @@ function Launchpad:getCompositeBufferValue()
   local result = 32+display+(update*4)+(flash*8)+(copy*16)
 end
 ]]
+
+
+--==============================================================================
+
+-- default configurations for the launchpad
+-- this is a fullblown implementation (with a custom class + control-map)
+
+
+--------------------------------------------------------------------------------
+
+device_configurations:insert {
+
+  -- configuration properties
+  name = "MixConsole",
+  pinned = true,
+
+  -- device properties
+  device = {
+    class_name = "Launchpad",
+    display_name = "Launchpad",
+    device_name = "Launchpad",
+    control_map = "Controllers/Launchpad/launchpad.xml",
+    protocol = DEVICE_MIDI_PROTOCOL,
+  },
+
+  -- setup "MixConsole" as the only app for this configuration
+  applications = {
+    MixConsole = {
+      levels = {
+        group_name = "Grid",
+      },
+      mute = {
+        group_name = "Controls",
+      },
+      master = {
+        group_name = "Triggers",
+      }
+    }
+  }
+}
+
+
+--------------------------------------------------------------------------------
+
+device_configurations:insert {
+
+  -- configuration properties
+  name = "PatternMatrix",
+  pinned = true,
+  
+  -- device properties
+  device = {
+    class_name = "Launchpad",
+    display_name = "Launchpad",
+    device_name = "Launchpad",
+    control_map = "Controllers/Launchpad/launchpad.xml",
+    protocol = DEVICE_MIDI_PROTOCOL,
+  },
+
+  -- setup "PatternMatrix" as the only app for this configuration
+  applications = {
+    PatternMatrix = {
+      matrix = {
+        group_name = "Grid",
+      },
+      triggers = {
+        group_name = "Triggers",
+      },
+      sequence = {
+        group_name = "Controls",
+        index = 0,
+      },
+      track = {
+        group_name = "Controls",
+        index = 2,
+      }
+    }
+  }
+}
+
+
+--------------------------------------------------------------------------------
+
+device_configurations:insert {
+
+  -- configuration properties
+  name = "MixConsole & PatternMatrix",
+  pinned = true,
+  
+  -- device properties
+  device = {
+    class_name = "Launchpad",
+    display_name = "Launchpad",
+    device_name = "Launchpad",
+    control_map = "Controllers/Launchpad/launchpad_vertical_split.xml",
+    protocol = DEVICE_MIDI_PROTOCOL,
+  },
+
+  -- setup "PatternMatrix" and "MixConsole", vertically split
+  applications = {
+    PatternMatrix = {
+      matrix = {
+        group_name = "Grid",
+      },
+      triggers = {
+        group_name = "Triggers",
+      },
+      sequence = {
+        group_name = "Controls",
+        index = 0,
+      },
+      track = {
+        group_name = "Controls",
+        index = 2,
+      }
+    },
+    MixConsole = {
+      levels = {
+        group_name = "Grid2",
+      },
+      mute = {
+        group_name = "Controls2",
+      },
+      master = {
+        group_name = "Triggers2",
+      }
+    }
+  }
+}
 

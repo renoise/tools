@@ -6,20 +6,16 @@ Duplex Changelog, Notes & TODOs
 Bugs
 --------------------------------------------------------------------------------
 
-* Multiple grid/column group layouts are broken (use Ohm64 for testing). 
+* taktik: function BrowserProcess:__finalize() causes a pure virtual function 
+  call error when destroying the scripting engine
+
+* danoise: Multiple grid/column group layouts are broken (use Ohm64 for testing). 
   Groups are not closed before the next one is encountered
 
 * MixConsole: Ohm64/VolumeLeft is used for mute switching? 
 
 * Controls which are not or no longer assigned to document values, should 
   be cleared, reset (when for example using less than 8 tracks in Renoise)
-    
-* Switching between Applications while the device is already running, 
-  sometimes does not update the UI properly although a display:clear is fired
-  Clarification: display.clear() should be used when shutting down a device,
-  applications need a different method for clearing the display, as they might
-  only occupy *some part* of the display (one or more groups)
-  
   
 --------------------------------------------------------------------------------
 In Progress
@@ -27,11 +23,11 @@ In Progress
 
 * Bjorn: Make MessageStream detect more event types: release, etc.
 
-* Bjorn: Build proper device/app configuration panels
-
 * Eduard: Implement Behringer BFC and BFR classes, finish the control maps
 
 * Eduard: Relative MIDI controller message support for encoders
+
+* Eduard: find and load controllers and apps dynamically
 
 
 ================================================================================

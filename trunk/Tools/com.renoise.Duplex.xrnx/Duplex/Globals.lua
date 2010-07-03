@@ -12,7 +12,6 @@ pcall(require, "future")
 
 MODULE_PATH = "./Duplex/"  
 NOTE_ARRAY = { "C-","C#","D-","D#","E-","F-","F#","G-","G#","A-","A#","B-" }
-PITCH_BEND = "PITCHBEND"
 
 -- Protocols
 
@@ -21,7 +20,7 @@ DEVICE_MIDI_PROTOCOL = 1
 
 MIDI_CC_MESSAGE = 2
 MIDI_NOTE_MESSAGE = 3
-MIDI_PITCH_BEND = 4
+MIDI_PITCH_BEND_MESSAGE = 4
 
 OSC_MESSAGE = 5
 
@@ -65,8 +64,39 @@ DEFAULT_MARGIN = renoise.ViewBuilder.DEFAULT_CONTROL_MARGIN
 DEFAULT_SPACING = renoise.ViewBuilder.DEFAULT_CONTROL_SPACING
 DEFAULT_CONTROL_HEIGHT = renoise.ViewBuilder.DEFAULT_CONTROL_HEIGHT
 
-MUTE_STATE_OFF = 2
 MUTE_STATE_ACTIVE = 1
+MUTE_STATE_OFF = 2
+
+
+--------------------------------------------------------------------------------
+-- device configurations
+--------------------------------------------------------------------------------
+
+-- device and application setup for controllers, registered by the controllers
+-- itself. each entry must have the following properties defined. all 
+-- configurations will be shown in the browser, sorted by device name 
+
+-- {
+--   ** configuration properties
+--   name = "Some Config", -- config name as visible in the browser
+--   pinned = true, -- when true, config is added to the duplex context menu
+--
+--   ** device properties
+--   device = {
+--     class_name = nil, -- optional custom device class          
+--     display_name = "Some Device", -- as visible in the browser
+--     device_name = "Some Device", -- MIDI device name
+--     control_map = "controlmap.xml", -- path & name of the control map
+--     protocol = DEVICE_MIDI_PROTOCOL
+--   },
+--
+--   ** applications
+--   applications = { -- list of applications and app config 
+--     MixConsole = { options = "Something" } -- for example a mix console
+--   } 
+-- }
+  
+device_configurations = table.create()
 
 
 --------------------------------------------------------------------------------
@@ -76,9 +106,9 @@ MUTE_STATE_ACTIVE = 1
 -- compare two numbers with variable precision
 
 function compare(val1,val2,precision)
-  val1 = math.floor(val1*precision)
-  val2 = math.floor(val2*precision)
-  return val1==val2 
+  val1 = math.floor(val1 * precision)
+  val2 = math.floor(val2 * precision)
+  return val1 == val2 
 end
 
 -- quick'n'dirty table compare, compares values (not keys)
