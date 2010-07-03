@@ -175,7 +175,7 @@ end
 -- {"^Display:"} " -> show traces, starting with "Display:" only
 -- {"^ControlMap:", "^Display:"} -> show "Display:" and "ControlMap:"
 
---local __trace_filters = {"^MIDIDevice"}
+--local __trace_filters = {"^MidiDevice"}
 local __trace_filters = nil
 
 

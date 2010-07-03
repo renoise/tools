@@ -18,7 +18,7 @@ device_configurations:insert {
     class_name = nil,          
     display_name = "Remote SL MKII Automap",
     device_name = "Automap MIDI",
-    control_map = "Controllers/Remote-SL-MKII/remote_default.xml",
+    control_map = "Controllers/Remote-SL-MKII/Remote-SL-MKII.xml",
     protocol = DEVICE_MIDI_PROTOCOL
   },
   

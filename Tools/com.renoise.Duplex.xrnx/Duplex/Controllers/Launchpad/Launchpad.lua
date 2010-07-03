@@ -4,7 +4,7 @@
 
 --[[
 
-Inheritance: Launchpad > MIDIDevice > Device
+Inheritance: Launchpad > MidiDevice > Device
 
 A device-specific class 
 
@@ -13,12 +13,12 @@ A device-specific class
 
 --==============================================================================
 
-class "Launchpad" (MIDIDevice)
+class "Launchpad" (MidiDevice)
 
 function Launchpad:__init(name, message_stream)
   TRACE("Launchpad:__init", name, message_stream)
 
-  MIDIDevice.__init(self, name, message_stream)
+  MidiDevice.__init(self, name, message_stream)
 
   -- this device has a color-space with 4 degrees of red and green
   self.colorspace = {4, 4, 0}
@@ -62,7 +62,7 @@ end
 -- and duty cycle are reset to defaults
 
 function Launchpad:reset()
-    MIDIDevice.send_cc_message(self,0,0)
+    MidiDevice.send_cc_message(self,0,0)
 end
 
 
@@ -71,7 +71,7 @@ end
 -- set grid mapping mode to X-Y layout
 
 function Launchpad:set_xy_map_mode()
-    MIDIDevice.send_cc_message(self,0,1)
+    MidiDevice.send_cc_message(self,0,1)
 end
 
 
@@ -80,7 +80,7 @@ end
 -- set grid mapping mode to drum rack layout
 
 function Launchpad:set_drum_map_mode()
-  MIDIDevice.send_cc_message(self,0,1)
+  MidiDevice.send_cc_message(self,0,1)
 end
 
 
@@ -89,7 +89,7 @@ end
 -- range: 0-2 (low/medium/high brightness test)
 
 function Launchpad:display_test(number)
-  MIDIDevice.send_cc_message(self,0,125+number)
+  MidiDevice.send_cc_message(self,0,125+number)
 end
 
 
@@ -99,7 +99,7 @@ end
 
 function Launchpad:set_active_display(number)
   self.display = 0
-  MIDIDevice.send_cc_message(self,0,self.getCompositeBufferValue())
+  MidiDevice.send_cc_message(self,0,self.getCompositeBufferValue())
 end
 
 
@@ -109,7 +109,7 @@ end
 
 function Launchpad:set_update_display(number)
   self.update = 0
-    MIDIDevice.send_cc_message(self,0,self.getCompositeBufferValue())
+    MidiDevice.send_cc_message(self,0,self.getCompositeBufferValue())
 end
 
 
@@ -119,7 +119,7 @@ end
 
 function Launchpad:set_flash_mode(number)
   self.flash = 0
-    MIDIDevice.send_cc_message(self,0,self.getCompositeBufferValue())
+    MidiDevice.send_cc_message(self,0,self.getCompositeBufferValue())
 end
 
 
@@ -129,7 +129,7 @@ end
 
 function Launchpad:copy_buffer()
   self.flash = 0
-    MIDIDevice.send_cc_message(self,0,self.getCompositeBufferValue())
+    MidiDevice.send_cc_message(self,0,self.getCompositeBufferValue())
 end
 
 
@@ -161,7 +161,7 @@ device_configurations:insert {
     class_name = "Launchpad",
     display_name = "Launchpad",
     device_name = "Launchpad",
-    control_map = "Controllers/Launchpad/launchpad.xml",
+    control_map = "Controllers/Launchpad/Launchpad.xml",
     protocol = DEVICE_MIDI_PROTOCOL,
   },
 
@@ -195,7 +195,7 @@ device_configurations:insert {
     class_name = "Launchpad",
     display_name = "Launchpad",
     device_name = "Launchpad",
-    control_map = "Controllers/Launchpad/launchpad.xml",
+    control_map = "Controllers/Launchpad/Launchpad.xml",
     protocol = DEVICE_MIDI_PROTOCOL,
   },
 
@@ -234,7 +234,7 @@ device_configurations:insert {
     class_name = "Launchpad",
     display_name = "Launchpad",
     device_name = "Launchpad",
-    control_map = "Controllers/Launchpad/launchpad_vertical_split.xml",
+    control_map = "Controllers/Launchpad/Launchpad_VerticalSplit.xml",
     protocol = DEVICE_MIDI_PROTOCOL,
   },
 

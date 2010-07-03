@@ -18,7 +18,7 @@ device_configurations:insert {
     class_name = nil,          
     display_name = "Nocturn Automap",
     device_name = "Automap MIDI",
-    control_map = "Controllers/Nocturn/nocturn.xml",
+    control_map = "Controllers/Nocturn/Nocturn.xml",
     protocol = DEVICE_MIDI_PROTOCOL
   },
   

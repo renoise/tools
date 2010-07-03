@@ -18,7 +18,7 @@ device_configurations:insert {
     class_name = nil,          
     display_name = "BCR-2000",
     device_name = "BCR2000",
-    control_map = "Controllers/BCR-2000/bcr-2000.xml",
+    control_map = "Controllers/BCR-2000/BCR-2000.xml",
     protocol = DEVICE_MIDI_PROTOCOL
   },
   

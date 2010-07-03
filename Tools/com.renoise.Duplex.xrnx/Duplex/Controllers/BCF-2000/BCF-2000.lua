@@ -19,7 +19,7 @@ device_configurations:insert {
     class_name = nil,          
     display_name = "BCF-2000",
     device_name = "BCF2000",
-    control_map = "Controllers/BCF-2000/bcf-2000.xml",
+    control_map = "Controllers/BCF-2000/BCF-2000.xml",
     protocol = DEVICE_MIDI_PROTOCOL
   },
   
