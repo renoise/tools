@@ -5,13 +5,10 @@
 --[[
 
 A generic application class for Duplex
-- extend this class to build applications for the Duplex Browser
+- extend this class to build custom applications for your controller
 - provides globally accessible configuration options 
 - o start/stop applications
 - o edit control-map groups, change built-in options 
-- o browser integration: control autorun, aliases, pinned status
-- 
-
 
 --]]
 
@@ -24,10 +21,9 @@ class 'Application'
 function Application:__init()
   TRACE("Application:__init()")
   
-  -- the application is considered created 
-  -- once build_app() has been called
+  -- applications create content only when needed
   self.created = false
-
+  
   -- when the application is inactive, it should 
   -- sleep during idle time and ignore any user input
   self.active = false
@@ -60,30 +56,13 @@ function Application:__init()
   -- define a palette to enable color-picker support
   self.palette = {}
 
-  -- the options dialog
-  self.dialog = nil
 
-  -- internal stuff
-  self.view = nil
-  self.vb = renoise.ViewBuilder()
+  -- the options dialog and view
 
-end
+  self.__vb = renoise.ViewBuilder()
 
-
---------------------------------------------------------------------------------
-
--- (run once) create view and members
-
-function Application:build_app()
-  TRACE("Application:build_app()")
-  
-  --local vb = renoise.ViewBuilder()
---[[  
-  self.view = self.vb:text {
-    text = "this is a blank application",
-  }
-]]  
-  self.created = true
+  self.__options_view = nil
+  self.__options_dialog = nil
 end
 
 
@@ -94,10 +73,6 @@ end
 function Application:start_app()
   TRACE("Application:start_app()")
   
-  if not (self.created) then 
-    return 
-  end
-
   if (self.active) then
     return
   end
@@ -113,10 +88,6 @@ end
 function Application:stop_app()
   TRACE("Application:stop_app()")
   
-  if not (self.created) then 
-    return 
-  end
-
   if (not self.active) then
     return
   end
@@ -127,31 +98,12 @@ end
 
 --------------------------------------------------------------------------------
 
--- display application options
+-- create application
 
-function Application:show_app()
-  TRACE("Application:show_app()")
+function Application:build_app()
+  TRACE("Application:build_app()")
   
-  if (not self.dialog) or (not self.dialog.visible) then
-    self:__create_dialog()
-  else
-    self.dialog:show()
-  end
-end
-
-
---------------------------------------------------------------------------------
-
--- hide application options
-
-function Application:hide_app()
-  TRACE("Application:hide_app()")
-  
-  if (self.dialog) and (self.dialog.visible) then
-    self.dialog:close()
-    self.dialog = nil
-  end
-
+  self.created = true
 end
 
 
@@ -161,8 +113,41 @@ end
 
 function Application:destroy_app()
   TRACE("Application:destroy_app()")
-  self:hide_app()
+  
+  self:hide_options_dialog()
   self:stop_app()
+  
+   self.created = false
+end
+
+
+--------------------------------------------------------------------------------
+
+-- display application options
+
+function Application:show_options_dialog()
+  TRACE("Application:show_options_dialog()")
+  
+  if (not self.__options_dialog or not self.__options_dialog.visible) then
+    self.__options_dialog = renoise.app():show_custom_dialog(
+      type(self), self.__options_view)
+  else
+    self.__options_dialog:show()
+  end
+end
+
+
+--------------------------------------------------------------------------------
+
+-- hide application options
+
+function Application:hide_options_dialog()
+  TRACE("Application:hide_options_dialog()")
+  
+  if (self.__options_dialog) and (self.__options_dialog.visible) then
+    self.__options_dialog:close()
+    self.__options_dialog = nil
+  end
 end
 
 
@@ -171,16 +156,27 @@ end
 -- handle periodic updates (many times per second)
 -- nothing is done by default
 
-function Application:idle_app()
-  --[[
-  -- it's a good idea to include this check 
-  -- when doing complex stuff:
+function Application:on_idle()
+  -- TRACE("Application:on_idle()")
+  
+--[[
+  -- it's a good idea to include this check when doing complex stuff:
   if (not self.active) then 
     return 
   end
-  ]]
+]]
+
+end
 
 
+--------------------------------------------------------------------------------
+
+-- called when a new document becomes available
+
+function Application:on_new_document()
+  TRACE("Application:on_new_document()")
+  
+  -- nothing done by default
 end
 
 
@@ -189,7 +185,8 @@ end
 -- assign matching group-names
 
 function Application:apply_mappings(mappings)
-
+  TRACE("Application:apply_mappings", mappings)
+  
   for v,k in pairs(self.mappings) do
     for v2,k2 in pairs(mappings) do
       if (v==v2) then
@@ -198,7 +195,6 @@ function Application:apply_mappings(mappings)
       end
     end
   end
-
 end
 
 
@@ -207,107 +203,22 @@ end
 -- todo: assign matching options
 
 function Application:apply_options(options)
-
+  TRACE("Application:apply_options", options)
+  
 --[[
   for v,k in pairs(self.options) do
-
     for v2,k2 in pairs(options) do
-
-  self.options.play_mode.value = options.play_mode.value
-  self.options.switch_mode.value = options.switch_mode.value
-  self.options.out_of_bounds.value = options.out_of_bounds.value
+      self.options.play_mode.value = options.play_mode.value
+      self.options.switch_mode.value = options.switch_mode.value
+      self.options.out_of_bounds.value = options.out_of_bounds.value
       if (v==v2) then
-
         self.options[v].value = options[v].value
-
       end
-
     end
-
   end
-
 ]]
 
 end
-
---------------------------------------------------------------------------------
-
--- called when a new document becomes available
-
-function Application:on_new_document()
-  -- nothing done by default
-end
-
-
---------------------------------------------------------------------------------
-
-function Application:__create_dialog()
-  TRACE("Application:__create_dialog()")
-  
-  self.dialog = renoise.app():show_custom_dialog(
-    type(self), self.view
-  )
-end
-
---------------------------------------------------------------------------------
-
--- set options to default values (only locally)
--- @skip_update : don't update the dialog 
---  todo: remove the skip_update argument when we get a proper way to check 
---  if .views is defined
-
-function Application:__set_default_options(skip_update)
-  TRACE("Application:__set_default_options()")
-
-  -- set local value
-  for k,v in pairs(self.options) do
-    self.options[k].value = self.options[k].default
-
-    if(not skip_update)then
-      local elm = self.vb.views[("dpx_app_options_%s"):format(k)]
-      if(elm)then
-        if(type(elm.value)=="boolean")then -- checkbox
-          elm.value = self.options[k].items[self.options[k].default]
-        else -- popup
-          elm.value = self.options[k].default
-        end
-      end
-    end
-
-  end
-
-
-
-end
-
---------------------------------------------------------------------------------
-
--- set option value 
-
-function Application:__set_option(name,value)
-
-  -- set local value
-  for k,v in pairs(self.options) do
-    if (k==name) then
-      self.options[k].value = value
-    end
-  end
-end
-
-
---------------------------------------------------------------------------------
-
-function Application:__tostring()
-  return type(self)
-end  
-
-
---------------------------------------------------------------------------------
-
-function Application:__eq(other)
-  -- only check for object identity
-  return rawequal(self, other)
-end  
 
 
 --------------------------------------------------------------------------------
@@ -315,27 +226,30 @@ end
 -- create application options dialog
 
 function Application:build_options()
-
-  if (self.view)then
+  TRACE("Application:apply_options", build_options)
+  
+  if (self.__options_view)then
     return
   end
-
+ 
+  local vb = self.__vb 
+  
   -- create basic dialog 
-  self.view = self.vb:column{
+  self.__options_view = vb:column{
     id = 'dpx_app_rootnode',
     margin = DEFAULT_MARGIN,
     spacing = DEFAULT_MARGIN,
     style = "body",
     width=400,
-    self.vb:column{
+    vb:column{
       style = "group",
       width="100%",
-      self.vb:column{
+      vb:column{
         margin = DEFAULT_MARGIN,
         spacing = DEFAULT_SPACING,
         id = "dpx_app_mappings",
-        self.vb:row{
-          self.vb:text{
+        vb:row{
+          vb:text{
             id="dpx_app_mappings_header",
             font="bold",
             text="",
@@ -343,17 +257,17 @@ function Application:build_options()
         },
         -- mappings are inserted here
       },
-      self.vb:space{
+      vb:space{
         width=18,
       },
     },
-    self.vb:column{
+    vb:column{
       style = "group",
       width="100%",
       margin = DEFAULT_MARGIN,
       spacing = DEFAULT_SPACING,
       id = "dpx_app_options",
-      self.vb:text{
+      vb:text{
         id="dpx_app_options_header",
         font="bold",
         text="",
@@ -361,11 +275,11 @@ function Application:build_options()
       -- options are inserted here
     },
 
-    self.vb:horizontal_aligner{
+    vb:horizontal_aligner{
       mode = "justify",
 
-      self.vb:row{
-        self.vb:button{
+      vb:row{
+        vb:button{
           text="Reset",
           width=60,
           height=24,
@@ -373,7 +287,7 @@ function Application:build_options()
             self:__set_default_options()
           end
         },
-        self.vb:button{
+        vb:button{
           text="Close",
           width=60,
           height=24,
@@ -389,8 +303,8 @@ function Application:build_options()
   local elm_group,elm_header
 
   -- mappings
-  elm_group = self.vb.views.dpx_app_mappings
-  elm_header = self.vb.views.dpx_app_mappings_header
+  elm_group = vb.views.dpx_app_mappings
+  elm_header = vb.views.dpx_app_mappings_header
 
   if (self.mappings) then
     -- update header text
@@ -413,8 +327,8 @@ function Application:build_options()
   end
 
   -- options
-  elm_group = self.vb.views.dpx_app_options
-  elm_header = self.vb.views.dpx_app_options_header
+  elm_group = vb.views.dpx_app_options
+  elm_header = vb.views.dpx_app_options_header
   if (self.options)then
     -- update header text
     if (table_count(self.options)>0) then
@@ -439,43 +353,47 @@ end
 
 
 --------------------------------------------------------------------------------
+--                         Private Helper Functions
+--------------------------------------------------------------------------------
 
 -- build a row of mapping controls
 -- @return ViewBuilder view
 
 function Application:__add_mapping_row(t,key)
 
+  local vb = self.__vb
+  local row = vb:row{}
+
   local elm
-  local row = self.vb:row{}
 
   -- leave out checkbox for required maps
   if(t.required)then 
-    elm = self.vb:space{
+    elm = vb:space{
       width=18,
     }
   else
-    elm = self.vb:checkbox{
+    elm = vb:checkbox{
       value=(t.group_name~=nil),
       tooltip="Set this assignment as active/inactive",
       width=18,
     }
   end
   row:add_child(elm)
-  elm = self.vb:row{
-    self.vb:text{
+  elm = vb:row{
+    vb:text{
       text=key,
       tooltip=("Assignment description: %s"):format(t.description),
       width=70,
     },
-    self.vb:row{
+    vb:row{
       style="border",
-      self.vb:text{
+      vb:text{
         text=t.group_name,
         tooltip="The selected control-map group",
         font="mono",
         width=110,
       },
-      self.vb:button{
+      vb:button{
         text="Choose",
         tooltip="Click here to choose a control-map group for this assignment",
         width=60,
@@ -497,13 +415,15 @@ end
 
 function Application:__add_option_row(t,key)
 
+  local vb = self.__vb
+  local row = vb:row{}
+
   local elm
-  local row = self.vb:row{}
 
   if (t.items) and (type(t.items[1])=="boolean") then
     -- boolean option
-    elm = self.vb:row{
-      self.vb:checkbox{
+    elm = vb:row{
+      vb:checkbox{
         value=t.items[t.value],
         id=('dpx_app_options_%s'):format(key),
         width=18,
@@ -512,7 +432,7 @@ function Application:__add_option_row(t,key)
           self:__set_option(key,val)
         end
       },
-      self.vb:text{
+      vb:text{
         text=t.label,
         tooltip=t.description,
       },
@@ -520,13 +440,13 @@ function Application:__add_option_row(t,key)
   
   else
     -- choice
-      elm = self.vb:row{
-        self.vb:text{
+      elm = vb:row{
+        vb:text{
           text=t.label,
           --tooltip=t.label,
           width=90,
         },
-        self.vb:popup{
+        vb:popup{
           items=t.items,
           id=('dpx_app_options_%s'):format(key),
           value=t.value,
@@ -542,3 +462,62 @@ function Application:__add_option_row(t,key)
 
   return row
 end
+
+
+--------------------------------------------------------------------------------
+
+-- set options to default values (only locally)
+-- @skip_update : don't update the dialog 
+--  todo: remove the skip_update argument when we get a proper way to check 
+--  if .views is defined
+
+function Application:__set_default_options(skip_update)
+  TRACE("Application:__set_default_options()")
+
+  -- set local value
+  for k,v in pairs(self.options) do
+    self.options[k].value = self.options[k].default
+
+    if(not skip_update)then
+      local elm = vb.views[("dpx_app_options_%s"):format(k)]
+      if(elm)then
+        if(type(elm.value)=="boolean")then -- checkbox
+          elm.value = self.options[k].items[self.options[k].default]
+        else -- popup
+          elm.value = self.options[k].default
+        end
+      end
+    end
+  end
+end
+
+
+--------------------------------------------------------------------------------
+
+-- set option value 
+
+function Application:__set_option(name, value)
+
+  -- set local value
+  for k,v in pairs(self.options) do
+    if (k == name) then
+      self.options[k].value = value
+    end
+  end
+end
+
+
+--------------------------------------------------------------------------------
+
+function Application:__tostring()
+  return type(self)
+end  
+
+
+--------------------------------------------------------------------------------
+
+function Application:__eq(other)
+  -- only check for object identity
+  return rawequal(self, other)
+end  
+

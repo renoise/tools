@@ -10,7 +10,7 @@
   - supported on a wide variety of hardware
   - supports faders, buttons or dials for input
 
-  Btw: the applicetion uses colorize() to change the default colors
+  Btw: the application uses colorize() to change the default colors
 
   
   ---------------------------------------------------------
@@ -43,8 +43,6 @@
   - "include_normal_tracks"
   - "include_send_tracks"
   - "include_master_tracks"
-
-
 
 --]]
 
@@ -125,13 +123,14 @@ function MixConsole:__init(display,mappings,options)
       index = nil,
     },
   }
---[[
-  self.master_group_name = options.master_group_name
-  self.levels_group_name = options.levels_group_name
-  self.mute_group_name = options.mute_group_name
-  self.panning_group_name = options.panning_group_name
-  self.page_controls_group_name = options.page_controls_group_name
-]]
+
+  --[[
+    self.master_group_name = options.master_group_name
+    self.levels_group_name = options.levels_group_name
+    self.mute_group_name = options.mute_group_name
+    self.panning_group_name = options.panning_group_name
+    self.page_controls_group_name = options.page_controls_group_name
+  ]]
 
   -- the default number of tracks to display
   self.width = 4
@@ -147,9 +146,6 @@ function MixConsole:__init(display,mappings,options)
 
   self:apply_options(options)
   self:apply_mappings(mappings)
-
-  -- final steps
-  --self:build_app()
 end
 
 
@@ -524,8 +520,6 @@ function MixConsole:build_app()
 
   -- the finishing touch
   self:__attach_to_song(renoise.song())
-
-
 end
 
 
