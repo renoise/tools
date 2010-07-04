@@ -111,7 +111,8 @@ function MidiDevice:midi_callback(message)
       elseif (xarg.type == "dial") then
         msg.input_method = CONTROLLER_DIAL
       else
-        error("unknown msg.input_method")
+        error(("Internal Error. Please report: " ..
+          "unknown msg.input_method %s"):format(xarg.type or "nil"))
       end
 
       -- include meta-properties

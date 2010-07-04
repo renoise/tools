@@ -20,6 +20,7 @@ function Device:__init(name, message_stream, protocol)
   TRACE('Device:__init',name, message_stream, protocol)
 
   assert(name and message_stream and protocol, 
+    "Internal Error. Please report: " ..
     "expected a valid name, stream and protocol for a device")
 
   -- for MIDI devices, name is equal to the port name 

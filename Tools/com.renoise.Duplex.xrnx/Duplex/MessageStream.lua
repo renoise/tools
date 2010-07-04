@@ -98,7 +98,8 @@ function MessageStream:add_listener(obj,evt_type,handler)
     TRACE("MessageStream:hold handler added")
   
   else
-    error(("unknown evt_type %d"):format(evt_type))
+    error(("Internal Error. Please report: " ..
+      "unknown evt_type '%s'"):format(tostring(evt_type) or "nil"))
   end
 
   TRACE("MessageStream:Number of listeners after addition:",
@@ -139,7 +140,8 @@ function MessageStream:remove_listener(obj,evt_type)
     end 
  
   else
-     error(("unknown evt_type %d"):format(evt_type))
+     error(("Internal Error. Please report: " .. 
+      "unknown evt_type '%s'"):format(tostring(evt_type) or "nil"))
   end
     
   return false
@@ -205,7 +207,8 @@ function MessageStream:input_message(msg)
     end
 
   else
-    error("unknown msg.input_method")
+    error(("Internal Error. Please report: " ..
+      "unknown msg.input_method '%s'"):format(msg.input_method or "nil"))
   end
 end
 
