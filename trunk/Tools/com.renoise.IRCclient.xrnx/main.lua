@@ -22,7 +22,11 @@ function print_server_replies()
 --the chat dialog. (if not switch_channel status is up)
   if (not irc_dialog or not irc_dialog.visible) and status_dialog_mode then
     stop_message_engine()
-    return
+    if chat_dialog or chat_dialog.visible then
+      local channel_line = os.date("%c").." [CLIENT] Disconnected from server."
+      vb_channel.views.channel_output_frame:add_line(channel_line)
+      vb_channel.views.channel_output_frame:scroll_to_last_line()
+    end
   else
     if (not chat_dialog or not chat_dialog.visible) and 
        (not status_dialog_mode) and (not switch_channel) then
