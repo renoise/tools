@@ -154,8 +154,9 @@ function Browser:set_device(device_display_name, start_running)
         end
       end
       
-      assert( ("Internal Error: found no configuration for " .. 
-        "device '%s'"):format(device_display_name))
+      assert(configuration, ("Internal Error. Please report: " ..
+        "found no configuration for device '%s'"):format(
+        device_display_name))
 
       -- thee may be no configs for the device
       self:set_configuration(configuration, start_running)
@@ -199,8 +200,8 @@ function Browser:show()
   TRACE("Browser:show()")
   
   if (not self.__dialog or not self.__dialog.visible) then
-    assert(self.__content_view, 
-      "Internal Error: browser always needs a valid content view")
+    assert(self.__content_view, "Internal Error. Please report: " .. 
+      "browser always needs a valid content view")
     
     self.__dialog = renoise.app():show_custom_dialog(
       "Duplex Browser", self.__content_view)
@@ -830,8 +831,8 @@ function BrowserProcess:instantiate(configuration)
   TRACE("BrowserProcess:instantiate:", 
     configuration.device.display_name, configuration.name)
 
-  assert(not self:instantiated(), 
-    "Internal Error: browser process already instantiated")
+  assert(not self:instantiated(), "Internal Error. Please report: " .. 
+    "browser process already instantiated")
 
 
   ---- validate the configuration (help controller developers to spot bugs)
@@ -1004,13 +1005,11 @@ end
 function BrowserProcess:start()
   TRACE("BrowserProcess:start")
 
-  assert(self:instantiated(), 
-    "Internal Error: trying to start a process " ..
-    "which was not instantiated")
+  assert(self:instantiated(), "Internal Error. Please report: " .. 
+    "trying to start a process which was not instantiated")
 
-  assert(not self:running(), 
-    "Internal Error: trying to start a browser " ..
-    "process which is already running")
+  assert(not self:running(), "Internal Error. Please report: " ..
+    "trying to start a browser process which is already running")
   
   local succeeded = true
   
@@ -1042,13 +1041,11 @@ end
 function BrowserProcess:stop()
   TRACE("BrowserProcess:stop")
 
-  assert(self:instantiated(), 
-    "Internal Error: trying to stop a process " ..
-    "which was not instantiated")
+  assert(self:instantiated(), "Internal Error. Please report: " ..
+    "trying to stop a process which was not instantiated")
 
-  assert(self:running(), 
-    "Internal Error: trying to stop a browser " ..
-    "process which is not running")
+  assert(self:running(), "Internal Error. Please report: " ..
+    "trying to stop a browser process which is not running")
   
   for _,app in pairs(self.__applications) do
     app:stop_app()
@@ -1072,13 +1069,12 @@ end
 function BrowserProcess:show_control_surface(parent_view)
   TRACE("BrowserProcess:show_control_surface")
 
-  assert(self:instantiated(), 
-    "Internal Error: trying to show a control map" ..
-    "GUi which was not instantiated")
+  assert(self:instantiated(), "Internal Error. Please report: " ..
+    "trying to show a control map GUI which was not instantiated")
   
   assert(not self:control_surface_visible(), 
-    "Internal Error: trying to show a control map " ..
-    "GUI which is already shown")
+    "Internal Error. Please report: " ..
+    "trying to show a control map GUI which is already shown")
     
   -- add the device GUI to the browser GUI
   self.__control_surface_parent_view = parent_view
@@ -1103,8 +1099,8 @@ function BrowserProcess:hide_control_surface()
   TRACE("BrowserProcess:hide_control_surface")
 
   assert(self:instantiated() and self:control_surface_visible(), 
-    "Internal Error: trying to hide a control map " ..
-    "GUI which was not shown")
+    "Internal Error. Please report: " .. 
+    "trying to hide a control map GUI which was not shown")
     
   -- remove the device GUI from the browser GUI
   self.__control_surface_parent_view:remove_child(

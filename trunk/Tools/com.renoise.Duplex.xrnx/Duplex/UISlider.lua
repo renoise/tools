@@ -174,7 +174,9 @@ function UISlider:determine_index_by_pos(column,row)
     idx = row
     offset = self.y_pos
   else
-    assert(self.orientation == HORIZONTAL)
+    assert(self.orientation == HORIZONTAL, 
+      "Internal Error. Please report: unexpected UI orientation")
+      
     idx = column
     offset = self.x_pos
   end
@@ -202,7 +204,9 @@ function UISlider:set_size(size)
   if (self.orientation == VERTICAL) then
     UIComponent.set_size(self, 1, size)
   else
-    assert(self.orientation == HORIZONTAL)   
+    assert(self.orientation == HORIZONTAL, 
+      "Internal Error. Please report: unexpected UI orientation")
+      
     UIComponent.set_size(self, size, 1)
   end
 

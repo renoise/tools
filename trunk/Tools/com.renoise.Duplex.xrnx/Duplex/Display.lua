@@ -22,7 +22,9 @@ class 'Display'
 function Display:__init(device)
   TRACE('Display:__init')
 
-  assert(device, "expected a valid device for a display")
+  assert(device, "Internal Error. Please report: " ..
+    "expected a valid device for a display")
+  
   self.device = device  
 
   --  viewbuilder stuff
@@ -226,7 +228,8 @@ function Display:set_parameter(elm, obj, point)
       end
 ]]    
     else
-      error(("unknown or unhandled msg_type: %s"):format(msg_type or "nil"))
+      error(("Internal Error. Please report: " ..
+        "unknown or unhandled msg_type: '%s'"):format(msg_type or "nil"))
     end
   end
 
@@ -261,8 +264,8 @@ function Display:set_parameter(elm, obj, point)
       widget:add_notifier(self.ui_notifiers[elm.id])
     
     else
-      error(("internal error: unexpected or unknown "..
-        "widget type '%s'"):format(type(widget)))
+      error(("Internal Error. Please report: " .. 
+        "unexpected or unknown widget type '%s'"):format(type(widget)))
     end
   end 
 end
@@ -321,7 +324,8 @@ function Display:generate_message(value, metadata)
     msg.input_method = CONTROLLER_DIAL
 
   else
-    error("unknown metadata.type")
+    error(("Internal Error. Please report: " .. 
+      "unknown metadata.type '%s'"):format(metadata.type or "nil"))
   end
 
   -- include additional useful meta-properties
@@ -471,10 +475,9 @@ function Display:walk_table(t, done, deep)
               }
             else
 
---rprint(t[key].xarg)
-
               assert(t[key].xarg.orientation == "horizontal",
-                "unexpected orientation")
+                "Internal Error. Please report: unexpected UI orientation")
+              
               view_obj.view = self.vb:slider {
                 id  =t[key].xarg.id,
                 min = tonumber(view_obj.meta.minimum),
@@ -535,7 +538,8 @@ function Display:walk_table(t, done, deep)
           }
         else
           assert(orientation == "horizontal",
-            "unexpected orientation")
+             "Internal Error. Please report: unexpected UI orientation")
+             
           view_obj.view = self.vb:row{
             style = "group",
             id = grid_id,
@@ -613,7 +617,9 @@ function Display:__quantize_widget_color(color)
 
   local function quantize_color(value, color_space)
     if (color_space and color_space > 0) then
-      assert(color_space <= 256, "invalid device colorspace value")
+      assert(color_space <= 256, "Internal Error. Please report: " .. 
+      "invalid device colorspace value")
+      
       return math.floor(value / (256 / color_space)) * (256 / color_space)
     else
       return 0

@@ -114,7 +114,8 @@ function UISpinner:do_press()
       end
     
     else
-      error("internal error: expected an index of 1 or 2")
+      error(("Internal Error. Please report: " .. 
+        "expected a spinner index of 1 or 2"))
     end
 
     if (changed) then
@@ -174,8 +175,8 @@ end
 
 function UISpinner:set_index(idx, skip_event_handler)
   assert(idx >= self.minimum and idx <= self.maximum, 
-    "invalid spinner index")
-  
+    "Internal Error. Please report: invalid index for a spinner")
+
   local changed = false
   
   if (self.index ~= idx) then
@@ -208,7 +209,9 @@ function UISpinner:determine_index_by_pos(column, row)
     pos = row
     offset = self.y_pos
   else
-    assert(self.orientation == HORIZONTAL)
+   assert(self.orientation == HORIZONTAL, 
+      "Internal Error. Please report: unexpected UI orientation")
+      
     pos = column
     offset = self.x_pos
   end
@@ -268,7 +271,9 @@ function UISpinner:draw()
     self.canvas:write(point2,2,1)
   
   else
-    assert(self.orientation == VERTICAL)
+    assert(self.orientation == VERTICAL, 
+      "Internal Error. Please report: unexpected UI orientation")
+
     self.canvas:write(point1,1,1)
     self.canvas:write(point2,1,2)
   end
