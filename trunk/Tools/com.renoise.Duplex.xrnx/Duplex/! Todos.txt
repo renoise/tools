@@ -6,39 +6,56 @@ Duplex Changelog, Notes & TODOs
 Bugs
 --------------------------------------------------------------------------------
 
-* taktik: function BrowserProcess:__finalize() causes a pure virtual function 
-  call error when destroying the scripting engine
-
-* danoise: Multiple grid/column group layouts are broken (use Ohm64 for testing). 
+* [danoise]: Multiple grid/column group layouts are broken (use Ohm64 for testing). 
   Groups are not closed before the next one is encountered
 
-* MixConsole: Ohm64/VolumeLeft is used for mute switching? 
+* [danoise]: MixConsole: Ohm64/VolumeLeft is used for mute switching? 
 
-* Controls which are not or no longer assigned to document values, should 
-  be cleared, reset (when for example using less than 8 tracks in Renoise)
-  
+* [taktik]: function BrowserProcess:__finalize() causes a pure virtual function 
+  call error when destroying the scripting engine
+
+
 --------------------------------------------------------------------------------
 In Progress
 --------------------------------------------------------------------------------
 
-* Bjorn: Make MessageStream detect more event types: release, etc.
+* [kraken]: finalize Apps and configs for the OHM
 
-* Eduard: Implement Behringer BFC and BFR classes, finish the control maps
+* [taktik + danoise]: implement OSC server message cracking for the Monome, add 
+  support for the Monome
 
-* Eduard: Relative MIDI controller message support for encoders
+* [taktik]: Document or add option to send the default presets we use for the 
+  controllers via a sysex dump
 
-* Eduard: find and load controllers and apps dynamically
+* [taktik]: Implement Behringer BFC and BFR classes, finish the control maps
 
+* [taktik]: find and load controllers and apps dynamically
+
+* ???: New Applications
+  o FX parameter Mixer (control currently selected FX)
+  o Transport (control Play/Start/Stop/Bla)
+
+* ???: MixConsole: 
+  o Support "OFF" and "MUTE" modes (which depend on Renoise preference)
+
+* ???: Relative MIDI controller message support for encoders
+
+* ???: Add an persistant option to "autostart" configurations, so users don't 
+  have to launch and configure Duplex over and over again for "their" setup
+  
 
 ================================================================================
 Planned / Todo
 ================================================================================
 
-* New Applications
-  o FX parameter Mixer (control currently selected FX)
+* Add support for Pitchbend messages
+  Note: We do need to pass over the MIDI channel in the control maps here as 
+  well. This maybe will also be needed for CC messages, because some controllers 
+  might use multiple channels within a single preset. For PB this is definitely 
+  needed, cause there are only 16 PB streams (there is no PB number, like with 
+  CC). i.g: The Mackie control uses 8 PBs for its main volume faders...
 
-* MixConsole: 
-  o Support "OFF" and "MUTE" modes (which depend on Renoise preference)
+* Make MessageStream detect more event types: release, etc.
 
 * Application configuration panel:
   o List the names of application groups, each with "choose" button that open
@@ -58,8 +75,6 @@ Planned / Todo
   o OSCDevice: specify the prefix (could be /renoise or /duplex always?)
   o Advanced settings tab (i.e. control brightness, contrast) - expose these 
     settings via generic "options" table in the device class
-
-* OSC Device / protocol support
 
 * ControlMap: <Page> node, indicates that multiple pages with identical layout
   can be expected (useful for access to the full mapping/MIDI implementation 
