@@ -3,8 +3,8 @@
 ----------------------------------------------------------------------------]]--
 
 
-local DEVICE_NOT_AVAILABLE_POSTFIX = " (N/A)"
-local CONFIGURATION_RUNNING_POSTFIX = " (running)"
+local NOT_AVAILABLE_POSTFIX = " (N/A)"
+local RUNNING_POSTFIX = " (running)"
 
 
 --==============================================================================
@@ -91,9 +91,9 @@ function Browser:available_devices()
   -- then all others that are available in duplex but not installed
   for _,config in pairs(self.__available_configurations) do
     if (not result:find(config.device.display_name) and
-        not result:find(config.device.display_name .. DEVICE_NOT_AVAILABLE_POSTFIX))
+        not result:find(config.device.display_name .. NOT_AVAILABLE_POSTFIX))
     then
-      result:insert(config.device.display_name .. DEVICE_NOT_AVAILABLE_POSTFIX)
+      result:insert(config.device.display_name .. NOT_AVAILABLE_POSTFIX)
     end
   end
 
@@ -118,7 +118,7 @@ function Browser:set_device(device_display_name, start_running)
   
   if (self.__device_name ~= device_display_name) then
     
-    self.__device_name = self:__strip_na_postfix(device_display_name)
+    self.__device_name = self:__strip_postfixes(device_display_name)
     self.__configuration_name = "None"
   
     if (device_display_name == "None") then
@@ -183,6 +183,8 @@ function Browser:set_device(device_display_name, start_running)
     available_configuration_names
   
   self.__vb.views.dpx_browser_rootnode:resize()
+  
+  self:__decorate_device_list()
   self:__decorate_configuration_list()
    
   self.__suppress_notifiers = suppress_notifiers
@@ -353,6 +355,8 @@ function Browser:set_configuration(configuration, start_running)
     (process and process:running()) or false
   
   self.__vb.views.dpx_browser_rootnode:resize()
+  
+  self:__decorate_device_list()
   self:__decorate_configuration_list()
 
   self.__suppress_notifiers = suppress_notifiers
@@ -378,6 +382,9 @@ function Browser:start_configuration()
   self.__vb.views.dpx_browser_configuration_running_checkbox.value = 
    (process and process:running()) or false
 
+  self:__decorate_device_list()
+  self:__decorate_configuration_list()
+  
   self.__suppress_notifiers = suppress_notifiers
 end
   
@@ -401,6 +408,9 @@ function Browser:stop_configuration()
   self.__vb.views.dpx_browser_configuration_running_checkbox.value = 
    (process and process:running()) or false
 
+  self:__decorate_device_list()
+  self:__decorate_configuration_list()
+  
   self.__suppress_notifiers = suppress_notifiers
 end
 
@@ -430,33 +440,22 @@ end
 -------  private helper functions
 --------------------------------------------------------------------------------
 
--- removes DEVICE_NOT_AVAILABLE_POSTFIX from the passed name, if present
+-- removes NOT_AVAILABLE_POSTFIX and RUNNING_POSTFIX from the passed name
 
-function Browser:__strip_na_postfix(name)
-  TRACE("Browser:__strip_na_postfix", name)
-
-  local plain_find = true
-  if (name:find(DEVICE_NOT_AVAILABLE_POSTFIX, 1, plain_find)) then
-    return name:sub(1, #name - #DEVICE_NOT_AVAILABLE_POSTFIX)
-  else
-    return name
-  end
-end
-
-
---------------------------------------------------------------------------------
-
--- removes CONFIGURATION_RUNNING_POSTFIX from the passed name, if present
-
-function Browser:__strip_running_postfix(name)
-  TRACE("Browser:__strip_running_postfix", name)
+function Browser:__strip_postfixes(name)
+  TRACE("Browser:__strip_postfixes", name)
 
   local plain_find = true
-  if (name:find(CONFIGURATION_RUNNING_POSTFIX, 1, plain_find)) then
-    return name:sub(1, #name - #CONFIGURATION_RUNNING_POSTFIX)
-  else
-    return name
+  
+  if (name:find(RUNNING_POSTFIX, 1, plain_find)) then
+    name = name:sub(1, #name - #RUNNING_POSTFIX)
   end
+  
+  if (name:find(NOT_AVAILABLE_POSTFIX, 1, plain_find)) then
+    name = name:sub(1, #name - #NOT_AVAILABLE_POSTFIX)
+  end
+  
+  return name
 end
 
 
@@ -502,11 +501,11 @@ end
 function Browser:__device_index_by_name(device_display_name)
   TRACE("Browser:__device_index_by_name", device_display_name)
   
-  device_display_name = self:__strip_na_postfix(device_display_name)
+  device_display_name = self:__strip_postfixes(device_display_name)
   
   local popup = self.__vb.views.dpx_browser_input_device
   for index, name in pairs(popup.items)do
-    if (device_display_name == self:__strip_na_postfix(name)) then
+    if (device_display_name == self:__strip_postfixes(name)) then
       return index
     end
   end
@@ -523,11 +522,11 @@ end
 function Browser:__configuration_index_by_name(config_name)
   TRACE("Browser:__configuration_index_by_name", config_name)
   
-  config_name = self:__strip_running_postfix(config_name)
+  config_name = self:__strip_postfixes(config_name)
   
   local popup = self.__vb.views.dpx_browser_configurations
   for index, name in pairs(popup.items)do
-    if (config_name == self:__strip_running_postfix(name)) then
+    if (config_name == self:__strip_postfixes(name)) then
       return index
     end
   end
@@ -579,6 +578,38 @@ end
 
 --------------------------------------------------------------------------------
 
+-- add/remove the "running" postfix for relevant devices.
+-- called when we start/stop apps, and choose a device/config
+
+function Browser:__decorate_device_list()
+  TRACE("Browser:__decorate_device_list:")
+
+  local device_list = self:available_devices()
+  
+  for index,device_name in pairs(device_list) do
+    device_name = self:__strip_postfixes(device_name) 
+    
+    local running = false
+    for _,process in pairs(self.__processes) do
+      if (process.configuration.device.display_name == device_name) then
+        if (process:running()) then
+          running = true
+          break
+        end
+      end
+    end
+  
+    if (running) then
+      device_list[index] = device_list[index] .. RUNNING_POSTFIX
+    end
+  end
+
+  self.__vb.views.dpx_browser_input_device.items = device_list
+end
+
+
+--------------------------------------------------------------------------------
+
 -- add/remove the "running" postfix for relevant configurations.
 -- called when we start/stop apps, and choose a device/config
 
@@ -600,7 +631,7 @@ function Browser:__decorate_configuration_list()
     end
   
     config_list:insert(running and 
-      (configuration_name .. CONFIGURATION_RUNNING_POSTFIX) or
+      (configuration_name .. RUNNING_POSTFIX) or
       (configuration_name)
     )
   end
@@ -646,10 +677,10 @@ function Browser:__create_content_view()
                 -- revert to the last used device
                 self:set_device(self.__device_name)
               else
-                self:set_device(self:__strip_na_postfix(device_list[e]))
+                self:set_device(self:__strip_postfixes(device_list[e]))
               end
             else
-              self:set_device(self:__strip_na_postfix(device_list[e]))
+              self:set_device(self:__strip_postfixes(device_list[e]))
             end
           end
         end
