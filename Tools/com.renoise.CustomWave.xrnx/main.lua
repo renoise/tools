@@ -219,7 +219,12 @@ end
 
 function new_song_loaded()
 
-	dialog:close();
+	if dialog.visible then
+		dialog:close();
+		if renoise.tool().app_new_document_observable:has_notifier(new_song_loaded) then
+			renoise.tool().app_new_document_observable:add_notifier(new_song_loaded)
+		end
+	end
 
 end
 
