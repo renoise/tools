@@ -29,7 +29,7 @@ local function show_dialog(config)
     browser:set_configuration(config, start_running)
   end
   
-  browser:show_app()
+  browser:show()
 end
 
 
@@ -113,7 +113,7 @@ renoise.tool():add_keybinding {
 
 renoise.tool().app_idle_observable:add_notifier(function()
   if (browser) then
-    browser:idle_app()
+    browser:on_idle()
   end
 end)
 

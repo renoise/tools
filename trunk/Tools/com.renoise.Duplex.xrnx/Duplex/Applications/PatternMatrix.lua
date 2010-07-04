@@ -34,10 +34,8 @@
   [] <- "stop" (any input)
   [] <- "rec" (any input)
 
-
-
-
 --]]
+
 
 --==============================================================================
 
@@ -217,12 +215,6 @@ function PatternMatrix:__init(display,mappings,options)
 
   self:apply_options(options)
   self:apply_mappings(mappings)
-
-
-  -- final steps
-
-  --self:build_app()
-
 
 end
 
@@ -759,7 +751,7 @@ end
 
 -- periodic updates: handle "un-observable" things here
 
-function PatternMatrix:idle_app()
+function PatternMatrix:on_idle()
 --TRACE("PatternMatrix:idle_app()",self.__update_slots_requested)
   
   if (not self.active) then 

@@ -13,14 +13,12 @@ local CONFIGURATION_RUNNING_POSTFIX = " (running)"
 -- and shows the virtual UI for them. More than one configuration can be 
 -- active and running for multiple devices.
 
-class 'Browser' (Application)
+class 'Browser'
 
 function Browser:__init(initial_configuration)
   TRACE("Browser:__init")
 
-  Application.__init(self)
-
-
+  
   ---- properties
 
   -- list of duplex device configuration definitions
@@ -44,16 +42,19 @@ function Browser:__init(initial_configuration)
   
   ---- components
   
-    -- view builder that we do use for all our views
+  -- view builder that we do use for all our views
   self.__vb = renoise.ViewBuilder()
   
+  -- referenc eto the main dialog that we create
+  self.__dialog = nil
   
-  ---- start
 
-  self:build_app()
+  ---- build the GUI
 
-  -- the browser is always active
-  Application.start_app(self)
+  self:__create_content_view()
+
+  
+  ---- activate default config
 
   -- select none by default
   self:set_device("None")
@@ -185,6 +186,51 @@ function Browser:set_device(device_display_name, start_running)
   self:__decorate_configuration_list()
    
   self.__suppress_notifiers = suppress_notifiers
+end
+
+
+--------------------------------------------------------------------------------
+
+-- activates and shows the dialog, or brings the active on to front
+
+function Browser:show()
+  TRACE("Browser:show()")
+  
+  if (not self.__dialog or not self.__dialog.visible) then
+    assert(self.__content_view, 
+      "Internal Error: browser always needs a valid content view")
+    
+    self.__dialog = renoise.app():show_custom_dialog(
+      "Duplex Browser", self.__content_view)
+  else
+    self.__dialog:show()
+  end
+end
+
+
+--------------------------------------------------------------------------------
+
+-- forward idle notification to all active processes
+
+function Browser:on_idle()
+  -- TRACE("Browser:on_idle()")
+  
+  for _,process in pairs(self.__processes) do
+    process:on_idle()
+  end
+end
+
+
+--------------------------------------------------------------------------------
+
+-- forward new document notification to all active processes
+
+function Browser:on_new_document()
+  TRACE("Browser:on_new_document()")
+
+  for _,process in pairs(self.__processes) do
+    process:new_document()
+  end
 end
 
 
@@ -381,153 +427,6 @@ end
 
 
 --------------------------------------------------------------------------------
--------  Application class methods
---------------------------------------------------------------------------------
-
--- build and assign the application view
-
-function Browser:build_app()
-  Application.build_app(self)
-
-  local device_list = self:available_devices()
-
-  local vb = self.__vb
-  
-  self.view = vb:column{
-    id = 'dpx_browser_rootnode',
-    style = "body",
-    width = 400,
-    
-    -- device chooser
-    vb:row {
-      margin = DEFAULT_MARGIN,
-      vb:text {
-        text = "Device",
-        width = 60,
-      },
-      vb:popup {
-        id = 'dpx_browser_input_device',
-        items = device_list,
-        width = 200,
-        notifier = function(e)
-          if (not self.__suppress_notifiers) then
-            if (e == 1 and self:__process_running()) then -- "None"
-              local choice = renoise.app():show_prompt("", 
-                "This will close all open devices. Are you sure?", 
-                {"OK","Cancel"})
-                    
-              if (choice == "Cancel") then
-                -- revert to the last used device
-                self:set_device(self.__device_name)
-              else
-                self:set_device(self:__strip_na_postfix(device_list[e]))
-              end
-            else
-              self:set_device(self:__strip_na_postfix(device_list[e]))
-            end
-          end
-        end
-      },
-      vb:button {
-        id = 'dpx_browser_device_settings',
-        text = "Settings",
-        width = 60,
-        notifier = function(e)
-          renoise.app():show_warning("Device settings not yet implemented")
-        end
-      },
-    },
-
-    -- configuration chooser
-    vb:row {
-      margin = DEFAULT_MARGIN,
-      id = 'dpx_browser_configuration_row',
-      visible = false,
-      vb:text {
-          text = "Config",
-          width = 60,
-      },
-      vb:popup {
-        id = 'dpx_browser_configurations',
-        items = table.create{"None"},
-        value = 1,
-        width = 200,
-        notifier = function(e)
-          if (not self.__suppress_notifiers) then
-            
-            local config_list = 
-              self:__available_configurations_for_device(self.__device_name)
-            
-            -- when the old config was running, run the new one as well
-            local auto_start = (self:__current_process() and
-              self:__current_process():running())
-            
-            self:set_configuration(config_list[e], auto_start)
-          end
-        end
-      },
-      --[[ taktik: temporarily removed
-      vb:button{
-        id="dpx_browser_configurations_options",
-        text = "Options",
-        width=60,
-        notifier=function(e)
-          renoise.app():show_warning("Device settings not yet implemented")
-          -- self:show_configuration_options()
-        end
-      },]]
-      vb:row {
-        vb:checkbox {
-          value = false,
-          id = 'dpx_browser_configuration_running_checkbox',
-          notifier = function(v)
-            if (not self.__suppress_notifiers) then
-              if (v == true) then
-                self:start_configuration()
-              else
-                self:stop_configuration()
-              end
-            end
-          end
-        },
-        vb:text {
-          text = "Run",
-        }
-      }
-    }
-  }
-end
-
-
---------------------------------------------------------------------------------
-
--- forward idle notification to all active processes, apps and the display
-
-function Browser:idle_app()
-  -- TRACE("Browser:idle_app()")
-
-  if (self.active) then
-    for _,process in pairs(self.__processes) do
-      process:on_idle()
-    end
-  end
-end
-
-
---------------------------------------------------------------------------------
-
--- forward new document notification to all active processes, apps
-
-function Browser:on_new_document()
-  TRACE("Browser:on_new_document()")
-
-  for _,process in pairs(self.__processes) do
-    process:new_document()
-  end
-end
-
-
---------------------------------------------------------------------------------
 -------  private helper functions
 --------------------------------------------------------------------------------
 
@@ -707,6 +606,122 @@ function Browser:__decorate_configuration_list()
   end
 
   self.__vb.views.dpx_browser_configurations.items = config_list
+end
+
+
+--------------------------------------------------------------------------------
+
+-- build and assign the application dialog
+
+function Browser:__create_content_view()
+  
+  local device_list = self:available_devices()
+
+  local vb = self.__vb
+  
+  self.__content_view = vb:column{
+    id = 'dpx_browser_rootnode',
+    style = "body",
+    width = 400,
+    
+    -- device chooser
+    vb:row {
+      margin = DEFAULT_MARGIN,
+      vb:text {
+        text = "Device",
+        width = 60,
+      },
+      vb:popup {
+        id = 'dpx_browser_input_device',
+        items = device_list,
+        width = 200,
+        notifier = function(e)
+          if (not self.__suppress_notifiers) then
+            if (e == 1 and self:__process_running()) then -- "None"
+              local choice = renoise.app():show_prompt("", 
+                "This will close all open devices. Are you sure?", 
+                {"OK","Cancel"})
+                    
+              if (choice == "Cancel") then
+                -- revert to the last used device
+                self:set_device(self.__device_name)
+              else
+                self:set_device(self:__strip_na_postfix(device_list[e]))
+              end
+            else
+              self:set_device(self:__strip_na_postfix(device_list[e]))
+            end
+          end
+        end
+      },
+      vb:button {
+        id = 'dpx_browser_device_settings',
+        text = "Settings",
+        width = 60,
+        notifier = function(e)
+          renoise.app():show_warning("Device settings not yet implemented")
+        end
+      },
+    },
+
+    -- configuration chooser
+    vb:row {
+      margin = DEFAULT_MARGIN,
+      id = 'dpx_browser_configuration_row',
+      visible = false,
+      vb:text {
+          text = "Config",
+          width = 60,
+      },
+      vb:popup {
+        id = 'dpx_browser_configurations',
+        items = table.create{"None"},
+        value = 1,
+        width = 200,
+        notifier = function(e)
+          if (not self.__suppress_notifiers) then
+            
+            local config_list = 
+              self:__available_configurations_for_device(self.__device_name)
+            
+            -- when the old config was running, run the new one as well
+            local auto_start = (self:__current_process() and
+              self:__current_process():running())
+            
+            self:set_configuration(config_list[e], auto_start)
+          end
+        end
+      },
+      --[[ taktik: temporarily removed
+      vb:button{
+        id="dpx_browser_configurations_options",
+        text = "Options",
+        width=60,
+        notifier=function(e)
+          renoise.app():show_warning("Device settings not yet implemented")
+          -- self:show_configuration_options()
+        end
+      },]]
+      vb:row {
+        vb:checkbox {
+          value = false,
+          id = 'dpx_browser_configuration_running_checkbox',
+          notifier = function(v)
+            if (not self.__suppress_notifiers) then
+              if (v == true) then
+                self:start_configuration()
+              else
+                self:stop_configuration()
+              end
+            end
+          end
+        },
+        vb:text {
+          text = "Run",
+        }
+      }
+    }
+  }
 end
 
 
@@ -1093,7 +1108,7 @@ function BrowserProcess:on_idle()
   
     -- then refresh the display 
     for _,app in pairs(self.__applications) do
-      app:idle_app()
+      app:on_idle()
     end
   end
 end
