@@ -603,90 +603,21 @@ Main Dialog
         local cur_octave = renoise.song().transport.octave    
         local fnote = cur_octave
 
-        if (mod == "" and (key == "z" or key == "q" or key == "comma")) then
-          if (key == "q" or key == "comma") then 
-            fnote = fnote + 1
+        if mod == "" then
+          local found = false
+          for ckey = 1, 12 do
+
+            if key == high_key[ckey] or key == mid_key[ckey] then
+              fnote = fnote + 1
+            end
+            if key == low_key[ckey] or key == high_key[ckey] or key == mid_key[ckey] then
+              fnote = key_matrix[ckey]..fnote
+              vb.views[fnote].value = not (vb.views[fnote].value and true)
+              break
+            end
+
           end
-          
-          fnote = "C_"..fnote
-          vb.views[fnote].value = not (vb.views[fnote].value and true)
-        end
-        if (mod == "" and (key == "s" or key == "l" or key =="2")) then
-          if (key == "l" or key == "2") then 
-            fnote = fnote + 1
-          end
-          fnote = "Cf"..fnote
-          vb.views[fnote].value = not (vb.views[fnote].value and true)
-        end
-        if (mod == "" and (key == "x" or key == "period" or key == "w")) then
-          if (key == "period" or key == "w") then 
-            fnote = fnote + 1
-          end
-          fnote = "D_"..fnote
-          vb.views[fnote].value = not (vb.views[fnote].value and true)
-        end
-        if (mod == "" and (key == "d" or key == ";" or key == "3")) then
-          if (key == ";" or key == "3") then 
-            fnote = fnote + 1
-          end
-          fnote = "Df"..fnote
-          vb.views[fnote].value = not (vb.views[fnote].value and true)
-        end
-        if (mod == "" and (key == "c" or key == "/" or key == "e")) then
-          if (key == "/" or key == "e") then 
-            fnote = fnote + 1
-          end
-          fnote = "E_"..fnote
-          vb.views[fnote].value = not (vb.views[fnote].value and true)
-        end
-        if (mod == "" and (key == "v" or key == "r")) then
-          if (key == "r") then 
-            fnote = fnote + 1
-          end
-          fnote = "F_"..fnote
-          vb.views[fnote].value = not (vb.views[fnote].value and true)
-        end
-        if (mod == "" and (key == "g" or key == "5")) then
-          if (key == "5") then 
-            fnote = fnote + 1
-          end
-          fnote = "Ff"..fnote
-          vb.views[fnote].value = not (vb.views[fnote].value and true)
-        end
-        if (mod == "" and (key == "b" or key == "t")) then
-          if (key == "t") then 
-            fnote = fnote + 1
-          end
-          fnote = "G_"..fnote
-          vb.views[fnote].value = not (vb.views[fnote].value and true)
-        end
-        if (mod == "" and (key == "h" or key == "6")) then
-          if (key == "6") then 
-            fnote = fnote + 1
-          end
-          fnote = "Gf"..fnote
-          vb.views[fnote].value = not (vb.views[fnote].value and true)
-        end
-        if (mod == "" and (key == "n" or key == "y")) then
-          if (key == "y") then 
-            fnote = fnote + 1
-          end
-          fnote = "A_"..fnote
-          vb.views[fnote].value = not (vb.views[fnote].value and true)
-        end
-        if (mod == "" and (key == "j" or key == "7")) then
-          if (key == "7") then 
-            fnote = fnote + 1
-          end
-          fnote = "Af"..fnote
-          vb.views[fnote].value = not (vb.views[fnote].value and true)
-        end
-        if (mod == "" and (key == "m" or key == "u")) then
-          if (key == "u") then 
-            fnote = fnote + 1
-          end
-          fnote = "B_"..fnote
-          vb.views[fnote].value = not (vb.views[fnote].value and true)
+
         end
 
         if (mod == "" and key == "esc") then

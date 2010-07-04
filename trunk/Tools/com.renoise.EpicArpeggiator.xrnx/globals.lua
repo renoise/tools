@@ -144,6 +144,15 @@ note_states = {}
 octave_states = {}
 
 
+--Key_handler tables
+low_key = {'z','s','x','d','c','v','g','b','h','n','j','m'}
+mid_key = {'comma','l','period',';','/','fill','fill','fill','fill','fill','fill','fill'}
+high_key = {'q','2','w','3','e','r','5','t','6','y','7','u'}
+key_matrix = {
+   [1]='C_', [2]='Cf', [3]='D_', [4]='Df', [5]='E_', [6]='F_',
+   [7]='Ff', [8]='G_', [9]='Gf', [10]='A_', [11]='Af', [12]='B_'
+}
+
 
 --[[----------------Helper functions-----------------------------]]
 
