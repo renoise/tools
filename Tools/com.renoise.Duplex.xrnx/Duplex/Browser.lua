@@ -69,6 +69,51 @@ end
 
 --------------------------------------------------------------------------------
 
+-- activates and shows the dialog, or brings the active on to front
+
+function Browser:show()
+  TRACE("Browser:show()")
+  
+  if (not self.__dialog or not self.__dialog.visible) then
+    assert(self.__content_view, "Internal Error. Please report: " .. 
+      "browser always needs a valid content view")
+    
+    self.__dialog = renoise.app():show_custom_dialog(
+      "Duplex Browser", self.__content_view)
+  else
+    self.__dialog:show()
+  end
+end
+
+
+--------------------------------------------------------------------------------
+
+-- forward idle notification to all active processes
+
+function Browser:on_idle()
+  -- TRACE("Browser:on_idle()")
+  
+  for _,process in pairs(self.__processes) do
+    process:on_idle()
+  end
+end
+
+
+--------------------------------------------------------------------------------
+
+-- forward new document notification to all active processes
+
+function Browser:on_new_document()
+  TRACE("Browser:on_new_document()")
+
+  for _,process in pairs(self.__processes) do
+    process:new_document()
+  end
+end
+
+
+--------------------------------------------------------------------------------
+
 -- return list of valid devices (plus a "None" option)
 -- existing devices (ones that we found MIID ports for) are listed first,
 -- all others are listed as (N/A)
@@ -194,51 +239,6 @@ end
 
 --------------------------------------------------------------------------------
 
--- activates and shows the dialog, or brings the active on to front
-
-function Browser:show()
-  TRACE("Browser:show()")
-  
-  if (not self.__dialog or not self.__dialog.visible) then
-    assert(self.__content_view, "Internal Error. Please report: " .. 
-      "browser always needs a valid content view")
-    
-    self.__dialog = renoise.app():show_custom_dialog(
-      "Duplex Browser", self.__content_view)
-  else
-    self.__dialog:show()
-  end
-end
-
-
---------------------------------------------------------------------------------
-
--- forward idle notification to all active processes
-
-function Browser:on_idle()
-  -- TRACE("Browser:on_idle()")
-  
-  for _,process in pairs(self.__processes) do
-    process:on_idle()
-  end
-end
-
-
---------------------------------------------------------------------------------
-
--- forward new document notification to all active processes
-
-function Browser:on_new_document()
-  TRACE("Browser:on_new_document()")
-
-  for _,process in pairs(self.__processes) do
-    process:new_document()
-  end
-end
-
-
---------------------------------------------------------------------------------
-
 -- return list of valid configurations for the given device 
 
 function Browser:available_configurations(device_name)
@@ -329,16 +329,10 @@ function Browser:set_configuration(configuration, start_running)
       else
         self.__configuration_name = "None" 
       end
-
-    end
-  
-    -- instantiation succeeded - auto start?
-    if (self.__configuration_name ~= "None" and start_running) then
-      self:start_configuration()
     end
   end
   
-  
+
   ---- validate the process list
   
   for _,process in pairs(self.__processes) do
@@ -347,6 +341,13 @@ function Browser:set_configuration(configuration, start_running)
   end
 
 
+  ---- apply start options
+  
+  if (self:__current_process() ~= nil and start_running) then
+    self:start_current_configuration()
+  end
+  
+    
   ---- update the GUI, in case this function was not fired from the GUI
 
   local suppress_notifiers = self.__suppress_notifiers
@@ -374,9 +375,9 @@ end
 
 --------------------------------------------------------------------------------
 
--- starts all apps from the current configuration
+-- starts all apps for the current configuration
 
-function Browser:start_configuration()
+function Browser:start_current_configuration()
   TRACE("Browser:start_configuration()")
   
   local process = self:__current_process()
@@ -402,7 +403,7 @@ end
 
 -- stops all apps that run with in the current configuration
 
-function Browser:stop_configuration()
+function Browser:stop_current_configuration()
   TRACE("Browser:stop_configuration()")
 
   local process = self:__current_process()
@@ -749,9 +750,9 @@ function Browser:__create_content_view()
           notifier = function(v)
             if (not self.__suppress_notifiers) then
               if (v == true) then
-                self:start_configuration()
+                self:start_current_configuration()
               else
-                self:stop_configuration()
+                self:stop_current_configuration()
               end
             end
           end
