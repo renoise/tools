@@ -13,6 +13,10 @@ Also the note-, instrument-, velocity- and octave-schemes are generated here
    local pattern_index = song.selected_pattern_index
    local track_index = song.selected_track_index
    local track_type = song.selected_track.type
+   if track_type == renoise.Track.TRACK_TYPE_MASTER or
+   track_type == renoise.Track.TRACK_TYPE_SEND then
+     return --Do not process master or sendtrack!!
+   end
    song.tracks[track_index].visible_note_columns = max_note_columns
    local visible_note_columns = song.tracks[track_index].visible_note_columns
    local iter, pos
