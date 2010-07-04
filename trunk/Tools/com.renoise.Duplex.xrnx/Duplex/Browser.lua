@@ -125,9 +125,9 @@ function Browser:set_device(device_display_name, start_running)
       TRACE("Browser:releasing all processes")
       
       -- release all devices & applications
-      for _,process in ripairs(self.__processes) do
-        process:invalidate()
-        self.__processes:remove()
+      while (#self.__processes > 0) do
+        self.__processes[#self.__processes]:invalidate()
+        self.__processes:remove(#self.__processes)
       end
 
     else
@@ -294,11 +294,11 @@ function Browser:set_configuration(configuration, start_running)
       TRACE("Browser:creating new process")
   
       -- remove already running processes for this device
-      for _,process in ripairs(self.__processes) do
+      for process_index,process in ripairs(self.__processes) do
         local process_device_name = process.configuration.device.display_name
         if (process_device_name == self.__device_name) then
           process:invalidate()
-          self.__processes:remove()
+          self.__processes:remove(process_index)
           break
         end
       end
@@ -338,6 +338,14 @@ function Browser:set_configuration(configuration, start_running)
   end
   
   
+  ---- validate the process list
+  
+  for _,process in pairs(self.__processes) do
+    assert(process:instantiated(), "Internal Error. Please report: " ..
+      "should only have instantiated processes listed")
+  end
+
+
   ---- update the GUI, in case this function was not fired from the GUI
 
   local suppress_notifiers = self.__suppress_notifiers
