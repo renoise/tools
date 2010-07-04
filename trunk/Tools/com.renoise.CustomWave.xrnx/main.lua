@@ -1,13 +1,17 @@
 --[[----------------------------------------------------------------------------
 
   Script        : It-Alien_custom_wave.lua
-  Creation Date : 10/23/2009
-  Last modified : 11/03/2009
-  Version       : 0.34
+  Creation Date : 2009/10/23
+  Last modified : 2010/07/04
+  Version       : 0.4
 
 ----------------------------------------------------------------------------]]--
 
---BEGIN: global constants
+
+-------------------------------------------------------------------------------
+-- BEGIN: global constants
+-------------------------------------------------------------------------------
+
 local SAMPLE_BIT_DEPTH = 32
 local SAMPLE_FREQUENCY = 44100 --this should be set to the driver' sample rate
 local SAMPLE_CHANS = 1
@@ -31,7 +35,6 @@ local WAVE_NUMBER = WAVE_WAVETABLE
 local EPSILON = 1e-12
 local MINUSINFDB = -200.0
 
-
 local real_amplification = 1.0
 local int_note = 58 --A-4
 local int_wave_type_selected = 5 --Sine
@@ -45,18 +48,32 @@ local TWOPI = 2*math.pi
 local PI = math.pi
 local HALFPI = PI * 0.5
 local NOTE_BASE = math.pow(2,1/12)
---END: global constants
+
+-------------------------------------------------------------------------------
+-- END: global constants
+-------------------------------------------------------------------------------
 
 
---- BEGIN: menu registration
+
+-------------------------------------------------------------------------------
+-- BEGIN: menu registration
+-------------------------------------------------------------------------------
+
 renoise.tool():add_menu_entry {
   name = "Sample Editor:Generate Custom Wave...",
   invoke = function() show_dialog() end
 }
---- END: menu registration
+
+-------------------------------------------------------------------------------
+-- END: menu registration
+-------------------------------------------------------------------------------
 
 
---- BEGIN: operator functions
+
+-------------------------------------------------------------------------------
+-- BEGIN: operator functions
+-------------------------------------------------------------------------------
+
 function arccosine(real_amplification, real_unused, real_x)
   return real_amplification * (-1 + 2 * math.acos(-1 + 2 * real_x) / PI)
 end
@@ -74,6 +91,8 @@ function noise(real_amplification, real_unused1, real_unused2)
 end
 
 function pulse(real_amplification, real_width, real_x)
+	print(tostring(real_x))
+	print(tostring(real_width))
   if real_x > real_width then return -real_amplification else return real_amplification end
 end
 
@@ -117,12 +136,18 @@ end
 function none(real_unused1, real_unused2, real_unused3)
   return 0
 end
---- END: operator functions
+
+-------------------------------------------------------------------------------
+-- END: operator functions
+-------------------------------------------------------------------------------
 
 
----BEGIN: global variables 
 
-_G = {}
+-------------------------------------------------------------------------------
+-- BEGIN: global variables 
+-------------------------------------------------------------------------------
+
+notifiers = {}
 
 local array_string_operators = {"-NONE-","Arc Cosine", "Arc Sine", "Cosine", "Noise", "Pulse", "Saw", "Sine", "Square", "Tangent","Triangle", "Wave"}
 local array_function_operators = {none,arccosine,arcsine,cosine,noise,pulse,saw,sine,square,tangent,triangle,wave}
@@ -138,7 +163,11 @@ local array_waves = {}
 local vb = nil 
 local dialog = nil
 
----END: global variables 
+-------------------------------------------------------------------------------
+-- END: global variables 
+-------------------------------------------------------------------------------
+
+
 
 
 function note_to_frequency(int_note)
@@ -161,8 +190,12 @@ function convert_db_to_linear(real_value)
   end
 end
 
---- BEGIN: observable notifiers
 
+
+
+-------------------------------------------------------------------------------
+-- BEGIN: observable notifiers
+-------------------------------------------------------------------------------
 
 function instruments_list_changed()
 
@@ -190,10 +223,16 @@ function new_song_loaded()
 
 end
 
---- END: observable notifiers
+-------------------------------------------------------------------------------
+-- END: observable notifiers
+-------------------------------------------------------------------------------
 
 
---- BEGIN: GUI functions
+
+-------------------------------------------------------------------------------
+-- BEGIN: GUI functions
+-------------------------------------------------------------------------------
+
 function show_operator_parameters(int_wave_type)
 
   vb.views.rowWidth.visible = int_wave_type == WAVE_PULSE or int_wave_type == WAVE_TANGENT
@@ -288,7 +327,7 @@ function generate_instrument_matrix()
   for int_count = 1, int_instruments do
     local string_name = renoise.song().instruments[int_count].name
     if string_name == "" then
-      string_name = "Instrument #" .. tostring(int_count)
+      string_name = "Instrument #" .. tostring(int_count-1)
     end
     array_string_return[int_count+1] = string_name
   end
@@ -309,7 +348,7 @@ function generate_sample_matrix(int_instrument)
 	for int_count = 1, int_samples do
 		local string_name = renoise.song().instruments[int_instrument].samples[int_count].name
 		if string_name == "" then
-		string_name = "Sample #" .. tostring(int_count)
+		string_name = "Sample #" .. tostring(int_count-1)
 		end
 		array_string_return[int_count+1] = string_name
 	end  
@@ -622,7 +661,7 @@ local function create_operator_gui()
 		
 		-- notifier for changes in samples list
 		if instrument_index > 0 then
-			_G[samples_notifier_name] = function ()
+			notifiers[samples_notifier_name] = function ()
 
 				-- the currently visible operator is a wavetable using the changed instrument as wavetable
 				if array_waves[int_operator_selected] == WAVE_WAVETABLE and array_instrument_number[int_operator_selected] == instrument_index then
@@ -653,13 +692,13 @@ local function create_operator_gui()
 		end
 
 		--remove any notifier from the previously selected sample
-		if last_instrument > 0 and (renoise.song().instruments[last_instrument].samples_observable:has_notifier(_G[last_samples_notifier_name])) then
-			renoise.song().instruments[last_instrument].samples_observable:remove_notifier(_G[last_samples_notifier_name])
+		if last_instrument > 0 and (renoise.song().instruments[last_instrument].samples_observable:has_notifier(notifiers[last_samples_notifier_name])) then
+			renoise.song().instruments[last_instrument].samples_observable:remove_notifier(notifiers[last_samples_notifier_name])
 		end
 
 		-- only add notifier if there is no yet another
-		if instrument_index > 0 and not (renoise.song().instruments[instrument_index].samples_observable:has_notifier(_G[samples_notifier_name])) then
-			renoise.song().instruments[instrument_index].samples_observable:add_notifier(_G[samples_notifier_name])
+		if instrument_index > 0 and not (renoise.song().instruments[instrument_index].samples_observable:has_notifier(notifiers[samples_notifier_name])) then
+			renoise.song().instruments[instrument_index].samples_observable:add_notifier(notifiers[samples_notifier_name])
 		end
 		
 	  
@@ -767,16 +806,23 @@ end
   )
 
 end
---- END: GUI functions
+
+-------------------------------------------------------------------------------
+-- END: GUI functions
+-------------------------------------------------------------------------------
 
 
----BEGIN: data processing functions
+
+-------------------------------------------------------------------------------
+-- BEGIN: data processing functions
+-------------------------------------------------------------------------------
+
 function wave_is_set(int_wave)
 
 	return
 		array_waves[int_wave] and 
 		array_real_amplitudes[int_wave] and 
-		(array_variant_parameters[int_wave] ~= nil or array_insstrument_number[int_wave]) and 
+		(array_variant_parameters[int_wave] ~= nil or array_instrument_number[int_wave]) and 
 		array_waves[int_wave] ~= WAVE_NONE
 		
 end
@@ -847,8 +893,6 @@ function process_data(real_amplification,real_x)
     if array_waves[int_wave] == WAVE_WAVETABLE and array_instrument_number[int_wave] > 0 and array_sample_number[int_wave] > 0 then
 	-- for WAVE mode, get the latest sample buffer
 		array_variant_parameters[int_wave] = renoise.song().instruments[array_instrument_number[int_wave]].samples[array_sample_number[int_wave]].sample_buffer
-	else
-		array_variant_parameters[int_wave] = nil
     end
 
   
@@ -863,7 +907,7 @@ function process_data(real_amplification,real_x)
         local array_real_modulators = {}
         local int_count = 0
         for int_modulator = 1, int_modulators do
-        
+   
           int_count = int_count + 1
           local int_wave = array_modulators[int_modulator]
           array_real_modulators[int_count] = array_real_amplitudes[int_wave] * operate(int_wave,real_x)
@@ -932,4 +976,7 @@ function generate()
   instrument.split_map[int_note] = int_sample_index
 
 end
----END: data processing functions
+
+-------------------------------------------------------------------------------
+-- END: data processing functions
+-------------------------------------------------------------------------------
