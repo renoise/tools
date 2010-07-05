@@ -174,16 +174,20 @@ end
 
 function ControlMap:determine_type(str)
   
+  -- url
   if string.sub(str,0,1)=="/" then
     return OSC_MESSAGE
   
+  -- cc, if first two characters match "CC"
   elseif string.sub(str,1,2)=="CC" then
     return MIDI_CC_MESSAGE
-  
+
+  -- note, if message has a "#" or "-" as the second character
   elseif string.sub(str,2,2)=="#" or string.sub(str,2,2)=="-" then
     return MIDI_NOTE_MESSAGE
 
-  elseif string.sub(str,1,2)=="PB" then
+  -- pitch bend, if it matches the pich-bend name
+  elseif string.sub(str,1,2)==PITCH_BEND_CONST then
     return MIDI_PITCH_BEND_MESSAGE
 
   end
