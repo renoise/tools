@@ -93,7 +93,7 @@ function MidiDevice:midi_callback(message)
   elseif (message[1] == 224) then
     msg.context = MIDI_PITCH_BEND_MESSAGE
     msg.value = message[3]
-    value_str = PITCH_BEND
+    value_str = PITCH_BEND_CONST
   end
 
   if (value_str) then
