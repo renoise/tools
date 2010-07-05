@@ -510,7 +510,11 @@ function MixConsole:build_app()
 
       self.__track_offset = obj.index
       self:__attach_to_tracks()
-      self:update()
+      
+      if (self.active) then
+        self:update()
+      end
+      
       return true
 
     end
@@ -573,7 +577,10 @@ function MixConsole:on_new_document()
   TRACE("MixConsole:on_new_document")
   
   self:__attach_to_song(renoise.song())
-  self:update()
+  
+  if (self.active) then
+    self:update()
+  end
 end
 
 
@@ -590,7 +597,10 @@ function MixConsole:__attach_to_song(song)
     function()
       TRACE("MixConsole:tracks_changed fired...")
       self:__attach_to_tracks()
-      self:update()
+      
+      if (self.active) then
+        self:update()
+      end
     end
   )
 
