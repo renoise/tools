@@ -74,6 +74,9 @@ for _,device_name in pairs(avilable_devices) do
         
       renoise.tool():add_menu_entry {
         name = ("%s%s"):format(prefix,entry_name),
+        selected = function() 
+          return (browser ~= nil and browser:configuration_running(config))
+        end,
         invoke = function() 
           show_dialog(config) 
         end

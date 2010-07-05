@@ -249,7 +249,26 @@ end
 -- return list of valid configurations for the given device 
 
 function Browser:available_configurations(device_name)
+  TRACE("Browser:available_configurations:",device_name)
+  
   return self:__available_configurations_for_device(device_name)
+end
+
+
+--------------------------------------------------------------------------------
+
+-- returns true if the given config is instantiated and running
+
+function Browser:configuration_running(configuration)
+  TRACE("Browser:configuration_running:",configuration.name)
+  
+  for _,process in pairs(self.__processes) do
+    if (process:matches_configuration(configuration)) then
+      return process:running()
+    end
+  end
+  
+  return false
 end
 
 
