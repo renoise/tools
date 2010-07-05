@@ -217,7 +217,7 @@ add_action {
 add_action {
   pattern = "/transport/lpb", 
   arguments = { argument("lpb_value", "number") }, 
-  description = "Set the songs current Lines Per Peat [1-255]",
+  description = "Set the songs current Lines Per Beat [1-255]",
   handler = function(lpb)
     renoise.song().transport.lpb = clamp_value(lpb, 1, 255)
   end,  
