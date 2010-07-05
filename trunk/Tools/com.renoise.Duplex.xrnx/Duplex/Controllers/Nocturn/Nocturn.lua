@@ -1,11 +1,22 @@
 --[[----------------------------------------------------------------------------
--- Duplex.Bcf-2000
+-- Duplex.Nocturn
 ----------------------------------------------------------------------------]]--
 
--- default configurations of the Noctron
+-- default configurations of the Nocturn
 -- only uses a control map and the MixConsole application
 
 --------------------------------------------------------------------------------
+
+class "Nocturn" (MidiDevice)
+
+function Nocturn:__init(name, message_stream)
+  TRACE("Nocturn:__init", name, message_stream)
+  MidiDevice.__init(self, name, message_stream)
+
+  self.loopback_received_messages = true
+
+end
+
 
 device_configurations:insert {
 
@@ -15,7 +26,7 @@ device_configurations:insert {
 
   -- device properties
   device = {
-    class_name = nil,          
+    class_name = "Nocturn",          
     display_name = "Nocturn Automap",
     device_name = "Automap MIDI",
     control_map = "Controllers/Nocturn/Nocturn.xml",
