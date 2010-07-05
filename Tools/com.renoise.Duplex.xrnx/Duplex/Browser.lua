@@ -15,7 +15,7 @@ local RUNNING_POSTFIX = " (running)"
 
 class 'Browser'
 
-function Browser:__init(initial_configuration)
+function Browser:__init(initial_configuration, start_configuration)
   TRACE("Browser:__init")
 
   
@@ -61,15 +61,14 @@ function Browser:__init(initial_configuration)
   
   -- as last step, apply optional arguments (autostart devices)
   if (initial_configuration) then
-    local auto_start = true
-    self:set_configuration(initial_configuration, auto_start)
+    self:set_configuration(initial_configuration, start_configuration)
   end
 end
 
 
 --------------------------------------------------------------------------------
 
--- activates and shows the dialog, or brings the active on to front
+-- activates and shows the dialog, or brings the existing one to front
 
 function Browser:show()
   TRACE("Browser:show()")
@@ -88,7 +87,7 @@ end
 
 --------------------------------------------------------------------------------
 
--- forward idle notification to all active processes
+-- forwards idle notifications to all active processes
 
 function Browser:on_idle()
   -- TRACE("Browser:on_idle()")
@@ -101,22 +100,23 @@ end
 
 --------------------------------------------------------------------------------
 
--- forward new document notification to all active processes
+-- forwards new document notifications to all active processes
 
 function Browser:on_new_document()
   TRACE("Browser:on_new_document()")
 
   for _,process in pairs(self.__processes) do
-    process:new_document()
+    process:on_new_document()
   end
 end
 
 
 --------------------------------------------------------------------------------
 
--- return list of valid devices (plus a "None" option)
--- existing devices (ones that we found MIID ports for) are listed first,
--- all others are listed as (N/A)
+-- return a list of valid devices (plus a "None" option)
+-- existing devices (ones that we found MIDI ports for) are listed first,
+-- all others are listed as (N/A) to indicate that they are not present
+-- in the users device setup
 
 function Browser:available_devices()
 
@@ -152,13 +152,14 @@ end
 -- instantiates a new device, using the first avilable configuration for it,
 -- or reusing an already running configuration
 -- @param name (string) device display-name, without postfix
+-- @param configuration_hint (optional table) configuration that should be 
+-- used to instantiate the device. when nil, a default one is selected from the 
+-- available device configs
 
-function Browser:set_device(device_display_name, start_running)
+function Browser:set_device(device_display_name, configuration_hint)
   TRACE("Browser:set_device("..device_display_name..")")
   
-  local start_running = start_running or false
-
-
+    
   ---- activate the device with its default or existing config
   
   if (self.__device_name ~= device_display_name) then
@@ -170,7 +171,7 @@ function Browser:set_device(device_display_name, start_running)
       TRACE("Browser:releasing all processes")
       
       -- release all devices & applications
-      while (#self.__processes > 0) do
+      while (not self.__processes:is_empty()) do
         self.__processes[#self.__processes]:invalidate()
         self.__processes:remove(#self.__processes)
       end
@@ -178,14 +179,20 @@ function Browser:set_device(device_display_name, start_running)
     else
       TRACE("Browser:assigning new process")
       
-      local configuration = nil
+      assert(configuration_hint == nil or 
+        configuration_hint.device.display_name == device_display_name, 
+        "Internal Error. Please report: invalid device configuration hint")
+        
+      local configuration = configuration_hint or nil
           
       -- use an already running process by default
-      for _,process in pairs(self.__processes) do
-        local process_device_name = process.configuration.device.display_name
-        if (process_device_name == device_display_name) then
-          configuration = process.configuration
-          break
+      if (not configuration) then
+        for _,process in pairs(self.__processes) do
+          local process_device_name = process.configuration.device.display_name
+          if (process_device_name == device_display_name) then
+            configuration = process.configuration
+            break
+          end
         end
       end
       
@@ -204,7 +211,7 @@ function Browser:set_device(device_display_name, start_running)
         device_display_name))
 
       -- thee may be no configs for the device
-      self:set_configuration(configuration, start_running)
+      self:set_configuration(configuration)
     end
   end
   
@@ -258,7 +265,7 @@ function Browser:set_configuration(configuration, start_running)
 
   ---- first make sure the configs device is selected
   
-  self:set_device(configuration.device.display_name, start_running)
+  self:set_device(configuration.device.display_name, configuration)
 
 
   ---- then apply the config, if necessary  
@@ -794,6 +801,9 @@ function BrowserProcess:__init()
   
   -- list of instantiated apps for current configuration
   self.__applications = table.create() 
+  
+  -- true when this process was running at least once after instantiated
+  self.__was_running = false
 end
 
 
@@ -937,6 +947,8 @@ function BrowserProcess:instantiate(configuration)
     self.__applications:insert(app_instance)
   end
 
+  self.__was_running = false
+  
   return true
 end
 
@@ -949,14 +961,17 @@ end
 function BrowserProcess:invalidate()
   TRACE("BrowserProcess:invalidate")
 
-  for _,app in ripairs(self.__applications) do
-    if (app.running) then
-      app:stop_app()
+  while (not self.__applications:is_empty()) do
+    local last_app = self.__applications[#self.__applications]
+    if (last_app.running) then 
+      last_app:stop_app() 
     end
-
-    app:destroy_app()
-    self.__applications:remove()
+    last_app:destroy_app()
+    
+    self.__applications:remove(#self.__applications)
   end
+  
+  self.__was_running = false
   
   if (self.__device) then
     self.__device:release()
@@ -1031,6 +1046,13 @@ function BrowserProcess:start()
     end
   end
   
+  -- refresh the display when reactivating an old process
+  if (succeeded and self.__was_running) then
+    self.__display:clear()
+  end
+
+  self.__was_running = succeeded
+    
   return succeeded
 end
 
@@ -1085,7 +1107,7 @@ function BrowserProcess:show_control_surface(parent_view)
 
   parent_view:add_child(self.__control_surface_view)
 
-  -- completely update the display when reactivating an old process
+  -- refresh the display when reactivating an old process
   if (self:running()) then
     self.__display:clear()
   end
@@ -1154,8 +1176,8 @@ end
 
 -- provide new document notification for all active apps
 
-function BrowserProcess:new_document()
-  TRACE("BrowserProcess:new_document")
+function BrowserProcess:on_new_document()
+  TRACE("BrowserProcess:on_new_document")
 
   if (self:instantiated()) then
     for _,app in pairs(self.__applications) do
