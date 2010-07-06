@@ -7,32 +7,32 @@
       <Row>
         <Column>
           <Group name="EncodersEffect" columns="4">
-            <Param value="CC#17" type="dial" name="Dial #1" maximum="127" minimum="0"/>
-            <Param value="CC#16" type="dial" name="Dial #2" maximum="127" minimum="0"/>
-            <Param value="CC#9"  type="dial" name="Dial #3" maximum="127" minimum="0"/>
-            <Param value="CC#8"  type="dial" name="Dial #4" maximum="127" minimum="0"/>
-            <Param value="CC#19" type="dial" name="Dial #5" maximum="127" minimum="0"/>
-            <Param value="CC#18" type="dial" name="Dial #6" maximum="127" minimum="0"/>
-            <Param value="CC#11" type="dial" name="Dial #7" maximum="127" minimum="0"/>
-            <Param value="CC#10" type="dial" name="Dial #8" maximum="127" minimum="0"/>
+            <Param value="CC#17" type="dial" name="Effect #1" maximum="127" minimum="0"/>
+            <Param value="CC#16" type="dial" name="Effect #2" maximum="127" minimum="0"/>
+            <Param value="CC#9"  type="dial" name="Effect #3" maximum="127" minimum="0"/>
+            <Param value="CC#8"  type="dial" name="Effect #4" maximum="127" minimum="0"/>
+            <Param value="CC#19" type="dial" name="Effect #5" maximum="127" minimum="0"/>
+            <Param value="CC#18" type="dial" name="Effect #6" maximum="127" minimum="0"/>
+            <Param value="CC#11" type="dial" name="Effect #7" maximum="127" minimum="0"/>
+            <Param value="CC#10" type="dial" name="Effect #8" maximum="127" minimum="0"/>
           </Group>
           <Group name="PanningLeft" columns="4">
-            <Param value="CC#21" type="dial" name="Dial #9" maximum="127" minimum="0"/>
-            <Param value="CC#20" type="dial" name="Dial #10" maximum="127" minimum="0"/>
-            <Param value="CC#13" type="dial" name="Dial #11" maximum="127" minimum="0"/>
-            <Param value="CC#12" type="dial" name="Dial #12" maximum="127" minimum="0"/>
+            <Param value="CC#21" type="dial" name="Track Pan #1" maximum="127" minimum="0"/>
+            <Param value="CC#20" type="dial" name="Track Pan #2" maximum="127" minimum="0"/>
+            <Param value="CC#13" type="dial" name="Track Pan #3" maximum="127" minimum="0"/>
+            <Param value="CC#12" type="dial" name="Track Pan #4" maximum="127" minimum="0"/>
           </Group>
           <Group name="VolumeLeft" orientation="horizontal">
-            <Param value="CC#23" type="fader" orientation="vertical" size="4.52" name="Fader #1" maximum="127" minimum="0"/>
-            <Param value="CC#22" type="fader" orientation="vertical" size="4.52" name="Fader #2" maximum="127" minimum="0"/>
-            <Param value="CC#15" type="fader" orientation="vertical" size="4.52" name="Fader #3" maximum="127" minimum="0"/>
-            <Param value="CC#14" type="fader" orientation="vertical" size="4.52" name="Fader #4" maximum="127" minimum="0"/>
+            <Param value="CC#23" type="fader" orientation="vertical" size="4.52" name="Track Volume #1" maximum="127" minimum="0"/>
+            <Param value="CC#22" type="fader" orientation="vertical" size="4.52" name="Track Volume #2" maximum="127" minimum="0"/>
+            <Param value="CC#15" type="fader" orientation="vertical" size="4.52" name="Track Volume #3" maximum="127" minimum="0"/>
+            <Param value="CC#14" type="fader" orientation="vertical" size="4.52" name="Track Volume #4" maximum="127" minimum="0"/>
           </Group>
-          <Group name="MuteLeft" orientation="horizontal">
-            <Param value="F-4" type="button" name="Trigger #1" maximum="64" minimum="0"/>
-            <Param value="C#5" type="button" name="Trigger #2" maximum="64" minimum="0"/>
-            <Param value="F#4" type="button" name="Trigger #3" maximum="64" minimum="0"/>
-            <Param value="D-5" type="button" name="Trigger #4" maximum="64" minimum="0"/>
+          <Group name="ButtonsLeft" orientation="horizontal">
+            <Param value="F-4" type="button" name="Track Select #1" maximum="64" minimum="0"/>
+            <Param value="C#5" type="button" name="Track Select #2" maximum="64" minimum="0"/>
+            <Param value="F#4" type="button" name="Track Select #3" maximum="64" minimum="0"/>
+            <Param value="D-5" type="button" name="Track Select #4" maximum="64" minimum="0"/>
           </Group>
         </Column>
         <Column>
@@ -103,9 +103,9 @@
             <Param value="D#4" type="button" name="Button 8,8"  maximum="64" minimum="0"/>
           </Group>
           <Group name="CrossFader" orientation="horizontal">
-            <Param value="E-4" type="button" name="MoveLeft #1" maximum="64" minimum="0"/>
-            <Param value="CC#24" type="fader" orientation="horizontal" size="6" name="Crossfade #1" maximum="127" minimum="0"/>
-            <Param value="C-5" type="button" name="MoveRight #1" maximum="64" minimum="0"/>
+            <Param value="E-4" type="button" name="Move Left" maximum="64" minimum="0"/>
+            <Param value="CC#24" type="fader" orientation="horizontal" size="6" name="Crossfade" maximum="127" minimum="0"/>
+            <Param value="C-5" type="button" name="Move Right" maximum="64" minimum="0"/>
           </Group>
         </Column>
         <Column>
@@ -119,24 +119,23 @@
             <Param value="G-5" type="button" name="Button 2,3" maximum="64" minimum="0"/>
           </Group>
           <Group name="PanningRight" orientation="horizontal">
-            <Param value="CC#3" type="dial" name="Dial #1" maximum="127" minimum="0"/>
-            <Param value="CC#1" type="dial" name="Dial #2" maximum="127" minimum="0"/>
-            <Param value="CC#0"  type="dial" name="Dial #3" maximum="127" minimum="0"/>
-            <Param value="CC#2"  type="dial" name="Dial #4" maximum="127" minimum="0"/>
+            <Param value="CC#3" type="dial" name="Track Pan #5" maximum="127" minimum="0"/>
+            <Param value="CC#1" type="dial" name="Track Pan #6" maximum="127" minimum="0"/>
+            <Param value="CC#0"  type="dial" name="Track Pan #7" maximum="127" minimum="0"/>
+            <Param value="CC#2"  type="dial" name="Track Pan #8" maximum="127" minimum="0"/>
           </Group>
           <Group name="VolumeRight" orientation="horizontal">
-            <Param value="CC#5" type="fader" orientation="vertical" size="4.52" name="Fader #1" maximum="127" minimum="0"/>
-            <Param value="CC#7" type="fader" orientation="vertical" size="4.52" name="Fader #2" maximum="127" minimum="0"/>
-            <Param value="CC#6" type="fader" orientation="vertical" size="4.52" name="Fader #3" maximum="127" minimum="0"/>
-            <Param value="CC#4" type="fader" orientation="vertical" size="4.52" name="Fader #4" maximum="127" minimum="0"/>
+            <Param value="CC#5" type="fader" orientation="vertical" size="4.52" name="Track Volume #5" maximum="127" minimum="0"/>
+            <Param value="CC#7" type="fader" orientation="vertical" size="4.52" name="Track Volume #6" maximum="127" minimum="0"/>
+            <Param value="CC#6" type="fader" orientation="vertical" size="4.52" name="Track Volume #7" maximum="127" minimum="0"/>
+            <Param value="CC#4" type="fader" orientation="vertical" size="4.52" name="Track Volume #8" maximum="127" minimum="0"/>
           </Group>
-          <Group name="MuteRight" orientation="horizontal">
-            <Param value="G-4" type="button" name="Trigger #1" maximum="64" minimum="0"/>
-            <Param value="D#5" type="button" name="Trigger #2" maximum="64" minimum="0"/>
-            <Param value="G#4" type="button" name="Trigger #3" maximum="64" minimum="0"/>
-            <Param value="E-5" type="button" name="Trigger #4" maximum="64" minimum="0"/>
+          <Group name="ButtonsRight" orientation="horizontal">
+            <Param value="G-4" type="button" name="Track Select #5" maximum="64" minimum="0"/>
+            <Param value="D#5" type="button" name="Track Select #6" maximum="64" minimum="0"/>
+            <Param value="G#4" type="button" name="Track Select #7" maximum="64" minimum="0"/>
+            <Param value="E-5" type="button" name="Track Select #8" maximum="64" minimum="0"/>
           </Group>
-
         </Column>
       </Row>
     </Page>

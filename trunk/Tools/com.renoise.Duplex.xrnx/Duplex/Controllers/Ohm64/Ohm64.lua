@@ -46,24 +46,25 @@ device_configurations:insert {
   applications = {
     MixConsole = {
       panning = {
-        group_name="PanningLeft",
+        group_name = "PanningLeft",
       },
       levels = {
-        group_name="VolumeLeft",
+        group_name = "VolumeLeft",
       },
       mute = {
-        group_name = "MuteLeft",
+        group_name = "ButtonsLeft",
       },
       master = {
-        group_name="VolumeRight",
+        group_name = "VolumeRight",
       },
     },
     PatternMatrix = {
       matrix = {
         group_name = "Grid",
       },
-      controls = {
-        group_name = "ControlsRight",
+      sequence = {
+        group_name = "CrossFader",
+        --index = 0,
       },
     },
   }
