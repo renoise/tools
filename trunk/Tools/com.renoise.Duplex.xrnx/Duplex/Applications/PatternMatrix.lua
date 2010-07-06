@@ -233,10 +233,9 @@ function PatternMatrix:build_app()
       self.height = math.ceil(#control_map/self.width)
   end
 
-  -- if the trigger_group_name is not specified, put it in the matrix 
-  local embed_triggers = (not self.mappings.triggers.group_name)
+  -- embed the trigger-group in the matrix?
+  local embed_triggers = (self.mappings.triggers.group_name==self.mappings.matrix.group_name)
   if(embed_triggers)then
-    self.mappings.triggers.group_name = self.mappings.matrix.group_name
     self.width = self.width-1
   end
 
