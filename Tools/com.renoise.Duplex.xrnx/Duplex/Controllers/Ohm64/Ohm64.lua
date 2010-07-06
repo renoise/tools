@@ -62,10 +62,24 @@ device_configurations:insert {
       matrix = {
         group_name = "Grid",
       },
+      --[[
       sequence = {
         group_name = "CrossFader",
         --index = 0,
       },
+      ]]
+      triggers = {
+        group_name = "Grid",
+      },
+      sequence = {
+        group_name = "ControlsRight",
+        index = 0,
+      },
+      track = {
+        group_name = "ControlsRight",
+        index = 2,
+      },
+
     },
   }
 }
