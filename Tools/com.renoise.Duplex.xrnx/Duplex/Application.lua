@@ -117,7 +117,7 @@ function Application:destroy_app()
   self:hide_options_dialog()
   self:stop_app()
   
-   self.created = false
+  self.created = false
 end
 
 
