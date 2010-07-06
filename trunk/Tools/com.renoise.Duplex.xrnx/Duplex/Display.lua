@@ -615,17 +615,25 @@ end
 
 function Display:__quantize_widget_color(color)
 
-  local function quantize_color(value, color_space)
-    if (color_space and color_space > 0) then
-      assert(color_space <= 256, "Internal Error. Please report: " .. 
-      "invalid device colorspace value")
-      
-      return math.floor(value / (256 / color_space)) * (256 / color_space)
+  local function quantize_color(value, depth)
+    if (depth and depth > 0) then
+      assert(depth <= 256, "invalid device colorspace value")
+      local a = 256/(depth+1)
+      local b = a*(math.floor(value/a))
+      return math.min(math.floor(b*256/(256-b)),255)
     else
       return 0
     end
   end
-  
+
+  -- check if monochrome, then apply the average value
+  local cs = self.device.colorspace
+  local range = math.max(cs[1],cs[2],cs[3])
+  if(range<2)then
+    local avg = (color[1]+color[2]+color[3])/3
+    color = {avg,avg,avg}
+  end
+
   return {
     quantize_color(color[1], self.device.colorspace[1]),
     quantize_color(color[2], self.device.colorspace[2]),
