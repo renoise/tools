@@ -22,6 +22,9 @@ function Ohm64:__init(name, message_stream)
 
   -- send back a copy of the incming midi messages
   self.loopback_received_messages = true
+
+  self.colorspace = {1,1,1}
+
 end
 
 
@@ -46,16 +49,16 @@ device_configurations:insert {
   applications = {
     MixConsole = {
       panning = {
-        group_name = "PanningLeft",
+        group_name="PanningLeft",
       },
       levels = {
-        group_name = "VolumeLeft",
+        group_name="VolumeLeft",
       },
       mute = {
         group_name = "ButtonsLeft",
       },
       master = {
-        group_name = "VolumeRight",
+        group_name="VolumeRight",
       },
     },
     PatternMatrix = {
@@ -78,7 +81,7 @@ device_configurations:insert {
       track = {
         group_name = "ControlsRight",
         index = 2,
-      },
+      }
 
     },
   }
