@@ -22,11 +22,13 @@ The Slider supports different input methods: buttons or sliders/encoders
 
 Events
 
+  on_change() - invoked whenever the slider recieve a new value
+
+
   General notes for UIComponent events:
   - if an event handler return false, we cancel/revert any changed values
   - if an event handler return true, the value (and appearance) is updated
 
-  on_change() - invoked whenever the slider recieve a new value
 
 -------------------------------------------------------------------------------
 
@@ -62,11 +64,11 @@ function UISlider:__init(display)
 
   UIComponent.__init(self,display)
 
-  -- 0 is empty (default)
-  self.size = 0
-
   -- the selected index (0 is deselected)
   self.index = 0
+
+  -- default size is 0 (this will always draw)
+  self.size = 0
 
   -- if true, press twice to switch to deselected state
   -- only applies when input method is a button
@@ -79,7 +81,7 @@ function UISlider:__init(display)
   self.value = 0
 
   -- the maximum value (between 0 and "ceiling")
-  self.ceiling = 1
+  --self.ceiling = 1
 
   -- slider is vertical or horizontal?
   self.orientation = VERTICAL 
@@ -103,14 +105,15 @@ function UISlider:__init(display)
   self._cached_index = self.index
   self._cached_value = self.value
 
-  -- attach ouself to the display message stream
+  -- attach ourself to the display message stream
   self:add_listeners()
+
 end
 
 
 --------------------------------------------------------------------------------
 
--- user input via button
+-- user input via button(s)
 -- set index
 
 function UISlider:do_press()
@@ -136,7 +139,7 @@ end
 --------------------------------------------------------------------------------
 
 -- user input via slider, encoder: 
--- set index + precise value
+-- set index + precise value within the index
 
 function UISlider:do_change()
   TRACE("Slider:do_change()")
@@ -350,13 +353,13 @@ end
 
 function UISlider:add_listeners()
 
-  self.display.device.message_stream:add_listener(
+  self.__display.device.message_stream:add_listener(
     self,DEVICE_EVENT_BUTTON_PRESSED,
-    function() self.do_press(self,self) end )
+    function() self:do_press() end )
 
-  self.display.device.message_stream:add_listener(
+  self.__display.device.message_stream:add_listener(
     self,DEVICE_EVENT_VALUE_CHANGED,
-    function() self.do_change(self,self) end )
+    function() self:do_change() end )
 
 end
 
@@ -365,10 +368,10 @@ end
 
 function UISlider:remove_listeners()
 
-  self.display.device.message_stream:remove_listener(
+  self.__display.device.message_stream:remove_listener(
     self,DEVICE_EVENT_BUTTON_PRESSED)
 
-  self.display.device.message_stream:remove_listener(
+  self.__display.device.message_stream:remove_listener(
     self,DEVICE_EVENT_VALUE_CHANGED)
 
 end

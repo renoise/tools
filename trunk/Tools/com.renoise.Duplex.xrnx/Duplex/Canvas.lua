@@ -4,8 +4,12 @@
 
 --[[
 
-Use a Canvas class to represent values in a 2-dimensional space
-- incremental output: maintains a delta buffer with recent values
+About 
+
+Canvas is employed by the UIComponents to represent it's visible state. The 
+canvas is essentially an extra layer that we perform updates "through". Think of 
+it as pre-optimization before we output to a potentially slow protocol (MIDI),
+only if something has *actually* changed in the Display the update is performed. 
 
 --]]
 

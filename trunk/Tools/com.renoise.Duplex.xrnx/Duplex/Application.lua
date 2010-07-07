@@ -5,10 +5,6 @@
 --[[
 
 A generic application class for Duplex
-- extend this class to build custom applications for your controller
-- provides globally accessible configuration options 
-- o start/stop applications
-- o edit control-map groups, change built-in options 
 
 --]]
 
@@ -184,8 +180,8 @@ end
 
 -- assign matching group-names
 
-function Application:apply_mappings(mappings)
-  TRACE("Application:apply_mappings", mappings)
+function Application:__apply_mappings(mappings)
+  TRACE("Application:__apply_mappings", mappings)
   
   for v,k in pairs(self.mappings) do
     for v2,k2 in pairs(mappings) do
@@ -202,8 +198,8 @@ end
 
 -- todo: assign matching options
 
-function Application:apply_options(options)
-  TRACE("Application:apply_options", options)
+function Application:__apply_options(options)
+  TRACE("Application:__apply_options", options)
   
 --[[
   for v,k in pairs(self.options) do
@@ -226,7 +222,7 @@ end
 -- create application options dialog
 
 function Application:build_options()
-  TRACE("Application:apply_options", build_options)
+  TRACE("Application:build_options")
   
   if (self.__options_view)then
     return

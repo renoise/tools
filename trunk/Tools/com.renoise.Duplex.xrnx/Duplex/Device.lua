@@ -5,9 +5,11 @@
 --[[
 Requires: ControlMap
 
-A generic device class (OSC or MIDI based)
-+ Specify the message stream for user-generated events
-+ Listen for incoming messages from the device
+About
+
+The Device class is the base class for any device. Both the MIDIDevice and 
+OSCDevice extend this class, just as the Launchpad is based on the MIDIDevice.
+
 
 --]]
 
@@ -43,9 +45,9 @@ function Device:__init(name, message_stream, protocol)
 
   -- specify a color-space like this: (r, g, b) or empty
   -- example#1 : {4,4,0} - four degrees of red and grees
-  -- example#2 : {0,0,1} - monochrome display (blue)
   -- example#2 : {1,1,1} - monochrome display (black/white)
-  -- example#2 : {} - no colors, display as text
+  -- example#3 : {0,0,1} - monochrome display (blue)
+  -- example#4 : {} - no colors, display as text
   self.colorspace = {}
   
   -- allow sending back the same messages we got from the device as answer 

@@ -93,7 +93,7 @@ function MidiDevice:midi_callback(message)
   elseif (message[1] == 224) then
     msg.context = MIDI_PITCH_BEND_MESSAGE
     msg.value = message[3]
-    value_str = PITCH_BEND_CONST
+    value_str = "PB"
   end
 
   if (value_str) then
@@ -262,9 +262,15 @@ end
 
 -- Convert the point to an output value
 -- (override with device-specific implementation)
-function MidiDevice:point_to_value(pt,maximum,minimum,ceiling)
-  ceiling = ceiling or 127
+-- @param pt (CanvasPoint)
+-- @param maximum - attribute from control-map
+-- @param minimum - -#-
+-- @param ceiling - the UIComponent ceiling value
 
+function MidiDevice:point_to_value(pt,maximum,minimum,ceiling)
+  TRACE("MidiDevice:point_to_value()",pt,maximum,minimum,ceiling)
+
+  local ceiling = ceiling or 127
   local value
   
   if (type(pt.val) == "boolean") then

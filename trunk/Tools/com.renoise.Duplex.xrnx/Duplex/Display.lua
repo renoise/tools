@@ -4,7 +4,11 @@
 
 --[[
 
-The Display is the base class for building device displays
+The Display is the base class for device displays, and performs many duties;
+it manages UIComponents, as it will both send and recieve their 
+messages, and take care of their visual updates on the idle time update. 
+The Display will also build the control surface, an interactive representation 
+of the device complete with native sliders, knobs etc. 
 
 --]]
 
@@ -47,6 +51,8 @@ function Display:__init(device)
 
   -- this is the default palette for any display,
   -- the UIComponents use these values as defaults
+  -- note that color values with an average below 0x80
+  -- are not displayed on monochrome displays
   self.palette = {
     background = {
       text="·",

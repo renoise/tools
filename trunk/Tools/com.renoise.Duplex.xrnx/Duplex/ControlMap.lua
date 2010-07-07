@@ -5,10 +5,14 @@
 --[[
 Requires: Globals
 
-Used for describing the layout of devices
-- import and parse external XML data
 
-Notes on the syntax of external XML :
+About
+
+Essentially, the ControlMap class will import a control-map file, and add some
+extra methods, more handy methods for accessing the groups. 
+
+Notes on the XML syntax 
+
 - Supported elements: <Row>, <Column>, <Group> and <Param>
 - <Group> nodes cannot be nested 
 - Only <Param> node are supported inside a <Group> node
@@ -21,9 +25,6 @@ Notes on the syntax of external XML :
 
 * Sliders
 
-Todo:
-- improve parsing of nested tags
-- <Page> nodes (present only a single page at a time)
 
 --]]
 
@@ -187,7 +188,7 @@ function ControlMap:determine_type(str)
     return MIDI_NOTE_MESSAGE
 
   -- pitch bend, if it matches the pich-bend name
-  elseif string.sub(str,1,2)==PITCH_BEND_CONST then
+  elseif string.sub(str,1,2)=="PB" then
     return MIDI_PITCH_BEND_MESSAGE
 
   end

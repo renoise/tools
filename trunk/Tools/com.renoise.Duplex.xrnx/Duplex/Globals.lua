@@ -13,8 +13,6 @@ pcall(require, "future")
 MODULE_PATH = "./Duplex/"  
 NOTE_ARRAY = { "C-","C#","D-","D#","E-","F-","F#","G-","G#","A-","A#","B-" }
 
-PITCH_BEND_CONST = "PB"
-
 -- Protocols
 
 DEVICE_OSC_PROTOCOL = 0
