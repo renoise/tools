@@ -6,6 +6,21 @@
 -- only uses a control map and the MixConsole application
 
 
+--==============================================================================
+
+class "BFC2000" (MidiDevice)
+
+function BFC2000:__init(name, message_stream)
+  TRACE("BFC2000:__init", name, message_stream)
+
+  MidiDevice.__init(self, name, message_stream)
+
+  -- the motor faders of the BFC can not handle looped back messages
+  -- correctly, so we disable sending back messages we got from the BFC
+  -- in order to break feedback loops...
+  self.loopback_received_messages = false
+end
+
 --------------------------------------------------------------------------------
 
 device_configurations:insert {
@@ -16,7 +31,7 @@ device_configurations:insert {
 
   -- device properties
   device = {
-    class_name = nil,          
+    class_name = "BFC2000",          
     display_name = "BCF-2000",
     device_name = "BCF2000",
     control_map = "Controllers/BCF-2000/BCF-2000.xml",
