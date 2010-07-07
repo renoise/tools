@@ -245,7 +245,7 @@ device_configurations:insert {
         group_name = "Grid",
       },
       triggers = {
-        group_name = "Triggers",
+        group_name = "Grid",
       },
       sequence = {
         group_name = "Controls",
@@ -261,10 +261,10 @@ device_configurations:insert {
         group_name = "Grid2",
       },
       mute = {
-        group_name = "Controls2",
+        group_name = "Grid2",
       },
       master = {
-        group_name = "Triggers2",
+        group_name = "Grid2",
       }
     }
   }

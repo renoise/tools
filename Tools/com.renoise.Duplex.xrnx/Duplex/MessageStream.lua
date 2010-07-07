@@ -13,15 +13,23 @@ Requires: Globals
 
 --[[
 
-Interpret incoming (user-generated) messages, with built-in handlers for 
-* detecting standard press/release events
-* detecting that a button was double-pressed (trigger on second press)
-* detecting that a button was held for specified amount of time 
-* detecting multiple simultanously pressed buttons (combinations) with support 
-  for "any" or "all" 
+About
 
-A Display use only a single MessageStream, but we can attach any device to it. 
-This also offers us a "brute-force" method for terminating device communication
+The MessageStream recieves messages from connected devices and the virtual 
+control surface. After the type of event has been determined, the resulting 
+Message is then directed towards relevant UIComponent event-listeners, such as  
+DEVICE_EVENT_BUTTON_PRESSED. 
+A device can only belong to a single stream, but nothing stops the stream from 
+recieving it's input from several devices.  
+
+Features
+* detect standard press events
+* detect that a button was held for specified amount of time 
+
+Todo 
+* detecting standard release events
+* detecting that a button was double-pressed (trigger on second press)
+* detecting multiple simultanously pressed buttons (combinations)
 
 --]]
 

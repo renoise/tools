@@ -26,13 +26,9 @@
   [][][][]  [<]
   [][][][]  [<]
 
-  - triggers are "embedded" into the matrix if the
-    group_name is an empty string (not nil)
+  - triggers are embedded into the matrix, if you
+    specify the same group name as the matrix
 
-  [] <- "play" (any input)
-  [] <- "loop" (any input)
-  [] <- "stop" (any input)
-  [] <- "rec" (any input)
 
 --]]
 
@@ -46,6 +42,8 @@ function PatternMatrix:__init(display,mappings,options)
   TRACE("PatternMatrix:__init(",display,mappings,options)
 
   Application.__init(self)
+
+  self.display = display
 
   -- define the options (with defaults)
 
@@ -74,12 +72,12 @@ function PatternMatrix:__init(display,mappings,options)
       default = 2,
     },
     bounds_mode = {
-      label = "When outside",
+      label = "Out of bounds",
       items = {"Stop playback","Do nothing"},
       default = 1,
     },
-    sync_navigation = {
-      label = "Sync global sequence/track position",
+    sync_position = {
+      label = "Sync to global position",
       items = {true,false},
       default = 1,
     },
@@ -113,32 +111,7 @@ function PatternMatrix:__init(display,mappings,options)
       required = false,
       index = 2,
     },
-    --[[
-    play = {
-      group_name = nil,
-      description = "Use this to include a 'start playback' feature. Assign to a button, fader or dial",
-      required = false,
-      index = 4,
-    },
-    loop = {
-      group_name = nil,
-      description = "Use this to include a 'pattern loop' feature. Assign to a button, fader or dial",
-      required = false,
-      index = 5,
-    },
-    stop = {
-      group_name = nil,
-      description = "Use this to include a 'stop playback' feature. Assign to a button, fader or dial",
-      required = false,
-      index = 6,
-    },
-    rec = {
-      group_name = nil,
-      description = "Use this to include a 'toggle recordmode' feature. Assign to a button, fader or dial",
-      required = false,
-      index = 7,
-    },
-    ]]
+
   }
 
   -- define default palette
@@ -187,15 +160,14 @@ function PatternMatrix:__init(display,mappings,options)
     
   }
 
-  -- control-map should redefine this
-  self.width = 4
-  self.height = 4
+  -- the various controls
+  self.__buttons = nil
+  self.__trigger = nil
+  self.__sequence_navigator = nil
+  self.__track_navigator = nil
 
-  self.buttons = nil  -- [UIToggleButton,...]
-  self.position = nil -- UISlider
-
-  self.display = display
-
+  self.__width = 4
+  self.__height = 4
 
   self.__playing = nil
   self.__play_page = nil  -- the currently playing page
@@ -210,11 +182,9 @@ function PatternMatrix:__init(display,mappings,options)
   self.__update_slots_requested = false
   self.__update_tracks_requested = false
 
-
   -- apply arguments
-
-  self:apply_options(options)
-  self:apply_mappings(mappings)
+  self:__apply_options(options)
+  self:__apply_mappings(mappings)
 
 end
 
@@ -226,30 +196,29 @@ function PatternMatrix:build_app()
 
   Application.build_app(self)
 
+
   -- determine matrix size by looking at the control-map
   local control_map = self.display.device.control_map.groups[self.mappings.matrix.group_name]
   if(control_map["columns"])then
-      self.width = control_map["columns"]
-      self.height = math.ceil(#control_map/self.width)
+      self.__width = control_map["columns"]
+      self.__height = math.ceil(#control_map/self.__width)
   end
 
   -- embed the trigger-group in the matrix?
   local embed_triggers = (self.mappings.triggers.group_name==self.mappings.matrix.group_name)
   if(embed_triggers)then
-    self.width = self.width-1
+    self.__width = self.__width-1
   end
 
   local observable = nil
 
+
   -- sequence (up/down scrolling)
-  self.switcher = UISpinner(self.display)
-  self.switcher.group_name = self.mappings.sequence.group_name
-  self.switcher.index = self.mappings.track.index
-  self.switcher.minimum = 0
-  self.switcher.maximum = 1 
-  self.switcher.palette.foreground_dec.text = "▲"
-  self.switcher.palette.foreground_inc.text = "▼"
-  self.switcher.on_press = function(obj) 
+  local c = UISpinner(self.display)
+  c.group_name = self.mappings.sequence.group_name
+  c.x_pos = 1+self.mappings.sequence.index
+  c.text_orientation = VERTICAL
+  c.on_press = function(obj) 
     if (not self.active) then
       return false
     end
@@ -263,58 +232,53 @@ function PatternMatrix:build_app()
     end
     return false
   end
-  self.display:add(self.switcher)
+  self.display:add(c)
+  self.__sequence_navigator = c
+
 
   --  track (sideways scrolling)
-  self.scroller = UISpinner(self.display)
-  self.scroller.group_name = self.mappings.track.group_name
-  self.scroller.index = self.mappings.track.index
-  self.scroller.step_size = 1
-  self.scroller.minimum = 0
-  self.scroller.maximum = 1
-  self.scroller.x_pos = 3
-  self.scroller.palette.foreground_dec.text = "◄"
-  self.scroller.palette.foreground_inc.text = "►"
-  self.scroller.on_press = function(obj) 
-    TRACE("self.scroller.on_press:",obj.index)
+  local c = UISpinner(self.display)
+  c.group_name = self.mappings.track.group_name
+  c.x_pos = 1+self.mappings.track.index
+  c.text_orientation = HORIZONTAL
+  c.on_press = function(obj) 
+    TRACE("self.__track_navigator.on_press:",obj)
     if (not self.active) then
       return false
     end
-    self.__track_offset = obj.index*self.width
+    self.__track_offset = obj.index*self.__width
     self:update()
     return true
   end
-  self.display:add(self.scroller)
+  self.display:add(c)
+  self.__track_navigator = c
 
   -- play-position (navigator)
-  -- quick hack to make a UISlider appear like a selector
-  -- (TODO make into proper/custom class, capable of displaying
-  --  the current position, looped range and scheduled pattern)
+
   local x_pos = 1
   if(embed_triggers)then
-    x_pos = self.width+1
+    x_pos = self.__width+1
   end
-  self.position = UISlider(self.display)
-  self.position.group_name = self.mappings.triggers.group_name
-  self.position.x_pos = x_pos
-  self.position.y_pos = 1
-  self.position.toggleable = true
-  self.position.flipped = true
-  self.position.ceiling = self.height
 
-  self.position.palette.background = table.copy(self.palette.trigger_back)
-  self.position.palette.tip = table.rcopy(self.palette.trigger_active)
-  self.position.palette.track = table.rcopy(self.palette.trigger_back)
-
-  self.position:set_size(self.height)
-  -- position changed from controller
-  self.position.on_change = function(obj) 
+  local c = UISlider(self.display)
+  c.group_name = self.mappings.triggers.group_name
+  c.x_pos = x_pos
+  c.y_pos = 1
+  c.toggleable = true
+  c.flipped = true
+  c.ceiling = self.__height
+  c.palette.background = table.copy(self.palette.trigger_back)
+  c.palette.tip = table.rcopy(self.palette.trigger_active)
+  c.palette.track = table.rcopy(self.palette.trigger_back)
+  c:set_size(self.__height)
+  c.on_change = function(obj) 
+    -- position changed from controller
     if not self.active then
       return false
     end
 
-    local seq_index = obj.index + (self.height*self.__edit_page)
-    local seq_offset = self.__playback_pos.sequence%self.height
+    local seq_index = obj.index + (self.__height*self.__edit_page)
+    local seq_offset = self.__playback_pos.sequence%self.__height
 
     if obj.index==0 then
       
@@ -327,7 +291,7 @@ function PatternMatrix:build_app()
         renoise.song().transport:stop()
       elseif (self.options.play_mode.value == self.PLAY_MODE_SCHEDULE) then
         seq_index = self.__playback_pos.sequence + 
-          (self.height*self.__edit_page)
+          (self.__height*self.__edit_page)
         if renoise.song().sequencer.pattern_sequence[seq_index] then
           renoise.song().transport:set_scheduled_sequence(seq_index)
         end
@@ -403,22 +367,24 @@ function PatternMatrix:build_app()
     end
     return true
   end
-  self.display:add(self.position)
+  self.display:add(c)
+  self.__trigger = c
 
   -- grid buttons
-  self.buttons = {}
-  for x=1,self.width do
-    self.buttons[x] = {}
+  self.__buttons = {}
+  for x=1,self.__width do
+    self.__buttons[x] = {}
 
-    for y=1,self.height do
-      self.buttons[x][y] = UIToggleButton(self.display)
-      self.buttons[x][y].group_name = self.mappings.matrix.group_name
-      self.buttons[x][y].x_pos = x
-      self.buttons[x][y].y_pos = y
-      self.buttons[x][y].active = false
+    for y=1,self.__height do
+
+      local c = UIToggleButton(self.display)
+      c.group_name = self.mappings.matrix.group_name
+      c.x_pos = x
+      c.y_pos = y
+      c.active = false
 
       -- controller button pressed & held
-      self.buttons[x][y].on_hold = function(obj) 
+      c.on_hold = function(obj) 
         TRACE("controller button pressed and held")
         obj:toggle()
         -- bring focus to pattern/track
@@ -431,7 +397,7 @@ function PatternMatrix:build_app()
       end
 
       -- controller button was pressed
-      self.buttons[x][y].on_change = function(obj) 
+      c.on_change = function(obj) 
         TRACE("controller button was pressed",x,y)
 
         if not self.active then
@@ -440,7 +406,7 @@ function PatternMatrix:build_app()
 
         local seq = renoise.song().sequencer.pattern_sequence
         local master_idx = get_master_track_index()
-        local seq_offset = self.__edit_page*self.height
+        local seq_offset = self.__edit_page*self.__height
 
         if x+self.__track_offset == master_idx then
           --print('Notice: Master-track cannot be muted')
@@ -458,12 +424,12 @@ function PatternMatrix:build_app()
         return true
       end
 
-      self.display:add(self.buttons[x][y])
+      self.display:add(c)
+      self.__buttons[x][y] = c
 
     end  
   end
 
-  -- the finishing touch
   self:__attach_to_song(renoise.song())
 
 end
@@ -488,7 +454,7 @@ function PatternMatrix:update()
   local sequence = renoise.song().sequencer.pattern_sequence
   local tracks = renoise.song().tracks
 
-  local seq_offset = self.__edit_page*self.height
+  local seq_offset = self.__edit_page*self.__height
   local master_idx = get_master_track_index()
   
   local patt_idx = nil
@@ -499,10 +465,10 @@ function PatternMatrix:update()
 
   -- loop through matrix & buttons
 
-  for track_idx = (1+self.__track_offset),(self.width+self.__track_offset) do
-    for seq_index = (1+seq_offset),(self.height+seq_offset) do
+  for track_idx = (1+self.__track_offset),(self.__width+self.__track_offset) do
+    for seq_index = (1+seq_offset),(self.__height+seq_offset) do
 
-      button = self.buttons[track_idx-self.__track_offset][seq_index-seq_offset]
+      button = self.__buttons[track_idx-self.__track_offset][seq_index-seq_offset]
 
       if((sequence[seq_index]) and (renoise.song().tracks[track_idx]))then
 
@@ -554,50 +520,30 @@ end
 
 --------------------------------------------------------------------------------
 
--- call this method with an options table as argument
-
-function PatternMatrix:apply_options(options)
-
-  Application.apply_options(self,options)
-
-end
-
---------------------------------------------------------------------------------
-
--- call this method with an mappings table as argument
--- todo: re-build the UI when mappings have changed
-
-function PatternMatrix:apply_mappings(mappings)
-
-  Application.apply_mappings(self,mappings)
-
-end
-
---------------------------------------------------------------------------------
-
--- update scroller (on new song, and when tracks have been changed)
+-- update track navigator,
+-- on new song, and when tracks have been changed
 -- + no event fired
 
 function PatternMatrix:update_track_count() 
   TRACE("PatternMatrix:update_track_count")
 
-  local count = math.floor((#renoise.song().tracks-1)/self.width)
-  self.scroller:set_maximum(count)
+  local count = math.floor((#renoise.song().tracks-1)/self.__width)
+  self.__track_navigator:set_maximum(count)
 end
 
 
 --------------------------------------------------------------------------------
 
--- update page switcher index 
+-- update sequence offset
 -- + no event fired
 
-function PatternMatrix:update_page_switcher()
-  TRACE("PatternMatrix:update_page_switcher()")
+function PatternMatrix:update_seq_offset()
+  TRACE("PatternMatrix:update_seq_offset()")
 
   local skip_event_handler = true
-  self.switcher:set_index(self.__play_page, skip_event_handler)
-  
+  self.__sequence_navigator:set_index(self.__play_page, skip_event_handler)
   self.__edit_page = self.__play_page
+
 end
 
 
@@ -607,10 +553,12 @@ end
 -- + no event fired
 
 function PatternMatrix:update_page_count()
+  TRACE("PatternMatrix:update_page_count()")
 
   local seq_len = #renoise.song().sequencer.pattern_sequence
-  local page_count = math.floor((seq_len-1)/self.height)
-  self.switcher:set_maximum(page_count)
+  local page_count = math.floor((seq_len-1)/self.__height)
+  self.__sequence_navigator:set_maximum(page_count)
+
 end
 
 
@@ -620,20 +568,22 @@ end
 -- @idx: (integer) the index, 0 - song-end
 
 function PatternMatrix:update_position(idx)
+  TRACE("PatternMatrix:update_position()",idx)
+
   local pos_idx = nil
   if(self.__playing)then
     local play_page = self:get_play_page()
     -- we are at a visible page?
     if(self.__edit_page == play_page)then
-      pos_idx = idx-(self.__play_page*self.height)
+      pos_idx = idx-(self.__play_page*self.__height)
     else
       pos_idx = 0 -- no, hide playback 
     end
   else
     pos_idx = 0 -- stopped
   end
-  self.position:set_index(pos_idx,true)
-  self.position:invalidate()
+  self.__trigger:set_index(pos_idx,true)
+  self.__trigger:invalidate()
 
 end
 
@@ -642,6 +592,7 @@ end
 -- retrigger the current pattern
 
 function PatternMatrix:retrigger_pattern()
+  TRACE("PatternMatrix:retrigger_pattern()")
 
   local play_pos = self.__playback_pos.sequence
   if renoise.song().sequencer.pattern_sequence[play_pos] then
@@ -653,9 +604,10 @@ end
 --------------------------------------------------------------------------------
 
 function PatternMatrix:get_play_page()
+  TRACE("PatternMatrix:get_play_page()")
 
   local play_pos = renoise.song().transport.playback_pos
-  return math.floor((play_pos.sequence-1)/self.height)
+  return math.floor((play_pos.sequence-1)/self.__height)
 
 end
 
@@ -715,7 +667,7 @@ function PatternMatrix:start_app()
 
   -- update everything!
   self:update_page_count()
-  self:update_page_switcher()
+  self:update_seq_offset()
   self:update_track_count()
   self:update_position(self.__playback_pos.sequence)
   self:update()
@@ -730,15 +682,15 @@ function PatternMatrix:destroy_app()
 
   Application.destroy_app(self)
 
-  if (self.position) then
-    self.position:remove_listeners()
+  if (self.__trigger) then
+    self.__trigger:remove_listeners()
   end
 
-  if (self.buttons) then
-    for i=1,self.width do
-      for o=1,self.height do
-        self.buttons[i][o]:remove_listeners()
-        self.buttons[i][o]:set(false)
+  if (self.__buttons) then
+    for i=1,self.__width do
+      for o=1,self.__height do
+        self.__buttons[i][o]:remove_listeners()
+        self.__buttons[i][o]:set(false)
       end
     end
   end
@@ -779,8 +731,8 @@ function PatternMatrix:on_idle()
     if(self.__num_lines)then
       -- figure out the progress
       local complete = (pos.line/self.__num_lines)
-      local counter = math.floor(complete*self.height)
-      if (self.position.index == counter) then
+      local counter = math.floor(complete*self.__height)
+      if (self.__trigger.index == counter) then
         self.progress:set_index(0,true)
         self.progress:invalidate()
       else
@@ -808,7 +760,7 @@ function PatternMatrix:on_idle()
         if(renoise.song().transport.follow_player)then
           if(self.__play_page~=self.__edit_page)then
             -- update only when following play-pos
-            self:update_page_switcher()
+            self:update_seq_offset()
             self:update()
           end
         end
@@ -817,7 +769,7 @@ function PatternMatrix:on_idle()
     elseif (not self.__playing) then
       -- playback resumed
       self:update_position(self.__playback_pos.sequence)
-    elseif (self.position.index == 0) and 
+    elseif (self.__trigger.index == 0) and 
       (self.__play_page==self.__edit_page) then
       -- position now in play-range
       self:update_position(self.__playback_pos.sequence)      
@@ -840,6 +792,7 @@ end
 
 function PatternMatrix:on_new_document()
   TRACE("PatternMatrix:on_new_document()")
+
   self:__attach_to_song(renoise.song())
   self:update_page_count()
   self:update_track_count()

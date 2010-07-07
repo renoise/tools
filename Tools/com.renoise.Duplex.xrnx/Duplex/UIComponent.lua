@@ -6,7 +6,23 @@
 
 Inheritance: UIComponent 
 
-The base class for UI objects
+About 
+
+The UIComponent is the basic building block from which you model the user 
+interface, and how it interacts with you. You will need to extend the 
+UIComponent class, as it doesn't come with any type of pre-defined events.
+
+The UIComponent pretty much leaves it up to you how to specify events. 
+However, there's only a limited number of different events:
+
+DEVICE_EVENT_VALUE_CHANGED 
+DEVICE_EVENT_BUTTON_PRESSED
+DEVICE_EVENT_BUTTON_RELEASED
+DEVICE_EVENT_BUTTON_HELD
+
+For examples on how to create/handle events with UIComponents, see either 
+the UISlider or the UIToggleButton class (both extensions of this class).
+
 
 --]]
 
@@ -19,29 +35,36 @@ function UIComponent:__init(display)
   TRACE("UIComponent:__init")
   
   self.canvas = Canvas()
-  
-  -- the parent display
-  self.display = display 
-  
+
   -- for indexed elements
   self.group_name = nil
-
-  -- set through set_size()
-  self.width = 1 
-  self.height = 1 
 
   -- default palette
   self.palette = {}
 
-  -- pos in canvas
+  -- position within canvas
   self.x_pos = 1
   self.y_pos = 1
+
+  -- "ceiling" will inform the device how to scale values
+  -- for an example, check MidiDevice.point_to_value()
+  self.ceiling = 1
+  
+  -- the parent display
+  self.__display = display 
+  
+  -- set width/height through the set_size() method
+  self.width = 1 
+  self.height = 1 
 
   -- request refresh
   self.dirty = true 
 
   -- sync our width, height with the canvas
   UIComponent.set_size(self, self.width, self.width)
+
+
+
 end
 
 
@@ -73,7 +96,7 @@ end
 -- (used by event handlers)
 
 function UIComponent:get_msg()
-  return self.display.device.message_stream.current_message
+  return self.__display.device.message_stream.current_message
 end
 
 
@@ -128,13 +151,13 @@ function UIComponent:set_palette(palette)
 
   for i,__ in pairs(palette)do
     for k,v in pairs(palette[i])do
-      if(self.palette[i][k])then
-        if(type(v)=="table")then
+      if self.palette[i] and self.palette[i][k] then
+        if(type(v)=="table")then -- color
           if(not table_compare(self.palette[i][k],v))then
             self.palette[i][k] = table.rcopy(v)
             changed = true
           end
-        elseif(type(v)=="string")then
+        elseif(type(v)=="string")then --text
           if(self.palette[i][k] ~= v)then
             self.palette[i][k] = v
             changed = true
@@ -157,6 +180,7 @@ end
 -- to call this method several times without loosing the 
 -- original color information
 
+--[[
 function UIComponent:colorize(rgb)
   TRACE("UIComponent:colorize:",rgb)
 
@@ -180,7 +204,7 @@ function UIComponent:colorize(rgb)
     self:invalidate()
   end
 end
-
+]]
 
 --------------------------------------------------------------------------------
 

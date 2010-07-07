@@ -10,8 +10,6 @@
   - supported on a wide variety of hardware
   - supports faders, buttons or dials for input
 
-  Btw: the application uses colorize() to change the default colors
-
   
   ---------------------------------------------------------
 
@@ -35,14 +33,27 @@
 
 
   ---------------------------------------------------------
+  
+  Navigation features
 
-  Options
+  The mixer will automatically follow the global position
+  if the option is enabled. It is displayed like this:
 
-  -- include the following track types:
+  Four-track mixer, where we select track 2/8:
+  The mixer is divided into two "pages"
 
-  - "include_normal_tracks"
-  - "include_send_tracks"
-  - "include_master_tracks"
+     Page#1    |    Page#2
+  [1][2][3][4] | [5][6][7][8] <-- tracks
+      x        |           x  <-- track offset (2/8)
+
+  Eight-track mixer, where we select track 2/8:
+  there is enough room for all tracks at once
+
+     Page#1
+  [1][2][3][4][5][6][7][8]    <-- tracks
+      x                 x     <-- track offset (2/8)
+
+
 
 --]]
 
@@ -59,33 +70,39 @@ function MixConsole:__init(display,mappings,options)
 
   self.display = display
 
-  self.master = nil
-  self.sliders = nil
-  self.buttons = nil
-  self.encoders = nil
-  self.page_controls = nil
-
     -- define the options (with defaults)
 
-  self.INCLUDE_TRACKS = "Include these tracks"
-  self.IGNORE_TRACKS = "Ignore these tracks"
-  self.INCLUDE_TRACK = "Include this track"
-  self.IGNORE_TRACK = "Ignore this track"
+  self.ALL_TRACKS = "Include all tracks"
+  self.NORMAL = "Normal tracks only"
+  self.NORMAL_MASTER = "Normal + master tracks"
+  self.MASTER = "Master track only"
+  self.MASTER_SEND = "Master + send tracks"
+  self.SEND = "Send tracks only"
 
   self.options = {
-    include_normal = {
-      label = "Normal tracks",
-      items = {self.INCLUDE_TRACKS,self.IGNORE_TRACKS},
+    include_tracks = {
+      label = "Tracks",
+      description = "Select any combination of tracks that you want to include: normal, master and send tracks.",
+      items = {
+        self.ALL_TRACKS,
+        self.NORMAL,
+        self.NORMAL_MASTER,
+        self.MASTER,
+        self.MASTER_SEND,
+        self.SEND,
+      },
       default = 1,
     },
-    include_send = {
-      label = "Send tracks",
-      items = {self.INCLUDE_TRACKS,self.IGNORE_TRACKS},
+    track_offset = {
+      label = "Offset",
+      description = "Change the offset if you want this Mixer to begin with a different track",
+      items = {0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16},
       default = 1,
     },
-    include_master = {
-      label = "Master track",
-      items = {self.INCLUDE_TRACK,self.IGNORE_TRACK},
+    sync_position = {
+      label = "Sync to global position",
+      description = "Set to true if you want the Mixer to align with the selected track in Renoise",
+      items = {true,false},
       default = 1,
     },
   }
@@ -118,34 +135,94 @@ function MixConsole:__init(display,mappings,options)
     },
     page = {
       group_name = nil,
-      description = "Page selector - assign to a fader, dial or two buttons",
+      description = "Page navigator - assign to a fader, dial or two buttons",
       required = false,
       index = nil,
     },
   }
 
-  --[[
-    self.master_group_name = options.master_group_name
-    self.levels_group_name = options.levels_group_name
-    self.mute_group_name = options.mute_group_name
-    self.panning_group_name = options.panning_group_name
-    self.page_controls_group_name = options.page_controls_group_name
-  ]]
+  -- default palette: launchpad settings, should degrade nicely...
 
-  -- the default number of tracks to display
-  self.width = 4
+  self.palette = {
+    background = {
+      color={0xff,0x00,0xff},
+      text="·",
+    },
+      -- normal tracks are green
+    normal_tip = {
+      color={0x00,0xff,0x00},
+      text="■",
+    },
+    normal_tip_dimmed = {
+      color={0x00,0x40,0x00},
+      text="□",
+    },
+    normal_lane = {
+      color={0x00,0x80,0x00},
+      text="▪",
+    },
+    normal_lane_dimmed = {
+      color={0x00,0x40,0x00},
+      text="▫",
+    },
+    normal_mute = {
+      color={0x00,0xff,0x00},
+      text="■",
+    },
+      -- master track is yellow
+    master_tip = {
+      color={0xff,0xff,0x00},
+      text="■",
+    },
+    master_lane = {
+      color={0x80,0x80,0x00},
+      text="▪",
+    },
+    -- send tracks are red
+    send_tip = {
+      color={0xff,0x00,0x00},
+      text="■",
+    },
+    send_tip_dimmed = {
+      color={0x40,0x00,0x00},
+      text="□",
+    },
+    send_lane = {
+      color={0x80,0x00,0x00},
+      text="▪",
+    },
+    send_lane_dimmed = {
+      color={0x40,0x00,0x00},
+      text="▫",
+    },
+    send_mute = {
+      color={0xff,0x00,0x00},
+      text="■",
+    },
+  }
 
-  -- the number of units spanned vertically
-  -- (more than one, if grid controller)
-  self.height = 1
+  -- the various controls
+  self.__master = nil
+  self.__levels = nil
+  self.__mutes = nil
+  self.__panning = nil
+  self.__track_navigator = nil
 
-  -- offset of the whole track mapping, controlled by the scroller
+  self.__width = 4
+  self.__height = 1
+
+  -- todo: extract this from options
+  self.__include_normal = true
+  self.__include_master = true
+  self.__include_send = true
+
+  -- offset of the whole track mapping, controlled by the track navigator
   self.__track_offset = 0
   
   -- apply arguments
+  self:__apply_options(options)
+  self:__apply_mappings(mappings)
 
-  self:apply_options(options)
-  self:apply_mappings(mappings)
 end
 
 
@@ -157,13 +234,13 @@ function MixConsole:set_track_volume(control_index, value)
   TRACE("MixConsole:set_track_volume", control_index, value)
 
   if (self.active) then
-    self.sliders[control_index]:set_value(value)
+    self.__levels[control_index]:set_value(value)
     
     -- update the master as well, if it has its own UI representation
-    if (self.master ~= nil) and 
+    if (self.__master ~= nil) and 
        (control_index + self.__track_offset == get_master_track_index()) 
     then
-      self.master:set_value(value)
+      self.__master:set_value(value)
     end
   end
 end
@@ -177,7 +254,7 @@ function MixConsole:set_track_panning(control_index, value)
   TRACE("MixConsole:set_track_panning", control_index, value)
 
   if (self.active) then
-    self.encoders[control_index]:set_value(value)
+    self.__panning[control_index]:set_value(value)
   end
 end
 
@@ -192,11 +269,11 @@ function MixConsole:set_track_mute(control_index, state)
   if (self.active) then
     -- set mute state to the button
     local active = (state == MUTE_STATE_ACTIVE)
-    self.buttons[control_index]:set(active)
+    self.__mutes[control_index]:set(active)
 
-    -- deactivate sliders and encoders to show that the track is inactive
-    self.sliders[control_index]:set_dimmed(not active)
-    self.encoders[control_index]:set_dimmed(not active)
+    -- make controls appear dimmed, to show that the track is inactive
+    self.__levels[control_index]:set_dimmed(not active)
+    self.__panning[control_index]:set_dimmed(not active)
   end
 end
 
@@ -206,11 +283,12 @@ end
 -- update: set all controls to current values from renoise
 
 function MixConsole:update()  
-  
+  TRACE("MixConsole:update()")
+
   local master_track_index = get_master_track_index()
   local tracks = renoise.song().tracks
 
-  for control_index=1, self.width do
+  for control_index=1, self.__width do
     local track_index = self.__track_offset + control_index
     local track = tracks[track_index]
       
@@ -236,37 +314,51 @@ function MixConsole:update()
       self:set_track_mute(control_index, MUTE_STATE_OFF)
     end
 
-    -- colorize: optimize this ...
-    
+    -- apply palette to controls
+
+    local track_palette = {}
+    local mute_palette = {}
+
     if (track_index < master_track_index) then
-      -- normal tracks are green
-      self.sliders[control_index]:colorize({0x00,0xff,0x00})
-      self.encoders[control_index]:colorize({0x00,0xff,0x00})
-      self.buttons[control_index]:colorize({0x00,0xff,0x00})
-
+      -- normal tracks
+      track_palette.tip           = self.palette.normal_tip
+      track_palette.tip_dimmed    = self.palette.normal_tip_dimmed
+      track_palette.track         = self.palette.normal_lane
+      track_palette.track_dimmed  = self.palette.normal_lane_dimmed
+      mute_palette.foreground     = self.palette.normal_mute
     elseif (track_index == master_track_index) then
-      -- master track is yellow
-      self.sliders[control_index]:colorize({0xff,0xff,0x00})
-      self.encoders[control_index]:colorize({0xff,0xff,0x00})
-      self.buttons[control_index]:colorize({0xff,0xff,0x00})      
-
+      -- master track
+      track_palette.tip           = self.palette.master_tip
+      track_palette.track         = self.palette.master_lane
+      mute_palette.foreground     = self.palette.background
     elseif (track_index <= #tracks) then
-      -- send tracks are red
-      self.sliders[control_index]:colorize({0xff,0x00,0x00})
-      self.encoders[control_index]:colorize({0xff,0x00,0x00})
-      self.buttons[control_index]:colorize({0xff,0x00,0x00})
+      -- send tracks
+      track_palette.tip           = self.palette.send_tip
+      track_palette.tip_dimmed    = self.palette.send_tip_dimmed
+      track_palette.track         = self.palette.send_lane
+      track_palette.track_dimmed  = self.palette.send_lane_dimmed
+      mute_palette.foreground     = self.palette.send_mute
 
     else 
       -- unmapped tracks are black
-      self.sliders[control_index]:colorize({0x00,0x00,0x00})
-      self.encoders[control_index]:colorize({0x00,0x00,0x00})
-      self.buttons[control_index]:colorize({0x00,0x00,0x00}) 
+      --[[
+      track_palette.tip = table.rcopy(self.palette.background)
+      track_palette.tip_dimmed = table.rcopy(self.palette.background)
+      track_palette.track = table.rcopy(self.palette.background)
+      track_palette.track_dimmed = table.rcopy(self.palette.background)
+      --mute_palette.foreground_dec = table.rcopy(self.palette.background)
+      mute_palette.foreground_dec = table.rcopy(self.palette.background)
+      ]]
     end
+
+    self.__levels[control_index]:set_palette(track_palette)
+    self.__panning[control_index]:set_palette(track_palette)
+    self.__mutes[control_index]:set_palette(mute_palette)
+
   end
-  
   -- update the master as well, if it has its own UI representation
-  if (self.master ~= nil) then
-     self.master:set_value(get_master_track().prefx_volume.value)
+  if (self.__master ~= nil) then
+     self.__master:set_value(get_master_track().prefx_volume.value)
   end
 end
 
@@ -280,10 +372,10 @@ function MixConsole:build_app()
 
   Application.build_app(self)
 
-  self.sliders = {}
-  self.encoders = {}
-  self.buttons = {}
-  self.master = nil
+  self.__levels = {}
+  self.__panning = {}
+  self.__mutes = {}
+  self.__master = nil
 
   -- check if the control-map describes a grid controller
   -- (slider is composed from individual buttons in grid mode)
@@ -303,8 +395,8 @@ function MixConsole:build_app()
       if(matched)then
         if (attr == "xarg" and param["columns"]) then
           grid_mode = true
-          self.width = tonumber(param["columns"])
-          self.height = math.ceil(#group/self.width)
+          self.__width = tonumber(param["columns"])
+          self.__height = math.ceil(#group/self.__width)
         end
       end
       if grid_mode then break end
@@ -312,47 +404,45 @@ function MixConsole:build_app()
     if grid_mode then break end
   end
 
-  local slider_offset = 0
+  local embed_mutes = (self.mappings.mute.group_name==self.mappings.levels.group_name)
+  local embed_master = (self.mappings.master.group_name==self.mappings.levels.group_name)
   if grid_mode then
-    -- if certain group names are left out, place them the main grid 
-    if (not self.mappings.mute.group_name) then
-      -- place mute buttons in the topmost row
-      self.mappings.mute.group_name = self.mappings.levels.group_name
-      slider_offset = slider_offset+1
+    if embed_master then
+      self.__width = self.__width-1
     end
-    -- todo: place master volume on the rightmost side
   else
     -- extend width to the number of parameters in the levels group
     local grp = control_map_groups[self.mappings.levels.group_name]
     if grp then
-      self.width = #grp
+      self.__width = #grp
     end
   end
 
-  for control_index=1, self.width do
+  for control_index=1, self.__width do
 
     -- sliders --------------------------------------------
 
-    local slider = UISlider(self.display)
-    slider.group_name = self.mappings.levels.group_name
-    slider.x_pos = control_index
-    slider.y_pos = 1+slider_offset
-    slider.toggleable = true
-    slider.flipped = false
-    slider.ceiling = RENOISE_DECIBEL
-    slider.orientation = VERTICAL
-    slider:set_size(self.height-slider_offset)
+    local y_pos = (embed_mutes) and 2 or 1
+    local c = UISlider(self.display)
+    c.group_name = self.mappings.levels.group_name
+    c.x_pos = control_index
+    c.y_pos = y_pos
+    c.toggleable = true
+    c.flipped = false
+    c.ceiling = RENOISE_DECIBEL
+    c.orientation = VERTICAL
+    c:set_size(self.__height-(y_pos-1))
 
     -- slider changed from controller
-    slider.on_change = function(obj) 
+    c.on_change = function(obj) 
       local track_index = self.__track_offset + control_index
 
       if (not self.active) then
         return false
       elseif (track_index == get_master_track_index()) then
-        if (self.master) then
+        if (self.__master) then
           -- this will cause another event...
-          self.master:set_value(obj.value)
+          self.__master:set_value(obj.value)
         else
           local track = renoise.song().tracks[track_index]
           track.prefx_volume.value = obj.value
@@ -368,24 +458,24 @@ function MixConsole:build_app()
       end
     end
     
-    self.display:add(slider)
-    self.sliders[control_index] = slider
+    self.display:add(c)
+    self.__levels[control_index] = c
 
 
     -- encoders -------------------------------------------
 
-    local encoder = UISlider(self.display)
-    encoder.group_name = self.mappings.panning.group_name
-    encoder.x_pos = control_index
-    encoder.y_pos = 1
-    encoder.toggleable = true
-    encoder.flipped = false
-    encoder.ceiling = 1.0
-    encoder.orientation = VERTICAL
-    encoder:set_size(1)
+    local c = UISlider(self.display)
+    c.group_name = self.mappings.panning.group_name
+    c.x_pos = control_index
+    c.y_pos = 1
+    c.toggleable = true
+    c.flipped = false
+    c.ceiling = 1.0
+    c.orientation = VERTICAL
+    c:set_size(1)
     
     -- slider changed from controller
-    encoder.on_change = function(obj) 
+    c.on_change = function(obj) 
       local track_index = self.__track_offset + control_index
 
       if (not self.active) then
@@ -402,22 +492,22 @@ function MixConsole:build_app()
       end
     end
     
-    self.display:add(encoder)
-    self.encoders[control_index] = encoder
+    self.display:add(c)
+    self.__panning[control_index] = c
     
     
     -- buttons --------------------------------------------
 
-    local button = UIToggleButton(self.display)
-    button.group_name = self.mappings.mute.group_name
-    button.x_pos = control_index
-    button.y_pos = 1
-    button.inverted = true
-    button.active = false
+    local c = UIToggleButton(self.display)
+    c.group_name = self.mappings.mute.group_name
+    c.x_pos = control_index
+    c.y_pos = 1
+    c.inverted = true
+    c.active = false
 
     -- mute state changed from controller
     -- (update the slider.dimmed property)
-    button.on_change = function(obj) 
+    c.on_change = function(obj) 
       local track_index = self.__track_offset + control_index
       
       if (not self.active) then
@@ -441,41 +531,43 @@ function MixConsole:build_app()
       
       track.mute_state = mute_state
       
-      self.sliders[control_index]:set_dimmed(dimmed)
-      self.encoders[control_index]:set_dimmed(dimmed)
+      self.__levels[control_index]:set_dimmed(dimmed)
+      self.__panning[control_index]:set_dimmed(dimmed)
       
       return true
     end
     
-    self.display:add(button)
-    self.buttons[control_index] = button    
+    self.display:add(c)
+    self.__mutes[control_index] = c    
   end
 
 
   -- master fader (optional) ------------------------------
 
   if (self.mappings.master.group_name) then
-    local slider = UISlider(self.display)
-    slider.group_name = self.mappings.master.group_name
-    slider.x_pos = 1
-    slider.y_pos = 1
-    slider.toggleable = true
-    slider.ceiling = RENOISE_DECIBEL
-    slider:set_size(self.height)
     
-    slider.on_change = function(obj) 
+    local x_pos = (embed_master) and (self.__width+1) or 1
+    local c = UISlider(self.display)
+    c.group_name = self.mappings.master.group_name
+    c.x_pos = x_pos
+    c.y_pos = 1
+    c.toggleable = true
+    c.ceiling = RENOISE_DECIBEL
+    c:set_size(self.__height)
+    
+    c.on_change = function(obj) 
       if (not self.active) then
         return false
       else
         local master_control_index = 
           get_master_track_index() - self.__track_offset
         
-        if (self.sliders and 
+        if (self.__levels and 
             master_control_index > 0 and 
-            master_control_index <= self.width) 
+            master_control_index <= self.__width) 
         then
           -- this will cause another event...
-          self.sliders[master_control_index]:set_value(obj.value)
+          self.__levels[master_control_index]:set_value(obj.value)
         else
           get_master_track().prefx_volume.value = obj.value
         end
@@ -484,25 +576,25 @@ function MixConsole:build_app()
       end
     end 
      
-    self.display:add(slider)
-    self.master = slider
+    self.display:add(c)
+    self.__master = c
   end
   
   
   -- track scrolling (optional) ---------------------------
 
   if (self.mappings.page.group_name) then
-    self.page_controls = UISpinner(self.display)
-    self.page_controls.group_name = self.mappings.page.group_name
-    self.page_controls.index = 0
-    self.page_controls.step_size = self.width
-    self.page_controls.minimum = 0
-    self.page_controls.maximum = math.max(0, 
-      #renoise.song().tracks - self.width)
-    self.page_controls.x_pos = 1
-    self.page_controls.palette.foreground_dec.text = "◄"
-    self.page_controls.palette.foreground_inc.text = "►"
-    self.page_controls.on_press = function(obj) 
+    self.__track_navigator = UISpinner(self.display)
+    self.__track_navigator.group_name = self.mappings.page.group_name
+    self.__track_navigator.index = 0
+    self.__track_navigator.step_size = self.__width
+    self.__track_navigator.minimum = 0
+    self.__track_navigator.maximum = math.max(0, 
+      #renoise.song().tracks - self.__width)
+    self.__track_navigator.x_pos = 1
+    self.__track_navigator.palette.foreground_dec.text = "◄"
+    self.__track_navigator.palette.foreground_inc.text = "►"
+    self.__track_navigator.on_press = function(obj) 
 
       if (not self.active) then
         return false
@@ -510,16 +602,12 @@ function MixConsole:build_app()
 
       self.__track_offset = obj.index
       self:__attach_to_tracks()
-      
-      if (self.active) then
-        self:update()
-      end
-      
+      self:update()
       return true
 
     end
     
-    self.display:add(self.page_controls)
+    self.display:add(self.__track_navigator)
   end
 
   -- the finishing touch
@@ -548,23 +636,23 @@ end
 function MixConsole:destroy_app()
   TRACE("MixConsole:destroy_app")
 
-  if (self.sliders) then
-    for _,obj in ipairs(self.sliders) do
+  if (self.__levels) then
+    for _,obj in ipairs(self.__levels) do
       obj.remove_listeners(obj)
     end
   end
-  if (self.encoders) then  
-    for _,obj in ipairs(self.encoders) do
+  if (self.__panning) then  
+    for _,obj in ipairs(self.__panning) do
       obj.remove_listeners(obj)
     end
   end
-  if (self.buttons) then
-    for _,obj in ipairs(self.buttons) do
+  if (self.__mutes) then
+    for _,obj in ipairs(self.__mutes) do
       obj.remove_listeners(obj)
     end
   end
-  if (self.master) then
-    self.master:remove_listeners()
+  if (self.__master) then
+    self.__master:remove_listeners()
   end
   
   Application.destroy_app(self)
@@ -619,10 +707,10 @@ function MixConsole:__attach_to_tracks()
 
   local tracks = renoise.song().tracks
 
-  -- validate and update the page scroller and track offset
-  if (self.page_controls) then
-    self.page_controls:set_maximum(math.max(0, 
-      #renoise.song().tracks - self.width))
+  -- validate and update the sequence/track offset
+  if (self.__track_navigator) then
+    self.__track_navigator:set_maximum(math.max(0, 
+      #renoise.song().tracks - self.__width))
   end
     
   -- detach all previously added notifiers first
@@ -633,9 +721,15 @@ function MixConsole:__attach_to_tracks()
   end 
   
   -- attach to the new ones in the order we want them
-  for control_index=1,math.min(#tracks, self.width) do
+  local master_done = false
+  local master_idx = get_master_track_index()
+  for control_index=1,math.min(#tracks, self.__width) do
     local track_index = self.__track_offset + control_index
     local track = tracks[track_index]
+
+    if(track_index == master_idx)then
+      master_done = true
+    end
     
     -- track volume level 
     track.prefx_volume.value_observable:add_notifier(
@@ -644,7 +738,7 @@ function MixConsole:__attach_to_tracks()
         if (self.active) then
           local value = track.prefx_volume.value
           -- compensate for potential loss of precision 
-          if not compare(self.sliders[control_index].value, value, 1000) then
+          if not compare(self.__levels[control_index].value, value, 1000) then
             self:set_track_volume(control_index, value)
           end
         end
@@ -658,7 +752,7 @@ function MixConsole:__attach_to_tracks()
         if (self.active) then
           local value = track.prefx_panning.value
           -- compensate for potential loss of precision 
-          if not compare(self.encoders[control_index].value, value, 1000) then
+          if not compare(self.__panning[control_index].value, value, 1000) then
             self:set_track_panning(control_index, value)
           end
         end
@@ -675,5 +769,25 @@ function MixConsole:__attach_to_tracks()
       end 
     )
   end
+
+  -- if master wasn't already mapped just before
+  if (not master_done) and 
+    (self.mappings.master.group_name) and 
+    (self.__include_master) then
+    local track = renoise.song().tracks[master_idx]
+    track.prefx_volume.value_observable:add_notifier(
+      self, 
+      function()
+        if (self.active) then
+          local value = track.prefx_volume.value
+          -- compensate for potential loss of precision 
+          if not compare(self.__master.value, value, 1000) then
+            self.__master:set_value(value)
+          end
+        end
+      end 
+    )
+  end
+
 end
 

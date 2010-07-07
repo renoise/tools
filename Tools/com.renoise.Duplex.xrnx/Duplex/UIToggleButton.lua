@@ -31,7 +31,7 @@ function UIToggleButton:__init(display)
 
   UIComponent.__init(self,display)
 
-  -- initial state is nil
+  -- initial state is nil (to force drawing)
   self.active = nil
 
   -- paint inverted
@@ -223,15 +223,15 @@ end
 
 function UIToggleButton:add_listeners()
 
-  self.display.device.message_stream:add_listener(
+  self.__display.device.message_stream:add_listener(
     self, DEVICE_EVENT_BUTTON_PRESSED,
     function() self:do_press() end )
 
-  self.display.device.message_stream:add_listener(
+  self.__display.device.message_stream:add_listener(
     self,DEVICE_EVENT_VALUE_CHANGED,
     function() self:do_change() end )
 
-  self.display.device.message_stream:add_listener(
+  self.__display.device.message_stream:add_listener(
     self,DEVICE_EVENT_BUTTON_HELD,
     function() self.do_hold(self,self) end )
 
@@ -242,13 +242,13 @@ end
 
 function UIToggleButton:remove_listeners()
 
-  self.display.device.message_stream:remove_listener(
+  self.__display.device.message_stream:remove_listener(
     self,DEVICE_EVENT_BUTTON_PRESSED)
 
-  self.display.device.message_stream:remove_listener(
+  self.__display.device.message_stream:remove_listener(
     self,DEVICE_EVENT_VALUE_CHANGED)
 
-  self.display.device.message_stream:remove_listener(
+  self.__display.device.message_stream:remove_listener(
     self,DEVICE_EVENT_BUTTON_HELD)
 
 end
