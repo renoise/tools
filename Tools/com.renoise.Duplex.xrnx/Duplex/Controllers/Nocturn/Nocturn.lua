@@ -7,17 +7,6 @@
 
 --------------------------------------------------------------------------------
 
-class "Nocturn" (MidiDevice)
-
-function Nocturn:__init(name, message_stream)
-  TRACE("Nocturn:__init", name, message_stream)
-  MidiDevice.__init(self, name, message_stream)
-
-  self.loopback_received_messages = true
-
-end
-
-
 device_configurations:insert {
 
   -- configuration properties
@@ -26,7 +15,7 @@ device_configurations:insert {
 
   -- device properties
   device = {
-    class_name = "Nocturn",          
+    class_name = nil,          
     display_name = "Nocturn Automap",
     device_name = "Automap MIDI",
     control_map = "Controllers/Nocturn/Nocturn.xml",

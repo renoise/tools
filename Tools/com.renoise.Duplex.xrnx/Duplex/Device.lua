@@ -19,34 +19,39 @@ class 'Device'
 function Device:__init(name, message_stream, protocol)
   TRACE('Device:__init',name, message_stream, protocol)
 
+  ---- initialzation
+  
   assert(name and message_stream and protocol, 
     "Internal Error. Please report: " ..
     "expected a valid name, stream and protocol for a device")
 
   -- for MIDI devices, name is equal to the port name 
   self.name = name
+  -- MIDI or OSC?
+  self.protocol = protocol  
+  -- transmit messages through this stream
+  self.message_stream = message_stream
 
+  -- create our control-map
+  self.control_map = ControlMap()
+  
+  
+  ---- configuration
+  
   -- default palette is provided by the display
   self.palette = {}   
 
   -- specify a color-space like this: (r, g, b) or empty
   -- example#1 : {4,4,0} - four degrees of red and grees
   -- example#2 : {0,0,1} - monochrome display (blue)
+  -- example#2 : {1,1,1} - monochrome display (black/white)
   -- example#2 : {} - no colors, display as text
   self.colorspace = {}
   
-  -- MIDI or OSC?
-  self.protocol = protocol
-
-  -- transmit messages through this stream
-  self.message_stream = message_stream
-  
-  -- allow midi loopback of messages to the real device
-  self.loopback_received_messages = false
-
-  -- init control-map
-  self.control_map = ControlMap()
-
+  -- allow sending back the same messages we got from the device as answer 
+  -- to the device. some controller which can deal with message feedback,
+  -- may want to disable this in its device class...
+  self.loopback_received_messages = true
 end
 
 

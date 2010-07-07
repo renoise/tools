@@ -20,11 +20,8 @@ function Ohm64:__init(name, message_stream)
 
   MidiDevice.__init(self, name, message_stream)
 
-  -- send back a copy of the incming midi messages
-  self.loopback_received_messages = true
-
+  -- setup a monochrom colorspace for the OHM
   self.colorspace = {1,1,1}
-
 end
 
 
