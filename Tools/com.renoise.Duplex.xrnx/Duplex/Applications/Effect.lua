@@ -325,7 +325,7 @@ function Effect:__attach_to_parameters()
 
   -- validate and update the sequence/parameter offset
   if (self.__page_control) then
-    self.__page_control:set_maximum(
+    self.__page_control:set_range(nil,
       math.max(0, #parameters - self.__width))
   end
     

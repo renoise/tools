@@ -27,10 +27,15 @@ Before beta starts
 
 * [danoise]: share track and other "offsets" for multiple running apps 
 * [danoise]: implement the "Navigator" app 
-* [danoise]: add Pitchbend support, and generic channel mapping -> [CC23|2]
+* [danoise]: add pitchbend support
+* [danoise]: add generic channel mapping -> [CC23|2]
 * [danoise]: start with the APC controller support
+* [danoise]: device-preference format, divide into "options" and "mappings"
 
 --
+
+* Test applications: write Ohm64-based apps to ensure proper operation 
+  o TestUISpinner/TestUISlider/TestUIToggleButton/etc
 
 * Navigator
   o Extract code from other apps
