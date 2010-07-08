@@ -176,6 +176,9 @@ function Browser:set_device(device_display_name, configuration_hint)
         self.__processes:remove(#self.__processes)
       end
 
+      -- make sure all configuration settings are also cleared
+      self:set_configuration(nil)
+    
     else
       TRACE("Browser:assigning new process")
       
@@ -210,36 +213,28 @@ function Browser:set_device(device_display_name, configuration_hint)
         "found no configuration for device '%s'"):format(
         device_display_name))
 
-      -- thee may be no configs for the device
+      -- there may be no configs for the device
       self:set_configuration(configuration)
     end
   end
   
-  
+
   ---- update the GUI, in case this function was not fired from the GUI
-  
+
   local suppress_notifiers = self.__suppress_notifiers
   self.__suppress_notifiers = true
-
-  local idx = self:__device_index_by_name(device_display_name)
-  self.__vb.views.dpx_browser_input_device.value = idx
-    
-  self.__vb.views.dpx_browser_configuration_row.visible = 
-    (self.__configuration_name ~= "None")
-  self.__vb.views.dpx_browser_device_settings.visible = 
-    (self.__device_name ~= "None")
 
   local available_configuration_names = 
     self:__available_configuration_names_for_device(self.__device_name)
 
   self.__vb.views.dpx_browser_configurations.items = 
     available_configuration_names
-  
-  self.__vb.views.dpx_browser_rootnode:resize()
+
+  local index = self:__device_index_by_name(self.__device_name)
+  self.__vb.views.dpx_browser_input_device.value = index
   
   self:__decorate_device_list()
-  self:__decorate_configuration_list()
-   
+
   self.__suppress_notifiers = suppress_notifiers
 end
 
@@ -277,85 +272,94 @@ end
 -- activate a new configuration for the currently active device
 
 function Browser:set_configuration(configuration, start_running)
-  TRACE("Browser:set_configuration:",configuration.name)
+  TRACE("Browser:set_configuration:", configuration and 
+    configuration.name or "None")
   
   start_running = start_running or false
 
-
-  ---- first make sure the configs device is selected
+  -- passing no configuration should deinitialize and update the GUI only
+  if (configuration ~= nil) then
   
-  self:set_device(configuration.device.display_name, configuration)
-
-
-  ---- then apply the config, if necessary  
+    ---- first make sure the configs device is selected
+    
+    self:set_device(configuration.device.display_name, configuration)
+    
   
-  if (self.__configuration_name ~= configuration.name) then
-    self.__configuration_name = configuration.name
+    ---- then apply the config, if necessary  
     
-    -- switching to an existing running process?
-    local existing_process = nil
-    for _,process in pairs(self.__processes) do
-      if (process:matches_configuration(configuration)) then
-        existing_process = process
-        break
-      end
-    end
-    
-    if (existing_process) then
-      TRACE("Browser:switching to existing process")
-          
-      -- hide previous instantiated control-maps
+    if (self.__configuration_name ~= configuration.name) then
+      self.__configuration_name = configuration.name
+      
+      -- switching to an existing running process?
+      local existing_process = nil
       for _,process in pairs(self.__processes) do
-        if (process ~= existing_process) then
+        if (process:matches_configuration(configuration)) then
+          existing_process = process
+          break
+        end
+      end
+      
+      if (existing_process) then
+        TRACE("Browser:switching to existing process")
+            
+        -- hide previous instantiated control-maps
+        for _,process in pairs(self.__processes) do
+          if (process ~= existing_process) then
+            if (process:control_surface_visible()) then
+              process:hide_control_surface()
+            end
+          end
+        end
+        
+        -- and show the new one
+        existing_process:show_control_surface(
+          self.__vb.views.dpx_browser_device_ui_row)
+  
+      else
+        TRACE("Browser:creating new process")
+    
+        -- remove already running processes for this device
+        for process_index,process in ripairs(self.__processes) do
+          local process_device_name = process.configuration.device.display_name
+          if (process_device_name == self.__device_name) then
+            process:invalidate()
+            self.__processes:remove(process_index)
+            break
+          end
+        end
+      
+        -- hide previous instantiated control-maps from other devices
+        for _,process in pairs(self.__processes) do
           if (process:control_surface_visible()) then
             process:hide_control_surface()
           end
         end
-      end
-      
-      -- and show the new one
-      existing_process:show_control_surface(
-        self.__vb.views.dpx_browser_rootnode)
-
-    else
-      TRACE("Browser:creating new process")
+        
+        -- create a new process 
+        local new_process = BrowserProcess()
+        
+        if (new_process:instantiate(configuration)) then
+          
+          -- apply debug options
+          new_process:set_dump_midi(self.__dump_midi)
+          
+          -- show it (add the control map GUI to the browser)
+          new_process:show_control_surface(
+            self.__vb.views.dpx_browser_device_ui_row)
   
-      -- remove already running processes for this device
-      for process_index,process in ripairs(self.__processes) do
-        local process_device_name = process.configuration.device.display_name
-        if (process_device_name == self.__device_name) then
-          process:invalidate()
-          self.__processes:remove(process_index)
-          break
-        end
-      end
-    
-      -- hide previous instantiated control-maps from other devices
-      for _,process in pairs(self.__processes) do
-        if (process:control_surface_visible()) then
-          process:hide_control_surface()
-        end
-      end
-      
-      -- create a new process 
-      local new_process = BrowserProcess()
-      
-      if (new_process:instantiate(configuration)) then
+          -- and add it to the list of active processes
+          self.__processes:insert(new_process)
         
-        -- apply debug options
-        new_process:set_dump_midi(self.__dump_midi)
-        
-        -- show it (add the control map GUI to the browser)
-        new_process:show_control_surface(
-          self.__vb.views.dpx_browser_rootnode)
-
-        -- and add it to the list of active processes
-        self.__processes:insert(new_process)
-      
-      else
-        self.__configuration_name = "None" 
+        else
+          self.__configuration_name = "None" 
+        end
       end
     end
+  
+  else
+  
+    self:set_device("None")
+    self.__configuration_name = "None" 
   end
   
 
@@ -369,7 +373,7 @@ function Browser:set_configuration(configuration, start_running)
 
   ---- apply start options
   
-  if (self:__current_process() ~= nil and start_running) then
+  if (self:__current_process() and start_running) then
     self:start_current_configuration()
   end
   
@@ -379,19 +383,26 @@ function Browser:set_configuration(configuration, start_running)
   local suppress_notifiers = self.__suppress_notifiers
   self.__suppress_notifiers = true
 
-  local idx = self:__configuration_index_by_name(configuration.name)
-  self.__vb.views.dpx_browser_configurations.value = idx
+  local index = self:__configuration_index_by_name(self.__configuration_name)
+  self.__vb.views.dpx_browser_configurations.value = index
   
-  self.__vb.views.dpx_browser_configuration_row.visible = 
-    (self.__configuration_name ~= "None")
-  
+  local has_device = (self:__current_process() ~= nil)
+    
+  self.__vb.views.dpx_browser_configuration_row.visible = has_device
+  self.__vb.views.dpx_browser_device_settings.visible = has_device
+  self.__vb.views.dpx_browser_device_ui_row.visible = has_device
+  self.__vb.views.dpx_browser_device_info_text.visible = has_device
+    
   local process = self:__current_process()
 
   self.__vb.views.dpx_browser_configuration_running_checkbox.value = 
     (process and process:running()) or false
-  
+
+  self.__vb.views.dpx_browser_device_ui_row:resize()
   self.__vb.views.dpx_browser_rootnode:resize()
-  
+
+  self:__update_device_description()
+    
   self:__decorate_device_list()
   self:__decorate_configuration_list()
 
@@ -537,16 +548,21 @@ end
 function Browser:__device_index_by_name(device_display_name)
   TRACE("Browser:__device_index_by_name", device_display_name)
   
-  device_display_name = self:__strip_postfixes(device_display_name)
+  if (device_display_name == "None") then
+    return 1
   
-  local popup = self.__vb.views.dpx_browser_input_device
-  for index, name in pairs(popup.items)do
-    if (device_display_name == self:__strip_postfixes(name)) then
-      return index
+  else
+    device_display_name = self:__strip_postfixes(device_display_name)
+  
+    local popup = self.__vb.views.dpx_browser_input_device
+    for index, name in pairs(popup.items)do
+      if (device_display_name == self:__strip_postfixes(name)) then
+        return index
+      end
     end
+  
+    return nil
   end
-
-  return nil
 end
 
 
@@ -558,16 +574,21 @@ end
 function Browser:__configuration_index_by_name(config_name)
   TRACE("Browser:__configuration_index_by_name", config_name)
   
-  config_name = self:__strip_postfixes(config_name)
-  
-  local popup = self.__vb.views.dpx_browser_configurations
-  for index, name in pairs(popup.items)do
-    if (config_name == self:__strip_postfixes(name)) then
-      return index
-    end
-  end
+  if (config_name == "None") then
+    return 1
 
-  return nil
+  else
+    config_name = self:__strip_postfixes(config_name)
+    
+    local popup = self.__vb.views.dpx_browser_configurations
+    for index, name in pairs(popup.items)do
+      if (config_name == self:__strip_postfixes(name)) then
+        return index
+      end
+    end
+  
+    return nil
+  end
 end
 
 
@@ -678,6 +699,56 @@ end
 
 --------------------------------------------------------------------------------
 
+-- show info about the current device, gathered by the control maps info field
+
+function Browser:__update_device_description() 
+
+  local active_process = self:__current_process()      
+
+  if (active_process == nil) then
+    self.__vb.views.dpx_browser_device_info_text.text = ""
+
+  else
+    local author, description
+    
+    -- get the author and description fields from the controlmap
+    if (active_process.device.control_map) then
+
+      local definition = active_process.device.control_map.definition
+      if (definition and #definition > 0) then
+
+        for _,tag in pairs(definition[1]) do
+          if (tag.label and tag.label == "Author") then
+            author = tag[1]
+          elseif (tag.label and tag.label == "Description") then
+            description = tag[1]
+          end
+        end
+      end
+    end
+
+    local paragraphs = table.create()
+
+    if (author) then
+      paragraphs:insert("Author: " .. author)
+    end
+
+    if (description) then
+      paragraphs:insert("Description: " .. description)
+    end
+
+    self.__vb.views.dpx_browser_device_info_text.paragraphs = paragraphs
+  end
+  
+  -- fill up the entire dialog width
+  self.__vb.views.dpx_browser_device_info_text.width = math.max(
+    self.__vb.views.dpx_browser_input_device_row.width, 
+    self.__vb.views.dpx_browser_device_ui_row.width)
+end
+
+
+--------------------------------------------------------------------------------
+
 -- build and assign the application dialog
 
 function Browser:__create_content_view()
@@ -693,6 +764,7 @@ function Browser:__create_content_view()
     
     -- device chooser
     vb:row {
+      id = 'dpx_browser_input_device_row',
       margin = DEFAULT_MARGIN,
       vb:text {
         text = "Device",
@@ -733,8 +805,8 @@ function Browser:__create_content_view()
 
     -- configuration chooser
     vb:row {
-      margin = DEFAULT_MARGIN,
       id = 'dpx_browser_configuration_row',
+      margin = DEFAULT_MARGIN,
       visible = false,
       vb:text {
           text = "Config",
@@ -761,10 +833,10 @@ function Browser:__create_content_view()
       },
       --[[ taktik: temporarily removed
       vb:button{
-        id="dpx_browser_configurations_options",
+        id = "dpx_browser_configurations_options",
         text = "Options",
-        width=60,
-        notifier=function(e)
+        width = 60,
+        notifier = function(e)
           renoise.app():show_warning("Device settings not yet implemented")
           -- self:show_configuration_options()
         end
@@ -786,8 +858,20 @@ function Browser:__create_content_view()
         vb:text {
           text = "Run",
         }
-      }
-    }
+      }    
+    },
+
+    -- virtual device ui
+    vb:column {
+      id = 'dpx_browser_device_ui_row'
+    },
+    
+    -- device info
+    vb:multiline_text {
+       id = 'dpx_browser_device_info_text',
+       width = 300,
+       height = 3*18
+    }      
   }
 end
 
@@ -806,7 +890,7 @@ function BrowserProcess:__init()
   self.configuration = nil
   
   -- device class instance
-  self.__device = nil 
+  self.device = nil 
   
   -- Display class instance
   self.__display = nil 
@@ -847,7 +931,7 @@ end
 -- returns true when the process instantiated correctly
 
 function BrowserProcess:instantiated()
-  return (self.configuration ~= nil and self.__device ~= nil)
+  return (self.configuration ~= nil and self.device ~= nil)
 end
 
 
@@ -941,14 +1025,14 @@ function BrowserProcess:instantiate(configuration)
 
   self.__message_stream = MessageStream()
   
-  self.__device = _G[device_class_name](
+  self.device = _G[device_class_name](
     configuration.device.device_name, self.__message_stream)
     
-  self.__device:set_control_map(
+  self.device:set_control_map(
     configuration.device.control_map)
 
-  self.__display = Display(self.__device)
-  self.__device.display = self.__display
+  self.__display = Display(self.device)
+  self.device.display = self.__display
 
 
   ---- instantiate all applications
@@ -992,11 +1076,6 @@ function BrowserProcess:invalidate()
   
   self.__was_running = false
   
-  if (self.__device) then
-    self.__device:release()
-    self.__device = nil
-  end
-  
   if (self.__control_surface_view) then
     self.__control_surface_parent_view:remove_child(
       self.__control_surface_view)
@@ -1008,6 +1087,11 @@ function BrowserProcess:invalidate()
   self.__message_stream = nil
   self.__display = nil
 
+  if (self.device) then
+    self.device:release()
+    self.device = nil
+  end
+  
   self.configuration = nil
 end
 
@@ -1161,8 +1245,8 @@ function BrowserProcess:set_dump_midi(dump)
   TRACE("BrowserProcess:set_dump_midi", dump)
 
   if (self:instantiated()) then
-    if (self.__device.protocol == DEVICE_MIDI_PROTOCOL) then
-      self.__device.dump_midi = dump
+    if (self.device.protocol == DEVICE_MIDI_PROTOCOL) then
+      self.device.dump_midi = dump
     end
   end
 end
