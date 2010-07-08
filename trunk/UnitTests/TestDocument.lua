@@ -260,6 +260,53 @@ do
   
   assert(os.remove(tmp_filename))
   
+  
+  ----------------------------------------------------------------------------
+  -- "free" Observable creation
+  
+  local notifications = 0
+  local notifier = function()
+    notifications = notifications + 1 
+  end
+  
+  local observable_number = renoise.Document.ObservableNumber()
+  observable_number = renoise.Document.ObservableNumber(23)
+  observable_number:add_notifier(notifier)
+  assert(observable_number.value == 23)
+  assert_error(function()
+    observable_number = renoise.Document.ObservableNumber("23")
+  end)
+  
+  local observable_boolean = renoise.Document.ObservableBoolean()
+  assert(observable_boolean.value == false)
+  observable_boolean = renoise.Document.ObservableBoolean(true)
+  observable_boolean:add_notifier(notifier)
+  assert(observable_boolean.value == true)
+  assert_error(function()
+    observable_boolean = renoise.Document.ObservableBoolean(12)
+  end)
+  
+  local observable_string = renoise.Document.ObservableString()
+  assert(observable_string.value == "")
+  observable_string = renoise.Document.ObservableString("Foo!")
+  observable_string:add_notifier(notifier)
+  assert(observable_string.value == "Foo!")
+  assert_error(function()
+    observable_string = renoise.Document.ObservableString(12)
+  end)
+  
+  assert(notifications == 0)
+  observable_number.value = 99
+  observable_boolean.value = false
+  observable_string.value = "New"
+  assert(notifications == 3)
+  
+  
+  -- Observable list creation
+  
+  local observable_number_list = renoise.Document.ObservableNumberList()
+  local observable_boolean_list = renoise.Document.ObservableBooleanList()
+  local observable_string_list = renoise.Document.ObservableStringList()
 end
 
 ------------------------------------------------------------------------------
