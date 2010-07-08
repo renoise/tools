@@ -153,7 +153,7 @@ end
 device_configurations:insert {
 
   -- configuration properties
-  name = "MixConsole",
+  name = "Mixer",
   pinned = true,
 
   -- device properties
@@ -187,7 +187,7 @@ device_configurations:insert {
 device_configurations:insert {
 
   -- configuration properties
-  name = "PatternMatrix",
+  name = "Matrix",
   pinned = true,
   
   -- device properties
@@ -226,7 +226,7 @@ device_configurations:insert {
 device_configurations:insert {
 
   -- configuration properties
-  name = "MixConsole & PatternMatrix",
+  name = "Matrix & Mixer",
   pinned = true,
   
   -- device properties

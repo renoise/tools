@@ -10,7 +10,7 @@
 device_configurations:insert {
 
   -- configuration properties
-  name = "MixConsole",
+  name = "Mixer",
   pinned = true,
 
   -- device properties

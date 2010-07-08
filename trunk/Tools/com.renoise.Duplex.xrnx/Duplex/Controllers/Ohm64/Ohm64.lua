@@ -30,7 +30,7 @@ end
 device_configurations:insert {
 
   -- configuration properties
-  name = "Default",
+  name = "Mixer, Matrix & Effects",
   pinned = true,
 
   -- device properties
