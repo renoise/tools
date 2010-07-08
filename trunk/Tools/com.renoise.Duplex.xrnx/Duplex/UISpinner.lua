@@ -214,7 +214,7 @@ end
 -- @skip_event (boolean) skip event handler
 
 function UISpinner:set_index(idx, skip_event_handler)
-  print("UISpinner:set_index",idx, skip_event_handler)
+  TRACE("UISpinner:set_index",idx, skip_event_handler)
   assert(idx >= self.minimum and idx <= self.maximum, 
     "Internal Error. Please report: invalid index for a spinner")
 
