@@ -528,7 +528,7 @@ function PatternMatrix:update_track_count()
   TRACE("PatternMatrix:update_track_count")
 
   local count = math.floor((#renoise.song().tracks-1)/self.__width)
-  self.__track_navigator:set_maximum(count)
+  self.__track_navigator:set_range(nil,count)
 end
 
 
@@ -557,7 +557,7 @@ function PatternMatrix:update_page_count()
 
   local seq_len = #renoise.song().sequencer.pattern_sequence
   local page_count = math.floor((seq_len-1)/self.__height)
-  self.__sequence_navigator:set_maximum(page_count)
+  self.__sequence_navigator:set_range(nil,page_count)
 
 end
 

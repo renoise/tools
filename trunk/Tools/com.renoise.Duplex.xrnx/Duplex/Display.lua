@@ -81,7 +81,7 @@ end
 --------------------------------------------------------------------------------
 
 function Display:add(obj_instance)
-  TRACE('Display:add')
+  print('Display:add',obj_instance)
   
   self.ui_objects:insert(obj_instance)
 end
