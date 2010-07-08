@@ -45,7 +45,9 @@ function MessageStream:__init()
   --self.double_press_listeners = {}  -- buttons
   --self.combo_listeners = {}  -- buttons
 
-  self.button_hold_time = 1 -- seconds
+
+  --self.button_hold_time = 1 -- seconds
+  self.button_hold_time = self:__get_button_hold_time()
   --self.double_press_time = 0.1 -- seconds
 
   -- most recent message (event handlers check this)
@@ -61,6 +63,11 @@ function MessageStream:__init()
   self.pressed_buttons = table.create() 
 end
 
+--------------------------------------------------------------------------------
+
+function MessageStream:__get_button_hold_time()
+    return duplex_preferences.button_hold_time
+end
 
 --------------------------------------------------------------------------------
 
