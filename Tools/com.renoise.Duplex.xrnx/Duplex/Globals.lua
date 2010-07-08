@@ -107,7 +107,10 @@ duplex_configurations = table.create()
 
 duplex_preferences = renoise.Document.create{
   -- list of device configurations that should be started by default
-  autostart_configurations = {""}
+  autostart_configurations = {""},
+  -- the number of seconds required to trigger DEVICE_EVENT_BUTTON_HELD
+  -- fractional values are supported, 0.5 is half a second
+  button_hold_time = 1,
 }
 
 
