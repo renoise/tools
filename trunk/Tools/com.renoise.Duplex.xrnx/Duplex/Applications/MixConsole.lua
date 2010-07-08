@@ -372,53 +372,52 @@ function MixConsole:build_app()
 
   Application.build_app(self)
 
+  -- check if the control-map describes a grid controller
+  -- (slider is composed from individual buttons in grid mode)
+  
+  local slider_grid_mode = false
+  
+  local control_map_groups = self.display.device.control_map.groups 
+  local levels_group = control_map_groups[self.mappings.levels.group_name]
+
+  if (levels_group) then
+    for attr, param in pairs(levels_group) do
+      if (attr == "xarg" and param["columns"]) then
+        slider_grid_mode = true
+        self.__width = tonumber(param["columns"])
+        self.__height = math.ceil(#levels_group / self.__width)
+        break
+      end
+    end
+  end
+  
+  local embed_mutes = (self.mappings.mute.group_name == 
+    self.mappings.levels.group_name)
+  
+  local embed_master = (self.mappings.master.group_name == 
+    self.mappings.levels.group_name)
+
+  if (slider_grid_mode) then
+    if (embed_master) then
+      self.__width = self.__width-1
+    end
+
+  else
+    -- extend width to the number of parameters in the levels group
+    if (levels_group) then
+      self.__width = #levels_group
+    end
+  end
+
+  
+  -- construct the display
+  
   self.__levels = {}
   self.__panning = {}
   self.__mutes = {}
   self.__master = nil
 
-  -- check if the control-map describes a grid controller
-  -- (slider is composed from individual buttons in grid mode)
-  local grid_mode = false
-  local matched
-  local control_map_groups = self.display.device.control_map.groups
-  for group_name, group in pairs(control_map_groups) do
-    for attr, param in pairs(group) do
-      
-      -- only enter grid mode if we are actually using those groups
-      matched = false
-      for k,v in pairs(self.mappings)do
-        if(v.group_name==group_name)then
-          matched = true
-        end
-      end
-      if(matched)then
-        if (attr == "xarg" and param["columns"]) then
-          grid_mode = true
-          self.__width = tonumber(param["columns"])
-          self.__height = math.ceil(#group/self.__width)
-        end
-      end
-      if grid_mode then break end
-    end
-    if grid_mode then break end
-  end
-
-  local embed_mutes = (self.mappings.mute.group_name==self.mappings.levels.group_name)
-  local embed_master = (self.mappings.master.group_name==self.mappings.levels.group_name)
-  if grid_mode then
-    if embed_master then
-      self.__width = self.__width-1
-    end
-  else
-    -- extend width to the number of parameters in the levels group
-    local grp = control_map_groups[self.mappings.levels.group_name]
-    if grp then
-      self.__width = #grp
-    end
-  end
-
-  for control_index=1, self.__width do
+  for control_index = 1,self.__width do
 
     -- sliders --------------------------------------------
 
