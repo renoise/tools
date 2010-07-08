@@ -3,28 +3,32 @@
 ----------------------------------------------------------------------------]]--
 
 --[[
+
 Requires: Globals
 
+About:
 
-About
+  Essentially, the ControlMap class will import a control-map file, and add 
+  some extra methods, more handy methods for accessing the groups. 
 
-Essentially, the ControlMap class will import a control-map file, and add some
-extra methods, more handy methods for accessing the groups. 
+Notes on the XML syntax:
 
-Notes on the XML syntax 
-
-- Supported elements: <Row>, <Column>, <Group> and <Param>
-- <Group> nodes cannot be nested 
-- Only <Param> node are supported inside a <Group> node
-- Use <Row> and <Column> nodes for controlling the layout 
-- - Use "orientation" attribute to control vertical/horizontal layout 
-- Indicate grid layout by supplying a "column" attribute for a <Group> node
-- - Note that orientation is then ignored (using grid layout)
-- Use "size" attribute to control the unit size of certain controls*
-- Underscore not allowed in attribute names
-
-* Sliders
-
+  - Supported elements are: <Row>, <Column>, <Group> and <Param>
+  
+  - <Group> nodes cannot be nested 
+  
+  - Only <Param> nodes are supported inside a <Group> node
+  
+  - Use <Row> and <Column> nodes for controlling the layout 
+    - Use "orientation" attribute to control vertical/horizontal layout 
+  
+  - Indicate grid layout by supplying a "column" attribute for a <Group> node
+    - Note that orientation is then ignored (using a grid layout)
+  
+  - Use "size" attribute to control the unit size of certain controls like 
+    sliders
+  
+  - Underscore is not allowed in attribute names
 
 --]]
 
@@ -36,12 +40,15 @@ class 'ControlMap'
 function ControlMap:__init()
   TRACE("ControlMap:__init")
 
-  self.groups = table.create() -- groups by name, e.g. self.groups["Triggers"]
+  -- groups by name, e.g. self.groups["Triggers"]
+  self.groups = table.create() 
 
   -- internal stuff
-  self.id = nil -- unique id, reset each time a control-map is parsed
-  self.definition = nil -- control-map parsed into table
-
+  
+  -- unique id, reset each time a control-map is parsed
+  self.id = nil 
+  -- control-map parsed into table
+  self.definition = nil 
 end
 
 
@@ -110,7 +117,8 @@ function ControlMap:parse_definition(control_map_name, xml_string)
     
     renoise.app():show_error(
       ("Failed to parse the controller definition file: '%s'. " ..
-       "The controller is not available."):format(control_map_name))       
+       "The controller is not available.\n\n%s"):format(
+       control_map_name, result or "unknown error"))       
   end
 end
 
@@ -154,10 +162,10 @@ end
 --------------------------------------------------------------------------------
 
 function ControlMap:read_file(file_path)
-  local file_ref,err = io.open(file_path,"r")
+  local file_ref, err = io.open(file_path, "r")
   
   if (not err) then
-    local rslt=file_ref:read("*a")
+    local rslt = file_ref:read("*a")
     io.close(file_ref)
     return rslt
   
@@ -165,7 +173,6 @@ function ControlMap:read_file(file_path)
     return nil,err
   end
 end
-
 
 
 --------------------------------------------------------------------------------
@@ -190,10 +197,8 @@ function ControlMap:determine_type(str)
   -- pitch bend, if it matches the pich-bend name
   elseif string.sub(str,1,2)=="PB" then
     return MIDI_PITCH_BEND_MESSAGE
-
   end
-
-
+  
 end
 
 
@@ -219,7 +224,7 @@ function ControlMap:parse_xml(s)
     end)
 
     -- meta-attr: add unique id for every node
-    arg.id = string.format("%d",self.id)
+    arg.id = string.format("%d", self.id)
     self.id = self.id+1
 
     return arg
@@ -270,6 +275,7 @@ function ControlMap:parse_xml(s)
 
       -- meta-attr : columns and rows
       if (label == "Group") then
+        
         -- add "columns" attribute to *all* groups
         local columns = nil
         
@@ -289,25 +295,24 @@ function ControlMap:parse_xml(s)
         toclose.columns = columns
         
         local counter = 0
-        local row_counter = 0
         
         for key,val in ipairs(toclose) do
+          
           -- add "group_name" to all members
           toclose[key].xarg.group_name =  toclose.xarg.name
           
           -- figure out active row/column
           toclose[key].xarg.column = counter + 1
           toclose[key].xarg.row = math.floor(
-            ((toclose[key].xarg.index-1) / columns) + 1)
+            ((toclose[key].xarg.index - 1) / columns) + 1)
           
-          counter = counter+1
+          counter = counter + 1
           if (counter >= columns) then
-            row_counter = row_counter+1
             counter = 0
           end
         end
         
-        self.groups[toclose.xarg.name]=toclose
+        self.groups[toclose.xarg.name] = toclose
       end
 
       -- reset parameter_index
