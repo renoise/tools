@@ -105,3 +105,23 @@ duplex_configurations:insert {
   }
 }
 
+duplex_configurations:insert {
+
+  -- configuration properties
+  name = "TestUISlider",
+  pinned = true,
+
+  -- device properties
+  device = {
+    class_name = "Ohm64",          
+    display_name = "Ohm64",
+    device_name = "Ohm64 MIDI 1",
+    control_map = "Controllers/Ohm64/Ohm64.xml",
+    protocol = DEVICE_MIDI_PROTOCOL
+  },
+  
+  -- setup a "MixConsole" and "PatternMatrix" as apps
+  applications = {
+    TestUISlider = {}
+  }
+}
