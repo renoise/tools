@@ -208,8 +208,7 @@ function Effect:build_app()
     navigator.minimum = 0
     navigator.maximum = math.max(0, #self:__current_parameters() - self.__width)
     navigator.x_pos = 1 + (self.mappings.page.index or 0)
-    navigator.palette.foreground_dec.text = "◄"
-    navigator.palette.foreground_inc.text = "►"
+    navigator.text_orientation = HORIZONTAL
     
     navigator.on_change = function(obj) 
       if (not self.active) then
