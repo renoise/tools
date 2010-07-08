@@ -594,7 +594,7 @@ function MixConsole:build_app()
     self.__track_navigator.x_pos = 1
     self.__track_navigator.palette.foreground_dec.text = "◄"
     self.__track_navigator.palette.foreground_inc.text = "►"
-    self.__track_navigator.on_press = function(obj) 
+    self.__track_navigator.on_change = function(obj) 
 
       if (not self.active) then
         return false

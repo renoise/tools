@@ -9,7 +9,10 @@ Requires: Globals, Display, MessageStream, CanvasPoint
 
 About
 
-UIToggleButton is a simple rectangular toggle button
+UIToggleButton is a simple rectangular on/off toggle button 
+You can use it with a button, but also dial and fader input is supported: 
+just turn the control to it's maximum or minimum to toggle between values 
+
 - display as normal/dimmed version
 - minimum unit size: 1x1
 
@@ -130,9 +133,7 @@ function UIToggleButton:toggle()
   self.active = not self.active
   self._cached_active = self.active
   
-  if (self.on_change ~= nil) then
-    self:invoke_handler()
-  end
+  self:invoke_handler()
 end
 
 
@@ -149,9 +150,7 @@ function UIToggleButton:set(value)
     self.active = value
     --self.invalidate(self)
   
-    if (self.on_change ~= nil) then
-      self:invoke_handler()
-    end
+    self:invoke_handler()
   end
 end
 
@@ -173,6 +172,9 @@ end
 -- (this can revert changes)
 
 function UIToggleButton:invoke_handler()
+
+  if (self.on_change == nil) then return end
+
   local rslt = self.on_change(self)
   if not rslt then  -- revert
     self.active = self._cached_active

@@ -238,7 +238,7 @@ function UISlider:set_value(val,skip_event)
     
     self:invalidate()
 
-    if (not skip_event) and (self.on_change ~= nil) then
+    if (not skip_event) then
       self:invoke_handler()
     end
   end  
@@ -262,7 +262,7 @@ function UISlider:set_index(idx,skip_event)
     self.index = idx
     self.value = (self.ceiling/self.size)*idx
   
-    if (not skip_event) and(self.on_change ~= nil) then
+    if (not skip_event) then
       self:invoke_handler()
     end
   end
@@ -274,6 +274,8 @@ end
 -- trigger the external handler method
 
 function UISlider:invoke_handler()
+
+  if (self.on_change == nil) then return end
 
   local rslt = self.on_change(self)  
   if not rslt then  -- revert

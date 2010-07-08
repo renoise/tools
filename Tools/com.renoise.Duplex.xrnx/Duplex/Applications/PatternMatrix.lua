@@ -218,7 +218,7 @@ function PatternMatrix:build_app()
   c.group_name = self.mappings.sequence.group_name
   c.x_pos = 1+self.mappings.sequence.index
   c.text_orientation = VERTICAL
-  c.on_press = function(obj) 
+  c.on_change = function(obj) 
     if (not self.active) then
       return false
     end
@@ -241,8 +241,8 @@ function PatternMatrix:build_app()
   c.group_name = self.mappings.track.group_name
   c.x_pos = 1+self.mappings.track.index
   c.text_orientation = HORIZONTAL
-  c.on_press = function(obj) 
-    TRACE("self.__track_navigator.on_press:",obj)
+  c.on_change = function(obj) 
+    TRACE("self.__track_navigator.on_change:",obj)
     if (not self.active) then
       return false
     end
