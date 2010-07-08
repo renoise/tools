@@ -9,10 +9,17 @@
   
   <!-- === REQUIRED ENTRIES === -->
   
-  <!-- This is the renoise.API_VERSION the script relies on. The API will be backwards -->
-  <!-- compatible from version 1.0 on, but not forwards compatible. -->
-  <!-- This way you can ensure that all API functions you use are available. -->
+  <!-- This is the min/max renoise.API_VERSION your tool relies on. Any changes in -->
+  <!-- the API which are not fully backwards compatible, will increase the internal -->
+  <!-- API version -->
+  <!-- By setting 'ApiVersionMax' to the current version, you can be sure that all API -->
+  <!-- functions that you use use are also available during runtime. -->
+  <!-- Only set 'ApiVersionMin' to previous versions if you know that you script also runs -->
+  <!-- in older version, or you deal with the changes dynamically by querying the APi verison--> 
   <!-- The current version is defined at 'renoise.API_VERSION' in the API -->
+  <ApiVersionMin>0.3</ApiVersionMin>
+  <ApiVersionMax>0.8</ApiVersionMax> 
+  <!-- INTERNAL NOTE - DEPRECATED: remove this for the 2.6 betas -->
   <ApiVersion>0.3</ApiVersion>
   
   <!-- Version of your tool. Will be used to decide if (auto-)upgrading is necessary. -->
