@@ -10,8 +10,8 @@
 duplex_configurations:insert {
 
   -- configuration properties
-  name = "Effects (N/A)",
-  pinned = false,
+  name = "Mixer & Effects",
+  pinned = true,
 
   -- device properties
   device = {
@@ -22,7 +22,28 @@ duplex_configurations:insert {
     protocol = DEVICE_MIDI_PROTOCOL
   },
   
-  -- TODO: needs a new "ParameterMixer" app
+  -- setup a MixConsole and Effect application
   applications = {
+    MixConsole = {
+      levels = {
+        group_name = "Encoders",
+      },
+      mute = {
+        group_name = "Buttons1",
+      },
+      page = {
+        group_name = "PageControls",
+        index = 0
+      }
+    },
+    Effect = {
+      parameters = {
+        group_name= "EffectEncoders",
+      },
+      page = {
+        group_name = "PageControls",
+        index = 2
+      }
+    }
   }
 }
