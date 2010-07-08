@@ -96,7 +96,19 @@ MUTE_STATE_OFF = 2
 --   } 
 -- }
   
-device_configurations = table.create()
+duplex_configurations = table.create()
+
+
+--------------------------------------------------------------------------------
+-- preferences
+--------------------------------------------------------------------------------
+
+-- global or configuration settings for duplex
+
+duplex_preferences = renoise.Document.create{
+  -- list of device configurations that should be started by default
+  autostart_configurations = {""}
+}
 
 
 --------------------------------------------------------------------------------
