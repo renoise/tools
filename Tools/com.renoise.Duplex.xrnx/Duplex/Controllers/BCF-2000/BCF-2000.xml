@@ -2,7 +2,7 @@
   <Name>BCF-2000</Name>
   <Author>Taktik</Author>
   <Description>Controlmap for Behringer BCF 2000
-Select factory preset #1 on the BCR for this configuration</Description>
+Select factory preset #1 on the BCF for this configuration</Description>
   <Parameters>
     <Page>
       <Column>
