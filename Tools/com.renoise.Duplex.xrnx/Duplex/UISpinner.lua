@@ -95,10 +95,10 @@ function UISpinner:do_change()
     return
   end
 
-  self.value = msg.value/(msg.max/self.maximum)
+  -- restrict the value to fit within the range 
+  self.value = (msg.value/((msg.max-msg.min)/(self.maximum-self.minimum)))+self.minimum
 
-  local step = msg.max/(self.maximum-self.minimum+1)
-  local index = math.max(math.ceil(msg.value/step),1)-1
+  local index = math.floor(self.value+.5)
 
   if(index~=self.index)then
     self.index = index
@@ -166,49 +166,44 @@ function UISpinner:do_press()
 end
 
 
+
 --------------------------------------------------------------------------------
 
--- set a new minimum value for the index, clipping the current index when needed
+-- set a new value range, clipping the current index when needed
+-- you can set just one value, since we skip nil values
 
-function UISpinner:set_minimum(value)
-  TRACE("UISpinner:set_minimum",value)
-  if (self.minimum ~= value) then
-    self.minimum = value
-    
-    if (self.minimum > self.maximum) then
-      self.minimum, self.maximum = self.maximum, self.minimum
-    end
+function UISpinner:set_range(minimum,maximum)
+  TRACE("UISpinner:set_range",minimum,maximum)
 
-    if (self.index < self.maximum) then
-      self:set_index(self.maximum)
-    end
-    
-    self:invalidate()
+  local changed = false
+
+  if (minimum) and (self.minimum ~= minimum) then
+    self.minimum = minimum
+    changed = true
   end
-end
 
+  if (maximum) and (self.maximum ~= maximum) then
+    self.maximum = maximum
+    self.ceiling = maximum
+    changed = true
+  end
 
---------------------------------------------------------------------------------
+  if(changed)then
 
--- set a new maximum value for the index, clipping the current index when needed
-
-function UISpinner:set_maximum(value)
-  TRACE("UISpinner:set_maximum",value)
-
-  if (self.maximum ~= value) then
-    self.maximum = value
-    self.ceiling = value
-    
     if (self.minimum > self.maximum) then
       self.minimum, self.maximum = self.maximum, self.minimum
     end
-    
+
     if (self.index > self.maximum) then
       self:set_index(self.maximum)
+    elseif (self.index < self.minimum) then
+      self:set_index(self.minimum)
     end
-    
+
     self:invalidate()
+
   end
+
 end
   
   
@@ -219,7 +214,7 @@ end
 -- @skip_event (boolean) skip event handler
 
 function UISpinner:set_index(idx, skip_event_handler)
-  TRACE("UISpinner:set_index",idx, skip_event_handler)
+  print("UISpinner:set_index",idx, skip_event_handler)
   assert(idx >= self.minimum and idx <= self.maximum, 
     "Internal Error. Please report: invalid index for a spinner")
 

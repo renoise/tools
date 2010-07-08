@@ -708,7 +708,7 @@ function MixConsole:__attach_to_tracks()
 
   -- validate and update the sequence/track offset
   if (self.__track_navigator) then
-    self.__track_navigator:set_maximum(math.max(0, 
+    self.__track_navigator:set_range(nil,math.max(0, 
       #renoise.song().tracks - self.__width))
   end
     
