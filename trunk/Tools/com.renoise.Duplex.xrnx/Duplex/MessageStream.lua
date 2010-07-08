@@ -77,14 +77,14 @@ function MessageStream:on_idle()
   TRACE("MessageStream:on_idle()")
 
   for i,msg in ipairs(self.pressed_buttons) do
-    if (not msg.__held_event_fired) and
+    if (not msg.held_event_fired) and
        (msg.timestamp + self.button_hold_time < os.clock()) 
     then
       -- broadcast to attached listeners
       for _,listener in ipairs(self.hold_listeners)  do 
         listener.handler() 
       end
-      msg.__held_event_fired = true
+      msg.held_event_fired = true
     end
   end
 end
@@ -269,11 +269,7 @@ function Message:__init(device)
   self.input_method = nil 
 
   -- true once the button is held for a while
-  self.__held_event_fired = false
-
-  -- true when message is fired from the virtual control surface
-  self.__is_virtual = false
-
+  self.held_event_fired = false
 end
 
 
