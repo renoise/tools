@@ -2,12 +2,12 @@
 -- Duplex.BCR-2000
 ----------------------------------------------------------------------------]]--
 
--- default configurations of the BCR-2000
+-- default configuration of the BCR-2000
 
 
 --------------------------------------------------------------------------------
 
-device_configurations:insert {
+duplex_configurations:insert {
 
   -- configuration properties
   name = "Effects (N/A)",

@@ -150,7 +150,7 @@ end
 
 --------------------------------------------------------------------------------
 
-device_configurations:insert {
+duplex_configurations:insert {
 
   -- configuration properties
   name = "Mixer",
@@ -184,7 +184,7 @@ device_configurations:insert {
 
 --------------------------------------------------------------------------------
 
-device_configurations:insert {
+duplex_configurations:insert {
 
   -- configuration properties
   name = "Matrix",
@@ -223,7 +223,7 @@ device_configurations:insert {
 
 --------------------------------------------------------------------------------
 
-device_configurations:insert {
+duplex_configurations:insert {
 
   -- configuration properties
   name = "Matrix & Mixer",

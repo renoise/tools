@@ -7,7 +7,7 @@
 
 --------------------------------------------------------------------------------
 
-device_configurations:insert {
+duplex_configurations:insert {
 
   -- configuration properties
   name = "Mixer & Effects",

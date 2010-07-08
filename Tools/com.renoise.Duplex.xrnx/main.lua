@@ -17,20 +17,75 @@ local browser = nil
 -- dump MIDI debug option
 local dump_midi = false
 
--- instantiate a new browser, or load a new controller configuration
-local function show_dialog(config)
+
+-------------------------------------------------------------------------------
+
+-- instantiate the browser, if needed, or load a new controller configuration
+
+local function create_browser(config, start_running)
+  start_running = start_running or true
+  
   if (not browser) then
     browser = Browser()
     browser:set_dump_midi(dump_midi)
   end
     
   if (config) then
-    local start_running = true
     browser:set_configuration(config, start_running)
   end
-  
+end
+
+
+-------------------------------------------------------------------------------
+
+-- show the duplex browser dialog and optionally lauch a configuration
+
+local function show_dialog(config, start_running)
+  create_browser(config, start_running)
   browser:show()
 end
+
+
+-------------------------------------------------------------------------------
+
+-- instantiate all configs that the user "enabled" to autostart
+-- to be invoked from app_new_document_observable 
+
+local applied_autostart_configurations = false
+
+local function apply_autostart_configurations() 
+
+  -- only needs to be done once, when the first song gets activated
+  if (not applied_autostart_configurations) then
+    applied_autostart_configurations = true
+    
+    local autostart_configurations = duplex_preferences.autostart_configurations    
+    for i=1, #autostart_configurations do     
+      local device_config_name = autostart_configurations[i].value      
+      if (device_config_name ~= "") then
+      
+        -- find the config
+        local matching_config
+        for _,config in pairs(duplex_configurations) do
+          local config_autostart_name = 
+            config.device.display_name .. " " .. config.name
+          
+          if (device_config_name == config_autostart_name) then
+            matching_config = config
+            break
+          end
+        end
+        
+        -- and start it
+        if (matching_config) then
+          local start_running = true
+          create_browser(matching_config, start_running)
+        end
+      end
+    end
+  end  
+end
+
 
 
 -------------------------------------------------------------------------------
@@ -51,7 +106,7 @@ renoise.tool():add_menu_entry {
 
 local device_configuration_map = table.create()
 
-for _,config in pairs(device_configurations) do
+for _,config in pairs(duplex_configurations) do
   if (config.device and config.device.display_name) then
     local device_name = config.device.display_name
     if (not device_configuration_map[device_name]) then
@@ -124,6 +179,25 @@ renoise.tool().app_new_document_observable:add_notifier(function()
   if (browser) then
     browser:on_new_document()
   end
+
+  apply_autostart_configurations()
 end)
 
+
+-------------------------------------------------------------------------------
+-- preferences
+-------------------------------------------------------------------------------
+
+-- assign the global duplex prefs as tool preferences
+renoise.tool().preferences = duplex_preferences
+
+
+-------------------------------------------------------------------------------
+-- debug
+-------------------------------------------------------------------------------
+
+_AUTO_RELOAD_DEBUG = function()
+  -- autoload device the configs from the prefs when changing duplex sources
+  apply_autostart_configurations()
+end
 

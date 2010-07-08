@@ -2,8 +2,8 @@
 -- Duplex.Bcf-2000
 ----------------------------------------------------------------------------]]--
 
--- default configurations of the Bcf-2000
--- only uses a control map and the MixConsole application
+-- default configuration of the BCF-2000
+-- uses a custom device class, a control map and the MixConsole application
 
 
 --==============================================================================
@@ -23,7 +23,7 @@ end
 
 --------------------------------------------------------------------------------
 
-device_configurations:insert {
+duplex_configurations:insert {
 
   -- configuration properties
   name = "Mixer",

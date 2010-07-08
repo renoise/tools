@@ -22,7 +22,7 @@ function Browser:__init(initial_configuration, start_configuration)
   ---- properties
 
   -- list of duplex device configuration definitions
-  self.__available_configurations = device_configurations
+  self.__available_configurations = duplex_configurations
 
   -- processes is a table containing BrowserProcess processes
   self.__processes = table.create()
@@ -391,8 +391,12 @@ function Browser:set_configuration(configuration, start_running)
   self.__vb.views.dpx_browser_configuration_row.visible = has_device
   self.__vb.views.dpx_browser_device_settings.visible = has_device
   self.__vb.views.dpx_browser_device_ui_row.visible = has_device
+  self.__vb.views.dpx_browser_autostart_row.visible = has_device
   self.__vb.views.dpx_browser_device_info_text.visible = has_device
-    
+
+  self.__vb.views.dpx_browser_autostart_checkbox.value = 
+    self:__configuration_autostart_enabled()
+      
   local process = self:__current_process()
 
   self.__vb.views.dpx_browser_configuration_running_checkbox.value = 
@@ -749,6 +753,72 @@ end
 
 --------------------------------------------------------------------------------
 
+-- returns true when the current configuration should be autostarted, else false
+
+function Browser:__configuration_autostart_enabled()
+
+  local process = self:__current_process()  
+
+  if (process) then
+    local autostart_configurations = duplex_preferences.autostart_configurations  
+    return (autostart_configurations:find(process:autostart_config_name()) ~= nil)
+  end
+    
+  return false
+end
+
+
+--------------------------------------------------------------------------------
+
+-- add the current configuration to the autostart prefs, so that it automatically 
+-- starts when renoise starts
+
+function Browser:__enable_configuration_autostart()
+  TRACE("Browser:__enable_configuration_autostart()")
+
+  local process = self:__current_process() 
+
+  if (process) then
+    local autostart_configurations = duplex_preferences.autostart_configurations  
+    
+    -- remove other configs for this device first (there's one config per device only)
+    for i=1, #autostart_configurations do      
+      local device_config_name = duplex_preferences.autostart_configurations[i].value
+      if (device_config_name:find(process.configuration.device.display_name) == 1) then
+        autostart_configurations:remove(i); i = i - 1
+      end
+    end
+      
+    -- then add the current, new one
+    if (not autostart_configurations:find(process:autostart_config_name())) then
+      autostart_configurations:insert(process:autostart_config_name())
+    end
+  end
+end
+  
+
+--------------------------------------------------------------------------------
+
+-- remove the current configuration from the autostart prefs
+
+function Browser:__disable_configuration_autostart()
+  TRACE("Browser:__disable_configuration_autostart()")
+  
+  local process = self:__current_process() 
+
+  if (process) then
+    local autostart_configurations = duplex_preferences.autostart_configurations  
+
+    local index = autostart_configurations:find(process:autostart_config_name())
+    if (index) then
+      autostart_configurations:remove(index)
+    end
+  end
+end
+
+
+--------------------------------------------------------------------------------
+
 -- build and assign the application dialog
 
 function Browser:__create_content_view()
@@ -860,6 +930,32 @@ function Browser:__create_content_view()
       }    
     },
 
+    -- autostart checkbox
+    vb:row {
+      id = 'dpx_browser_autostart_row',
+      margin = DEFAULT_MARGIN,
+      tooltip = "When enabled, this configuration will be launched\n" ..
+        "automatically, every time Renoise starts.",
+  
+      vb:space { width = 50 },
+      vb:checkbox {
+        value = false,
+        id = 'dpx_browser_autostart_checkbox',
+        notifier = function(v)
+          if (not self.__suppress_notifiers) then
+            if (v == true) then
+              self:__enable_configuration_autostart()
+            else
+              self:__disable_configuration_autostart()
+            end
+          end
+        end
+      },     
+      vb:text {
+        text = "Autostart configuration",
+      }
+    },
+    
     -- virtual device ui
     vb:column {
       id = 'dpx_browser_device_ui_row'
@@ -906,6 +1002,19 @@ function BrowserProcess:__init()
   
   -- true when this process was running at least once after instantiated
   self.__was_running = false
+end
+
+
+--------------------------------------------------------------------------------
+
+-- returns the configuration's name as used in the auto start preferences
+
+function BrowserProcess:autostart_config_name()
+  assert(self:instantiated(), "Internal Error. Please report: " .. 
+    "trying to use a process which was not instantiated")
+    
+  return self.configuration.device.display_name .. 
+    " " .. self.configuration.name
 end
 
 
