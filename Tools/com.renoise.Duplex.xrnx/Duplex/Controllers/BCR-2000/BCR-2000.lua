@@ -10,7 +10,7 @@
 device_configurations:insert {
 
   -- configuration properties
-  name = "ParameterMixer (N/A)",
+  name = "Effects (N/A)",
   pinned = false,
 
   -- device properties

@@ -759,7 +759,6 @@ function Browser:__create_content_view()
   
   self.__content_view = vb:column{
     id = 'dpx_browser_rootnode',
-    style = "body",
     width = 400,
     
     -- device chooser
@@ -768,7 +767,7 @@ function Browser:__create_content_view()
       margin = DEFAULT_MARGIN,
       vb:text {
         text = "Device",
-        width = 60,
+        width = 50,
       },
       vb:popup {
         id = 'dpx_browser_input_device',
@@ -809,8 +808,8 @@ function Browser:__create_content_view()
       margin = DEFAULT_MARGIN,
       visible = false,
       vb:text {
-          text = "Config",
-          width = 60,
+          text = "Config.",
+          width = 50,
       },
       vb:popup {
         id = 'dpx_browser_configurations',
