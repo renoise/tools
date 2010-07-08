@@ -10,19 +10,22 @@ Requires: Globals, Display, CanvasPoint
 About:
 
 UISpinner makes it possible to select among a list of options
-Imagine a list going from 1-5. This is how it could be displayed: 
+Flexible operating mode depend on the internal __size property
+
+[ ]     - (todo) single button controlled, will step through values
+( )     - single dial, will trigger event for each quantized value
+[ ][ ]  - two buttons, for next/previous style operation
+
+This is how the range 1-5 could be displayed in two-button mode:
 
 [ ][x] (this is how 1 is displayed)
 [x][x] (this is how 2/3/4 is displayed)
 [x][ ] (this is how 5 is displayed)
 
-- good for stuff like switching between pages 
-- supports vertical/horizontal and axis flipping
-- fixed size: 2 (two units spanned)
 
 Events
 
-  on_press() - invoked whenever the button is pressed
+  on_change() - invoked whenever the button is pressed
 
 --]]
 
@@ -48,7 +51,7 @@ function UISpinner:__init(display)
   self.maximum = 1
 
   -- draw vertical or horizontal?
-  self.orientation = HORIZONTAL 
+  self.__orientation = HORIZONTAL 
 
   -- up/down or left/right arrows?
   -- if specified, text arrows will appear
@@ -112,17 +115,16 @@ end
 function UISpinner:do_press()
   TRACE("UISpinner:do_press")
   
-  if (self.on_press ~= nil) then
+  if (self.on_change ~= nil) then
     local msg = self.get_msg(self)
     
     if not (self.group_name == msg.group_name) then
       return 
     end
     
-    if not self.test(self,msg.column,msg.row) then
+    if not self:test(msg.column,msg.row) then
       return 
     end
-
     local changed = false
     local idx = self:determine_index_by_pos(msg.column,msg.row)
 
@@ -248,27 +250,39 @@ end
 
 function UISpinner:determine_index_by_pos(column, row)
 
-  local pos,offset = nil,nil
+  local idx,offset = nil,nil
 
-  if (self.orientation == VERTICAL) then
-    pos = row
+  if (self.__orientation == VERTICAL) then
+    idx = row
     offset = self.y_pos
+
   else
-   assert(self.orientation == HORIZONTAL, 
+   assert(self.__orientation == HORIZONTAL, 
       "Internal Error. Please report: unexpected UI orientation")
-      
-    pos = column
+    idx = column
     offset = self.x_pos
   end
   
+
+  local idx = idx - (offset - 1)
   if (self.flipped) then
-    pos = self.__size - pos + 1
+    idx = math.abs((idx-1)-(offset-1))
   end
-  
-  local idx = pos - (offset - 1)
+
   return idx
 end
 
+--------------------------------------------------------------------------------
+
+function UISpinner:set_orientation(value)
+  TRACE("UISpinner:set_orientation",value)
+
+  if (value==HORIZONTAL) or (value==VERTICAL) then
+    self.__orientation = value
+    self:set_size(self.__size) -- update canvas
+  end
+
+end
 
 --------------------------------------------------------------------------------
 
@@ -277,7 +291,9 @@ end
 function UISpinner:invoke_handler()
   TRACE("UISpinner:invoke_handler()")
 
-  local rslt = self.on_press(self)
+  if (self.on_change == nil) then return end
+
+  local rslt = self.on_change(self)
   if not rslt then  -- revert
     self.index = self.__cached_index
   else
@@ -317,7 +333,7 @@ function UISpinner:draw()
       arrow2 = self.palette.down_arrow
     end
 
-    if (self.minimum == self.maximum) then        -- [ ][ ]
+    if (self.minimum == self.maximum) then        -- [ ][ ]     
       point1:apply(self.palette.background)
       point1:apply(blank)
       point2:apply(self.palette.background)
@@ -339,16 +355,29 @@ function UISpinner:draw()
       point2:apply(arrow2)
     end
 
-    if (self.orientation == HORIZONTAL) then
-      self.canvas:write(point1,1,1)
-      self.canvas:write(point2,2,1)
+    if (self.__orientation == HORIZONTAL) then
+
+      if (self.flipped) then
+        self.canvas:write(point1,2,1)
+        self.canvas:write(point2,1,1)
+      else
+        self.canvas:write(point1,1,1)
+        self.canvas:write(point2,2,1)
+      end
+
     
     else
-      assert(self.orientation == VERTICAL, 
+      assert(self.__orientation == VERTICAL, 
         "Internal Error. Please report: unexpected UI orientation")
 
-      self.canvas:write(point1,1,1)
-      self.canvas:write(point2,1,2)
+      if (self.flipped) then
+        self.canvas:write(point1,1,2)
+        self.canvas:write(point2,1,1)
+      else
+        self.canvas:write(point1,1,1)
+        self.canvas:write(point2,1,2)
+      end
+
     end
 
   end
@@ -359,13 +388,13 @@ end
 
 --------------------------------------------------------------------------------
 
--- set_size()  - omit this - only 2 is really accepted! 
+-- set_size()  - also used when switching orientation
 
 function UISpinner:set_size(size)
   
   self.__size = size
   
-  if self.orientation == VERTICAL then
+  if self.__orientation == VERTICAL then
     UIComponent.set_size(self, 1, self.__size)
   
   else
