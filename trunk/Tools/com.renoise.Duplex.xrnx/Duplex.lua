@@ -23,6 +23,7 @@ require "Duplex/Browser"
 
 require "Duplex/Applications/MixConsole"
 require "Duplex/Applications/PatternMatrix"
+require "Duplex/Applications/Effect"
 
 require "Duplex/Controllers/BCF-2000/BCF-2000"
 require "Duplex/Controllers/BCR-2000/BCR-2000"
