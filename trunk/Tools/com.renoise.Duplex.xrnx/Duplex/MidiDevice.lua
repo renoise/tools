@@ -72,6 +72,8 @@ function MidiDevice:midi_callback(message)
     self.name, message[1], message[2], message[3]))
 
   local msg = Message()
+  msg.from_device = true
+
   local value_str = nil
 
   if (self.dump_midi) then
