@@ -128,7 +128,17 @@ os.platform() -> [string]
 -- when executing a script from a file
 os.currentdir() -> [string]
 
+-- returns a list of directory names (names, not full paths) for the given
+-- parent directory. passed directory must be valid, or an error will be thrown.
+os.dirnames(path) -> [table of strings]
 
+-- returns a list file names (names, not full paths) for the given 
+-- parent directory. second optinal argument is a list of file extensions that 
+-- should be searched for, like {"*.wav", "*.txt"}. by default all files are 
+-- matched. the passed directory must be valid, or an error will be thrown.
+os.filenames(path [, {file_extensions}]) -> [table of strings]
+    
+    
 -- changed
 
 -- replaced with a temp directory and name which renoise will clean up on exit
