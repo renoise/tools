@@ -109,9 +109,14 @@ duplex_configurations = table.create()
 duplex_preferences = renoise.Document.create{
   -- list of device configurations that should be started by default
   autostart_configurations = {""},
+
   -- the number of seconds required to trigger DEVICE_EVENT_BUTTON_HELD
   -- fractional values are supported, 0.5 is half a second
   button_hold_time = 1,
+
+  -- debug option: when enabled, dump MIDI messages received and send by duplex
+  -- to the sdt out (Renoise terminal)
+  dump_midi = false
 }
 
 
