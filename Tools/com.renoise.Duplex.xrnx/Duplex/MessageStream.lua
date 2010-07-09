@@ -248,6 +248,10 @@ function Message:__init(device)
   -- it might indicate a CC, or OSC message
   self.context = nil
 
+  -- true, when the message was sent from a device (MIDI or OSC) and not
+  -- from the virtual UI components or other MessageStream clients
+  self.from_device = nil
+  
   -- the is the actual value for the chosen parameter
   -- (not to be confused with the control-map value)
   self.value = nil
