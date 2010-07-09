@@ -12,10 +12,6 @@ In Progress
 
 * Bjorn: Re-animate Device options parsing
 
-* Eduard: Implement Behringer BFC and BFR classes, finish the control maps
-
-* Eduard: Relative MIDI controller message support for encoders
-
 * Eduard: find and load controllers and apps dynamically
 
 
@@ -32,6 +28,9 @@ Before beta starts
 * [danoise]: start with the APC controller support
 * [danoise]: device-preference format, divide into "options" and "mappings"
 
+* [taktik]: OSC Device / protocol support
+* [taktik]: Finish Behringer BFC and BFR classes and control maps
+
 --
 
 * Test applications: write Ohm64-based apps to ensure proper operation 
@@ -40,15 +39,18 @@ Before beta starts
 * Navigator
   o Extract code from other apps
 
-* OSC Device / protocol support
-
-* Ability to map any app option?
-
-* New Applications
-  o FX parameter Mixer (control currently selected FX)
+* Effect:
+  o Support other than selected FX
+  o Support other parameter subsets than "everything"
 
 * MixConsole: 
+  o Support Solo
+  o Support Pre and Post Vol/Pan (via a page switch or config)
   o Support "OFF" and "MUTE" modes (which depend on Renoise preference)
+  
+* Relative MIDI controller message support for encoders
+
+* Ability to map any app option?
 
 * Application configuration panel:
   o List the names of application groups, each with "choose" button that open
@@ -130,6 +132,7 @@ Discuss
 
 * Ability to "discard" incoming messages after they have been processed (or 
   there would be note-on and cc messages all over the place). 
+
 
 ================================================================================
 Done
@@ -261,3 +264,5 @@ Done
   o text orientation property, arrows as part of palette (easier to set up)
   * set __size to 1 for "proper dial mode" ;)
 
+* New Applications
+  o FX parameter Mixer (control currently selected FX)
