@@ -21,8 +21,8 @@ require "Duplex/Browser"
 
 -- TODO: find and load controllers and apps dynamically
 
-require "Duplex/Applications/MixConsole"
-require "Duplex/Applications/PatternMatrix"
+require "Duplex/Applications/Mixer"
+require "Duplex/Applications/Matrix"
 require "Duplex/Applications/Effect"
 
 require "Duplex/Controllers/BCF-2000/BCF-2000"

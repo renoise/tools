@@ -22,9 +22,9 @@ duplex_configurations:insert {
     protocol = DEVICE_MIDI_PROTOCOL
   },
   
-  -- setup a MixConsole and Effect application
+  -- setup a Mixer and Effect application
   applications = {
-    MixConsole = {
+    Mixer = {
       levels = {
         group_name = "Encoders",
       },

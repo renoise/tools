@@ -3,7 +3,7 @@
 ----------------------------------------------------------------------------]]--
 
 -- default configuration of the BCF-2000
--- uses a custom device class, a control map and the MixConsole application
+-- uses a custom device class, a control map and the Mixer application
 
 
 --==============================================================================
@@ -38,9 +38,9 @@ duplex_configurations:insert {
     protocol = DEVICE_MIDI_PROTOCOL
   },
   
-  -- setup "MixConsole" as the only app for this configuration
+  -- setup a Mixer app as the only app for this configuration
   applications = {
-    MixConsole = {
+    Mixer = {
       mute = {
         group_name = "Buttons1",
       },

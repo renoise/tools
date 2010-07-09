@@ -1,5 +1,5 @@
 --[[----------------------------------------------------------------------------
--- Duplex.PatternMatrix
+-- Duplex.Matrix
 ----------------------------------------------------------------------------]]--
 
 --[[
@@ -36,10 +36,10 @@
 --==============================================================================
 
 
-class 'PatternMatrix' (Application)
+class 'Matrix' (Application)
 
-function PatternMatrix:__init(display,mappings,options)
-  TRACE("PatternMatrix:__init(",display,mappings,options)
+function Matrix:__init(display,mappings,options)
+  TRACE("Matrix:__init(",display,mappings,options)
 
   Application.__init(self)
 
@@ -191,8 +191,8 @@ end
 
 --------------------------------------------------------------------------------
 
-function PatternMatrix:build_app()
-  TRACE("PatternMatrix:build_app()")
+function Matrix:build_app()
+  TRACE("Matrix:build_app()")
 
   Application.build_app(self)
 
@@ -438,8 +438,8 @@ end
 
 -- update slots visual appeareance 
 
-function PatternMatrix:update()
-  TRACE("PatternMatrix:update()")
+function Matrix:update()
+  TRACE("Matrix:update()")
   if (not self.active) then
     return
   end
@@ -449,7 +449,7 @@ function PatternMatrix:update()
     return
   end
 
-  TRACE("PatternMatrix:update() - proceed")
+  TRACE("Matrix:update() - proceed")
 
   local sequence = renoise.song().sequencer.pattern_sequence
   local tracks = renoise.song().tracks
@@ -524,8 +524,8 @@ end
 -- on new song, and when tracks have been changed
 -- + no event fired
 
-function PatternMatrix:update_track_count() 
-  TRACE("PatternMatrix:update_track_count")
+function Matrix:update_track_count() 
+  TRACE("Matrix:update_track_count")
 
   local count = math.floor((#renoise.song().tracks-1)/self.__width)
   self.__track_navigator:set_range(nil,count)
@@ -537,8 +537,8 @@ end
 -- update sequence offset
 -- + no event fired
 
-function PatternMatrix:update_seq_offset()
-  TRACE("PatternMatrix:update_seq_offset()")
+function Matrix:update_seq_offset()
+  TRACE("Matrix:update_seq_offset()")
 
   local skip_event_handler = true
   self.__sequence_navigator:set_index(self.__play_page, skip_event_handler)
@@ -552,8 +552,8 @@ end
 -- update the switcher (when the number of pattern have changed)
 -- + no event fired
 
-function PatternMatrix:update_page_count()
-  TRACE("PatternMatrix:update_page_count()")
+function Matrix:update_page_count()
+  TRACE("Matrix:update_page_count()")
 
   local seq_len = #renoise.song().sequencer.pattern_sequence
   local page_count = math.floor((seq_len-1)/self.__height)
@@ -567,8 +567,8 @@ end
 -- update position in sequence
 -- @idx: (integer) the index, 0 - song-end
 
-function PatternMatrix:update_position(idx)
-  TRACE("PatternMatrix:update_position()",idx)
+function Matrix:update_position(idx)
+  TRACE("Matrix:update_position()",idx)
 
   local pos_idx = nil
   if(self.__playing)then
@@ -591,8 +591,8 @@ end
 
 -- retrigger the current pattern
 
-function PatternMatrix:retrigger_pattern()
-  TRACE("PatternMatrix:retrigger_pattern()")
+function Matrix:retrigger_pattern()
+  TRACE("Matrix:retrigger_pattern()")
 
   local play_pos = self.__playback_pos.sequence
   if renoise.song().sequencer.pattern_sequence[play_pos] then
@@ -603,8 +603,8 @@ end
 
 --------------------------------------------------------------------------------
 
-function PatternMatrix:get_play_page()
-  TRACE("PatternMatrix:get_play_page()")
+function Matrix:get_play_page()
+  TRACE("Matrix:get_play_page()")
 
   local play_pos = renoise.song().transport.playback_pos
   return math.floor((play_pos.sequence-1)/self.__height)
@@ -613,8 +613,8 @@ end
 
 --------------------------------------------------------------------------------
 
-function PatternMatrix:start_app()
-  TRACE("PatternMatrix.start_app()")
+function Matrix:start_app()
+  TRACE("Matrix.start_app()")
 
   -- "matrix_group_name" is required
   if (not self.mappings.matrix.group_name) then
@@ -623,7 +623,7 @@ function PatternMatrix:start_app()
   -- small issue: this dialog can become obscured by the main UI 
 
     local vb = renoise.ViewBuilder()
-    local dlg_title = "PatternMatrix"
+    local dlg_title = "Matrix"
     local dlg_text = vb:column{
       margin=10,
       spacing=10,
@@ -677,8 +677,8 @@ end
 
 --------------------------------------------------------------------------------
 
-function PatternMatrix:destroy_app()
-  TRACE("PatternMatrix:destroy_app")
+function Matrix:destroy_app()
+  TRACE("Matrix:destroy_app")
 
   Application.destroy_app(self)
 
@@ -702,8 +702,8 @@ end
 
 -- periodic updates: handle "un-observable" things here
 
-function PatternMatrix:on_idle()
---TRACE("PatternMatrix:idle_app()",self.__update_slots_requested)
+function Matrix:on_idle()
+--TRACE("Matrix:idle_app()",self.__update_slots_requested)
   
   if (not self.active) then 
     return 
@@ -790,8 +790,8 @@ end
 
 -- called when a new document becomes available
 
-function PatternMatrix:on_new_document()
-  TRACE("PatternMatrix:on_new_document()")
+function Matrix:on_new_document()
+  TRACE("Matrix:on_new_document()")
 
   self:__attach_to_song(renoise.song())
   self:update_page_count()
@@ -804,42 +804,42 @@ end
 
 -- adds notifiers to slot relevant states
 
-function PatternMatrix:__attach_to_song(song)
-  TRACE("PatternMatrix:__attach_to_song()")
+function Matrix:__attach_to_song(song)
+  TRACE("Matrix:__attach_to_song()")
   
   -- song notifiers
 
   song.sequencer.pattern_assignments_observable:add_notifier(
     function()
-      TRACE("PatternMatrix: pattern_assignments_observable fired...")
+      TRACE("Matrix: pattern_assignments_observable fired...")
       self.__update_slots_requested = true
     end
   )
   
   song.sequencer.pattern_sequence_observable:add_notifier(
     function(e)
-      TRACE("PatternMatrix: pattern_sequence_observable fired...")
+      TRACE("Matrix: pattern_sequence_observable fired...")
       self.__update_slots_requested = true
     end
   )
 
   song.sequencer.pattern_slot_mutes_observable:add_notifier(
     function()
-      TRACE("PatternMatrix:pattern_slot_mutes_observable fired...")
+      TRACE("Matrix:pattern_slot_mutes_observable fired...")
       self.__update_slots_requested = true
     end
   )
 
   song.tracks_observable:add_notifier(
     function()
-      TRACE("PatternMatrix:tracks_observable fired...")
+      TRACE("Matrix:tracks_observable fired...")
       self.__update_slots_requested = true
     end
   )
 
   song.patterns_observable:add_notifier(
     function()
-      TRACE("PatternMatrix:patterns_observable fired...")
+      TRACE("Matrix:patterns_observable fired...")
       self.__update_slots_requested = true
     end
   )
@@ -847,7 +847,7 @@ function PatternMatrix:__attach_to_song(song)
   -- slot notifiers
   
   local function slot_changed()
-    TRACE("PatternMatrix:slot_changed fired...")
+    TRACE("Matrix:slot_changed fired...")
     self.__update_slots_requested = true
   end
 
@@ -873,7 +873,7 @@ function PatternMatrix:__attach_to_song(song)
   -- and to new slots  
   song.tracks_observable:add_notifier(
     function()
-      TRACE("PatternMatrix:tracks_changed fired...")
+      TRACE("Matrix:tracks_changed fired...")
       self.__update_slots_requested = true
       self.__update_tracks_requested = true
       attach_slot_notifiers()
@@ -882,7 +882,7 @@ function PatternMatrix:__attach_to_song(song)
 
   song.patterns_observable:add_notifier(
     function()
-      TRACE("PatternMatrix:patterns_changed fired...")
+      TRACE("Matrix:patterns_changed fired...")
       self.__update_slots_requested = true
       attach_slot_notifiers()
     end

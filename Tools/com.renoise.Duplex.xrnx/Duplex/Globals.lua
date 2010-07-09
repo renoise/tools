@@ -91,8 +91,9 @@ MUTE_STATE_OFF = 2
 --   },
 --
 --   ** applications
---   applications = { -- list of applications and app config 
---     MixConsole = { options = "Something" } -- for example a mix console
+--   applications = { -- list of applications and app configs
+--     Mixer = { options = "Something" }, -- a mixer app
+--     Effect = { options = "Something" } -- an effect app
 --   } 
 -- }
   

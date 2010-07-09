@@ -1,12 +1,12 @@
 --[[----------------------------------------------------------------------------
--- Duplex.MixConsole
+-- Duplex.Mixer
 ----------------------------------------------------------------------------]]--
 
 --[[
 
   About
 
-  MixConsole is a generic class for controlling the Renoise mixer
+  Mixer is a generic class for controlling the Renoise mixer
   - supported on a wide variety of hardware
   - supports faders, buttons or dials for input
 
@@ -60,10 +60,10 @@
 
 --==============================================================================
 
-class 'MixConsole' (Application)
+class 'Mixer' (Application)
 
-function MixConsole:__init(display,mappings,options)
-  TRACE("MixConsole:__init",display,mappings,options)
+function Mixer:__init(display,mappings,options)
+  TRACE("Mixer:__init",display,mappings,options)
 
   -- constructor 
   Application.__init(self)
@@ -230,8 +230,8 @@ end
 
 -- volume level changed from Renoise
 
-function MixConsole:set_track_volume(control_index, value)
-  TRACE("MixConsole:set_track_volume", control_index, value)
+function Mixer:set_track_volume(control_index, value)
+  TRACE("Mixer:set_track_volume", control_index, value)
 
   if (self.active) then
     self.__levels[control_index]:set_value(value)
@@ -250,8 +250,8 @@ end
 
 -- panning changed from Renoise
 
-function MixConsole:set_track_panning(control_index, value)
-  TRACE("MixConsole:set_track_panning", control_index, value)
+function Mixer:set_track_panning(control_index, value)
+  TRACE("Mixer:set_track_panning", control_index, value)
 
   if (self.active) then
     self.__panning[control_index]:set_value(value)
@@ -263,8 +263,8 @@ end
 
 -- mute state changed from Renoise
 
-function MixConsole:set_track_mute(control_index, state)
-  TRACE("MixConsole:set_track_mute", control_index, state)
+function Mixer:set_track_mute(control_index, state)
+  TRACE("Mixer:set_track_mute", control_index, state)
 
   if (self.active) then
     -- set mute state to the button
@@ -282,8 +282,8 @@ end
 
 -- update: set all controls to current values from renoise
 
-function MixConsole:update()  
-  TRACE("MixConsole:update()")
+function Mixer:update()  
+  TRACE("Mixer:update()")
 
   local master_track_index = get_master_track_index()
   local tracks = renoise.song().tracks
@@ -367,8 +367,8 @@ end
 
 -- build_app: create a grid or fader/encoder layout
 
-function MixConsole:build_app()
-  TRACE("MixConsole:build_app(")
+function Mixer:build_app()
+  TRACE("Mixer:build_app(")
 
   Application.build_app(self)
 
@@ -617,8 +617,8 @@ end
 
 -- start/resume application
 
-function MixConsole:start_app()
-  TRACE("MixConsole.start_app()")
+function Mixer:start_app()
+  TRACE("Mixer.start_app()")
 
   if not (self.created) then 
     self:build_app()
@@ -631,8 +631,8 @@ end
 
 --------------------------------------------------------------------------------
 
-function MixConsole:destroy_app()
-  TRACE("MixConsole:destroy_app")
+function Mixer:destroy_app()
+  TRACE("Mixer:destroy_app")
 
   if (self.__levels) then
     for _,obj in ipairs(self.__levels) do
@@ -659,8 +659,8 @@ end
 
 --------------------------------------------------------------------------------
 
-function MixConsole:on_new_document()
-  TRACE("MixConsole:on_new_document")
+function Mixer:on_new_document()
+  TRACE("Mixer:on_new_document")
   
   self:__attach_to_song(renoise.song())
   
@@ -675,13 +675,13 @@ end
 -- adds notifiers to song
 -- invoked when a new document becomes available
 
-function MixConsole:__attach_to_song(song)
-  TRACE("MixConsole:__attach_to_song()")
+function Mixer:__attach_to_song(song)
+  TRACE("Mixer:__attach_to_song()")
   
   -- update on track changes in the song
   song.tracks_observable:add_notifier(
     function()
-      TRACE("MixConsole:tracks_changed fired...")
+      TRACE("Mixer:tracks_changed fired...")
       self:__attach_to_tracks()
       
       if (self.active) then
@@ -700,8 +700,8 @@ end
 -- add notifiers to parameters
 -- invoked when tracks are added/removed/swapped
 
-function MixConsole:__attach_to_tracks()
-  TRACE("MixConsole:__attach_to_tracks()")
+function Mixer:__attach_to_tracks()
+  TRACE("Mixer:__attach_to_tracks()")
 
   local tracks = renoise.song().tracks
 

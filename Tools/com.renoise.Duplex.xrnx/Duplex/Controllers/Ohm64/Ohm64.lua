@@ -42,9 +42,9 @@ duplex_configurations:insert {
     protocol = DEVICE_MIDI_PROTOCOL
   },
   
-  -- setup a "MixConsole" and "PatternMatrix" as apps
+  -- setup a Mixer and Matrix as apps
   applications = {
-    MixConsole = {
+    Mixer = {
       panning = {
         group_name = "PanningLeft",
       },
@@ -58,7 +58,7 @@ duplex_configurations:insert {
         group_name = "VolumeRight",
       },
     },
-    PatternMatrix = {
+    Matrix = {
       matrix = {
         group_name = "Grid",
       },
@@ -99,7 +99,7 @@ duplex_configurations:insert {
     protocol = DEVICE_MIDI_PROTOCOL
   },
   
-  -- setup a "MixConsole" and "PatternMatrix" as apps
+  -- setup a Mixer and Matrix as apps
   applications = {
     TestUISpinner = {}
   }
@@ -120,7 +120,6 @@ duplex_configurations:insert {
     protocol = DEVICE_MIDI_PROTOCOL
   },
   
-  -- setup a "MixConsole" and "PatternMatrix" as apps
   applications = {
     TestUISlider = {}
   }
