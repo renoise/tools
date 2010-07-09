@@ -151,9 +151,15 @@ function Effect:build_app()
   -- use one parameter per control in the group
   local control_map_groups = self.display.device.control_map.groups
   local parameters_group = control_map_groups[self.mappings.parameters.group_name]
+  local row,column,columns = 1,1,nil
 
   if (parameters_group) then
     self.__width = #parameters_group
+    if(parameters_group["columns"])then
+      columns = parameters_group["columns"]
+    else
+      columns = self.__width
+    end
   end
   
   for control_index = 1,self.__width do
@@ -162,8 +168,8 @@ function Effect:build_app()
 
     local slider = UISlider(self.display)
     slider.group_name = self.mappings.parameters.group_name
-    slider.x_pos = control_index
-    slider.y_pos = 1
+    slider.x_pos = column
+    slider.y_pos = row
     slider.toggleable = false
     slider.ceiling = 1
     slider:set_size(1)
@@ -194,6 +200,14 @@ function Effect:build_app()
     
     self.display:add(slider)
     self.__parameter_sliders[control_index] = slider
+
+    -- update row/column counters
+    column = column+1
+    if(column>columns)then
+      column = 1
+      row = row+1
+    end
+
   end
   
 
