@@ -243,6 +243,7 @@ function Request:__init(settings)
 
   -- Query string converted from the supplied parameters
   self.query_string = Request:_create_query_string(self.settings.data)
+  rprint(self.query_string)
 
   -- Possible values for the request status besides nil are
   -- "TIMEOUT", "ERROR", "NOTMODIFIED" and "PARSERERROR".
@@ -301,9 +302,37 @@ end
 ---## create_query_string ##---
 -- Converts a parameter data table into a query string
 function Request:_create_query_string(data)
+  
+  -- turn parameter table into multiple nested pairs
+  local function stringify(key,value) 
+    local str = ""
+    
+    -- handle nested parameters
+    local function expand(t)
+      local s = ""
+      if (type(t) == 'table') then
+        for k,v in pairs(t) do 
+          s = s .. '['..k..']' .. expand(v)
+        end 
+      else 
+        s = s .. '=' .. tostring(t)
+      end
+      return s
+    end    
+
+    if (type(value) == 'table') then    
+      for k,v in pairs(value) do
+        str = str ..'&' .. key .. '[' .. k .. ']' .. expand(v)
+      end
+      return str
+    else
+      return str .. "=" .. tostring(value)
+    end
+  end    
+
   local str = ""
   for k,v in pairs(data) do
-    str = str .. "&" .. k .. "=" .. tostring(v)
+    str = str .. stringify(k, v)
   end
   return Util:html_entity_encode(str:sub(2))
 end
