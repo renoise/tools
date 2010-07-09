@@ -14,9 +14,6 @@ require "Duplex"
 -- the one and only browser
 local browser = nil
 
--- dump MIDI debug option
-local dump_midi = false
-
 
 -------------------------------------------------------------------------------
 
@@ -27,7 +24,7 @@ local function create_browser(config, start_running)
   
   if (not browser) then
     browser = Browser()
-    browser:set_dump_midi(dump_midi)
+    browser:set_dump_midi(duplex_preferences.dump_midi.value)
   end
     
   if (config) then
@@ -144,12 +141,12 @@ end
 renoise.tool():add_menu_entry {
   name = "--- Main Menu:Tools:Duplex:Dump MIDI",
   selected = function()
-    return (browser ~= nil and browser:dump_midi() or dump_midi)
+    return duplex_preferences.dump_midi.value
   end,
   invoke = function() 
-    dump_midi = not dump_midi
+    duplex_preferences.dump_midi.value = not duplex_preferences.dump_midi.value
     if (browser) then
-      browser:set_dump_midi(dump_midi)
+      browser:set_dump_midi(duplex_preferences.dump_midi.value)
     end
   end
 }
