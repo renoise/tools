@@ -150,6 +150,19 @@ end
 
 
 -------------------------------------------------------------------------------
+--  stack_depth
+
+function stack_depth()
+  local depth = 1
+  for _ in function() return debug.getinfo(depth) end do
+    depth = depth + 1
+  end
+  
+  depth = depth - 2
+  return depth
+end
+
+
 --  restore_vars
 
 local function restore_vars(vars)
@@ -246,47 +259,43 @@ end
 --  debug_hook
 
 local function debug_hook(event, line)
-  if (event == "call") then
-    stack_level = stack_level + 1
+  stack_level = stack_depth()
 
-  elseif (event == "return") then
-    stack_level = stack_level - 1
-
-  else
-    local file = debug.getinfo(2, "S").source
-    
-    -- completely ignore sources with no files (internal scripts)
-    if (file:find("@") == 1) then
-
-      file = string.sub(file, 2)
-      
-      -- use an abs paths for file, if possible and necessary 
-      local merged_file = merge_paths(os.currentdir(), file)
-      if file_exists(merged_file) then
-        file = merged_file
-      end
-     
-      local vars = capture_vars()
-        
-      table.foreach(watches, function (index, value)
-        setfenv(value, vars)
-        local status, res = pcall(value)
-        if (status and res) then
-          coroutine.resume(coro_debugger, 
-            events.WATCH, vars, file, line, index)
-        end
-      end)
+  local file = debug.getinfo(2, "S").source
   
-      if file and (step_into or 
-          (step_over and stack_level <= step_level) or
-          has_breakpoint(file, line))
-      then
-        step_into = false
-        step_over = false
-        if (coroutine.resume(coro_debugger, 
-              events.BREAK, vars, file, line)) then
-          restore_vars(vars)
-        end
+  -- completely ignore sources with no files (internal scripts)
+  if (file and file:find("@") == 1) then
+    file = string.sub(file, 2)
+    
+    -- use an abs paths for file, if possible and necessary 
+    local merged_file = merge_paths(os.currentdir(), file)
+    if file_exists(merged_file) then
+      file = merged_file
+    end
+
+    local vars = capture_vars()
+      
+    table.foreach(watches, function (index, value)
+      setfenv(value, vars)
+      local status, res = pcall(value)
+      if (status and res) then
+        coroutine.resume(coro_debugger, 
+          events.WATCH, vars, file, line, index)
+      end
+    end)
+
+    if (step_into) or 
+       (step_over and stack_level <= step_level) or
+       (has_breakpoint(file, line))
+    then
+      step_into = false
+      step_over = false
+      
+      if (coroutine.resume(coro_debugger, 
+            events.BREAK, vars, file, line)) then
+        restore_vars(vars)
+      else
+        error("Remdebug error: failed to resume the debugged thread")
       end
     end
   end
@@ -553,7 +562,7 @@ function start()
     debug_server = server
 
     -- enable hooks
-    debug.sethook(debug_hook, "lcr")
+    debug.sethook(debug_hook, "l")
 
     _assert = _G.assert
     _G.assert = function(expression, message)
@@ -597,7 +606,7 @@ function start()
     coro_debugger = coroutine.create(debugger_loop)
     return _assert(coroutine.resume(coro_debugger, server))
   else
-    error(("remdebug connection failed: '%s'"):format(server_error))
+    error(("Remdebug Error: connection failed: '%s'"):format(server_error))
   end
 end
 
