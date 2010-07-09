@@ -785,7 +785,8 @@ function Browser:__enable_configuration_autostart()
     for i=1, #autostart_configurations do      
       local device_config_name = duplex_preferences.autostart_configurations[i].value
       if (device_config_name:find(process.configuration.device.display_name) == 1) then
-        autostart_configurations:remove(i); i = i - 1
+        autostart_configurations:remove(i)
+        break
       end
     end
       
