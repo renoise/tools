@@ -781,10 +781,13 @@ function Browser:__enable_configuration_autostart()
   if (process) then
     local autostart_configurations = duplex_preferences.autostart_configurations  
     
-    -- remove other configs for this device first (there's one config per device only)
-    for i=1, #autostart_configurations do      
-      local device_config_name = duplex_preferences.autostart_configurations[i].value
-      if (device_config_name:find(process.configuration.device.display_name) == 1) then
+    -- remove other configs for this device first (one config per device)
+    for i = 1,#autostart_configurations do      
+      local preferences_entry = autostart_configurations[i].value
+      local process_device_name = process.configuration.device.display_name
+      
+      local plain_find = true
+      if (preferences_entry:find(process_device_name, 1, plain_find) == 1) then
         autostart_configurations:remove(i)
         break
       end
