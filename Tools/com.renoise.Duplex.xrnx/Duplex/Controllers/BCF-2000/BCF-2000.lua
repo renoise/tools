@@ -15,9 +15,8 @@ function BFC2000:__init(name, message_stream)
 
   MidiDevice.__init(self, name, message_stream)
 
-  -- the motor faders of the BFC can not handle looped back messages
-  -- correctly, so we disable sending back messages we got from the BFC
-  -- in order to break feedback loops...
+  -- the BFC can not handle looped back messages correctly, so we disable 
+  -- sending back messages we got from the BFC, in order to break feedback loops...
   self.loopback_received_messages = false
 end
 
