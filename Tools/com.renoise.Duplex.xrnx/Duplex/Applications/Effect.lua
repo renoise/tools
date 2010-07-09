@@ -192,8 +192,16 @@ function Effect:build_app()
         -- scale parameter value from [0 - 1] range to the parameter range
         local parameter_value = parameter.value_min + obj.value *
           (parameter.value_max - parameter.value_min)
-            
-        parameter.value = parameter_value
+        
+        -- hackily check for valid ranges, in order to suppress updates of
+        -- temporarily wrong values that we get from Renoise (-1 for the meta 
+        -- device effect/device choosers)    
+        if (parameter_value >= parameter.value_min and 
+            parameter_value <= parameter.value_max) 
+        then
+          parameter.value = parameter_value
+        end
+        
         return true
       end
     end
