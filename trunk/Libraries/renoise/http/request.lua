@@ -22,10 +22,18 @@ require "renoise.http.util"
 -- JSON4Lua JSON Encoding and Decoding
 require "renoise.http.json"
 
+-- XML parser
 require "renoise.http.xml"
 
 -- Requests pool
 local requests_pool = table.create()
+
+
+-------------------------------------------------------------------------------
+--  Debug settings
+-------------------------------------------------------------------------------
+
+local DEBUG_CONTENT = false
 
 
 -------------------------------------------------------------------------------
@@ -48,7 +56,7 @@ read = function()
   -- Loop through the Requests pool
   for k,request in ipairs(requests_pool) do
     if not (request.complete) then
-      request.complete = not (request:read_content())
+      request.complete = not (request:_read_content())
     else 
       log:info("Request complete, removed from pool.")
       requests_pool:remove(k)
@@ -64,7 +72,7 @@ end
 
 
 -------------------------------------------------------------------------------
---  Request class
+--  Request class (PUBLIC)
 -------------------------------------------------------------------------------
 
 class "Request"
@@ -108,18 +116,20 @@ Request.settings = {
   -- TODO Set a local timeout (in milliseconds) for the request.
   timeout = 0,
 
-  -- Default: Intelligent Guess (xml, json, script, or html)
+  -- Default: "text"
   -- The type of data that you're expecting back from the server. If none is 
   -- specified, we will intelligently try to get the results, based on the 
   -- MIME type of the response.
   -- -- "text": A plain text string.
+  -- -- "lua_table": Expects data wrapped in a Lua table. The received
+  -- --              data can be used directly without having to parse.
   -- -- "json": Evaluates the response as JSON and returns a Lua table. Any
   -- --         malformed JSON is rejected and a parse error is thrown.
   -- --         (See json.org for more information on proper JSON formatting.)
   -- -- TODO "xml": Returns a XML document parsed into a Lua table/object.
   -- -- TODO "html": Returns HTML as plain text; included script tags are
   -- --              evaluated when inserted in the DOM.
-  -- -- TODO "script": Evaluates the response as Lua and returns it as plain
+  -- -- TODO "lua_script": Evaluates the response as Lua and returns it as plain
   -- --                text. Disables caching unless option "cache" is used.
   -- --                Note: This will turn POSTs into GETs for remote-domain
   -- --                requests.
@@ -232,7 +242,7 @@ function Request:__init(settings)
   self.header_map = table.create()
 
   -- Query string converted from the supplied parameters
-  self.query_string = Request:create_query_string(self.settings.data)
+  self.query_string = Request:_create_query_string(self.settings.data)
 
   -- Possible values for the request status besides nil are
   -- "TIMEOUT", "ERROR", "NOTMODIFIED" and "PARSERERROR".
@@ -254,15 +264,19 @@ function Request:__init(settings)
     end
   end
   
-  self:enqueue()
+  self:_enqueue()
 end
 
+
+-------------------------------------------------------------------------------
+--  Request class (PRIVATE)
+-------------------------------------------------------------------------------
 
 ---## enqueue ##---
 -- Retrieves the header from the server and 
 -- schedules the request for further download
-function Request:enqueue()
-  local success, socket_error = self:read_header()
+function Request:_enqueue()
+  local success, socket_error = self:_read_header()
   if (success) then
     requests_pool:insert(self)
     if (#requests_pool == 1) then
@@ -272,21 +286,21 @@ function Request:enqueue()
     self.text_status = Request.ERROR
     log:error(("%s failed: %s."):format(self.url,
       (socket_error or "[unknown error]")))
-    self:do_callback()  
+    self:_do_callback()  
   end
 end
 
 
 ---## set_header ##---
 -- Inserts or overrides a name/value pair in the header map
-function Request:set_header(name, value)
+function Request:_set_header(name, value)
   self.header_map[name] = value
 end
 
 
 ---## create_query_string ##---
 -- Converts a parameter data table into a query string
-function Request:create_query_string(data)
+function Request:_create_query_string(data)
   local str = ""
   for k,v in pairs(data) do
     str = str .. "&" .. k .. "=" .. tostring(v)
@@ -297,7 +311,7 @@ end
 
 ---## read_header ##---
 -- Sets up a connection and loads the HTTP header from the server
-function Request:read_header()
+function Request:_read_header()
 
   local socket_error = nil
 
@@ -320,11 +334,11 @@ function Request:read_header()
   -- Setup the header
   local header = string.format("%s %s HTTP/1.1\r\n",
      self.settings.method, self.url)
-  self:set_header("Host", self.url_parts.host)
-  self:set_header("Content-Type", self.settings.content_type)
-  self:set_header("Content-Length", content_length)
-  self:set_header("Connection", "keep-alive")
-  self:set_header("User-Agent",
+  self:_set_header("Host", self.url_parts.host)
+  self:_set_header("Content-Type", self.settings.content_type)
+  self:_set_header("Content-Length", content_length)
+  self:_set_header("Connection", "keep-alive")
+  self:_set_header("User-Agent",
     string.format( "Renoise %s (%s)", 
     renoise.RENOISE_VERSION, os.platform():lower() )
   )
@@ -396,14 +410,14 @@ local chunk=""
 --
 -- Example:
  -- Transfer-Encoding: chunked
- -- 
+ --
  -- 25
  -- This is the data in the first chunk
  -- 
  -- 1A
  -- and this is the second one
  -- 0
-function Request:process_chunk(buffer)       
+function Request:_process_chunk(buffer)
     -- new chunk
     if (#chunk == 0) then        
       log:info("New chunk")
@@ -418,10 +432,11 @@ function Request:process_chunk(buffer)
     if (chunk_size == 0) then
       return
     end
-    
-     log:info("chunk_size:" .. chunk_size)
-     log:info("buffer_size:" .. #buffer)         
-    
+
+    self.length = self.length + #buffer 
+    log:info("chunk_size:" .. chunk_size)
+    log:info("buffer_size:" .. #buffer) 
+     
     -- split buffer
     if (#buffer >= chunk_remaining) then
        log:info("chunk_remaining:" .. 0)
@@ -429,7 +444,7 @@ function Request:process_chunk(buffer)
        chunks:insert(chunk)
        buffer = buffer:sub(chunk_remaining+1)
        chunk = ""
-       self:process_chunk(buffer)
+       self:_process_chunk(buffer)
     else 
       chunk = chunk..buffer
       chunk_remaining = chunk_remaining - #buffer
@@ -437,9 +452,10 @@ function Request:process_chunk(buffer)
     end
 end        
 
+
 ---## read_content ##---
 -- Loads the response from the server
-function Request:read_content()
+function Request:_read_content()
   assert(self.client_socket and self.response.header,
     "read_header failed or was not called")
   
@@ -459,16 +475,13 @@ function Request:read_content()
         log:info("New chunk")
       end                 
         
-      self:process_chunk(buffer)      
+      self:_process_chunk(buffer)
       
     else
       -- Store received new data
       self.contents:insert(buffer)
-    end
-    
-
-    self.length = self.length + #buffer
-    
+      self.length = self.length + #buffer
+    end            
             
     -- Display amount of data read
     if (self.length > 10 * 1024) then
@@ -486,7 +499,7 @@ function Request:read_content()
       if (#chunks > 0) then
         self.contents = chunks
       end        
-      self:do_callback()
+      self:_do_callback()
       return false
     else
       -- continue reading      
@@ -506,7 +519,7 @@ function Request:read_content()
       -- cancel request
       log:warn(socket_error)
       self.text_status = Request.ERROR
-      self:do_callback(socket_error)
+      self:_do_callback(socket_error)
       return false
     end
   end
@@ -516,7 +529,7 @@ end
 ---## decode ##---
 -- Processes data in a different data type
  -- TODO process more data_types 
-function Request:decode(data)
+function Request:_decode(data)
   local error, succeeded, result
   local data_type = self.settings.data_type
   
@@ -529,14 +542,16 @@ function Request:decode(data)
     
   elseif (data_type == "OSC") then
   
-  elseif (data_type == "LUA_ARRAY") then
+  elseif (data_type == "LUA_TABLE") then
+    -- assume data is a raw Lua table, return data unprocessed.
+    return data
   
   elseif (data_type == "XML") then    
      log:info("Decoding XML")     
      succeeded, result =       
        XmlParser:ParseXmlText(data:concat())
      
-  elseif (data_type == "LUA") then
+  elseif (data_type == "LUA_SCRIPT") then
     -- evaluate Lua
     
   elseif (data_type == "HTML") then
@@ -555,13 +570,13 @@ end
 
 ---## do_callback ##---
 -- Finalizes the transaction and executes the optional callback functions
-function Request:do_callback(socket_error)
+function Request:_do_callback(socket_error)
 
   -- Print a small amount of received data in the terminal
   log:info(("=== CONTENT (%d bytes from %s) ==="):format(
     self.length, self.url))
   if (self.length <= 32 * 1024) then
-    --rprint(self.contents)
+    if (DEBUG_CONTENT)  then rprint(self.contents) end
   else
     print(" *** too much content to display (> 32 kbytes) *** ")
   end
@@ -604,7 +619,7 @@ function Request:do_callback(socket_error)
   local data = self.contents 
   local parser_error = nil
   if (self.length > 0) then
-    data, parser_error = self:decode(data)    
+    data, parser_error = self:_decode(data)
     if (parser_error) then 
       self.text_status = Request.PARSERERROR 
     end
@@ -614,7 +629,7 @@ function Request:do_callback(socket_error)
 
   -- invoke the external callbacks (if set)
   if (socket_error or parser_error) then
-    -- TODO more errors
+    -- TODO handle more errors
     self.settings.error( xml_http_request, self.text_status, socket_error)
   else
     self.settings.success( data, self.text_status, xml_http_request )
