@@ -3,7 +3,7 @@
 ----------------------------------------------------------------------------]]--
 
 -- default configurations of the Nocturn
--- only uses a control map and the MixConsole application
+-- only uses a control map and the Mixer application
 
 --------------------------------------------------------------------------------
 
@@ -22,9 +22,9 @@ duplex_configurations:insert {
     protocol = DEVICE_MIDI_PROTOCOL
   },
   
-  -- setup "MixConsole" as the only app for this configuration
+  -- setup a Mixer as the only app for this configuration
   applications = {
-    MixConsole = {
+    Mixer = {
       levels = {
         group_name = "Encoders",
       },

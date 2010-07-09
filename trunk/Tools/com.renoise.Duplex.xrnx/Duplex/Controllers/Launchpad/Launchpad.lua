@@ -165,9 +165,9 @@ duplex_configurations:insert {
     protocol = DEVICE_MIDI_PROTOCOL,
   },
 
-  -- setup "MixConsole" as the only app for this configuration
+  -- setup "Mixer" as the only app for this configuration
   applications = {
-    MixConsole = {
+    Mixer = {
       levels = {
         group_name = "Grid",
       },
@@ -199,9 +199,9 @@ duplex_configurations:insert {
     protocol = DEVICE_MIDI_PROTOCOL,
   },
 
-  -- setup "PatternMatrix" as the only app for this configuration
+  -- setup a Matrix as the only app for this configuration
   applications = {
-    PatternMatrix = {
+    Matrix = {
       matrix = {
         group_name = "Grid",
       },
@@ -238,9 +238,9 @@ duplex_configurations:insert {
     protocol = DEVICE_MIDI_PROTOCOL,
   },
 
-  -- setup "PatternMatrix" and "MixConsole", vertically split
+  -- setup a Matrix and Mixer, vertically split
   applications = {
-    PatternMatrix = {
+    Matrix = {
       matrix = {
         group_name = "Grid",
       },
@@ -256,7 +256,7 @@ duplex_configurations:insert {
         index = 2,
       }
     },
-    MixConsole = {
+    Mixer = {
       levels = {
         group_name = "Grid2",
       },

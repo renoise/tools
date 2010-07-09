@@ -8,7 +8,7 @@ In Progress
 
 * Bjorn: Make the virtual control surface detect press/release
 
-* Bjorn: MixConsole option: Show only certain track types 
+* Bjorn: Mixer option: Show only certain track types 
 
 * Bjorn: Re-animate Device options parsing
 
@@ -43,7 +43,7 @@ Before beta starts
   o Support other than selected FX
   o Support other parameter subsets than "everything"
 
-* MixConsole: 
+* Mixer: 
   o Support Solo
   o Support Pre and Post Vol/Pan (via a page switch or config)
   o Support "OFF" and "MUTE" modes (which depend on Renoise preference)
@@ -79,7 +79,7 @@ Before beta starts
   repeat values across pages?)
 
 * Scheduler class: for double-press detect, and stuff like blinking objects
-  o PatternMatrix: the scheduled pattern should blink
+  o Matrix: the scheduled pattern should blink
 
 * UITrigger: trigger button (with short delay, needs the Scheduler)
   o Delay time (0 for cycle mode, 100 for quick fade)
@@ -87,7 +87,7 @@ Before beta starts
     o Use as "fading effect" when a short delay is specified
     o In cycle mode, switch on each hit 
 
-* PatternMatrix: create a dedicated class for sequence triggers (UITrigger),
+* Matrix: create a dedicated class for sequence triggers (UITrigger),
   complete with "blinking" and "shaded loop region"
   o Active pattern index (press)
   o Scheduled pattern index (press another button than the selected one)
@@ -119,7 +119,7 @@ Discuss
 * Meta-applications / apps talking to each other?
   Expose the device process (all running apps on the device)
 
-* MixConsole makes "MUTE" (not "OFF") impossible !!
+* Mixer makes "MUTE" (not "OFF") impossible !!
   Check when a track is muted, the type of mute and set mode accordingly
 
 * Do we have access method for normal renoise mappings through Duplex?
@@ -170,7 +170,7 @@ Done
 * Application class methods for switching between applications/putting to 
   sleep etc.
 
-* Convert existing tools into Application classes (MixConsole, PatternMatrix)
+* Convert existing tools into Application classes (Mixer, Matrix)
 
 * Dynamic switching of MIDI device and control-map 
 
@@ -220,7 +220,7 @@ Done
 
 * Renamed constant CONTROLLER_POT to CONTROLLER_DIAL 
 
-* PatternMatrix: when trigger-group is an ampty string, embed into matrix 
+* Matrix: when trigger-group is an empty string, embed into matrix 
   (if the trigger-group is undefined, do not create triggers at all)
 
 * MixConsole/PatternMatrix: build_app() called when started, not loaded
