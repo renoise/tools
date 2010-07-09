@@ -473,6 +473,9 @@ renoise.song().tracks[].color, _observable
 renoise.song().tracks[].mute_state, _observable
   -> [enum = MUTE_STATE]
 
+renoise.song().tracks[].solo_state, _observable 
+  -> [boolean]
+
 renoise.song().tracks[].prefx_volume
   -> [renoise.DeviceParameter object]
 renoise.song().tracks[].prefx_panning
