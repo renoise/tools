@@ -833,12 +833,13 @@ function Browser:__create_content_view()
   
   self.__content_view = vb:column{
     id = 'dpx_browser_rootnode',
+    margin = DEFAULT_MARGIN,
+    spacing = DEFAULT_SPACING,
     width = 400,
     
     -- device chooser
     vb:row {
       id = 'dpx_browser_input_device_row',
-      margin = DEFAULT_MARGIN,
       vb:text {
         text = "Device",
         width = 50,
@@ -879,7 +880,6 @@ function Browser:__create_content_view()
     -- configuration chooser
     vb:row {
       id = 'dpx_browser_configuration_row',
-      margin = DEFAULT_MARGIN,
       visible = false,
       vb:text {
           text = "Config.",
@@ -937,7 +937,6 @@ function Browser:__create_content_view()
     -- autostart checkbox
     vb:row {
       id = 'dpx_browser_autostart_row',
-      margin = DEFAULT_MARGIN,
       tooltip = "When enabled, this configuration will be launched\n" ..
         "automatically, every time Renoise starts.",
   
