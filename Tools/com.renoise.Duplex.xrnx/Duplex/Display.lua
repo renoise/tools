@@ -35,16 +35,8 @@ function Display:__init(device)
   self.vb = nil
   self.view = nil    
 
-  --  temp values (construction of control surface)
-  self.parents = {}
-  self.grid_obj = nil    
-  self.grid_count = 0
-
-  --self.scheduler = Scheduler()
-
   -- array of UIComponent instances
   self.ui_objects = table.create()
-
   -- each UI object notifier method is referenced by id, 
   -- so we can attach/detach the method when we need
   self.ui_notifiers = table.create()
@@ -75,6 +67,11 @@ function Display:__init(device)
       color={0x40,0x40,0x40}
     },
   }    
+  
+  --  temp values (construction of control surface)
+  self.__parents = {}
+  self.__grid_obj = nil    
+  self.__grid_count = 0
 end
 
 
@@ -294,7 +291,14 @@ function Display:build_control_surface()
   
   -- loading may have failed. check if definition is valid...
   if (self.device.control_map.definition) then
-    self:walk_table(self.device.control_map.definition)
+  
+    -- reset temp states from previous walks
+    self.__parents = {}
+    self.__grid_obj = nil    
+    self.__grid_count = 0
+
+    -- construct the control surface UI
+    self:__walk_table(self.device.control_map.definition)
   end
   
   return self.view
@@ -355,11 +359,11 @@ end
 
 --------------------------------------------------------------------------------
 
---  walk_table: create the virtual control surface
+--  __walk_table: create the virtual control surface
 --  iterate through the control-map, while adding/collecting 
 --  relevant meta-information 
 
-function Display:walk_table(t, done, deep)
+function Display:__walk_table(t, done, deep)
 
   deep = deep and deep + 1 or 1  --  the nesting level
   done = done or {}
@@ -504,7 +508,7 @@ function Display:walk_table(t, done, deep)
         view_obj.view = self.vb:column{
           spacing = DEFAULT_SPACING
         }
-        self.parents[deep] = view_obj
+        self.__parents[deep] = view_obj
         
   
   
@@ -514,7 +518,7 @@ function Display:walk_table(t, done, deep)
         view_obj.view = self.vb:row{
           spacing = DEFAULT_SPACING,
         }
-        self.parents[deep] = view_obj
+        self.__parents[deep] = view_obj
         
   
       --- Group
@@ -527,12 +531,12 @@ function Display:walk_table(t, done, deep)
         if (columns) then
           -- enter "grid mode": use current group as 
           -- base object for inserting multiple rows
-          self.grid_count = self.grid_count+1
-          grid_id = string.format("grid_%i",self.grid_count)
+          self.__grid_count = self.__grid_count+1
+          grid_id = string.format("grid_%i",self.__grid_count)
           orientation = "vertical"
         else
           -- exit "grid mode"
-          self.grid_obj = nil
+          self.__grid_obj = nil
         end
           
         if (orientation == "vertical") then
@@ -558,10 +562,10 @@ function Display:walk_table(t, done, deep)
         -- more grid mode stuff: remember the original view_obj
         -- grid mode will otherwise loose this reference...
         if (grid_id) then
-          self.grid_obj = view_obj
+          self.__grid_obj = view_obj
         end
           
-        self.parents[deep] = view_obj
+        self.__parents[deep] = view_obj
       end
         
       -- something was matched
@@ -571,10 +575,10 @@ function Display:walk_table(t, done, deep)
     
         if (view_obj.meta.row) then
           row_id = string.format("grid_%i_row_%i",
-            self.grid_count,view_obj.meta.row)
+            self.__grid_count,view_obj.meta.row)
         end
     
-          if (not grid_id and self.grid_obj and 
+          if (not grid_id and self.__grid_obj and 
               not self.vb.views[row_id]) then
     
           local row_obj = {
@@ -584,16 +588,16 @@ function Display:walk_table(t, done, deep)
             }
           }
           -- assign grid objects to this row
-          self.grid_obj.view:add_child(row_obj.view)
-          self.parents[deep-1] = row_obj
+          self.__grid_obj.view:add_child(row_obj.view)
+          self.__parents[deep-1] = row_obj
         end
           
         -- attach to parent object (if it exists)
         local added = false
     
         for i = deep-1, 1, -1 do
-          if self.parents[i] then
-            self.parents[i].view:add_child(view_obj.view)
+          if self.__parents[i] then
+            self.__parents[i].view:add_child(view_obj.view)
             added = true
             break
           end
@@ -604,16 +608,10 @@ function Display:walk_table(t, done, deep)
           self.view:add_child(view_obj.view)
         end
       end
-      self:walk_table(value,done,deep)
+      
+      self:__walk_table(value, done, deep)
     end
   end
-end
-
-
---------------------------------------------------------------------------------
-
-function Display:__tostring()
-  return type(self)
 end
 
 
@@ -645,5 +643,12 @@ function Display:__quantize_widget_color(color)
     quantize_color(color[2], self.device.colorspace[2]),
     quantize_color(color[3], self.device.colorspace[3])
   } 
+end
+
+
+--------------------------------------------------------------------------------
+
+function Display:__tostring()
+  return type(self)
 end
 
