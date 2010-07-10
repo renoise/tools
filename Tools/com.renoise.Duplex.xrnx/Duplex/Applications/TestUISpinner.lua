@@ -30,8 +30,10 @@ function TestUISpinner:__init(display)
   c.__orientation = HORIZONTAL
   c.text_orientation = VERTICAL
   c.on_change = function(obj)
-    print(("spinner#1.on_change(): is now at index %i out of %i"):format(obj.index,c.maximum))
-    return true
+    if(self.active)then
+      print(("spinner#1.on_change(): is now at index %i out of %i"):format(obj.index,c.maximum))
+    end
+    return self.active
   end
   self.display:add(c)
 
@@ -44,8 +46,10 @@ function TestUISpinner:__init(display)
   c.text_orientation = HORIZONTAL
   c:set_range(1,3)
   c.on_change = function(obj)
-    print(("spinner#2.on_change(): is now at index %i out of %i"):format(obj.index,c.maximum))
-    return true
+    if(self.active)then
+      print(("spinner#2.on_change(): is now at index %i out of %i"):format(obj.index,c.maximum))
+    end
+    return self.active
   end
   self.display:add(c)
 
@@ -59,8 +63,10 @@ function TestUISpinner:__init(display)
   c.text_orientation = VERTICAL
   c:set_range(0,1)
   c.on_change = function(obj)
-    print(("spinner#3.on_change(): is now at index %i out of %i"):format(obj.index,c.maximum))
-    return true
+    if(self.active)then
+      print(("spinner#3.on_change(): is now at index %i out of %i"):format(obj.index,c.maximum))
+    end
+    return self.active
   end
   self.display:add(c)
 
@@ -75,8 +81,10 @@ function TestUISpinner:__init(display)
   c.text_orientation = HORIZONTAL
   c.__orientation = HORIZONTAL
   c.on_change = function(obj)
-    print(("spinner#4.on_change(): is now at index %i out of %i"):format(obj.index,c.maximum))
-    return true
+    if(self.active)then
+      print(("spinner#4.on_change(): is now at index %i out of %i"):format(obj.index,c.maximum))
+    end
+    return self.active
   end
   self.display:add(c)
 
@@ -89,8 +97,10 @@ function TestUISpinner:__init(display)
   c.text_orientation = VERTICAL
   c:set_orientation(VERTICAL) -- call the set_orientation() method
   c.on_change = function(obj)
-    print(("spinner#5.on_change(): is now at index %i out of %i"):format(obj.index,c.maximum))
-    return true
+    if(self.active)then
+      print(("spinner#5.on_change(): is now at index %i out of %i"):format(obj.index,c.maximum))
+    end
+    return self.active
   end
   self.display:add(c)
 
@@ -103,8 +113,10 @@ function TestUISpinner:__init(display)
   c.text_orientation = HORIZONTAL
   c:set_range(1,3)
   c.on_change = function(obj)
-    print(("spinner#6.on_change(): is now at index %i out of %i"):format(obj.index,c.maximum))
-    return true
+    if(self.active)then
+      print(("spinner#6.on_change(): is now at index %i out of %i"):format(obj.index,c.maximum))
+    end
+    return self.active
   end
   self.display:add(c)
 
@@ -117,8 +129,10 @@ function TestUISpinner:__init(display)
   c:set_index(8)
   c:set_size(1) -- dials only span a single unit
   c.on_change = function(obj)
-    print(("spinner#7.on_change(): is now at index %i out of %i"):format(obj.index,c.maximum))
-    return true
+    if(self.active)then
+      print(("spinner#7.on_change(): is now at index %i out of %i"):format(obj.index,c.maximum))
+    end
+    return self.active
   end
   self.display:add(c)
 
@@ -131,8 +145,10 @@ function TestUISpinner:__init(display)
   c:set_index(1) 
   c:set_size(1) 
   c.on_change = function(obj)
-    print(("spinner#8.on_change(): is now at index %i out of %i"):format(obj.index,c.maximum))
-    return true
+    if(self.active)then
+      print(("spinner#8.on_change(): is now at index %i out of %i"):format(obj.index,c.maximum))
+    end
+    return self.active
   end
   self.display:add(c)
 
@@ -145,8 +161,10 @@ function TestUISpinner:__init(display)
   c:set_index(999) 
   c:set_size(1) 
   c.on_change = function(obj)
-    print(("spinner#9.on_change(): is now at index %i out of %i"):format(obj.index,c.maximum))
-    return true
+    if(self.active)then
+      print(("spinner#9.on_change(): is now at index %i out of %i"):format(obj.index,c.maximum))
+    end
+    return self.active
   end
   self.display:add(c)
 

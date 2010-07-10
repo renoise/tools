@@ -10,6 +10,7 @@ require "Duplex/Display"
 require "Duplex/Canvas"
 require "Duplex/UIComponent"
 require "Duplex/UIToggleButton"
+require "Duplex/UITriggerButton"
 require "Duplex/UISlider"
 require "Duplex/UISpinner"
 require "Duplex/ControlMap"
@@ -18,6 +19,7 @@ require "Duplex/MidiDevice"
 require "Duplex/OscDevice"
 require "Duplex/Application"
 require "Duplex/Browser"
+require "Duplex/Scheduler"
 
 -- TODO: find and load controllers and apps dynamically
 
