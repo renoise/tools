@@ -16,13 +16,13 @@ The Scheduler class will execute tasks after a defined amount of time
 class 'Scheduler' 
 
 function Scheduler:__init()
+	TRACE("Scheduler:__init()")
 
-	print("Scheduler:__init()")
-
-  self.tasks = table.create{}
-
+  self.tasks = table.create()
 
 end
+
+--------------------------------------------------------------------------------
 
 function Scheduler:on_idle()
   TRACE("Scheduler:on_idle()",os.clock())
@@ -34,9 +34,9 @@ function Scheduler:on_idle()
       self.tasks:remove(idx)
     end
   end
-
-
 end
+
+--------------------------------------------------------------------------------
 
 function Scheduler:add_task(ref,func,delay)
   TRACE("Scheduler:add_task()",ref,func,delay)
@@ -46,6 +46,8 @@ function Scheduler:add_task(ref,func,delay)
   return task
 
 end
+
+--------------------------------------------------------------------------------
 
 function Scheduler:remove_task(ref)
   TRACE("Scheduler:remove_task()",ref)
@@ -60,6 +62,8 @@ function Scheduler:remove_task(ref)
 
 end
 
+--------------------------------------------------------------------------------
+
 function Scheduler:__execute_task(task)
   --print("Scheduler:__execute_task",task)
 
@@ -72,7 +76,6 @@ end
 --[[----------------------------------------------------------------------------
 -- Duplex.ScheduledTask
 ----------------------------------------------------------------------------]]--
-
 
 class 'ScheduledTask' 
 

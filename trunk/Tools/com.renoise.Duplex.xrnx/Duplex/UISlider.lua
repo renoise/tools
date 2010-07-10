@@ -117,7 +117,7 @@ end
 -- set index
 
 function UISlider:do_press()
-  local msg = self.get_msg(self)
+  local msg = self:get_msg()
 
   if not (self.group_name == msg.group_name) then
     return
@@ -127,7 +127,7 @@ function UISlider:do_press()
     return
   end
 
-  local idx = self:determine_index_by_pos(msg.column, msg.row)
+  local idx = self:__determine_index_by_pos(msg.column, msg.row)
   if (self.toggleable and self.index == idx) then
     idx = 0
   end
@@ -144,18 +144,18 @@ end
 function UISlider:do_change()
   TRACE("Slider:do_change()")
 
-  local msg = self.get_msg(self)
+  local msg = self:get_msg()
   
   if not (self.group_name == msg.group_name) then
     return
   end
   
-  if not self.test(self,msg.column,msg.row) then
+  if not self:test(msg.column,msg.row) then
     return
   end
   
   -- scale from the message range to the sliders range
-  local idx = self:determine_index_by_pos(msg.column, msg.row)
+  local idx = self:__determine_index_by_pos(msg.column, msg.row)
   local tmp = (msg.value / msg.max) * self.ceiling / self.size
   local rslt = (self.ceiling / self.size) * (idx - 1) + tmp
   
@@ -169,7 +169,7 @@ end
 -- @column (integer)
 -- @row (integer)
 
-function UISlider:determine_index_by_pos(column,row)
+function UISlider:__determine_index_by_pos(column,row)
 
   local idx,offset
 
@@ -239,7 +239,7 @@ function UISlider:set_value(val,skip_event)
     self:invalidate()
 
     if (not skip_event) then
-      self:invoke_handler()
+      self:__invoke_handler()
     end
   end  
 end
@@ -263,26 +263,8 @@ function UISlider:set_index(idx,skip_event)
     self.value = (self.ceiling/self.size)*idx
   
     if (not skip_event) then
-      self:invoke_handler()
+      self:__invoke_handler()
     end
-  end
-end
-
-
---------------------------------------------------------------------------------
-
--- trigger the external handler method
-
-function UISlider:invoke_handler()
-
-  if (self.on_change == nil) then return end
-
-  local rslt = self.on_change(self)  
-  if not rslt then  -- revert
-    self.index = self._cached_index    
-    self.value = self._cached_value  
-  else
-    self:invalidate()
   end
 end
 
@@ -377,4 +359,22 @@ function UISlider:remove_listeners()
     self,DEVICE_EVENT_VALUE_CHANGED)
 
 end
+
+--------------------------------------------------------------------------------
+
+-- trigger the external handler method
+
+function UISlider:__invoke_handler()
+
+  if (self.on_change == nil) then return end
+
+  local rslt = self:on_change()  
+  if (rslt==false) then  -- revert
+    self.index = self._cached_index    
+    self.value = self._cached_value  
+  else
+    self:invalidate()
+  end
+end
+
 

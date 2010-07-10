@@ -125,7 +125,9 @@ end
 CanvasPoint represents a point in a canvas 
 - color (table of 8-bit r/g/b values)
 - text (replacement for color, for labelling buttons)
-- value (as defined by the UIComponent)
+- value (as defined by the UIComponent): note that boolean values true/false
+  is translated to their <param> max/min property counterparts, which should 
+  produce an enabled state in the controller
 
 --]]
 

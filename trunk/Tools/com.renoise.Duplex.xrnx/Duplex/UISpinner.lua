@@ -85,7 +85,7 @@ end
 function UISpinner:do_change()
   TRACE("UISpinner:do_change()")
 
-  local msg = self.get_msg(self)
+  local msg = self:get_msg()
   
   if not (self.group_name == msg.group_name) then
     return
@@ -102,7 +102,7 @@ function UISpinner:do_change()
 
   if(index~=self.index)then
     self.index = index
-    self:invoke_handler()
+    self:__invoke_handler()
   end
 
 
@@ -116,7 +116,7 @@ function UISpinner:do_press()
   TRACE("UISpinner:do_press")
   
   if (self.on_change ~= nil) then
-    local msg = self.get_msg(self)
+    local msg = self:get_msg()
     
     if not (self.group_name == msg.group_name) then
       return 
@@ -126,7 +126,7 @@ function UISpinner:do_press()
       return 
     end
     local changed = false
-    local idx = self:determine_index_by_pos(msg.column,msg.row)
+    local idx = self:__determine_index_by_pos(msg.column,msg.row)
 
     -- increase/decrease index
     if (idx == 1) then
@@ -160,7 +160,7 @@ function UISpinner:do_press()
 
     if (changed) then
       self.value = self.index
-      self:invoke_handler()
+      self:__invoke_handler()
     end
   end
 end
@@ -231,7 +231,7 @@ function UISpinner:set_index(idx, skip_event_handler)
     self:invalidate()
 
     if (not skip_event_handler) then
-      self:invoke_handler()
+      self:__invoke_handler()
     end
   end
 end
@@ -243,7 +243,7 @@ end
 -- @column (integer)
 -- @row (integer)
 
-function UISpinner:determine_index_by_pos(column, row)
+function UISpinner:__determine_index_by_pos(column, row)
 
   local idx,offset = nil,nil
 
@@ -283,13 +283,13 @@ end
 
 -- trigger the external handler method
 
-function UISpinner:invoke_handler()
-  TRACE("UISpinner:invoke_handler()")
+function UISpinner:__invoke_handler()
+  TRACE("UISpinner:__invoke_handler()")
 
   if (self.on_change == nil) then return end
 
-  local rslt = self.on_change(self)
-  if not rslt then  -- revert
+  local rslt = self:on_change()
+  if (rslt==false) then  -- revert
     self.index = self.__cached_index
   else
     self:invalidate()
