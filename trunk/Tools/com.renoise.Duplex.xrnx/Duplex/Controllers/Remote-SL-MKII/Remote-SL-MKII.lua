@@ -31,7 +31,15 @@ duplex_configurations:insert {
       mute = {
         group_name = "SliderButtons",
       }
-      --master_group_name = "XFader",
+    },
+    Effect = {
+      parameters = {
+        group_name= "Encoders",
+      },
+      page = {
+        group_name = "EncoderButtons",
+        index = 0
+      }
     },
   }
 }
