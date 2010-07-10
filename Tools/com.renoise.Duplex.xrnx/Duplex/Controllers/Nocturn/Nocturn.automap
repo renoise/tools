@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<AutomapFile>
+    <PlugID PlugID="722721511" PlugID3="1444606871" PlugID2="1141333638" PlugID1="1578595161" />
+    <DeviceID DeviceID="-1215975765" DeviceID3="-1866063922" DeviceID2="1129091659" DeviceID1="-463121537" />
+    <Type Type="0" />
+    <BrowserHint Value="1" />
+    <Group name="Controls">
+        <Group name="Page 1 Encoders">
+            <Param name="CC# 0" shortName="CC# 0" id="0" intStep="1" intMax="127" intMin="0" high="127" low="0" step="1.000000" />
+            <Param name="CC# 1" shortName="CC# 1" id="1" intStep="1" intMax="127" intMin="0" high="127" low="0" step="1.000000" />
+            <Param name="CC# 2" shortName="CC# 2" id="2" intStep="1" intMax="127" intMin="0" high="127" low="0" step="1.000000" />
+            <Param name="CC# 3" shortName="CC# 3" id="3" intStep="1" intMax="127" intMin="0" high="127" low="0" step="1.000000" />
+            <Param name="CC# 4" shortName="CC# 4" id="4" intStep="1" intMax="127" intMin="0" high="127" low="0" step="1.000000" />
+            <Param name="CC# 5" shortName="CC# 5" id="5" intStep="1" intMax="127" intMin="0" high="127" low="0" step="1.000000" />
+            <Param name="CC# 6" shortName="CC# 6" id="6" intStep="1" intMax="127" intMin="0" high="127" low="0" step="1.000000" />
+            <Param name="CC# 7" shortName="CC# 7" id="7" intStep="1" intMax="127" intMin="0" high="127" low="0" step="1.000000" />
+        </Group>
+        <Group name="Page 1 Pots">
+            <Param name="CC# 8" shortName="CC# 8" id="8" intStep="0" intMax="127" intMin="0" high="127" low="127" step="0.000000" />
+            <Param name="CC# 9" shortName="CC# 9" id="9" intStep="0" intMax="127" intMin="0" high="127" low="127" step="0.000000" />
+            <Param name="CC# 10" shortName="CC# 10" id="10" intStep="0" intMax="127" intMin="0" high="127" low="127" step="0.000000" />
+            <Param name="CC# 11" shortName="CC# 11" id="11" intStep="0" intMax="127" intMin="0" high="127" low="127" step="0.000000" />
+            <Param name="CC# 12" shortName="CC# 12" id="12" intStep="0" intMax="127" intMin="0" high="127" low="127" step="0.000000" />
+            <Param name="CC# 13" shortName="CC# 13" id="13" intStep="0" intMax="127" intMin="0" high="127" low="127" step="0.000000" />
+            <Param name="CC# 14" shortName="CC# 14" id="14" intStep="0" intMax="127" intMin="0" high="127" low="127" step="0.000000" />
+            <Param name="CC# 15" shortName="CC# 15" id="15" intStep="0" intMax="127" intMin="0" high="127" low="127" step="0.000000" />
+        </Group>
+        <Group name="Page 1 XFader">
+            <Param name="Pitch Bend" shortName="Pitch Bend" id="128" intStep="1" intMax="63" intMin="-64" high="63" low="-64" step="1.000000" />
+        </Group>
+    </Group>
+</AutomapFile>

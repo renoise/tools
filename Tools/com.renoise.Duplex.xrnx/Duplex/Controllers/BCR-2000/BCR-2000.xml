@@ -18,25 +18,25 @@ Select factory preset #1 on the BCR for this configuration</Description>
         </Group>
         
         <Group name="Buttons1" orientation="horizontal">
-          <Param value="CC#65" type="button" name="Button #1"  maximum="127" minimum="0"/>
-          <Param value="CC#66" type="button" name="Button #2"  maximum="127" minimum="0"/>
-          <Param value="CC#67" type="button" name="Button #3"  maximum="127" minimum="0"/>
-          <Param value="CC#68" type="button" name="Button #4"  maximum="127" minimum="0"/>
-          <Param value="CC#69" type="button" name="Button #5"  maximum="127" minimum="0"/>
-          <Param value="CC#70" type="button" name="Button #6"  maximum="127" minimum="0"/>
-          <Param value="CC#71" type="button" name="Button #7"  maximum="127" minimum="0"/>
-          <Param value="CC#72" type="button" name="Button #8"  maximum="127" minimum="0"/>
+          <Param value="CC#65" type="togglebutton" name="Button #1"  maximum="127" minimum="0"/>
+          <Param value="CC#66" type="togglebutton" name="Button #2"  maximum="127" minimum="0"/>
+          <Param value="CC#67" type="togglebutton" name="Button #3"  maximum="127" minimum="0"/>
+          <Param value="CC#68" type="togglebutton" name="Button #4"  maximum="127" minimum="0"/>
+          <Param value="CC#69" type="togglebutton" name="Button #5"  maximum="127" minimum="0"/>
+          <Param value="CC#70" type="togglebutton" name="Button #6"  maximum="127" minimum="0"/>
+          <Param value="CC#71" type="togglebutton" name="Button #7"  maximum="127" minimum="0"/>
+          <Param value="CC#72" type="togglebutton" name="Button #8"  maximum="127" minimum="0"/>
         </Group>
         
         <Group name="Buttons2" orientation="horizontal">
-          <Param value="CC#73" type="button" name="Button #1"  maximum="127" minimum="0"/>
-          <Param value="CC#74" type="button" name="Button #2"  maximum="127" minimum="0"/>
-          <Param value="CC#75" type="button" name="Button #3"  maximum="127" minimum="0"/>
-          <Param value="CC#76" type="button" name="Button #4"  maximum="127" minimum="0"/>
-          <Param value="CC#77" type="button" name="Button #5"  maximum="127" minimum="0"/>
-          <Param value="CC#78" type="button" name="Button #6"  maximum="127" minimum="0"/>
-          <Param value="CC#79" type="button" name="Button #7"  maximum="127" minimum="0"/>
-          <Param value="CC#80" type="button" name="Button #8"  maximum="127" minimum="0"/>
+          <Param value="CC#73" type="togglebutton" name="Button #1"  maximum="127" minimum="0"/>
+          <Param value="CC#74" type="togglebutton" name="Button #2"  maximum="127" minimum="0"/>
+          <Param value="CC#75" type="togglebutton" name="Button #3"  maximum="127" minimum="0"/>
+          <Param value="CC#76" type="togglebutton" name="Button #4"  maximum="127" minimum="0"/>
+          <Param value="CC#77" type="togglebutton" name="Button #5"  maximum="127" minimum="0"/>
+          <Param value="CC#78" type="togglebutton" name="Button #6"  maximum="127" minimum="0"/>
+          <Param value="CC#79" type="togglebutton" name="Button #7"  maximum="127" minimum="0"/>
+          <Param value="CC#80" type="togglebutton" name="Button #8"  maximum="127" minimum="0"/>
         </Group>
         
         <Row>
@@ -68,10 +68,10 @@ Select factory preset #1 on the BCR for this configuration</Description>
           </Group>
           
           <Group name="PageControls" columns="2">
-            <Param value="CC#105" type="button" name="Control Button #1"  maximum="127" minimum="0"/>
-            <Param value="CC#106" type="button" name="Control Button #2"  maximum="127" minimum="0"/>
-            <Param value="CC#107" type="button" name="Control Button #3"  maximum="127" minimum="0"/>
-            <Param value="CC#108" type="button" name="Control Button #4"  maximum="127" minimum="0"/>
+            <Param value="CC#105" type="togglebutton" name="Control Button #1"  maximum="127" minimum="0"/>
+            <Param value="CC#106" type="togglebutton" name="Control Button #2"  maximum="127" minimum="0"/>
+            <Param value="CC#107" type="togglebutton" name="Control Button #3"  maximum="127" minimum="0"/>
+            <Param value="CC#108" type="togglebutton" name="Control Button #4"  maximum="127" minimum="0"/>
           </Group>
         
         </Row>

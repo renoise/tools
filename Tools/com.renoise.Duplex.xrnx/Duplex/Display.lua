@@ -334,6 +334,9 @@ function Display:generate_message(value, metadata)
   if (metadata.type == "button") then
     msg.input_method = CONTROLLER_BUTTON
 
+  elseif (metadata.type == "togglebutton") then
+    msg.input_method = CONTROLLER_TOGGLEBUTTON
+
 --  elseif (metadata.type == "encoder") then
 --    msg.input_method = CONTROLLER_ENCODER
 
@@ -405,12 +408,13 @@ function Display:__walk_table(t, done, deep)
             view_obj.meta.name,view_obj.meta.value)
   
   
-          --- Param:button
+          --- Param:button or togglebutton
           
-          if (t[key].xarg.type == "button") then
+          if (t[key].xarg.type == "button" or 
+              t[key].xarg.type == "togglebutton") then
             local notifier = function(value) 
               -- output the maximum value
-              self:generate_message(view_obj.meta.maximum*1,view_obj.meta)
+              self:generate_message(tonumber(view_obj.meta.maximum),view_obj.meta)
             end
               
             self.ui_notifiers[t[key].xarg.id] = notifier

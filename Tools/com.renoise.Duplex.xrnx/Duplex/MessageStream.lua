@@ -181,10 +181,10 @@ function MessageStream:input_message(msg)
       listener.handler() 
     end
   
-  elseif (msg.input_method == CONTROLLER_BUTTON) then
+  elseif (msg.input_method == CONTROLLER_BUTTON or 
+          msg.input_method == CONTROLLER_TOGGLEBUTTON) then
 
     --  "binary" input, value either max or min 
-
 
     if (msg.value == msg.max) then
       -- interpret this as pressed
@@ -204,11 +204,13 @@ function MessageStream:input_message(msg)
     elseif (msg.value == msg.min) then
       -- interpret this as release
       
-      -- broadcast to listeners
-      for _,listener in ipairs(self.press_listeners) do 
-        listener.handler() 
+      -- for toggle buttons, broadcast releases to listeners as well
+      if (msg.input_method == CONTROLLER_TOGGLEBUTTON) then
+        for _,listener in ipairs(self.press_listeners) do 
+          listener.handler() 
+        end
       end
-
+      
       -- remove from pressed_buttons
       if (not msg.is_virtual) then
         for i,button_msg in ipairs(self.pressed_buttons) do
