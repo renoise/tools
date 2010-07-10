@@ -30,6 +30,7 @@ Todo
 * detecting standard release events
 * detecting that a button was double-pressed (trigger on second press)
 * detecting multiple simultanously pressed buttons (combinations)
+* detecting ignored_buttons
 
 --]]
 
@@ -184,20 +185,14 @@ function MessageStream:input_message(msg)
 
     --  "binary" input, value either max or min 
 
-    -- if it's listed in ignored_buttons
-    -- remove from ignored_buttons and exit
 
     if (msg.value == msg.max) then
       -- interpret this as pressed
-      -- check if this button has been pressed recently invoke double_press, and 
-      -- add to ignored_buttons (so the release won't trigger as well) else, add 
-      -- to pressed_buttons
-      -- todo: check if already pressed, and skip adding
-
+      
       -- if the input source was the virtual control surface, we do
       -- not add the button to the list of pressed buttons (not while
       -- the control surface doesn't have a release event)
-      if (not msg.is_virtual)then
+      if (not msg.is_virtual) then
         self.pressed_buttons:insert(msg)
       end
 
@@ -206,17 +201,20 @@ function MessageStream:input_message(msg)
         listener.handler() 
       end
 
-      -- check other held buttons:
-      -- if combination is matched, invoke combination_press, and add held buttons 
-      -- to ignored_buttons (so the release won't trigger)
-      
     elseif (msg.value == msg.min) then
       -- interpret this as release
       
+      -- broadcast to listeners
+      for _,listener in ipairs(self.press_listeners) do 
+        listener.handler() 
+      end
+
       -- remove from pressed_buttons
-      for i,button_msg in ipairs(self.pressed_buttons) do
-        if (msg.id == button_msg.id) then
-          self.pressed_buttons:remove(i)
+      if (not msg.is_virtual) then
+        for i,button_msg in ipairs(self.pressed_buttons) do
+          if (msg.id == button_msg.id) then
+            self.pressed_buttons:remove(i)
+          end
         end
       end
     end
@@ -283,4 +281,3 @@ function Message:__tostring()
   return string.format("message: context:%s, group_name:%s",
     tostring(self.context), tostring(self.group_name))
 end
-
