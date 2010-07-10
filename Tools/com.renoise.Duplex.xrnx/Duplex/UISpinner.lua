@@ -5,27 +5,27 @@
 --[[
 
 Inheritance: UIComponent > UISpinner
-Requires: Globals, Display, CanvasPoint
 
-About:
+
+About
 
 UISpinner makes it possible to select among a list of options
 Flexible operating mode depend on the internal __size property
 
-[ ]     - (todo) single button controlled, will step through values
 ( )     - single dial, will trigger event for each quantized value
-[ ][ ]  - two buttons, for next/previous style operation
+[<][>]  - two buttons, for next/previous style operation
 
-This is how the range 1-5 could be displayed in two-button mode:
 
-[ ][x] (this is how 1 is displayed)
-[x][x] (this is how 2/3/4 is displayed)
-[x][ ] (this is how 5 is displayed)
+Input methods
+
+- use "button" type input (next/previous buttons)
+- use "dial" or "slider" (outputs quantized values)
 
 
 Events
 
-  on_change() - invoked whenever the button is pressed
+- on_change() - invoked when a button is pressed / control is changed
+
 
 --]]
 
@@ -331,23 +331,31 @@ function UISpinner:draw()
     if (self.minimum == self.maximum) then        -- [ ][ ]     
       point1:apply(self.palette.background)
       point1:apply(blank)
+      point1.val = false
       point2:apply(self.palette.background)
       point2:apply(blank)
+      point2.val = false
     elseif (self.index == self.minimum) then      -- [ ][▼]
       point1:apply(self.palette.background)
       point1:apply(blank)
+      point1.val = false
       point2:apply(self.palette.foreground_inc)
       point2:apply(arrow2)
+      point2.val = true
     elseif (self.index == self.maximum) then      -- [▲][ ]
       point1:apply(self.palette.foreground_dec)
       point1:apply(arrow1)
+      point1.val = true
       point2:apply(self.palette.background)
       point2:apply(blank)
+      point2.val = false
     else                                          -- [▲][▼]
       point1:apply(self.palette.foreground_dec)
       point1:apply(arrow1)
+      point1.val = true
       point2:apply(self.palette.foreground_inc)
       point2:apply(arrow2)
+      point2.val = true
     end
 
     if (self.__orientation == HORIZONTAL) then
