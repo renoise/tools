@@ -6,6 +6,9 @@ main.lua
 
 require "Duplex"
 
+-- enable tests
+
+require "testing"
 
 -------------------------------------------------------------------------------
 -- locals
