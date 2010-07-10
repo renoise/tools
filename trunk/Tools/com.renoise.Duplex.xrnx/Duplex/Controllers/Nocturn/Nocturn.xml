@@ -2,32 +2,33 @@
   <Name>Novation Nocturn</Name>
   <Author>Danoise</Author>
   <Description>Controlmap for Novation Nocturn.
-Ensure that the Automap user layout is identical to the default one. The cross-fader is assigned to CC#127 and all buttons are working in "normal" mode. Otherwise, if you have created some different preset yourself, the Automap software might cause buttons to turn on and off when they shouldn't.</Description>
+Load the provided automap configuration before using
+(the file is located in Controllers/Nocturn)</Description>
   <Parameters>
     <Page>
       <Column>
         <Row>
           <Group name="Encoders" orientation="horizontal">
-            <Param value="CC#0" type="dial" name="Dial #1"  maximum="127" minimum="0"/>
-            <Param value="CC#1" type="dial" name="Dial #2"  maximum="127" minimum="0"/>
-            <Param value="CC#2" type="dial" name="Dial #3"  maximum="127" minimum="0"/>
-            <Param value="CC#3" type="dial" name="Dial #4"  maximum="127" minimum="0"/>
-            <Param value="CC#4" type="dial" name="Dial #5"  maximum="127" minimum="0"/>
-            <Param value="CC#5" type="dial" name="Dial #6"  maximum="127" minimum="0"/>
-            <Param value="CC#6" type="dial" name="Dial #7"  maximum="127" minimum="0"/>
-            <Param value="CC#7" type="dial" name="Dial #8"  maximum="127" minimum="0"/>
+            <Param value="CC#64" type="dial" name="Dial #1"  maximum="127" minimum="0"/>
+            <Param value="CC#65" type="dial" name="Dial #2"  maximum="127" minimum="0"/>
+            <Param value="CC#66" type="dial" name="Dial #3"  maximum="127" minimum="0"/>
+            <Param value="CC#67" type="dial" name="Dial #4"  maximum="127" minimum="0"/>
+            <Param value="CC#68" type="dial" name="Dial #5"  maximum="127" minimum="0"/>
+            <Param value="CC#69" type="dial" name="Dial #6"  maximum="127" minimum="0"/>
+            <Param value="CC#70" type="dial" name="Dial #7"  maximum="127" minimum="0"/>
+            <Param value="CC#71" type="dial" name="Dial #8"  maximum="127" minimum="0"/>
           </Group>
         </Row>
         <Row>
           <Group name="Pots" orientation="horizontal">
-            <Param value="CC#8" type="button" name="Button #1"  maximum="127" minimum="0"/>
-            <Param value="CC#9" type="button" name="Button #2"  maximum="127" minimum="0"/>
-            <Param value="CC#10" type="button" name="Button #3"  maximum="127" minimum="0"/>
-            <Param value="CC#11" type="button" name="Button #4"  maximum="127" minimum="0"/>
-            <Param value="CC#12" type="button" name="Button #5"  maximum="127" minimum="0"/>
-            <Param value="CC#13" type="button" name="Button #6"  maximum="127" minimum="0"/>
-            <Param value="CC#14" type="button" name="Button #7"  maximum="127" minimum="0"/>
-            <Param value="CC#15" type="button" name="Button #8"  maximum="127" minimum="0"/>
+            <Param value="CC#72" type="togglebutton" name="Button #1"  maximum="127" minimum="0"/>
+            <Param value="CC#73" type="togglebutton" name="Button #2"  maximum="127" minimum="0"/>
+            <Param value="CC#74" type="togglebutton" name="Button #3"  maximum="127" minimum="0"/>
+            <Param value="CC#75" type="togglebutton" name="Button #4"  maximum="127" minimum="0"/>
+            <Param value="CC#76" type="button" name="Button #5"  maximum="127" minimum="0"/>
+            <Param value="CC#77" type="button" name="Button #6"  maximum="127" minimum="0"/>
+            <Param value="CC#78" type="button" name="Button #7"  maximum="127" minimum="0"/>
+            <Param value="CC#79" type="button" name="Button #8"  maximum="127" minimum="0"/>
           </Group>
         </Row>
         <Row>

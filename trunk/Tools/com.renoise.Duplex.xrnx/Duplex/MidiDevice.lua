@@ -107,6 +107,8 @@ function MidiDevice:midi_callback(message)
       -- determine input method
       if (xarg.type == "button") then
         msg.input_method = CONTROLLER_BUTTON
+      elseif (xarg.type == "togglebutton") then
+        msg.input_method = CONTROLLER_TOGGLEBUTTON
       elseif (xarg.type == "fader") then
         msg.input_method = CONTROLLER_FADER
       elseif (xarg.type == "dial") then

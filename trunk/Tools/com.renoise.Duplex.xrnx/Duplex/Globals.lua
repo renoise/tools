@@ -39,18 +39,14 @@ DEVICE_EVENT_BUTTON_HELD = 13
 
 -- bidirectional button (LED)
 CONTROLLER_BUTTON = 20    
+-- bidirectional button which toggles the state internally (LED)
+CONTROLLER_TOGGLEBUTTON = 21    
 --  bidirectional encoder (LED)
---CONTROLLER_ENCODER = 21  
--- manual fader *
-CONTROLLER_FADER = 22    
--- motorized fader
---CONTROLLER_MFADER = 23   
+--CONTROLLER_ENCODER = 22
+-- manual fader
+CONTROLLER_FADER = 23
 -- basic rotary encoder 
 CONTROLLER_DIAL = 24      
-
--- * the fader possibly has parameter-pickup,
--- so we choose to transmit MIDI anyway
--- (assuming that the device supports input)
 
 VERTICAL = 80
 HORIZONTAL = 81
