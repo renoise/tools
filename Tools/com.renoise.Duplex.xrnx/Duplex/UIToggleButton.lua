@@ -62,11 +62,11 @@ function UIToggleButton:do_press()
   
   if (self.on_change ~= nil) then
 
-    local msg = self.get_msg(self)
+    local msg = self:get_msg()
     if not (self.group_name == msg.group_name) then
       return 
     end
-    if not self.test(self,msg.column,msg.row) then
+    if not self:test(msg.column,msg.row) then
       return 
     end
 
@@ -85,11 +85,11 @@ function UIToggleButton:do_change()
   TRACE("UIToggleButton:do_change()")
 
   if (self.on_change ~= nil) then
-    local msg = self.get_msg(self)
+    local msg = self:get_msg()
     if not (self.group_name == msg.group_name) then
       return 
     end
-    if not self.test(self,msg.column,msg.row) then
+    if not self:test(msg.column,msg.row) then
       return 
     end
     -- toggle when moved away from min/max values
@@ -111,11 +111,11 @@ function UIToggleButton:do_hold()
   TRACE("UIToggleButton:do_hold()")
 
   if (self.on_hold ~= nil) then
-    local msg = self.get_msg(self)
+    local msg = self:get_msg()
     if not (self.group_name == msg.group_name) then
       return 
     end
-    if not self.test(self,msg.column,msg.row) then
+    if not self:test(msg.column,msg.row) then
       return 
     end
     self:on_hold()
@@ -133,7 +133,7 @@ function UIToggleButton:toggle()
   self.active = not self.active
   self._cached_active = self.active
   
-  self:invoke_handler()
+  self:__invoke_handler()
 end
 
 
@@ -148,9 +148,8 @@ function UIToggleButton:set(value)
 
     self._cached_active = value
     self.active = value
-    --self.invalidate(self)
   
-    self:invoke_handler()
+    self:__invoke_handler()
   end
 end
 
@@ -162,7 +161,7 @@ function UIToggleButton:set_dimmed(bool)
     return
   end
   self.dimmed = bool
-  self.invalidate(self)
+  self:invalidate()
 end
 
 
@@ -171,15 +170,15 @@ end
 -- trigger the external handler method
 -- (this can revert changes)
 
-function UIToggleButton:invoke_handler()
+function UIToggleButton:__invoke_handler()
 
   if (self.on_change == nil) then return end
 
-  local rslt = self.on_change(self)
-  if not rslt then  -- revert
+  local rslt = self:on_change()
+  if (rslt==false) then  -- revert
     self.active = self._cached_active
   else
-    self.invalidate(self)
+    self:invalidate()
   end
 end
 
@@ -205,16 +204,16 @@ function UIToggleButton:draw()
 
   if self.active then
     if self.dimmed then
-      point.apply(point,foreground_dimmed)
+      point:apply(foreground_dimmed)
     else
-      point.apply(point,foreground)
+      point:apply(foreground)
     end
     point.val = true
   else
-    point.apply(point,background)
+    point:apply(background)
     point.val = false
   end
-  self.canvas.fill(self.canvas,point)
+  self.canvas:fill(point)
 
   UIComponent.draw(self)
 
@@ -235,7 +234,7 @@ function UIToggleButton:add_listeners()
 
   self.__display.device.message_stream:add_listener(
     self,DEVICE_EVENT_BUTTON_HELD,
-    function() self.do_hold(self,self) end )
+    function() self:do_hold() end )
 
 end
 

@@ -74,7 +74,7 @@ function UITriggerButton:do_press()
   
   if (self.on_change ~= nil) then
 
-    local msg = self.get_msg(self)
+    local msg = self:get_msg()
     if not (self.group_name == msg.group_name) then
       return 
     end
@@ -94,7 +94,7 @@ function UITriggerButton:trigger()
 
     self.__seq_index = 1
     self:__cancel_scheduled_task()
-    self:invoke_handler()
+    self:__invoke_handler()
 
 end
 
@@ -103,8 +103,8 @@ end
 -- trigger the external handler method
 -- (this can revert changes)
 
-function UITriggerButton:invoke_handler()
-  print("UITriggerButton:invoke_handler()")
+function UITriggerButton:__invoke_handler()
+  print("UITriggerButton:__invoke_handler()")
 
   if (self.on_change == nil) then return end
 
