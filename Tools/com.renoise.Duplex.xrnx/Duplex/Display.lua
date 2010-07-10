@@ -188,7 +188,7 @@ function Display:set_parameter(elm, obj, point)
       -- do not loop back the original value change back to the sender, 
       -- unless the device explicitly wants this
       if (not current_message) or
-         (not current_message.from_device) or
+         (current_message.is_virtual) or
          (current_message.context ~= MIDI_NOTE_MESSAGE) or
          (current_message.id ~= elm.id) or
          (current_message.value ~= value) or
@@ -206,7 +206,7 @@ function Display:set_parameter(elm, obj, point)
       -- do not loop back the original value change back to the sender, 
       -- unless the device explicitly wants this
       if (not current_message) or
-         (not current_message.from_device) or
+         (current_message.is_virtual) or
          (current_message.context ~= MIDI_CC_MESSAGE) or
          (current_message.id ~= elm.id) or
          (current_message.value ~= value) or
@@ -224,7 +224,7 @@ function Display:set_parameter(elm, obj, point)
       -- do not loop back the original value change back to the sender, 
       -- unless the device explicitly wants this
       if (not current_message) or
-         (not current_message.from_device) or
+         (current_message.is_virtual) or
          (current_message.context ~= MIDI_PITCH_BEND_MESSAGE) or
          (current_message.id ~= elm.id) or
          (current_message.value ~= value) or
