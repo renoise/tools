@@ -41,6 +41,9 @@ function Display:__init(device)
   -- so we can attach/detach the method when we need
   self.ui_notifiers = table.create()
 
+  -- use the scheduler to perform periodic updates
+  self.scheduler = Scheduler()
+
   -- this is the default palette for any display,
   -- the UIComponents use these values as defaults
   -- note that color values with an average below 0x80
@@ -115,6 +118,10 @@ function Display:update()
 
   if (not self.view) then
     return
+  end
+
+  if(self.scheduler)then
+    self.scheduler:on_idle()
   end
 
   local control_map = self.device.control_map
