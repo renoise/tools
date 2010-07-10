@@ -42,6 +42,24 @@ function print_server_replies()
   end
 
   repeat 
+    if client.is_open == false then
+        --We got disconnected from the other end?
+        stop_message_engine()
+        local EOT = "\n[[Server disconnected]]\n"
+        if irc_dialog ~= nil then
+          if irc_dialog.visible then
+            vb_status.views.status_output_frame:add_line(EOT)
+            vb_channel.views.channel_output_frame:add_line(EOT)
+          end
+        end
+        if chat_dialog ~= nil then
+          if chat_dialog.visible then
+            vb_channel.views.channel_output_frame:add_line(EOT)
+            vb_channel.views.channel_output_frame:scroll_to_last_line()
+          end
+        end
+        return 
+    end
     local command_line, status = client:receive("*l", 0)
     if command_line ~= nil then
       -- If a ping is received, reply immediately
@@ -211,7 +229,9 @@ function set_nick(nick)
   if sirc_debug then
     print (COMMAND)
   end
- client:send(COMMAND)
+  if client.is_open then
+   client:send(COMMAND)
+  end
 end
 
 
@@ -220,7 +240,9 @@ function register_user(user, real_name)
   if sirc_debug then
     print (COMMAND)
   end
-  client:send(COMMAND)
+  if client.is_open then
+    client:send(COMMAND)
+  end
 end
 
 
@@ -229,7 +251,9 @@ function join_channel(channel)
   if sirc_debug then
     print (COMMAND)
   end
-  client:send(COMMAND)
+  if client.is_open then
+    client:send(COMMAND)
+  end
 end
 
 
@@ -238,7 +262,9 @@ function quit_irc()
   if sirc_debug then
     print (COMMAND)
   end
-  client:send(COMMAND)
+  if client.is_open then
+    client:send(COMMAND)
+  end
 end
 
 
@@ -355,7 +381,26 @@ function send_command (target, target_frame, command)
       end
     end
 
-    client:send(COMMAND)
+    if client.is_open then
+      client:send(COMMAND)
+    else
+        --We got disconnected from the other end?
+        stop_message_engine()
+        local EOT = "Server disconnected ->"..command
+        if irc_dialog ~= nil then
+          if irc_dialog.visible then
+            vb_status.views.status_output_frame:add_line(EOT)
+            vb_channel.views.channel_output_frame:add_line(EOT)
+          end
+        end
+        if chat_dialog ~= nil then
+          if chat_dialog.visible then
+            vb_channel.views.channel_output_frame:add_line(EOT)
+            vb_channel.views.channel_output_frame:scroll_to_last_line()
+          end
+        end
+        return    
+    end
 
     if string.find(command,"QUIT") == 1 then
         --Silently leave the arena when server returns a quit reply.
@@ -432,7 +477,7 @@ function connect_to_server(vb)
     progress_dialog()
   end
 
-  if client then
+  if client.is_open then
     set_nick(vb_login.views.irc_nick_name.text)            
     register_user(vb_login.views.irc_user_name.text, vb_login.views.irc_real_name.text)
     --    client:send("PRIVMSG #channelname :"..irc_nick_name.." in da house!!\r\n")
