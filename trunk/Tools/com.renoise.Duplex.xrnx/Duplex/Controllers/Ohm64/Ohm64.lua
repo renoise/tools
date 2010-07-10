@@ -21,7 +21,7 @@ function Ohm64:__init(name, message_stream)
   MidiDevice.__init(self, name, message_stream)
 
   -- setup a monochrome colorspace for the OHM
-  --self.colorspace = {1,1,1}
+  self.colorspace = {1,1,1}
 end
 
 
