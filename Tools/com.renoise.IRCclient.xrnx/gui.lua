@@ -284,7 +284,7 @@ function status_dialog()
   -- DIALOG
   if (not irc_dialog or not irc_dialog.visible) then
     irc_dialog = renoise.app():show_custom_dialog(
-      "Status", dialog_content, key_handler
+      "Status", dialog_content, status_key_handler
     )
   end
   vb_status = vb
@@ -306,7 +306,7 @@ function chat_dialog_control(target)
   local CONTROL_MARGIN = renoise.ViewBuilder.DEFAULT_CONTROL_MARGIN
     
   local TEXT_ROW_WIDTH = 80
-  local no_loop = 0
+--  local no_loop = 0
   
   if irc_dialog == nil then
     --If dialog is being closed now, the connection is broken
@@ -355,6 +355,7 @@ function chat_dialog_control(target)
                         -- simply because the value got cleared
                         -- else a new empty command would be send again.
             vb.views.channel_command.value = ""
+            global_channel_command = ""
           else
             no_loop = 0
           end
@@ -369,6 +370,7 @@ function chat_dialog_control(target)
         notifier = function(text)
           send_command(target, 'channel', text)
           vb.views.channel_command.text = ""
+          global_channel_command = ""
         end
       },
     },
@@ -390,7 +392,7 @@ function chat_dialog_control(target)
   -- DIALOG
   if (not chat_dialog or not chat_dialog.visible) then
     chat_dialog = renoise.app():show_custom_dialog(
-      target, dialog_content, key_handler
+      target, dialog_content, chat_key_handler
     )
   end
   vb_channel = vb
@@ -424,7 +426,7 @@ function progress_dialog()
   -- DIALOG
   if (not connect_progress_dialog or not connect_progress_dialog.visible) then
     connect_progress_dialog = renoise.app():show_custom_dialog(
-      'Connecting...', message_row, key_handler
+      'Connecting...', message_row, connect_key_handler
     )
   end
 end
