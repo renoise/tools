@@ -130,7 +130,7 @@ function jump(option)
       if new_pos.line < 1 then
          if song.selected_sequence_index-1 > 0 then
             local prv_sq_idx = song.selected_sequence_index-1
-            local prv_pt = song.pattern_sequence[prv_sq_idx]
+            local prv_pt = song.sequencer.pattern_sequence[prv_sq_idx]
             local prv_pt_lines = song.patterns[prv_pt].number_of_lines
             if switch_jump_mode_index ~= 3 then 
                new_pos.line = prv_pt_lines + new_pos.line
@@ -153,7 +153,7 @@ function jump(option)
 --      new_pos = song.selected_line_index + jump_steps
       if new_pos.line > song.selected_pattern.number_of_lines then
         
-         if song.selected_sequence_index+1 <= #song.pattern_sequence then
+         if song.selected_sequence_index+1 <= #song.sequencer.pattern_sequence then
             if switch_jump_mode_index ~= 3 then 
 --               new_pos = new_pos - song.selected_pattern.number_of_lines
                new_pos.line = new_pos.line - song.selected_pattern.number_of_lines
