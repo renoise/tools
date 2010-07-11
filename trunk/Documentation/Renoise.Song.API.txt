@@ -684,6 +684,9 @@ renoise.song().instruments[].samples[].interpolation_mode, _observable
 renoise.song().instruments[].samples[].new_note_action, _observable
   -> [enum = NEW_NOTE_ACTION]
 
+renoise.song().instruments[].samples[].autoseek, _observable
+  -> [boolean]
+
 renoise.song().instruments[].samples[].loop_mode, _observable
   -> [enum = LOOP_MODE]
 renoise.song().instruments[].samples[].loop_start, _observable
