@@ -351,7 +351,7 @@ function send_command (target, target_frame, command)
       local_echo = os.date("%c").." <"..irc_nick_name.."> "..command
 
       if string.find(command, "/me ") ~= nil then
-        local_echo = os.date("%c")..irc_nick_name.." "..string.sub(command, 5)
+        local_echo = os.date("%c ")..irc_nick_name.." "..string.sub(command, 5)
         command = string.gsub(command,"/me ", "ACTION ")
         command = command..""
       end
@@ -425,12 +425,132 @@ function send_command (target, target_frame, command)
 end
 
     
-function key_handler(dialog, mod, key)
+function status_key_handler(dialog, mod, key)
   -- update key_text to show what we got
   -- close on escape...
   if (mod == "" and key == "esc") then
     dialog:close()
+    return
   end
+  -- Let's send the text-line contents if present
+  if (mod == "" and key == "return") then
+    send_command('', 'status', vb_status.views.status_command.text)
+    vb_status.views.status_command.value = ""
+    return 
+  end
+ 
+end
+
+function chat_key_handler(dialog, mod, key)
+  -- update key_text to show what we got
+  -- close on escape...
+  if (key == "esc") then
+    dialog:close()
+  end
+  -- Let's send the text-line contents if present
+  if (key == "return") then
+    send_command(active_channel, 'channel', vb_channel.views.channel_command.text)
+    no_loop = 1 -- Prevent triggering the notifier again 
+                -- simply because the value got cleared
+                -- else a new empty command would be send again.
+    vb_channel.views.channel_command.value = ""
+    global_channel_command = ""
+    return
+  end
+
+  if (key == "back") then
+    no_loop = 1 -- Prevent triggering the notifier again 
+    global_channel_command = string.sub(global_channel_command,1,
+    string.len(global_channel_command)-1)
+    vb_channel.views.channel_command.value = global_channel_command
+    return
+  end
+
+  if (key == "space") then
+    no_loop = 1 -- Prevent triggering the notifier again 
+    vb_channel.views.channel_command.value = vb_channel.views.channel_command.value.." "
+    global_channel_command = global_channel_command.." "
+    return
+  end
+
+  if (key == "rshift"or key =="rcontrol" or key == "ralt" or key == "tab") then
+    return
+  end
+
+  --Here we are going to pump characters into the chatline even 
+  --if the chatline does not has keyboard focus.
+  --A way to circumvent the lack of focus functionality
+  --Not the best way, but better than clicking the text-field
+  --each time.
+  if (mod ~= "control" and mod ~= "alt" and key ~="lshift") then
+    no_loop = 1
+
+    if sirc_debug then
+      print ("mod:"..mod.." key:"..key)
+    end
+    
+    if (mod == "shift") then
+      -- This part sucks a bit as it is default US-english
+      -- layout. So you will have to adapt it to your 
+      -- own national layout to make these matches fit correctly.
+      -- Another thing is that rshift etc aren't specified as MOD
+      -- So you can't use those.
+      if key=="^" then key = "~" end
+      if key=="1" then key = "!" end
+      if key=="2" then key = "@" end
+      if key=="3" then key = "#" end
+      if key=="4" then key = "$" end
+      if key=="5" then key = "%" end
+      if key=="6" then key = "^" end
+      if key=="7" then key = "&" end
+      if key=="8" then key = "*" end
+      if key=="9" then key = "(" end
+      if key=="0" then key = ")" end
+      if key=="/" then key = "?" end
+      if key=="comma" then key = "<" end
+      if key=="period" then key = ">" end
+      if key==";" then key = ":" end
+      if key=="'" then key = "\"" end
+      if key=="[" then key = "{" end
+      if key=="]" then key = "}" end
+      if key=="-" then key = "_" end
+      if key=="=" then key = "+" end
+      if key=="a" then key = "A" end
+      if key=="b" then key = "B" end
+      if key=="c" then key = "C" end
+      if key=="d" then key = "D" end
+      if key=="e" then key = "E" end
+      if key=="f" then key = "F" end
+      if key=="g" then key = "G" end
+      if key=="h" then key = "H" end
+      if key=="i" then key = "I" end
+      if key=="j" then key = "J" end
+      if key=="k" then key = "K" end
+      if key=="l" then key = "L" end
+      if key=="m" then key = "M" end
+      if key=="n" then key = "N" end
+      if key=="o" then key = "O" end
+      if key=="p" then key = "P" end
+      if key=="q" then key = "Q" end
+      if key=="r" then key = "R" end
+      if key=="s" then key = "S" end
+      if key=="t" then key = "T" end
+      if key=="u" then key = "U" end
+      if key=="v" then key = "V" end
+      if key=="w" then key = "W" end
+      if key=="x" then key = "X" end
+      if key=="y" then key = "Y" end
+      if key=="z" then key = "Z" end
+    end
+    if key=="comma" then key = "," end
+    if key=="period" then key = "." end
+--Strange, the inversed apostrophe and tilde are being send as a "^" key?
+    if key=="^" then key = "`" end
+
+    vb_channel.views.channel_command.value = vb_channel.views.channel_command.value..key
+    global_channel_command = global_channel_command..key
+  end
+    
 end
 
 function login_key_handler(dialog, mod, key)
@@ -442,6 +562,15 @@ function login_key_handler(dialog, mod, key)
   if (mod == "" and key == "return") then
     connect_to_server()
     login_dialog:close()
+  end
+end
+
+function connect_key_handler(dialog, mod, key)
+  -- update key_text to show what we got
+  -- close on escape...
+  if (mod == "" and key == "esc") then
+    dialog:close()
+    stop_message_engine()
   end
 end
 
