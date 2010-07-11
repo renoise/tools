@@ -2,7 +2,6 @@
 <RenoiseScriptingTool>
   <ApiVersionMin>0.3</ApiVersionMin>
   <ApiVersionMax>0.8</ApiVersionMax> 
-  <ApiVersion>0.3</ApiVersion>
   <Id>com.renoise.Nibbles</Id>
   <Version>0.1</Version>
   <Name>Nibbles</Name>
