@@ -11,8 +11,6 @@ arpeg_option_dialog = nil
 pseq_warn_dialog = nil
 tone_mode = 1
 first_show = false
-max_note_columns = 1
-column_offset = 1 
 
 --Gui object definitions
 obj_textlabel = 1

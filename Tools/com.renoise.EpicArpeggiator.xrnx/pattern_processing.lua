@@ -17,6 +17,9 @@ Also the note-, instrument-, velocity- and octave-schemes are generated here
    track_type == renoise.Track.TRACK_TYPE_SEND then
      return --Do not process master or sendtrack!!
    end
+   if max_note_columns ~= vb.views.max_note_colums.value then
+     max_note_columns = vb.views.max_note_colums.value
+   end
    song.tracks[track_index].visible_note_columns = max_note_columns
    local visible_note_columns = song.tracks[track_index].visible_note_columns
    local iter, pos
@@ -673,7 +676,7 @@ from the stack. If a note-off has to be placed, this is calculated here as well.
       end
    end               
    --Place note off
-   if current_column <= max_note_columns and termination_step > 0 then
+   if current_column <= max_note_columns and termination_step > 0  and termination_index ~= NOTE_OFF_DISTANCE_TICKS then
       if cur_line == place_note_off[current_column] then
          if note_column.is_selected and area_to_process == OPTION_SELECTION_IN_TRACK or 
          area_to_process ~= OPTION_SELECTION_IN_TRACK then
