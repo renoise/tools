@@ -13,6 +13,7 @@ function open_arp_dialog()
          max_note_columns = 1
          column_offset = 1
       end
+
       local vb = renoise.ViewBuilder()
       
       local DIALOG_MARGIN = renoise.ViewBuilder.DEFAULT_DIALOG_MARGIN
@@ -566,7 +567,7 @@ Main Dialog
       end
 
       if first_show == false then
-         toggle_chord_mode_visibility(1,vb)
+         toggle_chord_mode_visibility(max_note_columns,vb)
          toggle_custom_arpeggiator_profile_visibility(1, vb)         
          toggle_note_profile_visibility(false, vb)
          first_show = true
@@ -781,7 +782,8 @@ end
 
 
 function toggle_chord_mode_visibility(value,vb)
-   max_note_columns = value
+   max_note_columns = vb.views.max_note_colums.value
+--   print('Chord mode?'..value)
    if value < 2 then
       value = false
    else
@@ -824,9 +826,11 @@ function toggle_note_matrix_visibility(show,fm,vb)
   if show == NOTE_PATTERN_MATRIX then
     fm.visible = true
     toggle_note_profile_visibility(false, vb)
+    toggle_octave_visibility(true, vb)
   else
     fm.visible = false
     toggle_note_profile_visibility(true, vb)
+    toggle_octave_visibility(false, vb)
   end
   vb.views.total_dialog:resize()
 end
