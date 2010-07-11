@@ -2,7 +2,6 @@
 <RenoiseScriptingTool>
   <ApiVersionMin>0.3</ApiVersionMin>
   <ApiVersionMax>0.8</ApiVersionMax> 
-  <ApiVersion>0.3</ApiVersion>
   <Version>0.3</Version>
   <Id>com.renoise.Rubberband</Id>
   <Author>Cly/Suva [clysuva@gmail.com]</Author>

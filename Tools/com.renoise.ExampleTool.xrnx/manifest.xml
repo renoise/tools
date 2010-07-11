@@ -19,8 +19,6 @@
   <!-- The current version is defined at 'renoise.API_VERSION' in the API -->
   <ApiVersionMin>0.3</ApiVersionMin>
   <ApiVersionMax>0.8</ApiVersionMax> 
-  <!-- INTERNAL NOTE - DEPRECATED: remove this for the 2.6 betas -->
-  <ApiVersion>0.3</ApiVersion>
   
   <!-- Version of your tool. Will be used to decide if (auto-)upgrading is necessary. -->
   <!-- You should upgrade the version number every time you change the tool. -->
