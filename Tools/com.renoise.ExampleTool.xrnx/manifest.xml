@@ -17,7 +17,7 @@
   <!-- Only set 'ApiVersionMin' to previous versions if you know that you script also runs -->
   <!-- in older version, or you deal with the changes dynamically by querying the APi verison--> 
   <!-- The current version is defined at 'renoise.API_VERSION' in the API -->
-  <ApiVersionMin>0.3</ApiVersionMin>
+  <ApiVersionMin>0.8</ApiVersionMin>
   <ApiVersionMax>0.8</ApiVersionMax> 
   
   <!-- Version of your tool. Will be used to decide if (auto-)upgrading is necessary. -->
