@@ -98,23 +98,9 @@ function UITriggerButton:trigger()
 
 end
 
+
 --------------------------------------------------------------------------------
-
--- trigger the external handler method
--- (this can revert changes)
-
-function UITriggerButton:__invoke_handler()
-  print("UITriggerButton:__invoke_handler()")
-
-  if (self.on_change == nil) then return end
-
-  local rslt = self:on_change()
-  if rslt then
-    self:invalidate()
-  end
-end
-
-
+-- Overridden from UIComponent
 --------------------------------------------------------------------------------
 
 -- once the draw() method is called, it will call itself repeatedly,
@@ -128,15 +114,17 @@ function UITriggerButton:draw()
   local point = CanvasPoint()
   local seq = self.sequence[self.__seq_index]
 
-  if(seq)then
+  if (seq) then
     
     -- apply the color from the sequence
     point:apply(seq)
     point.val = true
-    -- schedule another draw() by invalidating the component
-    self.__task = self.__display.scheduler:add_task(self,UITriggerButton.invalidate,self.interval)
-    self.__seq_index = self.__seq_index+1
 
+    -- schedule another draw() by invalidating the component
+    self.__task = self.__display.scheduler:add_task(
+      self, UITriggerButton.invalidate, self.interval)
+    self.__seq_index = self.__seq_index+1
+  
   else
 
     -- sequence done, set to background/false
@@ -148,19 +136,10 @@ function UITriggerButton:draw()
   end
 
   self.canvas:fill(point)
+
   UIComponent.draw(self)
-
 end
---------------------------------------------------------------------------------
 
-function UITriggerButton:__cancel_scheduled_task()
-  TRACE("UITriggerButton:__cancel_scheduled_task()")
-
-  if self.__task then
-    self.__display.scheduler:remove_task(self.__task)
-  end
-
-end
 
 --------------------------------------------------------------------------------
 
@@ -181,4 +160,36 @@ function UITriggerButton:remove_listeners()
     self,DEVICE_EVENT_BUTTON_PRESSED)
 
 end
+
+
+--------------------------------------------------------------------------------
+-- Private
+--------------------------------------------------------------------------------
+
+-- trigger the external handler method
+-- (this can revert changes)
+
+function UITriggerButton:__invoke_handler()
+  print("UITriggerButton:__invoke_handler()")
+
+  if (self.on_change == nil) then return end
+
+  local rslt = self:on_change()
+  if rslt then
+    self:invalidate()
+  end
+end
+
+
+--------------------------------------------------------------------------------
+
+function UITriggerButton:__cancel_scheduled_task()
+  TRACE("UITriggerButton:__cancel_scheduled_task()")
+
+  if self.__task then
+    self.__display.scheduler:remove_task(self.__task)
+  end
+
+end
+
 

@@ -23,7 +23,6 @@ DEVICE_EVENT_BUTTON_HELD
 For examples on how to create/handle events with UIComponents, see either 
 the UISlider or the UIToggleButton class (both extensions of this class).
 
-
 --]]
 
 
@@ -50,9 +49,6 @@ function UIComponent:__init(display)
   -- for an example, check MidiDevice.point_to_value()
   self.ceiling = 1
   
-  -- the parent display
-  self.__display = display 
-  
   -- set width/height through the set_size() method
   self.width = 1 
   self.height = 1 
@@ -62,6 +58,19 @@ function UIComponent:__init(display)
 
   -- request refresh
   self.dirty = true 
+  
+  -- the parent display
+  self.__display = display 
+end
+
+
+--------------------------------------------------------------------------------
+
+-- get_msg()  returns the last broadcast event 
+-- (used by event handlers)
+
+function UIComponent:get_msg()
+  return self.__display.device.message_stream.current_message
 end
 
 
@@ -84,16 +93,22 @@ function UIComponent:draw()
   --TRACE("UIComponent:draw")
 
   self.dirty = false
+  
+  -- override to specify a draw implementation
 end
 
 
 --------------------------------------------------------------------------------
 
--- get_msg()  returns the last broadcast event 
--- (used by event handlers)
+function UIComponent:add_listeners()
+  -- override to specify your own event handlers 
+end
 
-function UIComponent:get_msg()
-  return self.__display.device.message_stream.current_message
+
+--------------------------------------------------------------------------------
+
+function UIComponent:remove_listeners()
+  -- override to remove specified event handlers 
 end
 
 
@@ -167,53 +182,6 @@ function UIComponent:set_palette(palette)
   if (changed) then
     self:invalidate()
   end
-end
-
-
---------------------------------------------------------------------------------
-
--- simple color adjustment: 
--- store original color values as "_color", so we are able 
--- to call this method several times without loosing the 
--- original color information
-
---[[
-function UIComponent:colorize(rgb)
-  TRACE("UIComponent:colorize:",rgb)
-
-  local changed = false
-  
-  for k,v in pairs(self.palette) do
-    if not (v._color) then
-      self.palette[k]._color = table.copy(v.color)
-    end
-
-    for c=1,3 do
-      local color_value = v._color[c] * rgb[c] / 255
-      if (color_value ~= v.color[c]) then
-        v.color[c] = color_value   
-        changed = true  
-      end
-    end
-  end
-
-  if (changed) then
-    self:invalidate()
-  end
-end
-]]
-
---------------------------------------------------------------------------------
-
-function UIComponent:add_listeners()
-  -- override to specify your own event handlers 
-end
-
-
---------------------------------------------------------------------------------
-
-function UIComponent:remove_listeners()
-  -- override to remove specified event handlers 
 end
 
 

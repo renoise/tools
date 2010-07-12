@@ -102,12 +102,11 @@ function UISlider:__init(display)
   }
 
   -- internal values
-  self._cached_index = self.index
-  self._cached_value = self.value
+  self.__cached_index = self.index
+  self.__cached_value = self.value
 
   -- attach ourself to the display message stream
   self:add_listeners()
-
 end
 
 
@@ -165,59 +164,6 @@ end
 
 --------------------------------------------------------------------------------
 
--- determine index by position, depends on orientation
--- @column (integer)
--- @row (integer)
-
-function UISlider:__determine_index_by_pos(column,row)
-
-  local idx,offset
-
-  if (self.orientation == VERTICAL) then
-    idx = row
-    offset = self.y_pos
-  else
-    assert(self.orientation == HORIZONTAL, 
-      "Internal Error. Please report: unexpected UI orientation")
-      
-    idx = column
-    offset = self.x_pos
-  end
-
-  if not (self.flipped) then
-    idx = (self.size-idx+offset)
-  else
-    idx = idx-offset+1
-  end
-
-  return idx
-
-
-end
-
-
---------------------------------------------------------------------------------
-
--- setting the size will change the canvas too
--- @size (integer)
-
-function UISlider:set_size(size)
-  self.size = size
-
-  if (self.orientation == VERTICAL) then
-    UIComponent.set_size(self, 1, size)
-  else
-    assert(self.orientation == HORIZONTAL, 
-      "Internal Error. Please report: unexpected UI orientation")
-      
-    UIComponent.set_size(self, size, 1)
-  end
-
-end
-
-
---------------------------------------------------------------------------------
-
 -- setting value will also set index
 -- @val (float) 
 -- @skip_event (boolean) skip event handler
@@ -228,11 +174,11 @@ function UISlider:set_value(val,skip_event)
   local idx = math.ceil((self.size/self.ceiling)*val)
   local rslt = false
 
-  if (self._cached_index ~= idx) or
-     (self._cached_value ~= val) 
+  if (self.__cached_index ~= idx) or
+     (self.__cached_value ~= val) 
   then
-    self._cached_index = idx
-    self._cached_value = val
+    self.__cached_index = idx
+    self.__cached_value = val
     self.value = val
     self.index = idx
     
@@ -256,9 +202,9 @@ function UISlider:set_index(idx,skip_event)
 
   -- todo: cap value
   local rslt = false
-  if (self._cached_index ~= idx) then
-    self._cached_index = idx
-    self._cached_value = self.value
+  if (self.__cached_index ~= idx) then
+    self.__cached_index = idx
+    self.__cached_value = self.value
     self.index = idx
     self.value = (self.ceiling/self.size)*idx
   
@@ -275,6 +221,27 @@ function UISlider:set_dimmed(bool)
   -- TODO: only invalidate if we can dimm
   self.dimmed = bool
   self:invalidate()
+end
+
+
+--------------------------------------------------------------------------------
+-- Overridden from UIComponent
+--------------------------------------------------------------------------------
+
+-- setting the size will change the canvas too
+-- @size (integer)
+
+function UISlider:set_size(size)
+  self.size = size
+
+  if (self.orientation == VERTICAL) then
+    UIComponent.set_size(self, 1, size)
+  else
+    assert(self.orientation == HORIZONTAL, 
+      "Internal Error. Please report: unexpected UI orientation")
+      
+    UIComponent.set_size(self, size, 1)
+  end
 end
 
 
@@ -360,6 +327,40 @@ function UISlider:remove_listeners()
 
 end
 
+
+--------------------------------------------------------------------------------
+-- Private
+--------------------------------------------------------------------------------
+
+-- determine index by position, depends on orientation
+-- @column (integer)
+-- @row (integer)
+
+function UISlider:__determine_index_by_pos(column,row)
+
+  local idx,offset
+
+  if (self.orientation == VERTICAL) then
+    idx = row
+    offset = self.y_pos
+  else
+    assert(self.orientation == HORIZONTAL, 
+      "Internal Error. Please report: unexpected UI orientation")
+      
+    idx = column
+    offset = self.x_pos
+  end
+
+  if not (self.flipped) then
+    idx = (self.size-idx+offset)
+  else
+    idx = idx-offset+1
+  end
+
+  return idx
+end
+
+
 --------------------------------------------------------------------------------
 
 -- trigger the external handler method
@@ -370,8 +371,8 @@ function UISlider:__invoke_handler()
 
   local rslt = self:on_change()  
   if (rslt==false) then  -- revert
-    self.index = self._cached_index    
-    self.value = self._cached_value  
+    self.index = self.__cached_index    
+    self.value = self.__cached_value  
   else
     self:invalidate()
   end
