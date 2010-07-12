@@ -75,6 +75,8 @@ NOTE_OFF_DISTANCE_LINES = 1
 NOTE_OFF_DISTANCE_TICKS = 2
 termination_index = NOTE_OFF_DISTANCE_LINES
 
+reset_new_note = 0
+
 --Custom line positions
 custom_note_pos = {}
 custom_arpeggiator_field = "example: 0,2,5,7,9,11,nt OR 1,3,5,bn"
