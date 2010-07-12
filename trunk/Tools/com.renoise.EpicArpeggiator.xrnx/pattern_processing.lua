@@ -48,6 +48,11 @@ Also the note-, instrument-, velocity- and octave-schemes are generated here
             return
          end
       end
+      if area_to_process == OPTION_TRACK_IN_SONG or area_to_process <= OPTION_TRACK_IN_PATTERN then
+         song.selected_note_column_index = 1
+         next_column = 1
+         column_offset = 1
+      end 
       if area_to_process <= OPTION_TRACK_IN_PATTERN or area_to_process == OPTION_COLUMN_IN_PATTERN then
          iter = song.pattern_iterator:lines_in_pattern_track(pattern_index, 
          track_index)
@@ -504,15 +509,34 @@ from the stack. If a note-off has to be placed, this is calculated here as well.
       --last note position was adjourned to the next pattern *if* a position
       --was picked by the randomizer to place a note after the last known 
       --note position of the previous pattern. So this caused empty patterns
-      --until a note got placed in that last pattern region. So here's the fix:  
-      if cur_line >= 1 and cur_line <= distance_step and 
-      place_note_off[current_column] == 0 then
-         new_note_pos = 1
+      --until a note got placed in that last pattern region.
+      --I could fix this by resetting the new note position, but still cannot
+      --figure out a good way to get these specific notes on the last two
+      --lines of the previous pattern. They are not placed and as a cause
+      --redundant note-offs may appear and double notes on the same line
+      --So treat the random mode as a party-mode for now.
+
+--       if cur_line >= 1 and cur_line <= distance_step and 
+--      place_note_off[current_column] == 0 then
+--        reset_new_note = true
+--         new_note_pos = 0
+--      end
+--      print ("new note pos:"..new_note_pos)
+      if cur_line >= 1 and cur_line +distance_step>= song.patterns[pattern].number_of_lines and termination_index == NOTE_OFF_DISTANCE_LINES then
+        reset_new_note = cur_line --Remove this line and observe many empty patterns in line termination mode
+--        new_note_pos = 0
+         place_note_off[current_column] = (cur_line +distance_step-song.patterns[pattern].number_of_lines)
+--      else
+--        reset_new_note = false
+      end
+
+      if cur_line >= 1 and cur_line +distance_step >= song.patterns[pattern].number_of_lines and termination_index == NOTE_OFF_DISTANCE_TICKS then
+        new_note_pos = 0 --Remove this line and observe many empty patterns in tick termination mode
       end
       skip = randomize(1,2)
    end
    if current_column <= max_note_columns and current_column == next_column then
-      if popup_distance_mode_index == 2 then
+      if popup_distance_mode_index == NOTE_DISTANCE_DELAY then
          if current_column ~= 1 then
             if (current_column-1)*distance_step <= 255 then
                delay_apply = (current_column-1)*distance_step
@@ -533,7 +557,7 @@ from the stack. If a note-off has to be placed, this is calculated here as well.
               note = ordnot
             end
             
-            if termination_index == 2 then
+            if termination_index == NOTE_OFF_DISTANCE_TICKS then
                cut_value = tonumber(0xf0 + termination_step)
             else
                cut_value = 255
@@ -542,7 +566,7 @@ from the stack. If a note-off has to be placed, this is calculated here as well.
                if note_column.is_selected and area_to_process == OPTION_SELECTION_IN_TRACK or 
                area_to_process ~= OPTION_SELECTION_IN_TRACK then
                   note_column = fill_cells(note_column, note, tempins, tempvel, 
-                  delay_apply, cut_value)
+                  delay_apply, cut_value, pattern)
                   if area_to_process < OPTION_COLUMN_IN_PATTERN then
                      next_column = next_column + 1
                      if next_column > max_note_columns then
@@ -646,7 +670,7 @@ from the stack. If a note-off has to be placed, this is calculated here as well.
                      cur_line <= cur_pat_size - distance_step and 
                      switch_arp_pattern_index == ARPEGGIO_PATTERN_RANDOM then
                         note_column = fill_cells(note_column, note, tempins, 
-                        tempvel, delay_apply, cut_value)
+                        tempvel, delay_apply, cut_value, pattern)
                      end 
                      place_note_off[current_column] = cur_line + termination_step
                      if previous_pattern > 0 then
@@ -674,13 +698,14 @@ from the stack. If a note-off has to be placed, this is calculated here as well.
             end                         
          end
       end
-   end               
+   end             
+
    --Place note off
    if current_column <= max_note_columns and termination_step > 0  and termination_index ~= NOTE_OFF_DISTANCE_TICKS then
       if cur_line == place_note_off[current_column] then
          if note_column.is_selected and area_to_process == OPTION_SELECTION_IN_TRACK or 
          area_to_process ~= OPTION_SELECTION_IN_TRACK then
-            note_column = fill_cells(note_column, 120, 255, 255, 0, 255)
+            note_column = fill_cells(note_column, 120, 255, 255, 0, 255, pattern)
             place_note_off[current_column] = 0
          end
       end
@@ -688,7 +713,7 @@ from the stack. If a note-off has to be placed, this is calculated here as well.
 end
 
 
-function fill_cells(note_column, note, instrument, velocity, delay, cut_value)
+function fill_cells(note_column, note, instrument, velocity, delay, cut_value, pattern)
 --[[Places a note, volume, panning and perhaps a delay value in the cell--]]
    --String 'OFF' was not yet supported when creating this source.
    --value 120 will add a note-off command in the pattern editor, it suffice.
@@ -749,6 +774,14 @@ function fill_cells(note_column, note, instrument, velocity, delay, cut_value)
          end
       end
    end
+   if reset_new_note > 0 then
+     local song = renoise.song()
+     if pattern > 1 then
+       pattern = pattern - 1
+     end
+     new_note_pos = song.patterns[pattern].number_of_lines - (reset_new_note + distance_step)
+     reset_new_note = 0
+   end     
    return note_column
 end
 
