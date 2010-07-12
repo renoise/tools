@@ -28,7 +28,6 @@ sessions = 1
 target = nil
 vb_channel = nil
 no_loop = 0 --Prevent (empty) chat text from being send after striking just one key
-global_channel_command = ""
 vb_status = nil
 vb_login = nil
 active_channel = nil
