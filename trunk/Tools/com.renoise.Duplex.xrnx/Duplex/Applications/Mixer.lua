@@ -133,6 +133,12 @@ function Mixer:__init(display,mappings,options)
       required = false,
       index = nil,
     },
+    solo = {
+      group_name = nil,
+      description = "Solo - assign to a dial, fader or button",
+      required = false,
+      index = nil,
+    },
     page = {
       group_name = nil,
       description = "Page navigator - assign to a fader, dial or two buttons",
@@ -204,8 +210,9 @@ function Mixer:__init(display,mappings,options)
   -- the various controls
   self.__master = nil
   self.__levels = nil
-  self.__mutes = nil
   self.__panning = nil
+  self.__mutes = nil
+  self.__solos = nil
   self.__track_navigator = nil
 
   self.__width = 4
@@ -222,7 +229,6 @@ function Mixer:__init(display,mappings,options)
   -- apply arguments
   self:__apply_options(options)
   self:__apply_mappings(mappings)
-
 end
 
 
@@ -234,13 +240,15 @@ function Mixer:set_track_volume(control_index, value)
   TRACE("Mixer:set_track_volume", control_index, value)
 
   if (self.active) then
-    self.__levels[control_index]:set_value(value)
-    
-    -- update the master as well, if it has its own UI representation
-    if (self.__master ~= nil) and 
-       (control_index + self.__track_offset == get_master_track_index()) 
-    then
-      self.__master:set_value(value)
+    if (self.__levels ~= nil) then
+      self.__levels[control_index]:set_value(value)
+      
+      -- update the master as well, if it has its own UI representation
+      if (self.__master ~= nil) and 
+         (control_index + self.__track_offset == get_master_track_index()) 
+      then
+        self.__master:set_value(value)
+      end
     end
   end
 end
@@ -253,7 +261,7 @@ end
 function Mixer:set_track_panning(control_index, value)
   TRACE("Mixer:set_track_panning", control_index, value)
 
-  if (self.active) then
+  if (self.active and self.__panning ~= nil) then
     self.__panning[control_index]:set_value(value)
   end
 end
@@ -266,16 +274,36 @@ end
 function Mixer:set_track_mute(control_index, state)
   TRACE("Mixer:set_track_mute", control_index, state)
 
-  if (self.active) then
+  if (self.active and self.__mutes ~= nil) then
     -- set mute state to the button
     local active = (state == MUTE_STATE_ACTIVE)
     self.__mutes[control_index]:set(active)
 
     -- make controls appear dimmed, to show that the track is inactive
-    self.__levels[control_index]:set_dimmed(not active)
-    self.__panning[control_index]:set_dimmed(not active)
+    if (self.__levels) then
+      self.__levels[control_index]:set_dimmed(not active)
+    end
+    
+    if (self.__panning) then
+      self.__panning[control_index]:set_dimmed(not active)
+    end
   end
 end
+
+
+--------------------------------------------------------------------------------
+
+-- solo state changed from Renoise
+
+function Mixer:set_track_solo(control_index, state)
+  TRACE("Mixer:set_track_solo", control_index, state)
+
+  if (self.active and self.__solos ~= nil) then
+    -- set mute state to the button
+    self.__solos[control_index]:set(state)
+  end
+end
+
 
 
 --------------------------------------------------------------------------------
@@ -307,11 +335,13 @@ function Mixer:update()
         self:set_track_mute(control_index, track.mute_state)
       end
       
+       self:set_track_solo(control_index, track.solo_state)
     else
       -- deactivate, reset controls which have no track
       self:set_track_volume(control_index, 0)
       self:set_track_panning(control_index, 0)
       self:set_track_mute(control_index, MUTE_STATE_OFF)
+      self:set_track_solo(control_index, false)
     end
 
     -- apply palette to controls
@@ -351,11 +381,23 @@ function Mixer:update()
       ]]
     end
 
-    self.__levels[control_index]:set_palette(track_palette)
-    self.__panning[control_index]:set_palette(track_palette)
-    self.__mutes[control_index]:set_palette(mute_palette)
+    if (self.__levels) then
+      self.__levels[control_index]:set_palette(track_palette)
+    end
+    
+    if (self.__panning) then
+      self.__panning[control_index]:set_palette(track_palette)
+    end
 
+    if (self.__mutes) then
+      self.__mutes[control_index]:set_palette(mute_palette)
+    end
+
+    if (self.__solos) then
+      self.__solos[control_index]:set_palette(mute_palette)
+    end
   end
+  
   -- update the master as well, if it has its own UI representation
   if (self.__master ~= nil) then
      self.__master:set_value(get_master_track().prefx_volume.value)
@@ -412,136 +454,184 @@ function Mixer:build_app()
   
   -- construct the display
   
-  self.__levels = {}
-  self.__panning = {}
-  self.__mutes = {}
+  self.__levels = (self.mappings.levels.group_name) and {} or nil
+  self.__panning = (self.mappings.panning.group_name) and {} or nil
+  self.__mutes = (self.mappings.mute.group_name) and {} or nil
+  self.__solos = (self.mappings.solo.group_name) and {} or nil
+  
   self.__master = nil
+  self.__track_navigator = nil
 
+  
   for control_index = 1,self.__width do
 
     -- sliders --------------------------------------------
 
-    local y_pos = (embed_mutes) and 2 or 1
-    local c = UISlider(self.display)
-    c.group_name = self.mappings.levels.group_name
-    c.x_pos = control_index
-    c.y_pos = y_pos
-    c.toggleable = true
-    c.flipped = false
-    c.ceiling = RENOISE_DECIBEL
-    c.orientation = VERTICAL
-    c:set_size(self.__height-(y_pos-1))
-
-    -- slider changed from controller
-    c.on_change = function(obj) 
-      local track_index = self.__track_offset + control_index
-
-      if (not self.active) then
-        return false
-      elseif (track_index == get_master_track_index()) then
-        if (self.__master) then
-          -- this will cause another event...
-          self.__master:set_value(obj.value)
+    if (self.mappings.levels.group_name) then
+      local y_pos = (embed_mutes) and 2 or 1
+      local c = UISlider(self.display)
+      c.group_name = self.mappings.levels.group_name
+      c.x_pos = control_index
+      c.y_pos = y_pos
+      c.toggleable = true
+      c.flipped = false
+      c.ceiling = RENOISE_DECIBEL
+      c.orientation = VERTICAL
+      c:set_size(self.__height-(y_pos-1))
+  
+      -- slider changed from controller
+      c.on_change = function(obj) 
+        local track_index = self.__track_offset + control_index
+  
+        if (not self.active) then
+          return false
+        elseif (track_index == get_master_track_index()) then
+          if (self.__master) then
+            -- this will cause another event...
+            self.__master:set_value(obj.value)
+          else
+            local track = renoise.song().tracks[track_index]
+            track.prefx_volume.value = obj.value
+          end
+          return true
+        elseif (track_index > #renoise.song().tracks) then
+          -- track is outside bounds
+          return false
         else
           local track = renoise.song().tracks[track_index]
           track.prefx_volume.value = obj.value
+          return true
         end
-        return true
-      elseif (track_index > #renoise.song().tracks) then
-        -- track is outside bounds
-        return false
-      else
-        local track = renoise.song().tracks[track_index]
-        track.prefx_volume.value = obj.value
-        return true
       end
+      
+      self.display:add(c)
+      self.__levels[control_index] = c
     end
     
-    self.display:add(c)
-    self.__levels[control_index] = c
-
 
     -- encoders -------------------------------------------
 
-    local c = UISlider(self.display)
-    c.group_name = self.mappings.panning.group_name
-    c.x_pos = control_index
-    c.y_pos = 1
-    c.toggleable = true
-    c.flipped = false
-    c.ceiling = 1.0
-    c.orientation = VERTICAL
-    c:set_size(1)
+    if (self.mappings.panning.group_name) then
+      local c = UISlider(self.display)
+      c.group_name = self.mappings.panning.group_name
+      c.x_pos = control_index
+      c.y_pos = 1
+      c.toggleable = true
+      c.flipped = false
+      c.ceiling = 1.0
+      c.orientation = VERTICAL
+      c:set_size(1)
+      
+      -- slider changed from controller
+      c.on_change = function(obj) 
+        local track_index = self.__track_offset + control_index
+  
+        if (not self.active) then
+          return false
+  
+        elseif (track_index > #renoise.song().tracks) then
+          -- track is outside bounds
+          return false
+  
+        else
+          local track = renoise.song().tracks[track_index]
+          track.prefx_panning.value = obj.value
+          return true
+        end
+      end
+      
+      self.display:add(c)
+      self.__panning[control_index] = c
+    end
+        
+     
+    -- mute buttons -----------------------------------
     
-    -- slider changed from controller
-    c.on_change = function(obj) 
-      local track_index = self.__track_offset + control_index
-
-      if (not self.active) then
-        return false
-
-      elseif (track_index > #renoise.song().tracks) then
-        -- track is outside bounds
-        return false
-
-      else
+    if (self.mappings.mute.group_name) then
+      local c = UIToggleButton(self.display)
+      c.group_name = self.mappings.mute.group_name
+      c.x_pos = control_index
+      c.y_pos = 1
+      c.inverted = false
+      c.active = false
+  
+      -- mute state changed from controller
+      -- (update the slider.dimmed property)
+      c.on_change = function(obj) 
+        local track_index = self.__track_offset + control_index
+        
+        if (not self.active) then
+          return false
+        
+        elseif (track_index == get_master_track_index()) then
+          -- can't mute the master track
+          return false
+        
+        elseif (track_index > #renoise.song().tracks) then
+          -- track is outside bound
+          return false
+        end
+        
         local track = renoise.song().tracks[track_index]
-        track.prefx_panning.value = obj.value
+
+        if (obj.active) then
+          track:unmute()
+        else 
+          track:mute()
+        end
+
+        if (self.__levels) then
+          self.__levels[control_index]:set_dimmed(not obj.active)
+        end
+        
+        if (self.__panning) then
+          self.__panning[control_index]:set_dimmed(not obj.active)
+        end
+        
         return true
       end
+      
+      self.display:add(c)
+      self.__mutes[control_index] = c    
     end
     
-    self.display:add(c)
-    self.__panning[control_index] = c
-    
-    
-    -- buttons --------------------------------------------
 
-    local c = UIToggleButton(self.display)
-    c.group_name = self.mappings.mute.group_name
-    c.x_pos = control_index
-    c.y_pos = 1
-    c.inverted = true
-    c.active = false
+    -- solo buttons -----------------------------------
 
-    -- mute state changed from controller
-    -- (update the slider.dimmed property)
-    c.on_change = function(obj) 
-      local track_index = self.__track_offset + control_index
-      
-      if (not self.active) then
-        return false
-      
-      elseif (track_index == get_master_track_index()) then
-        -- can't mute the master track
-        return false
-      
-      elseif (track_index > #renoise.song().tracks) then
-        -- track is outside bound
-        return false
+    if (self.mappings.solo.group_name) then
+      local c = UIToggleButton(self.display)
+      c.group_name = self.mappings.solo.group_name
+      c.x_pos = control_index
+      c.y_pos = 1
+      c.inverted = false
+      c.active = false
+  
+      -- mute state changed from controller
+      -- (update the slider.dimmed property)
+      c.on_change = function(obj) 
+        local track_index = self.__track_offset + control_index
+        
+        if (not self.active) then
+          return false
+        
+        elseif (track_index > #renoise.song().tracks) then
+          -- track is outside bound
+          return false
+        end
+        
+        local track = renoise.song().tracks[track_index]
+        track.solo_state = obj.active
+  
+        return true
       end
       
-      local track = renoise.song().tracks[track_index]
-      
-      local mute_state = obj.active and 
-        MUTE_STATE_ACTIVE or MUTE_STATE_OFF
-      
-      local dimmed = not obj.active
-      
-      track.mute_state = mute_state
-      
-      self.__levels[control_index]:set_dimmed(dimmed)
-      self.__panning[control_index]:set_dimmed(dimmed)
-      
-      return true
+      self.display:add(c)
+      self.__solos[control_index] = c    
     end
-    
-    self.display:add(c)
-    self.__mutes[control_index] = c    
   end
+  
 
-
-  -- master fader (optional) ------------------------------
+  -- master fader ------------------------------
 
   if (self.mappings.master.group_name) then
     
@@ -580,9 +670,10 @@ function Mixer:build_app()
   end
   
   
-  -- track scrolling (optional) ---------------------------
+  -- track scrolling ---------------------------
 
   if (self.mappings.page.group_name) then
+  
     self.__track_navigator = UISpinner(self.display)
     self.__track_navigator.group_name = self.mappings.page.group_name
     self.__track_navigator.index = 0
@@ -592,8 +683,8 @@ function Mixer:build_app()
       #renoise.song().tracks - self.__width)
     self.__track_navigator.x_pos = 1
     self.__track_navigator.text_orientation = HORIZONTAL
-    self.__track_navigator.on_change = function(obj) 
 
+    self.__track_navigator.on_change = function(obj) 
       if (not self.active) then
         return false
       end
@@ -601,8 +692,8 @@ function Mixer:build_app()
       self.__track_offset = obj.index
       self:__attach_to_tracks()
       self:update()
-      return true
 
+      return true
     end
     
     self.display:add(self.__track_navigator)
@@ -635,17 +726,22 @@ function Mixer:destroy_app()
   TRACE("Mixer:destroy_app")
 
   if (self.__levels) then
-    for _,obj in ipairs(self.__levels) do
+    for _,obj in pairs(self.__levels) do
       obj.remove_listeners(obj)
     end
   end
   if (self.__panning) then  
-    for _,obj in ipairs(self.__panning) do
+    for _,obj in pairs(self.__panning) do
       obj.remove_listeners(obj)
     end
   end
   if (self.__mutes) then
-    for _,obj in ipairs(self.__mutes) do
+    for _,obj in pairs(self.__mutes) do
+      obj.remove_listeners(obj)
+    end
+  end
+  if (self.__solos) then
+    for _,obj in pairs(self.__solos) do
       obj.remove_listeners(obj)
     end
   end
@@ -707,7 +803,7 @@ function Mixer:__attach_to_tracks()
 
   -- validate and update the sequence/track offset
   if (self.__track_navigator) then
-    self.__track_navigator:set_range(nil,math.max(0, 
+    self.__track_navigator:set_range(nil, math.max(0, 
       #renoise.song().tracks - self.__width))
   end
     
@@ -716,61 +812,80 @@ function Mixer:__attach_to_tracks()
     track.prefx_volume.value_observable:remove_notifier(self)
     track.prefx_panning.value_observable:remove_notifier(self)
     track.mute_state_observable:remove_notifier(self) 
+    track.solo_state_observable:remove_notifier(self) 
   end 
   
   -- attach to the new ones in the order we want them
   local master_done = false
   local master_idx = get_master_track_index()
-  for control_index=1,math.min(#tracks, self.__width) do
+  
+  for control_index = 1,math.min(#tracks, self.__width) do
     local track_index = self.__track_offset + control_index
     local track = tracks[track_index]
 
-    if(track_index == master_idx)then
+    if (track_index == master_idx) then
       master_done = true
     end
     
     -- track volume level 
-    track.prefx_volume.value_observable:add_notifier(
-      self, 
-      function()
-        if (self.active) then
-          local value = track.prefx_volume.value
-          -- compensate for potential loss of precision 
-          if not compare(self.__levels[control_index].value, value, 1000) then
-            self:set_track_volume(control_index, value)
+    if (self.__levels) then
+      track.prefx_volume.value_observable:add_notifier(
+        self, 
+        function()
+          if (self.active) then
+            local value = track.prefx_volume.value
+            -- compensate for potential loss of precision 
+            if not compare(self.__levels[control_index].value, value, 1000) then
+              self:set_track_volume(control_index, value)
+            end
           end
-        end
-      end 
-    )
-
+        end 
+      )
+    end
+    
     -- track panning level 
-    track.prefx_panning.value_observable:add_notifier(
-      self, 
-      function()
-        if (self.active) then
-          local value = track.prefx_panning.value
-          -- compensate for potential loss of precision 
-          if not compare(self.__panning[control_index].value, value, 1000) then
-            self:set_track_panning(control_index, value)
+    if (self.__panning) then
+      track.prefx_panning.value_observable:add_notifier(
+        self, 
+        function()
+          if (self.active) then
+            local value = track.prefx_panning.value
+            -- compensate for potential loss of precision 
+            if not compare(self.__panning[control_index].value, value, 1000) then
+              self:set_track_panning(control_index, value)
+            end
           end
-        end
-      end 
-    )
+        end 
+      )
+    end
     
     -- track mute-state 
-    track.mute_state_observable:add_notifier(
-      self, 
-      function()
-        if (self.active) then
-          self:set_track_mute(control_index, track.mute_state)
-        end
-      end 
-    )
+    if (self.__mutes) then
+      track.mute_state_observable:add_notifier(
+        self, 
+        function()
+          if (self.active) then
+            self:set_track_mute(control_index, track.mute_state)
+          end
+        end 
+      )
+    end
+    
+    -- track solo-state 
+    if (self.__solos) then
+      track.solo_state_observable:add_notifier(
+        self, 
+        function()
+          if (self.active) then
+            self:set_track_solo(control_index, track.solo_state)
+          end
+        end 
+      )
+    end
   end
 
   -- if master wasn't already mapped just before
-  if (not master_done) and 
-    (self.mappings.master.group_name) and 
+  if (not master_done and self.__master) and 
     (self.__include_master) then
     local track = renoise.song().tracks[master_idx]
     track.prefx_volume.value_observable:add_notifier(
