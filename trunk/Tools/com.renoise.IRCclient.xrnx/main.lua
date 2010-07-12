@@ -556,22 +556,19 @@ function chat_key_handler(dialog, mod, key)
                 -- simply because the value got cleared
                 -- else a new empty command would be send again.
     vb_channel.views.channel_command.value = ""
-    global_channel_command = ""
     return
   end
 
   if (key == "back") then
     no_loop = 1 -- Prevent triggering the notifier again 
-    global_channel_command = string.sub(global_channel_command,1,
-    string.len(global_channel_command)-1)
-    vb_channel.views.channel_command.value = global_channel_command
+    vb_channel.views.channel_command.value = string.sub(vb_channel.views.channel_command.value,1,
+    string.len(vb_channel.views.channel_command.value)-1)
     return
   end
 
   if (key == "space") then
     no_loop = 1 -- Prevent triggering the notifier again 
     vb_channel.views.channel_command.value = vb_channel.views.channel_command.value.." "
-    global_channel_command = global_channel_command.." "
     return
   end
 
@@ -628,7 +625,6 @@ function chat_key_handler(dialog, mod, key)
     if key=="^" then key = "`" end
 
     vb_channel.views.channel_command.value = vb_channel.views.channel_command.value..key
-    global_channel_command = global_channel_command..key
   end
     
 end

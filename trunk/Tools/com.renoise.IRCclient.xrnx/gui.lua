@@ -355,7 +355,6 @@ function chat_dialog_control(target)
                         -- simply because the value got cleared
                         -- else a new empty command would be send again.
             vb.views.channel_command.value = ""
-            global_channel_command = ""
           else
             no_loop = 0
           end
@@ -370,7 +369,6 @@ function chat_dialog_control(target)
         notifier = function(text)
           send_command(target, 'channel', text)
           vb.views.channel_command.text = ""
-          global_channel_command = ""
         end
       },
     },
