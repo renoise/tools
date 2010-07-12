@@ -157,6 +157,18 @@ function table_count(t)
   end
 end
 
+-- split_filename
+
+function split_filename(filename)
+  local _, _, name, extension = filename:find("(.+)%.(.+)$")
+
+  if (name ~= nil) then
+    return name, extension
+  else
+    return filename 
+  end
+end
+
 -- get_master_track
 
 function get_master_track()
@@ -167,7 +179,6 @@ function get_master_track()
   end
 end
 
-
 -- get_master_track_index
 
 function get_master_track_index()
@@ -177,7 +188,6 @@ function get_master_track_index()
     end
   end
 end
-
 
 
 --------------------------------------------------------------------------------
