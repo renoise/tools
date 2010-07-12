@@ -2,7 +2,7 @@
  The Duplex Library
 --------------------------------------------------------------------------]]--
 
--- includes
+-- include the duplex core
 
 require "Duplex/Globals"
 require "Duplex/MessageStream"
@@ -21,16 +21,24 @@ require "Duplex/Application"
 require "Duplex/Browser"
 require "Duplex/Scheduler"
 
--- TODO: find and load controllers and apps dynamically
 
-require "Duplex/Applications/Mixer"
-require "Duplex/Applications/Matrix"
-require "Duplex/Applications/Effect"
+-- load all application scripts dynamically (Applications/XXX.lua)
 
-require "Duplex/Controllers/BCF-2000/BCF-2000"
-require "Duplex/Controllers/BCR-2000/BCR-2000"
-require "Duplex/Controllers/Launchpad/Launchpad"
-require "Duplex/Controllers/Ohm64/Ohm64"
-require "Duplex/Controllers/Nocturn/Nocturn"
-require "Duplex/Controllers/Remote-SL-MKII/Remote-SL-MKII"
+for _, filename in pairs(os.filenames("./Duplex/Applications", "*.lua")) do
+  require("Duplex/Applications/" .. split_filename(filename))
+end
+
+
+-- load all controller scripts dynamically (Controllers/XXX/XXX.lua)
+
+for _, foldername in pairs(os.dirnames("./Duplex/Controllers")) do
+  local subpath = "./Duplex/Controllers/" .. foldername
+
+  for _, filename in pairs(os.filenames(subpath, "*.lua")) do
+    -- only load the controller file that matches the controller folder name
+    if (split_filename(filename) == foldername) then
+      require(subpath .. "/" .. split_filename(filename))
+    end
+  end
+end
 
