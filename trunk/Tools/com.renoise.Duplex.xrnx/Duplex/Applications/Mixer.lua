@@ -226,6 +226,9 @@ function Mixer:__init(display,mappings,options)
   -- offset of the whole track mapping, controlled by the track navigator
   self.__track_offset = 0
   
+  -- current track properties we are listening to
+  self.__attached_track_observables = table.create()
+
   -- apply arguments
   self:__apply_options(options)
   self:__apply_mappings(mappings)
@@ -808,12 +811,12 @@ function Mixer:__attach_to_tracks()
   end
     
   -- detach all previously added notifiers first
-  for _,track in pairs(tracks) do
-    track.prefx_volume.value_observable:remove_notifier(self)
-    track.prefx_panning.value_observable:remove_notifier(self)
-    track.mute_state_observable:remove_notifier(self) 
-    track.solo_state_observable:remove_notifier(self) 
-  end 
+  for _,observable in pairs(self.__attached_track_observables) do
+    observable:remove_notifier(self)
+  end
+
+  self.__attached_track_observables:clear()
+  
   
   -- attach to the new ones in the order we want them
   local master_done = false
@@ -829,6 +832,9 @@ function Mixer:__attach_to_tracks()
     
     -- track volume level 
     if (self.__levels) then
+      self.__attached_track_observables:insert(
+        track.prefx_volume.value_observable)
+      
       track.prefx_volume.value_observable:add_notifier(
         self, 
         function()
@@ -845,6 +851,9 @@ function Mixer:__attach_to_tracks()
     
     -- track panning level 
     if (self.__panning) then
+      self.__attached_track_observables:insert(
+        track.prefx_panning.value_observable)
+
       track.prefx_panning.value_observable:add_notifier(
         self, 
         function()
@@ -861,6 +870,8 @@ function Mixer:__attach_to_tracks()
     
     -- track mute-state 
     if (self.__mutes) then
+      self.__attached_track_observables:insert(track.mute_state_observable)
+
       track.mute_state_observable:add_notifier(
         self, 
         function()
@@ -873,6 +884,8 @@ function Mixer:__attach_to_tracks()
     
     -- track solo-state 
     if (self.__solos) then
+      self.__attached_track_observables:insert(track.solo_state_observable)
+
       track.solo_state_observable:add_notifier(
         self, 
         function()
