@@ -57,25 +57,24 @@ new_note_pos = 1
 repeat_se_note = false
 custom_note_field = "example: C-4,F-5,A#6,G-7"
 
---Distance between notes
-distance_step = 1
-popup_distance_mode_index = 1
-
 --Note off positions
 note_off_pos = 0
 place_note_off = {}
+note_off_distance = 0
 
 --Distance between notes
 NOTE_DISTANCE_LINES = 1
 NOTE_DISTANCE_DELAY = 2
-termination_step = NOTE_DISTANCE_LINES
+distance_step = 1
+popup_distance_mode_index = NOTE_DISTANCE_LINES
 
 --Distance from note to note-off
 NOTE_OFF_DISTANCE_LINES = 1
 NOTE_OFF_DISTANCE_TICKS = 2
 termination_index = NOTE_OFF_DISTANCE_LINES
+termination_step = NOTE_DISTANCE_LINES
 
-reset_new_note = 0
+reset_new_note = {}
 
 --Custom line positions
 custom_note_pos = {}
