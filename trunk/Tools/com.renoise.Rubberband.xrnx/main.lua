@@ -49,9 +49,9 @@ function process_rubberband(cmd)
   local exe
 
   if os.platform() == 'WINDOWS' then
-    exe = renoise.tool().bundle_path .. 'bin/win32/rubberband.exe'
+    exe = '"' .. renoise.tool().bundle_path .. 'bin/win32/rubberband.exe"'
   elseif os.platform() == 'MACINTOSH' then
-    exe = renoise.tool().bundle_path .. 'bin/osx/rubberband'
+    exe = '"' .. renoise.tool().bundle_path .. 'bin/osx/rubberband"'
   else
     exe = 'rubberband'
   end
@@ -192,9 +192,16 @@ function show_stretch_dialog()
   elseif type_selector.value == 3 then
     stime = nlines_selector.value / slength
   end;
+  
+  if stime > 100 then
+    local conf = renoise.app():show_prompt('Too big stretch!', 'You want to multiply sample length by '.. stime..'! Doing this may freeze Renoise for several minutes or even indefinitely. Are you sure you want to continue?', {'Sure', 'No way!'});
+    if conf ~= 'Sure' then
+      return
+    end
+  end
 
   if res == 'Stretch' then
     process_stretch(stime, crisp_selector.value)
-  end;
+  end
 end
 
