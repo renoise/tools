@@ -87,6 +87,9 @@ function Effect:__init(display, mappings, options)
   -- offset of the whole parameter mapping, controlled by the page navigator
   self.__parameter_offset = 0
   
+  -- list of parameters we are currently listening to
+  self.__attached_observables = table.create()
+  
   -- apply arguments
   self:__apply_options(options)
   self:__apply_mappings(mappings)
@@ -199,7 +202,10 @@ function Effect:build_app()
         if (parameter_value >= parameter.value_min and 
             parameter_value <= parameter.value_max) 
         then
-          parameter.value = parameter_value
+          -- ignore floating point fuzziness...
+          if not compare(parameter_value, parameter.value, 1000) then
+            parameter.value = parameter_value
+          end
         end
         
         return true
@@ -350,17 +356,20 @@ function Effect:__attach_to_parameters()
       math.max(0, #parameters - self.__width))
   end
     
-  -- detach all previously added notifiers first
-  for _,parameter in pairs(parameters) do
-    parameter.value_observable:remove_notifier(self)
+  -- detach all previously attached notifiers first
+  for _,observable in pairs(self.__attached_observables) do
+    observable:remove_notifier(self)
   end 
   
-  -- attach to the new ones in the order we want them
+  self.__attached_observables:clear()
+  
+  -- then attach to the new ones in the order we want them
   for control_index = 1,math.min(#parameters, self.__width) do
     local parameter_index = self.__parameter_offset + control_index
     local parameter = parameters[parameter_index]
 
-    -- parameter value
+    self.__attached_observables:insert(parameter.value_observable)
+    
     parameter.value_observable:add_notifier(
       self, 
       function()
