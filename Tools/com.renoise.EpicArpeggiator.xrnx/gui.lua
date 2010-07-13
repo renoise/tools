@@ -637,6 +637,7 @@ end
 -------------------------------------------------------------------------------
 function change_distance_step(value, vb)
    distance_step = value
+
    if popup_distance_mode_index == NOTE_DISTANCE_DELAY then
       vb.views.vbox_distance_step.max = 255
    else
@@ -647,11 +648,14 @@ end
 
 function change_distance_mode(value,vb)
    popup_distance_mode_index = value
+
    if value == NOTE_DISTANCE_DELAY then
       vb.views.vbox_distance_step.max = 255
+
       if vb.views.vbox_distance_step.value > 255 then
          vb.views.vbox_distance_step.value = 255
       end
+
    else
       vb.views.vbox_distance_step.max = 511
    end
@@ -660,6 +664,7 @@ end
 
 function change_octave_order(value,vb)
    popup_octave_index = value
+
    if value >= PLACE_TOP_DOWN_TOP and value <= PLACE_DOWN_TOP_DOWN then
       vb.views.octave_repeat_mode.visible = true
       vb.views.octave_repeat_mode_text.visible = true
@@ -671,7 +676,9 @@ end
 
 
 function set_termination_step(value,vb)
+
    if termination_index == NOTE_OFF_DISTANCE_TICKS then
+
       if value > 15 then
          value = 15
       end
@@ -687,7 +694,9 @@ end
 
 function set_termination_minmax(value,vb)
    termination_index = value
+
    if value == NOTE_DISTANCE_DELAY then
+
       if vb.views.vbox_termination_step.value > 15 then
          vb.views.vbox_termination_step.value = 14
       end
@@ -702,6 +711,7 @@ end
 
 function change_note_order(value,vb)
    popup_note_index = value
+
    if value >= PLACE_TOP_DOWN_TOP and value <= PLACE_DOWN_TOP_DOWN then
       vb.views.repeat_note.visible = true
       vb.views.repeat_note_title.visible = true
@@ -714,6 +724,7 @@ end
 
 function change_instrument_insertion(value,vb)
    instrument_insertion_index = value
+
    if value >= PLACE_TOP_DOWN_TOP and value <= PLACE_DOWN_TOP_DOWN then
       vb.views.repeat_instrument.visible = true
       vb.views.repeat_instrument_title.visible = true
@@ -726,6 +737,7 @@ end
 
 function change_velocity_insertion(value,vb)
    velocity_insertion_index = value
+
    if value >= PLACE_TOP_DOWN_TOP and value <= PLACE_DOWN_TOP_DOWN then
       vb.views.repeat_velocity.visible = true
       vb.views.repeat_velocity_title.visible = true
@@ -738,8 +750,10 @@ end
 
 function set_area_selection(value,vb)
    local chooser = vb.views.chooser
+
    if value==OPTION_TRACK_IN_SONG or value==OPTION_COLUMN_IN_SONG then
       local seq_status = check_unique_pattern()
+
       if seq_status== -1 then
          vb.views.chooser.value = area_to_process
       else
@@ -749,11 +763,25 @@ function set_area_selection(value,vb)
    else
       area_to_process = value
    end
+   
+   if value==OPTION_COLUMN_IN_PATTERN or value==OPTION_COLUMN_IN_SONG then
+     chord_mode = false
+     vb.views.chord_mode_box_title.visible = false
+     vb.views.chord_mode_box.visible = false
+   else
+
+     if vb.views.chord_mode_box.value == true then
+       chord_mode = true
+     end
+     vb.views.chord_mode_box_title.visible = true
+     vb.views.chord_mode_box.visible = true
+   end
 end
 
 
 function toggle_custom_arpeggiator_profile_visibility(value, vb)
    switch_arp_pattern_index = value
+
    if value == ARPEGGIO_PATTERN_CUSTOM then
       value = true
    else         
@@ -771,6 +799,7 @@ end
 
 
 function toggle_note_profile_visibility(show, vb)
+
    if show == true then
       vb.views.custom_note_profile_title.visible = true
       vb.views.custom_note_profile.visible = true
@@ -783,12 +812,13 @@ end
 
 function toggle_chord_mode_visibility(value,vb)
    max_note_columns = vb.views.max_note_colums.value
---   print('Chord mode?'..value)
+
    if value < 2 then
       value = false
    else
       value = true
    end
+
    if value == true then
       vb.views.chord_mode_box_title.visible = true
       vb.views.chord_mode_box.visible = true
@@ -801,11 +831,13 @@ end
 
 
 function toggle_octave_visibility(show, vb)
+
    if show == true then
       vb.views.popup_octave_order_text.visible = true
       vb.views.popup_octave_order.visible = true
       vb.views.octave_repeat_mode_text.visible = true
       local pidx = vb.views.popup_octave_order.value
+
       if pidx >= PLACE_TOP_DOWN_TOP and pidx <= PLACE_DOWN_TOP_DOWN then
          vb.views.octave_repeat_mode.visible = true
          vb.views.octave_repeat_mode_text.visible = true
@@ -823,6 +855,7 @@ end
 
 
 function toggle_note_matrix_visibility(show,fm,vb)
+
   if show == NOTE_PATTERN_MATRIX then
     fm.visible = true
     toggle_note_profile_visibility(false, vb)
@@ -847,33 +880,43 @@ function create_obj(type,pa,pw,pmi,pma,pv,pid,ptt,ptx,pn,vb)
    if pa == '' then
       pa = 'left'
    end    
+
    if type == obj_textlabel then
       return vb:text {id=pid,align=pa,width=pw,tooltip=ptt,text=ptx}
    end
+
    if type == obj_button then
       return vb:button {id=pid,width=pw,tooltip=ptt,text=ptx,notifier=pn}
    end
+
    if type == obj_checkbox then
      return vb:checkbox {id=pid,width=pw,tooltip=ptt,value=pv,notifier=pn}
    end
+
    if type == obj_switch then
       return vb:switch {id=pid,width=pw,tooltip=ptt,items=ptx,value=pv,notifier=pn}
    end
+
    if type == obj_popup then
       return vb:popup {id=pid,width=pw,tooltip=ptt,items=ptx,value=pv,notifier=pn}
    end
+
    if type == obj_chooser then
       return vb:chooser {id=pid,width=pw,tooltip=ptt,items=ptx,value=pv,notifier=pn}
    end
+
    if type == obj_valuebox then
       return vb:valuebox {id=pid,width=pw,tooltip=ptt,min=pmi,max=pma,value=pv,notifier=pn}
    end
+
    if type == obj_slider then
       return vb:slider {id=pid,width=pw,tooltip=ptt,min=pmi,max=pma,value=pv,notifier=pn}
    end
+
    if type == obj_minislider then
       return vb:minislider {id=pid,width=pw,tooltip=ptt,min=pmi,max=pma,value=pv,notifier=pn}   
    end
+
    if type == obj_textfield then
       return vb:textfield{id=pid,align=pa,width=pw,tooltip=ptt,value=pv,notifier=pn}
    end
@@ -920,6 +963,7 @@ function cross_write_dialog(return_val, double, doubles)
          }
       }
    }
+
    if (pseq_warn_dialog and pseq_warn_dialog.visible)then
       pseq_warn_dialog:show()
    else
