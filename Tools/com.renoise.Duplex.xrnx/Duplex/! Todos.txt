@@ -6,13 +6,17 @@ Duplex Changelog, Notes & TODOs
 In Progress
 --------------------------------------------------------------------------------
 
-* Bjorn: Make the virtual control surface detect press/release
+* [danoise]: Make the virtual control surface detect press/release
 
-* Bjorn: Mixer option: Show only certain track types 
+* [danoise]: Mixer option: Show only certain track types 
 
-* Bjorn: Re-animate Device options parsing
+* [danoise]: Re-animate Device options parsing
 
-* Eduard: find and load controllers and apps dynamically
+* [taktik]: OSC Device / protocol support
+
+* [taktik]: device-preference format, divide into "options" and "mappings"
+
+* [taktik]: Finish Behringer BFC and BFR classes and control maps
 
 
 ================================================================================
@@ -26,10 +30,6 @@ Before beta starts
 * [danoise]: add pitchbend support
 * [danoise]: add generic channel mapping -> [CC23|2]
 * [danoise]: start with the APC controller support
-* [danoise]: device-preference format, divide into "options" and "mappings"
-
-* [taktik]: OSC Device / protocol support
-* [taktik]: Finish Behringer BFC and BFR classes and control maps
 
 --
 
