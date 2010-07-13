@@ -358,7 +358,8 @@ function Effect:__attach_to_parameters()
     
   -- detach all previously attached notifiers first
   for _,observable in pairs(self.__attached_observables) do
-    observable:remove_notifier(self)
+    -- TEMP HACK: needs a fix in the API core
+    pcall(function() observable:remove_notifier(self) end)
   end 
   
   self.__attached_observables:clear()

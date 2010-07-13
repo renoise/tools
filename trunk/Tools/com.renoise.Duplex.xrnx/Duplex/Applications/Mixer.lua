@@ -812,7 +812,8 @@ function Mixer:__attach_to_tracks()
     
   -- detach all previously added notifiers first
   for _,observable in pairs(self.__attached_track_observables) do
-    observable:remove_notifier(self)
+    -- TEMP HACK: needs a fix in the API core
+    pcall(function() observable:remove_notifier(self) end)
   end
 
   self.__attached_track_observables:clear()
