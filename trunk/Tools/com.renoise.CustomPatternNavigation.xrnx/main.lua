@@ -7,6 +7,10 @@
 -- class 'ThisIsAClassDefinition'
 -- function ThisIsAClassDefinition:__Init()
 
+local JUMP_UP = 1
+local JUMP_DOWN = 2
+
+
 
 renoise.tool():add_menu_entry {
   name = "Main Menu:Tools:Custom Pattern Navigation Setup...",
@@ -17,12 +21,12 @@ renoise.tool():add_menu_entry {
 
 renoise.tool():add_keybinding {
   name = "Pattern Editor:Navigation:Custom Jump Lines Up",
-  invoke = function() jump(1) end
+  invoke = function() jump(JUMP_UP) end
 }
 
 renoise.tool():add_keybinding {
   name = "Pattern Editor:Navigation:Custom Jump Lines Down",
-  invoke = function() jump(2) end
+  invoke = function() jump(JUMP_DOWN) end
 }
 
 
@@ -32,9 +36,12 @@ renoise.tool():add_keybinding {
 -- -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
 local jump_dialog = nil
+local MODE_LINES = 1
+local MODE_LINES_LPB = 2
+local MODE_LENGTH_FACTOR = 3
 local row_step = 16
-local switch_jump_mode_index = 1
-
+local switch_jump_mode_index = MODE_LINES
+local MAX_PATTERN_LINES = 512
 
 -------------------------------------------------------------------------------
 
@@ -90,7 +97,7 @@ Length / Factor: The patternlength divided by given factor.]],
 
                vb:valuebox {
                   min = 0,
-                  max = 512,
+                  max = MAX_PATTERN_LINES,
                   value = row_step,
                   tooltip = "Jump in row amounts 0 to max. 512 lines"..
                   "\nor set the division factor to divide the pattern size with",
@@ -123,19 +130,19 @@ function jump(option)
    local new_pos = 0
    local jump_steps = 0
    
-   if switch_jump_mode_index == 1 then
+   if switch_jump_mode_index == MODE_LINES then
       jump_steps = row_step 
    end
 
-   if switch_jump_mode_index == 2 then
+   if switch_jump_mode_index == MODE_LINES_LPB then
       jump_steps = song.transport.lpb
    end   
 
-   if switch_jump_mode_index == 3 then
+   if switch_jump_mode_index == MODE_LENGTH_FACTOR then
       jump_steps = song.selected_pattern.number_of_lines / row_step
    end
    
-   if option == 1 then
+   if option == JUMP_UP then
 --      new_pos = song.selected_line_index - jump_steps
       new_pos = song.transport.playback_pos
       new_pos.line = new_pos.line - jump_steps
@@ -147,7 +154,7 @@ function jump(option)
             local prv_pt = song.sequencer.pattern_sequence[prv_sq_idx]
             local prv_pt_lines = song.patterns[prv_pt].number_of_lines
 
-            if switch_jump_mode_index ~= 3 then 
+            if switch_jump_mode_index ~= MODE_LENGTH_FACTOR then 
                new_pos.line = prv_pt_lines + new_pos.line
             else
                --Always jump the division factor into the new pattern
@@ -164,7 +171,7 @@ function jump(option)
 --      song.selected_line_index = new_pos
    end
 
-   if option == 2 then
+   if option == JUMP_DOWN then
       new_pos = song.transport.playback_pos
       new_pos.line = new_pos.line + jump_steps
 --      new_pos = song.selected_line_index + jump_steps
@@ -172,12 +179,12 @@ function jump(option)
         
          if song.selected_sequence_index+1 <= #song.sequencer.pattern_sequence then
 
-            if switch_jump_mode_index ~= 3 then 
+            if switch_jump_mode_index ~= MODE_LENGTH_FACTOR then 
 --               new_pos = new_pos - song.selected_pattern.number_of_lines
                new_pos.line = new_pos.line - song.selected_pattern.number_of_lines
             else
                local nxt_sq_idx = song.selected_sequence_index+1
-               local nxt_pt =  song.pattern_sequence[nxt_sq_idx]
+               local nxt_pt =  song.sequencer.pattern_sequence[nxt_sq_idx]
                local nxt_pt_lines = song.patterns[nxt_pt].number_of_lines
                --Always jump the division factor into the new pattern
                new_pos.line = (nxt_pt_lines / row_step) --+ 1
