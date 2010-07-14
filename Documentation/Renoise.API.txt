@@ -15,10 +15,11 @@ API, and scripting in Renoise in general...
 
 -- consts
 
--- currently 0.8. the API version is going to be changed each time non backwards
--- compatible changes are made. So you should use the current renoise.API_VERSION
--- for your tools as min and max values by default, unless you have tested older
--- API versions as well or can deal with the changes internall..
+-- currently 1.0. Any changes in the API which are not backwards compatible,
+-- will increase the internal APIs major version number (i.e from 1.4 -> 2.0). 
+-- All other backwards compatible changes, like new functionality, new functions
+-- and classes which do not break existing scripts, will increase only the minor
+-- version number (i.g: 1.0 -> 1.1).
 renoise.API_VERSION -> [number]
 
 -- renoise version "Major.Minor.Revision[ AlphaBetaRcVersion][ Demo]"
