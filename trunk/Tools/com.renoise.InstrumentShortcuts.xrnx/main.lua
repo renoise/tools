@@ -18,6 +18,12 @@
 --
 -- -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
+-- Legenda:
+-- THIS_IS_A_CONSTANT = 0
+-- this_is_a_variable = 0
+-- class 'ThisIsAClassDefinition'
+-- function ThisIsAClassDefinition:__Init()
+
 renoise.tool():add_keybinding {
   name = "Instrument Box:Navigation:Select previous sample",
   invoke = function() sample("selectprevious") end
@@ -87,7 +93,7 @@ function sample(choice)
   end
 
   if choice == "rename" then
-    song.instruments[selected_instrument].samples[selected_sample].name = name_dialog(song.instruments[selected_instrument].samples[selected_sample].name, selected_sample)
+    song.instruments[selected_instrument].samples[selected_sample].name =   name_dialog(song.instruments[selected_instrument].samples[selected_sample].name, selected_sample)
   end
 
   if choice == "moveup" then
@@ -138,7 +144,9 @@ function name_dialog(old_name, sample)
     margin = DIALOG_MARGIN,
     spacing = CONTENT_SPACING,
     uniform = true,
+
     vb:row{
+
       vb:textfield{
         id = 'sample_name',
         width = TEXT_ROW_WIDTH,
@@ -154,9 +162,11 @@ end
 
 
 function key_handler(dialog, mod, key)
+
   if (mod == "" and key == "esc") or (mod == "" and key == "enter") then
     dialog:close()
   end
+
 end
 
 

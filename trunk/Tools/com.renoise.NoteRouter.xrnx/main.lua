@@ -45,6 +45,7 @@ end
 function process_messages(message)
   
   if message[1] >= 0x80 and message[1] <= 0x9F then
+
     if message[3] ~= 0 and message[1] >= 90 then
 
       if nr_debug then
@@ -53,6 +54,7 @@ function process_messages(message)
       end 
 
       if record_mode then
+
         if record_destination == PATTERN_EDITOR then
           map_to_pattern_editor(message)
         else
@@ -60,7 +62,9 @@ function process_messages(message)
         end
        
       end
+
     else
+
       --Need note-off support? then do you stuff here....
       if nr_debug then
         print ("OFF "..string.lower(midi_notes[tonumber(message[2])+1]))
@@ -90,6 +94,7 @@ function map_to_track(message)
     note_to_track[note_map_dialog_vb.views.trackindex.value] = midi_notes[midi_note]
     note_map_dialog_vb.views.note_field.text = note_to_track[note_map_dialog_vb.views.trackindex.value]
   end
+
 end
 
 
@@ -112,6 +117,7 @@ function map_to_pattern_editor(message)
         local midi_note = (tonumber(message[2])+1)+octave_derivate
 
         if midi_notes[midi_note] == note_to_track[t] then
+
           if nr_debug then
             print ("current midi-note number:"..midi_note)
           end
@@ -123,6 +129,7 @@ function map_to_pattern_editor(message)
             pattern.tracks[t].lines[line].note_columns[1].volume_value = message[3]
             break
           end
+
         end
 
       end
@@ -263,12 +270,14 @@ function key_handler(dialog, mod, key)
 
   if mod == "" then
     local found = false
+
     for ckey = 1, 12 do
 
       if key == low_key[ckey] or key == high_key[ckey] or key == mid_key[ckey] then
         fnote = (ckey -1) + fnote
         found = true
       end
+
       if key == high_key[ckey] or key == mid_key[ckey] then
         fnote = fnote + 12
         break

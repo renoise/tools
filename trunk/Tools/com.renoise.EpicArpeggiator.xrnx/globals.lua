@@ -2,9 +2,27 @@
 -- global definitions
 -- -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
-NUM_OCTAVES = 10
+-- Legenda:
+-- THIS_IS_A_CONSTANT = 0
+-- this_is_a_variable = 0
+-- class 'ThisIsAClassDefinition'
+-- function ThisIsAClassDefinition:__Init()
+
+
+
+--Renoise internal boundary constants
+NUM_OCTAVES = 10         --:0 to 9   = 10
 NUM_NOTES = 12
 
+MAX_PATTERN_LINES = 511  --:0 to 511 = 512
+MAX_TICKS = 15           --:0 to 15  = 16
+MAX_DELAY_STEPS = 255    --:0 to 255 = 256
+MAX_NOTE_COLUMNS = 12
+MAX_EFFECT_COLUMNS = 8
+EMPTY = 255              -- value to clear Instrument, Panning, volume and delay column
+EMPTY_NOTE = 121
+
+--Initialization
 track_index = 1
 tone_matrix_dialog = nil
 arpeg_option_dialog = nil
@@ -102,7 +120,7 @@ NOTE_PATTERN_MATRIX = 1
 NOTE_PATTERN_CUSTOM = 2
 switch_note_pattern_index = NOTE_PATTERN_MATRIX
 
---Note-columns options
+--Note-columns options to set for the current selected track
 track_index = 1
 max_note_columns = 1
 column_offset = 1 
@@ -157,9 +175,11 @@ key_matrix = {
 
 function randomize(tstart, tend)
    local number = tostring(os.clock())
+
    if string.find(number,"%.") ~= nil then
       number = string.sub(number, string.find(number,"%.")+1)
    end
+
    math.randomseed( tonumber(number))
    number  = number + math.random(1, 7)
    math.randomseed( tonumber(number))
@@ -171,7 +191,9 @@ end
 
 string.split = function(str, pattern)
   pattern = pattern or "[^%s]+"
+
   if pattern:len() == 0 then pattern = "[^%s]+" end
+
   local parts = {__index = table.insert}
   setmetatable(parts, parts)
   str:gsub(pattern, parts)

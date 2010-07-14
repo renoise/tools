@@ -1,6 +1,13 @@
 -- -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 -- menu registration
 -- -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+-- Legenda:
+-- THIS_IS_A_CONSTANT = 0
+-- this_is_a_variable = 0
+-- class 'ThisIsAClassDefinition'
+-- function ThisIsAClassDefinition:__Init()
+
+
 local OPTION_CHANGE_SELECTED = 1
 local OPTION_CHANGE_ALL = 2
 
@@ -62,6 +69,8 @@ valid_notes = {
 
 
 -------------------------------------------------------------------------------
+---                                 GUI elements                            ---
+-------------------------------------------------------------------------------
 
 function open_sample_dialog(option)
    -- only show one dialog at the same time...
@@ -77,6 +86,7 @@ function open_sample_dialog(option)
       local song = renoise.song()
       local s_instrument = song.selected_instrument_index
       local win_title = ''
+
       if option == OPTION_CHANGE_SELECTED then
          win_title = "Global sample properties (selected instrument)"
       else
@@ -90,18 +100,23 @@ function open_sample_dialog(option)
             spacing = 1,
             uniform = true,
             id = 'dialog_content',
+
             vb:row {
                create_view(obj_checkbox,'',18,0,0,do_nna,'id6',
                'Set NNA for all samples in instrument(s)?','',
                function(value) do_nna = value end,vb),
+
                create_view(obj_textlabel,'',TEXT_ROW_WIDTH,0,0,'novalue','id7',
                '','NNA','',vb),
+
                create_view(obj_popup,'',80,0,0,nna_index,
                'nna_mode','',{"Cut", "Noteoff", "Continue"}, 
                function(value) nna_index = value end,vb),
+
                create_view(obj_checkbox,'',18,0,0,do_base_note,'dobasenote',
                'Set base note for all samples in selected instrument?','',
                function(value) do_base_note = value end,vb),
+
                create_view(obj_textlabel,'',TEXT_ROW_WIDTH,0,0,'novalue','dobasenotetext',
                '','Basenote','',vb),
                vb:valuebox {
@@ -109,6 +124,7 @@ function open_sample_dialog(option)
                 max = 119,
                 value = 48,
                 id='base_note',
+
                 tostring = function(value) 
                   local octave_num = math.floor(value / 12)
                   local note_num = value % 12
@@ -117,64 +133,87 @@ function open_sample_dialog(option)
                   base_note_val = base_note..tostring(octave_num)
                   return (base_note_val)
                 end,
+
                 tonumber = function(str) 
                   local octave = tonumber(str:sub(3, 3))
+
                   if (octave) then
                     local note_string = str:sub(1, 2)
+
                     for val,str in pairs(valid_notes) do
+
                       if (str:lower() == note_string:lower()) then
                         return 12 * octave + val - 1
                       end
+
                     end
+
                   end
                   
                   return nil -- can not convert
                 end,
                },
             },
+            
             vb:row {
                create_view(obj_checkbox,'',18,0,0,do_loop,'doloop',
                'Set loop for all samples in instrument(s)?','',
                function(value) do_loop = value end,vb),
+
                create_view(obj_textlabel,'',TEXT_ROW_WIDTH,0,0,'novalue','id5',
                '','Loop','',vb),
+
                create_view(obj_popup,'',80,0,0,loop_index,
                'loop_mode','',{"Off", "Forward", "Backward", "PingPong"}, 
                function(value) loop_index = value end,vb),
+
                create_view(obj_checkbox,'',18,0,0,do_fine_tuning,'dofinetuning',
                'Set fine-tuning for all samples in selected instrument?','',
                function(value) do_fine_tuning = value end,vb),
+
                create_view(obj_textlabel,'',TEXT_ROW_WIDTH,0,0,'novalue','dofinetuningtext',
                '','Finetuning','',vb),
+
                create_view(obj_valuebox,'',60,-127,127,fine_tune_val,'fine_tune_val',
                '','',function(value) fine_tune_val = value end,vb),
             },
+            
             vb:row {
                create_view(obj_checkbox,'',18,0,0,do_interpolate,'dointerpolate',
                'Set interpolation level for all samples in instrument(s)?','',
                function(value) do_interpolate = value end,vb),
+
                create_view(obj_textlabel,'',TEXT_ROW_WIDTH,0,0,'novalue','id4',
                '','Interpolate','',vb),
+
                create_view(obj_popup,'',80,0,0,interpolation_index,
                'interpolation_mode','',{"None", "Linear", "Cubic"}, 
                function(value) interpolation_index = value end,vb),
+
                create_view(obj_checkbox,'',18,0,0,do_sync,'dosync',
                'Set Sync for all samples in selected instrument?','',
                function(value) do_sync = value end,vb),
+
                create_view(obj_textlabel,'',42,0,0,'novalue','dosynctext',
                '','Sync','',vb),
+
                create_view(obj_checkbox,'',18,0,0,sync_mode,'do_sync_mode',
                '','',function(value) sync_mode = value end,vb),
+
                create_view(obj_valuebox,'',60,0,512,sync_val,'sync_value',
                '','',function(value) sync_val = value end,vb),
             },         
+            
             vb:space{height = 3*CONTENT_SPACING},
+            
             vb:row {
                create_view(obj_checkbox,'',18,0,0,do_amplify,'id1',
                'Set amplification for all samples in selected instrument?','',
                function(value) do_amplify = value end,vb),
+
                create_view(obj_textlabel,'',TEXT_ROW_WIDTH,0,0,'novalue','id2',
                '','Amplify','',vb),
+
                create_view(obj_slider,'',140,0,4,1,'amplification_level',
                '','',function(value)slide_volume(vb, value)end,vb),
                vb:valuefield {
@@ -185,6 +224,7 @@ function open_sample_dialog(option)
       
                 tostring = function(value) 
                   local db = math.lin2db(value)
+
                   if db > math.infdb then
                     return ("%.03f dB"):format(db)
                   else
@@ -196,13 +236,16 @@ function open_sample_dialog(option)
                   if str == nil then
                     str = "0"
                   end
+
                   if str:lower():find("-inf") then
                     return 0.0
                   else
                     local db = tonumber(("%.01f"):format(tonumber(str)))
+
                     if (db ~= nil) then
                       return math.db2lin(db)
                     end
+
                   end
                 end,
                 
@@ -211,12 +254,15 @@ function open_sample_dialog(option)
                 end
               }
             },
+            
             vb:row {
                create_view(obj_checkbox,'',18,0,0,do_panning,'dopanning',
                'Set panning for all samples in selected instrument?','',
                function(value) do_panning = value end,vb),
+
                create_view(obj_textlabel,'',TEXT_ROW_WIDTH,0,0,'','dopanningtext',
                '','Panning','',vb),
+
                create_view(obj_slider,'',140,-50,50,0,'panning_level','','',
                function(value) slide_panning(vb, value) end,vb),
                 
@@ -228,11 +274,13 @@ function open_sample_dialog(option)
       
                 tostring = function(value) 
                   if value ~= 0 then
+
                     if value < 0 then
                       return ("%dL"):format(value)
                     else
                       return ("%dR"):format(value)
                     end 
+
                   else
                     return "Center"
                   end
@@ -251,16 +299,23 @@ function open_sample_dialog(option)
                 end
               }
             },
+            
             vb:space{height = 3*CONTENT_SPACING},
+            
             vb:row {
                vb:space {width = 250},
+
                create_view(obj_textlabel,'right',30,0,0,'novalue','id_safe_text',
                '','Safe','',vb),
+
                create_view(obj_checkbox,'',18,0,0,safe_mode,'id_safe_mode',
-               'Show/hide options that create unawarely subtile changes\nChanges that your are sure of to apply to *all* samples in *all* instruments','',
+               'Show/hide options that create unawarely subtile changes\n'..
+               'Changes that your are sure of to apply to *all* samples in *all* instruments',
+               '',
                function(value) toggle_safe_mode(value, vb) end,vb)
             }
          }
+         
       if option == OPTION_CHANGE_ALL then
          vb.views.id_safe_text.visible = true
          vb.views.id_safe_mode.visible = true
@@ -277,26 +332,32 @@ function open_sample_dialog(option)
 
       sample_dialog = renoise.app():show_custom_prompt(win_title,sample_content,
       {"Change the selected properties"})
+
       if sample_dialog ~= nil then
+
         if string.lower(sample_dialog) == "change the selected properties" then
-        
           change_sample_properties(option, vb)
         end
+
       end
+
    else
       sample_dialog:show()
    end
+
 end
 
 
 function toggle_safe_mode(value,vb)
   safe_mode = value
+
   if value == false then
     enable_unsafe_options(vb)
   else
     disable_unsafe_options(vb)  
   end
-    vb.views.dialog_content:resize()
+
+  vb.views.dialog_content:resize()
 end
 
 
@@ -361,55 +422,123 @@ end
 
 
 function create_view(type,palign,pwidth,pmin,pmax,pvalue, pid,ptooltip,ptext,pnotifier, vb)
-    if palign == '' then
-      palign = 'left'
-    end
+
+   if palign == '' then
+     palign = 'left'
+   end
+
    if type == obj_textlabel then
-      return vb:text {id=pid, align=palign, width = pwidth, tooltip = ptooltip, text = ptext}
+      return vb:text {
+      id=pid, 
+      align=palign, 
+      width = pwidth, 
+      tooltip = ptooltip, 
+      text = ptext}
    end
+
    if type == obj_button then
-      return vb:button {id=pid, width = pwidth, tooltip = ptooltip, text = ptext,
-         notifier = pnotifier}
+      return vb:button {
+      id=pid, 
+      width = pwidth, 
+      tooltip = ptooltip, 
+      text = ptext,
+      notifier = pnotifier}
    end
+
    if type == obj_checkbox then
-      return vb:checkbox {id = pid, width = pwidth, tooltip = ptooltip, 
-      value = pvalue, notifier = pnotifier}
+      return vb:checkbox {
+      id = pid, 
+      width = pwidth, 
+      tooltip = ptooltip, 
+      value = pvalue, 
+      notifier = pnotifier}
    end
+
    if type == obj_switch then
-      return vb:switch {id = pid, width = pwidth, tooltip = ptooltip,
-         items = ptext, value = pvalue, notifier = pnotifier}
+      return vb:switch {
+      id = pid, 
+      width = pwidth, 
+      tooltip = ptooltip,
+      items = ptext, 
+      value = pvalue, 
+      notifier = pnotifier}
    end
+
    if type == obj_popup then
-      return vb:popup {id = pid, width = pwidth, tooltip = ptooltip,
-         items = ptext, value = pvalue, notifier = pnotifier}
+      return vb:popup {
+      id = pid, 
+      width = pwidth, 
+      tooltip = ptooltip,
+      items = ptext, 
+      value = pvalue, 
+      notifier = pnotifier}
    end
+
    if type == obj_chooser then
-      return vb:chooser {id = pid, width = pwidth, tooltip = ptooltip,
-         value = pvalue, items = ptext, notifier = pnotifier}
+      return vb:chooser {
+      id = pid, 
+      width = pwidth, 
+      tooltip = ptooltip,
+      value = pvalue, 
+      items = ptext, 
+      notifier = pnotifier}
    end
+
    if type == obj_valuebox then
-      return vb:valuebox {id=pid, width = pwidth, tooltip = ptooltip,
-         min = pmin, max = pmax, value = pvalue, notifier = pnotifier}
+      return vb:valuebox {
+      id=pid, 
+      width = pwidth, 
+      tooltip = ptooltip,
+      min = pmin, 
+      max = pmax, 
+      value = pvalue, 
+      notifier = pnotifier}
    end
+
    if type == obj_slider then
-      return vb:slider {id=pid, width = pwidth, tooltip = ptooltip,
-         min = pmin, max = pmax, value = pvalue, notifier = pnotifier}
+      return vb:slider {
+      id=pid, 
+      width = pwidth, 
+      tooltip = ptooltip,
+      min = pmin, 
+      max = pmax, 
+      value = pvalue, 
+      notifier = pnotifier}
    end
+
    if type == obj_minislider then
-      return vb:minislider {id=pid, width = pwidth, tooltip = ptooltip,
-         min = pmin, max = pmax, value = pvalue, notifier = pnotifier}   
+      return vb:minislider {
+      id=pid, 
+      width = pwidth, 
+      tooltip = ptooltip,
+      min = pmin, 
+      max = pmax, 
+      value = pvalue, 
+      notifier = pnotifier}   
    end
+
    if type == obj_textfield then
-      return vb:textfield{id = pid, width = pwidth, tooltip = ptooltip,
-         value = pvalue, notifier = pnotifier}
+      return vb:textfield{
+      id = pid, 
+      width = pwidth, 
+      tooltip = ptooltip,
+      value = pvalue, 
+      notifier = pnotifier}
    end
+
    if type == obj_valuefield then
-      return vb:valuefield{id = pid, width = pwidth, tooltip = ptooltip,
-         value = pvalue, notifier = pnotifier}
+      return vb:valuefield{
+      id = pid, 
+      width = pwidth, 
+      tooltip = ptooltip,
+      value = pvalue, 
+      notifier = pnotifier}
    end
 end
 
------------------------------------------------------------------------------
+-------------------------------------------------------------------------------
+---                                   Functions                             ---
+-------------------------------------------------------------------------------
 
 
 local EPSILON = 1e-12
@@ -439,6 +568,7 @@ function change_sample_properties(option, vb)
    local range_end = song.selected_instrument_index
    local cur_ins = nil --song.instruments[song.selected_instrument_index]
    local send = nil --#s_instrument.samples
+
    if option == OPTION_CHANGE_SELECTED then
       range_start = song.selected_instrument_index
    else
@@ -452,23 +582,31 @@ function change_sample_properties(option, vb)
       cur_ins =song.instruments[_]
       local s_instrument = cur_ins
       send = #cur_ins.samples      
+
       for octave = 0, 9 do
+
          for note = 1, 12 do
             note_array[#note_array+1] = valid_notes[note]..tostring(octave)
          end
+
       end
    
       if do_base_note == true then
+
          for t = 1, 120 do
             my_splitmap[t] = 1
          end
+
          for t = 1, 120 do
+
             if tonumber(base_note_val) ~= nil then
               local shift = t + tonumber(base_note_val)
+
               if shift > 0 and shift < 121 then
                  my_splitmap[shift] = cur_ins.split_map[t]
               end
             end
+
          end
          
       else
@@ -476,10 +614,13 @@ function change_sample_properties(option, vb)
       end
          
       for t = 1, send do
+
          if do_nna == true then
             s_instrument.samples[t].new_note_action = nna_index
          end
+
          if do_base_note == true then
+
             if tonumber(base_note_val) ~= nil then
                local cur_base_note = s_instrument.samples[t].base_note
                base_note_figure = cur_base_note + tonumber(base_note_val) + 1
@@ -490,43 +631,57 @@ function change_sample_properties(option, vb)
                end
               
             else
+
                for nt = 1,10*12 do
+
                   if note_array[nt] == string.upper(base_note_val) then
                      base_note_figure = nt-1
                      break
                   end
+
                end
+
                if base_note_figure ~= nil then
                   s_instrument.samples[t].base_note = base_note_figure
                end
+
             end 
          end
+
          if do_loop == true then
             s_instrument.samples[t].loop_mode = loop_index
          end
+
          if do_fine_tuning == true then
             s_instrument.samples[t].fine_tune = fine_tune_val
          end
+
          if do_interpolate == true then
             s_instrument.samples[t].interpolation_mode = interpolation_index
          end
+
          if do_sync == true then
             s_instrument.samples[t].beat_sync_enabled = sync_mode
             s_instrument.samples[t].beat_sync_lines = sync_val
          end
+
          if do_amplify == true then
             s_instrument.samples[t].volume = vb.views.db_value.value
          end
+
          if do_panning == true then
             local pan_result = 0.5
             pan_val = vb.views.pan_value.value
+
             if pan_val > 0 then
                pan_result = pan_val / 100 + pan_result
             elseif pan_val < 0 then
                pan_result = pan_result - (pan_val / -100) 
             end         
+
             s_instrument.samples[t].panning = pan_result
          end
+
       end
 
       cur_ins.split_map = my_splitmap

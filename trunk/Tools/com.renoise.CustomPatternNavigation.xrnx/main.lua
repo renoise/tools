@@ -1,6 +1,12 @@
 -- -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 -- tool registration
 -- -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+-- Legenda:
+-- THIS_IS_A_CONSTANT = 0
+-- this_is_a_variable = 0
+-- class 'ThisIsAClassDefinition'
+-- function ThisIsAClassDefinition:__Init()
+
 
 renoise.tool():add_menu_entry {
   name = "Main Menu:Tools:Custom Pattern Navigation Setup...",
@@ -46,6 +52,7 @@ function open_jump_dialog()
 
       jump_dialog = renoise.app():show_custom_dialog(
          "Custom Pattern Navigation",
+
          vb:column {
             margin = DIALOG_MARGIN,
             spacing = CONTENT_SPACING,
@@ -53,6 +60,7 @@ function open_jump_dialog()
 
       --- valuebox
             vb:row {
+
                vb:text {
                   width = TEXT_ROW_WIDTH,
                   text = "Jump Mode"
@@ -74,10 +82,12 @@ Length / Factor: The patternlength divided by given factor.]],
             },
 
             vb:row {
+
                vb:text {
                   width = TEXT_ROW_WIDTH,
                   text = "Steps or Factor "
                },
+
                vb:valuebox {
                   min = 0,
                   max = 512,
@@ -116,9 +126,11 @@ function jump(option)
    if switch_jump_mode_index == 1 then
       jump_steps = row_step 
    end
+
    if switch_jump_mode_index == 2 then
       jump_steps = song.transport.lpb
    end   
+
    if switch_jump_mode_index == 3 then
       jump_steps = song.selected_pattern.number_of_lines / row_step
    end
@@ -127,11 +139,14 @@ function jump(option)
 --      new_pos = song.selected_line_index - jump_steps
       new_pos = song.transport.playback_pos
       new_pos.line = new_pos.line - jump_steps
+
       if new_pos.line < 1 then
+
          if song.selected_sequence_index-1 > 0 then
             local prv_sq_idx = song.selected_sequence_index-1
             local prv_pt = song.sequencer.pattern_sequence[prv_sq_idx]
             local prv_pt_lines = song.patterns[prv_pt].number_of_lines
+
             if switch_jump_mode_index ~= 3 then 
                new_pos.line = prv_pt_lines + new_pos.line
             else
@@ -139,10 +154,12 @@ function jump(option)
                new_pos.line = prv_pt_lines - (prv_pt_lines / row_step) --+ 1
             end
             new_pos.sequence = song.selected_sequence_index -1
+
 --            song.selected_sequence_index = song.selected_sequence_index -1
          else
             new_pos.line = 1
          end
+
       end
 --      song.selected_line_index = new_pos
    end
@@ -154,6 +171,7 @@ function jump(option)
       if new_pos.line > song.selected_pattern.number_of_lines then
         
          if song.selected_sequence_index+1 <= #song.sequencer.pattern_sequence then
+
             if switch_jump_mode_index ~= 3 then 
 --               new_pos = new_pos - song.selected_pattern.number_of_lines
                new_pos.line = new_pos.line - song.selected_pattern.number_of_lines
@@ -166,9 +184,11 @@ function jump(option)
             end
             new_pos.sequence = song.selected_sequence_index +1
 --            song.selected_sequence_index = song.selected_sequence_index +1
+
          else 
             new_pos.line = song.selected_pattern.number_of_lines
          end
+
       end
 --      song.selected_line_index = new_pos
    end
