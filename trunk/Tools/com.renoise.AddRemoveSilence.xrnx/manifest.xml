@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <RenoiseScriptingTool>
+  <ApiVersion>1.0</ApiVersion>
   <ApiVersionMin>0.8</ApiVersionMin>
   <ApiVersionMax>0.8</ApiVersionMax> 
   <Id>com.renoise.AddRemoveSilence</Id>
