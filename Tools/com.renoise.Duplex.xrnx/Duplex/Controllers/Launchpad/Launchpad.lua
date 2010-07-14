@@ -15,10 +15,10 @@ A device-specific class
 
 class "Launchpad" (MidiDevice)
 
-function Launchpad:__init(name, message_stream)
-  TRACE("Launchpad:__init", name, message_stream)
+function Launchpad:__init(display_name, port_name, message_stream)
+  TRACE("Launchpad:__init", display_name, port_name, message_stream)
 
-  MidiDevice.__init(self, name, message_stream)
+  MidiDevice.__init(self, display_name, port_name, message_stream)
 
   -- this device has a color-space with 4 degrees of red and green
   self.colorspace = {4, 4, 0}
@@ -145,10 +145,10 @@ end
 --==============================================================================
 
 -- default configurations for the launchpad
--- this is a fullblown implementation (with a custom class + control-map)
-
 
 --------------------------------------------------------------------------------
+
+-- setup "Mixer" as the only app for this configuration
 
 duplex_configurations:insert {
 
@@ -165,17 +165,18 @@ duplex_configurations:insert {
     protocol = DEVICE_MIDI_PROTOCOL,
   },
 
-  -- setup "Mixer" as the only app for this configuration
   applications = {
     Mixer = {
-      levels = {
-        group_name = "Grid",
-      },
-      mute = {
-        group_name = "Controls",
-      },
-      master = {
-        group_name = "Triggers",
+      mappings = {
+        levels = {
+          group_name = "Grid",
+        },
+        mute = {
+          group_name = "Controls",
+        },
+        master = {
+          group_name = "Triggers",
+        }
       }
     }
   }
@@ -183,6 +184,8 @@ duplex_configurations:insert {
 
 
 --------------------------------------------------------------------------------
+
+-- setup a Matrix as the only app for this configuration
 
 duplex_configurations:insert {
 
@@ -199,22 +202,27 @@ duplex_configurations:insert {
     protocol = DEVICE_MIDI_PROTOCOL,
   },
 
-  -- setup a Matrix as the only app for this configuration
   applications = {
     Matrix = {
-      matrix = {
-        group_name = "Grid",
+      mappings = {
+        matrix = {
+          group_name = "Grid",
+        },
+        triggers = {
+          group_name = "Triggers",
+        },
+        sequence = {
+          group_name = "Controls",
+          index = 0,
+        },
+        track = {
+          group_name = "Controls",
+          index = 2,
+        }
       },
-      triggers = {
-        group_name = "Triggers",
-      },
-      sequence = {
-        group_name = "Controls",
-        index = 0,
-      },
-      track = {
-        group_name = "Controls",
-        index = 2,
+      options = {
+        --play_mode = 4,
+        --switch_mode = 4,
       }
     }
   }
@@ -222,6 +230,8 @@ duplex_configurations:insert {
 
 
 --------------------------------------------------------------------------------
+
+-- setup a Matrix and Mixer, vertically split
 
 duplex_configurations:insert {
 
@@ -238,33 +248,36 @@ duplex_configurations:insert {
     protocol = DEVICE_MIDI_PROTOCOL,
   },
 
-  -- setup a Matrix and Mixer, vertically split
   applications = {
     Matrix = {
-      matrix = {
-        group_name = "Grid",
-      },
-      triggers = {
-        group_name = "Grid",
-      },
-      sequence = {
-        group_name = "Controls",
-        index = 0,
-      },
-      track = {
-        group_name = "Controls",
-        index = 2,
+      mappings = {
+        matrix = {
+          group_name = "Grid",
+        },
+        triggers = {
+          group_name = "Grid",
+        },
+        sequence = {
+          group_name = "Controls",
+          index = 0,
+        },
+        track = {
+          group_name = "Controls",
+          index = 2,
+        }
       }
     },
     Mixer = {
-      levels = {
-        group_name = "Grid2",
-      },
-      mute = {
-        group_name = "Grid2",
-      },
-      master = {
-        group_name = "Grid2",
+      mappings = {
+        levels = {
+          group_name = "Grid2",
+        },
+        mute = {
+          group_name = "Grid2",
+        },
+        master = {
+          group_name = "Grid2",
+        }
       }
     }
   }

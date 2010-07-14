@@ -15,10 +15,10 @@ A device-specific class
 
 class "Ohm64" (MidiDevice)
 
-function Ohm64:__init(name, message_stream)
-  TRACE("Ohm64:__init", name, message_stream)
+function Ohm64:__init(display_name, port_name, message_stream)
+  TRACE("Ohm64:__init", display_name, port_name, message_stream)
 
-  MidiDevice.__init(self, name, message_stream)
+  MidiDevice.__init(self, display_name, port_name, message_stream)
 
   -- setup a monochrome colorspace for the OHM
   self.colorspace = {1,1,1}
@@ -26,6 +26,8 @@ end
 
 
 --------------------------------------------------------------------------------
+
+-- setup Mixer + Matrix + Effect as apps
 
 duplex_configurations:insert {
 
@@ -42,45 +44,59 @@ duplex_configurations:insert {
     protocol = DEVICE_MIDI_PROTOCOL
   },
   
-  -- setup a Mixer and Matrix as apps
   applications = {
     Mixer = {
-      panning = {
-        group_name = "PanningLeft",
-      },
-      levels = {
-        group_name = "VolumeLeft",
-      },
-      mute = {
-        group_name = "ButtonsLeft",
-      },
-      master = {
-        group_name = "VolumeRight",
+      mappings = {
+        panning = {
+          group_name = "PanningLeft",
+        },
+        levels = {
+          group_name = "VolumeLeft",
+        },
+        mute = {
+          group_name = "ButtonsLeft",
+        },
+        master = {
+          group_name = "VolumeRight",
+        },
       },
     },
     Matrix = {
-      matrix = {
-        group_name = "Grid",
-      },
-      sequence = {
-        group_name = "CrossFader",
-        index = 1,
-      },
-      triggers = {
-        group_name = "Grid",
-      },
-      --[[
-      sequence = {
-        group_name = "ControlsRight",
-        index = 0,
-      },
-      ]]
-      track = {
-        group_name = "ControlsRight",
-        index = 2,
+      mappings = {
+        matrix = {
+          group_name = "Grid",
+        },
+        sequence = {
+          group_name = "CrossFader",
+          index = 1,
+        },
+        triggers = {
+          group_name = "Grid",
+        },
+        --[[
+        sequence = {
+          group_name = "ControlsRight",
+          index = 0,
+        },
+        ]]
+        track = {
+          group_name = "ControlsRight",
+          index = 2,
+        }
       }
-
     },
+    Effect = {
+      mappings = {
+        parameters = {
+          group_name= "EncodersEffect",
+        },
+        page = {
+          group_name = "ControlsRight",
+          index = 0,
+
+        }
+      }
+    }
   }
 }
 

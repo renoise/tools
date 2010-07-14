@@ -32,7 +32,7 @@ Events
 class 'UITriggerButton' (UIComponent)
 
 function UITriggerButton:__init(display)
-  print('UITriggerButton:__init')
+  TRACE('UITriggerButton:__init')
 
   UIComponent.__init(self,display)
 
@@ -70,7 +70,7 @@ end
 -- user input via button
 
 function UITriggerButton:do_press()
-  print("UITriggerButton:do_press")
+  TRACE("UITriggerButton:do_press")
   
   if (self.on_change ~= nil) then
 
@@ -91,6 +91,7 @@ end
 --------------------------------------------------------------------------------
 
 function UITriggerButton:trigger()
+  TRACE("UITriggerButton:trigger()")
 
     self.__seq_index = 1
     self:__cancel_scheduled_task()
@@ -108,8 +109,9 @@ end
 -- will start over again)
 
 function UITriggerButton:draw()
+  TRACE("UITriggerButton:draw")
+
   if(not self.__seq_index) then return end
-  --print("UITriggerButton:draw")
 
   local point = CanvasPoint()
   local seq = self.sequence[self.__seq_index]
@@ -170,7 +172,7 @@ end
 -- (this can revert changes)
 
 function UITriggerButton:__invoke_handler()
-  print("UITriggerButton:__invoke_handler()")
+  TRACE("UITriggerButton:__invoke_handler()")
 
   if (self.on_change == nil) then return end
 

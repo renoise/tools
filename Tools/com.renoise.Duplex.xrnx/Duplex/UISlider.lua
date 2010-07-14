@@ -261,27 +261,36 @@ function UISlider:draw()
 
     local point = CanvasPoint()
     point:apply(self.palette.background)
+    point.val = false      
 
     if (idx) then
+      local apply_track = false
       if (i == idx) then
         -- figure out the offset within the "step",
         -- going from 0 to .ceiling value
         local step = self.ceiling/self.size
         local offset = self.value-(step*(self.index-1))
-        
         point.val = offset * (1 / step) * self.ceiling
         point:apply((self.dimmed) and 
           self.palette.tip_dimmed or self.palette.tip)
 
       elseif (self.flipped) then
         if (i <= idx)then
-          point.val = true        
-          point:apply((self.dimmed) and 
-            self.palette.track_dimmed or self.palette.track)
+          apply_track = true
         end
 
       elseif ((self.size - i) < self.index) then
-        point.val = true      
+        apply_track = true
+      end
+      
+      if(apply_track)then
+        -- if the color is completely dark, this is also how
+        -- LED buttons will represent the value (turned off)
+        if(get_color_average(self.palette.track.color)>0x00)then
+          point.val = true        
+        else
+          point.val = false        
+        end
         point:apply((self.dimmed) and 
           self.palette.track_dimmed or self.palette.track)
       end

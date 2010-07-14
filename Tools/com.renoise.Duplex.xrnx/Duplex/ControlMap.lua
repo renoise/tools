@@ -43,6 +43,10 @@ function ControlMap:__init()
   -- groups by name, e.g. self.groups["Triggers"]
   self.groups = table.create() 
 
+  -- remember the name (this is a 'read-only' property, 
+  -- setting it will not do anything useful)
+  self.file_path = ""
+
   -- internal stuff
   
   -- unique id, reset each time a control-map is parsed
@@ -59,7 +63,7 @@ end
 
 function ControlMap:load_definition(file_path)
   
-  local control_map_name = file_path
+  self.file_path = file_path
   
   -- try to find the controller definition in the package path
   local package_paths = {}
@@ -86,12 +90,12 @@ function ControlMap:load_definition(file_path)
     TRACE("ControlMap:load_definition:", file_path)
     
     local xml_string = self.read_file(self, file_path)
-    self:parse_definition(control_map_name, xml_string)
+    self:parse_definition(file_path, xml_string)
   
   else
     renoise.app():show_error(
       ("Failed to load controller definition file: '%s'. " ..
-       "The controller is not available."):format(control_map_name))
+       "The controller is not available."):format(file_path))
   end
 end
 

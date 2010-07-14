@@ -10,7 +10,7 @@ In Progress
 
 * [danoise]: Mixer option: Show only certain track types 
 
-* [danoise]: Re-animate Device options parsing
+* [danoise]: Device settings
 
 * [taktik]: OSC Device / protocol support
 
@@ -33,30 +33,27 @@ Before beta starts
 
 --
 
-* Test applications: write Ohm64-based apps to ensure proper operation 
-  o TestUISpinner/TestUISlider/TestUIToggleButton/etc
-
 * Navigator
   o Extract code from other apps
 
 * Effect:
-  o Support other than selected FX
+  o Support other than selected FX ("sticky" device?)
   o Support other parameter subsets than "everything"
 
 * Mixer: 
-  o Support Solo
   o Support Pre and Post Vol/Pan (via a page switch or config)
-  o Support "OFF" and "MUTE" modes (which depend on Renoise preference)
+  o Auto-detect "OFF" and "MUTE" mode (which depend on Renoise preference)
+  o Support track-delay (-100/100ms)
   
 * Relative MIDI controller message support for encoders
 
-* Ability to map any app option?
+* Ability to map any app option? For example, to switch between different
+  triggering modes in the matrix
 
-* Application configuration panel:
+* Control-mapping dialog:
   o List the names of application groups, each with "choose" button that open
     a slightly smaller version of the virtual UI for choosing the relevant
     control and/or group
-  o Other options listed as a popup (the active choice)
 
 * Device control-panel: 
   o Small (optional) thumbnail for device
@@ -64,7 +61,6 @@ Before beta starts
   o Select among available control-map layouts (obtain list by scanning folder)
   o Display controlmap info (author, name, description) 
   o Reload control-map
-  o Set control-map as standard (persistent setting)
   o MidiDevice: specify input port - only for devices that 
     doesn't have a dedicated class (remember the chosen port)
   o OSCDevice: specify the prefix (could be /renoise or /duplex always?)

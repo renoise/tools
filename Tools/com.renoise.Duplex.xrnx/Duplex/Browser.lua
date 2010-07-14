@@ -873,6 +873,15 @@ function Browser:__create_content_view()
         width = 60,
         notifier = function(e)
           renoise.app():show_warning("Device settings not yet implemented")
+          --[[
+          for process_index,process in ripairs(self.__processes) do
+            if(process:control_surface_visible())then
+              process.device:show_settings_dialog(self)
+              return
+            end
+          end
+          ]]
+
         end
       },
     },
@@ -1136,8 +1145,8 @@ function BrowserProcess:instantiate(configuration)
 
   self.__message_stream = MessageStream()
   
-  self.device = _G[device_class_name](
-    configuration.device.device_name, self.__message_stream)
+  self.device = _G[device_class_name](configuration.device.display_name, 
+    configuration.device.device_name,self.__message_stream)
     
   self.device:set_control_map(
     configuration.device.control_map)
@@ -1152,8 +1161,8 @@ function BrowserProcess:instantiate(configuration)
 
   for app_class_name,_ in pairs(configuration.applications) do
 
-    local mappings = configuration.applications[app_class_name] or {}
-    local options = {} -- TODO
+    local mappings = configuration.applications[app_class_name].mappings or {}
+    local options = configuration.applications[app_class_name].options or {}
     
     local app_instance = _G[app_class_name](
       self.__display, mappings, options)
@@ -1292,7 +1301,8 @@ end
 
 --------------------------------------------------------------------------------
 
--- returtns true when the processes control surface is currently visible
+-- returns true when the processes control surface is currently visible
+-- (this is also an indication of whether this is the selected device)
 
 function BrowserProcess:control_surface_visible()
   return (self.__control_surface_view ~= nil)

@@ -189,6 +189,13 @@ function get_master_track_index()
   end
 end
 
+-- get average from color
+
+function get_color_average(color)
+  return color[1]+color[2]+color[3]/3
+end
+
+
 
 --------------------------------------------------------------------------------
 -- debug tracing

@@ -15,10 +15,16 @@ Requires: Globals, ControlMap, Message
 
 class 'MidiDevice' (Device)
 
-function MidiDevice:__init(name, message_stream)
-  TRACE("MidiDevice:__init("..name..")")
+function MidiDevice:__init(display_name, port_name, message_stream)
+  TRACE("MidiDevice:__init()",display_name, port_name, message_stream)
 
-  Device.__init(self, name, message_stream, DEVICE_MIDI_PROTOCOL)
+  assert(display_name and port_name and message_stream, 
+    "Internal Error. Please report: " ..
+    "expected a valid port-name, display-name and stream for a device")
+
+  Device.__init(self, display_name, message_stream, DEVICE_MIDI_PROTOCOL)
+
+  self.port_name = port_name
 
   self.midi_in = nil
   self.midi_out = nil
@@ -26,26 +32,34 @@ function MidiDevice:__init(name, message_stream)
   -- todo: update all MIDI devices when this setting change
   self.dump_midi = false
 
+  self:open()
+
+end
+
+
+--------------------------------------------------------------------------------
+
+function MidiDevice:open()
+
   local input_devices = renoise.Midi.available_input_devices()
   local output_devices = renoise.Midi.available_output_devices()
 
-  if table.find(input_devices, name) then
-    self.midi_in = renoise.Midi.create_input_device(name,
+  if table.find(input_devices, self.port_name) then
+    self.midi_in = renoise.Midi.create_input_device(self.port_name,
       {self, MidiDevice.midi_callback},
       {self, MidiDevice.sysex_callback}
     )
   else
-    print("Notice: Could not create MIDI input device "..name)
+    print("Notice: Could not create MIDI input device "..self.port_name)
   end
 
-  if table.find(output_devices, name) then
-    self.midi_out = renoise.Midi.create_output_device(name)
+  if table.find(output_devices, self.port_name) then
+    self.midi_out = renoise.Midi.create_output_device(self.port_name)
   else
-    print("Notice: Could not create MIDI output device "..name)
+    print("Notice: Could not create MIDI output device "..self.port_name)
   end
 
 end
-
 
 --------------------------------------------------------------------------------
 
@@ -69,7 +83,7 @@ end
 
 function MidiDevice:midi_callback(message)
   TRACE(("MidiDevice: %s received MIDI %X %X %X"):format(
-    self.name, message[1], message[2], message[3]))
+    self.port_name, message[1], message[2], message[3]))
 
   local msg = Message()
 
@@ -77,7 +91,7 @@ function MidiDevice:midi_callback(message)
 
   if (self.dump_midi) then
     print(("MidiDevice: %s received MIDI %X %X %X"):format(
-    self.name, message[1], message[2], message[3]))
+    self.port_name, message[1], message[2], message[3]))
   end
 
   -- determine the type of signal : note/cc/etc
@@ -146,7 +160,7 @@ end
 
 function MidiDevice:sysex_callback(message)
   TRACE(("MidiDevice: %s got SYSEX with %d bytes"):format(
-    self.device_name, #message))
+    self.port_name, #message))
 end
 
 
@@ -165,11 +179,11 @@ function MidiDevice:send_cc_message(number,value)
   local message = {0xB0, number, value}
 
   TRACE(("MidiDevice: %s send MIDI %X %X %X"):format(
-    self.name, message[1], message[2], message[3]))
+    self.port_name, message[1], message[2], message[3]))
 
   if(self.dump_midi)then
     print(("MidiDevice: %s send MIDI %X %X %X"):format(
-      self.name, message[1], message[2], message[3]))
+      self.port_name, message[1], message[2], message[3]))
   end
 
 
@@ -197,11 +211,11 @@ function MidiDevice:send_note_message(key,velocity)
   end
   
   TRACE(("MidiDevice: %s send MIDI %X %X %X"):format(
-    self.name, message[1], message[2], message[3]))
+    self.port_name, message[1], message[2], message[3]))
     
   if(self.dump_midi)then
     print(("MidiDevice: %s send MIDI %X %X %X"):format(
-      self.name, message[1], message[2], message[3]))
+      self.port_name, message[1], message[2], message[3]))
   end
 
   self.midi_out:send(message) 

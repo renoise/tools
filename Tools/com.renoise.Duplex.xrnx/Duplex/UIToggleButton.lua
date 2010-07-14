@@ -166,7 +166,23 @@ end
 
 
 --------------------------------------------------------------------------------
--- Overridden from UIComponent
+
+-- trigger the external handler method
+-- (this can revert changes)
+
+function UIToggleButton:__invoke_handler()
+
+  if (self.on_change == nil) then return end
+
+  local rslt = self:on_change()
+  if (rslt==false) then  -- revert
+    self.active = self._cached_active
+  else
+    self:invalidate()
+  end
+end
+
+
 --------------------------------------------------------------------------------
 
 function UIToggleButton:draw()
@@ -237,25 +253,4 @@ function UIToggleButton:remove_listeners()
     self,DEVICE_EVENT_BUTTON_HELD)
 
 end
-
-
---------------------------------------------------------------------------------
--- Private
---------------------------------------------------------------------------------
-
--- trigger the external handler method
--- (this can revert changes)
-
-function UIToggleButton:__invoke_handler()
-
-  if (self.on_change == nil) then return end
-
-  local rslt = self:on_change()
-  if (rslt==false) then  -- revert
-    self.active = self._cached_active
-  else
-    self:invalidate()
-  end
-end
-
 
