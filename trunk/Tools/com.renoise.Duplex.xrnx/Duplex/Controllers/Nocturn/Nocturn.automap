@@ -6,24 +6,24 @@
     <BrowserHint Value="1" />
     <Group name="Controls">
         <Group name="Page 1 Encoders">
-            <Param name="CC# 0" shortName="CC# 0" id="0" intStep="1" intMax="127" intMin="0" high="127" low="0" step="1.000000" />
-            <Param name="CC# 1" shortName="CC# 1" id="1" intStep="1" intMax="127" intMin="0" high="127" low="0" step="1.000000" />
-            <Param name="CC# 2" shortName="CC# 2" id="2" intStep="1" intMax="127" intMin="0" high="127" low="0" step="1.000000" />
-            <Param name="CC# 3" shortName="CC# 3" id="3" intStep="1" intMax="127" intMin="0" high="127" low="0" step="1.000000" />
-            <Param name="CC# 4" shortName="CC# 4" id="4" intStep="1" intMax="127" intMin="0" high="127" low="0" step="1.000000" />
-            <Param name="CC# 5" shortName="CC# 5" id="5" intStep="1" intMax="127" intMin="0" high="127" low="0" step="1.000000" />
-            <Param name="CC# 6" shortName="CC# 6" id="6" intStep="1" intMax="127" intMin="0" high="127" low="0" step="1.000000" />
-            <Param name="CC# 7" shortName="CC# 7" id="7" intStep="1" intMax="127" intMin="0" high="127" low="0" step="1.000000" />
+            <Param name="CC# 64" shortName="CC# 64" id="64" intStep="1" intMax="127" intMin="0" high="127" low="0" step="1.000000" />
+            <Param name="CC# 65" shortName="CC# 65" id="65" intStep="1" intMax="127" intMin="0" high="127" low="0" step="1.000000" />
+            <Param name="CC# 66" shortName="CC# 66" id="66" intStep="1" intMax="127" intMin="0" high="127" low="0" step="1.000000" />
+            <Param name="CC# 67" shortName="CC# 67" id="67" intStep="1" intMax="127" intMin="0" high="127" low="0" step="1.000000" />
+            <Param name="CC# 68" shortName="CC# 68" id="68" intStep="1" intMax="127" intMin="0" high="127" low="0" step="1.000000" />
+            <Param name="CC# 69" shortName="CC# 69" id="69" intStep="1" intMax="127" intMin="0" high="127" low="0" step="1.000000" />
+            <Param name="CC# 70" shortName="CC# 70" id="70" intStep="1" intMax="127" intMin="0" high="127" low="0" step="1.000000" />
+            <Param name="CC# 71" shortName="CC# 71" id="71" intStep="1" intMax="127" intMin="0" high="127" low="0" step="1.000000" />
         </Group>
         <Group name="Page 1 Pots">
-            <Param name="CC# 8" shortName="CC# 8" id="8" intStep="0" intMax="127" intMin="0" high="127" low="127" step="0.000000" />
-            <Param name="CC# 9" shortName="CC# 9" id="9" intStep="0" intMax="127" intMin="0" high="127" low="127" step="0.000000" />
-            <Param name="CC# 10" shortName="CC# 10" id="10" intStep="0" intMax="127" intMin="0" high="127" low="127" step="0.000000" />
-            <Param name="CC# 11" shortName="CC# 11" id="11" intStep="0" intMax="127" intMin="0" high="127" low="127" step="0.000000" />
-            <Param name="CC# 12" shortName="CC# 12" id="12" intStep="0" intMax="127" intMin="0" high="127" low="127" step="0.000000" />
-            <Param name="CC# 13" shortName="CC# 13" id="13" intStep="0" intMax="127" intMin="0" high="127" low="127" step="0.000000" />
-            <Param name="CC# 14" shortName="CC# 14" id="14" intStep="0" intMax="127" intMin="0" high="127" low="127" step="0.000000" />
-            <Param name="CC# 15" shortName="CC# 15" id="15" intStep="0" intMax="127" intMin="0" high="127" low="127" step="0.000000" />
+            <Param name="CC# 72" shortName="CC# 72" id="72" intStep="0" intMax="127" intMin="0" high="127" low="127" step="0.000000" />
+            <Param name="CC# 73" shortName="CC# 73" id="73" intStep="0" intMax="127" intMin="0" high="127" low="127" step="0.000000" />
+            <Param name="CC# 74" shortName="CC# 74" id="74" intStep="0" intMax="127" intMin="0" high="127" low="127" step="0.000000" />
+            <Param name="CC# 75" shortName="CC# 75" id="75" intStep="0" intMax="127" intMin="0" high="127" low="127" step="0.000000" />
+            <Param name="CC# 76" shortName="CC# 76" id="76" intStep="0" intMax="127" intMin="0" high="127" low="127" step="0.000000" />
+            <Param name="CC# 77" shortName="CC# 77" id="77" intStep="0" intMax="127" intMin="0" high="127" low="127" step="0.000000" />
+            <Param name="CC# 78" shortName="CC# 78" id="78" intStep="0" intMax="127" intMin="0" high="127" low="127" step="0.000000" />
+            <Param name="CC# 79" shortName="CC# 79" id="79" intStep="0" intMax="127" intMin="0" high="127" low="127" step="0.000000" />
         </Group>
         <Group name="Page 1 XFader">
             <Param name="Pitch Bend" shortName="Pitch Bend" id="128" intStep="1" intMax="63" intMin="-64" high="63" low="-64" step="1.000000" />

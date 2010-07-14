@@ -63,7 +63,7 @@ function Effect:__init(display, mappings, options)
   self.mappings = {
     parameters = {
       group_name = nil,
-      description = "Parameter Value - assign to a dial or fader",
+      description = "Parameter Value - assign to a fader, dial or grid",
       required = false,
       index = nil,
     },
@@ -73,6 +73,12 @@ function Effect:__init(display, mappings, options)
       required = false,
       index = nil,
     },
+    device = {
+      group_name = nil,
+      description = "Device navigator - assign to a fader, dial or grid",
+      required = false,
+      index = nil,
+    }
   }
 
   -- the controls
@@ -144,10 +150,10 @@ end
 
 -- build_app: create the fader/encoder layout
 
-function Effect:build_app()
-  TRACE("Effect:build_app(")
+function Effect:__build_app()
+  TRACE("Effect:__build_app(")
 
-  Application.build_app(self)
+  Application.__build_app(self)
 
   self.__parameter_sliders = {}
 
@@ -253,6 +259,40 @@ function Effect:build_app()
     self.display:add(self.__page_control)
   end
 
+  -- device navigator (optional) ---------------------------
+
+  local c = UISlider(self.display)
+  c.group_name = self.mappings.device.group_name
+  c.x_pos = 1
+  c.y_pos = 1
+  c.flipped = true
+  c.orientation = HORIZONTAL
+  c.ceiling = columns
+  c.palette.background = self.display.palette.background
+  c.palette.tip = self.display.palette.color_1
+  c.palette.track = self.display.palette.background
+
+  c:set_size(columns)
+  c.on_change = function(obj) 
+
+    local track_idx = renoise.song().selected_track_index
+    --local device_idx = renoise.song().selected_device_index
+    local device = renoise.song().tracks[track_idx].devices[obj.index]
+    if(device)then
+      renoise.song().selected_device_index = obj.index
+    else
+      if(obj.index~=0)then
+        -- we have attempted to select a non-existing device
+        return false      
+      end
+    end
+
+  end
+  self.display:add(c)
+  self.__device_navigator = c
+
+
+
   -- the finishing touch
   self:__attach_to_song(renoise.song())
 end
@@ -265,8 +305,8 @@ end
 function Effect:start_app()
   TRACE("Effect.start_app()")
 
-  if not (self.created) then 
-    self:build_app()
+  if not (self.__created) then 
+    self:__build_app()
   end
 
   Application.start_app(self)
@@ -331,6 +371,10 @@ function Effect:__attach_to_song(song)
       
       if (self.active) then
         self:update()
+        local device_idx = renoise.song().selected_device_index
+        if(device_idx)then
+          self.__device_navigator:set_index(device_idx)
+        end
       end
     end
   )

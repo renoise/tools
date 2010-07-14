@@ -25,13 +25,39 @@ duplex_configurations:insert {
 
   applications = {
     TestUITriggerButton = {
-      grid = {
-        group_name = "Grid",
-      },
+      mappings = {
+        grid = {
+          group_name = "Grid",
+        },
+      }
     }
   }
 }
 
+--------------------------------------------------------------------------------
+
+duplex_configurations:insert {
+
+  -- configuration properties
+  name = "Bogus",
+  pinned = true,
+
+  -- device properties
+  device = {
+    class_name = "Launchpad",
+    display_name = "Launchpad",
+    device_name = "Launchpad",
+    control_map = "Controllers/Launchpad/Launchpad.xml",
+    protocol = DEVICE_MIDI_PROTOCOL,
+  },
+
+  -- setup "Bogus" as test for a non-existing application class
+  applications = {
+    Bogus = {}
+  }
+}
+
+--------------------------------------------------------------------------------
 
 duplex_configurations:insert {
 
@@ -50,9 +76,11 @@ duplex_configurations:insert {
 
   applications = {
     TestUITriggerButton = {
-      grid = {
-        group_name = "Grid",
-      },
+      mappings = {
+        grid = {
+          group_name = "Grid",
+        },
+      }
     }
   }
 }
@@ -75,7 +103,9 @@ duplex_configurations:insert {
   },
   
   applications = {
-    TestUISpinner = {}
+    TestUISpinner = {
+      mappings = {}
+    }
   }
 }
 
@@ -97,7 +127,9 @@ duplex_configurations:insert {
   },
   
   applications = {
-    TestUISlider = {}
+    TestUISlider = {
+      mappings = {}    
+    }
   }
 }
 

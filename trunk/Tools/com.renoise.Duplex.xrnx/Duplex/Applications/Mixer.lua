@@ -410,12 +410,73 @@ end
 
 --------------------------------------------------------------------------------
 
+-- start/resume application
+
+function Mixer:start_app()
+  TRACE("Mixer.start_app()")
+
+  if not (self.__created) then 
+    self:__build_app()
+  end
+
+  Application.start_app(self)
+  self:update()
+end
+
+
+--------------------------------------------------------------------------------
+
+function Mixer:destroy_app()
+  TRACE("Mixer:destroy_app")
+
+  if (self.__levels) then
+    for _,obj in pairs(self.__levels) do
+      obj.remove_listeners(obj)
+    end
+  end
+  if (self.__panning) then  
+    for _,obj in pairs(self.__panning) do
+      obj.remove_listeners(obj)
+    end
+  end
+  if (self.__mutes) then
+    for _,obj in pairs(self.__mutes) do
+      obj.remove_listeners(obj)
+    end
+  end
+  if (self.__solos) then
+    for _,obj in pairs(self.__solos) do
+      obj.remove_listeners(obj)
+    end
+  end
+  if (self.__master) then
+    self.__master:remove_listeners()
+  end
+  
+  Application.destroy_app(self)
+end
+
+
+--------------------------------------------------------------------------------
+
+function Mixer:on_new_document()
+  TRACE("Mixer:on_new_document")
+  
+  self:__attach_to_song(renoise.song())
+  
+  if (self.active) then
+    self:update()
+  end
+end
+
+--------------------------------------------------------------------------------
+
 -- build_app: create a grid or fader/encoder layout
 
-function Mixer:build_app()
-  TRACE("Mixer:build_app(")
+function Mixer:__build_app()
+  TRACE("Mixer:__build_app(")
 
-  Application.build_app(self)
+  Application.__build_app(self)
 
   -- check if the control-map describes a grid controller
   -- (slider is composed from individual buttons in grid mode)
@@ -465,12 +526,12 @@ function Mixer:build_app()
   self.__master = nil
   self.__track_navigator = nil
 
-  
   for control_index = 1,self.__width do
 
     -- sliders --------------------------------------------
 
     if (self.mappings.levels.group_name) then
+
       local y_pos = (embed_mutes) and 2 or 1
       local c = UISlider(self.display)
       c.group_name = self.mappings.levels.group_name
@@ -484,6 +545,7 @@ function Mixer:build_app()
   
       -- slider changed from controller
       c.on_change = function(obj) 
+
         local track_index = self.__track_offset + control_index
   
         if (not self.active) then
@@ -503,7 +565,6 @@ function Mixer:build_app()
         else
           local track = renoise.song().tracks[track_index]
           track.prefx_volume.value = obj.value
-          return true
         end
       end
       
@@ -709,68 +770,6 @@ end
 
 --------------------------------------------------------------------------------
 
--- start/resume application
-
-function Mixer:start_app()
-  TRACE("Mixer.start_app()")
-
-  if not (self.created) then 
-    self:build_app()
-  end
-
-  Application.start_app(self)
-  self:update()
-end
-
-
---------------------------------------------------------------------------------
-
-function Mixer:destroy_app()
-  TRACE("Mixer:destroy_app")
-
-  if (self.__levels) then
-    for _,obj in pairs(self.__levels) do
-      obj.remove_listeners(obj)
-    end
-  end
-  if (self.__panning) then  
-    for _,obj in pairs(self.__panning) do
-      obj.remove_listeners(obj)
-    end
-  end
-  if (self.__mutes) then
-    for _,obj in pairs(self.__mutes) do
-      obj.remove_listeners(obj)
-    end
-  end
-  if (self.__solos) then
-    for _,obj in pairs(self.__solos) do
-      obj.remove_listeners(obj)
-    end
-  end
-  if (self.__master) then
-    self.__master:remove_listeners()
-  end
-  
-  Application.destroy_app(self)
-end
-
-
---------------------------------------------------------------------------------
-
-function Mixer:on_new_document()
-  TRACE("Mixer:on_new_document")
-  
-  self:__attach_to_song(renoise.song())
-  
-  if (self.active) then
-    self:update()
-  end
-end
-
-
---------------------------------------------------------------------------------
-
 -- adds notifiers to song
 -- invoked when a new document becomes available
 
@@ -806,7 +805,7 @@ function Mixer:__attach_to_tracks()
 
   -- validate and update the sequence/track offset
   if (self.__track_navigator) then
-    self.__track_navigator:set_range(nil, math.max(0, 
+    self.__track_navigator:set_range(nil,math.max(0, 
       #renoise.song().tracks - self.__width))
   end
     

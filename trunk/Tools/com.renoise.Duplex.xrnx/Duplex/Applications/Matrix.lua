@@ -188,252 +188,6 @@ function Matrix:__init(display,mappings,options)
 
 end
 
-
---------------------------------------------------------------------------------
-
-function Matrix:build_app()
-  TRACE("Matrix:build_app()")
-
-  Application.build_app(self)
-
-
-  -- determine matrix size by looking at the control-map
-  local control_map = self.display.device.control_map.groups[self.mappings.matrix.group_name]
-  if(control_map["columns"])then
-      self.__width = control_map["columns"]
-      self.__height = math.ceil(#control_map/self.__width)
-  end
-
-  -- embed the trigger-group in the matrix?
-  local embed_triggers = (self.mappings.triggers.group_name==self.mappings.matrix.group_name)
-  if(embed_triggers)then
-    self.__width = self.__width-1
-  end
-
-  local observable = nil
-
-
-  -- sequence (up/down scrolling)
-  local c = UISpinner(self.display)
-  c.group_name = self.mappings.sequence.group_name
-  c.x_pos = 1+self.mappings.sequence.index
-  c.text_orientation = VERTICAL
-  c.on_change = function(obj) 
-    if (not self.active) then
-      return false
-    end
-    if(self.__edit_page~=obj.index)then
-      self.__edit_page = obj.index
-      self:update()
-      if(self.__edit_page~=self.__play_page) then
-        self:update_position(self.__playback_pos.sequence)
-      end
-      return true
-    end
-    return false
-  end
-  self.display:add(c)
-  self.__sequence_navigator = c
-
-
-  --  track (sideways scrolling)
-  local c = UISpinner(self.display)
-  c.group_name = self.mappings.track.group_name
-  c.x_pos = 1+self.mappings.track.index
-  c.text_orientation = HORIZONTAL
-  c.on_change = function(obj) 
-    TRACE("self.__track_navigator.on_change:",obj)
-    if (not self.active) then
-      return false
-    end
-    self.__track_offset = obj.index*self.__width
-    self:update()
-    return true
-  end
-  self.display:add(c)
-  self.__track_navigator = c
-
-  -- play-position (navigator)
-
-  local x_pos = 1
-  if(embed_triggers)then
-    x_pos = self.__width+1
-  end
-
-  local c = UISlider(self.display)
-  c.group_name = self.mappings.triggers.group_name
-  c.x_pos = x_pos
-  c.y_pos = 1
-  c.toggleable = true
-  c.flipped = true
-  c.ceiling = self.__height
-  c.palette.background = table.copy(self.palette.trigger_back)
-  c.palette.tip = table.rcopy(self.palette.trigger_active)
-  c.palette.track = table.rcopy(self.palette.trigger_back)
-  c:set_size(self.__height)
-  c.on_change = function(obj) 
-    -- position changed from controller
-    if not self.active then
-      return false
-    end
-
-    local seq_index = obj.index + (self.__height*self.__edit_page)
-    local seq_offset = self.__playback_pos.sequence%self.__height
-
-    if obj.index==0 then
-      
-      -- the position was toggled off
-      if (self.options.play_mode.value == self.PLAY_MODE_RETRIG) then
-        self:retrigger_pattern()
-      elseif (self.options.play_mode.value == self.PLAY_MODE_PLAY) then
-        return false
-      elseif (self.options.play_mode.value == self.PLAY_MODE_TOGGLE) then
-        renoise.song().transport:stop()
-      elseif (self.options.play_mode.value == self.PLAY_MODE_SCHEDULE) then
-        seq_index = self.__playback_pos.sequence + 
-          (self.__height*self.__edit_page)
-        if renoise.song().sequencer.pattern_sequence[seq_index] then
-          renoise.song().transport:set_scheduled_sequence(seq_index)
-        end
-      end
-
-    elseif not renoise.song().sequencer.pattern_sequence[seq_index] then
-
-      -- position out of bounds
-      if (self.options.bounds_mode.value == self.BOUNDS_MODE_STOP) then
-        renoise.song().transport:stop()
-        return true -- allow the button to flash briefly 
-      end
-      return false
-
-    elseif(self.__playback_pos.sequence==seq_index)then
-
-      -- position toggled back on
-      if (self.options.play_mode.value == self.PLAY_MODE_RETRIG) then
-        self:retrigger_pattern()
-      elseif (self.options.play_mode.value == self.PLAY_MODE_PLAY) then
-        if (not renoise.song().transport.playing) then
-          if renoise.song().sequencer.pattern_sequence[seq_index] then
-            renoise.song().transport:trigger_sequence(seq_index)
-          end
-        end
-      elseif (self.options.play_mode.value == self.PLAY_MODE_SCHEDULE) then
-        if renoise.song().sequencer.pattern_sequence[seq_index] then
-          renoise.song().transport:set_scheduled_sequence(seq_index)
-        end
-      elseif (self.options.play_mode.value == self.PLAY_MODE_TOGGLE) then
-        if (not renoise.song().transport.playing) then
-          if renoise.song().sequencer.pattern_sequence[seq_index] then
-            renoise.song().transport:trigger_sequence(seq_index)
-          end
-        end
-      end
-
-    else
-
-      -- switch to new position
-      if (not renoise.song().transport.playing) then
-        -- start playback if stopped
-        if renoise.song().sequencer.pattern_sequence[seq_index] then
-          renoise.song().transport:trigger_sequence(seq_index)
-        end
-      else
-        if(self.options.switch_mode.value == self.SWITCH_MODE_SCHEDULE) then
-          if renoise.song().sequencer.pattern_sequence[seq_index] then
-            -- schedule, but do not update display
-            renoise.song().transport:set_scheduled_sequence(seq_index)
-            return false
-          end
-        elseif(self.options.switch_mode.value == self.SWITCH_MODE_SWITCH) then
-          -- instantly switch position:
-          local new_pos = renoise.song().transport.playback_pos
-          new_pos.sequence = seq_index
-          -- if the desired pattern-line does not exist,start from 0
-          local patt_idx = renoise.song().sequencer.pattern_sequence[seq_index]
-          local num_lines = renoise.song().patterns[patt_idx].number_of_lines
-          if(new_pos.line>num_lines)then
-            new_pos.line = 1
-          end
-          renoise.song().transport.playback_pos = new_pos
-        elseif(self.options.switch_mode.value == self.SWITCH_MODE_STOP) then
-          renoise.song().transport:stop()
-        elseif(self.options.switch_mode.value == self.SWITCH_MODE_TRIG) then
-          if renoise.song().sequencer.pattern_sequence[seq_index] then
-            self.__playback_pos.sequence = seq_index
-            self:retrigger_pattern()
-          end
-        end
-      end
-    end
-    return true
-  end
-  self.display:add(c)
-  self.__trigger = c
-
-  -- grid buttons
-  self.__buttons = {}
-  for x=1,self.__width do
-    self.__buttons[x] = {}
-
-    for y=1,self.__height do
-
-      local c = UIToggleButton(self.display)
-      c.group_name = self.mappings.matrix.group_name
-      c.x_pos = x
-      c.y_pos = y
-      c.active = false
-
-      -- controller button pressed & held
-      c.on_hold = function(obj) 
-        TRACE("controller button pressed and held")
-        obj:toggle()
-        -- bring focus to pattern/track
-        if (#renoise.song().tracks>=x) then
-          renoise.song().selected_track_index = x
-        end
-        if renoise.song().sequencer.pattern_sequence[y] then
-          renoise.song().selected_sequence_index = y
-        end
-      end
-
-      -- controller button was pressed
-      c.on_change = function(obj) 
-        TRACE("controller button was pressed",x,y)
-
-        if not self.active then
-          return false
-        end
-
-        local seq = renoise.song().sequencer.pattern_sequence
-        local master_idx = get_master_track_index()
-        local seq_offset = self.__edit_page*self.__height
-
-        if x+self.__track_offset == master_idx then
-          --print('Notice: Master-track cannot be muted')
-          return false
-        elseif not renoise.song().tracks[x+self.__track_offset] then
-          --print('Notice: Track is outside bounds')
-          return false
-        elseif not seq[y+seq_offset] then
-          --print('Notice: Pattern is outside bounds')
-          return false
-        else
-          renoise.song().sequencer:set_track_sequence_slot_is_muted(
-            (x+self.__track_offset),(y+seq_offset),(not obj.active))-- "active" is negated
-        end
-        return true
-      end
-
-      self.display:add(c)
-      self.__buttons[x][y] = c
-
-    end  
-  end
-
-  self:__attach_to_song(renoise.song())
-
-end
-
 --------------------------------------------------------------------------------
 
 -- update slots visual appeareance 
@@ -520,99 +274,6 @@ end
 
 --------------------------------------------------------------------------------
 
--- update track navigator,
--- on new song, and when tracks have been changed
--- + no event fired
-
-function Matrix:update_track_count() 
-  TRACE("Matrix:update_track_count")
-
-  local count = math.floor((#renoise.song().tracks-1)/self.__width)
-  self.__track_navigator:set_range(nil,count)
-end
-
-
---------------------------------------------------------------------------------
-
--- update sequence offset
--- + no event fired
-
-function Matrix:update_seq_offset()
-  TRACE("Matrix:update_seq_offset()")
-
-  local skip_event_handler = true
-  self.__sequence_navigator:set_index(self.__play_page, skip_event_handler)
-  self.__edit_page = self.__play_page
-
-end
-
-
---------------------------------------------------------------------------------
-
--- update the switcher (when the number of pattern have changed)
--- + no event fired
-
-function Matrix:update_page_count()
-  TRACE("Matrix:update_page_count()")
-
-  local seq_len = #renoise.song().sequencer.pattern_sequence
-  local page_count = math.floor((seq_len-1)/self.__height)
-  self.__sequence_navigator:set_range(nil,page_count)
-
-end
-
-
---------------------------------------------------------------------------------
-
--- update position in sequence
--- @idx: (integer) the index, 0 - song-end
-
-function Matrix:update_position(idx)
-  TRACE("Matrix:update_position()",idx)
-
-  local pos_idx = nil
-  if(self.__playing)then
-    local play_page = self:get_play_page()
-    -- we are at a visible page?
-    if(self.__edit_page == play_page)then
-      pos_idx = idx-(self.__play_page*self.__height)
-    else
-      pos_idx = 0 -- no, hide playback 
-    end
-  else
-    pos_idx = 0 -- stopped
-  end
-  self.__trigger:set_index(pos_idx,true)
-  self.__trigger:invalidate()
-
-end
-
---------------------------------------------------------------------------------
-
--- retrigger the current pattern
-
-function Matrix:retrigger_pattern()
-  TRACE("Matrix:retrigger_pattern()")
-
-  local play_pos = self.__playback_pos.sequence
-  if renoise.song().sequencer.pattern_sequence[play_pos] then
-    renoise.song().transport:trigger_sequence(play_pos)
-    self:update_position(play_pos)
-  end
-end
-
---------------------------------------------------------------------------------
-
-function Matrix:get_play_page()
-  TRACE("Matrix:get_play_page()")
-
-  local play_pos = renoise.song().transport.playback_pos
-  return math.floor((play_pos.sequence-1)/self.__height)
-
-end
-
---------------------------------------------------------------------------------
-
 function Matrix:start_app()
   TRACE("Matrix.start_app()")
 
@@ -647,15 +308,15 @@ function Matrix:start_app()
     renoise.app():show_custom_prompt(dlg_title,dlg_text,dlg_buttons)
 
     if (vb.views.choice.value) then
-      self:build_options()
-      self:show_app()
+      self:__build_options()
+      self:__show_app()
     end
 
     return false
   end
 
-  if not (self.created) then 
-    self:build_app()
+  if not (self.__created) then 
+    self:__build_app()
   end
 
   Application.start_app(self)
@@ -663,13 +324,13 @@ function Matrix:start_app()
 
   self.__playing = renoise.song().transport.playing
   self.__playback_pos = renoise.song().transport.playback_pos
-  self.__play_page = self:get_play_page()
+  self.__play_page = self:__get_play_page()
 
   -- update everything!
-  self:update_page_count()
-  self:update_seq_offset()
-  self:update_track_count()
-  self:update_position(self.__playback_pos.sequence)
+  self:__update_page_count()
+  self:__update_seq_offset()
+  self:__update_track_count()
+  self:__update_position(self.__playback_pos.sequence)
   self:update()
 
 end
@@ -713,13 +374,13 @@ function Matrix:on_idle()
   if (self.__update_tracks_requested) then
     -- note: __update_slots_requested is true as well
     self.__update_tracks_requested = false
-    self:update_track_count()
+    self:__update_track_count()
   end
   -- 
   if (self.__update_slots_requested) then
     self.__update_slots_requested = false
     self:update()
-    self:update_page_count()
+    self:__update_page_count()
   end
 
 
@@ -754,25 +415,25 @@ function Matrix:on_idle()
       --self.__num_lines = renoise.song().patterns[patt_idx].number_of_lines
 
       -- check if we need to change page
-      local play_page = self:get_play_page()
+      local play_page = self:__get_play_page()
       if(play_page~=self.__play_page)then
         self.__play_page = play_page
         if(renoise.song().transport.follow_player)then
           if(self.__play_page~=self.__edit_page)then
             -- update only when following play-pos
-            self:update_seq_offset()
+            self:__update_seq_offset()
             self:update()
           end
         end
       end
-      self:update_position(pos.sequence)
+      self:__update_position(pos.sequence)
     elseif (not self.__playing) then
       -- playback resumed
-      self:update_position(self.__playback_pos.sequence)
+      self:__update_position(self.__playback_pos.sequence)
     elseif (self.__trigger.index == 0) and 
       (self.__play_page==self.__edit_page) then
       -- position now in play-range
-      self:update_position(self.__playback_pos.sequence)      
+      self:__update_position(self.__playback_pos.sequence)      
     end
 
     self.__playing = true
@@ -780,7 +441,7 @@ function Matrix:on_idle()
   else
     -- if we stopped playing, turn off position
     if(self.__playing) then
-      self:update_position(0)
+      self:__update_position(0)
       self.__playing = false
     end
   end
@@ -794,11 +455,352 @@ function Matrix:on_new_document()
   TRACE("Matrix:on_new_document()")
 
   self:__attach_to_song(renoise.song())
-  self:update_page_count()
-  self:update_track_count()
+  self:__update_page_count()
+  self:__update_track_count()
   self:update()
 
 end
+
+--------------------------------------------------------------------------------
+-- private methods
+--------------------------------------------------------------------------------
+
+-- update track navigator,
+-- on new song, and when tracks have been changed
+-- + no event fired
+
+function Matrix:__update_track_count() 
+  TRACE("Matrix:__update_track_count")
+
+  local count = math.floor((#renoise.song().tracks-1)/self.__width)
+  self.__track_navigator:set_range(nil,count)
+end
+
+
+--------------------------------------------------------------------------------
+
+-- update sequence offset
+-- + no event fired
+
+function Matrix:__update_seq_offset()
+  TRACE("Matrix:__update_seq_offset()")
+
+  local skip_event_handler = true
+  self.__sequence_navigator:set_index(self.__play_page, skip_event_handler)
+  self.__edit_page = self.__play_page
+
+end
+
+
+--------------------------------------------------------------------------------
+
+-- update the switcher (when the number of pattern have changed)
+-- + no event fired
+
+function Matrix:__update_page_count()
+  TRACE("Matrix:__update_page_count()")
+
+  local seq_len = #renoise.song().sequencer.pattern_sequence
+  local page_count = math.floor((seq_len-1)/self.__height)
+  self.__sequence_navigator:set_range(nil,page_count)
+
+end
+
+
+--------------------------------------------------------------------------------
+
+-- update position in sequence
+-- @idx: (integer) the index, 0 - song-end
+
+function Matrix:__update_position(idx)
+  TRACE("Matrix:__update_position()",idx)
+
+  local pos_idx = nil
+  if(self.__playing)then
+    local play_page = self:__get_play_page()
+    -- we are at a visible page?
+    if(self.__edit_page == play_page)then
+      pos_idx = idx-(self.__play_page*self.__height)
+    else
+      pos_idx = 0 -- no, hide playback 
+    end
+  else
+    pos_idx = 0 -- stopped
+  end
+  self.__trigger:set_index(pos_idx,true)
+  self.__trigger:invalidate()
+
+end
+
+--------------------------------------------------------------------------------
+
+-- retrigger the current pattern
+
+function Matrix:__retrigger_pattern()
+  TRACE("Matrix:retrigger_pattern()")
+
+  local play_pos = self.__playback_pos.sequence
+  if renoise.song().sequencer.pattern_sequence[play_pos] then
+    renoise.song().transport:trigger_sequence(play_pos)
+    self:__update_position(play_pos)
+  end
+end
+
+--------------------------------------------------------------------------------
+
+function Matrix:__get_play_page()
+  TRACE("Matrix:__get_play_page()")
+
+  local play_pos = renoise.song().transport.playback_pos
+  return math.floor((play_pos.sequence-1)/self.__height)
+
+end
+
+--------------------------------------------------------------------------------
+
+function Matrix:__build_app()
+  TRACE("Matrix:__build_app()")
+
+  Application.__build_app(self)
+
+
+  -- determine matrix size by looking at the control-map
+  local control_map = self.display.device.control_map.groups[self.mappings.matrix.group_name]
+  if(control_map["columns"])then
+      self.__width = control_map["columns"]
+      self.__height = math.ceil(#control_map/self.__width)
+  end
+
+  -- embed the trigger-group in the matrix?
+  local embed_triggers = (self.mappings.triggers.group_name==self.mappings.matrix.group_name)
+  if(embed_triggers)then
+    self.__width = self.__width-1
+  end
+
+  local observable = nil
+
+
+  -- sequence (up/down scrolling)
+  local c = UISpinner(self.display)
+  c.group_name = self.mappings.sequence.group_name
+  c.x_pos = 1+self.mappings.sequence.index
+  c.text_orientation = VERTICAL
+  c.on_change = function(obj) 
+    if (not self.active) then
+      return false
+    end
+    if(self.__edit_page~=obj.index)then
+      self.__edit_page = obj.index
+      self:update()
+      if(self.__edit_page~=self.__play_page) then
+        self:__update_position(self.__playback_pos.sequence)
+      end
+      return true
+    end
+    return false
+  end
+  self.display:add(c)
+  self.__sequence_navigator = c
+
+
+  --  track (sideways scrolling)
+  local c = UISpinner(self.display)
+  c.group_name = self.mappings.track.group_name
+  c.x_pos = 1+self.mappings.track.index
+  c.text_orientation = HORIZONTAL
+  c.on_change = function(obj) 
+    TRACE("self.__track_navigator.on_change:",obj)
+    if (not self.active) then
+      return false
+    end
+    self.__track_offset = obj.index*self.__width
+    self:update()
+    return true
+  end
+  self.display:add(c)
+  self.__track_navigator = c
+
+  -- play-position (navigator)
+
+  local x_pos = 1
+  if(embed_triggers)then
+    x_pos = self.__width+1
+  end
+
+  local c = UISlider(self.display)
+  c.group_name = self.mappings.triggers.group_name
+  c.x_pos = x_pos
+  c.y_pos = 1
+  c.toggleable = true
+  c.flipped = true
+  c.ceiling = self.__height
+  c.palette.background = table.copy(self.palette.trigger_back)
+  c.palette.tip = table.rcopy(self.palette.trigger_active)
+  c.palette.track = table.rcopy(self.palette.trigger_back)
+  c:set_size(self.__height)
+  c.on_change = function(obj) 
+    -- position changed from controller
+    if not self.active then
+      return false
+    end
+
+    local seq_index = obj.index + (self.__height*self.__edit_page)
+    local seq_offset = self.__playback_pos.sequence%self.__height
+
+    if obj.index==0 then
+      
+      -- the position was toggled off
+      if (self.options.play_mode.value == self.PLAY_MODE_RETRIG) then
+        self:__retrigger_pattern()
+      elseif (self.options.play_mode.value == self.PLAY_MODE_PLAY) then
+        return false
+      elseif (self.options.play_mode.value == self.PLAY_MODE_TOGGLE) then
+        renoise.song().transport:stop()
+      elseif (self.options.play_mode.value == self.PLAY_MODE_SCHEDULE) then
+        seq_index = self.__playback_pos.sequence + 
+          (self.__height*self.__edit_page)
+        if renoise.song().sequencer.pattern_sequence[seq_index] then
+          renoise.song().transport:set_scheduled_sequence(seq_index)
+        end
+      end
+
+    elseif not renoise.song().sequencer.pattern_sequence[seq_index] then
+
+      -- position out of bounds
+      if (self.options.bounds_mode.value == self.BOUNDS_MODE_STOP) then
+        renoise.song().transport:stop()
+        return true -- allow the button to flash briefly 
+      end
+      return false
+
+    elseif(self.__playback_pos.sequence==seq_index)then
+
+      -- position toggled back on
+      if (self.options.play_mode.value == self.PLAY_MODE_RETRIG) then
+        self:__retrigger_pattern()
+      elseif (self.options.play_mode.value == self.PLAY_MODE_PLAY) then
+        if (not renoise.song().transport.playing) then
+          if renoise.song().sequencer.pattern_sequence[seq_index] then
+            renoise.song().transport:trigger_sequence(seq_index)
+          end
+        end
+      elseif (self.options.play_mode.value == self.PLAY_MODE_SCHEDULE) then
+        if renoise.song().sequencer.pattern_sequence[seq_index] then
+          renoise.song().transport:set_scheduled_sequence(seq_index)
+        end
+      elseif (self.options.play_mode.value == self.PLAY_MODE_TOGGLE) then
+        if (not renoise.song().transport.playing) then
+          if renoise.song().sequencer.pattern_sequence[seq_index] then
+            renoise.song().transport:trigger_sequence(seq_index)
+          end
+        end
+      end
+
+    else
+
+      -- switch to new position
+      if (not renoise.song().transport.playing) then
+        -- start playback if stopped
+        if renoise.song().sequencer.pattern_sequence[seq_index] then
+          renoise.song().transport:trigger_sequence(seq_index)
+        end
+      else
+        if(self.options.switch_mode.value == self.SWITCH_MODE_SCHEDULE) then
+          if renoise.song().sequencer.pattern_sequence[seq_index] then
+            -- schedule, but do not update display
+            renoise.song().transport:set_scheduled_sequence(seq_index)
+            return false
+          end
+        elseif(self.options.switch_mode.value == self.SWITCH_MODE_SWITCH) then
+          -- instantly switch position:
+          local new_pos = renoise.song().transport.playback_pos
+          new_pos.sequence = seq_index
+          -- if the desired pattern-line does not exist,start from 0
+          local patt_idx = renoise.song().sequencer.pattern_sequence[seq_index]
+          local num_lines = renoise.song().patterns[patt_idx].number_of_lines
+          if(new_pos.line>num_lines)then
+            new_pos.line = 1
+          end
+          renoise.song().transport.playback_pos = new_pos
+        elseif(self.options.switch_mode.value == self.SWITCH_MODE_STOP) then
+          renoise.song().transport:stop()
+        elseif(self.options.switch_mode.value == self.SWITCH_MODE_TRIG) then
+          if renoise.song().sequencer.pattern_sequence[seq_index] then
+            self.__playback_pos.sequence = seq_index
+            self:__retrigger_pattern()
+          end
+        end
+      end
+    end
+    return true
+  end
+  self.display:add(c)
+  self.__trigger = c
+
+  -- grid buttons
+  self.__buttons = {}
+  for x=1,self.__width do
+    self.__buttons[x] = {}
+
+    for y=1,self.__height do
+
+      local c = UIToggleButton(self.display)
+      c.group_name = self.mappings.matrix.group_name
+      c.x_pos = x
+      c.y_pos = y
+      c.active = false
+
+      -- controller button pressed & held
+      c.on_hold = function(obj) 
+        TRACE("controller button pressed and held")
+        obj:toggle()
+        -- bring focus to pattern/track
+        if (#renoise.song().tracks>=x) then
+          renoise.song().selected_track_index = x
+        end
+        if renoise.song().sequencer.pattern_sequence[y] then
+          renoise.song().selected_sequence_index = y
+        end
+      end
+
+      -- controller button was pressed
+      c.on_change = function(obj) 
+        TRACE("controller button was pressed",x,y)
+
+        if not self.active then
+          return false
+        end
+
+        local seq = renoise.song().sequencer.pattern_sequence
+        local master_idx = get_master_track_index()
+        local seq_offset = self.__edit_page*self.__height
+
+        if x+self.__track_offset == master_idx then
+          --print('Notice: Master-track cannot be muted')
+          return false
+        elseif not renoise.song().tracks[x+self.__track_offset] then
+          --print('Notice: Track is outside bounds')
+          return false
+        elseif not seq[y+seq_offset] then
+          --print('Notice: Pattern is outside bounds')
+          return false
+        else
+          renoise.song().sequencer:set_track_sequence_slot_is_muted(
+            (x+self.__track_offset),(y+seq_offset),(not obj.active))-- "active" is negated
+        end
+        return true
+      end
+
+      self.display:add(c)
+      self.__buttons[x][y] = c
+
+    end  
+  end
+
+  self:__attach_to_song(renoise.song())
+
+end
+
 
 --------------------------------------------------------------------------------
 

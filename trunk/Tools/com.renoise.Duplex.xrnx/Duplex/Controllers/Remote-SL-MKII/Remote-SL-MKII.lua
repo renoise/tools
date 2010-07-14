@@ -7,6 +7,8 @@
 
 --------------------------------------------------------------------------------
 
+-- setup a Mixer + Effect for this configuration
+
 duplex_configurations:insert {
 
   -- configuration properties
@@ -22,7 +24,6 @@ duplex_configurations:insert {
     protocol = DEVICE_MIDI_PROTOCOL
   },
   
-  -- setup a Mixer as the only app for this configuration
   applications = {
     Mixer = {
       levels = {

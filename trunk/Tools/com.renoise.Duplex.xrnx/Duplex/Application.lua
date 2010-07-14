@@ -17,9 +17,6 @@ class 'Application'
 function Application:__init()
   TRACE("Application:__init()")
   
-  -- applications create content only when needed
-  self.created = false
-  
   -- when the application is inactive, it should 
   -- sleep during idle time and ignore any user input
   self.active = false
@@ -49,10 +46,16 @@ function Application:__init()
   -- }
   self.options = {}
 
-  -- define a palette to enable color-picker support
+  -- define a default palette for the application
+  -- todo: this will enable color-picker support
   self.palette = {}
 
 
+  -- private stuff
+
+  -- true when content (UIComponents etc.) have been created
+  self.__created = false
+  
   -- the options dialog and view
 
   self.__vb = renoise.ViewBuilder()
@@ -96,10 +99,10 @@ end
 
 -- create application
 
-function Application:build_app()
-  TRACE("Application:build_app()")
+function Application:__build_app()
+  TRACE("Application:__build_app()")
   
-  self.created = true
+  self.__created = true
 end
 
 
@@ -113,7 +116,7 @@ function Application:destroy_app()
   self:hide_options_dialog()
   self:stop_app()
   
-  self.created = false
+  self.__created = false
 end
 
 
@@ -181,7 +184,7 @@ end
 -- assign matching group-names
 
 function Application:__apply_mappings(mappings)
-  TRACE("Application:__apply_mappings", mappings)
+  TRACE("Application:__apply_mappings",mappings)
   
   for v,k in pairs(self.mappings) do
     for v2,k2 in pairs(mappings) do
@@ -196,23 +199,20 @@ end
 
 --------------------------------------------------------------------------------
 
--- todo: assign matching options
+-- assign matching options
 
 function Application:__apply_options(options)
-  TRACE("Application:__apply_options", options)
-  
---[[
+  TRACE("Application:__apply_options",options)
+
   for v,k in pairs(self.options) do
     for v2,k2 in pairs(options) do
-      self.options.play_mode.value = options.play_mode.value
-      self.options.switch_mode.value = options.switch_mode.value
-      self.options.out_of_bounds.value = options.out_of_bounds.value
       if (v==v2) then
-        self.options[v].value = options[v].value
+        if(#self.options[v].items>=options[v])then
+          self.options[v].value = options[v]
+        end
       end
     end
   end
-]]
 
 end
 
@@ -221,8 +221,8 @@ end
 
 -- create application options dialog
 
-function Application:build_options()
-  TRACE("Application:build_options")
+function Application:__build_options()
+  TRACE("Application:__build_options")
   
   if (self.__options_view)then
     return
