@@ -2,6 +2,13 @@
 -- tool setup
 -- -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
+-- Legenda:
+-- THIS_IS_A_CONSTANT = 0
+-- this_is_a_variable = 0
+-- class 'ThisIsAClassDefinition'
+-- function ThisIsAClassDefinition:__Init()
+
+
 -- menu options
 
 local OPTION_SELECTION_IN_PATTERN = 1
@@ -86,6 +93,7 @@ function open_strum_dialog(range_option)
    --possibility to change options before executing the script using a hotkey
    --This means that pop_up index will always be 0 during the first start-up.
    popup_index = 1
+
    if range_option ~= nil then
       marker_area = range_option
    end
@@ -115,10 +123,12 @@ function open_strum_dialog(range_option)
 
       --- valuebox
          vb:row {
+
             vb:text {
                width = TEXT_ROW_WIDTH,
                text = "Delay steps"
             },
+
             vb:valuebox {
                min = 0,
                max = 64,
@@ -130,12 +140,14 @@ function open_strum_dialog(range_option)
                "delay value + delay step\n(min value 0, max value 64)",
             },
          },
-      --- popup
+
          vb:row {
+
             vb:text {
                width = TEXT_ROW_WIDTH,
                text = "Strum direction"
             },
+
             vb:popup {
                id = "popup",
                width = 95,
@@ -146,12 +158,13 @@ function open_strum_dialog(range_option)
                end,
             }
          },
-      --- switch
+
          vb:row {
             vb:text {
             width = TEXT_ROW_WIDTH,
             text = "Which area"
          },
+
          vb:chooser {
             id = "chooser",
             width = 100,
@@ -162,61 +175,66 @@ function open_strum_dialog(range_option)
             local chooser = vb.views.chooser
                marker_area = new_index
             end
-        }
-      },         
-      --- space
-         vb:space{
-            height = 3*CONTENT_SPACING
-         },
-      --- checkbox
-         vb:row {
-            vb:checkbox {
-               tooltip = "When checked, delay values beyond 255 will " ..
-               "not be truncated\nto new delay values added to an offset of 00 ",
+          }
+        },         
 
-               value = safe_mode,
-               notifier = function(value)
-               safe_mode = value
-               end,
-            },
-            vb:text {
-               width = TEXT_ROW_WIDTH,
-               text = "Apply safe delay change"
-            }
-         },
-      --- space
-         vb:space{
-            height = 3*CONTENT_SPACING
-         },
-      --- button
-         vb:row {
-            vb:space {
-               width = 40
-            },
-            vb:button {
-               text = "Strum Notes",
-               width = 100,
-               height = DIALOG_BUTTON_HEIGHT,
-               notifier = function()
-                  execute_strum(marker_area)
-               end,
-            },
-            vb:space {
-               width = 30,
-            },
-      --- subbutton
-            vb:button {
-               text = "?",
-               width = 10,
-               height = DIALOG_BUTTON_HEIGHT,
-               notifier = function()
-                 show_help()
-               end,
-            }
-         }
+        vb:space{
+          height = 3*CONTENT_SPACING
+        },
+
+        vb:row {
+
+          vb:checkbox {
+            tooltip = "When checked, delay values beyond 255 will " ..
+            "not be truncated\nto new delay values added to an offset of 00 ",
+
+            value = safe_mode,
+            notifier = function(value)
+            safe_mode = value
+            end,
+          },
+
+          vb:text {
+            width = TEXT_ROW_WIDTH,
+            text = "Apply safe delay change"
+          }
+        },
+
+        vb:space{
+          height = 3*CONTENT_SPACING
+        },
+
+        vb:row {
+
+          vb:space {
+            width = 40
+          },
+        
+          vb:button {
+            text = "Strum Notes",
+            width = 100,
+            height = DIALOG_BUTTON_HEIGHT,
+            notifier = function()
+              execute_strum(marker_area)
+            end,
+          },
+
+          vb:space {
+            width = 30,
+          },
+  
+          vb:button {
+            text = "?",
+            width = 10,
+            height = DIALOG_BUTTON_HEIGHT,
+            notifier = function()
+              show_help()
+            end,
+          }
+        }
       }
-   )
-   end
+    )
+ end
 end
 
 
@@ -257,6 +275,7 @@ function execute_strum(range_option)
    else
       assert(false, "unexpected popup index")
    end
+
 end
 
 
@@ -303,24 +322,35 @@ function strum(direction, range_option)
          -- must be reset to 0
          first_note = 0
          if not line.is_empty then
+
             if direction == down then
+
                for _,note_column in ipairs(line.note_columns) do
+
                   if marker_area ~= OPTION_SELECTION_IN_PATTERN or 
                      note_column.is_selected 
                   then
                      note_column = apply_strum_delay(note_column)
                   end 
+
                end
+
             else
+
                for _,note_column in ripairs(line.note_columns) do
+
                   if marker_area ~= OPTION_SELECTION_IN_PATTERN or 
                      note_column.is_selected 
                   then
                      note_column = apply_strum_delay(note_column)
                   end
+
                end
+
             end
+
          end
+
       end
 
       if not_extended then
@@ -332,6 +362,7 @@ function strum(direction, range_option)
    else
       renoise.app():show_warning("Cannot strum Master or Send-tracks!")
    end
+
 end
 
 
@@ -387,21 +418,29 @@ function strum_two_ways(direction, range_option)
             line_type = line_type + 1
 
             if (round((line_type/2),0) - (line_type / 2)) ~= direction then
+
                for _,note_column in ipairs(line.note_columns) do
+
                   if marker_area ~= OPTION_SELECTION_IN_PATTERN or 
                      note_column.is_selected 
                   then
                      note_column = apply_strum_delay(note_column)
                   end
+
                end
+
             else
+
                for _,note_column in ripairs(line.note_columns) do
+
                   if marker_area ~= OPTION_SELECTION_IN_PATTERN or 
                      note_column.is_selected 
                   then
                      note_column = apply_strum_delay(note_column)
                   end
+
                end
+
             end
 
             if not line_had_valid_notes then
@@ -409,12 +448,14 @@ function strum_two_ways(direction, range_option)
             end
 
          end
+
       end
 
       if not_extended then
          renoise.app():show_warning(
          "Some delays not extended:\rprev. value + delay step exceeds 255")
       end
+
    else
       renoise.app():show_warning("Cannot strum Master or Send-tracks!")
    end
@@ -429,6 +470,7 @@ function apply_strum_delay(note_column)
       note_column.note_value ~= renoise.PatternTrackLine.NOTE_OFF then
 
       if first_note ~= 0 then
+
          if offs_delay + delay_step <= 255 then
             note_column.delay_value=offs_delay + delay_step
          else
@@ -440,6 +482,7 @@ function apply_strum_delay(note_column)
             else
                note_column.delay_value = (delay_step - (255 - offs_delay))
             end
+
          end
 
       else
@@ -457,6 +500,7 @@ function apply_strum_delay(note_column)
 
       return note_column
    end
+
 end
 
 

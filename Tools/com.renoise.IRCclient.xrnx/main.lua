@@ -70,6 +70,7 @@ function print_server_replies()
           end
 
         end
+
         return 
     end
 
@@ -105,6 +106,7 @@ function print_server_replies()
 
           if SERVER_ARRAY[t] == "332" then  -- channel topic
             local topic = ""
+
             for y = 5, #SERVER_ARRAY do
               topic = topic..SERVER_ARRAY[y].." "
             end
@@ -121,6 +123,7 @@ function print_server_replies()
           if SERVER_ARRAY[t] == "353" then -- Names list requested, enumerate the names for the channel list.
             update_channel_users(SERVER_ARRAY)
           end
+
           if SERVER_ARRAY[t] == "433" then  -- nickname already in use
 
             if connection_status == IN_PROGRESS then
@@ -196,6 +199,7 @@ function print_server_replies()
 
             chat_dialog_control(irc_channel)          
             join_channel(irc_channel)
+
             if irc_dialog ~= nil then
               vb_status.views.status_dialog_content.visible = false
               vb_status.views.minimizer.text = "Maximize"
@@ -263,6 +267,7 @@ end
 function update_channel_users(SERVER_ARRAY)
   local u_channel = SERVER_ARRAY[4]
   vb_channel.views.channel_user_frame:clear()
+
   for b = 1, (#SERVER_ARRAY-5) do
 
     if string.find(SERVER_ARRAY[b+5],":") == 1 then
@@ -493,7 +498,9 @@ function send_command (target, target_frame, command)
           end
 
         end
+
         return    
+
     end
 
     if string.find(command,"QUIT") == 1 then
@@ -517,7 +524,9 @@ function send_command (target, target_frame, command)
           end
 
         end
+
         return
+
     end
 
   end

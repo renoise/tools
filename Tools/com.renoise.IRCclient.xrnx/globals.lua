@@ -2,6 +2,11 @@
 ----------------------        Globals for IRC        -------------------------
 ------------------------------------------------------------------------------
 
+-- Legenda:
+-- THIS_IS_A_CONSTANT = 0
+-- this_is_a_variable = 0
+-- class 'ThisIsAClassDefinition'
+-- function ThisIsAClassDefinition:__Init()
 
 sirc_debug = false
 
@@ -47,10 +52,13 @@ known_commands = {
 string.split = function(str, pattern)
   pattern = pattern or "[^%s]+"
   if pattern:len() == 0 then pattern = "[^%s]+" end
+
   local parts = {__index = table.insert}
   setmetatable(parts, parts)
   str:gsub(pattern, parts)
   setmetatable(parts, nil)
   parts.__index = nil
+
   return parts
+
 end

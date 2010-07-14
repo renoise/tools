@@ -24,19 +24,23 @@ function main_dialog()
     vb:row {
       style = 'group',
       margin = DEFAULT_MARGIN,
+
       vb:text {
         width = 20,
         text = "Map note "
       },
+
       vb:text {
         id = 'note_field',
         width = 20,
         text = "None"
       },
+
       vb:text {
         width = 20,
         text = "to track:"
       },
+
       vb:popup {
         id = 'trackindex',
         width = 100,
@@ -47,6 +51,7 @@ function main_dialog()
           vb.views.note_field.text = note_to_track[index]
         end
       },
+
       vb:button {
         text = "Clear",
         width = 60,
@@ -59,23 +64,30 @@ function main_dialog()
     },
     vb:horizontal_aligner {
       mode = "center",
+
       vb:row{ 
+
         vb:column{ 
           style='group',
           margin=DEFAULT_MARGIN, 
+
           vb:horizontal_aligner {
             mode = "center",
+
             vb:text {
               width = 20,
               text = "Controller options"
             },
           },
+
           vb:row {
             margin = DEFAULT_MARGIN,
+
             vb:text {
               width = 20,
               text = "Device in:"
             },
+
             vb:popup {
               id = 'device_list',
               width = 180,
@@ -86,12 +98,15 @@ function main_dialog()
               end
             },
           },
+
           vb:horizontal_aligner {
             mode = "center",
+
             vb:row {
               margin = DEFAULT_MARGIN,
               spacing = CONTENT_SPACING,
               uniform = true,
+
               vb:button {
                 id = 'connect',
                 text = "Start",
@@ -100,6 +115,7 @@ function main_dialog()
                 color = {36, 37, 44},
                 notifier = function(value)
                   record_mode = not record_mode
+
                   if record_mode == true then
                     vb.views.connect.text = 'Stop'
                     vb.views.connect.color = {245, 245, 245}
@@ -109,8 +125,10 @@ function main_dialog()
                     vb.views.connect.color = {36, 37, 44}
                     midi_engine('stop')
                   end
+
                 end,
               },
+
               vb:switch {
                 id = "mode_switch",
                 width = 120,
@@ -126,10 +144,14 @@ function main_dialog()
         } 
       }  
     },
-      vb:horizontal_aligner{
+
+    vb:horizontal_aligner{
       mode = 'right',
-    vb:column{
+
+      vb:column{
+
         vb:row{
+
           vb:button {
             text = "?",
             width = 10,

@@ -20,11 +20,14 @@ function client_login()
 
   local login_fields_generic = vb:column{
     id = 'login_dialog_content',
+
     vb:row {
+
       vb:text {
         width = TEXT_ROW_WIDTH,
         text = "server",
       },
+
       vb:textfield {
         width = 100,
         text = irc_host,
@@ -34,11 +37,14 @@ function client_login()
         end
       },
     },
+
     vb:row {
+
       vb:text {
         width = TEXT_ROW_WIDTH,
         text = "port",
       },
+
       vb:textfield {
         width = 50,
         text = tostring(irc_port),
@@ -48,11 +54,14 @@ function client_login()
         end
       },
     },
+
     vb:row {
+
       vb:text {
         width = TEXT_ROW_WIDTH,
         text = "channel",
       },
+
       vb:textfield {
         width = 100,
         text = irc_channel,
@@ -62,11 +71,14 @@ function client_login()
         end
       },
     },
+
     vb:row {
+
       vb:text {
         width = TEXT_ROW_WIDTH,
         text = "username",
       },
+
       vb:textfield {
         width = 100,
         text = irc_user,
@@ -76,11 +88,14 @@ function client_login()
         end
       },
     },
+
     vb:row{
+
       vb:text {
         width = TEXT_ROW_WIDTH,
         text = "real name",
       },
+
       vb:textfield {
         width = 100,
         text = irc_real_name,
@@ -90,7 +105,9 @@ function client_login()
         end
       },
     },
+
     vb:row{
+
       vb:checkbox {
         width = 17,
         value = status_dialog_mode,
@@ -99,9 +116,11 @@ function client_login()
           status_dialog_mode = value
         end
       },
+
       vb:space {
         width = 62,
       },
+
       vb:text {
         width = TEXT_ROW_WIDTH,
         text = "Show status-window",
@@ -113,10 +132,12 @@ function client_login()
   local login_fields_nick = vb:column{
 
     vb:row{
+
       vb:text {
         width = TEXT_ROW_WIDTH,
         text = "nickname"
       },
+
       vb:textfield {
         width = 100,
         text = irc_nick_name,
@@ -126,10 +147,13 @@ function client_login()
         end
       },
     },
+
     vb:space{
       height=10
     },
+
     vb:row{
+
       vb:horizontal_aligner {
         mode = "justify",
         spacing = 10,
@@ -152,6 +176,7 @@ function client_login()
           text = "More options",
           id = 'options_button',
           notifier = function(text)
+
            if vb.views.options_button.text == "More options" then
              vb.views.login_dialog_content.visible = true
              vb.views.options_button.text = "Less options"
@@ -160,6 +185,7 @@ function client_login()
              vb.views.options_button.text = "More options"
            end
            vb.views.visible_login_dialog:resize()         
+
           end
         }
       },
@@ -179,6 +205,7 @@ function client_login()
   vb.views.login_dialog_content.visible = false
   vb.views.visible_login_dialog:resize()         
   vb_login = vb
+
   -- DIALOG
   if (not login_dialog or not login_dialog.visible) then
     login_dialog = renoise.app():show_custom_dialog(
@@ -214,8 +241,10 @@ function status_dialog()
   -- textfield
   local status_frame = vb:column{
     id='status_dialog_content',
+
     vb:row {
       margin = CONTROL_MARGIN,
+
       vb:multiline_text{
         width = 700,
         height = 300, 
@@ -225,11 +254,14 @@ function status_dialog()
         text = ""
       },
     },
+
     vb:row{
+
       vb:text {
         width = TEXT_ROW_WIDTH,
         text = "text / command"
       },
+
       vb:textfield {
         width = 300,
         text = "",
@@ -239,6 +271,7 @@ function status_dialog()
           vb.views.status_command.text = ""
         end
       },
+
       vb:button {
         width = TEXT_ROW_WIDTH,
         text = "Send",
@@ -249,11 +282,15 @@ function status_dialog()
       },
     }
   }
+
   local minimize_button = vb:column{
+
     vb:row{
+
       vb:space{
         width = 622,
       },
+
       vb:button {
         id = 'minimizer',
         width = TEXT_ROW_WIDTH,
@@ -288,7 +325,9 @@ function status_dialog()
     )
   end
   vb_status = vb
+
   return vb
+
 end
 
 ------------------------------------------------------------------------------
@@ -315,9 +354,12 @@ function chat_dialog_control(target)
   end
   
   local chat_frame_row = vb:column{
+
     vb:row{    
+
       vb:column {
         margin = CONTROL_MARGIN,
+
         vb:multiline_text{
           width = 400,
           height = 300, 
@@ -327,8 +369,10 @@ function chat_dialog_control(target)
           text = ""
         }
       },
+
       vb:column {
         margin = CONTROL_MARGIN,
+
         vb:multiline_text{
           width = 150,
           height = 300, 
@@ -339,11 +383,14 @@ function chat_dialog_control(target)
         }
       },
     },
+
     vb:row{
+
       vb:text {
         width = TEXT_ROW_WIDTH,
         text = "text / command"
       },
+
       vb:textfield {
         width = 322,
         text = "",
@@ -360,9 +407,11 @@ function chat_dialog_control(target)
           end
         end
       },
+
       vb:space {
         width = 8,
       },
+
       vb:button {
         width = 150,
         text = "Send",
@@ -394,6 +443,7 @@ function chat_dialog_control(target)
     )
   end
   vb_channel = vb
+
 end
 
 ------------------------------------------------------------------------------
@@ -412,7 +462,9 @@ function progress_dialog()
   local TEXT_ROW_WIDTH = 80
   
   local message_row = vb:column{
+  
     vb:row{
+  
       vb:text {
         width = TEXT_ROW_WIDTH,
         text = "Please wait while connecting..."
@@ -427,4 +479,7 @@ function progress_dialog()
       'Connecting...', message_row, connect_key_handler
     )
   end
+  
 end
+
+
