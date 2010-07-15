@@ -688,62 +688,41 @@ Main Dialog
       -------------------------------------------------------------------------------
       ---                         Keyboard control handler                       ----
       -------------------------------------------------------------------------------
-      local function key_control(dialog, mod, key)
+      local function key_control(dialog, key)
     
-        if (mod == "" and key == "next") then
+        if (key.modifiers == "" and key.name == "esc") then
+          dialog:close()
+
+        elseif (key.modifiers == "" and key.name == "next") then
           switch_note_pattern_index = NOTE_PATTERN_CUSTOM
           vb.views.switch_note_pattern.value = NOTE_PATTERN_CUSTOM
           toggle_note_profile_visibility(true, vb)
-        end
     
-        if (mod == "" and key == "prior") then
+        elseif (key.modifiers == "" and key.name == "prior") then
           switch_note_pattern_index = NOTE_PATTERN_MATRIX
           vb.views.switch_note_pattern.value = NOTE_PATTERN_MATRIX
           toggle_note_profile_visibility(false, vb)
-        end
 
-        if (mod == "" and key == "numpad /") then
-
+        elseif (key.modifiers == "" and key.name == "numpad /") then
           if renoise.song().transport.octave >0 then
             renoise.song().transport.octave = renoise.song().transport.octave - 1
           end
 
-        end
-
-        if (mod == "" and key == "numpad *") then
-
+        elseif (key.modifiers == "" and key.name == "numpad *") then
           if renoise.song().transport.octave < 8 then
             renoise.song().transport.octave = renoise.song().transport.octave +1
           end
 
-        end
+        elseif (key.note) then
+          local cur_octave = renoise.song().transport.octave
 
-        local cur_octave = renoise.song().transport.octave    
-        local fnote = cur_octave
+          local fnote = key_matrix[key.note % 12 + 1] .. 
+            tostring(cur_octave + math.floor(key.note / 12))
 
-        if mod == "" then
-          local found = false
-
-          for ckey = 1, NUM_NOTES do
-
-            if key == high_key[ckey] or key == mid_key[ckey] then
-              fnote = fnote + 1
-            end
-
-            if key == low_key[ckey] or key == high_key[ckey] or key == mid_key[ckey] then
-              fnote = key_matrix[ckey]..fnote
-              vb.views[fnote].value = not (vb.views[fnote].value and true)
-              break
-            end
-
+          if (vb.views[fnote]) then
+            vb.views[fnote].value = not vb.views[fnote].value
           end
-
         end
-
-        if (mod == "" and key == "esc") then
-          dialog:close()
-        end
-
       end      
 
       arpeg_option_dialog = renoise.app():show_custom_dialog("Epic Arpeggiator", 

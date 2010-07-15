@@ -118,19 +118,19 @@ end
 
 
 -- Keyboard input
-function key_handler(dialog, mod_string, key_string)
+function key_handler(dialog, key)
 
-  if (key_string == "esc") then
+  if (key.name == "esc") then
     dialog:close()
 
   elseif (
-    key_string == "up" or
-    key_string == "down" or
-    key_string == "left" or
-    key_string == "right"
+    key.name == "up" or
+    key.name == "down" or
+    key.name == "left" or
+    key.name == "right"
   )
   then
-    current_direction = key_string
+    current_direction = key.name
   end
 
 end

@@ -797,26 +797,23 @@ renoise.tool():add_menu_entry {
 
 
 
-function key_handler(dialog, mod, key)
+function key_handler(dialog, key)
 
-  if (mod == "" and key == "left") then
+  if (key.modifiers == "" and key.name == "esc") then
+      dialog:close()
+  
+  elseif (key.modifiers == "" and key.name == "left") then
 
     if (vb_splitmap.views.start_split.value -1 > 0) then
       shift_split_range(-1,vb_splitmap)
     end
 
-  end
-
-  if (mod == "" and key == "right") then
+  elseif (key.modifiers == "" and key.name == "right") then
 
     if (vb_splitmap.views.end_split.value + 1 <= 120) then
        shift_split_range(1,vb_splitmap)
     end
 
-  end
-
-  if (mod == "" and key == "esc") then
-      dialog:close()
   end
 
 end

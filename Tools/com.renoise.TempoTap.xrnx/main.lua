@@ -315,11 +315,11 @@ function show_dialog()
   
   -- key_handler
   
-  local function key_handler(dialog, mod_string, key_string)
-    if (key_string == "esc") then
+  local function key_handler(dialog, key)
+    if (key.name == "esc") then
       dialog:close()
     
-    elseif (key_string == "return") then
+    elseif (key.name == "return") then
       if (tempo) then
         save_bpm(tempo)
       end

@@ -192,18 +192,18 @@ function show_randomize_gui()
     }
   }
 
-  local function key_handler(dialog, mod_name, key_name)
-    if (key_name == "esc") then
+  local function key_handler(dialog, key)
+    if (key.name == "esc") then
       dialog:close()
 
-    elseif (key_name == "return") then
+    elseif (key.name == "return") then
       invoke_current_random()
 
-    elseif (key_name == "up") then
+    elseif (key.name == "up") then
       mode_selector.value = math.max(
         1, mode_selector.value - 1)
 
-    elseif (key_name == "down") then
+    elseif (key.name == "down") then
       mode_selector.value = math.min(
         #randomize_modes, mode_selector.value + 1)
     end

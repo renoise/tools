@@ -163,18 +163,19 @@ function search_start()
     show_results{}
   end
 
-  local function keyhandler(dialog, mod_string, key_string)
-    local str = get_input()
-    local index = vb.views.results_chooser.value  
-   
-    if (key_string == "return") then
+  local function keyhandler(dialog, key)
+    
+    if (key.name == "return") then
       open_url(get_selected_result())
       return
     end
 
-    if (key_string == "up") then    
+    local index = vb.views.results_chooser.value  
+   
+    if (key.name == "up") then    
       index = index - 1
-    elseif (key_string == "down") then
+
+    elseif (key.name == "down") then
       index = index + 1
     end
     
@@ -186,25 +187,20 @@ function search_start()
       vb.views.results_chooser.value = index
     end
     
-    if (key_string == "up" or key_string == "down") then    
-      return
-    end 
-    
-    if (str == START_TEXT or key_string == "esc") then
-        str = ""
-    end        
-    
-    if (key_string == "back") then
-      str = str:sub(1,-2)    
+    local str = get_input()
+
+    if (str == START_TEXT or key.name == "esc") then
+      str = ""
     end
     
-    if (#key_string == 1) then      
-      if (mod_string == "shift") then
-        key_string = key_string:upper()
-      end
-      str = str .. key_string
-    end        
+    if (key.name == "back") then
+      str = str:sub(1,-2)    
+
+    elseif (key.character) then
+      str = str .. key.character
+    end
     
+    print(str)
     set_input(str)
     
     if (#str == 0) then
