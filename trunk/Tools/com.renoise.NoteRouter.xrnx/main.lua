@@ -231,73 +231,40 @@ end
 -------------------------------------------------------------------------------
 ---                         Keyboard control handler                       ----
 -------------------------------------------------------------------------------
-function key_handler(dialog, mod, key)
-  local message = {0x90,0,0x80}
+function key_handler(dialog, key)
+  if (key.modifiers == "" and key.name == "esc") then
+      dialog:close()
 
-  if (mod == "" and key == "numpad /") then
-
-    if renoise.song().transport.octave >0 then
+  elseif (key.modifiers == "" and key.name == "numpad /") then
+    if renoise.song().transport.octave > 0 then
       renoise.song().transport.octave = renoise.song().transport.octave - 1
     end
 
-  end
-
-  if (mod == "" and key == "numpad *") then
-
+  elseif (key.modifier == "" and key.name == "numpad *") then
     if renoise.song().transport.octave < 8 then
       renoise.song().transport.octave = renoise.song().transport.octave +1
     end
 
-  end
-
-  local cur_octave = renoise.song().transport.octave    
-  local fnote = (cur_octave * 12)
-
--- We have to do some special trickery because of the octave_derivate
--- above in the midi message key translation:
-  if cur_octave > 4 then
-    fnote = fnote - (12* (cur_octave-4))
-  else 
-
-    if cur_octave < 4 then
-      fnote = fnote + (12* (4-cur_octave))
-    end
-
-  end
-
---Now we translate our pc keyboard input to midi messages and send those to 
---our midi message processor, clever huh?:
-
-  if mod == "" then
-    local found = false
-
-    for ckey = 1, 12 do
-
-      if key == low_key[ckey] or key == high_key[ckey] or key == mid_key[ckey] then
-        fnote = (ckey -1) + fnote
-        found = true
+  elseif (key.note) then
+    local cur_octave = renoise.song().transport.octave    
+    local fnote = (cur_octave * 12)
+  
+    -- We have to do some special trickery because of the octave_derivate
+    -- above in the midi message key translation:
+    if cur_octave > 4 then
+      fnote = fnote - (12 * (cur_octave - 4))
+    else 
+      if cur_octave < 4 then
+        fnote = fnote + (12 * (4 - cur_octave))
       end
-
-      if key == high_key[ckey] or key == mid_key[ckey] then
-        fnote = fnote + 12
-        break
-      end
-
     end
 
-    if found then
-      message[2] = fnote
-      process_messages(message)
-    end
-
-  end
-
-  if (mod == "" and key == "esc") then
-      dialog:close()
+    fnote = key.note + fnote
+    print(fnote)
+    
+    local message = {0x90,fnote,0x80}
+    process_messages(message)
   end
 
 end 
-
-
-
 

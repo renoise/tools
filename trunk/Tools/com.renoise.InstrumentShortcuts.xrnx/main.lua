@@ -155,19 +155,9 @@ function name_dialog(old_name, sample)
       },
     }
   }
-  application:show_custom_prompt(title, name_input, {'ok'},key_handler)
+  application:show_custom_prompt(title, name_input)
   
   return vb.views.sample_name.text
 end
-
-
-function key_handler(dialog, mod, key)
-
-  if (mod == "" and key == "esc") or (mod == "" and key == "enter") then
-    dialog:close()
-  end
-
-end
-
 
 

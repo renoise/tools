@@ -534,10 +534,10 @@ function send_command (target, target_frame, command)
 end
 
     
-function status_key_handler(dialog, mod, key)
+function status_key_handler(dialog, key)
   -- update key_text to show what we got
   -- close on escape...
-  if (mod == "" and key == "esc") then
+  if (key.modifiers == "" and key.name == "esc") then
     dialog:close()
     return
   end
@@ -551,111 +551,44 @@ function status_key_handler(dialog, mod, key)
  
 end
 
-function chat_key_handler(dialog, mod, key)
-  -- update key_text to show what we got
+function chat_key_handler(dialog, key)
   -- close on escape...
-  if (key == "esc") then
+  if (key.modifiers == "" and key.name == "esc") then
     dialog:close()
-  end
 
   -- Let's send the text-line contents if present
-  if (key == "return") then
+  elseif (key.name == "return") then
     send_command(active_channel, 'channel', vb_channel.views.channel_command.text)
-    no_loop = 1 -- Prevent triggering the notifier again 
-                -- simply because the value got cleared
-                -- else a new empty command would be send again.
     vb_channel.views.channel_command.value = ""
-    return
-  end
-
-  if (key == "back") then
-    no_loop = 1 -- Prevent triggering the notifier again 
+  
+  -- update key_text to show what we got
+  elseif (key.name == "back") then
     vb_channel.views.channel_command.value = string.sub(vb_channel.views.channel_command.value,1,
     string.len(vb_channel.views.channel_command.value)-1)
-    return
-  end
-
-  if (key == "space") then
-    no_loop = 1 -- Prevent triggering the notifier again 
-    vb_channel.views.channel_command.value = vb_channel.views.channel_command.value.." "
-    return
-  end
-
-  if (key == "rshift"or key =="rcontrol" or key == "ralt" or 
-      key == "tab" or key == "apps" or key == "capital") then
-    return
-  end
-
-  --Here we are going to pump characters into the chatline even 
-  --if the chatline does not has keyboard focus.
-  --A way to circumvent the lack of focus functionality
-  --Not the best way, but better than clicking the text-field
-  --each time.
-  if (mod ~= "control" and mod ~= "alt" and key ~="lshift") then
-    no_loop = 1
-  
-    if (mod == "shift") then
-      -- This part sucks a bit as it is default US-english
-      -- layout. So you will have to adapt it to your 
-      -- own national layout to make these matches fit correctly.
-      -- Another thing is that rshift etc aren't specified as MOD
-      -- So you can't use those modifier keys.
-      if key=="^" then key = "~" end
-      if key=="1" then key = "!" end
-      if key=="2" then key = "@" end
-      if key=="3" then key = "#" end
-      if key=="4" then key = "$" end
-      if key=="5" then key = "%" end
-      if key=="6" then key = "^" end
-      if key=="7" then key = "&" end
-      if key=="8" then key = "*" end
-      if key=="9" then key = "(" end
-      if key=="0" then key = ")" end
-      if key=="/" then key = "?" end
-      if key=="comma" then key = "<" end
-      if key=="period" then key = ">" end
-      if key==";" then key = ":" end
-      if key=="'" then key = "\"" end
-      if key=="\\" then key = "\|" end
-      if key=="[" then key = "{" end
-      if key=="]" then key = "}" end
-      if key=="-" then key = "_" end
-      if key=="=" then key = "+" end
-      --Do we want capitals?
-      if string.byte(key) >= 97 and string.byte(key) <= 122 then
-        key = string.char(string.byte(key)-32)
-      end  
-
-    end
-
-    if key=="comma" then key = "," end
-    if key=="period" then key = "." end
-    --Strange, the inversed apostrophe and tilde are being send as a "^" key?
-    if key=="^" then key = "`" end
-
-    vb_channel.views.channel_command.value = vb_channel.views.channel_command.value..key
+  elseif (key.character) then
+    vb_channel.views.channel_command.value = vb_channel.views.channel_command.value .. 
+      key.character
   end
     
 end
 
-function login_key_handler(dialog, mod, key)
+function login_key_handler(dialog, key)
   -- update key_text to show what we got
   -- close on escape...
-  if (mod == "" and key == "esc") then
+  if (key.modifier == "" and key.name == "esc") then
     dialog:close()
-  end
 
-  if (mod == "" and key == "return") then
+  elseif (key.modifier == "" and key.name == "return") then
     connect_to_server()
     login_dialog:close()
   end
 
 end
 
-function connect_key_handler(dialog, mod, key)
+function connect_key_handler(dialog, key)
   -- update key_text to show what we got
   -- close on escape...
-  if (mod == "" and key == "esc") then
+  if (key.modifier == "" and key.name == "esc") then
     dialog:close()
     stop_message_engine()
   end
