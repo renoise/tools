@@ -53,7 +53,7 @@ duplex_configurations:insert {
   -- device properties
   device = {
     class_name = nil,          
-    display_name = "Nocturn Automap 2",
+    display_name = "Nocturn Automap",
     device_name = "Automap MIDI",
     control_map = "Controllers/Nocturn/Nocturn.xml",
     protocol = DEVICE_MIDI_PROTOCOL
