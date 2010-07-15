@@ -20,9 +20,14 @@ and
 -- (shows a non modal dialog (a tool window) with a custom content)
 app():show_custom_dialog(title, content_view [, key_handler_func]) -> [dialog]
 
--- key_handler_func is optional. when defined, it must have the following
--- signature:
-function my_keyhandler_func(dialog, mod_string, key_string) end
+-- key_handler_func is optional. when defined, it must have the below noted
+-- signature. "key" is a table with the fields {
+--   name,      -- name of the key, like 'esc' or 'a' - always valid
+--   modifiers, -- modifier states. 'shift + control' - always valid
+--   character, -- character representation of the key or nil
+--   note,      -- virtual keyboard piano key value (starting from 0) or nil
+-- }
+function my_keyhandler_func(dialog, key) end
 
 -- if no handler is installed, only the Escape key is used to close the dialog.
 -- For prompts, also the first character of the button labels is used to invoke

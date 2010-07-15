@@ -1174,7 +1174,7 @@ function handle_key_events()
   local DIALOG_MARGIN = renoise.ViewBuilder.DEFAULT_DIALOG_MARGIN
   local CONTENT_SPACING = renoise.ViewBuilder.DEFAULT_CONTROL_SPACING
 
-  local TEXT_ROW_WIDTH = 160
+  local TEXT_ROW_WIDTH = 240
   
   local content_view =  vb:column {
     margin = DIALOG_MARGIN,
@@ -1191,19 +1191,25 @@ function handle_key_events()
       vb:multiline_text {
         id = "key_text",
         width = TEXT_ROW_WIDTH,
-        height = 34,
-        paragraphs = {"mod:", "key:"},
+        height = 60,
+        paragraphs = {"key.name:", "key.modifiers:", "key.character:", "key.note:"},
         font = "mono",
       }
     }
   }
     
-  local function key_handler(dialog, mod, key)
+  local function key_handler(dialog, key)
+  
     -- update key_text to show what we got
-    vb.views.key_text.text = ("mod: %s\nkey: %s"):format(mod, key)
-    
+    vb.views.key_text.paragraphs = {
+      ("key.name: '%s'"):format(key.name), 
+      ("key.modifiers: '%s'"):format(key.modifiers), 
+      ("key.character: '%s'"):format(key.character or "nil"), 
+      ("key.note: '%s'"):format(tostring(key.note) or "nil")
+    }
+
     -- close on escape...
-    if (mod == "" and key == "esc") then
+    if (key.modifiers == "" and key.name == "esc") then
       dialog:close()
     end
   end
