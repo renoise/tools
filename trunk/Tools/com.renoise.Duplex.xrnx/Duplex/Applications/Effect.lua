@@ -250,7 +250,10 @@ function Effect:__build_app()
       end
       
       self.__parameter_offset = obj.index
-      self:__attach_to_parameters()
+
+      local new_song = false
+      self:__attach_to_parameters(new_song)
+
       self:update()
       return true
     end
@@ -292,9 +295,8 @@ function Effect:__build_app()
   self.__device_navigator = c
 
 
-
   -- the finishing touch
-  self:__attach_to_song(renoise.song())
+  self:__attach_to_song()
 end
 
 
@@ -334,7 +336,7 @@ end
 function Effect:on_new_document()
   TRACE("Effect:on_new_document")
   
-  self:__attach_to_song(renoise.song())
+  self:__attach_to_song()
   
   if (self.active) then
     self:update()
@@ -360,14 +362,16 @@ end
 -- adds notifiers to song
 -- invoked when a new document becomes available
 
-function Effect:__attach_to_song(song)
+function Effect:__attach_to_song()
   TRACE("Effect:__attach_to_song()")
   
   -- update on parameter changes in the song
-  song.selected_device_observable:add_notifier(
+  renoise.song().selected_device_observable:add_notifier(
     function()
       TRACE("Effect:selected_device_changed fired...")
-      self:__attach_to_parameters()
+      
+      local new_song = false
+      self:__attach_to_parameters(new_song)
       
       if (self.active) then
         self:update()
@@ -380,7 +384,8 @@ function Effect:__attach_to_song(song)
   )
 
   -- and immediately attach to the current parameter set
-  self:__attach_to_parameters()
+  local new_song = true
+  self:__attach_to_parameters(new_song)
 end
 
 
@@ -389,8 +394,8 @@ end
 -- add notifiers to parameters
 -- invoked when parameters are added/removed/swapped
 
-function Effect:__attach_to_parameters()
-  TRACE("Effect:__attach_to_parameters()")
+function Effect:__attach_to_parameters(new_song)
+  TRACE("Effect:__attach_to_parameters", new_song)
 
   local parameters = self:__current_parameters()
 
@@ -401,11 +406,14 @@ function Effect:__attach_to_parameters()
   end
     
   -- detach all previously attached notifiers first
-  for _,observable in pairs(self.__attached_observables) do
-    -- TEMP HACK: needs a fix in the API core
-    pcall(function() observable:remove_notifier(self) end)
-  end 
-  
+  -- but don't even try to detach when a new song arrived. old observables
+  -- will no longer be alive then...
+  if (not new_song) then
+    for _,observable in pairs(self.__attached_observables) do
+      observable:remove_notifier(self)
+    end
+  end
+    
   self.__attached_observables:clear()
   
   -- then attach to the new ones in the order we want them
