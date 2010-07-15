@@ -46,6 +46,9 @@ duplex_configurations:insert {
         mute = {
           group_name = "Buttons1",
         },
+        solo = {
+          group_name = "Buttons2",
+        },
         panning = {
           group_name= "Encoders",
         },

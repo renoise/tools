@@ -15,8 +15,8 @@ function BCR2000:__init(display_name, port_name, message_stream)
 
   MidiDevice.__init(self, display_name, port_name, message_stream)
 
-  -- the BFR can not handle looped back messages correctly, so we disable 
-  -- sending back messages we got from the BFR, in order to break feedback loops...
+  -- the BCR can not handle looped back messages correctly, so we disable 
+  -- sending back messages we got from the BCR, in order to break feedback loops...
   self.loopback_received_messages = false
 
 end
@@ -49,6 +49,9 @@ duplex_configurations:insert {
         },
         mute = {
           group_name = "Buttons1",
+        },
+        solo = {
+          group_name = "Buttons2",
         },
         page = {
           group_name = "PageControls",
