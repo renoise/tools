@@ -26,20 +26,24 @@ duplex_configurations:insert {
   
   applications = {
     Mixer = {
-      levels = {
-        group_name = "Sliders",
-      },
-      mute = {
-        group_name = "SliderButtons",
+      mappings = {
+        levels = {
+          group_name = "Sliders",
+        },
+        mute = {
+          group_name = "SliderButtons",
+        }
       }
     },
     Effect = {
-      parameters = {
-        group_name= "Encoders",
-      },
-      page = {
-        group_name = "EncoderButtons",
-        index = 0
+      mappings = {
+        parameters = {
+          group_name= "Encoders",
+        },
+        page = {
+          group_name = "EncoderButtons",
+          index = 0
+        }
       }
     },
   }
