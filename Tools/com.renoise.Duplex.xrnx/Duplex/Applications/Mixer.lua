@@ -462,7 +462,7 @@ end
 function Mixer:on_new_document()
   TRACE("Mixer:on_new_document")
   
-  self:__attach_to_song(renoise.song())
+  self:__attach_to_song()
   
   if (self.active) then
     self:update()
@@ -754,7 +754,10 @@ function Mixer:__build_app()
       end
 
       self.__track_offset = obj.index
-      self:__attach_to_tracks()
+      
+      local new_song = false
+      self:__attach_to_tracks(new_song)
+      
       self:update()
 
       return true
@@ -764,7 +767,7 @@ function Mixer:__build_app()
   end
 
   -- the finishing touch
-  self:__attach_to_song(renoise.song())
+  self:__attach_to_song()
 end
 
 
@@ -773,14 +776,16 @@ end
 -- adds notifiers to song
 -- invoked when a new document becomes available
 
-function Mixer:__attach_to_song(song)
-  TRACE("Mixer:__attach_to_song()")
+function Mixer:__attach_to_song()
+  TRACE("Mixer:__attach_to_song")
   
   -- update on track changes in the song
-  song.tracks_observable:add_notifier(
+  renoise.song().tracks_observable:add_notifier(
     function()
       TRACE("Mixer:tracks_changed fired...")
-      self:__attach_to_tracks()
+      
+      local new_song = false
+      self:__attach_to_tracks(new_song)
       
       if (self.active) then
         self:update()
@@ -789,7 +794,8 @@ function Mixer:__attach_to_song(song)
   )
 
   -- and immediately attach to the current track set
-  self:__attach_to_tracks()
+  local new_song = true
+  self:__attach_to_tracks(new_song)
 end
 
 
@@ -798,8 +804,8 @@ end
 -- add notifiers to parameters
 -- invoked when tracks are added/removed/swapped
 
-function Mixer:__attach_to_tracks()
-  TRACE("Mixer:__attach_to_tracks()")
+function Mixer:__attach_to_tracks(new_song)
+  TRACE("Mixer:__attach_to_tracks", new_song)
 
   local tracks = renoise.song().tracks
 
@@ -810,11 +816,14 @@ function Mixer:__attach_to_tracks()
   end
     
   -- detach all previously added notifiers first
-  for _,observable in pairs(self.__attached_track_observables) do
-    -- TEMP HACK: needs a fix in the API core
-    pcall(function() observable:remove_notifier(self) end)
+  -- but don't even try to detach when a new song arrived. old observables
+  -- will no longer be alive then...
+  if (not new_song) then
+    for _,observable in pairs(self.__attached_track_observables) do
+      observable:remove_notifier(self)
+    end
   end
-
+  
   self.__attached_track_observables:clear()
   
   
