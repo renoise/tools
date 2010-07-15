@@ -92,19 +92,55 @@ function Util:get_date(time)
   return os.date("%a, %d %b %Y %X " .. Util:get_tzoffset(), time)
 end
 
--- TODO encode html entities
-function Util:html_entity_encode(str)
-  return str:gsub("[ %c]", "%%20")  
+-- URL-encode a string (see RFC 2396)
+function Util:urlencode(str)
+  str = string.gsub (str, "\n", "\r\n")
+  str = string.gsub (str, "([^0-9a-zA-Z ])", -- locale independent
+    function (c) return string.format ("%%%02X", string.byte(c)) end)
+  str = string.gsub (str, " ", "+")
+  return str
+  
 end  
 
--- TODO decode html entities
-function Util:html_entity_decode(str)
-  local a,b = str:gsub("%%20", " ")
-  a,b = a:gsub("%+", " ")  
-  a,b = a:gsub("%%5B", "[")
-  a,b = a:gsub("%%5D", "]")
-  return a
+-- Decode an URL-encoded string (see RFC 2396)
+function Util:urldecode(str)
+  str = string.gsub (str, "+", " ")
+  str = string.gsub (str, "%%(%x%x)", function(h) return string.char(tonumber(h,16)) end)
+  str = string.gsub (str, "\r\n", "\n")
+  return str
 end
+
+-- Generates a URL-encoded query string from the 
+-- associative (or indexed) array provided.
+-- @param data Table containing parameters. May be multi-dimensional.
+-- @param prefix If numeric indices are used in the base table and this 
+--   parameter is provided, it will be prepended to the numeric index for 
+--   elements in the base table only.
+-- @param sep '&' is used to separate arguments, unless this parameter is 
+--   specified, and is then used.
+-- @param _key Don't use. It's a temporary key used recursively.
+function Util:http_build_query(data, prefix, sep, _key)
+  local ret = table.create()
+  local prefix = prefix or ''
+  local sep = sep or '&'
+  local _key = _key or ''
+
+  for k,v in pairs(data) do
+    if (type(k) == "number" and prefix ~= '') then
+      k = Util:urlencode(prefix .. k)
+    end
+    if (_key ~= '' or _key == 0) then
+      k = ("%s[%s]"):format(_key, Util:urlencode(k))
+    end
+    if (type(v) == 'table') then
+      ret:insert(Util:http_build_query(v, '', sep, k))
+    else
+      ret:insert(("%s=%s"):format(k, Util:urlencode(v)))
+    end
+  end
+  return ret:concat(sep)
+end
+
 
 function Util:get_extension(file)
     return file:match("%.(%a+)$")

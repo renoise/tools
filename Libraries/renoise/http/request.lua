@@ -30,11 +30,22 @@ local requests_pool = table.create()
 
 
 -------------------------------------------------------------------------------
---  Debug settings
+--  Debugging
 -------------------------------------------------------------------------------
 
-local DEBUG_CONTENT = false
+local DEBUG_CONTENT = true
 
+local function TRACE(data)
+  if (not DEBUG_CONTENT) then
+    return
+  end
+  
+  if (type(data) == 'table') then 
+    rprint(data)
+  else 
+    print(data)  
+  end
+end
 
 -------------------------------------------------------------------------------
 -- Idle notifier/handler
@@ -219,6 +230,9 @@ function Request:__init(settings)
   -- Force uppercase on some settings
   self.settings.method = self.settings.method:upper()
   self.settings.data_type = self.settings.data_type:upper()  
+  
+  -- Force lowercase on some other settings
+  self.settings.content_type = self.settings.content_type:lower()
 
   -- SocketClient object
   self.client_socket = nil
@@ -241,9 +255,12 @@ function Request:__init(settings)
   -- Name/Value pairs to construct the header
   self.header_map = table.create()
 
-  -- Query string converted from the supplied parameters
-  self.query_string = Request:_create_query_string(self.settings.data)
-  rprint(self.query_string)
+  if (self.settings.content_type:find("multipart/mixed")) then
+    self.query_string = self:_create_multipart_message(self.settings.data)
+  else  
+    -- Query string converted from the supplied parameters
+    self.query_string = self:_create_query_string(self.settings.data)
+  end    
 
   -- Possible values for the request status besides nil are
   -- "TIMEOUT", "ERROR", "NOTMODIFIED" and "PARSERERROR".
@@ -299,42 +316,53 @@ function Request:_set_header(name, value)
 end
 
 
+---## get_header ##---
+-- Returns the value of the specified header
+function Request:_get_header(name)
+  return self.header_map[name]
+end
+
+
+---## create_multipart_message ##---
+-- Converts a parameter data table into a multipart message
+function Request:_create_multipart_message(data)  
+  TRACE("Create multipart message")
+  TRACE(data)
+  
+  local function get_random_string()
+    local str = ""
+    for i=1,4 do 
+      str = str .. math.random(1,9)     
+    end
+    return str
+  end
+  
+  local content_type = self.settings.content_type
+  -- Content-Type: multipart/mixed; boundary=---------rnadom1234
+  local boundary = content_type:match("boundary=(.*)$") 
+  if (not boundary) then
+    boundary =  "---------rnadom" .. get_random_string()
+    self:_set_header("Content-Type", 
+      "multipart/mixed; boundary=" .. boundary)
+  end  
+  log:info("Multipart Boundary: " .. boundary)
+  
+  local msg = ""
+  for k,v in pairs(data) do
+    msg = ('Content-Disposition: form-data; name="%s"'):format(k)
+    msg = msg .. "\r\n"
+    msg = msg .. tostring(v)
+  end
+  return msg
+end
+
+
 ---## create_query_string ##---
 -- Converts a parameter data table into a query string
 function Request:_create_query_string(data)
-  
-  -- turn parameter table into multiple nested pairs
-  local function stringify(key,value) 
-    local str = ""
-    
-    -- handle nested parameters
-    local function expand(t)
-      local s = ""
-      if (type(t) == 'table') then
-        for k,v in pairs(t) do 
-          s = s .. '['..k..']' .. expand(v)
-        end 
-      else 
-        s = s .. '=' .. tostring(t)
-      end
-      return s
-    end    
-
-    if (type(value) == 'table') then    
-      for k,v in pairs(value) do
-        str = str ..'&' .. key .. '[' .. k .. ']' .. expand(v)
-      end
-      return str
-    else
-      return str .. "=" .. tostring(value)
-    end
-  end    
-
-  local str = ""
-  for k,v in pairs(data) do
-    str = str .. stringify(k, v)
-  end
-  return Util:html_entity_encode(str:sub(2))
+  TRACE("Create query string: ")
+  TRACE(data)  
+  return Util:http_build_query(data) 
 end
 
 
@@ -363,8 +391,8 @@ function Request:_read_header()
   -- Setup the header
   local header = string.format("%s %s HTTP/1.1\r\n",
      self.settings.method, self.url)
-  self:_set_header("Host", self.url_parts.host)
-  self:_set_header("Content-Type", self.settings.content_type)
+  self:_set_header("Host", self.url_parts.host) 
+  self:_set_header("Content-Type", self.settings.content_type)  
   self:_set_header("Content-Length", content_length)
   self:_set_header("Connection", "keep-alive")
   self:_set_header("User-Agent",
@@ -378,7 +406,8 @@ function Request:_read_header()
   end
   header = header .. "\r\n" -- mandatory empty line
 
-  log:info("=== REQUEST HEADERS ===\n" .. header)
+  TRACE("=== REQUEST HEADERS ===")
+  TRACE(header)
 
   -- Send the header
   local ok, socket_error = self.client_socket:send(header)
@@ -388,6 +417,8 @@ function Request:_read_header()
 
   -- Send the POST parameters in the request body, if applicable
   if (self.settings.method == Request.POST) then
+    TRACE("=== POST DATA ===")
+    TRACE(self.query_string)
     ok, socket_error = self.client_socket:send(self.query_string)
     if not (ok) then
       return false, socket_error
