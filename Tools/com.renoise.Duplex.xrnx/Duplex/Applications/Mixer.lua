@@ -16,7 +16,8 @@
   Control-map assignments 
 
   "master"  - specify this to control the master track seperately
-  "controls" - specify this to control the track offset
+  "page" - specify this to control the track offset
+  "mode" - specify this to control if pre of post fx values are mapped
 
   [][][][] []  [][][]     |
   |||||||| []  [][][]     |
@@ -54,7 +55,17 @@
       x                 x     <-- track offset (2/8)
 
 
-
+  ---------------------------------------------------------
+  
+  Pre/Post FX Volume/Pan
+  
+  The mixer allows controlling both, pre and post FX values. 
+  By default its configured to use post FX values. 
+  
+  You can either change the default via the controller options,
+  or by mapping something to the "mode" group, in order to 
+  change the mode dynamically from the controller
+  
 --]]
 
 
@@ -79,10 +90,14 @@ function Mixer:__init(display,mappings,options)
   self.MASTER_SEND = "Master + send tracks"
   self.SEND = "Send tracks only"
 
+  self.MODE_PREFX = "Pre FX volume and panning"
+  self.MODE_POSTFX = "Post FX volume and panning"
+
   self.options = {
     include_tracks = {
       label = "Tracks",
-      description = "Select any combination of tracks that you want to include: normal, master and send tracks.",
+      description = "Select any combination of tracks that you want to " ..
+        "include: normal, master and send tracks.",
       items = {
         self.ALL_TRACKS,
         self.NORMAL,
@@ -95,13 +110,24 @@ function Mixer:__init(display,mappings,options)
     },
     track_offset = {
       label = "Offset",
-      description = "Change the offset if you want this Mixer to begin with a different track",
+      description = "Change the offset if you want this Mixer to begin " .. 
+        "with a different track",
       items = {0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16},
       default = 1,
     },
+    mode = {
+      label = "Mode",
+      description = "Change if either Pre or Post FX volume/pan is controlled",
+      items = {
+        self.MODE_PREFX,
+        self.MODE_POSTFX,
+      },
+      default = self.MODE_POSTFX
+    },
     sync_position = {
       label = "Sync to global position",
-      description = "Set to true if you want the Mixer to align with the selected track in Renoise",
+      description = "Set to true if you want the Mixer to align with the " ..
+        "selected track in Renoise",
       items = {true,false},
       default = 1,
     },
@@ -142,6 +168,12 @@ function Mixer:__init(display,mappings,options)
     page = {
       group_name = nil,
       description = "Page navigator - assign to a fader, dial or two buttons",
+      required = false,
+      index = nil,
+    },
+    mode = {
+      group_name = nil,
+      description = "Pre/Post FX mode control - assign to a fader, dial or button",
       required = false,
       index = nil,
     },
@@ -214,6 +246,7 @@ function Mixer:__init(display,mappings,options)
   self.__mutes = nil
   self.__solos = nil
   self.__track_navigator = nil
+  self.__mode_control = nil
 
   self.__width = 4
   self.__height = 1
@@ -226,6 +259,9 @@ function Mixer:__init(display,mappings,options)
   -- offset of the whole track mapping, controlled by the track navigator
   self.__track_offset = 0
   
+  -- toggle, which defines if we're controlling the pre or post fx vol/pans
+  self.__postfx_mode = true
+   
   -- current track properties we are listening to
   self.__attached_track_observables = table.create()
 
@@ -308,7 +344,6 @@ function Mixer:set_track_solo(control_index, state)
 end
 
 
-
 --------------------------------------------------------------------------------
 
 -- update: set all controls to current values from renoise
@@ -319,20 +354,27 @@ function Mixer:update()
   local master_track_index = get_master_track_index()
   local tracks = renoise.song().tracks
 
-  for control_index=1, self.__width do
+  -- track volume/panning/mute and solo
+  
+  for control_index = 1,self.__width do
+  
     local track_index = self.__track_offset + control_index
     local track = tracks[track_index]
       
     -- set default values
-  
     if (track_index <= #tracks) then
       
       -- update component states from the track
-      self:set_track_volume(control_index, track.prefx_volume.value)
-      self:set_track_panning(control_index, track.prefx_panning.value)
+      if (self.__postfx_mode) then
+        self:set_track_volume(control_index, track.postfx_volume.value)
+        self:set_track_panning(control_index, track.postfx_panning.value)
+      else
+        self:set_track_volume(control_index, track.prefx_volume.value)
+        self:set_track_panning(control_index, track.prefx_panning.value)
+      end
       
       -- show that we can't change the master mute state
-      if (track_index == get_master_track_index()) then
+      if (track_index == master_track_index) then
         self:set_track_mute(control_index, MUTE_STATE_ACTIVE)
       else
         self:set_track_mute(control_index, track.mute_state)
@@ -401,10 +443,31 @@ function Mixer:update()
     end
   end
   
-  -- update the master as well, if it has its own UI representation
+  
+  -- master volume
+  
   if (self.__master ~= nil) then
-     self.__master:set_value(get_master_track().prefx_volume.value)
+     if (self.__postfx_mode) then
+       self.__master:set_value(get_master_track().postfx_volume.value)
+     else
+       self.__master:set_value(get_master_track().prefx_volume.value)
+     end
   end
+  
+  
+  -- page controls
+
+  if (self.__track_navigator) then
+    self.__track_navigator.index = self.__track_offset
+  end
+
+
+  -- mode controls
+
+  if (self.__mode_control) then
+    self.__mode_control.active = self.__postfx_mode
+  end
+
 end
 
 
@@ -469,6 +532,7 @@ function Mixer:on_new_document()
   end
 end
 
+
 --------------------------------------------------------------------------------
 
 -- build_app: create a grid or fader/encoder layout
@@ -525,7 +589,8 @@ function Mixer:__build_app()
   
   self.__master = nil
   self.__track_navigator = nil
-
+  self.__mode_control = nil
+  
   for control_index = 1,self.__width do
 
     -- sliders --------------------------------------------
@@ -550,21 +615,32 @@ function Mixer:__build_app()
   
         if (not self.active) then
           return false
+          
         elseif (track_index == get_master_track_index()) then
           if (self.__master) then
             -- this will cause another event...
             self.__master:set_value(obj.value)
           else
             local track = renoise.song().tracks[track_index]
-            track.prefx_volume.value = obj.value
+            
+            local volume = (self.__postfx_mode) and 
+              track.postfx_volume or track.prefx_volume
+        
+            volume.value = obj.value
           end
           return true
+        
         elseif (track_index > #renoise.song().tracks) then
           -- track is outside bounds
           return false
+
         else
           local track = renoise.song().tracks[track_index]
-          track.prefx_volume.value = obj.value
+          
+          local volume = (self.__postfx_mode) and 
+            track.postfx_volume or track.prefx_volume
+        
+          volume.value = obj.value
         end
       end
       
@@ -599,7 +675,12 @@ function Mixer:__build_app()
   
         else
           local track = renoise.song().tracks[track_index]
-          track.prefx_panning.value = obj.value
+          
+          local panning = (self.__postfx_mode) and 
+            track.postfx_panning or track.prefx_panning
+        
+          panning.value = obj.value
+          
           return true
         end
       end
@@ -699,10 +780,9 @@ function Mixer:__build_app()
 
   if (self.mappings.master.group_name) then
     
-    local x_pos = (embed_master) and (self.__width+1) or 1
     local c = UISlider(self.display)
     c.group_name = self.mappings.master.group_name
-    c.x_pos = x_pos
+    c.x_pos = (embed_master) and (self.__width + 1) or 1
     c.y_pos = 1
     c.toggleable = true
     c.ceiling = RENOISE_DECIBEL
@@ -721,8 +801,13 @@ function Mixer:__build_app()
         then
           -- this will cause another event...
           self.__levels[master_control_index]:set_value(obj.value)
+
         else
-          get_master_track().prefx_volume.value = obj.value
+          local volume = (self.__postfx_mode) and 
+            get_master_track().postfx_volume or 
+            get_master_track().prefx_volume
+        
+          volume.value = obj.value
         end
         
         return true
@@ -745,7 +830,7 @@ function Mixer:__build_app()
     self.__track_navigator.minimum = 0
     self.__track_navigator.maximum = math.max(0, 
       #renoise.song().tracks - self.__width)
-    self.__track_navigator.x_pos = 1
+    self.__track_navigator.x_pos = 1 + (self.mappings.page.index or 0)
     self.__track_navigator.text_orientation = HORIZONTAL
 
     self.__track_navigator.on_change = function(obj) 
@@ -766,6 +851,38 @@ function Mixer:__build_app()
     self.display:add(self.__track_navigator)
   end
 
+
+  -- Pre/Post FX mode ---------------------------
+
+  if (self.mappings.mode.group_name) then
+    self.__mode_control = UIToggleButton(self.display)
+    self.__mode_control.group_name = self.mappings.mode.group_name
+    self.__mode_control.x_pos = 1 + (self.mappings.mode.index or 0)
+    self.__mode_control.y_pos = 1
+    self.__mode_control.inverted = false
+    self.__mode_control.active = false
+
+    -- mode state changed from controller
+    self.__mode_control.on_change = function(obj) 
+      if (not self.active) then
+        return false
+      end
+      
+      if (self.__postfx_mode ~= obj.active) then
+        self.__postfx_mode = obj.active
+        
+        local new_song = false
+        self:__attach_to_tracks(new_song)
+        
+        self:update()
+      end
+
+      return true
+    end
+    
+    self.display:add(self.__mode_control)
+  end
+    
   -- the finishing touch
   self:__attach_to_song()
 end
@@ -841,14 +958,17 @@ function Mixer:__attach_to_tracks(new_song)
     
     -- track volume level 
     if (self.__levels) then
-      self.__attached_track_observables:insert(
-        track.prefx_volume.value_observable)
+      local volume = (self.__postfx_mode) and 
+        track.postfx_volume or track.prefx_volume
       
-      track.prefx_volume.value_observable:add_notifier(
+      self.__attached_track_observables:insert(
+        volume.value_observable)
+      
+      volume.value_observable:add_notifier(
         self, 
         function()
           if (self.active) then
-            local value = track.prefx_volume.value
+            local value = volume.value
             -- compensate for potential loss of precision 
             if not compare(self.__levels[control_index].value, value, 1000) then
               self:set_track_volume(control_index, value)
@@ -860,14 +980,17 @@ function Mixer:__attach_to_tracks(new_song)
     
     -- track panning level 
     if (self.__panning) then
+      local panning = (self.__postfx_mode) and 
+         track.postfx_panning or track.prefx_panning
+      
       self.__attached_track_observables:insert(
-        track.prefx_panning.value_observable)
+        panning.value_observable)
 
-      track.prefx_panning.value_observable:add_notifier(
+      panning.value_observable:add_notifier(
         self, 
         function()
           if (self.active) then
-            local value = track.prefx_panning.value
+            local value = panning.value
             -- compensate for potential loss of precision 
             if not compare(self.__panning[control_index].value, value, 1000) then
               self:set_track_panning(control_index, value)
@@ -910,11 +1033,18 @@ function Mixer:__attach_to_tracks(new_song)
   if (not master_done and self.__master) and 
     (self.__include_master) then
     local track = renoise.song().tracks[master_idx]
-    track.prefx_volume.value_observable:add_notifier(
+    
+    local volume = (self.__postfx_mode) and 
+      track.postfx_volume or track.prefx_volume
+
+    self.__attached_track_observables:insert(
+      volume.value_observable)
+  
+    volume.value_observable:add_notifier(
       self, 
       function()
         if (self.active) then
-          local value = track.prefx_volume.value
+          local value = volume.value
           -- compensate for potential loss of precision 
           if not compare(self.__master.value, value, 1000) then
             self.__master:set_value(value)
