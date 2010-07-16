@@ -394,124 +394,117 @@ function Display:__walk_table(t, done, deep)
   
       if (t[key].label == "Param") then
   
-          -- empty parameter (placeholder unit)?
-        if not (view_obj.meta.type) then
-          view_obj.view = self.vb:column{
+        --- validate param properties first
+        
+        self:__validate_param(t[key].xarg)
+      
+      
+        --- common properties
+
+        local tooltip = string.format("%s (%s)",
+          view_obj.meta.name, view_obj.meta.value)
+
+
+        --- Param:button or togglebutton
+
+        if (view_obj.meta.type == "button" or 
+            view_obj.meta.type == "togglebutton") then
+          local notifier = function(value) 
+            -- output the maximum value
+            self:generate_message(tonumber(view_obj.meta.maximum),view_obj.meta)
+          end
+            
+          self.ui_notifiers[view_obj.meta.id] = notifier
+          view_obj.view = self.vb:button{
+            id = view_obj.meta.id,
             height = UNIT_HEIGHT,
             width = UNIT_WIDTH,
+            tooltip = tooltip,
+            notifier = notifier
           }
-
-          -- a parameter unit
-        else
-  
-          local tooltip = string.format("%s (%s)",
-            view_obj.meta.name,view_obj.meta.value)
-  
-  
-          --- Param:button or togglebutton
-          
-          if (t[key].xarg.type == "button" or 
-              t[key].xarg.type == "togglebutton") then
-            local notifier = function(value) 
-              -- output the maximum value
-              self:generate_message(tonumber(view_obj.meta.maximum),view_obj.meta)
-            end
-              
-            self.ui_notifiers[t[key].xarg.id] = notifier
-            view_obj.view = self.vb:button{
-              id = t[key].xarg.id,
-              height = UNIT_HEIGHT,
-              width = UNIT_WIDTH,
-              tooltip = tooltip,
-              notifier = notifier
-            }
-          
-          
-          --- Param:encoder
-              
-          elseif (t[key].xarg.type == "encoder") then
-            local notifier = function(value) 
-              -- output the current value
-              self:generate_message(value,view_obj.meta)
-            end
-              
-              self.ui_notifiers[t[key].xarg.id] = notifier
-              view_obj.view = self.vb:minislider{
-                id=t[key].xarg.id,
-                min = tonumber(view_obj.meta.minimum),
-                max = tonumber(view_obj.meta.maximum),
-                tooltip = tooltip,
-                height = UNIT_HEIGHT/1.5,
-                width = UNIT_WIDTH,
-                notifier = notifier
-              }
-              
+        
+        
+        --- Param:encoder
             
-          --- Param:dial
-          
-          elseif (t[key].xarg.type == "dial") then
-            local notifier = function(value) 
-              -- output the current value
-              self:generate_message(value,view_obj.meta)
-            end
+        elseif (view_obj.meta.type == "encoder") then
+          local notifier = function(value) 
+            -- output the current value
+            self:generate_message(value,view_obj.meta)
+          end
             
-            self.ui_notifiers[t[key].xarg.id] = notifier
-            view_obj.view = self.vb:rotary{
-              id = t[key].xarg.id,
+            self.ui_notifiers[view_obj.meta.id] = notifier
+            view_obj.view = self.vb:minislider{
+              id=view_obj.meta.id,
               min = tonumber(view_obj.meta.minimum),
               max = tonumber(view_obj.meta.maximum),
               tooltip = tooltip,
+              height = UNIT_HEIGHT/1.5,
               width = UNIT_WIDTH,
-              height = UNIT_WIDTH,
               notifier = notifier
             }
             
+          
+        --- Param:dial
+        
+        elseif (view_obj.meta.type == "dial") then
+          local notifier = function(value) 
+            -- output the current value
+            self:generate_message(value,view_obj.meta)
+          end
+          
+          self.ui_notifiers[view_obj.meta.id] = notifier
+          view_obj.view = self.vb:rotary{
+            id = view_obj.meta.id,
+            min = tonumber(view_obj.meta.minimum),
+            max = tonumber(view_obj.meta.maximum),
+            tooltip = tooltip,
+            width = UNIT_WIDTH,
+            height = UNIT_WIDTH,
+            notifier = notifier
+          }
+          
+          
+        --- Param:fader
+                  
+        elseif (view_obj.meta.type == "fader") then
+          local notifier = function(value) 
+            -- output the current value
+            self:generate_message(value,view_obj.meta)
+          end
             
-          --- Param:fader
-                    
-          elseif (t[key].xarg.type == "fader") then
-            local notifier = function(value) 
-              -- output the current value
-              self:generate_message(value,view_obj.meta)
-            end
-              
-            self.ui_notifiers[t[key].xarg.id] = notifier
-  
-            if (t[key].xarg.orientation == "vertical") then
-              view_obj.view = self.vb:row {
-                -- padd with spaces to center DEFAULT_CONTROL_HEIGHT in UNIT_WIDTH
-                self.vb:space { 
-                  width = (UNIT_WIDTH -  DEFAULT_CONTROL_HEIGHT) / 2 
-                },
-                self.vb:slider{
-                  id = t[key].xarg.id,
-                  min = tonumber(view_obj.meta.minimum),
-                  max = tonumber(view_obj.meta.maximum),
-                  tooltip = tooltip,
-                  width = DEFAULT_CONTROL_HEIGHT,
-                  height = (UNIT_WIDTH * t[key].xarg.size) + 
-                    (DEFAULT_SPACING * (t[key].xarg.size - 1)),
-                  notifier = notifier
-                },
-                self.vb:space {
-                  width = (UNIT_WIDTH -  DEFAULT_CONTROL_HEIGHT) / 2 
-                }
-              }
-            else
+          self.ui_notifiers[view_obj.meta.id] = notifier
 
-              assert(t[key].xarg.orientation == "horizontal",
-                "Internal Error. Please report: unexpected UI orientation")
-              
-              view_obj.view = self.vb:slider {
-                id  =t[key].xarg.id,
+          if (view_obj.meta.orientation == "vertical") then
+            view_obj.view = self.vb:row {
+              -- padd with spaces to center DEFAULT_CONTROL_HEIGHT in UNIT_WIDTH
+              self.vb:space { 
+                width = (UNIT_WIDTH -  DEFAULT_CONTROL_HEIGHT) / 2 
+              },
+              self.vb:slider{
+                id = view_obj.meta.id,
                 min = tonumber(view_obj.meta.minimum),
                 max = tonumber(view_obj.meta.maximum),
                 tooltip = tooltip,
-                width = (UNIT_WIDTH*t[key].xarg.size) + 
-                  (DEFAULT_SPACING*(t[key].xarg.size-1)),
+                width = DEFAULT_CONTROL_HEIGHT,
+                height = (UNIT_WIDTH * view_obj.meta.size) + 
+                  (DEFAULT_SPACING * (view_obj.meta.size - 1)),
                 notifier = notifier
+              },
+              self.vb:space {
+                width = (UNIT_WIDTH -  DEFAULT_CONTROL_HEIGHT) / 2 
               }
-            end
+            }
+          else
+            
+            view_obj.view = self.vb:slider {
+              id  =view_obj.meta.id,
+              min = tonumber(view_obj.meta.minimum),
+              max = tonumber(view_obj.meta.maximum),
+              tooltip = tooltip,
+              width = (UNIT_WIDTH*view_obj.meta.size) + 
+                (DEFAULT_SPACING*(view_obj.meta.size-1)),
+              notifier = notifier
+            }
           end
         end
         
@@ -538,6 +531,9 @@ function Display:__walk_table(t, done, deep)
       --- Group
   
       elseif (t[key].label == "Group") then
+      
+        self:__validate_group(t[key].xarg)
+
         -- the group
         local orientation = t[key].xarg.orientation
         local columns = t[key].xarg.columns
@@ -561,9 +557,7 @@ function Display:__walk_table(t, done, deep)
             spacing = DEFAULT_SPACING,
           }
         else
-          assert(orientation == "horizontal",
-             "Internal Error. Please report: unexpected UI orientation")
-             
+          
           view_obj.view = self.vb:row{
             style = "group",
             id = grid_id,
@@ -629,6 +623,135 @@ function Display:__walk_table(t, done, deep)
 end
 
 
+--------------------------------------------------------------------------------
+
+-- validate and fix a groups arg and try to give the control map author some
+-- hints of what might be wroing with the control map
+
+function Display:__validate_group(xargs)
+
+  if (xargs.orientation ~= nil and 
+      xargs.orientation ~= "vertical" and 
+      xargs.orientation ~= "horizontal") 
+  then
+    renoise.app():show_warning(
+      ('Whoops! The controlmap \'%s\' specifies no valid \'orientation\' '..
+       'property in one of its \'Group\'s.\n\n'..
+       'Please use orientation="horizontal" or orientation="vertical".'
+      ):format(self.device.control_map.file_path))
+
+    xargs.orientation = "horizontal"
+  end
+  
+  if (xargs.name == nil) then
+    renoise.app():show_warning(
+      ('Whoops! The controlmap \'%s\' specifies no valid \'name\' '..
+       'property in one of its \'Group\'s.\n\n'..
+       'Please name the groups to be able to map them.'
+      ):format(self.device.control_map.file_path))
+
+    xargs.name = "Undefined"
+  end
+end
+
+ 
+--------------------------------------------------------------------------------
+
+-- validate and fix param xargs and try to give the control map author some
+-- hints of what might be wroing with the control map
+
+function Display:__validate_param(xargs)
+
+  -- common Param properties
+  
+  -- name
+  if (xargs.name == nil) then
+    renoise.app():show_warning(
+      ('Whoops! The controlmap \'%s\' specifies no \'name\' property in one '..
+       'of its \'Param\' fields.\n\n'..
+       'Please add a name like name="Button #1" to all <Param>\'s in the '..
+       'controlmap.'):format(self.device.control_map.file_path))
+
+    xargs.name = "Undefined"
+  end
+  
+  -- value
+  if (xargs.value == nil or 
+      self.device.control_map:determine_type(xargs.value) == nil)
+  then
+    renoise.app():show_warning(
+      ('Whoops! The controlmap \'%s\' specifies no or an invalid \'value\' '..
+       'property in one of its \'Param\' fields: %s.\n\n'..
+       'You have to map a control to a MIDI message via the name property, '..
+       'i.e: value="CC#10" (control change number 10, any hannel) or PB|1 '..
+       '(pitchbend on channel 1).'):format(
+       self.device.control_map.file_path, xargs.value or "")
+    )
+  
+    xargs.value = "CC#0"
+  end
+  
+  -- type
+  local valid_types = {"button", "togglebutton", "encoder", "dial", "fader"}
+          
+  if (xargs.type == nil or not table.find(valid_types, xargs.type)) then
+    renoise.app():show_warning(
+      ('Whoops! The controlmap \'%s\' specifies no valid \'type\' property '..
+       'in one of its \'Param\' fields.\n\n'..
+       'Please use one of: %s'):format(self.device.control_map.file_path, 
+       table.concat(valid_types, ", ")))
+
+    xargs.type = "button"
+  end
+  
+  
+  -- minimum/maximum
+  if (tonumber(xargs.minimum) == nil or
+      tonumber(xargs.maximum) == nil or 
+      tonumber(xargs.minimum) < 0 or 
+      tonumber(xargs.maximum) < 0) 
+  then
+    renoise.app():show_warning(
+      ('Whoops! The controlmap \'%s\' specifies no valid \'minimum\' '..
+       'or \'maximum\' property in one of its \'Param\' fields.\n\n'..
+       'Please use a number >= 0  (depending on the value, MIDI type).'
+      ):format(self.device.control_map.file_path))
+
+    xargs.minimum = 0 
+    xargs.maximum = 127
+  end
+  
+  -- faders
+  
+  if (xargs.type == "fader") then
+    
+    -- orientation
+    if (xargs.orientation ~= "vertical" and 
+        xargs.orientation ~= "horizontal") 
+    then
+      renoise.app():show_warning(
+        ('Whoops! The controlmap \'%s\' specifies no valid \'orientation\' '..
+         'property in one of its fader \'Params\'.\n\n'..
+         'Please use either orientation="horizontal" or orientation="vertical".'
+        ):format(self.device.control_map.file_path))
+  
+      xargs.orientation = "horizontal"
+    end
+
+    -- size
+    if (type(xargs.size) == "nil") then
+      renoise.app():show_warning(
+        ('Whoops! The controlmap \'%s\' specifies no valid \'size\' '..
+         'property in one of its fader \'Params\'.\n\n'..
+         'Please use a number >= 1 as size".'
+        ):format(self.device.control_map.file_path))
+  
+      xargs.size = 1
+    end    
+  end
+end
+ 
+ 
 --------------------------------------------------------------------------------
 
 function Display:__quantize_widget_color(color)
