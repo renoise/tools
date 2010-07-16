@@ -240,7 +240,7 @@ function key_handler(dialog, key)
       renoise.song().transport.octave = renoise.song().transport.octave - 1
     end
 
-  elseif (key.modifier == "" and key.name == "numpad *") then
+  elseif (key.modifiers == "" and key.name == "numpad *") then
     if renoise.song().transport.octave < 8 then
       renoise.song().transport.octave = renoise.song().transport.octave +1
     end
