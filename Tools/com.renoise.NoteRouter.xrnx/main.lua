@@ -260,8 +260,12 @@ function key_handler(dialog, key)
     end
 
     fnote = key.note + fnote
-    print(fnote)
-    
+
+    if nr_debug then
+      print(fnote)
+    end
+
+    --Send key-input as midi-note to midi message processor
     local message = {0x90,fnote,0x80}
     process_messages(message)
   end

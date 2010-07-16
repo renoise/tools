@@ -543,7 +543,7 @@ function status_key_handler(dialog, key)
   end
 
   -- Let's send the text-line contents if present
-  if (mod == "" and key == "return") then
+  if (key.modifiers == "" and key.name == "return") then
     send_command('', 'status', vb_status.views.status_command.text)
     vb_status.views.status_command.value = ""
     return 
@@ -563,9 +563,11 @@ function chat_key_handler(dialog, key)
   
   -- update key_text to show what we got
   elseif (key.name == "back") then
+    no_loop = 1
     vb_channel.views.channel_command.value = string.sub(vb_channel.views.channel_command.value,1,
     string.len(vb_channel.views.channel_command.value)-1)
   elseif (key.character) then
+    no_loop = 1
     vb_channel.views.channel_command.value = vb_channel.views.channel_command.value .. 
       key.character
   end

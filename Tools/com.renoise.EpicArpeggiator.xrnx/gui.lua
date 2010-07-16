@@ -716,8 +716,8 @@ Main Dialog
         elseif (key.note) then
           local cur_octave = renoise.song().transport.octave
 
-          local fnote = key_matrix[key.note % 12 + 1] .. 
-            tostring(cur_octave + math.floor(key.note / 12))
+          local fnote = key_matrix[key.note % NUM_NOTES + 1] .. 
+            tostring(cur_octave + math.floor(key.note / NUM_NOTES))
 
           if (vb.views[fnote]) then
             vb.views[fnote].value = not vb.views[fnote].value
