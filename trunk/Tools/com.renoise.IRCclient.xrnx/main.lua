@@ -577,10 +577,10 @@ end
 function login_key_handler(dialog, key)
   -- update key_text to show what we got
   -- close on escape...
-  if (key.modifier == "" and key.name == "esc") then
+  if (key.modifiers == "" and key.name == "esc") then
     dialog:close()
 
-  elseif (key.modifier == "" and key.name == "return") then
+  elseif (key.modifiers == "" and key.name == "return") then
     connect_to_server()
     login_dialog:close()
   end
@@ -590,7 +590,7 @@ end
 function connect_key_handler(dialog, key)
   -- update key_text to show what we got
   -- close on escape...
-  if (key.modifier == "" and key.name == "esc") then
+  if (key.modifiers == "" and key.name == "esc") then
     dialog:close()
     stop_message_engine()
   end
