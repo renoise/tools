@@ -120,9 +120,8 @@ function ControlMap:parse_definition(control_map_name, xml_string)
     print("Notice! ControlMap:parse_definition FAILED:", result)
     
     renoise.app():show_error(
-      ("Failed to parse the controller definition file: '%s'. " ..
-       "The controller is not available.\n\n%s"):format(
-       control_map_name, result or "unknown error"))       
+      ("Whoops! Failed to parse the controller definition file: "..
+       "'%s'.\n\n%s"):format(control_map_name, result or "unknown error"))       
   end
 end
 
