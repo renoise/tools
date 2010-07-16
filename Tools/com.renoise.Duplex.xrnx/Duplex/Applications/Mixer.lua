@@ -245,7 +245,7 @@ function Mixer:__init(display,mappings,options)
   self.__panning = nil
   self.__mutes = nil
   self.__solos = nil
-  self.__track_navigator = nil
+  self.__page_control = nil
   self.__mode_control = nil
 
   self.__width = 4
@@ -457,15 +457,15 @@ function Mixer:update()
   
   -- page controls
 
-  if (self.__track_navigator) then
-    self.__track_navigator.index = self.__track_offset
+  if (self.__page_control) then
+    self.__page_control:set_index(self.__track_offset)
   end
 
 
   -- mode controls
 
   if (self.__mode_control) then
-    self.__mode_control.active = self.__postfx_mode
+    self.__mode_control:set(self.__postfx_mode)
   end
 
 end
@@ -588,7 +588,7 @@ function Mixer:__build_app()
   self.__solos = (self.mappings.solo.group_name) and {} or nil
   
   self.__master = nil
-  self.__track_navigator = nil
+  self.__page_control = nil
   self.__mode_control = nil
   
   for control_index = 1,self.__width do
@@ -823,17 +823,17 @@ function Mixer:__build_app()
 
   if (self.mappings.page.group_name) then
   
-    self.__track_navigator = UISpinner(self.display)
-    self.__track_navigator.group_name = self.mappings.page.group_name
-    self.__track_navigator.index = 0
-    self.__track_navigator.step_size = self.__width
-    self.__track_navigator.minimum = 0
-    self.__track_navigator.maximum = math.max(0, 
+    self.__page_control = UISpinner(self.display)
+    self.__page_control.group_name = self.mappings.page.group_name
+    self.__page_control.index = 0
+    self.__page_control.step_size = self.__width
+    self.__page_control.minimum = 0
+    self.__page_control.maximum = math.max(0, 
       #renoise.song().tracks - self.__width)
-    self.__track_navigator.x_pos = 1 + (self.mappings.page.index or 0)
-    self.__track_navigator.text_orientation = HORIZONTAL
+    self.__page_control.x_pos = 1 + (self.mappings.page.index or 0)
+    self.__page_control.text_orientation = HORIZONTAL
 
-    self.__track_navigator.on_change = function(obj) 
+    self.__page_control.on_change = function(obj) 
       if (not self.active) then
         return false
       end
@@ -848,7 +848,7 @@ function Mixer:__build_app()
       return true
     end
     
-    self.display:add(self.__track_navigator)
+    self.display:add(self.__page_control)
   end
 
 
@@ -927,8 +927,8 @@ function Mixer:__attach_to_tracks(new_song)
   local tracks = renoise.song().tracks
 
   -- validate and update the sequence/track offset
-  if (self.__track_navigator) then
-    self.__track_navigator:set_range(nil,math.max(0, 
+  if (self.__page_control) then
+    self.__page_control:set_range(nil,math.max(0, 
       #renoise.song().tracks - self.__width))
   end
     
