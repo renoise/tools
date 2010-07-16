@@ -57,6 +57,9 @@ duplex_configurations:insert {
         },
         page = {
           group_name = "PageControls",
+        },
+        mode = {
+          group_name = "ModeControls",
         }
       }
     }
