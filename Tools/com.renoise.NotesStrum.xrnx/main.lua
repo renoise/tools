@@ -2,13 +2,6 @@
 -- tool setup
 -- -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
--- Legenda:
--- THIS_IS_A_CONSTANT = 0
--- this_is_a_variable = 0
--- class 'ThisIsAClassDefinition'
--- function ThisIsAClassDefinition:__Init()
-
-
 -- menu options
 
 local OPTION_SELECTION_IN_PATTERN = 1

@@ -2,12 +2,6 @@
 ----------------------        Globals for IRC        -------------------------
 ------------------------------------------------------------------------------
 
--- Legenda:
--- THIS_IS_A_CONSTANT = 0
--- this_is_a_variable = 0
--- class 'ThisIsAClassDefinition'
--- function ThisIsAClassDefinition:__Init()
-
 sirc_debug = false
 
 DISCONNECTED = 0

@@ -2,14 +2,6 @@
 -- global definitions
 -- -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
--- Legenda:
--- THIS_IS_A_CONSTANT = 0
--- this_is_a_variable = 0
--- class 'ThisIsAClassDefinition'
--- function ThisIsAClassDefinition:__Init()
-
-
-
 --Renoise internal boundary constants
 NUM_OCTAVES = 10         --:0 to 9   = 10
 NUM_NOTES = 12

@@ -1,12 +1,6 @@
 -- -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 -- tool registration
 -- -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
--- Legenda:
--- THIS_IS_A_CONSTANT = 0
--- this_is_a_variable = 0
--- class 'ThisIsAClassDefinition'
--- function ThisIsAClassDefinition:__Init()
-
 local JUMP_UP = 1
 local JUMP_DOWN = 2
 

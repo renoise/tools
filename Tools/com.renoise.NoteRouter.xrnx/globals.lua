@@ -2,12 +2,6 @@
 ----------------------    Globals for Noterouter     -------------------------
 ------------------------------------------------------------------------------
 
--- Legenda:
--- THIS_IS_A_CONSTANT = 0
--- this_is_a_variable = 0
--- class 'ThisIsAClassDefinition'
--- function ThisIsAClassDefinition:__Init()
-
 note_map_dialog = nil
 note_map_dialog_vb = nil
 record_mode = false
