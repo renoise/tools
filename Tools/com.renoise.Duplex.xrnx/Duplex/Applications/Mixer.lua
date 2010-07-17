@@ -937,7 +937,8 @@ function Mixer:__attach_to_tracks(new_song)
   -- will no longer be alive then...
   if (not new_song) then
     for _,observable in pairs(self.__attached_track_observables) do
-      observable:remove_notifier(self)
+      -- temp security hack. can also happen when removing tracks
+      pcall(function() observable:remove_notifier(self) end)
     end
   end
   
