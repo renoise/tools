@@ -1,14 +1,26 @@
-------------------------------------------------------------------------------
-----------------------       Simple IRC client       -------------------------
-------------------------------------------------------------------------------
+--[[============================================================================
+main.lua
+============================================================================]]--
+
+-- requires
 
 require "globals"
 require "gui"
+
+
+--------------------------------------------------------------------------------
+-- tool registration
+--------------------------------------------------------------------------------
 
 renoise.tool():add_menu_entry {
   name = "Main Menu:Help:Visit the Community Chatroom...",
   invoke = function() client_login() end
 }
+
+
+--------------------------------------------------------------------------------
+-- functions
+--------------------------------------------------------------------------------
 
 function print_server_replies()
   local vb = renoise.ViewBuilder()
@@ -264,6 +276,8 @@ function print_server_replies()
 end
 
 
+--------------------------------------------------------------------------------
+
 function update_channel_users(SERVER_ARRAY)
   local u_channel = SERVER_ARRAY[4]
   vb_channel.views.channel_user_frame:clear()
@@ -280,6 +294,8 @@ function update_channel_users(SERVER_ARRAY)
 end
 
 
+--------------------------------------------------------------------------------
+
 function set_nick(nick)
   local COMMAND = "NICK "..nick.."\r\n"
 
@@ -293,6 +309,8 @@ function set_nick(nick)
 
 end
 
+
+--------------------------------------------------------------------------------
 
 function register_user(user, real_name)
   local COMMAND = "USER "..user.." 8 * : "..real_name.."\r\n"
@@ -308,6 +326,8 @@ function register_user(user, real_name)
 end
 
 
+--------------------------------------------------------------------------------
+
 function join_channel(channel)
   local COMMAND = "JOIN "..channel.."\r\n"
 
@@ -322,6 +342,8 @@ function join_channel(channel)
 end
 
 
+--------------------------------------------------------------------------------
+
 function quit_irc()
   local COMMAND = "QUIT :Has left the building\r\n"
 
@@ -335,6 +357,8 @@ function quit_irc()
 
 end
 
+
+--------------------------------------------------------------------------------
 
 function send_command (target, target_frame, command)
   local local_echo = ''
@@ -534,6 +558,8 @@ function send_command (target, target_frame, command)
 end
 
     
+--------------------------------------------------------------------------------
+
 function status_key_handler(dialog, key)
   -- update key_text to show what we got
   -- close on escape...
@@ -550,6 +576,9 @@ function status_key_handler(dialog, key)
   end
  
 end
+
+
+--------------------------------------------------------------------------------
 
 function chat_key_handler(dialog, key)
   -- close on escape...
@@ -574,6 +603,9 @@ function chat_key_handler(dialog, key)
     
 end
 
+
+--------------------------------------------------------------------------------
+
 function login_key_handler(dialog, key)
   -- update key_text to show what we got
   -- close on escape...
@@ -587,6 +619,9 @@ function login_key_handler(dialog, key)
 
 end
 
+
+--------------------------------------------------------------------------------
+
 function connect_key_handler(dialog, key)
   -- update key_text to show what we got
   -- close on escape...
@@ -597,7 +632,11 @@ function connect_key_handler(dialog, key)
 
 end
 
+
+--------------------------------------------------------------------------------
+
 -- Start running the message poller
+
 function start_message_engine()
 
   if not (renoise.tool().app_idle_observable:has_notifier(print_server_replies)) then
@@ -607,7 +646,10 @@ function start_message_engine()
 end
 
 
+--------------------------------------------------------------------------------
+
 -- Stop running the message poller
+
 function stop_message_engine()
 
   if sirc_debug then
@@ -622,6 +664,8 @@ function stop_message_engine()
 
 end
 
+
+--------------------------------------------------------------------------------
 
 function connect_to_server(vb)
   client, client_error = renoise.Socket.create_client(vb_login.views.irc_server.text, 

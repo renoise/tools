@@ -1,13 +1,13 @@
+--[[============================================================================
+patter_processing.lua
+============================================================================]]--
 
--------------------------------------------------------------------------------
--- Processing functions
--------------------------------------------------------------------------------
-
-
-function add_notes(n_column, c_line, vb)
---[[ Start the processing, iterators are doing their work in this routine 
+--[[ 
+Start the processing, iterators are doing their work in this routine 
 Also the note-, instrument-, velocity- and octave-schemes are generated here 
 --]]
+
+function add_notes(n_column, c_line, vb)
    local song = renoise.song()
    local pattern_lines = song.selected_pattern.number_of_lines
    local pattern_index = song.selected_pattern_index
@@ -392,8 +392,13 @@ Also the note-, instrument-, velocity- and octave-schemes are generated here
 end
 
 
+--------------------------------------------------------------------------------
+
+--[[ 
+Clear area/track/song first 
+--]]
+
 function clear_track_first()
---[[ Clear area/track/song first --]]
    local song = renoise.song()
    local pattern_index = song.selected_pattern_index
    local track_index = song.selected_track_index
@@ -430,8 +435,13 @@ function clear_track_first()
 end
 
 
+--------------------------------------------------------------------------------
+
+--[[ 
+Pick a note from the stack and return for insertion 
+--]]
+
 function set_process_note(octave_order, vel_order)
---[[ Pick a note from the stack and return for insertion --]]
    local ordnot = nil
    local note_order = {}
    local nextnote = 0
@@ -506,8 +516,13 @@ function set_process_note(octave_order, vel_order)
 end
 
 
+--------------------------------------------------------------------------------
+
+--[[
+  Check if full note values are valid (start with note and end with figure
+--]]
+
 function fix_full_note(tempvar)
-   --[[Check if full note values are valid (start with note and end with figure]]
    local valid_note_found = false
    tempvar = string.sub(tempvar,1,3)
 
@@ -544,8 +559,13 @@ function fix_full_note(tempvar)
 end
 
 
+--------------------------------------------------------------------------------
+
+--[[
+Pick an octave from the stack and return for insertion 
+--]]
+
 function set_process_octave(octave_order)
---[[ Pick an octave from the stack and return for insertion --]]
    local ordoct = nil
 
    if popup_octave_index ~= PLACE_RANDOM then --Anything but Random
@@ -564,8 +584,13 @@ function set_process_octave(octave_order)
 end
 
 
+--------------------------------------------------------------------------------
+
+--[[ 
+  Pick an instrument number from the stack and return for insertion 
+--]]
+
 function set_process_instrument(ins_order)
---[[ Pick an instrument number from the stack and return for insertion --]]
    local tempins = nil
 
    if instrument_insertion_index ~= PLACE_RANDOM then --Anything but Random
@@ -582,8 +607,13 @@ function set_process_instrument(ins_order)
 end
 
 
+--------------------------------------------------------------------------------
+
+--[[ 
+  Pick a velocity figure from the stack and return for insertion 
+--]]
+
 function set_process_velocity(vel_order)
---[[ Pick a velocity figure from the stack and return for insertion --]]
    local tempvel = nil
    if velocity_insertion_index ~= PLACE_RANDOM then --Anything but Random
       if vel_order[vel_pointer] ~= nil then
@@ -598,12 +628,16 @@ function set_process_velocity(vel_order)
 end
 
 
+--------------------------------------------------------------------------------
+
+--[[
+  In here is determined if a note has to be placed on this line and if so then
+  also raise all the instrument and velocity pointers to pick a possible new entry
+  from the stack. If a note-off has to be placed, this is calculated here as well. 
+--]]
+
 function place_note(note_column, cur_line, octave_order, ins_order, vel_order, 
 current_column, track, pattern)
---[[In here is determined if a note has to be placed on this line and if so then
-also raise all the instrument and velocity pointers to pick a possible new entry
-from the stack. If a note-off has to be placed, this is calculated here as well. 
---]]
    local song = renoise.song()
    local delay_apply = 0
    local cut_value = termination_step
@@ -923,8 +957,14 @@ from the stack. If a note-off has to be placed, this is calculated here as well.
 end
 
 
-function fill_cells(note_column, note, instrument, velocity, delay, cut_value, pattern, current_column)
---[[Places a note, volume, panning and perhaps a delay value in the cell--]]
+--------------------------------------------------------------------------------
+
+--[[
+  Places a note, volume, panning and perhaps a delay value in the cell
+--]]
+
+function fill_cells(note_column, note, instrument, velocity, 
+  delay, cut_value, pattern, current_column)
    --String 'OFF' was not yet supported when creating this source.
    --value 120 will add a note-off command in the pattern editor, it suffice.
    if note == 120 then
@@ -1021,6 +1061,8 @@ function fill_cells(note_column, note, instrument, velocity, delay, cut_value, p
 
 end
 
+
+--------------------------------------------------------------------------------
 
 function fetch_notes_from_track(vb)
    local song = renoise.song()     
@@ -1144,7 +1186,8 @@ function fetch_notes_from_track(vb)
 end
 
 
-function ferris_wheel(source_table, target_table, direction, repeat_mode)
+--------------------------------------------------------------------------------
+
 --[[
    Copies one table into another depending on the desired order.
    This routine is specifically designed when one does *not* want to 
@@ -1154,6 +1197,8 @@ function ferris_wheel(source_table, target_table, direction, repeat_mode)
    I made changes in the top/down/top and down/top/down schemes not to regenerate
    the previous note if it would be the same. 
 --]]
+
+function ferris_wheel(source_table, target_table, direction, repeat_mode)
       local tend = #source_table
 
       if repeat_mode == true then
@@ -1221,11 +1266,15 @@ function ferris_wheel(source_table, target_table, direction, repeat_mode)
 end
 
 
--------------------------------------------------------------------------------
---                             Sequencer functions                           --
--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+-- Sequencer functions
+--------------------------------------------------------------------------------
+
+--[[
+Checks if the song sequence has patterns that are repeated
+--]]
+
 function check_unique_pattern()
---[[Checks if the song sequence has patterns that are repeated--]]
    local song = renoise.song()
    local double = {}
    local doubles = 1
@@ -1268,9 +1317,15 @@ function check_unique_pattern()
 end
 
 
+--------------------------------------------------------------------------------
+
+--[[
+ Copies all repeated patterns to a unique pattern 
+--]]
+
 function make_unique_pattern()
---[[Copies all repeated patterns to a unique pattern--]]
    local song = renoise.song()
    song.sequencer:make_range_unique(1, #song.sequencer.pattern_sequence)
    return
 end
+

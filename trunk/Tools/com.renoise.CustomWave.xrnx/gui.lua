@@ -1,6 +1,8 @@
--------------------------------------------------------------------------------
--- BEGIN: observable notifiers
--------------------------------------------------------------------------------
+--[[============================================================================
+gui.lua
+============================================================================]]--
+
+-- notifiers
 
 function instruments_list_changed()
 
@@ -20,37 +22,38 @@ function instruments_list_changed()
   
   renoise.app():show_status(
     "All operators of type 'Wave' have been reset because of a change in " ..
-	  "instruments list"
+    "instruments list"
   )
   
 end
 
+
+--------------------------------------------------------------------------------
+
 function new_song_loaded()
 
   if dialog.visible then
-    dialog:close();
+    dialog:close()
     if renoise.tool().app_new_document_observable:has_notifier(new_song_loaded)
-	then
+  then
       renoise.tool().app_new_document_observable:add_notifier(new_song_loaded)
     end
   end
 
 end
 
--------------------------------------------------------------------------------
--- END: observable notifiers
--------------------------------------------------------------------------------
 
+--------------------------------------------------------------------------------
+-- GUI
+--------------------------------------------------------------------------------
 
-
--------------------------------------------------------------------------------
--- BEGIN: GUI functions
--------------------------------------------------------------------------------
 local MARGIN_DEFAULT = renoise.ViewBuilder.DEFAULT_CONTROL_MARGIN
 
 vb = nil 
 dialog = nil
 
+
+--------------------------------------------------------------------------------
 
 function show_operator_parameters(int_wave_type)
 
@@ -61,6 +64,9 @@ function show_operator_parameters(int_wave_type)
   vb.views.rowMultiplier.visible = int_wave_type ~= WAVE_NOISE
 
 end
+
+
+--------------------------------------------------------------------------------
 
 function change_tab(int_operator_number)
 
@@ -107,6 +113,9 @@ function change_tab(int_operator_number)
   end
 end
 
+
+--------------------------------------------------------------------------------
+
 function change_wave(int_wave_number,int_wave_type_new)
   int_wave_type_selected = int_wave_type_new
   vb.views.cmbWave.value = int_wave_type_selected
@@ -127,6 +136,9 @@ function change_wave(int_wave_number,int_wave_type_new)
   end
 end
 
+
+--------------------------------------------------------------------------------
+
 function generate_modulator_matrix()
   local array_string_modulators = {}
   local int_operator
@@ -134,20 +146,24 @@ function generate_modulator_matrix()
   array_string_modulators[1] = "-NONE-"
   for int_operator = 1, OPERATORS do
     if 
-	  int_operator ~= int_operator_selected and 
-	  wave_is_set(int_operator) and 
-	  array_waves[int_operator] ~= WAVE_NONE and 
-	  not is_modulator(int_operator) then
-	  
-        array_string_modulators[int_count] = "Op " .. 
-		  tostring(int_operator) .. 
-		  "(" .. array_string_operators[array_waves[int_operator]] .. ")"
-          int_count = int_count + 1
-		
+      int_operator ~= int_operator_selected and 
+      wave_is_set(int_operator) and 
+      array_waves[int_operator] ~= WAVE_NONE and 
+      not is_modulator(int_operator) 
+    then
+    
+    array_string_modulators[int_count] = "Op " .. 
+      tostring(int_operator) .. 
+      "(" .. array_string_operators[array_waves[int_operator]] .. ")"
+      
+     int_count = int_count + 1
     end
   end
   return array_string_modulators
 end
+
+
+--------------------------------------------------------------------------------
 
 function generate_instrument_matrix()
   local int_instruments = table.getn(renoise.song().instruments)
@@ -164,6 +180,9 @@ function generate_instrument_matrix()
   return array_string_return
 end
 
+
+--------------------------------------------------------------------------------
+
 function generate_sample_matrix(int_instrument)
   
   if int_instrument <= 0 then
@@ -177,9 +196,9 @@ function generate_sample_matrix(int_instrument)
   
   for int_count = 1, int_samples do
     local string_name = 
-	  renoise.song().instruments[int_instrument].samples[int_count].name
+      renoise.song().instruments[int_instrument].samples[int_count].name
     if string_name == "" then
-    string_name = "Sample #" .. tostring(int_count-1)
+      string_name = "Sample #" .. tostring(int_count-1)
     end
     array_string_return[int_count+1] = string_name
   end  
@@ -187,6 +206,9 @@ function generate_sample_matrix(int_instrument)
   array_string_return[1] = "-- Select --"
   return array_string_return
 end
+
+
+--------------------------------------------------------------------------------
 
 function generate_note_matrix(int_start, int_end)
 
@@ -236,6 +258,9 @@ function generate_note_matrix(int_start, int_end)
 
 end
 
+
+--------------------------------------------------------------------------------
+
 function reset_gui()
   array_real_amplitudes = {}
   array_variant_parameters = {}
@@ -250,6 +275,9 @@ function reset_gui()
   vb.views.switchTabs.value = 1
   vb.views.chkInvert.value = false
 end
+
+
+--------------------------------------------------------------------------------
 
 function show_dialog()
 
@@ -342,7 +370,7 @@ function show_dialog()
       vb.views.txtDbValue.text = "-INF dB"
     else
       vb.views.txtDbValue.text = 
-	    string.format("%.2f dB",convert_linear_to_db(real_amplification))
+      string.format("%.2f dB",convert_linear_to_db(real_amplification))
     end
   end
   }
@@ -376,7 +404,7 @@ function show_dialog()
 end
 
 
--- operator_gui
+--------------------------------------------------------------------------------
 
 local function create_operator_gui()
 
@@ -494,39 +522,39 @@ local function create_operator_gui()
       -- generate notifier name associated with the 
       -- previously and newly selected instrument
       local samples_notifier_name = 
-	    ("sample_list_changed_in_instrument_%d"):format(instrument_index)
+      ("sample_list_changed_in_instrument_%d"):format(instrument_index)
       local last_samples_notifier_name = 
-  	    ("sample_list_changed_in_instrument_%d"):format(last_instrument)
+        ("sample_list_changed_in_instrument_%d"):format(last_instrument)
     
       -- notifier for changes in samples list
       if instrument_index > 0 then
-	  
+    
         notifiers[samples_notifier_name] = function ()
 
         -- the currently visible operator is a wavetable using 
-		-- the changed instrument as wavetable
+        -- the changed instrument as wavetable
         if 
-		  array_waves[int_operator_selected] == WAVE_WAVETABLE and 
-		  array_instrument_number[int_operator_selected] == instrument_index 
-		then
+          array_waves[int_operator_selected] == WAVE_WAVETABLE and 
+          array_instrument_number[int_operator_selected] == instrument_index 
+        then
           -- rebuild samples list
           array_sample_number[int_operator_selected] = 0
           vb.views.cmbSamples.items = generate_sample_matrix(instrument_index)
           vb.views.cmbSamples.value = 1
         end
         
-		-- we will use this to warn the user about what is happening
+        -- we will use this to warn the user about what is happening
         local string_warning = ' ' 
         
         -- loop over all operators to reset all the operators which have 
-		-- the changed isntrument as wavetable
+        -- the changed isntrument as wavetable
         for int_operator = 1, OPERATORS do
         
           if 
-			array_waves[int_operator] and 
-			array_waves[int_operator] == WAVE_WAVETABLE and 
-			array_instrument_number[int_operator] == instrument_index 
-		  then
+            array_waves[int_operator] and 
+            array_waves[int_operator] == WAVE_WAVETABLE and 
+            array_instrument_number[int_operator] == instrument_index 
+          then
             array_sample_number[int_operator] = 0
             string_warning = string_warning .. tostring(int_operator) .. ', '
           end
@@ -535,10 +563,10 @@ local function create_operator_gui()
           
         if string.len(string_warning) > 1 then
           renoise.app():show_status(
-		    ("The following operators have been reset because of changes in" ..
-			  " sample list of instrument %d: "):format(instrument_index-1) ..
-			  string.sub(string_warning,1,string.len(string_warning)-2)
-		  )
+            ("The following operators have been reset because of changes in" ..
+             " sample list of instrument %d: "):format(instrument_index-1) ..
+             string.sub(string_warning,1,string.len(string_warning)-2)
+          )
         end
 
       end
@@ -547,22 +575,22 @@ local function create_operator_gui()
 
     --remove any notifier from the previously selected sample
     if 
-	  last_instrument > 0 and 
-	  (renoise.song().instruments[last_instrument].samples_observable:has_notifier(
-	    notifiers[last_samples_notifier_name])) 
-	then
+      last_instrument > 0 and 
+        (renoise.song().instruments[last_instrument].samples_observable:has_notifier(
+          notifiers[last_samples_notifier_name])) 
+    then
       renoise.song().instruments[last_instrument].samples_observable:remove_notifier(
-	    notifiers[last_samples_notifier_name])
+        notifiers[last_samples_notifier_name])
     end
 
     -- only add notifier if there is no yet another
     if 
-	  instrument_index > 0 and 
-	  not (renoise.song().instruments[instrument_index].samples_observable:has_notifier(
-	    notifiers[samples_notifier_name])) 
-	then
+      instrument_index > 0 and 
+      not (renoise.song().instruments[instrument_index].samples_observable:has_notifier(
+        notifiers[samples_notifier_name])) 
+    then
       renoise.song().instruments[instrument_index].samples_observable:add_notifier(
-	    notifiers[samples_notifier_name])
+        notifiers[samples_notifier_name])
     end
         
     array_instrument_number[int_operator_selected] = instrument_index
@@ -577,9 +605,7 @@ local function create_operator_gui()
     items = generate_sample_matrix(0),
     value = 1,
     notifier = function(new_index)
-  
       array_sample_number[int_operator_selected] = new_index - 1
-
     end
   }
 
@@ -643,15 +669,15 @@ end
     height = DIALOG_BUTTON_HEIGHT,
     tooltip = "Reset all data",
     notifier = function()
-	
+  
       if renoise.app():show_prompt(
-	      "Parameters Reset",
+        "Parameters Reset",
           "Are you sure you want to reset all parameters data?",{"Yes","No"}
-	    ) == "Yes" 
-	  then
+        ) == "Yes" 
+      then
         reset_gui()
       end
-	  
+    
     end
   }
 
@@ -675,6 +701,3 @@ end
 
 end
 
--------------------------------------------------------------------------------
--- END: GUI functions
--------------------------------------------------------------------------------

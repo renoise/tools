@@ -1,6 +1,8 @@
---[[----------------------------------------------------------------------------
-Variables & Globals
-----------------------------------------------------------------------------]]--
+--[[============================================================================
+main.lua
+============================================================================]]--
+
+-- Variables & Globals
 
 local current_dialog = nil
 
@@ -17,11 +19,12 @@ local current_direction = "up"
 local last_idle_time = os.clock()
 
 
---[[----------------------------------------------------------------------------
-Functions
-----------------------------------------------------------------------------]]--
+--------------------------------------------------------------------------------
+-- The Game
+--------------------------------------------------------------------------------
 
 -- Reset Game
+
 function reset()
   math.randomseed(os.time())
 
@@ -43,7 +46,10 @@ function reset()
 end
 
 
+--------------------------------------------------------------------------------
+
 -- Create main matrix cells
+
 function create_cells()
   local vb = renoise.ViewBuilder()
   matrix_view = vb:row { }
@@ -64,7 +70,10 @@ function create_cells()
 end
 
 
+--------------------------------------------------------------------------------
+
 -- Draw snake
+
 function draw_snake()
   for _,point in pairs(snake) do
     set_cell_color(point.x, point.y, "blue")
@@ -72,7 +81,10 @@ function draw_snake()
 end
 
 
+--------------------------------------------------------------------------------
+
 -- Access a cell in the matrix view
+
 function matrix_cell(x, y)
   if (matrix_cells[x] ~= nil) then
     return matrix_cells[x][y]
@@ -82,7 +94,10 @@ function matrix_cell(x, y)
 end
 
 
+--------------------------------------------------------------------------------
+
 -- Get the color of a cell
+
 function get_cell_color(x ,y)
   local cell = matrix_cell(x, y)
 
@@ -100,7 +115,10 @@ function get_cell_color(x ,y)
 end
 
 
+--------------------------------------------------------------------------------
+
 -- Set a cells color
+
 function set_cell_color(x, y, color)
   assert(matrix_colors:find(color), "invalid color")
 
@@ -111,13 +129,19 @@ function set_cell_color(x, y, color)
 end
 
 
+--------------------------------------------------------------------------------
+
 -- Clear a cell
+
 function clear_cell(x, y)
   set_cell_color(x, y, "black")
 end
 
 
+--------------------------------------------------------------------------------
+
 -- Keyboard input
+
 function key_handler(dialog, key)
 
   if (key.name == "esc") then
@@ -136,7 +160,10 @@ function key_handler(dialog, key)
 end
 
 
+--------------------------------------------------------------------------------
+
 -- Start running the game logic (frame timer)
+
 function run()
   if not (renoise.tool().app_idle_observable:has_notifier(game)) then
     renoise.tool().app_idle_observable:add_notifier(game)
@@ -144,7 +171,10 @@ function run()
 end
 
 
+--------------------------------------------------------------------------------
+
 -- Stop running the game (frame timer)
+
 function stop()
   if (renoise.tool().app_idle_observable:has_notifier(game)) then
     renoise.tool().app_idle_observable:remove_notifier(game)
@@ -152,7 +182,10 @@ function stop()
 end
 
 
+--------------------------------------------------------------------------------
+
 -- Game logic (frame timer)
+
 function game()
 
   -- Game was closed?
@@ -246,7 +279,10 @@ function game()
 end
 
 
+--------------------------------------------------------------------------------
+
 -- Initializes and shows the game
+
 function create_game()
 
   if (not current_dialog or not current_dialog.visible) then
@@ -261,11 +297,12 @@ function create_game()
 end
 
 
---[[----------------------------------------------------------------------------
-Menu Registration
-----------------------------------------------------------------------------]]--
+--------------------------------------------------------------------------------
+-- Menu Registration
+--------------------------------------------------------------------------------
 
 renoise.tool():add_menu_entry {
   name = "Main Menu:Tools:Nibbles...",
   invoke = create_game
 }
+
