@@ -413,7 +413,8 @@ function Effect:__attach_to_parameters(new_song)
   -- will no longer be alive then...
   if (not new_song) then
     for _,observable in pairs(self.__attached_observables) do
-      observable:remove_notifier(self)
+      -- temp security hack. can also happen when removing FX
+      pcall(function() observable:remove_notifier(self) end)
     end
   end
     
