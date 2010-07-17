@@ -274,9 +274,15 @@ Some notes about the notation used in !all xxxAPI.txt! files:
 -- MIDI Controller Scripting with Duplex
 --------------------------------------------------------------------------------
   
-TODO: Some overview, link to duplex related help
+If you want to add support for you MIDI controller in Duplex, or help extending
+the Duplex core functionality, have a look at the Duplex xrnx tool please. 
+In the xrnx bundle you'll find some information about the Duplex API and also 
+how to create new controller mappings.
 
-  
+The duplex bundle can also be viewed online in the XRNX repository at:
+http://code.google.com/p/xrnx/source/browse/trunk/Tools#Tools/com.renoise.Duplex.xrnx
+
+
 --------------------------------------------------------------------------------
 -- Debugging Renoise Scripts
 --------------------------------------------------------------------------------
