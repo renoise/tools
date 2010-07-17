@@ -8,7 +8,7 @@
   <Description>Adds keybindings to jump an arbitrary amount of lines in the Pattern Editor. When activated, two new key binding entries will show up in 'Pattern Editor', 'Navigation': 
 'Custom Jump Lines Up' and Custom Jump Lines Down. Those keybindings can then be configured with in the 'Tools' menu.</Description>
   <Category>Pattern Editor</Category>
-  <Homepage>http://scripts.renoise.com</Homepage>
+  <Homepage>http://tools.renoise.com</Homepage>
 </RenoiseScriptingTool>
 
 

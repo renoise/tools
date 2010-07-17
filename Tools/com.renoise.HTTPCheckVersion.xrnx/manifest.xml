@@ -7,5 +7,5 @@
   <Author>bantai [marvin@renoise.com]</Author>
   <Description>Asks the renoise.com server for version information by comparing the version of the running Renoise process with the official release information.</Description>
   <Category>Networking</Category>
-  <Homepage>http://scripts.renoise.com</Homepage>
+  <Homepage>http://tools.renoise.com</Homepage>
 </RenoiseScriptingTool>

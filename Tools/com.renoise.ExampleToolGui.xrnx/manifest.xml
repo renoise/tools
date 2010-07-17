@@ -8,6 +8,6 @@
   <Description>A XRNX tool which describes step by step how to create custom GUIs for your Renoise XRNX tools. Please have a look at the source files of this tool (manifest.xml and main.lua) for more info. Also creates a new menu 'Example Tool GUI' in the global 'Tools' menu.</Description>
   <Category>Tool Development</Category>
   <Icon>Bitmaps/RenoiseLua.png</Icon>
-  <Homepage>http://scripts.renoise.com</Homepage>
+  <Homepage>http://scripting.renoise.com</Homepage>
 </RenoiseScriptingTool>
 

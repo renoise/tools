@@ -60,7 +60,7 @@
   <Icon>icon.png</Icon>
   
   <!-- Optional http:// based URL of the tools homepage, if available... -->
-  <Homepage>http://scripts.renoise.com</Homepage>
+  <Homepage>http://scripting.renoise.com</Homepage>
 
    <!-- Supported platforms for the tool. When not specified, its assumed that the tool -->
    <!-- is platform independent, else one or more of "Windows, Mac, Linux" are expected -->

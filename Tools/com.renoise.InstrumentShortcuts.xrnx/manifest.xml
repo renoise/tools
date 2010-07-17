@@ -7,7 +7,7 @@
   <Author>Vincent Voois [ http://tinyurl.com/vvrns ]</Author>
   <Description>Adds a few extra shortcuts to the instrument and sample slots area. The new shortcuts are by default not mapped to anything, but can be mapped manually in Renoises Preferences/Keys/Instrument Box settings.</Description>
   <Category>Instrument Editor</Category>
-  <Homepage>http://scripts.renoise.com</Homepage>
+  <Homepage>http://tools.renoise.com</Homepage>
 </RenoiseScriptingTool>
 
 

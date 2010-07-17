@@ -7,6 +7,6 @@
   <Author>Fabio Napodano | It-Alien (it-alien@renoise.com)</Author>
   <Description>Divides a sample into a batch of new small samples of equal size. This can be useful to create drum kits from loops, or to split long waves into smaller ones that should be triggerd pattern by pattern. Adds a new context context menu entry 'Process/BeatSlicer...' into the Renoise Sample Editor.</Description>
   <Category>Sample Editor</Category>
-  <Homepage>http://scripts.renoise.com</Homepage>
+  <Homepage>http://tools.renoise.com</Homepage>
 </RenoiseScriptingTool>
 

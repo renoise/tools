@@ -7,6 +7,6 @@
   <Author>Fabio Napodano | It-Alien (it-alien@renoise.com)</Author>
   <Description>Splits the current pattern in two on the current row, taking automations in count.</Description>
   <Category>Pattern Editor</Category>
-  <Homepage>http://scripts.renoise.com</Homepage>
+  <Homepage>http://tools.renoise.com</Homepage>
 </RenoiseScriptingTool>
 
