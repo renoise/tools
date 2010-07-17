@@ -46,14 +46,14 @@
 					<Param value="CC#15" type="dial" name="CC# 15" maximum="127" minimum="0" />
 				</Group>
 				<Group name="Drumpads" orientation="horizontal">
-					<Param value="" name="" type="button" maximum="127" minimum="0"/>
-					<Param value="" name="" type="button" maximum="127" minimum="0"/>
-					<Param value="" name="" type="button" maximum="127" minimum="0"/>
-					<Param value="" name="" type="button" maximum="127" minimum="0"/>
-					<Param value="" name="" type="button" maximum="127" minimum="0"/>
-					<Param value="" name="" type="button" maximum="127" minimum="0"/>
-					<Param value="" name="" type="button" maximum="127" minimum="0"/>
-					<Param value="" name="" type="button" maximum="127" minimum="0"/>
+					<Param value="C-4" name="" type="button" maximum="127" minimum="0"/>
+					<Param value="C#4" name="" type="button" maximum="127" minimum="0"/>
+					<Param value="D-4" name="" type="button" maximum="127" minimum="0"/>
+					<Param value="D#4" name="" type="button" maximum="127" minimum="0"/>
+					<Param value="E-4" name="" type="button" maximum="127" minimum="0"/>
+					<Param value="F-4" name="" type="button" maximum="127" minimum="0"/>
+					<Param value="F#4" name="" type="button" maximum="127" minimum="0"/>
+					<Param value="G-4" name="" type="button" maximum="127" minimum="0"/>
 				</Group>
 			</Column>
 			<Column>
@@ -78,14 +78,14 @@
 					<Param value="CC#47" type="button" name="CC# 47" maximum="127" minimum="0" />
 				</Group>
 				<Group name="Controls" orientation="horizontal">
-					<Param value="" name="" type="button" maximum="127" minimum="0"/>
-					<Param value="" name="" type="button" maximum="127" minimum="0"/>
-					<Param value="" name="" type="button" maximum="127" minimum="0"/>
-					<Param value="" name="" type="button" maximum="127" minimum="0"/>
-					<Param value="" name="" type="button" maximum="127" minimum="0"/>
-					<Param value="" name="" type="button" maximum="127" minimum="0"/>
-					<Param value="" name="" type="button" maximum="127" minimum="0"/>
-					<Param value="" name="" type="button" maximum="127" minimum="0"/>
+					<Param value="CC#48" name="" type="button" maximum="127" minimum="0"/>
+					<Param value="CC#49" name="" type="button" maximum="127" minimum="0"/>
+					<Param value="CC#50" name="" type="button" maximum="127" minimum="0"/>
+					<Param value="CC#51" name="" type="button" maximum="127" minimum="0"/>
+					<Param value="CC#52" name="" type="button" maximum="127" minimum="0"/>
+					<Param value="CC#53" name="" type="button" maximum="127" minimum="0"/>
+					<Param value="CC#54" name="" type="button" maximum="127" minimum="0"/>
+					<Param value="CC#55" name="" type="button" maximum="127" minimum="0"/>
 				</Group>
 			</Column>
 		</Row>
