@@ -2,16 +2,11 @@
 -- Duplex.Globals
 ----------------------------------------------------------------------------]]--
 
--- use standard Lua API extensions from branches/future already now
-pcall(require, "future")
-
-
---------------------------------------------------------------------------------
--- Duplex consts
---------------------------------------------------------------------------------
+-- Consts
 
 MODULE_PATH = "./Duplex/"  
 NOTE_ARRAY = { "C-","C#","D-","D#","E-","F-","F#","G-","G#","A-","A#","B-" }
+
 
 -- Protocols
 
