@@ -2,7 +2,7 @@
 Console.txt
 ----------------------------------------------------------------------------]]--
 
-The built in Script Terminal and Editor in Renoise can be opened by clicking
+The built-in Script Terminal and Editor in Renoise can be opened by clicking
 on the "Scripting Terminal & Editor..." menu entry in the "Tools" menu.
 
 It allows you to:
@@ -16,7 +16,7 @@ It allows you to:
 
 --------------------------------------------------------------------------------
 
--- Command" below is the Control key on Windows and Linux, Command on OSX
+-- 'Command' below is the Control key on Windows and Linux, Command on OSX
 
 
 --------------------------------------------------------------------------------
@@ -42,7 +42,7 @@ It allows you to:
 
 'Command + S' Save current File (Tool Scripts will automatically reload)
 'Command + Shift + S' Save all open files
-'Command + R' Save _and Run the current Tabs File
+'Command + R' Save and Run the current Tabs File
 
 'Command + W'  Close current tab
 'Command + F4' Close current tab
@@ -64,7 +64,7 @@ It allows you to:
 'Command + L' Jump to Line
 
 'Command + F'  Open Find Dialog
-'Command + F3' Find Next under Cursor _or Selection
+'Command + F3' Find Next under Cursor or Selection
 'F3'           Find Next
 'Command + G'  Find Next
 'Command + E'  Set Find string from current selection
@@ -105,7 +105,7 @@ It allows you to:
   To list all available modules, try 'rprint(renoise)' or 'rprint(_G)'
 
 * Take a look at the example tools in the 'Resource Scripts' node on the
-  left for a detailed description of a tool scripts layout
+  left for a detailed description of a tool script's layout
 
 * If you just want to test out some code without writing a 'tool', create a new
   script file in the 'Scripts' folder and not in the 'Scripts/Tools' folder.

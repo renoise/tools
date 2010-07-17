@@ -2,8 +2,8 @@
 -- Lua Standard Library and Extensions
 ----------------------------------------------------------------------------]]--
 
-This is a reference of standard global Lua functions and tools that where
-added or changed by Renoise, in order to extend the functionality of Luas
+This is a reference of standard global Lua functions and tools that were
+added or changed by Renoise, in order to extend the functionality of Lua's
 standard library.
 
 All standard Lua libraries are included in Renoise as well. You can find a
