@@ -62,7 +62,8 @@ renoise.tool():add_keybinding {
 -- -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 -- main content
 -- -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-
+local vb_rename = 0
+local no_return = false
 
 function sample(choice)
   local song = renoise.song()
@@ -87,7 +88,11 @@ function sample(choice)
   end
 
   if choice == "rename" then
-    song.instruments[selected_instrument].samples[selected_sample].name =   name_dialog(song.instruments[selected_instrument].samples[selected_sample].name, selected_sample)
+    local ret_val = name_dialog(song.instruments[selected_instrument].samples[selected_sample].name, 
+                                selected_sample)
+    if ret_val ~= nil then
+      song.instruments[selected_instrument].samples[selected_sample].name = ret_val
+    end
   end
 
   if choice == "moveup" then
@@ -133,6 +138,8 @@ function name_dialog(old_name, sample)
   local CONTENT_MARGIN = renoise.ViewBuilder.DEFAULT_CONTROL_MARGIN
 
   local TEXT_ROW_WIDTH = 150
+  no_return = false
+  vb_rename = vb
 
   local name_input = vb:column{
     margin = DIALOG_MARGIN,
@@ -149,9 +156,30 @@ function name_dialog(old_name, sample)
       },
     }
   }
-  application:show_custom_prompt(title, name_input)
-  
-  return vb.views.sample_name.text
+  application:show_custom_prompt(title, name_input,{'rename'}, key_handler)
+  if not no_return then
+    return vb.views.sample_name.text
+  end
 end
 
+function key_handler(dialog, key)
+  -- close on escape...
+  if (key.modifiers == "" and key.name == "esc") then
+    no_return = true
+    dialog:close()
 
+  -- Let's send the text-line contents if present
+  elseif (key.name == "return") then
+    dialog:close()
+  -- update key_text to show what we got
+  elseif (key.name == "back") then
+--    no_loop = 1
+    vb_rename.views.sample_name.value = string.sub(vb_rename.views.sample_name.value,1,
+    string.len(vb_rename.views.sample_name.value)-1)
+  elseif (key.character) then
+--r    no_loop = 1
+    vb_rename.views.sample_name.value = vb_rename.views.sample_name.value .. 
+      key.character
+  end
+    
+end
