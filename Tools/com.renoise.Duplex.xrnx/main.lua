@@ -6,9 +6,9 @@ main.lua
 
 require "Duplex"
 
--- enable tests
+-- tests configurations (enable for debugging only)
+-- require "testing"
 
-require "testing"
 
 --------------------------------------------------------------------------------
 -- locals
@@ -197,7 +197,7 @@ renoise.tool().preferences = duplex_preferences
 --------------------------------------------------------------------------------
 
 _AUTO_RELOAD_DEBUG = function()
-  -- autoload device the configs from the prefs when changing duplex sources
+  -- autostart configs from the prefs when changing duplex sources
   apply_autostart_configurations()
 end
 

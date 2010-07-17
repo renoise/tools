@@ -1,10 +1,10 @@
 --[[============================================================================
- Test applications for the various UIComponents
+ testing.lua
 ============================================================================]]--
 
-require "Duplex/Applications/TestUISlider"
-require "Duplex/Applications/TestUISpinner"
-require "Duplex/Applications/TestUITriggerButton"
+
+-- test applications and configurations for UIComponents
+
 
 --------------------------------------------------------------------------------
 
@@ -67,7 +67,7 @@ duplex_configurations:insert {
 
   -- device properties
   device = {
-    class_name = "Ohm64",          
+    class_name = "Ohm64",
     display_name = "Ohm64",
     device_name = "Ohm64 MIDI 1",
     control_map = "Controllers/Ohm64/Ohm64.xml",
@@ -95,13 +95,13 @@ duplex_configurations:insert {
 
   -- device properties
   device = {
-    class_name = "Ohm64",          
+    class_name = "Ohm64",
     display_name = "Ohm64",
     device_name = "Ohm64 MIDI 1",
     control_map = "Controllers/Ohm64/Ohm64.xml",
     protocol = DEVICE_MIDI_PROTOCOL
   },
-  
+
   applications = {
     TestUISpinner = {
       mappings = {}
@@ -119,16 +119,16 @@ duplex_configurations:insert {
 
   -- device properties
   device = {
-    class_name = "Ohm64",          
+    class_name = "Ohm64",
     display_name = "Ohm64",
     device_name = "Ohm64 MIDI 1",
     control_map = "Controllers/Ohm64/Ohm64.xml",
     protocol = DEVICE_MIDI_PROTOCOL
   },
-  
+
   applications = {
     TestUISlider = {
-      mappings = {}    
+      mappings = {}
     }
   }
 }
