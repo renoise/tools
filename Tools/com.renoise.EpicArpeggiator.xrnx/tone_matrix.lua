@@ -1,22 +1,23 @@
--------------------------------------------------------------------------------
--- tone matrix initialisation
--------------------------------------------------------------------------------
+--[[============================================================================
+tone_matrix.lua
+============================================================================]]--
 
+--  initialization
 
 for i = 1, NUM_OCTAVES * NUM_NOTES do
    note_states[i] = false
 end
 
-
 function note_state(octave, note)
    return note_states[octave * NUM_NOTES + note]
 end
-
 
 function octave_state(octave)
    return octave_states[octave]
 end
 
+
+--------------------------------------------------------------------------------
 
 function set_note_state(octave, note, state)
    local octave_check = 0         
@@ -36,7 +37,10 @@ function set_note_state(octave, note, state)
 end
 
 
---Toggle one full octave row
+--------------------------------------------------------------------------------
+
+-- Toggle one full octave row
+
 function toggle_octave_row(vb, oct)
    oct = oct - 1
    local checkbox = nil
@@ -57,7 +61,10 @@ function toggle_octave_row(vb, oct)
 end
 
 
---Toggle one full note row
+--------------------------------------------------------------------------------
+
+-- Toggle one full note row
+
 function toggle_note_row(vb, note)
    local checkbox = nil
    local cb = vb.views
@@ -76,6 +83,8 @@ function toggle_note_row(vb, note)
    end
 end
 
+
+--------------------------------------------------------------------------------
 
 function set_all_row_state(vb, btext)
    local checkbox = nil
@@ -104,8 +113,13 @@ function set_all_row_state(vb, btext)
 end
 
 
+--------------------------------------------------------------------------------
+
+--[[ 
+  Look which notes are set in the tone-matrix in one octave 
+--]]
+
 function harvest_notes_in_octave(octave)
---[[ Look which notes are set in the tone-matrix in one octave --]]
    local note_hyve = {}
    local note_count = 1
    for note = 1, NUM_NOTES do
@@ -116,3 +130,4 @@ function harvest_notes_in_octave(octave)
    end
    return note_hyve
 end
+

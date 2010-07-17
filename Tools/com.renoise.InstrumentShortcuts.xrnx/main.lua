@@ -1,9 +1,7 @@
--- -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
--- tool registration
--- -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+--[[============================================================================
+main.lua
+============================================================================]]--
 
--- -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
---
 -- This is a very simple example of how to create a quick personal shortcut 
 -- table for various options. In this case the sample-slots are a target.
 -- No menu option as most menu options already exists.
@@ -15,8 +13,11 @@
 --
 -- Hints:
 -- Documentation\Renoise.ScriptingTool.API.txt & com.renoise.ExampleTool\main.lua
---
--- -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+
+
+--------------------------------------------------------------------------------
+-- tool registration
+--------------------------------------------------------------------------------
 
 renoise.tool():add_keybinding {
   name = "Instrument Box:Navigation:Select previous sample",
@@ -59,9 +60,10 @@ renoise.tool():add_keybinding {
 }
 
 
--- -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+--------------------------------------------------------------------------------
 -- main content
--- -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+--------------------------------------------------------------------------------
+
 local vb_rename = 0
 local no_return = false
 
@@ -88,10 +90,14 @@ function sample(choice)
   end
 
   if choice == "rename" then
-    local ret_val = name_dialog(song.instruments[selected_instrument].samples[selected_sample].name, 
-                                selected_sample)
+    
+    local sample = 
+      song.instruments[selected_instrument].samples[selected_sample]
+    
+    local ret_val = name_dialog(sample.name, selected_sample)
+
     if ret_val ~= nil then
-      song.instruments[selected_instrument].samples[selected_sample].name = ret_val
+      sample.name = ret_val
     end
   end
 
@@ -99,7 +105,9 @@ function sample(choice)
 
     if song.selected_sample_index > 2 then
       song.selected_sample_index = song.selected_sample_index - 1
-      song.instruments[selected_instrument]:swap_samples_at(selected_sample, selected_sample - 1)
+      
+      song.instruments[selected_instrument]:swap_samples_at(
+        selected_sample, selected_sample - 1)
     end 
 
   end
@@ -109,7 +117,9 @@ function sample(choice)
 
     if song.selected_sample_index < max_samples-1 then
       song.selected_sample_index = song.selected_sample_index +1
-      song.instruments[selected_instrument]:swap_samples_at(selected_sample, selected_sample +1)
+      
+      song.instruments[selected_instrument]:swap_samples_at(
+        selected_sample, selected_sample +1)
     end
 
   end
@@ -129,10 +139,15 @@ function sample(choice)
 end
 
 
+--------------------------------------------------------------------------------
+
 function name_dialog(old_name, sample)
+  
   local application = renoise.app()
   local vb = renoise.ViewBuilder()
+  
   local title = "Rename sample ".. string.format("0x%X",  math.floor(sample-1)) 
+  
   local DIALOG_MARGIN = renoise.ViewBuilder.DEFAULT_DIALOG_MARGIN
   local CONTENT_SPACING = renoise.ViewBuilder.DEFAULT_CONTROL_SPACING
   local CONTENT_MARGIN = renoise.ViewBuilder.DEFAULT_CONTROL_MARGIN
@@ -162,6 +177,9 @@ function name_dialog(old_name, sample)
   end
 end
 
+
+--------------------------------------------------------------------------------
+
 function key_handler(dialog, key)
   -- close on escape...
   if (key.modifiers == "" and key.name == "esc") then
@@ -171,13 +189,13 @@ function key_handler(dialog, key)
   -- Let's send the text-line contents if present
   elseif (key.name == "return") then
     dialog:close()
+
   -- update key_text to show what we got
   elseif (key.name == "back") then
---    no_loop = 1
     vb_rename.views.sample_name.value = string.sub(vb_rename.views.sample_name.value,1,
     string.len(vb_rename.views.sample_name.value)-1)
+
   elseif (key.character) then
---r    no_loop = 1
     vb_rename.views.sample_name.value = vb_rename.views.sample_name.value .. 
       key.character
   end

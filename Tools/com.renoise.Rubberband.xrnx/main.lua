@@ -1,16 +1,15 @@
---[[----------------------------------------------------------------------------
-
-  Script        : Rubberband.lua
-  Creation Date : 2010-05-05
-  Last modified : 2010-05-05
-  Version       : 0.2
-
-----------------------------------------------------------------------------]]--
-
+--[[============================================================================
+main.lua
+============================================================================]]--
 
 if os.platform() == 'MACINTOSH' then
     io.chmod(renoise.tool().bundle_path .. 'bin/osx/rubberband', 755);
 end
+
+
+--------------------------------------------------------------------------------
+-- tool registration
+--------------------------------------------------------------------------------
 
 renoise.tool():add_menu_entry {
   name = "Sample Editor:Process:Timestretch...",
@@ -23,6 +22,11 @@ renoise.tool():add_menu_entry {
   name = "Sample Editor:Process:Pitch Shift...",
   invoke = function() show_shift_dialog() end
 }
+
+
+--------------------------------------------------------------------------------
+-- processing
+--------------------------------------------------------------------------------
 
 function display_error()
   if os.platform() == 'LINUX' then
@@ -44,6 +48,9 @@ function display_error()
     , {'Ok'})
   end
 end
+
+
+--------------------------------------------------------------------------------
 
 function process_rubberband(cmd)
   local exe
@@ -75,9 +82,14 @@ function process_rubberband(cmd)
 end
 
 
+--------------------------------------------------------------------------------
+
 function process_stretch(stretch, crisp)
   process_rubberband("--time "..stretch.." --crisp "..crisp);
 end
+
+
+--------------------------------------------------------------------------------
 
 function process_shift(shift, crisp, preserve_formant)
   local cmd = "--pitch "..shift.." --crisp "..crisp;
@@ -86,6 +98,11 @@ function process_shift(shift, crisp, preserve_formant)
   end
   process_rubberband(cmd);
 end
+
+
+--------------------------------------------------------------------------------
+-- GUI
+--------------------------------------------------------------------------------
 
 function show_shift_dialog()
 
@@ -135,6 +152,9 @@ function show_shift_dialog()
     process_shift(semitone_selector.value + (cent_selector.value / 100), crisp_selector.value, formant_selector.value)
   end;
 end
+
+
+--------------------------------------------------------------------------------
 
 function show_stretch_dialog()
   local bpm = renoise.song().transport.bpm

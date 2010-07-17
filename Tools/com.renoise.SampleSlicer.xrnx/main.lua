@@ -1,11 +1,8 @@
---[[----------------------------------------------------------------------------
+--[[============================================================================
+main.lua
+============================================================================]]--
 
-  Script        : It-Alien_Beatslicer.lua
-  Creation Date : 10/19/2009
-  Last modified : 11/19/2009
-  Version       : 0.6
-
-----------------------------------------------------------------------------]]--
+-- locals
 
 local SLICING_MODE_SLICES = 1
 local SLICING_MODE_SLICES_SECS = 2
@@ -24,7 +21,9 @@ local bDoLoop = false
 local nLoopMode = LOOP_MODE_FORWARD
 
 
---[[ menu registration ]]
+--------------------------------------------------------------------------------
+-- tool registration
+--------------------------------------------------------------------------------
 
 renoise.tool():add_menu_entry {
   name = "Sample Editor:Process:Beatslicer...",
@@ -34,7 +33,9 @@ renoise.tool():add_menu_entry {
 }
 
 
---[[ show_dialog ]]
+--------------------------------------------------------------------------------
+-- GUI
+--------------------------------------------------------------------------------
 
 function show_dialog()
 
@@ -81,7 +82,8 @@ function show_dialog()
   local row2 = vb:row {
     vb:checkbox {
       value = bDoMapping,
-      tooltip = 'Automatically create an instrument map for the newly created samples. *WARNING*: blindly overwrites the current one!',
+      tooltip = "Automatically create an instrument map for the newly " ..
+        "created samples. *WARNING*: blindly overwrites the current one!",
       notifier = function(value)
         bDoMapping = value
       end,
@@ -153,19 +155,21 @@ function show_dialog()
       row3,
       row4,
       vb:space { }
-	},
-	{'Slice!','Cancel'}
+    },
+    {'Slice!','Cancel'}
   )
   
-	if dialog == 'Slice!' then
-		slice_it()
-	end
+  if dialog == 'Slice!' then
+    slice_it()
+  end
 
   
 end
 
 
---[[ slice_it ]]
+--------------------------------------------------------------------------------
+-- processing
+--------------------------------------------------------------------------------
 
 function slice_it()
 
@@ -233,7 +237,9 @@ function slice_it()
     nSamples = nSamples + 1
     local smpBuffNew = smpNew.sample_buffer
     
-    if(smpBuffNew:create_sample_data(smpBuffSel.sample_rate, smpBuffSel.bit_depth, smpBuffSel.number_of_channels, nSliceSize)) then
+    if (smpBuffNew:create_sample_data(smpBuffSel.sample_rate, 
+          smpBuffSel.bit_depth, smpBuffSel.number_of_channels, nSliceSize)) 
+    then
     
       local nChan, nFrameNew
       for nFrameNew = 1, smpBuffNew.number_of_frames do
@@ -273,6 +279,7 @@ function slice_it()
       return
     end
   end
+  
   insSel.delete_sample_at(insSel,nSmpSel)
   
   if(bDoMapping)then

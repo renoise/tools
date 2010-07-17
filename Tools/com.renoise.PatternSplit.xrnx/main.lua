@@ -1,6 +1,8 @@
--- -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+--[[============================================================================
+main.lua
+============================================================================]]--
+
 -- tool registration
--- -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
 renoise.tool():add_menu_entry {
   name = "Pattern Editor:Pattern:Split...",
@@ -15,12 +17,9 @@ renoise.tool():add_keybinding {
 }
 
 
-
--- -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
--- main content
--- -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-
--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+-- processing
+--------------------------------------------------------------------------------
 
 function split()
 
@@ -56,7 +55,7 @@ function split()
     for num_auto = 1, table.getn(new_pattern.tracks[num_track].automation) do
 
       local points = new_pattern.tracks[num_track].automation[num_auto].points
-		
+    
       -- let's see if the line on which we are cutting already has a point
       -- in the curve; in such case, we are lucky and don't need to compute
       -- the intermediate point..
@@ -69,7 +68,7 @@ function split()
         local next_point = table.getn(points)
 
         for point = 1, table.getn(points) do
-				
+        
           if 
             points[point].time < current_line and 
             previous_point < points[point].time 
@@ -77,17 +76,17 @@ function split()
             -- get the highest line which is less than current_line
             previous_point = point
           end 
-			
+      
           if 
             points[point].time > current_line and 
             next_point > points[point].time 
           then
             -- get the lowest line which is greater than current_line
-            next_point = point				
+            next_point = point        
           end
-		
+    
         end
-			
+      
         -- now create the transition point
         local transition_time = current_line
         local transition_value
@@ -101,7 +100,7 @@ function split()
             (current_line - points[previous_point].time) /  
             (points[next_point].time - points[previous_point].time)
         end
-				
+        
         new_pattern.tracks[num_track].automation[num_auto]:add_point_at(current_line+1,transition_value)
         current_pattern.tracks[num_track].automation[num_auto]:add_point_at(current_line,transition_value)
 
@@ -118,30 +117,30 @@ function split()
 
       -- delete any point which is before the current_line
       for point = 1, table.getn(points) do
-			
+      
         if points[point].time < current_line + 1 then
           new_pattern.tracks[num_track].automation[num_auto]:remove_point_at(points[point].time)
           point = point - 1
         end
-		
+    
       end
-		
-      -- refresh copy after deletion	
+    
+      -- refresh copy after deletion  
       points = new_pattern.tracks[num_track].automation[num_auto].points
-		
+    
       -- shift back all the points after the current_line
       for point = 1, table.getn(points) do
 
         local auto_time = points[point].time - current_line
         local auto_value = points[point].value
 
-        new_pattern.tracks[num_track].automation[num_auto]:remove_point_at(points[point].time)			
+        new_pattern.tracks[num_track].automation[num_auto]:remove_point_at(points[point].time)      
         new_pattern.tracks[num_track].automation[num_auto]:add_point_at(auto_time,auto_value)
         
       end
-	
+  
     end
-	
+  
   end
   
   --iterate through tracks of the new pattern to shift lines up
@@ -158,3 +157,4 @@ function split()
   new_pattern.number_of_lines = new_pattern.number_of_lines - current_line;
  
 end
+

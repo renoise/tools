@@ -1,6 +1,6 @@
---[[----------------------------------------------------------------------------
+--[[============================================================================
 com.renoise.ExampleTool.xrnx/main.lua
-----------------------------------------------------------------------------]]--
+============================================================================]]--
 
 -- XRNX Bundle Layout:
 
@@ -21,6 +21,7 @@ com.renoise.ExampleTool.xrnx/main.lua
  
 --------------------------------------------------------------------------------
 -- preferences
+--------------------------------------------------------------------------------
 
 -- tools can have preferences, just like Renoise. To use them we first need 
 -- to create a renoise.Document object which holds the options that we want to 
@@ -43,6 +44,7 @@ renoise.tool().preferences = options
   
 --------------------------------------------------------------------------------
 -- menu entries
+--------------------------------------------------------------------------------
 
 -- you can add new menu entries into any existing context menues or the global 
 -- menu in Renoise. to do so, we are using the tool's add_menu_entry function.
@@ -96,6 +98,7 @@ renoise.tool():add_menu_entry {
 
 --------------------------------------------------------------------------------
 -- key bindings
+--------------------------------------------------------------------------------
 
 -- you can also define keybindings for your script, which will be activated and 
 -- mapped by the user just as any other key binding in Renoise.
@@ -115,6 +118,7 @@ renoise.tool():add_keybinding {
 
 --------------------------------------------------------------------------------
 -- notifications
+--------------------------------------------------------------------------------
 
 -- You can attach and detach from a set of script related notifications at any 
 -- time. Please see renoise.Document.API.txt -> Observable for more info
@@ -150,6 +154,7 @@ end)
 
 --------------------------------------------------------------------------------
 -- debug hook
+--------------------------------------------------------------------------------
 
 -- This hook helps you testing & debugging your script while editing
 -- it with an external editor or with Renoises built in script editor:
@@ -179,9 +184,9 @@ end
 -- or _AUTO_RELOAD_DEBUG = true
 
 
--------------------------------------------------------------------------------
-
+--------------------------------------------------------------------------------
 -- global variables
+--------------------------------------------------------------------------------
 
 -- if you want to do something, each time the script gets loaded, then
 -- simply do it here, in the global namespace when your tool gets loaded. 
@@ -199,7 +204,9 @@ if (options.show_debug_prints.value) then
 end
 
 
--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+-- functions
+--------------------------------------------------------------------------------
 
 -- show_dialog
 
@@ -211,6 +218,8 @@ function show_dialog()
   )
 end
 
+
+--------------------------------------------------------------------------------
 
 -- show_status_message
 
@@ -225,6 +234,8 @@ function show_status_message()
   )
 end
 
+
+--------------------------------------------------------------------------------
 
 -- insert_another_menu_entry
 
@@ -249,12 +260,16 @@ function insert_another_menu_entry()
 end
 
   
+--------------------------------------------------------------------------------
+
 -- can_remove_menu_entry
 
 function can_remove_menu_entry() 
   return (num_added_entries > 0)
 end
 
+
+--------------------------------------------------------------------------------
 
 -- remove_menu_entry
 
@@ -269,6 +284,8 @@ function remove_menu_entry()
 end
 
 
+--------------------------------------------------------------------------------
+
 -- show_key_binding_dialog
 
 function show_key_binding_dialog()
@@ -281,7 +298,7 @@ function show_key_binding_dialog()
 end  
 
 
--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
 
 -- implementation if the nofification callbacks, as attached above...
 
@@ -334,6 +351,3 @@ function handle_auto_reload_debug_notification()
   end
 end
 
-
---[[----------------------------------------------------------------------------
-----------------------------------------------------------------------------]]--

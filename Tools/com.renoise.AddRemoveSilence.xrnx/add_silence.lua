@@ -1,6 +1,8 @@
---[[----------------------------------------------------------------------------
+--[[============================================================================
 add_silence.lua
-----------------------------------------------------------------------------]]--
+============================================================================]]--
+
+-- locals
 
 local WHERE_START = 1
 local WHERE_END = 2
@@ -9,7 +11,7 @@ local int_where = WHERE_END
 local real_time = 1.0
 
 
---[[ Locals ]]
+--------------------------------------------------------------------------------
 
 local function process_data()
 
@@ -40,7 +42,10 @@ local function process_data()
     int_frames_new_sample = int_frames + int_frames_silence
   end    
 
-  if int_frames_new_sample > 0 and not buffer_new:create_sample_data(int_rate, int_depth, int_chans, int_frames_new_sample) then
+  if int_frames_new_sample > 0 and 
+     not buffer_new:create_sample_data(int_rate, 
+       int_depth, int_chans, int_frames_new_sample) 
+  then
     renoise.app():show_error("Error during sample creation!")
     renoise.song():undo()
     return
@@ -62,7 +67,8 @@ local function process_data()
   for int_frame = 1, int_frames do
     --copy original sample data
     for int_chan = 1, int_chans do
-      buffer_new:set_sample_data(int_chan,int_frame_new,buffer:sample_data(int_chan,int_frame))
+      buffer_new:set_sample_data(int_chan, int_frame_new, 
+        buffer:sample_data(int_chan,int_frame))
     end
     int_frame_new = int_frame_new + 1
   end  
@@ -107,15 +113,22 @@ local function process_data()
 end
 
 
---[[ GLOBALS ]]
+--------------------------------------------------------------------------------
+-- globals
+--------------------------------------------------------------------------------
 
 function show_add_silence_dialog() 
 
   local vb = renoise.ViewBuilder()
 
-  local DEFAULT_DIALOG_MARGIN = renoise.ViewBuilder.DEFAULT_DIALOG_MARGIN
-  local DEFAULT_DIALOG_SPACING = renoise.ViewBuilder.DEFAULT_DIALOG_SPACING
-  local DEFAULT_DIALOG_BUTTON_HEIGHT = renoise.ViewBuilder.DEFAULT_DIALOG_BUTTON_HEIGHT
+  local DEFAULT_DIALOG_MARGIN = 
+    renoise.ViewBuilder.DEFAULT_DIALOG_MARGIN
+  
+  local DEFAULT_DIALOG_SPACING = 
+    renoise.ViewBuilder.DEFAULT_DIALOG_SPACING
+  
+  local DEFAULT_DIALOG_BUTTON_HEIGHT = 
+    renoise.ViewBuilder.DEFAULT_DIALOG_BUTTON_HEIGHT
     
   local row_where = vb:row {
     vb:text {
@@ -124,7 +137,8 @@ function show_add_silence_dialog()
     vb:chooser {
       id = "rdWhere",
       items = {"start","end", "both"},
-      tooltip = [["Start = adds silence to start of sample End = adds silence to end of sample"]],
+      tooltip = "Start = adds silence to start of sample " .. 
+        "End = adds silence to end of sample",
       value = int_where,
       notifier = function(new_index)
         int_where = new_index
@@ -168,3 +182,4 @@ function show_add_silence_dialog()
     process_data()
   end
 end
+

@@ -1,6 +1,8 @@
---[[----------------------------------------------------------------------------
+--[[============================================================================
 remove_silence.lua
-----------------------------------------------------------------------------]]--
+============================================================================]]--
+
+-- locals
 
 local MODE_ERASE = 1
 local MODE_SILENCE = 2
@@ -20,7 +22,7 @@ local int_chans = nil
 local int_mode = MODE_SILENCE
 
 
---[[ Locals ]]
+--------------------------------------------------------------------------------
 
 local function is_under_threshold(int_frame)
   if (buffer == nil) then 
@@ -41,6 +43,8 @@ local function is_under_threshold(int_frame)
 end
 
 
+--------------------------------------------------------------------------------
+
 local function process_data()
 
   if (real_time == nil) then
@@ -52,9 +56,11 @@ local function process_data()
   local instrument = renoise.song().selected_instrument
   local splitmap = instrument.split_map
   local int_sample = renoise.song().selected_sample_index
+  
   buffer = sample.sample_buffer
   int_frames = buffer.number_of_frames
   int_chans = buffer.number_of_channels
+  
   local int_rate = buffer.sample_rate
   local int_depth = buffer.bit_depth
   
@@ -69,16 +75,24 @@ local function process_data()
   local array_int_silence_end = {}
   local int_detections = 0
   
-  --these will be useful when sample selection will be available in LUA API
+  -- these will be useful when sample selection will be available in LUA API
   local int_range_start = 1
   local int_range_end = int_frames
   
   for int_frame = int_range_start, int_range_end do
   
-    if (int_frame > int_range_end + int_read_ahead) then break end -- we can already stop here
+    if (int_frame > int_range_end + int_read_ahead) then 
+      -- we can already stop here
+      break 
+    end 
 
     if (int_mode == MODE_TRIMLEFT) then
-      if int_detections > 0 or int_silence_start > int_range_start then break end -- we already finished trimming to the left
+      if int_detections > 0 or 
+         int_silence_start > int_range_start 
+      then 
+        -- we already finished trimming to the left
+        break 
+      end 
     end
 
     local bool_is_under_threshold = is_under_threshold(int_frame)
@@ -101,11 +115,19 @@ local function process_data()
         int_silence_end = int_frame
 
         if (int_mode == MODE_TRIMRIGHT) then
-          if int_silence_end < int_range_end then int_silence_end = 0 end -- it is not a right trim
+          if int_silence_end < int_range_end then 
+            -- it is not a right trim
+            int_silence_end = 0 
+          end 
         end
 
         if (int_mode == MODE_TRIMBOTH) then
-          if int_silence_end ~= int_range_end and int_silence_start ~= int_range_start then int_silence_end = 0 end -- it is not a trim
+          if int_silence_end ~= int_range_end and 
+             int_silence_start ~= int_range_start 
+          then
+            -- it is not a trim 
+            int_silence_end = 0 
+          end 
         end
         
         if (int_silence_end - int_silence_start > int_read_ahead) then
@@ -144,14 +166,14 @@ local function process_data()
   
   local int_new_sample_length = 0
   
-  if(int_mode == MODE_SILENCE) then
-  
-    int_new_sample_length = int_frames -- no difference between new and old samples length
+  if (int_mode == MODE_SILENCE) then
+
+    -- no difference between new and old samples length
+    int_new_sample_length = int_frames 
   
   else
 
-    --we have to determine the size of the new sample before creating it
-
+    -- we have to determine the size of the new sample before creating it
     int_new_sample_length = int_frames -- set the initial length value
     
     for int_detection = 1, int_detections do
@@ -160,7 +182,8 @@ local function process_data()
       int_silence_end = array_int_silence_end[int_detection]
     
       --subtract the size of the removed data
-      int_new_sample_length = int_new_sample_length - (int_silence_end - int_silence_start)
+      int_new_sample_length = int_new_sample_length - 
+        (int_silence_end - int_silence_start)
       
     end
   
@@ -170,7 +193,10 @@ local function process_data()
   local buffer_new = sample_new.sample_buffer
 
   --create the new sample which will substitute the old one
-  if int_new_sample_length > 0 and not buffer_new:create_sample_data(int_rate, int_depth, int_chans, int_new_sample_length) then
+  if int_new_sample_length > 0 and 
+    not buffer_new:create_sample_data(int_rate, 
+      int_depth, int_chans, int_new_sample_length) 
+  then
     renoise.app():show_error("Error during sample creation!")
     renoise.song():undo()
     return
@@ -190,7 +216,8 @@ local function process_data()
       int_frame_new = int_frame_new + 1
 
       for int_chan = 1, int_chans do
-        buffer_new:set_sample_data(int_chan,int_frame_new,buffer:sample_data(int_chan,int_frame))
+        buffer_new:set_sample_data(int_chan,int_frame_new,
+          buffer:sample_data(int_chan,int_frame))
       end
       
       int_frame = int_frame + 1
@@ -221,7 +248,8 @@ local function process_data()
     int_frame_new = int_frame_new + 1
     
     for int_chan = 1, int_chans do
-      buffer_new:set_sample_data(int_chan,int_frame_new,buffer:sample_data(int_chan,int_frame))
+      buffer_new:set_sample_data(int_chan,int_frame_new,
+        buffer:sample_data(int_chan,int_frame))
     end
     
     int_frame = int_frame + 1      
@@ -243,8 +271,14 @@ local function process_data()
     sample_new.interpolation_mode = sample.interpolation_mode
     sample_new.new_note_action = sample.new_note_action
     sample_new.loop_mode = sample.loop_mode
-    if sample.loop_start < sample_new.sample_buffer.number_of_frames then sample_new.loop_start = sample.loop_start end
-    if sample.loop_end < sample_new.sample_buffer.number_of_frames then sample_new.loop_end = sample.loop_end end
+    
+    if sample.loop_start < sample_new.sample_buffer.number_of_frames then 
+      sample_new.loop_start = sample.loop_start 
+    end
+    
+    if sample.loop_end < sample_new.sample_buffer.number_of_frames then 
+      sample_new.loop_end = sample.loop_end 
+    end
 
     instrument:delete_sample_at(int_sample)
     
@@ -254,15 +288,22 @@ local function process_data()
 end
 
 
---[[ GLOBALS ]]
+--------------------------------------------------------------------------------
+-- globals
+--------------------------------------------------------------------------------
 
 function show_remove_silence_dialog() 
 
   local vb = renoise.ViewBuilder()
 
-  local DEFAULT_DIALOG_MARGIN = renoise.ViewBuilder.DEFAULT_DIALOG_MARGIN
-  local DEFAULT_DIALOG_SPACING = renoise.ViewBuilder.DEFAULT_DIALOG_SPACING
-  local DEFAULT_DIALOG_BUTTON_HEIGHT = renoise.ViewBuilder.DEFAULT_DIALOG_BUTTON_HEIGHT
+  local DEFAULT_DIALOG_MARGIN = 
+    renoise.ViewBuilder.DEFAULT_DIALOG_MARGIN
+
+  local DEFAULT_DIALOG_SPACING = 
+    renoise.ViewBuilder.DEFAULT_DIALOG_SPACING
+
+  local DEFAULT_DIALOG_BUTTON_HEIGHT = 
+    renoise.ViewBuilder.DEFAULT_DIALOG_BUTTON_HEIGHT
 
   local text_lbl_treshold = vb:text {
     text = "Treshold: "
