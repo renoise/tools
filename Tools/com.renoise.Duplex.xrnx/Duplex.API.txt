@@ -2,6 +2,8 @@
 -- Duplex API Reference
 ----------------------------------------------------------------------------]]--
 
+Version 0.8
+
 This is the API reference for Duplex, the bi-directional MIDI/OSC framework for 
 Renoise. If you don't know what Duplex is/does, then you might want to check out 
 some of the introduction videos first, or simply install Duplex and try out some 
@@ -148,7 +150,6 @@ However, there's only a limited number of different events that you can detect:
 
 DEVICE_EVENT_VALUE_CHANGED 
 DEVICE_EVENT_BUTTON_PRESSED
-DEVICE_EVENT_BUTTON_RELEASED
 DEVICE_EVENT_BUTTON_HELD
 
 The "value_changed" event is reserved for dials and faders with continuous 
@@ -424,7 +425,7 @@ Application:__apply_options
 ------------------------------------------------------------
 
 The procedure for installing an application is much the same
-as configuring an application. Basically
+as configuring an application. 
 
 1.  Save the application.lua file to the /Applications folder.
     This folder is scanned on startup, and you can now attach it to devices,
