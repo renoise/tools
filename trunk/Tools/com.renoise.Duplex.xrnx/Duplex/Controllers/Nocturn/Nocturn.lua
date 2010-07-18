@@ -42,7 +42,7 @@ duplex_configurations:insert {
 
 --------------------------------------------------------------------------------
 
--- setup an Effect as the only app for this configuration
+-- setup Effect as the only app for this configuration
 
 duplex_configurations:insert {
 
@@ -71,6 +71,65 @@ duplex_configurations:insert {
         device = {
           group_name = "Pots",
         },
+      },
+      options = {
+        
+      }
+    }
+  }
+}
+
+--------------------------------------------------------------------------------
+
+-- setup Transport as the only app for this configuration
+
+duplex_configurations:insert {
+
+  -- configuration properties
+  name = "Transport",
+  pinned = true,
+
+  -- device properties
+  device = {
+    class_name = nil,          
+    display_name = "Nocturn Automap",
+    device_name = "Automap MIDI",
+    control_map = "Controllers/Nocturn/Nocturn.xml",
+    protocol = DEVICE_MIDI_PROTOCOL
+  },
+  
+  applications = {
+    Transport = {
+      mappings = {
+        goto_previous = {
+          group_name = "Controls",
+          index = 1,
+        },
+        goto_next = {
+          group_name = "Controls",
+          index = 2,
+        },
+        stop_playback = {
+          group_name = "Pots",
+          index = 3,
+        },
+        start_playback = {
+          group_name = "Pots",
+          index = 4,
+        },
+        loop_pattern = {
+          group_name = "Pots",
+          index = 5,
+        },
+        edit_mode = {
+          group_name = "Pots",
+          index = 6,
+        },
+        block_loop = {
+          group_name = "Controls",
+          index = 7,
+        },
+
       },
       options = {
         

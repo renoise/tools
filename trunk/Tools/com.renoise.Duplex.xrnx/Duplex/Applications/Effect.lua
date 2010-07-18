@@ -47,6 +47,8 @@ function Effect:__init(display, mappings, options)
   self.MIXER_PARAMETERS = "Mixer Parameters only"
 
   self.options = {
+  --[[
+    -- TODO
     include_parameters = {
       label = "Parameters",
       description = "Select which parameter set you want to control.",
@@ -57,6 +59,7 @@ function Effect:__init(display, mappings, options)
       },
       default = 1,
     },
+    ]]
   }
 
   -- apply control-maps groups 

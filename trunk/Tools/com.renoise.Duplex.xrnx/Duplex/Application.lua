@@ -205,12 +205,18 @@ function Application:__apply_options(options)
   TRACE("Application:__apply_options",options)
 
   for v,k in pairs(self.options) do
+    local matched = false
     for v2,k2 in pairs(options) do
       if (v==v2) then
         if(#self.options[v].items>=options[v])then
           self.options[v].value = options[v]
+          matched = true
         end
       end
+    end
+    if (not matched) then
+      -- apply default value
+      self.options[v].value = self.options[v].default
     end
   end
 

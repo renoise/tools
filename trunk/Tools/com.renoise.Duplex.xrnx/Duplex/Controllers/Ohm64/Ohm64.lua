@@ -66,19 +66,13 @@ duplex_configurations:insert {
         matrix = {
           group_name = "Grid",
         },
-        sequence = {
-          group_name = "CrossFader",
-          index = 1,
-        },
         triggers = {
           group_name = "Grid",
         },
-        --[[
         sequence = {
           group_name = "ControlsRight",
           index = 0,
         },
-        ]]
         track = {
           group_name = "ControlsRight",
           index = 2,
@@ -92,11 +86,25 @@ duplex_configurations:insert {
         },
         page = {
           group_name = "ControlsRight",
-          index = 0,
+          index = 4,
 
         }
       }
-    }
+    },
+    Transport = {
+      mappings = {
+        goto_previous = {
+          group_name = "CrossFader",
+          index = 1,
+        },
+        goto_next = {
+          group_name = "CrossFader",
+          index = 3,
+        },
+
+      }
+    },
+
   }
 }
 

@@ -57,6 +57,9 @@ duplex_configurations:insert {
           group_name = "PageControls",
           index = 0
         }
+      },
+      options = {
+        pre_post = 2
       }
     },
     Effect = {
