@@ -80,9 +80,6 @@ function UISlider:__init(display)
   -- current value (sliders/encoders offer more precision)
   self.value = 0
 
-  -- the maximum value (between 0 and "ceiling")
-  --self.ceiling = 1
-
   -- slider is vertical or horizontal?
   self.orientation = VERTICAL 
 

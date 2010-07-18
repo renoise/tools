@@ -177,6 +177,9 @@ duplex_configurations:insert {
         master = {
           group_name = "Triggers",
         }
+      },
+      options = {
+        invert_mute = 1
       }
     }
   }
@@ -190,7 +193,7 @@ duplex_configurations:insert {
 duplex_configurations:insert {
 
   -- configuration properties
-  name = "Matrix",
+  name = "Matrix + Transport",
   pinned = true,
   
   -- device properties
@@ -221,10 +224,30 @@ duplex_configurations:insert {
         }
       },
       options = {
-        --play_mode = 4,
         --switch_mode = 4,
       }
-    }
+    },
+    Transport = {
+      mappings = {
+        stop_playback = {
+          group_name= "Controls",
+          index = 5,
+        },
+        start_playback = {
+          group_name = "Controls",
+          index = 6,
+        },
+        loop_pattern = {
+          group_name = "Controls",
+          index = 7,
+        },
+        edit_mode = {
+          group_name = "Controls",
+          index = 8,
+        },
+      }
+    },
+
   }
 }
 
@@ -236,7 +259,7 @@ duplex_configurations:insert {
 duplex_configurations:insert {
 
   -- configuration properties
-  name = "Matrix & Mixer",
+  name = "Matrix + Mixer + Transport",
   pinned = true,
   
   -- device properties
@@ -255,7 +278,7 @@ duplex_configurations:insert {
           group_name = "Grid",
         },
         triggers = {
-          group_name = "Grid",
+          group_name = "Triggers",
         },
         sequence = {
           group_name = "Controls",
@@ -276,10 +299,34 @@ duplex_configurations:insert {
           group_name = "Grid2",
         },
         master = {
-          group_name = "Grid2",
+          group_name = "Triggers2",
         }
+      },
+      options = {
+        invert_mute = 1
       }
-    }
+    },
+    Transport = {
+      mappings = {
+        stop_playback = {
+          group_name= "Controls",
+          index = 5,
+        },
+        start_playback = {
+          group_name = "Controls",
+          index = 6,
+        },
+        loop_pattern = {
+          group_name = "Controls",
+          index = 7,
+        },
+        edit_mode = {
+          group_name = "Controls",
+          index = 8,
+        },
+      }
+    },
+
   }
 }
 

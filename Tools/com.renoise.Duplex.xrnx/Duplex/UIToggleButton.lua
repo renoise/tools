@@ -141,15 +141,18 @@ end
 
 -- set button state
 
-function UIToggleButton:set(value)
+function UIToggleButton:set(value,skip_event_handler)
 --TRACE("UIToggleButton:set", value)
   
   if (self._cached_active ~= value) then
 
     self._cached_active = value
     self.active = value
-  
-    self:__invoke_handler()
+    if(skip_event_handler)then
+      self:invalidate()
+    else
+      self:__invoke_handler()
+    end
   end
 end
 

@@ -1,0 +1,463 @@
+--[[----------------------------------------------------------------------------
+-- Duplex API Reference
+----------------------------------------------------------------------------]]--
+
+This is the API reference for Duplex, the bi-directional MIDI/OSC framework for 
+Renoise. If you don't know what Duplex is/does, then you might want to check out 
+some of the introduction videos first, or simply install Duplex and try out some 
+of the accompanying applications. 
+
+As Duplex is written entirely in the Renoise API, anyone can extend and modify 
+it as they please. For general information about scripting in Renoise, please 
+check the Renoise API docs. 
+
+
+--------------------------------------------------------------------------------
+-- duplex.ControlMap
+--------------------------------------------------------------------------------
+
+Essentially, the ControlMap class will import a control-map file, and add some
+extra methods, more handy methods for accessing the groups. 
+
+-- consts
+
+MIDI_CC_MESSAGE
+MIDI_NOTE_MESSAGE
+MIDI_PITCH_BEND
+OSC_MESSAGE
+
+-- properties
+
+-- associative array of groups by name
+ControlMap.groups
+
+-- methods
+
+-- load_definition: load and parse xml
+-- (will show an error message if provided with a bad path)
+ControlMap.load_definition(file_path)
+
+-- retrieve <param> by position within group
+ControlMap.get_indexed_element(index,group_name)
+
+-- retrieve a parameter by it's value (note/cc-value/etc)
+ControlMap.get_param_by_value(string)
+
+-- determine the type of message (note/cc-value/etc) 
+ControlMap.determine_type(string)
+
+--------------------------------------------------------------------------------
+-- duplex.Display
+--------------------------------------------------------------------------------
+
+The Display manages UIComponents, as it will both send and recieve their 
+messages, and take care of their visual updates on the idle time update. 
+The Display will also build the control surface, an interactive representation 
+of the device complete with native sliders, knobs etc. 
+
+-- constructor
+
+Display(device) -- creates a new Display instance
+
+-- properties
+
+Display().device
+  -> [duplex.Device]
+ 
+Display().palette -- see notes on palette/colors
+  -> [table]
+
+-- functions
+
+-- add a UIComponent instance to the display
+Display:add(obj_instance)
+
+-- makes UIComponents update themselves when needed,
+-- called repeatedly with an on_idle notifier
+Display:update()
+
+-- build the virtual device representation 
+Display:build_control_surface()
+  -> [ViewBuilder view]
+
+-- show/hide the virtual device
+Display:show_control_surface()
+Display:hide_control_surface()
+
+
+--------------------------------------------------------------------------------
+-- duplex.UIComponent
+--------------------------------------------------------------------------------
+
+The UIComponent is the basic building block from which you model the user 
+interface, and how it interacts with you. You will need to extend the 
+UIComponent class, as it doesn't come with any type of pre-defined events.
+
+If you are looking for examples on how to create/handle events with 
+UIComponents, see either the UISlider or the UIToggleButton class (both 
+extensions of this class).
+
+-- constructor
+
+UIComponent(display) -- creates a new UIComponent instance
+
+-- properties
+
+-- you need to specify the active control-map group for the UIComponent
+UIComponent.group_name
+  -> [string]
+
+-- functions
+
+-- specifies width and height values within the control-map group
+UIComponent.set_size(width,height)
+
+-- let the component update it's visual appearance (the canvas)
+UIComponent.draw()
+
+-- make the component request draw() on next Display update
+UIComponent.invalidate()
+
+-- hit-testing, will limit incoming messages to those that originates from 
+-- "underneath" the UIComponent. Simply skip this check to make the UIComponent 
+-- detect all incoming signals in it's group
+UIComponent.test()
+  -> [boolean]
+
+-- return the most recent message - useful for event handlers 
+UIComponent.get_msg
+  -> [Message]
+
+-- add_listeners: attach relevant listeners to the device message-stream 
+-- remove_listeners: called when the UIComponent is shut down/removed
+UIComponent.add_listeners()
+UIComponent.remove_listeners()
+
+-- provide a palette for the UIComponent (only matching keys are applied)
+-- if the palette is different, the UIComponent is invalidated
+UIComponent.set_palette(palette)
+
+
+
+--------------------------------------------------------------------------------
+-- UIComponent events
+--------------------------------------------------------------------------------
+
+The UIComponent pretty much leaves it up to you how to specify events. 
+However, there's only a limited number of different events that you can detect:
+
+DEVICE_EVENT_VALUE_CHANGED 
+DEVICE_EVENT_BUTTON_PRESSED
+DEVICE_EVENT_BUTTON_RELEASED
+DEVICE_EVENT_BUTTON_HELD
+
+The "value_changed" event is reserved for dials and faders with continuous 
+output. For some examples of event handling, see UISlider and UIToggleButton
+
+--------------------------------------------------------------------------------
+-- duplex.Canvas
+--------------------------------------------------------------------------------
+
+Canvas is employed by the UIComponents to represent it's visible state. The 
+canvas is essentially an extra layer that we perform updates "through". Think of 
+it as pre-optimization before we output to a potentially slow protocol (MIDI),
+only if something has *actually* changed in the Display the update is performed. 
+
+-- constructor
+Canvas() -- creates a new Canvas instance
+
+-- properties
+
+-- flagged only when a UIComponent actually output something *different* 
+-- (thus, repeating values can be ignored) 
+Canvas.has_changed
+  -> [boolean]
+
+-- the width and height should be maintained by the UIComponents, and not called 
+-- directly. Instead, see UIComponents.set_size()
+Canvas.width/height
+
+-- functions
+
+-- once the Display has finished it's cycle of updates, this method is invoked
+-- clear the delta buffer and mark the canvas as unchanged
+Canvas.clear_delta()
+
+--------------------------------------------------------------------------------
+-- duplex.CanvasPoint
+--------------------------------------------------------------------------------
+
+A CanvasPoint represent a single information unit in a Canvas. It serves two
+purposes, presentation and storage of values. When we 
+
+
+Consider the following:
+
+(00)(05)(20)(25)  <-  four dials, represented as a Canvas containing four 
+                      CanvasPoint instances with different values
+
+[■] [x] [x] [x]   <-  
+
+
+
+--------------------------------------------------------------------------------
+-- palette
+--------------------------------------------------------------------------------
+
+The palette is closely related to the CanvasPoint
+
+
+The Display comes with a shared palette that UIComponents can obtain their 
+colors from. 
+
+Specify a palette like this:
+  {
+    background = {
+      text="·",
+      color={0x00,0x00,0x00}
+    },
+    etc = {}
+  }
+
+if no color-space has been defined, the virtual GUI reverts to a textual 
+representation of the current state. You should be able to embed special 
+characters if you save your script as an UTF (Unicode) encoded file. 
+
+
+--------------------------------------------------------------------------------
+-- colorspace
+--------------------------------------------------------------------------------
+
+Some controllers are capable of producing colors, shades and hues in many 
+different varieties. To make use of that, we have to describe the color-space 
+so Duplex knows how to represent the values. It's actually quite simple. 
+Here is a Launchpad color-space - 4 levels of red and green: 
+  -> colorspace = {4,4,0}
+
+There's three values - the red, green and blue color channel, the value is 
+indicative of the channel depth. So, in this case we can combine 4 green and 4 
+red colors, to a total of 16 possible values:
+  -> [R:0x00,G:0x00][R:0x40,G:0x00][R:0x80,G:0x00][R:0xC0,G:0x00]
+     [R:0x00,G:0x40][R:0x40,G:0x40][R:0x80,G:0x40][R:0xC0,G:0x40]
+     [R:0x00,G:0x80][R:0x40,G:0x80][R:0x80,G:0x80][R:0xC0,G:0x80]
+     [R:0x00,G:0xC0][R:0x40,G:0xC0][R:0x80,G:0xC0][R:0xC0,G:0xc0]
+
+The colorspace will automatically quantize colors to something that the device 
+is capable of displaying. 
+So, if we try to output a full white like this:
+  -> color={0xff,0xff,0xff}
+  
+the Launchpad will actually display a bright yellow
+  -> color={0xff,0xff,0x00} 
+  
+This is because the values are mapped in realtime. There was no blue channel in 
+the Launchpad, so there 
+
+Here we have another device, the monochromatic monome:
+colorspace = {1,1,1}
+
+In this colorspace, only black and white is possible. For someone who's writing 
+applications for several devices, it should be considered that not all devices 
+are 'born equal'. 
+
+--------------------------------------------------------------------------------
+-- duplex.Device
+--------------------------------------------------------------------------------
+
+The Device class is the base class for any device. Both the MIDIDevice and 
+OSCDevice extend this class, just as the Launchpad is based on the MIDIDevice.
+
+
+-- consts
+
+DEVICE_OSC_PROTOCOL
+DEVICE_MIDI_PROTOCOL
+
+-- properties
+
+-- (optional) specify the device color-space 
+-- (see also the seperate entry about this)
+Device.colorspace -> [colorspace]
+
+-- specifies the message stream for user-generated events
+Device.message_stream -> [MessageStream]
+
+-- functions
+
+-- change/set the active control-map
+Device.set_control_map(xml_file)
+
+-- return the communication protocol (OSC/MIDI)
+Device.get_protocol()
+  -> [CONSTANT]
+
+-- return the corresponding device-value for a CanvasPoint:
+-- if we want to translate "medium yellow" into a MIDI message,
+-- this is highly dependant on actual device specs
+Device.point_to_value()
+  -> [number] 
+
+--------------------------------------------------------------------------------
+-- duplex.MessageStream
+--------------------------------------------------------------------------------
+
+The MessageStream recieves messages from connected devices and the virtual 
+control surface. After the type of event has been determined, the resulting 
+Message is then directed towards relevant UIComponent event-listeners, such as a 
+DEVICE_EVENT_BUTTON_PRESSED. 
+A device can only belong to a single stream, but nothing stops the stream from 
+recieving it's input from several devices.  
+
+-- put a message into the stream (invoked by Device + control surface)
+MessageStream.input_message(Message)
+
+-- attach a UIComponent listener to the stream
+-- remember to specify a handler method
+MessageStream.add_listener(UIComponent,DEVICE_EVENT_CONSTANT,handler)
+
+-- remove an existing UIComponent listener from the stream
+MessageStream.remove_listener(UIComponent,DEVICE_EVENT_CONSTANT)
+
+-- called repeatedly, will check for held buttons
+MessageStream.on_idle
+
+
+--------------------------------------------------------------------------------
+-- duplex.Message
+--------------------------------------------------------------------------------
+
+The Message class is a container for messages 
+
+-- the context control how the number/value is output,
+-- it might indicate a CC, or OSC message
+self.context = nil
+
+-- the is the actual value for the chosen parameter
+-- (not to be confused with the control-map value)
+self.value = nil
+
+-- meta values are useful for further refinement of messages,
+-- for example by defining the expected/allowed range of values
+self.id = nil --  unique id for each parameter
+self.group_name = nil --  name of the parent group 
+self.index = nil --  (int) index within control-map group, zero-based
+self.column = nil --  (int) column, starting from 1
+self.row = nil --  (int) row, starting from 1
+self.timestamp = nil --  set by os.clock() 
+self.name = nil --  the parameter name
+self.max = nil --  maximum accepted/output value
+self.min = nil --  minimum accepted/output value
+
+-- the input method type - CONTROLLER_BUTTON/DIAL/etc. 
+self.input_method = nil 
+
+-- true once the button is held for a while
+self.__held_event_fired = false
+
+-- true when message is fired from the virtual control surface
+self.__is_virtual = false
+
+See also: 
+  Display.__generate message()
+  MIDIDevice.midi_callback()
+
+
+------------------------------------------------------------
+-- duplex:Application
+------------------------------------------------------------
+
+The Application class makes it easy to set up and configure a controller to 
+perform some specific task. As an example, the Mixer, Matrix, and Effect are all 
+based on the Application class. 
+
+At it's most basic level, the application is a process launched when a 
+device-configuration (device class) contain a reference to it. Each device 
+contain a seperate entry for the application, which means that we are able to 
+configure the same application differently for different devices, or have 
+multiple configurations for the same device.
+
+The Application class also contain code that automatically builds a GUI for 
+managing the application. This GUI is employed by the global Device options 
+dialog, and should provide easy access to all mappings & options that we have 
+chosen to expose for the application.
+
+-- properties
+
+  -- when the application is inactive, it should 
+  -- sleep during idle time and ignore any user input
+  self.active = false
+
+  -- mappings allows us to choose where to put controls,
+  -- see actual application implementations for examples
+  -- 
+  -- @group_name: the control-map group-name
+  -- @required: need to specify a group name
+  -- @index: when nil, mapping is considered "greedy",
+  -- and will use the entire group
+  -- 
+  -- example_mapping = {
+  --  group_name = "Main",
+  --  required = true,
+  --  index = nil
+  -- }
+  self.mappings -> [Table]
+
+  -- we can choose to expose the application options here
+  -- the values can be edited using the options dialog
+  -- 
+  -- example_option = {
+  --  label = "My option",
+  --  items = {"Choice 1", "Choice 2"},
+  --  default = 1 -- this is the default value ("Choice 1")
+  -- }
+  self.options = {}
+
+  -- define a palette to enable color-picker support
+  self.palette = {}
+
+
+...assign assignments to a control-map group, or a specific index within a 
+control-map group. 
+
+-- specify the type of assignment, what we are dealing with...
+-- if set, the assignment is only for a specific position
+-- if not, we map an entire group 
+TODO Assignment.index
+  -> [boolean]
+TODO Assignment.group_name
+TODO Assignment.options
+
+
+-- Installing & testing
+
+When we are writing an new application, we will of course need to be able to 
+run/test it on one or more device(s). The procedure for installing an 
+application is:
+
+1. Save MyApplication.lua to the /Applications folder in Duplex
+2. Choose "Reload all tools" from the tools menu in Renoise
+3. Launch the Duplex browser, and choose the desired device
+4. Hit "Options". This will open the device options *
+5. Next to assignments, hit the small "+" button and your app should be listed
+
+
+* Temporary procedure until the device options dialog has been done:
+
+Open the device class file, and insert a new configuration entry, e.g.:
+
+  applications = {
+    Effect = {
+      mappings = {
+        parameters = {
+          group_name= "Encoders",
+        },
+        page = {
+          group_name = "XFader",
+        }
+      }
+    }
+  }
+
+
+
+

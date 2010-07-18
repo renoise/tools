@@ -83,28 +83,52 @@ function Mixer:__init(display,mappings,options)
 
     -- define the options (with defaults)
 
-  self.ALL_TRACKS = "Include all tracks"
-  self.NORMAL = "Normal tracks only"
-  self.NORMAL_MASTER = "Normal + master tracks"
-  self.MASTER = "Master track only"
-  self.MASTER_SEND = "Master + send tracks"
-  self.SEND = "Send tracks only"
+  self.ALL_TRACKS = 1
+  self.NORMAL = 2
+  self.NORMAL_MASTER = 3
+  self.MASTER = 4
+  self.MASTER_SEND = 5
+  self.SEND = 6
 
-  self.MODE_PREFX = "Pre FX volume and panning"
-  self.MODE_POSTFX = "Post FX volume and panning"
+  self.MODE_PREFX = 1
+  self.MODE_POSTFX = 2
+
+  self.MUTE_NORMAL = 1
+  self.MUTE_INVERTED = 2
 
   self.options = {
+    pre_post = {
+      label = "Mode",
+      description = "Change if either Pre or Post FX volume/pan is controlled",
+      items = {
+        "Pre FX volume and panning",
+        "Post FX volume and panning",
+      },
+      default = 1
+    },
+    invert_mute = {
+      label = "Invert mute",
+      description = "Decide how to display muted tracks",
+      items = {
+        "Button is lit when track is muted",
+        "Button is lit when track is active",
+      },
+      default = 2
+    },
+
+    --[[
+    -- TODO
     include_tracks = {
       label = "Tracks",
       description = "Select any combination of tracks that you want to " ..
         "include: normal, master and send tracks.",
       items = {
-        self.ALL_TRACKS,
-        self.NORMAL,
-        self.NORMAL_MASTER,
-        self.MASTER,
-        self.MASTER_SEND,
-        self.SEND,
+        "Include all tracks",
+        "Normal tracks only",
+        "Normal + master tracks",
+        "Master track only",
+        "Master + send tracks",
+        "Send tracks only",
       },
       default = 1,
     },
@@ -115,15 +139,6 @@ function Mixer:__init(display,mappings,options)
       items = {0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16},
       default = 1,
     },
-    mode = {
-      label = "Mode",
-      description = "Change if either Pre or Post FX volume/pan is controlled",
-      items = {
-        self.MODE_PREFX,
-        self.MODE_POSTFX,
-      },
-      default = self.MODE_POSTFX
-    },
     sync_position = {
       label = "Sync to global position",
       description = "Set to true if you want the Mixer to align with the " ..
@@ -131,6 +146,7 @@ function Mixer:__init(display,mappings,options)
       items = {true,false},
       default = 1,
     },
+    ]]
   }
 
   -- apply control-maps groups 
@@ -259,15 +275,16 @@ function Mixer:__init(display,mappings,options)
   -- offset of the whole track mapping, controlled by the track navigator
   self.__track_offset = 0
   
-  -- toggle, which defines if we're controlling the pre or post fx vol/pans
-  self.__postfx_mode = true
-   
   -- current track properties we are listening to
   self.__attached_track_observables = table.create()
 
   -- apply arguments
   self:__apply_options(options)
   self:__apply_mappings(mappings)
+
+  -- toggle, which defines if we're controlling the pre or post fx vol/pans
+  self.__postfx_mode = (self.options.pre_post.value == self.POSTFX)
+
 end
 
 
@@ -416,14 +433,7 @@ function Mixer:update()
 
     else 
       -- unmapped tracks are black
-      --[[
-      track_palette.tip = table.rcopy(self.palette.background)
-      track_palette.tip_dimmed = table.rcopy(self.palette.background)
-      track_palette.track = table.rcopy(self.palette.background)
-      track_palette.track_dimmed = table.rcopy(self.palette.background)
-      --mute_palette.foreground_dec = table.rcopy(self.palette.background)
-      mute_palette.foreground_dec = table.rcopy(self.palette.background)
-      ]]
+
     end
 
     if (self.__levels) then
@@ -697,7 +707,7 @@ function Mixer:__build_app()
       c.group_name = self.mappings.mute.group_name
       c.x_pos = control_index
       c.y_pos = 1
-      c.inverted = false
+      c.inverted = (self.options.invert_mute.value == self.MUTE_NORMAL) or false
       c.active = false
   
       -- mute state changed from controller

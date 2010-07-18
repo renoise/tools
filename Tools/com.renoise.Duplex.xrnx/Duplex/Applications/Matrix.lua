@@ -366,9 +366,7 @@ end
 function Matrix:on_idle()
 --TRACE("Matrix:idle_app()",self.__update_slots_requested)
   
-  if (not self.active) then 
-    return 
-  end
+  if (not self.active) then return end
 
   -- updated tracks/slots?
   if (self.__update_tracks_requested) then

@@ -61,6 +61,9 @@ duplex_configurations:insert {
         mode = {
           group_name = "ModeControls",
         }
+      },
+      options = {
+        pre_post = 2
       }
     }
   }

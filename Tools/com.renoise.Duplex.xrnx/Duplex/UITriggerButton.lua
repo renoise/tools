@@ -39,9 +39,9 @@ function UITriggerButton:__init(display)
   -- sequence of colors (specify at least two values + background)
   self.sequence = {
     {color={0xff,0xff,0xff},text="■"},
-    {color={0x80,0x40,0x80},text="□"},
-    {color={0x40,0x00,0x40},text="▪"},
-    {color={0x00,0x00,0x00},text="▫"},
+    --{color={0x80,0x40,0x80},text="□"},
+    --{color={0x40,0x00,0x40},text="▪"},
+    --{color={0x00,0x00,0x00},text="▫"},
   }
 
   self.palette = {
@@ -49,13 +49,16 @@ function UITriggerButton:__init(display)
   }
 
   -- the delay (in seconds) between updates 
-  -- (choose a low value such as 0.1 for faster updates)
+  -- (choose a low value for faster updates)
   self.interval = 0.05
+
+  -- start over when sequence is done
+  self.loop = false
 
   -- internal stuff
 
   -- position within the sequence
-  self.__seq_index = nil
+  self.__seq_index = 0
 
   -- keep a reference to the scheduled task (so we can cancel it)
   self.__task = nil
@@ -120,7 +123,14 @@ function UITriggerButton:draw()
     
     -- apply the color from the sequence
     point:apply(seq)
-    point.val = true
+    -- if the color is completely dark, this is also how
+    -- LED buttons will represent the value (turned off)
+    if(get_color_average(seq.color)>0x00)then
+      point.val = true        
+    else
+      point.val = false        
+    end
+    --point.val = true
 
     -- schedule another draw() by invalidating the component
     self.__task = self.__display.scheduler:add_task(
@@ -128,12 +138,14 @@ function UITriggerButton:draw()
     self.__seq_index = self.__seq_index+1
   
   else
-
-    -- sequence done, set to background/false
-    -- and stop the draw method from repeating
-    point:apply(self.palette.background)
-    point.val = false
-    self.__seq_index = nil
+    -- sequence done
+    if (self.loop) then
+      self.__seq_index = 1
+      self:draw()
+    else
+      self:stop()
+    end
+    return
 
   end
 
@@ -142,6 +154,20 @@ function UITriggerButton:draw()
   UIComponent.draw(self)
 end
 
+--------------------------------------------------------------------------------
+
+-- set to background/false and stop from repeating
+
+function UITriggerButton:stop()
+
+  local point = CanvasPoint()
+  point:apply(self.palette.background)
+  point.val = false
+  self.__seq_index = nil
+  self.canvas:fill(point)
+  UIComponent.draw(self)
+
+end
 
 --------------------------------------------------------------------------------
 
@@ -177,7 +203,7 @@ function UITriggerButton:__invoke_handler()
   if (self.on_change == nil) then return end
 
   local rslt = self:on_change()
-  if rslt then
+  if (rslt~=false) then
     self:invalidate()
   end
 end

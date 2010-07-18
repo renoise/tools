@@ -3,16 +3,15 @@
 ----------------------------------------------------------------------------]]--
 
 -- default configurations of the Remote-SL
--- only uses a control map and the Mixer application
 
 --------------------------------------------------------------------------------
 
--- setup a Mixer + Effect for this configuration
+-- setup Mixer + Effect + Transport for this configuration
 
 duplex_configurations:insert {
 
   -- configuration properties
-  name = "Mixer & Effects",
+  name = "Mixer + Effects + Transport",
   pinned = true,
 
   -- device properties
@@ -30,9 +29,14 @@ duplex_configurations:insert {
         levels = {
           group_name = "Sliders",
         },
+        --[[
+        master = {
+          group_name = "Sliders",
+        },
+        ]]
         mute = {
           group_name = "SliderButtons",
-        }
+        },
       }
     },
     Effect = {
@@ -44,6 +48,38 @@ duplex_configurations:insert {
           group_name = "EncoderButtons",
           index = 0
         }
+      }
+    },
+    Transport = {
+      mappings = {
+        goto_previous = {
+          group_name = "Controls",
+          index = 1,
+        },
+        goto_next = {
+          group_name = "Controls",
+          index = 2,
+        },
+        stop_playback = {
+          group_name= "Controls",
+          index = 3,
+        },
+        start_playback = {
+          group_name = "Controls",
+          index = 4,
+        },
+        loop_pattern = {
+          group_name = "Controls",
+          index = 5,
+        },
+        edit_mode = {
+          group_name = "Controls",
+          index = 6,
+        },
+        block_loop = {
+          group_name = "Controls",
+          index = 7,
+        },
       }
     },
   }
