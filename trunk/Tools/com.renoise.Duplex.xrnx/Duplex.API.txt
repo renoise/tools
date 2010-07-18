@@ -187,17 +187,7 @@ Canvas.clear_delta()
 -- duplex.CanvasPoint
 --------------------------------------------------------------------------------
 
-A CanvasPoint represent a single information unit in a Canvas. It serves two
-purposes, presentation and storage of values. When we 
-
-
-Consider the following:
-
-(00)(05)(20)(25)  <-  four dials, represented as a Canvas containing four 
-                      CanvasPoint instances with different values
-
-[■] [x] [x] [x]   <-  
-
+A CanvasPoint represent a single information unit in a Canvas. 
 
 
 --------------------------------------------------------------------------------
@@ -231,6 +221,7 @@ characters if you save your script as an UTF (Unicode) encoded file.
 Some controllers are capable of producing colors, shades and hues in many 
 different varieties. To make use of that, we have to describe the color-space 
 so Duplex knows how to represent the values. It's actually quite simple. 
+
 Here is a Launchpad color-space - 4 levels of red and green: 
   -> colorspace = {4,4,0}
 
@@ -249,9 +240,6 @@ So, if we try to output a full white like this:
   
 the Launchpad will actually display a bright yellow
   -> color={0xff,0xff,0x00} 
-  
-This is because the values are mapped in realtime. There was no blue channel in 
-the Launchpad, so there 
 
 Here we have another device, the monochromatic monome:
 colorspace = {1,1,1}
@@ -273,6 +261,7 @@ OSCDevice extend this class, just as the Launchpad is based on the MIDIDevice.
 DEVICE_OSC_PROTOCOL
 DEVICE_MIDI_PROTOCOL
 
+
 -- properties
 
 -- (optional) specify the device color-space 
@@ -281,6 +270,7 @@ Device.colorspace -> [colorspace]
 
 -- specifies the message stream for user-generated events
 Device.message_stream -> [MessageStream]
+
 
 -- functions
 
@@ -330,32 +320,32 @@ The Message class is a container for messages
 
 -- the context control how the number/value is output,
 -- it might indicate a CC, or OSC message
-self.context = nil
+Message.context = nil
 
 -- the is the actual value for the chosen parameter
 -- (not to be confused with the control-map value)
-self.value = nil
+Message.value = nil
 
 -- meta values are useful for further refinement of messages,
 -- for example by defining the expected/allowed range of values
-self.id = nil --  unique id for each parameter
-self.group_name = nil --  name of the parent group 
-self.index = nil --  (int) index within control-map group, zero-based
-self.column = nil --  (int) column, starting from 1
-self.row = nil --  (int) row, starting from 1
-self.timestamp = nil --  set by os.clock() 
-self.name = nil --  the parameter name
-self.max = nil --  maximum accepted/output value
-self.min = nil --  minimum accepted/output value
+Message.id = nil --  unique id for each parameter
+Message.group_name = nil --  name of the parent group 
+Message.index = nil --  (int) index within control-map group, zero-based
+Message.column = nil --  (int) column, starting from 1
+Message.row = nil --  (int) row, starting from 1
+Message.timestamp = nil --  set by os.clock() 
+Message.name = nil --  the parameter name
+Message.max = nil --  maximum accepted/output value
+Message.min = nil --  minimum accepted/output value
 
 -- the input method type - CONTROLLER_BUTTON/DIAL/etc. 
-self.input_method = nil 
+Message.input_method = nil 
 
 -- true once the button is held for a while
-self.__held_event_fired = false
+Message.__held_event_fired = false
 
 -- true when message is fired from the virtual control surface
-self.__is_virtual = false
+Message.__is_virtual = false
 
 See also: 
   Display.__generate message()
@@ -366,8 +356,12 @@ See also:
 -- duplex:Application
 ------------------------------------------------------------
 
-The Application class makes it easy to set up and configure a controller to 
-perform some specific task. As an example, the Mixer, Matrix, and Effect are all 
+When you want a controller to perform a specific task, the Application class is 
+the 'brain' behind it. By extending the Application class, you're free to create 
+your own event-driven logic. 
+
+The default application doesn't do anything by itself, you need to write your 
+own implementation. As an example, the Mixer, Matrix, and Effect are all 
 based on the Application class. 
 
 At it's most basic level, the application is a process launched when a 
@@ -376,87 +370,107 @@ contain a seperate entry for the application, which means that we are able to
 configure the same application differently for different devices, or have 
 multiple configurations for the same device.
 
-The Application class also contain code that automatically builds a GUI for 
-managing the application. This GUI is employed by the global Device options 
-dialog, and should provide easy access to all mappings & options that we have 
-chosen to expose for the application.
+(This is not yet done, but planned for the beta phase:) The Application class 
+also contain code that automatically builds a GUI for managing the application. 
+This GUI is employed by the global Device options dialog, and should provide 
+easy access to mappings & options that we have chosen to expose for the 
+application
+
+
+-- constructor
+
+-- create a new Application instance
+Application(display,mappings,options) 
+
 
 -- properties
 
-  -- when the application is inactive, it should 
-  -- sleep during idle time and ignore any user input
-  self.active = false
+-- mappings allows us to choose where to put controls,
+-- see actual application implementations for examples
+Application.mappings -> [Table]
 
-  -- mappings allows us to choose where to put controls,
-  -- see actual application implementations for examples
-  -- 
-  -- @group_name: the control-map group-name
-  -- @required: need to specify a group name
-  -- @index: when nil, mapping is considered "greedy",
-  -- and will use the entire group
-  -- 
-  -- example_mapping = {
-  --  group_name = "Main",
-  --  required = true,
-  --  index = nil
-  -- }
-  self.mappings -> [Table]
-
-  -- we can choose to expose the application options here
-  -- the values can be edited using the options dialog
-  -- 
-  -- example_option = {
-  --  label = "My option",
-  --  items = {"Choice 1", "Choice 2"},
-  --  default = 1 -- this is the default value ("Choice 1")
-  -- }
-  self.options = {}
-
-  -- define a palette to enable color-picker support
-  self.palette = {}
+-- we can choose to expose the application options like this
+-- example_option = {
+--  label = "My option",
+--  items = {"Choice 1", "Choice 2"},
+--  default = 1 -- this is the default value ("Choice 1")
+-- }
+Application.options = {}
 
 
-...assign assignments to a control-map group, or a specific index within a 
-control-map group. 
+-- methods
 
--- specify the type of assignment, what we are dealing with...
--- if set, the assignment is only for a specific position
--- if not, we map an entire group 
-TODO Assignment.index
-  -> [boolean]
-TODO Assignment.group_name
-TODO Assignment.options
+-- set to active state
+Application.start_app()
 
+-- set to inactive state
+Application.stop_app()
 
--- Installing & testing
+-- create the content (if any?)
+Application.__build_app()
 
-When we are writing an new application, we will of course need to be able to 
-run/test it on one or more device(s). The procedure for installing an 
-application is:
+-- destroy app 
+Application.destroy_app()
 
-1. Save MyApplication.lua to the /Applications folder in Duplex
-2. Choose "Reload all tools" from the tools menu in Renoise
-3. Launch the Duplex browser, and choose the desired device
-4. Hit "Options". This will open the device options *
-5. Next to assignments, hit the small "+" button and your app should be listed
+-- handle periodic updates (many times per second)
+Application:on_idle()
 
+-- apply optional arguments (application configuration)
+Application:__apply_mappings
+Application:__apply_options
 
-* Temporary procedure until the device options dialog has been done:
+------------------------------------------------------------
+-- Installing & configuring applications
+------------------------------------------------------------
 
-Open the device class file, and insert a new configuration entry, e.g.:
+The procedure for installing an application is much the same
+as configuring an application. Basically
 
-  applications = {
-    Effect = {
-      mappings = {
-        parameters = {
-          group_name= "Encoders",
-        },
-        page = {
-          group_name = "XFader",
+1.  Save the application.lua file to the /Applications folder.
+    This folder is scanned on startup, and you can now attach it to devices,
+    using the configuration entries in the device.lua file
+
+2.  Edit the desired device.lua class file, add your configuration entry.
+    A configuration entry could look like this:
+
+    -- begin code --
+    duplex_configurations:insert {
+
+      -- configuration properties
+      name = "My Effect Preset", -- the name of the configuration entry
+      pinned = true, -- pin to duplex menu
+
+      -- device properties
+      device = {
+        class_name = nil,   -- the device class, generic device if unspecified
+        display_name = "My Device", -- the name you choose to give it
+        device_name = "MidiPort 1", -- the midi port
+        control_map = "Controllers/MyDevice/MyDevice.xml",
+        protocol = DEVICE_MIDI_PROTOCOL
+      },
+      -- list of applications
+      applications = {
+        Effect = {
+          mappings = {
+            parameters = {
+              group_name= "Encoders",
+            },
+            page = {
+              group_name = "XFader",
+            }
+          },
+          options = {
+            include_parameters = 1
+          }
         }
       }
     }
-  }
+    -- end code --
+
+2. Choose "Reload all tools" from the tools menu in Renoise
+3. Launch the Duplex browser, and choose the desired device
+
+
 
 
 
