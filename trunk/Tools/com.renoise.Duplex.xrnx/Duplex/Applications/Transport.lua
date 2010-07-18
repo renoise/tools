@@ -166,7 +166,7 @@ function Transport:on_idle()
   local loop_pattern = renoise.song().transport.loop_pattern
   local edit_mode = renoise.song().transport.edit_mode
 
-
+  -- update 'play' status
   if (playing ~= self.__playing) then
     if self.controls.play then
       self.controls.play:set(playing,true)
@@ -184,6 +184,7 @@ function Transport:on_idle()
     end
   end
 
+  -- update 'block_loop' status
   if (self.__block_loop ~= loop_block_enabled) then
     if self.controls.block then
       self.controls.block:set(loop_block_enabled,true)
@@ -191,6 +192,7 @@ function Transport:on_idle()
     self.__block_loop = loop_block_enabled
   end
 
+  -- update 'pattern_loop' status
   if (self.__pattern_loop ~= loop_pattern) then
     if self.controls.loop then
       self.controls.loop:set(loop_pattern,true)
@@ -198,6 +200,7 @@ function Transport:on_idle()
     self.__pattern_loop = loop_pattern
   end
 
+  -- update 'edit_mode' status
   if (self.__edit_mode ~= edit_mode) then
     if self.controls.edit then
       self.controls.edit:set(edit_mode,true)
@@ -205,11 +208,13 @@ function Transport:on_idle()
     self.__edit_mode = edit_mode
   end
 
+
   -- check if we have arrived at the scheduled pattern
   if (self.__scheduled_pattern)then
     local pos = renoise.song().transport.playback_pos.sequence
-    if(self.__scheduled_pattern==pos) and
-      (self.__scheduled_pattern~=self.__source_pattern) then
+print(pos,self.__scheduled_pattern,self.__source_pattern)
+    if(self.__scheduled_pattern==pos) or
+      (pos~=self.__source_pattern) then
       self.__scheduled_pattern = nil
       -- stop the blinking
       if self.controls.next then
@@ -397,6 +402,8 @@ function Transport:__next()
   if renoise.song().transport.loop_block_enabled then
     renoise.song().transport:loop_block_move_forwards()
   else
+print("self.__scheduled_pattern",self.__scheduled_pattern)
+
     local pos = self.__scheduled_pattern or 
       renoise.song().transport.playback_pos.sequence
     local seq_count = #renoise.song().sequencer.pattern_sequence
@@ -448,9 +455,9 @@ end
 -- @idx  - the pattern to schedule
 
 function Transport:__schedule_pattern(idx)
-
+print("Transport:__schedule_pattern",idx)
   self.__scheduled_pattern = idx
-  self.__source_pattern = renoise.song().transport.playback_pos
+  self.__source_pattern = renoise.song().transport.playback_pos.sequence
   renoise.song().transport:set_scheduled_sequence(idx)
 
 end
