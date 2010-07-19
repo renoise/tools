@@ -24,7 +24,19 @@ renoise.tool():add_keybinding {
 function split()
 
   local selected_line = renoise.song().selected_line;
+
+  --get the ordinal number of the current line (where to split)
+  local current_line = renoise.song().transport.edit_pos.line;
+
+  --get the current pattern    
+  local current_pattern = renoise.song().selected_pattern;
   
+  
+  if current_line == current_pattern.number_of_lines then
+	renoise.app():show_status('Warning: cannot split at the bottom of the pattern, operation aborted.');
+	return
+  end
+
   --clone current pattern
   local new_pattern_index =    
     renoise.song().sequencer:clone_range(
@@ -36,12 +48,6 @@ function split()
     renoise.song().sequencer.pattern_sequence[
       renoise.song().selected_sequence_index+1]];
       
-  --get the current pattern    
-  local current_pattern = renoise.song().selected_pattern;
-  
-  --get the ordinal number of the current line (where to split)
-  local current_line = renoise.song().transport.edit_pos.line;
-  
   --cut the current pattern at that line
   current_pattern.number_of_lines = current_line; 
   
