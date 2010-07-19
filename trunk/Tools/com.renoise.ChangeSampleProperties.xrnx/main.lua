@@ -26,6 +26,7 @@ renoise.tool():add_menu_entry {
 -- locals
 --------------------------------------------------------------------------------
 
+local autoseek_mode = false
 local sync_mode = false
 local safe_mode = true
 local base_note_val = 'C-4'
@@ -45,6 +46,7 @@ local do_interpolate = false
 local do_sync = false
 local do_amplify = false
 local do_panning = false
+local do_autoseek = false
 
 local obj_textlabel = 1
 local obj_button = 2 
@@ -233,10 +235,14 @@ function open_sample_dialog(option)
             if str == nil then
               str = "0"
             end
-
             if str:lower():find("-inf") then
               return 0.0
             else
+              str = string.sub(str,1,string.len(str)-2)
+              if tonumber(str) == nil then
+                str = "0"
+              end
+              
               local db = tonumber(("%.01f"):format(tonumber(str)))
 
               if (db ~= nil) then
@@ -260,10 +266,11 @@ function open_sample_dialog(option)
           create_view(obj_textlabel,'',TEXT_ROW_WIDTH,0,0,'','dopanningtext',
           '','Panning','',vb),
 
-          create_view(obj_slider,'',140,-50,50,0,'panning_level','','',
-          function(value) slide_panning(vb, value) end,vb),
+--          create_view(obj_slider,'',140,-50,50,0,'panning_level','','',
+--          function(value) slide_panning(vb, value) end,vb),
            
-          vb:valuefield {
+          vb:valuebox {
+           width = 80,
            id = 'pan_value',
            min = -50.2,
            max = math.db2lin(50.2),
@@ -273,9 +280,9 @@ function open_sample_dialog(option)
             if value ~= 0 then
 
               if value < 0 then
-               return ("%dL"):format(value)
+               return ("%d L"):format(value)
               else
-               return ("%dR"):format(value)
+               return ("%d R"):format(value)
               end 
 
             else
@@ -292,13 +299,37 @@ function open_sample_dialog(option)
            end,
            
            notifier = function(value)
-            vb.views.panning_level.value = tonumber(value)
+--            vb.views.panning_level.value = tonumber(value)
            end
-          }
+          },
+          create_view(obj_checkbox,'',18,0,0,do_autoseek,'doautoseek',
+          'Set autoseek for all samples in selected instrument?','',
+          function(value) do_autoseek = value end,vb),
+
+          create_view(obj_textlabel,'',TEXT_ROW_WIDTH,0,0,'novalue','doautoseektext',
+          '','Autoseek','',vb),        
+          vb:button {
+            id = 'id_autoseek',
+            text = "Disabled",
+            width = 60,
+            color = {36, 37, 44},
+            notifier = function(value)
+              autoseek_mode = not autoseek_mode
+
+              if autoseek_mode == true then
+                vb.views.id_autoseek.text = 'Enabled'
+                vb.views.id_autoseek.color = {245, 245, 245}
+              else
+                vb.views.id_autoseek.text = 'Disabled'
+                vb.views.id_autoseek.color = {36, 37, 44}
+              end
+
+            end,
+          },
         },
-        
+       
         vb:space{height = 3*CONTENT_SPACING},
-        
+
         vb:row {
           vb:space {width = 250},
 
@@ -326,6 +357,14 @@ function open_sample_dialog(option)
       vb.views.id_safe_mode.visible = false
       enable_unsafe_options(vb)
     end
+
+    if autoseek_mode == true then
+      vb.views.id_autoseek.text = 'Enabled'
+      vb.views.id_autoseek.color = {245, 245, 245}
+    else
+      vb.views.id_autoseek.text = 'Disabled'
+      vb.views.id_autoseek.color = {36, 37, 44}
+    end  
 
     sample_dialog = renoise.app():show_custom_prompt(win_title,sample_content,
     {"Change the selected properties"})
@@ -366,10 +405,16 @@ function disable_unsafe_options(vb)
   vb.views.dopanning.visible = false
   vb.views.dopanning.value = false
   vb.views.dopanningtext.visible = false
-  vb.views.panning_level.visible = false
+--  vb.views.panning_level.visible = false
   vb.views.pan_value.visible = false
   do_panning = false
-      
+
+  vb.views.doautoseek.visible = false
+  vb.views.doautoseek.value = false
+  vb.views.doautoseektext.visible = false
+  vb.views.id_autoseek.visible = false
+--  do_autoseek = false
+   
   vb.views.dofinetuning.visible = false
   vb.views.dofinetuning.value = false
   vb.views.dofinetuningtext.visible = false
@@ -396,8 +441,12 @@ end
 function enable_unsafe_options(vb)
   vb.views.dopanning.visible = true
   vb.views.dopanningtext.visible = true
-  vb.views.panning_level.visible = true
+--  vb.views.panning_level.visible = true
   vb.views.pan_value.visible = true
+
+  vb.views.doautoseek.visible = true
+  vb.views.doautoseektext.visible = true
+  vb.views.id_autoseek.visible = true
   
   vb.views.dofinetuning.visible = true
   vb.views.dofinetuningtext.visible = true
@@ -698,7 +747,9 @@ function change_sample_properties(option, vb)
 
         s_instrument.samples[t].panning = pan_result
       end
-
+      if do_autoseek == true then
+        s_instrument.samples[t].autoseek = autoseek_mode
+      end
     end
 
     cur_ins.split_map = my_splitmap
