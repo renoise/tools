@@ -19,7 +19,7 @@ local nSyncLines = 0
 local nSlicingMode = SLICING_MODE_SLICES
 local bDoLoop = false
 local nLoopMode = LOOP_MODE_FORWARD
-
+local bDoAutoseek = false
 
 --------------------------------------------------------------------------------
 -- tool registration
@@ -44,7 +44,8 @@ function show_dialog()
   bDoSync = smpSel.beat_sync_enabled
   bDoLoop = smpSel.loop_mode > renoise.Sample.LOOP_MODE_OFF
   nLoopMode = smpSel.loop_mode
-  
+  bDoAutoseek = smpSel.autoseek
+
   local vb = renoise.ViewBuilder()
 
   local DEFAULT_CONTROL_SPACING = renoise.ViewBuilder.DEFAULT_CONTROL_SPACING
@@ -143,6 +144,22 @@ function show_dialog()
       end,
       tooltip = "Select the loop mode."
     }
+  }
+
+  local row5 = vb:row {
+   vb:checkbox {
+      value = bDoAutoseek,
+      tooltip = 'Enable Autoseek',
+      notifier = function(value)
+        bDoLoop = value
+      end
+    },
+    
+    vb:text {
+      text = "Autoseek",
+      width = TEXT_WIDTH - vb:checkbox{}.width,
+    },
+    
   }
 
   local dialog = renoise.app():show_custom_prompt  (
@@ -268,7 +285,10 @@ function slice_it()
       else
         smpNew.loop_mode = renoise.Sample.LOOP_MODE_OFF
       end
-
+      if (bDoAutoseek) then
+        smpNew.autoseek = bDoAutoseek
+      end
+       
       smpNew.name = smpSel.name .. " slice" .. tostring(nSlice)
       nSlice = nSlice + 1
       smpBuffNew:finalize_sample_data_changes()
