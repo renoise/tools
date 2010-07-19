@@ -587,6 +587,7 @@ function chat_key_handler(dialog, key)
 
   -- Let's send the text-line contents if present
   elseif (key.name == "return") then
+    no_loop = 1
     send_command(active_channel, 'channel', vb_channel.views.channel_command.text)
     vb_channel.views.channel_command.value = ""
   
