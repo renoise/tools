@@ -32,6 +32,12 @@ renoise.tool():add_menu_entry {
   end
 }
 
+renoise.tool():add_keybinding {
+	name = "Sample Editor:Process:BeatSlicer",
+	invoke = function() 
+		show_dialog() 
+	end
+}
 
 --------------------------------------------------------------------------------
 -- GUI
