@@ -151,7 +151,7 @@ function show_dialog()
       value = bDoAutoseek,
       tooltip = 'Enable Autoseek',
       notifier = function(value)
-        bDoLoop = value
+        bDoAutoseek = value
       end
     },
     
@@ -248,8 +248,8 @@ function slice_it()
   end
   
   local nSlice = 1
-  local nFrame = 1
-  while nFrame < nSmpSize do
+  local nFrame = 1  
+  while nSmpSize - nFrame > 1 do
   
     local smpNew = insSel.insert_sample_at(insSel,nSamples+1)
     nSamples = nSamples + 1
@@ -295,10 +295,13 @@ function slice_it()
       smpBuffNew:finalize_sample_data_changes()
       
     else
+	
       renoise.app():show_error("Cannot create new sample! Aborting..")
       renoise.song():undo()
       return
+	  
     end
+		
   end
   
   insSel.delete_sample_at(insSel,nSmpSel)
