@@ -171,6 +171,7 @@ function show_dialog()
       row2,
       row3,
       row4,
+      row5,
       vb:space { }
     },
     {'Slice!','Cancel'}
