@@ -308,24 +308,10 @@ function open_sample_dialog(option)
 
           create_view(obj_textlabel,'',TEXT_ROW_WIDTH,0,0,'novalue','doautoseektext',
           '','Autoseek','',vb),        
-          vb:button {
-            id = 'id_autoseek',
-            text = "Disabled",
-            width = 60,
-            color = {36, 37, 44},
-            notifier = function(value)
-              autoseek_mode = not autoseek_mode
-
-              if autoseek_mode == true then
-                vb.views.id_autoseek.text = 'Enabled'
-                vb.views.id_autoseek.color = {245, 245, 245}
-              else
-                vb.views.id_autoseek.text = 'Disabled'
-                vb.views.id_autoseek.color = {36, 37, 44}
-              end
-
-            end,
-          },
+          
+          create_view(obj_checkbox,'',18,0,0,autoseek_mode,'id_autoseek',
+          'Autoseek button status:Enabled = checked, disabled = unchecked',
+          '',function(value) autoseek_mode = value end,vb),
         },
        
         vb:space{height = 3*CONTENT_SPACING},
@@ -357,14 +343,6 @@ function open_sample_dialog(option)
       vb.views.id_safe_mode.visible = false
       enable_unsafe_options(vb)
     end
-
-    if autoseek_mode == true then
-      vb.views.id_autoseek.text = 'Enabled'
-      vb.views.id_autoseek.color = {245, 245, 245}
-    else
-      vb.views.id_autoseek.text = 'Disabled'
-      vb.views.id_autoseek.color = {36, 37, 44}
-    end  
 
     sample_dialog = renoise.app():show_custom_prompt(win_title,sample_content,
     {"Change the selected properties"})
