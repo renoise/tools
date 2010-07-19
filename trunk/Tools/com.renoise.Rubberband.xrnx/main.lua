@@ -112,7 +112,7 @@ function show_shift_dialog()
   local cent_selector = vb:valuebox { min = -100, max = 100, value = 0 }
   local crisp_selector = vb:popup {
     items = {'1', '2', '3', '4', '5'},
-    value = 4
+    value = 5
   }
   local formant_selector = vb:checkbox {}
 
