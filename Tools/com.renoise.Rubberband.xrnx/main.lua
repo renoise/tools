@@ -173,7 +173,7 @@ function show_stretch_dialog()
   local nlines_selector = vb:valuebox { min = 1, value = 16 }
   local crisp_selector = vb:popup {
     items = {'1', '2', '3', '4', '5'},
-    value = 4
+    value = 5
   }
   local type_selector = vb:popup {
     items = {'lines', 'beats', 'seconds'},
