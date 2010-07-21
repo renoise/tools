@@ -680,31 +680,37 @@ function connect_to_server(vb)
     progress_dialog()
   end
 
-  if client.is_open then
-    set_nick(vb_login.views.irc_nick_name.text)            
-    register_user(vb_login.views.irc_user_name.text, vb_login.views.irc_real_name.text)
-    --    client:send("PRIVMSG #channelname :"..irc_nick_name.." in da house!!\r\n")
-    start_message_engine()          
-   else
+  if client ~= nil then
+    if client.is_open then
+      set_nick(vb_login.views.irc_nick_name.text)            
+      register_user(vb_login.views.irc_user_name.text, vb_login.views.irc_real_name.text)
+      --    client:send("PRIVMSG #channelname :"..irc_nick_name.." in da house!!\r\n")
+      start_message_engine()          
+    else
 
-     if client_error then
+      if client_error then
 
-       if irc_dialog ~= nil then
-         vb_status.views.status_output_frame:add_line(client_error)
-       else
+        if irc_dialog ~= nil then
+          vb_status.views.status_output_frame:add_line(client_error)
+        else
 
-         if connect_progress_dialog ~= nil then
-           connect_progress_dialog:close()
-         end
+          if connect_progress_dialog ~= nil then
+            connect_progress_dialog:close()
+          end
 
-         local err_msg = "Could not connect to chat-server reason: ["..client_error.."]\n\nPlease check your network connection and try again "
-         local choice = renoise.app():show_prompt("Network error",err_msg,{'close'})
+          local err_msg = "Could not connect to chat-server reason: ["..client_error.."]\n\nPlease check your network connection and try again "
+          local choice = renoise.app():show_prompt("Network error",err_msg,{'close'})
 
-       end
-
-     end
-
-   end
+        end
   
+      end
+
+    end
+
+  else
+    local err_msg = "Could not connect to chat-server reason: Client connection-establishment failed.\n\nPlease check your network connection and try again "
+    local choice = renoise.app():show_prompt("Network error",err_msg,{'close'})
+  end  
+
 end
 
