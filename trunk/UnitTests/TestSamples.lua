@@ -214,6 +214,41 @@ do
   
   sample_buffer:finalize_sample_data_changes()
 
+
+  ----------------------------------------------------------------------------
+  -- sample selection
+  
+  sample_buffer.selection_range = {1, new_num_frames}
+  
+  -- range and start/end must match
+  assert(sample_buffer.selection_range[1] == 1)
+  assert(sample_buffer.selection_range[2] == new_num_frames)
+  assert(sample_buffer.selection_start == 1)
+  assert(sample_buffer.selection_end == new_num_frames)
+
+  sample_buffer.selection_start = math.random(new_num_frames / 2)
+  assert(sample_buffer.selection_start == sample_buffer.selection_range[1])
+
+  sample_buffer.selection_range = {new_num_frames/2, new_num_frames}
+  
+  assert_error(function() -- start out of bounds
+    selected_sample.selection_start = new_num_frames + 1
+  end)
+  assert_error(function()
+    selected_sample.selection_start = 0
+  end)
+  
+  assert_error(function() -- end out of bounds
+    selected_sample.selection_end = new_num_frames + 1
+  end)
+  assert_error(function()
+    selected_sample.selection_end = 0
+  end)
+  
+  assert_error(function() -- end < start
+    sample_buffer.selection_range = {new_num_frames, new_num_frames/2}
+  end)
+  
 end
 
 

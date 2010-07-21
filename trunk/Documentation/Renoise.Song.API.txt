@@ -765,14 +765,16 @@ renoise.song().instruments[].samples[].sample_buffer.number_of_channels
 renoise.song().instruments[].samples[].sample_buffer.number_of_frames
   -> [read-only, number]
 
--- selection range as visible in the sample editor. always valid,
--- but only relevant for the currently active sample.
+-- selection range as visible in the sample editor. getters are always 
+-- valid, but only relevant for the currently active sample.
+-- setting new selections is only allowed for the currently selected 
+-- sample.
 renoise.song().instruments[].samples[].sample_buffer.selection_start
-  -> [read-only, number >= 1 <= number_of_frames]
+  -> [number >= 1 <= number_of_frames]
 renoise.song().instruments[].samples[].sample_buffer.selection_end
-  -> [read-only, number >= 1 <= number_of_frames]
+  -> [number >= 1 <= number_of_frames]
 renoise.song().instruments[].samples[].sample_buffer.selection_range
-  -> [read-only, array of two numbers, >= 1 <= number_of_frames]
+  -> [array of two numbers, >= 1 <= number_of_frames]
 
 
 --------------------------------------------------------------------------------
