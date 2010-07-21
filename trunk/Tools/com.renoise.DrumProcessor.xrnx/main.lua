@@ -3,6 +3,8 @@
 --  consts
 
 local TOOL_NAME = "Drum Processor"
+local TOOL_VERSION = "0.1"
+local TOOL_AUTHOR = "kRAkEn/gORe"
 
 local DEFAULT_MARGIN = renoise.ViewBuilder.DEFAULT_CONTROL_MARGIN
 local DEFAULT_SPACING = renoise.ViewBuilder.DEFAULT_CONTROL_SPACING
@@ -919,11 +921,11 @@ end
 
 function show_help()
 
-   local help_message = [[ Some help here !]]
-   local title = TOOL_NAME
+   local message = TOOL_NAME .. " v" .. TOOL_VERSION .. "\nby " .. TOOL_AUTHOR
+   local title = "About"
    local buttons = {"OK"}
 
-   renoise.app():show_prompt(title, help_message, buttons)
+   renoise.app():show_prompt(title, message, buttons)
 end
 
 

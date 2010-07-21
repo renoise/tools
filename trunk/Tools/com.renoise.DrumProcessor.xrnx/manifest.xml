@@ -1,13 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <RenoiseScriptingTool>
-  <ApiVersionMin>0.8</ApiVersionMin>
-  <ApiVersionMax>0.8</ApiVersionMax> 
+  <ApiVersion>1.0</ApiVersion>
   <Id>com.renoise.DrumProcessor</Id>
   <Version>0.1</Version>
-  <Author>kRAkEn/gORe [kraken@renoise.com]</Author>
   <Name>Drum Processor</Name>
-  <Category>Pattern Editor</Category>
+  <Author>kRAkEn/gORe [kraken@renoise.com]</Author>
   <Description>Glitch like pattern event processor</Description>
-  <Icon />
+  <Category>Pattern Editor</Category>
+  <Homepage>http://tools.renoise.com</Homepage>
 </RenoiseScriptingTool>
-
