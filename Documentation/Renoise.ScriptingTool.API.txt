@@ -20,7 +20,8 @@ Have a look at the com.renoise.ExampleTool.xrnx for more info about XRNX tools.
 -- functions
 
 -- access to your tools interface to Renoise. only valid for xrnx tools
-renoise.tool() -> [renoise.ScriptingTool object]
+renoise.tool() 
+  -> [renoise.ScriptingTool object]
 
 
 --------------------------------------------------------------------------------
@@ -51,7 +52,7 @@ renoise.tool() -> [renoise.ScriptingTool object]
 -- Placing entries:
 --
 -- You can place your entries in any context menu or any window menu in Renoise.
--- To to so, simply use one of the specified categories in its name:
+-- To do so, use one of the specified categories in its name:
 --
 -- "Window Menu"
 -- "Main Menu" (:File", ":Edit", ":View", ":Tools" or ":Help")

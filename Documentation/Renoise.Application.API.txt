@@ -16,7 +16,8 @@ API, and scripting in Renoise in general...
 
 -- functions
 
-renoise.app() -> [renoise.Application object]
+renoise.app() 
+  -> [renoise.Application object]
 
 
 --------------------------------------------------------------------------------
