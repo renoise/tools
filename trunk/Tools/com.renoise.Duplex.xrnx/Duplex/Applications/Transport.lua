@@ -150,7 +150,36 @@ function Transport:start_app()
 
 end
 
+--------------------------------------------------------------------------------
 
+function Transport:destroy_app()
+  TRACE("Transport:destroy_app")
+
+  if (self.controls.stop) then
+    self.controls.stop:remove_listeners()
+  end
+  if (self.controls.play) then
+    self.controls.play:remove_listeners()
+  end
+  if (self.controls.loop) then
+    self.controls.loop:remove_listeners()
+  end
+  if (self.controls.edit) then
+    self.controls.edit:remove_listeners()
+  end
+  if (self.controls.next) then
+    self.controls.next:remove_listeners()
+  end
+  if (self.controls.previous) then
+    self.controls.previous:remove_listeners()
+  end
+  if (self.controls.block) then
+    self.controls.block:remove_listeners()
+  end
+
+  
+  Application.destroy_app(self)
+end
 
 --------------------------------------------------------------------------------
 
@@ -208,11 +237,11 @@ function Transport:on_idle()
     self.__edit_mode = edit_mode
   end
 
+print("self.__edit_mode",self.__edit_mode)
 
   -- check if we have arrived at the scheduled pattern
   if (self.__scheduled_pattern)then
     local pos = renoise.song().transport.playback_pos.sequence
-print(pos,self.__scheduled_pattern,self.__source_pattern)
     if(self.__scheduled_pattern==pos) or
       (pos~=self.__source_pattern) then
       self.__scheduled_pattern = nil
@@ -240,7 +269,7 @@ function Transport:__build_app()
     c.group_name = self.mappings.stop_playback.group_name
     c.x_pos = self.mappings.stop_playback.index
     c.on_change = function(obj)
-      if not self.active then return end
+      if not self.active then return false end
       self:__stop_playback()
       if(self.controls.play)then
         self.controls.play:set(false,true)
@@ -256,7 +285,7 @@ function Transport:__build_app()
     c.x_pos = self.mappings.start_playback.index
     c.palette.foreground.text = "►"
     c.on_change = function(obj)
-      if not self.active then return end
+      if not self.active then return false end
       local is_playing = renoise.song().transport.playing
       self:__start_playback()
       -- update only when switching ON:
@@ -274,7 +303,7 @@ function Transport:__build_app()
     c.palette.foreground.color = {0x40,0xff,0x40}
     c.palette.foreground.text = "○"
     c.on_change = function(obj)
-      if not self.active then return end
+      if not self.active then return false end
       renoise.song().transport.loop_pattern = obj.active
     end
     self.display:add(c)
@@ -288,7 +317,8 @@ function Transport:__build_app()
     c.palette.foreground.color = {0xff,0x40,0x40}
     c.palette.foreground.text = "●"
     c.on_change = function(obj)
-      if not self.active then return end
+      if not self.active then return false end
+print("got here")
       renoise.song().transport.edit_mode = obj.active
     end
     self.display:add(c)
@@ -305,7 +335,7 @@ function Transport:__build_app()
       {color={0x00,0x00,0x00},text=" "},
     }
     c.on_change = function(obj)
-      if not self.active then return end
+      if not self.active then return false end
       self:__next()
     end
     self.display:add(c)
@@ -322,7 +352,7 @@ function Transport:__build_app()
       {color={0x00,0x00,0x00},text=" "},
     }
     c.on_change = function(obj)
-      if not self.active then return end
+      if not self.active then return false end
       self:__previous()
     end
     self.display:add(c)
@@ -334,14 +364,14 @@ function Transport:__build_app()
     c.group_name = self.mappings.block_loop.group_name
     c.x_pos = self.mappings.block_loop.index
     c.on_change = function(obj)
-      if not self.active then return end
+      if not self.active then return false end
       renoise.song().transport.loop_block_enabled = obj.active
     end
     self.display:add(c)
     self.controls.block = c
   end
 
-  Application:__build_app(self)
+  Application.__build_app(self)
 
 end
 
@@ -402,7 +432,6 @@ function Transport:__next()
   if renoise.song().transport.loop_block_enabled then
     renoise.song().transport:loop_block_move_forwards()
   else
-print("self.__scheduled_pattern",self.__scheduled_pattern)
 
     local pos = self.__scheduled_pattern or 
       renoise.song().transport.playback_pos.sequence
@@ -455,7 +484,6 @@ end
 -- @idx  - the pattern to schedule
 
 function Transport:__schedule_pattern(idx)
-print("Transport:__schedule_pattern",idx)
   self.__scheduled_pattern = idx
   self.__source_pattern = renoise.song().transport.playback_pos.sequence
   renoise.song().transport:set_scheduled_sequence(idx)
