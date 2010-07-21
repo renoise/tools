@@ -25,7 +25,6 @@ renoise.tool():add_keybinding {
 }
 
 
-
 --------------------------------------------------------------------------------
 -- locals
 --------------------------------------------------------------------------------
@@ -34,8 +33,11 @@ local jump_dialog = nil
 local MODE_LINES = 1
 local MODE_LINES_LPB = 2
 local MODE_LENGTH_FACTOR = 3
+local POS_MODE_PLAYBACK = 1
+local POS_MODE_EDIT = 2
 local row_step = 16
-local switch_jump_mode_index = MODE_LINES
+local switch_jump_mode_index = MODE_LINES_LPB
+local switch_pos_mode_index = POS_MODE_PLAYBACK
 local MAX_PATTERN_LINES = 512
 
 
@@ -107,6 +109,28 @@ Length / Factor: The patternlength divided by given factor.]],
           },
         },
         
+        vb:row {
+
+          vb:text {
+            width = TEXT_ROW_WIDTH,
+            text = "Position Mode "
+          },
+
+          vb:popup {
+            id = "switch_pos_mode",
+            width = 140,
+            value = switch_pos_mode_index,
+            items = {"Playback Position", "Edit Position"},
+            tooltip = [[
+Playback Position: Jumps to a new playback position. Good for live experimentation.
+Edit Position: Jumps to a new edit position. Good in pattern edit mode or for
+changing things on the fly during playback.]],
+            notifier = function(new_index)
+              switch_pos_mode_index = new_index
+            end   
+          },        
+        },        
+        
         vb:space { height = 10 },
         
         vb:multiline_text {
@@ -145,7 +169,14 @@ function jump(option)
   end
   
   if option == JUMP_UP then
-    new_pos = song.transport.playback_pos
+    if (switch_pos_mode_index == POS_MODE_PLAYBACK) then
+      new_pos = song.transport.playback_pos
+    end
+    
+    if (switch_pos_mode_index == POS_MODE_EDIT) then
+      new_pos = song.transport.edit_pos
+    end
+    
     new_pos.line = new_pos.line - jump_steps
 
     if new_pos.line < 1 then
@@ -171,7 +202,14 @@ function jump(option)
   end
 
   if option == JUMP_DOWN then
-    new_pos = song.transport.playback_pos
+    if (switch_pos_mode_index == POS_MODE_PLAYBACK) then
+      new_pos = song.transport.playback_pos
+    end
+
+    if (switch_pos_mode_index == POS_MODE_EDIT) then
+      new_pos = song.transport.edit_pos
+    end
+
     new_pos.line = new_pos.line + jump_steps
     if new_pos.line > song.selected_pattern.number_of_lines then
       
@@ -195,6 +233,13 @@ function jump(option)
     end
   end
 
-  song.transport.playback_pos = new_pos
+    if (switch_pos_mode_index == POS_MODE_PLAYBACK) then
+      song.transport.playback_pos = new_pos
+    end
+
+    if (switch_pos_mode_index == POS_MODE_EDIT) then
+      song.transport.edit_pos = new_pos
+    end
+
 end
 
