@@ -148,10 +148,10 @@ function key_handler(dialog, key)
     dialog:close()
 
   elseif (
-    key.name == "up" or
-    key.name == "down" or
-    key.name == "left" or
-    key.name == "right"
+    (key.name == "up" and current_direction ~= "down") or
+    (key.name == "down" and current_direction ~= "up") or
+    (key.name == "left" and current_direction ~= "right") or
+    (key.name == "right" and current_direction ~= "left")
   )
   then
     current_direction = key.name
