@@ -253,18 +253,25 @@ function slice_it()
     end
   end
   
-  local nSlice = 1
+  --calculate how many slices there  have to be
+  
   local nFrame = 1  
-  while nSmpSize - nFrame > 1 do
+  
+  for nSlice = 1, nSlices do
   
     local smpNew = insSel.insert_sample_at(insSel,nSamples+1)
     nSamples = nSamples + 1
     local smpBuffNew = smpNew.sample_buffer
+	
+    if (nSlice == nSlices) then
+      --the last slice will contain any other remaining piece of the source sample (should be a bunch of bytes)
+      nSliceSize = nSmpSize - nFrame
+    end
     
     if (smpBuffNew:create_sample_data(smpBuffSel.sample_rate, 
-          smpBuffSel.bit_depth, smpBuffSel.number_of_channels, nSliceSize)) 
+      smpBuffSel.bit_depth, smpBuffSel.number_of_channels, nSliceSize)) 
     then
-    
+	
       local nChan, nFrameNew
       for nFrameNew = 1, smpBuffNew.number_of_frames do
         for nChan = 1, smpBuffSel.number_of_channels do
