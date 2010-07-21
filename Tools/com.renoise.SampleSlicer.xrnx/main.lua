@@ -214,7 +214,7 @@ function slice_it()
   if(nSlicingMode == SLICING_MODE_SLICES) then
     nSliceSize = nSmpSize / nSlices
   elseif(nSlicingMode == SLICING_MODE_SLICES_SECS) then
-    if(nSlice>0) then
+    if(nSlices>0) then
       nSliceSize = smpBuffSel.sample_rate * nSlices
       if(nSliceSize>0) then
         nSlices = math.ceil(nSmpSize / (nSliceSize))
