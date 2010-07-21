@@ -708,7 +708,11 @@ function connect_to_server(vb)
     end
 
   else
-    local err_msg = "Could not connect to chat-server reason: Client connection-establishment failed.\n\nPlease check your network connection and try again "
+    local cl_err = "Client connection-establishment failed."
+    if client_error ~= nil then
+      cl_err = client_error
+    end
+    local err_msg = "Could not connect to chat-server reason: "..cl_err.."\n\nPlease check your network connection and try again "
     local choice = renoise.app():show_prompt("Network error",err_msg,{'close'})
   end  
 
