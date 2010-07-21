@@ -11,15 +11,15 @@ local DEFAULT_SPACING = renoise.ViewBuilder.DEFAULT_CONTROL_SPACING
 
 local BUTTON_HEIGHT = renoise.ViewBuilder.DEFAULT_DIALOG_BUTTON_HEIGHT
 local BUTTON_WIDTH = 86
-local SEQUENCER_BUTTON_SIZE = 38
+local SEQUENCER_BUTTON_SIZE = 39
 local HELP_BUTTON_WIDTH = 10
 
 local POPUP_WIDTH = 2*BUTTON_WIDTH - 2*DEFAULT_MARGIN
 
 local NOTE_WIDTH = 40
 local NUMBER_WIDTH = 30
-local DEFAULT_CELL_WIDTH = 196
-local TEXT_ROW_WIDTH = 76
+local DEFAULT_CELL_WIDTH = 200
+local TEXT_ROW_WIDTH = 86
 
 local OFF_COLOR = { 0, 0, 0 }
 
@@ -322,7 +322,6 @@ function DrumPatternProcessor:build_options(builder)
         text = "Base note"
       },
       builder:valuebox {
-        --width = BUTTON_WIDTH,
         min = 0,
         max = 119,
         value = note_string_to_number(self.base_note),
@@ -334,6 +333,20 @@ function DrumPatternProcessor:build_options(builder)
         end,
         notifier = function(value)
           self.base_note = note_number_to_string(value)
+        end,
+      }
+    },
+
+    builder:row {
+      width = DEFAULT_CELL_WIDTH,
+      builder:text {
+        width = TEXT_ROW_WIDTH,
+        text = "Preserve notes"
+      },
+      builder:checkbox {
+        value = self.preserve_notes,
+        notifier = function(value)
+          self.preserve_notes = value
         end,
       }
     },
@@ -516,6 +529,7 @@ function DrumPatternSlicer:on_process(pattern,
       line.note_columns[1].volume_string = ".."
       line.note_columns[1].instrument_value = instrument
     end
+    
     if line.note_columns[1].note_string ~= "---" then
       line.effect_columns[1].number_value = 0x09
 
@@ -621,6 +635,7 @@ function DrumPatternRepeater:on_process(pattern,
     line.note_columns[1].volume_string = ".."
     line.note_columns[1].instrument_value = instrument
   end
+
   if line.note_columns[1].note_string ~= "---" then
     local repeats = self.repeats
     local time = self.time
@@ -710,6 +725,7 @@ function DrumPatternArpeggiator:on_process(pattern,
     line.note_columns[1].volume_string = ".."
     line.note_columns[1].instrument_value = instrument
   end
+  
   if line.note_columns[1].note_string ~= "---" then
     line.effect_columns[1].number_string = "00"
     line.effect_columns[1].amount_string = (line_index) .. line_index + 1
@@ -764,6 +780,7 @@ function DrumPatternPitcher:on_process(pattern,
       line.note_columns[1].instrument_value = instrument
     end
   end
+  
   line.effect_columns[1].number_string = direction 
   line.effect_columns[1].amount_value = math.min(255, math.max(1, math.max(self.amount * self.increment)))
   -- print ("processing " .. self.name .. " > " .. line_index .. " (" .. (start_line + line_index) .. ")")
@@ -845,14 +862,20 @@ function DrumPatternReversor:on_process(pattern,
       line.note_columns[1].volume_string = ".."
       line.note_columns[1].instrument_value = instrument
     end
-    line.effect_columns[1].number_string = "0B"
-    line.effect_columns[1].amount_string = ".."
+    if line.note_columns[1].note_string ~= "---" then
+      line.effect_columns[1].number_string = "0B"
+      line.effect_columns[1].amount_string = ".."
+    end
   elseif line_index == (num_lines - 1) then
-    line.note_columns[1].note_string = processor.base_note
-    line.note_columns[1].volume_string = ".."
-    line.note_columns[1].instrument_value = instrument
-    line.effect_columns[1].number_string = "1B"
-    line.effect_columns[1].amount_string = ".."
+    if not processor.preserve_notes then
+      line.note_columns[1].note_string = processor.base_note
+      line.note_columns[1].volume_string = ".."
+      line.note_columns[1].instrument_value = instrument
+    end
+    if line.note_columns[1].note_string ~= "---" then
+      line.effect_columns[1].number_string = "1B"
+      line.effect_columns[1].amount_string = ".."
+    end
   end
 end
 
