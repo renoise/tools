@@ -12,13 +12,14 @@ API, and scripting in Renoise in general...
 Currently there are two ways to to use such views:
 
 -- (shows a dialog with a title, custom content and custom button labels)
-app():show_custom_prompt(title, content_view, {button_labels} [,
-  key_handler_func]) -> [pressed button]
+app():show_custom_prompt(title, content_view, {button_labels} [,key_handler_func]) 
+  -> [pressed button]
 
 and
 
 -- (shows a non modal dialog (a tool window) with a custom content)
-app():show_custom_dialog(title, content_view [, key_handler_func]) -> [dialog]
+app():show_custom_dialog(title, content_view [, key_handler_func]) 
+  -> [dialog object]
 
 -- key_handler_func is optional. when defined, it must have the below noted
 -- signature. "key" is a table with the fields {
@@ -62,7 +63,8 @@ view:remove_child(View child_view)
 -- Please note that view.visible will also return false when any of its
 -- parents are invisible (when its implicitly invisible)
 -- by default true
-view.visible -> [boolean]
+view.visible 
+  -> [boolean]
 
 -- get/set a views size. all views must have a size > 0
 -- by default > 0: how much exactly depends on the specialized view type.
@@ -70,12 +72,15 @@ view.visible -> [boolean]
 -- Note: in nested view_builder notations you can also specify relative
 -- sizes like for example vb:text { width = "80%"}. The percentage values are
 -- relative to the views parent and will automatically update on size changes...
-view.width -> [number]
-view.height -> [number]
+view.width 
+  -> [number]
+view.height 
+  -> [number]
 
 -- get/set a tooltip text that should be shown for this view.
 -- by default empty (no tip will be shown)
-view.tooltip -> [string]
+view.tooltip 
+  -> [string]
 
 
 --------------------------------------------------------------------------------
@@ -99,11 +104,13 @@ rack:resize()
 
 -- setup the "borders" of the rack (left, right, top and bottom equally)
 -- by default 0
-rack.margin -> [number]
+rack.margin 
+  -> [number]
 
 -- setup by which amount stacked child views are separated
 -- by default 0
-rack.spacing -> [number]
+rack.spacing 
+  -> [number]
 
 -- setup a background style for this rack. Available styles are:
 -- "invisible" -> no background is drawn
@@ -113,13 +120,15 @@ rack.spacing -> [number]
 -- "panel"     -> alternative "background" style, beveled
 -- "group"     -> background for "nested" groups within "body"s
 -- by default "invisible"
-rack.style -> [string]
+rack.style 
+  -> [string]
 
 -- when set to true, child views will get resized to the max size of
 -- all child views. This can be useful to automatically align all sub
 -- columns/panels to the same size...
 -- by default false
-rack.uniform -> [boolean]
+rack.uniform 
+  -> [boolean]
 
 
 --------------------------------------------------------------------------------
@@ -140,22 +149,25 @@ rack.uniform -> [boolean]
 
 -- setup the "borders" of the aligner (left, right, top and bottom equally)
 -- by default 0
-aligner.margin -> [number]
+aligner.margin 
+  -> [number]
 
 -- setup by which amount the child views are separated
 -- by default 0
-aligner.spacing -> [number]
+aligner.spacing 
+  -> [number]
 
 -- setup the alignment mode. Available mode are:
 -- "left"       -> align from left to right (for horizontal_aligner only)
 -- "right"      -> align from right to left (for horizontal_aligner only)
--- "top"  -> align from top to bottom (for vertical_aligner only)
+-- "top"        -> align from top to bottom (for vertical_aligner only)
 -- "bottom"     -> align from bottom to top (for vertical_aligner only)
 -- "center"     -> center all views
 -- "justify"    -> keep outer views at the borders, distribute the rest
--- "distribute"  -> equally distributes views over the aligners width/height
+-- "distribute" -> equally distributes views over the aligners width/height
 -- by default "left" for a horizontal_aligner, "top" for a vertical_aligner,
-aligner.mode -> [string]
+aligner.mode 
+  -> [string]
 
 
 -----------------------------------------------------------------------------"
@@ -175,17 +187,20 @@ aligner.mode -> [string]
 -- get/set the text that should be displayed. setting a new text will resize
 -- the view, but only if the text would not be fully visible (expands only)
 -- by default empty
-text.text -> [string]
+text.text 
+  -> [string]
 
 -- get/set the font that the text should be displayed with.
 -- avilable font styles are: "normal", "big", "bold, "italic" and "mono"
 -- by default "normal"
-text.font -> [string]
+text.font 
+  -> [string]
 
 -- setup the texts alignment
 -- "left", "right" or "center" are valid align values
 -- by default "left"
-text.align -> [string]
+text.align 
+  -> [string]
 
 
 --------------------------------------------------------------------------------
@@ -211,23 +226,27 @@ text.align -> [string]
 -- get/set the text that should be displayed. newlines in the text can be used
 -- to display multiple paragraphs
 -- by default empty
-multiline_text.text -> [string]
+multiline_text.text 
+  -> [string]
 
 -- get/set a list/table of text lines, which will be converted to paragraphs
 -- by default empty
-multiline_text.pargraphs -> [string]
+multiline_text.pargraphs 
+  -> [string]
 
 -- get/set the font that the text should be displayed with.
 -- avilable font styles are: "normal", "big", "bold, "italic" and "mono"
 -- by default "normal"
-multiline_text.font -> [string]
+multiline_text.font 
+  -> [string]
 
 -- setup the text views background style
 -- "body"    -> simple body text color with no background
 -- "strong"  -> stronger body text color with no background
 -- "border"  -> text on a bordered background
 -- by default "body"
-multiline_text.style -> [string]
+multiline_text.style 
+  -> [string]
 
 
 -- functions
@@ -264,9 +283,11 @@ multiline_text:clear()
 -- the currently shown value. the value will not be updated while editing,
 -- but only after editing finished.
 -- by default empty
-textfield.value -> [string]
+textfield.value 
+  -> [string]
 -- exactly the same as "value"; provided for consistency
-textfield.text -> [string]
+textfield.text 
+  -> [string]
 
 -- setup the text fields text alignment
 -- "left", "right" or "center" are valid align values
@@ -296,25 +317,30 @@ textfield.align
 
 -- the current text as single line, using usinx newlinesto separate paragraphs
 -- by default empty
-multiline_textfield.value -> [string]
+multiline_textfield.value 
+  -> [string]
 -- exactly the same as "value"; provided for consistency
-multiline_textfield.text -> [string]
+multiline_textfield.text 
+  -> [string]
 
 -- get/set a list/table of text lines, which will be converted to paragraphs
 -- by default empty
-multiline_textfield.pargraphs -> [string]
+multiline_textfield.pargraphs 
+  -> [string]
 
 -- get/set the font that the text should be displayed with.
 -- avilable font styles are: "normal", "big", "bold, "italic" and "mono"
 -- by default "normal"
-multiline_textfield.font -> [string]
+multiline_textfield.font 
+  -> [string]
 
 -- setup the text views background style
 -- "body"    -> simple body text color with no background
 -- "strong"  -> stronger body text color with no background
 -- "border"  -> text on a bordered background
 -- by default "border"
-multiline_textfield.style -> [string]
+multiline_textfield.style 
+  -> [string]
 
 
 -- functions
@@ -370,13 +396,14 @@ bitmapview:remove_notifier(function or {object, function} or {object, function})
 -- properties
 
 -- setup how the bitmap should be painted, recolored. Available modes are:
--- "plain"       -> bitmap is drawn just like it is, no recoloring is done
--- "transparent" -> same as plain, but will treat black pixels fully transparent
--- "button_back" -> recolor the bitmap, using the color themes button color
--- "body_back"   -> same as 'button_back' but with body text/back color
--- "main_back"   -> same as 'button_back' but with main text/back colors
+-- "plain"        -> bitmap is drawn just like it is, no recoloring is done
+-- "transparent"  -> same as plain, but will treat black pixels fully transparent
+-- "button_color" -> recolor the bitmap, using the color themes button color
+-- "body_color"   -> same as 'button_back' but with body text/back color
+-- "main_color"   -> same as 'button_back' but with main text/back colors
 -- by default "plain"
-bitmapview.mode -> [string]
+bitmapview.mode 
+  -> [string]
 
 -- set the to be drawn bitmap name and path. you should use a relative path
 -- that either assumes the apps default resource folder as base (like
@@ -386,10 +413,12 @@ bitmapview.mode -> [string]
 -- "MyBitmap.bmp" as name. Then the bitmap is loaded from
 -- "./FindAndReplace/MyBitmap.bmp". The only supported bitmap format is
 -- ".bmp" (Windows bitmap) on all platforms!
-bitmapview.bitmap -> [string]
+bitmapview.bitmap 
+  -> [string]
 
 -- valid in the construction table only: set up a click notifier
-bitmapview.notifier -> (function())
+bitmapview.notifier 
+  -> (function())
 
 
 --------------------------------------------------------------------------------
@@ -423,7 +452,8 @@ button:remove_released_notifier(function or {object, function} or {object, funct
 
 -- the label of the button
 -- by default empty
-button.text -> [string]
+button.text 
+  -> [string]
 
 -- by default not set. when set, text is cleared, and a relative path from
 -- the apps resource folder is expected (like "Icons/ArrowRight.bmp").
@@ -434,23 +464,28 @@ button.text -> [string]
 -- The only supported bitmap format is ".bmp". Colors will be overriden by the
 -- theme colors, using black as transparant color, white is the full theme
 -- color. All colors inbetween are mapped according to their grey value.
-button.bitmap -> [string]
+button.bitmap 
+  -> [string]
 
 -- table of rgb values like {0xff,0xff,0xff} -> white. when set, the
 -- unpressed button's background will be draw with the specified color. a 
 -- text color is automatically selected to make sure its always visible. 
 -- set a color of {0,0,0} to enable the theme colors for the button again...
-button.color -> [table with 3 numbers (0-255)]
+button.color 
+  -> [table with 3 numbers (0-255)]
 
 
 -- valid in the construction table only: set up a click notifier
-button.pressed -> (function())
+button.pressed 
+  -> (function())
 
 -- valid in the construction table only: set up a click release notifier
-button.released -> (function())
+button.released 
+  -> (function())
 
 -- synonymous for 'button.released'
-button.notifier -> (function())
+button.notifier 
+  -> (function())
 
 
 --------------------------------------------------------------------------------
@@ -477,10 +512,12 @@ checkbox:remove_notifier(function or {object, function} or {object, function})
 
 -- the current state of the checkbox
 -- by default false
-checkbox.value -> [boolen]
+checkbox.value 
+  -> [boolen]
 
 -- valid in the construction table only: set up a value notifier
-checkbox.notifier -> (function(value))
+checkbox.notifier 
+  -> (function(value))
 
 
 --------------------------------------------------------------------------------
@@ -507,13 +544,15 @@ switch:remove_notifier(function or {object, function} or {object, function})
 -- properties
 
 -- get/set the currently shown buttons. Item list size must be >= 2
-switch.items -> [list of strings]
+switch.items 
+  -> [list of strings]
 
 -- get/set the currently pressed button index
 switch.value
 
 -- valid in the construction table only: set up a value notifier
-switch.notifier -> (function(value))
+switch.notifier 
+  -> (function(value))
 
 
 --------------------------------------------------------------------------------
@@ -541,13 +580,15 @@ popup:remove_notifier(function or {object, function} or {object, function})
 
 -- get/set the currently shown items. Item list can be empty, then "None" is
 -- displayed and the value won't change...
-popup.items -> [list of strings]
+popup.items 
+  -> [list of strings]
 
 -- get/set the currently selected item index
 popup.value
 
 -- valid in the construction table only: set up a value notifier
-popup.notifier -> (function(value))
+popup.notifier 
+  -> (function(value))
 
 
 --------------------------------------------------------------------------------
@@ -574,13 +615,16 @@ chooser:remove_notifier(function or {object, function} or {object, function})
 -- properties
 
 -- get/set the currently shown items. Item list size must be >= 2.
-chooser.items -> [list of strings]
+chooser.items 
+  -> [list of strings]
 
 -- get/set the currently selected item index
 chooser.value
+  -> [number]
 
 -- valid in the construction table only: set up a value notifier
-chooser.notifier -> (function(value))
+chooser.notifier 
+  -> (function(value))
 
 
 --------------------------------------------------------------------------------
@@ -608,8 +652,10 @@ valuebox:remove_notifier(function or {object, function} or {object, function})
 
 -- get/set the min/max values that are expected, allowed.
 -- by default 0 and 100
-valuebox.min -> [number]
-valuebox.max -> [number]
+valuebox.min
+  -> [number]
+valuebox.max 
+  -> [number]
 
 -- get/set the current value
 valuebox.value
@@ -627,11 +673,14 @@ valuebox.value
 --
 -- note: when any of the callbacks fails with an error, both will be disabled
 -- to avoid floods of error messages
-valuefield.tostring -> (function(number) -> [string])
-valuefield.tovalue -> (function(string) -> [number])
+valuefield.tostring 
+  -> (function(number) -> [string])
+valuefield.tovalue 
+  -> (function(string) -> [number])
 
 -- valid in the construction table only: set up a value notifier
-valuebox.notifier -> (function(value))
+valuebox.notifier 
+  -> (function(value))
 
 
 --------------------------------------------------------------------------------
@@ -663,12 +712,14 @@ value.value
 -- get/set the font that the text should be displayed with.
 -- avilable font styles are: "normal", "big", "bold, "italic" and "mono"
 -- by default "normal"
-value.font -> [string]
+value.font 
+  -> [string]
 
 -- setup the value text's alignment
 -- "left", "right" or "center" are valid align values
 -- by default "left"
-value.align -> [string]
+value.align 
+  -> [string]
 
 -- valid in the construction table only: setup a custom rule on how the
 -- number should be displayed. when defined, 'tostring' must be a function
@@ -677,10 +728,12 @@ value.align -> [string]
 --
 -- note: when the callback fails with an error, it will be disabled to avoid
 -- floods of error messages
-value.tostring -> (function(number) -> [string])
+value.tostring 
+  -> (function(number) -> [string])
 
 -- valid in the construction table only: set up a value notifier
-value.notifier -> (function(number))
+value.notifier 
+  -> (function(number))
 
 
 --------------------------------------------------------------------------------
@@ -707,8 +760,10 @@ valuefield:remove_notifier(function or {object, function} or {object, function})
 
 -- get/set the min/max values that are expected, allowed
 -- by default 0.0 and 1.0
-valuefield.min -> [number]
-valuefield.max -> [number]
+valuefield.min 
+  -> [number]
+valuefield.max 
+  -> [number]
 
 -- get/set the current value
 valuefield.value
@@ -716,7 +771,8 @@ valuefield.value
 -- setup the texts alignment
 -- "left", "right" or "center" are valid align values
 -- by default "left"
-valuefield.align -> [string]
+valuefield.align 
+  -> [string]
 
 -- valid in the construction table only: setup custom rules on how the number
 -- should be displayed. both, 'tostring' and  'tovalue' must be set, or none
@@ -731,11 +787,14 @@ valuefield.align -> [string]
 --
 -- note: when any of the callbacks fails with an error, both will be disabled
 -- to avoid floods of error messages
-valuefield.tostring -> (function(number) -> [string])
-valuefield.tovalue -> (function(string) -> [number])
+valuefield.tostring 
+  -> (function(number) -> [string])
+valuefield.tovalue 
+  -> (function(string) -> [number])
 
 -- valid in the construction table only: set up a value notifier
-valuefield.notifier -> (function(number))
+valuefield.notifier 
+  -> (function(number))
 
 
 --------------------------------------------------------------------------------
@@ -764,14 +823,17 @@ slider:remove_notifier(function or {object, function} or {object, function})
 
 -- get/set the min/max values that are expected, allowed.
 -- by default 0.0 and 1.0
-slider.min -> [number]
-slider.max -> [number]
+slider.min 
+  -> [number]
+slider.max 
+  -> [number]
 
 -- get/set the current value
 slider.value
 
 -- valid in the construction table only: set up a value notifier
-slider.notifier -> (function(number))
+slider.notifier 
+  -> (function(number))
 
 
 --------------------------------------------------------------------------------
@@ -798,14 +860,17 @@ slider:remove_notifier(function or {object, function} or {object, function})
 
 -- get/set the min/max values that are expected, allowed.
 -- by default 0.0 and 1.0
-slider.min -> [number]
-slider.max -> [number]
+slider.min 
+  -> [number]
+slider.max 
+  -> [number]
 
 -- get/set the current value
 slider.value
 
 -- valid in the construction table only: set up a value notifier
-slider.notifier -> (function(number))
+slider.notifier 
+  -> (function(number))
 
 
 --------------------------------------------------------------------------------
@@ -835,14 +900,17 @@ rotary:remove_notifier(function or {object, function} or {object, function})
 
 -- get/set the min/max values that are expected, allowed.
 -- by default 0.0 and 1.0
-rotary.min -> [number]
-rotary.max -> [number]
+rotary.min 
+  -> [number]
+rotary.max 
+  -> [number]
 
 -- get/set the current value
 rotary.value
 
 -- valid in the construction table only: set up a value notifier
-rotary.notifier -> (function(number))
+rotary.notifier 
+  -> (function(number))
 
 
 --==============================================================================
@@ -861,7 +929,8 @@ dialog:close()
 
 -- properties
 
-dialog.visible -> [read-only, boolean]
+dialog.visible 
+  -> [read-only, boolean]
 
 
 --==============================================================================
@@ -947,7 +1016,8 @@ vb:rotary { RotaryEncoder Properties }
 -- properties
 
 -- view id is the key, value the corresponding view object
-vb.views -> [table of views, which got registered via the "id" property]
+vb.views 
+  -> [table of views, which got registered via the "id" property]
 
 
 --[[----------------------------------------------------------------------------
