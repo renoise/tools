@@ -18,8 +18,21 @@ check the Renoise API docs.
 -- duplex.ControlMap
 --------------------------------------------------------------------------------
 
-Essentially, the ControlMap class will import a control-map file, and add some
-extra methods, more handy methods for accessing the groups. 
+Control-map files are plain xml files) that describe a particular device in 
+terms of layout and expected input/output. Essentially, the ControlMap class 
+will import a control-map file, and add some extra methods, more handy methods 
+for accessing it's groups and parameters. 
+
+For examples of control-map files, try to open a device control-map using a 
+text editor. They're the xml files located inside the /Controllers/Device/ 
+folders. The syntax of the control-map is validated by Duplex on each load,
+so you can try out modifications to the control-maps, and there's a problem,
+you should receive a (hopefully) informative warning message.
+
+If you edit the control-map files while Renoise is running, you can force 
+Duplex to reload all control-map definitions by selecting "None" from the
+device browser, or (if you have enabled the console) choose "Reload all tools".
+
 
 -- consts
 
@@ -468,8 +481,8 @@ as configuring an application.
     }
     -- end code --
 
-2. Choose "Reload all tools" from the tools menu in Renoise
-3. Launch the Duplex browser, and choose the desired device
+3. Choose "Reload all tools" from the tools menu in Renoise
+4. Launch the Duplex browser, and choose the desired device
 
 
 
