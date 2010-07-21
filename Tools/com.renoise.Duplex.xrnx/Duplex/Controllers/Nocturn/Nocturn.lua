@@ -81,12 +81,12 @@ duplex_configurations:insert {
 
 --------------------------------------------------------------------------------
 
--- setup Transport as the only app for this configuration
+-- setup Mixer + Transport for this configuration
 
 duplex_configurations:insert {
 
   -- configuration properties
-  name = "Transport",
+  name = "Mixer + Transport",
   pinned = true,
 
   -- device properties
@@ -99,14 +99,21 @@ duplex_configurations:insert {
   },
   
   applications = {
+    Mixer = {
+      mappings = {
+        levels = {
+          group_name = "Encoders",
+        },
+      },
+    },
     Transport = {
       mappings = {
         goto_previous = {
-          group_name = "Controls",
+          group_name = "Pots",
           index = 1,
         },
         goto_next = {
-          group_name = "Controls",
+          group_name = "Pots",
           index = 2,
         },
         stop_playback = {
@@ -126,14 +133,10 @@ duplex_configurations:insert {
           index = 6,
         },
         block_loop = {
-          group_name = "Controls",
+          group_name = "Pots",
           index = 7,
         },
-
       },
-      options = {
-        
-      }
-    }
+    },
   }
 }
