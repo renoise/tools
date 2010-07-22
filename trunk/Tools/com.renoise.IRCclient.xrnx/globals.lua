@@ -21,6 +21,7 @@ rirc = nil
 last_idle_time = 0
 irc_dialog = nil
 chat_dialog = nil
+login_dialog = nil
 connect_progress_dialog = nil
 session = {}
 sessions = 1
@@ -33,7 +34,9 @@ active_channel = nil
 quit_reply = nil
 status_dialog_mode = false
 switch_channel = true
+chat_hidden = false
 connection_status = DISCONNECTED
+chat_buffer = ''
 
 channel_users = {}
 

@@ -6,8 +6,6 @@ gui.lua
 
 function client_login()
   
-  local login_dialog = nil
-  
   local vb = renoise.ViewBuilder()
   
   local DIALOG_MARGIN = renoise.ViewBuilder.DEFAULT_DIALOG_MARGIN
