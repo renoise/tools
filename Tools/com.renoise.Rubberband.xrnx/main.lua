@@ -84,9 +84,14 @@ end
 
 --------------------------------------------------------------------------------
 
-function process_stretch(stretch, crisp)
-  process_rubberband("--time "..stretch.." --crisp "..crisp);
+function process_stretch(stretch, crisp, bool_precise)
+  local cmd = "--time "..stretch.." --crisp "..crisp;
+  if bool_precise then
+    cmd = cmd .. ' -P'
+  end
+  process_rubberband(cmd);
 end
+
 
 
 --------------------------------------------------------------------------------
@@ -111,7 +116,7 @@ function show_shift_dialog()
   local semitone_selector = vb:valuebox { min = -48, max = 48, value = 0 }
   local cent_selector = vb:valuebox { min = -100, max = 100, value = 0 }
   local crisp_selector = vb:popup {
-    items = {'1', '2', '3', '4', '5'},
+    items = {'1', '2', '3', '4', '5', '6'},
     value = 5
   }
   local formant_selector = vb:checkbox {}
@@ -160,41 +165,80 @@ function show_stretch_dialog()
   local bpm = renoise.song().transport.bpm
   local lpb = renoise.song().transport.lpb
   local coef = bpm * lpb / 60.0
+  
+  local real_duration = 0
 
   local sel_sample = renoise.song().selected_sample
+  
   local nframes = sel_sample.sample_buffer.number_of_frames
+ 
+  -- local nframes = sel_sample.sample_buffer.selection_end - sel_sample.sample_buffer.selection_start + 1
+  -- Will study the selection handling bit later
+ 
   local srate = sel_sample.sample_buffer.sample_rate
 
   local slength = nframes / srate
   local rows = slength * coef
+  
+  local bool_precise = false
 
   local vb = renoise.ViewBuilder()
 
-  local nlines_selector = vb:valuebox { min = 1, value = 16 }
+  local nlines_selector = 
+      vb:textfield {
+      id = 'txtDuration',
+      tooltip = "The desired duration",
+      align = "right",
+      width = 50,
+      value = tostring(16),
+      notifier = function(real_value)
+        real_duration = tonumber(real_value)
+      end      
+    }
+
   local crisp_selector = vb:popup {
-    items = {'1', '2', '3', '4', '5'},
+  width = 230,
+    items = {'1 (Piano)', '2 (Smooth)', '3 (Balanced multitimbral mixture)', '4 (Unpitched percussion with stable notes)', '5 (Crisp monophonic instrumental)', '6 (Unpitched solo percussion)'},
     value = 5
   }
   local type_selector = vb:popup {
-    items = {'lines', 'beats', 'seconds'},
+    items = {'lines', 'beats', 'seconds', 'percent'},
     value = 2
   }
 
-  local view = vb:horizontal_aligner{
-    margin = 10,
-    spacing = 10,
-    vb:vertical_aligner{
-      vb:text{text = 'Length:' },
+  local view = 
+
+  vb:column
+  {
+    vb:horizontal_aligner
+    {
+      margin = 3,
+      spacing = 10,
+      mode = "center",
       nlines_selector,
-    },
-    vb:vertical_aligner{
-      vb:text{text = 'Units:' },
       type_selector,
     },
-    vb:vertical_aligner{
-      vb:text{text = 'Crispness:' },
-      crisp_selector
+    vb:horizontal_aligner
+    {
+      margin = 3,
+      spacing = 10,
+      mode = "center",
+      crisp_selector,
     },
+    vb:horizontal_aligner
+    {
+      margin = 3,
+      spacing = 10,
+      mode = "center",
+      vb:checkbox {
+        id = "chkPrecise",
+        value = bool_precise,
+        notifier = function(boolean_value)
+           bool_precise = boolean_value
+        end
+      },
+      vb:text { text = 'Minimal time distortion' },
+    }
   }
 
   local res = renoise.app():show_custom_prompt  (
@@ -204,24 +248,29 @@ function show_stretch_dialog()
   );
 
   -- How long we stretch?
-  local stime
+  local real_stretch_factor
+
+  -- calculate factor from desired time
   if type_selector.value == 1 then
-    stime = nlines_selector.value / rows
+    real_stretch_factor = real_duration / rows -- Lines
   elseif type_selector.value == 2 then
-    stime = (nlines_selector.value * lpb) / rows
+    real_stretch_factor = (real_duration * lpb) / rows -- Beats
   elseif type_selector.value == 3 then
-    stime = nlines_selector.value / slength
-  end;
+    real_stretch_factor = real_duration / slength -- Seconds
+  elseif type_selector.value == 4 then
+    real_stretch_factor = real_duration / 100 -- Percentage
+  end
+
   
-  if stime > 100 then
-    local conf = renoise.app():show_prompt('Too big stretch!', 'You want to multiply sample length by '.. stime..'! Doing this may freeze Renoise for several minutes or even indefinitely. Are you sure you want to continue?', {'Sure', 'No way!'});
+  if real_stretch_factor > 100 then
+    local conf = renoise.app():show_prompt('Too big stretch!', 'You want to multiply sample length by '.. real_stretch_factor..'! Doing this may freeze Renoise for several minutes or even indefinitely. Are you sure you want to continue?', {'Sure', 'No way!'});
     if conf ~= 'Sure' then
       return
     end
   end
 
   if res == 'Stretch' then
-    process_stretch(stime, crisp_selector.value)
+    process_stretch(real_stretch_factor, crisp_selector.value, bool_precise)
   end
 end
 

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <RenoiseScriptingTool>
   <ApiVersion>1.0</ApiVersion>
-  <Version>0.3.1</Version>
+  <Version>0.4</Version>
   <Id>com.renoise.Rubberband</Id>
   <Author>Cly/Suva [clysuva@gmail.com]</Author>
   <Category>Sample Editor</Category>
