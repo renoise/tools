@@ -4,20 +4,22 @@ main.lua
 
 -- Variables & Globals
 
-local current_dialog = nil
-
 local matrix_width = 25
 local matrix_height = 25
-local matrix_colors = table.create{'black','blue','yellow'} --Bitmaps dir
 local matrix_cells = table.create{}
 local matrix_view = nil
+local matrix_colors = table.create{'black','blue','yellow'} --Bitmaps dir
 
+local color_bg = "black"
+local color_snake = "blue"
+local color_food = "yellow"
+
+local current_dialog = nil
 local score = 0
 local snake = table.create()
 local food = { x= 6, y= 6 }
 local current_direction = "up"
 local last_idle_time = os.clock()
-
 
 --------------------------------------------------------------------------------
 -- The Game
@@ -60,7 +62,7 @@ function create_cells()
 
     for y = 1, matrix_height do
        matrix_cells[x][y] = vb:bitmap {
-        bitmap = "Bitmaps/cell_black.bmp",
+        bitmap = "Bitmaps/cell_" .. color_bg .. ".bmp",
       }
       column:add_child(matrix_cells[x][y])
     end
@@ -76,7 +78,7 @@ end
 
 function draw_snake()
   for _,point in pairs(snake) do
-    set_cell_color(point.x, point.y, "blue")
+    set_cell_color(point.x, point.y, color_snake)
   end
 end
 
@@ -108,9 +110,7 @@ function get_cell_color(x ,y)
     pos = color:find(".bmp")
     color = color:sub(1, -pos)
 
-    if (matrix_colors:find(color) ~= nil) then
-      return color
-    end
+    return color
   end
 end
 
@@ -134,7 +134,7 @@ end
 -- Clear a cell
 
 function clear_cell(x, y)
-  set_cell_color(x, y, "black")
+  set_cell_color(x, y, color_bg)
 end
 
 
@@ -203,14 +203,12 @@ function game()
   local tmp1 = table.create{x=nil, y=nil} --Init with empty/useless coordinates
   local tmp2 = table.create{x=nil, y=nil} --Ditto
 
-  local color = get_cell_color(snake[1].x, snake[1].y);
-
   -- Do not allow the food to be on snake's mouth
-  while (food.x == snake[1].x and food.y == snake[1].y) do
+  while get_cell_color(food.x, food.y ) == color_snake do
     food.x = math.random(matrix_width)
     food.y = math.random(matrix_height)
   end
-  set_cell_color(food.x, food.y, "yellow")
+  set_cell_color(food.x, food.y, color_food)
 
   tmp1.x = snake[1].x
   tmp1.y = snake[1].y
@@ -235,7 +233,7 @@ function game()
     snake[1].x > matrix_width or
     snake[1].y < 1 or
     snake[1].y > matrix_height or
-    color == get_cell_color(snake[1].x, snake[1].y)
+    color_snake == get_cell_color(snake[1].x, snake[1].y)
     )
   then
     renoise.app():show_error("Game over! You're score is: " .. score)
