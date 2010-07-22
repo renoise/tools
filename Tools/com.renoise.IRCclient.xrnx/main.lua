@@ -14,8 +14,14 @@ require "gui"
 
 renoise.tool():add_menu_entry {
   name = "Main Menu:Help:Visit the Community Chatroom...",
-  invoke = function() client_login() end
+  invoke = function() toggle_chat_dialog_window() end
 }
+
+renoise.tool():add_keybinding {
+  name = "Global:Tools:Show/Hide IRC chat",
+  invoke = function() toggle_chat_dialog_window() end
+}
+
 
 
 --------------------------------------------------------------------------------
@@ -45,14 +51,15 @@ function print_server_replies()
   else
 
     if (not chat_dialog or not chat_dialog.visible) and 
-       (not status_dialog_mode) and (not switch_channel) then
+       (not status_dialog_mode) and (not switch_channel) and (not chat_hidden) then
       stop_message_engine()
       return
     end
 
   end
 
-  if (not chat_dialog or not chat_dialog.visible) and active_channel ~=nil then
+  if (not chat_dialog or not chat_dialog.visible) and active_channel ~=nil and 
+     (not chat_hidden) then
     send_command("",'status',"/part "..active_channel)
     active_channel = nil
     return
@@ -64,6 +71,7 @@ function print_server_replies()
         --We got disconnected from the other end?
         stop_message_engine()
         local EOT = "\n[[Server disconnected]]\n"
+        chat_buffer = chat_buffer..EOT
 
         if irc_dialog ~= nil then
 
@@ -129,7 +137,8 @@ function print_server_replies()
               topic = "Current channel topic not set"
             end
             vb_channel.views.channel_output_frame:add_line(topic)
-            
+            chat_buffer = chat_buffer..topic.."\r\n"
+
           end
 
           if SERVER_ARRAY[t] == "353" then -- Names list requested, enumerate the names for the channel list.
@@ -158,8 +167,10 @@ function print_server_replies()
 
              else
 
+               local channel_line = os.date("%c").." [SERVER] nick "..irc_nick_name.." already in use"
+               chat_buffer = chat_buffer..channel_line.."\r\n"
+               
                if irc_dialog == nil and chat_dialog ~= nil then
-                 local channel_line = os.date("%c").." [SERVER] nick "..irc_nick_name.." already in use"
                  vb_channel.views.channel_output_frame:add_line(channel_line)
                  vb_channel.views.channel_output_frame:scroll_to_last_line()
                end
@@ -190,11 +201,14 @@ function print_server_replies()
 
              else
 
+               local channel_line = os.date("%c").." [SERVER] channel "..active_channel.." is invite only"
+
                if irc_dialog == nil and chat_dialog ~= nil then
-                 local channel_line = os.date("%c").." [SERVER] channel "..active_channel.." is invite only"
                  vb_channel.views.channel_output_frame:add_line(channel_line)
                  vb_channel.views.channel_output_frame:scroll_to_last_line()
                end
+
+               chat_buffer = chat_buffer..channel_line.."\r\n"
 
              end
 
@@ -245,6 +259,7 @@ function print_server_replies()
               channel_line = os.date("%c").." "..user_say..say_text
             end
 
+            chat_buffer = chat_buffer..channel_line.."\r\n"
             vb_channel.views.channel_output_frame:add_line(channel_line)
             vb_channel.views.channel_output_frame:scroll_to_last_line()
           end
@@ -272,6 +287,7 @@ function print_server_replies()
     end
 
   until command_line == nil
+
   last_idle_time = os.clock()
 end
 
@@ -466,6 +482,8 @@ function send_command (target, target_frame, command)
       end
 
       command = "PRIVMSG "..target.." :"..command
+      chat_buffer = chat_buffer..local_echo.."\r\n"
+
     end
 
     local COMMAND = command.."\r\n"
@@ -504,6 +522,7 @@ function send_command (target, target_frame, command)
         --We got disconnected from the other end?
         stop_message_engine()
         local EOT = "Server disconnected ->"..command
+        chat_buffer = chat_buffer..EOT.."\r\n"
 
         if irc_dialog ~= nil then
 
@@ -531,6 +550,7 @@ function send_command (target, target_frame, command)
         --Silently leave the arena when server returns a quit reply.
         stop_message_engine()
         local EOT = "Server disconnected ->"..command
+        chat_buffer = chat_buffer..EOT.."\r\n"
 
         if irc_dialog ~= nil then
 
@@ -596,12 +616,84 @@ function chat_key_handler(dialog, key)
     no_loop = 1
     vb_channel.views.channel_command.value = string.sub(vb_channel.views.channel_command.value,1,
     string.len(vb_channel.views.channel_command.value)-1)
+
+  elseif key.character ~= nil then
+    --Shortcut to hide / "m"inimize chat dialog.
+    --Want a different one? simply change the character and modifiers combo
+    
+    if (key.modifiers == "alt + control" and key.character == "c") then
+      chat_hidden = true  --Do not log off when closing the chat dialog!!
+      chat_dialog:close()
+    end
+      
   elseif (key.character) then
     no_loop = 1
     vb_channel.views.channel_command.value = vb_channel.views.channel_command.value .. 
       key.character
   end
     
+end
+
+
+--------------------------------------------------------------------------------
+
+function toggle_chat_dialog_window()
+
+  if chat_dialog ~= nil and connection_status == CONNECTED then
+
+    if sirc_debug then
+      print("Status connected, chat_dialog has handle")
+    end
+
+    if chat_dialog.visible then
+
+      if sirc_debug then
+        print("Hide dialog")
+      end
+
+      chat_hidden = true  --Do not log off when closing the chat dialog!!
+      chat_dialog:close()
+     else
+
+      if sirc_debug then
+        print("Display dialog")
+      end
+
+      chat_hidden = false
+      chat_dialog_control(active_channel)
+      vb_channel.views.channel_output_frame.text = chat_buffer
+      vb_channel.views.channel_command.text = "/NAMES "..active_channel
+    end
+
+  else
+
+    if sirc_debug then
+      print("Status disconnected or chat_dialog doesn't has handle")
+    end
+
+    if client ~= nil then
+
+      if sirc_debug then
+        print("Status disconnected, client NOT nil")
+      end
+
+      chat_hidden = false
+      chat_dialog_control(active_channel)
+      vb_channel.views.channel_output_frame.text = chat_buffer
+      vb_channel.views.channel_command.text = "/NAMES "..active_channel
+    else
+
+      if sirc_debug then
+        print("Status disconnected, client == nil")
+      end
+
+      chat_hidden = false
+      chat_buffer = ''
+      client_login()
+    end
+
+  end
+
 end
 
 
@@ -614,7 +706,7 @@ function login_key_handler(dialog, key)
     dialog:close()
 
   elseif (key.modifiers == "" and key.name == "return") then
-    connect_to_server()
+    connect_to_server(vb_login)
     login_dialog:close()
   end
 
@@ -661,6 +753,7 @@ function stop_message_engine()
     connection_status = DISCONNECTED
     renoise.tool().app_idle_observable:remove_notifier(print_server_replies)
     quit_irc()
+    client = nil
   end
 
 end
