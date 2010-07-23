@@ -194,6 +194,15 @@ function Browser:set_device(device_display_name, configuration_hint)
     if (device_display_name == "None") then
       TRACE("Browser:releasing all processes")
       
+      -- close device-settings (if open)
+      for _,process in pairs(self.__processes) do
+        if(process.device) and
+          (process.device.__settings_dialog) and
+          (process.device.__settings_dialog.visible) then
+          process.device.__settings_dialog:close()
+        end
+      end
+
       -- release all devices & applications
       while (not self.__processes:is_empty()) do
         self.__processes[#self.__processes]:invalidate()
