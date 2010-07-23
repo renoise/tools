@@ -18,8 +18,10 @@ duplex_configurations:insert {
   device = {
     class_name = nil,          
     display_name = "Remote SL MKII Automap",
-    device_name = "Automap MIDI",
+    device_port_in = "Automap MIDI",
+    device_port_out = "Automap MIDI",
     control_map = "Controllers/Remote-SL-MKII/Remote-SL-MKII.xml",
+    thumbnail = "Remote-SL-MKII.bmp",
     protocol = DEVICE_MIDI_PROTOCOL
   },
   

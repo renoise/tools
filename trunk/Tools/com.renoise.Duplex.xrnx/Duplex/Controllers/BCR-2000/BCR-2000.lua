@@ -10,10 +10,10 @@
 
 class "BCR2000" (MidiDevice)
 
-function BCR2000:__init(display_name, port_name, message_stream)
-  TRACE("BCR2000:__init", display_name, port_name, message_stream)
+function BCR2000:__init(display_name, message_stream, port_in, port_out)
+  TRACE("BCR2000:__init", display_name, message_stream, port_in, port_out)
 
-  MidiDevice.__init(self, display_name, port_name, message_stream)
+  MidiDevice.__init(self, display_name, message_stream, port_in, port_out)
 
   -- the BCR can not handle looped back messages correctly, so we disable 
   -- sending back messages we got from the BCR, in order to break feedback loops...
@@ -36,8 +36,10 @@ duplex_configurations:insert {
   device = {
     class_name = "BCR2000",          
     display_name = "BCR-2000",
-    device_name = "BCR2000",
+    device_port_in = "BCR2000",
+    device_port_out = "BCR2000",
     control_map = "Controllers/BCR-2000/BCR-2000.xml",
+    thumbnail = "BCR-2000.bmp",
     protocol = DEVICE_MIDI_PROTOCOL
   },
   

@@ -10,16 +10,16 @@
 
 class "BCF2000" (MidiDevice)
 
-function BCF2000:__init(display_name, port_name, message_stream)
-  TRACE("BCF2000:__init", display_name, port_name, message_stream)
+function BCF2000:__init(display_name, message_stream, port_in, port_out)
+  TRACE("BCF2000:__init", display_name, message_stream, port_in, port_out)
 
-  MidiDevice.__init(self, display_name, port_name, message_stream)
+  MidiDevice.__init(self, display_name, message_stream, port_in, port_out)
 
   -- the BCF can not handle looped back messages correctly, so we disable 
   -- sending back messages we got from the BCF, in order to break feedback loops...
   self.loopback_received_messages = false
-
 end
+
 
 --------------------------------------------------------------------------------
 
@@ -35,8 +35,10 @@ duplex_configurations:insert {
   device = {
     class_name = "BCF2000",          
     display_name = "BCF-2000",
-    device_name = "BCF2000",
+    device_port_in = "BCF2000",
+    device_port_out = "BCF2000",
     control_map = "Controllers/BCF-2000/BCF-2000.xml",
+    thumbnail = "BCF-2000.bmp",
     protocol = DEVICE_MIDI_PROTOCOL
   },
   
@@ -68,3 +70,4 @@ duplex_configurations:insert {
     }
   }
 }
+

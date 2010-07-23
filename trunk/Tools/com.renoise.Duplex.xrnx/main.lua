@@ -48,8 +48,8 @@ end
 
 --------------------------------------------------------------------------------
 
--- instantiate all configs that the user "enabled" to autostart
--- to be invoked from app_new_document_observable 
+-- instantiate all configs that the user "enabled" to autostart.
+-- to be invoked from 'app_new_document_observable'
 
 local applied_autostart_configurations = false
 
@@ -59,33 +59,15 @@ local function apply_autostart_configurations()
   if (not applied_autostart_configurations) then
     applied_autostart_configurations = true
     
-    local autostart_configurations = duplex_preferences.autostart_configurations    
-    for i=1, #autostart_configurations do     
-      local device_config_name = autostart_configurations[i].value      
-      if (device_config_name ~= "") then
-      
-        -- find the config
-        local matching_config
-        for _,config in pairs(duplex_configurations) do
-          local config_autostart_name = 
-            config.device.display_name .. " " .. config.name
-          
-          if (device_config_name == config_autostart_name) then
-            matching_config = config
-            break
-          end
-        end
-        
-        -- and start it
-        if (matching_config) then
-          local start_running = true
-          create_browser(matching_config, start_running)
-        end
+    for _,config in pairs(duplex_configurations) do
+      local settings = configuration_settings(config)
+      if (settings.autostart.value) then
+        local start_running = true
+        create_browser(config, start_running)
       end
     end
   end  
 end
-
 
 
 --------------------------------------------------------------------------------
@@ -117,26 +99,34 @@ for _,config in pairs(duplex_configurations) do
   end
 end
 
-local avilable_devices = table.create(device_configuration_map:keys())
-avilable_devices:sort()
+local available_devices = table.create(device_configuration_map:keys())
+available_devices:sort()
 
-for _,device_name in pairs(avilable_devices) do
+local added_menu_entries = table.create()
+
+for _,device_name in pairs(available_devices) do
   local prefix = "--- "
   for _,config in pairs(device_configuration_map[device_name]) do
     if (config.pinned) then
       local entry_name = ("Main Menu:Tools:Duplex: %s %s..."):format(
         config.device.display_name, config.name)
         
-      renoise.tool():add_menu_entry {
-        name = ("%s%s"):format(prefix,entry_name),
-        selected = function() 
-          return (browser ~= nil and browser:configuration_running(config))
-        end,
-        invoke = function() 
-          show_dialog(config) 
-        end
-      }
-      prefix = ""
+      -- doubled config entreis are validated below by the prefs registration
+      if (not added_menu_entries:find(entry_name)) then
+        added_menu_entries:insert(entry_name)
+        
+        renoise.tool():add_menu_entry {
+          name = ("%s%s"):format(prefix,entry_name),
+          selected = function() 
+            return (browser ~= nil and browser:configuration_running(config))
+          end,
+          invoke = function() 
+            show_dialog(config) 
+          end
+        }
+
+        prefix = ""
+      end
     end
   end
 end
@@ -188,7 +178,49 @@ end)
 -- preferences
 --------------------------------------------------------------------------------
 
--- assign the global duplex prefs as tool preferences
+-- dynamicall register configuration settings for each config
+
+local configuration_root_node = 
+  duplex_preferences:add("configurations", renoise.Document.create())
+
+for _,device_name in pairs(available_devices) do
+  for _,config in pairs(device_configuration_map[device_name]) do
+
+    if (config.device.display_name and config.name) then
+      if (configuration_root_node[configuration_settings_key(config)]) then
+      
+        renoise.app():show_warning(
+          ("Whoops! Device configuration '%s %s' seems to be present more "..
+           "than once. Please use a unique device & config name combination "..
+           "for each config."):format(config.device.display_name, config.name))
+      else
+      
+        if (config.device.protocol == DEVICE_MIDI_PROTOCOL) then
+          configuration_root_node:add(
+            configuration_settings_key(config), 
+            renoise.Document.create {
+              autostart = false,
+              device_port_in = "",
+              device_port_out = ""
+            }
+          )
+        else -- protocol == DEVICE_OSC_PROTOCOL
+          configuration_root_node:add(
+            configuration_settings_key(config), 
+            renoise.Document.create {
+              autostart = false,
+              prefix = "",
+              address = "",
+              port = ""
+            }
+          )
+        end        
+      end
+    end
+  end
+end
+
+-- and assign the global duplex prefs as tool preferences to activate them
 renoise.tool().preferences = duplex_preferences
 
 

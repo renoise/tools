@@ -60,7 +60,7 @@ MUTE_STATE_OFF = 2
 
 
 --------------------------------------------------------------------------------
--- device configurations
+-- device configurations & preferences
 --------------------------------------------------------------------------------
 
 -- device and application setup for controllers, registered by the controllers
@@ -92,14 +92,10 @@ duplex_configurations = table.create()
 
 
 --------------------------------------------------------------------------------
--- preferences
---------------------------------------------------------------------------------
 
 -- global or configuration settings for duplex
 
 duplex_preferences = renoise.Document.create{
-  -- list of device configurations that should be started by default
-  autostart_configurations = {""},
 
   -- the number of seconds required to trigger DEVICE_EVENT_BUTTON_HELD
   -- fractional values are supported, 0.5 is half a second
@@ -107,8 +103,50 @@ duplex_preferences = renoise.Document.create{
 
   -- debug option: when enabled, dump MIDI messages received and send by duplex
   -- to the sdt out (Renoise terminal)
-  dump_midi = false
+  dump_midi = false,
+
+  -- list of user configuration settings (like MIDI device names, app configs)
+  -- added during runtime for all available configs:
+  
+  -- configurations = {
+  --    autostart [boolean] -- if this config should be started with Renoise
+  --    device_in_port [string] -- custom MIDI in device name
+  --    device_out_port [string] -- custom MIDI out device name
+  -- }
 }
+
+
+--------------------------------------------------------------------------------
+
+-- returns a hopefully unique, xml node friendly key, that is used in the 
+-- preferences tree for the given configuration
+
+function configuration_settings_key(config)
+
+  -- use device_name + config_name as base
+  local key = (config.device.display_name .. " " .. config.name):lower()
+  
+  -- convert spaces to _'s
+  key = key:gsub("%s", "_")
+  -- remove all non alnums
+  key = key:gsub("[^%w_]", "")
+  -- and removed doubled _'s
+  key = key:gsub("[_]+", "_")
+  
+  return key
+end
+
+
+--------------------------------------------------------------------------------
+
+-- returns the preferences user settings node for the given configuration.
+-- always valid, but properties in the settings will be empty by default
+
+function configuration_settings(config)
+
+  local key = configuration_settings_key(config)
+  return duplex_preferences.configurations[key]
+end
 
 
 --------------------------------------------------------------------------------
