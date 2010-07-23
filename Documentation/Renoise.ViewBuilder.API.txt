@@ -231,7 +231,7 @@ multiline_text.text
 
 -- get/set a list/table of text lines, which will be converted to paragraphs
 -- by default empty
-multiline_text.pargraphs 
+multiline_text.paragraphs 
   -> [string]
 
 -- get/set the font that the text should be displayed with.
