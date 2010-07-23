@@ -1016,9 +1016,9 @@ function BrowserProcess:__init()
   self.configuration = nil
   -- shortcut for the configurations user settings
   self.settings = nil
-
-  -- device class instance
+  -- Device class instance
   self.device = nil 
+
   
   -- Display class instance
   self.__display = nil 
@@ -1029,25 +1029,12 @@ function BrowserProcess:__init()
   -- View that got build by the display for the device
   self.__control_surface_view = nil
   self.__control_surface_parent_view = nil
-  
-  -- list of instantiated apps for current configuration
+
+  -- list of instantiated apps for the current configuration
   self.__applications = table.create() 
   
   -- true when this process was running at least once after instantiated
   self.__was_running = false
-end
-
-
---------------------------------------------------------------------------------
-
--- returns the configuration's name as used in the auto start preferences
-
-function BrowserProcess:autostart_config_name()
-  assert(self:instantiated(), "Internal Error. Please report: " .. 
-    "trying to use a process which was not instantiated")
-    
-  return self.configuration.device.display_name .. 
-    " " .. self.configuration.name
 end
 
 
@@ -1139,7 +1126,7 @@ function BrowserProcess:instantiate(configuration)
     return false      
   end
 
-  -- applications class node specified?
+  -- application class node specified?
   if (configuration.applications == nil) then 
     renoise.app():show_warning(("Whoops! Device configuration "..
        "contains no applications"))
@@ -1147,8 +1134,8 @@ function BrowserProcess:instantiate(configuration)
     return false
   end
   
-   -- applications classes valid?
- for app_class_name in pairs(configuration.applications) do
+  -- application classes valid?
+  for app_class_name in pairs(configuration.applications) do
     if (not rawget(_G, app_class_name)) then
       renoise.app():show_warning(
         ("Whoops! Device configuration "..
