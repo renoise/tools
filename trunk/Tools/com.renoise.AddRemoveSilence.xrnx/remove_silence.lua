@@ -157,7 +157,7 @@ local function process_data()
   
   end
 
-  if int_silence_start ~= 0 then
+  if int_silence_start ~= 0 and not (int_mode == MODE_TRIMLEFT) then
     -- the sample ends with silence
     int_detections = int_detections +1
     array_int_silence_start[int_detections] = int_silence_start
