@@ -12,19 +12,19 @@ Devices that use this application: Remote, Launchpad and Ohm64
 
 Mappings 
 
-stop_playback		  (trigger)   short blink
-start_playback		(trigger)   on/off (listener) 
-loop_pattern		  (toggle)	  on/off (listener)
-edit_mode		      (toggle)	  on/off (listener)
-goto_next		      (triggers)	instant/scheduled blink
-goto_previous	    (triggers)	instant/scheduled blink
-block_loop        (toggle)	  on/off (listener)
+stop_playback      (trigger)   short blink
+start_playback    (trigger)   on/off (listener) 
+loop_pattern      (toggle)    on/off (listener)
+edit_mode          (toggle)    on/off (listener)
+goto_next          (triggers)  instant/scheduled blink
+goto_previous      (triggers)  instant/scheduled blink
+block_loop        (toggle)    on/off (listener)
 
 Options
 
-pattern_play		  retrigger / schedule
-pattern_stop		  panic / rewind
-bpm_range		      32-160 / 72-200 / 112-240 / 152-280
+pattern_play      retrigger / schedule
+pattern_stop      panic / rewind
+bpm_range          32-160 / 72-200 / 112-240 / 152-280
 
 
 --]]
@@ -237,7 +237,7 @@ function Transport:on_idle()
     self.__edit_mode = edit_mode
   end
 
-print("self.__edit_mode",self.__edit_mode)
+-- print("self.__edit_mode",self.__edit_mode)
 
   -- check if we have arrived at the scheduled pattern
   if (self.__scheduled_pattern)then
