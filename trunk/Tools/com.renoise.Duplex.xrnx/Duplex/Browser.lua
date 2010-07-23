@@ -3,7 +3,7 @@
 ----------------------------------------------------------------------------]]--
 
 
-local NOT_AVAILABLE_POSTFIX = " (N/A)"
+local NOT_AVAILABLE_POSTFIX = " [N/A]"
 local RUNNING_POSTFIX = " (running)"
 
 
@@ -134,9 +134,9 @@ end
 
 function Browser:available_devices()
 
-  local result = table.create{ "None" }
-
-  -- insert devices that are installed on this system first
+  -- devices that are installed on this system 
+  local installed_devices = table.create()
+  
   local input_devices = table.create(renoise.Midi.available_input_devices())
   local output_devices = table.create(renoise.Midi.available_output_devices())
   
@@ -149,23 +149,41 @@ function Browser:available_devices()
     local device_port_out = (settings.device_port_out.value ~= "") and 
       settings.device_port_out.value or config.device.device_port_out
   
+    local display_name = config.device.display_name
+    
     if (input_devices:find(device_port_in) and 
         output_devices:find(device_port_out) and 
-        not result:find(config.device.display_name)) 
+        not installed_devices:find(display_name)) 
     then
-      result:insert(config.device.display_name)
+      installed_devices:insert(display_name)
     end
   end
   
-  -- then all others that are available in duplex but not installed
+  -- all others that are available in duplex but could not be found
+  local remaining_devices = table.create()
+  
   for _,config in pairs(self.__available_configurations) do
-    if (not result:find(config.device.display_name) and
-        not result:find(config.device.display_name .. NOT_AVAILABLE_POSTFIX))
+    local display_name = config.device.display_name
+    if (not installed_devices:find(display_name) and
+        not remaining_devices:find(display_name .. NOT_AVAILABLE_POSTFIX))
     then
-      result:insert(config.device.display_name .. NOT_AVAILABLE_POSTFIX)
+      remaining_devices:insert(display_name .. NOT_AVAILABLE_POSTFIX)
     end
   end
 
+  -- build the final list, prepending "none"
+  local result = table.create{ "None" }
+  
+  installed_devices:sort()
+  for _,device in pairs(installed_devices) do
+    result:insert(device)
+  end
+  
+  remaining_devices:sort()
+  for _,device in pairs(remaining_devices) do
+    result:insert(device)
+  end
+  
   return result
 end
 
@@ -868,8 +886,6 @@ end
 
 function Browser:__create_content_view()
   
-  local device_list = self:available_devices()
-
   local vb = self.__vb
   
   self.__content_view = vb:column{
@@ -887,10 +903,12 @@ function Browser:__create_content_view()
       },
       vb:popup {
         id = 'dpx_browser_input_device',
-        items = device_list,
+        items = self:available_devices(),
         width = 200,
         notifier = function(e)
           if (not self.__suppress_notifiers) then
+            local device_list = self:available_devices()
+            
             if (e == 1 and self:__process_running()) then -- "None"
               local choice = renoise.app():show_prompt("", 
                 "This will close all open devices. Are you sure?", 
