@@ -774,13 +774,10 @@ function Matrix:__build_app()
         local seq_offset = self.__edit_page*self.__height
 
         if x+self.__track_offset == master_idx then
-          --print('Notice: Master-track cannot be muted')
           return false
         elseif not renoise.song().tracks[x+self.__track_offset] then
-          --print('Notice: Track is outside bounds')
           return false
         elseif not seq[y+seq_offset] then
-          --print('Notice: Pattern is outside bounds')
           return false
         else
           renoise.song().sequencer:set_track_sequence_slot_is_muted(

@@ -237,8 +237,6 @@ function Transport:on_idle()
     self.__edit_mode = edit_mode
   end
 
--- print("self.__edit_mode",self.__edit_mode)
-
   -- check if we have arrived at the scheduled pattern
   if (self.__scheduled_pattern)then
     local pos = renoise.song().transport.playback_pos.sequence
@@ -318,7 +316,6 @@ function Transport:__build_app()
     c.palette.foreground.text = "●"
     c.on_change = function(obj)
       if not self.active then return false end
-print("got here")
       renoise.song().transport.edit_mode = obj.active
     end
     self.display:add(c)
