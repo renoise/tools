@@ -54,8 +54,8 @@ renoise.tool():add_menu_entry {
 --  Debug
 -------------------------------------------
 
-if false then 
-  require "remdebug.engine"
+if true then 
+--  require "remdebug.engine"
   
   _AUTO_RELOAD_DEBUG = function()
     start_server()
@@ -68,6 +68,7 @@ end
 
 class 'ActionTree'
 
+   -- default values
    ActionTree.message = {
        boolean_value = nil,
        int_value = nil,
@@ -82,15 +83,32 @@ class 'ActionTree'
    }   
 
    function ActionTree:find_action(action_name)
-       if table.find(ActionTree.action_names, action_name) then
-         log:info("Invoking: " .. action_name)
-         invoke_action(action_name, ActionTree.message)
-         return true
-       else
-         log:warn("Action not found: " .. action_name)
-       end
-       return false
+     local splits = Util:split(action_name, "?")
+     action_name = splits[1]
+     local query = splits[2]
+     splits = Util:split(query, "=")     
+     local type = splits[1]
+     local value = splits[2]
+     local message = table.create(ActionTree.message)
+     if (type == 'b') then 
+       message.boolean_value = splits[2]
+     elseif (type == 'i') then 
+       message.int_value = splits[2] 
+       message.value_max_scaling = 99
+       message.is_trigger = function() return false end
+       message.is_abs_value = function() return true end
      end
+     rprint(message)
+     
+     if table.find(ActionTree.action_names, action_name) then
+       log:info("Invoking: " .. action_name)
+       invoke_action(action_name, message)
+       return true
+     else
+       log:warn("Action not found: " .. action_name)
+     end
+     return false
+   end
 
    function ActionTree:get_action_tree()
     ActionTree.action_names = available_actions()    
@@ -204,8 +222,8 @@ class "ActionServer"
      local p = {}
      local key, val = nil
      for k,v in body:gmatch("([^=&]+)=([^=&]+)") do
-       key = Util:html_entity_decode(Util:trim(k))
-       val = Util:html_entity_decode(Util:trim(v))                    
+       key = Util:urldecode(Util:trim(k))
+       val = Util:urldecode(Util:trim(v))                    
        if key:match("%[%]$") then
          if p[key] == nil then
             p[key] = table.create()
@@ -414,8 +432,13 @@ class "ActionServer"
       if method ~= nil then        
         method = method:upper()
         url = header[1]:match("%s(.-)%s")        
+        print(url)
         url_parts = Util:parse(url)                
-        path = Util:trim(Util:html_entity_decode(url_parts.path))
+        path = Util:trim(Util:urldecode(url_parts.path .. '?'..(url_parts.query or '')))
+        -- strip ending ?
+        if (path:sub(-1) == '?') then
+          path = path:sub(1,-2)
+        end
       else
         log:warn("No HTTP method received")
         return
@@ -499,7 +522,7 @@ function start_server()
     ActionServer.mime_types = Util:parse_config_file("/mime.types")
     action_server = ActionServer(address, port)
     
-    renoise.app():open_url("localhost:"..port)
+    renoise.app():open_url("localhost:"..port .. "/matrix.html")
 end
 
 function stop_server()
