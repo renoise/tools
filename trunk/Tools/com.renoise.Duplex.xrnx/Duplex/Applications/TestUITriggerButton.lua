@@ -21,9 +21,7 @@ row   1x8 buttons
 class 'TestUITriggerButton' (Application)
 
 function TestUITriggerButton:__init(display,mappings,options)
-  print("TestUITriggerButton:__init(",display,mappings,options)
-
-rprint(mappings)
+  TRACE("TestUITriggerButton:__init(",display,mappings,options)
 
   self.mappings = {
     grid = {},
@@ -33,8 +31,6 @@ rprint(mappings)
   self.display = display
 
   self:__apply_mappings(mappings)
-
-rprint(self.mappings)
 
   if(self.mappings.grid.group_name)then
 

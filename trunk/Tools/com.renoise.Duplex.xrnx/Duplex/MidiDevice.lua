@@ -92,7 +92,7 @@ function MidiDevice:midi_callback(message)
 
   if (self.dump_midi) then
     print(("MidiDevice: %s received MIDI %X %X %X"):format(
-    self.port_in, message[1], message[2], message[3]))
+      self.port_in, message[1], message[2], message[3]))
   end
 
   -- determine the type of signal : note/cc/etc

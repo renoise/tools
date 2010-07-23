@@ -7,7 +7,6 @@
 The Scheduler class will execute tasks after a defined amount of time
 - UIComponents use this for scheduling updates to their display
 
-
 --]]
 
 
@@ -21,6 +20,7 @@ function Scheduler:__init()
   self.tasks = table.create()
 
 end
+
 
 --------------------------------------------------------------------------------
 
@@ -36,6 +36,7 @@ function Scheduler:on_idle()
   end
 end
 
+
 --------------------------------------------------------------------------------
 
 function Scheduler:add_task(ref,func,delay)
@@ -46,6 +47,7 @@ function Scheduler:add_task(ref,func,delay)
   return task
 
 end
+
 
 --------------------------------------------------------------------------------
 
@@ -59,19 +61,17 @@ function Scheduler:remove_task(ref)
       return
     end
   end
-
 end
+
 
 --------------------------------------------------------------------------------
 
 function Scheduler:__execute_task(task)
-  --print("Scheduler:__execute_task",task)
+  TRACE("Scheduler:__execute_task",task)
 
-  --print("about to call task.func:",task.func)
   task.func(task.ref)
-
-
 end
+
 
 --[[----------------------------------------------------------------------------
 -- Duplex.ScheduledTask
@@ -79,14 +79,15 @@ end
 
 class 'ScheduledTask' 
 
-function ScheduledTask:__init(ref,func,delay)
-	TRACE("ScheduledTask:__init()",ref,func,delay)
+function ScheduledTask:__init(ref, func, delay)
+  TRACE("ScheduledTask:__init", ref, func, delay)
 
   self.time = os.clock()+delay
   self.ref = ref
   self.func = func
 
 end
+
 
 --------------------------------------------------------------------------------
 
