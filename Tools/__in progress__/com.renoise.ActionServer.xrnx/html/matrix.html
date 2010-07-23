@@ -1,0 +1,138 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" dir="ltr">
+<head>
+<title>Renoise Matrix</title>
+    <meta http-equiv="cache-control" content="no-cache" />
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+    <link type="text/css" href="/default.css" media="screen" rel="stylesheet" />
+
+    <!-- required scripts -->
+    <script type="text/javascript" src="/js/jquery-1.4.2.min.js"></script>
+    <script type="text/javascript" src="/js/jquery-ui-1.8.1.custom.min.js"></script>
+    <script type="text/javascript" src="/js/cookies.js"></script>
+
+    <!-- required styles -->
+    <link type="text/css" href="/fg-menu/theme/ui.core.css" media="screen" rel="stylesheet" />
+    <link type="text/css" href="/fg-menu/theme/ui.theme.css" media="screen" rel="stylesheet" />
+    
+    <style type="text/css">
+      td {
+        width: 80px;
+        height: 40px;
+      }
+      .pid {
+        background-color: #BE8D18;
+      }
+      .pid:hover {
+        background-color: #FFDF59;
+      }
+      .pid:active {
+        background-color: #DEAD38;
+      }
+      .playing {
+        background-color: #FEBD48;
+      }
+      .pattern {
+        border: 2px solid #eee;
+        background-color: pink;
+      }
+      .pattern:hover, .pid:hover {
+        border: 2px dotted black;
+        cursor: pointer;
+      }
+      .pattern:active {
+        background-color: red;
+      }
+      .seq_mute {
+        background-color: purple;
+      }
+      .empty {
+        background-color: black;
+      }
+    </style>
+
+</head>
+
+<body>
+  <div id="center">
+    ~{do
+        function s()
+          return renoise.song()
+        end
+    
+        local str = ""
+        function out(s)
+          str = str .. s
+        end
+    
+        out("<table>")
+    
+        -- get tracks
+        local tnum = #s().tracks
+        out("<thead><tr><th>#</th>")
+        for _,t in pairs(s().tracks) do
+          out(("<th>%s</th>"):format(t.name))
+        end
+        out("</tr></thead><tbody>")
+    
+        -- get patterns
+        local pattern
+        for sid,pid in pairs(s().sequencer.pattern_sequence) do
+          local classes = table.create{"pid"}
+          if (sid == s().transport.playback_pos.sequence) then
+              classes:insert("playing")
+          end
+          out("<tr>")
+          out(("<td class='%s' title='%d'>%d</td>")
+            :format(classes:concat(' '),sid,pid-1))
+          local has_notes = false
+          local seq_mute = false
+          for tid=1,tnum do
+            for pos,col in s().pattern_iterator:lines_in_pattern_track(pid, tid) do
+              has_notes = true
+              seq_mute = s().sequencer:track_sequence_slot_is_muted(tid, sid)
+              break
+            end
+
+            -- add classes
+            local classes = table.create{"pattern"}
+            if (not has_notes) then
+              classes:insert("empty")
+            end
+            if (seq_mute) then
+              classes:insert("seq_mute")
+            end
+            local url = ("/Seq. Muting/Seq. XX [Toggle]/Seq. #%02d/Mute Track #%02d [Toggle]")
+              :format(sid,tid)
+            out( ("<td class='%s' title='%s'></td>"):format(classes:concat(' '), Util:urlencode(url)) )
+
+          end
+          out("</tr>")
+        end
+
+        out("</tbody></table>")
+        OUT = str
+    end}
+
+  </div>
+
+  <script type="text/javascript">
+    //Seq Trigger
+    $(".pid").live('click', function(){
+     var url = "/Seq. Triggering/Trigger/Sequence XX [Set]?i="+$(this).attr('title');
+     $.post(url, {ajax:true});
+     return false;
+    });
+
+    //Seq Mute
+    $(".pattern").live('click', function(){
+     var p = this
+     var url = $(this).attr('title');
+     $.post(url, {ajax:true}, function(){
+      $(p).toggleClass('seq_mute');
+     });
+     return false;
+    });
+  </script>
+</body>
+</html>
