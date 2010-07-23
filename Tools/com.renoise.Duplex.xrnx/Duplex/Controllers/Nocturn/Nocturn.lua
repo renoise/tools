@@ -18,8 +18,10 @@ duplex_configurations:insert {
   device = {
     class_name = nil,          
     display_name = "Nocturn Automap",
-    device_name = "Automap MIDI",
+    device_port_in = "Automap MIDI",
+    device_port_out = "Automap MIDI",
     control_map = "Controllers/Nocturn/Nocturn.xml",
+    thumbnail = "Nocturn.bmp",
     protocol = DEVICE_MIDI_PROTOCOL
   },
   
@@ -54,8 +56,10 @@ duplex_configurations:insert {
   device = {
     class_name = nil,          
     display_name = "Nocturn Automap",
-    device_name = "Automap MIDI",
+    device_port_in = "Automap MIDI",
+    device_port_out = "Automap MIDI",
     control_map = "Controllers/Nocturn/Nocturn.xml",
+    thumbnail = "Nocturn.bmp",
     protocol = DEVICE_MIDI_PROTOCOL
   },
   
@@ -93,8 +97,10 @@ duplex_configurations:insert {
   device = {
     class_name = nil,          
     display_name = "Nocturn Automap",
-    device_name = "Automap MIDI",
+    device_port_in = "Automap MIDI",
+    device_port_out = "Automap MIDI",
     control_map = "Controllers/Nocturn/Nocturn.xml",
+    thumbnail = "Nocturn.bmp",
     protocol = DEVICE_MIDI_PROTOCOL
   },
   
@@ -104,6 +110,14 @@ duplex_configurations:insert {
         levels = {
           group_name = "Encoders",
         },
+        master = {
+          group_name = "XFader",
+        },
+        mode = {
+          group_name = "Pots",
+          index = 7,
+        }
+
       },
     },
     Transport = {

@@ -63,6 +63,20 @@ function Browser:__init(initial_configuration, start_configuration)
   if (initial_configuration) then
     self:set_configuration(initial_configuration, start_configuration)
   end
+
+
+  ---- attach to configuration settings
+  
+  for _,config in pairs(duplex_configurations) do
+    local settings = configuration_settings(config)
+     
+    settings.device_port_out:add_notifier(
+      Browser.__device_ports_changed, self
+    )
+    settings.device_port_in:add_notifier(
+      Browser.__device_ports_changed, self
+    )
+  end    
 end
 
 
@@ -124,9 +138,19 @@ function Browser:available_devices()
 
   -- insert devices that are installed on this system first
   local input_devices = table.create(renoise.Midi.available_input_devices())
-
+  local output_devices = table.create(renoise.Midi.available_output_devices())
+  
   for _,config in pairs(self.__available_configurations) do
-    if (input_devices:find(config.device.device_name) and 
+    local settings = configuration_settings(config)
+    
+    local device_port_in = (settings.device_port_in.value ~= "") and 
+      settings.device_port_in.value or config.device.device_port_in
+      
+    local device_port_out = (settings.device_port_out.value ~= "") and 
+      settings.device_port_out.value or config.device.device_port_out
+  
+    if (input_devices:find(device_port_in) and 
+        output_devices:find(device_port_out) and 
         not result:find(config.device.display_name)) 
     then
       result:insert(config.device.display_name)
@@ -760,11 +784,12 @@ function Browser:__configuration_autostart_enabled()
   local process = self:__current_process()  
 
   if (process) then
-    local autostart_configurations = duplex_preferences.autostart_configurations  
-    return (autostart_configurations:find(process:autostart_config_name()) ~= nil)
+    return process.settings.autostart.value
+
+  else
+    return false
   end
     
-  return false
 end
 
 
@@ -776,27 +801,20 @@ end
 function Browser:__enable_configuration_autostart()
   TRACE("Browser:__enable_configuration_autostart()")
 
-  local process = self:__current_process() 
+  local process = self:__current_process()
 
   if (process) then
-    local autostart_configurations = duplex_preferences.autostart_configurations  
-    
-    -- remove other configs for this device first (one config per device)
-    for i = 1,#autostart_configurations do      
-      local preferences_entry = autostart_configurations[i].value
-      local process_device_name = process.configuration.device.display_name
-      
-      local plain_find = true
-      if (preferences_entry:find(process_device_name, 1, plain_find) == 1) then
-        autostart_configurations:remove(i)
-        break
-      end
+    -- disable autostart for all other configs this device has first
+    local device_configs = 
+      self:__available_configurations_for_device(self.__device_name)
+
+    for _,config in pairs(device_configs) do
+      local settings = configuration_settings(config)
+      settings.autostart.value = false
     end
-      
-    -- then add the current, new one
-    if (not autostart_configurations:find(process:autostart_config_name())) then
-      autostart_configurations:insert(process:autostart_config_name())
-    end
+        
+    -- then enable autostart for the current config
+    process.settings.autostart.value = true
   end
 end
   
@@ -811,13 +829,27 @@ function Browser:__disable_configuration_autostart()
   local process = self:__current_process() 
 
   if (process) then
-    local autostart_configurations = duplex_preferences.autostart_configurations  
-
-    local index = autostart_configurations:find(process:autostart_config_name())
-    if (index) then
-      autostart_configurations:remove(index)
-    end
+    process.settings.autostart.value = false
   end
+end
+
+
+--------------------------------------------------------------------------------
+
+-- notifier, fired when device input or output port setting changed
+
+function Browser:__device_ports_changed()
+
+  local suppress_notifiers = self.__suppress_notifiers
+  self.__suppress_notifiers = true
+
+  -- update (NA) postfixes, which depend on the device port settings
+  self:__decorate_device_list()
+
+  local index = self:__device_index_by_name(self.__device_name)
+  self.__vb.views.dpx_browser_input_device.value = index
+
+  self.__suppress_notifiers = suppress_notifiers
 end
 
 
@@ -872,15 +904,12 @@ function Browser:__create_content_view()
         text = "Settings",
         width = 60,
         notifier = function(e)
-          renoise.app():show_warning("Device settings not yet implemented")
-          --[[
           for process_index,process in ripairs(self.__processes) do
             if(process:control_surface_visible())then
-              process.device:show_settings_dialog(self)
+              process.device:show_settings_dialog(process)
               return
             end
           end
-          ]]
 
         end
       },
@@ -913,16 +942,6 @@ function Browser:__create_content_view()
           end
         end
       },
-      --[[ taktik: temporarily removed
-      vb:button{
-        id = "dpx_browser_configurations_options",
-        text = "Options",
-        width = 60,
-        notifier = function(e)
-          renoise.app():show_warning("Device settings not yet implemented")
-          -- self:show_configuration_options()
-        end
-      },]]
       vb:row {
         vb:checkbox {
           value = false,
@@ -995,7 +1014,9 @@ function BrowserProcess:__init()
 
   -- the full configuration we got instantiated with (if any)
   self.configuration = nil
-  
+  -- shortcut for the configurations user settings
+  self.settings = nil
+
   -- device class instance
   self.device = nil 
   
@@ -1138,15 +1159,50 @@ function BrowserProcess:instantiate(configuration)
     end
   end
   
-  
-  ---- instantiate the device
+
+  ---- assign the config and settings
 
   self.configuration = configuration
+  self.settings = configuration_settings(configuration)
+
+
+  ---- instantiate the device
 
   self.__message_stream = MessageStream()
+
+  if (configuration.device.protocol == DEVICE_MIDI_PROTOCOL) then
+    local device_port_in = (self.settings.device_port_in.value ~= "") and 
+      self.settings.device_port_in.value or configuration.device.device_port_in
+      
+    local device_port_out = (self.settings.device_port_out.value ~= "") and 
+      self.settings.device_port_out.value or configuration.device.device_port_out
+    
+    self.device = _G[device_class_name](
+      configuration.device.display_name, 
+      self.__message_stream,
+      device_port_in,
+      device_port_out
+    )
   
-  self.device = _G[device_class_name](configuration.device.display_name, 
-    configuration.device.device_name,self.__message_stream)
+  else -- protocol == DEVICE_OSC_PROTOCOL
+    local prefix = (self.settings.device_prefix.value ~= "") and 
+      self.settings.device_prefix.value or configuration.device.prefix
+    
+    local address = (self.settings.device_address.value ~= "") and 
+      self.settings.device_address.value or configuration.device.address
+    
+    local port = (self.settings.device_port.value ~= "") and 
+      self.settings.device_port.value or configuration.device.port
+
+    self.device = _G[device_class_name](
+      configuration.device.display_name, 
+      self.__message_stream,
+      prefix,
+      address,
+      tonumber(port)
+    )
+  end
+    
     
   self.device:set_control_map(
     configuration.device.control_map)

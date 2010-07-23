@@ -15,10 +15,10 @@ A device-specific class
 
 class "Launchpad" (MidiDevice)
 
-function Launchpad:__init(display_name, port_name, message_stream)
-  TRACE("Launchpad:__init", display_name, port_name, message_stream)
+function Launchpad:__init(display_name, message_stream, port_in, port_out)
+  TRACE("Launchpad:__init", display_name, message_stream, port_in, port_out)
 
-  MidiDevice.__init(self, display_name, port_name, message_stream)
+  MidiDevice.__init(self, display_name, message_stream, port_in, port_out)
 
   -- this device has a color-space with 4 degrees of red and green
   self.colorspace = {4, 4, 0}
@@ -160,8 +160,10 @@ duplex_configurations:insert {
   device = {
     class_name = "Launchpad",
     display_name = "Launchpad",
-    device_name = "Launchpad",
+    device_port_in = "Launchpad",
+    device_port_out = "Launchpad",
     control_map = "Controllers/Launchpad/Launchpad.xml",
+    thumbnail = "Launchpad.bmp",
     protocol = DEVICE_MIDI_PROTOCOL,
   },
 
@@ -200,8 +202,10 @@ duplex_configurations:insert {
   device = {
     class_name = "Launchpad",
     display_name = "Launchpad",
-    device_name = "Launchpad",
+    device_port_in = "Launchpad",
+    device_port_out = "Launchpad",
     control_map = "Controllers/Launchpad/Launchpad.xml",
+    thumbnail = "Launchpad.bmp",
     protocol = DEVICE_MIDI_PROTOCOL,
   },
 
@@ -266,8 +270,10 @@ duplex_configurations:insert {
   device = {
     class_name = "Launchpad",
     display_name = "Launchpad",
-    device_name = "Launchpad",
+    device_port_in = "Launchpad",
+    device_port_out = "Launchpad",
     control_map = "Controllers/Launchpad/Launchpad_VerticalSplit.xml",
+    thumbnail = "Launchpad.bmp",
     protocol = DEVICE_MIDI_PROTOCOL,
   },
 
@@ -326,7 +332,6 @@ duplex_configurations:insert {
         },
       }
     },
-
   }
 }
 

@@ -15,10 +15,10 @@ A device-specific class
 
 class "Ohm64" (MidiDevice)
 
-function Ohm64:__init(display_name, port_name, message_stream)
-  TRACE("Ohm64:__init", display_name, port_name, message_stream)
+function Ohm64:__init(display_name, message_stream, port_in, port_out)
+  TRACE("Ohm64:__init", display_name, message_stream, port_in, port_out)
 
-  MidiDevice.__init(self, display_name, port_name, message_stream)
+  MidiDevice.__init(self, display_name, message_stream, port_in, port_out)
 
   -- setup a monochrome colorspace for the OHM
   self.colorspace = {1,1,1}
@@ -39,8 +39,10 @@ duplex_configurations:insert {
   device = {
     class_name = "Ohm64",          
     display_name = "Ohm64",
-    device_name = "Ohm64 MIDI 1",
+    device_port_in = "Ohm64 MIDI 1",
+    device_port_out = "Ohm64 MIDI 1",
     control_map = "Controllers/Ohm64/Ohm64.xml",
+    thumbnail = "Ohm64.bmp",
     protocol = DEVICE_MIDI_PROTOCOL
   },
   

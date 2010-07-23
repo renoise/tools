@@ -59,11 +59,9 @@ function Device:__init(name, message_stream, protocol)
 
   -- private stuff
 
-  self.__vb = renoise.ViewBuilder()
+  self.__vb = nil
   self.__settings_view = nil
   self.__settings_dialog = nil
-  self.__browser_ref = nil
-
 end
 
 
@@ -78,6 +76,7 @@ end
 
 function Device:set_control_map(xml_file)
   TRACE("Device:set_control_map:",xml_file)
+  
   self.control_map.load_definition(self.control_map,xml_file)
 end
 
@@ -91,285 +90,289 @@ function Device:point_to_value()
   return 0
 end
 
+
 --------------------------------------------------------------------------------
 
 -- open the device settings, includes a reference to the browser so that we
 -- can update the browser state when releasing a device
+-- @param process : reference to the BrowserProcess
 
-function Device:show_settings_dialog(browser_ref)
+function Device:show_settings_dialog(process)
 
-  self.__browser_ref = browser_ref
-
-  if not self.__settings_dialog then
-    self.__settings_view = self:__build_settings()
-    self.__settings_dialog = renoise.app():show_custom_dialog(
-      "Duplex: Device Settings",self.__settings_view)
+  -- already visible? bring to front...
+  if (self.__settings_dialog and self.__settings_dialog.visible) then
+    self.__settings_dialog:show()
+    return    
   end
 
-  self.__settings_dialog:show()
 
+  -- create the config view skeleton
+  
+  self.__settings_view = self:__build_settings()
+  
+  
+  -- and populate it with contents from the browser process / config
+
+  if (process) then
+
+    if (self.protocol == DEVICE_MIDI_PROTOCOL) then
+      
+      -- collect MIDI ports
+      
+      local ports_in = table.create{"None"}
+      local ports_out = table.create{"None"}
+
+      local input_devices = renoise.Midi.available_input_devices()
+      local output_devices = renoise.Midi.available_output_devices()
+
+      for k,v in ipairs(input_devices) do
+        ports_in:insert(v)
+      end
+
+      for k,v in ipairs(output_devices) do
+        ports_out:insert(v)
+      end
+
+      
+      -- match name
+      
+      if (self.__vb.views.dpx_device_name) then
+        if (process.configuration) and
+           (process.configuration.device) and
+           (process.configuration.device.display_name) 
+        then
+          self.__vb.views.dpx_device_name.text = 
+            process.configuration.device.display_name
+        end
+      end
+
+      
+      -- update type text
+      
+      if (self.__vb.views.dpx_device_protocol) then
+        self.__vb.views.dpx_device_protocol.text = "Type: MIDI Device"
+      end
+
+
+      -- update thumbnail
+
+      if (self.__vb.views.dpx_device_thumbnail_root) then
+        -- !!! this is not exactly smart. I want to know the device
+        -- folder, so I am extracting the control-map path - but
+        -- if the control-map is not located in that folder (which
+        -- is quite possible), it will not work...
+        
+        local extract_device_folder = function(filename)
+          local _, _, name, extension = filename:find("(.+)[/\\](.+)$")
+          if (name ~= nil) then
+            return "./Duplex/" .. name
+          end
+        end
+  
+        local bitmap = "./Duplex/Controllers/unknown.bmp"
+        local device_path = extract_device_folder(self.control_map.file_path)
+
+        if (process.configuration) and
+           (process.configuration.device) and
+           (process.configuration.device.thumbnail) 
+        then
+          local config_bitmap = ("%s/%s"):format(device_path,
+            process.configuration.device.thumbnail)
+            
+          if (io.exists(config_bitmap)) then
+            bitmap = config_bitmap
+          else
+            renoise.app():show_warning(
+              ("Whoops! Device thumbnail '%s' does not exist. Please fix the "..
+               "thumbnail filename, or do not specify a thumbnail property in "..
+               "the configuration."):format(config_bitmap))
+          end
+        end
+        
+        self.__vb.views.dpx_device_thumbnail_root:add_child(
+          self.__vb:bitmap{
+            bitmap = bitmap
+          }
+        )
+      end
+
+
+      -- match input port
+
+      if (self.__vb.views.dpx_device_midi_in_root) then
+        local port_idx
+        
+        for k,v in ipairs(ports_in) do
+          if (v == process.device.port_in) then
+            port_idx = k
+            break
+          end
+        end
+        
+        local view = self.__vb:popup {
+          id = "dpx_device_midi_in",
+          width = 150,
+          items = ports_in,
+          value = port_idx,
+
+          notifier = function(idx)
+            -- release, then re-open the device
+            self:release() -- assumes MidiDevice class
+
+            if (idx == 1) then
+              self.port_in = nil -- none
+              process.settings.device_port_in.value = ""
+
+            else
+              self.port_in = self.__vb.views.dpx_device_midi_in.items[idx]
+              process.settings.device_port_in.value = self.port_in
+              
+              if (self.port_out) then               
+                
+                -- open the new device
+                self:open() -- assumes MidiDevice class 
+
+                -- and restart the process to reactivate & refresh
+                if (process:running()) then
+                  process:stop()
+                  process:start()
+                end
+              end
+            end
+          end
+        }
+        
+        self.__vb.views.dpx_device_midi_in_root:add_child(view)
+      end
+      
+      
+      -- match output port
+      
+      if (self.__vb.views.dpx_device_midi_out_root) then
+        local port_idx
+        
+        for k,v in ipairs(ports_out) do
+          if (v == process.device.port_out) then
+            port_idx = k
+            break
+          end
+        end
+        
+        local view = self.__vb:popup {
+          id = "dpx_device_midi_out",
+          width = 150,
+          items = ports_out,
+          value = port_idx,
+          
+          notifier = function(idx)
+            -- release, then re-open the device
+            self:release() -- assumes MidiDevice class
+            
+            if (idx == 1) then
+              self.port_out = nil -- none
+              process.settings.device_port_out.value = ""
+              
+            else
+              self.port_out = self.__vb.views.dpx_device_midi_out.items[idx]
+              process.settings.device_port_out.value = self.port_out
+              
+              if (self.port_in) then 
+                -- open the new device
+                self:open() -- assumes MidiDevice class 
+                
+                -- and restart the process to reactivate & refresh
+                if (process:running()) then
+                  process:stop()
+                  process:start()
+                end
+              end
+            end
+          end
+        }
+
+        self.__vb.views.dpx_device_midi_out_root:add_child(view)
+      end
+    
+    elseif (self.protocol == DEVICE_OSC_PROTOCOL) then
+      -- TODO: OSC settings
+    end
+  end
+
+
+  -- and finally show the new dialog
+  
+  self.__settings_dialog = renoise.app():show_custom_dialog(
+    "Duplex: Device Settings", self.__settings_view)
 end  
+
 
 --------------------------------------------------------------------------------
 
--- construct the device settings (both MIDI and OSC devices are supported)
+-- construct the device settings dialog (for both MIDI and OSC devices)
 
 function Device:__build_settings()
   
+  -- new settings, new view_builder...
+  self.__vb = renoise.ViewBuilder()  
   local vb = self.__vb
 
-  -- MIDI device setup
-  local ports,port_idx,channels
-  if (self.protocol == DEVICE_MIDI_PROTOCOL) then
-
-    ports = table.create{"None"}
-    port_idx = nil
-
-    channels = {"All",
-      "#1","#2","#3","#4",
-      "#5","#6","#7","#8",
-      "#9","#10","#11","#12",
-      "#13","#14","#15","#16"}
-
-    -- gather information about MIDI ports 
-    local tmp = renoise.Midi.available_input_devices()
-    for k,v in ipairs(tmp) do
-      ports:insert(v)
-      if (v==self.name) then
-        port_idx = k+1
-      end
-    end
-
-  end
-
-  local controlmaps = self:__collect_control_maps()
 
   local view = vb:column{
     margin = renoise.ViewBuilder.DEFAULT_DIALOG_MARGIN,
     spacing = renoise.ViewBuilder.DEFAULT_CONTROL_SPACING,
-    width=300,
-    vb:row{
+    width = 300,
+
+    vb:row {
       spacing = renoise.ViewBuilder.DEFAULT_CONTROL_SPACING,
-      vb:row{
+      vb:row {
+        id = "dpx_device_thumbnail_root",
         style = "plain",
-        --height = 180,
-        vb:bitmap{
-          bitmap = "./Duplex/Controllers/Launchpad/Launchpad.bmp"
-        }
+        -- bitmap is added here
       },
-      vb:row{
+      vb:space { 
+        width = renoise.ViewBuilder.DEFAULT_CONTROL_SPACING 
+      },
+      vb:row {
         style = "group",
-        width = "100%",
         margin = renoise.ViewBuilder.DEFAULT_CONTROL_MARGIN,
-        vb:column{
-          vb:text{
+        vb:column {
+          vb:text {
+            id = "dpx_device_name",
             font = "bold",
-            text = "Novation Launchpad",
+            text = "Device name",
           },
-          vb:text{
+          vb:text {
+            id = "dpx_device_protocol",
             text = "Type: MIDI Device",
           },
           -- list device IO setup here (MIDI or OSC)
-          vb:column{
-            id="dpx_device_settings_midi",
-            vb:row{
-              vb:text{
-                text = "Port",
+          vb:column {
+            id = "dpx_device_settings_midi",
+            vb:row {
+              id = "dpx_device_midi_in_root",
+              vb:text {
+                width = 30,
+                text = "In",
               },
-              vb:popup{
-                items = ports,
-                value = port_idx,
-                notifier = function()
-                  -- release, then open the device
-                end
-
-              },
-              vb:button{
-                text = "Release",
-                notifier = function()
-                  -- release the device, and update browser
-                end
-              }
+              -- popup added here
             },
-            vb:row{
-              vb:text{
-                text = "Channel",
+            vb:row {
+              id = "dpx_device_midi_out_root",
+              vb:text {
+                width = 30,
+                text = "Out",
               },
-              vb:popup{
-                width = 61,
-                items = channels,
-                value = 1
-              }
-            }
-          
+              -- popup added here
+            },
           }
         }
-      },
-    },
-    vb:row{
-      spacing = renoise.ViewBuilder.DEFAULT_CONTROL_SPACING,
-      margin = renoise.ViewBuilder.DEFAULT_CONTROL_MARGIN,
-      style = "group",
-      width = "100%",
-
-      vb:column{
-
-        vb:row{
-          width = "100%",
-          spacing = renoise.ViewBuilder.DEFAULT_CONTROL_SPACING,
-          vb:text{
-            width = 40,
-            text = "Config",
-            font = "bold",
-          },
-          vb:popup{
-            -- list configurations here
-            items = {"Matrix","Mixer","Matrix + Mixer"},
-            value = 3,
-            width = 150,
-          },
-          vb:button{
-            text = "+",
-          },
-          vb:button{
-            text = "-",
-          },
-        },
-
-        vb:row{
-          width = "100%",
-          spacing = renoise.ViewBuilder.DEFAULT_CONTROL_SPACING,
-          vb:space{
-            width = 40,
-          },
-          vb:checkbox{
-            value = false,
-          },
-          vb:text{
-            text = "Autostart configuration",
-          },
-        },
-
-      },
-
-    },
-    vb:row{
-      spacing = renoise.ViewBuilder.DEFAULT_CONTROL_SPACING,
-      margin = renoise.ViewBuilder.DEFAULT_CONTROL_MARGIN,
-      style = "group",
-      width = "100%",
-
-      vb:row{
-        width = "100%",
-        spacing = renoise.ViewBuilder.DEFAULT_CONTROL_SPACING,
-        vb:text{
-          width = 80,
-          text = "Control-map",
-          font = "bold",
-        },
-        vb:popup{
-          --width = 150,
-          items = controlmaps,
-          value = 1,
-        },
-        vb:button{
-          text = "About",
-        },
-
       }
-    },
-    vb:row{
-      spacing = renoise.ViewBuilder.DEFAULT_CONTROL_SPACING,
-      margin = renoise.ViewBuilder.DEFAULT_CONTROL_MARGIN,
-      style = "group",
-      width = "100%",
-      vb:column{
-        width = "100%",
-        spacing = renoise.ViewBuilder.DEFAULT_CONTROL_SPACING,
-        vb:row{
-          width = "100%",
-          spacing = renoise.ViewBuilder.DEFAULT_CONTROL_SPACING,
-          vb:text{
-            width = 80,
-            text = "Applications",
-            font = "bold",
-          },
-          vb:button{
-            text = "+",
-          },
-          vb:button{
-            text = "-",
-          },
-        },
-        -- add running applications here
-        vb:multiline_text{
-          width = 200,
-          height = 40,
-          text = "Nothing to display. Hit the plus sign to add an application to this device",
-        },
-
-        vb:row{
-          width = "100%",
-          vb:button{
-            text = "Matrix",
-            width = 200,
-          },
-          -- applications options
-          vb:text{
-            text = "Displaying Matrix...",
-            visible = false,
-          },
-
-        },
-        vb:row{
-          width = "100%",
-          vb:button{
-            text = "Mixer",
-            width = 200,
-            --color = {0x01,0x01,0x01}
-          },
-          -- applications options
-          vb:text{
-            text = "Displaying Mixer...",
-            visible = false,
-          },
-
-        },
-      
-      },
-    },
-
+    }
   }  
 
   return view
-
 end
 
---------------------------------------------------------------------------------
-
--- collect all control-maps in the device folder (files ending with .xml)
--- we extract the device folder name from the control-map path
-
-function Device:__collect_control_maps()
-
-  local rslt = table.create()
-
-  local extract_device_folder = function(filename)
-    local _, _, name, extension = filename:find("(.+)%/(.+)$")
-    if (name ~= nil) then
-      return "./Duplex/"..name
-    end
-  end
-
-  local device_path = extract_device_folder(self.control_map.file_path)
-
-  for _, filename in pairs(os.filenames(device_path, "*.xml")) do
-    rslt:insert(filename)
-  end
-
-  return rslt
-
-end
 
 --------------------------------------------------------------------------------
 
