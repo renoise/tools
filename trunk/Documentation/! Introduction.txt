@@ -253,7 +253,7 @@ Some notes about the notation used in !all xxxAPI.txt! files:
 
   /some.bundle.id.xrnx/
     manifest.xml -> XML file with information about the tool (author, id...)
-    main.xml -> entry point: loaded by Renoise to execute the tool
+    main.lua -> entry point: loaded by Renoise to execute the tool
 
   You can import other Lua files into "main.lua" via Lua's "require" function, 
   if appropriate, and also include resource files (icons, bitmaps, text files
