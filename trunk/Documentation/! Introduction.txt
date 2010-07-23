@@ -143,15 +143,18 @@ Here is a small overview of the whole API that Renoise exposes:
 * Renoise.Song.API
 
 -- generic "observer pattern" document creation and access, used by the
-   song/app and also by you to create persistent data that can even be injected
-   into Renoise songs or preferences
+-- song/app and also by you to create persistent data (preferences, presets).
+-- might later on maybe also be used to inject script data into songs
 * Renoise.Document.API
 
 -- available to XRNX tools only: interact with Renoise; create menus, keybindings
 * Renoise.ScriptingTool.API
 
--- inter-process and network communication functions and classes (also for OSC)
+-- inter-process and network communication functions and classes
 * Renoise.Socket.API
+
+-- tools to generate and receive OSC messages, bundles over the network
+* Renoise.OSC.API
 
 -- "raw" MIDI device interaction (send, receive MIDI messages from any devices)
 * Renoise.Midi.API
