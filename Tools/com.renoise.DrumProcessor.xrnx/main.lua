@@ -1,6 +1,10 @@
--- ============================================================
+--[[============================================================================
+drum processor
+============================================================================]]--
 
---  consts
+--------------------------------------------------------------------------------
+-- consts
+--------------------------------------------------------------------------------
 
 local TOOL_NAME = "Drum Processor"
 local TOOL_VERSION = "0.1"
@@ -24,12 +28,16 @@ local TEXT_ROW_WIDTH = 86
 local OFF_COLOR = { 0, 0, 0 }
 
 
---  locals
+--------------------------------------------------------------------------------
+-- locals
+--------------------------------------------------------------------------------
 
 local maindialog = nil
 
 
+--------------------------------------------------------------------------------
 -- functions
+--------------------------------------------------------------------------------
 
 local function show_status(message)
   renoise.app():show_status(message); print(message)
@@ -60,9 +68,9 @@ local function note_string_to_number(str)
 end
 
 
--- ============================================================
-
+--------------------------------------------------------------------------------
 -- menu entries
+--------------------------------------------------------------------------------
 
 renoise.tool():add_menu_entry {
   name = "Main Menu:Tools:Drum Processor...",
@@ -74,11 +82,12 @@ renoise.tool():add_menu_entry {
 }
 
 
--- ============================================================
+--------------------------------------------------------------------------------
+-- classes
+--------------------------------------------------------------------------------
 
 class 'DrumPatternProcessor'
 
---------------------------------------------------------------
 function DrumPatternProcessor:__init()
   self.effects = {}
   self.sequencer = {}
@@ -101,23 +110,19 @@ function DrumPatternProcessor:__init()
   self:set_divisions(16)
 end
 
---------------------------------------------------------------
 function DrumPatternProcessor:add_effect(effect)
   effect:set_processor(self)
   table.insert(self.effects, effect)
 end
 
---------------------------------------------------------------
 function DrumPatternProcessor:get_effect(index)
   return self.effects[index]
 end
 
---------------------------------------------------------------
 function DrumPatternProcessor:get_effects(name)
   return self.effects
 end
 
---------------------------------------------------------------
 function DrumPatternProcessor:get_effects_name()
   local names = {}
   for k,v in pairs(self.effects) do
@@ -126,7 +131,6 @@ function DrumPatternProcessor:get_effects_name()
   return names
 end
 
---------------------------------------------------------------
 function DrumPatternProcessor:set_track_index(track_index)
   if (track_index >= 0 and track_index < #renoise.song().tracks) then
     local track = renoise.song().tracks[track_index]
@@ -139,7 +143,6 @@ function DrumPatternProcessor:set_track_index(track_index)
   end
 end
 
---------------------------------------------------------------
 function DrumPatternProcessor:set_divisions(divisions)
   if (divisions >= 1 and divisions <= 16) then
     self.divisions = divisions
@@ -149,14 +152,11 @@ function DrumPatternProcessor:set_divisions(divisions)
   end
 end
 
---------------------------------------------------------------
 function DrumPatternProcessor:clear(pattern, track)
   renoise.song().patterns[pattern].tracks[track]:clear()
 end
 
---------------------------------------------------------------
 function DrumPatternProcessor:process()
-
   local song = renoise.song()
   
   -- choose the pattern
@@ -237,7 +237,6 @@ function DrumPatternProcessor:process()
   end
 end
 
---------------------------------------------------------------
 function DrumPatternProcessor:on_update_sequencer()
   if #self.sequencer < self.divisions then
     local new_table_size = (self.divisions - #self.sequencer)
@@ -247,7 +246,6 @@ function DrumPatternProcessor:on_update_sequencer()
   end
 end
 
---------------------------------------------------------------
 function DrumPatternProcessor:build_effect_racks(builder)
   -- main view is a column
   local main_column = builder:column {  
@@ -277,7 +275,6 @@ function DrumPatternProcessor:build_effect_racks(builder)
   return main_column
 end
 
---------------------------------------------------------------
 function DrumPatternProcessor:build_sequencer(builder)
   local seq_row = builder:row {
     style = "group",
@@ -307,7 +304,6 @@ function DrumPatternProcessor:build_sequencer(builder)
   return seq_row
 end
 
---------------------------------------------------------------
 function DrumPatternProcessor:build_options(builder)
   local main_column = builder:column {  
     style = "group",
@@ -380,11 +376,10 @@ function DrumPatternProcessor:build_options(builder)
 end
 
 
--- ============================================================
+--------------------------------------------------------------------------------
 
 class 'DrumPatternEffect'
 
---------------------------------------------------------------
 function DrumPatternEffect:__init(name, column, color)
   self.name = name
   self.column = column
@@ -392,17 +387,14 @@ function DrumPatternEffect:__init(name, column, color)
   self.color = color
 end
 
---------------------------------------------------------------
 function DrumPatternEffect:set_processor(processor)
   self.processor = processor
 end
 
---------------------------------------------------------------
 function DrumPatternEffect:get_processor()
   return self.processor
 end
 
---------------------------------------------------------------
 function DrumPatternEffect:reset_notes_for_line(line)
   if not self.processor.preserve_notes then
     for _,col in pairs(line.note_columns) do
@@ -413,7 +405,6 @@ function DrumPatternEffect:reset_notes_for_line(line)
   end
 end
 
---------------------------------------------------------------
 function DrumPatternEffect:reset_effects_for_line(line)
   for _,col in pairs(line.effect_columns) do
     col.number_string = ".."
@@ -421,13 +412,11 @@ function DrumPatternEffect:reset_effects_for_line(line)
   end
 end
 
---------------------------------------------------------------
 function DrumPatternEffect:reset_effect_in_column(line, col)
   line.effect_columns[col].number_string = ".."
   line.effect_columns[col].amount_string = ".."  
 end
 
---------------------------------------------------------------
 function DrumPatternEffect:build_default_controls(builder)
   local default_color = OFF_COLOR
   local default_text = ""
@@ -467,7 +456,6 @@ function DrumPatternEffect:build_default_controls(builder)
   }
 end
 
---------------------------------------------------------------
 function DrumPatternEffect:build_parameter_row(builder, name, control)
   return builder:row {
     width = DEFAULT_CELL_WIDTH,
@@ -479,12 +467,10 @@ function DrumPatternEffect:build_parameter_row(builder, name, control)
   }
 end
 
---------------------------------------------------------------
 function DrumPatternEffect:on_build_view(builder)
   assert(false) -- cannot use this directly !
 end
 
---------------------------------------------------------------
 function DrumPatternEffect:on_process(pattern,
                                       track,
                                       instrument,
@@ -495,11 +481,10 @@ function DrumPatternEffect:on_process(pattern,
 end
 
 
--- ============================================================
+--------------------------------------------------------------------------------
 
 class 'DrumPatternSlicer' (DrumPatternEffect)
 
---------------------------------------------------------------
 function DrumPatternSlicer:__init()
   DrumPatternEffect.__init(self, "Slice", 1, { 255, 0, 0 })
   self.random = false
@@ -509,7 +494,6 @@ function DrumPatternSlicer:__init()
   self.quantize = true
 end
 
---------------------------------------------------------------
 function DrumPatternSlicer:on_process(pattern,
                                       track,
                                       instrument,
@@ -547,7 +531,6 @@ function DrumPatternSlicer:on_process(pattern,
   end
 end
 
---------------------------------------------------------------
 function DrumPatternSlicer:on_build_view(builder)
   return builder:column {
     style = "group",
@@ -604,11 +587,10 @@ function DrumPatternSlicer:on_build_view(builder)
 end
 
 
--- ============================================================
+--------------------------------------------------------------------------------
 
 class 'DrumPatternRepeater' (DrumPatternEffect)
 
---------------------------------------------------------------
 function DrumPatternRepeater:__init()
   DrumPatternEffect.__init(self, "Repeat", 2, { 0, 255, 0 })
   self.random = false
@@ -616,7 +598,6 @@ function DrumPatternRepeater:__init()
   self.repeats = 4
 end
 
---------------------------------------------------------------
 function DrumPatternRepeater:on_process(pattern,
                                         track,
                                         instrument,
@@ -653,7 +634,6 @@ function DrumPatternRepeater:on_process(pattern,
   end
 end
 
---------------------------------------------------------------
 function DrumPatternRepeater:on_build_view(builder)
   return builder:column {
     style = "group",
@@ -698,7 +678,7 @@ function DrumPatternRepeater:on_build_view(builder)
 end
 
 
--- ============================================================
+--------------------------------------------------------------------------------
 
 class 'DrumPatternArpeggiator' (DrumPatternEffect)
 
@@ -706,7 +686,6 @@ function DrumPatternArpeggiator:__init()
   DrumPatternEffect.__init(self, "Arpeggiate", 3, { 0, 0, 255 })
 end
 
---------------------------------------------------------------
 function DrumPatternArpeggiator:on_process(pattern,
                                            track,
                                            instrument,
@@ -732,7 +711,6 @@ function DrumPatternArpeggiator:on_process(pattern,
   end
 end
 
---------------------------------------------------------------
 function DrumPatternArpeggiator:on_build_view(builder)
   return builder:column {
     style = "group",
@@ -743,7 +721,8 @@ function DrumPatternArpeggiator:on_build_view(builder)
   }
 end
 
--- ============================================================
+
+--------------------------------------------------------------------------------
 
 class 'DrumPatternPitcher' (DrumPatternEffect)
 
@@ -754,7 +733,6 @@ function DrumPatternPitcher:__init()
   self.increment = 1.0
 end
 
---------------------------------------------------------------
 function DrumPatternPitcher:on_process(pattern,
                                        track,
                                        instrument,
@@ -786,7 +764,6 @@ function DrumPatternPitcher:on_process(pattern,
   -- print ("processing " .. self.name .. " > " .. line_index .. " (" .. (start_line + line_index) .. ")")
 end
 
---------------------------------------------------------------
 function DrumPatternPitcher:on_build_view(builder)
   return builder:column {
     style = "group",
@@ -833,16 +810,14 @@ function DrumPatternPitcher:on_build_view(builder)
 end
 
 
--- ============================================================
+--------------------------------------------------------------------------------
 
 class 'DrumPatternReversor' (DrumPatternEffect)
 
---------------------------------------------------------------
 function DrumPatternReversor:__init()
   DrumPatternEffect.__init(self, "Reverse", 5, { 255, 255, 0 })
 end
 
---------------------------------------------------------------
 function DrumPatternReversor:on_process(pattern,
                                         track,
                                         instrument,
@@ -879,7 +854,6 @@ function DrumPatternReversor:on_process(pattern,
   end
 end
 
---------------------------------------------------------------
 function DrumPatternReversor:on_build_view(builder)
   return builder:column {
     style = "group",
@@ -891,18 +865,16 @@ function DrumPatternReversor:on_build_view(builder)
 end
 
 
--- ============================================================
+--------------------------------------------------------------------------------
 
 class 'DrumPatternRandomic' (DrumPatternEffect)
 
---------------------------------------------------------------
 function DrumPatternRandomic:__init()
   DrumPatternEffect.__init(self, "Random", 6, { 205, 155, 55 })
   self.last_effect = 0
   self.effect = nil
 end
 
---------------------------------------------------------------
 function DrumPatternRandomic:on_process(pattern,
                                         track,
                                         instrument,
@@ -928,7 +900,6 @@ function DrumPatternRandomic:on_process(pattern,
   end
 end
 
---------------------------------------------------------------
 function DrumPatternRandomic:on_build_view(builder)
   return builder:column {
     style = "group",
@@ -940,7 +911,7 @@ function DrumPatternRandomic:on_build_view(builder)
 end
 
 
--- ============================================================
+--------------------------------------------------------------------------------
 
 function show_help()
 
@@ -952,7 +923,7 @@ function show_help()
 end
 
 
--- ============================================================
+--------------------------------------------------------------------------------
 
 function show_dialog()
 
@@ -1016,5 +987,3 @@ function show_dialog()
   
 end
 
--- rprint(drum_processor:get_effects_name())
--- show_status( ipairs(effects))
