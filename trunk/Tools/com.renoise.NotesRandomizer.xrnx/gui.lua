@@ -151,23 +151,31 @@ function show_randomize_gui()
       vb.views.neighbour_row.visible =
         (current_mode ~= randomize_modes:find("Shuffle") and
         current_mode ~= randomize_modes:find("Chaos"))
+      vb.views.neighbour_row_2.visible =
+        (vb.views.neighbour_row.visible == true and
+        current_neighbour == true)
+      vb.views.dialog_content:resize()
     end,
     width = POPUP_WIDTH
   }
 
   local neighbour_switch = vb:checkbox {
-    value = false,
+    value = current_neighbour,
     notifier = function(value)
       current_neighbour = value
-      vb.views.neighbour_row_2.visible = (current_neighbour == true)
+      vb.views.neighbour_row_2.visible =
+        (vb.views.neighbour_row.visible == true and
+        current_neighbour == true)
       vb.views.dialog_content:resize()
     end
   }
 
+  local switches = {"Up", "Down"}
   local neighbour_shift = vb:switch {
     id = "switch",
+    value = table.find(switches, current_neighbour_shift),
     width = 100,
-    items = {"Up", "Down"},
+    items = switches,
     notifier = function(value)
       local switch = vb.views.switch
       current_neighbour_shift = switch.items[value]
@@ -175,7 +183,7 @@ function show_randomize_gui()
   }
 
   local preserve_octave_switch = vb:checkbox {
-    value = true,
+    value = current_preserve_octaves,
     notifier = function(value)
       current_preserve_octaves = value
     end
