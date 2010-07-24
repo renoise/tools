@@ -1,4 +1,10 @@
-~{do L:set_header("Cache-Control", "no-cache, max-age: 0") end}
+~{do
+  -- http://www.mozilla.org/projects/netlib/http/http-caching-faq.html
+  L:set_header("Cache-control", "no-cache")
+  L:set_header("Cache-control", "no-store")
+  L:set_header("Pragma", "no-cache")
+  L:set_header("Expires", "0")
+end}
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" dir="ltr">
 <head>
@@ -95,9 +101,6 @@
       .empty {
         background-color: black;
       }
-      .seq_mute {
-        background-color: purple;
-      }
       .send {
         background-color: darkgreen;
       }
@@ -120,6 +123,9 @@
         color: white;
         text-align: center;
         padding: 2px;
+      }
+      .seq_mute {
+        background-color: purple;
       }
     </style>
 
