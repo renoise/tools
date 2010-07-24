@@ -1,3 +1,4 @@
+~{do L:set_header("Cache-Control", "no-cache, max-age: 0") end}
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" dir="ltr">
 <head>
@@ -35,6 +36,9 @@
       td {
         width: 80px;
         height: 40px;
+        border: 1px solid #555;
+        color: white;
+        text-align: center;
       }
       
       ._thead {
@@ -44,12 +48,29 @@
       ._thead th {
         padding: 2px;
       }
+      
+      .s, .l{
+        font-weight: bold;
+        color: #aaa;
+        width: 20px;
+      }
+
+      .s:hover, .l:hover {
+        border: 1px dotted red;
+        cursor: pointer;
+        color: white;
+      }
+      
+      .current_seq .s {
+        color: white;
+      }
 
       .pid {
         background-color: #BE8D18;
         font-weight: bold;
-        text-align: center;
         border: 2px solid white;
+        width: 30px;
+        color: black;
       }
       .pid:hover {
         background-color: #FFDF59;
@@ -92,7 +113,14 @@
         border-top: 4px solid red;
         border-bottom: 4px solid red;
       }
-
+      .label {
+        width: 160px;
+        border: 1px solid #555;
+        background-color: #333;
+        color: white;
+        text-align: center;
+        padding: 2px;
+      }
     </style>
 
 </head>
@@ -106,7 +134,7 @@
 
         local str = ""
         local function out(s)
-          str = str .. s
+          str = str .. "\n"  .. s
         end
 
         local function get_mute_state(state)
@@ -120,7 +148,7 @@
 
         -- get tracks
         local tnum = #s().tracks
-        out("<thead><tr><th>#</th>")
+        out("<thead><tr><th title='Schedule'>S</th><th title='Loop'>L</th><th>#</th><th>label</th>")
         for tid,t in ipairs(s().tracks) do
           local classes = table.create()
           out(("<th id='t%02d' class='%s'>%s</th>")
@@ -136,7 +164,8 @@
               id = "id='playing'"
           end
           out("<tr>")
-          out(("<td %s class='pid' title='%d'>%d</td>"):format(id,sid,pid-1))
+          local name = s().patterns[pid].name
+          out(("<td class='s'>&gt;</td><td class='l'></td><td %s class='pid' title='%d'>%d</td><td class='label'>%s</td>"):format(id,sid,pid-1,name))
           local seq_mute = false
           for tid=1,tnum do
             for pos,col in s().pattern_iterator:lines_in_pattern_track(pid, tid) do
@@ -179,21 +208,23 @@
       //Floating Table Head
       $("#table_matrix").chromatable({
         height: "600px",
-        width: "800px"
+        width: "1000px"
       });
 
       //Track Colors
       
       //Initial Playback Pos
       $('#playing').parent().addClass('current_seq');
-      $('table_matrix').focus();
-      //$.scrollTo( '#playing', 500);
+
+      //Scroll To Initial Playback Pos
+      //$('table_matrix').focus();
+      //$.scrollTo('#playing', 500);
     });
 
     //Track Hover
     var old_tid = 0;
     $("td").mouseover(function(){
-      if ($(this).hasClass('pid')) return false;
+      if (!$(this).hasClass('pattern')) return false;
       var pos = $(this).attr('title');
       var tstr = pos.match(/track\[\d+\]/);
       var tid = tstr[0].slice(6,-1);
