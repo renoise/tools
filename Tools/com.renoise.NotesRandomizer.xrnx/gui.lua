@@ -76,8 +76,10 @@ local function invoke_current_random()
   if (mode == "Shuffle") then
     randomizer.invoke_shuffle(iter, selection_only)
   else
-    randomizer.invoke_random(mode, iter, selection_only,
-    current_preserve_octaves, current_neighbour, current_neighbour_shift)
+    randomizer.invoke_random(
+      mode, iter, selection_only, current_preserve_octaves, current_neighbour,
+      current_neighbour_shift
+    )
   end
 end
 
@@ -221,14 +223,18 @@ function show_randomize_gui()
 
     vb:row {
       id = "neighbour_row",
-      visible = (current_mode ~= randomize_modes:find("Shuffle")),
+      visible =
+        (current_mode ~= randomize_modes:find("Shuffle") and
+        current_mode ~= randomize_modes:find("Chaos")),
       neighbour_switch,
       vb:text { text = 'Nearest Neighbour' }
     },
 
     vb: row {
       id = "neighbour_row_2",
-      visible = current_neighbour,
+      visible =
+        (vb.views.neighbour_row.visible == true and
+        current_neighbour == true),
       vb:column { width = 20 },
       neighbour_shift
     },
