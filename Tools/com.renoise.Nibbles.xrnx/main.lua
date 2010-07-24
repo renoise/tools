@@ -245,7 +245,7 @@ function game()
     color_snake == get_cell_color(snake[1].x, snake[1].y)
     )
   then
-    renoise.app():show_error("Game over! You're score is: " .. score)
+    renoise.app():show_error("Game over! Your score is: " .. score)
     current_dialog:show()
     reset()
 
