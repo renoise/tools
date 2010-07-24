@@ -85,6 +85,16 @@ end
 
 --------------------------------------------------------------------------------
 
+-- Move snake
+
+function move_snake()
+  set_cell_color(snake[1].x, snake[1].y, color_snake)
+  set_cell_color(snake[2].x, snake[2].y, color_snake)
+end
+
+
+--------------------------------------------------------------------------------
+
 -- Access a cell in the matrix view
 
 function matrix_cell(x, y)
@@ -212,7 +222,6 @@ function game()
 
   tmp1.x = snake[1].x
   tmp1.y = snake[1].y
-  clear_cell(snake[1].x, snake[1].y)
 
   -- Check the direction
   if (current_direction == "up") then
@@ -246,30 +255,30 @@ function game()
   -- Snake ate some food, so he grows
   if (snake[1].x == food.x and snake[1].y == food.y) then
     -- Grow
-    clear_cell(food.x, food.y);
+    clear_cell(food.x, food.y)
     snake[#snake + 1] = table.create{x=nil, y=nil}
-    snake[#snake].x = snake[#snake-1].x + 1
+    snake[#snake].x = snake[#snake-1].x
     snake[#snake].y = snake[#snake-1].y
     -- New food
     food.x = math.random(matrix_width)
     food.y = math.random(matrix_height)
     -- Increment score
-    score = score + 1;
+    score = score + 1
   end
 
   -- Move the snake
+  clear_cell(snake[#snake].x, snake[#snake].y)
   for i=2, table.count(snake) do
-    clear_cell(snake[i].x, snake[i].y);
-    tmp2.x = snake[i].x;
-    tmp2.y = snake[i].y;
-    snake[i].x = tmp1.x;
-    snake[i].y = tmp1.y;
-    tmp1.x = tmp2.x;
-    tmp1.y = tmp2.y;
+    tmp2.x = snake[i].x
+    tmp2.y = snake[i].y
+    snake[i].x = tmp1.x
+    snake[i].y = tmp1.y
+    tmp1.x = tmp2.x
+    tmp1.y = tmp2.y
   end
 
   -- Update cells
-  draw_snake()
+  move_snake()
 
   -- Memorize time for the frame timer
   last_idle_time = os.clock()
