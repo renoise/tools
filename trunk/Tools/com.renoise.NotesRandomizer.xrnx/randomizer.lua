@@ -36,10 +36,11 @@ for _,v in pairs(Random.modes) do
   Random.note_sets[v.name] = v.notes
 end
 
-function Random:__init(mode, preserve_octave)
+function Random:__init(mode, preserve_octave, neighbour, shift)
   math.randomseed(os.time())
   self:set_mode(mode or 'Chaos')
   self:set_preserve_octave(preserve_octave or false)
+  self:set_neighbour(neighbour or false, shift or "up")
 end
 
 function Random:set_mode(mode)
@@ -52,11 +53,21 @@ function Random:set_preserve_octave(preserve_octave)
   self.preserve_octave = preserve_octave
 end
 
+function Random:set_neighbour(neighbour, shift)
+  assert(type(neighbour) == 'boolean')
+  self.neighbour = neighbour
+  self.shift = shift or "up"
+end
+
 function Random:randomize(note)
   local number = nil
   local note_prefix_table = Random.note_sets[self.mode]
   local prefix = math.random(1, #note_prefix_table)
   prefix = note_prefix_table[prefix]
+
+  if (self.mode ~= "Chaos" and self.neighbour) then
+    prefix = self:_neighbour(note)
+  end
 
   if (self.preserve_octave) then
     number = tonumber(string.sub(note, -1))
@@ -67,6 +78,39 @@ function Random:randomize(note)
   end
 
   return (prefix .. number)
+end
+
+function Random:_neighbour(note)
+  shift = self.shift:lower() or "up"
+  local prefix = string.sub(note, 1, 2)
+  local number = tonumber(string.sub(note, -1))
+  if table.find(Random.note_sets[self.mode], prefix) == nil then
+    local valid_notes = Random.note_sets["Chaos"]
+    local pos = table.find(valid_notes, prefix)
+    local found = false
+    if shift == "up" then
+      -- Shift up
+      for i = pos + 1, #valid_notes do
+        if table.find(Random.note_sets[self.mode], valid_notes[i]) then
+          prefix = valid_notes[i]
+          found = true
+          break
+        end
+      end
+      if found == false then prefix = valid_notes[1] end --Rotate
+    else
+      -- Shift down
+      for i = pos - 1, #valid_notes, -1 do
+        if table.find(Random.note_sets[self.mode], valid_notes[i]) then
+          prefix = valid_notes[i]
+          found = true
+          break
+        end
+      end
+      if found == false then prefix = valid_notes[#valid_notes] end --Rotate
+    end
+  end
+  return prefix
 end
 
 
@@ -145,14 +189,17 @@ end
 
 -- invoke_random
 
-function invoke_random(mode, pattern_iterator, constrain, preserve_octave)
+function invoke_random(
+  mode, pattern_iterator, constrain, preserve_octave, neighbour, shift
+)
+
 
   if (preserve_octave == nil) then
     preserve_octave = (renoise.app():show_prompt('Randomizer',
      'Preserve the octave of each note?', {'No', 'Yes'}) == "Yes")
   end
 
-  local randomizer = Random(mode, preserve_octave)
+  local randomizer = Random(mode, preserve_octave, neighbour, shift)
   local iterator = Iterator(constrain)
 
   iterator:set_callback(function(x) return randomizer:randomize(x) end)
@@ -172,8 +219,9 @@ function invoke_shuffle(pattern_iterator, constrain)
   iterator:set_callback(function(x) shuffle:push(x); return x end)
   iterator:go(pattern_iterator)
 
-  iterator:set_callback(function(x) return shuffle:pop(x); end)
+  iterator:set_callback(function(x) return shuffle:pop(x) end)
   iterator:go(pattern_iterator)
 end
+
 
 
