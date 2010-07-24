@@ -27,6 +27,8 @@ range_modes = table.create {
 local current_range = #range_modes
 local current_mode = nil
 local current_preserve_octaves = true
+local current_neighbour = false
+local current_neighbour_shift = "Up"
 local current_dialog = nil
 
 
@@ -36,7 +38,7 @@ local current_dialog = nil
 
 local function invoke_current_random()
   assert(current_range and current_mode, "mode or range was not yet set")
-  
+
   local range = range_modes[current_range]
   local mode = randomize_modes[current_mode]
 
@@ -74,7 +76,8 @@ local function invoke_current_random()
   if (mode == "Shuffle") then
     randomizer.invoke_shuffle(iter, selection_only)
   else
-    randomizer.invoke_random(mode, iter, selection_only, current_preserve_octaves)
+    randomizer.invoke_random(mode, iter, selection_only,
+    current_preserve_octaves, current_neighbour, current_neighbour_shift)
   end
 end
 
@@ -83,13 +86,13 @@ end
 -- Public functions
 --------------------------------------------------------------------------------
 
--- if a mode already was set, invoke this mode, else open the GUI 
+-- if a mode already was set, invoke this mode, else open the GUI
 -- to let the user define a mode
 
 function invoke_random_in_range(range_string)
   current_range = table.find(range_modes, range_string) or
     error("expected param range to be one of 'range_string'")
-  
+
   if not (current_mode) then
     show_randomize_gui()
   else
@@ -110,7 +113,7 @@ function show_randomize_gui()
     return
   end
 
-  -- initialize mode when opened the first time 
+  -- initialize mode when opened the first time
   current_mode = current_mode or #randomize_modes
 
   -- create and show a new dialog
@@ -142,11 +145,33 @@ function show_randomize_gui()
     notifier = function(value)
       current_mode = value
       -- hide preserve_octave with shuffle
-      vb.views.preserve_octave_row.visible = 
+      vb.views.preserve_octave_row.visible =
         (current_mode ~= randomize_modes:find("Shuffle"))
-      vb.views.dialog_content:resize()
+      -- hide neighbour with shuffle and chaos
+      vb.views.neighbour_row.visible =
+        (current_mode ~= randomize_modes:find("Shuffle") and
+        current_mode ~= randomize_modes:find("Chaos"))
     end,
     width = POPUP_WIDTH
+  }
+
+  local neighbour_switch = vb:checkbox {
+    value = false,
+    notifier = function(value)
+      current_neighbour = value
+      vb.views.neighbour_row_2.visible = (current_neighbour == true)
+      vb.views.dialog_content:resize()
+    end
+  }
+
+  local neighbour_shift = vb:switch {
+    id = "switch",
+    width = 100,
+    items = {"Up", "Down"},
+    notifier = function(value)
+      local switch = vb.views.switch
+      current_neighbour_shift = switch.items[value]
+    end
   }
 
   local preserve_octave_switch = vb:checkbox {
@@ -184,6 +209,20 @@ function show_randomize_gui()
       visible = (current_mode ~= randomize_modes:find("Shuffle")),
       preserve_octave_switch,
       vb:text { text = 'Preserve Octaves' }
+    },
+
+    vb:row {
+      id = "neighbour_row",
+      visible = (current_mode ~= randomize_modes:find("Shuffle")),
+      neighbour_switch,
+      vb:text { text = 'Nearest Neighbour' }
+    },
+
+    vb: row {
+      id = "neighbour_row_2",
+      visible = current_neighbour,
+      vb:column { width = 20 },
+      neighbour_shift
     },
 
     vb:space { height = 10 },
