@@ -8,20 +8,33 @@
 
     <!-- required scripts -->
     <script type="text/javascript" src="/js/jquery-1.4.2.min.js"></script>
-    <script type="text/javascript" src="/js/jquery-ui-1.8.1.custom.min.js"></script>
-    <script type="text/javascript" src="/js/cookies.js"></script>
-
-    <!-- required styles -->
-    <link type="text/css" href="/fg-menu/theme/ui.core.css" media="screen" rel="stylesheet" />
-    <link type="text/css" href="/fg-menu/theme/ui.theme.css" media="screen" rel="stylesheet" />
     
     <style type="text/css">
+      body {  
+         background-color: black;
+      }
+      th{
+        color: white;
+      }
+      th.off {
+        color: #888;
+      }
+      th.muted {
+        text-decoration: line-through;
+        color: #888;
+      }
+      th:hover, th.hover {
+        text-decoration: underline;
+      }
       td {
         width: 80px;
         height: 40px;
       }
       .pid {
         background-color: #BE8D18;
+        font-weight: bold;
+        text-align: center;
+        border: 2px solid white;
       }
       .pid:hover {
         background-color: #FFDF59;
@@ -37,7 +50,7 @@
         background-color: pink;
       }
       .pattern:hover, .pid:hover {
-        border: 2px dotted black;
+        border: 2px dotted red;
         cursor: pointer;
       }
       .pattern:active {
@@ -49,6 +62,18 @@
       .empty {
         background-color: black;
       }
+      .send {
+        background-color: darkgreen;
+      }
+      .mst {
+        background-color: #333;
+      }
+      .mst:hover {
+        cursor: default;
+        border: none;
+        border: 2px solid #eee;
+      }
+
     </style>
 
 </head>
@@ -59,19 +84,28 @@
         function s()
           return renoise.song()
         end
-    
+
         local str = ""
-        function out(s)
+        local function out(s)
           str = str .. s
         end
-    
+
+        local function get_mute_state(state)
+          local states = {'active','off','muted'}
+          return states[state]
+        end
+
+        -------------------
+
         out("<table>")
-    
+
         -- get tracks
         local tnum = #s().tracks
         out("<thead><tr><th>#</th>")
-        for _,t in pairs(s().tracks) do
-          out(("<th>%s</th>"):format(t.name))
+        for tid,t in ipairs(s().tracks) do
+          local classes = table.create()
+          out(("<th id='t%02d' class='%s'>%s</th>")
+            :format(tid, get_mute_state(t.mute_state), t.name))
         end
         out("</tr></thead><tbody>")
     
@@ -85,26 +119,30 @@
           out("<tr>")
           out(("<td class='%s' title='%d'>%d</td>")
             :format(classes:concat(' '),sid,pid-1))
-          local has_notes = false
           local seq_mute = false
           for tid=1,tnum do
             for pos,col in s().pattern_iterator:lines_in_pattern_track(pid, tid) do
-              has_notes = true
               seq_mute = s().sequencer:track_sequence_slot_is_muted(tid, sid)
               break
             end
 
             -- add classes
             local classes = table.create{"pattern"}
-            if (not has_notes) then
+            if (s().patterns[pid].tracks[tid].is_empty) then
               classes:insert("empty")
             end
             if (seq_mute) then
               classes:insert("seq_mute")
             end
-            local url = ("/Seq. Muting/Seq. XX [Toggle]/Seq. #%02d/Mute Track #%02d [Toggle]")
-              :format(sid,tid)
-            out( ("<td class='%s' title='%s'></td>"):format(classes:concat(' '), Util:urlencode(url)) )
+            local track_type = s().tracks[tid].type
+            if (track_type == renoise.Track.TRACK_TYPE_MASTER) then
+              classes:insert("mst")
+            elseif (track_type == renoise.Track.TRACK_TYPE_SEND) then
+              classes:insert("send")
+            end
+
+            out( ("<td class='%s' title='seq[%02d]/track[%02d]'></td>")
+              :format(classes:concat(' '),sid, tid ) )
 
           end
           out("</tr>")
@@ -117,6 +155,20 @@
   </div>
 
   <script type="text/javascript">
+    //Track Hover
+    var old_tid = 0;
+    $("td").mouseover(function(){
+      if ($(this).hasClass('pid')) return false;
+      var pos = $(this).attr('title');
+      var tstr = pos.match(/track\[\d+\]/);
+      var tid = tstr[0].slice(6,-1);
+      if (old_tid != tid) {
+        $("#t"+old_tid).removeClass("hover");
+        $("#t"+tid).addClass("hover");
+      }
+      old_tid = tid;
+    });
+
     //Seq Trigger
     $(".pid").live('click', function(){
      var url = "/Seq. Triggering/Trigger/Sequence XX [Set]?i="+$(this).attr('title');
@@ -127,7 +179,20 @@
     //Seq Mute
     $(".pattern").live('click', function(){
      var p = this
-     var url = $(this).attr('title');
+          
+     var title = $(this).attr('title');
+     var arr = title.match(/\d+/g);
+     var seq = arr[0];
+     var tid = arr[1];
+     
+     ~{do
+       local url = Util:urlencode(
+         "/Seq. Muting/Seq. XX [Toggle]/Seq. #seq/Mute Track #tid [Toggle]")
+       url = url:gsub("%%23seq", "%%23'+seq+'")  
+       url = url:gsub("%%23tid", "%%23'+tid+'")         
+       OUT = ("var url = '%s';"):format(url)
+     end }
+     
      $.post(url, {ajax:true}, function(){
       $(p).toggleClass('seq_mute');
      });
