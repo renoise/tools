@@ -93,6 +93,15 @@ end
 
 --------------------------------------------------------------------------------
 
+-- returns true when the device settings dialog is visible 
+
+function Device:settings_dialog_visible()
+  return (self.__settings_dialog and self.__settings_dialog.visible)
+end
+
+
+--------------------------------------------------------------------------------
+
 -- open the device settings, includes a reference to the browser so that we
 -- can update the browser state when releasing a device
 -- @param process : reference to the BrowserProcess
@@ -306,6 +315,19 @@ function Device:show_settings_dialog(process)
 end  
 
 
+--------------------------------------------------------------------------------
+
+-- close the device settings, when open
+
+function Device:close_settings_dialog()
+  if (self.__settings_dialog and self.__settings_dialog.visible) then
+    self.__settings_dialog:close()
+  end
+
+  self.__settings_dialog = nil
+end
+  
+  
 --------------------------------------------------------------------------------
 
 -- construct the device settings dialog (for both MIDI and OSC devices)

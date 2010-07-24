@@ -212,15 +212,6 @@ function Browser:set_device(device_display_name, configuration_hint)
     if (device_display_name == "None") then
       TRACE("Browser:releasing all processes")
       
-      -- close device-settings (if open)
-      for _,process in pairs(self.__processes) do
-        if(process.device) and
-          (process.device.__settings_dialog) and
-          (process.device.__settings_dialog.visible) then
-          process.device.__settings_dialog:close()
-        end
-      end
-
       -- release all devices & applications
       while (not self.__processes:is_empty()) do
         self.__processes[#self.__processes]:invalidate()
@@ -930,12 +921,11 @@ function Browser:__create_content_view()
         id = 'dpx_browser_device_settings',
         text = "Settings",
         width = 60,
-        notifier = function(e)
-          for process_index,process in ripairs(self.__processes) do
-            if(process:control_surface_visible())then
-              process.device:show_settings_dialog(process)
-              return
-            end
+        notifier = function()
+          local process = self:__current_process()
+          if (process) then
+            process.device:show_settings_dialog(process)
+            return
           end
 
         end
@@ -1266,18 +1256,18 @@ function BrowserProcess:invalidate()
   
   self.__was_running = false
   
-  if (self.__control_surface_view) then
-    self.__control_surface_parent_view:remove_child(
-      self.__control_surface_view)
-    
-    self.__control_surface_parent_view = nil
-    self.__control_surface_view = nil
-  end
-
   self.__message_stream = nil
   self.__display = nil
 
   if (self.device) then
+    if (self.device:settings_dialog_visible()) then
+      self.device:close_settings_dialog()
+    end
+    
+    if (self:control_surface_visible()) then
+      self:hide_control_surface()
+    end
+    
     self.device:release()
     self.device = nil
   end
