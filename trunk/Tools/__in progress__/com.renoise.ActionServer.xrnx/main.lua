@@ -54,7 +54,8 @@ renoise.tool():add_menu_entry {
 --  Debug
 -------------------------------------------
 
-if true then 
+local DEBUG = false
+if DEBUG then 
 --  require "remdebug.engine"
   
   _AUTO_RELOAD_DEBUG = function()
@@ -98,7 +99,11 @@ class 'ActionTree'
        message.is_trigger = function() return false end
        message.is_abs_value = function() return true end
      end
-     rprint(message)
+     
+     if (DEBUG) then
+       log:info("Message:")
+       rprint(message)
+     end
      
      if table.find(ActionTree.action_names, action_name) then
        log:info("Invoking: " .. action_name)
@@ -432,9 +437,9 @@ class "ActionServer"
       if method ~= nil then        
         method = method:upper()
         url = header[1]:match("%s(.-)%s")        
-        print(url)
         url_parts = Util:parse(url)                
-        path = Util:trim(Util:urldecode(url_parts.path .. '?'..(url_parts.query or '')))
+        path = Util:trim(Util:urldecode(url_parts.path .. 
+          '?' ..(url_parts.query or '')))
         -- strip ending ?
         if (path:sub(-1) == '?') then
           path = path:sub(1,-2)
