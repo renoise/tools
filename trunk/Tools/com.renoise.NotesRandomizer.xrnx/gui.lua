@@ -28,7 +28,7 @@ local current_range = #range_modes
 local current_mode = nil
 local current_preserve_octaves = true
 local current_neighbour = false
-local current_neighbour_shift = "Up"
+local current_neighbour_shift = "Rand"
 local current_dialog = nil
 
 
@@ -172,11 +172,11 @@ function show_randomize_gui()
     end
   }
 
-  local switches = {"Up", "Down"}
+  local switches = {"Rand", "Up", "Down"}
   local neighbour_shift = vb:switch {
     id = "switch",
     value = table.find(switches, current_neighbour_shift),
-    width = 100,
+    width = 140,
     items = switches,
     notifier = function(value)
       local switch = vb.views.switch
@@ -193,7 +193,7 @@ function show_randomize_gui()
 
   local process_button = vb:button {
     text = "Randomize",
-    width = 100,
+    width = 140,
     height = DIALOG_BUTTON_HEIGHT,
     notifier = invoke_current_random
   }
@@ -230,12 +230,12 @@ function show_randomize_gui()
       vb:text { text = 'Nearest Neighbour' }
     },
 
-    vb: row {
+    vb:horizontal_aligner {
       id = "neighbour_row_2",
+      mode = "center",
       visible =
         (vb.views.neighbour_row.visible == true and
         current_neighbour == true),
-      vb:column { width = 20 },
       neighbour_shift
     },
 

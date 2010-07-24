@@ -81,7 +81,13 @@ function Random:randomize(note)
 end
 
 function Random:_neighbour(note)
-  shift = self.shift:lower() or "up"
+  shift = self.shift:lower() or "rand"
+  if shift == "rand" then
+    rand = math.random(2)
+    if rand == 1 then shift = "up"
+    else shift = "down"
+    end
+  end
   local prefix = string.sub(note, 1, 2)
   local number = tonumber(string.sub(note, -1))
   if table.find(Random.note_sets[self.mode], prefix) == nil then
