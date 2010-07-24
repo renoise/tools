@@ -81,10 +81,9 @@ function Random:randomize(note)
 end
 
 function Random:_neighbour(note)
-  shift = self.shift:lower() or "rand"
+  local shift = self.shift:lower() or "rand"
   if shift == "rand" then
-    rand = math.random(2)
-    if rand == 1 then shift = "up"
+    if math.random(2) == 1 then shift = "up"
     else shift = "down"
     end
   end
