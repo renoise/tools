@@ -8,13 +8,19 @@
 
     <!-- required scripts -->
     <script type="text/javascript" src="/js/jquery-1.4.2.min.js"></script>
-    
+    <script type="text/javascript" src="/js/jquery.chromatable.js"></script>
+    <script type="text/javascript" src="/js/jquery.scrollTo-min.js"></script>
+
+
     <style type="text/css">
-      body {  
+      body {
          background-color: black;
+         font-size: 10px;
+         overflow-y: hidden;
       }
       th{
         color: white;
+        background-color: black;
       }
       th.off {
         color: #888;
@@ -30,6 +36,15 @@
         width: 80px;
         height: 40px;
       }
+      
+      ._thead {
+        border-spacing: 0;
+      }
+      
+      ._thead th {
+        padding: 2px;
+      }
+
       .pid {
         background-color: #BE8D18;
         font-weight: bold;
@@ -42,7 +57,7 @@
       .pid:active {
         background-color: #DEAD38;
       }
-      .playing {
+      #playing {
         background-color: #FEBD48;
       }
       .pattern {
@@ -56,11 +71,11 @@
       .pattern:active {
         background-color: red;
       }
-      .seq_mute {
-        background-color: purple;
-      }
       .empty {
         background-color: black;
+      }
+      .seq_mute {
+        background-color: purple;
       }
       .send {
         background-color: darkgreen;
@@ -72,6 +87,10 @@
         cursor: default;
         border: none;
         border: 2px solid #eee;
+      }
+      tr.current_seq td {
+        border-top: 4px solid red;
+        border-bottom: 4px solid red;
       }
 
     </style>
@@ -97,7 +116,7 @@
 
         -------------------
 
-        out("<table>")
+        out("<table id='table_matrix'>")
 
         -- get tracks
         local tnum = #s().tracks
@@ -112,13 +131,12 @@
         -- get patterns
         local pattern
         for sid,pid in pairs(s().sequencer.pattern_sequence) do
-          local classes = table.create{"pid"}
+          local id = ''
           if (sid == s().transport.playback_pos.sequence) then
-              classes:insert("playing")
+              id = "id='playing'"
           end
           out("<tr>")
-          out(("<td class='%s' title='%d'>%d</td>")
-            :format(classes:concat(' '),sid,pid-1))
+          out(("<td %s class='pid' title='%d'>%d</td>"):format(id,sid,pid-1))
           local seq_mute = false
           for tid=1,tnum do
             for pos,col in s().pattern_iterator:lines_in_pattern_track(pid, tid) do
@@ -155,6 +173,23 @@
   </div>
 
   <script type="text/javascript">
+
+    $(document).ready(function(){
+
+      //Floating Table Head
+      $("#table_matrix").chromatable({
+        height: "600px",
+        width: "800px"
+      });
+
+      //Track Colors
+      
+      //Initial Playback Pos
+      $('#playing').parent().addClass('current_seq');
+      $('table_matrix').focus();
+      //$.scrollTo( '#playing', 500);
+    });
+
     //Track Hover
     var old_tid = 0;
     $("td").mouseover(function(){
@@ -172,7 +207,13 @@
     //Seq Trigger
     $(".pid").live('click', function(){
      var url = "/Seq. Triggering/Trigger/Sequence XX [Set]?i="+$(this).attr('title');
-     $.post(url, {ajax:true});
+     var p = this;
+     $.post(url, {ajax:true}, function(){
+      $('.current_seq').removeClass('current_seq');
+      $(p).parent().addClass('current_seq');
+      $('#playing').removeAttr('id');
+      $(p).attr('id','playing');
+     });
      return false;
     });
 
