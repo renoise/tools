@@ -29,6 +29,8 @@ local current_mode = nil
 local current_preserve_octaves = true
 local current_neighbour = false
 local current_neighbour_shift = "Rand"
+local current_min = 0
+local current_max = 9
 local current_dialog = nil
 
 
@@ -78,9 +80,32 @@ local function invoke_current_random()
   else
     randomizer.invoke_random(
       mode, iter, selection_only, current_preserve_octaves, current_neighbour,
-      current_neighbour_shift
+      current_neighbour_shift, current_min, current_max
     )
   end
+end
+
+--------------------------------------------------------------------------------
+
+-- redraw
+
+local function redraw(vb)
+  -- hide preserve_octave
+  vb.views.preserve_octave_row.visible =
+    (current_mode ~= randomize_modes:find("Shuffle"))
+  -- hide neighbour
+  vb.views.neighbour_row.visible =
+    (current_mode ~= randomize_modes:find("Shuffle") and
+    current_mode ~= randomize_modes:find("Chaos"))
+  vb.views.neighbour_row_2.visible =
+    (vb.views.neighbour_row.visible == true and
+    current_neighbour == true)
+  -- hide octave selectors
+  vb.views.preserve_octave_row_2.visible =
+    (current_mode ~= randomize_modes:find("Shuffle") and
+     current_preserve_octaves == false)
+    -- re-draw
+  vb.views.dialog_content:resize()
 end
 
 
@@ -129,6 +154,7 @@ function show_randomize_gui()
     renoise.ViewBuilder.DEFAULT_DIALOG_BUTTON_HEIGHT
 
   local POPUP_WIDTH = 140
+  local TEXT_ROW_WIDTH = 40
 
   local vb = renoise.ViewBuilder()
 
@@ -146,54 +172,77 @@ function show_randomize_gui()
     value = current_mode,
     notifier = function(value)
       current_mode = value
-      -- hide preserve_octave with shuffle
-      vb.views.preserve_octave_row.visible =
-        (current_mode ~= randomize_modes:find("Shuffle"))
-      -- hide neighbour with shuffle and chaos
-      vb.views.neighbour_row.visible =
-        (current_mode ~= randomize_modes:find("Shuffle") and
-        current_mode ~= randomize_modes:find("Chaos"))
-      vb.views.neighbour_row_2.visible =
-        (vb.views.neighbour_row.visible == true and
-        current_neighbour == true)
-      vb.views.dialog_content:resize()
+      redraw(vb)
     end,
     width = POPUP_WIDTH
-  }
-
-  local neighbour_switch = vb:checkbox {
-    value = current_neighbour,
-    notifier = function(value)
-      current_neighbour = value
-      vb.views.neighbour_row_2.visible =
-        (vb.views.neighbour_row.visible == true and
-        current_neighbour == true)
-      vb.views.dialog_content:resize()
-    end
-  }
-
-  local switches = {"Rand", "Up", "Down"}
-  local neighbour_shift = vb:switch {
-    id = "switch",
-    value = table.find(switches, current_neighbour_shift),
-    width = 140,
-    items = switches,
-    notifier = function(value)
-      local switch = vb.views.switch
-      current_neighbour_shift = switch.items[value]
-    end
   }
 
   local preserve_octave_switch = vb:checkbox {
     value = current_preserve_octaves,
     notifier = function(value)
       current_preserve_octaves = value
+      redraw(vb)
+    end
+  }
+
+  local octaves = {"0", "1", "2", "3", "4", "5", "6", "7", "8", "9"}
+  local octave_selector = vb:row {
+    width = POPUP_WIDTH,
+    vb:text {
+      text = "Min"
+    },
+    vb:popup {
+      id = "octave_selector_min",
+      items = octaves,
+      value = table.find(octaves, tostring(current_min)),
+      notifier = function(value)
+        current_min = tonumber(octaves[value])
+        if vb.views.octave_selector_max.value < current_min then
+          vb.views.octave_selector_max.value = value
+        end
+      end,
+      width = TEXT_ROW_WIDTH
+    },
+    vb:text {
+      text = "Max"
+    },
+    vb:popup {
+      id = "octave_selector_max",
+      items = octaves,
+      value = table.find(octaves, tostring(current_max)),
+      notifier = function(value)
+        current_max = tonumber(octaves[value])
+        if vb.views.octave_selector_min.value > current_max then
+          vb.views.octave_selector_min.value = value
+        end
+      end,
+      width = TEXT_ROW_WIDTH
+    }
+  }
+
+  local neighbour_switch = vb:checkbox {
+    value = current_neighbour,
+    notifier = function(value)
+      current_neighbour = value
+      redraw(vb)
+    end
+  }
+
+  local switches = {"Rand", "Up", "Down"}
+  local neighbour_shift = vb:switch {
+    id = "neighbour_shift",
+    value = table.find(switches, current_neighbour_shift),
+    width = POPUP_WIDTH,
+    items = switches,
+    notifier = function(value)
+      local switch = vb.views.neighbour_shift
+      current_neighbour_shift = switch.items[value]
     end
   }
 
   local process_button = vb:button {
     text = "Randomize",
-    width = 140,
+    width = POPUP_WIDTH - DIALOG_MARGIN,
     height = DIALOG_BUTTON_HEIGHT,
     notifier = invoke_current_random
   }
@@ -215,17 +264,7 @@ function show_randomize_gui()
     },
 
     vb:row {
-      id = "preserve_octave_row",
-      visible = (current_mode ~= randomize_modes:find("Shuffle")),
-      preserve_octave_switch,
-      vb:text { text = 'Preserve Octaves' }
-    },
-
-    vb:row {
       id = "neighbour_row",
-      visible =
-        (current_mode ~= randomize_modes:find("Shuffle") and
-        current_mode ~= randomize_modes:find("Chaos")),
       neighbour_switch,
       vb:text { text = 'Nearest Neighbour' }
     },
@@ -233,10 +272,19 @@ function show_randomize_gui()
     vb:horizontal_aligner {
       id = "neighbour_row_2",
       mode = "center",
-      visible =
-        (vb.views.neighbour_row.visible == true and
-        current_neighbour == true),
       neighbour_shift
+    },
+
+    vb:row {
+      id = "preserve_octave_row",
+      preserve_octave_switch,
+      vb:text { text = 'Preserve Octaves' }
+    },
+
+    vb:horizontal_aligner {
+      id = "preserve_octave_row_2",
+      mode = "center",
+      octave_selector,
     },
 
     vb:space { height = 10 },
@@ -264,7 +312,10 @@ function show_randomize_gui()
     end
   end
 
+  redraw(vb)
+
   current_dialog = renoise.app():show_custom_dialog(
     "Notes Randomizer", content_view, key_handler)
+
 end
 
