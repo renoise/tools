@@ -54,14 +54,29 @@ renoise.tool():add_menu_entry {
 --  Debug
 -------------------------------------------
 
-local DEBUG = true
+local DEBUG = false
 if DEBUG then 
 --  require "remdebug.engine"
   
   _AUTO_RELOAD_DEBUG = function()
     start_server()
   end
-end  
+end
+
+
+-------------------------------------------
+--  Sessions
+-------------------------------------------
+
+class 'Session'
+  Session.client_id = 1
+  function Session:__init(r)
+    --self.id = id
+    self.client_id = Session.client_id + 1
+    self.remote_addr = r
+  end
+  function Session:s()
+  end
 
 -------------------------------------------
 --  Renoise Actions Tree
@@ -165,7 +180,7 @@ class 'ActionTree'
    -- @param ...  vararg representing the path to the subtree
    -- @return table containing the subtree
    function ActionTree:get_subtree(...)      
-      local path = {...}       
+      local path = {...}
       local t = ActionTree.action_tree      
       for _,v in ipairs(path) do
          t = t[v]
@@ -183,8 +198,11 @@ class "ActionServer"
 
   ActionServer.document_root = root .. "html"
 
+  ActionServer.changes = table.create()
+
   function ActionServer:__init(address,port)
       self.chunked = false
+      self.notifiers = table.create()
       
       -- create a server socket
       local server, socket_error = nil
@@ -205,8 +223,6 @@ class "ActionServer"
       end
   end
 
-  
-
   function ActionServer:get_address()
     return self.server.local_address .. ':' .. self.server.local_port
   end
@@ -214,28 +230,9 @@ class "ActionServer"
   function ActionServer:get_date(time) 
     return os.date("%a, %d %b %Y %X " .. Util:get_tzoffset(), time)
   end
-  
-   function ActionServer:get_action_names()
-      return Action.action_names
-   end 
 
-  function ActionServer:parse_post_string(body)
-    if #Util:trim(body) == 0 then return {} end
-     local p = {}
-     local key, val = nil
-     for k,v in body:gmatch("([^=&]+)=([^=&]+)") do
-       key = Util:urldecode(Util:trim(k))
-       val = Util:urldecode(Util:trim(v))                    
-       if key:match("%[%]$") then
-         if p[key] == nil then
-            p[key] = table.create()
-         end
-         p[key]:insert(val)
-       else
-         p[key] = val       
-       end
-     end     
-     return p
+  function ActionServer:get_action_names()
+    return Action.action_names
   end
 
   function ActionServer:get_MIME(path)
@@ -284,8 +281,8 @@ class "ActionServer"
   
   function ActionServer:is_binary(str)    
     return str ~= nil and str:match("^text") == nil
-  end  
-    
+  end
+
   function ActionServer:is_image(str)    
     return str ~= nil and str:match("^image") ~= nil
   end
@@ -337,7 +334,7 @@ class "ActionServer"
        self:set_header("Content-Type", "text/html")
        self:set_header("Cache-Control", "private, max-age=0, must-revalidate")
       
-       local tic = os.clock()               
+       local tic = os.clock()
        body = expand(
          buffer,          
          { L=self, 
@@ -390,7 +387,7 @@ class "ActionServer"
      
   end
  
---Socket API Callbacks---------------------------   
+--Socket API Callbacks---------------------------
 
   function ActionServer:socket_error(socket_error)
     renoise.app():show_warning(socket_error)
@@ -399,7 +396,7 @@ class "ActionServer"
   function ActionServer:socket_accepted(socket)
     log:info("Socket accepted")
   end
-  
+
   function ActionServer:socket_message(socket, message)
       self.remote_addr = socket.peer_address .. ":" .. socket.peer_port
       log:info("Remote Addr: " .. self.remote_addr)
@@ -443,7 +440,6 @@ class "ActionServer"
           path = path:sub(1,-2)
         end
         query = url_parts.query or ''
-        params = Util:parse_query(query)
       else
         log:warn("No HTTP method received")
         return
@@ -466,10 +462,11 @@ class "ActionServer"
       end
 
       if method ~= "HEAD" then
-        parameters = self:parse_post_string(body)
+        parameters = Util:parse_query_string(query)
         if  #path > 0 and self:is_htdoc(path) then
           if method == "POST" then
-             -- parameters = self:parse_post_string(body)
+            local post_parameters = Util:parse_query_string(body)
+            parameters = Util:merge_tables(paramets, post_parameters)
           end
           self:send_htdoc(socket, path, nil, parameters)
           return
@@ -502,6 +499,77 @@ class "ActionServer"
        self.server = nil
      end
    end
+
+--External Synchronization---------------------------
+
+  class 'Event'
+    Event.id = 0
+    function Event:__init(value)
+      Event.id = Event.id + 1
+      self.id = Event.id
+      self.value = value
+    end
+
+  -- changes
+  -- [id][change_obj]
+
+  -- clients-changes
+  -- [client_1]
+  --   [change_id]
+  --   [change_id]
+
+
+  -- TODO check change_id to avoid removing updated data
+  function ActionServer:acknowledge(key, id)
+    local str = "Acknowledged: " .. key
+    if (self.changes[key].id == id) then
+      self.changes[key] = nil
+      log:info(str .. '; Event has been removed')
+    else
+      log:info(str .. '; Event cannot be removed, because it was updated.')
+    end
+  end
+
+  function ActionServer:publish(key, value)
+    log:info("Publishing: " .. key)
+    local c = Event(value)
+    self.changes[key] = c
+  end
+
+  function ActionServer:subscribe(name, callback)
+    local session = Session(self.remote_addr)
+
+    local buffer = ([[
+      ~{do
+        local name = "%s"
+        if (not notifiers[name]) then
+          print("Subscribing to: "..name.."_observable")
+          notifiers[name] = true
+          %s_observable:add_notifier(function() callback() end)
+        end
+      end}
+    ]]):format(name, name)
+    expand(buffer, {renoise=renoise, callback=callback, notifiers=self.notifiers},_G)
+
+    --ActionServer.changes:insert(SongChange(name, param, value))
+  end
+
+  -- TODO unsubscribe
+  function ActionServer:unsubscribe(name)
+  end
+
+  function ActionServer:serialize(changes)
+    local str = ''
+    for k,v in pairs(changes) do
+      self:acknowledge(k,v.id)
+      str = str .. ("%s|%s=%s\r\n"):format(v.id, k, tostring(v.value))
+    end
+    return str
+  end
+
+  function ActionServer:deserialize(s)
+
+  end
 
 -------------------------------------------
 -- Start / Stop 
