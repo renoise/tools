@@ -141,3 +141,15 @@ function Util:parse_config_file(filename)
    end
    return t
 end
+
+
+-- a=1&c=3&d[a]=6&d[b]=7
+function Util:parse_query(str)
+  local pairs = Util:split(str, '&')
+  local params = table.create()
+  for _,pair in ipairs(pairs) do
+    local a = Util:split(pair, '=')
+    params[a[1]] = a[2]
+  end
+  return params
+end
