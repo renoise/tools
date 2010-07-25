@@ -26,9 +26,6 @@ end}
          font-size: 10px;
          overflow-y: hidden;
       }
-      #center {
-         height: 600px;
-      }
       th{
         color: white;
         background-color: black;
@@ -136,83 +133,16 @@ end}
 </head>
 
 <body>
+  
   <div id="center">
-    ~{do
-        function s()
-          return renoise.song()
-        end
 
-        local str = ""
-        local function out(s)
-          str = str .. "\n"  .. s
-        end
-
-        local function get_mute_state(state)
-          local states = {'active','off','muted'}
-          return states[state]
-        end
-
-        -------------------
-
-        out("<table id='table_matrix'>")
-
-        -- get tracks
-        local tnum = #s().tracks
-        out("<thead><tr><th title='Schedule'>S</th><th title='Loop'>L</th><th>#</th><th>label</th>")
-        for tid,t in ipairs(s().tracks) do
-          local classes = table.create()
-          out(("<th id='t%02d' class='%s'>%s</th>")
-            :format(tid, get_mute_state(t.mute_state), t.name))
-        end
-        out("</tr></thead><tbody>")
-    
-        -- get patterns
-        local pattern
-        for sid,pid in pairs(s().sequencer.pattern_sequence) do
-          local classes = table.create{"pid"}
-          if (sid == s().transport.playback_pos.sequence) then
-              classes:insert('playing')
-          end
-          out("<tr>")
-          local name = s().patterns[pid].name
-          out(("<td class='s'>&gt;</td><td class='l'></td><td id='%s' class='%s' title='%d'>%d</td><td class='label'>%s</td>"):format('sid'..sid,classes:concat(' '),sid,pid-1,name))
-          local seq_mute = false
-          for tid=1,tnum do
-            for pos,col in s().pattern_iterator:lines_in_pattern_track(pid, tid) do
-              seq_mute = s().sequencer:track_sequence_slot_is_muted(tid, sid)
-              break
-            end
-
-            -- add classes
-            local classes = table.create{"pattern"}
-            if (s().patterns[pid].tracks[tid].is_empty) then
-              classes:insert("empty")
-            end
-            if (seq_mute) then
-              classes:insert("seq_mute")
-            end
-            local track_type = s().tracks[tid].type
-            if (track_type == renoise.Track.TRACK_TYPE_MASTER) then
-              classes:insert("mst")
-            elseif (track_type == renoise.Track.TRACK_TYPE_SEND) then
-              classes:insert("send")
-            end
-
-            out( ("<td class='%s' title='seq[%02d]/track[%02d]'></td>")
-              :format(classes:concat(' '),sid, tid ) )
-
-          end
-          out("</tr>")
-        end
-
-        out("</tbody></table>")
-        OUT = str
-    end}
+    <!-- Matrix Table goes here -->
 
   </div>
 
   <script type="text/javascript">
     var autoscroll = true;
+    var autoupdate = true;
 
     function set_sid(sid){
       $('.current_seq').removeClass('current_seq');
@@ -223,48 +153,61 @@ end}
         $.scrollTo('.current_seq', 500);
       }
     }
-    
-    var poll = $.get('/matrix.lua', function(response, status){
-      if (status == 'success'){
-         var arr = response.split("\n");
-         var sid = arr[0].split("=");
-         sid = sid[1];
-         set_sid(sid);
-      }
-    });
 
+    function deserialize(str){
+      var arr = str.split("\n");
+      var params = new Array();
+      $.each(arr, function(k,line){
+        var parts = line.split("|");
+        var event_id = parts[0];
+        parts = parts[1].split("=");
+        var key = parts[0];
+        var value = parts[1];
+        params[key].value = value;
+        params[key].id = event_id;
+      });
+      return params;
+    }
 
     $(document).ready(function(){
+      
+      //Get Matrix
+      $.get('/matrix_table.lua', function(data){
+        
+        //Display Content
+        $('#center').html(data);
 
-      //Floating Table Head
-      $("#table_matrix").chromatable({
-        height: "600px",
-        width: "1000px"
-      });
+        //Floating Table Head
+        $("#table_matrix").chromatable({
+          height: "600px",
+          width: "1000px"
+        });
+        
+        //Track Colors
 
-      //Track Colors
+        //Initial Playback Pos
+        $('.playing').parent().addClass('current_seq');
 
-      //Initial Playback Pos
-      $('.playing').parent().addClass('current_seq');
+        //Polling Renoise for song changes
+        if (autoupdate) {
+          $.PeriodicalUpdater('/get-song-updates.lua', {
+              method: 'get',          // method; get or post
+              data: '',               // array of values to be passed to the page - e.g. {name: "John", greeting: "hello"}
+              minTimeout: 125,        // starting value for the timeout in milliseconds
+              maxTimeout: 250,       // maximum length of time between requests
+              multiplier: 2,          // if set to 2, timerInterval will double each time the response hasn't changed (up to maxTimeout)
+              type: 'text',           // response type - text, xml, json, etc.  See $.ajax config options
+              maxCalls: 0,            // maximum number of calls. 0 = no limit.
+              autoStop: 0             // automatically stop requests after this many returns of the same data. 0 = disabled.
+          }, function(data) {
+             var params = deserialize(data);
+             set_sid(params['sid'].value);
+          });
+        }
 
-      //Polling Renoise for song changes
-      $.PeriodicalUpdater('/matrix.lua', {
-          method: 'get',          // method; get or post
-          data: '',               // array of values to be passed to the page - e.g. {name: "John", greeting: "hello"}
-          minTimeout: 100,        // starting value for the timeout in milliseconds
-          maxTimeout: 200,       // maximum length of time between requests
-          multiplier: 2,          // if set to 2, timerInterval will double each time the response hasn't changed (up to maxTimeout)
-          type: 'text',           // response type - text, xml, json, etc.  See $.ajax config options
-          maxCalls: 0,            // maximum number of calls. 0 = no limit.
-          autoStop: 0             // automatically stop requests after this many returns of the same data. 0 = disabled.
-      }, function(data) {
-         var arr = data.split("\n");
-         var sid = arr[0].split("=");
-         sid = sid[1];
-         set_sid(sid);
-      });
+      }); // end Get Matrix
 
-    });
+    }); // end document ready
 
 
 
@@ -284,15 +227,15 @@ end}
 
     //Seq Trigger
     $(".pid").live('click', function(){
-     var url = "/Seq. Triggering/Trigger/Sequence XX [Set]?i="+$(this).attr('title');
-     var p = this;
-     $.post(url, {ajax:true}, function(){
-      $('.current_seq').removeClass('current_seq');
-      $(p).parent().addClass('current_seq');
-      $('.playing').removeClass('playing');
-      $(p).addClass('playing');
-     });
-     return false;
+      var url = "/Seq. Triggering/Trigger/Sequence XX [Set]?i="+$(this).attr('title');
+      var p = this;
+      $.post(url, {ajax:true}, function(){
+        $('.current_seq').removeClass('current_seq');
+        $(p).parent().addClass('current_seq');
+        $('.playing').removeClass('playing');
+        $(p).addClass('playing');
+      });
+      return false;
     });
 
     //Seq Mute

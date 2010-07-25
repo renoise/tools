@@ -142,14 +142,32 @@ function Util:parse_config_file(filename)
    return t
 end
 
+-- Parses a query/post string into table key/val pairs
+function Util:parse_query_string(body)
+  if #Util:trim(body) == 0 then return {} end
+   local p = {}
+   local key, val = nil
+   for k,v in body:gmatch("([^=&]+)=([^=&]+)") do
+     key = Util:urldecode(Util:trim(k))
+     val = Util:urldecode(Util:trim(v))                    
+     if key:match("%[%]$") then
+       if p[key] == nil then
+          p[key] = table.create()
+       end
+       p[key]:insert(val)
+     else
+       p[key] = val       
+     end
+   end     
+   return p
+end
 
--- a=1&c=3&d[a]=6&d[b]=7
-function Util:parse_query(str)
-  local pairs = Util:split(str, '&')
-  local params = table.create()
-  for _,pair in ipairs(pairs) do
-    local a = Util:split(pair, '=')
-    params[a[1]] = a[2]
+function Util:merge_tables(a,b)
+  for k,v in pairs(a) do
+    if (type(v)=='table') then
+      b[k] = Util:merge_tables(b[k], v)
+    else
+      b[k] = v
+    end
   end
-  return params
 end
