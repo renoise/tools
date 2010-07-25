@@ -24,23 +24,22 @@ Random.modes = {
   { name = 'Pentatonic Neutral', notes = {'C-','D-','F-','G-','A#'} },
 }
 
--- Populate mode_names table with integers for keys
+-- Populate mode_names table with integers for keys (used for sorting)
 Random.mode_names = {}
 for _,v in pairs(Random.modes) do
   table.insert(Random.mode_names, v.name)
 end
 
--- Populate notes_sets table
+-- Populate note_sets table
 Random.note_sets = {}
 for _,v in pairs(Random.modes) do
   Random.note_sets[v.name] = v.notes
 end
 
-function Random:__init(mode, preserve_octave, neighbour, shift)
+function Random:__init(mode, preserve_octave)
   math.randomseed(os.time())
   self:set_mode(mode or 'Chaos')
   self:set_preserve_octave(preserve_octave or false)
-  self:set_neighbour(neighbour or false, shift or "up")
 end
 
 function Random:set_mode(mode)
@@ -56,7 +55,15 @@ end
 function Random:set_neighbour(neighbour, shift)
   assert(type(neighbour) == 'boolean')
   self.neighbour = neighbour
-  self.shift = shift or "up"
+  self.shift = shift or "rand"
+end
+
+function Random:set_range(min, max)
+  assert(type(min) == 'number')
+  assert(type(max) == 'number')
+  assert(min <= max)
+  self.min = math.min(9, math.max(min, 0))
+  self.max = math.min(9, math.max(max, 0))
 end
 
 function Random:randomize(note)
@@ -64,7 +71,7 @@ function Random:randomize(note)
   local number = nil
   local prefix = nil
 
-  if (self.mode ~= "Chaos" and self.neighbour) then
+  if self.neighbour and self.mode ~= "Chaos" then
     -- Nearest neighbour
     prefix, number = self:_neighbour(note)
   else
@@ -77,8 +84,12 @@ function Random:randomize(note)
     end
   end
 
+  -- Range
+  local min, max = 0, 9
+  if self.min then min = self.min end
+  if self.max then max = self.max end
   if type(number) == 'nil' then
-    number = math.random(0, 9)
+    number = math.random(min, max)
   end
 
   return (prefix .. number)
@@ -216,17 +227,19 @@ end
 -- invoke_random
 
 function invoke_random(
-  mode, pattern_iterator, constrain, preserve_octave, neighbour, shift
+  mode, pattern_iterator, constrain, preserve_octave, neighbour, shift, min, max
 )
-
 
   if (preserve_octave == nil) then
     preserve_octave = (renoise.app():show_prompt('Randomizer',
      'Preserve the octave of each note?', {'No', 'Yes'}) == "Yes")
   end
 
-  local randomizer = Random(mode, preserve_octave, neighbour, shift)
+  local randomizer = Random(mode, preserve_octave)
   local iterator = Iterator(constrain)
+
+  if neighbour then randomizer:set_neighbour(neighbour, shift) end
+  if min and max then randomizer:set_range(min, max) end
 
   iterator:set_callback(function(x) return randomizer:randomize(x) end)
   iterator:go(pattern_iterator)
