@@ -17,6 +17,7 @@ end}
     <script type="text/javascript" src="/js/jquery-1.4.2.min.js"></script>
     <script type="text/javascript" src="/js/jquery.chromatable.js"></script>
     <script type="text/javascript" src="/js/jquery.scrollTo-min.js"></script>
+    <script type="text/javascript" src="/js/jquery.periodicalupdater.js"></script>
 
 
     <style type="text/css">
@@ -24,6 +25,9 @@ end}
          background-color: black;
          font-size: 10px;
          overflow-y: hidden;
+      }
+      #center {
+         height: 600px;
       }
       th{
         color: white;
@@ -84,7 +88,7 @@ end}
       .pid:active {
         background-color: #DEAD38;
       }
-      #playing {
+      .playing {
         background-color: #FEBD48;
       }
       .pattern {
@@ -165,13 +169,13 @@ end}
         -- get patterns
         local pattern
         for sid,pid in pairs(s().sequencer.pattern_sequence) do
-          local id = ''
+          local classes = table.create{"pid"}
           if (sid == s().transport.playback_pos.sequence) then
-              id = "id='playing'"
+              classes:insert('playing')
           end
           out("<tr>")
           local name = s().patterns[pid].name
-          out(("<td class='s'>&gt;</td><td class='l'></td><td %s class='pid' title='%d'>%d</td><td class='label'>%s</td>"):format(id,sid,pid-1,name))
+          out(("<td class='s'>&gt;</td><td class='l'></td><td id='%s' class='%s' title='%d'>%d</td><td class='label'>%s</td>"):format('sid'..sid,classes:concat(' '),sid,pid-1,name))
           local seq_mute = false
           for tid=1,tnum do
             for pos,col in s().pattern_iterator:lines_in_pattern_track(pid, tid) do
@@ -208,6 +212,27 @@ end}
   </div>
 
   <script type="text/javascript">
+    var autoscroll = true;
+
+    function set_sid(sid){
+      $('.current_seq').removeClass('current_seq');
+      $('#sid'+sid).parent().addClass('current_seq');
+      $('.playing').removeClass('playing');
+      $('#sid'+sid).addClass('playing');
+      if (autoscroll){
+        $.scrollTo('.current_seq', 500);
+      }
+    }
+    
+    var poll = $.get('/matrix.lua', function(response, status){
+      if (status == 'success'){
+         var arr = response.split("\n");
+         var sid = arr[0].split("=");
+         sid = sid[1];
+         set_sid(sid);
+      }
+    });
+
 
     $(document).ready(function(){
 
@@ -218,14 +243,30 @@ end}
       });
 
       //Track Colors
-      
-      //Initial Playback Pos
-      $('#playing').parent().addClass('current_seq');
 
-      //Scroll To Initial Playback Pos
-      //$('table_matrix').focus();
-      //$.scrollTo('#playing', 500);
+      //Initial Playback Pos
+      $('.playing').parent().addClass('current_seq');
+
+      //Polling Renoise for song changes
+      $.PeriodicalUpdater('/matrix.lua', {
+          method: 'get',          // method; get or post
+          data: '',               // array of values to be passed to the page - e.g. {name: "John", greeting: "hello"}
+          minTimeout: 100,        // starting value for the timeout in milliseconds
+          maxTimeout: 200,       // maximum length of time between requests
+          multiplier: 2,          // if set to 2, timerInterval will double each time the response hasn't changed (up to maxTimeout)
+          type: 'text',           // response type - text, xml, json, etc.  See $.ajax config options
+          maxCalls: 0,            // maximum number of calls. 0 = no limit.
+          autoStop: 0             // automatically stop requests after this many returns of the same data. 0 = disabled.
+      }, function(data) {
+         var arr = data.split("\n");
+         var sid = arr[0].split("=");
+         sid = sid[1];
+         set_sid(sid);
+      });
+
     });
+
+
 
     //Track Hover
     var old_tid = 0;
@@ -248,8 +289,8 @@ end}
      $.post(url, {ajax:true}, function(){
       $('.current_seq').removeClass('current_seq');
       $(p).parent().addClass('current_seq');
-      $('#playing').removeAttr('id');
-      $(p).attr('id','playing');
+      $('.playing').removeClass('playing');
+      $(p).addClass('playing');
      });
      return false;
     });

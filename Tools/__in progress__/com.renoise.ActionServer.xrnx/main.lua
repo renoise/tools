@@ -54,7 +54,7 @@ renoise.tool():add_menu_entry {
 --  Debug
 -------------------------------------------
 
-local DEBUG = false
+local DEBUG = true
 if DEBUG then 
 --  require "remdebug.engine"
   
@@ -77,26 +77,23 @@ class 'ActionTree'
        value_min_scaling = 0.0,
        value_max_scaling = 1.0,
 
-       is_trigger = function() return true end,
+       is_trigger = function() return false end,
        is_switch = function() return false end,
        is_rel_value = function() return false end,
        is_abs_value = function() return false end
-   }   
+   }
 
-   function ActionTree:find_action(action_name)
-     local splits = Util:split(action_name, "?")
-     action_name = splits[1]
-     local query = splits[2]
-     splits = Util:split(query, "=")     
-     local type = splits[1]
-     local value = splits[2]
-     local message = table.create(ActionTree.message)
-     if (type == 'b') then 
+   function ActionTree:find_action(action_name, query)
+     local splits = Util:split(query, "=")
+     local type = splits[1] or 'b'
+     local value = splits[2] or true
+     local message = table.copy(ActionTree.message)
+     if (type == 'b') then
        message.boolean_value = splits[2]
-     elseif (type == 'i') then 
-       message.int_value = splits[2] 
+       message.is_trigger = function() return true end
+     elseif (type == 'i') then
+       message.int_value = splits[2]
        message.value_max_scaling = 99
-       message.is_trigger = function() return false end
        message.is_abs_value = function() return true end
      end
      
@@ -402,7 +399,7 @@ class "ActionServer"
   function ActionServer:socket_accepted(socket)
     log:info("Socket accepted")
   end
-
+  
   function ActionServer:socket_message(socket, message)
       self.remote_addr = socket.peer_address .. ":" .. socket.peer_port
       log:info("Remote Addr: " .. self.remote_addr)
@@ -414,9 +411,9 @@ class "ActionServer"
          body = message
          self.chunked = false
       else
-         header, body = Util:parse_message(message)         
+         header, body = Util:parse_message(message)
       end
-      
+
       self.header = header
       
       if #body < tonumber(header["Content-Length"]) then
@@ -433,17 +430,20 @@ class "ActionServer"
       local methods = table.create{"GET","POST","HEAD",
         "OPTIONS", "CONNECT", "PUT", "DELETE", "TRACE"}
       local method = header[1]:match("^(%w+)%s")
+      local query = ''
+      local params = {}
 
-      if method ~= nil then        
+      if method ~= nil then
         method = method:upper()
-        url = header[1]:match("%s(.-)%s")        
-        url_parts = Util:parse(url)                
-        path = Util:trim(Util:urldecode(url_parts.path .. 
-          '?' ..(url_parts.query or '')))
-        -- strip ending ?
+        url = header[1]:match("%s(.-)%s")
+        url_parts = Util:parse(url)
+        path = Util:trim(Util:urldecode(url_parts.path))
+        -- strip trailing '?'
         if (path:sub(-1) == '?') then
           path = path:sub(1,-2)
         end
+        query = url_parts.query or ''
+        params = Util:parse_query(query)
       else
         log:warn("No HTTP method received")
         return
@@ -476,7 +476,7 @@ class "ActionServer"
         else
           local action_name = string.sub(path:gsub('\/', ':'), 2)
           log:info ("Requested action:" .. action_name)
-          local found = ActionTree:find_action(action_name)
+          local found = ActionTree:find_action(action_name, query)
           if found then            
              if parameters and parameters.ajax == "true" then               
                log:info("Action requested by Ajax")
