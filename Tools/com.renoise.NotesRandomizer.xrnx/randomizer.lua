@@ -60,17 +60,21 @@ function Random:set_neighbour(neighbour, shift)
 end
 
 function Random:randomize(note)
+
   local number = nil
-  local note_prefix_table = Random.note_sets[self.mode]
-  local prefix = math.random(1, #note_prefix_table)
-  prefix = note_prefix_table[prefix]
+  local prefix = nil
 
   if (self.mode ~= "Chaos" and self.neighbour) then
-    prefix = self:_neighbour(note)
-  end
-
-  if (self.preserve_octave) then
-    number = tonumber(string.sub(note, -1))
+    -- Nearest neighbour
+    prefix, number = self:_neighbour(note)
+  else
+    -- Random
+    local note_prefix_table = Random.note_sets[self.mode]
+    prefix = math.random(1, #note_prefix_table)
+    prefix = note_prefix_table[prefix]
+    if self.preserve_octave then
+      number = tonumber(string.sub(note, -1))
+    end
   end
 
   if type(number) == 'nil' then
@@ -81,12 +85,14 @@ function Random:randomize(note)
 end
 
 function Random:_neighbour(note)
+
   local shift = self.shift:lower() or "rand"
   if shift == "rand" then
     if math.random(2) == 1 then shift = "up"
     else shift = "down"
     end
   end
+
   local prefix = string.sub(note, 1, 2)
   local number = tonumber(string.sub(note, -1))
   if table.find(Random.note_sets[self.mode], prefix) == nil then
@@ -102,20 +108,35 @@ function Random:_neighbour(note)
           break
         end
       end
-      if found == false then prefix = valid_notes[1] end --Rotate
+      if found == false then --Rotate
+        prefix = Random.note_sets[self.mode][1]
+        number = number + 1
+      end
     else
       -- Shift down
-      for i = pos - 1, #valid_notes, -1 do
+      for i = pos - 1, 1, -1 do
         if table.find(Random.note_sets[self.mode], valid_notes[i]) then
           prefix = valid_notes[i]
           found = true
           break
         end
       end
-      if found == false then prefix = valid_notes[#valid_notes] end --Rotate
+      if found == false then --Rotate
+        local count = table.count(Random.note_sets[self.mode])
+        prefix = Random.note_sets[self.mode][count]
+        number = number - 1
+      end
     end
   end
-  return prefix
+
+  if not self.preserve_octave then
+    number = nil
+  else
+    number = math.min(9, math.max(number, 0))
+  end
+
+  return prefix, number
+
 end
 
 
