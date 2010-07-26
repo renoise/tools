@@ -67,6 +67,12 @@ function Browser:__init(initial_configuration, start_configuration)
 
   ---- attach to configuration settings
   
+  -- MIDI port setup changed
+  renoise.Midi.devices_changed_observable():add_notifier(
+    Browser.__available_device_ports_changed, self
+  )
+  
+  -- MIDI port configs changed
   for _,config in pairs(duplex_configurations) do
     local settings = configuration_settings(config)
      
@@ -856,6 +862,51 @@ end
 
 -- notifier, fired when device input or output port setting changed
 
+function Browser:__available_device_ports_changed()
+  TRACE("Browser:__available_device_ports_changed()")
+
+  -- reactivate all devices that are now available but were not available before  
+  local input_devices = table.create(renoise.Midi.available_input_devices())
+  local output_devices = table.create(renoise.Midi.available_output_devices())
+  
+  for _,process in pairs(self.__processes) do
+    if (process:running()) then
+      local device = process.device
+      
+      if (device.protocol == DEVICE_MIDI_PROTOCOL) then
+        local now_available = (input_devices:find(device.port_in) ~= nil) and 
+          (output_devices:find(device.port_out) ~= nil)
+        
+        local ports_active = (device.midi_in ~= nil) and
+          (device.midi_out ~= nil)
+            
+        if (now_available and not ports_active) then
+          -- ports are now available. reactivate the device
+          
+          device:release()
+          device:open()
+
+          process:clear_display()
+        
+        elseif (not now_available and ports_active) then
+
+          -- ports no longer available. release the MIDI device ports
+          device:release()
+        end
+        
+      end
+    end
+  end
+
+  -- and update the device list GUI
+  self:__device_ports_changed()
+end
+
+
+--------------------------------------------------------------------------------
+
+-- notifier, fired when device input or output port setting changed
+
 function Browser:__device_ports_changed()
 
   local suppress_notifiers = self.__suppress_notifiers
@@ -1415,6 +1466,22 @@ function BrowserProcess:hide_control_surface()
 
   self.__control_surface_view = nil
   self.__control_surface_parent_view = nil
+end
+
+
+--------------------------------------------------------------------------------
+
+-- clears/repaints the display, device, virtual UI
+
+function BrowserProcess:clear_display()
+  TRACE("BrowserProcess:clear_display")
+  
+  assert(self:instantiated(), "Internal Error. Please report: " ..
+    "trying to clear a control map GUI which was not instantiated")
+  
+  if (self:running()) then
+    self.__display:clear() 
+  end
 end
 
 
