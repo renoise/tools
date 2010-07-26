@@ -62,6 +62,14 @@ function Device:__init(name, message_stream, protocol)
   self.__vb = nil
   self.__settings_view = nil
   self.__settings_dialog = nil
+  
+  
+  ---- MIDI port setup changed
+  
+  renoise.Midi.devices_changed_observable():add_notifier(
+    Device.__available_device_ports_changed, self
+  )
+  
 end
 
 
@@ -395,6 +403,22 @@ function Device:__build_settings()
   return view
 end
 
+
+--------------------------------------------------------------------------------
+
+-- construct the device settings dialog (for both MIDI and OSC devices)
+
+function Device:__available_device_ports_changed()
+  TRACE("Device:__available_device_ports_changed()")
+
+  -- close the device setting dialogs on MIDI port changes 
+  -- so we don't have to bother updating them
+  
+  if (self:settings_dialog_visible()) then
+      self:close_settings_dialog()
+  end
+end
+    
 
 --------------------------------------------------------------------------------
 
