@@ -1,4 +1,4 @@
-~{do    
+~{do
         -- http://www.mozilla.org/projects/netlib/http/http-caching-faq.html
         L:set_header("Cache-control", "no-cache")
         L:set_header("Cache-control", "no-store")
@@ -67,8 +67,8 @@
               classes:insert("send")
             end
 
-            out( ("<td class='%s' title='seq[%02d]/track[%02d]'></td>")
-              :format(classes:concat(' '),sid, tid ) )
+            out( ("<td class='%s' id='s%02dt%02d' title='seq[%02d]/track[%02d]'></td>")
+              :format(classes:concat(' '),sid, tid, sid, tid) )
 
           end
           out("</tr>")
