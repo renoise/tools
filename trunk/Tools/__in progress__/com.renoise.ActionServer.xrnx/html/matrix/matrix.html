@@ -83,18 +83,15 @@ end}
       .pid:active {
         background-color: #DEAD38;
       }
-      .playing {
-        background-color: #FEBD48;
-      }
-      .pattern {
+      .p {
         border: 2px solid #eee;
         background-color: pink;
       }
-      .pattern:hover, .pid:hover {
+      .p:hover, .pid:hover {
         border: 2px dotted red;
         cursor: pointer;
       }
-      .pattern:active {
+      .p:active {
         background-color: red;
       }
       .empty {
@@ -111,9 +108,12 @@ end}
         border: none;
         border: 2px solid #eee;
       }
-      tr.current_seq td {
+      .current_seq td {
         border-top: 4px solid red;
         border-bottom: 4px solid red;
+      }
+      .current_seq.pid  {
+        background-color: #FEBD48;
       }
       .label {
         width: 160px;
@@ -125,6 +125,10 @@ end}
       }
       .seq_mute {
         background-color: purple;
+      }
+      .scheduled {
+        text-decoration: blink;
+        color: white;
       }
     </style>
 
@@ -154,10 +158,9 @@ end}
 
 
     function set_sid(sid){
+      $('.scheduled').removeClass('scheduled');
       $('.current_seq').removeClass('current_seq');
-      $('#sid'+sid).parent().addClass('current_seq');
-      $('.playing').removeClass('playing');
-      $('#sid'+sid).addClass('playing');
+      $('#s'+sid).addClass('current_seq');
       if (autoscroll){
         $.scrollTo('.current_seq', 500);
       }
@@ -173,7 +176,7 @@ end}
     function load_matrix_table(callback){
       //Get Matrix
       $.get('/matrix/matrix_table.lua', function(data){
-        
+
         //Display Content
         $("#matrix_placeholder").html(data);
 
@@ -185,9 +188,6 @@ end}
 
         //Track Colors
 
-        //Initial Playback Pos
-        $('.playing').parent().addClass('current_seq');
-        
         callback();
       });
     }
@@ -244,7 +244,7 @@ end}
     //Track Hover
     var old_tid = 0;
     $("td").mouseover(function(){
-      if (!$(this).hasClass('pattern')) return false;
+      if (!$(this).hasClass('p')) return false;
       var pos = $(this).attr('title');
       var tstr = pos.match(/track\[\d+\]/);
       var tid = tstr[0].slice(6,-1);
@@ -254,26 +254,34 @@ end}
       }
       old_tid = tid;
     });
-
-    //Seq Trigger
-    $(".pid").live('click', function(){
-      var url = "/Seq. Triggering/Trigger/Sequence XX [Set]?i="+$(this).attr('title');
+    
+    //Set Schedule
+    $(".s").live('click', function(){
+      var sid = $(this).parent().attr('id').substr(1);
+      var url = "/Seq. Triggering/Schedule/Sequence XX [Set]?i="+sid;
       var p = this;
       $.post(url, {ajax:true}, function(){
-        $('.current_seq').removeClass('current_seq');
-        $(p).parent().addClass('current_seq');
-        $('.playing').removeClass('playing');
-        $(p).addClass('playing');
+        $(".s").removeClass('scheduled');
+        $(p).addClass('scheduled');
       });
       return false;
     });
 
+    //Seq Trigger
+    $(".pid").live('click', function(){
+      var sid = $(this).parent().attr('id').substr(1);
+      var url = "/Seq. Triggering/Trigger/Sequence XX [Set]?i="+sid;
+      var p = this;
+      $.post(url, {ajax:true});
+      return false;
+    });
+
     //Seq Mute
-    $(".pattern").live('click', function(){
+    $(".p").live('click', function(){
      var p = this
-          
-     var title = $(this).attr('title');
-     var arr = title.match(/\d+/g);
+
+     var id = $(this).attr('id');
+     var arr = id.match(/\d+/g);
      var seq = arr[0];
      var tid = arr[1];
      
@@ -281,7 +289,7 @@ end}
        local url = Util:urlencode(
          "/Seq. Muting/Seq. XX [Toggle]/Seq. #seq/Mute Track #tid [Toggle]")
        url = url:gsub("%%23seq", "%%23'+seq+'")  
-       url = url:gsub("%%23tid", "%%23'+tid+'")         
+       url = url:gsub("%%23tid", "%%23'+tid+'")
        OUT = ("var url = '%s';"):format(url)
      end }
      
