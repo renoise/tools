@@ -95,6 +95,8 @@ array_int_modulators = {}
 array_real_frequency_multipliers = {}
 array_waves = {}
 
+toggle_auto_generate = false;
+
 
 --------------------------------------------------------------------------------
 -- menu registration
@@ -162,7 +164,7 @@ function initialize_wave(int_wave_number)
   array_real_frequency_multipliers[int_wave_number] = 1.0
   array_int_modulators[int_wave_number] = 0
   array_instrument_number[int_wave_number] = 0
-  array_sample_number[int_wave_number] = 0
+  array_sample_number[int_wave_number] = 0  
 end
 
 
@@ -324,26 +326,40 @@ function generate()
     sample_new = renoise.song().selected_sample
   end
   
+  
+  
   buffer_new = sample_new.sample_buffer
   
   if int_frames == 0 then 
     int_frames = SAMPLE_FREQUENCY / note_to_frequency(int_note) 
   end
-  
-  --create the new sample
-  if 
-    int_frames > 0 and 
-    not buffer_new:create_sample_data(
-      SAMPLE_FREQUENCY, 
-      SAMPLE_BIT_DEPTH, 
-      SAMPLE_CHANS, 
-      real_cycles*int_frames
-    )
+     
+  -- if the samples is "the same" (size wise), don't recreate it, just overwrite it
+  if buffer_new.has_sample_data
+    and buffer_new.number_of_frames == math.floor(real_cycles*int_frames)
+    and buffer_new.sample_rate == SAMPLE_FREQUENCY
+    and buffer_new.bit_depth == SAMPLE_BIT_DEPTH
+    and buffer_new.number_of_channels == SAMPLE_CHANS
   then
-    renoise.app():show_error("Error during sample creation!")
-    renoise.song():undo()
-    return
+    -- do nothing
+  else
+    --create the new sample
+    if 
+      int_frames > 0 and 
+      not buffer_new:create_sample_data(
+        SAMPLE_FREQUENCY, 
+        SAMPLE_BIT_DEPTH, 
+        SAMPLE_CHANS, 
+        real_cycles*int_frames
+      )
+    then
+      renoise.app():show_error("Error during sample creation!")
+      renoise.song():undo()
+      return
+    end
   end
+     
+     
   
   local int_chan,int_frame,real_frame_value,int_valid_waves
   for int_chan = 1, SAMPLE_CHANS do
@@ -353,6 +369,9 @@ function generate()
       buffer_new:set_sample_data(int_chan,int_frame,real_frame_value)
     end
   end
+  
+  
+  
   
   buffer_new:finalize_sample_data_changes()
   

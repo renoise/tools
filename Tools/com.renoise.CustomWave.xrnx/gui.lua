@@ -274,6 +274,7 @@ function reset_gui()
   int_wave_type_selected = 5
   vb.views.switchTabs.value = 1
   vb.views.chkInvert.value = false
+  vb.views.chkAutoGenerate.value = false
 end
 
 
@@ -307,379 +308,458 @@ function show_dialog()
   local CONTENT_WIDTH = TEXT_LABEL_WIDTH + CONTROL_WIDTH
 
   local DIALOG_BUTTON_HEIGHT = renoise.ViewBuilder.DEFAULT_DIALOG_BUTTON_HEIGHT
+  local CONTROL_HEIGHT = renoise.ViewBuilder.DEFAULT_CONTROL_HEIGHT
 
   vb = renoise.ViewBuilder()
+
 
   -- create_global_properties
 
   local function create_global_properties()
 
-  local row_note = vb:row {
-    vb:text {
-      text = "Note",
-      width = TEXT_LABEL_WIDTH
-    },
-    vb:popup {
-      width = CONTROL_WIDTH,
-      value = int_note,
-      items = generate_note_matrix(1,120),
-      notifier = function(new_index)
-        int_note = new_index
-        int_frames = SAMPLE_FREQUENCY / note_to_frequency(new_index)
-      end,
-      width = CONTROL_WIDTH
+    local row_note = vb:row {
+      vb:text {
+        text = "Note",
+        width = TEXT_LABEL_WIDTH
+      },
+      vb:popup {
+        width = CONTROL_WIDTH,
+        value = int_note,
+        items = generate_note_matrix(1,120),
+        notifier = function(new_index)
+          int_note = new_index
+          int_frames = SAMPLE_FREQUENCY / note_to_frequency(new_index)
+          if toggle_auto_generate then
+            generate()
+          end
+        end,
+        width = CONTROL_WIDTH
+      }
     }
-  }
-
-  local row_cycles = vb:row {
-    vb:text {
-      text = "Cycles" ,
-      width = TEXT_LABEL_WIDTH
-    },
-    vb:valuefield {
-      width = CONTROL_WIDTH,
-      value = 1,
-      min = 0.5,
-      max = SAMPLE_FREQUENCY,
-      notifier = function(new_text)
-        real_cycles = tonumber(new_text)
-      end
+  
+    local row_cycles = vb:row {
+      vb:text {
+        text = "Cycles" ,
+        width = TEXT_LABEL_WIDTH
+      },
+      vb:valuefield {
+        width = CONTROL_WIDTH,
+        id = "valCycles",
+        value = 1,
+        min = 0.5,
+        max = SAMPLE_FREQUENCY,
+        notifier = function(new_text)
+          real_cycles = tonumber(new_text)
+          vb.views.sldCycles.value = real_cycles
+          if toggle_auto_generate then
+            generate()
+          end
+        end
+      }
     }
-  }
 
-  local row_label = vb:row {
-    vb:text {
-      text = "Amplification",
-      width = TEXT_LABEL_WIDTH
-    },
-    vb:text {
-      id = "txtDbValue",
-      text = "0 dB",
-      width = TEXT_LABEL_WIDTH
-    }
-  }
-
-  local slider_volume = vb:slider {
+  local slider_cycles = vb:slider {
     width = CONTROL_WIDTH + TEXT_LABEL_WIDTH,
-    min = 0, -- -INF using log scale
-    max = 1, -- 0 Decibels using log scale
+    min = 0.5,
+    id = "sldCycles",
+    max = 10,  --- to allow for finer tweaking, big values are too sluggish
     value = 1,
     notifier = function(value)
-    real_amplification = math.pow(value,2)
-    if (real_amplification==0) then
-      vb.views.txtDbValue.text = "-INF dB"
-    else
-      vb.views.txtDbValue.text = 
-      string.format("%.2f dB",convert_linear_to_db(real_amplification))
-    end
-  end
-  }
-
-  local array_string_buttons = {}
-  for i = 1, OPERATORS do
-    array_string_buttons[i] = tostring(i)
-  end
-
-  local switch_tabs = vb:switch {
-    id = "switchTabs",
-    width = CONTENT_WIDTH,
-    items = array_string_buttons,
-    notifier = function(int_index_new)
-      change_tab(int_index_new)
-    end
-  }
-
-  local column_global_properties = vb:column {
-    style = "group",
-    margin = MARGIN_DEFAULT,
-    row_note,
-    row_cycles,
-    row_label,
-    slider_volume,
-    switch_tabs
-  }
-  
-  return column_global_properties
-  
-end
-
-
---------------------------------------------------------------------------------
-
-local function create_operator_gui()
-
-  local text_operator = vb:text {
-    id = "txtOperator",
-    text = "Operator",
-    font = "bold",
-    align = "center",
-    width = CONTENT_WIDTH,
-  }
-
-  local row_wave = vb:row {
-    vb:text {
-      text = "Wave",
-      width = TEXT_LABEL_WIDTH
-    },
-    vb:popup {
-      id = "cmbWave",
-      width = CONTROL_WIDTH,
-      value = int_wave_type_selected,
-      items = array_string_operators,
-      notifier = function(int_wave_type)
-        change_wave(int_operator_selected,int_wave_type)
+      real_cycles = value
+      vb.views.valCycles.value = real_cycles
+      if toggle_auto_generate then
+        generate()
       end
+     end
     }
-  }
+  
 
-  local row_amplitude = vb:row {
-    vb:text {
-      text = "Amplitude",
-      width= TEXT_LABEL_WIDTH
-    },
-    vb:slider {
-      id = "sldAmplitude",
-      width = CONTROL_WIDTH,
-      min = 0,
-      max = 1,
+    local row_label = vb:row {
+      vb:text {
+        text = "Amplification",
+        width = TEXT_LABEL_WIDTH
+      },
+      vb:text {
+        id = "txtDbValue",
+        text = "0 dB",
+        width = TEXT_LABEL_WIDTH
+      }
+    }
+  
+    local slider_volume = vb:slider {
+      width = CONTROL_WIDTH + TEXT_LABEL_WIDTH,
+      min = 0, -- -INF using log scale
+      max = 1, -- 0 Decibels using log scale
       value = 1,
-      notifier = function(real_value)
-        array_real_amplitudes[int_operator_selected] = real_value
-      end
-    }
-  }
-
-  local row_width = vb:row {
-    id = "rowWidth",
-    vb:text {
-      text = "Width",
-      width = TEXT_LABEL_WIDTH
-    },
-    vb:slider {
-      id = "sldWidth",
-      width = CONTROL_WIDTH,
-      min = 0,
-      max = 0.5,
-      value = 0.5,
-      notifier = function(real_value)
-        if real_value ~= nil then
-          array_variant_parameters[int_operator_selected] = real_value
+      notifier = function(value)
+        real_amplification = math.pow(value,2)
+        if (real_amplification==0) then
+          vb.views.txtDbValue.text = "-INF dB"
+        else
+          vb.views.txtDbValue.text = 
+          string.format("%.2f dB",convert_linear_to_db(real_amplification))
+        end
+        if toggle_auto_generate then
+          generate()
         end
       end
     }
-  }
-
-  local row_invert = vb:row {
-    id = "rowInvert",
-    vb:text {
-      text = "Invert wave",
-      width= TEXT_LABEL_WIDTH
-    },
-    vb:checkbox {
-      id = "chkInvert",
-      value = false,
-      notifier = function(boolean_value)
-        array_boolean_inverts[int_operator_selected] = boolean_value
+  
+    local array_string_buttons = {}
+    for i = 1, OPERATORS do
+      array_string_buttons[i] = tostring(i)
+    end
+  
+    local switch_tabs = vb:switch {
+      id = "switchTabs",
+      width = CONTENT_WIDTH,
+      items = array_string_buttons,
+      notifier = function(int_index_new)
+        change_tab(int_index_new)
       end
     }
-  }
-
-  local row_modulate = vb:row {
-    vb:text {
-      text = "Mod.Ampl. of",
-      width = TEXT_LABEL_WIDTH
-    },
-    vb:popup {
-      id = "cmbModulate",
-      width = CONTROL_WIDTH,
-      items = generate_modulator_matrix(),
+  
+    local column_global_properties = vb:column {
+      style = "group",
+      margin = MARGIN_DEFAULT,
+      row_note,
+      row_cycles,
+      slider_cycles,
+      row_label,
+      slider_volume,
+      switch_tabs
+    }
+    
+    return column_global_properties
+    
+  end
+  
+    
+  --- create operator GUI
+  
+  local function create_operator_gui()
+  
+    local text_operator = vb:text {
+      id = "txtOperator",
+      text = "Operator",
+      font = "bold",
+      align = "center",
+      width = CONTENT_WIDTH,
+    }
+  
+    local row_wave = vb:row {
+      vb:text {
+        text = "Wave",
+        width = TEXT_LABEL_WIDTH
+      },
+      vb:popup {
+        id = "cmbWave",
+        width = CONTROL_WIDTH,
+        value = int_wave_type_selected,
+        items = array_string_operators,
+        notifier = function(int_wave_type)
+          change_wave(int_operator_selected,int_wave_type)
+          if toggle_auto_generate then
+            generate()
+          end
+        end
+      }
+    }
+  
+    local row_amplitude = vb:row {
+      vb:text {
+        text = "Amplitude",
+        width= TEXT_LABEL_WIDTH
+      },
+      vb:slider {
+        id = "sldAmplitude",
+        width = CONTROL_WIDTH,
+        min = 0,
+        max = 1,
+        value = 1,
+        notifier = function(real_value)
+          array_real_amplitudes[int_operator_selected] = real_value
+          if toggle_auto_generate then
+            generate()
+          end
+        end
+      }
+    }
+  
+    local row_width = vb:row {
+      id = "rowWidth",
+      vb:text {
+        text = "Width",
+        width = TEXT_LABEL_WIDTH
+      },
+      vb:slider {
+        id = "sldWidth",
+        width = CONTROL_WIDTH,
+        min = 0,
+        max = 0.5,
+        value = 0.5,
+        notifier = function(real_value)
+          if real_value ~= nil then
+            array_variant_parameters[int_operator_selected] = real_value
+               if toggle_auto_generate then
+                 generate()
+               end
+          end
+        end
+      }
+    }
+  
+    local row_invert = vb:row {
+      id = "rowInvert",
+      vb:text {
+        text = "Invert wave",
+        width= TEXT_LABEL_WIDTH
+      },
+      vb:checkbox {
+        id = "chkInvert",
+        value = false,
+        notifier = function(boolean_value)
+          array_boolean_inverts[int_operator_selected] = boolean_value
+          if toggle_auto_generate then
+            generate()
+          end
+        end
+      }
+    }
+  
+    local row_modulate = vb:row {
+      vb:text {
+        text = "Mod.Ampl. of",
+        width = TEXT_LABEL_WIDTH
+      },
+      vb:popup {
+        id = "cmbModulate",
+        width = CONTROL_WIDTH,
+        items = generate_modulator_matrix(),
+        value = 1,
+        notifier = function(new_index)
+          array_int_modulators[int_operator_selected] = new_index - 1
+          if toggle_auto_generate then
+            generate()
+          end
+        end
+      }
+    }
+  
+    local dropdown_instruments = vb:popup {
+      id = "cmbInstruments",
+      width = CONTENT_WIDTH,
+      items = generate_instrument_matrix(),
       value = 1,
       notifier = function(new_index)
-        array_int_modulators[int_operator_selected] = new_index - 1
-      end
-    }
-  }
-
-  local dropdown_instruments = vb:popup {
-    id = "cmbInstruments",
-    width = CONTENT_WIDTH,
-    items = generate_instrument_matrix(),
-    value = 1,
-    notifier = function(new_index)
-  
-      local instrument_index = new_index - 1
-        
-      local last_instrument = array_instrument_number[int_operator_selected]
-      local last_sample = array_sample_number[int_operator_selected]
-  
-      if instrument_index > 0 and vb.views.cmbSamples then
-        vb.views.cmbSamples.visible = true
-        vb.views.cmbSamples.items = generate_sample_matrix(instrument_index)
-      else
-        vb.views.cmbSamples.visible = false
-      end
-
-      -- generate notifier name associated with the 
-      -- previously and newly selected instrument
-      local samples_notifier_name = 
-      ("sample_list_changed_in_instrument_%d"):format(instrument_index)
-      local last_samples_notifier_name = 
-        ("sample_list_changed_in_instrument_%d"):format(last_instrument)
     
-      -- notifier for changes in samples list
-      if instrument_index > 0 then
+        local instrument_index = new_index - 1
+          
+        local last_instrument = array_instrument_number[int_operator_selected]
+        local last_sample = array_sample_number[int_operator_selected]
     
-        notifiers[samples_notifier_name] = function ()
-
-        -- the currently visible operator is a wavetable using 
-        -- the changed instrument as wavetable
-        if 
-          array_waves[int_operator_selected] == WAVE_WAVETABLE and 
-          array_instrument_number[int_operator_selected] == instrument_index 
-        then
-          -- rebuild samples list
-          array_sample_number[int_operator_selected] = 0
+        if instrument_index > 0 and vb.views.cmbSamples then
+          vb.views.cmbSamples.visible = true
           vb.views.cmbSamples.items = generate_sample_matrix(instrument_index)
-          vb.views.cmbSamples.value = 1
+        else
+          vb.views.cmbSamples.visible = false
         end
-        
-        -- we will use this to warn the user about what is happening
-        local string_warning = ' ' 
-        
-        -- loop over all operators to reset all the operators which have 
-        -- the changed isntrument as wavetable
-        for int_operator = 1, OPERATORS do
-        
+  
+        -- generate notifier name associated with the 
+        -- previously and newly selected instrument
+        local samples_notifier_name = 
+        ("sample_list_changed_in_instrument_%d"):format(instrument_index)
+        local last_samples_notifier_name = 
+          ("sample_list_changed_in_instrument_%d"):format(last_instrument)
+      
+        -- notifier for changes in samples list
+        if instrument_index > 0 then
+      
+          notifiers[samples_notifier_name] = function ()
+  
+          -- the currently visible operator is a wavetable using 
+          -- the changed instrument as wavetable
           if 
-            array_waves[int_operator] and 
-            array_waves[int_operator] == WAVE_WAVETABLE and 
-            array_instrument_number[int_operator] == instrument_index 
+            array_waves[int_operator_selected] == WAVE_WAVETABLE and 
+            array_instrument_number[int_operator_selected] == instrument_index 
           then
-            array_sample_number[int_operator] = 0
-            string_warning = string_warning .. tostring(int_operator) .. ', '
+            -- rebuild samples list
+            array_sample_number[int_operator_selected] = 0
+            vb.views.cmbSamples.items = generate_sample_matrix(instrument_index)
+            vb.views.cmbSamples.value = 1
           end
           
-        end
+          -- we will use this to warn the user about what is happening
+          local string_warning = ' ' 
           
-        if string.len(string_warning) > 1 then
-          renoise.app():show_status(
-            ("The following operators have been reset because of changes in" ..
-             " sample list of instrument %d: "):format(instrument_index-1) ..
-             string.sub(string_warning,1,string.len(string_warning)-2)
-          )
+          -- loop over all operators to reset all the operators which have 
+          -- the changed isntrument as wavetable
+          for int_operator = 1, OPERATORS do
+          
+            if 
+              array_waves[int_operator] and 
+              array_waves[int_operator] == WAVE_WAVETABLE and 
+              array_instrument_number[int_operator] == instrument_index 
+            then
+              array_sample_number[int_operator] = 0
+              string_warning = string_warning .. tostring(int_operator) .. ', '
+            end
+            
+          end
+            
+          if string.len(string_warning) > 1 then
+            renoise.app():show_status(
+              ("The following operators have been reset because of changes in" ..
+               " sample list of instrument %d: "):format(instrument_index-1) ..
+               string.sub(string_warning,1,string.len(string_warning)-2)
+            )
+          end
+  
         end
-
+  
+        if toggle_auto_generate then
+          generate()
+        end
+  
       end
+  
+      --remove any notifier from the previously selected sample
+      if 
+        last_instrument > 0 and 
+          (renoise.song().instruments[last_instrument].samples_observable:has_notifier(
+            notifiers[last_samples_notifier_name])) 
+      then
+        renoise.song().instruments[last_instrument].samples_observable:remove_notifier(
+          notifiers[last_samples_notifier_name])
+      end
+  
+      -- only add notifier if there is no yet another
+      if 
+        instrument_index > 0 and 
+        not (renoise.song().instruments[instrument_index].samples_observable:has_notifier(
+          notifiers[samples_notifier_name])) 
+      then
+        renoise.song().instruments[instrument_index].samples_observable:add_notifier(
+          notifiers[samples_notifier_name])
+      end
+          
+      array_instrument_number[int_operator_selected] = instrument_index
+      array_sample_number[int_operator_selected] = 1 -- default sample
       
-    end
-
-    --remove any notifier from the previously selected sample
-    if 
-      last_instrument > 0 and 
-        (renoise.song().instruments[last_instrument].samples_observable:has_notifier(
-          notifiers[last_samples_notifier_name])) 
-    then
-      renoise.song().instruments[last_instrument].samples_observable:remove_notifier(
-        notifiers[last_samples_notifier_name])
-    end
-
-    -- only add notifier if there is no yet another
-    if 
-      instrument_index > 0 and 
-      not (renoise.song().instruments[instrument_index].samples_observable:has_notifier(
-        notifiers[samples_notifier_name])) 
-    then
-      renoise.song().instruments[instrument_index].samples_observable:add_notifier(
-        notifiers[samples_notifier_name])
-    end
-        
-    array_instrument_number[int_operator_selected] = instrument_index
-    array_sample_number[int_operator_selected] = 1 -- default sample
-    
-    end
-  }
-
-  local dropdown_samples = vb:popup {
-    id = "cmbSamples",
-    width = CONTENT_WIDTH,
-    items = generate_sample_matrix(0),
-    value = 1,
-    notifier = function(new_index)
-      array_sample_number[int_operator_selected] = new_index - 1
-    end
-  }
-
-  local column_wavetable = vb:column {
-    id = "colWaveTable",
-    dropdown_instruments,
-    dropdown_samples
-  }
-
-  local row_frequency_multiplier = vb:row {
-    id = "rowMultiplier",
-    vb:text {
-      text = "Freq. Multiplier",
-      width = TEXT_LABEL_WIDTH
-    },
-    vb:valuefield {
-      id = "txtMultiplier",
-      width = CONTROL_WIDTH,
-      min = 0,
-      max = 10,
-      value = 1,
-      notifier = function(new_value)
-        array_real_frequency_multipliers[int_operator_selected] = new_value
       end
     }
-  }
-
-  local column_gui = vb:column {
-    id = "columnGui",
-    style = "group",
-    margin = MARGIN_DEFAULT,
-    text_operator,
-    row_wave,
-    column_wavetable,
-    row_amplitude,
-    row_width,
-    row_invert,
-    row_frequency_multiplier,
-    row_modulate
-  }
-
-  return column_gui
-end
-
+  
+    local dropdown_samples = vb:popup {
+      id = "cmbSamples",
+      width = CONTENT_WIDTH,
+      items = generate_sample_matrix(0),
+      value = 1,
+      notifier = function(new_index)
+        array_sample_number[int_operator_selected] = new_index - 1
+        if toggle_auto_generate then
+          generate()
+        end
+      end
+    }
+  
+    local column_wavetable = vb:column {
+      id = "colWaveTable",
+      dropdown_instruments,
+      dropdown_samples
+    }
+  
+    local row_frequency_multiplier = vb:row {
+      id = "rowMultiplier",
+      vb:text {
+        text = "Freq. Multiplier",
+        width = TEXT_LABEL_WIDTH
+      },
+      vb:valuefield {
+        id = "txtMultiplier",
+        width = CONTROL_WIDTH,
+        min = 0,
+        max = 10,
+        value = 1,
+        notifier = function(new_value)
+          array_real_frequency_multipliers[int_operator_selected] = new_value
+          if toggle_auto_generate then
+            generate()
+          end
+        end
+      }
+    }
+  
+    local column_gui = vb:column {
+      id = "columnGui",
+      style = "group",
+      margin = MARGIN_DEFAULT,
+      text_operator,
+      row_wave,
+      column_wavetable,
+      row_amplitude,
+      row_width,
+      row_invert,
+      row_frequency_multiplier,
+      row_modulate
+    }
+  
+    return column_gui
+  end
+  
 
   -- main layout
 
-  local button_generate = vb:button {
-    text = "Generate",
-    tooltip = "Hit this button to generate a custom wave with the specified features.",
-    width = "100%",
-    height = DIALOG_BUTTON_HEIGHT,
-    notifier = function()
-      generate()
-    end
+  local row_autogenerate = vb:horizontal_aligner {
+    id = "rowAutoGenerate",
+    mode = "justify",
+    
+    vb:button {
+      text = "Generate",
+      tooltip = "Generate a custom wave with the specified features.",
+      height = DIALOG_BUTTON_HEIGHT,
+      notifier = function()
+        generate()
+      end
+    },
+    
+    vb:row { 
+      margin = (DIALOG_BUTTON_HEIGHT - CONTROL_HEIGHT) / 2,
+      vb:checkbox {
+        id = "chkAutoGenerate",
+        value = toggle_auto_generate,
+        notifier = function(boolean_value)
+          toggle_auto_generate = boolean_value
+          if toggle_auto_generate then
+            generate()
+          end
+        end
+      },
+      vb:text {
+        text = "auto update?"
+      },
+    },
+    
+    vb:button {
+      text = "Reset",
+      height = DIALOG_BUTTON_HEIGHT,
+      tooltip = "Reset all data",
+      notifier = function()
+    
+        if renoise.app():show_prompt(
+          "Parameters Reset",
+            "Are you sure you want to reset all parameters data?",{"Yes","No"}
+          ) == "Yes" 
+        then
+          reset_gui()
+          if toggle_auto_generate then
+            generate()
+          end
+        end
+      
+      end
+    }
   }
 
-  local button_reset = vb:button {
-    text = "Reset",
-    width = "100%",
-    height = DIALOG_BUTTON_HEIGHT,
-    tooltip = "Reset all data",
-    notifier = function()
-  
-      if renoise.app():show_prompt(
-        "Parameters Reset",
-          "Are you sure you want to reset all parameters data?",{"Yes","No"}
-        ) == "Yes" 
-      then
-        reset_gui()
-      end
-    
-    end
-  }
 
   local dialog_content = vb:column {
     id = "colContainer",
@@ -687,8 +767,7 @@ end
     spacing = SPACING_DEFAULT,
     create_global_properties(),
     create_operator_gui(),
-    button_generate,
-    button_reset
+    row_autogenerate
   }
 
   change_wave(1,WAVE_SINE)
