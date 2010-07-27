@@ -20,6 +20,7 @@ Util.root = root
 require "log"
 local log = Log(Log.ALL)
 
+require "json"
 -------------------------------------------
 --  Menu registration
 -------------------------------------------
@@ -54,7 +55,7 @@ renoise.tool():add_menu_entry {
 --  Debug
 -------------------------------------------
 
-local DEBUG = false
+local DEBUG = true
 if DEBUG then 
 --  require "remdebug.engine"
   
@@ -188,7 +189,7 @@ class 'ActionTree'
       return t
    end
 
-   ActionTree.action_tree = ActionTree:get_action_tree() 
+   ActionTree.action_tree = ActionTree:get_action_tree()
 
 -------------------------------------------
 -- ActionServer
@@ -203,7 +204,8 @@ class "ActionServer"
   function ActionServer:__init(address,port)
       self.chunked = false
       self.notifiers = table.create()
-      
+      --self:generate_client()
+
       -- create a server socket
       local server, socket_error = nil
       if address == nil then
@@ -502,77 +504,136 @@ class "ActionServer"
 
 --External Synchronization---------------------------
 
-  class 'Event'
-    Event.id = 0
-    function Event:__init(value)
-      Event.id = Event.id + 1
-      self.id = Event.id
-      self.value = value
-    end
+class 'Countable'
+Countable.id = 0
+  function Countable:__init()
+    Countable.id = Countable.id + 1
+    self.id = Countable.id
+  end
+  function Countable:__tostring()
+    return ("%s[%d]"):format(type(self), self.id)
+  end
 
-  -- changes
-  -- [id][change_obj]
+class 'Action' (Countable)
+  Action.id = 0
+  function Action:__init(data)
+    Countable.__init(self)
+    self.data = data
+  end
+  function Action:action_performed()
+    -- optional callback
+  end
 
-  -- clients-changes
-  -- [client_1]
-  --   [change_id]
-  --   [change_id]
+class 'Client' (Countable)
+  function Client:__init()
+    Countable.__init(self)
+    log:info('Generated client_id: ' .. self.id)
+    self.notifiers = table.create()
+  end
+  function Client:add_notifier(name)
+    self.notifiers[name] = true
+  end
 
 
-  -- TODO check change_id to avoid removing updated data
-  function ActionServer:acknowledge(key, id)
-    local str = "Acknowledged: " .. key
-    if (self.changes[key].id == id) then
-      self.changes[key] = nil
-      log:info(str .. '; Event has been removed')
-    else
-      log:info(str .. '; Event cannot be removed, because it was updated.')
+class 'Event' (Countable)
+  function Event:__init(key, value)
+    Countable.__init(self)
+    self.key = key
+    self.value = value
+  end
+
+
+
+class 'SongChangeEvent' (Event)
+  function SongChangeEvent:__init(source,callback)
+    Event.__init(self, 'source', source)
+    self.callback = callback
+  end
+
+
+  ActionServer.clients = table.create()
+  ActionServer.mailboxes = table.create()
+
+  function ActionServer:generate_client()
+    local c = Client()
+    self.clients[c.id] = c
+    return c
+  end
+
+  function ActionServer:reset_notifiers(exception)
+    for name,v in pairs(self.notifiers) do
+      self.notifiers[name].active = false
     end
   end
 
-  function ActionServer:publish(key, value)
+  ActionServer.old_events = table.create()
+
+  function ActionServer:publish(notifier_name, key, value)
+    print(notifier_name,self.old_events[key] ,value)
+    if (notifier_name == nil and self.old_events[key] and self.old_events[key] == value) then
+      return nil
+    end
+
     log:info("Publishing: " .. key)
-    local c = Event(value)
-    self.changes[key] = c
+    local event = Event(key, value)
+    self.old_events[key] = value
+
+    local clients = {}
+    if (notifier_name) then
+      clients = self.notifiers[notifier_name].clients
+    else
+      clients = self.clients
+    end
+
+    for client_id,_ in pairs(clients) do
+      if (not self.mailboxes[client_id]) then
+        self.mailboxes[client_id] = table.create()
+      end
+      -- mailboxes[1]['23']['sid'] = 2
+      local eid = tostring(event.id)
+      self.mailboxes[client_id][eid] = {}
+      self.mailboxes[client_id][eid].key = event.key
+      self.mailboxes[client_id][eid].value = event.value
+    end
   end
 
-  function ActionServer:subscribe(name, callback)
+  function ActionServer:subscribe(client_id, name, callback)
     local session = Session(self.remote_addr)
 
     local buffer = ([[
       ~{do
         local name = "%s"
-        if (not notifiers[name]) then
+        if (not notifiers[name] or not notifiers[name].active) then
           print("Subscribing to: "..name.."_observable")
-          notifiers[name] = true
-          %s_observable:add_notifier(function() callback() end)
+          notifiers[name] = table.create()
+          notifiers[name].active = true
+          notifiers[name].clients = table.create()
+          --notifiers[name].callbacks = table.create()
+          %s_observable:add_notifier(function() callback(name) end)
+        end
+        if (notifiers[name].clients[client_id] == nil) then
+            notifiers[name].clients[client_id] = true
         end
       end}
     ]]):format(name, name)
-    expand(buffer, {renoise=renoise, callback=callback, notifiers=self.notifiers},_G)
-
-    --ActionServer.changes:insert(SongChange(name, param, value))
+    expand(buffer, {renoise=renoise, callback=callback, client_id=client_id, notifiers=self.notifiers},_G)
   end
 
-  -- TODO unsubscribe
-  function ActionServer:unsubscribe(name)
-  end
-
-  function ActionServer:serialize(changes)
-    local str = ''
-    for k,v in pairs(changes) do
-      self:acknowledge(k,v.id)
-      str = str .. ("%s|%s=%s\r\n"):format(v.id, k, tostring(v.value))
-    end
+  function ActionServer:get_messages_for(client_id)
+    local cid = tonumber(client_id)
+    local inbox = self.mailboxes[cid] or table.create()
+    --rprint(self.mailboxes)
+    inbox:insert("ok")
+    local str = json.encode(inbox)
+    log:info( ("Client[%d] JSON: %s"):format(client_id, str) )
+    self.mailboxes[cid] = table.create()
+    --rprint(self.mailboxes)
     return str
   end
 
-  function ActionServer:deserialize(s)
-
-  end
 
 -------------------------------------------
--- Start / Stop 
+-- Start / Stop
 -------------------------------------------
 local address = nil
 local port = 8888
@@ -594,8 +655,8 @@ function start_server()
 
     ActionServer.mime_types = Util:parse_config_file("/mime.types")
     action_server = ActionServer(address, port)
-    
-    renoise.app():open_url("localhost:"..port .. "/matrix.html")
+
+    renoise.app():open_url("localhost:"..port .. "/matrix/matrix.html")
 end
 
 function stop_server()
