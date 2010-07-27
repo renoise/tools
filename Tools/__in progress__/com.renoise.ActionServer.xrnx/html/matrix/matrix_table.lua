@@ -38,13 +38,13 @@
         -- get patterns
         local pattern
         for sid,pid in pairs(s().sequencer.pattern_sequence) do
-          local classes = table.create{"pid"}
+          local current_seq = ''
           if (sid == s().transport.playback_pos.sequence) then
-              classes:insert('playing')
+              current_seq = "class='current_seq'"
           end
-          out("<tr>")
+          out(("<tr id='s%d' %s>"):format(sid, current_seq))
           local name = s().patterns[pid].name
-          out(("<td class='s'>&gt;</td><td class='l'></td><td id='%s' class='%s' title='%d'>%d</td><td class='label'>%s</td>"):format('sid'..sid,classes:concat(' '),sid,pid-1,name))
+          out(("<td class='s'>&gt;</td><td class='l'></td><td class='pid'>%d</td><td class='label'>%s</td>"):format(pid-1,name))
           local seq_mute = false
           for tid=1,tnum do
             for pos,col in s().pattern_iterator:lines_in_pattern_track(pid, tid) do
@@ -53,7 +53,7 @@
             end
 
             -- add classes
-            local classes = table.create{"pattern"}
+            local classes = table.create{"p"}
             if (s().patterns[pid].tracks[tid].is_empty) then
               classes:insert("empty")
             end
@@ -67,7 +67,7 @@
               classes:insert("send")
             end
 
-            out( ("<td class='%s' id='s%02dt%02d' title='seq[%02d]/track[%02d]'></td>")
+            out( ("<td class='%s' id='s%02dt%02d'></td>")
               :format(classes:concat(' '),sid, tid, sid, tid) )
 
           end
