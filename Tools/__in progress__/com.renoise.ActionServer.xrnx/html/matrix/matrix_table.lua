@@ -37,15 +37,30 @@
     
         -- get patterns
         local pattern
+        local seq_loop = renoise.song().transport.loop_sequence_range
         for sid,pid in pairs(s().sequencer.pattern_sequence) do
+          
           local current_seq = ''
+          local classes = table.create()
+
           if (sid == s().transport.playback_pos.sequence) then
-              current_seq = "class='current_seq'"
+            classes:insert('current_seq')
           end
-          out(("<tr id='s%d' %s>"):format(sid, current_seq))
+
+          if (seq_loop[1] > 0 and sid >= seq_loop[1] and sid <= seq_loop[2]) then
+            classes:insert('seq_loop')
+          end
+
+          if (not classes:is_empty()) then
+            out(("<tr id='s%d' class='%s'>"):format(sid, classes:concat(' ')))
+          else
+            out(("<tr id='s%d'>"):format(sid))
+          end
+
           local name = s().patterns[pid].name
           out(("<td class='s'>&gt;</td><td class='l'></td><td class='pid'>%d</td><td class='label'>%s</td>"):format(pid-1,name))
           local seq_mute = false
+
           for tid=1,tnum do
             for pos,col in s().pattern_iterator:lines_in_pattern_track(pid, tid) do
               seq_mute = s().sequencer:track_sequence_slot_is_muted(tid, sid)
