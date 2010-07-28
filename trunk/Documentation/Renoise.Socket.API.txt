@@ -168,7 +168,7 @@ socket_client:send(message) ->
 --
 -- mode "number > 0": tryies reading \param NumberOfBytes od data from the 
 --   peer. Note that the timeout may be applied more than once, if more than 
--   one socket read is needed to receive the requested block.
+--   one socket read is needed to receive the requested block.
 -- 
 -- when receiving failed or timed-out, the returned message will be nil and 
 -- the returned error_message is set. The error message is "timeout" on timeouts, 
@@ -234,9 +234,9 @@ notifier_table = {
 
   socket_message = function(socket, message)
     -- a message was received from a client. the passed socket is a ready
-    -- to use connection to the socket that has sent the message, in case
-    -- you want to return something or to be able to identify the client that
-    -- has sent the message
+    -- to use connection to the socket that has sent the message for TCP 
+    -- connections. for UDP, a "dummy" socket is passed, which can only be 
+    -- use to query the peer address and port the message was sent from
   end
 }
 
@@ -259,10 +259,10 @@ class "MyNotifier"
   end
 
   function MyNotifier:socket_message(socket, message)
-    -- an message from a client was received. the passed socket is a ready to
-    -- use connection to the socket that has sent the message, in case
-    -- you want to return something or to be able to identify the client that
-    -- has sent the message
+    -- an message from a client was received. the passed socket is a ready
+    -- to use connection to the socket that has sent the message for TCP 
+    -- connections. for UDP, a "dummy" socket is passed, which can only be 
+    -- use to query the peer address and port the message was sent from.
   end
 
 
