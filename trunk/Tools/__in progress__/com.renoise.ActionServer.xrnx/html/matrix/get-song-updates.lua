@@ -45,8 +45,14 @@
   L:subscribe(client_id, "renoise.song().sequencer.pattern_slot_mutes", function(name)
     L:publish(name, 'mutes_changed', get_changed_mute_states())
   end)
+  
+  L:subscribe(client_id, "renoise.song().sequencer.pattern_slot_mutes", function(name)
+    L:publish(name, 'mutes_changed', get_changed_mute_states())
+  end)
 
   L:publish(nil, 'sid', renoise.song().transport.playback_pos.sequence)
+
+  L:publish(nil, 'seq_loop', renoise.song().transport.loop_sequence_range)
 
   OUT = L:get_messages_for(client_id)
 end}
