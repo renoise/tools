@@ -6,7 +6,7 @@ module("gui", package.seeall)
 
 -- randomize_modes table, including shuffle
 randomize_modes = table.create( table.rcopy(Random.mode_names) )
-randomize_modes:insert("Shuffle")
+randomize_modes:insert(1, "Shuffle")
 
 -- available iterator ranges
 range_modes = table.create {
@@ -141,7 +141,7 @@ function show_randomize_gui()
   end
 
   -- initialize mode when opened the first time
-  current_mode = current_mode or #randomize_modes
+  current_mode = current_mode or 1
 
   -- create and show a new dialog
   local DIALOG_MARGIN =
@@ -197,7 +197,7 @@ function show_randomize_gui()
       value = table.find(octaves, tostring(current_min)),
       notifier = function(value)
         current_min = tonumber(octaves[value])
-        if vb.views.octave_selector_max.value < current_min then
+        if vb.views.octave_selector_max.value < value then
           vb.views.octave_selector_max.value = value
         end
       end,
@@ -212,7 +212,7 @@ function show_randomize_gui()
       value = table.find(octaves, tostring(current_max)),
       notifier = function(value)
         current_max = tonumber(octaves[value])
-        if vb.views.octave_selector_min.value > current_max then
+        if vb.views.octave_selector_min.value > value then
           vb.views.octave_selector_min.value = value
         end
       end,
@@ -259,7 +259,7 @@ function show_randomize_gui()
     },
 
     vb:column {
-      vb:text { text = 'How:' },
+      vb:text { text = 'How: (Scales are in C)' },
       mode_selector,
     },
 
