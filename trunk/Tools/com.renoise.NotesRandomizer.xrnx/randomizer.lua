@@ -14,7 +14,15 @@ class "Random"
 -- Helper structure
 Random.modes = {
   { name = 'Chaos', notes = {'C-','C#','D-','D#','E-','F-','F#','G-','G#','A-','A#','B-'} },
+  { name = 'Algerian', notes = {'C-','D-','E-','F-','F#','G-','A-','B-'} },
+  { name = 'Augmented', notes = {'C-','D-','E-','F#','G#','B-'} },
+  { name = 'Auxiliary Augmented', notes = {'D-','E-','F#','G#','A#','B#'} },
+  { name = 'Auxiliary Diminished Blues', notes = {'C#','D-','E-','E#','G-','G#','A#','B-'} },
+  { name = 'Auxiliary Diminished', notes = {'D-','E-','F-','G-','G#','A-','A#', 'B-', 'C#'} },
+  { name = 'Balinese', notes = {'C-','D-','B-','G-','A-'} },
+  { name = 'Blues', notes = {'C-','E-','f-','F#','G-','B-'} },
   { name = 'Harmonic Minor', notes = {'C-','D-','D#','F-','G-','G#'} },
+  { name = 'Hirajoshi', notes = {'C#','D#','E-','G#','A-'} },
   { name = 'Locrian', notes = {'C-','C#','D#','F-','F#','G#','A#','C-'} },
   { name = 'Lydian', notes = {'C-','D-','E-','F#','G-','A-','B-'} },
   { name = 'Melodic minor', notes = { 'C-', 'D-', 'D#', 'F-', 'G-', 'A-', 'B-' } },
@@ -106,7 +114,8 @@ function Random:_neighbour(note)
 
   local prefix = string.sub(note, 1, 2)
   local number = tonumber(string.sub(note, -1))
-  if table.find(Random.note_sets[self.mode], prefix) == nil then
+  -- Uncomment for pre 0.4 behaviour
+  -- if table.find(Random.note_sets[self.mode], prefix) == nil then
     local valid_notes = Random.note_sets["Chaos"]
     local pos = table.find(valid_notes, prefix)
     local found = false
@@ -138,7 +147,8 @@ function Random:_neighbour(note)
         number = number - 1
       end
     end
-  end
+  -- Uncomment for pre 0.4 behaviour
+  -- end
 
   if not self.preserve_octave then
     number = nil
