@@ -236,12 +236,13 @@ end
 
 function process_data(real_amplification,real_x)
 
-  local int_waves = table.getn(array_waves)
   local int_wave
   local int_valid_waves = 0
   local real_frame_value = 0
   
-  for int_wave = 1, int_waves do
+  for int_wave = 1, OPERATORS do
+  
+	print(array_string_operators[array_waves[int_wave]])
   
     if 
       array_waves[int_wave] == WAVE_WAVETABLE and 
@@ -255,7 +256,6 @@ function process_data(real_amplification,real_x)
         .sample_buffer
     end
 
-  
     if 
       wave_is_set(int_wave) and 
       array_waves[int_wave] > 0 and 
@@ -299,6 +299,8 @@ function process_data(real_amplification,real_x)
     end
   
   end
+
+  print("------")
   
   if int_valid_waves > 0 then
     real_frame_value = real_amplification * 
@@ -370,9 +372,7 @@ function generate()
     end
   end
   
-  
-  
-  
+    
   buffer_new:finalize_sample_data_changes()
   
   sample_new.base_note = int_note-1

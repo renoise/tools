@@ -81,19 +81,27 @@ end
 --------------------------------------------------------------------------------
 
 function wave(real_amplification, buffer, real_x)
+
   local int_chan
   local real_value = 0
-  if not buffer or not buffer.has_sample_data then
-  return 0
+  
+  if 
+	buffer == 0.5 or --not initalized
+    not buffer or 
+	not buffer.has_sample_data 
+  then
+    return 0
   end
+  
   for int_chan = 1, buffer.number_of_channels do
     real_value = real_value + 
-    real_amplification * buffer:sample_data(
+    real_amplification * buffer:sample_data	(
       int_chan,
-    (buffer.number_of_frames-1)*real_x+1
+      (buffer.number_of_frames-1)*real_x+1
     )
   end
   real_value = real_value / buffer.number_of_channels
+  
   return real_value  
 end
 

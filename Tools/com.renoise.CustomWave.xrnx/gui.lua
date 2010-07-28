@@ -74,6 +74,7 @@ function change_tab(int_operator_number)
   
   if not wave_is_set(int_operator_number) then
     initialize_wave(int_operator_number)
+	print('init'..tostring(int_operator_number))
   end
 
   local real_amplitude = array_real_amplitudes[int_operator_number]
