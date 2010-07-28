@@ -97,9 +97,12 @@ do
     function NotificationClass:socket_message(socket, message)
       print(("client %s:%d sent '%s'"):format(
         socket.peer_address, socket.peer_port, message))
-              
-      local succeeded, socket_error = socket:send("Hello Client!\r")
-      assert(succeeded, socket_error)
+            
+      -- UDP only passes addresses, not connected sockets              
+      if (socket.is_open) then 
+        local succeeded, socket_error = socket:send("Hello Client!\r")
+        assert(succeeded, socket_error)
+      end
     end
   
   notification_table = {
@@ -111,8 +114,11 @@ do
       print(("client %s:%d sent '%s'"):format(
         socket.peer_address, socket.peer_port, message))
               
-      local succeeded, socket_error = socket:send("Hello Client!\r\n")
-      assert(succeeded, socket_error)
+      -- UDP only passes addresses, not connected sockets              
+      if (socket.is_open) then
+        local succeeded, socket_error = socket:send("Hello Client!\r\n")
+        assert(succeeded, socket_error)
+      end
     end
   }
     
@@ -154,19 +160,21 @@ do
     server:wait(receive_timeout)    
     
     -- and print the response from the server
-    message1, message_error1 = client1:receive("*line", receive_timeout)
-    assert(message1, message_error1)
-    
-    print(("client %s:%d got '%s' from server %s:%d"):format(
-      client1.local_address, client1.local_port,  
-      message1, client1.peer_address, client1.peer_port))
+    if (protocol == renoise.Socket.PROTOCOL_TCP) then 
+      message1, message_error1 = client1:receive("*line", receive_timeout)
+      assert(message1, message_error1)
       
-    message2, message_error2 = client2:receive("*line", receive_timeout)
-    assert(message2, message_error2)
-    
-    print(("client %s:%d got '%s' from server %s:%d"):format(
-      client2.local_address, client2.local_port,  
-      message2, client2.peer_address, client2.peer_port))
+      print(("client %s:%d got '%s' from server %s:%d"):format(
+        client1.local_address, client1.local_port,  
+        message1, client1.peer_address, client1.peer_port))
+        
+      message2, message_error2 = client2:receive("*line", receive_timeout)
+      assert(message2, message_error2)
+      
+      print(("client %s:%d got '%s' from server %s:%d"):format(
+        client2.local_address, client2.local_port,  
+        message2, client2.peer_address, client2.peer_port))
+    end
        
     -- shut off and repeat
     server:close()
