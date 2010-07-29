@@ -48,4 +48,4 @@ Folder/File Structure:
 
 "Documentation"
 
-  "Official" Renoise Scripting Dev docs on can be found here.
+  "Official" Renoise Scripting API documentation can be found here.
