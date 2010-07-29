@@ -66,20 +66,6 @@ end
 
 
 -------------------------------------------
---  Sessions
--------------------------------------------
-
-class 'Session'
-  Session.client_id = 1
-  function Session:__init(r)
-    --self.id = id
-    self.client_id = Session.client_id + 1
-    self.remote_addr = r
-  end
-  function Session:s()
-  end
-
--------------------------------------------
 --  Renoise Actions Tree
 -------------------------------------------
 
@@ -288,7 +274,7 @@ class "ActionServer"
   function ActionServer:is_image(str)    
     return str ~= nil and str:match("^image") ~= nil
   end
-  
+
   function ActionServer:get_etag(fullpath)
     local stat = io.stat(fullpath)
     local last_modified = stat.mtime
@@ -330,7 +316,7 @@ class "ActionServer"
           
      -- Create body
      local body = nil          
-     -- Interpret any Lua code in the buffer (see expand.lua)     
+     -- Interpret any Lua code in the buffer (see expand.lua)
      if self:is_expandable(path) and #buffer > 0 then
 
        self:set_header("Content-Type", "text/html")
@@ -372,7 +358,7 @@ class "ActionServer"
      local header = "HTTP/1.1 " .. status .. "\r\n"
      for k,v in pairs(self.header_map) do
        header = string.format("%s%s: %s\r\n",header,k,v)
-     end     
+     end
      header = header .. "\r\n"     
      
      -- Send header
@@ -414,7 +400,7 @@ class "ActionServer"
       end
 
       self.header = header
-      
+
       if #body < tonumber(header["Content-Length"]) then
         self.chunked = true
         return
@@ -560,17 +546,38 @@ class 'SongChangeEvent' (Event)
     return c
   end
 
-  function ActionServer:reset_notifiers(exception)
+  function ActionServer:reset_notifiers()
+    log:info("Resetting notifiers")
     for name,v in pairs(self.notifiers) do
       self.notifiers[name].active = false
+      local buffer = ([[
+        ~{do
+          if (%s_observable:has_notifier(func)) then
+            %s_observable:remove_notifier(func)
+          end
+        end}
+      ]]):format(name, name)
+      expand(buffer, {renoise=renoise, func=self.notifiers[name].callback},_G)
     end
   end
 
   ActionServer.old_events = table.create()
+  
+  local function equals(a,b)
+    if (type(a)=='table' and type(b)=='table') then
+      for k,_ in pairs(a) do
+        if (a[k] ~= b[k]) then
+          return false
+        end
+      end
+      return true
+    else
+      return (a == b)
+    end
+  end
 
   function ActionServer:publish(notifier_name, key, value)
-    print(notifier_name,self.old_events[key] ,value)
-    if (notifier_name == nil and self.old_events[key] and self.old_events[key] == value) then
+    if (notifier_name == nil and self.old_events[key] and equals(self.old_events[key],value) ) then
       return nil
     end
 
@@ -598,25 +605,27 @@ class 'SongChangeEvent' (Event)
   end
 
   function ActionServer:subscribe(client_id, name, callback)
-    local session = Session(self.remote_addr)
 
-    local buffer = ([[
-      ~{do
-        local name = "%s"
-        if (not notifiers[name] or not notifiers[name].active) then
-          print("Subscribing to: "..name.."_observable")
-          notifiers[name] = table.create()
-          notifiers[name].active = true
-          notifiers[name].clients = table.create()
-          --notifiers[name].callbacks = table.create()
-          %s_observable:add_notifier(function() callback(name) end)
-        end
-        if (notifiers[name].clients[client_id] == nil) then
-            notifiers[name].clients[client_id] = true
-        end
-      end}
-    ]]):format(name, name)
-    expand(buffer, {renoise=renoise, callback=callback, client_id=client_id, notifiers=self.notifiers},_G)
+    -- attach notifier and callback
+    if (not self.notifiers[name] or not self.notifiers[name].active) then
+      print("Subscribing to: "..name.."_observable")
+      self.notifiers[name] = table.create()
+      self.notifiers[name].active = true
+      self.notifiers[name].clients = table.create()
+      self.notifiers[name].callback = function() callback(name) end
+      local buffer = ([[
+        ~{do
+          %s_observable:add_notifier(func)
+        end}
+      ]]):format(name, name)
+      expand(buffer, {renoise=renoise, func=self.notifiers[name].callback},_G)
+    end
+
+    -- subscribe user
+    if (self.notifiers[name].clients[client_id] == nil) then
+        self.notifiers[name].clients[client_id] = true
+    end
+
   end
 
   function ActionServer:get_messages_for(client_id)

@@ -18,140 +18,23 @@ end}
     <script type="text/javascript" src="/js/jquery.chromatable.js"></script>
     <script type="text/javascript" src="/js/jquery.scrollTo-min.js"></script>
 
-    <style type="text/css">
-      body {
-         background-color: black;
-         font-size: 10px;
-         overflow-y: hidden;
-      }
-      th{
-        color: white;
-        background-color: black;
-      }
-      th.off {
-        color: #888;
-      }
-      th.muted {
-        text-decoration: line-through;
-        color: #888;
-      }
-      th:hover, th.hover {
-        text-decoration: underline;
-      }
-      td {
-        width: 80px;
-        height: 40px;
-        border: 1px solid #555;
-        color: white;
-        text-align: center;
-        --border-radius:4px;
-        --moz-border-radius:4px;        
-      }
-      
-      ._thead {
-        border-spacing: 0;
-      }
-      
-      ._thead th {
-        padding: 2px;
-      }
-      
-      .s, .l{
-        font-weight: bold;
-        color: #aaa;
-        width: 20px;
-      }
-
-      .s:hover, .l:hover {
-        border: 1px dotted red;
-        cursor: pointer;
-        color: white;
-      }
-      
-      .current_seq .s {
-        color: white;
-      }
-
-      .pid {
-        background-color: #BE8D18;
-        font-weight: bold;
-        border: 2px solid white;
-        width: 30px;
-        color: black;
-      }
-      .pid:hover {
-        background-color: #FFDF59;
-      }
-      .pid:active {
-        background-color: #DEAD38;
-      }
-      .p {
-        border: 2px solid #eee;
-        background-color: pink;
-      }
-      .p:hover, .pid:hover {
-        border: 2px dotted red;
-        cursor: pointer;
-      }
-      .p:active {
-        background-color: red;
-      }
-      .empty {
-        background-color: black;
-      }
-      .send {
-        background-color: darkgreen;
-      }
-      .mst {
-        background-color: #333;
-      }
-      .mst:hover {
-        cursor: default;
-        border: none;
-        border: 2px solid #eee;
-      }
-      .current_seq td {
-        border-top: 4px solid red;
-        border-bottom: 4px solid red;
-      }
-      .current_seq.pid  {
-        background-color: #FEBD48;
-      }
-      .label {
-        width: 160px;
-        border: 1px solid #555;
-        background-color: #333;
-        color: white;
-        text-align: center;
-        padding: 2px;
-      }
-      .seq_mute {
-        background-color: purple;
-      }
-      .scheduled {
-        color: transparent;
-        background-image: url(/images/progress_circle_1.gif);
-        background-repeat: no-repeat;
-        background-position: 50% 50%;
-      }
-      .seq_loop .l {
-        background-color: #6D727C;
-      }
-    </style>
+    <link type="text/css" href="matrix.css" media="screen" rel="stylesheet" />
 
 </head>
 
 <body>
   <div id="center">
-      <div id="test-tools" style="border: white; padding: 5px; margin: 10px; color: white"><strong>Test Tools</strong> </div>
+      <div id="test-tools"></div>
 
       <div id="matrix_placeholder"><!-- Matrix Table goes here --></div>
 
-      <div id="log" style="margin-top: 20px; width: 1000px; background-color: white; color: black; height: 100px; overflow-y: auto"></log>
+      <div id="log"></log>
 
   </div>
 
   <script type="text/javascript">
+    var debug = true;
+
     var autoscroll = false;
 
     var autoupdate = true;
@@ -207,12 +90,20 @@ end}
 
         //Track Colors
 
-        callback();
+        if (typeof callback == "function"){
+          callback();
+        }
       });
     }
     
+    function log(str){
+      if (debug==true){
+        $('#log').prepend("<p>"+str+"</p>");
+      }
+    }
+
     function update(data){
-      $('#log').prepend("<p>"+data+"</p>");
+      log(data)
       //eventid:[k=v]
       data = $.parseJSON(data);
       $.each(data, function(k,event){
@@ -235,7 +126,8 @@ end}
 
 
     $(document).ready(function(){
-      if (true || !autoupdate){
+      if (debug==true){
+        $("#test-tools").append("<strong>Test Tools</strong>");
         $("#test-tools").append("<button id='update'>update ["+client_id+"]</button>");
         $("#update").click(function(){
           $.get('/matrix/get-song-updates.lua', {client_id: client_id}, function(data){ update(data); } );
@@ -245,12 +137,15 @@ end}
         $("#autoupdate").toggle(function(){
           autoupdate = false;
           $("#autoupdate").text("enable auto-update");
-          $("#log").prepend("<p>disabled auto-update</p>");
+          log("disabled auto-update");
         }, function(){
           autoupdate = true;
           $("#autoupdate").text("disable auto-update");
-          $("#log").prepend("<p>enabled auto-update</p>");
+          log("enabled auto-update");
         });
+        
+        $("#test-tools").show();
+        $("#log").show();
       }
 
 
@@ -263,11 +158,10 @@ end}
 
     //Track Hover
     var old_tid = 0;
-    $("td").mouseover(function(){
+    $("td").live('mouseover', function(){
       if (!$(this).hasClass('p')) return false;
-      var pos = $(this).attr('title');
-      var tstr = pos.match(/track\[\d+\]/);
-      var tid = tstr[0].slice(6,-1);
+      var id = $(this).attr('id'); //s03t04
+      var tid = id.substr(id.indexOf("t")+1);
       if (old_tid != tid) {
         $("#t"+old_tid).removeClass("hover");
         $("#t"+tid).addClass("hover");
