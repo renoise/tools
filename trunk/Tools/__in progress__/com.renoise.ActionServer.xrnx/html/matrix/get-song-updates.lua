@@ -40,10 +40,7 @@
     print("New song")
     L:publish(name, 'song_change', true)
     L:reset_notifiers(name)
-  end)
-
-  L:subscribe(client_id, "renoise.song().sequencer.pattern_slot_mutes", function(name)
-    L:publish(name, 'mutes_changed', get_changed_mute_states())
+    L.old_mutes = nil
   end)
   
   L:subscribe(client_id, "renoise.song().sequencer.pattern_slot_mutes", function(name)
