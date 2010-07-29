@@ -557,11 +557,11 @@ function open_arp_dialog()
 
         vb:row {
           create_obj(obj_checkbox, '', 18,0,0,clear_track,'idpacb2',
-          'Clear track before generating new notes',0,
+          'Clear area before generating new notes',0,
           function(value) clear_track = value end,vb),
 
           create_obj(obj_textlabel, '', TEXT_ROW_WIDTH,0,0,0,'idpatl7',
-          '','Clear track',0,vb),
+          '','Clear area',0,vb),
         },
 
         vb:row {

@@ -415,7 +415,8 @@ function clear_track_first()
       renoise.app():show_status("Clear and arpeggiate track /column in song")
    end
 
-   for _,line in iter do
+  if area_to_process ~= OPTION_SELECTION_IN_TRACK then
+    for _,line in iter do
 
       for c,note_column in ipairs(line.note_columns) do
 
@@ -431,7 +432,30 @@ function clear_track_first()
 
       end
 
-   end
+    end
+
+  else
+
+    for _,line in iter do
+
+      for c,note_column in ipairs(line.note_columns) do
+
+         if c <= visible_note_columns and c >= column_offset then
+
+            if area_to_process < OPTION_COLUMN_IN_PATTERN and note_column.is_selected then
+               note_column:clear()
+            elseif c == column_offset and note_column.is_selected then
+               note_column:clear()
+            end
+
+         end
+
+      end
+
+    end
+
+  end
+     
 end
 
 
