@@ -1,6 +1,8 @@
---[[----------------------------------------------------------------------------
--- Renoise Document API Reference
-----------------------------------------------------------------------------]]--
+--[[============================================================================
+Renoise Document API Reference
+============================================================================]]--
+
+--[[
 
 The renoise.Document namespace covers all document related Renoise API
 functions. This is:
@@ -17,7 +19,7 @@ Please read the INTRODUCTION.txt first to get an overview about the complete
 API, and scripting in Renoise in general...
 
 
--- Observables 
+-------- Observables 
 
 Documents in the Renoise API are modeled after the observer pattern (have a 
 look at http://en.wikipedia.org/wiki/Observer_pattern if you have not heard
@@ -33,7 +35,7 @@ If you only want to use the existing "_observables" in the API, this is all
 you need to know. If you want to create your own documents, then read ahead:
 
 
--- Document data organization & basetypes
+-------- Document data organization & basetypes
 
 The basic types that can be in used a document node, are:
 - ObservableBoolean/Number/String ("raw" Lua base types)
@@ -54,7 +56,7 @@ operators, but can also query all info via methods (:size(), :property(name))
 and so on.
 
 
--- Document creation
+-------- Document creation
 
 Documents can either be constructed by explicitly and step by step adding new
 properties to a document node. This is done with the "add" and "remove"
@@ -101,6 +103,8 @@ my_document.age_list[2].value = 33 -- list members are observables as well
 For more details about the document construction and notifiers have a look 
 at the class docs below:
 
+]]
+
 
 --==============================================================================
 -- Document
@@ -109,11 +113,11 @@ at the class docs below:
 -- construction
 
 -- create an empty renoise.Document.DocumentNode
--- renoise.Document.create()
-
 -- create a renoise.Document tree, modeled after the passed table. 
 -- See general description above for more info
-
+renoise.Document.create(table or nil)
+  -> [renoise.Document object]
+  
 
 --------------------------------------------------------------------------------
 -- renoise.Document.Serializable
@@ -233,6 +237,3 @@ doc:save_as(document_type_name, file_name)
 doc:load_from(document_type_name, file_name) 
   -> [success, error_string or nil on success]
 
-
---[[----------------------------------------------------------------------------
-----------------------------------------------------------------------------]]--

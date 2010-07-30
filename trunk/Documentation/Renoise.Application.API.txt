@@ -1,6 +1,8 @@
---[[----------------------------------------------------------------------------
--- Renoise Application API Reference
-----------------------------------------------------------------------------]]--
+--[[============================================================================
+Renoise Application API Reference
+============================================================================]]--
+
+--[[
 
 This reference lists all available Lua functions and classes that control
 the Renoise application. The Application is the Lua interface to Renoise's main
@@ -8,6 +10,8 @@ GUI and window (Application and ApplicationWindow).
 
 Please read the INTRODUCTION.txt first to get an overview about the complete
 API, and scripting in Renoise in general...
+
+]]
 
 
 --------------------------------------------------------------------------------
@@ -199,5 +203,3 @@ renoise.app().window.pattern_matrix_is_visible, _observable
 renoise.app().window.pattern_advanced_edit_is_visible, _observable
   -> [boolean]
 
---[[----------------------------------------------------------------------------
-----------------------------------------------------------------------------]]--

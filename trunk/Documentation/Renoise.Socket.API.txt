@@ -1,6 +1,8 @@
---[[----------------------------------------------------------------------------
--- Renoise Socket API Reference
-----------------------------------------------------------------------------]]--
+--[[============================================================================
+Renoise Socket API Reference
+============================================================================]]--
+
+--[[
 
 This reference describes the built-in socket support for Lua scripts in Renoise.
 Sockets can be used to send/receive data over process boundaries or exchange
@@ -16,7 +18,7 @@ Please read the INTRODUCTION.txt first to get an overview about the complete
 API, and scripting in Renoise in general...
 
 
--- Overview
+-------- Overview
 
 The socket server interface in Renoise is asynchronous (callback based), which
 means server calls never block or wait, but are served in the background.
@@ -31,7 +33,7 @@ of 0 when calling receive(message) to see if there's some message pending
 from the server.
 
 
--- Error handling
+-------- Error handling
 
 All socket functions which can fail, will return an error string as an optional
 second return value. They do not call Luas error() handler, so you can decide on
@@ -45,10 +47,12 @@ means that you did something wrong, have fed or used the sockets in a way that
 does not make sense. Never "pcall" such errors, but fix the problems instead.
 
 
--- Examples
+-------- Examples
 
 -- for some small examples on how to use sockets in this API, have a look at the
 "CodeSnippets.txt" file please. There are two simple client/server examples...
+
+]]
 
 
 --==============================================================================
@@ -265,6 +269,3 @@ class "MyNotifier"
     -- use to query the peer address and port the message was sent from.
   end
 
-
---[[----------------------------------------------------------------------------
-----------------------------------------------------------------------------]]--

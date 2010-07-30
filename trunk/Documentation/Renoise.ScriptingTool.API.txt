@@ -1,6 +1,8 @@
---[[----------------------------------------------------------------------------
--- Renoise ScriptingTool API Reference
-----------------------------------------------------------------------------]]--
+--[[============================================================================
+Renoise ScriptingTool API Reference
+============================================================================]]--
+
+--[[
 
 This reference lists all available Lua functions and classes that are available
 to Renoise xrnx scripting tools only. The scripting tool interface allows
@@ -11,6 +13,8 @@ Please read the INTRODUCTION.txt first to get an overview about the complete
 API, and scripting in Renoise in general...
 
 Have a look at the com.renoise.ExampleTool.xrnx for more info about XRNX tools.
+
+]]
 
 
 --------------------------------------------------------------------------------
@@ -180,6 +184,3 @@ renoise.tool().app_new_document_observable
 renoise.tool().preferences
   -> [renoise.Document.DocumentNode object or nil]
     
---[[----------------------------------------------------------------------------
-----------------------------------------------------------------------------]]--
-

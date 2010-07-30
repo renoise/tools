@@ -1,6 +1,8 @@
---[[----------------------------------------------------------------------------
--- Renoise ViewBuilder API Reference
-----------------------------------------------------------------------------]]--
+--[[============================================================================
+Renoise ViewBuilder API Reference
+============================================================================]]--
+
+--[[
 
 This reference lists all "View" related functions in the API. "View" means
 classes and functions that are used to build custom GUIs; GUIs for your
@@ -9,7 +11,10 @@ scripts in Renoise.
 Please read the INTRODUCTION.txt first to get an overview about the complete
 API, and scripting in Renoise in general...
 
-Currently there are two ways to to use such views:
+]]
+
+
+-- Currently there are two ways to to use custom views:
 
 -- (shows a dialog with a title, custom content and custom button labels)
 app():show_custom_prompt(title, content_view, {button_labels} [,key_handler_func]) 
@@ -34,8 +39,8 @@ function my_keyhandler_func(dialog, key) end
 -- For prompts, also the first character of the button labels is used to invoke
 -- the corresponding button
 
-For a small tutorial, and more detials on how to createand use views, take
-a look at the  "Tools/ExampleTool_GUI.lua" file please.
+-- For a small tutorial, and more detials on how to createand use views, take
+-- a look at the  "Tools/ExampleTool_GUI.lua" file please.
 
 
 --==============================================================================
@@ -1019,6 +1024,3 @@ vb:rotary { RotaryEncoder Properties }
 vb.views 
   -> [table of views, which got registered via the "id" property]
 
-
---[[----------------------------------------------------------------------------
-----------------------------------------------------------------------------]]--

@@ -1,6 +1,8 @@
---[[----------------------------------------------------------------------------
-Console.txt
-----------------------------------------------------------------------------]]--
+--[[============================================================================
+Renoise Scripting Editor And Terminal
+============================================================================]]--
+
+--[[
 
 The built-in Script Terminal and Editor in Renoise can be opened by clicking
 on the "Scripting Terminal & Editor..." menu entry in the "Tools" menu.
@@ -116,6 +118,4 @@ It allows you to:
 * The full Renoise API reference is included in the left tree view
   as well, in case you want to lookup something without leaving Renoise
   
-
---[[----------------------------------------------------------------------------
-----------------------------------------------------------------------------]]--
+]]

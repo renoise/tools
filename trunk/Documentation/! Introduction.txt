@@ -1,13 +1,15 @@
---[[----------------------------------------------------------------------------
--- Renoise Scripting Reference and HOWTOs - Introduction
-----------------------------------------------------------------------------]]--
+--[[============================================================================
+Renoise Scripting Reference and HOWTOs - Introduction
+============================================================================]]--
+
+--[[
 
 Welcome to the Renoise scripting Guide. In all the various files in this
 "Documentation" folder, we will give you an overview on how to write tools
 for Renoise; how to debug them, what's possible to "script", what's not,
 and much more. Please read this introduction carefully, to get an idea how
 to get started, and to avoid common pitfalls and questions.
-
+  
 
 --------------------------------------------------------------------------------
 -- Scripting Development Tools in Renoise
@@ -297,5 +299,4 @@ have a look at Debugging.txt for more information and a small tutorial.
 
 -- Enjoy extending, customizing and automating Renoise ;)
 
---[[----------------------------------------------------------------------------
-----------------------------------------------------------------------------]]--
+]]

@@ -1,6 +1,8 @@
---[[----------------------------------------------------------------------------
--- Renoise Midi API Reference
-----------------------------------------------------------------------------]]--
+--[[============================================================================
+Renoise Midi API Reference
+============================================================================]]--
+
+--[[
 
 This reference describes raw MIDI IO support for scripts in Renoise: the
 ability to send and receive MIDI data.
@@ -9,15 +11,14 @@ Please read the INTRODUCTION.txt first to get an overview about the complete
 API, and scripting in Renoise in general...
 
 
--- Overview
+-------- Overview
 
 The Renoise Midi API allows you to access any MIDI input or output devices
 that are installed in the system. So you can also use MIDI in/outputs which
 are currently not used by Renoise (via Renoise's MIDI Remote, Sync settings,
 and so on, as set up in the preferences).
 
-
--- Error Handling
+-------- Error Handling
 
 When accessing a device which was not yet accessed (not by Renoise and not
 by your or other scripts), Renoise will try to open the device driver.
@@ -33,11 +34,13 @@ All other logic errors, like sending MIDI to a manually closed devices, sending
 bogus messages and so on, will be fired as as usual as Lua runtime errors.
 
 
--- Examples
+-------- Examples
 
 For some simple examples on how to use MIDI IO in Renoise, have a look at the
 "CodeSnippets.txt" file please. There are two simple MIDI input and output
 examples...
+
+]]
 
 
 --==============================================================================
@@ -135,6 +138,3 @@ midi_device:close()
 -- and <= 0xFF (bytes)
 midi_device:send(message_table)
 
-
---[[----------------------------------------------------------------------------
-----------------------------------------------------------------------------]]--
