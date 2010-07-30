@@ -170,4 +170,5 @@ function Util:merge_tables(a,b)
       b[k] = v
     end
   end
+  return b
 end

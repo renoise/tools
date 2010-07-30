@@ -127,7 +127,7 @@ end}
 
     $(document).ready(function(){
       if (debug==true){
-        $("#test-tools").append("<strong>Test Tools</strong>");
+        $("#test-tools").append("<strong>Test Tools</strong> ");
         $("#test-tools").append("<button id='update'>update ["+client_id+"]</button>");
         $("#update").click(function(){
           $.get('/matrix/get-song-updates.lua', {client_id: client_id}, function(data){ update(data); } );
@@ -143,7 +143,7 @@ end}
           $("#autoupdate").text("disable auto-update");
           log("enabled auto-update");
         });
-        
+
         $("#test-tools").show();
         $("#log").show();
       }
