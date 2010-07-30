@@ -1,6 +1,8 @@
---[[----------------------------------------------------------------------------
--- Renoise Socket API Reference
-----------------------------------------------------------------------------]]--
+--[[============================================================================
+Renoise Socket API Reference
+============================================================================]]--
+
+--[[
 
 This reference describes the built-in OSC (Open Sound Control) support for 
 Lua scripts in Renoise. OSC can be used in combination with sockets to 
@@ -11,10 +13,12 @@ Please have a look at http://opensoundcontrol.org for more general info
 about OSC
 
 
--- Examples
+-------- Examples
 
 -- for some small examples on how to use the OSC and the sockets API, have a
 -- look at the code sippets in the "Snippets/Osc.lua" file please. 
+
+]]
 
 
 --==============================================================================
@@ -95,7 +99,4 @@ bundle.elements
 -- message over the network through sockets
 bundle.binary_data 
   -> [read-only, raw string]
-
---[[----------------------------------------------------------------------------
-----------------------------------------------------------------------------]]--
 

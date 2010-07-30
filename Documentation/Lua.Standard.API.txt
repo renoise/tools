@@ -1,13 +1,16 @@
---[[----------------------------------------------------------------------------
--- Lua Standard Library and Extensions
-----------------------------------------------------------------------------]]--
+--[[============================================================================
+Lua Standard Library and Extensions
+============================================================================]]--
 
+--[[
 This is a reference of standard global Lua functions and tools that were
 added or changed by Renoise, in order to extend the functionality of Lua's
 standard library.
 
 All standard Lua libraries are included in Renoise as well. You can find a
 full reference here: http://www.lua.org/pil/18.html
+
+]]
 
 
 -------------------------------------------------------------------------------
@@ -259,7 +262,3 @@ bit.ror(x, n) -> [number]
 -- Swaps the bytes of its argument and returns it. This can be used to convert
 -- little-endian 32 bit numbers to big-endian 32 bit numbers or vice versa.
 bit.bswap(x) -> [number]
-
-
---[[----------------------------------------------------------------------------
-----------------------------------------------------------------------------]]--

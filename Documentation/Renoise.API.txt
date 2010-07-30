@@ -1,12 +1,16 @@
---[[----------------------------------------------------------------------------
--- Renoise Application API Reference
-----------------------------------------------------------------------------]]--
+--[[============================================================================
+Renoise Application API Reference
+============================================================================]]--
+
+--[[
 
 This reference lists the content of the main "renoise" namespace. All renoise
 related functions and classes are nested in this namespace.
 
 Please read the INTRODUCTION.txt first to get an overview about the complete
 API, and scripting in Renoise in general... 
+
+]]
 
 
 --------------------------------------------------------------------------------
@@ -37,6 +41,3 @@ renoise.tool() -> [renoise.ScriptingTool object]
 -- for renoise.Song, see Renoise.Song.API.txt
 -- for renoise.ScriptingTool, see Renoise.ScriptingTool.API.txt
 
-
---[[----------------------------------------------------------------------------
-----------------------------------------------------------------------------]]--
