@@ -454,7 +454,10 @@ class "ActionServer"
         if  #path > 0 and self:is_htdoc(path) then
           if method == "POST" then
             local post_parameters = Util:parse_query_string(body)
-            parameters = Util:merge_tables(paramets, post_parameters)
+            rprint(parameters)
+                        rprint(post_parameters)
+            parameters = Util:merge_tables(parameters, post_parameters)
+            rprint(parameters)
           end
           self:send_htdoc(socket, path, nil, parameters)
           return
@@ -665,7 +668,7 @@ function start_server()
     ActionServer.mime_types = Util:parse_config_file("/mime.types")
     action_server = ActionServer(address, port)
 
-    renoise.app():open_url("localhost:"..port .. "/matrix/matrix.html")
+    renoise.app():open_url("localhost:"..port .. "/actions.html")
 end
 
 function stop_server()

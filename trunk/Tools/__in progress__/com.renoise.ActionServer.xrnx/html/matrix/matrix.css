@@ -94,7 +94,7 @@
         border-top: 4px solid red;
         border-bottom: 4px solid red;
       }
-      .current_seq.pid  {
+      .current_seq .pid  {
         background-color: #FEBD48;
       }
       .label {
