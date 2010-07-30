@@ -1,48 +1,25 @@
---[[----------------------------------------------------------------------------
+--[[============================================================================
 add_silence.lua
-----------------------------------------------------------------------------]]--
+============================================================================]]--
 
--- notifiers
-
-function instruments_list_changed()
-end
-
-
---------------------------------------------------------------------------------
-
-function new_song_loaded()
-  if dialog ~= nil and dialog.visible then
-    dialog:close()
-    if not renoise.tool().app_new_document_observable:has_notifier(new_song_loaded)
-  then
-      renoise.tool().app_new_document_observable:add_notifier(new_song_loaded)
-    end
-  end
-end
-
--- [[ GUI ]]
-
-local dialog = nil
-local DIALOG_BUTTON_HEIGHT = renoise.ViewBuilder.DEFAULT_DIALOG_BUTTON_HEIGHT
-
-
+-- locals
 
 local WHERE_START = 1
 local WHERE_END = 2
 local WHERE_BOTH = 3
+
 local int_where = WHERE_END
 local real_time = 1.0
 local int_time_in_frames = 44100
 
---if renoise.song().selected_sample.sample_buffer.has_sample_data then
---	int_time_in_frames = 1.0 * renoise.song().selected_sample.sample_buffer.sample_rate
---end
 
---[[ Locals ]]
+--------------------------------------------------------------------------------
+-- process
+--------------------------------------------------------------------------------
 
 local function process_data()
 
-  if (real_time == nil) then 
+  if (not real_time or real_time == 0) then 
     renoise.app():show_error("Invalid duration value!")
     return
   end
@@ -65,7 +42,8 @@ local function process_data()
   local int_frames_silence = 0
   
   if (int_time_in_frames == 0) then
-  	-- might not be necessary anymore, since frames should always be set to *something*... 
+    -- might not be necessary anymore, since frames should always 
+    -- be set to *something*... 
     int_frames_silence = real_time * int_rate
   else
     int_frames_silence = int_time_in_frames
@@ -85,7 +63,10 @@ local function process_data()
     int_frames_new_sample = int_frames + int_frames_silence
   end    
 
-  if int_frames_new_sample > 0 and not buffer_new:create_sample_data(int_rate, int_depth, int_chans, int_frames_new_sample) then
+  if int_frames_new_sample > 0 and 
+     not buffer_new:create_sample_data(int_rate, 
+      int_depth, int_chans, int_frames_new_sample) 
+  then
     renoise.app():show_error("Error during sample creation!")
     renoise.song():undo()
     return
@@ -98,7 +79,8 @@ local function process_data()
     --copy the sample data before start of selection
     for int_frame = 1, (buffer.selection_start - 1) do
       for int_chan = 1, int_chans do
-        buffer_new:set_sample_data(int_chan, int_frame_new, buffer:sample_data(int_chan, int_frame))
+        buffer_new:set_sample_data(int_chan, int_frame_new, 
+          buffer:sample_data(int_chan, int_frame))
       end
       int_frame_new = int_frame_new + 1
     end
@@ -117,7 +99,8 @@ local function process_data()
   for int_frame = buffer.selection_start, buffer.selection_end do
     --copy middle part
     for int_chan = 1, int_chans do
-      buffer_new:set_sample_data(int_chan ,int_frame_new, buffer:sample_data(int_chan, int_frame))
+      buffer_new:set_sample_data(int_chan, int_frame_new, 
+        buffer:sample_data(int_chan, int_frame))
     end
     int_frame_new = int_frame_new + 1
   end  
@@ -136,7 +119,8 @@ local function process_data()
     --copy the sample data after selection
     for int_frame =  (buffer.selection_end + 1), int_frames do
       for int_chan = 1, int_chans do
-        buffer_new:set_sample_data(int_chan,int_frame_new,buffer:sample_data(int_chan,int_frame))
+        buffer_new:set_sample_data(int_chan,int_frame_new,
+          buffer:sample_data(int_chan,int_frame))
       end
       int_frame_new = int_frame_new + 1
     end
@@ -169,22 +153,27 @@ local function process_data()
 end
 
 
---[[ GLOBALS ]]
+--------------------------------------------------------------------------------
+-- GUI
+--------------------------------------------------------------------------------
 
-function show_add_silence_dialog() 
+local dialog = nil
 
 
-  if not 
-    renoise.song().instruments_observable:has_notifier(instruments_list_changed)
-  then
-    renoise.song().instruments_observable:add_notifier(instruments_list_changed)
+--------------------------------------------------------------------------------
+
+local function new_song_loaded()
+  if dialog ~= nil and dialog.visible then
+    dialog:close()
   end
   
-  if not 
-    renoise.tool().app_new_document_observable:has_notifier(new_song_loaded) 
-  then
-    renoise.tool().app_new_document_observable:add_notifier(new_song_loaded)
-  end
+  renoise.tool().app_new_document_observable:remove_notifier(new_song_loaded)
+end
+
+
+--------------------------------------------------------------------------------
+
+function show_add_silence_dialog() 
 
   if (dialog and dialog.visible) then
     -- already showing a dialog. bring it to front:
@@ -192,12 +181,14 @@ function show_add_silence_dialog()
     return
   end
 
-
   local vb = renoise.ViewBuilder()
 
-  local DEFAULT_DIALOG_MARGIN = renoise.ViewBuilder.DEFAULT_DIALOG_MARGIN
-  local DEFAULT_DIALOG_SPACING = renoise.ViewBuilder.DEFAULT_DIALOG_SPACING
-  local DEFAULT_DIALOG_BUTTON_HEIGHT = renoise.ViewBuilder.DEFAULT_DIALOG_BUTTON_HEIGHT
+  local DEFAULT_DIALOG_MARGIN = 
+    renoise.ViewBuilder.DEFAULT_DIALOG_MARGIN
+  local DEFAULT_DIALOG_SPACING = 
+    renoise.ViewBuilder.DEFAULT_DIALOG_SPACING
+  local DEFAULT_DIALOG_BUTTON_HEIGHT = 
+    renoise.ViewBuilder.DEFAULT_DIALOG_BUTTON_HEIGHT
     
   local row_where = vb:row {
     vb:text {
@@ -206,7 +197,8 @@ function show_add_silence_dialog()
     vb:chooser {
       id = "rdWhere",
       items = {"start","end", "both"},
-      tooltip = [["Start = adds silence to start of sample End = adds silence to end of sample"]],
+      tooltip = "Start = adds silence to start of sample "..
+        "End = adds silence to end of sample",
       value = int_where,
       notifier = function(new_index)
         int_where = new_index
@@ -221,9 +213,15 @@ function show_add_silence_dialog()
       value = tostring(real_time),
       notifier = function(real_value)
         real_time = tonumber(real_value)
-	if real_time == nil then real_time = 0 end
-        if renoise.song().selected_sample.sample_buffer.has_sample_data then
-          int_time_in_frames = math.floor(real_time * renoise.song().selected_sample.sample_buffer.sample_rate) -- for some weird reason this breaks getting the selection length when selecting only one or two samples - oh well....
+        if not real_time or real_time < 0 then 
+          real_time = 0 
+          vb.views.txtTime.value = tostring(0)
+        end
+        local sample_buffer = renoise.song().selected_sample.sample_buffer
+        if sample_buffer.has_sample_data then
+          -- for some weird reason this breaks getting the selection length 
+          -- when selecting only one or two samples - oh well....
+          int_time_in_frames = math.floor(real_time * sample_buffer.sample_rate) 
           vb.views.txtFrames.value = tostring(int_time_in_frames)
         end
       end      
@@ -240,8 +238,13 @@ function show_add_silence_dialog()
       value = tostring(int_time_in_frames),
       notifier = function(real_value)
         int_time_in_frames = tonumber(real_value)
-        if renoise.song().selected_sample.sample_buffer.has_sample_data then
-          real_time = int_time_in_frames / renoise.song().selected_sample.sample_buffer.sample_rate
+        if not int_time_in_frames or int_time_in_frames < 0 then 
+          int_time_in_frames = 0
+          vb.views.txtFrames.value = tostring(0)
+        end
+        local sample_buffer = renoise.song().selected_sample.sample_buffer
+        if sample_buffer.has_sample_data then
+          real_time = int_time_in_frames / sample_buffer.sample_rate
           vb.views.txtTime.value = tostring(real_time)
         end
       end      
@@ -254,12 +257,15 @@ function show_add_silence_dialog()
     vb:button {
       text = "From selection",
       tooltip = "Get silence duration from selection length",
-      height = DIALOG_BUTTON_HEIGHT,
+      height = DEFAULT_DIALOG_BUTTON_HEIGHT,
       notifier = function()
-        if renoise.song().selected_sample.sample_buffer.has_sample_data then
-          int_time_in_frames = renoise.song().selected_sample.sample_buffer.selection_end - renoise.song().selected_sample.sample_buffer.selection_start + 1 --!!! why is that necessary, and does it cause problems elsewhere??
+        local sample_buffer = renoise.song().selected_sample.sample_buffer
+        if sample_buffer.has_sample_data then
+          --!!! why is that necessary, and does it cause problems elsewhere??
+          int_time_in_frames = sample_buffer.selection_end - 
+            sample_buffer.selection_start + 1 
           vb.views.txtFrames.value = tostring(int_time_in_frames)
-          real_time = int_time_in_frames / renoise.song().selected_sample.sample_buffer.sample_rate
+          real_time = int_time_in_frames / sample_buffer.sample_rate
           vb.views.txtTime.value = tostring(real_time)
          end
       end
@@ -267,13 +273,12 @@ function show_add_silence_dialog()
     vb:button {
       text = "Apply",
       tooltip = "*shhhh*",
-      height = DIALOG_BUTTON_HEIGHT,
+      height = DEFAULT_DIALOG_BUTTON_HEIGHT,
       notifier = function()
         process_data()
       end
     }
   }
-  
   
   local main_rack = vb:column {
     margin = DEFAULT_DIALOG_MARGIN,
@@ -290,5 +295,11 @@ function show_add_silence_dialog()
     main_rack
   )
 
-
+  -- close the dialog when a new song arrives
+  if not 
+    renoise.tool().app_new_document_observable:has_notifier(new_song_loaded) 
+  then
+    renoise.tool().app_new_document_observable:add_notifier(new_song_loaded)
+  end
 end
+
