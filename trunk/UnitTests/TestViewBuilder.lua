@@ -349,6 +349,17 @@ do
         },
       },
          
+      --- freeze test
+      vb:column {
+        vb:button { 
+          text = "Script Freeze Test",
+          notifier = function()
+            while true do
+              -- loop forever
+            end
+          end
+        }
+      }
     },
     
     --- controls column
