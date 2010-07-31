@@ -44,15 +44,19 @@ for _,v in pairs(Random.modes) do
   Random.note_sets[v.name] = v.notes
 end
 
-function Random:__init(mode, preserve_octave)
+function Random:__init(mode)
   math.randomseed(os.time())
   self:set_mode(mode or 'Chaos')
-  self:set_preserve_octave(preserve_octave or false)
 end
 
 function Random:set_mode(mode)
   assert(Random.note_sets[mode] ~= nil)
   self.mode = mode
+end
+
+function Random:set_preserve_notes(preserve_notes)
+  assert(type(preserve_notes) == 'boolean')
+  self.preserve_notes = preserve_notes
 end
 
 function Random:set_preserve_octave(preserve_octave)
@@ -87,6 +91,12 @@ function Random:randomize(note)
     local note_prefix_table = Random.note_sets[self.mode]
     prefix = math.random(1, #note_prefix_table)
     prefix = note_prefix_table[prefix]
+    if self.preserve_notes then
+      local prefix2 = string.sub(note, 1, 2)
+      if table.find(Random.note_sets[self.mode], prefix2) ~= nil then
+        prefix = prefix2
+      end
+    end
     if self.preserve_octave then
       number = tonumber(string.sub(note, -1))
     end
@@ -114,8 +124,12 @@ function Random:_neighbour(note)
 
   local prefix = string.sub(note, 1, 2)
   local number = tonumber(string.sub(note, -1))
-  -- Uncomment for pre 0.4 behaviour
-  -- if table.find(Random.note_sets[self.mode], prefix) == nil then
+  if
+    self.preserve_notes and
+    table.find(Random.note_sets[self.mode], prefix) ~= nil
+  then
+    -- Keep note
+  else
     local valid_notes = Random.note_sets["Chaos"]
     local pos = table.find(valid_notes, prefix)
     local found = false
@@ -147,8 +161,7 @@ function Random:_neighbour(note)
         number = number - 1
       end
     end
-  -- Uncomment for pre 0.4 behaviour
-  -- end
+  end
 
   if not self.preserve_octave then
     number = nil
@@ -237,7 +250,8 @@ end
 -- invoke_random
 
 function invoke_random(
-  mode, pattern_iterator, constrain, preserve_octave, neighbour, shift, min, max
+  mode, pattern_iterator, constrain, preserve_notes, preserve_octave, neighbour,
+  shift, min, max
 )
 
   if (preserve_octave == nil) then
@@ -245,12 +259,13 @@ function invoke_random(
      'Preserve the octave of each note?', {'No', 'Yes'}) == "Yes")
   end
 
-  local randomizer = Random(mode, preserve_octave)
-  local iterator = Iterator(constrain)
-
+  local randomizer = Random(mode)
+  if preserve_octave then randomizer:set_preserve_octave(preserve_octave) end
+  if preserve_notes then randomizer:set_preserve_notes(preserve_notes) end
   if neighbour then randomizer:set_neighbour(neighbour, shift) end
   if min and max then randomizer:set_range(min, max) end
 
+  local iterator = Iterator(constrain)
   iterator:set_callback(function(x) return randomizer:randomize(x) end)
   iterator:go(pattern_iterator)
 end
