@@ -91,7 +91,7 @@ function Random:randomize(note)
     local note_prefix_table = Random.note_sets[self.mode]
     prefix = math.random(1, #note_prefix_table)
     prefix = note_prefix_table[prefix]
-    if self.preserve_notes then
+    if self.preserve_notes and self.mode ~= "Chaos" then
       local prefix2 = string.sub(note, 1, 2)
       if table.find(Random.note_sets[self.mode], prefix2) ~= nil then
         prefix = prefix2
