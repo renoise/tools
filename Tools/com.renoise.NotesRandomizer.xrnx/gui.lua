@@ -26,6 +26,7 @@ range_modes = table.create {
 
 local current_range = #range_modes
 local current_mode = nil
+local current_preserve_notes = false
 local current_preserve_octaves = true
 local current_neighbour = false
 local current_neighbour_shift = "Rand"
@@ -79,8 +80,9 @@ local function invoke_current_random()
     randomizer.invoke_shuffle(iter, selection_only)
   else
     randomizer.invoke_random(
-      mode, iter, selection_only, current_preserve_octaves, current_neighbour,
-      current_neighbour_shift, current_min, current_max
+      mode, iter, selection_only, current_preserve_notes,
+      current_preserve_octaves, current_neighbour, current_neighbour_shift,
+      current_min, current_max
     )
   end
 end
@@ -90,9 +92,6 @@ end
 -- redraw
 
 local function redraw(vb)
-  -- hide preserve_octave
-  vb.views.preserve_octave_row.visible =
-    (current_mode ~= randomize_modes:find("Shuffle"))
   -- hide neighbour
   vb.views.neighbour_row.visible =
     (current_mode ~= randomize_modes:find("Shuffle") and
@@ -100,11 +99,17 @@ local function redraw(vb)
   vb.views.neighbour_row_2.visible =
     (vb.views.neighbour_row.visible == true and
     current_neighbour == true)
-  -- hide octave selectors
+  -- hide notes
+  vb.views.preserve_notes_row.visible =
+    (current_mode ~= randomize_modes:find("Shuffle") and
+    current_mode ~= randomize_modes:find("Chaos"))
+  -- hide octave
+  vb.views.preserve_octave_row.visible =
+    (current_mode ~= randomize_modes:find("Shuffle"))
   vb.views.preserve_octave_row_2.visible =
     (current_mode ~= randomize_modes:find("Shuffle") and
      current_preserve_octaves == false)
-    -- re-draw
+  -- re-draw
   vb.views.dialog_content:resize()
 end
 
@@ -175,6 +180,14 @@ function show_randomize_gui()
       redraw(vb)
     end,
     width = POPUP_WIDTH
+  }
+
+  local preserve_notes_switch = vb:checkbox {
+    value = current_preserve_notes,
+    notifier = function(value)
+      current_preserve_notes = value
+      redraw(vb)
+    end
   }
 
   local preserve_octave_switch = vb:checkbox {
@@ -273,6 +286,12 @@ function show_randomize_gui()
       id = "neighbour_row_2",
       mode = "center",
       neighbour_shift
+    },
+
+    vb:row {
+      id = "preserve_notes_row",
+      preserve_notes_switch,
+      vb:text { text = 'Preserve Notes In Scale' }
     },
 
     vb:row {
