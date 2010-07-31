@@ -12,6 +12,11 @@ across computers in a network (Internet).
 Please have a look at http://opensoundcontrol.org for more general info 
 about OSC
 
+Please read the INTRODUCTION.txt first to get an overview about the complete
+API, and scripting in Renoise in general...
+
+Do not try to execute this file. It uses a .lua extension for markups only.
+
 
 -------- Examples
 
@@ -60,7 +65,7 @@ renoise.Osc.Message(pattern [, table of {tag, value} arguments])
 
 -- properties
 
--- the message pattern (i.g: "/renoise/transport/start")
+-- the message pattern (e.g. "/renoise/transport/start")
 message.pattern 
   -> [read-only, string]
 

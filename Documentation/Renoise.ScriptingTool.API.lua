@@ -14,6 +14,8 @@ API, and scripting in Renoise in general...
 
 Have a look at the com.renoise.ExampleTool.xrnx for more info about XRNX tools.
 
+Do not try to execute this file. It uses a .lua extension for markups only.
+
 ]]
 
 
