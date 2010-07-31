@@ -10,6 +10,8 @@ related functions and classes are nested in this namespace.
 Please read the INTRODUCTION.txt first to get an overview about the complete
 API, and scripting in Renoise in general... 
 
+Do not try to execute this file. It uses a .lua extension for markups only.
+
 ]]
 
 
