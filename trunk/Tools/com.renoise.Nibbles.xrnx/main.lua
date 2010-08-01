@@ -25,6 +25,16 @@ local last_idle_time = os.clock()
 -- The Game
 --------------------------------------------------------------------------------
 
+-- Initialize high score
+
+local prefs = renoise.Document.create {
+  high_score = 0
+}
+prefs:load_from("Nibbles", "preferences.xml")
+
+
+--------------------------------------------------------------------------------
+
 -- Reset Game
 
 function reset()
@@ -245,7 +255,14 @@ function game()
     color_snake == get_cell_color(snake[1].x, snake[1].y)
     )
   then
-    renoise.app():show_error("Game over! Your score is: " .. score)
+    if score > prefs.high_score.value then
+      prefs.high_score.value = score
+      prefs:save_as("Nibbles", "preferences.xml")
+    end
+    renoise.app():show_error(
+    "Game over!" .. "\nYour score is: " .. score ..
+    "\nYour high score is: " .. prefs.high_score.value
+    )
     current_dialog:show()
     reset()
 
