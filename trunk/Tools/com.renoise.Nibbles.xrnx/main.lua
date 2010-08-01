@@ -30,7 +30,7 @@ local last_idle_time = os.clock()
 local prefs = renoise.Document.create {
   high_score = 0
 }
-prefs:load_from("Nibbles", "preferences.xml")
+renoise.tool().preferences = prefs
 
 
 --------------------------------------------------------------------------------
@@ -257,7 +257,6 @@ function game()
   then
     if score > prefs.high_score.value then
       prefs.high_score.value = score
-      prefs:save_as("Nibbles", "preferences.xml")
     end
     renoise.app():show_error(
     "Game over!" .. "\nYour score is: " .. score ..
