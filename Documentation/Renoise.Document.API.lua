@@ -125,7 +125,7 @@ at the class docs below please.
 -- Document
 --==============================================================================
 
--- construction
+-------- construction
 
 -- create an empty renoise.Document.DocumentNode or create a renoise.Document 
 -- tree, modeled after the passed table. See the general description in this 
@@ -138,7 +138,7 @@ renoise.Document.create(table or nil)
 -- renoise.Document.Serializable
 --------------------------------------------------------------------------------
 
--- functions
+-------- functions
 
 -- serialize the object to a string
 serializable:to_string() 
@@ -152,7 +152,7 @@ serializable:from_string(string)
 -- renoise.Document.Observable, inherits Serializable
 --------------------------------------------------------------------------------
 
--- notifiers
+-------- functions
 
 -- check if the given function, method was already registered as notifier
 observable:has_notifier(function or (object, function) or (function, object)) 
@@ -174,7 +174,7 @@ observable:remove_notifier(function or (object, function) or
 -- renoise.Document.ObservableBoolean/Number/String, inherits Observable
 --------------------------------------------------------------------------------
 
--- properties
+-------- properties
 
 observable.value 
   -> [boolean, number or string]
@@ -184,7 +184,7 @@ observable.value
 -- renoise.Document.ObservableBoolean/String/NumberList, inherits Observable
 --------------------------------------------------------------------------------
 
--- operators
+-------- operators
 
 -- query the lists size
 #observable_list 
@@ -195,28 +195,7 @@ observable_list[Number]
   -> [Observable object]
 
 
--- notifiers
-
--- notifiers from renoise.Document.Observable are available for lists as well, 
--- but will not broadcast changes made to the items, but only changes to the 
--- !list! layout.
--- This means you will get notified as soon as an item was added, removed or
--- changed its position, but not when an items value changed. If you are 
--- interested in value changes of a specific item in the list, attach notifiers
--- directly to the item itself and not the list...
-
--- see renoise.Document.Observable for has/add/remove_notifier doc
-observable_list:has_notifier(function or (object, function) or (function, object)) 
-  -> [boolean]
-
-observable_list:add_notifier(function or (object, function) or (function, object))
-
-observable_list:remove_notifier(function or (object, function) or 
-  (function, object) or (object))
-
-
-
--- functions
+-------- functions
 
 -- returns the number of entries of the list
 observable_list:size()
@@ -240,11 +219,32 @@ Observable_list:insert([pos,] value)
 Observable_list:remove([pos])
 
 
+-- notifiers
+
+-- notifiers from renoise.Document.Observable are available for lists as well, 
+-- but will not broadcast changes made to the items, but only changes to the 
+-- !list! layout.
+-- This means you will get notified as soon as an item was added, removed or
+-- changed its position, but not when an items value changed. If you are 
+-- interested in value changes of a specific item in the list, attach notifiers
+-- directly to the item itself and not the list...
+
+-- see renoise.Document.Observable for has/add/remove_notifier doc
+observable_list:has_notifier(function or (object, function) or (function, object)) 
+  -> [boolean]
+
+observable_list:add_notifier(function or (object, function) or (function, object))
+
+observable_list:remove_notifier(function or (object, function) or 
+  (function, object) or (object))
+
+
+
 --------------------------------------------------------------------------------
 -- renoise.Document.DocumentNode
 --------------------------------------------------------------------------------
 
--- functions
+-------- functions
 
 doc:has_property(property_name)
 

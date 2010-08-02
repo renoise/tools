@@ -57,14 +57,14 @@ function my_keyhandler_func(dialog, key) end
 -- View properties can be applied to any of the following views
 
 
--- functions
+------ functions
 
 -- create view hierarchies
 view:add_child(View child_view)
 view:remove_child(View child_view)
 
 
--- properties
+----- properties
 
 -- set to false to hide this view (make it invisible without removing it).
 -- Please note that view.visible will also return false when any of its
@@ -97,7 +97,7 @@ view.tooltip
 -- a Rack has no content by its own, but stacks its child views either
 -- vertically (ViewBuilder.column) or horizontally (ViewBuilder.row)
 
--- functions
+----- functions
 
 -- adding new views to a rack automatically enlarges it while the views got 
 -- stacked . by calling resize, you can let the rack recalc its size and set 
@@ -107,7 +107,7 @@ view.tooltip
 rack:resize()
 
 
--- properties
+----- properties
 
 -- setup the "borders" of the rack (left, right, top and bottom equally)
 -- by default 0
@@ -152,7 +152,7 @@ rack.uniform
 -- can be used to align only one child view, or also multiple child views...
 
 
--- properties
+----- properties
 
 -- setup the "borders" of the aligner (left, right, top and bottom equally)
 -- by default 0
@@ -189,7 +189,7 @@ aligner.mode
 --]]
 
 
--- properties
+----- properties
 
 -- get/set the text that should be displayed. setting a new text will resize
 -- the view, but only if the text would not be fully visible (expands only)
@@ -228,7 +228,7 @@ text.align
 --]]
 
 
--- properties
+----- properties
 
 -- get/set the text that should be displayed. newlines in the text can be used
 -- to display multiple paragraphs
@@ -256,7 +256,7 @@ multiline_text.style
   -> [string]
 
 
--- functions
+----- functions
 
 -- when a scroll bar is visible, scroll the text to show the last line
 multiline_text:scroll_to_last_line()
@@ -285,7 +285,7 @@ multiline_text:clear()
 --]]
 
 
--- properties
+----- properties
 
 -- the currently shown value. the value will not be updated while editing,
 -- but only after editing finished.
@@ -317,10 +317,10 @@ textfield.align
  | With multiple paragraphs | |
  | and autowrapping support |+|
  +--------------------------+-+
---]]					   
+--]]             
 
 
--- properties
+----- properties
 
 -- the current text as single line, using usinx newlinesto separate paragraphs
 -- by default empty
@@ -350,7 +350,7 @@ multiline_textfield.style
   -> [string]
 
 
--- functions
+----- functions
 
 -- add/remove text change notifiers
 multiline_textfield:add_notifier(function or {object, function} or {object, function})
@@ -393,14 +393,14 @@ multiline_textfield:clear()
 -- show that the bitmap can be clicked...
 
 
--- functions
+----- functions
 
 -- add/remove mouse click notifiers
 bitmapview:add_notifier(function or {object, function} or {object, function})
 bitmapview:remove_notifier(function or {object, function} or {object, function})
 
 
--- properties
+----- properties
 
 -- setup how the bitmap should be painted, recolored. Available modes are:
 -- "plain"        -> bitmap is drawn just like it is, no recoloring is done
@@ -442,7 +442,7 @@ bitmapview.notifier
 --]]
 
 
--- functions
+----- functions
 
 -- add/remove button hit/release notifiers. 
 -- when a pressed notifier is set, the release notifier is guaranteed to be 
@@ -455,7 +455,7 @@ button:remove_pressed_notifier(function or {object, function} or {object, functi
 button:remove_released_notifier(function or {object, function} or {object, function})
 
 
--- properties
+----- properties
 
 -- the label of the button
 -- by default empty
@@ -508,14 +508,14 @@ button.notifier
 --]]
 
 
--- functions
+----- functions
 
 -- add/remove state notifiers
 checkbox:add_notifier(function or {object, function} or {object, function})
 checkbox:remove_notifier(function or {object, function} or {object, function})
 
 
--- properties
+----- properties
 
 -- the current state of the checkbox
 -- by default false
@@ -541,14 +541,14 @@ checkbox.notifier
 --]]
 
 
--- functions
+----- functions
 
 -- add/remove index change notifiers
 switch:add_notifier(function or {object, function} or {object, function})
 switch:remove_notifier(function or {object, function} or {object, function})
 
 
--- properties
+----- properties
 
 -- get/set the currently shown buttons. Item list size must be >= 2
 switch.items 
@@ -576,14 +576,14 @@ switch.notifier
 --]]
 
 
--- functions
+----- functions
 
 -- add/remove index change notifiers
 popup:add_notifier(function or {object, function} or {object, function})
 popup:remove_notifier(function or {object, function} or {object, function})
 
 
--- properties
+----- properties
 
 -- get/set the currently shown items. Item list can be empty, then "None" is
 -- displayed and the value won't change...
@@ -612,14 +612,14 @@ popup.notifier
 --]]
 
 
--- functions
+----- functions
 
 -- add/remove index change notifiers
 chooser:add_notifier(function or {object, function} or {object, function})
 chooser:remove_notifier(function or {object, function} or {object, function})
 
 
--- properties
+----- properties
 
 -- get/set the currently shown items. Item list size must be >= 2.
 chooser.items 
@@ -648,14 +648,14 @@ chooser.notifier
 --]]
 
 
--- functions
+----- functions
 
 -- add/remove value change notifiers
 valuebox:add_notifier(function or {object, function} or {object, function})
 valuebox:remove_notifier(function or {object, function} or {object, function})
 
 
--- properties
+----- properties
 
 -- get/set the min/max values that are expected, allowed.
 -- by default 0 and 100
@@ -704,14 +704,14 @@ valuebox.notifier
 --]]
 
 
--- functions
+----- functions
 
 -- add/remove value change notifiers
 value:add_notifier(function or {object, function} or {object, function})
 value:remove_notifier(function or {object, function} or {object, function})
 
 
--- properties
+----- properties
 
 -- get/set the current value
 value.value
@@ -756,14 +756,14 @@ value.notifier
 --]]
 
 
--- functions
+----- functions
 
 -- add/remove value change notifiers
 valuefield:add_notifier(function or {object, function} or {object, function})
 valuefield:remove_notifier(function or {object, function} or {object, function})
 
 
--- properties
+----- properties
 
 -- get/set the min/max values that are expected, allowed
 -- by default 0.0 and 1.0
@@ -819,14 +819,14 @@ valuefield.notifier
 --]]
 
 
--- functions
+----- functions
 
 -- add/remove value change notifiers
 slider:add_notifier(function or {object, function} or {object, function})
 slider:remove_notifier(function or {object, function} or {object, function})
 
 
--- properties
+----- properties
 
 -- get/set the min/max values that are expected, allowed.
 -- by default 0.0 and 1.0
@@ -856,14 +856,14 @@ slider.notifier
 --]]
 
 
--- functions
+----- functions
 
 -- add/remove value change notifiers
 slider:add_notifier(function or {object, function} or {object, function})
 slider:remove_notifier(function or {object, function} or {object, function})
 
 
--- properties
+----- properties
 
 -- get/set the min/max values that are expected, allowed.
 -- by default 0.0 and 1.0
@@ -896,14 +896,14 @@ slider.notifier
 -- to draw and control the rotary control, so you should always set both equally.
 
 
--- functions
+----- functions
 
 -- add/remove value change notifiers
 rotary:add_notifier(function or {object, function} or {object, function})
 rotary:remove_notifier(function or {object, function} or {object, function})
 
 
--- properties
+----- properties
 
 -- get/set the min/max values that are expected, allowed.
 -- by default 0.0 and 1.0
@@ -928,13 +928,13 @@ rotary.notifier
 -- close it after having passed it to a dialog. The apps non modal dialog
 -- create functions will return a reference to the created dialogs
 
--- functions
+----- functions
 
 dialog:show()
 dialog:close()
 
 
--- properties
+----- properties
 
 dialog.visible 
   -> [read-only, boolean]
@@ -985,7 +985,7 @@ renoise.ViewBuilder.DEFAULT_DIALOG_SPACING
 renoise.ViewBuilder.DEFAULT_DIALOG_BUTTON_HEIGHT
 
 
--- functions
+----- functions
 
 vb:column { Rack Properties and/or child views }
 vb:row { Rack Properties and/or child views }
@@ -1020,7 +1020,7 @@ vb:minislider { MiniSlider Properties }
 vb:rotary { RotaryEncoder Properties }
 
 
--- properties
+----- properties
 
 -- view id is the key, value the corresponding view object
 vb.views 
