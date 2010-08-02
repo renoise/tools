@@ -13,13 +13,35 @@ local LOOP_MODE_BACKWARD = 3
 local LOOP_MODE_PINGPONG = 4
 
 local nSlices = 4
+local rSliceSize = 0
+local nShownSlice = 0
+local nSlicingMode = SLICING_MODE_SLICES
+
+local insSel = nil
+local smpSel = nil
+local nSmpSel = 0
+local smpBuffSel = nil
+local rSmpSize = 0
+
 local bDoMapping = true
+local arrSplit = {} -- array used for note mapping
 local bDoSync = true
 local nSyncLines = 0
-local nSlicingMode = SLICING_MODE_SLICES
 local bDoLoop = false
 local nLoopMode = LOOP_MODE_FORWARD
 local bDoAutoseek = false
+local rSampleSelStart = 0
+local rSampleSelEnd = 0
+
+local rLastIdleTime = 0.0
+local rSliceShowInterval = 1
+
+local dialog = nil
+local vb = nil
+local bDialogOpened = false
+local bDoneSlicing = false
+
+local DIALOG_BUTTON_HEIGHT = renoise.ViewBuilder.DEFAULT_DIALOG_BUTTON_HEIGHT
 
 --------------------------------------------------------------------------------
 -- tool registration
@@ -45,14 +67,22 @@ renoise.tool():add_keybinding {
 
 function show_dialog()
 
-  local smpSel = renoise.song().selected_sample
+  smpSel = renoise.song().selected_sample
+  
+  if smpSel == nil or not smpSel.sample_buffer.has_sample_data then
+    renoise.app():show_error("No sample has been selected!")
+    return
+  end
+  
   nSyncLines = smpSel.beat_sync_lines
   bDoSync = smpSel.beat_sync_enabled
   bDoLoop = smpSel.loop_mode > renoise.Sample.LOOP_MODE_OFF
   nLoopMode = smpSel.loop_mode
   bDoAutoseek = smpSel.autoseek
+  rSampleSelStart = smpSel.sample_buffer.selection_start
+  rSampleSelEnd = smpSel.sample_buffer.selection_end
 
-  local vb = renoise.ViewBuilder()
+  vb = renoise.ViewBuilder()
 
   local DEFAULT_CONTROL_SPACING = renoise.ViewBuilder.DEFAULT_CONTROL_SPACING
 
@@ -69,7 +99,9 @@ function show_dialog()
       items = {"Slices", "Seconds", "BPM"},
       value = nSlicingMode,
       notifier = function(nVal)
-         nSlicingMode = nVal
+        nSlicingMode = nVal
+		nShownSlice = 0
+		run_slice_show()
       end,
       tooltip = "Select the slicing mode."
     },
@@ -80,7 +112,9 @@ function show_dialog()
       tooltip = [[insert the number of slices to create]],
       value = tostring(nSlices),
       notifier = function(value)
-        nSlices = value
+        nSlices = tonumber(value)
+		nShownSlice = 0
+		run_slice_show()
       end      
     }
   }
@@ -121,7 +155,7 @@ function show_dialog()
       tooltip = [[insert the number of lines to synch to]],
       value = tostring(nSyncLines),
       notifier = function(value)
-        nSyncLines = value
+        nSyncLines = tonumber(value)
       end      
     }
   }
@@ -167,8 +201,35 @@ function show_dialog()
     },
     
   }
-
-  local dialog = renoise.app():show_custom_prompt  (
+  
+  local row6 = vb:row {
+    vb:button {
+      text = "Slice!",
+      tooltip = "Split the selected sample into slices",
+      height = DIALOG_BUTTON_HEIGHT,
+	  width = vb.views["nSlices"].width,
+      notifier = function()
+        slice_it(false)
+        stop_slice_show()
+      end
+    },
+    vb:button {
+      text = "Cancel",
+      tooltip = "Close dialog and abort operation",
+      height = DIALOG_BUTTON_HEIGHT,
+	  width = vb.views["nSlices"].width,	  
+      notifier = function()
+        stop_slice_show()
+        dialog:close()        
+      end
+    }    	
+  }
+  
+  run_slice_show()
+  bDialogOpened = true
+  nShownSlice = 0
+  
+  dialog = renoise.app():show_custom_dialog  (
     "Auto Slicer",
     vb:column{
       margin = DEFAULT_DIALOG_MARGIN,
@@ -178,9 +239,10 @@ function show_dialog()
       row3,
       row4,
       row5,
+	  row6,
       vb:space { }
-    },
-    {'Slice!','Cancel'}
+    }--,
+    --{'Slice!','Cancel'}
   )
   
   if dialog == 'Slice!' then
@@ -192,55 +254,104 @@ end
 
 
 --------------------------------------------------------------------------------
--- processing
+-- calculates how much slices there will be according to the selected mode
 --------------------------------------------------------------------------------
 
-function slice_it()
+function get_number_of_slices()
 
-  local nSlices = tonumber(nSlices)
-  local nSliceSize = 0
-  if(nSlices==nil) then
-    renoise.app():show_error("Invalid number of slices!")
-    return
+  if smpSel == nil then
+    return false
   end
 
-  local insSel = renoise.song().selected_instrument
-  local nSamples = table.getn(insSel.samples)
-  local smpSel = renoise.song().selected_sample
-  local nSmpSel = renoise.song().selected_sample_index
-  local smpBuffSel = smpSel.sample_buffer
-  local nSmpSize = smpSel.sample_buffer.number_of_frames
-  
+  nSmpSel = renoise.song().selected_sample_index
+  smpBuffSel = smpSel.sample_buffer
+  rSmpSize = smpSel.sample_buffer.number_of_frames
+
   if(nSlicingMode == SLICING_MODE_SLICES) then
-    nSliceSize = nSmpSize / nSlices
+  
+    rSliceSize = rSmpSize / nSlices
+	
   elseif(nSlicingMode == SLICING_MODE_SLICES_SECS) then
-    if(nSlices>0) then
-      nSliceSize = smpBuffSel.sample_rate * nSlices
-      if(nSliceSize>0) then
-        nSlices = math.ceil(nSmpSize / (nSliceSize))
-      else
-        nSlices = 0
+  
+    local nSecs = tonumber(vb.views["nSlices"].value)
+  
+    if(nSecs>0) then
+	
+      rSliceSize = smpBuffSel.sample_rate * nSecs
+	  
+      if(rSliceSize>0) then	  
+        nSlices = math.ceil(rSmpSize / rSliceSize)
+      else	  
+        nSlices = 0		
       end
+	  
     end
+	
   elseif(nSlicingMode == SLICING_MODE_SLICES_BPM) then
-    if(nSlices>0) then
-      nSliceSize = (60 / nSlices) * smpBuffSel.sample_rate
-      if(nSliceSize>0) then
-        nSlices = math.ceil(nSmpSize / (nSliceSize))
+  
+    local rBPM = tonumber(vb.views["nSlices"].value)
+  
+    if(rBPM>0) then
+      rSliceSize = (60 / rBPM) * smpBuffSel.sample_rate
+      if(rSliceSize>0) then
+        nSlices = math.ceil(rSmpSize / rSliceSize)
+	  else
+	    nSlices = 0
       end
     end    
+	
   end
 
-  if(nSlices <= 1 or nSliceSize <=1) then 
-    renoise.app():show_error("Invalid number of slices!")
-    return
+  if(nSlices <= 1 or rSliceSize <=1) then 
+  
+    return false
+	
   end
   
   local nSyncLines = tonumber(nSyncLines)
-  local arrSplit = {}
   
-  if(nSyncLines == nil or nSyncLines <= 1) then 
+  if bDoSync and (nSyncLines == nil or nSyncLines < 1) then 
+
+	stop_slice_show()  
     renoise.app():show_error("Invalid number of sync lines!")
+    return false
+	
+  end
+  
+  return true
+  
+end
+
+
+--------------------------------------------------------------------------------
+-- processing
+--------------------------------------------------------------------------------
+
+function slice_it(bSliceShow)
+
+  nSlices = tonumber(nSlices)
+  rSliceSize = 0
+  if(nSlices==nil) then
+    renoise.app():show_error("Invalid number of slices!")
+	stop_slice_show()
+    return
+  end
+
+  insSel = renoise.song().selected_instrument
+  local nSamples = table.getn(insSel.samples)
+  smpSel = renoise.song().selected_sample
+  
+  if insSel == nil or smpSel == nil then
+    return
+  end
+
+  if not get_number_of_slices() then
+    return
+  end
+
+  if(nSlices==nil or nSlices < 2) then
+    renoise.app():show_error("Invalid number of slices!")	
+	stop_slice_show()
     return
   end
 
@@ -257,71 +368,165 @@ function slice_it()
   
   local nFrame = 1  
   
-  for nSlice = 1, nSlices do
-  
-    local smpNew = insSel.insert_sample_at(insSel,nSamples+1)
-    nSamples = nSamples + 1
-    local smpBuffNew = smpNew.sample_buffer
+  if (bSliceShow) then
 	
-    if (nSlice == nSlices) then
-      --the last slice will contain any other remaining piece of the source sample (should be a bunch of bytes)
-      nSliceSize = nSmpSize - nFrame
-    end
-    
-    if (smpBuffNew:create_sample_data(smpBuffSel.sample_rate, 
-      smpBuffSel.bit_depth, smpBuffSel.number_of_channels, nSliceSize)) 
-    then
-	
-      local nChan, nFrameNew
-      for nFrameNew = 1, smpBuffNew.number_of_frames do
-        for nChan = 1, smpBuffSel.number_of_channels do
-          local lValue = 0
-          if(nFrame<=nSmpSize) then
-            lValue = smpBuffSel:sample_data(nChan,nFrame)
-          end
-          smpBuffNew:set_sample_data(nChan,nFrameNew,lValue)
-        end
-        nFrame = nFrame + 1
-      end
-      
-      if(bDoMapping) then
-        smpNew.base_note = nBaseNote + nSlice-1
-        arrSplit[smpNew.base_note+1] = nSlice
-      end
-      
-      smpNew.beat_sync_enabled = bDoSync and (nSyncLines>0)
-      if(smpNew.beat_sync_enabled) then
-        smpNew.beat_sync_lines = nSyncLines
-      end
-      
-      if(bDoLoop) then
-        smpNew.loop_mode = nLoopMode
+    if (tonumber(nSlices) > 1) and (rSliceSize > 2) then
+
+      if (nShownSlice + 1 > nSlices) then
+	    nShownSlice = 1
       else
-        smpNew.loop_mode = renoise.Sample.LOOP_MODE_OFF
-      end
-      if (bDoAutoseek) then
-        smpNew.autoseek = bDoAutoseek
-      end
-       
-      smpNew.name = smpSel.name .. " slice" .. tostring(nSlice)
-      nSlice = nSlice + 1
-      smpBuffNew:finalize_sample_data_changes()
-      
-    else
+	    nShownSlice = nShownSlice + 1
+	  end
 	
-      renoise.app():show_error("Cannot create new sample! Aborting..")
-      renoise.song():undo()
-      return
-	  
-    end
+      smpSel = renoise.song().selected_sample
+	
+      if (smpSel ~= nil) then
+	
+		smpBuffSel = smpSel.sample_buffer
 		
+		if (smpBuffSel ~= nil and smpBuffSel.has_sample_data) then
+		
+		  rSmpSize = smpBuffSel.number_of_frames
+
+          local nSelStart = 1 + (nShownSlice - 1) * rSliceSize
+          -- min() is used to avoid rounding errors which could overcome buffer size
+          smpBuffSel.selection_range = {nSelStart,math.min(rSmpSize,nSelStart + rSliceSize)}
+						
+        end
+		
+      end
+	
+    end
+	
+  else
+	
+	for nSlice = 1, nSlices do
+  
+      local smpNew = insSel.insert_sample_at(insSel,nSamples+1)
+      nSamples = nSamples + 1
+      local smpBuffNew = smpNew.sample_buffer
+
+      if (nSlice == nSlices) then
+        --the last slice will contain any other remaining piece of the source sample (should be a bunch of bytes)
+        rSliceSize = rSmpSize - nFrame
+      end
+    
+      if (smpBuffNew:create_sample_data(smpBuffSel.sample_rate, 
+        smpBuffSel.bit_depth, smpBuffSel.number_of_channels, rSliceSize)) 
+      then
+	
+        local nChan, nFrameNew
+        for nFrameNew = 1, smpBuffNew.number_of_frames do
+          for nChan = 1, smpBuffSel.number_of_channels do
+            local lValue = 0
+            if(nFrame<=rSmpSize) then
+              lValue = smpBuffSel:sample_data(nChan,nFrame)
+            end
+            smpBuffNew:set_sample_data(nChan,nFrameNew,lValue)
+          end
+          nFrame = nFrame + 1
+        end
+      
+        if(bDoMapping) then
+          smpNew.base_note = nBaseNote + nSlice-1
+          arrSplit[smpNew.base_note+1] = nSlice
+        end
+      
+        smpNew.beat_sync_enabled = bDoSync and (nSyncLines>0)
+        if(smpNew.beat_sync_enabled) then
+          smpNew.beat_sync_lines = nSyncLines
+        end
+      
+        if(bDoLoop) then
+          smpNew.loop_mode = nLoopMode
+        else
+          smpNew.loop_mode = renoise.Sample.LOOP_MODE_OFF
+        end
+        if (bDoAutoseek) then
+          smpNew.autoseek = bDoAutoseek
+        end
+       
+        smpNew.name = smpSel.name .. " slice" .. tostring(nSlice)
+        nSlice = nSlice + 1
+        smpBuffNew:finalize_sample_data_changes()
+
+      else
+	
+        renoise.app():show_error("Cannot create new sample! Aborting..")
+        renoise.song():undo()
+        return
+	  
+      end
+		
+    end
+	
   end
   
-  insSel.delete_sample_at(insSel,nSmpSel)
+  if not bSliceShow then
   
-  if(bDoMapping)then
-    insSel.split_map = arrSplit
+    insSel.delete_sample_at(insSel,nSmpSel)
+  
+    if(bDoMapping)then
+      insSel.split_map = arrSplit
+    end
+  
+    bDoneSlicing = true
+
+  end	
+
+  
+  
+end
+
+--------------------------------------------------------------------------------
+
+-- start showing of slices into the sample view
+
+function run_slice_show()
+  if not (renoise.tool().app_idle_observable:has_notifier(slice_show)) then
+    renoise.tool().app_idle_observable:add_notifier(slice_show)	
   end
 end
 
+--------------------------------------------------------------------------------
+
+-- stop showing of slices into the sample view
+
+function stop_slice_show()
+  if (renoise.tool().app_idle_observable:has_notifier(slice_show)) then  
+    renoise.tool().app_idle_observable:remove_notifier(slice_show)
+	if not bDoneSlicing then
+	  -- no slicing has been actually done. reset selection
+	  if smpSel and smpSel.sample_buffer.selection_start >= smpSel.sample_buffer.selection_end then
+		smpSel.sample_buffer.selection_range = {rSampleSelStart, rSampleSelEnd}
+	  end
+	end
+  end
+  
+  smpSel = nil
+  insSel = nil
+  
+end
+
+--------------------------------------------------------------------------------
+
+function slice_show()
+
+  if (bDialogOpened and not dialog or not dialog.visible) then
+    stop_slice_show()
+    return
+  end
+
+  -- allows for timed execution
+  if (os.clock() - rLastIdleTime < rSliceShowInterval) then
+    return
+  end
+  
+  get_number_of_slices()
+
+  slice_it(true)
+  
+  rLastIdleTime = os.clock()
+
+end
 
