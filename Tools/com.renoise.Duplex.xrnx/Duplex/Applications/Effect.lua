@@ -29,6 +29,31 @@
 
 --==============================================================================
 
+-- default precision we're using to compare floating point values in Effect
+
+local FLOAT_COMPARE_QUANTUM = 1000
+
+
+-- convert a [0-1] value to the given parameter value-range
+
+local function normalized_value_to_parameter_value(parameter, value)
+  local parameter_range = parameter.value_max - parameter.value_min
+
+  return parameter.value_min + value * parameter_range
+end
+
+
+-- convert a parameter value to a [0-1] value 
+
+local function parameter_value_to_normalized_value(parameter, value)
+  local parameter_range = parameter.value_max - parameter.value_min
+
+  return (value - parameter.value_min) / parameter_range
+end
+
+
+--==============================================================================
+
 class 'Effect' (Application)
 
 function Effect:__init(display, mappings, options)
@@ -134,11 +159,12 @@ function Effect:update()
     -- set default values  
     if (parameter_index <= #parameters) then
           
-      -- update component states from the parameter
-      local value = (parameter.value - parameter.value_min) / 
-        (parameter.value_max - parameter.value_min)
+      -- update component states from the parameter, 
+      -- normalize to the controls [0-1] range
+      local normalized_value = parameter_value_to_normalized_value(
+        parameter, parameter.value) 
         
-      self:set_parameter(control_index, value)
+      self:set_parameter(control_index, normalized_value)
       
     else
       -- deactivate, reset controls which have no parameter assigned
@@ -205,18 +231,24 @@ function Effect:__build_app()
       else
         local parameter = parameters[parameter_index]
         
-        -- scale parameter value from [0 - 1] range to the parameter range
-        local parameter_value = parameter.value_min + obj.value *
-          (parameter.value_max - parameter.value_min)
-        
-        -- hackily check for valid ranges, in order to suppress updates of
-        -- temporarily wrong values that we get from Renoise (-1 for the meta 
-        -- device effect/device choosers)    
-        if (parameter_value >= parameter.value_min and 
-            parameter_value <= parameter.value_max) 
+        -- scale parameter value to a [0-1] range before comparing
+        local normalized_value = parameter_value_to_normalized_value(
+          parameter, parameter.value)
+    
+        -- ignore floating point fuziness    
+        if (not compare(normalized_value, obj.value, FLOAT_COMPARE_QUANTUM) or 
+            obj.value == 0.0 or obj.value == 1.0) -- be exact at the min/max 
         then
-          -- ignore floating point fuzziness...
-          if not compare(parameter_value, parameter.value, 1000) then
+          -- scale the [0-1] ranged value to the parameters value
+          local parameter_value = normalized_value_to_parameter_value(
+            parameter, obj.value)
+          
+          -- hackily check for valid ranges, in order to suppress updates of
+          -- temporarily wrong values that we get from Renoise (-1 for the meta 
+          -- device effect/device choosers)    
+          if (parameter_value >= parameter.value_min and 
+              parameter_value <= parameter.value_max) 
+          then
             parameter.value = parameter_value
           end
         end
@@ -435,14 +467,17 @@ function Effect:__attach_to_parameters(new_song)
       function()
         if (self.active) then
 
-          -- scale parameter value to a [0 - 1] range
-          local parameter_value = (parameter.value - parameter.value_min) /
-            (parameter.value_max - parameter.value_min)
-
+          -- scale parameter value to a [0-1] range
+          local normalized_value = parameter_value_to_normalized_value(
+            parameter, parameter.value) 
+      
           local control_value = self.__parameter_sliders[control_index].value
-          
-          if not compare(control_value, parameter_value, 1000) then
-            self:set_parameter(control_index, parameter_value)
+      
+          -- ignore floating point fuzziness    
+          if (not compare(normalized_value, control_value, FLOAT_COMPARE_QUANTUM) or
+              normalized_value == 0.0 or normalized_value == 1.0) -- be exact at the min/max 
+          then
+            self:set_parameter(control_index, normalized_value)
           end
         end
       end 
