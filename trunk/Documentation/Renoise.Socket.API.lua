@@ -65,13 +65,13 @@ does not make sense. Never "pcall" such errors, but fix the problems instead.
 -- renoise.Socket
 --------------------------------------------------------------------------------
 
--- consts (renoise.Socket)
+-------- consts (renoise.Socket)
 
 renoise.Socket.PROTOCOL_TCP
 renoise.Socket.PROTOCOL_UDP
 
 
--- Creating Socket Servers
+-------- Creating Socket Servers
 
 -- creates a connected UPD or TCP server object. Use "localhost" as address to
 -- use your systems default network address. protocol can be
@@ -103,7 +103,7 @@ renoise.Socket.create_client(server_address, server_port [, protocol] [, timeout
 -- SocketBase is the base class for socket clients and servers. All
 -- SocketBase properties and functions are available for servers and clients.
 
--- ... properties
+-------- properties
 
 -- returns true while the socket object is valid and connected. Sockets can be 
 -- manually closed (see socket:close()). client sockets can also get actively 
@@ -118,7 +118,7 @@ socket.local_address -> [string]
 -- the sockets local port number, as specified while instantiated
 socket.local_port -> [number]
 
--- ... functions
+-------- functions
 
 -- closes the socket connection and releases all its resources. this will make
 -- the socket useless, so any properties, calls to the socket will result in
@@ -138,7 +138,7 @@ socket:close()
 -- a client; ceate a new client instance instead.
 
 
--- properties
+-------- properties
 
 -- address of the sockets peer, the socket address this client is connected to
 socket_client.peer_address -> [string]
@@ -147,7 +147,7 @@ socket_client.peer_address -> [string]
 socket_client.peer_port -> [number]
 
 
--- functions
+-------- functions
 
 -- send a message string to the connected server. when sending failed, success
 -- will be false and error_message is set
@@ -198,13 +198,13 @@ socket_client:receive(mode, timeout_ms) ->
 -- this background polling can be started and stopped on request
 
 
--- properties
+-------- properties
 
 -- returns true while the server is running (the server is up and running)
 server_socket.is_running -> [boolean]
 
 
--- functions
+-------- functions
 
 -- start running the server by specifying a class or table which defines the
 -- callback functions for the server (see "callbacks" below for more info)
@@ -219,7 +219,7 @@ server_socket:stop()
 server_socket:wait(timeout_ms)
 
 
--- callbacks
+-------- callbacks
 
 -- all callback properties are optional. when not specified, no error is fired.
 -- So you can for example skip specifying "socket_accepted" if you have no use

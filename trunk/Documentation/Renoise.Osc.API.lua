@@ -49,7 +49,7 @@ renoise.Osc.from_binary_data(binary_data)
 -- renoise.Osc.Message
 --------------------------------------------------------------------------------
 
--- create
+-------- create
 
 -- create a new OSC message with the given pattern and optional arguments.
 -- when arguments are specified, they must be specified as a table of 
@@ -63,7 +63,8 @@ renoise.Osc.from_binary_data(binary_data)
 -- does not has to be specified.
 renoise.Osc.Message(pattern [, table of {tag, value} arguments])
 
--- properties
+
+-------- properties
 
 -- the message pattern (e.g. "/renoise/transport/start")
 message.pattern 
@@ -84,13 +85,16 @@ message.binary_data
 -- renoise.Socket.Bundle
 --------------------------------------------------------------------------------
 
--- create
+-------- create
 
 -- create a new bundle by specifying a timetag and one or more messages.
 -- if you don't know what to do with the timetag, simply use os.clock() 
 -- which means "now". messages have to be renoise.Osc.Message objects. Nested
 -- bundles (bundles with bundles) are right now not supported.
 renoise.Osc.Message(pattern, single_message_or_table_of_messages)
+
+
+-------- properties
 
 -- time value of the bundle
 bundle.timetag
@@ -104,4 +108,5 @@ bundle.elements
 -- message over the network through sockets
 bundle.binary_data 
   -> [read-only, raw string]
+
 

@@ -19,7 +19,7 @@ Do not try to execute this file. It uses a .lua extension for markups only.
 -- renoise
 --------------------------------------------------------------------------------
 
--- consts
+-------- consts
 
 -- currently 1.0. Any changes in the API which are not backwards compatible,
 -- will increase the internal APIs major version number (e.g. from 1.4 -> 2.0). 
@@ -32,7 +32,7 @@ renoise.API_VERSION -> [number]
 renoise.RENOISE_VERSION -> [string]
 
 
--- functions
+-------- functions
 
 renoise.app() -> [renoise.Application object]
 renoise.song() -> [renoise.Song object]
