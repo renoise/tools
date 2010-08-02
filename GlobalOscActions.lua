@@ -79,7 +79,7 @@ local action_pattern_map = table.create{}
 -- helper function to define a message argument for an action.
 -- name is only needed when generating a list of available messages for the 
 -- user. type is the expected lua type name for the OSC argument, NOT the OSC 
--- type tag. e.g: argument("bpm", "number")
+-- type tag. e.g. argument("bpm", "number")
 
 local function argument(name, type)
   return { name = name, type = type }
@@ -203,7 +203,7 @@ end
 
 add_action { 
   pattern = "/evaluate", 
-  description = "Evaluate a custom Lua expression, like e.g:\n" ..
+  description = "Evaluate a custom Lua expression, like e.g.\n" ..
     "'renoise.song().transport.bpm = 234'",
   
   arguments = { argument("expression", "string") },

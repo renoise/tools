@@ -11,9 +11,9 @@
   
   <!-- This is the renoise.API_VERSION your tool relies on. Any changes in -->
   <!-- the API which are not fully backwards compatible, will increase the internal -->
-  <!-- APIs major version number (i.e from 1.4 -> 2.0). All other backwards compatible -->
+  <!-- APIs major version number (e.g. from 1.4 -> 2.0). All other backwards compatible -->
   <!-- changes, like new functionality, new functions and classes will increase only  --> 
-  <!-- the minor version number (i.g: 1.0 -> 1.1).  -->
+  <!-- the minor version number (e.g. 1.0 -> 1.1).  -->
   <!-- This means that you tools major API version always MUST match the internal major --> 
   <!-- Api version in order to run. But this also gurantees that small additions and --> 
   <!-- changes to the internal API will not break existing tools. -->
