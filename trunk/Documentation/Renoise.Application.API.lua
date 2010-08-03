@@ -33,7 +33,7 @@ renoise.app()
 -------- functions
 
 -- shows an info message dialog to the user
-renoise.app():show_message(message)
+[BETA 4] renoise.app():show_message(message)
 
 -- shows an error dialog to the user
 renoise.app():show_error(message)

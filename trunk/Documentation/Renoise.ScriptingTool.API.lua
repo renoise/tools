@@ -86,6 +86,12 @@ renoise.tool()
 -- 
 -- To divide entries into groups (separate entries with a line), prepend one or 
 -- more dashes to the name, like "--- Main Menu:Tools:My Tool Group Starts Here"
+
+-- returns true when the given entry was already added, else false
+[BETA 4] renoise.tool():has_menu_entry(menu_entry_name)
+  -> [boolean]
+
+-- add a new menu entry as descriped above
 renoise.tool():add_menu_entry(menu_entry_definition_table)
 
 -- remove a previously added menu entry by specifying its full name
@@ -120,10 +126,35 @@ renoise.tool():remove_menu_entry(menu_entry_name)
 -- Theres no way to define default keyboard shortcuts for your entries. Users 
 -- manually have to bind them in the keyboard prefs pane. As soon as they did,
 -- they get saved just like any other key binding in Renoise.
+
+-- returns true when the given entry was already added, else false
+[BETA 4] renoise.tool():has_keybinding(keybinding_name)
+  -> [boolean]
+
+-- add a new keybinding entry as described above
 renoise.tool():add_keybinding(keybinding_definition_table)
 
 -- remove a previously added key binding by specifying its name and path 
 renoise.tool():remove_keybinding(keybinding_name)
+
+
+-- register a timer function or table with function and context (a method) 
+-- which gets periodically called with the app_idle_observable for your tool. 
+-- modal dialogs will avoid that timers are called. to create a one-shot timer,
+-- simply remove the timer again in your timer function. timer_interval_in_ms 
+-- must be > 0. the exact interval your function will be called with, will vary
+-- a bit, depending on the workload. when enough CPU time is available its error
+-- will be around +- 5 ms
+
+-- returns true when the given function or method was registered as timer
+[BETA 4] renoise.tool():has_timer(function or {object, function} or {function, object})
+  -> [boolean]
+
+[BETA 4] renoise.tool():add_timer(function or {object, function} or {function, object}, 
+  timer_interval_in_ms)
+
+-- remove a previously registered timer
+[BETA 4] renoise.tool():remove_timer(timer_func)
 
 
 -------- properties
