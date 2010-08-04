@@ -12,10 +12,10 @@
 
 --[[
 
- This file defines Renoise's default OSC server implementation. Beside of the 
- messages, patterns you find here, Renoise already processes a few realtime 
- critical messages internally. Those will never be trigger here, and thus can
- also not be overloaded here:
+ This file defines Renoise's default OSC server implementation. Besides the 
+ messages and patterns you find here, Renoise already processes a few realtime 
+ critical messages internally. Those will never be triggered here, and thus can
+ not be overloaded here:
  
  
  ---- Realtime Messages
@@ -33,7 +33,7 @@
  
  All other messages are handled in this script. 
  
- The message arguments are passes to the process function as a table 
+ The message arguments are passed to the process function as a table 
  (array) of:
 
  argument = {
@@ -54,7 +54,7 @@
  
  With the OSC message "/renoise/evaluate" you can evaluate Lua expressions 
  remotely, and thus do "anything" the Renoise Lua API offers remotely. This 
- way you don't need to edit this file in order to extend Renoises OSC 
+ way you don't need to edit this file in order to extend Renoise's OSC 
  implementation, but can do so in your client.
  
  "/renoise/evaluate" expects exactly one argument, the to be evaluated 
@@ -62,7 +62,7 @@
  This custom environment is a sandbox which only allows access to some global 
  Lua functions and the renoise.XXX modules. This means you can not change any 
  globals or locals from this script. Please see below (evaluate_env) for the 
- complete list of allowed funcitons and modules. 
+ complete list of allowed functions and modules. 
  
 ]]
 
@@ -270,7 +270,7 @@ add_action {
 
 -- available_messages
 
--- called by Renoise to show info about all avilable messages in the 
+-- called by Renoise to show info about all available messages in the 
 -- OSC preferences pane
 
 function available_messages()
