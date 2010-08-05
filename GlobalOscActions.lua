@@ -71,7 +71,10 @@
 -- Message Registration
 --------------------------------------------------------------------------------
 
-local action_pattern_map = table.create{}
+local global_action_pattern_map = table.create{}
+
+local track_action_pattern_map = table.create{}
+local track_action_pattern_map_prefix = "/song/track"
 
 
 -- argument
@@ -96,7 +99,7 @@ end
 --   handler      -> required. function which applies the action.
 -- }
 
-local function add_action(info)
+local function add_action(map, info)
 
   -- validate actions, help finding common errors and typos
   if not (type(info.pattern) == "string" and 
@@ -128,7 +131,7 @@ local function add_action(info)
       end
   end
     
-  if (action_pattern_map[info.pattern] ~= nil) then 
+  if (map[info.pattern] ~= nil) then 
     error(("OSC pattern '%s' is already registered"):format(info.pattern))
   end
   
@@ -136,9 +139,23 @@ local function add_action(info)
   info.arguments = info.arguments or {}
   info.description = info.description or "No description available"
 
-  action_pattern_map[info.pattern] = info
+  map[info.pattern] = info
 end
  
+
+--------------------------------------------------------------------------------
+
+local function add_global_action(info)
+  add_action(global_action_pattern_map, info)
+end
+
+
+--------------------------------------------------------------------------------
+
+local function add_track_action(info)
+  add_action(track_action_pattern_map, info)
+end
+
 
 --------------------------------------------------------------------------------
 -- Message Helpers
@@ -152,7 +169,7 @@ end
 
 
 --------------------------------------------------------------------------------
--- Messages
+-- Global Messages
 --------------------------------------------------------------------------------
 
 -- environment for custom expressions via OSC. such expressions can only 
@@ -201,7 +218,7 @@ end
 
 -- evaluate
 
-add_action { 
+add_global_action { 
   pattern = "/evaluate", 
   description = "Evaluate a custom Lua expression, like e.g.\n" ..
     "'renoise.song().transport.bpm = 234'",
@@ -220,9 +237,9 @@ add_action {
 
 --------------------------------------------------------------------------------
 
--- transport
+-- /transport/
 
-add_action { 
+add_global_action { 
   pattern = "/transport/start", 
   description = "Start playback or restart playing the current pattern.",
   
@@ -233,7 +250,7 @@ add_action {
   end,  
 }
 
-add_action { 
+add_global_action { 
   pattern = "/transport/stop", 
   description = "Stop playback.",
   
@@ -243,8 +260,83 @@ add_action {
   end,
 }
 
-add_action { 
-  pattern = "/transport/bpm", 
+add_global_action { 
+  pattern = "/transport/continue", 
+  description = "Continue playback.",
+  
+  arguments = nil,
+  handler = function()
+    local play_mode = renoise.Transport.PLAYMODE_CONTINUE_PATTERN
+    renoise.song().transport:start(play_mode)
+  end,
+}
+
+
+-- /transport/loop/
+
+add_global_action { 
+  pattern = "/transport/loop/pattern", 
+  description = "Enable or disable looping the current pattern",
+  
+  arguments = { argument("enabled", "boolean") },
+  handler = function(enabled)
+    renoise.song().transport.loop_pattern = enabled
+  end,
+}
+
+add_global_action { 
+  pattern = "/transport/loop/block", 
+  description = "Enable or disable pattern block looping",
+  
+  arguments = { argument("enabled", "boolean") },
+  handler = function(enabled)
+    renoise.song().transport.loop_block_enabled = enabled
+  end,
+}
+
+add_global_action { 
+  pattern = "/transport/loop/block_move_forwards", 
+  description = "Move loop block one segment forwards",
+  
+  arguments = nil,
+  handler = function()
+    renoise.song().transport:loop_block_move_forwards()
+  end,
+}
+
+add_global_action { 
+  pattern = "/transport/loop/block_move_backwards", 
+  description = "Move loop block one segment backwards",
+  
+  arguments = nil,
+  handler = function()
+    renoise.song().transport:loop_block_move_backwards()
+  end,
+}
+
+add_global_action { 
+  pattern = "/transport/loop/sequence", 
+  description = "Disable or set a new sequence loop range",
+  
+  arguments = { argument("start", "number"), argument("end", "number") },
+  handler = function(rstart, rend)
+    local start_pos = renoise.song().transport.loop_start
+    start_pos.line = 1; start_pos.sequence = clamp_value(rstart, 1, 
+      renoise.song().transport.song_length.sequence)
+    
+    local end_pos = renoise.song().transport.loop_end
+    end_pos.line = 1; end_pos.sequence =  clamp_value(rend + 1, 1, 
+      renoise.song().transport.song_length.sequence + 1)
+
+    renoise.song().transport.loop_range = {start_pos, end_pos}
+  end,
+}
+
+
+-- /song/
+
+add_global_action { 
+  pattern = "/song/bpm", 
   description = "Set the songs current BPM [32-999]",
   
   arguments = { argument("bpm", "number") },
@@ -253,14 +345,169 @@ add_action {
   end,
 }
 
-add_action {
-  pattern = "/transport/lpb", 
+add_global_action {
+  pattern = "/song/lpb", 
   description = "Set the songs current Lines Per Beat [1-255]",
 
   arguments = { argument("lpb", "number") }, 
   handler = function(lpb)
     renoise.song().transport.lpb = clamp_value(lpb, 1, 255)
   end,  
+}
+
+add_global_action {
+  pattern = "/song/tpl", 
+  description = "Set the songs current Ticks Per Line [1-16]",
+
+  arguments = { argument("tpl", "number") }, 
+  handler = function(tpl)
+    renoise.song().transport.tpl = clamp_value(tpl, 1, 16)
+  end,  
+}
+
+
+-- /song/edit/
+
+add_global_action { 
+  pattern = "/song/edit/mode", 
+  description = "Set the songs global edit mode on or off",
+  
+  arguments = { argument("enabled", "boolean") },
+  handler = function(enabled)
+    renoise.song().transport.edit_mode = enabled
+  end,
+}
+
+add_global_action { 
+  pattern = "/song/edit/octave", 
+  description = "Set the songs current octave [0-8]",
+  
+  arguments = { argument("octave", "number") },
+  handler = function(octave)
+    renoise.song().transport.octave = clamp_value(octave, 0, 8)
+  end,
+}
+
+add_global_action { 
+  pattern = "/song/edit/step", 
+  description = "Set the songs current edit_step [0-8]",
+  
+  arguments = { argument("edit_step", "number") },
+  handler = function(edit_step)
+    renoise.song().transport.edit_step = clamp_value(edit_step, 0, 9)
+  end,
+}
+
+add_global_action { 
+  pattern = "/song/edit/pattern_follow", 
+  description = "Enable or disable the global pattern follow mode",
+  
+  arguments = { argument("enabled", "boolean") },
+  handler = function(enabled)
+    renoise.song().transport.follow_player = enabled
+  end,
+}
+
+
+-- /song/record/
+
+add_global_action { 
+  pattern = "/song/record/quantization", 
+  description = "Enable or disable the global record quantization",
+  
+  arguments = { argument("enabled", "boolean") },
+  handler = function(enabled)
+    renoise.song().transport.record_quantize_enabled = enabled
+  end,
+}
+
+add_global_action { 
+  pattern = "/song/record/quantization_step", 
+  description = "Set the global record quantization step [1-32]",
+  
+  arguments = { argument("step", "number") },
+  handler = function(step)
+    renoise.song().transport.record_quantize_lines = clamp_value(step, 1, 32)
+  end,
+}
+
+add_global_action { 
+  pattern = "/song/record/chord_mode", 
+  description = "Enable or disable the global chord mode",
+  
+  arguments = { argument("enabled", "boolean") },
+  handler = function(enabled)
+    renoise.song().transport.chord_mode_enabled = enabled
+  end,
+}
+
+
+--------------------------------------------------------------------------------
+-- Track Mappings (/song/track/XXX/)
+--------------------------------------------------------------------------------
+
+-- pre_volume
+
+add_track_action { 
+  pattern = "/prefx_volume", 
+  description = "Set the mixer pre FX volume [0, 1.41]",
+  
+  arguments = { argument("value", "number") },
+  handler = function(track_index, value)
+    if (track_index < #renoise.song().tracks) then
+      local parameter = renoise.song().tracks[track_index].prefx_volume
+
+      parameter.value = clamp_value(
+        value, parameter.value_min, parameter.value_max)
+    end
+  end,
+}
+
+add_track_action { 
+  pattern = "/prefx_volume_db", 
+  description = "Set the mixer pre FX volume in dB [-200, 3]",
+  
+  arguments = { argument("value", "number") },
+  handler = function(track_index, value)
+    if (track_index < #renoise.song().tracks) then
+      local parameter = renoise.song().tracks[track_index].prefx_volume
+
+      parameter.value = clamp_value(
+        math.db2lin(value), parameter.value_min, parameter.value_max)
+    end
+  end,
+}
+
+-- post_volume
+
+add_track_action { 
+  pattern = "/postfx_volume", 
+  description = "Set the mixer post FX volume [0, 1.41]",
+  
+  arguments = { argument("value", "number") },
+  handler = function(track_index, value)
+    if (track_index < #renoise.song().tracks) then
+      local parameter = renoise.song().tracks[track_index].postfx_volume
+
+      parameter.value = clamp_value(
+        value, parameter.value_min, parameter.value_max)
+    end
+  end,
+}
+
+add_track_action { 
+  pattern = "/postfx_volume_db", 
+  description = "Set the mixer post FX volume in dB [-200, 3]",
+  
+  arguments = { argument("value", "number") },
+  handler = function(track_index, value)
+    if (track_index < #renoise.song().tracks) then
+      local parameter = renoise.song().tracks[track_index].postfx_volume
+
+      parameter.value = clamp_value(
+        math.db2lin(value), parameter.value_min, parameter.value_max)
+    end
+  end,
 }
 
 
@@ -274,19 +521,32 @@ add_action {
 -- OSC preferences pane
 
 function available_messages()
+
+  local maps = table.create()
+  maps:insert{
+    map = global_action_pattern_map, 
+    scope = ""
+  }
+  maps:insert{
+    map = track_action_pattern_map, 
+    scope = track_action_pattern_map_prefix.."/XXX"
+  }
+  
   local ret = table.create()
 
-  for _, action in pairs(action_pattern_map) do
-    local argument_types = table.create()
-    for _, argument in pairs(action.arguments) do
-      argument_types:insert(argument.type)
+  for _, map in pairs(maps) do
+    for _, action in pairs(map.map) do
+      local argument_types = table.create()
+      for _, argument in pairs(action.arguments) do
+        argument_types:insert(argument.type)
+      end
+      
+      ret:insert {
+        name = map.scope .. action.pattern,
+        description = action.description,
+        arguments = argument_types
+      }
     end
-    
-    ret:insert {
-      name = action.pattern,
-      description = action.description,
-      arguments = argument_types
-    }
   end
     
   return ret
@@ -304,31 +564,54 @@ end
 -- the user, but only dumped to the Lua terminal in Renoise.
 
 function process_message(pattern, arguments)
-  local handled = false
-  local action = action_pattern_map[pattern]
+
+  -- global pattern match
+  local action = global_action_pattern_map[pattern]
+  local action_context = nil
   
-  -- find message, compare argument count
-  if (action and #action.arguments == #arguments) then
-    local arguments_match = true
-    local argument_values = table.create{}
+  if (not action) then
+    local _, _, index, track_pattern = pattern:find(
+      track_action_pattern_map_prefix.."/(%d)(.*)")
+  
+    -- track pattern match
+    if (index and track_pattern) then
+      action = track_action_pattern_map[track_pattern]
+      action_context = tonumber(index)
+    end
+  end
+  
+  -- found a matching pattern?
+  if (action) then
     
-    -- check argument types
-    for i = 1, #arguments do
-      if (action.arguments[i].type == type(arguments[i].value)) then 
-        argument_values:insert(arguments[i].value)
-      else
-        arguments_match = false
-        break
+    -- then check if the arguments match
+    local arg_match = false
+    local arg_values = table.create{}
+      
+    if (action_context) then
+      arg_values:insert(action_context)
+    end
+    
+    if (#action.arguments == #arguments) then
+      arg_match = true
+
+      -- check argument types
+      for i = 1, #arguments do
+        if (action.arguments[i].type == type(arguments[i].value)) then 
+          arg_values:insert(arguments[i].value)
+        else
+          arg_match = false
+          break
+        end
       end
     end
     
-    -- invoke the action
-    if (arguments_match) then
-      action.handler(unpack(argument_values))
-      handled = true
+    -- and invoke the action
+    if (arg_match) then
+      action.handler(unpack(arg_values))
+      return true -- handled
     end
   end
     
-  return handled
+  return false -- not handled
 end
 
