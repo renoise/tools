@@ -32,8 +32,8 @@ Aka, if the "real" device failed to open, this is not your problem, but the
 users problem.
 
 That's also the reason why none of the Midi API functions return error codes.
-All other logic errors, like sending MIDI to a manually closed devices, sending
-bogus messages and so on, will be fired as as usual as Lua runtime errors.
+All other logic errors, like sending MIDI to a manually closed device, sending
+bogus messages and so on, will be fired as usual as Lua runtime errors.
 
 
 -------- Examples
@@ -55,16 +55,16 @@ examples...
 
 -------- Device Enumeration
 
--- list of strings with the currently available devices. This list can change
+-- List of strings with the currently available devices. This list can change
 -- when devices are hotplugged. See 'devices_changed_observable'
 renoise.Midi.available_input_devices() 
   -> [list of strings]
 renoise.Midi.available_output_devices() 
   -> [list of strings]
 
--- fires notifications, as soon as new devices arrived or previously added ones
--- got removed.
--- This will only happen on Linux and OSX with real devices. On windows this
+-- Fires notifications, as soon as new devices arrive or previously added ones
+-- are removed.
+-- This will only happen on Linux and OSX with real devices. On Windows this
 -- may happen when using ReWire slaves. ReWire adds virtual MIDI devices to
 -- Renoise.
 -- Already opened references to devices which are no longer available, will
@@ -76,8 +76,8 @@ renoise.Midi.devices_changed_observable()
 
 -------- Device Creation
 
--- listen to incoming MIDI data: opens access to a MIDI device by its name.
--- Name must be one of "available_input_devices". All other device names will
+-- Listens to incoming MIDI data: opens access to a MIDI device by its name.
+-- Names must be one of "available_input_devices". All other device names will
 -- fire a runtime error. Returns a ready to use input device.
 -- One or both callbacks should be valid, and should either be a reference to
 -- a function with one parameter(message_table), or a table with an object
@@ -85,16 +85,16 @@ renoise.Midi.devices_changed_observable()
 -- All regular messages are forwarded to your device, except active sensing.
 -- When Renoise already listens to the device, your callback and Renoise will
 -- both handle the message. TODO: THIS WILL CHANGE: MIDI FILTER
--- messages are received until the device reference is manually closed (see
+-- Messages are received until the device reference is manually closed (see
 -- midi_device:close()) or the MidiInputDevice object gets garbage collected.
 renoise.Midi.create_input_device(device_name [,callback] [, sysex_callback])
   -> [MidiInputDevice object]
 
--- send MIDI: open reference to a MIDI device by name. Name must be one of
+-- Send MIDI: Open reference to an available MIDI device by name. Name must be one of
 -- "available_input_devices". All other device names will fire an error. Returns
 -- a ready to use output device.
 -- The real device driver gets automatically closed when the MidiOutputDevice
--- object gets gets garbage collected or when the device was explicitely closed
+-- object gets garbage collected or when the device was explicitely closed
 -- via midi_device:close() and nothing else references it.
 renoise.Midi.create_output_device(device_name)
   -> [MidiOutputDevice object]
@@ -106,13 +106,13 @@ renoise.Midi.create_output_device(device_name)
 
 -------- properties
 
--- returns true while the device is open (ready to send or receive messages).
+-- Returns true while the device is open (ready to send or receive messages).
 -- your device refs will never get auto-closed, is_open will only be false if
--- you explicitely called "midi_device:close()" to release a device
+-- you explicitly called "midi_device:close()" to release a device
 midi_device.is_open 
   -> [boolean]
 
--- the name of the device. This is the name you created the device with (via
+-- The name of the device. This is the name you created the device with (via
 -- 'create_input_device' or 'create_output_device')
 midi_device.name 
   -> [string]
@@ -120,8 +120,8 @@ midi_device.name
 
 -------- functions
 
--- close a running midi device. when no other client is using it, Renoise will
--- alse shut off the device driver, so that for example on windows other
+-- Close a running midi device. when no other client is using it, Renoise will
+-- also shut off the device driver, so that for example on Windows other
 -- applications can use the device again. This is automatically done when
 -- scripts are closed or your device objects are garbage collected
 midi_device:close()
@@ -140,7 +140,7 @@ midi_device:close()
 
 -------- functions
 
--- send a regular 1-3 byte MIDI message or sysex message. message is expected
+-- Send a regular 1-3 byte MIDI message or sysex message. Message is expected
 -- to be a number array, must not be empty and can only contain numbers >= 0
 -- and <= 0xFF (bytes)
 midi_device:send(message_table)
