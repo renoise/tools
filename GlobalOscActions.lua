@@ -142,15 +142,15 @@ local function add_action(map, info)
   map[info.pattern] = info
 end
  
-
---------------------------------------------------------------------------------
+ 
+-- add_global_action
 
 local function add_global_action(info)
   add_action(global_action_pattern_map, info)
 end
 
 
---------------------------------------------------------------------------------
+-- add_track_action
 
 local function add_track_action(info)
   add_action(track_action_pattern_map, info)
@@ -161,18 +161,7 @@ end
 -- Message Helpers
 --------------------------------------------------------------------------------
 
--- clamp_value
-
-local function clamp_value(value, min_value, max_value)
-  return math.min(max_value, math.max(value, min_value))
-end
-
-
---------------------------------------------------------------------------------
--- Global Messages
---------------------------------------------------------------------------------
-
--- environment for custom expressions via OSC. such expressions can only 
+-- environment for custom Lua expressions via OSC. such expressions can only 
 -- access a few "safe" globals and modules
 
 local evaluate_env = {
@@ -197,8 +186,10 @@ local evaluate_env = {
   xpcall = _G.xpcall
 }
 
--- compile and evaluate an expression in the evaluate_env sandbox
 
+-- evaluate
+
+-- compile and evaluate an expression in the evaluate_env sandbox
 local function evaluate(expression)
   local eval_function, message = loadstring(expression)
   
@@ -214,9 +205,39 @@ local function evaluate(expression)
 end
 
 
+-- song
+
+local function song()
+  return renoise.song()
+end
+
+
+-- clamp_value
+
+local function clamp_value(value, min_value, max_value)
+  return math.min(max_value, math.max(value, min_value))
+end
+
+
+-- set_track_parameter
+
+local function set_track_parameter(track_index, parameter_name, value)
+  local tracks = song().tracks
+  
+  if (track_index >= 1 and track_index <= #tracks) then
+    local parameter = tracks[track_index][parameter_name]
+    
+    parameter.value = clamp_value(value, 
+      parameter.value_min, parameter.value_max)
+  end
+end
+
+
+--------------------------------------------------------------------------------
+-- Global Action Registration
 --------------------------------------------------------------------------------
 
--- evaluate
+-- /evaluate
 
 add_global_action { 
   pattern = "/evaluate", 
@@ -235,9 +256,19 @@ add_global_action {
 }
 
 
---------------------------------------------------------------------------------
+-- /transport/panic
 
--- /transport/
+add_global_action { 
+  pattern = "/transport/panic", 
+  description = "Stop playback and reset all playing instruments and DSPs.",
+  
+  arguments = nil,
+  handler = function()
+    song().transport:panic()
+  end,  
+}
+
+-- /transport/start
 
 add_global_action { 
   pattern = "/transport/start", 
@@ -246,9 +277,12 @@ add_global_action {
   arguments = nil,
   handler = function()
     local play_mode = renoise.Transport.PLAYMODE_RESTART_PATTERN
-    renoise.song().transport:start(play_mode)
+    song().transport:start(play_mode)
   end,  
 }
+
+
+-- /transport/stop
 
 add_global_action { 
   pattern = "/transport/stop", 
@@ -256,9 +290,12 @@ add_global_action {
   
   arguments = nil,
   handler = function()
-    renoise.song().transport:stop()
+    song().transport:stop()
   end,
 }
+
+
+-- /transport/continue
 
 add_global_action { 
   pattern = "/transport/continue", 
@@ -267,12 +304,12 @@ add_global_action {
   arguments = nil,
   handler = function()
     local play_mode = renoise.Transport.PLAYMODE_CONTINUE_PATTERN
-    renoise.song().transport:start(play_mode)
+    song().transport:start(play_mode)
   end,
 }
 
 
--- /transport/loop/
+-- /transport/loop/pattern
 
 add_global_action { 
   pattern = "/transport/loop/pattern", 
@@ -280,9 +317,12 @@ add_global_action {
   
   arguments = { argument("enabled", "boolean") },
   handler = function(enabled)
-    renoise.song().transport.loop_pattern = enabled
+    song().transport.loop_pattern = enabled
   end,
 }
+
+
+-- /transport/loop/block
 
 add_global_action { 
   pattern = "/transport/loop/block", 
@@ -290,9 +330,12 @@ add_global_action {
   
   arguments = { argument("enabled", "boolean") },
   handler = function(enabled)
-    renoise.song().transport.loop_block_enabled = enabled
+    song().transport.loop_block_enabled = enabled
   end,
 }
+
+
+-- /transport/loop/block_move_forwards
 
 add_global_action { 
   pattern = "/transport/loop/block_move_forwards", 
@@ -300,9 +343,12 @@ add_global_action {
   
   arguments = nil,
   handler = function()
-    renoise.song().transport:loop_block_move_forwards()
+    song().transport:loop_block_move_forwards()
   end,
 }
+
+
+-- /transport/loop/block_move_backwards
 
 add_global_action { 
   pattern = "/transport/loop/block_move_backwards", 
@@ -310,9 +356,12 @@ add_global_action {
   
   arguments = nil,
   handler = function()
-    renoise.song().transport:loop_block_move_backwards()
+    song().transport:loop_block_move_backwards()
   end,
 }
+
+
+-- /transport/loop/sequence
 
 add_global_action { 
   pattern = "/transport/loop/sequence", 
@@ -320,20 +369,20 @@ add_global_action {
   
   arguments = { argument("start", "number"), argument("end", "number") },
   handler = function(rstart, rend)
-    local start_pos = renoise.song().transport.loop_start
+    local start_pos = song().transport.loop_start
     start_pos.line = 1; start_pos.sequence = clamp_value(rstart, 1, 
-      renoise.song().transport.song_length.sequence)
+      song().transport.song_length.sequence)
     
-    local end_pos = renoise.song().transport.loop_end
+    local end_pos = song().transport.loop_end
     end_pos.line = 1; end_pos.sequence =  clamp_value(rend + 1, 1, 
-      renoise.song().transport.song_length.sequence + 1)
+      song().transport.song_length.sequence + 1)
 
-    renoise.song().transport.loop_range = {start_pos, end_pos}
+    song().transport.loop_range = {start_pos, end_pos}
   end,
 }
 
 
--- /song/
+-- /song/bpm
 
 add_global_action { 
   pattern = "/song/bpm", 
@@ -341,9 +390,12 @@ add_global_action {
   
   arguments = { argument("bpm", "number") },
   handler = function(bpm)
-    renoise.song().transport.bpm = clamp_value(bpm, 32, 999)
+    song().transport.bpm = clamp_value(bpm, 32, 999)
   end,
 }
+
+
+-- /song/lpb
 
 add_global_action {
   pattern = "/song/lpb", 
@@ -351,9 +403,12 @@ add_global_action {
 
   arguments = { argument("lpb", "number") }, 
   handler = function(lpb)
-    renoise.song().transport.lpb = clamp_value(lpb, 1, 255)
+    song().transport.lpb = clamp_value(lpb, 1, 255)
   end,  
 }
+
+
+-- /song/tpl
 
 add_global_action {
   pattern = "/song/tpl", 
@@ -361,12 +416,12 @@ add_global_action {
 
   arguments = { argument("tpl", "number") }, 
   handler = function(tpl)
-    renoise.song().transport.tpl = clamp_value(tpl, 1, 16)
+    song().transport.tpl = clamp_value(tpl, 1, 16)
   end,  
 }
 
 
--- /song/edit/
+-- /song/edit/mode
 
 add_global_action { 
   pattern = "/song/edit/mode", 
@@ -374,9 +429,12 @@ add_global_action {
   
   arguments = { argument("enabled", "boolean") },
   handler = function(enabled)
-    renoise.song().transport.edit_mode = enabled
+    song().transport.edit_mode = enabled
   end,
 }
+
+
+-- /song/edit/octave
 
 add_global_action { 
   pattern = "/song/edit/octave", 
@@ -384,9 +442,12 @@ add_global_action {
   
   arguments = { argument("octave", "number") },
   handler = function(octave)
-    renoise.song().transport.octave = clamp_value(octave, 0, 8)
+    song().transport.octave = clamp_value(octave, 0, 8)
   end,
 }
+
+
+-- /song/edit/step
 
 add_global_action { 
   pattern = "/song/edit/step", 
@@ -394,9 +455,12 @@ add_global_action {
   
   arguments = { argument("edit_step", "number") },
   handler = function(edit_step)
-    renoise.song().transport.edit_step = clamp_value(edit_step, 0, 9)
+    song().transport.edit_step = clamp_value(edit_step, 0, 9)
   end,
 }
+
+
+-- /song/edit/pattern_follow
 
 add_global_action { 
   pattern = "/song/edit/pattern_follow", 
@@ -404,7 +468,7 @@ add_global_action {
   
   arguments = { argument("enabled", "boolean") },
   handler = function(enabled)
-    renoise.song().transport.follow_player = enabled
+    song().transport.follow_player = enabled
   end,
 }
 
@@ -417,9 +481,12 @@ add_global_action {
   
   arguments = { argument("enabled", "boolean") },
   handler = function(enabled)
-    renoise.song().transport.record_quantize_enabled = enabled
+    song().transport.record_quantize_enabled = enabled
   end,
 }
+
+
+-- /song/record/quantization_step
 
 add_global_action { 
   pattern = "/song/record/quantization_step", 
@@ -427,9 +494,12 @@ add_global_action {
   
   arguments = { argument("step", "number") },
   handler = function(step)
-    renoise.song().transport.record_quantize_lines = clamp_value(step, 1, 32)
+    song().transport.record_quantize_lines = clamp_value(step, 1, 32)
   end,
 }
+
+
+-- /song/record/chord_mode
 
 add_global_action { 
   pattern = "/song/record/chord_mode", 
@@ -437,76 +507,68 @@ add_global_action {
   
   arguments = { argument("enabled", "boolean") },
   handler = function(enabled)
-    renoise.song().transport.chord_mode_enabled = enabled
+    song().transport.chord_mode_enabled = enabled
   end,
 }
 
 
 --------------------------------------------------------------------------------
--- Track Mappings (/song/track/XXX/)
+-- Track Action Registration
 --------------------------------------------------------------------------------
 
--- pre_volume
+-- NOTE: track action handler functions will get the track index passed as first 
+-- argument, but should not specify it in its argument list. Its resolved from 
+-- the message pattern
+
+
+-- /song/track/XXX/prefx_volume
 
 add_track_action { 
   pattern = "/prefx_volume", 
-  description = "Set the mixer pre FX volume [0, 1.41]",
+  description = "Set track XXX's pre FX volume [0, db2lin(3)]",
   
   arguments = { argument("value", "number") },
   handler = function(track_index, value)
-    if (track_index < #renoise.song().tracks) then
-      local parameter = renoise.song().tracks[track_index].prefx_volume
-
-      parameter.value = clamp_value(
-        value, parameter.value_min, parameter.value_max)
-    end
+    set_track_parameter(track_index, "prefx_volume", value)
   end,
 }
+
+
+-- /song/track/XXX/prefx_volume_db
 
 add_track_action { 
   pattern = "/prefx_volume_db", 
-  description = "Set the mixer pre FX volume in dB [-200, 3]",
+  description = "Set track XXX's pre FX volume in dB [-200, 3]",
   
   arguments = { argument("value", "number") },
   handler = function(track_index, value)
-    if (track_index < #renoise.song().tracks) then
-      local parameter = renoise.song().tracks[track_index].prefx_volume
-
-      parameter.value = clamp_value(
-        math.db2lin(value), parameter.value_min, parameter.value_max)
-    end
+    set_track_parameter(track_index, "prefx_volume", math.db2lin(value))
   end,
 }
 
--- post_volume
+
+-- /song/track/XXX/postfx_volume
 
 add_track_action { 
   pattern = "/postfx_volume", 
-  description = "Set the mixer post FX volume [0, 1.41]",
+  description = "Set track XXX's post FX volume [0, db2lin(3)]",
   
   arguments = { argument("value", "number") },
   handler = function(track_index, value)
-    if (track_index < #renoise.song().tracks) then
-      local parameter = renoise.song().tracks[track_index].postfx_volume
-
-      parameter.value = clamp_value(
-        value, parameter.value_min, parameter.value_max)
-    end
+    set_track_parameter(track_index, "postfx_volume", value)
   end,
 }
 
+
+-- /song/track/XXX/postfx_volume_db
+
 add_track_action { 
   pattern = "/postfx_volume_db", 
-  description = "Set the mixer post FX volume in dB [-200, 3]",
-  
+  description = "Set track XXX's post FX volume in dB [-200, 3]",
+
   arguments = { argument("value", "number") },
   handler = function(track_index, value)
-    if (track_index < #renoise.song().tracks) then
-      local parameter = renoise.song().tracks[track_index].postfx_volume
-
-      parameter.value = clamp_value(
-        math.db2lin(value), parameter.value_min, parameter.value_max)
-    end
+    set_track_parameter(track_index, "postfx_volume", math.db2lin(value))
   end,
 }
 
@@ -522,27 +584,28 @@ add_track_action {
 
 function available_messages()
 
-  local maps = table.create()
-  maps:insert{
+  local action_pattern_maps = table.create()
+  action_pattern_maps:insert{
     map = global_action_pattern_map, 
     scope = ""
   }
-  maps:insert{
+  action_pattern_maps:insert{
     map = track_action_pattern_map, 
     scope = track_action_pattern_map_prefix.."/XXX"
   }
   
   local ret = table.create()
 
-  for _, map in pairs(maps) do
-    for _, action in pairs(map.map) do
+  for _, action_pattern_map in pairs(action_pattern_maps) do
+    for _, action in pairs(action_pattern_map.map) do
+
       local argument_types = table.create()
       for _, argument in pairs(action.arguments) do
         argument_types:insert(argument.type)
       end
       
       ret:insert {
-        name = map.scope .. action.pattern,
+        name = action_pattern_map.scope .. action.pattern,
         description = action.description,
         arguments = argument_types
       }
@@ -570,31 +633,25 @@ function process_message(pattern, arguments)
   local action_context = nil
   
   if (not action) then
-    local _, _, index, track_pattern = pattern:find(
+    -- track pattern match
+    local _, _, track_index, track_pattern = pattern:find(
       track_action_pattern_map_prefix.."/(%d)(.*)")
   
-    -- track pattern match
-    if (index and track_pattern) then
+    if (track_index and track_pattern) then
       action = track_action_pattern_map[track_pattern]
-      action_context = tonumber(index)
+      action_context = tonumber(track_index)
     end
   end
   
   -- found a matching pattern?
   if (action) then
     
-    -- then check if the arguments match
-    local arg_match = false
-    local arg_values = table.create{}
-      
-    if (action_context) then
-      arg_values:insert(action_context)
-    end
-    
+    -- check if the arguments match as well
     if (#action.arguments == #arguments) then
-      arg_match = true
+      local arg_match = true
+      local arg_values = table.create{}
 
-      -- check argument types
+      -- check if the passed and the actions argument types match
       for i = 1, #arguments do
         if (action.arguments[i].type == type(arguments[i].value)) then 
           arg_values:insert(arguments[i].value)
@@ -603,15 +660,20 @@ function process_message(pattern, arguments)
           break
         end
       end
-    end
+      
+      -- and finally invoke the action when the args match
+      if (arg_match) then
+        if (action_context) then
+          action.handler(action_context, unpack(arg_values))
+        else
+          action.handler(unpack(arg_values))
+        end
     
-    -- and invoke the action
-    if (arg_match) then
-      action.handler(unpack(arg_values))
-      return true -- handled
+        return true -- handled
+      end
     end
   end
     
-  return false -- not handled
+  return false -- not handled (REJECTED)
 end
 
