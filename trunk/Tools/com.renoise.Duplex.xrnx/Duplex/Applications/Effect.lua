@@ -112,7 +112,8 @@ function Effect:__init(display, mappings, options)
   -- the controls
   self.__parameter_sliders = nil
   self.__page_control = nil
-
+  self.__device_navigator = nil
+  
   self.__width = 8
 
   -- todo: extract this from the options
@@ -169,6 +170,14 @@ function Effect:update()
     else
       -- deactivate, reset controls which have no parameter assigned
       self:set_parameter(control_index, 0)
+    end
+  end
+  
+  if (self.__device_navigator) then
+    local device_idx = renoise.song().selected_device_index
+    
+    if (device_idx) then
+      self.__device_navigator:set_index(device_idx)
     end
   end
 end
@@ -300,38 +309,41 @@ function Effect:__build_app()
     self.display:add(self.__page_control)
   end
 
+
   -- device navigator (optional) ---------------------------
 
-  local c = UISlider(self.display)
-  c.group_name = self.mappings.device.group_name
-  c.x_pos = 1
-  c.y_pos = 1
-  c.flipped = true
-  c.orientation = HORIZONTAL
-  c.ceiling = columns
-  c.palette.background = self.display.palette.background
-  c.palette.tip = self.display.palette.color_1
-  c.palette.track = self.display.palette.background
+  if (self.mappings.device.group_name) then
+    local navigator = UISlider(self.display)
+    navigator.group_name = self.mappings.device.group_name
+    navigator.x_pos = 1
+    navigator.y_pos = 1
+    navigator.flipped = true
+    navigator.orientation = HORIZONTAL
+    navigator.ceiling = columns
+    navigator.palette.background = self.display.palette.background
+    navigator.palette.tip = self.display.palette.color_1
+    navigator.palette.track = self.display.palette.background
+  
+    navigator:set_size(columns)
+    navigator.on_change = function(obj) 
+  
+      local track_idx = renoise.song().selected_track_index
+      local device = renoise.song().tracks[track_idx].devices[obj.index]
 
-  c:set_size(columns)
-  c.on_change = function(obj) 
-
-    local track_idx = renoise.song().selected_track_index
-    --local device_idx = renoise.song().selected_device_index
-    local device = renoise.song().tracks[track_idx].devices[obj.index]
-    if(device)then
-      renoise.song().selected_device_index = obj.index
-    else
-      if(obj.index~=0)then
-        -- we have attempted to select a non-existing device
-        return false      
+      if (device) then
+        renoise.song().selected_device_index = obj.index
+      else
+        if (obj.index ~= 0) then
+          -- we have attempted to select a non-existing device
+          return false      
+        end
       end
+  
     end
 
+    self.__device_navigator = navigator
+    self.display:add(navigator)
   end
-  self.display:add(c)
-  self.__device_navigator = c
-
 
   -- the finishing touch
   self:__attach_to_song()
@@ -361,10 +373,18 @@ function Effect:destroy_app()
 
   if (self.__parameter_sliders) then
     for _,obj in ipairs(self.__parameter_sliders) do
-      obj.remove_listeners(obj)
+      obj:remove_listeners()
     end
   end
   
+  if (self.__page_control) then
+    self.__page_control:remove_listeners()
+  end
+  
+  if (self.__device_navigator) then
+    self.__device_navigator:remove_listeners()
+  end
+
   Application.destroy_app(self)
 end
 
@@ -413,10 +433,6 @@ function Effect:__attach_to_song()
       
       if (self.active) then
         self:update()
-        local device_idx = renoise.song().selected_device_index
-        if(device_idx)then
-          self.__device_navigator:set_index(device_idx)
-        end
       end
     end
   )
