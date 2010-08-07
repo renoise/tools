@@ -2,7 +2,7 @@
 <RenoiseScriptingTool>
   <ApiVersion>1.0</ApiVersion>
   <Id>com.renoise.NotesStrum</Id>
-  <Version>2.303</Version>
+  <Version>2.4</Version>
   <Name>Strum Notes</Name>
   <Author>Vincent Voois [ http://tinyurl.com/vvrns ]</Author>
   <Description>Adds note delay values for notes on the same row, to get a plucked instrument alike effect.
