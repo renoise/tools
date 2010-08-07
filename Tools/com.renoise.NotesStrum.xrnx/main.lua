@@ -72,6 +72,7 @@ local up = 0
 local safe_mode = true
 local popup_index = 0
 local delay_step = 16
+local humanize_factor = 10
 
 local first_note = 0
 local offs_delay = 0
@@ -156,6 +157,32 @@ function open_strum_dialog(range_option)
             }
          },
 
+
+         vb:row {
+
+            vb:text {
+               width = TEXT_ROW_WIDTH,
+               text = "Humanize"
+            },
+
+            vb:valuebox {
+               id = "humanize",
+               width = 95,
+               min = 0,
+               max = 100,
+               value = humanize_factor,
+               tostring = function(value) 
+                return ("%d%s"):format(value,"%")
+               end,
+               tonumber = function(str) 
+                 return tonumber(str)
+               end,
+               notifier = function(value)
+               humanize_factor = value
+               end,
+            }
+         },
+         
          vb:row {
             vb:text {
             width = TEXT_ROW_WIDTH,
@@ -243,6 +270,7 @@ function show_help()
             [[This strum generator generates strum emulation, usually for string instruments.
 It scans for more than one note on each row and applies a small delay to the 
 following note thereafter. Delay values are increased using the delay-step value. 
+The humanize option humanizes x% of the delay steps that are being applied.
 You can emulate guitar strokes, harp strokes etc.
 
 Hey you can even apply note grooves on percussion!
@@ -462,14 +490,27 @@ end
 --------------------------------------------------------------------------------
 
 function apply_strum_delay(note_column)
+  local humanize_offs = 0
+
+  if humanize_factor > 0 then
+    humanize_offs = randomize(0, (delay_step*(humanize_factor*0.01)))
+    local tvalue = randomize(1,2)
+    if tvalue == 2 then
+      humanize_offs = humanize_offs * -1
+    end
+      
+  end
   
   if note_column.note_value ~= renoise.PatternTrackLine.EMPTY_NOTE and
       note_column.note_value ~= renoise.PatternTrackLine.NOTE_OFF then
 
       if first_note ~= 0 then
-
-         if offs_delay + delay_step <= 255 then
-            note_column.delay_value=offs_delay + delay_step
+         local new_delay = offs_delay + humanize_offs + delay_step
+         if new_delay <= 255 then
+            if new_delay < 0 then
+              new_delay = new_delay * -1
+            end
+            note_column.delay_value= new_delay
          else
             -- Ouch, delay values would raise above 255 with the last
             -- inserted delay, do not change values or truncate and
@@ -477,7 +518,7 @@ function apply_strum_delay(note_column)
             if safe_mode then
                not_extended = true
             else
-               note_column.delay_value = (delay_step - (255 - offs_delay))
+               note_column.delay_value = (delay_step - (255 - (offs_delay + humanize_offs) ))
             end
 
          end
@@ -502,9 +543,29 @@ end
 
 
 --------------------------------------------------------------------------------
+-- helper functions
+--------------------------------------------------------------------------------
 
 function round(num, idp)
    local mult = 10^(idp or 0)
    return math.floor(num * mult + 0.5) / mult
 end
+
+
+
+function randomize(tstart, tend)
+   local number = tostring(os.clock())
+
+   if string.find(number,"%.") ~= nil then
+      number = string.sub(number, string.find(number,"%.")+1)
+   end
+
+   math.randomseed( tonumber(number))
+   number  = number + math.random(1, 7)
+   math.randomseed( tonumber(number))
+   math.random(tstart, tend); math.random(tstart, tend); math.random(tstart, tend)
+   local result = math.random(tstart, tend)
+   return result
+end
+
 
