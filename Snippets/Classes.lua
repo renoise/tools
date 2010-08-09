@@ -1,6 +1,6 @@
---[[---------------------------------------------------------------------------
--- Object Orientet Programming in LUA
----------------------------------------------------------------------------]]--
+--[[============================================================================
+Classes.lua
+============================================================================]]--
 
 error("do not run this file. read and copy/paste from it only...")
 
@@ -10,7 +10,7 @@ Renoises lua API has a simple OO support inbuilt -> class "MyClass". All
 Renoise API objects use such classes.
 
 See http://www.rasterbar.com/products/luabind/docs.html#defining-classes-in-lua
-for more technical info and bolow for a simple example
+for more technical info and below for some simple examples
 
 Something to keep in mind:
 
@@ -107,8 +107,4 @@ end
 
 -- "__tostring" isn't really an operator, but it's the metamethod that is 
 -- called by the standard library's tostring() function. 
-
-
---[[---------------------------------------------------------------------------
----------------------------------------------------------------------------]]--
 

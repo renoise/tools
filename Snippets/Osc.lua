@@ -1,6 +1,6 @@
---[[---------------------------------------------------------------------------
--- renoise.Osc
----------------------------------------------------------------------------]]--
+--[[============================================================================
+Osc.lua
+============================================================================]]--
 
 error("do not run this file. read and copy/paste from it only...")
 
@@ -17,7 +17,7 @@ local server, socket_error = renoise.Socket.create_server(
   "localhost", 8008, renoise.Socket.PROTOCOL_UDP)
    
 if (socket_error) then 
-  app:show_warning(("Failed to start the " .. 
+  renoise.app():show_warning(("Failed to start the " .. 
     "OSC server. Error: '%s'"):format(socket_error))
   return
 end
@@ -47,7 +47,13 @@ server:run {
     socket:send(("%s:%d: Thank you so much for the OSC message. " ..
       "Here's one in return:"):format(socket.peer_address, socket.peer_port))
       
-    socket:send(OscMessage("/flowers"))
+    -- open a socket connection to the client
+    local client, socket_error = renoise.Socket.create_client(
+      socket.peer_address, socket.peer_port, renoise.Socket.PROTOCOL_UDP)
+  
+    if (not socket_error) then 
+      client:send(OscMessage("/flowers"))
+    end
   end    
 }
 
@@ -63,7 +69,7 @@ local client, socket_error = renoise.Socket.create_client(
   "localhost", 8008, renoise.Socket.PROTOCOL_UDP)
    
 if (socket_error) then 
-  app:show_warning(("Failed to start the " .. 
+  renoise.app():show_warning(("Failed to start the " .. 
     "OSC client. Error: '%s'"):format(socket_error))
   return
 end
@@ -94,8 +100,4 @@ local message2 = OscMessage("/another/one", {
 client:send(
   OscBundle(os.clock(), {message1, message2})
 )
-
-
---[[---------------------------------------------------------------------------
----------------------------------------------------------------------------]]--
 
