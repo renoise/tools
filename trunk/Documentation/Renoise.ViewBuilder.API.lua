@@ -37,9 +37,13 @@ app():show_custom_dialog(title, content_view [, key_handler_func])
 -- }
 function my_keyhandler_func(dialog, key) end
 
--- if no handler is installed, only the Escape key is used to close the dialog.
+-- When no handler is installed, only the Escape key is used to close the dialog.
 -- For prompts, also the first character of the button labels is used to invoke
--- the corresponding button
+-- the corresponding button.
+-- [added B4] When returning the passed key from the keyhandler function, the 
+-- key will be passed back to Renoises key event chain, in order to allow 
+-- processing global Renoise keybindings from your dialog. This will not work 
+-- for modal dialogs.
 
 -- For a small tutorial, and more detials on how to createand use views, take
 -- a look at the  "Tools/ExampleTool_GUI.lua" file please.
