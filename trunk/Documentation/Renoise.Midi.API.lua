@@ -39,7 +39,7 @@ bogus messages and so on, will be fired as usual as Lua runtime errors.
 -------- Examples
 
 For some simple examples on how to use MIDI IO in Renoise, have a look at the
-"CodeSnippets.txt" file please. There are two simple MIDI input and output
+"Snippets/Midi.lua" file please. There are two simple MIDI input and output
 examples...
 
 ]]

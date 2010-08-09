@@ -1,3 +1,9 @@
+--[[============================================================================
+Instruments.lua
+============================================================================]]--
+
+error("do not run this file. read and copy/paste from it only...")
+
 --[[
 
 This procedure sorts instruments from biggest to smallest using the Bubble
@@ -65,3 +71,4 @@ local alert = renoise.app():show_prompt(
   'Total number of swaps was: ' .. num_swaps,
   {'Ok'}
 )
+

@@ -8,12 +8,12 @@ The renoise.Document namespace covers all document related Renoise API
 functions. This is:
 
 * accessing existing Renoise document objects. The whole renoise API uses such
- document structs: all "_observables" in whole Renoise Lua API are
- renoise.Document.Observable objects
+  document structs: all "_observables" in the whole Renoise Lua API are
+  renoise.Document.Observable objects
 
 * create new documents (e.g persistent options, presets for your tools),
- which can be loaded and saved as XML files by your scripts, and also bound to
- custom views or "your own" document listeners -> see renoise.Document.create()
+  which can be loaded and saved as XML files by your scripts, and also bound to
+  custom views or "your own" document listeners -> see renoise.Document.create()
 
 Please read the INTRODUCTION.txt first to get an overview about the complete
 API, and scripting in Renoise in general...
