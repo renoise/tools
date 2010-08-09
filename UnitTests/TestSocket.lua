@@ -150,10 +150,12 @@ do
     
       
     -- send a message to the server
-    client1:send(("Hello Server from %s:%d"):format(
+    client1:send(("Hello %s Server from %s:%d"):format(
+      (protocol == renoise.Socket.PROTOCOL_TCP) and "TCP" or "UDP",
       client1.local_address, client1.local_port))
    
-    client2:send(("Hello Server from %s:%d"):format(
+    client2:send(("Hello %s Server from %s:%d"):format(
+      (protocol == renoise.Socket.PROTOCOL_TCP) and "TCP" or "UDP",
       client2.local_address, client2.local_port))
       
     -- wait a bit till its received
