@@ -44,6 +44,22 @@ renoise.song().transport.bpm_observable:add_notifier(bpm_changed)
 -- later on, maybe:
 renoise.song().transport.bpm_observable:remove_notifier(bpm_changed)
 
+[added B4] function tracks_changed(notification)
+  if (notification.type == "insert") then
+    print(("new track was inserted to index: %d"):format(notification.index))
+  
+  elseif (notification.type == "remove") then
+    print(("track got removed from index: %d"):format(notification.index))
+  
+  elseif (notification.type == "swap") then
+    print(("track at index: %d and %d swapped their positions"):format(
+      notification.index1, notification.index2))
+  end
+end
+
+renoise.song().transport.tracks_observable:add_notifier(tracks_changed)
+
+
 If you only want to use the existing "_observables" in the Renoise Song/App API,
 this is all you need to know. If you want to create your own documents, then
 read ahead please:
@@ -248,6 +264,32 @@ Observable_list:remove([pos])
 -- changed its position, but not when an items value changed. If you are
 -- interested in value changes of a specific item in the list, attach notifiers
 -- directly to the item itself and not the list...
+--
+-- [added B4] List notifiers will also pass a table with information about what
+-- happened to the list as first argument to the notifier:
+--
+-- function my_list_changed_notifier(notification)
+--
+-- when a new element got added, "notification" is {
+--   type = "insert",
+--   index = index_where_element_got_added
+-- }
+-- 
+-- when a element got removed, "notification" is {
+--   type = "remove",
+--   index = index_where_element_got_removed_from
+-- }
+-- 
+-- when two entries swapped their position, "notification" is {
+--   type = "swap",
+--   index1 = index_swap_pos1
+--   index2 = index_swap_pos2
+-- }
+--
+-- Please note that all notifications are fired !after! the list already changed,
+-- so the removed object is no longer available at the index you got passed in 
+-- the notification. Newly inserted objects will already be present at the 
+-- destination index, and so on...
 
 -- see renoise.Document.Observable for has/add/remove_notifier doc
 observable_list:has_notifier(function or (object, function) or (function, object))
@@ -302,3 +344,4 @@ doc:save_as(document_type_name, file_name)
 -- nodes that exist in the document only, will not be altered in any way
 doc:load_from(document_type_name, file_name)
   -> [success, error_string or nil on success]
+
