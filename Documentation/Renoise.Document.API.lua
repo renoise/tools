@@ -7,11 +7,11 @@ Renoise Document API Reference
 The renoise.Document namespace covers all document related Renoise API
 functions. This is:
 
-* accessing existing Renoise document objects. The whole renoise API uses such
+* Accessing existing Renoise document objects. The whole renoise API uses such
   document structs: all "_observables" in the whole Renoise Lua API are
   renoise.Document.Observable objects
 
-* create new documents (e.g persistent options, presets for your tools),
+* Create new documents (e.g persistent options, presets for your tools)
   which can be loaded and saved as XML files by your scripts, and also bound to
   custom views or "your own" document listeners -> see renoise.Document.create()
 
@@ -27,8 +27,8 @@ Documents and Views in the Renoise API are modeled after the observer pattern
 (have a look at http://en.wikipedia.org/wiki/Observer_pattern if you have not
 heard about this before please). This means a document basically just is a
 set of some raw data (booleans, numbers, lists, nested nodes), which anything
-can attach notifier functions (listeners) to, in order to track changes. A view
-in the Renoise API is an Observer, which listens to observable values. 
+can attach notifier functions (listeners) to in order to track changes. A view
+in the Renoise API is an Observer, which listens to observable values.
 
 Attaching and removing notifiers can done with the functions 'add_notifier',
 'remove_notifier' of the Observable base class, and support multiple kinds of
@@ -61,8 +61,8 @@ renoise.song().transport.tracks_observable:add_notifier(tracks_changed)
 
 
 If you only want to use the existing "_observables" in the Renoise Song/App API,
-this is all you need to know. If you want to create your own documents, then
-read ahead please:
+then this is all you need to know. If you want to create your own documents, 
+then read ahead please:
 
 
 -------- Document Basetypes, Building Blocks
@@ -127,12 +127,12 @@ my_document = renoise.Document.create{
 This will create a document node which is !modeled! after the the passed table.
 The table is not internally used by the document after construction, and will
 thus also not be referenced afterward. Also note that you need to assign values
-for all passed table properties, in order to determine its type.
+for all passed table properties in order to determine its type.
 
 
 -------- Accessing Documents
 
-Accessing such a renoise.Document can be done more or less just like you do
+Accessing such a "renoise.Document" can be done more or less just like you do
 with tables in Lua, except that if you want to get/set the value of some
 property, you have to query the value explicitly. e.g. Using my_document from
 the example above:
@@ -162,7 +162,7 @@ at the class docs below please.
 
 -------- construction
 
--- create an empty DocumentNode or a DocumentNode that is modeled after the 
+-- Create an empty DocumentNode or a DocumentNode that is modeled after the 
 -- passed table. See the general description in this file for more info about
 -- creating documents.
 renoise.Document.create(table or nil)
@@ -175,11 +175,12 @@ renoise.Document.create(table or nil)
 
 -------- functions
 
--- serialize the object to a string
+-- Serialize the object to a string.
 serializable:to_string()
   -> [string]
 
--- assign the objects value from a string
+-- Assign the objects value from a string - when possible. Errors are 
+-- silently ignored.
 serializable:from_string(string)
 
 
@@ -189,17 +190,17 @@ serializable:from_string(string)
 
 -------- functions
 
--- checks if the given function, method was already registered as notifier
+-- Checks if the given function, method was already registered as notifier.
 observable:has_notifier(function or (object, function) or (function, object))
   -> [boolean]
 
--- register a function or method as notifier, which will be called as soon as
--- the observables value changed
+-- Register a function or method as notifier, which will be called as soon as
+-- the observables value changed.
 observable:add_notifier(function or (object, function) or (function, object))
 
--- unregister a previously registered notifier. when only passing an object to
+-- Unregister a previously registered notifier. When only passing an object to
 -- remove_notifier, all notifier functions that match the given object will be
--- removed; aka all methods of the given object are removed. will not fire
+-- removed; aka all methods of the given object are removed. Will not fire
 -- errors when none are attached in this case.
 observable:remove_notifier(function or (object, function) or
  (function, object) or (object))
@@ -211,6 +212,7 @@ observable:remove_notifier(function or (object, function) or
 
 -------- properties
 
+-- Read/write access to the value of an Observable.
 observable.value
   -> [boolean, number or string]
 
@@ -221,72 +223,74 @@ observable.value
 
 -------- operators
 
--- query the lists size
+-- Query the lists size.
 #observable_list
   -> [Number]
 
--- access an observable by its index in the list
+-- Access an observable item of the list by index (returns nil for non 
+-- existing items).
 observable_list[number]
   -> [renoise.Document.Observable object]
 
 
 -------- functions
 
--- returns the number of entries of the list
+-- Returns the number of entries of the list.
 observable_list:size()
   -> [number]
 
 
--- list item access (returns nil for non existing items)
+-- List item access (returns nil for non existing items).
 observable_list:property(index)
   -> [nil or an renoise.Document.Observable object]
 
--- find a value, by comparing the list values with the passed value. first
--- match is returned. when no match is found, nil is returned
+-- Find a value i nthe list by comparing the list values with the passed 
+-- value. First successfull match is returned. When no match is found, nil 
+-- is returned.
 observable_list:find([start_pos,] value)
   -> [nil or number (the index)]
 
--- insert a new item to the end of the list or at the specified position.
--- returns the newly created and inserted Observable
+-- Insert a new item to the end of the list when no position is specified, or 
+-- at the specified position. Returns the newly created and inserted Observable.
 observable_list:insert([pos,] value)
   -> [inserted Observable object]
 
--- removes an item (or the last one if no index is specified) from the list
+-- Removes an item (or the last one if no index is specified) from the list.
 observable_list:remove([pos])
 
--- swaps the positions of two items without addeding/removing the items 
--- with a series of swaps you can move the item from/to any position
+-- Swaps the positions of two items without adding/removing the items.
+-- With a series of swaps you can move the item from/to any position.
 [added B4] observable_list:swap(pos1, pos2)
 
 
 -- notifiers
 
--- notifiers from renoise.Document.Observable are available for lists as well,
+-- Notifiers from renoise.Document.Observable are available for lists as well,
 -- but will not broadcast changes made to the items, but only changes to the
 -- !list! layout.
 -- This means you will get notified as soon as an item was added, removed or
 -- changed its position, but not when an items value changed. If you are
 -- interested in value changes of a specific item in the list, attach notifiers
--- directly to the item itself and not the list...
+-- directly to the items itself and not to the list...
 --
 -- [added B4] List notifiers will also pass a table with information about what
 -- happened to the list as first argument to the notifier:
 --
 -- function my_list_changed_notifier(notification)
 --
--- when a new element got added, "notification" is {
+-- When a new element got added, "notification" is {
 --   type = "insert",
 --   index = index_where_element_got_added
 -- }
 -- 
--- when a element got removed, "notification" is {
+-- When a element got removed, "notification" is {
 --   type = "remove",
 --   index = index_where_element_got_removed_from
 -- }
 -- 
--- when two entries swapped their position, "notification" is {
+-- When two entries swapped their position, "notification" is {
 --   type = "swap",
---   index1 = index_swap_pos1
+--   index1 = index_swap_pos1,
 --   index2 = index_swap_pos2
 -- }
 --
@@ -294,8 +298,8 @@ observable_list:remove([pos])
 -- so the removed object is no longer available at the index you got passed in 
 -- the notification. Newly inserted objects will already be present at the 
 -- destination index, and so on...
-
--- see renoise.Document.Observable for has/add/remove_notifier doc
+--
+-- See renoise.Document.Observable for more info about has/add/remove_notifier
 observable_list:has_notifier(function or (object, function) or (function, object))
   -> [boolean]
 
@@ -303,7 +307,6 @@ observable_list:add_notifier(function or (object, function) or (function, object
 
 observable_list:remove_notifier(function or (object, function) or
  (function, object) or (object))
-
 
 
 --------------------------------------------------------------------------------
@@ -314,13 +317,13 @@ observable_list:remove_notifier(function or (object, function) or
 
 doc:has_property(property_name)
 
--- access a property by name. returns the property, or nil when there is no
--- such property
+-- Access a property by name. returns the property, or nil when there is no
+-- such property.
 doc:property(property_name)
   -> [nil or (Observable or DocumentNode object)]
 
--- add a new property. name must be unique, aka overwriting already existing
--- properties with the same name is not allowed and will fire an error
+-- Add a new property. Name must be unique: overwriting already existing
+-- properties with the same name is not allowed and will fire an error.
 doc:add(name, boolean_value)
   -> [newly created ObservableBoolean object]
 doc:add(name, number_value)
@@ -332,20 +335,19 @@ doc:add(name, list)
 doc:add(name, node)
   -> [newly created DocumentNode object]
 
--- remove a previously added property
+-- Remove a previously added property. Property must exist.
 doc:remove(document or observable)
 
 
--- save the whole document tree to a XML file. overwrites all contents of the
+-- Save the whole document tree to a XML file. Overwrites all contents of the
 -- file when it already exists.
 doc:save_as(document_type_name, file_name)
   -> [success, error_string or nil on success]
 
--- load the document tree from a XML file. this will not create new properties
--- except for list items, but will only assign existing properties in the 
--- document node with existing properties from the XML file.
--- this means: nodes that exist in the XML only, will be silently ignored. 
--- nodes that exist in the document only, will not be altered in any way
+-- Load the document tree from a XML file. This will not create new properties,
+-- except for list items, but will only assign existing property values in the 
+-- document node with existing property values from the XML.
+-- This means: nodes that exist in the XML only will be silently ignored. 
+-- Nodes that exist in the document only, will not be altered in any way
 doc:load_from(document_type_name, file_name)
   -> [success, error_string or nil on success]
-
