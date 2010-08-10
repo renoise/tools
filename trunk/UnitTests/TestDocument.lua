@@ -151,6 +151,24 @@ do
   assert(number_list[3].value == 99)
   assert(number_list[4].value == 45)
   
+  number_list:swap(3, 4)
+  assert(number_list[3].value == 45)
+  assert(number_list[4].value == 99)
+  assert(last_list_notification.type == "swap" and 
+    last_list_notification.index1 == 3 and
+    last_list_notification.index2 == 4)
+    
+  number_list:swap(3, 4)
+  assert(number_list[3].value == 99)
+  assert(number_list[4].value == 45)
+  
+  assert_error(function()
+    number_list:swap(1,#number_list + 1)
+  end)
+  assert_error(function()
+    number_list:swap(0, #number_list)
+  end)
+  
   number_list[3].value = 999
   
   number_list:remove(1)
@@ -159,8 +177,7 @@ do
   assert(number_list:find(45) == 3)
   assert(not number_list:find(46))
   
-  assert(list_notifications == 8)
-  
+  assert(list_notifications == 10)
   number_list:remove_notifier(list_notifier)
   
   while (#number_list > 0) do
