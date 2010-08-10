@@ -76,6 +76,9 @@ local global_action_pattern_map = table.create{}
 local track_action_pattern_map = table.create{}
 local track_action_pattern_map_prefix = "/song/track"
 
+local device_action_pattern_map = table.create{}
+local device_action_pattern_map_prefix = "/device"
+
 
 -- argument
 
@@ -157,6 +160,13 @@ local function add_track_action(info)
 end
 
 
+-- add_device_action
+
+local function add_device_action(info)
+  add_action(device_action_pattern_map, info)
+end
+
+
 --------------------------------------------------------------------------------
 -- Message Helpers
 --------------------------------------------------------------------------------
@@ -219,6 +229,20 @@ local function clamp_value(value, min_value, max_value)
 end
 
 
+-- selected_track_index
+
+local function selected_track_index()
+  return song().selected_track_index
+end
+
+
+-- selected_device_index
+
+local function selected_device_index(track_index)
+  return song().selected_device_index
+end
+
+
 -- set_track_parameter
 
 local function set_track_parameter(track_index, parameter_name, value)
@@ -252,7 +276,7 @@ add_global_action {
     if (not succeeded) then
       print(("*** expression failed: '%s'"):format(error_message))
     end
-  end,
+  end
 }
 
 
@@ -265,7 +289,7 @@ add_global_action {
   arguments = nil,
   handler = function()
     song().transport:panic()
-  end,  
+  end
 }
 
 -- /transport/start
@@ -278,7 +302,7 @@ add_global_action {
   handler = function()
     local play_mode = renoise.Transport.PLAYMODE_RESTART_PATTERN
     song().transport:start(play_mode)
-  end,  
+  end
 }
 
 
@@ -291,7 +315,7 @@ add_global_action {
   arguments = nil,
   handler = function()
     song().transport:stop()
-  end,
+  end
 }
 
 
@@ -305,7 +329,7 @@ add_global_action {
   handler = function()
     local play_mode = renoise.Transport.PLAYMODE_CONTINUE_PATTERN
     song().transport:start(play_mode)
-  end,
+  end
 }
 
 
@@ -318,7 +342,7 @@ add_global_action {
   arguments = { argument("enabled", "boolean") },
   handler = function(enabled)
     song().transport.loop_pattern = enabled
-  end,
+  end
 }
 
 
@@ -331,7 +355,7 @@ add_global_action {
   arguments = { argument("enabled", "boolean") },
   handler = function(enabled)
     song().transport.loop_block_enabled = enabled
-  end,
+  end
 }
 
 
@@ -344,7 +368,7 @@ add_global_action {
   arguments = nil,
   handler = function()
     song().transport:loop_block_move_forwards()
-  end,
+  end
 }
 
 
@@ -357,7 +381,7 @@ add_global_action {
   arguments = nil,
   handler = function()
     song().transport:loop_block_move_backwards()
-  end,
+  end
 }
 
 
@@ -378,7 +402,7 @@ add_global_action {
       song().transport.song_length.sequence + 1)
 
     song().transport.loop_range = {start_pos, end_pos}
-  end,
+  end
 }
 
 
@@ -404,7 +428,7 @@ add_global_action {
   arguments = { argument("lpb", "number") }, 
   handler = function(lpb)
     song().transport.lpb = clamp_value(lpb, 1, 255)
-  end,  
+  end
 }
 
 
@@ -417,7 +441,7 @@ add_global_action {
   arguments = { argument("tpl", "number") }, 
   handler = function(tpl)
     song().transport.tpl = clamp_value(tpl, 1, 16)
-  end,  
+  end
 }
 
 
@@ -430,7 +454,7 @@ add_global_action {
   arguments = { argument("enabled", "boolean") },
   handler = function(enabled)
     song().transport.edit_mode = enabled
-  end,
+  end
 }
 
 
@@ -456,7 +480,7 @@ add_global_action {
   arguments = { argument("edit_step", "number") },
   handler = function(edit_step)
     song().transport.edit_step = clamp_value(edit_step, 0, 9)
-  end,
+  end
 }
 
 
@@ -482,7 +506,7 @@ add_global_action {
   arguments = { argument("enabled", "boolean") },
   handler = function(enabled)
     song().transport.record_quantize_enabled = enabled
-  end,
+  end
 }
 
 
@@ -508,10 +532,94 @@ add_global_action {
   arguments = { argument("enabled", "boolean") },
   handler = function(enabled)
     song().transport.chord_mode_enabled = enabled
+  end
+}
+
+
+-- /song/sequence/trigger
+
+add_global_action { 
+  pattern = "/song/sequence/trigger", 
+  description = "Set playback pos to the specified sequence pos",
+  
+  arguments = { argument("sequence_pos", "number") },
+  handler = function(sequence_pos)
+    song().transport:trigger_sequence(clamp_value(sequence_pos, 
+      1, song().transport.song_length.sequence))
   end,
 }
 
 
+-- /song/sequence/schedule_set
+
+add_global_action { 
+  pattern = "/song/sequence/schedule_set", 
+  description = "Replace the current schedule playback pos",
+  
+  arguments = { argument("sequence_pos", "number") },
+  handler = function(sequence_pos)
+    song().transport:set_scheduled_sequence(clamp_value(sequence_pos, 
+      1, song().transport.song_length.sequence))
+  end
+}
+
+
+-- /song/sequence/schedule_add
+
+add_global_action { 
+  pattern = "/song/sequence/schedule_add", 
+  description = "Add a scheduled sequence playback pos",
+  
+  arguments = { argument("sequence_pos", "number") },
+  handler = function(sequence_pos)
+    song().transport:add_scheduled_sequence(clamp_value(sequence_pos, 
+      1, song().transport.song_length.sequence))
+  end
+}
+
+
+-- /song/sequence/slot_mute
+
+add_global_action { 
+  pattern = "/song/sequence/slot_mute", 
+  description = "Mute the given track, sequence slot in the matrix",
+  
+  arguments = { argument("track_index", "number"), 
+    argument("sequence_pos", "number") },
+  handler = function(track_index, sequence_pos)
+    if track_index >= 1 and track_index <= #song().tracks then
+      if sequence_pos >= 1 and 
+         sequence_pos <= song().transport.song_length.sequence 
+      then
+        song().sequencer:set_track_sequence_slot_is_muted(
+          track_index, sequence_pos, true)
+      end
+    end
+  end
+}
+   
+
+-- /song/sequence/slot_unmute
+
+add_global_action { 
+  pattern = "/song/sequence/slot_unmute", 
+  description = "Unmute the given track, sequence slot in the matrix",
+  
+  arguments = { argument("track_index", "number"), 
+    argument("sequence_pos", "number") },
+  handler = function(track_index, sequence_pos)
+    if track_index >= 1 and track_index <= #song().tracks then
+      if sequence_pos >= 1 and 
+         sequence_pos <= song().transport.song_length.sequence 
+      then
+        song().sequencer:set_track_sequence_slot_is_muted(
+          track_index, sequence_pos, false)
+      end
+    end
+  end
+}
+
+  
 --------------------------------------------------------------------------------
 -- Track Action Registration
 --------------------------------------------------------------------------------
@@ -530,7 +638,7 @@ add_track_action {
   arguments = { argument("value", "number") },
   handler = function(track_index, value)
     set_track_parameter(track_index, "prefx_volume", value)
-  end,
+  end
 }
 
 
@@ -543,7 +651,7 @@ add_track_action {
   arguments = { argument("value", "number") },
   handler = function(track_index, value)
     set_track_parameter(track_index, "prefx_volume", math.db2lin(value))
-  end,
+  end
 }
 
 
@@ -556,7 +664,7 @@ add_track_action {
   arguments = { argument("value", "number") },
   handler = function(track_index, value)
     set_track_parameter(track_index, "postfx_volume", value)
-  end,
+  end
 }
 
 
@@ -569,7 +677,7 @@ add_track_action {
   arguments = { argument("value", "number") },
   handler = function(track_index, value)
     set_track_parameter(track_index, "postfx_volume", math.db2lin(value))
-  end,
+  end
 }
 
 
@@ -582,7 +690,7 @@ add_track_action {
   arguments = { argument("value", "number") },
   handler = function(track_index, value)
     set_track_parameter(track_index, "prefx_panning", value / 100 + 0.5)
-  end,
+  end
 }
 
 
@@ -595,7 +703,7 @@ add_track_action {
   arguments = { argument("value", "number") },
   handler = function(track_index, value)
     set_track_parameter(track_index, "postfx_panning", value / 100 + 0.5)
-  end,
+  end
 }
 
 
@@ -624,7 +732,7 @@ add_track_action {
     if (track_index >= 1 and track_index <= #tracks) then
       tracks[track_index].output_delay = clamp_value(value, -100, 100)
     end
-  end,
+  end
 }
 
 
@@ -656,8 +764,9 @@ add_track_action {
     if (track_index >= 1 and track_index <= #tracks) then
       tracks[track_index]:unmute() 
     end
-  end,
+  end
 }
+
 
 -- /song/track/XXX/solo
 
@@ -671,7 +780,106 @@ add_track_action {
     if (track_index >= 1 and track_index <= #tracks) then
       tracks[track_index]:solo() 
     end
-  end,
+  end
+}
+
+
+--------------------------------------------------------------------------------
+-- Device Action Registration
+--------------------------------------------------------------------------------
+
+-- NOTE: device action handler functions will get the track and device index 
+-- passed as first argument, but should not specify it in its argument list. 
+-- Its resolved from the message pattern.
+
+
+-- /song/track/XXX/device/XXX/bypass
+
+add_device_action { 
+  pattern = "/bypass", 
+  description = "Set bypass status of an device [true or false]",
+  
+  arguments = { argument("bypassed", "boolean") },
+  handler = function(track_index, device_index, bypassed)
+    local tracks = song().tracks
+    if (track_index >= 1 and track_index <= #tracks) then
+      local devices = tracks[track_index].devices
+      -- 2: do not try bypassing the mixer device
+      if (device_index >= 2 and device_index <= #devices) then
+        devices[device_index].is_active = not bypassed
+      end
+    end
+  end
+}
+
+
+-- /song/track/XXX/device/XXX/set_parameter_by_index
+
+add_device_action { 
+  pattern = "/set_parameter_by_index",
+  description = "Set parameter value of an device [0-1]",
+  
+  arguments = { argument("parameter_index", "number"), 
+    argument("value", "number") },
+  handler = function(track_index, device_index, parameter_index, value)
+    local tracks = song().tracks
+
+    if (track_index >= 1 and track_index <= #tracks) then
+      local devices = tracks[track_index].devices
+
+      if (device_index >= 1 and device_index <= #devices) then
+        local parameters = devices[device_index].parameters
+
+        if (parameter_index >= 1 and parameter_index <= #parameters) then
+          local parameter = parameters[parameter_index]
+          
+          local parameter_value = value * (parameter.value_max - 
+            parameter.value_min) + parameter.value_min
+          
+          parameter.value = clamp_value(parameter_value, 
+            parameter.value_min, parameter.value_max)
+        end
+      end
+    end
+  end
+}
+
+
+-- /song/track/XXX/device/XXX/set_parameter_by_name
+
+add_device_action { 
+  pattern = "/set_parameter_by_name",
+  description = "Set parameter value of an device [0-1]",
+  
+  arguments = { argument("parameter_name", "string"), 
+    argument("value", "number") },
+  handler = function(track_index, device_index, parameter_name, value)
+    local tracks = song().tracks
+    
+    if (track_index >= 1 and track_index <= #tracks) then
+      local devices = tracks[track_index].devices
+
+      if (device_index >= 1 and device_index <= #devices) then
+        local parameters = devices[device_index].parameters
+
+        local parameter
+        for _,p in pairs(parameters) do
+          if (p.name:lower() == parameter_name:lower()) then
+            parameter = p
+            break
+          end
+        end
+          
+        if (parameter) then
+          local parameter_value = value * (parameter.value_max - 
+            parameter.value_min) + parameter.value_min
+          
+          parameter.value = clamp_value(parameter_value, 
+            parameter.value_min, parameter.value_max)
+        end
+      end
+    end
+  end
 }
 
 
@@ -695,12 +903,17 @@ function available_messages()
     map = track_action_pattern_map, 
     scope = track_action_pattern_map_prefix.."/XXX"
   }
+  action_pattern_maps:insert{
+    map = device_action_pattern_map, 
+    scope = track_action_pattern_map_prefix.."/XXX"..
+      device_action_pattern_map_prefix.."/XXX"
+  }
   
   local ret = table.create()
 
   for _, action_pattern_map in pairs(action_pattern_maps) do
     for _, action in pairs(action_pattern_map.map) do
-
+      
       local argument_types = table.create()
       for _, argument in pairs(action.arguments) do
         argument_types:insert(argument.type)
@@ -732,16 +945,37 @@ function process_message(pattern, arguments)
 
   -- global pattern match
   local action = global_action_pattern_map[pattern]
-  local action_context = nil
+  local action_arguments = table.create{}
   
   if (not action) then
     -- track pattern match
     local _, _, track_index, track_pattern = pattern:find(
-      track_action_pattern_map_prefix.."/(%d)(.*)")
+      track_action_pattern_map_prefix.."/([-]%d)(.*)")
   
     if (track_index and track_pattern) then
+      track_index = tonumber(track_index) or 0
+      if (track_index == -1) then
+        track_index = selected_track_index() 
+      end
+      
       action = track_action_pattern_map[track_pattern]
-      action_context = tonumber(track_index)
+      action_arguments:insert(track_index)
+      
+      if (not action) then
+        -- track device match
+        local _, _, device_index, device_pattern = track_pattern:find(
+          device_action_pattern_map_prefix.."/([-]%d)(.*)")
+  
+        if (device_index and device_pattern) then
+          device_index = tonumber(device_index) or 0
+          if (device_index == -1) then
+            device_index = selected_device_index(track_index) 
+          end
+      
+          action = device_action_pattern_map[device_pattern]
+          action_arguments:insert(device_index)
+        end
+      end
     end
   end
   
@@ -756,21 +990,16 @@ function process_message(pattern, arguments)
       -- check if the passed and the actions argument types match
       for i = 1, #arguments do
         if (action.arguments[i].type == type(arguments[i].value)) then 
-          arg_values:insert(arguments[i].value)
+          action_arguments:insert(arguments[i].value)
         else
           arg_match = false
           break
         end
       end
       
-      -- and finally invoke the action when the args match
+      --  when the arg types matched, invoke the action
       if (arg_match) then
-        if (action_context) then
-          action.handler(action_context, unpack(arg_values))
-        else
-          action.handler(unpack(arg_values))
-        end
-    
+        action.handler(unpack(action_arguments))
         return true -- handled
       end
     end
