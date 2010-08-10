@@ -116,8 +116,11 @@ do
   -- observable list notifiers & list operations
   
   local list_notifications = 0
-  local list_notifier = function()
+  local last_list_notification
+  
+  local list_notifier = function(notification)
     list_notifications = list_notifications + 1 
+    last_list_notification = notification
   end
   
   number_list:add_notifier(list_notifier)
@@ -125,6 +128,9 @@ do
   assert(#number_list == 3)
   while (#number_list ~= 0) do
     number_list:remove()
+    
+    assert(last_list_notification.type == "remove" and 
+      last_list_notification.index == #number_list + 1)
   end
   
   assert(#number_list == 0)
@@ -133,6 +139,8 @@ do
   number_list:insert(99)
   assert(number_list:insert(45).value == 45)
   assert(#number_list == 2)
+  assert(last_list_notification.type == "insert" and 
+    last_list_notification.index == #number_list)
   
   number_list:insert(1, 22)
   assert(number_list[1].value == 22)
