@@ -79,10 +79,10 @@ local track_action_pattern_map_prefix = "/song/track"
 
 -- argument
 
--- helper function to define a message argument for an action.
--- name is only needed when generating a list of available messages for the 
--- user. type is the expected lua type name for the OSC argument, NOT the OSC 
--- type tag. e.g. argument("bpm", "number")
+-- Helper function to define a message argument for an action.
+-- "name" is only needed when generating a list of available messages for the 
+-- user. "type" is the expected lua type name for the OSC argument, NOT the OSC 
+-- type tag. e.g. argument("bpm", "number").
 
 local function argument(name, type)
   return { name = name, type = type }
@@ -91,7 +91,7 @@ end
 
 -- add_action
 
--- register a global Renoise OSC message
+-- Register a global Renoise OSC message:
 -- info = {
 --   pattern,     -> required. OSC message pattern like "/transport/start"
 --   description, -> optional. string which describes the action
@@ -161,8 +161,8 @@ end
 -- Message Helpers
 --------------------------------------------------------------------------------
 
--- environment for custom Lua expressions via OSC. such expressions can only 
--- access a few "safe" globals and modules
+-- Environment for custom Lua expressions via OSC. such expressions can only 
+-- access a few "safe" globals and modules.
 
 local evaluate_env = {
   _VERSION = _G._VERSION,
@@ -189,7 +189,7 @@ local evaluate_env = {
 
 -- evaluate
 
--- compile and evaluate an expression in the evaluate_env sandbox
+-- Compile and evaluate an expression in the evaluate_env sandbox.
 local function evaluate(expression)
   local eval_function, message = loadstring(expression)
   
@@ -569,6 +569,108 @@ add_track_action {
   arguments = { argument("value", "number") },
   handler = function(track_index, value)
     set_track_parameter(track_index, "postfx_volume", math.db2lin(value))
+  end,
+}
+
+
+-- /song/track/XXX/prefx_panning
+
+add_track_action { 
+  pattern = "/prefx_panning", 
+  description = "Set track XXX's pre FX panning [-50, 50]",
+  
+  arguments = { argument("value", "number") },
+  handler = function(track_index, value)
+    set_track_parameter(track_index, "prefx_panning", value / 100 + 0.5)
+  end,
+}
+
+
+-- /song/track/XXX/postfx_panning
+
+add_track_action { 
+  pattern = "/postfx_panning", 
+  description = "Set track XXX's post FX panning [-50, 50]",
+  
+  arguments = { argument("value", "number") },
+  handler = function(track_index, value)
+    set_track_parameter(track_index, "postfx_panning", value / 100 + 0.5)
+  end,
+}
+
+
+-- /song/track/XXX/prefx_width
+
+add_track_action { 
+  pattern = "/prefx_width", 
+  description = "Set track XXX's pre FX width [0, 1]",
+  
+  arguments = { argument("value", "number") },
+  handler = function(track_index, value)
+    set_track_parameter(track_index, "prefx_width", value * 126)
+  end,
+}
+
+
+-- /song/track/XXX/output_delay
+
+add_track_action { 
+  pattern = "/output_delay", 
+  description = "Set track XXX's delay in ms [-100, 100]",
+  
+  arguments = { argument("value", "number") },
+  handler = function(track_index, value)
+    local tracks = song().tracks
+    if (track_index >= 1 and track_index <= #tracks) then
+      tracks[track_index].output_delay = clamp_value(value, -100, 100)
+    end
+  end,
+}
+
+
+-- /song/track/XXX/mute
+
+add_track_action { 
+  pattern = "/mute", 
+  description = "Mute track XXX",
+  
+  arguments = nil,
+  handler = function(track_index)
+    local tracks = song().tracks
+    if (track_index >= 1 and track_index <= #tracks) then
+      tracks[track_index]:mute() 
+    end
+  end,
+}
+
+
+-- /song/track/XXX/unmute
+
+add_track_action { 
+  pattern = "/unmute", 
+  description = "Unmute track XXX",
+  
+  arguments = nil,
+  handler = function(track_index)
+    local tracks = song().tracks
+    if (track_index >= 1 and track_index <= #tracks) then
+      tracks[track_index]:unmute() 
+    end
+  end,
+}
+
+-- /song/track/XXX/solo
+
+add_track_action { 
+  pattern = "/solo", 
+  description = "Solo track XXX",
+  
+  arguments = nil,
+  handler = function(track_index)
+    local tracks = song().tracks
+    if (track_index >= 1 and track_index <= #tracks) then
+      tracks[track_index]:solo() 
+    end
   end,
 }
 
