@@ -689,7 +689,7 @@ function available_controls()
   
   -- -- (and the GUI)
   -- vb:slider {
-  --   bind_value = options.current_velocity, -- only gets a reference passed
+  --   bind = options.current_velocity, -- only gets a reference passed
   --   min = 0,
   --   max = 0x7f
   -- }
@@ -1000,7 +1000,8 @@ function available_controls()
   -- v sliders
   local vslider_column = vb:column {
     vb:text {
-      text = "vb:(mini)slider - flipped"
+      width = TEXT_ROW_WIDTH,
+      text = "vb:(mini)slider"
     },
     vb:row {
       vb:slider {
@@ -1023,6 +1024,27 @@ function available_controls()
         notifier = function(value)
           show_status(("v mini slider value changed to '%.1f'"):
             format(value))
+        end
+      }
+    }
+  }
+  
+  -- xy pad column
+  local xypad_column = vb:column {
+    vb:text {
+      width = TEXT_ROW_WIDTH,
+      text = "vb:xypad"
+    },
+    vb:column {
+      style = "border", -- cosmetics
+      margin = 4,
+
+      vb:xypad {
+        value = {x=0.75, y=0.25},
+        snapback = {x=0.5, y=0.5},
+        notifier = function(value)
+          show_status(("xy pad value changed to '%.2f, %.2f'"):
+            format(value.x, value.y))
         end
       }
     }
@@ -1069,7 +1091,7 @@ function available_controls()
       
       vb:space { height = 2*CONTENT_SPACING },
     
-      vslider_column
+      vb:row{ vslider_column, xypad_column }
     },
     
     -- close
@@ -1102,16 +1124,31 @@ end
 -- create a simple document with two values
 local example_document = renoise.Document.create {
   my_flag = false,
-  some_velocity = 127
+  some_velocity = 127,
+  pad_x = 0.5,
+  pad_y = 0.5
 }
 
 -- we do place our notifications (if needed now outside of the GUI code)
-example_document.my_flag:add_notifier(function()
+
+local function my_flag_notifier()
   local new_value = example_document.my_flag.value
   
-  print(("'my_flag' changed to '%s' by either the GUI "
-    .. "or something else..."):format(new_value and "True" or "False"))
-end)
+  print(("'my_flag' changed to '%s' by either the GUI "..
+    "or something else..."):format(new_value and "True" or "False"))
+end
+
+example_document.my_flag:add_notifier(my_flag_notifier)
+
+local function pad_value_notifier()
+  local x, y = example_document.pad_x.value, example_document.pad_y.value
+
+  print(("'pad_xy' value changed to '%s,%s' by either the GUI ".. 
+    "or something else..."):format(x, y))
+end
+
+example_document.pad_x:add_notifier(pad_value_notifier)
+example_document.pad_y:add_notifier(pad_value_notifier)
 
 
 -- GUI
@@ -1145,16 +1182,29 @@ function documents_and_views()
     }
   }
   
+  local xypad_row = vb:row {
+    vb:xypad{
+      bind = {
+        x = example_document.pad_x, 
+        y = example_document.pad_y
+      }, -- bind
+      width = valuebox_row.width,
+    }
+  }
+  
   renoise.app():show_custom_dialog("Documents & Views", 
     vb:column {
       margin = DIALOG_MARGIN,
+      spacing = CONTENT_SPACING,
       uniform = true,
  
       vb:column {
         spacing = CONTENT_SPACING,
         checkbox_row,
         valuebox_row
-      }
+      },
+      
+      xypad_row
     }
   )
 end

@@ -351,6 +351,7 @@ do
          
       --- freeze test
       vb:column {
+        margin = CONTENT_MARGIN,
         vb:button { 
           text = "Script Freeze Test",
           notifier = function()
@@ -359,8 +360,39 @@ do
             end
           end
         }
+      },
+      
+      
+      --- xy pad column
+      vb:column {
+        margin = CONTENT_MARGIN,
+        
+        vb:row {
+          spacing = CONTENT_SPACING,
+        
+          vb:xypad {
+            min = {x=-0.25, y=0.25},
+            max = {x=2.5, y=1.25},
+            value = {x=0.75, y=0.25},
+            snapback = {x=-0.25, y=1.25},
+            notifier = function(value)
+              show_status(("xy pad value changed to '%.2f, %.2f'"):
+                format(value.x, value.y))
+            end
+          },
+          vb:xypad {
+            width = 2*CONTROL_HEIGHT,
+            height = 2*CONTROL_HEIGHT,
+            value = {x=0.5, y=0.5},
+            notifier = function(value)
+              show_status(("mini xy pad value changed to '%.2f, %.2f'"):
+                format(value.x, value.y))
+            end
+          },
+        }  
       }
     },
+    
     
     --- controls column
      
