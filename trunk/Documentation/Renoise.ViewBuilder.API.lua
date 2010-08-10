@@ -1118,7 +1118,74 @@ rotary.notifier
 rotary.bind
   -> [ObservableNumber Object]
   
+
+--------------------------------------------------------------------------------
+-- [added B4] renoise.Views.XYPad (inherits from View, 'xypad' in the builder)
+--------------------------------------------------------------------------------
+
+-- A slider alike pad which allows controlling two values at once. By default
+-- it freely moves the XY values, but can also be configured to snap back to a
+-- predefined value when releasing the mouse button. 
+--
+-- All values, notifiers, current value or min/max properties, will act just 
+-- like a slider or rotaries properties, but instead of a single number a table
+-- with the fields {x = xvalue, y = yvalue} is expected, returned...
+
+--[[
++-------+
+|    o  |
+|   +   |
+|       |
++-------+
+--]]
+
+
+----- functions
+
+-- Add/remove value change notifiers.
+xypad:add_notifier(function or {object, function} or {object, function})
+xypad:remove_notifier(function or {object, function} or {object, function})
+
+
+----- properties
+
+-- Get/set a table of min/max values that are allowed.
+-- By default 0.0 and 1.0 for both, x and y.
+xypad.min 
+  -> [{x=Number,y=Number}]
+xypad.max 
+  -> [{x=Number,y=Number}]
+
+-- Get/set the pads current value in a table
+xypad.value
+  -> [{x=Number,y=Number}]
+
+-- When snapback is enabled a xy table is returned, else nil. To enable 
+-- snapback, pass a xy table with desired values. Pass nil or an empty table 
+-- to disable snapback.
+-- When snapback is enabled, the pad will revert its values to the specified 
+-- snapback values as soon as the mouse button is released in the pad. When 
+-- disabled,  releasing the mouse button will not change the value.
+xypad.snapback
+  -> [{x=Number,y=Number}]
+
+-- Valid in the construction table only: set up a value notifier function.
+xypad.notifier 
+  -> [function(value={x=Number,y=Number})]
+
+-- Valid in the construction table only: bind the views value to a pair of 
+-- renoise.Document.ObservableNumber objects. Will change the Observable
+-- values as soon as the views value changed, and change the Views values as 
+-- soon as the Observable's value changed - automatically keeps both values 
+-- in sync.
+-- Notifiers can then be added to either the view or the Observable object.
+-- Just like in the other xypad properties, a table with the fields x and y
+-- is expected here and not a single value. So you have to bind two 
+-- ObservableNumber object to the pad.
+xypad.bind
+  -> [{x=ObservableNumber Object, y=ObservableNumber Object}]
   
+    
 --==============================================================================
 -- renoise.Dialog
 --==============================================================================
@@ -1203,36 +1270,59 @@ renoise.ViewBuilder.DEFAULT_DIALOG_BUTTON_HEIGHT
 ----- functions
 
 vb:column { Rack Properties and/or child views }
+  -> [Rack object]
 vb:row { Rack Properties and/or child views }
+  -> [Rack object]
 
 vb:horizontal_aligner { Aligner Properties and/or child views }
+  -> [Aligner object]
 vb:vertical_aligner { Aligner Properties and/or child views }
+  -> [Aligner object]
 
 vb:space { View Properties and/or child views }
+  -> [View object]
 
 vb:text { Text Properties }
+  -> [Text object]
 vb:multiline_text { MultiLineText Properties }
+  -> [MultilineText object]
 
 vb:textfield { TextField Properties }
+  -> [TextField object]
 
 vb:bitmap { Bitmap Properties }
+  -> [Bitmap object]
 
 vb:button { Button Properties }
+  -> [Button object]
 
 vb:checkbox  { Rack Properties }
+  -> [CheckBox object]
 vb:switch { Switch Properties }
+  -> [Switch object]
 vb:popup { Popup Properties }
+  -> [Popup object]
 vb:chooser { Chooser Properties }
+  -> [Chooser object]
 
 vb:valuebox { ValueBox Properties }
+  -> [ValueBox object]
 
 vb:value { Value Properties }
+  -> [Value object]
 vb:valuefield { ValueField Properties }
+  -> [ValueField object]
 
 vb:slider { Slider Properties }
+  -> [Slider object]
 vb:minislider { MiniSlider Properties }
+  -> [MiniSlider object]
 
 vb:rotary { RotaryEncoder Properties }
+  -> [RotaryEncoder object]
+
+[added B4] vb:xypad { XYPad Properties } 
+  -> [XYPad object]
 
 
 ----- properties
@@ -1243,4 +1333,3 @@ vb:rotary { RotaryEncoder Properties }
 -- vb.views["my_view"].visible = false
 vb.views 
   -> [table of views, which got registered via the "id" property]
-
