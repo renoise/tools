@@ -54,6 +54,16 @@ renoise.tool():add_menu_entry {
 
 
 --------------------------------------------------------------------------------
+-- Helper Function
+--------------------------------------------------------------------------------
+
+local function show_status(message)
+  renoise.app():show_status(message)
+  print(message)
+end
+  
+  
+--------------------------------------------------------------------------------
 -- GUI
 --------------------------------------------------------------------------------
 
@@ -310,7 +320,7 @@ function dynamic_building_matrix()
           -- functions do memorize all values in the scope they are
           -- nested in (upvalues), so we can simply access the note and 
           -- octave from the loop here:
-          renoise.app():show_status(("note_button %s%d got pressed"):format(
+          show_status(("note_button %s%d got pressed"):format(
             note_strings[note], octave - 1))
         end
 
@@ -694,25 +704,33 @@ function available_controls()
   --   max = 0x7f
   -- }
 
-  local function show_status(message)
-    renoise.app():show_status(message); print(message)
-  end
-  
   -- we memorize a reference to the dialog this time, to close it
   local control_example_dialog = nil
   
   local vb = renoise.ViewBuilder()
   
-  local DIALOG_MARGIN = renoise.ViewBuilder.DEFAULT_DIALOG_MARGIN
-  local CONTENT_SPACING = renoise.ViewBuilder.DEFAULT_CONTROL_SPACING
-  local CONTENT_MARGIN = renoise.ViewBuilder.DEFAULT_CONTROL_MARGIN
-  local DEFAULT_CONTROL_HEIGHT = renoise.ViewBuilder.DEFAULT_CONTROL_HEIGHT
-  local DEFAULT_MINI_CONTROL_HEIGHT = renoise.ViewBuilder.DEFAULT_MINI_CONTROL_HEIGHT
+  local DIALOG_MARGIN = 
+    renoise.ViewBuilder.DEFAULT_DIALOG_MARGIN
+  
+  local CONTENT_SPACING = 
+    renoise.ViewBuilder.DEFAULT_CONTROL_SPACING
+  
+  local CONTENT_MARGIN = 
+    renoise.ViewBuilder.DEFAULT_CONTROL_MARGIN
+  
+  local DEFAULT_CONTROL_HEIGHT = 
+    renoise.ViewBuilder.DEFAULT_CONTROL_HEIGHT
+  
+  local DEFAULT_DIALOG_BUTTON_HEIGHT =
+    renoise.ViewBuilder.DEFAULT_DIALOG_BUTTON_HEIGHT
+  
+  local DEFAULT_MINI_CONTROL_HEIGHT = 
+    renoise.ViewBuilder.DEFAULT_MINI_CONTROL_HEIGHT
   
   local TEXT_ROW_WIDTH = 80
 
 
-  -- CONTROL ROWS
+  ---- CONTROL ROWS
   
   -- textfield
   local textfield_row = vb:row {
@@ -721,6 +739,7 @@ function available_controls()
       text = "vb:textfield"
     },
     vb:textfield {
+      width = 120,
       text = "Edit me",
       notifier = function(text)
         show_status(("textfield value changed to '%s'"):
@@ -736,10 +755,9 @@ function available_controls()
       text = "vb:ml_textfield"
     },
     vb:multiline_textfield {
-      height = 80,
       width = 120,
-      value = "I am a long text that can be edited.\n\nParagraphs are separated with "..
-        "\\n's.\n\nEdit me",
+      height = 60,
+      value = "Paragraphs are separated with \\n's.\n\nEdit me",
       notifier = function(value)
         show_status(("multiline_textfield value changed to '%s'"):
           format(value))
@@ -987,8 +1005,8 @@ function available_controls()
       min = 2,
       max = 4,
       value = 3.5,
-      width = 36,
-      height = 36,
+      width = 2*DEFAULT_CONTROL_HEIGHT,
+      height = 2*DEFAULT_CONTROL_HEIGHT,
       notifier = function(value)
         show_status(("rotaty encoder value changed to '%.1f'"):
           format(value))
@@ -1029,6 +1047,7 @@ function available_controls()
     }
   }
   
+  
   -- xy pad column
   local xypad_column = vb:column {
     vb:text {
@@ -1040,6 +1059,8 @@ function available_controls()
       margin = 4,
 
       vb:xypad {
+        width = 80,
+        height = 80,
         value = {x=0.75, y=0.25},
         snapback = {x=0.5, y=0.5},
         notifier = function(value)
@@ -1051,7 +1072,7 @@ function available_controls()
   }
   
   
-  -- CLOSE BUTTON
+  -- close button
     
   local close_button_row = vb:horizontal_aligner {
     mode = "right",
@@ -1059,6 +1080,7 @@ function available_controls()
     vb:button {
       text = "Close",
       width = 60,
+      height = DEFAULT_DIALOG_BUTTON_HEIGHT,
       notifier = function()
         control_example_dialog:close()
       end,
@@ -1066,32 +1088,48 @@ function available_controls()
   }
     
     
-  -- MAIN CONTENT & LAYOUT
+  ---- MAIN CONTENT & LAYOUT
   
   local dialog_content = vb:column {
     margin = DIALOG_MARGIN,
-    uniform = true,
-
-    vb:column {
-      spacing = CONTENT_SPACING,
-      
-      textfield_row, 
-      mltextfield_row,
-      bitmapview_row, 
-      button_row, 
-      checkbox_row, 
-      switch_row, 
-      popup_row, 
-      chooser_row, 
-      valuefield_row, 
-      valuebox_row, 
-      slider_row,
-      minislider_row,
-      rotary_row,
-      
-      vb:space { height = 2*CONTENT_SPACING },
+    spacing = CONTENT_SPACING,
     
-      vb:row{ vslider_column, xypad_column }
+    vb:row{
+      spacing = 4*CONTENT_SPACING,
+
+      vb:column {
+        spacing = CONTENT_SPACING,
+        
+        textfield_row, 
+        mltextfield_row,
+        bitmapview_row
+      },
+
+      vb:column {
+        spacing = CONTENT_SPACING,
+  
+        button_row, 
+        checkbox_row, 
+        switch_row, 
+        
+        vb:space {height = DEFAULT_CONTROL_HEIGHT},
+        popup_row, 
+        chooser_row, 
+        
+        vb:space {height = DEFAULT_CONTROL_HEIGHT},
+        valuefield_row, 
+        valuebox_row, 
+      },
+
+      vb:column {
+        spacing = CONTENT_SPACING,
+
+        slider_row,
+        minislider_row,
+        rotary_row,
+        
+        vb:row{ vslider_column, xypad_column }
+      }
     },
     
     -- close
@@ -1102,7 +1140,7 @@ function available_controls()
   -- DIALOG
   
   control_example_dialog = renoise.app():show_custom_dialog(
-    "Controls", dialog_content
+    "Available Controls", dialog_content
   )
 
 end
@@ -1121,7 +1159,7 @@ end
 
 -- DOCUMENT
 
--- create a simple document with two values
+-- create a simple document
 local example_document = renoise.Document.create {
   my_flag = false,
   some_velocity = 127,
@@ -1129,23 +1167,31 @@ local example_document = renoise.Document.create {
   pad_y = 0.5
 }
 
--- we do place our notifications (if needed now outside of the GUI code)
-
+-- notifier callbacks
 local function my_flag_notifier()
-  local new_value = example_document.my_flag.value
+  local my_flag_value = example_document.my_flag.value
   
-  print(("'my_flag' changed to '%s' by either the GUI "..
-    "or something else..."):format(new_value and "True" or "False"))
+  show_status(("'my_flag' changed to '%s' by either the GUI "..
+    "or something else..."):format(my_flag_value and "True" or "False"))
 end
 
-example_document.my_flag:add_notifier(my_flag_notifier)
+local function some_velocity_notifier()
+  local some_velocity = example_document.some_velocity.value
+
+  show_status(("'some_velocity' value changed to '%s' by either the GUI ".. 
+    "or something else..."):format(some_velocity))
+end
 
 local function pad_value_notifier()
   local x, y = example_document.pad_x.value, example_document.pad_y.value
 
-  print(("'pad_xy' value changed to '%s,%s' by either the GUI ".. 
+  show_status(("'pad_xy' value changed to '%.2f,%.2f' by either the GUI ".. 
     "or something else..."):format(x, y))
 end
+
+-- attach to the document 
+example_document.my_flag:add_notifier(my_flag_notifier)
+example_document.some_velocity:add_notifier(some_velocity_notifier)
 
 example_document.pad_x:add_notifier(pad_value_notifier)
 example_document.pad_y:add_notifier(pad_value_notifier)
@@ -1160,14 +1206,13 @@ function documents_and_views()
   local DIALOG_MARGIN = renoise.ViewBuilder.DEFAULT_DIALOG_MARGIN
   local CONTENT_SPACING = renoise.ViewBuilder.DEFAULT_CONTROL_SPACING
 
- 
   -- now we pass over the document struct to the views
   local checkbox_row = vb:row {
     vb:text { 
       text = "my_flag", width = 80 
     },
     vb:checkbox { 
-      bind = example_document.my_flag -- bind
+      bind = example_document.my_flag --> bind
     }
   }
   
@@ -1175,24 +1220,26 @@ function documents_and_views()
     vb:text { 
       text = "some_velocity", width = 80 
     },
-    vb:valuebox{
-      bind = example_document.some_velocity, -- bind
+    vb:valuebox {
+      bind = example_document.some_velocity, --> bind
       min = 0, 
       max = 0x7f
     }
   }
   
   local xypad_row = vb:row {
-    vb:xypad{
-      bind = {
+    vb:xypad {
+      bind = { --> bind
         x = example_document.pad_x, 
         y = example_document.pad_y
-      }, -- bind
+      },
       width = valuebox_row.width,
     }
   }
   
-  renoise.app():show_custom_dialog("Documents & Views", 
+  renoise.app():show_custom_dialog(
+    "Documents & Views", 
+    
     vb:column {
       margin = DIALOG_MARGIN,
       spacing = CONTENT_SPACING,
@@ -1200,10 +1247,10 @@ function documents_and_views()
  
       vb:column {
         spacing = CONTENT_SPACING,
+        
         checkbox_row,
         valuebox_row
       },
-      
       xypad_row
     }
   )
@@ -1244,7 +1291,12 @@ function handle_key_events()
         id = "key_text",
         width = TEXT_ROW_WIDTH,
         height = 60,
-        paragraphs = {"key.name:", "key.modifiers:", "key.character:", "key.note:"},
+        paragraphs = {
+          "key.name:", 
+          "key.modifiers:", 
+          "key.character:", 
+          "key.note:"
+        },
         font = "mono",
       }
     }
@@ -1269,7 +1321,7 @@ function handle_key_events()
   -- show a dialog as usual, but this time also pass a keyboard handler ref
   renoise.app():show_custom_dialog(
     "Handling Keyboard Events", content_view, key_handler)
-        
+
 end
 
    
