@@ -243,16 +243,20 @@ observable_list:property(index)
 
 -- find a value, by comparing the list values with the passed value. first
 -- match is returned. when no match is found, nil is returned
-Observable_list:find([start_pos,] value)
+observable_list:find([start_pos,] value)
   -> [nil or number (the index)]
 
 -- insert a new item to the end of the list or at the specified position.
 -- returns the newly created and inserted Observable
-Observable_list:insert([pos,] value)
+observable_list:insert([pos,] value)
   -> [inserted Observable object]
 
 -- removes an item (or the last one if no index is specified) from the list
-Observable_list:remove([pos])
+observable_list:remove([pos])
+
+-- swaps the positions of two items without addeding/removing the items 
+-- with a series of swaps you can move the item from/to any position
+[added B4] observable_list:swap(pos1, pos2)
 
 
 -- notifiers
