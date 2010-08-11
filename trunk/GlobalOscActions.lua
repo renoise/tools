@@ -238,7 +238,7 @@ end
 
 -- selected_device_index
 
-local function selected_device_index(track_index)
+local function selected_device_index()
   return song().selected_device_index
 end
 
@@ -284,7 +284,7 @@ add_global_action {
 
 add_global_action { 
   pattern = "/transport/panic", 
-  description = "Stop playback and reset all playing instruments and DSPs.",
+  description = "Stop playback and reset all playing instruments and DSPs",
   
   arguments = nil,
   handler = function()
@@ -296,7 +296,7 @@ add_global_action {
 
 add_global_action { 
   pattern = "/transport/start", 
-  description = "Start playback or restart playing the current pattern.",
+  description = "Start playback or restart playing the current pattern",
   
   arguments = nil,
   handler = function()
@@ -310,7 +310,7 @@ add_global_action {
 
 add_global_action { 
   pattern = "/transport/stop", 
-  description = "Stop playback.",
+  description = "Stop playback",
   
   arguments = nil,
   handler = function()
@@ -323,7 +323,7 @@ add_global_action {
 
 add_global_action { 
   pattern = "/transport/continue", 
-  description = "Continue playback.",
+  description = "Continue playback",
   
   arguments = nil,
   handler = function()
@@ -633,7 +633,8 @@ add_global_action {
 
 add_track_action { 
   pattern = "/prefx_volume", 
-  description = "Set track XXX's pre FX volume [0, db2lin(3)]",
+  description = "Set track XXX's pre FX volume [0, db2lin(3)]\n"..
+    "XXX is the track index, -1 the currently selected track",
   
   arguments = { argument("value", "number") },
   handler = function(track_index, value)
@@ -646,7 +647,8 @@ add_track_action {
 
 add_track_action { 
   pattern = "/prefx_volume_db", 
-  description = "Set track XXX's pre FX volume in dB [-200, 3]",
+  description = "Set track XXX's pre FX volume in dB [-200, 3]\n"..
+    "XXX is the track index, -1 the currently selected track",
   
   arguments = { argument("value", "number") },
   handler = function(track_index, value)
@@ -659,7 +661,8 @@ add_track_action {
 
 add_track_action { 
   pattern = "/postfx_volume", 
-  description = "Set track XXX's post FX volume [0, db2lin(3)]",
+  description = "Set track XXX's post FX volume [0, db2lin(3)]\n"..
+    "XXX is the track index, -1 the currently selected track",
   
   arguments = { argument("value", "number") },
   handler = function(track_index, value)
@@ -672,7 +675,8 @@ add_track_action {
 
 add_track_action { 
   pattern = "/postfx_volume_db", 
-  description = "Set track XXX's post FX volume in dB [-200, 3]",
+  description = "Set track XXX's post FX volume in dB [-200, 3]\n"..
+    "XXX is the track index, -1 the currently selected track",
 
   arguments = { argument("value", "number") },
   handler = function(track_index, value)
@@ -685,7 +689,8 @@ add_track_action {
 
 add_track_action { 
   pattern = "/prefx_panning", 
-  description = "Set track XXX's pre FX panning [-50, 50]",
+  description = "Set track XXX's pre FX panning [-50, 50]\n"..
+    "XXX is the track index, -1 the currently selected track",
   
   arguments = { argument("value", "number") },
   handler = function(track_index, value)
@@ -698,7 +703,8 @@ add_track_action {
 
 add_track_action { 
   pattern = "/postfx_panning", 
-  description = "Set track XXX's post FX panning [-50, 50]",
+  description = "Set track XXX's post FX panning [-50, 50]\n"..
+    "XXX is the track index, -1 the currently selected track",
   
   arguments = { argument("value", "number") },
   handler = function(track_index, value)
@@ -711,7 +717,8 @@ add_track_action {
 
 add_track_action { 
   pattern = "/prefx_width", 
-  description = "Set track XXX's pre FX width [0, 1]",
+  description = "Set track XXX's pre FX width [0, 1]\n"..
+    "XXX is the track index, -1 the currently selected track",
   
   arguments = { argument("value", "number") },
   handler = function(track_index, value)
@@ -724,7 +731,8 @@ add_track_action {
 
 add_track_action { 
   pattern = "/output_delay", 
-  description = "Set track XXX's delay in ms [-100, 100]",
+  description = "Set track XXX's delay in ms [-100, 100]\n"..
+    "XXX is the track index, -1 the currently selected track",
   
   arguments = { argument("value", "number") },
   handler = function(track_index, value)
@@ -740,7 +748,8 @@ add_track_action {
 
 add_track_action { 
   pattern = "/mute", 
-  description = "Mute track XXX",
+  description = "Mute track XXX\n"..
+    "XXX is the track index, -1 the currently selected track",
   
   arguments = nil,
   handler = function(track_index)
@@ -756,7 +765,8 @@ add_track_action {
 
 add_track_action { 
   pattern = "/unmute", 
-  description = "Unmute track XXX",
+  description = "Unmute track XXX\n"..
+    "XXX is the track index, -1 the currently selected track",
   
   arguments = nil,
   handler = function(track_index)
@@ -772,7 +782,8 @@ add_track_action {
 
 add_track_action { 
   pattern = "/solo", 
-  description = "Solo track XXX",
+  description = "Solo track XXX\n"..
+    "XXX is the track index, -1 the currently selected track",
   
   arguments = nil,
   handler = function(track_index)
@@ -797,7 +808,8 @@ add_track_action {
 
 add_device_action { 
   pattern = "/bypass", 
-  description = "Set bypass status of an device [true or false]",
+  description = "Set bypass status of an device [true or false]\n"..
+    "XXX is the device index, -1 the currently selected device",
   
   arguments = { argument("bypassed", "boolean") },
   handler = function(track_index, device_index, bypassed)
@@ -817,7 +829,8 @@ add_device_action {
 
 add_device_action { 
   pattern = "/set_parameter_by_index",
-  description = "Set parameter value of an device [0-1]",
+  description = "Set parameter value of an device [0-1]\n"..
+    "XXX is the device index, -1 the currently selected device",
   
   arguments = { argument("parameter_index", "number"), 
     argument("value", "number") },
@@ -849,7 +862,8 @@ add_device_action {
 
 add_device_action { 
   pattern = "/set_parameter_by_name",
-  description = "Set parameter value of an device [0-1]",
+  description = "Set parameter value of an device [0-1]\n"..
+    "XXX is the device index, -1 the currently selected device",
   
   arguments = { argument("parameter_name", "string"), 
     argument("value", "number") },
@@ -948,9 +962,10 @@ function process_message(pattern, arguments)
   local action_arguments = table.create{}
   
   if (not action) then
+  
     -- track pattern match
     local _, _, track_index, track_pattern = pattern:find(
-      track_action_pattern_map_prefix.."/([-]%d)(.*)")
+      track_action_pattern_map_prefix.."/(-?%d+)(/.+)")
   
     if (track_index and track_pattern) then
       track_index = tonumber(track_index) or 0
@@ -962,14 +977,15 @@ function process_message(pattern, arguments)
       action_arguments:insert(track_index)
       
       if (not action) then
+  
         -- track device match
         local _, _, device_index, device_pattern = track_pattern:find(
-          device_action_pattern_map_prefix.."/([-]%d)(.*)")
+          device_action_pattern_map_prefix.."/(-?%d+)(/.+)")
   
         if (device_index and device_pattern) then
           device_index = tonumber(device_index) or 0
           if (device_index == -1) then
-            device_index = selected_device_index(track_index) 
+            device_index = selected_device_index() 
           end
       
           action = device_action_pattern_map[device_pattern]
