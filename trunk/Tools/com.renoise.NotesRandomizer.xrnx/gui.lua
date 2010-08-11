@@ -328,6 +328,9 @@ function show_randomize_gui()
     elseif (key.name == "down") then
       mode_selector.value = math.min(
         #randomize_modes, mode_selector.value + 1)
+
+    else
+      return key
     end
   end
 
