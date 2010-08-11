@@ -64,6 +64,31 @@
  globals or locals from this script. Please see below (evaluate_env) for the 
  complete list of allowed functions and modules. 
  
+ 
+---- Adding new messages
+
+If you want to extend the default OSC message set, first copy this file to the 
+"Scripts" folder in your preferences folder. Then do your changes there. The 
+file in the Renoise resource folder may be overwritten when updating Renoise. 
+Click on "Help" -> "Show Preferences Folder..." in Renoise to locate the folder.
+
+Any errors that happen in the OSC message handlers, are not shown to the user.
+They are only dumped into the scripting terminal. Make sure its open when 
+changing anything in here to make debugging easier.
+
+When editing this file in Renoises "Scripting Terminal&Editor", any changes 
+to the message set will instantly be applied as soon as you save the file.
+This way you can quickly test out your changes.
+ 
+When working with an external editor, you can manually reload this script and 
+apply changes, by clicking on the small "refresh" button in Renoise's OSC 
+preferences pane (watch out for a small icon in the message search field, above
+the OSC message list). 
+
+Scripting developer tools must be enabled to see the "refresh" button and the 
+scripting terminal in Renoise. Please see http://scripting.renoise.com for more 
+info about this.
+  
 ]]
 
 
@@ -171,7 +196,7 @@ end
 -- Message Helpers
 --------------------------------------------------------------------------------
 
--- Environment for custom Lua expressions via OSC. such expressions can only 
+-- Environment for custom Lua expressions via OSC. Such expressions can only 
 -- access a few "safe" globals and modules.
 
 local evaluate_env = {
@@ -410,7 +435,7 @@ add_global_action {
 
 add_global_action { 
   pattern = "/song/bpm", 
-  description = "Set the songs current BPM [32-999]",
+  description = "Set the songs current BPM [32 - 999]",
   
   arguments = { argument("bpm", "number") },
   handler = function(bpm)
@@ -423,7 +448,7 @@ add_global_action {
 
 add_global_action {
   pattern = "/song/lpb", 
-  description = "Set the songs current Lines Per Beat [1-255]",
+  description = "Set the songs current Lines Per Beat [1 - 255]",
 
   arguments = { argument("lpb", "number") }, 
   handler = function(lpb)
@@ -436,7 +461,7 @@ add_global_action {
 
 add_global_action {
   pattern = "/song/tpl", 
-  description = "Set the songs current Ticks Per Line [1-16]",
+  description = "Set the songs current Ticks Per Line [1 - 16]",
 
   arguments = { argument("tpl", "number") }, 
   handler = function(tpl)
@@ -462,7 +487,7 @@ add_global_action {
 
 add_global_action { 
   pattern = "/song/edit/octave", 
-  description = "Set the songs current octave [0-8]",
+  description = "Set the songs current octave [0 - 8]",
   
   arguments = { argument("octave", "number") },
   handler = function(octave)
@@ -475,7 +500,7 @@ add_global_action {
 
 add_global_action { 
   pattern = "/song/edit/step", 
-  description = "Set the songs current edit_step [0-8]",
+  description = "Set the songs current edit_step [0 - 8]",
   
   arguments = { argument("edit_step", "number") },
   handler = function(edit_step)
@@ -514,7 +539,7 @@ add_global_action {
 
 add_global_action { 
   pattern = "/song/record/quantization_step", 
-  description = "Set the global record quantization step [1-32]",
+  description = "Set the global record quantization step [1 - 32]",
   
   arguments = { argument("step", "number") },
   handler = function(step)
@@ -626,14 +651,14 @@ add_global_action {
 
 -- NOTE: track action handler functions will get the track index passed as first 
 -- argument, but should not specify it in its argument list. Its resolved from 
--- the message pattern
+-- the message pattern.
 
 
 -- /song/track/XXX/prefx_volume
 
 add_track_action { 
   pattern = "/prefx_volume", 
-  description = "Set track XXX's pre FX volume [0, db2lin(3)]\n"..
+  description = "Set track XXX's pre FX volume [0 - db2lin(3)]\n"..
     "XXX is the track index, -1 the currently selected track",
   
   arguments = { argument("value", "number") },
@@ -647,7 +672,7 @@ add_track_action {
 
 add_track_action { 
   pattern = "/prefx_volume_db", 
-  description = "Set track XXX's pre FX volume in dB [-200, 3]\n"..
+  description = "Set track XXX's pre FX volume in dB [-200 - 3]\n"..
     "XXX is the track index, -1 the currently selected track",
   
   arguments = { argument("value", "number") },
@@ -661,7 +686,7 @@ add_track_action {
 
 add_track_action { 
   pattern = "/postfx_volume", 
-  description = "Set track XXX's post FX volume [0, db2lin(3)]\n"..
+  description = "Set track XXX's post FX volume [0 - db2lin(3)]\n"..
     "XXX is the track index, -1 the currently selected track",
   
   arguments = { argument("value", "number") },
@@ -675,7 +700,7 @@ add_track_action {
 
 add_track_action { 
   pattern = "/postfx_volume_db", 
-  description = "Set track XXX's post FX volume in dB [-200, 3]\n"..
+  description = "Set track XXX's post FX volume in dB [-200 -  3]\n"..
     "XXX is the track index, -1 the currently selected track",
 
   arguments = { argument("value", "number") },
@@ -689,7 +714,7 @@ add_track_action {
 
 add_track_action { 
   pattern = "/prefx_panning", 
-  description = "Set track XXX's pre FX panning [-50, 50]\n"..
+  description = "Set track XXX's pre FX panning [-50 - 50]\n"..
     "XXX is the track index, -1 the currently selected track",
   
   arguments = { argument("value", "number") },
@@ -703,7 +728,7 @@ add_track_action {
 
 add_track_action { 
   pattern = "/postfx_panning", 
-  description = "Set track XXX's post FX panning [-50, 50]\n"..
+  description = "Set track XXX's post FX panning [-50 - 50]\n"..
     "XXX is the track index, -1 the currently selected track",
   
   arguments = { argument("value", "number") },
@@ -731,7 +756,7 @@ add_track_action {
 
 add_track_action { 
   pattern = "/output_delay", 
-  description = "Set track XXX's delay in ms [-100, 100]\n"..
+  description = "Set track XXX's delay in ms [-100 - 100]\n"..
     "XXX is the track index, -1 the currently selected track",
   
   arguments = { argument("value", "number") },
@@ -829,7 +854,7 @@ add_device_action {
 
 add_device_action { 
   pattern = "/set_parameter_by_index",
-  description = "Set parameter value of an device [0-1]\n"..
+  description = "Set parameter value of an device [0 - 1]\n"..
     "XXX is the device index, -1 the currently selected device",
   
   arguments = { argument("parameter_index", "number"), 
@@ -862,7 +887,7 @@ add_device_action {
 
 add_device_action { 
   pattern = "/set_parameter_by_name",
-  description = "Set parameter value of an device [0-1]\n"..
+  description = "Set parameter value of an device [0 - 1]\n"..
     "XXX is the device index, -1 the currently selected device",
   
   arguments = { argument("parameter_name", "string"), 
@@ -903,8 +928,8 @@ add_device_action {
 
 -- available_messages
 
--- called by Renoise to show info about all available messages in the 
--- OSC preferences pane
+-- Called by Renoise to show info about all available messages in the 
+-- OSC preferences pane.
 
 function available_messages()
 
@@ -949,11 +974,13 @@ end
 
 -- process_message
 
--- called by Renoise in order to process an OSC message. the returned boolean 
--- is only used for the OSC log view in the preferences  (handled = false will 
--- log messages as REJECTED) 
+-- Called by Renoise in order to process an OSC message which was received by 
+-- the global Renoise OSC server (the one that is configured in the OSC 
+-- preferences pane in Renoise).
+-- The returned boolean is only used for the OSC log view in the preferences
+-- (return false will log messages as REJECTED).
 -- Lua runtime errors that may happen here, will never be shown as errors to 
--- the user, but only dumped to the Lua terminal in Renoise.
+-- the user, but will only be dumped to scripting terminal in Renoise.
 
 function process_message(pattern, arguments)
 
@@ -1023,4 +1050,3 @@ function process_message(pattern, arguments)
     
   return false -- not handled (REJECTED)
 end
-
