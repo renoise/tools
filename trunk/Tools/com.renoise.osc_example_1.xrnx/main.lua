@@ -85,7 +85,7 @@ function set_block_loop(mode)
   
   local o_message = OscMessage(
     "/renoise/transport/loop/block",{
-      {tag=mode,value=""}
+      {tag=mode}
     }
   )
   
