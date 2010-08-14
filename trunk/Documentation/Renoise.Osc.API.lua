@@ -54,9 +54,13 @@ renoise.Osc.from_binary_data(binary_data)
 -- When arguments are specified, they must be specified as a table of
 -- {tag="X", value=SomeValue}'s.
 -- "tag" is a standard OSC type tag. (see http://opensoundcontrol.org/spec-1_0)
--- Valid tags are:
+-- "value" is the arguments value expressed by a Lua type. The value must
+-- be convertible to the specified tag, which means, you cannot for example
+-- specify an "i" (integer) as type and then pass a string as the value. Use a
+-- number value instead. Not all tags require a value, like the T,F boolean 
+-- tags. Then a "value" field should not be specified.
 --
--- OSC Type Tag, Type of corresponding value
+-- Valid tags are (OSC Type Tag, Type of corresponding value)
 -- i    int32
 -- f    float32
 -- s    OSC-string
@@ -65,21 +69,17 @@ renoise.Osc.from_binary_data(binary_data)
 -- t    OSC-timetag
 -- d    64 bit ("double") IEEE 754 floating point number
 -- S    Alternate type represented as an OSC-string
--- c    an ascii character, sent as 32 bits
+-- c    An ascii character, sent as 32 bits
 -- r    32 bit RGBA color
--- m    4 byte MIDI message. Bytes from MSB to LSB are: port id, status byte, data1, data2
--- T    True. No bytes are allocated in the argument data.
--- F    False. No bytes are allocated in the argument data.
--- N    Nil. No bytes are allocated in the argument data.
--- I    Infinitum. No bytes are allocated in the argument data.
--- [    Indicates the beginning of an array. The tags following are for data in the Array until a close brace tag is reached.
--- ]    Indicates the end of an array.
+-- m    4 byte MIDI message. Bytes from MSB to LSB are: port id, 
+--        status byte, data1, data2
+-- T    True. No value needs to be specified.
+-- F    False. No value needs to be specified.
+-- N    Nil. No value needs to be specified.
+-- I    Infinitum. No value needs to be specified.
+-- [,]  Indicates the beginning, end of an array. currently not 
+--        supported by Renoise.
 --
--- "value" is the arguments value expressed by a Lua type. The value must
--- be convertible to the specified tag, which means, you cannot for example
--- specify an "i" (integer) as type and then pass a string as the value. Use a
--- number value instead. Not all tags require a value, like the T,F boolean tags.
--- Then a "value" field should not be specified.
 renoise.Osc.Message(pattern [, table of {tag, value} arguments])
 
 
