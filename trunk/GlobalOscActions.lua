@@ -254,6 +254,50 @@ local function clamp_value(value, min_value, max_value)
 end
 
 
+-- convert_value
+
+-- Tries to convert the given value to the specified dest type
+-- returns the converted value when conversion succeeded, else nil
+
+local function convert_value(value, dest_type)
+
+  local src_type = type(value)
+  
+  if (dest_type == src_type) then
+    -- no conversion needed
+    return value
+  
+  elseif (dest_type == "string") then
+    -- try converting dest to a string
+    return tostring(value)
+    
+  elseif (dest_type == "number") then
+    -- try converting dest to a number
+    return tonumber(value)
+    
+  elseif (dest_type == "boolean") then
+    -- try converting value from a string or number to boolean
+    if (tonumber(value) ~= nil) then 
+      local number = tonumber(value)
+      if (number == 1) then
+        return true
+      elseif (number == 0) then
+        return false
+      end
+    
+    -- try converting value from a string to boolean
+    elseif (tostring(value) ~= nil) then
+      local string = tostring(value):lower()
+      if (string == "true") then
+        return true
+      elseif (string == "false") then
+        return false
+      end
+    end
+  end
+end
+    
+    
 -- selected_track_index
 
 local function selected_track_index()
@@ -1031,9 +1075,13 @@ function process_message(pattern, arguments)
       local arg_values = table.create{}
 
       -- check if the passed and the actions argument types match
+      -- or can be converted to the expected type
       for i = 1, #arguments do
-        if (action.arguments[i].type == type(arguments[i].value)) then 
-          action_arguments:insert(arguments[i].value)
+        local arg_value = convert_value(
+          arguments[i].value, action.arguments[i].type)
+        
+        if (arg_value ~= nil) then 
+          action_arguments:insert(arg_value)
         else
           arg_match = false
           break
