@@ -58,10 +58,10 @@ duplex_configurations:insert {
           group_name = "Faders",
         },
         page = {
-          group_name = "PageControls",
+          group_name = "ControlButtonRow1",
         },
         mode = {
-          group_name = "ModeControls",
+          group_name = "ControlButtonRow2",
         }
       },
       options = {
