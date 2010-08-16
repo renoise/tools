@@ -5,14 +5,14 @@ main.lua
 -- tool registration
 
 renoise.tool():add_menu_entry {
-  name = "Pattern Editor:Pattern:Split...",
+  name = "Pattern Editor:Pattern:Split",
   invoke = function() 
      split()
   end
 }
 
 renoise.tool():add_keybinding {
-  name = "Pattern Editor:Pattern:Split",
+  name = "Pattern Editor:Pattern Operations:Split",
   invoke = function() split() end
 }
 
@@ -33,8 +33,8 @@ function split()
   
   
   if current_line == current_pattern.number_of_lines then
-	renoise.app():show_status('Warning: cannot split at the bottom of the pattern, operation aborted.');
-	return
+    renoise.app():show_status('Warning: cannot split at the bottom of the pattern, operation aborted.');
+    return
   end
 
   --clone current pattern
