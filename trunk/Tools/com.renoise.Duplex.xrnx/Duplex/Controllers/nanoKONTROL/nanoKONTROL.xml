@@ -38,6 +38,7 @@ Select factory scene #1 on the NanoKontrol for this configuration</Description>
           <Param value="CC#106" type="dial" name="Dial #27"  maximum="127" minimum="0"/>
 
         </Group>
+        
         <Group name="Buttons1" orientation="horizontal">
           <Param value="CC#23" type="button" name="Button #1"  maximum="127" minimum="0"/>
           <Param value="CC#24" type="button" name="Button #2"  maximum="127" minimum="0"/>
@@ -70,6 +71,7 @@ Select factory scene #1 on the NanoKontrol for this configuration</Description>
           <Param value="CC#115" type="button" name="Button #27"  maximum="127" minimum="0"/>
 
         </Group>
+        
         <Group name="Buttons2" orientation="horizontal">
           <Param value="CC#33" type="button" name="Button #1"  maximum="127" minimum="0"/>
           <Param value="CC#34" type="button" name="Button #2"  maximum="127" minimum="0"/>
@@ -100,54 +102,50 @@ Select factory scene #1 on the NanoKontrol for this configuration</Description>
           <Param value="CC#122" type="button" name="Button #25"  maximum="127" minimum="0"/>
           <Param value="CC#123" type="button" name="Button #26"  maximum="127" minimum="0"/>
           <Param value="CC#124" type="button" name="Button #27"  maximum="127" minimum="0"/>
-
-
         </Group>
-        <Row>
-          <Group name="Faders" orientation="horizontal">
-            <Param value="CC#2" type="fader" name="Fader #1"  orientation="vertical" size="3"  maximum="127" minimum="0"/>
-            <Param value="CC#3" type="fader" name="Fader #2"  orientation="vertical" size="3"  maximum="127" minimum="0"/>
-            <Param value="CC#4" type="fader" name="Fader #3"  orientation="vertical" size="3"  maximum="127" minimum="0"/>
-            <Param value="CC#5" type="fader" name="Fader #4"  orientation="vertical" size="3"  maximum="127" minimum="0"/>
-            <Param value="CC#6" type="fader" name="Fader #5"  orientation="vertical" size="3"  maximum="127" minimum="0"/>
-            <Param value="CC#8" type="fader" name="Fader #6"  orientation="vertical" size="3"  maximum="127" minimum="0"/>
-            <Param value="CC#9" type="fader" name="Fader #7"  orientation="vertical" size="3"  maximum="127" minimum="0"/>
-            <Param value="CC#12" type="fader" name="Fader #8"  orientation="vertical" size="3"  maximum="127" minimum="0"/>
-            <Param value="CC#13" type="fader" name="Fader #9"  orientation="vertical" size="3"  maximum="127" minimum="0"/>
+        
+        <Group name="Faders" orientation="horizontal">
+          <Param value="CC#2" type="fader" name="Fader #1"  orientation="vertical" size="3"  maximum="127" minimum="0"/>
+          <Param value="CC#3" type="fader" name="Fader #2"  orientation="vertical" size="3"  maximum="127" minimum="0"/>
+          <Param value="CC#4" type="fader" name="Fader #3"  orientation="vertical" size="3"  maximum="127" minimum="0"/>
+          <Param value="CC#5" type="fader" name="Fader #4"  orientation="vertical" size="3"  maximum="127" minimum="0"/>
+          <Param value="CC#6" type="fader" name="Fader #5"  orientation="vertical" size="3"  maximum="127" minimum="0"/>
+          <Param value="CC#8" type="fader" name="Fader #6"  orientation="vertical" size="3"  maximum="127" minimum="0"/>
+          <Param value="CC#9" type="fader" name="Fader #7"  orientation="vertical" size="3"  maximum="127" minimum="0"/>
+          <Param value="CC#12" type="fader" name="Fader #8"  orientation="vertical" size="3"  maximum="127" minimum="0"/>
+          <Param value="CC#13" type="fader" name="Fader #9"  orientation="vertical" size="3"  maximum="127" minimum="0"/>
 
-            <Param value="CC#42" type="fader" name="Fader #10"  orientation="vertical" size="3"  maximum="127" minimum="0"/>
-            <Param value="CC#43" type="fader" name="Fader #11"  orientation="vertical" size="3"  maximum="127" minimum="0"/>
-            <Param value="CC#50" type="fader" name="Fader #12"  orientation="vertical" size="3"  maximum="127" minimum="0"/>
-            <Param value="CC#51" type="fader" name="Fader #13"  orientation="vertical" size="3"  maximum="127" minimum="0"/>
-            <Param value="CC#52" type="fader" name="Fader #14"  orientation="vertical" size="3"  maximum="127" minimum="0"/>
-            <Param value="CC#53" type="fader" name="Fader #15"  orientation="vertical" size="3"  maximum="127" minimum="0"/>
-            <Param value="CC#54" type="fader" name="Fader #16"  orientation="vertical" size="3"  maximum="127" minimum="0"/>
-            <Param value="CC#55" type="fader" name="Fader #17"  orientation="vertical" size="3"  maximum="127" minimum="0"/>
-            <Param value="CC#56" type="fader" name="Fader #18"  orientation="vertical" size="3"  maximum="127" minimum="0"/>
+          <Param value="CC#42" type="fader" name="Fader #10"  orientation="vertical" size="3"  maximum="127" minimum="0"/>
+          <Param value="CC#43" type="fader" name="Fader #11"  orientation="vertical" size="3"  maximum="127" minimum="0"/>
+          <Param value="CC#50" type="fader" name="Fader #12"  orientation="vertical" size="3"  maximum="127" minimum="0"/>
+          <Param value="CC#51" type="fader" name="Fader #13"  orientation="vertical" size="3"  maximum="127" minimum="0"/>
+          <Param value="CC#52" type="fader" name="Fader #14"  orientation="vertical" size="3"  maximum="127" minimum="0"/>
+          <Param value="CC#53" type="fader" name="Fader #15"  orientation="vertical" size="3"  maximum="127" minimum="0"/>
+          <Param value="CC#54" type="fader" name="Fader #16"  orientation="vertical" size="3"  maximum="127" minimum="0"/>
+          <Param value="CC#55" type="fader" name="Fader #17"  orientation="vertical" size="3"  maximum="127" minimum="0"/>
+          <Param value="CC#56" type="fader" name="Fader #18"  orientation="vertical" size="3"  maximum="127" minimum="0"/>
 
-            <Param value="CC#85" type="fader" name="Fader #19"  orientation="vertical" size="3"  maximum="127" minimum="0"/>
-            <Param value="CC#86" type="fader" name="Fader #20"  orientation="vertical" size="3"  maximum="127" minimum="0"/>
-            <Param value="CC#87" type="fader" name="Fader #21"  orientation="vertical" size="3"  maximum="127" minimum="0"/>
-            <Param value="CC#88" type="fader" name="Fader #22"  orientation="vertical" size="3"  maximum="127" minimum="0"/>
-            <Param value="CC#89" type="fader" name="Fader #23"  orientation="vertical" size="3"  maximum="127" minimum="0"/>
-            <Param value="CC#90" type="fader" name="Fader #24"  orientation="vertical" size="3"  maximum="127" minimum="0"/>
-            <Param value="CC#91" type="fader" name="Fader #25"  orientation="vertical" size="3"  maximum="127" minimum="0"/>
-            <Param value="CC#92" type="fader" name="Fader #26"  orientation="vertical" size="3"  maximum="127" minimum="0"/>
-            <Param value="CC#93" type="fader" name="Fader #27"  orientation="vertical" size="3"  maximum="127" minimum="0"/>
-
-
-          </Group>
-          <Column>
-            <Group name="Transport" orientation="horizontal">
-              <Param value="CC#47" type="button" name="Control Button #1"  maximum="127" minimum="0"/>
-              <Param value="CC#45" type="button" name="Control Button #2"  maximum="127" minimum="0"/>
-              <Param value="CC#48" type="button" name="Control Button #3"  maximum="127" minimum="0"/>
-              <Param value="CC#49" type="button" name="Control Button #4"  maximum="127" minimum="0"/>
-              <Param value="CC#46" type="button" name="Control Button #5"  maximum="127" minimum="0"/>
-              <Param value="CC#44" type="button" name="Control Button #6"  maximum="127" minimum="0"/>
-            </Group>
-          </Column>
-        </Row>
+          <Param value="CC#85" type="fader" name="Fader #19"  orientation="vertical" size="3"  maximum="127" minimum="0"/>
+          <Param value="CC#86" type="fader" name="Fader #20"  orientation="vertical" size="3"  maximum="127" minimum="0"/>
+          <Param value="CC#87" type="fader" name="Fader #21"  orientation="vertical" size="3"  maximum="127" minimum="0"/>
+          <Param value="CC#88" type="fader" name="Fader #22"  orientation="vertical" size="3"  maximum="127" minimum="0"/>
+          <Param value="CC#89" type="fader" name="Fader #23"  orientation="vertical" size="3"  maximum="127" minimum="0"/>
+          <Param value="CC#90" type="fader" name="Fader #24"  orientation="vertical" size="3"  maximum="127" minimum="0"/>
+          <Param value="CC#91" type="fader" name="Fader #25"  orientation="vertical" size="3"  maximum="127" minimum="0"/>
+          <Param value="CC#92" type="fader" name="Fader #26"  orientation="vertical" size="3"  maximum="127" minimum="0"/>
+          <Param value="CC#93" type="fader" name="Fader #27"  orientation="vertical" size="3"  maximum="127" minimum="0"/>
+        </Group>
+        
+        <Group name="TransportRow1" orientation="horizontal">
+          <Param value="CC#47" type="button" name="Control Button #1"  maximum="127" minimum="0"/>
+          <Param value="CC#45" type="button" name="Control Button #2"  maximum="127" minimum="0"/>
+          <Param value="CC#48" type="button" name="Control Button #3"  maximum="127" minimum="0"/>
+        </Group>
+        <Group name="TransportRow2" orientation="horizontal">
+          <Param value="CC#49" type="button" name="Control Button #4"  maximum="127" minimum="0"/>
+          <Param value="CC#46" type="button" name="Control Button #5"  maximum="127" minimum="0"/>
+          <Param value="CC#44" type="button" name="Control Button #6"  maximum="127" minimum="0"/>
+        </Group>
       </Column>
     </Page>
   </Parameters>
