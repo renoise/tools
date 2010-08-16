@@ -516,7 +516,7 @@ function Display:__walk_table(t, done, deep)
           spacing = DEFAULT_SPACING
         }
         self.__parents[deep] = view_obj
-        
+        self.__grid_obj = nil
   
   
       --- Row
@@ -526,8 +526,8 @@ function Display:__walk_table(t, done, deep)
           spacing = DEFAULT_SPACING,
         }
         self.__parents[deep] = view_obj
-        
-  
+        self.__grid_obj = nil
+
       --- Group
   
       elseif (t[key].label == "Group") then
@@ -538,6 +538,8 @@ function Display:__walk_table(t, done, deep)
         local orientation = t[key].xarg.orientation
         local columns = t[key].xarg.columns
           
+        grid_id = nil
+
         if (columns) then
           -- enter "grid mode": use current group as 
           -- base object for inserting multiple rows
