@@ -60,28 +60,29 @@ duplex_configurations:insert {
     Transport = {
       mappings = {
         goto_previous = {
-          group_name = "Transport",
+          group_name = "TransportRow1",
           index = 1,
         },
-        goto_next = {
-          group_name = "Transport",
-          index = 3,
-        },
-        stop_playback = {
-          group_name = "Transport",
-          index = 5,
-        },
         start_playback = {
-          group_name = "Transport",
+          group_name = "TransportRow1",
           index = 2,
         },
+        goto_next = {
+          group_name = "TransportRow1",
+          index = 3,
+        },
+        
         loop_pattern = {
-          group_name = "Transport",
-          index = 4,
+          group_name = "TransportRow2",
+          index = 1,
+        },
+        stop_playback = {
+          group_name = "TransportRow2",
+          index = 2,
         },
         edit_mode = {
-          group_name = "Transport",
-          index = 6,
+          group_name = "TransportRow2",
+          index = 3,
         },
       },
     },
