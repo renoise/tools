@@ -110,6 +110,8 @@ function ControlMap:parse_definition(control_map_name, xml_string)
   -- must guard any file io access. may fail, and we don't want to bother
   -- the user with cryptic LUA error messages then...
   local succeeded, result = pcall(function() 
+    -- remove comments before parsing
+    xml_string = string.gsub (xml_string, "(<!--.-->)", "")
     return self:parse_xml(xml_string) 
   end)
   
@@ -327,7 +329,7 @@ function ControlMap:parse_xml(s)
   
   local text = string.sub(s, i)
   
-  if (not string.find(text, "^%s*$"))then
+  if (not string.find(text, "^%s*$")) then
     table.insert(stack[#stack], text)
   end
   
