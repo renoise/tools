@@ -756,9 +756,10 @@ end
 function Browser:__update_device_description() 
 
   local active_process = self:__current_process()      
-
+  local info_text_view = self.__vb.views.dpx_browser_device_info_text
+  
   if (active_process == nil) then
-    self.__vb.views.dpx_browser_device_info_text.text = ""
+    info_text_view.text = ""
 
   else
     local author, description
@@ -789,13 +790,21 @@ function Browser:__update_device_description()
       paragraphs:insert("Description: " .. description)
     end
 
-    self.__vb.views.dpx_browser_device_info_text.paragraphs = paragraphs
+    info_text_view.paragraphs = paragraphs
   end
   
   -- fill up the entire dialog width
-  self.__vb.views.dpx_browser_device_info_text.width = math.max(
+  info_text_view.width = math.max(
     self.__vb.views.dpx_browser_input_device_row.width, 
     self.__vb.views.dpx_browser_device_ui_row.width)
+
+  local text_rows = math.min(5, math.max(1, #info_text_view.paragraphs))
+  if (text_rows ~= math.floor(info_text_view.height / 16)) then
+    self.__vb.views.dpx_browser_device_info_text.height = text_rows*16
+    
+    self.__vb.views.dpx_browser_device_ui_row:resize()
+    self.__vb.views.dpx_browser_rootnode:resize()
+  end
 end
 
 
@@ -1064,7 +1073,7 @@ function Browser:__create_content_view()
     vb:multiline_text {
        id = 'dpx_browser_device_info_text',
        width = 300,
-       height = 3*18
+       height = 4*16
     }      
   }
 end
