@@ -88,7 +88,7 @@ renoise.tool()
 -- more dashes to the name, like "--- Main Menu:Tools:My Tool Group Starts Here"
 
 -- returns true when the given entry was already added, else false
-[BETA 4] renoise.tool():has_menu_entry(menu_entry_name)
+[added B4] renoise.tool():has_menu_entry(menu_entry_name)
   -> [boolean]
 
 -- add a new menu entry as descriped above
@@ -128,7 +128,7 @@ renoise.tool():remove_menu_entry(menu_entry_name)
 -- they get saved just like any other key binding in Renoise.
 
 -- returns true when the given entry was already added, else false
-[BETA 4] renoise.tool():has_keybinding(keybinding_name)
+[added B4] renoise.tool():has_keybinding(keybinding_name)
   -> [boolean]
 
 -- add a new keybinding entry as described above
@@ -147,14 +147,14 @@ renoise.tool():remove_keybinding(keybinding_name)
 -- will be around +- 5 ms
 
 -- returns true when the given function or method was registered as timer
-[BETA 4] renoise.tool():has_timer(function or {object, function} or {function, object})
+[added B4] renoise.tool():has_timer(function or {object, function} or {function, object})
   -> [boolean]
 
-[BETA 4] renoise.tool():add_timer(function or {object, function} or {function, object}, 
+[added B4] renoise.tool():add_timer(function or {object, function} or {function, object}, 
   timer_interval_in_ms)
 
 -- remove a previously registered timer
-[BETA 4] renoise.tool():remove_timer(timer_func)
+[added B4] renoise.tool():remove_timer(timer_func)
 
 
 -------- properties
