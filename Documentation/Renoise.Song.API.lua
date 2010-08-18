@@ -203,7 +203,7 @@ renoise.song().transport:cancel_sample_recording()
 
 -------- properties
 
-renoise.song().transport.playing, [BETA 4] _observable
+renoise.song().transport.playing, [added B4] _observable
   -> [boolean]
 
 renoise.song().transport.bpm, _observable
