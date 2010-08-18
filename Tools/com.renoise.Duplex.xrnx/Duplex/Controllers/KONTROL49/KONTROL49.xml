@@ -11,8 +11,8 @@ It is recommended to set the pad illumination mode to "Blink: Off". To do this h
       <Row>
         <Column>
           <Group name="Switches" orientation="horizontal">
-            <Param value="CC#61" type="togglebutton" name="Switch 2" maximum="127" minimum="0"/>
             <Param value="CC#60" type="togglebutton" name="Switch 1" maximum="127" minimum="0"/>
+            <Param value="CC#61" type="togglebutton" name="Switch 2" maximum="127" minimum="0"/>
           </Group>
         </Column>
         <Column>
@@ -38,25 +38,25 @@ It is recommended to set the pad illumination mode to "Blink: Off". To do this h
           </Group>
         </Column>
         <Column>
-          <Group name="Dials" orientation="horizontal">
-            <Param value="CC#20" type="dial" name="Dial #1" maximum="127" minimum="0"/>
-            <Param value="CC#21" type="dial" name="Dial #2" maximum="127" minimum="0"/>
-            <Param value="CC#22" type="dial" name="Dial #3" maximum="127" minimum="0"/>
-            <Param value="CC#23" type="dial" name="Dial #4" maximum="127" minimum="0"/>
-            <Param value="CC#24" type="dial" name="Dial #5" maximum="127" minimum="0"/>
-            <Param value="CC#25" type="dial" name="Dial #6" maximum="127" minimum="0"/>
-            <Param value="CC#26" type="dial" name="Dial #7" maximum="127" minimum="0"/>
-            <Param value="CC#27" type="dial" name="Dial #8" maximum="127" minimum="0"/>
+          <Group name="Encoders" orientation="horizontal">
+            <Param value="CC#20" type="dial" name="Encoder #1" maximum="127" minimum="0"/>
+            <Param value="CC#21" type="dial" name="Encoder #2" maximum="127" minimum="0"/>
+            <Param value="CC#22" type="dial" name="Encoder #3" maximum="127" minimum="0"/>
+            <Param value="CC#23" type="dial" name="Encoder #4" maximum="127" minimum="0"/>
+            <Param value="CC#24" type="dial" name="Encoder #5" maximum="127" minimum="0"/>
+            <Param value="CC#25" type="dial" name="Encoder #6" maximum="127" minimum="0"/>
+            <Param value="CC#26" type="dial" name="Encoder #7" maximum="127" minimum="0"/>
+            <Param value="CC#27" type="dial" name="Encoder #8" maximum="127" minimum="0"/>
           </Group>
-          <Group name="Faders" orientation="horizontal">
-            <Param value="CC#80" type="fader" name="Fader #1" orientation="vertical" size="3" maximum="127" minimum="0"/>
-            <Param value="CC#81" type="fader" name="Fader #2" orientation="vertical" size="3" maximum="127" minimum="0"/>
-            <Param value="CC#82" type="fader" name="Fader #3" orientation="vertical" size="3" maximum="127" minimum="0"/>
-            <Param value="CC#83" type="fader" name="Fader #4" orientation="vertical" size="3" maximum="127" minimum="0"/>
-            <Param value="CC#84" type="fader" name="Fader #5" orientation="vertical" size="3" maximum="127" minimum="0"/>
-            <Param value="CC#85" type="fader" name="Fader #6" orientation="vertical" size="3" maximum="127" minimum="0"/>
-            <Param value="CC#86" type="fader" name="Fader #7" orientation="vertical" size="3" maximum="127" minimum="0"/>
-            <Param value="CC#87" type="fader" name="Fader #8" orientation="vertical" size="3" maximum="127" minimum="0"/>
+          <Group name="Sliders" orientation="horizontal">
+            <Param value="CC#80" type="fader" name="Slider #1" orientation="vertical" size="3" maximum="127" minimum="0"/>
+            <Param value="CC#81" type="fader" name="Slider #2" orientation="vertical" size="3" maximum="127" minimum="0"/>
+            <Param value="CC#82" type="fader" name="Slider #3" orientation="vertical" size="3" maximum="127" minimum="0"/>
+            <Param value="CC#83" type="fader" name="Slider #4" orientation="vertical" size="3" maximum="127" minimum="0"/>
+            <Param value="CC#84" type="fader" name="Slider #5" orientation="vertical" size="3" maximum="127" minimum="0"/>
+            <Param value="CC#85" type="fader" name="Slider #6" orientation="vertical" size="3" maximum="127" minimum="0"/>
+            <Param value="CC#86" type="fader" name="Slider #7" orientation="vertical" size="3" maximum="127" minimum="0"/>
+            <Param value="CC#87" type="fader" name="Slider #8" orientation="vertical" size="3" maximum="127" minimum="0"/>
           </Group>
         </Column>
       </Row>

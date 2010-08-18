@@ -35,10 +35,10 @@ duplex_configurations:insert {
           group_name = "Pads B"
         },
         panning = {
-          group_name = "Dials"
+          group_name = "Encoders"
         },
         levels = {
-          group_name = "Faders"
+          group_name = "Sliders"
         },
         page = {
           group_name = "Joystick"
@@ -71,7 +71,7 @@ duplex_configurations:insert {
     Effect = {
       mappings = {
         parameters = {
-          group_name= "Dials"
+          group_name= "Encoders"
         },
         page = {
           group_name = "Joystick"
