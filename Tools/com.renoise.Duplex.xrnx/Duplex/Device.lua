@@ -375,10 +375,9 @@ function Device:show_settings_dialog(process)
             self:release()
             
             self.port_in = self.__vb.views.dpx_device_port_in.value
-            --todo: save in persistent config
-
+            process.settings.device_port_in.value = tostring(self.port_in)
+            
             restart_process()
-
           end
         },
         self.__vb:space{
@@ -398,10 +397,9 @@ function Device:show_settings_dialog(process)
             self:release()
             
             self.address = self.__vb.views.dpx_device_address.value
-            --todo: save in persistent config
+            process.settings.device_address.value = self.address
 
             restart_process()
-
           end
         }
       }
@@ -422,15 +420,17 @@ function Device:show_settings_dialog(process)
             self:release()
             
             self.port_out = self.__vb.views.dpx_device_port_out.value
-            --todo: save in persistent config
+            process.settings.device_port_out.value = tostring(self.port_out)
 
             restart_process()
-
           end
         },
+        
         self.__vb:space{
           width = 6
         },
+        
+        -- Prefix
         self.__vb:text{
           text = "Prefix",
           width = 50
@@ -447,19 +447,14 @@ function Device:show_settings_dialog(process)
             -- set_device_prefix() is called when re-opening the device,
             -- so we simply set the prefix to the new value here...
             self.prefix = self.__vb.views.dpx_device_prefix.value
-            --todo: save in persistent config
+            process.settings.device_prefix.value = self.prefix
             
             restart_process()
-
           end
         }
       }
 
       self.__vb.views.dpx_device_port_out_root:add_child(view)
-
-
-      -- prefix
-
     end
 
   end

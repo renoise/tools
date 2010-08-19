@@ -152,12 +152,10 @@ function Browser:available_devices()
   for _,config in pairs(self.__available_configurations) do
     local settings = configuration_settings(config)
     
-    local device_port_in = settings.device_port_in and
-      (settings.device_port_in.value ~= "") and 
+    local device_port_in = (settings.device_port_in.value ~= "") and 
       settings.device_port_in.value or config.device.device_port_in
       
-    local device_port_out = settings.device_port_out and
-      (settings.device_port_out.value ~= "") and 
+    local device_port_out = (settings.device_port_out.value ~= "") and 
       settings.device_port_out.value or config.device.device_port_out
   
     local display_name = config.device.display_name
@@ -1241,12 +1239,10 @@ function BrowserProcess:instantiate(configuration)
 
   if (configuration.device.protocol == DEVICE_MIDI_PROTOCOL) then
 
-    local device_port_in = self.settings.device_port_in and
-      (self.settings.device_port_in.value ~= "") and 
+    local device_port_in = (self.settings.device_port_in.value ~= "") and 
       self.settings.device_port_in.value or configuration.device.device_port_in
       
-    local device_port_out = self.settings.device_port_out and
-      (self.settings.device_port_out.value ~= "") and 
+    local device_port_out = (self.settings.device_port_out.value ~= "") and 
       self.settings.device_port_out.value or configuration.device.device_port_out
     
     self.device = _G[device_class_name](
@@ -1258,20 +1254,16 @@ function BrowserProcess:instantiate(configuration)
   
   else  -- protocol == DEVICE_OSC_PROTOCOL
 
-    local prefix = self.settings.device_prefix and 
-      (self.settings.device_prefix.value ~= "") and 
+    local prefix = (self.settings.device_prefix.value ~= "") and 
       self.settings.device_prefix.value or configuration.device.device_prefix
     
-    local address = self.settings.device_address and
-      (self.settings.device_address.value ~= "") and 
+    local address = (self.settings.device_address.value ~= "") and 
       self.settings.device_address.value or configuration.device.device_address
     
-    local port_in = self.settings.device_port_in and
-      (self.settings.device_port_in.value ~= "") and 
+    local port_in = (self.settings.device_port_in.value ~= "") and 
       self.settings.device_port_in.value or configuration.device.device_port_in
 
-    local port_out = self.settings.device_port_out and
-      (self.settings.device_port_out.value ~= "") and 
+    local port_out = (self.settings.device_port_out.value ~= "") and 
       self.settings.device_port_out.value or configuration.device.device_port_out
 
     self.device = _G[device_class_name](
@@ -1283,7 +1275,6 @@ function BrowserProcess:instantiate(configuration)
       tonumber(port_out)
     )
   end
-    
     
   self.device:set_control_map(
     configuration.device.control_map)
@@ -1376,7 +1367,7 @@ end
 --------------------------------------------------------------------------------
 
 -- start running a fully configured process. returns true when successfully 
--- started, else false (may happen if one of the apps neglect to start)
+-- started, else false (may happen if one of the apps failed to start)
 
 function BrowserProcess:start()
   TRACE("BrowserProcess:start")
@@ -1538,7 +1529,7 @@ function BrowserProcess:on_idle()
     -- idle process for stream
     self.__message_stream:on_idle()
     
-    -- first, modify ui components
+    -- modify ui components
     self.__display:update()
   
     -- then refresh the display 
