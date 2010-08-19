@@ -139,7 +139,7 @@ end
 --------------------------------------------------------------------------------
 
 function Transport:start_app()
-  print("Transport.start_app()")
+  TRACE("Transport.start_app()")
 
   if not (self.__created) then 
     self:__build_app()
@@ -152,7 +152,7 @@ end
 --------------------------------------------------------------------------------
 
 function Transport:destroy_app()
-  print("Transport:destroy_app")
+  TRACE("Transport:destroy_app")
 
   for _,c in pairs(self.controls) do
     c:remove_listeners()

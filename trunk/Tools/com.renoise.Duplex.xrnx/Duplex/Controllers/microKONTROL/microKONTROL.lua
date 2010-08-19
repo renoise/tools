@@ -3,21 +3,10 @@
 ----------------------------------------------------------------------------]]--
 
 -- default configuration of the microKONTROL
--- uses a custom device class, a control map and the Mixer and Effect
+-- uses a control map and the Mixer and Effect applications
 -- applications
 
 --==============================================================================
-
-class "microKONTROL" (MidiDevice)
-
-function microKONTROL:__init(display_name, message_stream, port_in, port_out)
-  TRACE("microKONTROL:__init", display_name, message_stream, port_in, port_out)
-
-  MidiDevice.__init(self, display_name, message_stream, port_in, port_out)
-
-end
-
---------------------------------------------------------------------------------
 
 -- setup a Mixer and Effect application
 
@@ -42,16 +31,16 @@ duplex_configurations:insert {
     Mixer = {
       mappings = {
         mute = {
-          group_name = "Button 1"
+          group_name = "Pads A"
         },
         solo = {
-          group_name = "Button 2"
+          group_name = "Pads B"
         },
         panning = {
-          group_name = "Dials"
+          group_name = "Encoders"
         },
         levels = {
-          group_name = "Faders"
+          group_name = "Sliders"
         },
         page = {
           group_name = "Joystick"
@@ -72,7 +61,6 @@ duplex_configurations:insert {
 
   -- device properties
   device = {
-    class_name = "microKONTROL",
     display_name = "microKONTROL",
     device_port_in = "MIDIIN2 (microKONTROL)",
     device_port_out = "MIDIOUT2 (microKONTROL)",
@@ -85,7 +73,7 @@ duplex_configurations:insert {
     Effect = {
       mappings = {
         parameters = {
-          group_name = "Dials"
+          group_name= "Encoders"
         },
         device = {
           group_name = "Button 2"

@@ -112,7 +112,7 @@ function Effect:__init(display, mappings, options)
   -- the controls
   self.__parameter_sliders = nil
   self.__page_control = nil
-  self.__device_navigator = nil
+  self.__device_navigators = nil
   
   self.__width = 8
 

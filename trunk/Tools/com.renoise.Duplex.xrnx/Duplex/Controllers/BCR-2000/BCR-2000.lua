@@ -56,8 +56,7 @@ duplex_configurations:insert {
           group_name = "Buttons2",
         },
         page = {
-          group_name = "PageControls",
-          index = 1
+          group_name = "ControlButtonRow1"
         }
       },
       options = {
@@ -70,8 +69,7 @@ duplex_configurations:insert {
           group_name= "EffectEncoders",
         },
         page = {
-          group_name = "PageControls",
-          index = 3
+          group_name = "ControlButtonRow2"
         }
       }
     }
