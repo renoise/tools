@@ -5,7 +5,7 @@
 
 Add the supplied scene data file "KONTROL49.k4d" into a free slot of your own scene set or load the complete scene set "KONTROL49.k4s" using the "Korg KONTROL49 Editor Librarian" software and transmit it to your KONTROL49. Then select the scene by holding the "SCENE" button and press the slot number on the pads to load it. In case you have used the supplied scene set "KONTROL49.k4s" use "SCENE" and "PAD 1" to select it.
 
-It is recommended to set the pad illumination mode to "Blink: Off". To do this hold the "SETTING" button and press "PAD 12", then use the main dial to switch the mode to "Blink: Off" in the main LCD display, then hit the red blinking "ENTER" button to save this setting.</Description>
+It is recommended to set the pad illumination mode to "Blink: Off". To do this hold the "SETTING" button and press "PAD 16", then use the main dial to switch the mode to "Blink: Off" in the main LCD display, then hit the red blinking "ENTER" button to save this setting.</Description>
   <Parameters>
     <Page>
       <Row>
