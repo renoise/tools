@@ -209,9 +209,10 @@ for _,device_name in pairs(available_devices) do
             configuration_settings_key(config), 
             renoise.Document.create {
               autostart = false,
-              prefix = "",
-              address = "",
-              port = ""
+              device_prefix = "",
+              device_address = "",
+              device_port_in = "",
+              device_port_out = ""
             }
           )
         end        
@@ -228,8 +229,6 @@ renoise.tool().preferences = duplex_preferences
 -- debug
 --------------------------------------------------------------------------------
 
-_AUTO_RELOAD_DEBUG = function()
-  -- autostart configs from the prefs when changing duplex sources
-  apply_autostart_configurations()
-end
+-- makes things easier for controller map authors...
+_AUTO_RELOAD_DEBUG = true
 
