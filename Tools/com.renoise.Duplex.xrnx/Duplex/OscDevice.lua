@@ -13,7 +13,6 @@ Requires: Globals
 
 --==============================================================================
 
-
 class 'OscDevice' (Device)
 
 function OscDevice:__init(name, message_stream,prefix,address,port_in,port_out)
@@ -40,6 +39,7 @@ function OscDevice:__init(name, message_stream,prefix,address,port_in,port_out)
 
 end
 
+
 --------------------------------------------------------------------------------
 
 -- create the OSC client/server sockets, set prefix (if any)
@@ -47,7 +47,8 @@ end
 function OscDevice:open()
   TRACE("OscDevice:open()")
 
-  assert(((not self.client) or (not self.server)), "Internal Error. Please report: " .. 
+  assert(((not self.client) or (not self.server)), 
+    "Internal Error. Please report: " .. 
     "trying to start an OSC service which is already active")
 
   -- open a client connection (send to device)
@@ -55,26 +56,36 @@ function OscDevice:open()
     self.address, self.port_out, renoise.Socket.PROTOCOL_UDP)
   if (socket_error) then 
     renoise.app():show_warning(("Failed to start the " .. 
-      "OSC client. Error: '%s'"):format(socket_error))
+      "OSC client for Duplex device '%s'. Error: '%s'"):format(
+      self.name, socket_error))
+      
+    self.client = nil
     return
+
+  else
+    self.client = client
   end
-  self.client = client
 
   -- open a server connection (receive from device)
   local server, socket_error = renoise.Socket.create_server(
     self.port_in, renoise.Socket.PROTOCOL_UDP)
   if (socket_error) then 
     renoise.app():show_warning(("Failed to start the " .. 
-      "OSC server. Error: '%s'"):format(socket_error))
+      "OSC server for Duplex device '%s'. Error: '%s'"):format(
+      self.name, socket_error))
+
+    self.server = nil
     return
-  end
-  self.server = server
-  self.server:run(self)
   
+  else
+    self.server = server
+    self.server:run(self)
+  end
+    
   self:set_device_prefix(self.prefix)
-
-
+    
 end
+
 
 --------------------------------------------------------------------------------
 
@@ -84,9 +95,7 @@ end
 function OscDevice:socket_error(error_message)
   TRACE("OscDevice:socket_error",error_message)
 
-  error(("The server returned " .. 
-    "an error message: '%s'"):format(error_message))
-
+  -- should we bother the user with this?
 end
 
 
@@ -97,14 +106,17 @@ end
 -- look for the control-map "action" instead of the "value" attribute
 -- (but still using the "value" as fallback if "action" is undefined)
 
-function OscDevice:socket_message(socket, message)
-  TRACE("OscDevice:socket_message",socket, message)
+function OscDevice:socket_message(socket, binary_data)
+  TRACE("OscDevice:socket_message",socket, binary_data)
 
-  local msg, osc_error = renoise.Osc.from_binary_data(message)
-  if (msg) then
+  local message_or_bundle, osc_error = 
+    renoise.Osc.from_binary_data(binary_data)
+  
+  if (message_or_bundle) then
+    local messages = table.create()
+    self:__unpack_messages(message_or_bundle, messages)
 
-    if (type(msg) == "Message") then
-
+    for _,msg in pairs(messages) do
       local value_str = self:__msg_to_string(msg)
 
       -- (only if defined) check the prefix:
@@ -127,21 +139,15 @@ function OscDevice:socket_message(socket, message)
           self:__send_message(message,param["xarg"])
         end
       end
-
-    elseif (type(msg) == "Bundle") then
-      -- put code here that interpret bundled messages 
-    else
-      error("unexpected argument for unpack_messages: "..
-       "expected an osc bundle or message")
     end
-
+  
   else
-    print(("Got invalid OSC data, or data which is not " .. 
-      "OSC data at all. Error: '%s'"):format(osc_error))
+    TRACE(("OscDevice: Got invalid OSC data, or data which is not " .. 
+      "OSC data at all. Error: '%s'"):format(osc_error))    
   end
-
-
+  
 end
+
 
 --------------------------------------------------------------------------------
 
@@ -162,6 +168,7 @@ function OscDevice:release()
 
 end
 
+
 --------------------------------------------------------------------------------
 
 -- set prefix for this device (pattern is appended to all outgoing traffic,
@@ -178,6 +185,7 @@ function OscDevice:set_device_prefix(prefix)
   end
 
 end
+
 
 --------------------------------------------------------------------------------
 
@@ -217,11 +225,9 @@ function OscDevice:send_osc_message(message,value)
 
       end
     end
+
     header = self.prefix and ("%s%s"):format(self.prefix,header) or header
---[[
-print("about to send:",header)
-rprint(osc_vars)
-]]
+
     self.client:send(
       renoise.Osc.Message(header,osc_vars)
     )
@@ -229,22 +235,6 @@ rprint(osc_vars)
 
 end
 
---------------------------------------------------------------------------------
-
--- create string representation of OSC message:
--- e.g. "/this/is/the/pattern 1 2 3"
-
-function OscDevice:__msg_to_string(msg)
-  TRACE("OscDevice:__msg_to_string()",msg)
-
-  local rslt = msg.pattern
-  for k,v in ipairs(msg.arguments) do
-    rslt = ("%s %s"):format(rslt,v.value)
-  end
-
-  return rslt
-
-end
 
 --------------------------------------------------------------------------------
 
@@ -273,6 +263,52 @@ function OscDevice:point_to_value(pt,maximum,minimum,ceiling)
   end
 
   return tonumber(value)
+end
+
+
+--------------------------------------------------------------------------------
+-- Private
+--------------------------------------------------------------------------------
+
+-- recursively unpacks all OSC messages from the given bundle or message. 
+-- when message_or_bundle is a single message, only this one will be added
+-- to the given message list
+
+function OscDevice:__unpack_messages(message_or_bundle, messages)
+   --TRACE("OscDevice:__unpack_messages()",message_or_bundle)
+   
+   if (type(message_or_bundle) == "Message") then
+     messages:insert(message_or_bundle)
+   
+   elseif (type(message_or_bundle) == "Bundle") then
+     for _,element in pairs(message_or_bundle.elements) do
+       -- bundles may contain messages or other bundles
+       self:__unpack_messages(element, messages)
+     end
+   
+   else
+     error("Internal Error: unexpected argument for unpack_messages: "..
+       "expected an osc bundle or message")
+   end
+   
+end
+
+
+--------------------------------------------------------------------------------
+
+-- create string representation of OSC message:
+-- e.g. "/this/is/the/pattern 1 2 3"
+
+function OscDevice:__msg_to_string(msg)
+  --TRACE("OscDevice:__msg_to_string()",msg)
+
+  local rslt = msg.pattern
+  for k,v in ipairs(msg.arguments) do
+    rslt = ("%s %s"):format(rslt, tostring(v.value))
+  end
+
+  return rslt
+
 end
 
 
