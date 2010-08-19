@@ -465,12 +465,12 @@ function Effect:__attach_to_parameters(new_song)
   local parameters = self:__current_parameters()
 
   local cm = self.display.device.control_map
-  local group_cols = cm:count_columns(self.mappings.parameters.group_name)
+  local group_count = cm:get_group_size(self.mappings.parameters.group_name)
 
   -- validate and update the sequence/parameter offset
   if (self.__page_control) then
     self.__page_control:set_range(nil,
-      math.max(0, #parameters - group_cols))
+      math.max(0, #parameters - group_count))
   end
     
   -- detach all previously attached notifiers first
@@ -486,7 +486,7 @@ function Effect:__attach_to_parameters(new_song)
   self.__attached_observables:clear()
   
   -- then attach to the new ones in the order we want them
-  for control_index = 1,math.min(#parameters, group_cols) do
+  for control_index = 1,math.min(#parameters, group_count) do
     local parameter_index = self.__parameter_offset + control_index
     local parameter = parameters[parameter_index]
 
