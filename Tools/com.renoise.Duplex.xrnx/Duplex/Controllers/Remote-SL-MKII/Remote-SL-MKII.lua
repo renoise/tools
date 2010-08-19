@@ -48,7 +48,10 @@ duplex_configurations:insert {
         },
         page = {
           group_name = "EncoderButtons",
-          index = 0
+          index = 1
+        },
+        device = {
+          group_name = "PotButtons",
         }
       }
     },
@@ -81,6 +84,10 @@ duplex_configurations:insert {
         block_loop = {
           group_name = "Controls",
           index = 7,
+        },
+        follow_player = {
+          group_name = "Controls",
+          index = 8,
         },
       }
     },

@@ -117,41 +117,7 @@ function MidiDevice:midi_callback(message)
     local param = self.control_map:get_param_by_value(value_str)
   
     if (param) then
-      local xarg = param["xarg"]
-      
-      -- determine input method
-      if (xarg.type == "button") then
-        msg.input_method = CONTROLLER_BUTTON
-      elseif (xarg.type == "togglebutton") then
-        msg.input_method = CONTROLLER_TOGGLEBUTTON
-      elseif (xarg.type == "fader") then
-        msg.input_method = CONTROLLER_FADER
-      elseif (xarg.type == "dial") then
-        msg.input_method = CONTROLLER_DIAL
-      else
-        error(("Internal Error. Please report: " ..
-          "unknown msg.input_method %s"):format(xarg.type or "nil"))
-      end
-
-      -- include meta-properties
-      msg.name = xarg.name
-      msg.group_name = xarg.group_name
-      msg.max = tonumber(xarg.maximum)
-      msg.min = tonumber(xarg.minimum)
-      msg.id = xarg.id
-      msg.index = xarg.index
-      msg.column = xarg.column
-      msg.row = xarg.row
-      msg.timestamp = os.clock()
-  
-      -- send the message
-      self.message_stream:input_message(msg)
-     
-      -- immediately update the display after having received a message
-      -- to improve response of the display
-      if (self.display) then
-        self.display:update()
-      end
+      self:__send_message(msg,param["xarg"])
     end
   end
 end
@@ -177,7 +143,7 @@ function MidiDevice:send_cc_message(number,value)
     return
   end
 
-  local message = {0xB0, number, value}
+  local message = {0xB0, math.floor(number), math.floor(value)}
 
   TRACE(("MidiDevice: %s send MIDI %X %X %X"):format(
     self.port_out, message[1], message[2], message[3]))

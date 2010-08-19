@@ -48,11 +48,11 @@ Select factory preset #1 on the BCF for this configuration</Description>
             <Param value="CC#88" type="fader" name="Fader #8"  orientation="vertical" size="3"  maximum="127" minimum="0"/>
           </Group>
           <Column>
-            <Group name="ControlButtonRow1" orientation="horizontal">
+            <Group name="PageControls" orientation="horizontal">
               <Param value="CC#89" type="togglebutton" name="Control Button #1"  maximum="127" minimum="0"/>
               <Param value="CC#90" type="togglebutton" name="Control Button #2"  maximum="127" minimum="0"/>
             </Group>
-            <Group name="ControlButtonRow2" orientation="horizontal">
+            <Group name="ModeControls" orientation="horizontal">
               <Param value="CC#91" type="togglebutton" name="Control Button #3"  maximum="127" minimum="0"/>
               <Param value="CC#92" type="togglebutton" name="Control Button #4"  maximum="127" minimum="0"/>
             </Group>

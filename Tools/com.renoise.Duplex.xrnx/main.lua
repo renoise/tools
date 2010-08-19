@@ -228,6 +228,8 @@ renoise.tool().preferences = duplex_preferences
 -- debug
 --------------------------------------------------------------------------------
 
--- controller map authors and others to get their changes applied automatically
-_AUTO_RELOAD_DEBUG = true
+_AUTO_RELOAD_DEBUG = function()
+  -- autostart configs from the prefs when changing duplex sources
+  apply_autostart_configurations()
+end
 

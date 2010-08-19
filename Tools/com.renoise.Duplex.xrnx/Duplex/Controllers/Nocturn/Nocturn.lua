@@ -115,7 +115,7 @@ duplex_configurations:insert {
         },
         mode = {
           group_name = "Pots",
-          index = 7,
+          index = 8,
         }
 
       },

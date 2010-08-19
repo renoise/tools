@@ -141,6 +141,13 @@ function ControlMap:get_indexed_element(index,group_name)
   return nil
 end
 
+--------------------------------------------------------------------------------
+
+function ControlMap:get_group_size(group_name)
+
+  return #self.groups[group_name]
+
+end
 
 --------------------------------------------------------------------------------
 
@@ -166,6 +173,100 @@ end
 
 --------------------------------------------------------------------------------
 
+-- get_param_by_action() - used for parsing OSC messages
+-- retrieve a parameter by matching it's value or action attribute, 
+-- with wildcard support for particular types of value:
+-- "/press 1 %i" matches "/press 1 1" but not "/press 1 A". 
+--
+-- use the action property if it's available, otherwise use
+-- the "value" property - the action property is needed when
+-- a device transmit a different outgoing than incoming value 
+-- 
+-- @param str (string) message to match against
+-- @return  <Param> node as table (only the first match is returned),
+--          and the value (if matched against a wildcard)
+
+function ControlMap:get_param_by_action(str)
+  TRACE("ControlMap:get_param_by_action",str)
+
+  -- todo: attempt a literal match (faster)
+  --[[
+  for _,group in pairs(self.groups) do
+    for k,v in ipairs(group) do
+      local str_prop = v["xarg"]["action"] or v["xarg"]["value"]
+      if (str_prop == str) then
+        return v
+      end
+    end
+  end
+  ]]
+  -- check with wildcard support:
+  local str_table = table.create()
+  for v in string.gmatch(str,"[^%s]+") do
+    str_table:insert(v)
+  end
+
+  for _,group in pairs(self.groups) do
+    for _,v in ipairs(group) do
+      local str_prop = v["xarg"]["action"] or v["xarg"]["value"]
+      if (str_prop) then
+
+        -- split match into parts, separated by whitespace
+        local prop_table = table.create()
+        for p in string.gmatch(str_prop,"[^%s]+") do
+          prop_table:insert(p)
+        end
+        if (#str_table~=#prop_table) then
+          -- ignore if different number of parts
+
+        elseif(str_table[1]~=prop_table[1]) then
+          -- ignore if different pattern 
+
+        else
+          -- return matching group + extracted value
+          local ignore = false
+          for o=2,#prop_table do
+            if (not ignore) then
+              if (prop_table[o]=="%f") then
+                return v,tonumber(str_table[o])
+              elseif (prop_table[o]=="%i") then
+                return v,tonumber(str_table[o])
+              --elseif (prop_table[o]=="(%s)") then
+                --return v,tostring(str_table[o])
+              elseif (prop_table[o]~=str_table[o]) then
+                -- wrong argument, ignore
+                ignore = true
+              end
+            end
+          end
+        end
+      end
+    end
+  end
+
+end
+
+
+--------------------------------------------------------------------------------
+
+-- return number of columns for the provided group
+
+function ControlMap:count_columns(group_name)
+  TRACE("ControlMap:count_columns",group_name)
+
+  local group = self.groups[group_name]
+  if (group) then
+    local row, column, columns = 1, 1, nil
+    self.__width = #group
+    if (group["columns"]) then
+      return group["columns"]
+    end
+  end
+
+end
+
+--------------------------------------------------------------------------------
+
 function ControlMap:read_file(file_path)
   local file_ref, err = io.open(file_path, "r")
   
@@ -173,10 +274,10 @@ function ControlMap:read_file(file_path)
     local rslt = file_ref:read("*a")
     io.close(file_ref)
     return rslt
-  
   else
     return nil,err
   end
+
 end
 
 
@@ -256,6 +357,16 @@ function ControlMap:parse_xml(s)
       if (label == "Param") then
         xargs.index = parameter_index
         parameter_index = parameter_index + 1
+      end
+
+      -- meta-attr: add size attribute to (toggle)buttons, if not defined
+      --if (not)xargs["size"]
+      if (xargs["type"]) and
+        (xargs["type"]=="button") or
+        (xargs["type"]=="togglebutton") then
+        if (not xargs["size"]) then
+          xargs["size"] = 1
+        end
       end
 
       table.insert(top, {label=label, xarg=xargs, empty=1})

@@ -75,6 +75,9 @@ duplex_configurations:insert {
         },
         page = {
           group_name = "Switches"
+        },
+        device = {
+          group_name = "Pads B"
         }
       }
     }

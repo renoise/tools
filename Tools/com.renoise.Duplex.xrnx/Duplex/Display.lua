@@ -72,9 +72,9 @@ function Display:__init(device)
   }    
   
   --  temp values (construction of control surface)
-  self.__parents = {}
+  self.__parents = nil
   self.__grid_obj = nil    
-  self.__grid_count = 0
+  self.__grid_count = nil
 end
 
 
@@ -240,6 +240,25 @@ function Display:set_parameter(elm, obj, point)
         self.device:send_pb_message(num,value)
       end
 ]]    
+    elseif (msg_type == OSC_MESSAGE) then
+
+      value = self.device:point_to_value(
+        point, elm.maximum, elm.minimum, obj.ceiling)
+
+      -- do not loop back the original value change back to the sender, 
+      -- unless the device explicitly wants this
+      if (not current_message) or
+         (current_message.is_virtual) or
+         (current_message.context ~= OSC_MESSAGE) or
+         (current_message.id ~= elm.id) or
+         (current_message.value ~= value) or
+         (self.device.loopback_received_messages)
+      then
+        self.device:send_osc_message(elm.value,value)
+      end
+
+
+
     else
       error(("Internal Error. Please report: " ..
         "unknown or unhandled msg_type: '%s'"):format(msg_type or "nil"))
@@ -258,13 +277,13 @@ function Display:set_parameter(elm, obj, point)
       -- either use text or colors for a button
       local colorspace = self.device.colorspace
       if (colorspace[1] or colorspace[2] or colorspace[3]) then
-        widget.color = self:__quantize_widget_color(point.color)
-        widget.text = ""
+        widget.color = self.device:quantize_color(point.color)
+        --widget.text = point.text
+        --widget.text = nil
       else
         widget.color = { 0, 0, 0 }
         widget.text = point.text
       end
-    
     elseif (type(widget) == "RotaryEncoder") or 
       (type(widget) == "MiniSlider") or
       (type(widget) == "Slider")
@@ -401,8 +420,9 @@ function Display:__walk_table(t, done, deep)
       
         --- common properties
 
-        local tooltip = string.format("%s (%s)",
-          view_obj.meta.name, view_obj.meta.value)
+        --local tooltip = string.format("%s (%s)",
+        --  view_obj.meta.name, view_obj.meta.value)
+        local tooltip = view_obj.meta.name
 
 
         --- Param:button or togglebutton
@@ -417,8 +437,10 @@ function Display:__walk_table(t, done, deep)
           self.ui_notifiers[view_obj.meta.id] = notifier
           view_obj.view = self.vb:button{
             id = view_obj.meta.id,
-            height = UNIT_HEIGHT,
-            width = UNIT_WIDTH,
+            width = (UNIT_WIDTH * view_obj.meta.size) + 
+              (DEFAULT_SPACING * (view_obj.meta.size - 1)),
+            height = (UNIT_HEIGHT * view_obj.meta.size) + 
+              (DEFAULT_SPACING * (view_obj.meta.size - 1)),
             tooltip = tooltip,
             notifier = notifier
           }
@@ -588,8 +610,8 @@ function Display:__walk_table(t, done, deep)
             self.__grid_count,view_obj.meta.row)
         end
     
-          if (not grid_id and self.__grid_obj and 
-              not self.vb.views[row_id]) then
+        if (not grid_id and self.__grid_obj and 
+          not self.vb.views[row_id]) then
     
           local row_obj = {
             view = self.vb:row{
@@ -754,37 +776,6 @@ function Display:__validate_param(xargs)
 end
  
  
---------------------------------------------------------------------------------
-
-function Display:__quantize_widget_color(color)
-
-  local function quantize_color(value, depth)
-    if (depth and depth > 0) then
-      assert(depth <= 256, "invalid device colorspace value")
-      local a = 256/(depth+1)
-      local b = a*(math.floor(value/a))
-      return math.min(math.floor(b*256/(256-b)),255)
-    else
-      return 0
-    end
-  end
-
-  -- check if monochrome, then apply the average value
-  local cs = self.device.colorspace
-  local range = math.max(cs[1],cs[2],cs[3])
-  if(range<2)then
-    local avg = (color[1]+color[2]+color[3])/3
-    color = {avg,avg,avg}
-  end
-
-  return {
-    quantize_color(color[1], self.device.colorspace[1]),
-    quantize_color(color[2], self.device.colorspace[2]),
-    quantize_color(color[3], self.device.colorspace[3])
-  } 
-end
-
-
 --------------------------------------------------------------------------------
 
 function Display:__tostring()

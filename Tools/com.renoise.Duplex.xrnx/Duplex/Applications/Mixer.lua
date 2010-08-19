@@ -195,62 +195,62 @@ function Mixer:__init(display,mappings,options)
     },
   }
 
-  -- default palette: launchpad settings, should degrade nicely...
+  -- default palette: should degrade nicely for all supported devices
 
   self.palette = {
     background = {
-      color={0xff,0x00,0xff},
+      color={0,0,0},
       text="·",
     },
       -- normal tracks are green
     normal_tip = {
-      color={0x00,0xff,0x00},
+      color={0x00,0xff,0xff},
       text="■",
     },
     normal_tip_dimmed = {
-      color={0x00,0x40,0x00},
+      color={0x00,0x40,0xff},
       text="□",
     },
     normal_lane = {
-      color={0x00,0x80,0x00},
+      color={0x00,0x81,0xff},
       text="▪",
     },
     normal_lane_dimmed = {
-      color={0x00,0x40,0x00},
+      color={0x00,0x40,0xff},
       text="▫",
     },
     normal_mute = {
-      color={0x00,0xff,0x00},
+      color={0x00,0xff,0xff},
       text="■",
     },
       -- master track is yellow
     master_tip = {
-      color={0xff,0xff,0x00},
+      color={0xff,0xff,0xff},
       text="■",
     },
     master_lane = {
-      color={0x80,0x80,0x00},
+      color={0x80,0x80,0xff},
       text="▪",
     },
     -- send tracks are red
     send_tip = {
-      color={0xff,0x00,0x00},
+      color={0xff,0x00,0xff},
       text="■",
     },
     send_tip_dimmed = {
-      color={0x40,0x00,0x00},
+      color={0x40,0x00,0xff},
       text="□",
     },
     send_lane = {
-      color={0x80,0x00,0x00},
+      color={0x81,0x00,0xff},
       text="▪",
     },
     send_lane_dimmed = {
-      color={0x40,0x00,0x00},
+      color={0x40,0x00,0xff},
       text="▫",
     },
     send_mute = {
-      color={0xff,0x00,0x00},
+      color={0xff,0x00,0xff},
       text="■",
     },
   }
@@ -525,6 +525,12 @@ function Mixer:destroy_app()
   if (self.__master) then
     self.__master:remove_listeners()
   end
+  if (self.__page_control) then
+    self.__page_control:remove_listeners()
+  end
+  if (self.__mode_control) then
+    self.__mode_control:remove_listeners()
+  end
   
   Application.destroy_app(self)
 end
@@ -610,8 +616,7 @@ function Mixer:__build_app()
       local y_pos = (embed_mutes) and 2 or 1
       local c = UISlider(self.display)
       c.group_name = self.mappings.levels.group_name
-      c.x_pos = control_index
-      c.y_pos = y_pos
+      c:set_pos(control_index,y_pos)
       c.toggleable = true
       c.flipped = false
       c.ceiling = RENOISE_DECIBEL
@@ -664,8 +669,7 @@ function Mixer:__build_app()
     if (self.mappings.panning.group_name) then
       local c = UISlider(self.display)
       c.group_name = self.mappings.panning.group_name
-      c.x_pos = control_index
-      c.y_pos = 1
+      c:set_pos(control_index)
       c.toggleable = true
       c.flipped = false
       c.ceiling = 1.0
@@ -705,8 +709,7 @@ function Mixer:__build_app()
     if (self.mappings.mute.group_name) then
       local c = UIToggleButton(self.display)
       c.group_name = self.mappings.mute.group_name
-      c.x_pos = control_index
-      c.y_pos = 1
+      c:set_pos(control_index)
       c.inverted = (self.options.invert_mute.value == self.MUTE_NORMAL) or false
       c.active = false
   
@@ -756,8 +759,7 @@ function Mixer:__build_app()
     if (self.mappings.solo.group_name) then
       local c = UIToggleButton(self.display)
       c.group_name = self.mappings.solo.group_name
-      c.x_pos = control_index
-      c.y_pos = 1
+      c:set_pos(control_index)
       c.inverted = false
       c.active = false
   
@@ -792,8 +794,7 @@ function Mixer:__build_app()
     
     local c = UISlider(self.display)
     c.group_name = self.mappings.master.group_name
-    c.x_pos = (embed_master) and (self.__width + 1) or 1
-    c.y_pos = 1
+    c:set_pos((embed_master) and (self.__width + 1) or 1)
     c.toggleable = true
     c.ceiling = RENOISE_DECIBEL
     c:set_size(self.__height)
@@ -840,7 +841,7 @@ function Mixer:__build_app()
     self.__page_control.minimum = 0
     self.__page_control.maximum = math.max(0, 
       #renoise.song().tracks - self.__width)
-    self.__page_control.x_pos = 1 + (self.mappings.page.index or 0)
+    self.__page_control:set_pos(self.mappings.page.index or 1)
     self.__page_control.text_orientation = HORIZONTAL
 
     self.__page_control.on_change = function(obj) 
@@ -867,8 +868,7 @@ function Mixer:__build_app()
   if (self.mappings.mode.group_name) then
     self.__mode_control = UIToggleButton(self.display)
     self.__mode_control.group_name = self.mappings.mode.group_name
-    self.__mode_control.x_pos = 1 + (self.mappings.mode.index or 0)
-    self.__mode_control.y_pos = 1
+    self.__mode_control:set_pos(self.mappings.mode.index or 1)
     self.__mode_control.inverted = false
     self.__mode_control.active = false
 

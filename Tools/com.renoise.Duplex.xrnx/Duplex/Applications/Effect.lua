@@ -153,7 +153,10 @@ function Effect:update()
 
   local parameters = self:__current_parameters()
 
-  for control_index = 1,self.__width do
+  local cm = self.display.device.control_map
+  local group_size = cm:get_group_size(self.mappings.parameters.group_name)
+
+  for control_index = 1,group_size do
     local parameter_index = self.__parameter_offset + control_index
     local parameter = parameters[parameter_index]
           
@@ -171,14 +174,14 @@ function Effect:update()
       -- deactivate, reset controls which have no parameter assigned
       self:set_parameter(control_index, 0)
     end
-  end
-  
-  if (self.__device_navigator) then
-    local device_idx = renoise.song().selected_device_index
-    
-    if (device_idx) then
-      self.__device_navigator:set_index(device_idx)
+
+    -- set the device navigator to the current fx
+
+    if (self.__device_navigators) then
+      local device_idx = renoise.song().selected_device_index
+      self.__device_navigators[control_index]:set((device_idx==control_index),true)
     end
+
   end
 end
 
@@ -194,6 +197,7 @@ function Effect:__build_app()
   Application.__build_app(self)
 
   self.__parameter_sliders = {}
+  self.__device_navigators = (self.mappings.device.group_name) and {} or nil
 
   -- use one parameter per control in the group
   local control_map_groups = self.display.device.control_map.groups
@@ -209,31 +213,31 @@ function Effect:__build_app()
     end
   end
 
-  if (not columns) then
-    columns = self.__width
-  end
-  
-  for control_index = 1,self.__width do
+  local cm = self.display.device.control_map
+  local group_cols,group_size = nil,nil
 
-    -- sliders --------------------------------------------
+  group_cols = cm:count_columns(self.mappings.parameters.group_name)
+  group_size = cm:get_group_size(self.mappings.parameters.group_name)
 
-    local slider = UISlider(self.display)
-    slider.group_name = self.mappings.parameters.group_name
-    slider.x_pos = column
-    slider.y_pos = row
-    slider.toggleable = false
-    slider.ceiling = 1
-    slider:set_size(1)
+  for control_index = 1,group_size do
 
-    -- slider changed from controller
-    slider.on_change = function(obj) 
+    -- sliders for parameters ------------------------------
+
+    local c = UISlider(self.display)
+    c.group_name = self.mappings.parameters.group_name
+    c:set_pos(control_index)
+    c.toggleable = false
+    c.ceiling = 1
+    c:set_size(1)
+
+    c.on_change = function(obj) 
+
+      if (not self.active) then return false end
+      
       local parameter_index = self.__parameter_offset + control_index
       local parameters = self:__current_parameters()    
   
-      if (not self.active) then
-        return false
-      
-      elseif (parameter_index > #parameters) then
+      if (parameter_index > #parameters) then
         -- parameter is outside bounds
         return false
 
@@ -266,38 +270,77 @@ function Effect:__build_app()
       end
     end
     
-    self.display:add(slider)
-    self.__parameter_sliders[control_index] = slider
+    self.display:add(c)
+    self.__parameter_sliders[control_index] = c
 
-    -- update row/column counters
-    column = column + 1
-    if (column > columns) then
-      column = 1
-      row = row + 1
+    -- device navigator (optional) ---------------------------
+    if (self.mappings.device.group_name) then
+
+      group_cols = cm:count_columns(self.mappings.device.group_name)
+
+      local c = UIToggleButton(self.display)
+      c.group_name = self.mappings.device.group_name
+      c.flipped = true
+      c.orientation = HORIZONTAL
+      c.ceiling = group_cols
+      c.palette.background = self.display.palette.background
+      c.palette.tip = self.display.palette.color_1
+      c.palette.track = self.display.palette.background
+      c:set_pos(control_index)
+      --c:set_size(group_cols)
+      c.on_change = function(obj) 
+
+        if (not self.active) then return false end
+
+        local track_idx = renoise.song().selected_track_index
+        local device = renoise.song().tracks[track_idx].devices[control_index]
+        local device_idx = renoise.song().selected_device_index
+        if (renoise.song().tracks[track_idx].devices[control_index]) then
+          if(device_idx ~= control_index) then
+              self.__device_navigators[device_idx]:set(false,true)
+          end
+          renoise.song().selected_device_index = control_index
+        else
+          return false      
+        end
+
+        -- make togglebuttons behave like radio buttons
+        -- (refuse to toggle off when already active)
+        if (not obj.active) then 
+          obj:set(true,true)
+          return false      
+        end
+
+        return true      
+
+      end
+      self.display:add(c)
+      self.__device_navigators[control_index] = c
     end
+
   end
-  
 
   -- parameter scrolling (optional) ---------------------------
 
   if (self.mappings.page.group_name) then
-    local navigator = UISpinner(self.display)
+
+    group_size = cm:get_group_size(self.mappings.parameters.group_name)
+    group_cols = cm:count_columns(self.mappings.page.group_name)
+
+    local c = UISpinner(self.display)
+    c.group_name = self.mappings.page.group_name
+    c.index = 0
+    c.step_size = group_size
+    c.minimum = 0
+    c.maximum = math.max(0, #self:__current_parameters() - group_cols)
+    c:set_pos(self.mappings.page.index or 1)
+    c.text_orientation = HORIZONTAL
     
-    navigator.group_name = self.mappings.page.group_name
-    navigator.index = 0
-    navigator.step_size = self.__width
-    navigator.minimum = 0
-    navigator.maximum = math.max(0, #self:__current_parameters() - self.__width)
-    navigator.x_pos = 1 + (self.mappings.page.index or 0)
-    navigator.text_orientation = HORIZONTAL
-    
-    navigator.on_change = function(obj) 
-      if (not self.active) then
-        return false
-      end
+    c.on_change = function(obj) 
+
+      if (not self.active) then return false end
       
       self.__parameter_offset = obj.index
-
       local new_song = false
       self:__attach_to_parameters(new_song)
 
@@ -305,45 +348,10 @@ function Effect:__build_app()
       return true
     end
     
-    self.__page_control = navigator
+    self.__page_control = c
     self.display:add(self.__page_control)
   end
 
-
-  -- device navigator (optional) ---------------------------
-
-  if (self.mappings.device.group_name) then
-    local navigator = UISlider(self.display)
-    navigator.group_name = self.mappings.device.group_name
-    navigator.x_pos = 1
-    navigator.y_pos = 1
-    navigator.flipped = true
-    navigator.orientation = HORIZONTAL
-    navigator.ceiling = columns
-    navigator.palette.background = self.display.palette.background
-    navigator.palette.tip = self.display.palette.color_1
-    navigator.palette.track = self.display.palette.background
-  
-    navigator:set_size(columns)
-    navigator.on_change = function(obj) 
-  
-      local track_idx = renoise.song().selected_track_index
-      local device = renoise.song().tracks[track_idx].devices[obj.index]
-
-      if (device) then
-        renoise.song().selected_device_index = obj.index
-      else
-        if (obj.index ~= 0) then
-          -- we have attempted to select a non-existing device
-          return false      
-        end
-      end
-  
-    end
-
-    self.__device_navigator = navigator
-    self.display:add(navigator)
-  end
 
   -- the finishing touch
   self:__attach_to_song()
@@ -381,8 +389,11 @@ function Effect:destroy_app()
     self.__page_control:remove_listeners()
   end
   
-  if (self.__device_navigator) then
-    self.__device_navigator:remove_listeners()
+  if (self.__device_navigators) then
+	for i=1, #self.__device_navigators do
+	    self.__device_navigators[i]:remove_listeners()
+	end
+
   end
 
   Application.destroy_app(self)
@@ -453,10 +464,13 @@ function Effect:__attach_to_parameters(new_song)
 
   local parameters = self:__current_parameters()
 
+  local cm = self.display.device.control_map
+  local group_cols = cm:count_columns(self.mappings.parameters.group_name)
+
   -- validate and update the sequence/parameter offset
   if (self.__page_control) then
     self.__page_control:set_range(nil,
-      math.max(0, #parameters - self.__width))
+      math.max(0, #parameters - group_cols))
   end
     
   -- detach all previously attached notifiers first
@@ -472,7 +486,7 @@ function Effect:__attach_to_parameters(new_song)
   self.__attached_observables:clear()
   
   -- then attach to the new ones in the order we want them
-  for control_index = 1,math.min(#parameters, self.__width) do
+  for control_index = 1,math.min(#parameters, group_cols) do
     local parameter_index = self.__parameter_offset + control_index
     local parameter = parameters[parameter_index]
 

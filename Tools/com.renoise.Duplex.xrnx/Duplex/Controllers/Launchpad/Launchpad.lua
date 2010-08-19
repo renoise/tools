@@ -32,6 +32,19 @@ function Launchpad:__init(display_name, message_stream, port_in, port_out)
   ]]
 end
 
+--------------------------------------------------------------------------------
+
+-- clear display before releasing device:
+-- all LEDs are turned off, and the mapping mode, buffer settings, 
+-- and duty cycle are reset to defaults
+
+function Launchpad:release()
+  TRACE("Launchpad:release()")
+
+  self:send_cc_message(0,0) 
+  MidiDevice.release(self)
+
+end
 
 --------------------------------------------------------------------------------
 
@@ -56,15 +69,6 @@ function Launchpad:point_to_value(pt)
 end
 
 --[[
---------------------------------------------------------------------------------
-
--- all LEDs are turned off, and the mapping mode, buffer settings, 
--- and duty cycle are reset to defaults
-
-function Launchpad:reset()
-    MidiDevice.send_cc_message(self,0,0)
-end
-
 
 --------------------------------------------------------------------------------
 
@@ -220,11 +224,11 @@ duplex_configurations:insert {
         },
         sequence = {
           group_name = "Controls",
-          index = 0,
+          index = 1,
         },
         track = {
           group_name = "Controls",
-          index = 2,
+          index = 3,
         }
       },
       options = {
@@ -288,11 +292,11 @@ duplex_configurations:insert {
         },
         sequence = {
           group_name = "Controls",
-          index = 0,
+          index = 1,
         },
         track = {
           group_name = "Controls",
-          index = 2,
+          index = 3,
         }
       }
     },

@@ -75,13 +75,16 @@ function Browser:__init(initial_configuration, start_configuration)
   -- MIDI port configs changed
   for _,config in pairs(duplex_configurations) do
     local settings = configuration_settings(config)
-     
-    settings.device_port_out:add_notifier(
-      Browser.__device_ports_changed, self
-    )
-    settings.device_port_in:add_notifier(
-      Browser.__device_ports_changed, self
-    )
+    if (settings.device_port_out) then
+      settings.device_port_out:add_notifier(
+        Browser.__device_ports_changed, self
+      )
+    end
+    if (settings.device_port_in) then
+      settings.device_port_in:add_notifier(
+        Browser.__device_ports_changed, self
+      )
+    end
   end    
 end
 
@@ -149,10 +152,12 @@ function Browser:available_devices()
   for _,config in pairs(self.__available_configurations) do
     local settings = configuration_settings(config)
     
-    local device_port_in = (settings.device_port_in.value ~= "") and 
+    local device_port_in = settings.device_port_in and
+      (settings.device_port_in.value ~= "") and 
       settings.device_port_in.value or config.device.device_port_in
       
-    local device_port_out = (settings.device_port_out.value ~= "") and 
+    local device_port_out = settings.device_port_out and
+      (settings.device_port_out.value ~= "") and 
       settings.device_port_out.value or config.device.device_port_out
   
     local display_name = config.device.display_name
@@ -1235,10 +1240,13 @@ function BrowserProcess:instantiate(configuration)
   self.__message_stream = MessageStream()
 
   if (configuration.device.protocol == DEVICE_MIDI_PROTOCOL) then
-    local device_port_in = (self.settings.device_port_in.value ~= "") and 
+
+    local device_port_in = self.settings.device_port_in and
+      (self.settings.device_port_in.value ~= "") and 
       self.settings.device_port_in.value or configuration.device.device_port_in
       
-    local device_port_out = (self.settings.device_port_out.value ~= "") and 
+    local device_port_out = self.settings.device_port_out and
+      (self.settings.device_port_out.value ~= "") and 
       self.settings.device_port_out.value or configuration.device.device_port_out
     
     self.device = _G[device_class_name](
@@ -1248,22 +1256,31 @@ function BrowserProcess:instantiate(configuration)
       device_port_out
     )
   
-  else -- protocol == DEVICE_OSC_PROTOCOL
-    local prefix = (self.settings.device_prefix.value ~= "") and 
-      self.settings.device_prefix.value or configuration.device.prefix
+  else  -- protocol == DEVICE_OSC_PROTOCOL
+
+    local prefix = self.settings.device_prefix and 
+      (self.settings.device_prefix.value ~= "") and 
+      self.settings.device_prefix.value or configuration.device.device_prefix
     
-    local address = (self.settings.device_address.value ~= "") and 
-      self.settings.device_address.value or configuration.device.address
+    local address = self.settings.device_address and
+      (self.settings.device_address.value ~= "") and 
+      self.settings.device_address.value or configuration.device.device_address
     
-    local port = (self.settings.device_port.value ~= "") and 
-      self.settings.device_port.value or configuration.device.port
+    local port_in = self.settings.device_port_in and
+      (self.settings.device_port_in.value ~= "") and 
+      self.settings.device_port_in.value or configuration.device.device_port_in
+
+    local port_out = self.settings.device_port_out and
+      (self.settings.device_port_out.value ~= "") and 
+      self.settings.device_port_out.value or configuration.device.device_port_out
 
     self.device = _G[device_class_name](
-      configuration.device.display_name, 
+      configuration.device.display_name,
       self.__message_stream,
       prefix,
       address,
-      tonumber(port)
+      tonumber(port_in),
+      tonumber(port_out)
     )
   end
     
