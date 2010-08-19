@@ -41,7 +41,7 @@ function UIComponent:__init(display)
   -- default palette
   self.palette = {}
 
-  -- position within canvas
+  -- position within display
   self.x_pos = 1
   self.y_pos = 1
 
@@ -123,6 +123,36 @@ function UIComponent:set_size(width, height)
   self.canvas:set_size(width, height)
   self.width = width      
   self.height = height
+end
+
+
+--------------------------------------------------------------------------------
+
+-- set_pos()  set the position using x/y or index within group
+
+function UIComponent:set_pos(x,y)
+  TRACE("UIComponent:set_pos", x, y)
+  
+  local idx = nil
+  if x and (not y) then
+    idx = x
+  end
+  
+  if (idx) then
+    -- obtain the size of the group
+    local cm = self.__display.device.control_map
+    local cols = cm:count_columns(self.group_name)
+    -- calculate x/y from index
+    if (idx>0) then
+      y = math.ceil(idx/cols)
+      x = idx-(cols*(y-1))
+    end
+  end
+  if(x~=self.x_pos) and (y~=self.y_pos) then
+    self:invalidate()
+  end
+  self.x_pos = x
+  self.y_pos = y
 end
 
 

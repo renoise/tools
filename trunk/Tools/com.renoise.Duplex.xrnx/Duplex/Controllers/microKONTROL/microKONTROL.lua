@@ -3,9 +3,21 @@
 ----------------------------------------------------------------------------]]--
 
 -- default configuration of the microKONTROL
--- uses a control map and the Mixer and Effect applications
+-- uses a custom device class, a control map and the Mixer and Effect
+-- applications
 
 --==============================================================================
+
+class "microKONTROL" (MidiDevice)
+
+function microKONTROL:__init(display_name, message_stream, port_in, port_out)
+  TRACE("microKONTROL:__init", display_name, message_stream, port_in, port_out)
+
+  MidiDevice.__init(self, display_name, message_stream, port_in, port_out)
+
+end
+
+--------------------------------------------------------------------------------
 
 -- setup a Mixer and Effect application
 
@@ -17,6 +29,7 @@ duplex_configurations:insert {
 
   -- device properties
   device = {
+    class_name = "microKONTROL",
     display_name = "microKONTROL",
     device_port_in = "MIDIIN2 (microKONTROL)",
     device_port_out = "MIDIOUT2 (microKONTROL)",
@@ -29,16 +42,16 @@ duplex_configurations:insert {
     Mixer = {
       mappings = {
         mute = {
-          group_name = "Pads A"
+          group_name = "Button 1"
         },
         solo = {
-          group_name = "Pads B"
+          group_name = "Button 2"
         },
         panning = {
-          group_name = "Encoders"
+          group_name = "Dials"
         },
         levels = {
-          group_name = "Sliders"
+          group_name = "Faders"
         },
         page = {
           group_name = "Joystick"
@@ -59,6 +72,7 @@ duplex_configurations:insert {
 
   -- device properties
   device = {
+    class_name = "microKONTROL",
     display_name = "microKONTROL",
     device_port_in = "MIDIIN2 (microKONTROL)",
     device_port_out = "MIDIOUT2 (microKONTROL)",
@@ -71,7 +85,10 @@ duplex_configurations:insert {
     Effect = {
       mappings = {
         parameters = {
-          group_name= "Encoders"
+          group_name = "Dials"
+        },
+        device = {
+          group_name = "Button 2"
         },
         page = {
           group_name = "Joystick"

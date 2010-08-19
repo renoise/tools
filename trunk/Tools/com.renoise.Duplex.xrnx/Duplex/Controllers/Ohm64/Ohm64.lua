@@ -73,11 +73,11 @@ duplex_configurations:insert {
         },
         sequence = {
           group_name = "ControlsRight",
-          index = 0,
+          index = 1,
         },
         track = {
           group_name = "ControlsRight",
-          index = 2,
+          index = 3,
         }
       }
     },
@@ -88,7 +88,7 @@ duplex_configurations:insert {
         },
         page = {
           group_name = "ControlsRight",
-          index = 4,
+          index = 5,
 
         }
       }

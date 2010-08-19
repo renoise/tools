@@ -252,13 +252,13 @@ function Matrix:update()
         end
 
         --button:set_dimmed(slot_empty)
-        button:set(not slot_muted)
+        button:set(not slot_muted,true)
 
       elseif button then
 
         -- out-of-bounds space (below/next to song)
         palette.background = table.rcopy(self.palette.out_of_bounds)
-        button:set(false)
+        button:set(false,true)
         button:set_dimmed(false)
 
       end
@@ -278,6 +278,7 @@ function Matrix:start_app()
   TRACE("Matrix.start_app()")
 
   -- "matrix_group_name" is required
+  --[[
   if (not self.mappings.matrix.group_name) then
 
   -- display some helpful advice
@@ -314,6 +315,7 @@ function Matrix:start_app()
 
     return false
   end
+  ]]
 
   if not (self.__created) then 
     self:__build_app()
@@ -345,6 +347,14 @@ function Matrix:destroy_app()
 
   if (self.__trigger) then
     self.__trigger:remove_listeners()
+  end
+
+  if (self.__sequence_navigator) then
+    self.__sequence_navigator:remove_listeners()
+  end
+
+  if (self.__track_navigator) then
+    self.__track_navigator:remove_listeners()
   end
 
   if (self.__buttons) then
@@ -581,7 +591,7 @@ function Matrix:__build_app()
   -- sequence (up/down scrolling)
   local c = UISpinner(self.display)
   c.group_name = self.mappings.sequence.group_name
-  c.x_pos = 1+self.mappings.sequence.index
+  c:set_pos(self.mappings.sequence.index or 1)
   c.text_orientation = VERTICAL
   c.on_change = function(obj) 
     if (not self.active) then
@@ -604,7 +614,7 @@ function Matrix:__build_app()
   --  track (sideways scrolling)
   local c = UISpinner(self.display)
   c.group_name = self.mappings.track.group_name
-  c.x_pos = 1+self.mappings.track.index
+  c:set_pos(self.mappings.track.index or 1)
   c.text_orientation = HORIZONTAL
   c.on_change = function(obj) 
     TRACE("self.__track_navigator.on_change:",obj)
@@ -627,8 +637,7 @@ function Matrix:__build_app()
 
   local c = UISlider(self.display)
   c.group_name = self.mappings.triggers.group_name
-  c.x_pos = x_pos
-  c.y_pos = 1
+  c:set_pos(x_pos)
   c.toggleable = true
   c.flipped = true
   c.ceiling = self.__height
@@ -744,11 +753,11 @@ function Matrix:__build_app()
 
       local c = UIToggleButton(self.display)
       c.group_name = self.mappings.matrix.group_name
-      c.x_pos = x
-      c.y_pos = y
+      c:set_pos(x,y)
       c.active = false
 
       -- controller button pressed & held
+      --[[
       c.on_hold = function(obj) 
         TRACE("controller button pressed and held")
         obj:toggle()
@@ -760,6 +769,7 @@ function Matrix:__build_app()
           renoise.song().selected_sequence_index = y
         end
       end
+      ]]
 
       -- controller button was pressed
       c.on_change = function(obj) 

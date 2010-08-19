@@ -13,10 +13,11 @@ NOTE_ARRAY = { "C-","C#","D-","D#","E-","F-","F#","G-","G#","A-","A#","B-" }
 DEVICE_OSC_PROTOCOL = 0
 DEVICE_MIDI_PROTOCOL = 1
 
+-- Message types
+
 MIDI_CC_MESSAGE = 2
 MIDI_NOTE_MESSAGE = 3
 MIDI_PITCH_BEND_MESSAGE = 4
-
 OSC_MESSAGE = 5
 
 -- Event types
@@ -33,14 +34,19 @@ DEVICE_EVENT_BUTTON_HELD = 13
 -- Input methods
 
 -- bidirectional button (LED)
+-- (a control-map @type="button" attribute)
 CONTROLLER_BUTTON = 20    
 -- bidirectional button which toggles the state internally (LED)
+-- (a control-map @type="togglebutton" attribute)
 CONTROLLER_TOGGLEBUTTON = 21    
---  bidirectional encoder (LED)
+--  relative/endless encoder (LED)
+-- (a control-map @type="encoder" attribute)
 --CONTROLLER_ENCODER = 22
 -- manual fader
+-- (a control-map @type="fader" attribute)
 CONTROLLER_FADER = 23
 -- basic rotary encoder 
+-- (a control-map @type="dial" attribute)
 CONTROLLER_DIAL = 24      
 
 VERTICAL = 80
