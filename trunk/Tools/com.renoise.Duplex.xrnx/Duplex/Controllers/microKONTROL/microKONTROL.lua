@@ -18,7 +18,6 @@ duplex_configurations:insert {
 
   -- device properties
   device = {
-    class_name = "microKONTROL",
     display_name = "microKONTROL",
     device_port_in = "MIDIIN2 (microKONTROL)",
     device_port_out = "MIDIOUT2 (microKONTROL)",
@@ -76,7 +75,7 @@ duplex_configurations:insert {
           group_name= "Encoders"
         },
         device = {
-          group_name = "Button 2"
+          group_name = "Pads B"
         },
         page = {
           group_name = "Joystick"
