@@ -114,31 +114,39 @@ renoise.song().selected_parameter, _observable
 renoise.song().selected_parameter_index, _observable
   -> [read-only, number or 0 (when no parameter is selected)]
 
-renoise.song().selected_pattern TODO: , _observable
+-- the currently edited pattern track. never nil. 
+-- use selected_pattern_index_observable for notifications
+renoise.song().selected_pattern
   -> [read-only, renoise.Pattern object]
-renoise.song().selected_pattern_track  TODO: , _observable
+
+-- the currently edited pattern track object. never nil. 
+-- use selected_pattern_index_observable
+-- and selected_track_index_observable for notifications
+renoise.song().selected_pattern_track
   -> [read-only, renoise.PatternTrack object]
-renoise.song().selected_pattern_index   TODO: , _observable
+
+-- the currently edited pattern index
+renoise.song().selected_pattern_index, [added B6] _observable
   -> [number]
 
--- the currently edited sequence
+-- the currently edited sequence position
 renoise.song().selected_sequence_index, _observable
   -> [number]
 
--- the currently edited line in the edited sequence/pattern
+-- the currently edited line in the edited pattern
 renoise.song().selected_line
   -> [read-only, renoise.PatternTrackLine object]
 renoise.song().selected_line_index
   -> [number]
 
 -- the currently edited column in the selected line in the edited sequence/pattern
-renoise.song().selected_note_column
+renoise.song().selected_note_column, TODO: _observable
   -> [read-only, renoise.NoteColumn object or nil], [renoise.Line object or nil]
 renoise.song().selected_note_column_index
   -> [number or nil (when an effect column is selected)]
 
 -- the currently edited column in the selected line in the edited sequence/pattern
-renoise.song().selected_effect_column
+renoise.song().selected_effect_column, TODO: _observable
   -> [read-only, renoise.EffectColumn or nil], [renoise.Line object or nil]
 renoise.song().selected_effect_column_index
   -> [number or nil (when a note column is selected)]
@@ -1005,7 +1013,7 @@ renoise.song().patterns[].tracks[].lines[].note_columns[].is_selected
 renoise.song().patterns[].tracks[].lines[].note_columns[].note_value 
   -> [number, 0-119, 120=Off, 121=Empty]
 renoise.song().patterns[].tracks[].lines[].note_columns[].note_string 
-  -> [string, 'C-0' - 'G-9', 'Off' or '---']
+  -> [string, 'C-0' - 'G-9', 'OFF' or '---']
 
 renoise.song().patterns[].tracks[].lines[].note_columns[].instrument_value 
   -> [number, 0-254, 255==Empty]
