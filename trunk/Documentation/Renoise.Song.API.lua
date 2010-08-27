@@ -641,8 +641,52 @@ renoise.song().instruments[].split_map[]
 renoise.song().instruments[].split_map_assignment_observable
   -> [renoise.Observable object]
 
+[added b6] renoise.song().instruments[].midi_properties
+  -> [InstrumentMidiProperties object]
+
+[added b6] renoise.song().instruments[].plugin_properties 
+  -> [InstrumentPluginProperties object]
+
 renoise.song().instruments[].samples[], _observable
   -> [read-only, array of renoise.Sample objects]
+
+
+--------------------------------------------------------------------------------
+-- renoise.Instrument.MidiProperties
+
+
+-------- consts
+
+[added b6] renoise.Instrument.MidiProperties.TYPE_EXTERNAL
+[added b6] renoise.Instrument.MidiProperties.TYPE_LINE_IN_RET
+[added b6] renoise.Instrument.MidiProperties.TYPE_INTERNAL -- REWIRE
+
+
+-------- properties
+  
+[added b6] renoise.song().instruments[].midi_properties.instrument_type, _observable
+  -> [Enum=TYPE_XXX]
+
+[added b6] renoise.song().instruments[].midi_properties.device_name, _observable
+  -> [string]
+[added b6] renoise.song().instruments[].midi_properties.midi_channel, _observable
+  -> [number, 1 - 16]
+[added b6] renoise.song().instruments[].midi_properties.midi_base_note, _observable
+  -> [number, 0 - 119, C-4=48]
+[added b6] renoise.song().instruments[].midi_properties.midi_program, _observable
+  -> [number, 1 - 128, 0 = OFF]
+[added b6] renoise.song().instruments[].midi_properties.midi_bank, _observable
+  -> [number, 1 - 65536, 0 = OFF]
+[added b6] renoise.song().instruments[].midi_properties.delay, _observable
+  -> [number, 0 - 100]
+[added b6] renoise.song().instruments[].midi_properties.duration, _observable
+  -> [number, 0 - 100 OR -1 = Disabled]
+
+
+--------------------------------------------------------------------------------
+-- renoise.InstrumentPluginProperties
+
+-- TODO
 
 
 --------------------------------------------------------------------------------
