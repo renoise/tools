@@ -577,6 +577,9 @@ renoise.DeviceParameter.POLARITY_BIPOLAR
 
 -------- functions
 
+-- set a new value and write automation, when the MIDI mapping
+-- "record to autmation" option is set. only works for parameters
+-- of track devices, not for instrument devices
 renoise.song().tracks[].devices[].parameters[].record_value(value)
 
 
@@ -597,9 +600,11 @@ renoise.song().tracks[].devices[].parameters[].value_quantum
 renoise.song().tracks[].devices[].parameters[].value_default
   -> [read-only, float]
 
+-- not valid for parameters of instrument devices
 renoise.song().tracks[].devices[].parameters[].is_automated, _observable
   -> [read-only, boolean]
 
+-- not valid for parameters of instrument devices
 renoise.song().tracks[].devices[].parameters[].show_in_mixer, _observable
   -> [boolean]
 
@@ -665,15 +670,18 @@ renoise.song().instruments[].samples[], _observable
 
 -------- properties
   
--- Note: ReWire device do always start with "ReWire: " in its device_name and will 
--- always ignore the instrument_type and midi_channel properties. MIDI channels are 
--- not configurable for ReWire MIDI, and instrument_type will always be "TYPE_INTERNAL"
+-- Note: ReWire device do always start with "ReWire: " in its device_name and
+-- will always ignore the instrument_type and midi_channel properties. MIDI 
+-- channels are not configurable for ReWire MIDI, and instrument_type will 
+-- always be "TYPE_INTERNAL" for ReWire devices.
   
 [added b6] renoise.song().instruments[].midi_properties.instrument_type, _observable
   -> [Enum=TYPE_XXX]
 
--- when setting new devices, device name must be one of renoise.Midi.available_output_devices
--- devices are automatically opened when needed. to close a device, set its name to ""
+-- when setting new devices, device name must be one of 
+-- renoise.Midi.available_output_devices.
+-- devices are automatically opened when needed. to close a device, set its name 
+-- to an empty string ("")
 [added b6] renoise.song().instruments[].midi_properties.device_name, _observable
   -> [string]
 [added b6] renoise.song().instruments[].midi_properties.midi_channel, _observable
@@ -696,41 +704,44 @@ renoise.song().instruments[].samples[], _observable
 
 -------- functions
 
--- load an existing new, non aliases plugin. pass a empty string to unload 
--- an existing plugin. see also available_plugins 
+-- load an existing, new, non aliased plugin. pass an empty string to unload 
+-- an already assigned plugin. see also "available_plugins"
 [added b6] renoise.song().instruments[].plugin_properties:load_plugin(plugin_name)
   -> [boolean, success]
 
 
 -------- properties
 
--- list of currently available plugins. this is a list of unique plugin names
--- which also contains the plugins type, not including the plugin vendors as
--- visible in the Renoise GUI
+-- list of all currently available plugins. this is a list of unique plugin names
+-- which also contains the plugin's type (VST/AU/DSSI/...), not including the 
+-- vendor names as visible in Renoise's GUI. Aka, its an identifier, and not the 
+-- name as visible in the GUI. when no plugin is loaded, the identifier is empty.
 [added b6] renoise.song().instruments[].plugin_properties.available_plugins[]
   -> [read_only, list of strings]
 
--- plugin name will only be present when a plugin was assigned, and the plugin 
--- was loaded successfully. when set, it will be one of "available_plugins"
+-- plugin name will be a non empty string as soon as plugin is or was loaded, 
+-- not nessesarily when a plugin is present. when loading the plugin failed, or 
+-- the plugin currently is not installed on the system, name will be set, but 
+-- the device will NOT be present. when the plugin was loaded successfully, 
+-- plugin_name will be one of "available_plugins"
 [added b6] renoise.song().instruments[].plugin_properties.plugin_name
   -> [read_only, string]
 
-[added b6] renoise.song().instruments[].plugin_properties.external_editor_present
+-- returns true when a plugin is present; was loaded successfully 
+[added b6] renoise.song().instruments[].plugin_properties.plugin_loaded
   -> [read-only, boolean]
+
+-- valid object for successfully loaded plugins, else nil. alias plugin instruments
+-- of FX will return the resolved device, will link to the device the alias points to.
+[added b6] renoise.song().instruments[].plugin_properties.plugin_device
+ -> [renoise.InstrumentDevice object or renoise.TrackDevice object or nil]
+
+-- valid for loaded plugins only. when the plugin has no custom editor, renoise
+-- will create a dummy editor for it which only lists the plging parameters
 [added b6] renoise.song().instruments[].plugin_properties.external_editor_visible
   -> [boolean, set to true to show the editor, false to close it]
 
-[added b6] renoise.song().instruments[].plugin_properties.midi_channel, _observable 
-  -> [number, 1 - 16]
-[added b6] renoise.song().instruments[].plugin_properties.midi_base_note, _observable 
-  -> [number, 0 - 119, C-4=48]
-
-[added b6] renoise.song().instruments[].plugin_properties.volume, _observable
-  -> [number, linear gain, 0 - 4]
-
-[added b6] renoise.song().instruments[].plugin_properties.auto_suspend, _observable 
-  -> [boolean]
-
+-- valid for loaded and unloaded plugins
 [added b6] renoise.song().instruments[].plugin_properties.alias_instrument_index
   -> [read-only, number or 0 (when no alias instrument is set)]
 [added b6] renoise.song().instruments[].plugin_properties.alias_fx_track_index
@@ -738,12 +749,42 @@ renoise.song().instruments[].samples[], _observable
 [added b6] renoise.song().instruments[].plugin_properties.alias_fx_device_index
   -> [read-only, number or 0 (when no alias FX is set)]
 
+-- valid for loaded and unloaded plugins
+[added b6] renoise.song().instruments[].plugin_properties.midi_channel, _observable 
+  -> [number, 1 - 16]
+[added b6] renoise.song().instruments[].plugin_properties.midi_base_note, _observable 
+  -> [number, 0 - 119, C-4=48]
+
+-- valid for loaded and unloaded plugins
+[added b6] renoise.song().instruments[].plugin_properties.volume, _observable
+  -> [number, linear gain, 0 - 4]
+
+-- valid for loaded and unloaded plugins
+[added b6] renoise.song().instruments[].plugin_properties.auto_suspend, _observable 
+  -> [boolean]
+
 -- TODO: renoise.song().instruments[].plugin_properties.create_alias(other_plugin_properties)
 -- TODO: renoise.song().instruments[].plugin_properties.create_alias(track_fx)
 -- TODO: renoise.song().instruments[].plugin_properties.output_routings[]
--- TODO: renoise.song().instruments[].plugin_properties.plugin_device
---   -> [renoise.InstrumentDevice object or nil]
 
+
+--------------------------------------------------------------------------------
+-- renoise.InstrumentDevice
+--------------------------------------------------------------------------------
+
+-------- properties
+
+[added b6] renoise.song().instruments[].plugin_properties.plugin_device.name
+  -> [read-only, string]
+
+[added b6] renoise.song().instruments[].plugin_properties.plugin_device.active_preset, _observable 
+  -> [number, 0 when none is active or available]
+
+[added b6] renoise.song().instruments[].plugin_properties.plugin_device.presets[] 
+  -> [read-only, list of strings]
+  
+[added b6] renoise.song().instruments[].plugin_properties.plugin_device.parameters[]
+  -> [read-only, list of renoise.DeviceParameter objects]
 
 
 --------------------------------------------------------------------------------
