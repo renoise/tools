@@ -22,6 +22,9 @@ Do not try to execute this file. It uses a .lua extension for markups only.
 
 -------- functions
 
+-- access to the one and only loaded song in the app. always valid 
+-- after the application initialized. NOT valid when called from the XRNX globals
+-- (xrnx tools are initialized before the initial song is created)
 renoise.song() 
   -> [renoise.Song object]
 
@@ -32,30 +35,71 @@ renoise.song()
 
 -------- functions
 
+-- test if something in the song can be undone
 renoise.song():can_undo()
   -> [boolean]
+-- undo the last performed action. will do nothing if nothing can be undone.
 renoise.song():undo()
 
+-- test if something in the song can be redone.
 renoise.song():can_redo()
   -> [boolean]
+-- redo a previously undone action. will do nothing if nothing can be redone
 renoise.song():redo()
 
+-- when modifying the song, renoise will automatically add descriptions for 
+-- undo/redo by looking at what changed first (a track was inserted, a pattern 
+-- line changed and so on). when the song is changed from a menu entry callback, 
+-- the menu entries label will automatically be used for the undo description. 
+-- if those auto-generated names do not work for you, or you can come up with 
+-- something more descriptive, you can !before changing anything in the song! 
+-- give your changes a custom undo description (like i.e: "Generate Synth Sample").
+[added b6] renoise.song():describe_undo(description)
+    
+-- insert a new track at the given track index. inserting a track behind or at
+-- the master_track will create a send_track. else a "normal" track is created.
 renoise.song():insert_track_at(index)
   -> [new renoise.Track object]
+-- delete an existing track. the master track can not be deleted, but all sends 
+-- can. Renoise at least needs one "normal" track to work, thus trying to delete
+-- all tracks will fire an error.
 renoise.song():delete_track_at(index)
+-- swap the positions of two tracks. a send can only be swapped with a send and 
+-- a normal track can only be swapped with a normal track. the master can not be 
+-- swapped at all.
 renoise.song():swap_tracks_at(index1, index2)
 
+-- insert a new instrument at the given index. this will remap all existing notes 
+-- in all patterns, if needed, and also update all other instrument links in 
+-- the song.
 renoise.song():insert_instrument_at(index)
   -> [new renoise.Instrument object]
+-- delete an existing instrument at the given index. Renoise needs at least one
+-- instrument, thus trying to completely trash all instruments will fire an 
+-- error. this will remap all existing notes in all patterns and update all 
+-- other instrument links in the song.
 renoise.song():delete_instrument_at(index)
+-- swap positions of two isntruments. this will remap all existing notes in all 
+-- patterns and update all other instrument links in the song.
 renoise.song():swap_instruments_at(index2, index2)
 
+-- captures the current instrument (selects the instrument) from the current
+-- note column at the current cursor pos. changes the the selected instrument 
+-- accordingly, but does not return the result. when no instrument is present at
+-- the current cursor pos, nothing will be done.
 renoise.song():capture_instrument_from_pattern()
+-- tries to captures the nearest instrument from the current pattern track,
+-- starting to look at the cursor pos, then advancing until an instrument is found.
+-- changes the the selected instrument accordingly, but does not return the result.
+-- when no instruments (notes) are present in the current pattern track, nothing
+-- will be done.
 renoise.song():capture_nearest_instrument_from_pattern()
 
 
 -------- properties
 
+-- when the song was loaded from or saved to a file, the absolute path and name
+-- to the xrnx file is returned, else an empty string is returned
 renoise.song().file_name
   -> [read-only, string]
 
@@ -69,11 +113,13 @@ renoise.song().comments[], _observable
 renoise.song().comments_assignment_observable
   -> [renoise.Observable object]
 
-
+-- see renoise.Transport for more info
 renoise.song().transport
   -> [read-only, renoise.Transport object]
-renoise.song().sequencer
+-- see renoise.PatternSequencer for more info
+rrenoise.song().sequencer
   -> [read-only, renoise.PatternSequencer object]
+-- see renoise.PatternIterator for more info
 renoise.song().pattern_iterator
   -> [read-only, renoise.PatternIterator object]
 
