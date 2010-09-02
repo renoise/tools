@@ -83,6 +83,7 @@ renoise.song():delete_instrument_at(index)
 -- patterns and update all other instrument links in the song.
 renoise.song():swap_instruments_at(index2, index2)
 
+
 -- captures the current instrument (selects the instrument) from the current
 -- note column at the current cursor pos. changes the the selected instrument 
 -- accordingly, but does not return the result. when no instrument is present at
@@ -96,6 +97,42 @@ renoise.song():capture_instrument_from_pattern()
 renoise.song():capture_nearest_instrument_from_pattern()
 
 
+-- when rendering (see renoise.song().rendering, renoise.song().rendering_progress), 
+-- the current render process is canceled. else nothing is done.
+[added b6] renoise.song():cancel_rendering()
+
+-- start rendering a section of the song or the whole song to a WAV file. This
+-- will start an offline process and not block the calling script: 
+-- the rendering job will be done in the background and the call will return 
+-- immediately back to the script, but the Renoise GUI will be blocked during
+-- rendering. the passed 'rendering_done_callback' function is called as soon as 
+-- rendering is done, successfully completed. 
+-- while rendering, the rendering status can be polled with the song().rendering
+-- and song().rendering_progress properties in for example idle notifier loops.
+-- if starting the rendering process fails (because of file io errors for
+-- example), the render function will return false and the error message is set 
+-- as second return value. on success only true is returned.
+-- 'options' is an optional table with the following optional fields:
+-- options = {
+--   TODO: start_position, -- renoise.SongPos object. by default the song start
+--   TODO: end_position,   -- renoise.SongPos object. by default the song end
+--   sample_rate,    -- number, one of 22050, 44100, 48000, 88200, 96000. 
+--                        by default the current rate
+--   bit_depth ,     -- number, one of 16, 24 or 32. by default 32
+--   priority,       -- string, one "low", "realtime", "high". by default "high"
+-- }
+-- to render only specific tracks or columns, mute all the tracks/columns that
+-- should not be rendered before starting to render.
+-- 'file_name' must point to a valid, maybe already existing file. if it already
+-- exists, the file will be silently overwritten. the renderer will add a ".wav" 
+-- extension to the file_name when not already present.
+-- 'rendering_done_callback' is ONLY called when rendering succeeded. you should
+-- "do something" with the file you've passed to the renderer here, like for 
+-- example loading the file into a sample buffer...
+[added b6] renoise.song():render([options, ] filename, rendering_done_callback) 
+  -> [boolean, error_message]
+  
+  
 -------- properties
 
 -- when the song was loaded from or saved to a file, the absolute path and name
@@ -113,6 +150,13 @@ renoise.song().comments[], _observable
 renoise.song().comments_assignment_observable
   -> [renoise.Observable object]
 
+-- see renoise.song():render(). returns true while rendering is in progress
+[added b6] renoise.song().rendering
+  -> [read-only, boolean]
+-- see renoise.song():render(). returns the current rendering progress amount
+[added b6] renoise.song().rendering_progress
+  -> [read-only, number, 0-1.0]
+	
 -- see renoise.Transport for more info
 renoise.song().transport
   -> [read-only, renoise.Transport object]
