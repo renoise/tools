@@ -47,6 +47,10 @@ end
 
 function Random:__init(mode)
   math.randomseed(os.time())
+  -- Fix for poor OSX/BSD random behavior
+  -- @see: http://lua-users.org/lists/lua-l/2007-03/msg00564.html
+  local garbage = math.random()
+  garbage = math.random()
   self:set_mode(mode or 'Chaos')
 end
 
