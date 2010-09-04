@@ -26,6 +26,7 @@ range_modes = table.create {
 
 local current_range = #range_modes
 local current_mode = nil
+local current_key = "C-"
 local current_preserve_notes = false
 local current_preserve_octaves = true
 local current_neighbour = false
@@ -80,7 +81,7 @@ local function invoke_current_random()
     randomizer.invoke_shuffle(iter, selection_only)
   else
     randomizer.invoke_random(
-      mode, iter, selection_only, current_preserve_notes,
+      mode, iter, selection_only, current_key, current_preserve_notes,
       current_preserve_octaves, current_neighbour, current_neighbour_shift,
       current_min, current_max
     )
@@ -92,6 +93,10 @@ end
 -- redraw
 
 local function redraw(vb)
+  -- hide key
+  vb.views.key_column.visible =
+    (current_mode ~= randomize_modes:find("Shuffle") and
+    current_mode ~= randomize_modes:find("Chaos"))
   -- hide neighbour
   vb.views.neighbour_row.visible =
     (current_mode ~= randomize_modes:find("Shuffle") and
@@ -177,6 +182,17 @@ function show_randomize_gui()
     value = current_mode,
     notifier = function(value)
       current_mode = value
+      redraw(vb)
+    end,
+    width = POPUP_WIDTH
+  }
+
+  local key_selector = vb:popup {
+    items = Random.note_sets["Chaos"],
+    value = table.find(Random.note_sets["Chaos"], tostring(current_key)),
+    notifier = function(value)
+      current_key = Random.note_sets["Chaos"][value]
+      print(current_key)
       redraw(vb)
     end,
     width = POPUP_WIDTH
@@ -272,8 +288,14 @@ function show_randomize_gui()
     },
 
     vb:column {
-      vb:text { text = 'How: (Scales are in C)' },
+      vb:text { text = 'How:' },
       mode_selector,
+    },
+
+    vb:column {
+      id = "key_column",
+      vb:text { text = 'Key:' },
+      key_selector,
     },
 
     vb:row {

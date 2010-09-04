@@ -12,6 +12,7 @@ module("randomizer", package.seeall)
 class "Random"
 
 -- Helper structure
+-- Important: Do not change "Chaos", it represents "All notes" internally
 Random.modes = {
   { name = 'Chaos', notes = {'C-','C#','D-','D#','E-','F-','F#','G-','G#','A-','A#','B-'} },
   { name = 'Algerian', notes = {'C-','D-','E-','F-','F#','G-','A-','B-'} },
@@ -41,7 +42,7 @@ end
 -- Populate note_sets table
 Random.note_sets = {}
 for _,v in pairs(Random.modes) do
-  Random.note_sets[v.name] = v.notes
+  Random.note_sets[v.name] = table.copy(v.notes)
 end
 
 function Random:__init(mode)
@@ -53,6 +54,34 @@ function Random:set_mode(mode)
   assert(Random.note_sets[mode] ~= nil)
   self.mode = mode
 end
+
+function Random:set_key(key)
+  assert(table.find(Random.note_sets["Chaos"], key) ~= nil)
+  -- Reset keys to C-
+  for _,v in pairs(Random.modes) do
+    Random.note_sets[v.name] = table.copy(v.notes)
+  end
+  if self.mode == "Chaos" or key == "C-" then return end
+
+  local intervals = {}
+  local shift = table.copy(Random.note_sets["Chaos"])
+  local key_table = Random.note_sets[self.mode]
+
+  for i = 1, #key_table do
+    table.insert(intervals, (table.find(Random.note_sets["Chaos"], key_table[i])))
+  end
+
+  while shift[1] ~= key do
+     table.insert(shift, shift[1])
+     table.remove(shift, 1)
+  end
+
+  for i = 1, #intervals do
+    key_table[i] = shift[intervals[i]]
+  end
+
+end
+
 
 function Random:set_preserve_notes(preserve_notes)
   assert(type(preserve_notes) == 'boolean')
@@ -250,8 +279,8 @@ end
 -- invoke_random
 
 function invoke_random(
-  mode, pattern_iterator, constrain, preserve_notes, preserve_octave, neighbour,
-  shift, min, max
+  mode, pattern_iterator, constrain, key, preserve_notes, preserve_octave,
+  neighbour, shift, min, max
 )
 
   if (preserve_octave == nil) then
@@ -260,6 +289,7 @@ function invoke_random(
   end
 
   local randomizer = Random(mode)
+  if key then randomizer:set_key(key) end
   if preserve_octave then randomizer:set_preserve_octave(preserve_octave) end
   if preserve_notes then randomizer:set_preserve_notes(preserve_notes) end
   if neighbour then randomizer:set_neighbour(neighbour, shift) end
