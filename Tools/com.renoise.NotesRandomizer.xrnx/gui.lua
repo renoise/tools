@@ -192,7 +192,6 @@ function show_randomize_gui()
     value = table.find(Random.note_sets["Chaos"], tostring(current_key)),
     notifier = function(value)
       current_key = Random.note_sets["Chaos"][value]
-      print(current_key)
       redraw(vb)
     end,
     width = POPUP_WIDTH

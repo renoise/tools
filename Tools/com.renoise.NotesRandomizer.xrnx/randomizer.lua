@@ -61,31 +61,35 @@ end
 
 function Random:set_key(key)
   assert(table.find(Random.note_sets["Chaos"], key) ~= nil)
+  self.key = key
+
   -- Reset keys to C-
   for _,v in pairs(Random.modes) do
     Random.note_sets[v.name] = table.copy(v.notes)
   end
   if self.mode == "Chaos" or key == "C-" then return end
 
-  local intervals = {}
+  -- Permutate notes table
   local shift = table.copy(Random.note_sets["Chaos"])
-  local key_table = Random.note_sets[self.mode]
-
-  for i = 1, #key_table do
-    table.insert(intervals, (table.find(Random.note_sets["Chaos"], key_table[i])))
-  end
-
   while shift[1] ~= key do
      table.insert(shift, shift[1])
      table.remove(shift, 1)
   end
 
-  for i = 1, #intervals do
-    key_table[i] = shift[intervals[i]]
+  -- Change key for all scales
+  for _,v in pairs(Random.modes) do
+    if v.name ~= "Chaos" then
+      local intervals = {}
+      local key_table = Random.note_sets[v.name]
+      for i = 1, #key_table do
+        table.insert(intervals, (table.find(Random.note_sets["Chaos"], key_table[i])))
+      end
+      for i = 1, #intervals do
+        key_table[i] = shift[intervals[i]]
+      end
+    end
   end
-
 end
-
 
 function Random:set_preserve_notes(preserve_notes)
   assert(type(preserve_notes) == 'boolean')
