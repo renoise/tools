@@ -55,7 +55,11 @@ do
     selected_pattern_track:create_automation(parameter)
   end)
 
+  assert_error(function() -- postfx: parameter not automateable
+    selected_pattern_track:create_automation(selected_track.postfx_volume)
+  end)
 
+  
   -- change automation
   
   local function make_point(time, value)
