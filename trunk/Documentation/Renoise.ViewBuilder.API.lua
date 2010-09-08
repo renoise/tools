@@ -101,6 +101,26 @@ view.tooltip
   -> [string]
 
 
+
+--------------------------------------------------------------------------------
+-- renoise.Views.Control (inherits from View)
+--------------------------------------------------------------------------------
+
+-- Control is the base class for all views which somehow allow letting the user 
+-- change a value or some "state" via the UI.
+
+
+----- properties
+
+-- Instead of making a control invisible, you can also make it inactive.
+-- Deactivated controls will still be shown and will also still show its 
+-- currently assigned value, but do not allow changing it. Most controls will 
+-- also display "greyed out" to visualize the deactivated state.
+control.active
+  -> [boolean]
+
+
+
 --------------------------------------------------------------------------------
 -- renoise.Views.Rack (inherits from View, 'column' or 'row' in ViewBuilder)
 --------------------------------------------------------------------------------
@@ -457,7 +477,7 @@ multiline_textfield.bind
 
 
 --------------------------------------------------------------------------------
--- renoise.Views.Bitmap (inherits from View, 'bitmap' in the builder)
+-- renoise.Views.Bitmap (inherits from Control, 'bitmap' in the builder)
 --------------------------------------------------------------------------------
 
 --[[    *
@@ -515,7 +535,7 @@ bitmapview.notifier
 
 
 --------------------------------------------------------------------------------
--- renoise.Views.Button (inherits from View, 'button' in the builder)
+-- renoise.Views.Button (inherits from Control, 'button' in the builder)
 --------------------------------------------------------------------------------
 
 -- A simple button, which will call a custom notifier function when clicked.
@@ -583,7 +603,7 @@ button.notifier
 
 
 --------------------------------------------------------------------------------
--- renoise.Views.CheckBox (inherits from View, 'checkbox' in the builder)
+-- renoise.Views.CheckBox (inherits from Control, 'checkbox' in the builder)
 --------------------------------------------------------------------------------
 
 -- A single button with a checkbox bitmap, which can be used to toggle 
@@ -625,7 +645,7 @@ checkbox.bind
   
   
 --------------------------------------------------------------------------------
--- renoise.Views.Switch (inherits from View, 'switch' in the builder)
+-- renoise.Views.Switch (inherits from Control, 'switch' in the builder)
 --------------------------------------------------------------------------------
 
 -- A set of horizontally aligned buttons, where only one button can be enabled
@@ -670,7 +690,7 @@ switch.bind
   
   
 --------------------------------------------------------------------------------
--- renoise.Views.Popup (inherits from View, 'popup' in the builder)
+-- renoise.Views.Popup (inherits from Control, 'popup' in the builder)
 --------------------------------------------------------------------------------
 
 -- A dropdown menu which shows the currently selected value when closed.
@@ -716,7 +736,7 @@ popup.bind
   
   
 --------------------------------------------------------------------------------
--- renoise.Views.Chooser (inherits from View, 'chooser' in the builder)
+-- renoise.Views.Chooser (inherits from Control, 'chooser' in the builder)
 --------------------------------------------------------------------------------
 
 -- A radio button alike set of vertically stacked items. Only one value can be 
@@ -761,7 +781,7 @@ chooser.bind
   
   
 --------------------------------------------------------------------------------
--- renoise.Views.ValueBox (inherits from View, 'valuebox' in the builder)
+-- renoise.Views.ValueBox (inherits from Control, 'valuebox' in the builder)
 --------------------------------------------------------------------------------
 
 -- A box with <> buttons and a text field which can be edited by the user. 
@@ -898,7 +918,7 @@ value.bind
   
   
 --------------------------------------------------------------------------------
--- renoise.Views.ValueField (inherits from View, 'valuefield' in the builder)
+-- renoise.Views.ValueField (inherits from Control, 'valuefield' in the builder)
 --------------------------------------------------------------------------------
 
 -- A text view, which shows a string representation of a number and allows 
@@ -972,7 +992,7 @@ valuefield.bind
   
   
 --------------------------------------------------------------------------------
--- renoise.Views.Slider (inherits from View, 'slider' in the builder)
+-- renoise.Views.Slider (inherits from Control, 'slider' in the builder)
 --------------------------------------------------------------------------------
 
 -- A slider with <> buttons, which shows and allows editing values in a custom 
@@ -1021,7 +1041,7 @@ slider.bind
   
   
 --------------------------------------------------------------------------------
--- renoise.Views.MiniSlider (inherits from View, 'minislider' in the builder)
+-- renoise.Views.MiniSlider (inherits from Control, 'minislider' in the builder)
 --------------------------------------------------------------------------------
 
 -- Same as a slider, but without <> buttons and a really tiny height. Just like
@@ -1067,7 +1087,7 @@ slider.bind
   -> [ObservableNumber Object]
 
 --------------------------------------------------------------------------------
--- renoise.Views.RotaryEncoder (inherits from View, 'rotary' in the builder)
+-- renoise.Views.RotaryEncoder (inherits from Control, 'rotary' in the builder)
 --------------------------------------------------------------------------------
 
 -- A slider which looks like a potentiometer.
@@ -1120,7 +1140,7 @@ rotary.bind
   
 
 --------------------------------------------------------------------------------
--- [added B4] renoise.Views.XYPad (inherits from View, 'xypad' in the builder)
+-- [added B4] renoise.Views.XYPad (inherits from Control, 'xypad' in the builder)
 --------------------------------------------------------------------------------
 
 -- A slider alike pad which allows controlling two values at once. By default

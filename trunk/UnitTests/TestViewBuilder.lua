@@ -489,8 +489,8 @@ do
           text = "Hit me",
           width = 60,
           notifier = function()
-            local slider_row = vb.views.slider_row
-            slider_row.visible = not slider_row.visible
+            local slider = vb.views.slider
+            slider.active = not slider.active
           end,
         },
         vb:button {
@@ -682,6 +682,7 @@ do
           text = "vb:slider"
         },
         vb:slider {
+          id = "slider",
           min = 1,
           max = 100,
           value = 20,
