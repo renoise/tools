@@ -55,7 +55,7 @@ do
     selected_pattern_track:create_automation(parameter)
   end)
 
-  assert_error(function() -- postfx: parameter not automateable
+  assert_error(function() -- postfx: parameter not automatable
     selected_pattern_track:create_automation(selected_track.postfx_volume)
   end)
 
