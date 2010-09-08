@@ -70,8 +70,8 @@ do
   ----------------------------------------------------------------------------
   -- parameter automation flags
  
-  assert(selected_track.prefx_volume.is_automateable)
-  assert(not selected_track.postfx_volume.is_automateable)
+  assert(selected_track.prefx_volume.is_automatable)
+  assert(not selected_track.postfx_volume.is_automatable)
  
 end
   

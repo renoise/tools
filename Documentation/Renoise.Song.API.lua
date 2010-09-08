@@ -707,7 +707,7 @@ renoise.song().tracks[].devices[].parameters[].value_default
 -- Not valid for parameters of instrument devices. returns true when creating
 -- envelope auotmation is possible for the parameter (see also 
 -- renoise.song().patterns[].tracks[]:create_automation)
-[added b6] renoise.song().tracks[].devices[].parameters[].is_automateable
+[added b6] renoise.song().tracks[].devices[].parameters[].is_automatable
   -> [read-only, boolean]
 
 -- Not valid for parameters of instrument devices.
@@ -1108,8 +1108,8 @@ renoise.song().patterns[].tracks[]:find_automation(parameter)
 
 -- Creates a new automation for the given device parameter. 
 -- Fires and error when an automation already exists returns the newly 
--- created automation. passed parameter must be automateable, which can
--- be tested with 'parameter.is_automateable'
+-- created automation. passed parameter must be automatable, which can
+-- be tested with 'parameter.is_automatable'
 renoise.song().patterns[].tracks[]:create_automation(parameter)
   -> [renoise.PatternTrackAutomation object]
 
