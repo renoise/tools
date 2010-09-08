@@ -922,6 +922,31 @@ function available_controls()
     }
   }
 
+  -- valuebox_deactivated
+  local valuebox_deactivated_row = vb:row {
+    vb:text {
+      width = TEXT_ROW_WIDTH,
+      text = "(active=false)"
+    },
+    vb:valuebox {
+      active = false, -- any control can be (de)activated
+      min = 0,
+      max = 55,
+      value = 5,
+      tostring = function(value) 
+        return ("0x%.2X"):format(value)
+      end,
+      tonumber = function(str) 
+        return tonumber(str, 0x10)
+      end,
+      notifier = function(value)
+        show_status(("valuebox value changed to '%d'"):
+          format(value))
+      end
+    }
+  }
+
+
   -- valuefield 
   local valuefield_row = vb:row {
     vb:text {
@@ -1119,6 +1144,7 @@ function available_controls()
         vb:space {height = DEFAULT_CONTROL_HEIGHT},
         valuefield_row, 
         valuebox_row, 
+        valuebox_deactivated_row,
       },
 
       vb:column {
