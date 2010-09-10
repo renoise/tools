@@ -139,8 +139,8 @@ local function send_track(send_index)
 
   local track_index = sequencer_track_count + send_index + 1
 
-  if track_index > sequencer_track_count and
-     track_index <= #song().tracks then
+  if (track_index > sequencer_track_count and
+      track_index <= #song().tracks) then
     return song().tracks[track_index]
   else
     return nil
@@ -190,11 +190,11 @@ local function wrap_value(value, min_value, max_value)
   local range = max_value - min_value + 1
   assert(range > 0, "invalid range")
 
-  while value < min_value do
+  while (value < min_value) do
     value = value + range
   end
 
-  while value > max_value do
+  while (value > max_value) do
     value = value - range
   end
 
@@ -205,7 +205,7 @@ end
 -- quantize_value
 
 function quantize_value(value, quantum)
-  if value >= 0 then
+  if (value >= 0) then
      value = value + quantum / 2
   else
      value = value - quantum / 2
@@ -220,7 +220,7 @@ end
 -- boolean_message_value
 
 local function boolean_message_value(message, value)
-  if message:is_switch() then
+  if (message:is_switch()) then
     return message.boolean_value
   else
     return value
@@ -231,7 +231,7 @@ end
 -- toggle_message_value
 
 local function toggle_message_value(message, value)
-  if message:is_trigger() then
+  if (message:is_trigger()) then
     return not value
   else
     return value
@@ -244,10 +244,10 @@ end
 local function message_value_with_offset(message, value,
   offset, min_value, max_value)
 
-  if message:is_abs_value() then
+  if (message:is_abs_value()) then
     return clamp_value(message.int_value + offset, min_value, max_value)
 
-  elseif message:is_rel_value() then
+  elseif (message:is_rel_value()) then
     return clamp_value(value + message.int_value, min_value, max_value)
 
   else
@@ -266,7 +266,7 @@ end
 -- inc_message_value
 
 local function inc_message_value(message, value, min_value, max_value)
-  if message:is_trigger() then
+  if (message:is_trigger()) then
     return clamp_value(value + 1, min_value, max_value)
   else
     return value
@@ -277,7 +277,7 @@ end
 -- dec_message_value
 
 local function dec_message_value(message, value, min_value, max_value)
-  if message:is_trigger() then
+  if (message:is_trigger()) then
     return clamp_value(value - 1, min_value, max_value)
   else
     return value
@@ -297,29 +297,30 @@ local function parameter_message_value(message, parameter)
   local parameter_max = (parameter.value_max - parameter.value_min) *
     message.value_max_scaling + parameter.value_min
 
-  if quantum > 0 then
+  if (quantum > 0) then
     new_value = quantize_value(new_value, quantum)
-
+    
     parameter_min = quantize_value(parameter_min, quantum)
     parameter_max = quantize_value(parameter_max, quantum)
   end
 
   local parameter_range = parameter_max - parameter_min
 
-  if message:is_abs_value() then
+  if (message:is_abs_value()) then
     new_value = parameter_min + (message.int_value / 127 * parameter_range)
 
     if (parameter.polarity == renoise.DeviceParameter.POLARITY_BIPOLAR) then
-      local mid_value = (parameter.value_max - parameter.value_min) / 2;
-      if (new_value ~= mid_value and -- 128 to avoid rounding fuzz
-          math.abs(mid_value - new_value) < parameter_range / 128) then
-        new_value = mid_value
+      local center_value = parameter.value_min +
+        (parameter.value_max - parameter.value_min) / 2;
+      if (math.abs(center_value - new_value) < parameter_range / 128) then
+        -- snap to center
+        new_value = center_value
       end
     end
 
-  elseif message:is_rel_value() then
-    if quantum > 0 then
-      if message.int_value > 0 then
+  elseif (message:is_rel_value()) then
+    if (quantum > 0) then
+      if (message.int_value > 0) then
         new_value = new_value + quantum
       else
         new_value = new_value - quantum
@@ -328,11 +329,11 @@ local function parameter_message_value(message, parameter)
       new_value = new_value + parameter_range / 127 * message.int_value;
 
       if (parameter.polarity == renoise.DeviceParameter.POLARITY_BIPOLAR) then
-        local mid_value = (parameter.value_max - parameter.value_min) / 2;
-
-        if (new_value ~= mid_value and -- 128 to avoid rounding fuzz
-            math.abs(mid_value - new_value) < parameter_range / 128) then
-          new_value = mid_value
+        local center_value = parameter.value_min + 
+          (parameter.value_max - parameter.value_min) / 2;
+        if (math.abs(center_value - new_value) < parameter_range / 128) then
+          -- snap to center
+          new_value = center_value
         end
       end
     end
@@ -342,30 +343,30 @@ local function parameter_message_value(message, parameter)
       math.max(parameter_min, parameter_max)
     )
 
-  elseif message:is_switch() then
-    if message.boolean_value then
+  elseif (message:is_switch()) then
+    if (message.boolean_value) then
       new_value = parameter_max
     else
       new_value = parameter_min
     end
 
-  elseif message:is_trigger() then
-    if quantum > 0 then
+  elseif (message:is_trigger()) then
+    if (quantum > 0) then
       -- walk through quantized values
-      if parameter_max > parameter_min then
+      if (parameter_max > parameter_min) then
         new_value = new_value + quantum;
-        if new_value > parameter_max then
+        if (new_value > parameter_max) then
           new_value = parameter_min
         end
-      elseif parameter_max < parameter_min then
+      elseif (parameter_max < parameter_min) then
         new_value = new_value - quantum
-        if new_value < parameter_max then
+        if (new_value < parameter_max) then
           new_value = parameter_min
         end
       end
     else
       -- toggle between min/max
-      if parameter.value > parameter_min + parameter_range / 2 then
+      if (parameter.value > parameter_min + parameter_range / 2) then
         new_value = parameter_min
       else
         new_value = parameter_max
