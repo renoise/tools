@@ -350,6 +350,14 @@ function show_randomize_gui()
       mode_selector.value = math.min(
         #randomize_modes, mode_selector.value + 1)
 
+    elseif (key.name == "left") then
+      key_selector.value = math.max(
+        1, key_selector.value - 1)
+
+    elseif (key.name == "right") then
+      key_selector.value = math.min(
+        #Random.note_sets["Chaos"], key_selector.value + 1)
+
     else
       return key
     end
