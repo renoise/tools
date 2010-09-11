@@ -61,6 +61,7 @@ end
 
 function Random:set_key(key)
   assert(table.find(Random.note_sets["Chaos"], key) ~= nil)
+  if key == self.key then return end
   self.key = key
 
   -- Reset keys to C-
