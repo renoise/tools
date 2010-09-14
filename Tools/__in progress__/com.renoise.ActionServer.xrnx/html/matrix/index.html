@@ -4,14 +4,13 @@
   L:set_header("Cache-control", "no-store")
   L:set_header("Pragma", "no-cache")
   L:set_header("Expires", "0")
-end}
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1.dtd">
+end}<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" dir="ltr">
 <head>
 <title>Renoise Matrix</title>
     <meta http-equiv="cache-control" content="no-cache" />
     <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
-    <link type="text/css" href="/default.css" media="screen" rel="stylesheet" />
+    <link type="text/css" href="/css/default.css" media="screen" rel="stylesheet" />
 
     <!-- required scripts -->
     <script type="text/javascript" src="/js/jquery-1.4.2.min.js"></script>
@@ -24,11 +23,13 @@ end}
 
 <body>
   <div id="center">
+      <div id="playback_control"><b>Playback Control</b> &raquo; <b>Tempo:</b> <span id="tempo">n/a</span> - <b>Line:</b> <span id="line">?</span> / <span id="lines">?</span></div>
+
       <div id="test-tools"></div>
 
       <div id="matrix_placeholder"><!-- Matrix Table goes here --></div>
 
-      <div id="log"></log>
+      <div id="log"></div>
 
   </div>
 
@@ -59,6 +60,11 @@ end}
     function set_mute_state(data){
       $.each(data, function(k,v){
         $('#'+k).toggleClass('seq_mute', v);
+        if (!v) {
+          clearCell($('#'+k));
+        } else {
+          drawSeqMute($('#'+k));
+        }
       });
     }
     
@@ -73,7 +79,33 @@ end}
         }
       }
     }
+    
+    function set_tempo(bpm){
+      $('#tempo').text(bpm);
+    }
+    
+    function set_track_state(data){
+        $('.t'+data.tid).toggleClass('off', data.state==2);
+        $('.t'+data.tid).toggleClass('muted', data.state==3);
+    }
 
+    function set_playback_pos(line){
+      $('#line').text(line);
+    }
+
+    function set_pattern_length(lines){
+      $('#lines').text(lines);
+    }
+    
+    function clearCell(elm){
+      $(elm).html("");
+    }
+
+    function drawSeqMute(elm){
+      var w = $(elm).width();
+      var h = $(elm).height();
+      $(elm).html('<img src="seq_mute.png" height="'+h+'" width="'+w+'" />');
+    }
 
     function load_matrix_table(callback){
       //Get Matrix
@@ -85,8 +117,16 @@ end}
         //Floating Table Head
         $("#table_matrix").chromatable({
           height: "600px",
-          width: "1000px"
+          width: "100%"
         });
+
+        //Cell Mutes
+        $('.seq_mute').each(function(){drawSeqMute(this);});
+        
+        //Initialize stuff
+        set_pattern_length(lines);
+        set_playback_pos(line);
+        set_tempo(bpm);
 
         //Track Colors
 
@@ -95,7 +135,7 @@ end}
         }
       });
     }
-    
+
     function log(str){
       if (debug==true){
         $('#log').prepend("<p>"+str+"</p>");
@@ -108,10 +148,14 @@ end}
       data = $.parseJSON(data);
       $.each(data, function(k,event){
         switch(event.key) {
+          case "line": set_playback_pos(event.value); break;
           case "sid": set_sid(event.value); break;
+          case "lines": set_pattern_length(event.value); break;
           case "mutes_changed": set_mute_state(event.value); break;
           case "song_change": load_matrix_table(); break;
           case "seq_loop": set_seq_loop(event.value); break;
+          case "tempo": set_tempo(event.value); break;
+          case "track_state_changed": set_track_state(event.value); break;
         }
       });
 
@@ -124,8 +168,10 @@ end}
       setTimeout('loop()', au_interval);
     }
 
-
     $(document).ready(function(){
+      $('body').prepend('<div id="gmenu"></div>');
+      $('#gmenu').load('/menu.html');
+    
       if (debug==true){
         $("#test-tools").append("<strong>Test Tools</strong> ");
         $("#test-tools").append("<button id='update'>update ["+client_id+"]</button>");
@@ -144,17 +190,32 @@ end}
           log("enabled auto-update");
         });
 
-        $("#test-tools").show();
-        $("#log").show();
+        $("#test-tools").css("display", "block");
+        $("#log").css("display", "block");
       }
-
 
       //Polling Renoise for song changes
         load_matrix_table(loop);
 
     }); // end document ready
 
+    //Track Mute
+    $("#table_matrixwrapper th").live('click', function(){
+      var id = $(this).attr('id'); //t03
+      if (!id) 
+        return false;
+      var tid = id.substr(1);
+      ~{do
+         local url = Util:urlencode(
+           "/Track Muting/Mute//Unmute/Track XX [Toggle]/Track #tid [Toggle]")
+         url = url:gsub("%%23tid", "%%23'+tid+'")
+         OUT = ("var url = '%s';"):format(url)
+      end }
 
+      var p = this;
+      $.post(url, {ajax:true});
+      return false;
+    });
 
     //Track Hover
     var old_tid = 0;
@@ -215,11 +276,11 @@ end}
      var arr = id.match(/\d+/g);
      var seq = arr[0];
      var tid = arr[1];
-     
+
      ~{do
        local url = Util:urlencode(
          "/Seq. Muting/Seq. XX [Toggle]/Seq. #seq/Mute Track #tid [Toggle]")
-       url = url:gsub("%%23seq", "%%23'+seq+'")  
+       url = url:gsub("%%23seq", "%%23'+seq+'")
        url = url:gsub("%%23tid", "%%23'+tid+'")
        OUT = ("var url = '%s';"):format(url)
      end }

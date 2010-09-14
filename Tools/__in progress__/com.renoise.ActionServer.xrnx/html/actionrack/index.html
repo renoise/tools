@@ -4,7 +4,7 @@
 <title>Renoise Actions</title>
     <meta http-equiv="cache-control" content="no-cache" />
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <link type="text/css" href="/default.css" media="screen" rel="stylesheet" />
+    <link type="text/css" href="/css/default.css" media="screen" rel="stylesheet" />
 
     <!-- required scripts -->
     <script type="text/javascript" src="/js/jquery-1.4.2.min.js"></script>
@@ -20,7 +20,7 @@
 
     <!-- styles for this example page only -->
   <style type="text/css">
-      body { padding: 0px; margin: 0px ;  background-color: #aaa; height: 100%;}
+      body { background-color: #aaa; height: 100%;}
       #center { height: 100%;  font-size:62.5%; border: 10% solid #333; padding: 10px 20px 20px 20px; width: 600px; margin: 0px auto; background-color: white;  }
       .fg-menu-container  { font-size:62.5%; }
       #menuLog { font-size:1.4em; margin:10px 20px 20px; }
@@ -184,7 +184,7 @@
 
       function getMenu(){
         // DYNAMIC MENU ITEMS
-          $.post("/actions.lua", {'path[]':path, full:dynamic, depth:levels}, function(subtree){
+          $.post("actions.lua", {'path[]':path, full:dynamic, depth:levels}, function(subtree){
              //merge(subtree, menu_tree)
 
             $("#actions").html(subtree);
@@ -210,6 +210,8 @@
       }
 
       $(function(){
+        $('body').prepend('<div id="gmenu"></div>');
+        $('#gmenu').load('/menu.html');
 
          $rack = $('#rack');
 
@@ -225,7 +227,7 @@
          $('.widget_elm input').live('click',function(){
             var id = $(this).parents("fieldset").attr('id');
             var w_id = id.substring(2);
-            var url = widgets[w_id];
+            var url = "/" + widgets[w_id];
             $.post(url, {ajax:true});
          });
 
@@ -263,18 +265,19 @@
 
 <body>
  <div id="center">
-  <p><a href="/">Back to index</a></p>
+  
   <h1>Renoise Actions Rack</h1>
 
   <p>The goal is to display a menu, initialized with only 1 level of items. As soon as the user clicks on an item, 
   the relevant branch is loaded and injected into the menu. Currently the server generates the tree as a HTML list,
   which makes injecting branches a bit hard/inefficient.</p>
 
-   <p>Todo:</p>
+   <p>TODO:</p>
   <ul>
-   <li>Request branches and merge them in a local tree</li>
-   <li>Execute Actions</li>
-   <li>Show feedback from Renoise</li>
+   <li>Currently only TOGGLE type Actions work correctly</li>
+   <li>For each Action, determine the valid range of values</li>
+   <li>Bi-Directional communication: show feedback from Renoise</li>
+   <li>Request branches instead of the whole catalog of Actions, and merge them in a local tree</li>
   </ul>
 
 

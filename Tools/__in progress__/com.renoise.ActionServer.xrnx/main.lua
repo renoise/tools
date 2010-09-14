@@ -2,6 +2,8 @@
 -- Requires and initialization
 -------------------------------------------
 
+local start_page = "/matrix/"
+
 local root = "./"
 local action_server = nil
 local errors = {}
@@ -176,6 +178,70 @@ class 'ActionTree'
    end
 
    ActionTree.action_tree = ActionTree:get_action_tree()
+   
+-------------------------------------------
+--  ETag
+-------------------------------------------
+
+class "ETag"
+
+function ETag:__init()
+  self.valid = false
+end
+
+function ETag:is_valid()
+  return self.valid
+end
+
+function ETag:__eq(other)
+  return self.mtime == other.mtime and
+    self.size == other.size
+end
+
+function ETag:set_file(fullpath)
+  self.path = fullpath
+  local stat = io.stat(fullpath)
+  self.inode = stat.ino
+  self.size = stat.size
+  self.mtime = stat.mtime
+  self.valid = true
+end
+
+-- parses an ETag header
+function ETag:set_str(str)
+  if (not str) then return end
+  self.str = self:unquote(str)  
+  if (not self.str:match("(%w+)-(%w+)-(%w+)")) then
+    log:warn("ETag is malformed")
+    return
+  end
+  local t = Util:split(self.str, '-')
+  self.inode = tonumber(t[1], 16)
+  self.size = tonumber(t[2], 16)
+  self.mtime = tonumber(t[3], 16)
+  self.valid = true
+end
+
+-- apache style etag
+function ETag:get_etag()  
+  local etag = 
+    ("%x"):format(self.inode) .. '-' ..
+    ("%x"):format(self.size) .. '-' ..
+    ("%x"):format(self.mtime)
+    
+  -- quote
+  return self:quote(etag)
+end
+
+function ETag:quote(str)
+  return '"' .. str .. '"'
+end
+
+function ETag:unquote(str)  
+  return str:match('"(.*)"') or str
+end
+
+
 
 -------------------------------------------
 -- ActionServer
@@ -237,9 +303,15 @@ class "ActionServer"
 
   function ActionServer:is_htdoc(path)
     local fullpath = self:get_htdoc(path)
+    
+    --[[
     local f,err = io.open(fullpath)
     if f then io.close(f) end
     local exists = (f~=nil)
+    --]]
+    
+    
+    local exists = io.exists(fullpath) and io.stat(fullpath).type == "file"
     log:info("Path " .. fullpath .. " exists?: " .. tostring(exists))
     return exists
   end
@@ -275,12 +347,6 @@ class "ActionServer"
     return str ~= nil and str:match("^image") ~= nil
   end
 
-  function ActionServer:get_etag(fullpath)
-    local stat = io.stat(fullpath)
-    local last_modified = stat.mtime
-    return last_modified
-  end
-
   function ActionServer:send_htdoc(socket, path, status, parameters)
      status = status or "200 OK"
      local buffer = nil
@@ -291,20 +357,27 @@ class "ActionServer"
      parameters = parameters or {}
      local fullpath = self:get_htdoc(path)
      local stat = io.stat(fullpath)
-     local size = stat.size
+     local size = stat.size          
      
      log:info("If-None-Match: " .. tostring(self.header["If-None-Match"]))
      log:info("If-Modified-Since: " .. tostring(self.header["If-Modified-Since"]))     
      
-     -- Conditional GET with ETag / If-None-Match
-     if self.header["If-None-Match"] and 
-       tonumber(self:get_etag(fullpath)) <= tonumber(self.header["If-None-Match"])
-     then
-      status = "304 Not Modified"
-      buffer = ""
-      size = 0
-      log:info("Serving empty body due to Conditional GET")
-      self:set_header("Cache-Control", "no-cache, no-store")       
+     -- Cache mechanism
+     local etag = ETag()
+     etag:set_file(fullpath)
+             
+     local client_etag = ETag()
+     client_etag:set_str(self.header["If-None-Match"])
+     
+     -- Conditional GET with ETag OR Last-Modified
+     if ((client_etag:is_valid() and etag == client_etag) 
+      or (nil ~= self.header["If-Modified-Since"]
+        and self.header["If-Modified-Since"] == stat.mtime)) then
+       status = "304 Not Modified"
+       buffer = ""
+       size = 0
+       log:info("Serving empty body due to Conditional GET")
+       self:set_header("Cache-Control", "no-cache, no-store")       
      else      
        -- Read file into string buffer
        local is_binary = self:is_binary(mime)     
@@ -317,7 +390,7 @@ class "ActionServer"
      -- Create body
      local body = nil          
      -- Interpret any Lua code in the buffer (see expand.lua)
-     if self:is_expandable(path) and #buffer > 0 then
+     if (self:is_expandable(path) and #buffer > 0) then
 
        self:set_header("Content-Type", "text/html")
        self:set_header("Cache-Control", "private, max-age=0, must-revalidate")
@@ -337,12 +410,16 @@ class "ActionServer"
        log:info(string.format("Expanding embedded Lua code took %d ms", 
          (toc-tic) * 1000))             
        size = #body -- interpreted size is different from filesize
-       self:set_header("ETag", os.time())
+       etag.size = size
+       etag.mtime = os.time()
+       self:set_header("Last-Modified", os.time())
      else
        self:set_header("Cache-Control", "private, max-age=3600, must-revalidate")
-       body = buffer
-       self:set_header("ETag", self:get_etag(fullpath))       
+       self:set_header("Last-Modified", stat.mtime)
+       body = buffer       
      end
+     
+     self:set_header("ETag", etag:get_etag())       
      
      -- Format "Content-Length"
      self:set_header("Content-Length", size)
@@ -378,7 +455,10 @@ class "ActionServer"
 --Socket API Callbacks---------------------------
 
   function ActionServer:socket_error(socket_error)
-    renoise.app():show_warning(socket_error)
+    log:warn(socket_error)
+    if (debug) then
+      renoise.app():show_warning(socket_error)
+    end    
   end
 
   function ActionServer:socket_accepted(socket)
@@ -432,14 +512,16 @@ class "ActionServer"
         log:warn("No HTTP method received")
         return
       end
-
-      self.path = path
-
+            
       if path == nil then
         log:warn("No HTTP path received")
         return
       end
       if #path == 0 then return end
+      
+      -- add the request path to the L table,
+      -- similar to PHP's $_SERVER['REQUEST_URI']
+      self.path = path 
 
       -- handle index pages quickly
       local index_pages = table.create{"/index.html","/index.lua","/"}
@@ -448,23 +530,37 @@ class "ActionServer"
             self:send_htdoc(socket, path)
           return
       end
+      
+      -- trailing slash in url
+      -- search in directory for index pages      
+      if (path:sub(-1) == "/") then 
+        log:info("Trailing slash: find index page")
+        if (self:is_htdoc(path .. "index.html")) then        
+          path = path .. "index.html"
+          self:send_htdoc(socket, path)
+          return
+        elseif (self:is_htdoc(path .. "index.lua")) then
+          path = path .. "index.lua"        
+          self:send_htdoc(socket, path)  
+          return
+        end
+      end
+      
 
       if method ~= "HEAD" then
         parameters = Util:parse_query_string(query)
-        if  #path > 0 and self:is_htdoc(path) then
-          if method == "POST" then
-            local post_parameters = Util:parse_query_string(body)
-            rprint(parameters)
-                        rprint(post_parameters)
-            parameters = Util:merge_tables(parameters, post_parameters)
-            rprint(parameters)
-          end
+        if method == "POST" then
+          local post_parameters = Util:parse_query_string(body)          
+          parameters = Util:merge_tables(parameters, post_parameters)          
+        end
+        if  #path > 0 and self:is_htdoc(path) then                    
           self:send_htdoc(socket, path, nil, parameters)
           return
         else
-          local action_name = string.sub(path:gsub('\/', ':'), 2)
+          local action_name = string.sub(path:gsub('/', ':'), 2)          
+          action_name = action_name:gsub('::', '/')
           log:info ("Requested action:" .. action_name)
-          local found = ActionTree:find_action(action_name, query)
+          local found = ActionTree:find_action(action_name, query)                    
           if found then            
              if parameters and parameters.ajax == "true" then               
                log:info("Action requested by Ajax")
@@ -553,8 +649,10 @@ class 'SongChangeEvent' (Event)
     log:info("Resetting notifiers")
     for name,v in pairs(self.notifiers) do
       self.notifiers[name].active = false
+      print(name)
       local buffer = ([[
         ~{do
+          print(func)
           if (%s_observable:has_notifier(func)) then
             %s_observable:remove_notifier(func)
           end
@@ -580,13 +678,15 @@ class 'SongChangeEvent' (Event)
   end
 
   function ActionServer:publish(notifier_name, key, value)
-    if (notifier_name == nil and self.old_events[key] and equals(self.old_events[key],value) ) then
-      return nil
+    if (notifier_name == nil 
+      and self.old_events[key] 
+      and equals(self.old_events[key],value) ) then
+        return nil
     end
 
     log:info("Publishing: " .. key)
     local event = Event(key, value)
-    self.old_events[key] = value
+    self.old_events[key] = value        
 
     local clients = {}
     if (notifier_name) then
@@ -603,8 +703,8 @@ class 'SongChangeEvent' (Event)
       local eid = tostring(event.id)
       self.mailboxes[client_id][eid] = {}
       self.mailboxes[client_id][eid].key = event.key
-      self.mailboxes[client_id][eid].value = event.value
-    end
+      self.mailboxes[client_id][eid].value = event.value      
+    end    
   end
 
   function ActionServer:subscribe(client_id, name, callback)
@@ -668,7 +768,7 @@ function start_server()
     ActionServer.mime_types = Util:parse_config_file("/mime.types")
     action_server = ActionServer(address, port)
 
-    renoise.app():open_url("localhost:"..port .. "/actions.html")
+    renoise.app():open_url("localhost:"..port .. start_page)
 end
 
 function stop_server()

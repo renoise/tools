@@ -3,7 +3,12 @@
       <head>
         <title>Renoise Live!</title>
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-        <link type="text/css" href="/default.css" rel="stylesheet" />
+        <link type="text/css" href="/css/default.css" rel="stylesheet" />
+        <style type="text/css">
+          body {
+            margin-left: 10px;            
+          }
+        </style>
       </head>
       <body>
             <h1>Welcome to Renoise live</h1>
@@ -12,7 +17,7 @@
             <p>BPM: ~{renoise.song().transport.bpm}</p>
 
             <h2>Control Renoise through asynchronous POST request</h2>
-            <p><b>New!</b> Work in progress: <a href="/actions.html">Control All Actions</a></p>
+            <p><b>New!</b> Work in progress: <a href="/actionrack/">Control All Actions</a></p>
 
             <form id="async-form" method="post" action="/">
               <p>Form data is sent to the server in the background, while the current page is updated with JQuery.</p>
@@ -50,15 +55,19 @@
             <script type="text/javascript" src="/jquery.js"></script>
             <script type="text/javascript">
                 $(document).ready(function(){
+                                
+                  $('body').prepend('<div id="gmenu"></div>');
+                  $('#gmenu').load('/menu.html');
+  
                   $("#async-form button").click(function(){
                        $("#myvar").val($(this).text());
                   });
-                	$("#async-form").submit(function(){
-                              	$.post("/ajax.lua", $(this).serialize(), function(data){
+                  $("#async-form").submit(function(){
+                                $.post("/ajax.lua", $(this).serialize(), function(data){
                                    $("#result").text(data);
-                              	}, "text");
-                		return false;
-                	});
+                                }, "text");
+                    return false;
+                  });
                 });
             </script>
       </body>
