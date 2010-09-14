@@ -30,16 +30,16 @@
         out("<thead><tr><th title='Schedule'>S</th><th title='Loop'>L</th><th>#</th><th>label</th>")
         for tid,t in ipairs(s().tracks) do
           local classes = table.create()
-          out(("<th id='t%02d' class='%s'>%s</th>")
-            :format(tid, get_mute_state(t.mute_state), t.name))
+          out(("<th id='t%02d' class='t%02d %s'>%s</th>")
+            :format(tid, tid, get_mute_state(t.mute_state), t.name))
         end
         out("</tr></thead><tbody>")
-    
+
         -- get patterns
         local pattern
         local seq_loop = renoise.song().transport.loop_sequence_range
         for sid,pid in pairs(s().sequencer.pattern_sequence) do
-          
+
           local current_seq = ''
           local classes = table.create()
 
@@ -82,13 +82,28 @@
               classes:insert("send")
             end
 
+            if (s().tracks[tid].mute_state == renoise.Track.MUTE_STATE_OFF) then
+              classes:insert('off')
+            elseif (s().tracks[tid].mute_state == renoise.Track.MUTE_STATE_MUTED) then
+              classes:insert('muted')
+            end
+
+            classes:insert(('s%02d'):format(sid))
+            classes:insert(('t%02d'):format(tid))
+
             out( ("<td class='%s' id='s%02dt%02d'></td>")
-              :format(classes:concat(' '),sid, tid, sid, tid) )
+              :format(classes:concat(' '),sid, tid) )
 
           end
           out("</tr>")
         end
 
         out("</tbody></table>")
+        out("<script type='text/javascript'>")
+        out(("var bpm = %f"):format(renoise.song().transport.bpm));
+        out(("var line = %f"):format(renoise.song().transport.playback_pos.line));
+        local pid = renoise.song().sequencer.pattern_sequence[renoise.song().transport.playback_pos.sequence]
+        out(("var lines = %f"):format(renoise.song().patterns[pid].number_of_lines));
+        out("</script>");
         OUT = str
 end}

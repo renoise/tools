@@ -7,6 +7,18 @@
 
   -- JSON
   --L:set_header("Content-Type", "application/json")
+  
+  local client_id = tonumber(P.client_id) or 1
+
+  function subscribe_track_mutes()
+   for tid,_ in ipairs(renoise.song().tracks) do
+      L:subscribe(client_id, "renoise.song().tracks["..tid.."].mute_state", function(name)
+        L:publish(name, 'track_state_changed',
+          {tid=("%02d"):format(tid), state=renoise.song().tracks[tid].mute_state}
+        )
+      end)
+   end
+  end
 
   function get_changed_mute_states()
     print("get_changed_mute_states")
@@ -27,27 +39,36 @@
     L.old_mutes = mutes
     rprint(changes)
     return changes
-  end     
-  
+  end
+
   -- initial
   if (not L.old_mutes) then
     get_changed_mute_states()
   end
-
-  local client_id = tonumber(P.client_id) or 1
+  
+  subscribe_track_mutes()
 
   L:subscribe(client_id, "renoise.tool().app_new_document", function(name)
     print("New song")
     L:publish(name, 'song_change', true)
-    L:reset_notifiers(name)
+    L:reset_notifiers()
     L.old_mutes = nil
   end)
-  
+
   L:subscribe(client_id, "renoise.song().sequencer.pattern_slot_mutes", function(name)
     L:publish(name, 'mutes_changed', get_changed_mute_states())
   end)
 
+  L:subscribe(client_id, "renoise.song().transport.bpm", function(name)
+    L:publish(name, 'tempo', renoise.song().transport.bpm)
+  end)
+
+  local pid = renoise.song().sequencer.pattern_sequence[renoise.song().transport.playback_pos.sequence]
+  L:publish(nil, 'lines', renoise.song().patterns[pid].number_of_lines)
+
   L:publish(nil, 'sid', renoise.song().transport.playback_pos.sequence)
+
+  -- L:publish(nil, 'line', renoise.song().transport.playback_pos.line)
 
   L:publish(nil, 'seq_loop', renoise.song().transport.loop_sequence_range)
 
