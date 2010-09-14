@@ -668,6 +668,16 @@ renoise.song().tracks[].devices[].presets[]
 renoise.song().tracks[].devices[].parameters[]
   -> [read-only, array of renoise.DeviceParameter objects]
 
+-- returns if the device provides its own custom GUI (only avilable for 
+-- some plugin devices)
+[added b7] renoise.song().tracks[].devices[].external_editor_available
+  -> [read-only, boolean]
+
+-- when the device has no custom GUI am error will be fired (see 
+-- external_editor_available), else this external editor is opened/closed.
+[added b7] renoise.song().tracks[].devices[].external_editor_visible
+  -> [boolean, set to true to show the editor, false to close it]
+
 
 --------------------------------------------------------------------------------
 -- renoise.DeviceParameter
@@ -846,11 +856,6 @@ renoise.song().instruments[].samples[], _observable
 [added b6] renoise.song().instruments[].plugin_properties.plugin_device
  -> [renoise.InstrumentDevice object or renoise.TrackDevice object or nil]
 
--- Valid for loaded plugins only. when the plugin has no custom editor, Renoise
--- will create a dummy editor for it which only lists the pluging parameters.
-[added b6] renoise.song().instruments[].plugin_properties.external_editor_visible
-  -> [boolean, set to true to show the editor, false to close it]
-
 -- Valid for loaded and unloaded plugins.
 [added b6] renoise.song().instruments[].plugin_properties.alias_instrument_index
   -> [read-only, number or 0 (when no alias instrument is set)]
@@ -895,6 +900,15 @@ renoise.song().instruments[].samples[], _observable
   
 [added b6] renoise.song().instruments[].plugin_properties.plugin_device.parameters[]
   -> [read-only, list of renoise.DeviceParameter objects]
+
+-- returns if the plugin provides its own custom GUI
+[added b7] renoise.song().instruments[].plugin_properties.plugin_device.external_editor_available
+  -> [read-only, boolean]
+
+-- when the plugin has no custom GUI, Renoise will create a dummy editor for it which 
+-- only lists the pluging parameters.
+[added b7] renoise.song().instruments[].plugin_properties.plugin_device.external_editor_visible
+  -> [boolean, set to true to show the editor, false to close it]
 
 
 --------------------------------------------------------------------------------
