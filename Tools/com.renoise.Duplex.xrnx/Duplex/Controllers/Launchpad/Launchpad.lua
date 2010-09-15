@@ -237,8 +237,14 @@ duplex_configurations:insert {
     },
     Transport = {
       mappings = {
+        --[[
         stop_playback = {
           group_name= "Controls",
+          index = 5,
+        },
+        ]]
+        edit_mode = {
+          group_name = "Controls",
           index = 5,
         },
         start_playback = {
@@ -249,11 +255,14 @@ duplex_configurations:insert {
           group_name = "Controls",
           index = 7,
         },
-        edit_mode = {
-          group_name = "Controls",
+        follow_player = {
+          group_name= "Controls",
           index = 8,
         },
-      }
+      },
+      options = {
+        pattern_play = 3,
+      },
     },
 
   }
@@ -339,3 +348,49 @@ duplex_configurations:insert {
   }
 }
 
+--------------------------------------------------------------------------------
+
+-- setup Daxton's Step Sequencer for the Launchpad
+
+duplex_configurations:insert {
+
+  -- configuration properties
+  name = "Step Sequencer",
+  pinned = true,
+
+  -- device properties
+  device = {
+    class_name = "Launchpad",
+    display_name = "Launchpad",
+    device_port_in = "Launchpad",
+    device_port_out = "Launchpad",
+    control_map = "Controllers/Launchpad/Launchpad.xml",
+    thumbnail = "Launchpad.bmp",
+    protocol = DEVICE_MIDI_PROTOCOL,
+  },
+
+  applications = {
+    StepSequencer = {
+      mappings = {
+        grid = {
+          group_name = "Grid",
+        },
+        level = {
+          group_name = "Triggers",
+        },
+        line = {
+          group_name = "Controls",
+          index = 1
+        },
+        track = {
+          group_name = "Controls",
+          index = 3
+        },
+        transpose = {
+          group_name = "Controls",
+          index = 5
+        },
+      },
+    },
+  }
+}

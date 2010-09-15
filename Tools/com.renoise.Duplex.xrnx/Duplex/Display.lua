@@ -46,8 +46,8 @@ function Display:__init(device)
 
   -- this is the default palette for any display,
   -- the UIComponents use these values as defaults
-  -- note that color values with an average below 0x80
-  -- are not displayed on monochrome displays
+  -- (note that color values with an average below 0x80
+  -- might not display on monochrome devices)
   self.palette = {
     background = {
       text="·",
@@ -80,6 +80,8 @@ end
 
 --------------------------------------------------------------------------------
 
+-- register a UIComponent with this display
+
 function Display:add(obj_instance)
   TRACE('Display:add',obj_instance)
   
@@ -99,7 +101,7 @@ function Display:clear()
     return
   end
   
-  -- force updating all canvas for the next update
+  -- force-update entire canvas for the next update
   for _,obj in ipairs(self.ui_objects) do
     if (obj.group_name) then
       obj.canvas.delta = table.rcopy(obj.canvas.buffer)
@@ -109,10 +111,46 @@ function Display:clear()
   end
 end
 
+--------------------------------------------------------------------------------
+
+-- apply_tooltips: set tooltips on the virtual display based on the 
+-- tooltip property assigned to existing ui_objects 
+-- @param group_name: limit to a specific control-map group
+
+function Display:apply_tooltips(group_name)
+  TRACE("Display:apply_tooltips()",group_name)
+
+  if (not self.view) then
+    return
+  end
+
+  local control_map = self.device.control_map
+
+  for _,obj in pairs(self.ui_objects) do
+    if (control_map.groups[obj.group_name]) then
+      if (group_name) and (group_name~=obj.group_name) then
+        -- skip this element
+      else
+        for x = 1,obj.width do
+          for y = 1, obj.height do
+            local columns = control_map.groups[obj.group_name].columns
+            local idx = (x+obj.x_pos-1)+((y+obj.y_pos-2)*columns)
+            local elm = control_map:get_indexed_element(idx, obj.group_name)
+            if (elm) then
+              local widget = self.vb.views[elm.id]
+              widget.tooltip = string.format("%s (%s)",obj.tooltip,elm.value)
+            end
+          end
+        end
+      end
+    end
+  end
+
+end
 
 --------------------------------------------------------------------------------
 
--- update: will update virtual/hardware displays
+-- update: will update virtual/hardware displays (called continously)
 
 function Display:update()
 
@@ -128,7 +166,7 @@ function Display:update()
   
   for _,obj in pairs(self.ui_objects) do
 
-    -- skip unused objects, object that doesn't need update
+    -- skip unused objects, objects that doesn't need update
     if (obj.group_name and obj.dirty) then
 
       obj:draw()
@@ -185,7 +223,10 @@ function Display:set_parameter(elm, obj, point)
     local msg_type = self.device.control_map:determine_type(elm.value)
     
     local current_message = self.device.message_stream.current_message
-    
+
+    local channel = (current_message) and current_message.channel or
+      self.device.default_midi_channel
+
     if (msg_type == MIDI_NOTE_MESSAGE) then
       num = self.device:extract_midi_note(elm.value)
 
@@ -201,7 +242,7 @@ function Display:set_parameter(elm, obj, point)
          (current_message.value ~= value) or
          (self.device.loopback_received_messages)
       then
-        self.device:send_note_message(num,value)
+        self.device:send_note_message(num,value,channel)
       end
     
     elseif (msg_type == MIDI_CC_MESSAGE) then
@@ -219,7 +260,7 @@ function Display:set_parameter(elm, obj, point)
          (current_message.value ~= value) or
          (self.device.loopback_received_messages)
       then
-        self.device:send_cc_message(num,value)
+        self.device:send_cc_message(num,value,channel)
       end
     
     elseif (msg_type == MIDI_PITCH_BEND_MESSAGE) then
@@ -275,9 +316,10 @@ function Display:set_parameter(elm, obj, point)
   if (widget) then
     if (type(widget) == "Button") then
       -- either use text or colors for a button
-      local colorspace = self.device.colorspace
+      --local colorspace = self.device.colorspace
+      local colorspace = elm.colorspace or self.device.colorspace
       if (colorspace[1] or colorspace[2] or colorspace[3]) then
-        widget.color = self.device:quantize_color(point.color)
+        widget.color = self.device:quantize_color(point.color,colorspace)
         --widget.text = point.text
         --widget.text = nil
       else
@@ -328,6 +370,9 @@ function Display:build_control_surface()
 
     -- construct the control surface UI
     self:__walk_table(self.device.control_map.definition)
+
+    self:apply_tooltips()
+
   end
   
   return self.view
@@ -348,6 +393,11 @@ function Display:generate_message(value, metadata)
 
   -- the type of message (MIDI/OSC...)
   msg.context = self.device.control_map:determine_type(metadata.value)
+  -- add channel for MIDI devices
+  if (self.device.protocol == DEVICE_MIDI_PROTOCOL) then
+    msg.channel = self.device:extract_midi_channel(metadata.value) or 
+      self.device.default_midi_channel
+  end
 
   -- input method : make sure we're using the right handler 
   if (metadata.type == "button") then
@@ -420,10 +470,7 @@ function Display:__walk_table(t, done, deep)
       
         --- common properties
 
-        --local tooltip = string.format("%s (%s)",
-        --  view_obj.meta.name, view_obj.meta.value)
-        local tooltip = view_obj.meta.name
-
+        local tooltip = string.format("%s (unassigned)",view_obj.meta.value)
 
         --- Param:button or togglebutton
 
@@ -432,6 +479,14 @@ function Display:__walk_table(t, done, deep)
           local notifier = function(value) 
             -- output the maximum value
             self:generate_message(tonumber(view_obj.meta.maximum),view_obj.meta)
+          end
+          local press_notifier = function(value) 
+            -- output the maximum value
+            self:generate_message(tonumber(view_obj.meta.maximum),view_obj.meta)
+          end
+          local release_notifier = function(value) 
+            -- output the minimum value
+            self:generate_message(tonumber(view_obj.meta.minimum),view_obj.meta)
           end
             
           self.ui_notifiers[view_obj.meta.id] = notifier
@@ -442,7 +497,9 @@ function Display:__walk_table(t, done, deep)
             height = (UNIT_HEIGHT * view_obj.meta.size) + 
               (DEFAULT_SPACING * (view_obj.meta.size - 1)),
             tooltip = tooltip,
-            notifier = notifier
+            --notifier = notifier
+            pressed = press_notifier,
+            released = release_notifier
           }
         
         

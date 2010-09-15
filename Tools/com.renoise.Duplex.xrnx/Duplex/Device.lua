@@ -10,8 +10,7 @@ About
 The Device class is the base class for any device. Both the MIDIDevice and 
 OSCDevice extend this class.
 
-The Device class also contains methods for managing device settings
-via a graphical user interface (true for both OSC and MIDI devices)
+The Device class also contains methods for managing basic device settings
 
 --]]
 
@@ -104,7 +103,8 @@ end
 
 --------------------------------------------------------------------------------
 
-function Device:quantize_color(color)
+function Device:quantize_color(color,colorspace)
+  TRACE("Device:quantize_color()",color,colorspace)
 
   local function quantize_color(value, depth)
     if (depth and depth > 0) then
@@ -117,10 +117,12 @@ function Device:quantize_color(color)
     end
   end
 
+  -- apply optional colorspace, or use device default
+  colorspace = colorspace or self.colorspace
+
   -- check if monochrome, then apply the average value 
-  local cs = self.colorspace
-  if (cs[1]) then
-    local range = math.max(cs[1],cs[2],cs[3])
+  if (colorspace[1]) then
+    local range = math.max(colorspace[1],colorspace[2],colorspace[3])
     if(range<2)then
       local avg = (color[1]+color[2]+color[3])/3
       color = {avg,avg,avg}
@@ -128,9 +130,9 @@ function Device:quantize_color(color)
   end
 
   return {
-    quantize_color(color[1], self.colorspace[1]),
-    quantize_color(color[2], self.colorspace[2]),
-    quantize_color(color[3], self.colorspace[3])
+    quantize_color(color[1], colorspace[1]),
+    quantize_color(color[2], colorspace[2]),
+    quantize_color(color[3], colorspace[3])
   } 
 end
 
@@ -425,12 +427,9 @@ function Device:show_settings_dialog(process)
             restart_process()
           end
         },
-        
         self.__vb:space{
           width = 6
         },
-        
-        -- Prefix
         self.__vb:text{
           text = "Prefix",
           width = 50

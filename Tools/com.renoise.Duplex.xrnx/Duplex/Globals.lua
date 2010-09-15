@@ -23,31 +23,42 @@ OSC_MESSAGE = 5
 -- Event types
 
 --  button event
-DEVICE_EVENT_BUTTON_PRESSED = 10  
+DEVICE_EVENT_BUTTON_PRESSED = 1  
 --  button event
-DEVICE_EVENT_BUTTON_RELEASED = 11  
+DEVICE_EVENT_BUTTON_RELEASED = 2  
 --  slider, encoder event
-DEVICE_EVENT_VALUE_CHANGED = 12    
+DEVICE_EVENT_VALUE_CHANGED = 3    
 --  button event
-DEVICE_EVENT_BUTTON_HELD = 13
+DEVICE_EVENT_BUTTON_HELD = 4
 
 -- Input methods
 
 -- bidirectional button (LED)
 -- (a control-map @type="button" attribute)
-CONTROLLER_BUTTON = 20    
+CONTROLLER_BUTTON = 1    
 -- bidirectional button which toggles the state internally (LED)
+-- this type of control does not support release & hold events
 -- (a control-map @type="togglebutton" attribute)
-CONTROLLER_TOGGLEBUTTON = 21    
+CONTROLLER_TOGGLEBUTTON = 2    
 --  relative/endless encoder (LED)
 -- (a control-map @type="encoder" attribute)
---CONTROLLER_ENCODER = 22
+--CONTROLLER_ENCODER = 3
 -- manual fader
 -- (a control-map @type="fader" attribute)
-CONTROLLER_FADER = 23
+CONTROLLER_FADER = 4
 -- basic rotary encoder 
 -- (a control-map @type="dial" attribute)
-CONTROLLER_DIAL = 24      
+CONTROLLER_DIAL = 5      
+
+-- UIComponents
+
+UI_COMPONENT_TOGGLEBUTTON = 1
+UI_COMPONENT_PUSHBUTTON = 2
+UI_COMPONENT_SLIDER = 3
+UI_COMPONENT_SPINNER = 4
+UI_COMPONENT_CUSTOM = 5
+
+-- Miscellaneous
 
 VERTICAL = 80
 HORIZONTAL = 81
@@ -234,6 +245,13 @@ function get_color_average(color)
   return color[1]+color[2]+color[3]/3
 end
 
+-- helper function to remove channel info from value-string
+-- @return str
+
+function strip_channel_info(str)
+  return string.gsub (str, "(|Ch[0-9]+)", "")
+end
+
 
 
 --------------------------------------------------------------------------------
@@ -248,8 +266,8 @@ end
 -- {"^Display:"} " -> show traces, starting with "Display:" only
 -- {"^ControlMap:", "^Display:"} -> show "Display:" and "ControlMap:"
 
---local __trace_filters = {"^MidiDevice"}
 local __trace_filters = nil
+--local __trace_filters = {"^BrowserProcess"}
 
 
 --------------------------------------------------------------------------------

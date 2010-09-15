@@ -2,8 +2,7 @@
   <Name>Novation Nocturn</Name>
   <Author>Danoise</Author>
   <Description>Controlmap for Novation Nocturn.
-Load the provided automap configuration before using
-(the file is located in Controllers/Nocturn)</Description>
+Load the provided automap configuration before using (the file is located in Controllers/Nocturn)</Description>
   <Parameters>
     <Page>
       <Column>
@@ -21,10 +20,10 @@ Load the provided automap configuration before using
         </Row>
         <Row>
           <Group name="Pots" orientation="horizontal">
-            <Param value="CC#72" type="togglebutton" name="Button #1"  maximum="127" minimum="0"/>
-            <Param value="CC#73" type="togglebutton" name="Button #2"  maximum="127" minimum="0"/>
-            <Param value="CC#74" type="togglebutton" name="Button #3"  maximum="127" minimum="0"/>
-            <Param value="CC#75" type="togglebutton" name="Button #4"  maximum="127" minimum="0"/>
+            <Param value="CC#72" type="button" name="Button #1"  maximum="127" minimum="0"/>
+            <Param value="CC#73" type="button" name="Button #2"  maximum="127" minimum="0"/>
+            <Param value="CC#74" type="button" name="Button #3"  maximum="127" minimum="0"/>
+            <Param value="CC#75" type="button" name="Button #4"  maximum="127" minimum="0"/>
             <Param value="CC#76" type="button" name="Button #5"  maximum="127" minimum="0"/>
             <Param value="CC#77" type="button" name="Button #6"  maximum="127" minimum="0"/>
             <Param value="CC#78" type="button" name="Button #7"  maximum="127" minimum="0"/>

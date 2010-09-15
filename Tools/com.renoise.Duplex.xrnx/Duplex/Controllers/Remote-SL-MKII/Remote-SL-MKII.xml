@@ -1,7 +1,8 @@
 <Device>
 	<Name>Novation Remote SL MKII</Name>
 	<Author>Danoise</Author>
-	<Description>Controlmap for Novation Remote SL MKII</Description>
+	<Description>Controlmap for Novation Remote SL MKII
+Load the provided automap configuration before using (the file is located in Controllers/Remote-SL-MKII)</Description>
 	<Parameters>
 		<Row>
 			<Column>

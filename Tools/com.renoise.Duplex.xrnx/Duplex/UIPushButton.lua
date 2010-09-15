@@ -1,27 +1,34 @@
 --[[----------------------------------------------------------------------------
--- Duplex.UITriggerButton
+-- Duplex.UIPushButton
 ----------------------------------------------------------------------------]]--
 
 --[[
 
-Inheritance: UIComponent > UITriggerButton
+Inheritance: UIComponent > UIPushButton
 
 
 About
 
-Essentially, UITriggerButton is a button that will light up for a moment. 
-The UITriggerButton will allow you to specify the amount of time that should
-pass between updates, as well as a customizable sequence of colors to display. 
+UIPushButton is a stateless button (has no value), that can be used to
+trigger events in an application. It's capable of more than just a brief
+flash of light, you can also assign a sequence of colors to the button and
+specify the amount of time that should pass between updates
+
+- oneshot/trigger buttons (short blink)
+- oneshot/trigger buttons with release (lit while pressed)
+- blinking buttons (e.g "schedule pattern" in the Transport application)
+- fading buttons (if the device has enough shades)
 
 
-Input methods
+Supported input methods
 
-- only the "button" type is supported for this control
-
+- "button"
+- "togglebutton" 
 
 Events
 
-- on_change() - external function to invoke after button is pressed
+- on_press()
+- on_release()
 
 
 --]]
@@ -29,21 +36,18 @@ Events
 
 --==============================================================================
 
-class 'UITriggerButton' (UIComponent)
+class 'UIPushButton' (UIComponent)
 
-function UITriggerButton:__init(display)
-  TRACE('UITriggerButton:__init')
+function UIPushButton:__init(display)
+  TRACE('UIPushButton:__init')
 
   UIComponent.__init(self,display)
 
-  -- sequence of colors (specify at least two values + background)
+
+  -- sequence of colors (specify at least one value)
   self.sequence = {
     {color={0xff,0xff,0xff},text="■"},
-    --{color={0x80,0x40,0x80},text="□"},
-    --{color={0x40,0x00,0x40},text="▪"},
-    --{color={0x00,0x00,0x00},text="▫"},
   }
-
   self.palette = {
     background = table.rcopy(display.palette.background),
   }
@@ -55,6 +59,19 @@ function UITriggerButton:__init(display)
   -- start over when sequence is done
   self.loop = false
 
+  -- specify the mode that the button is working in - 
+  -- true: show the first color while pressed, then the sequence
+  -- false: run the entire sequence immidiately when pressed
+  self.wait_for_release = false
+
+  self.on_press = function()
+    -- override this with your own implementation
+  end
+
+  self.on_release = function()
+    -- override this with your own implementation
+  end
+
   -- internal stuff
 
   -- position within the sequence
@@ -62,6 +79,9 @@ function UITriggerButton:__init(display)
 
   -- keep a reference to the scheduled task (so we can cancel it)
   self.__task = nil
+
+  self.__pressed = false
+
 
   self:add_listeners()
 
@@ -72,10 +92,10 @@ end
 
 -- user input via button
 
-function UITriggerButton:do_press()
-  TRACE("UITriggerButton:do_press")
+function UIPushButton:do_press()
+  TRACE("UIPushButton:do_press")
   
-  if (self.on_change ~= nil) then
+  if (self.on_press ~= nil) then
 
     local msg = self:get_msg()
     if not (self.group_name == msg.group_name) then
@@ -85,7 +105,31 @@ function UITriggerButton:do_press()
       return 
     end
 
+    self.__pressed = true
+
     self:trigger()
+
+  end
+
+end
+
+function UIPushButton:do_release()
+  TRACE("UIPushButton:do_release")
+  
+  if (self.on_release ~= nil) and
+    (self.wait_for_release) then
+
+    local msg = self:get_msg()
+    if not (self.group_name == msg.group_name) then
+      return 
+    end
+    if not self:test(msg.column,msg.row) then
+      return 
+    end
+
+    self.__pressed = false
+
+    self:invalidate()
 
   end
 
@@ -93,8 +137,8 @@ end
 
 --------------------------------------------------------------------------------
 
-function UITriggerButton:trigger()
-  TRACE("UITriggerButton:trigger()")
+function UIPushButton:trigger()
+  TRACE("UIPushButton:trigger()")
 
     self.__seq_index = 1
     self:__cancel_scheduled_task()
@@ -108,11 +152,10 @@ end
 --------------------------------------------------------------------------------
 
 -- once the draw() method is called, it will call itself repeatedly,
--- until the sequence is done, or a new event is triggered (in which case it
--- will start over again)
+-- until the sequence is done, or a new event is triggered (start over again)
 
-function UITriggerButton:draw()
-  TRACE("UITriggerButton:draw")
+function UIPushButton:draw()
+  --TRACE("UIPushButton:draw")
 
   if(not self.__seq_index) then return end
 
@@ -130,11 +173,12 @@ function UITriggerButton:draw()
     else
       point.val = false        
     end
-    --point.val = true
 
     -- schedule another draw() by invalidating the component
-    self.__task = self.__display.scheduler:add_task(
-      self, UITriggerButton.invalidate, self.interval)
+    if not (self.wait_for_release and self.__pressed) then
+      self.__task = self.__display.scheduler:add_task(
+        self, UIPushButton.invalidate, self.interval)
+    end
     self.__seq_index = self.__seq_index+1
   
   else
@@ -158,7 +202,7 @@ end
 
 -- set to background/false and stop from repeating
 
-function UITriggerButton:stop()
+function UIPushButton:stop()
 
   local point = CanvasPoint()
   point:apply(self.palette.background)
@@ -171,21 +215,28 @@ end
 
 --------------------------------------------------------------------------------
 
-function UITriggerButton:add_listeners()
+function UIPushButton:add_listeners()
 
   self.__display.device.message_stream:add_listener(
     self, DEVICE_EVENT_BUTTON_PRESSED,
     function() self:do_press() end )
+
+  self.__display.device.message_stream:add_listener(
+    self,DEVICE_EVENT_BUTTON_RELEASED,
+    function() self:do_release() end )
 
 end
 
 
 --------------------------------------------------------------------------------
 
-function UITriggerButton:remove_listeners()
+function UIPushButton:remove_listeners()
 
   self.__display.device.message_stream:remove_listener(
     self,DEVICE_EVENT_BUTTON_PRESSED)
+
+  self.__display.device.message_stream:remove_listener(
+    self,DEVICE_EVENT_BUTTON_RELEASED)
 
 end
 
@@ -195,14 +246,13 @@ end
 --------------------------------------------------------------------------------
 
 -- trigger the external handler method
--- (this can revert changes)
 
-function UITriggerButton:__invoke_handler()
-  TRACE("UITriggerButton:__invoke_handler()")
+function UIPushButton:__invoke_handler()
+  TRACE("UIPushButton:__invoke_handler()")
 
-  if (self.on_change == nil) then return end
+  if (self.on_press == nil) then return end
 
-  local rslt = self:on_change()
+  local rslt = self:on_press()
   if (rslt~=false) then
     self:invalidate()
   end
@@ -211,8 +261,8 @@ end
 
 --------------------------------------------------------------------------------
 
-function UITriggerButton:__cancel_scheduled_task()
-  TRACE("UITriggerButton:__cancel_scheduled_task()")
+function UIPushButton:__cancel_scheduled_task()
+  TRACE("UIPushButton:__cancel_scheduled_task()")
 
   if self.__task then
     self.__display.scheduler:remove_task(self.__task)

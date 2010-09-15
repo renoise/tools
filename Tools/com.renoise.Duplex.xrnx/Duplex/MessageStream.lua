@@ -42,7 +42,7 @@ function MessageStream:__init()
   self.change_listeners = table.create() -- for faders,dials
   self.press_listeners = table.create() -- for buttons
   self.hold_listeners = table.create()  -- buttons
-  --self.release_listeners = {}  -- buttons
+  self.release_listeners = table.create()  -- buttons
   --self.double_press_listeners = {}  -- buttons
   --self.combo_listeners = {}  -- buttons
 
@@ -75,12 +75,12 @@ end
 -- on_idle() : check if buttons have been pressed for some time 
 
 function MessageStream:on_idle()
-  TRACE("MessageStream:on_idle()")
+  --TRACE("MessageStream:on_idle()")
 
   for i,msg in ipairs(self.pressed_buttons) do
     if (not msg.held_event_fired) and
-       (msg.timestamp + self.button_hold_time < os.clock()) 
-    then
+      (msg.input_method == CONTROLLER_BUTTON) and
+       (msg.timestamp + self.button_hold_time < os.clock()) then
       -- broadcast to attached listeners
       for _,listener in ipairs(self.hold_listeners)  do 
         listener.handler() 
@@ -107,11 +107,15 @@ function MessageStream:add_listener(obj,evt_type,handler)
 
   elseif (evt_type == DEVICE_EVENT_VALUE_CHANGED) then
     self.change_listeners:insert({ handler = handler, obj = obj })
-    TRACE("MessageStream:onpress handler added")
+    TRACE("MessageStream:onchange handler added")
 
   elseif (evt_type == DEVICE_EVENT_BUTTON_HELD) then
     self.hold_listeners:insert({ handler = handler, obj = obj })
     TRACE("MessageStream:hold handler added")
+    
+  elseif (evt_type == DEVICE_EVENT_BUTTON_RELEASED) then
+    self.release_listeners:insert({ handler = handler, obj = obj })
+    TRACE("MessageStream:onrelease handler added")
   
   else
     error(("Internal Error. Please report: " ..
@@ -119,7 +123,7 @@ function MessageStream:add_listener(obj,evt_type,handler)
   end
 
   TRACE("MessageStream:Number of listeners after addition:",
-     #self.press_listeners, #self.change_listeners, #self.hold_listeners)
+     #self.press_listeners, #self.change_listeners, #self.hold_listeners, #self.release_listeners)
 end
 
 
@@ -151,6 +155,14 @@ function MessageStream:remove_listener(obj,evt_type)
     for i,listener in ipairs(self.hold_listeners) do
       if (obj == listener.obj) then
         self.hold_listeners:remove(i)
+        return true
+      end
+    end 
+    
+  elseif (evt_type == DEVICE_EVENT_BUTTON_RELEASED) then
+    for i,listener in ipairs(self.release_listeners) do
+      if (obj == listener.obj) then
+        self.release_listeners:remove(i)
         return true
       end
     end 
@@ -189,36 +201,39 @@ function MessageStream:input_message(msg)
     if (msg.value == msg.max) then
       -- interpret this as pressed
       
-      -- if the input source was the virtual control surface, we do
-      -- not add the button to the list of pressed buttons (not while
-      -- the control surface doesn't have a release event)
-      if (not msg.is_virtual) then
-        self.pressed_buttons:insert(msg)
-      end
+      self.pressed_buttons:insert(msg)
 
       -- broadcast to listeners
       for _,listener in ipairs(self.press_listeners) do 
         listener.handler() 
       end
 
+
+
+
     elseif (msg.value == msg.min) then
       -- interpret this as release
       
       -- for toggle buttons, broadcast releases to listeners as well
-      if (msg.input_method == CONTROLLER_TOGGLEBUTTON) then
+      if (not msg.is_virtual) and
+        (msg.input_method == CONTROLLER_TOGGLEBUTTON) then
         for _,listener in ipairs(self.press_listeners) do 
+          listener.handler() 
+        end
+      else
+        for _,listener in ipairs(self.release_listeners) do 
           listener.handler() 
         end
       end
       
       -- remove from pressed_buttons
-      if (not msg.is_virtual) then
+      --if (not msg.is_virtual) then
         for i,button_msg in ipairs(self.pressed_buttons) do
           if (msg.id == button_msg.id) then
             self.pressed_buttons:remove(i)
           end
         end
-      end
+      --end
     end
 
   else
@@ -244,8 +259,8 @@ class 'Message'
 function Message:__init(device)
   TRACE('Message:__init')
 
-  -- the context control how the number/value is output,
-  -- it might indicate a CC, or OSC message
+  -- the context indicate the "type" of message
+  -- (set to one of the "Message type" properties defined in Globals.lua)
   self.context = nil
 
   -- true, when the message was NOT received from devices (MIDI or OSC) but 
@@ -254,14 +269,15 @@ function Message:__init(device)
   
   -- the is the actual value for the chosen parameter
   -- (not to be confused with the control-map value)
+  -- TODO: support multiple values, to allow control of XY pads etc.
   self.value = nil
 
-  -- meta values are useful for further refinement of messages,
-  -- for example by defining the expected/allowed range of values
+  -- MIDI only, the channel of the message (1-16)
+  self.channel = nil 
 
   self.id = nil --  unique id for each parameter
   self.group_name = nil --  name of the parent group 
-  self.index = nil --  (int) index within control-map group, zero-based
+  self.index = nil --  (int) index within control-map group, starting from 1
   self.column = nil --  (int) column, starting from 1
   self.row = nil --  (int) row, starting from 1
   self.timestamp = nil --  set by os.clock() 

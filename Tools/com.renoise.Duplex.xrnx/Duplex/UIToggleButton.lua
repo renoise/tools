@@ -7,19 +7,31 @@
 Inheritance: UIComponent > UIToggleButton
 Requires: Globals, Display, MessageStream, CanvasPoint
 
-About
+About 
 
-UIToggleButton is a simple rectangular on/off toggle button 
-You can use it with a button, but also dial and fader input is supported: 
-just turn the control to it's maximum or minimum to toggle between values 
+The UIToggleButton is a button that you can use to control an on/off state.
+You can of course use it to represent a button on an external controller, 
+but perhaps not so obvious, dial and fader input is also supported,
+simply turn the control to it's maximum or minimum to toggle between states.
 
-- display as normal/dimmed version
-- minimum unit size: 1x1
+- Used by multiple core applications (Mixer, Matrix, etc.)
+- Minimum unit size: 1x1, otherwise any width/height
+
+
+Supported input methods
+
+- button
+- togglebutton*
+- slider*
+- dial*
+
 
 Events
 
-  on_change() - invoked whenever the button change it's active state
-  on_hold()   - (optional) invoked when the button is held for a while
+- on_change() - invoked whenever the button change it's active state
+- on_hold()   - (optional) invoked when the button is held for a while*
+
+* hold event is only supported for the "button" input method
 
 
 --]]
@@ -37,16 +49,22 @@ function UIToggleButton:__init(display)
   -- initial state is nil (to force drawing)
   self.active = nil
 
-  -- paint inverted
+  -- paint inverted (swap fore/background)
   self.inverted = false
 
-  self._cached_active = nil
-
+  -- specify the default palette 
   self.palette = {
     foreground = table.rcopy(display.palette.color_1),
-    foreground_dimmed = table.rcopy(display.palette.color_1_dimmed),
     background = table.rcopy(display.palette.background)
   }
+
+  -- external event handlers
+  self.on_press = nil
+  self.on_change = nil
+  self.on_hold = nil
+
+  -- internal stuff
+  self._cached_active = nil
 
   self.add_listeners(self)
 
@@ -105,7 +123,7 @@ end
 --------------------------------------------------------------------------------
 
 -- user input via (held) button
--- on_hold() is the optional handler method
+-- on_hold() is an optional handler, which is only supported by "button" input
 
 function UIToggleButton:do_hold()
   TRACE("UIToggleButton:do_hold()")
@@ -159,17 +177,6 @@ end
 
 --------------------------------------------------------------------------------
 
-function UIToggleButton:set_dimmed(bool)
-  if(self.dimmed == bool)then
-    return
-  end
-  self.dimmed = bool
-  self:invalidate()
-end
-
-
---------------------------------------------------------------------------------
-
 -- trigger the external handler method
 -- (this can revert changes)
 
@@ -191,26 +198,20 @@ end
 function UIToggleButton:draw()
   TRACE("UIToggleButton:draw")
 
-  local foreground,foreground_dimmed,background
+  local foreground,background
 
   if(self.inverted)then
     foreground = self.palette.background
-    foreground_dimmed = self.palette.background
     background = self.palette.foreground
   else
     foreground = self.palette.foreground
-    foreground_dimmed = self.palette.foreground_dimmed
     background = self.palette.background
   end
   
   local point = CanvasPoint()
 
   if self.active then
-    if self.dimmed then
-      point:apply(foreground_dimmed)
-    else
-      point:apply(foreground)
-    end
+    point:apply(foreground)
     point.val = true
   else
     point:apply(background)

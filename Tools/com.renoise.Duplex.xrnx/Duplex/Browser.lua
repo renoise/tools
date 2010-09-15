@@ -1410,7 +1410,7 @@ end
 
 --------------------------------------------------------------------------------
 
--- stop a runing process. will not invalidate it, just stop all apps
+-- stop a running process. will not invalidate it, just stop all apps
 
 function BrowserProcess:stop()
   TRACE("BrowserProcess:stop")

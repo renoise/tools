@@ -1,11 +1,12 @@
 <Device>
 	<Name>Novation Launchpad</Name>
 	<Author>Danoise</Author>
-	<Description>Controlmap for Novation Launchpad</Description>
+	<Description>Controlmap for Novation Launchpad
+Note: If you have the Automap software running in the background, please disable it on the Launchpad to avoid conflicts between Duplex and Automap: simply press User2 + Down at the same time (this will toggle the automap software on and off)</Description>
 	<Parameters>
 		<Column>
 			<Row>
-				<Group name="Controls" orientation="horizontal">
+				<Group name="Controls" orientation="horizontal" >
 					<Param value="CC#104" type="button" name="Up"		maximum="127" minimum="0"/>
 					<Param value="CC#105" type="button" name="Down"		maximum="127" minimum="0"/>
 					<Param value="CC#106" type="button" name="Left"		maximum="127" minimum="0"/>
@@ -17,7 +18,7 @@
 				</Group>
 			</Row>
 			<Row>
-				<Group name="Grid" columns="8">
+				<Group name="Grid" columns="8" >
 					<Param value="C--1" type="button" name="Button 1,1"	maximum="127" minimum="0"/>
 					<Param value="C#-1" type="button" name="Button 1,2"	maximum="127" minimum="0"/>
 					<Param value="D--1" type="button" name="Button 1,3"	maximum="127" minimum="0"/>
@@ -51,7 +52,7 @@
 					<Param value="F#3" type="button" name="Button 4,7"	maximum="127" minimum="0"/>
 					<Param value="G-3" type="button" name="Button 4,8"	maximum="127" minimum="0"/>
 				</Group>
-				<Group name="Triggers" orientation="vertical">
+				<Group name="Triggers" orientation="vertical" >
 					<Param value="G#-1" type="button" name="TriggerS #1"	maximum="127" minimum="0"/>
 					<Param value="C-1" type="button" name="Trigger #2"	maximum="127" minimum="0"/>
 					<Param value="E-2" type="button" name="Trigger #3"	maximum="127" minimum="0"/>
@@ -59,7 +60,7 @@
 				</Group>
 			</Row>
 			<Row>
-				<Group name="Grid2" columns="8">
+				<Group name="Grid2" columns="8" >
 					<Param value="E-4" type="button" name="Button 5,1"	maximum="127" minimum="0"/>
 					<Param value="F-4" type="button" name="Button 5,2"	maximum="127" minimum="0"/>
 					<Param value="F#4" type="button" name="Button 5,3"	maximum="127" minimum="0"/>

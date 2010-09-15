@@ -1,12 +1,12 @@
 --[[----------------------------------------------------------------------------
--- Duplex.TestUITriggerButton
+-- Duplex.TestUIPushButton
 ----------------------------------------------------------------------------]]--
 
 --[[
 
 About
 
-This class is for testing the UITriggerButton functionality
+This class is for testing the UIPushButton functionality
 
 Mappings
 
@@ -18,10 +18,10 @@ row   1x8 buttons
 --==============================================================================
 
 
-class 'TestUITriggerButton' (Application)
+class 'TestUIPushButton' (Application)
 
-function TestUITriggerButton:__init(display,mappings,options)
-  TRACE("TestUITriggerButton:__init(",display,mappings,options)
+function TestUIPushButton:__init(display,mappings,options)
+  TRACE("TestUIPushButton:__init(",display,mappings,options)
 
   self.mappings = {
     grid = {},
@@ -34,11 +34,12 @@ function TestUITriggerButton:__init(display,mappings,options)
 
   if(self.mappings.grid.group_name)then
 
-    -- default button, yellow fade
-    local c = UITriggerButton(display)
+    -- upper left: big button, yellow fade, wait for release
+    local c = UIPushButton(display)
     c.group_name = self.mappings.grid.group_name
     c.x_pos = 1
     c.y_pos = 1
+    c.wait_for_release = true
     c:set_size(4,4)
     c.sequence = {
       {color={0xff,0xff,0xff}},
@@ -46,13 +47,13 @@ function TestUITriggerButton:__init(display,mappings,options)
       {color={0x40,0x40,0xff}},
       {color={0x00,0x00,0x00}}
     }
-    c.on_change = function(obj)
+    c.on_press = function(obj)
       return self.active
     end
     self.display:add(c)
 
-    -- long delay time
-    local c = UITriggerButton(display)
+    -- upper right : big button, long delay time
+    local c = UIPushButton(display)
     c.group_name = self.mappings.grid.group_name
     c.x_pos = 5
     c.y_pos = 1
@@ -62,20 +63,20 @@ function TestUITriggerButton:__init(display,mappings,options)
       {color={0xff,0xff,0xff},text="■"},
       {color={0x00,0x00,0x00}}
     }
-    c.on_change = function(obj)
+    c.on_press = function(obj)
       return self.active
     end
     self.display:add(c)
     c:trigger() -- trigger immidiately
 
-    -- 4x4 grid of defaults
+    -- lower left: 4x4 grid of defaults
     for col=1,4 do
       for row=5,8 do
-        local c = UITriggerButton(display)
+        local c = UIPushButton(display)
         c.group_name = self.mappings.grid.group_name
         c.x_pos = col
         c.y_pos = row
-        c.on_change = function(obj)
+        c.on_press = function(obj)
           return self.active
         end
         self.display:add(c)
@@ -84,7 +85,7 @@ function TestUITriggerButton:__init(display,mappings,options)
 
     -- green columns
     for col=5,8 do
-      local c = UITriggerButton(display)
+      local c = UIPushButton(display)
       c.group_name = self.mappings.grid.group_name
       c.x_pos = col
       c.y_pos = 5
@@ -96,7 +97,7 @@ function TestUITriggerButton:__init(display,mappings,options)
         {color={0x00,0x40,0xff}},
         {color={0x00,0x00,0x00}}
       }
-      c.on_change = function(obj)
+      c.on_press = function(obj)
         return self.active
       end
       self.display:add(c)
@@ -107,7 +108,7 @@ function TestUITriggerButton:__init(display,mappings,options)
   -- for testing with LED based buttons
   if(self.mappings.row.group_name)then
     for col=1,8 do
-      local c = UITriggerButton(display)
+      local c = UIPushButton(display)
       c.group_name = self.mappings.row.group_name
       c.x_pos = col
       c.y_pos = 1
@@ -116,7 +117,7 @@ function TestUITriggerButton:__init(display,mappings,options)
       else
 
       end
-      c.on_change = function(obj)
+      c.on_press = function(obj)
         return self.active
       end
       self.display:add(c)

@@ -12,7 +12,7 @@ The Transport application is aimed at controlling the playback position
 Mappings 
 
 stop_playback     (trigger)   short blink
-start_playback    (trigger)   on/off (listener) 
+start_playback    (toggle)    on/off (listener) 
 loop_pattern      (toggle)    on/off (listener)
 edit_mode         (toggle)    on/off (listener)
 goto_next         (triggers)  instant/scheduled blink
@@ -46,6 +46,7 @@ function Transport:__init(display,mappings,options)
 
   self.PLAY_MODE_RETRIG = 1
   self.PLAY_MODE_SCHEDULE = 2
+  self.PLAY_MODE_STOP = 3
 
   self.SWITCH_MODE_SWITCH = 1
   self.SWITCH_MODE_SCHEDULE = 2
@@ -62,7 +63,7 @@ function Transport:__init(display,mappings,options)
     },
     pattern_play = {
       label = "Play pressed twice",
-      items = {"Retrigger current pattern","Schedule current pattern"},
+      items = {"Retrigger current pattern","Schedule current pattern","Stop playback"},
       default = 1,
     },
     pattern_stop = {
@@ -70,37 +71,47 @@ function Transport:__init(display,mappings,options)
       items = {"Panic (stop all)","Jump to beginning"},
       default = 1,
     },
+    --[[
     bpm_range = {
       label = "Range of BPM control",
       items = {"32-160","72-200","112-240","152-280"},
       default = 2,
     },
+    ]]
   }
 
   self.mappings = {
     stop_playback = {
-      description = "Stop playback (assign to a button)",
+      description = "Stop playback",
+      ui_component = UI_COMPONENT_PUSHBUTTON,
     },
     start_playback = {
-      description = "Start playback (assign to a button)",    
+      description = "Start playback",    
+      ui_component = UI_COMPONENT_TOGGLEBUTTON,
     },
     loop_pattern = {
-      description = "Toggle pattern looping (assign to a button)",
+      description = "Toggle pattern looping",
+      ui_component = UI_COMPONENT_TOGGLEBUTTON,
     },
     edit_mode = {
-      description = "Toggle edit-mode (assign to a button)",
+      description = "Toggle edit-mode",
+      ui_component = UI_COMPONENT_TOGGLEBUTTON,
     },
     follow_player = {
-      description = "Toggle play-follow mode (assign to a button)",
+      description = "Toggle play-follow mode",
+      ui_component = UI_COMPONENT_TOGGLEBUTTON,
     },
     goto_next = {
-      description = "Goto next pattern/block (assign to a button)",    
+      description = "Goto next pattern/block",    
+      ui_component = UI_COMPONENT_PUSHBUTTON,
     },
     goto_previous = {
-      description = "Goto previous pattern/block (assign to a button)",    
+      description = "Goto previous pattern/block",    
+      ui_component = UI_COMPONENT_PUSHBUTTON,
     },
     block_loop = {
-      description = "Toggle block-loop mode (assign to a button)",    
+      description = "Toggle block-loop mode",    
+      ui_component = UI_COMPONENT_TOGGLEBUTTON,
     },
     --[[
     -- TODO
@@ -125,8 +136,7 @@ function Transport:__init(display,mappings,options)
   self.__follow_player = nil
 
 
-  -- the various UIComponents, loop through this
-  -- when removing listeners from app 
+  -- the various UIComponents
   self.controls = {}
 
   -- apply arguments
@@ -147,19 +157,6 @@ function Transport:start_app()
 
   Application.start_app(self)
 
-end
-
---------------------------------------------------------------------------------
-
-function Transport:destroy_app()
-  TRACE("Transport:destroy_app")
-
-  for _,c in pairs(self.controls) do
-    c:remove_listeners()
-  end
-
-  
-  Application.destroy_app(self)
 end
 
 --------------------------------------------------------------------------------
@@ -253,123 +250,134 @@ function Transport:__build_app()
   TRACE("Transport:__build_app()")
 
   if self.mappings.stop_playback.group_name then
-    local c = UITriggerButton(self.display)
+    local c = UIPushButton(self.display)
     c.group_name = self.mappings.stop_playback.group_name
+    c.tooltip = self.mappings.stop_playback.description
     c:set_pos(self.mappings.stop_playback.index)
-    c.on_change = function(obj)
+    c.on_press = function(obj)
       if not self.active then return false end
       self:__stop_playback()
       if(self.controls.play)then
         self.controls.play:set(false,true)
       end
     end
-    self.display:add(c)
+    self:__add_component(c)
     self.controls.stop = c
   end
 
   if self.mappings.start_playback.group_name then
     local c = UIToggleButton(self.display)
     c.group_name = self.mappings.start_playback.group_name
+    c.tooltip = self.mappings.start_playback.description
     c:set_pos(self.mappings.start_playback.index)
+    c.palette.foreground.color = {0xff,0xff,0x40} -- bright yellow
     c.palette.foreground.text = "►"
     c.on_change = function(obj)
       if not self.active then return false end
       local is_playing = renoise.song().transport.playing
       self:__start_playback()
+      obj:set(true,true)
       -- update only when switching ON:
       -- this tricks it into being 'always on'
       return (not is_playing) and (self.__playing)
     end
-    self.display:add(c)
+    self:__add_component(c)
     self.controls.play = c
   end
 
   if self.mappings.loop_pattern.group_name then
     local c = UIToggleButton(self.display)
     c.group_name = self.mappings.loop_pattern.group_name
-   c:set_pos(self.mappings.loop_pattern.index)
-    c.palette.foreground.color = {0x40,0xff,0x40}
+    c.tooltip = self.mappings.loop_pattern.description
+    c:set_pos(self.mappings.loop_pattern.index)
+    c.palette.foreground.color = {0x80,0xff,0x40} -- bright green
     c.palette.foreground.text = "○"
     c.on_change = function(obj)
       if not self.active then return false end
       renoise.song().transport.loop_pattern = obj.active
     end
-    self.display:add(c)
+    self:__add_component(c)
     self.controls.loop = c
   end
 
   if self.mappings.edit_mode.group_name then
     local c = UIToggleButton(self.display)
     c.group_name = self.mappings.edit_mode.group_name
+    c.tooltip = self.mappings.edit_mode.description
     c:set_pos(self.mappings.edit_mode.index)
-    c.palette.foreground.color = {0xff,0x40,0x40}
+    c.palette.foreground.color = {0xff,0x40,0x40} -- red
     c.palette.foreground.text = "●"
     c.on_change = function(obj)
       if not self.active then return false end
       renoise.song().transport.edit_mode = obj.active
     end
-    self.display:add(c)
+    self:__add_component(c)
     self.controls.edit = c
   end
 
   if self.mappings.goto_next.group_name then
-    local c = UITriggerButton(self.display)
+    local c = UIPushButton(self.display)
     c.group_name = self.mappings.goto_next.group_name
+    c.tooltip = self.mappings.goto_next.description
     c:set_pos(self.mappings.goto_next.index)
     c.interval = 0.5
     c.sequence = {
       {color={0xff,0xff,0xff},text="►"},
       {color={0x00,0x00,0x00},text=" "},
     }
-    c.on_change = function(obj)
+    c.on_press = function(obj)
       if not self.active then return false end
       self:__next()
     end
-    self.display:add(c)
+    self:__add_component(c)
     self.controls.next = c
   end
 
   if self.mappings.goto_previous.group_name then
-    local c = UITriggerButton(self.display)
+    local c = UIPushButton(self.display)
     c.group_name = self.mappings.goto_previous.group_name
+    c.tooltip = self.mappings.goto_previous.description
     c:set_pos(self.mappings.goto_previous.index)
     c.interval = 0.5
     c.sequence = {
       {color={0xff,0xff,0xff},text="◄"},
       {color={0x00,0x00,0x00},text=" "},
     }
-    c.on_change = function(obj)
+    c.on_press = function(obj)
       if not self.active then return false end
       self:__previous()
     end
-    self.display:add(c)
+    self:__add_component(c)
     self.controls.previous = c
   end
 
   if self.mappings.block_loop.group_name then
     local c = UIToggleButton(self.display)
     c.group_name = self.mappings.block_loop.group_name
+    c.tooltip = self.mappings.block_loop.description
     c:set_pos(self.mappings.block_loop.index)
     c.palette.foreground.text = "□"
     c.on_change = function(obj)
       if not self.active then return false end
       renoise.song().transport.loop_block_enabled = obj.active
     end
-    self.display:add(c)
+    self:__add_component(c)
     self.controls.block = c
   end
 
   if self.mappings.follow_player.group_name then
     local c = UIToggleButton(self.display)
     c.group_name = self.mappings.follow_player.group_name
+    c.tooltip = self.mappings.follow_player.description
     c:set_pos(self.mappings.follow_player.index)
+    c.palette.foreground.color = {0x40,0xff,0x40} -- green
     c.palette.foreground.text = "▬"
     c.on_change = function(obj)
       if not self.active then return false end
       --renoise.song().transport.loop_block_enabled = obj.active
       renoise.song().transport.follow_player = obj.active
     end
-    self.display:add(c)
+    self:__add_component(c)
     self.controls.follow_player = c
   end
 
@@ -387,6 +395,8 @@ function Transport:__start_playback()
       self:__retrigger_pattern()
     elseif (self.options.pattern_play.value == self.PLAY_MODE_SCHEDULE) then
       self:__reschedule_pattern()
+    elseif (self.options.pattern_play.value == self.PLAY_MODE_STOP) then
+      self:__stop_playback()
     end
   else
     -- we started playing
@@ -395,7 +405,6 @@ function Transport:__start_playback()
 
   end
 
-  --renoise.song().transport.playing = true
   self.__playing = true
 
 end
