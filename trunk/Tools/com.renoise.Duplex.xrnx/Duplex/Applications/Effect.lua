@@ -90,22 +90,17 @@ function Effect:__init(display, mappings, options)
   -- apply control-maps groups 
   self.mappings = {
     parameters = {
-      group_name = nil,
-      description = "Parameter Value - assign to a fader, dial or grid",
-      required = false,
-      index = nil,
+      description = "Parameter value",
+      ui_component = UI_COMPONENT_SLIDER,
+      greedy = true,
     },
     page = {
-      group_name = nil,
-      description = "Page navigator - assign to a fader, dial or two buttons",
-      required = false,
-      index = nil,
+      description = "Effect parameter navigator",
+      ui_component = UI_COMPONENT_SPINNER,
     },
     device = {
-      group_name = nil,
-      description = "Device navigator - assign to a fader, dial or grid",
-      required = false,
-      index = nil,
+      description = "Effect device navigator",
+      ui_component = UI_COMPONENT_SPINNER,
     }
   }
 
@@ -155,6 +150,7 @@ function Effect:update()
 
   local cm = self.display.device.control_map
   local group_size = cm:get_group_size(self.mappings.parameters.group_name)
+  local track_idx = renoise.song().selected_track_index
 
   for control_index = 1,group_size do
     local parameter_index = self.__parameter_offset + control_index
@@ -180,9 +176,21 @@ function Effect:update()
     if (self.__device_navigators) then
       local device_idx = renoise.song().selected_device_index
       self.__device_navigators[control_index]:set((device_idx==control_index),true)
+        
+      -- update tooltip
+      local device = renoise.song().tracks[track_idx].devices[control_index]   
+      self.__device_navigators[control_index].tooltip = (device) and 
+        string.format("Set focus to %s",device.name) or
+        "Effect device N/A"
+
     end
 
   end
+  
+  if (self.__device_navigators) then
+    self.display:apply_tooltips(self.mappings.device.group_name)
+  end
+
 end
 
 
@@ -225,6 +233,7 @@ function Effect:__build_app()
 
     local c = UISlider(self.display)
     c.group_name = self.mappings.parameters.group_name
+    c.tooltip = self.mappings.parameters.description
     c:set_pos(control_index)
     c.toggleable = false
     c.ceiling = 1
@@ -270,7 +279,8 @@ function Effect:__build_app()
       end
     end
     
-    self.display:add(c)
+    --self.display:add(c)
+    self:__add_component(c)
     self.__parameter_sliders[control_index] = c
 
     -- device navigator (optional) ---------------------------
@@ -280,6 +290,7 @@ function Effect:__build_app()
 
       local c = UIToggleButton(self.display)
       c.group_name = self.mappings.device.group_name
+      c.tooltip = self.mappings.device.description
       c.flipped = true
       c.orientation = HORIZONTAL
       c.ceiling = group_cols
@@ -296,7 +307,7 @@ function Effect:__build_app()
         local device = renoise.song().tracks[track_idx].devices[control_index]
         local device_idx = renoise.song().selected_device_index
         if (renoise.song().tracks[track_idx].devices[control_index]) then
-          if(device_idx ~= control_index) then
+          if(device_idx > 0) and (device_idx ~= control_index) then
               self.__device_navigators[device_idx]:set(false,true)
           end
           renoise.song().selected_device_index = control_index
@@ -314,7 +325,8 @@ function Effect:__build_app()
         return true      
 
       end
-      self.display:add(c)
+      --self.display:add(c)
+      self:__add_component(c)
       self.__device_navigators[control_index] = c
     end
 
@@ -329,6 +341,7 @@ function Effect:__build_app()
 
     local c = UISpinner(self.display)
     c.group_name = self.mappings.page.group_name
+    c.tooltip = self.mappings.page.description
     c.index = 0
     c.step_size = group_size
     c.minimum = 0
@@ -348,8 +361,10 @@ function Effect:__build_app()
       return true
     end
     
+    --self.display:add(self.__page_control)
+    self:__add_component(c)
     self.__page_control = c
-    self.display:add(self.__page_control)
+
   end
 
 
@@ -371,32 +386,6 @@ function Effect:start_app()
 
   Application.start_app(self)
   self:update()
-end
-
-
---------------------------------------------------------------------------------
-
-function Effect:destroy_app()
-  TRACE("Effect:destroy_app")
-
-  if (self.__parameter_sliders) then
-    for _,obj in ipairs(self.__parameter_sliders) do
-      obj:remove_listeners()
-    end
-  end
-  
-  if (self.__page_control) then
-    self.__page_control:remove_listeners()
-  end
-  
-  if (self.__device_navigators) then
-	for i=1, #self.__device_navigators do
-	    self.__device_navigators[i]:remove_listeners()
-	end
-
-  end
-
-  Application.destroy_app(self)
 end
 
 
@@ -425,6 +414,18 @@ function Effect:__current_parameters()
   return selected_device and selected_device.parameters or {}
 end
 
+    
+--------------------------------------------------------------------------------
+
+-- returns the current device name
+--[[
+function Effect:__current_device_name()
+  TRACE("Effect:__current_device_name()")
+
+  local selected_device = renoise.song().selected_device   
+  return selected_device and selected_device.name or nil
+end
+]]
     
 --------------------------------------------------------------------------------
 
@@ -463,13 +464,16 @@ function Effect:__attach_to_parameters(new_song)
   TRACE("Effect:__attach_to_parameters", new_song)
 
   local parameters = self:__current_parameters()
+  --local device_name = self:__current_device_name()
 
   local cm = self.display.device.control_map
+  local group_cols = cm:count_columns(self.mappings.parameters.group_name)
   local group_count = cm:get_group_size(self.mappings.parameters.group_name)
 
   -- validate and update the sequence/parameter offset
   if (self.__page_control) then
     self.__page_control:set_range(nil,
+      --math.max(0, #parameters - group_cols))
       math.max(0, #parameters - group_count))
   end
     
@@ -486,32 +490,43 @@ function Effect:__attach_to_parameters(new_song)
   self.__attached_observables:clear()
   
   -- then attach to the new ones in the order we want them
-  for control_index = 1,math.min(#parameters, group_count) do
+  --for control_index = 1,math.min(#parameters, group_count) do
+  for control_index = 1, group_count do
     local parameter_index = self.__parameter_offset + control_index
     local parameter = parameters[parameter_index]
 
-    self.__attached_observables:insert(parameter.value_observable)
-    
-    parameter.value_observable:add_notifier(
-      self, 
-      function()
-        if (self.active) then
+    -- different tooltip for unassigned controls
+    local tooltip = (control_index>#parameters) and "Effect: param N/A" or 
+      string.format("Effect param : %s",parameter.name)
+    self.__parameter_sliders[control_index].tooltip = tooltip
 
-          -- scale parameter value to a [0-1] range
-          local normalized_value = parameter_value_to_normalized_value(
-            parameter, parameter.value) 
-      
-          local control_value = self.__parameter_sliders[control_index].value
-      
-          -- ignore floating point fuzziness    
-          if (not compare(normalized_value, control_value, FLOAT_COMPARE_QUANTUM) or
-              normalized_value == 0.0 or normalized_value == 1.0) -- be exact at the min/max 
-          then
-            self:set_parameter(control_index, normalized_value)
+    if(parameter) then
+      self.__attached_observables:insert(parameter.value_observable)
+      parameter.value_observable:add_notifier(
+        self, 
+        function()
+          if (self.active) then
+
+            -- scale parameter value to a [0-1] range
+            local normalized_value = parameter_value_to_normalized_value(
+              parameter, parameter.value) 
+        
+            local control_value = self.__parameter_sliders[control_index].value
+        
+            -- ignore floating point fuzziness    
+            if (not compare(normalized_value, control_value, FLOAT_COMPARE_QUANTUM) or
+                normalized_value == 0.0 or normalized_value == 1.0) -- be exact at the min/max 
+            then
+              self:set_parameter(control_index, normalized_value)
+            end
           end
-        end
-      end 
-    )
+        end 
+      )
+    end
+
   end
+
+  self.display:apply_tooltips(self.mappings.parameters.group_name)
+
 end
 

@@ -30,14 +30,29 @@ end
 --------------------------------------------------------------------------------
 
 -- quantize value to determine lit/off state
---[[
-function TouchOSC:point_to_value(pt)
-  TRACE("Monome:point_to_value")
+function TouchOSC:point_to_value(pt,maximum,minimum,ceiling)
+  TRACE("TouchOSC:point_to_value()",pt,maximum,minimum,ceiling)
 
-  local color = self:quantize_color(pt.color)
-  return (color[1]==0xff) and 1 or 0
+  local value
+
+  TRACE("TouchOSC:type(pt.val)",type(pt.val))
+
+  if (type(pt.val) == "boolean") then
+    -- buttons
+    local color = self:quantize_color(pt.color)
+    value = (color[1]==0xff) and 1 or 0
+  else
+    -- faders
+    value = (pt.val * (1 / ceiling)) * maximum
+  
+  end
+  TRACE("TouchOSC:value",value)
+
+  --return tonumber(value)
+  return value
 
 end
+--[[
 ]]
 
 --==============================================================================

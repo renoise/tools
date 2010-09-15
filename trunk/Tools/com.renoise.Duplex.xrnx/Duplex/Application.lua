@@ -23,21 +23,21 @@ function Application:__init()
 
   -- mappings allows us to choose where to put controls,
   -- see actual application implementations for examples
-  -- 
-  -- @group_name: the control-map group-name
-  -- @required: you have to specify a group name
-  -- @index: when nil, mapping is considered "greedy",
-  -- and will use the entire group
+  --
+  -- @group_name: the control-map group-name (set in config)
+  -- @index: the position where the control should be located (set in config)
+  -- @description: provide a sensible tooltip text for the virtual display
+  -- @greedy: indicates that the mapping will use the entire group
   -- 
   -- example_mapping = {
   --  group_name = "Main",
-  --  required = true,
-  --  index = nil
+  --  greedy = true, 
+  --  index = nil    -- index doesn't mean anything when the mapping is greedy
   -- }
   self.mappings = {}
 
   -- you can choose to expose your application's options here
-  -- the values can be edited using the options dialog
+  -- each option can be set in the device/app configuration 
   -- 
   -- example_option = {
   --  label = "My option",
@@ -62,6 +62,10 @@ function Application:__init()
 
   self.__options_view = nil
   self.__options_dialog = nil
+
+  -- UIComponents registered via add_component method
+  self.__ui_components = table.create()
+
 end
 
 
@@ -74,6 +78,10 @@ function Application:start_app()
   
   if (self.active) then
     return
+  end
+
+  if (self.display) then
+    self.display:apply_tooltips()
   end
 
   self.active = true
@@ -115,6 +123,13 @@ function Application:destroy_app()
   
   self:hide_options_dialog()
   self:stop_app()
+
+  -- unregister components
+  if(self.__ui_components)then
+    for _,v in pairs(self.__ui_components) do
+      v:remove_listeners()
+    end
+  end
   
   self.__created = false
 end
@@ -507,6 +522,21 @@ function Application:__set_option(name, value)
     end
   end
 end
+
+--------------------------------------------------------------------------------
+
+-- register a UIComponent so we can automatically remove it when exiting
+-- note that the display might not be present, so use with caution
+
+function Application:__add_component(c)
+  
+  assert(self.display, "Internal Error. Please report: " ..
+    "trying to add a UIComponent to an application without a display")
+
+  self.__ui_components:insert(c)
+  self.display:add(c)
+
+end  
 
 
 --------------------------------------------------------------------------------

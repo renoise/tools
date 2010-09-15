@@ -33,6 +33,10 @@ function MidiDevice:__init(display_name, message_stream, port_in, port_out)
   -- todo: update all MIDI devices when this setting change
   self.dump_midi = false
 
+  -- when using the virtual control surface, and the control-map
+  -- doesn't specify a specific channel, use this value: 
+  self.default_midi_channel = 1
+
   self:open()
 
 end
@@ -82,6 +86,10 @@ end
 
 --------------------------------------------------------------------------------
 
+-- receive MIDI from device
+-- construct a string identical to the <Param> value attribute
+-- and use this to locate the parameter in the control-map
+
 function MidiDevice:midi_callback(message)
   TRACE(("MidiDevice: %s received MIDI %X %X %X"):format(
     self.port_in, message[1], message[2], message[3]))
@@ -96,24 +104,30 @@ function MidiDevice:midi_callback(message)
   end
 
   -- determine the type of signal : note/cc/etc
-  if (message[1] == 144) then
+  if (message[1]>=128) and (message[1]<=159) then
     msg.context = MIDI_NOTE_MESSAGE
     msg.value = message[3]
-    value_str = self.note_to_string(self,message[2])
-  
-  elseif (message[1] == 176) then
+    if(message[1]>143)then
+      msg.channel = message[1]-143  -- on
+    else
+      msg.channel = message[1]-127  -- off
+    end
+    value_str = self.__note_to_string(self,message[2])
+  elseif (message[1]>=176) and (message[1]<=191) then
     msg.context = MIDI_CC_MESSAGE
     msg.value = message[3]
-    value_str = self.midi_cc_to_string(self,message[2])
-
-  elseif (message[1] == 224) then
+    msg.channel = message[1]-175
+    value_str = self.__midi_cc_to_string(self,message[2])
+  elseif (message[1]>=224) and (message[1]<=239) then
     msg.context = MIDI_PITCH_BEND_MESSAGE
     msg.value = message[3]
+    msg.channel = message[1]-223
     value_str = "PB"
   end
 
+  value_str = string.format("%s|Ch%i",value_str,msg.channel)
+
   if (value_str) then
-    -- locate the relevant parameter in the control-map
     local param = self.control_map:get_param_by_value(value_str)
   
     if (param) then
@@ -136,14 +150,20 @@ end
 --  send CC message
 --  @param number (int) the control-number (0-127)
 --  @param value (int) the control-value (0-127)
+--  @param channel (int, optional) the midi channel (1-16)
 
-function MidiDevice:send_cc_message(number,value)
+function MidiDevice:send_cc_message(number,value,channel)
+  TRACE("MidiDevice:send_cc_message()",number,value,channel)
 
   if (not self.midi_out or not self.midi_out.is_open) then
     return
   end
 
-  local message = {0xB0, math.floor(number), math.floor(value)}
+  if not channel then
+    channel = self.default_midi_channel
+  end
+
+  local message = {0xAF+channel, math.floor(number), math.floor(value)}
 
   TRACE(("MidiDevice: %s send MIDI %X %X %X"):format(
     self.port_out, message[1], message[2], message[3]))
@@ -160,7 +180,7 @@ end
 
 --------------------------------------------------------------------------------
 
-function MidiDevice:send_note_message(key,velocity)
+function MidiDevice:send_note_message(key,velocity,channel)
 
   if (not self.midi_out or not self.midi_out.is_open) then
     return
@@ -171,10 +191,14 @@ function MidiDevice:send_note_message(key,velocity)
   
   local message = {nil, key, velocity}
   
+  if not channel then
+    channel = self.default_midi_channel
+  end
+
   if (velocity == 0) then
-    message[1] = 0x80 -- note off
+    message[1] = 0x7F+channel -- note off
   else
-    message[1] = 0x90 -- note-on
+    message[1] = 0x8F+channel -- note-on
   end
   
   TRACE(("MidiDevice: %s send MIDI %X %X %X"):format(
@@ -195,7 +219,7 @@ end
 -- @param key: the key (7-bit integer)
 -- @return string (e.g. "C#5")
 
-function MidiDevice:note_to_string(int)
+function MidiDevice:__note_to_string(int)
   local key = (int%12)+1
   local oct = math.floor(int/12)-1
   return NOTE_ARRAY[key]..(oct)
@@ -204,7 +228,7 @@ end
 
 --------------------------------------------------------------------------------
 
-function MidiDevice:midi_cc_to_string(int)
+function MidiDevice:__midi_cc_to_string(int)
   return string.format("CC#%d",int)
 end
 
@@ -216,6 +240,9 @@ end
 -- @return #note (7-bit integer)
 
 function MidiDevice:extract_midi_note(str) 
+  TRACE("MidiDevice:extract_midi_note()",str)
+
+  str = strip_channel_info(str)
   local rslt = nil
   local note_segment = string.sub(str,0,2)
   local octave_segment = string.sub(str,3)
@@ -235,10 +262,28 @@ end
 --------------------------------------------------------------------------------
 
 -- Extract MIDI CC number (range 0-127)
+-- @param str (string, control-map value attribute)
 -- @return #cc (integer) 
 
 function MidiDevice:extract_midi_cc(str)
-  return tonumber(string.sub(str, 4))
+  TRACE("MidiDevice:extract_midi_cc()",str)
+
+  str = strip_channel_info(str)
+  return string.sub(str,4)
+end
+
+--------------------------------------------------------------------------------
+
+
+-- Determine channel for the given message
+-- Use the default port if nothing is explicitly set
+-- @param str (string, control-map value)
+-- @return integer (1-16)
+
+function MidiDevice:extract_midi_channel(str)
+  TRACE("MidiDevice:extract_midi_channel()",str)
+
+  return string.match(str, "|Ch([0-9]+)")
 end
 
 

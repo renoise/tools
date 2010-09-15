@@ -62,7 +62,8 @@ end
 -- @param file_path (string) the name of the file, e.g. "my_map.xml"
 
 function ControlMap:load_definition(file_path)
-  
+  TRACE("ControlMap:load_definition",file_path)
+
   self.file_path = file_path
   
   -- try to find the controller definition in the package path
@@ -105,6 +106,8 @@ end
 -- parse the supplied xml string (reset the counter first)
 
 function ControlMap:parse_definition(control_map_name, xml_string)
+  TRACE("ControlMap:parse_definition",control_map_name, xml_string)
+
   self.id = 0
 
   -- must guard any file io access. may fail, and we don't want to bother
@@ -112,15 +115,13 @@ function ControlMap:parse_definition(control_map_name, xml_string)
   local succeeded, result = pcall(function() 
     -- remove comments before parsing
     xml_string = string.gsub (xml_string, "(<!--.-->)", "")
-    return self:parse_xml(xml_string) 
+    return self:__parse_xml(xml_string) 
   end)
   
   if (succeeded) then
     self.definition = result
   
   else
-    print("Notice! ControlMap:parse_definition FAILED:", result)
-    
     renoise.app():show_error(
       ("Whoops! Failed to parse the controller definition file: "..
        "'%s'.\n\n%s"):format(control_map_name, result or "unknown error"))       
@@ -134,6 +135,8 @@ end
 -- @return the <param> attributes array
 
 function ControlMap:get_indexed_element(index,group_name)
+  TRACE("ControlMap:get_indexed_element",index,group_name)
+
   if (self.groups[group_name] and self.groups[group_name][index]) then
     return self.groups[group_name][index].xarg
   end
@@ -144,24 +147,45 @@ end
 --------------------------------------------------------------------------------
 
 function ControlMap:get_group_size(group_name)
+  TRACE("ControlMap:get_group_size",group_name)
 
   return #self.groups[group_name]
 
 end
 
+
 --------------------------------------------------------------------------------
 
--- get_element_by_value() 
--- this retrieves a parameter by note/cc-value-string
--- @param str (string) note/cc-value, e.g. "CC#10"
+-- parse a string like this "4,4,0" into a colorspace table
+
+function ControlMap:import_colorspace(str)
+  TRACE("ControlMap:import_colorspace",str)
+
+  local rslt = table.create()
+  rslt:insert(tonumber(string.sub(str,1,1)))
+  rslt:insert(tonumber(string.sub(str,3,3)))
+  rslt:insert(tonumber(string.sub(str,5,5)))
+  return rslt
+
+end
+
+--------------------------------------------------------------------------------
+
+-- get_param_by_value() 
+-- used by the MidiDevice to retrieves a parameter by it's note/cc-value-string
+-- the function will match values on the default channel, if not defined:
+-- "CC#105|Ch1" will match both "CC#105|Ch1" and "CC#105" 
+-- @param str (string, control-map value attribute)
 -- @return table
 
 function ControlMap:get_param_by_value(str)
   TRACE("ControlMap:get_param_by_value",str)
 
+  local str2 = strip_channel_info(str)
+  
   for _,group in pairs(self.groups) do
     for k,v in ipairs(group) do
-      if (v["xarg"]["value"] == str) then
+      if (v["xarg"]["value"] == str) or (v["xarg"]["value"] == str2) then
         return v
       end
     end
@@ -182,7 +206,7 @@ end
 -- the "value" property - the action property is needed when
 -- a device transmit a different outgoing than incoming value 
 -- 
--- @param str (string) message to match against
+-- @param str (string, control-map value/action attribute)
 -- @return  <Param> node as table (only the first match is returned),
 --          and the value (if matched against a wildcard)
 
@@ -256,8 +280,6 @@ function ControlMap:count_columns(group_name)
 
   local group = self.groups[group_name]
   if (group) then
-    local row, column, columns = 1, 1, nil
-    self.__width = #group
     if (group["columns"]) then
       return group["columns"]
     end
@@ -267,7 +289,26 @@ end
 
 --------------------------------------------------------------------------------
 
+-- return number of rows for the provided group
+
+function ControlMap:count_rows(group_name)
+  TRACE("ControlMap:count_rows",group_name)
+
+  local group = self.groups[group_name]
+  if (group) then
+    if (group["columns"]) then
+      return math.ceil(#group/group["columns"])
+    end
+  end
+
+end
+
+--------------------------------------------------------------------------------
+
 function ControlMap:read_file(file_path)
+  TRACE("ControlMap:read_file",file_path)
+
+
   local file_ref, err = io.open(file_path, "r")
   
   if (not err) then
@@ -284,10 +325,12 @@ end
 --------------------------------------------------------------------------------
 
 -- Determine the type of message (OSC/Note/CC)
+-- @param str (string, control-map value)
 -- @return integer (e.g. MIDI_NOTE_MESSAGE)
 
 function ControlMap:determine_type(str)
-  
+  TRACE("ControlMap:determine_type",str)
+
   -- url
   if string.sub(str,0,1)=="/" then
     return OSC_MESSAGE
@@ -303,6 +346,10 @@ function ControlMap:determine_type(str)
   -- pitch bend, if it matches the pich-bend name
   elseif string.sub(str,1,2)=="PB" then
     return MIDI_PITCH_BEND_MESSAGE
+
+  else
+    error(("Internal Error. Please report: " ..
+      "unknown message-type: %s"):format(str or "nil"))
   end
   
 end
@@ -313,8 +360,8 @@ end
 -- Parse the control-map, and add runtime
 -- information (element id's and group names)
 
-function ControlMap:parse_xml(s)
-  TRACE('ControlMap:parse_xml(...)')
+function ControlMap:__parse_xml(s)
+  TRACE('ControlMap:__parse_xml(...)')
 
   local stack = {}
   local top = {}
@@ -394,7 +441,13 @@ function ControlMap:parse_xml(s)
         
         -- add "columns" attribute to *all* groups
         local columns = nil
-        
+
+        -- import colorspace or create blank
+        if (toclose.xarg.colorspace) then
+          toclose.xarg.colorspace = self:import_colorspace(toclose.xarg.colorspace)
+        else
+          toclose.xarg.colorspace = nil
+        end
         if (not toclose.xarg.columns) then
           if (toclose.xarg.orientation and 
               toclose.xarg.orientation == "vertical") 
@@ -414,9 +467,9 @@ function ControlMap:parse_xml(s)
         
         for key,val in ipairs(toclose) do
           
-          -- add "group_name" to all members
+          -- extend some group properties to it's members
           toclose[key].xarg.group_name =  toclose.xarg.name
-          
+          toclose[key].xarg.colorspace =  toclose.xarg.colorspace
           -- figure out active row/column
           toclose[key].xarg.column = counter + 1
           toclose[key].xarg.row = math.floor(

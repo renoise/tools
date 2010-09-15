@@ -149,49 +149,39 @@ function Mixer:__init(display,mappings,options)
     ]]
   }
 
-  -- apply control-maps groups 
+  -- define control-maps groups 
   self.mappings = {
     master = {
-      group_name = nil,
-      description = "Master level - assign to a dial, fader or group of buttons",
-      required = false,
-      index = nil,
+      description = "Master volume",
+      ui_component = UI_COMPONENT_SLIDER,
     },
     levels = {
-      group_name = nil,
-      description = "Track levels - assign to a dial, fader or group of buttons",
-      required = false,
-      index = nil,
+      description = "Track volume",
+      ui_component = UI_COMPONENT_SLIDER,
+      greedy = true,
     },
     panning = {
-      group_name = nil,
-      description = "Panning - assign to a dial, fader or group of buttons",
-      required = false,
-      index = nil,
+      description = "Track panning",
+      ui_component = UI_COMPONENT_SLIDER,
+      greedy = true,
     },
     mute = {
-      group_name = nil,
-      description = "Mute - assign to a dial, fader or button",
-      required = false,
-      index = nil,
+      description = "Mute track",
+      ui_component = UI_COMPONENT_TOGGLEBUTTON,
+      greedy = true,
     },
     solo = {
-      group_name = nil,
-      description = "Solo - assign to a dial, fader or button",
-      required = false,
-      index = nil,
+      description = "Solo track",
+      ui_component = UI_COMPONENT_TOGGLEBUTTON,
+      greedy = true,
     },
     page = {
-      group_name = nil,
-      description = "Page navigator - assign to a fader, dial or two buttons",
-      required = false,
-      index = nil,
+      description = "Mixer track navigator",
+      ui_component = UI_COMPONENT_SPINNER,
     },
     mode = {
-      group_name = nil,
-      description = "Pre/Post FX mode control - assign to a fader, dial or button",
-      required = false,
-      index = nil,
+      description = "Mixer Pre/Post FX mode",
+      ui_component = UI_COMPONENT_TOGGLEBUTTON,
     },
   }
 
@@ -499,45 +489,6 @@ end
 
 --------------------------------------------------------------------------------
 
-function Mixer:destroy_app()
-  TRACE("Mixer:destroy_app")
-
-  if (self.__levels) then
-    for _,obj in pairs(self.__levels) do
-      obj.remove_listeners(obj)
-    end
-  end
-  if (self.__panning) then  
-    for _,obj in pairs(self.__panning) do
-      obj.remove_listeners(obj)
-    end
-  end
-  if (self.__mutes) then
-    for _,obj in pairs(self.__mutes) do
-      obj.remove_listeners(obj)
-    end
-  end
-  if (self.__solos) then
-    for _,obj in pairs(self.__solos) do
-      obj.remove_listeners(obj)
-    end
-  end
-  if (self.__master) then
-    self.__master:remove_listeners()
-  end
-  if (self.__page_control) then
-    self.__page_control:remove_listeners()
-  end
-  if (self.__mode_control) then
-    self.__mode_control:remove_listeners()
-  end
-  
-  Application.destroy_app(self)
-end
-
-
---------------------------------------------------------------------------------
-
 function Mixer:on_new_document()
   TRACE("Mixer:on_new_document")
   
@@ -616,6 +567,7 @@ function Mixer:__build_app()
       local y_pos = (embed_mutes) and 2 or 1
       local c = UISlider(self.display)
       c.group_name = self.mappings.levels.group_name
+      c.tooltip = self.mappings.levels.description
       c:set_pos(control_index,y_pos)
       c.toggleable = true
       c.flipped = false
@@ -659,8 +611,9 @@ function Mixer:__build_app()
         end
       end
       
-      self.display:add(c)
+      self:__add_component(c)
       self.__levels[control_index] = c
+
     end
     
 
@@ -669,6 +622,7 @@ function Mixer:__build_app()
     if (self.mappings.panning.group_name) then
       local c = UISlider(self.display)
       c.group_name = self.mappings.panning.group_name
+      c.tooltip = self.mappings.panning.description
       c:set_pos(control_index)
       c.toggleable = true
       c.flipped = false
@@ -699,8 +653,9 @@ function Mixer:__build_app()
         end
       end
       
-      self.display:add(c)
+      self:__add_component(c)
       self.__panning[control_index] = c
+
     end
         
      
@@ -709,6 +664,7 @@ function Mixer:__build_app()
     if (self.mappings.mute.group_name) then
       local c = UIToggleButton(self.display)
       c.group_name = self.mappings.mute.group_name
+      c.tooltip = self.mappings.mute.description
       c:set_pos(control_index)
       c.inverted = (self.options.invert_mute.value == self.MUTE_NORMAL) or false
       c.active = false
@@ -749,8 +705,9 @@ function Mixer:__build_app()
         return true
       end
       
-      self.display:add(c)
+      self:__add_component(c)
       self.__mutes[control_index] = c    
+
     end
     
 
@@ -759,6 +716,7 @@ function Mixer:__build_app()
     if (self.mappings.solo.group_name) then
       local c = UIToggleButton(self.display)
       c.group_name = self.mappings.solo.group_name
+      c.tooltip = self.mappings.solo.description
       c:set_pos(control_index)
       c.inverted = false
       c.active = false
@@ -782,8 +740,9 @@ function Mixer:__build_app()
         return true
       end
       
-      self.display:add(c)
+      self:__add_component(c)
       self.__solos[control_index] = c    
+
     end
   end
   
@@ -794,6 +753,7 @@ function Mixer:__build_app()
     
     local c = UISlider(self.display)
     c.group_name = self.mappings.master.group_name
+    c.tooltip = self.mappings.master.description
     c:set_pos((embed_master) and (self.__width + 1) or 1)
     c.toggleable = true
     c.ceiling = RENOISE_DECIBEL
@@ -824,9 +784,10 @@ function Mixer:__build_app()
         return true
       end
     end 
-     
-    self.display:add(c)
+    
+    self:__add_component(c)
     self.__master = c
+
   end
   
   
@@ -834,17 +795,18 @@ function Mixer:__build_app()
 
   if (self.mappings.page.group_name) then
   
-    self.__page_control = UISpinner(self.display)
-    self.__page_control.group_name = self.mappings.page.group_name
-    self.__page_control.index = 0
-    self.__page_control.step_size = self.__width
-    self.__page_control.minimum = 0
-    self.__page_control.maximum = math.max(0, 
+    local c = UISpinner(self.display)
+    c.group_name = self.mappings.page.group_name
+    c.tooltip = self.mappings.page.description
+    c.index = 0
+    c.step_size = self.__width
+    c.minimum = 0
+    c.maximum = math.max(0, 
       #renoise.song().tracks - self.__width)
-    self.__page_control:set_pos(self.mappings.page.index or 1)
-    self.__page_control.text_orientation = HORIZONTAL
+    c:set_pos(self.mappings.page.index or 1)
+    c.text_orientation = HORIZONTAL
 
-    self.__page_control.on_change = function(obj) 
+    c.on_change = function(obj) 
       if (not self.active) then
         return false
       end
@@ -859,21 +821,24 @@ function Mixer:__build_app()
       return true
     end
     
-    self.display:add(self.__page_control)
+    self:__add_component(c)
+    self.__page_control = c
+
   end
 
 
   -- Pre/Post FX mode ---------------------------
 
   if (self.mappings.mode.group_name) then
-    self.__mode_control = UIToggleButton(self.display)
-    self.__mode_control.group_name = self.mappings.mode.group_name
-    self.__mode_control:set_pos(self.mappings.mode.index or 1)
-    self.__mode_control.inverted = false
-    self.__mode_control.active = false
+    local c = UIToggleButton(self.display)
+    c.group_name = self.mappings.mode.group_name
+    c.tooltip = self.mappings.mode.description
+    c:set_pos(self.mappings.mode.index or 1)
+    c.inverted = false
+    c.active = false
 
     -- mode state changed from controller
-    self.__mode_control.on_change = function(obj) 
+    c.on_change = function(obj) 
       if (not self.active) then
         return false
       end
@@ -890,10 +855,12 @@ function Mixer:__build_app()
       return true
     end
     
-    self.display:add(self.__mode_control)
+    self:__add_component(c)
+    self.__mode_control = c
+
   end
     
-  -- the finishing touch
+  -- the finishing touches
   self:__attach_to_song()
 end
 

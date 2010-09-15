@@ -127,6 +127,10 @@ UIComponent.group_name
 -- specifies width and height values within the control-map group
 UIComponent.set_size(width,height)
 
+-- specifies position within the control-map group as x/y, or by index
+UIComponent.set_pos(x,y)
+UIComponent.set_pos(index)
+
 -- let the component update it's visual appearance (the canvas)
 UIComponent.draw()
 

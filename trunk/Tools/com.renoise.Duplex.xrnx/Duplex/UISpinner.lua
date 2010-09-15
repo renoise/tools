@@ -10,13 +10,12 @@ Inheritance: UIComponent > UISpinner
 About
 
 UISpinner makes it possible to select among a list of options
-Flexible operating mode depend on the internal __size property
+Flexible operating mode depend on if the unit-size is set to 1 or 2:
+1 ( ) - single dial, will trigger event for each quantized value
+2 [<][>]  - two buttons, for next/previous style operation
 
-( )     - single dial, will trigger event for each quantized value
-[<][>]  - two buttons, for next/previous style operation
 
-
-Input methods
+Supported input methods
 
 - use "button" type input (next/previous buttons)
 - use "dial" or "slider" (outputs quantized values)

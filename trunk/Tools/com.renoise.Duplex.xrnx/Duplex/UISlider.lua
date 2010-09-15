@@ -151,11 +151,8 @@ function UISlider:do_change()
   end
   
   -- scale from the message range to the sliders range
-  local idx = self:__determine_index_by_pos(msg.column, msg.row)
   local tmp = (msg.value / msg.max) * self.ceiling / self.size
-  local rslt = (self.ceiling / self.size) * (idx - 1) + tmp
-  
-  self:set_value(rslt)
+  self:set_value(tmp)
 end
 
 

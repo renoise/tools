@@ -60,6 +60,7 @@ duplex_configurations:insert {
         },
         master = {
           group_name = "VolumeRight",
+          index = 1,
         },
       },
     },
@@ -110,3 +111,93 @@ duplex_configurations:insert {
   }
 }
 
+--------------------------------------------------------------------------------
+
+-- setup Mixer, Sequencer & Effects as apps
+--[[
+duplex_configurations:insert {
+
+  -- configuration properties
+  name = "Mixer, Sequencer & Effects",
+  pinned = true,
+
+  -- device properties
+  device = {
+    class_name = "Ohm64",          
+    display_name = "Ohm64",
+    device_port_in = "Ohm64 MIDI 1",
+    device_port_out = "Ohm64 MIDI 1",
+    control_map = "Controllers/Ohm64/Ohm64.xml",
+    thumbnail = "Ohm64.bmp",
+    protocol = DEVICE_MIDI_PROTOCOL
+  },
+  
+  applications = {
+    Mixer = {
+      mappings = {
+        panning = {
+          group_name = "PanningLeft",
+        },
+        levels = {
+          group_name = "VolumeLeft",
+        },
+        mute = {
+          group_name = "ButtonsLeft",
+        },
+        master = {
+          group_name = "VolumeRight",
+        },
+      },
+    },
+    StepSequencer = {
+      mappings = {
+        grid = {
+          group_name = "Grid",
+        },
+        level = {
+          group_name = "CrossFader",
+          index = 2,
+        },
+        line = {
+          group_name = "ControlsRight",
+          index = 1,
+        },
+        track = {
+          group_name = "ControlsRight",
+          index = 3,
+        },
+        transpose = {
+          group_name = "ButtonsRight",
+          index = 5,
+        },
+      },
+    },
+    Effect = {
+      mappings = {
+        parameters = {
+          group_name= "EncodersEffect",
+        },
+        page = {
+          group_name = "ControlsRight",
+          index = 5,
+
+        }
+      }
+    },
+    Transport = {
+      mappings = {
+        goto_previous = {
+          group_name = "CrossFader",
+          index = 1,
+        },
+        goto_next = {
+          group_name = "CrossFader",
+          index = 3,
+        },
+
+      }
+    },
+
+  }
+}
+]]

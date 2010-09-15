@@ -53,6 +53,9 @@ function UIComponent:__init(display)
   self.width = 1 
   self.height = 1 
 
+  -- for indexed elements
+  self.tooltip = ""
+
   -- sync our width, height with the canvas
   self.canvas:set_size(self.width, self.height)
 
@@ -90,7 +93,7 @@ end
 -- draw() - update the visual definition
 
 function UIComponent:draw()
-  --TRACE("UIComponent:draw")
+  TRACE("UIComponent:draw")
 
   self.dirty = false
   
