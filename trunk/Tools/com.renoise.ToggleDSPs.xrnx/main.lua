@@ -29,6 +29,7 @@ local split = false
 -- tracks[track_num]['enabled'] = true
 -- TODO tracks[track_num][device_id]['enabled'] = true
 local tracks = table.create()
+local dsps = table.create()
 
 local options = renoise.Document.create {
   restore = true -- Remember Bypassed DSPs
@@ -157,7 +158,7 @@ local function update_table(t,data,value)
     local temp = t[data.index1]
     t[data.index1] = t[data.index2]
     t[data.index2] = temp
-  elseif (data.type == "remove") then    
+  elseif (data.type == "remove") then        
     t[data.index] = nil
     for k,v in pairs(t) do      
       if (type(k)=='number' and k>data.index) then              
@@ -167,7 +168,7 @@ local function update_table(t,data,value)
     end    
   elseif (data.type == "insert") then        
     for _,k in ripairs(table.keys(t)) do
-      if (type(k)=='number' and k>=data.index) then      
+      if (type(k)=='number' and k>=data.index) then
         t[k+1] = t[k]
         t[k] = nil
       end
@@ -180,24 +181,33 @@ local function update_table(t,data,value)
   end   
 end
 
+function get_track_num_by_id(dspid)    
+  for k,v in pairs(tracks) do        
+    if (v.id and v.id == dspid) then
+      return k
+    end
+  end
+  --renoise.app():show_error("get_track_num_by_id == nil")  
+end 
+
 -- This is the handler for the devices_observable notifier
 -- When moving a device from one track to another, the device bypass state
 --  from the source track will not carry over to the target track
 -- @param params  the additional parameters table
 -- @param data  the built-in data sent by the notifier
-local function device_notifier(params,data)
-  local track = params.track
-  local track_num = params.t
-  local value = function(d)        
+local function device_notifier(id,data)  
+  local track_num = get_track_num_by_id(id)  
+  local value = function(d)            
     return renoise.song().tracks[track_num].devices[d.index].is_active
-  end        
+  end          
   update_table(tracks[track_num],data,value)
 end
 
 -- This is the handler for the tracks_observable notifier
 -- @param data  the built-in data sent by the notifier
 local function track_notifier(data)
-  update_table(tracks, data)    
+  attach_notifiers()
+  update_table(tracks, data)  
 end
 
 local function is_renoise_dsp(name)
@@ -256,17 +266,41 @@ function toggle_dsps(toggle_value, type_id, range_id)
   end  
 end
 
-function attach_notifiers()
-  if (not renoise.song().tracks_observable:has_notifier(track_notifier)) then
-    renoise.song().tracks_observable:add_notifier(track_notifier)
+function attach_notifiers()  
+  if (renoise.song().tracks_observable:has_notifier(track_notifier)) then
+    renoise.song().tracks_observable:remove_notifier(track_notifier)
   end
+  renoise.song().tracks_observable:add_notifier(track_notifier)
   
-  for k,track in pairs(renoise.song().tracks) do
-    tracks[k] = {}
-    if (not track.devices_observable:has_notifier(device_notifier)) then
-        track.devices_observable:add_notifier(device_notifier, {t=k, track=track})
-    end
+  for k,track in pairs(renoise.song().tracks) do    
+    if (not tracks[k]) then
+      tracks[k] = {}
+    end    
+    
+    if (not tracks[k].id) then
+      tracks[k].id = DSPId()
+      track.devices_observable:add_notifier(device_notifier, tracks[k].id)
+    end  
+    
+  end  
+end
+
+
+class "DSPId"
+DSPId.count = 1
+function DSPId:__init()  
+  DSPId.count = DSPId.count + 1
+  self.value = DSPId.count 
+end
+function DSPId:__eq(other)
+  if (type(other) == "number") then
+    return self.value == other
+  elseif (type(other) == "DSPId") then
+    return self.value == other.value
   end
+end
+function DSPId:__tostring()  
+  return self.value
 end
 
 --------------------------------------------------------------------------------
