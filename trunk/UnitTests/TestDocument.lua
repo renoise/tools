@@ -332,7 +332,45 @@ do
   local observable_number_list = renoise.Document.ObservableNumberList()
   local observable_boolean_list = renoise.Document.ObservableBooleanList()
   local observable_string_list = renoise.Document.ObservableStringList()
+  
+
+  -- Document lists & models
+  
+  local modeled_node1 = renoise.Document.create("MyModel1") {
+    num = 1,
+    str = "Bla!",
+  }
+  
+  local modeled_node2 = renoise.Document.create("MyModel2") {
+    boo1 = false,
+    str = "Bli!",
+  }
+  
+  local doc = renoise.Document.create {
+    yanum = 1,
+    doc = {
+      nested = "nested"
+    },
+    doclist = renoise.Document.DocumentList(),
+  }
+  
+  doc.doclist:insert(modeled_node1)
+  doc.doclist:insert(modeled_node2)
+  
+  assert(doc.doclist[1].num.value == modeled_node1.num.value)
+  assert(doc.doclist[1].str.value == modeled_node1.str.value)
+  
+  assert(doc.doclist[2].boo1.value == modeled_node2.boo1.value)
+  assert(doc.doclist[2].str.value == modeled_node2.str.value)
+  
+  local tmp_filename = "C:/Users/Edu/Test.xml" -- os.tmpname()
+  doc:save_as("MyDoc", tmp_filename)
+  
+  -- TODO: load, resolve, create from models
+  
+  -- TODO: list notifiers
 end
+
 
 ------------------------------------------------------------------------------
 -- test finalizers
