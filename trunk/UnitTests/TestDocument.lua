@@ -15,43 +15,43 @@ do
   ----------------------------------------------------------------------------
   -- manual doc creation
   
-  local doc = renoise.Document.create()
-  local number = doc:add("number_value", 1)
-  local number2 = doc:add("number_value2", 2)
-  local string_value = doc:add("string_value", "string_value")
-  local boolean_value = doc:add("boolean_value", true)
+  local doc = renoise.Document.create("TestDocument"){}
+  local number = doc:add_property("number_value", 1)
+  local number2 = doc:add_property("number_value2", 2)
+  local string_value = doc:add_property("string_value", "string_value")
+  local boolean_value = doc:add_property("boolean_value", true)
   
-  local number_list = doc:add("number_list", { 11, 12, 13})
-  local string_list = doc:add("string_list", { "11", "12", "13"})
-  local boolean_list = doc:add("boolean_list", { false, false} )
+  local number_list = doc:add_property("number_list", { 11, 12, 13})
+  local string_list = doc:add_property("string_list", { "11", "12", "13"})
+  local boolean_list = doc:add_property("boolean_list", { false, false} )
       
   local nested_doc = renoise.Document.create()
-  nested_doc:add("sub_number_value", 2)
-  nested_doc:add("sub_string_value", "string_value2")
+  nested_doc:add_property("sub_number_value", 2)
+  nested_doc:add_property("sub_string_value", "string_value2")
   
-  doc:add("sub_node", nested_doc)
+  doc:add_property("sub_node", nested_doc)
   
   
   ----------------------------------------------------------------------------
   -- bogus adds
   
   assert_error(function()
-    doc:add("number_value", 1)
+    doc:add_property("number_value", 1)
   end)
   assert_error(function()
-    doc:add("number_list", 1 )
+    doc:add_property("number_list", 1 )
   end)
   assert_error(function()
-    doc:add("bogus_list", { false, 1} )
+    doc:add_property("bogus_list", { false, 1} )
   end)
   assert_error(function()
-    doc:add("<bogus_key>", 12)
+    doc:add_property("<bogus_key>", 12)
   end)
   assert_error(function()
-    doc:add("bogus key", 12)
+    doc:add_property("bogus key", 12)
   end)
   assert_error(function()
-    doc:add("1bogus", 12)
+    doc:add_property("1bogus", 12)
   end)
   
   
@@ -263,21 +263,13 @@ do
   -- XML serialization
   
   local tmp_filename = os.tmpname()
-  
-  assert(doc2:save_as("TestDocument", tmp_filename))
-  assert_error(function()
-    assert(doc2:save_as("<TestDocument>", tmp_filename))
-  end)
+  assert(doc2:save_as(tmp_filename))
   
   doc2.number.value = 12
   doc2.number_list[3].value = 0
   doc2.sub_node.sub_number.value = 99
   
-  assert(doc2:load_from("TestDocument", tmp_filename))
-  
-  assert_error(function()
-    assert(doc2:load_from("Invalid", tmp_filename))
-  end)
+  assert(doc2:load_from(tmp_filename))
   
   assert(doc2.number.value == 99)
   assert(doc2.number_list[3].value == 13)
@@ -334,7 +326,47 @@ do
   local observable_string_list = renoise.Document.ObservableStringList()
   
 
-  -- Document lists & models
+  ----------------------------------------------------------------------------
+  -- sliced doc classes
+  
+  local sliced_constructor_calls = 0
+  
+  class "SlicedDocClass"(renoise.Document.DocumentNode)
+    function SlicedDocClass:__init()
+      renoise.Document.DocumentNode.__init(self)
+  
+      self:add_property("num", 12)
+      self:add_property("str", "Oolla (sliced)!")
+      
+      sliced_constructor_calls = sliced_constructor_calls + 1
+    end
+      
+  local sliced = SlicedDocClass()
+  assert(sliced_constructor_calls == 1)
+  
+  assert(sliced.num.value == 12)
+  assert(sliced.str.value == "Oolla (sliced)!")
+  
+  sliced.num.value = 66
+  sliced.str.value = "changed"
+  
+  local tmp_filename = os.tmpname()
+  assert(sliced:save_as(tmp_filename))
+  
+  sliced = SlicedDocClass() -- create new instance
+  assert(sliced_constructor_calls == 2)
+  
+  assert(sliced:load_from(tmp_filename))
+  assert(sliced_constructor_calls == 2)
+  
+  assert(sliced.num.value == 66)
+  assert(sliced.str.value == "changed")
+  
+  assert(os.remove(tmp_filename))
+  
+  
+  ----------------------------------------------------------------------------
+  -- Document models & lists
   
   local modeled_node1 = renoise.Document.create("MyModel1") {
     num = 1,
@@ -346,16 +378,16 @@ do
     str = "Bli!",
   }
   
-  local doc = renoise.Document.create {
+  local doc = renoise.Document.create("MyDoc") {
     yanum = 1,
-    doc = {
-      nested = "nested"
-    },
+    doc = { nested_str = "nested" },
     doclist = renoise.Document.DocumentList(),
   }
   
   doc.doclist:insert(modeled_node1)
   doc.doclist:insert(modeled_node2)
+  doc.doclist:insert(SlicedDocClass())
+  doc.doclist:insert(SlicedDocClass())
   
   assert(doc.doclist[1].num.value == modeled_node1.num.value)
   assert(doc.doclist[1].str.value == modeled_node1.str.value)
@@ -363,12 +395,21 @@ do
   assert(doc.doclist[2].boo1.value == modeled_node2.boo1.value)
   assert(doc.doclist[2].str.value == modeled_node2.str.value)
   
-  local tmp_filename = "C:/Users/Edu/Test.xml" -- os.tmpname()
-  doc:save_as("MyDoc", tmp_filename)
+  local tmp_filename = os.tmpname()
+  assert(doc:save_as(tmp_filename))
   
-  -- TODO: load, resolve, create from models
+  assert(sliced_constructor_calls == 4)
   
-  -- TODO: list notifiers
+  assert(doc:load_from(tmp_filename))
+  -- TODO assert(sliced_constructor_calls == 6)
+  
+  
+  ----------------------------------------------------------------------------
+  -- TODO: create docs from model type identifiers
+  -- TODO: create Lua sliced classes from class identifiers
+  -- TODO: doc list notifier
+  -- TODO: ipairs pairs support (or new ?dpairs? iterators)
+  
 end
 
 
