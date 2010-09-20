@@ -2,6 +2,9 @@
   ToggleDSPs main.lua
 ============================================================================]]--
 
+local debug = false
+_AUTO_RELOAD_DEBUG = debug
+
 local toggles = {
   Bypass = false,
   Enable = true,
@@ -27,7 +30,7 @@ local split = false
 
 -- Remember track states
 -- tracks[track_num]['enabled'] = true
--- TODO tracks[track_num][device_id]['enabled'] = true
+-- tracks[track_num][device_id] = true
 local tracks = table.create()
 local dsps = table.create()
 
@@ -135,6 +138,17 @@ renoise.tool():add_keybinding{
 -- Functions
 --------------------------------------------------------------------------------
 
+local function trace(s)
+  if (not debug) then
+    return
+  end
+  if (type(s) == 'table') then
+    rprint(s)
+  else
+    print(s)
+  end
+end
+
 local function get_track_state(track_num)
   if (not tracks[track_num] or tracks[track_num]['enabled'] == nil) then
     return true
@@ -153,7 +167,8 @@ end
 -- @param t  the table
 -- @param data  the built-in data sent by the notifier
 -- @param value  the built-in data sent by the notifier
-local function update_table(t,data,value)   
+local function update_table(t,data,value)
+  trace(data)
   if (data.type == "swap") then
     local temp = t[data.index1]
     t[data.index1] = t[data.index2]
@@ -162,32 +177,52 @@ local function update_table(t,data,value)
     t[data.index] = nil
     for k,v in pairs(t) do      
       if (type(k)=='number' and k>data.index) then              
-        t[k-1] = v
+        t[k-1] = table.rcopy(v)
         t[k] = nil
       end      
     end    
-  elseif (data.type == "insert") then        
+  elseif (data.type == "insert") then
+      -- 4 = a
+      -- 5 = b
+      -- insert 5
+      -- 4 = a
+      -- 5 = c
+      -- 6 = b
+      -- insert 4
+      -- 4 = d
+      -- 5 = a
+      -- 6 = c
+      -- 7 = b
+      -- insert 8
+      -- 4 = d
+      -- 5 = a
+      -- 6 = c
+      -- 7 = b
+      -- 8 = e
     for _,k in ripairs(table.keys(t)) do
       if (type(k)=='number' and k>=data.index) then
-        t[k+1] = t[k]
-        t[k] = nil
+        t[k+1] = table.rcopy(t[k])
       end
     end
-    if (type(value)=='function') then      
-      t[data.index] = value(data)      
+    if (type(value)=='function') then
+      t[data.index] = value(data)
     else
-      t[data.index] = value
-    end    
-  end   
+      t[data.index] = value or {}
+    end
+    trace(t)
+  end
 end
 
-function get_track_num_by_id(dspid)    
-  for k,v in pairs(tracks) do        
-    if (v.id and v.id == dspid) then
+function get_track_num_by_id(dspid)
+  trace(tracks)
+  for k,track in pairs(tracks) do
+    if (track.id and track.id == dspid) then
       return k
     end
   end
-  --renoise.app():show_error("get_track_num_by_id == nil")  
+  if (debug) then
+    renoise.app():show_error("get_track_num_by_id == nil")
+  end
 end 
 
 -- This is the handler for the devices_observable notifier
@@ -195,9 +230,11 @@ end
 --  from the source track will not carry over to the target track
 -- @param params  the additional parameters table
 -- @param data  the built-in data sent by the notifier
-local function device_notifier(id,data)  
-  local track_num = get_track_num_by_id(id)  
-  local value = function(d)            
+local function device_notifier(id,data)
+  local track_num = get_track_num_by_id(id)
+  local value = function(d)
+    local track_num = get_track_num_by_id(id)
+    trace("track_num/id:  " .. track_num .. "/" .. id.value)
     return renoise.song().tracks[track_num].devices[d.index].is_active
   end          
   update_table(tracks[track_num],data,value)
@@ -206,8 +243,8 @@ end
 -- This is the handler for the tracks_observable notifier
 -- @param data  the built-in data sent by the notifier
 local function track_notifier(data)
+  update_table(tracks, data)
   attach_notifiers()
-  update_table(tracks, data)  
 end
 
 local function is_renoise_dsp(name)
@@ -231,7 +268,7 @@ local function toggle_dsps_in_track(toggle_value, track_num, type_id)
   set_track_state(track_num, toggle_value)
   
   local devices = renoise.song().tracks[track_num].devices
-  
+
   -- Loop (skip the Track/Vol/Pan device at 1)  
   for i = 2, #devices do
     local d = devices[i]
@@ -266,28 +303,28 @@ function toggle_dsps(toggle_value, type_id, range_id)
   end  
 end
 
-function attach_notifiers()  
+function attach_notifiers()
+  trace("attach_notifiers")
   if (renoise.song().tracks_observable:has_notifier(track_notifier)) then
     renoise.song().tracks_observable:remove_notifier(track_notifier)
   end
   renoise.song().tracks_observable:add_notifier(track_notifier)
-  
-  for k,track in pairs(renoise.song().tracks) do    
+
+  for k,track in pairs(renoise.song().tracks) do
     if (not tracks[k]) then
       tracks[k] = {}
-    end    
-    
+    end
+
     if (not tracks[k].id) then
       tracks[k].id = DSPId()
       track.devices_observable:add_notifier(device_notifier, tracks[k].id)
-    end  
-    
-  end  
+    end
+  end
 end
 
 
 class "DSPId"
-DSPId.count = 1
+DSPId.count = 0
 function DSPId:__init()  
   DSPId.count = DSPId.count + 1
   self.value = DSPId.count 
@@ -300,14 +337,18 @@ function DSPId:__eq(other)
   end
 end
 function DSPId:__tostring()  
-  return self.value
+  return tostring(self.value)
+end
+function DSPId:reset()
+  DSPId.count = 0
 end
 
 --------------------------------------------------------------------------------
 -- Global Notifiers
 --------------------------------------------------------------------------------
 
-renoise.tool().app_new_document_observable:add_notifier(function()  
+renoise.tool().app_new_document_observable:add_notifier(function()
   table.clear(tracks)
-  attach_notifiers()  
+  DSPId:reset()
+  attach_notifiers()
 end)
