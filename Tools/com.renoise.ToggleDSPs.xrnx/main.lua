@@ -2,7 +2,7 @@
   ToggleDSPs main.lua
 ============================================================================]]--
 
-local debug = false
+local debug = true
 _AUTO_RELOAD_DEBUG = debug
 
 local toggles = {
@@ -177,7 +177,7 @@ local function update_table(t,data,value)
     t[data.index] = nil
     for k,v in pairs(t) do      
       if (type(k)=='number' and k>data.index) then              
-        t[k-1] = table.rcopy(v)
+        t[k-1] = v
         t[k] = nil
       end      
     end    
@@ -201,7 +201,7 @@ local function update_table(t,data,value)
       -- 8 = e
     for _,k in ripairs(table.keys(t)) do
       if (type(k)=='number' and k>=data.index) then
-        t[k+1] = table.rcopy(t[k])
+        t[k+1] = t[k]
       end
     end
     if (type(value)=='function') then
