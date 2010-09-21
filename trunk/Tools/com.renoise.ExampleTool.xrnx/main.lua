@@ -26,7 +26,7 @@ com.renoise.ExampleTool.xrnx/main.lua
 -- tools can have preferences, just like Renoise. To use them we first need 
 -- to create a renoise.Document object which holds the options that we want to 
 -- store/restore
-local options = renoise.Document.create {
+local options = renoise.Document.create("ExampleToolPreferences") {
   show_debug_prints = false
 }
 
@@ -38,8 +38,25 @@ renoise.tool().preferences = options
 -- the preferences file for tools is saved inside the tools bundle as 
 -- "preferences.xml"
 
+-- for more complex documents, or if you prefere doing things the OO way, you can
+-- also inherit from renoise.Document.DocumentNode and register properties there:
+--
+class "ExampleToolPreferences"(renoise.Document.DocumentNode)
+
+function ExampleToolPreferences:__init()
+  renoise.Document.DocumentNode.__init(self)
+  
+  -- register an observable property "show_debug_prints" which also will be 
+  -- loaded/saved with the document
+  self:add_property("show_debug_prints", false)
+end
+
+local options = ExampleToolPreferences()
+renoise.tool().preferences = options
+
+-- which also allows you to create more complex documents.
 -- please have a look at the Renoise.Tool.API.txt for more info and details 
--- about documents and what else you can store this way...
+-- about documents and what else you can load/store this way...
 
   
 --------------------------------------------------------------------------------
