@@ -25,7 +25,7 @@ do
   local string_list = doc:add_property("string_list", { "11", "12", "13"})
   local boolean_list = doc:add_property("boolean_list", { false, false} )
       
-  local nested_doc = renoise.Document.create()
+  local nested_doc = renoise.Document.create("TestDocumentNode"){ }
   nested_doc:add_property("sub_number_value", 2)
   nested_doc:add_property("sub_string_value", "string_value2")
   
@@ -215,7 +215,7 @@ do
   ----------------------------------------------------------------------------
   -- inline doc creation
   
-  local doc2 = renoise.Document.create {
+  local doc2 = renoise.Document.create("AnotherDoc") {
     boolean_value = true,
     number = 99,
     string_value = "wer",
@@ -232,13 +232,13 @@ do
   }
   
   assert_error(function()
-    renoise.Document.create {
+    renoise.Document.create("BogusDoc") {
       empty_list = {},
     }
   end)
   
   assert_error(function()
-    renoise.Document.create {
+    renoise.Document.create("BogusDoc") {
       ["bogus_key!"] = "value",
     }
   end)
@@ -378,11 +378,23 @@ do
     str = "Bli!",
   }
   
+  assert_error(function()
+    renoise.Document.create("2InvalidModelName") {}
+  end)
+  
+  -- create docs from model type identifiers
+  local new_modeled_node = renoise.Document.instantiate("MyModel1")
+  assert(new_modeled_node.num.value == 1)
+  assert(new_modeled_node.str.value == "Bla!")
+  
+  
+  -- register a doc with doc sub nodes and a doc list
   local doc = renoise.Document.create("MyDoc") {
     yanum = 1,
     doc = { nested_str = "nested" },
     doclist = renoise.Document.DocumentList(),
   }
+
   
   doc.doclist:insert(modeled_node1)
   doc.doclist:insert(modeled_node2)
@@ -399,15 +411,72 @@ do
   assert(doc:save_as(tmp_filename))
   
   assert(sliced_constructor_calls == 4)
-  
+  doc = renoise.Document.instantiate("MyDoc")
+  assert(sliced_constructor_calls == 6)
+
   assert(doc:load_from(tmp_filename))
-  -- TODO assert(sliced_constructor_calls == 6)
+  assert(sliced_constructor_calls == 8)
   
-  
+  -- unregister class "SlicedDocClass" (must fail cleanly)
+  _G["SlicedDocClass"] = nil
+  local succeeded, errormsg = doc:load_from(tmp_filename)
+  assert(not succeeded and 
+    errormsg:find("class 'SlicedDocClass' was not registered")
+  )
+   
+
   ----------------------------------------------------------------------------
-  -- TODO: create docs from model type identifiers
-  -- TODO: create Lua sliced classes from class identifiers
-  -- TODO: doc list notifier
+  -- doc list notifier
+  
+  class "TestDocClass"(renoise.Document.DocumentNode)
+    function TestDocClass:__init()
+      renoise.Document.DocumentNode.__init(self)
+      self:add_property("number", 15)
+    end
+    
+  local doc_list_notifications = 0
+  local last_doc_list_notification
+  
+  local doc_list_notifier = function(notification)
+    doc_list_notifications = doc_list_notifications + 1 
+    last_doc_list_notification = notification
+  end
+  
+  local doc_list = renoise.Document.DocumentList()
+
+  assert_error(function() -- no saving/loading or raw lists
+    doc_list:save_as(tmp_filename)
+  end)
+    
+  assert(not doc_list:has_notifier(doc_list_notifier))
+  doc_list:add_notifier(doc_list_notifier)
+  assert(doc_list:has_notifier(doc_list_notifier))
+  
+  assert(#doc_list == 0)
+  doc_list:insert(TestDocClass())
+  doc_list:insert(TestDocClass())
+  assert(last_doc_list_notification.type == "insert" and 
+    last_doc_list_notification.index == 2)
+  
+  assert(doc_list_notifications == 2)
+  
+  doc_list:swap(1, 2)
+  assert(last_doc_list_notification.type == "swap" and
+    last_doc_list_notification.index1 == 1 and
+    last_doc_list_notification.index2 == 2)
+  
+
+  assert(doc_list_notifications == 3)
+  
+  doc_list:remove()
+  assert(last_doc_list_notification.type == "remove" and
+    last_doc_list_notification.index == 2)
+
+  assert(doc_list_notifications == 4)
+  assert(#doc_list == 1)  
+  
+  
+  ------------------------------------------------------------------------------
   -- TODO: ipairs pairs support (or new ?dpairs? iterators)
   
 end
