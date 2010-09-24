@@ -195,7 +195,7 @@ also can use additional methods to deal with your properties, the data.
 
 Here is a simple example:
 
-class MyDocument(renoise.Document.DocumentNode)
+class "MyDocument"(renoise.Document.DocumentNode)
 
   function MyDocument:__init()
     -- important! call super first
