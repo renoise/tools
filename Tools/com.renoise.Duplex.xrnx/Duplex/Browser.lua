@@ -99,9 +99,24 @@ function Browser:show()
   if (not self.__dialog or not self.__dialog.visible) then
     assert(self.__content_view, "Internal Error. Please report: " .. 
       "browser always needs a valid content view")
-    
+
+    -- switch configuration using the function keys
+    local function keyhandler(dialog, key)
+      local fkey = (string.match(key.name,"f([%d]+)"))
+      if (key.modifiers=="") and (fkey~=nil) then
+        fkey = fkey *1
+        local config_list = 
+          self:__available_configurations_for_device(self.__device_name)
+        if (config_list[fkey]) then
+          self:set_configuration(config_list[fkey], true)
+        end
+      else
+        return key
+      end
+    end
+
     self.__dialog = renoise.app():show_custom_dialog(
-      "Duplex Browser", self.__content_view)
+      "Duplex Browser", self.__content_view,keyhandler)
   else
     self.__dialog:show()
   end

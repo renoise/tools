@@ -200,4 +200,4 @@ duplex_configurations:insert {
 
   }
 }
-]]
+

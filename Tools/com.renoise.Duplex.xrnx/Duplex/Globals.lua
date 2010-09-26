@@ -116,7 +116,7 @@ duplex_preferences = renoise.Document.create{
 
   -- the number of seconds required to trigger DEVICE_EVENT_BUTTON_HELD
   -- fractional values are supported, 0.5 is half a second
-  button_hold_time = 1,
+  button_hold_time = 0.5,
 
   -- debug option: when enabled, dump MIDI messages received and send by duplex
   -- to the sdt out (Renoise terminal)
@@ -244,6 +244,13 @@ end
 function get_color_average(color)
   return color[1]+color[2]+color[3]/3
 end
+
+-- check if colorspace is monochromatic
+function is_monochrome(colorspace)
+  local cs = {1,1,1}
+  return table_compare(colorspace,cs)
+end
+
 
 -- helper function to remove channel info from value-string
 -- @return str

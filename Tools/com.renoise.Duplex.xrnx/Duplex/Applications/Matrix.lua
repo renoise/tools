@@ -7,27 +7,14 @@
   About
 
   This application will take control of the pattern matrix in Renoise 
-  - hit matrix buttons to mute/unmute track slots
+  - hit matrix buttons to mute/unmute track slots, hold button to focus
   - navigation features (page up/down/left/right), when song follow is on, 
     the matrix will automatically display the currently playing page
   - flexible options for song-position control (switch/retrigger/etc)
+  - depending on hardware capabilities, the matrix sequence can control both
+    the pattern-loop range and the playback position (SEQUENCE_MODE)
   - minimum size (all features enabled): 4x4 (navigation + 3 tracks/patterns)
 
-
-  ---------------------------------------------------------
-
-  Control-map assignments 
-
-  [][] <- "track" (any input)
-  [][] <- "sequence" (any input)
-
-  [][][][]  [<] <- "matrix"  "triggers" (button grid)
-  [][][][]  [<]
-  [][][][]  [<]
-  [][][][]  [<]
-
-  - triggers are embedded into the matrix, if you
-    specify the same group name as the matrix
 
 
 --]]
@@ -60,27 +47,48 @@ function Matrix:__init(display,mappings,options)
   self.BOUNDS_MODE_STOP = 1
   self.BOUNDS_MODE_IGNORE = 2
 
+  self.SEQUENCE_MODE_NORMAL = 1
+  self.SEQUENCE_MODE_INDEX = 2
+
   self.options = {
     play_mode = {
       label = "When triggered",
+      description = "What to do when playback is started or re-started",
       items = {"Play/continue","Toggle start & stop","Retrigger pattern","Schedule pattern"},
       default = 3,
     },
     switch_mode = {
       label = "When switching",
+      description = "What to do when switching from one pattern to another",
       items = {"Stop playback","Switch to pattern","Trigger pattern","Schedule pattern"},
       default = 2,
     },
     bounds_mode = {
-      label = "Out of bounds",
+      label = "When out of bounds",
+      description = "What to do when a position outside the song is triggered",
       items = {"Stop playback","Do nothing"},
       default = 1,
     },
     sync_position = {
-      label = "Sync to global position",
+      label = "Sync to global focus",
+      description = "Whether to force the application to follow the Renoise focus at all times",
       items = {true,false},
       default = 1,
     },
+    sequence_mode = {
+      label = "Sequence-control",
+      description = "Whather to support range-selections in the Matrix sequence - select 'index only' if your device does not have a release event",
+      items = {"Control range + index","Control index only"},
+      on_activate = function()
+        -- this function is called before the applications start, 
+        -- and after the UIComponents have been created
+        if (self.__trigger) then
+          local is_normal = (self.options.sequence_mode.value==self.SEQUENCE_MODE_NORMAL)
+          self.__trigger.mode = is_normal and self.__trigger.MODE_NORMAL or self.__trigger.MODE_INDEX 
+        end
+      end,
+      default = 1,
+    }
   }
   self:__set_default_options(true)
 
@@ -165,14 +173,11 @@ function Matrix:__init(display,mappings,options)
   self.__height = 4
 
   self.__playing = nil
-  self.__play_page = nil  -- the currently playing page
-  self.__edit_page = nil  -- the currently editing page
-  self.__track_offset = 0  -- the track offset (0-#tracks)
-
-  -- the number of lines is used for determining the playback- 
-  -- position within the currently playing pattern (in lines)
-  --self.__num_lines = nil    -- 
-
+  self.__play_page = nil  
+  self.__edit_page = nil  
+  self.__track_offset = 0  
+  self.__loop_sequence_range = {0,0}
+  self.__scheduled_pattern = nil
   self.__playback_pos = nil
   self.__update_slots_requested = false
   self.__update_tracks_requested = false
@@ -187,9 +192,13 @@ end
 
 -- update slots visual appeareance 
 
-function Matrix:update()
-  TRACE("Matrix:update()")
+function Matrix:__update_slots()
+  TRACE("Matrix:__update_slots()")
   if (not self.active) then
+    return
+  end
+
+  if (not self.mappings.matrix.group_name) then
     return
   end
 
@@ -197,8 +206,6 @@ function Matrix:update()
     -- do lazy updates in idle...
     return
   end
-
-  TRACE("Matrix:update() - proceed")
 
   local sequence = renoise.song().sequencer.pattern_sequence
   local tracks = renoise.song().tracks
@@ -286,8 +293,9 @@ function Matrix:start_app()
   self:__update_page_count()
   self:__update_seq_offset()
   self:__update_track_count()
-  self:__update_position(self.__playback_pos.sequence)
-  self:update()
+  self:__update_position()
+  self:__update_range()
+  self:__update_slots()
 
 end
 
@@ -310,30 +318,21 @@ function Matrix:on_idle()
   -- 
   if (self.__update_slots_requested) then
     self.__update_slots_requested = false
-    self:update()
+    self:__update_slots()
     self:__update_page_count()
   end
 
+  -- update range?
+  local rng = renoise.song().transport.loop_sequence_range
+  if (rng[1]~=self.__loop_sequence_range[1]) or
+    (rng[2]~=self.__loop_sequence_range[2]) then
+    self:__update_range()
+  end
 
   if renoise.song().transport.playing then
 
 
     local pos = renoise.song().transport.playback_pos
---[[
-    if(self.__num_lines)then
-      -- figure out the progress
-      local complete = (pos.line/self.__num_lines)
-      local counter = math.floor(complete*self.__height)
-      if (self.__trigger.index == counter) then
-        self.progress:set_index(0,true)
-        self.progress:invalidate()
-      else
-        self.progress:set_index(counter,true)
-        self.progress:invalidate()
-      end
-
-    end
-]]
 
     -- ??? playback_pos might briefly contain the wrong value
     if (pos.sequence ~= self.__playback_pos.sequence)then
@@ -341,31 +340,24 @@ function Matrix:on_idle()
       -- changed pattern
       self.__playback_pos = pos
 
-      -- update number of lines (used for progress)
-      --local patt_idx = renoise.song().sequencer.pattern_sequence[renoise.song().selected_sequence_index]
-      --self.__num_lines = renoise.song().patterns[patt_idx].number_of_lines
-
-      -- check if we need to change page
+      if (self.__trigger) then
+        self.__trigger:stop_blink()
+      end
+      -- entered a new play-page
       local play_page = self:__get_play_page()
-      if(play_page~=self.__play_page)then
-        self.__play_page = play_page
-        if(renoise.song().transport.follow_player)then
-          if(self.__play_page~=self.__edit_page)then
-            -- update only when following play-pos
-            self:__update_seq_offset()
-            self:update()
-          end
-        end
+      if (play_page~=self.__play_page) then
+        self:__check_page_change()
       end
       self:__update_position(pos.sequence)
+
     elseif (not self.__playing) then
       -- playback resumed
-      self:__update_position(self.__playback_pos.sequence)
+      self:__update_position()
     elseif (self.__trigger) and 
-      (self.__trigger.index == 0) and 
+      (self.__trigger:get_index() == 0) and 
       (self.__play_page==self.__edit_page) then
       -- position now in play-range
-      self:__update_position(self.__playback_pos.sequence)      
+      self:__update_position()      
     end
 
     self.__playing = true
@@ -376,6 +368,11 @@ function Matrix:on_idle()
       self:__update_position(0)
       self.__playing = false
     end
+    if (self.__trigger) then
+      self.__trigger:stop_blink()
+    end
+
+
   end
 end
 
@@ -389,7 +386,7 @@ function Matrix:on_new_document()
   self:__attach_to_song(renoise.song())
   self:__update_page_count()
   self:__update_track_count()
-  self:update()
+  self:__update_slots()
 
 end
 
@@ -397,9 +394,26 @@ end
 -- private methods
 --------------------------------------------------------------------------------
 
+-- check if we need to change page, but update only when following play-pos
+-- called when page changes and when "follow_player" is enabled
+
+function Matrix:__check_page_change() 
+  TRACE("Matrix:__check_page_change")
+  self.__play_page = self:__get_play_page()
+  if(renoise.song().transport.follow_player)then
+    if(self.__play_page~=self.__edit_page)then
+      self:__update_seq_offset()
+      self:__update_range()
+      self:__update_slots()
+    end
+  end
+end
+
+
+--------------------------------------------------------------------------------
+
 -- update track navigator,
 -- on new song, and when tracks have been changed
--- + no event fired
 
 function Matrix:__update_track_count() 
   TRACE("Matrix:__update_track_count")
@@ -414,7 +428,6 @@ end
 --------------------------------------------------------------------------------
 
 -- update sequence offset
--- + no event fired
 
 function Matrix:__update_seq_offset()
   TRACE("Matrix:__update_seq_offset()")
@@ -431,7 +444,6 @@ end
 --------------------------------------------------------------------------------
 
 -- update the switcher (when the number of pattern have changed)
--- + no event fired
 
 function Matrix:__update_page_count()
   TRACE("Matrix:__update_page_count()")
@@ -443,14 +455,56 @@ function Matrix:__update_page_count()
   end
 end
 
+--------------------------------------------------------------------------------
+
+-- update range in sequence trigger
+
+function Matrix:__update_range()
+
+  if (self.__trigger) then
+
+    --local rng = self.__trigger:get_range()
+    local rng = renoise.song().transport.loop_sequence_range
+    self.__loop_sequence_range = rng
+
+    -- set the range
+    local start = (self.__height*(self.__edit_page+1))-(self.__height-1)
+    if not ((start+self.__height-1)<rng[1]) and 
+      not (start>rng[2]) then
+
+      local index_start = self.__loop_sequence_range[1]%self.__height
+      index_start = (index_start==0) and self.__height or index_start
+      if(start>rng[1]) then
+       index_start = 1
+      end
+
+      local index_end = self.__loop_sequence_range[2]%self.__height
+      index_end = (index_end==0) and self.__height or index_end
+      if((start+self.__height-1)<self.__loop_sequence_range[2]) then
+        index_end = self.__height
+      end
+
+      self.__trigger:set_range(index_start,index_end,true)
+
+    else
+      self.__trigger:set_range(0,0,true)
+    end
+    self.__trigger:invalidate()
+  end
+end
 
 --------------------------------------------------------------------------------
 
--- update position in sequence
--- @idx: (integer) the index, 0 - song-end
+-- update index in sequence trigger
+-- called when starting/stopping playback, changing page
+-- @idx: (integer) the index, 0 - song-end (use current position if undefined)
 
 function Matrix:__update_position(idx)
   TRACE("Matrix:__update_position()",idx)
+
+  if not idx then
+    idx = self.__playback_pos.sequence
+  end
 
   local pos_idx = nil
   if(self.__playing)then
@@ -459,14 +513,25 @@ function Matrix:__update_position(idx)
     if(self.__edit_page == play_page)then
       pos_idx = idx-(self.__play_page*self.__height)
     else
-      pos_idx = 0 -- no, hide playback 
+      pos_idx = 0 -- no, hide sequence index 
     end
   else
-    pos_idx = 0 -- stopped
+    pos_idx = 0 -- stopped, hide sequence index 
   end
 
   if (self.__trigger) then
     self.__trigger:set_index(pos_idx,true)
+
+    -- control trigger blinking
+    if (self.__scheduled_pattern) then
+      local schedule_page = math.floor(self.__scheduled_pattern/self.__height)
+      if (schedule_page==self.__edit_page) then
+        self.__trigger:start_blink(self.__trigger.__blink_idx)
+      else
+        self.__trigger:pause_blink()
+      end
+    end
+
     self.__trigger:invalidate()
   end
 
@@ -503,12 +568,15 @@ function Matrix:__build_app()
 
   Application.__build_app(self)
 
-
   -- determine matrix size by looking at the control-map
-  local control_map = self.display.device.control_map.groups[self.mappings.matrix.group_name]
-  if(control_map["columns"])then
-      self.__width = control_map["columns"]
-      self.__height = math.ceil(#control_map/self.__width)
+  if (self.mappings.matrix.group_name) then
+    local control_map = self.display.device.control_map
+    self.__width = control_map:count_columns(self.mappings.matrix.group_name)
+    self.__height = control_map:count_rows(self.mappings.matrix.group_name)
+  elseif (self.mappings.triggers.group_name) then
+    local control_map = self.display.device.control_map
+    self.__width = control_map:count_columns(self.mappings.triggers.group_name)
+    self.__height = control_map:count_rows(self.mappings.triggers.group_name)
   end
 
   -- embed the trigger-group in the matrix?
@@ -532,9 +600,10 @@ function Matrix:__build_app()
       end
       if(self.__edit_page~=obj.index)then
         self.__edit_page = obj.index
-        self:update()
+        self:__update_slots()
+        self:__update_range()
         if(self.__edit_page~=self.__play_page) then
-          self:__update_position(self.__playback_pos.sequence)
+          self:__update_position()
         end
         return true
       end
@@ -557,7 +626,7 @@ function Matrix:__build_app()
         return false
       end
       self.__track_offset = obj.index*self.__width
-      self:update()
+      self:__update_slots()
       return true
     end
     self:__add_component(c)
@@ -572,29 +641,39 @@ function Matrix:__build_app()
       x_pos = self.__width+1
     end
 
-    local c = UISlider(self.display)
+    local c = UIButtonStrip(self.display)
+    -- note: the mode is set via the sequence_mode option, and needs to be 
+    -- specified via device configurations if the controller has "togglebutton"
+    -- as it's input method (for an example, see the TouchOSC configuration)
     c.group_name = self.mappings.triggers.group_name
     c.tooltip = self.mappings.triggers.description
-    c:set_pos(x_pos)
     c.toggleable = true
+    c.monochrome = is_monochrome(self.display.device.colorspace)
     c.flipped = true
-    c.ceiling = self.__height
-    c.palette.background = table.copy(self.palette.trigger_back)
-    c.palette.tip = table.rcopy(self.palette.trigger_active)
-    c.palette.track = table.rcopy(self.palette.trigger_back)
+    c:set_pos(x_pos)
     c:set_size(self.__height)
-    c.on_change = function(obj) 
-      -- position changed from controller
+--[[
+    c.on_press = function(obj)
+    end
+    c.on_release = function(obj)
+    end
+    c.on_hold = function(obj)
+    end
+]]
+    c.on_index_change = function(obj)
+
       if not self.active then
         return false
       end
 
-      local seq_index = obj.index + (self.__height*self.__edit_page)
+      local obj_index = obj:get_index()
+      local seq_index = obj_index + (self.__height*self.__edit_page)
       local seq_offset = self.__playback_pos.sequence%self.__height
 
-      if obj.index==0 then
-        
-        -- the position was toggled off
+      if obj_index==0 then
+
+        TRACE("Matrix: position was toggled off")
+
         if (self.options.play_mode.value == self.PLAY_MODE_RETRIG) then
           self:__retrigger_pattern()
         elseif (self.options.play_mode.value == self.PLAY_MODE_PLAY) then
@@ -606,22 +685,30 @@ function Matrix:__build_app()
             (self.__height*self.__edit_page)
           if renoise.song().sequencer.pattern_sequence[seq_index] then
             renoise.song().transport:set_scheduled_sequence(seq_index)
+            --[[
+            -- how to detect that a scheduled pattern starts to play,
+            -- when it's the current one? an observable is needed?
+            self.__scheduled_pattern = seq_index
+            local obj_index2 = seq_index%self.__height
+            obj:start_blink(obj_index2)
+            ]]
           end
         end
 
       elseif not renoise.song().sequencer.pattern_sequence[seq_index] then
 
-        -- position out of bounds
+        TRACE("Matrix: position out of bounds")
+
         if (self.options.bounds_mode.value == self.BOUNDS_MODE_STOP) then
           renoise.song().transport:stop()
-          --return true -- allow the button to flash briefly 
-          obj:set_index(0,true)
         end
+        obj.__cached_index = 0 -- hackish  
         return false
 
       elseif(self.__playback_pos.sequence==seq_index)then
 
-        -- position toggled back on
+        TRACE("Matrix: position toggled back on")
+
         if (self.options.play_mode.value == self.PLAY_MODE_RETRIG) then
           self:__retrigger_pattern()
         elseif (self.options.play_mode.value == self.PLAY_MODE_PLAY) then
@@ -638,23 +725,29 @@ function Matrix:__build_app()
           if (not renoise.song().transport.playing) then
             if renoise.song().sequencer.pattern_sequence[seq_index] then
               renoise.song().transport:trigger_sequence(seq_index)
+              -- TODO : set index (for slightly faster update)
+              return false
             end
           end
         end
 
       else
 
-        -- switch to new position
+        TRACE("Matrix: switch to new position")
+
         if (not renoise.song().transport.playing) then
           -- start playback if stopped
           if renoise.song().sequencer.pattern_sequence[seq_index] then
             renoise.song().transport:trigger_sequence(seq_index)
+            return false
           end
         else
           if(self.options.switch_mode.value == self.SWITCH_MODE_SCHEDULE) then
             if renoise.song().sequencer.pattern_sequence[seq_index] then
               -- schedule, but do not update display
               renoise.song().transport:set_scheduled_sequence(seq_index)
+              self.__scheduled_pattern = seq_index
+              obj:start_blink(obj_index)
               return false
             end
           elseif(self.options.switch_mode.value == self.SWITCH_MODE_SWITCH) then
@@ -678,10 +771,45 @@ function Matrix:__build_app()
           end
         end
       end
-      return true
     end
+    c.on_range_change = function(obj)
+
+      if not self.active then
+        return false
+      end
+
+      local rng = obj:get_range()
+
+      -- check if the range is empty (0,0)
+      if (rng[1]==0) and (rng[2]==0) then
+        renoise.song().transport.loop_sequence_range = {0,0}
+        return
+      end
+
+      -- TODO: support range selection across "pages"
+
+      local start_index = rng[1] + (self.__height*self.__edit_page)
+      local end_index = rng[2] + (self.__height*self.__edit_page)
+
+      -- check if the range is out-of-bounds
+      if not renoise.song().sequencer.pattern_sequence[start_index] then
+        -- completely out-of-bounds, ignore
+        return false
+      elseif not renoise.song().sequencer.pattern_sequence[end_index] then
+        -- partially out-of-bounds, correct
+        local sequence_length = #renoise.song().sequencer.pattern_sequence
+        renoise.song().transport.loop_sequence_range = {start_index,sequence_length}
+        return false
+      else
+        -- range is within current page
+        self.__loop_sequence_range = {start_index,end_index}
+        renoise.song().transport.loop_sequence_range = self.__loop_sequence_range
+      end
+    end
+
     self:__add_component(c)
     self.__trigger = c
+
   end
 
   -- grid buttons
@@ -699,23 +827,26 @@ function Matrix:__build_app()
         c.active = false
 
         -- controller button pressed & held
-        --[[
-        ]]
         c.on_hold = function(obj) 
-          TRACE("Matrix:controller button pressed and held")
+
+          local x_pos = x + self.__track_offset
+          local y_pos = y + (self.__height*self.__edit_page)
           obj:toggle()
+          --[[
+          -- todo: copy slot to memory
+          ]]
           -- bring focus to pattern/track
-          if (#renoise.song().tracks>=x) then
-            renoise.song().selected_track_index = x
+          if (#renoise.song().tracks>=x_pos) then
+            renoise.song().selected_track_index = x_pos
           end
-          if renoise.song().sequencer.pattern_sequence[y] then
-            renoise.song().selected_sequence_index = y
+          if renoise.song().sequencer.pattern_sequence[y_pos] then
+            renoise.song().selected_sequence_index = y_pos
           end
+
         end
 
         -- controller button was pressed
         c.on_change = function(obj) 
-          TRACE("Matrix:controller button was pressed",x,y)
 
           if not self.active then
             return false
@@ -791,6 +922,15 @@ function Matrix:__attach_to_song(song)
     function()
       TRACE("Matrix:patterns_observable fired...")
       self.__update_slots_requested = true
+    end
+  )
+
+  song.transport.follow_player_observable:add_notifier(
+    function()
+      TRACE("Matrix:follow_player_observable fired...")
+      if(self.__play_page~=self.__edit_page)then
+        self:__check_page_change()
+      end
     end
   )
 

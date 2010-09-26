@@ -2,7 +2,7 @@
 	<Name>Novation Launchpad</Name>
 	<Author>Danoise</Author>
 	<Description>Controlmap for Novation Launchpad
-Note: If you have the Automap software running in the background, please disable it on the Launchpad to avoid conflicts between Duplex and Automap: simply press User2 + Down at the same time (this will toggle the automap software on and off)</Description>
+Note: If you have the Automap software running in the background, please disable it on the Launchpad to avoid conflicts between Duplex and Automap: simply press User2 + Down at the same time (this will toggle Automap on/off for the Launchpad)</Description>
 	<Parameters>
 		<Column>
 			<Row>

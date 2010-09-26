@@ -113,6 +113,9 @@ duplex_configurations:insert {
           index = 3,
         }
       },
+      options = {
+        sequence_mode = 2,  -- to support "togglebutton" input
+      }
     }
   }
 }

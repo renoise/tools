@@ -168,7 +168,7 @@ duplex_configurations:insert {
 
 --------------------------------------------------------------------------------
 
--- setup "Mixer" as the only app for this configuration
+-- setup "Matrix" + "Mixer" for this configuration
 
 duplex_configurations:insert {
 
@@ -236,6 +236,62 @@ duplex_configurations:insert {
       options = {
         invert_mute = 2
       }
+    }
+  }
+}
+
+--------------------------------------------------------------------------------
+
+-- setup "Matrix" + "StepSequencer" for this configuration
+
+duplex_configurations:insert {
+
+  -- configuration properties
+  name = "Matrix + StepSequencer",
+  pinned = true,
+
+  -- device properties
+  device = {
+    class_name = "Monome",
+    display_name = "Monome 128",
+    device_prefix = "/duplex",
+    device_address = "127.0.0.1",
+    device_port_in = "8002",
+    device_port_out = "8082",
+    control_map = "Controllers/Monome/Monome128_StepSequencer.xml",
+    thumbnail = "Monome.bmp",
+    protocol = DEVICE_OSC_PROTOCOL,
+  },
+  applications = {
+    Matrix = {
+      mappings = {
+        triggers = {
+          group_name = "Column1",
+        },
+      }
+    },
+    StepSequencer = {
+      mappings = {
+        grid = {
+          group_name = "Grid",
+        },
+        level = {
+          group_name = "Column2",
+          index = 1,
+        },
+        line = { 
+          group_name = "Column2",
+          index = 9,
+        },
+        track = {
+          group_name = "Column2",
+          index = 11,
+        },
+        transpose = {
+          group_name = "Column2",
+          index = 13,
+        },
+      },
     }
   }
 }

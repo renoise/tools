@@ -24,8 +24,8 @@ function Canvas:__init(device)
   self.has_changed = false
   self.width = 0
   self.height = 0      
-  self.delta = {{}}    
-  self.buffer = {{}}
+  self.delta = {{}}   -- difference buffer, cleared on each update
+  self.buffer = {{}}  -- the current representation
 end
 
 

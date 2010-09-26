@@ -53,7 +53,7 @@ function UIComponent:__init(display)
   self.width = 1 
   self.height = 1 
 
-  -- for indexed elements
+  -- text to display on the virtual UI
   self.tooltip = ""
 
   -- sync our width, height with the canvas

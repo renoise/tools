@@ -1,0 +1,114 @@
+================================================================================
+Duplex Changelog
+================================================================================
+
+--------------------------------------------------------------------------------
+Done 0.9
+--------------------------------------------------------------------------------
+
+* OSC device / protocol support
+
+* Monome128 support (monome-specific class)
+
+* TouchOSC support (as generic OSC device)
+
+* Variable-sized controls (not all buttons are born equal)
+
+* XML comments is now supported
+
+* Fixed: Broken colums issue 
+
+* UIComponent:set_pos() - supply just one value to set the index
+
+* Transport: follow player option
+
+* Device-specific release() methods for monome, Launchpad
+
+* Matrix - removed "BUTTON_HELD" (broken with hardware toggle-buttons)
+
+
+--------------------------------------------------------------------------------
+Done 0.91
+--------------------------------------------------------------------------------
+
+* Fixed: Transport: always turn off "start" when hitting "stop"
+
+* Matrix: all mappings are now without dependancies (no more "required" groups)
+
+* Application:add_component() automatically unregister components when exiting 
+  o Existing apps updated to support the new method, destroy_app() removed.
+
+* Fixed: Effect: check if "no device" is selected (initial state)
+
+* Specify color-space as <Group> attribute in the control-map 
+  o Support for devices like APC, where not all buttons are the same
+  o Colorspace is still specified via the device class, but a colorspace defined 
+    in the control-map will override the device colorspace
+
+* Specify MIDI channel mapping as an extension to the <Param> value attribute
+  o Simple syntax : "CC#23|2" to match channel #2
+  o Optional: if undefined, simply match all channels
+  o Affects all messages that support channels (CC,Notes,etc.)
+
+* Seperate notifiers for press/release on the virtual control surface 
+  o Now, it's possible to support "held" buttons events
+
+
+--------------------------------------------------------------------------------
+Done 0.92
+--------------------------------------------------------------------------------
+
+* Transport
+  o New option: "stop playback" when pressing play while playing
+  o Re-arranged Launchpad configuration (uses the new option)
+
+* UITriggerButton
+  o Added release event, and "wait_for_release" mode (a.k.a. sustain)
+
+* UIBasicButton + StepSequencer
+  o Added Daxton's code to the distribution (with some small modifications)
+
+* Assign tooltips to the control surface that describe the *actual* purpose 
+  o This could largely replace the need for app documentation?
+
+* Make tooltip descriptions for all applications 
+  o Effect has contextual tooltip support: show name of DSP parameter
+  o The remaining apps have "basic" tooltip support
+
+* Replace the mapping property "required" (not used) with "greedy"
+* Add "ui_component" to mappings, to describe the type of UIComponent
+  o for the planned visual mapping dialog, this will be needed
+  o also helpful when browsing application class code
+
+
+--------------------------------------------------------------------------------
+Done 0.93
+--------------------------------------------------------------------------------
+
+* UIButtonStrip, for controlling/displaying a sequence
+  o Can control position and range simultaneously (Matrix sequence triggers)
+  o Optimized for monochrome devices
+
+* UISpinner improvements (better togglebutton support)
+  o TouchOSC and other controllers using togglebutton input should now 
+    display the UISpinner correctly at all times...
+
+* Browser: 
+  o Switch between device presets/configurations using function keys
+  o Forward keypresses to Renoise (except those we use for switching)
+
+* Application: 
+  o Application.options[].on_activate(): specify a method to be executed 
+    immediately before the application is started - for example, to provide a
+    UIComponent with values *after* it has been constructed
+
+* Matrix:
+  o Updated to support interactive pattern looping (via UIButtonStrip)
+  o Utilize "blinking" feature to display a scheduled pattern
+  o "follow_player" mode in Renoise will now update the matrix immediately
+
+* StepSequencer:
+  o Display playposition and volume simultaneously (via UIButtonStrip)
+  o Better support for other/monochrome devices (Monome)
+
+

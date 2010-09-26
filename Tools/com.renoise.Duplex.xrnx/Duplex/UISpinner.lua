@@ -167,6 +167,13 @@ function UISpinner:do_press()
       self.value = self.index
       self:__invoke_handler()
     end
+
+    if (msg.input_method == CONTROLLER_TOGGLEBUTTON) then
+      -- force update togglebuttons...
+      self.canvas.delta = table.rcopy(self.canvas.buffer)
+      self.canvas.has_changed = true
+      self:invalidate()
+    end
   end
 end
 

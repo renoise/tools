@@ -25,8 +25,10 @@ daxton.fleming@gmail.com
 
 ----------------------------------------------------------------------------]]--
 
--- this class has been embedded into the application (for now)
---require "Duplex/UIBasicButton"
+-- danoise comments --
+-- this class has been embedded into the application : UIBasicButton
+-- now uses UIButtonStrip for displaying volume level + position
+-- switched from .lines[idx] to :line(idx) syntax (performance)
 
 class 'StepSequencer' (Application)
 
@@ -94,7 +96,7 @@ function StepSequencer:__init(display,mappings,options)
     
     slot_empty = {
       color={0x00,0x00,0x00},
-      text="·",
+      text="",
     },
     slot_muted = { -- volume 0 or note_cut
       color={0x40,0x00,0x00},
@@ -115,6 +117,10 @@ function StepSequencer:__init(display,mappings,options)
       { color={0x40,0xc0,0xff}, }, -- up a semi
       { color={0x00,0xff,0xff}, }, -- up an octave
     },
+    position = {
+      color={0x00,0xff,0x00},
+    },
+
   }
 
   -- the various controls
@@ -151,8 +157,6 @@ end
 function StepSequencer:start_app()
   TRACE("StepSequencer.start_app()")
 
-  if not (self:__check_mappings()) then return false end
-  
   if not (self.__created) then self:__build_app() end
 
   -- update everything!
@@ -165,46 +169,6 @@ function StepSequencer:start_app()
 
 end
 
---------------------------------------------------------------------------------
-
-function StepSequencer:__check_mappings() 
-  if (self.mappings.grid.group_name) then
-    return true
-  else
-    -- display some helpful advice
-    -- small issue: this dialog can become obscured by the main UI 
-      local vb = renoise.ViewBuilder()
-      local dlg_title = "StepSequencer"
-      local dlg_text = vb:column{
-        margin=10,
-        spacing=10,
-        vb:text{
-          text="Required mapping parameters are missing"
-        },
-        vb:horizontal_aligner{
-          vb:row{
-            spacing=6,
-            vb:checkbox{
-              id="choice",
-              value=true
-            },
-            vb:text{
-              text="Open 'Options' dialog and correct this",
-            }
-          }
-        }
-      }
-      local dlg_buttons = {"OK"}
-      renoise.app():show_custom_prompt(dlg_title,dlg_text,dlg_buttons)
-
-      if (vb.views.choice.value) then
-        self:__build_options()
-        self:__show_app()
-      end
-
-      return false
-    end
-end
 
 --------------------------------------------------------------------------------
 
@@ -335,25 +299,28 @@ function StepSequencer:__build_level()
   local rows = cm:count_rows(self.mappings.level.group_name)
 
   -- level buttons
-  local c = UISlider(self.display)
+  local c = UIButtonStrip(self.display)
   c.group_name = self.mappings.level.group_name
   c.tooltip = self.mappings.level.description
-  c:set_pos(self.mappings.level.index or 1)
   c.toggleable = false
-  c.flipped = false
-  c.ceiling = 127
+  c.monochrome = is_monochrome(self.display.device.colorspace)
+  c.mode = c.MODE_INDEX
+  c.flipped = true
   c:set_size(rows)
-  c.on_change = function(obj) 
-    if not self.active then return false end
-    -- do things differently when using buttons to control volume (rows>1)
-    -- can't just take value directly since we want index 1 to be volume 0
-    local newval = (rows==1) and math.floor(obj.value) or
-      math.floor((obj.index-1) * obj.ceiling/(obj.size-1))
+  c.on_index_change = function(obj) 
+    
+    if not self.active then 
+      return false 
+    end
+
+    local idx = obj:get_index()
+    local idx_flipped = obj.__size-obj:get_index()+1
+    local newval = (127/(obj.__size-1)) * (idx_flipped-1)
 
     -- check for held grid notes
     local held = self:walk_held_keys(
       function(x,y)
-        local note = renoise.song().selected_pattern.tracks[x+self.__track_offset].lines[y+self.__edit_page*self.__height].note_columns[1]
+        local note = renoise.song().selected_pattern.tracks[x+self.__track_offset]:line(y+self.__edit_page*self.__height).note_columns[1]
         note.volume_value = newval
       end,
       true
@@ -370,15 +337,17 @@ function StepSequencer:__build_level()
     else 
       p = self:__volume_palette(newval, 127)
     end
-    c.palette.tip = p
-    c.palette.track = p
-    --c:draw()
+    --c.palette.index = p
+    c.palette.range = p
+    c:set_range(idx,obj.__size)
     c:invalidate()
     
     return true
   end
   self:__add_component(c)
   self.__level = c
+
+
 end
 
 --------------------------------------------------------------------------------
@@ -401,7 +370,7 @@ function StepSequencer:__build_transpose()
       -- check for held grid notes
       local held = self:walk_held_keys(
         function(x,y)
-          local note = renoise.song().selected_pattern.tracks[x+self.__track_offset].lines[y+self.__edit_page*self.__height].note_columns[1]
+          local note = renoise.song().selected_pattern.tracks[x+self.__track_offset]:line(y+self.__edit_page*self.__height).note_columns[1]
           local newval = note.note_value + obj.transpose
           if (newval > 0 and newval < 120) then 
             note.note_value = newval
@@ -453,7 +422,12 @@ function StepSequencer:on_idle()
     self:__update_transpose()
   end
   
-
+  if renoise.song().transport.playing then
+    self:__update_position()
+  else
+    -- clear level?
+    self:__draw_position(0)
+  end
 end
 
 --------------------------------------------------------------------------------
@@ -461,6 +435,25 @@ end
 function StepSequencer:__update_track_count()
   TRACE("StepSequencer:__update_track_count")
   self.__track_navigator:set_range(nil, math.floor((get_master_track_index()-2)/self.__width))
+end
+
+--------------------------------------------------------------------------------
+
+function StepSequencer:__update_position()
+  -- can we see the current step?
+  local pos = renoise.song().transport.playback_pos.line
+  if ((self.__edit_page)*self.__height < pos and pos < (self.__edit_page+1)*self.__height +1) then
+    self:__draw_position(((pos-1)%self.__height)+1)
+  else
+    self:__draw_position(0)
+  end
+end
+
+--------------------------------------------------------------------------------
+
+function StepSequencer:__draw_position(idx)
+  self.__level:set_index(idx,true)
+  self.__level:invalidate()
 end
 
 --------------------------------------------------------------------------------
@@ -484,10 +477,12 @@ function StepSequencer:__update_grid()
   for track_idx = (1+self.__track_offset),(self.__width+self.__track_offset) do
     for line_idx = (1+line_offset),(self.__height+line_offset) do
       button = self.__buttons[track_idx-self.__track_offset][line_idx-line_offset]
-      if(line_idx <= renoise.song().selected_pattern.number_of_lines) then
+      if(line_idx <= renoise.song().selected_pattern.number_of_lines) and
+      (renoise.song().selected_pattern.tracks[track_idx]) and
+      (renoise.song().selected_pattern.tracks[track_idx]:line(line_idx)) then
         note = nil
         if (track_idx <= track_count) then
-          note = renoise.song().selected_pattern.tracks[track_idx].lines[line_idx].note_columns[1]
+          note = renoise.song().selected_pattern.tracks[track_idx]:line(line_idx).note_columns[1]
         end
         self:__draw_grid_button(button, note)
       end
@@ -499,15 +494,18 @@ end
 
 function StepSequencer:__update_level()
   if (not self.active) then return end
+--[[
   local p = { }
   if (self.options.base_volume.value == 0) then
     p = table.rcopy(self.palette.slot_muted)
   else 
     p = self:__volume_palette(self.options.base_volume.value, 127)
   end
-  self.__level.palette.tip = p
+  --self.__level.palette.tip = p
+  --self.__level:draw()
   self.__level.palette.track = p
-  self.__level:draw()
+  self.__level:invalidate()
+]]
 end
 
 --------------------------------------------------------------------------------
@@ -572,7 +570,7 @@ function StepSequencer:__process_grid_event(x,y, state, btn)
   local line_idx = y+self.__edit_page*self.__height
   if (track_idx >= get_master_track_index()) then return false end
   
-  local note = renoise.song().selected_pattern.tracks[track_idx].lines[line_idx].note_columns[1]
+  local note = renoise.song().selected_pattern.tracks[track_idx]:line(line_idx).note_columns[1]
   
   if (state) then -- press
     self.__keys_down[x][y] = true
@@ -601,7 +599,7 @@ function StepSequencer:__copy_grid_button(lx,ly, btn)
   local gx = lx+self.__track_offset
   local gy = ly+self.__edit_page*self.__height
   if (gx >= get_master_track_index()) then return false end
-  local note = renoise.song().selected_pattern.tracks[gx].lines[gy].note_columns[1]
+  local note = renoise.song().selected_pattern.tracks[gx]:line(gy).note_columns[1]
   
   -- copy note to base note
   if (note.note_value < 120) then
