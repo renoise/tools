@@ -24,8 +24,6 @@ Events
 
   on_change() - invoked whenever the slider recieve a new value
 
-
-  General notes for UIComponent events:
   - if an event handler return false, we cancel/revert any changed values
   - if an event handler return true, the value (and appearance) is updated
 

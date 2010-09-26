@@ -80,6 +80,10 @@ function Application:start_app()
     return
   end
 
+  -- since options can be applied before the construction of the application,
+  -- we call apply_options() a second time to set UIComponent parameters, etc.
+  self:__apply_options(self.options)
+
   if (self.display) then
     self.display:apply_tooltips()
   end
@@ -215,6 +219,7 @@ end
 --------------------------------------------------------------------------------
 
 -- assign matching options
+-- @param options: either a primitive table of values, or a full option-table
 
 function Application:__apply_options(options)
   TRACE("Application:__apply_options",options)
@@ -223,9 +228,21 @@ function Application:__apply_options(options)
     local matched = false
     for v2,k2 in pairs(options) do
       if (v==v2) then
-        if(#self.options[v].items>=options[v])then
-          self.options[v].value = options[v]
+        if (type(options[v]) == "number") then
+          -- initial import of values
+          if(#self.options[v].items>=options[v])then
+            self.options[v].value = options[v]
+            matched = true
+          end
+        elseif (type(options[v]) == "table") then
+          -- when applying the options onto itself
+          -- (start_app will do this)
+          --self.options[v].value = options[v].value
           matched = true
+          -- invoke on_activate() method if it exists
+          if (self.options[v].on_activate~=nil) then
+            self.options[v].on_activate()
+          end
         end
       end
     end
