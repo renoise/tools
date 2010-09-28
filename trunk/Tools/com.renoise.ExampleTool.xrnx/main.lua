@@ -128,7 +128,49 @@ renoise.tool():add_menu_entry {
 renoise.tool():add_keybinding {
   name = "Global:Tools:Example Script Shortcut",
   invoke = function()
-    show_key_binding_dialog() 
+    renoise.app():show_prompt(
+      "Congrats!",
+      "You've pressed a magic keyboard combo "..
+      "which was defined by a script example tool.",
+      {"OK?"}
+    )
+  end
+}
+
+
+--------------------------------------------------------------------------------
+-- midi mappings
+--------------------------------------------------------------------------------
+
+-- Tools also can extend Renoises internal MIDI mapping set. This way you can 
+-- add MIDI mappings to control your tool, or also write tools which do nothing
+-- more than extending Renoises default MIDI mapping set.
+--
+-- Have a look at "Renoise.ScriptingTool.API.txt" in the documentation 
+-- folder for a complete reference. Also have a look at the GlobalMidiActions.lua
+-- file for examples mappings (this is Renoises complete default MIDI mapping set) 
+-- and more descriptions of the passed message parameter.
+
+renoise.tool():add_midi_mapping{
+  name = "com.renoise.ExampleTool:Example MIDI Mapping",
+  invoke = function(message)
+    if (options.show_debug_prints.value) then
+      print("com.renoise.ExampleTool: >> got midi_mapping message :")
+      
+      print(("  message:is_trigger(): %s)"):format(
+        message:is_trigger() and "yes" or "no"))
+      print(("  message:is_switch(): %s)"):format(
+        message:is_switch() and "yes" or "no"))
+      print(("  message:is_rel_value(): %s)"):format(
+        message:is_rel_value() and "yes" or "no"))
+      print(("  message:is_abs_value(): %s)"):format(
+        message:is_abs_value() and "yes" or "no"))
+      
+      print(("  message.int_value: %d)"):format(
+        message.int_value))
+      print(("  message.boolean_value: %s)"):format(
+        message.boolean_value and "true" or "false"))
+    end
   end
 }
 
@@ -299,20 +341,6 @@ function remove_menu_entry()
   
   num_added_entries = num_added_entries - 1
 end
-
-
---------------------------------------------------------------------------------
-
--- show_key_binding_dialog
-
-function show_key_binding_dialog()
-  renoise.app():show_prompt(
-    "Congrats!",
-    "You've pressed a magic keyboard combo "..
-    "which was defined by a script example tool.",
-    {"OK?"}
-  )
-end  
 
 
 --------------------------------------------------------------------------------

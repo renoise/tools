@@ -36,7 +36,7 @@ renoise.tool()
 
 -------- functions
 
--- add_menu_entry: insert a new menu entry somewhere in Renoises existing 
+-- menu_entries: insert a new menu entry somewhere in Renoises existing 
 -- context menues or the global app menu. insertion can be done while 
 -- the script is initializing, but also dynamically later on.
 --
@@ -98,7 +98,7 @@ renoise.tool():add_menu_entry(menu_entry_definition_table)
 renoise.tool():remove_menu_entry(menu_entry_name)
 
 
--- add_keybinding: register key bindings somewhere in Renoises existing 
+-- keybindings: register key bindings somewhere in Renoises existing 
 -- set of bindings.
 --
 -- The table passed as argument to add_keybinding is defined as:
@@ -136,6 +136,59 @@ renoise.tool():add_keybinding(keybinding_definition_table)
 
 -- remove a previously added key binding by specifying its name and path 
 renoise.tool():remove_keybinding(keybinding_name)
+
+
+-- [added B7] midi_mappings: extend Renoises default MIDI mapping set with tools,
+-- or add custom MIDI mappings for your tools.
+--
+-- The table passed as argument to 'add_midi_mapping' is defined as:
+-- * required fields
+--   ["name"] = the group, name of the midi mapping, as visible to the user
+--   ["invoke"] = a function that is called to handle bound MIDI message
+--
+-- The mappings 'name' should have more than 1 parts, separated with :'s
+-- <topic_name:optional_sub_topic_name:name>
+-- topic_name and optional sub group names will create new groups in the list 
+-- of MIDI mappings, as seen in Renoises MIDI mapping dialog.
+-- If you can't come up with something useful, use your tools name as topic name.
+-- Existing global mappings from Renoise can be overriden. In this case the original 
+-- mapping is no longer called, but only your tools mapping.
+--
+-- The "invoke" function gets called with one argument, the midi message, which 
+-- is a:
+--
+-- class "renoise.ScriptingTool.MidiMessage"
+--   -- returns if action should be invoked
+--   function is_trigger() -> boolean
+--
+--   -- check which properties are valid
+--   function: is_switch() -> boolean
+--   function: is_rel_value() -> boolean
+--   function: is_abs_value() -> boolean
+--
+--   -- [0 - 127] for abs values, [-63 - 63] for relative values
+--   -- valid when is_rel_value() or is_abs_value() returns true, else undefined
+--   property: int_value
+--
+--   -- valid [true OR false] when :is_switch() returns true, else undefined
+--   property: boolean_value
+--
+-- MIDI mappings which are defined by tools, can be used just like the regular 
+-- ones in Renoise: Either manually lookup the mapping in the MIDI mapping dialogs
+-- list, then bind it to a MIDI message, or, when your tool has a custom GUI, 
+-- specify the mapping via a controls "control.midi_mapping" property. Such controls
+-- will get highlighted as soon as the MIDI mapping dialog gets opened. Then users
+-- only have to click on the highlighted control to map MIDI messages.
+
+-- returns true when the given mapping was already added, else false
+[added B7] renoise.tool():has_midi_mapping(midi_mapping_name)
+  -> [boolean]
+
+-- add a new midi_mapping entry as described above
+[added B7] renoise.tool():add_midi_mapping(midi_mapping_definition_table)
+
+-- remove a previously added midi mapping by specifying its name
+[added B7] renoise.tool():remove_midi_mapping(midi_mapping_name)
 
 
 -- register a timer function or table with function and context (a method) 

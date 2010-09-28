@@ -116,11 +116,21 @@ view.tooltip
 -- Deactivated controls will still be shown and will also still show its 
 -- currently assigned value, but do not allow changing it. Most controls will 
 -- also display "greyed out" to visualize the deactivated state.
-control.active
+[added B6] control.active
   -> [boolean]
 
 
-
+-- When set, the control will be highlighted with Renoises MIDI mapping dialog 
+-- open. When clicked while the mapping dialog is open, it selects the specifid 
+-- string as MIDI mapping target action. This target acton can either be one of
+-- the globally available mappings in Renoise, or ones that got created by the 
+-- tool just for the tool.
+-- Target strings are not verified. When they point to nothing, the mapped MIDI
+-- message will do nothing but also no error is fired.
+[added B7] control.midi_mapping
+  -> [boolean]
+ 
+ 
 --------------------------------------------------------------------------------
 -- renoise.Views.Rack (inherits from View, 'column' or 'row' in ViewBuilder)
 --------------------------------------------------------------------------------
