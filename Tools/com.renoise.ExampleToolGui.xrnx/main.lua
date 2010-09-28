@@ -1391,7 +1391,7 @@ function midi_mapping()
       spacing = CONTENT_SPACING,
       
       vb:text {
-        text = "Openthe  MIDI mapping dialog in Renoise to map:"
+        text = "Open the MIDI mapping dialog in Renoise to map:"
       },
       vb:row {
         vb:button { 
