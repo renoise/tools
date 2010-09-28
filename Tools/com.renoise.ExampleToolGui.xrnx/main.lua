@@ -52,6 +52,11 @@ renoise.tool():add_menu_entry {
   invoke = function() handle_key_events() end
 }
 
+renoise.tool():add_menu_entry {
+  name = "Main Menu:Tools:Example Tool GUI:10. MIDI mapping...",
+  invoke = function() midi_mapping() end
+}
+
 
 --------------------------------------------------------------------------------
 -- Helper Function
@@ -1349,6 +1354,83 @@ function handle_key_events()
     "Handling Keyboard Events", content_view, key_handler)
 
 end
+
+   
+--------------------------------------------------------------------------------
+
+function midi_mapping()
+
+  -- Tools can create their own MIDI mappings, and GUIs created from tools can
+  -- also make use of MIDI mapping frames: MIDI mapping frames are colored 
+  -- overlays that are only visible when the MIDI mapping dialog in Renoise is
+  -- open. When visible, they show the currently assigned MIDI mappings and also 
+  -- to easily bind new messages.
+  --
+  -- In this example we do create two buttons: one which allows mapping an 
+  -- existing function ("Transport:Playback:Start Playing [Trigger]") and one 
+  -- which we created in this tool ("com.renoise.ExampleToolGui:Example Mapping")
+  -- See "renoise.tool():add_midi_mapping" below for the handler.
+  --
+  -- The 'midi_mapping' property can be used ony everything that's a 'control' 
+  -- in the viewbuilder.
+  --  
+  -- Please note that the buttons in this example will do nothing at all when
+  -- pressed with the mouse buttons. The MIDI mappings only apply to mapped 
+  -- MIDI, nothing else...
+
+  local vb = renoise.ViewBuilder()
+  
+  local DIALOG_MARGIN = renoise.ViewBuilder.DEFAULT_DIALOG_MARGIN
+  local CONTENT_SPACING = renoise.ViewBuilder.DEFAULT_CONTROL_SPACING
+
+  renoise.app():show_custom_dialog(
+    "Documents & Views", 
+    
+    vb:column {
+      margin = DIALOG_MARGIN,
+      spacing = CONTENT_SPACING,
+      
+      vb:text {
+        text = "Openthe  MIDI mapping dialog in Renoise to map:"
+      },
+      vb:row {
+        vb:button { 
+          width = 120,
+          text = "Start Playing",
+          midi_mapping = "Transport:Playback:Start Playing [Trigger]"
+        },
+        vb:button { 
+          width = 120,
+          text = "Custom Mapping",
+          midi_mapping = "com.renoise.ExampleToolGui:Example MIDI Mapping"
+        },
+      }
+    }
+  )
+end
+
+-- add a custom MIDI mapping, as used in the midi_mapping() example above
+
+renoise.tool():add_midi_mapping{
+  name = "com.renoise.ExampleToolGui:Example MIDI Mapping",
+  invoke = function(message)
+    print("com.renoise.ExampleToolGui: >> got midi_mapping message :")
+    
+    print(("  message:is_trigger(): %s)"):format(
+      message:is_trigger() and "yes" or "no"))
+    print(("  message:is_switch(): %s)"):format(
+      message:is_switch() and "yes" or "no"))
+    print(("  message:is_rel_value(): %s)"):format(
+      message:is_rel_value() and "yes" or "no"))
+    print(("  message:is_abs_value(): %s)"):format(
+      message:is_abs_value() and "yes" or "no"))
+    
+    print(("  message.int_value: %d)"):format(
+      message.int_value))
+    print(("  message.boolean_value: %s)"):format(
+      message.boolean_value and "true" or "false"))
+  end
+}
 
    
 --------------------------------------------------------------------------------
