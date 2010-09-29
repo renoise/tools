@@ -210,6 +210,12 @@ renoise.tool().app_new_document_observable:add_notifier(function()
   handle_app_new_document_notification()
 end)
 
+-- invoked right before a document (song)gets replaced with a new one. the old 
+-- document is still valid here.
+renoise.tool().app_release_document_observable:add_notifier(function()
+  handle_app_release_document_notification()
+end)
+
 
 --------------------------------------------------------------------------------
 -- debug hook
@@ -384,6 +390,15 @@ end
 function handle_app_new_document_notification()
   if (options.show_debug_prints.value) then
     print("com.renoise.ExampleTool: !! app_new_document notification")
+  end
+end
+
+
+-- handle_app_release_document_notification
+
+function handle_app_release_document_notification()
+  if (options.show_debug_prints.value) then
+    print("com.renoise.ExampleTool: !! app_release_document notification")
   end
 end
 
