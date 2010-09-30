@@ -78,7 +78,7 @@ duplex_configurations:insert {
     device_port_in = "8001",
     device_port_out = "8081",
     control_map = "Controllers/TouchOSC/TouchOSC.xml",
-    --thumbnail = "TouchOSC.bmp",
+    thumbnail = "TouchOSC.bmp",
     protocol = DEVICE_OSC_PROTOCOL,
   },
 
