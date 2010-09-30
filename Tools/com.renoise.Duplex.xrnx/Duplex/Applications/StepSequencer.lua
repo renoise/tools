@@ -75,10 +75,12 @@ function StepSequencer:__init(display,mappings,options)
     line = { 
       description = "Sequencer: Flip up/down through lines",
       ui_component = UI_COMPONENT_SPINNER,
+      orientation = HORIZONTAL,
     },
     track = {
       description = "Sequencer: Flip through tracks",
       ui_component = UI_COMPONENT_SPINNER,
+      orientation = HORIZONTAL,
     },
     transpose = {
       description = "Sequencer: 4 buttons for transpose up/down.  oct- / semi- / semi+ / oct+",
@@ -135,6 +137,8 @@ function StepSequencer:__init(display,mappings,options)
 
   self.__edit_page = 0  -- the currently editing page
   self.__track_offset = 0  -- the track offset (0-#tracks)
+  self.__follow_player = 0 -- true when song follow is enabled, 
+                            -- set to false when using the line navigator
 
   self.__current_pattern = 0
   
@@ -158,6 +162,8 @@ function StepSequencer:start_app()
   TRACE("StepSequencer.start_app()")
 
   if not (self.__created) then self:__build_app() end
+
+  self.__follow_player = renoise.song().transport.follow_player
 
   -- update everything!
   self:__update_line_count()
@@ -183,6 +189,7 @@ function StepSequencer:__build_app()
       self.__width = control_map["columns"]
       self.__height = math.ceil(#control_map/self.__width)
   end
+print("self.__width",self.__width)
 
   -- build each section's controllers
   self:__build_line()
@@ -203,12 +210,15 @@ function StepSequencer:__build_line()
   c.group_name = self.mappings.line.group_name
   c.tooltip = self.mappings.line.description
   c:set_pos(self.mappings.line.index)
+  c:set_orientation(self.mappings.line.orientation)
   c.text_orientation = VERTICAL
   c.step_size = 1
   c.on_change = function(obj) 
+print("__line_navigator.on_change")
     if (not self.active) then return false end
     if(self.__edit_page~=obj.index)then
       self.__edit_page = obj.index
+      self.__follow_player = false
       self:__update_grid()
       return true
     end
@@ -226,8 +236,12 @@ function StepSequencer:__build_track()
   c.group_name = self.mappings.track.group_name
   c.tooltip = self.mappings.track.description
   c:set_pos(self.mappings.track.index)
+  c:set_orientation(self.mappings.track.orientation)
+print("c.orientation",c.orientation)
+rprint(self.mappings.track)
   c.text_orientation = HORIZONTAL
   c.on_change = function(obj) 
+print("__track_navigator.on_change")
     if (not self.active) then return false end
     self.__track_offset = obj.index*self.__width
     self:__update_grid()
@@ -445,7 +459,28 @@ function StepSequencer:__update_position()
   if ((self.__edit_page)*self.__height < pos and pos < (self.__edit_page+1)*self.__height +1) then
     self:__draw_position(((pos-1)%self.__height)+1)
   else
-    self:__draw_position(0)
+    if(self.__follow_player)then      
+      self:__update_page()
+
+    else
+      self:__draw_position(0)
+    end
+  end
+
+
+end
+
+--------------------------------------------------------------------------------
+function StepSequencer:__update_page()
+  local pos = renoise.song().transport.playback_pos.line
+  local page = math.ceil(pos/self.__height)-1
+  if (page~=self.__edit_page) then
+    self.__edit_page = page
+    --self:__update_grid()
+    --self.__update_lines_requested = true
+    self.__line_navigator:set_index(page,true)
+    --self:__update_line_count()
+    self.__update_grid_requested = true
   end
 end
 
@@ -539,7 +574,15 @@ function StepSequencer:__attach_to_song(song)
       self.__update_lines_requested = true
     end
   )
-  
+  song.transport.follow_player_observable:add_notifier(
+    function()
+      TRACE("StepSequencer:follow_player_observable fired...")
+      self.__follow_player = renoise.song().transport.follow_player
+      if(self.__follow_player)then   
+        self:__update_page()
+      end
+    end
+  )
   -- pattern notifiers
   --[[
   song.selected_pattern_observable:add_notifier(
