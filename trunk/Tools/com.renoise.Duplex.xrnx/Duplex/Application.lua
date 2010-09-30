@@ -27,13 +27,14 @@ function Application:__init()
   -- @group_name: the control-map group-name (set in config)
   -- @index: the position where the control should be located (set in config)
   -- @description: provide a sensible tooltip text for the virtual display
-  -- @greedy: indicates that the mapping will use the entire group
+  -- @greedy: indicates that the application will use the entire group
+  -- @orientation: defines the UIComponent orientation (VERTICAL/HORIZONTAL)
   -- 
   -- example_mapping = {
   --  group_name = "Main",
   --  greedy = true, 
-  --  index = nil    -- index doesn't mean anything when the mapping is greedy
   -- }
+
   self.mappings = {}
 
   -- you can choose to expose your application's options here
@@ -208,8 +209,11 @@ function Application:__apply_mappings(mappings)
   for v,k in pairs(self.mappings) do
     for v2,k2 in pairs(mappings) do
       if (v==v2) then
-        self.mappings[v].group_name = mappings[v].group_name
-        self.mappings[v].index = mappings[v].index
+        for k3,v3 in pairs(mappings[v]) do
+          self.mappings[v][k3] = v3
+        end
+        --self.mappings[v].group_name = mappings[v].group_name
+        --self.mappings[v].index = mappings[v].index
       end
     end
   end
