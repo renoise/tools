@@ -280,16 +280,18 @@ duplex_configurations:insert {
           index = 1,
         },
         line = { 
-          group_name = "Column2",
-          index = 9,
+          group_name = "Column3",
+          orientation = VERTICAL,
+          index = 1,
         },
         track = {
-          group_name = "Column2",
-          index = 11,
+          group_name = "Column3",
+          orientation = VERTICAL,
+          index = 3,
         },
         transpose = {
-          group_name = "Column2",
-          index = 13,
+          group_name = "Column3",
+          index = 5,
         },
       },
     }
