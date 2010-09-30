@@ -475,6 +475,125 @@ do
   assert(doc_list_notifications == 4)
   assert(#doc_list == 1)  
   
+    
+  ------------------------------------------------------------------------------
+  -- object lifetime (strong & weak_refs)
+  
+
+  -- ChildDoc
+  
+  class "ChildDoc"(renoise.Document.DocumentNode)
+    ChildDoc.instances = 0
+  
+    function ChildDoc:__init()
+      renoise.Document.DocumentNode.__init(self)
+      ChildDoc.instances = ChildDoc.instances + 1
+    end
+   
+    function ChildDoc:__finalize()
+      ChildDoc.instances = ChildDoc.instances - 1
+    end
+  
+  
+  -- ParentDoc
+  
+  class "ParentDoc"(renoise.Document.DocumentNode)
+    ParentDoc.instances = 0
+  
+    function ParentDoc:__init()
+      renoise.Document.DocumentNode.__init(self)
+      ParentDoc.instances = ParentDoc.instances + 1
+  
+      self:add_property("node", ChildDoc())
+      self:add_property("list", renoise.Document.DocumentList())
+      self:add_property("observable", renoise.Document.ObservableString("Oll"))
+    end
+   
+    function ParentDoc:__finalize()
+      ParentDoc.instances = ParentDoc.instances - 1
+    end
+  
+  
+  -- sliced doc nodes in doc lists
+  
+  local sliced_doc_list = renoise.Document.DocumentList()
+  sliced_doc_list:insert(ChildDoc())
+  
+  assert(type(sliced_doc_list[1]) ~= "nil")
+  assert(ChildDoc.instances == 1)
+  collectgarbage()
+  assert(ChildDoc.instances == 1)
+  assert(type(sliced_doc_list[1]) ~= "nil")
+  
+  sliced_doc_list:remove()
+  collectgarbage()
+  assert(ChildDoc.instances == 0)
+  
+  
+  -- sliced doc nodes in doc nodes
+  
+  local parent = ParentDoc()
+  assert(ParentDoc.instances == 1)
+  assert(ChildDoc.instances == 1)
+  assert(type(parent.node) ~= "nil")
+  collectgarbage()
+  assert(type(parent.node) ~= "nil")
+  assert(ChildDoc.instances == 1)
+  assert(ParentDoc.instances == 1)
+  
+  parent = nil
+  collectgarbage(); collectgarbage()
+  assert(ParentDoc.instances == 0)
+  assert(ChildDoc.instances == 0)
+  
+  
+  -- modeled doc nodes in doc lists
+  
+  local child_doc = renoise.Document.create("ChildModel") {}
+  sliced_doc_list = renoise.Document.DocumentList()
+  sliced_doc_list:insert(child_doc)
+  
+  assert(type(sliced_doc_list[1]) ~= "nil")
+  collectgarbage()
+  assert(type(sliced_doc_list[1]) ~= "nil")
+  collectgarbage()
+  
+  
+  -- modeled doc nodes in doc nodes
+  
+  local parent_doc = renoise.Document.create("ParentModel") {
+    child = renoise.Document.instantiate("ChildModel")
+  }
+  
+  assert(type(parent_doc.child) ~= "nil")
+  collectgarbage()
+  assert(type(parent_doc.child) ~= "nil")
+  
+  
+  -- observables in oservable lists
+  
+  local sliced_obs_list = renoise.Document.ObservableNumberList()
+  sliced_obs_list:insert(66)
+  
+  assert(type(sliced_obs_list[1]) ~= "nil")
+  collectgarbage()
+  assert(type(sliced_obs_list[1]) ~= "nil")
+  collectgarbage()
+  
+  
+  -- oservables in doc nodes
+  
+  parent = ParentDoc()
+  assert(type(parent.observable) ~= "nil")
+  collectgarbage()
+  assert(type(parent.observable) ~= "nil")
+  collectgarbage()
+  
+  parent.observable = renoise.Document.ObservableString()
+  assert(type(parent.observable) ~= "nil")
+  collectgarbage()
+  assert(type(parent.observable) ~= "nil")
+  
   
   ------------------------------------------------------------------------------
   -- TODO: ipairs pairs support (or new ?dpairs? iterators)
@@ -485,6 +604,8 @@ end
 ------------------------------------------------------------------------------
 -- test finalizers
 
+collectgarbage()
+-- need two runs to completely collect all parent<->child refs
 collectgarbage()
 
 
