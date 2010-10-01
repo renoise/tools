@@ -520,13 +520,17 @@ doc:remove_property(document or observable object)
 
 -- Save the whole document tree to a XML file. Overwrites all contents of the
 -- file when it already exists.
-doc:save_as(document_type_name, file_name)
+doc:save_as(file_name)
   -> [success, error_string or nil on success]
 
--- Load the document tree from a XML file. This will not create new properties,
+-- Load the document tree from a XML file. This will !not! create new properties,
 -- except for list items, but will only assign existing property values in the 
 -- document node with existing property values from the XML.
--- This means: nodes that exist in the XML only will be silently ignored. 
--- Nodes that exist in the document only, will not be altered in any way
-doc:load_from(document_type_name, file_name)
+-- This means: nodes that only exist in the XML only will be silently ignored.
+-- Nodes that only exist in the document, will not be altered in any way.
+-- The loaded document's type must match the document type that saved the XML data.
+-- A documents type is specified in the renoise.Document.create function 
+-- as 'model_name'. For classes which inherit from renoise.Document.DocumentNode,
+-- its the Lua class name.
+doc:load_from(file_name)
   -> [success, error_string or nil on success]
