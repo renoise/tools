@@ -182,20 +182,20 @@ renoise.tool():add_midi_mapping{
 -- You can attach and detach from a set of script related notifications at any 
 -- time. Please see renoise.Document.API.txt -> Observable for more info
 
--- invoked, as soon as the application became the foreground window,
+-- Invoked, as soon as the application became the foreground window,
 -- for example when you alt-tab'ed to it, or switched with the mouse
--- from another app to Renoise
+-- from another app to Renoise.
 renoise.tool().app_became_active_observable:add_notifier(function()
  handle_app_became_active_notification()
 end)
   
--- invoked, as soon as the application looses focus, another app
--- became the foreground window
+-- Invoked, as soon as the application looses focus, another app
+-- became the foreground window.
 renoise.tool().app_resigned_active_observable:add_notifier(function()
   handle_app_resigned_active_notification()
 end)
   
--- invoked periodically in the background, more often when the work load
+-- Invoked periodically in the background, more often when the work load
 -- is low. less often when Renoises work load is high.
 -- The exact interval is not defined and can not be relied on, but will be
 -- around 10 times per sec.
@@ -205,15 +205,20 @@ renoise.tool().app_idle_observable:add_notifier(function()
   handle_app_idle_notification()
 end)
   
--- invoked each time a new document (song) was created or loaded
+-- Invoked right before a document (song) gets replaced with a new one. The old 
+-- document is still valid here.
+renoise.tool().app_release_document_observable:add_notifier(function()
+  handle_app_release_document_notification()
+end)
+
+-- Invoked each time a new document (song) was created or loaded.
 renoise.tool().app_new_document_observable:add_notifier(function()
   handle_app_new_document_notification()
 end)
 
--- invoked right before a document (song)gets replaced with a new one. the old 
--- document is still valid here.
-renoise.tool().app_release_document_observable:add_notifier(function()
-  handle_app_release_document_notification()
+-- Invoked each time the apps document (song) was successfully saved.
+renoise.tool().app_saved_document_observable:add_notifier(function()
+  handle_app_saved_document_notification()
 end)
 
 
@@ -385,6 +390,15 @@ function handle_app_idle_notification()
 end
 
 
+-- handle_app_release_document_notification
+
+function handle_app_release_document_notification()
+  if (options.show_debug_prints.value) then
+    print("com.renoise.ExampleTool: !! app_release_document notification")
+  end
+end
+
+
 -- handle_app_new_document_notification
 
 function handle_app_new_document_notification()
@@ -394,11 +408,12 @@ function handle_app_new_document_notification()
 end
 
 
--- handle_app_release_document_notification
+-- handle_app_saved_document_notification
 
-function handle_app_release_document_notification()
+function handle_app_saved_document_notification()
   if (options.show_debug_prints.value) then
-    print("com.renoise.ExampleTool: !! app_release_document notification")
+    print(("com.renoise.ExampleTool: !! handle_app_saved_document "..
+      "notification (filename: '%s')"):format(renoise.song().file_name))
   end
 end
 
@@ -410,4 +425,3 @@ function handle_auto_reload_debug_notification()
     print("com.renoise.ExampleTool: ** auto_reload_debug notification")
   end
 end
-
