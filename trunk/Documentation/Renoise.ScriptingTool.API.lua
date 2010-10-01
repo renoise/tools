@@ -236,13 +236,6 @@ renoise.tool().app_resigned_active_observable
 renoise.tool().app_idle_observable
   -> [renoise.Document.Observable object]
 
--- invoked each time a new document (song) was created or loaded, aka each time
--- the result of renoise.song() has changed. also called when the script gets
--- reloaded (only happens with the auto_reload debugging tools), in order 
--- to connect the new script instance to the already running document.
-renoise.tool().app_new_document_observable
-  -> [renoise.Document.Observable object]
-
 -- invoked each time before a new document gets created or loaded, aka the last 
 -- time renoise.song() still points to the old song before a new one arrives.
 -- you can explicitely release notifiers to the old document here, or do some own
@@ -250,6 +243,17 @@ renoise.tool().app_new_document_observable
 [added B7] renoise.tool().app_release_document_observable
   -> [renoise.Document.Observable object]
 
+-- invoked each time a new document (song) was created or loaded, aka each time
+-- the result of renoise.song() has changed. also called when the script gets
+-- reloaded (only happens with the auto_reload debugging tools), in order 
+-- to connect the new script instance to the already running document.
+renoise.tool().app_new_document_observable
+  -> [renoise.Document.Observable object]
+
+-- invoked each time the apps document (song) got successfully saved. 
+-- renoise.song().file_name will point to the filename it got saved to.
+[added B7] renoise.tool().app_saved_document_observable
+  -> [renoise.Document.Observable object]
 
 -- get or set an optional renoise.Document.DocumentNode object, which will be
 -- used as set of persistant "options" or preferences for your tool. 
