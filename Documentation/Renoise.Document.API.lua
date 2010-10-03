@@ -62,7 +62,7 @@ function tracks_changed(notification)
   end
 end
 
-renoise.song().transport.tracks_observable:add_notifier(tracks_changed)
+renoise.song().tracks_observable:add_notifier(tracks_changed)
 
 If you only want to use the existing "_observables" in the Renoise Song/App API,
 then this is all you need to know. If you want to create your own documents, 
