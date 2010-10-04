@@ -87,13 +87,21 @@ for toggle_id, toggle_value in pairs(toggles) do
       renoise.tool():add_keybinding{
         name = "Track DSPs Chain:Toggle DSPs:" ..
           toggle_id .. " In " .. range_id .. " - " .. type_value ,
-        invoke = function() toggle_dsps(toggle_value,type_id, range_id) end
+        invoke = function(repeated)
+          if (not repeated) then 
+            toggle_dsps(toggle_value,type_id, range_id) 
+          end
+        end
       }
       
       renoise.tool():add_keybinding{
         name = "Global:Toggle DSPs:" ..
           toggle_id .. " In " .. range_id .. " - " .. type_value ,
-        invoke = function() toggle_dsps(toggle_value,type_id, range_id) end
+        invoke = function(repeated)
+          if (not repeated) then 
+            toggle_dsps(toggle_value,type_id, range_id)
+          end 
+        end
       }
 
     end

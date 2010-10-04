@@ -21,42 +21,42 @@ main.lua
 
 renoise.tool():add_keybinding {
   name = "Instrument Box:Navigation:Select previous sample",
-  invoke = function() sample("selectprevious") end
+  invoke = function(repeated) sample("selectprevious") end
 }
 
 renoise.tool():add_keybinding {
   name = "Instrument Box:Navigation:Select next sample",
-  invoke = function() sample("selectnext") end
+  invoke = function(repeated) sample("selectnext") end
 }
 
 renoise.tool():add_keybinding {
   name = "Instrument Box:Edit:Move sample up",
-  invoke = function() sample("moveup") end
+  invoke = function(repeated) sample("moveup") end
 }
 
 renoise.tool():add_keybinding {
   name = "Instrument Box:Edit:Move sample down",
-  invoke = function() sample("movedown") end
+  invoke = function(repeated) sample("movedown") end
 }
 
 renoise.tool():add_keybinding {
   name = "Instrument Box:Edit:Insert new sample",
-  invoke = function() sample("insert") end
+  invoke = function(repeated) sample("insert") end
 }
 
 renoise.tool():add_keybinding {
   name = "Instrument Box:Edit:Delete sample",
-  invoke = function() sample("delete") end
+  invoke = function(repeated) sample("delete") end
 }
 
 renoise.tool():add_keybinding {
   name = "Instrument Box:Edit:Rename sample",
-  invoke = function() sample("rename") end
+  invoke = function(repeated) sample("rename") end
 }
 
 renoise.tool():add_keybinding {
   name = "Instrument Box:Edit:Clear sample",
-  invoke = function() sample("clear") end
+  invoke = function(repeated) sample("clear") end
 }
 
 

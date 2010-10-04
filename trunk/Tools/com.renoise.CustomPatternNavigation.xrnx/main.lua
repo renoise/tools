@@ -16,12 +16,12 @@ renoise.tool():add_menu_entry {
 
 renoise.tool():add_keybinding {
   name = "Pattern Editor:Navigation:Custom Jump Lines Up",
-  invoke = function() jump(JUMP_UP) end
+  invoke = function(repeated) jump(JUMP_UP) end
 }
 
 renoise.tool():add_keybinding {
   name = "Pattern Editor:Navigation:Custom Jump Lines Down",
-  invoke = function() jump(JUMP_DOWN) end
+  invoke = function(repeated) jump(JUMP_DOWN) end
 }
 
 

@@ -105,7 +105,9 @@ renoise.tool():remove_menu_entry(menu_entry_name)
 --
 -- * required fields
 --   ["name"] = the scope, name and category of the key binding
---   ["invoke"] = a function that is called as soon as the mapped key was pressed
+--   ["invoke"] = a function that is called as soon as the mapped key was 
+--     pressed. [added b7] The callback has one argument: "repeated", indicating
+--     if its a virtual key repeat.
 --
 -- The key binding's 'name' must have 3 parts, separated with :'s
 -- <scope:topic_name:binding_name>

@@ -402,27 +402,31 @@ renoise.tool():add_menu_entry {
 
 renoise.tool():add_keybinding {
   name = "Pattern Editor:Tools:Rotate...",
-  invoke = show_dialog
+  invoke = function(repeated) 
+    if (not repeated) then 
+      show_dialog()
+    end
+  end
 }
 
 renoise.tool():add_keybinding {
   name = "Pattern Editor:Pattern Operations:Rotate Pattern up",
-  invoke = function() rotate(-1, RANGE_WHOLE_PATTERN) end
+  invoke = function(repeated) rotate(-1, RANGE_WHOLE_PATTERN) end
 }
 
 renoise.tool():add_keybinding {
   name = "Pattern Editor:Pattern Operations:Rotate Pattern down",
- invoke = function() rotate(1, RANGE_WHOLE_PATTERN) end
+ invoke = function(repeated) rotate(1, RANGE_WHOLE_PATTERN) end
 }
 
 renoise.tool():add_keybinding {
   name = "Pattern Editor:Selection:Rotate Selection up",
-  invoke = function() rotate(-1, RANGE_SELECTION_IN_PATTERN) end
+  invoke = function(repeated) rotate(-1, RANGE_SELECTION_IN_PATTERN) end
 }
 
 renoise.tool():add_keybinding {
   name = "Pattern Editor:Selection:Rotate Selection down",
-  invoke = function() rotate(1, RANGE_SELECTION_IN_PATTERN) end
+  invoke = function(repeated) rotate(1, RANGE_SELECTION_IN_PATTERN) end
 }
 
 

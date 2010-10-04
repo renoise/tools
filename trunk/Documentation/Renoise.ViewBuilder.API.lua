@@ -39,6 +39,7 @@ app():show_custom_dialog(title, content_view [, key_handler_func])
 --   modifiers, -- modifier states. 'shift + control' - always valid
 --   character, -- character representation of the key or nil
 --   note,      -- virtual keyboard piano key value (starting from 0) or nil
+--   repeated,  -- [added B7] true when the key is soft repeated (hold down)
 -- }
 -- "dialog" is a reference to the dialog the keyhandler is running on.
 

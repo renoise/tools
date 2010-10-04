@@ -22,7 +22,11 @@ renoise.tool():add_menu_entry {
 
 renoise.tool():add_keybinding {
   name = "Global:Tools:Note Mapper...",
-  invoke = function() initialize() end
+  invoke = function(repeated) 
+    if (not repeated) then
+      initialize()
+    end
+  end
 }
 
 

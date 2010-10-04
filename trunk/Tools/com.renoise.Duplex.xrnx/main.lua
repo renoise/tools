@@ -151,7 +151,11 @@ renoise.tool():add_menu_entry {
 
 renoise.tool():add_keybinding {
   name = "Global:Tools:Duplex Browser...",
-  invoke = function() show_dialog() end
+  invoke = function(repeated) 
+    if (not repeated) then 
+      show_dialog() 
+    end
+  end
 }
 
 

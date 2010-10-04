@@ -1321,12 +1321,13 @@ function handle_key_events()
       vb:multiline_text {
         id = "key_text",
         width = TEXT_ROW_WIDTH,
-        height = 60,
+        height = 78,
         paragraphs = {
           "key.name:", 
           "key.modifiers:", 
           "key.character:", 
-          "key.note:"
+          "key.note:",
+          "key.repeat:"
         },
         font = "mono",
       }
@@ -1340,7 +1341,8 @@ function handle_key_events()
       ("key.name: '%s'"):format(key.name), 
       ("key.modifiers: '%s'"):format(key.modifiers), 
       ("key.character: '%s'"):format(key.character or "nil"), 
-      ("key.note: '%s'"):format(tostring(key.note) or "nil")
+      ("key.note: '%s'"):format(tostring(key.note) or "nil"),
+      ("key.repeated: '%s'"):format(key.repeated and "true" or "false")
     }
 
     -- close on escape...
