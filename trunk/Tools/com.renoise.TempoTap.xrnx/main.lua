@@ -16,7 +16,7 @@ local last_clock = 0
 
 -- options (tool preferences)
 
-local options = renoise.Document.create {
+local options = renoise.Document.create("ScriptingToolPreferences") {
   sensitivity = 4,
   round_bpm = true,
   auto_save_bpm = true,

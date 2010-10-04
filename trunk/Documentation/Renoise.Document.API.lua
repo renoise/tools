@@ -271,11 +271,15 @@ at the class docs below please.
 
 -- Create an empty DocumentNode or a DocumentNode that is modeled after the 
 -- passed table. See the general description in this file for more info about
--- creating documents.
--- [changed B7] "create(){ }" with no model name is deprecated and will be 
--- removed for the final version. model name will default to 
--- "ScriptingToolPreferences" when not specified.
+-- creating documents. "model name" will be used to identify the documents type
+-- when loading/saving the doc. Also allows you to instantiate new document
+-- objects (see renoise.Document.instantiate).
 renoise.Document.create(model_name) {[table]}
+  -> [renoise.Document.DocumentNode object]
+
+-- create a new instance of the given document model. model_name must have been
+-- registered with renoise.Document.create before.
+[added B7] renoise.Document.instantiate(model_name)
   -> [renoise.Document.DocumentNode object]
 
 

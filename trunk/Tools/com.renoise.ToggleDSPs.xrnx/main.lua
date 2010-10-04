@@ -34,7 +34,7 @@ local split = false
 local tracks = table.create()
 local dsps = table.create()
 
-local options = renoise.Document.create {
+local options = renoise.Document.create("ScriptingToolPreferences") {
   restore = true -- Remember Bypassed DSPs
 }
 

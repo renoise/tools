@@ -1191,7 +1191,7 @@ end
 -- DOCUMENT
 
 -- create a simple document
-local example_document = renoise.Document.create {
+local example_document = renoise.Document.create("ExampleDocument") {
   my_flag = false,
   some_velocity = 127,
   pad_x = 0.5,
