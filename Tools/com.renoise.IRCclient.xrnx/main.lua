@@ -19,7 +19,11 @@ renoise.tool():add_menu_entry {
 
 renoise.tool():add_keybinding {
   name = "Global:Tools:Show/Hide IRC chat",
-  invoke = function() toggle_chat_dialog_window() end
+  invoke = function(repeated) 
+    if (not repeated) then
+      toggle_chat_dialog_window() 
+    end
+  end
 }
 
 

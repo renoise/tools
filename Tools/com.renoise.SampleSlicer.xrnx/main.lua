@@ -55,10 +55,12 @@ renoise.tool():add_menu_entry {
 }
 
 renoise.tool():add_keybinding {
-	name = "Sample Editor:Process:BeatSlicer",
-	invoke = function() 
-		show_dialog() 
-	end
+  name = "Sample Editor:Process:BeatSlicer",
+  invoke = function(repeated)
+    if not repeated then 
+      show_dialog() 
+    end
+  end
 }
 
 --------------------------------------------------------------------------------
@@ -100,8 +102,8 @@ function show_dialog()
       value = nSlicingMode,
       notifier = function(nVal)
         nSlicingMode = nVal
-		nShownSlice = 0
-		run_slice_show()
+        nShownSlice = 0
+        run_slice_show()
       end,
       tooltip = "Select the slicing mode."
     },
@@ -113,8 +115,8 @@ function show_dialog()
       value = tostring(nSlices),
       notifier = function(value)
         nSlices = tonumber(value)
-		nShownSlice = 0
-		run_slice_show()
+        nShownSlice = 0
+        run_slice_show()
       end      
     }
   }
@@ -207,7 +209,7 @@ function show_dialog()
       text = "Slice!",
       tooltip = "Split the selected sample into slices",
       height = DIALOG_BUTTON_HEIGHT,
-	  width = vb.views["nSlices"].width,
+      width = vb.views["nSlices"].width,
       notifier = function()
         slice_it(false)
         stop_slice_show()
@@ -217,7 +219,7 @@ function show_dialog()
       text = "Cancel",
       tooltip = "Close dialog and abort operation",
       height = DIALOG_BUTTON_HEIGHT,
-	  width = vb.views["nSlices"].width,	  
+      width = vb.views["nSlices"].width,	  
       notifier = function()
         stop_slice_show()
         dialog:close()        
@@ -239,7 +241,7 @@ function show_dialog()
       row3,
       row4,
       row5,
-	  row6,
+      row6,
       vb:space { }
     }--,
     --{'Slice!','Cancel'}
@@ -270,23 +272,23 @@ function get_number_of_slices()
   if(nSlicingMode == SLICING_MODE_SLICES) then
   
     rSliceSize = rSmpSize / nSlices
-	
+  
   elseif(nSlicingMode == SLICING_MODE_SLICES_SECS) then
   
     local nSecs = tonumber(vb.views["nSlices"].value)
   
     if(nSecs>0) then
-	
+  
       rSliceSize = smpBuffSel.sample_rate * nSecs
-	  
+    
       if(rSliceSize>0) then	  
         nSlices = math.ceil(rSmpSize / rSliceSize)
       else	  
         nSlices = 0		
       end
-	  
+    
     end
-	
+  
   elseif(nSlicingMode == SLICING_MODE_SLICES_BPM) then
   
     local rBPM = tonumber(vb.views["nSlices"].value)
@@ -295,27 +297,27 @@ function get_number_of_slices()
       rSliceSize = (60 / rBPM) * smpBuffSel.sample_rate
       if(rSliceSize>0) then
         nSlices = math.ceil(rSmpSize / rSliceSize)
-	  else
-	    nSlices = 0
+    else
+      nSlices = 0
       end
     end    
-	
+  
   end
 
   if(nSlices <= 1 or rSliceSize <=1) then 
   
     return false
-	
+  
   end
   
   local nSyncLines = tonumber(nSyncLines)
   
   if bDoSync and (nSyncLines == nil or nSyncLines < 1) then 
 
-	stop_slice_show()  
+  stop_slice_show()  
     renoise.app():show_error("Invalid number of sync lines!")
     return false
-	
+  
   end
   
   return true
@@ -333,7 +335,7 @@ function slice_it(bSliceShow)
   rSliceSize = 0
   if(nSlices==nil) then
     renoise.app():show_error("Invalid number of slices!")
-	stop_slice_show()
+    stop_slice_show()
     return
   end
 
@@ -351,7 +353,7 @@ function slice_it(bSliceShow)
 
   if(nSlices==nil or nSlices < 2) then
     renoise.app():show_error("Invalid number of slices!")	
-	stop_slice_show()
+    stop_slice_show()
     return
   end
 
@@ -369,38 +371,38 @@ function slice_it(bSliceShow)
   local nFrame = 1  
   
   if (bSliceShow) then
-	
+  
     if (tonumber(nSlices) > 1) and (rSliceSize > 2) then
 
       if (nShownSlice + 1 > nSlices) then
-	    nShownSlice = 1
+        nShownSlice = 1
       else
-	    nShownSlice = nShownSlice + 1
-	  end
-	
-      smpSel = renoise.song().selected_sample
-	
-      if (smpSel ~= nil) then
-	
-		smpBuffSel = smpSel.sample_buffer
-		
-		if (smpBuffSel ~= nil and smpBuffSel.has_sample_data) then
-		
-		  rSmpSize = smpBuffSel.number_of_frames
-
-          local nSelStart = 1 + (nShownSlice - 1) * rSliceSize
-          -- min() is used to avoid rounding errors which could overcome buffer size
-          smpBuffSel.selection_range = {nSelStart,math.min(rSmpSize,nSelStart + rSliceSize)}
-						
-        end
-		
+        nShownSlice = nShownSlice + 1
       end
-	
+  
+      smpSel = renoise.song().selected_sample
+    
+      if (smpSel ~= nil) then
+    
+        smpBuffSel = smpSel.sample_buffer
+      
+        if (smpBuffSel ~= nil and smpBuffSel.has_sample_data) then
+      
+          rSmpSize = smpBuffSel.number_of_frames
+  
+            local nSelStart = 1 + (nShownSlice - 1) * rSliceSize
+            -- min() is used to avoid rounding errors which could overcome buffer size
+            smpBuffSel.selection_range = {nSelStart,math.min(rSmpSize,nSelStart + rSliceSize)}
+              
+          end
+    
+      end
+  
     end
-	
+  
   else
-	
-	for nSlice = 1, nSlices do
+  
+  for nSlice = 1, nSlices do
   
       local smpNew = insSel.insert_sample_at(insSel,nSamples+1)
       nSamples = nSamples + 1
@@ -414,7 +416,7 @@ function slice_it(bSliceShow)
       if (smpBuffNew:create_sample_data(smpBuffSel.sample_rate, 
         smpBuffSel.bit_depth, smpBuffSel.number_of_channels, rSliceSize)) 
       then
-	
+  
         local nChan, nFrameNew
         for nFrameNew = 1, smpBuffNew.number_of_frames do
           for nChan = 1, smpBuffSel.number_of_channels do
@@ -451,15 +453,15 @@ function slice_it(bSliceShow)
         smpBuffNew:finalize_sample_data_changes()
 
       else
-	
+  
         renoise.app():show_error("Cannot create new sample! Aborting..")
         renoise.song():undo()
         return
-	  
+    
       end
-		
+    
     end
-	
+  
   end
   
   if not bSliceShow then
@@ -495,12 +497,12 @@ end
 function stop_slice_show()
   if (renoise.tool().app_idle_observable:has_notifier(slice_show)) then  
     renoise.tool().app_idle_observable:remove_notifier(slice_show)
-	if not bDoneSlicing then
-	  -- no slicing has been actually done. reset selection
-	  if smpSel and smpSel.sample_buffer.selection_start >= smpSel.sample_buffer.selection_end then
-		smpSel.sample_buffer.selection_range = {rSampleSelStart, rSampleSelEnd}
-	  end
-	end
+    if not bDoneSlicing then
+      -- no slicing has been actually done. reset selection
+      if smpSel and smpSel.sample_buffer.selection_start >= smpSel.sample_buffer.selection_end then
+        smpSel.sample_buffer.selection_range = {rSampleSelStart, rSampleSelEnd}
+      end
+    end
   end
   
   smpSel = nil

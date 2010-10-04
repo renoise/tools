@@ -46,17 +46,17 @@ renoise.tool():add_menu_entry {
 
 renoise.tool():add_keybinding {
   name = "Pattern Editor:Block Operations:Strum Notes",
-  invoke = function() execute_strum(OPTION_SELECTION_IN_PATTERN) end
+  invoke = function(repeated) execute_strum(OPTION_SELECTION_IN_PATTERN) end
 }
 
 renoise.tool():add_keybinding {
   name = "Pattern Editor:Track Operations:Strum Notes in Pattern",
-  invoke = function() execute_strum(OPTION_TRACK_IN_PATTERN) end
+  invoke = function(repeated) execute_strum(OPTION_TRACK_IN_PATTERN) end
 }
 
 renoise.tool():add_keybinding {
   name = "Pattern Editor:Track Operations:Strum Notes in Song",
-  invoke = function() execute_strum(OPTION_TRACK_IN_SONG) end
+  invoke = function(repeated) execute_strum(OPTION_TRACK_IN_SONG) end
 }
 
 

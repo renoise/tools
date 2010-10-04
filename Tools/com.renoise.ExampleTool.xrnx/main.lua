@@ -127,13 +127,15 @@ renoise.tool():add_menu_entry {
 
 renoise.tool():add_keybinding {
   name = "Global:Tools:Example Script Shortcut",
-  invoke = function()
-    renoise.app():show_prompt(
-      "Congrats!",
-      "You've pressed a magic keyboard combo "..
-      "which was defined by a script example tool.",
-      {"OK?"}
-    )
+  invoke = function(repeated)
+    if (not repeated) then -- we ignore soft repeated keys here
+      renoise.app():show_prompt(
+        "Congrats!",
+        "You've pressed a magic keyboard combo "..
+        "which was defined by a script example tool.",
+        {"OK?"}
+      )
+    end
   end
 }
 

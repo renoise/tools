@@ -13,7 +13,11 @@ renoise.tool():add_menu_entry {
 
 renoise.tool():add_keybinding {
   name = "Pattern Editor:Pattern Operations:Split",
-  invoke = function() split() end
+  invoke = function(repeated) 
+    if not repeated then
+      split()
+    end 
+  end
 }
 
 
