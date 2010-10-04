@@ -266,13 +266,21 @@ renoise.tool().app_new_document_observable
 --
 -- a simple example:
 -- -- create a document first
--- my_options = renoise.Document.create { 
+-- my_options = renoise.Document.create("ScriptingToolPreferences") { 
 --  some_option = true, 
 --  some_value = "string_value"
 -- }
 --
--- -- register the document as the tools preferences
--- renoise.tool().preferences = my_options
+-- OR
+--
+-- class "ExampleToolPreferences"(renoise.Document.DocumentNode)
+-- function ExampleToolPreferences:__init()
+--   renoise.Document.DocumentNode.__init(self)
+--   self:add_property("some_option", true)
+--   self:add_property("some_value", "string_value")
+-- end
+--
+-- my_options = ExampleToolPreferences()
 --
 -- -- values can be accessed (read, written) via 
 -- my_options.some_option.value, my_options.some_value.value

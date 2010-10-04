@@ -112,7 +112,7 @@ duplex_configurations = table.create()
 
 -- global or configuration settings for duplex
 
-duplex_preferences = renoise.Document.create{
+duplex_preferences = renoise.Document.create("ScriptingToolPreferences") {
 
   -- the number of seconds required to trigger DEVICE_EVENT_BUTTON_HELD
   -- fractional values are supported, 0.5 is half a second

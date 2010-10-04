@@ -27,7 +27,7 @@ local last_idle_time = os.clock()
 
 -- Initialize high score
 
-local prefs = renoise.Document.create {
+local prefs = renoise.Document.create("ScriptingToolPreferences") {
   high_score = 0
 }
 renoise.tool().preferences = prefs

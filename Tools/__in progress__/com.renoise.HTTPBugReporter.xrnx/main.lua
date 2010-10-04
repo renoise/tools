@@ -19,7 +19,7 @@ renoise.tool():add_menu_entry(entry)
 --  Document
 -------------------------------------------------------------------------------
 
-local bug_report = renoise.Document.create {
+local bug_report = renoise.Document.create("BugReport") {
   topic = "",
   summary = "what happened?",
   description = {"please describe the problem as detailed as possible here"},

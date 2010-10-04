@@ -28,7 +28,7 @@ local range_names = {
 -- preferences
 --------------------------------------------------------------------------------
 
-local preferences = renoise.Document.create {
+local preferences = renoise.Document.create("ScriptingToolPreferences") {
   range_mode = RANGE_WHOLE_PATTERN,
   shift_amount = 1,
   shift_automation = true

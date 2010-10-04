@@ -184,8 +184,8 @@ end)
 
 -- dynamicall register configuration settings for each config
 
-local configuration_root_node = 
-  duplex_preferences:add("configurations", renoise.Document.create())
+local configuration_root_node = duplex_preferences:add_property(
+  "configurations", renoise.Document.create("Configurations"){ })
 
 for _,device_name in pairs(available_devices) do
   for _,config in pairs(device_configuration_map[device_name]) do
@@ -200,18 +200,18 @@ for _,device_name in pairs(available_devices) do
       else
       
         if (config.device.protocol == DEVICE_MIDI_PROTOCOL) then
-          configuration_root_node:add(
+          configuration_root_node:add_property(
             configuration_settings_key(config), 
-            renoise.Document.create {
+            renoise.Document.create("MidiDevice") {
               autostart = false,
               device_port_in = "",
               device_port_out = ""
             }
           )
         else -- protocol == DEVICE_OSC_PROTOCOL
-          configuration_root_node:add(
+          configuration_root_node:add_property(
             configuration_settings_key(config), 
-            renoise.Document.create {
+            renoise.Document.create("OscDevice") {
               autostart = false,
               device_prefix = "",
               device_address = "",
