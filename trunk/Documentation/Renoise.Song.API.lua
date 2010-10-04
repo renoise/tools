@@ -354,22 +354,22 @@ renoise.song().transport.loop_end_beats
 renoise.song().transport.loop_range_beats
   -> [array of two floats within 0 - song_end_beats]
 
-renoise.song().transport.loop_block_enabled
-  -> [boolean]
-renoise.song().transport.loop_block_start_pos
-  -> [read-only, renoise.SongPos object]
-renoise.song().transport.loop_block_range_coeff
-  -> [number, 2-16]
-
-renoise.song().transport.loop_pattern
-  -> [boolean]
-
 renoise.song().transport.loop_sequence_start
   -> [read-only, 0 or 1 - sequence_length]
 renoise.song().transport.loop_sequence_end
   -> [read-only, 0 or 1 - sequence_length]
 renoise.song().transport.loop_sequence_range 
   -> [array of two numbers, 0 or 1-sequence_length or empty array to disable]
+
+renoise.song().transport.loop_pattern, [added B7] _observable
+  -> [boolean]
+
+renoise.song().transport.loop_block_enabled
+  -> [boolean]
+renoise.song().transport.loop_block_start_pos
+  -> [read-only, renoise.SongPos object]
+renoise.song().transport.loop_block_range_coeff
+  -> [number, 2-16]
 
 renoise.song().transport.edit_mode, _observable
   -> [boolean]
