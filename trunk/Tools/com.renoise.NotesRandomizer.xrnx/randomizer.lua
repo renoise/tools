@@ -68,7 +68,7 @@ function Random:set_key(key)
   for _,v in pairs(Random.modes) do
     Random.note_sets[v.name] = table.copy(v.notes)
   end
-  if self.mode == "Chaos" or key == "C-" then return end
+  if key == "C-" then return end
 
   -- Permutate notes table
   local shift = table.copy(Random.note_sets["Chaos"])
