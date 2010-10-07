@@ -20,7 +20,9 @@ local options = renoise.Document.create("ScriptingToolPreferences") {
   sensitivity = 4,
   round_bpm = true,
   auto_save_bpm = true,
-  tempo_track = false
+  tempo_track = false,
+  sensitivity_min = 2,
+  sensitivity_max = 10,
 }
 
 -- notifiers
@@ -45,7 +47,6 @@ renoise.tool():add_menu_entry {
     show_dialog() 
   end
 }
-
 
 --------------------------------------------------------------------------------
 -- helper functions
@@ -251,7 +252,8 @@ function show_dialog()
       text = "TAP",
       width = WIDE,
       height = 80,
-      pressed = function()       
+      midi_mapping = "com.renoise.TempoTap:Tap",
+      pressed = function()
         tap()
       end
     },
@@ -266,9 +268,11 @@ function show_dialog()
           text = "Sensitivity"
         },
         vb:valuebox {
+          id = "sensitivity",
+          midi_mapping = "com.renoise.TempoTap:Sensitivity",
           bind = options.sensitivity,
-          min = 2,
-          max = 10,
+          min = options.sensitivity_min.value,
+          max = options.sensitivity_max.value,
         },
       },
       
@@ -313,6 +317,7 @@ function show_dialog()
       vb:button {
         text = "Save BPM",
         tooltip = "Set Player Tempo (Return)",
+        midi_mapping = "com.renoise.TempoTap:Save BPM",
         notifier = function()       
           if (tempo) then
             save_bpm(tempo)
@@ -326,6 +331,11 @@ function show_dialog()
   -- key_handler
   
   local function key_handler(dialog, key)
+    -- ignore held keys
+    if (key.repeated) then
+      return
+    end
+    
     if (key.name == "esc") then
       dialog:close()
     
@@ -347,3 +357,57 @@ function show_dialog()
 
 end
 
+
+--------------------------------------------------------------------------------
+-- Custom MIDI Mapping
+--------------------------------------------------------------------------------
+
+local tap_message = nil
+
+renoise.tool():add_midi_mapping{
+  name = "com.renoise.TempoTap:Tap",
+  invoke = function(message)
+    if (message.boolean_value ~= tap_message) then
+      tap_message = message.boolean_value
+      tap()      
+    end
+  end
+}
+
+local save_message = nil
+
+renoise.tool():add_midi_mapping{
+  name = "com.renoise.TempoTap:Save BPM",
+  invoke = function(message)    
+    if (message.boolean_value ~= save_message and tempo) then
+      save_message = message.boolean_value    
+      save_bpm(tempo)
+    end
+  end
+}
+
+renoise.tool():add_midi_mapping{
+  name = "com.renoise.TempoTap:Sensitivity",
+  invoke = function(message)        
+    local value = nil
+    local input = message.int_value
+    local min = options.sensitivity_min.value 
+    local max = options.sensitivity_max.value 
+    if (message:is_rel_value()) then
+      input = input + 64
+    end 
+    if (message:is_rel_value() or message:is_abs_value()) then
+      local range = max - min + 1
+      value = (range * input / 128) + min      
+      value = math.floor(value)      
+    else     
+      value = options.sensitivity.value + 1
+    end     
+    if (value > max) then
+      value = min
+    elseif (value < min) then
+      value = max
+    end
+    options.sensitivity.value = value
+  end
+}
