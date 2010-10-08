@@ -2,7 +2,7 @@
   ToggleDSPs main.lua
 ============================================================================]]--
 
-local debug = true
+local debug = false
 _AUTO_RELOAD_DEBUG = debug
 
 local toggles = {
