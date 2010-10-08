@@ -252,7 +252,7 @@ function show_dialog()
       text = "TAP",
       width = WIDE,
       height = 80,
-      midi_mapping = "com.renoise.TempoTap:Tap",
+      midi_mapping = "Transport:Record:Tap Tempo [Trigger]",
       pressed = function()
         tap()
       end
@@ -268,8 +268,7 @@ function show_dialog()
           text = "Sensitivity"
         },
         vb:valuebox {
-          id = "sensitivity",
-          midi_mapping = "com.renoise.TempoTap:Sensitivity",
+          id = "sensitivity",          
           bind = options.sensitivity,
           min = options.sensitivity_min.value,
           max = options.sensitivity_max.value,
@@ -316,8 +315,7 @@ function show_dialog()
     vb:row {
       vb:button {
         text = "Save BPM",
-        tooltip = "Set Player Tempo (Return)",
-        midi_mapping = "com.renoise.TempoTap:Save BPM",
+        tooltip = "Set Player Tempo (Return)",        
         notifier = function()       
           if (tempo) then
             save_bpm(tempo)
@@ -362,52 +360,11 @@ end
 -- Custom MIDI Mapping
 --------------------------------------------------------------------------------
 
-local tap_message = nil
-
 renoise.tool():add_midi_mapping{
-  name = "com.renoise.TempoTap:Tap",
+  name = "Transport:Record:Tap Tempo [Trigger]",
   invoke = function(message)
-    if (message.boolean_value ~= tap_message) then
-      tap_message = message.boolean_value
+    if (message:is_trigger()) then      
       tap()      
     end
-  end
-}
-
-local save_message = nil
-
-renoise.tool():add_midi_mapping{
-  name = "com.renoise.TempoTap:Save BPM",
-  invoke = function(message)    
-    if (message.boolean_value ~= save_message and tempo) then
-      save_message = message.boolean_value    
-      save_bpm(tempo)
-    end
-  end
-}
-
-renoise.tool():add_midi_mapping{
-  name = "com.renoise.TempoTap:Sensitivity",
-  invoke = function(message)        
-    local value = nil
-    local input = message.int_value
-    local min = options.sensitivity_min.value 
-    local max = options.sensitivity_max.value 
-    if (message:is_rel_value()) then
-      input = input + 64
-    end 
-    if (message:is_rel_value() or message:is_abs_value()) then
-      local range = max - min + 1
-      value = (range * input / 128) + min      
-      value = math.floor(value)      
-    else     
-      value = options.sensitivity.value + 1
-    end     
-    if (value > max) then
-      value = min
-    elseif (value < min) then
-      value = max
-    end
-    options.sensitivity.value = value
   end
 }
