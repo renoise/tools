@@ -77,17 +77,19 @@ do
   if (plugin_properties:load_plugin(new_plugin)) then
     assert(plugin_properties.plugin_name == new_plugin)
     assert(plugin_properties.plugin_loaded == true)
-    assert(plugin_properties.external_editor_visible == false)
     
-    plugin_properties.external_editor_visible = true
-    assert(plugin_properties.external_editor_visible == true)
-    plugin_properties.external_editor_visible = false
-    assert(plugin_properties.external_editor_visible == false)
+    local plugin_device = plugin_properties.plugin_device
+     
+    assert(plugin_device.external_editor_visible == false)
+    plugin_device.external_editor_visible = true
+    assert(plugin_device.external_editor_visible == true)
+    plugin_device.external_editor_visible = false
+    assert(plugin_device.external_editor_visible == false)
     
     -- can't assert parameters and presets, cause they may not be present
     -- simply access them to test...
-    local parameters = plugin_properties.plugin_device.parameters
-    local presets = plugin_properties.plugin_device.presets
+    local parameters = plugin_device.parameters
+    local presets = plugin_device.presets
   end
 
   song:delete_instrument_at(#song.instruments)
