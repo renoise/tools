@@ -34,11 +34,11 @@ Do not try to execute this file. It uses a .lua extension for markups only.
 -- renoise.Osc
 --------------------------------------------------------------------------------
 
--- Depacketizing raw (socket) data to OSC messages or bundles
+-- De-packetizing raw (socket) data to OSC messages or bundles
 -- converts the binary data to an OSC message or bundle. If the data does not
 -- look like an OSC message, or the message contains errors, nil is returned
 -- as first argument and the second return value will contain the error.
--- If depacketizing was successful, either a renoise.Osc.Bundle or Message
+-- If de-packetizing was successful, either a renoise.Osc.Bundle or Message
 -- object is returned. Bundles may contain multiple messages or nested bundles.
 renoise.Osc.from_binary_data(binary_data)
   -> [Osc.Bundle or Osc.Message object or nil, error or nil]
@@ -106,8 +106,8 @@ message.binary_data
 
 -------- create
 
--- Create a new bundle by specifying a timetag and one or more messages.
--- If you do not know what to do with the timetag, use os.clock(),
+-- Create a new bundle by specifying a time-tag and one or more messages.
+-- If you do not know what to do with the time-tag, use os.clock(),
 -- which simply means "now". Messages must be renoise.Osc.Message objects.
 -- Nested bundles (bundles in bundles) are right now not supported.
 renoise.Osc.Bundle(pattern, single_message_or_table_of_messages)

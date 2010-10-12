@@ -88,7 +88,7 @@ serializers. See http://lua-users.org/wiki/TableSerialization for a start.
 Related to this, import of renoise.Documents from XML will NOT create new object
 models from the source XML files, but will only assign existing values in the 
 XML file to existing values in your document object (except for lists which are
-instantiated dynamically via predefined types, mdels). This means: values which
+instantiated dynamically via predefined types, models). This means: values which
 are not present in the original model, will be silently ignored in the import. 
 This most of the time is exactly what's needed for example extending an already
 existing document format. But thats exactly what's NOTE needed when dealing with
@@ -111,7 +111,7 @@ Observable object is strongly typed, can only hold a predefined Lua base type,
 defined when constructing the property. Same is true for the basetype list 
 wrappers: Lists can not contain multiple objects of different types.
 
-Luas other fundamental type, the table, has no direct representation in the
+Lua's other fundamental type, the table, has no direct representation in the
 Document API: You can either use the strongly typed lists in order to get Lua
 index based table alike behavior, or use nested document nodes or lists 
 (documents in documents) to get an associative table alike layout/behavior.
@@ -143,7 +143,7 @@ my_document:add_property("value2", "bla")
 local node = renoise.Document.create("MySubDoc"){ } 
 node:add_property("another_value", 1)
 
--- add another already exising node
+-- add another already existing node
 my_document:add_property("nested_node", node) 
 
 -- removes a previously added node
@@ -159,8 +159,8 @@ function:
 
 my_document = renoise.Document.create("MyDoc") {
   age = 1,
-  name = "bla", -- implicitely specify a property type
-  is_valid = renoise.Document.ObservableBoolean(false), -- or explicitely
+  name = "bla", -- implicitly specify a property type
+  is_valid = renoise.Document.ObservableBoolean(false), -- or explicitly
   age_list = {1, 2, 3},
   another_list = renoise.Document.ObservableNumberList(),
   sub_node = {
@@ -173,7 +173,7 @@ This will create a document node which is !modeled! after the the passed table.
 The table is not internally used by the document after construction, and will
 only be referenced to construct new instances. Also note that you need to assign 
 values for all passed table properties in order to automatically determine its 
-type, or specify the docment types explicitely -> renoise.Document.ObservableXXX().
+type, or specify the document types explicitly -> renoise.Document.ObservableXXX().
 
 The passed name ("MyDoc" in the example above) us used to identify the document
 when loading/saving it (loading a XML file which was saved with a different 
@@ -358,8 +358,8 @@ observable_list:size()
 observable_list:property(index)
   -> [nil or an renoise.Document.Observable object]
 
--- Find a value i nthe list by comparing the list values with the passed 
--- value. First successfull match is returned. When no match is found, nil 
+-- Find a value in the list by comparing the list values with the passed 
+-- value. First successful match is returned. When no match is found, nil 
 -- is returned.
 observable_list:find([start_pos,] value)
   -> [nil or number (the index)]

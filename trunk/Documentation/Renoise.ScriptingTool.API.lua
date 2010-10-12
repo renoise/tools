@@ -37,7 +37,7 @@ renoise.tool()
 -------- functions
 
 -- menu_entries: insert a new menu entry somewhere in Renoises existing 
--- context menues or the global app menu. insertion can be done while 
+-- context menus or the global app menu. insertion can be done while 
 -- the script is initializing, but also dynamically later on.
 --
 -- The table passed as argument to 'add_menu_entry' is defined as:
@@ -91,7 +91,7 @@ renoise.tool()
 [added B4] renoise.tool():has_menu_entry(menu_entry_name)
   -> [boolean]
 
--- add a new menu entry as descriped above
+-- add a new menu entry as described above
 renoise.tool():add_menu_entry(menu_entry_definition_table)
 
 -- remove a previously added menu entry by specifying its full name
@@ -112,7 +112,7 @@ renoise.tool():remove_menu_entry(menu_entry_name)
 -- The key binding's 'name' must have 3 parts, separated with :'s
 -- <scope:topic_name:binding_name>
 -- * 'scope' is where the shortcut will be applied, just like you see them 
---   in the categories list in the keyboard assigment preferences pane
+--   in the categories list in the keyboard assignment preferences pane
 -- * 'topic_name' is useful to group entries in the key assignment pane.
 --   use "tool" if you can not come up with something useful.
 -- * 'binding_name' is the name of the binding
@@ -122,7 +122,7 @@ renoise.tool():remove_menu_entry(menu_entry_name)
 -- "Pattern Editor", "Pattern Matrix", "Pattern Sequencer", "Sample Editor"
 -- "Track DSPs Chain"
 --
--- Using a non avilable scope will not fire an error but only drive the binding
+-- Using a non available scope will not fire an error but only drive the binding
 -- useless. It will be listed and can be mapped, but will never be invoked.
 --
 -- Theres no way to define default keyboard shortcuts for your entries. Users 
@@ -153,7 +153,7 @@ renoise.tool():remove_keybinding(keybinding_name)
 -- topic_name and optional sub group names will create new groups in the list 
 -- of MIDI mappings, as seen in Renoises MIDI mapping dialog.
 -- If you can't come up with something useful, use your tools name as topic name.
--- Existing global mappings from Renoise can be overriden. In this case the original 
+-- Existing global mappings from Renoise can be overridden. In this case the original 
 -- mapping is no longer called, but only your tools mapping.
 --
 -- The "invoke" function gets called with one argument, the midi message, which 
@@ -240,7 +240,7 @@ renoise.tool().app_idle_observable
 
 -- invoked each time before a new document gets created or loaded, aka the last 
 -- time renoise.song() still points to the old song before a new one arrives.
--- you can explicitely release notifiers to the old document here, or do some own
+-- you can explicitly release notifiers to the old document here, or do some own
 -- housekeeping. also called right before the application exits.
 [added B7] renoise.tool().app_release_document_observable
   -> [renoise.Document.Observable object]
@@ -258,7 +258,7 @@ renoise.tool().app_new_document_observable
   -> [renoise.Document.Observable object]
 
 -- get or set an optional renoise.Document.DocumentNode object, which will be
--- used as set of persistant "options" or preferences for your tool. 
+-- used as set of persistent "options" or preferences for your tool. 
 -- by default nil. when set, the assigned document object will be automatically 
 -- loaded and saved by Renoise, in order to retain the tools state.
 -- the preference xml file is saved/loaded within the tool bundle as 

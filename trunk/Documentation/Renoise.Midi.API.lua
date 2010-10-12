@@ -56,7 +56,7 @@ examples...
 -------- Device Enumeration
 
 -- List of strings with the currently available devices. This list can change
--- when devices are hotplugged. See 'devices_changed_observable'
+-- when devices are hot-plugged. See 'devices_changed_observable'
 renoise.Midi.available_input_devices() 
   -> [list of strings]
 renoise.Midi.available_output_devices() 
@@ -94,7 +94,7 @@ renoise.Midi.create_input_device(device_name [,callback] [, sysex_callback])
 -- "available_input_devices". All other device names will fire an error. Returns
 -- a ready to use output device.
 -- The real device driver gets automatically closed when the MidiOutputDevice
--- object gets garbage collected or when the device was explicitely closed
+-- object gets garbage collected or when the device was explicitly closed
 -- via midi_device:close() and nothing else references it.
 renoise.Midi.create_output_device(device_name)
   -> [MidiOutputDevice object]

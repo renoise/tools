@@ -116,13 +116,13 @@ view.tooltip
 -- Instead of making a control invisible, you can also make it inactive.
 -- Deactivated controls will still be shown and will also still show its 
 -- currently assigned value, but do not allow changing it. Most controls will 
--- also display "greyed out" to visualize the deactivated state.
+-- also display "grayed out" to visualize the deactivated state.
 [added B6] control.active
   -> [boolean]
 
 
 -- When set, the control will be highlighted with Renoises MIDI mapping dialog 
--- open. When clicked while the mapping dialog is open, it selects the specifid 
+-- open. When clicked while the mapping dialog is open, it selects the specified 
 -- string as MIDI mapping target action. This target acton can either be one of
 -- the globally available mappings in Renoise, or ones that got created by the 
 -- tool just for the tool.
@@ -587,13 +587,13 @@ button.text
 -- "MyBitmap.bmp" as name. Then the bitmap is loaded from
 -- "PATH_TO/com.foo.MyTool.xrnx/MyBitmap.bmp". 
 -- The only supported bitmap format is ".bmp" (Windows bitmap) right now.
--- Colors will be overridden by the theme colors, using black as transparant 
+-- Colors will be overridden by the theme colors, using black as transparent 
 -- color, white is the full theme color. All colors in between are mapped 
 -- according to their gray value.
 button.bitmap 
   -> [string]
 
--- Table of rgb values like {0xff,0xff,0xff} -> white. When set, the
+-- Table of RGB values like {0xff,0xff,0xff} -> white. When set, the
 -- unpressed button's background will be drawn in the specified color. 
 -- A text color is automatically selected to make sure its always visible. 
 -- Set color {0,0,0} to enable the theme colors for the button again.
@@ -639,7 +639,7 @@ checkbox:remove_notifier(function or {object, function} or {object, function})
 -- The current state of the checkbox, expressed as boolean.
 -- By default "false".
 checkbox.value 
-  -> [boolen]
+  -> [boolean]
 
 -- Valid in the construction table only: set up a value notifier.
 checkbox.notifier 
@@ -704,7 +704,7 @@ switch.bind
 -- renoise.Views.Popup (inherits from Control, 'popup' in the builder)
 --------------------------------------------------------------------------------
 
--- A dropdown menu which shows the currently selected value when closed.
+-- A drop-down menu which shows the currently selected value when closed.
 -- When clicked, it pops up a list of all available items.
 
 --[[
@@ -1222,7 +1222,7 @@ xypad.bind
 --==============================================================================
 
 -- Dialogs can not created with the viewbuilder, but only by the application. 
--- See create custom views on top of this file how to do so.
+-- See "create custom views" on top of this file how to do so.
 
 ----- functions
 
@@ -1258,13 +1258,13 @@ dialog.visible
 --   -> vb.views.SomeString or vb.views["SomeString"]
 --
 -- * notifier = some_function or notifier = {some_obj, some_function} to
---   register valua change notifiers in controls (views which represent values)
+--   register value change notifiers in controls (views which represent values)
 --
 -- * bind = a_document_value (Observable) to bind a view's value directly 
 --   to an Observable object. Notifiers can then be added to the Observable or 
 --   the view. Then binding a value to a view, the view will automatically 
 --   update its value as soon as the Observable's value changed, and the 
---   Observable's value will auotmatically be updateed as soon as the view's 
+--   Observable's value will automatically be updated as soon as the view's 
 --   value changed.
 --   See "Renoise.Document.API.lua" for more general info about Documents & 
 --   Observables please.
