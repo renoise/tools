@@ -111,7 +111,7 @@ following places:
 
 What you can *NOT* do with Renoise tools:
 
-  + Change Renoise's existing behaviour. Like, you can not make all C-4s in the
+  + Change Renoise's existing behavior. Like, you can not make all C-4s in the
     pattern editor yellow instead of white. You can write your own pattern
     editor, but not change the existing one.
 

@@ -38,12 +38,12 @@ from the server.
 -------- Error handling
 
 All socket functions which can fail, will return an error string as an optional
-second return value. They do not call Luas error() handler, so you can decide on
-your own how to deal with expected errors like connection timeouts, connection
-failures and so on. This also means you don't have to "pcall" socket functions
-to handle "expected" errors.
+second return value. They do not call Lua's error() handler, so you can decide
+on your own how to deal with expected errors like connection timeouts, 
+connection failures and so on. This also means you don't have to "pcall" 
+socket functions to handle "expected" errors.
 Logic errors (setting invalid addresses, using disconnected sockets, passing
-invalid timeouts and so on) will, as usual, fire a Luas runtime error (abort
+invalid timeouts and so on) will, as usual, fire a Lua's runtime error (abort
 your scripts and spit out an error). If you get such an error, then this usually
 means that you did something wrong, have fed or used the sockets in a way that
 does not make sense. Never "pcall" such errors, but fix the problems instead.
@@ -135,7 +135,7 @@ socket:close()
 -- a SocketClient can connect to other socket servers and send and
 -- receive data from them on request. Connections to a server can not
 -- change, they are specified when constructing a client. You can not reconnect
--- a client; ceate a new client instance instead.
+-- a client; create a new client instance instead.
 
 
 -------- properties
@@ -156,7 +156,7 @@ socket_client:send(message) ->
 
 -- receive a message string from the the connected server with the given 
 -- timeout in milliseconds. mode can be one of "*line", "*all" or a number > 0, 
--- like Luas io.read's. \param timeout can be 0, which is useful for 
+-- like Lua's io.read. \param timeout can be 0, which is useful for 
 -- receive("*all"). this will only check and read pending data from the 
 -- sockets queue.
 --
@@ -172,7 +172,7 @@ socket_client:send(message) ->
 --   entire HTTP page or file you may have to call receive("*all") multiple 
 --   times until you got all you expect to get. 
 --
--- mode "number > 0": tryies reading \param NumberOfBytes od data from the 
+-- mode "number > 0": tries reading \param NumberOfBytes of data from the 
 --   peer. Note that the timeout may be applied more than once, if more than 
 --   one socket read is needed to receive the requested block.
 -- 
@@ -182,9 +182,9 @@ socket_client:send(message) ->
 -- any other errors are system dependent, and should only be used for display 
 -- purposes.
 -- once you got an error from receive, and this error is not a "timeout", the 
--- socket will already be closed and thus must be recreted in order to retry the 
--- communication with the server. any attempts to use a closed socket will fire
--- a runtime error.
+-- socket will already be closed and thus must be recreated in order to retry
+-- the communication with the server. any attempts to use a closed socket will
+-- fire a runtime error.
 socket_client:receive(mode, timeout_ms) ->
   [message (string or nil), error_message (string or nil)]
 
