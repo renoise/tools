@@ -60,8 +60,9 @@ renoise.tool()
 -- You can place your entries in any context menu or any window menu in Renoise.
 -- To do so, use one of the specified categories in its name:
 --
--- "Window Menu"
--- "Main Menu" (:File", ":Edit", ":View", ":Tools" or ":Help")
+-- "Window Menu" -- Renoise icon menu in the window caption on Windows/Linux
+-- "Main Menu" (:File", ":Edit", ":View", ":Tools" or ":Help") -- Renoise's main menu
+-- [added RC1] "Scripting Menu" (:File",  or ":Tools") -- Scripting Editor & Terminal
 -- "Disk Browser Directories"
 -- "Disk Browser Files"
 -- "Instrument Box" 
