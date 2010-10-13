@@ -36,7 +36,7 @@ chords = {
 
 ------------------------------------------------------
 function get_scale(root, scale)
-  local spat = scales[scale]['pattern'];
+  local spat = scale['pattern'];
   local rpat = {false,false,false,false,false,false,false,false,false,false,false}
   -- Finds scale notes
   for i = 0,11 do
