@@ -149,4 +149,4 @@ dialog = vb:column {
   }
 }
 update()
-renoise.app():show_custom_dialog('Scale finder', dialog) 
+--renoise.app():show_custom_dialog('Scale finder', dialog) 
