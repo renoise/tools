@@ -142,8 +142,14 @@ os.dirnames(path) -> [table of strings]
 -- should be searched for, like {"*.wav", "*.txt"}. by default all files are 
 -- matched. the passed directory must be valid, or an error will be thrown.
 os.filenames(path [, {file_extensions}]) -> [table of strings]
-    
-    
+
+-- creates a new directory. mkdir can only create one new sub directory at the 
+-- same time. if you need to create more than one sub dir, call mkdir multiple 
+-- times. returns true if the operation was successful; in case of error, it 
+-- returns nil plus an error string. 
+[added RC1] os.mkdir(path) -> [boolean, error_string or nil]
+
+        
 -- changed
 
 -- replaced with a temp directory and name which renoise will clean up on exit
