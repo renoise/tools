@@ -12,7 +12,7 @@ local vb = renoise.ViewBuilder()
 local sdisplay = vb:text{ width = 190, font = 'bold' }
 local cdisplay = vb:text{ width = 160, font = 'bold', text = 'Chord  [none selected]' }
 
-local cb_headers = { 'I', 'ii', 'iii', 'I', 'V', 'vi', 'vii' }
+local cb_headers = { 'I', 'ii', 'iii', 'IV', 'V', 'vi', 'vii' }
 
 local chord_boxes = {}
 for i = 1, 12 do
@@ -25,20 +25,40 @@ for i = 1, 12 do
         text = cb_headers[i] 
       }
   }
-end 
+end
+
+function start_preview()  
+  renoise.song().transport:start_at(renoise.song().selected_line_index)
+end
+
+function stop_preview()  
+  renoise.song().transport:stop()
+end
+
 
 function insert_note(note, col)
   -- Note must not be smaller than scale root!
   if renoise.song().selected_note_column_index ~= nil then
     col = col + renoise.song().selected_note_column_index - 1
   end
-  renoise.song().selected_line.note_columns[col + 1].note_value = note - 4 + 
-    renoise.song().transport.octave * 12
-    
+  -- Get the note column
+  local nc = renoise.song().selected_line.note_columns[col + 1]
+  
+  -- Note value
+  nc.note_value = note - 4 + renoise.song().transport.octave * 12
+  
+  -- Instrument value
+  nc.instrument_value = renoise.song().selected_instrument_index - 1
+  
   -- Not enough space? Compensate!
   if col >= renoise.song().selected_track.visible_note_columns then
     renoise.song().selected_track.visible_note_columns = col + 1
   end
+  
+  -- Preview
+  start_preview()
+ 
+  
 end
 
 function clear_cb()
@@ -95,8 +115,11 @@ function update()
             width = 60,
             height = 30,
             text = get_nname(n) .. c['code'],
-            notifier = function()
+            pressed = function()
               add_chord(n, c)
+            end,
+            released = function()
+              stop_preview()
             end
           }
           chord_boxes[sn]:add_child(cb)

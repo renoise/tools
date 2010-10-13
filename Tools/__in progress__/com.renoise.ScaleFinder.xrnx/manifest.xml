@@ -6,7 +6,7 @@
   <Author>Cly/Suva [clysuva@gmail.com]</Author>
   <Category>Pattern Editor</Category>
   <Name>Scale Finder</Name>
-  <Description>...</Description>
+  <Description>Provides selection of diatonic chords available in selected scale.</Description>
   <Homepage>http://tools.renoise.com</Homepage>
   <Platform></Platform>
 </RenoiseScriptingTool>
