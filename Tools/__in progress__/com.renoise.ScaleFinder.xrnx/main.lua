@@ -76,4 +76,4 @@ dialog = vb:column {
   }
 }
 update()
--- renoise.app():show_custom_prompt('Scale finder', dialog, {'OK'}) 
+--renoise.app():show_custom_prompt('Scale finder', dialog, {'OK'}) 
