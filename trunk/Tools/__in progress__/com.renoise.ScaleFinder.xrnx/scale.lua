@@ -48,6 +48,13 @@ function get_scale(root, scale)
   return rpat
 end
 
+function get_note(note)
+   return ((note - 1) % 12) + 1
+end
+
+function get_nname(note)
+  return notes[get_note(note)]
+end
 ------------------------------------------------------
 function is_valid(root, chord, scale_pattern)
   local cpat = chords[chord]['pattern']

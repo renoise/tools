@@ -6,6 +6,7 @@ require 'scale'
 local scale_root = 4
 local scale_type = 1
 local scale_pattern
+local ccont = {}
 
 local vb = renoise.ViewBuilder()
 local sdisplay = vb:text{ width = 190, font = 'bold' }
@@ -26,11 +27,18 @@ for i = 1, 12 do
   }
 end 
 
-ccont = {}
-
 function insert_note(note, col)
+  -- Note must not be smaller than scale root!
+  if renoise.song().selected_note_column_index ~= nil then
+    col = col + renoise.song().selected_note_column_index - 1
+  end
   renoise.song().selected_line.note_columns[col + 1].note_value = note - 4 + 
     renoise.song().transport.octave * 12
+    
+  -- Not enough space? Compensate!
+  if col >= renoise.song().selected_track.visible_note_columns then
+    renoise.song().selected_track.visible_note_columns = col + 1
+  end
 end
 
 function clear_cb()
@@ -41,23 +49,23 @@ function clear_cb()
 end
 
 function add_chord(root, chord)
-  cdisplay.text = 'Chord: ' .. notes[root] .. chord["code"]
+  cdisplay.text = 'Chord: ' .. get_note(root) .. chord["code"]
   local cpattern = get_scale(root, chord)
   local res = ''
   local note_offset = 0
-  for i = 0, 11 do
-    local n = ((root + i - 1) % 12) + 1
-    if cpattern[n] then
+   
+  for n = root, root + 11 do
+    if cpattern[get_note(n)] then
       -- Form the string for chord note listing
       if res ~= '' then 
         res = res .. ', '
       else
-        res = 'Chord ' ..  notes[root] .. chord["code"] .. ': '
+        res = 'Chord ' ..  get_nname(root) .. chord["code"] .. ': '
       end
-      res = res .. notes[n]
-      
+      res = res .. get_nname(n)
+     
       -- Insert note
-      insert_note(root + i, note_offset)
+      insert_note(n, note_offset)
       note_offset = note_offset + 1
     end
   end
@@ -69,16 +77,15 @@ function update()
   scale_pattern = get_scale(scale_root, scales[scale_type])
   local res = ''
   local sn = 0
-  for i = 0, 11 do
-    local n = ((scale_root + i - 1) % 12) + 1
-    if scale_pattern[n] then
+  for n = scale_root, scale_root + 11 do
+    if scale_pattern[get_note(n)] then
       -- Form the string for scale note listing
       if res ~= '' then 
         res = res .. ', '
       else
         res = 'Scale: '
       end
-      res = res .. notes[n]
+      res = res .. get_nname(n)
       
       -- Build the chord views
       sn = sn + 1
@@ -87,7 +94,7 @@ function update()
           local cb = vb:button {
             width = 60,
             height = 30,
-            text = notes[n] .. c['code'],
+            text = get_nname(n) .. c['code'],
             notifier = function()
               add_chord(n, c)
             end
@@ -148,5 +155,17 @@ dialog = vb:column {
     }
   }
 }
-update()
---renoise.app():show_custom_dialog('Scale finder', dialog) 
+
+function display()
+  update()
+  renoise.app():show_custom_dialog('Scale finder', dialog) 
+end
+
+--------------------------------------------------------------------------------
+-- menu registration
+--------------------------------------------------------------------------------
+
+renoise.tool():add_menu_entry {
+   name = "Main Menu:Tools:Scale finder",
+   invoke = display
+}
