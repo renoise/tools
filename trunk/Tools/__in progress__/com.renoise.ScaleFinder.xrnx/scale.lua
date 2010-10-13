@@ -28,7 +28,7 @@ chords = {
   },
   {
     name = 'Diminished',
-    code = 'maj',
+    code = 'dim',
     pattern = '10010010'
   }  
 
