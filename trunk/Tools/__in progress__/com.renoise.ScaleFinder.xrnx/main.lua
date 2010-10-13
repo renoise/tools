@@ -63,8 +63,11 @@ end
 
 function clear_cb()
   for i, v in ipairs(ccont) do
-    chord_boxes[i]:remove_child(v)
-    chord_boxes[i]:resize()
+    if v ~= nil then
+      chord_boxes[i]:remove_child(v)
+      chord_boxes[i]:resize()
+      ccont[i] = nil
+    end 
   end
 end
 
@@ -109,6 +112,9 @@ function update()
       
       -- Build the chord views
       sn = sn + 1
+      local cc = vb:column {} -- Chord Container
+      ccont[sn] = cc
+      chord_boxes[sn]:add_child(cc)
       for k, c in ipairs(chords) do
         if is_valid(n, k, scale_pattern) then
           local cb = vb:button {
@@ -122,10 +128,9 @@ function update()
               stop_preview()
             end
           }
-          chord_boxes[sn]:add_child(cb)
-          ccont[sn] = cb
+          cc:add_child(cb)
         end
-      end 
+      end
     end
   end
   sdisplay.text = res
