@@ -25,16 +25,7 @@ local options = renoise.Document.create("ScriptingToolPreferences") {
   sensitivity_max = 10,
 }
 
--- notifiers
 
-options.sensitivity:add_notifier(function()
-  -- keep timetable in sync with the sensitivity
-  resize_table(timetable, options.sensitivity.value)
-  timetable_filled = false
-  counter = 1
-end)
-
- 
 --------------------------------------------------------------------------------
 -- tool setup
 --------------------------------------------------------------------------------
@@ -52,7 +43,7 @@ renoise.tool():add_menu_entry {
 -- helper functions
 --------------------------------------------------------------------------------
 
-function resize_table(t, length)
+local function resize_table(t, length)
   assert(type(t) == "table")
   assert(length > 0)
 
@@ -135,7 +126,7 @@ end
 
 -- save_bpm
 
-function save_bpm(bpm)
+local function save_bpm(bpm)
   if (bpm >= 32 and bpm <= 999) then
     renoise.song().transport.bpm = bpm      
     if (options.tempo_track.value) then
@@ -149,7 +140,7 @@ end
 
 -- tap
 
-function tap()
+local function tap()
   
   local function get_average(tb)
     return (tb[#tb] - tb[1]) / (#tb - 1)
@@ -368,3 +359,15 @@ renoise.tool():add_midi_mapping{
     end
   end
 }
+
+--------------------------------------------------------------------------------
+-- Notifiers
+--------------------------------------------------------------------------------
+
+options.sensitivity:add_notifier(function()
+  -- keep timetable in sync with the sensitivity
+  resize_table(timetable, options.sensitivity.value)
+  timetable_filled = false
+  counter = 1
+end)
+
