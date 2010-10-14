@@ -27,28 +27,29 @@ for i = 1, 12 do
   }
 end
 
+--------------------------------------------------------------------------------
 function start_preview()  
   renoise.song().transport:start_at(renoise.song().selected_line_index)
 end
 
-function stop_preview()  
+--------------------------------------------------------------------------------
+function stop_preview()
   renoise.song().transport:stop()
 end
 
-
-function insert_note(note, col)
-  -- Note must not be smaller than scale root!
-  if renoise.song().selected_note_column_index ~= nil then
-    col = col + renoise.song().selected_note_column_index - 1
+--------------------------------------------------------------------------------
+function insert_note(note, col, insv)
+  if renoise.song().selected_note_column_index == 0 then
+    renoise.song().selected_note_column_index = 1
   end
+   
+  col = col + renoise.song().selected_note_column_index - 1
+  
   -- Get the note column
   local nc = renoise.song().selected_line.note_columns[col + 1]
-  
-  -- Note value
+  -- Add note
   nc.note_value = note - 4 + renoise.song().transport.octave * 12
-  
-  -- Instrument value
-  nc.instrument_value = renoise.song().selected_instrument_index - 1
+  nc.instrument_value = insv - 1
   
   -- Not enough space? Compensate!
   if col >= renoise.song().selected_track.visible_note_columns then
@@ -57,7 +58,6 @@ function insert_note(note, col)
   
   -- Preview
   start_preview()
- 
   
 end
 
@@ -71,12 +71,14 @@ function clear_cb()
   end
 end
 
+--------------------------------------------------------------------------------
 function add_chord(root, chord)
   cdisplay.text = 'Chord: ' .. get_note(root) .. chord["code"]
   local cpattern = get_scale(root, chord)
   local res = ''
   local note_offset = 0
-   
+  local current_instrument = renoise.song().selected_instrument_index
+  
   for n = root, root + 11 do
     if cpattern[get_note(n)] then
       -- Form the string for chord note listing
@@ -88,13 +90,23 @@ function add_chord(root, chord)
       res = res .. get_nname(n)
      
       -- Insert note
-      insert_note(n, note_offset)
+      insert_note(n, note_offset, current_instrument)
       note_offset = note_offset + 1
     end
   end
+  
+  -- OFF rest of the notes
+  local vnc = renoise.song().selected_track.visible_note_columns
+  if vnc > note_offset then
+    for i = note_offset + 1,vnc do
+      local nc = renoise.song().selected_line.note_columns[i]
+      nc.note_value = 120
+      nc.instrument_value = 255
+    end
+  end 
   cdisplay.text = res
 end
-
+--------------------------------------------------------------------------------
 function update()
   clear_cb()
   scale_pattern = get_scale(scale_root, scales[scale_type])
@@ -136,13 +148,13 @@ function update()
   sdisplay.text = res
 end
 
+--------------------------------------------------------------------------------
 snames = { }
 for key, scale in ipairs(scales) do
   table.insert(snames,scale['name'])
 end
 
-dialog = vb:column {
-  
+dialog = vb:column {  
   margin = renoise.ViewBuilder.DEFAULT_DIALOG_MARGIN,
   vb:column {
     spacing = renoise.ViewBuilder.DEFAULT_CONTROL_SPACING,
@@ -184,9 +196,10 @@ dialog = vb:column {
   }
 }
 
+--------------------------------------------------------------------------------
 function display()
   update()
-  renoise.app():show_custom_dialog('Scale finder', dialog) 
+  renoise.app():show_custom_dialog('Scale finder', dialog, function(d,k) return k end ) 
 end
 
 --------------------------------------------------------------------------------
