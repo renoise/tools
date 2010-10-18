@@ -123,11 +123,14 @@ function MidiDevice:midi_callback(message)
     msg.value = message[3]
     msg.channel = message[1]-223
     value_str = "PB"
+  else
+    -- ignore unsupported type...
   end
 
-  value_str = string.format("%s|Ch%i",value_str,msg.channel)
 
   if (value_str) then
+
+    value_str = string.format("%s|Ch%i",value_str,msg.channel)
     local param = self.control_map:get_param_by_value(value_str)
   
     if (param) then
