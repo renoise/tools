@@ -66,13 +66,46 @@ this.
 
 ]]
 
+
 --------------------------------------------------------------------------------
--- Globals
+-- Globals (Interface to Renoise)
 --------------------------------------------------------------------------------
+
+-- max mapping counts (TODO: should be dynamically build)
+
+MAX_SEQUENCE_MAPPINGS = 512
+MAX_TRACK_MAPPINGS = 64
+MAX_SEND_TRACK_MAPPINGS = 32
+MAX_GENERIC_PARAMETER_MAPPINGS = 32
+
+
+-- available_actions
+
+local action_names = table.create()
+
+function available_actions()
+  return action_names
+end
+
+
+-- invoke_action
 
 local action_map = {}
-local action_names = {}
 
+function invoke_action(name, message)
+  local action = action_map[name]
+
+  if (action == nil) then
+    error(string.format("trying to invoke undefined action '%s'", name))
+  end
+
+  action(message)
+end
+
+
+--------------------------------------------------------------------------------
+-- Locals (message registration & helpers)
+--------------------------------------------------------------------------------
 
 -- add_action
 
@@ -82,21 +115,11 @@ local function add_action(name, func)
   end
 
   action_map[name] = func
-  action_names[#action_names + 1] = name
+  action_names:insert(name)
 end
 
 
 --------------------------------------------------------------------------------
--- Locals
---------------------------------------------------------------------------------
-
--- Consts
-
-local MAX_SEQUENCE_MAPPINGS = 128
-local MAX_TRACK_MAPPINGS = 64
-local MAX_SEND_TRACK_MAPPINGS = 32
-local MAX_GENERIC_PARAMETER_MAPPINGS = 32
-
 
 -- API access shortcuts
 
@@ -2109,22 +2132,4 @@ function(message)
   end
 end)
 
-
---------------------------------------------------------------------------------
--- Interface
---------------------------------------------------------------------------------
-
-function available_actions()
-  return action_names
-end
-
-function invoke_action(name, message)
-  local action = action_map[name]
-
-  if (action == nil) then
-    error(string.format("trying to invoke undefined action '%s'", name))
-  end
-
-  action(message)
-end
 
