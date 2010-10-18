@@ -13,17 +13,16 @@ local sdisplay = vb:text{ width = 190, font = 'bold' }
 local cdisplay = vb:text{ width = 160, font = 'bold', text = 'Chord  [none selected]' }
 
 local cb_headers = { 'I', 'ii', 'iii', 'IV', 'V', 'vi', 'vii' }
-
 local chord_boxes = {}
 for i = 1, 12 do
   chord_boxes[i] = vb:column { 
-      style = 'panel', 
-      vb:text{ 
-        align = 'center',
-        width = 60,
-        font = 'bold', 
-        text = cb_headers[i] 
-      }
+    style = 'panel', 
+    vb:text{ 
+      align = 'center',
+      width = 60,
+      font = 'bold', 
+      text = cb_headers[i] 
+    }
   }
 end
 
@@ -207,6 +206,6 @@ end
 --------------------------------------------------------------------------------
 
 renoise.tool():add_menu_entry {
-   name = "Main Menu:Tools:Scale finder",
+   name = "Main Menu:Tools:Scale finder...",
    invoke = display
 }
