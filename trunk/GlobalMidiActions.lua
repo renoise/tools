@@ -36,7 +36,7 @@ The message parameter, passed to invoke the action, is defined as:
   value_max_scaling
 
   
----- Adding new messages
+---- Adding new mappings
 
 If you want to extend the default MIDI mapping set, first copy this file to the 
 "Scripts" folder in your preferences folder. Then do your changes there. The 
@@ -64,16 +64,25 @@ Scripting developer tools must be enabled to see the "refresh" button and the
 scripting terminal. Please see http://scripting.renoise.com for more info about
 this.
 
+
+---- [added B7] Add mappings via XRNX tools 
+
+Alternatively to editing this file, you can also define new midi mappings via
+Renoise XRNX tool bundles. This way new mappings can be easily installed (drag 
+& drop the xrnx tool bundle) and upgrading Renoise won't remove your mappings. 
+Please have a look at the "Renoise.ScriptingTool.API.lua" documentation for more 
+info about this. 
+
 ]]
 
 
 --------------------------------------------------------------------------------
--- Globals (Interface to Renoise)
+-- Globals (interface to Renoise)
 --------------------------------------------------------------------------------
 
 -- max mapping counts (TODO: should be dynamically build)
 
-MAX_SEQUENCE_MAPPINGS = 512
+MAX_SEQUENCE_MAPPINGS = 256
 MAX_TRACK_MAPPINGS = 64
 MAX_SEND_TRACK_MAPPINGS = 32
 MAX_GENERIC_PARAMETER_MAPPINGS = 32
@@ -121,11 +130,14 @@ end
 
 --------------------------------------------------------------------------------
 
--- API access shortcuts
+-- app
 
 local function app()
   return renoise.app()
 end
+
+
+-- song
 
 local function song()
   return renoise.song()
@@ -227,7 +239,7 @@ end
 
 -- quantize_value
 
-function quantize_value(value, quantum)
+local function quantize_value(value, quantum)
   if (value >= 0) then
      value = value + quantum / 2
   else
