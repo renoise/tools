@@ -1020,17 +1020,26 @@ renoise.song().instruments[].samples[].sample_buffer.delete_sample_data()
 renoise.song().instruments[].samples[].sample_buffer.sample_data(
   channel_index, frame_index)
   -> [float -1 - 1]
--- Write access to samples in a sample data buffer. New samples values
--- must be within [-1, 1] but will be clipped automatically.
+
+-- Write access to samples in a sample data buffer. New samples values must be within
+-- [-1, 1] but will be clipped automatically.
+-- IMPORTANT: before modifying buffers, call 'prepare_sample_data_changes' once.
+-- When you are done, call 'finalize_sample_data_changes' to generate undo/redo
+-- data for your changes and update sample overview caches!
 renoise.song().instruments[].samples[].sample_buffer.set_sample_data(
   channel_index, frame_index, sample_value)
 
--- To be called once after the sample data was manipulated via 'set_sample_data'.
--- This will create undo/redo data if necessary, and also update the sample view
--- caches for the sample. This is not invoked automatically to avoid performance
--- overhead when changing the sample data sample by sample, so don't forget to
--- call this after any data changes, or your changes may not be visible in the
--- GUI and can not be un/redone!
+-- To be called once BEFORE the sample data gets manipulated via 'set_sample_data'.
+-- This will prepare undo/redo data for the whole sample if necessary. See also 
+-- 'finalize_sample_data_changes'.
+renoise.song().instruments[].samples[].sample_buffer.prepare_sample_data_changes()
+
+-- To be called once AFTER the sample data was manipulated via 'set_sample_data'.
+-- This will create undo/redo data for the whole sample, when necessary, and also 
+-- update the sample view caches for the sample. This is not invoked automatically 
+-- in order to avoid performance overhead when changing the sample data sample by 
+-- sample, so don't forget to call this after any data changes, or your changes may 
+-- not be visible in the GUI and can not be un/redone!
 renoise.song().instruments[].samples[].sample_buffer.finalize_sample_data_changes()
 
 

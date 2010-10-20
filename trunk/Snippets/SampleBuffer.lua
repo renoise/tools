@@ -12,6 +12,9 @@ local sample_buffer = renoise.song().selected_sample.sample_buffer
 -- check if sample data is preset at all first
 if (sample_buffer.has_sample_data) then
 
+  -- before touching any sample, let renoise create undo data, when necessary
+  sample_buffer:prepare_sample_data_changes()
+  
   -- modify sample data in the selection (defaults to the whole sample)
   for channel = 1, sample_buffer.number_of_channels do
     for frame = sample_buffer.selection_start, sample_buffer.selection_end do
@@ -51,6 +54,9 @@ if (not allocation_succeeded) then
   return
 end
 
+-- let renoise know we are about to change the sample buffer
+sample_buffer:prepare_sample_data_changes()
+  
 -- fill in the sample data with an amazing zapp sound
 for channel = 1,num_channels do
   for frame = 1,num_frames do
@@ -60,7 +66,7 @@ for channel = 1,num_channels do
 end
 
 -- let renoise update sample overviews and caches. apply bit depth 
--- quantization. create undo/redo data if needed...
+-- quantization. finalize data for undo/redo, when needed...
 sample_buffer:finalize_sample_data_changes()
 
 -- setup a pingpong loop for our new sample
