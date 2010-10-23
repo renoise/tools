@@ -61,19 +61,26 @@ function show_tool_updates()
       local page = vb:column{spacing=3,visible=true,uniform=true}
       local pages = vb:row{spacing=5}
       local page_table = table.create()
-      for k,v in ipairs(data) do        
-        
+      for k,v in ipairs(data) do               
         -- Tool group
-        local tool = vb:row{ 
+        local tool = vb:row{         
           style="group",           
           margin=3,
           -- Checkbox
           vb:checkbox {
-          },
+          },          
           -- Tool title          
           vb:text{ 
             text=v.node_title, 
             font="bold"
+          },
+          -- Website
+          vb:bitmap {          
+            mode = "body_color",
+            bitmap = "images/link-icon.bmp",
+            notifier = function() 
+              renoise.app():open_url("http://tools.renoise.com/node/"..v.nid) 
+            end
           },
           -- Tool version
           vb:text{ 
