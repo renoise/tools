@@ -33,7 +33,7 @@ local requests_pool = table.create()
 --  Debugging
 -------------------------------------------------------------------------------
 
-local DEBUG_CONTENT = true
+local DEBUG_CONTENT = false
 
 local function TRACE(data)
   if (not DEBUG_CONTENT) then
@@ -255,11 +255,13 @@ function Request:__init(settings)
   -- Name/Value pairs to construct the header
   self.header_map = table.create()
 
+  -- enctype="multipart/form-data"
   if (self.settings.content_type:find("multipart/mixed")) then
-    self.query_string = self:_create_multipart_message(self.settings.data)
-  else  
-    -- Query string converted from the supplied parameters
-    self.query_string = self:_create_query_string(self.settings.data)
+    self:_set_payload( self:_create_multipart_message(self.settings.data))
+  elseif (self.settings.content_type:find("application/json")) then
+    self:_set_payload(self:_create_json_message(self.settings.data))
+  else -- Query string converted from the supplied parameters     
+    self:_set_payload(self:_create_query_string(self.settings.data))
   end    
 
   -- Possible values for the request status besides nil are
@@ -273,12 +275,13 @@ function Request:__init(settings)
   if (not table.is_empty(self.settings.data)) then
     if (self.settings.method == Request.GET) then
       if (not self.url_parts.query) then
-        self.url = self.url .. "?" .. self.query_string
+        self.url = self.url .. "?" .. self:_get_payload()
       else
-        self.url = self.url .. "&" .. self.query_string
+        self.url = self.url .. "&" .. self:_get_payload()
       end
     elseif (self.settings.method == Request.POST) then
-      self.query_string = self.query_string:gsub("%%20", "+")
+      -- convert space entities
+      self:_set_payload(self:_get_payload():gsub("%%20", "+"))
     end
   end
   
@@ -304,7 +307,7 @@ function Request:_enqueue()
     self.text_status = Request.ERROR
     log:error(("%s failed: %s."):format(self.url,
       (socket_error or "[unknown error]")))
-    self:_do_callback()  
+    self:_do_callback(socket_error)  
   end
 end
 
@@ -325,20 +328,21 @@ end
 
 ---## create_multipart_message ##---
 -- Converts a parameter data table into a multipart message
-function Request:_create_multipart_message(data)  
+function Request:_create_multipart_message(data)
   TRACE("Create multipart message")
   TRACE(data)
-  
+
   local function get_random_string()
     local str = ""
-    for i=1,4 do 
-      str = str .. math.random(1,9)     
+    for i=1,4 do
+      str = str .. math.random(1,9)
     end
     return str
   end
-  
+
   local content_type = self.settings.content_type
   -- Content-Type: multipart/mixed; boundary=---------rnadom1234
+  -- TODO enctype="multipart/form-data"
   local boundary = content_type:match("boundary=(.*)$") 
   if (not boundary) then
     boundary =  "---------rnadom" .. get_random_string()
@@ -356,6 +360,15 @@ function Request:_create_multipart_message(data)
   return msg
 end
 
+---## create_json_message ##---
+function Request:_create_json_message(data)
+  TRACE("Create JSON message")
+  TRACE(data)
+  local ok, res = pcall(json.encode, data) 
+  TRACE(res)
+  return res
+end
+
 
 ---## create_query_string ##---
 -- Converts a parameter data table into a query string
@@ -365,6 +378,17 @@ function Request:_create_query_string(data)
   return Util:http_build_query(data) 
 end
 
+---## set_payload ##---
+-- specify the body of the request
+function Request:_set_payload(data)
+  self.payload = data
+end
+
+---## set_payload ##---
+-- retrieve the body of the request
+function Request:_get_payload()
+  return self.payload
+end
 
 ---## read_header ##---
 -- Sets up a connection and loads the HTTP header from the server
@@ -382,10 +406,10 @@ function Request:_read_header()
   
   
   -- Determine Content-Length. With GET requests the body is empty. 
-  -- With POST requests the body consists of the parameters.
+  -- With POST requests the body consists of a payload.
   local content_length = 0
   if (self.settings.method == Request.POST) then
-    content_length = #self.query_string
+    content_length = #self:_get_payload()
   end
 
   -- Setup the header
@@ -418,8 +442,8 @@ function Request:_read_header()
   -- Send the POST parameters in the request body, if applicable
   if (self.settings.method == Request.POST) then
     TRACE("=== POST DATA ===")
-    TRACE(self.query_string)
-    ok, socket_error = self.client_socket:send(self.query_string)
+    TRACE(self:_get_payload())
+    ok, socket_error = self.client_socket:send(self:_get_payload())
     if not (ok) then
       return false, socket_error
     end
@@ -686,11 +710,12 @@ function Request:_do_callback(socket_error)
   end
   
   local xml_http_request = self;
-
+  
   -- invoke the external callbacks (if set)
   if (socket_error or parser_error) then
     -- TODO handle more errors
-    self.settings.error( xml_http_request, self.text_status, socket_error)
+    local error = socket_error or parser_error
+    self.settings.error( xml_http_request, self.text_status, error)
   else
     self.settings.success( data, self.text_status, xml_http_request )
   end
