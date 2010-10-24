@@ -94,8 +94,9 @@ end
 
 -- URL-encode a string (see RFC 2396)
 function Util:urlencode(str)
+  str = tostring(str)
   str = string.gsub (str, "\n", "\r\n")
-  str = string.gsub (str, "([^0-9a-zA-Z ])", -- locale independent
+  str = string.gsub (str, "([^0-9a-zA-Z_/ ])", -- locale independent
     function (c) return string.format ("%%%02X", string.byte(c)) end)
   str = string.gsub (str, " ", "+")
   return str
@@ -151,6 +152,7 @@ function Util:trim(s)
 end
 
 function Util:split(str, pat)
+   str = str or ''
    local t = {}  -- NOTE: use {n = 0} in Lua-5.0
    local fpat = "(.-)" .. pat
    local last_end = 1
