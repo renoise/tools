@@ -1249,16 +1249,16 @@ renoise.song().patterns[].tracks[].automation[]:remove_point_at(time)
 
 -------- consts
 
-renoise.PatternLine.EMPTY_NOTE
-renoise.PatternLine.NOTE_OFF
+renoise.PatternTrackLine.EMPTY_NOTE
+renoise.PatternTrackLine.NOTE_OFF
 
-renoise.PatternLine.EMPTY_INSTRUMENT
-renoise.PatternLine.EMPTY_VOLUME
-renoise.PatternLine.EMPTY_PANNING
-renoise.PatternLine.EMPTY_DELAY
+renoise.PatternTrackLine.EMPTY_INSTRUMENT
+renoise.PatternTrackLine.EMPTY_VOLUME
+renoise.PatternTrackLine.EMPTY_PANNING
+renoise.PatternTrackLine.EMPTY_DELAY
 
-renoise.PatternLine.EMPTY_EFFECT_NUMBER
-renoise.PatternLine.EMPTY_EFFECT_AMOUNT
+renoise.PatternTrackLine.EMPTY_EFFECT_NUMBER
+renoise.PatternTrackLine.EMPTY_EFFECT_AMOUNT
 
 
 -------- functions
