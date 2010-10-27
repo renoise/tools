@@ -1120,6 +1120,13 @@ renoise.song().patterns[].tracks[]
   -> [read-only, array of renoise.PatternTrack]
 
 
+-------- operators
+
+-- compares all tracks, including automation
+==(Pattern object, Pattern object) -> [boolean]
+~=(Pattern object, Pattern object) -> [boolean]
+
+
 --------------------------------------------------------------------------------
 -- renoise.PatternTrack
 --------------------------------------------------------------------------------
@@ -1175,6 +1182,13 @@ renoise.song().patterns[].tracks[].lines[]
 
 renoise.song().patterns[].tracks[].automation[], _observable 
   -> [read-only, list of renoise.PatternTrackAutomation]
+
+
+-------- operators
+
+-- compares line content and automation
+==(PatternTrack object, PatternTrack object) -> [boolean]
+~=(PatternTrack object, PatternTrack object) -> [boolean]
 
   
 --------------------------------------------------------------------------------
@@ -1242,6 +1256,13 @@ renoise.song().patterns[].tracks[].automation[]:add_point_at(time, value)
 -- Removes a point at the given time. Point must exist.
 renoise.song().patterns[].tracks[].automation[]:remove_point_at(time)
   
+
+-------- operators
+
+-- compares automation content only, ignoring dest parameters
+==(PatternTrackAutomation object, PatternTrackAutomation object) -> [boolean]
+~=(PatternTrackAutomation object, PatternTrackAutomation object) -> [boolean]
+
   
 --------------------------------------------------------------------------------
 -- renoise.PatternTrackLine
@@ -1280,6 +1301,16 @@ renoise.song().patterns[].tracks[].lines[].note_columns
 
 renoise.song().patterns[].tracks[].lines[].effect_columns 
   -> [read-only, array of renoise.EffectColumn objects]
+
+
+-------- operators
+
+-- compares all columns
+==(PatternTrackLine object, PatternTrackLine object) -> [boolean]
+~=(PatternTrackLine object, PatternTrackLine object) -> [boolean]
+
+-- serialize a line
+tostring(Pattern object) -> [string]
 
 
 --------------------------------------------------------------------------------
@@ -1335,6 +1366,16 @@ renoise.song().patterns[].tracks[].lines[].note_columns[].delay_string
   -> [string, '00' - 'FF' or '..']
 
 
+-------- operators
+
+-- compares the whole column
+==(NoteColumn object, NoteColumn object) -> [boolean]
+~=(NoteColumn object, NoteColumn object) -> [boolean]
+
+-- serialize a column
+tostring(Pattern object) -> [string]
+
+
 --------------------------------------------------------------------------------
 -- renoise.EffectColumn
 --------------------------------------------------------------------------------
@@ -1369,3 +1410,12 @@ renoise.song().patterns[].tracks[].lines[].effect_columns[].amount_value
 renoise.song().patterns[].tracks[].lines[].effect_columns[].amount_string 
   -> [string, '00' - 'FF']
 
+
+-------- operators
+
+-- compares the whole column
+==(EffectColumn object, EffectColumn object) -> [boolean]
+~=(EffectColumn object, EffectColumn object) -> [boolean]
+
+-- serialize a column
+tostring(Pattern object) -> [string]
