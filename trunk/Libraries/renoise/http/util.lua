@@ -187,3 +187,13 @@ function Util:parse_config_file(filename)
    end
    return t
 end
+function Util:merge_tables(a,b)
+  for k,v in pairs(a) do
+    if (type(v)=='table') then
+      b[k] = Util:merge_tables(b[k], v)
+    else
+      b[k] = v
+    end
+  end
+  return b
+end
