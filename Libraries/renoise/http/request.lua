@@ -22,8 +22,9 @@ require "renoise.http.util"
 -- JSON4Lua JSON Encoding and Decoding
 require "renoise.http.json"
 
--- XML parser
-require "renoise.http.xml"
+-- XML codec
+require "renoise.http.xml_parser"
+require "renoise.http.xml_encoder"
 
 -- Requests pool
 local requests_pool = table.create()
@@ -260,6 +261,8 @@ function Request:__init(settings)
     self:_set_payload( self:_create_multipart_message(self.settings.data))
   elseif (self.settings.content_type:find("application/json")) then
     self:_set_payload(self:_create_json_message(self.settings.data))
+  elseif (self.settings.content_type:find("application/xml")) then
+    self:_set_payload(self:_create_xml_message(self.settings.data))    
   else -- Query string converted from the supplied parameters     
     self:_set_payload(self:_create_query_string(self.settings.data))
   end    
@@ -367,6 +370,15 @@ function Request:_create_json_message(data)
   local ok, res = pcall(json.encode, data) 
   TRACE(res)
   return res
+end
+
+---## create_xml_message ##---
+function Request:_create_xml_message(data)
+  TRACE("Create XML message")
+  TRACE(data)
+  local obj,err = XmlEncoder:encode_table(data)
+  TRACE(obj)
+  return obj
 end
 
 
@@ -631,10 +643,10 @@ function Request:_decode(data)
     return data
   
   elseif (data_type == "XML") then    
-     log:info("Decoding XML")     
-     succeeded, result =       
-       XmlParser:ParseXmlText(data:concat())
-     
+    log:info("Decoding XML")     
+    result,error = XmlParser:ParseXmlText(data:concat())
+    succeeded = not error    
+            
   elseif (data_type == "LUA_SCRIPT") then
     -- evaluate Lua
     
@@ -646,7 +658,7 @@ function Request:_decode(data)
     data = result
   else
     error = result
-    log:error("Unable to decode: " .. error)
+    log:error("Unable to decode: " .. (error or "unknown XML Parser error"))
   end     
   return data, error
 end

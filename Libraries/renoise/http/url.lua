@@ -253,7 +253,7 @@ function URL:parse_path(path)
 	--path = string.gsub(path, "%s", "")
 	string.gsub(path, "([^/]+)", function (s) table.insert(parsed, s) end)
 	for i = 1, table.getn(parsed) do
-		parsed[i] = unescape(parsed[i])
+		parsed[i] = URL:unescape(parsed[i])
 	end
 	if string.sub(path, 1, 1) == "/" then parsed.is_absolute = 1 end
 	if string.sub(path, -1, -1) == "/" then parsed.is_directory = 1 end
