@@ -44,6 +44,7 @@ renoise.app():show_warning(message)
 -- Shows a message in Renoise's status bar to the user.
 renoise.app():show_status(message)
 
+
 -- Opens a modal dialog with a title, text and custom button labels.
 renoise.app():show_prompt(title, message, {button_labels})
   -> [pressed_button_label]
@@ -61,6 +62,11 @@ renoise.app():show_custom_prompt(title, content_view, {button_labels} [, key_han
 renoise.app():show_custom_dialog(title, content_view [, key_handler])
   -> [renoise.Dialog object]
 
+
+-- Opens a modal dialog to query an existing directory from the user.
+[added RC2] renoise.app():prompt_for_path(dialog_title)
+  -> [valid path or empty string]
+
 -- Opens a modal dialog to query a filename and path to read from a file.
 -- The given extension(s) should be something  like {"wav", "aiff"
 -- or "*" (any file) }
@@ -77,6 +83,7 @@ renoise.app():prompt_for_multiple_filenames_to_read({file_extensions}, dialog_ti
 -- so you don't have to take of this by your own.
 renoise.app():prompt_for_filename_to_write(file_extension, dialog_title)
   -> [filename or empty string]
+
 
 -- Opens the default internet browser with the given url. url can also be
 -- a file that browsers can open (like xml, html files...).
