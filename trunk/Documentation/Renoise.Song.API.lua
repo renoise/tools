@@ -1021,8 +1021,8 @@ renoise.song().instruments[].samples[].sample_buffer.sample_data(
   channel_index, frame_index)
   -> [float -1 - 1]
 
--- Write access to samples in a sample data buffer. New samples values must be within
--- [-1, 1] but will be clipped automatically.
+-- Write access to samples in a sample data buffer. New samples values must be 
+-- within [-1, 1] but will be clipped automatically.
 -- IMPORTANT: before modifying buffers, call 'prepare_sample_data_changes' once.
 -- When you are done, call 'finalize_sample_data_changes' to generate undo/redo
 -- data for your changes and update sample overview caches!
@@ -1038,8 +1038,8 @@ renoise.song().instruments[].samples[].sample_buffer.prepare_sample_data_changes
 -- This will create undo/redo data for the whole sample, when necessary, and also 
 -- update the sample view caches for the sample. This is not invoked automatically 
 -- in order to avoid performance overhead when changing the sample data sample by 
--- sample, so don't forget to call this after any data changes, or your changes may 
--- not be visible in the GUI and can not be un/redone!
+-- sample, so don't forget to call this after any data changes, or your changes 
+-- may not be visible in the GUI and can not be un/redone!
 renoise.song().instruments[].samples[].sample_buffer.finalize_sample_data_changes()
 
 
@@ -1094,6 +1094,7 @@ renoise.song().instruments[].samples[].sample_buffer.selection_range
 
 -------- consts
 
+-- Maximum number of lines that may be present in a pattern
 renoise.Pattern.MAX_NUMBER_OF_LINES
 
 
@@ -1106,25 +1107,60 @@ renoise.song().patterns[]:clear()
 renoise.song().patterns[].copy_from(other_pattern object)
 
 
+-- Check/add/remove notifier functions or methods, which are called by Renoise 
+-- as soon as any of the pattern's lines have changed. 
+-- The notifiers are called as soon as a new line was added, an existing one 
+-- was cleared, or existing ones changed somehow (notes, effects, anything). 
+--
+-- One argument is passed to the notifier function: "pos", a table with the 
+-- fields "pattern", "track" and "line", which define where the change has
+-- happened:
+--
+-- function my_pattern_line_notifier(pos)
+--   -- check pos.pattern, pos.track, pos.line (all are indices)
+-- end
+--
+-- Please be gentle in the notifiers, don't do too much stuff in there. 
+-- Ideally just set a flag like "pattern_dirty" which then gets picked up by
+-- an app_idle notifier: Line change notifiers can be called hundreds of times
+-- when for example simply clearing a pattern.
+-- If you are only interested in changes that are made to currently edited 
+-- pattern, dynamically attach and detach to the selected pattern's line 
+-- notifiers by listening to "renoise.song().selected_pattern_index_observable".
+
+[added RC2] renoise.song().patterns[]:has_line_notifier(func[, obj])
+  -> [boolean]
+  
+[added RC2] renoise.song().patterns[]:add_line_notifier(func[, obj])
+[added RC2] renoise.song().patterns[]:remove_line_notifier(func[, obj])
+    
+    
 -------- properties
 
+-- Quickly check if a pattern has some pattern lines or automation.
 renoise.song().patterns[].is_empty 
   -> [read-only, boolean]
 
+-- Name of the pattern, as visible in the pattern sequencer.
 renoise.song().patterns[].name, _observable 
   -> [string]
+
+-- Number of lines the pattern currently has. 64 by default. Max is 
+-- renoise.Pattern.MAX_NUMBER_OF_LINES, min is 1.
 renoise.song().patterns[].number_of_lines, _observable 
   -> [number]
 
+-- Access to the pattern tracks. each pattern has #renoise.tracks amount 
+-- of tracks.
 renoise.song().patterns[].tracks[] 
   -> [read-only, array of renoise.PatternTrack]
 
 
 -------- operators
 
--- compares all tracks, including automation
-==(Pattern object, Pattern object) -> [boolean]
-~=(Pattern object, Pattern object) -> [boolean]
+-- compares all tracks and lines, including automation
+[added RC2] ==(Pattern object, Pattern object) -> [boolean]
+[added RC2] ~=(Pattern object, Pattern object) -> [boolean]
 
 
 --------------------------------------------------------------------------------
@@ -1187,8 +1223,8 @@ renoise.song().patterns[].tracks[].automation[], _observable
 -------- operators
 
 -- compares line content and automation
-==(PatternTrack object, PatternTrack object) -> [boolean]
-~=(PatternTrack object, PatternTrack object) -> [boolean]
+[added RC2] ==(PatternTrack object, PatternTrack object) -> [boolean]
+[added RC2] ~=(PatternTrack object, PatternTrack object) -> [boolean]
 
   
 --------------------------------------------------------------------------------
@@ -1260,8 +1296,8 @@ renoise.song().patterns[].tracks[].automation[]:remove_point_at(time)
 -------- operators
 
 -- compares automation content only, ignoring dest parameters
-==(PatternTrackAutomation object, PatternTrackAutomation object) -> [boolean]
-~=(PatternTrackAutomation object, PatternTrackAutomation object) -> [boolean]
+[added RC2] ==(PatternTrackAutomation object, PatternTrackAutomation object) -> [boolean]
+[added RC2] ~=(PatternTrackAutomation object, PatternTrackAutomation object) -> [boolean]
 
   
 --------------------------------------------------------------------------------

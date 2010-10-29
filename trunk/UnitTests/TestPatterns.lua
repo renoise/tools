@@ -342,6 +342,63 @@ do
   song.patterns[2]:copy_from(song.patterns[1])
   assert(not song.patterns[1].is_empty and not song.patterns[2].is_empty)
 
+
+  ------------------------------------------------------------------------------
+  -- Pattern line notifiers
+
+  local notifier_calls = 0
+  
+  function pattern_line_changed(pos)
+    notifier_calls = notifier_calls + 1
+  end
+  
+  class "TestClass" 
+  function TestClass:__init() end
+  function TestClass:pattern_line_changed(pos)
+    notifier_calls = notifier_calls + 1
+  end
+
+  first_pattern:add_line_notifier(pattern_line_changed)
+  first_pattern:remove_line_notifier(pattern_line_changed)
+  assert(not first_pattern:has_line_notifier(pattern_line_changed))
+  
+  first_pattern:add_line_notifier(pattern_line_changed)
+  assert(first_pattern:has_line_notifier(pattern_line_changed))
+  
+  local object = TestClass()
+  first_pattern:add_line_notifier(TestClass.pattern_line_changed, object)
+  first_pattern:remove_line_notifier(TestClass.pattern_line_changed, object)
+  assert(not first_pattern:has_line_notifier(object, TestClass.pattern_line_changed))
+  
+  first_pattern:add_line_notifier(object, TestClass.pattern_line_changed)
+  assert(first_pattern:has_line_notifier(object, TestClass.pattern_line_changed))
+  assert(first_pattern:has_line_notifier(TestClass.pattern_line_changed, object))
+
+  assert(notifier_calls == 0)
+  
+  first_line.note_columns[1].note_value = 52
+  assert(notifier_calls == 2)
+  
+  first_line:clear()
+  assert(notifier_calls == 4)
+  
+  first_line.effect_columns[2].number_value = 0xA0
+  assert(notifier_calls == 6)
+
+  first_line.effect_columns[2].amount_value = 0xFF
+  assert(notifier_calls == 8)
+  
+  first_line.effect_columns[3].amount_value = 0xFF
+  assert(notifier_calls == 10)
+  
+  first_line:clear()
+  assert(notifier_calls == 12)
+  
+  first_pattern:remove_line_notifier(pattern_line_changed)
+  assert(not first_pattern:has_line_notifier(pattern_line_changed))
+  
+  first_pattern:remove_line_notifier(TestClass.pattern_line_changed, object)
+  assert(not first_pattern:has_line_notifier(object, TestClass.pattern_line_changed))
 end
 
 
