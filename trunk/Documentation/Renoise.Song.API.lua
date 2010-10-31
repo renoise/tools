@@ -236,14 +236,12 @@ renoise.song().selected_parameter_index, _observable
   -> [read-only, number or 0 (when no parameter is selected)]
 
 -- The currently edited pattern. Never nil. 
--- Use selected_pattern_index_observable for notifications.
-renoise.song().selected_pattern
+renoise.song().selected_pattern, [added RC2] _observable
   -> [read-only, renoise.Pattern object]
 
 -- The currently edited pattern track object. Never nil. 
--- Use selected_pattern_index_observable
 -- and selected_track_index_observable for notifications.
-renoise.song().selected_pattern_track
+renoise.song().selected_pattern_track, [added RC2] _observable
   -> [read-only, renoise.PatternTrack object]
 
 -- The currently edited pattern index. 
@@ -1126,7 +1124,7 @@ renoise.song().patterns[].copy_from(other_pattern object)
 -- when for example simply clearing a pattern.
 -- If you are only interested in changes that are made to currently edited 
 -- pattern, dynamically attach and detach to the selected pattern's line 
--- notifiers by listening to "renoise.song().selected_pattern_index_observable".
+-- notifiers by listening to "renoise.song().selected_pattern_observable".
 
 [added RC2] renoise.song().patterns[]:has_line_notifier(func[, obj])
   -> [boolean]
