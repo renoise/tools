@@ -2,14 +2,25 @@
 -- Duplex.StepSequencer
 
 Use your Novation Launchpad as a step sequencer.
-8x8 grid is 8 vertical tracks with 8 lines visible.  Press an empty button to put a note down using currently selected instrument.  Press a lit button to remove the note.
+8x8 grid is 8 vertical tracks with 8 lines visible.  Press an empty button to 
+put a note down using currently selected instrument.  Press a lit button to 
+remove the note.
+
 Page lines up/down with "line" spinner
 Page tracks left/right with "track" spinner
-Transpose note up/down with "transpose" control (4 buttons, from left: oct-, semi-, semi+, oct+)
-Select note volume from 8 preset levels with "level" slider (right-hand trigger buttons)
-If transpose / level controls are used while holding down grid buttons, the transpose / level will be applied to all held notes.  Otherwise the base note will be adjusted.
 
-Only tested with Launchpad.  Could probably be applied to other grid controllers but might need some modification.
+Transpose note up/down with "transpose" control (4 buttons, from left: 
+oct-, semi-, semi+, oct+)
+
+Select note volume from 8 preset levels with "level" slider 
+(right-hand trigger buttons)
+
+If transpose / level controls are used while holding down grid buttons, the 
+transpose / level will be applied to all held notes.  Otherwise the base note
+will be adjusted.
+
+Only tested with Launchpad. Could probably be applied to other grid controllers 
+but might need some modification.
 
 Code mostly based on danoise's Matrix application.
 
@@ -26,9 +37,10 @@ daxton.fleming@gmail.com
 ----------------------------------------------------------------------------]]--
 
 -- danoise comments --
--- this class has been embedded into the application : UIBasicButton
+-- this class has been embedded into the application : UIStepSeqButton
 -- now uses UIButtonStrip for displaying volume level + position
--- switched from .lines[idx] to :line(idx) syntax (performance)
+-- switched from .lines[idx] to :line(idx) syntax 
+-- applied taktik's idle lag patch
 
 class 'StepSequencer' (Application)
 
@@ -148,13 +160,16 @@ function StepSequencer:__init(display,mappings,options)
   
   -- STEP SEQUENCER VARIABLES
   self.__keys_down = { } -- track held grid keys
-  self.__toggle_exempt = { } -- don't toggle off if pressing multiple on / transposing / etc
+  
+  -- don't toggle off if pressing multiple on / transposing / etc
+  self.__toggle_exempt = { } 
 
   -- apply arguments
   self:__apply_options(options)
   self:__apply_mappings(mappings)
 
 end
+
 
 --------------------------------------------------------------------------------
 
@@ -184,12 +199,13 @@ function StepSequencer:__build_app()
   Application.__build_app(self)
 
   -- determine grid size by looking at the control-map
-  local control_map = self.display.device.control_map.groups[self.mappings.grid.group_name]
-  if(control_map["columns"])then
-      self.__width = control_map["columns"]
-      self.__height = math.ceil(#control_map/self.__width)
+  local control_map = self.display.device.control_map.groups[
+    self.mappings.grid.group_name]
+  
+  if (control_map["columns"])then
+    self.__width = control_map["columns"]
+    self.__height = math.ceil(#control_map/self.__width)
   end
-print("self.__width",self.__width)
 
   -- build each section's controllers
   self:__build_line()
@@ -201,6 +217,7 @@ print("self.__width",self.__width)
   -- bind observables
   self:__attach_to_song(renoise.song())
 end
+
 
 --------------------------------------------------------------------------------
 
@@ -214,7 +231,6 @@ function StepSequencer:__build_line()
   c.text_orientation = VERTICAL
   c.step_size = 1
   c.on_change = function(obj) 
-print("__line_navigator.on_change")
     if (not self.active) then return false end
     if(self.__edit_page~=obj.index)then
       self.__edit_page = obj.index
@@ -228,6 +244,7 @@ print("__line_navigator.on_change")
   self.__line_navigator = c
 end
 
+
 --------------------------------------------------------------------------------
 
 function StepSequencer:__build_track()
@@ -237,11 +254,8 @@ function StepSequencer:__build_track()
   c.tooltip = self.mappings.track.description
   c:set_pos(self.mappings.track.index)
   c:set_orientation(self.mappings.track.orientation)
-print("c.orientation",c.orientation)
-rprint(self.mappings.track)
   c.text_orientation = HORIZONTAL
   c.on_change = function(obj) 
-print("__track_navigator.on_change")
     if (not self.active) then return false end
     self.__track_offset = obj.index*self.__width
     self:__update_grid()
@@ -250,6 +264,7 @@ print("__track_navigator.on_change")
   self:__add_component(c)
   self.__track_navigator = c
 end
+
 
 --------------------------------------------------------------------------------
 
@@ -263,7 +278,7 @@ function StepSequencer:__build_grid()
 
     for y=1,self.__height do
 
-      local c = UIBasicButton(self.display)
+      local c = UIStepSeqButton(self.display)
       c.group_name = self.mappings.grid.group_name
       c.tooltip = self.mappings.grid.description
       c.x_pos = x
@@ -298,10 +313,10 @@ function StepSequencer:__build_grid()
       end
       self:__add_component(c)
       self.__buttons[x][y] = c
-
     end  
   end
 end
+
 
 --------------------------------------------------------------------------------
 
@@ -334,7 +349,8 @@ function StepSequencer:__build_level()
     -- check for held grid notes
     local held = self:walk_held_keys(
       function(x,y)
-        local note = renoise.song().selected_pattern.tracks[x+self.__track_offset]:line(y+self.__edit_page*self.__height).note_columns[1]
+        local note = renoise.song().selected_pattern.tracks[x + self.__track_offset]:line(
+          y + self.__edit_page * self.__height).note_columns[1]
         note.volume_value = newval
       end,
       true
@@ -361,8 +377,8 @@ function StepSequencer:__build_level()
   self:__add_component(c)
   self.__level = c
 
-
 end
+
 
 --------------------------------------------------------------------------------
 
@@ -371,7 +387,7 @@ function StepSequencer:__build_transpose()
   local transposes = { -12, -1, 1, 12 }
   for k,v in ipairs(transposes) do
     
-    local c = UIBasicButton(self.display)
+    local c = UIStepSeqButton(self.display)
     c.group_name = self.mappings.transpose.group_name
     c.tooltip = self.mappings.transpose.description
     c:set_pos(self.mappings.transpose.index+(k-1))
@@ -384,7 +400,8 @@ function StepSequencer:__build_transpose()
       -- check for held grid notes
       local held = self:walk_held_keys(
         function(x,y)
-          local note = renoise.song().selected_pattern.tracks[x+self.__track_offset]:line(y+self.__edit_page*self.__height).note_columns[1]
+          local note = renoise.song().selected_pattern.tracks[x + self.__track_offset]:line(
+            y + self.__edit_page * self.__height).note_columns[1]
           local newval = note.note_value + obj.transpose
           if (newval > 0 and newval < 120) then 
             note.note_value = newval
@@ -402,6 +419,7 @@ function StepSequencer:__build_transpose()
     
   end
 end
+
 
 --------------------------------------------------------------------------------
 
@@ -444,19 +462,23 @@ function StepSequencer:on_idle()
   end
 end
 
+
 --------------------------------------------------------------------------------
 
 function StepSequencer:__update_track_count()
   TRACE("StepSequencer:__update_track_count")
-  self.__track_navigator:set_range(nil, math.floor((get_master_track_index()-2)/self.__width))
+  self.__track_navigator:set_range(nil, 
+    math.floor((get_master_track_index()-2)/self.__width))
 end
+
 
 --------------------------------------------------------------------------------
 
 function StepSequencer:__update_position()
   -- can we see the current step?
   local pos = renoise.song().transport.playback_pos.line
-  if ((self.__edit_page)*self.__height < pos and pos < (self.__edit_page+1)*self.__height +1) then
+  if ((self.__edit_page)*self.__height < pos and 
+      pos < (self.__edit_page+1)*self.__height +1) then
     self:__draw_position(((pos-1)%self.__height)+1)
   else
     if(self.__follow_player)then      
@@ -467,10 +489,11 @@ function StepSequencer:__update_position()
     end
   end
 
-
 end
 
+
 --------------------------------------------------------------------------------
+
 function StepSequencer:__update_page()
   local pos = renoise.song().transport.playback_pos.line
   local page = math.ceil(pos/self.__height)-1
@@ -484,6 +507,7 @@ function StepSequencer:__update_page()
   end
 end
 
+
 --------------------------------------------------------------------------------
 
 function StepSequencer:__draw_position(idx)
@@ -491,39 +515,51 @@ function StepSequencer:__draw_position(idx)
   self.__level:invalidate()
 end
 
+
 --------------------------------------------------------------------------------
 
 function StepSequencer:__update_line_count()
   TRACE("StepSequencer:__update_line_count()")
-  self.__line_navigator:set_range(0, (math.floor(renoise.song().selected_pattern.number_of_lines)/self.__height)-1)
+  self.__line_navigator:set_range(0, 
+    (math.floor(renoise.song().selected_pattern.number_of_lines)/self.__height)-1)
 end
+
 
 --------------------------------------------------------------------------------
 
 function StepSequencer:__update_grid()
-  if (not self.active) then return end
+  if (not self.active) then 
+    return 
+  end
 
   -- loop through grid & buttons
-  local button = nil
-  local note = nil
   local line_offset = self.__edit_page*self.__height
+  
   local master_idx = get_master_track_index()
   local track_count = #renoise.song().tracks
-  for track_idx = (1+self.__track_offset),(self.__width+self.__track_offset) do
-    for line_idx = (1+line_offset),(self.__height+line_offset) do
-      button = self.__buttons[track_idx-self.__track_offset][line_idx-line_offset]
-      if(line_idx <= renoise.song().selected_pattern.number_of_lines) and
-      (renoise.song().selected_pattern.tracks[track_idx]) and
-      (renoise.song().selected_pattern.tracks[track_idx]:line(line_idx)) then
-        note = nil
+  
+  local selected_pattern_tracks = renoise.song().selected_pattern.tracks
+  local selected_pattern_lines = renoise.song().selected_pattern.number_of_lines
+  
+  for track_idx = (1 + self.__track_offset),(self.__width+self.__track_offset) do
+    local pattern_track = selected_pattern_tracks[track_idx]
+    
+    for line_idx = (1 + line_offset),(self.__height + line_offset) do
+      local button = self.__buttons[track_idx - self.__track_offset][line_idx - line_offset]
+      
+      if (line_idx <= selected_pattern_lines) then
+        local note = nil
+        
         if (track_idx <= track_count) then
-          note = renoise.song().selected_pattern.tracks[track_idx]:line(line_idx).note_columns[1]
+          note = pattern_track:line(line_idx).note_columns[1]
         end
+        
         self:__draw_grid_button(button, note)
       end
     end
   end
 end
+
 
 --------------------------------------------------------------------------------
 
@@ -543,6 +579,7 @@ function StepSequencer:__update_level()
 ]]
 end
 
+
 --------------------------------------------------------------------------------
 
 function StepSequencer:__update_transpose()
@@ -554,6 +591,7 @@ function StepSequencer:__update_transpose()
   end
   
 end
+
 
 --------------------------------------------------------------------------------
 
@@ -594,6 +632,7 @@ function StepSequencer:__attach_to_song(song)
   ]]
 end
 
+
 --------------------------------------------------------------------------------
 
 -- called when a new document becomes available
@@ -603,23 +642,30 @@ function StepSequencer:on_new_document()
   self:__attach_to_song(renoise.song())
   self:__update_line_count()
   self:__update_track_count()
-  --self:__update_grid()
+  self:__update_grid()
 
 end
 
------------------------- STEP SEQUENCER FUNCTIONS
+
+--------------------------------------------------------------------------------
+-- STEP SEQUENCER FUNCTIONS
+--------------------------------------------------------------------------------
+
 function StepSequencer:__process_grid_event(x,y, state, btn)
   local track_idx = x+self.__track_offset
   local line_idx = y+self.__edit_page*self.__height
   if (track_idx >= get_master_track_index()) then return false end
   
-  local note = renoise.song().selected_pattern.tracks[track_idx]:line(line_idx).note_columns[1]
+  local note = renoise.song().selected_pattern.tracks[track_idx]:line(
+    line_idx).note_columns[1]
   
   if (state) then -- press
     self.__keys_down[x][y] = true
     if (note.note_string == "OFF" or note.note_string == "---") then
-      local base_note = (self.options.base_note.value-1)+(self.options.base_octave.value-1)*12
-      self:__set_note(note, base_note, renoise.song().selected_instrument_index-1, self.options.base_volume.value)
+      local base_note = (self.options.base_note.value-1) + 
+        (self.options.base_octave.value-1)*12
+      self:__set_note(note, base_note, renoise.song().selected_instrument_index-1, 
+        self.options.base_volume.value)
       self.__toggle_exempt[x][y] = true
       -- and update the button ...
       self:__draw_grid_button(btn, note)
@@ -637,6 +683,9 @@ function StepSequencer:__process_grid_event(x,y, state, btn)
   end
   return true
 end
+
+
+--------------------------------------------------------------------------------
 
 function StepSequencer:__copy_grid_button(lx,ly, btn)
   local gx = lx+self.__track_offset
@@ -660,14 +709,24 @@ function StepSequencer:__copy_grid_button(lx,ly, btn)
   return true
 end
 
+
+--------------------------------------------------------------------------------
+
 function StepSequencer:__set_note(note_obj, note, instrument, volume)
   note_obj.note_value = note
   note_obj.instrument_value = instrument
   note_obj.volume_value = volume
 end
+
+
+--------------------------------------------------------------------------------
+
 function StepSequencer:__clear_note(note_obj)
   self:__set_note(note_obj, 121, 255, 255)
 end
+
+
+--------------------------------------------------------------------------------
 
 function StepSequencer:__draw_grid_button(button, note)
   if (button ~= nil) then 
@@ -690,11 +749,17 @@ function StepSequencer:__draw_grid_button(button, note)
   end
 end
 
+
+--------------------------------------------------------------------------------
+
 function StepSequencer:__volume_palette(vol, max)
   if (vol > max) then vol = max end
   local vol_level = 1+ math.floor(vol / max * (#self.palette.slot_level-1))
   return table.rcopy(self.palette.slot_level[vol_level])
 end
+
+
+--------------------------------------------------------------------------------
 
 function StepSequencer:__set_basenote(note_value)
   local note = note_value % 12 +1
@@ -702,6 +767,10 @@ function StepSequencer:__set_basenote(note_value)
   self.options.base_note.value = note
   self.options.base_octave.value = oct
 end
+
+
+--------------------------------------------------------------------------------
+
 function StepSequencer:__transpose_basenote(steps)
   local baseNote = (self.options.base_note.value-1)+(self.options.base_octave.value-1)*12
   local newval = baseNote + steps
@@ -710,11 +779,19 @@ function StepSequencer:__transpose_basenote(steps)
   end
 end
 
--- apply a function to all held grid buttons, optionally adding them all to toggle_exempt table.  return the number of held keys
+
+--------------------------------------------------------------------------------
+
+-- apply a function to all held grid buttons, optionally adding them 
+-- all to toggle_exempt table.  return the number of held keys
+
 function StepSequencer:walk_held_keys(callback, toggleExempt)
   local newval = nil
   local note = nil
-  local ct = 0 -- count as we go through pairs.  # keysDown doesn't seem to work all the time?
+  
+  -- count as we go through pairs. # keysDown doesn't seem to work all the time?
+  local ct = 0 
+  
   for x,row in pairs(self.__keys_down) do
     for y,down in pairs(row) do
       if (down) then
@@ -733,17 +810,17 @@ end
 
 
 --[[----------------------------------------------------------------------------
--- Duplex.UIBasicButton
+-- Duplex.UIStepSeqButton
 ----------------------------------------------------------------------------]]--
 
 --[[
 
-Inheritance: UIComponent > UIBasicButton
+Inheritance: UIComponent > UIStepSeqButton
 Requires: Globals, Display, MessageStream, CanvasPoint
 
 About
 
-UIBasicButton is a general purpose button with press & release handlers, 
+UIStepSeqButton is a general purpose button with press & release handlers, 
 with limited support for input methods - only the "button" type is fully
 supported (see UIToggleButton for a more widely supported type).
 
@@ -772,10 +849,10 @@ Events
 
 --==============================================================================
 
-class 'UIBasicButton' (UIComponent)
+class 'UIStepSeqButton' (UIComponent)
 
-function UIBasicButton:__init(display)
-  TRACE('UIBasicButton:__init')
+function UIStepSeqButton:__init(display)
+  TRACE('UIStepSeqButton:__init')
 
   UIComponent.__init(self,display)
 
@@ -798,8 +875,8 @@ end
 
 -- user input via button
 
-function UIBasicButton:do_press()
-  TRACE("UIBasicButton:do_press()")
+function UIStepSeqButton:do_press()
+  TRACE("UIStepSeqButton:do_press()")
 
   if (self.on_press ~= nil) then
     local msg = self:get_msg()
@@ -816,8 +893,8 @@ end
 
 -- ... and release
 
-function UIBasicButton:do_release()
-  TRACE("UIBasicButton:do_release()")
+function UIStepSeqButton:do_release()
+  TRACE("UIStepSeqButton:do_release()")
 
   if (self.on_release ~= nil) then
     local msg = self:get_msg()
@@ -838,8 +915,8 @@ end
 -- user input via (held) button
 -- on_hold() is the optional handler method
 
-function UIBasicButton:do_hold()
-  TRACE("UIBasicButton:do_hold()")
+function UIStepSeqButton:do_hold()
+  TRACE("UIStepSeqButton:do_hold()")
 
   if (self.on_hold ~= nil) then
     local msg = self:get_msg()
@@ -854,10 +931,11 @@ function UIBasicButton:do_hold()
 
 end
 
+
 --------------------------------------------------------------------------------
 
-function UIBasicButton:draw()
-  TRACE("UIBasicButton:draw")
+function UIStepSeqButton:draw()
+  TRACE("UIStepSeqButton:draw")
 
   local color = self.palette.foreground
   local point = CanvasPoint()
@@ -877,7 +955,7 @@ end
 
 --------------------------------------------------------------------------------
 
-function UIBasicButton:add_listeners()
+function UIStepSeqButton:add_listeners()
 
   self.__display.device.message_stream:add_listener(
     self, DEVICE_EVENT_BUTTON_PRESSED,
@@ -896,7 +974,7 @@ end
 
 --------------------------------------------------------------------------------
 
-function UIBasicButton:remove_listeners()
+function UIStepSeqButton:remove_listeners()
 
   self.__display.device.message_stream:remove_listener(
     self,DEVICE_EVENT_BUTTON_PRESSED)
@@ -908,3 +986,4 @@ function UIBasicButton:remove_listeners()
     self,DEVICE_EVENT_BUTTON_RELEASED)
 
 end
+
