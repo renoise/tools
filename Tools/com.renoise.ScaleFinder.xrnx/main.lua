@@ -39,13 +39,14 @@ end
 --------------------------------------------------------------------------------
 function insert_note(note, col, insv)
   if renoise.song().selected_note_column_index == 0 then
-    renoise.song().selected_note_column_index = 1
+    return -- Don't enter notes when in effect column
   end
    
   col = col + renoise.song().selected_note_column_index - 1
   
   -- Get the note column
   local nc = renoise.song().selected_line.note_columns[col + 1]
+  
   -- Add note
   nc.note_value = note - 4 + renoise.song().transport.octave * 12
   nc.instrument_value = insv - 1
@@ -152,53 +153,74 @@ snames = { }
 for key, scale in ipairs(scales) do
   table.insert(snames,scale['name'])
 end
+local dialog_view
 
-dialog = vb:column {  
-  margin = renoise.ViewBuilder.DEFAULT_DIALOG_MARGIN,
-  vb:column {
-    spacing = renoise.ViewBuilder.DEFAULT_CONTROL_SPACING,
-    vb:row {
-      spacing = renoise.ViewBuilder.DEFAULT_CONTROL_SPACING,
-      margin = renoise.ViewBuilder.DEFAULT_CONTROL_MARGIN,
-      width = 700,
-      style = 'group',
-      vb:text { text = 'Key:' },
-      vb:popup { 
-        items = notes, 
-        value = scale_root,
-        notifier = function (i) scale_root = i; update() end 
-      },
-      vb:text { text = ' Scale:' },
-      vb:popup { 
-        items = snames,  
-        value = scale_type,
-        notifier = function (i) scale_type = i; update() end  
-      },
-      sdisplay
-    },
+function create_dialog ()
+  dialog_view = vb:column {  
+    margin = renoise.ViewBuilder.DEFAULT_DIALOG_MARGIN,
     vb:column {
-      style = 'group',
-      margin = renoise.ViewBuilder.DEFAULT_CONTROL_MARGIN,
       spacing = renoise.ViewBuilder.DEFAULT_CONTROL_SPACING,
-      height = 200,
-      cdisplay,
-      vb:row{
-        chord_boxes[1], 
-        chord_boxes[2], 
-        chord_boxes[3], 
-        chord_boxes[4], 
-        chord_boxes[5], 
-        chord_boxes[6], 
-        chord_boxes[7]
+      vb:row {
+        spacing = renoise.ViewBuilder.DEFAULT_CONTROL_SPACING,
+        margin = renoise.ViewBuilder.DEFAULT_CONTROL_MARGIN,
+        width = 700,
+        style = 'group',
+        vb:text { text = 'Key:' },
+        vb:popup { 
+          items = notes, 
+          value = scale_root,
+          notifier = function (i) scale_root = i; update() end 
+        },
+        vb:text { text = ' Scale:' },
+        vb:popup { 
+          items = snames,  
+          value = scale_type,
+          notifier = function (i) scale_type = i; update() end  
+        },
+        sdisplay
+      },
+      vb:column {
+        style = 'group',
+        margin = renoise.ViewBuilder.DEFAULT_CONTROL_MARGIN,
+        spacing = renoise.ViewBuilder.DEFAULT_CONTROL_SPACING,
+        height = 200,
+        cdisplay,
+        vb:row{
+          chord_boxes[1], 
+          chord_boxes[2], 
+          chord_boxes[3], 
+          chord_boxes[4], 
+          chord_boxes[5], 
+          chord_boxes[6], 
+          chord_boxes[7]
+        }
       }
     }
   }
-}
+end
+
+function handle_keys(d, k)
+  print(k.name)
+  if k.name == 'esc' then
+    d:close()
+  else 
+    return k
+  end
+end
 
 --------------------------------------------------------------------------------
+local dialog
 function display()
   update()
-  renoise.app():show_custom_dialog('Scale finder', dialog, function(d,k) return k end ) 
+  
+  if dialog_view == nil then
+    create_dialog()
+  end
+  
+  if dialog == nil or not dialog.visible then
+    dialog = renoise.app():show_custom_dialog('Scale finder', 
+        dialog_view, handle_keys )
+  end
 end
 
 --------------------------------------------------------------------------------
