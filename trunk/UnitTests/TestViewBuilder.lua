@@ -782,10 +782,10 @@ do
   
   -- dialog key handler
   
-  function dialog_key_handler(dialog, mod, key)
-    print(("mod:'%s', key:'%s'"):format(mod, key))
+  function dialog_key_handler(dialog, key)
+    print(("modifiers:'%s', name:'%s'"):format(key.modifiers, key.name))
       
-    if (mod == "" and key == "esc") then 
+    if (key.modifiers == "" and key.name == "esc") then 
       dialog:close()
     end
   end
