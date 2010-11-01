@@ -3,7 +3,7 @@ main.lua
 ============================================================================]]--
 
 renoise.tool():add_menu_entry {
-  name = "Sample Editor:Process:Swap stereo channels...",
+  name = "Sample Editor:Process:Swap stereo channels",
   invoke = function() 
     main() 
   end
