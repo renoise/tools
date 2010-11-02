@@ -13,7 +13,7 @@ end}<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/
     <link type="text/css" href="/css/default.css" media="screen" rel="stylesheet" />
 
     <!-- required scripts -->
-    <script type="text/javascript" src="/js/jquery-1.4.2.min.js"></script>
+    <script type="text/javascript" src="/js/jquery-1.4.3.min.js"></script>
     <script type="text/javascript" src="/js/jquery.chromatable.js"></script>
     <script type="text/javascript" src="/js/jquery.scrollTo-min.js"></script>
 
@@ -35,6 +35,7 @@ end}<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/
 
   <script type="text/javascript">
     var debug = true;
+    var logging = true;
 
     var autoscroll = false;
 
@@ -89,6 +90,26 @@ end}<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/
         $('.t'+data.tid).toggleClass('muted', data.state==3);
     }
 
+    //TODO reflect track changes in data model/references
+    function update_table(t, data, value){
+        if (data.type == "swap") {
+
+        } else if (data.type == "remove") {
+
+        } else if (data.type == "insert") {
+          if (typeof value == 'function') {
+
+          } else {
+
+          }
+        }
+    }
+
+    //TODO reflect track changes in GUI
+    function rearrange_tracks(data){
+
+    }
+
     function set_playback_pos(line){
       $('#line').text(line);
     }
@@ -137,7 +158,7 @@ end}<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/
     }
 
     function log(str){
-      if (debug==true){
+      if (debug==true && logging==true){
         $('#log').prepend("<p>"+str+"</p>");
       }
     }
@@ -156,6 +177,7 @@ end}<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/
           case "seq_loop": set_seq_loop(event.value); break;
           case "tempo": set_tempo(event.value); break;
           case "track_state_changed": set_track_state(event.value); break;
+          case "tracks_changed": rearrange_tracks(event.value); break;
         }
       });
 
@@ -178,7 +200,7 @@ end}<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/
         $("#update").click(function(){
           $.get('/matrix/get-song-updates.lua', {client_id: client_id}, function(data){ update(data); } );
         });
-
+  
         $("#test-tools").append("<button id='autoupdate'>disable auto-update</button>");
         $("#autoupdate").toggle(function(){
           autoupdate = false;
@@ -188,6 +210,17 @@ end}<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/
           autoupdate = true;
           $("#autoupdate").text("disable auto-update");
           log("enabled auto-update");
+        });
+        
+        $("#test-tools").append("<button id='logtoggle'>disable logging</button>");
+         $("#logtoggle").toggle(function(){          
+          $("#logtoggle").text("enable logging");
+          log("disabled logging");
+          logging = false;
+        }, function(){
+          logging = true;
+          $("#autoupdate").text("disable logging");
+          log("enabled logging");
         });
 
         $("#test-tools").css("display", "block");

@@ -30,7 +30,7 @@
           mutes[track_index] = {}
         end
         mutes[track_index][sequence_index] = renoise.song().sequencer:track_sequence_slot_is_muted(track_index, sequence_index)
-        if (L.old_mutes and L.old_mutes[track_index][sequence_index] ~= mutes[track_index][sequence_index]) then
+        if (L.old_mutes and L.old_mutes[track_index] and L.old_mutes[track_index][sequence_index] ~= mutes[track_index][sequence_index]) then
           local pos = ("s%02dt%02d"):format(sequence_index, track_index)
           changes[pos] = mutes[track_index][sequence_index]
         end
@@ -45,7 +45,7 @@
   if (not L.old_mutes) then
     get_changed_mute_states()
   end
-  
+
   subscribe_track_mutes()
 
   L:subscribe(client_id, "renoise.tool().app_new_document", function(name)
@@ -55,13 +55,24 @@
     L.old_mutes = nil
   end)
 
-  L:subscribe(client_id, "renoise.song().sequencer.pattern_slot_mutes", function(name)
+  L:subscribe(client_id, "renoise.song().tracks", function(name, data)
+    Util:update_table(L.old_mutes, data)
+    L:publish(name, 'tracks_changed', data)    
+  end)
+
+  L:subscribe(client_id, "renoise.song().sequencer.pattern_slot_mutes", function(name, data)
+    print(data)
     L:publish(name, 'mutes_changed', get_changed_mute_states())
   end)
 
   L:subscribe(client_id, "renoise.song().transport.bpm", function(name)
     L:publish(name, 'tempo', renoise.song().transport.bpm)
   end)
+  
+  L:subscribe(client_id, "renoise.song().sequencer.pattern_sequence", function(name, data)
+    --rprint(data)
+    L:publish(name, 'sequence_changed', data)
+  end)  
 
   local pid = renoise.song().sequencer.pattern_sequence[renoise.song().transport.playback_pos.sequence]
   L:publish(nil, 'lines', renoise.song().patterns[pid].number_of_lines)

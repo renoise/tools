@@ -172,3 +172,37 @@ function Util:merge_tables(a,b)
   end
   return b
 end
+
+
+-- Updates a table
+-- @param t  the table
+-- @param data  the built-in data sent by the notifier
+-- @param value  the built-in data sent by the notifier
+local function update_table(t,data,value)
+  trace(data)
+  if (data.type == "swap") then
+    local temp = t[data.index1]
+    t[data.index1] = t[data.index2]
+    t[data.index2] = temp
+  elseif (data.type == "remove") then        
+    t[data.index] = nil
+    for k,v in pairs(t) do      
+      if (type(k)=='number' and k>data.index) then              
+        t[k-1] = v
+        t[k] = nil
+      end      
+    end    
+  elseif (data.type == "insert") then     
+    for _,k in ripairs(table.keys(t)) do
+      if (type(k)=='number' and k>=data.index) then
+        t[k+1] = t[k]
+      end
+    end
+    if (type(value)=='function') then
+      t[data.index] = value(data)
+    else
+      t[data.index] = value or {}
+    end
+    trace(t)
+  end
+end
