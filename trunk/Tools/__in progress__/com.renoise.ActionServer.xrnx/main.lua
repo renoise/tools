@@ -2,6 +2,14 @@
 -- Requires and initialization
 -------------------------------------------
 
+local address = nil
+local port = 8888
+local INADDR_ANY = false
+
+-- reconnection attempts
+local max_retries = 5
+local retried = 0
+
 local start_page = "/matrix/"
 
 local root = "./"
@@ -459,6 +467,12 @@ class "ActionServer"
     if (debug) then
       renoise.app():show_warning(socket_error)
     end    
+    
+    if (max_retries > retried) then
+      retried = retried + 1    
+      log:info("Restarting the server")
+      action_server = ActionServer(address, port)
+    end    
   end
 
   function ActionServer:socket_accepted(socket)
@@ -466,6 +480,7 @@ class "ActionServer"
   end
 
   function ActionServer:socket_message(socket, message)
+      retried = 0
       self.remote_addr = socket.peer_address .. ":" .. socket.peer_port
       log:info("Remote Addr: " .. self.remote_addr)
       print("\r\n----------MESSAGE RECEIVED----------")
@@ -715,7 +730,7 @@ class 'SongChangeEvent' (Event)
       self.notifiers[name] = table.create()
       self.notifiers[name].active = true
       self.notifiers[name].clients = table.create()
-      self.notifiers[name].callback = function() callback(name) end
+      self.notifiers[name].callback = function(data) callback(name,data) end
       local buffer = ([[
         ~{do
           %s_observable:add_notifier(func)
@@ -747,9 +762,6 @@ class 'SongChangeEvent' (Event)
 -------------------------------------------
 -- Start / Stop
 -------------------------------------------
-local address = nil
-local port = 8888
-local INADDR_ANY = false
 
 function restore_default_configuration()
     port = 80
