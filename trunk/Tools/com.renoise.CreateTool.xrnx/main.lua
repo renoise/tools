@@ -40,18 +40,18 @@ renoise.tool():add_menu_entry {
 
 local options = renoise.Document.create("ScriptingToolPreferences") {    
   ConfirmOverwrite = true,
-  Domain = "your-domain",
+  Domain = "YourDomain",
   DefaultDomain = true,
   TLD = "com", 
   TLD_id = 1, 
-  Email = "your-name@your-domain.tld"
+  Email = "you@yourdomain.xyz"
 }
 options:add_property("Name", "The Tool Name")
 options:add_property("Id", "com.myorg.ToolName")        
 options:add_property("Author", "My Name")
 options:add_property("Category", "In Progress")
 options:add_property("Description", "")
-options:add_property("Homepage", "")
+options:add_property("Homepage", "http://tools.renoise.com")
 options:add_property("Icon", "")  
 
 local categories = {"Pattern Editor", "Sample Editor", "Instruments", "Algorithmic composition"}
@@ -83,12 +83,18 @@ class "RenoiseScriptingTool"(renoise.Document.DocumentNode)
   end
   
   function RenoiseScriptingTool:update()      
+    
     -- pre-processed fields
     self.Id.value = vb.views.name_preview.text:sub(1,-6)
     self.ApiVersion = renoise.API_VERSION       
+    if (trim(options.Email.value) ~= "" and 
+      options.Email.value ~= "you@yourdomain.xyz") then
+      self.Name.value = options.Name.value .. " | " .. options.Email.value      
+    else
+      self.Name.value = options.Name.value    
+    end
     
-    -- copy fields
-    self.Name.value = options.Name.value    
+    -- copied fields
     self.Author.value = options.Author.value    
     self.Description.value = options.Description.value
     self.Category.value = options.Category.value    
@@ -221,7 +227,7 @@ end
 local function create_tool()
   local root = get_tools_root()  
   local folder_name = vb.views.name_preview.text
-  local my_tools = create_folder(root, "_my_tools")
+  local my_tools = create_folder(root, "__MyTools__")
   local target_folder = create_folder(my_tools, folder_name)
   if (not target_folder) then
     return
@@ -245,18 +251,18 @@ local function create_tool()
   renoise.app():show_message("Your new Tool has been created: \n\n" .. target_folder)
 end
 
-local function trim(s)  
+function trim(s)  
   return (s:gsub("^%s*(.-)%s*$", "%1"))
 end
 
 local function clean_component(str)
   --str = str:gsub("[/\\%.;:%*%?%<%|%z=\"%[%]'&]+", "")
-  str = str:gsub("[^%w-_!]", "")
+  str = str:gsub("[^%s%w-_!]", "")  
   return str
 end
 
 local function camel_case(str)  
-  str = str or ""  
+  str = str or ""    
   local function tchelper(first, rest)
     return first:upper()..rest:lower()
   end
@@ -341,11 +347,28 @@ function show_dialog()
   
   local function get_tool_name()
     local raw = vb.views.tool_name_text.text
-    raw = clean_component(raw)
-    return trim(camel_case(raw))
+    print("raw "..raw)
+    raw = clean_component(raw)    
+    return camel_case(raw)
+  end
+  
+  local function get_email()
+    local raw = trim(vb.views.email_text.text)
+    if (raw == "") then 
+      return
+    end
+    if (not raw:match(
+      "[A-Za-z0-9%.%%%+%-]+@[A-Za-z0-9%.%%%+%-]+%.%w%w%w?%w?"
+      )) then
+      renoise.app():show_warning("The e-mail address is not valid")
+    end
   end
   
   local function update_preview()
+    vb.views.email_text.value = trim(vb.views.email_text.value)
+    vb.views.author_text.value = trim(options.Author.value)      
+    vb.views.tool_name_text.value = trim(options.Name.value)
+    
     vb.views.name_preview.text = ("%s.%s.%s.xrnx"):format(                   
       get_tld(),
       get_domain(),
@@ -354,9 +377,7 @@ function show_dialog()
     
     options.TLD.value = get_tld()
     options.Domain.value = get_domain()
-    vb.views.author_text.value = trim(options.Author.value)
-    vb.views.tool_name_text.value = trim(options.Name.value)
-    options.Description.value = vb.views.description.text
+    options.Description.value = vb.views.description_text.text
     vb.views.save_button.active = is_form_complete()
   end
 
@@ -488,20 +509,20 @@ example, rfc920.txt and rfc1032.txt.]]
       
       vb:text { text = "E-Mail" },
       vb:textfield {
-        id = "email",
+        id = "email_text",
         bind = options.Email
       },
       
       vb:text { text = "Homepage" },
       vb:textfield {
-        id = "homepage",
+        id = "homepage_text",
         bind = options.Homepage
       },
   
   
       vb:text { text = "Description" },
       vb:multiline_textfield  {
-        id = "description",      
+        id = "description_text",      
         height = 60, 
         text = options.Description.value
       },
