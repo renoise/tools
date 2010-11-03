@@ -487,6 +487,17 @@ function Request:_read_header()
     -- TODO check content-length and HTTP status code  
     self.response.content_length =
       tonumber(self.response.header["Content-Length"])
+    -- 301 Permanent Redirect  
+    if (self.response.header[1]:find("301") or 
+        self.response.header[1]:find("302")) then
+      self.url  = self.response.header["Location"]
+      if (not self.url) then 
+        log:error("URL was moved, but the new location was not found.")
+        return
+      end       
+      self.url_parts = URL:parse(self.url) 
+      return self:_read_header()
+    end
     return true
   else
     return false, "Invalid page header"
@@ -563,7 +574,7 @@ function Request:_read_content()
   
   if (buffer) then
     
-    if (self.response.header["Transfer-Encoding"] == "chunked") then
+    if (tostring(self.response.header["Transfer-Encoding"]):lower() == "chunked") then
       log:info("Unchunking message stream")
             
       if (chunk_size == 0) then
