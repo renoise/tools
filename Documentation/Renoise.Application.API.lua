@@ -33,7 +33,7 @@ renoise.app()
 -------- functions
 
 -- Shows an info message dialog to the user.
-[added B4] renoise.app():show_message(message)
+renoise.app():show_message(message)
 
 -- Shows an error dialog to the user.
 renoise.app():show_error(message)
@@ -64,7 +64,7 @@ renoise.app():show_custom_dialog(title, content_view [, key_handler])
 
 
 -- Opens a modal dialog to query an existing directory from the user.
-[added RC2] renoise.app():prompt_for_path(dialog_title)
+renoise.app():prompt_for_path(dialog_title)
   -> [valid path or empty string]
 
 -- Opens a modal dialog to query a filename and path to read from a file.

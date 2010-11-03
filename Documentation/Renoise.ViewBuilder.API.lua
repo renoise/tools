@@ -39,7 +39,7 @@ app():show_custom_dialog(title, content_view [, key_handler_func])
 --   modifiers, -- modifier states. 'shift + control' - always valid
 --   character, -- character representation of the key or nil
 --   note,      -- virtual keyboard piano key value (starting from 0) or nil
---   repeated,  -- [added B7] true when the key is soft repeated (hold down)
+--   repeated,  -- true when the key is soft repeated (hold down)
 -- }
 -- "dialog" is a reference to the dialog the keyhandler is running on.
 
@@ -48,7 +48,7 @@ function my_keyhandler_func(dialog, key) end
 -- When no key handler is specified, only the Escape key is used to close the 
 -- dialog. For prompts, also the first character of the button labels is used 
 -- to invoke the corresponding button.
--- [added B4] When returning the passed key from the key-handler function, the 
+-- When returning the passed key from the key-handler function, the 
 -- key will be passed back to Renoises key event chain, in order to allow 
 -- processing global Renoise key-bindings from your dialog. This will not work 
 -- for modal dialogs. This will also only apply global shortcuts in Renoise, 
@@ -117,7 +117,7 @@ view.tooltip
 -- Deactivated controls will still be shown and will also still show its 
 -- currently assigned value, but do not allow changing it. Most controls will 
 -- also display "grayed out" to visualize the deactivated state.
-[added B6] control.active
+control.active
   -> [boolean]
 
 
@@ -128,7 +128,7 @@ view.tooltip
 -- tool just for the tool.
 -- Target strings are not verified. When they point to nothing, the mapped MIDI
 -- message will do nothing but also no error is fired.
-[added B7] control.midi_mapping
+control.midi_mapping
   -> [boolean]
  
  
@@ -1151,7 +1151,7 @@ rotary.bind
   
 
 --------------------------------------------------------------------------------
--- [added B4] renoise.Views.XYPad (inherits from Control, 'xypad' in the builder)
+-- renoise.Views.XYPad (inherits from Control, 'xypad' in the builder)
 --------------------------------------------------------------------------------
 
 -- A slider alike pad which allows controlling two values at once. By default
@@ -1352,7 +1352,7 @@ vb:minislider { MiniSlider Properties }
 vb:rotary { RotaryEncoder Properties }
   -> [RotaryEncoder object]
 
-[added B4] vb:xypad { XYPad Properties } 
+vb:xypad { XYPad Properties } 
   -> [XYPad object]
 
 

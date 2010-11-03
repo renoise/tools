@@ -65,7 +65,7 @@ scripting terminal. Please see http://scripting.renoise.com for more info about
 this.
 
 
----- [added B7] Add mappings via XRNX tools 
+---- Add mappings via XRNX tools 
 
 Alternatively to editing this file, you can also define new midi mappings via
 Renoise XRNX tool bundles. This way new mappings can be easily installed (drag 
