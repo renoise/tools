@@ -61,8 +61,8 @@ renoise.tool()
 -- To do so, use one of the specified categories in its name:
 --
 -- "Window Menu" -- Renoise icon menu in the window caption on Windows/Linux
--- "Main Menu" (:File", ":Edit", ":View", ":Tools" or ":Help") -- Renoise's main menu
--- [added RC1] "Scripting Menu" (:File",  or ":Tools") -- Scripting Editor & Terminal
+-- "Main Menu" (:File", ":Edit", ":View", ":Tools" or ":Help") -- Main menu
+-- "Scripting Menu" (:File",  or ":Tools") -- Scripting Editor & Terminal
 -- "Disk Browser Directories"
 -- "Disk Browser Files"
 -- "Instrument Box" 
@@ -89,7 +89,7 @@ renoise.tool()
 -- more dashes to the name, like "--- Main Menu:Tools:My Tool Group Starts Here"
 
 -- returns true when the given entry was already added, else false
-[added B4] renoise.tool():has_menu_entry(menu_entry_name)
+renoise.tool():has_menu_entry(menu_entry_name)
   -> [boolean]
 
 -- add a new menu entry as described above
@@ -107,7 +107,7 @@ renoise.tool():remove_menu_entry(menu_entry_name)
 -- * required fields
 --   ["name"] = the scope, name and category of the key binding
 --   ["invoke"] = a function that is called as soon as the mapped key was 
---     pressed. [added b7] The callback has one argument: "repeated", indicating
+--     pressed. The callback has one argument: "repeated", indicating
 --     if its a virtual key repeat.
 --
 -- The key binding's 'name' must have 3 parts, separated with :'s
@@ -131,7 +131,7 @@ renoise.tool():remove_menu_entry(menu_entry_name)
 -- they get saved just like any other key binding in Renoise.
 
 -- returns true when the given entry was already added, else false
-[added B4] renoise.tool():has_keybinding(keybinding_name)
+renoise.tool():has_keybinding(keybinding_name)
   -> [boolean]
 
 -- add a new keybinding entry as described above
@@ -141,7 +141,7 @@ renoise.tool():add_keybinding(keybinding_definition_table)
 renoise.tool():remove_keybinding(keybinding_name)
 
 
--- [added B7] midi_mappings: extend Renoises default MIDI mapping set with tools,
+-- midi_mappings: extend Renoises default MIDI mapping set with tools,
 -- or add custom MIDI mappings for your tools.
 --
 -- The table passed as argument to 'add_midi_mapping' is defined as:
@@ -184,14 +184,14 @@ renoise.tool():remove_keybinding(keybinding_name)
 -- only have to click on the highlighted control to map MIDI messages.
 
 -- returns true when the given mapping was already added, else false
-[added B7] renoise.tool():has_midi_mapping(midi_mapping_name)
+renoise.tool():has_midi_mapping(midi_mapping_name)
   -> [boolean]
 
 -- add a new midi_mapping entry as described above
-[added B7] renoise.tool():add_midi_mapping(midi_mapping_definition_table)
+renoise.tool():add_midi_mapping(midi_mapping_definition_table)
 
 -- remove a previously added midi mapping by specifying its name
-[added B7] renoise.tool():remove_midi_mapping(midi_mapping_name)
+renoise.tool():remove_midi_mapping(midi_mapping_name)
 
 
 -- register a timer function or table with function and context (a method) 
@@ -203,14 +203,14 @@ renoise.tool():remove_keybinding(keybinding_name)
 -- will be around +- 5 ms
 
 -- returns true when the given function or method was registered as timer
-[added B4] renoise.tool():has_timer(function or {object, function} or {function, object})
+renoise.tool():has_timer(function or {object, function} or {function, object})
   -> [boolean]
 
-[added B4] renoise.tool():add_timer(function or {object, function} or {function, object}, 
+renoise.tool():add_timer(function or {object, function} or {function, object}, 
   timer_interval_in_ms)
 
 -- remove a previously registered timer
-[added B4] renoise.tool():remove_timer(timer_func)
+renoise.tool():remove_timer(timer_func)
 
 
 -------- properties
@@ -243,7 +243,7 @@ renoise.tool().app_idle_observable
 -- time renoise.song() still points to the old song before a new one arrives.
 -- you can explicitly release notifiers to the old document here, or do some own
 -- housekeeping. also called right before the application exits.
-[added B7] renoise.tool().app_release_document_observable
+renoise.tool().app_release_document_observable
   -> [renoise.Document.Observable object]
 
 -- invoked each time a new document (song) was created or loaded, aka each time
@@ -255,7 +255,7 @@ renoise.tool().app_new_document_observable
 
 -- invoked each time the apps document (song) got successfully saved. 
 -- renoise.song().file_name will point to the filename it got saved to.
-[added B7] renoise.tool().app_saved_document_observable
+renoise.tool().app_saved_document_observable
   -> [renoise.Document.Observable object]
 
 -- get or set an optional renoise.Document.DocumentNode object, which will be

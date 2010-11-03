@@ -84,7 +84,7 @@ renoise.song():redo()
 -- something more descriptive, you can !before changing anything in the song! 
 -- give your changes a custom undo description (like i.e: "Generate Synth 
 -- Sample").
-[added b6] renoise.song():describe_undo(description)
+renoise.song():describe_undo(description)
     
 -- Insert a new track at the given track index. Inserting a track behind or at
 -- the master track's index will create a send track. Else a regular track is
@@ -130,7 +130,7 @@ renoise.song():capture_nearest_instrument_from_pattern()
 
 -- When rendering (see renoise.song().rendering, renoise.song().rendering_progress), 
 -- the current render process is canceled. Else nothing is done.
-[added b6] renoise.song():cancel_rendering()
+renoise.song():cancel_rendering()
 
 -- Start rendering a section of the song or the whole song to a WAV file. 
 -- Rendering job will be done in the background and the call will return
@@ -160,7 +160,7 @@ renoise.song():capture_nearest_instrument_from_pattern()
 -- param 'rendering_done_callback' is ONLY called when rendering succeeded. you 
 -- can do something with the file you've passed to the renderer here, like for 
 -- example loading the file into a sample buffer...
-[added b6] renoise.song():render([options, ] filename, rendering_done_callback) 
+renoise.song():render([options, ] filename, rendering_done_callback) 
   -> [boolean, error_message]
   
   
@@ -182,10 +182,10 @@ renoise.song().comments_assignment_observable
   -> [renoise.Observable object]
 
 -- See renoise.song():render(). Returns true while rendering is in progress.
-[added b6] renoise.song().rendering
+renoise.song().rendering
   -> [read-only, boolean]
 -- See renoise.song():render(). Returns the current render progress amount.
-[added b6] renoise.song().rendering_progress
+renoise.song().rendering_progress
   -> [read-only, number, 0-1.0]
 	
 -- See renoise.Transport for more info
@@ -236,16 +236,16 @@ renoise.song().selected_parameter_index, _observable
   -> [read-only, number or 0 (when no parameter is selected)]
 
 -- The currently edited pattern. Never nil. 
-renoise.song().selected_pattern, [added RC2] _observable
+renoise.song().selected_pattern, _observable
   -> [read-only, renoise.Pattern object]
 
 -- The currently edited pattern track object. Never nil. 
 -- and selected_track_index_observable for notifications.
-renoise.song().selected_pattern_track, [added RC2] _observable
+renoise.song().selected_pattern_track, _observable
   -> [read-only, renoise.PatternTrack object]
 
 -- The currently edited pattern index. 
-renoise.song().selected_pattern_index, [added B6] _observable
+renoise.song().selected_pattern_index, _observable
   -> [number]
 
 -- The currently edited sequence position.
@@ -318,7 +318,7 @@ renoise.song().transport:cancel_sample_recording()
 
 -------- properties
 
-renoise.song().transport.playing, [added B4] _observable
+renoise.song().transport.playing, _observable
   -> [boolean]
 
 renoise.song().transport.bpm, _observable
@@ -364,7 +364,7 @@ renoise.song().transport.loop_sequence_end
 renoise.song().transport.loop_sequence_range 
   -> [array of two numbers, 0 or 1-sequence_length or empty array to disable]
 
-renoise.song().transport.loop_pattern, [added B7] _observable
+renoise.song().transport.loop_pattern, _observable
   -> [boolean]
 
 renoise.song().transport.loop_block_enabled
@@ -684,12 +684,12 @@ renoise.song().tracks[].devices[].parameters[]
 
 -- Returns if the device provides its own custom GUI (only available for 
 -- some plugin devices).
-[added b7] renoise.song().tracks[].devices[].external_editor_available
+renoise.song().tracks[].devices[].external_editor_available
   -> [read-only, boolean]
 
 -- When the device has no custom GUI an error will be fired (see 
 -- external_editor_available), else this external editor is opened/closed.
-[added b7] renoise.song().tracks[].devices[].external_editor_visible
+renoise.song().tracks[].devices[].external_editor_visible
   -> [boolean, set to true to show the editor, false to close it]
 
 
@@ -731,7 +731,7 @@ renoise.song().tracks[].devices[].parameters[].value_default
 -- Not valid for parameters of instrument devices. Returns true when creating
 -- envelope automation is possible for the parameter (see also 
 -- renoise.song().patterns[].tracks[]:create_automation)
-[added b6] renoise.song().tracks[].devices[].parameters[].is_automatable
+renoise.song().tracks[].devices[].parameters[].is_automatable
   -> [read-only, boolean]
 
 -- Not valid for parameters of instrument devices.
@@ -781,10 +781,10 @@ renoise.song().instruments[].split_map[]
 renoise.song().instruments[].split_map_assignment_observable
   -> [renoise.Observable object]
 
-[added b6] renoise.song().instruments[].midi_properties
+renoise.song().instruments[].midi_properties
   -> [renoise.InstrumentMidiProperties object]
 
-[added b6] renoise.song().instruments[].plugin_properties 
+renoise.song().instruments[].plugin_properties 
   -> [renoise.InstrumentPluginProperties object]
 
 renoise.song().instruments[].samples[], _observable
@@ -797,9 +797,9 @@ renoise.song().instruments[].samples[], _observable
 
 -------- consts
 
-[added b6] renoise.Instrument.MidiProperties.TYPE_EXTERNAL
-[added b6] renoise.Instrument.MidiProperties.TYPE_LINE_IN_RET
-[added b6] renoise.Instrument.MidiProperties.TYPE_INTERNAL -- REWIRE
+renoise.Instrument.MidiProperties.TYPE_EXTERNAL
+renoise.Instrument.MidiProperties.TYPE_LINE_IN_RET
+renoise.Instrument.MidiProperties.TYPE_INTERNAL -- REWIRE
 
 
 -------- properties
@@ -809,26 +809,26 @@ renoise.song().instruments[].samples[], _observable
 -- channels are not configurable for ReWire MIDI, and instrument_type will 
 -- always be "TYPE_INTERNAL" for ReWire devices.
   
-[added b6] renoise.song().instruments[].midi_properties.instrument_type, _observable
+renoise.song().instruments[].midi_properties.instrument_type, _observable
   -> [Enum=TYPE_XXX]
 
 -- When setting new devices, device name must be one of 
 -- renoise.Midi.available_output_devices.
 -- Devices are automatically opened when needed. To close a device, set its name 
 -- to an empty string -> "".
-[added b6] renoise.song().instruments[].midi_properties.device_name, _observable
+renoise.song().instruments[].midi_properties.device_name, _observable
   -> [string]
-[added b6] renoise.song().instruments[].midi_properties.midi_channel, _observable
+renoise.song().instruments[].midi_properties.midi_channel, _observable
   -> [number, 1 - 16]
-[added b6] renoise.song().instruments[].midi_properties.midi_base_note, _observable
+renoise.song().instruments[].midi_properties.midi_base_note, _observable
   -> [number, 0 - 119, C-4=48]
-[added b6] renoise.song().instruments[].midi_properties.midi_program, _observable
+renoise.song().instruments[].midi_properties.midi_program, _observable
   -> [number, 1 - 128, 0 = OFF]
-[added b6] renoise.song().instruments[].midi_properties.midi_bank, _observable
+renoise.song().instruments[].midi_properties.midi_bank, _observable
   -> [number, 1 - 65536, 0 = OFF]
-[added b6] renoise.song().instruments[].midi_properties.delay, _observable
+renoise.song().instruments[].midi_properties.delay, _observable
   -> [number, 0 - 100]
-[added b6] renoise.song().instruments[].midi_properties.duration, _observable
+renoise.song().instruments[].midi_properties.duration, _observable
   -> [number, 1 - 8000, 8000 = INF]
 
 
@@ -841,7 +841,7 @@ renoise.song().instruments[].samples[], _observable
 -- Load an existing, new, non aliased plugin. Pass an empty string to unload
 -- an already assigned plugin. plugin_name must be one of:
 -- "plugin_properties.available_plugins"
-[added b6] renoise.song().instruments[].plugin_properties:load_plugin(plugin_name)
+renoise.song().instruments[].plugin_properties:load_plugin(plugin_name)
   -> [boolean, success]
 
 
@@ -852,7 +852,7 @@ renoise.song().instruments[].samples[], _observable
 -- the vendor names as visible in Renoise's GUI. Aka, its an identifier, and not
 -- the name as visible in the GUI. When no plugin is loaded, the identifier is
 -- an empty string.
-[added b6] renoise.song().instruments[].plugin_properties.available_plugins[]
+renoise.song().instruments[].plugin_properties.available_plugins[]
   -> [read_only, list of strings]
 
 -- Plugin name will be a non empty string as soon as plugin is or was loaded, 
@@ -860,39 +860,39 @@ renoise.song().instruments[].samples[], _observable
 -- the plugin currently is not installed on the system, name will be set, but
 -- the device will NOT be present. When the plugin was successfully loaded, 
 -- plugin_name will be one of "available_plugins".
-[added b6] renoise.song().instruments[].plugin_properties.plugin_name
+renoise.song().instruments[].plugin_properties.plugin_name
   -> [read_only, string]
 
 -- Returns true when a plugin is present; was loaded successfully.
-[added b6] renoise.song().instruments[].plugin_properties.plugin_loaded
+renoise.song().instruments[].plugin_properties.plugin_loaded
   -> [read-only, boolean]
 
 -- Valid object for successfully loaded plugins, else nil. Alias plugin
 -- instruments of FX will return the resolved device, will link to the device
 -- the alias points to.
-[added b6] renoise.song().instruments[].plugin_properties.plugin_device
+renoise.song().instruments[].plugin_properties.plugin_device
  -> [renoise.InstrumentDevice object or renoise.TrackDevice object or nil]
 
 -- Valid for loaded and unloaded plugins.
-[added b6] renoise.song().instruments[].plugin_properties.alias_instrument_index
+renoise.song().instruments[].plugin_properties.alias_instrument_index
   -> [read-only, number or 0 (when no alias instrument is set)]
-[added b6] renoise.song().instruments[].plugin_properties.alias_fx_track_index
+renoise.song().instruments[].plugin_properties.alias_fx_track_index
   -> [read-only, number or 0 (when no alias FX is set)]
-[added b6] renoise.song().instruments[].plugin_properties.alias_fx_device_index
+renoise.song().instruments[].plugin_properties.alias_fx_device_index
   -> [read-only, number or 0 (when no alias FX is set)]
 
 -- Valid for loaded and unloaded plugins.
-[added b6] renoise.song().instruments[].plugin_properties.midi_channel, _observable 
+renoise.song().instruments[].plugin_properties.midi_channel, _observable 
   -> [number, 1 - 16]
-[added b6] renoise.song().instruments[].plugin_properties.midi_base_note, _observable 
+renoise.song().instruments[].plugin_properties.midi_base_note, _observable 
   -> [number, 0 - 119, C-4=48]
 
 -- Valid for loaded and unloaded plugins.
-[added b6] renoise.song().instruments[].plugin_properties.volume, _observable
+renoise.song().instruments[].plugin_properties.volume, _observable
   -> [number, linear gain, 0 - 4]
 
 -- Valid for loaded and unloaded plugins.
-[added b6] renoise.song().instruments[].plugin_properties.auto_suspend, _observable 
+renoise.song().instruments[].plugin_properties.auto_suspend, _observable 
   -> [boolean]
 
 -- TODO: renoise.song().instruments[].plugin_properties.create_alias(other_plugin_properties)
@@ -906,25 +906,25 @@ renoise.song().instruments[].samples[], _observable
 
 -------- properties
 
-[added b6] renoise.song().instruments[].plugin_properties.plugin_device.name
+renoise.song().instruments[].plugin_properties.plugin_device.name
   -> [read-only, string]
 
-[added b6] renoise.song().instruments[].plugin_properties.plugin_device.active_preset, _observable 
+renoise.song().instruments[].plugin_properties.plugin_device.active_preset, _observable 
   -> [number, 0 when none is active or available]
 
-[added b6] renoise.song().instruments[].plugin_properties.plugin_device.presets[] 
+renoise.song().instruments[].plugin_properties.plugin_device.presets[] 
   -> [read-only, list of strings]
   
-[added b6] renoise.song().instruments[].plugin_properties.plugin_device.parameters[]
+renoise.song().instruments[].plugin_properties.plugin_device.parameters[]
   -> [read-only, list of renoise.DeviceParameter objects]
 
 -- returns if the plugin provides its own custom GUI
-[added b7] renoise.song().instruments[].plugin_properties.plugin_device.external_editor_available
+renoise.song().instruments[].plugin_properties.plugin_device.external_editor_available
   -> [read-only, boolean]
 
 -- when the plugin has no custom GUI, Renoise will create a dummy editor for it which 
 -- only lists the plugin parameters.
-[added b7] renoise.song().instruments[].plugin_properties.plugin_device.external_editor_visible
+renoise.song().instruments[].plugin_properties.plugin_device.external_editor_visible
   -> [boolean, set to true to show the editor, false to close it]
 
 
@@ -1126,11 +1126,11 @@ renoise.song().patterns[].copy_from(other_pattern object)
 -- pattern, dynamically attach and detach to the selected pattern's line 
 -- notifiers by listening to "renoise.song().selected_pattern_observable".
 
-[added RC2] renoise.song().patterns[]:has_line_notifier(func[, obj])
+renoise.song().patterns[]:has_line_notifier(func[, obj])
   -> [boolean]
   
-[added RC2] renoise.song().patterns[]:add_line_notifier(func[, obj])
-[added RC2] renoise.song().patterns[]:remove_line_notifier(func[, obj])
+renoise.song().patterns[]:add_line_notifier(func[, obj])
+renoise.song().patterns[]:remove_line_notifier(func[, obj])
     
     
 -------- properties
@@ -1157,8 +1157,8 @@ renoise.song().patterns[].tracks[]
 -------- operators
 
 -- compares all tracks and lines, including automation
-[added RC2] ==(Pattern object, Pattern object) -> [boolean]
-[added RC2] ~=(Pattern object, Pattern object) -> [boolean]
+==(Pattern object, Pattern object) -> [boolean]
+~=(Pattern object, Pattern object) -> [boolean]
 
 
 --------------------------------------------------------------------------------
@@ -1221,8 +1221,8 @@ renoise.song().patterns[].tracks[].automation[], _observable
 -------- operators
 
 -- compares line content and automation
-[added RC2] ==(PatternTrack object, PatternTrack object) -> [boolean]
-[added RC2] ~=(PatternTrack object, PatternTrack object) -> [boolean]
+==(PatternTrack object, PatternTrack object) -> [boolean]
+~=(PatternTrack object, PatternTrack object) -> [boolean]
 
   
 --------------------------------------------------------------------------------
@@ -1294,8 +1294,8 @@ renoise.song().patterns[].tracks[].automation[]:remove_point_at(time)
 -------- operators
 
 -- compares automation content only, ignoring dest parameters
-[added RC2] ==(PatternTrackAutomation object, PatternTrackAutomation object) -> [boolean]
-[added RC2] ~=(PatternTrackAutomation object, PatternTrackAutomation object) -> [boolean]
+==(PatternTrackAutomation object, PatternTrackAutomation object) -> [boolean]
+~=(PatternTrackAutomation object, PatternTrackAutomation object) -> [boolean]
 
   
 --------------------------------------------------------------------------------

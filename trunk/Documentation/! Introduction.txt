@@ -6,14 +6,14 @@ Welcome to the Renoise scripting Guide. In all the various files in this
 "Documentation" folder, we will give you an overview on how to write tools
 for Renoise; how to debug them, what's possible to "script", what's not,
 and much more. Please read this introduction carefully, to get an idea how
-to get started, and to avoid common pitfalls and questions.
+to get started and to avoid common pitfalls and questions.
   
 
 --------------------------------------------------------------------------------
 -- Scripting Development Tools in Renoise
 --------------------------------------------------------------------------------
 
-By default Renoise has all the scripting stuff hidden to keep things as easy as
+By default Renoise has all the scripting stuff hidden, to keep things as easy as
 possible for those who don't want to mess around with code. If you want to write
 scripts, the first thing you have to do is enable the hidden development tools
 that are built into Renoise. This can be done by:
@@ -31,9 +31,9 @@ entries there if it already exists). In the "Tools" menu you will find:
   scripting tools. This can be handy when adding new tools by hand or when
   changing them.
 
-- "Scripting Console & Editor": This is the main developing scripting tool. It
-   allows you to:
-  + Evaluate scripts or commands in realtime with a small terminal (command-line)
+- "Scripting Console & Editor": This is the main developing scripting tool. 
+  It allows you to:
+  + Evaluate scripts or commands in realtime with a terminal (command-line)
   + Watch any script's output (all "print"s and errors from scripts will be
     redirected here)
   + Create, view and edit Lua, text, and XML files that will make up tools
@@ -43,7 +43,7 @@ entries there if it already exists). In the "Tools" menu you will find:
 
 
 --------------------------------------------------------------------------------
--- What can be 'scripted', what can't? What is all this 'scripting' about?
+-- What can be 'scripted', what can't? What is all this scripting about?
 --------------------------------------------------------------------------------
 
 Right now (in this Renoise release), you can make use of scripts in the
@@ -51,15 +51,15 @@ following places:
 
 - Run scripts and commands via a terminal in realtime using the
   "Scripting Console & Editor". This is what enabling "--scripting-dev" will
-  do and how you will start getting into all this...
+  do and how you will start getting into all this.
 
 - Create tools: Add new and custom functionality to Renoise. Tools are small
-  file bundles with a Lua script and a description file (manifest.xml) that
-  make use of the Renoise API; described below.
+  file bundles with one or more Lua scripts and a description file
+  (manifest.xml) that make use of the Renoise API; described below.
   Such tools can be distributed and installed via drag and drop (by bundling
-  them and hiding the code). This way, not only developers can use them, but
+  them and hiding the code). This way not only developers can use them, but
   also those who don't want to mess around with the technical details. We'll
-  describe bundles later on in detail.
+  describe those bundles later on in detail.
 
   Some examples of what you can do with Renoise tools:
 
@@ -90,7 +90,7 @@ following places:
   Create MIDI mappings or an OSC implementation the way you need it for live
   sessions or other needs.
 
-  To make this easier, Renoise offers you a tool called "Duplex", which 
+  To make this easier, Renoise offers you a tool called "Duplex", which
   already has support for the Launchpad and some other MIDI controllers. 
   Duplex is a very flexible, object-oriented approach to handling MIDI 
   controllers in Renoise, and also offers virtual UIs for the MIDI controllers 
@@ -100,7 +100,7 @@ following places:
   You don't have to use Duplex to write MIDI controller scripts in Renoise, 
   but it already offers a lot of tools that will make this easier.
   
-  
+    
 - Create, configure, or override Renoise's default MIDI, OSC bindings:
   Renoise has a default set of MIDI mappings that can be assigned manually by
   the user. This set can be extended and tweaked to fit your needs, then via
@@ -115,11 +115,11 @@ What you can *NOT* do with Renoise tools:
     pattern editor yellow instead of white. You can write your own pattern
     editor, but not change the existing one.
 
-  + "Realtime" access. Except the OSC and MIDI IO stuff, you can not write
+  + Realtime access. Except the OSC and MIDI IO stuff, you can not write
     scripts that run in the audio player. So you can not script your own new
     realtime DSP - yet. But you can, for example, write a tool that creates
-    samples or manipulates existing samples. This limitation might change in the
-    future. For now make a VST or AudioUnit. One thing after the other please.
+    samples or manipulates existing samples. This limitation might change in 
+    the future. For now you can make a VST or AudioUnit or LADSPA/DSSI plugin.
 
 
 --------------------------------------------------------------------------------
@@ -131,7 +131,7 @@ functions and classes that you can access from scripts in Renoise.
 If you are familiar with Renoise, the names of the classes, functions and
 properties should hopefully explain themselves (WYSIWYG).
 
-Here is a small overview of the whole API that Renoise exposes:
+Here is a small overview of what the API exposes:
 
 -- Renoise API version number and some global accessors "song", "app" are here
 * Renoise.API
@@ -144,7 +144,6 @@ Here is a small overview of the whole API that Renoise exposes:
 
 -- generic "observer pattern" document creation and access, used by the
 -- song/app and also by you to create persistent data (preferences, presets).
--- might later on maybe also be used to inject script data into songs
 * Renoise.Document.API
 
 -- available to XRNX tools only: interact with Renoise; create menus, keybindings
@@ -162,29 +161,25 @@ Here is a small overview of the whole API that Renoise exposes:
 
 A note about the general API design:
 
-* Whatever you do with the API, you should never be able to crash Renoise. If 
+* Whatever you do with the API, you should never be able to crash Renoise. If
   you managed to do this, then please report this, so we can fix this. 
   All errors, as stupid they might be, should always result in a clean error 
-  message from Lua. 
-  
-  What can right now not be avoided though, is that you create endless loops
-  in your scripts (loop forever). In such situations Renoise also can not 
-  save crash backups for documents, because it never gains control again.
+  message from Lua.
   
   The Renoise Lua API also allows global File IO and external program execution 
-  (via os.execute()), which can do harm as well, so please be careful with what 
+  (via os.execute()), which can do harm as well. Please be careful with what 
   you do there - well, as you would with programming in general...
     
 
-Some notes about the notation used in !all xxxAPI.txt! files:
+Some notes about the notation used in !all xxxAPI.lua! files:
 
-* All classes, functions in the API are nested in a namespace (Lua table) 
+* All classes, functions in the API, are nested in a namespace (Lua table) 
   "renoise". e.g: to get the application object, you will have to type 
   "renoise.app()"
 
 * The API is object-oriented, and thus split into classes. The references
   will first note the class name (e.g. 'renoise.Application'), then list its
-  properties / functions.
+  constants, properties, functions and operators.
   All properties and functions are always listed with their full path to make
   clear where they belong and how to access them...
 
@@ -201,37 +196,37 @@ Some notes about the notation used in !all xxxAPI.txt! files:
   will invoke a function which returns "comments". But not all properties do
   have setters, and thus can only be used as read-only "getters". Those are
   marked as [read-only, type].
-  Again mind the colon, which you don't have to use with properties!
+  Again mind the colon, which you don't need when accessing properties!
 
 * All exposed "objects" are read-only (you can not add new fields, properties),
   but the "classes" are not. This means you can extend the API classes with your
-  own helper functions, if needed, but can not add new properties to the objects.
-  "Objects", like for example the result of "song()" are read-only, to make
+  own helper functions, if needed, but can not add new properties to the
+  objects.
+  Objects like for example the result of "song()" are read-only, to make
   it easier to catch typos: 'song().transport.bmp = 80' will fire an error,
   because there is no such property 'bmp.' You probably meant
-  'song().transport.bpm = 80' here. If you need to store data somewhere, simply
+  'song().transport.bpm = 80' here. If you need to store data somewhere,
   do it in your own tables, objects, instead of using the Renoise API objects.
 
 * "some_property, _observable" means, that there is also an observer object
-  available for the property. An observable object allows you to attach notifiers
-  (global functions or methods) that will be called as soon as its value
-  has changed. Please see Renoise.Document.API.txt for more info about observables
-  and related classes.
+  available for the property. An observable object allows you to attach
+  notifiers (global functions or methods) that will be called as soon as its
+  value has changed. Please see Renoise.Document.API.txt for more info about
+  observables and related classes.
 
   -- one small example for bpm:
   renoise.song().transport.bpm_observable:addnotifier(function()
     print("bpm changed")
   end)
 
-  -- will print "bpm changed", but only if the bpm was not 120 before (it changed)
+  -- will print "bpm changed", but only if the bpm was not 120 before
   renoise.song().transport.bpm = 120
 
-  your notifier is called when anything changes the bpm, including
-  your script, other scripts, or anything else in Renoise (you've
-  automated the BPM in the song, entered a new BPM value in Renoise's GUI,
-  whatever)...
+  Your notifier is called when anything changes the bpm, including your 
+  script, other scripts, or anything else in Renoise (you've automated the 
+  BPM in the song, entered a new BPM value in Renoise's GUI, whatever)...
 
-  - lists like "renoise.song().tracks[]" can also have notifiers. But these
+  Lists like "renoise.song().tracks[]" can also have notifiers. But these
   will only fire when the list layout has changed: an element was added,
   removed or elements in the list changed their order. They will not fire when
   the list values changed. Attach notifiers to the list elements to get such
@@ -247,8 +242,8 @@ Some notes about the notation used in !all xxxAPI.txt! files:
 -- Creating Renoise Tools
 --------------------------------------------------------------------------------
 
-* Developing XRNX tools
-  As mentioned above, Renoise tools are file bundles with the extension .xrnx, 
+* Developing XRNX tools:
+  As mentioned above, Renoise tools are file bundles with the extension .xrnx,
   and have the following layout: 
 
   /some.bundle.id.xrnx/
@@ -263,11 +258,11 @@ Some notes about the notation used in !all xxxAPI.txt! files:
   manifest.lua specification, have a look at the "com.renoise.Example.xrnx" 
   tool please.  
   
-* Distributing XRNX tools
+* Distributing XRNX tools:
   To share your tools with others, you can create zip files out of your 
   bundles, which then can simply be dragged and dropped into Renoise to be 
   installed by the user.
-  To do so, zip all the bundle's content (the content, not the bundle 
+  To do so, zip all the bundle's content (the !content!, not the bundle folder 
   itself), and rename this zip to "SomeName.xrnx". Renoise will accept such 
   xrnx zips as drag and drop target, and copy, install and activate the tool 
   automatically.
@@ -278,7 +273,7 @@ Some notes about the notation used in !all xxxAPI.txt! files:
 --------------------------------------------------------------------------------
   
 If you want to add support for you MIDI controller in Duplex, or help extending
-the Duplex core functionality, have a look at the Duplex xrnx tool please. 
+the Duplex core functionality, have a look at the Duplex xrnx tool please.
 In the xrnx bundle you'll find some information about the Duplex API and also 
 how to create new controller mappings.
 

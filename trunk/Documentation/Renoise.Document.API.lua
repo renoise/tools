@@ -45,9 +45,9 @@ renoise.song().transport.bpm_observable:add_notifier(bpm_changed)
 -- later on, maybe:
 renoise.song().transport.bpm_observable:remove_notifier(bpm_changed)
 
-[added B4] When adding notifiers to lists (like the track list in a song)
-an additional context parameter is passed to your notifier function. This way
-you know what happened to the list:
+When adding notifiers to lists (like the track list in a song) an additional
+context parameter is passed to your notifier function. This way you know what
+happened to the list:
 
 function tracks_changed(notification)
   if (notification.type == "insert") then
@@ -116,8 +116,9 @@ Document API: You can either use the strongly typed lists in order to get Lua
 index based table alike behavior, or use nested document nodes or lists 
 (documents in documents) to get an associative table alike layout/behavior.
 
-Except of the strong typing, ObservableBoolean/String/NumberList and DocumentList
-will behave more or less like Lua tables with number based indices (Arrays). 
+Except of the strong typing, ObservableBoolean/String/NumberList and
+DocumentList will behave more or less like Lua tables with number based indices
+(Arrays). 
 You can use the # operator or [] operators just like you do with tables, but can
 also query all this info via list methods (:size(), :property(name), ...).
 
@@ -173,7 +174,7 @@ This will create a document node which is !modeled! after the the passed table.
 The table is not internally used by the document after construction, and will
 only be referenced to construct new instances. Also note that you need to assign 
 values for all passed table properties in order to automatically determine its 
-type, or specify the document types explicitly -> renoise.Document.ObservableXXX().
+type, or specify the types explicitly -> renoise.Document.ObservableXXX().
 
 The passed name ("MyDoc" in the example above) us used to identify the document
 when loading/saving it (loading a XML file which was saved with a different 
@@ -186,7 +187,7 @@ new instances. For example:
 my_other_document = renoise.Document.instantiate("MyDoc")
 
 
--------- [added B7] Creating Documents via inheritance (custom Doc classes)
+-------- Creating Documents via inheritance (custom Doc classes)
 
 Alternatively to "renoise.Document.create", you can also inherit from 
 renoise.Document.DocumentNode in order to create your own document classes. 
@@ -279,7 +280,7 @@ renoise.Document.create(model_name) {[table]}
 
 -- create a new instance of the given document model. model_name must have been
 -- registered with renoise.Document.create before.
-[added B7] renoise.Document.instantiate(model_name)
+renoise.Document.instantiate(model_name)
   -> [renoise.Document.DocumentNode object]
 
 
@@ -374,7 +375,7 @@ observable_list:remove([pos])
 
 -- Swaps the positions of two items without adding/removing the items.
 -- With a series of swaps you can move the item from/to any position.
-[added B4] observable_list:swap(pos1, pos2)
+observable_list:swap(pos1, pos2)
 
 
 -- notifiers
@@ -387,7 +388,7 @@ observable_list:remove([pos])
 -- interested in value changes of a specific item in the list, attach notifiers
 -- directly to the items itself and not to the list...
 --
--- [added B4] List notifiers will also pass a table with information about what
+-- List notifiers will also pass a table with information about what
 -- happened to the list as first argument to the notifier:
 --
 -- function my_list_changed_notifier(notification)
@@ -408,10 +409,10 @@ observable_list:remove([pos])
 --   index2 = index_swap_pos2
 -- }
 --
--- Please note that all notifications are fired !after! the list already changed,
--- so the removed object is no longer available at the index you got passed in 
--- the notification. Newly inserted objects will already be present at the 
--- destination index, and so on...
+-- Please note that all notifications are fired !after! the list already
+-- changed, so the removed object is no longer available at the index you got
+-- passed in the notification. Newly inserted objects will already be present 
+-- at the destination index, and so on...
 --
 -- See renoise.Document.Observable for more info about has/add/remove_notifier
 observable_list:has_notifier(function or (object, function) or 
@@ -431,37 +432,37 @@ observable_list:remove_notifier(function or (object, function) or
 -------- operators
 
 -- Query a lists size (item count).
-[added B7] #doc_list
+#doc_list
   -> [Number]
 
 -- Access an document item of the list by index (returns nil for non 
 -- existing items).
-[added B7] doc_list[number]
+doc_list[number]
   -> [renoise.Document.DocumentNode object]
 
 
 -------- functions
 
 -- Returns the number of entries of the list.
-[added B7] doc_list:size()
+doc_list:size()
   -> [number]
 
 
 -- List item access by index (returns nil for non existing items).
-[added B7] doc_list:property(index)
+doc_list:property(index)
   -> [nil or renoise.Document.DocumentNode object]
 
 -- Insert a new item to the end of the list when no position is specified, or 
 -- at the specified position. Returns the inserted DocumentNode.
-[added B7] doc_list:insert([pos,] doc_object)
+doc_list:insert([pos,] doc_object)
   -> [inserted renoise.Document.DocumentNode object]
 
 -- Removes an item (or the last one if no index is specified) from the list.
-[added B7] doc_list:remove([pos])
+doc_list:remove([pos])
 
 -- Swaps the positions of two items without adding/removing the items.
 -- With a series of swaps you can move the item from/to any position.
-[added B7] doc_list:swap(pos1, pos2)
+doc_list:swap(pos1, pos2)
 
 
 -- notifiers
@@ -469,27 +470,27 @@ observable_list:remove_notifier(function or (object, function) or
 -- Notifiers behave exactly like renoise.Document.ObservableXXXLists. Please 
 -- have a look at them for more info.
 
-[added B7] doc_list:has_notifier(function or (object, function) or 
+doc_list:has_notifier(function or (object, function) or 
   (function, object)) -> [boolean]
 
-[added B7] doc_list:add_notifier(function or (object, function) or 
+doc_list:add_notifier(function or (object, function) or 
   (function, object))
 
-[added B7] doc_list:remove_notifier(function or (object, function) or
+doc_list:remove_notifier(function or (object, function) or
  (function, object) or (object))
 
-  
-  
+
+
 --------------------------------------------------------------------------------
 -- renoise.Document.DocumentNode
 --------------------------------------------------------------------------------
 
 -------- operators
 
-[added B7] doc[property_name]
+doc[property_name]
   -> [nil or (Observable, ObservableList or DocumentNode, DocumentList object)]
 
-  
+
 -------- functions
 
 doc:has_property(property_name)
@@ -499,9 +500,6 @@ doc:has_property(property_name)
 -- such property.
 doc:property(property_name)
   -> [nil or (Observable, ObservableList or DocumentNode, DocumentList object)]
-
--- [changed B7] "add", "remove" is deprecated and will be removed in the final 
--- version, use the new "add_property", "remove_property" functions instead
 
 -- Add a new property. Name must be unique: overwriting already existing
 -- properties with the same name is not allowed and will fire an error.
@@ -527,14 +525,15 @@ doc:remove_property(document or observable object)
 doc:save_as(file_name)
   -> [success, error_string or nil on success]
 
--- Load the document tree from a XML file. This will !not! create new properties,
+-- Load the document tree from a XML file. This will NOT create new properties,
 -- except for list items, but will only assign existing property values in the 
 -- document node with existing property values from the XML.
 -- This means: nodes that only exist in the XML only will be silently ignored.
 -- Nodes that only exist in the document, will not be altered in any way.
--- The loaded document's type must match the document type that saved the XML data.
--- A documents type is specified in the renoise.Document.create function 
--- as 'model_name'. For classes which inherit from renoise.Document.DocumentNode,
--- its the Lua class name.
+-- The loaded document's type must match the document type that saved the XML
+-- data.
+-- A documents type is specified in the renoise.Document.create() function 
+-- as 'model_name'. For classes which inherit from renoise.Document.DocumentNode
+-- its the class name.
 doc:load_from(file_name)
   -> [success, error_string or nil on success]

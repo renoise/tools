@@ -147,7 +147,7 @@ os.filenames(path [, {file_extensions}]) -> [table of strings]
 -- same time. if you need to create more than one sub dir, call mkdir multiple 
 -- times. returns true if the operation was successful; in case of error, it 
 -- returns nil plus an error string. 
-[added RC1] os.mkdir(path) -> [boolean, error_string or nil]
+os.mkdir(path) -> [boolean, error_string or nil]
 
         
 -- changed
