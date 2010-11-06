@@ -71,6 +71,10 @@ function print_server_replies()
 
   repeat 
 
+    if client == nil then
+      return 
+    end
+    
     if client.is_open == false then
         --We got disconnected from the other end?
         stop_message_engine()
@@ -183,6 +187,40 @@ function print_server_replies()
 
           end
 
+          if SERVER_ARRAY[t] == "432" then  -- errornous nickname used
+
+            if connection_status == IN_PROGRESS then
+              stop_message_engine()
+
+              if connect_progress_dialog ~= nil then
+                connect_progress_dialog:close()
+              end
+
+              local err_msg = vb:text {
+                      
+                      text = "     Nickname "..irc_nick_name.." contains invalid characters. Avoid dots, spaces etc."
+                    }
+              local buttons = {"change", "exit"}
+              local choice = renoise.app():show_custom_prompt("IRC error", err_msg,buttons)
+
+              if choice == "change" then
+                client_login()
+              end
+
+             else
+
+               local channel_line = os.date("%c").." [SERVER] nick "..irc_nick_name.." contains invalid characters. Avoid dots, spaces etc."
+               chat_buffer = chat_buffer..channel_line.."\r\n"
+               
+               if irc_dialog == nil and chat_dialog ~= nil then
+                 vb_channel.views.channel_output_frame:add_line(channel_line)
+                 vb_channel.views.channel_output_frame:scroll_to_last_line()
+               end
+
+             end
+
+          end
+          
           if SERVER_ARRAY[t] == "473" then  -- channel is invite only
 
             if connection_status == IN_PROGRESS then
