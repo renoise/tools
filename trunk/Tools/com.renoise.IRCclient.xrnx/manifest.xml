@@ -2,7 +2,7 @@
 <RenoiseScriptingTool>
   <ApiVersion>1.0</ApiVersion>
   <Id>com.renoise.IRCclient</Id>
-  <Version>1.12</Version>
+  <Version>1.13</Version>
   <Name>Simple IRC Client</Name>
   <Author>Vincent Voois ( http://tinyurl.com/vvrns )</Author>
   <Description>Log on to #renoise on espernet</Description>
