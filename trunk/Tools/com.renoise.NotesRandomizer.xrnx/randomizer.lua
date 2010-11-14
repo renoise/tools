@@ -11,8 +11,9 @@ module("randomizer", package.seeall)
 
 class "Random"
 
--- Helper structure
--- Important: Do not change "Chaos", it represents "All notes" internally
+-- Helper structure, Important:
+-- Do not change "Chaos", it represents "All notes" internally.
+-- Do not change "Custom", pass a Lua table to set_mode() instead
 Random.modes = {
   { name = 'Chaos', notes = {'C-','C#','D-','D#','E-','F-','F#','G-','G#','A-','A#','B-'} },
   { name = 'Algerian', notes = {'C-','D-','E-','F-','F#','G-','A-','B-'} },
@@ -31,6 +32,7 @@ Random.modes = {
   { name = 'Pentatonic Major', notes = {'C-','D-','F-','G-','A-'} },
   { name = 'Pentatonic Minor', notes = {'C-','D#','F-','G-','A#'} },
   { name = 'Pentatonic Neutral', notes = {'C-','D-','F-','G-','A#'} },
+  { name = 'Custom', notes = { } },
 }
 
 -- Populate mode_names table with integers for keys (used for sorting)
@@ -42,7 +44,7 @@ end
 -- Populate note_sets table
 Random.note_sets = {}
 for _,v in pairs(Random.modes) do
-  Random.note_sets[v.name] = table.copy(v.notes)
+  Random.note_sets[v.name] = table.create(table.copy(v.notes))
 end
 
 function Random:__init(mode)
@@ -55,18 +57,33 @@ function Random:__init(mode)
 end
 
 function Random:set_mode(mode)
-  assert(Random.note_sets[mode] ~= nil)
-  self.mode = mode
+  if (type(mode) == "table") then
+    for _,v in pairs(mode) do
+      assert(Random.note_sets["Chaos"]:find(v))
+    end
+    self.mode = "Custom"
+    Random.note_sets["Custom"] = table.create()
+    for i = 1, 12 do
+      if (mode[i] ~= nil) then
+        Random.note_sets["Custom"]:insert(mode[i])
+      end
+    end
+  else
+    assert(Random.note_sets[mode] ~= nil)
+    self.mode = mode
+  end
 end
 
 function Random:set_key(key)
-  assert(table.find(Random.note_sets["Chaos"], key) ~= nil)
+  assert(Random.note_sets["Chaos"]:find(key) ~= nil)
   if key == self.key then return end
   self.key = key
 
   -- Reset keys to C-
   for _,v in pairs(Random.modes) do
-    Random.note_sets[v.name] = table.copy(v.notes)
+    if v.name ~= "Custom" then
+      Random.note_sets[v.name] = table.create(table.copy(v.notes))
+    end
   end
   if key == "C-" then return end
 
@@ -79,11 +96,11 @@ function Random:set_key(key)
 
   -- Change key for all scales
   for _,v in pairs(Random.modes) do
-    if v.name ~= "Chaos" then
+    if v.name ~= "Chaos" and v.name ~= "Custom" then
       local intervals = {}
       local key_table = Random.note_sets[v.name]
       for i = 1, #key_table do
-        table.insert(intervals, (table.find(Random.note_sets["Chaos"], key_table[i])))
+        table.insert(intervals, (Random.note_sets["Chaos"]:find(key_table[i])))
       end
       for i = 1, #intervals do
         key_table[i] = shift[intervals[i]]
@@ -118,6 +135,11 @@ end
 
 function Random:randomize(note)
 
+  if self.mode == "Custom" and #Random.note_sets["Custom"] == 0 then
+    -- Nothing to do?
+    return note
+  end
+
   local number = nil
   local prefix = nil
 
@@ -131,7 +153,7 @@ function Random:randomize(note)
     prefix = note_prefix_table[prefix]
     if self.preserve_notes and self.mode ~= "Chaos" then
       local prefix2 = string.sub(note, 1, 2)
-      if table.find(Random.note_sets[self.mode], prefix2) ~= nil then
+      if Random.note_sets[self.mode]:find(prefix2) ~= nil then
         prefix = prefix2
       end
     end
@@ -164,7 +186,7 @@ function Random:_neighbour(note)
   local number = tonumber(string.sub(note, -1))
   if
     self.preserve_notes and
-    table.find(Random.note_sets[self.mode], prefix) ~= nil
+    Random.note_sets[self.mode]:find(prefix) ~= nil
   then
     -- Keep note
   else
@@ -174,7 +196,7 @@ function Random:_neighbour(note)
     if shift == "up" then
       -- Shift up
       for i = pos + 1, #valid_notes do
-        if table.find(Random.note_sets[self.mode], valid_notes[i]) then
+        if Random.note_sets[self.mode]:find(valid_notes[i]) then
           prefix = valid_notes[i]
           found = true
           break
@@ -187,14 +209,14 @@ function Random:_neighbour(note)
     else
       -- Shift down
       for i = pos - 1, 1, -1 do
-        if table.find(Random.note_sets[self.mode], valid_notes[i]) then
+        if Random.note_sets[self.mode]:find(valid_notes[i]) then
           prefix = valid_notes[i]
           found = true
           break
         end
       end
       if found == false then --Rotate
-        local count = table.count(Random.note_sets[self.mode])
+        local count = Random.note_sets[self.mode]:count()
         prefix = Random.note_sets[self.mode][count]
         number = number - 1
       end

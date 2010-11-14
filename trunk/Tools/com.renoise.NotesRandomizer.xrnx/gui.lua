@@ -5,7 +5,7 @@ gui.lua
 module("gui", package.seeall)
 
 -- randomize_modes table, including shuffle
-randomize_modes = table.create( table.rcopy(Random.mode_names) )
+randomize_modes = table.create(table.rcopy(Random.mode_names))
 randomize_modes:insert(1, "Shuffle")
 
 -- available iterator ranges
@@ -26,6 +26,7 @@ range_modes = table.create {
 
 local current_range = #range_modes
 local current_mode = nil
+local current_custom = table.create()
 local current_key = "C-"
 local current_preserve_notes = false
 local current_preserve_octaves = true
@@ -80,6 +81,9 @@ local function invoke_current_random()
   if (mode == "Shuffle") then
     randomizer.invoke_shuffle(iter, selection_only)
   else
+    if (mode == "Custom") then
+      mode = current_custom
+    end
     randomizer.invoke_random(
       mode, iter, selection_only, current_key, current_preserve_notes,
       current_preserve_octaves, current_neighbour, current_neighbour_shift,
@@ -93,10 +97,14 @@ end
 -- redraw
 
 local function redraw(vb)
+  -- hide custom
+  vb.views.custom_column.visible =
+    current_mode == randomize_modes:find("Custom")
   -- hide key
   vb.views.key_column.visible =
     (current_mode ~= randomize_modes:find("Shuffle") and
-    current_mode ~= randomize_modes:find("Chaos"))
+    current_mode ~= randomize_modes:find("Chaos") and
+    current_mode ~= randomize_modes:find("Custom"))
   -- hide neighbour
   vb.views.neighbour_row.visible =
     (current_mode ~= randomize_modes:find("Shuffle") and
@@ -189,13 +197,48 @@ function show_randomize_gui()
 
   local key_selector = vb:popup {
     items = Random.note_sets["Chaos"],
-    value = table.find(Random.note_sets["Chaos"], tostring(current_key)),
+    value = Random.note_sets["Chaos"]:find(tostring(current_key)),
     notifier = function(value)
       current_key = Random.note_sets["Chaos"][value]
       redraw(vb)
     end,
     width = POPUP_WIDTH
   }
+
+  local custom_selector = vb:column {
+    style = "border",
+    margin = DIALOG_MARGIN,
+    spacing = CONTROL_SPACING,
+  }
+  local custom_selector_row = vb:row { spacing = CONTROL_SPACING }
+  local j = 1
+  for i = 1, #Random.note_sets["Chaos"] do
+    custom_selector_row:add_child(vb:text {
+      text = Random.note_sets["Chaos"][i],
+      font = "mono"
+    })
+    local bool = false
+    if current_custom:find(Random.note_sets["Chaos"][i]) ~= nil then
+      bool = true
+    end
+    custom_selector_row:add_child(vb:checkbox {
+      value = bool,
+      notifier = function(value)
+        if (value) then
+          current_custom[i] = Random.note_sets["Chaos"][i]
+        else
+          current_custom[i] = nil
+        end
+      end
+    })
+    j = j + 1
+    if (j > 3) then
+      j = 1
+      custom_selector:add_child(custom_selector_row)
+      custom_selector_row = vb:row { spacing = CONTROL_SPACING }
+    end
+  end
+  custom_selector:add_child(custom_selector_row)
 
   local preserve_notes_switch = vb:checkbox {
     value = current_preserve_notes,
@@ -295,6 +338,12 @@ function show_randomize_gui()
       id = "key_column",
       vb:text { text = 'Key:' },
       key_selector,
+    },
+
+    vb:column {
+      id = "custom_column",
+      vb:text { text = 'Custom Scale:' },
+      custom_selector,
     },
 
     vb:row {
