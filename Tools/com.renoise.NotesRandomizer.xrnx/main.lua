@@ -76,9 +76,12 @@ renoise.tool():add_keybinding {
 -- menu registration
 --------------------------------------------------------------------------------
 
--- Randomize GUI
+renoise.tool():add_menu_entry {
+  name = "Main Menu:Tools:Randomize Notes...",
+  invoke = gui.show_randomize_gui
+}
+
 renoise.tool():add_menu_entry {
   name = "Pattern Editor:Randomize Notes...",
   invoke = gui.show_randomize_gui
 }
-
