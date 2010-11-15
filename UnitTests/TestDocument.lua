@@ -16,15 +16,41 @@ do
   -- manual doc creation
   
   local doc = renoise.Document.create("TestDocument"){}
-  local number = doc:add_property("number_value", 1)
-  local number2 = doc:add_property("number_value2", 2)
-  local string_value = doc:add_property("string_value", "string_value")
-  local boolean_value = doc:add_property("boolean_value", true)
+
+  local number, string_value, boolean_value
+  local number_list, string_list, boolean_list
   
-  local number_list = doc:add_property("number_list", { 11, 12, 13})
-  local string_list = doc:add_property("string_list", { "11", "12", "13"})
-  local boolean_list = doc:add_property("boolean_list", { false, false} )
-      
+  if ((math.random(4) % 2 == 0)) then
+    number = doc:add_property("number_value", 1)
+    string_value = doc:add_property("string_value", "string_value")
+    boolean_value = doc:add_property("boolean_value", true)
+  else
+    number = doc:add_property("number_value", 
+      renoise.Document.ObservableNumber(1))
+    string_value = doc:add_property("string_value", 
+      renoise.Document.ObservableString("string_value"))
+    boolean_value = doc:add_property("boolean_value",
+      renoise.Document.ObservableBoolean(true))
+  end
+  
+  if (not (math.random(4) % 2 == 0)) then
+    number_list = doc:add_property("number_list", { 11, 12, 13} )
+    string_list = doc:add_property("string_list", { "11", "12", "13"} )
+    boolean_list = doc:add_property("boolean_list", { false, false} )
+  else      
+    number_list = doc:add_property("number_list",
+      renoise.Document.ObservableNumberList())
+    number_list:insert(11); number_list:insert(12); number_list:insert(13)
+    
+    string_list = doc:add_property("string_list",
+      renoise.Document.ObservableStringList())
+    string_list:insert("11"); string_list:insert("12"); string_list:insert("13")
+    
+    boolean_list = doc:add_property("boolean_list",
+      renoise.Document.ObservableBooleanList())
+    boolean_list:insert(false); boolean_list:insert(false)
+  end
+  
   local nested_doc = renoise.Document.create("TestDocumentNode"){ }
   nested_doc:add_property("sub_number_value", 2)
   nested_doc:add_property("sub_string_value", "string_value2")
@@ -86,9 +112,6 @@ do
   assert(number * 2 == 24)
   assert(number / 2 == 6)
   assert(number / 2 == 6)
-  
-  number2.value = 4
-  assert(number + number2 == 16)
   
   
   ----------------------------------------------------------------------------
