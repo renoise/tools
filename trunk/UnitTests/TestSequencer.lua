@@ -28,14 +28,17 @@ do
   
   -- insert/delete
   
-  sequencer:insert_sequence_at(1, 5)
+  sequencer:insert_sequence_at(2, 5)
   assert(#sequencer.pattern_sequence == 5)
   
   sequencer:insert_sequence_at(#sequencer.pattern_sequence, 6)
   assert(#sequencer.pattern_sequence == 6)
   
+  sequencer:insert_sequence_at(#sequencer.pattern_sequence + 1, 7)
+  assert(#sequencer.pattern_sequence == 7)
+  
   assert_error(function()
-    sequencer:insert_sequence_at(6, 1001)
+    sequencer:insert_sequence_at(7, 1001)
   end)
   
   assert_error(function()
@@ -52,19 +55,21 @@ do
     sequencer.pattern_sequence[1] == 1 and
     sequencer.pattern_sequence[2] == 2 and
     sequencer.pattern_sequence[3] == 3 and
-    sequencer.pattern_sequence[4] == 4 and
-    sequencer.pattern_sequence[5] == 6)
+    sequencer.pattern_sequence[4] == 6 and
+    sequencer.pattern_sequence[5] == 4 and
+    sequencer.pattern_sequence[6] == 7)
     
   
-  sequencer:insert_new_pattern_at(#sequencer.pattern_sequence)
+  sequencer:insert_new_pattern_at(#sequencer.pattern_sequence + 1)
   
   assert(
     sequencer.pattern_sequence[1] == 1 and
     sequencer.pattern_sequence[2] == 2 and
     sequencer.pattern_sequence[3] == 3 and
-    sequencer.pattern_sequence[4] == 4 and
-    sequencer.pattern_sequence[5] == 6 and
-    sequencer.pattern_sequence[6] == 7)
+    sequencer.pattern_sequence[4] == 6 and
+    sequencer.pattern_sequence[5] == 4 and
+    sequencer.pattern_sequence[6] == 7 and
+    sequencer.pattern_sequence[7] == 8)
     
   
   -- sequence_pos / current_pattern
@@ -73,12 +78,12 @@ do
     song.selected_sequence_index = 0
   end)
   assert_error(function()
-    song.selected_sequence_index = 7
+    song.selected_sequence_index = 8
   end)
   
   
   song.selected_sequence_index = 5
-  assert(song.selected_pattern_index == 6)
+  assert(song.selected_pattern_index == 4)
   
   song.selected_pattern_index = 5
   
