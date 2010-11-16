@@ -28,6 +28,7 @@ function instruments_list_changed()
 end
 
 
+
 --------------------------------------------------------------------------------
 
 function new_song_loaded()
@@ -67,6 +68,7 @@ end
 
 
 --------------------------------------------------------------------------------
+
 
 function change_tab(int_operator_number)
 
@@ -139,6 +141,7 @@ end
 
 
 --------------------------------------------------------------------------------
+
 
 function generate_modulator_matrix()
   local array_string_modulators = {}
@@ -277,6 +280,7 @@ function reset_gui()
   vb.views.chkInvert.value = false
   vb.views.chkAutoGenerate.value = false
 end
+
 
 
 --------------------------------------------------------------------------------
@@ -540,6 +544,10 @@ function show_dialog()
         value = 1,
         notifier = function(new_index)
           array_int_modulators[int_operator_selected] = new_index - 1
+		  local bool_is_modulated, int_modulator = is_modulated(new_index - 1)
+		  if(bool_is_modulated) then
+		    array_int_modulators[int_modulator] = 0
+		  end
           if toggle_auto_generate then
             generate()
           end
