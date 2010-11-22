@@ -12,6 +12,7 @@ _AUTO_RELOAD_DEBUG = function()
   vb = nil
 end
 
+
 --------------------------------------------------------------------------------
 -- Menu entries
 --------------------------------------------------------------------------------
@@ -20,6 +21,13 @@ renoise.tool():add_menu_entry {
   name = "Scripting Menu:File:Create New Tool...",
   invoke = function()
     show_dialog()
+  end
+}
+
+renoise.tool():add_menu_entry {
+  name = "Scripting Menu:File:Export to XRNX file...",
+  invoke = function()
+    show_zip_dialog()
   end
 }
 
@@ -34,18 +42,22 @@ renoise.tool():add_menu_entry {
 
 --]]
 
+
 --------------------------------------------------------------------------------
 -- Preferences (form defaults)
 --------------------------------------------------------------------------------
 
 local options = renoise.Document.create("ScriptingToolPreferences") {    
-  ConfirmOverwrite = true,
+  ConfirmOverwrite = true,  
   Domain = "YourDomain",
   DefaultDomain = true,
   TLD = "com", 
   TLD_id = 1, 
   Email = "you@yourdomain.xyz",
-  Desc = renoise.Document.ObservableStringList()
+  Desc = renoise.Document.ObservableStringList(),
+  -- export options
+  ExportOverwrite = true,
+  ExportDefaultDestination = true
 }
 options:add_property("Name", "The Tool Name")
 options:add_property("Id", "com.myorg.ToolName")        
@@ -58,6 +70,8 @@ options:add_property("Icon", "")
 local categories = {"Pattern Editor", "Sample Editor", "Instruments", "Algorithmic composition"}
 
 renoise.tool().preferences = options
+
+
 --------------------------------------------------------------------------------
 -- Manifest Document Structure
 --------------------------------------------------------------------------------
@@ -104,10 +118,13 @@ class "RenoiseScriptingTool"(renoise.Document.DocumentNode)
   
 
 local manifest = RenoiseScriptingTool()
+
   
 --------------------------------------------------------------------------------
 -- I/O and file system functions
 --------------------------------------------------------------------------------
+
+local MYTOOLS = "__MyTools__"
 
 local SEP = "/"
 if (os.platform() == "WINDOWS") then
@@ -210,11 +227,10 @@ end
 -- Tool creation functions
 --------------------------------------------------------------------------------
 
-
 local function create_tool()
   local root = get_tools_root()  
   local folder_name = vb.views.name_preview.text
-  local my_tools = create_folder(root, "__MyTools__")
+  local my_tools = create_folder(root, MYTOOLS)
   local target_folder = create_folder(my_tools, folder_name)
   if (not target_folder) then
     return
@@ -265,9 +281,14 @@ local function camel_case(str)
   return str
 end
 
+
 --------------------------------------------------------------------------------
 -- GUI
 --------------------------------------------------------------------------------
+
+local DIALOG_BUTTON_HEIGHT = renoise.ViewBuilder.DEFAULT_DIALOG_BUTTON_HEIGHT
+local DEFAULT_DIALOG_MARGIN = renoise.ViewBuilder.DEFAULT_DIALOG_MARGIN
+local DEFAULT_CONTROL_SPACING = renoise.ViewBuilder.DEFAULT_CONTROL_SPACING
 
 local function is_form_complete()
   local ok = false  
@@ -298,10 +319,6 @@ function show_dialog()
 
   vb = renoise.ViewBuilder()
 
-  local DEFAULT_DIALOG_MARGIN =
-    renoise.ViewBuilder.DEFAULT_DIALOG_MARGIN
-  local DEFAULT_CONTROL_SPACING =
-    renoise.ViewBuilder.DEFAULT_CONTROL_SPACING
   local TEXT_ROW_WIDTH = 100
   local WIDE = 180
 
@@ -543,13 +560,15 @@ example, rfc920.txt and rfc1032.txt.]]
       vb:button {
         id = "save_button",
         text = "Save and Create Tool",
+        height = DIALOG_BUTTON_HEIGHT,
         active = is_form_complete(),
         notifier = function()        
           create_tool()
-        end    
+        end        
       },
       vb:button {
         text = "Preferences",
+        height = DIALOG_BUTTON_HEIGHT,
         notifier = function()
           local vb = renoise.ViewBuilder()
           local content = vb:column {
@@ -593,3 +612,139 @@ example, rfc920.txt and rfc1032.txt.]]
 end
 
 
+--------------------------------------------------------------------------------
+-- Export Tool folder to XRNX file (ZIP)
+--------------------------------------------------------------------------------
+
+local zip_dialog = nil
+
+require "zip"
+
+-- Create an XRNX file by ZIP'ing the Tool within the __MyTools__ folder
+function zip_tool(path)      
+  local source_folder = get_tools_root() .. MYTOOLS .. SEP .. path 
+  local target_folder = get_tools_root()..MYTOOLS..SEP.."XRNX"
+  
+  -- browse to custom output folder 
+  if (not options.ExportDefaultDestination.value) then
+    target_folder = renoise.app():prompt_for_path("Choose")      
+    print(type(target_folder), target_folder)
+    if (not target_folder or target_folder == "") then
+       return false, "Export operation was cancelled."
+    end          
+  end
+  
+  -- create output folder if it does not exist
+  if (not io.exists(target_folder)) then
+    os.mkdir(target_folder)
+  end  
+  
+  -- strip trailing slash
+  if (target_folder:sub(-1) == SEP) then
+    target_folder = target_folder:sub(1,-2)
+  end
+  
+  -- construct absolute output file path
+  local destination = target_folder..SEP..path    
+  
+  -- ask to overwrite
+  if (options.ExportOverwrite.value == false and io.exists(destination)) then
+    local choice = renoise.app():show_prompt(
+      "File exists", 
+      "The file\n\n"..destination.."\n\nalready exists. Overwrite existing file?", 
+      {"Overwrite", "Cancel"})
+    if (choice ~= "Overwrite") then
+      return false, "Export operation was cancelled."
+    end
+  end
+  
+  -- zip
+  return zip(source_folder, destination)
+end
+
+-- Returns a list of Tool folders in the __MyTools__ folder
+function get_mytools()
+  local t = os.dirnames(get_tools_root() .. MYTOOLS)
+  local list = table.create()
+  for _,v in ipairs(t) do
+    if (v:match("xrnx$")) then
+      list:insert(v)
+    end
+  end      
+  return list
+end
+
+
+-- GUI -----------
+
+function show_zip_dialog()
+
+  if zip_dialog and zip_dialog.visible then
+    zip_dialog:show()
+    return
+  end
+
+  vb = renoise.ViewBuilder()
+  
+  local dialog_title = "Export Tool folder to XRNX file"
+  local dialog_content = vb:column {
+    margin = DEFAULT_DIALOG_MARGIN,
+    spacing = DEFAULT_CONTROL_SPACING,    
+    
+    vb:text {
+      text = "Choose folder to export:"
+    },   
+    vb:popup {
+      id = "mytools",
+      items = get_mytools(),
+      width = 260
+    },
+    vb:row { 
+      spacing = DEFAULT_CONTROL_SPACING,
+      vb:checkbox {                
+        bind = options.ExportOverwrite
+      },
+      vb:text {
+        text = "Overwrite existing files",        
+      }
+    },
+    vb:row { 
+      spacing = DEFAULT_CONTROL_SPACING,
+      vb:checkbox {                
+        bind = options.ExportDefaultDestination
+      },
+      vb:text {
+        text = "Save files into default XRNX export folder",
+      }
+    },    
+    vb:row {
+      spacing = DEFAULT_CONTROL_SPACING,
+      vb:button {
+        text = "Export folder",
+        height = DIALOG_BUTTON_HEIGHT,        
+        notifier = function()
+          local items = vb.views.mytools.items
+          local id = vb.views.mytools.value        
+          local ok,err = zip_tool(items[id])
+          if (not ok) then                      
+            renoise.app():show_error(err)
+          else
+            local msg = "The XRNX file was succesfully created."              
+            renoise.app():show_message(msg)
+          end
+        end
+      },
+      vb:button {
+        text = "Browse default XRNX export folder",
+        height = DIALOG_BUTTON_HEIGHT,
+        notifier = function()
+          renoise.app():open_path(get_tools_root()..MYTOOLS..SEP.."XRNX")
+        end
+      }
+    }
+  }
+  
+  zip_dialog = renoise.app():show_custom_dialog(
+    dialog_title, dialog_content)
+
+end  
