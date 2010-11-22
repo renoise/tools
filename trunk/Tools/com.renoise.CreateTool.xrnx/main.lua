@@ -617,6 +617,7 @@ end
 --------------------------------------------------------------------------------
 
 local zip_dialog = nil
+local vbz = nil
 
 require "zip"
 
@@ -696,65 +697,67 @@ function show_zip_dialog()
     return
   end
 
-  vb = renoise.ViewBuilder()
+  vbz = renoise.ViewBuilder()
   
   local dialog_title = "Export Tool folder to XRNX file"
-  local dialog_content = vb:column {
+  local dialog_content = vbz:column {
     margin = DEFAULT_DIALOG_MARGIN,
     spacing = DEFAULT_CONTROL_SPACING,    
     
-    vb:text {
+    vbz:text {
       text = "Choose folder to export:"
     },   
-    vb:popup {
+    vbz:popup {
       id = "mytools",
       items = get_mytools(),
       width = 260
     },
-    vb:row { 
+    vbz:row { 
       spacing = DEFAULT_CONTROL_SPACING,
-      vb:checkbox {                
+      vbz:checkbox {                
         bind = options.ExportOverwrite
       },
-      vb:text {
+      vbz:text {
         text = "Overwrite existing files",        
       }
     },
-    vb:row { 
+    vbz:row { 
       spacing = DEFAULT_CONTROL_SPACING,
-      vb:checkbox {                
+      vbz:checkbox {                
         bind = options.ExportDefaultDestination
       },
-      vb:text {
+      vbz:text {
         text = "Save files into default XRNX export folder",
       }
     },    
-    vb:row {
+    vbz:row {
       spacing = DEFAULT_CONTROL_SPACING,
-      vb:button {
+      vbz:button {
         text = "Export folder",
+        active = vbz.views.mytools.items[1] ~= "None",
         height = DIALOG_BUTTON_HEIGHT,        
         notifier = function()
-          local items = vb.views.mytools.items
-          local id = vb.views.mytools.value        
+          local items = vbz.views.mytools.items
+          local id = vbz.views.mytools.value        
           local ok,err = zip_tool(items[id])          
         end
       },
-      vb:button {
+      vbz:button {
         text = "Browse default XRNX export folder",
+        active = vbz.views.mytools.items[1] ~= "None",
         height = DIALOG_BUTTON_HEIGHT,
         notifier = function()
           local path = get_tools_root()..MYTOOLS..SEP.."XRNX"
-          if (not io.exists(path)) then
+          if (not io.exists(path)) then            
             os.mkdir(path)
           end
           renoise.app():open_path(path)
         end
       }
     }
-  }
+  }  
   
   zip_dialog = renoise.app():show_custom_dialog(
     dialog_title, dialog_content)
 
-end  
+end
