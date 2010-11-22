@@ -85,9 +85,9 @@ function zip(path, destination)
   local str = ""  
   if (stat.type == "directory") then
     -- go to the folder and zip folder contents   
-    str = ("cd %s && %s -r %s *"):format(path, zip, destination)    
+    str = ('cd "%s" && "%s" -r "%s" *'):format(path, zip, destination)    
   else 
-    str = ("zip -j %s %s"):format(path, destination, path)
+    str = ('zip -j "%s" "%s"'):format(path, destination, path)
   end  
   
   TRACE(str)
