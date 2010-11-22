@@ -66,32 +66,40 @@ code[18] =
 [[Zip could not open a specified file for reading; either it doesn't exist or 
 the user running Zip doesn't have permission to read it.]]
 
+
 -- Zips the file at the given path to the given destination.
 -- Depends on Info-ZIP Zip, which is included with Unix/Linux/MacOSX.
 -- For Windows a Zip executable is required.
 function zip(path, destination)
+  local zip = "zip"
+  if (os.platform()=="WINDOWS") then    
+    zip = renoise.tool().bundle_path .. "\zip.exe"
+  end
   if (not io.exists(path)) then
     return false, "Zip: The input path '".. path .."' does not exist."
+  else 
+    -- empty existing zip file
+    TRACE("Zip: deleted contents, exit code " .. os.execute("zip -d " .. destination .. " *"))
   end
   local stat = io.stat(path)
-  local str = ""
+  local str = ""  
   if (stat.type == "directory") then
-    -- go within source folder
-    os.execute("cd " .. path)
-    str = ("zip -r %s *"):format(destination)
+    -- go to the folder and zip folder contents   
+    str = ("cd %s && %s -r %s *"):format(path, zip, destination)    
   else 
-    str = ("zip %s %s"):format(destination, path)
+    str = ("zip -j %s %s"):format(path, destination, path)
   end  
   
   TRACE(str)
   
   local error_code = os.execute(str)
+  local err = (code[error_code] or 
+    "Unknown exit code encountered: " .. error_code)
 
-  TRACE("Zip: " .. (code[error_code] or
-    "Unknown error encountered while unzipping."))
+  TRACE("Zip: " .. err)
     
   if (error_code ~= 0) then 
-    return false, code[error_code]
+    return false, err
   end
   return true
 end
