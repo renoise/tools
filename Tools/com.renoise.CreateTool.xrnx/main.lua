@@ -44,20 +44,20 @@ local options = renoise.Document.create("ScriptingToolPreferences") {
   DefaultDomain = true,
   TLD = "com", 
   TLD_id = 1, 
-  Email = "you@yourdomain.xyz"
+  Email = "you@yourdomain.xyz",
+  Desc = renoise.Document.ObservableStringList()
 }
 options:add_property("Name", "The Tool Name")
 options:add_property("Id", "com.myorg.ToolName")        
 options:add_property("Author", "My Name")
 options:add_property("Category", "In Progress")
-options:add_property("Description", "")
+options:add_property("Description",  "Too lazy")
 options:add_property("Homepage", "http://tools.renoise.com")
 options:add_property("Icon", "")  
 
 local categories = {"Pattern Editor", "Sample Editor", "Instruments", "Algorithmic composition"}
 
 renoise.tool().preferences = options
-
 --------------------------------------------------------------------------------
 -- Manifest Document Structure
 --------------------------------------------------------------------------------
@@ -89,13 +89,13 @@ class "RenoiseScriptingTool"(renoise.Document.DocumentNode)
     self.ApiVersion = renoise.API_VERSION       
     if (trim(options.Email.value) ~= "" and 
       options.Email.value ~= "you@yourdomain.xyz") then
-      self.Name.value = options.Name.value .. " | " .. options.Email.value      
+      self.Author.value = options.Author.value .. " | " .. options.Email.value      
     else
-      self.Name.value = options.Name.value    
+      self.Author.value = options.Author.value    
     end
     
     -- copied fields
-    self.Author.value = options.Author.value    
+    self.Name.value = options.Name.value    
     self.Description.value = options.Description.value
     self.Category.value = options.Category.value    
     self.Homepage.value = options.Homepage.value
@@ -122,19 +122,6 @@ function get_tools_root()
   return dir:sub(1,dir:find("Tools")+5)      
 end
 
---[[
-
-class "File"
-function File:__init(parent, child)
-  self.path = parent .. child
-end
-
-local function validate_folder_name(name)
-
-end
-
---]]
-
 local function create_folder(parent, child)
   if (parent == nil) then
     renoise.app():show_error("Parent folder was empty: " .. child)  
@@ -158,7 +145,7 @@ end
 local function may_overwrite(path)
   local overwrite = true
   if (io.exists(path) and options.ConfirmOverwrite.value) then
-    local buttons = {"Overwrite", "Keep existing file", "Always Overwrite"}
+    local buttons = {"Overwrite", "Keep existing file" ,"Always Overwrite"}
     local choice = renoise.app():show_prompt("File exists", "The file\n\n " ..path .. " \n\n"
       .. "already exists. Overwrite existing file?", buttons)
     if (choice==buttons[3]) then 
@@ -285,6 +272,7 @@ end
 local function is_form_complete()
   local ok = false  
   ok = (nil ~= vb.views.name_preview.text:match("^[%w]+%.[%w%-_!]+%.[%w%-_!]+%.xrnx$"))  
+  ok = ok and (trim(options.Description.value) ~= "")
   return ok
 end
 
@@ -346,26 +334,23 @@ function show_dialog()
   end
   
   local function get_tool_name()
-    local raw = vb.views.tool_name_text.text
-    print("raw "..raw)
+    local raw = vb.views.tool_name_text.text  
     raw = clean_component(raw)    
     return camel_case(raw)
   end
   
   local function get_email()
-    local raw = trim(vb.views.email_text.text)
-    if (raw == "") then 
-      return
-    end
-    if (not raw:match(
+    local raw = trim(vb.views.email_text.text)    
+    if (raw ~= "" and not raw:match(
       "[A-Za-z0-9%.%%%+%-]+@[A-Za-z0-9%.%%%+%-]+%.%w%w%w?%w?"
       )) then
-      renoise.app():show_warning("The e-mail address is not valid")
+      renoise.app():show_warning("Invalid e-mail address")
     end
+    return raw
   end
   
-  local function update_preview()
-    vb.views.email_text.value = trim(vb.views.email_text.value)
+  local function update_preview()    
+    vb.views.email_text.value = get_email()
     vb.views.author_text.value = trim(options.Author.value)      
     vb.views.tool_name_text.value = trim(options.Name.value)
     
@@ -377,7 +362,9 @@ function show_dialog()
     
     options.TLD.value = get_tld()
     options.Domain.value = get_domain()
-    options.Description.value = vb.views.description_text.text
+    options.Homepage.value = trim(vb.views.homepage_text.text)
+    options.Category.value = trim(vb.views.category_text.text)
+    options.Description.value = trim(vb.views.description_text.text)
     vb.views.save_button.active = is_form_complete()
   end
 
@@ -387,9 +374,9 @@ function show_dialog()
   local dialog_content = vb:column {
     margin = DEFAULT_DIALOG_MARGIN,
     spacing = DEFAULT_CONTROL_SPACING,
-    uniform = true,             
+    uniform = true,      
     
-    vb:column {
+    vb:column {            
       style = "panel",
       margin = 5,
       
@@ -411,6 +398,7 @@ function show_dialog()
     vb:column {
       style = "group",
       margin = 5,      
+      width = 240, -- prevent resize
       
       vb:text {
         text = "Give your new Tool a name",
@@ -495,7 +483,27 @@ example, rfc920.txt and rfc1032.txt.]]
       },      
     },      
     
-   
+    vb:column {
+      style = "group",
+      margin = 5,
+      uniform = true,
+    
+      vb:text { 
+        font = "bold",
+        text = "Mandatory Manifest Fields",        
+      },    
+    
+      vb:text { text = "Description" },
+      vb:multiline_textfield  {
+        id = "description_text",      
+        height = 60, 
+        bind = options.Desc,        
+        notifier = function()           
+           update_preview()
+        end 
+        --text = options.Description.value,               
+      }    
+    },
     
     vb:column {
       style = "group",
@@ -504,28 +512,22 @@ example, rfc920.txt and rfc1032.txt.]]
     
       vb:text { 
         font = "bold",
-        text = "Additional Manifest Fields",        
+        text = "Optional Manifest Fields",        
       },    
       
       vb:text { text = "E-Mail" },
       vb:textfield {
         id = "email_text",
-        bind = options.Email
+        bind = options.Email,
+        notifier = update_preview
       },
       
       vb:text { text = "Homepage" },
       vb:textfield {
         id = "homepage_text",
-        bind = options.Homepage
-      },
-  
-  
-      vb:text { text = "Description" },
-      vb:multiline_textfield  {
-        id = "description_text",      
-        height = 60, 
-        text = options.Description.value
-      },
+        bind = options.Homepage,
+        notifier = update_preview
+      },     
       
       vb:text { text = "Category" },
       vb:textfield {        
@@ -533,16 +535,39 @@ example, rfc920.txt and rfc1032.txt.]]
         bind = options.Category,
         notifier = function(text)         
           autocomplete(text)
+          update_preview()
         end
       }
     },
-    vb:button {
-      id = "save_button",
-      text = "Save and Create Tool",
-      active = is_form_complete(),
-      notifier = function()        
-        create_tool()
-      end    
+    vb:row{
+      vb:button {
+        id = "save_button",
+        text = "Save and Create Tool",
+        active = is_form_complete(),
+        notifier = function()        
+          create_tool()
+        end    
+      },
+      vb:button {
+        text = "Preferences",
+        notifier = function()
+          local vb = renoise.ViewBuilder()
+          local content = vb:column {
+            margin = 5,
+            vb:horizontal_aligner {
+              spacing = 5,              
+              vb:checkbox {                
+                bind = options.ConfirmOverwrite
+              },
+              vb:text { 
+                text = "Ask before overwriting files and folders"
+              }
+            }
+          }
+          renoise.app():show_custom_prompt(
+            "Preferences for the 'Create New Tool' Tool", content, {"Save and Close"})
+        end        
+      }
     }
   }
   
