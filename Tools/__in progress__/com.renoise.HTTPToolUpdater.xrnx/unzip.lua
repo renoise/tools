@@ -1,5 +1,5 @@
 -------------------------------------------------------------------------------
---  ZIP functions (Info-ZIP)
+--  UNZIP functions (Info-ZIP)
 -------------------------------------------------------------------------------
 
 -- Info-ZIP UnZip Error Code list:
@@ -69,7 +69,11 @@ file is successfully processed, however, the exit status is 1.)]]
 -- Depends on Info-ZIP UnZip, which is included with Unix/Linux/MacOSX.
 -- This Tool contains an UnZip executable for Windows.
 function unzip(path, destination)
-  local error_code = os.execute(("unzip %s -d %s"):format(path, destination)) 
+  local str = ("unzip %s -d %s"):format(path, destination)
+  
+  TRACE(str)
+  
+  local error_code = os.execute(str) 
 
   TRACE("UnZip: " .. (code[error_code] or 
     "Unknown error encountered while unzipping."))
