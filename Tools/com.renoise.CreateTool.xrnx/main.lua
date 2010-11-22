@@ -659,12 +659,24 @@ function zip_tool(path)
   end
   
   -- zip
-  return zip(source_folder, destination)
+  local ok, err = zip(source_folder, destination)
+  if (not ok) then                      
+    renoise.app():show_error(err)
+  else
+    local msg = "The XRNX file was succesfully created at the following location:\n\n"
+      .. destination 
+    renoise.app():show_message(msg)
+  end
+  return ok, err
 end
 
 -- Returns a list of Tool folders in the __MyTools__ folder
 function get_mytools()
-  local t = os.dirnames(get_tools_root() .. MYTOOLS)
+  local path = get_tools_root() .. MYTOOLS
+  if (not io.exists(path)) then
+    return {}
+  end
+  local t = os.dirnames(path)
   local list = table.create()
   for _,v in ipairs(t) do
     if (v:match("xrnx$")) then
@@ -725,20 +737,18 @@ function show_zip_dialog()
         notifier = function()
           local items = vb.views.mytools.items
           local id = vb.views.mytools.value        
-          local ok,err = zip_tool(items[id])
-          if (not ok) then                      
-            renoise.app():show_error(err)
-          else
-            local msg = "The XRNX file was succesfully created."              
-            renoise.app():show_message(msg)
-          end
+          local ok,err = zip_tool(items[id])          
         end
       },
       vb:button {
         text = "Browse default XRNX export folder",
         height = DIALOG_BUTTON_HEIGHT,
         notifier = function()
-          renoise.app():open_path(get_tools_root()..MYTOOLS..SEP.."XRNX")
+          local path = get_tools_root()..MYTOOLS..SEP.."XRNX"
+          if (not io.exists(path)) then
+            os.mkdir(path)
+          end
+          renoise.app():open_path(path)
         end
       }
     }
