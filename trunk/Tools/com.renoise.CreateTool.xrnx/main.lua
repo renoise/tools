@@ -54,7 +54,6 @@ local options = renoise.Document.create("ScriptingToolPreferences") {
   TLD = "com", 
   TLD_id = 1, 
   Email = "you@yourdomain.xyz",
-  Desc = renoise.Document.ObservableStringList(),
   -- export options
   ExportOverwrite = true,
   ExportDefaultDestination = true
@@ -63,7 +62,7 @@ options:add_property("Name", "The Tool Name")
 options:add_property("Id", "com.myorg.ToolName")        
 options:add_property("Author", "My Name")
 options:add_property("Category", "In Progress")
-options:add_property("Description",  "Too lazy")
+options:add_property("Description",  "")
 options:add_property("Homepage", "http://tools.renoise.com")
 options:add_property("Icon", "")  
 
@@ -88,7 +87,7 @@ class "RenoiseScriptingTool"(renoise.Document.DocumentNode)
     self:add_property("ApiVersion", 1)
     self:add_property("Author", "")
     self:add_property("Category", "")
-    self:add_property("Description", "Too lazy")
+    self:add_property("Description", "")
     self:add_property("Homepage", "")
     self:add_property("Icon", "")
   end
@@ -289,6 +288,7 @@ end
 local DIALOG_BUTTON_HEIGHT = renoise.ViewBuilder.DEFAULT_DIALOG_BUTTON_HEIGHT
 local DEFAULT_DIALOG_MARGIN = renoise.ViewBuilder.DEFAULT_DIALOG_MARGIN
 local DEFAULT_CONTROL_SPACING = renoise.ViewBuilder.DEFAULT_CONTROL_SPACING
+local TEXTFIELD_WIDTH = 180
 
 local function is_form_complete()
   local ok = false  
@@ -318,9 +318,6 @@ function show_dialog()
   end
 
   vb = renoise.ViewBuilder()
-
-  local TEXT_ROW_WIDTH = 100
-  local WIDE = 180
 
   local dialog_title = "Create New Tool"
   local dialog_buttons = {"Close"};
@@ -410,27 +407,32 @@ function show_dialog()
         font = "italic", 
         text = "(Any disallowed characters are filtered out)" 
       }
-    },
-      
+    }, 
+     
     vb:column {
       style = "group",
-      margin = 5,      
-      width = 240, -- prevent resize
-      
+      spacing = DEFAULT_CONTROL_SPACING,
+      margin = 5,                   
+        
       vb:text {
         text = "Give your new Tool a name",
         font = "bold"
       },
       
-      vb:text { text = "Tool Name" },
-      vb:textfield { 
+      vb:text { 
+        text = "Tool Name", 
+        width = 220 
+      },
+      vb:textfield {         
+        width = TEXTFIELD_WIDTH,
         id = "tool_name_text", 
         bind = options.Name, 
         notifier = update_preview,                
       },
       
       vb:text {text= "Author"},
-      vb:textfield { 
+      vb:textfield {         
+        width = TEXTFIELD_WIDTH,      
         id = "author_text",
         notifier = update_preview,
         bind = options.Author
@@ -514,7 +516,8 @@ example, rfc920.txt and rfc1032.txt.]]
       vb:multiline_textfield  {
         id = "description_text",      
         height = 60, 
-        bind = options.Desc,        
+        width = "100%",
+        text = options.Description.value,
         notifier = function()           
            update_preview()
         end 
@@ -536,14 +539,16 @@ example, rfc920.txt and rfc1032.txt.]]
       vb:textfield {
         id = "email_text",
         bind = options.Email,
-        notifier = update_preview
+        notifier = update_preview,
+        width = TEXTFIELD_WIDTH
       },
       
       vb:text { text = "Homepage" },
       vb:textfield {
         id = "homepage_text",
         bind = options.Homepage,
-        notifier = update_preview
+        notifier = update_preview,
+        width = TEXTFIELD_WIDTH
       },     
       
       vb:text { text = "Category" },
@@ -553,7 +558,8 @@ example, rfc920.txt and rfc1032.txt.]]
         notifier = function(text)         
           autocomplete(text)
           update_preview()
-        end
+        end,
+        width = TEXTFIELD_WIDTH
       }
     },
     vb:row{
@@ -666,7 +672,10 @@ function zip_tool(path)
   else
     local msg = "The XRNX file was succesfully created at the following location:\n\n"
       .. destination 
-    renoise.app():show_message(msg)
+    local choice = renoise.app():show_prompt("Export was succesful", msg, {"Close","Show file"})
+    if (choice == "Go to file") then
+      renoise.app():open_path(target_folder)
+    end
   end
   return ok, err
 end
@@ -737,6 +746,19 @@ function show_zip_dialog()
         active = vbz.views.mytools.items[1] ~= "None",
         height = DIALOG_BUTTON_HEIGHT,        
         notifier = function()
+          local choices = {"OK", "Go to manifest.xml"}
+          local choice = renoise.app():show_prompt("Confirm export",
+            "Is manifest.xml still up-to-date? Please double check:"
+            .. "\n\n- Version Number\n- Category\n- Description\n- Contact Info\n\n"
+            .. "Continue exporting?", 
+            choices)
+          if (choice == choices[2]) then            
+            renoise.app():open_path(get_tools_root()..MYTOOLS..SEP
+              .. vbz.views.mytools.items[vbz.views.mytools.value])
+            return
+          elseif (choice ~= choices[1]) then
+            return
+          end
           local items = vbz.views.mytools.items
           local id = vbz.views.mytools.value        
           local ok,err = zip_tool(items[id])          
