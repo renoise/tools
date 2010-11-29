@@ -23,6 +23,18 @@ end
 
 --------------------------------------------------------------------------------
 
+function morpher(real_amplification, arr_real_sources, real_weight)
+  local real_part1 = arr_real_sources[1] * (1 - real_weight)
+  local real_part2 = arr_real_sources[2] * real_weight
+  
+  print(real_weight)
+  
+  return real_amplification * ( arr_real_sources[1] * (1 - real_weight) + arr_real_sources[2] * real_weight )
+end
+
+
+--------------------------------------------------------------------------------
+
 function noise(real_amplification, real_unused1, real_unused2)
   return real_amplification - 2 * real_amplification * math.random()
 end
@@ -77,6 +89,40 @@ function triangle(real_amplification, real_unused, real_x)
   end
 end
 
+
+--------------------------------------------------------------------------------
+
+
+function variator(real_amplification, real_previous_value, bool_change)
+
+  if not bool_change then
+    return real_previous_value
+  end
+
+  local real_variation = (math.random() - 0.5) * real_amplification
+
+  if(real_previous_value == real_amplification) then
+  
+    --avoid continuous clipping
+	return real_amplification - real_variation
+
+  elseif(real_previous_value == -real_amplification) then
+  
+    --avoid continuous clipping
+    return -real_amplification + real_variation
+  
+  else
+  
+    local real_value = real_previous_value + real_variation;
+	
+	real_value = math.max(-real_amplification, real_value)
+	real_value = math.min(real_amplification, real_value)
+	
+	return real_value
+  
+  end
+  
+end
 
 --------------------------------------------------------------------------------
 
