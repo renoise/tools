@@ -1,4 +1,4 @@
---[[============================================================================
+  --[[============================================================================
 main.lua
 ============================================================================]]--
 
@@ -20,26 +20,26 @@ end
 renoise.tool():add_menu_entry {
   name = "Scripting Menu:File:Create New Tool...",
   invoke = function()
-    show_dialog()
+    show_create_tool_dialog()
   end
 }
 
 renoise.tool():add_menu_entry {
   name = "Scripting Menu:File:Export to XRNX file...",
   invoke = function()
-    show_zip_dialog()
+    show_export_dialog()
   end
 }
 
---[[ require ("formbuilder")
+--[[
+ require ("formbuilder")
 
 renoise.tool():add_menu_entry {
-  name = "Main Menu:Tools:Development:Create Form...",
+  name = "Scripting Menu:File:Build Form...",
   invoke = function()
     show_builder()
   end
 }
-
 --]]
 
 
@@ -54,9 +54,11 @@ local options = renoise.Document.create("ScriptingToolPreferences") {
   TLD = "com", 
   TLD_id = 1, 
   Email = "you@yourdomain.xyz",
+  
   -- export options
   ExportOverwrite = true,
-  ExportDefaultDestination = true
+  ExportDefaultDestination = true,
+  ExportIncludeVersion = false
 }
 options:add_property("Name", "The Tool Name")
 options:add_property("Id", "com.myorg.ToolName")        
@@ -253,7 +255,10 @@ local function create_tool()
   renoise.app():show_message("Your new Tool has been created: \n\n" .. target_folder)
 end
 
-function trim(s)  
+function trim(s)
+  if (type(s) ~= "String") then
+    return s
+  end
   return (s:gsub("^%s*(.-)%s*$", "%1"))
 end
 
@@ -310,7 +315,7 @@ function autocomplete(text)
   end
 end
 
-function show_dialog()
+function show_create_tool_dialog()
 
   if dialog and dialog.visible then
     dialog:show()
@@ -562,7 +567,8 @@ example, rfc920.txt and rfc1032.txt.]]
         width = TEXTFIELD_WIDTH
       }
     },
-    vb:row{
+    vb:row {
+      spacing = DEFAULT_CONTROL_SPACING,      
       vb:button {
         id = "save_button",
         text = "Save and Create Tool",
@@ -622,13 +628,25 @@ end
 -- Export Tool folder to XRNX file (ZIP)
 --------------------------------------------------------------------------------
 
-local zip_dialog = nil
-local vbz = nil
-
 require "zip"
 
+local zip_dialog = nil
+local confirm_dialog = nil
+
+local vbz = nil
+local vbc = nil
+
+local selected_tool = nil
+local mytools = {}
+
+local function load_manifest(path)  
+  local mf = RenoiseScriptingTool()
+  local ok, err = mf:load_from(path)
+  return mf  
+end
+
 -- Create an XRNX file by ZIP'ing the Tool within the __MyTools__ folder
-function zip_tool(path)      
+local function zip_tool(path, version)      
   local source_folder = get_tools_root() .. MYTOOLS .. SEP .. path 
   local target_folder = get_tools_root()..MYTOOLS..SEP.."XRNX"
   
@@ -652,7 +670,11 @@ function zip_tool(path)
   end
   
   -- construct absolute output file path
-  local destination = target_folder..SEP..path    
+  local destination = target_folder..SEP..path
+  if (version) then    
+    destination = target_folder..SEP..path:sub(1,-6)
+    .. "_V" .. tostring(version) .. ".xrnx"
+  end
   
   -- ask to overwrite
   if (options.ExportOverwrite.value == false and io.exists(destination)) then
@@ -672,8 +694,9 @@ function zip_tool(path)
   else
     local msg = "The XRNX file was succesfully created at the following location:\n\n"
       .. destination 
-    local choice = renoise.app():show_prompt("Export was succesful", msg, {"Close","Show file"})
-    if (choice == "Go to file") then
+    local choices = {"Close","Show file"}
+    local choice = renoise.app():show_prompt("Export was succesful", msg, choices)
+    if (choice == choices[2]) then
       renoise.app():open_path(target_folder)
     end
   end
@@ -681,25 +704,174 @@ function zip_tool(path)
 end
 
 -- Returns a list of Tool folders in the __MyTools__ folder
-function get_mytools()
+local function get_mytools()
   local path = get_tools_root() .. MYTOOLS
   if (not io.exists(path)) then
     return {}
   end
   local t = os.dirnames(path)
-  local list = table.create()
+  mytools = table.create()
   for _,v in ipairs(t) do
     if (v:match("xrnx$")) then
-      list:insert(v)
+      mytools:insert(v)
     end
   end      
-  return list
+  return mytools
 end
-
 
 -- GUI -----------
 
-function show_zip_dialog()
+-- Confirm Export Dialog
+function show_confirm_export_dialog()      
+  
+  if (confirm_dialog and confirm_dialog.visible) then
+    confirm_dialog:show()
+    return
+  end
+  
+  local title = "Check manifest.xml and Confirm Export"
+  
+  vbc = renoise.ViewBuilder()
+
+  local mf_folder = get_tools_root()..MYTOOLS..SEP .. selected_tool
+  local mf_path = mf_folder .. SEP .. "manifest.xml"
+  local mf = load_manifest(mf_path)    
+  
+  local content = vbc:column{ 
+    margin = DEFAULT_DIALOG_MARGIN, 
+    spacing = DEFAULT_CONTROL_SPACING  
+  }
+  content:add_child(vbc:text{text="Is manifest.xml still up-to-date? Please adjust where necessary."})
+  local main = vbc:row{ 
+    margin = DEFAULT_DIALOG_MARGIN, 
+    spacing = 20,
+    style = "group"
+  }
+  content:add_child(main)
+  local labels = vbc:column{ uniform = true, spacing = DEFAULT_CONTROL_SPACING   }
+  main:add_child(labels)
+  local controls = vbc:column{ uniform = true, spacing = DEFAULT_CONTROL_SPACING }  
+  main:add_child(controls)
+      
+  local function add_field(name)    
+    labels:add_child(
+      vbc:text {      
+        text = name,
+        font = "bold"
+    })    
+    
+    local t = type(mf[name])    
+    local c = nil
+    
+    if (name == "Id") then
+      c = vbc:text {
+        text = mf[name].value,  
+      }
+    elseif (name == "Description") then
+      c = vbc:multiline_textfield {
+        height = 60,
+        text = mf[name].value,
+        notifier = function(text)           
+          mf[name].value = trim(text)
+        end
+      }        
+    elseif (t == "ObservableString") then
+      c = vbc:textfield {
+        text = mf[name].value,
+        notifier = function(text)
+          mf[name].value = trim(text)
+        end
+      }      
+    elseif (t == "ObservableNumber") then      
+        c = vbc:valuefield {
+          tostring = function(value) 
+            return ("%.2f"):format(value)
+          end,
+          tonumber = function(str)
+            if str ~= nil then
+              return tonumber(str)
+            end
+          end,         
+          min = 0.00,
+          max = 100.00, 
+          bind = mf[name]         
+       }         
+    elseif (t == "ObservableBoolean") then      
+        c = vbc:checkbox {
+          bind = mf[name]          
+        }
+    elseif (t == "ObservableList") then
+      --[[ 
+      print(type(mf[name][1]))
+      c = vbc:text {            
+        text = mf[name].value
+      }
+      --]]
+    end 
+    c.width = 200   
+    controls:add_child(c)        
+  end
+  
+  local names = {"Id", "Name", "Version", "ApiVersion", "Author",
+     "Homepage", "Category", "Description"}
+  for _,name in ipairs(names) do
+    add_field(name)
+  end
+  
+  content.uniform = true
+  content:add_child(vbc:text{text="Save to manifest.xml and export?"})  
+  
+  local incomplete_form = vbc:text{
+    id = "incomplete_form",
+    text = "Cannot export because this form is incomplete.",
+    font = "italic",    
+    visible = false
+  }
+  content:add_child(incomplete_form)
+  
+  local buttons = vbc:horizontal_aligner {
+    spacing = DEFAULT_CONTROL_SPACING,      
+    --mode = "distribute",
+    vbc:button {
+      height = DIALOG_BUTTON_HEIGHT, 
+      text = "Save and export",
+      notifier = function()
+        
+        for _,name in ipairs(names) do          
+          mf[name].value = trim(mf[name].value)
+          if (mf[name].value == "" and 
+            name ~= "Homepage" and name ~= "Category") then
+            vbc.views.incomplete_form.visible = true
+            return
+          end
+        end
+        
+        mf:save_as(mf_path)    
+                
+        local version = nil
+        if (options.ExportIncludeVersion.value) then
+          version = mf["Version"].value
+        end
+        local ok,err = zip_tool(selected_tool, version)   
+        confirm_dialog:close()        
+      end
+    },
+    vbc:button {
+      height = DIALOG_BUTTON_HEIGHT,
+      text = "Close", 
+      notifier = function()
+        confirm_dialog:close()  
+      end
+    }
+  }
+  content:add_child(buttons)
+    
+  confirm_dialog = renoise.app():show_custom_dialog(title, content)      
+  
+end
+
+-- Export Dialog
+function show_export_dialog()
 
   if zip_dialog and zip_dialog.visible then
     zip_dialog:show()
@@ -707,6 +879,10 @@ function show_zip_dialog()
   end
 
   vbz = renoise.ViewBuilder()
+  
+  -- init popup list with Tools in __MyTools__ directory
+  get_mytools()
+  selected_tool = mytools[1]
   
   local dialog_title = "Export Tool folder to XRNX file"
   local dialog_content = vbz:column {
@@ -718,8 +894,21 @@ function show_zip_dialog()
     },   
     vbz:popup {
       id = "mytools",
-      items = get_mytools(),
-      width = 260
+      items = mytools,
+      width = 260,
+      notifier = function(index) 
+        selected_tool = vbz.views.mytools.items[index]       
+      end
+    },
+    vbz:row { 
+      spacing = DEFAULT_CONTROL_SPACING,
+      vbz:checkbox {                
+        bind = options.ExportIncludeVersion
+      },
+      vbz:text {
+        text = "Add version number to filename",        
+        tooltip = "Example: com.yourname.YourTool_V2.50.xrnx"        
+      }
     },
     vbz:row { 
       spacing = DEFAULT_CONTROL_SPACING,
@@ -738,31 +927,14 @@ function show_zip_dialog()
       vbz:text {
         text = "Save files into default XRNX export folder",
       }
-    },    
+    },        
     vbz:row {
       spacing = DEFAULT_CONTROL_SPACING,
-      vbz:button {
+      vbz:button {      
         text = "Export folder",
         active = vbz.views.mytools.items[1] ~= "None",
         height = DIALOG_BUTTON_HEIGHT,        
-        notifier = function()
-          local choices = {"OK", "Go to manifest.xml"}
-          local choice = renoise.app():show_prompt("Confirm export",
-            "Is manifest.xml still up-to-date? Please double check:"
-            .. "\n\n- Version Number\n- Category\n- Description\n- Contact Info\n\n"
-            .. "Continue exporting?", 
-            choices)
-          if (choice == choices[2]) then            
-            renoise.app():open_path(get_tools_root()..MYTOOLS..SEP
-              .. vbz.views.mytools.items[vbz.views.mytools.value])
-            return
-          elseif (choice ~= choices[1]) then
-            return
-          end
-          local items = vbz.views.mytools.items
-          local id = vbz.views.mytools.value        
-          local ok,err = zip_tool(items[id])          
-        end
+        notifier = show_confirm_export_dialog
       },
       vbz:button {
         text = "Browse default XRNX export folder",
@@ -777,9 +949,11 @@ function show_zip_dialog()
         end
       }
     }
-  }  
+  }
   
   zip_dialog = renoise.app():show_custom_dialog(
     dialog_title, dialog_content)
 
 end
+
+
