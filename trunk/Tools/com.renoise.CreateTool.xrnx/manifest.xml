@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<RenoiseScriptingTool>
-  <ApiVersion>1.0</ApiVersion>
-  <Id>com.renoise.CreateTool</Id>
-  <Version>3</Version>
+<RenoiseScriptingTool doc_version="0">
   <Name>Create Tool</Name>
+  <Id>com.renoise.CreateTool</Id>
+  <Version>4</Version>
+  <ApiVersion>1.0</ApiVersion>
   <Author>Bantai</Author>
+  <Category>Development</Category>
   <Description>A wizard to help you setup the basic structure for a new Tool. There is also an Export to XRNX file feature.
 
 Look in the File menu of the Scripting Editor.</Description>
-  <Category>Development</Category>
   <Homepage>http://tools.renoise.com</Homepage>
+  <Icon/>
 </RenoiseScriptingTool>
-

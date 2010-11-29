@@ -34,7 +34,7 @@ function handle_cell(source_id, action_id)
 end
 
 function handle_action(source_id, action_id)  
-  print("Handle "..source_id .. " Action "..action_id)
+  --print("Handle "..source_id .. " Action "..action_id)
   if (action_id == 1) then
   end
 end
