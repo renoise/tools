@@ -828,7 +828,7 @@ valuebox.value
 -- Valid in the construction table only: setup custom rules on how the number
 -- should be displayed. Both, 'tostring' and  'tovalue' must be set, or none
 -- of them. If none are set, a default string/number conversion is done, which
--- simply shows the number with 3 digits after the decimal point.
+-- simply reads/writes the number as integer value.
 --
 -- When defined, 'tostring' must be a function with one parameter, the to be
 -- converted number, and must return a string or nil.
