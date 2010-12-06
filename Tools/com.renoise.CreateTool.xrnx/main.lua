@@ -753,7 +753,7 @@ function show_confirm_export_dialog()
   local controls = vbc:column{ uniform = true, spacing = DEFAULT_CONTROL_SPACING }  
   main:add_child(controls)
       
-  local function add_field(name)    
+  local function add_field(name)
     labels:add_child(
       vbc:text {      
         text = name,
@@ -766,7 +766,7 @@ function show_confirm_export_dialog()
     if (name == "Id") then
       c = vbc:text {
         text = mf[name].value,  
-      }
+      }       
     elseif (name == "Description") then
       c = vbc:multiline_textfield {
         height = 60,
@@ -781,7 +781,7 @@ function show_confirm_export_dialog()
         notifier = function(text)
           mf[name].value = trim(text)
         end
-      }      
+      }            
     elseif (t == "ObservableNumber") then      
         c = vbc:valuefield {
           tostring = function(value) 
@@ -808,6 +808,17 @@ function show_confirm_export_dialog()
       }
       --]]
     end 
+    
+    if (name == "ApiVersion") then
+      c = vbc:row { 
+        c,        
+        vbc:text {
+          text = ("(now running API v%.2f)"):format(            
+            renoise.API_VERSION)
+        }
+      }
+    end
+      
     c.width = 200   
     controls:add_child(c)        
   end
