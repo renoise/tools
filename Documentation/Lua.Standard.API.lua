@@ -9,7 +9,7 @@ added or changed by Renoise, in order to extend the functionality of Lua's
 standard library.
 
 All standard Lua libraries are included in Renoise as well. You can find the
-full reference here: http://www.lua.org/manual/5.1/manual.html#5
+full reference here: <http://www.lua.org/manual/5.1/manual.html#5>
 
 Do not try to execute this file. It uses a .lua extension for markups only.
 
@@ -19,11 +19,11 @@ Do not try to execute this file. It uses a .lua extension for markups only.
 -- globals
 -------------------------------------------------------------------------------
 
--- added
+----- added
 
 -- an iterator like ipairs, but in reverse order
--- examples: t = {"a", "b", "c"}
--- for k,v in ripairs(t) do print(k, v) end -> "3 c, 2 b, 1 a"
+-- > examples: t = {"a", "b", "c"}  
+-- > for k,v in ripairs(t) do print(k, v) end -> "3 c, 2 b, 1 a"
 ripairs(table) -> [iterator function]
 
 -- return a string which lists properties and methods of class objects
@@ -36,13 +36,13 @@ rprint(table)
 oprint(table)
 
 
--- changed
+----- changed
 
 -- also returns a class objects type name. for all other types the standard
 -- lua type function is used
--- examples: class "MyClass"; function MyClass:__init() end
---           print(type(MyClass)) -> "MyClass class"
---           print(type(MyClass())) -> "MyClass"
+-- > examples: class "MyClass"; function MyClass:__init() end  
+-- >          print(type(MyClass)) -> "MyClass class"  
+-- >          print(type(MyClass())) -> "MyClass"
 type(class_object or class or anything else) -> [string]
 
 
@@ -50,63 +50,63 @@ type(class_object or class or anything else) -> [string]
 -- debug
 -------------------------------------------------------------------------------
 
--- added
+----- added
 
--- shortcut to remdebug.session.start(), which starts a debug session: 
--- launches the debugger controller and breaks script execution. See 
+-- shortcut to remdebug.session.start(), which starts a debug session:
+-- launches the debugger controller and breaks script execution. See
 -- "Debugging.txt" in the documentation root folder for more info.
-debug.start() 
+debug.start()
 
 -- shortcut to remdebug.session.stop: stops a running debug session
-debug.stop() 
+debug.stop()
 
 
 -------------------------------------------------------------------------------
 -- table
 -------------------------------------------------------------------------------
 
--- added
+----- added
 
 -- create a new, or convert an exiting table to an object that uses the global
 -- 'table.XXX' functions as methods, just like strings in Lua do.
--- examples: t = table.create(); t:insert("a"); rprint(t) -> [1] = a;
+-- > examples: t = table.create(); t:insert("a"); rprint(t) -> [1] = a;  
 --           t = table.create{1,2,3}; print(t:concat("|")); -> "1|2|3";
 table.create([t]) -> [table]
 
 
 -- returns true when the table is empty, else false and will also work
 -- for non indexed tables
--- examples: t = {};          print(table.is_empty(t)); -> true;
---           t = {66};        print(table.is_empty(t)); -> false;
---           t = {["a"] = 1}; print(table.is_empty(t)); -> false;
+-- > examples: t = {};          print(table.is_empty(t)); -> true;  
+-- >           t = {66};        print(table.is_empty(t)); -> false;  
+-- >           t = {["a"] = 1}; print(table.is_empty(t)); -> false;
 table.is_empty(t) -> [boolean]
 
--- count the number of items of a table, also works for non index  
+-- count the number of items of a table, also works for non index
 -- based tables (using pairs).
--- examples:  t = {["a"]=1, ["b"]=1}; print(table.count(t))  -> 2
+-- > examples:  t = {["a"]=1, ["b"]=1}; print(table.count(t))  -> 2
 table.count(t) -> [number]
 
 -- find first match of 'value' in the given table, starting from element
 -- number 'start_index'. returns the first !key! that matches the value or nil
--- examples: t = {"a", "b"}; table.find(t, "a") -> 1;
---           t = {a=1, b=2}; table.find(t, 2) -> "b"
---           t = {"a", "b", "a"}; table.find(t, "a", 2) -> "3"
---           t = {"a", "b"}; table.find(t, "c") -> nil
+-- > examples: t = {"a", "b"}; table.find(t, "a") -> 1;  
+-- >          t = {a=1, b=2}; table.find(t, 2) -> "b"  
+-- >          t = {"a", "b", "a"}; table.find(t, "a", 2) -> "3"  
+-- >          t = {"a", "b"}; table.find(t, "c") -> nil
 table.find(t, value [,start_index]) -> [key or nil]
 
 
 -- return an indexed table of all keys that are used in the table
--- examples: t = {a="aa", b="bb"}; rprint(table.keys(t)); -> "a", "b"
---           t = {"a", "b"};       rprint(table.keys(t)); -> 1, 2
+-- > examples: t = {a="aa", b="bb"}; rprint(table.keys(t)); -> "a", "b"  
+-- >           t = {"a", "b"};       rprint(table.keys(t)); -> 1, 2
 table.keys(t) -> [table]
 
 -- return an indexed table of all values that are used in the table
--- examples: t = {a="aa", b="bb"}; rprint(table.values(t)); -> "aa", "bb"
---           t = {"a", "b"};       rprint(table.values(t)); -> "a", "b"
+-- > examples: t = {a="aa", b="bb"}; rprint(table.values(t)); -> "aa", "bb"  
+-- >           t = {"a", "b"};       rprint(table.values(t)); -> "a", "b"
 table.values(t) -> [table]
 
 
--- copy the metatable and all first level elements of the given table into a 
+-- copy the metatable and all first level elements of the given table into a
 -- new table. Use table.rcopy to do a recursive copy of all elements
 table.copy(t) -> [table]
 
@@ -123,7 +123,7 @@ table.clear(t)
 -- os
 -------------------------------------------------------------------------------
 
--- added
+----- added
 
 -- returns the platform the script is running on:
 -- "WINDOWS", "MACINTOSH" or "LINUX"
@@ -137,20 +137,20 @@ os.currentdir() -> [string]
 -- parent directory. passed directory must be valid, or an error will be thrown.
 os.dirnames(path) -> [table of strings]
 
--- returns a list file names (names, not full paths) for the given 
--- parent directory. second optinal argument is a list of file extensions that 
--- should be searched for, like {"*.wav", "*.txt"}. by default all files are 
+-- returns a list file names (names, not full paths) for the given
+-- parent directory. second optinal argument is a list of file extensions that
+-- should be searched for, like {"*.wav", "*.txt"}. by default all files are
 -- matched. the passed directory must be valid, or an error will be thrown.
 os.filenames(path [, {file_extensions}]) -> [table of strings]
 
--- creates a new directory. mkdir can only create one new sub directory at the 
--- same time. if you need to create more than one sub dir, call mkdir multiple 
--- times. returns true if the operation was successful; in case of error, it 
--- returns nil plus an error string. 
+-- creates a new directory. mkdir can only create one new sub directory at the
+-- same time. if you need to create more than one sub dir, call mkdir multiple
+-- times. returns true if the operation was successful; in case of error, it
+-- returns nil plus an error string.
 os.mkdir(path) -> [boolean, error_string or nil]
 
-        
--- changed
+
+----- changed
 
 -- replaced with a temp directory and name which renoise will clean up on exit
 -- extension will be ".tmp" when not specified
@@ -167,37 +167,38 @@ os.exit()
 -- io
 -------------------------------------------------------------------------------
 
--- added
+----- added
 
 -- returns true when a file, folder or link at the given path and name exists
 io.exists(filename) -> [boolean]
 
--- returns a table with status info about the file, folder or link at the given 
+-- returns a table with status info about the file, folder or link at the given
 -- path and name, else nil the error and the error code is returned.
 --
 -- the returned valid stat table contains the following fields:
--- 'dev'    number: device number of filesystem
--- 'ino'    number: inode number
--- 'mode'   number: unix styled file permissions
--- 'type'   string: type ("file", "directory", "link", "socket", 
+--
+-- + 'dev'    number: device number of filesystem
+-- + 'ino'    number: inode number
+-- + 'mode'   number: unix styled file permissions
+-- + 'type'   string: type ("file", "directory", "link", "socket",
 --            "named pipe", "char device" or "block device")
--- 'nlink'  number: number of (hard) links to the file
--- 'uid'    number: numeric user ID of file's owner
--- 'gid'    number: numeric group ID of file's owner
--- 'rdev'   number: the device identifier (special files only)
--- 'size'   number: total size of file, in bytes
--- 'atime'  number: last access time in seconds since the epoch
--- 'mtime'  number: last modify time in seconds since the epoch
--- 'ctime'  number: inode change time (NOT creation time!) in seconds
+-- + 'nlink'  number: number of (hard) links to the file
+-- + 'uid'    number: numeric user ID of file's owner
+-- + 'gid'    number: numeric group ID of file's owner
+-- + 'rdev'   number: the device identifier (special files only)
+-- + 'size'   number: total size of file, in bytes
+-- + 'atime'  number: last access time in seconds since the epoch
+-- + 'mtime'  number: last modify time in seconds since the epoch
+-- + 'ctime'  number: inode change time (NOT creation time!) in seconds
 io.stat(filename) -> [table or (nil, error, error no)]
 
--- change permissions of a file, folder or link. mode is a unix permission 
--- styled octal number (like 755 - WITHOUT a leading octal 0). executable, 
+-- change permissions of a file, folder or link. mode is a unix permission
+-- styled octal number (like 755 - WITHOUT a leading octal 0). executable,
 -- group and others flags are ignored on windows and won't fire errors
 io.chmod(filename, mode) -> [true or (nil, error, error no)]
 
 
--- changed
+----- changed
 
 -- all io functions use UTF8 as encoding for the file names and paths. UTF8
 -- is used for LUA in the whole API as default string encoding...
@@ -207,17 +208,17 @@ io.chmod(filename, mode) -> [true or (nil, error, error no)]
 -- math
 -------------------------------------------------------------------------------
 
--- added
+----- added
 
--- converts a linear value to a db value. db values will be clipped to 
+-- converts a linear value to a db value. db values will be clipped to
 -- math.infdb
--- example: print(math.lin2db(1.0)) -> 0
---          print(math.lin2db(0.0)) -> -200 (math.infdb)
+-- > example: print(math.lin2db(1.0)) -> 0  
+-- >          print(math.lin2db(0.0)) -> -200 (math.infdb)
 math.lin2db(number) -> [number]
 
 -- converts a dB value to a linear value
--- example: print(math.db2lin(math.infdb)) -> 0
---          print(math.db2lin(6.0)) -> 1.9952623149689
+-- > example: print(math.db2lin(math.infdb)) -> 0  
+-- >          print(math.db2lin(6.0)) -> 1.9952623149689
 math.db2lin(number) -> [number]
 
 -- db values at and below this value will be treated as silent (linearly 0)
@@ -228,10 +229,11 @@ math.infdb -> [-200]
 -- bit (added)
 -------------------------------------------------------------------------------
 
-Integer, Bit Operations, provided by http://bitop.luajit.org/
-Take a look at http://bitop.luajit.org/api.html for the complete reference
+--[[
+Integer, Bit Operations, provided by <http://bitop.luajit.org/>
+Take a look at <http://bitop.luajit.org/api.html> for the complete reference
 and examples please...
-
+]]--
 
 -- Normalizes a number to the numeric range for bit operations and returns it.
 -- This function is usually not needed since all bit operations already
