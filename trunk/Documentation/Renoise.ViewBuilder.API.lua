@@ -67,14 +67,14 @@ function my_keyhandler_func(dialog, key) end
 -- properties can be applied to any of the following views.
 
 
------- functions
+----------- functions
 
 -- Dynamically create view hierarchies.
 view:add_child(View child_view)
 view:remove_child(View child_view)
 
 
------ properties
+----------- properties
 
 -- Set visible to false to hide a view (make it invisible without removing
 -- it). Please note that view.visible will also return false when any of its
@@ -110,7 +110,7 @@ view.tooltip
 -- change a value or some "state" via the UI.
 
 
------ properties
+----------- properties
 
 -- Instead of making a control invisible, you can also make it inactive.
 -- Deactivated controls will still be shown and will also still show its
@@ -139,7 +139,7 @@ control.midi_mapping
 -- vertically (ViewBuilder.column) or horizontally (ViewBuilder.row). It allows
 -- you to create view layouts.
 
------ functions
+----------- functions
 
 -- Adding new child views to a rack automatically enlarges the rack, but
 -- removing child views from a rack or making them invisible, will never
@@ -150,7 +150,7 @@ control.midi_mapping
 rack:resize()
 
 
------ properties
+----------- properties
 
 -- Set the "borders" of the rack (left, right, top and bottom equally)
 -- By default 0 (no borders).
@@ -198,7 +198,7 @@ rack.uniform
 -- To make use of modes like "center", you manually have to setup a size that
 -- is bigger than the sum of the child sizes.
 
------ properties
+----------- properties
 
 -- Setup "borders" of the aligner (left, right, top and bottom equally)
 -- By default 0 (no borders).
@@ -243,7 +243,7 @@ aligner.mode
 --]]
 
 
------ properties
+----------- properties
 
 -- Get/set the text that should be displayed. Setting a new text will resize
 -- the view in order to make the text fully visible (expanding only).
@@ -296,11 +296,11 @@ text.align
 --. | Text, Bla 4  |+|
 --. +--------------+-+
 
-![MultiLineText](http://_TODO_)
+![MultiLineText](http://__REPLACE__/MultiLineText.png)
 --]]
 
 
------ functions
+----------- functions
 
 -- When a scroll bar is visible (needed), scroll the text to show the last line.
 multiline_text:scroll_to_last_line()
@@ -316,7 +316,7 @@ multiline_text:add_line(text)
 multiline_text:clear()
 
 
------ properties
+----------- properties
 
 -- Get/set the text that should be displayed in a single line. newlines
 -- (Windows, mac or Unix styled newlines) in the text can be used to create
@@ -366,18 +366,18 @@ multiline_text.style
 --. | Editable Te|xt |
 --. +----------------+
 
-![TextField](http://_TODO_)
+![TextField](http://_REPLACE_/TextField.png)
 --]]
 
 
------ functions
+----------- functions
 
 -- Add/remove value change (text change) notifiers.
 textfield:add_notifier(function or {object, function} or {object, function})
 textfield:remove_notifier(function or {object, function} or {object, function})
 
 
------ properties
+----------- properties
 
 -- The currently shown value / text. The text will not be updated while editing,
 -- but only after editing finished (return was pressed, or focus was lost).  
@@ -429,11 +429,11 @@ textfield.bind
 --. | and auto-wrapping        |+|
 --. +--------------------------+-+
 
-![MultilineTextField](http://_TODO_)
+![MultilineTextField](http://_REPLACE_/MultilineTextField.png)
 --]]
 
 
------ functions
+----------- functions
 
 -- Add/remove value change (text change) notifiers.
 multiline_textfield:add_notifier(function or {object, function} or {object, function})
@@ -453,7 +453,7 @@ multiline_textfield:add_line(text)
 multiline_textfield:clear()
 
 
------ properties
+-------- properties
 
 -- The current text as single line, using using newline characters to specify
 -- paragraphs.  
@@ -522,7 +522,7 @@ multiline_textfield.bind
 --. ||||||||||||
 
 
-![Bitmap](http://_TODO_)
+![Bitmap](http://_REPLACE_/Bitmap.png)
 --]]
 
 -- A view which either simply draws a bitmap, or a draws a bitmap which acts
@@ -533,14 +533,14 @@ multiline_textfield.bind
 -- are present, to show that the bitmap can be clicked.
 
 
------ functions
+-------- functions
 
 -- Add/remove mouse click notifiers
 bitmapview:add_notifier(function or {object, function} or {object, function})
 bitmapview:remove_notifier(function or {object, function} or {object, function})
 
 
------ properties
+-------- properties
 
 -- Setup how the bitmap should be drawn, recolored. Available modes are:
 -- >  "plain"        -> bitmap is drawn just like it is, no recoloring is done  
@@ -583,11 +583,11 @@ bitmapview.notifier
 --. | Button |
 --. +--------+
 
-![Button](http://_TODO_)
+![Button](http://_REPLACE_/Button.png)
 --]]
 
 
------ functions
+-------- functions
 
 -- Add/remove button hit/release notifier functions.
 -- When a "pressed" notifier is set, the release notifier is guaranteed to be
@@ -600,7 +600,7 @@ button:remove_pressed_notifier(function or {object, function} or {object, functi
 button:remove_released_notifier(function or {object, function} or {object, function})
 
 
------ properties
+-------- properties
 
 -- The text label of the button
 -- By default empty.
@@ -654,18 +654,18 @@ button.notifier
 --. | _/ |
 --. +----+
 
-![CheckBox](http://_TODO_)
+![CheckBox](http://_REPLACE_/CheckBox.png)
 --]]
 
 
------ functions
+-------- functions
 
 -- Add/remove value notifiers
 checkbox:add_notifier(function or {object, function} or {object, function})
 checkbox:remove_notifier(function or {object, function} or {object, function})
 
 
------ properties
+-------- properties
 
 -- The current state of the checkbox, expressed as boolean.
 -- By default "false".
@@ -699,18 +699,18 @@ checkbox.bind
 --. | Button A  | +Button+B+ | Button C |
 --. +-----------+------------+----------+
 
-![Switch](http://_TODO_)
+![Switch](http://_REPLACE_/Switch.png)
 --]]
 
 
------ functions
+-------- functions
 
 -- Add/remove index change notifiers.
 switch:add_notifier(function or {object, function} or {object, function})
 switch:remove_notifier(function or {object, function} or {object, function})
 
 
------ properties
+-------- properties
 
 -- Get/set the currently shown button labels. Item list size must be >= 2.
 switch.items
@@ -747,18 +747,18 @@ switch.bind
 --. | Current Item || ^ |
 --. +--------------++---+
 
-![Popup](http://_TODO_)
+![Popup](http://_REPLACE_/Popup.png)
 --]]
 
 
------ functions
+-------- functions
 
 -- Add/remove index change notifiers.
 popup:add_notifier(function or {object, function} or {object, function})
 popup:remove_notifier(function or {object, function} or {object, function})
 
 
------ properties
+-------- properties
 
 -- Get/set the currently shown items. Item list can be empty, then "None" is
 -- displayed and the value won't change.
@@ -796,18 +796,18 @@ popup.bind
 --. o Item B
 --. . Item C
 
-![Chooser](http://_TODO_)
+![Chooser](http://_REPLACE_/Chooser.png)
 --]]
 
 
------ functions
+-------- functions
 
 -- Add/remove index change notifiers.
 chooser:add_notifier(function or {object, function} or {object, function})
 chooser:remove_notifier(function or {object, function} or {object, function})
 
 
------ properties
+-------- properties
 
 -- Get/set the currently shown items. Item list size must be >= 2.
 chooser.items
@@ -844,18 +844,18 @@ chooser.bind
 --. |<|>|  12   |
 --. +---+-------+
 
-![ValueBox](http://_TODO_)
+![ValueBox](http://_REPLACE_/ValueBox.png)
 --]]
 
 
------ functions
+-------- functions
 
 -- Add/remove value change notifiers.
 valuebox:add_notifier(function or {object, function} or {object, function})
 valuebox:remove_notifier(function or {object, function} or {object, function})
 
 
------ properties
+-------- properties
 
 -- Get/set the min/max values that are expected, allowed.
 -- By default 0 and 100.
@@ -914,18 +914,18 @@ valuebox.bind
 --. | 12.1 dB   |
 --. +---+-------+
 
-![Value](http://_TODO_)
+![Value](http://_REPLACE_/Value.png)
 --]]
 
 
------ functions
+-------- functions
 
 -- Add/remove value change notifiers.
 value:add_notifier(function or {object, function} or {object, function})
 value:remove_notifier(function or {object, function} or {object, function})
 
 
------ properties
+-------- properties
 
 -- Get/set the current value.
 value.value
@@ -989,18 +989,18 @@ value.bind
 --. | 12.1 dB   |
 --. +---+-------+
 
-![ValueField](http://_TODO_)
+![ValueField](http://_REPLACE_/ValueField.png)
 --]]
 
 
------ functions
+-------- functions
 
 -- Add/remove value change notifiers.
 valuefield:add_notifier(function or {object, function} or {object, function})
 valuefield:remove_notifier(function or {object, function} or {object, function})
 
 
------ properties
+-------- properties
 
 -- Get/set the min/max values that are expected, allowed.
 -- By default 0.0 and 1.0.
@@ -1068,18 +1068,18 @@ valuefield.bind
 --. |<|>| --------[]    |
 --. +---+---------------+
 
-![Slider](http://_TODO_)
+![Slider](http://_REPLACE_/Slider.png)
 --]]
 
 
------ functions
+-------- functions
 
 -- Add/remove value change notifiers.
 slider:add_notifier(function or {object, function} or {object, function})
 slider:remove_notifier(function or {object, function} or {object, function})
 
 
------ properties
+-------- properties
 
 -- Get/set the min/max values that are expected, allowed.
 -- By default 0.0 and 1.0.
@@ -1118,18 +1118,18 @@ slider.bind
 
 --. --------[]
 
-![MiniSlider](http://_TODO_)
+![MiniSlider](http://_REPLACE_/MiniSlider.png)
 --]]
 
 
------ functions
+-------- functions
 
 -- Add/remove value change notifiers.
 slider:add_notifier(function or {object, function} or {object, function})
 slider:remove_notifier(function or {object, function} or {object, function})
 
 
------ properties
+-------- properties
 
 -- Get/set the min/max values that are expected, allowed.
 -- By default 0.0 and 1.0.
@@ -1172,19 +1172,19 @@ slider.bind
 --. \  |  /
 --.   +-+
 
-![RotaryEncoder](http://_TODO_)
+![RotaryEncoder](http://_REPLACE_/RotaryEncoder.png)
 --]]
 
 
 
------ functions
+-------- functions
 
 -- Add/remove value change notifiers.
 rotary:add_notifier(function or {object, function} or {object, function})
 rotary:remove_notifier(function or {object, function} or {object, function})
 
 
------ properties
+-------- properties
 
 -- Get/set the min/max values that are expected, allowed.
 -- By default 0.0 and 1.0.
@@ -1231,18 +1231,18 @@ rotary.bind
 --. |       |
 --. +-------+
 
-![XYPad](http://_TODO_)
+![XYPad](http://_REPLACE_/XYPad.png)
 --]]
 
 
------ functions
+-------- functions
 
 -- Add/remove value change notifiers.
 xypad:add_notifier(function or {object, function} or {object, function})
 xypad:remove_notifier(function or {object, function} or {object, function})
 
 
------ properties
+-------- properties
 
 -- Get/set a table of min/max values that are allowed.
 -- By default 0.0 and 1.0 for both, x and y.
@@ -1288,7 +1288,7 @@ xypad.bind
 -- Dialogs can not created with the viewbuilder, but only by the application.
 -- See "create custom views" on top of this file how to do so.
 
------ functions
+-------- functions
 
 -- Bring an already visible dialog to front and make it the key window.
 dialog:show()
@@ -1297,7 +1297,7 @@ dialog:show()
 dialog:close()
 
 
------ properties
+-------- properties
 
 -- Check if a dialog is alive and visible.
 dialog.visible
@@ -1335,8 +1335,7 @@ dialog.visible
 --
 -- * nested child views: add a child view to the currently specified view.
 --   For example:
---
---   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+--   ~~~
 --   vb:column {  
 --      margin = 1,  
 --      vb:text {  
@@ -1346,7 +1345,7 @@ dialog.visible
 --        text = "Text1"  
 --      }  
 --   }
---   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+--   ~~~
 --
 --  Creates a column view with margin = 1 and adds two text views to the column.
 
@@ -1366,7 +1365,7 @@ renoise.ViewBuilder.DEFAULT_DIALOG_SPACING
 renoise.ViewBuilder.DEFAULT_DIALOG_BUTTON_HEIGHT
 
 
------ functions
+-------- functions
 
 vb:column { Rack Properties and/or child views }
   -> [Rack object]
@@ -1424,7 +1423,7 @@ vb:xypad { XYPad Properties }
   -> [XYPad object]
 
 
------ properties
+-------- properties
 
 -- View id is the table key, the tables value the view object.
 -- > e.g.: vb:text{ id="my_view", text="some_text"}  

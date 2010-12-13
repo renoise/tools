@@ -24,7 +24,7 @@ Do not try to execute this file. It uses a .lua extension for markups only.
 -------- Observables
 
 Documents and Views in the Renoise API are modeled after the observer pattern
-(have a look at http://en.wikipedia.org/wiki/Observer_pattern if you have not
+(have a look at <http://en.wikipedia.org/wiki/Observer_pattern> if you have not
 heard about this before please). This means a document basically just is a
 set of some raw data (booleans, numbers, lists, nested nodes), which anything
 can attach notifier functions (listeners) to, in order to track changes. 
@@ -83,7 +83,7 @@ Lua classes and so on.
 If all you need is a generic XML im/exporter (or JSON or "fill in the currently
 hyped format here") for your Lua tables, data, and you don't need an Observable 
 mechanism for your values, then you should prefere using some generic Lua table
-serializers. See http://lua-users.org/wiki/TableSerialization for a start.
+serializers. See <http://lua-users.org/wiki/TableSerialization> for a start.
 
 Related to this, import of renoise.Documents from XML will NOT create new object
 models from the source XML files, but will only assign existing values in the 

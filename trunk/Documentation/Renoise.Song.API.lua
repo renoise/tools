@@ -79,7 +79,7 @@ renoise.song():redo()
 -- undo/redo by looking at what changed first (a track was inserted, a pattern 
 -- line changed and so on). When the song is changed from an action in a menu 
 -- entry callback, the menu entries label will automatically be used for the
--- undo description. 
+-- undo description.
 -- If those auto-generated names do not work for you, or you can come up with 
 -- something more descriptive, you can !before changing anything in the song! 
 -- give your changes a custom undo description (like i.e: "Generate Synth 
@@ -142,16 +142,18 @@ renoise.song():cancel_rendering()
 -- If starting the rendering process fails (because of file IO errors for
 -- example), the render function will return false and the error message is set 
 -- as second return value. On success, only a single "true" value is returned.
--- param 'options' is an optional table with the following optional fields:
--- options = {
---   start_pos,     -- renoise.SongPos object. by default the song start.
---   end_pos,       -- renoise.SongPos object. by default the song end.
---   sample_rate,   -- number, one of 22050, 44100, 48000, 88200, 96000. 
---                        by default the players current rate.
---   bit_depth ,    -- number, one of 16, 24 or 32. by default 32.
---   interpolation, -- string, one of 'cubic', 'sinc'. by default cubic'.
---   priority,      -- string, one "low", "realtime", "high". by default "high".
--- }
+-- param 'options' is an optional table with the following optional fields: e.g:
+--
+-- > options = {  
+-- >   start_pos,     -- renoise.SongPos object. by default the song start.  
+-- >   end_pos,       -- renoise.SongPos object. by default the song end.  
+-- >   sample_rate,   -- number, one of 22050, 44100, 48000, 88200, 96000.
+-- >                        by default the players current rate.  
+-- >   bit_depth ,    -- number, one of 16, 24 or 32. by default 32.  
+-- >   interpolation, -- string, one of 'cubic', 'sinc'. by default cubic'.  
+-- >   priority,      -- string, one "low", "realtime", "high". by default "high".  
+-- > }
+--
 -- To render only specific tracks or columns, mute all the tracks/columns that
 -- should not be rendered before starting to render.
 -- param 'file_name' must point to a valid, maybe already existing file. if it 
@@ -187,7 +189,7 @@ renoise.song().rendering
 -- See renoise.song():render(). Returns the current render progress amount.
 renoise.song().rendering_progress
   -> [read-only, number, 0-1.0]
-	
+    
 -- See renoise.Transport for more info
 renoise.song().transport
   -> [read-only, renoise.Transport object]
@@ -1112,11 +1114,11 @@ renoise.song().patterns[].copy_from(other_pattern object)
 --
 -- One argument is passed to the notifier function: "pos", a table with the 
 -- fields "pattern", "track" and "line", which define where the change has
--- happened:
+-- happened, e.g:
 --
--- function my_pattern_line_notifier(pos)
---   -- check pos.pattern, pos.track, pos.line (all are indices)
--- end
+-- > function my_pattern_line_notifier(pos)  
+-- >   -- check pos.pattern, pos.track, pos.line (all are indices)  
+-- > end
 --
 -- Please be gentle in the notifiers, don't do too much stuff in there. 
 -- Ideally just set a flag like "pattern_dirty" which then gets picked up by

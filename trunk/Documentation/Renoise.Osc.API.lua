@@ -9,7 +9,7 @@ Lua scripts in Renoise. OSC can be used in combination with sockets to
 send/receive OSC tagged data over process boundaries or to exchange data
 across computers in a network (Internet).
 
-Please have a look at http://opensoundcontrol.org for more general info
+Please have a look at <http://opensoundcontrol.org> for more general info
 about OSC
 
 Please read the INTRODUCTION.txt first to get an overview about the complete
@@ -53,32 +53,34 @@ renoise.Osc.from_binary_data(binary_data)
 -- Create a new OSC message with the given pattern and optional arguments.
 -- When arguments are specified, they must be specified as a table of
 -- {tag="X", value=SomeValue}'s.
--- "tag" is a standard OSC type tag. (see http://opensoundcontrol.org/spec-1_0)
+-- "tag" is a standard OSC type tag.
 -- "value" is the arguments value expressed by a Lua type. The value must
 -- be convertible to the specified tag, which means, you cannot for example
 -- specify an "i" (integer) as type and then pass a string as the value. Use a
 -- number value instead. Not all tags require a value, like the T,F boolean 
--- tags. Then a "value" field should not be specified.
+-- tags. Then a "value" field should not be specified. For more info, see:
+-- <http://opensoundcontrol.org/spec-1_0>
 --
 -- Valid tags are (OSC Type Tag, Type of corresponding value)
--- i    int32
--- f    float32
--- s    OSC-string
--- b    OSC-blob
--- h    64 bit big-endian two's complement integer
--- t    OSC-timetag
--- d    64 bit ("double") IEEE 754 floating point number
--- S    Alternate type represented as an OSC-string
--- c    An ascii character, sent as 32 bits
--- r    32 bit RGBA color
--- m    4 byte MIDI message. Bytes from MSB to LSB are: port id, 
---        status byte, data1, data2
--- T    True. No value needs to be specified.
--- F    False. No value needs to be specified.
--- N    Nil. No value needs to be specified.
--- I    Infinitum. No value needs to be specified.
--- [,]  Indicates the beginning, end of an array. currently not 
---        supported by Renoise.
+-- 
+-- + i,    int32
+-- + f,    float32
+-- + s,    OSC-string
+-- + b,    OSC-blob
+-- + h,    64 bit big-endian two's complement integer
+-- + t,    OSC-timetag
+-- + d,    64 bit ("double") IEEE 754 floating point number
+-- + S,    Alternate type represented as an OSC-string
+-- + c,    An ascii character, sent as 32 bits
+-- + r,    32 bit RGBA color
+-- + m,    4 byte MIDI message. Bytes from MSB to LSB are: port id, 
+--         status byte, data1, data2
+-- + T,    True. No value needs to be specified.
+-- + F,    False. No value needs to be specified.
+-- + N,    Nil. No value needs to be specified.
+-- + I,    Infinitum. No value needs to be specified.
+-- + [],  Indicates the beginning, end of an array. _currently not 
+--        supported by Renoise._
 --
 renoise.Osc.Message(pattern [, table of {tag, value} arguments])
 
@@ -127,5 +129,4 @@ bundle.elements
 -- message over the network through sockets
 bundle.binary_data
   -> [read-only, raw string]
-
 
