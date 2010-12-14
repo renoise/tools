@@ -8,12 +8,12 @@ This reference lists all available Lua functions and classes that control
 the Renoise application. The Application is the Lua interface to Renoise's main
 GUI and window (Application and ApplicationWindow).
 
-Please read the INTRODUCTION.txt first to get an overview about the complete
-API, and scripting in Renoise in general...
+Please read the INTRODUCTION first to get an overview about the complete
+API, and scripting for Renoise in general...
 
-Do not try to execute this file. It uses a .lua extension for markups only.
+Do not try to execute this file. It uses a .lua extension for markup only.
 
-]]
+]]--
 
 
 --------------------------------------------------------------------------------
@@ -49,14 +49,14 @@ renoise.app():show_status(message)
 renoise.app():show_prompt(title, message, {button_labels})
   -> [pressed_button_label]
 
--- Opens a modal dialog with a title, a custom content and custom button labels.
--- See Renoise.ViewBuilder.API.txt for more info. key_handler is an optional
+-- Opens a modal dialog with a title, custom content and custom button labels.
+-- See Renoise.ViewBuilder.API for more info. key_handler is an optional
 -- notifier function for keyboard events in the dialog.
 renoise.app():show_custom_prompt(title, content_view, {button_labels} [, key_handler])
   -> [pressed_button_label]
 
 -- Shows a non modal dialog (a floating tool window) with custom content.
--- Again see Renoise.ViewBuilder.API.txt for more info about custom views.
+-- Again see Renoise.ViewBuilder.API for more info about custom views.
 -- key_handler is an optional notifier function for keyboard events that are 
 -- received by the dialog.
 renoise.app():show_custom_dialog(title, content_view [, key_handler])
@@ -78,14 +78,14 @@ renoise.app():prompt_for_filename_to_read({file_extensions}, dialog_title)
 renoise.app():prompt_for_multiple_filenames_to_read({file_extensions}, dialog_title)
   -> [list of filenames or empty list]
 
--- Open a modal dialog to get a filename and path for writing a file.
--- When an existing file was selected, the dialog will ask to overwrite it,
--- so you don't have to take of this by your own.
+-- Open a modal dialog to get a filename and path for writing.
+-- When an existing file is selected, the dialog will ask whether or not to 
+-- overwrite it, so you don't have to take care of this on your own.
 renoise.app():prompt_for_filename_to_write(file_extension, dialog_title)
   -> [filename or empty string]
 
 
--- Opens the default internet browser with the given url. url can also be
+-- Opens the default internet browser with the given URL. The URL can also be
 -- a file that browsers can open (like xml, html files...).
 renoise.app():open_url(url)
 -- Opens the default file browser (explorer, finder...) with the given path.
@@ -101,21 +101,21 @@ renoise.app():new_song_no_template()
 -- changes if needed, any errors are shown to the user).
 renoise.app():load_song(filename)
 
--- Quicksave or save the current song under a new name. Errors that may happen
--- during the export are shown to the user only.
+-- Quicksave or save the current song under a new name. Any errors
+-- during the export are shown to the user.
 renoise.app():save_song()
 renoise.app():save_song_as(filename)
 
 
 -------- properties
 
--- Access to the applications full log filename and path. Will already be opened 
+-- Access to the application's full log filename and path. Will already be opened 
 -- for writing, but you nevertheless should be able to read from it.
 renoise.app().log_filename
   -> [string]
 
 -- Get the apps main document, the song. The global "renoise.song()" function 
--- basically just is a shortcut for renoise.app().current_song.
+-- is, in fact, a shortcut to this property.
 renoise.app().current_song
   -> [renoise.Song object]
 
@@ -162,11 +162,10 @@ renoise.ApplicationWindow.LOWER_FRAME_SONG_PROPERTIES
 -- docks and so on.
 renoise.app().window:maximize()
 
--- Minimize the window to the dock or taskbar.
--- docks and so on.
+-- Minimize the window to the dock or taskbar, depending on the OS.
 renoise.app().window:minimize()
 
--- "un-maximize" or "un-minimize" the window or just bring it to front.
+-- "un-maximize" or "un-minimize" the window, or just bring it to front.
 renoise.app().window:restore()
 
 -- Select/enable one of the global view presets, to memorize/restore
@@ -176,7 +175,7 @@ renoise.app().window:select_preset(preset_index)
 
 -------- properties
 
--- Get/change if the application is running fullscreen.
+-- Get/set if the application is running fullscreen.
 renoise.app().window.fullscreen
   -> [boolean]
 
@@ -187,7 +186,7 @@ renoise.app().window.is_minimized
   -> [read-only, boolean]
 
 -- When true, the middle frame views (like the pattern editor) will
--- stay focused unless alt or middle mouse clicked.
+-- stay focused unless alt or middle mouse is clicked.
 renoise.app().window.lock_keyboard_focus
   -> [boolean]
 
@@ -207,7 +206,7 @@ renoise.app().window.active_upper_frame, _observable
 renoise.app().window.active_middle_frame, _observable
   -> [enum = MIDDLE_FRAME]
 
--- Frame with the dsp chain view, automation...
+-- Frame with the DSP chain view, automation, etc.
 renoise.app().window.lower_frame_is_visible, _observable
   -> [boolean]
 renoise.app().window.active_lower_frame, _observable
@@ -221,3 +220,4 @@ renoise.app().window.pattern_matrix_is_visible, _observable
 -- Pattern advanced edit, visible in pattern editor only...
 renoise.app().window.pattern_advanced_edit_is_visible, _observable
   -> [boolean]
+

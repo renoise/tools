@@ -11,7 +11,7 @@ standard library.
 All standard Lua libraries are included in Renoise as well. You can find the
 full reference here: <http://www.lua.org/manual/5.1/manual.html#5>
 
-Do not try to execute this file. It uses a .lua extension for markups only.
+Do not try to execute this file. It uses a .lua extension for markup only.
 
 ]]
 

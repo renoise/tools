@@ -9,9 +9,9 @@ Renoise's main document - the song - with all its components like instruments,
 tracks, patterns, and so on.
 
 Please read the INTRODUCTION.txt first to get an overview about the complete
-API, and scripting in Renoise in general...
+API, and scripting for Renoise in general...
 
-Do not try to execute this file. It uses a .lua extension for markups only.
+Do not try to execute this file. It uses a .lua extension for markup only.
 
 ]]
 

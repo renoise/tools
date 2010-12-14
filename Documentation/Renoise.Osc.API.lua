@@ -13,9 +13,9 @@ Please have a look at <http://opensoundcontrol.org> for more general info
 about OSC
 
 Please read the INTRODUCTION.txt first to get an overview about the complete
-API, and scripting in Renoise in general...
+API, and scripting for Renoise in general...
 
-Do not try to execute this file. It uses a .lua extension for markups only.
+Do not try to execute this file. It uses a .lua extension for markup only.
 
 
 -------- Examples
@@ -52,14 +52,14 @@ renoise.Osc.from_binary_data(binary_data)
 
 -- Create a new OSC message with the given pattern and optional arguments.
 -- When arguments are specified, they must be specified as a table of
--- {tag="X", value=SomeValue}'s.
--- "tag" is a standard OSC type tag.
--- "value" is the arguments value expressed by a Lua type. The value must
--- be convertible to the specified tag, which means, you cannot for example
--- specify an "i" (integer) as type and then pass a string as the value. Use a
--- number value instead. Not all tags require a value, like the T,F boolean 
--- tags. Then a "value" field should not be specified. For more info, see:
--- <http://opensoundcontrol.org/spec-1_0>
+-- > { tag="X", value=SomeValue }
+--
+-- "tag" is a standard OSC type tag. "value" is the arguments value expressed 
+-- by a Lua type. The value must be convertible to the specified tag, which 
+-- means, you cannot for example specify an "i" (integer) as type and then pass 
+-- a string as the value. Use a number value instead. Not all tags require a 
+-- value, like the T,F boolean  tags. Then a "value" field should not be 
+-- specified. For more info, see: <http://opensoundcontrol.org/spec-1_0>
 --
 -- Valid tags are (OSC Type Tag, Type of corresponding value)
 -- 

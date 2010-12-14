@@ -4,15 +4,15 @@ Renoise Application API Reference
 
 --[[
 
-This reference lists the content of the main "renoise" namespace. All renoise
+This reference lists the content of the main "renoise" namespace. All Renoise
 related functions and classes are nested in this namespace.
 
-Please read the INTRODUCTION.txt first to get an overview about the complete
-API, and scripting in Renoise in general... 
+Please read the INTRODUCTION first to get an overview about the complete
+API, and scripting for Renoise in general... 
 
-Do not try to execute this file. It uses a .lua extension for markups only.
+Do not try to execute this file. It uses a .lua extension for markup only.
 
-]]
+]]--
 
 
 --------------------------------------------------------------------------------
@@ -38,8 +38,9 @@ renoise.app() -> [renoise.Application object]
 renoise.song() -> [renoise.Song object]
 renoise.tool() -> [renoise.ScriptingTool object]
 
--- Not much going on here:
--- for renoise.Application, see Renoise.Application.API.txt
--- for renoise.Song, see Renoise.Song.API.txt
--- for renoise.ScriptingTool, see Renoise.ScriptingTool.API.txt
+-- Not much else going on here...
+-- for renoise.Application, see Renoise.Application.API,
+-- for renoise.Song, see Renoise.Song.API,
+-- for renoise.ScriptingTool, see Renoise.ScriptingTool.API,
+-- and so on.
 
