@@ -53,6 +53,9 @@ function strip_linebreaks($string) {
     return str_replace("\n", null, $string);
 }
 
+// Debug
+// $files = array('/Users/dac514/Desktop/test.lua');
+
 $index = array();
 foreach ($files as $file) {
 
@@ -66,17 +69,12 @@ foreach ($files as $file) {
     $tmp2 = explode("\n", $tmp);
     $count = count($tmp2);
     if (preg_match('/lua$/', $file)) foreach ($tmp2 as $lnum => $line) {
-
+        
         if ($long_comment) {
             if (preg_match('/\]\]/', $line)) $long_comment = false;
             continue;
         }
-
-        if (!$long_comment && preg_match('/^\s*--\[\[/', $line)) {
-            $long_comment = true;
-            continue;
-        }
-
+        
         if ($long_code) {
             if ($count-1 <= $lnum) {
                 $tmp2[$lnum] = "~~~\n" . $line;
@@ -92,19 +90,25 @@ foreach ($files as $file) {
             else {
                 // Not consecutive empty lines
                 $long_code_offset = 0;
-            }
+            }    
         }
-
+        
+        if (!$long_comment && preg_match('/^\s*--\[\[/', $line)) {
+            $long_comment = true;
+            continue;
+        }        
+        
         if (preg_match('/^\s*--/', $line) || preg_match('/^\s*$/', $line)) {
             continue;
         }
-
+        
         if (!$long_code) {
             $tmp2[$lnum] = "~~~\n" . $line;
             $long_code = true;
             $long_code_offset = 0;
         }
-
+        
+        
     }
     $markdown = implode("\n", $tmp2);
 
@@ -115,7 +119,7 @@ foreach ($files as $file) {
     */
 
     // Get rid of Lua warning
-    $markdown = str_ireplace('Do not try to execute this file. It uses a .lua extension for markups only.', null, $markdown);
+    $markdown = str_ireplace('Do not try to execute this file. It uses a .lua extension for markup only.', null, $markdown);
 
     // Find `--[[ % ]]--` or `--[[ % ]]` and replace with %
     $markdown = preg_replace('/--\[\[(.*?)(\]\]--|\]\])/s', '$1', $markdown);

@@ -10,11 +10,11 @@ your tool to interact with Renoise by injecting, creating menu entries or
 keybindings into Renoise; or by attaching to some common tool related notifiers.
 
 Please read the INTRODUCTION.txt first to get an overview about the complete
-API, and scripting in Renoise in general...
+API, and scripting for Renoise in general...
 
 Have a look at the com.renoise.ExampleTool.xrnx for more info about XRNX tools.
 
-Do not try to execute this file. It uses a .lua extension for markups only.
+Do not try to execute this file. It uses a .lua extension for markup only.
 
 ]]
 

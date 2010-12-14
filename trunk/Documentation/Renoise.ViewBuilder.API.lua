@@ -9,13 +9,13 @@ classes and functions that are used to build custom GUIs; GUIs for your
 scripts in Renoise.
 
 Please read the INTRODUCTION.txt first to get an overview about the complete
-API, and scripting in Renoise in general...
+API, and scripting for Renoise in general...
 
 For a small tutorial and more details about how to create and use views, take
 a look at the "com.renoise.ExampleToolGUI.xrnx" tool please. This tool
 is included in the scripting dev started pack at <http://scripting.renoise.com>
 
-Do not try to execute this file. It uses a .lua extension for markups only.
+Do not try to execute this file. It uses a .lua extension for markup only.
 
 ]]
 
