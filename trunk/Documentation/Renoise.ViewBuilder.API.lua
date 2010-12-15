@@ -67,14 +67,14 @@ function my_keyhandler_func(dialog, key) end
 -- properties can be applied to any of the following views.
 
 
------------ functions
+----------- Functions
 
 -- Dynamically create view hierarchies.
 view:add_child(View child_view)
 view:remove_child(View child_view)
 
 
------------ properties
+----------- Properties
 
 -- Set visible to false to hide a view (make it invisible without removing
 -- it). Please note that view.visible will also return false when any of its
@@ -110,7 +110,7 @@ view.tooltip
 -- change a value or some "state" via the UI.
 
 
------------ properties
+----------- Properties
 
 -- Instead of making a control invisible, you can also make it inactive.
 -- Deactivated controls will still be shown and will also still show its
@@ -139,7 +139,7 @@ control.midi_mapping
 -- vertically (ViewBuilder.column) or horizontally (ViewBuilder.row). It allows
 -- you to create view layouts.
 
------------ functions
+----------- Functions
 
 -- Adding new child views to a rack automatically enlarges the rack, but
 -- removing child views from a rack or making them invisible, will never
@@ -150,7 +150,7 @@ control.midi_mapping
 rack:resize()
 
 
------------ properties
+----------- Properties
 
 -- Set the "borders" of the rack (left, right, top and bottom equally)
 -- By default 0 (no borders).
@@ -198,7 +198,7 @@ rack.uniform
 -- To make use of modes like "center", you manually have to setup a size that
 -- is bigger than the sum of the child sizes.
 
------------ properties
+----------- Properties
 
 -- Setup "borders" of the aligner (left, right, top and bottom equally)
 -- By default 0 (no borders).
@@ -243,7 +243,7 @@ aligner.mode
 --]]
 
 
------------ properties
+----------- Properties
 
 -- Get/set the text that should be displayed. Setting a new text will resize
 -- the view in order to make the text fully visible (expanding only).
@@ -300,7 +300,7 @@ text.align
 --]]
 
 
------------ functions
+----------- Functions
 
 -- When a scroll bar is visible (needed), scroll the text to show the last line.
 multiline_text:scroll_to_last_line()
@@ -316,7 +316,7 @@ multiline_text:add_line(text)
 multiline_text:clear()
 
 
------------ properties
+----------- Properties
 
 -- Get/set the text that should be displayed in a single line. newlines
 -- (Windows, mac or Unix styled newlines) in the text can be used to create
@@ -370,14 +370,14 @@ multiline_text.style
 --]]
 
 
------------ functions
+----------- Functions
 
 -- Add/remove value change (text change) notifiers.
 textfield:add_notifier(function or {object, function} or {object, function})
 textfield:remove_notifier(function or {object, function} or {object, function})
 
 
------------ properties
+----------- Properties
 
 -- The currently shown value / text. The text will not be updated while editing,
 -- but only after editing finished (return was pressed, or focus was lost).  
@@ -433,7 +433,7 @@ textfield.bind
 --]]
 
 
------------ functions
+----------- Functions
 
 -- Add/remove value change (text change) notifiers.
 multiline_textfield:add_notifier(function or {object, function} or {object, function})
@@ -453,7 +453,7 @@ multiline_textfield:add_line(text)
 multiline_textfield:clear()
 
 
--------- properties
+-------- Properties
 
 -- The current text as single line, using using newline characters to specify
 -- paragraphs.  
@@ -533,14 +533,14 @@ multiline_textfield.bind
 -- are present, to show that the bitmap can be clicked.
 
 
--------- functions
+-------- Functions
 
 -- Add/remove mouse click notifiers
 bitmapview:add_notifier(function or {object, function} or {object, function})
 bitmapview:remove_notifier(function or {object, function} or {object, function})
 
 
--------- properties
+-------- Properties
 
 -- Setup how the bitmap should be drawn, recolored. Available modes are:
 -- >  "plain"        -> bitmap is drawn just like it is, no recoloring is done  
@@ -587,7 +587,7 @@ bitmapview.notifier
 --]]
 
 
--------- functions
+-------- Functions
 
 -- Add/remove button hit/release notifier functions.
 -- When a "pressed" notifier is set, the release notifier is guaranteed to be
@@ -600,7 +600,7 @@ button:remove_pressed_notifier(function or {object, function} or {object, functi
 button:remove_released_notifier(function or {object, function} or {object, function})
 
 
--------- properties
+-------- Properties
 
 -- The text label of the button
 -- By default empty.
@@ -658,14 +658,14 @@ button.notifier
 --]]
 
 
--------- functions
+-------- Functions
 
 -- Add/remove value notifiers
 checkbox:add_notifier(function or {object, function} or {object, function})
 checkbox:remove_notifier(function or {object, function} or {object, function})
 
 
--------- properties
+-------- Properties
 
 -- The current state of the checkbox, expressed as boolean.
 -- By default "false".
@@ -703,14 +703,14 @@ checkbox.bind
 --]]
 
 
--------- functions
+-------- Functions
 
 -- Add/remove index change notifiers.
 switch:add_notifier(function or {object, function} or {object, function})
 switch:remove_notifier(function or {object, function} or {object, function})
 
 
--------- properties
+-------- Properties
 
 -- Get/set the currently shown button labels. Item list size must be >= 2.
 switch.items
@@ -751,14 +751,14 @@ switch.bind
 --]]
 
 
--------- functions
+-------- Functions
 
 -- Add/remove index change notifiers.
 popup:add_notifier(function or {object, function} or {object, function})
 popup:remove_notifier(function or {object, function} or {object, function})
 
 
--------- properties
+-------- Properties
 
 -- Get/set the currently shown items. Item list can be empty, then "None" is
 -- displayed and the value won't change.
@@ -800,14 +800,14 @@ popup.bind
 --]]
 
 
--------- functions
+-------- Functions
 
 -- Add/remove index change notifiers.
 chooser:add_notifier(function or {object, function} or {object, function})
 chooser:remove_notifier(function or {object, function} or {object, function})
 
 
--------- properties
+-------- Properties
 
 -- Get/set the currently shown items. Item list size must be >= 2.
 chooser.items
@@ -848,14 +848,14 @@ chooser.bind
 --]]
 
 
--------- functions
+-------- Functions
 
 -- Add/remove value change notifiers.
 valuebox:add_notifier(function or {object, function} or {object, function})
 valuebox:remove_notifier(function or {object, function} or {object, function})
 
 
--------- properties
+-------- Properties
 
 -- Get/set the min/max values that are expected, allowed.
 -- By default 0 and 100.
@@ -918,14 +918,14 @@ valuebox.bind
 --]]
 
 
--------- functions
+-------- Functions
 
 -- Add/remove value change notifiers.
 value:add_notifier(function or {object, function} or {object, function})
 value:remove_notifier(function or {object, function} or {object, function})
 
 
--------- properties
+-------- Properties
 
 -- Get/set the current value.
 value.value
@@ -993,14 +993,14 @@ value.bind
 --]]
 
 
--------- functions
+-------- Functions
 
 -- Add/remove value change notifiers.
 valuefield:add_notifier(function or {object, function} or {object, function})
 valuefield:remove_notifier(function or {object, function} or {object, function})
 
 
--------- properties
+-------- Properties
 
 -- Get/set the min/max values that are expected, allowed.
 -- By default 0.0 and 1.0.
@@ -1072,14 +1072,14 @@ valuefield.bind
 --]]
 
 
--------- functions
+-------- Functions
 
 -- Add/remove value change notifiers.
 slider:add_notifier(function or {object, function} or {object, function})
 slider:remove_notifier(function or {object, function} or {object, function})
 
 
--------- properties
+-------- Properties
 
 -- Get/set the min/max values that are expected, allowed.
 -- By default 0.0 and 1.0.
@@ -1122,14 +1122,14 @@ slider.bind
 --]]
 
 
--------- functions
+-------- Functions
 
 -- Add/remove value change notifiers.
 slider:add_notifier(function or {object, function} or {object, function})
 slider:remove_notifier(function or {object, function} or {object, function})
 
 
--------- properties
+-------- Properties
 
 -- Get/set the min/max values that are expected, allowed.
 -- By default 0.0 and 1.0.
@@ -1177,14 +1177,14 @@ slider.bind
 
 
 
--------- functions
+-------- Functions
 
 -- Add/remove value change notifiers.
 rotary:add_notifier(function or {object, function} or {object, function})
 rotary:remove_notifier(function or {object, function} or {object, function})
 
 
--------- properties
+-------- Properties
 
 -- Get/set the min/max values that are expected, allowed.
 -- By default 0.0 and 1.0.
@@ -1235,14 +1235,14 @@ rotary.bind
 --]]
 
 
--------- functions
+-------- Functions
 
 -- Add/remove value change notifiers.
 xypad:add_notifier(function or {object, function} or {object, function})
 xypad:remove_notifier(function or {object, function} or {object, function})
 
 
--------- properties
+-------- Properties
 
 -- Get/set a table of min/max values that are allowed.
 -- By default 0.0 and 1.0 for both, x and y.
@@ -1288,7 +1288,7 @@ xypad.bind
 -- Dialogs can not created with the viewbuilder, but only by the application.
 -- See "create custom views" on top of this file how to do so.
 
--------- functions
+-------- Functions
 
 -- Bring an already visible dialog to front and make it the key window.
 dialog:show()
@@ -1297,7 +1297,7 @@ dialog:show()
 dialog:close()
 
 
--------- properties
+-------- Properties
 
 -- Check if a dialog is alive and visible.
 dialog.visible
@@ -1365,7 +1365,7 @@ renoise.ViewBuilder.DEFAULT_DIALOG_SPACING
 renoise.ViewBuilder.DEFAULT_DIALOG_BUTTON_HEIGHT
 
 
--------- functions
+-------- Functions
 
 vb:column { Rack Properties and/or child views }
   -> [Rack object]
@@ -1423,7 +1423,7 @@ vb:xypad { XYPad Properties }
   -> [XYPad object]
 
 
--------- properties
+-------- Properties
 
 -- View id is the table key, the tables value the view object.
 -- > e.g.: vb:text{ id="my_view", text="some_text"}  

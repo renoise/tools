@@ -20,7 +20,7 @@ Do not try to execute this file. It uses a .lua extension for markup only.
 -- renoise
 --------------------------------------------------------------------------------
 
--------- functions
+-------- Functions
 
 -- Access to the one and only loaded song in the app. Always valid after the
 -- application initialized. NOT valid when called from the XRNX globals while
@@ -36,7 +36,7 @@ renoise.song()
 
 -- helper class used in Transport and Song, representing a position in the song.
 
--------- properties
+-------- Properties
 
 -- Position in the pattern sequence.
 song_pos.sequence
@@ -47,7 +47,7 @@ song_pos.line
   -> [number]
 
 
--------- operators
+-------- Operators
 
 ==(song_pos, song_pos) -> [boolean]
 ~=(song_pos, song_pos) -> [boolean]
@@ -61,7 +61,7 @@ song_pos.line
 -- renoise.Song
 --------------------------------------------------------------------------------
 
--------- functions
+-------- Functions
 
 -- Test if something in the song can be undone.
 renoise.song():can_undo()
@@ -166,7 +166,7 @@ renoise.song():render([options, ] filename, rendering_done_callback)
   -> [boolean, error_message]
   
   
--------- properties
+-------- Properties
 
 -- When the song was loaded from or saved to a file, the absolute path and name
 -- to the xrns file is returned. Else an empty string is returned.
@@ -279,7 +279,7 @@ renoise.song().selected_effect_column_index
 -- renoise.Transport
 --------------------------------------------------------------------------------
 
--------- consts
+-------- Consts
 
 renoise.Transport.PLAYMODE_RESTART_PATTERN
 renoise.Transport.PLAYMODE_CONTINUE_PATTERN
@@ -288,7 +288,7 @@ renoise.Transport.RECORD_PARAMETER_MODE_PATTERN
 renoise.Transport.RECORD_PARAMETER_MODE_AUTOMATION
 
 
--------- functions
+-------- Functions
 
 renoise.song().transport:panic()
 
@@ -318,7 +318,7 @@ renoise.song().transport:start_stop_sample_recording()
 renoise.song().transport:cancel_sample_recording()
 
 
--------- properties
+-------- Properties
 
 renoise.song().transport.playing, _observable
   -> [boolean]
@@ -423,7 +423,7 @@ renoise.song().transport.shuffle_assignment_observable
 -- renoise.PatternSequencer
 --------------------------------------------------------------------------------
 
--------- functions
+-------- Functions
 
 -- Insert a new or existing pattern at the given position in the sequence.
 renoise.song().sequencer.insert_sequence_at(sequence_pos, pattern_index)
@@ -451,7 +451,7 @@ renoise.song().sequencer:set_track_sequence_slot_is_muted(
   track_index, sequence_index, muted)
 
 
--------- properties
+-------- Properties
 
 -- Pattern order list: notifiers will only be fired when sequence positions
 -- added, removed or changed their order. To get notified of pattern assignment
@@ -554,7 +554,7 @@ renoise.song().pattern_iterator:effect_columns_in_pattern_track(
 -- renoise.Track
 --------------------------------------------------------------------------------
 
--------- consts
+-------- Consts
 
 renoise.Track.TRACK_TYPE_SEQUENCER
 renoise.Track.TRACK_TYPE_MASTER
@@ -565,7 +565,7 @@ renoise.Track.MUTE_STATE_OFF
 renoise.Track.MUTE_STATE_MUTED
 
 
--------- functions
+-------- Functions
 
 -- Insert a new device at the given position. "device_name" must be one of 
 -- renoise.song().tracks[].available_devices
@@ -593,7 +593,7 @@ renoise.song().tracks[]:column_is_muted_observable(column)
 renoise.song().tracks[]:mute_column(column, muted)
 
 
--------- properties
+-------- Properties
 
 renoise.song().tracks[].type
   -> [enum = TRACK_TYPE]
@@ -664,7 +664,7 @@ renoise.song().tracks[].devices[], _observable
 -- renoise.TrackDevice
 --------------------------------------------------------------------------------
 
--------- properties
+-------- Properties
 
 renoise.song().tracks[].devices[].name
   -> [read-only, string]
@@ -699,13 +699,13 @@ renoise.song().tracks[].devices[].external_editor_visible
 -- renoise.DeviceParameter
 --------------------------------------------------------------------------------
 
--------- consts
+-------- Consts
 
 renoise.DeviceParameter.POLARITY_UNIPOLAR
 renoise.DeviceParameter.POLARITY_BIPOLAR
 
 
--------- functions
+-------- Functions
 
 -- Set a new value and write automation, when the MIDI mapping
 -- "record to automation" option is set. Only works for parameters
@@ -713,7 +713,7 @@ renoise.DeviceParameter.POLARITY_BIPOLAR
 renoise.song().tracks[].devices[].parameters[].record_value(value)
 
 
--------- properties
+-------- Properties
 
 renoise.song().tracks[].devices[].parameters[].name
   -> [read-only, string]
@@ -754,7 +754,7 @@ renoise.song().tracks[].devices[].parameters[].value_string, _observable
 -- renoise.Instrument
 --------------------------------------------------------------------------------
 
--------- functions
+-------- Functions
 
 -- Reset, clear all settings and all samples.
 renoise.song().instruments[]:clear()
@@ -771,7 +771,7 @@ renoise.song().instruments[]:delete_sample_at(index)
 renoise.song().instruments[]:swap_samples_at(index1, index2)
 
 
--------- properties
+-------- Properties
 
 renoise.song().instruments[].name, _observable 
   -> [string]
@@ -797,14 +797,14 @@ renoise.song().instruments[].samples[], _observable
 -- renoise.Instrument.MidiProperties
 --------------------------------------------------------------------------------
 
--------- consts
+-------- Consts
 
 renoise.Instrument.MidiProperties.TYPE_EXTERNAL
 renoise.Instrument.MidiProperties.TYPE_LINE_IN_RET
 renoise.Instrument.MidiProperties.TYPE_INTERNAL -- REWIRE
 
 
--------- properties
+-------- Properties
   
 -- Note: ReWire device do always start with "ReWire: " in its device_name and
 -- will always ignore the instrument_type and midi_channel properties. MIDI 
@@ -838,7 +838,7 @@ renoise.song().instruments[].midi_properties.duration, _observable
 -- renoise.Instrument.PluginProperties
 --------------------------------------------------------------------------------
 
--------- functions
+-------- Functions
 
 -- Load an existing, new, non aliased plugin. Pass an empty string to unload
 -- an already assigned plugin. plugin_name must be one of:
@@ -847,7 +847,7 @@ renoise.song().instruments[].plugin_properties:load_plugin(plugin_name)
   -> [boolean, success]
 
 
--------- properties
+-------- Properties
 
 -- List of all currently available plugins. This is a list of unique plugin
 -- names which also contains the plugin's type (VST/AU/DSSI/...), not including
@@ -906,7 +906,7 @@ renoise.song().instruments[].plugin_properties.auto_suspend, _observable
 -- renoise.InstrumentDevice
 --------------------------------------------------------------------------------
 
--------- properties
+-------- Properties
 
 renoise.song().instruments[].plugin_properties.plugin_device.name
   -> [read-only, string]
@@ -934,7 +934,7 @@ renoise.song().instruments[].plugin_properties.plugin_device.external_editor_vis
 -- renoise.Sample
 --------------------------------------------------------------------------------
 
--------- consts
+-------- Consts
 
 renoise.Sample.INTERPOLATE_NONE
 renoise.Sample.INTERPOLATE_LINEAR
@@ -950,7 +950,7 @@ renoise.Sample.LOOP_MODE_REVERSE
 renoise.Sample.LOOP_MODE_PING_PONG
 
 
--------- functions
+-------- Functions
 
 -- Reset, clear all sample settings and sample data.
 renoise.song().instruments[].samples[]:clear()
@@ -959,7 +959,7 @@ renoise.song().instruments[].samples[]:clear()
 renoise.song().instruments[].samples[]:copy_from(other_sample object)
 
 
--------- properties
+-------- Properties
 
 renoise.song().instruments[].samples[].name, _observable
   -> [string]
@@ -1002,7 +1002,7 @@ renoise.song().instruments[].samples[].sample_buffer, _observable
 -- renoise.SampleBuffer
 --------------------------------------------------------------------------------
 
--------- functions
+-------- Functions
 
 -- Create new sample data with the given rate, bit-depth, channel and frame 
 -- count. Will trash existing sample data if present. Initial buffer is all
@@ -1054,7 +1054,7 @@ renoise.song().instruments[].samples[].sample_buffer.save_as(filename, format)
   -> [boolean - success]
 
 
--------- properties
+-------- Properties
 
 renoise.song().instruments[].samples[].sample_buffer.has_sample_data
   -> [read-only, boolean]
@@ -1092,13 +1092,13 @@ renoise.song().instruments[].samples[].sample_buffer.selection_range
 -- renoise.Pattern
 --------------------------------------------------------------------------------
 
--------- consts
+-------- Consts
 
 -- Maximum number of lines that may be present in a pattern
 renoise.Pattern.MAX_NUMBER_OF_LINES
 
 
--------- functions
+-------- Functions
 
 -- Deletes all lines & automation.
 renoise.song().patterns[]:clear()
@@ -1135,7 +1135,7 @@ renoise.song().patterns[]:add_line_notifier(func[, obj])
 renoise.song().patterns[]:remove_line_notifier(func[, obj])
     
     
--------- properties
+-------- Properties
 
 -- Quickly check if a pattern has some pattern lines or automation.
 renoise.song().patterns[].is_empty 
@@ -1156,7 +1156,7 @@ renoise.song().patterns[].tracks[]
   -> [read-only, array of renoise.PatternTrack]
 
 
--------- operators
+-------- Operators
 
 -- compares all tracks and lines, including automation
 ==(Pattern object, Pattern object) -> [boolean]
@@ -1167,7 +1167,7 @@ renoise.song().patterns[].tracks[]
 -- renoise.PatternTrack
 --------------------------------------------------------------------------------
 
--------- functions
+-------- Functions
 
 -- Deletes all lines & automation.
 renoise.song().patterns[].tracks[]:clear()
@@ -1203,7 +1203,7 @@ renoise.song().patterns[].tracks[]:create_automation(parameter)
 renoise.song().patterns[].tracks[]:delete_automation(parameter)
 
 
--------- properties
+-------- Properties
 
 renoise.song().patterns[].tracks[].color, _observable 
   -> [table with 3 numbers (0-0xFF, RGB) or nil when no custom slot color is set]
@@ -1220,7 +1220,7 @@ renoise.song().patterns[].tracks[].automation[], _observable
   -> [read-only, list of renoise.PatternTrackAutomation]
 
 
--------- operators
+-------- Operators
 
 -- compares line content and automation
 ==(PatternTrack object, PatternTrack object) -> [boolean]
@@ -1231,14 +1231,14 @@ renoise.song().patterns[].tracks[].automation[], _observable
 -- renoise.PatternTrackAutomation
 --------------------------------------------------------------------------------
   
--------- consts
+-------- Consts
 
 renoise.PatternTrackAutomation.PLAYMODE_POINTS
 renoise.PatternTrackAutomation.PLAYMODE_LINEAR
 renoise.PatternTrackAutomation.PLAYMODE_CUBIC
 
 
--------- properties
+-------- Properties
 
 renoise.song().patterns[].tracks[].automation[].dest_device 
   -> [renoise.TrackDevice]
@@ -1270,7 +1270,7 @@ renoise.song().patterns[].tracks[].automation[].points[].value
   -> [number, 0 - 1.0]
 
 
--------- functions
+-------- Functions
   
 -- Removes all points from the automation. Will not delete the automation
 -- from tracks[]:automation, but the resulting automation will not do anything 
@@ -1293,7 +1293,7 @@ renoise.song().patterns[].tracks[].automation[]:add_point_at(time, value)
 renoise.song().patterns[].tracks[].automation[]:remove_point_at(time)
   
 
--------- operators
+-------- Operators
 
 -- compares automation content only, ignoring dest parameters
 ==(PatternTrackAutomation object, PatternTrackAutomation object) -> [boolean]
@@ -1304,7 +1304,7 @@ renoise.song().patterns[].tracks[].automation[]:remove_point_at(time)
 -- renoise.PatternTrackLine
 --------------------------------------------------------------------------------
 
--------- consts
+-------- Consts
 
 renoise.PatternTrackLine.EMPTY_NOTE
 renoise.PatternTrackLine.NOTE_OFF
@@ -1318,7 +1318,7 @@ renoise.PatternTrackLine.EMPTY_EFFECT_NUMBER
 renoise.PatternTrackLine.EMPTY_EFFECT_AMOUNT
 
 
--------- functions
+-------- Functions
 
 -- Clear all note and effect columns.
 renoise.song().patterns[].tracks[].lines[]:clear()
@@ -1327,7 +1327,7 @@ renoise.song().patterns[].tracks[].lines[]:clear()
 renoise.song().patterns[].tracks[].lines[]:copy_from(other_line object)
 
 
--------- properties
+-------- Properties
 
 renoise.song().patterns[].tracks[].lines[].is_empty 
   -> [boolean]
@@ -1339,7 +1339,7 @@ renoise.song().patterns[].tracks[].lines[].effect_columns
   -> [read-only, array of renoise.EffectColumn objects]
 
 
--------- operators
+-------- Operators
 
 -- compares all columns
 ==(PatternTrackLine object, PatternTrackLine object) -> [boolean]
@@ -1353,7 +1353,7 @@ tostring(Pattern object) -> [string]
 -- renoise.NoteColumn
 --------------------------------------------------------------------------------
 
--------- functions
+-------- Functions
 
 -- Clear the note column.
 renoise.song().patterns[].tracks[].lines[].note_columns[]:clear()
@@ -1363,7 +1363,7 @@ renoise.song().patterns[].tracks[].lines[].note_columns[]:copy_from(
   other_column object)
 
 
--------- properties
+-------- Properties
 
 -- True, when all note column properties are empty.
 renoise.song().patterns[].tracks[].lines[].note_columns[].is_empty 
@@ -1402,7 +1402,7 @@ renoise.song().patterns[].tracks[].lines[].note_columns[].delay_string
   -> [string, '00' - 'FF' or '..']
 
 
--------- operators
+-------- Operators
 
 -- compares the whole column
 ==(NoteColumn object, NoteColumn object) -> [boolean]
@@ -1416,7 +1416,7 @@ tostring(Pattern object) -> [string]
 -- renoise.EffectColumn
 --------------------------------------------------------------------------------
 
--------- functions
+-------- Functions
 
 -- Clear the effect column.
 renoise.song().patterns[].tracks[].lines[].effect_columns[]:clear()
@@ -1425,7 +1425,7 @@ renoise.song().patterns[].tracks[].lines[].effect_columns[]:clear()
 renoise.song().patterns[].tracks[].lines[].effect_columns[]:copy_from(other_column object)
 
 
--------- properties
+-------- Properties
 
 -- True, when all effect column properties are empty.
 renoise.song().patterns[].tracks[].lines[].effect_columns[].is_empty 
@@ -1447,7 +1447,7 @@ renoise.song().patterns[].tracks[].lines[].effect_columns[].amount_string
   -> [string, '00' - 'FF']
 
 
--------- operators
+-------- Operators
 
 -- compares the whole column
 ==(EffectColumn object, EffectColumn object) -> [boolean]

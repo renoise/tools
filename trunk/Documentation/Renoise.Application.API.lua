@@ -20,7 +20,7 @@ Do not try to execute this file. It uses a .lua extension for markup only.
 -- renoise
 --------------------------------------------------------------------------------
 
--------- functions
+-------- Functions
 
 renoise.app() 
   -> [renoise.Application object]
@@ -30,7 +30,7 @@ renoise.app()
 -- renoise.Application
 --------------------------------------------------------------------------------
 
--------- functions
+-------- Functions
 
 -- Shows an info message dialog to the user.
 renoise.app():show_message(message)
@@ -107,7 +107,7 @@ renoise.app():save_song()
 renoise.app():save_song_as(filename)
 
 
--------- properties
+-------- Properties
 
 -- Access to the application's full log filename and path. Will already be opened 
 -- for writing, but you nevertheless should be able to read from it.
@@ -138,7 +138,7 @@ renoise.app().window
 -- renoise.ApplicationWindow
 --------------------------------------------------------------------------------
 
--------- consts
+-------- Consts
 
 renoise.ApplicationWindow.UPPER_FRAME_DISK_BROWSER
 renoise.ApplicationWindow.UPPER_FRAME_TRACK_SCOPES
@@ -156,7 +156,7 @@ renoise.ApplicationWindow.LOWER_FRAME_INSTRUMENT_PROPERTIES
 renoise.ApplicationWindow.LOWER_FRAME_SONG_PROPERTIES
 
 
--------- functions
+-------- Functions
 
 -- Expand the window over the entire screen, without hiding menu bars, 
 -- docks and so on.
@@ -173,7 +173,7 @@ renoise.app().window:restore()
 renoise.app().window:select_preset(preset_index)
 
 
--------- properties
+-------- Properties
 
 -- Get/set if the application is running fullscreen.
 renoise.app().window.fullscreen

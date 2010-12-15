@@ -17,6 +17,8 @@ Terminal & Editor..." in the "Tools" menu. It allows you to:
 -- Browser Shortcuts
 --------------------------------------------------------------------------------
 
+Note: 'Command' below is the _Control_ key on Windows & Linux, _Command_ on OSX.
+
 + 'Command + E' Switch to Editor
 + 'Command + N' Create a new File
 + 'Command + O' Open an existing File
@@ -76,9 +78,6 @@ Terminal & Editor..." in the "Tools" menu. It allows you to:
 --------------------------------------------------------------------------------
 -- Tips & Tricks:
 --------------------------------------------------------------------------------
-
-* 'Command' above is the _Control_ key on Windows and Linux, _Command_ on
-  OSX.
 
 * To enter multiple lines in the terminal, end a line with a \
   The terminal will then prompt for another line until you hit enter twice

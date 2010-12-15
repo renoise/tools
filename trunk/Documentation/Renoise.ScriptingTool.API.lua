@@ -23,7 +23,7 @@ Do not try to execute this file. It uses a .lua extension for markup only.
 -- renoise
 --------------------------------------------------------------------------------
 
--------- functions
+-------- Functions
 
 -- access to your tools interface to Renoise. only valid for xrnx tools
 renoise.tool() 
@@ -34,7 +34,7 @@ renoise.tool()
 -- renoise.ScriptingTool
 --------------------------------------------------------------------------------
 
--------- functions
+-------- Functions
 
 -- menu_entries: insert a new menu entry somewhere in Renoises existing 
 -- context menus or the global app menu. insertion can be done while 
@@ -213,7 +213,7 @@ renoise.tool():add_timer(function or {object, function} or {function, object},
 renoise.tool():remove_timer(timer_func)
 
 
--------- properties
+-------- Properties
 
 -- full abs path and name of your tools bundle directory
 renoise.tool().bundle_path

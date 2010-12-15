@@ -281,7 +281,7 @@ at the class docs below.
 -- renoise.Document
 --==============================================================================
 
--------- construction
+-------- Construction
 
 -- Create an empty DocumentNode or a DocumentNode that is modelled after the
 -- passed table. See the general description in this file for more info about
@@ -301,7 +301,7 @@ renoise.Document.instantiate(model_name)
 -- renoise.Document.Serializable
 --------------------------------------------------------------------------------
 
--------- functions
+-------- Functions
 
 -- Serialize an object to a string.
 serializable:to_string()
@@ -316,7 +316,7 @@ serializable:from_string(string)
 -- renoise.Document.Observable, inherits Serializable
 --------------------------------------------------------------------------------
 
--------- functions
+-------- Functions
 
 -- Checks if the given function, method was already registered as notifier.
 observable:has_notifier(function or (object, function) or (function, object))
@@ -338,7 +338,7 @@ observable:remove_notifier(function or (object, function) or
 -- renoise.Document.ObservableBoolean/Number/String, inherits Observable
 --------------------------------------------------------------------------------
 
--------- properties
+-------- Properties
 
 -- Read/write access to the value of an Observable.
 observable.value
@@ -349,7 +349,7 @@ observable.value
 -- renoise.Document.ObservableBoolean/String/NumberList, inherits Observable
 --------------------------------------------------------------------------------
 
--------- operators
+-------- Operators
 
 -- Query a list's size (item count).
 #observable_list
@@ -361,7 +361,7 @@ observable_list[number]
   -> [renoise.Document.Observable object]
 
 
--------- functions
+-------- Functions
 
 -- Returns the number of entries of the list.
 observable_list:size()
@@ -391,7 +391,7 @@ observable_list:remove([pos])
 observable_list:swap(pos1, pos2)
 
 
--------- notifiers
+-------- Notifiers
 
 --[[
 
@@ -407,7 +407,7 @@ not to the list...
 List notifiers will also pass a table with information about what
 happened to the list as the first argument to the notifier, example:
 
-> function my_list_changed_notifier(notification)
+`function my_list_changed_notifier(notification)`
 
 When a new element gets added, the "notification" is:
 
@@ -448,7 +448,7 @@ observable_list:remove_notifier(function or (object, function) or
 -- renoise.Document.DocumentList
 --------------------------------------------------------------------------------
 
--------- operators
+-------- Operators
 
 -- Query a list's size (item count).
 #doc_list
@@ -460,7 +460,7 @@ doc_list[number]
   -> [renoise.Document.DocumentNode object]
 
 
--------- functions
+-------- Functions
 
 -- Returns the number of entries in the list.
 doc_list:size()
@@ -484,7 +484,7 @@ doc_list:remove([pos])
 doc_list:swap(pos1, pos2)
 
 
--------- notifiers
+-------- Notifiers
 
 -- Notifiers behave exactly like renoise.Document.ObservableXXXLists. Please
 -- have a look at those for more info.
@@ -504,13 +504,13 @@ doc_list:remove_notifier(function or (object, function) or
 -- renoise.Document.DocumentNode
 --------------------------------------------------------------------------------
 
--------- operators
+-------- Operators
 
 doc[property_name]
   -> [nil or (Observable, ObservableList or DocumentNode, DocumentList object)]
 
 
--------- functions
+-------- Functions
 
 doc:has_property(property_name)
   -> [boolean]
