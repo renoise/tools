@@ -41,7 +41,6 @@ app():show_custom_dialog(title, content_view [, key_handler_func])
 -- > }
 --
 -- "dialog" is a reference to the dialog the keyhandler is running on.
-
 function my_keyhandler_func(dialog, key) end
 
 -- When no key handler is specified, only the Escape key is used to close the

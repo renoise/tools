@@ -3,7 +3,7 @@ Renoise Script Debugging HowTo
 ============================================================================]]--
 
 In addition to the usual print & trace stuff via the Renoise scripting console
-(all 'print's will be dumped there), Renoise also offers a simple command-line
+(all 'print's will be dumped there), Renoise offers a simple command-line
 debugger. This debugger can even be used to debug scripts remotely; scripts
 running on other computers.
 
@@ -23,6 +23,8 @@ Renoise.
 -- Prerequisites
 --------------------------------------------------------------------------------
 
+To use the debugger you will need:
+
 * Renoise's "remdebug" module, which can be found in "Scripts/Libraries/remdebug"
   (no installation required - included in Renoise)
 
@@ -37,13 +39,13 @@ Renoise.
 -- Overview
 --------------------------------------------------------------------------------
 
-* The debugger will be controlled via a command-line Lua interpreter, outside
-  of Renoise via the remdebug/controller.lua script. To start a local debug
-  session from within Renoise you can use the function "debug.start()":
+The debugger will be controlled via a command-line Lua interpreter, outside
+of Renoise via the remdebug/controller.lua script. To start a local debug
+session from within Renoise you can use the function "debug.start()":
 
-        -- Opens a debugger controller in a new terminal/cmd window and
-        -- attaches the debugger to this script. Immediately breaks execution.
-        debug.start()
+    -- Opens a debugger controller in a new terminal/cmd window and
+    -- attaches the debugger to this script. Immediately breaks execution.
+    debug.start()
 
 You can add this anywhere in any script that runs in Renoise. This will
 work in a tool's main.lua main() body, just like a local function that you

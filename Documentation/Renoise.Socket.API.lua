@@ -224,52 +224,55 @@ server_socket:wait(timeout_ms)
 
 -------- Callbacks
 
--- All callback properties are optional. So you can for example skip specifying
--- "socket_accepted" if you have no use for this.
+--[[
 
--- notifier table example:
+All callback properties are optional. So you can for example skip specifying
+"socket_accepted" if you have no use for this.
 
-notifier_table = {
-  socket_error = function(error_message)
-    -- An error happened in the servers background thread.
-  end,
+notifier table example:
 
-  socket_accepted = function(socket)
-     -- FOR TCP CONNECTIONS ONLY: called as soon as a new client
-     -- connected to your server. The passed socket is a ready to use socket
-     -- object, representing a connection to the new socket.
-  end,
+    notifier_table = {
+      socket_error = function(error_message)
+        -- An error happened in the servers background thread.
+      end,
+    
+      socket_accepted = function(socket)
+         -- FOR TCP CONNECTIONS ONLY: called as soon as a new client
+         -- connected to your server. The passed socket is a ready to use socket
+         -- object, representing a connection to the new socket.
+      end,
+    
+      socket_message = function(socket, message)
+        -- A message was received from a client: The passed socket is a ready
+        -- to use connection for TCP connections. For UDP, a "dummy" socket is
+        -- passed, which can only be used to query the peer address and port
+        -- -> socket.port and socket.address
+      end
+    }
 
-  socket_message = function(socket, message)
-    -- A message was received from a client: The passed socket is a ready
-    -- to use connection for TCP connections. For UDP, a "dummy" socket is
-    -- passed, which can only be used to query the peer address and port
-    -- -> socket.port and socket.address
-  end
-}
+notifier class example:
+Note: You must pass an instance of a class, like server_socket:run(MyNotifier())
 
--- notifier class example:
--- Note: You must pass an instance of a class, like server_socket:run(MyNotifier())
+    class "MyNotifier"
+      MyNotifier::__init()
+        -- could pass a server ref or something else here, or simply do nothing
+      end
+    
+      function MyNotifier:socket_error(error_message)
+        -- An error happened in the servers background thread.
+      end
+    
+      function MyNotifier:socket_accepted(socket)
+        -- FOR TCP CONNECTIONS ONLY: called as soon as a new client
+        -- connected to your server. The passed socket is a ready to use socket
+        -- object, representing a connection to the new socket.
+      end
+    
+      function MyNotifier:socket_message(socket, message)
+        -- A message was received from a client: The passed socket is a ready
+        -- to use connection for TCP connections. For UDP, a "dummy" socket is
+        -- passed, which can only be used to query the peer address and port
+        -- -> socket.port and socket.address
+      end
 
-class "MyNotifier"
-  MyNotifier::__init()
-    -- could pass a server ref or something else here, or simply do nothing
-  end
-
-  function MyNotifier:socket_error(error_message)
-    -- An error happened in the servers background thread.
-  end
-
-  function MyNotifier:socket_accepted(socket)
-    -- FOR TCP CONNECTIONS ONLY: called as soon as a new client
-    -- connected to your server. The passed socket is a ready to use socket
-    -- object, representing a connection to the new socket.
-  end
-
-  function MyNotifier:socket_message(socket, message)
-    -- A message was received from a client: The passed socket is a ready
-    -- to use connection for TCP connections. For UDP, a "dummy" socket is
-    -- passed, which can only be used to query the peer address and port
-    -- -> socket.port and socket.address
-  end
-
+]]--
