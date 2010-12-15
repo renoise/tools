@@ -67,7 +67,7 @@ does not make sense. Never "pcall" such errors, but fix the problem instead.
 -- renoise.Socket
 --------------------------------------------------------------------------------
 
--------- consts (renoise.Socket)
+-------- Consts (renoise.Socket)
 
 renoise.Socket.PROTOCOL_TCP
 renoise.Socket.PROTOCOL_UDP
@@ -105,7 +105,7 @@ renoise.Socket.create_client(server_address, server_port [, protocol] [, timeout
 -- SocketBase is the base class for socket clients and servers. All
 -- SocketBase properties and functions are available for servers and clients.
 
--------- properties
+-------- Properties
 
 -- Returns true while the socket object is valid and connected. Sockets can be
 -- manually closed (see socket:close()). Client sockets can also get actively
@@ -120,7 +120,7 @@ socket.local_address -> [string]
 -- The sockets local port number, as specified while instantiated.
 socket.local_port -> [number]
 
--------- functions
+-------- Functions
 
 -- Closes the socket connection and releases all resources. This will make
 -- the socket useless, so any properties, calls to the socket will result in
@@ -140,7 +140,7 @@ socket:close()
 -- a new client instance instead.
 
 
--------- properties
+-------- Properties
 
 -- Address of the sockets peer, the socket address this client is connected to
 socket_client.peer_address -> [string]
@@ -149,7 +149,7 @@ socket_client.peer_address -> [string]
 socket_client.peer_port -> [number]
 
 
--------- functions
+-------- Functions
 
 -- Send a message string to the connected server. When sending failed, success
 -- will be false and error_message is set.
@@ -201,13 +201,13 @@ socket_client:receive(mode, timeout_ms) ->
 -- started and stopped on request.
 
 
--------- properties
+-------- Properties
 
 -- Returns true while the server is running (the server is up and running)
 server_socket.is_running -> [boolean]
 
 
--------- functions
+-------- Functions
 
 -- Start running the server by specifying a class or table which defines the
 -- callback functions for the server (see "callbacks" below for more info).
@@ -222,7 +222,7 @@ server_socket:stop()
 server_socket:wait(timeout_ms)
 
 
--------- callbacks
+-------- Callbacks
 
 -- All callback properties are optional. So you can for example skip specifying
 -- "socket_accepted" if you have no use for this.

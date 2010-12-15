@@ -6,13 +6,12 @@ Renoise OSC API Reference
 
 This reference describes the built-in OSC (Open Sound Control) support for
 Lua scripts in Renoise. OSC can be used in combination with sockets to
-send/receive OSC tagged data over process boundaries or to exchange data
+send/receive OSC tagged data over process boundaries, or to exchange data
 across computers in a network (Internet).
 
-Please have a look at <http://opensoundcontrol.org> for more general info
-about OSC
+Have a look at <http://opensoundcontrol.org> for general info about OSC.
 
-Please read the INTRODUCTION.txt first to get an overview about the complete
+Please read the INTRODUCTION first to get an overview about the complete
 API, and scripting for Renoise in general...
 
 Do not try to execute this file. It uses a .lua extension for markup only.
@@ -20,10 +19,10 @@ Do not try to execute this file. It uses a .lua extension for markup only.
 
 -------- Examples
 
--- For some small examples on how to use the OSC and sockets API, have a
--- look at the code snippets in the "Snippets/Osc.lua" file please.
+-- For some small examples on how to use the OSC and Sockets API, have a
+-- look at the code snippets in "Snippets/Osc.lua".
 
-]]
+]]--
 
 
 --==============================================================================
@@ -48,10 +47,11 @@ renoise.Osc.from_binary_data(binary_data)
 -- renoise.Osc.Message
 --------------------------------------------------------------------------------
 
--------- create
+-------- Create
 
 -- Create a new OSC message with the given pattern and optional arguments.
--- When arguments are specified, they must be specified as a table of
+-- When arguments are specified, they must be specified as a table of:
+--
 -- > { tag="X", value=SomeValue }
 --
 -- "tag" is a standard OSC type tag. "value" is the arguments value expressed 
@@ -79,13 +79,13 @@ renoise.Osc.from_binary_data(binary_data)
 -- + F,    False. No value needs to be specified.
 -- + N,    Nil. No value needs to be specified.
 -- + I,    Infinitum. No value needs to be specified.
--- + [],  Indicates the beginning, end of an array. _currently not 
---        supported by Renoise._
+-- + [ ],  Indicates the beginning, end of an array. (Currently not 
+--         supported by Renoise.)
 --
 renoise.Osc.Message(pattern [, table of {tag, value} arguments])
 
 
--------- properties
+-------- Properties
 
 -- the message pattern (e.g. "/renoise/transport/start")
 message.pattern
@@ -106,7 +106,7 @@ message.binary_data
 -- renoise.Osc.Bundle
 --------------------------------------------------------------------------------
 
--------- create
+-------- Create
 
 -- Create a new bundle by specifying a time-tag and one or more messages.
 -- If you do not know what to do with the time-tag, use os.clock(),
@@ -115,7 +115,7 @@ message.binary_data
 renoise.Osc.Bundle(pattern, single_message_or_table_of_messages)
 
 
--------- properties
+-------- Properties
 
 -- time value of the bundle
 bundle.timetag

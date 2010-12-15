@@ -4,22 +4,21 @@ Lua Standard Library and Extensions
 
 --[[
 
-This is a reference of standard global Lua functions and tools that were
-added or changed by Renoise, in order to extend the functionality of Lua's
-standard library.
+This is a reference for standard global Lua functions and tools that were
+added/changed by Renoise.
 
 All standard Lua libraries are included in Renoise as well. You can find the
 full reference here: <http://www.lua.org/manual/5.1/manual.html#5>
 
 Do not try to execute this file. It uses a .lua extension for markup only.
 
-]]
+]]--
 
 -------------------------------------------------------------------------------
 -- globals
 -------------------------------------------------------------------------------
 
------ added
+-------- Added
 
 -- an iterator like ipairs, but in reverse order
 -- > examples: t = {"a", "b", "c"}  
@@ -36,10 +35,10 @@ rprint(table)
 oprint(table)
 
 
------ changed
+-------- Changed
 
--- also returns a class objects type name. for all other types the standard
--- lua type function is used
+-- also returns a class object's type name. For all other types the standard
+-- Lua type function is used
 -- > examples: class "MyClass"; function MyClass:__init() end  
 -- >          print(type(MyClass)) -> "MyClass class"  
 -- >          print(type(MyClass())) -> "MyClass"
@@ -50,7 +49,7 @@ type(class_object or class or anything else) -> [string]
 -- debug
 -------------------------------------------------------------------------------
 
------ added
+------- Added
 
 -- shortcut to remdebug.session.start(), which starts a debug session:
 -- launches the debugger controller and breaks script execution. See
@@ -65,7 +64,7 @@ debug.stop()
 -- table
 -------------------------------------------------------------------------------
 
------ added
+------- Added
 
 -- create a new, or convert an exiting table to an object that uses the global
 -- 'table.XXX' functions as methods, just like strings in Lua do.
@@ -123,7 +122,7 @@ table.clear(t)
 -- os
 -------------------------------------------------------------------------------
 
------ added
+------- Added
 
 -- returns the platform the script is running on:
 -- "WINDOWS", "MACINTOSH" or "LINUX"
@@ -150,7 +149,7 @@ os.filenames(path [, {file_extensions}]) -> [table of strings]
 os.mkdir(path) -> [boolean, error_string or nil]
 
 
------ changed
+------- Changed
 
 -- replaced with a temp directory and name which renoise will clean up on exit
 -- extension will be ".tmp" when not specified
@@ -167,7 +166,7 @@ os.exit()
 -- io
 -------------------------------------------------------------------------------
 
------ added
+------- Added
 
 -- returns true when a file, folder or link at the given path and name exists
 io.exists(filename) -> [boolean]
@@ -177,19 +176,19 @@ io.exists(filename) -> [boolean]
 --
 -- the returned valid stat table contains the following fields:
 --
--- + 'dev'    number: device number of filesystem
--- + 'ino'    number: inode number
--- + 'mode'   number: unix styled file permissions
--- + 'type'   string: type ("file", "directory", "link", "socket",
---            "named pipe", "char device" or "block device")
--- + 'nlink'  number: number of (hard) links to the file
--- + 'uid'    number: numeric user ID of file's owner
--- + 'gid'    number: numeric group ID of file's owner
--- + 'rdev'   number: the device identifier (special files only)
--- + 'size'   number: total size of file, in bytes
--- + 'atime'  number: last access time in seconds since the epoch
--- + 'mtime'  number: last modify time in seconds since the epoch
--- + 'ctime'  number: inode change time (NOT creation time!) in seconds
+-- + dev,    (number): device number of filesystem
+-- + ino,    (number): inode number
+-- + mode,   (number): unix styled file permissions
+-- + type,   (string): type ("file", "directory", "link", "socket",
+--                   "named pipe", "char device" or "block device")
+-- + nlink,  (number): number of (hard) links to the file
+-- + uid,    (number): numeric user ID of file's owner
+-- + gid,    (number): numeric group ID of file's owner
+-- + rdev,   (number): the device identifier (special files only)
+-- + size,   (number): total size of file, in bytes
+-- + atime,  (number): last access time in seconds since the epoch
+-- + mtime,  (number): last modify time in seconds since the epoch
+-- + ctime,  (number): inode change time (NOT creation time!) in seconds
 io.stat(filename) -> [table or (nil, error, error no)]
 
 -- change permissions of a file, folder or link. mode is a unix permission
@@ -198,7 +197,7 @@ io.stat(filename) -> [table or (nil, error, error no)]
 io.chmod(filename, mode) -> [true or (nil, error, error no)]
 
 
------ changed
+------- Changed
 
 -- all io functions use UTF8 as encoding for the file names and paths. UTF8
 -- is used for LUA in the whole API as default string encoding...
@@ -208,7 +207,7 @@ io.chmod(filename, mode) -> [true or (nil, error, error no)]
 -- math
 -------------------------------------------------------------------------------
 
------ added
+------- Added
 
 -- converts a linear value to a db value. db values will be clipped to
 -- math.infdb
