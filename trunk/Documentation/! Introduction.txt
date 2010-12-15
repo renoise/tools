@@ -2,11 +2,11 @@
 Renoise Scripting Reference and HOWTOs - Introduction
 ============================================================================]]--
 
-Welcome to the Renoise scripting Guide. In all the various files of this
-"Documentation" folder, we will give you an overview on how to write tools
-for Renoise; how to debug them, what's possible to "script", what's not,
-and much more. Please read this introduction carefully to get an idea on how
-to get started and to avoid common pitfalls and FAQs.
+Welcome to the Renoise scripting Guide. In all the various "Documention" files,
+we will give you an overview on how to write tools for Renoise; how to debug 
+them, what's possible to "script", what's not, and much more. Please read this
+introduction carefully to get an idea on how to get started, and to avoid common
+pitfalls and FAQs.
 
 
 --------------------------------------------------------------------------------
@@ -107,15 +107,15 @@ following places:
 
 What's *NOT* possible with Renoise tools:
 
-  + Change Renoise's existing behaviour. Like, you can't make all C-4s in the
-    pattern editor yellow instead of white. You can write your own pattern
-    editor, but not change the existing one.
+- Change Renoise's existing behaviour. Like, you can't make all C-4s in the
+  pattern editor yellow instead of white. You can write your own pattern
+  editor, but not change the existing one.
 
-  + Realtime access. Except for OSC and MIDI IO, you can't write scripts that
-    run in the audio player. In other words, you can not script new realtime
-    DSPs - yet. But you can, for example, write a tool that creates samples or
-    manipulates existing samples. This limitation might change in the future.
-    For now you can make a VST, AudioUnit, or LADSPA/DSSI plug-in.
+- Realtime access. Except for OSC and MIDI IO, you can't write scripts that
+  run in the audio player. In other words, you can not script new realtime
+  DSPs - yet. But you can, for example, write a tool that creates samples or
+  manipulates existing samples. This limitation might change in the future.
+  For now you can make a VST, AudioUnit, or LADSPA/DSSI plug-in.
 
 
 --------------------------------------------------------------------------------
@@ -157,44 +157,44 @@ Tools to generate and receive OSC messages, bundles over the network.
 
 A note about the general API design:
 
-* Whatever you do with the API, you should never be able to fatally crash
+- Whatever you do with the API, you should never be able to fatally crash
   Renoise. If you manage to do this, then please file a bug report in our forums
   so we can fix it. All errors, as stupid they might be, should always result in
   a clean error message from Lua.
 
-* The Renoise Lua API also allows global File IO and external program execution
+- The Renoise Lua API also allows global File IO and external program execution
   (via os.execute()) which can obviously be hazardous. Please be careful with
   these, as you would with programming in general...
 
 
 Some notes about the documentation, and a couple of tips:
 
-* All classes, functions in the API, are nested in the namespace (Lua table)
+- All classes, functions in the API, are nested in the namespace (Lua table)
   "renoise". E.g: to get the application object, you will have to type
   "renoise.app()"
 
-* The API is object-oriented, and thus split into classes. The references
+- The API is object-oriented, and thus split into classes. The references
   will first note the class name (e.g. 'renoise.Application'), then list its
   Constants, Properties, Functions and Operators.
   All properties and functions are always listed with their full path to make
   it clear where they belong and how to access them.
 
-* Return values (or arguments / types of properties) are listed in brackets.
+- Return values (or arguments / types of properties) are listed in brackets.
   "-> [string]" means that a string is returned. When no brackets are listed,
   the function will not return anything.
 
-* Nearly all functions are actually "methods", so you have to invoke them
+- Nearly all functions are actually "methods", so you have to invoke them
   via the colon operator ":" E.g. 'renoise.app():show_status("Status Message")'
   If you're new to Lua, this takes a while to get used to. Don't worry, it'll
   make sense sooner or later. ;)
 
-* Properties are syntactic sugar for get/set functions. "song().comments"
+- Properties are syntactic sugar for get/set functions. "song().comments"
   will invoke a function which returns "comments". But not all properties
   have setters, and thus can only be used as read-only "getters". Those are
   marked as "[read-only, type]".
   Again mind the colon; which you don't need when accessing properties!
 
-* All exposed "objects" are read-only (you can not add new fields, properties).
+- All exposed "objects" are read-only (you can not add new fields, properties).
   In contrast, the "classes" are not. This means you can extend the API classes 
   with your own helper functions, if needed, but can not add new properties to 
   objects. Objects, like for example the result of "song()", are read-only to 
@@ -203,7 +203,7 @@ Some notes about the documentation, and a couple of tips:
   `song().transport.bpm = 80` here. If you need to store data somewhere,
   do it in your own tables, objects instead of using the Renoise API objects.
 
-* "some_property, _observable" means, that there is also an observer object
+- "some_property, _observable" means, that there is also an observer object
   available for the property. An observable object allows you to attach
   notifiers (global functions or methods) that will be called as soon as a
   value has changed. Please see Renoise.Document.API for more info about
@@ -228,7 +228,7 @@ Some notes about the documentation, and a couple of tips:
   the list values changed. Attach notifiers to the list elements to get such
   notifications.
 
-* Can't remember what the name of function XYZ was? In the scripting terminal
+- Can't remember what the name of function XYZ was? In the scripting terminal
   you can list all methods/properties of API objects (or your own class objects)
   via the global function `oprint(some_object)` - e.g. `oprint(renoise.song())`.
   To dump the renoise module/class layout, use `rprint(renoise)`.
@@ -238,7 +238,7 @@ Some notes about the documentation, and a couple of tips:
 -- Creating Renoise Tools
 --------------------------------------------------------------------------------
 
-* Developing XRNX tools:
+- Developing XRNX tools:
   As previously mentioned, Renoise tools are file bundles with an XRNX
   extension. Tools have the following layout:
 
@@ -254,7 +254,7 @@ Some notes about the documentation, and a couple of tips:
   manifest.lua specifications, have a look at the "com.renoise.Example.xrnx"
   tool please.
 
-* Distributing XRNX tools:
+- Distributing XRNX tools:
   To share your tools with others, you can create Zip files out of your
   bundles, which can then simply be dragged and dropped into Renoise by the
   user.
@@ -285,9 +285,9 @@ More information can be found in Duplex manual, available here:
 -- Debugging Renoise Scripts
 --------------------------------------------------------------------------------
 
-If tracing / debugging in the console with print, oprint and rprint isn't
-enough, you can try attaching a command-line based debugger to your scripts.
-Have a look at the Debugging document for more information and a small tutorial.
+If tracing/debugging in the console with print, oprint and rprint isn't enough,
+you can try attaching a command-line based debugger to your scripts. Have a look
+at the Debugging document for more information and a small tutorial.
 
 
 -- Enjoy extending, customizing and automating Renoise ;)

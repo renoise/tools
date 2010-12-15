@@ -9,23 +9,15 @@ require_once(dirname(__FILE__) . '/includes/markdown/markdown.php');
 // HTML Template
 // ----------------------------------------------------------------------------
 
+$css = file_get_contents(dirname(__FILE__) . '/templates/api_to_html.css');
+
 $header = '
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
 <meta content="text/html; charset=UTF-8" http-equiv="content-type" />
 <title>_REPLACE_TITLE_</title>
-<style type="text/css">
-body { font-family: Arial, Helvetica, sans-serif;; margin: 1em; background:#ffffff; color:#000000; background-image: url(images/colours.gif); background-repeat: repeat-x; background-position: top left; }
-h1, h2 { background: #eeeeee; padding: 10px; background-color: #eeeeee; border: 4px solid #ccc; border-radius: 10px; -moz-border-radius: 10px; -webkit-border-radius: 10px; }
-a:link,  a:visited, a:active { color: #14cc43; }
-a:hover{ color: #ff00fd; background: #000000; }
-code { background: #FBFF80; }
-pre { padding-bottom: 1.75em; }
-blockquote { background: #f9f9f9; border-left: 10px solid #ccc; margin: 1px; padding: 0.5em 10px; }
-blockquote:before { color: #ccc; font-size: 4em; line-height: 0.1em; margin-right: 0.25em; vertical-align: -0.4em; }
-blockquote p { display:inline; font-size: small; }
-</style>
+<style type="text/css">' . "\n$css\n" . '</style>
 </head>
 <body>
 ';
@@ -69,12 +61,12 @@ foreach ($files as $file) {
     $tmp2 = explode("\n", $tmp);
     $count = count($tmp2);
     if (preg_match('/lua$/', $file)) foreach ($tmp2 as $lnum => $line) {
-        
+
         if ($long_comment) {
             if (preg_match('/\]\]/', $line)) $long_comment = false;
             continue;
         }
-        
+
         if ($long_code) {
             if ($count-1 <= $lnum) {
                 $tmp2[$lnum] = "~~~\n" . $line;
@@ -90,25 +82,24 @@ foreach ($files as $file) {
             else {
                 // Not consecutive empty lines
                 $long_code_offset = 0;
-            }    
+            }
         }
-        
+
         if (!$long_comment && preg_match('/^\s*--\[\[/', $line)) {
             $long_comment = true;
             continue;
-        }        
-        
+        }
+
         if (preg_match('/^\s*--/', $line) || preg_match('/^\s*$/', $line)) {
             continue;
         }
-        
+
         if (!$long_code) {
             $tmp2[$lnum] = "~~~\n" . $line;
             $long_code = true;
             $long_code_offset = 0;
         }
-        
-        
+
     }
     $markdown = implode("\n", $tmp2);
 
