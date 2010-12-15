@@ -241,35 +241,31 @@ do with tables in Lua, except that if you want to get/set the value of some
 property, you have to query the value explicitly. Using my_document from
 the example above:
 
-]]--
-
--- this returns the !ObservableNumber object, not a number!
-local age_observable = my_document.age
-
--- this sets the value of the object
-my_document.age.value = 2
-
--- this accesses/prints the value of the object
-print(my_document.age.value)
-
--- add notifiers
-my_document.age:add_notifier(function()
-  print("something changed 'age'!")
-end)
-
--- inserts a new entry to the list
-my_document.age_list:insert(22)
-
--- queries the length of the list
-print(#my_document.age_list)
-
--- access a list member
-local entry = my_document.age_list[1]
-
--- list members are observables as well
-my_document.age_list[2].value = 33
-
---[[
+    -- this returns the !ObservableNumber object, not a number!
+    local age_observable = my_document.age
+    
+    -- this sets the value of the object
+    my_document.age.value = 2
+    
+    -- this accesses/prints the value of the object
+    print(my_document.age.value)
+    
+    -- add notifiers
+    my_document.age:add_notifier(function()
+      print("something changed 'age'!")
+    end)
+    
+    -- inserts a new entry to the list
+    my_document.age_list:insert(22)
+    
+    -- queries the length of the list
+    print(#my_document.age_list)
+    
+    -- access a list member
+    local entry = my_document.age_list[1]
+    
+    -- list members are observables as well
+    my_document.age_list[2].value = 33
 
 For more details about document construction and notifiers, have a look
 at the class docs below.

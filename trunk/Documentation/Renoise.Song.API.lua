@@ -144,15 +144,16 @@ renoise.song():cancel_rendering()
 -- as second return value. On success, only a single "true" value is returned.
 -- param 'options' is an optional table with the following optional fields: e.g:
 --
--- > options = {  
--- >   start_pos,     -- renoise.SongPos object. by default the song start.  
--- >   end_pos,       -- renoise.SongPos object. by default the song end.  
--- >   sample_rate,   -- number, one of 22050, 44100, 48000, 88200, 96000.
--- >                        by default the players current rate.  
--- >   bit_depth ,    -- number, one of 16, 24 or 32. by default 32.  
--- >   interpolation, -- string, one of 'cubic', 'sinc'. by default cubic'.  
--- >   priority,      -- string, one "low", "realtime", "high". by default "high".  
--- > }
+--     options = {
+--       start_pos,     -- renoise.SongPos object. by default the song start.
+--       end_pos,       -- renoise.SongPos object. by default the song end.
+--       sample_rate,   -- number, one of 22050, 44100, 48000, 88200, 96000.
+--                         by default the players current rate.
+--       bit_depth ,    -- number, one of 16, 24 or 32. by default 32.
+--       interpolation, -- string, one of 'cubic', 'sinc'. by default cubic'.
+--       priority,      -- string, one "low", "realtime", "high".
+--                         by default "high".
+--     }
 --
 -- To render only specific tracks or columns, mute all the tracks/columns that
 -- should not be rendered before starting to render.
@@ -604,7 +605,7 @@ renoise.song().tracks[].name, _observable
 renoise.song().tracks[].color, _observable 
   -> [table with 3 numbers (0-0xFF), RGB]
   
- -- !Not available for the master track!
+-- !Not available for the master track!
 renoise.song().tracks[].mute_state, _observable
   -> [enum = MUTE_STATE]
 
@@ -1116,9 +1117,9 @@ renoise.song().patterns[].copy_from(other_pattern object)
 -- fields "pattern", "track" and "line", which define where the change has
 -- happened, e.g:
 --
--- > function my_pattern_line_notifier(pos)  
--- >   -- check pos.pattern, pos.track, pos.line (all are indices)  
--- > end
+--     function my_pattern_line_notifier(pos)  
+--       -- check pos.pattern, pos.track, pos.line (all are indices)  
+--     end
 --
 -- Please be gentle in the notifiers, don't do too much stuff in there. 
 -- Ideally just set a flag like "pattern_dirty" which then gets picked up by
