@@ -139,8 +139,8 @@ foreach ($files as $file) {
     // Transform ---- header ---- to Markdown equivilant
     $markdown = preg_replace('/-{4,}\n(.*?)-{4,}\n/se', "strip_linebreaks('## $1')", $markdown);
 
-    // Find `--- Foo` and replace with Markdown equivilant
-    $markdown = preg_replace('/-{3,}\s{1}(.*?)\n/s', "### $1\n", $markdown);
+    // Find `---- Foo` and replace with Markdown equivilant
+    $markdown = preg_replace('/-{4,}\s{1}(.*?)\n/s', "### $1\n", $markdown);
 
     // Convert to markdown
     $markdown = Markdown($markdown);
