@@ -3,9 +3,6 @@ body {
     margin: 1em;
     background: #ffffff;
     color: #000000;
-    background-image: url(images/colours.gif);
-    background-repeat: repeat-x;
-    background-position: top left;
 }
 
 a:link,  a:visited, a:active {

@@ -19,7 +19,7 @@ Do not try to execute this file. It uses a .lua extension for markup only.
 -- renoise
 --------------------------------------------------------------------------------
 
--------- Consts
+-------- Constants
 
 -- Currently 1.0. Any changes in the API which are not backwards compatible,
 -- will increase the internal APIs major version number (e.g. from 1.4 -> 2.0). 

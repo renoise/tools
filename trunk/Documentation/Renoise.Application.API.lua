@@ -138,7 +138,7 @@ renoise.app().window
 -- renoise.ApplicationWindow
 --------------------------------------------------------------------------------
 
--------- Consts
+-------- Constants
 
 renoise.ApplicationWindow.UPPER_FRAME_DISK_BROWSER
 renoise.ApplicationWindow.UPPER_FRAME_TRACK_SCOPES
