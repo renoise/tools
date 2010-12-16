@@ -8,7 +8,7 @@ This reference lists all available Lua functions and classes that control
 Renoise's main document - the song - with all its components like instruments,
 tracks, patterns, and so on.
 
-Please read the INTRODUCTION.txt first to get an overview about the complete
+Please read the INTRODUCTION first to get an overview about the complete
 API, and scripting for Renoise in general...
 
 Do not try to execute this file. It uses a .lua extension for markup only.

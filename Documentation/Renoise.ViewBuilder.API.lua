@@ -8,7 +8,7 @@ This reference lists all "View" related functions in the API. "View" means
 classes and functions that are used to build custom GUIs; GUIs for your
 scripts in Renoise.
 
-Please read the INTRODUCTION.txt first to get an overview about the complete
+Please read the INTRODUCTION first to get an overview about the complete
 API, and scripting for Renoise in general...
 
 For a small tutorial and more details about how to create and use views, take

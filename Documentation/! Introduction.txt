@@ -89,7 +89,7 @@ following places:
   To make this easier, Renoise offers a tool called "Duplex" which already has
   support for several MIDI/OSC controllers. Duplex is a very flexible,
   object-oriented approach to handling MIDI controllers in Renoise, and also
-  offers virtual UIs for the MIDI controllers that are supported by  Duplex.
+  offers virtual UIs for the MIDI controllers that are supported by Duplex.
   This way you can virtually test and use such controllers in Renoise without
   even owning them. ;)
 
