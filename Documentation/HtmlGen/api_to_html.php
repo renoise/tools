@@ -16,7 +16,7 @@ $header = '
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
 <meta content="text/html; charset=UTF-8" http-equiv="content-type" />
-<title>_REPLACE_TITLE_</title>
+<title>___REPLACE_TITLE___</title>
 <style type="text/css">' . "\n$css\n" . '</style>
 </head>
 <body>
@@ -144,14 +144,18 @@ foreach ($files as $file) {
     // HTMLize stuff
     // ------------------------------------------------------------------------
 
-    // echo $markdown;
-    $tmp = trim($header . $markdown . $footer);
+    $fname = basename($file);
+    $tmp = trim(
+        str_replace('___REPLACE_TITLE___', htmlspecialchars($fname), $header) .
+        $markdown .
+        $footer
+        );
 
     // ------------------------------------------------------------------------
     // Output Api File as HTML
     // ------------------------------------------------------------------------
 
-    $fname = basename($file) . '.html';
+    $fname = $fname . '.html';
     $index[] = $fname;
     file_put_contents($CONFIG['outdir'] . '/' . $fname, $tmp);
 
@@ -161,14 +165,19 @@ foreach ($files as $file) {
 // Output index.html
 // ----------------------------------------------------------------------------
 
-$tmp = "<h1>Renoise Lua API</h1>\n";
+$index_title = 'Renoise Lua API';
+$tmp = "<h1>$index_title</h1>\n";
 $tmp .= "<ul>\n";
 asort($index);
 foreach ($index as $file) {
     $tmp .= "<li><a href='$file'>$file</a></li>\n";
 }
 $tmp .= "</ul>\n";
-$tmp = trim($header . $tmp . $footer);
+$tmp = trim(
+    str_replace('___REPLACE_TITLE___', $index_title, $header) .
+    $tmp .
+    $footer
+    );
 file_put_contents($CONFIG['outdir'] . '/index.html', $tmp);
 
 ?>

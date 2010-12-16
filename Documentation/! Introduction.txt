@@ -211,7 +211,7 @@ Some notes about the documentation, and a couple of tips:
   
   A small example using bpm:
 
-        renoise.song().transport.bpm_observable:addnotifier(function()
+        renoise.song().transport.bpm_observable:add_notifier(function()
           print("bpm changed")
         end)
 

@@ -67,7 +67,7 @@ does not make sense. Never "pcall" such errors, but fix the problem instead.
 -- renoise.Socket
 --------------------------------------------------------------------------------
 
--------- Consts (renoise.Socket)
+-------- Constants
 
 renoise.Socket.PROTOCOL_TCP
 renoise.Socket.PROTOCOL_UDP

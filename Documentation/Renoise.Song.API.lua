@@ -280,7 +280,7 @@ renoise.song().selected_effect_column_index
 -- renoise.Transport
 --------------------------------------------------------------------------------
 
--------- Consts
+-------- Constants
 
 renoise.Transport.PLAYMODE_RESTART_PATTERN
 renoise.Transport.PLAYMODE_CONTINUE_PATTERN
@@ -555,7 +555,7 @@ renoise.song().pattern_iterator:effect_columns_in_pattern_track(
 -- renoise.Track
 --------------------------------------------------------------------------------
 
--------- Consts
+-------- Constants
 
 renoise.Track.TRACK_TYPE_SEQUENCER
 renoise.Track.TRACK_TYPE_MASTER
@@ -700,7 +700,7 @@ renoise.song().tracks[].devices[].external_editor_visible
 -- renoise.DeviceParameter
 --------------------------------------------------------------------------------
 
--------- Consts
+-------- Constants
 
 renoise.DeviceParameter.POLARITY_UNIPOLAR
 renoise.DeviceParameter.POLARITY_BIPOLAR
@@ -798,7 +798,7 @@ renoise.song().instruments[].samples[], _observable
 -- renoise.Instrument.MidiProperties
 --------------------------------------------------------------------------------
 
--------- Consts
+-------- Constants
 
 renoise.Instrument.MidiProperties.TYPE_EXTERNAL
 renoise.Instrument.MidiProperties.TYPE_LINE_IN_RET
@@ -935,7 +935,7 @@ renoise.song().instruments[].plugin_properties.plugin_device.external_editor_vis
 -- renoise.Sample
 --------------------------------------------------------------------------------
 
--------- Consts
+-------- Constants
 
 renoise.Sample.INTERPOLATE_NONE
 renoise.Sample.INTERPOLATE_LINEAR
@@ -1093,7 +1093,7 @@ renoise.song().instruments[].samples[].sample_buffer.selection_range
 -- renoise.Pattern
 --------------------------------------------------------------------------------
 
--------- Consts
+-------- Constants
 
 -- Maximum number of lines that may be present in a pattern
 renoise.Pattern.MAX_NUMBER_OF_LINES
@@ -1232,7 +1232,7 @@ renoise.song().patterns[].tracks[].automation[], _observable
 -- renoise.PatternTrackAutomation
 --------------------------------------------------------------------------------
   
--------- Consts
+-------- Constants
 
 renoise.PatternTrackAutomation.PLAYMODE_POINTS
 renoise.PatternTrackAutomation.PLAYMODE_LINEAR
@@ -1305,7 +1305,7 @@ renoise.song().patterns[].tracks[].automation[]:remove_point_at(time)
 -- renoise.PatternTrackLine
 --------------------------------------------------------------------------------
 
--------- Consts
+-------- Constants
 
 renoise.PatternTrackLine.EMPTY_NOTE
 renoise.PatternTrackLine.NOTE_OFF
