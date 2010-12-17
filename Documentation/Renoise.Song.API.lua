@@ -13,7 +13,7 @@ API, and scripting for Renoise in general...
 
 Do not try to execute this file. It uses a .lua extension for markup only.
 
-]]
+]]--
 
 
 --------------------------------------------------------------------------------
@@ -139,14 +139,14 @@ renoise.song():cancel_rendering()
 -- Start rendering a section of the song or the whole song to a WAV file.
 -- Rendering job will be done in the background and the call will return
 -- back immediately, but the Renoise GUI will be blocked during rendering. The
--- passed 'rendering_done_callback' function is called as soon as rendering is done,
--- e.g. successfully completed.
+-- passed 'rendering_done_callback' function is called as soon as rendering is
+-- done, e.g. successfully completed.
 -- While rendering, the rendering status can be polled with the song().rendering
--- and song().rendering_progress properties, for example, in idle notifier loops.
--- If starting the rendering process fails (because of file IO errors for
+-- and song().rendering_progress properties, for example, in idle notifier
+-- loops. If starting the rendering process fails (because of file IO errors for
 -- example), the render function will return false and the error message is set
--- as the second return value. On success, only a single "true" value is returned.
--- Param 'options' is a table with the following fields, all optional:
+-- as the second return value. On success, only a single "true" value is
+-- returned. Param 'options' is a table with the following fields, all optional:
 --
 --     options = {
 --       start_pos,     -- renoise.SongPos object. by default the song start.
@@ -165,8 +165,8 @@ renoise.song():cancel_rendering()
 -- already exists, the file will be silently overwritten. The renderer will
 -- automatically add a ".wav" extension to the file_name, if missing.
 -- Param 'rendering_done_callback' is ONLY called when rendering has succeeded.
--- You can do something with the file you've passed to the renderer here, like for
--- example loading the file into a sample buffer.
+-- You can do something with the file you've passed to the renderer here, like
+-- for example loading the file into a sample buffer.
 renoise.song():render([options, ] filename, rendering_done_callback)
   -> [boolean, error_message]
 
@@ -515,8 +515,8 @@ renoise.song().sequencer.pattern_slot_mutes_observable
 -- The "visible_only" flag controls if all content should be traversed, or only
 -- the currently used patterns, columns, and so on:
 -- With "visible_patters_only" set, patterns are traversed in the order they
--- are referenced in the pattern sequence, but each pattern is accessed only once.
--- With "visible_columns_only" set, hidden columns are not traversed.
+-- are referenced in the pattern sequence, but each pattern is accessed only
+-- once. With "visible_columns_only" set, hidden columns are not traversed.
 
 
 -------- Song
@@ -1088,11 +1088,11 @@ renoise.song().instruments[].samples[].sample_buffer.set_sample_data(
 renoise.song().instruments[].samples[].sample_buffer.prepare_sample_data_changes()
 
 -- To be called once AFTER the sample data is manipulated via 'set_sample_data'.
--- This will create undo/redo data for the whole sample, and also  update the sample
--- view caches for the sample. The reason this isn't automatically invoked is to avoid
--- performance overhead when changing sample data 'sample by sample'. Don't forget to
--- call this after any data changes, or changes may not be visible in the GUI and
--- can not be un/redone!
+-- This will create undo/redo data for the whole sample, and also  update the
+-- sample view caches for the sample. The reason this isn't automatically
+-- invoked is to avoid performance overhead when changing sample data 'sample by
+-- sample'. Don't forget to call this after any data changes, or changes may not
+-- be visible in the GUI and can not be un/redone!
 renoise.song().instruments[].samples[].sample_buffer.finalize_sample_data_changes()
 
 -- Load sample data from a file. Files can be any audio format Renoise supports.
@@ -1519,3 +1519,4 @@ renoise.song().patterns[].tracks[].lines[].effect_columns[].amount_string
 
 -- Serialize a column.
 tostring(Pattern object) -> [string]
+
