@@ -11,14 +11,16 @@ scripts in Renoise.
 Please read the INTRODUCTION first to get an overview about the complete
 API, and scripting for Renoise in general...
 
-For a small tutorial and more details about how to create and use views, take
-a look at the "com.renoise.ExampleToolGUI.xrnx" tool please. This tool
-is included in the scripting dev started pack at <http://scripting.renoise.com>
+For a small tutorial and more details about how to create and use views, have
+a look at the "com.renoise.ExampleToolGUI.xrnx" tool. This tool is included in 
+the scripting dev started pack at <http://scripting.renoise.com>
 
 Do not try to execute this file. It uses a .lua extension for markup only.
 
-]]
+]]--
 
+
+-------- Introduction
 
 -- Currently there are two ways to to create custom views:
 
@@ -238,8 +240,11 @@ aligner.mode
 
 
 --[[
- Text, Bla
---]]
+
+--.. Text, Bla
+
+![Text](http://__REPLACE__/Text.png)
+]]--
 
 
 ----------- Properties
@@ -296,7 +301,7 @@ text.align
 --. +--------------+-+
 
 ![MultiLineText](http://__REPLACE__/MultiLineText.png)
---]]
+]]--
 
 
 ----------- Functions
@@ -366,7 +371,7 @@ multiline_text.style
 --. +----------------+
 
 ![TextField](http://_REPLACE_/TextField.png)
---]]
+]]--
 
 
 ----------- Functions
@@ -429,7 +434,7 @@ textfield.bind
 --. +--------------------------+-+
 
 ![MultilineTextField](http://_REPLACE_/MultilineTextField.png)
---]]
+]]--
 
 
 ----------- Functions
@@ -522,7 +527,7 @@ multiline_textfield.bind
 
 
 ![Bitmap](http://_REPLACE_/Bitmap.png)
---]]
+]]--
 
 -- A view which either simply draws a bitmap, or a draws a bitmap which acts
 -- like a button (as soon as a notifier was specified). The notifier is called
@@ -583,7 +588,7 @@ bitmapview.notifier
 --. +--------+
 
 ![Button](http://_REPLACE_/Button.png)
---]]
+]]--
 
 
 -------- Functions
@@ -654,7 +659,7 @@ button.notifier
 --. +----+
 
 ![CheckBox](http://_REPLACE_/CheckBox.png)
---]]
+]]--
 
 
 -------- Functions
@@ -699,7 +704,7 @@ checkbox.bind
 --. +-----------+------------+----------+
 
 ![Switch](http://_REPLACE_/Switch.png)
---]]
+]]--
 
 
 -------- Functions
@@ -747,7 +752,7 @@ switch.bind
 --. +--------------++---+
 
 ![Popup](http://_REPLACE_/Popup.png)
---]]
+]]--
 
 
 -------- Functions
@@ -796,7 +801,7 @@ popup.bind
 --. . Item C
 
 ![Chooser](http://_REPLACE_/Chooser.png)
---]]
+]]--
 
 
 -------- Functions
@@ -844,7 +849,7 @@ chooser.bind
 --. +---+-------+
 
 ![ValueBox](http://_REPLACE_/ValueBox.png)
---]]
+]]--
 
 
 -------- Functions
@@ -914,7 +919,7 @@ valuebox.bind
 --. +---+-------+
 
 ![Value](http://_REPLACE_/Value.png)
---]]
+]]--
 
 
 -------- Functions
@@ -989,7 +994,7 @@ value.bind
 --. +---+-------+
 
 ![ValueField](http://_REPLACE_/ValueField.png)
---]]
+]]--
 
 
 -------- Functions
@@ -1068,7 +1073,7 @@ valuefield.bind
 --. +---+---------------+
 
 ![Slider](http://_REPLACE_/Slider.png)
---]]
+]]--
 
 
 -------- Functions
@@ -1118,7 +1123,7 @@ slider.bind
 --. --------[]
 
 ![MiniSlider](http://_REPLACE_/MiniSlider.png)
---]]
+]]--
 
 
 -------- Functions
@@ -1172,7 +1177,7 @@ slider.bind
 --.   +-+
 
 ![RotaryEncoder](http://_REPLACE_/RotaryEncoder.png)
---]]
+]]--
 
 
 
@@ -1231,7 +1236,7 @@ rotary.bind
 --. +-------+
 
 ![XYPad](http://_REPLACE_/XYPad.png)
---]]
+]]--
 
 
 -------- Functions
@@ -1317,8 +1322,8 @@ dialog.visible
 -- Beside of the listed class properties above, you can also specify the
 -- following "extra" properties in the passed table:
 --
--- * id = "SomeString": which can be use to resolve the view later on
---   -> vb.views.SomeString or vb.views["SomeString"]
+-- * id = "SomeString": which can be use to resolve the view later on,
+--   e.g. `vb.views.SomeString or vb.views["SomeString"]`
 --
 -- * notifier = some_function or notifier = {some_obj, some_function} to
 --   register value change notifiers in controls (views which represent values)
@@ -1332,19 +1337,18 @@ dialog.visible
 --   See "Renoise.Document.API.lua" for more general info about Documents &
 --   Observables please.
 --
--- * nested child views: add a child view to the currently specified view.
+-- * Nested child views: add a child view to the currently specified view.
 --   For example:
---   ~~~
---   vb:column {  
---      margin = 1,  
---      vb:text {  
---        text = "Text1"  
---      },  
---      vb:text {  
---        text = "Text1"  
---      }  
---   }
---   ~~~
+--
+--         vb:column {
+--            margin = 1,
+--            vb:text {
+--              text = "Text1"
+--            },
+--            vb:text {
+--              text = "Text1"
+--            }
+--         }
 --
 --  Creates a column view with margin = 1 and adds two text views to the column.
 
