@@ -129,7 +129,7 @@ midi_device:close()
 -- renoise.Midi.MidiInputDevice
 --------------------------------------------------------------------------------
 
--- No public properties or functions
+-- No public properties or functions.
 
 
 --------------------------------------------------------------------------------

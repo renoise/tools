@@ -87,17 +87,17 @@ renoise.Osc.Message(pattern [, table of {tag, value} arguments])
 
 -------- Properties
 
--- the message pattern (e.g. "/renoise/transport/start")
+-- The message pattern (e.g. "/renoise/transport/start")
 message.pattern
   -> [read-only, string]
 
--- table of {tag="X", value=SomeValue}'s that represents the message arguments.
+-- Table of {tag="X", value=SomeValue}'s that represents the message arguments.
 -- see renoise.Osc.Message "create" for more info.
 message.arguments
   -> [read-only, table of {tag, value} tables]
 
--- raw binary representation of the messsage, as needed when e.g. sending the
--- message over the network through sockets
+-- Raw binary representation of the messsage, as needed when e.g. sending the
+-- message over the network through sockets.
 message.binary_data
   -> [read-only, raw string]
 
@@ -117,16 +117,16 @@ renoise.Osc.Bundle(pattern, single_message_or_table_of_messages)
 
 -------- Properties
 
--- time value of the bundle
+-- Time value of the bundle.
 bundle.timetag
   -> [read-only, number]
 
--- access to the bundle elements (table of messages or bundle objects)
+-- Access to the bundle elements (table of messages or bundle objects)
 bundle.elements
   -> [read-only, table of renoise.Osc.Message or renoise.Osc.Bundle objects]
 
--- raw binary representation of the bundle, as needed when e.g. sending the
--- message over the network through sockets
+-- Raw binary representation of the bundle, as needed when e.g. sending the
+-- message over the network through sockets.
 bundle.binary_data
   -> [read-only, raw string]
 

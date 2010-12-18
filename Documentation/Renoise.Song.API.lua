@@ -151,12 +151,12 @@ renoise.song():cancel_rendering()
 --     options = {
 --       start_pos,     -- renoise.SongPos object. by default the song start.
 --       end_pos,       -- renoise.SongPos object. by default the song end.
---       sample_rate,   -- number, one of 22050, 44100, 48000, 88200, 96000.
---                         by default the players current rate.
+--       sample_rate,   -- number, one of 22050, 44100, 48000, 88200, 96000. \
+--                      -- by default the players current rate.
 --       bit_depth ,    -- number, one of 16, 24 or 32. by default 32.
 --       interpolation, -- string, one of 'cubic', 'sinc'. by default cubic'.
---       priority,      -- string, one "low", "realtime", "high".
---                         by default "high".
+--       priority,      -- string, one "low", "realtime", "high". \
+--                      -- by default "high".
 --     }
 --
 -- To render only specific tracks or columns, mute the undesired tracks/columns
