@@ -24,12 +24,20 @@ h1, h2 {
     -webkit-border-radius: 10px;
 }
 
+.lua {
+    font-weight: bold;
+    font-size: 105%;
+    color: green;
+    border: 1px dashed #ccc;
+    padding: 1em;
+}
+
 code {
-    background: #FBFF80;
+    background: #ccc; 
 }
 
 pre {
-    padding-bottom: 1.75em;
+    margin-bottom: 1.75em;
 }
 
 blockquote {

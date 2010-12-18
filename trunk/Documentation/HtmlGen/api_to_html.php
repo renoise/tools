@@ -2,7 +2,7 @@
 
 
 require_once(dirname(__FILE__) . '/config.php');
-require_once(dirname(__FILE__) . '/includes/markdown/markdown.php');
+require_once(dirname(__FILE__) . '/includes/markdown_with_geshi.php');
 
 
 // ----------------------------------------------------------------------------
@@ -134,7 +134,8 @@ foreach ($files as $file) {
     $markdown = preg_replace('/-{4,}\s{1}(.*?)\n/s', "### $1\n", $markdown);
 
     // Convert to markdown
-    $markdown = Markdown($markdown);
+    // $markdown = Markdown($markdown);
+    $markdown = Markdown_with_geshi($markdown);
 
     // Replace remaining URLs, inspired from: http://php-faq.de/q-regexp-uri-klickbar.html
     // $pattern = '#(^|[^\"=]{1})(http://|ftp://|mailto:|news:)([^\s<>]+)([\s\n<>]|$)#sm';
