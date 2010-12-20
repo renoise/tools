@@ -255,6 +255,7 @@ Notifier class example:
 Note: You must pass an instance of a class, like server_socket:run(MyNotifier())
 
     class "MyNotifier"
+
       MyNotifier::__init()
         -- could pass a server ref or something else here, or simply do nothing
       end

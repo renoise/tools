@@ -4,7 +4,7 @@ Renoise ViewBuilder API Reference
 
 --[[
 
-This reference lists all "View" related functions in the API. "View" means
+This reference lists all "View" related functions in the API. View means
 classes and functions that are used to build custom GUIs; GUIs for your
 scripts in Renoise.
 
@@ -12,7 +12,7 @@ Please read the INTRODUCTION first to get an overview about the complete
 API, and scripting for Renoise in general...
 
 For a small tutorial and more details about how to create and use views, have
-a look at the "com.renoise.ExampleToolGUI.xrnx" tool. This tool is included in 
+a look at the "com.renoise.ExampleToolGUI.xrnx" tool. This tool is included in
 the scripting dev started pack at <http://scripting.renoise.com>
 
 Do not try to execute this file. It uses a .lua extension for markup only.
@@ -23,12 +23,13 @@ Do not try to execute this file. It uses a .lua extension for markup only.
 -------- Introduction
 
 -- Currently there are two ways to to create custom views:
-
+--
 -- Shows a modal dialog with a title, custom content and custom button labels:
 app():show_custom_prompt(title, content_view, {button_labels} [,key_handler_func])
   -> [pressed button]
 
--- _(and)_ Shows a non modal dialog, a floating tool window, with custom content:
+-- _(and)_ Shows a non modal dialog, a floating tool window, with custom
+-- content:
 app():show_custom_dialog(title, content_view [, key_handler_func])
   -> [dialog object]
 
@@ -43,17 +44,18 @@ app():show_custom_dialog(title, content_view [, key_handler_func])
 -- > }
 --
 -- "dialog" is a reference to the dialog the keyhandler is running on.
-function my_keyhandler_func(dialog, key) end
-
--- When no key handler is specified, only the Escape key is used to close the
--- dialog. For prompts, also the first character of the button labels is used
--- to invoke the corresponding button.
+--
+--     function my_keyhandler_func(dialog, key) end
+--
+-- When no key handler is specified, the Escape key is used to close the dialog.
+-- For prompts, the first character of the button labels is used to invoke
+-- the corresponding button.
 -- When returning the passed key from the key-handler function, the
--- key will be passed back to Renoises key event chain, in order to allow
+-- key will be passed back to Renoise's key event chain, in order to allow
 -- processing global Renoise key-bindings from your dialog. This will not work
--- for modal dialogs. This will also only apply global shortcuts in Renoise,
--- because your dialog will steal the focus from all other Renoise views like
--- e.g.: the pattern editor.
+-- for modal dialogs. This also only applies to global shortcuts in Renoise,
+-- because your dialog will steal the focus from all other Renoise views such as
+-- the Pattern Editor, etc.
 
 
 --==============================================================================
@@ -64,8 +66,8 @@ function my_keyhandler_func(dialog, key) end
 -- renoise.Views.View
 --------------------------------------------------------------------------------
 
--- View is the base class for all following specialized views. All View
--- properties can be applied to any of the following views.
+-- View is the base class for all child views. All View properties can be
+-- applied to any of the following specialized views.
 
 
 ----------- Functions
@@ -84,13 +86,13 @@ view:remove_child(View child_view)
 view.visible
   -> [boolean]
 
--- Get/set a views size. All views must have a size > 0.
--- By default > 0: how much exactly depends on the specialized view type.
+-- Get/set a view's size. All views must have a size > 0.
+-- By default > 0: How much exactly depends on the specialized view type.
 --
 -- Note: in nested view_builder notations you can also specify relative
--- sizes, like for example vb:text { width = "80%"}. The percentage values are
--- relative to the views parent size and will automatically update on size
--- changes...
+-- sizes, like for example `vb:text { width = "80%"}`. The percentage values are
+-- relative to the view's parent size and will automatically update on size
+-- changes.
 view.width
   -> [number]
 view.height
@@ -102,32 +104,29 @@ view.tooltip
   -> [string]
 
 
-
 --------------------------------------------------------------------------------
 -- renoise.Views.Control (inherits from View)
 --------------------------------------------------------------------------------
 
--- Control is the base class for all views which somehow allow letting the user
--- change a value or some "state" via the UI.
+-- Control is the base class for all views which let the user change a value or
+-- some "state" from the UI.
 
 
 ----------- Properties
 
 -- Instead of making a control invisible, you can also make it inactive.
--- Deactivated controls will still be shown and will also still show its
--- currently assigned value, but do not allow changing it. Most controls will
--- also display "grayed out" to visualize the deactivated state.
+-- Deactivated controls will still be shown, and will still show their
+-- currently assigned values, but will not allow changes. Most controls will
+-- display as "grayed out" to visualize the deactivated state.
 control.active
   -> [boolean]
 
-
--- When set, the control will be highlighted with Renoises MIDI mapping dialog
--- open. When clicked while the mapping dialog is open, it selects the specified
--- string as MIDI mapping target action. This target acton can either be one of
--- the globally available mappings in Renoise, or ones that got created by the
--- tool just for the tool.
+-- When set, the control will be highlighted when Renoise's MIDI mapping dialog
+-- is open. When clicked, it selects the specified string as a MIDI mapping
+-- target action. This target acton can either be one of the globally available
+-- mappings in Renoise, or those that were created by the tool itself.
 -- Target strings are not verified. When they point to nothing, the mapped MIDI
--- message will do nothing but also no error is fired.
+-- message will do nothing and no error is fired.
 control.midi_mapping
   -> [boolean]
 
@@ -136,29 +135,29 @@ control.midi_mapping
 -- renoise.Views.Rack (inherits from View, 'column' or 'row' in ViewBuilder)
 --------------------------------------------------------------------------------
 
--- A Rack has no content by its own, but only stacks its child views either
+-- A Rack has no content on its own. It only stacks child views. Either
 -- vertically (ViewBuilder.column) or horizontally (ViewBuilder.row). It allows
 -- you to create view layouts.
 
 ----------- Functions
 
 -- Adding new child views to a rack automatically enlarges the rack, but
--- removing child views from a rack or making them invisible, will never
+-- removing child views from a rack or making them invisible does not
 -- automatically shrink it.
--- "resize" does so, recalculates the racks size to exactly cover all its
--- child views. When resizing a rack view which is the main content view of
+-- Instead, "resize" does. It recalculates the rack's size to cover exactly all
+-- its child views. When resizing a rack which is the main content view of
 -- a dialog, "resize" will also resize the dialog.
 rack:resize()
 
 
 ----------- Properties
 
--- Set the "borders" of the rack (left, right, top and bottom equally)
+-- Set the "borders" of the rack (left, right, top and bottom inclusively)
 -- By default 0 (no borders).
 rack.margin
   -> [number]
 
--- Setup by which amount stacked child views are separated (horizontally in
+-- Setup the amount stacked child views are separated by (horizontally in
 -- rows, vertically in columns).
 -- By default 0 (no spacing).
 rack.spacing
@@ -167,21 +166,21 @@ rack.spacing
 -- Setup a background style for the rack. Available styles are:
 --
 -- +  "invisible" -> no background
--- +  "plain"     -> undecorated, single colored background
--- +  "border"    -> same as plain, but with a bold nesting border
--- +  "body"      -> main "background" style, as used in dialogs backgrounds
+-- +  "plain"     -> undecorated, single coloured background
+-- +  "border"    -> same as plain, but with a bold nested border
+-- +  "body"      -> main "background" style, as used in dialog backgrounds
 -- +  "panel"     -> alternative "background" style, beveled
--- +  "group"     -> background for "nested" groups within "body"'s
+-- +  "group"     -> background for "nested" groups within body
 --
 -- By default "invisible".
 rack.style
   -> [string]
 
--- When set to true, all the child views in the rack will automatically get
--- resized to the max size of all child views (width in ViewBuilder.column,
--- height in ViewBuilder.row). This can be useful to automatically align all
--- sub columns/panels to the same size. Resizing is done automatically, as soon
--- as a child views size changed or new childs got added.
+-- When set to true, all child views in the rack are automatically resized to
+-- the max size of all child views (width in ViewBuilder.column, height in
+-- ViewBuilder.row). This can be useful to automatically align all sub
+-- columns/panels to the same size. Resizing is done automatically, as soon
+-- as a child view size changes or new children are added.
 -- By default disabled, false.
 rack.uniform
   -> [boolean]
@@ -192,21 +191,21 @@ rack.uniform
 --   'vertical_aligner' in ViewBuilder)
 --------------------------------------------------------------------------------
 
--- Just like the Rack, the Aligner shows no content by its own, but just aligns
--- its child views either vertically or horizontally. As soon as childs are
--- added, the Aligner will expand itself to make sure that all childs are
--- visible (including spacing & margins).
+-- Just like a Rack, the Aligner shows no content on its own. It just aligns
+-- child views vertically or horizontally. As soon as children are added, the
+-- Aligner will expand itself to make sure that all children are visible
+-- (including spacing & margins).
 -- To make use of modes like "center", you manually have to setup a size that
 -- is bigger than the sum of the child sizes.
 
 ----------- Properties
 
--- Setup "borders" of the aligner (left, right, top and bottom equally)
+-- Setup "borders" for the aligner (left, right, top and bottom inclusively)
 -- By default 0 (no borders).
 aligner.margin
   -> [number]
 
--- Setup by which amount child views are separated (horizontally in rows,
+-- Setup the amount child views are separated by (horizontally in rows,
 -- vertically in columns).
 -- By default 0 (no spacing).
 aligner.spacing
@@ -231,10 +230,10 @@ aligner.mode
 -- renoise.Views.Text (inherits from View, 'text' in ViewBuilder)
 -----------------------------------------------------------------------------
 
--- A view which simply shows a "static" text string. Static just means that
--- its not linked, bound to some value and has no notifiers. And that the
--- text can not be edited by the user. Nevertheless you can of course change
--- the text at run-time with its "text" property.
+-- Shows a "static" text string. Static just means that its not linked, bound
+-- to some value and has no notifiers. The text can not be edited by the user. 
+-- Nevertheless you can of course change the text at run-time with the "text" 
+-- property.
 
 -- See renoise.Views.TextField for texts that can be edited by the user.
 
@@ -243,7 +242,7 @@ aligner.mode
 
 --.. Text, Bla
 
-![Text](http://__REPLACE__/Text.png)
+![Text](http://___REPLACE_URL___/Text.png)
 ]]--
 
 
@@ -255,7 +254,7 @@ aligner.mode
 text.text
   -> [string]
 
--- Get/set the font the text should be displayed with.
+-- Get/set the style that the text should be displayed with.
 -- Available font styles are:
 -- >  "normal"  
 -- >  "big"  
@@ -268,7 +267,7 @@ text.font
   -> [string]
 
 -- Setup the text's alignment. Applies only when the view's size is larger than
--- the size that is needed to draw the text.
+-- the needed size to draw the text.
 -- Available mode are:
 -- >  "left"  
 -- >  "right"  
@@ -283,10 +282,9 @@ text.align
 -- renoise.Views.MultiLineText (inherits from View, 'multiline_text' in the builder)
 --------------------------------------------------------------------------------
 
--- A view which shows multiple lines of text, auto-formatting and auto-wrapping
--- paragraphs into lines.
--- Its size is not automatically set. As soon as the text does not fit into the
--- view, a vertical scroll bar will be shown.
+-- Shows multiple lines of text, auto-formatting and auto-wrapping paragraphs
+-- into lines. Size is not automatically set. As soon as the text no longer fits
+-- into the view, a vertical scroll bar will be shown.
 
 -- See renoise.Views.MultilineTextField for multiline texts that can be edited
 -- by the user.
@@ -300,7 +298,7 @@ text.align
 --. | Text, Bla 4  |+|
 --. +--------------+-+
 
-![MultiLineText](http://__REPLACE__/MultiLineText.png)
+![MultiLineText](http://___REPLACE_URL___/MultiLineText.png)
 ]]--
 
 
@@ -316,26 +314,26 @@ multiline_text:scroll_to_first_line()
 -- paragraphs, just like in the "text" property.
 multiline_text:add_line(text)
 
--- clear the whole text, same as multiline_text.text="".
+-- Clear the whole text, same as multiline_text.text="".
 multiline_text:clear()
 
 
 ----------- Properties
 
--- Get/set the text that should be displayed in a single line. newlines
--- (Windows, mac or Unix styled newlines) in the text can be used to create
--- paragraphs.  
+-- Get/set the text that should be displayed on a single line. Newlines
+-- (Windows, Mac or Unix styled newlines) in the text can be used to create
+-- paragraphs.
 -- By default empty.
 multiline_text.text
   -> [string]
 
 -- Get/set an array (table) of text lines, instead of specifying a single text
--- line with newline characters like "text" does.  
+-- line with newline characters like "text" does.
 -- By default empty.
 multiline_text.paragraphs
   -> [string]
 
--- Get/set the font that the text should be displayed with.
+-- Get/set the style that the text should be displayed with.
 -- Available font styles are:
 -- >  "normal"  
 -- >  "big"  
@@ -347,7 +345,7 @@ multiline_text.paragraphs
 multiline_text.font
   -> [string]
 
--- Setup the text views background:
+-- Setup the text view's background:
 -- >  "body"    -> simple text color with no background  
 -- >  "strong"  -> stronger text color with no background  
 -- >  "border"  -> text on a bordered background
@@ -361,8 +359,7 @@ multiline_text.style
 -- renoise.Views.TextField (inherits from View, 'textfield' in the builder)
 --------------------------------------------------------------------------------
 
--- A view which shows a text string which can be edited by the user when
--- clicked on.
+-- Shows a text string that can be clicked and edited by the user.
 
 --[[
 
@@ -370,7 +367,7 @@ multiline_text.style
 --. | Editable Te|xt |
 --. +----------------+
 
-![TextField](http://_REPLACE_/TextField.png)
+![TextField](http://___REPLACE_URL___/TextField.png)
 ]]--
 
 
@@ -383,16 +380,17 @@ textfield:remove_notifier(function or {object, function} or {object, function})
 
 ----------- Properties
 
--- The currently shown value / text. The text will not be updated while editing,
--- but only after editing finished (return was pressed, or focus was lost).  
+-- The currently shown value / text. The text will not be updated when editing,
+-- rather only after editing is complete (return is pressed, or focus is lost).
 -- By default empty.
 textfield.value
   -> [string]
+
 -- Exactly the same as "value"; provided for consistency.
 textfield.text
   -> [string]
 
--- Setup the text fields text alignment, when not editing.
+-- Setup the text field's text alignment, when not editing.
 -- Valid values are:
 -- >  "left"  
 -- >  "right"  
@@ -401,17 +399,17 @@ textfield.text
 -- By default "left".
 textfield.align
 
--- Valid in the construction table only: set up a notifier for text changes.
+-- Valid in the construction table only: Set up a notifier for text changes.
 -- See add_notifier/remove_notifier below.
 textfield.notifier
   -> [function()]
 
--- Valid in the construction table only: bind the views value to an
+-- Valid in the construction table only: Bind the view's value to a
 -- renoise.Document.ObservableString object. Will change the Observable
--- value as soon as the views value changed, and change the Views value as
--- soon as the Observable's value changed - automatically keeps both values
--- in sync.  
--- Notifiers can then be added to either the view or the Observable object.
+-- value as soon as the views value changes, and change the view's value as
+-- soon as the Observable's value changes - automatically keeps both values
+-- in sync.
+-- Notifiers can be added to either the view or the Observable object.
 textfield.bind
   -> [ObservableString Object]
 
@@ -421,8 +419,8 @@ textfield.bind
 --   'multiline_textfield' in the builder)
 --------------------------------------------------------------------------------
 
--- A view which shows multiple text lines of text, auto-wrapping
--- paragraphs into lines. The text can be edited by the user.
+-- Shows multiple text lines of text, auto-wrapping paragraphs into lines. The
+-- text can be edited by the user.
 
 --[[
 
@@ -433,7 +431,7 @@ textfield.bind
 --. | and auto-wrapping        |+|
 --. +--------------------------+-+
 
-![MultilineTextField](http://_REPLACE_/MultilineTextField.png)
+![MultilineTextField](http://___REPLACE_URL___/MultilineTextField.png)
 ]]--
 
 
@@ -450,7 +448,7 @@ multiline_textfield:scroll_to_last_line()
 multiline_textfield:scroll_to_first_line()
 
 -- Append a new text to the existing text. Newline characters in the string will
--- Create new paragraphs, else a single new paragraph is appended.
+-- create new paragraphs, othwerise a single paragraph is appended.
 multiline_textfield:add_line(text)
 
 -- Clear the whole text.
@@ -459,22 +457,23 @@ multiline_textfield:clear()
 
 -------- Properties
 
--- The current text as single line, using using newline characters to specify
--- paragraphs.  
+-- The current text as a single line, uses newline characters to specify
+-- paragraphs.
 -- By default empty.
 multiline_textfield.value
   -> [string]
+
 -- Exactly the same as "value"; provided for consistency.
 multiline_textfield.text
   -> [string]
 
 -- Get/set a list/table of text lines instead of specifying the newlines as
--- characters.  
+-- characters.
 -- By default empty.
 multiline_textfield.paragraphs
   -> [string]
 
--- Get/set the font style that the text should be displayed with.
+-- Get/set the style that the text should be displayed with.
 -- Available font styles are:
 -- >  "normal"  
 -- >  "big"  
@@ -486,7 +485,7 @@ multiline_textfield.paragraphs
 multiline_textfield.font
   -> [string]
 
--- Setup the text views background style
+-- Setup the text view's background style.
 -- >  "body"    -> simple body text color with no background  
 -- >  "strong"  -> stronger body text color with no background  
 -- >  "border"  -> text on a bordered background
@@ -495,17 +494,17 @@ multiline_textfield.font
 multiline_textfield.style
   -> [string]
 
--- Valid in the construction table only: set up a notifier for text changes.
+-- Valid in the construction table only: Set up a notifier for text changes.
 -- See add_notifier/remove_notifier above.
 multiline_textfield.notifier
   -> [function()]
 
--- Valid in the construction table only: bind the views value to an
+-- Valid in the construction table only: Bind the view's value to a
 -- renoise.Document.ObservableStringList object. Will change the Observable
--- value as soon as the views value changed, and change the Views value as
--- soon as the Observable's value changed - automatically keeps both values
--- in sync.  
--- Notifiers can then be added to either the view or the Observable object.
+-- value as soon as the view's value changes, and change the view's value as
+-- soon as the Observable's value changes - automatically keeps both values
+-- in sync.
+-- Notifiers can be added to either the View or the Observable object.
 multiline_textfield.bind
   -> [ObservableStringList Object]
 
@@ -526,15 +525,15 @@ multiline_textfield.bind
 --. ||||||||||||
 
 
-![Bitmap](http://_REPLACE_/Bitmap.png)
+![Bitmap](http://___REPLACE_URL___/Bitmap.png)
 ]]--
 
--- A view which either simply draws a bitmap, or a draws a bitmap which acts
--- like a button (as soon as a notifier was specified). The notifier is called
--- when clicking with the mouse button somewhere on the bitmap. When using a
--- recolorable style (see 'mode'), the bitmap is automatically recolored to
--- match the current theme colors. Also mouse hover is enabled when notifies
--- are present, to show that the bitmap can be clicked.
+-- Draws a bitmap, or a draws a bitmap which acts like a button (as soon as a
+-- notifier is specified). The notifier is called when clicking the mouse
+-- somewhere on the bitmap. When using a re-colorable style (see 'mode'), the
+-- bitmap is automatically recolored to match the current theme's colors. Mouse
+-- hover is also enabled when notifies are present, to show that the bitmap can
+-- be clicked.
 
 
 -------- Functions
@@ -547,9 +546,9 @@ bitmapview:remove_notifier(function or {object, function} or {object, function})
 -------- Properties
 
 -- Setup how the bitmap should be drawn, recolored. Available modes are:
--- >  "plain"        -> bitmap is drawn just like it is, no recoloring is done  
+-- >  "plain"        -> bitmap is drawn as is, no recoloring is done  
 -- >  "transparent"  -> same as plain, but black pixels will be fully transparent  
--- >  "button_color" -> recolor the bitmap, using the color themes button color  
+-- >  "button_color" -> recolor the bitmap, using the theme's button color  
 -- >  "body_color"   -> same as 'button_back' but with body text/back color  
 -- >  "main_color"   -> same as 'button_back' but with main text/back colors
 --
@@ -557,18 +556,17 @@ bitmapview:remove_notifier(function or {object, function} or {object, function})
 bitmapview.mode
   -> [string]
 
--- Set the to be drawn bitmap name and path. You should use a relative path
--- that either assumes Renoises default resource folder as base (like
--- "Icons/ArrowRight.bmp"). Or specify a file relative from your XRNX tool
--- bundle:
+-- Bitmap name and path. You should use a relative path that uses  Renoise's
+-- default resource folder as base (like "Icons/ArrowRight.bmp"). Or specify a
+-- file relative from your XRNX tool bundle:
 -- Lets say your tool is called "com.foo.MyTool.xrnx" and you pass
--- "MyBitmap.bmp" as name. Then the bitmap is loaded from
+-- "MyBitmap.bmp" as teh name. Then the bitmap is loaded from
 -- "PATH_TO/com.foo.MyTool.xrnx/MyBitmap.bmp".
--- The only supported bitmap format is ".bmp" (Windows bitmap) right now.
+-- Currently, only ".bmp" (Windows bitmap) is supported.
 bitmapview.bitmap
   -> [string]
 
--- Valid in the construction table only: set up a click notifier. See
+-- Valid in the construction table only: Set up a click notifier. See
 -- add_notifier/remove_notifier above.
 bitmapview.notifier
   -> [function()]
@@ -578,7 +576,7 @@ bitmapview.notifier
 -- renoise.Views.Button (inherits from Control, 'button' in the builder)
 --------------------------------------------------------------------------------
 
--- A simple button, which will call a custom notifier function when clicked.
+-- A simple button that calls a custom notifier function when clicked.
 -- Supports text or bitmap labels.
 
 --[[
@@ -587,7 +585,7 @@ bitmapview.notifier
 --. | Button |
 --. +--------+
 
-![Button](http://_REPLACE_/Button.png)
+![Button](http://___REPLACE_URL___/Button.png)
 ]]--
 
 
@@ -595,9 +593,9 @@ bitmapview.notifier
 
 -- Add/remove button hit/release notifier functions.
 -- When a "pressed" notifier is set, the release notifier is guaranteed to be
--- called as soon as the mouse was released, either on your button or anywhere
--- else. When only a "release" notifier is set, its only called when the mouse
--- button was pressed !and! released on your button.
+-- called as soon as the mouse is released, either over your button or anywhere
+-- else. When a "release" notifier is set, it is only called when the mouse
+-- button is pressed !and! released over your button.
 button:add_pressed_notifier(function or {object, function} or {object, function})
 button:add_released_notifier(function or {object, function} or {object, function})
 button:remove_pressed_notifier(function or {object, function} or {object, function})
@@ -658,7 +656,7 @@ button.notifier
 --. | _/ |
 --. +----+
 
-![CheckBox](http://_REPLACE_/CheckBox.png)
+![CheckBox](http://___REPLACE_URL___/CheckBox.png)
 ]]--
 
 
@@ -676,16 +674,16 @@ checkbox:remove_notifier(function or {object, function} or {object, function})
 checkbox.value
   -> [boolean]
 
--- Valid in the construction table only: set up a value notifier.
+-- Valid in the construction table only: Set up a value notifier.
 checkbox.notifier
   -> [function(boolean_value)]
 
--- Valid in the construction table only: bind the views value to an
+-- Valid in the construction table only: Bind the view's value to a
 -- renoise.Document.ObservableBoolean object. Will change the Observable
--- value as soon as the views value changed, and change the Views value as
--- soon as the Observable's value changed - automatically keeps both values
+-- value as soon as the views value changes, and change the view's value as
+-- soon as the Observable's value changes - automatically keeps both values
 -- in sync.
--- Notifiers can then be added to either the view or the Observable object.
+-- Notifiers can be added to either the view or the Observable object.
 checkbox.bind
   -> [ObservableBoolean Object]
 
@@ -703,7 +701,7 @@ checkbox.bind
 --. | Button A  | +Button+B+ | Button C |
 --. +-----------+------------+----------+
 
-![Switch](http://_REPLACE_/Switch.png)
+![Switch](http://___REPLACE_URL___/Switch.png)
 ]]--
 
 
@@ -724,16 +722,16 @@ switch.items
 switch.value
   -> [number]
 
--- Valid in the construction table only: set up a value notifier.
+-- Valid in the construction table only: Set up a value notifier.
 switch.notifier
   -> [function(index)]
 
--- Valid in the construction table only: bind the views value to an
+-- Valid in the construction table only: Bind the view's value to a
 -- renoise.Document.ObservableNumber object. Will change the Observable
--- value as soon as the views value changed, and change the Views value as
--- soon as the Observable's value changed - automatically keeps both values
+-- value as soon as the views value changes, and change the view's value as
+-- soon as the Observable's value changes - automatically keeps both values
 -- in sync.
--- Notifiers can then be added to either the view or the Observable object.
+-- Notifiers can be added to either the view or the Observable object.
 switch.bind
   -> [ObservableNumber Object]
 
@@ -751,7 +749,7 @@ switch.bind
 --. | Current Item || ^ |
 --. +--------------++---+
 
-![Popup](http://_REPLACE_/Popup.png)
+![Popup](http://___REPLACE_URL___/Popup.png)
 ]]--
 
 
@@ -773,16 +771,16 @@ popup.items
 popup.value
   -> [number]
 
--- Valid in the construction table only: set up a value notifier.
+-- Valid in the construction table only: Set up a value notifier.
 popup.notifier
   -> [function(index)]
 
--- Valid in the construction table only: bind the views value to an
+-- Valid in the construction table only: Bind the view's value to a
 -- renoise.Document.ObservableNumber object. Will change the Observable
--- value as soon as the views value changed, and change the Views value as
--- soon as the Observable's value changed - automatically keeps both values
+-- value as soon as the views value changes, and change the view's value as
+-- soon as the Observable's value changes - automatically keeps both values
 -- in sync.
--- Notifiers can then be added to either the view or the Observable object.
+-- Notifiers can be added to either the view or the Observable object.
 popup.bind
   -> [ObservableNumber Object]
 
@@ -791,8 +789,8 @@ popup.bind
 -- renoise.Views.Chooser (inherits from Control, 'chooser' in the builder)
 --------------------------------------------------------------------------------
 
--- A radio button alike set of vertically stacked items. Only one value can be
--- selected at the same time.
+-- A radio button like set of vertically stacked items. Only one value can be
+-- selected at a time.
 
 --[[
 
@@ -800,7 +798,7 @@ popup.bind
 --. o Item B
 --. . Item C
 
-![Chooser](http://_REPLACE_/Chooser.png)
+![Chooser](http://___REPLACE_URL___/Chooser.png)
 ]]--
 
 
@@ -821,16 +819,16 @@ chooser.items
 chooser.value
   -> [number]
 
--- Valid in the construction table only: set up a value notifier.
+-- Valid in the construction table only: Set up a value notifier.
 chooser.notifier
   -> [function(index)]
 
--- Valid in the construction table only: bind the views value to an
+-- Valid in the construction table only: Bind the view's value to a
 -- renoise.Document.ObservableNumber object. Will change the Observable
--- value as soon as the views value changed, and change the Views value as
--- soon as the Observable's value changed - automatically keeps both values
+-- value as soon as the views value changes, and change the view's value as
+-- soon as the Observable's value changes - automatically keeps both values
 -- in sync.
--- Notifiers can then be added to either the view or the Observable object.
+-- Notifiers can be added to either the view or the Observable object.
 chooser.bind
   -> [ObservableNumber Object]
 
@@ -839,7 +837,7 @@ chooser.bind
 -- renoise.Views.ValueBox (inherits from Control, 'valuebox' in the builder)
 --------------------------------------------------------------------------------
 
--- A box with <> buttons and a text field which can be edited by the user.
+-- A box with arrow buttons and a text field that can be edited by the user.
 -- Allows showing and editing natural numbers in a custom range.
 
 --[[
@@ -848,7 +846,7 @@ chooser.bind
 --. |<|>|  12   |
 --. +---+-------+
 
-![ValueBox](http://_REPLACE_/ValueBox.png)
+![ValueBox](http://___REPLACE_URL___/ValueBox.png)
 ]]--
 
 
@@ -872,34 +870,34 @@ valuebox.max
 valuebox.value
   -> [number]
 
--- Valid in the construction table only: setup custom rules on how the number
--- should be displayed. Both, 'tostring' and  'tovalue' must be set, or none
--- of them. If none are set, a default string/number conversion is done, which
+-- Valid in the construction table only: Setup custom rules on how the number
+-- should be displayed. Both 'tostring' and  'tovalue' must be set, or neither.
+-- If none are set, a default string/number conversion is done, which
 -- simply reads/writes the number as integer value.
 --
--- When defined, 'tostring' must be a function with one parameter, the to be
--- converted number, and must return a string or nil.
--- 'tonumber' must be a function with one parameter and gets the to be
--- converted string passed, returning a a number or nil. when returning nil,
--- no conversion will be done and the value is not changed.
+-- When defined, 'tostring' must be a function with one parameter, the
+-- conversion procedure, and must return a string or nil.
+-- 'tonumber' must be a function with one parameter, also the conversion
+-- procedure, and return a a number or nil. When returning nil, no conversion is
+-- done and the value is not changed.
 --
--- Note: when any of the callbacks fails with an error, both will be disabled
--- to avoid floods of error messages.
+-- Note: when any of the callbacks fail with an error, both will be disabled
+-- to avoid a flood of error messages.
 valuebox.tostring
   -> (function(number) -> [string])
 valuebox.tovalue
   -> (function(string) -> [number])
 
--- Valid in the construction table only: set up a value notifier.
+-- Valid in the construction table only: Set up a value notifier.
 valuebox.notifier
   -> [function(number)]
 
--- Valid in the construction table only: bind the views value to an
+-- Valid in the construction table only: Bind the view's value to a
 -- renoise.Document.ObservableNumber object. Will change the Observable
--- value as soon as the views value changed, and change the Views value as
--- soon as the Observable's value changed - automatically keeps both values
+-- value as soon as the views value changes, and change the view's value as
+-- soon as the Observable's value changes - automatically keeps both values
 -- in sync.
--- Notifiers can then be added to either the view or the Observable object.
+-- Notifiers can be added to either the view or the Observable object.
 valuebox.bind
   -> [ObservableNumber Object]
 
@@ -908,8 +906,8 @@ valuebox.bind
 -- renoise.Views.Value (inherits from View, 'value' in the builder)
 --------------------------------------------------------------------------------
 
--- A static text view, which shows a string representation of a number and
--- allows custom number -> string conversion.
+-- A static text view. Shows a string representation of a number and
+-- allows custom "number to string" conversion.
 -- See 'Views.ValueField' for a value text field that can be edited by the user.
 
 --[[
@@ -918,7 +916,7 @@ valuebox.bind
 --. | 12.1 dB   |
 --. +---+-------+
 
-![Value](http://_REPLACE_/Value.png)
+![Value](http://___REPLACE_URL___/Value.png)
 ]]--
 
 
@@ -935,7 +933,7 @@ value:remove_notifier(function or {object, function} or {object, function})
 value.value
   -> [number]
 
--- Get/set the font that the text should be displayed with.
+-- Get/set the style that the text should be displayed with.
 -- Available font styles are:
 -- >  "normal"  
 -- >  "big"  
@@ -947,7 +945,7 @@ value.value
 value.font
   -> [string]
 
--- Setup the value text alignment. Valid values are:
+-- Setup the value's text alignment. Valid values are:
 -- >  "left"  
 -- >  "right"  
 -- >  "center"
@@ -956,26 +954,26 @@ value.font
 value.align
   -> [string]
 
--- Valid in the construction table only: setup a custom rule on how the
+-- Valid in the construction table only: Setup a custom rule on how the
 -- number should be displayed. When defined, 'tostring' must be a function
--- with one parameter, the to be converted number, and must return a string
+-- with one parameter, the conversion procedure, and must return a string
 -- or nil.
 --
--- Note: when the callback fails with an error, it will be disabled to avoid
--- floods of error messages.
+-- Note: When the callback fails with an error, it will be disabled to avoid
+-- a flood of error messages.
 value.tostring
   -> (function(number) -> [string])
 
--- Valid in the construction table only: set up a value notifier.
+-- Valid in the construction table only: Set up a value notifier.
 value.notifier
   -> [function(number)]
 
--- Valid in the construction table only: bind the views value to an
+-- Valid in the construction table only: Bind the views value to a
 -- renoise.Document.ObservableNumber object. Will change the Observable
--- value as soon as the views value changed, and change the Views value as
--- soon as the Observable's value changed - automatically keeps both values
+-- value as soon as the views value changes, and change the view's value as
+-- soon as the Observable's value changes - automatically keeps both values
 -- in sync.
--- Notifiers can then be added to either the view or the Observable object.
+-- Notifiers can be added to either the view or the Observable object.
 value.bind
   -> [ObservableNumber Object]
 
@@ -985,7 +983,8 @@ value.bind
 --------------------------------------------------------------------------------
 
 -- A text view, which shows a string representation of a number and allows
--- custom number <-> string conversion. The value text can be edited by the user.
+-- custom "number to string" conversion. The value's text can be edited by the
+-- user.
 
 --[[
 
@@ -993,7 +992,7 @@ value.bind
 --. | 12.1 dB   |
 --. +---+-------+
 
-![ValueField](http://_REPLACE_/ValueField.png)
+![ValueField](http://___REPLACE_URL___/ValueField.png)
 ]]--
 
 
@@ -1038,22 +1037,22 @@ valuefield.align
 -- no conversion will be done and the value is not changed.
 --
 -- Note: when any of the callbacks fail with an error, both will be disabled
--- to avoid floods of error messages.
+-- to avoid a flood of error messages.
 valuefield.tostring
   -> (function(number) -> [string])
 valuefield.tovalue
   -> (function(string) -> [number])
 
--- Valid in the construction table only: set up a value notifier function.
+-- Valid in the construction table only: Set up a value notifier function.
 valuefield.notifier
   -> [function(number)]
 
--- Valid in the construction table only: bind the views value to an
+-- Valid in the construction table only: Bind the view's value to a
 -- renoise.Document.ObservableNumber object. Will change the Observable
--- value as soon as the views value changed, and change the Views value as
--- soon as the Observable's value changed - automatically keeps both values
+-- value as soon as the views value changes, and change the view's value as
+-- soon as the Observable's value changes - automatically keeps both values
 -- in sync.
--- Notifiers can then be added to either the view or the Observable object.
+-- Notifiers can be added to either the view or the Observable object.
 valuefield.bind
   -> [ObservableNumber Object]
 
@@ -1062,9 +1061,9 @@ valuefield.bind
 -- renoise.Views.Slider (inherits from Control, 'slider' in the builder)
 --------------------------------------------------------------------------------
 
--- A slider with <> buttons, which shows and allows editing values in a custom
--- range. A slider can be horizontal or vertical; will flip its orientation
--- according to the set width and height. By default horizontal.
+-- A slider with arrow buttons, which shows and allows editing of values in a
+-- custom range. A slider can be horizontal or vertical; will flip its
+-- orientation according to the set width and height. By default horizontal.
 
 --[[
 
@@ -1072,7 +1071,7 @@ valuefield.bind
 --. |<|>| --------[]    |
 --. +---+---------------+
 
-![Slider](http://_REPLACE_/Slider.png)
+![Slider](http://___REPLACE_URL___/Slider.png)
 ]]--
 
 
@@ -1096,16 +1095,16 @@ slider.max
 slider.value
   -> [number]
 
--- Valid in the construction table only: set up a value notifier function.
+-- Valid in the construction table only: Set up a value notifier function.
 slider.notifier
   -> [function(number)]
 
--- Valid in the construction table only: bind the views value to an
+-- Valid in the construction table only: Bind the view's value to a
 -- renoise.Document.ObservableNumber object. Will change the Observable
--- value as soon as the views value changed, and change the Views value as
--- soon as the Observable's value changed - automatically keeps both values
+-- value as soon as the views value changes, and change the view's value as
+-- soon as the Observable's value changes - automatically keeps both values
 -- in sync.
--- Notifiers can then be added to either the view or the Observable object.
+-- Notifiers can be added to either the view or the Observable object.
 slider.bind
   -> [ObservableNumber Object]
 
@@ -1114,15 +1113,15 @@ slider.bind
 -- renoise.Views.MiniSlider (inherits from Control, 'minislider' in the builder)
 --------------------------------------------------------------------------------
 
--- Same as a slider, but without <> buttons and a really tiny height. Just like
--- the slider, a mini slider can be horizontal or vertical. It will flip its
--- orientation according to the set width and height. By default horizontal.
+-- Same as a slider, but without arrow buttons and a really tiny height. Just
+-- like the slider, a mini slider can be horizontal or vertical. It will flip
+-- its orientation according to the set width and height. By default horizontal.
 
 --[[
 
 --. --------[]
 
-![MiniSlider](http://_REPLACE_/MiniSlider.png)
+![MiniSlider](http://___REPLACE_URL___/MiniSlider.png)
 ]]--
 
 
@@ -1146,16 +1145,16 @@ slider.max
 slider.value
   -> [number]
 
--- Valid in the construction table only: set up a value notifier.
+-- Valid in the construction table only: Set up a value notifier.
 slider.notifier
   -> [function(number)]
 
--- Valid in the construction table only: bind the views value to an
+-- Valid in the construction table only: Bind the view's value to a
 -- renoise.Document.ObservableNumber object. Will change the Observable
--- value as soon as the views value changed, and change the Views value as
--- soon as the Observable's value changed - automatically keeps both values
+-- value as soon as the views value changes, and change the view's value as
+-- soon as the Observable's value changes - automatically keeps both values
 -- in sync.
--- Notifiers can then be added to either the view or the Observable object.
+-- Notifiers can be added to either the view or the Observable object.
 slider.bind
   -> [ObservableNumber Object]
 
@@ -1164,9 +1163,9 @@ slider.bind
 --------------------------------------------------------------------------------
 
 -- A slider which looks like a potentiometer.
--- Note: when changing the size, the min of the width and height will be used
--- to draw and control the rotary control, so you should always set both
--- equally.
+-- Note: when changing the size, the minimum of either width or height will be
+-- used to draw and control the rotary, therefor you should always set both
+-- equally when possible.
 
 --[[
 
@@ -1176,7 +1175,7 @@ slider.bind
 --. \  |  /
 --.   +-+
 
-![RotaryEncoder](http://_REPLACE_/RotaryEncoder.png)
+![RotaryEncoder](http://___REPLACE_URL___/RotaryEncoder.png)
 ]]--
 
 
@@ -1201,16 +1200,16 @@ rotary.max
 rotary.value
   -> [number]
 
--- Valid in the construction table only: set up a value notifier function.
+-- Valid in the construction table only: Set up a value notifier function.
 rotary.notifier
   -> [function(number)]
 
--- Valid in the construction table only: bind the views value to an
+-- Valid in the construction table only: Bind the view's value to a
 -- renoise.Document.ObservableNumber object. Will change the Observable
--- value as soon as the views value changed, and change the Views value as
--- soon as the Observable's value changed - automatically keeps both values
+-- value as soon as the view's value changes, and change the view's value as
+-- soon as the Observable's value changes - automatically keeps both values
 -- in sync.
--- Notifiers can then be added to either the view or the Observable object.
+-- Notifiers can be added to either the view or the Observable object.
 rotary.bind
   -> [ObservableNumber Object]
 
@@ -1219,13 +1218,13 @@ rotary.bind
 -- renoise.Views.XYPad (inherits from Control, 'xypad' in the builder)
 --------------------------------------------------------------------------------
 
--- A slider alike pad which allows controlling two values at once. By default
--- it freely moves the XY values, but can also be configured to snap back to a
--- predefined value when releasing the mouse button.
+-- A slider like pad which allows for controlling two values at once. By default
+-- it freely moves the XY values, but it can also be configured to snap back to
+-- a predefined value when releasing the mouse button.
 --
--- All values, notifiers, current value or min/max properties, will act just
--- like a slider or rotaries properties, but instead of a single number a table
--- with the fields {x = xvalue, y = yvalue} is expected, returned...
+-- All values, notifiers, current value or min/max properties will act just
+-- like a slider or a rotary's properties, but nstead of a single number, a
+-- table with the fields `{x = xvalue, y = yvalue}` is expected, returned.
 
 --[[
 
@@ -1235,7 +1234,7 @@ rotary.bind
 --. |       |
 --. +-------+
 
-![XYPad](http://_REPLACE_/XYPad.png)
+![XYPad](http://___REPLACE_URL___/XYPad.png)
 ]]--
 
 
@@ -1248,37 +1247,37 @@ xypad:remove_notifier(function or {object, function} or {object, function})
 
 -------- Properties
 
--- Get/set a table of min/max values that are allowed.
+-- Get/set a table of allowed min/max values.
 -- By default 0.0 and 1.0 for both, x and y.
 xypad.min
   -> [{x=Number,y=Number}]
 xypad.max
   -> [{x=Number,y=Number}]
 
--- Get/set the pads current value in a table
+-- Get/set the pad's current value in a table.
 xypad.value
   -> [{x=Number,y=Number}]
 
--- When snapback is enabled a xy table is returned, else nil. To enable
--- snapback, pass a xy table with desired values. Pass nil or an empty table
+-- When snapback is enabled an XY table is returned, else nil. To enable
+-- snapback, pass an XY table with desired values. Pass nil or an empty table
 -- to disable snapback.
 -- When snapback is enabled, the pad will revert its values to the specified
 -- snapback values as soon as the mouse button is released in the pad. When
--- disabled,  releasing the mouse button will not change the value.
+-- disabled, releasing the mouse button will not change the value.
 xypad.snapback
   -> [{x=Number,y=Number}]
 
--- Valid in the construction table only: set up a value notifier function.
+-- Valid in the construction table only: Set up a value notifier function.
 xypad.notifier
   -> [function(value={x=Number,y=Number})]
 
--- Valid in the construction table only: bind the views value to a pair of
+-- Valid in the construction table only: Bind the view's value to a pair of
 -- renoise.Document.ObservableNumber objects. Will change the Observable
--- values as soon as the views value changed, and change the Views values as
--- soon as the Observable's value changed - automatically keeps both values
+-- values as soon as the views value changes, and change the view's values as
+-- soon as the Observable's value changes - automatically keeps both values
 -- in sync.
--- Notifiers can then be added to either the view or the Observable object.
--- Just like in the other xypad properties, a table with the fields x and y
+-- Notifiers can be added to either the view or the Observable object.
+-- Just like in the other XYPad properties, a table with the fields X and Y
 -- is expected here and not a single value. So you have to bind two
 -- ObservableNumber object to the pad.
 xypad.bind
@@ -1312,32 +1311,32 @@ dialog.visible
 -- renoise.ViewBuilder
 --==============================================================================
 
--- Class which is used to construct new views. All views properties, as listed
+-- Class which is used to construct new views. All view properties, as listed
 -- above, can optionally be in-lined in a passed construction table:
 --
--- local vb = renoise.ViewBuilder() -- create a new ViewBuilder
--- vb:button { text = "ButtonText" } -- is the same as
--- my_button = vb:button(); my_button.text = "ButtonText"
+--     local vb = renoise.ViewBuilder() -- create a new ViewBuilder
+--     vb:button { text = "ButtonText" } -- is the same as
+--     my_button = vb:button(); my_button.text = "ButtonText"
 --
--- Beside of the listed class properties above, you can also specify the
--- following "extra" properties in the passed table:
+-- Besides the listed class properties, you can also specify the following
+-- "extra" properties in the passed table:
 --
--- * id = "SomeString": which can be use to resolve the view later on,
---   e.g. `vb.views.SomeString or vb.views["SomeString"]`
+-- * id = "SomeString": Can be use to resolve the view later on, e.g.
+--   `vb.views.SomeString` or `vb.views["SomeString"]`
 --
 -- * notifier = some_function or notifier = {some_obj, some_function} to
 --   register value change notifiers in controls (views which represent values)
 --
 -- * bind = a_document_value (Observable) to bind a view's value directly
---   to an Observable object. Notifiers can then be added to the Observable or
---   the view. Then binding a value to a view, the view will automatically
---   update its value as soon as the Observable's value changed, and the
+--   to an Observable object. Notifiers can be added to the Observable or
+--   the view. After binding a value to a view, the view will automatically
+--   update its value as soon as the Observable's value changes, and the
 --   Observable's value will automatically be updated as soon as the view's
---   value changed.
+--   value changes.
 --   See "Renoise.Document.API.lua" for more general info about Documents &
---   Observables please.
+--   Observables.
 --
--- * Nested child views: add a child view to the currently specified view.
+-- * Nested child views: Add a child view to the currently specified view.
 --   For example:
 --
 --         vb:column {
@@ -1350,7 +1349,7 @@ dialog.visible
 --            }
 --         }
 --
---  Creates a column view with margin = 1 and adds two text views to the column.
+--  Creates a column view with `margin = 1` and adds two text views to the column.
 
 
 --------------------------------------------------------------------------------
@@ -1358,7 +1357,7 @@ dialog.visible
 --------------------------------------------------------------------------------
 
 -- Default sizes for views and view layouts. Should be used instead of magic
--- numbers, also to be able to globally change them in the program for all GUIs.
+-- numbers, also useful to inherit global changes from the main app.
 renoise.ViewBuilder.DEFAULT_CONTROL_MARGIN
 renoise.ViewBuilder.DEFAULT_CONTROL_SPACING
 renoise.ViewBuilder.DEFAULT_CONTROL_HEIGHT
@@ -1370,33 +1369,39 @@ renoise.ViewBuilder.DEFAULT_DIALOG_BUTTON_HEIGHT
 
 -------- Functions
 
+-- Column, row.
 vb:column { Rack Properties and/or child views }
   -> [Rack object]
 vb:row { Rack Properties and/or child views }
   -> [Rack object]
 
+-- Aligners.
 vb:horizontal_aligner { Aligner Properties and/or child views }
   -> [Aligner object]
 vb:vertical_aligner { Aligner Properties and/or child views }
   -> [Aligner object]
 
+-- Space.
 vb:space { View Properties and/or child views }
   -> [View object]
 
+-- Text.
 vb:text { Text Properties }
   -> [Text object]
 vb:multiline_text { MultiLineText Properties }
   -> [MultilineText object]
-
 vb:textfield { TextField Properties }
   -> [TextField object]
 
+-- Bitmap.
 vb:bitmap { Bitmap Properties }
   -> [Bitmap object]
 
+-- Button.
 vb:button { Button Properties }
   -> [Button object]
 
+-- Checkbox, switch, popup, chooser.
 vb:checkbox  { Rack Properties }
   -> [CheckBox object]
 vb:switch { Switch Properties }
@@ -1406,6 +1411,7 @@ vb:popup { Popup Properties }
 vb:chooser { Chooser Properties }
   -> [Chooser object]
 
+-- Values.
 vb:valuebox { ValueBox Properties }
   -> [ValueBox object]
 
@@ -1414,6 +1420,7 @@ vb:value { Value Properties }
 vb:valuefield { ValueField Properties }
   -> [ValueField object]
 
+-- Sliders, rotary, XYPad.
 vb:slider { Slider Properties }
   -> [Slider object]
 vb:minislider { MiniSlider Properties }
@@ -1428,7 +1435,7 @@ vb:xypad { XYPad Properties }
 
 -------- Properties
 
--- View id is the table key, the tables value the view object.
+-- View id is the table key, the table's value is the view's object.
 -- > e.g.: vb:text{ id="my_view", text="some_text"}  
 -- > vb.views.my_view.visible = false _(or)_  
 -- > vb.views["my_view"].visible = false

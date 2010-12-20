@@ -91,7 +91,7 @@ renoise.Osc.Message(pattern [, table of {tag, value} arguments])
 message.pattern
   -> [read-only, string]
 
--- Table of {tag="X", value=SomeValue}'s that represents the message arguments.
+-- Table of `{tag="X", value=SomeValue}` that represents the message arguments.
 -- see renoise.Osc.Message "create" for more info.
 message.arguments
   -> [read-only, table of {tag, value} tables]
