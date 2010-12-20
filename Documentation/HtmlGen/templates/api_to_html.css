@@ -27,17 +27,17 @@ h1, h2 {
 .lua {
     font-weight: bold;
     font-size: 105%;
-    color: green;
-    border: 1px dashed #ccc;
+    border: 1px dashed #999;
     padding: 1em;
+    background: #fff7c1;
 }
 
 code {
-    background: #ccc; 
+    background: #fff7c1;
 }
 
 pre {
-    margin-bottom: 1.75em;
+    margin-bottom: 2.25em;
 }
 
 blockquote {

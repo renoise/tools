@@ -12,14 +12,22 @@ class MarkdownGeshi_Parser extends MarkdownExtra_Parser {
     function _doCodeBlocks_callback($matches) {
         $codeblock = $matches[1];
         $codeblock = $this->outdent($codeblock);
-        $geshi = new GeSHi(trim($codeblock), $this->geshi_code_type);
+        static $geshi;
+        if (!isset($geshi)) {
+            $geshi = new GeSHi(null, $this->geshi_code_type);
+        }
+        $geshi->set_source(trim($codeblock));
         $codeblock  = $geshi->parse_code();
         return "\n\n".$this->hashBlock($codeblock)."\n\n";
     }
 
     function _doFencedCodeBlocks_callback($matches) {
         $codeblock = $matches[2];
-        $geshi = new GeSHi(trim($codeblock), $this->geshi_code_type);
+        static $geshi;
+        if (!isset($geshi)) {
+            $geshi = new GeSHi(null, $this->geshi_code_type);
+        }
+        $geshi->set_source(trim($codeblock));
         $codeblock  = $geshi->parse_code();
         return "\n\n".$this->hashBlock($codeblock)."\n\n";
     }

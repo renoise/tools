@@ -167,6 +167,7 @@ The "invoke" function gets called with one argument, the midi message, which
 is modeled as:
 
     class "renoise.ScriptingTool.MidiMessage"
+    
       -- returns if action should be invoked
       function is_trigger() -> boolean
 
@@ -290,20 +291,21 @@ A simple example:
 Or:
 
     class "ExampleToolPreferences"(renoise.Document.DocumentNode)
-    function ExampleToolPreferences:__init()
-      renoise.Document.DocumentNode.__init(self)
-      self:add_property("some_option", true)
-      self:add_property("some_value", "string_value")
-    end
 
-    my_options = ExampleToolPreferences()
+      function ExampleToolPreferences:__init()
+        renoise.Document.DocumentNode.__init(self)
+        self:add_property("some_option", true)
+        self:add_property("some_value", "string_value")
+      end
 
-    -- values can be accessed (read, written) via
-    my_options.some_option.value, my_options.some_value.value
+      my_options = ExampleToolPreferences()
 
-    -- also notifiers can be added to listen to changes to the values
-    -- done by you, or after new values got loaded or a view changed the value:
-    my_options.some_option:add_notifier(function() end)
+      -- values can be accessed (read, written) via
+      my_options.some_option.value, my_options.some_value.value
+
+      -- also notifiers can be added to listen to changes to the values
+      -- done by you, or after new values got loaded or a view changed the value:
+      my_options.some_option:add_notifier(function() end)
 
 ]]--
 
