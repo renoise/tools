@@ -36,20 +36,43 @@ foreach(new DirectoryIterator($CONFIG['docdir']) as $file) {
     $files[] = $file->getPathname();
 }
 
+// Debug
+// $files = array('/Users/dac514/Desktop/test.lua');
+
+// ----------------------------------------------------------------------------
+// Helpers
+// ----------------------------------------------------------------------------
+
+// Globals
+$h_id = 0;
+$h_array = array();
+
+// Header
+function header_transform($type, $string) {
+    global $h_id, $h_array;
+    $string = str_replace("\n", null, $string);
+    $string2 = preg_replace("/\([^\)]+\)/","", $string); // Remove text between parenthesis
+    if (strpos($type, '=') !== false) {
+        $id = '#h1_' . ++$h_id;
+        $h_array[] = "* [$string2]($id)";
+        return '# ' . $string . ' {' . $id . '}' . "\n";
+    }
+    else {
+        $id = '#h2_' . ++$h_id;
+        $h_array[] = "  * [$string2]($id)";
+        return '## ' . $string . ' {' . $id . '}' . "\n";
+
+    }
+}
+
 // ----------------------------------------------------------------------------
 // Mangle stuff
 // ----------------------------------------------------------------------------
 
-// Helper
-function strip_linebreaks($string) {
-    return str_replace("\n", null, $string);
-}
-
-// Debug
-// $files = array('/Users/dac514/Desktop/test.lua');
-
 $index = array();
 foreach ($files as $file) {
+
+    global $h_array;
 
     // Get contents
     $tmp = file_get_contents($file);
@@ -124,22 +147,17 @@ foreach ($files as $file) {
     // Find `-- %` and replace with %
     $markdown = preg_replace('/^--\s{0,1}(.*?)$/sm', '$1', $markdown);
 
-    // Transform ==== header ==== to Markdown equivilant
-    $markdown = preg_replace('/={4,}\n(.*?)={4,}\n/se', "strip_linebreaks('# $1')", $markdown);
-
-    // Transform ---- header ---- to Markdown equivilant
-    $markdown = preg_replace('/-{4,}\n(.*?)-{4,}\n/se', "strip_linebreaks('## $1')", $markdown);
+    // Transform ==== header ==== or ---- header ---- to Markdown equivilant
+    $markdown = preg_replace('/(={4,}|-{4,})\n(.*?)(={4,}|-{4,})\n/se', "header_transform('$1', '$2')", $markdown);
 
     // Find `---- Foo` and replace with Markdown equivilant
     $markdown = preg_replace('/-{4,}\s{1}(.*?)\n/s', "### $1\n", $markdown);
 
-    // Convert to markdown
-    // $markdown = Markdown($markdown);
-    $markdown = Markdown_with_geshi($markdown);
+    // Prepend TOC
+    $markdown = "#### Contents \n" . implode($h_array, "  \n") . "  \n" . $markdown;
 
-    // Replace remaining URLs, inspired from: http://php-faq.de/q-regexp-uri-klickbar.html
-    // $pattern = '#(^|[^\"=]{1})(http://|ftp://|mailto:|news:)([^\s<>]+)([\s\n<>]|$)#sm';
-    // $markdown = preg_replace($pattern, "\\1<a href=\"\\2\\3\"><u>\\2\\3</u></a>\\4", $markdown);
+    // Convert to markdown
+    $markdown = Markdown_with_geshi($markdown);
 
     // ------------------------------------------------------------------------
     // HTMLize stuff
@@ -159,6 +177,14 @@ foreach ($files as $file) {
     $fname = $fname . '.html';
     $index[] = $fname;
     file_put_contents($CONFIG['outdir'] . '/' . $fname, $tmp);
+
+    // ------------------------------------------------------------------------
+    // Cleanup
+    // ------------------------------------------------------------------------
+
+
+    $h_array = array();
+
 
 }
 

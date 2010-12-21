@@ -309,7 +309,7 @@ serializable:from_string(string)
 
 
 --------------------------------------------------------------------------------
--- renoise.Document.Observable, inherits Serializable
+-- renoise.Document.Observable (inherits Serializable)
 --------------------------------------------------------------------------------
 
 -------- Functions
@@ -331,7 +331,7 @@ observable:remove_notifier(function or (object, function) or
 
 
 --------------------------------------------------------------------------------
--- renoise.Document.ObservableBoolean/Number/String, inherits Observable
+-- renoise.Document.ObservableBoolean/Number/String (inherits Observable)
 --------------------------------------------------------------------------------
 
 -------- Properties
@@ -342,7 +342,7 @@ observable.value
 
 
 --------------------------------------------------------------------------------
--- renoise.Document.ObservableBoolean/String/NumberList, inherits Observable
+-- renoise.Document.ObservableBoolean/String/NumberList (inherits Observable)
 --------------------------------------------------------------------------------
 
 -------- Operators

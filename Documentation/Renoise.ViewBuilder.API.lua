@@ -1352,9 +1352,7 @@ dialog.visible
 --  Creates a column view with `margin = 1` and adds two text views to the column.
 
 
---------------------------------------------------------------------------------
--- consts (renoise.ViewBuilder.XXX)
---------------------------------------------------------------------------------
+-------- Constants
 
 -- Default sizes for views and view layouts. Should be used instead of magic
 -- numbers, also useful to inherit global changes from the main app.
