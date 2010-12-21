@@ -5,8 +5,12 @@ body {
     color: #000000;
 }
 
-a:link,  a:visited, a:active {
+a:link, a:active {
     color: #14cc43;
+}
+
+a:visited {
+    color: green;
 }
 
 a:hover {
@@ -14,7 +18,7 @@ a:hover {
     background: #000000;
 }
 
-h1, h2 {
+h1, h2, h4 {
     background: #eeeeee;
     padding: 10px;
     background-color: #eeeeee;
@@ -58,4 +62,9 @@ blockquote:before {
 blockquote p {
     display: inline;
     font-size: small;
+}
+
+ul {
+    margin-left: 0;
+    padding-left: 1em;
 }
