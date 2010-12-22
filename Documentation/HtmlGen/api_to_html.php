@@ -29,7 +29,7 @@ $footer = '</body></html>';
 // ----------------------------------------------------------------------------
 
 $files = array();
-foreach(new DirectoryIterator($CONFIG['docdir']) as $file) {
+foreach(new DirectoryIterator($CONFIG['DOCS_DIR']) as $file) {
 
     if (!$file->isFile()) continue;
     if (!preg_match('/(lua|txt)$/', $file->getFilename())) continue;
@@ -161,7 +161,7 @@ foreach ($files as $file) {
     $markdown = Markdown_with_geshi($markdown);
 
     // ___REPLACE_URL___
-    $markdown = str_ireplace('___REPLACE_URL___', $CONFIG['url'], $markdown);
+    $markdown = str_ireplace('___REPLACE_URL___', $CONFIG['IMAGES_URL'], $markdown);
 
 
     // ------------------------------------------------------------------------
@@ -181,7 +181,7 @@ foreach ($files as $file) {
 
     $fname = $fname . '.html';
     $index[] = $fname;
-    file_put_contents($CONFIG['outdir'] . '/' . $fname, $tmp);
+    file_put_contents($CONFIG['OUT_DIR'] . '/' . $fname, $tmp);
 
     // ------------------------------------------------------------------------
     // Cleanup
@@ -208,6 +208,6 @@ $tmp = trim(
     $tmp .
     $footer
     );
-file_put_contents($CONFIG['outdir'] . '/index.html', $tmp);
+file_put_contents($CONFIG['OUT_DIR'] . '/index.html', $tmp);
 
 ?>

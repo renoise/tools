@@ -3,7 +3,7 @@
 require_once(dirname(__FILE__) . '/config.php');
 
 $concise = array();
-foreach(new DirectoryIterator($CONFIG['docdir']) as $file) {
+foreach(new DirectoryIterator($CONFIG['DOCS_DIR']) as $file) {
 
     if (!$file->isFile()) continue;
     if (!preg_match('/lua$/', $file->getFilename())) continue;
