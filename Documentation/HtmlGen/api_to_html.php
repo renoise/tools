@@ -53,15 +53,16 @@ function header_transform($type, $string) {
     $string = str_replace("\n", null, $string);
     $string2 = preg_replace("/\([^\)]+\)/","", $string); // Remove text between parenthesis
     if (strpos($type, '=') !== false) {
+        // H1
         $id = '#h1_' . ++$h_id;
         $h_array[] = "* [$string2]($id)";
         return '# ' . $string . ' {' . $id . '}' . "\n";
     }
     else {
+        // H2
         $id = '#h2_' . ++$h_id;
         $h_array[] = "  * [$string2]($id)";
         return '## ' . $string . ' {' . $id . '}' . "\n";
-
     }
 }
 
@@ -159,6 +160,10 @@ foreach ($files as $file) {
     // Convert to markdown
     $markdown = Markdown_with_geshi($markdown);
 
+    // ___REPLACE_URL___
+    $markdown = str_ireplace('___REPLACE_URL___', $CONFIG['url'], $markdown);
+
+
     // ------------------------------------------------------------------------
     // HTMLize stuff
     // ------------------------------------------------------------------------
@@ -182,9 +187,7 @@ foreach ($files as $file) {
     // Cleanup
     // ------------------------------------------------------------------------
 
-
     $h_array = array();
-
 
 }
 

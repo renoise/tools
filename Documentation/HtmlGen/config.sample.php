@@ -6,7 +6,13 @@ error_reporting(E_ALL | E_STRICT);
 // Config
 // ----------------------------------------------------------------------------
 
-$CONFIG['docdir'] = '/Users/dac514/code/xrnx/trunk/Documentation'; // No trailing slash!
-$CONFIG['outdir'] = '/Users/dac514/Desktop/test'; // No trailing slash!
+// IMPORTANT!
+// No trailing slashes for any of the following variables!!!
+
+$CONFIG['docdir'] = '/Users/dac514/code/xrnx/svn/trunk/Documentation';
+
+$CONFIG['outdir'] = '/Users/dac514/Desktop/test';
+
+$CONFIG['url'] = 'http://www.trotch.com/tmp/blah';
 
 ?>
