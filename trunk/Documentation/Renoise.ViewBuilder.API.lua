@@ -242,7 +242,7 @@ aligner.mode
 
 --.. Text, Bla
 
-![Text](http://___REPLACE_URL___/Text.png)
+![Text](___REPLACE_URL___/Text.png)
 ]]--
 
 
@@ -298,7 +298,7 @@ text.align
 --. | Text, Bla 4  |+|
 --. +--------------+-+
 
-![MultiLineText](http://___REPLACE_URL___/MultiLineText.png)
+![MultiLineText](___REPLACE_URL___/MultiLineText.png)
 ]]--
 
 
@@ -367,7 +367,7 @@ multiline_text.style
 --. | Editable Te|xt |
 --. +----------------+
 
-![TextField](http://___REPLACE_URL___/TextField.png)
+![TextField](___REPLACE_URL___/TextField.png)
 ]]--
 
 
@@ -431,7 +431,7 @@ textfield.bind
 --. | and auto-wrapping        |+|
 --. +--------------------------+-+
 
-![MultilineTextField](http://___REPLACE_URL___/MultilineTextField.png)
+![MultilineTextField](___REPLACE_URL___/MultilineTextField.png)
 ]]--
 
 
@@ -525,7 +525,7 @@ multiline_textfield.bind
 --. ||||||||||||
 
 
-![Bitmap](http://___REPLACE_URL___/Bitmap.png)
+![Bitmap](___REPLACE_URL___/Bitmap.png)
 ]]--
 
 -- Draws a bitmap, or a draws a bitmap which acts like a button (as soon as a
@@ -585,7 +585,7 @@ bitmapview.notifier
 --. | Button |
 --. +--------+
 
-![Button](http://___REPLACE_URL___/Button.png)
+![Button](___REPLACE_URL___/Button.png)
 ]]--
 
 
@@ -656,7 +656,7 @@ button.notifier
 --. | _/ |
 --. +----+
 
-![CheckBox](http://___REPLACE_URL___/CheckBox.png)
+![CheckBox](___REPLACE_URL___/CheckBox.png)
 ]]--
 
 
@@ -701,7 +701,7 @@ checkbox.bind
 --. | Button A  | +Button+B+ | Button C |
 --. +-----------+------------+----------+
 
-![Switch](http://___REPLACE_URL___/Switch.png)
+![Switch](___REPLACE_URL___/Switch.png)
 ]]--
 
 
@@ -749,7 +749,7 @@ switch.bind
 --. | Current Item || ^ |
 --. +--------------++---+
 
-![Popup](http://___REPLACE_URL___/Popup.png)
+![Popup](___REPLACE_URL___/Popup.png)
 ]]--
 
 
@@ -798,7 +798,7 @@ popup.bind
 --. o Item B
 --. . Item C
 
-![Chooser](http://___REPLACE_URL___/Chooser.png)
+![Chooser](___REPLACE_URL___/Chooser.png)
 ]]--
 
 
@@ -846,7 +846,7 @@ chooser.bind
 --. |<|>|  12   |
 --. +---+-------+
 
-![ValueBox](http://___REPLACE_URL___/ValueBox.png)
+![ValueBox](___REPLACE_URL___/ValueBox.png)
 ]]--
 
 
@@ -916,7 +916,7 @@ valuebox.bind
 --. | 12.1 dB   |
 --. +---+-------+
 
-![Value](http://___REPLACE_URL___/Value.png)
+![Value](___REPLACE_URL___/Value.png)
 ]]--
 
 
@@ -992,7 +992,7 @@ value.bind
 --. | 12.1 dB   |
 --. +---+-------+
 
-![ValueField](http://___REPLACE_URL___/ValueField.png)
+![ValueField](___REPLACE_URL___/ValueField.png)
 ]]--
 
 
@@ -1071,7 +1071,7 @@ valuefield.bind
 --. |<|>| --------[]    |
 --. +---+---------------+
 
-![Slider](http://___REPLACE_URL___/Slider.png)
+![Slider](___REPLACE_URL___/Slider.png)
 ]]--
 
 
@@ -1121,7 +1121,7 @@ slider.bind
 
 --. --------[]
 
-![MiniSlider](http://___REPLACE_URL___/MiniSlider.png)
+![MiniSlider](___REPLACE_URL___/MiniSlider.png)
 ]]--
 
 
@@ -1175,7 +1175,7 @@ slider.bind
 --. \  |  /
 --.   +-+
 
-![RotaryEncoder](http://___REPLACE_URL___/RotaryEncoder.png)
+![RotaryEncoder](___REPLACE_URL___/RotaryEncoder.png)
 ]]--
 
 
@@ -1234,7 +1234,7 @@ rotary.bind
 --. |       |
 --. +-------+
 
-![XYPad](http://___REPLACE_URL___/XYPad.png)
+![XYPad](___REPLACE_URL___/XYPad.png)
 ]]--
 
 

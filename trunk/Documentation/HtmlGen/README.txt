@@ -1,5 +1,6 @@
 # Usage  #####################################################################
 
+copy the images to a public webserver
 copy `config.sample.php` to `config.php` and edit accordingly
 run the scripts at the command prompt, example:
 $ php api_to_html.php
@@ -19,8 +20,8 @@ Syntax docs available at:
 * http://michelf.com/projects/php-markdown/extra/
 
 
-# api_consider.php ############################################################
+# api_concisor.php ############################################################
 
 Reduces the API docs into a list of functions.
 
-
+// WORK IN PROGRESS, CURRENTLY NOT FUNCTIONAL...
