@@ -25,12 +25,12 @@ Do not try to execute this file. It uses a .lua extension for markup only.
 -- Currently there are two ways to to create custom views:
 --
 -- Shows a modal dialog with a title, custom content and custom button labels:
-app():show_custom_prompt(title, content_view, {button_labels} [,key_handler_func])
+renoise.app():show_custom_prompt(title, content_view, {button_labels} [,key_handler_func])
   -> [pressed button]
 
 -- _(and)_ Shows a non modal dialog, a floating tool window, with custom
 -- content:
-app():show_custom_dialog(title, content_view [, key_handler_func])
+renoise.app():show_custom_dialog(title, content_view [, key_handler_func])
   -> [dialog object]
 
 -- key_handler_func is optional. When defined, it should point to a function
