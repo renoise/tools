@@ -749,7 +749,7 @@ renoise.DeviceParameter.POLARITY_BIPOLAR
 -- Set a new value and write automation when the MIDI mapping
 -- "record to automation" option is set. Only works for parameters
 -- of track devices, not for instrument devices.
-renoise.song().tracks[].devices[].parameters[].record_value(value)
+renoise.song().tracks[].devices[].parameters[]:record_value(value)
 
 
 -------- Properties
@@ -1062,15 +1062,15 @@ renoise.song().instruments[].samples[].sample_buffer, _observable
 -- count. Will trash existing sample data. Initial buffer is all zero.
 -- Will only return false when memory allocation fails (you're running out
 -- of memory). All other errors are fired as usual.
-renoise.song().instruments[].samples[].sample_buffer.create_sample_data(
+renoise.song().instruments[].samples[].sample_buffer:create_sample_data(
   sample_rate, bit_depth, num_channels, num_frames)
     -> [boolean - success]
 
 -- Delete existing sample data.
-renoise.song().instruments[].samples[].sample_buffer.delete_sample_data()
+renoise.song().instruments[].samples[].sample_buffer:delete_sample_data()
 
 -- Read access to samples in a sample data buffer.
-renoise.song().instruments[].samples[].sample_buffer.sample_data(
+renoise.song().instruments[].samples[].sample_buffer:sample_data(
   channel_index, frame_index)
   -> [float -1 - 1]
 
@@ -1079,13 +1079,13 @@ renoise.song().instruments[].samples[].sample_buffer.sample_data(
 -- IMPORTANT: before modifying buffers, call 'prepare_sample_data_changes'.
 -- When you are done, call 'finalize_sample_data_changes' to generate undo/redo
 -- data for your changes and update sample overview caches!
-renoise.song().instruments[].samples[].sample_buffer.set_sample_data(
+renoise.song().instruments[].samples[].sample_buffer:set_sample_data(
   channel_index, frame_index, sample_value)
 
 -- To be called once BEFORE sample data gets manipulated via 'set_sample_data'.
 -- This will prepare undo/redo data for the whole sample. See also
 -- 'finalize_sample_data_changes'.
-renoise.song().instruments[].samples[].sample_buffer.prepare_sample_data_changes()
+renoise.song().instruments[].samples[].sample_buffer:prepare_sample_data_changes()
 
 -- To be called once AFTER the sample data is manipulated via 'set_sample_data'.
 -- This will create undo/redo data for the whole sample, and also  update the
@@ -1093,16 +1093,16 @@ renoise.song().instruments[].samples[].sample_buffer.prepare_sample_data_changes
 -- invoked is to avoid performance overhead when changing sample data 'sample by
 -- sample'. Don't forget to call this after any data changes, or changes may not
 -- be visible in the GUI and can not be un/redone!
-renoise.song().instruments[].samples[].sample_buffer.finalize_sample_data_changes()
+renoise.song().instruments[].samples[].sample_buffer:finalize_sample_data_changes()
 
 -- Load sample data from a file. Files can be any audio format Renoise supports.
 -- Possible errors are shown to the user, otherwise success is returned.
-renoise.song().instruments[].samples[].sample_buffer.load_from(filename)
+renoise.song().instruments[].samples[].sample_buffer:load_from(filename)
   -> [boolean - success]
 
 -- Export sample data to a file. Possible errors are shown to the user,
 -- otherwise success is returned. Valid export types are 'wav' or 'flac'.
-renoise.song().instruments[].samples[].sample_buffer.save_as(filename, format)
+renoise.song().instruments[].samples[].sample_buffer:save_as(filename, format)
   -> [boolean - success]
 
 
@@ -1159,7 +1159,7 @@ renoise.Pattern.MAX_NUMBER_OF_LINES
 renoise.song().patterns[]:clear()
 
 -- Copy contents from other patterns, including automation, when possible.
-renoise.song().patterns[].copy_from(other_pattern object)
+renoise.song().patterns[]:copy_from(other_pattern object)
 
 
 -- Check/add/remove notifier functions or methods, which are called by Renoise
