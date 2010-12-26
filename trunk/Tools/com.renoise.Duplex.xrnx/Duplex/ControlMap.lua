@@ -115,7 +115,7 @@ function ControlMap:parse_definition(control_map_name, xml_string)
   local succeeded, result = pcall(function() 
     -- remove comments before parsing
     xml_string = string.gsub (xml_string, "(<!--.-->)", "")
-    return self:__parse_xml(xml_string) 
+    return self:_parse_xml(xml_string) 
   end)
   
   if (succeeded) then
@@ -143,16 +143,6 @@ function ControlMap:get_indexed_element(index,group_name)
 
   return nil
 end
-
---------------------------------------------------------------------------------
-
-function ControlMap:get_group_size(group_name)
-  TRACE("ControlMap:get_group_size",group_name)
-
-  return #self.groups[group_name]
-
-end
-
 
 --------------------------------------------------------------------------------
 
@@ -305,6 +295,91 @@ end
 
 --------------------------------------------------------------------------------
 
+-- get number of parameters in group
+
+function ControlMap:get_group_size(group_name)
+  TRACE("ControlMap:get_group_size",group_name)
+
+  return #self.groups[group_name]
+
+end
+
+--------------------------------------------------------------------------------
+
+-- get width/height of provided group
+-- also used for checking if a control-map group is a grid 
+-- @match_grid (boolean) only match groups with column attribute
+-- @return width/height or nil if not matched
+
+function ControlMap:get_group_dimensions(group_name)
+  
+  local group = self.groups[group_name]
+  if (group) then
+    for attr, param in pairs(group) do
+      if (attr == "xarg") then
+        local width = tonumber(param["columns"])
+        local height = math.ceil(#group / width)
+        return width,height
+      end
+    end
+  end
+end
+
+--[[
+function ControlMap:get_group_dimensions(group_name,match_grid)
+  
+  local group = self.groups[group_name]
+  if (group) then
+    for attr, param in pairs(group) do
+      if (attr == "xarg") then
+        if (match_grid) and (not param["columns"]) then
+          return
+        end
+        local width = tonumber(param["columns"])
+        local height = math.ceil(#group / width)
+        return width,height
+      end
+    end
+  end
+end
+]]
+
+--------------------------------------------------------------------------------
+
+-- test if the group describe a grid (columns, with each member being a button)
+-- @return boolean
+
+function ControlMap:is_grid_group(group_name)
+  
+  local is_grid = true
+  local group = self.groups[group_name]
+  if (group) then
+    -- look for "columns" group attribute
+    for attr, param in pairs(group) do
+      if (attr == "xarg") then
+        if (not param["columns"]) then
+          return false
+        end
+      end
+    end
+    -- check parameter type
+    for _, param in ipairs(group) do
+      if (param["xarg"] and param["xarg"]["type"]) then
+        if not (param["xarg"]["type"]=="button") and
+           not (param["xarg"]["type"]=="togglebutton") and
+           not (param["xarg"]["type"]=="pushbutton") 
+        then
+          return false
+        end
+      end
+    end
+    return true
+  end
+
+end
+
+--------------------------------------------------------------------------------
+
 function ControlMap:read_file(file_path)
   TRACE("ControlMap:read_file",file_path)
 
@@ -320,7 +395,6 @@ function ControlMap:read_file(file_path)
   end
 
 end
-
 
 --------------------------------------------------------------------------------
 
@@ -360,8 +434,8 @@ end
 -- Parse the control-map, and add runtime
 -- information (element id's and group names)
 
-function ControlMap:__parse_xml(s)
-  TRACE('ControlMap:__parse_xml(...)')
+function ControlMap:_parse_xml(s)
+  TRACE('ControlMap:_parse_xml(...)')
 
   local stack = {}
   local top = {}

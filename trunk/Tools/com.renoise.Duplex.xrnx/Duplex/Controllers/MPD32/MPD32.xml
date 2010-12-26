@@ -1,0 +1,71 @@
+<Device>
+	<Name>Akai MPD32</Name>
+	<Author>murkey</Author>
+	<Description>Controlmap for Akai MPD32</Description>
+	<Parameters>
+		<Row>        
+			<Column>
+				<Row>
+					<Column>
+						<Group name="Faders" orientation="horizontal">
+						  <Param value="CC#20" type="fader" name="F1"  orientation="vertical" size="3"  maximum="127" minimum="0"/>
+						  <Param value="CC#21" type="fader" name="F2"  orientation="vertical" size="3"  maximum="127" minimum="0"/>
+						  <Param value="CC#22" type="fader" name="F3"  orientation="vertical" size="3"  maximum="127" minimum="0"/>
+						  <Param value="CC#23" type="fader" name="F4"  orientation="vertical" size="3"  maximum="127" minimum="0"/>
+						  <Param value="CC#24" type="fader" name="F5"  orientation="vertical" size="3"  maximum="127" minimum="0"/>
+						  <Param value="CC#25" type="fader" name="F6"  orientation="vertical" size="3"  maximum="127" minimum="0"/>
+						  <Param value="CC#26" type="fader" name="F7"  orientation="vertical" size="3"  maximum="127" minimum="0"/>
+						  <Param value="CC#27" type="fader" name="F8"  orientation="vertical" size="3"  maximum="127" minimum="0"/>
+						</Group>
+						<Group name="Switches" orientation="horizontal">
+						  <Param value="CC#28" type="button" name="S1"  maximum="127" minimum="0"/>
+						  <Param value="CC#29" type="button" name="S2"  maximum="127" minimum="0"/>
+						  <Param value="CC#30" type="button" name="S3"  maximum="127" minimum="0"/>
+						  <Param value="CC#31" type="button" name="S4"  maximum="127" minimum="0"/>
+						  <Param value="CC#35" type="button" name="S5"  maximum="127" minimum="0"/>
+						  <Param value="CC#41" type="button" name="S6"  maximum="127" minimum="0"/>
+						  <Param value="CC#46" type="button" name="S7"  maximum="127" minimum="0"/>
+						  <Param value="CC#47" type="button" name="S8"  maximum="127" minimum="0"/>
+						</Group>
+					</Column>
+				</Row>
+				<Row>
+					<Group name="Unassigned" orientation="vertical">
+					  <Param value="/" type="button" name="" maximum="127" minimum="0"/>
+					  <Param value="/" type="button" name="" maximum="127" minimum="0"/>
+					  <Param value="/" type="button" name="" maximum="127" minimum="0"/>
+					</Group>
+
+					<Group name="Pads" columns="4">
+					  <Param value="C-4" type="button" name="Pad 13" size="1.7" maximum="127" minimum="0"/>
+					  <Param value="C#4" type="button" name="Pad 14" size="1.7" maximum="127" minimum="0"/>
+					  <Param value="D-4" type="button" name="Pad 15" size="1.7" maximum="127" minimum="0"/>
+					  <Param value="D#4" type="button" name="Pad 16" size="1.7" maximum="127" minimum="0"/>
+					  <Param value="G#3" type="button" name="Pad 9"  size="1.7" maximum="127" minimum="0"/>
+					  <Param value="A-3" type="button" name="Pad 10" size="1.7" maximum="127" minimum="0"/>
+					  <Param value="A#3" type="button" name="Pad 11" size="1.7" maximum="127" minimum="0"/>
+					  <Param value="B-3" type="button" name="Pad 12" size="1.7" maximum="127" minimum="0"/>
+					  <Param value="E-3" type="button" name="Pad 5"  size="1.7" maximum="127" minimum="0"/>
+					  <Param value="F-3" type="button" name="Pad 6"  size="1.7" maximum="127" minimum="0"/>
+					  <Param value="F#3" type="button" name="Pad 7"  size="1.7" maximum="127" minimum="0"/>
+					  <Param value="G-3" type="button" name="Pad 8"  size="1.7" maximum="127" minimum="0"/>
+					  <Param value="C-3" type="button" name="Pad 1"  size="1.7" maximum="127" minimum="0"/>
+					  <Param value="C#3" type="button" name="Pad 2"  size="1.7" maximum="127" minimum="0"/>
+					  <Param value="D-3" type="button" name="Pad 3"  size="1.7" maximum="127" minimum="0"/>
+					  <Param value="D#3" type="button" name="Pad 4"  size="1.7" maximum="127" minimum="0"/>
+					</Group>
+					<Group name="Knobs" orientation="horizontal" columns="4">
+						<Param value="CC#3"  type="dial" name="K1" size="1.3" maximum="127" minimum="0"/>
+						<Param value="CC#9"  type="dial" name="K2" size="1.3" maximum="127" minimum="0"/>
+						<Param value="CC#14" type="dial" name="K3" size="1.3" maximum="127" minimum="0"/>
+						<Param value="CC#15" type="dial" name="K4" size="1.3" maximum="127" minimum="0"/>
+						<Param value="CC#16" type="dial" name="K5" size="1.3" maximum="127" minimum="0"/>
+						<Param value="CC#17" type="dial" name="K6" size="1.3" maximum="127" minimum="0"/>
+						<Param value="CC#18" type="dial" name="K7" size="1.3" maximum="127" minimum="0"/>
+						<Param value="CC#19" type="dial" name="K8" size="1.3" maximum="127" minimum="0"/>
+					</Group>
+				</Row>
+			</Column>
+		</Row>
+	</Parameters>
+</Device>

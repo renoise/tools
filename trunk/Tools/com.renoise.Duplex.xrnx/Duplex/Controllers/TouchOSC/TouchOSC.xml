@@ -2,7 +2,8 @@
 <Device>
 	<Name>TouchOSC</Name>
 	<Author>Danoise</Author>
-	<Description>Controlmap for TouchOSC (simple layout)</Description>
+	<Description>Controlmap for TouchOSC (simple layout)
+Note that XY controllers are not yet implemented in Duplex</Description>
 	<Parameters>
 		<Row>
 			<Page>
@@ -33,28 +34,28 @@
 			<Page>
 				<Column>
 					<Group name="2_TriggerPad" columns="4">
-						<Param value="/1/push1 %i" type="button" name="1_push1" maximum="1" minimum="0" />
-						<Param value="/1/push2 %i" type="button" name="1_push2" maximum="1" minimum="0" />
-						<Param value="/1/push3 %i" type="button" name="1_push3" maximum="1" minimum="0" />
-						<Param value="/1/push4 %i" type="button" name="1_push4" maximum="1" minimum="0" />
-						<Param value="/1/push5 %i" type="button" name="1_push5" maximum="1" minimum="0" />
-						<Param value="/1/push6 %i" type="button" name="1_push6" maximum="1" minimum="0" />
-						<Param value="/1/push7 %i" type="button" name="1_push7" maximum="1" minimum="0" />
-						<Param value="/1/push8 %i" type="button" name="1_push8" maximum="1" minimum="0" />
-						<Param value="/1/push9 %i" type="button" name="1_push9" maximum="1" minimum="0" />
-						<Param value="/1/push10 %i" type="button" name="1_push10" maximum="1" minimum="0" />
-						<Param value="/1/push11 %i" type="button" name="1_push11" maximum="1" minimum="0" />
-						<Param value="/1/push12 %i" type="button" name="1_push12" maximum="1" minimum="0" />
-						<Param value="/1/push13 %i" type="button" name="1_push13" maximum="1" minimum="0" />
-						<Param value="/1/push14 %i" type="button" name="1_push14" maximum="1" minimum="0" />
-						<Param value="/1/push15 %i" type="button" name="1_push15" maximum="1" minimum="0" />
-						<Param value="/1/push16 %i" type="button" name="1_push16" maximum="1" minimum="0" />
+						<Param value="/2/push1 %i" type="pushbutton" name="1_push1" maximum="1" minimum="0" />
+						<Param value="/2/push2 %i" type="pushbutton" name="1_push2" maximum="1" minimum="0" />
+						<Param value="/2/push3 %i" type="pushbutton" name="1_push3" maximum="1" minimum="0" />
+						<Param value="/2/push4 %i" type="pushbutton" name="1_push4" maximum="1" minimum="0" />
+						<Param value="/2/push5 %i" type="pushbutton" name="1_push5" maximum="1" minimum="0" />
+						<Param value="/2/push6 %i" type="pushbutton" name="1_push6" maximum="1" minimum="0" />
+						<Param value="/2/push7 %i" type="pushbutton" name="1_push7" maximum="1" minimum="0" />
+						<Param value="/2/push8 %i" type="pushbutton" name="1_push8" maximum="1" minimum="0" />
+						<Param value="/2/push9 %i" type="pushbutton" name="1_push9" maximum="1" minimum="0" />
+						<Param value="/2/push10 %i" type="pushbutton" name="1_push10" maximum="1" minimum="0" />
+						<Param value="/2/push11 %i" type="pushbutton" name="1_push11" maximum="1" minimum="0" />
+						<Param value="/2/push12 %i" type="pushbutton" name="1_push12" maximum="1" minimum="0" />
+						<Param value="/2/push13 %i" type="pushbutton" name="1_push13" maximum="1" minimum="0" />
+						<Param value="/2/push14 %i" type="pushbutton" name="1_push14" maximum="1" minimum="0" />
+						<Param value="/2/push15 %i" type="pushbutton" name="1_push15" maximum="1" minimum="0" />
+						<Param value="/2/push16 %i" type="pushbutton" name="1_push16" maximum="1" minimum="0" />
 					</Group>
 					<Group name="2_Buttons" >
-						<Param value="/1/toggle1 %i" type="togglebutton" name="1_toggle1" maximum="1" minimum="0" />
-						<Param value="/1/toggle2 %i" type="togglebutton" name="1_toggle2" maximum="1" minimum="0" />
-						<Param value="/1/toggle3 %i" type="togglebutton" name="1_toggle3" maximum="1" minimum="0" />
-						<Param value="/1/toggle4 %i" type="togglebutton" name="1_toggle4" maximum="1" minimum="0" />							
+						<Param value="/2/toggle1 %i" type="togglebutton" name="1_toggle1" maximum="1" minimum="0" />
+						<Param value="/2/toggle2 %i" type="togglebutton" name="1_toggle2" maximum="1" minimum="0" />
+						<Param value="/2/toggle3 %i" type="togglebutton" name="1_toggle3" maximum="1" minimum="0" />
+						<Param value="/2/toggle4 %i" type="togglebutton" name="1_toggle4" maximum="1" minimum="0" />							
 					</Group>
 				</Column>
 			</Page>

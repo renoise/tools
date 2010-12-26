@@ -114,10 +114,10 @@ function OscDevice:socket_message(socket, binary_data)
   
   if (message_or_bundle) then
     local messages = table.create()
-    self:__unpack_messages(message_or_bundle, messages)
+    self:_unpack_messages(message_or_bundle, messages)
 
     for _,msg in pairs(messages) do
-      local value_str = self:__msg_to_string(msg)
+      local value_str = self:_msg_to_string(msg)
 
       -- (only if defined) check the prefix:
       -- ignore messages that doesn't match our prefix
@@ -136,7 +136,7 @@ function OscDevice:socket_message(socket, binary_data)
           local message = Message()
           message.context = OSC_MESSAGE
           message.value = val
-          self:__send_message(message,param["xarg"])
+          self:_send_message(message,param["xarg"])
         end
       end
     end
@@ -240,26 +240,27 @@ end
 
 -- Convert the point to an output value
 -- @param pt (CanvasPoint)
--- @param maximum/minimum - attribute from control-map
+-- @param elm - control-map parameter
 -- @param ceiling - the UIComponent ceiling value
 
-function OscDevice:point_to_value(pt,maximum,minimum,ceiling)
-  TRACE("OscDevice:point_to_value()",pt,maximum,minimum,ceiling)
+function OscDevice:point_to_value(pt,elm,ceiling)
+  TRACE("OscDevice:point_to_value()",pt,elm,ceiling)
 
   local value
 
   if (type(pt.val) == "boolean") then
+
     if (pt.val) then
-      value = maximum
+      value = elm.maximum
     else
-      value = minimum
+      value = elm.minimum
     end
 
   else
     -- scale the value from "local" to "external"
     -- for instance, from Renoise dB range (1.4125375747681) 
     -- to a 7-bit controller value (127)
-    value = (pt.val * (1 / ceiling)) * maximum
+    value = (pt.val * (1 / ceiling)) * elm.maximum
   end
 
   return tonumber(value)
@@ -274,8 +275,8 @@ end
 -- when message_or_bundle is a single message, only this one will be added
 -- to the given message list
 
-function OscDevice:__unpack_messages(message_or_bundle, messages)
-   --TRACE("OscDevice:__unpack_messages()",message_or_bundle)
+function OscDevice:_unpack_messages(message_or_bundle, messages)
+   --TRACE("OscDevice:_unpack_messages()",message_or_bundle)
    
    if (type(message_or_bundle) == "Message") then
      messages:insert(message_or_bundle)
@@ -283,7 +284,7 @@ function OscDevice:__unpack_messages(message_or_bundle, messages)
    elseif (type(message_or_bundle) == "Bundle") then
      for _,element in pairs(message_or_bundle.elements) do
        -- bundles may contain messages or other bundles
-       self:__unpack_messages(element, messages)
+       self:_unpack_messages(element, messages)
      end
    
    else
@@ -299,8 +300,8 @@ end
 -- create string representation of OSC message:
 -- e.g. "/this/is/the/pattern 1 2 3"
 
-function OscDevice:__msg_to_string(msg)
-  --TRACE("OscDevice:__msg_to_string()",msg)
+function OscDevice:_msg_to_string(msg)
+  --TRACE("OscDevice:_msg_to_string()",msg)
 
   local rslt = msg.pattern
   for k,v in ipairs(msg.arguments) do

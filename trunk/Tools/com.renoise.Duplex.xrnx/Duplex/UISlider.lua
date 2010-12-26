@@ -11,9 +11,9 @@ Requires: Globals, Display, CanvasPoint
 
 About
 
-The Slider supports different input methods: buttons or sliders/encoders
+The Slider supports different input methods: buttons or faders/dials
 - - use buttons to quantize the slider input
-- - use faders/encoders to divide value into smaller segments
+- - use faders/dials to divide value into smaller segments
 - supports horizontal/vertical and axis flipping
 - display as normal/dimmed version (if supported in hardware)
 - minimum size: 1
@@ -41,7 +41,7 @@ Usage
   slider.toggleable = true
   slider.inverted = false
   slider.ceiling = 10
-  slider.orientation = VERTICAL
+  slider:set_orientation(VERTICAL)
   slider:set_size(4)
   slider.on_change = function(obj) 
     -- on_change needs to be specified, if we
@@ -62,30 +62,48 @@ function UISlider:__init(display)
 
   UIComponent.__init(self,display)
 
-  -- the selected index (0 is deselected)
-  self.index = 0
+  -- current value, between 0 and .ceiling
+  self.value = nil
 
-  -- default size is 0 (this will always draw)
-  self.size = 0
+  -- TODO the minimum value (the opposite of ceiling)
+  -- self.floor = 0
+
+  -- set the number of steps to quantize the value
+  -- (this value is automatically set when we assign a size,
+  -- for easy support of the button input method)
+  self.steps = 1
+
+  -- the selected index, between 0 - number of steps
+  self.index = nil
 
   -- if true, press twice to switch to deselected state
   -- only applies when input method is a button
   self.toggleable = false
 
   -- paint a dimmed version
+  -- only applies when input method is a button
   self.dimmed = false
 
-  -- current value (sliders/encoders offer more precision)
-  self.value = 0
-
-  -- slider is vertical or horizontal?
-  self.orientation = VERTICAL 
+  -- set this mode to ensure that slider is always displayed 
+  -- correctly when using an array of buttons 
+  -- (normally, this is not a problem, but when a slider is 
+  -- resized to a single unit, this is the only way it will be 
+  -- able to tell that it's a button)
+  self.button_mode = false
 
   -- flip top/bottom direction 
   self.flipped = false
 
-  -- default UIComponent size
-  self:set_size(1)
+  -- slider is vertical or horizontal?
+  -- (use set_orientation() method to set this value)
+  self._orientation = VERTICAL 
+
+  -- the 'physical' size (should always be 1 for dials/faders)
+  -- (use set_size() method to set this value)
+  self._size = 1
+
+  -- apply size 
+  self:set_size(self._size)
   
   -- default palette
   self.palette = {
@@ -97,11 +115,12 @@ function UISlider:__init(display)
   }
 
   -- internal values
-  self.__cached_index = self.index
-  self.__cached_value = self.value
+  self._cached_index = self.index
+  self._cached_value = self.value
 
   -- attach ourself to the display message stream
   self:add_listeners()
+
 end
 
 
@@ -111,6 +130,8 @@ end
 -- set index
 
 function UISlider:do_press()
+  TRACE("UISlider:do_press()")
+
   local msg = self:get_msg()
 
   if not (self.group_name == msg.group_name) then
@@ -121,36 +142,59 @@ function UISlider:do_press()
     return
   end
 
-  local idx = self:__determine_index_by_pos(msg.column, msg.row)
+  local idx = self:_determine_index_by_pos(msg.column, msg.row)
   if (self.toggleable and self.index == idx) then
     idx = 0
   end
 
   self.set_index(self,idx)
+
 end
 
 
 --------------------------------------------------------------------------------
 
--- user input via slider, encoder: 
--- set index + precise value within the index
+-- user input via button(s)
+-- the release handler is here to force-update controls   
+-- that handle their internal state automatically
 
-function UISlider:do_change()
-  TRACE("Slider:do_change()")
+function UISlider:do_release()
+  TRACE("UISlider:do_press()")
 
   local msg = self:get_msg()
-  
   if not (self.group_name == msg.group_name) then
     return
   end
-  
+  if not (self:test(msg.column, msg.row)) then
+    return
+  end
+  if (msg.input_method == CONTROLLER_PUSHBUTTON) then
+    self.canvas.delta = table.rcopy(self.canvas.buffer)
+    self.canvas.has_changed = true
+    self:invalidate()
+  end
+
+end
+
+--------------------------------------------------------------------------------
+
+-- user input via slider, dial: 
+-- set index + precise value within the index
+
+function UISlider:do_change()
+  --TRACE("UISlider:do_change()")
+
+  local msg = self:get_msg()
+
+  if not (self.group_name == msg.group_name) then
+    return
+  end
   if not self:test(msg.column,msg.row) then
     return
   end
-  
   -- scale from the message range to the sliders range
-  local tmp = (msg.value / msg.max) * self.ceiling / self.size
-  self:set_value(tmp)
+  local val = (msg.value / msg.max) * self.ceiling
+  self:set_value(val)
 end
 
 
@@ -161,23 +205,22 @@ end
 -- @skip_event (boolean) skip event handler
 
 function UISlider:set_value(val,skip_event)
-  TRACE("UISlider:set_value:",val)
+  TRACE("UISlider:set_value()",val,skip_event)
 
-  local idx = math.ceil((self.size/self.ceiling)*val)
-  local rslt = false
-
-  if (self.__cached_index ~= idx) or
-     (self.__cached_value ~= val) 
+  local idx = math.abs(math.ceil(((self.steps/self.ceiling)*val)-0.5))
+  if (self._cached_index ~= idx) or
+     (self._cached_value ~= val) 
   then
-    self.__cached_index = idx
-    self.__cached_value = val
+    self._cached_index = idx
+    self._cached_value = val
     self.value = val
     self.index = idx
-    
-    self:invalidate()
+    --TRACE("UISlider:set_value() - resulting index",self.index)
 
-    if (not skip_event) then
-      self:__invoke_handler()
+    if (skip_event) then
+      self:invalidate()
+    else
+      self:_invoke_handler()
     end
   end  
 end
@@ -190,19 +233,23 @@ end
 -- @skip_event (boolean) skip event handler
 
 function UISlider:set_index(idx,skip_event)
-  TRACE("UISlider:set_index:",idx)
+  TRACE("UISlider:set_index()",idx,skip_event)
 
   -- todo: cap value
   local rslt = false
-  if (self.__cached_index ~= idx) then
-    self.__cached_index = idx
-    self.__cached_value = self.value
+  if (self._cached_index ~= idx) then
+    self._cached_index = idx
+    self._cached_value = self.value
     self.index = idx
-    self.value = (self.ceiling/self.size)*idx
-  
-    if (not skip_event) then
-      self:__invoke_handler()
+    self.value = (idx==0) and 0 or (self.ceiling/self.steps)*idx
+    --TRACE("UISlider:set_index() - resulting value",self.value)
+
+    if (skip_event) then
+      self:invalidate()
+    else
+      self:_invoke_handler()
     end
+
   end
 end
 
@@ -217,6 +264,23 @@ end
 
 
 --------------------------------------------------------------------------------
+
+function UISlider:set_orientation(value)
+  TRACE("UISlider:set_orientation",value)
+
+  if (value == HORIZONTAL) or (value == VERTICAL) then
+    self._orientation = value
+    self:set_size(self._size) -- update canvas
+  end
+end
+
+function UISlider:get_orientation()
+  TRACE("UISlider:get_orientation()")
+  return self._orientation
+end
+
+
+--------------------------------------------------------------------------------
 -- Overridden from UIComponent
 --------------------------------------------------------------------------------
 
@@ -224,12 +288,15 @@ end
 -- @size (integer)
 
 function UISlider:set_size(size)
-  self.size = size
+  TRACE("UISlider:set_size",size)
 
-  if (self.orientation == VERTICAL) then
+  self.steps = size
+  self._size = size
+
+  if (self._orientation == VERTICAL) then
     UIComponent.set_size(self, 1, size)
   else
-    assert(self.orientation == HORIZONTAL, 
+    assert(self._orientation == HORIZONTAL, 
       "Internal Error. Please report: unexpected UI orientation")
       
     UIComponent.set_size(self, size, 1)
@@ -239,65 +306,82 @@ end
 
 --------------------------------------------------------------------------------
 
+-- update the UIComponent canvas
+
 function UISlider:draw()
-  TRACE("UISlider:draw:", self.index)
-  
-  local idx = self.index
+  TRACE("UISlider:draw()")
 
-  if (not self.flipped) then
-    idx = self.size - idx + 1
-  end
-
-  for i = 1,self.size do
-    local x,y = 1,1
-
+  if (self._size==1) and not (self.button_mode) then
+    -- update dial/fader 
     local point = CanvasPoint()
-    point:apply(self.palette.background)
-    point.val = false      
+    point.val = self.value
+    self.canvas:write(point, 1, 1)
+  else
+    -- update button array
+    local idx = self.index
+    if idx then
 
-    if (idx) then
-      local apply_track = false
-      if (i == idx) then
-        -- figure out the offset within the "step",
-        -- going from 0 to .ceiling value
-        local step = self.ceiling/self.size
-        local offset = self.value-(step*(self.index-1))
-        point.val = offset * (1 / step) * self.ceiling
-        point:apply((self.dimmed) and 
-          self.palette.tip_dimmed or self.palette.tip)
+      if (not self.flipped) then
+        idx = self._size - idx + 1
+      end
 
-      elseif (self.flipped) then
-        if (i <= idx)then
+      for i = 1,self._size do
+        local x,y = 1,1
+
+        local point = CanvasPoint()
+        point:apply(self.palette.background)
+        point.val = false      
+
+        local apply_track = false
+
+        if (i == idx) then
+          -- update the tip of the slider
+          -- ensure that monochrome devices get this right! 
+          local color = self.palette.tip.color
+          local quantized = self._display.device:quantize_color(color)
+          if(quantized[1]>0x00)then
+            point.val = true        
+          else
+            point.val = false        
+          end
+          --point.val = true
+          point:apply((self.dimmed) and 
+            self.palette.tip_dimmed or self.palette.tip)
+        elseif (self.flipped) then
+          if (i <= idx)then
+            apply_track = true
+          end
+        elseif ((self._size - i) < self.index) then
           apply_track = true
         end
-
-      elseif ((self.size - i) < self.index) then
-        apply_track = true
-      end
-      
-      if(apply_track)then
-        -- if the color is completely dark, this is also how
-        -- LED buttons will represent the value (turned off)
-        if(get_color_average(self.palette.track.color)>0x00)then
-          point.val = true        
-        else
-          point.val = false        
+        
+        if(apply_track)then
+          local color = self.palette.track.color
+          local quantized = self._display.device:quantize_color(color)
+          if(quantized[1]>0x00)then
+            point.val = true        
+          else
+            point.val = false        
+          end
+          point:apply((self.dimmed) and 
+            self.palette.track_dimmed or self.palette.track)
         end
-        point:apply((self.dimmed) and 
-          self.palette.track_dimmed or self.palette.track)
-      end
-    end
 
-    if (self.orientation == VERTICAL) then 
-      y = i
-    else
-      x = i  
+        if (self._orientation == VERTICAL) then 
+          y = i
+        else
+          x = i  
+        end
+
+        self.canvas:write(point, x, y)
+
+      end
+
     end
-    
-    self.canvas:write(point, x, y)
   end
 
   UIComponent.draw(self)
+
 end
 
 
@@ -305,13 +389,17 @@ end
 
 function UISlider:add_listeners()
 
-  self.__display.device.message_stream:add_listener(
+  self._display.device.message_stream:add_listener(
     self,DEVICE_EVENT_BUTTON_PRESSED,
     function() self:do_press() end )
 
-  self.__display.device.message_stream:add_listener(
+  self._display.device.message_stream:add_listener(
     self,DEVICE_EVENT_VALUE_CHANGED,
     function() self:do_change() end )
+
+  self._display.device.message_stream:add_listener(
+    self,DEVICE_EVENT_BUTTON_RELEASED,
+    function() self:do_release() end )
 
 end
 
@@ -320,11 +408,15 @@ end
 
 function UISlider:remove_listeners()
 
-  self.__display.device.message_stream:remove_listener(
+  self._display.device.message_stream:remove_listener(
     self,DEVICE_EVENT_BUTTON_PRESSED)
 
-  self.__display.device.message_stream:remove_listener(
+  self._display.device.message_stream:remove_listener(
     self,DEVICE_EVENT_VALUE_CHANGED)
+
+  self._display.device.message_stream:remove_listener(
+    self,DEVICE_EVENT_BUTTON_RELEASED)
+
 
 end
 
@@ -337,15 +429,15 @@ end
 -- @column (integer)
 -- @row (integer)
 
-function UISlider:__determine_index_by_pos(column,row)
+function UISlider:_determine_index_by_pos(column,row)
 
   local idx,offset
 
-  if (self.orientation == VERTICAL) then
+  if (self._orientation == VERTICAL) then
     idx = row
     offset = self.y_pos
   else
-    assert(self.orientation == HORIZONTAL, 
+    assert(self._orientation == HORIZONTAL, 
       "Internal Error. Please report: unexpected UI orientation")
       
     idx = column
@@ -353,7 +445,7 @@ function UISlider:__determine_index_by_pos(column,row)
   end
 
   if not (self.flipped) then
-    idx = (self.size-idx+offset)
+    idx = (self._size-idx+offset)
   else
     idx = idx-offset+1
   end
@@ -366,14 +458,14 @@ end
 
 -- trigger the external handler method
 
-function UISlider:__invoke_handler()
+function UISlider:_invoke_handler()
 
   if (self.on_change == nil) then return end
 
   local rslt = self:on_change()  
   if (rslt==false) then  -- revert
-    self.index = self.__cached_index    
-    self.value = self.__cached_value  
+    self.index = self._cached_index    
+    self.value = self._cached_value  
   else
     self:invalidate()
   end

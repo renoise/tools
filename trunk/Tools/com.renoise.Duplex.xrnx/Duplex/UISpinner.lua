@@ -67,13 +67,13 @@ function UISpinner:__init(display)
   }
   
   -- draw vertical or horizontal?
-  self.__orientation = HORIZONTAL 
+  self._orientation = HORIZONTAL 
 
   -- internal stuff
-  self.__cached_index = self.index
+  self._cached_index = self.index
 
-  self.__size = 2
-  self:set_size(self.__size)
+  self._size = 2
+  self:set_size(self._size)
 
   -- attach ourself to the display message stream
   self:add_listeners()
@@ -82,7 +82,7 @@ end
 
 --------------------------------------------------------------------------------
 
--- user input via slider, encoder,
+-- user input via fader, dial,
 -- set index from entire range
 
 function UISpinner:do_change()
@@ -106,7 +106,7 @@ function UISpinner:do_change()
 
   if (index ~= self.index) then
     self.index = index
-    self:__invoke_handler()
+    self:_invoke_handler()
   end
 
 end
@@ -131,13 +131,12 @@ function UISpinner:do_press()
     end
     
     local changed = false
-    local idx = self:__determine_index_by_pos(msg.column,msg.row)
-
+    local idx = self:_determine_index_by_pos(msg.column,msg.row)
     -- increase/decrease index
     if (idx == 1) then
       if (self.index > self.minimum) then
-        self.__cached_index = self.index
-        self.index = self.index - self.step_size
+        self._cached_index = self.index
+        self.index = math.floor(self.index-self.step_size)
         
         if (self.index < self.minimum) then
           self.index = self.minimum
@@ -148,8 +147,8 @@ function UISpinner:do_press()
     
     elseif (idx == 2)then
       if (self.index < self.maximum) then
-        self.__cached_index = self.index
-        self.index = self.index + self.step_size
+        self._cached_index = self.index
+        self.index = math.floor(self.index+self.step_size)
         
         if (self.index > self.maximum) then
           self.index = self.maximum
@@ -163,9 +162,10 @@ function UISpinner:do_press()
         "expected a spinner index of 1 or 2"))
     end
 
+
     if (changed) then
       self.value = self.index
-      self:__invoke_handler()
+      self:_invoke_handler()
     end
 
     if (msg.input_method == CONTROLLER_TOGGLEBUTTON) then
@@ -184,17 +184,22 @@ function UISpinner:set_orientation(value)
   TRACE("UISpinner:set_orientation",value)
 
   if (value == HORIZONTAL) or (value == VERTICAL) then
-    self.__orientation = value
-    self:set_size(self.__size) -- update canvas
+    self._orientation = value
+    self:set_size(self._size) -- update canvas
   end
 end
 
-
+function UISpinner:get_orientation()
+  TRACE("UISpinner:get_orientation()")
+  return self._orientation
+end
 
 --------------------------------------------------------------------------------
 
 -- set a new value range, clipping the current index when needed
 -- you can set just one value, since we skip nil values
+-- @minimum (integer)
+-- @maximum (integer)
 
 function UISpinner:set_range(minimum,maximum)
   TRACE("UISpinner:set_range",minimum,maximum)
@@ -226,6 +231,7 @@ function UISpinner:set_range(minimum,maximum)
 
     self:invalidate()
   end
+
 end
   
   
@@ -237,13 +243,18 @@ end
 
 function UISpinner:set_index(idx, skip_event_handler)
   TRACE("UISpinner:set_index",idx, skip_event_handler)
-  assert(idx >= self.minimum and idx <= self.maximum, 
-    "Internal Error. Please report: invalid index for a spinner")
+  --assert(idx >= self.minimum and idx <= self.maximum, 
+  --  "Internal Error. Please report: invalid index for a spinner")
+
+  if(idx < self.minimum or idx > self.maximum)then
+    print("Notice: tried to set an invalid index for a UISpinner")
+    return
+  end
 
   local changed = false
   
   if (self.index ~= idx) then
-    self.__cached_index = self.index
+    self._cached_index = self.index
     self.index = idx
     self.value = idx
     changed = true
@@ -253,7 +264,7 @@ function UISpinner:set_index(idx, skip_event_handler)
     self:invalidate()
 
     if (not skip_event_handler) then
-      self:__invoke_handler()
+      self:_invoke_handler()
     end
   end
 end
@@ -266,7 +277,7 @@ end
 function UISpinner:draw()
   TRACE("UISpinner:draw")
 
-  if (self.__size == 1)then
+  if (self._size == 1)then
 
     -- dial mode : set precise value
 
@@ -280,7 +291,7 @@ function UISpinner:draw()
 
     local point1 = CanvasPoint()
     local point2 = CanvasPoint() 
-    local blank = {text=""}
+    local blank = {text="·"}
     local arrow1,arrow2 = blank,blank
 
     if(self.text_orientation == HORIZONTAL)then
@@ -321,7 +332,7 @@ function UISpinner:draw()
       point2.val = true
     end
 
-    if (self.__orientation == HORIZONTAL) then
+    if (self._orientation == HORIZONTAL) then
 
       if (self.flipped) then
         self.canvas:write(point1,2,1)
@@ -332,7 +343,7 @@ function UISpinner:draw()
       end
     
     else
-      assert(self.__orientation == VERTICAL, 
+      assert(self._orientation == VERTICAL, 
         "Internal Error. Please report: unexpected UI orientation")
 
       if (self.flipped) then
@@ -357,12 +368,12 @@ end
 
 function UISpinner:set_size(size)
   
-  self.__size = size
+  self._size = size
   
-  if self.__orientation == VERTICAL then
-    UIComponent.set_size(self, 1, self.__size)
+  if self._orientation == VERTICAL then
+    UIComponent.set_size(self, 1, self._size)
   else
-    UIComponent.set_size(self, self.__size, 1)
+    UIComponent.set_size(self, self._size, 1)
   end
 end
 
@@ -371,12 +382,12 @@ end
 
 function UISpinner:add_listeners()
 
-  self.__display.device.message_stream:add_listener(
+  self._display.device.message_stream:add_listener(
     self, DEVICE_EVENT_BUTTON_PRESSED,
     function() self:do_press() end )
 
 
-  self.__display.device.message_stream:add_listener(
+  self._display.device.message_stream:add_listener(
     self,DEVICE_EVENT_VALUE_CHANGED,
     function() self:do_change() end )
 
@@ -387,10 +398,10 @@ end
 
 function UISpinner:remove_listeners()
 
-  self.__display.device.message_stream:remove_listener(
+  self._display.device.message_stream:remove_listener(
     self,DEVICE_EVENT_BUTTON_PRESSED)
 
-  self.__display.device.message_stream:remove_listener(
+  self._display.device.message_stream:remove_listener(
     self,DEVICE_EVENT_VALUE_CHANGED)
 
 end
@@ -404,16 +415,16 @@ end
 -- @column (integer)
 -- @row (integer)
 
-function UISpinner:__determine_index_by_pos(column, row)
+function UISpinner:_determine_index_by_pos(column, row)
 
   local idx,offset = nil,nil
 
-  if (self.__orientation == VERTICAL) then
+  if (self._orientation == VERTICAL) then
     idx = row
     offset = self.y_pos
 
   else
-   assert(self.__orientation == HORIZONTAL, 
+   assert(self._orientation == HORIZONTAL, 
       "Internal Error. Please report: unexpected UI orientation")
     idx = column
     offset = self.x_pos
@@ -433,14 +444,14 @@ end
 
 -- trigger the external handler method
 
-function UISpinner:__invoke_handler()
-  TRACE("UISpinner:__invoke_handler()")
+function UISpinner:_invoke_handler()
+  TRACE("UISpinner:_invoke_handler()")
 
   if (self.on_change == nil) then return end
 
   local rslt = self:on_change()
   if (rslt==false) then  -- revert
-    self.index = self.__cached_index
+    self.index = self._cached_index
   else
     self:invalidate()
   end

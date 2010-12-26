@@ -23,14 +23,9 @@ A device can only belong to a single stream, but nothing stops the stream from
 recieving it's input from several devices.  
 
 Features
-* detect standard press events
+* detect standard press/release events
 * detect that a button was held for specified amount of time 
 
-Todo 
-* detecting standard release events
-* detecting that a button was double-pressed (trigger on second press)
-* detecting multiple simultanously pressed buttons (combinations)
-* detecting ignored_buttons
 
 --]]
 
@@ -48,7 +43,7 @@ function MessageStream:__init()
 
 
   --self.button_hold_time = 1 -- seconds
-  self.button_hold_time = self:__get_button_hold_time()
+  self.button_hold_time = self:_get_button_hold_time()
   --self.double_press_time = 0.1 -- seconds
 
   -- most recent message (event handlers check this)
@@ -66,7 +61,7 @@ end
 
 --------------------------------------------------------------------------------
 
-function MessageStream:__get_button_hold_time()
+function MessageStream:_get_button_hold_time()
     return duplex_preferences.button_hold_time
 end
 
@@ -79,7 +74,8 @@ function MessageStream:on_idle()
 
   for i,msg in ipairs(self.pressed_buttons) do
     if (not msg.held_event_fired) and
-      (msg.input_method == CONTROLLER_BUTTON) and
+      (msg.input_method == CONTROLLER_BUTTON or
+       msg.input_method == CONTROLLER_PUSHBUTTON) and
        (msg.timestamp + self.button_hold_time < os.clock()) then
       -- broadcast to attached listeners
       for _,listener in ipairs(self.hold_listeners)  do 
@@ -179,11 +175,11 @@ end
 --------------------------------------------------------------------------------
 
 function MessageStream:input_message(msg)
-  TRACE('MessageStream: event was recieved:',msg)
-  
+  TRACE('MessageStream:input_message(',msg,')')
+
+
   self.current_message = msg
-  
---  if (msg.input_method == CONTROLLER_ENCODER) or 
+
   if (msg.input_method == CONTROLLER_FADER or 
       msg.input_method == CONTROLLER_DIAL) then
 
@@ -194,27 +190,24 @@ function MessageStream:input_message(msg)
     end
   
   elseif (msg.input_method == CONTROLLER_BUTTON or 
-          msg.input_method == CONTROLLER_TOGGLEBUTTON) then
+          msg.input_method == CONTROLLER_TOGGLEBUTTON or
+          msg.input_method == CONTROLLER_PUSHBUTTON) then
 
     --  "binary" input, value either max or min 
 
-    if (msg.value == msg.max) then
+    if (msg.value == msg.max) and (not msg.is_note_off) then
       -- interpret this as pressed
       
       self.pressed_buttons:insert(msg)
-
       -- broadcast to listeners
       for _,listener in ipairs(self.press_listeners) do 
         listener.handler() 
       end
 
-
-
-
     elseif (msg.value == msg.min) then
       -- interpret this as release
-      
-      -- for toggle buttons, broadcast releases to listeners as well
+
+      -- for toggle/push buttons, broadcast releases to listeners as well
       if (not msg.is_virtual) and
         (msg.input_method == CONTROLLER_TOGGLEBUTTON) then
         for _,listener in ipairs(self.press_listeners) do 
@@ -227,13 +220,12 @@ function MessageStream:input_message(msg)
       end
       
       -- remove from pressed_buttons
-      --if (not msg.is_virtual) then
-        for i,button_msg in ipairs(self.pressed_buttons) do
-          if (msg.id == button_msg.id) then
-            self.pressed_buttons:remove(i)
-          end
+      for i,button_msg in ipairs(self.pressed_buttons) do
+        if (msg.id == button_msg.id) then
+          self.pressed_buttons:remove(i)
         end
-      --end
+      end
+
     end
 
   else
@@ -260,7 +252,8 @@ function Message:__init(device)
   TRACE('Message:__init')
 
   -- the context indicate the "type" of message
-  -- (set to one of the "Message type" properties defined in Globals.lua)
+  -- (set to one of the "Message type" properties defined in Globals.lua,
+  -- such as MIDI_CC_MESSAGE or OSC_MESSAGE)
   self.context = nil
 
   -- true, when the message was NOT received from devices (MIDI or OSC) but 
@@ -274,6 +267,9 @@ function Message:__init(device)
 
   -- MIDI only, the channel of the message (1-16)
   self.channel = nil 
+
+  -- MIDI only, to detect release events
+  self.is_note_off = false
 
   self.id = nil --  unique id for each parameter
   self.group_name = nil --  name of the parent group 

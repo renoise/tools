@@ -103,21 +103,26 @@ function MidiDevice:midi_callback(message)
       self.port_in, message[1], message[2], message[3]))
   end
 
+
   -- determine the type of signal : note/cc/etc
   if (message[1]>=128) and (message[1]<=159) then
     msg.context = MIDI_NOTE_MESSAGE
-    msg.value = message[3]
     if(message[1]>143)then
       msg.channel = message[1]-143  -- on
+      msg.value = message[3]
+      if (msg.value==0) then
+        msg.is_note_off = true      -- off
+      end
     else
       msg.channel = message[1]-127  -- off
+      msg.is_note_off = true
     end
-    value_str = self.__note_to_string(self,message[2])
+    value_str = self._note_to_string(self,message[2])
   elseif (message[1]>=176) and (message[1]<=191) then
     msg.context = MIDI_CC_MESSAGE
     msg.value = message[3]
     msg.channel = message[1]-175
-    value_str = self.__midi_cc_to_string(self,message[2])
+    value_str = self._midi_cc_to_string(self,message[2])
   elseif (message[1]>=224) and (message[1]<=239) then
     msg.context = MIDI_PITCH_BEND_MESSAGE
     msg.value = message[3]
@@ -134,7 +139,7 @@ function MidiDevice:midi_callback(message)
     local param = self.control_map:get_param_by_value(value_str)
   
     if (param) then
-      self:__send_message(msg,param["xarg"])
+      self:_send_message(msg,param["xarg"])
     end
   end
 end
@@ -183,6 +188,40 @@ end
 
 --------------------------------------------------------------------------------
 
+--  send sysex message
+--  the method will take care of adding the initial 0xF0 and 0xF7 values
+--  @param ... (vararg) values to send, e.g. 0x47, 0x7F, 0x7B,...
+
+function MidiDevice:send_sysex_message(...)
+  TRACE("MidiDevice:send_sysex_message(...)")
+
+  if (not self.midi_out or not self.midi_out.is_open) then
+    return
+  end
+
+  local message = table.create()
+  local message_str = "0xF0"
+
+  message:insert(0xF0)
+  for _, e in ipairs({...}) do
+    message:insert(e)
+    message_str = string.format("%s,0x%02X",message_str,e)
+  end
+  message:insert(0xF7)
+  message_str = string.format("%s,0x%02X",message_str,0xF7)
+
+  if(self.dump_midi)then
+    print(("MidiDevice: %s send MIDI %s"):format(
+      self.port_out, message_str))
+  end
+
+  self.midi_out:send(message)
+end
+
+
+
+--------------------------------------------------------------------------------
+
 function MidiDevice:send_note_message(key,velocity,channel)
 
   if (not self.midi_out or not self.midi_out.is_open) then
@@ -222,7 +261,7 @@ end
 -- @param key: the key (7-bit integer)
 -- @return string (e.g. "C#5")
 
-function MidiDevice:__note_to_string(int)
+function MidiDevice:_note_to_string(int)
   local key = (int%12)+1
   local oct = math.floor(int/12)-1
   return NOTE_ARRAY[key]..(oct)
@@ -231,7 +270,7 @@ end
 
 --------------------------------------------------------------------------------
 
-function MidiDevice:__midi_cc_to_string(int)
+function MidiDevice:_midi_cc_to_string(int)
   return string.format("CC#%d",int)
 end
 
@@ -293,30 +332,28 @@ end
 --------------------------------------------------------------------------------
 
 -- Convert the point to an output value
--- (override with device-specific implementation)
 -- @param pt (CanvasPoint)
--- @param maximum - attribute from control-map
--- @param minimum - -#-
+-- @param elm - control-map parameter
 -- @param ceiling - the UIComponent ceiling value
 
-function MidiDevice:point_to_value(pt,maximum,minimum,ceiling)
-  TRACE("MidiDevice:point_to_value()",pt,maximum,minimum,ceiling)
+function MidiDevice:point_to_value(pt,elm,ceiling)
+  TRACE("MidiDevice:point_to_value()",pt,elm,ceiling)
 
   local ceiling = ceiling or 127
   local value
   
   if (type(pt.val) == "boolean") then
     if (pt.val) then
-      value = maximum
+      value = elm.maximum
     else
-      value = minimum
+      value = elm.minimum
     end
 
   else
     -- scale the value from "local" to "external"
     -- for instance, from Renoise dB range (1.4125375747681) 
     -- to a 7-bit controller value (127)
-    value = math.floor((pt.val * (1 / ceiling)) * maximum)
+    value = math.floor((pt.val * (1 / ceiling)) * elm.maximum)
   end
 
   return tonumber(value)

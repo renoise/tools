@@ -61,6 +61,20 @@ ControlMap.get_param_by_value(string)
 -- determine the type of message (note/cc-value/etc) 
 ControlMap.determine_type(string)
 
+-- return number of columns for the provided group
+ControlMap.count_columns(group_name)
+
+-- return number of rows for the provided group
+ControlMap.count_rows(group_name)
+
+-- get number of parameters in group
+ControlMap.get_group_size(group_name)
+
+-- get width/height of provided group
+-- also used for checking if a control-map group is a grid 
+ControlMap.get_group_dimensions(group_name,match_grid)
+
+
 --------------------------------------------------------------------------------
 -- duplex.Display
 --------------------------------------------------------------------------------
@@ -360,13 +374,13 @@ Message.min = nil --  minimum accepted/output value
 Message.input_method = nil 
 
 -- true once the button is held for a while
-Message.__held_event_fired = false
+Message.held_event_fired = false
 
 -- true when message is fired from the virtual control surface
-Message.__is_virtual = false
+Message.is_virtual = false
 
 See also: 
-  Display.__generate message()
+  Display.generate_message()
   MIDIDevice.midi_callback()
 
 
@@ -425,7 +439,7 @@ Application.start_app()
 Application.stop_app()
 
 -- create the content (if any?)
-Application.__build_app()
+Application._build_app()
 
 -- destroy app 
 Application.destroy_app()
@@ -434,8 +448,8 @@ Application.destroy_app()
 Application:on_idle()
 
 -- apply optional arguments (application configuration)
-Application:__apply_mappings
-Application:__apply_options
+Application:_apply_mappings
+Application:_apply_options
 
 ------------------------------------------------------------
 -- Installing & configuring applications

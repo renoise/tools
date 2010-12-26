@@ -154,11 +154,12 @@ end
 
 -- setup "Mixer" as the only app for this configuration
 
+--[[
 duplex_configurations:insert {
 
   -- configuration properties
   name = "Mixer",
-  pinned = true,
+  pinned = false,
 
   -- device properties
   device = {
@@ -190,11 +191,196 @@ duplex_configurations:insert {
     }
   }
 }
+]]
+--------------------------------------------------------------------------------
+
+-- setup "Recorder + Navigator" for this configuration
+
+duplex_configurations:insert {
+
+  -- configuration properties
+  name = "Recorder BETA + Transport",
+  pinned = true,
+
+  -- device properties
+  device = {
+    class_name = "Launchpad",
+    display_name = "Launchpad",
+    device_port_in = "Launchpad",
+    device_port_out = "Launchpad",
+    control_map = "Controllers/Launchpad/Launchpad-Recorder.xml",
+    thumbnail = "Launchpad.bmp",
+    protocol = DEVICE_MIDI_PROTOCOL,
+  },
+
+  applications = {
+    Recorder = {
+      mappings = {
+        recorders = {
+          group_name = "Grid",
+        },
+        sliders = {
+          group_name = "Grid",
+        },
+      },
+      options = {
+        --writeahead = 1,
+        --loop_mode = 2,
+        --beat_sync = 1,
+        --trigger_mode = 1,
+      }
+    },
+    Navigator = {
+      mappings = {
+        blockpos = {
+          group_name = "Triggers",
+        }
+      }
+    },
+    Mixer = {
+      mappings = {
+        mute = {
+          group_name = "Row2",
+        },
+      },
+      options = {
+        follow_track = 2,
+      }
+    },
+    Mixer2 = {
+      application = "Mixer",
+      mappings = {
+        levels = {
+          group_name = "Column",
+        },
+      },
+      options = {
+        follow_track = 1,
+      }
+    },
+    Transport = {
+      mappings = {
+        goto_previous = {
+          group_name= "Controls",
+          index = 1,
+        },
+        goto_next = {
+          group_name= "Controls",
+          index = 2,
+        },
+        edit_mode = {
+          group_name = "Controls",
+          index = 5,
+        },
+        start_playback = {
+          group_name = "Controls",
+          index = 6,
+        },
+        loop_pattern = {
+          group_name = "Controls",
+          index = 7,
+        },
+        follow_player = {
+          group_name= "Controls",
+          index = 8,
+        },
+      },
+      options = {
+        pattern_play = 3,
+      }
+    },
+  }
+}
+
+--------------------------------------------------------------------------------
+
+-- setup "Mixer + Transport" for this configuration
+
+duplex_configurations:insert {
+
+  -- configuration properties
+  name = "Mixer + Transport",
+  pinned = true,
+
+  -- device properties
+  device = {
+    class_name = "Launchpad",
+    display_name = "Launchpad",
+    device_port_in = "Launchpad",
+    device_port_out = "Launchpad",
+    control_map = "Controllers/Launchpad/Launchpad.xml",
+    thumbnail = "Launchpad.bmp",
+    protocol = DEVICE_MIDI_PROTOCOL,
+  },
+
+  applications = {
+    Mixer = {
+      mappings = {
+        levels = {
+          group_name = "Grid",
+        },
+        mute = {
+          group_name = "Grid",
+        },
+        master = {
+          group_name = "Grid",
+        },
+        page = {
+          group_name = "Controls",
+          index = 3
+        },
+      },
+      options = {
+        invert_mute = 1,
+        track_increment = 2,
+        follow_track = 1,
+      }
+    },
+    Navigator = {
+      mappings = {
+        blockpos = {
+          group_name = "Triggers",
+        }
+      }
+    },
+    Transport = {
+      mappings = {
+        goto_previous = {
+          group_name= "Controls",
+          index = 1,
+        },
+        goto_next = {
+          group_name= "Controls",
+          index = 2,
+        },
+        edit_mode = {
+          group_name = "Controls",
+          index = 5,
+        },
+        start_playback = {
+          group_name = "Controls",
+          index = 6,
+        },
+        loop_pattern = {
+          group_name = "Controls",
+          index = 7,
+        },
+        follow_player = {
+          group_name= "Controls",
+          index = 8,
+        },
+      },
+      options = {
+        pattern_play = 3,
+      },
+    },
+  }
+}
 
 
 --------------------------------------------------------------------------------
 
--- setup a Matrix as the only app for this configuration
+-- setup "Matrix + Transport" for this configuration
 
 duplex_configurations:insert {
 
@@ -232,7 +418,7 @@ duplex_configurations:insert {
         }
       },
       options = {
-        --switch_mode = 4,
+        sequence_mode = 2,
       }
     },
     Transport = {
@@ -262,16 +448,84 @@ duplex_configurations:insert {
       },
       options = {
         pattern_play = 3,
-      },
+      }
     },
 
   }
 }
 
+--------------------------------------------------------------------------------
+
+-- setup "Matrix" as the only app for this configuration
+
+duplex_configurations:insert {
+
+  -- configuration properties
+  name = "Effect + Transport",
+  pinned = true,
+  
+  -- device properties
+  device = {
+    class_name = "Launchpad",
+    display_name = "Launchpad",
+    device_port_in = "Launchpad",
+    device_port_out = "Launchpad",
+    control_map = "Controllers/Launchpad/Launchpad.xml",
+    thumbnail = "Launchpad.bmp",
+    protocol = DEVICE_MIDI_PROTOCOL,
+  },
+
+  applications = {
+    Effect = {
+      mappings = {
+        parameters = {
+          group_name= "Grid",
+        },
+        page = {
+          group_name = "Controls",
+          index = 1,
+        },
+        device = {
+          group_name = "Triggers",
+        },
+      },
+    },
+    Transport = {
+      mappings = {
+        --[[
+        stop_playback = {
+          group_name= "Controls",
+          index = 5,
+        },
+        ]]
+        edit_mode = {
+          group_name = "Controls",
+          index = 5,
+        },
+        start_playback = {
+          group_name = "Controls",
+          index = 6,
+        },
+        loop_pattern = {
+          group_name = "Controls",
+          index = 7,
+        },
+        follow_player = {
+          group_name= "Controls",
+          index = 8,
+        },
+      },
+      options = {
+        pattern_play = 3,
+      }
+    },
+
+  }
+}
 
 --------------------------------------------------------------------------------
 
--- setup a Matrix and Mixer, vertically split
+-- setup "Matrix + Mixer + Transport", vertically split
 
 duplex_configurations:insert {
 
@@ -307,6 +561,8 @@ duplex_configurations:insert {
           group_name = "Controls",
           index = 3,
         }
+      },
+      options = {      
       }
     },
     Mixer = {
@@ -343,6 +599,8 @@ duplex_configurations:insert {
           group_name = "Controls",
           index = 8,
         },
+      },
+      options = {
       }
     },
   }
@@ -371,26 +629,144 @@ duplex_configurations:insert {
 
   applications = {
     StepSequencer = {
+
+      -- vertical layout (default)
+
       mappings = {
         grid = {
           group_name = "Grid",
+          orientation = VERTICAL,
         },
         level = {
           group_name = "Triggers",
+          orientation = VERTICAL,
         },
         line = {
           group_name = "Controls",
+          orientation = HORIZONTAL,
           index = 1
         },
         track = {
           group_name = "Controls",
+          orientation = HORIZONTAL,
           index = 3
         },
         transpose = {
           group_name = "Controls",
+          orientation = HORIZONTAL,
           index = 5
         },
       },
+      options = {
+        --line_increment = 8,
+        --follow_track = 1,
+        --track_increment = 5,
+      }
+
+      --[[
+
+      -- enable this for horizontal layout
+
+      mappings = {
+        grid = {
+          group_name = "Grid",
+          orientation = HORIZONTAL,
+        },
+        level = {
+          group_name = "Controls",
+          orientation = HORIZONTAL,
+        },
+        line = {
+          group_name = "Triggers",
+          orientation = VERTICAL,
+          index = 1
+        },
+        track = {
+          group_name = "Triggers",
+          orientation = VERTICAL,
+          index = 3
+        },
+        transpose = {
+          group_name = "Triggers",
+          orientation = VERTICAL,
+          index = 5
+        },
+      },
+      ]]
     },
   }
 }
+
+--------------------------------------------------------------------------------
+
+-- Here's how to make a second Launchpad show up as a separate device 
+-- Notice that the "display name" is different
+
+--[[
+duplex_configurations:insert {
+
+  -- configuration properties
+  name = "Matrix + Transport",
+  pinned = true,
+  
+  -- device properties
+  device = {
+    class_name = "Launchpad",
+    display_name = "Launchpad (2)",
+    device_port_in = "Launchpad (2)",
+    device_port_out = "Launchpad (2)",
+    control_map = "Controllers/Launchpad/Launchpad.xml",
+    thumbnail = "Launchpad.bmp",
+    protocol = DEVICE_MIDI_PROTOCOL,
+  },
+
+  applications = {
+    Matrix = {
+      mappings = {
+        matrix = {
+          group_name = "Grid",
+        },
+        triggers = {
+          group_name = "Triggers",
+        },
+        sequence = {
+          group_name = "Controls",
+          index = 1,
+        },
+        track = {
+          group_name = "Controls",
+          index = 3,
+        }
+      },
+      options = {
+        --switch_mode = 4,
+      }
+    },
+    Transport = {
+      mappings = {
+        edit_mode = {
+          group_name = "Controls",
+          index = 5,
+        },
+        start_playback = {
+          group_name = "Controls",
+          index = 6,
+        },
+        loop_pattern = {
+          group_name = "Controls",
+          index = 7,
+        },
+        follow_player = {
+          group_name= "Controls",
+          index = 8,
+        },
+      },
+      options = {
+        pattern_play = 3,
+      },
+    },
+
+  }
+}
+
+]]

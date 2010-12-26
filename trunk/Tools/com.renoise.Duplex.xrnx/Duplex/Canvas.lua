@@ -24,8 +24,19 @@ function Canvas:__init(device)
   self.has_changed = false
   self.width = 0
   self.height = 0      
-  self.delta = {{}}   -- difference buffer, cleared on each update
-  self.buffer = {{}}  -- the current representation
+
+  -- difference buffer, cleared on each update
+  self.delta = {{}}   
+
+  -- the current (complete) representation
+  self.buffer = {{}}  
+
+  -- table of extraneous points that should be cleared on next update
+  -- created when the canvas is reduced in size, and contains just a 
+  -- simple set of booleans (the Display class will create the empty
+  -- points when needed)
+  self.clear = {}
+          
 end
 
 
@@ -35,17 +46,38 @@ end
 
 function Canvas:set_size(width,height)
   TRACE('Canvas:set_size',width,height)
-  
+
+  local old_width = self.width
+  local old_height = self.height
+
   self.width = width
   self.height = height
   for x = 1,width do
-    for y = 1, height do
+    --for y = 1, height do
       if not self.buffer[x] then
         self.buffer[x] = {}
         self.delta[x] = {}
       end
+    --end
+  end
+
+  -- if size is reduced, update the "clear" buffer
+  self.clear = {}
+  for x = width,old_width do
+    for y = height,old_height do
+      if(x>width) or (y>height) then
+        if not self.clear[x] then
+          self.clear[x] = {}
+        end
+        self.clear[x][y] = true
+        if (x>width) then
+          self.buffer[x] = nil
+        end
+      end
     end
   end
+
+
 
 end
 
@@ -127,7 +159,7 @@ CanvasPoint represents a point in a canvas
 - text (replacement for color, for labelling buttons)
 - value (as defined by the UIComponent): note that boolean values true/false
   is translated to their <param> max/min property counterparts, which should 
-  produce an enabled state in the controller
+  produce an enabled/disabled state in the controller
 
 --]]
 

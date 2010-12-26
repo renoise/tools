@@ -33,9 +33,14 @@ duplex_configurations:insert {
         },
         --[[
         master = {
-          group_name = "Sliders",
+          group_name = "Modulators",
+          index = 2,
         },
         ]]
+        page = {
+          group_name = "EncoderButtons",
+          index = 7,
+        },
         mute = {
           group_name = "SliderButtons",
         },
@@ -89,6 +94,8 @@ duplex_configurations:insert {
           group_name = "Controls",
           index = 8,
         },
+      },
+      options = {
       }
     },
   }

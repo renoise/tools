@@ -10,25 +10,29 @@ Inheritance: UIComponent > UIPushButton
 About
 
 UIPushButton is a stateless button (has no value), that can be used to
-trigger events in an application. It's capable of more than just a brief
-flash of light, you can also assign a sequence of colors to the button and
-specify the amount of time that should pass between updates
+trigger events in an application. A special feature is the "sequence",
+which is a built-in list of values that the button can cycle through
+after being triggered (providing visual feedback of some kind)
 
 - oneshot/trigger buttons (short blink)
 - oneshot/trigger buttons with release (lit while pressed)
-- blinking buttons (e.g "schedule pattern" in the Transport application)
-- fading buttons (if the device has enough shades)
+- "blinking" buttons (e.g "schedule pattern" in the Transport application)
+- "fading" buttons (if the device has enough shades this is possible too)
 
 
 Supported input methods
 
-- "button"
-- "togglebutton" 
+- button
+- pushbutton
+- togglebutton*
 
 Events
 
 - on_press()
 - on_release()
+- on_hold()
+
+* release & hold events are not supported for this input method
 
 
 --]]
@@ -72,16 +76,20 @@ function UIPushButton:__init(display)
     -- override this with your own implementation
   end
 
+  -- external event handlers
+  self.on_press = nil
+  self.on_release = nil
+  self.on_hold = nil
+
   -- internal stuff
 
   -- position within the sequence
-  self.__seq_index = 0
+  self._seq_index = 0
 
   -- keep a reference to the scheduled task (so we can cancel it)
-  self.__task = nil
+  self._task = nil
 
-  self.__pressed = false
-
+  self._pressed = false
 
   self:add_listeners()
 
@@ -105,8 +113,7 @@ function UIPushButton:do_press()
       return 
     end
 
-    self.__pressed = true
-
+    self._pressed = true
     self:trigger()
 
   end
@@ -127,9 +134,27 @@ function UIPushButton:do_release()
       return 
     end
 
-    self.__pressed = false
-
+    self._pressed = false
     self:invalidate()
+
+  end
+
+end
+
+function UIPushButton:do_hold()
+  TRACE("UIPushButton:do_release")
+  
+  if (self.on_hold ~= nil) then
+
+    local msg = self:get_msg()
+    if not (self.group_name == msg.group_name) then
+      return 
+    end
+    if not self:test(msg.column,msg.row) then
+      return 
+    end
+
+    self.on_hold()
 
   end
 
@@ -140,9 +165,9 @@ end
 function UIPushButton:trigger()
   TRACE("UIPushButton:trigger()")
 
-    self.__seq_index = 1
-    self:__cancel_scheduled_task()
-    self:__invoke_handler()
+    self._seq_index = 1
+    self:_cancel_scheduled_task()
+    self:_invoke_handler()
 
 end
 
@@ -157,10 +182,10 @@ end
 function UIPushButton:draw()
   --TRACE("UIPushButton:draw")
 
-  if(not self.__seq_index) then return end
+  if(not self._seq_index) then return end
 
   local point = CanvasPoint()
-  local seq = self.sequence[self.__seq_index]
+  local seq = self.sequence[self._seq_index]
 
   if (seq) then
     
@@ -175,16 +200,16 @@ function UIPushButton:draw()
     end
 
     -- schedule another draw() by invalidating the component
-    if not (self.wait_for_release and self.__pressed) then
-      self.__task = self.__display.scheduler:add_task(
+    if not (self.wait_for_release and self._pressed) then
+      self._task = self._display.scheduler:add_task(
         self, UIPushButton.invalidate, self.interval)
     end
-    self.__seq_index = self.__seq_index+1
+    self._seq_index = self._seq_index+1
   
   else
     -- sequence done
     if (self.loop) then
-      self.__seq_index = 1
+      self._seq_index = 1
       self:draw()
     else
       self:stop()
@@ -194,8 +219,8 @@ function UIPushButton:draw()
   end
 
   self.canvas:fill(point)
-
   UIComponent.draw(self)
+
 end
 
 --------------------------------------------------------------------------------
@@ -207,7 +232,7 @@ function UIPushButton:stop()
   local point = CanvasPoint()
   point:apply(self.palette.background)
   point.val = false
-  self.__seq_index = nil
+  self._seq_index = nil
   self.canvas:fill(point)
   UIComponent.draw(self)
 
@@ -217,13 +242,17 @@ end
 
 function UIPushButton:add_listeners()
 
-  self.__display.device.message_stream:add_listener(
+  self._display.device.message_stream:add_listener(
     self, DEVICE_EVENT_BUTTON_PRESSED,
     function() self:do_press() end )
 
-  self.__display.device.message_stream:add_listener(
+  self._display.device.message_stream:add_listener(
     self,DEVICE_EVENT_BUTTON_RELEASED,
     function() self:do_release() end )
+
+  self._display.device.message_stream:add_listener(
+    self,DEVICE_EVENT_BUTTON_HELD,
+    function() self:do_hold() end )
 
 end
 
@@ -232,11 +261,14 @@ end
 
 function UIPushButton:remove_listeners()
 
-  self.__display.device.message_stream:remove_listener(
+  self._display.device.message_stream:remove_listener(
     self,DEVICE_EVENT_BUTTON_PRESSED)
 
-  self.__display.device.message_stream:remove_listener(
+  self._display.device.message_stream:remove_listener(
     self,DEVICE_EVENT_BUTTON_RELEASED)
+
+  self._display.device.message_stream:remove_listener(
+    self,DEVICE_EVENT_BUTTON_HELD)
 
 end
 
@@ -247,8 +279,8 @@ end
 
 -- trigger the external handler method
 
-function UIPushButton:__invoke_handler()
-  TRACE("UIPushButton:__invoke_handler()")
+function UIPushButton:_invoke_handler()
+  TRACE("UIPushButton:_invoke_handler()")
 
   if (self.on_press == nil) then return end
 
@@ -261,11 +293,11 @@ end
 
 --------------------------------------------------------------------------------
 
-function UIPushButton:__cancel_scheduled_task()
-  TRACE("UIPushButton:__cancel_scheduled_task()")
+function UIPushButton:_cancel_scheduled_task()
+  TRACE("UIPushButton:_cancel_scheduled_task()")
 
-  if self.__task then
-    self.__display.scheduler:remove_task(self.__task)
+  if self._task then
+    self._display.scheduler:remove_task(self._task)
   end
 
 end
