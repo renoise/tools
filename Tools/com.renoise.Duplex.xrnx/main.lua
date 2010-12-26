@@ -6,9 +6,6 @@ main.lua
 
 require "Duplex"
 
--- tests configurations (enable for debugging only)
--- require "testing"
-
 
 --------------------------------------------------------------------------------
 -- locals
@@ -111,7 +108,7 @@ for _,device_name in pairs(available_devices) do
       local entry_name = ("Main Menu:Tools:Duplex: %s %s..."):format(
         config.device.display_name, config.name)
         
-      -- doubled config entreis are validated below by the prefs registration
+      -- duplicate config entries are validated below by the prefs registration
       if (not added_menu_entries:find(entry_name)) then
         added_menu_entries:insert(entry_name)
         
@@ -158,6 +155,37 @@ renoise.tool():add_keybinding {
   end
 }
 
+--------------------------------------------------------------------------------
+-- MIDI mappings
+--------------------------------------------------------------------------------
+
+renoise.tool():add_midi_mapping({
+  name = "Global:Tools:Duplex Browser...",
+  invoke = function(msg) 
+    if(browser)then
+      if msg.boolean_value then 
+        browser:show() 
+      else
+        browser:hide() 
+      end
+    end
+  end
+})
+
+renoise.tool():add_midi_mapping({
+  name = "Global:Tools:Duplex configuration [Set]",
+  invoke = function(msg)
+    if(browser)then
+      local idx = msg.int_value
+      local config_list = 
+        browser:_available_configurations_for_device(browser._device_name)
+      if (config_list[idx]) then
+        browser:set_configuration(config_list[idx], true)
+      end
+    end
+  end
+})
+
 
 --------------------------------------------------------------------------------
 -- notifications
@@ -198,18 +226,51 @@ for _,device_name in pairs(available_devices) do
            "than once. Please use a unique device & config name combination "..
            "for each config."):format(config.device.display_name, config.name))
       else
-      
+
+        -- create application options
+        local applications_root_node = renoise.Document.create("Applications") {}
+        for app_name,app in pairs(config.applications) do
+            local application_root_node = applications_root_node:add_property(
+              app_name, renoise.Document.create("Application") {}
+            )
+            local options_node = renoise.Document.create("Options"){} 
+            local option_key, option_value
+            -- figure out the actual application name
+            if (app.application) then
+              app_name = app.application
+            end
+            -- create default application options
+            local default_options = _G[app_name]["default_options"]
+            if default_options then
+              for option_name,option in pairs(default_options) do
+                option_key = option_name
+                option_value = option.value
+                -- use the key from the device config if present
+                if app.options and
+                  app.options[option_key] 
+                then
+                  option_value = app.options[option_key] 
+                end
+                options_node:add_property(option_key,option_value)
+              end
+            end
+
+            application_root_node:add_property("options",options_node)
+        end
+
+        -- add devices...
+        local device_root_node
         if (config.device.protocol == DEVICE_MIDI_PROTOCOL) then
-          configuration_root_node:add_property(
+          device_root_node = configuration_root_node:add_property(
             configuration_settings_key(config), 
             renoise.Document.create("MidiDevice") {
               autostart = false,
               device_port_in = "",
-              device_port_out = ""
+              device_port_out = "",
             }
           )
         else -- protocol == DEVICE_OSC_PROTOCOL
-          configuration_root_node:add_property(
+          device_root_node = configuration_root_node:add_property(
             configuration_settings_key(config), 
             renoise.Document.create("OscDevice") {
               autostart = false,
@@ -219,7 +280,9 @@ for _,device_name in pairs(available_devices) do
               device_port_out = ""
             }
           )
-        end        
+        end    
+        -- attach application options to device
+        device_root_node:add_property("applications",applications_root_node)
       end
     end
   end

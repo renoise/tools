@@ -29,31 +29,24 @@ end
 
 --------------------------------------------------------------------------------
 
--- quantize value to determine lit/off state
-function TouchOSC:point_to_value(pt,maximum,minimum,ceiling)
-  TRACE("TouchOSC:point_to_value()",pt,maximum,minimum,ceiling)
+function TouchOSC:point_to_value(pt,elm,ceiling)
+  TRACE("TouchOSC:point_to_value()",pt,elm,ceiling)
 
   local value
 
-  TRACE("TouchOSC:type(pt.val)",type(pt.val))
-
   if (type(pt.val) == "boolean") then
     -- buttons
+    -- quantize value to determine lit/off state
     local color = self:quantize_color(pt.color)
-    value = (color[1]==0xff) and 1 or 0
+    value = (color[1]==0xff) and elm.maximum or elm.minimum
   else
     -- faders
-    value = (pt.val * (1 / ceiling)) * maximum
+    value = (pt.val * (1 / ceiling)) * elm.maximum
   
   end
-  TRACE("TouchOSC:value",value)
-
-  --return tonumber(value)
   return value
 
 end
---[[
-]]
 
 --==============================================================================
 
@@ -66,7 +59,7 @@ end
 duplex_configurations:insert {
 
   -- configuration properties
-  name = "Mixer + Triggers + XY + Matrix",
+  name = "Mixer + Recorder + Matrix",
   pinned = true,
 
   -- device properties
@@ -95,6 +88,18 @@ duplex_configurations:insert {
           group_name = "1_Fader",
         }
       },
+    },
+    Recorder = {
+      mappings = {
+        recorders = {
+          group_name = "2_Buttons",
+        },
+        sliders = {
+          group_name = "2_TriggerPad",
+        },
+      },
+      options = {
+      }
     },
     Matrix = {
       mappings = {

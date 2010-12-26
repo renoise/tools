@@ -36,44 +36,44 @@
             <Param name="CC# 23" shortName="CC# 23" id="23" intStep="1" intMax="127" intMin="0" high="127" low="0" step="1.000000" />
         </Group>
         <Group name="Page 1 Encoder Buttons">
-            <Param name="CC# 24" shortName="CC# 24" id="24" intStep="0" intMax="127" intMin="0" high="127" low="127" step="0.000000" />
-            <Param name="CC# 25" shortName="CC# 25" id="25" intStep="0" intMax="127" intMin="0" high="127" low="127" step="0.000000" />
-            <Param name="CC# 26" shortName="CC# 26" id="26" intStep="0" intMax="127" intMin="0" high="127" low="127" step="0.000000" />
-            <Param name="CC# 27" shortName="CC# 27" id="27" intStep="0" intMax="127" intMin="0" high="127" low="127" step="0.000000" />
-            <Param name="CC# 28" shortName="CC# 28" id="28" intStep="0" intMax="127" intMin="0" high="127" low="127" step="0.000000" />
-            <Param name="CC# 29" shortName="CC# 29" id="29" intStep="0" intMax="127" intMin="0" high="127" low="127" step="0.000000" />
-            <Param name="CC# 30" shortName="CC# 30" id="30" intStep="0" intMax="127" intMin="0" high="127" low="127" step="0.000000" />
-            <Param name="CC# 31" shortName="CC# 31" id="31" intStep="0" intMax="127" intMin="0" high="127" low="127" step="0.000000" />
+            <Param name="CC# 24" shortName="CC# 24" id="24" intStep="0" intMax="127" intMin="0" high="127" low="0" step="0.000000" />
+            <Param name="CC# 25" shortName="CC# 25" id="25" intStep="0" intMax="127" intMin="0" high="127" low="0" step="0.000000" />
+            <Param name="CC# 26" shortName="CC# 26" id="26" intStep="0" intMax="127" intMin="0" high="127" low="0" step="0.000000" />
+            <Param name="CC# 27" shortName="CC# 27" id="27" intStep="0" intMax="127" intMin="0" high="127" low="0" step="0.000000" />
+            <Param name="CC# 28" shortName="CC# 28" id="28" intStep="0" intMax="127" intMin="0" high="127" low="0" step="0.000000" />
+            <Param name="CC# 29" shortName="CC# 29" id="29" intStep="0" intMax="127" intMin="0" high="127" low="0" step="0.000000" />
+            <Param name="CC# 30" shortName="CC# 30" id="30" intStep="0" intMax="127" intMin="0" high="127" low="0" step="0.000000" />
+            <Param name="CC# 31" shortName="CC# 31" id="31" intStep="0" intMax="127" intMin="0" high="127" low="0" step="0.000000" />
         </Group>
         <Group name="Page 1 Pot Buttons">
-            <Param name="CC# 32" shortName="CC# 32" id="32" intStep="1" intMax="127" intMin="0" high="127" low="127" step="1.000000" />
-            <Param name="CC# 33" shortName="CC# 33" id="33" intStep="1" intMax="127" intMin="0" high="127" low="127" step="1.000000" />
-            <Param name="CC# 34" shortName="CC# 34" id="34" intStep="1" intMax="127" intMin="0" high="127" low="127" step="1.000000" />
-            <Param name="CC# 35" shortName="CC# 35" id="35" intStep="0" intMax="127" intMin="0" high="127" low="127" step="0.000000" />
-            <Param name="CC# 36" shortName="CC# 36" id="36" intStep="0" intMax="127" intMin="0" high="127" low="127" step="0.000000" />
-            <Param name="CC# 37" shortName="CC# 37" id="37" intStep="0" intMax="127" intMin="0" high="127" low="127" step="0.000000" />
-            <Param name="CC# 38" shortName="CC# 38" id="38" intStep="0" intMax="127" intMin="0" high="127" low="127" step="0.000000" />
-            <Param name="CC# 39" shortName="CC# 39" id="39" intStep="0" intMax="127" intMin="0" high="127" low="127" step="0.000000" />
+            <Param name="CC# 32" shortName="CC# 32" id="32" intStep="0" intMax="127" intMin="0" high="127" low="0" step="0.000000" />
+            <Param name="CC# 33" shortName="CC# 33" id="33" intStep="0" intMax="127" intMin="0" high="127" low="0" step="0.000000" />
+            <Param name="CC# 34" shortName="CC# 34" id="34" intStep="0" intMax="127" intMin="0" high="127" low="0" step="0.000000" />
+            <Param name="CC# 35" shortName="CC# 35" id="35" intStep="0" intMax="127" intMin="0" high="127" low="0" step="0.000000" />
+            <Param name="CC# 36" shortName="CC# 36" id="36" intStep="0" intMax="127" intMin="0" high="127" low="0" step="0.000000" />
+            <Param name="CC# 37" shortName="CC# 37" id="37" intStep="0" intMax="127" intMin="0" high="127" low="0" step="0.000000" />
+            <Param name="CC# 38" shortName="CC# 38" id="38" intStep="0" intMax="127" intMin="0" high="127" low="0" step="0.000000" />
+            <Param name="CC# 39" shortName="CC# 39" id="39" intStep="0" intMax="127" intMin="0" high="127" low="0" step="0.000000" />
         </Group>
         <Group name="Page 1 Slider Buttons">
-            <Param name="CC# 40" shortName="CC# 40" id="40" intStep="0" intMax="127" intMin="0" high="127" low="127" step="0.000000" />
-            <Param name="CC# 41" shortName="CC# 41" id="41" intStep="0" intMax="127" intMin="0" high="127" low="127" step="0.000000" />
-            <Param name="CC# 42" shortName="CC# 42" id="42" intStep="0" intMax="127" intMin="0" high="127" low="127" step="0.000000" />
-            <Param name="CC# 43" shortName="CC# 43" id="43" intStep="0" intMax="127" intMin="0" high="127" low="127" step="0.000000" />
-            <Param name="CC# 44" shortName="CC# 44" id="44" intStep="0" intMax="127" intMin="0" high="127" low="127" step="0.000000" />
-            <Param name="CC# 45" shortName="CC# 45" id="45" intStep="0" intMax="127" intMin="0" high="127" low="127" step="0.000000" />
-            <Param name="CC# 46" shortName="CC# 46" id="46" intStep="0" intMax="127" intMin="0" high="127" low="127" step="0.000000" />
-            <Param name="CC# 47" shortName="CC# 47" id="47" intStep="0" intMax="127" intMin="0" high="127" low="127" step="0.000000" />
+            <Param name="CC# 40" shortName="CC# 40" id="40" intStep="0" intMax="127" intMin="0" high="127" low="0" step="0.000000" />
+            <Param name="CC# 41" shortName="CC# 41" id="41" intStep="0" intMax="127" intMin="0" high="127" low="0" step="0.000000" />
+            <Param name="CC# 42" shortName="CC# 42" id="42" intStep="0" intMax="127" intMin="0" high="127" low="0" step="0.000000" />
+            <Param name="CC# 43" shortName="CC# 43" id="43" intStep="0" intMax="127" intMin="0" high="127" low="0" step="0.000000" />
+            <Param name="CC# 44" shortName="CC# 44" id="44" intStep="0" intMax="127" intMin="0" high="127" low="0" step="0.000000" />
+            <Param name="CC# 45" shortName="CC# 45" id="45" intStep="0" intMax="127" intMin="0" high="127" low="0" step="0.000000" />
+            <Param name="CC# 46" shortName="CC# 46" id="46" intStep="0" intMax="127" intMin="0" high="127" low="0" step="0.000000" />
+            <Param name="CC# 47" shortName="CC# 47" id="47" intStep="0" intMax="127" intMin="0" high="127" low="0" step="0.000000" />
         </Group>
         <Group name="Page 1 D Buttons">
-            <Param name="CC# 48" shortName="CC# 48" id="48" intStep="0" intMax="127" intMin="0" high="127" low="127" step="0.000000" />
-            <Param name="CC# 49" shortName="CC# 49" id="49" intStep="0" intMax="127" intMin="0" high="127" low="127" step="0.000000" />
-            <Param name="CC# 50" shortName="CC# 50" id="50" intStep="0" intMax="127" intMin="0" high="127" low="127" step="0.000000" />
-            <Param name="CC# 51" shortName="CC# 51" id="51" intStep="0" intMax="127" intMin="0" high="127" low="127" step="0.000000" />
-            <Param name="CC# 52" shortName="CC# 52" id="52" intStep="0" intMax="127" intMin="0" high="127" low="127" step="0.000000" />
-            <Param name="CC# 53" shortName="CC# 53" id="53" intStep="0" intMax="127" intMin="0" high="127" low="127" step="0.000000" />
-            <Param name="CC# 54" shortName="CC# 54" id="54" intStep="0" intMax="127" intMin="0" high="127" low="127" step="0.000000" />
-            <Param name="CC# 55" shortName="CC# 55" id="55" intStep="0" intMax="127" intMin="0" high="127" low="127" step="0.000000" />
+            <Param name="CC# 48" shortName="CC# 48" id="48" intStep="0" intMax="127" intMin="0" high="127" low="0" step="0.000000" />
+            <Param name="CC# 49" shortName="CC# 49" id="49" intStep="0" intMax="127" intMin="0" high="127" low="0" step="0.000000" />
+            <Param name="CC# 50" shortName="CC# 50" id="50" intStep="0" intMax="127" intMin="0" high="127" low="0" step="0.000000" />
+            <Param name="CC# 51" shortName="CC# 51" id="51" intStep="0" intMax="127" intMin="0" high="127" low="0" step="0.000000" />
+            <Param name="CC# 52" shortName="CC# 52" id="52" intStep="0" intMax="127" intMin="0" high="127" low="0" step="0.000000" />
+            <Param name="CC# 53" shortName="CC# 53" id="53" intStep="0" intMax="127" intMin="0" high="127" low="0" step="0.000000" />
+            <Param name="CC# 54" shortName="CC# 54" id="54" intStep="0" intMax="127" intMin="0" high="127" low="0" step="0.000000" />
+            <Param name="CC# 55" shortName="CC# 55" id="55" intStep="0" intMax="127" intMin="0" high="127" low="0" step="0.000000" />
         </Group>
         <Group name="Page 1 Drumpads">
             <Param name="Note 060 (C3)" shortName="Note 060 (C3)" id="189" intStep="1" intMax="127" intMin="0" high="127" low="0" step="1.000000" />
@@ -86,10 +86,10 @@
             <Param name="Note 067 (G3)" shortName="Note 067 (G3)" id="196" intStep="1" intMax="127" intMin="0" high="127" low="0" step="1.000000" />
         </Group>
         <Group name="Page 1 XYPedals">
+            <Param name="CC# 58" shortName="CC# 58" id="58" intStep="1" intMax="127" intMin="0" high="127" low="0" step="1.000000" />
             <Param />
-            <Param />
-            <Param />
-            <Param />
+            <Param name="CC# 57" shortName="CC# 57" id="57" intStep="1" intMax="127" intMin="0" high="127" low="0" step="1.000000" />
+            <Param name="CC# 56" shortName="CC# 56" id="56" intStep="1" intMax="127" intMin="0" high="127" low="0" step="1.000000" />
         </Group>
         <Group name="Page 1 Modwheel">
             <Param name="Pitch Bend" shortName="Pitch Bend" id="128" intStep="1" intMax="63" intMin="-64" high="63" low="-64" step="1.000000" />

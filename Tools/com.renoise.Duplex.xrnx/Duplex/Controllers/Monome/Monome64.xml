@@ -1,0 +1,87 @@
+
+<Device>
+	<Name>Monome64</Name>
+	<Author>Danoise (adapted for 64 by P.E. Viau)</Author>
+	<Description>Controlmap for Monome64</Description>
+	<Parameters>
+		<Column>
+			<Group name="Controls2" columns="8">
+				<Param value="/led 0 0 %i"  action="/press 0 0 %i"  type="button" name="00" maximum="1" minimum="0"/>
+				<Param value="/led 1 0 %i"  action="/press 1 0 %i"  type="button" name="01" maximum="1" minimum="0"/>
+				<Param value="/led 2 0 %i"  action="/press 2 0 %i"  type="button" name="02" maximum="1" minimum="0"/>
+				<Param value="/led 3 0 %i"  action="/press 3 0 %i"  type="button" name="03" maximum="1" minimum="0"/>
+				<Param value="/led 4 0 %i"  action="/press 4 0 %i"  type="button" name="04" maximum="1" minimum="0"/>
+				<Param value="/led 5 0 %i"  action="/press 5 0 %i"  type="button" name="05" maximum="1" minimum="0"/>
+				<Param value="/led 6 0 %i"  action="/press 6 0 %i"  type="button" name="06" maximum="1" minimum="0"/>
+				<Param value="/led 7 0 %i"  action="/press 7 0 %i"  type="button" name="07" maximum="1" minimum="0"/>
+			</Group>
+			<Row>
+				<Group name="Grid" columns="8">
+					<Param value="/led 0 1 %i"  action="/press 0 1 %i"  type="button" name="00" maximum="1" minimum="0"/>
+					<Param value="/led 1 1 %i"  action="/press 1 1 %i"  type="button" name="01" maximum="1" minimum="0"/>
+					<Param value="/led 2 1 %i"  action="/press 2 1 %i"  type="button" name="02" maximum="1" minimum="0"/>
+					<Param value="/led 3 1 %i"  action="/press 3 1 %i"  type="button" name="03" maximum="1" minimum="0"/>
+					<Param value="/led 4 1 %i"  action="/press 4 1 %i"  type="button" name="04" maximum="1" minimum="0"/>
+					<Param value="/led 5 1 %i"  action="/press 5 1 %i"  type="button" name="05" maximum="1" minimum="0"/>
+					<Param value="/led 6 1 %i"  action="/press 6 1 %i"  type="button" name="06" maximum="1" minimum="0"/>
+					<Param value="/led 7 1 %i"  action="/press 7 1 %i"  type="button" name="07" maximum="1" minimum="0"/>
+					<Param value="/led 0 2 %i"  action="/press 0 2 %i"  type="button" name="00" maximum="1" minimum="0"/>
+					<Param value="/led 1 2 %i"  action="/press 1 2 %i"  type="button" name="01" maximum="1" minimum="0"/>
+					<Param value="/led 2 2 %i"  action="/press 2 2 %i"  type="button" name="02" maximum="1" minimum="0"/>
+					<Param value="/led 3 2 %i"  action="/press 3 2 %i"  type="button" name="03" maximum="1" minimum="0"/>
+					<Param value="/led 4 2 %i"  action="/press 4 2 %i"  type="button" name="04" maximum="1" minimum="0"/>
+					<Param value="/led 5 2 %i"  action="/press 5 2 %i"  type="button" name="05" maximum="1" minimum="0"/>
+					<Param value="/led 6 2 %i"  action="/press 6 2 %i"  type="button" name="06" maximum="1" minimum="0"/>
+					<Param value="/led 7 2 %i"  action="/press 7 2 %i"  type="button" name="07" maximum="1" minimum="0"/>
+					<Param value="/led 0 3 %i"  action="/press 0 3 %i"  type="button" name="00" maximum="1" minimum="0"/>
+					<Param value="/led 1 3 %i"  action="/press 1 3 %i"  type="button" name="01" maximum="1" minimum="0"/>
+					<Param value="/led 2 3 %i"  action="/press 2 3 %i"  type="button" name="02" maximum="1" minimum="0"/>
+					<Param value="/led 3 3 %i"  action="/press 3 3 %i"  type="button" name="03" maximum="1" minimum="0"/>
+					<Param value="/led 4 3 %i"  action="/press 4 3 %i"  type="button" name="04" maximum="1" minimum="0"/>
+					<Param value="/led 5 3 %i"  action="/press 5 3 %i"  type="button" name="05" maximum="1" minimum="0"/>
+					<Param value="/led 6 3 %i"  action="/press 6 3 %i"  type="button" name="06" maximum="1" minimum="0"/>
+					<Param value="/led 7 3 %i"  action="/press 7 3 %i"  type="button" name="07" maximum="1" minimum="0"/>
+					<Param value="/led 0 4 %i"  action="/press 0 4 %i"  type="button" name="00" maximum="1" minimum="0"/>
+					<Param value="/led 1 4 %i"  action="/press 1 4 %i"  type="button" name="01" maximum="1" minimum="0"/>
+					<Param value="/led 2 4 %i"  action="/press 2 4 %i"  type="button" name="02" maximum="1" minimum="0"/>
+					<Param value="/led 3 4 %i"  action="/press 3 4 %i"  type="button" name="03" maximum="1" minimum="0"/>
+					<Param value="/led 4 4 %i"  action="/press 4 4 %i"  type="button" name="04" maximum="1" minimum="0"/>
+					<Param value="/led 5 4 %i"  action="/press 5 4 %i"  type="button" name="05" maximum="1" minimum="0"/>
+					<Param value="/led 6 4 %i"  action="/press 6 4 %i"  type="button" name="06" maximum="1" minimum="0"/>
+					<Param value="/led 7 4 %i"  action="/press 7 4 %i"  type="button" name="07" maximum="1" minimum="0"/>
+					<Param value="/led 0 5 %i"  action="/press 0 5 %i"  type="button" name="00" maximum="1" minimum="0"/>
+					<Param value="/led 1 5 %i"  action="/press 1 5 %i"  type="button" name="01" maximum="1" minimum="0"/>
+					<Param value="/led 2 5 %i"  action="/press 2 5 %i"  type="button" name="02" maximum="1" minimum="0"/>
+					<Param value="/led 3 5 %i"  action="/press 3 5 %i"  type="button" name="03" maximum="1" minimum="0"/>
+					<Param value="/led 4 5 %i"  action="/press 4 5 %i"  type="button" name="04" maximum="1" minimum="0"/>
+					<Param value="/led 5 5 %i"  action="/press 5 5 %i"  type="button" name="05" maximum="1" minimum="0"/>
+					<Param value="/led 6 5 %i"  action="/press 6 5 %i"  type="button" name="06" maximum="1" minimum="0"/>
+					<Param value="/led 7 5 %i"  action="/press 7 5 %i"  type="button" name="07" maximum="1" minimum="0"/>
+					<Param value="/led 0 6 %i"  action="/press 0 6 %i"  type="button" name="00" maximum="1" minimum="0"/>
+					<Param value="/led 1 6 %i"  action="/press 1 6 %i"  type="button" name="01" maximum="1" minimum="0"/>
+					<Param value="/led 2 6 %i"  action="/press 2 6 %i"  type="button" name="02" maximum="1" minimum="0"/>
+					<Param value="/led 3 6 %i"  action="/press 3 6 %i"  type="button" name="03" maximum="1" minimum="0"/>
+					<Param value="/led 4 6 %i"  action="/press 4 6 %i"  type="button" name="04" maximum="1" minimum="0"/>
+					<Param value="/led 5 6 %i"  action="/press 5 6 %i"  type="button" name="05" maximum="1" minimum="0"/>
+					<Param value="/led 6 6 %i"  action="/press 6 6 %i"  type="button" name="06" maximum="1" minimum="0"/>
+					<Param value="/led 7 6 %i"  action="/press 7 6 %i"  type="button" name="07" maximum="1" minimum="0"/>
+					<Param value="/led 0 7 %i"  action="/press 0 7 %i"  type="button" name="00" maximum="1" minimum="0"/>
+					<Param value="/led 1 7 %i"  action="/press 1 7 %i"  type="button" name="01" maximum="1" minimum="0"/>
+					<Param value="/led 2 7 %i"  action="/press 2 7 %i"  type="button" name="02" maximum="1" minimum="0"/>
+					<Param value="/led 3 7 %i"  action="/press 3 7 %i"  type="button" name="03" maximum="1" minimum="0"/>
+					<Param value="/led 4 7 %i"  action="/press 4 7 %i"  type="button" name="04" maximum="1" minimum="0"/>
+					<Param value="/led 5 7 %i"  action="/press 5 7 %i"  type="button" name="05" maximum="1" minimum="0"/>
+					<Param value="/led 6 7 %i"  action="/press 6 7 %i"  type="button" name="06" maximum="1" minimum="0"/>
+					<Param value="/led 7 7 %i"  action="/press 7 7 %i"  type="button" name="07" maximum="1" minimum="0"/>
+				</Group>
+				<!--
+				<Group name="ADC">
+					<Param value="/tilt" orientation="vertical" size="8" type="fader" name="tilt1" maximum="200" minimum="0"/>
+					<Param value="/tilt" orientation="vertical" size="8" type="fader" name="tilt2" maximum="200" minimum="0"/>
+				</Group>
+				-->
+			</Row>
+		</Column>
+	</Parameters>
+</Device>
+

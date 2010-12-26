@@ -14,9 +14,14 @@ A generic application class for Duplex
 class 'Application'
 
 -- constructor 
-function Application:__init()
+function Application:__init(config_name)
   TRACE("Application:__init()")
   
+  -- (string) this is the name of the application as it appears
+  -- in the device configuration, e.g. "MySecondMixer" - used for looking 
+  -- up the correct preferences-key when specifying custom options 
+  self._config_name = config_name
+
   -- when the application is inactive, it should 
   -- sleep during idle time and ignore any user input
   self.active = false
@@ -24,7 +29,7 @@ function Application:__init()
   -- mappings allows us to choose where to put controls,
   -- see actual application implementations for examples
   --
-  -- @group_name: the control-map group-name (set in config)
+  -- @group_name: (required) the control-map group-name 
   -- @index: the position where the control should be located (set in config)
   -- @description: provide a sensible tooltip text for the virtual display
   -- @greedy: indicates that the application will use the entire group
@@ -32,18 +37,26 @@ function Application:__init()
   -- 
   -- example_mapping = {
   --  group_name = "Main",
-  --  greedy = true, 
+  --  greedy = false,
+  --  index = 3,
   -- }
 
   self.mappings = {}
 
   -- you can choose to expose your application's options here
-  -- each option can be set in the device/app configuration 
-  -- 
+  -- (device-specific options are specified in the device configuration)
+  --
+  -- @label: displayed in options dialog
+  -- @description: tooltip in options dialog
+  -- @on_change: (function) code to execute when option is changed
+  -- @items: brief descriptions of each available choice (list)
+  -- @value: the default choice among the @items
+  --
   -- example_option = {
   --  label = "My option",
+  --  on_change = function() end,
   --  items = {"Choice 1", "Choice 2"},
-  --  default = 1 -- this is the default value ("Choice 1")
+  --  value = 1 -- this is the default value ("Choice 1")
   -- }
   self.options = {}
 
@@ -51,21 +64,20 @@ function Application:__init()
   -- todo: this will enable color-picker support
   self.palette = {}
 
+  -- (Display) most application will define this 
+  self.display = nil
 
   -- private stuff
 
-  -- true when content (UIComponents etc.) have been created
-  self.__created = false
+  -- (boolean) true when content (UIComponents etc.) have been created
+  self._created = false
   
-  -- the options dialog and view
-
-  self.__vb = renoise.ViewBuilder()
-
-  self.__options_view = nil
-  self.__options_dialog = nil
+  -- the options view
+  self._vb = renoise.ViewBuilder()
+  self._settings_view = nil
 
   -- UIComponents registered via add_component method
-  self.__ui_components = table.create()
+  self._ui_components = table.create()
 
 end
 
@@ -76,20 +88,29 @@ end
 
 function Application:start_app()
   TRACE("Application:start_app()")
-  
+
   if (self.active) then
-    return
+    return false
   end
 
-  -- since options can be applied before the construction of the application,
-  -- we call apply_options() a second time to set UIComponent parameters, etc.
-  self:__apply_options(self.options)
+  -- validate mappings, then construction
+  if not (self._created) then 
+    if not self:_check_mappings(self.mappings) then
+      return false
+    end
+    if not self:_build_app() then
+      return false
+    end
+  end
 
   if (self.display) then
     self.display:apply_tooltips()
   end
 
   self.active = true
+
+  return true
+
 end
 
 
@@ -112,10 +133,11 @@ end
 
 -- create application
 
-function Application:__build_app()
-  TRACE("Application:__build_app()")
+function Application:_build_app()
+  TRACE("Application:_build_app()")
   
-  self.__created = true
+  self._created = true
+
 end
 
 
@@ -126,47 +148,16 @@ end
 function Application:destroy_app()
   TRACE("Application:destroy_app()")
   
-  self:hide_options_dialog()
   self:stop_app()
 
   -- unregister components
-  if(self.__ui_components)then
-    for _,v in pairs(self.__ui_components) do
+  if(self._ui_components)then
+    for _,v in pairs(self._ui_components) do
       v:remove_listeners()
     end
   end
   
-  self.__created = false
-end
-
-
---------------------------------------------------------------------------------
-
--- display application options
-
-function Application:show_options_dialog()
-  TRACE("Application:show_options_dialog()")
-  
-  if (not self.__options_dialog or not self.__options_dialog.visible) then
-    self.__options_dialog = renoise.app():show_custom_dialog(
-      type(self), self.__options_view)
-  else
-    self.__options_dialog:show()
-  end
-end
-
-
---------------------------------------------------------------------------------
-
--- hide application options
-
-function Application:hide_options_dialog()
-  TRACE("Application:hide_options_dialog()")
-  
-  if (self.__options_dialog) and (self.__options_dialog.visible) then
-    self.__options_dialog:close()
-    self.__options_dialog = nil
-  end
+  self._created = false
 end
 
 
@@ -178,12 +169,10 @@ end
 function Application:on_idle()
   -- TRACE("Application:on_idle()")
   
---[[
-  -- it's a good idea to include this check when doing complex stuff:
-  if (not self.active) then 
-    return 
-  end
-]]
+  -- it's a good idea to include this check when doing complex stuff:..
+  -- if (not self.active) then 
+  --   return 
+  -- end
 
 end
 
@@ -203,8 +192,8 @@ end
 
 -- assign matching group-names
 
-function Application:__apply_mappings(mappings)
-  TRACE("Application:__apply_mappings",mappings)
+function Application:_apply_mappings(mappings)
+  TRACE("Application:_apply_mappings",mappings)
   
   for v,k in pairs(self.mappings) do
     for v2,k2 in pairs(mappings) do
@@ -212,50 +201,38 @@ function Application:__apply_mappings(mappings)
         for k3,v3 in pairs(mappings[v]) do
           self.mappings[v][k3] = v3
         end
-        --self.mappings[v].group_name = mappings[v].group_name
-        --self.mappings[v].index = mappings[v].index
       end
     end
   end
 end
 
-
 --------------------------------------------------------------------------------
 
--- assign matching options
--- @param options: either a primitive table of values, or a full option-table
+-- check mappings: should be called before application is started
+-- @return boolean (false if missing group-names were encountered)
 
-function Application:__apply_options(options)
-  TRACE("Application:__apply_options",options)
-
-  for v,k in pairs(self.options) do
-    local matched = false
-    for v2,k2 in pairs(options) do
-      if (v==v2) then
-        if (type(options[v]) == "number") then
-          -- initial import of values
-          if(#self.options[v].items>=options[v])then
-            self.options[v].value = options[v]
-            matched = true
-          end
-        elseif (type(options[v]) == "table") then
-          -- when applying the options onto itself
-          -- (start_app will do this)
-          --self.options[v].value = options[v].value
-          matched = true
-          -- invoke on_activate() method if it exists
-          if (self.options[v].on_activate~=nil) then
-            self.options[v].on_activate()
-          end
+function Application:_check_mappings(mappings)
+  TRACE("Application:_check_mappings",mappings)
+  
+  if (self.display) then
+    local cm = self.display.device.control_map
+    for k,v in pairs(mappings) do
+      for k2,v2 in pairs(v) do
+        if(k2 == "group_name") and not (cm.groups[v2])then
+          local app_name = type(self)
+          local msg = "Message from Duplex: the application %s "
+                    .."has been stopped - the control-map group '%s', "
+                    .."does not exist. Please review the device settings "
+                    .."and/or control-map (other applications will "
+                    .."continue to run)"
+          msg = string.format(msg,app_name,v2)
+          renoise.app():show_warning(msg)
+          return false
         end
       end
     end
-    if (not matched) then
-      -- apply default value
-      self.options[v].value = self.options[v].default
-    end
   end
-
+  return true
 end
 
 
@@ -263,129 +240,55 @@ end
 
 -- create application options dialog
 
-function Application:__build_options()
-  TRACE("Application:__build_options")
+function Application:_build_options(process)
+  TRACE("Application:_build_options")
   
-  if (self.__options_view)then
+  if (self._settings_view)then
     return
   end
  
-  local vb = self.__vb 
+  local vb = self._vb 
   
   -- create basic dialog 
-  self.__options_view = vb:column{
-    id = 'dpx_app_rootnode',
-    margin = DEFAULT_MARGIN,
-    spacing = DEFAULT_MARGIN,
-    style = "body",
-    width=400,
-    vb:column{
-      style = "group",
+  self._settings_view = vb:column{
+    style = "group",
+    width="100%",
+    vb:button{
+      text = self._config_name,
       width="100%",
-      vb:column{
-        margin = DEFAULT_MARGIN,
-        spacing = DEFAULT_SPACING,
-        id = "dpx_app_mappings",
-        vb:row{
-          vb:text{
-            id="dpx_app_mappings_header",
-            font="bold",
-            text="",
-          },
-        },
-        -- mappings are inserted here
-      },
-      vb:space{
-        width=18,
-      },
+      notifier = function()
+        local view = vb.views.dpx_app_options
+        local hidden_field = vb.views.dpx_app_options_hidden_field
+        if (view.visible) then
+          view.height = hidden_field.value
+        else
+          view.height = 1
+          hidden_field.value = view.height          
+        end
+        view.visible = not view.visible
+        view:resize()
+      end
+    },
+    vb:value{
+      id = "dpx_app_options_hidden_field",
+      visible = false,
     },
     vb:column{
-      style = "group",
+      id = "dpx_app_options",
       width="100%",
       margin = DEFAULT_MARGIN,
       spacing = DEFAULT_SPACING,
-      id = "dpx_app_options",
-      vb:text{
-        id="dpx_app_options_header",
-        font="bold",
-        text="",
-      },
+      visible = false,
       -- options are inserted here
-    },
-
-    vb:horizontal_aligner{
-      mode = "justify",
-
-      vb:row{
-        vb:button{
-          text="Reset",
-          width=60,
-          height=24,
-          notifier = function(e)
-            self:__set_default_options()
-          end
-        },
-        vb:button{
-          text="Close",
-          width=60,
-          height=24,
-          notifier = function(e)
-            self:hide_app()
-          end
-        },
-      }
     }
   }
   
-  -- populate view with data
-  local elm_group,elm_header
-
-  -- mappings
-  elm_group = vb.views.dpx_app_mappings
-  elm_header = vb.views.dpx_app_mappings_header
-
-  if (self.mappings) then
-    -- update header text
-    if (table_count(self.mappings)>0) then
-      elm_header.text = "Control-map assignments"
-    else
-      elm_header.text = "No mappings are available"
-    end
-    -- build rows (required comes first)
-    for k,v in pairs(self.mappings) do
-      if(v.required)then 
-        elm_group:add_child(self:__add_mapping_row(v,k))
-      end
-    end
-    for k,v in pairs(self.mappings) do
-      if(not v.required)then 
-        elm_group:add_child(self:__add_mapping_row(v,k))
-      end
-    end
-  end
-
-  -- options
-  elm_group = vb.views.dpx_app_options
-  elm_header = vb.views.dpx_app_options_header
+  local elm_group = vb.views.dpx_app_options
   if (self.options)then
-    -- update header text
-    if (table_count(self.options)>0) then
-      elm_header.text = "Other options"
-    else
-      elm_header.text = "No options are available"
-    end
-    -- build rows (popups)
     for k,v in pairs(self.options) do
-      if (v.items) and (type(v.items[1])~="boolean") then
-        elm_group:add_child(self:__add_option_row(v,k))
-      end
+      elm_group:add_child(self:_add_option_row(v,k,process))
     end
-    -- build rows (checkbox)
-    for k,v in pairs(self.options) do
-      if (v.items) and (type(v.items[1])=="boolean") then
-        elm_group:add_child(self:__add_option_row(v,k))
-      end
-    end
+
   end
 end
 
@@ -394,139 +297,40 @@ end
 --                         Private Helper Functions
 --------------------------------------------------------------------------------
 
--- build a row of mapping controls
--- @return ViewBuilder view
-
-function Application:__add_mapping_row(t,key)
-
-  local vb = self.__vb
-  local row = vb:row{}
-
-  local elm
-
-  -- leave out checkbox for required maps
-  if(t.required)then 
-    elm = vb:space{
-      width=18,
-    }
-  else
-    elm = vb:checkbox{
-      value=(t.group_name~=nil),
-      tooltip="Set this assignment as active/inactive",
-      width=18,
-    }
-  end
-  row:add_child(elm)
-  elm = vb:row{
-    vb:text{
-      text=key,
-      tooltip=("Assignment description: %s"):format(t.description),
-      width=70,
-    },
-    vb:row{
-      style="border",
-      vb:text{
-        text=t.group_name,
-        tooltip="The selected control-map group",
-        font="mono",
-        width=110,
-      },
-      vb:button{
-        text="Choose",
-        tooltip="Click here to choose a control-map group for this assignment",
-        width=60,
-        notifier = function()
-          renoise.app():show_warning("Mapping dialog not yet implemented")
-        end
-      }
-    }
-  }
-  row:add_child(elm)
-  return row
-
-end
-
---------------------------------------------------------------------------------
-
 -- build a row of option controls
 -- @return ViewBuilder view
 
-function Application:__add_option_row(t,key)
+function Application:_add_option_row(t,key,process)
 
-  local vb = self.__vb
-  local row = vb:row{}
-
-  local elm
-
-  if (t.items) and (type(t.items[1])=="boolean") then
-    -- boolean option
-    elm = vb:row{
-      vb:checkbox{
-        value=t.items[t.value],
-        id=('dpx_app_options_%s'):format(key),
-        width=18,
-        --id = checkbox_id,
-        notifier = function(val)
-          self:__set_option(key,val)
-        end
-      },
-      vb:text{
-        text=t.label,
-        tooltip=t.description,
-      },
-    }
-  
-  else
-    -- choice
-      elm = vb:row{
-        vb:text{
-          text=t.label,
-          --tooltip=t.label,
-          width=90,
-        },
-        vb:popup{
-          items=t.items,
-          id=('dpx_app_options_%s'):format(key),
-          value=t.value,
-          width=160,
-          notifier = function(val)
-            self:__set_option(key,val)
-          end
-        }
-      }
-  end
-
-  row:add_child(elm)
-
-  return row
-end
-
-
---------------------------------------------------------------------------------
-
--- set options to default values (only locally)
--- @skip_update : don't update the dialog 
---  todo: remove the skip_update argument when we get a proper way to check 
---  if .views is defined
-
-function Application:__set_default_options(skip_update)
-  TRACE("Application:__set_default_options()")
-
-  -- set local value
-  for k,v in pairs(self.options) do
-    self.options[k].value = self.options[k].default
-
-    if(not skip_update)then
-      local elm = vb.views[("dpx_app_options_%s"):format(k)]
-      if(elm)then
-        if(type(elm.value)=="boolean")then -- checkbox
-          elm.value = self.options[k].items[self.options[k].default]
-        else -- popup
-          elm.value = self.options[k].default
+  local vb = self._vb
+  local elm = vb:row{
+    width="100%",
+    tooltip=t.description,
+    vb:text{
+      text=t.label,
+      width=90,
+    },
+    vb:popup{
+      items=t.items,
+      --id=('dpx_app_options_%s'):format(key),
+      value=t.value,
+      width=175,
+      notifier = function(val)
+        -- set application option
+        self:_set_option(key,val)
+        -- update relevant device configuration
+        local app_options_node = 
+          process.settings.applications:property(self._config_name).options
+        -- check if we need to create the node 
+        if not app_options_node:property(key) then
+          app_options_node:add_property(key,val)
+        else
+          app_options_node:property(key).value = val
         end
       end
-    end
-  end
+    }
+  }
+  return elm
 end
 
 
@@ -534,12 +338,15 @@ end
 
 -- set option value 
 
-function Application:__set_option(name, value)
+function Application:_set_option(name, value)
 
   -- set local value
   for k,v in pairs(self.options) do
     if (k == name) then
       self.options[k].value = value
+      if (self.options[k].on_change) then
+        self.options[k].on_change(self)
+      end
     end
   end
 end
@@ -549,12 +356,12 @@ end
 -- register a UIComponent so we can automatically remove it when exiting
 -- note that the display might not be present, so use with caution
 
-function Application:__add_component(c)
+function Application:_add_component(c)
   
   assert(self.display, "Internal Error. Please report: " ..
     "trying to add a UIComponent to an application without a display")
 
-  self.__ui_components:insert(c)
+  self._ui_components:insert(c)
   self.display:add(c)
 
 end  

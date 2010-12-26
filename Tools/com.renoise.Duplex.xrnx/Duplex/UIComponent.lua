@@ -63,7 +63,7 @@ function UIComponent:__init(display)
   self.dirty = true 
   
   -- the parent display
-  self.__display = display 
+  self._display = display 
 end
 
 
@@ -73,7 +73,7 @@ end
 -- (used by event handlers)
 
 function UIComponent:get_msg()
-  return self.__display.device.message_stream.current_message
+  return self._display.device.message_stream.current_message
 end
 
 
@@ -123,6 +123,11 @@ end
 function UIComponent:set_size(width, height)
   TRACE("UIComponent:set_size", width, height)
 
+  if (width ~= self.width) or
+    (height ~= self.height) then
+    self:invalidate()
+  end
+
   self.canvas:set_size(width, height)
   self.width = width      
   self.height = height
@@ -140,10 +145,10 @@ function UIComponent:set_pos(x,y)
   if x and (not y) then
     idx = x
   end
-  
+
   if (idx) then
     -- obtain the size of the group
-    local cm = self.__display.device.control_map
+    local cm = self._display.device.control_map
     local cols = cm:count_columns(self.group_name)
     -- calculate x/y from index
     if (idx>0) then
@@ -188,13 +193,13 @@ end
 --------------------------------------------------------------------------------
 
 -- set palette, invalidate if changed
--- @colors: a table of color values, e.g {background={color{0x00,0x00,0x00}}}
+-- @colors: a table of color values, e.g {background={color={0x00,0x00,0x00}}}
 
 function UIComponent:set_palette(palette)
 
   local changed = false
 
-  for i,__ in pairs(palette)do
+  for i,_ in pairs(palette)do
     for k,v in pairs(palette[i])do
       if self.palette[i] and self.palette[i][k] then
         if(type(v)=="table")then -- color

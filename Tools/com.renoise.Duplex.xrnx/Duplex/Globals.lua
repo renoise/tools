@@ -33,14 +33,21 @@ DEVICE_EVENT_BUTTON_HELD = 4
 
 -- Input methods
 
--- bidirectional button (LED)
+-- standard bidirectional button which output a value on press
+-- & release, but does not control it's internal state
 -- (a control-map @type="button" attribute)
 CONTROLLER_BUTTON = 1    
--- bidirectional button which toggles the state internally (LED)
+-- bidirectional button which toggles the state internally 
 -- this type of control does not support release & hold events
+-- Examples are buttons on the BCF/BCR controller 
 -- (a control-map @type="togglebutton" attribute)
 CONTROLLER_TOGGLEBUTTON = 2    
---  relative/endless encoder (LED)
+-- bidirectional button which will output values on press & release 
+-- while controlling it's state internally. Some examples are 
+-- Automap "momentary" buttons, or TouchOSC pushbuttons
+-- (a control-map @type="pushbutton" attribute)
+CONTROLLER_PUSHBUTTON = 3
+--  relative/endless encoder
 -- (a control-map @type="encoder" attribute)
 --CONTROLLER_ENCODER = 3
 -- manual fader
@@ -57,6 +64,7 @@ UI_COMPONENT_PUSHBUTTON = 2
 UI_COMPONENT_SLIDER = 3
 UI_COMPONENT_SPINNER = 4
 UI_COMPONENT_CUSTOM = 5
+UI_COMPONENT_BUTTONSTRIP = 6
 
 -- Miscellaneous
 
@@ -74,7 +82,11 @@ DEFAULT_CONTROL_HEIGHT = renoise.ViewBuilder.DEFAULT_CONTROL_HEIGHT
 
 MUTE_STATE_ACTIVE = 1
 MUTE_STATE_OFF = 2
+MUTE_STATE_MUTED = 3
 
+TRACK_TYPE_SEQUENCER = 1
+TRACK_TYPE_MASTER = 2
+TRACK_TYPE_SEND = 3
 
 --------------------------------------------------------------------------------
 -- device configurations & preferences
@@ -184,8 +196,8 @@ end
 function table_compare(t1,t2)
   local to_string = function(t)
     local rslt = ""
-    for _,__ in ipairs(table.values(t))do
-      rslt = rslt..tostring(__)..","
+    for _,v in ipairs(table.values(t))do
+      rslt = rslt..tostring(v)..","
     end
     return rslt
   end
@@ -219,6 +231,14 @@ function split_filename(filename)
   end
 end
 
+-- get_playing_pattern
+
+function get_playing_pattern()
+  local idx = renoise.song().transport.playback_pos.sequence
+  return renoise.song().patterns[renoise.song().sequencer.pattern_sequence[idx]]
+end
+
+
 -- get_master_track
 
 function get_master_track()
@@ -242,23 +262,41 @@ end
 -- get average from color
 
 function get_color_average(color)
-  return color[1]+color[2]+color[3]/3
+  return (color[1]+color[2]+color[3])/3
 end
 
 -- check if colorspace is monochromatic
 function is_monochrome(colorspace)
-  local cs = {1,1,1}
-  return table_compare(colorspace,cs)
+  if table.is_empty(colorspace) then
+    return true
+  end
+  local val = math.max(colorspace[1],
+    math.max(colorspace[2],
+    math.max(colorspace[3])))
+  return (val==1)
 end
 
 
--- helper function to remove channel info from value-string
--- @return str
+-- remove channel info from value-string
 
 function strip_channel_info(str)
   return string.gsub (str, "(|Ch[0-9]+)", "")
 end
 
+
+-- get the type of track: sequencer/master/send
+
+function determine_track_type(track_index)
+  local master_idx = get_master_track_index()
+  local tracks = renoise.song().tracks
+  if (track_index < master_idx) then
+    return TRACK_TYPE_SEQUENCER
+  elseif (track_index == master_idx) then
+    return TRACK_TYPE_MASTER
+  elseif (track_index <= #tracks) then
+    return TRACK_TYPE_SEND
+  end
+end
 
 
 --------------------------------------------------------------------------------
@@ -273,14 +311,17 @@ end
 -- {"^Display:"} " -> show traces, starting with "Display:" only
 -- {"^ControlMap:", "^Display:"} -> show "Display:" and "ControlMap:"
 
-local __trace_filters = nil
---local __trace_filters = {"^BrowserProcess"}
-
+local _trace_filters = nil
+--local _trace_filters = {"^MessageStream"}
+--local _trace_filters = {"^UIButtonStrip", "^UISlider","^Browser"}
+--local _trace_filters = {"^Recorder", "^Effect","^Navigator","^Mixer","^Matrix"}
+--local _trace_filters = {"^StepSequencer", "^Transport","^MidiDevice","^MessageStream","^"}
+--local _trace_filters = {".*"}
 
 --------------------------------------------------------------------------------
 -- TRACE impl
 
-if (__trace_filters ~= nil) then
+if (_trace_filters ~= nil) then
   
   function TRACE(...)
     local result = ""
@@ -332,7 +373,7 @@ if (__trace_filters ~= nil) then
     end
   
     -- apply filter
-    for _,filter in pairs(__trace_filters) do
+    for _,filter in pairs(_trace_filters) do
       if result:find(filter) then
         print(result)
         break

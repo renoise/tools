@@ -72,9 +72,9 @@ function Display:__init(device)
   }    
   
   --  temp values (construction of control surface)
-  self.__parents = nil
-  self.__grid_obj = nil    
-  self.__grid_count = nil
+  self._parents = nil
+  self._grid_obj = nil    
+  self._grid_count = nil
 end
 
 
@@ -171,33 +171,51 @@ function Display:update()
 
       obj:draw()
 
+      local columns = control_map.groups[obj.group_name].columns
+
       -- loop through the delta array - it contains all recent updates
       if (obj.canvas.has_changed) then
+
         for x = 1,obj.width do
           for y = 1, obj.height do
-
             if (obj.canvas.delta[x][y]) then
               if not (control_map.groups[obj.group_name]) then
                 print(("Warning: '%s' is not specified in control-map "..
                   "group '%s'"):format(type(obj), tostring(obj.group_name)))
-
               else
-                local columns = control_map.groups[obj.group_name].columns
                 local idx = (x+obj.x_pos-1)+((y+obj.y_pos-2)*columns)
-
                 local elm = control_map:get_indexed_element(idx, obj.group_name)
-                
                 if (elm) then
                   self:set_parameter(elm, obj, obj.canvas.delta[x][y])
                 end
               end
             end
+
           end
         end
         
-        -- reset has_changed flag
         obj.canvas:clear_delta()
+
       end
+
+      -- check if the canvas has extraneous points that need to be cleared
+      for x,v in pairs(obj.canvas.clear) do
+        for y,v2 in pairs(obj.canvas.clear[x]) do
+          -- clear point (TODO: clear tooltips as well)
+          local idx = (x+obj.x_pos-1)+((y+obj.y_pos-2)*columns)
+          local elm = control_map:get_indexed_element(idx, obj.group_name)
+          if (elm) then
+            local point = CanvasPoint()
+            point:apply(self.palette.background)
+            point.val = false      
+            self:set_parameter(elm,obj,point)
+          end
+
+        end
+      end
+
+      obj.canvas.clear = {}
+
     end
   end
 end
@@ -220,18 +238,20 @@ function Display:set_parameter(elm, obj, point)
   -- update hardware display
 
   if (self.device) then 
-    local msg_type = self.device.control_map:determine_type(elm.value)
-    
-    local current_message = self.device.message_stream.current_message
 
-    local channel = (current_message) and current_message.channel or
-      self.device.default_midi_channel
+    local msg_type = self.device.control_map:determine_type(elm.value)
+    local current_message = self.device.message_stream.current_message
+    local channel = nil
+    if (self.device.protocol==DEVICE_MIDI_PROTOCOL) then
+      channel = self.device:extract_midi_channel(elm.value) or 
+        self.device.default_midi_channel
+    end
 
     if (msg_type == MIDI_NOTE_MESSAGE) then
       num = self.device:extract_midi_note(elm.value)
 
       value = self.device:point_to_value(
-        point, elm.maximum, elm.minimum, obj.ceiling)
+        point, elm, obj.ceiling)
 
       -- do not loop back the original value change back to the sender, 
       -- unless the device explicitly wants this
@@ -249,7 +269,7 @@ function Display:set_parameter(elm, obj, point)
       num = self.device:extract_midi_cc(elm.value)
       
       value = self.device:point_to_value(
-        point, elm.maximum, elm.minimum, obj.ceiling)
+        point, elm, obj.ceiling)
 
       -- do not loop back the original value change back to the sender, 
       -- unless the device explicitly wants this
@@ -267,7 +287,7 @@ function Display:set_parameter(elm, obj, point)
 
 --[[ TODO      
       value = self.device:point_to_value(
-        point, elm.maximum, elm.minimum, obj.ceiling)
+        point, elm, obj.ceiling)
 
       -- do not loop back the original value change back to the sender, 
       -- unless the device explicitly wants this
@@ -284,8 +304,7 @@ function Display:set_parameter(elm, obj, point)
     elseif (msg_type == OSC_MESSAGE) then
 
       value = self.device:point_to_value(
-        point, elm.maximum, elm.minimum, obj.ceiling)
-
+        point, elm, obj.ceiling)
       -- do not loop back the original value change back to the sender, 
       -- unless the device explicitly wants this
       if (not current_message) or
@@ -331,7 +350,7 @@ function Display:set_parameter(elm, obj, point)
       (type(widget) == "Slider")
     then
       value = self.device:point_to_value(
-        point, elm.maximum, elm.minimum, obj.ceiling)
+        point, elm, obj.ceiling)
 
       widget:remove_notifier(self.ui_notifiers[elm.id])
       widget.value = tonumber(value)
@@ -364,12 +383,12 @@ function Display:build_control_surface()
   if (self.device.control_map.definition) then
   
     -- reset temp states from previous walks
-    self.__parents = {}
-    self.__grid_obj = nil    
-    self.__grid_count = 0
+    self._parents = {}
+    self._grid_obj = nil    
+    self._grid_count = 0
 
     -- construct the control surface UI
-    self:__walk_table(self.device.control_map.definition)
+    self:_walk_table(self.device.control_map.definition)
 
     self:apply_tooltips()
 
@@ -385,18 +404,32 @@ end
 --  @value : the value
 --  @metadata : metadata table (min/max etc.)
 
-function Display:generate_message(value, metadata)
+function Display:generate_message(value, metadata, released)
   TRACE('Display:generate_message:'..value)
 
   local msg = Message()
   msg.value = value
 
+  -- include additional useful meta-properties
+  msg.name = metadata.name
+  msg.group_name = metadata.group_name
+  msg.max = tonumber(metadata.maximum)
+  msg.min = tonumber(metadata.minimum)
+  msg.id = metadata.id
+  msg.index = metadata.index
+  msg.column = metadata.column
+  msg.row = metadata.row
+  msg.timestamp = os.clock()
+
   -- the type of message (MIDI/OSC...)
   msg.context = self.device.control_map:determine_type(metadata.value)
-  -- add channel for MIDI devices
+  -- add channel/note-off for MIDI devices
   if (self.device.protocol == DEVICE_MIDI_PROTOCOL) then
     msg.channel = self.device:extract_midi_channel(metadata.value) or 
       self.device.default_midi_channel
+    if (msg.context==MIDI_NOTE_MESSAGE) and released then
+      msg.is_note_off = true
+    end
   end
 
   -- input method : make sure we're using the right handler 
@@ -405,6 +438,9 @@ function Display:generate_message(value, metadata)
 
   elseif (metadata.type == "togglebutton") then
     msg.input_method = CONTROLLER_TOGGLEBUTTON
+
+  elseif (metadata.type == "pushbutton") then
+    msg.input_method = CONTROLLER_PUSHBUTTON
 
 --  elseif (metadata.type == "encoder") then
 --    msg.input_method = CONTROLLER_ENCODER
@@ -420,17 +456,6 @@ function Display:generate_message(value, metadata)
       "unknown metadata.type '%s'"):format(metadata.type or "nil"))
   end
 
-  -- include additional useful meta-properties
-  msg.name = metadata.name
-  msg.group_name = metadata.group_name
-  msg.max = tonumber(metadata.maximum)
-  msg.min = tonumber(metadata.minimum)
-  msg.id = metadata.id
-  msg.index = metadata.index
-  msg.column = metadata.column
-  msg.row = metadata.row
-  msg.timestamp = os.clock()
-
   -- mark as virtual generated message
   msg.is_virtual = true
 
@@ -441,11 +466,11 @@ end
 
 --------------------------------------------------------------------------------
 
---  __walk_table: create the virtual control surface
+--  _walk_table: create the virtual control surface
 --  iterate through the control-map, while adding/collecting 
 --  relevant meta-information 
 
-function Display:__walk_table(t, done, deep)
+function Display:_walk_table(t, done, deep)
 
   deep = deep and deep + 1 or 1  --  the nesting level
   done = done or {}
@@ -465,17 +490,32 @@ function Display:__walk_table(t, done, deep)
   
         --- validate param properties first
         
-        self:__validate_param(t[key].xarg)
+        self:_validate_param(t[key].xarg)
       
       
         --- common properties
 
         local tooltip = string.format("%s (unassigned)",view_obj.meta.value)
 
-        --- Param:button or togglebutton
+        --  relative size
+        local adj_width = UNIT_WIDTH
+        local adj_height = UNIT_WIDTH
+        if view_obj.meta.size then
+          adj_width = (UNIT_WIDTH * view_obj.meta.size) + 
+            (DEFAULT_SPACING * (view_obj.meta.size - 1))
+          adj_height = (UNIT_HEIGHT * view_obj.meta.size) + 
+            (DEFAULT_SPACING * (view_obj.meta.size - 1))
+        end
+        if view_obj.meta.aspect then
+          adj_height = adj_height*view_obj.meta.aspect
+        end
+
+
+        --- Param:button, togglebutton or pushbutton
 
         if (view_obj.meta.type == "button" or 
-            view_obj.meta.type == "togglebutton") then
+            view_obj.meta.type == "togglebutton" or
+            view_obj.meta.type == "pushbutton") then
           local notifier = function(value) 
             -- output the maximum value
             self:generate_message(tonumber(view_obj.meta.maximum),view_obj.meta)
@@ -486,25 +526,24 @@ function Display:__walk_table(t, done, deep)
           end
           local release_notifier = function(value) 
             -- output the minimum value
-            self:generate_message(tonumber(view_obj.meta.minimum),view_obj.meta)
+            local released = true
+            self:generate_message(
+              tonumber(view_obj.meta.minimum),view_obj.meta,released)
           end
             
           self.ui_notifiers[view_obj.meta.id] = notifier
           view_obj.view = self.vb:button{
             id = view_obj.meta.id,
-            width = (UNIT_WIDTH * view_obj.meta.size) + 
-              (DEFAULT_SPACING * (view_obj.meta.size - 1)),
-            height = (UNIT_HEIGHT * view_obj.meta.size) + 
-              (DEFAULT_SPACING * (view_obj.meta.size - 1)),
+            width = adj_width,
+            height = adj_height,
             tooltip = tooltip,
-            --notifier = notifier
             pressed = press_notifier,
             released = release_notifier
           }
         
         
         --- Param:encoder
-            
+        --[[
         elseif (view_obj.meta.type == "encoder") then
           local notifier = function(value) 
             -- output the current value
@@ -521,7 +560,7 @@ function Display:__walk_table(t, done, deep)
               width = UNIT_WIDTH,
               notifier = notifier
             }
-            
+        ]]
           
         --- Param:dial
         
@@ -537,8 +576,8 @@ function Display:__walk_table(t, done, deep)
             min = tonumber(view_obj.meta.minimum),
             max = tonumber(view_obj.meta.maximum),
             tooltip = tooltip,
-            width = UNIT_WIDTH,
-            height = UNIT_WIDTH,
+            width = adj_width,
+            height = adj_height,
             notifier = notifier
           }
           
@@ -594,8 +633,8 @@ function Display:__walk_table(t, done, deep)
         view_obj.view = self.vb:column{
           spacing = DEFAULT_SPACING
         }
-        self.__parents[deep] = view_obj
-        self.__grid_obj = nil
+        self._parents[deep] = view_obj
+        self._grid_obj = nil
   
   
       --- Row
@@ -604,14 +643,14 @@ function Display:__walk_table(t, done, deep)
         view_obj.view = self.vb:row{
           spacing = DEFAULT_SPACING,
         }
-        self.__parents[deep] = view_obj
-        self.__grid_obj = nil
+        self._parents[deep] = view_obj
+        self._grid_obj = nil
 
       --- Group
   
       elseif (t[key].label == "Group") then
       
-        self:__validate_group(t[key].xarg)
+        self:_validate_group(t[key].xarg)
 
         -- the group
         local orientation = t[key].xarg.orientation
@@ -622,12 +661,12 @@ function Display:__walk_table(t, done, deep)
         if (columns) then
           -- enter "grid mode": use current group as 
           -- base object for inserting multiple rows
-          self.__grid_count = self.__grid_count+1
-          grid_id = string.format("grid_%i",self.__grid_count)
+          self._grid_count = self._grid_count+1
+          grid_id = string.format("grid_%i",self._grid_count)
           orientation = "vertical"
         else
           -- exit "grid mode"
-          self.__grid_obj = nil
+          self._grid_obj = nil
         end
           
         if (orientation == "vertical") then
@@ -651,10 +690,10 @@ function Display:__walk_table(t, done, deep)
         -- more grid mode stuff: remember the original view_obj
         -- grid mode will otherwise loose this reference...
         if (grid_id) then
-          self.__grid_obj = view_obj
+          self._grid_obj = view_obj
         end
           
-        self.__parents[deep] = view_obj
+        self._parents[deep] = view_obj
       end
         
       -- something was matched
@@ -664,10 +703,10 @@ function Display:__walk_table(t, done, deep)
     
         if (view_obj.meta.row) then
           row_id = string.format("grid_%i_row_%i",
-            self.__grid_count,view_obj.meta.row)
+            self._grid_count,view_obj.meta.row)
         end
     
-        if (not grid_id and self.__grid_obj and 
+        if (not grid_id and self._grid_obj and 
           not self.vb.views[row_id]) then
     
           local row_obj = {
@@ -677,16 +716,16 @@ function Display:__walk_table(t, done, deep)
             }
           }
           -- assign grid objects to this row
-          self.__grid_obj.view:add_child(row_obj.view)
-          self.__parents[deep-1] = row_obj
+          self._grid_obj.view:add_child(row_obj.view)
+          self._parents[deep-1] = row_obj
         end
           
         -- attach to parent object (if it exists)
         local added = false
     
         for i = deep-1, 1, -1 do
-          if self.__parents[i] then
-            self.__parents[i].view:add_child(view_obj.view)
+          if self._parents[i] then
+            self._parents[i].view:add_child(view_obj.view)
             added = true
             break
           end
@@ -698,7 +737,7 @@ function Display:__walk_table(t, done, deep)
         end
       end
       
-      self:__walk_table(value, done, deep)
+      self:_walk_table(value, done, deep)
     end
   end
 end
@@ -709,7 +748,7 @@ end
 -- validate and fix a groups arg and try to give the control map author some
 -- hints of what might be wroing with the control map
 
-function Display:__validate_group(xargs)
+function Display:_validate_group(xargs)
 
   if (xargs.orientation ~= nil and 
       xargs.orientation ~= "vertical" and 
@@ -741,11 +780,12 @@ end
 -- validate and fix param xargs and try to give the control map author some
 -- hints of what might be wroing with the control map
 
-function Display:__validate_param(xargs)
+function Display:_validate_param(xargs)
 
   -- common Param properties
   
   -- name
+  --[[
   if (xargs.name == nil) then
     renoise.app():show_warning(
       ('Whoops! The controlmap \'%s\' specifies no \'name\' property in one '..
@@ -755,6 +795,7 @@ function Display:__validate_param(xargs)
 
     xargs.name = "Undefined"
   end
+  ]]
   
   -- value
   if (xargs.value == nil or 
@@ -773,7 +814,7 @@ function Display:__validate_param(xargs)
   end
   
   -- type
-  local valid_types = {"button", "togglebutton", "encoder", "dial", "fader"}
+  local valid_types = {"button", "togglebutton", "pushbutton", "encoder", "dial", "fader"}
           
   if (xargs.type == nil or not table.find(valid_types, xargs.type)) then
     renoise.app():show_warning(

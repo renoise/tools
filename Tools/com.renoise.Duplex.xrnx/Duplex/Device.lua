@@ -59,16 +59,18 @@ function Device:__init(name, message_stream, protocol)
 
   -- private stuff
 
-  self.__vb = nil
-  self.__settings_view = nil
-  self.__settings_dialog = nil
+  self._vb = nil
+  self._settings_view = nil
+  --self._settings_dialog = nil
   
   
   ---- MIDI port setup changed
-  
+  -- 0.95
+  --[[
   renoise.Midi.devices_changed_observable():add_notifier(
-    Device.__available_device_ports_changed, self
+    Device._available_device_ports_changed, self
   )
+  ]]
   
 end
 
@@ -139,15 +141,15 @@ end
 
 
 --------------------------------------------------------------------------------
-
+--[[
 -- returns true when the device settings dialog is visible 
 
 function Device:settings_dialog_visible()
   TRACE("Device:settings_dialog_visible()")
 
-  return (self.__settings_dialog and self.__settings_dialog.visible)
+  return (self._settings_dialog and self._settings_dialog.visible)
 end
-
+]]
 
 --------------------------------------------------------------------------------
 
@@ -158,33 +160,22 @@ end
 function Device:show_settings_dialog(process)
   TRACE("Device:show_settings_dialog()",process)
 
-  -- already visible? bring to front...
-  if (self.__settings_dialog and self.__settings_dialog.visible) then
-    self.__settings_dialog:show()
-    return    
-  end
-
-
   -- create the config view skeleton
-  
-  self.__settings_view = self:__build_settings()
+  self._settings_view = self:_build_settings()
   
   
   -- and populate it with contents from the browser process / config
-
   local ports_in,ports_out,input_devices,output_devices 
 
   if (process) then
 
     local restart_process = function()
-
       self:open() -- assumes MIDI or OscDevice class 
       -- restart the process to reactivate & refresh
       if (process:running()) then
         process:stop()
         process:start()
       end
-
     end
 
 
@@ -210,12 +201,12 @@ function Device:show_settings_dialog(process)
       
     -- match name
     
-    if (self.__vb.views.dpx_device_name) then
+    if (self._vb.views.dpx_device_name) then
       if (process.configuration) and
          (process.configuration.device) and
          (process.configuration.device.display_name) 
       then
-        self.__vb.views.dpx_device_name.text = 
+        self._vb.views.dpx_device_name.text = 
           process.configuration.device.display_name
       end
     end
@@ -223,11 +214,11 @@ function Device:show_settings_dialog(process)
     
     -- update "device type" text
     
-    if (self.__vb.views.dpx_device_protocol) then
+    if (self._vb.views.dpx_device_protocol) then
       if (self.protocol == DEVICE_MIDI_PROTOCOL) then
-        self.__vb.views.dpx_device_protocol.text = "Type: MIDI Device"
+        self._vb.views.dpx_device_protocol.text = "Type: MIDI Device"
       elseif (self.protocol == DEVICE_OSC_PROTOCOL) then
-        self.__vb.views.dpx_device_protocol.text = "Type: OSC Device"
+        self._vb.views.dpx_device_protocol.text = "Type: OSC Device"
       end
     end
 
@@ -236,7 +227,7 @@ function Device:show_settings_dialog(process)
 
     local bitmap = "./Duplex/Controllers/unknown.bmp"
 
-    if (self.__vb.views.dpx_device_thumbnail_root) then
+    if (self._vb.views.dpx_device_thumbnail_root) then
       -- !!! this is not exactly smart. I want to know the device
       -- folder, so I am extracting the control-map path - but
       -- if the control-map is not located in that folder (which
@@ -269,8 +260,8 @@ function Device:show_settings_dialog(process)
       end
       
     end
-    self.__vb.views.dpx_device_thumbnail_root:add_child(
-      self.__vb:bitmap{
+    self._vb.views.dpx_device_thumbnail_root:add_child(
+      self._vb:bitmap{
         bitmap = bitmap
       }
     )
@@ -280,7 +271,7 @@ function Device:show_settings_dialog(process)
 
       -- match input port
 
-      if (self.__vb.views.dpx_device_port_in_root) then
+      if (self._vb.views.dpx_device_port_in_root) then
         local port_idx
         
         for k,v in ipairs(ports_in) do
@@ -290,7 +281,7 @@ function Device:show_settings_dialog(process)
           end
         end
         
-        local view = self.__vb:popup {
+        local view = self._vb:popup {
           id = "dpx_device_port_in",
           width = 150,
           items = ports_in,
@@ -305,9 +296,8 @@ function Device:show_settings_dialog(process)
               process.settings.device_port_in.value = ""
 
             else
-              self.port_in = self.__vb.views.dpx_device_port_in.items[idx]
+              self.port_in = self._vb.views.dpx_device_port_in.items[idx]
               process.settings.device_port_in.value = self.port_in
-              
               if (self.port_out) then               
                 restart_process()
               end
@@ -315,13 +305,13 @@ function Device:show_settings_dialog(process)
           end
         }
         
-        self.__vb.views.dpx_device_port_in_root:add_child(view)
+        self._vb.views.dpx_device_port_in_root:add_child(view)
       end
       
       
       -- match output port
       
-      if (self.__vb.views.dpx_device_port_out_root) then
+      if (self._vb.views.dpx_device_port_out_root) then
         local port_idx
         
         for k,v in ipairs(ports_out) do
@@ -331,7 +321,7 @@ function Device:show_settings_dialog(process)
           end
         end
         
-        local view = self.__vb:popup {
+        local view = self._vb:popup {
           id = "dpx_device_port_out",
           width = 150,
           items = ports_out,
@@ -346,7 +336,7 @@ function Device:show_settings_dialog(process)
               process.settings.device_port_out.value = ""
               
             else
-              self.port_out = self.__vb.views.dpx_device_port_out.items[idx]
+              self.port_out = self._vb.views.dpx_device_port_out.items[idx]
               process.settings.device_port_out.value = self.port_out
               
               if (self.port_in) then 
@@ -357,15 +347,15 @@ function Device:show_settings_dialog(process)
           end
         }
 
-        self.__vb.views.dpx_device_port_out_root:add_child(view)
+        self._vb.views.dpx_device_port_out_root:add_child(view)
       end
 
     elseif (self.protocol == DEVICE_OSC_PROTOCOL) then
 
       -- input port + address
 
-      local view = self.__vb:row{
-        self.__vb:valuebox {
+      local view = self._vb:row{
+        self._vb:valuebox {
           id = "dpx_device_port_in",
           width = 70,
           min = 1024, -- minimum allowed value for *nix based systems
@@ -376,20 +366,20 @@ function Device:show_settings_dialog(process)
             -- release, then re-open the device
             self:release()
             
-            self.port_in = self.__vb.views.dpx_device_port_in.value
+            self.port_in = self._vb.views.dpx_device_port_in.value
             process.settings.device_port_in.value = tostring(self.port_in)
             
             restart_process()
           end
         },
-        self.__vb:space{
+        self._vb:space{
           width = 6
         },
-        self.__vb:text{
+        self._vb:text{
           text = "Address",
           width = 50
         },
-        self.__vb:textfield {
+        self._vb:textfield {
           id = "dpx_device_address",
           width = 70,
           value = self.address,
@@ -398,7 +388,7 @@ function Device:show_settings_dialog(process)
             -- release, then re-open the device
             self:release()
             
-            self.address = self.__vb.views.dpx_device_address.value
+            self.address = self._vb.views.dpx_device_address.value
             process.settings.device_address.value = self.address
 
             restart_process()
@@ -406,11 +396,11 @@ function Device:show_settings_dialog(process)
         }
       }
 
-      self.__vb.views.dpx_device_port_in_root:add_child(view)
+      self._vb.views.dpx_device_port_in_root:add_child(view)
 
       -- output port
-      local view = self.__vb:row{
-        self.__vb:valuebox {
+      local view = self._vb:row{
+        self._vb:valuebox {
           id = "dpx_device_port_out",
           width = 70,
           min = 1024, -- minimum allowed value for *nix based systems
@@ -421,20 +411,20 @@ function Device:show_settings_dialog(process)
             -- release, then re-open the device
             self:release()
             
-            self.port_out = self.__vb.views.dpx_device_port_out.value
+            self.port_out = self._vb.views.dpx_device_port_out.value
             process.settings.device_port_out.value = tostring(self.port_out)
 
             restart_process()
           end
         },
-        self.__vb:space{
+        self._vb:space{
           width = 6
         },
-        self.__vb:text{
+        self._vb:text{
           text = "Prefix",
           width = 50
         },
-        self.__vb:textfield {
+        self._vb:textfield {
           id = "dpx_device_prefix",
           width = 70,
           value = self.prefix,
@@ -445,7 +435,7 @@ function Device:show_settings_dialog(process)
             
             -- set_device_prefix() is called when re-opening the device,
             -- so we simply set the prefix to the new value here...
-            self.prefix = self.__vb.views.dpx_device_prefix.value
+            self.prefix = self._vb.views.dpx_device_prefix.value
             process.settings.device_prefix.value = self.prefix
             
             restart_process()
@@ -453,49 +443,29 @@ function Device:show_settings_dialog(process)
         }
       }
 
-      self.__vb.views.dpx_device_port_out_root:add_child(view)
+      self._vb.views.dpx_device_port_out_root:add_child(view)
     end
 
   end
 
-
-  -- and finally show the new dialog
-  
-  self.__settings_dialog = renoise.app():show_custom_dialog(
-    "Duplex: Device Settings", self.__settings_view)
 end  
 
-
---------------------------------------------------------------------------------
-
--- close the device settings, when open
-
-function Device:close_settings_dialog()
-  TRACE("Device:close_settings_dialog()")
-
-  if (self.__settings_dialog and self.__settings_dialog.visible) then
-    self.__settings_dialog:close()
-  end
-
-  self.__settings_dialog = nil
-end
-  
   
 --------------------------------------------------------------------------------
 
--- construct the device settings dialog (for both MIDI and OSC devices)
+-- construct the device settings view (for both MIDI and OSC devices)
 
-function Device:__build_settings()
-  TRACE("Device:__build_settings()")
+function Device:_build_settings()
+  TRACE("Device:_build_settings()")
 
   -- new settings, new view_builder...
-  self.__vb = renoise.ViewBuilder()  
-  local vb = self.__vb
+  self._vb = renoise.ViewBuilder()  
+  local vb = self._vb
 
 
   local view = vb:column{
-    margin = renoise.ViewBuilder.DEFAULT_DIALOG_MARGIN,
-    spacing = renoise.ViewBuilder.DEFAULT_CONTROL_SPACING,
+    --margin = renoise.ViewBuilder.DEFAULT_DIALOG_MARGIN,
+    --spacing = renoise.ViewBuilder.DEFAULT_CONTROL_SPACING,
     width = 300,
 
     vb:row {
@@ -552,10 +522,10 @@ end
 
 --------------------------------------------------------------------------------
 
+--[[
 -- handle device hot-plugging (ports changing while Renoise is running)
-
-function Device:__available_device_ports_changed()
-  TRACE("Device:__available_device_ports_changed()")
+function Device:_available_device_ports_changed()
+  TRACE("Device:_available_device_ports_changed()")
 
   -- close the device setting dialogs on MIDI port changes 
   -- so we don't have to bother updating them
@@ -564,19 +534,21 @@ function Device:__available_device_ports_changed()
       self:close_settings_dialog()
   end
 end
-    
+]]
 --------------------------------------------------------------------------------
 
 -- construct & send internal messages (for both MIDI and OSC devices)
 
-function Device:__send_message(message,xarg)
-  TRACE("Device:__send_message()",message,xarg)
+function Device:_send_message(message,xarg)
+  TRACE("Device:_send_message()",message,xarg)
 
   -- determine input method
   if (xarg.type == "button") then
     message.input_method = CONTROLLER_BUTTON
   elseif (xarg.type == "togglebutton") then
     message.input_method = CONTROLLER_TOGGLEBUTTON
+  elseif (xarg.type == "pushbutton") then
+    message.input_method = CONTROLLER_PUSHBUTTON
   elseif (xarg.type == "fader") then
     message.input_method = CONTROLLER_FADER
   elseif (xarg.type == "dial") then

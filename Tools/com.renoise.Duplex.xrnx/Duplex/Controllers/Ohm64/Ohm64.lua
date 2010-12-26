@@ -24,15 +24,34 @@ function Ohm64:__init(display_name, message_stream, port_in, port_out)
   self.colorspace = {1,1,1}
 end
 
+--------------------------------------------------------------------------------
+
+function Ohm64:point_to_value(pt,elm,ceiling)
+
+  local ceiling = ceiling or 127
+  local value
+  
+  if (type(pt.val) == "boolean") then
+    -- buttons
+    local color = self:quantize_color(pt.color)
+    value = (color[1]==0xff) and elm.maximum or elm.minimum
+  else
+    -- dials/faders
+    value = math.floor((pt.val * (1 / ceiling)) * elm.maximum)
+  end
+
+  return tonumber(value)
+end
+
 
 --------------------------------------------------------------------------------
 
--- setup Mixer + Matrix + Effect as apps
+-- setup Mixer + Matrix + Effect as apps - 
 
 duplex_configurations:insert {
 
   -- configuration properties
-  name = "Mixer, Matrix & Effects",
+  name = "Matrix, Mixer & Effects",
   pinned = true,
 
   -- device properties
@@ -58,11 +77,38 @@ duplex_configurations:insert {
         mute = {
           group_name = "ButtonsLeft",
         },
-        master = {
-          group_name = "VolumeRight",
-          index = 1,
-        },
       },
+      options = {
+        invert_mute = 1,
+        follow_track = 1,
+--        track_offset = 1,
+        track_increment = 5,
+      }
+    },
+    Mixer2 = {
+      application = "Mixer",
+      mappings = {
+        panning = {
+          group_name = "PanningRight",
+        },
+        levels = {
+          group_name = "VolumeRight",
+        },
+        mute = {
+          group_name = "ButtonsRight",
+        },
+--       Setting the crossfader to master volume may be too annoying, uncomment if you wish to try it!
+--        master = {
+--          group_name = "CrossFader",
+--          index = 2
+--        },
+      },
+      options = {
+        invert_mute = 1,
+        follow_track = 1,
+        track_offset = 5,
+        track_increment = 5,
+      }
     },
     Matrix = {
       mappings = {
@@ -70,16 +116,21 @@ duplex_configurations:insert {
           group_name = "Grid",
         },
         triggers = {
-          group_name = "Grid",
+          group_name = "Grid2",
         },
         sequence = {
           group_name = "ControlsRight",
+          orientation = VERTICAL,
           index = 1,
         },
         track = {
           group_name = "ControlsRight",
-          index = 3,
+          index = 2,
         }
+      },
+      options = {
+        follow_track = 1,
+        track_increment = 5,
       }
     },
     Effect = {
@@ -90,7 +141,6 @@ duplex_configurations:insert {
         page = {
           group_name = "ControlsRight",
           index = 5,
-
         }
       }
     },
@@ -104,21 +154,29 @@ duplex_configurations:insert {
           group_name = "CrossFader",
           index = 3,
         },
-
+        start_playback = {
+          group_name = "BigButton",
+          index = 1,
+        },        
+      },
+      options = {
+        pattern_play = 3,
       }
     },
 
   }
 }
 
---------------------------------------------------------------------------------
 
--- setup Mixer, Sequencer & Effects as apps
---[[
+
+
+--------------------------------------------------------------------------------
+-- setup Mixer + Step sequencer + Navigator + Effects as apps - 
+
 duplex_configurations:insert {
 
   -- configuration properties
-  name = "Mixer, Sequencer & Effects",
+  name = "Step Sequencer, Navigator, Mixer & Effects",
   pinned = true,
 
   -- device properties
@@ -141,13 +199,35 @@ duplex_configurations:insert {
         levels = {
           group_name = "VolumeLeft",
         },
-        mute = {
-          group_name = "ButtonsLeft",
-        },
-        master = {
-          group_name = "VolumeRight",
-        },
       },
+      options = {
+--        invert_mute = 1,
+        follow_track = 1,
+        track_offset = 1,
+        track_increment = 5,
+      }
+    },
+    Mixer2 = {
+      application = "Mixer",
+      mappings = {
+        panning = {
+          group_name = "PanningRight",
+        },
+        levels = {
+          group_name = "VolumeRight",
+        }, 
+--       Setting the crossfader to master volume may be too annoying, uncomment if you wish to try it!
+--        master = {
+--          group_name = "CrossFader",
+--          index = 2
+--        },
+      },
+      options = {
+--        invert_mute = 1,
+        follow_track = 1,
+        track_offset = 5,
+        track_increment = 5,
+      }
     },
     StepSequencer = {
       mappings = {
@@ -155,22 +235,37 @@ duplex_configurations:insert {
           group_name = "Grid",
         },
         level = {
-          group_name = "CrossFader",
-          index = 2,
+          group_name = "ButtonsRight",
+          orientation = HORIZONTAL,
+          index = 1
         },
         line = {
           group_name = "ControlsRight",
-          index = 1,
+          orientation = VERTICAL,
+          index = 1
         },
         track = {
           group_name = "ControlsRight",
-          index = 3,
+          orientation = HORIZONTAL,
+          index = 2
         },
         transpose = {
-          group_name = "ButtonsRight",
-          index = 5,
+          group_name = "ButtonsLeft",
+          index = 1
         },
       },
+      options = {
+        orientation = 1,  
+        follow_track = 1,
+        track_increment = 5,           
+      }
+     },
+     Navigator = {
+      mappings = {
+        blockpos = {
+          group_name = "Grid2",
+        }
+      }
     },
     Effect = {
       mappings = {
@@ -180,7 +275,6 @@ duplex_configurations:insert {
         page = {
           group_name = "ControlsRight",
           index = 5,
-
         }
       }
     },
@@ -194,10 +288,16 @@ duplex_configurations:insert {
           group_name = "CrossFader",
           index = 3,
         },
-
+        start_playback = {
+          group_name = "BigButton",
+          index = 1,
+        },        
+      },
+      options = {
+        pattern_play = 3,
       }
     },
 
   }
 }
-]]
+

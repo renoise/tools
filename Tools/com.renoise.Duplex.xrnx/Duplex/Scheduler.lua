@@ -25,12 +25,12 @@ end
 --------------------------------------------------------------------------------
 
 function Scheduler:on_idle()
-  TRACE("Scheduler:on_idle()",os.clock())
+  --TRACE("Scheduler:on_idle()",os.clock())
 
   -- check time
   for idx,task in ripairs(self.tasks) do
     if (task.time<=os.clock()) then
-      self:__execute_task(task)
+      self:_execute_task(task)
       self.tasks:remove(idx)
     end
   end
@@ -66,8 +66,8 @@ end
 
 --------------------------------------------------------------------------------
 
-function Scheduler:__execute_task(task)
-  TRACE("Scheduler:__execute_task",task)
+function Scheduler:_execute_task(task)
+  TRACE("Scheduler:_execute_task",task)
 
   task.func(task.ref)
 end

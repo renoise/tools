@@ -85,6 +85,9 @@ duplex_configurations:insert {
           index = 3,
         },
       },
+      options = {
+      }
+
     },
   }
 }
