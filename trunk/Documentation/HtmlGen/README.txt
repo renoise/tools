@@ -22,6 +22,7 @@ Syntax docs available at:
 
 # api_concisor.php ############################################################
 
+// WORK IN PROGRESS, NOT YET READY...
+
 Reduces the API docs into a list of functions.
 
-// WORK IN PROGRESS, CURRENTLY NOT FUNCTIONAL...

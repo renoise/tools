@@ -30,7 +30,7 @@ $footer = '</body></html>';
 
 $files = array();
 foreach(new DirectoryIterator($CONFIG['DOCS_DIR']) as $file) {
-    
+
     if (!$file->isFile()) continue;
     if (!preg_match('/(lua|txt)$/', $file->getFilename())) continue;
     $files[] = $file->getPathname();
@@ -72,12 +72,12 @@ function header_transform($type, $string) {
 
 $index = array();
 foreach ($files as $file) {
-    
+
     global $h_array;
-    
+
     // Get contents
     $tmp = file_get_contents($file);
-    
+
     // Find code chunks, encapsulate in Extendend Markdown code tags
     $long_comment = false;
     $long_code = false;
@@ -85,12 +85,12 @@ foreach ($files as $file) {
     $tmp2 = explode("\n", $tmp);
     $count = count($tmp2);
     if (preg_match('/lua$/', $file)) foreach ($tmp2 as $lnum => $line) {
-        
+
         if ($long_comment) {
             if (preg_match('/\]\]/', $line)) $long_comment = false;
             continue;
         }
-        
+
         if ($long_code) {
             if ($count-1 <= $lnum) {
                 $tmp2[$lnum] = "~~~\n" . $line;
@@ -108,87 +108,87 @@ foreach ($files as $file) {
                 $long_code_offset = 0;
             }
         }
-        
+
         if (!$long_comment && preg_match('/^\s*--\[\[/', $line)) {
             $long_comment = true;
             continue;
         }
-        
+
         if (preg_match('/^\s*--/', $line) || preg_match('/^\s*$/', $line)) {
             continue;
         }
-        
+
         if (!$long_code) {
             $tmp2[$lnum] = "~~~\n" . $line;
             $long_code = true;
             $long_code_offset = 0;
         }
-        
+
     }
     $markdown = implode("\n", $tmp2);
-    
+
     /*
     Regular expression mayhem:
     For modifier explinations, see:
     http://php.net/manual/en/reference.pcre.pattern.modifiers.php
     */
-    
+
     // Get rid of Lua warning
     $markdown = str_ireplace('Do not try to execute this file. It uses a .lua extension for markup only.', null, $markdown);
-    
+
     // Find `--[[ % ]]--` or `--[[ % ]]` and replace with %
     $markdown = preg_replace('/--\[\[(.*?)(\]\]--|\]\])/s', '$1', $markdown);
-    
+
     // Find `--. % \n` and replace with empty string
     $markdown = preg_replace('/^--\.(.*?)$/sm', null, $markdown);
-    
+
     // Find `--\n` and replace with empty string
     $markdown = preg_replace('/^--$/sm', '', $markdown);
-    
+
     // Find `-- %` and replace with %
     $markdown = preg_replace('/^--\s{0,1}(.*?)$/sm', '$1', $markdown);
-    
+
     // Transform ==== header ==== or ---- header ---- to Markdown equivilant
     $markdown = preg_replace('/(={4,}|-{4,})\n(.*?)(={4,}|-{4,})\n/se', "header_transform('$1', '$2')", $markdown);
-    
+
     // Find `---- Foo` and replace with Markdown equivilant
     $markdown = preg_replace('/-{4,}\s{1}(.*?)\n/s', "### $1\n", $markdown);
-    
+
     // Prepend TOC
     $markdown = "#### Contents \n" . implode($h_array, "  \n") . "  \n" . $markdown;
-    
+
     // Convert to markdown
     $markdown = Markdown_with_geshi($markdown);
-    
+
     // ___REPLACE_URL___
     $markdown = str_ireplace('___REPLACE_URL___', $CONFIG['IMAGES_URL'], $markdown);
-    
-    
+
+
     // ------------------------------------------------------------------------
     // HTMLize stuff
     // ------------------------------------------------------------------------
-    
+
     $fname = basename($file);
     $tmp = trim(
         str_replace('___REPLACE_TITLE___', htmlspecialchars($fname), $header) .
         $markdown .
         $footer
         );
-    
+
     // ------------------------------------------------------------------------
     // Output Api File as HTML
     // ------------------------------------------------------------------------
-    
+
     $fname = $fname . '.html';
     $index[] = array($fname, $h_array);
     file_put_contents($CONFIG['OUT_DIR'] . '/' . $fname, $tmp);
-    
+
     // ------------------------------------------------------------------------
     // Cleanup
     // ------------------------------------------------------------------------
-    
+
     $h_array = array();
-    
+
 }
 
 // ----------------------------------------------------------------------------
