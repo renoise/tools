@@ -136,32 +136,28 @@ Such document objects can be extended with the document's "add_property"
 function. Existing properties can also be removed again with the
 "remove_property" function:
 
-]]--
-
--- creates an empty document, using "MyDoc" as the model name (a type name)
-local my_document = renoise.Document.create("MyDoc"){ }
-
--- adds a number to the document with the initial value 1
-my_document:add_property("value1", 1)
-
--- adds a string
-my_document:add_property("value2", "bla")
-
--- create another document and adds it
-local node = renoise.Document.create("MySubDoc"){ }
-node:add_property("another_value", 1)
-
--- add another already existing node
-my_document:add_property("nested_node", node)
-
--- removes a previously added node
-my_document:remove_property(node)
-
--- access properties
-local value1 = my_document.value1
-value1 = my_document:property("value1")
-
---[[
+    -- creates an empty document, using "MyDoc" as the model name (a type name)
+    local my_document = renoise.Document.create("MyDoc"){ }
+    
+    -- adds a number to the document with the initial value 1
+    my_document:add_property("value1", 1)
+    
+    -- adds a string
+    my_document:add_property("value2", "bla")
+    
+    -- create another document and adds it
+    local node = renoise.Document.create("MySubDoc"){ }
+    node:add_property("another_value", 1)
+    
+    -- add another already existing node
+    my_document:add_property("nested_node", node)
+    
+    -- removes a previously added node
+    my_document:remove_property(node)
+    
+    -- access properties
+    local value1 = my_document.value1
+    value1 = my_document:property("value1")
 
 A more comfortable, and often more readable way of creating simple
 document trees, structs, can be done by passing a table to the create()
