@@ -281,13 +281,13 @@ function key_handler(dialog, key)
   
   elseif (key.modifiers == "" and key.name == "left") then
 
-   if (vb_splitmap.views.start_split.value -1 > 0) then
+   if (math.floor(vb_splitmap.views.start_split.value) -1 > 0) then
     shift_split_range(-1,vb_splitmap)
    end
 
   elseif (key.modifiers == "" and key.name == "right") then
 
-   if (vb_splitmap.views.end_split.value + 1 <= 120) then
+   if (math.floor(vb_splitmap.views.end_split.value) + 1 <= 120) then
      shift_split_range(1,vb_splitmap)
    end
 
@@ -358,15 +358,14 @@ function shift_split_range(value,vb)
   local song = renoise.song()
   local s_instrument = song.selected_instrument_index
   local cur_ins = song.instruments[s_instrument]
-
   if yield_operation == 0 then
     yield_operation = 1
     local split_distance = high_split - low_split
     local target_low = 0
     local target_high = 0
-    low_split = vb.views.start_split.value
+    low_split = math.floor(vb.views.start_split.value)
 --      vb.views.split_range_shift.min = 0 - low_split
-    high_split = vb.views.end_split.value
+    high_split = math.floor(vb.views.end_split.value)
 --      vb.views.split_range_shift.max = 120 - high_split
     split_distance = high_split - low_split
     value = tonumber(math.floor(value))
@@ -379,9 +378,8 @@ function shift_split_range(value,vb)
       value = 120
     end 
 
-    low_split = vb.views.start_split.value
-    high_split = vb.views.end_split.value
-
+    low_split = math.floor(vb.views.start_split.value)
+    high_split = math.floor(vb.views.end_split.value)
     if low_split + value > 0 then
       target_low = low_split + value
 
@@ -435,17 +433,17 @@ function shift_split_range(value,vb)
     yield_operation = 0
     local stop_shift = 0
 
-    if (vb.views.start_split.value + value > 0) and 
-    (vb.views.end_split.value + value <= 120) then
-      vb.views.start_split.value = vb.views.start_split.value + value
+    if (math.floor(vb.views.start_split.value) + value > 0) and 
+    (math.floor(vb.views.end_split.value) + value <= 120) then
+      vb.views.start_split.value = math.floor(vb.views.start_split.value) + value
       stop_shift = 0
     else
       stop_shift = 1
     end 
 
-    if (vb.views.end_split.value + value <= 120) and 
+    if (math.floor(vb.views.end_split.value) + value <= 120) and 
     stop_shift == 0 then
-      vb.views.end_split.value = vb.views.end_split.value + value
+      vb.views.end_split.value = math.floor(vb.views.end_split.value) + value
     end 
 
     set_base_notes()
@@ -644,7 +642,7 @@ end
 function map_sample_range()
   local song = renoise.song()
   local layer_start = 1
-  local split_position = start_split
+  local split_position = math.floor(start_split)
   local s_instrument = 1
   local cur_ins = 1   
   start_sample = math.floor(start_sample)
@@ -706,7 +704,9 @@ function map_sample_range()
     end
 
   end
+   
 --   if table.exists(temp_split_map) then
+
     cur_ins.split_map = temp_split_map
     set_base_notes()
 --   end
