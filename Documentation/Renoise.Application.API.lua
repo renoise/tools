@@ -89,7 +89,6 @@ renoise.app():prompt_for_filename_to_write(file_extension, dialog_title)
 -- a file that browsers can open (like xml, html files...).
 renoise.app():open_url(url)
 -- Opens the default file browser (explorer, finder...) with the given path.
--- Passing file names instead of paths is undefined (will change from OS to OS)
 renoise.app():open_path(file_path)
 
 
