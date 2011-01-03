@@ -264,8 +264,9 @@ end
 
 class "Iterator"
 
-function Iterator:__init(constrain_to_selected, callback_function)
+function Iterator:__init(constrain_to_selected, ignore_muted, callback_function)
   self.constrain_to_selected = constrain_to_selected or false
+  self.ignore_muted = ignore_muted or false  
   self.callback = callback_function or function(x) return x end
 end
 
@@ -274,16 +275,26 @@ function Iterator:set_constrain_to_selected(selected)
   self.constrain_to_selected = selected
 end
 
+function Iterator:set_ignore_muted(ignore)
+  assert(type(ignore) == 'boolean')
+  self.ignore_muted = ignore
+end
+
 function Iterator:set_callback(callback_function)
   assert(type(callback_function) == 'function')
   self.callback = callback_function
 end
 
 function Iterator:go(iter)
-  for _,line in iter do
+  for pos,line in iter do
     if not line.is_empty then
       for _,note_col in ipairs(line.note_columns) do
         if
+        (
+          not self.ignore_muted or
+          self.ignore_muted and renoise.song().tracks[pos.track].mute_state == renoise.Track.MUTE_STATE_ACTIVE
+        )
+        and
         (
           not self.constrain_to_selected or
           self.constrain_to_selected and note_col.is_selected
@@ -310,8 +321,8 @@ end
 -- invoke_random
 
 function invoke_random(
-  mode, pattern_iterator, constrain, key, preserve_notes, preserve_octave,
-  neighbour, shift, min, max
+  mode, pattern_iterator, constrain, ignore_muted, key, preserve_notes, 
+  preserve_octave, neighbour, shift, min, max
 )
 
   if (preserve_octave == nil) then
@@ -326,7 +337,7 @@ function invoke_random(
   if neighbour then randomizer:set_neighbour(neighbour, shift) end
   if min and max then randomizer:set_range(min, max) end
 
-  local iterator = Iterator(constrain)
+  local iterator = Iterator(constrain, ignore_muted)
   iterator:set_callback(function(x) return randomizer:randomize(x) end)
   iterator:go(pattern_iterator)
 end
@@ -336,10 +347,10 @@ end
 
 -- Shuffle notes
 
-function invoke_shuffle(pattern_iterator, constrain)
+function invoke_shuffle(pattern_iterator, constrain, ignore_muted)
 
   local shuffle = Shuffle()
-  local iterator = Iterator(constrain)
+  local iterator = Iterator(constrain, ignore_muted)
 
   iterator:set_callback(function(x) shuffle:push(x); return x end)
   iterator:go(pattern_iterator)
