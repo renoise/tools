@@ -32,20 +32,23 @@ foreach(new DirectoryIterator($CONFIG['DOCS_DIR']) as $file) {
 
 foreach ($concise as $key => &$val) {
 
+    $i = 1;
     $val = rtrim($val);
 
     // If `(` or ` or` are the last characters, concatenate the next line
     if (preg_match('/(\(| or)$/', $val)) {
-        $val .= @trim($concise[$key+1]);
-        unset($concise[$key+1]);
+        $val .= @trim($concise[$key+$i]);
+        unset($concise[$key+$i]);
+        ++$i;
     }
 
     // Remove everything after ` -> `, also check the next line...
     if (preg_match('/\s*?->(.*?)/', $val)) {
         $val = preg_replace('/\s*?->(.*?)$/', null, $val);
         // Next line...
-        if (preg_match('/^\s.?/', @$concise[$key+1])) {
-            unset($concise[$key+1]);
+        if (preg_match('/^\s.?/', @$concise[$key+$i])) {
+            unset($concise[$key+$i]);
+            ++$i;
         }
     }
 
