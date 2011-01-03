@@ -28,6 +28,7 @@ local current_range = #range_modes
 local current_mode = nil
 local current_custom = table.create()
 local current_key = "C-"
+local current_ignore_muted = false
 local current_preserve_notes = false
 local current_preserve_octaves = true
 local current_neighbour = false
@@ -79,13 +80,13 @@ local function invoke_current_random()
   end
 
   if (mode == "Shuffle") then
-    randomizer.invoke_shuffle(iter, selection_only)
+    randomizer.invoke_shuffle(iter, selection_only, current_ignore_muted)
   else
     if (mode == "Custom") then
       mode = current_custom
     end
     randomizer.invoke_random(
-      mode, iter, selection_only, current_key, current_preserve_notes,
+      mode, iter, selection_only, current_ignore_muted, current_key, current_preserve_notes,
       current_preserve_octaves, current_neighbour, current_neighbour_shift,
       current_min, current_max
     )
@@ -240,6 +241,13 @@ function show_randomize_gui()
   end
   custom_selector:add_child(custom_selector_row)
 
+  local ignore_muted_switch = vb:checkbox {
+    value = current_ignore_muted,
+    notifier = function(value)
+      current_ignore_muted = value
+    end
+  }
+
   local preserve_notes_switch = vb:checkbox {
     value = current_preserve_notes,
     notifier = function(value)
@@ -374,6 +382,11 @@ function show_randomize_gui()
       id = "preserve_octave_row_2",
       mode = "center",
       octave_selector,
+    },
+
+    vb:row {
+      ignore_muted_switch,
+      vb:text { text = 'Ignore Muted Tracks' }
     },
 
     vb:space { height = 10 },
