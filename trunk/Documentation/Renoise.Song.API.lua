@@ -273,14 +273,14 @@ renoise.song().selected_line_index
 
 -- The currently edited column in the selected line in the edited
 -- sequence/pattern. Nil when an effect column is selected.
-renoise.song().selected_note_column, TODO: _observable
+renoise.song().selected_note_column
   -> [read-only, renoise.NoteColumn object or nil], [renoise.Line object or nil]
 renoise.song().selected_note_column_index
   -> [number or nil (when an effect column is selected)]
 
 -- The currently edited column in the selected line in the edited
 -- sequence/pattern. Nil when a note column is selected.
-renoise.song().selected_effect_column, TODO: _observable
+renoise.song().selected_effect_column
   -> [read-only, renoise.EffectColumn or nil], [renoise.Line object or nil]
 renoise.song().selected_effect_column_index
   -> [number or nil (when a note column is selected)]
@@ -942,11 +942,7 @@ renoise.song().instruments[].plugin_properties.volume, _observable
 -- Valid for loaded and unloaded plugins.
 renoise.song().instruments[].plugin_properties.auto_suspend, _observable
   -> [boolean]
-
--- TODO: renoise.song().instruments[].plugin_properties.create_alias(other_plugin_properties)  
--- TODO: renoise.song().instruments[].plugin_properties.create_alias(track_fx)  
--- TODO: renoise.song().instruments[].plugin_properties.output_routings[]
-
+  
 
 --------------------------------------------------------------------------------
 -- renoise.InstrumentDevice
