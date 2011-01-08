@@ -287,14 +287,17 @@ end
 
 function Iterator:go(iter)
   for pos,line in iter do
-    if not line.is_empty then
+    if
+    (
+      not self.ignore_muted or
+      self.ignore_muted and renoise.song().tracks[pos.track].mute_state ==
+      renoise.Track.MUTE_STATE_ACTIVE
+    )
+    and
+      not line.is_empty
+    then
       for _,note_col in ipairs(line.note_columns) do
         if
-        (
-          not self.ignore_muted or
-          self.ignore_muted and renoise.song().tracks[pos.track].mute_state == renoise.Track.MUTE_STATE_ACTIVE
-        )
-        and
         (
           not self.constrain_to_selected or
           self.constrain_to_selected and note_col.is_selected
