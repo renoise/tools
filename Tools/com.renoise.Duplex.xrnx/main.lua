@@ -160,9 +160,12 @@ renoise.tool():add_keybinding {
 --------------------------------------------------------------------------------
 
 renoise.tool():add_midi_mapping({
-  name = "Global:Tools:Duplex Browser...",
+  name = "Global:Tools:Duplex:Display Browser [Set]",
   invoke = function(msg) 
-    if(browser)then
+    if not browser then
+      create_browser()
+    end
+    if (browser) then
       if msg.boolean_value then 
         browser:show() 
       else
@@ -173,7 +176,7 @@ renoise.tool():add_midi_mapping({
 })
 
 renoise.tool():add_midi_mapping({
-  name = "Global:Tools:Duplex configuration [Set]",
+  name = "Global:Tools:Duplex:Select configuration [Set]",
   invoke = function(msg)
     if(browser)then
       local idx = msg.int_value
@@ -181,6 +184,28 @@ renoise.tool():add_midi_mapping({
         browser:_available_configurations_for_device(browser._device_name)
       if (config_list[idx]) then
         browser:set_configuration(config_list[idx], true)
+      end
+    end
+  end
+})
+
+renoise.tool():add_midi_mapping({
+  name = "Global:Tools:Duplex:Next configuration [Trigger]",
+  invoke = function(msg)
+    if(browser)then
+      if msg.boolean_value then 
+        browser:set_next_configuration()
+      end
+    end
+  end
+})
+
+renoise.tool():add_midi_mapping({
+  name = "Global:Tools:Duplex:Previous configuration [Trigger]",
+  invoke = function(msg)
+    if(browser)then
+      if msg.boolean_value then 
+        browser:set_previous_configuration()
       end
     end
   end
