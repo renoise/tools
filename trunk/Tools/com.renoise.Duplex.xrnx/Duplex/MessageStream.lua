@@ -38,19 +38,12 @@ function MessageStream:__init()
   self.press_listeners = table.create() -- for buttons
   self.hold_listeners = table.create()  -- buttons
   self.release_listeners = table.create()  -- buttons
-  --self.double_press_listeners = {}  -- buttons
-  --self.combo_listeners = {}  -- buttons
-
 
   --self.button_hold_time = 1 -- seconds
   self.button_hold_time = self:_get_button_hold_time()
-  --self.double_press_time = 0.1 -- seconds
 
   -- most recent message (event handlers check this)
   self.current_message = nil 
-
-  -- cache of recent events (used for double-press detection)
-  --self.button_cache = nil 
 
   -- [Message,...] temporarily exclude from interpretation
   self.ignored_buttons = nil 
@@ -197,14 +190,13 @@ function MessageStream:input_message(msg)
 
     if (msg.value == msg.max) and (not msg.is_note_off) then
       -- interpret this as pressed
-      
       self.pressed_buttons:insert(msg)
       -- broadcast to listeners
       for _,listener in ipairs(self.press_listeners) do 
         listener.handler() 
       end
 
-    elseif (msg.value == msg.min) then
+    elseif (msg.value == msg.min) or (msg.is_note_off) then
       -- interpret this as release
 
       -- for toggle/push buttons, broadcast releases to listeners as well
@@ -268,7 +260,7 @@ function Message:__init(device)
   -- MIDI only, the channel of the message (1-16)
   self.channel = nil 
 
-  -- MIDI only, to detect release events
+  -- MIDI only, to distinguish between NOTE-ON and NOTE-OFF events
   self.is_note_off = false
 
   self.id = nil --  unique id for each parameter

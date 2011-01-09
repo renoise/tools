@@ -403,6 +403,7 @@ end
 --  generate message : used by virtual control-surface elements
 --  @value : the value
 --  @metadata : metadata table (min/max etc.)
+--  @release: boolean, true when button has been released
 
 function Display:generate_message(value, metadata, released)
   TRACE('Display:generate_message:'..value)
