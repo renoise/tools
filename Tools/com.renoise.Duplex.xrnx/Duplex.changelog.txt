@@ -189,4 +189,46 @@ Done 0.95
   o Double underscored property names (__) replaced with single underscore (_)
     to avoid accidental clashes with lua's internal meta-method names
 
+--------------------------------------------------------------------------------
+Done 0.96
+--------------------------------------------------------------------------------
+
+* Duplex Browser
+  o Interactively change options while applications are running
+    - Application:_apply_options() and optional on_activate() has been removed
+  o Fixed: hot-plugging devices caused an error (bug was introduced in 0.95)
+  o More MIDI-mapping options: set,select previous/next configuration
+
+* Control-map
+  o New attribute: "aspect", control height of button (0.5 for 50% height)
+
+* APC20/40 support
+
+* Ohm64 support
+  o Improved control-map/configuration files
+
+* Transport
+  o Fixed: Option "pattern_switch" didn't switch instantly
+
+* Navigator
+  o Fixed: holding button while playback is stopped cause error 
+
+* Matrix,Mixer,StepSequencer
+  o Option: "follow_track", set to align to selected track in Renoise
+  o Option: "track_increment", specify custom step size for track-switching
+
+* StepSequencer
+  o Option: "increment" renamed to "line_increment"
+
+* Mixer
+  o Option: "track offset", set to offset mixer tracks by specified amount
+
+* All applications
+  o "Orientation" support for every applicable UI component (UISpinner, etc.)
+    - specify in device-config mappings using the "orientation" property
+  o Obsolete method: set_default_options() removed
+  o Options now specified statically, as "default_options"
+
+* Message/Stream
+  o New Message property: is_note_off - distinguish between note-on/note-off 
 
