@@ -107,14 +107,14 @@ function MidiDevice:midi_callback(message)
   -- determine the type of signal : note/cc/etc
   if (message[1]>=128) and (message[1]<=159) then
     msg.context = MIDI_NOTE_MESSAGE
-    if(message[1]>143)then
-      msg.channel = message[1]-143  -- on
+    if(message[1]>143)then -- on
+      msg.channel = message[1]-143  
       msg.value = message[3]
-      if (msg.value==0) then
-        msg.is_note_off = true      -- off
+      if (msg.value==0) then -- off
+        msg.is_note_off = true      
       end
-    else
-      msg.channel = message[1]-127  -- off
+    else  -- off
+      msg.channel = message[1]-127 
       msg.is_note_off = true
     end
     value_str = self._note_to_string(self,message[2])
