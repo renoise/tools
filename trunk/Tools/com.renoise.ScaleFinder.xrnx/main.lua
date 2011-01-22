@@ -79,10 +79,9 @@ function add_chord(root, chord)
   local note_offset = 0
   local current_instrument = renoise.song().selected_instrument_index
   
-  print(#cpattern)
-  
   for n = root, root + #cpattern do
     if cpattern[get_note(n)] then
+      print(n)
       -- Form the string for chord note listing
       if res ~= '' then 
         res = res .. ', '

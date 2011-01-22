@@ -123,7 +123,7 @@ chords = {
     name = 'seventh diminished fifth',
     code = '7b5',
     pattern = '10001010001'
-	           
+             
   },
   {
     name = 'seventh augmented fifth',
@@ -149,8 +149,7 @@ chords = {
     name = 'seventh suspended fourth augmented fifth',
     code = '7sus4#5',
     pattern = '10000100101'
-  }
-  
+  },
 }
 
 ------------------------------------------------------
@@ -158,7 +157,7 @@ function get_scale(root, scale)
   local spat = scale['pattern'];
   local rpat = {false,false,false,false,false,false,false,false,false,false,false}
   -- Finds scale notes
-  for i = 0,11 do
+  for i = 0,#spat do
     local note = ((root - 1 + i) % 12) + 1
     if spat:sub(i+1, i+1) == '1' then
       rpat[note] = true
@@ -178,7 +177,7 @@ end
 function is_valid(root, chord, scale_pattern)
   local cpat = chords[chord]['pattern']
   for i = 0,#cpat do
-    local note = ((root - 1 + i) % 12) + 1
+    local note = ((root - 1 + i) % 12) + 1 
     if cpat:sub(i+1, i+1) == '1' then
       if not scale_pattern[get_note(note)] then
         return false;
