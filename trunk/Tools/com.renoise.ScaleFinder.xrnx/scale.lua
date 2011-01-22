@@ -67,18 +67,90 @@ chords = {
   {
     name = 'Diminished',
     code = 'dim',
-    pattern = '10010010'
+    pattern = '1001001'
   },
   {
-    name = 'Fifth',
-    code = '5',
-    pattern = '10000001'
+    name = 'suspended second',
+    code = 'sus2',
+    pattern = '10100001'
   },
   {
-    name = 'Seventh',
+    name = 'suspended fourth',
+    code = 'sus4',
+    pattern = '10000101'
+  },
+  {
+    name = 'sixth',
+    code = 'maj6',
+    pattern = '1000100101'
+  },
+  {
+    name = 'minor sixth',
+    code = 'min6',
+    pattern = '1001000101'
+  },
+  {
+    name = 'seventh',
     code = '7',
     pattern = '10001001001'
+  },
+  {
+    name = 'major seventh',
+    code = 'maj7',
+    pattern = '100010010001'
+  },
+  {
+    name = 'minor seventh',
+    code = 'min7',
+    pattern = '10010001001'
+  },
+  {
+    name = 'minor/major seventh',
+    code = 'min/maj7',
+    pattern = '100100010001'
+  },
+  {
+    name = 'diminished seventh',
+    code = 'dim7',
+    pattern = '1001001001'
+  },
+  {
+    name = 'half-diminished',
+    code = 'min7b5',
+    pattern = '10010010001'
+  },
+  {
+    name = 'seventh diminished fifth',
+    code = '7b5',
+    pattern = '10001010001'
+	           
+  },
+  {
+    name = 'seventh augmented fifth',
+    code = '7#5',
+    pattern = '10001000101'
+  },
+  {
+    name = 'major seventh diminished fifth',
+    code = 'maj7b5',
+    pattern = '100010100001'
+  },
+  {
+    name = 'major seventh augmented fifth',
+    code = 'maj7#5',
+    pattern = '100010001001'
+  },
+  {
+    name = 'seventh suspended fourth',
+    code = '7sus4',
+    pattern = '10000101001'
+  },
+  {
+    name = 'seventh suspended fourth augmented fifth',
+    code = '7sus4#5',
+    pattern = '10000100101'
   }
+  
 }
 
 ------------------------------------------------------

@@ -79,7 +79,9 @@ function add_chord(root, chord)
   local note_offset = 0
   local current_instrument = renoise.song().selected_instrument_index
   
-  for n = root, root + 11 do
+  print(#cpattern)
+  
+  for n = root, root + #cpattern do
     if cpattern[get_note(n)] then
       -- Form the string for chord note listing
       if res ~= '' then 
@@ -130,7 +132,7 @@ function update()
       for k, c in ipairs(chords) do
         if is_valid(n, k, scale_pattern) then
           local cb = vb:button {
-            width = 60,
+            width = 70,
             height = 30,
             text = get_nname(n) .. c['code'],
             pressed = function()
