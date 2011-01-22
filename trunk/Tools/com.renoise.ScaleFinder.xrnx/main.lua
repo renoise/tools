@@ -74,24 +74,24 @@ end
 --------------------------------------------------------------------------------
 function add_chord(root, chord)
   cdisplay.text = 'Chord: ' .. get_note(root) .. chord["code"]
-  local cpattern = get_scale(root, chord)
+  local cpattern = chord["pattern"]
   local res = ''
   local note_offset = 0
   local current_instrument = renoise.song().selected_instrument_index
   
-  for n = root, root + #cpattern do
-    if cpattern[get_note(n)] then
-      print(n)
+  for n = 1, #cpattern do
+    if cpattern:sub(n, n) == '1' then
+      local note = root + n - 1;
       -- Form the string for chord note listing
       if res ~= '' then 
         res = res .. ', '
       else
         res = 'Chord ' ..  get_nname(root) .. chord["code"] .. ': '
       end
-      res = res .. get_nname(n)
+      res = res .. get_nname(note)
      
       -- Insert note
-      insert_note(n, note_offset, current_instrument)
+      insert_note(note, note_offset, current_instrument)
       note_offset = note_offset + 1
     end
   end

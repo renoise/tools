@@ -149,7 +149,7 @@ chords = {
     name = 'seventh suspended fourth augmented fifth',
     code = '7sus4#5',
     pattern = '10000100101'
-  },
+  }
 }
 
 ------------------------------------------------------
