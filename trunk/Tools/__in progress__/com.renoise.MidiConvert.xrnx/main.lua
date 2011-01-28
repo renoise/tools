@@ -2,12 +2,13 @@
 require "Midi"
 require "process_slicer"
 
-local rns = renoise.song()
-local data = table.create()
-local instruments = renoise.song().instruments
-local total_sequence = #rns.sequencer.pattern_sequence
+local rns = nil
+local instruments = nil
+local total_sequence = nil
 
-function build_data()
+function build_data()  
+  local data = table.create()
+  
   -- Instruments
   for i = 1,#instruments do
     data[i] = table.create()
@@ -76,29 +77,40 @@ function build_data()
           end
         end
       end
-      -- Yeild every 3rd track, to avoid timeout nag screens
-      if (track_index % 3 == 0) then coroutine.yield() end
+      -- Yield every 3rd track to avoid timeout nag screens
+      if (track_index % 3 == 0) then 
+        coroutine.yield()         
+        print(("Process(build_data()) - Instr: %d; Track: %d.")
+          :format(i,track_index))
+      end
     end
   end
+  return "No errors", data
 end
 
--- This function encapsulates the workload, used by ProcessSlicer
-function build()
-  print("Working...")
-  build_data()
+-- This function is called when build_data is finished.
+-- @param result  Table containing the return values from build_data() 
+function build_data_done(result)
+  print("Process 'build_data()' has finished!")
+  rprint(result)
+  
   -- TODO:
   -- Create a second data structure that stores effects, for secondary processing
 end
 
--- This function is called when ProcessSlicer is finished.
-function done(...)
-  print("Done!")
-  rprint(data)
-end
-
 -- Main
 function main()
-  local process = ProcessSlicer(build, done)
+  rns = renoise.song()  
+  instruments =rns.instruments
+  total_sequence = #rns.sequencer.pattern_sequence
+  local process = ProcessSlicer(build_data, build_data_done)
+  renoise.tool().app_release_document_observable
+    :add_notifier(function()
+      if (process and process:running()) then
+        process:stop()
+        print("Process 'build_data()' has been aborted due to song change.")
+      end
+    end)
   process:start()
 end
 

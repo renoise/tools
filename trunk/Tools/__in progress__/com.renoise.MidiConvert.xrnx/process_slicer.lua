@@ -100,6 +100,11 @@ function ProcessSlicer:stop()
   self.__process_thread = nil
 end
 
+--------------------------------------------------------------------------------
+-- reverse of unpack: puts any number of arguments into a table
+local function pack(...)
+  return arg
+end
 
 --------------------------------------------------------------------------------
 
@@ -112,15 +117,20 @@ function ProcessSlicer:__on_idle()
   
   -- continue or start the process while its still active
   if (coroutine.status(self.__process_thread) == 'suspended') then
-    local succeeded, data = coroutine.resume(
+    local result = pack(coroutine.resume(
       self.__process_thread, unpack(self.__process_func_args))      
-    self.__data = data    
+    )    
+    
+    local succeeded = result[1]    
+    table.remove(result,1)
+    result.n = nil    
+    self.__data = result
     
     if (not succeeded) then
       -- stop the process on errors
       self:stop()
       -- and forward the error to the main thread
-      error(data) 
+      error(result[2]) 
     end
     
   -- stop when the process function completed
