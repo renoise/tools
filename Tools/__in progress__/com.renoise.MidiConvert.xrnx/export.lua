@@ -10,11 +10,12 @@ Thusly, this file is procedural. Each function is to be prepended with `export_`
 Good times.
 ]]--
 
+local midi_division = 96 -- MIDI clicks per quarter note
+
 local filepath = nil
 local rns = nil
 local instruments = nil
 local total_sequence = nil
-
 
 function export_procedure()
   filepath = renoise.app():prompt_for_filename_to_write("midi", "Export")
@@ -33,7 +34,7 @@ function export_procedure()
 end
 
 
-function export_pos_to_time(pos, delay, bpm, lpb)
+function export_pos_to_time(pos, delay, bpm, lpb)   
   -- TODO
   return timestamp
 end
@@ -87,7 +88,7 @@ function export_build_data()
               -- Note ON
               if note_col.instrument_value == i-1 then
                 data[i]:insert{
-                  note = note_col.note_string,
+                  note = note_col.note_value,
                   pos_start = line_index + pattern_offset,
                   pos_end = 0,
                   delay_start = note_col.delay_value,
@@ -124,6 +125,7 @@ end
 -- This function is called when build_data is finished.
 -- @param result  Table containing the return values from export_build_data()
 function export_build_data_done(result)
+
   rprint(result)
   print("Process 'build_data()' has finished!")
 
@@ -131,7 +133,14 @@ function export_build_data_done(result)
   -- Create a second data structure that stores effects, for secondary processing
   -- Stack data in Midi class
   --
-  -- local midi = Midi()
+  
+  local midi = Midi()
+  midi:open()
+  midi:newTrack()
+  midi:setTimebase(midi_division);
+
+  -- TODO: Something
+  -- midi:saveTxtFile(filepath .. '.txt')
   -- midi:saveMidFile(filepath)
 
 end

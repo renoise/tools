@@ -6,7 +6,8 @@ Supports MIDI (binary) and MF2T (text) formats
 Based on Valentin Schmidt's PHP MIDI CLASS
 @see: http://www.dasdeck.de/staff/valentin/midi/
 
-# Supported methods:
+
+# Available methods:
 --------------------
 
  * open
@@ -34,6 +35,7 @@ Based on Valentin Schmidt's PHP MIDI CLASS
  * getTrackTxt
  * importMid
  * getMid
+ * saveTxtFile
  * saveMidFile
 
 
@@ -94,6 +96,16 @@ Channel numbers are 1-based, all other numbers are as they appear in the midifil
 The <num> in the Pb is the real value (two midibytes combined).
 In Tempo it is a long (32 bits) value. Others are in the interval 0-127.
 The SysEx sequence contains the leading F0 and the trailing F7.
+
+
+# Notes:
+--------
+
+The MIDI file format expresses tempo as "the amount of time (ie, microseconds) 
+per quarter note". NOTE: If there are no tempo events in a MIDI file, then the 
+tempo is assumed to be 120 BPM. 
+
+@see: http://home.roadrunner.com/~jgglatt/tech/midifile.htm
 
 ----------------------------------------------------------------------------]]--
 
@@ -479,6 +491,15 @@ function Midi:getMid()
   end
   return midStr
 
+end
+
+
+-- Saves MIDI song as mf2t text file
+function Midi:saveTxtFile(mid_path)
+  if self.tracks:count() < 1 then error( "MIDI song has no tracks") end
+  local out = assert(io.open(mid_path, "w"))
+  out:write(self:getTxt())
+  assert(out:close())
 end
 
 
