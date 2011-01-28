@@ -6,8 +6,6 @@ Based on Valentin Schmidt's PHP MIDI CLASS
 @see: http://www.dasdeck.de/staff/valentin/midi/
 ----------------------------------------------------------------------------]]--
 
-require "toolbox"
-
 class "Midi"
 
 function Midi:__init()
