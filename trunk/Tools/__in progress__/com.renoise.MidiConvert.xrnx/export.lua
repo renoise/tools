@@ -33,6 +33,12 @@ function export_procedure()
 end
 
 
+function export_pos_to_time(pos, delay, bpm, lpb)
+  -- TODO
+  return timestamp
+end
+
+
 function export_build_data()
   local data = table.create()
   -- Instruments
