@@ -29,7 +29,8 @@ local data = table.create()
 --------------------------------------------------------------------------------
 
 function export_pos_to_time(pos, delay, division, lpb)
-  return ((pos - 1) + (delay * 100 / 255 * 0.01)) * (division/lpb)
+  local time = ((pos - 1) + (delay * 100 / 255 * 0.01)) * (division/lpb)
+  return math.floor(time + .5) --Round
 end
 
 
@@ -97,9 +98,9 @@ function export_build_data()
                   delay_end = 0,
                   volume = note_col.volume_value,
                   panning = note_col.panning_value,
-                  track = track_index,
-                  column = column_index,
-                  sequence_index = sequence_index,
+                  -- track = track_index,
+                  -- column = column_index,
+                  -- sequence_index = sequence_index,
                 }
                 j = table.count(data[i])
               end
