@@ -96,7 +96,7 @@ function export_build_data()
               -- TODO: Shortterm,
               -- * Add delay from PAN, VOL, and FX columns.
               -- * Scan for BPM changes, store them for later.
-              -- * Scan for LPB changes, convert them to BPM changes.
+              -- * Scan for LPB changes, convert them to BPM for ease of implementation.
               -- * Groove settings?
               --
               -- TODO: Longterm,
