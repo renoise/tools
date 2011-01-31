@@ -419,7 +419,7 @@ function Midi:importMid(smf_path, tn)
   smf:close()
 
   local pos = song:find("MThd")
-  if  pos > 0 then
+  if  toint(pos) > 0 then
     song = song:sub(pos) --get rid of RMID header
   end
 
@@ -529,12 +529,6 @@ function Midi:_getMsgStr(line)
   local msg = explode(" ", line)
   local ch, p, n, v, c, num, texttypes, byte, start, end_, txt, len,
         tempo, h, m, s, f, fh, zt, z, t, mc, vz, g, cnt, data = nil
-
-  --[[
-  if msg[2] == "Meta" then print(msg[3])
-  else print(msg[2])
-  end
-  ]]--
 
   if ("PrCh" == msg[2]) then --0x0C
     ch = assert(loadstring('local '.. msg[3] .. 'return ch'))() --chan
@@ -649,7 +643,7 @@ function Midi:_getMsgStr(line)
   elseif ("TimeSig" == msg[2]) then --0x58
     zt = explode("/", msg[3])
     z = string.char(zt[1])
-    t = string.char(math.log(zt[2])/math.log(zt[3]))
+    t = string.char(math.log(zt[2])/math.log(2))
     mc = string.char(msg[4])
     c = string.char(msg[5])
     return
