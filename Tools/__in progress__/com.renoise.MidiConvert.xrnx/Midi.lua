@@ -97,16 +97,6 @@ The <num> in the Pb is the real value (two midibytes combined).
 In Tempo it is a long (32 bits) value. Others are in the interval 0-127.
 The SysEx sequence contains the leading F0 and the trailing F7.
 
-
-# Notes:
---------
-
-The MIDI file format expresses tempo as "the amount of time (ie, microseconds) 
-per quarter note". NOTE: If there are no tempo events in a MIDI file, then the 
-tempo is assumed to be 120 BPM. 
-
-@see: http://home.roadrunner.com/~jgglatt/tech/midifile.htm
-
 ----------------------------------------------------------------------------]]--
 
 class "Midi"
