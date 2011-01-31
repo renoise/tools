@@ -39,7 +39,7 @@ end
 
 
 -- Used to sort a table in export_midi()
-function compare(a, b)
+function export_compare(a, b)
   return a[1] < b[1]
 end
 
@@ -47,7 +47,7 @@ end
 -- Animate status bar
 local status_animation = { "|", "/", "-", "\\" }
 local status_animation_pos = 1
-function status_progress()
+function export_status_progress()
   if status_animation_pos >= #status_animation then
     status_animation_pos = 1
   else
@@ -140,7 +140,7 @@ function export_build_data()
       end
       -- Yield every 2nd track to avoid timeout nag screens
       if (track_index % 2 == 0) then
-        renoise.app():show_status(status_progress())
+        renoise.app():show_status(export_status_progress())
         coroutine.yield()
         print(("Process(build_data()) - Instr: %d; Track: %d.")
           :format(i, track_index))
@@ -222,7 +222,7 @@ function export_midi()
     end
     -- Yield every 2nd track to avoid timeout nag screens
     if (i % 2 == 0) then
-      renoise.app():show_status(status_progress())
+      renoise.app():show_status(export_status_progress())
       coroutine.yield()
       print(("Process(midi()) - Instr: %d."):format(i))
     end
@@ -230,12 +230,12 @@ function export_midi()
 
   -- Sort and add special `sort_me` table
   -- [1] = MF2T Timestamp, [2] = Msg, [3] = Track number (tn)
-  table.sort(sort_me, compare)
+  table.sort(sort_me, export_compare)
   for i=1,#sort_me do
     midi:addMsg(sort_me[i][3], trim(sort_me[i][1] .. " " .. sort_me[i][2]))
     -- Yield every 1000 messages to avoid timeout nag screens
     if (i % 1000 == 0) then
-      renoise.app():show_status(status_progress())
+      renoise.app():show_status(export_status_progress())
       coroutine.yield()
       print(("Process(midi()) - Msg: %d."):format(i))
     end
@@ -272,7 +272,7 @@ end
 
 
 function export_build()
-  renoise.app():show_status(status_progress())
+  renoise.app():show_status(export_status_progress())
   export_build_data()
   export_midi()
 end
