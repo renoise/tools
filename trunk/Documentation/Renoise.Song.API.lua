@@ -340,7 +340,7 @@ renoise.song().transport:cancel_sample_recording()
 renoise.song().transport.playing, _observable
   -> [boolean]
 
--- BPM, LPB, and deprecated TPL.
+-- BPM, LPB, and TPL.
 renoise.song().transport.bpm, _observable
   -> [number, 32-999]
 renoise.song().transport.lpb, _observable
