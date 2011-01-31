@@ -4,8 +4,8 @@
   <Id>com.renoise.MidiConvert</Id>
   <Version>0.2</Version>
   <Name>Midi Convert</Name>
-  <Author>Dac Chartrand</Author>
+  <Author>Dac Chartrand, Marvin Tjon</Author>
   <Description>Convert between Renoise data and MIDI formats.</Description>
   <Category>Tools</Category>
-  <Homepage>http://www.trotch.com</Homepage>
+  <Homepage>http://www.renoise.com</Homepage>
 </RenoiseScriptingTool>

@@ -14,12 +14,12 @@ require "export"
 --------------------------------------------------------------------------------
 
 function check_song_version()
-    local ok = true; -- TODO: An actual check
-    if not ok then
-      renoise.app():show_error("Error: This script will not run on old XRNS " ..
-      "files with Tick Speed. Upgrade your song in the 'Songs Settings' tab.")
-    end
-    return ok
+  local ok = true; -- TODO: An actual check
+  if not ok then
+    renoise.app():show_error("Error: This script will not run on old XRNS " ..
+    "files with Tick Speed. Upgrade your song in the 'Songs Settings' tab.")
+  end
+  return ok
 end
 
 
