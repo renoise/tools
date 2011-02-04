@@ -123,7 +123,7 @@ function Midi:open(timebase)
 end
 
 
--- Sets tempo by replacing set tempo msg in track 0 (or adding new track 0)
+-- Set initial tempo by replacing tempo msg in track 0 (or adding new track 0)
 function Midi:setTempo(tempo)
   assert(type(tempo) == 'number')
   tempo = math.floor(tempo + .5) --Round
@@ -132,8 +132,7 @@ function Midi:setTempo(tempo)
   else
     local tempoTrack = table.create{
       "0 TimeSig 4/4 24 8",
-      "0 Tempo " .. tempo,
-      "0 Meta TrkEnd"
+      "0 Tempo " .. tempo
     }
     self.tracks:insert(1, tempoTrack)
     self.tempoMsgNum = 2
