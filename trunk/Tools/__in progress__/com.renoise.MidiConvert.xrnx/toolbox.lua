@@ -29,6 +29,12 @@ function trim(s)
 end
 
 
+-- Convert bpm to midi tempo
+function bpm_to_tempo(bpm)
+  return math.floor(60000000/bpm + .5)
+end
+
+
 -- Converts all delta times in track to absolute times
 function _delta2Absolute(track)
   local mc = track:count()

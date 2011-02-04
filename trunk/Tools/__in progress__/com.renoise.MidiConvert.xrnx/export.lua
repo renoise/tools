@@ -42,9 +42,16 @@ function export_pos_to_time(pos, delay, division, lpb)
   return math.floor(time + .5) --Round
 end
 
+-- Tick to Delay (0.XX)
+function export_tick_to_delay(tick, tpl)
+  if tick > tpl then return false end
+  local delay = tick * 256 / tpl
+  return delay / 256
+end
+
 
 -- Used to sort a table in export_midi()
-function compare(a, b)
+function export_compare(a, b)
   return a[1] < b[1]
 end
 
@@ -67,13 +74,17 @@ end
 --------------------------------------------------------------------------------
 
 function export_build_data()
-  data:clear()
+
+  data:clear(); data_bpm:clear(); data_lpb:clear()
+  data_tpl:clear(); data_tick_delay:clear()
+
   local instruments = rns.instruments
   local tracks = rns.tracks
   local sequencer = rns.sequencer
   local total_instruments = #instruments
   local total_tracks = #tracks
   local total_sequence = #sequencer.pattern_sequence
+
   -- Instruments
   for i=1,total_instruments do
     data[i] = table.create()
@@ -158,7 +169,7 @@ function export_build_data()
               if 0 <= note_col.panning_value and note_col.panning_value <= 128 then
                 panning = note_col.panning_value
               elseif note_col.panning_string:find('D') == 1 then
-                tick_delay = note_col.volume_string:sub(2)
+                tick_delay = note_col.panning_string:sub(2)
               end
 
               -- Note OFF
@@ -220,33 +231,96 @@ end
 -- Create and save midi file
 --------------------------------------------------------------------------------
 
+-- Note: we often re-use a special `sort_me` table
+-- because we need to sort timestamps before they can be added
+
+-- Returns max pos in table
+-- (a) is a table where key is pos
+function _export_max_pos(a)
+  local keys = a:keys()
+  local mi = 1
+  local m = keys[mi]
+  for i, val in ipairs(keys) do
+    if val > m then
+      mi = i
+      m = val
+    end
+  end
+  return m
+end
+
+
+-- Return a float representing, pos, delay, and tick
+function _export_pos_to_float(pos, delay, tick, idx)
+  -- Find last known tick value
+  local tpl = rns.transport.tpl
+  for i=idx,1,-1 do
+    if data_tpl[i] ~= nil and i <= pos then
+      tpl = tonumber(data_tpl[i], 16)
+      break
+    end
+  end
+  -- Calculate tick delay
+  local float = export_tick_to_delay(tick, tpl)
+  if float == false then return false end
+  -- Calculate global tick delay
+  if data_tick_delay[pos] ~= nil then
+    local g_float = export_tick_to_delay(tonumber(data_tick_delay[pos], 16), tpl)
+    if g_float == false then return false
+    else float = float + g_float end
+  end
+  -- Convert to pos
+  float = float + delay / 256
+  return pos + float
+end
+
+
+-- Return a MF2T timestamp
+function _export_float_to_time(float, division, idx)
+  -- Find last known tick value
+  local lpb = rns.transport.lpb
+  for i=idx,1,-1 do
+    if data_lpb[i] ~= nil and i <= math.floor(float + .5) then
+      lpb = tonumber(data_lpb[i], 16)
+      break
+    end
+  end
+  -- Calculate time
+  local time = (float - 1) * (division / lpb)
+  return math.floor(time + .5) --Round
+end
+
+
 -- Note ON
-function _export_note_on(tn, sort_me, data)
-  -- TODO: ch=???
-  -- What about panning?
-  local timestamp = export_pos_to_time(
-    data.pos_start, data.delay_start,
-    midi_division, rns.transport.lpb
-  )
-  local msg = "On ch=1 n=" ..  data.note .. " v=" ..
-  math.min(data.volume, 127)
-  sort_me:insert{timestamp, msg, tn}
+function _export_note_on(tn, sort_me, data, idx)
+  -- Create MF2T message
+  local pos_d = _export_pos_to_float(data.pos_start, data.delay_start,
+    tonumber(data.tick_delay_start, 16), idx)
+  if pos_d ~= false then
+    local msg = "On ch=1 n=" ..  data.note .. " v=" .. math.min(data.volume, 127)
+    sort_me:insert{pos_d, msg, tn}
+  end
 end
 
 
 -- Note OFF
-function _export_note_off(tn, sort_me, data)
-  -- TODO: ch=???
-  local timestamp = export_pos_to_time(
-    data.pos_end, data.delay_end,
-    midi_division, rns.transport.lpb
-  )
-  local msg = "Off ch=1 n=" ..  data.note .. " v=0"
-  sort_me:insert{timestamp, msg, tn}
+function _export_note_off(tn, sort_me, data, idx)
+  -- Create MF2T message
+  local pos_d = _export_pos_to_float(data.pos_end, data.delay_end,
+    tonumber(data.tick_delay_end, 16), idx)
+  if pos_d ~= false then
+    local msg = "Off ch=1 n=" ..  data.note .. " v=0"
+    sort_me:insert{pos_d, msg, tn}
+  end
 end
 
 
 function export_midi()
+
+  local midi = Midi()
+  midi:open()
+  midi:setTimebase(midi_division);
+  midi:setBpm(rns.transport.bpm); -- Initial BPM
 
   -- Debug
   -- rprint(data)
@@ -255,18 +329,29 @@ function export_midi()
   -- rprint(data_tpl)
   -- rprint(data_tick_delay)
 
-  -- Init Midi object
-  local midi = Midi()
-  midi:open()
-  midi:setTimebase(midi_division);
-
-  midi:setBpm(rns.transport.bpm); -- Initial BPM
-  -- TODO:
-  -- Whenever you encounter a BPM change, write it to the MIDI tempo track
-  -- e.g. Track Number 1
+  -- Whenever we encounter a BPM change, write it to the MIDI tempo track
+  local sort_me = table.create()
+  local lpb = rns.transport.lpb -- Initial LPB
+  for pos,bpm in pairs(data_bpm) do
+    sort_me:insert{ pos, bpm }
+  end
+  -- [1] = MF2T Timestamp, [2] = BPM
+  table.sort(sort_me, export_compare)
+  for i=1,#sort_me do
+    local bpm = tonumber(sort_me[i][2], 16)
+    if  bpm > 0 then
+      -- TODO:
+      -- Apply LPB changes here? See "LBP procedure is flawed" note below...
+      local timestamp = export_pos_to_time(sort_me[i][1], 0, midi_division, lpb)
+      if timestamp > 0 then
+        midi:addMsg(1, timestamp .. " Tempo " .. bpm_to_tempo(bpm))
+      end
+    end
+  end
 
   -- Create a new MIDI track for each Renoise Instrument
-  local sort_me = table.create()
+  local idx = _export_max_pos(data_tpl) or 1
+  sort_me:clear()
   for i=1,#data do
     if table.count(data[i]) > 0 then
       local tn = midi:newTrack()
@@ -282,25 +367,32 @@ function export_midi()
         string.format("%02d", i - 1) .. ": " ..
         string.gsub(rns.instruments[i].name, '"', '') .. '"'
       )
-      -- Store events in special `sort_me` table
-      -- because they need to be sorted before they can be added
-      -- [1] = MF2T Timestamp, [2] = Msg, [3] = Track number (tn)
+
+      -- [1] = Pos+Delay, [2] = Msg, [3] = Track number (tn)
       for j=1,#data[i] do
-        _export_note_on(tn, sort_me, data[i][j])
-        _export_note_off(tn, sort_me, data[i][j])
+        _export_note_on(tn, sort_me, data[i][j], idx)
+        _export_note_off(tn, sort_me, data[i][j], idx)
       end
+
     end
-    -- Yield every 2nd track to avoid timeout nag screens
-    if (i % 2 == 0) then
-      renoise.app():show_status(export_status_progress())
-      coroutine.yield()
-      print(("Process(midi()) - Instr: %d."):format(i))
-    end
+    -- Yield every track to avoid timeout nag screens
+    renoise.app():show_status(export_status_progress())
+    coroutine.yield()
+    print(("Process(midi()) - Instr: %d."):format(i))
   end
 
-  -- Sort and add special `sort_me` table
+  -- TODO:
+  -- LBP procedure is flawed, for example:
+  -- Note pos:1, LBP changed pos:3, LBP changed pos:5, Note pos:7
+  -- Current algorithm only detects LBP on pos:5
+  -- But, pos:3 will affect the timeline?
+
   -- [1] = MF2T Timestamp, [2] = Msg, [3] = Track number (tn)
-  table.sort(sort_me, compare)
+  idx = _export_max_pos(data_lpb) or 1
+  for j=1,#sort_me do
+    sort_me[j][1] = _export_float_to_time(sort_me[j][1], midi_division, idx)
+  end
+  table.sort(sort_me, export_compare)
   for i=1,#sort_me do
     midi:addMsg(sort_me[i][3], trim(sort_me[i][1] .. " " .. sort_me[i][2]))
     -- Yield every 1000 messages to avoid timeout nag screens
