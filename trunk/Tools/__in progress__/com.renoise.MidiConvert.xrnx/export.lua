@@ -252,7 +252,7 @@ end
 
 -- Return a float representing, pos, delay, and tick
 function _export_pos_to_float(pos, delay, tick, idx)
-  -- Find last known tick value
+  -- Find last known tpl value
   local tpl = rns.transport.tpl
   for i=idx,1,-1 do
     if data_tpl[i] ~= nil and i <= pos then
@@ -335,13 +335,13 @@ function export_midi()
   for pos,bpm in pairs(data_bpm) do
     sort_me:insert{ pos, bpm }
   end
-  -- [1] = MF2T Timestamp, [2] = BPM
+  -- [1] = Pos, [2] = BPM
   table.sort(sort_me, export_compare)
   for i=1,#sort_me do
     local bpm = tonumber(sort_me[i][2], 16)
     if  bpm > 0 then
       -- TODO:
-      -- Apply LPB changes here? See "LBP procedure is flawed" note below...
+      -- Apply LPB changes here? See "LBP procedure is flawed?" note below...
       local timestamp = export_pos_to_time(sort_me[i][1], 0, midi_division, lpb)
       if timestamp > 0 then
         midi:addMsg(1, timestamp .. " Tempo " .. bpm_to_tempo(bpm))
@@ -382,9 +382,9 @@ function export_midi()
   end
 
   -- TODO:
-  -- LBP procedure is flawed, for example:
+  -- LBP procedure is flawed? for example:
   -- Note pos:1, LBP changed pos:3, LBP changed pos:5, Note pos:7
-  -- Current algorithm only detects LBP on pos:5
+  -- Current algorithm only uses last known LBP on pos:5 
   -- But, pos:3 will affect the timeline?
 
   -- [1] = MF2T Timestamp, [2] = Msg, [3] = Track number (tn)
@@ -419,6 +419,11 @@ function export_procedure()
   if filepath == '' then return end
 
   rns = renoise.song()
+
+  -- Reset song position
+  rns.transport:stop()
+  rns.transport.playback_pos = renoise.SongPos(1, 1)
+
   local process = ProcessSlicer(export_build, export_done)
   renoise.tool().app_release_document_observable
     :add_notifier(function()

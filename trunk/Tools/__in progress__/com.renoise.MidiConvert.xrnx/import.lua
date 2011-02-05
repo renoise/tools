@@ -19,6 +19,7 @@ Good times.
 --[[
 
 TODO:
+A lot of work. :)
 
 local example = Midi()
 example:importMid("/path/to/test.midi")

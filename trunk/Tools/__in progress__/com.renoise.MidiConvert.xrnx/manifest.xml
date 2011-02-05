@@ -2,10 +2,10 @@
 <RenoiseScriptingTool>
   <ApiVersion>1.0</ApiVersion>
   <Id>com.renoise.MidiConvert</Id>
-  <Version>0.3</Version>
+  <Version>0.3.1</Version>
   <Name>Midi Convert</Name>
   <Author>Dac Chartrand, Marvin Tjon</Author>
-  <Description>Convert between Renoise data and MIDI formats.</Description>
+  <Description>Converts a Renoise song into a MIDI file. Creates a new menu "MIDI Export" in the global Tools menu.</Description>
   <Category>Tools</Category>
   <Homepage>http://www.renoise.com</Homepage>
 </RenoiseScriptingTool>
