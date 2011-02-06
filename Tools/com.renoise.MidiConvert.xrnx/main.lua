@@ -2,6 +2,8 @@
 main.lua
 ============================================================================]]--
 
+local dbug_mode = false
+
 require "toolbox"
 require "ProcessSlicer"
 require "Midi"
@@ -12,6 +14,12 @@ require "export"
 --------------------------------------------------------------------------------
 -- Helper functions
 --------------------------------------------------------------------------------
+
+-- Debug print
+function dbug(msg)
+  if dbug_mode == true then print(msg) end
+end
+
 
 function check_song_version()
   local ok = true; -- TODO: An actual check

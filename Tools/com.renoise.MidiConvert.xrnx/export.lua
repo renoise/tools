@@ -44,7 +44,7 @@ end
 
 -- Tick to Delay (0.XX)
 function export_tick_to_delay(tick, tpl)
-  if tick > tpl then return false end
+  if tick >= tpl then return false end
   local delay = tick * 256 / tpl
   return delay / 256
 end
@@ -214,14 +214,14 @@ function export_build_data()
           end
 
         end -- Sequence
+
+        -- Yield every column to avoid timeout nag screens
+        renoise.app():show_status(export_status_progress())
+        coroutine.yield()
+        dbug(("Process(build_data()) Instr: %d; Track: %d; Column: %d")
+          :format(i, track_index, column_index))
+
       end -- Note Columns
-
-      -- Yield every track to avoid timeout nag screens
-      renoise.app():show_status(export_status_progress())
-      coroutine.yield()
-      print(("Process(build_data()) - Instr: %d; Track: %d.")
-        :format(i, track_index))
-
     end -- Tracks
   end -- Instruments
 end
@@ -251,6 +251,13 @@ end
 
 
 -- Return a float representing, pos, delay, and tick
+--
+-- * Delay in pan overrides existing delays in volume column.
+-- * Delay in effect column overrides delay in volume or pan columns.
+-- * Notecolumn delays are applied in addition to the tick delays - summ up.
+--
+-- @see: http://www.renoise.com/board/index.php?showtopic=28604&view=findpost&p=224642
+--
 function _export_pos_to_float(pos, delay, tick, idx)
   -- Find last known tpl value
   local tpl = rns.transport.tpl
@@ -263,11 +270,11 @@ function _export_pos_to_float(pos, delay, tick, idx)
   -- Calculate tick delay
   local float = export_tick_to_delay(tick, tpl)
   if float == false then return false end
-  -- Calculate global tick delay
+  -- Calculate and override with global tick delay
   if data_tick_delay[pos] ~= nil then
     local g_float = export_tick_to_delay(tonumber(data_tick_delay[pos], 16), tpl)
     if g_float == false then return false
-    else float = float + g_float end
+    else float = g_float end
   end
   -- Convert to pos
   float = float + delay / 256
@@ -279,8 +286,9 @@ end
 function _export_float_to_time(float, division, idx)
   -- Find last known tick value
   local lpb = rns.transport.lpb
+  local tmp = math.floor(float + .5)
   for i=idx,1,-1 do
-    if data_lpb[i] ~= nil and i <= math.floor(float + .5) then
+    if data_lpb[i] ~= nil and i <= tmp then
       lpb = tonumber(data_lpb[i], 16)
       break
     end
@@ -372,25 +380,37 @@ function export_midi()
       for j=1,#data[i] do
         _export_note_on(tn, sort_me, data[i][j], idx)
         _export_note_off(tn, sort_me, data[i][j], idx)
+        -- Yield every 250 notes to avoid timeout nag screens
+        if (j % 250 == 0) then
+          renoise.app():show_status(export_status_progress())
+          coroutine.yield()
+          dbug(("Process(midi()) Instr: %d; Note: %d."):format(i, j))
+        end
       end
 
     end
-    -- Yield every track to avoid timeout nag screens
+    -- Yield every instrument to avoid timeout nag screens
     renoise.app():show_status(export_status_progress())
     coroutine.yield()
-    print(("Process(midi()) - Instr: %d."):format(i))
+    dbug(("Process(midi()) Instr: %d."):format(i))
   end
 
   -- TODO:
   -- LBP procedure is flawed? for example:
   -- Note pos:1, LBP changed pos:3, LBP changed pos:5, Note pos:7
-  -- Current algorithm only uses last known LBP on pos:5 
+  -- Current algorithm only uses last known LBP on pos:5
   -- But, pos:3 will affect the timeline?
 
   -- [1] = MF2T Timestamp, [2] = Msg, [3] = Track number (tn)
   idx = _export_max_pos(data_lpb) or 1
   for j=1,#sort_me do
     sort_me[j][1] = _export_float_to_time(sort_me[j][1], midi_division, idx)
+    -- Yield every 250 index to avoid timeout nag screens
+    if (j % 250 == 0) then
+      renoise.app():show_status(export_status_progress())
+      coroutine.yield()
+      dbug(("Process(midi()) _float_to time: %d."):format(j))
+    end
   end
   table.sort(sort_me, export_compare)
   for i=1,#sort_me do
@@ -399,7 +419,7 @@ function export_midi()
     if (i % 1000 == 0) then
       renoise.app():show_status(export_status_progress())
       coroutine.yield()
-      print(("Process(midi()) - Msg: %d."):format(i))
+      dbug(("Process(midi()) Msg: %d."):format(i))
     end
   end
 
