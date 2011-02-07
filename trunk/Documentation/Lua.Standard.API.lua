@@ -137,7 +137,7 @@ os.currentdir() -> [string]
 os.dirnames(path) -> [table of strings]
 
 -- Returns a list file names (names, not full paths) for the given
--- parent directory. Second optinal argument is a list of file extensions that
+-- parent directory. Second argument is a list of file extensions that
 -- should be searched for, like {"*.wav", "*.txt"}. By default all files are
 -- matched. The passed directory must be valid, or an error will be thrown.
 os.filenames(path [, {file_extensions}]) -> [table of strings]
