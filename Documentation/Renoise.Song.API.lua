@@ -178,7 +178,11 @@ renoise.song():render([options, ] filename, rendering_done_callback)
 renoise.song().file_name
   -> [read-only, string]
 
--- Song Comments
+-- Song Comments  
+-- Note: All property tables of basic types in the API are temporary copies.
+-- In other words `renoise.song().comments = { "Hello", "World" }` will work,
+-- `renoise.song().comments[1] = "Hello"; renoise.song().comments[2] = "World"`
+-- will *not* work.
 renoise.song().artist, _observable
   -> [string]
 renoise.song().name, _observable
