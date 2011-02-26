@@ -42,6 +42,7 @@ function export_pos_to_time(pos, delay, division, lpb)
   return math.floor(time + .5) --Round
 end
 
+
 -- Tick to Delay (0.XX)
 function export_tick_to_delay(tick, tpl)
   if tick >= tpl then return false end
@@ -171,7 +172,6 @@ function export_build_data()
               elseif note_col.panning_string:find('D') == 1 then
                 tick_delay = note_col.panning_string:sub(2)
               end
-
               -- Note OFF
               if
                 not note_col.is_empty and
@@ -192,13 +192,14 @@ function export_build_data()
                   delay_end = 0,
                   tick_delay_end = 0,
                   volume = volume,
-                  panning = panning,
+                  -- panning = panning, -- TODO: Do something with panning var
                   -- track = track_index,
                   -- column = column_index,
                   -- sequence_index = sequence_index,
                 }
                 j = table.count(data[i])
               end
+              -- Next
               pattern_previous = sequencer.pattern_sequence[sequence_index]
             end
 
@@ -331,11 +332,11 @@ function export_midi()
   midi:setBpm(rns.transport.bpm); -- Initial BPM
 
   -- Debug
-  -- rprint(data)
-  -- rprint(data_bpm)
-  -- rprint(data_lpb)
-  -- rprint(data_tpl)
-  -- rprint(data_tick_delay)
+  -- dbug(data)
+  -- dbug(data_bpm)
+  -- dbug(data_lpb)
+  -- dbug(data_tpl)
+  -- dbug(data_tick_delay)
 
   -- Whenever we encounter a BPM change, write it to the MIDI tempo track
   local sort_me = table.create()
@@ -435,7 +436,7 @@ end
 --------------------------------------------------------------------------------
 
 function export_procedure()
-  filepath = renoise.app():prompt_for_filename_to_write("midi", "Export MIDI")
+  filepath = renoise.app():prompt_for_filename_to_write("mid", "Export MIDI")
   if filepath == '' then return end
 
   rns = renoise.song()

@@ -17,7 +17,9 @@ require "export"
 
 -- Debug print
 function dbug(msg)
-  if dbug_mode == true then print(msg) end
+  if dbug_mode == false then return end
+  if type(msg) == 'table' then rprint(msg)
+  else print(msg) end
 end
 
 
@@ -40,6 +42,7 @@ function export()
   export_procedure()
 end
 
+
 --------------------------------------------------------------------------------
 -- Menu Registration
 --------------------------------------------------------------------------------
@@ -48,3 +51,4 @@ renoise.tool():add_menu_entry {
   name = "Main Menu:Tools:MIDI Export...",
   invoke = export
 }
+
