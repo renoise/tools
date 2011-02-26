@@ -2,7 +2,8 @@
 main.lua
 ============================================================================]]--
 
-local dbug_mode = false
+dbug_mode = false
+coroutine_mode = true
 
 require "toolbox"
 require "ProcessSlicer"

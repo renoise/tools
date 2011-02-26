@@ -218,7 +218,7 @@ function export_build_data()
 
         -- Yield every column to avoid timeout nag screens
         renoise.app():show_status(export_status_progress())
-        coroutine.yield()
+        if coroutine_mode then coroutine.yield() end
         dbug(("Process(build_data()) Instr: %d; Track: %d; Column: %d")
           :format(i, track_index, column_index))
 
@@ -384,7 +384,7 @@ function export_midi()
         -- Yield every 250 notes to avoid timeout nag screens
         if (j % 250 == 0) then
           renoise.app():show_status(export_status_progress())
-          coroutine.yield()
+          if coroutine_mode then coroutine.yield() end
           dbug(("Process(midi()) Instr: %d; Note: %d."):format(i, j))
         end
       end
@@ -392,7 +392,7 @@ function export_midi()
     end
     -- Yield every instrument to avoid timeout nag screens
     renoise.app():show_status(export_status_progress())
-    coroutine.yield()
+    if coroutine_mode then coroutine.yield() end
     dbug(("Process(midi()) Instr: %d."):format(i))
   end
 
@@ -409,7 +409,7 @@ function export_midi()
     -- Yield every 250 index to avoid timeout nag screens
     if (j % 250 == 0) then
       renoise.app():show_status(export_status_progress())
-      coroutine.yield()
+      if coroutine_mode then coroutine.yield() end
       dbug(("Process(midi()) _float_to time: %d."):format(j))
     end
   end
@@ -419,7 +419,7 @@ function export_midi()
     -- Yield every 1000 messages to avoid timeout nag screens
     if (i % 1000 == 0) then
       renoise.app():show_status(export_status_progress())
-      coroutine.yield()
+      if coroutine_mode then coroutine.yield() end
       dbug(("Process(midi()) Msg: %d."):format(i))
     end
   end
@@ -445,15 +445,20 @@ function export_procedure()
   rns.transport:stop()
   rns.transport.playback_pos = renoise.SongPos(1, 1)
 
-  local process = ProcessSlicer(export_build, export_done)
-  renoise.tool().app_release_document_observable
-    :add_notifier(function()
-      if (process and process:running()) then
-        process:stop()
-        print("Process 'build_data()' has been aborted due to song change.")
-      end
-    end)
-  process:start()
+  if coroutine_mode then
+    local process = ProcessSlicer(export_build, export_done)
+    renoise.tool().app_release_document_observable
+      :add_notifier(function()
+        if (process and process:running()) then
+          process:stop()
+          print("Process 'build_data()' has been aborted due to song change.")
+        end
+      end)
+    process:start()
+  else
+    export_build()
+    export_done()
+  end
 end
 
 
@@ -465,7 +470,5 @@ end
 
 
 function export_done()
-  -- export_build_data()
-  -- export_midi()
   renoise.app():show_status("MIDI Export, Done!")
 end
