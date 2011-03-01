@@ -179,7 +179,7 @@ function show_stretch_dialog()
   local bpm = renoise.song().transport.bpm
   local lpb = renoise.song().transport.lpb
   local coef = bpm * lpb / 60.0
-  local real_duration = 0
+  local real_duration = 16
   local sel_sample = renoise.song().selected_sample
   local nframes = sel_sample.sample_buffer.number_of_frames
  
@@ -211,7 +211,7 @@ function show_stretch_dialog()
       tooltip = "The desired duration",
       align = "right",
       width = 90,
-      value = tostring(16),
+      value = tostring(real_duration),
       notifier = function(real_value)
         real_duration = tonumber(real_value)
       end      
