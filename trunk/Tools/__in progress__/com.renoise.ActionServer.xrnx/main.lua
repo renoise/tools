@@ -1,10 +1,28 @@
 -------------------------------------------
+-- Preferences
+-------------------------------------------
+
+local options = renoise.Document.create("ScriptingToolPreferences") {    
+  Address = "0.0.0.0",
+  Port = 8888,
+  INADDR_ANY = false
+}
+
+renoise.tool().preferences = options
+
+
+function options:reset()
+  self.Address.value = "0.0.0.0"
+  self.Port.value = 8888  
+  self.INADDR_ANY.value = false
+end
+
+-------------------------------------------
 -- Requires and initialization
 -------------------------------------------
 
-local address = nil
-local port = 8888
-local INADDR_ANY = false
+local config_dialog = nil
+local vb = nil
 
 -- reconnection attempts
 local max_retries = 5
@@ -65,7 +83,7 @@ renoise.tool():add_menu_entry {
 --  Debug
 -------------------------------------------
 
-local DEBUG = true
+local DEBUG = false
 if DEBUG then 
 --  require "remdebug.engine"
   
@@ -471,7 +489,7 @@ class "ActionServer"
     if (max_retries > retried) then
       retried = retried + 1    
       log:info("Restarting the server")
-      action_server = ActionServer(address, port)
+      action_server = ActionServer(options.Address.value, options.Port.value)
     end    
   end
 
@@ -763,12 +781,6 @@ class 'SongChangeEvent' (Event)
 -- Start / Stop
 -------------------------------------------
 
-function restore_default_configuration()
-    port = 80
-    address = nil
-    INADDR_ANY = false
-end
-
 function server_running()
     return (action_server ~= nil)
 end
@@ -778,9 +790,15 @@ function start_server()
     assert(not action_server, "server is already running")
 
     ActionServer.mime_types = Util:parse_config_file("/mime.types")
+    
+    local port = options.Port.value
+    local address = options.Address.value
+    if (options.INADDR_ANY.value) then
+      address = "0.0.0.0"                
+    end
+    
     action_server = ActionServer(address, port)
-
-    renoise.app():open_url("localhost:"..port .. start_page)
+    renoise.app():open_url("127.0.0.1:"..port .. start_page)
 end
 
 function stop_server()
@@ -807,65 +825,78 @@ local function set_port(value)
 end
 
 function configure_server()
-   local vb = renoise.ViewBuilder()
+  if config_dialog and config_dialog.visible then
+    config_dialog:show()
+    return
+  end
+  
+   vb = renoise.ViewBuilder()
    local DEFAULT_DIALOG_MARGIN =
     renoise.ViewBuilder.DEFAULT_DIALOG_MARGIN
    local DEFAULT_CONTROL_SPACING =
     renoise.ViewBuilder.DEFAULT_CONTROL_SPACING
-   local TEXT_ROW_WIDTH = 80
-   local temp = address
+   local TEXT_ROW_WIDTH = 80   
 
    local content =
      vb:column {
+       id = "config_col",       
        style = "invisible",
        margin = DEFAULT_DIALOG_MARGIN,
        spacing = DEFAULT_CONTROL_SPACING,
 
-       vb:row {
+       vb:row {          
           vb:text {
             width = TEXT_ROW_WIDTH,
-            text = "INADDR_ANY"
+            text = "Loopback (INADDR_ANY)",
+            tooltip = "A special IP address. The server receives packets on all interfaces."
           },
           vb:checkbox {
-            value = INADDR_ANY,
-            notifier = function(value)
-               INADDR_ANY = value
-               if value then
-                 vb.views.address_field.value = "0.0.0.0"
-               else
-                 vb.views.address_field.value = temp
-               end
+            bind = options.INADDR_ANY,
+            notifier = function(v) 
+              vb.views.address_row.visible = not v
+--              vb.views.config_col:resize()
             end
           },
         },
 
        vb:row {
+          id = "address_row",
+          visible = not options.INADDR_ANY.value,
+          
           vb:text {
             width = TEXT_ROW_WIDTH,
             text = "Address"
           },
-          vb:textfield {
-            visible = not INADDR_ANY,
+          vb:textfield {            
             id = "address_field",
-            value = address,
-            notifier = function(value)
-              set_address(value)
-            end
+            bind = options.Address,            
           },
         },
 
         vb:row {
           vb:text {
             width = TEXT_ROW_WIDTH,
-            text = "Port"
+            text = "Port",
+            tooltip = "If you want to access the server remotely, the port needs to be"..
+            " opened in your firewall."
           },
           vb:valuebox {
-            value = port,
+            bind = options.Port,
             min = 0,
             max = 65535,
-            notifier = function(value)
-              set_port(value)
-            end
+          }
+        },
+        
+        vb:row {
+          vb:button {
+            height = renoise.ViewBuilder.DEFAULT_DIALOG_BUTTON_HEIGHT,            
+            text = "Close",
+            notifier = function() config_dialog:close() end
+          }, 
+          vb:button {
+            height = renoise.ViewBuilder.DEFAULT_DIALOG_BUTTON_HEIGHT,            
+            text = "Reset", 
+            notifier = function() options:reset() end
           }
         }
 
@@ -873,19 +904,15 @@ function configure_server()
 
   local buttons = {"OK", "Default"}
 
-  local choice = renoise.app():show_custom_prompt(
-    "Configure ActionServer", content, buttons)
+  config_dialog = renoise.app():show_custom_dialog(
+    "Configure ActionServer", content)
   
-  if (choice == "Cancel") then
-    -- restore_previous_configuration()
-  elseif (choice == "Default") then
-      restore_default_configuration()
-  end
-
+--[[
   if choice then
    if server_running() then 
      stop_server()
    end
    start_server()
   end
+--]]  
 end

@@ -79,7 +79,7 @@
 
   L:publish(nil, 'sid', renoise.song().transport.playback_pos.sequence)
 
-  -- L:publish(nil, 'line', renoise.song().transport.playback_pos.line)
+  L:publish(nil, 'line', renoise.song().transport.playback_pos.line)
 
   L:publish(nil, 'seq_loop', renoise.song().transport.loop_sequence_range)
 
