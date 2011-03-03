@@ -23,7 +23,7 @@ end}<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/
 
 <body>
   <div id="center">
-      <div id="playback_control"><b>Playback Control</b> &raquo; <b>Tempo:</b> <span id="tempo">n/a</span> - <b>Line:</b> <span id="line">?</span> / <span id="lines">?</span></div>
+      <div id="playback_control"><b>Playback Control</b> &raquo; <b>Tempo:</b> <span id="tempo">n/a</span> - <b>Line:</b> <span id="line">?</span> / <span id="lines">?</span></div> 
 
       <div id="test-tools"></div>
 
@@ -35,7 +35,7 @@ end}<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/
 
   <script type="text/javascript">
     var debug = true;
-    var logging = true;
+    var logging = false;
 
     var autoscroll = false;
 
@@ -189,39 +189,51 @@ end}<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/
       }
       setTimeout('loop()', au_interval);
     }
+    
+    function get_toggle_text(v) {
+      var str = "enable";
+      if (v) {
+        str = "disable";
+      }
+      return str
+    }
 
     $(document).ready(function(){
       $('body').prepend('<div id="gmenu"></div>');
       $('#gmenu').load('/menu.html');
     
       if (debug==true){
-        $("#test-tools").append("<strong>Test Tools</strong> ");
-        $("#test-tools").append("<button id='update'>update ["+client_id+"]</button>");
+        $("#test-tools").append("<strong>Test Tools</strong> ");        
+        $("#test-tools").append("Client ID: "+client_id+" ");
+        $("#test-tools").append("<button id='update'>update manually</button>");
+        $("#update").toggle(!autoupdate);
         $("#update").click(function(){
           $.get('/matrix/get-song-updates.lua', {client_id: client_id}, function(data){ update(data); } );
-        });
-  
-        $("#test-tools").append("<button id='autoupdate'>disable auto-update</button>");
-        $("#autoupdate").toggle(function(){
-          autoupdate = false;
-          $("#autoupdate").text("enable auto-update");
-          log("disabled auto-update");
-        }, function(){
-          autoupdate = true;
-          $("#autoupdate").text("disable auto-update");
-          log("enabled auto-update");
+        });        
+           
+        //AUTO-UPDATE TOGGLE   
+                
+        $("#test-tools").append("<button id='autoupdate'>"
+          +get_toggle_text(autoupdate)+" auto-update</button>");          
+          
+        $("#autoupdate").click(function(){
+          autoupdate = !autoupdate
+          log(get_toggle_text(autoupdate)+"d autoupdate");
+          $("#autoupdate").text(get_toggle_text(autoupdate)+" auto-update");
+          $("#update").toggle(!autoupdate);
         });
         
-        $("#test-tools").append("<button id='logtoggle'>disable logging</button>");
-         $("#logtoggle").toggle(function(){          
-          $("#logtoggle").text("enable logging");
-          log("disabled logging");
-          logging = false;
-        }, function(){
-          logging = true;
-          $("#autoupdate").text("disable logging");
-          log("enabled logging");
+        //LOGGING TOGGLE
+        
+        $("#test-tools").append("<button id='logtoggle'>"
+          +get_toggle_text(logging)+" logging</button>");
+          
+        $("#logtoggle").click(function(){
+          logging = !logging
+          log(get_toggle_text(logging)+"d logging");
+          $("#logtoggle").text(get_toggle_text(logging)+ " logging");
         });
+        
 
         $("#test-tools").css("display", "block");
         $("#log").css("display", "block");
