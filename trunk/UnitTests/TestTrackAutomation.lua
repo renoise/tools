@@ -69,7 +69,7 @@ do
   new_automation.points = {
     make_point(1, 1.0), 
     make_point(2, 0.0), 
-    make_point(8, 0.5)
+    make_point(8 + 2/256, 0.5)
   }
 
   assert_error(function() -- bogus values
@@ -93,7 +93,7 @@ do
   assert(new_automation.points[2].time == 2)
   assert(new_automation.points[2].value == 0.0)
 
-  assert(new_automation.points[3].time == 8)
+  assert(new_automation.points[3].time == 8 + 2/256)
   assert(new_automation.points[3].value == 0.5)
 
   new_automation:clear()
@@ -106,21 +106,21 @@ do
     new_automation:add_point_at(-2, 0.345)
   end)
   
-  new_automation:add_point_at(2, 0.345)
-  new_automation:add_point_at(2, 1.0) -- will change point
+  new_automation:add_point_at(2 + 3/256, 0.345)
+  new_automation:add_point_at(2 + 3/256, 1.0) -- will change point
   
   assert(#new_automation.points == 1)
-  assert(new_automation.points[1].time == 2)
+  assert(new_automation.points[1].time == 2 + 3/256)
   assert(new_automation.points[1].value == 1.0)
 
-  assert(new_automation:has_point_at(2))
-  new_automation:remove_point_at(2)
-  assert_error(not new_automation:has_point_at(2))
+  assert(new_automation:has_point_at(2 + 3/256))
+  new_automation:remove_point_at(2 + 3/256)
+  assert_error(not new_automation:has_point_at(2 + 3/256))
 
   -- something to look at (also test unsorted points)
   new_automation.points = {
     make_point(2, 0.0), 
-    make_point(1, 1.0), 
+    make_point(1 + 128/256, 1.0), 
     make_point(8, 0.5)
   }
   
