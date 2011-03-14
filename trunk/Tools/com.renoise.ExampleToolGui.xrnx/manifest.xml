@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <RenoiseScriptingTool>
-  <ApiVersion>1.0</ApiVersion>
+  <ApiVersion>2.0</ApiVersion>
   <Id>com.renoise.ExampleToolGui</Id>
   <Version>1.0</Version>
   <Name>Renoise ViewBuilder API Example</Name>
