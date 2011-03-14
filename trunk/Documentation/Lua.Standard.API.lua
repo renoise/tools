@@ -44,6 +44,15 @@ oprint(table)
 -- >          print(type(MyClass())) -> "MyClass"
 type(class_object or class or anything else) -> [string]
 
+-- Also compares object identities of Renoise API class objects: 
+-- > examples: 
+-- >          print(rawequal(renoise.app(), renoise.app())) --> true
+-- >          print(rawequal(renoise.song().track[1], 
+-- >            renoise.song().track[1]) --> true
+-- >          print(rawequal(renoise.song().track[1], 
+-- >            renoise.song().track[2]) --> false
+rawequal(obj1, obj2) -> [boolean]
+
 
 -------------------------------------------------------------------------------
 -- debug
@@ -137,7 +146,7 @@ os.currentdir() -> [string]
 os.dirnames(path) -> [table of strings]
 
 -- Returns a list file names (names, not full paths) for the given
--- parent directory. Second argument is a list of file extensions that
+-- parent directory. Second optional argument is a list of file extensions that
 -- should be searched for, like {"*.wav", "*.txt"}. By default all files are
 -- matched. The passed directory must be valid, or an error will be thrown.
 os.filenames(path [, {file_extensions}]) -> [table of strings]

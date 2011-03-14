@@ -146,7 +146,7 @@ renoise.ApplicationWindow.UPPER_FRAME_MASTER_SPECTRUM
 
 renoise.ApplicationWindow.MIDDLE_FRAME_PATTERN_EDITOR
 renoise.ApplicationWindow.MIDDLE_FRAME_MIXER
-renoise.ApplicationWindow.MIDDLE_FRAME_INSTRUMENT_EDITOR
+renoise.ApplicationWindow.MIDDLE_FRAME_KEYZONE_EDITOR
 renoise.ApplicationWindow.MIDDLE_FRAME_SAMPLE_EDITOR
 
 renoise.ApplicationWindow.LOWER_FRAME_TRACK_DSPS
@@ -219,4 +219,8 @@ renoise.app().window.pattern_matrix_is_visible, _observable
 -- Pattern advanced edit, visible in pattern editor only...
 renoise.app().window.pattern_advanced_edit_is_visible, _observable
   -> [boolean]
+  
+-- Mixer views Pre/Post volume setting.
+renoise.app().window.mixer_view_post_fx, _observable
+  -> [boolean]  
 

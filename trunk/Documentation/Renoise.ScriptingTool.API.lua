@@ -67,7 +67,6 @@ renoise.tool()
 -- + "Disk Browser Directories"
 -- + "Disk Browser Files"
 -- + "Instrument Box"
--- + "Instrument Box Samples"
 -- + "Pattern Sequencer"
 -- + "Pattern Editor"
 -- + "Pattern Matrix"
@@ -75,6 +74,8 @@ renoise.tool()
 -- + "Pattern Matrix",
 -- + "Sample Editor"
 -- + "Sample Editor Ruler"
+-- + "Sample List"
+-- + "Sample Mappings"
 -- + "Mixer"
 -- + "Track DSPs Chain"
 -- + "Track DSPs Chain List"
