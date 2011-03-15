@@ -359,7 +359,7 @@ renoise.song().transport:cancel_sample_recording()
 renoise.song().transport.playing, _observable
   -> [boolean]
 
--- BPM, LPB, and deprecated TPL.
+-- BPM, LPB, and TPL.
 renoise.song().transport.bpm, _observable
   -> [number, 32-999]
 renoise.song().transport.lpb, _observable
@@ -888,7 +888,7 @@ renoise.song().instruments[]:sample(index)
 -- that the mapping gets appended to the 'sample_mappings' property.
 -- Manipulating sample lists (removing swapping) will automatically update
 -- existing mappings. Sample mappings of sliced samples are read-only: can 
--- not be modified. Test (#samples[1].slice_markers > 1) to find out if the 
+-- not be modified. Test for `#samples[1].slice_markers > 1` to find out if the 
 -- instrument is sliced.
 renoise.song().instruments[]:insert_sample_mapping(
   layer, sample_index [, base_note] [, note_range] [, vel_range])
@@ -1080,8 +1080,8 @@ renoise.song().instruments[].plugin_properties.plugin_device.external_editor_vis
 --------------------------------------------------------------------------------
 
 -- General remarks: Sample mappings of sliced samples are read-only: can not be
--- modified. Test (#samples[1].slice_markers > 1) to find out if the instrument 
--- is sliced.
+-- modified. Test for `#samples[1].slice_markers > 1` to find out if the
+-- instrument is sliced.
 
 -------- Properties
 

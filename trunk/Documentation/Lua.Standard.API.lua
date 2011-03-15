@@ -46,10 +46,10 @@ type(class_object or class or anything else) -> [string]
 
 -- Also compares object identities of Renoise API class objects: 
 -- > examples: 
--- >          print(rawequal(renoise.app(), renoise.app())) --> true
--- >          print(rawequal(renoise.song().track[1], 
--- >            renoise.song().track[1]) --> true
--- >          print(rawequal(renoise.song().track[1], 
+-- >          print(rawequal(renoise.app(), renoise.app())) --> true  
+-- >          print(rawequal(renoise.song().track[1],
+-- >            renoise.song().track[1]) --> true  
+-- >          print(rawequal(renoise.song().track[1],
 -- >            renoise.song().track[2]) --> false
 rawequal(obj1, obj2) -> [boolean]
 

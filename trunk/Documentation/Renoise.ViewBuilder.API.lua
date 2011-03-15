@@ -351,7 +351,7 @@ multiline_text.font
 multiline_text.style
   -> [string]
 
--- true when the text field is focused. setting the edit_mode programatically
+-- True when the text field is focused. setting the edit_mode programatically
 -- will focus the text field or remove the focus (focus the dialog) accordingly.
 -- By default false.
 multiline_text.edit_mode
@@ -402,7 +402,7 @@ textfield.text
 -- By default "left".
 textfield.align
 
--- true when the text field is focused. setting the edit_mode programatically
+-- True when the text field is focused. setting the edit_mode programatically
 -- will focus the text field or remove the focus (focus the dialog) accordingly.
 -- By default false.
 textfield.edit_mode
