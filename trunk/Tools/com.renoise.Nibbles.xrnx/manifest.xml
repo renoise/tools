@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <RenoiseScriptingTool>
-  <ApiVersion>1.0</ApiVersion>
+  <ApiVersion>2.0</ApiVersion>
   <Id>com.renoise.Nibbles</Id>
-  <Version>0.31</Version>
+  <Version>0.4</Version>
   <Name>Nibbles</Name>
   <Author>Dac Chartrand [dac@renoise.com]</Author>
   <Description>Nibbles, what else?</Description>
