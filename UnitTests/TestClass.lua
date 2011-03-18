@@ -63,7 +63,7 @@ do
   end
   
   
-  -- test class namespaces
+  -- test
   
   assert_error(function() 
     assert(tostring(MyClass("Olla")) == "Olla") 
@@ -83,27 +83,9 @@ do
   assert(type(namespace.MyClass) == "MyClass class")
   assert(type(namespace.MyClass()) == "MyClass")
   
-  assert(type(renoise.song()) == "Song")
-  assert(type(renoise.Song) == "Song class")
-  
   -- rprint(namespace)
   -- oprint(GlobalMyClass())
   -- oprint(namespace.MyClass())
-
-
-  -- test class object comparison
-  
-  local obj1 = GlobalMyClass()
-  local obj2 = GlobalMyClass()
-  
-  assert(rawequal(obj1, obj1))
-  assert(not rawequal(obj1, obj2))
-
-  assert(rawequal(renoise.song(), renoise.song()))
-  assert(rawequal(renoise.song().tracks[1], renoise.song().tracks[1]))
-  assert(not rawequal(renoise.song().tracks[1], renoise.song().tracks[2]))
-  assert(not rawequal(renoise.song().tracks[1], renoise.song().instruments[1]))
-  assert(not rawequal(renoise.song().tracks[1], obj1))
 
 end
 

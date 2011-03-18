@@ -448,7 +448,6 @@ do
         },
         vb:textfield {
           value = "Edit me",
-          edit_mode = false,
           notifier = function(value)
             show_status(("textfield value changed to '%s'"):
               format(value))
@@ -468,7 +467,6 @@ do
         vb:multiline_textfield {
           height = 80,
           width = 120,
-          edit_mode = true,
           value = "I am a long text that can be editied.\nParagraphs are separated with "..
             "\\n's.\n\nEdit me",
           notifier = function(value)

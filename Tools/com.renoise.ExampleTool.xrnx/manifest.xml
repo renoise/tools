@@ -19,7 +19,7 @@
   <!-- changes to the internal API will not break existing tools. -->
   <!-- When creating a new tools, simply set this version to the internal API version  --> 
   <!-- number. You can access this internal version via "renoise.API_VERSION" in Lua... -->
-  <ApiVersion>2.0</ApiVersion>
+  <ApiVersion>1.0</ApiVersion>
   
   <!-- Version of your tool. Will be used to decide if (auto-)upgrading is necessary. -->
   <!-- You should upgrade the version number every time you change the tool. -->

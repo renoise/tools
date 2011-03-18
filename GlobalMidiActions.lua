@@ -1983,7 +1983,7 @@ table.insert(middle_frame_views,
 table.insert(middle_frame_views,
   renoise.ApplicationWindow.MIDDLE_FRAME_MIXER)
 table.insert(middle_frame_views,
-  renoise.ApplicationWindow.MIDDLE_FRAME_KEYZONE_EDITOR)
+  renoise.ApplicationWindow.MIDDLE_FRAME_INSTRUMENT_EDITOR)
 table.insert(middle_frame_views,
   renoise.ApplicationWindow.MIDDLE_FRAME_SAMPLE_EDITOR)
 
@@ -2025,11 +2025,11 @@ function(message)
   end
 end)
 
-add_action("GUI:Middle Frame:Show Key-Zone Editor [Trigger]",
+add_action("GUI:Middle Frame:Show Instrument Editor [Trigger]",
 function(message)
   if message:is_trigger() then
     app().window.active_middle_frame =
-      renoise.ApplicationWindow.MIDDLE_FRAME_KEYZONE_EDITOR
+      renoise.ApplicationWindow.MIDDLE_FRAME_INSTRUMENT_EDITOR
   end
 end)
 

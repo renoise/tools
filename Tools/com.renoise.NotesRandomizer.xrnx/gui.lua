@@ -123,6 +123,8 @@ local function redraw(vb)
   vb.views.preserve_octave_row_2.visible =
     (current_mode ~= randomize_modes:find("Shuffle") and
      current_preserve_octaves == false)
+  -- re-draw
+  vb.views.dialog_content:resize()
 end
 
 

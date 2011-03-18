@@ -141,9 +141,12 @@ control.midi_mapping
 
 ----------- Functions
 
--- DEPRECATED: Adding new child views to a rack automatically enlarges and 
--- shrinks the rack since API_VERSION 2.0. calling this function will have no 
--- effect.
+-- Adding new child views to a rack automatically enlarges the rack, but
+-- removing child views from a rack or making them invisible does not
+-- automatically shrink it.
+-- Instead, "resize" does. It recalculates the rack's size to cover exactly all
+-- its child views. When resizing a rack which is the main content view of
+-- a dialog, "resize" will also resize the dialog.
 rack:resize()
 
 
@@ -351,12 +354,6 @@ multiline_text.font
 multiline_text.style
   -> [string]
 
--- True when the text field is focused. setting the edit_mode programatically
--- will focus the text field or remove the focus (focus the dialog) accordingly.
--- By default false.
-multiline_text.edit_mode
-  -> [boolean]
-
 
 --------------------------------------------------------------------------------
 -- renoise.Views.TextField (inherits from View, 'textfield' in the builder)
@@ -401,12 +398,6 @@ textfield.text
 --
 -- By default "left".
 textfield.align
-
--- True when the text field is focused. setting the edit_mode programatically
--- will focus the text field or remove the focus (focus the dialog) accordingly.
--- By default false.
-textfield.edit_mode
-  -> [boolean]
 
 -- Valid in the construction table only: Set up a notifier for text changes.
 -- See add_notifier/remove_notifier below.
