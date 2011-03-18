@@ -34,7 +34,7 @@ local requests_pool = table.create()
 --  Debugging
 -------------------------------------------------------------------------------
 
-local DEBUG_CONTENT = false
+local DEBUG_CONTENT = true
 
 local function TRACE(data)
   if (not DEBUG_CONTENT) then
@@ -104,7 +104,7 @@ Request.PARSERERROR = "PARSERERROR"
 
 ---## settings ##---
 -- Default request options
-Request.settings = {
+Request.default_settings = table.create{
 
   -- jQuery uses "type" instead of "method"
   -- The type of request to make ("POST" or "GET"), default is "GET". 
@@ -125,8 +125,14 @@ Request.settings = {
   -- synchronous requests, set this option to false.
   async = true,
 
-  -- TODO Set a local timeout (in milliseconds) for the request.
-  timeout = 0,
+  -- Set a local timeout (in milliseconds) for the request of the header.
+  header_timeout = 10000, 
+  
+  -- Set a local timeout (in milliseconds) for the request of the body.
+  timeout = 0, -- 0 means: until connection is closed
+  
+  -- Maximum number of automatic request retries.
+  max_retries = 2,
 
   -- Default: "text"
   -- The type of data that you're expecting back from the server. If none is 
@@ -209,10 +215,10 @@ Request.settings = {
 ---## setup ##---
 -- Set default values for future Ajax requests.
 -- For details on the settings available for Request:setup(), 
--- see Request.settings.
+-- see Request.default_settings.
 function Request:setup(options)
   for k,v in pairs(options) do
-    Request.settings[k] = v;
+    Request.default_settings[k] = v;
   end
 end
 
@@ -220,11 +226,14 @@ end
 ---## __init ##---
 --  A set of key/value pairs that configure the request. All options are 
 -- optional. A default can be set for any option with Request:setup().
-function Request:__init(settings)
-  settings = settings or table.create()
-
+function Request:__init(custom_settings)
+  custom_settings = custom_settings or table.create()
+  
+  -- First make a clone of the default settings
+  self.settings = Request.default_settings:rcopy()
+  
   -- User specified options override default options
-  for k,v in pairs(settings) do
+  for k,v in pairs(custom_settings) do
     self.settings[k] = v;
   end
   
@@ -249,12 +258,21 @@ function Request:__init(settings)
   
   -- Retried timeouts 
   self.retries = 0
+  
+  -- Number of redirects
+  self.redirects = 0
 
   -- Connection status
   self.complete = false
 
   -- Name/Value pairs to construct the header
   self.header_map = table.create()
+  
+  -- Chunk variables
+  self.chunk_size = 0
+  self.chunk_remaining = 0
+  self.chunks=table.create()
+  self.chunk=""
 
   -- enctype="multipart/form-data"
   if (self.settings.content_type:find("multipart/mixed")) then
@@ -405,17 +423,27 @@ end
 ---## read_header ##---
 -- Sets up a connection and loads the HTTP header from the server
 function Request:_read_header()
-
+  
   local socket_error = nil
-
+  
+  -- Prevent infinite loop due to invalid redirect  
+  if (self.redirects > 10) then
+    return false, "Too many redirects detected."
+  end
+  self.redirects = self.redirects + 1  
+  
+  -- Reparse the URL, in case there's a redirect
+  self.url_parts = URL:parse(self.url)
+  
   -- Create a SocketClient object and connect with the server
   self.client_socket, socket_error = renoise.Socket.create_client(
-    self.url_parts.host, self.url_parts.port or 80, renoise.Socket.PROTOCOL_TCP)
+    self.url_parts.host,  -- address
+    tonumber(self.url_parts.port or 80), -- port
+    renoise.Socket.PROTOCOL_TCP) -- protocol
   
   if not (self.client_socket) then
      return false, socket_error
-  end
-  
+  end  
   
   -- Determine Content-Length. With GET requests the body is empty. 
   -- With POST requests the body consists of a payload.
@@ -465,8 +493,11 @@ function Request:_read_header()
   local header_lines = table.create()
 
   while true do
-    local line = self.client_socket:receive("*l", 1000)
+    local line, socket_error = self.client_socket:receive(
+      "*l", self.settings.header_timeout)
+      
     if (not line) then
+      log:warn("Unexpected EOF while receiving header: "..socket_error)
       break -- unexpected EOF
     end
 
@@ -478,37 +509,39 @@ function Request:_read_header()
   end
 
   log:info(("=== RESPONSE HEADER (%s) ==="):format(self.url))
-  rprint(header_lines)
-  print("\n")
-
+  TRACE(header_lines)
+  TRACE("\n")
+  
   self.response.header = Util:parse_message(header_lines:concat("\n"))
 
-  if (self.response.header) then
+  if (self.response.header and #self.response.header > 0) then
     -- TODO check content-length and HTTP status code  
     self.response.content_length =
       tonumber(self.response.header["Content-Length"])
-    -- 301 Permanent Redirect  
-    if (self.response.header[1]:find("301") or 
-        self.response.header[1]:find("302")) then
-      self.url  = self.response.header["Location"]
-      if (not self.url) then 
-        log:error("URL was moved, but the new location was not found.")
-        return
-      end       
-      self.url_parts = URL:parse(self.url) 
+    -- Redirection
+    if (self.response.header["Location"] and 
+      #self.response.header["Location"] > 5
+     -- and not self.response.header[1]:find("201") -- POST Created
+      ) then                        
+      local location = self.response.header["Location"]
+      
+      -- Take care of a relative URL
+      local new_url_parts = URL:parse(location)
+      if (not new_url_parts.host) then  
+        new_url_parts.host = self.url_parts.host
+        new_url_parts.scheme = self.url_parts.scheme
+        location = URL:build(new_url_parts)
+      end
+      self.url = location
       return self:_read_header()
     end
     return true
   else
-    return false, "Invalid page header"
+    return false, "Time-out or invalid HTTP header"
   end
 end
 
--- Chunk vars
-local chunk_size = 0
-local chunk_remaining = 0
-local chunks=table.create()
-local chunk=""
+
 
 ---## process_chunk ##---
 -- Unchunk a message stream. Chunked data is useful when the sender 
@@ -524,38 +557,38 @@ local chunk=""
  -- 1A
  -- and this is the second one
  -- 0
-function Request:_process_chunk(buffer)
+function Request:_process_chunk(buffer)       
     -- new chunk
-    if (#chunk == 0) then        
+    if (#self.chunk == 0) then        
       log:info("New chunk")
       local chunk_boundary = buffer:find("\n", self.response.chunk_pos) 
       local chunk_size_hex = buffer:sub(1, chunk_boundary):gsub("%c","")
       buffer = buffer:sub(chunk_boundary+1)
-      chunk_size = tonumber("0x"..chunk_size_hex) or 0        
-      chunk_remaining = chunk_size
+      self.chunk_size = tonumber("0x"..chunk_size_hex) or 0        
+      self.chunk_remaining = self.chunk_size
     end      
     
     -- message complete
-    if (chunk_size == 0) then
+    if (self.chunk_size == 0) then
       return
     end
 
     self.length = self.length + #buffer 
-    log:info("chunk_size:" .. chunk_size)
+    log:info("self.chunk_size:" .. self.chunk_size)
     log:info("buffer_size:" .. #buffer) 
      
     -- split buffer
-    if (#buffer >= chunk_remaining) then
-       log:info("chunk_remaining:" .. 0)
-       chunk=chunk..buffer:sub(1,chunk_remaining) 
-       chunks:insert(chunk)
-       buffer = buffer:sub(chunk_remaining+1)
-       chunk = ""
+    if (#buffer >= self.chunk_remaining) then
+       log:info("self.chunk_remaining:" .. 0)
+       self.chunk=self.chunk..buffer:sub(1,self.chunk_remaining) 
+       self.chunks:insert(self.chunk)
+       buffer = buffer:sub(self.chunk_remaining+1)
+       self.chunk= ""
        self:_process_chunk(buffer)
     else 
-      chunk = chunk..buffer
-      chunk_remaining = chunk_remaining - #buffer
-      log:info("chunk_remaining:" .. chunk_remaining)          
+      self.chunk= self.chunk..buffer
+      self.chunk_remaining = self.chunk_remaining - #buffer
+      log:info("self.chunk_remaining:" .. self.chunk_remaining)          
     end
 end        
 
@@ -565,19 +598,16 @@ end
 function Request:_read_content()
   assert(self.client_socket and self.response.header,
     "read_header failed or was not called")
-  
-  -- read all pending data
-  local timeout = 0
-  
+    
   local buffer, socket_error = 
-    self.client_socket:receive("*all", timeout)
+    self.client_socket:receive("*all", self.settings.timeout)
   
   if (buffer) then
     
     if (tostring(self.response.header["Transfer-Encoding"]):lower() == "chunked") then
       log:info("Unchunking message stream")
             
-      if (chunk_size == 0) then
+      if (self.chunk_size == 0) then
         self.response.new_chunk = true
         log:info("New chunk")
       end                 
@@ -601,10 +631,10 @@ function Request:_read_content()
     
     -- Detect end of transmission
     if (self.length >= self.response.content_length
-      and chunk_size == 0) then
+      and self.chunk_size == 0) then
       -- done
-      if (#chunks > 0) then
-        self.contents = chunks
+      if (#self.chunks > 0) then
+        self.contents = self.chunks
       end        
       self:_do_callback()
       return false
@@ -616,11 +646,13 @@ function Request:_read_content()
   else
   -- timeout or error
     
-    if (socket_error == "timeout" and self.retries < 10) then
+    if (socket_error == "timeout" and 
+      self.retries < self.settings.max_retries) then
       -- retry next time (TODO: give up at some point)
       self.retries = self.retries + 1
       self.text_status = Request.TIMEOUT
-      log:warn(string.format("read timeout (%s)", self.url))
+      log:warn(string.format("read timeout (%s); attempt (#%s)", 
+        self.url, self.retries))
       return true
     else
       -- cancel request
@@ -636,7 +668,7 @@ end
 ---## decode ##---
 -- Processes data in a different data type
  -- TODO process more data_types 
-function Request:_decode(data)
+function Request:_decode(data)  
   local error, succeeded, result
   local data_type = self.settings.data_type
   
@@ -644,7 +676,7 @@ function Request:_decode(data)
     return data:concat()
     
   elseif (data_type == "JSON") then
-    log:info("Decoding JSON")
+    log:info("Decoding JSON")    
     succeeded, result = pcall(json.decode, data:concat())    
     
   elseif (data_type == "OSC") then
@@ -655,7 +687,7 @@ function Request:_decode(data)
   
   elseif (data_type == "XML") then    
     log:info("Decoding XML")     
-    result,error = XmlParser:ParseXmlText(data:concat())
+    result,error = XmlParser:ParseXmlText(data:concat())    
     succeeded = not error    
             
   elseif (data_type == "LUA_SCRIPT") then
@@ -683,9 +715,10 @@ function Request:_do_callback(socket_error)
   log:info(("=== CONTENT (%d bytes from %s) ==="):format(
     self.length, self.url))
   if (self.length <= 32 * 1024) then
-    if (DEBUG_CONTENT)  then rprint(self.contents) end
+    TRACE("do_callback contents:")
+    TRACE(self.contents)
   else
-    print(" *** too much content to display (> 32 kbytes) *** ")
+    TRACE(" *** too much content to display (> 32 kbytes) *** ")
   end
 
   if (socket_error) then

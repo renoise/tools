@@ -5,6 +5,31 @@
 -----------------------------------------------------------------------------------------
 
 local DEBUG = false
+
+class "XmlObject"
+function XmlObject:__init(tree)  
+  self.tree = tree
+end
+function XmlObject:get(label, amount)  
+  local tree = self.tree.ChildNodes  
+  amount = amount or #tree  
+  local collection = table.create()  
+  local v = nil
+  
+  for i=1,amount do
+    v = tree[i]
+    if (v.Name == label) then        
+      collection:insert(v.Value)
+    end
+  end  
+  
+  self.tree = collection
+  return self
+end
+function XmlObject:rprint()
+  rprint(self.tree)
+end
+
 XmlParser = {};
 
 function XmlParser:ToXmlString(value)
@@ -111,6 +136,9 @@ function XmlParser:ParseXmlText(xmlText)
   if #stack > 1 then
     error("XmlParser: unclosed "..stack[stack.n].Name)
   end  
+  
+  --local xml_obj = XmlObject(stack[1].ChildNodes[1])
+  
   return stack[1].ChildNodes[1];
 end
 
@@ -124,4 +152,3 @@ function XmlParser:ParseXmlFile(xmlFileName)
     return nil,err;
   end
 end
-
