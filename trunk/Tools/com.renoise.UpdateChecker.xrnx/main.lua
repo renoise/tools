@@ -194,8 +194,7 @@ local function show_dialog(msg, outdated, remote_version)
     },
     
     -- Buttons
-    vb:horizontal_aligner {      
-      mode = "left",
+    vb:row {            
       vb:button {
         visible = false,
         width = BUTTON_WIDTH,
