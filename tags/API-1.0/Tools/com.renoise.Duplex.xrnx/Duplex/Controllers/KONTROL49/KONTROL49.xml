@@ -1,0 +1,65 @@
+<Device>
+  <Name>KONTROL49</Name>
+  <Author>Alexander Stoica | Beatslaughter (info@beatslaughter.de) & In-Fluence</Author>
+  <Description>Korg KONTROL49 control map for Duplex.
+
+Add the supplied scene data file "KONTROL49.k4d" into a free slot of your own scene set or load the complete scene set "KONTROL49.k4s" using the "Korg KONTROL49 Editor Librarian" software and transmit it to your KONTROL49. Then select the scene by holding the "SCENE" button and press the slot number on the pads to load it. In case you have used the supplied scene set "KONTROL49.k4s" use "SCENE" and "PAD 1" to select it.
+
+It is recommended to set the pad illumination mode to "Blink: Off". To do this hold the "SETTING" button and press "PAD 12", then use the main dial to switch the mode to "Blink: Off" in the main LCD display, then hit the red blinking "ENTER" button to save this setting.</Description>
+  <Parameters>
+    <Page>
+      <Row>
+        <Column>
+          <Group name="Switches" orientation="horizontal">
+            <Param value="CC#60" type="togglebutton" name="Switch 1" maximum="127" minimum="0"/>
+            <Param value="CC#61" type="togglebutton" name="Switch 2" maximum="127" minimum="0"/>
+          </Group>
+        </Column>
+        <Column>
+          <Group name="Pads A" orientation="horizontal" columns="4">
+            <Param value="CC#40" type="togglebutton" name="Pad #1" maximum="127" minimum="0"/>
+            <Param value="CC#41" type="togglebutton" name="Pad #2" maximum="127" minimum="0"/>
+            <Param value="CC#42" type="togglebutton" name="Pad #3" maximum="127" minimum="0"/>
+            <Param value="CC#43" type="togglebutton" name="Pad #4" maximum="127" minimum="0"/>
+            <Param value="CC#44" type="togglebutton" name="Pad #5" maximum="127" minimum="0"/>
+            <Param value="CC#45" type="togglebutton" name="Pad #6" maximum="127" minimum="0"/>
+            <Param value="CC#46" type="togglebutton" name="Pad #7" maximum="127" minimum="0"/>
+            <Param value="CC#47" type="togglebutton" name="Pad #8" maximum="127" minimum="0"/>
+          </Group>
+          <Group name="Pads B" orientation="horizontal" columns="4">
+            <Param value="CC#50" type="togglebutton" name="Pad #9" maximum="127" minimum="0"/>
+            <Param value="CC#51" type="togglebutton" name="Pad #10" maximum="127" minimum="0"/>
+            <Param value="CC#52" type="togglebutton" name="Pad #11" maximum="127" minimum="0"/>
+            <Param value="CC#53" type="togglebutton" name="Pad #12" maximum="127" minimum="0"/>
+            <Param value="CC#54" type="togglebutton" name="Pad #13" maximum="127" minimum="0"/>
+            <Param value="CC#55" type="togglebutton" name="Pad #14" maximum="127" minimum="0"/>
+            <Param value="CC#56" type="togglebutton" name="Pad #15" maximum="127" minimum="0"/>
+            <Param value="CC#57" type="togglebutton" name="Pad #16" maximum="127" minimum="0"/>
+          </Group>
+        </Column>
+        <Column>
+          <Group name="Encoders" orientation="horizontal">
+            <Param value="CC#20" type="dial" name="Encoder #1" maximum="127" minimum="0"/>
+            <Param value="CC#21" type="dial" name="Encoder #2" maximum="127" minimum="0"/>
+            <Param value="CC#22" type="dial" name="Encoder #3" maximum="127" minimum="0"/>
+            <Param value="CC#23" type="dial" name="Encoder #4" maximum="127" minimum="0"/>
+            <Param value="CC#24" type="dial" name="Encoder #5" maximum="127" minimum="0"/>
+            <Param value="CC#25" type="dial" name="Encoder #6" maximum="127" minimum="0"/>
+            <Param value="CC#26" type="dial" name="Encoder #7" maximum="127" minimum="0"/>
+            <Param value="CC#27" type="dial" name="Encoder #8" maximum="127" minimum="0"/>
+          </Group>
+          <Group name="Sliders" orientation="horizontal">
+            <Param value="CC#80" type="fader" name="Slider #1" orientation="vertical" size="3" maximum="127" minimum="0"/>
+            <Param value="CC#81" type="fader" name="Slider #2" orientation="vertical" size="3" maximum="127" minimum="0"/>
+            <Param value="CC#82" type="fader" name="Slider #3" orientation="vertical" size="3" maximum="127" minimum="0"/>
+            <Param value="CC#83" type="fader" name="Slider #4" orientation="vertical" size="3" maximum="127" minimum="0"/>
+            <Param value="CC#84" type="fader" name="Slider #5" orientation="vertical" size="3" maximum="127" minimum="0"/>
+            <Param value="CC#85" type="fader" name="Slider #6" orientation="vertical" size="3" maximum="127" minimum="0"/>
+            <Param value="CC#86" type="fader" name="Slider #7" orientation="vertical" size="3" maximum="127" minimum="0"/>
+            <Param value="CC#87" type="fader" name="Slider #8" orientation="vertical" size="3" maximum="127" minimum="0"/>
+          </Group>
+        </Column>
+      </Row>
+    </Page>
+  </Parameters>
+</Device>

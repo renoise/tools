@@ -1,0 +1,101 @@
+--[[============================================================================
+Renoise Scripting Editor And Terminal
+============================================================================]]--
+
+The built-in Script Editor and Terminal can be opened by clicking "Scripting
+Terminal & Editor..." in the "Tools" menu. It allows you to:
+
+* Create, view and edit Lua, text, and XML files.
+
+* Evaluate scripts or commands in realtime using the Terminal.
+
+* Watch any scripts output in the Terminal. For example:
+  all "print"s and errors from scripts will be redirected here
+
+
+--------------------------------------------------------------------------------
+-- Browser Shortcuts
+--------------------------------------------------------------------------------
+
+Note: 'Command' below is the _Control_ key on Windows & Linux, _Command_ on OSX.
+
++ 'Command + E' Switch to Editor
++ 'Command + N' Create a new File
++ 'Command + O' Open an existing File
++ 'Command + T' Switch to Terminal
+
+
+--------------------------------------------------------------------------------
+-- Editor Shortcuts
+--------------------------------------------------------------------------------
+
++ 'Command + A' Select all
++ 'Command + B' Switch to Browser
++ 'Command + C' Copy
++ 'Command + D' Delete
++ 'Command + E'  Set Find string from current selection
++ 'Command + F'  Open Find Dialog
++ 'Command + F3' Find Next under Cursor or Selection
++ 'Command + F4' Close current tab
++ 'Command + G'  Find Next
++ 'Command + H'  Replace Next
++ 'Command + L' Jump to Line
++ 'Command + N' Create a new File
++ 'Command + O' Open an existing File
++ 'Command + P' Paste
++ 'Command + R' Save and Run the current Tabs File
++ 'Command + S' Save current File (Tool Scripts will automatically reload)
++ 'Command + Shift + F4' Close all except current Tab
++ 'Command + Shift + S' Save all open files
++ 'Command + Shift + Tab' Switch to Previous Tab
++ 'Command + Shift + W'  Close all except current Tab
++ 'Command + T' Switch to Terminal
++ 'Command + Tab' Switch to Next Tab
++ 'Command + W'  Close current tab
++ 'Command + X' Cut
++ 'Command + Y' Redo ('Command + Shift + Z' on OSX, LINUX)
++ 'Command + Z' Undo
++ 'F3' Find Next
++ 'Shift + Tab' Unindent Selection
++ 'Tab' Indent Selection
+
+
+--------------------------------------------------------------------------------
+-- Terminal Shortcuts
+--------------------------------------------------------------------------------
+
++ 'Arrow Down' Next Command
++ 'Arrow Up' Previous Command
++ 'Command + B' Switch to Browser
++ 'Command + C' Copy Selection _in Output
++ 'Command + E' Switch to Editor
++ 'Command + K' Clear Output
++ 'Command + L' Clear Output
++ 'Command + N' Create a new File
++ 'Command + O' Open an existing File
+
+
+--------------------------------------------------------------------------------
+-- Tips & Tricks
+--------------------------------------------------------------------------------
+
+* To enter multiple lines in the terminal, end a line with a \
+  The terminal will then prompt for another line until you hit enter twice
+
+* `oprint(some_object)` prints out info about a Lua class object:
+  try for example `oprint(renoise.song())` to see all properties
+  and methods for song(). To list all available modules, try `rprint(renoise)`
+  or `rprint(_G)`
+
+* Take a look at the example tools in the 'Resource Scripts' node on the
+  left for a detailed description of a tool script's layout
+
+* If you just want to test out some code without writing a 'tool', create a new
+  script file in the 'Scripts' folder and not in the 'Scripts/Tools' folder.
+  Such Scripts can then be launched by hitting the 'Run Script' button or
+  via 'Command + R'. A default file called 'TestPad.lua' should already
+  be present which you can use for testing.
+
+* The full Renoise API reference is included in the left tree view
+  as well, in case you want to lookup something without leaving Renoise
+

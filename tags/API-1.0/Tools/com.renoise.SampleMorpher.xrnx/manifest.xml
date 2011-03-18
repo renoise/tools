@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<RenoiseScriptingTool doc_version="0">
+  <Name>Morpher</Name>
+  <Id>com.renoise.SampleMorpher</Id>
+  <Version>1.0</Version>
+  <ApiVersion>1.0</ApiVersion>
+  <Author>It-Alien (Fabio Napodano) | napodano@napodano.com</Author>
+  <Category>Sample Editor</Category>
+  <Description>This script lets you select two samples and morph the first one into the other by creating 
+  an user definable number of intermediate samples. 
+   The  size of the resulting samples  will be the same of the first source sample.
+  
+  An entry into "Sample Editor => Process" menu and a related keybinding will be added to call this tool.
+  </Description>
+  <Homepage>http://tools.renoise.com</Homepage>
+  <Icon/>
+</RenoiseScriptingTool>

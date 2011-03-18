@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<RenoiseScriptingTool>
+  <ApiVersion>1.0</ApiVersion>
+  <Id>com.renoise.SelectTrackShortcuts</Id>
+  <Version>0.21</Version>
+  <Name>Set selected track shortcuts</Name>
+  <Author>Fabio Napodano | It-Alien (it-alien@renoise.com)</Author>
+  <Description>Adds MIDI/PC keyboard shortcuts to select tracks directly. Both types of mapping are filed under Pattern Editor:Track:Select Track #...</Description>
+  <Category>Pattern Editor</Category>
+  <Homepage>http://tools.renoise.com/select-track-shortcuts</Homepage>
+</RenoiseScriptingTool>

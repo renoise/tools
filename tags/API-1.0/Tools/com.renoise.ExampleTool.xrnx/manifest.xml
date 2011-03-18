@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- Tool scripts must describe themselves through a manifest XML, to let Renoise -->
+<!-- and tool browsers know which API version the tool relies on, what "it can do" -->
+<!-- and so on,  without actually loading/executing it. -->
+
+<!-- Root node name of the manifest.xml. Must be 'RenoiseScriptingTool' -->
+<RenoiseScriptingTool>
+  
+  <!-- === REQUIRED ENTRIES === -->
+  
+  <!-- This is the renoise.API_VERSION your tool relies on. Any changes in -->
+  <!-- the API which are not fully backwards compatible, will increase the internal -->
+  <!-- APIs major version number (e.g. from 1.4 -> 2.0). All other backwards compatible -->
+  <!-- changes, like new functionality, new functions and classes will increase only  --> 
+  <!-- the minor version number (e.g. 1.0 -> 1.1).  -->
+  <!-- This means that you tools major API version always MUST match the internal major --> 
+  <!-- Api version in order to run. But this also gurantees that small additions and --> 
+  <!-- changes to the internal API will not break existing tools. -->
+  <!-- When creating a new tools, simply set this version to the internal API version  --> 
+  <!-- number. You can access this internal version via "renoise.API_VERSION" in Lua... -->
+  <ApiVersion>1.0</ApiVersion>
+  
+  <!-- Version of your tool. Will be used to decide if (auto-)upgrading is necessary. -->
+  <!-- You should upgrade the version number every time you change the tool. -->
+  <!-- The version is evaluated as a double precision floating point value -->
+  <Version>1.0</Version>
+  
+  <!-- Unique identifier for your tool. The identifier must match the XRNX bundle name -->
+  <!-- without the extension .xrnx. This will be done automatically by Renoise -->
+  <!-- when installing tools -->
+  <!-- The Id should be a string with 3 parts, separated by dots, like org.superduper.tool.--> 
+  <!-- You don't have to use prefixes like com/org and so on, but please try to use -->
+  <!-- something personal, like your name, or your homepage domain or company name in -->
+  <!-- the Id in order to make it as unique as possible. -->
+  <Id>com.renoise.ExampleTool</Id>
+  
+  
+  <!-- The author field is only used in descriptions of the tools, or in error messages  -->
+  <!-- from the script. Providing an email is not necessary, but recommended if you -->
+  <!-- want feedback. -->
+  <Author>taktik [taktik@renoise.com]</Author>
+  
+  <!-- Main topic, tag of this tool, like "Pattern Editor, 'Sample Editor' and so on -->
+  <!-- as visible to the user -->  
+  <Category>Tool Development</Category>
+
+  <!-- Name of the tool, as visible to the user -->
+  <Name>Renoise Scripting Tool Example</Name>
+
+  <!-- Description of the tool as visible to the users -->
+  <Description>A XRNX tool which describes step by step and in depth how to create Renoise XRNX tools. Please have a look at the source files of this tool (manifest.xml and main.lua) for more info. Also creates a new menu 'Example Tool' in the global 'Tools' menu.</Description>
+  
+  
+  <!-- === OPTIONAL ENTRIES === -->
+  
+  <!-- Optional relative path and name of an icon file, which may be shown -->
+  <!-- in tool browsers. The icon must be provided as PNG file and should have -->
+  <!-- a size of 128x128 pixels -->
+  <Icon>icon.png</Icon>
+  
+  <!-- Optional http:// based URL of the tools homepage, if available... -->
+  <Homepage>http://scripting.renoise.com</Homepage>
+
+   <!-- Supported platforms for the tool. When not specified, its assumed that the tool -->
+   <!-- is platform independent, else one or more of "Windows, Mac, Linux" are expected -->
+  <Platform>Windows, Mac, Linux</Platform>
+  
+</RenoiseScriptingTool>
+

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<RenoiseScriptingTool>
+  <ApiVersion>1.0</ApiVersion>
+  <Id>com.renoise.PatternSplit</Id>
+  <Version>0.21</Version>
+  <Name>Pattern split</Name>
+  <Author>Fabio Napodano | It-Alien (it-alien@renoise.com)</Author>
+  <Description>Splits the current pattern in two on the current row, including automation.
+  
+Creates a menu entry 'Split' in the 'Pattern Editor -&gt; Pattern' context menu and adds an unassigned keyboard shortcut.
+  </Description>
+  <Category>Pattern Editor</Category>
+  <Homepage>http://tools.renoise.com</Homepage>
+</RenoiseScriptingTool>

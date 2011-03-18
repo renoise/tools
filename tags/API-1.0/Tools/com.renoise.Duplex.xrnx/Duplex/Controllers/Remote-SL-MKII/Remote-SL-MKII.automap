@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<AutomapFile>
+    <PlugID PlugID="722721511" PlugID3="1444606871" PlugID2="1141333638" PlugID1="1578595161" />
+    <DeviceID DeviceID="-994295660" DeviceID3="-881871444" DeviceID2="1101665183" DeviceID1="-152906728" />
+    <Type Type="0" />
+    <BrowserHint Value="0" />
+    <Group name="Controls">
+        <Group name="Page 1 Encoders">
+            <Param name="CC# 0" shortName="CC# 0" id="0" intStep="1" intMax="127" intMin="0" high="127" low="0" step="1.000000" />
+            <Param name="CC# 1" shortName="CC# 1" id="1" intStep="1" intMax="127" intMin="0" high="127" low="0" step="1.000000" />
+            <Param name="CC# 2" shortName="CC# 2" id="2" intStep="1" intMax="127" intMin="0" high="127" low="0" step="1.000000" />
+            <Param name="CC# 3" shortName="CC# 3" id="3" intStep="1" intMax="127" intMin="0" high="127" low="0" step="1.000000" />
+            <Param name="CC# 4" shortName="CC# 4" id="4" intStep="1" intMax="127" intMin="0" high="127" low="0" step="1.000000" />
+            <Param name="CC# 5" shortName="CC# 5" id="5" intStep="1" intMax="127" intMin="0" high="127" low="0" step="1.000000" />
+            <Param name="CC# 6" shortName="CC# 6" id="6" intStep="1" intMax="127" intMin="0" high="127" low="0" step="1.000000" />
+            <Param name="CC# 7" shortName="CC# 7" id="7" intStep="1" intMax="127" intMin="0" high="127" low="0" step="1.000000" />
+        </Group>
+        <Group name="Page 1 Pots">
+            <Param name="CC# 8" shortName="CC# 8" id="8" intStep="1" intMax="127" intMin="0" high="127" low="0" step="1.000000" />
+            <Param name="CC# 9" shortName="CC# 9" id="9" intStep="1" intMax="127" intMin="0" high="127" low="0" step="1.000000" />
+            <Param name="CC# 10" shortName="CC# 10" id="10" intStep="1" intMax="127" intMin="0" high="127" low="0" step="1.000000" />
+            <Param name="CC# 11" shortName="CC# 11" id="11" intStep="1" intMax="127" intMin="0" high="127" low="0" step="1.000000" />
+            <Param name="CC# 12" shortName="CC# 12" id="12" intStep="1" intMax="127" intMin="0" high="127" low="0" step="1.000000" />
+            <Param name="CC# 13" shortName="CC# 13" id="13" intStep="1" intMax="127" intMin="0" high="127" low="0" step="1.000000" />
+            <Param name="CC# 14" shortName="CC# 14" id="14" intStep="1" intMax="127" intMin="0" high="127" low="0" step="1.000000" />
+            <Param name="CC# 15" shortName="CC# 15" id="15" intStep="1" intMax="127" intMin="0" high="127" low="0" step="1.000000" />
+        </Group>
+        <Group name="Page 1 Sliders">
+            <Param name="CC# 16" shortName="CC# 16" id="16" intStep="1" intMax="127" intMin="0" high="127" low="0" step="1.000000" />
+            <Param name="CC# 17" shortName="CC# 17" id="17" intStep="1" intMax="127" intMin="0" high="127" low="0" step="1.000000" />
+            <Param name="CC# 18" shortName="CC# 18" id="18" intStep="1" intMax="127" intMin="0" high="127" low="0" step="1.000000" />
+            <Param name="CC# 19" shortName="CC# 19" id="19" intStep="1" intMax="127" intMin="0" high="127" low="0" step="1.000000" />
+            <Param name="CC# 20" shortName="CC# 20" id="20" intStep="1" intMax="127" intMin="0" high="127" low="0" step="1.000000" />
+            <Param name="CC# 21" shortName="CC# 21" id="21" intStep="1" intMax="127" intMin="0" high="127" low="0" step="1.000000" />
+            <Param name="CC# 22" shortName="CC# 22" id="22" intStep="1" intMax="127" intMin="0" high="127" low="0" step="1.000000" />
+            <Param name="CC# 23" shortName="CC# 23" id="23" intStep="1" intMax="127" intMin="0" high="127" low="0" step="1.000000" />
+        </Group>
+        <Group name="Page 1 Encoder Buttons">
+            <Param name="CC# 24" shortName="CC# 24" id="24" intStep="0" intMax="127" intMin="0" high="127" low="0" step="0.000000" />
+            <Param name="CC# 25" shortName="CC# 25" id="25" intStep="0" intMax="127" intMin="0" high="127" low="0" step="0.000000" />
+            <Param name="CC# 26" shortName="CC# 26" id="26" intStep="0" intMax="127" intMin="0" high="127" low="0" step="0.000000" />
+            <Param name="CC# 27" shortName="CC# 27" id="27" intStep="0" intMax="127" intMin="0" high="127" low="0" step="0.000000" />
+            <Param name="CC# 28" shortName="CC# 28" id="28" intStep="0" intMax="127" intMin="0" high="127" low="0" step="0.000000" />
+            <Param name="CC# 29" shortName="CC# 29" id="29" intStep="0" intMax="127" intMin="0" high="127" low="0" step="0.000000" />
+            <Param name="CC# 30" shortName="CC# 30" id="30" intStep="0" intMax="127" intMin="0" high="127" low="0" step="0.000000" />
+            <Param name="CC# 31" shortName="CC# 31" id="31" intStep="0" intMax="127" intMin="0" high="127" low="0" step="0.000000" />
+        </Group>
+        <Group name="Page 1 Pot Buttons">
+            <Param name="CC# 32" shortName="CC# 32" id="32" intStep="0" intMax="127" intMin="0" high="127" low="0" step="0.000000" />
+            <Param name="CC# 33" shortName="CC# 33" id="33" intStep="0" intMax="127" intMin="0" high="127" low="0" step="0.000000" />
+            <Param name="CC# 34" shortName="CC# 34" id="34" intStep="0" intMax="127" intMin="0" high="127" low="0" step="0.000000" />
+            <Param name="CC# 35" shortName="CC# 35" id="35" intStep="0" intMax="127" intMin="0" high="127" low="0" step="0.000000" />
+            <Param name="CC# 36" shortName="CC# 36" id="36" intStep="0" intMax="127" intMin="0" high="127" low="0" step="0.000000" />
+            <Param name="CC# 37" shortName="CC# 37" id="37" intStep="0" intMax="127" intMin="0" high="127" low="0" step="0.000000" />
+            <Param name="CC# 38" shortName="CC# 38" id="38" intStep="0" intMax="127" intMin="0" high="127" low="0" step="0.000000" />
+            <Param name="CC# 39" shortName="CC# 39" id="39" intStep="0" intMax="127" intMin="0" high="127" low="0" step="0.000000" />
+        </Group>
+        <Group name="Page 1 Slider Buttons">
+            <Param name="CC# 40" shortName="CC# 40" id="40" intStep="0" intMax="127" intMin="0" high="127" low="0" step="0.000000" />
+            <Param name="CC# 41" shortName="CC# 41" id="41" intStep="0" intMax="127" intMin="0" high="127" low="0" step="0.000000" />
+            <Param name="CC# 42" shortName="CC# 42" id="42" intStep="0" intMax="127" intMin="0" high="127" low="0" step="0.000000" />
+            <Param name="CC# 43" shortName="CC# 43" id="43" intStep="0" intMax="127" intMin="0" high="127" low="0" step="0.000000" />
+            <Param name="CC# 44" shortName="CC# 44" id="44" intStep="0" intMax="127" intMin="0" high="127" low="0" step="0.000000" />
+            <Param name="CC# 45" shortName="CC# 45" id="45" intStep="0" intMax="127" intMin="0" high="127" low="0" step="0.000000" />
+            <Param name="CC# 46" shortName="CC# 46" id="46" intStep="0" intMax="127" intMin="0" high="127" low="0" step="0.000000" />
+            <Param name="CC# 47" shortName="CC# 47" id="47" intStep="0" intMax="127" intMin="0" high="127" low="0" step="0.000000" />
+        </Group>
+        <Group name="Page 1 D Buttons">
+            <Param name="CC# 48" shortName="CC# 48" id="48" intStep="0" intMax="127" intMin="0" high="127" low="0" step="0.000000" />
+            <Param name="CC# 49" shortName="CC# 49" id="49" intStep="0" intMax="127" intMin="0" high="127" low="0" step="0.000000" />
+            <Param name="CC# 50" shortName="CC# 50" id="50" intStep="0" intMax="127" intMin="0" high="127" low="0" step="0.000000" />
+            <Param name="CC# 51" shortName="CC# 51" id="51" intStep="0" intMax="127" intMin="0" high="127" low="0" step="0.000000" />
+            <Param name="CC# 52" shortName="CC# 52" id="52" intStep="0" intMax="127" intMin="0" high="127" low="0" step="0.000000" />
+            <Param name="CC# 53" shortName="CC# 53" id="53" intStep="0" intMax="127" intMin="0" high="127" low="0" step="0.000000" />
+            <Param name="CC# 54" shortName="CC# 54" id="54" intStep="0" intMax="127" intMin="0" high="127" low="0" step="0.000000" />
+            <Param name="CC# 55" shortName="CC# 55" id="55" intStep="0" intMax="127" intMin="0" high="127" low="0" step="0.000000" />
+        </Group>
+        <Group name="Page 1 Drumpads">
+            <Param name="Note 060 (C3)" shortName="Note 060 (C3)" id="189" intStep="1" intMax="127" intMin="0" high="127" low="0" step="1.000000" />
+            <Param name="Note 061 (C#3)" shortName="Note 061 (C#3)" id="190" intStep="1" intMax="127" intMin="0" high="127" low="0" step="1.000000" />
+            <Param name="Note 062 (D3)" shortName="Note 062 (D3)" id="191" intStep="1" intMax="127" intMin="0" high="127" low="0" step="1.000000" />
+            <Param name="Note 063 (Eb3)" shortName="Note 063 (Eb3)" id="192" intStep="1" intMax="127" intMin="0" high="127" low="0" step="1.000000" />
+            <Param name="Note 064 (E3)" shortName="Note 064 (E3)" id="193" intStep="1" intMax="127" intMin="0" high="127" low="0" step="1.000000" />
+            <Param name="Note 065 (F3)" shortName="Note 065 (F3)" id="194" intStep="1" intMax="127" intMin="0" high="127" low="0" step="1.000000" />
+            <Param name="Note 066 (F#3)" shortName="Note 066 (F#3)" id="195" intStep="1" intMax="127" intMin="0" high="127" low="0" step="1.000000" />
+            <Param name="Note 067 (G3)" shortName="Note 067 (G3)" id="196" intStep="1" intMax="127" intMin="0" high="127" low="0" step="1.000000" />
+        </Group>
+        <Group name="Page 1 XYPedals">
+            <Param name="CC# 58" shortName="CC# 58" id="58" intStep="1" intMax="127" intMin="0" high="127" low="0" step="1.000000" />
+            <Param />
+            <Param name="CC# 57" shortName="CC# 57" id="57" intStep="1" intMax="127" intMin="0" high="127" low="0" step="1.000000" />
+            <Param name="CC# 56" shortName="CC# 56" id="56" intStep="1" intMax="127" intMin="0" high="127" low="0" step="1.000000" />
+        </Group>
+        <Group name="Page 1 Modwheel">
+            <Param name="Pitch Bend" shortName="Pitch Bend" id="128" intStep="1" intMax="63" intMin="-64" high="63" low="-64" step="1.000000" />
+        </Group>
+    </Group>
+    <Keyboard channel="0" octave="-1" transpose="-1" aftertouch="-1" curve="-1" />
+</AutomapFile>
