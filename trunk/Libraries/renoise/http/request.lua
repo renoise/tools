@@ -520,14 +520,14 @@ function Request:_read_header()
       tonumber(self.response.header["Content-Length"])
     -- Redirection
     if (self.response.header["Location"] and 
-      #self.response.header["Location"] > 5
+      #self.response.header["Location"] > 0
      -- and not self.response.header[1]:find("201") -- POST Created
-      ) then                        
+    ) then
       local location = self.response.header["Location"]
-      
+
       -- Take care of a relative URL
       local new_url_parts = URL:parse(location)
-      if (not new_url_parts.host) then  
+      if (not new_url_parts.host) then
         new_url_parts.host = self.url_parts.host
         new_url_parts.scheme = self.url_parts.scheme
         location = URL:build(new_url_parts)
@@ -567,7 +567,7 @@ function Request:_process_chunk(buffer)
       self.chunk_size = tonumber("0x"..chunk_size_hex) or 0        
       self.chunk_remaining = self.chunk_size
     end      
-    
+
     -- message complete
     if (self.chunk_size == 0) then
       return
@@ -715,7 +715,6 @@ function Request:_do_callback(socket_error)
   log:info(("=== CONTENT (%d bytes from %s) ==="):format(
     self.length, self.url))
   if (self.length <= 32 * 1024) then
-    TRACE("do_callback contents:")
     TRACE(self.contents)
   else
     TRACE(" *** too much content to display (> 32 kbytes) *** ")
