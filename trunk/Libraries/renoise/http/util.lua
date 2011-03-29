@@ -142,9 +142,12 @@ function Util:http_build_query(data, prefix, sep, _key)
   return ret:concat(sep)
 end
 
+function Util:get_filename(path)
+  return path:match("([^/\\]+)$")
+end
 
 function Util:get_extension(file)
-    return file:match("%.(%a+)$")
+  return file:match("%.(%a+)$")
 end
 
 function Util:trim(s)
@@ -196,4 +199,34 @@ function Util:merge_tables(a,b)
     end
   end
   return b
+end
+
+
+-- Reads entire file into a string
+-- (this function is binary safe)
+function Util:file_get_contents(file_path)
+  local mode = "rb"  
+  local file_ref,err = io.open(file_path, mode)
+  if not err then
+    local data=file_ref:read("*all")        
+    io.close(file_ref)    
+    return data
+  else
+    return nil,err;
+  end
+end
+
+-- Writes a string to a file
+-- (this function is binary safe)
+function Util:file_put_contents(file_path, data, mode)
+  mode = mode or "w+b" -- all previous data is erased
+  local file_ref,err = io.open(file_path, mode)
+  if not err then
+    local ok=file_ref:write(data)
+    io.flush(file_ref)
+    io.close(file_ref)    
+    return ok
+  else
+    return nil,err;
+  end
 end

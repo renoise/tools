@@ -25,6 +25,18 @@ class "HTTP"
 ---## http ##---
 --- Perform an asynchronous HTTP (Ajax) request.
 function HTTP:request(url, method, data, success, data_type)
+  if (type(data) == "function") then    
+    success = data
+    data = nil
+  elseif (type(data) == "string") then
+    data_type = data
+    data = nil
+    success = nil
+  elseif (type(success) == "string") then
+    data_type = success
+    success = nil 
+  end
+    
   local settings = {
     url=url,
     method=method,
@@ -55,10 +67,14 @@ end
 
 ---## http_download_file ##---
 -- TODO replace/integrate with callback
-function HTTP:download_file(url)
-  local save_file = true
-  local new_request = Request({url=url, method=Request.GET, file=save_file})
-  local success, socket_error = new_request:read_header()
+function HTTP:download_file(url)  
+  --local header_request = HTTP:request(url, Request.HEAD, function(data)
+  --  rprint(data)    
+  --end)  
+  
+  local new_request = Request({url=url, method=Request.GET, save_file=true})
+
+--[[  local success, socket_error = new_request:_read_header()
 
   if (success) then
     requests:insert(new_request)
@@ -66,4 +82,5 @@ function HTTP:download_file(url)
      log:info(("%s failed: %s."):format(url,
        (socket_error or "[unknown error]")))
   end
+  --]]
 end

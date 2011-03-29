@@ -82,6 +82,11 @@ read = function()
   return true
 end
 
+function get_tools_root()    
+  local dir = renoise.tool().bundle_path
+  return dir:sub(1,dir:find("Tools")+5)      
+end
+
 
 -------------------------------------------------------------------------------
 --  Request class (PUBLIC)
@@ -114,6 +119,11 @@ Request.default_settings = table.create{
 
   -- A string containing the URL to which the request is sent.
   url = "",
+  
+  -- TODO (remove) save file to disk
+  save_file = false,
+  
+  default_download_folder = get_tools_root() .."downloads",
 
   -- When sending data to the server, use this content-type. Default is
   -- "application/x-www-form-urlencoded", which is fine for most cases. If you
@@ -590,7 +600,20 @@ function Request:_process_chunk(buffer)
       self.chunk_remaining = self.chunk_remaining - #buffer
       log:info("self.chunk_remaining:" .. self.chunk_remaining)          
     end
-end        
+end   
+
+function Request:_save_content(buffer)
+  if (not self.settings.save_file) then
+     self.contents:insert(buffer) 
+  else 
+     if (not self.tempfile) then
+      self.tempfile = os.tmpname()
+      local err
+      self.handle, err = io.open(self.tempfile, "wb")
+     end
+     self.handle:write(buffer) --Util:file_put_contents(self.tempfile, buffer, "w+b")
+  end
+end     
 
 
 ---## read_content ##---
@@ -616,7 +639,7 @@ function Request:_read_content()
       
     else
       -- Store received new data
-      self.contents:insert(buffer)
+      self:_save_content(buffer)
       self.length = self.length + #buffer
     end            
             
@@ -710,6 +733,11 @@ end
 ---## do_callback ##---
 -- Finalizes the transaction and executes the optional callback functions
 function Request:_do_callback(socket_error)
+  
+  if (self.tempfile and io.exists(self.tempfile)) then
+    self.handle:flush()
+    self.handle:close()
+  end 
 
   -- Print a small amount of received data in the terminal
   log:info(("=== CONTENT (%d bytes from %s) ==="):format(
@@ -723,15 +751,63 @@ function Request:_do_callback(socket_error)
   if (socket_error) then
     log:info(("%s failed with error: '%s'."):format(self.url, socket_error))
   else
-    log:info(("%s has completed."):format(self.url))
-
-    --[[ TODO Save files directly on disk
-    if (self.save_downloaded_file) then
-      local _, _, filename, extension = self.url:find(".+[/\\](.+)%.(.+)$")
-      assert(filename and extension, "failed to extract the filename")
+    log:info(("%s has completed."):format(self.url))    
+    
+    if (self.settings.save_file) then      
+      if (io.exists(self.tempfile)) then        
+        local dir = ""
+        local sep = ""
+        local mv = ""
+        if (os.platform() == "WINDOWS") then          
+          dir = self.settings.default_download_folder:gsub("/","\\")
+          sep = "\\"
+          mv = "move" 
+        else
+          dir = self.settings.default_download_folder:gsub("\\","/")
+          sep = "/"
+          mv = "mv"
+        end  
+        if (not io.exists(dir)) then          
+          local ok, err = os.mkdir(dir)          
+          TRACE("Created download dir: "..dir .. tostring(ok) .. tostring(err))
+        end
+        -- strip trailing slash
+        --dir = dir:match("^(.*)/$")
+        if (io.exists(dir)) then
+          local path = self.url_parts.path       
+          local filename = Util:get_filename(path)
+          local target = dir..sep..filename          
+          local i = 1
+          print(target, io.exists(target))
+          while (io.exists(target)) do            
+            local name = filename:match("^(.*)%.")            
+            local extension = Util:get_extension(filename)
+            if (extension) then
+              extension = "."..extension 
+            else
+              extension = ""
+            end
+            target = ("%s%s%s (%d)%s"):format(dir,sep,name,i, extension)
+            i = i + 1
+          end
+          local command = ('%s "%s" "%s"'):format(mv, self.tempfile, target)
+          TRACE("Moving tempfile to download dir: " .. command )          
+          print(os.execute(command))
+        end
+      end
+    end
+    --[[
+    -- TODO  Save files directly on disk    
+    if (self.settings.save_file) then      
+      local path = self.url_parts.path       
+      local filename = Util:get_filename(path)
+      local extension = Util:get_extension(filename)
+      --local _, _, filename, extension = self.url:find(".+[/\\](.+)%.(.+)$")
+     
+      TRACE(("Saving file %s to disk"):format(filename))
 
       local file_name_and_path = renoise.app():prompt_for_filename_to_write(
-        extension, ("Save %s.%s as"):format(filename, extension))
+        extension, ("Save %s as"):format(filename))
 
       if (file_name_and_path and file_name_and_path ~= "") then
         local file = io.open(file_name_and_path, "wb")
