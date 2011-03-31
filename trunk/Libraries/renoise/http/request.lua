@@ -29,7 +29,6 @@ require "renoise.http.xml_encoder"
 -- Requests pool
 local requests_pool = table.create()
 
-
 -------------------------------------------------------------------------------
 --  Debugging
 -------------------------------------------------------------------------------
@@ -344,16 +343,16 @@ end
 
 
 ---## set_header ##---
--- Inserts or overrides a name/value pair in the header map
-function Request:_set_header(name, value)
-  self.header_map[name] = value
+-- Inserts or overrides a name/value pair in the [request] header map
+function Request:_set_header(name, value)  
+  self.header_map[name] = value  
 end
 
 
 ---## get_header ##---
--- Returns the value of the specified header
-function Request:_get_header(name)
-  return self.header_map[name]
+-- Returns the value of the specified [response] header
+function Request:_get_header(name)      
+  return self.response.header[name]
 end
 
 
@@ -467,7 +466,7 @@ function Request:_read_header()
      self.settings.method, self.url)
   self:_set_header("Host", self.url_parts.host) 
   self:_set_header("Content-Type", self.settings.content_type)  
-  self:_set_header("Content-Length", content_length)
+  self:_set_header("Content-Length", content_length)  
   self:_set_header("Connection", "keep-alive")
   self:_set_header("User-Agent",
     string.format( "Renoise %s (%s)", 
@@ -551,55 +550,137 @@ function Request:_read_header()
   end
 end
 
-
+function BytesToString(bytes)
+  local s = {}
+  local len = #bytes
+  for i = 1, len do
+    s[i] = ("%02X "):format(bytes:byte(i))
+  end
+  return table.concat(s)
+end
 
 ---## process_chunk ##---
 -- Unchunk a message stream. Chunked data is useful when the sender 
 -- does not know the content-length beforehand, which is often the
--- case with dynamically generated data. A chunk can span multiple packets.
+-- case with dynamically generated data. A chunk can be split over
+--  multiple buffers.
 --
 -- Example:
  -- Transfer-Encoding: chunked
- --
+ -- 
  -- 25
  -- This is the data in the first chunk
  -- 
  -- 1A
  -- and this is the second one
  -- 0
-function Request:_process_chunk(buffer)       
-    -- new chunk
-    if (#self.chunk == 0) then        
-      log:info("New chunk")
-      local chunk_boundary = buffer:find("\n", self.response.chunk_pos) 
-      local chunk_size_hex = buffer:sub(1, chunk_boundary):gsub("%c","")
-      buffer = buffer:sub(chunk_boundary+1)
-      self.chunk_size = tonumber("0x"..chunk_size_hex) or 0        
-      self.chunk_remaining = self.chunk_size
-    end      
-
-    -- message complete
-    if (self.chunk_size == 0) then
-      return
+function Request:_process_chunk(buffer, same)
+  -- new buffer
+  if (not same) then
+    TRACE("\n")  
+    log:info("New buffer. Size: " .. #buffer .. " byte")    
+    Util:file_put_contents(self.settings.default_download_folder.."/raw.txt", buffer, "wb") 
+     -- add buffer length to total message length
+    self.length = self.length + #buffer     
+    log:info("Total message size: " .. self.length .. " byte")
+  end
+  
+  -- new chunk
+  if (#self.chunk == 0) then      
+    TRACE("\n")      
+    log:info("New chunk")    
+    
+    if (self.temp_chunk) then
+      buffer = self.temp_chunk .. buffer
+      self.temp_chunk = nil
     end
-
-    self.length = self.length + #buffer 
-    log:info("self.chunk_size:" .. self.chunk_size)
-    log:info("buffer_size:" .. #buffer) 
+    
+    log:info("Remaining buffer: " .. #buffer .. " byte")             
+    log:info(BytesToString(buffer:sub(1,16)))
      
-    -- split buffer
-    if (#buffer >= self.chunk_remaining) then
-       log:info("self.chunk_remaining:" .. 0)
-       self.chunk=self.chunk..buffer:sub(1,self.chunk_remaining) 
-       self.chunks:insert(self.chunk)
-       buffer = buffer:sub(self.chunk_remaining+1)
-       self.chunk= ""
-       self:_process_chunk(buffer)
-    else 
-      self.chunk= self.chunk..buffer
-      self.chunk_remaining = self.chunk_remaining - #buffer
-      log:info("self.chunk_remaining:" .. self.chunk_remaining)          
+    -- find the position of CRLF, eg. [\r\n]2000 [extension]\r\n
+    local pattern = "^%x+.-\r\n"
+    if (self.transfer_notstart) then
+      pattern = ("^\r\n%x+.-\r\n")      
     end
+    self.transfer_notstart = true
+    
+    local chunk_header_start, chunk_boundary = buffer:find(pattern)
+    
+    if (not chunk_header_start) then
+      log:info("Incomplete chunk header, add to new buffer")
+      self.temp_chunk = buffer
+      return
+    end    
+    
+    log:info("Chunk header ends at: " .. tostring(chunk_boundary))
+
+    
+    assert(chunk_boundary > 1 and chunk_boundary < 50, "Incorrect chunk header")
+    -- get the hex value, strip any CRLFs
+    local chunk_header = buffer:sub(1, chunk_boundary)
+
+--    local chunk_size_hex, chunk_extension = chunk_header:match("^(%x+)(.-)$")
+    local chunk_size_hex = chunk_header:match("%x+")
+    assert(chunk_size_hex, "Chunk size not found in header")
+    
+    -- convert to dec
+    self.chunk_size = tonumber("0x"..chunk_size_hex)
+    
+    -- the whole chunk remains
+    self.chunk_remaining = self.chunk_size
+    
+     -- The last chunk is a zero-length chunk, 
+    -- with the chunk size coded as 0, but without any chunk data section.
+    if (self.chunk_size == 0) then      
+      log:info("Last chunk found, stopping.")
+      return
+    end    
+    
+    
+    log:info("Chunk size: 0x" .. tostring(chunk_size_hex):upper()
+      .. " (" .. self.chunk_size .. " byte)")          
+    
+          
+    -- remove the chunk header from the buffer
+    local chunk_start = buffer:find("[^\r\n]", chunk_boundary)
+    if (chunk_start) then
+      chunk_start = chunk_start
+      buffer = buffer:sub(chunk_start)                  
+      log:info("Chunk starts at:" .. chunk_start)
+    end 
+  end      
+     
+  
+  -- The chunk can be completed with this buffer
+  if (#buffer >= self.chunk_remaining) then    
+      
+    -- append 1st part of the buffer to chunk    
+    self.chunk=self.chunk..buffer:sub(1,self.chunk_remaining)
+    
+    -- save the chunk to disk or ram
+    self:_save_content(self.chunk)
+    --log:info(BytesToString(self.chunk))
+    log:info("Remaining data in this chunk: 0 (fully consumed)")
+    
+    -- remove the 1st part from the buffer
+    buffer = buffer:sub(self.chunk_remaining+1)
+    self.chunk = ""
+    
+    -- restart the process with the remaining buffer
+    self:_process_chunk(buffer, true)   
+    
+  else 
+    -- The chunk needs the next buffer
+    
+    -- append complete buffer to chunk
+    self.chunk = self.chunk..buffer
+    --log:info(BytesToString(buffer:sub(-16)))    
+    
+    -- calculate how much data must be added to complete the chunk
+    self.chunk_remaining = self.chunk_remaining - #buffer
+    log:info("Remaining data in this chunk: " .. self.chunk_remaining)          
+  end
 end   
 
 function Request:_save_content(buffer)
@@ -625,18 +706,10 @@ function Request:_read_content()
   local buffer, socket_error = 
     self.client_socket:receive("*all", self.settings.timeout)
   
-  if (buffer) then
-    
+  if (buffer) then    
     if (tostring(self.response.header["Transfer-Encoding"]):lower() == "chunked") then
-      log:info("Unchunking message stream")
-            
-      if (self.chunk_size == 0) then
-        self.response.new_chunk = true
-        log:info("New chunk")
-      end                 
-        
-      self:_process_chunk(buffer)
-      
+      log:info("Unchunking buffer")
+      self:_process_chunk(buffer)      
     else
       -- Store received new data
       self:_save_content(buffer)
@@ -656,9 +729,11 @@ function Request:_read_content()
     if (self.length >= self.response.content_length
       and self.chunk_size == 0) then
       -- done
+      --[[
       if (#self.chunks > 0) then
         self.contents = self.chunks
-      end        
+      end 
+      --]]       
       self:_do_callback()
       return false
     else
@@ -776,11 +851,17 @@ function Request:_do_callback(socket_error)
         if (io.exists(dir)) then
           local path = self.url_parts.path       
           local filename = Util:get_filename(path)
+          -- get filename from header          
+          local cd = self:_get_header("Content-Disposition")
+          TRACE(cd)
+          if (cd and #cd > 0) then
+            filename = cd:match("filename=(.+)$") 
+          end
+          
           local target = dir..sep..filename          
-          local i = 1
-          print(target, io.exists(target))
+          local i = 1          
           while (io.exists(target)) do            
-            local name = filename:match("^(.*)%.")            
+            local name = filename:match("^(.*)%.")
             local extension = Util:get_extension(filename)
             if (extension) then
               extension = "."..extension 
@@ -791,8 +872,11 @@ function Request:_do_callback(socket_error)
             i = i + 1
           end
           local command = ('%s "%s" "%s"'):format(mv, self.tempfile, target)
-          TRACE("Moving tempfile to download dir: " .. command )          
-          print(os.execute(command))
+          log:info("Moving tempfile to download dir: " .. command )
+          local console_msg = os.capture(command)
+          if (console_msg) then
+            log:error(console_msg)
+          end
         end
       end
     end
