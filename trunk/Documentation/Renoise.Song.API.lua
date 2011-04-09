@@ -229,6 +229,13 @@ renoise.song().sequencer
 renoise.song().pattern_iterator
   -> [read-only, renoise.PatternIterator object]
 
+-- number of renoise.Track.TRACK_TYPE_SEQUENCER tracks in song.
+renoise.song().sequencer_track_count
+  -> [read-only, number]
+-- number of renoise.Track.TRACK_TYPE_SEND tracks in song.
+renoise.song().send_track_count
+  -> [read-only, number]
+
 -- Instrument, Pattern, and Track arrays
 renoise.song().instruments[], _observable
   -> [read-only, array of renoise.Instrument objects]
@@ -756,7 +763,10 @@ renoise.song().tracks:parameter(index)
 
 -- Devices.
 renoise.song().tracks[].devices[].name
-  -> [read-only, string]
+  -> [read-only, string -> device identifier]
+
+renoise.song().tracks[].devices[].display_name, observable 
+  -> [string, custom name]
 
 renoise.song().tracks[].devices[].is_active, _observable
   -> [boolean, not active = 'bypassed']
@@ -1080,19 +1090,29 @@ renoise.song().instruments[].plugin_properties.plugin_device.external_editor_vis
 --------------------------------------------------------------------------------
 
 -- General remarks: Sample mappings of sliced samples are read-only: can not be
--- modified. Test for `#samples[1].slice_markers > 1` to find out if the
--- instrument is sliced.
+-- modified. See `sample_mappings[].read_only`
 
 -------- Properties
 
--- Linked sample index within the instrument. when setting new values,
+-- True for sliced insturments. No sample mapping properties are allowed to 
+-- be modified, but can be read.
+renoise.song().instruments[].sample_mappings[].read_only
+  -> [read-only, booelan]
+  
+-- Linked sample index within the instrument. When setting new values,
 -- ony existing sample indices are allowed.
 renoise.song().instruments[].sample_mappings[].sample_index, _observable 
   -> [number]
 
+
 -- When enabled, the mapping triggers/uses the instrument's envelopes.
 renoise.song().instruments[].sample_mappings[].use_envelopes, _observable 
   -> [booelan]
+
+-- When enabled, velocity will be mapped to the sample's volume when triggering.
+renoise.song().instruments[].sample_mappings[].map_velocity_to_volume, _observable 
+  -> [boolean]
+  
 
 -- Mappings base note. Final pitch of the palyed sample is:
 --   played_note - mapping.base_note + sample.transpose + sample.finetune
