@@ -92,6 +92,14 @@ renoise.app():open_url(url)
 renoise.app():open_path(file_path)
 
 
+-- Install, update or uninstall a tool. returns success. Any errors are 
+-- shown to the user during (un)installation. Installing an already 
+-- existing tool will upgrade the tool without confirmation. Upgraded 
+-- tools will automatically be re-enabled, if necessary.
+renoise.app().install_tool(file_path_to_xrnx) -> [boolean]
+renoise.app().uninstall_tool(file_path_to_xrnx) -> [boolean]
+
+
 -- Create a new song document (will ask the user to save changes if needed).
 renoise.app():new_song()
 renoise.app():new_song_no_template()
@@ -123,6 +131,9 @@ renoise.app().recently_loaded_song_files
   -> [array of strings, filenames]
 renoise.app().recently_saved_song_files 
   -> [array of strings, filenames]
+
+-- Returns information about all currently installed tools.
+renoise.app().installed_tools -> [table of tables with tool info]
 
 -- Globally used clipboard "slots" in the application.
 renoise.app().active_clipboard_index 
