@@ -242,9 +242,7 @@ end
 
 -- song
 
-local function song()
-  return renoise.song()
-end
+local song = renoise.song
 
 
 -- clamp_value
@@ -315,10 +313,11 @@ end
 -- set_track_parameter
 
 local function set_track_parameter(track_index, parameter_name, value)
-  local tracks = song().tracks
-  
-  if (track_index >= 1 and track_index <= #tracks) then
-    local parameter = tracks[track_index][parameter_name]
+  -- sequencer + master + sends
+  local num_tracks = song().sequencer_track_count + 1 + song().send_track_count
+
+  if (track_index >= 1 and track_index <= num_tracks) then
+    local parameter = song():track(track_index)[parameter_name]
     
     parameter.value = clamp_value(value, 
       parameter.value_min, parameter.value_max)
@@ -566,7 +565,33 @@ add_global_action {
 }
 
 
--- /song/record/
+-- /song/record/metronome
+
+add_global_action { 
+  pattern = "/song/record/metronome", 
+  description = "Enable or disable the global metronome",
+  
+  arguments = { argument("enabled", "boolean") },
+  handler = function(enabled)
+    song().transport.metronome_enabled = enabled
+  end
+}
+
+
+-- /song/record/metronome_precount
+
+add_global_action { 
+  pattern = "/song/record/metronome_precount", 
+  description = "Enable or disable the global metronome precount",
+  
+  arguments = { argument("enabled", "boolean") },
+  handler = function(enabled)
+    song().transport.metronome_precount_enabled = enabled
+  end
+}
+
+
+-- /song/record/quantization
 
 add_global_action { 
   pattern = "/song/record/quantization", 
