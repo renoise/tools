@@ -80,7 +80,7 @@ info about this.
 -- Globals (interface to Renoise)
 --------------------------------------------------------------------------------
 
--- max mapping counts (TODO: should be dynamically build)
+-- max mapping counts
 
 MAX_SEQUENCE_MAPPINGS = 256
 MAX_TRACK_MAPPINGS = 64
@@ -132,30 +132,19 @@ end
 
 -- app
 
-local function app()
-  return renoise.app()
-end
+local app = renoise.app
 
 
 -- song
 
-local function song()
-  return renoise.song()
-end
+local song = renoise.song
 
 
 -- sequencer_track
 
 local function sequencer_track(track_index)
-  local sequencer_track_count = 0
-  for _,track in ipairs(song().tracks) do
-    if (track.type == renoise.Track.TRACK_TYPE_SEQUENCER) then
-      sequencer_track_count = sequencer_track_count + 1
-    end
-  end
-
-  if track_index <= sequencer_track_count then
-    return song().tracks[track_index]
+  if (track_index <= song().sequencer_track_count) then
+    return song():track(track_index)
   else
     return nil
   end
@@ -165,18 +154,9 @@ end
 -- send_track
 
 local function send_track(send_index)
-  local sequencer_track_count = 0
-  for _,track in ipairs(song().tracks) do
-    if (track.type == renoise.Track.TRACK_TYPE_SEQUENCER) then
-      sequencer_track_count = sequencer_track_count + 1
-    end
-  end
-
-  local track_index = sequencer_track_count + send_index + 1
-
-  if (track_index > sequencer_track_count and
-      track_index <= #song().tracks) then
-    return song().tracks[track_index]
+  if (send_index <= song().send_track_count) then
+    -- send tracks are always behind the master track
+    return song():track(song().sequencer_track_count + 1 + send_index)
   else
     return nil
   end
@@ -186,26 +166,22 @@ end
 -- master_track
 
 local function master_track()
-  for _, track in ipairs(song().tracks) do
-    if(track.type == renoise.Track.TRACK_TYPE_MASTER) then
-      return track
-    end
-  end
-  assert(false, "expected a master track in every song")
+  -- master track is always behind the sequencer tracks
+  return song():track(song().sequencer_track_count + 1)
 end
 
 
 -- selected_track
 
 local function selected_track()
-  return song().tracks[song().selected_track_index]
+  return song().selected_track
 end
 
 
 -- selected_device
 
 local function selected_device()
-  return selected_track().devices[song().selected_device_index]
+  return song().selected_device
 end
 
 
