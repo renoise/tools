@@ -13,7 +13,9 @@ $suspicious = array(
     'socket',
     'osc',
     'install_tool',
-    'uninstall_tool',
+    'open',
+    'read',
+    'write',
     );
 
 // ----------------------------------------------------------------------------
@@ -86,7 +88,7 @@ function scan($file) {
                     $tokens = mb_split("\W", $tmp2);
                     foreach ($tokens as $tmp3) {
                         foreach ($suspicious as $findme) {
-                            $pos = stripos($tmp3, $findme);
+                            $pos = strtolower($tmp3) == strtolower($findme);
                             if ($pos !== false) {
                                 $warnings[] = "$relpath contains suspect code `$findme` on line " . ($line + 1);
                             }
