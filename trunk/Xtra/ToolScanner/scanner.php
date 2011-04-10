@@ -10,12 +10,15 @@ $valid_extensions = array('lua', 'xml'); // Lowercase letters!
 
 $suspicious = array(
     'execute',
-    'socket',
-    'osc',
     'install_tool',
-    'uninstall_tool',
+    'load',
+    'loadfile',
+    'loadstring',
     'open',
+    'osc',
     'read',
+    'socket',
+    'uninstall_tool',
     'write',
     );
 
