@@ -242,3 +242,17 @@ function Util:file_put_contents(file_path, data, mode)
     return nil,err;
   end
 end
+
+function Util:bytes_to_string(bytes)
+  local s = {}
+  local len = #bytes
+  for i = 1, len do
+    s[i] = ("%02X "):format(bytes:byte(i))
+  end
+  return table.concat(s)
+end
+
+function Util:get_tools_root()    
+  local dir = renoise.tool().bundle_path
+  return dir:sub(1,dir:find("Tools")+5)      
+end
