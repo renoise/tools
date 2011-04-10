@@ -42,7 +42,7 @@ local function TRACE(data)
   
   if (type(data) == 'table') then 
     rprint(data)
-  else 
+  else
     print(data)  
   end
 end
@@ -163,6 +163,8 @@ Request.default_settings = table.create{
   -- -- TODO "jsonp": Loads in a JSON block using JSONP. Will add an extra
   -- --               "?callback=?" to the end of your URL to specify the 
   -- --               callback.
+  -- -- TODO "binary": Automatically set when downloading files.
+  -- --           Returns the path to the downloaded file.
   data_type = "text",
 
   -- Set this to true if you wish to use the traditional style of param 
@@ -189,6 +191,9 @@ Request.default_settings = table.create{
   -- TODO If set to false it will force the pages that you request to not be
   -- cached by the browser.
   cache = true,
+  
+  -- Cache size in KB
+  max_cache_size = 5000,
 
   -- TODO A username to be used in response to an HTTP access authentication
   -- request.
@@ -256,7 +261,7 @@ function Request:__init(custom_settings)
   -- SocketClient object
   self.client_socket = nil
 
-  -- Raw table that receives the data
+  --  table that receives the data
   self.contents = table.create()
   
   -- Table to store response info in 
@@ -264,6 +269,12 @@ function Request:__init(custom_settings)
 
   -- Content length
   self.length = 0
+  
+  -- Cache 
+  self.cache = table.create()
+  
+  -- Cache size
+  self.cache_len = 0
   
   -- Retried timeouts 
   self.retries = 0
@@ -408,6 +419,17 @@ function Request:_create_xml_message(data)
   return obj
 end
 
+---## create_query_string ##---
+-- Converts a parameter data table into a query string
+function Request:_get_status_code(string)
+  local code = string:match(" (%d%d%d) ")
+  if (code) then    
+    return tonumber(code)    
+  end
+  -- when no status code could be found
+  return 999 
+end
+
 
 ---## create_query_string ##---
 -- Converts a parameter data table into a query string
@@ -525,6 +547,11 @@ function Request:_read_header()
 
   if (self.response.header and #self.response.header > 0) then
     -- TODO check content-length and HTTP status code  
+    self.status_code = self:_get_status_code(self.response.header[1])
+    if (self.status_code >= 400) then
+      return false, ("HTTP Error: %s"):format(self.response.header[1])
+    end
+    
     self.response.content_length =
       tonumber(self.response.header["Content-Length"])
     -- Redirection
@@ -579,7 +606,7 @@ function Request:_process_chunk(buffer, same)
   if (not same) then
     TRACE("\n")  
     log:info("New buffer. Size: " .. #buffer .. " byte")    
-    Util:file_put_contents(self.settings.default_download_folder.."/raw.txt", buffer, "wb") 
+    --Util:file_put_contents(self.settings.default_download_folder.."/raw.txt", buffer, "wb") 
      -- add buffer length to total message length
     self.length = self.length + #buffer     
     log:info("Total message size: " .. self.length .. " byte")
@@ -634,6 +661,7 @@ function Request:_process_chunk(buffer, same)
     -- with the chunk size coded as 0, but without any chunk data section.
     if (self.chunk_size == 0) then      
       log:info("Last chunk found, stopping.")
+      self:_save_content("")
       return
     end    
     
@@ -683,18 +711,42 @@ function Request:_process_chunk(buffer, same)
   end
 end   
 
-function Request:_save_content(buffer)
-  if (not self.settings.save_file) then
-     self.contents:insert(buffer) 
-  else 
-     if (not self.tempfile) then
+
+---## write_file ##---
+function Request:_write_file(data)
+    -- create tempfile
+    if (not self.tempfile) then
       self.tempfile = os.tmpname()
       local err
       self.handle, err = io.open(self.tempfile, "wb")
-     end
-     self.handle:write(buffer) --Util:file_put_contents(self.tempfile, buffer, "w+b")
+    end
+    log:info("Writing data to tempfile")
+    if (type(data)=="table") then
+      data = table.concat(data)
+    end
+    self.handle:write(data)
+end
+
+
+---## save_content ##---
+function Request:_save_content(buffer)
+  if (not self.settings.save_file) then
+     self.contents:insert(buffer) 
+  else     
+    local cache_full = self.cache_len 
+      + #buffer > (self.settings.max_cache_size * 1024)
+      
+    -- write buffer when EOF or cache is full       
+    if (#buffer == 0 or cache_full) then    
+      self:_write_file(self.cache)
+      self:_write_file(buffer)
+      self.cache:clear()       
+      self.cache_len = 0
+    end
+    self.cache:insert(buffer)
+    self.cache_len = self.cache_len + #buffer    
   end
-end     
+end
 
 
 ---## read_content ##---
@@ -768,7 +820,7 @@ end
  -- TODO process more data_types 
 function Request:_decode(data)  
   local error, succeeded, result
-  local data_type = self.settings.data_type
+  local data_type = self.settings.data_type    
   
   if (data_type == "TEXT") then
     return data:concat()
@@ -873,9 +925,11 @@ function Request:_do_callback(socket_error)
           end
           local command = ('%s "%s" "%s"'):format(mv, self.tempfile, target)
           log:info("Moving tempfile to download dir: " .. command )
-          local console_msg = os.capture(command)
-          if (console_msg) then
+          local console_msg, blah = os.execute(command)
+          if (console_msg and console_msg > 0) then
             log:error(console_msg)
+          else
+            self.download_target = target
           end
         end
       end
@@ -915,10 +969,17 @@ function Request:_do_callback(socket_error)
   self.response.header = nil
     
   -- Decode data of non-plain datatypes
-  local data = self.contents 
+  local data = nil 
   local parser_error = nil
-  if (self.length > 0) then
-    data, parser_error = self:_decode(data)
+  
+  if (self.settings.save_file) then
+    if (self.download_target and io.exists(self.download_target)) then    
+      data = self.download_target
+    else
+      parser_error = "Downloaded file not found"
+    end
+  elseif (self.length > 0) then
+    data, parser_error = self:_decode(self.contents)
     if (parser_error) then 
       self.text_status = Request.PARSERERROR 
     end
@@ -931,10 +992,14 @@ function Request:_do_callback(socket_error)
     -- TODO handle more errors
     local error = socket_error or parser_error
     self.settings.error( xml_http_request, self.text_status, error)
-  else
+  else    
     self.settings.success( data, self.text_status, xml_http_request )
   end
 
   self.settings.complete( xml_http_request, self.text_status )
 
+end
+
+function Request:get_downloaded_file()
+  return self.download_target
 end
