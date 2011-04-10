@@ -1,6 +1,6 @@
 
-A script that runs a simple sanity on a XRNX tool. It's meant as a to help a
-human admin and is by no means exhaustive.
+A script that runs a simple sanity on a XRNX tool. It's meant to help a human
+admin and is by no means exhaustive.
 
 # Example usage:
 
