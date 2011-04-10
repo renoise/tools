@@ -24,11 +24,12 @@ function dbug(msg)
 end
 
 
-function check_song_version()
+function current_song_format()
   local ok = true; -- TODO: An actual check
   if not ok then
     renoise.app():show_error("Error: This script will not run on old XRNS " ..
     "files with Tick Speed. Upgrade your song in the 'Songs Settings' tab.")
+    ok = false
   end
   return ok
 end
@@ -38,9 +39,9 @@ end
 -- Export
 --------------------------------------------------------------------------------
 
-function export()
-  if not check_song_version() then return end
-  export_procedure()
+function export(plan)
+  if not current_song_format() then return end
+  export_procedure(plan)
 end
 
 
@@ -49,7 +50,11 @@ end
 --------------------------------------------------------------------------------
 
 renoise.tool():add_menu_entry {
-  name = "Main Menu:Tools:MIDI Export...",
+  name = "Main Menu:File:Export Song to MIDI...",
   invoke = export
 }
 
+renoise.tool():add_menu_entry {
+  name = "Pattern Editor:Selection:Export to MIDI...",
+  invoke = function() export('selection') end
+}

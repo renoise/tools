@@ -74,7 +74,7 @@ end
 -- Build a data table
 --------------------------------------------------------------------------------
 
-function export_build_data()
+function export_build_data(plan)
 
   data:clear(); data_bpm:clear(); data_lpb:clear()
   data_tpl:clear(); data_tick_delay:clear()
@@ -85,6 +85,18 @@ function export_build_data()
   local total_instruments = #instruments
   local total_tracks = #tracks
   local total_sequence = #sequencer.pattern_sequence
+  local start = { pattern = 1, line = 1 }
+  local constrain_to_selected = false
+
+  -- Plan
+  rns.transport:stop()
+  if plan == 'selection' then
+    constrain_to_selected = true
+    start.pattern = rns.selected_pattern_index
+    total_sequence = start.pattern
+  else
+    rns.transport.playback_pos = renoise.SongPos(1, 1)
+  end
 
   -- Instruments
   for i=1,total_instruments do
@@ -107,11 +119,16 @@ function export_build_data()
       local pattern_offset = 0
       local pattern_length = 0
       -- Sequence
-      for sequence_index=1,total_sequence do
+      for sequence_index=start.pattern,total_sequence do
         -- Calculate offset
         if pattern_current ~= sequence_index then
           pattern_current = sequence_index
-          if sequence_index > 1 then
+          if constrain_to_selected then
+            -- TODO:
+            -- Placeholder to modify pattern_offset / pos
+            -- Needs a negative number here
+            -- Could also modify start.ine here as well
+          elseif sequence_index > 1 then
             pattern_offset = pattern_offset + rns.patterns[pattern_previous].number_of_lines
           end
         end
@@ -119,7 +136,7 @@ function export_build_data()
         local current_pattern_track = rns.patterns[pattern_index].tracks[track_index]
         pattern_length = rns.patterns[pattern_index].number_of_lines
         -- Lines
-        for line_index=1,pattern_length do
+        for line_index=start.line,pattern_length do
 
           --------------------------------------------------------------------
           -- Data chug-a-lug start >>>
@@ -131,18 +148,23 @@ function export_build_data()
           -- Override pos, from left to right
           for fx_column_index=1,tracks[track_index].visible_effect_columns do
             local fx_col = current_pattern_track:line(line_index).effect_columns[fx_column_index]
-            if 'F0' == fx_col.number_string then
-              -- F0xx - Set Beats Per Minute (BPM) (20 - FF, 00 = stop song)
-              data_bpm[pos] = fx_col.amount_string
-            elseif 'F1' == fx_col.number_string  then
-              -- F1xx - Set Lines Per Beat (LPB) (01 - FF, 00 = stop song).
-               data_lpb[pos] = fx_col.amount_string
-            elseif 'F2' == fx_col.number_string  then
-              -- F2xx - Set Ticks Per Line (TPL) (01 - 10).
-              data_tpl[pos] = fx_col.amount_string
-            elseif '0D' == fx_col.number_string  then
-              -- 0Dxx, Delay all notes by xx ticks.
-              data_tick_delay[pos] = fx_col.amount_string
+            if
+              not constrain_to_selected or
+              constrain_to_selected and fx_col.is_selected
+            then
+              if 'F0' == fx_col.number_string then
+                -- F0xx - Set Beats Per Minute (BPM) (20 - FF, 00 = stop song)
+                data_bpm[pos] = fx_col.amount_string
+              elseif 'F1' == fx_col.number_string  then
+                -- F1xx - Set Lines Per Beat (LPB) (01 - FF, 00 = stop song).
+                 data_lpb[pos] = fx_col.amount_string
+              elseif 'F2' == fx_col.number_string  then
+                -- F2xx - Set Ticks Per Line (TPL) (01 - 10).
+                data_tpl[pos] = fx_col.amount_string
+              elseif '0D' == fx_col.number_string  then
+                -- 0Dxx, Delay all notes by xx ticks.
+                data_tick_delay[pos] = fx_col.amount_string
+              end
             end
           end
 
@@ -157,49 +179,54 @@ function export_build_data()
             -- ADSR properties.
 
             local note_col = current_pattern_track:line(line_index).note_columns[column_index]
-            local volume = 128
-            local panning = 64
-            local tick_delay = 0 -- Dx - Delay a note by x ticks (0 - F).
-
-            -- Volume column
-            if 0 <= note_col.volume_value and note_col.volume_value <= 128 then
-              volume = note_col.volume_value
-            elseif note_col.volume_string:find('D') == 1 then
-              tick_delay = note_col.volume_string:sub(2)
-            end
-            -- Panning col
-            if 0 <= note_col.panning_value and note_col.panning_value <= 128 then
-              panning = note_col.panning_value
-            elseif note_col.panning_string:find('D') == 1 then
-              tick_delay = note_col.panning_string:sub(2)
-            end
-            -- Note OFF
             if
-              not note_col.is_empty and
-              j > 0 and data[i][j].pos_end == 0
+              not constrain_to_selected or
+              constrain_to_selected and note_col.is_selected
             then
-              data[i][j].pos_end = pos
-              data[i][j].delay_end = note_col.delay_value
-              data[i][j].tick_delay_end = tick_delay
-            end
-            -- Note ON
-            if note_col.instrument_value ~= 255 then
-              i = note_col.instrument_value + 1 -- Lua vs C++
-              data[i]:insert{
-                note = note_col.note_value,
-                pos_start = pos,
-                pos_end = 0,
-                delay_start = note_col.delay_value,
-                tick_delay_start = tick_delay,
-                delay_end = 0,
-                tick_delay_end = 0,
-                volume = volume,
-                -- panning = panning, -- TODO: Do something with panning var
-                -- track = track_index,
-                -- column = column_index,
-                -- sequence_index = sequence_index,
-              }
-              j = table.count(data[i])
+              -- Set some defaults
+              local volume = 128
+              local panning = 64
+              local tick_delay = 0 -- Dx - Delay a note by x ticks (0 - F).
+              -- Volume column
+              if 0 <= note_col.volume_value and note_col.volume_value <= 128 then
+                volume = note_col.volume_value
+              elseif note_col.volume_string:find('D') == 1 then
+                tick_delay = note_col.volume_string:sub(2)
+              end
+              -- Panning col
+              if 0 <= note_col.panning_value and note_col.panning_value <= 128 then
+                panning = note_col.panning_value
+              elseif note_col.panning_string:find('D') == 1 then
+                tick_delay = note_col.panning_string:sub(2)
+              end
+              -- Note OFF
+              if
+                not note_col.is_empty and
+                j > 0 and data[i][j].pos_end == 0
+              then
+                data[i][j].pos_end = pos
+                data[i][j].delay_end = note_col.delay_value
+                data[i][j].tick_delay_end = tick_delay
+              end
+              -- Note ON
+              if note_col.instrument_value ~= 255 then
+                i = note_col.instrument_value + 1 -- Lua vs C++
+                data[i]:insert{
+                  note = note_col.note_value,
+                  pos_start = pos,
+                  pos_end = 0,
+                  delay_start = note_col.delay_value,
+                  tick_delay_start = tick_delay,
+                  delay_end = 0,
+                  tick_delay_end = 0,
+                  volume = volume,
+                  -- panning = panning, -- TODO: Do something with panning var
+                  -- track = track_index,
+                  -- column = column_index,
+                  -- sequence_index = sequence_index,
+                }
+                j = table.count(data[i])
+              end
             end
             -- Next
             pattern_previous = sequencer.pattern_sequence[sequence_index]
@@ -436,18 +463,13 @@ end
 -- Main procedure(s) wraped in ProcessSlicer
 --------------------------------------------------------------------------------
 
-function export_procedure()
+function export_procedure(plan)
   filepath = renoise.app():prompt_for_filename_to_write("mid", "Export MIDI")
   if filepath == '' then return end
 
   rns = renoise.song()
-
-  -- Reset song position
-  rns.transport:stop()
-  rns.transport.playback_pos = renoise.SongPos(1, 1)
-
   if coroutine_mode then
-    local process = ProcessSlicer(export_build, export_done)
+    local process = ProcessSlicer(function() export_build(plan) end, export_done)
     renoise.tool().app_release_document_observable
       :add_notifier(function()
         if (process and process:running()) then
@@ -457,15 +479,15 @@ function export_procedure()
       end)
     process:start()
   else
-    export_build()
+    export_build(plan)
     export_done()
   end
 end
 
 
-function export_build()
+function export_build(plan)
   renoise.app():show_status(export_status_progress())
-  export_build_data()
+  export_build_data(plan)
   export_midi()
 end
 
