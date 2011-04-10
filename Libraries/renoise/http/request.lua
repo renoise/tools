@@ -14,7 +14,6 @@
 
 -- Logger
 require "renoise.http.log"
-local log = Log(Log.ALL)
 
 -- General purpose utility functions
 require "renoise.http.util"
@@ -26,30 +25,22 @@ require "renoise.http.json"
 require "renoise.http.xml_parser"
 require "renoise.http.xml_encoder"
 
--- Requests pool
-local requests_pool = table.create()
 
 -------------------------------------------------------------------------------
 --  Debugging
 -------------------------------------------------------------------------------
 
-local DEBUG_CONTENT = true
+-- Filter debug and error messages by severity
+-- ALL / INFO / WARN / ERROR / FATAL / OFF
+local log = Log(Log.ALL)
 
-local function TRACE(data)
-  if (not DEBUG_CONTENT) then
-    return
-  end
-  
-  if (type(data) == 'table') then 
-    rprint(data)
-  else
-    print(data)  
-  end
-end
 
 -------------------------------------------------------------------------------
 -- Idle notifier/handler
 -------------------------------------------------------------------------------
+
+-- Requests pool
+local requests_pool = table.create()
 
 local read = nil
 
@@ -66,7 +57,18 @@ read = function()
 
   -- Loop through the Requests pool
   for k,request in ipairs(requests_pool) do
-    if not (request.complete) then
+  
+    if (request.paused) then      
+      request.progress:_set_status(Progress.PAUSED)
+      
+      -- stop polling when the only request is paused
+      if (#requests_pool == 1) then
+        detach()
+      end
+            
+    elseif (request.cancelled) then          
+      requests_pool:remove(k)
+    elseif not (request.complete) then      
       request.complete = not (request:_read_content())
     else 
       log:info("Request complete, removed from pool.")
@@ -81,11 +83,117 @@ read = function()
   return true
 end
 
-function get_tools_root()    
-  local dir = renoise.tool().bundle_path
-  return dir:sub(1,dir:find("Tools")+5)      
+
+-------------------------------------------------------------------------------
+--  Progress class
+-------------------------------------------------------------------------------
+
+class "Progress"
+Progress.INIT = "Initialized"
+Progress.QUEUED = "Queued"
+Progress.BUSY = "Downloading"
+Progress.DONE = "Completed"
+Progress.CANCELLED = "Cancelled"
+Progress.PAUSED = "Paused"
+
+Progress.status_string = {
+  "Initialized", 
+  "Queued", 
+  "Downloading", 
+  "Completed",
+  "Cancelled",
+  "Paused"  
+}
+
+function Progress:__init(callback)    
+  -- current amount of received bytes
+  self.bytes = 0
+  
+  self.content_length = nil
+  
+  -- current in percent
+  -- can be nil if total filesize is unknown
+  self.percent = nil
+  
+  -- elapsed time in ms
+  self.elapsed_time = 0
+  
+  self.start_time = nil
+  
+  self.paused_time = nil
+  
+  -- estimated time until completion in ms
+  -- can be nil if total filesize is unknown
+  self.eta = nil
+  
+  self.estimated_duration = nil
+  
+  -- init / queued / busy / done
+  self.status = Progress.INIT
+  
+  local progress_obj = self
+  
+  -- function to be called when new data has been received
+  self.callback = callback     
 end
 
+function Progress:_set_status(s)
+  self.status = s  
+  if (self.status == Progress.PAUSED) then
+    self.paused_time = os.clock()
+  elseif (self.status == Progress.BUSY and self.paused_time) then
+    local paused_duration = (os.clock() - self.paused_time)
+    self.elapsed_time = self.elapsed_time - paused_duration
+    self.paused_time = nil
+  end
+  self:_notify()
+end
+
+function Progress:get_status()  
+  --return Progress.status_string[self.status]  
+  return self.status
+end
+
+function Progress:_set_eta()
+  if (not self.percent) then 
+    return 
+  end
+  
+  -- time (s) per 1 percent
+  local time_per_percent = self.elapsed_time / self.percent
+  
+  -- eta = approximate time when 100% 
+  local eta = time_per_percent * 100 + 1
+  
+  -- average from last result
+  self.estimated_duration = ((self.estimated_duration or 0) + eta) / 2
+  self.eta = math.max(0, self.estimated_duration - self.elapsed_time)
+end
+
+function Progress:_set_elapsed_time()  
+  if (not self.start_time) then
+    self.start_time = os.clock()
+  end
+  self.elapsed_time = os.clock() - self.start_time  
+  self:_set_eta()
+end
+
+function Progress:_notify()
+  self.callback(self)
+end
+
+function Progress:_set_percent()
+  if (self.content_length and self.content_length > 0) then
+    self.percent = self.bytes / self.content_length * 100
+  end
+end
+
+function Progress:_set_bytes(b)  
+  self.bytes = b
+  self:_set_elapsed_time()
+  self:_set_percent()
+  self:_notify()
+end
 
 -------------------------------------------------------------------------------
 --  Request class (PUBLIC)
@@ -104,6 +212,7 @@ Request.TIMEOUT = "TIMEOUT"
 Request.ERROR = "ERROR"
 Request.NOTMODIFIED = "NOTMODIFIED"
 Request.PARSERERROR = "PARSERERROR"
+Request.CANCELERROR = "CANCELERROR"
 
 
 ---## settings ##---
@@ -122,7 +231,7 @@ Request.default_settings = table.create{
   -- TODO (remove) save file to disk
   save_file = false,
   
-  default_download_folder = get_tools_root() .."downloads",
+  default_download_folder = Util:get_tools_root() .."downloads",
 
   -- When sending data to the server, use this content-type. Default is
   -- "application/x-www-form-urlencoded", which is fine for most cases. If you
@@ -215,14 +324,19 @@ Request.default_settings = table.create{
   --  Possible values for the second argument (besides null) are "timeout",
   -- "error", "notmodified" and "parsererror". This is an Ajax Event.
   error = function(xml_http_request, text_status, error_thrown)
-   log:error(error_thrown)
+    log:error(error_thrown)
   end,
 
   -- TODO A function to be called when the request finishes (after success and
   -- error callbacks are executed). The function gets passed two arguments: 
   -- The XMLHttpRequest object and a string describing the status of the 
   -- request. This is an Ajax Event.
-  complete = function(xml_http_request, text_status) end
+  complete = function(xml_http_request, text_status) end,
+  
+  -- A function to be called whenever the download progress changes.  
+  progress = function(progress_obj) 
+    log:info(progress_obj.bytes .. " bytes received.")
+  end
 }
 
 
@@ -326,7 +440,44 @@ function Request:__init(custom_settings)
     end
   end
   
+  self.progress = Progress(self.settings.progress)  
+  
   self:_enqueue()
+end
+
+
+---## get_downloaded_file ##---
+-- Returns the path to the downloaded file, if any.
+function Request:get_downloaded_file()
+  return self.download_target
+end
+
+function Request:pause()
+  if (not self.paused) then
+    log:warn("Pausing request.")    
+  end
+  self.paused = true
+end
+
+function Request:resume()    
+  local was_paused = self.paused
+  if (was_paused) then
+    log:warn("Resuming request.")    
+  end
+  self.paused = false  
+  -- restart polling the requests pool 
+  if (was_paused and #requests_pool == 1) then
+    attach()
+  end
+end
+
+---## cancel ##---
+function Request:cancel()
+  self.cancelled = true
+  self:_do_callback("cancelled")      
+  self.text_status = Request.CANCELERROR        
+  self.progress:_set_status(Progress.CANCELLED)
+  log:warn("Request cancelled by user.")
 end
 
 
@@ -341,6 +492,7 @@ function Request:_enqueue()
   local success, socket_error = self:_read_header()
   if (success) then
     requests_pool:insert(self)
+    self.progress:_set_status(Progress.QUEUED)
     if (#requests_pool == 1) then
        attach()
     end
@@ -370,8 +522,8 @@ end
 ---## create_multipart_message ##---
 -- Converts a parameter data table into a multipart message
 function Request:_create_multipart_message(data)
-  TRACE("Create multipart message")
-  TRACE(data)
+  log:info("Create multipart message")
+  log:info(data)
 
   local function get_random_string()
     local str = ""
@@ -403,19 +555,19 @@ end
 
 ---## create_json_message ##---
 function Request:_create_json_message(data)
-  TRACE("Create JSON message")
-  TRACE(data)
+  log:info("Create JSON message")
+  log:info(data)
   local ok, res = pcall(json.encode, data) 
-  TRACE(res)
+  log:info(res)
   return res
 end
 
 ---## create_xml_message ##---
 function Request:_create_xml_message(data)
-  TRACE("Create XML message")
-  TRACE(data)
+  log:info("Create XML message")
+  log:info(data)
   local obj,err = XmlEncoder:encode_table(data)
-  TRACE(obj)
+  log:info(obj)
   return obj
 end
 
@@ -434,8 +586,8 @@ end
 ---## create_query_string ##---
 -- Converts a parameter data table into a query string
 function Request:_create_query_string(data)
-  TRACE("Create query string: ")
-  TRACE(data)  
+  log:info("Create query string: ")
+  log:info(data)  
   return Util:http_build_query(data) 
 end
 
@@ -501,8 +653,8 @@ function Request:_read_header()
   end
   header = header .. "\r\n" -- mandatory empty line
 
-  TRACE("=== REQUEST HEADERS ===")
-  TRACE(header)
+  log:info("=== REQUEST HEADERS ===")
+  log:info(header)
 
   -- Send the header
   local ok, socket_error = self.client_socket:send(header)
@@ -512,8 +664,8 @@ function Request:_read_header()
 
   -- Send the POST parameters in the request body, if applicable
   if (self.settings.method == Request.POST) then
-    TRACE("=== POST DATA ===")
-    TRACE(self:_get_payload())
+    log:info("=== POST DATA ===")
+    log:info(self:_get_payload())
     ok, socket_error = self.client_socket:send(self:_get_payload())
     if not (ok) then
       return false, socket_error
@@ -540,8 +692,8 @@ function Request:_read_header()
   end
 
   log:info(("=== RESPONSE HEADER (%s) ==="):format(self.url))
-  TRACE(header_lines)
-  TRACE("\n")
+  log:info(header_lines)
+  log:info()
   
   self.response.header = Util:parse_message(header_lines:concat("\n"))
 
@@ -552,8 +704,14 @@ function Request:_read_header()
       return false, ("HTTP Error: %s"):format(self.response.header[1])
     end
     
+    -- File size
     self.response.content_length =
       tonumber(self.response.header["Content-Length"])
+    self.progress.content_length = self.response.content_length
+    
+    self.response.transfer_encoding = 
+      tostring(self.response.header["Transfer-Encoding"]):lower()
+      
     -- Redirection
     if (self.response.header["Location"] and 
       #self.response.header["Location"] > 0
@@ -577,196 +735,29 @@ function Request:_read_header()
   end
 end
 
-function BytesToString(bytes)
-  local s = {}
-  local len = #bytes
-  for i = 1, len do
-    s[i] = ("%02X "):format(bytes:byte(i))
-  end
-  return table.concat(s)
-end
-
----## process_chunk ##---
--- Unchunk a message stream. Chunked data is useful when the sender 
--- does not know the content-length beforehand, which is often the
--- case with dynamically generated data. A chunk can be split over
---  multiple buffers.
---
--- Example:
- -- Transfer-Encoding: chunked
- -- 
- -- 25
- -- This is the data in the first chunk
- -- 
- -- 1A
- -- and this is the second one
- -- 0
-function Request:_process_chunk(buffer, same)
-  -- new buffer
-  if (not same) then
-    TRACE("\n")  
-    log:info("New buffer. Size: " .. #buffer .. " byte")    
-    --Util:file_put_contents(self.settings.default_download_folder.."/raw.txt", buffer, "wb") 
-     -- add buffer length to total message length
-    self.length = self.length + #buffer     
-    log:info("Total message size: " .. self.length .. " byte")
-  end
-  
-  -- new chunk
-  if (#self.chunk == 0) then      
-    TRACE("\n")      
-    log:info("New chunk")    
-    
-    if (self.temp_chunk) then
-      buffer = self.temp_chunk .. buffer
-      self.temp_chunk = nil
-    end
-    
-    log:info("Remaining buffer: " .. #buffer .. " byte")             
-    log:info(BytesToString(buffer:sub(1,16)))
-     
-    -- find the position of CRLF, eg. [\r\n]2000 [extension]\r\n
-    local pattern = "^%x+.-\r\n"
-    if (self.transfer_notstart) then
-      pattern = ("^\r\n%x+.-\r\n")      
-    end
-    self.transfer_notstart = true
-    
-    local chunk_header_start, chunk_boundary = buffer:find(pattern)
-    
-    if (not chunk_header_start) then
-      log:info("Incomplete chunk header, add to new buffer")
-      self.temp_chunk = buffer
-      return
-    end    
-    
-    log:info("Chunk header ends at: " .. tostring(chunk_boundary))
-
-    
-    assert(chunk_boundary > 1 and chunk_boundary < 50, "Incorrect chunk header")
-    -- get the hex value, strip any CRLFs
-    local chunk_header = buffer:sub(1, chunk_boundary)
-
---    local chunk_size_hex, chunk_extension = chunk_header:match("^(%x+)(.-)$")
-    local chunk_size_hex = chunk_header:match("%x+")
-    assert(chunk_size_hex, "Chunk size not found in header")
-    
-    -- convert to dec
-    self.chunk_size = tonumber("0x"..chunk_size_hex)
-    
-    -- the whole chunk remains
-    self.chunk_remaining = self.chunk_size
-    
-     -- The last chunk is a zero-length chunk, 
-    -- with the chunk size coded as 0, but without any chunk data section.
-    if (self.chunk_size == 0) then      
-      log:info("Last chunk found, stopping.")
-      self:_save_content("")
-      return
-    end    
-    
-    
-    log:info("Chunk size: 0x" .. tostring(chunk_size_hex):upper()
-      .. " (" .. self.chunk_size .. " byte)")          
-    
-          
-    -- remove the chunk header from the buffer
-    local chunk_start = buffer:find("[^\r\n]", chunk_boundary)
-    if (chunk_start) then
-      chunk_start = chunk_start
-      buffer = buffer:sub(chunk_start)                  
-      log:info("Chunk starts at:" .. chunk_start)
-    end 
-  end      
-     
-  
-  -- The chunk can be completed with this buffer
-  if (#buffer >= self.chunk_remaining) then    
-      
-    -- append 1st part of the buffer to chunk    
-    self.chunk=self.chunk..buffer:sub(1,self.chunk_remaining)
-    
-    -- save the chunk to disk or ram
-    self:_save_content(self.chunk)
-    --log:info(BytesToString(self.chunk))
-    log:info("Remaining data in this chunk: 0 (fully consumed)")
-    
-    -- remove the 1st part from the buffer
-    buffer = buffer:sub(self.chunk_remaining+1)
-    self.chunk = ""
-    
-    -- restart the process with the remaining buffer
-    self:_process_chunk(buffer, true)   
-    
-  else 
-    -- The chunk needs the next buffer
-    
-    -- append complete buffer to chunk
-    self.chunk = self.chunk..buffer
-    --log:info(BytesToString(buffer:sub(-16)))    
-    
-    -- calculate how much data must be added to complete the chunk
-    self.chunk_remaining = self.chunk_remaining - #buffer
-    log:info("Remaining data in this chunk: " .. self.chunk_remaining)          
-  end
-end   
-
-
----## write_file ##---
-function Request:_write_file(data)
-    -- create tempfile
-    if (not self.tempfile) then
-      self.tempfile = os.tmpname()
-      local err
-      self.handle, err = io.open(self.tempfile, "wb")
-    end
-    log:info("Writing data to tempfile")
-    if (type(data)=="table") then
-      data = table.concat(data)
-    end
-    self.handle:write(data)
-end
-
-
----## save_content ##---
-function Request:_save_content(buffer)
-  if (not self.settings.save_file) then
-     self.contents:insert(buffer) 
-  else     
-    local cache_full = self.cache_len 
-      + #buffer > (self.settings.max_cache_size * 1024)
-      
-    -- write buffer when EOF or cache is full       
-    if (#buffer == 0 or cache_full) then    
-      self:_write_file(self.cache)
-      self:_write_file(buffer)
-      self.cache:clear()       
-      self.cache_len = 0
-    end
-    self.cache:insert(buffer)
-    self.cache_len = self.cache_len + #buffer    
-  end
-end
-
 
 ---## read_content ##---
 -- Loads the response from the server
 function Request:_read_content()
   assert(self.client_socket and self.response.header,
     "read_header failed or was not called")
+  
+  self.progress:_set_status( Progress.BUSY )
     
   local buffer, socket_error = 
     self.client_socket:receive("*all", self.settings.timeout)
   
-  if (buffer) then    
-    if (tostring(self.response.header["Transfer-Encoding"]):lower() == "chunked") then
+  if (buffer) then            
+    if (self.response.transfer_encoding == "chunked") then
       log:info("Unchunking buffer")
       self:_process_chunk(buffer)      
     else
       -- Store received new data
-      self:_save_content(buffer)
-      self.length = self.length + #buffer
-    end            
+      self:_save_content(buffer)      
+      self.length = self.length + #buffer    
+    end 
+        
+    self.progress:_set_bytes(self.length)
             
     -- Display amount of data read
     if (self.length > 10 * 1024) then
@@ -815,6 +806,295 @@ function Request:_read_content()
 end
 
 
+---## process_chunk ##---
+-- Unchunk a message stream. Chunked data is useful when the sender 
+-- does not know the content-length beforehand, which is often the
+-- case with dynamically generated data. A chunk can be split over
+--  multiple buffers.
+--
+-- Example:
+ -- Transfer-Encoding: chunked
+ -- 
+ -- 25
+ -- This is the data in the first chunk
+ -- 
+ -- 1A
+ -- and this is the second one
+ -- 0
+function Request:_process_chunk(buffer, same)
+  -- new buffer
+  if (not same) then
+    log:info()  
+    log:info("New buffer. Size: " .. #buffer .. " byte")    
+    --Util:file_put_contents(self.settings.default_download_folder.."/raw.txt", buffer, "wb") 
+     -- add buffer length to total message length
+    self.length = self.length + #buffer     
+    log:info("Total message size: " .. self.length .. " byte")
+  end
+  
+  -- new chunk
+  if (#self.chunk == 0) then      
+    log:info()      
+    log:info("New chunk")    
+    
+    if (self.temp_chunk) then
+      buffer = self.temp_chunk .. buffer
+      self.temp_chunk = nil
+    end
+    
+    log:info("Remaining buffer: " .. #buffer .. " byte")             
+    log:info(Util:bytes_to_string(buffer:sub(1,16)))
+     
+    -- Find the position of CRLF, eg. "[\r\n]2000 [extension]\r\n"
+    -- ... at the beginning of the response, the first chunk
+    local pattern = "^%x+.-\r\n"
+    if (self.transfer_notstart) then
+      -- ... at the start of each following chunk
+      pattern = ("^\r\n%x+.-\r\n")      
+    end
+    self.transfer_notstart = true
+    
+    local chunk_header_start, chunk_boundary = buffer:find(pattern)
+    
+    if (not chunk_header_start) then
+      log:info("Broken chunk header; append buffer")      
+      self.temp_chunk = buffer
+      self.socket:close()
+      return
+    end    
+    
+    log:info("Chunk header ends at: " .. tostring(chunk_boundary))
+
+    
+    assert(chunk_boundary > 1 and chunk_boundary < 50, "Incorrect chunk header")
+    -- get the hex value, strip any CRLFs
+    local chunk_header = buffer:sub(1, chunk_boundary)
+
+--    local chunk_size_hex, chunk_extension = chunk_header:match("^(%x+)(.-)$")
+    local chunk_size_hex = chunk_header:match("%x+")
+    assert(chunk_size_hex, "Chunk size not found in header")
+    
+    -- convert to dec
+    self.chunk_size = tonumber("0x"..chunk_size_hex)
+    
+    -- the whole chunk remains
+    self.chunk_remaining = self.chunk_size
+    
+     -- The last chunk is a zero-length chunk, 
+    -- with the chunk size coded as 0, but without any chunk data section.
+    if (self.chunk_size == 0) then      
+      log:info("Last chunk found, stopping.")
+      self:_save_content("")
+      return
+    end    
+    
+    
+    log:info("Chunk size: 0x" .. tostring(chunk_size_hex):upper()
+      .. " (" .. self.chunk_size .. " byte)")          
+    
+          
+    -- remove the chunk header from the buffer
+    local chunk_start = chunk_boundary+1
+    if (chunk_start) then
+      chunk_start = chunk_start
+      buffer = buffer:sub(chunk_start)                  
+      log:info("Chunk starts at:" .. chunk_start)
+    end 
+  end      
+     
+  
+  -- The chunk can be completed with this buffer
+  if (#buffer >= self.chunk_remaining) then    
+      
+    -- append 1st part of the buffer to chunk    
+    self.chunk=self.chunk..buffer:sub(1,self.chunk_remaining)
+    
+    -- save the chunk to disk or ram
+    self:_save_content(self.chunk)
+    --log:info(Util:bytes_to_string(self.chunk))
+    log:info("Remaining data in this chunk: 0 (fully consumed)")
+    
+    -- remove the 1st part from the buffer
+    buffer = buffer:sub(self.chunk_remaining+1)
+    self.chunk = ""
+    
+    -- restart the process with the remaining buffer
+    self:_process_chunk(buffer, true)   
+    
+  else 
+    -- The chunk needs the next buffer
+    
+    -- append complete buffer to chunk
+    self.chunk = self.chunk..buffer
+    --log:info(Util:bytes_to_string(buffer:sub(-16)))    
+    
+    -- calculate how much data must be added to complete the chunk
+    self.chunk_remaining = self.chunk_remaining - #buffer
+    log:info("Remaining data in this chunk: " .. self.chunk_remaining)          
+  end
+end   
+
+
+---## save_content ##---
+function Request:_save_content(buffer)
+  
+  if (not self.settings.save_file) then
+     self.contents:insert(buffer) 
+  else     
+    self.cache_len = self.cache_len + #buffer
+    
+    if (#buffer > 0) then
+      self.cache:insert(buffer)
+    end
+    
+    local cache_full = self.cache_len > 
+      (self.settings.max_cache_size * 1024)
+    
+    -- write buffer when EOF or cache is full           
+    if (#buffer == 0 or cache_full) then      
+      self:_write_file(self.cache)
+      self.cache:clear()       
+      self.cache_len = 0      
+    end       
+  end
+end
+
+
+---## write_file ##---
+function Request:_write_file(data)
+    -- create tempfile
+    if (not self.tempfile) then
+      self.tempfile = os.tmpname()
+      local err
+      self.handle, err = io.open(self.tempfile, "wb")
+    end
+    log:info("Writing data to temporary file.")
+    if (type(data)=="table") then
+      data = table.concat(data)
+    end
+    self.handle:write(data)
+end
+
+
+---## do_callback ##---
+-- Finalizes the transaction and executes the optional callback functions
+function Request:_do_callback(socket_error)
+  -- flush cache
+  if (self.settings.save_file) then
+    self:_write_file(self.cache)
+  end
+  if (self.tempfile and io.exists(self.tempfile)) then
+    self.handle:flush()
+    self.handle:close()
+  end 
+
+  -- Print a small amount of received data in the terminal
+  log:info(("=== CONTENT (%d bytes from %s) ==="):format(
+    self.length, self.url))
+  if (self.length <= 32 * 1024) then
+    log:info(self.contents)
+  else
+    log:info(" *** too much content to display (> 32 kbytes) *** ")
+  end
+
+  if (socket_error) then
+    log:info(("%s failed with error: '%s'."):format(self.url, socket_error))    
+  else
+    log:info(("%s has completed."):format(self.url))    
+    
+    if (self.settings.save_file) then      
+      if (io.exists(self.tempfile)) then        
+        local dir = ""
+        local sep = ""
+        local mv = ""
+        if (os.platform() == "WINDOWS") then          
+          dir = self.settings.default_download_folder:gsub("/","\\")
+          sep = "\\"
+          mv = "move" 
+        else
+          dir = self.settings.default_download_folder:gsub("\\","/")
+          sep = "/"
+          mv = "mv"
+        end  
+        if (not io.exists(dir)) then          
+          local ok, err = os.mkdir(dir)          
+          log:info("Created download dir: "..dir .. tostring(ok) .. tostring(err))
+        end
+        -- strip trailing slash
+        --dir = dir:match("^(.*)/$")
+        if (io.exists(dir)) then
+          local path = self.url_parts.path       
+          local filename = Util:get_filename(path)
+          -- get filename from header          
+          local cd = self:_get_header("Content-Disposition")
+          log:info(cd)
+          if (cd and #cd > 0) then
+            filename = cd:match("filename=(.+)$") 
+          end
+          
+          local target = dir..sep..filename          
+          local i = 1          
+          while (io.exists(target)) do            
+            local name = filename:match("^(.*)%.")
+            local extension = Util:get_extension(filename)
+            if (extension) then
+              extension = "."..extension 
+            else
+              extension = ""
+            end
+            target = ("%s%s%s (%d)%s"):format(dir,sep,name,i, extension)
+            i = i + 1
+          end
+          local command = ('%s "%s" "%s"'):format(mv, self.tempfile, target)
+          log:info("Moving tempfile to download dir: " .. command )
+          local console_msg, blah = os.execute(command)
+          if (console_msg and console_msg > 0) then
+            log:error(console_msg)
+          else
+            self.download_target = target
+          end
+        end
+      end
+    end   
+  end
+  
+  -- close the connection and invalidate
+  self.client_socket = nil
+  self.response.header = nil
+    
+  -- Decode data of non-plain datatypes
+  local data = nil 
+  local parser_error = nil
+  
+  if (self.settings.save_file) then
+    if (self.download_target and io.exists(self.download_target)) then    
+      data = self.download_target
+    else
+      parser_error = "Downloaded file not found"
+    end
+  elseif (self.length > 0) then
+    data, parser_error = self:_decode(self.contents)
+    if (parser_error) then 
+      self.text_status = Request.PARSERERROR 
+    end
+  end
+  
+  local xml_http_request = self;  
+  
+  -- invoke the external callbacks (if set)
+  if (socket_error or parser_error) then
+    -- TODO handle more errors
+    local error = socket_error or parser_error
+    self.settings.error( xml_http_request, self.text_status, error)    
+  else    
+    self.settings.success( data, self.text_status, xml_http_request )
+  end
+
+  self.settings.complete( xml_http_request, self.text_status )
+  self.progress:_set_status(Progress.DONE)
+end
+
+
 ---## decode ##---
 -- Processes data in a different data type
  -- TODO process more data_types 
@@ -854,152 +1134,4 @@ function Request:_decode(data)
     log:error("Unable to decode: " .. (error or "unknown XML Parser error"))
   end     
   return data, error
-end
-
-
----## do_callback ##---
--- Finalizes the transaction and executes the optional callback functions
-function Request:_do_callback(socket_error)
-  
-  if (self.tempfile and io.exists(self.tempfile)) then
-    self.handle:flush()
-    self.handle:close()
-  end 
-
-  -- Print a small amount of received data in the terminal
-  log:info(("=== CONTENT (%d bytes from %s) ==="):format(
-    self.length, self.url))
-  if (self.length <= 32 * 1024) then
-    TRACE(self.contents)
-  else
-    TRACE(" *** too much content to display (> 32 kbytes) *** ")
-  end
-
-  if (socket_error) then
-    log:info(("%s failed with error: '%s'."):format(self.url, socket_error))
-  else
-    log:info(("%s has completed."):format(self.url))    
-    
-    if (self.settings.save_file) then      
-      if (io.exists(self.tempfile)) then        
-        local dir = ""
-        local sep = ""
-        local mv = ""
-        if (os.platform() == "WINDOWS") then          
-          dir = self.settings.default_download_folder:gsub("/","\\")
-          sep = "\\"
-          mv = "move" 
-        else
-          dir = self.settings.default_download_folder:gsub("\\","/")
-          sep = "/"
-          mv = "mv"
-        end  
-        if (not io.exists(dir)) then          
-          local ok, err = os.mkdir(dir)          
-          TRACE("Created download dir: "..dir .. tostring(ok) .. tostring(err))
-        end
-        -- strip trailing slash
-        --dir = dir:match("^(.*)/$")
-        if (io.exists(dir)) then
-          local path = self.url_parts.path       
-          local filename = Util:get_filename(path)
-          -- get filename from header          
-          local cd = self:_get_header("Content-Disposition")
-          TRACE(cd)
-          if (cd and #cd > 0) then
-            filename = cd:match("filename=(.+)$") 
-          end
-          
-          local target = dir..sep..filename          
-          local i = 1          
-          while (io.exists(target)) do            
-            local name = filename:match("^(.*)%.")
-            local extension = Util:get_extension(filename)
-            if (extension) then
-              extension = "."..extension 
-            else
-              extension = ""
-            end
-            target = ("%s%s%s (%d)%s"):format(dir,sep,name,i, extension)
-            i = i + 1
-          end
-          local command = ('%s "%s" "%s"'):format(mv, self.tempfile, target)
-          log:info("Moving tempfile to download dir: " .. command )
-          local console_msg, blah = os.execute(command)
-          if (console_msg and console_msg > 0) then
-            log:error(console_msg)
-          else
-            self.download_target = target
-          end
-        end
-      end
-    end
-    --[[
-    -- TODO  Save files directly on disk    
-    if (self.settings.save_file) then      
-      local path = self.url_parts.path       
-      local filename = Util:get_filename(path)
-      local extension = Util:get_extension(filename)
-      --local _, _, filename, extension = self.url:find(".+[/\\](.+)%.(.+)$")
-     
-      TRACE(("Saving file %s to disk"):format(filename))
-
-      local file_name_and_path = renoise.app():prompt_for_filename_to_write(
-        extension, ("Save %s as"):format(filename))
-
-      if (file_name_and_path and file_name_and_path ~= "") then
-        local file = io.open(file_name_and_path, "wb")
-
-        if (file) then
-          for _,buffer in pairs(self.contents) do
-            file:write(buffer)
-          end
-          file:close()
-        else
-          log:info(("failed to open '%s' for writing."):format(
-            file_name_and_path))
-        end
-      end
-    end
-    --]]
-  end
-  
-  -- close the connection and invalidate
-  self.client_socket = nil
-  self.response.header = nil
-    
-  -- Decode data of non-plain datatypes
-  local data = nil 
-  local parser_error = nil
-  
-  if (self.settings.save_file) then
-    if (self.download_target and io.exists(self.download_target)) then    
-      data = self.download_target
-    else
-      parser_error = "Downloaded file not found"
-    end
-  elseif (self.length > 0) then
-    data, parser_error = self:_decode(self.contents)
-    if (parser_error) then 
-      self.text_status = Request.PARSERERROR 
-    end
-  end
-  
-  local xml_http_request = self;
-  
-  -- invoke the external callbacks (if set)
-  if (socket_error or parser_error) then
-    -- TODO handle more errors
-    local error = socket_error or parser_error
-    self.settings.error( xml_http_request, self.text_status, error)
-  else    
-    self.settings.success( data, self.text_status, xml_http_request )
-  end
-
-  self.settings.complete( xml_http_request, self.text_status )
-
-end
-
-function Request:get_downloaded_file()
-  return self.download_target
 end
