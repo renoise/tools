@@ -13,6 +13,7 @@ $suspicious = array(
     'socket',
     'osc',
     'install_tool',
+    'uninstall_tool',
     'open',
     'read',
     'write',
