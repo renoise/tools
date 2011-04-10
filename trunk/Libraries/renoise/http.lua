@@ -67,12 +67,18 @@ end
 
 ---## http_download_file ##---
 -- TODO replace/integrate with callback
-function HTTP:download_file(url)  
+function HTTP:download_file(url, success)  
   --local header_request = HTTP:request(url, Request.HEAD, function(data)
   --  rprint(data)    
   --end)  
   
-  local new_request = Request({url=url, method=Request.GET, save_file=true})
+  local new_request = Request(
+    {
+    url=url, 
+    method=Request.GET, 
+    save_file=true, 
+    success=success 
+   })  
 
 --[[  local success, socket_error = new_request:_read_header()
 
