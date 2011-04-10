@@ -89,6 +89,7 @@ end
 -------------------------------------------------------------------------------
 
 class "Progress"
+
 Progress.INIT = "Initialized"
 Progress.QUEUED = "Queued"
 Progress.BUSY = "Downloading"
@@ -96,15 +97,8 @@ Progress.DONE = "Completed"
 Progress.CANCELLED = "Cancelled"
 Progress.PAUSED = "Paused"
 
-Progress.status_string = {
-  "Initialized", 
-  "Queued", 
-  "Downloading", 
-  "Completed",
-  "Cancelled",
-  "Paused"  
-}
 
+---## __init ##---
 function Progress:__init(callback)    
   -- current amount of received bytes
   self.bytes = 0
@@ -137,6 +131,14 @@ function Progress:__init(callback)
   self.callback = callback     
 end
 
+
+---## get_status ##---
+function Progress:get_status()    
+  return self.status
+end
+
+
+---## set_status ##---
 function Progress:_set_status(s)
   self.status = s  
   if (self.status == Progress.PAUSED) then
@@ -149,11 +151,9 @@ function Progress:_set_status(s)
   self:_notify()
 end
 
-function Progress:get_status()  
-  --return Progress.status_string[self.status]  
-  return self.status
-end
 
+---## set_eta ##---
+-- Estimate the arrival time of the downloaded file.
 function Progress:_set_eta()
   if (not self.percent) then 
     return 
@@ -170,6 +170,8 @@ function Progress:_set_eta()
   self.eta = math.max(0, self.estimated_duration - self.elapsed_time)
 end
 
+
+---## set_elapsed_time ##---
 function Progress:_set_elapsed_time()  
   if (not self.start_time) then
     self.start_time = os.clock()
@@ -178,22 +180,33 @@ function Progress:_set_elapsed_time()
   self:_set_eta()
 end
 
+
+---## notify ##---
+-- Let the attached callback functions know something has changed.
 function Progress:_notify()
   self.callback(self)
 end
 
+
+---## set_percent ##---
+-- Calculate the percentage of download completion.
 function Progress:_set_percent()
   if (self.content_length and self.content_length > 0) then
     self.percent = self.bytes / self.content_length * 100
   end
 end
 
+
+---## set_bytes ##---
+-- Specify the current amount of received bytes.
+-- Increased whenever the socket fills a new buffer.
 function Progress:_set_bytes(b)  
   self.bytes = b
   self:_set_elapsed_time()
   self:_set_percent()
   self:_notify()
 end
+
 
 -------------------------------------------------------------------------------
 --  Request class (PUBLIC)
@@ -452,6 +465,8 @@ function Request:get_downloaded_file()
   return self.download_target
 end
 
+
+---## pause ##---
 function Request:pause()
   if (not self.paused) then
     log:warn("Pausing request.")    
@@ -459,6 +474,8 @@ function Request:pause()
   self.paused = true
 end
 
+
+---## resume ##---
 function Request:resume()    
   local was_paused = self.paused
   if (was_paused) then
@@ -470,6 +487,7 @@ function Request:resume()
     attach()
   end
 end
+
 
 ---## cancel ##---
 function Request:cancel()
@@ -597,7 +615,7 @@ function Request:_set_payload(data)
   self.payload = data
 end
 
----## set_payload ##---
+---## get_payload ##---
 -- retrieve the body of the request
 function Request:_get_payload()
   return self.payload
@@ -837,9 +855,9 @@ function Request:_process_chunk(buffer, same)
     log:info()      
     log:info("New chunk")    
     
-    if (self.temp_chunk) then
-      buffer = self.temp_chunk .. buffer
-      self.temp_chunk = nil
+    if (self.temp_buffer) then
+      buffer = self.temp_buffer .. buffer
+      self.temp_buffer = nil
     end
     
     log:info("Remaining buffer: " .. #buffer .. " byte")             
@@ -857,10 +875,9 @@ function Request:_process_chunk(buffer, same)
     local chunk_header_start, chunk_boundary = buffer:find(pattern)
     
     if (not chunk_header_start) then
-      log:info("Broken chunk header; append buffer")      
-      self.temp_chunk = buffer
-      self.socket:close()
-      return
+      log:info("Fragmented chunk header; prepend remaining buffer to next buffer")      
+      self.temp_buffer = buffer
+      return -- wait for new buffer
     end    
     
     log:info("Chunk header ends at: " .. tostring(chunk_boundary))
@@ -1046,7 +1063,7 @@ function Request:_do_callback(socket_error)
             i = i + 1
           end
           local command = ('%s "%s" "%s"'):format(mv, self.tempfile, target)
-          log:info("Moving tempfile to download dir: " .. command )
+          log:info("Moving tempfile to download dir: " .. command )          
           local console_msg, blah = os.execute(command)
           if (console_msg and console_msg > 0) then
             log:error(console_msg)
@@ -1055,7 +1072,7 @@ function Request:_do_callback(socket_error)
           end
         end
       end
-    end   
+    end       
   end
   
   -- close the connection and invalidate
