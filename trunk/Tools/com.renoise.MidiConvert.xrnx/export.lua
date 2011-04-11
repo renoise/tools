@@ -85,58 +85,72 @@ function export_build_data(plan)
   local total_instruments = #instruments
   local total_tracks = #tracks
   local total_sequence = #sequencer.pattern_sequence
-  local start = { pattern = 1, line = 1 }
+  local start = { pattern_index = 1, line_start = 1, line_end = nil }
   local constrain_to_selected = false
 
   -- Plan
   rns.transport:stop()
   if plan == 'selection' then
     constrain_to_selected = true
-    start.pattern = rns.selected_pattern_index
-    total_sequence = start.pattern
+    start.pattern_index = rns.selected_pattern_index
+    start.line_start, start.line_end = selection_line_range()
+    total_sequence = start.pattern_index
   else
     rns.transport.playback_pos = renoise.SongPos(1, 1)
   end
 
-  -- Instruments
+  -- Setup data table
   for i=1,total_instruments do
     data[i] = table.create()
   end
 
-  local i = 255 -- Empty instrument_value
-  local j = 0
-  -- Tracks
+  local i = 255 -- instrument_value, 255 means empty
+  local j = 0 -- e.g. data[i][j]
+
+  -- # TRACKS
   for track_index=1,total_tracks do
-    -- Note Columns
-    -- At least 1 (used to process master an send tracks)
+
+    -- Total must be 1 or more, used to process master and send tracks
     local total_note_columns = 1
     if tracks[track_index].visible_note_columns > 1 then
       total_note_columns = tracks[track_index].visible_note_columns
     end
+
+    -- # NOTE COLUMNS
     for column_index=1,total_note_columns do
+
       local pattern_current = -1
       local pattern_previous = sequencer.pattern_sequence[1]
-      local pattern_offset = 0
       local pattern_length = 0
-      -- Sequence
-      for sequence_index=start.pattern,total_sequence do
+      local pattern_offset = 0
+      if constrain_to_selected then
+        pattern_offset = 1 - start.line_start
+      end
+      local k = 1 -- Pattern counter
+
+      -- # SEQUENCE
+      for sequence_index=start.pattern_index,total_sequence do
+
+        local pattern_index = sequencer.pattern_sequence[sequence_index]
+        local current_pattern_track = rns.patterns[pattern_index].tracks[track_index]
+
         -- Calculate offset
         if pattern_current ~= sequence_index then
           pattern_current = sequence_index
-          if constrain_to_selected then
-            -- TODO:
-            -- Placeholder to modify pattern_offset / pos
-            -- Needs a negative number here
-            -- Could also modify start.ine here as well
-          elseif sequence_index > 1 then
+          if k > 1 then
             pattern_offset = pattern_offset + rns.patterns[pattern_previous].number_of_lines
           end
         end
-        local pattern_index = sequencer.pattern_sequence[sequence_index]
-        local current_pattern_track = rns.patterns[pattern_index].tracks[track_index]
-        pattern_length = rns.patterns[pattern_index].number_of_lines
-        -- Lines
-        for line_index=start.line,pattern_length do
+
+        -- Selection hack
+        if constrain_to_selected then
+          pattern_length = start.line_end
+        else
+          pattern_length = rns.patterns[pattern_index].number_of_lines
+        end
+
+        -- # LINES
+        for line_index=start.line_start,pattern_length do
 
           --------------------------------------------------------------------
           -- Data chug-a-lug start >>>
@@ -236,14 +250,17 @@ function export_build_data(plan)
           -- <<< Data chug-a-lug end
           --------------------------------------------------------------------
 
-        end -- Lines
+        end -- LINES #
 
         -- Insert terminating Note OFF
         if j > 0 and data[i][j].pos_end == 0 then
           data[i][j].pos_end = pattern_offset + pattern_length + rns.transport.lpb
         end
 
-      end -- Sequence
+        -- Increment pattern counter
+        k = k + 1
+
+      end -- SEQUENCE #
 
       -- Yield every column to avoid timeout nag screens
       renoise.app():show_status(export_status_progress())
@@ -251,8 +268,9 @@ function export_build_data(plan)
       dbug(("Process(build_data()) Track: %d; Column: %d")
         :format(track_index, column_index))
 
-    end -- Note Columns
-  end -- Tracks
+    end -- NOTE COLUMNS #
+
+  end -- TRACKS #
 end
 
 
