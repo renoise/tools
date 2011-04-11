@@ -41,8 +41,8 @@
   <!-- want feedback. -->
   <Author>taktik [taktik@renoise.com]</Author>
   
-  <!-- Main topic, tag of this tool, like "Pattern Editor, 'Sample Editor' and so on -->
-  <!-- as visible to the user -->  
+  <!-- Main topic, tag(s) of this tool, like "Pattern Editor, Sample Editor" and so on. -->
+  <!-- Separate multiple categories with commas. -->  
   <Category>Tool Development</Category>
 
   <!-- Name of the tool, as visible to the user -->
