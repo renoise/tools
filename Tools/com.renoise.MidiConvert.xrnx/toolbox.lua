@@ -26,7 +26,6 @@ function selection_line_range()
 end
 
 
-
 -- PHP style exlpode()
 function explode(div,str)
   if (div=='') then return false end

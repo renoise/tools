@@ -46,7 +46,7 @@ end
 
 
 --------------------------------------------------------------------------------
--- Menu Registration
+-- Menu Registration, Key Bindings
 --------------------------------------------------------------------------------
 
 renoise.tool():add_menu_entry {
@@ -57,4 +57,9 @@ renoise.tool():add_menu_entry {
 renoise.tool():add_menu_entry {
   name = "Pattern Editor:Selection:Export to MIDI...",
   invoke = function() export('selection') end
+}
+
+renoise.tool():add_keybinding {
+  name = "Pattern Editor:Play:Export Selection to MIDI",
+  invoke = function(repeated) export('selection') end
 }
