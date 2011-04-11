@@ -1,3 +1,32 @@
+-- Queries the selection range start and end lines
+function selection_line_range()
+
+  local line_start, line_end
+
+  local pattern_index = renoise.song().selected_pattern_index
+  local iter = renoise.song().pattern_iterator:lines_in_pattern(pattern_index)
+
+  for pos,line in iter do
+    for _,note_column in pairs(line.note_columns) do
+      if (note_column.is_selected) then
+        line_start = line_start or pos.line
+        line_end = line_end and math.max(line_end, pos.line) or pos.line
+      end
+    end
+
+    for _,effect_column in pairs(line.effect_columns) do
+      if (effect_column.is_selected) then
+        line_start = line_start or pos.line
+        line_end = line_end and math.max(line_end, pos.line) or pos.line
+      end
+    end
+  end
+
+  return line_start, line_end
+end
+
+
+
 -- PHP style exlpode()
 function explode(div,str)
   if (div=='') then return false end
