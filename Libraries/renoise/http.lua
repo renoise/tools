@@ -67,7 +67,7 @@ end
 
 ---## http_download_file ##---
 -- TODO replace/integrate with callback
-function HTTP:download_file(url, success, progress_callback)  
+function HTTP:download_file(url, progress_callback, success, complete, error)  
   --local header_request = HTTP:request(url, Request.HEAD, function(data)
   --  rprint(data)    
   --end)   
@@ -78,7 +78,9 @@ function HTTP:download_file(url, success, progress_callback)
     method=Request.GET, 
     save_file=true, 
     success=success,
-    progress=progress_callback
+    complete=complete,
+    error=error,
+    progress=progress_callback    
    })  
    
    return new_request

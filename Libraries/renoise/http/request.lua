@@ -25,6 +25,8 @@ require "renoise.http.json"
 require "renoise.http.xml_parser"
 require "renoise.http.xml_encoder"
 
+require "renoise.http.progress"
+
 
 -------------------------------------------------------------------------------
 --  Debugging
@@ -54,22 +56,33 @@ end
 
 -- Read a few bytes from every request
 read = function()
-
+  
   -- Loop through the Requests pool
   for k,request in ipairs(requests_pool) do
-  
-    if (request.paused) then      
-      request.progress:_set_status(Progress.PAUSED)
-      
+    
+    -- Paused  
+    if (request.paused and request.progress.status ~= Progress.PAUSED) then            
+      request.progress:_set_status(Progress.PAUSED)            
+      log:info("Request paused.")
       -- stop polling when the only request is paused
       if (#requests_pool == 1) then
         detach()
-      end
-            
+      end            
+    
+    -- Cancelled  
     elseif (request.cancelled) then          
       requests_pool:remove(k)
-    elseif not (request.complete) then      
-      request.complete = not (request:_read_content())
+      log:info("Request cancelled, removed from pool.")      
+    
+    -- Timeout
+    elseif (request.text_status == Request.TIMEOUT and request.wait > 0) then      
+      request.wait = request.wait - 1   
+      
+    -- Busy  
+    elseif not (request.complete) then          
+      request.complete = not (request:_read_content())  
+      
+    -- Complete
     else 
       log:info("Request complete, removed from pool.")
       requests_pool:remove(k)
@@ -84,127 +97,9 @@ read = function()
 end
 
 
--------------------------------------------------------------------------------
---  Progress class
--------------------------------------------------------------------------------
-
-class "Progress"
-
-Progress.INIT = "Initialized"
-Progress.QUEUED = "Queued"
-Progress.BUSY = "Downloading"
-Progress.DONE = "Completed"
-Progress.CANCELLED = "Cancelled"
-Progress.PAUSED = "Paused"
-
-
----## __init ##---
-function Progress:__init(callback)    
-  -- current amount of received bytes
-  self.bytes = 0
-  
-  self.content_length = nil
-  
-  -- current in percent
-  -- can be nil if total filesize is unknown
-  self.percent = nil
-  
-  -- elapsed time in ms
-  self.elapsed_time = 0
-  
-  self.start_time = nil
-  
-  self.paused_time = nil
-  
-  -- estimated time until completion in ms
-  -- can be nil if total filesize is unknown
-  self.eta = nil
-  
-  self.estimated_duration = nil
-  
-  -- init / queued / busy / done
-  self.status = Progress.INIT
-  
-  local progress_obj = self
-  
-  -- function to be called when new data has been received
-  self.callback = callback     
-end
-
-
----## get_status ##---
-function Progress:get_status()    
-  return self.status
-end
-
-
----## set_status ##---
-function Progress:_set_status(s)
-  self.status = s  
-  if (self.status == Progress.PAUSED) then
-    self.paused_time = os.clock()
-  elseif (self.status == Progress.BUSY and self.paused_time) then
-    local paused_duration = (os.clock() - self.paused_time)
-    self.elapsed_time = self.elapsed_time - paused_duration
-    self.paused_time = nil
-  end
-  self:_notify()
-end
-
-
----## set_eta ##---
--- Estimate the arrival time of the downloaded file.
-function Progress:_set_eta()
-  if (not self.percent) then 
-    return 
-  end
-  
-  -- time (s) per 1 percent
-  local time_per_percent = self.elapsed_time / self.percent
-  
-  -- eta = approximate time when 100% 
-  local eta = time_per_percent * 100 + 1
-  
-  -- average from last result
-  self.estimated_duration = ((self.estimated_duration or 0) + eta) / 2
-  self.eta = math.max(0, self.estimated_duration - self.elapsed_time)
-end
-
-
----## set_elapsed_time ##---
-function Progress:_set_elapsed_time()  
-  if (not self.start_time) then
-    self.start_time = os.clock()
-  end
-  self.elapsed_time = os.clock() - self.start_time  
-  self:_set_eta()
-end
-
-
----## notify ##---
--- Let the attached callback functions know something has changed.
-function Progress:_notify()
-  self.callback(self)
-end
-
-
----## set_percent ##---
--- Calculate the percentage of download completion.
-function Progress:_set_percent()
-  if (self.content_length and self.content_length > 0) then
-    self.percent = self.bytes / self.content_length * 100
-  end
-end
-
-
----## set_bytes ##---
--- Specify the current amount of received bytes.
--- Increased whenever the socket fills a new buffer.
-function Progress:_set_bytes(b)  
-  self.bytes = b
-  self:_set_elapsed_time()
-  self:_set_percent()
-  self:_notify()
+local function get_tools_root()    
+  local dir = renoise.tool().bundle_path
+  return dir:sub(1,dir:find("Tools")+5)      
 end
 
 
@@ -213,6 +108,9 @@ end
 -------------------------------------------------------------------------------
 
 class "Request"
+
+-- Library version
+Request.VERSION = "100418"
 
 -- Definition of HTTP request methods
 Request.GET = "GET"
@@ -240,11 +138,16 @@ Request.default_settings = table.create{
 
   -- A string containing the URL to which the request is sent.
   url = "",
+   
+  default_parts = {
+    scheme = "http",    
+    path = "/"
+  },
   
-  -- TODO (remove) save file to disk
+  -- Enable to save files to disk by default
   save_file = false,
   
-  default_download_folder = Util:get_tools_root() .."downloads",
+  default_download_folder = get_tools_root() .."downloads",
 
   -- When sending data to the server, use this content-type. Default is
   -- "application/x-www-form-urlencoded", which is fine for most cases. If you
@@ -260,10 +163,13 @@ Request.default_settings = table.create{
   header_timeout = 10000, 
   
   -- Set a local timeout (in milliseconds) for the request of the body.
-  timeout = 0, -- 0 means: until connection is closed
+  timeout = 1000, -- 0 means: until connection is closed
   
   -- Maximum number of automatic request retries.
   max_retries = 2,
+  
+  -- Read cycles to wait between retries
+  wait = 20,
 
   -- Default: "text"
   -- The type of data that you're expecting back from the server. If none is 
@@ -367,7 +273,10 @@ end
 ---## __init ##---
 --  A set of key/value pairs that configure the request. All options are 
 -- optional. A default can be set for any option with Request:setup().
-function Request:__init(custom_settings)
+function Request:__init(custom_settings)  
+  print("\n")
+  log:info(">>> NEW REQUEST <<<")  
+  
   custom_settings = custom_settings or table.create()
   
   -- First make a clone of the default settings
@@ -411,6 +320,10 @@ function Request:__init(custom_settings)
 
   -- Connection status
   self.complete = false
+  
+  self.paused = false
+  
+  self.cancelled = false
 
   -- Name/Value pairs to construct the header
   self.header_map = table.create()
@@ -433,12 +346,12 @@ function Request:__init(custom_settings)
   end    
 
   -- Possible values for the request status besides nil are
-  -- "TIMEOUT", "ERROR", "NOTMODIFIED" and "PARSERERROR".
-  self.text_status = nil 
+  -- "TIMEOUT", "ERROR", "NOTMODIFIED", "PARSERERROR", "CANCELERROR".
+  self.text_status = nil   
 
-  -- Build the URL based on request method
-  self.url = self.settings.url
-  self.url_parts = URL:parse(self.url)
+  -- Build the URL based on request method  
+  self.url = Util:trim(self.settings.url)
+  self.url_parts = URL:parse(self.url, self.settings.default_parts)  
 
   if (not table.is_empty(self.settings.data)) then
     if (self.settings.method == Request.GET) then
@@ -454,6 +367,13 @@ function Request:__init(custom_settings)
   end
   
   self.progress = Progress(self.settings.progress)  
+  
+  if (not self.url_parts or not self.url_parts.host 
+    or self.url_parts.host == "") then        
+    self.text_status = Request.ERROR    
+    self:_do_callback("Incorrect URL")
+    return false
+  end
   
   self:_enqueue()
 end
@@ -495,7 +415,7 @@ function Request:cancel()
   self:_do_callback("cancelled")      
   self.text_status = Request.CANCELERROR        
   self.progress:_set_status(Progress.CANCELLED)
-  log:warn("Request cancelled by user.")
+  log:warn("Request cancelled by user.")  
 end
 
 
@@ -604,10 +524,13 @@ end
 ---## create_query_string ##---
 -- Converts a parameter data table into a query string
 function Request:_create_query_string(data)
-  log:info("Create query string: ")
-  log:info(data)  
+  if (not table.is_empty(data)) then
+    log:info("Create query string: ")  
+    log:info(data)  
+  end
   return Util:http_build_query(data) 
 end
+
 
 ---## set_payload ##---
 -- specify the body of the request
@@ -615,11 +538,22 @@ function Request:_set_payload(data)
   self.payload = data
 end
 
+
 ---## get_payload ##---
 -- retrieve the body of the request
 function Request:_get_payload()
   return self.payload
 end
+
+
+---## get_user_agent_string ##---
+-- Generates a User-Agent string conforming to RFC 1945
+function Request:_get_user_agent_string()
+  local version = renoise.RENOISE_VERSION:gsub("%s", "")
+  local os = os.platform():lower():gsub("^%l", string.upper)
+  return string.format( "Renoise/%s (%s) HTTPLib/%s", version, os, Request.VERSION)   
+end
+
 
 ---## read_header ##---
 -- Sets up a connection and loads the HTTP header from the server
@@ -631,10 +565,17 @@ function Request:_read_header()
   if (self.redirects > 10) then
     return false, "Too many redirects detected."
   end
-  self.redirects = self.redirects + 1  
+  self.redirects = self.redirects + 1 
   
   -- Reparse the URL, in case there's a redirect
-  self.url_parts = URL:parse(self.url)
+  self.url_parts = URL:parse(self.url, self.settings.default_parts)
+  
+  if (not self.url_parts or not self.url_parts.host 
+    or self.url_parts.host == "") then        
+    self.text_status = Request.ERROR    
+    --self:_do_callback("Incorrect URL")
+    return false, "Incorrect URL"
+  end
   
   -- Create a SocketClient object and connect with the server
   self.client_socket, socket_error = renoise.Socket.create_client(
@@ -655,15 +596,12 @@ function Request:_read_header()
 
   -- Setup the header
   local header = string.format("%s %s HTTP/1.1\r\n",
-     self.settings.method, self.url)
+     self.settings.method, self.url_parts.path)
   self:_set_header("Host", self.url_parts.host) 
   self:_set_header("Content-Type", self.settings.content_type)  
   self:_set_header("Content-Length", content_length)  
   self:_set_header("Connection", "keep-alive")
-  self:_set_header("User-Agent",
-    string.format( "Renoise %s (%s)", 
-    renoise.RENOISE_VERSION, os.platform():lower() )
-  )
+  self:_set_header("User-Agent", self:_get_user_agent_string())
 
   -- Construct the HTTP request header
   for k,v in pairs(self.header_map) do
@@ -671,7 +609,7 @@ function Request:_read_header()
   end
   header = header .. "\r\n" -- mandatory empty line
 
-  log:info("=== REQUEST HEADERS ===")
+  log:info(("=== REQUEST HEADERS (%s) ==="):format(self.url))
   log:info(header)
 
   -- Send the header
@@ -693,7 +631,7 @@ function Request:_read_header()
   -- Read the response header
   local header_lines = table.create()
 
-  while true do
+  while true do  
     local line, socket_error = self.client_socket:receive(
       "*l", self.settings.header_timeout)
       
@@ -713,7 +651,7 @@ function Request:_read_header()
   log:info(header_lines)
   log:info()
   
-  self.response.header = Util:parse_message(header_lines:concat("\n"))
+  self.response.header = Util:parse_message(header_lines:concat("\n"))  
 
   if (self.response.header and #self.response.header > 0) then
     -- TODO check content-length and HTTP status code  
@@ -734,14 +672,18 @@ function Request:_read_header()
     if (self.response.header["Location"] and 
       #self.response.header["Location"] > 0
      -- and not self.response.header[1]:find("201") -- POST Created
-    ) then
-      local location = self.response.header["Location"]
-
-      -- Take care of a relative URL
-      local new_url_parts = URL:parse(location)
-      if (not new_url_parts.host) then
+    ) then      
+      local location = self.response.header["Location"]                              
+      log:info(("=== REDIRECTION TO (%s) ==="):format(location))
+      local new_url_parts = URL:parse(location)      
+      rprint(new_url_parts)
+      if (not new_url_parts.host) then        
+        if (location:sub(1,1) ~= "/") then
+          new_url_parts.path = "/"..location
+        end
+        -- Take care of a relative URL        
         new_url_parts.host = self.url_parts.host
-        new_url_parts.scheme = self.url_parts.scheme
+        new_url_parts.scheme = self.url_parts.scheme        
         location = URL:build(new_url_parts)
       end
       self.url = location
@@ -756,11 +698,12 @@ end
 
 ---## read_content ##---
 -- Loads the response from the server
-function Request:_read_content()
+function Request:_read_content()  
   assert(self.client_socket and self.response.header,
     "read_header failed or was not called")
   
   self.progress:_set_status( Progress.BUSY )
+  self.text_status = nil  
     
   local buffer, socket_error = 
     self.client_socket:receive("*all", self.settings.timeout)
@@ -804,19 +747,21 @@ function Request:_read_content()
     
   else
   -- timeout or error
+    self.text_status = Request.TIMEOUT
     
     if (socket_error == "timeout" and 
       self.retries < self.settings.max_retries) then
-      -- retry next time (TODO: give up at some point)
+      -- retry      
       self.retries = self.retries + 1
-      self.text_status = Request.TIMEOUT
+      self.wait = self.settings.wait
+            
       log:warn(string.format("read timeout (%s); attempt (#%s)", 
         self.url, self.retries))
+        
       return true
     else
       -- cancel request
-      log:warn(socket_error)
-      self.text_status = Request.ERROR
+      log:warn(socket_error)      
       self:_do_callback(socket_error)
       return false
     end
@@ -989,7 +934,25 @@ function Request:_write_file(data)
     if (type(data)=="table") then
       data = table.concat(data)
     end
-    self.handle:write(data)
+    if (io.type(self.handle) == "file") then
+      self.handle:write(data)
+    end
+end
+
+
+---## _get_ext_by_mime ##---
+function Request:_get_ext_by_mime(type)
+  if (type == "text/html") then
+    return ".htm"
+  elseif (type == "text/plain") then
+    return ".txt"
+  elseif (type == "application/xhtml+xml") then
+    return ".xhtml"
+  elseif (type == "application/xml") then
+    return ".xml"  
+  end
+  
+  return ""
 end
 
 
@@ -1000,7 +963,7 @@ function Request:_do_callback(socket_error)
   if (self.settings.save_file) then
     self:_write_file(self.cache)
   end
-  if (self.tempfile and io.exists(self.tempfile)) then
+  if (self.tempfile and io.exists(self.tempfile) and io.type(self.handle) == "file") then
     self.handle:flush()
     self.handle:close()
   end 
@@ -1008,10 +971,8 @@ function Request:_do_callback(socket_error)
   -- Print a small amount of received data in the terminal
   log:info(("=== CONTENT (%d bytes from %s) ==="):format(
     self.length, self.url))
-  if (self.length <= 32 * 1024) then
-    log:info(self.contents)
-  else
-    log:info(" *** too much content to display (> 32 kbytes) *** ")
+  if (#self.contents > 0 and self.length <= 32 * 1024) then
+    log:info(self.contents)  
   end
 
   if (socket_error) then
@@ -1041,13 +1002,23 @@ function Request:_do_callback(socket_error)
         --dir = dir:match("^(.*)/$")
         if (io.exists(dir)) then
           local path = self.url_parts.path       
-          local filename = Util:get_filename(path)
+          local filename = Util:get_filename(path)          
+          
           -- get filename from header          
-          local cd = self:_get_header("Content-Disposition")
-          log:info(cd)
+          local cd = self:_get_header("Content-Disposition")          
           if (cd and #cd > 0) then
+            log:info("Content-Disposition: " .. cd)
             filename = cd:match("filename=(.+)$") 
           end
+          
+          if (not filename) then
+            filename = self.url_parts.host
+          end
+          
+          -- add extension depending on content type
+          local type = self:_get_header("Content-Type")
+          type = type:match("^[^;]+")
+          filename = filename .. Request:_get_ext_by_mime(type)                      
           
           local target = dir..sep..filename          
           local i = 1          
@@ -1098,17 +1069,19 @@ function Request:_do_callback(socket_error)
   
   local xml_http_request = self;  
   
+  self.complete = true
+  self.progress:_set_status(Progress.DONE)  
+  
   -- invoke the external callbacks (if set)
   if (socket_error or parser_error) then
-    -- TODO handle more errors
+    -- TODO handle more errors    
     local error = socket_error or parser_error
     self.settings.error( xml_http_request, self.text_status, error)    
   else    
     self.settings.success( data, self.text_status, xml_http_request )
   end
 
-  self.settings.complete( xml_http_request, self.text_status )
-  self.progress:_set_status(Progress.DONE)
+  self.settings.complete( xml_http_request, self.text_status )   
 end
 
 
