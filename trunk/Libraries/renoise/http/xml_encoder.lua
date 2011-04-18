@@ -12,17 +12,19 @@ local TAB = "\t"
 function XmlEncoder:traverse(t, tabs)
   local closing_tabs = ""
   tabs = tabs or 0
-  local str = "" 
+  local buffer = table.create()
   
-  for k,v in pairs(t) do            
-    
+  for k,v in pairs(t) do                
+    if (type(k)=="number") then
+      k = "data"
+    end
     if (type(v)~="table" or not v[1]) then
-      str = str .. "\n"    
+      buffer:insert("\n")
     end
     for i=1,tabs do
-      str = str .. TAB       
+      buffer:insert(TAB)
     end    
-    if (type(v) == "table") then
+    if (type(v) == "table") then      
       for i=1,tabs do
         closing_tabs = closing_tabs .. TAB
       end
@@ -30,18 +32,20 @@ function XmlEncoder:traverse(t, tabs)
         for _,w in ipairs(v) do
           local temp = {}
           temp[k] = w
-          str = ("%s%s"):format(str,XmlEncoder:traverse(temp, tabs))
+          buffer:insert(XmlEncoder:traverse(temp, tabs))
         end
-      else
-        str = ("%s<%s>%s\n%s</%s>"):format(
-          str,k,XmlEncoder:traverse(v, tabs+1),closing_tabs,k)      
+      elseif (table.count(v) == 0) then
+         buffer:insert( ("<%s />"):format(k) )
+      else        
+        buffer:insert( ("<%s>%s\n%s</%s>"):format(
+          k,XmlEncoder:traverse(v, tabs+1),closing_tabs,k) )
       end
-    else 
-      str = ("%s<%s>%s</%s>"):format(str,k,v,k)      
+    else
+      buffer:insert( ("<%s>%s</%s>"):format(k,tostring(v),k) )
     end    
     
   end
-  return str
+  return buffer:concat()
 end
 
 function XmlEncoder:encode_table(t)

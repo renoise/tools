@@ -41,7 +41,7 @@ end
 function Log:output(level, str)
   if (str == nil) then
     str = ""
-  end
+  end  
   if (type(str) == 'table') then 
     print(string.format("[%s] table:", level))
     rprint(str)

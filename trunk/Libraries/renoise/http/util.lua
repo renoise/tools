@@ -31,9 +31,11 @@ end
 -------------------------------------------------------------------------------
 class 'Util'
 
+Util.root = "./"
 Util.CLRF = "\r\n"
 
 function Util:split_lines(str)
+  str = str or ""
   local t = {}
   local function helper(line) table.insert(t, line) return "" end
   helper((str:gsub("(.-)\r?\n", helper)))
@@ -154,11 +156,15 @@ function Util:http_build_query(data, prefix, sep, _key)
   return ret:concat(sep)
 end
 
+-- Get the filename portion of a path
 function Util:get_filename(path)
+  path = path or ""
   return path:match("([^/\\]+)$")
 end
 
+-- Get the extension from a file path
 function Util:get_extension(file)
+  file = file or ""
   return file:match("%.(%a+)$")
 end
 
@@ -167,41 +173,50 @@ function Util:trim(s)
 end
 
 function Util:split(str, pat)
-   str = str or ''
-   local t = {}  -- NOTE: use {n = 0} in Lua-5.0
-   local fpat = "(.-)" .. pat
-   local last_end = 1
-   local s, e, cap = str:find(fpat, 1)
-   while s do
-      if s ~= 1 or cap ~= "" then
-   table.insert(t,cap)
-      end
-      last_end = e+1
-      s, e, cap = str:find(fpat, last_end)
-   end
-   if last_end <= #str then
-      cap = str:sub(last_end)
-      table.insert(t, cap)
-   end
-   return t
+  str = str or ''
+  local t = {}  -- NOTE: use {n = 0} in Lua-5.0
+  local fpat = "(.-)" .. pat
+  local last_end = 1
+  local s, e, cap = str:find(fpat, 1)
+  while s do
+    if s ~= 1 or cap ~= "" then
+  table.insert(t,cap)
+    end
+    last_end = e+1
+    s, e, cap = str:find(fpat, last_end)
+  end
+  if last_end <= #str then
+    cap = str:sub(last_end)
+    table.insert(t, cap)
+  end
+  return t
 end
 
 -- Assumes "#comment" is a comment, "value  key_1 key_2"
-function Util:parse_config_file(filename)
-   local str = Util:read_file(Util.root .. filename)
-   local lines = Util:split_lines(str)
-   local t = {}
-   local k, v = nil
-   for _,l in ipairs(lines) do
-      if not l:find("^(%s*)#") then
-        local a = Util:split(l, "%s+")
-           for i=2,#a do
-              t[a[i]] = a[1]
-           end
-      end
-   end
-   return t
+function Util:parse_config_file(filename, reverse)  
+  reverse = true
+  local str = Util:read_file(Util.root .. filename)
+  local lines = Util:split_lines(str)
+  local t = {}   
+  for _,l in ipairs(lines) do
+    if not l:find("^(%s*)#") then
+      local a = Util:split(l, "%s+")          
+        if (reverse) then
+          for i=2,#a do
+            t[a[i]] = a[1]
+          end
+        else
+          t[a[1]] = {}
+          for i=2,#a do              
+            table.insert(t[a[1]], a[i])
+          end
+        end
+    end
+  end
+  return t
 end
+
+
 function Util:merge_tables(a,b)
   for k,v in pairs(a) do
     if (type(v)=='table') then
@@ -252,6 +267,9 @@ function Util:bytes_to_string(bytes)
   return table.concat(s)
 end
 
+-- Return the path of the "Tools" folder
+-- The behavior of this function in situations involving symlinks 
+--  or junctions was not determined.
 function Util:get_tools_root()    
   local dir = renoise.tool().bundle_path
   return dir:sub(1,dir:find("Tools")+5)      
