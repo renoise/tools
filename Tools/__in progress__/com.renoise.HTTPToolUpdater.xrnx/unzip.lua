@@ -69,7 +69,7 @@ file is successfully processed, however, the exit status is 1.)]]
 -- Depends on Info-ZIP UnZip, which is included with Unix/Linux/MacOSX.
 -- This Tool contains an UnZip executable for Windows.
 function unzip(path, destination)
-  local str = ("unzip %s -d %s"):format(path, destination)
+  local str = ('unzip "%s" -d "%s"'):format(path, destination)
   
   TRACE(str)
   
@@ -83,3 +83,21 @@ function unzip(path, destination)
   end
   return true
 end
+
+
+-- TRACE -----------
+
+--[[
+local DEBUG = true
+
+function TRACE(obj)
+  if (not DEBUG) then 
+    return
+  end
+  if (type(obj)=="table") then
+    rprint(obj)
+  else 
+    print(obj)
+  end
+end
+--]]
