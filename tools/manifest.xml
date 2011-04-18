@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<RenoiseScriptingTool doc_version="0">
+  <Name>InstallTool</Name>
+  <Id>nl.atomsk.Installtool</Id>
+  <Version>1.0</Version>
+  <ApiVersion>2</ApiVersion>
+  <Author>Bantai | marvin@renoise.com  </Author>
+  <Category>Testing</Category>
+  <Description>Test the Install Tool function</Description>
+  <Homepage>http://tools.renoise.com</Homepage>
+  <Icon/>
+</RenoiseScriptingTool>
