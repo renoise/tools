@@ -97,9 +97,17 @@ read = function()
 end
 
 
-local function get_tools_root()    
-  local dir = renoise.tool().bundle_path
-  return dir:sub(1,dir:find("Tools")+5)      
+-- Get Scripts Dir
+local function get_appdata_dir()    
+  --local dir = renoise.tool().bundle_path
+  local dir = os.currentdir()
+  local a,z 
+  if (os.platform == "LINUX") then
+    a,z = dir:find(".renoise")
+  else
+    a,z = dir:find("Renoise")
+  end
+  return dir:sub(1,z+1)
 end
 
 
@@ -147,7 +155,7 @@ Request.default_settings = table.create{
   -- Enable to save files to disk by default
   save_file = false,
   
-  default_download_folder = get_tools_root() .."downloads",
+  default_download_folder = get_appdata_dir() .."Downloads",
 
   -- When sending data to the server, use this content-type. Default is
   -- "application/x-www-form-urlencoded", which is fine for most cases. If you
@@ -675,8 +683,7 @@ function Request:_read_header()
     ) then      
       local location = self.response.header["Location"]                              
       log:info(("=== REDIRECTION TO (%s) ==="):format(location))
-      local new_url_parts = URL:parse(location)      
-      rprint(new_url_parts)
+      local new_url_parts = URL:parse(location)            
       if (not new_url_parts.host) then        
         if (location:sub(1,1) ~= "/") then
           new_url_parts.path = "/"..location
