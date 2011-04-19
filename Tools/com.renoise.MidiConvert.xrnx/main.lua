@@ -19,19 +19,23 @@ require "export"
 -- Debug print
 function dbug(msg)
   if dbug_mode == false then return end
-  if type(msg) == 'table' then rprint(msg)
+  local base_types = {
+    ["nil"]=true, ["boolean"]=true, ["number"]=true,
+    ["string"]=true, ["thread"]=true, ["table"]=true
+  }
+  if not base_types[type(msg)] then oprint(msg)
+  elseif type(msg) == 'table' then rprint(msg)
   else print(msg) end
 end
 
-
+-- Check timing model
 function current_song_format()
-  local ok = true; -- TODO: An actual check
-  if not ok then
+  if renoise.song().transport.timing_model ~= renoise.Transport.TIMING_MODEL_LPB then
     renoise.app():show_error("Error: This script will not run on old XRNS " ..
     "files with Tick Speed. Upgrade your song in the 'Songs Settings' tab.")
-    ok = false
+    return false
   end
-  return ok
+  return true
 end
 
 
