@@ -324,6 +324,9 @@ renoise.Transport.PLAYMODE_CONTINUE_PATTERN
 renoise.Transport.RECORD_PARAMETER_MODE_PATTERN
 renoise.Transport.RECORD_PARAMETER_MODE_AUTOMATION
 
+renoise.Transport.TIMING_MODEL_SPEED
+renoise.Transport.TIMING_MODEL_LPB
+
 
 -------- Functions
 
@@ -365,6 +368,13 @@ renoise.song().transport:cancel_sample_recording()
 -- Playing.
 renoise.song().transport.playing, _observable
   -> [boolean]
+
+-- Old school speed or new LPB timing used?
+-- With TIMING_MODEL_SPEED, tpl is used as speed factor. The lpb property 
+-- is unused then. With TIMING_MODEL_LPB, tpl is used as event rate for effects
+-- only and lpb defines relationship between pattern lines and beats.
+renoise.song().transport.timing_model
+  -> [read-only, enum=TIMING_MODEL]
 
 -- BPM, LPB, and TPL.
 renoise.song().transport.bpm, _observable
@@ -776,6 +786,9 @@ renoise.song().tracks[].devices[].is_maximized, _observable
 
 renoise.song().tracks[].devices[].active_preset, _observable
   -> [number, 0 when none is active or available]
+
+renoise.song().tracks[].devices[].active_preset_data
+  -> [string, raw xml data of the active preset]
 
 renoise.song().tracks[].devices[].presets[]
   -> [read-only, list of strings]
