@@ -65,13 +65,13 @@ renoise.tool():add_menu_entry(entry)
 -- INSTALL & UNZIP TEST --
 entry.name = "Main Menu:Tools:"..TITLE..":Install a Tool (old)..."
 entry.invoke = function()   
-  unzip_test()
+  unzip_test()  
 end
 renoise.tool():add_menu_entry(entry)  
 
 entry.name = "Main Menu:Tools:"..TITLE..":Install a Tool (new)..."
 entry.invoke = function()   
-  unzip_test(true)
+  unzip_test(true, true)
 end
 renoise.tool():add_menu_entry(entry)  
 
@@ -90,7 +90,6 @@ end
 renoise.tool():add_menu_entry(entry)  
 entry.active = function() return true end    
 
-
 -------------------------------------------------------------------------------
 --  Zip functions
 -------------------------------------------------------------------------------
@@ -101,8 +100,9 @@ require "unzip"
 -- Unzips the Tool within the Tools folder, in
 -- a subfolder with the filename of the XRNX.
 function unzip_tool(path)
+  path = path:gsub("\\", "/")
   local p = URL:parse_path(path) 
-  local filename = p[#p]
+  local filename = p[#p]  
   local destination = get_tools_root() .. filename 
   return unzip(path, destination)
 end
@@ -157,18 +157,19 @@ function scan_tool_dirs(path, rel)
 end
 
 function parse_xml(file)
- local obj,err = XmlParser:ParseXmlFile(file)
- if(not err) then
-   return obj
- else
-   TRACE(err)    
+  local obj,err = XmlParser:ParseXmlFile(file)
+  if(not err) then
+    return obj
+  else
+    TRACE(err)    
   end
 end
 
-function get_tools_root()
- local dir = renoise.tool().bundle_path
- local root = dir:sub(1,dir:find("Tools")+5)
- return root
+function get_tools_root()   
+  --local dir = renoise.tool().bundle_path -- uncomment this line to see error
+  local dir = os.currentdir()
+  local root = dir:sub(1,dir:find("Tools")+5)   
+  return root 
 end
 
 local versions = nil
@@ -484,26 +485,23 @@ function json_view_test()
 end
 
 
-
 --------------------------------------------------------------
 -- INSTALL TOOL / UNZIP TEST
 --------------------------------------------------------------
 
 -- unzip_tool() has been superseded by renoise.app():install_tool()
-function unzip_test(internal)  
+function unzip_test(internal, absolute)  
   local xrnx = "com.renoise.UnzipTestSubject.xrnx"       
   
-  local SEP = "/"
-  if (os.platform() == "WINDOWS") then
-    SEP = "\\"
-  end
-  
   -- relative path
-  local path = "temp"..SEP..xrnx
+  local path = 'temp/'..xrnx
   
   -- absolute path
-  -- path = os.currentdir().. SEP..path
+  if (absolute) then
+    path = os.currentdir()..path
+  end
   
+  path = path:gsub("\\","/")
   print(path)
   
   if (not io.exists(path)) then
@@ -511,13 +509,15 @@ function unzip_test(internal)
     return false
   end
   
-  local ok, err = ""
-  if (not internal) then
+  local ok = false
+  local err = ""
+  
+  if (not internal) then        
     ok, err = unzip_tool(path)
     if (not ok) then 
       renoise.app():show_error("Unzip error: " .. err)  
     end
-  else 
+  else           
     ok = renoise.app():install_tool(path)
     if (not ok) then
       renoise.app():show_error("Error installing Tool")
@@ -525,7 +525,9 @@ function unzip_test(internal)
   end
   
   if (ok) then
-    renoise.app():open_path(Util:get_tools_root()..xrnx)        
+    local dir = get_tools_root()..xrnx
+    print(dir)
+    renoise.app():open_path(dir)        
   end  
 end
 
