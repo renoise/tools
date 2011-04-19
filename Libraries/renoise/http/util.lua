@@ -266,11 +266,3 @@ function Util:bytes_to_string(bytes)
   end
   return table.concat(s)
 end
-
--- Return the path of the "Tools" folder
--- The behavior of this function in situations involving symlinks 
---  or junctions was not determined.
-function Util:get_tools_root()    
-  local dir = renoise.tool().bundle_path
-  return dir:sub(1,dir:find("Tools")+5)      
-end
