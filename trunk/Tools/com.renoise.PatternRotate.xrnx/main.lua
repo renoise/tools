@@ -6,6 +6,8 @@ com.renoise.PatternRotate.xrnx/main.lua
 
 require "pattern_line_tools"
 
+local song = renoise.song
+
 
 -- ranges
 
@@ -75,11 +77,11 @@ function rotate(shift_amount, range_mode, shift_automation)
   assert(type(shift_automation) == "boolean" and 
     "Internal Error: Unexpected shift_automation argument")
   
-  local patterns = renoise.song().patterns
-  local tracks = renoise.song().tracks
+  local patterns = song().patterns
+  local tracks = song().tracks
   
-  local selected_track_index = renoise.song().selected_track_index
-  local selected_pattern_index = renoise.song().selected_pattern_index
+  local selected_track_index = song().selected_track_index
+  local selected_pattern_index = song().selected_pattern_index
     
   
   ----- get the processing pattern & track range
@@ -139,7 +141,7 @@ function rotate(shift_amount, range_mode, shift_automation)
     ---- rotate each track in the pattern in the processing range
     
     for track_index = track_start,track_end do
-      local track = pattern.tracks[track_index] 
+      local track = pattern:track(track_index) 
       
       -- copy relevant lines to a temp array first (pattern lines are references)
 
@@ -179,7 +181,7 @@ function rotate(shift_amount, range_mode, shift_automation)
         if (process_selection) then
           -- copy column by column, checking the selection state
           for index,note_column in pairs(src_line.note_columns) do
-            local dest_note_column = dest_line.note_columns[index]
+            local dest_note_column = dest_line:note_column(index)
             
             if (dest_note_column.is_selected) then
               copy_note_column(note_column, dest_note_column)
@@ -187,7 +189,7 @@ function rotate(shift_amount, range_mode, shift_automation)
           end
           
           for index,effect_column in pairs(src_line.effect_columns) do
-            local dest_effect_column = dest_line.effect_columns[index]
+            local dest_effect_column = dest_line:effect_column(index)
             
             if (dest_effect_column.is_selected) then
               copy_effect_column(effect_column, dest_effect_column)
@@ -352,10 +354,8 @@ function show_dialog()
       rotate(preferences.shift_amount.value)
     
     elseif (key.name == "tab") then
-      local song = renoise.song()
-      
-      song.selected_track_index = rotate_index(song.selected_track_index,
-        (key.modifiers == "shift") and -1 or 1, 1, #song.tracks
+      song().selected_track_index = rotate_index(song().selected_track_index,
+        (key.modifiers == "shift") and -1 or 1, 1, #song().tracks
       )
           
     else
