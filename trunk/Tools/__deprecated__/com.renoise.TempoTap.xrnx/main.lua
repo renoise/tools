@@ -138,6 +138,18 @@ end
 
 --------------------------------------------------------------------------------
 
+-- set_text
+
+local function set_text(str)
+  renoise.app():show_status("[TempoTap] " .. str)
+  if (vb) then
+    vb.views.bpm_text.text = str    
+  end    
+end
+
+
+--------------------------------------------------------------------------------
+
 -- tap
 
 local function tap()
@@ -193,17 +205,17 @@ local function tap()
       field = "%d"
     end  
     
-    vb.views.bpm_text.text = string.format("Tempo: ".. 
-      field .. " BPM [%d/%d]", tempo, counter, #timetable)
+    set_text(string.format("Tempo: ".. 
+      field .. " BPM [%d/%d]", tempo, counter, #timetable))
     
     if (counter == 1 and options.auto_save_bpm.value) then 
       save_bpm(tempo)
     end  
 
   else 
-    vb.views.bpm_text.text = string.
+    set_text(string.
       format("Keep tapping [%d/%d]...", counter, 
-        options.sensitivity.value)
+        options.sensitivity.value))
   end
 end  
 
