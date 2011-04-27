@@ -36,7 +36,7 @@ function new_song_loaded()
   if dialog.visible then
     dialog:close()
     if renoise.tool().app_new_document_observable:has_notifier(new_song_loaded)
-  then
+    then
       renoise.tool().app_new_document_observable:add_notifier(new_song_loaded)
     end
   end
@@ -62,16 +62,17 @@ function show_operator_parameters(int_wave_type)
     int_wave_type == WAVE_PULSE or int_wave_type == WAVE_TANGENT
   vb.views.colWaveTable.visible = int_wave_type == WAVE_WAVETABLE
   vb.views.rowInvert.visible = int_wave_type ~= WAVE_NOISE
-  vb.views.rowMultiplier.visible = (int_wave_type ~= WAVE_NOISE and int_wave_type ~= WAVE_MORPHER)
+  vb.views.rowMultiplier.visible = (int_wave_type ~= WAVE_NOISE and 
+    int_wave_type ~= WAVE_MORPHER)
   vb.views.rowSources.visible = int_wave_type == WAVE_MORPHER
   vb.views.rowMorphingTime.visible = int_wave_type == WAVE_MORPHER
   
   if int_wave_type == WAVE_VARIATOR then
     vb.views.txtMultiplier.min = 0
-    vb.views.txtMultiplier.max = 1	
+    vb.views.txtMultiplier.max = 1  
   else
     vb.views.txtMultiplier.min = 0
-    vb.views.txtMultiplier.max = 10	  
+    vb.views.txtMultiplier.max = 10    
   end
 
 end
@@ -86,7 +87,7 @@ function change_tab(int_operator_number)
   
   if not wave_is_set(int_operator_number) then
     initialize_wave(int_operator_number)
-	--print('init'..tostring(int_operator_number))
+    --print('init'..tostring(int_operator_number))
   end
 
   local real_amplitude = array_real_amplitudes[int_operator_number]
@@ -101,7 +102,11 @@ function change_tab(int_operator_number)
   vb.views.sldAmplitude.value = real_amplitude
   
   if int_wave_type ~= WAVE_WAVETABLE then
-    if real_width ~= nil and int_wave_type ~= WAVE_VARIATOR and int_wave_type ~= WAVE_MORPHER then
+    if 
+      real_width ~= nil and 
+      int_wave_type ~= WAVE_VARIATOR and 
+      int_wave_type ~= WAVE_MORPHER 
+    then
       vb.views.sldWidth.value = real_width
     else
       vb.views.sldWidth.value = 0.5
@@ -124,7 +129,7 @@ function change_tab(int_operator_number)
   vb.views.cmbSources2.items = generate_modulator_matrix()
 
   if array_int_modulators[int_operator_number] > 0 then
-  --print("OP#" ..int_operator_number .. " modulates OP#" .. array_int_modulators[int_operator_number])
+    --print("OP#" ..int_operator_number .. " modulates OP#" .. array_int_modulators[int_operator_number])
     vb.views.cmbModulate.value = array_int_modulators[int_operator_number] + 1
   else
     --print("OP#" .. int_operator_number .. " does not modulate")
@@ -133,21 +138,23 @@ function change_tab(int_operator_number)
   
   if (int_wave_type_selected == WAVE_MORPHER) then
   
-    local bool_is_modulated, arr_int_modulators, int_modulators = is_modulated(int_operator_number)
-	
+    local bool_is_modulated, arr_int_modulators, 
+      int_modulators = is_modulated(int_operator_number)
+  
   
     if bool_is_modulated then
-	  if arr_int_modulators[1] ~= nil then
+    if arr_int_modulators[1] ~= nil then
         vb.views.cmbSources1.value = arr_int_modulators[1] + 1
-	  end
-	  if arr_int_modulators[2] ~= nil then
+    end
+    if arr_int_modulators[2] ~= nil then
         vb.views.cmbSources2.value = arr_int_modulators[2] + 1
-	  end
-	end
+    end
+  end
   
   end
   
-  vb.views.cmbModulate.active = can_modulate(int_operator_number) or is_modulator(int_operator_number)
+  vb.views.cmbModulate.active = can_modulate(int_operator_number) or 
+    is_modulator(int_operator_number)
   
 end
 
@@ -167,24 +174,25 @@ function change_wave(int_wave_number,int_wave_type_new)
   if int_wave_type_new == WAVE_NONE then
   
     -- the operator has been disabled
-	local bool_is_modulated, arr_modulators, int_modulators = is_modulated(int_wave_number)
-	
-	if bool_is_modulated then
-	
-	  for int_modulator = 1, int_modulators do
-	  
-    	--print("OP#" .. int_wave_number .. " is modulated by OP#" .. arr_modulators[int_modulator]);
-	    array_int_modulators[arr_modulators[int_modulator]] = 0 
-        --print("modulation of OP#" .. arr_modulators[int_modulator] .. " changed to NONE")	  
-	  
-	  end
-	
-	end
-	  
+  local bool_is_modulated, arr_modulators, 
+    int_modulators = is_modulated(int_wave_number)
+  
+  if bool_is_modulated then
+  
+    for int_modulator = 1, int_modulators do
+    
+      --print("OP#" .. int_wave_number .. " is modulated by OP#" .. arr_modulators[int_modulator]);
+      array_int_modulators[arr_modulators[int_modulator]] = 0 
+      --print("modulation of OP#" .. arr_modulators[int_modulator] .. " changed to NONE")    
+    
+    end
+  
+  end
+    
   elseif int_wave_type_new == WAVE_WAVETABLE then
     if array_instrument_number[int_wave_number] == 0 then
-    generate_instrument_matrix()
-    generate_sample_matrix(0)
+      generate_instrument_matrix()
+      generate_sample_matrix(0)
     end
     vb.views.cmbInstruments.value = array_instrument_number[int_wave_number] + 1
     vb.views.cmbSamples.value = array_sample_number[int_wave_number] + 1
@@ -206,10 +214,10 @@ function generate_modulator_matrix()
   for int_operator = 1, OPERATORS do
   
     local int_wave = 1
-	
-	if array_waves[int_operator] then
-	  int_wave = array_waves[int_operator]	
-	end
+    
+    if array_waves[int_operator] then
+      int_wave = array_waves[int_operator]  
+    end
   
     array_string_modulators[int_count] = "Op " .. 
       tostring(int_operator) .. 
@@ -217,7 +225,8 @@ function generate_modulator_matrix()
       
      int_count = int_count + 1
   
-  end
+    end
+    
   return array_string_modulators
 end
 
@@ -225,17 +234,22 @@ end
 --------------------------------------------------------------------------------
 
 function generate_instrument_matrix()
+
   local int_instruments = table.getn(renoise.song().instruments)
   local int_count
   local array_string_return = {}
+
   for int_count = 1, int_instruments do
     local string_name = renoise.song().instruments[int_count].name
     if string_name == "" then
       string_name = "Instrument #" .. tostring(int_count-1)
     end
+
     array_string_return[int_count+1] = string_name
   end
+
   array_string_return[1] = "-- Select --"
+
   return array_string_return
 end
 
@@ -271,39 +285,39 @@ end
 
 function note_number_to_string(int_note)
 
-    local string_note = ""
-  
-    local int_remainder = int_note % 12
-    
-    if int_remainder == 1 then
-      string_note = string_note .. "C-"
-    elseif int_remainder == 2 then
-      string_note = string_note .. "C#"
-    elseif int_remainder == 3 then
-      string_note = string_note .. "D-"
-    elseif int_remainder == 4 then
-      string_note = string_note .. "D#"
-    elseif int_remainder == 5 then
-      string_note = string_note .. "E-"
-    elseif int_remainder == 6 then
-      string_note = string_note .. "F-"
-    elseif int_remainder == 7 then
-      string_note = string_note .. "F#"
-    elseif int_remainder == 8 then
-      string_note = string_note .. "G-"
-    elseif int_remainder == 9 then
-      string_note = string_note .. "G#"
-    elseif int_remainder == 10 then
-      string_note = string_note .. "A-"
-    elseif int_remainder == 11 then
-      string_note = string_note .. "A#"
-    elseif int_remainder == 0 then
-      string_note = string_note .. "B-"
-    end
-    
-    local string_octave = tostring(math.floor(int_note / 12))
+  local string_note = ""
 
-	return string_note .. string_octave
+  local int_remainder = int_note % 12
+  
+  if int_remainder == 1 then
+    string_note = string_note .. "C-"
+  elseif int_remainder == 2 then
+    string_note = string_note .. "C#"
+  elseif int_remainder == 3 then
+    string_note = string_note .. "D-"
+  elseif int_remainder == 4 then
+    string_note = string_note .. "D#"
+  elseif int_remainder == 5 then
+    string_note = string_note .. "E-"
+  elseif int_remainder == 6 then
+    string_note = string_note .. "F-"
+  elseif int_remainder == 7 then
+    string_note = string_note .. "F#"
+  elseif int_remainder == 8 then
+    string_note = string_note .. "G-"
+  elseif int_remainder == 9 then
+    string_note = string_note .. "G#"
+  elseif int_remainder == 10 then
+    string_note = string_note .. "A-"
+  elseif int_remainder == 11 then
+    string_note = string_note .. "A#"
+  elseif int_remainder == 0 then
+    string_note = string_note .. "B-"
+  end
+  
+  local string_octave = tostring(math.floor(int_note / 12))
+
+  return string_note .. string_octave
 
 end
 
@@ -311,6 +325,7 @@ function generate_note_matrix(int_start, int_end)
 
   local array_string_notes = {}
   local int_count = 1
+  
   for int_start_note = int_start, int_end do
   
     array_string_notes[int_count] = note_number_to_string(int_start_note)    
@@ -340,7 +355,6 @@ function reset_gui()
   vb.views.chkInvert.value = false
   vb.views.chkAutoGenerate.value = false
 end
-
 
 
 --------------------------------------------------------------------------------
@@ -388,14 +402,14 @@ function show_dialog()
         width = TEXT_LABEL_WIDTH
       },
       vb:popup {
-	    id = "cmbStartNote",
+      id = "cmbStartNote",
         width = CONTROL_WIDTH,
         value = int_start_note,
         items = generate_note_matrix(1,120),
         notifier = function(new_index)
-		  if(new_index > int_end_note) then
-			vb.views.cmbEndNote.value = new_index
-		  end
+          if(new_index > int_end_note) then
+            vb.views.cmbEndNote.value = new_index
+          end
           int_start_note = new_index
           int_frames = SAMPLE_FREQUENCY / note_to_frequency(new_index)
           if toggle_auto_generate then
@@ -412,14 +426,14 @@ function show_dialog()
         width = TEXT_LABEL_WIDTH
       },
       vb:popup {
-	    id = "cmbEndNote",
+      id = "cmbEndNote",
         width = CONTROL_WIDTH,
         value = int_end_note,
         items = generate_note_matrix(1,120),
         notifier = function(new_index)
-		  if(new_index < int_start_note) then
-			vb.views.cmbStartNote.value = new_index
-		  end
+          if (new_index < int_start_note) then
+            vb.views.cmbStartNote.value = new_index
+          end
           int_end_note = new_index
           int_frames = SAMPLE_FREQUENCY / note_to_frequency(new_index)
           if toggle_auto_generate then
@@ -596,9 +610,9 @@ function show_dialog()
         notifier = function(real_value)
           if real_value ~= nil then
             array_variant_parameters[int_operator_selected] = real_value
-               if toggle_auto_generate then
-                 generate()
-               end
+             if toggle_auto_generate then
+               generate()
+             end
           end
         end
       }
@@ -633,28 +647,29 @@ function show_dialog()
         items = generate_modulator_matrix(),
         value = 1,
         notifier = function(new_index)
-		
-		  local int_new_wannabe_modulated = new_index - 1
-		  
-		  if 
-		    not can_be_modulated(int_new_wannabe_modulated) and 
-			not is_modulated_by(int_new_wannabe_modulated,int_operator_selected) 
-		  then
-            renoise.app():show_status("An invalid operator has been selected. Selection will be reset.");
-		    int_new_wannabe_modulated = 0
-			vb.views.cmbModulate.value = 1			
-			return
-		  end
-		  
-		  --print("now OP#" .. int_operator_selected .. " modulates OP#" .. int_new_wannabe_modulated);
-		  array_int_modulators[int_operator_selected] = int_new_wannabe_modulated
-		  
-		  local bool_is_modulator, int_modulated = is_modulator(int_new_wannabe_modulated)
-		  if(bool_is_modulator) then
-			  array_int_modulators[int_modulated] = 0
-			  --print("now OP#" .. int_modulated .. " is no more modulated by OP#" .. int_new_wannabe_modulated)
-		  end
-		  
+        
+          local int_new_wannabe_modulated = new_index - 1
+          
+          if 
+            not can_be_modulated(int_new_wannabe_modulated) and 
+            not is_modulated_by(int_new_wannabe_modulated,int_operator_selected) 
+          then
+            renoise.app():show_status("An invalid operator has been selected. "..
+              "Selection will be reset.");
+            int_new_wannabe_modulated = 0
+            vb.views.cmbModulate.value = 1      
+            return
+          end
+        
+          --print("now OP#" .. int_operator_selected .. " modulates OP#" .. int_new_wannabe_modulated);
+          array_int_modulators[int_operator_selected] = int_new_wannabe_modulated
+          
+          local bool_is_modulator, int_modulated = is_modulator(int_new_wannabe_modulated)
+          if (bool_is_modulator) then
+            array_int_modulators[int_modulated] = 0
+            --print("now OP#" .. int_modulated .. " is no more modulated by OP#" .. int_new_wannabe_modulated)
+          end
+        
           if toggle_auto_generate then
             generate()
           end
@@ -684,7 +699,7 @@ function show_dialog()
         -- generate notifier name associated with the 
         -- previously and newly selected instrument
         local samples_notifier_name = 
-        ("sample_list_changed_in_instrument_%d"):format(instrument_index)
+          ("sample_list_changed_in_instrument_%d"):format(instrument_index)
         local last_samples_notifier_name = 
           ("sample_list_changed_in_instrument_%d"):format(last_instrument)
       
@@ -804,92 +819,82 @@ function show_dialog()
         end
       }
     }
-	
-	local row_sources = vb:row {
-	
-	  id = "rowSources",
-      width = CONTENT_WIDTH,
-	  
-	  vb:popup {
-	    id = "cmbSources1",
-		items = generate_modulator_matrix(),
-		
-		notifier = function(new_index)
-		
-		  local bool_is_modulator, int_modulator = is_modulator(new_index-1)
-		
-		  print("1",new_index == vb.views.cmbSources2.value, new_index - 1 == int_operator_selected, bool_is_modulator,int_modulator ~= (new_index-1))
-		  
-		  if 
-		    new_index == vb.views.cmbSources2.value or 
-			new_index - 1 == int_operator_selected or
-			(bool_is_modulator and int_modulator ~= (int_operator_selected)) then
-		  
-            renoise.app():show_status("An invalid operator has been selected. Selection will be reset.");
-			vb.views.cmbSources1.value = 1			
-		  
-		  end
+  
+  local row_sources = vb:row {
+  
+    id = "rowSources",
+    width = CONTENT_WIDTH,
+    vb:popup {
+      id = "cmbSources1",
+      items = generate_modulator_matrix(),
+      notifier = function(new_index)
+        local bool_is_modulator, int_modulator = is_modulator(new_index-1)
+    
+        -- print("1",new_index == vb.views.cmbSources2.value, new_index - 1 == int_operator_selected, bool_is_modulator,int_modulator ~= (new_index-1))
+      
+        if 
+          new_index == vb.views.cmbSources2.value or 
+          new_index - 1 == int_operator_selected or
+          (bool_is_modulator and int_modulator ~= (int_operator_selected)) 
+        then
+          renoise.app():show_status("An invalid operator has been selected. Selection will be reset.");
+          vb.views.cmbSources1.value = 1      
+        end
+        
+        array_int_modulators[vb.views.cmbSources1.value-1] = int_operator_selected
+      end
+    },
+    
+    vb:text {
+      text = "=>"
+    },
 
-  	      array_int_modulators[vb.views.cmbSources1.value-1] = int_operator_selected
-		  
-		end
-	  },
-	  
-	  vb:text {
-	    text = "=>"
-	  },
-
-	  vb:popup {
-	    id = "cmbSources2",
-		items = generate_modulator_matrix(),
-
-		notifier = function(new_index)
-			
-		  local bool_is_modulator, int_modulator = is_modulator(new_index-1)
-		  
-		  print("2",new_index == vb.views.cmbSources1.value, new_index - 1 == int_operator_selected, bool_is_modulator,int_modulator ~= (new_index-1))
-		
-		  if 
-		    new_index == vb.views.cmbSources1.value or 
-			new_index - 1 == int_operator_selected or
-			(bool_is_modulator and int_modulator ~= (int_operator_selected)) then
-		  
-            renoise.app():show_status("An invalid operator has been selected. Selection will be reset.");
-			vb.views.cmbSources2.value = 1			
-		  
-		  end
-		  
-		  array_int_modulators[vb.views.cmbSources2.value-1] = int_operator_selected
-		
-		end
-
-  	  }
-	
-	}
-	
-	local label_morphing_time = vb:text {
-	  id = "lblMorphingTime",
-	  text = "Morph. time",
-      width= TEXT_LABEL_WIDTH
-	}
-	
-	local slider_morphing_time = vb:slider {
-	  id = "sldMorphingTime",
-	  min = 0,
-	  max = 1,
-	  value = 1,
-      width = CONTROL_WIDTH,
-	  notifier = function(real_new_value)
-	    array_morphing_times[int_operator_selected] = real_new_value
-	  end
-	}
-	
-	local row_morphing_time = vb:row {
-	  id = "rowMorphingTime",
-	  width = CONTENT_WIDTH,
-	  label_morphing_time,
-	  slider_morphing_time
-	}
+    vb:popup {
+      id = "cmbSources2",
+      items = generate_modulator_matrix(),
+      notifier = function(new_index)
+        local bool_is_modulator, int_modulator = is_modulator(new_index-1)
+      
+        --print("2",new_index == vb.views.cmbSources1.value, new_index - 1 == int_operator_selected, bool_is_modulator,int_modulator ~= (new_index-1))
+    
+        if 
+          new_index == vb.views.cmbSources1.value or 
+          new_index - 1 == int_operator_selected or
+          (bool_is_modulator and int_modulator ~= (int_operator_selected)) 
+        then
+          renoise.app():show_status("An invalid operator has been selected. Selection will be reset.");
+          vb.views.cmbSources2.value = 1      
+        end
+        
+        array_int_modulators[vb.views.cmbSources2.value-1] = int_operator_selected
+        
+      end
+    }
+  }
+  
+  local label_morphing_time = vb:text {
+    id = "lblMorphingTime",
+    text = "Morph. time",
+    width = TEXT_LABEL_WIDTH
+  }
+  
+  local slider_morphing_time = vb:slider {
+    id = "sldMorphingTime",
+    min = 0,
+    max = 1,
+    value = 1,
+    width = CONTROL_WIDTH,
+    notifier = function(real_new_value)
+      array_morphing_times[int_operator_selected] = real_new_value
+    end
+  }
+  
+  local row_morphing_time = vb:row {
+    id = "rowMorphingTime",
+    width = CONTENT_WIDTH,
+    label_morphing_time,
+    slider_morphing_time
+  }
   
     local column_gui = vb:column {
       id = "columnGui",
@@ -902,8 +907,8 @@ function show_dialog()
       row_width,
       row_invert,
       row_frequency_multiplier,
-	  row_sources,
-	  row_morphing_time,
+      row_sources,
+      row_morphing_time,
       row_modulate
     }
   
@@ -948,7 +953,7 @@ function show_dialog()
       height = DIALOG_BUTTON_HEIGHT,
       tooltip = "Reset all data",
       notifier = function()
-    
+
         if renoise.app():show_prompt(
           "Parameters Reset",
             "Are you sure you want to reset all parameters data?",{"Yes","No"}

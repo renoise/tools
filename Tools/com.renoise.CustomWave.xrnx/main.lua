@@ -218,24 +218,24 @@ end
 
 function can_modulate(int_wannabe_modulator)
 
-    if int_wannabe_modulator == nil then
-	  return false
-	end
+  if int_wannabe_modulator == nil then
+    return false
+  end
 
-	local bool_is_set = wave_is_set(int_wannabe_modulator)
-	local bool_is_active = array_waves[int_wannabe_modulator] ~= WAVE_NONE
-	local bool_is_not_modulator = not is_modulator(int_wannabe_modulator) 
-	
-	--[[print("Can OP#" .. int_wannabe_modulator .. " be a modulator?", 
-	  "is set: ", bool_is_set, 
+  local bool_is_set = wave_is_set(int_wannabe_modulator)
+  local bool_is_active = array_waves[int_wannabe_modulator] ~= WAVE_NONE
+  local bool_is_not_modulator = not is_modulator(int_wannabe_modulator) 
+  
+  --[[print("Can OP#" .. int_wannabe_modulator .. " be a modulator?", 
+    "is set: ", bool_is_set, 
       "is active: ", bool_is_active, 
-	  "is not a modulator: ", bool_is_not_modulator
-	)]]--
-	
-    return 
-      bool_is_set and 
-      bool_is_active and 
-      true --bool_is_not_modulator
+    "is not a modulator: ", bool_is_not_modulator
+  )]]--
+  
+  return 
+    bool_is_set and 
+    bool_is_active and 
+    true --bool_is_not_modulator
 
 end
 
@@ -244,30 +244,30 @@ end
 
 function can_be_modulated(int_wannabe_modulated)
 
-    if int_wannabe_modulated == nil then
-	  return false
-	end
+  if int_wannabe_modulated == nil then
+    return false
+  end
 
-    local bool_is_not_current_operator = int_wannabe_modulated ~= int_operator_selected
-	local bool_is_set = wave_is_set(int_wannabe_modulated)
-	local bool_is_active = array_waves[int_wannabe_modulated] ~= WAVE_NONE
-	local bool_is_modulator, int_modulator = is_modulator(int_wannabe_modulated) 
-	local bool_is_not_modulated = not is_modulated(int_wannabe_modulated) 
-	
-	--[[print("Can OP#" .. int_wannabe_modulated .. " be a modulator?", 
-	  "is not the current operator: ", bool_is_not_current_operator,
-	  "is set: ", bool_is_set, 
+  local bool_is_not_current_operator = int_wannabe_modulated ~= int_operator_selected
+  local bool_is_set = wave_is_set(int_wannabe_modulated)
+  local bool_is_active = array_waves[int_wannabe_modulated] ~= WAVE_NONE
+  local bool_is_modulator, int_modulator = is_modulator(int_wannabe_modulated) 
+  local bool_is_not_modulated = not is_modulated(int_wannabe_modulated) 
+  
+  --[[print("Can OP#" .. int_wannabe_modulated .. " be a modulator?", 
+    "is not the current operator: ", bool_is_not_current_operator,
+    "is set: ", bool_is_set, 
       "is active: ", bool_is_active, 
-	  "is not a modulator: ", bool_is_not_modulator,
-	  "is not already modulated: ", bool_is_not_modulated
-	)]]--
-	
-    return 
-      bool_is_not_current_operator and 
-      bool_is_set and 
-      bool_is_active and 
-      not (bool_is_modulator or array_waves[array_int_modulators[int_modulator]] == WAVE_MORPHER) and
-	  bool_is_not_modulated
+    "is not a modulator: ", bool_is_not_modulator,
+    "is not already modulated: ", bool_is_not_modulated
+  )]]--
+  
+  return 
+    bool_is_not_current_operator and 
+    bool_is_set and 
+    bool_is_active and 
+    not (bool_is_modulator or array_waves[array_int_modulators[int_modulator]] == WAVE_MORPHER) and
+    bool_is_not_modulated
 
 end
 
@@ -278,8 +278,11 @@ end
 -- *an integer value indicating the operator being modulated by int_operator
 function is_modulator(int_operator)
 
-  local bool_is_modulator = array_int_modulators[int_operator] and array_int_modulators[int_operator] > 0
+  local bool_is_modulator = array_int_modulators[int_operator] and 
+    array_int_modulators[int_operator] > 0
+  
   local int_modulated = 0
+  
   if bool_is_modulator then
     int_modulated = array_int_modulators[int_operator]
   end
@@ -300,16 +303,16 @@ function operate(int_wave,real_x)
     if array_waves[int_wave] == WAVE_VARIATOR then
 
       real_phase = math.random() < array_real_frequency_multipliers[int_wave]
-	  --print("Will variator signal change?", real_phase)
-	  
+    --print("Will variator signal change?", real_phase)
+    
     else
 
       real_phase = 
         math.fmod(real_x * array_real_frequency_multipliers[int_wave],1.01) 
-		
-		print(real_phase,real_x,array_real_frequency_multipliers[int_wave])
-	  
-	end
+    
+    --print(real_phase,real_x,array_real_frequency_multipliers[int_wave])
+    
+  end
   
   end
 
@@ -317,6 +320,7 @@ function operate(int_wave,real_x)
   local variant_parameter = array_variant_parameters[int_wave]
   
   local real_operator_value
+  
   if array_waves[int_wave] then  
      real_operator_value = 
        array_function_operators[array_waves[int_wave]](
@@ -347,60 +351,58 @@ function process_data(real_amplification,real_x)
   
   for int_wave = 1, OPERATORS do
   
-	----print(array_string_operators[array_waves[int_wave]])
-	
-	local bool_variant_parameters_are_ok = true
+  ----print(array_string_operators[array_waves[int_wave]])
   
-    if 
-      array_waves[int_wave] == WAVE_WAVETABLE and 
-      array_instrument_number[int_wave] > 0 and 
-      array_sample_number[int_wave] > 0 
-    then
-      -- for WAVE mode, get the latest sample buffer
-      array_variant_parameters[int_wave] = 
-      renoise.song().instruments[array_instrument_number[int_wave]]
-      .samples[array_sample_number[int_wave]]
-        .sample_buffer
-	
-	elseif array_waves[int_wave] == WAVE_VARIATOR then
-	  -- for VARIATOR mode, take the last frame value
+  local bool_variant_parameters_are_ok = true
+  
+  if 
+    array_waves[int_wave] == WAVE_WAVETABLE and 
+    array_instrument_number[int_wave] > 0 and 
+    array_sample_number[int_wave] > 0 
+  then
+    -- for WAVE mode, get the latest sample buffer
+    array_variant_parameters[int_wave] = 
+    renoise.song().instruments[array_instrument_number[int_wave]]
+    .samples[array_sample_number[int_wave]]
+      .sample_buffer
+  
+  elseif array_waves[int_wave] == WAVE_VARIATOR then
+    -- for VARIATOR mode, take the last frame value
       array_variant_parameters[int_wave] = array_operator_last_values[int_wave]
-	
+  
     elseif array_waves[int_wave] == WAVE_MORPHER then
-	
-	  -- for MORPHER mode, take its two modulation sources and the morphing time
-	  
-	  local bool_is_modulated, arr_int_modulators, int_modulators = is_modulated(int_wave)
-	  
-	  if 
-	    not bool_is_modulated or
-		int_modulators ~= 2
-	  then
-	    bool_variant_parameters_are_ok = false
-	  else
-	
+  
+    -- for MORPHER mode, take its two modulation sources and the morphing time
+    
+      local bool_is_modulated, arr_int_modulators, int_modulators = is_modulated(int_wave)
+      
+      if 
+        not bool_is_modulated or int_modulators ~= 2 
+      then
+        bool_variant_parameters_are_ok = false
+      else
+    
         local real_morphing_time = array_morphing_times[int_wave]
-	    array_variant_parameters[int_wave] = {operate(arr_int_modulators[1],real_x),operate(arr_int_modulators[2],real_x)}
-		real_x = math.min(1,int_frame / (buffer_new.number_of_frames * real_morphing_time))
-	    print("OP#" .. int_wave .. ": morphing OP#" .. arr_int_modulators[1] .. " into OP#" .. arr_int_modulators[2], real_x, int_frame)
-		
-		
-	  end
-	  
-	end
+        array_variant_parameters[int_wave] =
+         {operate(arr_int_modulators[1],real_x),operate(arr_int_modulators[2],real_x)}
+        real_x = math.min(1,int_frame / (buffer_new.number_of_frames * real_morphing_time))
+        -- print("OP#" .. int_wave .. ": morphing OP#" .. arr_int_modulators[1] .. " into OP#" .. arr_int_modulators[2], real_x, int_frame)
+      
+      end
+    
+    end
 
-	local bool_wave_is_set = wave_is_set(int_wave)
-	local bool_wave_is_active = bool_wave_is_set and array_waves[int_wave] > 0
-	local bool_is_not_modulator = is_modulator(int_wave) == false
-	
-	--[[--print("can OP#" .. int_wave .. " be processed?",
-	  "Variant parameters are ok:", bool_variant_parameters_are_ok,
-	  "Wave is set", bool_wave_is_set,
-	  "Wave is active", bool_wave_is_active,
-	  "Is not a modulator", bool_is_not_modulator)]]--
-	
-    if 
-	  bool_variant_parameters_are_ok and
+    local bool_wave_is_set = wave_is_set(int_wave)
+    local bool_wave_is_active = bool_wave_is_set and array_waves[int_wave] > 0
+    local bool_is_not_modulator = is_modulator(int_wave) == false
+  
+  --[[--print("can OP#" .. int_wave .. " be processed?",
+    "Variant parameters are ok:", bool_variant_parameters_are_ok,
+    "Wave is set", bool_wave_is_set,
+    "Wave is active", bool_wave_is_active,
+    "Is not a modulator", bool_is_not_modulator)]]--
+  
+    if bool_variant_parameters_are_ok and
       bool_wave_is_set and 
       bool_wave_is_active and 
       bool_is_not_modulator 
@@ -408,14 +410,16 @@ function process_data(real_amplification,real_x)
     
       local real_modulator = 0.0
       local bool_is_modulated, array_modulators, int_modulators = is_modulated(int_wave)
-	  
-      if bool_is_modulated and array_waves[int_wave] ~= WAVE_MORPHER then
+    
+      if 
+        bool_is_modulated and array_waves[int_wave] ~= WAVE_MORPHER 
+      then
         -- modulate the amplitude of the current operator by the 
         -- operators which are assigned to it 
         local int_modulator
         local array_real_modulators = {}
         local int_count = 0
-		
+    
         for int_modulator = 1, int_modulators do
    
           int_count = int_count + 1
@@ -438,8 +442,8 @@ function process_data(real_amplification,real_x)
       end
     
       local real_operator_value = operate(int_wave,real_x)
-	  
-	  array_operator_last_values[int_wave] = real_operator_value
+    
+      array_operator_last_values[int_wave] = real_operator_value
         
       real_frame_value = real_frame_value + 
       real_operator_value * (1 + real_modulator)
@@ -467,23 +471,16 @@ end
 function generate()
 
   local instrument = renoise.song().selected_instrument
-  
   local sample_new
-
   local int_sample_index = renoise.song().selected_sample_index
-  
   local int_generated_samples = 0
 
   while table.getn(instrument.samples) > 1 do
-	
-	instrument:delete_sample_at(1)
-	
+    instrument:delete_sample_at(1)
   end
   
   for int_operator_to_which_reset_last_value = 1, OPERATORS do
-
     array_operator_last_values[int_operator_to_which_reset_last_value] = 0
-  
   end  
  
   
@@ -494,7 +491,7 @@ function generate()
     else
       sample_new = instrument:insert_sample_at(int_generated_samples+1) 
     end
-	
+  
     buffer_new = sample_new.sample_buffer
   
     int_frames = SAMPLE_FREQUENCY / note_to_frequency(int_note) 
@@ -529,47 +526,52 @@ function generate()
     local int_chan,real_frame_value,int_valid_waves
     for int_chan = 1, SAMPLE_CHANS do
       for int_frame_in_buffer = 1, buffer_new.number_of_frames do
-	    int_frame = int_frame_in_buffer
+        int_frame = int_frame_in_buffer
         real_frame_value, int_valid_waves = 
           process_data(real_amplification,int_frame_in_buffer/int_frames)
         buffer_new:set_sample_data(int_chan,int_frame_in_buffer,real_frame_value)
-		real_last_frame_value = real_frame_value
+        real_last_frame_value = real_frame_value
       end
     end
   
-    
     buffer_new:finalize_sample_data_changes()
   
     sample_new.base_note = int_note - 1
-	sample_new.name = "Generated " .. note_number_to_string(int_note) .. " sample"
-	
-	int_generated_samples = int_generated_samples + 1
-
+    sample_new.name = "Generated " .. note_number_to_string(int_note) .. " sample"
+  
+    int_generated_samples = int_generated_samples + 1
   end
   
+  --set instrument name
   instrument.name = "Generated instrument"
   
-  local arr_split = {}
-  
-  for int_note = 1, int_start_note - 1 do
-  
-    arr_split[int_note] = 1
-  
+  --create key zones
+  local LAYER_NOTE_OFF = renoise.Instrument.LAYER_NOTE_OFF
+  while (#instrument.sample_mappings[LAYER_NOTE_OFF] > 0) do
+    instrument:delete_sample_mapping_at(LAYER_NOTE_OFF, 1)
   end
   
-  for int_note = int_start_note, int_end_note  do
-  
-    arr_split[int_note] = int_note - int_start_note + 1
-  
+  local LAYER_NOTE_ON = renoise.Instrument.LAYER_NOTE_ON
+  while (#instrument.sample_mappings[LAYER_NOTE_ON] > 0) do
+    instrument:delete_sample_mapping_at(LAYER_NOTE_ON, 1)
   end
   
-  for int_note = int_end_note + 1, 120 do
-  
-    arr_split[int_note] = 1
-	
+  for int_note = int_start_note, int_end_note do
+    local sample_index = int_note - int_start_note + 1
+    
+    local base_note = int_note - 1
+    
+    local note_range = {0, 119}
+    
+    if (int_note > int_start_note) then
+      note_range[1] = int_note - 1
+    end    
+    if (int_note < int_end_note) then
+      note_range[2] = int_note - 1
+    end
+    
+    instrument:insert_sample_mapping(LAYER_NOTE_ON,
+      sample_index, base_note, note_range, {0, 0x7f})
   end
-  
-  instrument.split_map = arr_split
-  
 end
 
