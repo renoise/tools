@@ -86,7 +86,7 @@ class "RenoiseScriptingTool"(renoise.Document.DocumentNode)
     self:add_property("Name", "")
     self:add_property("Id", "")        
     self:add_property("Version", 1)
-    self:add_property("ApiVersion", 1)
+    self:add_property("ApiVersion", renoise.API_VERSION)
     self:add_property("Author", "")
     self:add_property("Category", "")
     self:add_property("Description", "")
@@ -898,11 +898,25 @@ function show_export_dialog()
   local dialog_title = "Export Tool folder to XRNX file"
   local dialog_content = vbz:column {
     margin = DEFAULT_DIALOG_MARGIN,
-    spacing = DEFAULT_CONTROL_SPACING,    
-    
-    vbz:text {
-      text = "Choose folder to export:"
-    },   
+    spacing = DEFAULT_CONTROL_SPACING,        
+  
+    vbz:row {
+      margin = DEFAULT_DIALOG_MARGIN,
+      style = "group",
+      vbz:text {
+        width = 245,
+        -- visible = #get_mytools() == 0,
+        text = 
+[[This Tool exports the selected Tool folder  
+under "Tools/__MyTools__/" into a .xrnx file. 
+
+The "Tools/__MyTools__/" folder is automatically 
+created by the "Create New Tool" Tool.]]        
+      }
+    },    
+    vbz:text {      
+      text = "Choose a Tool to export:"
+    },  
     vbz:popup {
       id = "mytools",
       items = mytools,
@@ -942,13 +956,13 @@ function show_export_dialog()
     vbz:row {
       spacing = DEFAULT_CONTROL_SPACING,
       vbz:button {      
-        text = "Export folder",
+        text = "Export Tool",
         active = vbz.views.mytools.items[1] ~= "None",
         height = DIALOG_BUTTON_HEIGHT,        
         notifier = show_confirm_export_dialog
       },
       vbz:button {
-        text = "Browse default XRNX export folder",
+        text = "Browse export folder",
         active = vbz.views.mytools.items[1] ~= "None",
         height = DIALOG_BUTTON_HEIGHT,
         notifier = function()
