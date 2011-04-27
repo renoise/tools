@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <RenoiseScriptingTool>
-  <ApiVersion>1.0</ApiVersion>
+  <ApiVersion>2.0</ApiVersion>
   <Id>com.renoise.SampleChannelsSwapper</Id>
   <Version>0.2</Version>
   <Name>Sample channels swapper</Name>
@@ -9,4 +9,3 @@
   <Category>Sample Editor</Category>
   <Homepage>http://tools.renoise.com/sample-channels-swapper</Homepage>
 </RenoiseScriptingTool>
-
