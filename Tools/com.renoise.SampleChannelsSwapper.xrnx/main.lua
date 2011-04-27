@@ -16,6 +16,9 @@ renoise.tool():add_keybinding {
   end
 }
 
+
+--------------------------------------------------------------------------------
+
 function main()
 
   local sample_buffer = renoise.song().selected_sample.sample_buffer
@@ -25,8 +28,9 @@ function main()
     renoise.app():show_error('No sample found!')
     return
   
-  end  local int_sample = renoise.song().selected_sample_index
-
+  end  
+  
+  local int_sample = renoise.song().selected_sample_index
   
   if (sample_buffer.number_of_channels < 2) then
   
