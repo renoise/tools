@@ -75,10 +75,12 @@ function zip(path, destination)
   if (os.platform()=="WINDOWS") then    
     zip = renoise.tool().bundle_path .. "\zip.exe"
   end
-  if (not io.exists(path)) then
+  
+  -- Do input files exist?
+  if (not io.exists(path)) then    
     return false, "Zip: The input path '".. path .."' does not exist."
   else 
-    -- empty existing zip file
+    -- Empty zip file whether it exists or not
     TRACE("Zip: deleted contents, exit code " .. os.execute("zip -d " .. destination .. " *"))
   end
   local stat = io.stat(path)
@@ -109,7 +111,7 @@ end
 
 local DEBUG = true
 
-function TRACE(obj)
+function TRACE(obj)  
   if (not DEBUG) then 
     return
   end
