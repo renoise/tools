@@ -198,6 +198,7 @@ end
 --------------------------------------------------------------------------------
 
 local download_queue = table.create()
+local install_paths = table.create()
 
 -- Validates the installation of updates by 
 -- comparing the version numbers.
@@ -237,17 +238,23 @@ local function download_update(meta, last)
   -- SUCCESS CALLBACK
   local success = function(filepath)
     
-    -- Install the update
-    renoise.app():install_tool(filepath)      
+    -- Queue the installation until all updates have been downloaded
+    install_paths:insert(filepath)
     
-    if (true or last) then       
+    if (last) then       
+      print("Installing updates...")
+      for _,path in ipairs(install_paths) do
+        print("Installing " .. path)
+        renoise.app():install_tool(path)      
+      end
+      print("Done installing updates.")
+      
       -- Validate the installation by comparing 
       -- the version numbers. Wait a bit.           
-      
-      -- NOTE: Timer won't trigger. Why not?
       if (renoise.tool():has_timer(validate_updates)) then
         renoise.tool():remove_timer(validate_updates)
       end
+      -- NOTE: Timer won't trigger. Why not?
       renoise.tool():add_timer(validate_updates, 1000)
     end
   end
@@ -336,6 +343,12 @@ local function json_find_updates(success, error, complete)
     success = function(response, text_status, xml_http_request) 
       if (response and response.result) then        
         success(response, text_status, xml_http_request) 
+      elseif (response and response.error) then
+        -- JSONRPC Error
+        local error_thrown = ("%s: %s"):format(
+          response.error.name,
+          response.error.message)
+        error(xml_http_request, text_status, error_thrown)         
       else
         local error_thrown = "The server sent data I did not expect " ..
           "and I don't know what to do with it."
@@ -390,16 +403,18 @@ function browser()
   
   -- COMPLETE CALLBACK      
   local function complete()
-    body:remove_child(status)      
+    
   end      
   
    -- ERROR CALLBACK            
   local function error(xml_http_request, text_status, error_thrown)
-      status.text = "Could not load update info :(\n" .. (error_thrown or "")
+      status.text = "Could not load update info. Maybe a connection problem.\nReason given: " .. (error_thrown or "")
   end
         
   -- SUCCESS CALLBACK
   local function success(response, text_status, xml_http_request)
+      
+    body:remove_child(status)      
     
     -- Metadata from all installed Tools
     local metadata = response.result        
