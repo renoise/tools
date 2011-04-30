@@ -34,7 +34,7 @@ require "renoise.http.progress"
 
 -- Filter debug and error messages by severity
 -- ALL / INFO / WARN / ERROR / FATAL / OFF
-local log = Log(Log.ALL)
+local log = Log(Log.WARN)
 
 
 -------------------------------------------------------------------------------
@@ -99,10 +99,10 @@ end
 
 -- Get Scripts Dir
 local function get_appdata_dir()    
-  --local dir = renoise.tool().bundle_path
-  local dir = os.currentdir()
-  local a,z 
-  if (os.platform == "LINUX") then
+  local dir = renoise.tool().bundle_path  
+
+  local a,z
+  if (os.platform() == "LINUX") then
     a,z = dir:find(".renoise")
   else
     a,z = dir:find("Renoise")
@@ -118,7 +118,7 @@ end
 class "Request"
 
 -- Library version
-Request.VERSION = "100418"
+Request.VERSION = "100419"
 
 -- Definition of HTTP request methods
 Request.GET = "GET"
