@@ -370,7 +370,16 @@ end
 -- GUI
 --------------------------------------------------------------------------------
 
-function browser()
+local function close_dialog()
+  if (dialog and dialog.visible) then
+    dialog:close()
+  end
+  if (renoise.tool():has_timer(close_dialog)) then
+    renoise.tool():remove_timer(close_dialog)
+  end
+end
+
+local function browser(autoclose, silent)
 
   -- If dialog is already open, focus it and be done with it.
   -- To recheck updates, user has to close the dialog first.
@@ -387,7 +396,20 @@ function browser()
   }
   
   local description = vb:text{
-      text = TOOL_NAME.." retrieves a list of applicable updates from the Renoise server."
+    text = TOOL_NAME.." retrieves a list of applicable updates from the Renoise server."
+  }
+  
+  local settings = vb:row {
+    vb:checkbox {        
+      bind = options.CheckOnStartup
+    },
+    vb:text {
+      text = "Check on startup"
+    }
+  }    
+  
+  local main = vb:column {
+    id = "main"
   }
   
   local body = vb:column{ 
@@ -395,11 +417,15 @@ function browser()
     spacing=5, 
     uniform=true,
     description,
-    status 
+    status,
+    main,
+    settings,        
   }    
   
-  dialog = renoise.app():show_custom_dialog(      
-        TOOL_NAME, body)        
+  if (not silent) then
+    dialog = renoise.app():show_custom_dialog(      
+      TOOL_NAME, body)        
+  end
   
   -- COMPLETE CALLBACK      
   local function complete()
@@ -413,8 +439,8 @@ function browser()
         
   -- SUCCESS CALLBACK
   local function success(response, text_status, xml_http_request)
-      
-    body:remove_child(status)      
+     
+    body:remove_child(status)             
     
     -- Metadata from all installed Tools
     local metadata = response.result        
@@ -423,13 +449,25 @@ function browser()
     local updates = find_updates(metadata)
     
     if (#updates == 0) then
-      body:add_child(
+      main:add_child(
         vb:text {
           text = "All your installed Tools are up-to-date.",
           font = "bold"
         }
       )
+      if (autoclose) then
+        if (renoise.tool():has_timer(close_dialog)) then
+          renoise.tool():remove_timer(close_dialog)
+        end
+        renoise.tool():add_timer(close_dialog, 1000)
+      end
+      
       return
+    end
+    
+    if (silent) then
+      dialog = renoise.app():show_custom_dialog(      
+      TOOL_NAME, body)
     end
                 
     local pages = vb:row{
@@ -579,7 +617,7 @@ function browser()
     end 
     
     -- Body
-    body:add_child(                      
+    main:add_child(                      
       vb:row {          
         spacing = 5, 
                   
@@ -599,7 +637,7 @@ function browser()
       }     
     ) -- end body               
     
-    body:add_child(
+    main:add_child(
       vb:column{
         vb:text {
           id = "current_download",
@@ -630,7 +668,9 @@ end
 -- This fact can be used to determine whether is running or 
 -- starting up. 
 if (not options.Shown.value and options.CheckOnStartup.value) then  
-  check_product_version_jsonrpc()  
+  local autoclose = false
+  local silent = true
+  browser(autoclose, silent)
 end
 
 -- When starting or loading a new song, set a flag to true.
@@ -650,5 +690,9 @@ end)
 
 renoise.tool():add_menu_entry {
   name = "Main Menu:Help:Find updates for Tools...",
-  invoke = browser  
+  invoke = function()
+    local autoclose = true
+    local silent = false
+    browser(autoclose, silent)
+  end
 }
