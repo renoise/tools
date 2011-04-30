@@ -100,7 +100,6 @@ end
 -- Get Scripts Dir
 local function get_appdata_dir()    
   local dir = renoise.tool().bundle_path  
-
   local a,z
   if (os.platform() == "LINUX") then
     a,z = dir:find(".renoise")
@@ -118,7 +117,7 @@ end
 class "Request"
 
 -- Library version
-Request.VERSION = "100419"
+Request.VERSION = "100430"
 
 -- Definition of HTTP request methods
 Request.GET = "GET"
@@ -374,7 +373,7 @@ function Request:__init(custom_settings)
     end
   end
   
-  self.progress = Progress(self.settings.progress)  
+  self.progress = Progress(self.url, self.settings.progress)  
   
   if (not self.url_parts or not self.url_parts.host 
     or self.url_parts.host == "") then        
@@ -987,11 +986,14 @@ function Request:_do_callback(socket_error)
   else
     log:info(("%s has completed."):format(self.url))    
     
-    if (self.settings.save_file) then      
+    if (self.settings.save_file) then         
       if (io.exists(self.tempfile)) then        
         local dir = ""
         local sep = ""
         local mv = ""
+        if (not self.settings.default_download_folder) then
+          self.settings.default_download_folder = self.tempfile:match("^(.+[/\\])")  
+        end
         if (os.platform() == "WINDOWS") then          
           dir = self.settings.default_download_folder:gsub("/","\\")
           sep = "\\"
@@ -1000,13 +1002,17 @@ function Request:_do_callback(socket_error)
           dir = self.settings.default_download_folder:gsub("\\","/")
           sep = "/"
           mv = "mv"
-        end  
+        end
+                
+        -- Try to create target dir
         if (not io.exists(dir)) then          
           local ok, err = os.mkdir(dir)          
           log:info("Created download dir: "..dir .. tostring(ok) .. tostring(err))
         end
+        
         -- strip trailing slash
-        --dir = dir:match("^(.*)/$")
+        dir = dir:match("^(.+[^/\\])")
+        
         if (io.exists(dir)) then
           local path = self.url_parts.path       
           local filename = Util:get_filename(path)          
@@ -1027,7 +1033,8 @@ function Request:_do_callback(socket_error)
           type = type:match("^[^;]+")
           filename = filename .. Request:_get_ext_by_mime(type)                      
           
-          local target = dir..sep..filename          
+          -- generate unique name (1).txt
+          local target = dir..sep..filename
           local i = 1          
           while (io.exists(target)) do            
             local name = filename:match("^(.*)%.")
@@ -1048,10 +1055,10 @@ function Request:_do_callback(socket_error)
           else
             self.download_target = target
           end
-        end
-      end
-    end       
-  end
+        end -- download folder exists
+      end -- temp file exists       
+    end -- save file to harddisk
+  end -- no socket error
   
   -- close the connection and invalidate
   self.client_socket = nil

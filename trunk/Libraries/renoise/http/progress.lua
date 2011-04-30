@@ -13,7 +13,10 @@ Progress.PAUSED = "Paused"
 
 
 ---## __init ##---
-function Progress:__init(callback)    
+function Progress:__init(url, callback)    
+  -- original url
+  self.url = url
+  
   -- current amount of received bytes
   self.bytes = 0
   
