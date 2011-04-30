@@ -45,6 +45,15 @@ function Progress:__init(callback)
   self.max_speed = 0
   self.min_speed = 0
   
+  -- moving average
+  self.timetable = table.create()
+  self.timetable:insert({ms=os.clock(), bytes=0})
+  self.timetable_spread = 10
+  self.old_avg = nil
+  self.new_avg = nil
+  self.speeds = table.create()
+  self.refresh = 5
+  
   -- function to be called when new data has been received
   self.callback = callback     
 end
@@ -63,13 +72,55 @@ function Progress:get_status()
 end
 
 
+function Progress:_set_moving_average()
+  local ms = os.clock() * 1000
+  self.timetable:insert({ms=ms, bytes=self.bytes})
+  
+  -- remove oldest entry
+  if (#self.timetable > self.timetable_spread) then    
+    self.timetable:remove(1)
+  end
+end
+
+function Progress:get_moving_average()  
+  local high = self.timetable[#self.timetable]
+  local low = self.timetable[1]
+  local delta_kb = (high.bytes - low.bytes) / 1024
+  local delta_t = (high.ms - low.ms) / 1000
+  local kbps = 0
+  if (delta_t > 0) then
+   kbps = math.floor(delta_kb / delta_t)
+  end
+  
+  self.speeds:insert(kbps)  
+  if (#self.speeds > 5) then
+    self.speeds:remove(1)
+  end
+  
+  self.refresh = self.refresh - 1
+  if (self.refresh == 0) then
+    self.refresh = 5
+    return self.new_avg or kbps
+  end
+  
+  local sum = 0
+  for _,v in ipairs(self.speeds) do
+    sum = sum + v
+  end
+  self.old_avg = self.new_avg or 0
+  self.new_avg = ((sum / #self.speeds) + self.old_avg) / 2
+  
+  return self.new_avg
+end
+
+
 ---## set_speed ##---
 function Progress:_set_speed(old, new)
   local seconds = os.clock() - (self.tic or 0.5)
   local amount = new - old
   self.tic = os.clock()
   self.speed = amount / 1024 / seconds
-  self.avg_speed = self.bytes / 1024 / self.elapsed_time
+  self.avg_speed = self:get_moving_average()
   self.min_speed = math.min(self.speed, self.min_speed)
   self.max_speed = math.max(self.speed, self.max_speed)
 end
@@ -145,6 +196,7 @@ end
 function Progress:_set_bytes(b)  
   self:_set_speed(self.bytes, b)
   self.bytes = b
+  self:_set_moving_average()
   self:_set_elapsed_time()
   self:_set_percent()  
   self:_notify()
