@@ -1,3 +1,4 @@
+
 -- Tool Updater
 -- 
 -- Looks for available updates of installed Tools, which will then be 
@@ -173,7 +174,7 @@ local function is_update_available(localtool, remotetool)
   -- version of the remote tool is guaranteed to match the 
   -- running Renoise instance (Service argument). 
   return (tonumber(localtool.version) < tonumber(remotetool.Version)
-    or tonumber(localtool.api_version) < tonumber(remotetool.ApiVersion)
+    or tonumber(localtool.api_version) < tonumber(renoise.API_VERSION)
   ) 
 end
 
@@ -307,7 +308,7 @@ local function json_find_updates(success, error, complete)
   -- A table with the ID of every installed tool
   local installed_ids = table.create()  
   
-  for _,tool in pairs(tools) do
+  for _,tool in pairs(tools) do    
     installed_ids:insert(tool.id)    
   end
   
@@ -320,21 +321,33 @@ local function json_find_updates(success, error, complete)
   
   -- Parameters to send to the server.  
   -- Id: table containing the installed IDs
-  -- ApiVersion: the API version of the running instance of Renoise  
-  local parameters = {
-    Id=installed_ids,
-    ApiVersion=tonumber(renoise.API_VERSION)
-  }
+  -- ApiVersion: the API version of the running instance of Renoise    
+  
+  local json_post_data = {
+    method='renoisetool.get',
+    params={
+      Id=installed_ids,
+      ApiVersion=tonumber(renoise.API_VERSION)
+    }
+  } 
+  
+  -- When more than x amount of tools are installed, 
+  -- just get whole list of tools from the server.
+  if (#installed_ids > 5) then
+    json_post_data = {
+      method='renoisetool.all',
+      params= {
+        ApiVersion=tonumber(renoise.API_VERSION)
+      }
+    }
+  end
   
   -- Request settings
   local settings = {
     content_type='application/json',
     url=JSON_RPC_URL,
     method=Request.POST,
-    data={
-      method='renoisetool.get',
-      params=parameters,
-    },
+    data=json_post_data,
     
     -- error callback
     error = error,
@@ -342,7 +355,16 @@ local function json_find_updates(success, error, complete)
     -- success callback
     success = function(response, text_status, xml_http_request) 
       if (response and response.result) then        
-        success(response, text_status, xml_http_request) 
+        if (type(response.result) == "table") then
+          success(response, text_status, xml_http_request) 
+        else
+          -- No Table received
+          local error_thrown = "Unexpected reponse data format."
+          if (type(response.result) == "string") then
+            error_thrown = response.result
+          end
+          error(xml_http_request, text_status, error_thrown)  
+        end        
       elseif (response and response.error) then
         -- JSONRPC Error
         local error_thrown = ("%s: %s"):format(
@@ -396,7 +418,7 @@ local function browser(autoclose, silent)
   }
   
   local description = vb:text{
-    text = TOOL_NAME.." retrieves a list of applicable updates from the Renoise server."
+    text = TOOL_NAME.." retrieves a list of updated Tools from the Renoise server."
   }
   
   local settings = vb:row {
@@ -689,7 +711,7 @@ end)
 --------------------------------------------------------------------------------
 
 renoise.tool():add_menu_entry {
-  name = "Main Menu:Help:Find updates for Tools...",
+  name = "Main Menu:Help:Find Tool Updates...",
   invoke = function()
     local autoclose = true
     local silent = false
