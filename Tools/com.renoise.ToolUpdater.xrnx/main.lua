@@ -17,12 +17,6 @@ local dialog = nil
 -- Placeholder to expose the ViewBuilder outside the show_dialog() function
 local vb = nil
 
--- Reload the script whenever this file is saved. 
--- Additionally, execute the attached function.
-_AUTO_RELOAD_DEBUG = function()
-  
-end
-
 -- Read from the manifest.xml file.
 class "RenoiseScriptingTool" (renoise.Document.DocumentNode)
   function RenoiseScriptingTool:__init()    
