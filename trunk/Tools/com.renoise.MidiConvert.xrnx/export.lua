@@ -4,6 +4,8 @@ export.lua
 
 --[[
 
+ProcessSlicer() related...
+
 I tried to make an OO class, but yield would throw:
 $ Error: attempt to yield across metamethod/C-call boundary
 
@@ -492,7 +494,7 @@ function export_procedure(plan)
       :add_notifier(function()
         if (process and process:running()) then
           process:stop()
-          print("Process 'build_data()' has been aborted due to song change.")
+          dbug("Process 'build_data()' has been aborted due to song change.")
         end
       end)
     process:start()
