@@ -94,7 +94,7 @@ end
 
 function process_stretch(stretch, crisp, bool_precise)
   if stretch > 100 then
-    local conf = renoise.app():show_prompt('Too big stretch!', 'You want to multiply sample length by '.. real_stretch_factor..'! Doing this may freeze Renoise for several minutes or even indefinitely. Are you sure you want to continue?', {'Sure', 'No way!'});
+    local conf = renoise.app():show_prompt('Too big stretch!', 'You want to multiply sample length by '.. stretch ..'! Doing this may freeze Renoise for several minutes or even indefinitely. Are you sure you want to continue?', {'Sure', 'No way!'});
     if conf ~= 'Sure' then
       return
     end
