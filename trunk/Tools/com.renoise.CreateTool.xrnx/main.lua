@@ -953,17 +953,20 @@ local function to_popup_items(tools)
 end
 
 -- Update the Tool folder filters and the popup list
+local filtered_tools = table.create()
 local function update_filters(tools)
-  local filtered = tools
+  filtered_tools = tools
   if (options.ExportFilterByAuthor.value) then
-    filtered = filter_tools_by_author(filtered, options.ExportFilterAuthorValue.value)    
+    filtered_tools = filter_tools_by_author(
+      filtered_tools, options.ExportFilterAuthorValue.value)    
   end
   if (options.ExportFilterByFolder.value) then
-    filtered = filter_tools_by_folder(filtered, options.ExportFilterFolderValue.value)    
+    filtered_tools = filter_tools_by_folder(
+      filtered_tools, options.ExportFilterFolderValue.value)    
   end
   
   if (vbz) then
-    vbz.views.mytools.items = to_popup_items(filtered)
+    vbz.views.mytools.items = to_popup_items(filtered_tools)
   end
 end
 
@@ -1112,8 +1115,9 @@ function show_export_dialog()
         active = vbz.views.mytools.items[1] ~= "None",
         height = DIALOG_BUTTON_HEIGHT,        
         notifier = function() 
-          local id = vbz.views.mytools.value          
-          show_confirm_export_dialog(tools[id])
+          local k = vbz.views.mytools.value
+          local tool = filtered_tools[k]
+          show_confirm_export_dialog(tool)
         end
       },
       vbz:button {
