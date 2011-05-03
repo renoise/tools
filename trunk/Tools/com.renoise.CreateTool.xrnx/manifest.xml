@@ -2,8 +2,8 @@
 <RenoiseScriptingTool doc_version="0">
   <Name>Create Tool</Name>
   <Id>com.renoise.CreateTool</Id>
-  <Version>6</Version>
-  <ApiVersion>2.0</ApiVersion>
+  <Version>7</Version>
+  <ApiVersion>2</ApiVersion>
   <Author>Bantai</Author>
   <Category>Development</Category>
   <Description>A wizard to help you setup the basic structure for a new Tool. There is also an Export to XRNX file feature.
