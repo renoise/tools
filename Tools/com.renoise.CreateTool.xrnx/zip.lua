@@ -70,10 +70,27 @@ the user running Zip doesn't have permission to read it.]]
 -- Zips the file at the given path to the given destination.
 -- Depends on Info-ZIP Zip, which is included with Unix/Linux/MacOSX.
 -- For Windows a Zip executable is required.
-function zip(path, destination)
+function zip(path, destination, excluded_files)
+  -- strip trailing slash
+  if (path:sub(-1) == "/" or path:sub(-1) == "\\") then
+    path = path:sub(1,-2)
+  end
+
   local zip = "zip"
   if (os.platform()=="WINDOWS") then    
     zip = renoise.tool().bundle_path .. "\zip.exe"
+  end
+    
+  local excludes = ""
+  if (excluded_files) then
+    excludes = "-x "
+    if (type(excluded_files) == "table") then
+      for _,f in ipairs(excluded_files)  do
+        excludes = excludes .. table.concat(excluded_files, ' ')
+      end
+    elseif (type(excluded_files) == "string") then
+      excludes = excludes .. excluded_files
+    end
   end
   
   -- Do input files exist?
@@ -89,7 +106,7 @@ function zip(path, destination)
     -- go to the folder and zip folder contents   
     str = ('cd "%s" && "%s" -r "%s" *'):format(path, zip, destination)    
   else 
-    str = ('zip -j "%s" "%s"'):format(path, destination, path)
+    str = ('zip -j %s "%s" "%s"'):format(path, excludes, destination, path)
   end  
   
   TRACE(str)

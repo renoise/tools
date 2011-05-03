@@ -7,11 +7,6 @@ main.lua
 local dialog = nil
 local vb = nil
 
-_AUTO_RELOAD_DEBUG = function()
-  dialog = nil
-  vb = nil
-end
-
 
 --------------------------------------------------------------------------------
 -- Menu entries
@@ -58,7 +53,14 @@ local options = renoise.Document.create("ScriptingToolPreferences") {
   -- export options
   ExportOverwrite = true,
   ExportDefaultDestination = true,
-  ExportIncludeVersion = false
+  ExportIncludeVersion = true,  
+  ExportIncludeRenoiseVersion = true,  
+  ExportExcludePreferencesXml = true,
+  -- export filters
+  ExportFilterByFolder = true,
+  ExportFilterFolderValue = "__MyTools__",
+  ExportFilterByAuthor = false,
+  ExportFilterAuthorValue = "My Name",
 }
 options:add_property("Name", "The Tool Name")
 options:add_property("Id", "com.myorg.ToolName")        
@@ -293,6 +295,7 @@ end
 local DIALOG_BUTTON_HEIGHT = renoise.ViewBuilder.DEFAULT_DIALOG_BUTTON_HEIGHT
 local DEFAULT_DIALOG_MARGIN = renoise.ViewBuilder.DEFAULT_DIALOG_MARGIN
 local DEFAULT_CONTROL_SPACING = renoise.ViewBuilder.DEFAULT_CONTROL_SPACING
+local DEFAULT_CONTROL_HEIGHT = renoise.ViewBuilder.DEFAULT_CONTROL_HEIGHT
 local TEXTFIELD_WIDTH = 180
 
 local function is_form_complete()
@@ -636,9 +639,6 @@ local confirm_dialog = nil
 local vbz = nil
 local vbc = nil
 
-local selected_tool = nil
-local mytools = {}
-
 local function load_manifest(path)  
   local mf = RenoiseScriptingTool()
   local ok, err = mf:load_from(path)
@@ -646,8 +646,8 @@ local function load_manifest(path)
 end
 
 -- Create an XRNX file by ZIP'ing the Tool within the __MyTools__ folder
-local function zip_tool(path, version)      
-  local source_folder = get_tools_root() .. MYTOOLS .. SEP .. path 
+local function zip_tool(tool, version)      
+  local source_folder = tool.bundle_path 
   local target_folder = get_tools_root()..MYTOOLS..SEP.."XRNX"
   
   -- browse to custom output folder 
@@ -667,14 +667,25 @@ local function zip_tool(path, version)
   -- strip trailing slash
   if (target_folder:sub(-1) == SEP) then
     target_folder = target_folder:sub(1,-2)
+  end  
+  
+  -- assemble filename
+  local filename = ""
+  local renoise_version = ""
+  if (options.ExportIncludeRenoiseVersion.value) then
+    if (renoise.API_VERSION == 1) then
+      renoise_version = "_Rns260"
+    elseif (renoise.API_VERSION == 2) then
+      renoise_version = "_Rns270"
+    end
   end
+  if (version) then
+    version = "_V".. tostring(version)
+  end
+  filename = ("%s%s%s"):format(tool.id, renoise_version, version)
   
   -- construct absolute output file path
-  local destination = target_folder..SEP..path
-  if (version) then    
-    destination = target_folder..SEP..path:sub(1,-6)
-    .. "_V" .. tostring(version) .. ".xrnx"
-  end
+  local destination = target_folder..SEP..filename..".xrnx"  
   
   -- ask to overwrite
   if (options.ExportOverwrite.value == false and io.exists(destination)) then
@@ -687,8 +698,14 @@ local function zip_tool(path, version)
     end
   end
   
+  -- exclude files
+  local excludes = table.create()
+  if (options.ExportExcludePreferencesXml.value) then
+    excludes:insert("preferences.xml")
+  end
+  
   -- zip
-  local ok, err = zip(source_folder, destination)
+  local ok, err = zip(source_folder, destination, excludes)
   if (not ok) then                      
     renoise.app():show_error(err)
   else
@@ -697,11 +714,56 @@ local function zip_tool(path, version)
     local choices = {"Close","Show file"}
     local choice = renoise.app():show_prompt("Export was succesful", msg, choices)
     if (choice == choices[2]) then
-      renoise.app():open_path(target_folder)
+      renoise.app():open_path(destination)
     end
   end
   return ok, err
 end
+
+
+-- Is the path in the given location?
+local function in_folder(needle, haystack)
+  local haystack = haystack:gsub("\\", "/"):lower()
+  local needle = needle:gsub("\\", "/"):lower()
+  return (haystack:find(needle) ~= nil)
+end
+
+
+-- Get a table of tools filtered by author
+local function filter_tools_by_author(tools, author)  
+  local found = table.create()
+  
+  if (type(tools) ~= "table" or not author or #author < 1) then
+    return found
+  end
+  
+  author = author:lower()
+  
+  for k,tool in ipairs(tools) do
+    if (tool.author:lower():find(author)) then
+      found:insert(tool)
+    end    
+  end
+  return found
+end
+
+
+-- Get a table of tools filtered by folder
+local function filter_tools_by_folder(tools, folder)  
+  local found = table.create()
+  
+  if (type(tools) ~= "table" or not folder or #folder < 1) then
+    return found
+  end    
+    
+  for k,tool in ipairs(tools) do        
+    if (in_folder(folder, tool.bundle_path)) then
+      found:insert(tool)
+    end    
+  end
+  return found  
+end
+
 
 -- Returns a list of Tool folders in the __MyTools__ folder
 local function get_mytools()
@@ -722,7 +784,7 @@ end
 -- GUI -----------
 
 -- Confirm Export Dialog
-function show_confirm_export_dialog()      
+function show_confirm_export_dialog(tool)      
   
   if (confirm_dialog and confirm_dialog.visible) then
     confirm_dialog:show()
@@ -733,7 +795,7 @@ function show_confirm_export_dialog()
   
   vbc = renoise.ViewBuilder()
 
-  local mf_folder = get_tools_root()..MYTOOLS..SEP .. selected_tool
+  local mf_folder = tool.bundle_path
   local mf_path = mf_folder .. SEP .. "manifest.xml"
   local mf = load_manifest(mf_path)    
   
@@ -863,7 +925,7 @@ function show_confirm_export_dialog()
         if (options.ExportIncludeVersion.value) then
           version = mf["Version"].value
         end
-        local ok,err = zip_tool(selected_tool, version)   
+        local ok,err = zip_tool(tool, version)   
         confirm_dialog:close()        
       end
     },
@@ -881,85 +943,178 @@ function show_confirm_export_dialog()
   
 end
 
+-- Turn a tools table into a table suitable for a popup list
+local function to_popup_items(tools)
+  local filtered = table.create()
+  for k,tool in ipairs(tools) do
+    filtered[k] = tool.id
+  end
+  return filtered
+end
+
+-- Update the Tool folder filters and the popup list
+local function update_filters(tools)
+  local filtered = tools
+  if (options.ExportFilterByAuthor.value) then
+    filtered = filter_tools_by_author(filtered, options.ExportFilterAuthorValue.value)    
+  end
+  if (options.ExportFilterByFolder.value) then
+    filtered = filter_tools_by_folder(filtered, options.ExportFilterFolderValue.value)    
+  end
+  
+  if (vbz) then
+    vbz.views.mytools.items = to_popup_items(filtered)
+  end
+end
+
 -- Export Dialog
 function show_export_dialog()
 
+  local tools = renoise.app().installed_tools  
+    
   if zip_dialog and zip_dialog.visible then
-    zip_dialog:show()
+    zip_dialog:show()    
     return
   end
 
   vbz = renoise.ViewBuilder()
   
-  -- init popup list with Tools in __MyTools__ directory
-  get_mytools()
-  selected_tool = mytools[1]
-  
   local dialog_title = "Export Tool folder to XRNX file"
   local dialog_content = vbz:column {
     margin = DEFAULT_DIALOG_MARGIN,
-    spacing = DEFAULT_CONTROL_SPACING,        
-  
-    vbz:row {
-      margin = DEFAULT_DIALOG_MARGIN,
-      style = "group",
-      vbz:text {
-        width = 245,
-        -- visible = #get_mytools() == 0,
-        text = 
-[[This Tool exports the selected Tool folder  
-under "Tools/__MyTools__/" into a .xrnx file. 
-
-The "Tools/__MyTools__/" folder is automatically 
-created by the "Create New Tool" Tool.]]        
-      }
-    },    
+    spacing = DEFAULT_CONTROL_SPACING,              
+    
     vbz:text {      
-      text = "Choose a Tool to export:"
+      text = "Choose a Tool to export",
+      font = "bold"
     },  
     vbz:popup {
       id = "mytools",
-      items = mytools,
-      width = 260,
-      notifier = function(index) 
-        selected_tool = vbz.views.mytools.items[index]       
-      end
-    },
-    vbz:row { 
+      items = to_popup_items(tools),
+      width = 260,      
+    },    
+    
+    -- author filter
+    vbz:horizontal_aligner {                
       spacing = DEFAULT_CONTROL_SPACING,
-      vbz:checkbox {                
-        bind = options.ExportIncludeVersion
+      vbz:checkbox {        
+        bind = options.ExportFilterByAuthor,
+        notifier = function()
+          update_filters(tools)    
+        end
       },
       vbz:text {
-        text = "Add version number to filename",        
-        tooltip = "Example: com.yourname.YourTool_V2.50.xrnx"        
-      }
+        text = "Filter by author name"
+      },
+      vbz:textfield {        
+        id = "author_filter",
+        width = 80,
+        bind = options.ExportFilterAuthorValue,
+        notifier = function()
+          update_filters(tools)    
+        end
+      }       
     },
-    vbz:row { 
-      spacing = DEFAULT_CONTROL_SPACING,
-      vbz:checkbox {                
-        bind = options.ExportOverwrite
+    
+    -- folder filter
+    vbz:horizontal_aligner {      
+      spacing = DEFAULT_CONTROL_SPACING,      
+      vbz:checkbox {       
+        bind = options.ExportFilterByFolder,
+        notifier = function(enabled)           
+          update_filters(tools)    
+        end
       },
       vbz:text {
-        text = "Overwrite existing files",        
-      }
-    },
-    vbz:row { 
-      spacing = DEFAULT_CONTROL_SPACING,
-      vbz:checkbox {                
-        bind = options.ExportDefaultDestination
+        text = "Filter by folder"
+      },                 
+      
+      vbz:textfield {
+        id = "folder_filter",      
+        width = 115,
+        bind = options.ExportFilterFolderValue,
+        notifier = function()
+          update_filters(tools)    
+        end
       },
+      vbz:button {        
+        text = "Browse",      
+        notifier = function()
+          local path = renoise.app():prompt_for_path(dialog_title)                    
+          options.ExportFilterFolderValue.value = path
+        end
+      },     
+    },   
+   
+    -- export options
+    vbz:column {
+      style = "group",
+      margin = DEFAULT_DIALOG_MARGIN,
+      spacing = DEFAULT_CONTROL_SPACING,
+      width = "100%",
+      
       vbz:text {
-        text = "Save files into default XRNX export folder",
-      }
-    },        
+        text = "Export options",
+        font = "bold"
+      }, 
+      vbz:row { 
+        spacing = DEFAULT_CONTROL_SPACING,
+        vbz:checkbox {                
+          bind = options.ExportExcludePreferencesXml
+        },
+        vbz:text {
+          text = "Exclude preferences.xml",        
+        }
+      },
+      vbz:row { 
+        spacing = DEFAULT_CONTROL_SPACING,
+        vbz:checkbox {                
+          bind = options.ExportIncludeVersion
+        },
+        vbz:text {
+          text = "Add version number to filename",        
+          tooltip = "Example: com.yourname.YourTool_V2.50.xrnx"        
+        }
+      },
+      vbz:row { 
+        spacing = DEFAULT_CONTROL_SPACING,
+        vbz:checkbox {                
+          bind = options.ExportIncludeRenoiseVersion
+        },
+        vbz:text {
+          text = "Add Renoise version to filename",        
+          tooltip = "Example: com.yourname.YourTool_Rns270_V2.xrnx"        
+        }
+      },
+      vbz:row { 
+        spacing = DEFAULT_CONTROL_SPACING,
+        vbz:checkbox {                
+          bind = options.ExportOverwrite
+        },
+        vbz:text {
+          text = "Overwrite existing files",        
+        }
+      },
+      vbz:row { 
+        spacing = DEFAULT_CONTROL_SPACING,
+        vbz:checkbox {                
+          bind = options.ExportDefaultDestination
+        },
+        vbz:text {
+          text = "Save files into default XRNX export folder",
+        }
+      }, 
+    },       
     vbz:row {
       spacing = DEFAULT_CONTROL_SPACING,
       vbz:button {      
         text = "Export Tool",
         active = vbz.views.mytools.items[1] ~= "None",
         height = DIALOG_BUTTON_HEIGHT,        
-        notifier = show_confirm_export_dialog
+        notifier = function() 
+          local id = vbz.views.mytools.value          
+          show_confirm_export_dialog(tools[id])
+        end
       },
       vbz:button {
         text = "Browse export folder",
@@ -974,8 +1129,9 @@ created by the "Create New Tool" Tool.]]
         end
       }
     }
-  }
+  }  
   
+  update_filters(tools)
   zip_dialog = renoise.app():show_custom_dialog(
     dialog_title, dialog_content)
 
