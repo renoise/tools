@@ -22,7 +22,7 @@ for num_track = 1, 256 do
   renoise.tool():add_midi_mapping {
     name = midi_mapping_name,
     invoke = function(message) 
-      if message:is_switch() then
+      if message:is_trigger() then
         set_selected_track(num_track) 
       end
     end
