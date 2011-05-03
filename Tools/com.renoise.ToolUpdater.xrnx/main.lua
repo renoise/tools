@@ -192,8 +192,11 @@ end
 -- Main functions
 --------------------------------------------------------------------------------
 
+-- Stores request objects by Tool ID
 local download_queue = table.create()
+
 local install_paths = table.create()
+local selected_updates = table.create()
 
 -- Validates the installation of updates by 
 -- comparing the version numbers.
@@ -212,14 +215,38 @@ local function validate_updates()
   end      
 end
 
+local function start_installation()
+  if (#install_paths == download_queue:count()) then       
+    print("Installing updates...")
+    for _,path in ipairs(install_paths) do
+      if (#path > 0) then
+        print("Installing " .. path)
+        renoise.app():install_tool(path)      
+      end
+    end
+    print("Done installing updates.")
+    
+    -- Validate the installation by comparing 
+    -- the version numbers. Wait a bit.           
+    if (renoise.tool():has_timer(validate_updates)) then
+      renoise.tool():remove_timer(validate_updates)
+    end
+    -- NOTE: Timer won't trigger because of reloading.
+    renoise.tool():add_timer(validate_updates, 1000)
+  end
+end
+
 -- Queue an update for download and install.
 -- After the last update, trigger a validation function.
-local function download_update(meta, last)  
+local function download_update(meta)
+  
   local url = DOMAIN .. meta.path
   
     -- ERROR CALLBACK
   local error = function(x, t, e)        
     print(x,t,e)
+    -- Add a dummy path just to flag the download as completed
+    install_paths:insert("")
   end
   
   -- COMPLETE CALLBACK
@@ -228,37 +255,31 @@ local function download_update(meta, last)
     vb.views.progress.text = ""
     vb.views.current_download.visible = false
     vb.views.progress.visible = false
+    
+    -- Start installation when all downloads have completed
+    start_installation()
   end
   
   -- SUCCESS CALLBACK
   local success = function(filepath)
     
     -- Queue the installation until all updates have been downloaded
-    install_paths:insert(filepath)
-    
-    if (last) then       
-      print("Installing updates...")
-      for _,path in ipairs(install_paths) do
-        print("Installing " .. path)
-        renoise.app():install_tool(path)      
-      end
-      print("Done installing updates.")
-      
-      -- Validate the installation by comparing 
-      -- the version numbers. Wait a bit.           
-      if (renoise.tool():has_timer(validate_updates)) then
-        renoise.tool():remove_timer(validate_updates)
-      end
-      -- NOTE: Timer won't trigger. Why not?
-      renoise.tool():add_timer(validate_updates, 1000)
-    end
+    install_paths:insert(filepath)          
   end
   
   -- PROGRESS CALLBACK
   local progress = function(p)
-    if (vb) then      
+    if (vb) then            
       vb.views.current_download.text = tostring(p.url)
-      vb.views.progress.text = tostring(p.bytes)
+      local str = ""
+      if (p.eta and p.percent and p.estimated_duration) then
+        str = ("%d%% [ETA %d s/ %d s]; Avg Speed: %dkB/s"):format(
+          p.percent, p.eta, p.estimated_duration, p.avg_speed)   
+        vb.views.progress.text = str
+      else
+        vb.views.progress.text = tostring(p.bytes)
+      end
+      vb.views.progress.text = str
     end
   end 
   
@@ -396,13 +417,13 @@ local function close_dialog()
 end
 
 local function browser(autoclose, silent)
-
+  
   -- If dialog is already open, focus it and be done with it.
   -- To recheck updates, user has to close the dialog first.
   if (dialog and dialog.visible) then
     dialog:show()
     return
-  end
+  end    
   
   vb = renoise.ViewBuilder()
   
@@ -608,8 +629,7 @@ local function browser(autoclose, silent)
       active = amount_selected > 0,
       text = "Update\n selected Tools",       
       notifier = function()           
-          -- Apply user selected updates          
-          local selected_updates = table.create()
+          -- Apply user selected updates                              
           local count = 0
           for k,toolmeta in ipairs(updates) do
             count = count + 1
@@ -707,7 +727,7 @@ end)
 renoise.tool():add_menu_entry {
   name = "Main Menu:Help:Find Tool Updates...",
   invoke = function()
-    local autoclose = true
+    local autoclose = false
     local silent = false
     browser(autoclose, silent)
   end
