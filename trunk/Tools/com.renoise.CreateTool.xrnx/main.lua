@@ -61,6 +61,8 @@ local options = renoise.Document.create("ScriptingToolPreferences") {
   ExportFilterFolderValue = "__MyTools__",
   ExportFilterByAuthor = false,
   ExportFilterAuthorValue = "My Name",
+  -- export dialog 
+  ExportPopupIndex = 1
 }
 options:add_property("Name", "The Tool Name")
 options:add_property("Id", "com.myorg.ToolName")        
@@ -967,6 +969,10 @@ local function update_filters(tools)
   
   if (vbz) then
     vbz.views.mytools.items = to_popup_items(filtered_tools)
+    -- force selection to first item
+    if (vbz.views.mytools.value > #vbz.views.mytools.items) then    
+      vbz.views.mytools.value = 1 
+    end
   end
 end
 
@@ -993,6 +999,7 @@ function show_export_dialog()
     },  
     vbz:popup {
       id = "mytools",
+      bind = options.ExportPopupIndex,
       items = to_popup_items(tools),
       width = 260,      
     },    
