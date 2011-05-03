@@ -4,6 +4,8 @@ import.lua
 
 --[[
 
+ProcessSlicer() related...
+
 I tried to make an OO class, but yield would throw:
 $ Error: attempt to yield across metamethod/C-call boundary
 
