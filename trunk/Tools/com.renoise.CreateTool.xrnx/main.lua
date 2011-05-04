@@ -89,8 +89,8 @@ class "RenoiseScriptingTool"(renoise.Document.DocumentNode)
     
     self:add_property("Name", "")
     self:add_property("Id", "")        
-    self:add_property("Version", 1)
-    self:add_property("ApiVersion", renoise.API_VERSION)
+    self:add_property("Version", "1")
+    self:add_property("ApiVersion", tostring(renoise.API_VERSION))
     self:add_property("Author", "")
     self:add_property("Category", "")
     self:add_property("Description", "")
@@ -105,7 +105,7 @@ class "RenoiseScriptingTool"(renoise.Document.DocumentNode)
     
     -- pre-processed fields
     self.Id.value = vb.views.name_preview.text:sub(1,-6)
-    self.ApiVersion = renoise.API_VERSION       
+    self.ApiVersion = tostring(renoise.API_VERSION)
     if (trim(options.Email.value) ~= "" and 
       options.Email.value ~= "you@yourdomain.xyz") then
       self.Author.value = options.Author.value .. " | " .. options.Email.value      
@@ -124,6 +124,9 @@ class "RenoiseScriptingTool"(renoise.Document.DocumentNode)
 
 local manifest = RenoiseScriptingTool()
 
+local API_VERSIONS = table.create()
+API_VERSIONS[1] = "1"
+API_VERSIONS[2] = "2"
   
 --------------------------------------------------------------------------------
 -- I/O and file system functions
@@ -796,9 +799,8 @@ function show_confirm_export_dialog(tool)
   local title = "Check manifest.xml and Confirm Export"
   
   vbc = renoise.ViewBuilder()
-
-  local mf_folder = tool.bundle_path
-  local mf_path = mf_folder .. SEP .. "manifest.xml"
+  
+  local mf_path = tool.bundle_path .. "manifest.xml"
   local mf = load_manifest(mf_path)    
   
   local content = vbc:column{ 
@@ -838,14 +840,32 @@ function show_confirm_export_dialog(tool)
         notifier = function(text)           
           mf[name].value = trim(text)
         end
-      }        
-    elseif (t == "ObservableString") then
-      c = vbc:textfield {
-        text = mf[name].value,
-        notifier = function(text)
-          mf[name].value = trim(text)
+      }       
+    elseif (name == "ApiVersion") then
+      c = vbc:popup {
+        items = API_VERSIONS,        
+        value = API_VERSIONS:find(tostring(renoise.API_VERSION)),
+        notifier = function(k)
+          mf.ApiVersion.value = tostring(k)
         end
-      }            
+      }       
+    elseif (name == "Version") then      
+        c = vbc:valuefield {
+          tostring = function(value) 
+            return ("%.2f"):format(value)
+          end,
+          tonumber = function(str)
+            if str ~= nil then
+              return tonumber(str)
+            end
+          end,         
+          min = 0,
+          max = 999.99, 
+          value = tonumber(mf.Version.value),
+          notifier = function(val)
+            mf.Version.value = tostring(val)
+          end
+       }                                       
     elseif (t == "ObservableNumber") then      
         c = vbc:valuefield {
           tostring = function(value) 
@@ -856,10 +876,17 @@ function show_confirm_export_dialog(tool)
               return tonumber(str)
             end
           end,         
-          min = 0.00,
-          max = 100.00, 
+          min = 0,
+          max = 999.99, 
           bind = mf[name]         
        }         
+    elseif (t == "ObservableString") then
+      c = vbc:textfield {
+        text = mf[name].value,
+        notifier = function(text)
+          mf[name].value = trim(text)
+        end
+      }    
     elseif (t == "ObservableBoolean") then      
         c = vbc:checkbox {
           bind = mf[name]          
