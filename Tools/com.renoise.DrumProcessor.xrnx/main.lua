@@ -7,7 +7,7 @@ drum processor
 --------------------------------------------------------------------------------
 
 local TOOL_NAME = "Drum Processor"
-local TOOL_VERSION = "0.1"
+local TOOL_VERSION = "1.0"
 local TOOL_AUTHOR = "kRAkEn/gORe"
 
 local DEFAULT_MARGIN = renoise.ViewBuilder.DEFAULT_CONTROL_MARGIN
