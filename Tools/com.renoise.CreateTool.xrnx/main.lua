@@ -644,6 +644,15 @@ local confirm_dialog = nil
 local vbz = nil
 local vbc = nil
 
+local function version_formatter(value)
+  -- "1.300" => 1.30
+  local float = ("%.2f"):format(value)
+  -- 1.30 => 1.3
+  local number = tonumber(float) 
+  -- 1.3 => "1.3"
+  return tostring(number)
+end
+
 local function load_manifest(path)  
   local mf = RenoiseScriptingTool()
   local ok, err = mf:load_from(path)
@@ -677,6 +686,8 @@ local function zip_tool(tool, version)
   -- assemble filename
   local filename = ""
   local renoise_version = ""
+  
+  -- add ApiVersion
   if (options.ExportIncludeRenoiseVersion.value) then
     if (renoise.API_VERSION == 1) then
       renoise_version = "_Rns260"
@@ -684,9 +695,13 @@ local function zip_tool(tool, version)
       renoise_version = "_Rns270"
     end
   end
+  
+  -- add Version
   if (version) then
-    version = "_V".. tostring(version)
+    version = "_V".. version_formatter(version)
   end
+  
+  -- combine
   filename = ("%s%s%s"):format(tool.id, renoise_version, version)
   
   -- construct absolute output file path
@@ -846,13 +861,13 @@ function show_confirm_export_dialog(tool)
         items = API_VERSIONS,        
         value = API_VERSIONS:find(tostring(renoise.API_VERSION)),
         notifier = function(k)
-          mf.ApiVersion.value = tostring(k)
+          mf.ApiVersion.value = tostring(tonumber(k))
         end
       }       
     elseif (name == "Version") then      
         c = vbc:valuefield {
-          tostring = function(value) 
-            return ("%.2f"):format(value)
+          tostring = function(val)             
+            return version_formatter(val)
           end,
           tonumber = function(str)
             if str ~= nil then
@@ -863,7 +878,7 @@ function show_confirm_export_dialog(tool)
           max = 999.99, 
           value = tonumber(mf.Version.value),
           notifier = function(val)
-            mf.Version.value = tostring(val)
+            mf.Version.value = version_formatter(val)            
           end
        }                                       
     elseif (t == "ObservableNumber") then      
