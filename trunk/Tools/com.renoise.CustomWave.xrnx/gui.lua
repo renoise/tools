@@ -657,7 +657,12 @@ function show_dialog()
             renoise.app():show_status("An invalid operator has been selected. "..
               "Selection will be reset.");
             int_new_wannabe_modulated = 0
-            vb.views.cmbModulate.value = 1      
+			
+			--the row below has been commented out because notifier loops are no more supported in 
+			--Renoise 2.7. The comboBox value will simply be reset the next time the operator tab will
+			--be refreshed
+            --vb.views.cmbModulate.value = 1      
+			
             return
           end
         
