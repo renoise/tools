@@ -2,10 +2,11 @@
 <RenoiseScriptingTool>
   <ApiVersion>2.0</ApiVersion>
   <Id>com.renoise.SampleChannelsSwapper</Id>
-  <Version>0.2</Version>
+  <Version>0.20</Version>
   <Name>Sample channels swapper</Name>
   <Author>Fabio Napodano | It-Alien (it-alien@renoise.com)</Author>
   <Description>Swaps left and right channel of a stereo sample. Creates a menu entry 'Swap stereo channels...' in the sample editor's context menu.</Description>
   <Category>Sample Editor</Category>
   <Homepage>http://tools.renoise.com/sample-channels-swapper</Homepage>
 </RenoiseScriptingTool>
+
