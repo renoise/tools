@@ -83,8 +83,8 @@ function zip(path, destination, excluded_files)
   end
     
   -- Exclude files
-  local excludes = ""
-  if (excluded_files) then    
+  local excludes = ""  
+  if (excluded_files and #excluded_files > 0) then    
     excludes = '-x'
     if (type(excluded_files) == "table") then
       for _,f in ipairs(excluded_files)  do
