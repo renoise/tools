@@ -659,15 +659,19 @@ local function load_manifest(path)
   return mf  
 end
 
--- Create an XRNX file by ZIP'ing the Tool within the __MyTools__ folder
+-- Create an XRNX file by ZIP'ing the Tool within the Scripts/Tools folder
 local function zip_tool(tool, version)      
   local source_folder = tool.bundle_path 
-  local target_folder = get_tools_root()..MYTOOLS..SEP.."XRNX"
+  local target_folder = get_tools_root().."XRNX"    
   
+  -- create XRNX folder 
+  if (not io.exists(target_folder)) then
+    os.mkdir(target_folder)
+  end
+
   -- browse to custom output folder 
   if (not options.ExportDefaultDestination.value) then
     target_folder = renoise.app():prompt_for_path("Choose")      
-    print(type(target_folder), target_folder)
     if (not target_folder or target_folder == "") then
        return false, "Export operation was cancelled."
     end          
@@ -1174,7 +1178,7 @@ function show_export_dialog()
         active = vbz.views.mytools.items[1] ~= "None",
         height = DIALOG_BUTTON_HEIGHT,
         notifier = function()
-          local path = get_tools_root()..MYTOOLS..SEP.."XRNX"
+          local path = get_tools_root().."XRNX"          
           if (not io.exists(path)) then            
             os.mkdir(path)
           end
