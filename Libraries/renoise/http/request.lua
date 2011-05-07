@@ -34,7 +34,7 @@ require "renoise.http.progress"
 
 -- Filter debug and error messages by severity
 -- ALL / INFO / WARN / ERROR / FATAL / OFF
-local log = Log(Log.WARN)
+local log = Log(Log.ERROR)
 
 
 -------------------------------------------------------------------------------
@@ -117,7 +117,7 @@ end
 class "Request"
 
 -- Library version
-Request.VERSION = "100430"
+Request.VERSION = "100507"
 
 -- Definition of HTTP request methods
 Request.GET = "GET"
@@ -170,13 +170,13 @@ Request.default_settings = table.create{
   header_timeout = 10000, 
   
   -- Set a local timeout (in milliseconds) for the request of the body.
-  timeout = 1000, -- 0 means: until connection is closed
+  timeout = 0, -- 0 means: until connection is closed
   
   -- Maximum number of automatic request retries.
-  max_retries = 2,
+  max_retries = 30,
   
   -- Read cycles to wait between retries
-  wait = 20,
+  wait = 0, 
 
   -- Default: "text"
   -- The type of data that you're expecting back from the server. If none is 
@@ -714,7 +714,10 @@ function Request:_read_content()
   local buffer, socket_error = 
     self.client_socket:receive("*all", self.settings.timeout)
   
-  if (buffer) then            
+  if (buffer) then
+    -- We got a new buffer, so we reset the retry count
+    self.retries = 0
+        
     if (self.response.transfer_encoding == "chunked") then
       log:info("Unchunking buffer")
       self:_process_chunk(buffer)      
@@ -757,8 +760,11 @@ function Request:_read_content()
     
     if (socket_error == "timeout" and 
       self.retries < self.settings.max_retries) then
+      
       -- retry      
       self.retries = self.retries + 1
+      
+      --reset wait time
       self.wait = self.settings.wait
             
       log:warn(string.format("read timeout (%s); attempt (#%s)", 
@@ -988,26 +994,18 @@ function Request:_do_callback(socket_error)
     
     if (self.settings.save_file) then         
       if (io.exists(self.tempfile)) then        
-        local dir = ""
-        local sep = ""
-        local mv = ""
         if (not self.settings.default_download_folder) then
           self.settings.default_download_folder = self.tempfile:match("^(.+[/\\])")  
         end
-        if (os.platform() == "WINDOWS") then          
-          dir = self.settings.default_download_folder:gsub("/","\\")
-          sep = "\\"
-          mv = "move" 
-        else
-          dir = self.settings.default_download_folder:gsub("\\","/")
-          sep = "/"
-          mv = "mv"
-        end
-                
+
+        -- "/" is supported on all supported platforms as path seperator
+        local dir = self.settings.default_download_folder:gsub("\\","/")
+
         -- Try to create target dir
         if (not io.exists(dir)) then          
           local ok, err = os.mkdir(dir)          
-          log:info("Created download dir: "..dir .. tostring(ok) .. tostring(err))
+          log:info("Created download dir: "..dir .." Ok: ".. 
+            tostring(ok).."; Err: " .. tostring(err))
         end
         
         -- strip trailing slash
@@ -1034,7 +1032,7 @@ function Request:_do_callback(socket_error)
           filename = filename .. Request:_get_ext_by_mime(type)                      
           
           -- generate unique name (1).txt
-          local target = dir..sep..filename
+          local target = dir.."/"..filename
           local i = 1          
           while (io.exists(target)) do            
             local name = filename:match("^(.*)%.")
@@ -1044,14 +1042,14 @@ function Request:_do_callback(socket_error)
             else
               extension = ""
             end
-            target = ("%s%s%s (%d)%s"):format(dir,sep,name,i, extension)
+            target = ("%s%s%s (%d)%s"):format(dir,"/",name,i, extension)
             i = i + 1
           end
-          local command = ('%s "%s" "%s"'):format(mv, self.tempfile, target)
-          log:info("Moving tempfile to download dir: " .. command )          
-          local console_msg, blah = os.execute(command)
-          if (console_msg and console_msg > 0) then
-            log:error(console_msg)
+          
+          log:info("Moving tempfile to download dir: " .. target )          
+          local result, error_message = os.rename(self.tempfile, target)
+          if (not result) then
+            log:error(error_message)
           else
             self.download_target = target
           end
