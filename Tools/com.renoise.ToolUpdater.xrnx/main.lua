@@ -32,7 +32,7 @@ local ok,err = manifest:load_from("manifest.xml")
 local TOOL_NAME = manifest:property("Name").value
 local TOOL_ID = manifest:property("Id").value
 
-local DOMAIN  = 'http://tools.renoise.com/'
+local DOMAIN  = 'http://tools.marvin.nl/'
 local JSON_RPC_URL = DOMAIN .. 'services/json-rpc'
 
 -- Maximum number of tool updates per page in the browser
@@ -58,12 +58,19 @@ renoise.tool().preferences = options
 --------------------------------------------------------------------------------
 
 -- Cache for the remote updates.
-local remote_updates = {}
+local remote_updates = table.create()
 
 -- Cache for local tools listings.
 -- NOTE: The tables use the Tool IDs as keys, remember use pairs() to loop.
 local installed_tools = nil
 local filtered_tools = nil
+
+
+local function call(func, ...)    
+  if (func and type(func) == "function") then
+    func(unpack(arg))
+  end 
+end
 
 
 -- Returns a table with metadata from all installed tools
@@ -175,9 +182,7 @@ end
 -- Loops over requested tool metadata from the server, 
 -- compares with installed tool metadata.
 local function find_updates(remote_versions)  
-  if (not remote_updates) then
-    remote_updates = table.create()  
-  
+  if (#remote_updates == 0) then      
     for _,r in ipairs(remote_versions) do
       if (is_update_available(get_tool_metadata(r.Id), r)) then
         remote_updates:insert(r)
@@ -200,8 +205,8 @@ local selected_updates = table.create()
 
 -- Validates the installation of updates by 
 -- comparing the version numbers.
-local function validate_updates()
-  print("Validating installation...")
+local function validate_updates(callback)
+  print("Validating update process...")
   
   -- Destroy the caches  
   installed_tools = nil
@@ -209,55 +214,66 @@ local function validate_updates()
  
   -- Get new listing including the hopefully updates tools
   local f = get_filtered_tools()  
-  
+    
   for k,u in ipairs(remote_updates) do
-    print(f[u.Id].version, u.Version, f[u.Id].version == u.Version)
+    local status = "FAILED"
+    if (f[u.Id].version == u.Version) then
+      status = "ok"
+    end
+    print(("Update [V%s to V%s] for %s %s"):format(
+      f[u.Id].version, u.Version, u.Id, status))
   end      
+  print("Validation finished")
+  
+  call(callback)  
 end
 
-local function start_installation()
-  if (#install_paths == download_queue:count()) then       
-    print("Installing updates...")
+
+-- Start installation of the updates if all downloads have completed.
+local function start_installation(completed_all)  
+  if (#install_paths == download_queue:count()) then               
+    
+    completed_all()
+    
     for _,path in ipairs(install_paths) do
+      -- Skip failed downloads
       if (#path > 0) then
         print("Installing " .. path)
-        renoise.app():install_tool(path)      
+        renoise.app():install_tool(path)            
       end
-    end
-    print("Done installing updates.")
+    end    
     
-    -- Validate the installation by comparing 
-    -- the version numbers. Wait a bit.           
-    if (renoise.tool():has_timer(validate_updates)) then
-      renoise.tool():remove_timer(validate_updates)
-    end
-    -- NOTE: Timer won't trigger because of reloading.
-    renoise.tool():add_timer(validate_updates, 1000)
+    -- Validation has to start after installation
+    -- validate_updates()    
   end
 end
 
 -- Queue an update for download and install.
 -- After the last update, trigger a validation function.
-local function download_update(meta)
+local function download_update(meta, progress_callback, completed_one, completed_all)
   
   local url = DOMAIN .. meta.path
   
     -- ERROR CALLBACK
   local error = function(x, t, e)        
-    print(x,t,e)
+    print("[ERROR]", x.url, t, e)
     -- Add a dummy path just to flag the download as completed
     install_paths:insert("")
   end
   
   -- COMPLETE CALLBACK
-  local complete = function()        
-    vb.views.current_download.text = ""
-    vb.views.progress.text = ""
-    vb.views.current_download.visible = false
-    vb.views.progress.visible = false
-    
+  local complete = function()                
+  
+    -- Launch callback
+    call(completed_one)
+      
     -- Start installation when all downloads have completed
-    start_installation()
+    start_installation(completed_all)
+    
+    -- Remove request from queue
+    if (download_queue[meta.Id]) then
+      download_queue[meta.Id] = nil
+    end
   end
   
   -- SUCCESS CALLBACK
@@ -268,38 +284,33 @@ local function download_update(meta)
   end
   
   -- PROGRESS CALLBACK
-  local progress = function(p)
-    if (vb) then            
-      vb.views.current_download.text = tostring(p.url)
-      local str = ""
-      if (p.eta and p.percent and p.estimated_duration) then
-        str = ("%d%% [ETA %d s/ %d s]; Avg Speed: %dkB/s"):format(
-          p.percent, p.eta, p.estimated_duration, p.avg_speed)   
-        vb.views.progress.text = str
-      else
-        vb.views.progress.text = tostring(p.bytes)
-      end
-      vb.views.progress.text = str
-    end
-  end 
+  local progress = progress_callback
   
-  -- init log/progress
-  vb.views.current_download.text = ""
-  vb.views.progress.text = ""
-  vb.views.current_download.visible = true
-  vb.views.progress.visible = true
+  if (not download_queue[meta.Id]) then
   
-  local request = Request({
-    url=url, 
-    method=Request.GET, 
-    save_file=true, -- write to harddisk
-    default_download_folder = false, -- keep in temp folder
-    success=success,
-    complete=complete,
-    error=error,
-    progress=progress
-  })   
-  download_queue[meta.Id] = request  
+    local request = Request({
+      url=url, 
+      method=Request.GET, 
+      save_file=true, -- write to harddisk
+      default_download_folder = false, -- keep in temp folder
+      success=success,
+      complete=complete,
+      error=error,
+      progress=progress
+    })     
+  
+    download_queue[meta.Id] = request  
+  end
+end
+
+local function cancel_update_process()
+  -- Cancel downloads one by one
+  for id,request in pairs(download_queue) do
+    download_queue[id] = nil
+    request:cancel()            
+  end
+  -- Delete references to temp files
+  table.clear(install_paths)
 end
 
 
@@ -311,7 +322,7 @@ end
 local function json_find_updates(success, error, complete)    
 
   -- Destroy caches
-  remote_updates = nil
+  remote_updates = table.create()
   installed_tools = nil
   filtered_tools = nil
   
@@ -416,19 +427,18 @@ local function close_dialog()
   end
 end
 
-local function browser(autoclose, silent)
+local body = nil
+
+local function browser_init(autoclose, silent)  
   
-  -- If dialog is already open, focus it and be done with it.
-  -- To recheck updates, user has to close the dialog first.
-  if (dialog and dialog.visible) then
-    dialog:show()
-    return
-  end    
+  local success = nil
+  local error = nil
+  local complete = nil
   
   vb = renoise.ViewBuilder()
   
-  local status = vb:text{
-    text = "Loading...",
+  
+  local status = vb:text{        
     font = "bold"
   }
   
@@ -436,48 +446,79 @@ local function browser(autoclose, silent)
     text = TOOL_NAME.." retrieves a list of updated Tools from the Renoise server."
   }
   
-  local settings = vb:row {
+  local settings = vb:row {          
     vb:checkbox {        
       bind = options.CheckOnStartup
     },
     vb:text {
       text = "Check on startup"
-    }
+    } 
   }    
   
   local main = vb:column {
     id = "main"
   }
   
-  local body = vb:column{ 
+  local monitor = vb:column{
+    style = "border",
+    margin = 10,
+    id = "monitor",
+    visible = download_queue:count() > 0,
+    vb:text {
+      id = "current_download",      
+    },
+    vb:text {
+      id = "progress",      
+    }      
+  }
+  
+  local function dialog_init()
+    status.visible = true
+    status.text = "Loading..."    
+    main.visible = false    
+  end
+  
+  local check_button = vb:button {    
+    visible = false,
+    text = "Search for updates again",
+    notifier = function()      
+      dialog:close()
+      vb = nil      
+      browser_init(autoclose, false)      
+    end
+  }
+  
+  body = vb:column{ 
+    id = "body",
     margin=10,
     spacing=5, 
     uniform=true,
     description,
     status,
     main,
-    settings,        
-  }    
+    settings,                
+    monitor,    
+  } 
   
-  if (not silent) then
+  dialog_init()   
+  
+  if (not silent and (not dialog or not dialog.visible)) then
     dialog = renoise.app():show_custom_dialog(      
       TOOL_NAME, body)        
   end
   
-  -- COMPLETE CALLBACK      
-  local function complete()
-    
+  -- COMPLETE CALLBACK        
+  complete = function()    
+    check_button.visible = true
   end      
   
    -- ERROR CALLBACK            
-  local function error(xml_http_request, text_status, error_thrown)
+  error = function(xml_http_request, text_status, error_thrown)
       status.text = "Could not load update info. Maybe a connection problem.\nReason given: " .. (error_thrown or "")
   end
         
   -- SUCCESS CALLBACK
-  local function success(response, text_status, xml_http_request)
-     
-    body:remove_child(status)             
+  success = function(response, text_status, xml_http_request)     
     
     -- Metadata from all installed Tools
     local metadata = response.result        
@@ -486,12 +527,9 @@ local function browser(autoclose, silent)
     local updates = find_updates(metadata)
     
     if (#updates == 0) then
-      main:add_child(
-        vb:text {
-          text = "All your installed Tools are up-to-date.",
-          font = "bold"
-        }
-      )
+      
+      status.text = "All your installed Tools are up-to-date."
+      
       if (autoclose) then
         if (renoise.tool():has_timer(close_dialog)) then
           renoise.tool():remove_timer(close_dialog)
@@ -500,11 +538,6 @@ local function browser(autoclose, silent)
       end
       
       return
-    end
-    
-    if (silent) then
-      dialog = renoise.app():show_custom_dialog(      
-      TOOL_NAME, body)
     end
                 
     local pages = vb:row{
@@ -564,7 +597,7 @@ local function browser(autoclose, silent)
         -- Checkbox
         vb:checkbox {
           id="c_"..k,
-          notifier = select_update 
+          notifier = select_update,          
         },          
         
         -- Tool title          
@@ -583,9 +616,10 @@ local function browser(autoclose, silent)
         },
         
         -- Tool version
-        vb:text{ 
-          text=toolmeta.Version
-        },       
+         vb:text{ 
+          text="V"..toolmeta.Version
+         },       
+        
       } -- end tool
               
       -- Add tool to page
@@ -623,21 +657,100 @@ local function browser(autoclose, silent)
       end          
     }     
     
+    -- Called at the start of download process
+    local init_progress = function()
+      -- Disable all buttons
+      --vb.views.update_button.active = false        
+      vb.views.select_all_button.active = false        
+      -- Init progress monitor
+      vb.views.current_download.text = ""
+      vb.views.progress.text = ""
+      vb.views.monitor.visible = true      
+    end
+    
+    local progress_callback = function(p)      
+      if (vb) then            
+        vb.views.current_download.text = tostring(p.url)
+        local str = ""
+        if (p.eta and p.percent and p.estimated_duration) then
+          local eta = ("%d sec"):format(p.eta)
+          local dur = ("%d sec"):format(p.estimated_duration)          
+          if (p.eta > 60) then
+            eta = ("%d min"):format(p.eta / 60)
+          end          
+          if (p.estimated_duration > 60) then
+            dur = ("%d min"):format(p.estimated_duration / 60)
+          end          
+          str = ("%d%% [ETA %s / %s]; Avg Speed: %d kB/s"):format(
+            p.percent, eta, dur, p.avg_speed)   
+          vb.views.progress.text = str
+        else
+          vb.views.progress.text = tostring(p.bytes)
+        end
+        vb.views.progress.text = str
+      end
+    end
+    
+    -- Called whenever a download has finished
+    local completed_one = function()      
+    end
+    
+    -- Stuff to do when installation is complete
+    local completed_all = function()          
+      if (vb) then
+        -- Enable all buttons
+        vb.views.update_button.active = true
+        vb.views.select_all_button.active = true        
+        -- Hide progress        
+        vb.views.monitor.visible = false
+        vb.views.current_download.text = ""
+        vb.views.progress.text = ""        
+        vb.views.update_button.text = "Update\nselected Tools"        
+      end
+    end
+    
     -- Update Button
     local update_button = vb:button{
       id = "update_button",
-      active = amount_selected > 0,
-      text = "Update\n selected Tools",       
-      notifier = function()           
-          -- Apply user selected updates                              
-          local count = 0
-          for k,toolmeta in ipairs(updates) do
-            count = count + 1
+      active = amount_selected > 0 and #remote_updates  == 0,
+      text = "Update\nselected Tools",
+      notifier = function()                                           
+        
+        if (download_queue:count() > 0) then
+          
+          cancel_update_process()
+          
+          -- Hide progress        
+          vb.views.monitor.visible = false
+          vb.views.current_download.text = ""
+          vb.views.progress.text = ""        
+          
+          -- Reset checkboxes
+          for k,_ in ipairs(updates) do            
             if (vb.views["c_"..k].value) then              
-              download_update(toolmeta, amount_selected==count)
+              vb.views["c_"..k].active = true
             end
-          end          
-        end
+          end        
+          
+          vb.views.update_button.text = "Update\nselected Tools"
+        
+        else 
+          
+          init_progress()
+          
+          vb.views.update_button.text = "Cancel\nupdate process"
+           
+          -- Download and install user selected updates                                                
+          for k,toolmeta in ipairs(updates) do            
+            if (vb.views["c_"..k].value) then              
+              vb.views["c_"..k].active = false
+              download_update(toolmeta, progress_callback, completed_one, completed_all)        
+            end
+          end  
+        
+        end                          
+      
+      end -- end Update Button
     }
     
     --- Select All Button
@@ -652,7 +765,7 @@ local function browser(autoclose, silent)
       left_column_height = 100
     end 
     
-    -- Body
+    -- Main
     main:add_child(                      
       vb:row {          
         spacing = 5, 
@@ -671,24 +784,42 @@ local function browser(autoclose, silent)
         -- right column
         pages          
       }     
-    ) -- end body               
+    ) -- end Main               
+  
+    status.visible = false
+    main.visible = true
     
-    main:add_child(
-      vb:column{
-        vb:text {
-          id = "current_download",
-          visible = false
-        },
-        vb:text {
-          id = "progress",
-          visible = false
-        }      
-      }
-    )
-    
+    -- Show dialog now because it wasn't open before
+    if (silent and not dialog and not dialog.visible) then
+      dialog = renoise.app():show_custom_dialog(      
+      TOOL_NAME, body)
+    end
+      
   end
   
-  json_find_updates(success, error, complete)  
+  -- Check RIGHT NOW!  
+  json_find_updates(success, error, complete)    
+end
+
+
+local function browser_open(autoclose, silent)
+  -- If dialog is already open, focus it and be done with it.
+  -- To recheck updates, user has to close the dialog first.
+  if (dialog and dialog.visible) then    
+    dialog:show()
+    return
+  end    
+  
+  if (download_queue:count() == 0 or not vb) then
+    browser_init(autoclose, silent)  
+    return
+  end
+  
+  if (not silent) then
+    dialog = renoise.app():show_custom_dialog(      
+      TOOL_NAME, body)        
+   end
+  
 end
 
 
@@ -706,7 +837,7 @@ end
 if (not options.Shown.value and options.CheckOnStartup.value) then  
   local autoclose = false
   local silent = true
-  browser(autoclose, silent)
+  browser_open(autoclose, silent)
 end
 
 -- When starting or loading a new song, set a flag to true.
@@ -729,6 +860,6 @@ renoise.tool():add_menu_entry {
   invoke = function()
     local autoclose = false
     local silent = false
-    browser(autoclose, silent)
+    browser_open(autoclose, silent)
   end
 }
