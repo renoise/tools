@@ -2,7 +2,7 @@
 <RenoiseScriptingTool doc_version="0">
   <Name>Create Tool</Name>
   <Id>com.renoise.CreateTool</Id>
-  <Version>7</Version>
+  <Version>8</Version>
   <ApiVersion>2</ApiVersion>
   <Author>Bantai</Author>
   <Category>Development</Category>
