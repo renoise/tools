@@ -32,7 +32,7 @@ local ok,err = manifest:load_from("manifest.xml")
 local TOOL_NAME = manifest:property("Name").value
 local TOOL_ID = manifest:property("Id").value
 
-local DOMAIN  = 'http://tools.marvin.nl/'
+local DOMAIN  = 'http://tools.renoise.com/'
 local JSON_RPC_URL = DOMAIN .. 'services/json-rpc'
 
 -- Maximum number of tool updates per page in the browser
