@@ -364,12 +364,12 @@ function Request:__init(custom_settings)
   self.url_parts = URL:parse(self.url, self.settings.default_parts)  
 
   if (not table.is_empty(self.settings.data)) then
-    if (self.settings.method == Request.GET) then
+    if (self.settings.method == Request.GET) then      
       if (not self.url_parts.query) then
         self.url = self.url .. "?" .. self:_get_payload()
       else
         self.url = self.url .. "&" .. self:_get_payload()
-      end
+      end      
     elseif (self.settings.method == Request.POST) then
       -- convert space entities
       self:_set_payload(self:_get_payload():gsub("%%20", "+"))
@@ -603,10 +603,16 @@ function Request:_read_header()
   if (self.settings.method == Request.POST) then
     content_length = #self:_get_payload()
   end
-
+  
+  local path = self.url_parts.path
+  local path_start = self.url:find(self.url_parts.path, nil, true)      
+  if (path_start) then
+    path = self.url:sub(path_start)
+  end
+  
   -- Setup the header
   local header = string.format("%s %s HTTP/1.1\r\n",
-     self.settings.method, self.url_parts.path)
+     self.settings.method, path)
   self:_set_header("Host", self.url_parts.host) 
   self:_set_header("Content-Type", self.settings.content_type)  
   self:_set_header("Content-Length", content_length)  
