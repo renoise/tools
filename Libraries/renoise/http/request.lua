@@ -60,8 +60,12 @@ read = function()
   -- Loop through the Requests pool
   for k,request in ipairs(requests_pool) do
     
+    -- Read Header
+    if (not request.header_received) then                  
+      request:_read_header()
+      
     -- Paused  
-    if (request.paused and request.progress.status ~= Progress.PAUSED) then            
+    elseif (request.paused and request.progress.status ~= Progress.PAUSED) then            
       request.progress:_set_status(Progress.PAUSED)            
       log:info("Request paused.")
       -- stop polling when the only request is paused
@@ -117,7 +121,7 @@ end
 class "Request"
 
 -- Library version
-Request.VERSION = "100508"
+Request.VERSION = "100509"
 
 -- Definition of HTTP request methods
 Request.GET = "GET"
@@ -167,13 +171,16 @@ Request.default_settings = table.create{
   async = true,
 
   -- Set a local timeout (in milliseconds) for the request of the header.
-  header_timeout = 10000, 
+  header_timeout = 0, 
   
   -- Set a local timeout (in milliseconds) for the request of the body.
   timeout = 0, -- 0 means: until connection is closed
   
   -- Maximum number of automatic request retries.
   max_retries = 30,
+  
+  -- Number of lines to read per cycle
+  lines_per_try = 6,
   
   -- Read cycles to wait between retries
   wait = 0, 
@@ -281,7 +288,7 @@ end
 --  A set of key/value pairs that configure the request. All options are 
 -- optional. A default can be set for any option with Request:setup().
 function Request:__init(custom_settings)  
-  print("\n")
+  log:info()
   log:info(">>> NEW REQUEST <<<")  
   
   custom_settings = custom_settings or table.create()
@@ -384,7 +391,8 @@ function Request:__init(custom_settings)
     self:_do_callback("Incorrect URL")
     return false
   end
-  
+    
+  -- Start 
   self:_enqueue()
 end
 
@@ -437,7 +445,8 @@ end
 -- Retrieves the header from the server and 
 -- schedules the request for further download
 function Request:_enqueue()
-  local success, socket_error = self:_read_header()
+  local success, socket_error = self:_send_header()
+  
   if (success) then
     requests_pool:insert(self)
     self.progress:_set_status(Progress.QUEUED)
@@ -565,9 +574,9 @@ function Request:_get_user_agent_string()
 end
 
 
----## read_header ##---
--- Sets up a connection and loads the HTTP header from the server
-function Request:_read_header()
+---## send_header ##---
+-- Sets up a connection, sends the request header to the server
+function Request:_send_header()  
   
   local socket_error = nil
   
@@ -604,10 +613,12 @@ function Request:_read_header()
     content_length = #self:_get_payload()
   end
   
-  local path = self.url_parts.path
-  local path_start = self.url:find(self.url_parts.path, nil, true)      
-  if (path_start) then
-    path = self.url:sub(path_start)
+  local path = self.url_parts.path  
+  if (path and path:find("[^/]")) then
+    local path_start = self.url:find(self.url_parts.path, nil, true)      
+    if (path_start and #self.url_parts.path > 0) then
+      path = self.url:sub(path_start)
+    end
   end
   
   -- Setup the header
@@ -643,32 +654,71 @@ function Request:_read_header()
       return false, socket_error
     end
   end
+  
+   -- Init response header
+  self.header_lines = table.create()
+  self.header_received = false 
+ 
+  return true
+end
 
-  -- Read the response header
-  local header_lines = table.create()
 
-  while true do  
-    local line, socket_error = self.client_socket:receive(
-      "*l", self.settings.header_timeout)
-      
-    if (not line) then
-      log:warn("Unexpected EOF while receiving header: "..socket_error)
-      break -- unexpected EOF
+---## read_header ##---
+-- Try to read a couple of response header lines
+function Request:_read_header()    
+   
+  local line, socket_error = nil
+  
+  -- Try to get a few lines at a time
+  for i=1,self.settings.lines_per_try do
+    
+    if (not self.client_socket) then
+      break
     end
-
+    
+    line, socket_error = self.client_socket:receive(
+        "*l", self.settings.header_timeout)    
+        
     if (line == "") then
-      break -- header ends with an empty line
+      -- header ends with an empty line
+      self.retries = 0
+      self.header_received = true
+      local success, error = self:_parse_header()
+      if (error) then
+        self:_do_callback(error)
+      end
+      break                
+    elseif (line) then
+      -- we got a line
+      self.retries = 0
+      self.header_lines:insert(line)      
     end
-
-    header_lines:insert(line)
+  
   end
+  
+  if (socket_error) then
+    self.retries = self.retries + 1
+  end
+  
+  if (self.retries == self.settings.max_retries) then
+    -- quit trying
+    self:_do_callback(socket_error)      
+    return false
+  end
+end
 
+
+---## parse_header ##---
+-- Get meaningful data from the response header
+function Request:_parse_header()
+  
+  local header_lines = self.header_lines
   log:info(("=== RESPONSE HEADER (%s) ==="):format(self.url))
   log:info(header_lines)
   log:info()
   
   self.response.header = Util:parse_message(header_lines:concat("\n"))  
-
+  
   if (self.response.header and #self.response.header > 0) then
     -- TODO check content-length and HTTP status code  
     self.status_code = self:_get_status_code(self.response.header[1])
@@ -683,7 +733,7 @@ function Request:_read_header()
     
     self.response.transfer_encoding = 
       tostring(self.response.header["Transfer-Encoding"]):lower()
-      
+    
     -- Redirection
     if (self.response.header["Location"] and 
       #self.response.header["Location"] > 0
@@ -702,7 +752,7 @@ function Request:_read_header()
         location = URL:build(new_url_parts)
       end
       self.url = location
-      return self:_read_header()
+      return self:_send_header()
     end
     return true
   else
@@ -714,9 +764,10 @@ end
 ---## read_content ##---
 -- Loads the response from the server
 function Request:_read_content()  
+    
   assert(self.client_socket and self.response.header,
     "read_header failed or was not called")
-  
+   
   self.progress:_set_status( Progress.BUSY )
   self.text_status = nil  
     
@@ -746,7 +797,7 @@ function Request:_read_content()
       log:info(string.format("%d bytes read (%s)", 
         self.length, self.url))
     end
-    
+      
     -- Detect end of transmission
     if (self.length >= self.response.content_length
       and self.chunk_size == 0) then
@@ -764,7 +815,7 @@ function Request:_read_content()
     end
     
   else
-  -- timeout or error
+    -- timeout or error
     self.text_status = Request.TIMEOUT
     
     if (socket_error == "timeout" and 
