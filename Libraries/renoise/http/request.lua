@@ -117,7 +117,7 @@ end
 class "Request"
 
 -- Library version
-Request.VERSION = "100507"
+Request.VERSION = "100508"
 
 -- Definition of HTTP request methods
 Request.GET = "GET"
@@ -321,6 +321,9 @@ function Request:__init(custom_settings)
   
   -- Retried timeouts 
   self.retries = 0
+  
+  -- Setup wait countdown
+  self.wait = self.settings.wait
   
   -- Number of redirects
   self.redirects = 0
@@ -971,7 +974,15 @@ end
 ---## do_callback ##---
 -- Finalizes the transaction and executes the optional callback functions
 function Request:_do_callback(socket_error)
-  -- flush cache
+  
+  -- Close the connection and invalidate  
+  if (self.client_socket and self.client_socket.is_open) then
+    self.client_socket:close()    
+  end  
+  self.client_socket = nil  
+  self.response.header = nil
+  
+  -- Flush cache
   if (self.settings.save_file) then
     self:_write_file(self.cache)
   end
@@ -1057,10 +1068,6 @@ function Request:_do_callback(socket_error)
       end -- temp file exists       
     end -- save file to harddisk
   end -- no socket error
-  
-  -- close the connection and invalidate
-  self.client_socket = nil
-  self.response.header = nil
     
   -- Decode data of non-plain datatypes
   local data = nil 
