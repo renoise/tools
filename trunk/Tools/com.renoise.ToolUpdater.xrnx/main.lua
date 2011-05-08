@@ -231,7 +231,8 @@ end
 
 -- Start installation of the updates if all downloads have completed.
 local function start_installation(completed_all)  
-  if (#install_paths == download_queue:count()) then               
+  
+  if (download_queue:count() == 0) then               
     
     completed_all()
     
@@ -250,30 +251,33 @@ end
 
 -- Queue an update for download and install.
 -- After the last update, trigger a validation function.
-local function download_update(meta, progress_callback, completed_one, completed_all)
+local function download_update(meta, progress_callback, completed_one, completed_all, error_callback)
   
-  local url = DOMAIN .. meta.path
+  local url = DOMAIN .. meta.path 
   
     -- ERROR CALLBACK
-  local error = function(x, t, e)        
-    print("[ERROR]", x.url, t, e)
+  local error = function(x, t, e)            
+      
     -- Add a dummy path just to flag the download as completed
     install_paths:insert("")
+    
+    error_callback(x,t,e)
   end
   
   -- COMPLETE CALLBACK
   local complete = function()                
-  
-    -- Launch callback
-    call(completed_one)
-      
-    -- Start installation when all downloads have completed
-    start_installation(completed_all)
     
     -- Remove request from queue
     if (download_queue[meta.Id]) then
       download_queue[meta.Id] = nil
     end
+  
+    -- Launch callback
+    call(completed_one)
+      
+    -- Start installation when all downloads have completed
+    start_installation(completed_all)    
+    
   end
   
   -- SUCCESS CALLBACK
@@ -286,11 +290,13 @@ local function download_update(meta, progress_callback, completed_one, completed
   -- PROGRESS CALLBACK
   local progress = progress_callback
   
+  -- Look for new updates (if not already downloading)
   if (not download_queue[meta.Id]) then
   
     local request = Request({
-      url=url, 
+      url=url,
       method=Request.GET, 
+      data={nid=meta.nid},
       save_file=true, -- write to harddisk
       default_download_folder = false, -- keep in temp folder
       success=success,
@@ -539,6 +545,8 @@ local function browser_init(autoclose, silent)
       
       return
     end
+    
+    status.text = "The following updates are available:"
                 
     local pages = vb:row{
       spacing=5
@@ -668,6 +676,7 @@ local function browser_init(autoclose, silent)
       vb.views.monitor.visible = true      
     end
     
+    -- DOWNLOAD PROGRESS CALLBACK
     local progress_callback = function(p)      
       if (vb) then            
         vb.views.current_download.text = tostring(p.url)
@@ -691,17 +700,26 @@ local function browser_init(autoclose, silent)
       end
     end
     
+    -- DOWNLOAD FAILED CALLBACK
+    local download_failed = function(x,t,e)
+      status.visible = true
+      status.text = ("Download failed: %s\nReason: %s"):format(x.url, e)
+      print("[ERROR]", x.url, t, e)
+    end
+    
+    -- COMPLETED ONE DOWNLOAD
     -- Called whenever a download has finished
     local completed_one = function()      
     end
     
+    -- COMPLETED ALL DOWNLOADS
     -- Stuff to do when installation is complete
     local completed_all = function()          
       if (vb) then
         -- Enable all buttons
         vb.views.update_button.active = true
         vb.views.select_all_button.active = true        
-        -- Hide progress        
+        -- Reset progress        
         vb.views.monitor.visible = false
         vb.views.current_download.text = ""
         vb.views.progress.text = ""        
@@ -736,6 +754,8 @@ local function browser_init(autoclose, silent)
         
         else 
           
+          status.text = ""
+          status.visible = false
           init_progress()
           
           vb.views.update_button.text = "Cancel\nupdate process"
@@ -744,7 +764,8 @@ local function browser_init(autoclose, silent)
           for k,toolmeta in ipairs(updates) do            
             if (vb.views["c_"..k].value) then              
               vb.views["c_"..k].active = false
-              download_update(toolmeta, progress_callback, completed_one, completed_all)        
+              download_update(toolmeta, progress_callback, 
+                completed_one, completed_all, download_failed)        
             end
           end  
         
@@ -786,11 +807,11 @@ local function browser_init(autoclose, silent)
       }     
     ) -- end Main               
   
-    status.visible = false
+    -- status.visible = false
     main.visible = true
     
     -- Show dialog now because it wasn't open before
-    if (silent and not dialog and not dialog.visible) then
+    if (silent and not dialog) then
       dialog = renoise.app():show_custom_dialog(      
       TOOL_NAME, body)
     end
