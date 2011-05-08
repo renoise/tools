@@ -979,8 +979,7 @@ function Request:_do_callback(socket_error)
   if (self.client_socket and self.client_socket.is_open) then
     self.client_socket:close()    
   end  
-  self.client_socket = nil  
-  self.response.header = nil
+  self.client_socket = nil    
   
   -- Flush cache
   if (self.settings.save_file) then
