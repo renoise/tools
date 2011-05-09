@@ -121,7 +121,7 @@ end
 class "Request"
 
 -- Library version
-Request.VERSION = "100509"
+Request.VERSION = "100510"
 
 -- Definition of HTTP request methods
 Request.GET = "GET"
@@ -169,6 +169,9 @@ Request.default_settings = table.create{
   -- TODO By default, all requests are sent asynchronous. If you need 
   -- synchronous requests, set this option to false.
   async = true,
+  
+  -- Timeout when creating a connection. Default = 1000 ms.
+  connection_timeout = 3000,
 
   -- Set a local timeout (in milliseconds) for the request of the header.
   header_timeout = 0, 
@@ -176,11 +179,11 @@ Request.default_settings = table.create{
   -- Set a local timeout (in milliseconds) for the request of the body.
   timeout = 0, -- 0 means: until connection is closed
   
-  -- Maximum number of automatic request retries.
-  max_retries = 30,
+  -- Maximum number of automatic request retries. About 10 per second.
+  max_retries = 100,
   
   -- Number of lines to read per cycle
-  lines_per_try = 6,
+  lines_per_cycle = 20,
   
   -- Read cycles to wait between retries
   wait = 0, 
@@ -331,6 +334,9 @@ function Request:__init(custom_settings)
   
   -- Setup wait countdown
   self.wait = self.settings.wait
+  
+  -- Amout of lines to read per idle tick
+  self.lines_per_cycle = 1
   
   -- Number of redirects
   self.redirects = 0
@@ -597,10 +603,15 @@ function Request:_send_header()
   end
   
   -- Create a SocketClient object and connect with the server
-  self.client_socket, socket_error = renoise.Socket.create_client(
-    self.url_parts.host,  -- address
-    tonumber(self.url_parts.port or 80), -- port
-    renoise.Socket.PROTOCOL_TCP) -- protocol
+  -- Re-use socket if it's still open
+  if (not self.client_socket or not self.client_socket.is_open) then    
+    self.client_socket, socket_error = renoise.Socket.create_client(
+      self.url_parts.host,  -- address
+      tonumber(self.url_parts.port or 80), -- port
+      renoise.Socket.PROTOCOL_TCP, -- protocol
+      self.settings.connection_timeout -- timeout
+    )
+  end
   
   if not (self.client_socket) then
      return false, socket_error
@@ -670,7 +681,7 @@ function Request:_read_header()
   local line, socket_error = nil
   
   -- Try to get a few lines at a time
-  for i=1,self.settings.lines_per_try do
+  for i=1,self.lines_per_cycle do
     
     if (not self.client_socket) then
       break
@@ -681,6 +692,7 @@ function Request:_read_header()
         
     if (line == "") then
       -- header ends with an empty line
+      self.lines_per_cycle = 1
       self.retries = 0
       self.header_received = true
       local success, error = self:_parse_header()
@@ -690,13 +702,16 @@ function Request:_read_header()
       break                
     elseif (line) then
       -- we got a line
+      self.lines_per_cycle = self.settings.lines_per_cycle      
       self.retries = 0
       self.header_lines:insert(line)      
-    end
-  
+    else
+      self.lines_per_cycle = 1     
+    end  
   end
   
   if (socket_error) then
+    log:warn("Response header timed-out")    
     self.retries = self.retries + 1
   end
   
@@ -1031,9 +1046,10 @@ end
 ---## do_callback ##---
 -- Finalizes the transaction and executes the optional callback functions
 function Request:_do_callback(socket_error)
-  
+      
   -- Close the connection and invalidate  
   if (self.client_socket and self.client_socket.is_open) then
+    log:info("Closing socket")
     self.client_socket:close()    
   end  
   self.client_socket = nil    
