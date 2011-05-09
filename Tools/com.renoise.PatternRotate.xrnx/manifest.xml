@@ -2,7 +2,7 @@
 <RenoiseScriptingTool>
   <ApiVersion>2.0</ApiVersion>
   <Id>com.renoise.PatternRotate</Id>
-  <Version>0.2</Version>
+  <Version>0.3</Version>
   <Name>Rotate Pattern</Name>
   <Author>Taktik (taktik@renoise.com)</Author>
   <Description>Rotates pattern content (shift and wrap content around the pattern start and end) and automation points for the current pattern.
