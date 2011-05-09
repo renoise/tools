@@ -133,7 +133,7 @@ local function get_installed_tools(filter)
   end
 end
 
--- Create a listing of Tools installed directly 
+-- Create a listing of Tools installed directly
 -- under the Tools root folder.
 local function get_filtered_tools()           
   if (not filtered_tools) then    
@@ -144,13 +144,16 @@ local function get_filtered_tools()
     local tools = renoise.app().installed_tools    
     
     for _,tool in ipairs(tools) do         
-      local bundle = tool.bundle_path
-      local pos = bundle:find(tool.id) - 2 
-      local dir = bundle:sub(1,pos)    
-      if (dir == TOOLS_ROOT) then      
-        filtered_tools[tool.id] = tool
-      end    
-    end  
+      local path = tool.bundle_path
+      local found = path:find(tool.id)
+      if (found and found > 2) then
+        local pos = found - 2 
+        local dir = path:sub(1,pos)    
+        if (dir == TOOLS_ROOT) then      
+          filtered_tools[tool.id] = tool
+        end    
+      end
+    end
     
   end
   
@@ -635,9 +638,10 @@ local function browser_init(autoclose, silent)
       
       -- Pagination
       if (k % MAX_TOOLS == 0 or k == #updates) then
-        local pid = "page_"..k / MAX_TOOLS
+        local pagenumber = math.ceil(k / MAX_TOOLS)
+        local pid = "page_"..pagenumber
         page_table[pid] = page
-        pages:add_child(page_table[pid]) 
+        pages:add_child(page_table[pid])
         page = vb:column{
           spacing=3,
           visible=false,
@@ -780,21 +784,16 @@ local function browser_init(autoclose, silent)
       text = "Select All",
       notifier = batch_select
     }
-          
-    local left_column_height = "100%"
-    if (#updates < 3) then 
-      left_column_height = 100
-    end 
     
     -- Main
-    main:add_child(                      
+    main:add_child(
       vb:row {          
         spacing = 5, 
                   
         -- left column
         vb:column { 
           margin = 3,
-          height = left_column_height,
+          height = 100,
           style = "body",
           uniform = true,              
           page_selector,
