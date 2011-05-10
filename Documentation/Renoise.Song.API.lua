@@ -1082,6 +1082,9 @@ renoise.song().instruments[].plugin_properties.plugin_device.name
 renoise.song().instruments[].plugin_properties.plugin_device.active_preset, _observable
   -> [number, 0 when none is active or available]
 
+renoise.song().instruments[].plugin_properties.plugin_device.active_preset_data
+  -> [string, raw xml data of the active preset]
+
 renoise.song().instruments[].plugin_properties.plugin_device.presets[]
   -> [read-only, list of strings]
 
