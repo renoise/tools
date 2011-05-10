@@ -37,58 +37,62 @@ renoise.tool()
 
 -------- Functions
 
--- menu_entries: Insert a new menu entry somewhere in Renoise's existing
--- context menus or the global app menu. Insertion can be done during
--- script initialization, but can also be done dynamically later on.
---
--- The Lua table passed to 'add_menu_entry' is defined as:
---
--- * Required fields:
---   + ["name"] = Name and 'path' of the entry as shown in the global menus or
---       context menus to the user
---   + ["invoke"] = A function that is called as soon as the entry is clicked
---
--- * Optional fields:
---   + ["active"] = A function that should return true or false. When returning
---       false, the action will not be invoked and will be "greyed out" in
---       menus. This function is always called before "invoke", and every time
---       prior to a menu becoming visible.
---   + ["selected"] = A function that should return true or false. When
---       returning true, the entry will be marked as "this is a selected option"
---
--- Positioning entries:
---
--- You can place your entries in any context menu or any window menu in Renoise.
--- To do so, use one of the specified categories in its name:
---
--- + "Window Menu" -- Renoise icon menu in the window caption on Windows/Linux
--- + "Main Menu" (:File", ":Edit", ":View", ":Tools" or ":Help") -- Main menu
--- + "Scripting Menu" (:File",  or ":Tools") -- Scripting Editor & Terminal
--- + "Disk Browser Directories"
--- + "Disk Browser Files"
--- + "Instrument Box"
--- + "Pattern Sequencer"
--- + "Pattern Editor"
--- + "Pattern Matrix"
--- + "Pattern Matrix Header"
--- + "Pattern Matrix",
--- + "Sample Editor"
--- + "Sample Editor Ruler"
--- + "Sample List"
--- + "Sample Mappings"
--- + "Mixer"
--- + "Track DSPs Chain"
--- + "Track DSPs Chain List"
--- + "Track Automation"
--- + "Track Automation List"
--- + "DSP Device"
--- + "DSP Device Header"
--- + "DSP Device Automation"
---
--- Separating entries:
---
--- To divide entries into groups (separate entries with a line), prepend one or
--- more dashes to the name, like "--- Main Menu:Tools:My Tool Group Starts Here"
+--[[
+
+menu_entries: Insert a new menu entry somewhere in Renoise's existing
+context menus or the global app menu. Insertion can be done during
+script initialization, but can also be done dynamically later on.
+
+The Lua table passed to 'add_menu_entry' is defined as:
+
+* Required fields:
+  + ["name"] = Name and 'path' of the entry as shown in the global menus or
+      context menus to the user
+  + ["invoke"] = A function that is called as soon as the entry is clicked
+
+* Optional fields:
+  + ["active"] = A function that should return true or false. When returning
+      false, the action will not be invoked and will be "greyed out" in
+      menus. This function is always called before "invoke", and every time
+      prior to a menu becoming visible.
+  + ["selected"] = A function that should return true or false. When
+      returning true, the entry will be marked as "this is a selected option"
+
+Positioning entries:
+
+You can place your entries in any context menu or any window menu in Renoise.
+To do so, use one of the specified categories in its name:
+
++ "Window Menu" -- Renoise icon menu in the window caption on Windows/Linux
++ "Main Menu" (:File", ":Edit", ":View", ":Tools" or ":Help") -- Main menu
++ "Scripting Menu" (:File",  or ":Tools") -- Scripting Editor & Terminal
++ "Disk Browser Directories"
++ "Disk Browser Files"
++ "Instrument Box"
++ "Pattern Sequencer"
++ "Pattern Editor"
++ "Pattern Matrix"
++ "Pattern Matrix Header"
++ "Pattern Matrix",
++ "Sample Editor"
++ "Sample Editor Ruler"
++ "Sample List"
++ "Sample Mappings"
++ "Mixer"
++ "Track DSPs Chain"
++ "Track DSPs Chain List"
++ "Track Automation"
++ "Track Automation List"
++ "DSP Device"
++ "DSP Device Header"
++ "DSP Device Automation"
+
+Separating entries:
+
+To divide entries into groups (separate entries with a line), prepend one or
+more dashes to the name, like "--- Main Menu:Tools:My Tool Group Starts Here"
+
+]]
 
 -- Returns true if the given entry already exists, otherwise false.
 renoise.tool():has_menu_entry(menu_entry_name)
@@ -101,37 +105,41 @@ renoise.tool():add_menu_entry(menu_entry_definition_table)
 renoise.tool():remove_menu_entry(menu_entry_name)
 
 
--- keybindings: Register key bindings somewhere in Renoise's existing
--- set of bindings.
---
--- The Lua table passed to add_keybinding is defined as:
---
--- * Required fields:
---   + ["name"] = The scope, name and category of the key binding.
---   + ["invoke"] = A function that is called as soon as the mapped key is
---       pressed. The callback has one argument: "repeated", indicating
---       if its a virtual key repeat.
---
--- The key binding's 'name' must have 3 parts, separated by ":" e.g.
--- [scope:topic_name:binding_name]
---
--- * 'scope' is where the shortcut will be applied, just like those
---    in the categories list for the keyboard assignment preference pane.
--- * 'topic_name' is useful when grouping entries in the key assignment pane.
---    Use "tool" if you can't come up with something meaningful.
--- * 'binding_name' is the name of the binding.
---
--- Currently available scopes are:
--- > "Global", "Automation", "Disk Browser", "Instrument Box", "Mixer",
--- > "Pattern Editor", "Pattern Matrix", "Pattern Sequencer", "Sample Editor"
--- > "Track DSPs Chain"
---
--- Using an unavailable scope will not fire an error, instead it will render the
--- binding useless. It will be listed and mappable, but never be invoked.
---
--- There's no way to define default keyboard shortcuts for your entries. Users
--- manually have to bind them in the keyboard prefs pane. As soon as they do,
--- they'll get saved just like any other key binding in Renoise.
+
+--[[
+
+keybindings: Register key bindings somewhere in Renoise's existing
+set of bindings.
+
+The Lua table passed to add_keybinding is defined as:
+
+* Required fields:
+  + ["name"] = The scope, name and category of the key binding.
+  + ["invoke"] = A function that is called as soon as the mapped key is
+      pressed. The callback has one argument: "repeated", indicating
+      if its a virtual key repeat.
+The key binding's 'name' must have 3 parts, separated by ":" e.g.
+[scope:topic_name:binding_name]
+
+* 'scope' is where the shortcut will be applied, just like those
+  in the categories list for the keyboard assignment preference pane.
+* 'topic_name' is useful when grouping entries in the key assignment pane.
+  Use "tool" if you can't come up with something meaningful.
+* 'binding_name' is the name of the binding.
+
+Currently available scopes are:
+> "Global", "Automation", "Disk Browser", "Instrument Box", "Mixer",
+> "Pattern Editor", "Pattern Matrix", "Pattern Sequencer", "Sample Editor"
+> "Track DSPs Chain"
+
+Using an unavailable scope will not fire an error, instead it will render the
+binding useless. It will be listed and mappable, but never be invoked.
+
+There's no way to define default keyboard shortcuts for your entries. Users
+manually have to bind them in the keyboard prefs pane. As soon as they do,
+they'll get saved just like any other key binding in Renoise.
+
+]]
 
 -- Returns true when the given keybinging already exists, otherwise false.
 renoise.tool():has_keybinding(keybinding_name)
@@ -142,6 +150,7 @@ renoise.tool():add_keybinding(keybinding_definition_table)
 
 -- Remove a previously added key binding by specifying its name and path.
 renoise.tool():remove_keybinding(keybinding_name)
+
 
 
 --[[
@@ -191,7 +200,7 @@ specifying the mapping via a control's "control.midi_mapping" property. Such
 controls will get highlighted as soon as the MIDI mapping dialog is opened.
 Then, users simply click on the highlighted control to map MIDI messages.
 
-]]--
+]]
 
 -- Returns true when the given mapping already exists, otherwise false.
 renoise.tool():has_midi_mapping(midi_mapping_name)
@@ -203,17 +212,57 @@ renoise.tool():add_midi_mapping(midi_mapping_definition_table)
 -- Remove a previously added midi mapping by specifying its name.
 renoise.tool():remove_midi_mapping(midi_mapping_name)
 
+
+
+--[[ 
+
+file_import_hooks: Add support for new filetypes in Renoise. Registered file
+types will show up in Renoise's disk browser and can also be loaded by drag and 
+dropping the files onto the Renoise window. When adding hooks for files which
+Renoise already supports, your tool's import functions will override the internal
+import functions. 
+
+Always load the file into the currently selected component, like 
+'renoise.song().selected_track','selected_instrument','selected_sample'.
+
+Preloading/prehearing sample files is not supported via tools.
+
+The Lua table passed to 'add_file_import_hook' is defined as:
+
+* Required fields:
+  + ["category"] = in which disk browser category the file type shows up. 
+      "song", "dsp chain", "instrument", "sample" or "theme"
+  + ["extensions"] = a list of strings, file extensions, that will invoke
+      your hook, like for example {"txt", "swave"}
+  + ["invoke"] = function that is called to do the import. return true when
+      the import succeeded, else false.
+]]
+
+-- Returns true when the given hook already exists, otherwise false.
+renoise.tool():has_file_import_hook(category, extensions_table)
+  -> [boolean]
+
+-- Add a new file import hook as described above.
+renoise.tool():add_file_import_hook(file_import_hook_definition_table)
+
+-- Remove a previously added file import hook by specifying its category 
+-- and extension(s)
+renoise.tool():remove_file_import_hook(category, extensions_table)
+
+
+
 --[[
 
 Register a timer function or table with a function and context (a method)
 that periodically gets called by the app_idle_observable for your tool.
+
 Modal dialogs will avoid that timers are called. To create a one-shot timer,
 simply call remove_timer at the end of your timer function. Timer_interval_in_ms
 must be > 0. The exact interval your function is called will vary
 a bit, depending on workload; e.g. when enough CPU time is available the
-rounding error will be around +/- 5 ms
+rounding error will be around +/- 5 ms.
 
-]]--
+]]
 
 -- Returns true when the given function or method was registered as a timer.
 renoise.tool():has_timer(function or {object, function} or {function, object})
@@ -272,6 +321,7 @@ renoise.tool().app_new_document_observable
 renoise.tool().app_saved_document_observable
   -> [renoise.Document.Observable object]
 
+
 --[[
 
 Get or set an optional renoise.Document.DocumentNode object, which will be
@@ -283,7 +333,7 @@ The preference XML file is saved/loaded within the tool bundle as
 
 A simple example:
 
-    -- create a document first
+    -- create a document
     my_options = renoise.Document.create("ScriptingToolPreferences") {
      some_option = true,
      some_value = "string_value"
@@ -291,6 +341,7 @@ A simple example:
 
 Or:
 
+    -- create a document
     class "ExampleToolPreferences"(renoise.Document.DocumentNode)
 
       function ExampleToolPreferences:__init()
@@ -308,7 +359,11 @@ Or:
       -- done by you, or after new values got loaded or a view changed the value:
       my_options.some_option:add_notifier(function() end)
 
-]]--
+And assign it:
+
+    -- 'my_options' will be loaded/saved automatically with the tool now:
+    renoise.tool().preferences = my_options
+]]
 
 -- Please see Renoise.Document.API for more info about renoise.DocumentNode
 -- and for info on Documents in general.
