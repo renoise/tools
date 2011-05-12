@@ -25,10 +25,44 @@ local function process_data()
   end
  
   local instrument = renoise.song().selected_instrument
-  local splitmap = instrument.split_map
   local sample = renoise.song().selected_sample
   local int_sample = renoise.song().selected_sample_index
   local buffer = sample.sample_buffer
+  
+  local mapping = nil
+  local int_layer = nil
+  
+  --print("ON layers:", table.getn(instrument.sample_mappings[renoise.Instrument.LAYER_NOTE_ON]))
+  --print("OFF layers:", table.getn(instrument.sample_mappings[renoise.Instrument.LAYER_NOTE_OFF]))
+  
+  --look for old sample's sample mapping:
+  for int_sample_mapping = 1, table.getn(instrument.sample_mappings[renoise.Instrument.LAYER_NOTE_ON]) do
+  
+    local sample_mapping = instrument.sample_mappings[renoise.Instrument.LAYER_NOTE_ON][int_sample_mapping]
+	if sample_mapping.sample_index == int_sample then
+	  mapping = sample_mapping
+	  --print("sample found on ON layer ", int_sample_mapping)
+	  int_layer = renoise.Instrument.LAYER_NOTE_ON
+	  break
+	else
+	  --print(sample_mapping.sample_index,int_sample)
+	end
+  
+  end
+
+  if mapping == nil then
+    for int_sample_mapping = 1, table.getn(instrument.sample_mappings[renoise.Instrument.LAYER_NOTE_OFF]) do
+  
+      local sample_mapping = instrument.sample_mappings[renoise.Instrument.LAYER_NOTE_OFF][int_sample_mapping]
+	  if sample_mapping.sample_index == int_sample then
+  	    mapping = sample_mapping
+		print("sample found on OFF layer ", int_sample_mapping)
+		int_layer = renoise.Instrument.LAYER_NOTE_OFF
+	    break
+	  end
+  
+    end
+  end
 
   if (buffer.has_sample_data ~= true) then 
     renoise.app():show_error("No sample selected.")
@@ -74,6 +108,8 @@ local function process_data()
 
   local int_frame
   local int_frame_new = 1
+  
+  buffer_new:prepare_sample_data_changes()
 
   if (buffer.selection_start > 1) then
     --copy the sample data before start of selection
@@ -148,7 +184,12 @@ local function process_data()
   buffer_new:finalize_sample_data_changes() 
   
   instrument:delete_sample_at(int_sample)
-  instrument.split_map = splitmap
+  
+  if mapping then
+    instrument:insert_sample_mapping(
+      int_layer, int_sample , mapping.base_note, mapping.note_range, mapping.velocity_range
+    ) 
+  end
 
 end
 
