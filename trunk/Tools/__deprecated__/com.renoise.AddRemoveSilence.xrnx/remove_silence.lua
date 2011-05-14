@@ -21,7 +21,6 @@ local int_frames = nil
 local int_chans = nil
 local int_mode = MODE_SILENCE
 
-
 --------------------------------------------------------------------------------
 
 local function is_under_threshold(int_frame)
