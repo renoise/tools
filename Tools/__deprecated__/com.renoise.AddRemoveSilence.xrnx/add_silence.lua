@@ -25,6 +25,12 @@ local function process_data()
   end
  
   local instrument = renoise.song().selected_instrument
+  
+  if table.getn(instrument.samples) > 0 and table.getn(instrument.samples[1].slice_markers) > 0 then
+    renoise.app():show_warning("This instrument contains slice markers, the script cannot operate on it.")
+	return
+  end
+  
   local sample = renoise.song().selected_sample
   local int_sample = renoise.song().selected_sample_index
   local buffer = sample.sample_buffer
