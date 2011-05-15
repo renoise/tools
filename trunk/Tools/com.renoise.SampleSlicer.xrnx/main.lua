@@ -27,6 +27,7 @@ local bDoMapping = true
 local bDoSync = true
 local nSyncLines = 0
 local bDoLoop = false
+local bUseMarkers = false
 local nLoopMode = LOOP_MODE_FORWARD
 local bDoAutoseek = false
 local rSampleSelStart = 0
@@ -212,11 +213,29 @@ function show_dialog()
   }
   
   local row6 = vb:row {
+  
+    vb:switch {
+      items = {"Slice","Mark"},
+	  tooltip = "Choose wether to actually divide the sample into more samples or use the slicer markers feature",
+      height = DIALOG_BUTTON_HEIGHT,
+      width = vb.views["nSlices"].width,    
+      notifier = function(index)
+	    print(index)
+		if index == 1 then
+		  bUseMarkers = false
+		else
+		  bUseMarkers = true
+		end
+      end
+    }
+
+  }
+  
+  local row7 = vb:row {
     vb:button {
       text = "Slice!",
       tooltip = "Split the selected sample into slices",
       height = DIALOG_BUTTON_HEIGHT,
-      width = vb.views["nSlices"].width,
       notifier = function()
         slice_it(false)
         stop_slice_show()
@@ -226,7 +245,6 @@ function show_dialog()
       text = "Cancel",
       tooltip = "Close dialog and abort operation",
       height = DIALOG_BUTTON_HEIGHT,
-      width = vb.views["nSlices"].width,    
       notifier = function()
         stop_slice_show()
         dialog:close()        
@@ -249,6 +267,7 @@ function show_dialog()
       row4,
       row5,
       row6,
+      row7,
       vb:space { }
     }--,
     --{'Slice!','Cancel'}
@@ -338,6 +357,8 @@ end
 
 function slice_it(bSliceShow)
 
+  print(bUseMarkers)
+
   nSlices = tonumber(nSlices)
   rSliceSize = 0
   if(nSlices==nil) then
@@ -409,104 +430,132 @@ function slice_it(bSliceShow)
         break -- can't map any more notes
       end
         
-      local smpNew = insSel.insert_sample_at(insSel,nSamples+1)
-      nSamples = nSamples + 1
-      local smpBuffNew = smpNew.sample_buffer
-
+	  local smpNew = nil
+	  local smpBuffNew = nil
+		
       if (nSlice == nSlices) then
         -- the last slice will contain any other remaining piece of the 
         -- source sample (should be a bunch of bytes)
         rSliceSize = rSmpSize - nFrame
       end
     
-      if (smpBuffNew:create_sample_data(smpBuffSel.sample_rate, 
-        smpBuffSel.bit_depth, smpBuffSel.number_of_channels, rSliceSize)) 
-      then
+		
+      if not bUseMarkers then
+	  
+	    --actual slicing
+	  
+  	    smpNew = insSel.insert_sample_at(insSel,nSamples+1)
+        nSamples = nSamples + 1
+        smpBuffNew = smpNew.sample_buffer
+		
+		if (smpBuffNew:create_sample_data(smpBuffSel.sample_rate, 
+          smpBuffSel.bit_depth, smpBuffSel.number_of_channels, rSliceSize)) 
+        then
   
-        smpBuffNew:prepare_sample_data_changes()
+          smpBuffNew:prepare_sample_data_changes()
         
-        local nChan, nFrameNew
-        for nFrameNew = 1, smpBuffNew.number_of_frames do
-          for nChan = 1, smpBuffSel.number_of_channels do
-            local lValue = 0
-            if(nFrame<=rSmpSize) then
-              lValue = smpBuffSel:sample_data(nChan,nFrame)
+          local nChan, nFrameNew
+          for nFrameNew = 1, smpBuffNew.number_of_frames do
+            for nChan = 1, smpBuffSel.number_of_channels do
+              local lValue = 0
+              if(nFrame<=rSmpSize) then
+                lValue = smpBuffSel:sample_data(nChan,nFrame)
+              end
+              smpBuffNew:set_sample_data(nChan,nFrameNew,lValue)
             end
-            smpBuffNew:set_sample_data(nChan,nFrameNew,lValue)
+            nFrame = nFrame + 1
           end
-          nFrame = nFrame + 1
-        end
       
-        smpNew.base_note = base_note
+          smpNew.base_note = base_note
         
-        smpNew.beat_sync_enabled = bDoSync and (nSyncLines>0)
-        if(smpNew.beat_sync_enabled) then
-          smpNew.beat_sync_lines = nSyncLines
-        end
+          smpNew.beat_sync_enabled = bDoSync and (nSyncLines>0)
+          if(smpNew.beat_sync_enabled) then
+            smpNew.beat_sync_lines = nSyncLines
+          end
       
-        if(bDoLoop) then
-          smpNew.loop_mode = nLoopMode
-        else
-          smpNew.loop_mode = renoise.Sample.LOOP_MODE_OFF
-        end
-        if (bDoAutoseek) then
-          smpNew.autoseek = bDoAutoseek
-        end
+          if(bDoLoop) then
+            smpNew.loop_mode = nLoopMode
+          else
+            smpNew.loop_mode = renoise.Sample.LOOP_MODE_OFF
+          end
+          if (bDoAutoseek) then
+            smpNew.autoseek = bDoAutoseek
+          end
        
-        smpNew.name = smpSel.name .. " slice" .. tostring(nSlice)
-        nSlice = nSlice + 1
+          smpNew.name = smpSel.name .. " slice" .. tostring(nSlice)
+          nSlice = nSlice + 1
         
-        smpBuffNew:finalize_sample_data_changes()
+          smpBuffNew:finalize_sample_data_changes()
 
-      else
+        else
   
-        renoise.app():show_error("Cannot create new sample! Aborting..")
-        renoise.song():undo()
-        return
+          renoise.app():show_error("Cannot create new sample! Aborting..")
+          renoise.song():undo()
+          return
     
-      end
-    
-    end
-  
-  end
-  
-  if not bSliceShow then
-  
-    insSel.delete_sample_at(insSel,nSmpSel)
-  
-    if(bDoMapping)then
-      -- clear off zones
-      local LAYER_NOTE_OFF = renoise.Instrument.LAYER_NOTE_OFF
-      while (#insSel.sample_mappings[LAYER_NOTE_OFF] > 0) do
-        insSel:delete_sample_mapping_at(LAYER_NOTE_OFF, 1)
-      end
-      
-      -- create on zones
-      local LAYER_NOTE_ON = renoise.Instrument.LAYER_NOTE_ON
-      while (#insSel.sample_mappings[LAYER_NOTE_ON] > 0) do
-        insSel:delete_sample_mapping_at(LAYER_NOTE_ON, 1)
-      end
-      
-      for sample_index,sample in pairs(insSel.samples) do
-        local base_note = sample.base_note
-        local note_range = {0, 119}
-        local velocity_range = {0, 0x7f}
-        
-        if (sample_index > 1) then
-          note_range[1] = base_note
-        end    
-        if (sample_index < #insSel.samples) then
-          note_range[2] = base_note
         end
-        
-        insSel:insert_sample_mapping(LAYER_NOTE_ON,
-          sample_index, base_note, note_range, velocity_range)
-      end
-    end
-  
-    bDoneSlicing = true
 
-  end  
+	  else
+	  
+	    --slice markers creation
+		local marker_position = 1+math.floor((nSlice-1)*(smpBuffSel.number_of_frames/nSlices))
+		print(marker_position)
+		smpSel:insert_slice_marker(marker_position)
+		
+	  end
+    
+    end
+
+  end
+ 
+  if not bUseMarkers then
+  
+ 	if not bSliceShow then
+  
+      insSel.delete_sample_at(insSel,nSmpSel)
+  
+      if(bDoMapping)then
+      -- clear off zones
+        local LAYER_NOTE_OFF = renoise.Instrument.LAYER_NOTE_OFF
+        while (#insSel.sample_mappings[LAYER_NOTE_OFF] > 0) do
+          insSel:delete_sample_mapping_at(LAYER_NOTE_OFF, 1)
+        end
+      
+        -- create on zones
+        local LAYER_NOTE_ON = renoise.Instrument.LAYER_NOTE_ON
+        while (#insSel.sample_mappings[LAYER_NOTE_ON] > 0) do
+          insSel:delete_sample_mapping_at(LAYER_NOTE_ON, 1)
+        end
+      
+        for sample_index,sample in pairs(insSel.samples) do
+
+          local base_note = sample.base_note
+          local note_range = {0, 119}
+          local velocity_range = {0, 0x7f}
+      
+          if (sample_index > 1) then
+            note_range[1] = base_note
+          end    
+          if (sample_index < #insSel.samples) then
+            note_range[2] = base_note
+          end
+     
+          insSel:insert_sample_mapping(LAYER_NOTE_ON,
+          sample_index, base_note, note_range, velocity_range)
+			  
+        end
+			
+      end
+ 
+      bDoneSlicing = true
+
+    end 
+
+  else
+
+    bDoneSlicing = true  
+
+  end
   
 end
 
