@@ -68,8 +68,16 @@ renoise.tool():add_keybinding {
 
 function show_dialog()
 
-  smpSel = renoise.song().selected_sample
+  local instrument = renoise.song().selected_instrument
+
+  if table.getn(instrument.samples) > 0 and table.getn(instrument.samples[1].slice_markers) > 0 then
+    renoise.app():show_warning("This instrument contains slice markers, the script cannot operate on it.")
+	return
+  end
   
+
+  smpSel = renoise.song().selected_sample
+    
   if smpSel == nil or not smpSel.sample_buffer.has_sample_data then
     renoise.app():show_error("No sample has been selected!")
     return
