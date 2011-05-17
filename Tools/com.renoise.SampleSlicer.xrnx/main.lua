@@ -233,7 +233,7 @@ function show_dialog()
   
   local row7 = vb:row {
     vb:button {
-      text = "Slice!",
+      text = "Perform",
       tooltip = "Split the selected sample into slices",
       height = DIALOG_BUTTON_HEIGHT,
       notifier = function()
@@ -273,7 +273,7 @@ function show_dialog()
     --{'Slice!','Cancel'}
   )
   
-  if dialog == 'Slice!' then
+  if dialog == 'Perform' then
     slice_it()
   end
 
@@ -423,6 +423,20 @@ function slice_it(bSliceShow)
   
   else
   
+  		
+  if bUseMarkers and renoise.song().selected_sample_index > 1 then
+		
+	--only the first sample of an instrument can be used to create samples; 
+	--therefore, a new instrument must be created with the selected sample
+	local insNew = renoise.song():insert_instrument_at(renoise.song().selected_instrument_index)
+	insNew.name = smpSel.name .. " sliced"
+	local smpNew = insNew:insert_sample_at(1)
+	smpNew.name = smpSel.name .. " sliced"
+	smpNew:copy_from(smpSel)		  
+	smpSel = smpNew
+		
+  end
+  
   for nSlice = 1, nSlices do
 
       local base_note = nBaseNote + nSlice - 1 
@@ -498,6 +512,7 @@ function slice_it(bSliceShow)
 	  else
 	  
 	    --slice markers creation
+		
 		local marker_position = 1+math.floor((nSlice-1)*(smpBuffSel.number_of_frames/nSlices))
 		print(marker_position)
 		smpSel:insert_slice_marker(marker_position)
