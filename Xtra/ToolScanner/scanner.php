@@ -81,6 +81,10 @@ function scan($file) {
             if (is_binary($fullpath)) {
                 $warnings[] = "$relpath is binary";
             }
+            // Check for OSX junk
+            else if ((mb_strpos($fullpath, '__MACOSX') !== false)) {
+                $warnings[] = "$relpath is OSX junk";
+            }
             // Check for sane extensions
             else if (!in_array($format, $valid_extensions)) {
                 $warnings[] = "$relpath is not of type: " . strtoupper(implode(',', $valid_extensions));
