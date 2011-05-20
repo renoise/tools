@@ -23,6 +23,7 @@ Good times.
 --------------------------------------------------------------------------------
 
 local midi_division = 96 -- MIDI clicks per quarter note
+local midi_channel = 1   -- Initial MIDI channel
 
 local filepath = nil
 local rns = nil
@@ -37,6 +38,12 @@ local data_tick_delay = table.create()
 --------------------------------------------------------------------------------
 -- Helper functions
 --------------------------------------------------------------------------------
+
+-- Go to next midi channel
+function ch_rotator()
+  midi_channel = midi_channel + 1
+  if midi_channel > 16 then midi_channel = 1 end
+end
 
 -- MF2T Timestamp
 function export_pos_to_time(pos, delay, division, lpb)
@@ -225,7 +232,10 @@ function export_build_data(plan)
                 data[i][j].tick_delay_end = tick_delay
               end
               -- Note ON
-              if note_col.instrument_value ~= 255 then
+              if
+                note_col.instrument_value ~= 255 and
+                data[note_col.instrument_value + 1] ~= nil
+              then
                 i = note_col.instrument_value + 1 -- Lua vs C++
                 data[i]:insert{
                   note = note_col.note_value,
@@ -354,7 +364,7 @@ function _export_note_on(tn, sort_me, data, idx)
   local pos_d = _export_pos_to_float(data.pos_start, data.delay_start,
     tonumber(data.tick_delay_start, 16), idx)
   if pos_d ~= false then
-    local msg = "On ch=1 n=" ..  data.note .. " v=" .. math.min(data.volume, 127)
+    local msg = "On ch=" .. midi_channel .. " n=" ..  data.note .. " v=" .. math.min(data.volume, 127)
     sort_me:insert{pos_d, msg, tn}
   end
 end
@@ -366,7 +376,7 @@ function _export_note_off(tn, sort_me, data, idx)
   local pos_d = _export_pos_to_float(data.pos_end, data.delay_end,
     tonumber(data.tick_delay_end, 16), idx)
   if pos_d ~= false then
-    local msg = "Off ch=1 n=" ..  data.note .. " v=0"
+    local msg = "Off ch=" .. midi_channel .. " n=" ..  data.note .. " v=0"
     sort_me:insert{pos_d, msg, tn}
   end
 end
@@ -436,7 +446,7 @@ function export_midi()
           dbug(("Process(midi()) Instr: %d; Note: %d."):format(i, j))
         end
       end
-
+      ch_rotator()
     end
     -- Yield every instrument to avoid timeout nag screens
     renoise.app():show_status(export_status_progress())
