@@ -33,6 +33,7 @@ local data_bpm = table.create()
 local data_lpb = table.create()
 local data_tpl = table.create()
 local data_tick_delay = table.create()
+local data_tick_cut = table.create()
 
 
 --------------------------------------------------------------------------------
@@ -85,8 +86,8 @@ end
 
 function export_build_data(plan)
 
-  data:clear(); data_bpm:clear(); data_lpb:clear()
-  data_tpl:clear(); data_tick_delay:clear()
+  data:clear(); data_bpm:clear(); data_lpb:clear(); data_tpl:clear()
+  data_tick_delay:clear(); data_tick_cut:clear()
 
   local instruments = rns.instruments
   local tracks = rns.tracks
@@ -209,18 +210,23 @@ function export_build_data(plan)
               -- Set some defaults
               local volume = 128
               local panning = 64
-              local tick_delay = 0 -- Dx - Delay a note by x ticks (0 - F).
+              local tick_delay = 0 -- Dx - Delay a note by x ticks (0 - F)
+              local tick_cut = nil -- Fx - Cut the note after x ticks (0 - F)
               -- Volume column
               if 0 <= note_col.volume_value and note_col.volume_value <= 128 then
                 volume = note_col.volume_value
               elseif note_col.volume_string:find('D') == 1 then
                 tick_delay = note_col.volume_string:sub(2)
+              elseif note_col.volume_string:find('F') == 1 then
+                tick_cut = note_col.volume_string:sub(2)
               end
               -- Panning col
               if 0 <= note_col.panning_value and note_col.panning_value <= 128 then
                 panning = note_col.panning_value
               elseif note_col.panning_string:find('D') == 1 then
                 tick_delay = note_col.panning_string:sub(2)
+              elseif note_col.panning_string:find('F') == 1 then
+                tick_cut = note_col.panning_string:sub(2)
               end
               -- Note OFF
               if
@@ -230,6 +236,13 @@ function export_build_data(plan)
                 data[i][j].pos_end = pos
                 data[i][j].delay_end = note_col.delay_value
                 data[i][j].tick_delay_end = tick_delay
+              elseif
+                tick_cut ~= nil and
+                j > 0 and data[i][j].pos_end == 0
+              then
+                data[i][j].pos_end = pos
+                data[i][j].delay_end = note_col.delay_value
+                data[i][j].tick_delay_end = tick_cut
               end
               -- Note ON
               if
@@ -252,6 +265,10 @@ function export_build_data(plan)
                   -- sequence_index = sequence_index,
                 }
                 j = table.count(data[i])
+                if tick_cut ~= nil then
+                  data[i][j].pos_end = pos
+                  data[i][j].tick_delay_end = tick_cut
+                end
               end
             end
             -- Next
