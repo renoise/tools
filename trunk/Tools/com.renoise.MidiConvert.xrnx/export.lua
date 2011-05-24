@@ -86,6 +86,7 @@ end
 
 function export_build_data(plan)
 
+  midi_channel = 1
   data:clear(); data_bpm:clear(); data_lpb:clear(); data_tpl:clear()
   data_tick_delay:clear(); data_tick_cut:clear()
 
