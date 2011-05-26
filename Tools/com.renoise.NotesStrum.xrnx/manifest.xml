@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<RenoiseScriptingTool doc_version="0">
+  <Name>Strum Notes</Name>
+  <Id>com.renoise.NotesStrum</Id>
+  <Version>2.4</Version>
+  <ApiVersion>2.0</ApiVersion>
+  <Author>Vincent Voois [ http://tinyurl.com/vvrns ]</Author>
+  <Category>Pattern Editor</Category>
+  <Description>Adds note delay values for notes on the same row, to get a plucked instrument alike effect.
+Can be found in the Pattern Editor's context menu (right click some where in the Pattern Editor). 
+  </Description>
+  <Homepage>http://tools.renoise.com</Homepage>
+  <Icon/>
+</RenoiseScriptingTool>
