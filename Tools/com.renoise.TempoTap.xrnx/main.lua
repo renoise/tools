@@ -150,6 +150,30 @@ end
 
 --------------------------------------------------------------------------------
 
+-- reset
+
+local reset = nil
+
+reset = function()
+
+  if (renoise.tool():has_timer(reset)) then
+    renoise.tool():remove_timer(reset)    
+  end
+
+  counter = 1
+  timetable_filled = false
+
+  while (#timetable > 1) do 
+    timetable:remove(1) 
+  end    
+
+  set_text(string.format("Tap counter has been reset."))  
+  
+end
+  
+  
+--------------------------------------------------------------------------------
+
 -- tap
 
 local function tap()
@@ -161,14 +185,6 @@ local function tap()
   local function get_bpm(dt)
     -- 60 BPM => 1 beat per sec         
     return (60 / dt)
-  end
-  
-  local function reset()
-    counter = 1
-    timetable_filled = false
-    while (#timetable > 1) do 
-      timetable:remove(1) 
-    end
   end
   
   local function increase_counter()  
@@ -183,11 +199,12 @@ local function tap()
   
   local clock = os.clock()
   timetable:insert(clock) 
-  
-  if (last_clock > 0 and (clock - last_clock) > 2) then
-    -- reset after 2 sec idle
-    reset()
+    
+  -- refresh reset timer
+  if (renoise.tool():has_timer(reset)) then
+    renoise.tool():remove_timer(reset)    
   end
+  renoise.tool():add_timer(reset, 2000)
   
   last_clock = clock
   
@@ -237,6 +254,8 @@ function show_dialog()
     renoise.ViewBuilder.DEFAULT_DIALOG_MARGIN
   local DEFAULT_CONTROL_SPACING = 
     renoise.ViewBuilder.DEFAULT_CONTROL_SPACING
+  local DEFAULT_BUTTON_HEIGHT =
+    renoise.ViewBuilder.DEFAULT_DIALOG_BUTTON_HEIGHT   
   local TEXT_ROW_WIDTH = 100
   local WIDE = 180
 
@@ -259,6 +278,13 @@ function show_dialog()
       pressed = function()
         tap()
       end
+    },
+    
+    vb:text {
+      width = "100%",
+      id = "bpm_text",
+      text = "Tap a key to start",
+      font = "bold"
     },
     
     vb:column {
@@ -309,20 +335,25 @@ function show_dialog()
       } 
     },      
     
-    vb:text {
-      width = "100%",
-      id = "bpm_text",
-      text = "Tap a key to start"        
-    },
-    
-    vb:row {
+    vb:horizontal_aligner {
+      mode = "justify",
+      margin = 4,
       vb:button {
-        text = "Save BPM",
-        tooltip = "Set Player Tempo (Return)",        
+        text = "Save Tempo",        
+        tooltip = "Save Playback Tempo, and write to Tempo Track if enabled (Return)",        
+        height = DEFAULT_BUTTON_HEIGHT*2,
         notifier = function()       
           if (tempo) then
             save_bpm(tempo)
           end
+        end
+      },
+      vb:button {
+        text = "Reset Taps",        
+        tooltip = "Start over with tapping (Del)",
+        height = DEFAULT_BUTTON_HEIGHT*2,
+        notifier = function()                 
+          reset()          
         end
       }
     }
@@ -345,9 +376,13 @@ function show_dialog()
         save_bpm(tempo)
       end
     
+    elseif (key.name == "del") then      
+        reset()      
+      
     else    
       tap()   
     end 
+    
   end
   
   
@@ -368,6 +403,15 @@ renoise.tool():add_midi_mapping{
   invoke = function(message)
     if (message:is_trigger()) then      
       tap()      
+    end
+  end
+}
+
+renoise.tool():add_midi_mapping{
+  name = "Transport:Record:Tap Tempo Reset [Trigger]",
+  invoke = function(message)
+    if (message:is_trigger()) then      
+      reset()      
     end
   end
 }
