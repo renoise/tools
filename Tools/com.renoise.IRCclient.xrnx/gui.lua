@@ -374,6 +374,7 @@ function chat_dialog_control(target)
           font = "mono",
           style = 'border',
           id = 'channel_output_frame',
+--          edit_mode = false,
           text = ""
         }
       },
@@ -387,6 +388,7 @@ function chat_dialog_control(target)
           font = "mono",
           style = 'border',
           id = 'channel_user_frame',
+--          edit_mode = false,
           text = ""
         }
       },
@@ -399,20 +401,25 @@ function chat_dialog_control(target)
         text = "text / command"
       },
 
-      vb:textfield {
-        width = 322,
+      vb:multiline_text {
+        width = 480,
+        height = 20, 
+        style = 'border',
         text = "",
         id = 'channel_command',
+--[[
         notifier = function(text)
           if no_loop == 0 then
             send_command(target, 'channel', text)
             no_loop = 1 -- Prevent triggering the notifier again 
                         -- simply because the value got cleared
                         -- else a new empty command would be send again.
+--            vb.views.channel_command.text = ""
           else
             no_loop = 0
           end
         end
+
       },
 
       vb:space {
@@ -424,8 +431,10 @@ function chat_dialog_control(target)
         text = "Send",
         notifier = function(text)
           send_command(target, 'channel', text)
+          no_loop = 1
           vb.views.channel_command.text = ""
         end
+--]]
       },
     },
   }
