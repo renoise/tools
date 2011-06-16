@@ -380,6 +380,40 @@ end
 
 --------------------------------------------------------------------------------
 
+-- test if the parameter describes some kind of button
+-- @param group_name (string, control-map group name)
+-- @param index (integer, index within group)
+-- @return boolean (false if not matched)
+
+function ControlMap:is_button(group_name,index)
+  
+  -- greedy mappings might not specify an index,
+  -- so we simply use the first available one...
+  if not index then
+    index = 1
+  end
+
+  local group = self.groups[group_name]
+  if (group) then
+    local param = group[index]
+    if (param["xarg"] and param["xarg"]["type"]) then
+      if not (param["xarg"]["type"]=="button") and
+         not (param["xarg"]["type"]=="togglebutton") and
+         not (param["xarg"]["type"]=="pushbutton") 
+      then
+        return false
+      else
+        return true
+      end
+    end
+  end
+
+  return false
+
+end
+
+--------------------------------------------------------------------------------
+
 function ControlMap:read_file(file_path)
   TRACE("ControlMap:read_file",file_path)
 

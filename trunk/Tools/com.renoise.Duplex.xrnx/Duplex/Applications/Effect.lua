@@ -33,6 +33,10 @@ Options
 
 
 Changes (equal to Duplex version number)
+
+  0.97  - Better performance, as idle loop takes care of UI updates 
+        - Option to include parameters based on criteria:
+          ALL/MIXER/AUTOMATED_PARAMETERS
   
   0.95  - Grid controller support (with configurations for Launchpad, etc)
         - Seperated device-navigator group size from parameter group size
@@ -63,36 +67,35 @@ local FLOAT_COMPARE_QUANTUM = 1000
 class 'Effect' (Application)
 
 Effect.default_options = {
-  --[[
-    -- TODO
     include_parameters = {
       label = "Parameters",
       description = "Select which parameter set you want to control.",
       items = {
-        self.ALL_PARAMETERS,
-        self.AUTOMATED_PARAMETERS,
-        self.MIXER_PARAMETERS,
+        "All parameters (device)",
+        "Automated parameters (track)",
+        "Mixer parameters (track)",
       },
       value = 1,
+      on_change = function(inst)
+        local mode = (inst.options.include_parameters.value) 
+        if (mode == inst.ALL_PARAMETERS) then
+          inst._update_requested = true
+        else
+          inst._track_update_requested = true
+        end
+      end,
+
     },
-    ]]
 }
 
 function Effect:__init(display,mappings,options,config_name)
   TRACE("Effect:__init", display,mappings,options,config_name)
 
-  -- constructor 
-  Application.__init(self,config_name)
+   -- define option constants
 
-  self.display = display
-
-   -- define the options (with defaults)
-
-  self.ALL_PARAMETERS = "Include all parameters"
-  self.AUTOMATED_PARAMETERS = "Automated Parameters only"
-  self.MIXER_PARAMETERS = "Mixer Parameters only"
-
-  self.options = {}
+  self.ALL_PARAMETERS = 1
+  self.AUTOMATED_PARAMETERS = 2
+  self.MIXER_PARAMETERS = 3
 
   -- apply control-maps groups 
   self.mappings = {
@@ -162,18 +165,19 @@ function Effect:__init(display,mappings,options,config_name)
   -- true if sliders are in grid mode
   self._slider_grid_mode = nil
 
-  -- todo: extract this from the options
-  self._parameter_set = self.ALL_PARAMETERS
+  -- the current parameter set 
+  self._parameter_set = table.create()
 
   -- offset of the whole parameter mapping, controlled by the page navigator
   self._parameter_offset = 0
   
   -- list of parameters we are currently listening to
-  self._attached_observables = table.create()
-  
-  -- apply arguments
-  self.options = options
-  self:_apply_mappings(mappings)
+  self._parameter_observables = table.create()
+  self._device_observables = table.create()
+  self._mixer_observables = table.create()
+
+  Application.__init(self,display,mappings,options,config_name)
+
 end
 
 
@@ -193,22 +197,22 @@ end
 --------------------------------------------------------------------------------
 
 -- update: set all controls to current values from renoise
+-- todo: make the device navigator follow the "device page"
+--  when using MIXER_PARAMETERS or AUTOMATED_PARAMETERS
 
 function Effect:update()  
   TRACE("Effect:update()")
 
-  -- skip event handlers for all updates, to only update the UI display
   local skip_event = true
 
-  local parameters = self:_current_parameters()
+  local parameters = self._parameter_set
 
   local cm = self.display.device.control_map
   local track_idx = renoise.song().selected_track_index
 
   for control_index = 1,self._slider_group_size do
     local parameter_index = self._parameter_offset + control_index
-    local parameter = parameters[parameter_index]
-          
+    local parameter = self:_get_parameter_by_index(parameter_index)
     -- set default values  
     if (parameter_index <= #parameters) then
           
@@ -235,16 +239,83 @@ function Effect:update()
   
   if (self._device_navigators) then
 
-    -- set the device navigator to the current fx
-    local device_idx = renoise.song().selected_device_index
-    for control_index = 1,#self._device_navigators do
-      self._device_navigators[control_index]:set((device_idx==control_index),true)  
+    if (self.options.include_parameters.value == self.ALL_PARAMETERS) then
 
-      -- update tooltip
-      local device = renoise.song().tracks[track_idx].devices[control_index]   
-      self._device_navigators[control_index].tooltip = (device) and 
-        string.format("Set focus to %s",device.name) or
-        "Effect device N/A"
+      -- set the device navigator to the current fx
+      local device_idx = renoise.song().selected_device_index
+      for control_index = 1,#self._device_navigators do
+        self._device_navigators[control_index]:set((device_idx==control_index),true)  
+
+        -- update tooltip
+        local device = renoise.song().tracks[track_idx].devices[control_index]   
+        self._device_navigators[control_index].tooltip = (device) and 
+          string.format("Set focus to %s",device.name) or
+          "Effect device N/A"
+      end
+
+    else
+
+      -- parameter subsets require a different approach
+
+      local count = 0
+      for control_idx = 1,#self._device_navigators do
+
+        local is_current = false
+        local device = nil
+
+        -- go through the parameter set, each entry with
+        -- a higher device_index will be added 
+        for _,prm in ipairs(self._parameter_set) do
+          if (prm.device_index>count) then
+            is_current = (prm.device_index==renoise.song().selected_device_index) 
+            device = renoise.song().tracks[track_idx].devices[prm.device_index]   
+            count = prm.device_index
+            break
+          end
+        end
+        
+        self._device_navigators[control_idx]:set(is_current,skip_event)  
+
+        -- update tooltip
+        self._device_navigators[control_idx].tooltip = (device) and 
+          string.format("Set focus to %s",device.name) or
+          "Effect device N/A"
+
+
+      end
+
+
+
+--[[
+      for control_idx = 1,#self._device_navigators do
+
+        local device = nil
+        local parameter = nil
+        local device_idx = nil
+
+        if self._parameter_set[control_idx] then
+          device_idx = self._parameter_set[control_idx].device_index
+          parameter = self:_get_parameter_by_index(control_idx)
+        end
+
+        if parameter then
+          -- is current? 
+          local is_current = (device_idx==renoise.song().selected_device_index) 
+          self._device_navigators[control_idx]:set(is_current,skip_event)  
+          device = renoise.song().tracks[track_idx].devices[device_idx]   
+        end
+
+        if not device then
+          self._device_navigators[control_idx]:set(false,skip_event)  
+        end
+
+        -- update tooltip
+        self._device_navigators[control_idx].tooltip = (device) and 
+          string.format("Set focus to %s",device.name) or
+          "Effect device N/A"
+
+      end
+]]
     end
 
     self.display:apply_tooltips(self.mappings.device.group_name)
@@ -305,17 +376,19 @@ function Effect:_build_app()
 
     c.on_change = function(obj) 
 
-      if (not self.active) then return false end
+      if (not self.active) then 
+        return false 
+      end
       
       local parameter_index = self._parameter_offset + control_index
-      local parameters = self:_current_parameters()    
+      local parameters = self._parameter_set
   
       if (parameter_index > #parameters) then
         -- parameter is outside bounds
         return false
 
       else
-        local parameter = parameters[parameter_index]
+        local parameter = self:_get_parameter_by_index(parameter_index)
 
         self:_modify_ceiling(obj,parameter)
         
@@ -363,20 +436,48 @@ function Effect:_build_app()
       c:set_pos(control_index)
       c.on_change = function(obj) 
 
-        if (not self.active) then return false end
+        if (not self.active) then 
+          return false 
+        end
 
         local track_idx = renoise.song().selected_track_index
-        local device = renoise.song().tracks[track_idx].devices[control_index]
-        local device_idx = renoise.song().selected_device_index
-        if (renoise.song().tracks[track_idx].devices[control_index]) then
-          if (self._device_navigators[device_idx]) and
-            (device_idx > 0) and (device_idx ~= control_index) then
-              self._device_navigators[device_idx]:set(false,true)
+        local new_index = nil
+
+        -- obtain the device index
+        if (self.options.include_parameters.value == self.ALL_PARAMETERS) then
+          new_index = control_index
+        else
+          new_index = self:_get_device_index_by_ctrl_index(control_index)
+        end
+
+        local device = renoise.song().tracks[track_idx].devices[new_index]   
+
+        if device then
+
+          -- select the device
+          renoise.song().selected_device_index = new_index
+
+          -- turn off previously selected device
+          if (self.options.include_parameters.value == self.ALL_PARAMETERS) then
+            local sel_index = renoise.song().selected_device_index
+            if (sel_index ~= control_index) and
+                self._device_navigators[sel_index] then
+              self._device_navigators[sel_index]:set(false,true)
+            end
+          else
+            for control_index2 = 1,#self._device_navigators do
+              local prm_table = self._parameter_set[control_index2]
+              if prm_table and
+                  (prm_table.device_index ~= new_index) then
+                self._device_navigators[control_index2]:set(false,true)
+              end
+            end
           end
-          renoise.song().selected_device_index = control_index
+
         else
           return false      
         end
+
 
         -- make togglebuttons behave like radio buttons
         -- (refuse to toggle off when already active)
@@ -407,19 +508,20 @@ function Effect:_build_app()
     c.index = 0
     c.step_size = self._slider_group_size
     c.minimum = 0
-    c.maximum = math.max(0, #self:_current_parameters() - group_cols)
+    c.maximum = math.max(0, #self._parameter_set - group_cols)
     c:set_pos(self.mappings.page.index or 1)
     c:set_orientation(self.mappings.page.orientation)
     c:set_orientation(self.mappings.page.orientation)
     c.text_orientation = HORIZONTAL
     c.on_change = function(obj) 
 
-      if (not self.active) then return false end
+      if (not self.active) then 
+        return false 
+      end
       
       self._parameter_offset = obj.index
       local new_song = false
       self:_attach_to_parameters(new_song)
-
       self:update()
       return true
     end
@@ -453,6 +555,38 @@ function Effect:start_app()
   self:_attach_to_parameters(new_song)
 
   self:update()
+end
+
+--------------------------------------------------------------------------------
+
+function Effect:_get_parameter_by_index(idx)
+  --TRACE("Effect._get_parameter_by_index()",idx)
+
+  if (self._parameter_set[idx]) then
+    return self._parameter_set[idx].ref
+  end
+
+end
+
+--------------------------------------------------------------------------------
+
+-- obtain device index by specifying the control index
+-- this is used when working with parameter subsets 
+
+function Effect:_get_device_index_by_ctrl_index(idx)
+  --TRACE("Effect._get_device_index_by_ctrl_index()",idx)
+
+  local count,matched = 0,0
+  for _,prm in ipairs(self._parameter_set) do
+    if (prm.device_index>matched) then
+      matched = prm.device_index
+      count = count+1
+      if (count==idx) then
+        return prm.device_index
+      end
+    end
+  end
+
 end
 
 
@@ -525,17 +659,78 @@ function Effect:_parameter_value_to_normalized_value(parameter, value)
 
 end
 
+--------------------------------------------------------------------------------
+
+-- perform periodic updates
+
+function Effect:on_idle()
+
+  if (not self.active) then 
+    return 
+  end
+
+  if self._track_update_requested then
+    self._track_update_requested = false
+    self:_attach_to_track_devices(renoise.song().selected_track)
+    self._update_requested = true
+  end
+
+  if(self._update_requested) then
+    self:_attach_to_parameters()
+    self._update_requested = false
+    self:update()
+  end
+
+end
+
 
 --------------------------------------------------------------------------------
 
 -- returns the current parameter set that we control
 
-function Effect:_current_parameters()
-  TRACE("Effect:_current_parameters()")
+function Effect:_define_parameters()
+  TRACE("Effect:_define_parameters()")
 
-  -- TODO: could use other parameter sets and not "everything" here...
-  local selected_device = renoise.song().selected_device   
-  return selected_device and selected_device.parameters or {}
+  self._parameter_set = table.create()
+
+  if (self.options.include_parameters.value == self.ALL_PARAMETERS) then
+
+    local device = renoise.song().selected_device   
+    --self._parameter_set = selected_device and selected_device.parameters or {}
+    if device then
+      for _,parameter in ipairs(device.parameters) do
+        self._parameter_set:insert({
+          device_index=renoise.song().selected_device_index,
+          ref=parameter
+        })
+
+      end
+    end
+
+  else
+
+    local track = renoise.song().selected_track
+    for device_idx,device in ipairs(track.devices) do
+      for _,parameter in ipairs(device.parameters) do
+        if(parameter.show_in_mixer) and
+            (self.options.include_parameters.value == self.MIXER_PARAMETERS) then
+          self._parameter_set:insert({
+            device_index=device_idx,
+            ref=parameter
+          })
+        elseif (parameter.is_automated) and
+            (self.options.include_parameters.value == self.AUTOMATED_PARAMETERS) then
+          self._parameter_set:insert({
+            device_index=device_idx,
+            ref=parameter
+          })
+        end
+
+      end
+    end
+
+  end
+
 end
 
     
@@ -550,28 +745,120 @@ function Effect:_attach_to_song()
   -- update on parameter changes in the song
   renoise.song().selected_device_observable:add_notifier(
     function()
-      TRACE("Effect:selected_device_changed fired...")
       
-      local new_song = false
-      self:_attach_to_parameters(new_song)
+      if (self.options.include_parameters.value == self.ALL_PARAMETERS) then
+        TRACE("Effect:selected_device_changed fired...")
+        self._update_requested = true
+      else
+        -- todo: update the device selector
+        self._update_requested = true
+      end
+
+    end
+  )
+
+  -- follow active track in Renoise
+  -- (for AUTOMATED_PARAMETERS and MIXER_PARAMETERS)
+  renoise.song().selected_track_index_observable:add_notifier(
+    function()
+        TRACE("Effect:self.options.include_parameters.value",self.options.include_parameters.value)
+      if (self.options.include_parameters.value == self.MIXER_PARAMETERS) or
+          (self.options.include_parameters.value == self.AUTOMATED_PARAMETERS) then
+        TRACE("Effect:selected_track_index_observable fired...")
+
+        local track = renoise.song().selected_track
+        self._track_update_requested = true
+
+      end
+
+    end
+  )
+
+  --[[
+  renoise.song().tracks_observable:add_notifier(
+    function()
+      TRACE("Effect:tracks_observable fired...")
+      
+      local track = renoise.song().selected_track
+
+      self:_attach_to_track_devices(track)
       
       if (self.active) then
         self:update()
       end
     end
   )
+  ]]
+
+
 
   -- and immediately attach to the current parameter set
   local new_song = true
   self:_attach_to_parameters(new_song)
-end
+  self:_attach_to_track_devices(renoise.song().selected_track,new_song)
 
+end
 
 --------------------------------------------------------------------------------
 
--- add notifiers to parameters
--- invoked when parameters are added/removed/swapped
+-- handle when visible or automated state has changed 
+-- (for AUTOMATED_PARAMETERS and MIXER_PARAMETERS)
 
+function Effect:_attach_to_track_devices(track,new_song)
+  TRACE("Effect:_attach_to_track_devices",track,new_song)
+
+  self._device_observables = table.create()
+
+  -- remove notifier first 
+  self:_remove_notifiers(new_song,self._device_observables)
+  self:_remove_notifiers(new_song,self._mixer_observables)
+
+  -- handle changes to devices in track
+  self._device_observables:insert(track.devices_observable)
+  track.devices_observable:add_notifier(
+    function()
+      -- todo: only perform update when in current track
+      self._track_update_requested = true
+    end
+  )
+
+  for idx2,device in ipairs(track.devices) do
+
+    for idx3,parameter in ipairs(device.parameters) do
+      
+      self._mixer_observables:insert(parameter.show_in_mixer_observable)
+      parameter.show_in_mixer_observable:add_notifier(
+        function(obj)
+          if (self.options.include_parameters.value == self.MIXER_PARAMETERS) then
+            TRACE("Effect:show_in_mixer_observable fired...")
+            -- todo: only perform update when in current track
+            self._update_requested = true
+          end
+
+        end
+      )
+
+      self._mixer_observables:insert(parameter.is_automated_observable)
+      parameter.is_automated_observable:add_notifier(
+        function(obj)
+          if (self.options.include_parameters.value == self.AUTOMATED_PARAMETERS) then
+            TRACE("Effect:is_automated_observable fired...")
+            -- todo: only perform update when in current track
+            self._update_requested = true
+          end
+
+        end
+      )
+
+    end
+  end
+
+end
+
+--------------------------------------------------------------------------------
+
+-- detect when a parameter set has changed
+-- @param new_song - boolean, true to leave existing notifiers alone
 function Effect:_attach_to_parameters(new_song)
   TRACE("Effect:_attach_to_parameters", new_song)
 
@@ -579,34 +866,30 @@ function Effect:_attach_to_parameters(new_song)
     return
   end
 
-  local parameters = self:_current_parameters()
+    -- if no device is selected, select the TrackVolPan device
+  if (renoise.song().selected_device_index==0) then
+    renoise.song().selected_device_index = 1
+  end
+
+
+  self:_define_parameters()
 
   local cm = self.display.device.control_map
 
   -- validate and update the sequence/parameter offset
   if (self._page_control) then
     self._page_control:set_range(nil,
-      math.max(0, #parameters - self._slider_group_size))
+      math.max(0, #self._parameter_set - self._slider_group_size))
   end
     
-  -- detach all previously attached notifiers first
-  -- but don't even try to detach when a new song arrived. old observables
-  -- will no longer be alive then...
-  if (not new_song) then
-    for _,observable in pairs(self._attached_observables) do
-      -- temp security hack. can also happen when removing FX
-      pcall(function() observable:remove_notifier(self) end)
-    end
-  end
-    
-  self._attached_observables:clear()
+  self:_remove_notifiers(new_song,self._parameter_observables)
   
   -- then attach to the new ones in the order we want them
   for control_index = 1, self._slider_group_size do
     local parameter_index = self._parameter_offset + control_index
-    local parameter = parameters[parameter_index]
+    local parameter = self:_get_parameter_by_index(parameter_index)
     local control = self._parameter_sliders[control_index]
-    local outside_bounds = (control_index>#parameters)
+    local outside_bounds = (control_index>#self._parameter_set)
 
     -- different tooltip for unassigned controls
     local tooltip = outside_bounds and "Effect: param N/A" or 
@@ -635,7 +918,7 @@ function Effect:_attach_to_parameters(new_song)
 
       self:_modify_ceiling(control,parameter)
 
-      self._attached_observables:insert(parameter.value_observable)
+      self._parameter_observables:insert(parameter.value_observable)
       parameter.value_observable:add_notifier(
         self, 
         function()
@@ -658,13 +941,34 @@ function Effect:_attach_to_parameters(new_song)
 
   end
 
+--[[
     -- if no device is selected, select the TrackVolPan device
   if (renoise.song().selected_device_index==0) then
     renoise.song().selected_device_index = 1
   end
-
+]]
 
   self.display:apply_tooltips(self.mappings.parameters.group_name)
+
+end
+
+--------------------------------------------------------------------------------
+
+-- detach all previously attached notifiers first
+-- but don't even try to detach when a new song arrived. old observables
+-- will no longer be alive then...
+-- @param new_song - boolean, true to leave existing notifiers alone
+-- @param observables - list of observables
+function Effect:_remove_notifiers(new_song,observables)
+
+  if (not new_song) then
+    for _,observable in pairs(observables) do
+      -- temp security hack. can also happen when removing FX
+      pcall(function() observable:remove_notifier(self) end)
+    end
+  end
+    
+  observables:clear()
 
 end
 

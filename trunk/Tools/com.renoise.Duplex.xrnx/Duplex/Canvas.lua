@@ -70,6 +70,7 @@ function Canvas:set_size(width,height)
           self.clear[x] = {}
         end
         self.clear[x][y] = true
+        self.buffer[x][y] = nil
         if (x>width) then
           self.buffer[x] = nil
         end

@@ -70,12 +70,6 @@ Navigator.default_options = {}
 function Navigator:__init(display,mappings,options,config_name)
   TRACE("Navigator:__init(",display,mappings,options,config_name)
 
-  Application.__init(self,config_name)
-
-  self.display = display
-
-  self.options = {}
-
   self.mappings = {
     blockpos = {
       description = "Navigator: Pattern position/blockloop"
@@ -131,9 +125,7 @@ function Navigator:__init(display,mappings,options,config_name)
   -- (boolean) true when number of lines has changed
   self._changed_num_lines = false
 
-  -- apply arguments
-  self.options = options
-  self:_apply_mappings(mappings)
+  Application.__init(self,display,mappings,options,config_name)
 
 
 end

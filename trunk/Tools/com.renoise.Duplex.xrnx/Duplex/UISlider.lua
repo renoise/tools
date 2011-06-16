@@ -69,8 +69,7 @@ function UISlider:__init(display)
   -- self.floor = 0
 
   -- set the number of steps to quantize the value
-  -- (this value is automatically set when we assign a size,
-  -- for easy support of the button input method)
+  -- (this value is automatically set when we assign a size)
   self.steps = 1
 
   -- the selected index, between 0 - number of steps
@@ -215,7 +214,6 @@ function UISlider:set_value(val,skip_event)
     self._cached_value = val
     self.value = val
     self.index = idx
-    --TRACE("UISlider:set_value() - resulting index",self.index)
 
     if (skip_event) then
       self:invalidate()
@@ -241,8 +239,7 @@ function UISlider:set_index(idx,skip_event)
     self._cached_index = idx
     self._cached_value = self.value
     self.index = idx
-    self.value = (idx==0) and 0 or (self.ceiling/self.steps)*idx
-    --TRACE("UISlider:set_index() - resulting value",self.value)
+    self.value = (idx~=0) and ((self.ceiling/self.steps)*idx) or 0
 
     if (skip_event) then
       self:invalidate()
@@ -318,6 +315,7 @@ function UISlider:draw()
     self.canvas:write(point, 1, 1)
   else
     -- update button array
+
     local idx = self.index
     if idx then
 
@@ -344,7 +342,6 @@ function UISlider:draw()
           else
             point.val = false        
           end
-          --point.val = true
           point:apply((self.dimmed) and 
             self.palette.tip_dimmed or self.palette.tip)
         elseif (self.flipped) then
@@ -372,9 +369,7 @@ function UISlider:draw()
         else
           x = i  
         end
-
         self.canvas:write(point, x, y)
-
       end
 
     end
@@ -466,6 +461,7 @@ function UISlider:_invoke_handler()
   if (rslt==false) then  -- revert
     self.index = self._cached_index    
     self.value = self._cached_value  
+
   else
     self:invalidate()
   end

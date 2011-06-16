@@ -8,24 +8,18 @@
 About
 
   The Mixer is a generic class for controlling the Renoise mixer
-  Assign a mapping for "levels", and Renoise tracks will automatically
-  become available on your controller. Assign the "page" mapping, and you'll
-  be able to flip through all tracks.
 
 Mappings
 
-  levels  - (UISlider...)       volume, assignable to grid controller
-  mute    - (UIToggleButton...) track mute state, embeddable*
-  solo    - (UIToggleButton...) track solo state
-  master  - (UISlider)          the master volume, embeddable**
+  levels  - (UISlider...)       volume *
+  mute    - (UIToggleButton...) track mute *
+  solo    - (UIToggleButton...) track solo *
+  master  - (UISlider)          master volume *
   panning - (UISlider...)       track panning
-  master  - (UISlider)          control the master track seperately
-  page    - (UISpinner)         paged track navigation***
+  page    - (UISpinner)         paged track navigation
   mode    - (UIToggleButton)    PRE/POST fx toggle
 
-  *   See the notes on "Grid controller layout" for details
-  **  In any controller, if volume are assigned. The volume will be
-      placed leftmost in the array of sliders
+  *  Automatic layout when using a grid controller
 
 
 Options
@@ -33,42 +27,51 @@ Options
   pre_post      - decide if Mixer should start in PRE or POST fx mode
   invert_mute   - toggle inverted mute state (on when off)
   mute_mode     - decide if mute means MUTE or OFF
-  follow_track  - enable this to align with the selected track in Renoise
   offset_track  - specify how many tracks to offset the mixer by
+  follow_track  - align with the selected track in Renoise
+  page_size     - specify step size when using paged navigation
 
+Automatic grid controller layout
 
-Grid controller mode
+  Assigning the levels, mute and/or solo mapping to the same group
+  (the grid) will automaticaly produce the following layout:
 
-  +-----+-----+-----+-----+
-  |mute1|mute2|mute3|mute4|
-  +-----+-----+-----+-----|
-  |  t  |  t  |  t  |  m  |
-  |  r  |  r  |  r  |  a  |
-  |  a  |  a  |  a  |  s  |
-  |  c  |  c  |  c  |  t  |
-  |  k  |  k  |  k  |  e  |
-  |  1  |  2  |  3  |  r  |
-  +-----------------------+
-
-  Assign "levels" to a grid in order to activate grid mode
-  The master volume, mute & solo buttons can be embedded into the
-  grid by specifying the "levels" control-map 
-
+  +---- - --- - --- - --- +    +---- +  The master track 
+  |mute1|mute2|mute3|mute4| -> |  m  |  will, when specified, 
+  +---- - --- - --- - --- +    +  a  +  show up in the 
+  |solo1|solo2|solo3|solo4| -> |  s  |  rightmost side 
+  +---- - --- - --- - --- +    +  t  +  and use full height
+  |  l  |  l  |  l  |  l  | -> |  e  |  
+  +  e  +  e  +  e  +  e  +    +  r  +  
+  |  v  |  v  |  v  |  v  |    |     |  
+  +  e  +  e  +  e  +  e  +    +     +  
+  |  l  |  l  |  l  |  l  |    |     |
+  +     +     +     +     +    +     +
+  |  1  |  2  |  3  |  4  |    |     |
+  +---- - --- - --- - --- +    +---- +
+  
 
 Notes
 
-  The page size is determined by the actual assignements (checked in this order: 
-  volume/mute/solo/panning). The Mixer will automatically check on startup, to 
-  see if all specified groups have an identical size.
+  The Mixer will automatically check on startup, to 
+  see if all specified groups have an identical size
 
 
 Changes (equal to Duplex version number)
+
+  0.97  - Renoise's 2.7 multi-solo mode supported/visualized
+        - Main display updates now happen in on_idle loop
+        - Ability to embed both mute & solo mappings into grid
+        - New option: "sync_pre_post" (Renoise 2.7+)
+
+  0.96  - Option: paged navigation features (page_size)
+        - Option: offset tracks by X (for the Ohm64 configuration)
 
   0.95  - Dependancies are gone for the various mappings. For example, it's
           possible to run a Mixer instance without the "levels" specified
         - Feature: hold mute button to toggle solo state for the given track
         - Applied feedback fix (cascading mutes when solo'ing)
-        - Options: follow_track, mute_mode and track_offset
+        - Options: follow_track, mute_mode
 
   0.92  - Remove the destroy_app() method (not needed anymore)
         - Assign tooltips to the virtual control surface
@@ -88,14 +91,12 @@ class 'Mixer' (Application)
 
 Mixer.default_options = {
   pre_post = {
-    label = "Mode",
+    label = "Pre/Post mode",
     description = "Change if either Pre or Post FX volume/pan is controlled",
     on_change = function(inst)
       inst._postfx_mode = (inst.options.pre_post.value==inst.MODE_POSTFX) and 
         true or false
-      local new_song = false
-      inst:_attach_to_tracks(new_song)
-      inst:update()
+      inst._update_requested = true
     end,
     items = {
       "Pre FX volume and panning",
@@ -131,14 +132,14 @@ Mixer.default_options = {
     items = {"Follow track enabled","Follow track disabled"},
     value = 2,
   },
-  track_increment = {
-    label = "Track increment",
-    description = "Specify the step size when flipping through tracks",
+  page_size = {
+    label = "Page size",
+    description = "Specify the step size when using paged navigation",
     on_change = function(inst)
       inst:_attach_to_tracks()
     end,
     items = {
-      "Automatic: use mixer width",
+      "Automatic: use available width",
       "1","2","3","4",
       "5","6","7","8",
       "9","10","11","12",
@@ -154,9 +155,7 @@ Mixer.default_options = {
                 .."\none of them being offset by a number of tracks",
     on_change = function(inst)
       inst._track_offset = inst.options.track_offset.value-1
-      local new_song = false
-      inst:_attach_to_tracks(new_song)        
-      inst:update()
+      inst._update_requested = true
     end,
     items = {"0","1","2","3","4","5","6","7"},
     value = 1,
@@ -178,18 +177,25 @@ Mixer.default_options = {
     value = 1,
   },
   ]]
-
 }
+
+-- add Renoise 2.7 specific observables
+if (renoise.API_VERSION >=2) then
+  Mixer.default_options["sync_pre_post"] = {
+    label = "Pre/Post sync",
+    description = "Decide if switching Pre/Post is reflected "
+              .."\nboth in Renoise and on the controller",
+    items = {
+      "Pre/Post sync is enabled",
+      "Pre/Post sync is disabled",
+    },
+    value = 1,
+  }
+end
+
 
 function Mixer:__init(display,mappings,options,config_name)
   TRACE("Mixer:__init",display,mappings,options,config_name)
-
-
-
-  -- constructor 
-  Application.__init(self,config_name)
-
-  self.display = display
 
     -- define the options (with defaults)
   --[[
@@ -204,6 +210,9 @@ function Mixer:__init(display,mappings,options,config_name)
   self.MODE_PREFX = 1
   self.MODE_POSTFX = 2
 
+  self.MODE_PREPOSTSYNC_ON = 1
+  self.MODE_PREPOSTSYNC_OFF = 2
+
   self.MUTE_NORMAL = 1
   self.MUTE_INVERTED = 2
 
@@ -214,8 +223,6 @@ function Mixer:__init(display,mappings,options,config_name)
   self.FOLLOW_TRACK_OFF = 2
 
   self.TRACK_PAGE_AUTO = 1
-
-  self.options = {}
 
   -- define control-maps groups 
   self.mappings = {
@@ -234,7 +241,7 @@ function Mixer:__init(display,mappings,options,config_name)
       greedy = true,
     },
     mute = {
-      description = "Mixer: Mute track, hold to solo",
+      description = "Mixer: Mute track",
       ui_component = UI_COMPONENT_TOGGLEBUTTON,
       greedy = true,
     },
@@ -336,14 +343,44 @@ function Mixer:__init(display,mappings,options,config_name)
   -- current track properties we are listening to
   self._attached_track_observables = table.create()
 
+  self._update_requested = false
+
   -- apply arguments
-  self.options = options
-  self:_apply_mappings(mappings)
+  Application.__init(self,display,mappings,options,config_name)
 
   -- toggle, which defines if we're controlling the pre or post fx vol/pans
   self._postfx_mode = (self.options.pre_post.value == self.MODE_POSTFX)
 
 end
+
+--------------------------------------------------------------------------------
+
+-- set pre/post mode
+--[[
+function Mixer:_set_pre_post(bool,skip_event)
+
+
+
+end
+]]
+
+--------------------------------------------------------------------------------
+
+-- perform periodic updates
+
+function Mixer:on_idle()
+
+  if (not self.active) then 
+    return 
+  end
+  if(self._update_requested) then
+    self._update_requested = false
+    self:_attach_to_tracks()
+    self:update()
+  end
+
+end
+
 
 
 --------------------------------------------------------------------------------
@@ -402,21 +439,6 @@ function Mixer:set_track_mute(control_index, state, skip_event_handler)
     -- set mute state to the button
     local active = (state == MUTE_STATE_ACTIVE)
     self._mutes[control_index]:set(active, skip_event_handler)
-
-    local monochrome = is_monochrome(self.display.device.colorspace)
-    if not monochrome then
-      if self._volume and 
-        self._volume[control_index] 
-      then
-        self._volume[control_index]:set_dimmed(not active)
-      end
-      if self._panning and 
-        self._panning[control_index] 
-      then
-        self._panning[control_index]:set_dimmed(not active)
-      end
-    end
-
   end
 end
 
@@ -432,9 +454,65 @@ function Mixer:set_track_solo(control_index, state, skip_event_handler)
     skip_event_handler = true
   end
   if (self.active and self._solos ~= nil) then
-    -- set mute state to the button
     self._solos[control_index]:set(state, skip_event_handler)
+
   end
+end
+
+
+--------------------------------------------------------------------------------
+
+-- return true if any track is soloed
+
+function Mixer:_any_track_is_soloed()
+
+  for v,track in ipairs(renoise.song().tracks) do
+    if track.solo_state then
+      return true
+    end
+  end
+  return false
+end
+
+--------------------------------------------------------------------------------
+
+-- set dimmed state of slider - will only happen when:
+-- - the controller has a color display
+-- - when the control is unsolo'ed or unmuted
+
+function Mixer:set_dimmed(control_index)
+  TRACE("Mixer:set_dimmed()",control_index)
+
+
+  local track_index = self._track_offset + control_index
+  local track = renoise.song().tracks[track_index]
+  if (track) then
+
+    local dimmed = false
+    local any_solo = self:_any_track_is_soloed()
+
+    if any_solo then
+      dimmed = (not track.solo_state)
+    else
+      dimmed = (track.mute_state~=MUTE_STATE_ACTIVE)
+    end
+
+    local monochrome = is_monochrome(self.display.device.colorspace)
+    if not monochrome then
+      if self._volume and 
+        self._volume[control_index] 
+      then
+        self._volume[control_index]:set_dimmed(dimmed)
+      end
+      if self._panning and 
+        self._panning[control_index] 
+      then
+        self._panning[control_index]:set_dimmed(dimmed)
+      end
+    end
+
+  end
+
 end
 
 --------------------------------------------------------------------------------
@@ -534,6 +612,10 @@ function Mixer:update()
 
     end
 
+    -- update the dimmed state 
+    self:set_dimmed(control_index)
+
+
   end
 
   -- master volume
@@ -547,7 +629,6 @@ function Mixer:update()
   
   -- page controls
   if (self._page_control) then
-    --local page = math.floor(self._track_offset/self._width)
     local page_width = self:_get_page_width()
     local page = math.floor(self._track_offset/page_width)
     self._page_control:set_index(page,skip_event)
@@ -617,6 +698,8 @@ function Mixer:_build_app()
 
   local embed_mutes = (self.mappings.mute.group_name == 
     self.mappings.levels.group_name)
+  local embed_solos = (self.mappings.solo.group_name == 
+    self.mappings.levels.group_name)
   local embed_master = (self.mappings.master.group_name == 
     self.mappings.levels.group_name)
 
@@ -624,15 +707,17 @@ function Mixer:_build_app()
   TRACE("Mixer:embed_master",embed_master)
 
   -- check that embedded controls are for grid controller
+  --[[
   if not slider_grid_mode and
-    embed_mutes 
+    (embed_mutes or embed_solos) 
   then
-    local msg = "Message from Mixer: the device configuration specifies "
-              .."embedded mute buttons - however, this is only supported when "
-              .."the level & mute mappings are assigned to a button grid"
+    local msg = "Message from Mixer: embedded mappings are only "
+              .."available for a grid controller (please read the "
+              .."Mixer.lua file for more information)"
     renoise.app():show_warning(msg)
     return false
   end
+  ]]
 
   -- determine the size of each group of controls
   local group = cm.groups[self.mappings.levels.group_name]
@@ -656,7 +741,15 @@ function Mixer:_build_app()
 
   local group = cm.groups[self.mappings.solo.group_name]
   if group then
-    solos_count = #group
+    if slider_grid_mode then
+      if embed_solos then
+        solos_count = (embed_master) and grid_w-1 or grid_w
+      else
+        solos_count = volume_count
+      end
+    else
+      solos_count = #group
+    end
   end
 
   local group = cm.groups[self.mappings.mute.group_name]
@@ -735,7 +828,7 @@ function Mixer:_build_app()
   if self._volume then
     for control_index = 1,volume_count do
       TRACE("Mixer:adding level#",control_index)
-      local y_pos = (embed_mutes) and 2 or 1
+      local y_pos = (embed_mutes) and ((embed_solos) and 3 or 2) or 1
       local c = UISlider(self.display)
       c.group_name = self.mappings.levels.group_name
       c.tooltip = self.mappings.levels.description
@@ -772,8 +865,6 @@ function Mixer:_build_app()
         local volume = (self._postfx_mode) and 
           track.postfx_volume or track.prefx_volume
         volume.value = obj.value
-
-        --return true
   
       end
       
@@ -874,21 +965,14 @@ function Mixer:_build_app()
           track.mute_state = mute_state
         end
 
-        local monochrome = is_monochrome(self.display.device.colorspace)
-        if not monochrome then
-          if (self._volume) then
-            self._volume[control_index]:set_dimmed(not obj.active)
-          end
-          if (self._panning) then
-            self._panning[control_index]:set_dimmed(not obj.active)
-          end
-        end
-        
+        self:set_dimmed(control_index)
+       
         return true
 
       end
 
       -- secondary feature: hold mute button to solo track
+      --[[
       c.on_hold = function(obj)
 
         local track_index = self._track_offset + control_index
@@ -904,6 +988,7 @@ function Mixer:_build_app()
         track.solo_state = not track.solo_state
 
       end
+      ]]
       
       self:_add_component(c)
       self._mutes[control_index] = c    
@@ -919,7 +1004,12 @@ function Mixer:_build_app()
       local c = UIToggleButton(self.display)
       c.group_name = self.mappings.solo.group_name
       c.tooltip = self.mappings.solo.description
-      c:set_pos(control_index)
+      if embed_solos then
+        local y_pos = (embed_mutes) and 2 or 1
+        c:set_pos(control_index,y_pos)
+      else
+        c:set_pos(control_index)
+      end
       c.inverted = false
       c.active = false
 
@@ -983,7 +1073,6 @@ function Mixer:_build_app()
           get_master_track().prefx_volume
         volume.value = obj.value
         
-        --return true
       end
     end 
     
@@ -1021,9 +1110,8 @@ function Mixer:_build_app()
         renoise.song().selected_track_index = 1+track_idx
       else
         self._track_offset = track_idx
-        local new_song = false
-        self:_attach_to_tracks(new_song)
-        self:update()
+        self._update_requested = true
+
       end
     end
     
@@ -1052,11 +1140,14 @@ function Mixer:_build_app()
       
       if (self._postfx_mode ~= obj.active) then
         self._postfx_mode = obj.active
-        
-        local new_song = false
-        self:_attach_to_tracks(new_song)
-        
-        self:update()
+        self._update_requested = true
+
+        if self.options.sync_pre_post and
+            (self.options.sync_pre_post.value == self.MODE_PREPOSTSYNC_ON) 
+        then
+          renoise.app().window.mixer_view_post_fx = self._postfx_mode
+        end
+
       end
 
       return true
@@ -1074,25 +1165,6 @@ end
 
 --------------------------------------------------------------------------------
 
--- test if the provided track offset is currently being displayed
--- @return boolean
---[[
-function Mixer:_track_within_range(track_idx)
-  TRACE("Mixer:_track_within_range(",track_idx,")")
-
-  if (track_idx > (self._track_offset+self._width)) 
-    or (track_idx <= self._track_offset) 
-  then
-    return false
-  else
-    return true
-  end
-
-end
-]]
-
---------------------------------------------------------------------------------
-
 -- adds notifiers to song
 -- invoked when a new document becomes available
 
@@ -1101,18 +1173,27 @@ function Mixer:_attach_to_song()
   
   local song = renoise.song()
 
+  -- attach to mixer PRE/POST 
+  if (renoise.API_VERSION >=2) then
+    renoise.app().window.mixer_view_post_fx_observable:add_notifier(
+      function()
+        TRACE("Mixer:mixer_view_post_fx_observable fired...")
+        --print("Mixer:mixer_view_post_fx_observable fired...")
+        if (self.options.sync_pre_post.value == self.MODE_PREPOSTSYNC_ON) then
+          self._postfx_mode = renoise.app().window.mixer_view_post_fx
+          self._update_requested = true
+        end
+      end
+    )
+  end
+
   self._track_offset = self.options.track_offset.value-1
   -- update on track changes in the song
   song.tracks_observable:add_notifier(
     function()
       TRACE("Mixer:tracks_changed fired...")
-      
-      local new_song = false
-      self:_attach_to_tracks(new_song)
-      
-      if (self.active) then
-        self:update()
-      end
+      self._update_requested = true
+
     end
   )
 
@@ -1147,13 +1228,11 @@ function Mixer:_follow_track()
   local song = renoise.song()
   local track_idx = song.selected_track_index+self.options.track_offset.value-1
   local page = self:_get_track_page(track_idx)
-  local page_width = self:_get_page_width()
   if (page~=self._track_page) then
     self._track_page = page
-    self._track_offset = page*page_width
-    local new_song = false
-    self:_attach_to_tracks(new_song)        
-    self:update()
+    self._track_offset = page*self:_get_page_width()
+    self._update_requested = true
+
   end
 
 end
@@ -1161,14 +1240,13 @@ end
 --------------------------------------------------------------------------------
 
 -- figure out the active "track page" based on the supplied track index
--- @param track_idx (1-number of tracks)
+-- @param track_idx, renoise track number
 -- return integer (0-number of pages)
 
 function Mixer:_get_track_page(track_idx)
 
   local page_width = self:_get_page_width()
-  local page = math.floor((track_idx-1)/page_width)
-  return page
+  return math.floor((track_idx-1)/page_width)
 
 end
 
@@ -1177,8 +1255,8 @@ end
 
 function Mixer:_get_page_width()
 
-  return (self.options.track_increment.value==self.TRACK_PAGE_AUTO)
-    and self._width or self.options.track_increment.value-1
+  return (self.options.page_size.value==self.TRACK_PAGE_AUTO)
+    and self._width or self.options.page_size.value-1
 
 end
 
@@ -1309,6 +1387,8 @@ function Mixer:_attach_to_tracks(new_song)
         function()
           if (self.active) then
             self:set_track_solo(control_index, track.solo_state)
+            self._update_requested = true
+
           end
         end 
       )

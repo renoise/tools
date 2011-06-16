@@ -12,14 +12,11 @@ About
 
 Changes (equal to Duplex version number)
 
+  0.97  New mapping: "toggle_metronome"
   0.96  Fixed: Option "pattern_switch" didn't switch instantly
-
   0.92  New option: "stop playback" (playback toggle button)
-  
   0.91  Fixed: always turn off "start" when hitting "stop"
-  
   0.90  Follow player option
-
   0.81  First release
 
 --]]
@@ -51,7 +48,7 @@ Transport.default_options = {
       value = 1,
     },
     pattern_stop = {
-      label = "Press stop",
+      label = "Press stop x2",
       description = "When stop is pressed *twice*, choose an action",
       items = {
         "Panic (stop all)",
@@ -60,7 +57,7 @@ Transport.default_options = {
       value = 1,
     },
     jump_mode = {
-      label = "Next/previous II",
+      label = "Loop mode",
       description = "Choose between standard pattern or optional" 
                   .."\nhybrid pattern/block-loop control ",
       items = {
@@ -73,10 +70,6 @@ Transport.default_options = {
 
 function Transport:__init(display,mappings,options,config_name)
   TRACE("Transport:__init(",display,mappings,options,config_name)
-
-  Application.__init(self,config_name)
-
-  self.display = display
 
   -- define the options (with defaults)
 
@@ -156,13 +149,10 @@ function Transport:__init(display,mappings,options,config_name)
   self._edit_mode = nil
   self._follow_player = nil
 
-
   -- the various UIComponents
   self.controls = {}
 
-  -- apply arguments
-  self.options = options
-  self:_apply_mappings(mappings)
+  Application.__init(self,display,mappings,options,config_name)
 
 
 end

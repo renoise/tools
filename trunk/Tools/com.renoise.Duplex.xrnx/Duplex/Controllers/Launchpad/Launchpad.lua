@@ -199,7 +199,7 @@ duplex_configurations:insert {
 duplex_configurations:insert {
 
   -- configuration properties
-  name = "Recorder BETA + Transport",
+  name = "Recorder + Transport",
   pinned = true,
 
   -- device properties
@@ -208,7 +208,7 @@ duplex_configurations:insert {
     display_name = "Launchpad",
     device_port_in = "Launchpad",
     device_port_out = "Launchpad",
-    control_map = "Controllers/Launchpad/Launchpad-Recorder.xml",
+    control_map = "Controllers/Launchpad/Launchpad_Recorder.xml",
     thumbnail = "Launchpad.bmp",
     protocol = DEVICE_MIDI_PROTOCOL,
   },
@@ -224,10 +224,6 @@ duplex_configurations:insert {
         },
       },
       options = {
-        --writeahead = 1,
-        --loop_mode = 2,
-        --beat_sync = 1,
-        --trigger_mode = 1,
       }
     },
     Navigator = {
@@ -240,14 +236,14 @@ duplex_configurations:insert {
     Mixer = {
       mappings = {
         mute = {
-          group_name = "Row2",
+          group_name = "Row",
         },
       },
       options = {
         follow_track = 2,
       }
     },
-    Mixer2 = {
+    Mixer_Track = {
       application = "Mixer",
       mappings = {
         levels = {
@@ -256,6 +252,17 @@ duplex_configurations:insert {
       },
       options = {
         follow_track = 1,
+      }
+    },
+    TrackSelector = {
+      mappings = {
+        prev_next_page = {
+          group_name = "Controls",
+          index = 3,
+        },
+      },
+      options = {
+        page_size = 1 ,
       }
     },
     Transport = {
@@ -299,7 +306,7 @@ duplex_configurations:insert {
 duplex_configurations:insert {
 
   -- configuration properties
-  name = "Mixer + Transport",
+  name = "Mixer + Navigator + Transport",
   pinned = true,
 
   -- device properties
@@ -308,7 +315,7 @@ duplex_configurations:insert {
     display_name = "Launchpad",
     device_port_in = "Launchpad",
     device_port_out = "Launchpad",
-    control_map = "Controllers/Launchpad/Launchpad.xml",
+    control_map = "Controllers/Launchpad/Launchpad_Mixer.xml",
     thumbnail = "Launchpad.bmp",
     protocol = DEVICE_MIDI_PROTOCOL,
   },
@@ -322,6 +329,9 @@ duplex_configurations:insert {
         mute = {
           group_name = "Grid",
         },
+        solo = {
+          group_name = "Grid",
+        },
         master = {
           group_name = "Grid",
         },
@@ -332,7 +342,7 @@ duplex_configurations:insert {
       },
       options = {
         invert_mute = 1,
-        track_increment = 2,
+        page_size = 2,
         follow_track = 1,
       }
     },
@@ -394,7 +404,7 @@ duplex_configurations:insert {
     display_name = "Launchpad",
     device_port_in = "Launchpad",
     device_port_out = "Launchpad",
-    control_map = "Controllers/Launchpad/Launchpad.xml",
+    control_map = "Controllers/Launchpad/Launchpad_Matrix.xml",
     thumbnail = "Launchpad.bmp",
     protocol = DEVICE_MIDI_PROTOCOL,
   },
@@ -454,6 +464,7 @@ duplex_configurations:insert {
   }
 }
 
+
 --------------------------------------------------------------------------------
 
 -- setup "Matrix" as the only app for this configuration
@@ -470,26 +481,13 @@ duplex_configurations:insert {
     display_name = "Launchpad",
     device_port_in = "Launchpad",
     device_port_out = "Launchpad",
-    control_map = "Controllers/Launchpad/Launchpad.xml",
+    control_map = "Controllers/Launchpad/Launchpad_Effect.xml",
     thumbnail = "Launchpad.bmp",
     protocol = DEVICE_MIDI_PROTOCOL,
   },
 
   applications = {
-    Effect = {
-      mappings = {
-        parameters = {
-          group_name= "Grid",
-        },
-        page = {
-          group_name = "Controls",
-          index = 1,
-        },
-        device = {
-          group_name = "Triggers",
-        },
-      },
-    },
+
     Transport = {
       mappings = {
         --[[
@@ -519,6 +517,56 @@ duplex_configurations:insert {
         pattern_play = 3,
       }
     },
+    TrackSelector = {
+      mappings = {
+      --[[
+        prev_next_track = {
+          group_name = "Controls",
+          index = 1,
+        },
+        ]]
+        prev_next_page = {
+          group_name = "Controls",
+          index = 3,
+        },
+        --[[
+        select_first = {
+          group_name = "Controls",
+          index = 5,
+        },
+        select_master = {
+          group_name = "Controls",
+          index = 6,
+        },
+        select_sends = {
+          group_name = "Controls",
+          index = 7,
+        },
+        ]]
+        select_track = {
+          group_name = "Row",
+          index = 1,
+        },
+      },
+      options = {      
+        page_size = 3,
+      }
+    },
+    Effect = {
+      mappings = {
+        parameters = {
+          group_name= "Grid",
+        },
+        page = {
+          group_name = "Controls",
+          index = 1,
+        },
+        device = {
+          group_name = "Triggers",
+        },
+      },
+    },
+
 
   }
 }
@@ -539,7 +587,7 @@ duplex_configurations:insert {
     display_name = "Launchpad",
     device_port_in = "Launchpad",
     device_port_out = "Launchpad",
-    control_map = "Controllers/Launchpad/Launchpad_VerticalSplit.xml",
+    control_map = "Controllers/Launchpad/Launchpad_MatrixMixer.xml",
     thumbnail = "Launchpad.bmp",
     protocol = DEVICE_MIDI_PROTOCOL,
   },
@@ -606,6 +654,7 @@ duplex_configurations:insert {
   }
 }
 
+
 --------------------------------------------------------------------------------
 
 -- setup Daxton's Step Sequencer for the Launchpad
@@ -622,7 +671,7 @@ duplex_configurations:insert {
     display_name = "Launchpad",
     device_port_in = "Launchpad",
     device_port_out = "Launchpad",
-    control_map = "Controllers/Launchpad/Launchpad.xml",
+    control_map = "Controllers/Launchpad/Launchpad_StepSequencer.xml",
     thumbnail = "Launchpad.bmp",
     protocol = DEVICE_MIDI_PROTOCOL,
   },
@@ -660,7 +709,7 @@ duplex_configurations:insert {
       options = {
         --line_increment = 8,
         --follow_track = 1,
-        --track_increment = 5,
+        --page_size = 5,
       }
 
       --[[

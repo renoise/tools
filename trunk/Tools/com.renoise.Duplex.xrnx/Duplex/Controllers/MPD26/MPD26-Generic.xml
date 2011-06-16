@@ -1,0 +1,139 @@
+<Device>
+  <Name>Akai MPD26</Name>
+  <Author>satobox</Author>
+  <Description>Select any Generic Preset on the Akai MPD26
+and set transport buttons to 'CTRL' by edit mode.
+Also turn on the "FULL LEVEL" mode.
+
+This configuration uses PAD BANK A & C only.
+BANK A = Mixer(Solo & Mute) + Matrix(1 line only)
+BANK C = Effect device selector
+</Description>
+  <Parameters>
+    <Row>
+      <Column>
+        <Row>
+
+          <Column>
+            <Group name="Faders" orientation="horizontal">
+              <Param value="CC#20" type="fader" name="F1"  orientation="vertical" size="3"  maximum="127" minimum="0"/>
+              <Param value="CC#21" type="fader" name="F2"  orientation="vertical" size="3"  maximum="127" minimum="0"/>
+              <Param value="CC#22" type="fader" name="F3"  orientation="vertical" size="3"  maximum="127" minimum="0"/>
+              <Param value="CC#23" type="fader" name="F4"  orientation="vertical" size="3"  maximum="127" minimum="0"/>
+            </Group>
+          </Column>
+          
+          <Column>
+          </Column>
+          
+          <Column>
+            <Group name="Master-Fader" orientation="horizontal">
+              <Param value="CC#25" type="fader" name="F6"  orientation="vertical" size="3"  maximum="127" minimum="0"/>
+            </Group>
+          </Column>
+          
+          <Column>
+          </Column>
+          
+          <Column>
+            <Group name="Transport" columns="5">
+              <Param value="CC#115" type="button" name="Left" size="0.8" aspect="0.6" maximum="127" minimum="0"/>
+              <Param value="CC#116" type="button" name="Right" size="0.8" aspect="0.6" maximum="127" minimum="0"/>
+              <Param value="CC#117" type="button" name="Stop" size="0.8" aspect="0.6" maximum="127" minimum="0"/>
+              <Param value="CC#118" type="button" name="Play" size="0.8" aspect="0.6" maximum="127" minimum="0"/>
+              <Param value="CC#119" type="button" name="Rec"  size="0.8" aspect="0.6" maximum="127" minimum="0"/>
+            </Group>
+          </Column>
+          
+        </Row>
+        
+----------------------------------------------------
+----------------------------------------------------        
+        
+        <Row>
+
+          <Column>
+            <Group name="Pad-Mixer-1" columns="4">
+              <Param value="C-3" type="button" name="Pad 13" size="1.2" maximum="127" minimum="0"/>
+              <Param value="C#3" type="button" name="Pad 14" size="1.2" maximum="127" minimum="0"/>
+              <Param value="D-3" type="button" name="Pad 15" size="1.2" maximum="127" minimum="0"/>
+              <Param value="D#3" type="button" name="Pad 16" size="1.2" maximum="127" minimum="0"/>
+            </Group>  
+             
+            <Group name="Pad-Mixer-2" columns="4">
+              <Param value="G#2" type="button" name="Pad 9"  size="1.2" maximum="127" minimum="0"/>
+              <Param value="A-2" type="button" name="Pad 10" size="1.2" maximum="127" minimum="0"/>
+              <Param value="A#2" type="button" name="Pad 11"  size="1.2" maximum="127" minimum="0"/>
+              <Param value="B-2" type="button" name="Pad 12"  size="1.2" maximum="127" minimum="0"/>
+            </Group>
+            
+            <Group name="Pad-Matrix" columns="4">
+              <Param value="E-2" type="button" name="Pad 5"  size="1.2" maximum="127" minimum="0"/>
+              <Param value="F-2" type="button" name="Pad 6"  size="1.2" maximum="127" minimum="0"/>
+              <Param value="F#2" type="button" name="Pad 7"  size="1.2" maximum="127" minimum="0"/>
+              <Param value="G-2" type="button" name="Pad 8"  size="1.2" maximum="127" minimum="0"/>
+              
+            </Group>
+
+            <Group name="Pad-Page" columns="4">
+              <Param value="C-2" type="button" name="Pad 1"  size="1.2" maximum="127" minimum="0"/>
+              <Param value="C#2" type="button" name="Pad 2"  size="1.2" maximum="127" minimum="0"/>
+              <Param value="D-2" type="button" name="Pad 3"  size="1.2" maximum="127" minimum="0"/>
+              <Param value="D#2" type="button" name="Pad 4"  size="1.2" maximum="127" minimum="0"/>
+            </Group>
+
+          </Column>
+
+--------------------------------------------------------
+          <Column>
+          </Column>
+--------------------------------------------------------
+          
+          <Column>
+            <Group name="Pad-FX-1" columns="4">
+              <Param value="C-5" type="button" name="Pad 13" size="1" maximum="127" minimum="0"/>
+              <Param value="C#5" type="button" name="Pad 14" size="1" maximum="127" minimum="0"/>
+              <Param value="D-5" type="button" name="Pad 15" size="1" maximum="127" minimum="0"/>
+              <Param value="D#5" type="button" name="Pad 16" size="1" maximum="127" minimum="0"/>
+              <Param value="G#4" type="button" name="Pad 9"  size="1" maximum="127" minimum="0"/>
+              <Param value="A-4" type="button" name="Pad 10" size="1" maximum="127" minimum="0"/>
+              <Param value="A#4" type="button" name="Pad 11" size="1" maximum="127" minimum="0"/>
+              <Param value="B-4" type="button" name="Pad 12" size="1" maximum="127" minimum="0"/>
+              <Param value="E-4" type="button" name="Pad 5"  size="1" maximum="127" minimum="0"/>
+              <Param value="F-4" type="button" name="Pad 6"  size="1" maximum="127" minimum="0"/>
+              <Param value="F#4" type="button" name="Pad 7"  size="1" maximum="127" minimum="0"/>
+              <Param value="G-4" type="button" name="Pad 8"  size="1" maximum="127" minimum="0"/>
+            </Group>  
+             
+            <Group name="Pad-FX-2" columns="4">
+              <Param value="C-4" type="button" name="Pad 1"  size="1" maximum="127" minimum="0"/>
+              <Param value="C#4" type="button" name="Pad 2"  size="1" maximum="127" minimum="0"/>
+              <Param value="D-4" type="button" name="Pad 3"  size="1" maximum="127" minimum="0"/>
+              <Param value="D#4" type="button" name="Pad 4"  size="1" maximum="127" minimum="0"/>
+            </Group>
+          </Column>
+
+--------------------------------------------------------
+          <Column>
+          </Column>
+--------------------------------------------------------
+
+          <Column>
+            <Row>
+              <Group name="Knobs" orientation="horizontal" columns="2">
+                <Param value="CC#16" type="dial" name="K5" size="1.3" maximum="127" minimum="0"/>
+                <Param value="CC#17" type="dial" name="K6" size="1.3" maximum="127" minimum="0"/>
+                <Param value="CC#14"  type="dial" name="K3" size="1.3" maximum="127" minimum="0"/>
+                <Param value="CC#15" type="dial" name="K4" size="1.3" maximum="127" minimum="0"/>
+                <Param value="CC#3"  type="dial" name="K1" size="1.3" maximum="127" minimum="0"/>
+                <Param value="CC#9"  type="dial" name="K2" size="1.3" maximum="127" minimum="0"/>
+              </Group>
+            </Row>
+          </Column>
+
+        </Row>
+        
+      </Column>
+    </Row>
+  </Parameters>
+</Device>

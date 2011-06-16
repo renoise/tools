@@ -225,8 +225,8 @@ end
 
 -- set_parameter: update object states
 -- @elm : control-map definition of the element
--- @obj : reference to the UIComponent instance
--- @point : canvas point containing text/value/color 
+-- @obj : UIComponent instance
+-- @point : canvas point (text/value/color)
 
 function Display:set_parameter(elm, obj, point)
   TRACE('Display:set_parameter',elm.name,elm.value,point.text)

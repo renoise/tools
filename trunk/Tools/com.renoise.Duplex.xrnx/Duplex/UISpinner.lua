@@ -105,6 +105,7 @@ function UISpinner:do_change()
   local index = math.floor(self.value+.5)
 
   if (index ~= self.index) then
+    self._cached_index = self.index
     self.index = index
     self:_invoke_handler()
   end
