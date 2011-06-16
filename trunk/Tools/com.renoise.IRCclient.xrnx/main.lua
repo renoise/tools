@@ -6,7 +6,8 @@ main.lua
 
 require "globals"
 require "gui"
-
+local lastlist = {}
+local hims = 1
 
 --------------------------------------------------------------------------------
 -- tool registration
@@ -150,6 +151,10 @@ function print_server_replies()
           end
 
           if SERVER_ARRAY[t] == "353" then -- Names list requested, enumerate the names for the channel list.
+            update_channel_users_list(SERVER_ARRAY)
+          end
+
+          if SERVER_ARRAY[t] == "366" then -- End of names list.
             update_channel_users(SERVER_ARRAY)
           end
 
@@ -336,21 +341,26 @@ end
 
 --------------------------------------------------------------------------------
 
-function update_channel_users(SERVER_ARRAY)
+function update_channel_users_list(SERVER_ARRAY)
   local u_channel = SERVER_ARRAY[4]
   vb_channel.views.channel_user_frame:clear()
-
-  for b = 1, (#SERVER_ARRAY-5) do
-    print SERVER_ARRAY[b+5]
-    if string.find(SERVER_ARRAY[b+5],":") == 1 then
-      SERVER_ARRAY[b+5] = string.sub(SERVER_ARRAY[b+5],2)
-    end
-    vb_channel.views.channel_user_frame:add_line(SERVER_ARRAY[b+5])
-
+  for p = 1, #SERVER_ARRAY-5 do
+    channel_users[#channel_users+1] = SERVER_ARRAY[p+5]
   end
-
 end
 
+function update_channel_users(SERVER_ARRAY)
+  vb_channel.views.channel_user_frame:clear()
+  for b = 1, (#channel_users) do
+    if string.find(channel_users[b],":") == 1 then
+      channel_users[b] = string.sub(channel_users[b],2)
+    end
+    vb_channel.views.channel_user_frame:add_line(channel_users[b])
+    vb_channel.views.channel_user_frame:scroll_to_first_line()
+  end
+  channel_users = {}
+  
+end
 
 --------------------------------------------------------------------------------
 
@@ -434,7 +444,8 @@ function send_command (target, target_frame, command)
   local found = false
   if no_loop == 1 then
     if vb_channel ~= nil then
-      vb_channel.views.channel_command.value = ""
+--      vb_channel.views.channel_command.value = ""
+      vb_channel.views.channel_command.text = ""
     end 
 
     if vb_status ~= nil then
@@ -664,6 +675,7 @@ end
 
 function chat_key_handler(dialog, key)
   -- close on escape...
+
   if (key.modifiers == "" and key.name == "esc") then
     dialog:close()
 
@@ -671,16 +683,20 @@ function chat_key_handler(dialog, key)
   elseif (key.name == "return") then
     no_loop = 1
     send_command(active_channel, 'channel', vb_channel.views.channel_command.text)
-    vb_channel.views.channel_command.value = ""
+    vb_channel.views.channel_command.text = ""
   
   -- update key_text to show what we got
   elseif (key.name == "back") then
     no_loop = 1
-    vb_channel.views.channel_command.value = string.sub(vb_channel.views.channel_command.value,1,
-    string.len(vb_channel.views.channel_command.value)-1)
+    vb_channel.views.channel_command.text = string.sub(vb_channel.views.channel_command.text,1,
+    string.len(vb_channel.views.channel_command.text)-1)
+
+  elseif (key.name == "del") then
+    no_loop = 1
+    vb_channel.views.channel_command.text = ""
 
   elseif key.character ~= nil then
-    --Shortcut to hide / "m"inimize chat dialog.
+    --Shortcut to hide / "m"inimize chat dialog. (right alt-gr C in my case)
     --Want a different one? simply change the character and modifiers combo
     
     if (key.character == "©") then
@@ -689,7 +705,7 @@ function chat_key_handler(dialog, key)
       return
     end
     no_loop = 1
-    vb_channel.views.channel_command.value = vb_channel.views.channel_command.value .. 
+    vb_channel.views.channel_command.text = vb_channel.views.channel_command.text .. 
       key.character
       if sirc_debug then
         print ("adding ".. key.character)    
