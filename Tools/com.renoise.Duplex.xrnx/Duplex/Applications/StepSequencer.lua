@@ -29,15 +29,19 @@ How to use:
 
 Mappings
 
-  - grid          - the note grid 
-  - transpose     - 4 buttons, oct-/semi-/semi+/oct+
-  - level         - adjust note volume/display current line
-  - line          - flip through lines
-  - track         - flip through tracks
+  grid          - the note grid 
+  transpose     - 4 buttons, oct-/semi-/semi+/oct+
+  level         - adjust note volume/display current line
+  line          - flip through lines
+  track         - flip through tracks
+
 
 Options
-  - orientation   - display horizontally or vertically
-  - line_increment- the amount of lines to jump by when scrolling
+
+  orientation   - display horizontally or vertically
+  line_increment- the amount of lines to jump by when scrolling
+  follow_track  - align with the selected track in Renoise
+  page_size     - specify step size when using paged navigation
 
 
 Changes (equal to Duplex version number)
@@ -93,14 +97,14 @@ StepSequencer.default_options = {
     },
     value = 2,
   },
-  track_increment = {
-    label = "Track increment",
-    description = "Specify the step size when flipping through tracks",
+  page_size = {
+    label = "Page size",
+    description = "Specify the step size when using paged navigation",
     on_change = function(inst)
       inst:_update_track_count()
     end,
     items = {
-      "Automatic: use available number of tracks in sequencer",
+      "Automatic: use available width",
       "1","2","3","4",
       "5","6","7","8",
       "9","10","11","12",
@@ -113,9 +117,6 @@ StepSequencer.default_options = {
 function StepSequencer:__init(display,mappings,options,config_name)
   TRACE("StepSequencer:__init(",display,mappings,options,config_name)
 
-  Application.__init(self,config_name)
-  self.display = display -- what does this do?
-  
   self.COLUMNS_SINGLE = 1
   self.COLUMNS_MULTI = 2
 
@@ -249,9 +250,7 @@ function StepSequencer:__init(display,mappings,options,config_name)
   -- don't toggle off if pressing multiple on / transposing / etc
   self._toggle_exempt = { } 
 
-  -- apply arguments
-  self.options = options
-  self:_apply_mappings(mappings)
+  Application.__init(self,display,mappings,options,config_name)
 
 end
 
@@ -867,7 +866,7 @@ end
 --------------------------------------------------------------------------------
 
 -- figure out the active "track page" based on the supplied track index
--- @param track_idx (1-number of tracks)
+-- @param track_idx, renoise track number
 -- return integer (0-number of pages)
 
 function StepSequencer:_get_track_page(track_idx)
@@ -882,8 +881,8 @@ end
 
 function StepSequencer:_get_page_width()
 
-  return (self.options.track_increment.value==self.TRACK_PAGE_AUTO)
-    and self._track_count or self.options.track_increment.value-1
+  return (self.options.page_size.value==self.TRACK_PAGE_AUTO)
+    and self._track_count or self.options.page_size.value-1
 
 end
 

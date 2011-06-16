@@ -158,6 +158,10 @@ duplex_configurations:insert {
           orientation = HORIZONTAL,
           index = 1,
         },
+        mode = {
+          group_name = "Controls2",
+          index = 1,
+        },
       },
       options = {
         invert_mute = 2,
@@ -181,10 +185,12 @@ duplex_configurations:insert {
           group_name= "Controls1",
           index = 4,
         },
+        --[[
         edit_mode = {
-          group_name = "Controls2",
-          index = 112/2/2010,
+          group_name = "Controls",
+          index = 5,
         },
+        ]]
         start_playback = {
           group_name = "Controls2",
           index = 2,
@@ -202,7 +208,6 @@ duplex_configurations:insert {
         pattern_play = 3,
       }
     },
-    -- applications...
   }
 }
 
@@ -224,7 +229,7 @@ duplex_configurations:insert {
     device_address = "127.0.0.1",
     device_port_in = "8002",
     device_port_out = "8082",
-    control_map = "Controllers/Monome/Monome128_split.xml",
+    control_map = "Controllers/Monome/Monome128_MatrixEffect.xml",
     thumbnail = "Monome.bmp",
     protocol = DEVICE_OSC_PROTOCOL,
     options = {
@@ -302,7 +307,7 @@ duplex_configurations:insert {
 duplex_configurations:insert {
 
   -- configuration properties
-  name = "Recorder BETA + Mixer",
+  name = "Recorder + Mixer",
   pinned = true,
 
   -- device properties
@@ -313,7 +318,7 @@ duplex_configurations:insert {
     device_address = "127.0.0.1",
     device_port_in = "8002",
     device_port_out = "8082",
-    control_map = "Controllers/Monome/Monome128_split.xml",
+    control_map = "Controllers/Monome/Monome128_RecorderMixer.xml",
     thumbnail = "Monome.bmp",
     protocol = DEVICE_OSC_PROTOCOL,
 
@@ -328,6 +333,16 @@ duplex_configurations:insert {
         sliders = {
           group_name = "Grid1",
         },
+      },
+      options = {
+        follow_track = 1,
+        page_size = 3,
+        --autostart
+        --trigger_mode
+        --beat_sync
+        --auto_seek
+        --loop_mode
+      
       }
     },
     Navigator = {
@@ -336,6 +351,50 @@ duplex_configurations:insert {
           group_name = "Column",
           orientation = VERTICAL,
         }
+      }
+    },
+    TrackSelector = {
+      mappings = {
+        prev_next_page = {
+          group_name = "Controls2",
+          orientation = HORIZONTAL,
+          index = 1,
+        }
+      },
+      options = {
+        --page_size
+      }
+
+    },
+    Transport = {
+      mappings = {
+        goto_previous = {
+          group_name= "Controls2",
+          index = 3,
+        },
+        goto_next = {
+          group_name= "Controls2",
+          index = 4,
+        },
+        edit_mode = {
+          group_name = "Controls2",
+          index = 5,
+        },
+        start_playback = {
+          group_name = "Controls2",
+          index = 6,
+        },
+        loop_pattern = {
+          group_name = "Controls2",
+          index = 7,
+        },
+        follow_player = {
+          group_name= "Controls2",
+          index = 8,
+        },
+      },
+      options = {
+        pattern_play = 3,
       }
     },
     Mixer = {
@@ -349,17 +408,26 @@ duplex_configurations:insert {
         master = {
           group_name = "Grid2",
         },
+        --[[
         page = {
           group_name = "Controls2",
           index = 1
         },
+        ]]
         mode = {
           group_name = "Controls2",
           index = 8
-        }
+        },
+        --panning = {},
+        --solo = {},
       },
       options = {
-        invert_mute = 2
+        invert_mute = 2,
+        follow_track = 1,
+        page_size = 3,
+        --track_offset
+        --pre_post
+        --mute_mode
       }
     }
   }
@@ -478,12 +546,45 @@ duplex_configurations:insert {
     device_address = "127.0.0.1",
     device_port_in = "8002",
     device_port_out = "8082",
-    control_map = "Controllers/Monome/Monome64.xml",
+    control_map = "Controllers/Monome/Monome64_Mixer.xml",
     thumbnail = "Monome.bmp",
     protocol = DEVICE_OSC_PROTOCOL,
   },
 
   applications = {
+    Transport = {
+      mappings = {
+        goto_previous = {
+          group_name= "Controls",
+          index = 3,
+        },
+        goto_next = {
+          group_name= "Controls",
+          index = 4,
+        },
+        edit_mode = {
+          group_name = "Controls",
+          index = 5,
+        },
+        start_playback = {
+          group_name = "Controls",
+          index = 6,
+        },
+        loop_pattern = {
+          group_name = "Controls",
+          index = 7,
+        },
+        --[[
+        follow_player = {
+          group_name= "Controls",
+          index = 8,
+        },
+        ]]
+      },
+      options = {
+        pattern_play = 3,
+      }
+    },
     Mixer = {
       mappings = {
         levels = {
@@ -493,16 +594,21 @@ duplex_configurations:insert {
           group_name = "Grid",
         },
         page = {
-          group_name = "Controls2",
+          group_name = "Controls",
           index = 1
         },
         mode = {
-          group_name = "Controls2",
+          group_name = "Controls",
           index = 8
         }
       },
       options = {
-        invert_mute = 2
+        invert_mute = 2,
+        follow_track = 1,
+        --page_size
+        --track_offset
+        --mute_mode
+        --pre_post
       }
     }
   }
@@ -526,7 +632,7 @@ duplex_configurations:insert {
     device_address = "127.0.0.1",
     device_port_in = "8002",
     device_port_out = "8082",
-    control_map = "Controllers/Monome/Monome64_matrix.xml",
+    control_map = "Controllers/Monome/Monome64_Matrix.xml",
     thumbnail = "Monome.bmp",
     protocol = DEVICE_OSC_PROTOCOL,
 
@@ -619,7 +725,7 @@ duplex_configurations:insert {
 duplex_configurations:insert {
 
   -- configuration properties
-  name = "Recorder BETA",
+  name = "Recorder",
   pinned = true,
 
   -- device properties
@@ -636,16 +742,34 @@ duplex_configurations:insert {
   },
 
   applications = {
+    TrackSelector = {
+      mappings = {
+        prev_next_page = {
+          group_name = "Controls",
+          index = 1,
+        },
+      },
+      options = {
+        page_size = 8,
+      }
+    },
     Recorder = {
       mappings = {
         recorders = {
-          group_name = "Controls",
+          group_name = "Row",
         },
         sliders = {
           group_name = "Grid",
         },
       },
       options = {
+        follow_track = 1,
+        --page_size
+        --autostart
+        --trigger_mode
+        --beat_sync
+        --auto_seek
+        --loop_mode
       }
     },
     Navigator = {
@@ -656,6 +780,32 @@ duplex_configurations:insert {
         }
       }
     },
-    -- applications ...
+    Transport = {
+      mappings = {
+        goto_previous = {
+          group_name= "Controls",
+          index = 3,
+        },
+        goto_next = {
+          group_name= "Controls",
+          index = 4,
+        },
+        edit_mode = {
+          group_name = "Controls",
+          index = 5,
+        },
+        start_playback = {
+          group_name = "Controls",
+          index = 6,
+        },
+        loop_pattern = {
+          group_name = "Controls",
+          index = 7,
+        },
+      },
+      options = {
+        pattern_play = 3,
+      }
+    },
   }
 }

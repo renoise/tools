@@ -82,7 +82,7 @@ duplex_configurations:insert {
         invert_mute = 1,
         follow_track = 1,
 --        track_offset = 1,
-        track_increment = 5,
+        page_size = 5,
       }
     },
     Mixer2 = {
@@ -107,7 +107,7 @@ duplex_configurations:insert {
         invert_mute = 1,
         follow_track = 1,
         track_offset = 5,
-        track_increment = 5,
+        page_size = 5,
       }
     },
     Matrix = {
@@ -130,7 +130,7 @@ duplex_configurations:insert {
       },
       options = {
         follow_track = 1,
-        track_increment = 5,
+        page_size = 5,
       }
     },
     Effect = {
@@ -204,7 +204,7 @@ duplex_configurations:insert {
 --        invert_mute = 1,
         follow_track = 1,
         track_offset = 1,
-        track_increment = 5,
+        page_size = 5,
       }
     },
     Mixer2 = {
@@ -226,7 +226,7 @@ duplex_configurations:insert {
 --        invert_mute = 1,
         follow_track = 1,
         track_offset = 5,
-        track_increment = 5,
+        page_size = 5,
       }
     },
     StepSequencer = {
@@ -257,7 +257,7 @@ duplex_configurations:insert {
       options = {
         orientation = 1,  
         follow_track = 1,
-        track_increment = 5,           
+        page_size = 5,           
       }
      },
      Navigator = {

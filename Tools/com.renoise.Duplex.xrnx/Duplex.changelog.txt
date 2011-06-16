@@ -232,3 +232,37 @@ Done 0.96
 * Message/Stream
   o New Message property: is_note_off - distinguish between note-on/note-off 
 
+--------------------------------------------------------------------------------
+Done 0.97
+--------------------------------------------------------------------------------
+
+* Changes for Renoise 2.7
+  o API version updated to 2.0
+  o Use of rack:resize() has been depricated
+
+* All applications
+  o Options: renamed "track_increment" to more fitting "page_size" 
+
+* TrackSelector (new application)
+  o Allows to set focus to track by index, previous or next track
+  o Supports paged navigation features (previous/next, page size)
+  o Allows direct access to sequencer-track #1, master or send-track #1
+
+* Recorder
+  o Any number of tracks supported, option to follow current track
+  o Supports paged navigation features (previous/next, page size)
+  o Detect when tracks are inserted/removed/swapped, maintain references
+
+* Effect
+  o UI updates in idle loop
+  o Option to include parameters based on criteria:
+    ALL/MIXER/AUTOMATED_PARAMETERS
+
+* Mixer
+  o New option: "sync_pre_post" (Renoise 2.7+)
+  o Implement new multi-solo mode (affects how UISlider's are dimmed)
+  o Removed "hold to solo" action for normal mute buttons
+  o UI updates in idle loop 
+
+* Other minor changes 
+  o Cleaner app initialization (less code)

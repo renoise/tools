@@ -221,7 +221,13 @@ renoise.tool().app_idle_observable:add_notifier(function()
     browser:on_idle()
   end
 end)
-
+--[[
+renoise.tool().app_release_document_observable:add_notifier(function()
+  if (browser) then
+    browser:set_device("None")
+  end
+end)
+]]
 renoise.tool().app_new_document_observable:add_notifier(function()
   if (browser) then
     browser:on_new_document()
@@ -260,24 +266,31 @@ for _,device_name in pairs(available_devices) do
             )
             local options_node = renoise.Document.create("Options"){} 
             local option_key, option_value
+
             -- figure out the actual application name
             if (app.application) then
               app_name = app.application
             end
-            -- create default application options
-            local default_options = _G[app_name]["default_options"]
-            if default_options then
-              for option_name,option in pairs(default_options) do
-                option_key = option_name
-                option_value = option.value
-                -- use the key from the device config if present
-                if app.options and
-                  app.options[option_key] 
-                then
-                  option_value = app.options[option_key] 
+
+            -- only include existing applications
+            if (rawget(_G, app_name)) then
+
+              -- create default application options
+              local default_options = _G[app_name]["default_options"]
+              if default_options then
+                for option_name,option in pairs(default_options) do
+                  option_key = option_name
+                  option_value = option.value
+                  -- use the key from the device config if present
+                  if app.options and
+                    app.options[option_key] 
+                  then
+                    option_value = app.options[option_key] 
+                  end
+                  options_node:add_property(option_key,option_value)
                 end
-                options_node:add_property(option_key,option_value)
               end
+
             end
 
             application_root_node:add_property("options",options_node)

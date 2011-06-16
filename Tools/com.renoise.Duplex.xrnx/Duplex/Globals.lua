@@ -84,6 +84,9 @@ MUTE_STATE_ACTIVE = 1
 MUTE_STATE_OFF = 2
 MUTE_STATE_MUTED = 3
 
+SOLO_STATE_ON = 1
+SOLO_STATE_OFF = 2
+
 TRACK_TYPE_SEQUENCER = 1
 TRACK_TYPE_MASTER = 2
 TRACK_TYPE_SEND = 3
@@ -312,7 +315,8 @@ end
 -- {"^ControlMap:", "^Display:"} -> show "Display:" and "ControlMap:"
 
 local _trace_filters = nil
---local _trace_filters = {"^MessageStream"}
+--local _trace_filters = {"^Mixer"}
+--local _trace_filters = {"^Recorder","^UISlider"}
 --local _trace_filters = {"^UIButtonStrip", "^UISlider","^Browser"}
 --local _trace_filters = {"^Recorder", "^Effect","^Navigator","^Mixer","^Matrix"}
 --local _trace_filters = {"^StepSequencer", "^Transport","^MidiDevice","^MessageStream","^"}

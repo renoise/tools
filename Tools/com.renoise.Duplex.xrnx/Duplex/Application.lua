@@ -14,8 +14,11 @@ A generic application class for Duplex
 class 'Application'
 
 -- constructor 
-function Application:__init(config_name)
+function Application:__init(display,mappings,options,config_name)
   TRACE("Application:__init()")
+
+  -- this is the Display that our application is using
+  self.display = display
   
   -- (string) this is the name of the application as it appears
   -- in the device configuration, e.g. "MySecondMixer" - used for looking 
@@ -41,7 +44,8 @@ function Application:__init(config_name)
   --  index = 3,
   -- }
 
-  self.mappings = {}
+  -- update "self.mappings" with values from the provided configuration
+  self:_apply_mappings(mappings)
 
   -- you can choose to expose your application's options here
   -- (device-specific options are specified in the device configuration)
@@ -58,18 +62,15 @@ function Application:__init(config_name)
   --  items = {"Choice 1", "Choice 2"},
   --  value = 1 -- this is the default value ("Choice 1")
   -- }
-  self.options = {}
+  self.options = options or {}
 
   -- define a default palette for the application
   -- todo: this will enable color-picker support
-  self.palette = {}
-
-  -- (Display) most application will define this 
-  self.display = nil
+  self.palette = self.palette or {}
 
   -- private stuff
 
-  -- (boolean) true when content (UIComponents etc.) have been created
+  -- (boolean) true once build_app has been run
   self._created = false
   
   -- the options view
@@ -98,8 +99,11 @@ function Application:start_app()
     if not self:_check_mappings(self.mappings) then
       return false
     end
-    if not self:_build_app() then
-      return false
+    if self._build_app then
+      if not self:_build_app() then
+        return false
+      end
+      self._created = true
     end
   end
 
@@ -136,7 +140,6 @@ end
 function Application:_build_app()
   TRACE("Application:_build_app()")
   
-  self._created = true
 
 end
 
@@ -195,6 +198,12 @@ end
 function Application:_apply_mappings(mappings)
   TRACE("Application:_apply_mappings",mappings)
   
+  if not self.mappings then
+    -- we've got no mappings
+    self.mappings = {}
+    return
+  end
+
   for v,k in pairs(self.mappings) do
     for v2,k2 in pairs(mappings) do
       if (v==v2) then
@@ -252,21 +261,23 @@ function Application:_build_options(process)
   -- create basic dialog 
   self._settings_view = vb:column{
     style = "group",
-    width="100%",
     vb:button{
       text = self._config_name,
-      width="100%",
+      width=273,
       notifier = function()
         local view = vb.views.dpx_app_options
         local hidden_field = vb.views.dpx_app_options_hidden_field
         if (view.visible) then
-          view.height = hidden_field.value
-        else
           view.height = 1
-          hidden_field.value = view.height          
+        else
+          -- display option rows
+          if (hidden_field.value~=0) then
+            view.height = 6+hidden_field.value*20
+          else
+            view.visible = true
+          end
         end
         view.visible = not view.visible
-        view:resize()
       end
     },
     vb:value{
@@ -275,7 +286,6 @@ function Application:_build_options(process)
     },
     vb:column{
       id = "dpx_app_options",
-      width="100%",
       margin = DEFAULT_MARGIN,
       spacing = DEFAULT_SPACING,
       visible = false,
@@ -284,9 +294,11 @@ function Application:_build_options(process)
   }
   
   local elm_group = vb.views.dpx_app_options
+  local hidden_field = vb.views.dpx_app_options_hidden_field
   if (self.options)then
     for k,v in pairs(self.options) do
       elm_group:add_child(self:_add_option_row(v,k,process))
+      hidden_field.value = hidden_field.value+1
     end
 
   end
@@ -301,10 +313,10 @@ end
 -- @return ViewBuilder view
 
 function Application:_add_option_row(t,key,process)
+  TRACE("Application:_add_option_row()",t,key,process)
 
   local vb = self._vb
   local elm = vb:row{
-    width="100%",
     tooltip=t.description,
     vb:text{
       text=t.label,
@@ -312,11 +324,9 @@ function Application:_add_option_row(t,key,process)
     },
     vb:popup{
       items=t.items,
-      --id=('dpx_app_options_%s'):format(key),
       value=t.value,
       width=175,
       notifier = function(val)
-        -- set application option
         self:_set_option(key,val)
         -- update relevant device configuration
         local app_options_node = 

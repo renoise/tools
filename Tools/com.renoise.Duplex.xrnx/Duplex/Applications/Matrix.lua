@@ -35,7 +35,8 @@ Options
   switch_mode   - what to do when switching pattern
   bounds_mode   - what to do when pressing "outside bounds"
   sequence_mode - determine the pattern-trigger mode
-
+  follow_track  - align with the selected track in Renoise
+  page_size     - specify step size when using paged navigation
 
 Changes (equal to Duplex version number)
 
@@ -111,14 +112,14 @@ Matrix.default_options = {
     description = ""
   }
   ]]
-  track_increment = {
-    label = "Track increment",
-    description = "Specify the step size when flipping through tracks",
+  page_size = {
+    label = "Page size",
+    description = "Specify the step size when using paged navigation",
     on_change = function(inst)
       inst:_update_track_count()
     end,
     items = {
-      "Automatic: use grid width",
+      "Automatic: use available width",
       "1","2","3","4",
       "5","6","7","8",
       "9","10","11","12",
@@ -144,10 +145,6 @@ Matrix.default_options = {
 
 function Matrix:__init(display,mappings,options,config_name)
   TRACE("Matrix:__init(",display,mappings,options,config_name)
-
-  Application.__init(self,config_name)
-
-  self.display = display
 
   -- define the options (with defaults)
 
@@ -275,9 +272,7 @@ function Matrix:__init(display,mappings,options,config_name)
   self._update_tracks_requested = false
   self._mute_notifier_disabled = false
 
-  -- apply arguments
-  self.options = options
-  self:_apply_mappings(mappings)
+  Application.__init(self,display,mappings,options,config_name)
 
 end
 
@@ -348,7 +343,6 @@ function Matrix:_update_slots()
           end
           -- workaround for devices with no colorspace:
           -- revert to the unlit state 
-          --if table.is_empty(self.display.device.colorspace) then
           if is_monochrome(self.display.device.colorspace) then
             if slot_empty then
               button:set(false,skip_event)
@@ -718,7 +712,7 @@ end
 --------------------------------------------------------------------------------
 
 -- figure out the active "track page" based on the supplied track index
--- @param track_idx (1-number of tracks)
+-- @param track_idx, renoise track number
 -- return integer (0-number of pages)
 
 function Matrix:_get_track_page(track_idx)
@@ -733,8 +727,8 @@ end
 
 function Matrix:_get_page_width()
 
-  return (self.options.track_increment.value==self.TRACK_PAGE_AUTO)
-    and self._width or self.options.track_increment.value-1
+  return (self.options.page_size.value==self.TRACK_PAGE_AUTO)
+    and self._width or self.options.page_size.value-1
 
 end
 

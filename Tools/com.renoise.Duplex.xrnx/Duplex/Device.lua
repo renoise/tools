@@ -122,6 +122,12 @@ function Device:quantize_color(color,colorspace)
   -- apply optional colorspace, or use device default
   colorspace = colorspace or self.colorspace
 
+  -- if there's no colorspace, return original color
+  if table.is_empty(colorspace) then
+    return {color[1],color[2],color[3]}
+  end
+
+
   -- check if monochrome, then apply the average value 
   if (colorspace[1]) then
     local range = math.max(colorspace[1],colorspace[2],colorspace[3])

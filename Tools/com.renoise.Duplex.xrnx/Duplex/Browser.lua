@@ -534,8 +534,8 @@ function Browser:set_configuration(configuration, start_running)
   self._vb.views.dpx_browser_configuration_running_checkbox.value = 
     (process and process:running()) or false
 
-  self._vb.views.dpx_browser_device_ui_row:resize()
-  self._vb.views.dpx_browser_rootnode:resize()
+  --self._vb.views.dpx_browser_device_ui_row:resize()
+  --self._vb.views.dpx_browser_rootnode:resize()
 
   self:_update_device_description()
     
@@ -886,8 +886,8 @@ function Browser:_update_device_description()
   if (text_rows ~= math.floor(info_text_view.height / 16)) then
     self._vb.views.dpx_browser_device_info_text.height = text_rows*16
     
-    self._vb.views.dpx_browser_device_ui_row:resize()
-    self._vb.views.dpx_browser_rootnode:resize()
+    --self._vb.views.dpx_browser_device_ui_row:resize()
+    --self._vb.views.dpx_browser_rootnode:resize()
   end
 end
 
@@ -1648,7 +1648,8 @@ function BrowserProcess:show_settings_dialog()
       vb:column{
         id="dpx_app_settings_root",
         spacing = DEFAULT_SPACING,
-        width = "100%",
+        --width = "100%",
+        --width = 200,
       },
     }
 

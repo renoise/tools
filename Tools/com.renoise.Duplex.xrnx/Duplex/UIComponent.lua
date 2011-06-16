@@ -123,12 +123,13 @@ end
 function UIComponent:set_size(width, height)
   TRACE("UIComponent:set_size", width, height)
 
+  self.canvas:set_size(width, height)
+
   if (width ~= self.width) or
     (height ~= self.height) then
     self:invalidate()
   end
 
-  self.canvas:set_size(width, height)
   self.width = width      
   self.height = height
 end
