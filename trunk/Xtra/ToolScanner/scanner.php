@@ -20,6 +20,8 @@ $suspicious = array(
     'socket',
     'uninstall_tool',
     'write',
+    'remove',
+    'rename',
     );
 
 // ----------------------------------------------------------------------------
