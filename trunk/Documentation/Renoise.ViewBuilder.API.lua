@@ -880,7 +880,7 @@ valuebox.value
   -> [number]
 
 -- Valid in the construction table only: Setup custom rules on how the number
--- should be displayed. Both 'tostring' and  'tovalue' must be set, or neither.
+-- should be displayed. Both 'tostring' and  'tonumber' must be set, or neither.
 -- If none are set, a default string/number conversion is done, which
 -- simply reads/writes the number as integer value.
 --
@@ -894,7 +894,7 @@ valuebox.value
 -- to avoid a flood of error messages.
 valuebox.tostring
   -> (function(number) -> [string])
-valuebox.tovalue
+valuebox.tonumber
   -> (function(string) -> [number])
 
 -- Valid in the construction table only: Set up a value notifier.
@@ -1035,7 +1035,7 @@ valuefield.align
   -> [string]
 
 -- Valid in the construction table only: setup custom rules on how the number
--- should be displayed. Both, 'tostring' and  'tovalue' must be set, or none
+-- should be displayed. Both, 'tostring' and  'tonumber' must be set, or none
 -- of them. If none are set, a default string/number conversion is done, which
 -- simply shows the number with 3 digits after the decimal point.
 --
@@ -1049,7 +1049,7 @@ valuefield.align
 -- to avoid a flood of error messages.
 valuefield.tostring
   -> (function(number) -> [string])
-valuefield.tovalue
+valuefield.tonumber
   -> (function(string) -> [number])
 
 -- Valid in the construction table only: Set up a value notifier function.
