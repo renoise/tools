@@ -4,8 +4,13 @@ main.lua
 
 local DOMAIN = "http://www.renoise.com"
 
-local DEBUG = true
+local DEBUG = false
 local INSTALLED_VERSION = renoise.RENOISE_VERSION
+--[[
+local INSTALLED_VERSION = "2.6.1 a1"
+local INSTALLED_VERSION = "2.6.1 b3 Demo"
+local INSTALLED_VERSION = "2.6.1 rc1"
+]]--
 
 local vb = nil
 local dialog = nil
@@ -20,7 +25,7 @@ require "renoise.http"
 --------------------------------------------------------------------------------
 
 local options = renoise.Document.create("ScriptingToolPreferences") {    
-  CheckOnStartup = true,
+  CheckOnStartup = false,
   Shown = false, 
   LastVersion = 0,
   DontRemindOldNews = false
@@ -34,7 +39,7 @@ renoise.tool().preferences = options
 --------------------------------------------------------------------------------
 
 local function is_demo()
-  return string.find(INSTALLED_VERSION, "Demo")~=nil
+  return string.find(string.lower(INSTALLED_VERSION), "demo")~=nil
 end
 
 local function download_handler()  
@@ -64,10 +69,11 @@ local function get_release_str(s)
 end
 
 local function get_version_str(product, version_table)
-  local v = version_table
-  return ("%s %d.%d.%d %s %s %s"):format(
+  local v = version_table  
+  local str = ("%s %d.%d.%d %s %s %s"):format(
         product, v.major, v.minor, v.revision, get_release_str(v.status),
-        get_status_version_str(v.version), v.demo)
+        get_status_version_str(v.version), v.demo)  
+  return str:gsub("  ", " ")
 end
 
 local function parse_renoise_version()
@@ -81,28 +87,21 @@ local function parse_renoise_version()
   local revision = b[1]
   
   local status = "Final"
-  local demo = true
-  local version = 0
-  local s = {a=1,b=2,rc=3,Final=4}
+  local demo = "Registered"
   
-  if (b[2] == nil) then -- Final Registered    
-    demo = false
-  elseif (b[2] == "Demo") then -- Final Demo
-    demo = true
-  else    
-    status = b[2]:match("(%a+)%d") -- a/b/rc
-    version = b[2]:match("%a+(%d+)") -- 1,2,3...
-    if (b[4] and b[4] == "Demo") then -- Demo
-      demo = true
-    else -- Registered
-      demo = false
-    end
-  end
-  if (demo) then 
+  if (is_demo()) then
     demo = "Demo"
-  else 
-    demo = "Registered"
   end
+  
+  local version = 0
+  local s = {a=1,b=2,rc=3,Final=4}    
+  
+  if (b[2] ~= nil and string.lower(b[2]) ~= "demo") then 
+    b[2] = string.lower(b[2])
+    status = b[2]:match("(%a+)%d") -- a/b/rc
+    version = b[2]:match("%a+(%d+)") -- 1,2,3...    
+  end  
+  
   return {major=major, minor=minor, revision=revision, 
     status=s[status], version=version, demo=demo}
 end
