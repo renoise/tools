@@ -2,7 +2,7 @@
 <RenoiseScriptingTool doc_version="0">
   <Name>Update Checker</Name>
   <Id>com.renoise.UpdateChecker</Id>
-  <Version>4</Version>
+  <Version>6</Version>
   <ApiVersion>2</ApiVersion>
   <Author>bantai [marvin@renoise.com]</Author>
   <Category>Networking</Category>
