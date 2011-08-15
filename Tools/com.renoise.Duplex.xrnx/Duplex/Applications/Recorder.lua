@@ -236,8 +236,8 @@ Recorder.default_options = {
   },
 }
 
-function Recorder:__init(display,mappings,options,config_name)
-  TRACE("Recorder:__init(",display,mappings,options,config_name)
+function Recorder:__init(browser_process,mappings,options,config_name)
+  TRACE("Recorder:__init(",browser_process,mappings,options,config_name)
 
   --self.WRITEAHEAD_ON = 1
   --self.WRITEAHEAD_OFF = 2
@@ -381,7 +381,7 @@ function Recorder:__init(display,mappings,options,config_name)
   -- maintain track/instrument references here
   self._tracks = {}
 
-  Application.__init(self,display,mappings,options,config_name)
+  Application.__init(self,browser_process,mappings,options,config_name)
 
 
 end

@@ -88,8 +88,8 @@ Effect.default_options = {
     },
 }
 
-function Effect:__init(display,mappings,options,config_name)
-  TRACE("Effect:__init", display,mappings,options,config_name)
+function Effect:__init(browser_process,mappings,options,config_name)
+  TRACE("Effect:__init", browser_process,mappings,options,config_name)
 
    -- define option constants
 
@@ -176,7 +176,7 @@ function Effect:__init(display,mappings,options,config_name)
   self._device_observables = table.create()
   self._mixer_observables = table.create()
 
-  Application.__init(self,display,mappings,options,config_name)
+  Application.__init(self,browser_process,mappings,options,config_name)
 
 end
 

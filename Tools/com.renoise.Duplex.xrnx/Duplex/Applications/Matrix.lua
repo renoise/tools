@@ -143,8 +143,8 @@ Matrix.default_options = {
 
 }
 
-function Matrix:__init(display,mappings,options,config_name)
-  TRACE("Matrix:__init(",display,mappings,options,config_name)
+function Matrix:__init(browser_process,mappings,options,config_name)
+  TRACE("Matrix:__init(",browser_process,mappings,options,config_name)
 
   -- define the options (with defaults)
 
@@ -272,7 +272,7 @@ function Matrix:__init(display,mappings,options,config_name)
   self._update_tracks_requested = false
   self._mute_notifier_disabled = false
 
-  Application.__init(self,display,mappings,options,config_name)
+  Application.__init(self,browser_process,mappings,options,config_name)
 
 end
 

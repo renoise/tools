@@ -194,8 +194,8 @@ if (renoise.API_VERSION >=2) then
 end
 
 
-function Mixer:__init(display,mappings,options,config_name)
-  TRACE("Mixer:__init",display,mappings,options,config_name)
+function Mixer:__init(browser_process,mappings,options,config_name)
+  TRACE("Mixer:__init",browser_process,mappings,options,config_name)
 
     -- define the options (with defaults)
   --[[
@@ -346,7 +346,7 @@ function Mixer:__init(display,mappings,options,config_name)
   self._update_requested = false
 
   -- apply arguments
-  Application.__init(self,display,mappings,options,config_name)
+  Application.__init(self,browser_process,mappings,options,config_name)
 
   -- toggle, which defines if we're controlling the pre or post fx vol/pans
   self._postfx_mode = (self.options.pre_post.value == self.MODE_POSTFX)

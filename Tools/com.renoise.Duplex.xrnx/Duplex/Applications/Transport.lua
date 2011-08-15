@@ -68,8 +68,8 @@ Transport.default_options = {
     }
 }
 
-function Transport:__init(display,mappings,options,config_name)
-  TRACE("Transport:__init(",display,mappings,options,config_name)
+function Transport:__init(browser_process,mappings,options,config_name)
+  TRACE("Transport:__init(",browser_process,mappings,options,config_name)
 
   -- define the options (with defaults)
 
@@ -152,7 +152,7 @@ function Transport:__init(display,mappings,options,config_name)
   -- the various UIComponents
   self.controls = {}
 
-  Application.__init(self,display,mappings,options,config_name)
+  Application.__init(self,browser_process,mappings,options,config_name)
 
 
 end
