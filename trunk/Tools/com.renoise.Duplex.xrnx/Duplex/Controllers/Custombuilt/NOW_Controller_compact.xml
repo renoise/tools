@@ -1,0 +1,189 @@
+<Device>
+  <Name>N.O.W Controller</Name>
+  <Author>danoise</Author>
+  <Description>Custom controlmap for Notes On Wheels</Description>
+  <Parameters>
+    <Column>
+		<Row>
+			<Group name="LedRow" >
+				<Param value="CC#1" type="pushbutton" minimum="0" maximum="127" />
+				<Param value="CC#1" type="pushbutton" minimum="0" maximum="127" />
+				<Param value="CC#1" type="pushbutton" minimum="0" maximum="127" />
+				<Param value="CC#1" type="pushbutton" minimum="0" maximum="127" />
+				<Param value="CC#1" type="pushbutton" minimum="0" maximum="127" />
+				<Param value="CC#1" type="pushbutton" minimum="0" maximum="127" />
+				<Param value="CC#1" type="pushbutton" minimum="0" maximum="127" />
+				<Param value="CC#1" type="pushbutton" minimum="0" maximum="127" />
+				<!--
+				<Param value="CC#1" type="pushbutton" minimum="0" maximum="127" />
+				<Param value="CC#1" type="pushbutton" minimum="0" maximum="127" />
+				<Param value="CC#1" type="pushbutton" minimum="0" maximum="127" />
+				<Param value="CC#1" type="pushbutton" minimum="0" maximum="127" />
+				-->
+			</Group>
+			<Group name="ButtonPair" >
+				<Param value="CC#1" type="pushbutton" minimum="0" maximum="127" />
+				<Param value="CC#1" type="pushbutton" minimum="0" maximum="127" />
+			</Group>
+		</Row>
+		<Row>
+			<Group name="DialRow_1">
+				<Param value="CC#1" type="dial" minimum="0" maximum="127" />
+				<Param value="CC#2" type="dial" minimum="0" maximum="127" />
+				<Param value="CC#3" type="dial" minimum="0" maximum="127" />
+				<Param value="CC#4" type="dial" minimum="0" maximum="127" />
+				<Param value="CC#5" type="dial" minimum="0" maximum="127" />
+				<Param value="CC#6" type="dial" minimum="0" maximum="127" />
+				<Param value="CC#7" type="dial" minimum="0" maximum="127" />
+				<Param value="CC#8" type="dial" minimum="0" maximum="127" />
+				<!--
+				<Param value="CC#9" type="dial" minimum="0" maximum="127" />
+				<Param value="CC#10" type="dial" minimum="0" maximum="127" />
+				<Param value="CC#11" type="dial" minimum="0" maximum="127" />
+				<Param value="CC#12" type="dial" minimum="0" maximum="127" />
+				-->
+			</Group>
+		</Row>
+		<Row>
+			<Group name="Fader_1">
+				<Param value="CC#13" type="fader" orientation="horizontal" size="8" minimum="0" maximum="127" />
+			</Group>
+		</Row>
+		<!--
+		<Row>
+			<Group name="DialRow_2">
+				<Param value="CC#1" type="dial" minimum="0" maximum="127" />
+				<Param value="CC#2" type="dial" minimum="0" maximum="127" />
+				<Param value="CC#3" type="dial" minimum="0" maximum="127" />
+				<Param value="CC#4" type="dial" minimum="0" maximum="127" />
+				<Param value="CC#5" type="dial" minimum="0" maximum="127" />
+				<Param value="CC#6" type="dial" minimum="0" maximum="127" />
+				<Param value="CC#7" type="dial" minimum="0" maximum="127" />
+				<Param value="CC#8" type="dial" minimum="0" maximum="127" />
+				<Param value="CC#9" type="dial" minimum="0" maximum="127" />
+				<Param value="CC#10" type="dial" minimum="0" maximum="127" />
+				<Param value="CC#11" type="dial" minimum="0" maximum="127" />
+				<Param value="CC#12" type="dial" minimum="0" maximum="127" />
+			</Group>
+			<Group name="Fader_2">
+				<Param value="CC#13" type="fader" orientation="horizontal" size="3" minimum="0" maximum="127" />
+			</Group>
+		</Row>
+		<Row>
+			<Group name="DialRow_3">
+				<Param value="CC#21" type="dial" minimum="0" maximum="127" />
+				<Param value="CC#22" type="dial" minimum="0" maximum="127" />
+				<Param value="CC#23" type="dial" minimum="0" maximum="127" />
+				<Param value="CC#24" type="dial" minimum="0" maximum="127" />
+				<Param value="CC#25" type="dial" minimum="0" maximum="127" />
+				<Param value="CC#26" type="dial" minimum="0" maximum="127" />
+				<Param value="CC#27" type="dial" minimum="0" maximum="127" />
+				<Param value="CC#28" type="dial" minimum="0" maximum="127" />
+				<Param value="CC#29" type="dial" minimum="0" maximum="127" />
+				<Param value="CC#30" type="dial" minimum="0" maximum="127" />
+				<Param value="CC#31" type="dial" minimum="0" maximum="127" />
+				<Param value="CC#32" type="dial" minimum="0" maximum="127" />
+			</Group>
+			<Group name="Fader_3">
+				<Param value="CC#33" type="fader" orientation="horizontal" size="3" minimum="0" maximum="127" />
+			</Group>
+		</Row>
+		<Row>
+			<Group name="DialRow_4">
+				<Param value="CC#41" type="dial" minimum="0" maximum="127" />
+				<Param value="CC#42" type="dial" minimum="0" maximum="127" />
+				<Param value="CC#43" type="dial" minimum="0" maximum="127" />
+				<Param value="CC#44" type="dial" minimum="0" maximum="127" />
+				<Param value="CC#45" type="dial" minimum="0" maximum="127" />
+				<Param value="CC#46" type="dial" minimum="0" maximum="127" />
+				<Param value="CC#47" type="dial" minimum="0" maximum="127" />
+				<Param value="CC#48" type="dial" minimum="0" maximum="127" />
+				<Param value="CC#49" type="dial" minimum="0" maximum="127" />
+				<Param value="CC#50" type="dial" minimum="0" maximum="127" />
+				<Param value="CC#51" type="dial" minimum="0" maximum="127" />
+				<Param value="CC#52" type="dial" minimum="0" maximum="127" />
+			</Group>
+			<Group name="Fader_4">
+				<Param value="CC#53" type="fader" orientation="horizontal" size="3" minimum="0" maximum="127" />
+			</Group>
+		</Row>
+		<Row>
+			<Group name="DialRow_5">
+				<Param value="CC#61" type="dial" minimum="0" maximum="127" />
+				<Param value="CC#62" type="dial" minimum="0" maximum="127" />
+				<Param value="CC#63" type="dial" minimum="0" maximum="127" />
+				<Param value="CC#64" type="dial" minimum="0" maximum="127" />
+				<Param value="CC#65" type="dial" minimum="0" maximum="127" />
+				<Param value="CC#66" type="dial" minimum="0" maximum="127" />
+				<Param value="CC#67" type="dial" minimum="0" maximum="127" />
+				<Param value="CC#68" type="dial" minimum="0" maximum="127" />
+				<Param value="CC#69" type="dial" minimum="0" maximum="127" />
+				<Param value="CC#70" type="dial" minimum="0" maximum="127" />
+				<Param value="CC#71" type="dial" minimum="0" maximum="127" />
+				<Param value="CC#72" type="dial" minimum="0" maximum="127" />
+			</Group>
+			<Group name="Fader_5">
+				<Param value="CC#73" type="fader" orientation="horizontal" size="3" minimum="0" maximum="127" />
+			</Group>
+		</Row>
+		<Row>
+			<Group name="DialRow_6">
+				<Param value="CC#61" type="dial" minimum="0" maximum="127" />
+				<Param value="CC#62" type="dial" minimum="0" maximum="127" />
+				<Param value="CC#63" type="dial" minimum="0" maximum="127" />
+				<Param value="CC#64" type="dial" minimum="0" maximum="127" />
+				<Param value="CC#65" type="dial" minimum="0" maximum="127" />
+				<Param value="CC#66" type="dial" minimum="0" maximum="127" />
+				<Param value="CC#67" type="dial" minimum="0" maximum="127" />
+				<Param value="CC#68" type="dial" minimum="0" maximum="127" />
+				<Param value="CC#69" type="dial" minimum="0" maximum="127" />
+				<Param value="CC#70" type="dial" minimum="0" maximum="127" />
+				<Param value="CC#71" type="dial" minimum="0" maximum="127" />
+				<Param value="CC#72" type="dial" minimum="0" maximum="127" />
+			</Group>
+			<Group name="Fader_6">
+				<Param value="CC#73" type="fader" orientation="horizontal" size="3" minimum="0" maximum="127" />
+			</Group>
+		</Row>
+		-->
+
+		<Row>
+			<Group name="ButtonRow" columns="12"><!-- setting columns will make it a grid -->
+				<Param value="CC#81" type="pushbutton" minimum="0" maximum="127" />
+				<Param value="CC#82" type="pushbutton" minimum="0" maximum="127" />
+				<Param value="CC#83" type="pushbutton" minimum="0" maximum="127" />
+				<Param value="CC#84" type="pushbutton" minimum="0" maximum="127" />
+				<Param value="CC#85" type="pushbutton" minimum="0" maximum="127" />
+				<Param value="CC#86" type="pushbutton" minimum="0" maximum="127" />
+				<Param value="CC#87" type="pushbutton" minimum="0" maximum="127" />
+				<Param value="CC#88" type="pushbutton" minimum="0" maximum="127" />
+				<!--
+				<Param value="CC#89" type="pushbutton" minimum="0" maximum="127" />
+				<Param value="CC#90" type="pushbutton" minimum="0" maximum="127" />
+				<Param value="CC#91" type="pushbutton" minimum="0" maximum="127" />
+				<Param value="CC#92" type="pushbutton" minimum="0" maximum="127" />
+				-->
+			</Group>
+			<Group name="Dials">
+				<Param value="CC#93" type="dial" minimum="0" maximum="127" />
+				<!-- <Param value="CC#94" type="dial" minimum="0" maximum="127" /> -->
+			</Group>
+		</Row>
+		<Row>
+			<Group name="Controls">
+				<Param value="CC#101" type="pushbutton" minimum="0" maximum="127"/>
+				<Param value="CC#102" type="pushbutton" minimum="0" maximum="127"/>
+				<Param value="CC#103" type="pushbutton" minimum="0" maximum="127"/>
+				<Param value="CC#104" type="pushbutton" minimum="0" maximum="127"/>
+				<Param value="CC#105" type="pushbutton" minimum="0" maximum="127"/>
+				<Param value="CC#106" type="pushbutton" minimum="0" maximum="127"/>
+				<Param value="CC#107" type="pushbutton" minimum="0" maximum="127"/>
+				<Param value="CC#108" type="pushbutton" minimum="0" maximum="127"/>
+				<!--
+				<Param value="CC#109" type="pushbutton" minimum="0" maximum="127"/>
+				-->
+			</Group>
+		</Row>
+	</Column>
+  </Parameters>
+</Device>

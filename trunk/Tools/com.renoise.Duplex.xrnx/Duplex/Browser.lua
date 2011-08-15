@@ -111,7 +111,19 @@ function Browser:show()
           self:set_configuration(config_list[fkey], true)
         end
       else
-        return key
+        local notify_main_window = true
+        for _,process in ipairs(self._processes) do
+          if (process:control_surface_visible()) then
+            for __,app in ipairs(process._applications) do
+              if not app:on_keypress(key) then
+                notify_main_window = false
+              end
+            end
+          end
+        end
+        if notify_main_window then
+          return key
+        end
       end
     end
 

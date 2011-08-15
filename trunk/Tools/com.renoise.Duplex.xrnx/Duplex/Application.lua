@@ -193,6 +193,21 @@ end
 
 --------------------------------------------------------------------------------
 
+-- receive keypress events from the Duplex Browser dialog
+-- @param key (table) forwarded from the keyhandler 
+-- @return (boolean) if false, key event is not forwarded to Renoise
+
+function Application:on_keypress(key)
+  TRACE("Application:on_keypress",key)
+  
+  return true
+
+end
+
+
+
+--------------------------------------------------------------------------------
+
 -- assign matching group-names
 
 function Application:_apply_mappings(mappings)
