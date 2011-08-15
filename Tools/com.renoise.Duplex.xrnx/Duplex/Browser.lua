@@ -358,19 +358,18 @@ function Browser:set_previous_configuration()
   end
   local available_configuration_names = 
     self:_available_configuration_names_for_device(self._device_name)
-  local config_idx = 0
-  for _,config_name in pairs(available_configuration_names) do
+  for config_idx, config_name in ripairs(available_configuration_names) do
     if (config_name == self._configuration_name) then
-      if (config_idx>0) then
+      if (config_idx>1) then
         local config_list = 
           self:_available_configurations_for_device(self._device_name)
         local start_running = true
-        self:set_configuration(config_list[config_idx], start_running)
-        return
+          self:set_configuration(config_list[config_idx-1], start_running)
+       return
       end
     end
-    config_idx = config_idx+1 
   end
+  
 end
 
 --------------------------------------------------------------------------------
@@ -384,19 +383,18 @@ function Browser:set_next_configuration()
   end
   local available_configuration_names = 
     self:_available_configuration_names_for_device(self._device_name)
-  local config_idx = 2
-  for _,config_name in pairs(available_configuration_names) do
+  for config_idx, config_name in ipairs(available_configuration_names) do
     if (config_name == self._configuration_name) then
       if (config_idx<#available_configuration_names) then
         local config_list = 
           self:_available_configurations_for_device(self._device_name)
         local start_running = true
-        self:set_configuration(config_list[config_idx], start_running)
-        return
+          self:set_configuration(config_list[config_idx+1], start_running)
+       return
       end
     end
-    config_idx = config_idx+1 
   end
+      
 end
 
 --------------------------------------------------------------------------------

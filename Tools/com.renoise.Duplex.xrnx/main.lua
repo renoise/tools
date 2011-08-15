@@ -193,7 +193,8 @@ renoise.tool():add_midi_mapping({
   name = "Global:Tools:Duplex:Next configuration [Trigger]",
   invoke = function(msg)
     if(browser)then
-      if msg.boolean_value then 
+      if msg:is_trigger() then 
+        renoise.app():show_status("Next Duplex Configuration")
         browser:set_next_configuration()
       end
     end
@@ -204,7 +205,8 @@ renoise.tool():add_midi_mapping({
   name = "Global:Tools:Duplex:Previous configuration [Trigger]",
   invoke = function(msg)
     if(browser)then
-      if msg.boolean_value then 
+      if msg:is_trigger() then 
+        renoise.app():show_status("Previous Duplex Configuration")
         browser:set_previous_configuration()
       end
     end
