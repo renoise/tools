@@ -14,11 +14,11 @@ A generic application class for Duplex
 class 'Application'
 
 -- constructor 
-function Application:__init(display,mappings,options,config_name)
+function Application:__init(browser_process,mappings,options,config_name)
   TRACE("Application:__init()")
 
   -- this is the Display that our application is using
-  self.display = display
+  self.display = browser_process.display
   
   -- (string) this is the name of the application as it appears
   -- in the device configuration, e.g. "MySecondMixer" - used for looking 

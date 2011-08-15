@@ -466,7 +466,7 @@ function Browser:set_configuration(configuration, start_running)
         end
         
         -- create a new process 
-        local new_process = BrowserProcess()
+        local new_process = BrowserProcess(self)
         
         if (new_process:instantiate(configuration)) then
           
@@ -1187,7 +1187,7 @@ end
 
 class 'BrowserProcess'
 
-function BrowserProcess:__init()
+function BrowserProcess:__init(p_browser)
   TRACE("BrowserProcess:__init")
 
   -- the full configuration we got instantiated with (if any)
@@ -1199,7 +1199,7 @@ function BrowserProcess:__init()
 
   
   -- Display class instance
-  self._display = nil 
+  self.display = nil 
 
   -- MessageStream class instance
   self._message_stream = nil
@@ -1219,6 +1219,8 @@ function BrowserProcess:__init()
   self._was_running = false
 
   self._vb = renoise.ViewBuilder()
+
+  self.browser = p_browser
 
 end
 
@@ -1394,8 +1396,8 @@ function BrowserProcess:instantiate(configuration)
   self.device:set_control_map(
     configuration.device.control_map)
 
-  self._display = Display(self.device)
-  self.device.display = self._display
+  self.display = Display(self.device)
+  self.device.display = self.display
 
 
   ---- instantiate all applications
@@ -1422,9 +1424,11 @@ function BrowserProcess:instantiate(configuration)
         end
       end
     end
+    
+    local app_instance = nil
 
-    local app_instance = _G[actual_class_name](
-      self._display,mappings,options,config_name)
+    app_instance = _G[actual_class_name](
+        self, mappings, options, config_name)
     
     self._applications:insert(app_instance)
   end
@@ -1479,7 +1483,7 @@ function BrowserProcess:invalidate()
   self._was_running = false
   
   self._message_stream = nil
-  self._display = nil
+  self.display = nil
 
   if (self.device) then
     if (self:settings_dialog_visible()) then
@@ -1553,7 +1557,7 @@ function BrowserProcess:start()
   
   -- refresh the display when reactivating an old process
   if (succeeded and self._was_running) then
-    self._display:clear()
+    self.display:clear()
   end
 
   self._was_running = succeeded
@@ -1609,13 +1613,13 @@ function BrowserProcess:show_control_surface(parent_view)
   self._control_surface_parent_view = parent_view
 
   self._control_surface_view = 
-    self._display:build_control_surface()
+    self.display:build_control_surface()
 
   parent_view:add_child(self._control_surface_view)
 
   -- refresh the display when reactivating an old process
   if (self:running()) then
-    self._display:clear()
+    self.display:clear()
   end
 end
 
@@ -1715,7 +1719,7 @@ function BrowserProcess:clear_display()
     "trying to clear a control map GUI which was not instantiated")
   
   if (self:running()) then
-    self._display:clear() 
+    self.display:clear() 
   end
 end
 
@@ -1748,7 +1752,7 @@ function BrowserProcess:on_idle()
     self._message_stream:on_idle()
     
     -- modify ui components
-    self._display:update()
+    self.display:update()
   
     -- then refresh the display 
     for _,app in pairs(self._applications) do

@@ -55,7 +55,7 @@ TrackSelector.default_options = {
 
 }
 
-function TrackSelector:__init(display,mappings,options,config_name)
+function TrackSelector:__init(browser_process,mappings,options,config_name)
 
   -- globals
   self.TRACK_PAGE_AUTO = 1
@@ -117,7 +117,7 @@ function TrackSelector:__init(display,mappings,options,config_name)
       ui_component = UI_COMPONENT_PUSHBUTTON,
     },
   }
-  Application.__init(self,display,mappings,options,config_name)
+  Application.__init(self,browser_process,mappings,options,config_name)
 
 end
 
