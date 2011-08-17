@@ -339,7 +339,7 @@ function Application:_add_option_row(t,key,process)
     },
     vb:popup{
       items=t.items,
-      value=t.value,
+      value=(t.value>#t.items) and 1 or t.value, -- if invalid, set to first
       width=175,
       notifier = function(val)
         self:_set_option(key,val)
