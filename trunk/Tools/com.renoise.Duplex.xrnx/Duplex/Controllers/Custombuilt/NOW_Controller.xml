@@ -163,6 +163,8 @@
 			<Group name="Dials">
 				<Param value="CC#93" type="dial" minimum="0" maximum="127" />
 				<!-- <Param value="CC#94" type="dial" minimum="0" maximum="127" /> -->
+				<Param value="CC#110" type="pushbutton" minimum="0" maximum="127"/>
+				<Param value="CC#111" type="pushbutton" minimum="0" maximum="127"/>
 			</Group>
 		</Row>
 		<Row>

@@ -94,6 +94,14 @@ duplex_configurations:insert {
           group_name = "Controls",
           index = 4,
         },
+        shrink = {
+          group_name = "Dials",
+          index = 2,
+        },
+        extend = {
+          group_name = "Dials",
+          index = 3,
+        },
         set_mode_pitch = {
           group_name = "Controls",
           index = 5,
