@@ -83,9 +83,13 @@
 
     Control the line-number offset using two buttons (increase/decrease offset by a single line)
 
-  @mapping mode_adjust (UISlider)
+  @mapping extend/shrink (UIPushButton)
 
-    The mode_adjust fader adjust all steps in a sequence simultaneously, but only one type of parameter (pitch, velocity, etc.). Which parameter is adjusted depend on the currently selected mode. 
+    The 'extend' button will multiply the sequence's length by two, by cloning all steps and doubling the global retrig rate. Pressing 'shrink' will reduce the length of the sequence and global retrig rate by 50%
+
+  @mapping multi_adjust (UISlider)
+
+    The multi_adjust fader adjust all steps in a sequence simultaneously, but only one type of parameter (pitch, velocity, etc.). Which parameter is adjusted depend on the currently selected mode. 
     
     Adjustments work like this:
 
@@ -198,6 +202,17 @@
   * Sliced sample support: autodetect when instrument is sliced
   * New option: disable rotation of sample-offset values (when adjusting)
   * PC Keyboard support: transpose/set notes (when dialog has focus)
+  * Optimize: precalculate @gate_cached
+  * Optimize: scheduled updates, use the idle loop to reduce CPU usage
+  * MIDI keyboard input (add as option listing available MIDI ports)-
+  * - Detect multiple pressed keys, update sequence length on release
+  * - Pitchbend is hardwired to @pitch_adjust
+  * - CC is hardwired to @multi_adjust (pitch is ignored)
+  * Fixed: virtual KB had a couple of minor bugs
+  * Fixed: skip master/send tracks when writing output
+  * Tweak: start output (‘touch’) when using virtual keyboard
+  * Tweak: output immediately when starting playback (first line)
+
 
 --]]
 
@@ -322,127 +337,135 @@ function NotesOnWheels:__init(browser_process,mappings,options,config_name)
   self.mappings = {
 
     choose_mode = {
-      description = "Choose mode",
+      description = "NOW: Choose mode",
       ui_component = UI_COMPONENT_SLIDER,
     },
     set_mode_pitch = {
-      description = "Set mode to 'pitch'"..
+      description = "NOW: Set mode to 'pitch'"..
                     "\nHold to write sequence to entire pattern",
       ui_component = UI_COMPONENT_TOGGLEBUTTON,
     },
     set_mode_velocity = {
-      description = "Set mode to 'velocity'"..
+      description = "NOW: Set mode to 'velocity'"..
                     "\nHold to write sequence to entire pattern",
       ui_component = UI_COMPONENT_TOGGLEBUTTON,
     },
     set_mode_offset = {
-      description = "Set mode to 'offset'"..
+      description = "NOW: Set mode to 'offset'"..
                     "\nHold to write sequence to entire pattern",
       ui_component = UI_COMPONENT_TOGGLEBUTTON,
     },
     set_mode_gate = {
-      description = "Set mode to 'duration'"..
+      description = "NOW: Set mode to 'duration'"..
                     "\nHold to write sequence to entire pattern",
       ui_component = UI_COMPONENT_TOGGLEBUTTON,
     },
     set_mode_retrig = {
-      description = "Set mode to 'retrigger)"..
+      description = "NOW: Set mode to 'retrigger)"..
                     "\nHold to write sequence to entire pattern",
       ui_component = UI_COMPONENT_TOGGLEBUTTON,
     },
     multi_sliders = {
-      description = "Multi-slider",
+      description = "NOW: Mode-dependant slider",
       ui_component = UI_COMPONENT_SLIDER,
       greedy = true,
     },
     pitch_sliders = {
-      description = "Pitch",
+      description = "NOW: Change pitch for step ",
       ui_component = UI_COMPONENT_SLIDER,
       greedy = true,    
     },
     velocity_sliders = {
-      description = "Velocity",
+      description = "NOW: Change velocity for step ",
       ui_component = UI_COMPONENT_SLIDER,
       greedy = true,    
     },
     offset_sliders = {
-      description = "Offset",
+      description = "NOW: Change sample-offset for step ",
       ui_component = UI_COMPONENT_SLIDER,
       greedy = true,    
     },
     gate_sliders = {
-      description = "Gate",
+      description = "NOW: Change gate/duration for step ",
       ui_component = UI_COMPONENT_SLIDER,
       greedy = true,    
     },
     retrig_sliders = {
-      description = "Retrig",
+      description = "NOW: Change number of retrigs for step ",
       ui_component = UI_COMPONENT_SLIDER,
       greedy = true,    
     },
     num_steps = {
-      description = "Number of steps",
+      description = "NOW: Number of steps",
       ui_component = UI_COMPONENT_SLIDER,
       orientation = HORIZONTAL, -- supports grid mode
     },
     step_spacing = {
-      description = "Space between steps",
+      description = "NOW: Line-space between steps",
       ui_component = UI_COMPONENT_SLIDER,
     },
     num_lines = {
-      description = "Sequence length (lines)",
+      description = "NOW: Sequence length (lines)",
       ui_component = UI_COMPONENT_SLIDER,
     },
     pitch_adjust = {
-      description = "Transpose all steps",
+      description = "NOW: Transpose all steps",
       ui_component = UI_COMPONENT_SLIDER,
     },
     velocity_adjust = {
-      description = "Adjust volume for all steps",
+      description = "NOW: Adjust volume for all steps",
       ui_component = UI_COMPONENT_SLIDER,
     },
     offset_adjust = {
-      description = "Adjust sample-offset for all steps",
+      description = "NOW: Adjust sample-offset for all steps",
       ui_component = UI_COMPONENT_SLIDER,
     },
     gate_adjust = {
-      description = "Adjust note length for all steps",
+      description = "NOW: Adjust note length for all steps",
       ui_component = UI_COMPONENT_SLIDER,
     },
     retrig_adjust = {
-      description = "Adjust retriggering for all steps",
+      description = "NOW: Adjust retriggering for all steps",
       ui_component = UI_COMPONENT_SLIDER,
     },
     multi_adjust = {
-      description = "Adjust all steps (mode-dependant)",
+      description = "NOW: Adjust all steps (mode-dependant)",
       ui_component = UI_COMPONENT_SLIDER,
     },
     write = {
-      description = "Write to pattern in realtime",
+      description = "NOW: Write to pattern in realtime",
       ui_component = UI_COMPONENT_TOGGLEBUTTON,
     },
     learn = {
-      description = "Import sequence from pattern",
+      description = "NOW: Import sequence from pattern",
       ui_component = UI_COMPONENT_PUSHBUTTON,
     },
     fill = {
-      description = "Fill entire track (can be very CPU intensive, use with caution!!)",
+      description = "NOW: Fill entire track (can be very CPU intensive, use with caution!!)",
       ui_component = UI_COMPONENT_TOGGLEBUTTON,
     },
     global = {
-      description = "Toggle between global/parameter-only output",
+      description = "NOW: Toggle between global/parameter-only output",
       ui_component = UI_COMPONENT_TOGGLEBUTTON,
     },
     shift_up = {
-      description = "Decrease line offset",
+      description = "NOW: Decrease line offset",
       ui_component = UI_COMPONENT_PUSHBUTTON,
     },
     shift_down = {
-      description = "Increase line offset",
+      description = "NOW: Increase line offset",
+      ui_component = UI_COMPONENT_PUSHBUTTON,
+    },
+    extend = {
+      description = "NOW: Repeat sequence twice",
+      ui_component = UI_COMPONENT_PUSHBUTTON,
+    },
+    shrink = {
+      description = "NOW: Reduce sequence to half the size",
       ui_component = UI_COMPONENT_PUSHBUTTON,
     },
     position = {
-      description = "Displays position within sequence",
+      description = "NOW: Displays position within sequence",
       ui_component = UI_COMPONENT_TOGGLEBUTTON,
       greedy = true,
     },
@@ -506,6 +529,7 @@ function NotesOnWheels:__init(browser_process,mappings,options,config_name)
   self.seq = nil
 
   -- continuous mode support
+  self.last_line = 0              -- the pattern-line last detected by idle loop
   self.line_offset = 0            -- the current line offset
   self.pending_line_offset = 0    -- the upcoming pattern's line offset
   self.pending_seq_pos = nil      -- sequence-pos of upcoming pattern 
@@ -612,7 +636,6 @@ function NotesOnWheels:midi_callback(message)
       -- remove key from pressed keys
       for k,v in ripairs(self.midi_pressed_keys) do
         if (v==message[2]) then
-          --print("remove pressed key: ",k,v)
           -- todo: figure out index in pitch steps,
           -- and update velocity 
           self.midi_pressed_keys:remove(k)
@@ -630,7 +653,6 @@ function NotesOnWheels:midi_callback(message)
       end
       self.midi_max_keys = self.midi_max_keys+1
       local length = math.max(self.midi_max_keys,self.seq.num_steps)
-      --print("length",length,"self.midi_max_keys",self.midi_max_keys)
       if (length<=12) then
         -- add note to sequence
         local note = message[2]
@@ -752,25 +774,33 @@ function NotesOnWheels:on_idle()
       tmp = tmp_len
     end
     if (tmp~=self.realtime_pos)then
-      --print("realtime_pos,tmp",self.realtime_pos,tmp)
       local ctrl_pos = self._controls.pos_buttons[self.realtime_pos]
       if ctrl_pos then
         ctrl_pos:set(false,false) 
-        --print("button OFF ",self.realtime_pos,ctrl_pos)
       end
       self.realtime_pos = tmp
       ctrl_pos = self._controls.pos_buttons[self.realtime_pos]
-      --print("self.realtime_pos",self.realtime_pos,ctrl_pos)
       if ctrl_pos then
         ctrl_pos:set(true,false)
-        --print("button ON ",tmp,ctrl_pos)
       end
     end
     -- continuous mode support: we have arrived at the desired position 
     if (self.pending_seq_pos and pos.sequence==self.pending_seq_pos) then
-      --print("ARRIVED at ",pos," - set the line offset",self.pending_line_offset)
-      self.line_offset = self.pending_line_offset
-      self.pending_seq_pos = nil
+      local arrived = true
+      -- if looped, we need to check that we've played the entire pattern
+      -- (we have no 'pattern playback restarted' notifier, so this is a workaround)
+      if (renoise.song().transport.loop_pattern) then
+        local curr_line = renoise.song().selected_line_index
+        if (self.last_line<=curr_line) then
+          arrived = false
+        end
+        self.last_line = curr_line
+      end
+      if arrived then
+        --print("ARRIVED at ",pos," - set the line offset",self.pending_line_offset)
+        self.line_offset = self.pending_line_offset
+        self.pending_seq_pos = nil
+      end
     end
   end
 
@@ -820,8 +850,10 @@ function NotesOnWheels:on_idle()
   -- when we start/stop playing
   if (not playing and playing ~= self._playing) then
     self._playing = false
+    -- cancel any scheduled write
+    self.pending_seq_pos = nil
+    -- update write mode button
     if (ctrl) then
-      -- update write mode button
       local palette = {foreground = {text=self.TEXT_WRITE_ON}}
       ctrl:set_palette(palette)
     end
@@ -1012,8 +1044,24 @@ function NotesOnWheels:_attach_to_instrument(new_song)
   TRACE("NotesOnWheels:_attach_to_instrument",new_song)
 
   local inst_idx = renoise.song().selected_instrument_index
+  renoise.song().instruments[inst_idx].sample_mappings_observable[1]:add_notifier(
+    function()
+      TRACE("NotesOnWheels:sample_mappings_observable fired...")
+      self:detect_slices()
+    end
+  
+  )
+
+  self:detect_slices()
+
+end
+
+function NotesOnWheels:detect_slices()
+
+  local inst_idx = renoise.song().selected_instrument_index
   local mappings = renoise.song().instruments[inst_idx].sample_mappings[1] -- Note On Layer
-  if not mappings[1].read_only then
+  --rprint("mappings",mappings)
+  if not mappings[1] or not mappings[1].read_only then
     -- not sliced
     self.number_of_slices = 0
   else
@@ -1029,8 +1077,12 @@ function NotesOnWheels:_attach_to_instrument(new_song)
     self.lower_note = mappings[1].base_note
     self.upper_note = mappings[#mappings].base_note
   end
-
+  --print("self.number_of_slices",self.number_of_slices)
+  --print("self.white_keys_only",self.white_keys_only)
+  --print("self.lower_note",self.lower_note)
+  --print("self.upper_note",self.upper_note)
 end
+
 
 -- convert the pitch range (normally 0-121) to the sliced sample range
 -- (for example, middle C and every white key for the next two octaves)
@@ -1043,6 +1095,9 @@ function NotesOnWheels:to_sliced_pitch_range(int_val,invert)
   if (int_val==0) then
     return int_val
   end
+  if (int_val==121) then
+    return self.upper_note
+  end
   if invert then
     int_val = math.floor(scale_value(int_val,self.lower_note,self.upper_note,1,121))
   else
@@ -1053,6 +1108,8 @@ function NotesOnWheels:to_sliced_pitch_range(int_val,invert)
       end
     end
   end
+  -- ensure value is within range
+  int_val = clamp_value(int_val,self.lower_note,self.upper_note)
   return int_val
 end
 
@@ -1230,7 +1287,6 @@ function NotesOnWheels:_build_app()
           if (self.number_of_slices>0) then
             int_val = self:to_sliced_pitch_range(int_val)
           end
-
           if self.seq:set_pitch(control_index,int_val) then
             self:schedule_output(control_index,self.MODE_PITCH)
             -- display hack: update the multi slider as well, but check
@@ -1364,8 +1420,9 @@ function NotesOnWheels:_build_app()
           if (not self.active) then
             return false
           end
-          local int_val = math.floor(obj.value*NOW_Sequence.MAX_RETRIGS)
-          if self.seq:set_retrig(control_index,int_val,nil,true) then
+          --local int_val = math.floor(obj.value*NOW_Sequence.MAX_RETRIGS)
+          local val_exp = math.floor(self.seq:scale_exp(obj.value,1,4)*NOW_Sequence.MAX_RETRIGS)
+          if self.seq:set_retrig(control_index,val_exp,nil,true) then
             self:schedule_output(control_index,self.MODE_RETRIG)
           end
           self:change_mode(self.MODE_RETRIG,true)
@@ -1418,7 +1475,8 @@ function NotesOnWheels:_build_app()
               self:schedule_output(control_index,self.MODE_GATE)
             end
           elseif (self.mode == self.MODE_RETRIG) then
-            if self.seq:set_retrig(control_index,math.floor(obj.value*NOW_Sequence.MAX_RETRIGS),update) then
+            local val_exp = math.floor(self.seq:scale_exp(obj.value,1,4)*NOW_Sequence.MAX_RETRIGS)
+            if self.seq:set_retrig(control_index,val_exp,update) then
               self:schedule_output(control_index,self.MODE_RETRIG)
             end
           end
@@ -1448,13 +1506,14 @@ function NotesOnWheels:_build_app()
       local c = UISlider(self.display)
       c.group_name = group_name
       c.ceiling = 1
+      c:set_pos(self.mappings.pitch_adjust.index or 1)
       c.tooltip = self.mappings.pitch_adjust.description
       c.on_change = function(obj) 
         if (not self.active) then
           return false
         end
         self.touched = true
-        self:change_mode(self.MODE_PITCH,true)
+        --self:change_mode(self.MODE_PITCH,true)
         if self.seq:adjust_pitch(obj.value) then
           self:schedule_output(nil,self.MODE_PITCH)
           set_multi(obj.value)
@@ -1473,13 +1532,14 @@ function NotesOnWheels:_build_app()
       local c = UISlider(self.display)
       c.group_name = group_name
       c.ceiling = 1
+      c:set_pos(self.mappings.velocity_adjust.index or 1)
       c.tooltip = self.mappings.velocity_adjust.description
       c.on_change = function(obj) 
         if (not self.active) then
           return false
         end
         self.touched = true
-        self:change_mode(self.MODE_VELOCITY,true)
+        --self:change_mode(self.MODE_VELOCITY,true)
         if self.seq:adjust_velocity(obj.value) then
           self:schedule_output(nil,self.MODE_VELOCITY)
           set_multi(obj.value)
@@ -1498,13 +1558,14 @@ function NotesOnWheels:_build_app()
       local c = UISlider(self.display)
       c.group_name = group_name
       c.ceiling = 1
+      c:set_pos(self.mappings.offset_adjust.index or 1)
       c.tooltip = self.mappings.offset_adjust.description
       c.on_change = function(obj) 
         if (not self.active) then
           return false
         end
         self.touched = true
-        self:change_mode(self.MODE_OFFSET,true)
+        --self:change_mode(self.MODE_OFFSET,true)
         if self.seq:adjust_offset(obj.value) then
           self:schedule_output(nil,self.MODE_OFFSET)
           set_multi(obj.value)
@@ -1524,12 +1585,13 @@ function NotesOnWheels:_build_app()
       c.group_name = group_name
       c.ceiling = 1
       c.tooltip = self.mappings.gate_adjust.description
+      c:set_pos(self.mappings.gate_adjust.index or 1)
       c.on_change = function(obj) 
         if (not self.active) then
           return false
         end
         self.touched = true
-        self:change_mode(self.MODE_GATE,true)
+        --self:change_mode(self.MODE_GATE,true)
         if self.seq:adjust_gate(obj.value) then
           self:schedule_output(nil,self.MODE_GATE)
           set_multi(obj.value)
@@ -1548,16 +1610,17 @@ function NotesOnWheels:_build_app()
       local c = UISlider(self.display)
       c.group_name = group_name
       c.ceiling = 1
+      c:set_pos(self.mappings.retrig_adjust.index or 1)
       c.tooltip = self.mappings.retrig_adjust.description
       c.on_change = function(obj) 
         if (not self.active) then
           return false
         end
         self.touched = true
-        self:change_mode(self.MODE_RETRIG,true)
-        if self.seq:adjust_retrig(obj.value) then
+        local val_exp = self.seq:scale_exp(obj.value,1,4)
+        if self.seq:adjust_retrig(val_exp) then
           self:schedule_output(nil,self.MODE_RETRIG)
-          set_multi(obj.value)
+          set_multi(val_exp)
         end
       end 
       self:_add_component(c)
@@ -1573,6 +1636,7 @@ function NotesOnWheels:_build_app()
       local c = UISlider(self.display)
       c.group_name = group_name
       c.ceiling = 1
+      c:set_pos(self.mappings.multi_adjust.index or 1)
       c.tooltip = self.mappings.multi_adjust.description
       c:set_value(0)
       c.on_change = function(obj) 
@@ -1607,6 +1671,7 @@ function NotesOnWheels:_build_app()
         c:set_orientation(orientation)
         c:set_size(12)
       end
+      c:set_pos(self.mappings.num_steps.index or 1)
       c.tooltip = self.mappings.num_steps.description
       c:set_value(0)
       c.on_change = function(obj) 
@@ -1649,6 +1714,7 @@ function NotesOnWheels:_build_app()
   end
 
   -- create 'num_lines' slider
+  --[[
   group_name = self.mappings.num_lines.group_name
   if group_name then
     local group = cm.groups[group_name]
@@ -1672,6 +1738,7 @@ function NotesOnWheels:_build_app()
       self._controls.num_lines = c
     end
   end
+  ]]
 
   -- create 'write' button
   group_name = self.mappings.write.group_name
@@ -1698,9 +1765,12 @@ function NotesOnWheels:_build_app()
           return false
         end
         self.write_mode = obj.active
+        --[[
         if not obj.active then
           self.touched = false
         end
+        ]]
+        self.touched = false
       end
       self:_add_component(c)
       self._controls.write = c    
@@ -1870,6 +1940,72 @@ function NotesOnWheels:_build_app()
       end
       self:_add_component(c)
       self._controls.shift_down = c    
+    end
+  end
+
+  -- create 'extend' button
+  group_name = self.mappings.extend.group_name
+  if group_name then
+    local group = cm.groups[group_name]
+    if group then
+      local c = UIPushButton(self.display)
+      c.group_name = self.mappings.extend.group_name
+      c.tooltip = self.mappings.extend.description
+      c:set_pos(self.mappings.extend.index or 1)
+      c.palette = {
+        background = {
+          text="x²",
+          color={0x00,0x00,0x00}
+        },
+        foreground = {
+          text="x²",
+          color={0xff,0xff,0xff}
+        },
+      }
+      c.on_press = function(obj) 
+        if (not self.active) then
+          return false
+        end
+        self.touched = true
+        if self.seq:extend() then
+          self:output_sequence(self.step)
+        end
+      end
+      self:_add_component(c)
+      self._controls.extend = c    
+    end
+  end
+
+  -- create 'shrink' button
+  group_name = self.mappings.shrink.group_name
+  if group_name then
+    local group = cm.groups[group_name]
+    if group then
+      local c = UIPushButton(self.display)
+      c.group_name = self.mappings.shrink.group_name
+      c.tooltip = self.mappings.shrink.description
+      c:set_pos(self.mappings.shrink.index or 1)
+      c.palette = {
+        background = {
+          text="½",
+          color={0x00,0x00,0x00}
+        },
+        foreground = {
+          text="½",
+          color={0xff,0xff,0xff}
+        },
+      }
+      c.on_press = function(obj) 
+        if (not self.active) then
+          return false
+        end
+        self.touched = true
+        if self.seq:shrink() then
+          self:output_sequence(self.step)
+        end
+      end
+      self:_add_component(c)
+      self._controls.shrink = c    
     end
   end
 
@@ -2172,23 +2308,25 @@ end
 
 class 'NOW_Sequence'
 
+NOW_Sequence.DEFAULT_STEP_SPACING = 1
+NOW_Sequence.DEFAULT_NUM_STEPS = 8
+NOW_Sequence.MAX_LINE_SPACING = 16
+NOW_Sequence.MAX_RETRIGS = 64
+NOW_Sequence.MAX_NUM_STEPS = 12
+
+-- default values for new sequences
 NOW_Sequence.DEFAULT_NOTE_VALUE = -1
 NOW_Sequence.DEFAULT_VELOCITY_VALUE = 127
 NOW_Sequence.DEFAULT_OFFSET_VALUE = 0
 NOW_Sequence.DEFAULT_GATE_VALUE = 255
 NOW_Sequence.DEFAULT_RETRIG_VALUE = 0
 
+-- initial position for adjustment faders
 NOW_Sequence.DEFAULT_PITCH_ADJUST = 0.5
 NOW_Sequence.DEFAULT_VELOCITY_ADJUST = 1
 NOW_Sequence.DEFAULT_OFFSET_ADJUST = 0
 NOW_Sequence.DEFAULT_GATE_ADJUST = 1
-NOW_Sequence.DEFAULT_RETRIG_ADJUST = 0
-
-NOW_Sequence.DEFAULT_STEP_SPACING = 1
-NOW_Sequence.DEFAULT_NUM_STEPS = 8
-NOW_Sequence.MAX_LINE_SPACING = 16
-NOW_Sequence.MAX_RETRIGS = 64
-NOW_Sequence.MAX_NUM_STEPS = 12
+NOW_Sequence.DEFAULT_RETRIG_ADJUST = 1/NOW_Sequence.MAX_RETRIGS
 
 function NOW_Sequence:__init(owner)
   TRACE("NOW_Sequence:__init()")
@@ -2256,7 +2394,6 @@ function NOW_Sequence:set_pitch(idx,int_val,update,multi)
   local display_val = int_val
   if (update or multi) and (self.owner.number_of_slices>0) then
     display_val = self.owner:to_sliced_pitch_range(int_val,true)
-    --print("*** display_val",display_val)
   end
   if update then
     self:update_pitch_ctrl(display_val,self.owner._controls.pitch_sliders[idx])
@@ -2266,7 +2403,6 @@ function NOW_Sequence:set_pitch(idx,int_val,update,multi)
       self:update_pitch_ctrl(display_val,self.owner._controls.multi_sliders[idx])
     end
   end
-  --print(int_val)
   if (int_val == 0) then
     -- the 'real' empty value
     int_val = 121
@@ -2351,25 +2487,21 @@ end
 
 -- @param int_val (int), range 0-MAX_RETRIGS
 -- @param invert_scale (bool), inverse-scale the value 
-function NOW_Sequence:set_retrig(idx,int_val,update,multi,invert_scale)
-  TRACE("NOW_Sequence:set_retrig",idx,int_val,update,multi,invert_scale)
-  --int_val = clamp_value(int_val,0,NOW_Sequence.MAX_RETRIGS)
-  local int_val_log = nil
-  if not invert_scale and (int_val>0) then
-    -- scale value exponentially
-    int_val = math.floor(self:scale_exp(int_val,NOW_Sequence.MAX_RETRIGS,4))
-    --print("scaled exp",int_val)
-  elseif invert_scale then
-    int_val_log = math.floor(self:scale_log(int_val,NOW_Sequence.MAX_RETRIGS,4))
-    --print("scaled log",int_val_log)
-  end
-  local display_val = invert_scale and int_val_log or int_val
-  if update then
-    self:update_retrig_ctrl(display_val,self.owner._controls.retrig_sliders[idx])
-  end
-  if multi then
-    if (self.owner.mode==self.owner.MODE_RETRIG) then
-      self:update_retrig_ctrl(display_val,self.owner._controls.multi_sliders[idx])
+function NOW_Sequence:set_retrig(idx,int_val,update,multi)
+  TRACE("NOW_Sequence:set_retrig",idx,int_val,update,multi)
+  --int_val = clamp_value(int_val,1,NOW_Sequence.MAX_RETRIGS)
+  if update or multi then
+    local display_val = int_val
+    if (int_val>0) then
+      display_val = math.floor(self:scale_log(int_val,NOW_Sequence.MAX_RETRIGS))
+    end
+    if update then
+      self:update_retrig_ctrl(display_val,self.owner._controls.retrig_sliders[idx])
+    end
+    if multi then
+      if (self.owner.mode==self.owner.MODE_RETRIG) then
+        self:update_retrig_ctrl(display_val,self.owner._controls.multi_sliders[idx])
+      end
     end
   end
   if (self.retrig_steps[idx] ~= int_val) then
@@ -2450,6 +2582,8 @@ end
 
 function NOW_Sequence:set_num_steps(int_val,update)
   TRACE("NOW_Sequence:set_num_steps",int_val,update)
+
+  int_val = clamp_value(int_val,1,NOW_Sequence.MAX_NUM_STEPS)
 
   local skip_event = true
   if update then
@@ -2580,7 +2714,7 @@ function NOW_Sequence:adjust_offset(val,update)
     if update and ctrl then
       ctrl:set_value(val)
     end
-    self.offset_adjust = val
+    self.offset_adjust = 256-sample_offset
     self.sample_offset = sample_offset
     local msg = string.format("Sample-offset shifted by %X",sample_offset)
     renoise.app():show_status(msg)
@@ -2608,20 +2742,21 @@ function NOW_Sequence:adjust_gate(val,update)
 end
 
 function NOW_Sequence:adjust_retrig(val,update)
-  TRACE("NOW_Sequence:adjust_retrig()",val,update)
+  print("NOW_Sequence:adjust_retrig()",val,update)
   local ctrl = self.owner._controls.retrig_adjust
   local skip_event = true
   if update and ctrl then
-    ctrl:set_value(val,skip_event)
+    local display_val = val
+    if (val>0) then
+      display_val = self:scale_log(val*NOW_Sequence.MAX_RETRIGS,NOW_Sequence.MAX_RETRIGS,4)/NOW_Sequence.MAX_RETRIGS
+    end
+    ctrl:set_value(display_val,skip_event)
   end
-  if (val>0) then
-    val = self:scale_exp(val*NOW_Sequence.MAX_RETRIGS,NOW_Sequence.MAX_RETRIGS,4)/NOW_Sequence.MAX_RETRIGS
-  end
-  -- optimize: convert value to integer range to detect if changed
+  -- convert value to integer range to detect if changed
   local val1 = math.floor(NOW_Sequence.MAX_RETRIGS*val)
   local val2 = math.floor(NOW_Sequence.MAX_RETRIGS*self.retrig_adjust)
   if (val1 ~= val2) then
-    self.retrig_adjust = val
+    self.retrig_adjust = math.max(val,1/NOW_Sequence.MAX_RETRIGS)
     local msg = string.format("Retrigging increased by %d",val*NOW_Sequence.MAX_RETRIGS)
     renoise.app():show_status(msg)
     return true
@@ -2658,6 +2793,62 @@ function NOW_Sequence:_update_length()
   end
 end
 
+-- extend the sequence
+-- @return true when extended, false if not
+function NOW_Sequence:extend()
+
+  if (self.num_steps>6) then
+    local msg = string.format("NOW: Cannot extend a sequence which is more than 6 steps in length")
+    renoise.app():show_status(msg)
+    return false
+  end
+
+  local num_ticks = self.num_lines * renoise.song().transport.tpl
+
+  for i=1,self.num_steps do
+
+    local new_idx = i+self.num_steps
+    local new_pitch = self.pitch_steps[i]
+    if (new_pitch==121) then
+      new_pitch = 0
+    end
+    self:set_pitch(new_idx,new_pitch,true,true)
+    self:set_velocity(new_idx,self.velocity_steps[i],true,true)
+    self:set_offset(new_idx,self.offset_steps[i],true,true)
+    self:set_gate(new_idx,self.gate_steps[i],true,true)
+    self:set_retrig(new_idx,self.retrig_steps[i],true,true)
+
+  end
+  --self.retrig_adjust = self.retrig_adjust*2
+  --print("B self.retrig_adjust",self.retrig_adjust)
+  -- TODO update display
+  local val_int = math.floor(self.retrig_adjust*NOW_Sequence.MAX_RETRIGS)*2/NOW_Sequence.MAX_RETRIGS
+  self:adjust_retrig(clamp_value(val_int,0,1),true)
+
+  self:set_num_steps(self.num_steps*2,true)
+  return true
+
+end
+
+-- shrink the sequence
+-- @return true when shrunk, false if not
+function NOW_Sequence:shrink()
+
+  if (self.num_steps<2) then
+    local msg = string.format("NOW: Cannot shrink a sequence which is less than 2 steps in length")
+    renoise.app():show_status(msg)
+    return false
+  end
+
+  local val_int = math.floor(self.retrig_adjust*NOW_Sequence.MAX_RETRIGS)/2/NOW_Sequence.MAX_RETRIGS
+  self:adjust_retrig(math.max(val_int,NOW_Sequence.DEFAULT_RETRIG_ADJUST),true)
+
+  local new_len = math.ceil(self.num_steps/2)
+  self:set_num_steps(new_len,true)
+  return true
+
+end
+
 -- calculate the total number of lines, including step spacing
 -- this value is used when writing/learning 
 function NOW_Sequence:_compute_length()
@@ -2666,8 +2857,11 @@ end
 
 -- scale value exponentially
 function NOW_Sequence:scale_exp(val,range,factor)
-    local incr = (factor/range)*val
-    return math.exp(incr)/(math.exp(factor))*range
+  if (val==0) then
+    return val
+  end 
+  local incr = (factor/range)*val
+  return math.exp(incr)/(math.exp(factor))*range
 end
 
 -- scale value logarithimic
@@ -2676,11 +2870,23 @@ function NOW_Sequence:scale_log(val,range)
   return (math.log10(val)*log_base)
 end
 
+-- return the doubled retrig rate
+-- @param val (int) value between 0-64
+-- @return (int) also between 0-64
+function NOW_Sequence:get_expanded_retrig_rate(val)
+
+    if (val==0) then
+      return val
+    end
+    local new_retrig = ((math.floor(val+1)*2)-1)
+    return clamp_value(new_retrig,0,NOW_Sequence.MAX_RETRIGS)
+end
+
 -- apply the current adjustment to the provided retrigger value
 -- @return (int) between 0-MAX_RETRIGS
 function NOW_Sequence:apply_retrig_adjust(val)
-  local retrig_adj = self.retrig_adjust*NOW_Sequence.MAX_RETRIGS
-  return math.floor(clamp_value(val+retrig_adj,0,NOW_Sequence.MAX_RETRIGS))
+  local retrig_adj = math.floor(self.retrig_adjust*NOW_Sequence.MAX_RETRIGS)
+  return math.floor(clamp_value(val*retrig_adj+(retrig_adj-1),0,NOW_Sequence.MAX_RETRIGS-1))
 end
 
 -- calculate the amount of retriggers
@@ -2703,7 +2909,7 @@ end
 
 -- compute pending pattern's offset based on the current offset
 function NOW_Sequence:compute_offset(pat_lines,line_offset)
-  local pat_offset = pat_lines-(math.floor(pat_lines/self.num_lines)*self.num_lines)
+  local pat_offset = pat_lines-(math.floor(pat_lines/self.num_lines)*self.num_lines)--%pat_lines
   return (line_offset+pat_offset)%self.num_lines
 
 end
@@ -2714,7 +2920,7 @@ end
 -- @param val (int) the retrigger multiplier
 -- @return int
 function NOW_Sequence:fast_retrigger(val)
-  --print("NOW_Sequence:fast_retrigger",val)
+  --TRACE("NOW_Sequence:fast_retrigger",val)
   local tmp = renoise.song().transport.tpl/val
   local frac = (fraction(tmp)>0) and 1 or 0
   return 224+math.floor(tmp)+frac
@@ -2724,7 +2930,7 @@ end
 -- @param note_column (renoise.NoteColumn object)
 -- @param skip_instr (boolean) don't set instrument number (for retriggers)
 function NOW_Sequence:write_note(val,note_column,skip_instr)
-  --print("NOW_Sequence:write_note",val,note_column,skip_instr)
+  --TRACE("NOW_Sequence:write_note",val,note_column,skip_instr)
   --local val = self.pitch_steps[offset2]
   local instr_index = renoise.song().selected_instrument_index-1
   if not val or (val==-1) then
@@ -2746,8 +2952,7 @@ end
 -- @param val (int) velocity value
 -- @param note_column (renoise.NoteColumn object)
 function NOW_Sequence:write_velocity(val,note_column)
-  --print("NOW_Sequence:write_velocity",val,note_column)
-  --local val = self.velocity_steps[offset2]
+  --TRACE("NOW_Sequence:write_velocity",val,note_column)
   if val then
     val = math.floor(val*self.velocity_adjust)
     if not (val==127 or val==255) then
@@ -2780,7 +2985,6 @@ function NOW_Sequence:to_discrete_steps(val)
   end
   local rslt = math.floor(256/quant)
 	rslt = math.floor(val/rslt)*rslt
-  --print("NOW_Sequence:to_discrete_steps - rslt",rslt)
 	return rslt
 end
 
@@ -2821,8 +3025,6 @@ function NOW_Sequence:detect_steps(patt_idx,line_idx,col_idx,seq_idx)
   local expected_col = col_idx
   local done = false
 
-
-  --print("self.spacing",self.spacing)
 
   while not done do
 
@@ -2879,14 +3081,9 @@ function NOW_Sequence:detect_steps(patt_idx,line_idx,col_idx,seq_idx)
     
       if (pos.line>=patt.number_of_lines) then
         -- reached last line, check next pattern
-        --print("reached last line, check next pattern from this line",line_idx)
-        --done = true
-        --line_idx = expected_line-patt.number_of_lines
         seq_idx = seq_idx+1
         expected_line = expected_line-patt.number_of_lines
         patt_idx = renoise.song().sequencer.pattern_sequence[seq_idx]
-        --patt_idx = self:get_next_patt_in_seq(seq_idx)
-        --if()
         
       end
 
@@ -2925,7 +3122,6 @@ function NOW_Sequence:detect_trigger(patt_idx,line_idx,col_idx,forwards)
         if (col_count==col_idx) then
           if (note_column.instrument_value<255) then
             trigger_line = pos.line
-            --print("trigger_line",trigger_line)
             if forwards then
               return trigger_line
             end
@@ -2953,8 +3149,6 @@ function NOW_Sequence:detect_spacing(patt_idx,line_idx,col_idx,seq_idx)
   local triggered_line = nil
   local triggered_col = 0
   local done = false
-
-  --print("self.num_steps",self.num_steps)
 
   while not done do
 
@@ -3053,7 +3247,6 @@ function NOW_Sequence:write_to_pattern(patt_idx,begin_line,seq_step,mask_type,st
 
   -- prevent from writing in master/send track 
 	if (renoise.song().selected_track_index>=get_master_track_index()) then
-    --print("prevent from writing in master/send track ")
 		return
 	end
 
@@ -3063,7 +3256,6 @@ function NOW_Sequence:write_to_pattern(patt_idx,begin_line,seq_step,mask_type,st
 	local set_note,set_gate,set_offset,set_velocity,set_retrig
   local seq_idx = self:get_pattseq_pos()
   local seq_len = self:_compute_length()
-  --local last_trigger = nil
 
   -- A) manual write, output the exact sequence length
   local writeahead_length = self.num_lines-1
@@ -3083,6 +3275,10 @@ function NOW_Sequence:write_to_pattern(patt_idx,begin_line,seq_step,mask_type,st
 		set_offset = (mask_type == self.owner.MODE_OFFSET)
 		set_velocity = (mask_type == self.owner.MODE_VELOCITY)
 		set_retrig = (mask_type == self.owner.MODE_RETRIG)
+    -- always output note when setting retriggers
+    if set_retrig then
+      set_note = true
+    end
 	else
 		set_note = true
 		set_gate = true
@@ -3334,25 +3530,19 @@ function NOW_Sequence:write_to_pattern(patt_idx,begin_line,seq_step,mask_type,st
                   end
                   if gate_pos then 
                     local trigger_pos = ((col_index-1)*self.spacing)+1
-                    --print("trigger_pos",trigger_pos,"gate_pos",gate_pos)
-                    if (gate_pos<seq_line) then 
-                      --print("after note is cut")
+                    if (gate_pos<seq_line) then -- after note-cut
                       gates_set[col_index] = true
                       if (gate_pos<trigger_pos) 
                       and (seq_line>trigger_pos) 
                       then -- note has been triggered
                         gates_set[col_index] = false
-                        --print("C gates_set["..col_index.."]",gates_set[col_index])
                       end
-                    else
-                      --print("before note-cut")
+                    else -- before note-cut
                       if (seq_line<trigger_pos) then -- before the trigger
-                        if (gate_pos<trigger_pos) then -- cut is before trigger
+                        if (gate_pos<trigger_pos) then -- cut before trigger
                           gates_set[col_index] = false
-                          --print("D gates_set["..col_index.."]",gates_set[col_index])
                         else
                           gates_set[col_index] = true
-                          --print("B gates_set["..col_index.."]",gates_set[col_index])
                         end
                       end
                     end
@@ -3366,6 +3556,7 @@ function NOW_Sequence:write_to_pattern(patt_idx,begin_line,seq_step,mask_type,st
                   local retrig_val = self.retrig_steps[col_index]
                   if retrig_val then
                     retrig_val = self:apply_retrig_adjust(retrig_val)
+
                     if (retrig_val>0) then
                       if (retrigs>0) then
                         -- 'fast' retriggering using Ex commands 
@@ -3495,24 +3686,32 @@ function NOW_Sequence:write_to_pattern(patt_idx,begin_line,seq_step,mask_type,st
     -- (call this function again then, but limited to a single run, 
     -- as the various gate/retrig tables needs to be rebuilt)
     if ((pos.line+1) > pattern.number_of_lines) then
+      --print("write into next pattern, recursive",recursive)
       if not recursive then
+        local next_pattern = nil
         local seq_loop_end = renoise.song().transport.loop_end.sequence
         local next_patt_idx = renoise.song().sequencer.pattern_sequence[seq_idx+1]
         --line_offset = 0
         if (renoise.song().transport.loop_pattern) then
-          --print("A) skip looped pattern")
-        elseif (seq_loop_end==seq_idx) then
-          --print("B) skip pattern loop in effect")
-        elseif next_patt_idx then
-          -- C) write to next pattern
+          -- same pattern
           self.owner.pending_line_offset = self:compute_offset(pattern.number_of_lines,line_offset) 
-          local next_pattern = renoise.song().patterns[next_patt_idx]
-          if next_pattern then
-            self:write_to_pattern(next_patt_idx,1,seq_step,mask_type,stream,true,self.owner.pending_line_offset)
-            self.owner.pending_seq_pos = seq_idx+1
-          end
+          self.owner.pending_seq_pos = seq_idx
+          next_patt_idx = renoise.song().sequencer.pattern_sequence[seq_idx]
+          next_pattern = renoise.song().patterns[next_patt_idx]
+          --print("A) looped pattern - self.owner.pending_line_offset",self.owner.pending_line_offset,"next_patt_idx",next_patt_idx)
+
+        elseif (seq_loop_end==seq_idx) then
+          --print("B) pattern loop in effect")
+        elseif next_patt_idx then
+          --print("C) write to next pattern")
+          self.owner.pending_line_offset = self:compute_offset(pattern.number_of_lines,line_offset) 
+          self.owner.pending_seq_pos = seq_idx+1
+          next_pattern = renoise.song().patterns[next_patt_idx]
         else
           --print("D) skip end of song")
+        end
+        if next_pattern then
+          self:write_to_pattern(next_patt_idx,1,seq_step,mask_type,true,true,self.owner.pending_line_offset)
         end
       end
     end
@@ -3582,7 +3781,6 @@ function NOW_Sequence:learn_sequence()
   else
     -- no trigger detected
     local msg = string.format("Learning aborted, could not reliably detect sequence")
-    print(msg)
     renoise.app():show_status(msg)
     return
 
@@ -3772,7 +3970,6 @@ function NOW_Sequence:learn_sequence()
               -- skip 'fractional' offsets
               if (offset==math.floor(offset)) then
                 -- rotate the values
-                --local val = math.floor((fx_column.amount_value/2)-((math.floor(self.offset_adjust*255))/2))
                 --print("offset val before wrapping",val)
                 self:set_offset(offset,wrap_value(fx_column.amount_value,0,255),true,true) 
               end
