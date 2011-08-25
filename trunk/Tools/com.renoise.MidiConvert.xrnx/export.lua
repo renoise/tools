@@ -96,16 +96,16 @@ function export_build_data(plan)
   local total_instruments = #instruments
   local total_tracks = #tracks
   local total_sequence = #sequencer.pattern_sequence
-  local start = { pattern_index = 1, line_start = 1, line_end = nil }
+  local start = { sequence_index = 1, line_start = 1, line_end = nil }
   local constrain_to_selected = false
 
   -- Plan
   rns.transport:stop()
   if plan == 'selection' then
     constrain_to_selected = true
-    start.pattern_index = rns.selected_pattern_index
+    start.sequence_index = rns.selected_sequence_index
     start.line_start, start.line_end = selection_line_range()
-    total_sequence = start.pattern_index
+    total_sequence = start.sequence_index
   else
     rns.transport.playback_pos = renoise.SongPos(1, 1)
   end
@@ -140,7 +140,7 @@ function export_build_data(plan)
       local k = 1 -- Pattern counter
 
       -- # SEQUENCE
-      for sequence_index=start.pattern_index,total_sequence do
+      for sequence_index=start.sequence_index,total_sequence do
 
         local pattern_index = sequencer.pattern_sequence[sequence_index]
         local current_pattern_track = rns.patterns[pattern_index].tracks[track_index]
