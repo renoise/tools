@@ -145,7 +145,7 @@ end
 -- through the Help > Check for Updates menu item. It's also
 -- called in the last stage of the jsonrpc() function during a 
 -- start-up check.
-local function show_dialog(msg, outdated, remote_version)  
+local function show_dialog(message)  
   if dialog and dialog.visible then
     dialog:show()
     return
@@ -164,54 +164,79 @@ local function show_dialog(msg, outdated, remote_version)
     spacing = DEFAULT_CONTROL_SPACING,    
     
     -- Message
-    vb:column {      
-      style = "group",
+    vb:column {            
       margin = DEFAULT_DIALOG_MARGIN,
+      uniform = true,
+      spacing = DEFAULT_CONTROL_SPACING,  
       
-      vb:text {
-        id = "msg",
-        text = msg,        
-      },    
       -- Version Info
-      vb:text {
-        text = "Installed Version",
-        font = "bold"        
-      },
-      vb:text{
-        id = "installed_version_textfield",
-        text = get_version_str("Renoise", 
-          parse_renoise_version(INSTALLED_VERSION))
+      vb:column{ 
+        style = "group",
+        margin = DEFAULT_MARGIN,
+        vb:row {
+          id = "local_version_group",
+          vb:text {
+            text = "Installed Version",
+            font = "bold"        
+          },
+          vb:text{
+            id = "installed_version_textfield",
+            text = get_version_str("Renoise", 
+              parse_renoise_version(INSTALLED_VERSION))
+          }, 
+        },
+        -- Remote version
+        vb:row {
+          id = "remote_version_group",
+          visible = false,
+          vb:text {
+            text = "Available Update",
+            font = "bold"        
+          }, 
+          vb:text{
+            id = "remote_version_textfield",          
+          },
+        },
       }, 
-       vb:text {
-        text = "Available Update",
-        font = "bold"        
-      }, 
-      vb:text{
-        id = "latest_update_textfield",
-        text = remote_version
-      },             
-    },
-    
-    -- Buttons
-    vb:row {            
-      vb:button {
-        visible = false,
-        width = BUTTON_WIDTH,
-        height = BUTTON_HEIGHT,
-        text = "Close",
-        notifier = function() 
-          dialog:close()
-          -- TODO maybe cancel process here?
-        end
-      },
-      vb:button {                
-        width = BUTTON_WIDTH,
-        height = BUTTON_HEIGHT,
-        id = "download_button",
-        visible = outdated or false,
-        text = "Go to Download Page",
-        notifier = download_handler
+      
+      -- Message
+      vb:column {        
+        id = "message_group",
+        style = "group",
+        margin = DEFAULT_MARGIN,
+        vb:text {
+          id = "msg",
+          text = message,        
+          font = "bold",          
+        },
+        vb:button {                
+          width = BUTTON_WIDTH,
+          height = BUTTON_HEIGHT,
+          id = "download_button",
+          visible = false,
+          text = "Go to Download Page",
+          notifier = download_handler
       }          
+      },
+      
+      -- Changelog
+      vb:column {        
+        id = "changelog_group",
+        style = "group",
+        margin = DEFAULT_MARGIN,
+        visible = false,        
+        vb:row {
+          vb:text {          
+            text = "Changelog",
+            font = "bold"        
+          }, 
+        },
+        vb:row {                    
+          vb:text{
+            id = "changelog_textfield",            
+          }  
+       }
+      }           
     },
     
     -- Start-Up Options
@@ -255,23 +280,32 @@ end
 
 -- Update the dialog that was launched manually, 
 -- or show the startup dialog if there's an update.
-local function update_dialog(version, outdated)              
-  local message = nil
-  if (outdated) then
-    message = "There is an update for your Renoise installation!"    
-  else
-    message = "Your Renoise installation is up-to-date."     
-  end       
+local function update_dialog(version, outdated, changelog)              
+  if dialog and dialog.visible then          
+    dialog:show()    
+  else          
+    show_dialog()      
+  end          
   
-  if dialog and dialog.visible then      
-    vb.views.msg.text = message
-    vb.views.latest_update_textfield.text = version
-    vb.views.download_button.visible = outdated or false            
-    dialog:show()
-    return
-  else      
-    show_dialog(message, outdated, version)    
-  end        
+  if (outdated) then
+    vb.views.msg.text = "There is an update for your Renoise installation!"    
+    vb.views.download_button.visible = true
+    vb.views.changelog_textfield.text = changelog
+    vb.views.changelog_group.visible =  
+      (type(changelog) == "string" and #changelog > 0)
+    vb.views.remote_version_group.visible = true    
+    vb.views.remote_version_textfield.text = version     
+  else
+    vb.views.msg.text = "Your Renoise installation is up-to-date."     
+  end             
+end
+
+
+local function show_error(msg)
+  if (dialog and dialog.visible) then
+    vb.views.msg.text = msg
+    --renoise.app():show_warning(error_msg) 
+  end
 end
 
 
@@ -300,12 +334,10 @@ local function check_product_version_jsonrpc(menu)
       params={title='renoise', demo=is_demo() },      
     },
     error=function(xml_http_request, text_status, error_thrown)
-      if (options.Shown.value) then
-        if (dialog and dialog.visible) then
-          dialog:close()
-        end
-        renoise.app():show_warning("Update check failed: \n"
-          .. (error_thrown or "") ) 
+      if (options.Shown.value) then        
+        local error_msg = ("Update check failed: \n"
+        .. (error_thrown or ""))
+        show_error(error_msg)                
       end
     end,
     success=function(d, text_status, xml_http_request)
@@ -363,10 +395,11 @@ local function check_product_version_jsonrpc(menu)
       end
       
       local version = get_version_str(r.title, r)
+      local changelog = r.changelog      
       
       -- Update the dialog that was launched manually, 
       -- or show the startup dialog if there's an update.
-      update_dialog(version, outdated)
+      update_dialog(version, outdated, changelog)
       
     end    
   }
