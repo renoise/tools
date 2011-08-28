@@ -394,8 +394,8 @@ local function check_product_version_jsonrpc(menu)
         options.LastVersion.value = get_version_hash(r)
       end
       
-      local version = get_version_str(r.title, r)
-      local changelog = r.changelog      
+      local version = get_version_str(r.title, r)      
+      local changelog = r.changelog or ""
       
       -- Update the dialog that was launched manually, 
       -- or show the startup dialog if there's an update.
