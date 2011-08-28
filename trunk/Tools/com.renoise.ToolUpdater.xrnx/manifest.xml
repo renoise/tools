@@ -2,7 +2,7 @@
 <RenoiseScriptingTool doc_version="0">
   <Name>Tool Updater</Name>
   <Id>com.renoise.ToolUpdater</Id>
-  <Version>4</Version>
+  <Version>5</Version>
   <ApiVersion>2</ApiVersion>
   <Author>Bantai | marvin@renoise.com  </Author>
   <Category>Tool Management</Category>

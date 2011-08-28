@@ -1,4 +1,3 @@
-
 -- Tool Updater
 -- 
 -- Looks for available updates of installed Tools, which will then be 
@@ -93,49 +92,9 @@ end
 
 --]]
 
--- Get a listing of all installed tools and a filtered listing 
--- of only the tools installed directly under the Tools root.
--- NOTE: The resulting tables use the Tool IDs as keys, remember use pairs() to loop.
-local function get_installed_tools(filter)   
-  
-  -- Cache listing of all installed Tools
-  if (not installed_tools) then 
-    installed_tools = table.create()
-    local tools = renoise.app().installed_tools    
-    for _,tool in ipairs(tools) do      
-      installed_tools[tool.id] = tool      
-    end
-  end
-  
-  -- NOTE Due to the table keys being IDs, 
-  --  any second install of a tool will
-  --  overwrite the first one in the table
-  
-  -- Cache listing of all Tools minus those not 
-  -- installed directly under the Tools root.  
-  if (not filtered_tools) then
-    filtered_tools = table.create()
-    local tools = renoise.app().installed_tools    
-    for _,tool in pairs(tools) do         
-      local bundle = tool.bundle_path
-      local pos = bundle:find(tool.id) - 2 
-      local dir = bundle:sub(1,pos)    
-      if (dir == TOOLS_ROOT) then      
-        filtered_tools[tool.id] = tool
-      end    
-    end
-  end  
-  
-  if (filter) then
-    return filtered_tools
-  else
-    return installed_tools
-  end
-end
-
--- Create a listing of Tools installed directly
--- under the Tools root folder.
+-- Create a listing of Tools, discarding old duplicates.
 local function get_filtered_tools()           
+  
   if (not filtered_tools) then    
   
     filtered_tools = table.create()
@@ -143,18 +102,14 @@ local function get_filtered_tools()
     -- Get new list
     local tools = renoise.app().installed_tools    
     
-    for _,tool in ipairs(tools) do         
-      local path = tool.bundle_path
-      local found = path:find(tool.id)
-      if (found and found > 2) then
-        local pos = found - 2 
-        local dir = path:sub(1,pos)    
-        if (dir == TOOLS_ROOT) then      
-          filtered_tools[tool.id] = tool
-        end    
+    -- Add new or newer tool to list
+    for _,tool in ipairs(tools) do        
+      if (not filtered_tools[tool.id] or 
+        filtered_tools[tool.id].version < tool.version) then
+        filtered_tools[tool.id] = tool
       end
     end
-    
+        
   end
   
   return filtered_tools
