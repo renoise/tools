@@ -228,6 +228,10 @@ function build_interface()
   local max_y = #renoise.song().sequencer.pattern_sequence - matrix_height
   if max_y < 1 then max_y = 1 end
 
+  -- Reset
+  x_pos = 1
+  y_pos = 1
+
   -- Buttons
   local button_view = vb:row {
     vb:text {
