@@ -84,14 +84,14 @@ function zip(path, destination, excluded_files)
     
   -- Exclude files
   local excludes = ""  
-  if (excluded_files and #excluded_files > 0) then    
-    excludes = '-x'
+  if (excluded_files and #excluded_files > 0) then        
     if (type(excluded_files) == "table") then
-      for _,f in ipairs(excluded_files)  do
-        excludes = excludes .. table.concat(excluded_files, ' -x')
-      end
+      excludes = excludes .. table.concat(excluded_files, ' ')
+      --for _,f in ipairs(excluded_files)  do
+      --  excludes = excludes .. table.concat(excluded_files, ' -x')
+      --end
     elseif (type(excluded_files) == "string") then
-      excludes = excludes .. excluded_files
+      excludes = excluded_files
     end
   end  
   
@@ -106,9 +106,9 @@ function zip(path, destination, excluded_files)
   local str = ""  
   if (stat.type == "directory") then
     -- go to the folder and zip folder contents   
-    str = ('cd "%s" && "%s" -r %s "%s" *'):format(path, zip, excludes, destination)    
+    str = ('cd "%s" && "%s" -r "%s" * -x %s'):format(path, zip, destination, excludes)    
   else 
-    str = ('zip -j %s "%s" "%s"'):format(excludes, path, destination)
+    str = ('"%s" -j "%s" "%s"'):format(zip, path, destination)
   end  
   
   TRACE(str)

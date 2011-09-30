@@ -727,6 +727,7 @@ local function zip_tool(tool, version)
   if (options.ExportExcludePreferencesXml.value) then
     excludes:insert("preferences.xml")
   end
+  excludes:insert("/__MACOSX/*")
   
   -- zip
   local ok, err = zip(source_folder, destination, excludes)
