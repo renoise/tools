@@ -85,7 +85,7 @@ function init_pm()
       tracks[x].type ~= renoise.Track.TRACK_TYPE_SEND
     then
       for y = 1, total_sequence do
-        renoise.song().sequencer:set_track_sequence_slot_is_muted(x , y, true)
+        rns.sequencer:set_track_sequence_slot_is_muted(x , y, true)
       end
     end
   end
@@ -117,7 +117,7 @@ function init_gp_pattern()
     rns.patterns[last_pattern]:clear()
     rns.patterns[last_pattern].name = "__GRID_PIE__"
     for x = 1, total_tracks do
-      renoise.song().sequencer:set_track_sequence_slot_is_muted(x , total_sequence, false)
+      rns.sequencer:set_track_sequence_slot_is_muted(x , total_sequence, false)
     end
     gridpie_idx = last_pattern
   end
@@ -183,13 +183,20 @@ function toggler(x, y)
 
   -- Copy to gridpie_idx
   if muted then
-    rns.patterns[gridpie_idx].tracks[x]:clear()
+    -- Mute
+    -- TODO: This is a hackaround, fix when API is updated
+    -- See: http://www.renoise.com/board/index.php?showtopic=31927
+    rns.tracks[x].mute_state = renoise.Track.MUTE_STATE_OFF
+    OneShotIdleNotifier(0, function()
+      rns.patterns[gridpie_idx].tracks[x]:clear()
+      rns.tracks[x].mute_state = renoise.Track.MUTE_STATE_ACTIVE
+    end)
   else
+    -- Copy
     rns.patterns[gridpie_idx].tracks[x]:copy_from(rns.patterns[rns.sequencer:pattern(y)].tracks[x])
-    renoise.song().patterns[gridpie_idx].number_of_lines = rns.patterns[rns.sequencer:pattern(y)].number_of_lines
+    rns.patterns[gridpie_idx].number_of_lines = rns.patterns[rns.sequencer:pattern(y)].number_of_lines
+    -- TODO: Improve. E.g. Polyrythm with least_common(), renoise.Pattern.MAX_NUMBER_OF_LINES, ...
   end
-
-  -- TODO: Polyrythm with least_common(), renoise.Pattern.MAX_NUMBER_OF_LINES, ...
 
   -- Change PM
   for i = 1, #rns.sequencer.pattern_sequence - 1 do
@@ -356,16 +363,13 @@ end
 function tracks_changed(notification)
 
   if (notification.type == "insert") then
-    --[[
-    -- TODO: Why doesn't this work?
+    -- TODO: This is a hackaround, fix when API is updated
     -- See: http://www.renoise.com/board/index.php?showtopic=31893
-
-    for i = 1, #renoise.song().sequencer.pattern_sequence - 1 do
-      renoise.song().sequencer:set_track_sequence_slot_is_muted(notification.index , i, true)
-      print("[DEBUG] Mute slot: " .. notification.index .. ", " .. i)
-    end
-    ]]--
-    abort()
+    OneShotIdleNotifier(0, function()
+      for i = 1, #renoise.song().sequencer.pattern_sequence - 1 do
+        renoise.song().sequencer:set_track_sequence_slot_is_muted(notification.index , i, true)
+      end
+    end)
   end
 end
 
