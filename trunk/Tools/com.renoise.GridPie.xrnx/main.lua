@@ -187,7 +187,7 @@ function toggler(x, y)
     -- TODO: This is a hackaround, fix when API is updated
     -- See: http://www.renoise.com/board/index.php?showtopic=31927
     rns.tracks[x].mute_state = renoise.Track.MUTE_STATE_OFF
-    OneShotIdleNotifier(0, function()
+    OneShotIdleNotifier(100, function()
       rns.patterns[gridpie_idx].tracks[x]:clear()
       rns.tracks[x].mute_state = renoise.Track.MUTE_STATE_ACTIVE
     end)
@@ -365,7 +365,7 @@ function tracks_changed(notification)
   if (notification.type == "insert") then
     -- TODO: This is a hackaround, fix when API is updated
     -- See: http://www.renoise.com/board/index.php?showtopic=31893
-    OneShotIdleNotifier(0, function()
+    OneShotIdleNotifier(100, function()
       for i = 1, #renoise.song().sequencer.pattern_sequence - 1 do
         renoise.song().sequencer:set_track_sequence_slot_is_muted(notification.index , i, true)
       end
