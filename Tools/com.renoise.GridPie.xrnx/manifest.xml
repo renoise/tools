@@ -2,8 +2,8 @@
 <RenoiseScriptingTool>
   <ApiVersion>2.0</ApiVersion>
   <Id>com.renoise.GridPie</Id>
-  <Version>0.4</Version>
+  <Version>0.5</Version>
   <Name>Grid Pie</Name>
   <Author>Dac Chartrand [dac@renoise.com]</Author>
-  <Description>Renoise cut and pastery. Live sequence recombinator.</Description>
+  <Description>Renoise cut and pastry. Live sequence recombinator.</Description>
 </RenoiseScriptingTool>
