@@ -160,6 +160,8 @@ function adjust_grid()
       end
     end
   end
+  renoise.song().selected_track_index = x_pos
+  renoise.song().selected_sequence_index = y_pos
 
 end
 
