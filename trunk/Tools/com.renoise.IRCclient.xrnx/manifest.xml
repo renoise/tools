@@ -2,7 +2,7 @@
 <RenoiseScriptingTool doc_version="0">
   <Name>Simple IRC Client</Name>
   <Id>com.renoise.IRCclient</Id>
-  <Version>1.2</Version>
+  <Version>1.21</Version>
   <ApiVersion>2.0</ApiVersion>
   <Author>Vincent Voois ( http://tinyurl.com/vvrns )</Author>
   <Category>Tools</Category>
