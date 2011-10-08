@@ -675,7 +675,6 @@ end
 
 function chat_key_handler(dialog, key)
   -- close on escape...
-
   if (key.modifiers == "" and key.name == "esc") then
     dialog:close()
 
@@ -694,16 +693,13 @@ function chat_key_handler(dialog, key)
   elseif (key.name == "del") then
     no_loop = 1
     vb_channel.views.channel_command.text = ""
+  elseif (key.modifiers == "control" and key.name == "next") then
+    chat_hidden = true  --Do not log off when closing the chat dialog!!
+    chat_dialog:close()
+    return
 
   elseif key.character ~= nil then
-    --Shortcut to hide / "m"inimize chat dialog. (right alt-gr C in my case)
-    --Want a different one? simply change the character and modifiers combo
     
-    if (key.character == "©") then
-      chat_hidden = true  --Do not log off when closing the chat dialog!!
-      chat_dialog:close()
-      return
-    end
     no_loop = 1
     vb_channel.views.channel_command.text = vb_channel.views.channel_command.text .. 
       key.character
@@ -742,6 +738,9 @@ function toggle_chat_dialog_window()
       chat_dialog_control(active_channel)
       vb_channel.views.channel_output_frame.text = chat_buffer
       vb_channel.views.channel_command.text = "/NAMES "..active_channel
+      no_loop = 1
+      send_command(active_channel, 'channel', vb_channel.views.channel_command.text)
+      vb_channel.views.channel_command.text = ""
     end
 
   else
@@ -760,6 +759,9 @@ function toggle_chat_dialog_window()
       chat_dialog_control(active_channel)
       vb_channel.views.channel_output_frame.text = chat_buffer
       vb_channel.views.channel_command.text = "/NAMES "..active_channel
+      no_loop = 1
+      send_command(active_channel, 'channel', vb_channel.views.channel_command.text)
+      vb_channel.views.channel_command.text = ""
     else
 
       if sirc_debug then
