@@ -1,4 +1,6 @@
---[[ Math ]]--
+--------------------------------------------------------------------------------
+-- Math
+--------------------------------------------------------------------------------
 
 -- greatest common divisor
 function gcd(m,n)
@@ -25,7 +27,26 @@ function least_common(...)
 end
 
 
---[[ Midi ]]--
+--------------------------------------------------------------------------------
+-- PHP style exlpode()
+--------------------------------------------------------------------------------
+
+function explode(div,str)
+  if (div=='') then return false end
+  local pos,arr = 0,table.create()
+  -- for each divider found
+  for st,sp in function() return string.find(str,div,pos,true) end do
+    table.insert(arr,string.sub(str,pos,st-1)) -- Attach chars left of current divider
+    pos = sp + 1 -- Jump past current divider
+  end
+  table.insert(arr,string.sub(str,pos)) -- Attach chars right of last divider
+  return arr
+end
+
+
+--------------------------------------------------------------------------------
+-- Midi
+--------------------------------------------------------------------------------
 
 function midi_debug(message)
 
@@ -46,7 +67,9 @@ function midi_debug(message)
 end
 
 
---[[ OneShotIdle Class ]]--
+--------------------------------------------------------------------------------
+-- OneShotIdle Class
+--------------------------------------------------------------------------------
 
 -- delay a function call by the given amount of time into a tools idle notifier
 --
@@ -74,3 +97,4 @@ function OneShotIdleNotifier:__on_idle()
     self._callback(unpack(self._args))
   end
 end
+
