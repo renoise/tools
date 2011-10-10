@@ -1,17 +1,16 @@
 require "toolbox"
 
---[[ Globals ]]--
+--[[ Globals, capitalized for easier recognition ]]--
 
-local matrix_width = 8
-local matrix_height = 8
-local matrix_cells = table.create{}
-
-local x_pos = 1
-local y_pos = 1
-
-local my_interface = nil
-local vb = nil
-local gridpie_idx = nil
+local GRIDPIE_IDX = nil
+local MATRIX_CELLS = table.create()
+local MATRIX_HEIGHT = 8
+local MATRIX_WIDTH = 8
+local MY_INTERFACE = nil
+local REVERT_PM_SLOT = table.create()
+local VB = nil
+local X_POS = 1
+local Y_POS = 1
 
 --------------------------------------------------------------------------------
 -- Keyboard input
@@ -45,8 +44,10 @@ function is_garbage_pos(x, y)
     renoise.song().tracks[x].type == renoise.Track.TRACK_TYPE_SEND or
     total_sequence == y
   then
+    -- Is garbage
     return true
   else
+    -- Is not garbage
     return false
   end
 
@@ -54,13 +55,13 @@ end
 
 
 --------------------------------------------------------------------------------
--- Access a cell in the matrix view
+-- Access a cell in the Grid Pie
 --------------------------------------------------------------------------------
 
 function matrix_cell(x, y)
 
-  if (matrix_cells[x] ~= nil) then
-    return matrix_cells[x][y]
+  if (MATRIX_CELLS[x] ~= nil) then
+    return MATRIX_CELLS[x][y]
   else
     return nil
   end
@@ -68,10 +69,10 @@ end
 
 
 --------------------------------------------------------------------------------
--- Initialize PM
+-- Toggle all slot mutes in Pattern Matrix
 --------------------------------------------------------------------------------
 
-function init_pm()
+function init_pm_slots_to(val)
 
   local rns = renoise.song()
   local tracks = rns.tracks
@@ -85,7 +86,16 @@ function init_pm()
       tracks[x].type ~= renoise.Track.TRACK_TYPE_SEND
     then
       for y = 1, total_sequence do
-        rns.sequencer:set_track_sequence_slot_is_muted(x , y, true)
+        local tmp = x .. ',' .. y
+        if val and rns.sequencer:track_sequence_slot_is_muted(x, y) then
+        -- Store original state
+          REVERT_PM_SLOT[tmp] = true
+        end
+        rns.sequencer:set_track_sequence_slot_is_muted(x , y, val)
+        if not val and REVERT_PM_SLOT ~= nil and REVERT_PM_SLOT[tmp] ~= nil then
+        -- Revert to original state
+          rns.sequencer:set_track_sequence_slot_is_muted(x , y, true)
+        end
       end
     end
   end
@@ -110,7 +120,7 @@ function init_gp_pattern()
     -- Create new pattern
     local new_pattern = rns.sequencer:insert_new_pattern_at(total_sequence + 1)
     rns.patterns[new_pattern].name = "__GRID_PIE__"
-    gridpie_idx = new_pattern
+    GRIDPIE_IDX = new_pattern
     total_sequence = total_sequence + 1
   else
     -- Clear pattern, unmute slot
@@ -119,7 +129,7 @@ function init_gp_pattern()
     for x = 1, total_tracks do
       rns.sequencer:set_track_sequence_slot_is_muted(x , total_sequence, false)
     end
-    gridpie_idx = last_pattern
+    GRIDPIE_IDX = last_pattern
   end
 
   -- Cleanup any other pattern named __GRID_PIE__
@@ -148,9 +158,9 @@ end
 function adjust_grid()
 
   local cell = nil
-  for x = x_pos, matrix_width + x_pos - 1 do
-    for y = y_pos, matrix_height + y_pos - 1 do
-      cell = matrix_cell(x - x_pos + 1, y - y_pos + 1)
+  for x = X_POS, MATRIX_WIDTH + X_POS - 1 do
+    for y = Y_POS, MATRIX_HEIGHT + Y_POS - 1 do
+      cell = matrix_cell(x - X_POS + 1, y - Y_POS + 1)
       if cell ~= nil and not is_garbage_pos(x, y) then
         local val = renoise.song().sequencer:track_sequence_slot_is_muted(x, y)
         if val then cell.color = { 0, 0, 0 }
@@ -160,8 +170,8 @@ function adjust_grid()
       end
     end
   end
-  renoise.song().selected_track_index = x_pos
-  renoise.song().selected_sequence_index = y_pos
+  renoise.song().selected_track_index = X_POS
+  renoise.song().selected_sequence_index = Y_POS
 
 end
 
@@ -176,27 +186,25 @@ function toggler(x, y)
   local muted = false
   if cell ~= nil and cell.color[2] == 255 then muted = true end
 
-  x = x + (x_pos - 1)
-  y = y + (y_pos - 1)
+  x = x + (X_POS - 1)
+  y = y + (Y_POS - 1)
 
   if is_garbage_pos(x, y) then return end
 
   local rns = renoise.song()
 
-  -- Copy to gridpie_idx
+  -- Copy to GRIDPIE_IDX
   if muted then
     -- Mute
     -- TODO: This is a hackaround, fix when API is updated
     -- See: http://www.renoise.com/board/index.php?showtopic=31927
     rns.tracks[x].mute_state = renoise.Track.MUTE_STATE_OFF
-    OneShotIdleNotifier(100, function()
-      rns.patterns[gridpie_idx].tracks[x]:clear()
-      rns.tracks[x].mute_state = renoise.Track.MUTE_STATE_ACTIVE
-    end)
+    rns.patterns[GRIDPIE_IDX].tracks[x]:clear()
+    OneShotIdleNotifier(100, function() rns.tracks[x].mute_state = renoise.Track.MUTE_STATE_ACTIVE end)
   else
     -- Copy
-    rns.patterns[gridpie_idx].tracks[x]:copy_from(rns.patterns[rns.sequencer:pattern(y)].tracks[x])
-    rns.patterns[gridpie_idx].number_of_lines = rns.patterns[rns.sequencer:pattern(y)].number_of_lines
+    rns.patterns[GRIDPIE_IDX].tracks[x]:copy_from(rns.patterns[rns.sequencer:pattern(y)].tracks[x])
+    rns.patterns[GRIDPIE_IDX].number_of_lines = rns.patterns[rns.sequencer:pattern(y)].number_of_lines
     -- TODO: Improve. E.g. Polyrythm with least_common(), renoise.Pattern.MAX_NUMBER_OF_LINES, ...
   end
 
@@ -222,46 +230,46 @@ end
 function build_interface()
 
   -- Init VB
-  vb = renoise.ViewBuilder()
+  VB = renoise.ViewBuilder()
 
-  local max_x = renoise.song().sequencer_track_count - matrix_width + 1
+  local max_x = renoise.song().sequencer_track_count - MATRIX_WIDTH + 1
   if max_x < 1 then max_x = 1 end
 
-  local max_y = #renoise.song().sequencer.pattern_sequence - matrix_height
+  local max_y = #renoise.song().sequencer.pattern_sequence - MATRIX_HEIGHT
   if max_y < 1 then max_y = 1 end
 
   -- Reset
-  x_pos = 1
-  y_pos = 1
+  X_POS = 1
+  Y_POS = 1
 
   -- Buttons
-  local button_view = vb:row {
-    vb:text {
+  local button_view = VB:row {
+    VB:text {
       text = "x:",
       font = "mono",
     },
-    vb:valuebox {
+    VB:valuebox {
       id = "gp_x",
       min = 1,
       max = max_x,
-      value = x_pos,
+      value = X_POS,
       notifier = function(val)
-        x_pos = val
+        X_POS = val
         adjust_grid()
       end,
       midi_mapping = "Grid Pie:X Axis",
     },
-    vb:text {
+    VB:text {
       text = " y:",
       font = "mono",
     },
-    vb:valuebox {
+    VB:valuebox {
       id = "gp_y",
       min = 1,
       max = max_y,
-      value = y_pos,
+      value = Y_POS,
       notifier = function(val)
-        y_pos = val
+        Y_POS = val
         adjust_grid()
       end,
       midi_mapping = "Grid Pie:Y Axis",
@@ -269,12 +277,12 @@ function build_interface()
   }
 
   -- Checkmark Matrix
-  local matrix_view = vb:row { }
-  for x = 1, matrix_width do
-    local column = vb:column {  margin = 2, spacing = 2, }
-    matrix_cells[x] = table.create()
-    for y = 1, matrix_height do
-      matrix_cells[x][y] = vb:button {
+  local matrix_view = VB:row { }
+  for x = 1, MATRIX_WIDTH do
+    local column = VB:column {  margin = 2, spacing = 2, }
+    MATRIX_CELLS[x] = table.create()
+    for y = 1, MATRIX_HEIGHT do
+      MATRIX_CELLS[x][y] = VB:button {
         width = 35,
         height = 35,
         pressed = function()
@@ -282,31 +290,28 @@ function build_interface()
         end,
         midi_mapping = "Grid Pie:Slice " .. x .. "," .. y,
       }
-      column:add_child(matrix_cells[x][y])
+      column:add_child(MATRIX_CELLS[x][y])
     end
     matrix_view:add_child(column)
   end
 
   -- Racks
-  local rack = vb:column {
-    id = "my_interface",
+  local rack = VB:column {
     uniform = true,
     margin = renoise.ViewBuilder.DEFAULT_DIALOG_MARGIN,
     spacing = renoise.ViewBuilder.DEFAULT_CONTROL_SPACING,
 
-    vb:column {
-      vb:horizontal_aligner {
-        id = "my_buttons",
+    VB:column {
+      VB:horizontal_aligner {
         mode = "center",
         button_view,
       },
     },
 
-    vb:space { height = 10 },
+    VB:space { height = 10 },
 
-    vb:column {
-      vb:horizontal_aligner {
-        id = "my_matrix",
+    VB:column {
+      VB:horizontal_aligner {
         mode = "center",
         matrix_view,
       },
@@ -315,7 +320,7 @@ function build_interface()
   }
 
   -- Show dialog
-  my_interface = renoise.app():show_custom_dialog("Grid Pie", rack, key_handler)
+  MY_INTERFACE = renoise.app():show_custom_dialog("Grid Pie", rack, key_handler)
 
 end
 
@@ -327,15 +332,15 @@ end
 function main(x, y)
 
   if
-    not vb or
-    x ~= matrix_width or
-    y ~= matrix_height
+    not VB or
+    x ~= MATRIX_WIDTH or
+    y ~= MATRIX_HEIGHT
   then
-    matrix_width = x
-    matrix_height = y
-    init_pm()
+    MATRIX_WIDTH = x
+    MATRIX_HEIGHT = y
+    init_pm_slots_to(true)
     init_gp_pattern()
-    if my_interface and my_interface.visible then my_interface:close() end
+    if MY_INTERFACE and MY_INTERFACE.visible then MY_INTERFACE:close() end
     build_interface()
   end
   run()
@@ -353,7 +358,7 @@ function abort(notification)
   renoise.app():show_message(
   "You dun goofed! Grid Pie needs to be restarted."
   )
-  if my_interface and my_interface.visible then my_interface:close() end
+  if MY_INTERFACE and MY_INTERFACE.visible then MY_INTERFACE:close() end
 
 end
 
@@ -363,6 +368,9 @@ end
 --------------------------------------------------------------------------------
 
 function tracks_changed(notification)
+
+  -- Tracks have changed, stored slots are invalid, reset table
+  REVERT_PM_SLOT = nil
 
   if (notification.type == "insert") then
     -- TODO: This is a hackaround, fix when API is updated
@@ -375,6 +383,16 @@ function tracks_changed(notification)
   end
 end
 
+--------------------------------------------------------------------------------
+-- Handle sequence change
+--------------------------------------------------------------------------------
+
+function sequence_changed(notification)
+
+  -- Tracks have changed, stored slots are invalid, reset table
+  REVERT_PM_SLOT = nil
+
+end
 
 --------------------------------------------------------------------------------
 -- Idler
@@ -382,7 +400,7 @@ end
 
 function idler(notification)
 
-  if (not vb or not my_interface or not my_interface.visible) then
+  if (not VB or not MY_INTERFACE or not MY_INTERFACE.visible) then
     stop()
     return
   end
@@ -392,17 +410,17 @@ function idler(notification)
     abort()
   else
 
-    vb.views.gp_x.max = renoise.song().sequencer_track_count - matrix_width + 1
-    if vb.views.gp_x.max < 1 then vb.views.gp_x.max = 1 end
-    if vb.views.gp_x.value > vb.views.gp_x.max then
-      vb.views.gp_x.value = vb.views.gp_x.max
+    VB.views.gp_x.max = renoise.song().sequencer_track_count - MATRIX_WIDTH + 1
+    if VB.views.gp_x.max < 1 then VB.views.gp_x.max = 1 end
+    if VB.views.gp_x.value > VB.views.gp_x.max then
+      VB.views.gp_x.value = VB.views.gp_x.max
       adjust_grid()
     end
 
-    vb.views.gp_y.max = #renoise.song().sequencer.pattern_sequence - matrix_height
-    if vb.views.gp_y.max < 1 then vb.views.gp_y.max = 1 end
-    if vb.views.gp_y.value > vb.views.gp_y.max then
-      vb.views.gp_x.value = vb.views.gp_x.max
+    VB.views.gp_y.max = #renoise.song().sequencer.pattern_sequence - MATRIX_HEIGHT
+    if VB.views.gp_y.max < 1 then VB.views.gp_y.max = 1 end
+    if VB.views.gp_y.value > VB.views.gp_y.max then
+      VB.views.gp_x.value = VB.views.gp_x.max
       adjust_grid()
     end
 
@@ -424,11 +442,17 @@ function run()
   if not (renoise.song().tracks_observable:has_notifier(tracks_changed)) then
     renoise.song().tracks_observable:add_notifier(tracks_changed)
   end
+  if not (renoise.song().sequencer.pattern_sequence_observable:has_notifier(sequence_changed)) then
+    renoise.song().sequencer.pattern_sequence_observable:add_notifier(sequence_changed)
+  end
 
 end
 
 
 function stop()
+
+  -- Revert PM
+  init_pm_slots_to(false)
 
   -- Observers takedown
   if (renoise.tool().app_idle_observable:has_notifier(idler)) then
@@ -437,8 +461,13 @@ function stop()
   if (renoise.song().tracks_observable:has_notifier(tracks_changed)) then
     renoise.song().tracks_observable:remove_notifier(tracks_changed)
   end
-  -- Destroy vb
-  vb = nil
+  if (renoise.song().sequencer.pattern_sequence_observable:has_notifier(sequence_changed)) then
+    renoise.song().sequencer.pattern_sequence_observable:remove_notifier(sequence_changed)
+  end
+
+  -- Destroy VB
+  VB = nil
+
 end
 
 
@@ -450,22 +479,22 @@ renoise.tool():add_midi_mapping{
   name = "Grid Pie:X Axis",
   invoke = function(message)
     -- midi_debug(message)
-    if not vb then
+    if not VB then
      return
     elseif message.int_value >= 0 and message.int_value <= 128 then
       -- Knob? Then scale
-      local tmp = 1 + (message.int_value / 127) * (vb.views.gp_x.max - 1) -- Scale
-      vb.views.gp_x.value = math.floor(tmp * 1 + 0.5) / 1 -- Round to int
+      local tmp = 1 + (message.int_value / 127) * (VB.views.gp_x.max - 1) -- Scale
+      VB.views.gp_x.value = math.floor(tmp * 1 + 0.5) / 1 -- Round to int
     elseif message:is_trigger() then
       -- Button? Then increment
-      if vb.views.gp_x.value == vb.views.gp_x.max then
-        vb.views.gp_x.value = 1
+      if VB.views.gp_x.value == VB.views.gp_x.max then
+        VB.views.gp_x.value = 1
       else
-        local tmp = vb.views.gp_x.value + matrix_width
-        if tmp > vb.views.gp_x.max then
-          vb.views.gp_x.value = vb.views.gp_x.max
+        local tmp = VB.views.gp_x.value + MATRIX_WIDTH
+        if tmp > VB.views.gp_x.max then
+          VB.views.gp_x.value = VB.views.gp_x.max
         else
-          vb.views.gp_x.value = tmp
+          VB.views.gp_x.value = tmp
         end
       end
     end
@@ -477,22 +506,22 @@ renoise.tool():add_midi_mapping{
   name = "Grid Pie:Y Axis",
   invoke = function(message)
     -- midi_debug(message)
-    if not vb then
+    if not VB then
      return
     elseif message.int_value >= 0 and message.int_value <= 128 then
       -- Knob? Then scale
-      local tmp = 1 + (message.int_value / 127) * (vb.views.gp_y.max - 1) -- Scale
-      vb.views.gp_y.value = math.floor(tmp * 1 + 0.5) / 1 -- Round to int
+      local tmp = 1 + (message.int_value / 127) * (VB.views.gp_y.max - 1) -- Scale
+      VB.views.gp_y.value = math.floor(tmp * 1 + 0.5) / 1 -- Round to int
     elseif message:is_trigger() then
       -- Button? Then increment
-      if vb.views.gp_y.value == vb.views.gp_y.max then
-        vb.views.gp_y.value = 1
+      if VB.views.gp_y.value == VB.views.gp_y.max then
+        VB.views.gp_y.value = 1
       else
-        local tmp = vb.views.gp_y.value + matrix_height
-        if tmp > vb.views.gp_y.max then
-          vb.views.gp_y.value = vb.views.gp_y.max
+        local tmp = VB.views.gp_y.value + MATRIX_HEIGHT
+        if tmp > VB.views.gp_y.max then
+          VB.views.gp_y.value = VB.views.gp_y.max
         else
-          vb.views.gp_y.value = tmp
+          VB.views.gp_y.value = tmp
         end
       end
     end
@@ -500,13 +529,13 @@ renoise.tool():add_midi_mapping{
 }
 
 
-for x = 1, matrix_width do
-  for y = 1, matrix_height do
+for x = 1, MATRIX_WIDTH do
+  for y = 1, MATRIX_HEIGHT do
     renoise.tool():add_midi_mapping{
       name = "Grid Pie:Slice " .. x .. "," .. y,
       invoke = function(message)
         -- midi_debug(message)
-        if not vb then
+        if not VB then
           return
         elseif (message:is_trigger()) then
           toggler(x, y)
