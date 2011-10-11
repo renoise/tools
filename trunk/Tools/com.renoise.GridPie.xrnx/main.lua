@@ -2,15 +2,35 @@ require "toolbox"
 
 --[[ Globals, capitalized for easier recognition ]]--
 
+local DBUG_MODE = false
+local DISABLE_POLYRHYTHMS = true
 local GRIDPIE_IDX = nil
 local MATRIX_CELLS = table.create()
 local MATRIX_HEIGHT = 8
 local MATRIX_WIDTH = 8
 local MY_INTERFACE = nil
+local POLY_COUNTER = table.create()
+local PROCESS = nil
 local REVERT_PM_SLOT = table.create()
 local VB = nil
 local X_POS = 1
 local Y_POS = 1
+
+--------------------------------------------------------------------------------
+-- Debug print
+--------------------------------------------------------------------------------
+
+function dbug(msg)
+  if DBUG_MODE == false then return end
+  local base_types = {
+    ["nil"]=true, ["boolean"]=true, ["number"]=true,
+    ["string"]=true, ["thread"]=true, ["table"]=true
+  }
+  if not base_types[type(msg)] then oprint(msg)
+  elseif type(msg) == 'table' then rprint(msg)
+  else print(msg) end
+end
+
 
 --------------------------------------------------------------------------------
 -- Keyboard input
@@ -177,6 +197,53 @@ end
 
 
 --------------------------------------------------------------------------------
+-- Copy and expand a track
+--------------------------------------------------------------------------------
+
+function copy_and_expand(source_pattern, dest_pattern, track_idx, number_of_lines)
+
+  if number_of_lines == nil then
+    number_of_lines = source_pattern.number_of_lines
+  end
+
+  if source_pattern ~= dest_pattern then
+    dest_pattern.tracks[track_idx]:copy_from(source_pattern.tracks[track_idx])
+  end
+
+  if dest_pattern.number_of_lines <= number_of_lines then
+    return
+  end
+
+  local multiplier = math.floor(dest_pattern.number_of_lines / number_of_lines) - 1
+  local to_line = 1
+
+  for i=1, number_of_lines do
+    for j=1, multiplier do
+      to_line = i + number_of_lines * j
+      if not dest_pattern.tracks[track_idx].lines[i].is_empty then
+        -- Copy the top of pattern to the expanded lines
+        dest_pattern.tracks[track_idx].lines[to_line]:copy_from(dest_pattern.tracks[track_idx].lines[i])
+      end
+      for k,automation in pairs(dest_pattern.tracks[track_idx].automation) do
+        local points = table.create(table.rcopy(automation.points))
+        for _,point in pairs(points) do
+          if math.floor(point.time) == i then
+            local decimals = explode(".", point.time)
+            if (decimals[2] ~= nil) then decimals = tonumber("0." .. decimals[2])
+            else decimals = 0 end
+            dest_pattern.tracks[track_idx].automation[k]:add_point_at(to_line + decimals, point.value)
+          elseif math.floor(point.time) > i then
+            break
+          end
+        end
+      end
+    end
+  end
+
+end
+
+
+--------------------------------------------------------------------------------
 -- Toggler
 --------------------------------------------------------------------------------
 
@@ -192,20 +259,71 @@ function toggler(x, y)
   if is_garbage_pos(x, y) then return end
 
   local rns = renoise.song()
+  local source = rns.patterns[rns.sequencer:pattern(y)]
+  local dest = rns.patterns[GRIDPIE_IDX]
+  local lc = least_common(dest.number_of_lines, source.number_of_lines)
+  local toc = 0
 
-  -- Copy to GRIDPIE_IDX
   if muted then
+
     -- Mute
     -- TODO: This is a hackaround, fix when API is updated
     -- See: http://www.renoise.com/board/index.php?showtopic=31927
     rns.tracks[x].mute_state = renoise.Track.MUTE_STATE_OFF
     rns.patterns[GRIDPIE_IDX].tracks[x]:clear()
     OneShotIdleNotifier(100, function() rns.tracks[x].mute_state = renoise.Track.MUTE_STATE_ACTIVE end)
+    POLY_COUNTER[x] = nil
+
   else
-    -- Copy
-    rns.patterns[GRIDPIE_IDX].tracks[x]:copy_from(rns.patterns[rns.sequencer:pattern(y)].tracks[x])
-    rns.patterns[GRIDPIE_IDX].number_of_lines = rns.patterns[rns.sequencer:pattern(y)].number_of_lines
-    -- TODO: Improve. E.g. Polyrythm with least_common(), renoise.Pattern.MAX_NUMBER_OF_LINES, ...
+
+    POLY_COUNTER[x] = source.number_of_lines
+    local poly_lines = table.create()
+    for _,val in ipairs(POLY_COUNTER:values()) do poly_lines[val] = true end
+
+    if
+      DISABLE_POLYRHYTHMS or
+      lc == source.number_of_lines or
+      lc > renoise.Pattern.MAX_NUMBER_OF_LINES or
+      table.count(poly_lines) <= 1
+    then
+
+      -- Simple copy
+      dest.number_of_lines = source.number_of_lines
+      dest.tracks[x]:copy_from(source.tracks[x])
+
+    else
+
+      -- Complex copy
+      local old_lines = dest.number_of_lines
+      dest.number_of_lines = lc
+      dbug("Expanding track " .. x .. " from " .. source.number_of_lines .. " to " .. dest.number_of_lines .. " lines")
+      OneShotIdleNotifier(0, function()
+        local toc = os.clock()
+        copy_and_expand(source, dest, x)
+        dbug("Time to expand track " .. x .. " was: " .. (os.clock() - toc))
+      end)
+
+      if old_lines < dest.number_of_lines then
+        for idx=1,#rns.tracks do
+          if
+            idx ~= x and
+            not dest.tracks[idx].is_empty and
+            rns.tracks[idx].type ~= renoise.Track.TRACK_TYPE_MASTER and
+            rns.tracks[idx].type ~= renoise.Track.TRACK_TYPE_SEND
+          then
+            dbug("Also expanding track " .. idx .. " from " .. old_lines .. " to " .. dest.number_of_lines .. " lines")
+            OneShotIdleNotifier(0, function()
+              local toc = os.clock()
+              copy_and_expand(dest, dest, idx, old_lines)
+              dbug("Time to expand track " .. idx .. " was: " .. (os.clock() - toc))
+            end)
+          end
+        end
+      end
+
+    end
+
+
   end
 
   -- Change PM
@@ -339,6 +457,7 @@ function main(x, y)
     MATRIX_WIDTH = x
     MATRIX_HEIGHT = y
     REVERT_PM_SLOT = table.create()
+    POLY_COUNTER = table.create()
     init_pm_slots_to(true)
     init_gp_pattern()
     if MY_INTERFACE and MY_INTERFACE.visible then MY_INTERFACE:close() end
@@ -479,7 +598,6 @@ end
 renoise.tool():add_midi_mapping{
   name = "Grid Pie:X Axis",
   invoke = function(message)
-    -- midi_debug(message)
     if not VB then
      return
     elseif message.int_value >= 0 and message.int_value <= 128 then
@@ -506,7 +624,6 @@ renoise.tool():add_midi_mapping{
 renoise.tool():add_midi_mapping{
   name = "Grid Pie:Y Axis",
   invoke = function(message)
-    -- midi_debug(message)
     if not VB then
      return
     elseif message.int_value >= 0 and message.int_value <= 128 then
@@ -535,7 +652,6 @@ for x = 1, MATRIX_WIDTH do
     renoise.tool():add_midi_mapping{
       name = "Grid Pie:Slice " .. x .. "," .. y,
       invoke = function(message)
-        -- midi_debug(message)
         if not VB then
           return
         elseif (message:is_trigger()) then
