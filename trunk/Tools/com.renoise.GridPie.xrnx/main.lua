@@ -338,6 +338,7 @@ function main(x, y)
   then
     MATRIX_WIDTH = x
     MATRIX_HEIGHT = y
+    REVERT_PM_SLOT = table.create()
     init_pm_slots_to(true)
     init_gp_pattern()
     if MY_INTERFACE and MY_INTERFACE.visible then MY_INTERFACE:close() end
@@ -370,7 +371,7 @@ end
 function tracks_changed(notification)
 
   -- Tracks have changed, stored slots are invalid, reset table
-  REVERT_PM_SLOT = nil
+  REVERT_PM_SLOT = table.create()
 
   if (notification.type == "insert") then
     -- TODO: This is a hackaround, fix when API is updated
@@ -390,7 +391,7 @@ end
 function sequence_changed(notification)
 
   -- Tracks have changed, stored slots are invalid, reset table
-  REVERT_PM_SLOT = nil
+  REVERT_PM_SLOT = table.create()
 
 end
 
