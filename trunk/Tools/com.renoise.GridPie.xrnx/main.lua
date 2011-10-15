@@ -3,14 +3,13 @@ require "toolbox"
 --[[ Globals, capitalized for easier recognition ]]--
 
 local DBUG_MODE = false
-local DISABLE_POLYRHYTHMS = true
+local DISABLE_POLYRHYTHMS = false
 local GRIDPIE_IDX = nil
 local MATRIX_CELLS = table.create()
 local MATRIX_HEIGHT = 8
 local MATRIX_WIDTH = 8
 local MY_INTERFACE = nil
 local POLY_COUNTER = table.create()
-local PROCESS = nil
 local REVERT_PM_SLOT = table.create()
 local VB = nil
 local X_POS = 1
@@ -202,12 +201,15 @@ end
 
 function copy_and_expand(source_pattern, dest_pattern, track_idx, number_of_lines)
 
+  local source_track = source_pattern:track(track_idx)
+  local dest_track = dest_pattern:track(track_idx)
+
   if number_of_lines == nil then
     number_of_lines = source_pattern.number_of_lines
   end
 
   if source_pattern ~= dest_pattern then
-    dest_pattern.tracks[track_idx]:copy_from(source_pattern.tracks[track_idx])
+    dest_track:copy_from(source_track)
   end
 
   if dest_pattern.number_of_lines <= number_of_lines then
@@ -219,19 +221,23 @@ function copy_and_expand(source_pattern, dest_pattern, track_idx, number_of_line
 
   for i=1, number_of_lines do
     for j=1, multiplier do
+
       to_line = i + number_of_lines * j
-      if not dest_pattern.tracks[track_idx].lines[i].is_empty then
+      local source_line = dest_track:line(i)
+      local dest_line = dest_track:line(to_line)
+
+      if not source_line.is_empty then
         -- Copy the top of pattern to the expanded lines
-        dest_pattern.tracks[track_idx].lines[to_line]:copy_from(dest_pattern.tracks[track_idx].lines[i])
+        dest_line:copy_from(source_line)
       end
-      for k,automation in pairs(dest_pattern.tracks[track_idx].automation) do
+      for k,automation in pairs(dest_track.automation) do
         local points = table.create(table.rcopy(automation.points))
         for _,point in pairs(points) do
           if math.floor(point.time) == i then
             local decimals = explode(".", point.time)
             if (decimals[2] ~= nil) then decimals = tonumber("0." .. decimals[2])
             else decimals = 0 end
-            dest_pattern.tracks[track_idx].automation[k]:add_point_at(to_line + decimals, point.value)
+            dest_track.automation[k]:add_point_at(to_line + decimals, point.value)
           elseif math.floor(point.time) > i then
             break
           end
@@ -297,11 +303,11 @@ function toggler(x, y)
       local old_lines = dest.number_of_lines
       dest.number_of_lines = lc
       dbug("Expanding track " .. x .. " from " .. source.number_of_lines .. " to " .. dest.number_of_lines .. " lines")
-      OneShotIdleNotifier(0, function()
+      -- OneShotIdleNotifier(0, function()
         local toc = os.clock()
         copy_and_expand(source, dest, x)
         dbug("Time to expand track " .. x .. " was: " .. (os.clock() - toc))
-      end)
+      -- end)
 
       if old_lines < dest.number_of_lines then
         for idx=1,#rns.tracks do
@@ -312,11 +318,11 @@ function toggler(x, y)
             rns.tracks[idx].type ~= renoise.Track.TRACK_TYPE_SEND
           then
             dbug("Also expanding track " .. idx .. " from " .. old_lines .. " to " .. dest.number_of_lines .. " lines")
-            OneShotIdleNotifier(0, function()
+            -- OneShotIdleNotifier(0, function()
               local toc = os.clock()
               copy_and_expand(dest, dest, idx, old_lines)
               dbug("Time to expand track " .. idx .. " was: " .. (os.clock() - toc))
-            end)
+            -- end)
           end
         end
       end
@@ -509,8 +515,21 @@ end
 
 function sequence_changed(notification)
 
-  -- Tracks have changed, stored slots are invalid, reset table
+  -- Sequence have changed, stored slots are invalid, reset table
   REVERT_PM_SLOT = table.create()
+
+end
+
+
+--------------------------------------------------------------------------------
+-- Handle document change
+--------------------------------------------------------------------------------
+
+function document_changed(notification)
+
+  -- Document has changed, stored slots are invalid, reset table
+  REVERT_PM_SLOT = table.create()
+  abort()
 
 end
 
@@ -565,6 +584,9 @@ function run()
   if not (renoise.song().sequencer.pattern_sequence_observable:has_notifier(sequence_changed)) then
     renoise.song().sequencer.pattern_sequence_observable:add_notifier(sequence_changed)
   end
+  if not (renoise.tool().app_release_document_observable:has_notifier(document_changed)) then
+    renoise.tool().app_release_document_observable:add_notifier(document_changed)
+  end
 
 end
 
@@ -583,6 +605,9 @@ function stop()
   end
   if (renoise.song().sequencer.pattern_sequence_observable:has_notifier(sequence_changed)) then
     renoise.song().sequencer.pattern_sequence_observable:remove_notifier(sequence_changed)
+  end
+  if (renoise.tool().app_release_document_observable:has_notifier(document_changed)) then
+    renoise.tool().app_release_document_observable:remove_notifier(document_changed)
   end
 
   -- Destroy VB
