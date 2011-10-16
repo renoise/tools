@@ -218,6 +218,12 @@ function copy_and_expand(source_pattern, dest_pattern, track_idx, number_of_line
 
   local multiplier = math.floor(dest_pattern.number_of_lines / number_of_lines) - 1
   local to_line = 1
+  local approx_line = 1
+
+  local automations = table.create()
+  for k,automation in pairs(dest_track.automation) do
+    automations[k] = table.create(table.rcopy(automation.points))
+  end
 
   for i=1, number_of_lines do
     for j=1, multiplier do
@@ -230,19 +236,21 @@ function copy_and_expand(source_pattern, dest_pattern, track_idx, number_of_line
         -- Copy the top of pattern to the expanded lines
         dest_line:copy_from(source_line)
       end
-      for k,automation in pairs(dest_track.automation) do
-        local points = table.create(table.rcopy(automation.points))
+
+      for k,points in pairs(automations) do
         for _,point in pairs(points) do
-          if math.floor(point.time) == i then
+          approx_line = math.floor(point.time)
+          if approx_line == i then
             local decimals = explode(".", point.time)
             if (decimals[2] ~= nil) then decimals = tonumber("0." .. decimals[2])
             else decimals = 0 end
             dest_track.automation[k]:add_point_at(to_line + decimals, point.value)
-          elseif math.floor(point.time) > i then
+          elseif approx_line > i then
             break
           end
         end
       end
+
     end
   end
 
@@ -282,6 +290,7 @@ function toggler(x, y)
 
   else
 
+    -- Track polyrhythms
     POLY_COUNTER[x] = source.number_of_lines
     local poly_lines = table.create()
     for _,val in ipairs(POLY_COUNTER:values()) do poly_lines[val] = true end
@@ -302,12 +311,10 @@ function toggler(x, y)
       -- Complex copy
       local old_lines = dest.number_of_lines
       dest.number_of_lines = lc
-      dbug("Expanding track " .. x .. " from " .. source.number_of_lines .. " to " .. dest.number_of_lines .. " lines")
-      -- OneShotIdleNotifier(0, function()
-        local toc = os.clock()
+      if DBUG_MODE then dbug("Expanding track " .. x .. " from " .. source.number_of_lines .. " to " .. dest.number_of_lines .. " lines") end
+      OneShotIdleNotifier(0, function()
         copy_and_expand(source, dest, x)
-        dbug("Time to expand track " .. x .. " was: " .. (os.clock() - toc))
-      -- end)
+      end)
 
       if old_lines < dest.number_of_lines then
         for idx=1,#rns.tracks do
@@ -317,18 +324,13 @@ function toggler(x, y)
             rns.tracks[idx].type ~= renoise.Track.TRACK_TYPE_MASTER and
             rns.tracks[idx].type ~= renoise.Track.TRACK_TYPE_SEND
           then
-            dbug("Also expanding track " .. idx .. " from " .. old_lines .. " to " .. dest.number_of_lines .. " lines")
-            -- OneShotIdleNotifier(0, function()
-              local toc = os.clock()
-              copy_and_expand(dest, dest, idx, old_lines)
-              dbug("Time to expand track " .. idx .. " was: " .. (os.clock() - toc))
-            -- end)
+            if DBUG_MODE then dbug("Also expanding track " .. idx .. " from " .. old_lines .. " to " .. dest.number_of_lines .. " lines") end
+            copy_and_expand(dest, dest, idx, old_lines)
           end
         end
       end
 
     end
-
 
   end
 
