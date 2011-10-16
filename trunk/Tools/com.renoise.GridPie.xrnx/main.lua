@@ -220,11 +220,6 @@ function copy_and_expand(source_pattern, dest_pattern, track_idx, number_of_line
   local to_line = 1
   local approx_line = 1
 
-  local automations = table.create()
-  for k,automation in pairs(dest_track.automation) do
-    automations[k] = table.create(table.rcopy(automation.points))
-  end
-
   for i=1, number_of_lines do
     for j=1, multiplier do
 
@@ -232,19 +227,17 @@ function copy_and_expand(source_pattern, dest_pattern, track_idx, number_of_line
       local source_line = dest_track:line(i)
       local dest_line = dest_track:line(to_line)
 
+      -- Copy the top of pattern to the expanded lines
       if not source_line.is_empty then
-        -- Copy the top of pattern to the expanded lines
         dest_line:copy_from(source_line)
       end
 
-      for k,points in pairs(automations) do
-        for _,point in pairs(points) do
+      -- Copy the top of the automations to the expanded lines
+      for _,automation in pairs(dest_track.automation) do
+        for _,point in pairs(automation.points) do
           approx_line = math.floor(point.time)
           if approx_line == i then
-            local decimals = explode(".", point.time)
-            if (decimals[2] ~= nil) then decimals = tonumber("0." .. decimals[2])
-            else decimals = 0 end
-            dest_track.automation[k]:add_point_at(to_line + decimals, point.value)
+            automation:add_point_at(to_line + point.time - approx_line, point.value)
           elseif approx_line > i then
             break
           end
@@ -297,9 +290,9 @@ function toggler(x, y)
 
     if
       DISABLE_POLYRHYTHMS or
-      lc == source.number_of_lines or
       lc > renoise.Pattern.MAX_NUMBER_OF_LINES or
-      table.count(poly_lines) <= 1
+      table.count(poly_lines) <= 1 or
+      (lc == source.number_of_lines and lc == dest.number_of_lines)
     then
 
       -- Simple copy
@@ -315,6 +308,8 @@ function toggler(x, y)
       OneShotIdleNotifier(0, function()
         copy_and_expand(source, dest, x)
       end)
+
+
 
       if old_lines < dest.number_of_lines then
         for idx=1,#rns.tracks do
