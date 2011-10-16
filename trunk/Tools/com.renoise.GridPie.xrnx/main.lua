@@ -287,11 +287,18 @@ function toggler(x, y)
     POLY_COUNTER[x] = source.number_of_lines
     local poly_lines = table.create()
     for _,val in ipairs(POLY_COUNTER:values()) do poly_lines[val] = true end
+    local poly_num = table.count(poly_lines)
+
+    if poly_num > 1 then
+      renoise.app():show_status("Grid Pie " .. poly_num .. "x poly combo!")
+    else
+      renoise.app():show_status("")
+    end
 
     if
       DISABLE_POLYRHYTHMS or
       lc > renoise.Pattern.MAX_NUMBER_OF_LINES or
-      table.count(poly_lines) <= 1 or
+      poly_num <= 1 or
       (lc == source.number_of_lines and lc == dest.number_of_lines)
     then
 
@@ -304,12 +311,11 @@ function toggler(x, y)
       -- Complex copy
       local old_lines = dest.number_of_lines
       dest.number_of_lines = lc
+
       if DBUG_MODE then dbug("Expanding track " .. x .. " from " .. source.number_of_lines .. " to " .. dest.number_of_lines .. " lines") end
       OneShotIdleNotifier(0, function()
         copy_and_expand(source, dest, x)
       end)
-
-
 
       if old_lines < dest.number_of_lines then
         for idx=1,#rns.tracks do
