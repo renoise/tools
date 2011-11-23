@@ -1,0 +1,46 @@
+<Device>
+  <Name>R-control</Name>
+  <Author>Your Name</Author>
+  <Description>Controlmap for R-control</Description>
+  <Parameters>
+    <Row>
+    
+      <Column>
+         <Group name="Master">
+           <Param value="CC#24" type="fader" size="2.25" orientation="vertical" name="Master" maximum="127" minimum="0"/>
+         </Group>
+      </Column>
+      
+      <Column>
+
+        <Row>
+          <Group name="Encoders" orientation="horizontal">
+            <Param value="CC#16" type="dial" name="Encoder #1" maximum="127" minimum="0"/>
+            <Param value="CC#17" type="dial" name="Encoder #2" maximum="127" minimum="0"/>
+            <Param value="CC#18" type="dial" name="Encoder #3" maximum="127" minimum="0"/>
+            <Param value="CC#19" type="dial" name="Encoder #4" maximum="127" minimum="0"/>
+            <Param value="CC#20" type="dial" name="Encoder #5" maximum="127" minimum="0"/>
+            <Param value="CC#21" type="dial" name="Encoder #6" maximum="127" minimum="0"/>
+            <Param value="CC#22" type="dial" name="Encoder #7" maximum="127" minimum="0"/>
+            <Param value="CC#23" type="dial" name="Encoder #8" maximum="127" minimum="0"/>
+          </Group>
+        </Row>
+        
+        <Row>
+          <Group name="Switches" orientation="horizontal">
+            <Param value="CC#102" type="togglebutton" name="Switch 1" maximum="127" minimum="0"/>
+            <Param value="CC#103" type="togglebutton" name="Switch 2" maximum="127" minimum="0"/>
+            <Param value="CC#104" type="togglebutton" name="Switch 3" maximum="127" minimum="0"/>
+            <Param value="CC#105" type="togglebutton" name="Switch 4" maximum="127" minimum="0"/>
+            <Param value="CC#106" type="togglebutton" name="Switch 5" maximum="127" minimum="0"/>
+            <Param value="CC#107" type="togglebutton" name="Switch 6" maximum="127" minimum="0"/>
+            <Param value="CC#108" type="togglebutton" name="Switch 7" maximum="127" minimum="0"/>
+            <Param value="CC#109" type="togglebutton" name="Switch 8" maximum="127" minimum="0"/>
+          </Group>
+        </Row>
+
+      </Column>
+
+    </Row>
+  </Parameters>
+</Device>

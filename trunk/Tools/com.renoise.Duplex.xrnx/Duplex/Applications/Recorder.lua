@@ -234,6 +234,16 @@ Recorder.default_options = {
     },
     value = 1,
   },
+  first_run = {
+    label = "First run",
+    hidden = true,
+    description = "First time Recorder is launched, provide instructions",
+    items = {
+      "On",
+      "Off",
+    },
+    value = 1,
+  }
 }
 
 function Recorder:__init(browser_process,mappings,options,config_name)
@@ -259,6 +269,9 @@ function Recorder:__init(browser_process,mappings,options,config_name)
   self.AUTOSTART_OFF = 1
   self.AUTOSTART_LPB = 2
 
+  self.FIRST_RUN_ON = 1
+  self.FIRST_RUN_OFF = 2
+
   self.FOLLOW_TRACK_ON = 1
   self.FOLLOW_TRACK_OFF = 2
 
@@ -267,11 +280,9 @@ function Recorder:__init(browser_process,mappings,options,config_name)
   self.mappings = {
     recorders = {
       description = "Recorder: Toggle recording mode",
-      ui_component = {UI_COMPONENT_TOGGLEBUTTON},
     },
     sliders = {
       description = "Recorder: Switch between takes",
-      ui_component = {UI_COMPONENT_SLIDER},
     },
   }
 
@@ -381,8 +392,13 @@ function Recorder:__init(browser_process,mappings,options,config_name)
   -- maintain track/instrument references here
   self._tracks = {}
 
+  -- keep reference to browser process, or we couldn't 
+  -- set options while running (used by first_run) 
+  self.recorder_process = browser_process
+
   Application.__init(self,browser_process,mappings,options,config_name)
 
+  self._first_run = self.options.first_run.value
 
 end
 
@@ -608,13 +624,15 @@ function Recorder:_abort_recording()
     ]]
   end
   
-  -- remove unreferenced "samples" (since nothing got recorded)
+  -- remove unreferenced "samples" 
+  -- 1. because nothing got recorded (we aborted)
+  -- 2. because we might just have deleted the take
   for track_idx=1,#self._tracks do
     local track = self._tracks[track_idx]
     if (track) then
       local changed = false
       for idx,sample in ripairs(track.samples) do
-        if (not sample.instrument_value) then
+        if not sample or not sample.instrument_value then
           table.remove(track.samples,idx)
           changed = true
         end
@@ -1350,8 +1368,6 @@ function Recorder:_process_input(track,obj)
     and (not self._finalizing) then
 
     -- prepare for recording
-    --TRACE("Recorder:prepare for recording")
-
     self._prepare = true
     TRACE("Recorder: start_stop_sample_recording()")
     renoise.song().transport:start_stop_sample_recording()
@@ -1474,6 +1490,20 @@ function Recorder:_attempt_track_switch(track_idx)
   if not track or not track.has_ghost then
     renoise.app().window.sample_record_dialog_is_visible = true
     self:_add_ghost(track_idx)
+
+    if (self._first_run==self.FIRST_RUN_ON) then
+      local msg = "IMPORTANT ONE-TIME MESSAGE FROM DUPLEX RECORDER"
+                .."\n"
+                .."\nPlease ensure that the recording dialog in Renoise is set to "
+                .."\ncreate instruments on each take, synced to the pattern length"
+                .."\n"
+                .."\nThanks!"
+      renoise.app():show_message(msg)
+      self:_set_option("first_run",self.FIRST_RUN_OFF,self.recorder_process)
+      self._first_run = self.FIRST_RUN_OFF
+    end
+
+
   else
     if self._grid_mode then
       -- grid mode: hide recording dialog
@@ -1608,6 +1638,11 @@ function Recorder:_build_app()
       end
       local track_idx = i+self._track_offset
       local track = self._tracks[track_idx]
+
+      if not track then
+        return false
+      end
+
       local is_current_track = (self._active_track_idx == track_idx)
 
       if(is_current_track) 
@@ -1739,6 +1774,10 @@ function RecorderTrack:__init()
   self.selected_sample = 0    -- the selected RecorderSample index
   self.has_ghost = false      -- true while dialog is "on" this track
 
+  self.GLIDE_NUM_VALUE = 5
+  self.OFFSET_NUM_VALUE = 9
+
+
 end
 
 --------------------------------------------------------------------------------
@@ -1759,25 +1798,35 @@ function RecorderTrack:write_to_pattern(trigger_mode,sample_lines,autostart)
   local note = patt_track:line(1).note_columns[1]
   local fx = patt_track:line(1).effect_columns[1]
   local sample = self.samples[self.selected_sample]
+
   -- start by clearing pattern
   patt_track:clear()
+
   if sample and sample.active then
     note.instrument_value = sample.instrument_value
     note.note_value = note_val
     note.volume_value = volume_val
     if continuous_mode then
-      fx.number_string = "05"
-      fx.amount_string = "00"
+      --fx.number_string = "05"
+      --fx.amount_string = "00"
+      fx.number_value = self.GLIDE_NUM_VALUE
     else
-      fx.number_string = "00"
-      fx.amount_string = "00"
+      --fx.number_string = "00"
+      --fx.amount_string = "00"
+      fx.number_value = 0
     end
+    fx.amount_value = 0
+    --[[
   else
     note.instrument_value = 255 -- EMPTY
     note.note_value = 120       -- OFF
     note.volume_value = 255     -- EMPTY
-    fx.number_string = "00"
-    fx.amount_string = "00"
+    --fx.number_string = "00"
+    --fx.amount_string = "00"
+    fx.number_value = 0
+    fx.amount_value = 0
+    ]]
+
   end
 
   -- hackish way to force new sample to catch up with playback
@@ -1825,15 +1874,21 @@ function RecorderTrack:write_to_pattern(trigger_mode,sample_lines,autostart)
       end
       note.volume_value = volume_val
       if continuous_mode then
-        fx1.number_string = "05"
-        fx1.amount_string = "00"
+        --fx1.number_string = "05"
+        --fx1.amount_string = "00"
+        fx1.number_value = self.GLIDE_NUM_VALUE
       else
-        fx1.number_string = "00"
-        fx1.amount_string = "00"
+        --fx1.number_string = "00"
+        --fx1.amount_string = "00"
+        fx1.number_value = 0
       end
-      fx2.number_string = "09"
-      fx2.amount_string = string.format("%02X",math.floor(math.min(offset,255)))
+      fx1.amount_value = 0
+      --fx2.number_string = "09"
+      --fx2.amount_string = string.format("%02X",math.floor(math.min(offset,255)))
+      fx2.number_value = self.OFFSET_NUM_VALUE
+      fx2.amount_value = math.floor(math.min(offset,255))
     else
+      --[[
       note.instrument_value = 255 -- EMPTY
       note.note_value = 121       -- EMPTY
       note.volume_value = 255     -- EMPTY
@@ -1842,6 +1897,10 @@ function RecorderTrack:write_to_pattern(trigger_mode,sample_lines,autostart)
       fx1.amount_string = "00"
       fx2.number_string = "00"
       fx2.amount_string = "00"
+      ]]
+      note:clear()
+      fx1:clear()
+      fx2:clear()
     end
 
   end
@@ -1941,7 +2000,6 @@ function RecorderSample:set_beat_sync(mode,sample_lines)
       -- max beat-sync size is 512, show notice 
       local msg = "Notice: Beat-sync has been disabled for the recording, "
                 .."since it exceeds the maximum allowed size of 512 lines"
-      print(msg)
       renoise.app():show_status(msg)
       active = false
       sample.beat_sync_lines = 0

@@ -380,15 +380,14 @@ end
 
 --------------------------------------------------------------------------------
 
--- test if the parameter describes some kind of button
+-- test if the parameter describes a button
 -- @param group_name (string, control-map group name)
 -- @param index (integer, index within group)
 -- @return boolean (false if not matched)
 
 function ControlMap:is_button(group_name,index)
   
-  -- greedy mappings might not specify an index,
-  -- so we simply use the first available one...
+  -- use the first available index if nothing is specified
   if not index then
     index = 1
   end

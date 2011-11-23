@@ -133,6 +133,9 @@ duplex_preferences = renoise.Document.create("ScriptingToolPreferences") {
   -- fractional values are supported, 0.5 is half a second
   button_hold_time = 0.5,
 
+  -- automation: the amount of extrapolation applied to linear envelopes
+  extrapolation_strength = 3,
+
   -- debug option: when enabled, dump MIDI messages received and send by duplex
   -- to the sdt out (Renoise terminal)
   dump_midi = false,
@@ -301,6 +304,23 @@ function determine_track_type(track_index)
   end
 end
 
+-- determine the sign of a number
+
+function sign(x)
+    return (x<0 and -1) or 1
+end
+
+-- get average of supplied numbers
+
+function average(...)
+  local rslt = 0
+  for i=1, #arg do
+    rslt = rslt+arg[i]
+  end
+	return rslt/#arg
+end
+
+
 
 --------------------------------------------------------------------------------
 -- debug tracing
@@ -315,7 +335,7 @@ end
 -- {"^ControlMap:", "^Display:"} -> show "Display:" and "ControlMap:"
 
 local _trace_filters = nil
---local _trace_filters = {"^Mixer"}
+--local _trace_filters = {"^Effect"}
 --local _trace_filters = {"^Recorder","^UISlider"}
 --local _trace_filters = {"^UIButtonStrip", "^UISlider","^Browser"}
 --local _trace_filters = {"^Recorder", "^Effect","^Navigator","^Mixer","^Matrix"}

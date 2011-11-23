@@ -1,0 +1,17 @@
+<Device>
+  <Name>Zoom R16</Name>
+  <Author>Cylab</Author>
+  <Description>Controlmap for Zoom R16</Description>
+  <Parameters>
+    <Page>
+      <Row>
+        <Column>
+          <Group name="Buttons" orientation="horizontal">
+            <Param value="A-7|Ch1" type="button" name="Stop" maximum="127" minimum="0"/>
+            <Param value="A#7|Ch1" type="button" name="Play" maximum="127" minimum="0"/>
+          </Group>
+        </Column>
+      </Row>
+    </Page>
+  </Parameters>
+</Device>

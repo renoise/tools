@@ -18,23 +18,35 @@ Features
   - Flip through parameters using paged navigation
   - Select between devices using a number of fixed buttons
   - Enable grid-controller mode by assigning "parameters" to a grid
+  - Parameter subsets make it possible to control only certain values
+  - Supports automation recording (touch or latch mode)
 
 
 Mappings
   
-  parameters  (UISlider)  parameter value, assignable to grid-controller
-  page        (UISpinner) effect parameter navigator
-  device      (UIToggleButton) effect device navigator
-
+  parameters    (UISliders) parameter values, assignable to buttons
+  page          (UISpinner) effect parameter navigator
+  device        (UIToggleButton,...) device navigator for buttons
+  device_select (UISlider) device navigator for knobs/sliders
+  device_next   (UIToggleButton) select next device
+  device_prev   (UIToggleButton) select previous device
+  preset_next   (UIToggleButton) select next preset
+  preset_prev   (UIToggleButton) select previous preset
 
 Options
 
-  This application has no options
+  include_parameters  (parameter subset)
+  record_method       (automation recording)
 
 
 Changes (equal to Duplex version number)
 
-  0.97  - Better performance, as idle loop takes care of UI updates 
+  0.98  - Support for automation recording
+        - New mapping: select device via knob/slider
+        - New mappings: previous/next device
+        - New mappings: previous/next preset
+
+  0.97  - Better performance, as UI updates now happen in idle loop 
         - Option to include parameters based on criteria:
           ALL/MIXER/AUTOMATED_PARAMETERS
   
@@ -67,25 +79,37 @@ local FLOAT_COMPARE_QUANTUM = 1000
 class 'Effect' (Application)
 
 Effect.default_options = {
-    include_parameters = {
-      label = "Parameters",
-      description = "Select which parameter set you want to control.",
-      items = {
-        "All parameters (device)",
-        "Automated parameters (track)",
-        "Mixer parameters (track)",
-      },
-      value = 1,
-      on_change = function(inst)
-        local mode = (inst.options.include_parameters.value) 
-        if (mode == inst.ALL_PARAMETERS) then
-          inst._update_requested = true
-        else
-          inst._track_update_requested = true
-        end
-      end,
-
+  include_parameters = {
+    label = "Param. subset",
+    description = "Select which parameter set you want to control.",
+    items = {
+      "All parameters (device)",
+      "Automated parameters (track)",
+      "Mixer parameters (track)",
     },
+    value = 1,
+    on_change = function(inst)
+      local mode = (inst.options.include_parameters.value) 
+      if (mode == inst.ALL_PARAMETERS) then
+        inst._update_requested = true
+      else
+        inst._track_update_requested = true
+      end
+    end,
+  },
+  record_method = {
+    label = "Automation rec.",
+    description = "Determine how to record automation",
+    items = {
+      "Disabled, do not record automation",
+      "Touch: record only when touched",
+      "Latch: touch to start output",
+    },
+    value = 1,
+    on_change = function(inst)
+      inst.automation.latch_record = (inst.options.record_method.value==inst.RECORD_LATCH) and true or false
+    end
+  }
 }
 
 function Effect:__init(browser_process,mappings,options,config_name)
@@ -97,35 +121,42 @@ function Effect:__init(browser_process,mappings,options,config_name)
   self.AUTOMATED_PARAMETERS = 2
   self.MIXER_PARAMETERS = 3
 
+  self.EDIT_SYNC_ON = 1
+  self.EDIT_SYNC_OFF = 2
+
+  self.RECORD_NONE = 1
+  self.RECORD_TOUCH = 2
+  self.RECORD_LATCH = 3
+
   -- apply control-maps groups 
   self.mappings = {
     parameters = {
       description = "Parameter value",
-      greedy = true,
     },
     page = {
-      description = "Effect parameter navigator",
+      description = "Parameter page",
       orientation = HORIZONTAL,
     },
     device = {
-      description = "Effect device navigator",
-      greedy = true,
+      description = "Select device via buttons",
     },
---[[
-    -- todo
-    set_device = {
-      description = "Flip through devices",
-      ui_component = UI_COMPONENT_SPINNER,
+    device_select = {
+      description = "Select device via knob/slider",
+      orientation = HORIZONTAL,
     },
-    toggle_active = {
-      description = "Turn device on/off",
-      ui_component = UI_COMPONENT_TOGGLEBUTTON,
-    }
-    device_preset = {
-      description = "Select device preset",
-      ui_component = UI_COMPONENT_SPINNER,
-    }
-]]
+    device_next = {
+      description = "Select next device",
+    },
+    device_prev = {
+      description = "Select previous device",
+    },
+    preset_next = {
+      description = "Select next device preset",
+    },
+    preset_prev = {
+      description = "Select previous device preset",
+    },
+
   }
 
   -- define default palette
@@ -155,7 +186,12 @@ function Effect:__init(browser_process,mappings,options,config_name)
   self._parameter_sliders = nil
   self._page_control = nil
   self._device_navigators = nil
-  
+  self._device_select = nil
+  self._device_next = nil
+  self._device_prev = nil
+  self._preset_next = nil
+  self._preset_prev = nil
+
   -- the number of controls assigned as sliders
   self._slider_group_size = nil
 
@@ -168,18 +204,32 @@ function Effect:__init(browser_process,mappings,options,config_name)
   -- the current parameter set 
   self._parameter_set = table.create()
 
+  -- how many devices are included in our parameter set?
+  self._num_devices = 1
+
   -- offset of the whole parameter mapping, controlled by the page navigator
   self._parameter_offset = 0
   
   -- list of parameters we are currently listening to
   self._parameter_observables = table.create()
   self._device_observables = table.create()
+  self._preset_observables = table.create()
   self._mixer_observables = table.create()
+
+  -- use Automation class to record movements
+  self.automation = Automation()
+
+  -- set while recording automation
+  self._record_mode = false
 
   Application.__init(self,browser_process,mappings,options,config_name)
 
-end
+  -- do stuff after options have been set
 
+  self.automation.latch_record = (self.options.record_method.value==self.RECORD_LATCH)
+
+
+end
 
 --------------------------------------------------------------------------------
 
@@ -197,8 +247,6 @@ end
 --------------------------------------------------------------------------------
 
 -- update: set all controls to current values from renoise
--- todo: make the device navigator follow the "device page"
---  when using MIXER_PARAMETERS or AUTOMATED_PARAMETERS
 
 function Effect:update()  
   TRACE("Effect:update()")
@@ -209,6 +257,21 @@ function Effect:update()
 
   local cm = self.display.device.control_map
   local track_idx = renoise.song().selected_track_index
+  local device_idx = renoise.song().selected_device_index
+
+  -- update prev/next device buttons
+  self:_update_prev_next_device_buttons(device_idx)
+
+  -- update prev/next device buttons
+  self:_update_prev_next_preset_buttons(device_idx)
+
+  -- update device-select control
+  local new_index = self:_get_ctrl_index_by_device(renoise.song().selected_device_index)
+  if new_index then
+    if self._device_select then
+      self._device_select:set_value(new_index/self._num_devices,skip_event)
+    end
+  end
 
   for control_index = 1,self._slider_group_size do
     local parameter_index = self._parameter_offset + control_index
@@ -237,12 +300,11 @@ function Effect:update()
     end
   end
   
+  -- update button-based device selectors
   if (self._device_navigators) then
 
     if (self.options.include_parameters.value == self.ALL_PARAMETERS) then
-
       -- set the device navigator to the current fx
-      local device_idx = renoise.song().selected_device_index
       for control_index = 1,#self._device_navigators do
         self._device_navigators[control_index]:set((device_idx==control_index),true)  
 
@@ -252,17 +314,12 @@ function Effect:update()
           string.format("Set focus to %s",device.name) or
           "Effect device N/A"
       end
-
     else
-
       -- parameter subsets require a different approach
-
       local count = 0
       for control_idx = 1,#self._device_navigators do
-
         local is_current = false
         local device = nil
-
         -- go through the parameter set, each entry with
         -- a higher device_index will be added 
         for _,prm in ipairs(self._parameter_set) do
@@ -273,49 +330,12 @@ function Effect:update()
             break
           end
         end
-        
         self._device_navigators[control_idx]:set(is_current,skip_event)  
-
         -- update tooltip
         self._device_navigators[control_idx].tooltip = (device) and 
           string.format("Set focus to %s",device.name) or
           "Effect device N/A"
-
-
       end
-
-
-
---[[
-      for control_idx = 1,#self._device_navigators do
-
-        local device = nil
-        local parameter = nil
-        local device_idx = nil
-
-        if self._parameter_set[control_idx] then
-          device_idx = self._parameter_set[control_idx].device_index
-          parameter = self:_get_parameter_by_index(control_idx)
-        end
-
-        if parameter then
-          -- is current? 
-          local is_current = (device_idx==renoise.song().selected_device_index) 
-          self._device_navigators[control_idx]:set(is_current,skip_event)  
-          device = renoise.song().tracks[track_idx].devices[device_idx]   
-        end
-
-        if not device then
-          self._device_navigators[control_idx]:set(false,skip_event)  
-        end
-
-        -- update tooltip
-        self._device_navigators[control_idx].tooltip = (device) and 
-          string.format("Set focus to %s",device.name) or
-          "Effect device N/A"
-
-      end
-]]
     end
 
     self.display:apply_tooltips(self.mappings.device.group_name)
@@ -336,6 +356,7 @@ function Effect:_build_app()
   self._parameter_sliders = {}
   self._device_navigators = (self.mappings.device.group_name) and {} or nil
 
+  local song = renoise.song()
   local cm = self.display.device.control_map
 
   -- check if the control-map describes a grid controller
@@ -353,7 +374,7 @@ function Effect:_build_app()
 
   for control_index = 1,self._slider_group_size do
 
-    -- sliders for parameters ------------------------------
+    -- sliders for parameters --
 
     local c = UISlider(self.display)
     c.group_name = self.mappings.parameters.group_name
@@ -410,6 +431,11 @@ function Effect:_build_app()
               parameter_value <= parameter.value_max) 
           then
             parameter.value = parameter_value
+            if self._record_mode then
+              -- todo: proper detection of track
+              local track_idx = renoise.song().selected_track_index
+              self.automation:add_automation(track_idx,parameter,obj.value)
+            end
           end
         end
         
@@ -422,7 +448,9 @@ function Effect:_build_app()
   end
 
 
-  -- device navigator (optional) ---------------------------
+  -- device navigator (optional) --
+  -- wrappable across control-map groups, as it's made from individual buttons
+
   if (self.mappings.device.group_name) then
 
     local group_size = cm:get_group_size(self.mappings.device.group_name)
@@ -440,26 +468,19 @@ function Effect:_build_app()
           return false 
         end
 
-        local track_idx = renoise.song().selected_track_index
-        local new_index = nil
-
-        -- obtain the device index
-        if (self.options.include_parameters.value == self.ALL_PARAMETERS) then
-          new_index = control_index
-        else
-          new_index = self:_get_device_index_by_ctrl_index(control_index)
-        end
-
-        local device = renoise.song().tracks[track_idx].devices[new_index]   
+        local track_idx = song.selected_track_index
+        local new_index = self:_get_device_index_by_ctrl(control_index)
+        local device = song.tracks[track_idx].devices[new_index]   
 
         if device then
 
           -- select the device
-          renoise.song().selected_device_index = new_index
+          --song.selected_device_index = new_index
+          self:_set_selected_device_index(new_index)
 
           -- turn off previously selected device
           if (self.options.include_parameters.value == self.ALL_PARAMETERS) then
-            local sel_index = renoise.song().selected_device_index
+            local sel_index = song.selected_device_index
             if (sel_index ~= control_index) and
                 self._device_navigators[sel_index] then
               self._device_navigators[sel_index]:set(false,true)
@@ -478,9 +499,7 @@ function Effect:_build_app()
           return false      
         end
 
-
-        -- make togglebuttons behave like radio buttons
-        -- (refuse to toggle off when already active)
+        -- emulate radiobuttons, refuse to toggle when active
         if (not obj.active) then 
           obj:set(true,true)
           return false      
@@ -494,9 +513,39 @@ function Effect:_build_app()
     end
   end
 
+  -- device_select (optional) --
+  -- select devices via knob/slider 
 
+  local map = self.mappings.device_select
+  if (map.group_name) then
 
-  -- parameter scrolling (optional) ---------------------------
+    local c = UISlider(self.display)
+    c.group_name = self.mappings.device_select.group_name
+    c.tooltip = map.description
+    c:set_pos(map.index or 1)
+    c.palette.track = table.rcopy(self.display.palette.background)
+    c.toggleable = false
+    c.flipped = true
+    c.value = 0
+    c:set_orientation(map.orientation)
+    c.on_change = function(obj) 
+
+      if (not self.active) then 
+        return false 
+      end
+
+      local track_idx = song.selected_track_index
+      local new_index = self:_get_device_index_by_ctrl(math.ceil(obj.value*self._num_devices))
+      self:_set_selected_device_index(new_index)
+
+    end
+
+    self:_add_component(c)
+    self._device_select = c
+
+  end
+
+  -- parameter scrolling (optional) --
 
   if (self.mappings.page.group_name) then
 
@@ -515,10 +564,10 @@ function Effect:_build_app()
     c.text_orientation = HORIZONTAL
     c.on_change = function(obj) 
 
-      if (not self.active) then 
+      if not self.active then 
         return false 
       end
-      
+
       self._parameter_offset = obj.index
       local new_song = false
       self:_attach_to_parameters(new_song)
@@ -531,14 +580,206 @@ function Effect:_build_app()
   end
 
 
-  -- the finishing touch
-  self:_attach_to_song()
+  -- next device (optional) --
 
+  if (self.mappings.device_next.group_name) then
+
+    local c = UIToggleButton(self.display)
+    c.group_name = self.mappings.device_next.group_name
+    c.tooltip = self.mappings.device_next.description
+    c.palette.foreground.text = "►"
+    c:set_pos(self.mappings.device_next.index)
+    c.on_press = function(obj)
+
+      if not self.active then 
+        return false 
+      end
+
+      local device_idx = renoise.song().selected_device_index
+      local new_index = self:_get_next_device_index(device_idx)
+      self:_set_selected_device_index(new_index)
+      return false
+
+    end
+    self:_add_component(c)
+    self._device_next = c
+
+  end
+
+  -- previous device (optional) --
+
+  if (self.mappings.device_prev.group_name) then
+
+    local c = UIToggleButton(self.display)
+    c.group_name = self.mappings.device_prev.group_name
+    c.tooltip = self.mappings.device_prev.description
+    c.palette.foreground.text = "◄"
+    c:set_pos(self.mappings.device_prev.index)
+    c.on_change = function(obj)
+
+      if not self.active then 
+        return false 
+      end
+      
+      local device_idx = renoise.song().selected_device_index
+      local new_index = self:_get_previous_device_index(device_idx)
+      self:_set_selected_device_index(new_index)
+      return false
+
+    end
+    self:_add_component(c)
+    self._device_prev = c
+
+  end
+
+
+  -- next device preset (optional) --
+
+  if (self.mappings.preset_next.group_name) then
+
+    local c = UIToggleButton(self.display)
+    c.group_name = self.mappings.preset_next.group_name
+    c.tooltip = self.mappings.preset_next.description
+    c.palette.foreground.text = "►"
+    c:set_pos(self.mappings.preset_next.index)
+    c.on_press = function(obj)
+
+      if not self.active then 
+        return false 
+      end
+      
+      local device = self:_get_selected_device()
+      device.active_preset = math.min(#device.presets,device.active_preset+1)
+      return false
+
+    end
+    self:_add_component(c)
+    self._preset_next = c
+
+  end
+
+  -- previous device preset (optional) --
+
+  if (self.mappings.preset_prev.group_name) then
+
+    local c = UIToggleButton(self.display)
+    c.group_name = self.mappings.preset_prev.group_name
+    c.tooltip = self.mappings.preset_prev.description
+    c.palette.foreground.text = "◄"
+    c:set_pos(self.mappings.preset_prev.index)
+    c.on_change = function(obj)
+
+      if not self.active then 
+        return false 
+      end
+      
+      local device = self:_get_selected_device()
+      device.active_preset = math.max(1,device.active_preset-1)
+      return false
+
+    end
+    self:_add_component(c)
+    self._preset_prev = c
+
+  end
+
+
+  -- the finishing touches --
+  self:_attach_to_song()
   Application._build_app(self)
   return true
 
 end
 
+--------------------------------------------------------------------------------
+
+-- set device index, but only when valid
+
+function Effect:_set_selected_device_index(idx)
+  TRACE("Effect:_set_selected_device_index()",idx)
+
+  local song = renoise.song()
+  local track_idx = song.selected_track_index
+  local device = song.tracks[song.selected_track_index].devices[idx]   
+  if device then
+    song.selected_device_index = idx
+  end
+
+end
+
+--------------------------------------------------------------------------------
+
+function Effect:_get_selected_device()
+
+  local song = renoise.song()
+  local track_idx = song.selected_track_index
+  local device_index = song.selected_device_index
+  return song.tracks[track_idx].devices[device_index]   
+
+end
+
+--------------------------------------------------------------------------------
+
+function Effect:_update_prev_next_device_buttons(device_idx)
+  TRACE("Effect:_update_prev_next_device_buttons()",device_idx)
+
+  local song = renoise.song()
+  local track_idx = song.selected_track_index
+
+  local skip_event = true
+  if self._device_prev then
+    local prev_idx = self:_get_previous_device_index(device_idx)
+    local previous_device = song.tracks[track_idx].devices[prev_idx]
+    if previous_device then
+      self._device_prev:set(true,skip_event)
+    else
+      self._device_prev:set(false,skip_event)
+    end
+  end
+  if self._device_next then
+    local next_idx = self:_get_next_device_index(device_idx)
+    local next_device = song.tracks[track_idx].devices[next_idx]
+    if next_device then
+      self._device_next:set(true,skip_event)
+    else
+      self._device_next:set(false,skip_event)
+    end
+  end
+
+end
+
+--------------------------------------------------------------------------------
+
+function Effect:_update_prev_next_preset_buttons(device_idx)
+  TRACE("Effect:_update_prev_next_preset_buttons()",device_idx)
+
+  local song = renoise.song()
+  local track_idx = song.selected_track_index
+  local device = song.tracks[track_idx].devices[device_idx]
+
+  if not device then
+    -- unexpected, no device present...
+    return
+  end
+
+  local preset_idx = device.active_preset
+  local skip_event = true
+  if self._preset_prev then
+    if device.presets[preset_idx-1] then
+      self._preset_prev:set(true,skip_event)
+    else
+      self._preset_prev:set(false,skip_event)
+    end
+  end
+  if self._preset_next then
+    if device.presets[preset_idx+1] then
+      self._preset_next:set(true,skip_event)
+    else
+      self._preset_next:set(false,skip_event)
+    end
+  end
+
+end
 
 --------------------------------------------------------------------------------
 
@@ -570,18 +811,16 @@ end
 
 --------------------------------------------------------------------------------
 
--- obtain device index by specifying the control index
--- this is used when working with parameter subsets 
+-- obtain next device index (supports parameter subsets)
 
-function Effect:_get_device_index_by_ctrl_index(idx)
-  --TRACE("Effect._get_device_index_by_ctrl_index()",idx)
+function Effect:_get_next_device_index(idx)
+  --TRACE("Effect._get_next_device_index()",idx)
 
-  local count,matched = 0,0
-  for _,prm in ipairs(self._parameter_set) do
-    if (prm.device_index>matched) then
-      matched = prm.device_index
-      count = count+1
-      if (count==idx) then
+  if (self.options.include_parameters.value == self.ALL_PARAMETERS) then
+    return idx+1
+  else
+    for _,prm in ipairs(self._parameter_set) do
+      if (idx<prm.device_index) then
         return prm.device_index
       end
     end
@@ -589,6 +828,78 @@ function Effect:_get_device_index_by_ctrl_index(idx)
 
 end
 
+
+--------------------------------------------------------------------------------
+
+-- obtain previous device index (supports parameter subsets)
+
+function Effect:_get_previous_device_index(idx)
+  --TRACE("Effect._get_previous_device_index()",idx)
+
+  if (self.options.include_parameters.value == self.ALL_PARAMETERS) then
+    return idx-1
+  else
+    for _,prm in ripairs(self._parameter_set) do
+      if (idx>prm.device_index) then
+        return prm.device_index
+      end
+    end
+  end
+
+end
+
+
+
+--------------------------------------------------------------------------------
+
+-- obtain actual device index by specifying the control index
+-- (useful when dealing with parameter subsets)
+
+function Effect:_get_device_index_by_ctrl(idx)
+  --TRACE("Effect._get_device_index_by_ctrl()",idx)
+
+  if (self.options.include_parameters.value == self.ALL_PARAMETERS) then
+    return idx
+  else
+    local count,matched = 0,0
+    for _,prm in ipairs(self._parameter_set) do
+      if (prm.device_index>matched) then
+        matched = prm.device_index
+        count = count+1
+        if (count==idx) then
+          return prm.device_index
+        end
+      end
+    end
+  end
+
+end
+
+
+--------------------------------------------------------------------------------
+
+-- obtain control index by specifying the actual device index
+-- (useful when dealing with parameter subsets)
+
+function Effect:_get_ctrl_index_by_device(idx)
+  --TRACE("Effect._get_ctrl_index_by_device()",idx)
+
+  if (self.options.include_parameters.value == self.ALL_PARAMETERS) then
+    return idx
+  else
+    local count,matched = 0,0
+    for _,prm in ipairs(self._parameter_set) do
+      if (prm.device_index>matched) then
+        matched = prm.device_index
+        count = count+1
+        if (prm.device_index==idx) then
+          return count
+        end
+      end
+    end
+  end
+
+end
 
 --------------------------------------------------------------------------------
 
@@ -600,6 +911,7 @@ function Effect:on_new_document()
   if (self.active) then
     self:update()
   end
+
 end
 
 
@@ -675,10 +987,14 @@ function Effect:on_idle()
     self._update_requested = true
   end
 
-  if(self._update_requested) then
+  if self._update_requested then
     self:_attach_to_parameters()
     self._update_requested = false
     self:update()
+  end
+
+  if self._record_mode then
+    self.automation:update()
   end
 
 end
@@ -694,21 +1010,18 @@ function Effect:_define_parameters()
   self._parameter_set = table.create()
 
   if (self.options.include_parameters.value == self.ALL_PARAMETERS) then
-
     local device = renoise.song().selected_device   
-    --self._parameter_set = selected_device and selected_device.parameters or {}
     if device then
       for _,parameter in ipairs(device.parameters) do
         self._parameter_set:insert({
           device_index=renoise.song().selected_device_index,
           ref=parameter
         })
-
       end
     end
-
+    local track_idx = renoise.song().selected_track_index
+    self._num_devices = #renoise.song().tracks[track_idx].devices
   else
-
     local track = renoise.song().selected_track
     for device_idx,device in ipairs(track.devices) do
       for _,parameter in ipairs(device.parameters) do
@@ -725,15 +1038,63 @@ function Effect:_define_parameters()
             ref=parameter
           })
         end
-
       end
     end
+  end
+
+end
+
+--------------------------------------------------------------------------------
+
+-- look for the number of devices in the current parameter set
+
+function Effect:_get_num_devices()
+  TRACE("Effect:_get_num_devices()")
+
+  if (self.options.include_parameters.value == self.ALL_PARAMETERS) then
+    local track_idx = renoise.song().selected_track_index
+    self._num_devices = #renoise.song().tracks[track_idx].devices
+  else
+    local devices = {}
+    local device_count = 0
+    local track = renoise.song().selected_track
+    for device_idx,device in ipairs(track.devices) do
+      for _,parameter in ipairs(device.parameters) do
+        local matched = false
+        if(parameter.show_in_mixer) and
+            (self.options.include_parameters.value == self.MIXER_PARAMETERS) then
+          matched = true
+        elseif (parameter.is_automated) and
+            (self.options.include_parameters.value == self.AUTOMATED_PARAMETERS) then
+          matched = true
+        end
+        if matched and not devices[device_idx] then
+          devices[device_idx] = true -- "something"
+          device_count = device_count +1           
+        end
+      end
+    end
+
+    self._num_devices = device_count
 
   end
 
 end
 
-    
+
+--------------------------------------------------------------------------------
+
+-- update the record mode (when editmode or record_method has changed)
+
+function Effect:_update_record_mode()
+  TRACE("Effect:_update_record_mode()")
+  if (self.options.record_method.value ~= self.RECORD_NONE) then
+    self._record_mode = renoise.song().transport.edit_mode 
+  else
+    self._record_mode = false
+  end
+end
+
 --------------------------------------------------------------------------------
 
 -- adds notifiers to song
@@ -741,16 +1102,18 @@ end
 
 function Effect:_attach_to_song()
   TRACE("Effect:_attach_to_song()")
+
   
   -- update on parameter changes in the song
   renoise.song().selected_device_observable:add_notifier(
     function()
-      
+      TRACE("Effect:selected_device_observable fired...")
+      -- always update when display all parameters 
       if (self.options.include_parameters.value == self.ALL_PARAMETERS) then
-        TRACE("Effect:selected_device_changed fired...")
         self._update_requested = true
-      else
-        -- todo: update the device selector
+      end
+      -- update the device selector
+      if self._device_select then
         self._update_requested = true
       end
 
@@ -761,71 +1124,82 @@ function Effect:_attach_to_song()
   -- (for AUTOMATED_PARAMETERS and MIXER_PARAMETERS)
   renoise.song().selected_track_index_observable:add_notifier(
     function()
-        TRACE("Effect:self.options.include_parameters.value",self.options.include_parameters.value)
+      TRACE("Effect:selected_track_index_observable fired...")
+      TRACE("Effect:self.options.include_parameters.value",self.options.include_parameters.value)
       if (self.options.include_parameters.value == self.MIXER_PARAMETERS) or
           (self.options.include_parameters.value == self.AUTOMATED_PARAMETERS) then
-        TRACE("Effect:selected_track_index_observable fired...")
-
-        local track = renoise.song().selected_track
         self._track_update_requested = true
-
       end
-
+      self:_get_num_devices()
     end
   )
 
-  --[[
-  renoise.song().tracks_observable:add_notifier(
+  -- track edit_mode, and set record_mode accordingly
+  renoise.song().transport.edit_mode_observable:add_notifier(
     function()
-      TRACE("Effect:tracks_observable fired...")
-      
-      local track = renoise.song().selected_track
-
-      self:_attach_to_track_devices(track)
-      
-      if (self.active) then
-        self:update()
-      end
+      TRACE("Effect:edit_mode_observable fired...")
+        self:_update_record_mode()
     end
   )
-  ]]
+  self._record_mode = renoise.song().transport.edit_mode
 
-
-
-  -- and immediately attach to the current parameter set
+  -- immediately attach to the current parameter set
   local new_song = true
   self:_attach_to_parameters(new_song)
   self:_attach_to_track_devices(renoise.song().selected_track,new_song)
+
+  -- also call Automation class
+  self.automation:attach_to_song(new_song)
 
 end
 
 --------------------------------------------------------------------------------
 
--- handle when visible or automated state has changed 
--- (for AUTOMATED_PARAMETERS and MIXER_PARAMETERS)
+-- attach notifier methods to devices & parameters...
 
 function Effect:_attach_to_track_devices(track,new_song)
   TRACE("Effect:_attach_to_track_devices",track,new_song)
 
-  self._device_observables = table.create()
 
   -- remove notifier first 
   self:_remove_notifiers(new_song,self._device_observables)
   self:_remove_notifiers(new_song,self._mixer_observables)
+  self:_remove_notifiers(new_song,self._preset_observables)
+
+  self._device_observables = table.create()
 
   -- handle changes to devices in track
+  -- todo: only perform update when in current track
   self._device_observables:insert(track.devices_observable)
   track.devices_observable:add_notifier(
-    function()
-      -- todo: only perform update when in current track
+    function(obj)
+      TRACE("Effect:devices_observable fired...")
       self._track_update_requested = true
+
+      -- tracks may have been inserted or removed
+      self:_get_num_devices()
+
     end
   )
 
   for idx2,device in ipairs(track.devices) do
 
+    -- listen for preset changes 
+    self._preset_observables:insert(device.active_preset_observable)
+    device.active_preset_observable:add_notifier(
+        function(obj)
+            TRACE("Effect:active_preset_observable fired...")
+            -- update prev/next device buttons
+            --self:_update_prev_next_preset_buttons(device_idx)
+            self._update_requested = true
+        end
+      )
+
     for idx3,parameter in ipairs(device.parameters) do
       
+      -- handle when visible or automated state has changed 
+      -- (for AUTOMATED_PARAMETERS and MIXER_PARAMETERS)
+
       self._mixer_observables:insert(parameter.show_in_mixer_observable)
       parameter.show_in_mixer_observable:add_notifier(
         function(obj)
@@ -868,11 +1242,13 @@ function Effect:_attach_to_parameters(new_song)
 
     -- if no device is selected, select the TrackVolPan device
   if (renoise.song().selected_device_index==0) then
-    renoise.song().selected_device_index = 1
+    --renoise.song().selected_device_index = 1
+    self:_set_selected_device_index(1)
   end
 
 
   self:_define_parameters()
+  self:_get_num_devices()
 
   local cm = self.display.device.control_map
 
@@ -924,6 +1300,8 @@ function Effect:_attach_to_parameters(new_song)
         function()
           if (self.active) then
 
+            -- TODO skip value-tracking when we are recording automation
+
             -- scale parameter value to a [0-1] range
             local normalized_value = self:_parameter_value_to_normalized_value(
               parameter, parameter.value) 
@@ -940,13 +1318,6 @@ function Effect:_attach_to_parameters(new_song)
     end
 
   end
-
---[[
-    -- if no device is selected, select the TrackVolPan device
-  if (renoise.song().selected_device_index==0) then
-    renoise.song().selected_device_index = 1
-  end
-]]
 
   self.display:apply_tooltips(self.mappings.parameters.group_name)
 

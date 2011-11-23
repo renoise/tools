@@ -55,7 +55,7 @@ end
 --------------------------------------------------------------------------------
 
 function MessageStream:_get_button_hold_time()
-    return duplex_preferences.button_hold_time
+  return duplex_preferences.button_hold_time
 end
 
 --------------------------------------------------------------------------------

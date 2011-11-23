@@ -78,7 +78,6 @@ function Navigator:__init(browser_process,mappings,options,config_name)
                   .."\nPress multiple buttons to define blockloop"
                   .."\nControl-map value: ",
       orientation = VERTICAL,
-      ui_component = UI_COMPONENT_BUTTONSTRIP,
     },
   }
 
@@ -86,6 +85,9 @@ function Navigator:__init(browser_process,mappings,options,config_name)
 
   -- (boolean) keep track of the playing state
   self._playing = nil
+
+  -- (boolean) keep track of block loop state
+  self._loop_block_enabled = false
 
   -- (number) blockloop starting line
   -- (used for checking if start has been changed from Renoise)
@@ -152,11 +154,12 @@ function Navigator:on_idle()
     return 
   end
 
+  local song = renoise.song()
   local skip_event = true
-  local playing = renoise.song().transport.playing
-  local line =  renoise.song().transport.playback_pos.line
-  local patt = renoise.song().patterns[self._editing_idx]
-  local actual_coeff = renoise.song().transport.loop_block_range_coeff
+  local playing = song.transport.playing
+  local line =  song.transport.playback_pos.line
+  local patt = song.patterns[self._editing_idx]
+  local actual_coeff = song.transport.loop_block_range_coeff
 
   -- detect if we've entered/exited the active pattern
   local active_pattern = self:_is_active_seq_index()
@@ -189,6 +192,52 @@ function Navigator:on_idle()
     end
   end
 
+
+  -------------------------------------------------------
+  -- handle changes from within Renoise 
+  -- (pending changes will cause these to be skipped)
+  -------------------------------------------------------
+
+  local update_requested = false
+
+  -- track changes to the blockloop coeff
+  if not self._pending_coeff and
+   not (self._pending_loop==false) and 
+   not self._pending_loop and
+   not self._pending_loop and
+   not self._pending_index then
+    if (self._loop_block_range_coeff~=actual_coeff) then
+      TRACE("Navigator: ** coeff changed",actual_coeff,self._loop_block_range_coeff)
+      self._loop_block_range_coeff = actual_coeff
+      update_requested = true
+    end
+    -- track changes to the blockloop start_pos
+    local actual_start_line = song.transport.loop_block_start_pos.line
+    if (self._loop_block_start_line~=actual_start_line) then
+      TRACE("Navigator: ** start_pos changed",actual_start_line,self._loop_block_start_line)
+      self._loop_block_start_line = actual_start_line
+      update_requested = true
+    end
+    -- changes to on/off stage
+    if (self._loop_block_enabled~=song.transport.loop_block_enabled) then
+      self._loop_block_enabled = song.transport.loop_block_enabled
+      update_requested = true
+    end
+    -- handle changes
+    if update_requested then
+      if self._loop_block_enabled then
+        self:_update()
+      else
+        self._blockpos:set_range(0,0,true)
+      end
+    end
+
+  end
+
+  -------------------------------------------------------
+  -- handle pending changes 
+  -------------------------------------------------------
+
   -- check if playback is stopped/started
   if (playing ~= self._playing) then
     self._playing = playing
@@ -203,38 +252,40 @@ function Navigator:on_idle()
 
   -- try to enable/disable blockloop 
   if (self._pending_loop==true) then
-   TRACE("Navigator: ** pending loop")
+    --TRACE("Navigator: ** pending loop")
     if self._pending_coeff or self._pending_loop then
       if self._pending_coeff and (actual_coeff~=self._pending_coeff) then
         TRACE("Navigator: ** set coeff")
-        renoise.song().transport.loop_block_range_coeff = self._pending_coeff
+        song.transport.loop_block_range_coeff = self._pending_coeff
       else
-        if renoise.song().transport.loop_block_enabled then
+        if song.transport.loop_block_enabled then
           TRACE("Navigator: ** set range")
           self._pending_coeff = nil
           self._pending_loop = nil
           self:_set_blockloop_range(self._blockpos)
         else
           -- try to enable loop (again)
-          renoise.song().transport.loop_block_enabled = true
+          song.transport.loop_block_enabled = true
+          self._loop_block_enabled = true
           TRACE("Navigator: ** try to enable loop (again)")
         end
       end
     end
   elseif (self._pending_loop==false) then 
-    if not renoise.song().transport.loop_block_enabled then
+    if not song.transport.loop_block_enabled then
       TRACE("Navigator: ** exit pending_loop ")
       self._pending_loop = nil
     else
       -- try to disable loop (again)
-      renoise.song().transport.loop_block_enabled = false
+      song.transport.loop_block_enabled = false
+      self._loop_block_enabled = false
       TRACE("Navigator: ** try to disable loop (again)")
     end
   end
 
   -- update index
   if self._pending_index and 
-    renoise.song().transport.loop_block_enabled 
+    song.transport.loop_block_enabled 
   then
     TRACE("Navigator: ** set pending index",self._pending_index)
     self._blockpos:set_range(self._pending_index,self._pending_index,true)
@@ -242,20 +293,7 @@ function Navigator:on_idle()
     self._pending_index = nil
   end
 
-  -- track changes to the blockloop coeff, update when needed
-  if (self._loop_block_range_coeff~=actual_coeff) then
-    TRACE("Navigator: ** coeff changed",actual_coeff,self._loop_block_range_coeff)
-    self._loop_block_range_coeff = actual_coeff
-    self:_update()
-  end
 
-  -- track changes to the blockloop start_pos, update when needed
-  local actual_start_line = renoise.song().transport.loop_block_start_pos.line
-  if (self._loop_block_start_line~=actual_start_line) then
-    TRACE("Navigator: ** start_pos changed",actual_start_line,self._loop_block_start_line)
-    self._loop_block_start_line = actual_start_line
-    self:_update()
-  end
 
 end
 
@@ -265,7 +303,6 @@ end
 
 function Navigator:on_new_document()
   TRACE("Navigator:on_new_document()")
-
   self:_attach_to_song(renoise.song())
 
 end
@@ -294,13 +331,14 @@ function Navigator:_attach_to_song(song)
 
   self:_update_num_lines_notifier()
 
+  
+
 end
 
 --------------------------------------------------------------------------------
 
 function Navigator:_update_num_lines_notifier()
   TRACE("Navigator:_update_num_lines_notifier()")
-
   local song = renoise.song()
   local patt = song.patterns[self._editing_idx]
   local observable = patt.number_of_lines_observable
@@ -320,9 +358,22 @@ end
 
 --------------------------------------------------------------------------------
 
--- TODO set to values from Renoise
+-- set to values from Renoise
 
 function Navigator:_update()
+  TRACE("Navigator:_update()")
+  local coeff = self._loop_block_range_coeff
+
+  -- figure out how many buttons the new range is spanning
+  local rng_len = math.ceil(self._steps/coeff)
+
+  -- figure out the starting position of the range
+  local patt_idx = renoise.song().selected_pattern_index
+  local num_lines = renoise.song().patterns[patt_idx].number_of_lines
+  local block_start = renoise.song().transport.loop_block_start_pos.line-1
+  local curr_section = math.floor(self._steps*(block_start/num_lines))+1
+
+  self._blockpos:set_range(curr_section,curr_section+rng_len-1,true)
 
 end
 
@@ -515,7 +566,6 @@ end
 --------------------------------------------------------------------------------
 
 -- toggle blockloop on/off: wait for idle mode to do the actual work
--- (since the blockloop needs a slight delay to activate)
 -- @obj: UIButtonStrip
 
 function Navigator:_toggle_blockloop(obj)
@@ -526,6 +576,7 @@ function Navigator:_toggle_blockloop(obj)
   if (rng[1]==0) and (rng[2]==0) then
     TRACE("Navigator: ** blockloop disabled **")
     renoise.song().transport.loop_block_enabled = false
+    self._loop_block_enabled = false
     self._pending_loop = false
   else
     -- activating the loop will make it seek the current edit position,
@@ -541,6 +592,7 @@ function Navigator:_toggle_blockloop(obj)
     then
       TRACE("Navigator: ** blockloop enabled **")
       renoise.song().transport.loop_block_enabled = true
+      self._loop_block_enabled = true
     end
     self._pending_loop = true
     if (renoise.song().transport.loop_block_range_coeff~=coeff) then
@@ -657,6 +709,7 @@ function Navigator:_build_app()
           -- wait for idle loop to set the range
           self._pending_index = idx
           renoise.song().transport.loop_block_enabled = true
+          self._loop_block_enabled = true
         end
 
       else

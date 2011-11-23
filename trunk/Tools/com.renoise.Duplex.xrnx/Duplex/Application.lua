@@ -35,12 +35,10 @@ function Application:__init(browser_process,mappings,options,config_name)
   -- @group_name: (required) the control-map group-name 
   -- @index: the position where the control should be located (set in config)
   -- @description: provide a sensible tooltip text for the virtual display
-  -- @greedy: indicates that the application will use the entire group
   -- @orientation: defines the UIComponent orientation (VERTICAL/HORIZONTAL)
   -- 
   -- example_mapping = {
   --  group_name = "Main",
-  --  greedy = false,
   --  index = 3,
   -- }
 
@@ -65,7 +63,6 @@ function Application:__init(browser_process,mappings,options,config_name)
   self.options = options or {}
 
   -- define a default palette for the application
-  -- todo: this will enable color-picker support
   self.palette = self.palette or {}
 
   -- private stuff
@@ -312,8 +309,10 @@ function Application:_build_options(process)
   local hidden_field = vb.views.dpx_app_options_hidden_field
   if (self.options)then
     for k,v in pairs(self.options) do
-      elm_group:add_child(self:_add_option_row(v,k,process))
-      hidden_field.value = hidden_field.value+1
+      if not v.hidden then
+        elm_group:add_child(self:_add_option_row(v,k,process))
+        hidden_field.value = hidden_field.value+1
+      end
     end
 
   end
@@ -342,16 +341,7 @@ function Application:_add_option_row(t,key,process)
       value=(t.value>#t.items) and 1 or t.value, -- if invalid, set to first
       width=175,
       notifier = function(val)
-        self:_set_option(key,val)
-        -- update relevant device configuration
-        local app_options_node = 
-          process.settings.applications:property(self._config_name).options
-        -- check if we need to create the node 
-        if not app_options_node:property(key) then
-          app_options_node:add_property(key,val)
-        else
-          app_options_node:property(key).value = val
-        end
+        self:_set_option(key,val,process)
       end
     }
   }
@@ -363,17 +353,30 @@ end
 
 -- set option value 
 
-function Application:_set_option(name, value)
+function Application:_set_option(key, val, process)
 
   -- set local value
   for k,v in pairs(self.options) do
-    if (k == name) then
-      self.options[k].value = value
+    if (k == key) then
+      self.options[k].value = val
       if (self.options[k].on_change) then
         self.options[k].on_change(self)
       end
     end
   end
+
+  if process then
+    -- update relevant device configuration
+    local app_options_node = 
+      process.settings.applications:property(self._config_name).options
+    -- check if we need to create the node 
+    if not app_options_node:property(key) then
+      app_options_node:add_property(key,val)
+    else
+      app_options_node:property(key).value = val
+    end
+  end
+
 end
 
 --------------------------------------------------------------------------------

@@ -182,7 +182,7 @@ end
 -- use this to quickly customize the look of a single point
 
 function CanvasPoint:apply(obj)
---TRACE("CanvasPoint:apply", obj)
+  TRACE("CanvasPoint:apply", obj)
   
   for k,v in pairs(obj) do
     if (k=="text")then

@@ -7,7 +7,10 @@
 
 -- About -----------------------------------------------------------------------
 
-  Notes On Wheels (NOW) is a realtime phrase arpeggiator/sequencer for Renoise. A phrase arpeggiator is basically a mix between an arpeggiator (oscillating between pressed keys) and a step sequencer (repeating a programmed a series of notes). It allows us to create a sequence and control aspects of each step in it, such as the pitch, velocity and so on. 
+  Notes On Wheels (NOW) is a realtime phrase arpeggiator/sequencer for Renoise, basically a mix between an arpeggiator (oscillating between pressed keys) and a step sequencer (repeating a programmed a series of notes). It allows us to create a sequence and control all aspects of each step (such as the pitch, velocity etc.) in realtime. 
+
+  As for input, N.O.W. is very flexible, as you can both control it via the virtual control surface and your controller (obviously), but it also features an additional MIDI input which you can use for hooking up an external keyboard. Finally, the virtual control surface will, when focused, detect and respond to keypresses within a specific range (identical to the virtual keyboard in Renoise, but only for two full octaves). 
+  The virtual keyboard supports both ordinary transpose (one octave up/down from the middle C), and multi-step sequences (press keys while holding the SHIFT modifier). Same goes for the external MIDI keyboard, which can be set up to act upon CC messages and pitch bend. 
 
 
 -- Controller setup ------------------------------------------------------------
@@ -33,8 +36,8 @@
   | |Write| |Learn| |Fill| |Global| |Modes...|    | <- Various controls
   | ______________________________________________|
 
-  There's also a compact version, which use fewer controls, but still 
-  manages to contain every feature of it's bigger brother. 
+  Also, check out the compact version, which use fewer controls, but still manages to contain every feature of it's bigger brother. This is possible because the sliders in that version are switching between the currently active mode (pitch, velocity etc.), and therefore, require only a small set of physical controls. Perhaps it's a more realistic starting point for your wn controller mapping than the fully expanded version? It's located here: 
+  Duplex > Custombuilt > Notes On Wheels (compact)
 
 
 -- Mappings --------------------------------------------------------------------
@@ -177,8 +180,8 @@
 
   TODO @option learn_method (true,false)
 
-    1. 'Same length', only import a matching sequences
-    2. 'Any length', attempt to import anything
+    1. 'Strict', only import a sequences with matching length
+    2. 'Loose', attempt to import anything
 
     In any case, learning a completely empty pattern will empty the sequence
 
@@ -186,32 +189,7 @@
 
 -- Changelog ------------------------------------------------------------------
 
-  0.98a  - Pending release
-  * New mappings: shift up/down (push-buttons)
-  * Will now output from playback-pos when playing, edit-pos when stopped
-  * Continuous mode support: write sequences across patterns
-  * Better learning: able to determine the spacing, length and offset of the existing sequence 
-  * Mode-toggle buttons: hold to produce output
-  * Fixed rounding issue when adjusting gate length (sometimes output wrong Fx command)
-  * Latch recording: 'write' button able to blink when playback is stopped 
-  * Tweak: when going from many to fewer steps, remove the instrument values from obsolete tracks 
-  * Option: 'offset_quantize', specifies number of possible 9xx commands (free, or 1-32)
-  * Multi-purpose/mode-dependant sliders (to support hardware with fewer knobs & buttons)
-  * Scale retrigger sliders exponentially (more detail in lower values)
-  * New mappings: note retriggering, see 'retrig_sliders' & 'retrig_adjust' 
-  * Sliced sample support: autodetect when instrument is sliced
-  * New option: disable rotation of sample-offset values (when adjusting)
-  * PC Keyboard support: transpose/set notes (when dialog has focus)
-  * Optimize: precalculate @gate_cached
-  * Optimize: scheduled updates, use the idle loop to reduce CPU usage
-  * MIDI keyboard input (add as option listing available MIDI ports)-
-  * - Detect multiple pressed keys, update sequence length on release
-  * - Pitchbend is hardwired to @pitch_adjust
-  * - CC is hardwired to @multi_adjust (pitch is ignored)
-  * Fixed: virtual KB had a couple of minor bugs
-  * Fixed: skip master/send tracks when writing output
-  * Tweak: start output (‘touch’) when using virtual keyboard
-  * Tweak: output immediately when starting playback (first line)
+  0.98  - First release
 
 
 --]]
@@ -333,141 +311,110 @@ function NotesOnWheels:__init(browser_process,mappings,options,config_name)
   self.TEXT_WRITE_ON = "■ Write"
   self.TEXT_WRITE_OFF = "□ Write"
 
+  self.TEXT_LEARN_ON = "■ Learn"
+  self.TEXT_LEARN_OFF = "□ Learn"
+
+  self.BUTTON_COLOR_ON = self.BUTTON_COLOR_ON
+  self.BUTTON_COLOR_ON = self.BUTTON_COLOR_OFF
+
   -- control-map groups 
   self.mappings = {
 
     choose_mode = {
       description = "NOW: Choose mode",
-      ui_component = UI_COMPONENT_SLIDER,
     },
     set_mode_pitch = {
       description = "NOW: Set mode to 'pitch'"..
                     "\nHold to write sequence to entire pattern",
-      ui_component = UI_COMPONENT_TOGGLEBUTTON,
     },
     set_mode_velocity = {
       description = "NOW: Set mode to 'velocity'"..
                     "\nHold to write sequence to entire pattern",
-      ui_component = UI_COMPONENT_TOGGLEBUTTON,
     },
     set_mode_offset = {
       description = "NOW: Set mode to 'offset'"..
                     "\nHold to write sequence to entire pattern",
-      ui_component = UI_COMPONENT_TOGGLEBUTTON,
     },
     set_mode_gate = {
       description = "NOW: Set mode to 'duration'"..
                     "\nHold to write sequence to entire pattern",
-      ui_component = UI_COMPONENT_TOGGLEBUTTON,
     },
     set_mode_retrig = {
       description = "NOW: Set mode to 'retrigger)"..
                     "\nHold to write sequence to entire pattern",
-      ui_component = UI_COMPONENT_TOGGLEBUTTON,
     },
     multi_sliders = {
       description = "NOW: Mode-dependant slider",
-      ui_component = UI_COMPONENT_SLIDER,
-      greedy = true,
     },
     pitch_sliders = {
       description = "NOW: Change pitch for step ",
-      ui_component = UI_COMPONENT_SLIDER,
-      greedy = true,    
     },
     velocity_sliders = {
       description = "NOW: Change velocity for step ",
-      ui_component = UI_COMPONENT_SLIDER,
-      greedy = true,    
     },
     offset_sliders = {
       description = "NOW: Change sample-offset for step ",
-      ui_component = UI_COMPONENT_SLIDER,
-      greedy = true,    
     },
     gate_sliders = {
       description = "NOW: Change gate/duration for step ",
-      ui_component = UI_COMPONENT_SLIDER,
-      greedy = true,    
     },
     retrig_sliders = {
       description = "NOW: Change number of retrigs for step ",
-      ui_component = UI_COMPONENT_SLIDER,
-      greedy = true,    
     },
     num_steps = {
       description = "NOW: Number of steps",
-      ui_component = UI_COMPONENT_SLIDER,
       orientation = HORIZONTAL, -- supports grid mode
     },
     step_spacing = {
       description = "NOW: Line-space between steps",
-      ui_component = UI_COMPONENT_SLIDER,
     },
     num_lines = {
       description = "NOW: Sequence length (lines)",
-      ui_component = UI_COMPONENT_SLIDER,
     },
     pitch_adjust = {
       description = "NOW: Transpose all steps",
-      ui_component = UI_COMPONENT_SLIDER,
     },
     velocity_adjust = {
       description = "NOW: Adjust volume for all steps",
-      ui_component = UI_COMPONENT_SLIDER,
     },
     offset_adjust = {
       description = "NOW: Adjust sample-offset for all steps",
-      ui_component = UI_COMPONENT_SLIDER,
     },
     gate_adjust = {
       description = "NOW: Adjust note length for all steps",
-      ui_component = UI_COMPONENT_SLIDER,
     },
     retrig_adjust = {
       description = "NOW: Adjust retriggering for all steps",
-      ui_component = UI_COMPONENT_SLIDER,
     },
     multi_adjust = {
       description = "NOW: Adjust all steps (mode-dependant)",
-      ui_component = UI_COMPONENT_SLIDER,
     },
     write = {
       description = "NOW: Write to pattern in realtime",
-      ui_component = UI_COMPONENT_TOGGLEBUTTON,
     },
     learn = {
       description = "NOW: Import sequence from pattern",
-      ui_component = UI_COMPONENT_PUSHBUTTON,
     },
     fill = {
       description = "NOW: Fill entire track (can be very CPU intensive, use with caution!!)",
-      ui_component = UI_COMPONENT_TOGGLEBUTTON,
     },
     global = {
       description = "NOW: Toggle between global/parameter-only output",
-      ui_component = UI_COMPONENT_TOGGLEBUTTON,
     },
     shift_up = {
       description = "NOW: Decrease line offset",
-      ui_component = UI_COMPONENT_PUSHBUTTON,
     },
     shift_down = {
       description = "NOW: Increase line offset",
-      ui_component = UI_COMPONENT_PUSHBUTTON,
     },
     extend = {
       description = "NOW: Repeat sequence twice",
-      ui_component = UI_COMPONENT_PUSHBUTTON,
     },
     shrink = {
       description = "NOW: Reduce sequence to half the size",
-      ui_component = UI_COMPONENT_PUSHBUTTON,
     },
     position = {
       description = "NOW: Displays position within sequence",
-      ui_component = UI_COMPONENT_TOGGLEBUTTON,
-      greedy = true,
     },
 
   }
@@ -476,16 +423,16 @@ function NotesOnWheels:__init(browser_process,mappings,options,config_name)
   self.step_focus = nil
 
   -- set to something else than 0 when instrument is sliced
-  -- (TODO track in realtime via the sample_mappings property)
+  -- (tracked in realtime via the sample_mappings property)
   self.number_of_slices = 0
 
   -- remember where the sample mappings start/end
-  -- (TODO track in realtime via the sample_mappings property)
+  -- (tracked in realtime via the sample_mappings property)
   self.lower_note = nil
   self.upper_note = nil
 
   -- detect if sample mappings are 'white keys only'
-  -- (TODO track in realtime via the sample_mappings property)
+  -- (tracked in realtime via the sample_mappings property)
   self.white_keys_only = true
 
   -- list of white keys
@@ -508,11 +455,19 @@ function NotesOnWheels:__init(browser_process,mappings,options,config_name)
   self.midi_max_keys = 0
 
   -- use these for scheduled output
+  -- (assign a special value to make them output first time)
   self.scheduled_step = -1
   self.scheduled_mode = -1
 
   -- track playback progress in 'blinks' 
   self._blink = false
+
+  -- the lit state of buttons
+  self.write_button_state = nil
+  self.learn_button_state = nil
+
+  -- track changed? check via idle loop
+  self.track_changed = false
 
   -- when using the 'latch' write method, this will indicate
   -- that no control has yet been touched 
@@ -523,6 +478,11 @@ function NotesOnWheels:__init(browser_process,mappings,options,config_name)
 
   -- realtime position 
   self.realtime_pos = nil
+
+  -- when auto-learning is enabled
+  self.autolearn = false
+
+  self.just_entered_autolearn = false
 
   -- internal sequence representation 
   -- (instance of 'NOW_Sequence')
@@ -564,6 +524,7 @@ function NotesOnWheels:__init(browser_process,mappings,options,config_name)
   self.global_mode = (self.options.global_mode.value == self.GLOBAL_MODE_ON)
   self.fill_mode = (self.options.fill_mode.value == self.FILL_MODE_ON)
   self.write_mode = false
+
   if (self.options.edit_sync.value == self.EDIT_SYNC_ON) then
     self.write_mode = renoise.song().transport.edit_mode
   end
@@ -603,7 +564,6 @@ function NotesOnWheels:select_midi_port(port_idx)
   end
   local input_devices = renoise.Midi.available_input_devices()
   local port_name = input_devices[port_idx]
-  --print("port_name",port_name)
   if port_name then
     self.midi_in = renoise.Midi.create_input_device(port_name,
       {self, NotesOnWheels.midi_callback}
@@ -613,8 +573,6 @@ function NotesOnWheels:select_midi_port(port_idx)
 end
 
 -- receive MIDI from device
--- construct a string identical to the <Param> value attribute
--- and use this to locate the parameter in the control-map
 
 function NotesOnWheels:midi_callback(message)
   TRACE("NotesOnWheels:midi_callback",message[1], message[2], message[3])
@@ -682,25 +640,37 @@ end
 
 -- schedule output, simple way to reduce number of pattern writes:
 -- remember the last step / mode - if either change, output immediately 
+-- @param seq_step (int), step to output (can be nil)
+-- @param mask_mode (enum), restrict to specific mode (can be nil)
 
 function NotesOnWheels:schedule_output(seq_step,mask_mode)
   TRACE("NotesOnWheels:schedule_output",seq_step,mask_mode)
 
   if (seq_step~=self.scheduled_step) or (mask_mode~=self.scheduled_mode) then
-    self:output_sequence(self.scheduled_step,self.scheduled_mode)
+    if (self.scheduled_step==-1) and (self.scheduled_mode==-1) then
+      --print("first time around, output immediately")
+      -- first time around, output immediately
+      self:output_sequence(seq_step,mask_mode)
+      self.scheduled_output = false
+    else
+      --print("output scheduled")
+      self:output_sequence(self.scheduled_step,self.scheduled_mode)
+      self.scheduled_output = true
+    end
+  else 
+    self.scheduled_output = true
   end
 
-  self.scheduled_output = true
-  self.scheduled_step = seq_step
+  self.scheduled_step = seq_step 
   self.scheduled_mode = mask_mode
 
 end
 
 
 -- output sequence to pattern 
--- @param seq_step (int, step)
--- @param mask_mode (enum, mode)
--- @param stream (boolean), set when invoked from idle loop
+-- @param seq_step (int), step to output (can be nil)
+-- @param mask_mode (enum), restrict to specific mode (can be nil)
+-- @param stream (boolean), produce output in 'short bursts'
 -- @param force (boolean), force output (e.g. when mode buttons are held)
 
 function NotesOnWheels:output_sequence(seq_step,mask_mode,stream,force)
@@ -712,11 +682,20 @@ function NotesOnWheels:output_sequence(seq_step,mask_mode,stream,force)
 		return
 	end
 
-  -- touch mode can prevent output
-  if stream and
-  (self.options.write_method.value == self.WRITE_METHOD_TOUCH) then
-    --print("touch prevented output")
-    return
+  -- touch mode can prevent output next time
+  if (self.options.write_method.value == self.WRITE_METHOD_TOUCH) then
+    if not self.touched then
+      --print("touch mode prevented output")
+      return
+    end
+    self.touched = false
+  end
+
+  -- expand the sequence to step length
+  if seq_step and (seq_step>self.seq.num_steps) then
+    self.seq:set_num_steps(seq_step,true)
+    --print("raise steps to ",seq_step)
+    --self.seq:mute_columns(seq_step)
   end
 
   -- latch mode can also prevent output
@@ -768,10 +747,15 @@ function NotesOnWheels:on_idle()
 
   if playing then 
     -- realtime position: check if changed
-    local tmp_len = self.seq.num_steps
-    local tmp = math.ceil(((pos.line+self.line_offset)/self.seq.spacing)%tmp_len)
-    if (tmp==0) then -- fix
-      tmp = tmp_len
+    local tmp = nil
+    if (self.seq.spacing==0) then
+      tmp = 1
+    else
+      local tmp_len = self.seq.num_steps
+      tmp = math.ceil(((pos.line+self.line_offset)/self.seq.spacing)%tmp_len)
+      if (tmp==0) then -- fix
+        tmp = tmp_len
+      end
     end
     if (tmp~=self.realtime_pos)then
       local ctrl_pos = self._controls.pos_buttons[self.realtime_pos]
@@ -783,6 +767,8 @@ function NotesOnWheels:on_idle()
       if ctrl_pos then
         ctrl_pos:set(true,false)
       end
+
+
     end
     -- continuous mode support: we have arrived at the desired position 
     if (self.pending_seq_pos and pos.sequence==self.pending_seq_pos) then
@@ -797,31 +783,30 @@ function NotesOnWheels:on_idle()
         self.last_line = curr_line
       end
       if arrived then
-        --print("ARRIVED at ",pos," - set the line offset",self.pending_line_offset)
         self.line_offset = self.pending_line_offset
         self.pending_seq_pos = nil
       end
     end
   end
 
+  -- periodic output & write button blinking is 
+  -- controlled by the playback line number 
+  local lpb = renoise.song().transport.lpb
+  local pos = playing 
+    and renoise.song().transport.playback_pos 
+    or renoise.song().transport.edit_pos
+  -- 'blink' when we have moved a certain distance
+  local blink = (math.floor((((pos.line-2)/lpb)+1)%2)==1)
+  local changed = false
+  if (blink~=self._blink) then
+    changed = true
+    self._blink = blink
+  end
+  
   if(self.write_mode) then
-    -- periodic output & write button blinking is 
-    -- controlled by the playback line number 
-    local lpb = renoise.song().transport.lpb
-    local pos = playing 
-      and renoise.song().transport.playback_pos 
-      or renoise.song().transport.edit_pos
-    local blink = (math.floor((((pos.line-2)/lpb)+1)%2)==1)
-    -- 'changed' is true when we have moved a certain distance
-    local changed = false
-    if (blink~=self._blink) then
-      changed = true
-      self._blink = blink
-    end
     local enforce_latch_delay = not self.touched and 
       (self.options.write_method.value == self.WRITE_METHOD_LATCH)
     if changed then
-      --print("changed",changed)
       if not enforce_latch_delay then
         self:output_sequence(self.step_focus,self.mode,playing)
         has_written = true
@@ -834,16 +819,47 @@ function NotesOnWheels:on_idle()
       if not playing then
         lit = (math.floor(os.clock()*2)%2==0) and true or false
       end
-      local palette = (lit) 
-        and {foreground = {text=self.TEXT_WRITE_ON}} 
-        or {foreground = {text=self.TEXT_WRITE_OFF}} 
-      ctrl:set_palette(palette)
+      if (lit~=self.write_button_state) then
+        local palette = (lit) 
+          and {foreground = {text=self.TEXT_WRITE_ON,color=self.BUTTON_COLOR_ON}}
+          or {foreground = {text=self.TEXT_WRITE_OFF,color=self.BUTTON_COLOR_OFF}}
+        ctrl:set_palette(palette)
+        ctrl:set(lit,true)
+        self.write_button_state = lit
+      end
     else
       if ctrl then
         -- make sure write button is always lit 
         local palette = {foreground = {text=self.TEXT_WRITE_ON}} 
         ctrl:set_palette(palette)
+        ctrl:set(true,true)
+        self.write_button_state = true
+
       end
+    end
+  end
+
+  -- auto-learning, learn button blinking
+  if self.autolearn then
+    local c = self._controls.learn
+    if c then
+      local lit = blink
+      if not playing then
+        lit = (math.floor(os.clock()*2)%2==0) and true or false
+      end
+      if (lit~=self.learn_button_state) then
+        local palette = (lit) 
+          and {background = {text=self.TEXT_LEARN_ON,color=self.BUTTON_COLOR_ON}} 
+          or {background = {text=self.TEXT_LEARN_OFF,color=self.BUTTON_COLOR_OFF}} 
+        c:set_palette(palette)
+        c:set(lit,true)
+        self.learn_button_state = lit
+      end
+    end
+    if changed or self.track_changed then
+      self:reset_adjustments()
+      self.seq:learn_sequence()
+      self.track_changed = false
     end
   end
 
@@ -866,7 +882,10 @@ function NotesOnWheels:on_idle()
     has_written = true
   end
 
+
+  -- write scheduled output
   if not has_written and self.scheduled_output then
+  --if self.scheduled_output then
     self:output_sequence(self.scheduled_step,self.scheduled_mode,playing)
     self.scheduled_output = false
   end
@@ -878,20 +897,26 @@ function NotesOnWheels:on_new_document()
   TRACE("NotesOnWheels:on_new_document")
   
   self:_attach_to_song()
-
-  -- disable write 
-  self.write_mode = false
-  local ctrl = self._controls.write
-  if ctrl then
-    ctrl:set(false,true) 
-  end
+  self:disable_write_mode()
 
 end
 
 
+function NotesOnWheels:disable_write_mode()
+  TRACE("NotesOnWheels:disable_write_mode")
+
+  self.write_mode = false
+
+  local skip_event = true
+  local ctrl = self._controls.write
+  if ctrl then
+    ctrl:set(false,skip_event) 
+  end
+
+end
+
 function NotesOnWheels:on_keypress(key)
   TRACE("NotesOnWheels:on_keypress")
-  --rprint(key)
 
   -- workaround: look up character to obtain the note
   local chars = {
@@ -943,7 +968,7 @@ function NotesOnWheels:on_keypress(key)
       return false
     end
     if not key.repeated then
-      -- TODO support CTRL+shift to insert (in fact, accept any modifier while shift)
+      -- TODO support CTRL+shift to insert
       if (key.modifiers == "shift") then
         if not self.has_received_input then
           -- first note has arrived, set sequence length
@@ -1026,6 +1051,15 @@ function NotesOnWheels:_attach_to_song()
     end
   )
 
+  -- when track is changed
+  renoise.song().selected_track_index_observable:add_notifier(
+    function()
+      TRACE("NotesOnWheels:selected_track_index_observable fired...")
+      self.track_changed = true
+    end
+  )
+
+
   -- when instrument is changed, 
   renoise.song().selected_instrument_observable:add_notifier(
     function()
@@ -1060,7 +1094,6 @@ function NotesOnWheels:detect_slices()
 
   local inst_idx = renoise.song().selected_instrument_index
   local mappings = renoise.song().instruments[inst_idx].sample_mappings[1] -- Note On Layer
-  --rprint("mappings",mappings)
   if not mappings[1] or not mappings[1].read_only then
     -- not sliced
     self.number_of_slices = 0
@@ -1077,10 +1110,6 @@ function NotesOnWheels:detect_slices()
     self.lower_note = mappings[1].base_note
     self.upper_note = mappings[#mappings].base_note
   end
-  --print("self.number_of_slices",self.number_of_slices)
-  --print("self.white_keys_only",self.white_keys_only)
-  --print("self.lower_note",self.lower_note)
-  --print("self.upper_note",self.upper_note)
 end
 
 
@@ -1247,11 +1276,11 @@ function NotesOnWheels:_build_app()
         c.palette = {
           background = {
             text="▫",
-            color={0x00,0x00,0x00}
+            color=self.BUTTON_COLOR_OFF
           },
           foreground = {
             text="▪",
-            color={0xff,0xff,0xff}
+            color=self.BUTTON_COLOR_ON
           },
         }
         c.active = false
@@ -1305,8 +1334,6 @@ function NotesOnWheels:_build_app()
         self:_add_component(c)
         self._controls.pitch_sliders[control_index] = c
       end
-    else
-      print("Notice: could not locate the control-map group"..group_name)
     end
   end
 
@@ -1337,8 +1364,6 @@ function NotesOnWheels:_build_app()
         self:_add_component(c)
         self._controls.velocity_sliders[control_index] = c
       end
-    else
-      print("Notice: could not locate the control-map group"..group_name)
     end
   end
   
@@ -1369,8 +1394,6 @@ function NotesOnWheels:_build_app()
         self:_add_component(c)
         self._controls.offset_sliders[control_index] = c
       end
-    else
-      print("Notice: could not locate the control-map group"..group_name)
     end
   end
   
@@ -1486,8 +1509,6 @@ function NotesOnWheels:_build_app()
         self:_add_component(c)
         self._controls.multi_sliders[control_index] = c
       end
-    else
-      print("Notice: could not locate the control-map group"..group_name)
     end
   end
 
@@ -1752,25 +1773,27 @@ function NotesOnWheels:_build_app()
       c.palette = {
         background = {
           text=self.TEXT_WRITE_OFF,
-          color={0x00,0x00,0x00}
+          color=self.BUTTON_COLOR_OFF
         },
         foreground = {
           text=self.TEXT_WRITE_ON,
-          color={0xff,0xff,0xff}
+          color=self.BUTTON_COLOR_ON
         },
       }
       c.active = self.write_mode
-      c.on_change = function(obj) 
+      c.on_press = function(obj) 
         if (not self.active) then
           return false
         end
-        self.write_mode = obj.active
-        --[[
-        if not obj.active then
-          self.touched = false
-        end
-        ]]
+        self.write_mode = not self.write_mode
         self.touched = false
+      end
+      c.on_release = function(obj)
+        if (not self.active) then
+          return false
+        end
+        obj:set(self.write_mode,true)
+        
       end
       self:_add_component(c)
       self._controls.write = c    
@@ -1782,35 +1805,45 @@ function NotesOnWheels:_build_app()
   if group_name then
     local group = cm.groups[group_name]
     if group then
-      local c = UIPushButton(self.display)
+      --local c = UIPushButton(self.display)
+      local c = UIToggleButton(self.display)
       c.group_name = self.mappings.learn.group_name
       c.tooltip = self.mappings.learn.description
       c:set_pos(self.mappings.learn.index or 1)
       c.palette = {
         background = {
-          text="□ Learn",
-          color={0x00,0x00,0x00}
+          text=self.TEXT_LEARN_OFF,
+          color=self.BUTTON_COLOR_OFF
         },
         foreground = {
-          text="■ Learn",
-          color={0xff,0xff,0xff}
+          text=self.TEXT_LEARN_ON,
+          color=self.BUTTON_COLOR_ON
         },
       }
-      -- learn sequence
       c.on_press = function(obj) 
         if (not self.active) then
           return false
         end
         self:reset_adjustments()
         self.seq:learn_sequence()
+        obj:set_palette({background = {text=self.TEXT_LEARN_ON,color=self.BUTTON_COLOR_ON}})
       end
-      -- secondary: forget sequence
       c.on_hold = function(obj)
         if (not self.active) then
           return false
         end
-        --print("on hold, forget sequence")
-        self:create_empty_sequence()
+        self:disable_write_mode()
+        self.autolearn = true
+        self.just_entered_autolearn = true
+      end
+      c.on_release = function(obj)
+        if not self.just_entered_autolearn then
+          self.autolearn = false
+          obj:set_palette({background = {text=self.TEXT_LEARN_OFF,color=self.BUTTON_COLOR_OFF}})
+          obj:set(false,true)
+        else
+          self.just_entered_autolearn = false
+        end
       end
       self:_add_component(c)
       self._controls.learn = c    
@@ -1829,11 +1862,11 @@ function NotesOnWheels:_build_app()
       c.palette = {
         background = {
           text="□ Fill",
-          color={0x00,0x00,0x00}
+          color=self.BUTTON_COLOR_OFF
         },
         foreground = {
           text="■ Fill",
-          color={0xff,0xff,0xff}
+          color=self.BUTTON_COLOR_ON
         },
       }
       c.active = self.fill_mode
@@ -1860,11 +1893,11 @@ function NotesOnWheels:_build_app()
       c.palette = {
         background = {
           text="□ Global",
-          color={0x00,0x00,0x00}
+          color=self.BUTTON_COLOR_OFF
         },
         foreground = {
           text="■ Global",
-          color={0xff,0xff,0xff}
+          color=self.BUTTON_COLOR_ON
         },
       }
       c.active = self.global_mode
@@ -1891,11 +1924,11 @@ function NotesOnWheels:_build_app()
       c.palette = {
         background = {
           text="↑",
-          color={0x00,0x00,0x00}
+          color=self.BUTTON_COLOR_OFF
         },
         foreground = {
           text="↑",
-          color={0xff,0xff,0xff}
+          color=self.BUTTON_COLOR_ON
         },
       }
       c.on_press = function(obj) 
@@ -1923,11 +1956,11 @@ function NotesOnWheels:_build_app()
       c.palette = {
         background = {
           text="↓",
-          color={0x00,0x00,0x00}
+          color=self.BUTTON_COLOR_OFF
         },
         foreground = {
           text="↓",
-          color={0xff,0xff,0xff}
+          color=self.BUTTON_COLOR_ON
         },
       }
       c.on_press = function(obj) 
@@ -1955,11 +1988,11 @@ function NotesOnWheels:_build_app()
       c.palette = {
         background = {
           text="x²",
-          color={0x00,0x00,0x00}
+          color=self.BUTTON_COLOR_OFF
         },
         foreground = {
           text="x²",
-          color={0xff,0xff,0xff}
+          color=self.BUTTON_COLOR_ON
         },
       }
       c.on_press = function(obj) 
@@ -1988,11 +2021,11 @@ function NotesOnWheels:_build_app()
       c.palette = {
         background = {
           text="½",
-          color={0x00,0x00,0x00}
+          color=self.BUTTON_COLOR_OFF
         },
         foreground = {
           text="½",
-          color={0xff,0xff,0xff}
+          color=self.BUTTON_COLOR_ON
         },
       }
       c.on_press = function(obj) 
@@ -2021,11 +2054,11 @@ function NotesOnWheels:_build_app()
       c.palette = {
         background = {
           text="□ Pitch",
-          color={0x00,0x00,0x00}
+          color=self.BUTTON_COLOR_OFF
         },
         foreground = {
           text="■ Pitch",
-          color={0xff,0xff,0xff}
+          color=self.BUTTON_COLOR_ON
         },
       }
       c.active = true
@@ -2035,6 +2068,8 @@ function NotesOnWheels:_build_app()
         end
         self:change_mode(self.MODE_PITCH)
         if not obj.active then
+          self.touched = true
+          self:output_sequence(nil,self.MODE_PITCH)
           return false
         end
       end
@@ -2043,9 +2078,8 @@ function NotesOnWheels:_build_app()
           return false
         end
         self.touched = true
-        local force_output = true
         self.fill_mode = true
-        self:output_sequence(nil,self.MODE_PITCH,nil,force_output)
+        self:output_sequence(nil,self.MODE_PITCH,nil,true)
         self.fill_mode = false
       end
       self:_add_component(c)
@@ -2065,11 +2099,11 @@ function NotesOnWheels:_build_app()
       c.palette = {
         background = {
           text="□ Velocity",
-          color={0x00,0x00,0x00}
+          color=self.BUTTON_COLOR_OFF
         },
         foreground = {
           text="■ Velocity",
-          color={0xff,0xff,0xff}
+          color=self.BUTTON_COLOR_ON
         },
       }
       c.on_change = function(obj) 
@@ -2078,6 +2112,8 @@ function NotesOnWheels:_build_app()
         end
         self:change_mode(self.MODE_VELOCITY)
         if not obj.active then
+          self.touched = true
+          self:output_sequence(nil,self.MODE_VELOCITY)
           return false
         end
       end
@@ -2086,9 +2122,8 @@ function NotesOnWheels:_build_app()
           return false
         end
         self.touched = true
-        local force_output = true
         self.fill_mode = true
-        self:output_sequence(nil,self.MODE_VELOCITY,nil,force_output)
+        self:output_sequence(nil,self.MODE_VELOCITY,nil,true)
         self.fill_mode = false
       end
       self:_add_component(c)
@@ -2108,11 +2143,11 @@ function NotesOnWheels:_build_app()
       c.palette = {
         background = {
           text="□ Offset",
-          color={0x00,0x00,0x00}
+          color=self.BUTTON_COLOR_OFF
         },
         foreground = {
           text="■ Offset",
-          color={0xff,0xff,0xff}
+          color=self.BUTTON_COLOR_ON
         },
       }
       c.on_change = function(obj) 
@@ -2121,6 +2156,8 @@ function NotesOnWheels:_build_app()
         end
         self:change_mode(self.MODE_OFFSET)
         if not obj.active then
+          self.touched = true
+          self:output_sequence(nil,self.MODE_OFFSET)
           return false
         end
       end
@@ -2129,9 +2166,8 @@ function NotesOnWheels:_build_app()
           return false
         end
         self.touched = true
-        local force_output = true
         self.fill_mode = true
-        self:output_sequence(nil,self.MODE_OFFSET,nil,force_output)
+        self:output_sequence(nil,self.MODE_OFFSET,nil,true)
         self.fill_mode = false
       end
       self:_add_component(c)
@@ -2151,15 +2187,17 @@ function NotesOnWheels:_build_app()
       c.palette = {
         background = {
           text="□ Gate",
-          color={0x00,0x00,0x00}
+          color=self.BUTTON_COLOR_OFF
         },
         foreground = {
           text="■ Gate",
-          color={0xff,0xff,0xff}
+          color=self.BUTTON_COLOR_ON
         },
       }
       c.on_change = function(obj) 
         if (not self.active) then
+          self.touched = true
+          self:output_sequence(nil,self.MODE_GATE)
           return false
         end
         self:change_mode(self.MODE_GATE)
@@ -2172,9 +2210,8 @@ function NotesOnWheels:_build_app()
           return false
         end
         self.touched = true
-        local force_output = true
         self.fill_mode = true
-        self:output_sequence(nil,self.MODE_GATE,nil,force_output)
+        self:output_sequence(nil,self.MODE_GATE,nil,true)
         self.fill_mode = false
       end
       self:_add_component(c)
@@ -2194,11 +2231,11 @@ function NotesOnWheels:_build_app()
       c.palette = {
         background = {
           text="□ Retrig",
-          color={0x00,0x00,0x00}
+          color=self.BUTTON_COLOR_OFF
         },
         foreground = {
           text="■ Retrig",
-          color={0xff,0xff,0xff}
+          color=self.BUTTON_COLOR_ON
         },
       }
       c.on_change = function(obj) 
@@ -2207,6 +2244,8 @@ function NotesOnWheels:_build_app()
         end
         self:change_mode(self.MODE_RETRIG)
         if not obj.active then
+          self.touched = true
+          self:output_sequence(nil,self.MODE_RETRIG)
           return false
         end
       end
@@ -2215,9 +2254,8 @@ function NotesOnWheels:_build_app()
           return false
         end
         self.touched = true
-        local force_output = true
         self.fill_mode = true
-        self:output_sequence(nil,self.MODE_RETRIG,nil,force_output)
+        self:output_sequence(nil,self.MODE_RETRIG,nil,true)
         self.fill_mode = false
       end
       self:_add_component(c)
@@ -2308,18 +2346,18 @@ end
 
 class 'NOW_Sequence'
 
-NOW_Sequence.DEFAULT_STEP_SPACING = 1
-NOW_Sequence.DEFAULT_NUM_STEPS = 8
+NOW_Sequence.DEFAULT_STEP_SPACING = 2
+NOW_Sequence.DEFAULT_NUM_STEPS = 4
 NOW_Sequence.MAX_LINE_SPACING = 16
 NOW_Sequence.MAX_RETRIGS = 64
 NOW_Sequence.MAX_NUM_STEPS = 12
 
 -- default values for new sequences
-NOW_Sequence.DEFAULT_NOTE_VALUE = -1
-NOW_Sequence.DEFAULT_VELOCITY_VALUE = 127
-NOW_Sequence.DEFAULT_OFFSET_VALUE = 0
-NOW_Sequence.DEFAULT_GATE_VALUE = 255
-NOW_Sequence.DEFAULT_RETRIG_VALUE = 0
+NOW_Sequence.DEFAULT_PITCH_VALUE = -1 -- disabled note
+NOW_Sequence.DEFAULT_VELOCITY_VALUE = 127 -- full volume
+NOW_Sequence.DEFAULT_OFFSET_VALUE = 0 -- play from the beginning
+NOW_Sequence.DEFAULT_GATE_VALUE = 255 -- fully open gate
+NOW_Sequence.DEFAULT_RETRIG_VALUE = 0 -- no retriggering
 
 -- initial position for adjustment faders
 NOW_Sequence.DEFAULT_PITCH_ADJUST = 0.5
@@ -2330,6 +2368,12 @@ NOW_Sequence.DEFAULT_RETRIG_ADJUST = 1/NOW_Sequence.MAX_RETRIGS
 
 function NOW_Sequence:__init(owner)
   TRACE("NOW_Sequence:__init()")
+  
+  self.GATE_PAN_LOWER = 240
+  self.GATE_PAN_UPPER = 255
+  self.RETRIG_PAN_LOWER = 224
+  self.RETRIG_PAN_UPPER = 240
+  self.OFFSET_NUM_VALUE = 9
 
   -- reference to the main class
   self.owner = owner
@@ -2359,7 +2403,7 @@ function NOW_Sequence:__init(owner)
   self.retrig_adjust = self.DEFAULT_RETRIG_ADJUST
 
 
-  self.gate_cached = nil
+  self.gate_cached = table.create()
 
   -- raise this flag when num_lines, spacing or any gate has changed
   self.recalc_gate_cached = true
@@ -2598,10 +2642,15 @@ function NOW_Sequence:set_num_steps(int_val,update)
     self.num_steps = int_val
     self:_update_length()
 
+    -- nullify the focused step if not within bounds 
+    if self.owner.step_focus and (self.owner.step_focus>int_val) then
+      self.owner.step_focus = nil
+    end
+
     --	supply default values for undefined indices
     for idx = 1,int_val do			
       if(self.pitch_steps[idx]==nil)then
-        self:set_pitch(idx,self.DEFAULT_NOTE_VALUE)
+        self:set_pitch(idx,self.DEFAULT_PITCH_VALUE)
       end
       if(self.gate_steps[idx]==nil)then
         self:set_gate(idx,self.DEFAULT_GATE_VALUE)
@@ -2617,15 +2666,7 @@ function NOW_Sequence:set_num_steps(int_val,update)
       end
     end
 
-    --	mute/unmute note columns
-    -- prevent from writing in master/send track 
-    local track_idx = renoise.song().selected_track_index
-    if (track_idx<get_master_track_index()) then
-      for idx = 1,12 do
-        local muted = (idx > int_val)
-        renoise.song().tracks[track_idx]:mute_column(idx, muted)
-      end
-    end
+    self:mute_columns(int_val)
 
     local msg = string.format("Number of steps was set to %d",int_val)
     renoise.app():show_status(msg)
@@ -2637,10 +2678,24 @@ function NOW_Sequence:set_num_steps(int_val,update)
 
 end
 
+function NOW_Sequence:mute_columns(idx)
+
+    --	mute/unmute note columns
+    -- prevent from writing in master/send track 
+    local track_idx = renoise.song().selected_track_index
+    if (track_idx<get_master_track_index()) then
+      for i = 1,12 do
+        local muted = (i > idx)
+        renoise.song().tracks[track_idx]:mute_column(i, muted)
+      end
+    end
+
+end
+
 -- TODO set sequence to specific number of lines
 -- @param update (boolean, when control needs update)
 -- @return true when changed, false when not
-
+--[[
 function NOW_Sequence:set_num_lines(int_val,update)
 
   self._explicit_length = true
@@ -2656,6 +2711,8 @@ function NOW_Sequence:set_num_lines(int_val,update)
   end
 
 end
+
+]]
 
 -- adjust value (when using controller)
 -- @param val (number) between 0-1
@@ -2674,7 +2731,6 @@ function NOW_Sequence:adjust_pitch(val,update)
 
   -- adjust +/- 12 semitones
   local semitones = math.floor((val-0.49)*24)
-  --print("semitones",semitones,math.floor((val-0.49)*24))
   if (self.transpose ~= semitones) then
     local ctrl = self.owner._controls.pitch_adjust
     if update and ctrl then
@@ -2742,7 +2798,7 @@ function NOW_Sequence:adjust_gate(val,update)
 end
 
 function NOW_Sequence:adjust_retrig(val,update)
-  print("NOW_Sequence:adjust_retrig()",val,update)
+  TRACE("NOW_Sequence:adjust_retrig()",val,update)
   local ctrl = self.owner._controls.retrig_adjust
   local skip_event = true
   if update and ctrl then
@@ -2757,7 +2813,7 @@ function NOW_Sequence:adjust_retrig(val,update)
   local val2 = math.floor(NOW_Sequence.MAX_RETRIGS*self.retrig_adjust)
   if (val1 ~= val2) then
     self.retrig_adjust = math.max(val,1/NOW_Sequence.MAX_RETRIGS)
-    local msg = string.format("Retrigging increased by %d",val*NOW_Sequence.MAX_RETRIGS)
+    local msg = string.format("Retriggering increased by a factor of %d",val*NOW_Sequence.MAX_RETRIGS)
     renoise.app():show_status(msg)
     return true
   else
@@ -2819,8 +2875,6 @@ function NOW_Sequence:extend()
     self:set_retrig(new_idx,self.retrig_steps[i],true,true)
 
   end
-  --self.retrig_adjust = self.retrig_adjust*2
-  --print("B self.retrig_adjust",self.retrig_adjust)
   -- TODO update display
   local val_int = math.floor(self.retrig_adjust*NOW_Sequence.MAX_RETRIGS)*2/NOW_Sequence.MAX_RETRIGS
   self:adjust_retrig(clamp_value(val_int,0,1),true)
@@ -2923,7 +2977,7 @@ function NOW_Sequence:fast_retrigger(val)
   --TRACE("NOW_Sequence:fast_retrigger",val)
   local tmp = renoise.song().transport.tpl/val
   local frac = (fraction(tmp)>0) and 1 or 0
-  return 224+math.floor(tmp)+frac
+  return self.RETRIG_PAN_LOWER+math.floor(tmp)+frac
 end
 
 -- @param val (int) pitch value
@@ -2964,7 +3018,7 @@ end
 -- raise tick value to produce a "Fx" value for the pan column
 function NOW_Sequence:ticks_to_notecut(val)
   --TRACE("NOW_Sequence:ticks_to_notecut",val)
-	return math.floor(val)+240
+	return math.floor(val)+self.GATE_PAN_LOWER
 end
 
 -- interpret notecut+line(s), used by learn function
@@ -2973,7 +3027,7 @@ end
 -- @return number of ticks
 function NOW_Sequence:notecut_to_ticks(lines,val)
   --TRACE("NOW_Sequence:notecut_to_ticks",lines,val)
-	return (lines*renoise.song().transport.tpl)+(val-240)
+	return (lines*renoise.song().transport.tpl)+(val-self.RETRIG_PAN_LOWER)
 end
 
 -- quantize value by the amount specified in options
@@ -2992,12 +3046,27 @@ end
 function NOW_Sequence:clear()
   TRACE("NOW_Sequence:clear")
 
+  local mode = self.owner.mode
+
 	for idx = 1,self.num_steps do
-		self:set_pitch(idx,self.DEFAULT_NOTE_VALUE,true,true)
-		self:set_velocity(idx,self.DEFAULT_VELOCITY_VALUE,true,true)
-		self:set_offset(idx,self.DEFAULT_OFFSET_VALUE,true,true)
-		self:set_gate(idx,self.DEFAULT_GATE_VALUE,true,true)
-		self:set_retrig(idx,self.DEFAULT_RETRIG_VALUE,true,true)
+    if self.owner.global_mode then
+      self:set_pitch(idx,self.DEFAULT_PITCH_VALUE,true,true)
+      self:set_velocity(idx,self.DEFAULT_VELOCITY_VALUE,true,true)
+      self:set_offset(idx,self.DEFAULT_OFFSET_VALUE,true,true)
+      self:set_gate(idx,self.DEFAULT_GATE_VALUE,true,true)
+      self:set_retrig(idx,self.DEFAULT_RETRIG_VALUE,true,true)
+    elseif (mode == self.owner.MODE_PITCH) then
+      self:set_pitch(idx,self.DEFAULT_PITCH_VALUE,true,true)
+    elseif (mode == self.owner.MODE_VELOCITY) then
+      self:set_velocity(idx,self.DEFAULT_VELOCITY_VALUE,true,true)
+    elseif (mode == self.owner.MODE_OFFSET) then
+      self:set_offset(idx,self.DEFAULT_OFFSET_VALUE,true,true)
+    elseif (mode == self.owner.MODE_GATE) then
+      self:set_gate(idx,self.DEFAULT_GATE_VALUE,true,true)
+    elseif (mode == self.owner.MODE_RETRIG) then
+      self:set_retrig(idx,self.DEFAULT_RETRIG_VALUE,true,true)
+    end
+
 	end
 end
 
@@ -3043,7 +3112,6 @@ function NOW_Sequence:detect_steps(patt_idx,line_idx,col_idx,seq_idx)
       if done then
         break
       end
-      --print("pos.line",pos.line,"expected_line",expected_line,"expected_col",expected_col)
       -- we have reached a trigger line?
       if (pos.line==expected_line)then
 
@@ -3054,12 +3122,9 @@ function NOW_Sequence:detect_steps(patt_idx,line_idx,col_idx,seq_idx)
         end
         if (line.note_columns[expected_col])
         and (line.note_columns[expected_col].instrument_value<255) then
-          --print("include ",line.note_columns[expected_col],expected_col)
           length = length+1
-          --print("PRE expected_line,expected_col,self.spacing",expected_line,expected_col,self.spacing)
           expected_line = expected_line+self.spacing
           expected_col = expected_col+1
-          --print("POST expected_line,expected_col",expected_line,expected_col)
           if (self.spacing==0) then
             -- notes are aligned - simply look across columns
             while line.note_columns[expected_col] 
@@ -3101,37 +3166,71 @@ end
 -- @param line_idx (int) pattern line
 -- @param col_idx (int) note column index
 -- @param forwards (bool) look forward (backwards is default)
--- @return int (null if no trigger was detected)
+-- @param seq_idx (int) position within sequence
+-- @return int,int (line index, sequence index - both null if no trigger was detected)
 
-function NOW_Sequence:detect_trigger(patt_idx,line_idx,col_idx,forwards)
-  TRACE("NOW_Sequence:detect_trigger",patt_idx,line_idx,col_idx,forwards)
+function NOW_Sequence:detect_trigger(patt_idx,line_idx,col_idx,forwards,seq_idx)
+  TRACE("NOW_Sequence:detect_trigger",patt_idx,line_idx,col_idx,forwards,seq_idx)
 
   local inst_idx = renoise.song().selected_instrument_index
   local trigger_line = nil -- the line number
+  local tmp_seq_idx = seq_idx
+  local done = false
 
-	local iter = renoise.song().pattern_iterator:lines_in_pattern_track(
-		patt_idx,
-		renoise.song().selected_track_index);
-	for pos,line in iter do
-    for col_count,note_column in ipairs(line.note_columns) do
-      local continue = (pos.line<=line_idx)
-      if (forwards) then
-        continue = not continue
+  while not done do
+
+    local patt = renoise.song().patterns[patt_idx]
+    if not patt then
+      --print("done B - no pattern with this pattern index ",patt_idx)
+      done = true
+      break
+    end
+
+    local iter = renoise.song().pattern_iterator:lines_in_pattern_track(
+      patt_idx,
+      renoise.song().selected_track_index);
+    for pos,line in iter do
+      if done then
+        break
       end
-      if continue then
-        if (col_count==col_idx) then
-          if (note_column.instrument_value<255) then
-            trigger_line = pos.line
-            if forwards then
-              return trigger_line
+      for col_count,note_column in ipairs(line.note_columns) do
+        if done then
+          break
+        end
+        local continue = true
+        if (forwards) then
+          continue = (pos.line>line_idx)
+        end
+        if continue then
+          if (col_count==col_idx) then
+            if (note_column.instrument_value<255) then
+              if forwards then
+                --print("done A - found forwards trigger in this pattern ",patt_idx,"trigger_line",trigger_line)
+                return pos.line,tmp_seq_idx
+              elseif (pos.line>=line_idx) then
+                done = true
+                break
+              else
+                trigger_line = pos.line
+              end
             end
           end
         end
       end
     end
+
+    if trigger_line then
+      --print("we have completed looking in pattern",patt_idx,", trigger line is ",trigger_line)
+      done = true
+      break
+    end
+
+    tmp_seq_idx = (forwards) and tmp_seq_idx+1 or tmp_seq_idx-1
+    patt_idx = renoise.song().sequencer.pattern_sequence[tmp_seq_idx]
+
   end
 
-  return trigger_line
+  return trigger_line,tmp_seq_idx
 
 end
 
@@ -3175,13 +3274,10 @@ function NOW_Sequence:detect_spacing(patt_idx,line_idx,col_idx,seq_idx)
           if done then
             break
           end
-          --print("col_count",col_count,"pos.line",pos.line)
           if (note_column.instrument_value<255) then
-            --print("got here pos.line",pos.line,"note_column",note_column)
 
             if (col_count>triggered_col) then
               local sp = 0
-              --print("triggered_line",triggered_line)
               if triggered_line then
                 sp = pos.line-triggered_line
               end
@@ -3199,7 +3295,7 @@ function NOW_Sequence:detect_spacing(patt_idx,line_idx,col_idx,seq_idx)
                 or (col_count>triggered_col+1) then
                   -- expected column or line was skipped
                   done = true
-                  --print("done D - expected column or line was skipped")
+                  --print("done D - expected column or line was skipped: col_count",col_count,"triggered_col",triggered_col)
                   break
                 end
                 -- increase count 
@@ -3207,13 +3303,12 @@ function NOW_Sequence:detect_spacing(patt_idx,line_idx,col_idx,seq_idx)
                 --print("spacing is now",spacing)
                 triggered_line = pos.line
                 triggered_col = col_count
-                --print("spacing",spacing,"triggered_line/col",triggered_line,triggered_col)
               end
             else
               if (triggered_col>0) then
                 -- we have encountered 'stray notes'
                 done = true
-                --print("done B - stray notes")
+                --print("done E - stray notes")
                 break
               end
             end
@@ -3263,9 +3358,12 @@ function NOW_Sequence:write_to_pattern(patt_idx,begin_line,seq_step,mask_type,st
 	if self.owner.fill_mode then
     begin_line = 1
 		writeahead_length = renoise.Pattern.MAX_NUMBER_OF_LINES
-  -- C) stream mode, output in small segments 
+  -- C) stream mode, output in smaller segments,
+  --    based on current tempo, lines per beat
   elseif stream or renoise.song().transport.playing then
-    writeahead_length = 16
+    local bpm = renoise.song().transport.bpm
+    local lpb = renoise.song().transport.lpb
+    writeahead_length = math.ceil(math.max(2,(bpm*lpb)/80))
 	end
   --print("writeahead_length",writeahead_length)
 
@@ -3275,9 +3373,11 @@ function NOW_Sequence:write_to_pattern(patt_idx,begin_line,seq_step,mask_type,st
 		set_offset = (mask_type == self.owner.MODE_OFFSET)
 		set_velocity = (mask_type == self.owner.MODE_VELOCITY)
 		set_retrig = (mask_type == self.owner.MODE_RETRIG)
-    -- always output note when setting retriggers
+    -- always output note when setting retriggers and vice versa
     if set_retrig then
       set_note = true
+    elseif set_note then
+      set_retrig = true
     end
 	else
 		set_note = true
@@ -3286,8 +3386,6 @@ function NOW_Sequence:write_to_pattern(patt_idx,begin_line,seq_step,mask_type,st
 		set_velocity = true
 		set_retrig = true
 	end	
-
-  --print("set_note,set_gate,set_offset,set_velocity,set_retrig",set_note,set_gate,set_offset,set_velocity,set_retrig)
 
   -- compute slow/fast retrigger lookup tables
   -- slow trigger table format : [column].{line,delay} 
@@ -3326,7 +3424,6 @@ function NOW_Sequence:write_to_pattern(patt_idx,begin_line,seq_step,mask_type,st
               branch:insert({line=ln,delay=0})
             end
           else
-            -- spread out
             local line = 0
             while (line<self.num_lines) do
               line = (self.num_lines/(val+1))*#branch
@@ -3337,15 +3434,11 @@ function NOW_Sequence:write_to_pattern(patt_idx,begin_line,seq_step,mask_type,st
           end
           trigger_table:insert(branch)
 
-        end -- slow trigger
+        end
 
       end
     end
   end
-  --print("line_retrigs")
-  --rprint(line_retrigs)
-  --print("trigger_table")
-  --rprint(trigger_table)
 
   -- boolean value for each step, true when gate has been set
   local gates_set = table.create()
@@ -3354,7 +3447,6 @@ function NOW_Sequence:write_to_pattern(patt_idx,begin_line,seq_step,mask_type,st
   -- format: [column][line_number_within_sequence][tick_value]
   if set_gate then
     if (self.recalc_gate_cached) then
-      --print("recalc_gate_cached")
       self.recalc_gate_cached = false
       self.gate_cached = table.create()
       for idx = 1,self.num_steps do
@@ -3385,9 +3477,6 @@ function NOW_Sequence:write_to_pattern(patt_idx,begin_line,seq_step,mask_type,st
     end
   end
 
-  --print("self.gate_cached")
-  --rprint(self.gate_cached)
-
 	local iter = renoise.song().pattern_iterator:lines_in_pattern_track(
 		patt_idx,
 		renoise.song().selected_track_index);
@@ -3406,8 +3495,6 @@ function NOW_Sequence:write_to_pattern(patt_idx,begin_line,seq_step,mask_type,st
         if (seq_line==0) then
           seq_line = self.num_lines
         end
-
-        --print("pos.line",pos.line,"offset_line",offset_line,"seq_line",seq_line)
 
         -- 'offset' is the index we use to look up the sequence 
         -- (it can contain a fractional part, like 6.25)
@@ -3451,11 +3538,9 @@ function NOW_Sequence:write_to_pattern(patt_idx,begin_line,seq_step,mask_type,st
               is_trigger = (offset==col_index)
             end
 
-            --print("pos.line",pos.line,"col_index",col_index,"is_trigger",is_trigger)
-
-            -- clear existing data, based on whether we are in 
+            -- todo: clear existing data, based on whether we are in 
             -- global mode (clear all) or not (clear only flagged parms)
-
+            
             if set_note or set_retrig then
               note_column.note_value = 121
               note_column.instrument_value = 255
@@ -3494,7 +3579,6 @@ function NOW_Sequence:write_to_pattern(patt_idx,begin_line,seq_step,mask_type,st
                 if set_retrig then
                   if (retrigs>0) then
                     note_column.panning_value = self:fast_retrigger(retrigs)
-                    --print(string.format("retrigger on trigger %d,%d,%X",col_index,pos.line,self:fast_retrigger(val)))
                     retrig_set = true
                   end
                 end
@@ -3650,7 +3734,6 @@ function NOW_Sequence:write_to_pattern(patt_idx,begin_line,seq_step,mask_type,st
 
               local val = self.offset_steps[math.floor(tmp_offset)]
 
-              --print(pos.line%self.spacing)
 							if val then
 								val = self:to_discrete_steps(val)
 								-- fix : 256 becoming 0 when wrapped 
@@ -3663,7 +3746,7 @@ function NOW_Sequence:write_to_pattern(patt_idx,begin_line,seq_step,mask_type,st
                   val = clamp_value(val+(math.floor(self.offset_adjust*255)),0,255)	
                 end
 								if val ~= 0 then
-									fx_column.number_value = 9
+									fx_column.number_value = self.OFFSET_NUM_VALUE
 									fx_column.amount_value = val
                   offset_set = true
 								end
@@ -3671,8 +3754,11 @@ function NOW_Sequence:write_to_pattern(patt_idx,begin_line,seq_step,mask_type,st
               
               -- clear existing
               if not offset_set then
+                --[[
                 fx_column.number_value = 0
                 fx_column.amount_value = 0
+                ]]
+                fx_column:clear()
               end
 
             end
@@ -3686,7 +3772,6 @@ function NOW_Sequence:write_to_pattern(patt_idx,begin_line,seq_step,mask_type,st
     -- (call this function again then, but limited to a single run, 
     -- as the various gate/retrig tables needs to be rebuilt)
     if ((pos.line+1) > pattern.number_of_lines) then
-      --print("write into next pattern, recursive",recursive)
       if not recursive then
         local next_pattern = nil
         local seq_loop_end = renoise.song().transport.loop_end.sequence
@@ -3729,9 +3814,15 @@ function NOW_Sequence:learn_sequence()
   local track_idx = renoise.song().selected_track_index
 	local begin_line = pos.line
   local line_offset = 0
-  local seq_idx = self:get_pattseq_pos()
+  local seq_idx = renoise.song().selected_sequence_index --self:get_pattseq_pos()
 
-  --print("begin_line",begin_line)
+  -- the actual sequence/pattern index (can be prior to out current pattern)
+  local tmp_seq_idx = seq_idx 
+  local tmp_patt_idx = patt_idx 
+
+  -- bring focus to the detected instrument once done
+  -- (except when it's an empty pattern)
+  local detected_instr_index = nil
 
   -- if pattern-track is empty, clear sequence
   if pattern.tracks[track_idx].is_empty then
@@ -3741,21 +3832,23 @@ function NOW_Sequence:learn_sequence()
   end
 
   -- pre analysis: detect existing sequence 
-  local last_trigger = self:detect_trigger(patt_idx,begin_line,1)
+  local last_trigger,tmp_seq_idx = self:detect_trigger(patt_idx,begin_line,1,nil,seq_idx)
+  --print("last_trigger A",last_trigger,tmp_seq_idx)
   if not last_trigger then
     -- try next trigger instead
     local forwards = true
-    last_trigger = self:detect_trigger(patt_idx,begin_line,1,forwards)
+    last_trigger,tmp_seq_idx = self:detect_trigger(patt_idx,begin_line,1,forwards,seq_idx)
   end
   if last_trigger then
     --print("last_trigger",last_trigger)
     -- detect spacing
-    local spacing = self:detect_spacing(patt_idx,last_trigger,1,seq_idx)
+    tmp_patt_idx = renoise.song().sequencer.pattern_sequence[tmp_seq_idx]
+    local spacing = self:detect_spacing(tmp_patt_idx,last_trigger,1,tmp_seq_idx)
     --print("spacing",spacing)
     if spacing then
       self:set_spacing(spacing,true)
       -- detect the length
-      local steps = self:detect_steps(patt_idx,last_trigger,1,seq_idx)
+      local steps = self:detect_steps(tmp_patt_idx,last_trigger,1,tmp_seq_idx)
       --print("steps",steps)
       if steps then
         self:set_num_steps(steps,true)
@@ -3786,13 +3879,15 @@ function NOW_Sequence:learn_sequence()
 
   end
 
+  -- now set the start point to our first trigger
+  begin_line = last_trigger
 
   -- slow trigger detection: contain the rate of the first 
   -- matched note on a non-trigger position for each column
   local slow_triggers = table.create()
 
   local seq_len = self:_compute_length()
-	local val = nil
+	--local val = nil
 	local offset = nil
 	local get_note,get_gate,get_offset,get_volume,get_retrig
 	local readahead_length = self:_compute_length()-1
@@ -3808,7 +3903,7 @@ function NOW_Sequence:learn_sequence()
 		get_retrig = true
 		self:clear()
 	else
-		get_note = (self.owner.mode == self.owner.MODE_NOTE)
+		get_note = (self.owner.mode == self.owner.MODE_PITCH)
 		get_gate = (self.owner.mode == self.owner.MODE_GATE)
 		get_offset = (self.owner.mode == self.owner.MODE_OFFSET)
 		get_volume = (self.owner.mode == self.owner.MODE_VELOCITY)
@@ -3819,15 +3914,15 @@ function NOW_Sequence:learn_sequence()
 
   while not done do
 
-    local pattern = renoise.song().patterns[patt_idx]
+    local pattern = renoise.song().patterns[tmp_patt_idx]
     if not pattern then
-      --print("done A - no pattern with this pattern index ",patt_idx)
+      --print("learn A - no pattern with this pattern index ",tmp_patt_idx)
       done = true
       break
     end
 
     local iter = renoise.song().pattern_iterator:lines_in_pattern_track(
-      patt_idx,
+      tmp_patt_idx,
       renoise.song().selected_track_index);
     for pos,line in iter do
       if(pos.line>=begin_line) then
@@ -3865,11 +3960,16 @@ function NOW_Sequence:learn_sequence()
               --print("offset2",offset2)
               if is_trigger then
                 steps_learned = steps_learned+1
-                --print("trigger point: pos.line",pos.line,"offset",offset,"offset2",offset2,"steps_learned",steps_learned)
+
+                -- focus to this instrument
+                local val = note_column.instrument_value
+                if (val<255) then
+                  detected_instr_index = note_column.instrument_value+1
+                end
 
                 if get_note then
-                  --print("note_column",col_index,note_column)
-                  val = note_column.note_value
+                  --print("get note - pos.line",pos.line,"col_index",col_index,"note_column",note_column)
+                  local val = note_column.note_value
                   if (val==121) then
                     val = 0
                   end
@@ -3879,25 +3979,25 @@ function NOW_Sequence:learn_sequence()
                   self:set_velocity(offset2,note_column.volume_value,true,true) 
                 end
                 if get_gate then
-                  val = note_column.panning_value
-                  if val ~= 255 and val > 239 then
-                    self:set_gate(col_index,val-240,true,true)
+                  local val = note_column.panning_value
+                  if (val<self.GATE_PAN_UPPER) and (val>=self.GATE_PAN_LOWER) then
+                    self:set_gate(col_index,val-self.GATE_PAN_LOWER,true,true)
                   end
                 end
                 if get_retrig then
-                  val = note_column.panning_value
-                  if (val>224) and (val<240) then
+                  local val = note_column.panning_value
+                  if (val>self.RETRIG_PAN_LOWER) and (val<self.RETRIG_PAN_UPPER) then
                     -- compute the fast retrigger value, scale logarithmically
-                    local val_adj = self:get_num_retrigs(val-224)
+                    local val_adj = self:get_num_retrigs(val-self.RETRIG_PAN_LOWER)
                     self:set_retrig(col_index,val_adj,true,true,true)
                   end
                 end
               else
                 -- non-trigger point position
                 if get_gate then
-                  val = note_column.panning_value
-                  -- proceed only if not special 'blank' value
-                  if val ~= 255 and val > 239 then
+                  local val = note_column.panning_value
+                  if (val<self.GATE_PAN_UPPER) and (val>self.GATE_PAN_LOWER) then
+                  --if val ~= 255 and val > 239 then
                     local note_line = begin_line+((col_index-1)*self.spacing)
                     local seq_offset = (begin_line+line_offset+1)%seq_len
                     local num_lines = (seq_offset+pos.line-note_line-2)%seq_len
@@ -3907,9 +4007,8 @@ function NOW_Sequence:learn_sequence()
                 if get_retrig then
                   if not slow_triggers[col_index] then
                     -- check that it's not a retrigger
-                    val = note_column.panning_value
-                    if (val==255) or (val<224) or (val>240) then
-
+                    local val = note_column.panning_value
+                    if (val==255) or (val<self.RETRIG_PAN_LOWER) or (val>self.RETRIG_PAN_UPPER) then
                       -- position within sequence
                       local seq_line = pos.line+line_offset%self.num_lines
                       if (seq_line==0) then
@@ -3925,12 +4024,13 @@ function NOW_Sequence:learn_sequence()
                           -- look from the most recent trigger and forth...
                           --print("look back from next_trigger->seq_line",next_trigger,seq_line)
                           local track_idx = renoise.song().selected_track_index
-                          local track = renoise.song().patterns[patt_idx].tracks[track_idx]
+                          local track = renoise.song().patterns[tmp_patt_idx].tracks[track_idx]
                           for i=next_trigger+1,next_trigger+self.num_lines-1 do
+                            if (i>pattern.number_of_lines) then
+                              break
+                            end
                             local col = track:line(i).note_columns[col_index]
-                            --print("col_index",col_index,"line",i,"col",col)
-                            val = col.note_value
-                            --print("-B -- val",val)
+                            local val = col.note_value
                             if val<121 then
                               matched_line = i
                               matched_note_column = col
@@ -3970,7 +4070,7 @@ function NOW_Sequence:learn_sequence()
               -- skip 'fractional' offsets
               if (offset==math.floor(offset)) then
                 -- rotate the values
-                --print("offset val before wrapping",val)
+                --print("get offset (before wrapping):",fx_column.amount_value)
                 self:set_offset(offset,wrap_value(fx_column.amount_value,0,255),true,true) 
               end
             end
@@ -3982,19 +4082,33 @@ function NOW_Sequence:learn_sequence()
     end -- patt iterator
     --print("steps_learned,self.num_steps",steps_learned,self.num_steps)
     if (steps_learned<self.num_steps) then
-      seq_idx = seq_idx+1
+      if not renoise.song().transport.loop_pattern then
+        tmp_seq_idx = tmp_seq_idx+1
+      end
+      if (tmp_seq_idx>=seq_idx) then
+        --print("done F - completed searching pattern",tmp_patt_idx)
+      end
       begin_line = 1
       line_offset = self:compute_offset(pattern.number_of_lines,line_offset) 
-      patt_idx = renoise.song().sequencer.pattern_sequence[seq_idx]
-      --print("not yet done learning - proceed to this pattern ",patt_idx)
+      tmp_patt_idx = renoise.song().sequencer.pattern_sequence[tmp_seq_idx]
+      --print("*** not yet done learning - proceed to this pattern ",tmp_patt_idx)
     else
-      --print("done B - completed searching pattern")
+      --print("done G - completed searching pattern",tmp_patt_idx)
       done = true
       break
     end
     
 
   end -- not done
+
+  -- set active instrument
+  if renoise.song().instruments[detected_instr_index] then
+    renoise.song().selected_instrument_index = detected_instr_index
+  end
+
+  local msg = "Learned sequence with %d steps, spacing is %d, line offset is %d"
+  msg = string.format(msg,self.num_steps,self.spacing,line_offset,self.owner.line_offset)
+  renoise.app():show_status(msg)
 
 end
 

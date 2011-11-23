@@ -22,7 +22,7 @@ class 'Device'
 function Device:__init(name, message_stream, protocol)
   TRACE('Device:__init()',name, message_stream, protocol)
 
-  ---- initialzation
+  ---- initialization
   
   assert(name and message_stream and protocol, 
     "Internal Error. Please report: " ..
@@ -61,16 +61,7 @@ function Device:__init(name, message_stream, protocol)
 
   self._vb = nil
   self._settings_view = nil
-  --self._settings_dialog = nil
   
-  
-  ---- MIDI port setup changed
-  -- 0.95
-  --[[
-  renoise.Midi.devices_changed_observable():add_notifier(
-    Device._available_device_ports_changed, self
-  )
-  ]]
   
 end
 
@@ -144,18 +135,6 @@ function Device:quantize_color(color,colorspace)
   } 
 end
 
-
-
---------------------------------------------------------------------------------
---[[
--- returns true when the device settings dialog is visible 
-
-function Device:settings_dialog_visible()
-  TRACE("Device:settings_dialog_visible()")
-
-  return (self._settings_dialog and self._settings_dialog.visible)
-end
-]]
 
 --------------------------------------------------------------------------------
 
@@ -234,27 +213,14 @@ function Device:show_settings_dialog(process)
     local bitmap = "./Duplex/Controllers/unknown.bmp"
 
     if (self._vb.views.dpx_device_thumbnail_root) then
-      -- !!! this is not exactly smart. I want to know the device
-      -- folder, so I am extracting the control-map path - but
-      -- if the control-map is not located in that folder (which
-      -- is quite possible), it will not work...
-      
-      local extract_device_folder = function(filename)
-        local _, _, name, extension = filename:find("(.+)[/\\](.+)$")
-        if (name ~= nil) then
-          return "./Duplex/" .. name
-        end
-      end
-
-      local device_path = extract_device_folder(self.control_map.file_path)
 
       if (process.configuration) and
          (process.configuration.device) and
          (process.configuration.device.thumbnail) 
       then
-        local config_bitmap = ("%s/%s"):format(device_path,
-          process.configuration.device.thumbnail)
-          
+        local config_bitmap = "./Duplex/" .. 
+          process.configuration.device.thumbnail
+
         if (io.exists(config_bitmap)) then
           bitmap = config_bitmap
         else
@@ -525,22 +491,6 @@ function Device:_build_settings()
   return view
 end
 
-
---------------------------------------------------------------------------------
-
---[[
--- handle device hot-plugging (ports changing while Renoise is running)
-function Device:_available_device_ports_changed()
-  TRACE("Device:_available_device_ports_changed()")
-
-  -- close the device setting dialogs on MIDI port changes 
-  -- so we don't have to bother updating them
-  
-  if (self:settings_dialog_visible()) then
-      self:close_settings_dialog()
-  end
-end
-]]
 --------------------------------------------------------------------------------
 
 -- construct & send internal messages (for both MIDI and OSC devices)

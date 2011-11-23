@@ -266,3 +266,46 @@ Done 0.97
 
 * Other minor changes 
   o Cleaner app initialization (less code)
+
+--------------------------------------------------------------------------------
+Done 0.98
+--------------------------------------------------------------------------------
+
+* API
+  o Automation class: generic automation support (used in Effect and Mixer)
+  o Device-config: thumbnails specified in same path syntax as a controlmap
+  o Removed semantic entries “greedy” and “ui_component” from applications
+
+* Controllers
+  o APC40 (fixed controlmap)
+  o nanoKONTROL2 (new device, configurations)
+  o LPD8 (new device, configurations)
+  o BCR2000 (new configurations)
+  o Restructured controller config/controlmap files
+
+* Mixer
+  o Automation recording support (volume, panning)
+  o Soft takeover / parameter pickup
+
+* Navigator
+  o Reset on new song
+  o Listen for changes to block-loop size
+  o Follow block loop enable
+
+* Effect
+  o Mapping for selecting current device via knob/slider
+  o Mapping for selecting next/previous device 
+  o Mapping for selecting active device preset 
+
+* Matrix
+  o pattern_assignments_observable is deprecated in Renoise 2.8 
+
+* Recorder
+  o First-run message explaining how to set up a recording
+  o Detect v3 API and use alternate FX commands
+
+* NotesOnWheels
+  o When learning while writing, extend search by writeahead
+
+* Transport
+  o New mapping: "toggle_metronome"
