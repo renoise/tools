@@ -114,7 +114,8 @@ Mixer.default_options = {
     value = 1,
   },
   invert_mute = {
-    label = "Invert display",
+    label = "Mute display",
+    hidden = true,
     description = "Decide how to display muted tracks",
     items = {
       "Button is lit when track is muted",
@@ -160,6 +161,46 @@ Mixer.default_options = {
     items = {"0","1","2","3","4","5","6","7"},
     value = 1,
   },
+  take_over_volumes = {
+    label = "Soft takeover",
+    description = "Enables soft take-over for volume: useful if faders of the device are not motorized. "
+                .."\nThis feature will not take care of the position of the fader until"
+                .."\nthe volume value is reached. "
+                .."\nExample: you are playing a song A and you finish it by fading out the master volume."
+                .."\nWhen you load a song B, the master volume will not jump to 0 "
+                .."\nwhen you move again the fader of master volume.",
+    items = {
+      "Disabled",
+      "Enabled",
+    },
+    value = 1,
+  },
+  --[[
+  edit_sync = {
+    label = "Edit-sync",
+    description = "Record automation while edit-mode (red border in Renoise) is active",
+    items = {
+      "Edit-sync enabled",
+      "Edit-sync disabled",
+    },
+    value = 1,
+  },
+  ]]
+  record_method = {
+    label = "Automation rec.",
+    description = "Determine how to record automation ",
+    items = {
+      "Disabled, do not record automation",
+      "Touch record: record only when touched",
+      "Latch record: touch to start output",
+    },
+    value = 1,
+    on_change = function(inst)
+      inst.automation.latch_record = (inst.options.record_method.value==inst.RECORD_LATCH) 
+      inst:update_record_mode()
+    end
+  }
+
   --[[
   -- TODO
   include_tracks = {
@@ -179,7 +220,7 @@ Mixer.default_options = {
   ]]
 }
 
--- add Renoise 2.7 specific observables
+-- add Renoise 2.7+ specific options
 if (renoise.API_VERSION >=2) then
   Mixer.default_options["sync_pre_post"] = {
     label = "Pre/Post sync",
@@ -224,40 +265,41 @@ function Mixer:__init(browser_process,mappings,options,config_name)
 
   self.TRACK_PAGE_AUTO = 1
 
+  self.TAKE_OVER_VOLUME_OFF = 1
+  self.TAKE_OVER_VOLUME_ON = 2
+  
+  --[[
+  self.EDIT_SYNC_ON = 1
+  self.EDIT_SYNC_OFF = 2
+  ]]
+
+  self.RECORD_NONE = 1
+  self.RECORD_TOUCH = 2
+  self.RECORD_LATCH = 3
+
   -- define control-maps groups 
   self.mappings = {
     master = {
       description = "Mixer: Master volume",
-      ui_component = UI_COMPONENT_SLIDER,
     },
     levels = {
       description = "Mixer: Track volume",
-      ui_component = UI_COMPONENT_SLIDER,
-      greedy = true,
     },
     panning = {
       description = "Mixer: Track panning",
-      ui_component = UI_COMPONENT_SLIDER,
-      greedy = true,
     },
     mute = {
       description = "Mixer: Mute track",
-      ui_component = UI_COMPONENT_TOGGLEBUTTON,
-      greedy = true,
     },
     solo = {
       description = "Mixer: Solo track",
-      ui_component = UI_COMPONENT_TOGGLEBUTTON,
-      greedy = true,
     },
     page = {
       description = "Mixer: Track navigator",
-      ui_component = UI_COMPONENT_SPINNER,
       orientation = HORIZONTAL,
     },
     mode = {
       description = "Mixer: Pre/Post FX mode",
-      ui_component = UI_COMPONENT_TOGGLEBUTTON,
     },
   }
 
@@ -345,11 +387,23 @@ function Mixer:__init(browser_process,mappings,options,config_name)
 
   self._update_requested = false
 
+  -- use Automation class to record movements
+  self.automation = Automation()
+
+  -- set while recording automation
+  self._record_mode = false
+
+  -- list of takeover volumes
+  self._take_over_volumes = {}
+
   -- apply arguments
   Application.__init(self,browser_process,mappings,options,config_name)
 
   -- toggle, which defines if we're controlling the pre or post fx vol/pans
   self._postfx_mode = (self.options.pre_post.value == self.MODE_POSTFX)
+
+  -- possible after options have been set
+  self.automation.latch_record = (self.options.record_method.value==self.RECORD_LATCH)
 
 end
 
@@ -379,6 +433,10 @@ function Mixer:on_idle()
     self:update()
   end
 
+  if self._record_mode then
+    self.automation:update()
+  end
+
 end
 
 
@@ -390,22 +448,36 @@ end
 function Mixer:set_track_volume(control_index, value, skip_event_handler)
   TRACE("Mixer:set_track_volume", control_index, value, skip_event_handler)
 
-  if (not skip_event_handler) then
+  if not skip_event_handler then
     skip_event_handler = true
   end
 
-  if (self.active) then
-    if (self._volume ~= nil) then
-      self._volume[control_index]:set_value(value, skip_event_handler)
-      
-      -- update the master as well, if it has its own UI representation
-      if (self._master ~= nil) and 
-         (control_index + self._track_offset == get_master_track_index()) 
-      then
-        self._master:set_value(value, skip_event_handler)
+  if not self.active then
+    return
+  end
+
+  if (self._volume ~= nil) then
+
+    -- update track control
+    self._volume[control_index]:set_value(value, skip_event_handler)
+    
+    -- reset the takeover hook (when not recording, as automation recording  
+    -- output a stream of new values, and we would get caught in a "reset-loop")
+    if not self._record_mode then
+      if self._take_over_volumes[control_index] then
+        self._take_over_volumes[control_index].hook = true
       end
     end
+
+    -- update the master as well, if it has its own UI representation
+    if (self._master ~= nil) and 
+       (control_index + self._track_offset == get_master_track_index()) 
+    then
+      self._master:set_value(value, skip_event_handler)
+    end
   end
+  
+
 end
 
 
@@ -670,6 +742,8 @@ function Mixer:on_new_document()
   if (self.active) then
     self:update()
   end
+
+  self:_init_take_over_volume()
 end
 
 
@@ -864,14 +938,16 @@ function Mixer:_build_app()
         local track = renoise.song().tracks[track_index]
         local volume = (self._postfx_mode) and 
           track.postfx_volume or track.prefx_volume
-        volume.value = obj.value
-  
+
+        -- when take-over is enabled, this can return false 
+        return self:_set_volume(volume,track_index,obj)
       end
       
       self:_add_component(c)
       self._volume[control_index] = c
 
     end
+
   end
     
 
@@ -910,6 +986,10 @@ function Mixer:_build_app()
         
           panning.value = obj.value
           
+          if self._record_mode then
+            self.automation:add_automation(track_index,panning,obj.value)
+          end
+
           return true
         end
       end
@@ -1058,20 +1138,23 @@ function Mixer:_build_app()
       if (not self.active) then
         return false
       else
-        local master_control_index = 
-          get_master_track_index() - self._track_offset
+        local track_index = get_master_track_index()
+        local control_index = track_index - self._track_offset
         if (self._volume and 
-            master_control_index > 0 and 
-            master_control_index <= volume_count) 
+            control_index > 0 and 
+            control_index <= volume_count) 
         then
           -- update visible master level slider
-          self._volume[master_control_index]:set_value(obj.value,true)
+          self._volume[control_index]:set_value(obj.value,true)
         end
-        
+        local track = get_master_track()
+        local is_master = true
+
         local volume = (self._postfx_mode) and 
-          get_master_track().postfx_volume or 
-          get_master_track().prefx_volume
-        volume.value = obj.value
+          track.postfx_volume or track.prefx_volume
+
+        -- when take-over is enabled, this can return false 
+        return self:_set_volume(volume,track_index,obj)
         
       end
     end 
@@ -1113,6 +1196,7 @@ function Mixer:_build_app()
         self._update_requested = true
 
       end
+      self:_init_take_over_volume()
     end
     
     self:_add_component(c)
@@ -1141,6 +1225,7 @@ function Mixer:_build_app()
       if (self._postfx_mode ~= obj.active) then
         self._postfx_mode = obj.active
         self._update_requested = true
+        self:_init_take_over_volume()
 
         if self.options.sync_pre_post and
             (self.options.sync_pre_post.value == self.MODE_PREPOSTSYNC_ON) 
@@ -1165,6 +1250,44 @@ end
 
 --------------------------------------------------------------------------------
 
+-- set volume with support for automation recording and soft takeover
+-- @return boolean (true when volume has been set)
+
+function Mixer:_set_volume(parameter,track_index,obj)
+  TRACE("Mixer:_set_volume()",parameter,track_index,obj)
+
+  local value_set = false
+  if self.options.take_over_volumes.value == self.TAKE_OVER_VOLUME_ON then
+    value_set = self:_set_take_over_volume(parameter, obj, track_index)
+  else
+    parameter.value = obj.value
+    value_set = true
+  end
+  if value_set and self._record_mode then
+    -- scale back value to 0-1 range
+    self.automation:add_automation(track_index,parameter,obj.value/RENOISE_DECIBEL)
+  end
+
+  return value_set
+
+end
+
+
+--------------------------------------------------------------------------------
+
+-- update the record mode (when editmode or record_method has changed)
+
+function Mixer:update_record_mode()
+  TRACE("Mixer:update_record_mode")
+  if (self.options.record_method.value ~= self.RECORD_NONE) then
+    self._record_mode = renoise.song().transport.edit_mode 
+  else
+    self._record_mode = false
+  end
+end
+
+--------------------------------------------------------------------------------
+
 -- adds notifiers to song
 -- invoked when a new document becomes available
 
@@ -1178,7 +1301,6 @@ function Mixer:_attach_to_song()
     renoise.app().window.mixer_view_post_fx_observable:add_notifier(
       function()
         TRACE("Mixer:mixer_view_post_fx_observable fired...")
-        --print("Mixer:mixer_view_post_fx_observable fired...")
         if (self.options.sync_pre_post.value == self.MODE_PREPOSTSYNC_ON) then
           self._postfx_mode = renoise.app().window.mixer_view_post_fx
           self._update_requested = true
@@ -1193,7 +1315,6 @@ function Mixer:_attach_to_song()
     function()
       TRACE("Mixer:tracks_changed fired...")
       self._update_requested = true
-
     end
   )
 
@@ -1208,8 +1329,19 @@ function Mixer:_attach_to_song()
       self:_follow_track()
     end
   )
-
   self:_follow_track()
+
+  -- track edit_mode, and set record_mode accordingly
+  renoise.song().transport.edit_mode_observable:add_notifier(
+    function()
+      TRACE("Mixer:edit_mode_observable fired...")
+        self:update_record_mode()
+    end
+  )
+  self:update_record_mode()
+
+  -- attach Automation class
+  self.automation:attach_to_song(new_song)
 
 end
 
@@ -1232,6 +1364,7 @@ function Mixer:_follow_track()
     self._track_page = page
     self._track_offset = page*self:_get_page_width()
     self._update_requested = true
+    self:_init_take_over_volume()
 
   end
 
@@ -1312,11 +1445,12 @@ function Mixer:_attach_to_tracks(new_song)
           if (self.active) then
             local value = volume.value
             -- compensate for potential loss of precision 
-            if not compare(self._volume[control_index].value, value, 1000) then
+            if not self._record_mode and
+              not compare(self._volume[control_index].value, value, 1000) then
               self:set_track_volume(control_index, value)
             end
           end
-        end 
+        end
       )
       if (track_index == master_idx) then
         master_done = true
@@ -1421,3 +1555,75 @@ function Mixer:_attach_to_tracks(new_song)
 
 end
 
+-- Sets the volume of a track when a Controller's fader hooks the actual
+-- volume of the track.
+-- @param p_volume (DeviceParameter)
+-- @param p_obj (UIComponent) the control that contain the value
+-- @param p_track_index (number) look for / remember by this index 
+-- @return (boolean) true when value was set
+function Mixer:_set_take_over_volume(p_volume, p_obj, p_track_index)
+  TRACE("Mixer:_set_take_over_volume()",p_volume, p_obj, p_track_index)
+
+  local p_from_master = (p_track_index == get_master_track_index())
+
+  -- If a fader is not registered into the table, we init it
+  if not self._take_over_volumes[p_track_index] then
+    self._take_over_volumes[p_track_index] = {hook = true, last_value = nil}
+  end
+
+  local take_over = self._take_over_volumes[p_track_index]
+  local value_set = false
+
+  -- Master volume can be controlled by 2 sliders at the same time.
+  -- Need to determinated if the hook system must be reset depending on which
+  -- fader control it.
+  if p_from_master ~= nil then
+    if take_over.master_move ~= p_from_master then
+      take_over.hook = true
+      take_over.last_value = p_obj.value
+    end
+    take_over.master_move = p_from_master
+  end
+      
+  -- If hook is activated, fader will have no effect on track volume
+  if take_over.hook then
+    if not take_over.last_value then
+      take_over.last_value = p_obj.value
+    end
+
+    -- determines if fader has reached/crossed the track volume
+    -- first, see if the volume is within threshold ("sticky")
+    local reached = compare(p_volume.value,p_obj.value,5)
+    if not reached then
+      local x1 = p_volume.value - take_over.last_value 
+      local x2 = p_volume.value - p_obj.value
+      reached = (sign(x1) ~= sign(x2))
+    end
+    
+    if reached then 
+      p_volume.value = p_obj.value
+      take_over.hook = false
+      value_set = true
+    end
+  else
+    -- hook is deactivated, Mixer reacts normally
+    p_volume.value = p_obj.value
+    take_over.last_value = p_obj.value
+    --print("change take-over to this value",p_track_index,p_obj.value)
+    value_set = true
+  end
+
+  --rprint(self._take_over_volumes)
+  return value_set
+
+end
+
+-- Init (or re-init) hook system. For instance, when a new song is loaded or
+-- when user moves among tracks.
+function Mixer:_init_take_over_volume()
+  TRACE("Mixer:_init_take_over_volume()")
+  for _, v in pairs(self._take_over_volumes) do 
+    v.hook = true
+    v.last_value = nil
+  end
+end

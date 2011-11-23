@@ -178,7 +178,6 @@ function Matrix:__init(browser_process,mappings,options,config_name)
       description = "Matrix: Press to toggle muted state"
                   .."\nHold to focus this track/pattern"
                   .."\nControl value: ",
-      greedy = true,
     },
     triggers = {
       description = "Matrix: Pattern-sequence triggers"
@@ -1084,11 +1083,8 @@ end
 -- adds notifiers to slot relevant states
 
 function Matrix:_attach_to_song(song)
-  TRACE("Matrix:_attach_to_song()")
+  TRACE("Matrix:_attach_to_song()",song)
   
-
-  -- song notifiers
-
   song.sequencer.pattern_assignments_observable:add_notifier(
     function()
       TRACE("Matrix: pattern_assignments_observable fired...")

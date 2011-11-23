@@ -5,6 +5,7 @@
 -- include the duplex core
 
 require "Duplex/Globals"
+require "Duplex/Automation"
 require "Duplex/MessageStream"
 require "Duplex/Display"
 require "Duplex/Canvas"

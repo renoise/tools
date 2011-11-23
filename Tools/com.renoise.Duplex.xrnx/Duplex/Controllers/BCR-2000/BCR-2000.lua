@@ -1,10 +1,8 @@
 --[[----------------------------------------------------------------------------
--- Duplex.BCR-2000
+-- Duplex.BCR2000
 ----------------------------------------------------------------------------]]--
 
 -- default configuration of the BCR-2000
--- uses a custom device class, a control map and Mixer and Effect applications
-
 
 --==============================================================================
 
@@ -22,56 +20,12 @@ function BCR2000:__init(display_name, message_stream, port_in, port_out)
 end
 
 
---------------------------------------------------------------------------------
+--==============================================================================
 
--- setup a Mixer and Effect application
+-- Include these configurations 
 
-duplex_configurations:insert {
+local CTRL_PATH = "Duplex/Controllers/BCR-2000/Configurations/"
+require (CTRL_PATH.."BCR2000_MixerEffect")
+require (CTRL_PATH.."BCR2000_NotesOnWheels")
+require (CTRL_PATH.."BCR2000_RecorderEffect")
 
-  -- configuration properties
-  name = "Mixer & Effects",
-  pinned = true,
-
-  -- device properties
-  device = {
-    class_name = "BCR2000",          
-    display_name = "BCR-2000",
-    device_port_in = "BCR2000",
-    device_port_out = "BCR2000",
-    control_map = "Controllers/BCR-2000/BCR-2000.xml",
-    thumbnail = "BCR-2000.bmp",
-    protocol = DEVICE_MIDI_PROTOCOL
-  },
-  
-  applications = {
-    Mixer = {
-      mappings = {
-        levels = {
-          group_name = "Encoders",
-        },
-        mute = {
-          group_name = "Buttons1",
-        },
-        solo = {
-          group_name = "Buttons2",
-        },
-        page = {
-          group_name = "ControlButtonRow1"
-        }
-      },
-      options = {
-        pre_post = 2
-      }
-    },
-    Effect = {
-      mappings = {
-        parameters = {
-          group_name= "EffectEncoders",
-        },
-        page = {
-          group_name = "ControlButtonRow2"
-        }
-      }
-    }
-  }
-}

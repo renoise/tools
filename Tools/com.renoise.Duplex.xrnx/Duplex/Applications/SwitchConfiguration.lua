@@ -33,12 +33,10 @@ function SwitchConfiguration:__init(browser_process, mappings, options, config_n
         goto_next = {
             description = "SwitchConfiguration: Goto next configuration"    
             .."\nControl value: ",
-            ui_component = UI_COMPONENT_BUTTONSTRIP,
         },
         goto_previous = {
             description = "SwitchConfiguration: Goto previous configuration"    
             .."\nControl value: ",
-            ui_component = UI_COMPONENT_BUTTONSTRIP,
         },
 
     }

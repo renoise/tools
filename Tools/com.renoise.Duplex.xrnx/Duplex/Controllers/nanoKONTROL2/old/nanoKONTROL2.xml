@@ -1,0 +1,108 @@
+<Device>
+  <Name>NanoKontrol2</Name>
+  <Author>satobox, craftomaniac (based on original by Cuubic)</Author>
+  <Description>Controlmap for Korg NanoKontrol2
+  Please set the "LED mode" to [External] in the Korg Editor
+  </Description>
+  <Parameters>
+    <Row>
+      <Column>
+        <Row>
+          <Group name="TRACK" orientation="horizontal">
+            <Param value="CC#58" type="button" name="Control Button #1" aspect="0.6"  maximum="127" minimum="0"/>
+            <Param value="CC#59" type="button" name="Control Button #2" aspect="0.6"  maximum="127" minimum="0"/>
+          </Group>
+        
+          <Group name="CYCLE" orientation="horizontal">
+            <Param value="CC#46" type="button" name="Control Button #1" aspect="0.6"  maximum="127" minimum="0"/>
+          </Group>
+        
+          <Group name="MARKER" orientation="horizontal">
+            <Param value="CC#60" type="button" name="Control Button #1" aspect="0.6"  maximum="127" minimum="0"/>
+            <Param value="CC#61" type="button" name="Control Button #2" aspect="0.6"  maximum="127" minimum="0"/>
+            <Param value="CC#62" type="button" name="Control Button #3" aspect="0.6"  maximum="127" minimum="0"/>
+          </Group>
+        </Row>
+      
+        <Row>  
+          <Group name="Transport" orientation="horizontal">
+            <Param value="CC#43" type="button" name="Control Button #4"  maximum="127" minimum="0"/>
+            <Param value="CC#44" type="button" name="Control Button #5"  maximum="127" minimum="0"/>
+            <Param value="CC#42" type="button" name="Control Button #6"  maximum="127" minimum="0"/>
+            <Param value="CC#41" type="button" name="Control Button #6"  maximum="127" minimum="0"/>
+            <Param value="CC#45" type="button" name="Control Button #6"  maximum="127" minimum="0"/>
+          </Group>
+        </Row>
+      </Column>
+    </Row>
+    
+    <Row>
+    </Row>
+    <Row>
+    </Row>
+    <Row>
+    </Row>
+    <Row>
+    </Row>
+
+    <Row>
+      <Column>
+        <Group name="Encoders" orientation="horizontal" columns="8">
+          <Param value="CC#16" type="dial" name="Dial #1"  maximum="127" minimum="0"/>
+          <Param value="CC#17" type="dial" name="Dial #2"  maximum="127" minimum="0"/>
+          <Param value="CC#18" type="dial" name="Dial #3"  maximum="127" minimum="0"/>
+          <Param value="CC#19" type="dial" name="Dial #4"  maximum="127" minimum="0"/>
+          <Param value="CC#20" type="dial" name="Dial #5"  maximum="127" minimum="0"/>
+          <Param value="CC#21" type="dial" name="Dial #6"  maximum="127" minimum="0"/>
+          <Param value="CC#22" type="dial" name="Dial #7"  maximum="127" minimum="0"/>
+          <Param value="CC#23" type="dial" name="Dial #8"  maximum="127" minimum="0"/>
+        </Group>
+        
+        <Group name="Faders" orientation="horizontal" columns="8">
+          <Param value="CC#0" type="fader" name="Fader #1"  orientation="vertical" size="4"  maximum="127" minimum="0"/>
+          <Param value="CC#1" type="fader" name="Fader #2"  orientation="vertical" size="4"  maximum="127" minimum="0"/>
+          <Param value="CC#2" type="fader" name="Fader #3"  orientation="vertical" size="4"  maximum="127" minimum="0"/>
+          <Param value="CC#3" type="fader" name="Fader #4"  orientation="vertical" size="4"  maximum="127" minimum="0"/>
+          <Param value="CC#4" type="fader" name="Fader #5"  orientation="vertical" size="4"  maximum="127" minimum="0"/>
+          <Param value="CC#5" type="fader" name="Fader #6"  orientation="vertical" size="4"  maximum="127" minimum="0"/>
+          <Param value="CC#6" type="fader" name="Fader #7"  orientation="vertical" size="4"  maximum="127" minimum="0"/>
+          <Param value="CC#7" type="fader" name="Fader #8"  orientation="vertical" size="4"  maximum="127" minimum="0"/>
+        </Group>
+        
+        <Group name="Buttons1" orientation="horizontal" columns="8">
+          <Param value="CC#32" type="button" name="Button #1"  maximum="127" minimum="0"/>
+          <Param value="CC#33" type="button" name="Button #2"  maximum="127" minimum="0"/>
+          <Param value="CC#34" type="button" name="Button #3"  maximum="127" minimum="0"/>
+          <Param value="CC#35" type="button" name="Button #4"  maximum="127" minimum="0"/>
+          <Param value="CC#36" type="button" name="Button #5"  maximum="127" minimum="0"/>
+          <Param value="CC#37" type="button" name="Button #6"  maximum="127" minimum="0"/>
+          <Param value="CC#38" type="button" name="Button #7"  maximum="127" minimum="0"/>
+          <Param value="CC#39" type="button" name="Button #8"  maximum="127" minimum="0"/>
+        </Group>
+        
+        <Group name="Buttons2" orientation="horizontal" columns="8">
+          <Param value="CC#48" type="button" name="Button #1"  maximum="127" minimum="0"/>
+          <Param value="CC#49" type="button" name="Button #2"  maximum="127" minimum="0"/>
+          <Param value="CC#50" type="button" name="Button #3"  maximum="127" minimum="0"/>
+          <Param value="CC#51" type="button" name="Button #4"  maximum="127" minimum="0"/>
+          <Param value="CC#52" type="button" name="Button #5"  maximum="127" minimum="0"/>
+          <Param value="CC#53" type="button" name="Button #6"  maximum="127" minimum="0"/>
+          <Param value="CC#54" type="button" name="Button #7"  maximum="127" minimum="0"/>
+          <Param value="CC#55" type="button" name="Button #8"  maximum="127" minimum="0"/>
+        </Group>
+        
+        <Group name="Buttons3" orientation="horizontal" columns="8">
+          <Param value="CC#64" type="button" name="Button #1"  maximum="127" minimum="0"/>
+          <Param value="CC#65" type="button" name="Button #2"  maximum="127" minimum="0"/>
+          <Param value="CC#66" type="button" name="Button #3"  maximum="127" minimum="0"/>
+          <Param value="CC#67" type="button" name="Button #4"  maximum="127" minimum="0"/>
+          <Param value="CC#68" type="button" name="Button #5"  maximum="127" minimum="0"/>
+          <Param value="CC#69" type="button" name="Button #6"  maximum="127" minimum="0"/>
+          <Param value="CC#70" type="button" name="Button #7"  maximum="127" minimum="0"/>
+          <Param value="CC#71" type="button" name="Button #8"  maximum="127" minimum="0"/>
+        </Group>
+        
+      </Column>        
+    </Row>
+  </Parameters>
+</Device>

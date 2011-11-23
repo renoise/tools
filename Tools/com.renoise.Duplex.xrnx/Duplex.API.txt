@@ -402,11 +402,10 @@ contain a seperate entry for the application, which means that we are able to
 configure the same application differently for different devices, or have 
 multiple configurations for the same device.
 
-(This is not yet done, but planned for the beta phase:) The Application class 
-also contain code that automatically builds a GUI for managing the application. 
-This GUI is employed by the global Device options dialog, and should provide 
-easy access to mappings & options that we have chosen to expose for the 
-application
+The Application class also contain code that automatically builds a GUI for 
+managing the application. This GUI is employed by the global Device options 
+dialog, and should provide easy access to mappings & options that we have chosen 
+to expose for the application
 
 
 -- constructor

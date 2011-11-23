@@ -91,30 +91,24 @@ function TrackSelector:__init(browser_process,mappings,options,config_name)
   self.mappings = {
     prev_next_track = {    
       description = "TrackSelector: Select next/previous track",
-      ui_component = UI_COMPONENT_SPINNER,
       orientation = HORIZONTAL,    
     },
     prev_next_page = {
       description = "TrackSelector: Select track-page",
-      ui_component = UI_COMPONENT_SPINNER,
       orientation = HORIZONTAL,    
     },
     select_track = {
       description = "TrackSelector: Select active track",
-      ui_component = UI_COMPONENT_SLIDER,
       orientation = HORIZONTAL,    
     },
     select_master = {
       description = "TrackSelector: Select master-track",
-      ui_component = UI_COMPONENT_PUSHBUTTON,
     },
     select_sends = {
       description = "TrackSelector: Select 1st send-track",
-      ui_component = UI_COMPONENT_PUSHBUTTON,
     },
     select_first = {
       description = "TrackSelector: Select first track",
-      ui_component = UI_COMPONENT_PUSHBUTTON,
     },
   }
   Application.__init(self,browser_process,mappings,options,config_name)
@@ -226,12 +220,12 @@ function TrackSelector:update()
   end
 
   -- set the active track page + range
+  local track_max = #renoise.song().tracks
+  local track_index = self._selected_track_index
+  local page = self:_get_track_page(track_index)
+  self._track_page = page
+  local pages = math.ceil(track_max/page_width)
   if (self._prev_next_page) then
-    local track_max = #renoise.song().tracks
-    local track_index = self._selected_track_index
-    local page = self:_get_track_page(track_index)
-    self._track_page = page
-    local pages = math.ceil(track_max/page_width)
     self._prev_next_page:set_range(1,pages)
     self._prev_next_page:set_index(page,skip_event)
   end
@@ -347,7 +341,7 @@ function TrackSelector:_build_app(song)
     TRACE("TrackSelector:add track-activator control (slider)")
     
     -- is the control button-based?
-    slider_grid_mode = self:is_button(cm,map.group_name,map.index)
+    slider_grid_mode = cm:is_button(map.group_name,map.index)
     if slider_grid_mode then
       -- yes, count the number of available buttons
       if (map.orientation==HORIZONTAL) then
@@ -460,35 +454,6 @@ function TrackSelector:_build_app(song)
 
   Application._build_app(self)
   return true
-
-end
-
---------------------------------------------------------------------------------
--- depricated (part of ControlMap.lua in the next release)
-
-function TrackSelector:is_button(cm,group_name,index)
-
-  -- greedy mappings might not specify an index,
-  -- so we simply use the first available one...
-  if not index then
-    index = 1
-  end
-  local group = cm.groups[group_name]
-  if (group) then
-    local param = group[index]
-    if (param["xarg"] and param["xarg"]["type"]) then
-      if not (param["xarg"]["type"]=="button") and
-         not (param["xarg"]["type"]=="togglebutton") and
-         not (param["xarg"]["type"]=="pushbutton") 
-      then
-        return false
-      else
-        return true
-      end
-    end
-  end
-
-  return false
 
 end
 

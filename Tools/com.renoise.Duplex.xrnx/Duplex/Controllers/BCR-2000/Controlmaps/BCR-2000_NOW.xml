@@ -1,0 +1,165 @@
+<Device>
+  <Name>Behringer BCR 2000</Name>
+  <Author>Taktik, satobox</Author>
+  <Description>Controlmap for Behringer BCR 2000
+Select factory preset #1 on the BCR for this configuration</Description>
+  <Parameters>
+    <Page>
+      <Column>
+        <Group name="Encoders1" orientation="horizontal" columns="8">
+          <Param value="CC#1|Ch1" type="dial" name="Dial #1/1"  maximum="127" minimum="0"/>
+          <Param value="CC#2|Ch1" type="dial" name="Dial #1/2"  maximum="127" minimum="0"/>
+          <Param value="CC#3|Ch1" type="dial" name="Dial #1/3"  maximum="127" minimum="0"/>
+          <Param value="CC#4|Ch1" type="dial" name="Dial #1/4"  maximum="127" minimum="0"/>
+          <Param value="CC#5|Ch1" type="dial" name="Dial #1/5"  maximum="127" minimum="0"/>
+          <Param value="CC#6|Ch1" type="dial" name="Dial #1/6"  maximum="127" minimum="0"/>
+          <Param value="CC#7|Ch1" type="dial" name="Dial #1/7"  maximum="127" minimum="0"/>
+          <Param value="CC#8|Ch1" type="dial" name="Dial #1/8"  maximum="127" minimum="0"/>
+        </Group>
+        <Group name="DialPush1" orientation="horizontal" columns="8">  
+          <Param value="CC#33|Ch1" type="togglebutton" name="Dial #1/1 PushButton" aspect="0.5"  maximum="127" minimum="0"/>
+          <Param value="CC#34|Ch1" type="togglebutton" name="Dial #1/2 PushButton" aspect="0.5"  maximum="127" minimum="0"/>
+          <Param value="CC#35|Ch1" type="togglebutton" name="Dial #1/3 PushButton" aspect="0.5"  maximum="127" minimum="0"/>
+          <Param value="CC#36|Ch1" type="togglebutton" name="Dial #1/4 PushButton" aspect="0.5"  maximum="127" minimum="0"/>
+          <Param value="CC#37|Ch1" type="togglebutton" name="Dial #1/5 PushButton" aspect="0.5"  maximum="127" minimum="0"/>
+          <Param value="CC#38|Ch1" type="togglebutton" name="Dial #1/6 PushButton" aspect="0.5"  maximum="127" minimum="0"/>
+          <Param value="CC#39|Ch1" type="togglebutton" name="Dial #1/7 PushButton" aspect="0.5"  maximum="127" minimum="0"/>
+          <Param value="CC#40|Ch1" type="togglebutton" name="Dial #1/8 PushButton" aspect="0.5"  maximum="127" minimum="0"/>
+        </Group>
+        <Group name="Encoders2" orientation="horizontal" columns="8">
+          <Param value="CC#9|Ch1" type="dial" name="Dial #2/1"  maximum="127" minimum="0"/>
+          <Param value="CC#10|Ch1" type="dial" name="Dial #2/2"  maximum="127" minimum="0"/>
+          <Param value="CC#11|Ch1" type="dial" name="Dial #2/3"  maximum="127" minimum="0"/>
+          <Param value="CC#12|Ch1" type="dial" name="Dial #2/4"  maximum="127" minimum="0"/>
+          <Param value="CC#13|Ch1" type="dial" name="Dial #2/5"  maximum="127" minimum="0"/>
+          <Param value="CC#14|Ch1" type="dial" name="Dial #2/6"  maximum="127" minimum="0"/>
+          <Param value="CC#15|Ch1" type="dial" name="Dial #2/7"  maximum="127" minimum="0"/>
+          <Param value="CC#16|Ch1" type="dial" name="Dial #2/8"  maximum="127" minimum="0"/>
+        </Group>
+        <Group name="DialPush2" orientation="horizontal" columns="8">  
+          <Param value="CC#41|Ch1" type="togglebutton" name="Dial #2/1 PushButton" aspect="0.5"  maximum="127" minimum="0"/>
+          <Param value="CC#42|Ch1" type="togglebutton" name="Dial #2/2 PushButton" aspect="0.5"  maximum="127" minimum="0"/>
+          <Param value="CC#43|Ch1" type="togglebutton" name="Dial #2/3 PushButton" aspect="0.5"  maximum="127" minimum="0"/>
+          <Param value="CC#44|Ch1" type="togglebutton" name="Dial #2/4 PushButton" aspect="0.5"  maximum="127" minimum="0"/>
+          <Param value="CC#45|Ch1" type="togglebutton" name="Dial #2/5 PushButton" aspect="0.5"  maximum="127" minimum="0"/>
+          <Param value="CC#46|Ch1" type="togglebutton" name="Dial #2/6 PushButton" aspect="0.5"  maximum="127" minimum="0"/>
+          <Param value="CC#47|Ch1" type="togglebutton" name="Dial #2/7 PushButton" aspect="0.5"  maximum="127" minimum="0"/>
+          <Param value="CC#48|Ch1" type="togglebutton" name="Dial #2/8 PushButton" aspect="0.5"  maximum="127" minimum="0"/>
+        </Group>
+        <Group name="Encoders3" orientation="horizontal" columns="8">
+          <Param value="CC#17|Ch1" type="dial" name="Dial #3/1"  maximum="127" minimum="0"/>
+          <Param value="CC#18|Ch1" type="dial" name="Dial #3/2"  maximum="127" minimum="0"/>
+          <Param value="CC#19|Ch1" type="dial" name="Dial #3/3"  maximum="127" minimum="0"/>
+          <Param value="CC#20|Ch1" type="dial" name="Dial #3/4"  maximum="127" minimum="0"/>
+          <Param value="CC#21|Ch1" type="dial" name="Dial #3/5"  maximum="127" minimum="0"/>
+          <Param value="CC#22|Ch1" type="dial" name="Dial #3/6"  maximum="127" minimum="0"/>
+          <Param value="CC#23|Ch1" type="dial" name="Dial #3/7"  maximum="127" minimum="0"/>
+          <Param value="CC#24|Ch1" type="dial" name="Dial #3/8"  maximum="127" minimum="0"/>
+        </Group>
+        <Group name="DialPush3" orientation="horizontal" columns="8">  
+          <Param value="CC#49|Ch1" type="togglebutton" name="Dial #3/1 PushButton" aspect="0.5"  maximum="127" minimum="0"/>
+          <Param value="CC#50|Ch1" type="togglebutton" name="Dial #3/2 PushButton" aspect="0.5"  maximum="127" minimum="0"/>
+          <Param value="CC#51|Ch1" type="togglebutton" name="Dial #3/3 PushButton" aspect="0.5"  maximum="127" minimum="0"/>
+          <Param value="CC#52|Ch1" type="togglebutton" name="Dial #3/4 PushButton" aspect="0.5"  maximum="127" minimum="0"/>
+          <Param value="CC#53|Ch1" type="togglebutton" name="Dial #3/5 PushButton" aspect="0.5"  maximum="127" minimum="0"/>
+          <Param value="CC#54|Ch1" type="togglebutton" name="Dial #3/6 PushButton" aspect="0.5"  maximum="127" minimum="0"/>
+          <Param value="CC#55|Ch1" type="togglebutton" name="Dial #3/7 PushButton" aspect="0.5"  maximum="127" minimum="0"/>
+          <Param value="CC#56|Ch1" type="togglebutton" name="Dial #3/8 PushButton" aspect="0.5"  maximum="127" minimum="0"/>
+        </Group>
+        <Group name="Encoders4" orientation="horizontal" columns="8">
+          <Param value="CC#25|Ch1" type="dial" name="Dial #4/1"  maximum="127" minimum="0"/>
+          <Param value="CC#26|Ch1" type="dial" name="Dial #4/2"  maximum="127" minimum="0"/>
+          <Param value="CC#27|Ch1" type="dial" name="Dial #4/3"  maximum="127" minimum="0"/>
+          <Param value="CC#28|Ch1" type="dial" name="Dial #4/4"  maximum="127" minimum="0"/>
+          <Param value="CC#29|Ch1" type="dial" name="Dial #4/5"  maximum="127" minimum="0"/>
+          <Param value="CC#30|Ch1" type="dial" name="Dial #4/6"  maximum="127" minimum="0"/>
+          <Param value="CC#31|Ch1" type="dial" name="Dial #4/7"  maximum="127" minimum="0"/>
+          <Param value="CC#32|Ch1" type="dial" name="Dial #4/8"  maximum="127" minimum="0"/>
+        </Group>
+        <Group name="DialPush4" orientation="horizontal" columns="8">  
+          <Param value="CC#57|Ch1" type="togglebutton" name="Dial #4/1 PushButton" aspect="0.5"  maximum="127" minimum="0"/>
+          <Param value="CC#58|Ch1" type="togglebutton" name="Dial #4/2 PushButton" aspect="0.5"  maximum="127" minimum="0"/>
+          <Param value="CC#59|Ch1" type="togglebutton" name="Dial #4/3 PushButton" aspect="0.5"  maximum="127" minimum="0"/>
+          <Param value="CC#60|Ch1" type="togglebutton" name="Dial #4/4 PushButton" aspect="0.5"  maximum="127" minimum="0"/>
+          <Param value="CC#61|Ch1" type="togglebutton" name="Dial #4/5 PushButton" aspect="0.5"  maximum="127" minimum="0"/>
+          <Param value="CC#62|Ch1" type="togglebutton" name="Dial #4/6 PushButton" aspect="0.5"  maximum="127" minimum="0"/>
+          <Param value="CC#63|Ch1" type="togglebutton" name="Dial #4/7 PushButton" aspect="0.5"  maximum="127" minimum="0"/>
+          <Param value="CC#64|Ch1" type="togglebutton" name="Dial #4/8 PushButton" aspect="0.5"  maximum="127" minimum="0"/>
+        </Group>
+
+--------------------------------------------------------------------------------------------------------------------
+
+        <Group name="Buttons1" orientation="horizontal" columns="8">
+          <Param value="CC#65|Ch1" type="togglebutton" name="Button #1"  maximum="127" minimum="0"/>
+          <Param value="CC#66|Ch1" type="togglebutton" name="Button #2"  maximum="127" minimum="0"/>
+          <Param value="CC#67|Ch1" type="togglebutton" name="Button #3"  maximum="127" minimum="0"/>
+          <Param value="CC#68|Ch1" type="togglebutton" name="Button #4"  maximum="127" minimum="0"/>
+          <Param value="CC#69|Ch1" type="togglebutton" name="Button #5"  maximum="127" minimum="0"/>
+          <Param value="CC#70|Ch1" type="togglebutton" name="Button #6"  maximum="127" minimum="0"/>
+          <Param value="CC#71|Ch1" type="togglebutton" name="Button #7"  maximum="127" minimum="0"/>
+          <Param value="CC#72|Ch1" type="togglebutton" name="Button #8"  maximum="127" minimum="0"/>
+        </Group>
+        <Group name="Buttons2" orientation="horizontal" columns="8">
+          <Param value="CC#73|Ch1" type="togglebutton" name="Button #1"  maximum="127" minimum="0"/>
+          <Param value="CC#74|Ch1" type="togglebutton" name="Button #2"  maximum="127" minimum="0"/>
+          <Param value="CC#75|Ch1" type="togglebutton" name="Button #3"  maximum="127" minimum="0"/>
+          <Param value="CC#76|Ch1" type="togglebutton" name="Button #4"  maximum="127" minimum="0"/>
+          <Param value="CC#77|Ch1" type="togglebutton" name="Button #5"  maximum="127" minimum="0"/>
+          <Param value="CC#78|Ch1" type="togglebutton" name="Button #6"  maximum="127" minimum="0"/>
+          <Param value="CC#79|Ch1" type="togglebutton" name="Button #7"  maximum="127" minimum="0"/>
+          <Param value="CC#80|Ch1" type="togglebutton" name="Button #8"  maximum="127" minimum="0"/>
+        </Group>
+        
+---------------------------------------------------------------------------------------------------------        
+        
+        <Row>
+          <Column>
+          <Group name="EffectEncoders1" columns="8">
+            <Param value="CC#81|Ch1" type="dial" name="EffectDial #1/1"  maximum="127" minimum="0"/>
+            <Param value="CC#82|Ch1" type="dial" name="EffectDial #1/2"  maximum="127" minimum="0"/>
+            <Param value="CC#83|Ch1" type="dial" name="EffectDial #1/3"  maximum="127" minimum="0"/>
+            <Param value="CC#84|Ch1" type="dial" name="EffectDial #1/4"  maximum="127" minimum="0"/>
+            <Param value="CC#85|Ch1" type="dial" name="EffectDial #1/5"  maximum="127" minimum="0"/>
+            <Param value="CC#86|Ch1" type="dial" name="EffectDial #1/6"  maximum="127" minimum="0"/>
+            <Param value="CC#87|Ch1" type="dial" name="EffectDial #1/7"  maximum="127" minimum="0"/>
+            <Param value="CC#88|Ch1" type="dial" name="EffectDial #1/8"  maximum="127" minimum="0"/>
+          </Group>
+          
+          <Group name="EffectEncoders2" columns="8">  
+            <Param value="CC#89|Ch1" type="dial" name="EffectDial #2/1"  maximum="127" minimum="0"/>
+            <Param value="CC#90|Ch1" type="dial" name="EffectDial #2/2"  maximum="127" minimum="0"/>
+            <Param value="CC#91|Ch1" type="dial" name="EffectDial #2/3"  maximum="127" minimum="0"/>
+            <Param value="CC#92|Ch1" type="dial" name="EffectDial #2/4"  maximum="127" minimum="0"/>
+            <Param value="CC#93|Ch1" type="dial" name="EffectDial #2/5"  maximum="127" minimum="0"/>
+            <Param value="CC#94|Ch1" type="dial" name="EffectDial #2/6"  maximum="127" minimum="0"/>
+            <Param value="CC#95|Ch1" type="dial" name="EffectDial #2/7"  maximum="127" minimum="0"/>
+            <Param value="CC#96|Ch1" type="dial" name="EffectDial #2/8"  maximum="127" minimum="0"/>
+          </Group>
+          
+          <Group name="EffectEncoders3" columns="8">  
+            <Param value="CC#97|Ch1" type="dial" name="EffectDial #3/1"  maximum="127" minimum="0"/>
+            <Param value="CC#98|Ch1" type="dial" name="EffectDial #3/2"  maximum="127" minimum="0"/>
+            <Param value="CC#99|Ch1" type="dial" name="EffectDial #3/3"  maximum="127" minimum="0"/>
+            <Param value="CC#100|Ch1" type="dial" name="EffectDial #3/4"  maximum="127" minimum="0"/>
+            <Param value="CC#101|Ch1" type="dial" name="EffectDial #3/5"  maximum="127" minimum="0"/>
+            <Param value="CC#102|Ch1" type="dial" name="EffectDial #3/6"  maximum="127" minimum="0"/>
+            <Param value="CC#103|Ch1" type="dial" name="EffectDial #3/7"  maximum="127" minimum="0"/>
+            <Param value="CC#104|Ch1" type="dial" name="EffectDial #3/8"  maximum="127" minimum="0"/>
+          </Group>
+          </Column>
+          
+          <Column>
+            <Group name="ControlButtonRow1" orientation="horizontal">
+            <Param value="CC#105|Ch1" type="togglebutton" name="Control Button #1"  maximum="127" minimum="0"/>
+            <Param value="CC#106|Ch1" type="togglebutton" name="Control Button #2"  maximum="127" minimum="0"/>
+            </Group>
+            <Group name="ControlButtonRow2" orientation="horizontal">
+            <Param value="CC#107|Ch1" type="togglebutton" name="Control Button #3"  maximum="127" minimum="0"/>
+            <Param value="CC#108|Ch1" type="togglebutton" name="Control Button #4"  maximum="127" minimum="0"/>
+            </Group>
+          </Column>
+        </Row>
+      </Column>
+    </Page>    
+  </Parameters>
+</Device>

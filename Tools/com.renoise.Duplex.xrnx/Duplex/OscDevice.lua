@@ -101,7 +101,7 @@ end
 
 --------------------------------------------------------------------------------
 
--- receive incoming osc messages
+-- receive/unpack incoming osc messages
 -- largely identical to the MidiDevice implementation, except that we 
 -- look for the control-map "action" instead of the "value" attribute
 -- (but still using the "value" as fallback if "action" is undefined)
@@ -131,13 +131,7 @@ function OscDevice:socket_message(socket, binary_data)
       end
 
       if (value_str) then
-        local param,val = self.control_map:get_param_by_action(value_str)
-        if (param) then
-          local message = Message()
-          message.context = OSC_MESSAGE
-          message.value = val
-          self:_send_message(message,param["xarg"])
-        end
+        self:receive_osc_message(value_str)
       end
     end
   
@@ -148,6 +142,22 @@ function OscDevice:socket_message(socket, binary_data)
   
 end
 
+
+--------------------------------------------------------------------------------
+
+-- look up value, once we have unpacked the message
+function OscDevice:receive_osc_message(value_str)
+  TRACE("OscDevice:receive_message",value_str)
+
+  local param,val = self.control_map:get_param_by_action(value_str)
+  if (param) then
+    local message = Message()
+    message.context = OSC_MESSAGE
+    message.value = val
+    self:_send_message(message,param["xarg"])
+  end
+
+end
 
 --------------------------------------------------------------------------------
 

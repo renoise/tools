@@ -137,26 +137,21 @@ function StepSequencer:__init(browser_process,mappings,options,config_name)
                   .."\nHold single button to copy note"
                   .."\nHold multiple buttons to adjust level/transpose"
                   .."\nControl value: ",
-      ui_component = UI_COMPONENT_CUSTOM,
       orientation = VERTICAL,
-      greedy = true,
     },
     level = {
       -- note: this control serves two purposes, as it will also display the 
       -- currently playing line - therefore, it needs to be the same size
       -- as the grid (rows if vertical, columns if horizontal)
       description = "Sequencer: Adjust note volume",
-      ui_component = UI_COMPONENT_BUTTONSTRIP,
       orientation = VERTICAL,
     },
     line = { 
       description = "Sequencer: Flip up/down through lines",
-      ui_component = UI_COMPONENT_SPINNER,
       orientation = HORIZONTAL,
     },
     track = {
       description = "Sequencer: Flip through tracks",
-      ui_component = UI_COMPONENT_SPINNER,
       orientation = HORIZONTAL,
     },
     transpose = {
@@ -166,7 +161,6 @@ function StepSequencer:__init(browser_process,mappings,options,config_name)
                   .."\n3rd: Semi up"
                   .."\n4th: Oct up"
                   .."\nControl value: ",
-      ui_component = UI_COMPONENT_CUSTOM,
     },
 
   }
