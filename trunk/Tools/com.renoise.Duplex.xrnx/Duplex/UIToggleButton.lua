@@ -240,24 +240,26 @@ end
 function UIToggleButton:draw()
   TRACE("UIToggleButton:draw",self.active)
 
-  local foreground,background
+  local foreground,background,lit
 
   if(self.inverted)then
     foreground = self.palette.background
     background = self.palette.foreground
+    lit = false
   else
     foreground = self.palette.foreground
     background = self.palette.background
+    lit = true
   end
   
   local point = CanvasPoint()
 
   if self.active then
     point:apply(foreground)
-    point.val = true
+    point.val = lit
   else
     point:apply(background)
-    point.val = false
+    point.val = not lit
   end
   self.canvas:fill(point)
 
