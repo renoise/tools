@@ -72,6 +72,7 @@ require (CTRL_PATH.."MatrixNavigatorTransport")
 require (CTRL_PATH.."MixerTransport")
 require (CTRL_PATH.."RecorderNavigator")
 require (CTRL_PATH.."StepSequencer")
+require (CTRL_PATH.."GridPie")
 
 --------------------------------------------------------------------------------
 -- A couple of sample configurations
