@@ -8,4 +8,5 @@ local CTRL_PATH = "Duplex/Controllers/AkaiLPD8/Configurations/"
 require (CTRL_PATH.."Mixer")
 require (CTRL_PATH.."Effect")
 require (CTRL_PATH.."NOW")
+require (CTRL_PATH.."GridPie")
 
