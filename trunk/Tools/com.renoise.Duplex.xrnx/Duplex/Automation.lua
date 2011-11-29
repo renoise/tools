@@ -480,7 +480,7 @@ end
 -- stop all currently recording automation
 
 function Automation:stop_automation()
-  print("Automation:stop_automation()")
+  TRACE("Automation:stop_automation()")
 
   self:_remove_notifiers()
   self._automations:clear()
@@ -492,7 +492,7 @@ end
 -- call this from the host application 
 
 function Automation:attach_to_song(new_song)
-  print("Automation:attach_to_song() new_song",new_song)
+  TRACE("Automation:attach_to_song() new_song",new_song)
 
   -- first, remove automation observables
   self:_remove_notifiers(new_song)
