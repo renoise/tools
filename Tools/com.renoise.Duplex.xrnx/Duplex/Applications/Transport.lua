@@ -11,7 +11,6 @@ About
 
 
 Changes (equal to Duplex version number)
-
   
   0.98  New mapping: "metronome_toggle", minor optimizations
   0.96  Fixed: Option "pattern_switch" didn't switch instantly
@@ -166,6 +165,8 @@ function Transport:start_app()
     return
   end
 
+  self:update_everything()
+
 end
 
 --------------------------------------------------------------------------------
@@ -236,78 +237,101 @@ end
 function Transport:_attach_to_song()
   TRACE("Transport._attach_to_song()")
 
-  local skip_event = true
   local song = renoise.song()
 
   -- metronome --
-  local update_metronome_enabled = function()
-    if self.controls.metronome_toggle then
-      self.controls.metronome_toggle:set(renoise.song().transport.metronome_enabled,skip_event)
-    end
-  end
   song.transport.metronome_enabled_observable:add_notifier(
     function()
       TRACE("Transport.metronome_enabled_observable()")
-      update_metronome_enabled()
+      self:update_metronome_enabled()
     end
   )
-  update_metronome_enabled()
 
   -- follow player --
-  local update_follow_player = function()
-    if self.controls.follow_player then
-      self.controls.follow_player:set(renoise.song().transport.follow_player,skip_event)
-    end
-  end
   song.transport.follow_player_observable:add_notifier(
     function()
       TRACE("Transport.follow_player_observable()")
-      update_follow_player()
+      self:update_follow_player()
     end
   )
-  update_follow_player()
 
   -- playing --
-  local update_playing = function()
-    if self.controls.play then
-      self.controls.play:set(renoise.song().transport.playing,skip_event)
-    end
-  end
   song.transport.playing_observable:add_notifier(
     function()
       TRACE("Transport.playing_observable()")
-      update_playing()
+      self:update_playing()
     end
   )
-  update_playing()
 
   -- loop pattern -- 
-  local update_loop_pattern = function()
-    if self.controls.loop then
-      self.controls.loop:set(renoise.song().transport.loop_pattern,skip_event)
-    end
-  end
   song.transport.loop_pattern_observable:add_notifier(
     function()
       TRACE("Transport.loop_pattern_observable()")
-      update_loop_pattern()
+      self:update_loop_pattern()
     end
   )
-  update_loop_pattern()
 
   -- edit mode --
-  local update_edit_mode = function()
-    if self.controls.edit then
-      self.controls.edit:set(renoise.song().transport.edit_mode,skip_event)
-    end
-  end
   song.transport.edit_mode_observable:add_notifier(
     function()
       TRACE("Transport.edit_mode_observable()")
-      update_edit_mode()
+      self:update_edit_mode()
     end
   )
-  update_edit_mode()
+
+end
+
+
+--------------------------------------------------------------------------------
+
+-- update methods for the various UIComponents
+
+function Transport:update_metronome_enabled()
+  if not self.active then return false end
+  if self.controls.metronome_toggle then
+    self.controls.metronome_toggle:set(renoise.song().transport.metronome_enabled,true)
+  end
+end
+
+function Transport:update_follow_player()
+  if not self.active then return false end
+  if self.controls.follow_player then
+    self.controls.follow_player:set(renoise.song().transport.follow_player,true)
+  end
+end
+
+function Transport:update_playing()
+  if not self.active then return false end
+  if self.controls.play then
+    self.controls.play:set(renoise.song().transport.playing,true)
+  end
+end
+
+function Transport:update_loop_pattern()
+  if not self.active then return false end
+  if self.controls.loop then
+    self.controls.loop:set(renoise.song().transport.loop_pattern,true)
+  end
+end
+
+function Transport:update_edit_mode()
+  if not self.active then return false end
+  if self.controls.edit then
+    self.controls.edit:set(renoise.song().transport.edit_mode,true)
+  end
+end
+
+--------------------------------------------------------------------------------
+
+-- update all UIComponents to the present state
+
+function Transport:update_everything()
+
+  self:update_metronome_enabled()
+  self:update_follow_player()
+  self:update_playing()
+  self:update_loop_pattern()
+  self:update_edit_mode()
 
 end
 
@@ -322,11 +346,7 @@ function Transport:_build_app()
     c.tooltip = self.mappings.stop_playback.description
     c:set_pos(self.mappings.stop_playback.index)
     c.on_press = function(obj)
-      
-      if not self.active then 
-        return false 
-      end
-      
+      if not self.active then return false end
       self:_stop_playback()
       if(self.controls.play)then
         self.controls.play:set(false,true)
@@ -344,11 +364,7 @@ function Transport:_build_app()
     c.palette.foreground.color = {0xff,0xff,0xff} -- bright yellow
     c.palette.foreground.text = "►"
     c.on_change = function(obj)
-      
-      if not self.active then 
-        return false 
-      end
-      
+      if not self.active then return false end
       local is_playing = renoise.song().transport.playing
       self:_start_playback()
       obj:set(true,true)
@@ -367,13 +383,8 @@ function Transport:_build_app()
     c.palette.foreground.color = {0x80,0xff,0xff} -- bright green
     c.palette.foreground.text = "○"
     c.on_change = function(obj)
-      
-      if not self.active then 
-        return false 
-      end
-      
+      if not self.active then return false end
       renoise.song().transport.loop_pattern = obj.active
-    
     end
     self:_add_component(c)
     self.controls.loop = c
@@ -387,13 +398,8 @@ function Transport:_build_app()
     c.palette.foreground.color = {0xff,0x40,0xff} -- red
     c.palette.foreground.text = "●"
     c.on_change = function(obj)
-      
-      if not self.active then 
-        return false 
-      end
-
+      if not self.active then return false end
       renoise.song().transport.edit_mode = obj.active
-
     end
     self:_add_component(c)
     self.controls.edit = c
@@ -408,16 +414,10 @@ function Transport:_build_app()
     c.palette.background.text = "►|"
     c.sequence = {
       {color={0xff,0xff,0xff},text="►|"},
-      --{color={0x00,0x00,0x00},text="►|"},
     }
     c.on_press = function(obj)
-      
-      if not self.active then 
-        return false
-      end
-
+      if not self.active then return false end
       self:_next()
-    
     end
     --c.on_hold = function(obj)
     --end
@@ -434,14 +434,9 @@ function Transport:_build_app()
     c.palette.background.text = "|◄"
     c.sequence = {
       {color={0xff,0xff,0xff},text="|◄"},
-      --{color={0x00,0x00,0x00},text="|◄"},
     }
     c.on_press = function(obj)
-
-      if not self.active then 
-        return false 
-      end
-
+      if not self.active then return false end
       self:_previous()
     end
     --c.on_hold = function(obj)
@@ -472,11 +467,7 @@ function Transport:_build_app()
     c.palette.foreground.color = {0x40,0xff,0xff} -- green
     c.palette.foreground.text = "▬"
     c.on_change = function(obj)
-      
-      if not self.active then 
-        return false 
-      end
-      
+      if not self.active then return false end
       renoise.song().transport.follow_player = obj.active
     end
     self:_add_component(c)
@@ -490,11 +481,7 @@ function Transport:_build_app()
     c:set_pos(self.mappings.metronome_toggle.index)
     c.palette.foreground.text = "∆"
     c.on_change = function(obj)
-      
-      if not self.active then 
-        return false 
-      end
-      
+      if not self.active then return false end
       renoise.song().transport.metronome_enabled = obj.active
     end
     self:_add_component(c)
@@ -540,7 +527,6 @@ function Transport:_stop_playback()
     elseif (self.options.pattern_stop.value == self.STOP_MODE_JUMP) then
       self:_jump_to_beginning()
     end
-
   end
 
   self._scheduled_pattern = nil
