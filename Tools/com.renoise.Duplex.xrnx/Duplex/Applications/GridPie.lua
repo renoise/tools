@@ -7,18 +7,34 @@
 
 About
 
-  This application is a Duplex port of Grid Pie. 
-  See http://www.renoise.com/board/index.php?/topic/27606-new-tool-27-grid-pie/
-
-  -- TODO --
-  - Remember held buttons, so they don't toggle when released
-  - Enable ALL tracks when button is held
-
-  ?? Questions ?? 
-
-  - How does "init_pm_slots_to" work?
+  This application is a Duplex port of Grid Pie:
+  http://www.renoise.com/board/index.php?/topic/27606-new-tool-27-grid-pie/
 
 
+TODO
+  - Inobtrusive: skip temp-mute hack when the track is already muted
+
+
+Mappings
+
+  grid      - (UIToggleButton...) - grid mapping, the individual buttons
+  v_prev    - (UIToggleButton)    - step to previous pattern
+  v_next    - (UIToggleButton)    - step to next pattern
+  h_prev    - (UIToggleButton)    - step to previous track
+  h_next    - (UIToggleButton)    - step to next track
+  v_slider  - (UISlider)          - set pattern
+  h_slider  - (UISlider)          - set track
+
+
+Options
+  follow_pos    - enable to make Renoise follow the pattern/track
+  polyrhythms   - allow/disallow polyrhythms when combining patterns (save CPU)
+  v_step        - determine how many patterns to scroll with each step
+  h_step        - determine how many tracks to scroll with each step
+
+Changes (equal to Duplex version number)
+
+  0.98 - First release (based on v0.82 of the original tool)
 
 
 
@@ -42,7 +58,8 @@ GridPie.default_options = {
   },
   polyrhythms = {
     label = "Polyrhythms",
-    description = "Disable this feature if it's using too much CPU",
+    description = "Allow/disallow polyrhythms when combining patterns"
+                .."\n(disable this feature if Grid Pie is using too much CPU)",
     items = {
       "Enabled",
       "Disabled",
@@ -53,7 +70,7 @@ GridPie.default_options = {
     label = "Vertical step",
     description = "Specify the vertical step size",
     on_change = function(inst)
-      -- TODO
+      inst:_set_step_sizes()
     end,
     items = {
       "Automatic: use available width",
@@ -68,7 +85,7 @@ GridPie.default_options = {
     label = "Horizontal step",
     description = "Specify the horizontal step size",
     on_change = function(inst)
-      -- TODO
+      inst:_set_step_sizes()
     end,
     items = {
       "Automatic: use available width",
@@ -80,6 +97,8 @@ GridPie.default_options = {
     value = 1,
   },
 }
+
+--------------------------------------------------------------------------------
 
 function GridPie:__init(browser_process,mappings,options,config_name)
   TRACE("GridPie:__init(",browser_process,mappings,options,config_name)
@@ -101,16 +120,26 @@ function GridPie:__init(browser_process,mappings,options,config_name)
   self.POLY_DISABLED = 2
   self.FOLLOW_POS_ON = 1
   self.FOLLOW_POS_OFF = 2
+  self.STEPSIZE_AUTO = 1
 
   -- misc private stuff
-  self.v_step = 1
-  self.h_step = 1
+  self.held_button = nil
+  self.v_step = nil
+  self.h_step = nil
+  self.update_requested = false
+  self.v_update_requested = false
+  self.h_update_requested = false
+  self._disable_follow_player = false
+  -- keep reference to process, so we stop/abort the application
+  self._process = browser_process
 
   -- UIComponent references
   self._bt_v_prev = nil
   self._bt_v_next = nil
   self._bt_h_prev = nil
   self._bt_h_next = nil
+  self._v_slider = nil
+  self._h_slider = nil
 
   self.mappings = {
     grid = {
@@ -128,6 +157,12 @@ function GridPie:__init(browser_process,mappings,options,config_name)
       description = "GridPie: goto previous tracks in pattern"
     },
     h_next = {
+      description = "GridPie: goto next tracks in pattern"
+    },
+    v_slider = {
+      description = "GridPie: goto next tracks in pattern"
+    },
+    h_slider = {
       description = "GridPie: goto next tracks in pattern"
     },
   }
@@ -155,8 +190,8 @@ function GridPie:__init(browser_process,mappings,options,config_name)
     }
   }
 
-  Application.__init(self,browser_process,mappings,options,config_name)
 
+  Application.__init(self,browser_process,mappings,options,config_name)
 
 end
 
@@ -168,15 +203,17 @@ end
 function GridPie:_set_step_sizes()
   TRACE("GridPie:_set_step_sizes()")
 
-  self.v_step = (self.options.v_step.value==1) and
+  self.v_step = (self.options.v_step.value==self.STEPSIZE_AUTO) and
     self.MATRIX_HEIGHT or self.options.v_step.value-1
   
-  self.h_step = (self.options.h_step.value==1) and
+  self.h_step = (self.options.h_step.value==self.STEPSIZE_AUTO) and
     self.MATRIX_WIDTH or self.options.h_step.value-1
 
 end
 
 --------------------------------------------------------------------------------
+
+-- figure out the boundaries
 
 function GridPie:_get_v_limit()
   return math.max(1,#renoise.song().sequencer.pattern_sequence - self.MATRIX_HEIGHT)
@@ -188,41 +225,91 @@ end
 
 --------------------------------------------------------------------------------
 
--- update buttons for horizontal navigation
+-- set the vertical/horizontal position 
 
-function GridPie:update_h_buttons()
+function GridPie:set_vertical_pos(idx)
+  TRACE("GridPie:set_vertical_pos()",idx)
 
-  local skip_event = true
-
-  if (self.mappings.h_next.group_name) then
-    self._bt_h_next:set(self.X_POS~=self:_get_h_limit(),skip_event)
+  if (self.Y_POS~=idx) then
+    self.Y_POS = idx
+    self.v_update_requested = true
   end
-  if (self.mappings.h_prev.group_name) then
-    self._bt_h_prev:set(self.X_POS~=1,skip_event)
+
+end
+
+function GridPie:set_horizontal_pos(idx)
+  TRACE("GridPie:set_horizontal_pos()",idx)
+
+  if (self.X_POS~=idx) then
+    self.X_POS = idx
+    self.h_update_requested = true
   end
 
 end
 
 --------------------------------------------------------------------------------
 
--- update buttons for vertical navigation
+-- update buttons for horizontal/vertical navigation
 
-function GridPie:update_v_buttons()
+function GridPie:update_h_buttons()
+  TRACE("GridPie:update_h_buttons()")
 
   local skip_event = true
 
-  if (self.mappings.v_next.group_name) then
+  if self.mappings.h_next.group_name then
+    self._bt_h_next:set(self.X_POS~=self:_get_h_limit(),skip_event)
+  end
+  if self.mappings.h_prev.group_name then
+    self._bt_h_prev:set(self.X_POS~=1,skip_event)
+  end
+
+end
+
+function GridPie:update_v_buttons()
+  TRACE("GridPie:update_v_buttons()")
+
+  local skip_event = true
+
+  if self.mappings.v_next.group_name then
     self._bt_v_next:set(self.Y_POS~=self:_get_v_limit(),skip_event)
   end
-  if (self.mappings.v_prev.group_name) then
+  if self.mappings.v_prev.group_name then
     self._bt_v_prev:set(self.Y_POS~=1,skip_event)
   end
 
 end
 
 --------------------------------------------------------------------------------
--- Is garbage PM position?
+
+-- update slider for horizontal/vertical navigation
+
+function GridPie:update_v_slider()
+  TRACE("GridPie:update_v_slider()")
+
+  if self._v_slider then
+    local skip_event = true
+    local steps = self:_get_v_limit()
+    self._v_slider.steps = steps
+    self._v_slider:set_index(self.Y_POS-1,skip_event)
+  end
+
+end
+
+function GridPie:update_h_slider()
+  TRACE("GridPie:update_h_slider()")
+
+  if self._h_slider then
+    local skip_event = true
+    local steps = self:_get_h_limit()
+    self._h_slider.steps = steps
+    self._h_slider:set_index(self.X_POS-1,skip_event)
+  end
+
+end
+
 --------------------------------------------------------------------------------
+
+-- Is garbage PM position?
 
 function GridPie:is_garbage_pos(x,y)
   --TRACE("GridPie:is_garbage_pos()",x,y)
@@ -249,8 +336,8 @@ end
 
 
 --------------------------------------------------------------------------------
+
 -- Access a cell in the Grid Pie
---------------------------------------------------------------------------------
 
 function GridPie:matrix_cell(x,y)
   --TRACE("GridPie:matrix_cell()",x,y)
@@ -264,8 +351,8 @@ end
 
 
 --------------------------------------------------------------------------------
+
 -- Toggle all slot mutes in Pattern Matrix
---------------------------------------------------------------------------------
 
 function GridPie:init_pm_slots_to(val)
   TRACE("GridPie:init_pm_slots_to()",val)
@@ -300,8 +387,8 @@ end
 
 
 --------------------------------------------------------------------------------
+
 -- Initialize Grid Pie Pattern
---------------------------------------------------------------------------------
 
 function GridPie:init_gp_pattern()
   TRACE("GridPie:init_gp_pattern()")
@@ -338,19 +425,20 @@ function GridPie:init_gp_pattern()
     end
   end
 
-  -- Ajdust the Renoise interface, move playhead to last pattern, ...
+  -- adjust the Renoise interface, move playhead to last pattern, ...
   renoise.app().window.pattern_matrix_is_visible = true
   rns.selected_sequence_index = #sequencer.pattern_sequence
-  rns.transport.follow_player = false
   rns.transport.loop_pattern = true
-  rns.transport:start(renoise.Transport.PLAYMODE_RESTART_PATTERN)
+  --rns.transport:start(renoise.Transport.PLAYMODE_RESTART_PATTERN)
+  --rns.transport.follow_player = false
+
 
 end
 
 
 --------------------------------------------------------------------------------
+
 -- Adjust grid
---------------------------------------------------------------------------------
 
 function GridPie:adjust_grid()
   TRACE("GridPie:adjust_grid()")
@@ -401,8 +489,8 @@ end
 
 
 --------------------------------------------------------------------------------
+
 -- Copy and expand a track
---------------------------------------------------------------------------------
 
 function GridPie:copy_and_expand(source_pattern, dest_pattern, track_idx, number_of_lines)
   TRACE("GridPie:copy_and_expand()",source_pattern, dest_pattern, track_idx, number_of_lines)
@@ -457,23 +545,19 @@ end
 
 
 --------------------------------------------------------------------------------
--- Toggler
---------------------------------------------------------------------------------
 
-function GridPie:toggler(x, y)
-  TRACE("GridPie:toggler()",x, y)
+-- Toggler
+
+function GridPie:toggler(x, y, pattern)
+  TRACE("GridPie:toggler()",x, y, pattern)
 
   local cell = self:matrix_cell(x, y)
   local muted = false
   if cell ~= nil and 
-    --cell.color[2] == 255 
     cell.active
   then 
-    print("cell.active",cell.active)
     muted = true 
   end
-
-  print("muted",muted)
 
   x = x + (self.X_POS - 1)
   y = y + (self.Y_POS - 1)
@@ -483,100 +567,126 @@ function GridPie:toggler(x, y)
   local rns = renoise.song()
   local source = rns.patterns[rns.sequencer:pattern(y)]
   local dest = rns.patterns[self.GRIDPIE_IDX]
-  local lc = least_common(dest.number_of_lines, source.number_of_lines)
-  local toc = 0
 
-  if muted then
+  if pattern then
 
-    -- Mute
-    -- TODO: This is a hackaround, fix when API is updated
-    -- See: http://www.renoise.com/board/index.php?showtopic=31927
-    rns.tracks[x].mute_state = renoise.Track.MUTE_STATE_OFF
-    rns.patterns[self.GRIDPIE_IDX].tracks[x]:clear()
-    OneShotIdleNotifier(100, function() rns.tracks[x].mute_state = renoise.Track.MUTE_STATE_ACTIVE end)
-    self.POLY_COUNTER[x] = nil
+    -- pattern copy
+    dest:copy_from(source)
+    dest.number_of_lines = source.number_of_lines 
+
+    -- Change PM
+    for i = 1, #rns.sequencer.pattern_sequence - 1 do
+      for o = 1, #rns.tracks do
+        if not self:is_garbage_pos(o, i) then
+          if i == y then
+            rns.sequencer:set_track_sequence_slot_is_muted(o , i, false)
+          else
+            rns.sequencer:set_track_sequence_slot_is_muted(o , i, true)
+          end
+        end
+      end
+    end
 
   else
 
-    -- Track polyrhythms
-    self.POLY_COUNTER[x] = source.number_of_lines
-    local poly_lines = table.create()
-    for _,val in ipairs(self.POLY_COUNTER:values()) do poly_lines[val] = true end
-    local poly_num = table.count(poly_lines)
+    -- track copy
 
-    if poly_num > 1 then
-      renoise.app():show_status("Grid Pie " .. poly_num .. "x poly combo!")
-    else
-      renoise.app():show_status("")
-    end
+    if muted then
 
-    if
-      self.options.polyrhythms.value == self.POLY_DISABLED or
-      lc > renoise.Pattern.MAX_NUMBER_OF_LINES or
-      poly_num <= 1 or
-      (lc == source.number_of_lines and lc == dest.number_of_lines)
-    then
-
-      -- Simple copy
-      dest.number_of_lines = source.number_of_lines
-      dest.tracks[x]:copy_from(source.tracks[x])
+      -- Mute
+      if (rns.tracks[x].mute_state==renoise.Track.MUTE_STATE_ACTIVE) then
+        -- TODO: This is a hackaround, fix when API is updated
+        -- See: http://www.renoise.com/board/index.php?showtopic=31927
+        rns.tracks[x].mute_state = renoise.Track.MUTE_STATE_OFF
+        rns.patterns[self.GRIDPIE_IDX].tracks[x]:clear()
+        OneShotIdleNotifier(100, function() rns.tracks[x].mute_state = renoise.Track.MUTE_STATE_ACTIVE end)
+        self.POLY_COUNTER[x] = nil
+      end
 
     else
 
-      -- Complex copy
-      local old_lines = dest.number_of_lines
-      dest.number_of_lines = lc
+      -- Track polyrhythms
 
-      TRACE("Expanding track " .. x .. " from " .. source.number_of_lines .. " to " .. dest.number_of_lines .. " lines")
+      self.POLY_COUNTER[x] = source.number_of_lines
+      local lc = least_common(dest.number_of_lines, source.number_of_lines)
+      local poly_lines = table.create()
+      for _,val in ipairs(self.POLY_COUNTER:values()) do poly_lines[val] = true end
+      local poly_num = table.count(poly_lines)
 
-      OneShotIdleNotifier(0, function()
-        self:copy_and_expand(source, dest, x)
-      end)
+      if poly_num > 1 then
+        renoise.app():show_status("Grid Pie " .. poly_num .. "x poly combo!")
+      else
+        renoise.app():show_status("")
+      end
 
-      if old_lines < dest.number_of_lines then
+      if
+        self.options.polyrhythms.value == self.POLY_DISABLED or
+        lc > renoise.Pattern.MAX_NUMBER_OF_LINES or
+        poly_num <= 1 or
+        (lc == source.number_of_lines and lc == dest.number_of_lines)
+      then
 
-        for idx=1,#rns.tracks do
-          if
-            idx ~= x and
-            not dest.tracks[idx].is_empty and
-            rns.tracks[idx].type ~= renoise.Track.TRACK_TYPE_MASTER and
-            rns.tracks[idx].type ~= renoise.Track.TRACK_TYPE_SEND
-          then
-            TRACE("Also expanding track " .. idx .. " from " .. old_lines .. " to " .. dest.number_of_lines .. " lines") 
-            self:copy_and_expand(dest, dest, idx, old_lines)
+        -- Simple copy
+        dest.number_of_lines = source.number_of_lines
+        dest.tracks[x]:copy_from(source.tracks[x])
+
+      else
+
+        -- Complex copy
+        local old_lines = dest.number_of_lines
+        dest.number_of_lines = lc
+
+        TRACE("Expanding track " .. x .. " from " .. source.number_of_lines .. " to " .. dest.number_of_lines .. " lines")
+
+        OneShotIdleNotifier(0, function()
+          self:copy_and_expand(source, dest, x)
+        end)
+
+        if old_lines < dest.number_of_lines then
+
+          for idx=1,#rns.tracks do
+            if
+              idx ~= x and
+              not dest.tracks[idx].is_empty and
+              rns.tracks[idx].type ~= renoise.Track.TRACK_TYPE_MASTER and
+              rns.tracks[idx].type ~= renoise.Track.TRACK_TYPE_SEND
+            then
+              TRACE("Also expanding track " .. idx .. " from " .. old_lines .. " to " .. dest.number_of_lines .. " lines") 
+              self:copy_and_expand(dest, dest, idx, old_lines)
+            end
           end
+
         end
 
       end
 
     end
 
-  end
-
-  -- Change PM
-  for i = 1, #rns.sequencer.pattern_sequence - 1 do
-    if not self:is_garbage_pos(x, i) then
-      if i == y then
-        rns.sequencer:set_track_sequence_slot_is_muted(x , i, muted)
-      else
-        rns.sequencer:set_track_sequence_slot_is_muted(x , i, true)
+    -- Change PM
+    for i = 1, #rns.sequencer.pattern_sequence - 1 do
+      if not self:is_garbage_pos(x, i) then
+        if i == y then
+          rns.sequencer:set_track_sequence_slot_is_muted(x , i, muted)
+        else
+          rns.sequencer:set_track_sequence_slot_is_muted(x , i, true)
+        end
       end
     end
+
   end
-  self:adjust_grid()
+
+  self.update_requested = true
 
 end
 
 
 --------------------------------------------------------------------------------
+
 -- Build GUI Interface
 -- equivalent to build_interface() in the original tool
---------------------------------------------------------------------------------
 
 function GridPie:_build_app()
   TRACE("GridPie:_build_app()")
-
-  -- supply this when setting UIComponents programmatically
 
   -- determine grid size by looking at the control-map
   local cm = self.display.device.control_map
@@ -593,17 +703,13 @@ function GridPie:_build_app()
     c:set_pos(self.mappings.v_prev.index)
     c.active = false
     c.on_press = function(obj) 
-      print("*** _bt_v_prev.on_press()")
       if not self.active then
         return
       end
       local limit = 1
       local new_y = math.max(limit,self.Y_POS-self.v_step)
-      print("new_y",new_y)
       if (new_y~=self.Y_POS) then
-        self.Y_POS = new_y
-        self:adjust_grid()
-        self:update_v_buttons()
+        self:set_vertical_pos(new_y)
       end
     end
     self:_add_component(c)
@@ -618,17 +724,13 @@ function GridPie:_build_app()
     c:set_pos(self.mappings.v_next.index)
     c.active = false
     c.on_press = function(obj) 
-      print("*** _bt_v_next.on_press()")
       if not self.active then
         return
       end
       local limit = self:_get_v_limit()
       local new_y = math.min(self.Y_POS+self.v_step,limit)
-      print("new_y",new_y)
       if (new_y~=self.Y_POS) then
-        self.Y_POS = new_y
-        self:adjust_grid()
-        self:update_v_buttons()
+        self:set_vertical_pos(new_y)
       end
     end
     self:_add_component(c)
@@ -643,17 +745,13 @@ function GridPie:_build_app()
     c:set_pos(self.mappings.h_prev.index)
     c.active = false
     c.on_press = function(obj) 
-      print("*** _bt_h_prev.on_press()")
       if not self.active then
         return
       end
       local limit = 1
       local new_x = math.max(limit,self.X_POS-self.h_step)
-      print("new_x",new_x)
       if (new_x~=self.X_POS) then
-        self.X_POS = new_x
-        self:adjust_grid()
-        self:update_h_buttons()
+        self:set_horizontal_pos(new_x)
       end
     end
     self:_add_component(c)
@@ -674,9 +772,7 @@ function GridPie:_build_app()
       local limit = self:_get_h_limit()
       local new_x = math.min(self.X_POS+self.h_step,limit)
       if (new_x~=self.X_POS) then
-        self.X_POS = new_x
-        self:adjust_grid()
-        self:update_h_buttons()
+        self:set_horizontal_pos(new_x)
       end
     end
     self:_add_component(c)
@@ -695,26 +791,26 @@ function GridPie:_build_app()
         c.tooltip = self.mappings.grid.description
         c:set_pos(x,y)
         c.active = false
-        c.on_hold = function(obj) 
-          print("*** button.on_hold()")
-        end
         c.on_release = function(obj) 
-          print("*** button.on_release()",x,y)
+          -- track copy
           if not self.active then
             return false
           end
-          self:toggler(x,y)
-          --return true
+          if self.held_button and
+            (self.held_button == obj) then
+            self.held_button = nil
+            return false
+          end
+          self:toggler(x,y) 
         end
         c.on_hold = function(obj) 
-          print("*** button.on_hold()",x,y)
+          -- pattern copy
           if not self.active then
             return false
           end
-          for x = 1,self.MATRIX_WIDTH do
-            self:toggler(x,y)
-          end
-          --return true
+          local pattern = true
+          self:toggler(x,y,pattern) 
+          self.held_button = obj
         end
 
         self:_add_component(c)
@@ -725,8 +821,38 @@ function GridPie:_build_app()
     end
   end
 
-  self:_attach_to_song(renoise.song())
+  -- vertical slider
+  if (self.mappings.v_slider.group_name) then
+    local c = UISlider(self.display)
+    c.group_name = self.mappings.v_slider.group_name
+    c.tooltip = self.mappings.v_slider.description
+    c:set_pos(self.mappings.v_slider.index or 1)
+    c.on_change = function(obj) 
+      local limit = self:_get_v_limit()
+      local val = math.min(limit,obj.index+1)
+      self:set_vertical_pos(val)
+    end
+    self:_add_component(c)
+    self._v_slider = c
+  end
 
+  -- horizontal slider
+  if (self.mappings.h_slider.group_name) then
+    local c = UISlider(self.display)
+    c.group_name = self.mappings.h_slider.group_name
+    c.tooltip = self.mappings.h_slider.description
+    c:set_pos(self.mappings.h_slider.index or 1)
+    c.on_change = function(obj) 
+      local limit = self:_get_h_limit()
+      local val = math.min(limit,obj.index+1)
+      self:set_horizontal_pos(val)
+    end
+    self:_add_component(c)
+    self._h_slider = c
+  end
+
+  -- final steps
+  self:_attach_to_song(renoise.song())
   Application._build_app(self)
   return true
 
@@ -734,9 +860,8 @@ end
 
 
 --------------------------------------------------------------------------------
--- Main
+
 -- equivalent to main() in the original tool
---------------------------------------------------------------------------------
 
 function GridPie:start_app()
   TRACE("GridPie:start_app()")
@@ -747,24 +872,36 @@ function GridPie:start_app()
     return
   end
 
-  self:_set_step_sizes() 
+  self:initialize()
 
+end
+
+
+--------------------------------------------------------------------------------
+
+function GridPie:initialize()
+  TRACE("GridPie:initialize()")
+
+  -- initialize important stuff
   self.REVERT_PM_SLOT = table.create()
   self.POLY_COUNTER = table.create()
   self:init_pm_slots_to(true)
   self:init_gp_pattern()
+  self:_set_step_sizes() 
 
+  -- update everything
   self:update_v_buttons()
+  self:update_v_slider()
   self:update_h_buttons()
+  self:update_h_slider()
   self:adjust_grid()
 
 end
 
 
+--------------------------------------------------------------------------------
 
---------------------------------------------------------------------------------
--- Abort
---------------------------------------------------------------------------------
+-- Abort (sleep during idle time and ignore any user input)
 
 function GridPie:abort(notification)
   TRACE("GridPie:abort()",notification)
@@ -773,61 +910,86 @@ function GridPie:abort(notification)
     "You dun goofed! Grid Pie needs to be restarted."
   )
 
+  --self._process:stop()
+  --self.active = false
+  self._process.browser:stop_current_configuration()
+
 end
 
 
 --------------------------------------------------------------------------------
--- Handle document change
+
+-- Handle document change 
 -- document_changed() in original tool
---------------------------------------------------------------------------------
 
 function GridPie:on_new_document(song)
   TRACE("GridPie:on_new_document()",song)
 
-  -- Document has changed, stored slots are invalid, reset table
-  self.REVERT_PM_SLOT = table.create()
+  self:_attach_to_song()
   self:abort()
 
 end
 
 --------------------------------------------------------------------------------
--- Idler
+
 -- idler() in original tool
---------------------------------------------------------------------------------
 
 function GridPie:on_idle()
 
-  --[[
+  if not self.active then
+    return false
+  end
+
   local last_pattern = renoise.song().sequencer:pattern(#renoise.song().sequencer.pattern_sequence)
   if renoise.song().patterns[last_pattern].name ~= "__GRID_PIE__" then
     self:abort()
   end
-  ]]
+
+  if self.v_update_requested then
+    self.v_update_requested = false
+    self.update_requested = true
+    self:update_v_buttons()
+    self:update_v_slider()
+  end
+
+  if self.h_update_requested then
+    self.h_update_requested = false
+    self.update_requested = true
+    self:update_h_buttons()
+    self:update_h_slider()
+  end
+
+  if self.update_requested then
+    self.update_requested = false
+    self:adjust_grid()
+  end
+
+  if self._disable_follow_player then
+    self._disable_follow_player = false
+    renoise.song().transport.follow_player = false
+  end
 
 end
 
 
 --------------------------------------------------------------------------------
+
 -- Bootsauce
 -- equivalent to run() in original tool,
 -- notification (tracks_changed,sequence_changed) are assigned anonymously
---------------------------------------------------------------------------------
 
 function GridPie:_attach_to_song()
   TRACE("GridPie:_attach_to_song()")
 
+  -- Tracks have changed, stored slots are invalid, reset table
   renoise.song().tracks_observable:add_notifier(
     function(notification)
       TRACE("GridPie:tracks_observable fired...",notification)
-
       if not self.active then
         return false
       end
-
-      -- Tracks have changed, stored slots are invalid, reset table
       self.REVERT_PM_SLOT = table.create()
       if (notification.type == "insert") then
-
         -- TODO: This is a hackaround, fix when API is updated
         -- See: http://www.renoise.com/board/index.php?showtopic=31893
         OneShotIdleNotifier(100, function()
@@ -835,31 +997,62 @@ function GridPie:_attach_to_song()
             renoise.song().sequencer:set_track_sequence_slot_is_muted(notification.index , i, true)
           end
         end)
+      end
+      self.h_update_requested = true
+    end
+  )
+
+  -- Sequence have changed, stored slots are invalid, reset table
+  renoise.song().sequencer.pattern_sequence_observable:add_notifier(
+    function()
+      TRACE("GridPie:pattern_sequence_observable fired...")
+      if not self.active then
+        return false
+      end
+      self.REVERT_PM_SLOT = table.create()
+      self.v_update_requested = true
+    end
+  )
+
+  -- when playback start, force playback to enter __GRID PIE__ pattern
+  renoise.song().transport.playing_observable:add_notifier(
+    function()
+      TRACE("GridPie:playing_observable fired...")
+      if not self.active then
+        return false
+      end
+      if renoise.song().transport.playing then
+
+        local rns = renoise.song()
+        local total_sequence = #rns.sequencer.pattern_sequence
+        local last_patt_idx = rns.sequencer:pattern(total_sequence)
+        local last_patt = rns.patterns[last_patt_idx]
+        local songpos = rns.transport.playback_pos
+        songpos.sequence = total_sequence
+        -- when set to last line, the first one will play next...
+        songpos.line = last_patt.number_of_lines 
+        renoise.song().transport.playback_pos = songpos
 
       end
-
-      self:update_h_buttons()
-      self:adjust_grid()
 
     end
   )
 
-  renoise.song().sequencer.pattern_sequence_observable:add_notifier(
+  -- when follow_pos is enabled, enforce a disabled "follow_player"
+  renoise.song().transport.follow_player_observable:add_notifier(
     function()
-      TRACE("GridPie:pattern_sequence_observable fired...")
-
+      TRACE("GridPie:follow_player_observable fired...")
       if not self.active then
         return false
       end
 
-      -- Sequence have changed, stored slots are invalid, reset table
-      self.REVERT_PM_SLOT = table.create()
-
-      self:update_v_buttons()
-      self:adjust_grid()
+      if renoise.song().transport.follow_player and
+        (self.options.follow_pos.value == self.FOLLOW_POS_ON) 
+      then
+        self._disable_follow_player = true
+      end
 
     end
-
   )
 
 end
