@@ -28,5 +28,5 @@ end
 
 -- Include these configurations for the NanoKontrol
 
-local CTRL_PATH = "Duplex/Controllers/NanoKontrol/Configurations/"
+local CTRL_PATH = "Duplex/Controllers/nanoKONTROL/Configurations/"
 require (CTRL_PATH.."MixerTransport")
