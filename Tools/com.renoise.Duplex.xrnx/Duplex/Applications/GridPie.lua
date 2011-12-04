@@ -10,9 +10,34 @@ About
   This application is a Duplex port of Grid Pie:
   http://www.renoise.com/board/index.php?/topic/27606-new-tool-27-grid-pie/
 
+  What is Grid Pie? 
 
-TODO
-  - Inobtrusive: skip temp-mute hack when the track is already muted
+  Grid Pie is a performance interface. It lets the user combine different parts 
+  of a linear song, non-linearly, in real time, using a special looping pattern 
+  as a live drafting area. It does so by taking over the Pattern Matrix.
+
+  Basic usage
+
+  Once Grid Pie is started, it will mute all matrix slots and create the 
+  special recombination pattern. Once you stop Grid Pie, it will revert those
+  slots to their original state and remove the special pattern.
+
+  While it is running, you can select any track on your controller to copy
+  it to the recombination pattern. If "polyrhythms" have been enabled, it will
+  copy and expand pattern-tracks that have different lengths. So you can easily 
+  create some pretty complex, non-repeating note sequences, but notice that this
+  calculation takes up extra CPU cycles - if you computer is very slow, you can
+  simply disable this feature. It's probably a good idea to experiment with 
+  short patterns in any case.
+
+  Navigating the Grid Pie
+
+  A "hybrid" navigation scheme means that you can use the built-in controls
+  for navigating the matrix, without going into the parts that are of no use
+  to Grid Pie (such as send tracks). The navigation is fully compatible with the 
+  "paged" navigation scheme of other Duplex apps (Mixer, etc.), just specify the 
+  same page size to make them align nicely with each other. 
+
 
 
 Mappings
@@ -29,8 +54,8 @@ Mappings
 Options
   follow_pos    - enable to make Renoise follow the pattern/track
   polyrhythms   - allow/disallow polyrhythms when combining patterns (save CPU)
-  v_step        - determine how many patterns to scroll with each step
-  h_step        - determine how many tracks to scroll with each step
+  y_step        - determine how many patterns to scroll with each step
+  x_step        - determine how many tracks to scroll with each step
 
 Changes (equal to Duplex version number)
 
@@ -49,10 +74,10 @@ class 'GridPie' (Application)
 GridPie.default_options = {
   follow_pos = {
     label = "Follow position",
-    description = "Enable this to make Renoise follow the pattern/track",
+    description = "Enable this to sync the active pattern/track between Renoise & GridPie",
     items = {
-      "Enabled",
-      "Disabled",
+      "Enabled, follow track & pattern",
+      "Disabled, do nothing",
     },
     value = 1,
   },
@@ -66,9 +91,24 @@ GridPie.default_options = {
     },
     value = 1,
   },
-  v_step = {
-    label = "Vertical step",
-    description = "Specify the vertical step size",
+  y_step = {
+    label = "Vertical page",
+    description = "Specify the vertical page size",
+    on_change = function(inst)
+      inst:_set_step_sizes()
+    end,
+    items = {
+      "Automatic: use available height",
+      "1","2","3","4",
+      "5","6","7","8",
+      "9","10","11","12",
+      "13","14","15","16",
+    },
+    value = 1,
+  },
+  x_step = {
+    label = "Horizontal page",
+    description = "Specify the horizontal page size",
     on_change = function(inst)
       inst:_set_step_sizes()
     end,
@@ -81,21 +121,15 @@ GridPie.default_options = {
     },
     value = 1,
   },
-  h_step = {
-    label = "Horizontal step",
-    description = "Specify the horizontal step size",
-    on_change = function(inst)
-      inst:_set_step_sizes()
-    end,
+  auto_start = {
+    label = "Auto-start",
+    description = "Start playing when Grid Pie is launched",
     items = {
-      "Automatic: use available width",
-      "1","2","3","4",
-      "5","6","7","8",
-      "9","10","11","12",
-      "13","14","15","16",
+      "Enabled, start playing once ready",
+      "Disabled",
     },
     value = 1,
-  },
+  }
 }
 
 --------------------------------------------------------------------------------
@@ -121,15 +155,21 @@ function GridPie:__init(browser_process,mappings,options,config_name)
   self.FOLLOW_POS_ON = 1
   self.FOLLOW_POS_OFF = 2
   self.STEPSIZE_AUTO = 1
+  self.AUTOSTART_ON = 1
+  self.AUTOSTART_OFF = 2
 
   -- misc private stuff
   self.held_button = nil
-  self.v_step = nil
-  self.h_step = nil
+  self.y_step = nil
+  self.x_step = nil
+  self.actual_x = nil
+  self.actual_y = nil
+  self.play_requested = false
   self.update_requested = false
   self.v_update_requested = false
   self.h_update_requested = false
   self._disable_follow_player = false
+
   -- keep reference to process, so we stop/abort the application
   self._process = browser_process
 
@@ -198,16 +238,16 @@ end
 --------------------------------------------------------------------------------
 
 -- this function will apply the current settings
--- to the v_step and h_step variables
+-- to the y_step and x_step variables
 
 function GridPie:_set_step_sizes()
   TRACE("GridPie:_set_step_sizes()")
 
-  self.v_step = (self.options.v_step.value==self.STEPSIZE_AUTO) and
-    self.MATRIX_HEIGHT or self.options.v_step.value-1
+  self.y_step = (self.options.y_step.value==self.STEPSIZE_AUTO) and
+    self.MATRIX_HEIGHT or self.options.y_step.value-1
   
-  self.h_step = (self.options.h_step.value==self.STEPSIZE_AUTO) and
-    self.MATRIX_WIDTH or self.options.h_step.value-1
+  self.x_step = (self.options.x_step.value==self.STEPSIZE_AUTO) and
+    self.MATRIX_WIDTH or self.options.x_step.value-1
 
 end
 
@@ -220,7 +260,7 @@ function GridPie:_get_v_limit()
 end
 
 function GridPie:_get_h_limit()
-  return renoise.song().sequencer_track_count - self.MATRIX_WIDTH + 1
+  return math.max(1,renoise.song().sequencer_track_count - self.MATRIX_WIDTH + 1)
 end
 
 --------------------------------------------------------------------------------
@@ -255,12 +295,13 @@ function GridPie:update_h_buttons()
   TRACE("GridPie:update_h_buttons()")
 
   local skip_event = true
+  local x_pos = self.actual_x or self.X_POS
 
   if self.mappings.h_next.group_name then
-    self._bt_h_next:set(self.X_POS~=self:_get_h_limit(),skip_event)
+    self._bt_h_next:set(x_pos<self:_get_h_limit(),skip_event)
   end
   if self.mappings.h_prev.group_name then
-    self._bt_h_prev:set(self.X_POS~=1,skip_event)
+    self._bt_h_prev:set(x_pos>self.x_step,skip_event)
   end
 
 end
@@ -269,12 +310,13 @@ function GridPie:update_v_buttons()
   TRACE("GridPie:update_v_buttons()")
 
   local skip_event = true
+  local y_pos = self.actual_y or self.Y_POS
 
   if self.mappings.v_next.group_name then
-    self._bt_v_next:set(self.Y_POS~=self:_get_v_limit(),skip_event)
+    self._bt_v_next:set(y_pos<self:_get_v_limit(),skip_event)
   end
   if self.mappings.v_prev.group_name then
-    self._bt_v_prev:set(self.Y_POS~=1,skip_event)
+    self._bt_v_prev:set(y_pos>self.y_step,skip_event)
   end
 
 end
@@ -289,8 +331,9 @@ function GridPie:update_v_slider()
   if self._v_slider then
     local skip_event = true
     local steps = self:_get_v_limit()
+    local idx = math.min(steps,self.Y_POS-1)
     self._v_slider.steps = steps
-    self._v_slider:set_index(self.Y_POS-1,skip_event)
+    self._v_slider:set_index(idx,skip_event)
   end
 
 end
@@ -301,10 +344,92 @@ function GridPie:update_h_slider()
   if self._h_slider then
     local skip_event = true
     local steps = self:_get_h_limit()
+    local idx = math.min(steps,self.X_POS-1)
     self._h_slider.steps = steps
-    self._h_slider:set_index(self.X_POS-1,skip_event)
+    self._h_slider:set_index(idx,skip_event)
   end
 
+end
+
+--------------------------------------------------------------------------------
+
+-- handle paged navigation
+
+function GridPie:goto_prev_track_page()
+  local limit = renoise.song().sequencer_track_count-(self.x_step-1)
+  local new_x = math.min(limit,math.max(1,self.X_POS-self.x_step))
+  self:set_horizontal_pos(new_x)
+  self:align_track()
+end
+
+function GridPie:goto_next_track_page()
+  if(self.X_POS<self:_get_h_limit()) then
+    local new_x = self.X_POS+self.x_step
+    self:set_horizontal_pos(new_x)
+    self:align_track()
+  end
+end
+
+function GridPie:goto_first_track_page()
+  self:set_horizontal_pos(1)
+  self:align_track()
+end
+
+function GridPie:goto_last_track_page()
+  local new_x = 1
+  local limit = self:_get_h_limit()
+  while (new_x<limit) do
+    new_x = new_x+self.x_step
+  end
+  self:set_horizontal_pos(new_x)
+  self:align_track()
+end
+
+function GridPie:goto_next_seq_page()
+  if(self.Y_POS<self:_get_v_limit()) then
+    local new_y = self.Y_POS+self.y_step
+    self:set_vertical_pos(new_y)
+    self:align_pattern()
+  end
+end
+
+function GridPie:goto_prev_seq_page()
+  local limit = 1
+  local new_y = math.max(limit,self.Y_POS-self.y_step)
+  self:set_vertical_pos(new_y)
+  self:align_pattern()
+end
+
+function GridPie:goto_first_seq_page()
+  self:set_vertical_pos(1)
+  self:align_pattern()
+end
+
+function GridPie:goto_last_seq_page()
+  local new_y = 1
+  local limit = self:_get_v_limit()
+  while (new_y<limit) do
+    new_y = new_y+self.y_step
+  end
+  self:set_vertical_pos(new_y)
+  self:align_pattern()
+end
+
+
+--------------------------------------------------------------------------------
+
+-- align selected track/pattern with position
+
+function GridPie:align_track()
+  if (self.options.follow_pos.value == self.FOLLOW_POS_ON) then
+    renoise.song().selected_track_index = self.X_POS
+  end
+end
+
+function GridPie:align_pattern()
+  if (self.options.follow_pos.value == self.FOLLOW_POS_ON) then
+    renoise.song().selected_sequence_index = self.Y_POS
+  end
 end
 
 --------------------------------------------------------------------------------
@@ -325,10 +450,8 @@ function GridPie:is_garbage_pos(x,y)
     renoise.song().tracks[x].type == renoise.Track.TRACK_TYPE_SEND or
     total_sequence == y
   then
-    -- Is garbage
     return true
   else
-    -- Is not garbage
     return false
   end
 
@@ -425,13 +548,6 @@ function GridPie:init_gp_pattern()
     end
   end
 
-  -- adjust the Renoise interface, move playhead to last pattern, ...
-  renoise.app().window.pattern_matrix_is_visible = true
-  rns.selected_sequence_index = #sequencer.pattern_sequence
-  rns.transport.loop_pattern = true
-  --rns.transport:start(renoise.Transport.PLAYMODE_RESTART_PATTERN)
-  --rns.transport.follow_player = false
-
 
 end
 
@@ -443,16 +559,24 @@ end
 function GridPie:adjust_grid()
   TRACE("GridPie:adjust_grid()")
 
+  local rns = renoise.song()
   local color = nil
+  local master_track_idx = get_master_track_index()
+  local total_sequence = #rns.sequencer.pattern_sequence
+
   for x = self.X_POS, self.MATRIX_WIDTH + self.X_POS - 1 do
     for y = self.Y_POS, self.MATRIX_HEIGHT + self.Y_POS - 1 do
       local cell = self:matrix_cell(x - self.X_POS + 1, y - self.Y_POS + 1)
       local active,empty,muted = false,true,true
-      if cell ~= nil and not self:is_garbage_pos(x, y) then
-        muted = renoise.song().sequencer:track_sequence_slot_is_muted(x, y)
+      if (x>=master_track_idx) then
+        color = self.palette.out_of_bounds
+      elseif (y>=total_sequence) then
+        color = self.palette.out_of_bounds
+      elseif cell ~= nil then
+        muted = rns.sequencer:track_sequence_slot_is_muted(x, y)
         active = not muted
-        local patt_idx = renoise.song().sequencer.pattern_sequence[y]
-        empty = renoise.song().patterns[patt_idx].tracks[x].is_empty
+        local patt_idx = rns.sequencer.pattern_sequence[y]
+        empty = rns.patterns[patt_idx].tracks[x].is_empty
         if empty then
           if muted then 
             color = self.palette.empty
@@ -466,10 +590,6 @@ function GridPie:adjust_grid()
             color = self.palette.selected_filled 
           end
         end
-      elseif cell ~= nil then
-        color = self.palette.out_of_bounds
-      elseif self:is_garbage_pos(x, y) then
-        color = self.palette.out_of_bounds
       end
       if color then
         -- assign same color to selected/inactive state
@@ -480,9 +600,13 @@ function GridPie:adjust_grid()
 
     end
   end
+
+  -- set the selected track to either the one specified in Renoise
+  -- (the "actual" position), or the one specified by this script
   if (self.options.follow_pos.value == self.FOLLOW_POS_ON) then
-    renoise.song().selected_track_index = self.X_POS
-    renoise.song().selected_sequence_index = self.Y_POS
+    rns.selected_track_index = self.actual_x or self.X_POS
+    rns.selected_sequence_index = self.actual_y or self.Y_POS
+    self.actual_x,self.actual_y = nil,nil
   end
 
 end
@@ -559,29 +683,40 @@ function GridPie:toggler(x, y, pattern)
     muted = true 
   end
 
+  local rns = renoise.song()
+
   x = x + (self.X_POS - 1)
   y = y + (self.Y_POS - 1)
 
-  if self:is_garbage_pos(x, y) then return end
+  if self:is_garbage_pos(x, y) then 
+    return 
+  end
+  
 
-  local rns = renoise.song()
   local source = rns.patterns[rns.sequencer:pattern(y)]
   local dest = rns.patterns[self.GRIDPIE_IDX]
+  local master_track_idx = get_master_track_index()
+  local total_sequence = #rns.sequencer.pattern_sequence
 
   if pattern then
 
     -- pattern copy
     dest:copy_from(source)
     dest.number_of_lines = source.number_of_lines 
+    self.POLY_COUNTER[x] = source.number_of_lines
 
     -- Change PM
+    -- TODO: optimize by changing only affected parts
     for i = 1, #rns.sequencer.pattern_sequence - 1 do
-      for o = 1, #rns.tracks do
-        if not self:is_garbage_pos(o, i) then
-          if i == y then
-            rns.sequencer:set_track_sequence_slot_is_muted(o , i, false)
-          else
-            rns.sequencer:set_track_sequence_slot_is_muted(o , i, true)
+      if (i<total_sequence) then
+        for o = 1, #rns.tracks do
+          --if not self:is_garbage_pos(o, i) then
+          if (o<master_track_idx) then
+            if i == y then
+              rns.sequencer:set_track_sequence_slot_is_muted(o , i, false)
+            else
+              rns.sequencer:set_track_sequence_slot_is_muted(o , i, true)
+            end
           end
         end
       end
@@ -636,7 +771,7 @@ function GridPie:toggler(x, y, pattern)
         local old_lines = dest.number_of_lines
         dest.number_of_lines = lc
 
-        TRACE("Expanding track " .. x .. " from " .. source.number_of_lines .. " to " .. dest.number_of_lines .. " lines")
+        TRACE("GridPie:Expanding track " .. x .. " from " .. source.number_of_lines .. " to " .. dest.number_of_lines .. " lines")
 
         OneShotIdleNotifier(0, function()
           self:copy_and_expand(source, dest, x)
@@ -651,7 +786,7 @@ function GridPie:toggler(x, y, pattern)
               rns.tracks[idx].type ~= renoise.Track.TRACK_TYPE_MASTER and
               rns.tracks[idx].type ~= renoise.Track.TRACK_TYPE_SEND
             then
-              TRACE("Also expanding track " .. idx .. " from " .. old_lines .. " to " .. dest.number_of_lines .. " lines") 
+              TRACE("GridPie:Also expanding track " .. idx .. " from " .. old_lines .. " to " .. dest.number_of_lines .. " lines") 
               self:copy_and_expand(dest, dest, idx, old_lines)
             end
           end
@@ -663,13 +798,16 @@ function GridPie:toggler(x, y, pattern)
     end
 
     -- Change PM
+    -- TODO: optimize by changing only affected parts
     for i = 1, #rns.sequencer.pattern_sequence - 1 do
-      if not self:is_garbage_pos(x, i) then
-        if i == y then
-          rns.sequencer:set_track_sequence_slot_is_muted(x , i, muted)
-        else
-          rns.sequencer:set_track_sequence_slot_is_muted(x , i, true)
-        end
+      if (i<total_sequence) then
+        --if not self:is_garbage_pos(x, i) then
+          if i == y then
+            rns.sequencer:set_track_sequence_slot_is_muted(x , i, muted)
+          else
+            rns.sequencer:set_track_sequence_slot_is_muted(x , i, true)
+          end
+        --end
       end
     end
 
@@ -702,15 +840,15 @@ function GridPie:_build_app()
     c.tooltip = self.mappings.v_prev.description
     c:set_pos(self.mappings.v_prev.index)
     c.active = false
-    c.on_press = function(obj) 
+    c.on_hold = function()
+      if not self.active then return end
+      self:goto_first_seq_page()
+    end
+    c.on_release = function(obj) 
       if not self.active then
         return
       end
-      local limit = 1
-      local new_y = math.max(limit,self.Y_POS-self.v_step)
-      if (new_y~=self.Y_POS) then
-        self:set_vertical_pos(new_y)
-      end
+      self:goto_prev_seq_page()
     end
     self:_add_component(c)
     self._bt_v_prev = c
@@ -723,15 +861,13 @@ function GridPie:_build_app()
     c.tooltip = self.mappings.v_next.description
     c:set_pos(self.mappings.v_next.index)
     c.active = false
-    c.on_press = function(obj) 
-      if not self.active then
-        return
-      end
-      local limit = self:_get_v_limit()
-      local new_y = math.min(self.Y_POS+self.v_step,limit)
-      if (new_y~=self.Y_POS) then
-        self:set_vertical_pos(new_y)
-      end
+    c.on_hold = function()
+      if not self.active then return end
+      self:goto_last_seq_page()
+    end
+    c.on_release = function(obj) 
+      if not self.active then return end
+      self:goto_next_seq_page()
     end
     self:_add_component(c)
     self._bt_v_next = c
@@ -744,15 +880,13 @@ function GridPie:_build_app()
     c.tooltip = self.mappings.h_prev.description
     c:set_pos(self.mappings.h_prev.index)
     c.active = false
-    c.on_press = function(obj) 
-      if not self.active then
-        return
-      end
-      local limit = 1
-      local new_x = math.max(limit,self.X_POS-self.h_step)
-      if (new_x~=self.X_POS) then
-        self:set_horizontal_pos(new_x)
-      end
+    c.on_hold = function()
+      if not self.active then return end
+      self:goto_first_track_page()
+    end
+    c.on_release = function() 
+      if not self.active then return end
+      self:goto_prev_track_page()
     end
     self:_add_component(c)
     self._bt_h_prev = c
@@ -765,15 +899,13 @@ function GridPie:_build_app()
     c.tooltip = self.mappings.h_next.description
     c:set_pos(self.mappings.h_next.index)
     c.active = false
-    c.on_press = function(obj) 
-      if not self.active then
-        return
-      end
-      local limit = self:_get_h_limit()
-      local new_x = math.min(self.X_POS+self.h_step,limit)
-      if (new_x~=self.X_POS) then
-        self:set_horizontal_pos(new_x)
-      end
+    c.on_hold = function()
+      if not self.active then return end
+      self:goto_last_track_page()
+    end
+    c.on_release = function(obj) 
+      if not self.active then return end
+      self:goto_next_track_page()
     end
     self:_add_component(c)
     self._bt_h_next = c
@@ -793,9 +925,7 @@ function GridPie:_build_app()
         c.active = false
         c.on_release = function(obj) 
           -- track copy
-          if not self.active then
-            return false
-          end
+          if not self.active then return end
           if self.held_button and
             (self.held_button == obj) then
             self.held_button = nil
@@ -805,9 +935,7 @@ function GridPie:_build_app()
         end
         c.on_hold = function(obj) 
           -- pattern copy
-          if not self.active then
-            return false
-          end
+          if not self.active then return end
           local pattern = true
           self:toggler(x,y,pattern) 
           self.held_button = obj
@@ -828,9 +956,11 @@ function GridPie:_build_app()
     c.tooltip = self.mappings.v_slider.description
     c:set_pos(self.mappings.v_slider.index or 1)
     c.on_change = function(obj) 
+      if not self.active then return end
       local limit = self:_get_v_limit()
       local val = math.min(limit,obj.index+1)
       self:set_vertical_pos(val)
+      self:align_pattern()
     end
     self:_add_component(c)
     self._v_slider = c
@@ -843,9 +973,11 @@ function GridPie:_build_app()
     c.tooltip = self.mappings.h_slider.description
     c:set_pos(self.mappings.h_slider.index or 1)
     c.on_change = function(obj) 
+      if not self.active then return end
       local limit = self:_get_h_limit()
       local val = math.min(limit,obj.index+1)
       self:set_horizontal_pos(val)
+      self:align_track()
     end
     self:_add_component(c)
     self._h_slider = c
@@ -867,20 +999,13 @@ function GridPie:start_app()
   TRACE("GridPie:start_app()")
 
   -- this step will ensure that the application is properly mapped,
-  -- after which it will also call the build_app() method 
+  -- after which it will call the build_app() method, which in 
+  -- turn will call attach_to_song() method)
   if not Application.start_app(self) then
     return
   end
 
-  self:initialize()
-
-end
-
-
---------------------------------------------------------------------------------
-
-function GridPie:initialize()
-  TRACE("GridPie:initialize()")
+  local rns = renoise.song()
 
   -- initialize important stuff
   self.REVERT_PM_SLOT = table.create()
@@ -889,12 +1014,45 @@ function GridPie:initialize()
   self:init_gp_pattern()
   self:_set_step_sizes() 
 
-  -- update everything
+  -- update controller
   self:update_v_buttons()
   self:update_v_slider()
   self:update_h_buttons()
   self:update_h_slider()
   self:adjust_grid()
+
+  -- adjust the Renoise interface
+  renoise.app().window.pattern_matrix_is_visible = true
+  rns.transport.follow_player = false
+  rns.transport.loop_pattern = true
+
+  -- start playing as soon as we have initialized?
+  if (self.options.auto_start.value == self.AUTOSTART_ON) then
+    self.play_requested = true
+  end
+
+  -- if follow_pos is enabled, display the first pattern,
+  -- otherwise display the __GRID PIE__ pattern
+  if (self.options.follow_pos.value == self.FOLLOW_POS_ON) then
+    rns.selected_sequence_index = 1
+  else
+    rns.selected_sequence_index = #rns.sequencer.pattern_sequence
+  end
+
+
+end
+
+--------------------------------------------------------------------------------
+
+-- equivalent to stop() in the original tool
+
+function GridPie:stop_app()
+  TRACE("GridPie:stop_app()")
+
+  -- Revert PM
+  self:init_pm_slots_to(false)
+
+  Application.stop_app(self)
 
 end
 
@@ -906,12 +1064,17 @@ end
 function GridPie:abort(notification)
   TRACE("GridPie:abort()",notification)
 
+  if not self.active then
+    return false
+  end
+
+  --[[
   renoise.app():show_message(
     "You dun goofed! Grid Pie needs to be restarted."
   )
+  ]]
+  renoise.app():show_status("You dun goofed! Grid Pie needs to be restarted.")
 
-  --self._process:stop()
-  --self.active = false
   self._process.browser:stop_current_configuration()
 
 end
@@ -940,7 +1103,8 @@ function GridPie:on_idle()
     return false
   end
 
-  local last_pattern = renoise.song().sequencer:pattern(#renoise.song().sequencer.pattern_sequence)
+  local rns = renoise.song()
+  local last_pattern = rns.sequencer:pattern(#rns.sequencer.pattern_sequence)
   if renoise.song().patterns[last_pattern].name ~= "__GRID_PIE__" then
     self:abort()
   end
@@ -969,8 +1133,40 @@ function GridPie:on_idle()
     renoise.song().transport.follow_player = false
   end
 
+  local grid_pie_pos = #rns.sequencer.pattern_sequence
+  if (renoise.song().transport.playback_pos.sequence~=grid_pie_pos) then
+    self:playback_pos_to_gridpie()
+  end
+
+  if self.play_requested then
+    self.play_requested = false
+    renoise.song().transport.playing = true
+  end
+
 end
 
+--------------------------------------------------------------------------------
+
+-- move playback position to the __GRID PIE__ pattern
+-- @param restart (Boolean) force pattern to play from the beginning
+
+function GridPie:playback_pos_to_gridpie(restart)
+  TRACE("GridPie:playback_pos_to_gridpie()",restart)
+
+  local rns = renoise.song()
+  local total_sequence = #rns.sequencer.pattern_sequence
+  local last_patt_idx = rns.sequencer:pattern(total_sequence)
+  local last_patt = rns.patterns[last_patt_idx]
+  local songpos = rns.transport.playback_pos
+  songpos.sequence = total_sequence
+  if restart and (songpos.sequence~=total_sequence) then
+    -- when started outside the __GRID PIE__ pattern, play
+    -- from the last line (so the next one is the first)
+    songpos.line = last_patt.number_of_lines 
+  end
+  renoise.song().transport.playback_pos = songpos
+
+end
 
 --------------------------------------------------------------------------------
 
@@ -984,7 +1180,7 @@ function GridPie:_attach_to_song()
   -- Tracks have changed, stored slots are invalid, reset table
   renoise.song().tracks_observable:add_notifier(
     function(notification)
-      TRACE("GridPie:tracks_observable fired...",notification)
+      --TRACE("GridPie:tracks_observable fired...",notification)
       if not self.active then
         return false
       end
@@ -1005,7 +1201,7 @@ function GridPie:_attach_to_song()
   -- Sequence have changed, stored slots are invalid, reset table
   renoise.song().sequencer.pattern_sequence_observable:add_notifier(
     function()
-      TRACE("GridPie:pattern_sequence_observable fired...")
+      --TRACE("GridPie:pattern_sequence_observable fired...")
       if not self.active then
         return false
       end
@@ -1017,22 +1213,12 @@ function GridPie:_attach_to_song()
   -- when playback start, force playback to enter __GRID PIE__ pattern
   renoise.song().transport.playing_observable:add_notifier(
     function()
-      TRACE("GridPie:playing_observable fired...")
+      --TRACE("GridPie:playing_observable fired...")
       if not self.active then
         return false
       end
       if renoise.song().transport.playing then
-
-        local rns = renoise.song()
-        local total_sequence = #rns.sequencer.pattern_sequence
-        local last_patt_idx = rns.sequencer:pattern(total_sequence)
-        local last_patt = rns.patterns[last_patt_idx]
-        local songpos = rns.transport.playback_pos
-        songpos.sequence = total_sequence
-        -- when set to last line, the first one will play next...
-        songpos.line = last_patt.number_of_lines 
-        renoise.song().transport.playback_pos = songpos
-
+        self:playback_pos_to_gridpie(true)
       end
 
     end
@@ -1041,7 +1227,7 @@ function GridPie:_attach_to_song()
   -- when follow_pos is enabled, enforce a disabled "follow_player"
   renoise.song().transport.follow_player_observable:add_notifier(
     function()
-      TRACE("GridPie:follow_player_observable fired...")
+      --TRACE("GridPie:follow_player_observable fired...")
       if not self.active then
         return false
       end
@@ -1054,6 +1240,48 @@ function GridPie:_attach_to_song()
 
     end
   )
+
+  -- when changing track, update horizontal page
+  renoise.song().selected_track_index_observable:add_notifier(
+    function()
+      --TRACE("GridPie:selected_track_index_observable fired...")
+      if not self.active then
+        return false
+      end
+
+      if (self.options.follow_pos.value == self.FOLLOW_POS_ON) then
+        local track_idx = renoise.song().selected_track_index
+        self.actual_x = track_idx
+        local page = math.floor((track_idx-1)/self.x_step)
+        local new_x = page*self.x_step+1
+        self:set_horizontal_pos(new_x)
+        -- hack: prevent track from changing
+        self.actual_y = renoise.song().selected_sequence_index
+
+      end
+    end
+  )
+
+  -- when changing pattern in the sequence, update vertical page
+  renoise.song().selected_sequence_index_observable:add_notifier(
+    function()
+      --TRACE("GridPie:selected_sequence_index_observable fired...")
+      if not self.active then
+        return false
+      end
+      if (self.options.follow_pos.value == self.FOLLOW_POS_ON) then
+        local seq_idx = renoise.song().selected_sequence_index
+        self.actual_y = seq_idx
+        --local page = math.ceil((seq_idx-1)/self.y_step)
+        local page = math.floor((seq_idx-1)/self.y_step)
+        local new_y = page*self.y_step+1
+        self:set_vertical_pos(new_y)
+        -- hack: prevent track from changing
+        self.actual_x = renoise.song().selected_track_index
+      end
+    end
+  )
+
 
 end
 

@@ -106,7 +106,7 @@ end
 -- parse the supplied xml string (reset the counter first)
 
 function ControlMap:parse_definition(control_map_name, xml_string)
-  TRACE("ControlMap:parse_definition",control_map_name, xml_string)
+  --TRACE("ControlMap:parse_definition",control_map_name, xml_string)
 
   self.id = 0
 

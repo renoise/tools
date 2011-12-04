@@ -25,11 +25,19 @@ local function create_browser(config, start_running)
   if (not browser) then
     browser = Browser()
     browser:set_dump_midi(duplex_preferences.dump_midi.value)
+
+    local display = duplex_preferences.display_browser_on_start.value
+    if display then
+      browser:show()
+    end
+
   end
     
-  if (config) then
+  if config then
     browser:set_configuration(config, start_running)
   end
+
+
 end
 
 
@@ -38,6 +46,7 @@ end
 -- show the duplex browser dialog and optionally lauch a configuration
 
 local function show_dialog(config, start_running)
+
   create_browser(config, start_running)
   browser:show()
 end
@@ -74,10 +83,10 @@ end
 -- main browser entry
 
 renoise.tool():add_menu_entry {
-  name = "Main Menu:Tools:Duplex:Browser...",
+  name = "Main Menu:Tools:Duplex:Show Duplex Browser...",
   invoke = function() 
     show_dialog() 
-  end
+  end,
 }
 
 
@@ -102,18 +111,18 @@ available_devices:sort()
 local added_menu_entries = table.create()
 
 for _,device_name in pairs(available_devices) do
-  local prefix = "--- "
   for _,config in pairs(device_configuration_map[device_name]) do
     if (config.pinned) then
-      local entry_name = ("Main Menu:Tools:Duplex: %s %s..."):format(
-        config.device.display_name, config.name)
+      local entry_name = ("Main Menu:Tools:Duplex:%s:%s %s..."):format(
+        config.device.display_name, config.device.display_name, config.name)
         
       -- duplicate config entries are validated below by the prefs registration
       if (not added_menu_entries:find(entry_name)) then
         added_menu_entries:insert(entry_name)
         
         renoise.tool():add_menu_entry {
-          name = ("%s%s"):format(prefix,entry_name),
+          --name = ("%s%s"):format(entry_name),
+          name = entry_name,
           selected = function() 
             return (browser ~= nil and browser:configuration_running(config))
           end,
@@ -122,14 +131,33 @@ for _,device_name in pairs(available_devices) do
           end
         }
 
-        prefix = ""
       end
     end
   end
 end
 
 renoise.tool():add_menu_entry {
-  name = "--- Main Menu:Tools:Duplex:Dump MIDI",
+  name = "--- Main Menu:Tools:Duplex:Release all open devices",
+  invoke = function() 
+    if (browser) then
+      browser:set_configuration()
+    end
+  end
+}
+
+renoise.tool():add_menu_entry {
+  name = "--- Main Menu:Tools:Duplex:Display on startup",
+  selected = function()
+    return duplex_preferences.display_browser_on_start.value
+  end,
+  invoke = function() 
+    duplex_preferences.display_browser_on_start.value = 
+      not duplex_preferences.display_browser_on_start.value
+  end
+}
+
+renoise.tool():add_menu_entry {
+  name = "Main Menu:Tools:Duplex:Dump MIDI to console",
   selected = function()
     return duplex_preferences.dump_midi.value
   end,
@@ -138,9 +166,17 @@ renoise.tool():add_menu_entry {
     if (browser) then
       browser:set_dump_midi(duplex_preferences.dump_midi.value)
     end
+    if duplex_preferences.dump_midi.value then
+      local msg = "You have selected to dump MIDI data into the Renoise scripting console"
+                .."\nThis is useful when you want to identify some problem, or figure out"
+                .."\nwhich messages your device is transmitting."
+                .."\n"
+                .."\nNote that you have to enable scripting in Renoise before you can see"
+                .."\nthe scripting console (howto: http://code.google.com/p/xrnx/)"
+      renoise.app():show_message(msg)
+    end
   end
 }
-
 
 --------------------------------------------------------------------------------
 -- keybindings

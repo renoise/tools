@@ -7,4 +7,5 @@
 local CTRL_PATH = "Duplex/Controllers/KONTROL49/Configurations/"
 require (CTRL_PATH.."Effect")
 require (CTRL_PATH.."Mixer")
+require (CTRL_PATH.."GridPie")
 

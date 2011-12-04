@@ -222,8 +222,8 @@ end
 
 --------------------------------------------------------------------------------
 
-function Transport:_on_new_document()
-  TRACE("Transport._on_new_document()")
+function Transport:on_new_document()
+  TRACE("Transport.on_new_document()")
 
   self:_attach_to_song()
 
@@ -242,7 +242,7 @@ function Transport:_attach_to_song()
   -- metronome --
   song.transport.metronome_enabled_observable:add_notifier(
     function()
-      TRACE("Transport.metronome_enabled_observable()")
+      TRACE("Transport.metronome_enabled_observable fired...")
       self:update_metronome_enabled()
     end
   )
@@ -250,7 +250,7 @@ function Transport:_attach_to_song()
   -- follow player --
   song.transport.follow_player_observable:add_notifier(
     function()
-      TRACE("Transport.follow_player_observable()")
+      TRACE("Transport.follow_player_observable fired...")
       self:update_follow_player()
     end
   )
@@ -258,7 +258,7 @@ function Transport:_attach_to_song()
   -- playing --
   song.transport.playing_observable:add_notifier(
     function()
-      TRACE("Transport.playing_observable()")
+      TRACE("Transport.playing_observable fired...")
       self:update_playing()
     end
   )
@@ -266,7 +266,7 @@ function Transport:_attach_to_song()
   -- loop pattern -- 
   song.transport.loop_pattern_observable:add_notifier(
     function()
-      TRACE("Transport.loop_pattern_observable()")
+      TRACE("Transport.loop_pattern_observable fired...")
       self:update_loop_pattern()
     end
   )
@@ -274,7 +274,7 @@ function Transport:_attach_to_song()
   -- edit mode --
   song.transport.edit_mode_observable:add_notifier(
     function()
-      TRACE("Transport.edit_mode_observable()")
+      TRACE("Transport.edit_mode_observable fired...")
       self:update_edit_mode()
     end
   )
@@ -326,6 +326,7 @@ end
 -- update all UIComponents to the present state
 
 function Transport:update_everything()
+  TRACE("Transport:update_everything()")
 
   self:update_metronome_enabled()
   self:update_follow_player()
@@ -498,6 +499,7 @@ end
 --------------------------------------------------------------------------------
 
 function Transport:_start_playback()
+  TRACE("Transport:_start_playback()")
 
   if renoise.song().transport.playing then
     -- retriggered
@@ -520,6 +522,7 @@ end
 --------------------------------------------------------------------------------
 
 function Transport:_stop_playback()
+  TRACE("Transport:_stop_playback()")
 
   if (not renoise.song().transport.playing) then
     if (self.options.pattern_stop.value == self.STOP_MODE_PANIC) then
@@ -545,6 +548,7 @@ end
 -- goto next pattern/block
 
 function Transport:_next()
+  TRACE("Transport:_next()")
 
   local block_mode = (self.options.jump_mode.value == self.JUMP_MODE_BLOCK)
   if self._block_loop and block_mode then
@@ -583,6 +587,7 @@ end
 -- goto previous pattern/block
 
 function Transport:_previous()
+  TRACE("Transport:_previous()")
 
   local block_mode = (self.options.jump_mode.value == self.JUMP_MODE_BLOCK)
   if self._block_loop and block_mode then
@@ -618,6 +623,8 @@ end
 -- @idx  - the pattern to schedule
 
 function Transport:_schedule_pattern(idx)
+  TRACE("Transport:_schedule_pattern()",idx)
+
   self._scheduled_pattern = idx
   self._source_pattern = renoise.song().transport.playback_pos.sequence
   renoise.song().transport:set_scheduled_sequence(idx)
@@ -629,6 +636,7 @@ end
 -- re-trigger the current pattern
 
 function Transport:_retrigger_pattern()
+  TRACE("Transport:_retrigger_pattern()")
 
   local pos = renoise.song().transport.playback_pos
   renoise.song().transport:trigger_sequence(pos.sequence)
@@ -640,6 +648,7 @@ end
 -- re-schedule the current pattern
 
 function Transport:_reschedule_pattern()
+  TRACE("Transport:_reschedule_pattern()")
 
   local pos = renoise.song().transport.playback_pos.sequence
   renoise.song().transport:set_scheduled_sequence(pos)
@@ -652,6 +661,7 @@ end
 -- if the line in the target pattern does not exist,start from the beginning
 
 function Transport:_switch_to_seq_index(seq_index)
+  TRACE("Transport:_switch_to_seq_index()",seq_index)
 
   local song = renoise.song()
   local new_pos = song.transport.playback_pos
@@ -673,6 +683,7 @@ end
 -- jump to beginning of song
 
 function Transport:_jump_to_beginning()
+  TRACE("Transport:_jump_to_beginning()")
 
   local new_pos = renoise.song().transport.playback_pos
   new_pos.sequence = 1

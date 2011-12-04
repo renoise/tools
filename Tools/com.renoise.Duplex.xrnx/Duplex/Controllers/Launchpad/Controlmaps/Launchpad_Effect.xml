@@ -90,7 +90,7 @@ Note: If you have the Automap software running in the background, please disable
 					</Group>
 				</Column>
 				<Group name="Triggers" orientation="vertical">
-					<Param value="G#-1" type="button" name="TriggerS #1"	maximum="127" minimum="0"/>
+					<Param value="G#-1" type="button" name="Trigger #1"	maximum="127" minimum="0"/>
 					<Param value="C-1" type="button" name="Trigger #2"	maximum="127" minimum="0"/>
 					<Param value="E-2" type="button" name="Trigger #3"	maximum="127" minimum="0"/>
 					<Param value="G#3" type="button" name="Trigger #4"	maximum="127" minimum="0"/>
