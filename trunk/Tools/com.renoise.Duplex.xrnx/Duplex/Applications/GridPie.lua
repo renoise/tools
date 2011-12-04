@@ -28,7 +28,7 @@ About
   create some pretty complex, non-repeating note sequences, but notice that this
   calculation takes up extra CPU cycles - if you computer is very slow, you can
   simply disable this feature. It's probably a good idea to experiment with 
-  short patterns in any case.
+  relatively short patterns in any case.
 
   Navigating the Grid Pie
 
@@ -37,7 +37,6 @@ About
   to Grid Pie (such as send tracks). The navigation is fully compatible with the 
   "paged" navigation scheme of other Duplex apps (Mixer, etc.), just specify the 
   same page size to make them align nicely with each other. 
-
 
 
 Mappings
@@ -54,8 +53,8 @@ Mappings
 Options
   follow_pos    - enable to make Renoise follow the pattern/track
   polyrhythms   - allow/disallow polyrhythms when combining patterns (save CPU)
-  y_step        - determine how many patterns to scroll with each step
-  x_step        - determine how many tracks to scroll with each step
+  page_size_v        - determine how many patterns to scroll with each step
+  page_size_h        - determine how many tracks to scroll with each step
 
 Changes (equal to Duplex version number)
 
@@ -91,7 +90,7 @@ GridPie.default_options = {
     },
     value = 1,
   },
-  y_step = {
+  page_size_v = {
     label = "Vertical page",
     description = "Specify the vertical page size",
     on_change = function(inst)
@@ -106,7 +105,7 @@ GridPie.default_options = {
     },
     value = 1,
   },
-  x_step = {
+  page_size_h = {
     label = "Horizontal page",
     description = "Specify the horizontal page size",
     on_change = function(inst)
@@ -137,18 +136,6 @@ GridPie.default_options = {
 function GridPie:__init(browser_process,mappings,options,config_name)
   TRACE("GridPie:__init(",browser_process,mappings,options,config_name)
 
-  --[[ Globals, capitalized for easier recognition ]]--
-
-  self.GRIDPIE_IDX = nil
-  self.MATRIX_CELLS = table.create()
-  self.MATRIX_HEIGHT = nil
-  self.MATRIX_WIDTH = nil
-  self.POLY_COUNTER = table.create()
-  self.REVERT_PM_SLOT = table.create()
-
-  self.X_POS = 1 
-  self.Y_POS = 1
-
   -- option constants
   self.POLY_ENABLED = 1
   self.POLY_DISABLED = 2
@@ -158,12 +145,42 @@ function GridPie:__init(browser_process,mappings,options,config_name)
   self.AUTOSTART_ON = 1
   self.AUTOSTART_OFF = 2
 
-  -- misc private stuff
+  -- sequence index of our special recombination pattern
+  self.GRIDPIE_IDX = nil
+
+  -- width/height of the "grid" control-map group
+  self.MATRIX_HEIGHT = nil
+  self.MATRIX_WIDTH = nil
+
+  -- references to the grid's UIToggleButtons
+  self.MATRIX_CELLS = table.create()
+
+  -- remember length (pattern-lines) of each track
+  self.POLY_COUNTER = table.create()
+
+  -- memorized state of the matrix 
+  self.REVERT_PM_SLOT = table.create()
+
+  -- these indicate the upper-left corner of the area
+  -- currently displayed on the controller
+  self.X_POS = 1 
+  self.Y_POS = 1
+
+  -- TODO remember the active slots (used when toggling)
+  --self.active_slots = table.create()
+
+  -- boolean, true when button has been held
   self.held_button = nil
-  self.y_step = nil
-  self.x_step = nil
+
+  -- page size (horizontal/vertical)
+  self.page_size_v = nil
+  self.page_size_h = nil
+
+  -- the selected track/sequence index
   self.actual_x = nil
   self.actual_y = nil
+
+  -- various flags used by idle loop
   self.play_requested = false
   self.update_requested = false
   self.v_update_requested = false
@@ -188,22 +205,26 @@ function GridPie:__init(browser_process,mappings,options,config_name)
                   .."\nControl value: ",
     },
     v_prev = {
-      description = "GridPie: goto previous part of sequence"
+      description = "GridPie: Press and release to display previous part of sequence"
+                  .."\nPress and hold to display first pattern"
     },
     v_next = {
-      description = "GridPie: goto next part of sequence"
+      description = "GridPie: Press and release to display next part of sequence"
+                  .."\nPress and hold to display last pattern"
     },
     h_prev = {
-      description = "GridPie: goto previous tracks in pattern"
+      description = "GridPie: Press and release to display previous tracks in pattern"
+                  .."\nPress and hold to go display first track"
     },
     h_next = {
-      description = "GridPie: goto next tracks in pattern"
+      description = "GridPie: Press and release to display next tracks in pattern"
+                  .."\nPress and hold to go display last track"
     },
     v_slider = {
-      description = "GridPie: goto next tracks in pattern"
+      description = "GridPie: select track in pattern"
     },
     h_slider = {
-      description = "GridPie: goto next tracks in pattern"
+      description = "GridPie: select pattern in sequence"
     },
   }
 
@@ -230,7 +251,6 @@ function GridPie:__init(browser_process,mappings,options,config_name)
     }
   }
 
-
   Application.__init(self,browser_process,mappings,options,config_name)
 
 end
@@ -238,16 +258,16 @@ end
 --------------------------------------------------------------------------------
 
 -- this function will apply the current settings
--- to the y_step and x_step variables
+-- to the page_size_v and page_size_h variables
 
 function GridPie:_set_step_sizes()
   TRACE("GridPie:_set_step_sizes()")
 
-  self.y_step = (self.options.y_step.value==self.STEPSIZE_AUTO) and
-    self.MATRIX_HEIGHT or self.options.y_step.value-1
+  self.page_size_v = (self.options.page_size_v.value==self.STEPSIZE_AUTO) and
+    self.MATRIX_HEIGHT or self.options.page_size_v.value-1
   
-  self.x_step = (self.options.x_step.value==self.STEPSIZE_AUTO) and
-    self.MATRIX_WIDTH or self.options.x_step.value-1
+  self.page_size_h = (self.options.page_size_h.value==self.STEPSIZE_AUTO) and
+    self.MATRIX_WIDTH or self.options.page_size_h.value-1
 
 end
 
@@ -301,7 +321,7 @@ function GridPie:update_h_buttons()
     self._bt_h_next:set(x_pos<self:_get_h_limit(),skip_event)
   end
   if self.mappings.h_prev.group_name then
-    self._bt_h_prev:set(x_pos>self.x_step,skip_event)
+    self._bt_h_prev:set(x_pos>self.page_size_h,skip_event)
   end
 
 end
@@ -316,7 +336,7 @@ function GridPie:update_v_buttons()
     self._bt_v_next:set(y_pos<self:_get_v_limit(),skip_event)
   end
   if self.mappings.v_prev.group_name then
-    self._bt_v_prev:set(y_pos>self.y_step,skip_event)
+    self._bt_v_prev:set(y_pos>self.page_size_v,skip_event)
   end
 
 end
@@ -356,15 +376,15 @@ end
 -- handle paged navigation
 
 function GridPie:goto_prev_track_page()
-  local limit = renoise.song().sequencer_track_count-(self.x_step-1)
-  local new_x = math.min(limit,math.max(1,self.X_POS-self.x_step))
+  local limit = renoise.song().sequencer_track_count-(self.page_size_h-1)
+  local new_x = math.min(limit,math.max(1,self.X_POS-self.page_size_h))
   self:set_horizontal_pos(new_x)
   self:align_track()
 end
 
 function GridPie:goto_next_track_page()
   if(self.X_POS<self:_get_h_limit()) then
-    local new_x = self.X_POS+self.x_step
+    local new_x = self.X_POS+self.page_size_h
     self:set_horizontal_pos(new_x)
     self:align_track()
   end
@@ -379,7 +399,7 @@ function GridPie:goto_last_track_page()
   local new_x = 1
   local limit = self:_get_h_limit()
   while (new_x<limit) do
-    new_x = new_x+self.x_step
+    new_x = new_x+self.page_size_h
   end
   self:set_horizontal_pos(new_x)
   self:align_track()
@@ -387,7 +407,7 @@ end
 
 function GridPie:goto_next_seq_page()
   if(self.Y_POS<self:_get_v_limit()) then
-    local new_y = self.Y_POS+self.y_step
+    local new_y = self.Y_POS+self.page_size_v
     self:set_vertical_pos(new_y)
     self:align_pattern()
   end
@@ -395,7 +415,7 @@ end
 
 function GridPie:goto_prev_seq_page()
   local limit = 1
-  local new_y = math.max(limit,self.Y_POS-self.y_step)
+  local new_y = math.max(limit,self.Y_POS-self.page_size_v)
   self:set_vertical_pos(new_y)
   self:align_pattern()
 end
@@ -409,7 +429,7 @@ function GridPie:goto_last_seq_page()
   local new_y = 1
   local limit = self:_get_v_limit()
   while (new_y<limit) do
-    new_y = new_y+self.y_step
+    new_y = new_y+self.page_size_v
   end
   self:set_vertical_pos(new_y)
   self:align_pattern()
@@ -703,20 +723,17 @@ function GridPie:toggler(x, y, pattern)
     -- pattern copy
     dest:copy_from(source)
     dest.number_of_lines = source.number_of_lines 
-    self.POLY_COUNTER[x] = source.number_of_lines
 
     -- Change PM
     -- TODO: optimize by changing only affected parts
     for i = 1, #rns.sequencer.pattern_sequence - 1 do
       if (i<total_sequence) then
-        for o = 1, #rns.tracks do
-          --if not self:is_garbage_pos(o, i) then
-          if (o<master_track_idx) then
-            if i == y then
-              rns.sequencer:set_track_sequence_slot_is_muted(o , i, false)
-            else
-              rns.sequencer:set_track_sequence_slot_is_muted(o , i, true)
-            end
+        for o = 1, rns.sequencer_track_count do
+          self.POLY_COUNTER[o] = source.number_of_lines
+          if i == y then
+            rns.sequencer:set_track_sequence_slot_is_muted(o , i, false)
+          else
+            rns.sequencer:set_track_sequence_slot_is_muted(o , i, true)
           end
         end
       end
@@ -1235,6 +1252,7 @@ function GridPie:_attach_to_song()
       if renoise.song().transport.follow_player and
         (self.options.follow_pos.value == self.FOLLOW_POS_ON) 
       then
+        print("got here")
         self._disable_follow_player = true
       end
 
@@ -1252,8 +1270,8 @@ function GridPie:_attach_to_song()
       if (self.options.follow_pos.value == self.FOLLOW_POS_ON) then
         local track_idx = renoise.song().selected_track_index
         self.actual_x = track_idx
-        local page = math.floor((track_idx-1)/self.x_step)
-        local new_x = page*self.x_step+1
+        local page = math.floor((track_idx-1)/self.page_size_h)
+        local new_x = page*self.page_size_h+1
         self:set_horizontal_pos(new_x)
         -- hack: prevent track from changing
         self.actual_y = renoise.song().selected_sequence_index
@@ -1272,9 +1290,9 @@ function GridPie:_attach_to_song()
       if (self.options.follow_pos.value == self.FOLLOW_POS_ON) then
         local seq_idx = renoise.song().selected_sequence_index
         self.actual_y = seq_idx
-        --local page = math.ceil((seq_idx-1)/self.y_step)
-        local page = math.floor((seq_idx-1)/self.y_step)
-        local new_y = page*self.y_step+1
+        --local page = math.ceil((seq_idx-1)/self.page_size_v)
+        local page = math.floor((seq_idx-1)/self.page_size_v)
+        local new_y = page*self.page_size_v+1
         self:set_vertical_pos(new_y)
         -- hack: prevent track from changing
         self.actual_x = renoise.song().selected_track_index
