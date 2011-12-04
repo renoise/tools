@@ -136,6 +136,9 @@ duplex_preferences = renoise.Document.create("ScriptingToolPreferences") {
   -- automation: the amount of extrapolation applied to linear envelopes
   extrapolation_strength = 3,
 
+  -- option: when enabled, the Duplex browser is displayed on startup
+  display_browser_on_start = false,
+
   -- debug option: when enabled, dump MIDI messages received and send by duplex
   -- to the sdt out (Renoise terminal)
   dump_midi = false,
@@ -237,6 +240,26 @@ function split_filename(filename)
   end
 end
 
+-- convert note-column pitch number into string value
+-- @param val - NoteColumn note-value, e.g. 120
+-- @return nil or NoteColumn note-string, e.g. "OFF"
+
+function note_pitch_to_value(val)
+  if not val then
+    return nil
+  elseif (val==120) then
+    return "OFF"
+  elseif(val==121) then
+    return "---"
+  elseif(val==0) then
+    return "C-0"
+  else
+    local oct = math.floor(val/12)
+    local note = NOTE_ARRAY[(val%12)+1]
+    return string.format("%s%s",note,oct)
+  end
+end
+
 -- get_playing_pattern
 
 function get_playing_pattern()
@@ -303,6 +326,43 @@ function determine_track_type(track_index)
     return TRACK_TYPE_SEND
   end
 end
+
+-- clamp_value: ensure value is within min/max
+function clamp_value(value, min_value, max_value)
+  return math.min(max_value, math.max(value, min_value))
+end
+
+-- wrap_value: 'rotate' value within specified range
+-- (with a range of 0-127, a value of 150 will output 22
+function wrap_value(value, min_value, max_value)
+  local range = max_value - min_value + 1
+  assert(range > 0, "invalid range")
+  while (value < min_value) do
+    value = value + range
+  end
+  while (value > max_value) do
+    value = value - range
+  end
+  return value
+end
+
+-- scale_value: scale a value to a range within a range
+-- for example, we could have a range of 0-127, and want
+-- to distribute the numbers 1-8 evenly across that range
+-- @param value (number) the value we wish to scale
+-- @param low_val/high_val (number) the lowest/highest value in 'our' range
+-- @param min_val/max_val (number) the lowest/highest possible value
+function scale_value(value,low_val,high_val,min_val,max_val)
+  local incr1 = min_val/(high_val-low_val)
+  local incr2 = max_val/(high_val-low_val)-incr1
+  return(((value-low_val)*incr2)+min_val)
+end
+
+-- return the fractional part of a number
+function fraction(val)
+  return val-math.floor(val)
+end
+
 
 -- determine the sign of a number
 

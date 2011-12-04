@@ -620,7 +620,7 @@ function NotesOnWheels:midi_callback(message)
         self.touched = true
         self:output_sequence()
       else
-        local msg = string.format("No more keys are accepted into the sequence")
+        local msg = string.format("Notes On Wheels: no more keys are accepted into the sequence")
         renoise.app():show_status(msg)
       end
     end
@@ -986,7 +986,7 @@ function NotesOnWheels:on_keypress(key)
           self:output_sequence()
         else
           self.accept_note_input = false
-          local msg = string.format("No more keys are accepted into the sequence")
+          local msg = string.format("Notes On Wheels: No more keys are accepted into the sequence")
           renoise.app():show_status(msg)
         end
       else
@@ -1252,7 +1252,7 @@ function NotesOnWheels:shift(amount)
   if self.pending_line_offset then
     self.pending_line_offset = self.line_offset+amount
   end
-  local msg = string.format("Sequence is offset by %d lines",self.line_offset)
+  local msg = string.format("Notes On Wheels: Sequence is offset by %d lines",self.line_offset)
   renoise.app():show_status(msg)
 
 end
@@ -2273,6 +2273,7 @@ end
 -- and update the display (dedicated/multi-control) 
 
 function NotesOnWheels:reset_adjustments()
+  TRACE("NotesOnWheels:reset_adjustments()")
   
   local c = nil
   local skip_event = true
@@ -2359,7 +2360,7 @@ NOW_Sequence.DEFAULT_OFFSET_VALUE = 0 -- play from the beginning
 NOW_Sequence.DEFAULT_GATE_VALUE = 255 -- fully open gate
 NOW_Sequence.DEFAULT_RETRIG_VALUE = 0 -- no retriggering
 
--- initial position for adjustment faders
+-- initial position for adjustment faders (between 0-1)
 NOW_Sequence.DEFAULT_PITCH_ADJUST = 0.5
 NOW_Sequence.DEFAULT_VELOCITY_ADJUST = 1
 NOW_Sequence.DEFAULT_OFFSET_ADJUST = 0
@@ -2453,7 +2454,7 @@ function NOW_Sequence:set_pitch(idx,int_val,update,multi)
   end
   if (self.pitch_steps[idx] ~= int_val) then
   	self.pitch_steps[idx] = int_val
-    local msg = string.format("Pitch #%d was set to %d",idx,int_val)
+    local msg = string.format("Notes On Wheels: Pitch #%d was set to %s",idx,note_pitch_to_value(int_val))
     renoise.app():show_status(msg)
     return true
   else
@@ -2475,7 +2476,7 @@ function NOW_Sequence:set_velocity(idx,int_val,update,multi)
   end
   if (self.velocity_steps[idx] ~= int_val) then
   	self.velocity_steps[idx] = int_val
-    local msg = string.format("Velocity #%d was set to %d",idx,int_val)
+    local msg = string.format("Notes On Wheels: Velocity #%d was set to %d",idx,int_val)
     renoise.app():show_status(msg)
     return true
   else
@@ -2498,7 +2499,7 @@ function NOW_Sequence:set_offset(idx,int_val,update,multi)
   end
   if (self.offset_steps[idx] ~= int_val) then
   	self.offset_steps[idx] = int_val
-    local msg = string.format("Offset #%d was set to %X",idx,int_val)
+    local msg = string.format("Notes On Wheels: Offset #%d was set to %X",idx,int_val)
     renoise.app():show_status(msg)
     return true
   else
@@ -2521,7 +2522,7 @@ function NOW_Sequence:set_gate(idx,int_val,update,multi)
   if (self.gate_steps[idx] ~= int_val) then
   	self.gate_steps[idx] = int_val
     self.recalc_gate_cached = true
-    local msg = string.format("Gate #%d was set to %d ticks",idx,int_val)
+    local msg = string.format("Notes On Wheels: Gate #%d was set to %d ticks",idx,int_val)
     renoise.app():show_status(msg)
     return true
   else
@@ -2550,7 +2551,7 @@ function NOW_Sequence:set_retrig(idx,int_val,update,multi)
   end
   if (self.retrig_steps[idx] ~= int_val) then
   	self.retrig_steps[idx] = int_val
-    local msg = string.format("Retrig #%d was set to %d",idx,int_val)
+    local msg = string.format("Notes On Wheels: Retrig #%d was set to %d",idx,int_val)
     renoise.app():show_status(msg)
     return true
   else
@@ -2600,7 +2601,7 @@ end
 function NOW_Sequence:set_spacing(int_val,update)
   TRACE("NOW_Sequence:set_spacing",int_val,update)
 
-  if update then
+  if update and self.owner._controls.step_spacing then
     self.owner._controls.step_spacing:set_value(int_val,true)
   end
 
@@ -2610,7 +2611,7 @@ function NOW_Sequence:set_spacing(int_val,update)
     self.recalc_gate_cached = true
     self:_update_length()
 
-    local msg = string.format("Step distance was set to %d",int_val)
+    local msg = string.format("Notes On Wheels: Step distance was set to %d",int_val)
     renoise.app():show_status(msg)
     return true
   else
@@ -2668,7 +2669,7 @@ function NOW_Sequence:set_num_steps(int_val,update)
 
     self:mute_columns(int_val)
 
-    local msg = string.format("Number of steps was set to %d",int_val)
+    local msg = string.format("Notes On Wheels: Number of steps was set to %d",int_val)
     renoise.app():show_status(msg)
     return true
   else
@@ -2724,7 +2725,7 @@ function NOW_Sequence:adjust_pitch(val,update)
 
   -- when instrument is sliced, ignore pitch adjustment
   if (self.owner.number_of_slices>0) then
-    local msg = string.format("Transpose is disabled when sample is sliced")
+    local msg = string.format("Notes On Wheels: Transpose is disabled when sample is sliced")
     renoise.app():show_status(msg)
     return false
   end
@@ -2738,7 +2739,7 @@ function NOW_Sequence:adjust_pitch(val,update)
     end
     self.pitch_adjust = val
     self.transpose = semitones
-    local msg = string.format("Pitch transposed by %d semitones",semitones)
+    local msg = string.format("Notes On Wheels: Pitch transposed by %d semitones",semitones)
     renoise.app():show_status(msg)
     return true
   else
@@ -2754,7 +2755,7 @@ function NOW_Sequence:adjust_velocity(val,update)
       ctrl:set_value(val)
     end
     self.velocity_adjust = val
-    local msg = string.format("Master-velocity set to %d%%",(val*100))
+    local msg = string.format("Notes On Wheels: Master-velocity set to %d%%",(val*100))
     renoise.app():show_status(msg)
     return true
   else
@@ -2770,9 +2771,9 @@ function NOW_Sequence:adjust_offset(val,update)
     if update and ctrl then
       ctrl:set_value(val)
     end
-    self.offset_adjust = 256-sample_offset
+    self.offset_adjust = 1+(sample_offset-256)/256
     self.sample_offset = sample_offset
-    local msg = string.format("Sample-offset shifted by %X",sample_offset)
+    local msg = string.format("Notes On Wheels: Sample-offset shifted by %X",sample_offset)
     renoise.app():show_status(msg)
     return true
   else
@@ -2789,7 +2790,7 @@ function NOW_Sequence:adjust_gate(val,update)
     end
     self.gate_adjust = val
     self.recalc_gate_cached = true
-    local msg = string.format("Note duration set to %d%%",(val*100))
+    local msg = string.format("Notes On Wheels: Note duration set to %d%%",(val*100))
     renoise.app():show_status(msg)
     return true
   else
@@ -2813,7 +2814,7 @@ function NOW_Sequence:adjust_retrig(val,update)
   local val2 = math.floor(NOW_Sequence.MAX_RETRIGS*self.retrig_adjust)
   if (val1 ~= val2) then
     self.retrig_adjust = math.max(val,1/NOW_Sequence.MAX_RETRIGS)
-    local msg = string.format("Retriggering increased by a factor of %d",val*NOW_Sequence.MAX_RETRIGS)
+    local msg = string.format("Notes On Wheels: Retriggering increased by a factor of %d",val*NOW_Sequence.MAX_RETRIGS)
     renoise.app():show_status(msg)
     return true
   else
@@ -2854,7 +2855,7 @@ end
 function NOW_Sequence:extend()
 
   if (self.num_steps>6) then
-    local msg = string.format("NOW: Cannot extend a sequence which is more than 6 steps in length")
+    local msg = string.format("Notes On Wheels: Cannot extend a sequence which is more than 6 steps in length")
     renoise.app():show_status(msg)
     return false
   end
@@ -2875,7 +2876,7 @@ function NOW_Sequence:extend()
     self:set_retrig(new_idx,self.retrig_steps[i],true,true)
 
   end
-  -- TODO update display
+  -- update display
   local val_int = math.floor(self.retrig_adjust*NOW_Sequence.MAX_RETRIGS)*2/NOW_Sequence.MAX_RETRIGS
   self:adjust_retrig(clamp_value(val_int,0,1),true)
 
@@ -2889,7 +2890,7 @@ end
 function NOW_Sequence:shrink()
 
   if (self.num_steps<2) then
-    local msg = string.format("NOW: Cannot shrink a sequence which is less than 2 steps in length")
+    local msg = string.format("Notes On Wheels: Cannot shrink a sequence which is less than 2 steps in length")
     renoise.app():show_status(msg)
     return false
   end
@@ -3873,7 +3874,7 @@ function NOW_Sequence:learn_sequence()
     end
   else
     -- no trigger detected
-    local msg = string.format("Learning aborted, could not reliably detect sequence")
+    local msg = string.format("Notes On Wheels: Learning aborted, could not reliably detect sequence")
     renoise.app():show_status(msg)
     return
 
@@ -4106,49 +4107,18 @@ function NOW_Sequence:learn_sequence()
     renoise.song().selected_instrument_index = detected_instr_index
   end
 
-  local msg = "Learned sequence with %d steps, spacing is %d, line offset is %d"
-  msg = string.format(msg,self.num_steps,self.spacing,line_offset,self.owner.line_offset)
+  -- report back what got learned
+  local msg = "Notes On Wheels: Learned sequence with %d steps (%s), spacing is %d, line offset is %d"
+  local step_vals = ""
+  for k,v in ipairs(self.pitch_steps) do
+    if(k<=self.num_steps) then
+      step_vals = step_vals..(note_pitch_to_value(v))
+    end
+    if not ((k+1)>self.num_steps) then
+      step_vals = step_vals..", "
+    end
+  end
+  msg = string.format(msg,self.num_steps,step_vals,self.spacing,line_offset,self.owner.line_offset)
   renoise.app():show_status(msg)
 
 end
-
---==============================================================================
-
--- a few helper methods (here instead of in Globals.lua)
-
--- clamp_value: ensure value is within min/max
-function clamp_value(value, min_value, max_value)
-  return math.min(max_value, math.max(value, min_value))
-end
-
--- wrap_value: 'rotate' value within specified range
--- (with a range of 0-127, a value of 150 will output 22
-function wrap_value(value, min_value, max_value)
-  local range = max_value - min_value + 1
-  assert(range > 0, "invalid range")
-  while (value < min_value) do
-    value = value + range
-  end
-  while (value > max_value) do
-    value = value - range
-  end
-  return value
-end
-
--- scale_value: scale a value to a range within a range
--- for example, we could have a range of 0-127, and want
--- to distribute the numbers 1-8 evenly across that range
--- @param value (number) the value we wish to scale
--- @param low_val/high_val (number) the lowest/highest value in 'our' range
--- @param min_val/max_val (number) the lowest/highest possible value
-function scale_value(value,low_val,high_val,min_val,max_val)
-  local incr1 = min_val/(high_val-low_val)
-  local incr2 = max_val/(high_val-low_val)-incr1
-  return(((value-low_val)*incr2)+min_val)
-end
-
--- return the fractional part of a number
-function fraction(val)
-  return val-math.floor(val)
-end
-

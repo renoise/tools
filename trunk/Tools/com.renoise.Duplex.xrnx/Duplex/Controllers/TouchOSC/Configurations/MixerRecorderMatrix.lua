@@ -7,7 +7,7 @@
 duplex_configurations:insert {
 
   -- configuration properties
-  name = "Mixer + Recorder + Matrix",
+  name = "Handset (simple template)",
   pinned = true,
 
   -- device properties
