@@ -45,8 +45,10 @@ duplex_configurations:insert {
         },
     	},
       options = {
-        --FOLLOW_POS = 1,
-        --POLYRHYTHMS = 1,
+        follow_pos = 1,
+        polyrhythms = 1,
+        page_size_v = 5,
+        page_size_h = 2,
       },
     },
     Mixer = {
