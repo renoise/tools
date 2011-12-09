@@ -18,14 +18,14 @@ Pad CCs: 110-117, Knob CCs: 21-28. Preset file for LPD8 Editor included</Descrip
 		<Column>
 			<Row>
 				<Group name="Pads" columns="4">
-					<Param value="CC#110" type="pushbutton" name="PAD5"  maximum="127" minimum="0"/>
-					<Param value="CC#111" type="pushbutton" name="PAD6"  maximum="127" minimum="0"/>
-					<Param value="CC#112" type="pushbutton" name="PAD7"  maximum="127" minimum="0"/>
-					<Param value="CC#113" type="pushbutton" name="PAD8"  maximum="127" minimum="0"/>
-					<Param value="CC#114" type="pushbutton" name="PAD1"  maximum="127" minimum="0"/>
-					<Param value="CC#115" type="pushbutton" name="PAD2"  maximum="127" minimum="0"/>
-					<Param value="CC#116" type="pushbutton" name="PAD3"  maximum="127" minimum="0"/>
-					<Param value="CC#117" type="pushbutton" name="PAD4"  maximum="127" minimum="0"/>
+					<Param value="CC#110" type="togglebutton" name="PAD5"  maximum="127" minimum="0"/>
+					<Param value="CC#111" type="togglebutton" name="PAD6"  maximum="127" minimum="0"/>
+					<Param value="CC#112" type="togglebutton" name="PAD7"  maximum="127" minimum="0"/>
+					<Param value="CC#113" type="togglebutton" name="PAD8"  maximum="127" minimum="0"/>
+					<Param value="CC#114" type="togglebutton" name="PAD1"  maximum="127" minimum="0"/>
+					<Param value="CC#115" type="togglebutton" name="PAD2"  maximum="127" minimum="0"/>
+					<Param value="CC#116" type="togglebutton" name="PAD3"  maximum="127" minimum="0"/>
+					<Param value="CC#117" type="togglebutton" name="PAD4"  maximum="127" minimum="0"/>
 				</Group>
 				<Group name="Knobs" columns="1">
 					<Param value="CC#21" type="dial" name="K1"  maximum="127" minimum="0"/>
