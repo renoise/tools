@@ -72,9 +72,9 @@ GridPie.default_options = {
     label = "Follow position",
     description = "Enable this to sync the active pattern/track between Renoise & GridPie",
     items = {
-      "Follow track & pattern",
-      "Follow track only",
       "Disabled",
+      "Follow track",
+      "Follow track & pattern",
     },
     value = 1,
   },
@@ -1440,12 +1440,13 @@ function GridPie:_attach_to_song()
       --TRACE("GridPie:selected_sequence_index_observable fired...")
       if not self.active then return end
       if (self.options.follow_pos.value ~= self.FOLLOW_OFF) then
-        local seq_idx = renoise.song().selected_sequence_index
-        self.actual_y = seq_idx
-        --local page = math.ceil((seq_idx-1)/self.page_size_v)
-        local page = math.floor((seq_idx-1)/self.page_size_v)
-        local new_y = page*self.page_size_v+1
-        self:set_vertical_pos(new_y)
+        if (self.options.follow_pos.value == self.FOLLOW_TRACK_PATTERN) then
+          local seq_idx = renoise.song().selected_sequence_index
+          self.actual_y = seq_idx
+          local page = math.floor((seq_idx-1)/self.page_size_v)
+          local new_y = page*self.page_size_v+1
+          self:set_vertical_pos(new_y)
+        end
         -- hack: prevent track from changing
         self.actual_x = renoise.song().selected_track_index
       end
