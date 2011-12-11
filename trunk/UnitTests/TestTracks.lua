@@ -43,8 +43,8 @@ do
   assert_error(function()
     song:insert_track_at(0)
   end)
-  
-  
+
+
   ----------------------------------------------------------------------------
   --mute/unmute/solo
   
@@ -87,6 +87,7 @@ do
   local seq_tracks = {}
   local master_tracks = {}
   local send_tracks = {}
+  local group_tracks = {}
   
   for _,track in ipairs(song.tracks) do
   
@@ -98,11 +99,17 @@ do
   
     elseif track.type == renoise.Track.TRACK_TYPE_SEND then
       send_tracks[#send_tracks + 1] = track
-    end
   
+    elseif track.type == renoise.Track.TRACK_TYPE_GROUP then
+      group_tracks[#group_tracks + 1] = track
+  
+    else
+      error("unknown track type")    
+    end
   end
   
   assert(#seq_tracks >= 1)
+  assert(#group_tracks >= 0)
   assert(#master_tracks == 1)
   assert(#send_tracks >= 0)
   
@@ -136,10 +143,10 @@ do
   local available_routings = seq_tracks[1].available_output_routings
   
   for _,routing in ipairs(available_routings) do
-   seq_tracks[1].output_routing = routing
+    seq_tracks[1].output_routing = routing
   end
   
-  assert(available_routings[1] == "Master Track")
+  assert(table.find(available_routings, "Master Track") ~= nil)
   seq_tracks[1].output_routing = available_routings[1]
   
   
@@ -199,6 +206,31 @@ do
   
   song.selected_device_index = 0
   assert(song.selected_device_index == 0)
+
+
+  ----------------------------------------------------------------------------
+  -- groups
+
+  new_group = song:insert_group_at(1)
+  assert(#new_group.members == 0)
+
+  song:add_track_to_group(2, 1)
+  assert(#new_group.members == 1)
+
+  assert(rawequal(new_group.members[1].group_parent, new_group))
+
+  local available_routings = new_group.members[1].available_output_routings
+  
+  for _,routing in ipairs(available_routings) do
+    new_group.members[1].output_routing = routing
+  end
+  
+  assert(available_routings[1] == "Group 02")
+  assert(available_routings[2] == "Master Track")
+
+  new_group.group_collapsed = true
+
+  song:delete_group_at(1)
 
 end
 

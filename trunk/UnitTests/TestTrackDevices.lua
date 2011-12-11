@@ -25,24 +25,24 @@ do
   
   local avail_devices = selected_track.available_devices
   
-  local new_device_name, new_device_name2
+  local new_device_path, new_device_path2
   
   repeat
-    new_device_name = avail_devices[math.random(1, #avail_devices)]
-    new_device_name2 = avail_devices[math.random(1, #avail_devices)]
+    new_device_path = avail_devices[math.random(1, #avail_devices)]
+    new_device_path2 = avail_devices[math.random(1, #avail_devices)]
   until
     -- avoid plugins, cause they may fail to load and pop up dialogs
-    not string.find(new_device_name, "VST") and
-    not string.find(new_device_name, "AU") and
-    not string.find(new_device_name2, "VST") and
-    not string.find(new_device_name2, "AU")
+    not string.find(new_device_path, "VST") and
+    not string.find(new_device_path, "AU") and
+    not string.find(new_device_path2, "VST") and
+    not string.find(new_device_path2, "AU")
   
   assert_error(function()
     selected_track:insert_device_at("InvalidDeviceName#234", #selected_track.devices + 1)
   end)
   
   assert_error(function()
-    selected_track:insert_device_at(new_device_name, 1)
+    selected_track:insert_device_at(new_device_path, 1)
   end)
   
   assert_error(function()
@@ -51,28 +51,35 @@ do
   
   local device_count = #selected_track.devices
   
-  local new_device = selected_track:insert_device_at(new_device_name, 2)
+  local new_device = selected_track:insert_device_at(new_device_path, 2)
   device_count = device_count + 1
   assert(device_count == #selected_track.devices)
   
   local found_device = false
   
+  local found_device_path = false
+  
   for _,device in ipairs(selected_track.devices) do
     if device.name == new_device.name then
-       found_device = true
+      found_device = true
+    end
+    if device.device_path == new_device_path then
+      found_device_path = true
     end
   end
   
   assert(found_device)
   
+  assert(found_device_path)
+  
   selected_track:delete_device_at(2)
   device_count = device_count - 1
   assert(device_count == #selected_track.devices)
   
-  selected_track:insert_device_at(new_device_name, 
+  selected_track:insert_device_at(new_device_path, 
     #selected_track.devices + 1)
   
-  selected_track:insert_device_at(new_device_name2, 
+  selected_track:insert_device_at(new_device_path2, 
     #selected_track.devices + 1)
   
   device_count = device_count + 2
@@ -98,7 +105,7 @@ do
   local trackvolpan = selected_track.devices[1]
   assert(#trackvolpan.presets == 1) -- init
   
-  selected_track:insert_device_at(new_device_name, 
+  selected_track:insert_device_at(new_device_path, 
     #selected_track.devices + 1)
     
   local new_device = selected_track.devices[#selected_track.devices]

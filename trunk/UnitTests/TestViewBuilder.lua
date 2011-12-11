@@ -540,6 +540,7 @@ do
           items = {"A", "B", "C"},
           notifier = function(new_index)
             local switch = vb.views.switch
+            assert(switch.value == new_index)
             show_status(("switchup value changed to '%s'"):
               format(switch.items[new_index]))
           end
@@ -561,6 +562,7 @@ do
           items = {"First", "Second", "Third"},
           notifier = function(new_index)
             local popup = vb.views.popup
+            assert(popup.value == new_index)
             show_status(("popup value changed to '%s'"):
               format(popup.items[new_index]))
           end
@@ -581,6 +583,7 @@ do
           items = {"First", "Second", "Third", "Fourth"},
           notifier = function(new_index)
             local chooser = vb.views.chooser
+	    assert(chooser.value == new_index)
             show_status(("chooser value changed to '%s'"):
               format(chooser.items[new_index]))
           end
