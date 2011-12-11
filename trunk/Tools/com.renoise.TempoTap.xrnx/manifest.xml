@@ -2,11 +2,13 @@
 <RenoiseScriptingTool doc_version="0">
   <Name>Tempo Tap</Name>
   <Id>com.renoise.TempoTap</Id>
-  <Version>5</Version>
-  <ApiVersion>2</ApiVersion>
+  <Version>7</Version>
+  <ApiVersion>3</ApiVersion>
   <Author>bantai [marvin@renoise.com]</Author>
+  <AutoUpgraded>false</AutoUpgraded>
   <Category>Song</Category>
   <Description>Sets or finds a new BPM value by tapping the beat on a really big button. Adds a new context menu entry 'Tempo Tap' to the 'Tools' menu.</Description>
   <Homepage>http://tools.renoise.com/tools/tempotap</Homepage>
+  <Platform/>
   <Icon/>
 </RenoiseScriptingTool>
