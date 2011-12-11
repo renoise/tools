@@ -71,8 +71,6 @@ do
   end)
   
   selected_sample.volume = 2.25
-  
-  selected_sample.base_note = 48 + 12
   selected_sample.fine_tune = -127
   
   selected_sample.beat_sync_enabled = false
@@ -220,6 +218,31 @@ do
 
 
   ----------------------------------------------------------------------------
+  -- sample display
+  
+  sample_buffer.display_length = 6
+  assert(sample_buffer.display_length == 6)
+
+  assert_error(function() -- length out of bounds
+    sample_buffer.display_length = new_num_frames + 1
+  end)
+
+  sample_buffer.display_start = 5
+  assert(sample_buffer.display_start == 5)
+
+  assert_error(function() -- start out of bounds
+    sample_buffer.display_start = new_num_frames + 1
+  end)
+
+  sample_buffer.vertical_zoom_factor = 0.5
+  assert(sample_buffer.vertical_zoom_factor == 0.5)
+
+  assert_error(function() -- vzoom out of bounds
+    sample_buffer.vertical_zoom_factor = 2.0
+  end)
+
+
+  ----------------------------------------------------------------------------
   -- sample selection
   
   sample_buffer.selection_range = {1, new_num_frames}
@@ -249,7 +272,20 @@ do
     selected_sample.selection_end = 0
   end)
   
-  
+  sample_buffer.selected_channel = renoise.SampleBuffer.CHANNEL_LEFT
+  assert(sample_buffer.selected_channel == renoise.SampleBuffer.CHANNEL_LEFT)
+
+  new_num_channels = 1
+  sample_buffer:delete_sample_data()
+  sample_buffer:create_sample_data(
+    new_rate, new_bit_depth, new_num_channels, new_num_frames)
+  sample_buffer:set_sample_data(1, 1, 0.1)
+
+  assert_error(function()
+    sample_buffer.selected_channel = renoise.SampleBuffer.CHANNEL_RIGHT
+  end)
+
+
   ----------------------------------------------------------------------------
   -- sample slices
   

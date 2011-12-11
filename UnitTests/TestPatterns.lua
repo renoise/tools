@@ -17,6 +17,45 @@ do
   local song = renoise.song()
   
   
+  ----------------------------------------------------------------------------
+  -- Selection in pattern
+  
+  -- set selection
+  local my_selection = { 
+    start_line = 16, start_track = 2, start_column = 1,
+    end_line = 32, end_track = 4, end_column = 2 }  
+    
+  song.selection_in_pattern = my_selection
+  
+  assert_error(function()
+    song.selection_in_pattern = { start_line = 0, end_line = 99999 }
+  end)
+  
+  assert_error(function()
+    song.selection_in_pattern = { start_track = 0, end_track = 99999 }
+  end)
+  
+  assert_error(function()
+    song.selection_in_pattern = { start_column = 0, end_column = 99999 }
+  end)
+  
+  -- get selection
+  local selection = song.selection_in_pattern
+  
+  assert(selection.start_line == my_selection.start_line)
+  assert(selection.end_line == my_selection.end_line)
+  
+  assert(selection.start_track == my_selection.start_track)
+  assert(selection.end_track == my_selection.end_track)
+  
+  assert(selection.start_column == my_selection.start_column)
+  assert(selection.end_column == my_selection.end_column)  
+  
+  -- has/clear selection
+  song.selection_in_pattern = {}
+  assert(song.selection_in_pattern == nil)
+  
+  
   ------------------------------------------------------------------------------
   -- Pattern
   
@@ -162,7 +201,7 @@ do
   assert(first_note_column.instrument_string == "01")
   assert(first_note_column.instrument_value == 0x1)
   
-  first_note_column.volume_value = 0xF8
+  first_note_column.volume_value = 0x80
   first_note_column.volume_string = ".."
   assert(first_note_column.volume_value ==
     renoise.PatternTrackLine.EMPTY_VOLUME)
@@ -198,8 +237,9 @@ do
     
   -- effectcolumn access
   
-  first_line.effect_columns[1].number_value = 0x66
-  assert(first_pattern_track.lines[1].effect_columns[1].number_value == 0x66)
+  first_line.effect_columns[1].number_value = 0x1*256 + 0x1
+  assert(first_pattern_track.lines[1].effect_columns[1].number_value == 0x1*256 + 0x1)
+  assert(first_pattern_track.lines[1].effect_columns[1].number_string == "11")
   
   first_line.effect_columns[1].amount_value = 0x55
   assert(first_pattern_track.lines[1].effect_columns[1].amount_value == 0x55)
@@ -207,13 +247,13 @@ do
   
   -- effectcolumn serialization
   
-  first_line.effect_columns[1].number_value = 0x12
+  first_line.effect_columns[1].number_value = 0x1*256 + 0x2
   first_line.effect_columns[1].number_string = ".."
   assert(first_line.effect_columns[1].number_value == 
     renoise.PatternTrackLine.EMPTY_EFFECT_NUMBER)
   first_line.effect_columns[1].number_string = "42"
   assert(first_line.effect_columns[1].number_string == "42")
-  assert(first_line.effect_columns[1].number_value == 0x42)
+  assert(first_line.effect_columns[1].number_value == 0x4*256 + 0x2)
   assert_error(function()
     first_line.effect_columns[1].number_string = "8"
   end)
@@ -276,7 +316,8 @@ do
       line.note_columns[1].volume_value = math.random(0, 128)
     end
   
-    line.effect_columns[1].number_value = math.random(0, 255)
+    line.effect_columns[1].number_value = 
+      math.random(0, 35)*256 + math.random(0, 35)
     line.effect_columns[1].amount_value = i
   end
   
@@ -314,6 +355,138 @@ do
     assert(#first_pattern.tracks[send_track_index].lines[1].note_columns ==
        song.tracks[send_track_index].max_note_columns)
   end
+  
+  
+  ----------------------------------------------------------------------------
+  -- new effect value mnemonics
+  
+  song.selected_track_index = 1 -- make sure its a player track
+
+  local eff_col = song:pattern(1):track(1):line(1):effect_column(1)
+
+  eff_col:clear()
+  assert(eff_col.is_empty)
+
+  eff_col.number_string = "ZT"
+  assert(eff_col.number_string == "ZT")
+  assert(eff_col.number_value == 8989) -- 35(Z) << 8 + 29(T) = 8989
+
+  eff_col.number_value = 778 -- "3A"
+  assert(eff_col.number_value == 778) 
+  assert(eff_col.number_string == "3A")
+
+  assert_error(function()
+    eff_col.number_string = "zt"
+  end)
+
+  assert_error(function()
+    eff_col.number_string = "&*"
+  end)
+
+  assert_error(function()
+    eff_col.number_value = 36
+  end)
+
+  assert_error(function()
+    eff_col.number_value = 256 + 36
+  end)
+
+  eff_col.amount_string = "4A"
+  assert(eff_col.amount_string == "4A")
+  assert(eff_col.amount_value == 74) 
+
+  eff_col.amount_value = 99
+  assert(eff_col.amount_value == 99) 
+  assert(eff_col.amount_string == "63")
+
+  assert_error(function()
+    eff_col.amount_string = "GG"
+  end)
+
+  assert_error(function()
+    eff_col.amount_value = 256
+  end)
+
+
+  ----------------------------------------------------------------------------
+  -- new vol/pan mnemonics
+  
+  local note_col = song:pattern(1):track(1):line(1):note_column(1)
+
+  note_col:clear()
+  assert(note_col.is_empty)
+
+  note_col.volume_string = "ZE"
+  assert(note_col.volume_string == "ZE")
+  assert(note_col.volume_value == 8974) -- 35(Z) << 8 + 14(T) = 8974
+
+  note_col.volume_string = "33" -- 51 decimal
+  assert(note_col.volume_string == "33")
+  assert(note_col.volume_value == 51) -- <= 0x80 represented literally
+
+  note_col.volume_value = 8974 -- "ZE"
+  assert(note_col.volume_value == 8974) 
+  assert(note_col.volume_string == "ZE")
+
+  note_col.volume_value = 100 -- 64 hex
+  assert(note_col.volume_value == 100) 
+  assert(note_col.volume_string == "64")
+
+  assert_error(function()
+    note_col.volume_string = "ZT"
+  end)
+
+  assert_error(function()
+    note_col.volume_string = "ze"
+  end)
+
+  assert_error(function()
+    note_col.volume_string = "&*"
+  end)
+
+  assert_error(function()
+    note_col.volume_value = 130
+  end)
+
+  assert_error(function()
+    note_col.volume_value = 256 + 36
+  end)
+
+  note_col.panning_string = "ZE"
+  assert(note_col.panning_string == "ZE")
+  assert(note_col.panning_value == 8974) -- 35(Z) << 8 + 14(T) = 8974
+
+  note_col.panning_string = "33" -- 51 decimal
+  assert(note_col.panning_string == "33")
+  assert(note_col.panning_value == 51) -- <= 0x80 represented literally
+
+  note_col.panning_value = 8974 -- "ZE"
+  assert(note_col.panning_value == 8974) 
+  assert(note_col.panning_string == "ZE")
+
+  note_col.panning_value = 100 -- 64 hex
+  assert(note_col.panning_value == 100) 
+  assert(note_col.panning_string == "64")
+
+  assert_error(function()
+    note_col.panning_string = "ZT"
+  end)
+
+  assert_error(function()
+    note_col.panning_string = "ze"
+  end)
+
+  assert_error(function()
+    note_col.panning_string = "&*"
+  end)
+
+  assert_error(function()
+    note_col.panning_value = 130
+  end)
+
+  assert_error(function()
+    note_col.panning_value = 256 + 36
+  end)
   
   
   ------------------------------------------------------------------------------
@@ -382,7 +555,7 @@ do
   first_line:clear()
   assert(notifier_calls == 4)
   
-  first_line.effect_columns[2].number_value = 0xA0
+  first_line.effect_columns[2].number_value = 0xA*256 + 0xA
   assert(notifier_calls == 6)
 
   first_line.effect_columns[2].amount_value = 0xFF

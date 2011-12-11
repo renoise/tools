@@ -569,9 +569,9 @@ bitmapview.mode
 -- default resource folder as base (like "Icons/ArrowRight.bmp"). Or specify a
 -- file relative from your XRNX tool bundle:
 -- Lets say your tool is called "com.foo.MyTool.xrnx" and you pass
--- "MyBitmap.bmp" as teh name. Then the bitmap is loaded from
+-- "MyBitmap.bmp" as the name. Then the bitmap is loaded from
 -- "PATH_TO/com.foo.MyTool.xrnx/MyBitmap.bmp".
--- Currently, only ".bmp" (Windows bitmap) is supported.
+-- Supported bitmap file formats are *.bmp, *.png or *.tif (no transparency).
 bitmapview.bitmap
   -> [string]
 

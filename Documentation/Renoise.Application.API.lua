@@ -101,11 +101,17 @@ renoise.app().uninstall_tool(file_path_to_xrnx)
 
 
 -- Create a new song document (will ask the user to save changes if needed).
+-- The song is not created immediately, but soon after the call was made and 
+-- the user did not aborted the operation. In order to continue execution 
+-- with the new song, attach a notifier to 'app_new_document_observable'
+-- See renoise.ScriptingTool.API.lua for more info.
 renoise.app():new_song()
 renoise.app():new_song_no_template()
 
 -- Load a new song document from the given filename (will ask to save
 -- changes if needed, any errors are shown to the user).
+-- Just like new_song(), the song is not loaded immediately, but soon after 
+-- the call was made. See 'renoise.app():new_song()' for details.
 renoise.app():load_song(filename)
 
 -- Quicksave or save the current song under a new name. Any errors
@@ -206,11 +212,13 @@ renoise.app().window.sample_record_dialog_is_visible
   -> [boolean]
 
 
--- Frame with the transport, diskbrowser, instrument box...
+-- Frame with the transport, disk browser, instrument box...
 renoise.app().window.upper_frame_is_visible, _observable
   -> [boolean]
 renoise.app().window.active_upper_frame, _observable
   -> [enum = UPPER_FRAME]
+renoise.app().window.disk_browser_is_expanded, _observable
+  -> [boolean]
 
 -- Frame with the pattern editor, mixer...
 renoise.app().window.active_middle_frame, _observable
