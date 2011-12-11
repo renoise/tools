@@ -983,6 +983,9 @@ function show_confirm_export_dialog(tool)
           end
         end        
         
+        -- format version number
+        mf["Version"].value = version_formatter(mf["Version"].value)
+        
         mf:save_as(mf_path)    
                 
         local version = nil
