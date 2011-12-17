@@ -78,6 +78,7 @@ end
   [47] => table
     [api_version] =>  2
     [author] =>  PeanutHead
+    [auto_upgraded] => false
     [bundle_path] =>  C:\Users\PeanutHead\AppData\Roaming\Renoise\V2.7.0\Scripts\Tools\se.peanuts.PeanutButter.xrnx\
     [category] =>  Food
     [description] =>  Nice and sticky
@@ -126,13 +127,14 @@ local function is_update_available(localtool, remotetool)
   -- Do the Tool IDs match?  
   if (not (localtool and localtool.id == remotetool.Id)) then
     return false
-  end  
+  end
   
   -- Is the installed tool older than the one on the server?
   -- Also update any tools with older API versions. The API 
   -- version of the remote tool is guaranteed to match the 
-  -- running Renoise instance (Service argument). 
+  -- running Renoise instance (Service argument).
   return (tonumber(localtool.version) < tonumber(remotetool.Version)
+    or (localtool.auto_upgraded and tonumber(localtool.version) == tonumber(remotetool.Version))
     or tonumber(localtool.api_version) < tonumber(renoise.API_VERSION)
   ) 
 end
