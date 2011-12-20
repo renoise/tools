@@ -1424,6 +1424,7 @@ function BrowserProcess:instantiate(configuration)
     end
 
     local mappings = configuration.applications[app_class_name].mappings or {}
+    local palette = configuration.applications[app_class_name].palette or {}
     local options = table.rcopy(_G[actual_class_name]["default_options"]) or {}
     local config_name = app_class_name
 
@@ -1440,7 +1441,7 @@ function BrowserProcess:instantiate(configuration)
     local app_instance = nil
 
     app_instance = _G[actual_class_name](
-        self, mappings, options, config_name)
+        self, mappings, options, config_name, palette)
     
     self._applications:insert(app_instance)
   end

@@ -162,6 +162,10 @@ function Display:update()
     self.scheduler:on_idle()
   end
 
+  if(self.device.on_idle)then
+    self.device:on_idle()
+  end
+
   local control_map = self.device.control_map
   
   for _,obj in pairs(self.ui_objects) do
@@ -227,31 +231,37 @@ end
 -- @elm : control-map definition of the element
 -- @obj : UIComponent instance
 -- @point : canvas point (text/value/color)
+-- @secondary: boolean, specified when function call itself (xypad/value-pairs)
 
-function Display:set_parameter(elm, obj, point)
-  TRACE('Display:set_parameter',elm.name,elm.value,point.text)
+function Display:set_parameter(elm, obj, point, secondary)
+  TRACE('Display:set_parameter',elm, obj, point, secondary)
 
-  local widget = nil
-  local value = nil
-  local num = nil
+  -- resulting numeric value, or table of values (XYPad)
+  local value = self.device:point_to_value(point, elm, obj.ceiling)
+
+  -- reference to control-map
+  local cm = self.device.control_map
+
+  -- the type of message, based on the control-map
+  local msg_type = cm:determine_type(elm.value)
+
+  -- the most recent message
+  local current_message = self.device.message_stream.current_message
+
 
   -- update hardware display
 
-  if (self.device) then 
+  local channel = nil
+  if (self.device.protocol==DEVICE_MIDI_PROTOCOL) then
+    channel = self.device:extract_midi_channel(elm.value) or 
+      self.device.default_midi_channel
+  end
 
-    local msg_type = self.device.control_map:determine_type(elm.value)
-    local current_message = self.device.message_stream.current_message
-    local channel = nil
-    if (self.device.protocol==DEVICE_MIDI_PROTOCOL) then
-      channel = self.device:extract_midi_channel(elm.value) or 
-        self.device.default_midi_channel
-    end
+  -- when this is specified, NEVER send message back to hardware
+  if not elm.skip_echo then
 
     if (msg_type == MIDI_NOTE_MESSAGE) then
-      num = self.device:extract_midi_note(elm.value)
-
-      value = self.device:point_to_value(
-        point, elm, obj.ceiling)
+      local num = self.device:extract_midi_note(elm.value)
 
       -- do not loop back the original value change back to the sender, 
       -- unless the device explicitly wants this
@@ -264,12 +274,31 @@ function Display:set_parameter(elm, obj, point)
       then
         self.device:send_note_message(num,value,channel)
       end
-    
     elseif (msg_type == MIDI_CC_MESSAGE) then
-      num = self.device:extract_midi_cc(elm.value)
-      
-      value = self.device:point_to_value(
-        point, elm, obj.ceiling)
+      local num = self.device:extract_midi_cc(elm.value)
+      local multiple_params = (type(point.val) == "table")
+      if multiple_params and 
+        obj.secondary_index
+      then
+        -- split message in two
+        if secondary then
+          elm = cm:get_indexed_element(obj.secondary_index, obj.group_name)
+          if elm then
+            point.val = point.val[2]
+            value = self.device:point_to_value(
+              point, elm, obj.ceiling)
+          else
+            print("could not locate secondary elm")
+          end
+        else
+          -- value-pair, invoke method again
+          Display.set_parameter(self, elm, obj, point,true)
+        end
+
+      elseif multiple_params then
+        print("*** Could not set value, no secondary group was defined")
+        return
+      end
 
       -- do not loop back the original value change back to the sender, 
       -- unless the device explicitly wants this
@@ -282,10 +311,9 @@ function Display:set_parameter(elm, obj, point)
       then
         self.device:send_cc_message(num,value,channel)
       end
-    
     elseif (msg_type == MIDI_PITCH_BEND_MESSAGE) then
 
---[[ TODO      
+      --[[ TODO      
       value = self.device:point_to_value(
         point, elm, obj.ceiling)
 
@@ -300,40 +328,79 @@ function Display:set_parameter(elm, obj, point)
       then
         self.device:send_pb_message(num,value)
       end
-]]    
+      ]]    
     elseif (msg_type == OSC_MESSAGE) then
 
-      value = self.device:point_to_value(
-        point, elm, obj.ceiling)
-      -- do not loop back the original value change back to the sender, 
-      -- unless the device explicitly wants this
+      -- value comparison on OSC, might be a table
+      local values_are_equal = false
+      local osc_value = value
+      if current_message then
+        if (type(osc_value)=="table") then
+          osc_value = table.rcopy(value)
+        end
+        if (type(value) == "table") and 
+          (type(current_message.value) == "table")
+        then
+          values_are_equal = table_compare(current_message.value,osc_value)
+        else
+          values_are_equal = current_message.value == value
+        end
+      end
+
       if (not current_message) or
          (current_message.is_virtual) or
          (current_message.context ~= OSC_MESSAGE) or
          (current_message.id ~= elm.id) or
-         (current_message.value ~= value) or
+         (not values_are_equal) or
          (self.device.loopback_received_messages)
       then
-        self.device:send_osc_message(elm.value,value)
+
+        -- invert XYPad values before sending?
+        local osc_value = value
+        if (elm.type == "xypad") then
+          if (type(osc_value)=="table") then
+            osc_value = table.rcopy(value)
+          end
+          osc_value[1] = elm.invert_x and elm.maximum-osc_value[1] or osc_value[1]
+          osc_value[2] = elm.invert_y and elm.maximum-osc_value[2] or osc_value[2]
+        end
+
+        -- it's recommended that wireless devices have their 
+        -- messages bundled (or some might get lost)
+        if self.device.bundle_messages then
+          self.device:queue_osc_message(elm.value,osc_value)
+        else
+          self.device:send_osc_message(elm.value,osc_value)
+        end
+      --[[
+      else 
+        print("*** rejected osc message:")
+        if current_message then
+          print("current_message.is_virtual",current_message.is_virtual)
+          print("current_message.context",current_message.context,OSC_MESSAGE)
+          print("current_message.id",current_message.id,elm.id)
+          --print("values_are_equal",values_are_equal)
+        end
+      ]]
       end
-
-
-
     else
       error(("Internal Error. Please report: " ..
         "unknown or unhandled msg_type: '%s'"):format(msg_type or "nil"))
     end
-  end
 
+  end
 
   -- update virtual control surface
 
+  local widget = nil
   if (self.vb and self.vb.views) then 
     widget = self.vb.views[elm.id]
   end
 
   if (widget) then
-    if (type(widget) == "Button") then
+    local widget_type = type(widget)
+    --print("widget_type",widget_type)
+    if (widget_type == "Button") then
       -- either use text or colors for a button
       --local colorspace = self.device.colorspace
       local colorspace = elm.colorspace or self.device.colorspace
@@ -345,17 +412,24 @@ function Display:set_parameter(elm, obj, point)
         widget.color = { 0, 0, 0 }
         widget.text = point.text
       end
-    elseif (type(widget) == "RotaryEncoder") or 
-      (type(widget) == "MiniSlider") or
-      (type(widget) == "Slider")
+    elseif (widget_type == "RotaryEncoder") or 
+      (widget_type == "MiniSlider") or
+      (widget_type == "Slider")
     then
-      value = self.device:point_to_value(
-        point, elm, obj.ceiling)
 
       widget:remove_notifier(self.ui_notifiers[elm.id])
       widget.value = tonumber(value)
       widget:add_notifier(self.ui_notifiers[elm.id])
     
+    elseif (widget_type == "XYPad") then
+
+      widget:remove_notifier(self.ui_notifiers[elm.id])
+      widget.value = {
+        x=value[1],
+        y=value[2]
+      }
+      widget:add_notifier(self.ui_notifiers[elm.id])
+
     else
       error(("Internal Error. Please report: " .. 
         "unexpected or unknown widget type '%s'"):format(type(widget)))
@@ -406,7 +480,7 @@ end
 --  @release: boolean, true when button has been released
 
 function Display:generate_message(value, metadata, released)
-  TRACE('Display:generate_message:'..value)
+  TRACE('Display:generate_message:',value)
 
   local msg = Message()
   msg.value = value
@@ -414,13 +488,13 @@ function Display:generate_message(value, metadata, released)
   -- include additional useful meta-properties
   msg.name = metadata.name
   msg.group_name = metadata.group_name
-  msg.max = tonumber(metadata.maximum)
-  msg.min = tonumber(metadata.minimum)
   msg.id = metadata.id
   msg.index = metadata.index
   msg.column = metadata.column
   msg.row = metadata.row
   msg.timestamp = os.clock()
+  msg.max = metadata.maximum
+  msg.min = metadata.minimum
 
   -- the type of message (MIDI/OSC...)
   msg.context = self.device.control_map:determine_type(metadata.value)
@@ -451,6 +525,9 @@ function Display:generate_message(value, metadata, released)
 
   elseif (metadata.type == "dial") then
     msg.input_method = CONTROLLER_DIAL
+
+  elseif (metadata.type == "xypad") then
+    msg.input_method = CONTROLLER_XYPAD
 
   else
     error(("Internal Error. Please report: " .. 
@@ -519,17 +596,17 @@ function Display:_walk_table(t, done, deep)
             view_obj.meta.type == "pushbutton") then
           local notifier = function(value) 
             -- output the maximum value
-            self:generate_message(tonumber(view_obj.meta.maximum),view_obj.meta)
+            self:generate_message(view_obj.meta.maximum,view_obj.meta)
           end
           local press_notifier = function(value) 
             -- output the maximum value
-            self:generate_message(tonumber(view_obj.meta.maximum),view_obj.meta)
+            self:generate_message(view_obj.meta.maximum,view_obj.meta)
           end
           local release_notifier = function(value) 
             -- output the minimum value
             local released = true
             self:generate_message(
-              tonumber(view_obj.meta.minimum),view_obj.meta,released)
+              view_obj.meta.minimum,view_obj.meta,released)
           end
             
           self.ui_notifiers[view_obj.meta.id] = notifier
@@ -554,8 +631,8 @@ function Display:_walk_table(t, done, deep)
             self.ui_notifiers[view_obj.meta.id] = notifier
             view_obj.view = self.vb:minislider{
               id=view_obj.meta.id,
-              min = tonumber(view_obj.meta.minimum),
-              max = tonumber(view_obj.meta.maximum),
+              min = view_obj.meta.minimum,
+              max = view_obj.meta.maximum,
               tooltip = tooltip,
               height = UNIT_HEIGHT/1.5,
               width = UNIT_WIDTH,
@@ -574,8 +651,8 @@ function Display:_walk_table(t, done, deep)
           self.ui_notifiers[view_obj.meta.id] = notifier
           view_obj.view = self.vb:rotary{
             id = view_obj.meta.id,
-            min = tonumber(view_obj.meta.minimum),
-            max = tonumber(view_obj.meta.maximum),
+            min = view_obj.meta.minimum,
+            max = view_obj.meta.maximum,
             tooltip = tooltip,
             width = adj_width,
             height = adj_height,
@@ -586,7 +663,13 @@ function Display:_walk_table(t, done, deep)
         --- Param:fader
                   
         elseif (view_obj.meta.type == "fader") then
+
+
           local notifier = function(value) 
+            --[[
+            print("view_obj.meta")
+            rprint(view_obj.meta)
+            ]]
             -- output the current value
             self:generate_message(value,view_obj.meta)
           end
@@ -601,8 +684,8 @@ function Display:_walk_table(t, done, deep)
               },
               self.vb:slider{
                 id = view_obj.meta.id,
-                min = tonumber(view_obj.meta.minimum),
-                max = tonumber(view_obj.meta.maximum),
+                min = view_obj.meta.minimum,
+                max = view_obj.meta.maximum,
                 tooltip = tooltip,
                 width = DEFAULT_CONTROL_HEIGHT,
                 height = (UNIT_WIDTH * view_obj.meta.size) + 
@@ -617,14 +700,39 @@ function Display:_walk_table(t, done, deep)
             
             view_obj.view = self.vb:slider {
               id  =view_obj.meta.id,
-              min = tonumber(view_obj.meta.minimum),
-              max = tonumber(view_obj.meta.maximum),
+              min = view_obj.meta.minimum,
+              max = view_obj.meta.maximum,
               tooltip = tooltip,
               width = (UNIT_WIDTH*view_obj.meta.size) + 
                 (DEFAULT_SPACING*(view_obj.meta.size-1)),
               notifier = notifier
             }
           end
+        
+        --- Param:xypad
+        elseif (view_obj.meta.type == "xypad") then
+
+          local notifier = function(value) 
+            self:generate_message({value.x,value.y},view_obj.meta)
+          end
+
+          self.ui_notifiers[view_obj.meta.id] = notifier
+
+          view_obj.view = self.vb:xypad {
+            id  =view_obj.meta.id,
+            min = {
+              x=view_obj.meta.minimum,
+              y=view_obj.meta.minimum
+            },
+            max = {
+              x=view_obj.meta.maximum,
+              y=view_obj.meta.maximum
+            },
+            tooltip = tooltip,
+            width = adj_width,
+            height = adj_height,
+            notifier = notifier
+          }
         end
         
   
@@ -815,7 +923,7 @@ function Display:_validate_param(xargs)
   end
   
   -- type
-  local valid_types = {"button", "togglebutton", "pushbutton", "encoder", "dial", "fader"}
+  local valid_types = {"button", "togglebutton", "pushbutton", "encoder", "dial", "fader", "xypad"}
           
   if (xargs.type == nil or not table.find(valid_types, xargs.type)) then
     renoise.app():show_warning(
@@ -827,21 +935,28 @@ function Display:_validate_param(xargs)
     xargs.type = "button"
   end
   
-  
-  -- minimum/maximum
-  if (tonumber(xargs.minimum) == nil or
-      tonumber(xargs.maximum) == nil or 
-      tonumber(xargs.minimum) < 0 or 
-      tonumber(xargs.maximum) < 0) 
-  then
-    renoise.app():show_warning(
-      ('Whoops! The controlmap \'%s\' specifies no valid \'minimum\' '..
-       'or \'maximum\' property in one of its \'Param\' fields.\n\n'..
-       'Please use a number >= 0  (depending on the value, MIDI type).'
-      ):format(self.device.control_map.file_path))
+  if (xargs.type == "xypad") then
 
-    xargs.minimum = 0 
-    xargs.maximum = 127
+    -- TODO: validate that required attributes exist for XYPad
+
+  else
+  
+    -- minimum/maximum
+    if (xargs.minimum == nil or
+        xargs.maximum == nil or 
+        xargs.minimum < 0 or 
+        xargs.maximum < 0) 
+    then
+      renoise.app():show_warning(
+        ('Whoops! The controlmap \'%s\' specifies no valid \'minimum\' '..
+         'or \'maximum\' property in one of its \'Param\' fields.\n\n'..
+         'Please use a number >= 0  (depending on the value, MIDI type).'
+        ):format(self.device.control_map.file_path))
+
+      xargs.minimum = 0 
+      xargs.maximum = 127
+    end
+
   end
   
   -- faders

@@ -26,8 +26,8 @@ class 'SwitchConfiguration' (Application)
 SwitchConfiguration.default_options = {}
 SwitchConfiguration.need_browser = true
 
-function SwitchConfiguration:__init(browser_process, mappings, options, config_name)
-    TRACE("SwitchConfiguration:__init(",browser_process,mappings,options,config_name)
+function SwitchConfiguration:__init(process, mappings, options, cfg_name,palette)
+    TRACE("SwitchConfiguration:__init(",process,mappings,options,cfg_name,palette)
 
     self.mappings = {
         goto_next = {
@@ -43,9 +43,9 @@ function SwitchConfiguration:__init(browser_process, mappings, options, config_n
 
     -- the various UIComponents
     self.controls = {}
-    self._browser = browser_process.browser
+    self._browser = process.browser
 
-    Application.__init(self,browser_process,mappings,options,config_name)
+    Application.__init(self,process,mappings,options,cfg_name,palette)
 
 
 end

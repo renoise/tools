@@ -100,7 +100,7 @@ function Automation:update()
   end
 
   -- status message
-  --local msg = "Automation recording "
+  local msg = "Automation recording "
 
   -- find and output automation 
   local seq_idx = renoise.song().selected_sequence_index
@@ -111,16 +111,16 @@ function Automation:update()
       local ptrack = renoise.song().patterns[patt_idx]:track(v.track_idx)
       local automation = ptrack.automation[math.abs(auto_idx)]
       if automation then
-        --msg = string.format("%s %s (%d), ",msg,v.parameter.name,v.track_idx)
+        msg = string.format("%s %s (%d), ",msg,v.parameter.name,v.track_idx)
         self:writeahead(writeahead_amount,automation,v)
       else
-        --print("*** expected automation")
+        print("*** expected automation")
       end
     end
   end
 
   -- see which parameters are actively being recorded
-  --renoise.app():show_status(msg)
+  renoise.app():show_status(msg)
   
 
 end

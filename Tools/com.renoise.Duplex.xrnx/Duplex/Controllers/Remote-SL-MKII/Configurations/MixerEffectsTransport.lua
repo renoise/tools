@@ -66,6 +66,18 @@ duplex_configurations:insert {
         }
       }
     },
+    XYPad = {
+      mappings = {
+        y_slider = {
+          group_name = "XYPad",
+          index = 1,
+        },
+        x_slider = {
+          group_name = "XYPad",
+          index = 2,
+        },
+      }
+    },
     Transport = {
       mappings = {
         goto_previous = {

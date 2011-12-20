@@ -48,11 +48,20 @@ function ControlMap:__init()
   self.file_path = ""
 
   -- internal stuff
+
+  --[[
+    TODO - multiple message support, remember messages by value
+    (also for quickly looking up if the value is defined, before
+    we use string matching)
+  self.value_buffer = table.create()
+  --]]
   
   -- unique id, reset each time a control-map is parsed
   self.id = nil 
+
   -- control-map parsed into table
   self.definition = nil 
+
 end
 
 
@@ -165,6 +174,7 @@ end
 -- used by the MidiDevice to retrieves a parameter by it's note/cc-value-string
 -- the function will match values on the default channel, if not defined:
 -- "CC#105|Ch1" will match both "CC#105|Ch1" and "CC#105" 
+-- TODO: update value_buffer when a match was made
 -- @param str (string, control-map value attribute)
 -- @return table
 
@@ -238,21 +248,24 @@ function ControlMap:get_param_by_action(str)
 
         else
           -- return matching group + extracted value
+          local values = table.create()
           local ignore = false
           for o=2,#prop_table do
             if (not ignore) then
               if (prop_table[o]=="%f") then
-                return v,tonumber(str_table[o])
+                values:insert(tonumber(str_table[o]))
               elseif (prop_table[o]=="%i") then
-                return v,tonumber(str_table[o])
-              --elseif (prop_table[o]=="(%s)") then
-                --return v,tostring(str_table[o])
+                values:insert(tonumber(str_table[o]))
               elseif (prop_table[o]~=str_table[o]) then
                 -- wrong argument, ignore
                 ignore = true
               end
             end
           end
+          if not ignore then
+            return v,values
+          end
+
         end
       end
     end
@@ -307,8 +320,7 @@ end
 --------------------------------------------------------------------------------
 
 -- get width/height of provided group
--- also used for checking if a control-map group is a grid 
--- @match_grid (boolean) only match groups with column attribute
+-- @group_name (string) the group-name we want to match
 -- @return width/height or nil if not matched
 
 function ControlMap:get_group_dimensions(group_name)
@@ -324,25 +336,6 @@ function ControlMap:get_group_dimensions(group_name)
     end
   end
 end
-
---[[
-function ControlMap:get_group_dimensions(group_name,match_grid)
-  
-  local group = self.groups[group_name]
-  if (group) then
-    for attr, param in pairs(group) do
-      if (attr == "xarg") then
-        if (match_grid) and (not param["columns"]) then
-          return
-        end
-        local width = tonumber(param["columns"])
-        local height = math.ceil(#group / width)
-        return width,height
-      end
-    end
-  end
-end
-]]
 
 --------------------------------------------------------------------------------
 
@@ -479,7 +472,7 @@ function ControlMap:_parse_xml(s)
   
   local function parseargs(s)
     local arg = {}
-    string.gsub(s, "(%w+)=([\"'])(.-)%2", function (w, _, a)
+    string.gsub(s, "([%w_]+)=([\"'])(.-)%2", function (w, _, a)
       arg[w] = a
     end)
 
@@ -488,6 +481,10 @@ function ControlMap:_parse_xml(s)
     self.id = self.id+1
 
     return arg
+  end
+
+  local function bool(s)
+    return (s=="true") and true or false
   end
   
   while true do
@@ -506,6 +503,10 @@ function ControlMap:_parse_xml(s)
     
     if (empty == "/") then  -- empty element tag
       local xargs=parseargs(xarg)
+      --[[
+      print("Controlmap xargs")
+      rprint(xargs)
+      ]]
 
       -- meta-attr: index each <Param> node
       if (label == "Param") then
@@ -513,8 +514,7 @@ function ControlMap:_parse_xml(s)
         parameter_index = parameter_index + 1
       end
 
-      -- meta-attr: add size attribute to (toggle)buttons, if not defined
-      --if (not)xargs["size"]
+      -- meta-attr: add size attribute to (toggle)buttons
       if (xargs["type"]) and
         (xargs["type"]=="button") or
         (xargs["type"]=="togglebutton") then
@@ -522,6 +522,20 @@ function ControlMap:_parse_xml(s)
           xargs["size"] = 1
         end
       end
+
+      -- meta-atrr - cast as numbers
+
+      if (xargs["maximum"]) then
+        xargs["maximum"] = tonumber(xargs["maximum"])
+      end
+      if (xargs["minimum"]) then
+        xargs["minimum"] = tonumber(xargs["minimum"])
+      end
+
+      -- meta-attr - cast as booleans:
+      xargs["skip_echo"] = bool(xargs["skip_echo"])
+      xargs["invert_x"] = bool(xargs["invert_x"])
+      xargs["invert_y"] = bool(xargs["invert_y"])
 
       table.insert(top, {label=label, xarg=xargs, empty=1})
     

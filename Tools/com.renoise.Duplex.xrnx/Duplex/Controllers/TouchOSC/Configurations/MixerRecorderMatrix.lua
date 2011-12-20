@@ -49,6 +49,32 @@ duplex_configurations:insert {
       options = {
       }
     },
+    PadXY = {
+      application = "XYPad",
+      mappings = {
+        xy_pad = {
+          group_name = "3_XYPad",
+        },
+        lock_button = {
+          group_name = "3_Buttons",
+          index = 1
+        },
+        focus_button = {
+          group_name = "3_Buttons",
+          index = 2
+        },
+        prev_device = {
+          group_name = "3_Buttons",
+          index = 3
+        },
+        next_device = {
+          group_name = "3_Buttons",
+          index = 4
+        }
+      },
+      options = {
+      }
+    },
     Matrix = {
       mappings = {
         matrix = {
@@ -68,6 +94,16 @@ duplex_configurations:insert {
       },
       options = {
         sequence_mode = 2,  -- to support "togglebutton" input
+      }
+    },
+    TiltSensorPad = {
+      application = "XYPad",
+      mappings = {
+        xy_pad = {
+          group_name = "Extra",
+        },
+      },
+      options = {
       }
     }
   }

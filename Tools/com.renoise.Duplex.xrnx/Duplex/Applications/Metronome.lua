@@ -16,7 +16,7 @@ class 'Metronome' (Application)
 
 Metronome.default_options = {}
 
-function Metronome:__init(browser_process,mappings,options,config_name)
+function Metronome:__init(process,mappings,options,cfg_name,palette)
 
   self.mappings = {
     toggle = {
@@ -24,7 +24,7 @@ function Metronome:__init(browser_process,mappings,options,config_name)
     }
   }
 
-  Application.__init(self,browser_process,mappings,options,config_name)
+  Application.__init(self,process,mappings,options,cfg_name,palette)
 
 end
 

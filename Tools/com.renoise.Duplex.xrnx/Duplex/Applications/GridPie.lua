@@ -146,8 +146,8 @@ GridPie.default_options = {
 
 --------------------------------------------------------------------------------
 
-function GridPie:__init(browser_process,mappings,options,config_name)
-  TRACE("GridPie:__init(",browser_process,mappings,options,config_name)
+function GridPie:__init(process,mappings,options,cfg_name,palette)
+  TRACE("GridPie:__init(",process,mappings,options,cfg_name,palette)
 
   -- option constants
   self.POLY_ENABLED = 1
@@ -207,7 +207,7 @@ function GridPie:__init(browser_process,mappings,options,config_name)
   --self.suppress_track_notification = false
 
   -- keep reference to process, so we stop/abort the application
-  self._process = browser_process
+  self._process = process
 
   -- UIComponent references
   self._bt_v_prev = nil
@@ -274,7 +274,7 @@ function GridPie:__init(browser_process,mappings,options,config_name)
     },  
   }
 
-  Application.__init(self,browser_process,mappings,options,config_name)
+  Application.__init(self,process,mappings,options,cfg_name,palette)
 
 end
 

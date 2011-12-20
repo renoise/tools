@@ -174,10 +174,14 @@ function MessageStream:input_message(msg)
   self.current_message = msg
 
   if (msg.input_method == CONTROLLER_FADER or 
-      msg.input_method == CONTROLLER_DIAL) then
+      msg.input_method == CONTROLLER_DIAL or
+      msg.input_method == CONTROLLER_XYPAD) then
 
-      -- "analogue" input, value between max/min
-    
+    -- "analogue" input, value between max/min
+    --print(msg)
+    --print("msg.max",msg.max)
+    --rprint(msg.value)
+
     for _,listener in ipairs(self.change_listeners)  do 
       listener.handler() 
     end
@@ -270,9 +274,11 @@ function Message:__init(device)
   self.row = nil --  (int) row, starting from 1
   self.timestamp = nil --  set by os.clock() 
   self.name = nil --  the parameter name
-  self.max = nil --  maximum accepted/output value
-  self.min = nil --  minimum accepted/output value
   
+  --  min/max values for every other type of control
+  self.max = nil  
+  self.min = nil
+
   -- the input method type - CONTROLLER_BUTTON/DIAL/etc. 
   self.input_method = nil 
 
@@ -284,6 +290,6 @@ end
 --------------------------------------------------------------------------------
 
 function Message:__tostring()
-  return string.format("message: context:%s, group_name:%s",
-    tostring(self.context), tostring(self.group_name))
+  return string.format("message: context:%s, group_name:%s, value:%s",
+    tostring(self.context), tostring(self.group_name),self.value)
 end

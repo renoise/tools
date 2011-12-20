@@ -55,7 +55,7 @@ TrackSelector.default_options = {
 
 }
 
-function TrackSelector:__init(browser_process,mappings,options,config_name)
+function TrackSelector:__init(process,mappings,options,cfg_name,palette)
 
   -- globals
   self.TRACK_PAGE_AUTO = 1
@@ -111,7 +111,7 @@ function TrackSelector:__init(browser_process,mappings,options,config_name)
       description = "TrackSelector: Select first track",
     },
   }
-  Application.__init(self,browser_process,mappings,options,config_name)
+  Application.__init(self,process,mappings,options,cfg_name,palette)
 
 end
 

@@ -92,6 +92,10 @@ function UIToggleButton:do_press()
     return 
   end
 
+  if (msg.input_method ~= CONTROLLER_BUTTON) then
+    self:force_update()
+  end
+
   if (self.on_press ~= nil) then
     self:on_press()
   end
@@ -118,17 +122,26 @@ function UIToggleButton:do_release()
     return
   end
 
-  -- force-update controls that are handling 
-  -- their internal state automatically...
-  if (msg.input_method == CONTROLLER_PUSHBUTTON) then
-    self.canvas.delta = table.rcopy(self.canvas.buffer)
-    self.canvas.has_changed = true
-    self:invalidate()
+  if (msg.input_method ~= CONTROLLER_BUTTON) then
+    self:force_update()
   end
 
   if (self.on_release ~= nil) then
     self:on_release()
   end
+
+end
+
+--------------------------------------------------------------------------------
+
+-- force-update controls that are handling 
+-- their internal state automatically...
+
+function UIToggleButton:force_update()
+
+  self.canvas.delta = table.rcopy(self.canvas.buffer)
+  self.canvas.has_changed = true
+  self:invalidate()
 
 end
 
@@ -198,9 +211,7 @@ end
 
 function UIToggleButton:set(value,skip_event)
   TRACE("UIToggleButton:set", value)
-  
   if (self.active~=value) then
-
     if(skip_event)then
       self._cached_active = value
       self.active = value
