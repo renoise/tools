@@ -40,7 +40,7 @@ function Ohm64:point_to_value(pt,elm,ceiling)
     value = math.floor((pt.val * (1 / ceiling)) * elm.maximum)
   end
 
-  return tonumber(value)
+  return value
 end
 
 

@@ -24,7 +24,7 @@ How to use
 Mappings
 
   matrix    - (UIToggleButton...) toggle slot muted state
-  triggers  - (UISlider) sequence pattern-triggers
+  triggers  - (UIButtonStrip) sequence pattern-triggers
   sequence  - (UISpinner) control visible sequence page 
   track     - (UISpinner) control visible track page
 
@@ -143,8 +143,8 @@ Matrix.default_options = {
 
 }
 
-function Matrix:__init(browser_process,mappings,options,config_name)
-  TRACE("Matrix:__init(",browser_process,mappings,options,config_name)
+function Matrix:__init(process,mappings,options,cfg_name,palette)
+  TRACE("Matrix:__init(",process,mappings,options,cfg_name,palette)
 
   -- define the options (with defaults)
 
@@ -271,7 +271,7 @@ function Matrix:__init(browser_process,mappings,options,config_name)
   self._update_tracks_requested = false
   self._mute_notifier_disabled = false
 
-  Application.__init(self,browser_process,mappings,options,config_name)
+  Application.__init(self,process,mappings,options,cfg_name,palette)
 
 end
 
@@ -1049,13 +1049,14 @@ function Matrix:_build_app()
           end
           -- don't update the entire grid the next time
           self._mute_notifier_disabled = true
+
           -- workaround for devices with no colorspace:
           -- revert to the unlit state 
-          --if table.is_empty(self.display.device.colorspace) then
           if is_monochrome(self.display.device.colorspace) then
             local slot_empty = patt.tracks[x+self._track_offset].is_empty
             if slot_empty then
               obj:set(false,true)
+              obj:force_update()
               return false
             end
           end

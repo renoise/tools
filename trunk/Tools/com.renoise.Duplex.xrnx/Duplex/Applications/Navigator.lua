@@ -67,8 +67,8 @@ class 'Navigator' (Application)
 
 Navigator.default_options = {}
 
-function Navigator:__init(browser_process,mappings,options,config_name)
-  TRACE("Navigator:__init(",browser_process,mappings,options,config_name)
+function Navigator:__init(process,mappings,options,cfg_name,palette)
+  TRACE("Navigator:__init(",process,mappings,options,cfg_name,palette)
 
   self.mappings = {
     blockpos = {
@@ -127,7 +127,7 @@ function Navigator:__init(browser_process,mappings,options,config_name)
   -- (boolean) true when number of lines has changed
   self._changed_num_lines = false
 
-  Application.__init(self,browser_process,mappings,options,config_name)
+  Application.__init(self,process,mappings,options,cfg_name,palette)
 
 
 end

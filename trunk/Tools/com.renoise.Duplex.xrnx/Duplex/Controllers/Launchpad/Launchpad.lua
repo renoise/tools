@@ -73,6 +73,7 @@ require (CTRL_PATH.."MixerTransport")
 require (CTRL_PATH.."RecorderNavigator")
 require (CTRL_PATH.."StepSequencer")
 require (CTRL_PATH.."LaunchPad_GridPie")
+require (CTRL_PATH.."LaunchPad_XYPad")
 
 --------------------------------------------------------------------------------
 -- A couple of sample configurations

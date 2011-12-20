@@ -281,8 +281,8 @@ NotesOnWheels.default_options = {
 
 }
 
-function NotesOnWheels:__init(browser_process,mappings,options,config_name)
-  TRACE("NotesOnWheels:__init",browser_process,mappings,options,config_name)
+function NotesOnWheels:__init(process,mappings,options,cfg_name,palette)
+  TRACE("NotesOnWheels:__init",process,mappings,options,cfg_name,palette)
 
   -- constants
 
@@ -516,7 +516,7 @@ function NotesOnWheels:__init(browser_process,mappings,options,config_name)
   end
 
   -- apply user-specified arguments
-  Application.__init(self,browser_process,mappings,options,config_name)
+  Application.__init(self,process,mappings,options,cfg_name,palette)
 
   -- set these values after configuration has been applied
   self.mode = self.MODE_PITCH
@@ -1091,6 +1091,7 @@ function NotesOnWheels:_attach_to_instrument(new_song)
 end
 
 function NotesOnWheels:detect_slices()
+  TRACE("NotesOnWheels:detect_slices()")
 
   local inst_idx = renoise.song().selected_instrument_index
   local mappings = renoise.song().instruments[inst_idx].sample_mappings[1] -- Note On Layer
@@ -1110,6 +1111,7 @@ function NotesOnWheels:detect_slices()
     self.lower_note = mappings[1].base_note
     self.upper_note = mappings[#mappings].base_note
   end
+
 end
 
 
@@ -1118,7 +1120,7 @@ end
 -- @param value (number) the value to scale
 -- @param invert (boolean) when the value is sent to a control
 function NotesOnWheels:to_sliced_pitch_range(int_val,invert)
-  TRACE("NotesOnWheels:to_sliced_pitch_range",int_val)
+  TRACE("NotesOnWheels:to_sliced_pitch_range",int_val,invert)
 
   -- special value, leave alone...
   if (int_val==0) then
@@ -1136,9 +1138,8 @@ function NotesOnWheels:to_sliced_pitch_range(int_val,invert)
         int_val = int_val-1
       end
     end
+    int_val = clamp_value(int_val,self.lower_note,self.upper_note)
   end
-  -- ensure value is within range
-  int_val = clamp_value(int_val,self.lower_note,self.upper_note)
   return int_val
 end
 
@@ -1207,6 +1208,9 @@ function NotesOnWheels:change_mode(mode,update)
         local int_val = self.seq.pitch_steps[control_index]
         if (int_val==121) then 
           int_val = 0 
+        end
+        if (self.number_of_slices>0) then
+          int_val = self:to_sliced_pitch_range(int_val,true)
         end
         self.seq:update_pitch_ctrl(int_val,ctrl)
       elseif (self.mode == self.MODE_VELOCITY) then
@@ -2370,11 +2374,20 @@ NOW_Sequence.DEFAULT_RETRIG_ADJUST = 1/NOW_Sequence.MAX_RETRIGS
 function NOW_Sequence:__init(owner)
   TRACE("NOW_Sequence:__init()")
   
-  self.GATE_PAN_LOWER = 240
-  self.GATE_PAN_UPPER = 255
-  self.RETRIG_PAN_LOWER = 224
-  self.RETRIG_PAN_UPPER = 240
-  self.OFFSET_NUM_VALUE = 9
+  local api_version = renoise.API_VERSION
+  if (api_version>=3) then
+    self.GATE_PAN_LOWER = 3072
+    self.GATE_PAN_UPPER = 3087
+    self.RETRIG_PAN_LOWER = 6912
+    self.RETRIG_PAN_UPPER = 6926
+    self.OFFSET_NUM_VALUE = 28
+  elseif (api_version>=2) then
+    self.GATE_PAN_LOWER = 240
+    self.GATE_PAN_UPPER = 255
+    self.RETRIG_PAN_LOWER = 224
+    self.RETRIG_PAN_UPPER = 240
+    self.OFFSET_NUM_VALUE = 9
+  end
 
   -- reference to the main class
   self.owner = owner
@@ -2589,7 +2602,6 @@ end
 
 function NOW_Sequence:update_retrig_ctrl(int_val,ctrl)
   if (ctrl) then
-    --int_val = self:scale_log(int_val,NOW_Sequence.MAX_RETRIGS,4)
     ctrl:set_value(int_val/NOW_Sequence.MAX_RETRIGS,true)
   end
 end

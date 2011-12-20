@@ -114,8 +114,8 @@ StepSequencer.default_options = {
   },
 }
 
-function StepSequencer:__init(browser_process,mappings,options,config_name)
-  TRACE("StepSequencer:__init(",browser_process,mappings,options,config_name)
+function StepSequencer:__init(process,mappings,options,cfg_name,palette)
+  TRACE("StepSequencer:__init(",process,mappings,options,cfg_name,palette)
 
   self.COLUMNS_SINGLE = 1
   self.COLUMNS_MULTI = 2
@@ -244,7 +244,7 @@ function StepSequencer:__init(browser_process,mappings,options,config_name)
   -- don't toggle off if pressing multiple on / transposing / etc
   self._toggle_exempt = { } 
 
-  Application.__init(self,browser_process,mappings,options,config_name)
+  Application.__init(self,process,mappings,options,cfg_name,palette)
 
 end
 

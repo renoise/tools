@@ -246,8 +246,8 @@ Recorder.default_options = {
   }
 }
 
-function Recorder:__init(browser_process,mappings,options,config_name)
-  TRACE("Recorder:__init(",browser_process,mappings,options,config_name)
+function Recorder:__init(process,mappings,options,cfg_name,palette)
+  TRACE("Recorder:__init(",process,mappings,options,cfg_name,palette)
 
   --self.WRITEAHEAD_ON = 1
   --self.WRITEAHEAD_OFF = 2
@@ -394,9 +394,9 @@ function Recorder:__init(browser_process,mappings,options,config_name)
 
   -- keep reference to browser process, or we couldn't 
   -- set options while running (used by first_run) 
-  self.recorder_process = browser_process
+  self.recorder_process = process
 
-  Application.__init(self,browser_process,mappings,options,config_name)
+  Application.__init(self,process,mappings,options,cfg_name,palette)
 
   self._first_run = self.options.first_run.value
 
@@ -1774,8 +1774,15 @@ function RecorderTrack:__init()
   self.selected_sample = 0    -- the selected RecorderSample index
   self.has_ghost = false      -- true while dialog is "on" this track
 
-  self.GLIDE_NUM_VALUE = 5
-  self.OFFSET_NUM_VALUE = 9
+  -- effect commands depend on API version
+  local api_version = renoise.API_VERSION
+  if (api_version>=3) then
+    self.GLIDE_NUM_VALUE = 16
+    self.OFFSET_NUM_VALUE = 28
+  elseif (api_version>=2) then
+    self.GLIDE_NUM_VALUE = 5
+    self.OFFSET_NUM_VALUE = 9
+  end
 
 
 end

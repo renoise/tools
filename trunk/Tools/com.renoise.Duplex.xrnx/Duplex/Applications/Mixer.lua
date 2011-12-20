@@ -191,8 +191,8 @@ Mixer.default_options = {
     description = "Determine how to record automation ",
     items = {
       "Disabled, do not record automation",
-      "Touch record: record only when touched",
-      "Latch record: touch to start output",
+      "Touch, record only when touched",
+      "Latch record (experimental)",
     },
     value = 1,
     on_change = function(inst)
@@ -235,8 +235,8 @@ if (renoise.API_VERSION >=2) then
 end
 
 
-function Mixer:__init(browser_process,mappings,options,config_name)
-  TRACE("Mixer:__init",browser_process,mappings,options,config_name)
+function Mixer:__init(process,mappings,options,cfg_name,palette)
+  TRACE("Mixer:__init",process,mappings,options,cfg_name,palette)
 
     -- define the options (with defaults)
   --[[
@@ -397,7 +397,7 @@ function Mixer:__init(browser_process,mappings,options,config_name)
   self._take_over_volumes = {}
 
   -- apply arguments
-  Application.__init(self,browser_process,mappings,options,config_name)
+  Application.__init(self,process,mappings,options,cfg_name,palette)
 
   -- toggle, which defines if we're controlling the pre or post fx vol/pans
   self._postfx_mode = (self.options.pre_post.value == self.MODE_POSTFX)

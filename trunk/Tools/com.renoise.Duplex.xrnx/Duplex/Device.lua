@@ -509,6 +509,19 @@ function Device:_send_message(message,xarg)
     message.input_method = CONTROLLER_FADER
   elseif (xarg.type == "dial") then
     message.input_method = CONTROLLER_DIAL
+  elseif (xarg.type == "xypad") then
+    message.input_method = CONTROLLER_XYPAD
+    --[[
+    if (xarg.swap_axes) then
+      message.value[1],message.value[2] = message.value[2],message.value[1]
+    end
+    ]]
+    if (xarg.invert_x) then
+      message.value[1] = xarg.maximum-message.value[1]
+    end
+    if (xarg.invert_y) then
+      message.value[2] = xarg.maximum-message.value[2]
+    end
   else
     error(("Internal Error. Please report: " ..
       "unknown message.input_method %s"):format(xarg.type or "nil"))
@@ -517,13 +530,13 @@ function Device:_send_message(message,xarg)
   -- include meta-properties
   message.name = xarg.name
   message.group_name = xarg.group_name
-  message.max = tonumber(xarg.maximum)
-  message.min = tonumber(xarg.minimum)
   message.id = xarg.id
   message.index = xarg.index
   message.column = xarg.column
   message.row = xarg.row
   message.timestamp = os.clock()
+  message.max = tonumber(xarg.maximum)
+  message.min = tonumber(xarg.minimum)
 
   -- send the message
   self.message_stream:input_message(message)

@@ -55,7 +55,10 @@ CONTROLLER_PUSHBUTTON = 3
 CONTROLLER_FADER = 4
 -- basic rotary encoder 
 -- (a control-map @type="dial" attribute)
-CONTROLLER_DIAL = 5      
+CONTROLLER_DIAL = 5     
+-- XY pad 
+-- (a control-map @type="xypad" attribute)
+CONTROLLER_XYPAD = 6
 
 -- UIComponents
 
@@ -138,6 +141,9 @@ duplex_preferences = renoise.Document.create("ScriptingToolPreferences") {
 
   -- option: when enabled, the Duplex browser is displayed on startup
   display_browser_on_start = false,
+
+  -- option: enable realtime NRPN message support
+  nrpn_support = false,
 
   -- debug option: when enabled, dump MIDI messages received and send by duplex
   -- to the sdt out (Renoise terminal)
@@ -327,6 +333,11 @@ function determine_track_type(track_index)
   end
 end
 
+-- round_value (from http://lua-users.org/wiki/SimpleRound)
+function round_value(num) 
+  if num >= 0 then return math.floor(num+.5) 
+  else return math.ceil(num-.5) end
+end
 -- clamp_value: ensure value is within min/max
 function clamp_value(value, min_value, max_value)
   return math.min(max_value, math.max(value, min_value))
@@ -420,11 +431,8 @@ end
 -- {"^ControlMap:", "^Display:"} -> show "Display:" and "ControlMap:"
 
 local _trace_filters = nil
---local _trace_filters = {"^GridPie"}
---local _trace_filters = {"^Recorder","^UISlider"}
---local _trace_filters = {"^UIButtonStrip", "^UISlider","^Browser"}
---local _trace_filters = {"^Recorder", "^Effect","^Navigator","^Mixer","^Matrix"}
---local _trace_filters = {"^StepSequencer", "^Transport","^MidiDevice","^MessageStream","^"}
+--local _trace_filters = {"^XYPad"}
+--local _trace_filters = {"^XYPad","^Automation"}
 --local _trace_filters = {".*"}
 
 --------------------------------------------------------------------------------

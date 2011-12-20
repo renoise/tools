@@ -157,6 +157,23 @@ renoise.tool():add_menu_entry {
 }
 
 renoise.tool():add_menu_entry {
+  name = "--- Main Menu:Tools:Duplex:Enable NRPN support",
+  selected = function()
+    return duplex_preferences.nrpn_support.value
+  end,
+  invoke = function() 
+    duplex_preferences.nrpn_support.value = 
+      not duplex_preferences.nrpn_support.value
+      if duplex_preferences.nrpn_support.value then
+        local msg = "You have selected to enable NRPN support. Please note that the"
+                  .."\nfeature is currently experimental and might have undesired."
+                  .."\nside-effects (please see http://goo.gl/BiIW6)"
+        renoise.app():show_message(msg)
+      end
+  end
+}
+
+renoise.tool():add_menu_entry {
   name = "Main Menu:Tools:Duplex:Dump MIDI to console",
   selected = function()
     return duplex_preferences.dump_midi.value

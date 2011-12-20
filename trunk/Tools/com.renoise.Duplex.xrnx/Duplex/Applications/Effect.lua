@@ -103,7 +103,7 @@ Effect.default_options = {
     items = {
       "Disabled, do not record automation",
       "Touch: record only when touched",
-      "Latch: touch to start output",
+      "Latch (experimental) ",
     },
     value = 1,
     on_change = function(inst)
@@ -112,8 +112,8 @@ Effect.default_options = {
   }
 }
 
-function Effect:__init(browser_process,mappings,options,config_name)
-  TRACE("Effect:__init", browser_process,mappings,options,config_name)
+function Effect:__init(process,mappings,options,cfg_name,palette)
+  TRACE("Effect:__init", process,mappings,options,cfg_name,palette)
 
    -- define option constants
 
@@ -222,7 +222,7 @@ function Effect:__init(browser_process,mappings,options,config_name)
   -- set while recording automation
   self._record_mode = false
 
-  Application.__init(self,browser_process,mappings,options,config_name)
+  Application.__init(self,process,mappings,options,cfg_name,palette)
 
   -- do stuff after options have been set
 

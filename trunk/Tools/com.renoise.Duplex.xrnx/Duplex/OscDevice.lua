@@ -35,6 +35,10 @@ function OscDevice:__init(name, message_stream,prefix,address,port_in,port_out)
   self.client = nil
   self.server = nil
 
+  self.message_queue = nil
+
+  self.bundle_messages = false
+
   self:open()
 
 end
@@ -130,9 +134,13 @@ function OscDevice:socket_message(socket, binary_data)
         value_str = string.sub(value_str,string.len(self.prefix)+1)
       end
 
-      if (value_str) then
+      --print("osc value_str",value_str)
+
+      if value_str then
+        print("*** received message",value_str)
         self:receive_osc_message(value_str)
       end
+
     end
   
   else
@@ -153,7 +161,12 @@ function OscDevice:receive_osc_message(value_str)
   if (param) then
     local message = Message()
     message.context = OSC_MESSAGE
-    message.value = val
+    -- cap to the range specified in the control-map
+    for k,v in pairs(val) do
+      val[k] = clamp_value(v,param["xarg"].minimum,param["xarg"].maximum)
+    end
+    -- multiple values?
+    message.value = (#val>1) and val or val[1]
     self:_send_message(message,param["xarg"])
   end
 
@@ -196,6 +209,106 @@ function OscDevice:set_device_prefix(prefix)
 
 end
 
+--------------------------------------------------------------------------------
+
+function OscDevice:queue_osc_message(message,value)
+
+  if not self.message_queue then
+    self.message_queue = table.create()
+  end
+
+  -- TODO when queue reach certain size, send bundle
+  -- (for increased responsiveness)
+    
+  self.message_queue:insert({
+    message=message,
+    value=value
+  })
+
+end
+
+--------------------------------------------------------------------------------
+
+-- bundle & send queued messages, clear queue
+
+function OscDevice:on_idle()
+
+  if self.message_queue then
+    self:send_osc_bundle()
+  end
+
+end
+
+--------------------------------------------------------------------------------
+
+-- construct_osc_message
+
+function OscDevice:construct_osc_message(message,value)
+
+    -- split the message into non-whitespace chunks
+    local str_vars = string.gmatch(message,"[^%s]+")
+
+    -- construct the table of variables
+    local header = nil
+    local osc_vars = table.create()
+    local counter = 1
+    for vars in str_vars do
+      --print("vars",vars)
+      
+      if (string.sub(vars,0,1)=="/") then
+        -- the message part
+        header = vars
+      else
+        -- the variable part
+        local entry = table.create()
+        if (type(value)=="table") then
+          local counter2 = 1
+          for k,v in pairs(value) do
+            --print("*** got here",counter,counter2)
+            if (counter==counter2) then
+              --print(k,v)
+              entry = self:produce_entry(vars,v)
+            end
+            counter2 = counter2+1
+          end
+        else
+          entry = self:produce_entry(vars,value)
+        end
+        if (entry.tag) then
+          osc_vars:insert(entry)
+        end
+        counter = counter+1
+      end
+
+    end
+
+    header = self.prefix and ("%s%s"):format(self.prefix,header) or header
+
+    return renoise.Osc.Message(header,osc_vars)
+
+end
+
+--------------------------------------------------------------------------------
+
+--  send bundle of OSC messages
+
+function OscDevice:send_osc_bundle()
+
+  local msgs = table.create()
+  for k,v in ipairs(self.message_queue) do
+    msgs:insert(self:construct_osc_message(v.message,v.value))
+  end
+  --[[
+  print("msgs",msgs)
+  rprint(msgs)
+  ]]
+  local bundle = renoise.Osc.Bundle(os.clock(),msgs)
+  self:send_osc_message(bundle)
+  self.message_queue:clear()
+  self.message_queue = nil
+
+end
+
 
 --------------------------------------------------------------------------------
 
@@ -203,44 +316,12 @@ end
 --  @param message (string) the message string
 --  @param value (number) the value to inject
 
-function OscDevice:send_osc_message(message,value)
-  TRACE("OscDevice:send_osc_message()",message,value)
+function OscDevice:send_osc_message(message)
+  TRACE("OscDevice:send_osc_message()",message)
 
   if (self.client) and (self.client.is_open) then
-    -- split the message into non-whitespace chunks
-    local str_vars = string.gmatch(message,"[^%s]+")
-    -- construct the table of variables
-    local header = nil
-    local osc_vars = table.create()
-    for vars in str_vars do
-      if (string.sub(vars,0,1)=="/") then
-        -- the message part
-        header = vars
-      else
-        -- the variable part
-        local entry = table.create()
-        if (vars=="%i") then
-          entry.tag = "i"
-          entry.value = tonumber(value)
-        elseif (vars=="%f") then
-          entry.tag = "f"
-          entry.value = tonumber(value)
-        elseif (tonumber(vars)~=nil) then
-          entry.tag = "f"
-          entry.value = tonumber(vars)
-        end
-        if (entry.tag) then
-          osc_vars:insert(entry)
-        end
 
-      end
-    end
-
-    header = self.prefix and ("%s%s"):format(self.prefix,header) or header
-
-    self.client:send(
-      renoise.Osc.Message(header,osc_vars)
-    )
+    self.client:send(message)
   end
 
 end
@@ -248,23 +329,54 @@ end
 
 --------------------------------------------------------------------------------
 
+-- produce an OSC message entry 
+
+function OscDevice:produce_entry(vars,value)
+
+  local entry = table.create()
+  if (vars=="%i") then
+    entry.tag = "i"
+    entry.value = tonumber(value)
+  elseif (vars=="%f") then
+    --print("*** got here B")
+    entry.tag = "f"
+    entry.value = tonumber(value)
+  elseif (tonumber(vars)~=nil) then
+    --print("*** got here A")
+    entry.tag = "f"
+    entry.value = tonumber(vars)
+  end
+  return entry
+end
+
+--------------------------------------------------------------------------------
+
 -- Convert the point to an output value
 -- @param pt (CanvasPoint)
 -- @param elm - control-map parameter
 -- @param ceiling - the UIComponent ceiling value
+-- @return value (number, or table of numbers)
 
 function OscDevice:point_to_value(pt,elm,ceiling)
   TRACE("OscDevice:point_to_value()",pt,elm,ceiling)
 
-  local value
+  local value = nil
+  local val_type = type(pt.val)
 
-  if (type(pt.val) == "boolean") then
+  if (val_type == "boolean") then
 
     if (pt.val) then
       value = elm.maximum
     else
       value = elm.minimum
     end
+  elseif (val_type == "table") then
+    -- multiple-parameter: tilt sensors, xy-pad...
+    value = table.create()
+    for k,v in ipairs(pt.val) do
+      value:insert((v * (1 / ceiling)) * 1)
+    end
+    --rprint(value)
 
   else
     -- scale the value from "local" to "external"
@@ -273,7 +385,7 @@ function OscDevice:point_to_value(pt,elm,ceiling)
     value = (pt.val * (1 / ceiling)) * elm.maximum
   end
 
-  return tonumber(value)
+  return value
 end
 
 

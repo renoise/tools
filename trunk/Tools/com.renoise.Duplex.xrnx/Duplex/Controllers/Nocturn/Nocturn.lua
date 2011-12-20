@@ -12,4 +12,5 @@ require (CTRL_PATH.."Nocturn_Navigator")
 require (CTRL_PATH.."Nocturn_Recorder")
 require (CTRL_PATH.."Nocturn_TrackSelector")
 require (CTRL_PATH.."Nocturn_NotesOnWheels")
+require (CTRL_PATH.."Nocturn_XYPad")
 
