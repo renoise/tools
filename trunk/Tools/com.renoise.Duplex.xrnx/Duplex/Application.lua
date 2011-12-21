@@ -246,8 +246,7 @@ end
 function Application:_apply_palette(palette)
   TRACE("Application:_apply_palette",palette)
   
-  if not self.palette then
-    self.palette = {}
+  if not palette then
     return
   end
 
