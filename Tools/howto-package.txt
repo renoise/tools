@@ -1,0 +1,3 @@
+$ cd <SUBDIR>
+$ zip -vr <FILENAME>.xrnx * -x@../exclude.list
+$ mv <FILENAME>.xrnx ~/Desktop/
