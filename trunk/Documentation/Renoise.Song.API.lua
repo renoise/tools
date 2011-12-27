@@ -616,7 +616,8 @@ renoise.song().sequencer:sort()
 -- which starts a section, or till the end of the song when there are no others.
 renoise.song().sequencer:sequence_is_start_of_section(sequence_index) 
   -> [boolean]
-renoise.song().sequencer:set_sequence_is_start_of_section(sequence_index) 
+renoise.song().sequencer:set_sequence_is_start_of_section(
+  sequence_index, true_or_false) 
 renoise.song().sequencer:sequence_is_start_of_section_observable(sequence_index) 
   -> [renoise.Observable object]
 
@@ -823,6 +824,9 @@ renoise.song().tracks[].name, _observable
 
 renoise.song().tracks[].color, _observable
   -> [table with 3 numbers (0-0xFF), RGB]
+
+renoise.song().tracks[].color_blend, _observable
+  -> [number, 0 - 100]
 
 -- Mute and solo states. Not available for the master track.
 renoise.song().tracks[].mute_state, _observable
@@ -1141,20 +1145,20 @@ renoise.song().instruments[].plugin_properties
 
 --------- Constants
 
-renoise.InstrumentEnvelope.PLAYMODE_POINTS = 1
-renoise.InstrumentEnvelope.PLAYMODE_LINEAR = 2
-renoise.InstrumentEnvelope.PLAYMODE_CUBIC = 3
+renoise.InstrumentEnvelope.PLAYMODE_POINTS
+renoise.InstrumentEnvelope.PLAYMODE_LINEAR
+renoise.InstrumentEnvelope.PLAYMODE_CUBIC
 
-renoise.InstrumentEnvelope.LOOP_MODE_OFF = 1
-renoise.InstrumentEnvelope.LOOP_MODE_FORWARD = 2
-renoise.InstrumentEnvelope.LOOP_MODE_REVERSE = 3
-renoise.InstrumentEnvelope.LOOP_MODE_PING_PONG = 4
+renoise.InstrumentEnvelope.LOOP_MODE_OFF
+renoise.InstrumentEnvelope.LOOP_MODE_FORWARD
+renoise.InstrumentEnvelope.LOOP_MODE_REVERSE
+renoise.InstrumentEnvelope.LOOP_MODE_PING_PONG
 
-renoise.InstrumentEnvelope.MAX_NUMBER_OF_POINTS = 6
-renoise.InstrumentEnvelope.MAX_NUMBER_OF_POINTS = 1000
+renoise.InstrumentEnvelope.MAX_NUMBER_OF_POINTS -- 6
+renoise.InstrumentEnvelope.MAX_NUMBER_OF_POINTS -- 1000
 
-renoise.InstrumentEnvelope.MIN_FADE_AMOUNT = 0
-renoise.InstrumentEnvelope.MAX_FADE_AMOUNT = 4095
+renoise.InstrumentEnvelope.MIN_FADE_AMOUNT -- 0
+renoise.InstrumentEnvelope.MAX_FADE_AMOUNT -- 4095
 
 
 -------- Functions
@@ -1235,20 +1239,20 @@ renoise.song().instruments[].sample_envelopes.XXX.points[].value
 
 -------- Constants
 
-renoise.InstrumentEnvelopeLfo.MODE_OFF = 1
-renoise.InstrumentEnvelopeLfo.MODE_SIN = 2
-renoise.InstrumentEnvelopeLfo.MODE_SAW = 3
-renoise.InstrumentEnvelopeLfo.MODE_PULSE = 4
-renoise.InstrumentEnvelopeLfo.MODE_RANDOM = 5
+renoise.InstrumentEnvelopeLfo.MODE_OFF
+renoise.InstrumentEnvelopeLfo.MODE_SIN
+renoise.InstrumentEnvelopeLfo.MODE_SAW
+renoise.InstrumentEnvelopeLfo.MODE_PULSE
+renoise.InstrumentEnvelopeLfo.MODE_RANDOM
 
-renoise.InstrumentEnvelopeLfo.MIN_FREQUENCY = 0
-renoise.InstrumentEnvelopeLfo.MAX_FREQUENCY = 127
+renoise.InstrumentEnvelopeLfo.MIN_FREQUENCY -- 0 
+renoise.InstrumentEnvelopeLfo.MAX_FREQUENCY -- 127
 
-renoise.InstrumentEnvelopeLfo.MIN_AMOUNT = 0
-renoise.InstrumentEnvelopeLfo.MAX_AMOUNT = 127
+renoise.InstrumentEnvelopeLfo.MIN_AMOUNT -- 0
+renoise.InstrumentEnvelopeLfo.MAX_AMOUNT -- 127
 
-renoise.InstrumentEnvelopeLfo.MIN_PHASE = 0
-renoise.InstrumentEnvelopeLfo.MAX_PHASE = 180
+renoise.InstrumentEnvelopeLfo.MIN_PHASE -- 0
+renoise.InstrumentEnvelopeLfo.MAX_PHASE -- 180
 
 
 -------- Functions
@@ -1287,14 +1291,14 @@ renoise.song().instruments[].sample_envelopes.XXX.lfo.amount, _observable
 
 -------- Constants
 
-renoise.InstrumentEnvelopeFollower.MIN_ATTACK = 1
-renoise.InstrumentEnvelopeFollower.MAX_ATTACK = 180
+renoise.InstrumentEnvelopeFollower.MIN_ATTACK -- 1
+renoise.InstrumentEnvelopeFollower.MAX_ATTACK -- 180
 
-renoise.InstrumentEnvelopeFollower.MIN_RELEASE = 1
-renoise.InstrumentEnvelopeFollower.MAX_RELEASE = 127
+renoise.InstrumentEnvelopeFollower.MIN_RELEASE -- 1
+renoise.InstrumentEnvelopeFollower.MAX_RELEASE -- 127
 
-renoise.InstrumentEnvelopeFollower.MIN_AMOUNT = -127
-renoise.InstrumentEnvelopeFollower.MAX_AMOUNT = 127
+renoise.InstrumentEnvelopeFollower.MIN_AMOUNT -- -127
+renoise.InstrumentEnvelopeFollower.MAX_AMOUNT -- 127
 
 
 -------- Functions
@@ -1331,6 +1335,35 @@ renoise.song().instruments[].sample_envelopes.XXX.follower.amount, _observable
 -- renoise.InstrumentSampleEnvelopes
 --------------------------------------------------------------------------------
 
+-------- Constants
+
+renoise.InstrumentSampleEnvelopes.FILTER_2X2_POLE_LP
+renoise.InstrumentSampleEnvelopes.FILTER_2_POLE_LP
+renoise.InstrumentSampleEnvelopes.FILTER_BIQUAD_LP
+renoise.InstrumentSampleEnvelopes.FILTER_MOOG_LP
+renoise.InstrumentSampleEnvelopes.FILTER_1_POLE_LP
+
+renoise.InstrumentSampleEnvelopes.FILTER_2X2_POLE_HP
+renoise.InstrumentSampleEnvelopes.FILTER_2_POLE_HP
+renoise.InstrumentSampleEnvelopes.FILTER_MOOG_HP
+
+renoise.InstrumentSampleEnvelopes.FILTER_BAND_REJECT
+renoise.InstrumentSampleEnvelopes.FILTER_BAND_PASS
+
+renoise.InstrumentSampleEnvelopes.FILTER_EQ_MINUS_15_DB
+renoise.InstrumentSampleEnvelopes.FILTER_EQ_MINUS_6_DB
+renoise.InstrumentSampleEnvelopes.FILTER_EQ_PLUS_6_DB
+renoise.InstrumentSampleEnvelopes.FILTER_EQ_PLUS_15_DB
+renoise.InstrumentSampleEnvelopes.FILTER_EQ_PEAKING
+
+renoise.InstrumentSampleEnvelopes.FILTER_COMP_DIST_LOW
+renoise.InstrumentSampleEnvelopes.FILTER_COMP_DIST_MID
+renoise.InstrumentSampleEnvelopes.FILTER_COMP_DIST_HIGH
+renoise.InstrumentSampleEnvelopes.FILTER_COMP_DIST
+
+renoise.InstrumentSampleEnvelopes.FILTER_RING_MOD
+
+
 -------- Functions
 
 -- Reset all sample envelopes back to their default initial states.
@@ -1364,7 +1397,7 @@ renoise.song().instruments[].sample_envelopes.resonance
 
 -- Filter type.
 renoise.song().instruments[].sample_envelopes.filter_type, _observable
-  -> [enum = FILTER_TYPE]
+  -> [enum = FILTER]
 
 
 --------------------------------------------------------------------------------

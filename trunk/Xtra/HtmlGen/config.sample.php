@@ -6,13 +6,12 @@ error_reporting(E_ALL | E_STRICT);
 // Config
 // ----------------------------------------------------------------------------
 
-// IMPORTANT!
-// No trailing slashes for any of the following variables!!!
+// IMPORTANT! No trailing slashes for any of the following variables:
 
-// Path to Renoise API docs, text files in markdown format, .lua|.txt extensions
+// absolute paths required:
 $CONFIG['DOCS_DIR'] = '/Users/dac514/code/xrnx/svn/trunk/Documentation';
+$CONFIG['OUT_DIR'] = $CONFIG['DOCS_DIR'].'/html';
 
-// Path to output, will also copy images/ directory
-$CONFIG['OUT_DIR'] = '/Users/dac514/Desktop/test';
-
+// absolute path or URL or relative path from $CONFIG['OUT_DIR']:
+$CONFIG['IMAGES_URL'] = 'images';
 ?>
