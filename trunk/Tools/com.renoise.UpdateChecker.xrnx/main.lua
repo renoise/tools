@@ -340,14 +340,22 @@ local function check_product_version_jsonrpc(menu)
         show_error(error_msg)                
       end
     end,
-    success=function(d, text_status, xml_http_request)
+    success=function(data, text_status, xml_http_request)
       if (DEBUG) then
         print("-------service response-------")
-        rprint(d)
+        rprint(data)
         print("------------------------------")
       end
+      
+      if (type(data) ~= "table") then
+        local error_msg = ("Update check failed: \n"
+          .."The server sent data I did not expect and"
+          .."\nI don't know what to do with it.")
+        show_error(error_msg)      
+        return false
+      end
 
-      local r = d.result
+      local r = data.result
       
       -- Wipe status version if release status is Final
       if (r.status == 4) then
