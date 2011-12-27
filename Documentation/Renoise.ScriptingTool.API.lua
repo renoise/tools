@@ -73,7 +73,6 @@ To do so, use one of the specified categories in its name:
 + "Pattern Editor"
 + "Pattern Matrix"
 + "Pattern Matrix Header"
-+ "Pattern Matrix",
 + "Sample Editor"
 + "Sample Editor Ruler"
 + "Sample List"
@@ -298,7 +297,7 @@ renoise.tool().app_resigned_active_observable
 -- The exact interval is undefined and can not be relied on, but will be
 -- around 10 times per sec.
 -- You can do stuff in the background without blocking the application here.
--- Be gentle and don't do CPU heavy stuff here please!
+-- Be gentle and don't do CPU heavy stuff please!
 renoise.tool().app_idle_observable
   -> [renoise.Document.Observable object]
 

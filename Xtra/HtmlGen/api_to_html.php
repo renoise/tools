@@ -160,6 +160,10 @@ foreach ($files as $file) {
     // Convert to markdown
     $markdown = Markdown_with_geshi($markdown);
 
+    // ___REPLACE_URL___
+    $markdown = str_ireplace('___REPLACE_URL___', $CONFIG['IMAGES_URL'], $markdown);
+
+
     // ------------------------------------------------------------------------
     // HTMLize stuff
     // ------------------------------------------------------------------------
@@ -214,28 +218,5 @@ $tmp = trim(
     );
 file_put_contents($CONFIG['OUT_DIR'] . '/index.html', $tmp);
 
-// ----------------------------------------------------------------------------
-// Copy images
-// ----------------------------------------------------------------------------
-
-if (!file_exists($CONFIG['OUT_DIR'] . '/images')) {
-
-    // Make directory
-    $oldumask = umask(0);
-    mkdir($CONFIG['OUT_DIR'] . '/images', 0755);
-    umask($oldumask);
-}
-
-foreach(new DirectoryIterator(dirname(__FILE__) . '/images') as $image) {
-
-    if (!$image->isFile()) continue;
-    if (!preg_match('/(\.jpe?g|\.gif|\.png)$/', $image->getFilename())) continue;
-
-    // Copy file
-    $ok = @copy($image->getPathname(), $CONFIG['OUT_DIR'] . '/images/' . basename($image->getPathname()));
-    if (!$ok) {
-        echo 'Error: Could not copy: ' . $CONFIG['OUT_DIR'] . '/images/' . basename($image->getPathname()) . ", check permissions?\n";
-    }
-}
 
 ?>

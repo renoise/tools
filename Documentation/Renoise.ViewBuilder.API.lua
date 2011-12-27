@@ -35,12 +35,12 @@ renoise.app():show_custom_dialog(title, content_view [, key_handler_func])
 
 -- key_handler_func is optional. When defined, it should point to a function
 -- with the signature noted below. "key" is a table with the fields:
--- > key = {
--- >   name,      -- name of the key, like 'esc' or 'a' - always valid
--- >   modifiers, -- modifier states. 'shift + control' - always valid
--- >   character, -- character representation of the key or nil
--- >   note,      -- virtual keyboard piano key value (starting from 0) or nil
--- >   repeated,  -- true when the key is soft repeated (hold down)
+-- > key = {  
+-- >   name,      -- name of the key, like 'esc' or 'a' - always valid  
+-- >   modifiers, -- modifier states. 'shift + control' - always valid  
+-- >   character, -- character representation of the key or nil  
+-- >   note,      -- virtual keyboard piano key value (starting from 0) or nil  
+-- >   repeated,  -- true when the key is soft repeated (hold down)  
 -- > }
 --
 -- "dialog" is a reference to the dialog the keyhandler is running on.
@@ -141,8 +141,8 @@ control.midi_mapping
 
 ----------- Functions
 
--- DEPRECATED: Adding new child views to a rack automatically enlarges and
--- shrinks the rack since API_VERSION 2.0. calling this function will have no
+-- DEPRECATED: Adding new child views to a rack automatically enlarges and 
+-- shrinks the rack since API_VERSION 2.0. calling this function will have no 
 -- effect.
 rack:resize()
 
@@ -228,8 +228,8 @@ aligner.mode
 -----------------------------------------------------------------------------
 
 -- Shows a "static" text string. Static just means that its not linked, bound
--- to some value and has no notifiers. The text can not be edited by the user.
--- Nevertheless you can of course change the text at run-time with the "text"
+-- to some value and has no notifiers. The text can not be edited by the user. 
+-- Nevertheless you can of course change the text at run-time with the "text" 
 -- property.
 
 -- See renoise.Views.TextField for texts that can be edited by the user.
@@ -239,7 +239,7 @@ aligner.mode
 
 --.. Text, Bla
 
-![Text](images/Text.png)
+![Text](___REPLACE_URL___/Text.png)
 ]]--
 
 
@@ -253,10 +253,10 @@ text.text
 
 -- Get/set the style that the text should be displayed with.
 -- Available font styles are:
--- >  "normal"
--- >  "big"
--- >  "bold
--- >  "italic"
+-- >  "normal"  
+-- >  "big"  
+-- >  "bold  
+-- >  "italic"  
 -- >  "mono"
 --
 -- By default "normal".
@@ -266,8 +266,8 @@ text.font
 -- Setup the text's alignment. Applies only when the view's size is larger than
 -- the needed size to draw the text.
 -- Available mode are:
--- >  "left"
--- >  "right"
+-- >  "left"  
+-- >  "right"  
 -- >  "center"
 --
 -- By default "left".
@@ -295,7 +295,7 @@ text.align
 --. | Text, Bla 4  |+|
 --. +--------------+-+
 
-![MultiLineText](images/MultiLineText.png)
+![MultiLineText](___REPLACE_URL___/MultiLineText.png)
 ]]--
 
 
@@ -332,10 +332,10 @@ multiline_text.paragraphs
 
 -- Get/set the style that the text should be displayed with.
 -- Available font styles are:
--- >  "normal"
--- >  "big"
--- >  "bold
--- >  "italic"
+-- >  "normal"  
+-- >  "big"  
+-- >  "bold  
+-- >  "italic"  
 -- >  "mono"
 --
 -- By default "normal".
@@ -343,8 +343,8 @@ multiline_text.font
   -> [string]
 
 -- Setup the text view's background:
--- >  "body"    -> simple text color with no background
--- >  "strong"  -> stronger text color with no background
+-- >  "body"    -> simple text color with no background  
+-- >  "strong"  -> stronger text color with no background  
 -- >  "border"  -> text on a bordered background
 --
 -- By default "body".
@@ -370,7 +370,7 @@ multiline_text.edit_mode
 --. | Editable Te|xt |
 --. +----------------+
 
-![TextField](images/TextField.png)
+![TextField](___REPLACE_URL___/TextField.png)
 ]]--
 
 
@@ -395,8 +395,8 @@ textfield.text
 
 -- Setup the text field's text alignment, when not editing.
 -- Valid values are:
--- >  "left"
--- >  "right"
+-- >  "left"  
+-- >  "right"  
 -- >  "center"
 --
 -- By default "left".
@@ -440,7 +440,7 @@ textfield.bind
 --. | and auto-wrapping        |+|
 --. +--------------------------+-+
 
-![MultilineTextField](images/MultilineTextField.png)
+![MultilineTextField](___REPLACE_URL___/MultilineTextField.png)
 ]]--
 
 
@@ -484,10 +484,10 @@ multiline_textfield.paragraphs
 
 -- Get/set the style that the text should be displayed with.
 -- Available font styles are:
--- >  "normal"
--- >  "big"
--- >  "bold"
--- >  "italic"
+-- >  "normal"  
+-- >  "big"  
+-- >  "bold"  
+-- >  "italic"  
 -- >  "mono"
 --
 -- By default "normal".
@@ -495,8 +495,8 @@ multiline_textfield.font
   -> [string]
 
 -- Setup the text view's background style.
--- >  "body"    -> simple body text color with no background
--- >  "strong"  -> stronger body text color with no background
+-- >  "body"    -> simple body text color with no background  
+-- >  "strong"  -> stronger body text color with no background  
 -- >  "border"  -> text on a bordered background
 --
 -- By default "border".
@@ -534,7 +534,7 @@ multiline_textfield.bind
 --. ||||||||||||
 
 
-![Bitmap](images/Bitmap.png)
+![Bitmap](___REPLACE_URL___/Bitmap.png)
 ]]--
 
 -- Draws a bitmap, or a draws a bitmap which acts like a button (as soon as a
@@ -555,10 +555,10 @@ bitmapview:remove_notifier(function or {object, function} or {object, function})
 -------- Properties
 
 -- Setup how the bitmap should be drawn, recolored. Available modes are:
--- >  "plain"        -> bitmap is drawn as is, no recoloring is done
--- >  "transparent"  -> same as plain, but black pixels will be fully transparent
--- >  "button_color" -> recolor the bitmap, using the theme's button color
--- >  "body_color"   -> same as 'button_back' but with body text/back color
+-- >  "plain"        -> bitmap is drawn as is, no recoloring is done  
+-- >  "transparent"  -> same as plain, but black pixels will be fully transparent  
+-- >  "button_color" -> recolor the bitmap, using the theme's button color  
+-- >  "body_color"   -> same as 'button_back' but with body text/back color  
 -- >  "main_color"   -> same as 'button_back' but with main text/back colors
 --
 -- By default "plain".
@@ -594,7 +594,7 @@ bitmapview.notifier
 --. | Button |
 --. +--------+
 
-![Button](images/Button.png)
+![Button](___REPLACE_URL___/Button.png)
 ]]--
 
 
@@ -665,7 +665,7 @@ button.notifier
 --. | _/ |
 --. +----+
 
-![CheckBox](images/CheckBox.png)
+![CheckBox](___REPLACE_URL___/CheckBox.png)
 ]]--
 
 
@@ -710,7 +710,7 @@ checkbox.bind
 --. | Button A  | +Button+B+ | Button C |
 --. +-----------+------------+----------+
 
-![Switch](images/Switch.png)
+![Switch](___REPLACE_URL___/Switch.png)
 ]]--
 
 
@@ -758,7 +758,7 @@ switch.bind
 --. | Current Item || ^ |
 --. +--------------++---+
 
-![Popup](images/Popup.png)
+![Popup](___REPLACE_URL___/Popup.png)
 ]]--
 
 
@@ -807,7 +807,7 @@ popup.bind
 --. o Item B
 --. . Item C
 
-![Chooser](images/Chooser.png)
+![Chooser](___REPLACE_URL___/Chooser.png)
 ]]--
 
 
@@ -855,7 +855,7 @@ chooser.bind
 --. |<|>|  12   |
 --. +---+-------+
 
-![ValueBox](images/ValueBox.png)
+![ValueBox](___REPLACE_URL___/ValueBox.png)
 ]]--
 
 
@@ -925,7 +925,7 @@ valuebox.bind
 --. | 12.1 dB   |
 --. +---+-------+
 
-![Value](images/Value.png)
+![Value](___REPLACE_URL___/Value.png)
 ]]--
 
 
@@ -944,10 +944,10 @@ value.value
 
 -- Get/set the style that the text should be displayed with.
 -- Available font styles are:
--- >  "normal"
--- >  "big"
--- >  "bold"
--- >  "italic"
+-- >  "normal"  
+-- >  "big"  
+-- >  "bold"  
+-- >  "italic"  
 -- >  "mono"
 --
 -- By default "normal".
@@ -955,8 +955,8 @@ value.font
   -> [string]
 
 -- Setup the value's text alignment. Valid values are:
--- >  "left"
--- >  "right"
+-- >  "left"  
+-- >  "right"  
 -- >  "center"
 --
 -- By default "left".
@@ -1001,7 +1001,7 @@ value.bind
 --. | 12.1 dB   |
 --. +---+-------+
 
-![ValueField](images/ValueField.png)
+![ValueField](___REPLACE_URL___/ValueField.png)
 ]]--
 
 
@@ -1026,8 +1026,8 @@ valuefield.value
   -> [number]
 
 -- Setup the text alignment. Valid values are:
--- >  "left"
--- >  "right"
+-- >  "left"  
+-- >  "right"  
 -- >  "center"
 --
 -- By default "left".
@@ -1080,7 +1080,7 @@ valuefield.bind
 --. |<|>| --------[]    |
 --. +---+---------------+
 
-![Slider](images/Slider.png)
+![Slider](___REPLACE_URL___/Slider.png)
 ]]--
 
 
@@ -1130,7 +1130,7 @@ slider.bind
 
 --. --------[]
 
-![MiniSlider](images/MiniSlider.png)
+![MiniSlider](___REPLACE_URL___/MiniSlider.png)
 ]]--
 
 
@@ -1184,7 +1184,7 @@ slider.bind
 --. \  |  /
 --.   +-+
 
-![RotaryEncoder](images/RotaryEncoder.png)
+![RotaryEncoder](___REPLACE_URL___/RotaryEncoder.png)
 ]]--
 
 
@@ -1243,7 +1243,7 @@ rotary.bind
 --. |       |
 --. +-------+
 
-![XYPad](images/XYPad.png)
+![XYPad](___REPLACE_URL___/XYPad.png)
 ]]--
 
 
@@ -1443,8 +1443,8 @@ vb:xypad { XYPad Properties }
 -------- Properties
 
 -- View id is the table key, the table's value is the view's object.
--- > e.g.: vb:text{ id="my_view", text="some_text"}
--- > vb.views.my_view.visible = false _(or)_
+-- > e.g.: vb:text{ id="my_view", text="some_text"}  
+-- > vb.views.my_view.visible = false _(or)_  
 -- > vb.views["my_view"].visible = false
 vb.views
   -> [table of views, which got registered via the "id" property]
