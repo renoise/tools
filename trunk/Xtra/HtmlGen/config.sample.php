@@ -9,9 +9,10 @@ error_reporting(E_ALL | E_STRICT);
 // IMPORTANT!
 // No trailing slashes for any of the following variables!!!
 
+// Path to Renoise API docs, text files in markdown format, .lua|.txt extensions
 $CONFIG['DOCS_DIR'] = '/Users/dac514/code/xrnx/svn/trunk/Documentation';
 
+// Path to output, will also copy images/ directory
 $CONFIG['OUT_DIR'] = '/Users/dac514/Desktop/test';
 
-$CONFIG['IMAGES_URL'] = 'http://www.trotch.com/tmp/api_to_html-alpha-version_02/images';
 ?>
