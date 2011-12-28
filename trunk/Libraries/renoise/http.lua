@@ -66,6 +66,7 @@ end
 
 
 ---## http_download_file ##---
+-- Download file at given URL into the temp folder.
 -- TODO replace/integrate with callback
 function HTTP:download_file(url, progress_callback, success, complete, error)  
   --local header_request = HTTP:request(url, Request.HEAD, function(data)
@@ -76,7 +77,8 @@ function HTTP:download_file(url, progress_callback, success, complete, error)
     {
     url=url, 
     method=Request.GET, 
-    save_file=true, 
+    save_file=true,
+    default_download_folder=false,
     success=success,
     complete=complete,
     error=error,

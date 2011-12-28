@@ -107,6 +107,7 @@ function Util:get_date(time)
 end
 
 -- URL-encode a string (see RFC 2396)
+-- converts characters that are not alphanumeric into the form %xx (for use in cookies, query string, etc.)
 function Util:urlencode(str)
   str = tostring(str)
   str = string.gsub (str, "\n", "\r\n")
@@ -123,6 +124,14 @@ function Util:urldecode(str)
   str = string.gsub (str, "%%(%x%x)", function(h) return string.char(tonumber(h,16)) end)
   str = string.gsub (str, "\r\n", "\n")
   return str
+end
+
+
+function Util:encode_for_url(str)
+  return str:gsub("%s", "%%20")
+end
+
+function Util:decode_from_url()
 end
 
 -- Generates a URL-encoded query string from the 
@@ -265,4 +274,67 @@ function Util:bytes_to_string(bytes)
     s[i] = ("%02X "):format(bytes:byte(i))
   end
   return table.concat(s)
+end
+
+-- Gets system dependent path
+function Util:get_path(path)
+  local sep = "/"
+  if (os.platform() == "WINDOWS") then
+    sep = "\\"
+  end  
+  return path:gsub("[\\/]+", sep)
+end
+
+
+-- Recursively create new directories
+-- @return: ok, err
+function Util:mkdir(path)
+  local dirs = Util:split(path, "[\\/]+")  
+  local p = dirs[1]
+  
+  if (p:lower():match("[a-z]:")) then
+    table.remove(dirs,1)    
+  end
+  
+  for _,d in ipairs(dirs) do            
+    p = p .. "/" .. d
+    print(p)
+    if (not io.exists(p)) then        
+      local ok,err = os.mkdir(p)
+      if (err) then
+        return ok, err
+      end
+    end    
+  end
+
+  return true
+  
+end
+
+-- Wrap a string at a given margin
+-- This is intended for strings without newlines in them (i.e. after reflowing the text and breaking it into paragraphs.)
+function Util:wordwrap(str, limit, indent, indent1)
+  indent = indent or ""
+  indent1 = indent1 or indent
+  limit = limit or 72
+  local here = 1-#indent1
+  return indent1..str:gsub("(%s+)()(%S+)()",
+    function(sp, st, word, fi)
+      if fi-here > limit then
+        here = st - #indent
+        return "\n"..indent..word
+      end
+    end)
+end
+
+
+-- Reflowing text into paragraphs
+-- This builds on wrap to do a quick-and-dirty reflow: paragraphs are defined as lines starting with a space, or having a blank line between them:
+function Util:reflow(str, limit, indent, indent1)
+  return (str:gsub("%s*\n%s+", "\n")
+             :gsub("%s%s+", " ")
+             :gsub("[^\n]+",
+                   function(line)
+                     return Util:wordwrap(line, limit, indent, indent1)
+                   end))
 end
