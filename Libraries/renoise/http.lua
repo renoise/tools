@@ -66,7 +66,9 @@ end
 
 
 ---## http_download_file ##---
--- Download file at given URL into the temp folder.
+-- Download file at given URL into the temp folder. When Renoise is shutdown,
+-- the downloaded file is removed.
+-- The path to the file is given in the success callback.
 -- TODO replace/integrate with callback
 function HTTP:download_file(url, progress_callback, success, complete, error)  
   --local header_request = HTTP:request(url, Request.HEAD, function(data)
