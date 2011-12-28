@@ -61,18 +61,21 @@ local requests_pool = table.create()
 
 local read = nil
 
-local function attach()
+local function attach()  
   renoise.tool().app_idle_observable:add_notifier(read)
+  log:info("Idle notifier attached. Started rotating the requests pool.")
 end
 
-local function detach()
+local function detach()  
   renoise.tool().app_idle_observable:remove_notifier(read)
+  log:info("Idle notifier removed. Stopped rotating the requests pool.")
 end
 
 -- Read a few bytes from every request
 read = function()
   
-  -- Loop through the Requests pool  
+  -- Loop through the Requests pool    
+  -- TODO paused requests can clog up other queued requests
   for k=1,CONCURRENT_REQUESTS do
     
     local request = requests_pool[k]
@@ -81,11 +84,10 @@ read = function()
     
       -- Send Header
       if (not request.sent_header) then
+        request.progress:_set_status(Progress.SENDING_HEADER)
         local success, socket_error = request:_send_header()
         request.sent_header = true
-        if (success) then
-          request.progress:_set_status(Progress.QUEUED)
-        else
+        if (not success) then          
           request.text_status = Request.ERROR
           log:error(("%s failed: %s."):format(request.url,
             (socket_error or "[unknown error]")))
@@ -95,13 +97,12 @@ read = function()
     
       -- Read Header
       elseif (not request.header_received) then                  
+        request.progress:_set_status(Progress.READING_HEADER)
         request:_read_header()
         
-      -- Paused  
-      elseif (request.paused and request.progress.status ~= Progress.PAUSED) then            
-        request.progress:_set_status(Progress.PAUSED)            
-        log:info("Request paused.")
-        -- stop polling when the only request is paused
+      -- Paused        
+      elseif (request.paused and request.progress.status ~= Progress.PAUSED) then
+        -- stop polling when the only request in the pool is paused
         if (#requests_pool == 1) then
           detach()
         end            
@@ -116,7 +117,7 @@ read = function()
         request.wait = request.wait - 1   
         
       -- Busy  
-      elseif not (request.complete) then
+      elseif (request.header_received and not request.complete) then
         request.complete = not (request:_read_content())  
         
       -- Complete
@@ -212,7 +213,8 @@ Request.default_settings = table.create{
     path = "/"
   },
   
-  -- Enable to save files to disk by default. Else keep in RAM.
+  -- Enable to save files to disk by default and return the path. 
+  -- Disable to keep the file in RAM and return its contents.
   save_file = false,
   
   -- Enable to write file into default download folder. If not set, keep in temp folder.
@@ -484,6 +486,7 @@ end
 function Request:pause()
   if (not self.paused) then
     log:warn("Pausing request.")    
+    self.progress:_set_status(Progress.PAUSED)
   end
   self.paused = true
 end
@@ -506,10 +509,18 @@ end
 ---## cancel ##---
 function Request:cancel()
   self.cancelled = true
-  self:_do_callback("cancelled")      
+  self:_do_callback("cancelled")
+  
+  -- Remove any cancelled requests from pool.
+  for k,request in ipairs(requests_pool) do
+    if (request.cancelled) then    
+      log:info(("Request was cancelled and removed from pool. [%s]"):format(request.url))
+      requests_pool:remove(k)
+    end  
+  end
+  
   self.text_status = Request.CANCELERROR        
-  self.progress:_set_status(Progress.CANCELLED)
-  log:warn("Request cancelled by user.")  
+  self.progress:_set_status(Progress.CANCELLED)  
 end
 
 
@@ -522,6 +533,7 @@ end
 -- schedules the request for further download
 function Request:_enqueue()  
     requests_pool:insert(self)    
+    self.progress:_set_status(Progress.QUEUED)
     if (#requests_pool == 1) then
        attach()
     end
@@ -762,7 +774,10 @@ function Request:_read_header()
       self.lines_per_cycle = 1
       self.retries = 0
       self.header_received = true
+      
+      -- parse header
       local success, error = self:_parse_header()
+      
       if (error) then
         self:_do_callback(error)
       end
@@ -797,9 +812,9 @@ function Request:_parse_header()
   local header_lines = self.header_lines
   log:info(("=== RESPONSE HEADER (%s) ==="):format(self.url))
   log:info(header_lines)
-  log:info()
+  log:info("--- end of response header ---")
   
-  self.response.header = Util:parse_message(header_lines:concat("\n"))  
+  self.response.header = Util:parse_message(header_lines:concat("\n"))    
   
   if (self.response.header and #self.response.header > 0) then
     -- TODO check content-length and HTTP status code  
@@ -833,8 +848,25 @@ function Request:_parse_header()
         new_url_parts.scheme = self.url_parts.scheme        
         location = URL:build(new_url_parts)
       end
-      self.url = location
-      return self:_send_header()
+      
+      -- Specify new location
+      self.url = location                  
+      
+      -- Initialize data containers      
+      self.ram_buffer:clear()
+      self.ram_buffer_len = 0
+      self.contents:clear() 
+      self.length = 0    
+               
+      -- Initialize state to start over.
+      self.sent_header = false
+      self.header_received = false
+      
+      -- Flush socket buffer
+      self.client_socket:receive("*all", self.settings.timeout)
+      
+      -- Suppress error callback. The idle handler will take over from here.
+      return true, nil
     end
     return true
   else
@@ -858,8 +890,8 @@ function Request:_read_content()
   
   if (buffer) then
     -- We got a new buffer, so we reset the retry count
-    self.retries = 0
-        
+    self.retries = 0    
+
     if (self.response.transfer_encoding == "chunked") then
       log:info("Unchunking buffer")
       self:_process_chunk(buffer)      
@@ -889,7 +921,9 @@ function Request:_read_content()
         self.contents = self.chunks
       end 
       --]]       
+      
       self:_do_callback(nil)
+   
       return false
     else
       -- continue reading      

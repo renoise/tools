@@ -6,6 +6,8 @@ class "Progress"
 
 Progress.INIT = "Initialized"
 Progress.QUEUED = "Queued"
+Progress.SENDING_HEADER = "Sending header"
+Progress.READING_HEADER = "Reading header"
 Progress.BUSY = "Downloading"
 Progress.DONE = "Completed"
 Progress.CANCELLED = "Cancelled"
