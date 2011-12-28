@@ -345,36 +345,37 @@ renoise.song().selected_sub_column_type
 -- Read/write access to the selection in the pattern editor.
 -- The property is a table with the following members:
 --
---  {
---    start_line,     -- Start pattern line index
---    start_track,    -- Start track index
---    start_column,   -- Start column index within start_track
+--      {
+--        start_line,     -- Start pattern line index
+--        start_track,    -- Start track index
+--        start_column,   -- Start column index within start_track
 --
---    end_line,       -- End pattern line index
---    end_track,      -- End track index
---    end_column      -- End column index within end_track
---  }
+--        end_line,       -- End pattern line index
+--        end_track,      -- End track index
+--        end_column      -- End column index within end_track
+--      }
 --
--- Line indexes are valid from 1 to renoise.song().patterns[].number_of_lines
+-- Line indexes are valid from 1 to `renoise.song().patterns[].number_of_lines`
 --
--- Track indexes are valid from 1 to #renoise.song().tracks
+-- Track indexes are valid from 1 to `#renoise.song().tracks`
 --
 -- Column indexes are valid from 1 to
---   (renoise.song().tracks[].visible_note_columns +
---    renoise.song().tracks[].visible_effect_columns)
+--   `(renoise.song().tracks[].visible_note_columns +
+--    renoise.song().tracks[].visible_effect_columns)`
 --
 -- When setting the selection, all members are optional. Combining them in
 -- various different ways will affect how specific the selection is. When
 -- 'selection_in_pattern' returns nil or is set to nil, no selection is present.
 --
 -- Examples:
--- renoise.song().selection_in_pattern = {}
---   --> clear
--- renoise.song().selection_in_pattern = { start_line = 1, end_line = 4 }
---   --> select line 1 to 4, first to last track
--- renoise.song().selection_in_pattern =
---   { start_line = 1, start_track = 1, end_line = 4, end_track = 1 }
---   --> select line 1 to 4, in the first track only
+--
+--      renoise.song().selection_in_pattern = {}
+--        --> clear
+--      renoise.song().selection_in_pattern = { start_line = 1, end_line = 4 }
+--        --> select line 1 to 4, first to last track
+--      renoise.song().selection_in_pattern =
+--        { start_line = 1, start_track = 1, end_line = 4, end_track = 1 }
+--        --> select line 1 to 4, in the first track only
 --
 renoise.song().selection_in_pattern
   -> [table of start/end values or nil]
