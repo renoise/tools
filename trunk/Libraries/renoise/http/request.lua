@@ -291,11 +291,15 @@ Request.default_settings = table.create{
   -- multiple values with same key based on the value of the traditional setting.
   data = table.create{},
 
+  -- RAM buffer size in KB. It's the threshold before streaming 
+  -- an ongoing download into a temporary file.
+  ram_buffer_max_size = 5000,
+
   -- TODO If set to false it will force the pages that you request to not be
   -- cached by the browser.
   cache = false,
   
-    -- Cache size in KB
+  -- Cache size in KB
   cache_max_size = 50000,
 
   -- TODO A username to be used in response to an HTTP access authentication
@@ -381,11 +385,11 @@ function Request:__init(custom_settings)
   -- Content length
   self.length = 0
   
-  -- Cache 
-  self.cache = table.create()
+  -- RAM buffer 
+  self.ram_buffer = table.create()
   
-  -- Cache size
-  self.cache_len = 0
+  -- The size of the RAM buffer
+  self.ram_buffer_len = 0
   
   -- Retried timeouts 
   self.retries = 0
@@ -1053,20 +1057,20 @@ function Request:_save_content(buffer)
   if (not self.settings.save_file) then
      self.contents:insert(buffer) 
   else     
-    self.cache_len = self.cache_len + #buffer
+    self.ram_buffer_len = self.ram_buffer_len + #buffer
     
     if (#buffer > 0) then
-      self.cache:insert(buffer)
+      self.ram_buffer:insert(buffer)
     end
     
-    local cache_full = self.cache_len > 
-      (self.settings.cache_max_size * 1024)
+    local ram_buffer_full = self.ram_buffer_len > 
+      (self.settings.ram_buffer_max_size * 1024)
     
-    -- write buffer when EOF or cache is full           
-    if (#buffer == 0 or cache_full) then      
-      self:_write_file(self.cache)
-      self.cache:clear()       
-      self.cache_len = 0      
+    -- write buffer to disk when EOF or RAM buffer is full           
+    if (#buffer == 0 or ram_buffer_full) then      
+      self:_write_file(self.ram_buffer)
+      self.ram_buffer:clear()       
+      self.ram_buffer_len = 0      
     end       
   end
 end
@@ -1117,9 +1121,9 @@ function Request:_do_callback(socket_error)
   end  
   self.client_socket = nil    
   
-  -- Flush cache
+  -- Flush RAM buffer
   if (self.settings.save_file) then
-    self:_write_file(self.cache)
+    self:_write_file(self.ram_buffer)
   end
   if (self.tempfile and io.exists(self.tempfile) and io.type(self.handle) == "file") then
     self.handle:flush()
