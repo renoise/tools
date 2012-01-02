@@ -3,7 +3,7 @@
   <Name>Epic Arpeggiator</Name>
   <Id>com.renoise.EpicArpeggiator</Id>
   <Version>1.99</Version>
-  <ApiVersion>2.0</ApiVersion>
+  <ApiVersion>3.0</ApiVersion>
   <Author>Vincent Voois [ http://tinyurl.com/vvrns ]</Author>
   <Category>Pattern Editor</Category>
   <Description>Create new note sequences with a note matrix GUI and a lot of other very powerful arpeggiator features. Can be found in the 'Tools' menu as 'Epic Arpegiator...'.
