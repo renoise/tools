@@ -734,7 +734,7 @@ current_column, track, pattern)
             end
             
             if termination_index == NOTE_OFF_DISTANCE_TICKS then
-               cut_value = tonumber(0xf0 + termination_step)
+               cut_value = tonumber(0xc00 + termination_step)
             else
                cut_value = EMPTY
             end
@@ -880,7 +880,7 @@ current_column, track, pattern)
                end   
 
                if termination_index == NOTE_OFF_DISTANCE_TICKS then
-                  cut_value = tonumber(0xf0 + termination_step)
+                  cut_value = tonumber(0xc00 + termination_step)
                else
                   cut_value = EMPTY
                end
@@ -1025,14 +1025,17 @@ function fill_cells(note_column, note, instrument, velocity,
       if cut_value > 0 then
 
          if note_column.panning_value ~= EMPTY then
-
-            if note_column.panning_value >= 240 and note_column.panning_value <= EMPTY then
+            print(note_column.panning_value)
+            if (note_column.panning_value >= 129 and note_column.panning_value <= EMPTY) or 
+               (note_column.panning_value >= 0xc00 and note_column.panning_value <= 0xc0f) then
                note_column.panning_value = cut_value
+               
             else
 
                if note_column.volume_value ~= EMPTY then                  
 
-                  if note_column.volume_value >= 240 or note_column.volume_value <= EMPTY then
+                  if (note_column.volume_value >= 129 or note_column.volume_value <= EMPTY) or 
+                     (note_column.volume_value >= 0xc00 or note_column.volume_value <= 0xc0f) then
                      note_column.volume_value = cut_value
                   end
 
@@ -1053,7 +1056,9 @@ function fill_cells(note_column, note, instrument, velocity,
 
          if note_column.panning_value ~= EMPTY then
 
-            if note_column.panning_value >= 240 and note_column.panning_value <= EMPTY then
+            if (note_column.panning_value >= 129 and note_column.panning_value <= EMPTY) or 
+               (note_column.panning_value >= 0xc00 and note_column.panning_value <= 0xc0f) then
+
                note_column.panning_value = cut_value
             else
                --Sorry whatever is in the volume column will now be exchanged.
