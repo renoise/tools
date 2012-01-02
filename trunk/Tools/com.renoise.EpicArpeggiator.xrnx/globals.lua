@@ -13,6 +13,7 @@ MAX_NOTE_COLUMNS = 12
 MAX_EFFECT_COLUMNS = 8
 EMPTY = 255              -- value to clear Instrument, Panning, volume and delay column
 EMPTY_NOTE = 121
+TRACK_TYPE_GROUP = 4
 
 --Initialization
 track_index = 1
