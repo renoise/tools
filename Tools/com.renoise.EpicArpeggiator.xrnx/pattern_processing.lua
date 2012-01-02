@@ -15,7 +15,8 @@ function add_notes(n_column, c_line, vb)
    local track_type = song.selected_track.type
 
    if track_type == renoise.Track.TRACK_TYPE_MASTER or
-   track_type == renoise.Track.TRACK_TYPE_SEND then
+   track_type == renoise.Track.TRACK_TYPE_SEND and 
+   track_type ~= renoise.Track.TRACK_TYPE_GROUP then
      return --Do not process master or sendtrack!!
    end
 
@@ -37,7 +38,8 @@ function add_notes(n_column, c_line, vb)
    next_column = column_offset
    
    if track_type ~= renoise.Track.TRACK_TYPE_MASTER and
-   track_type ~= renoise.Track.TRACK_TYPE_SEND then
+   track_type ~= renoise.Track.TRACK_TYPE_SEND and 
+   track_type ~= renoise.Track.TRACK_TYPE_GROUP then
       --show delay column in case it is invisible      
       song.tracks[track_index].delay_column_visible = true
 
@@ -387,7 +389,7 @@ function add_notes(n_column, c_line, vb)
 --]]
 
    else
-      renoise.app():show_warning("Cannot insert notes in master or send-track!")
+      renoise.app():show_warning("Cannot insert notes in master/send or group-track!")
    end
 end
 
@@ -1111,7 +1113,8 @@ function fetch_notes_from_track(vb)
    end
 
    if track_type ~= renoise.Track.TRACK_TYPE_MASTER and
-   track_type ~= renoise.Track.TRACK_TYPE_SEND then
+   track_type ~= renoise.Track.TRACK_TYPE_SEND and 
+   track_type ~= renoise.Track.TRACK_TYPE_GROUP then
 
       if switch_note_pattern_index == NOTE_PATTERN_MATRIX then
 
