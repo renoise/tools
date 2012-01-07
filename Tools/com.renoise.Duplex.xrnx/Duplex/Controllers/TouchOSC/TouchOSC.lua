@@ -52,10 +52,3 @@ function TouchOSC:point_to_value(pt,elm,ceiling)
 
 end
 
---==============================================================================
-
--- Include these configurations for TouchOSC
-
-local CTRL_PATH = "Duplex/Controllers/TouchOSC/Configurations/"
-require (CTRL_PATH.."MixerRecorderMatrix")
-

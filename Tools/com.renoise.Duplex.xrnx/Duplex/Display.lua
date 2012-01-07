@@ -190,6 +190,7 @@ function Display:update()
                 local idx = (x+obj.x_pos-1)+((y+obj.y_pos-2)*columns)
                 local elm = control_map:get_indexed_element(idx, obj.group_name)
                 if (elm) then
+                  -- update the display, using everything we've got
                   self:set_parameter(elm, obj, obj.canvas.delta[x][y])
                 end
               end
@@ -257,7 +258,7 @@ function Display:set_parameter(elm, obj, point, secondary)
       self.device.default_midi_channel
   end
 
-  -- when this is specified, NEVER send message back to hardware
+  -- when this is specified, device is not updated
   if not elm.skip_echo then
 
     if (msg_type == MIDI_NOTE_MESSAGE) then
@@ -288,16 +289,14 @@ function Display:set_parameter(elm, obj, point, secondary)
             value = self.device:point_to_value(
               point, elm, obj.ceiling)
           else
-            print("could not locate secondary elm")
+            --print("could not locate secondary elm")
           end
         else
           -- value-pair, invoke method again
+          --print("set_parameter",self, elm, obj, point)
           Display.set_parameter(self, elm, obj, point,true)
         end
 
-      elseif multiple_params then
-        print("*** Could not set value, no secondary group was defined")
-        return
       end
 
       -- do not loop back the original value change back to the sender, 
@@ -416,7 +415,6 @@ function Display:set_parameter(elm, obj, point, secondary)
       (widget_type == "MiniSlider") or
       (widget_type == "Slider")
     then
-
       widget:remove_notifier(self.ui_notifiers[elm.id])
       widget.value = tonumber(value)
       widget:add_notifier(self.ui_notifiers[elm.id])
@@ -667,8 +665,6 @@ function Display:_walk_table(t, done, deep)
 
           local notifier = function(value) 
             --[[
-            print("view_obj.meta")
-            rprint(view_obj.meta)
             ]]
             -- output the current value
             self:generate_message(value,view_obj.meta)

@@ -157,7 +157,7 @@ renoise.tool():add_menu_entry {
 }
 
 renoise.tool():add_menu_entry {
-  name = "--- Main Menu:Tools:Duplex:Enable NRPN support",
+  name = "Main Menu:Tools:Duplex:Enable NRPN support",
   selected = function()
     return duplex_preferences.nrpn_support.value
   end,

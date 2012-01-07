@@ -44,12 +44,3 @@ function Ohm64:point_to_value(pt,elm,ceiling)
 end
 
 
---------------------------------------------------------------------------------
-
--- Include these configurations
-
-local CTRL_PATH = "Duplex/Controllers/Ohm64/Configurations/"
-require (CTRL_PATH.."MixerMatrixEffects")
-require (CTRL_PATH.."MixerMatrixEffectsSwitch")
-require (CTRL_PATH.."SequencerNavigatorMixerEffects")
-require (CTRL_PATH.."SequencerNavigatorMixerEffectsSwitch")

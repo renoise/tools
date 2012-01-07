@@ -71,11 +71,3 @@ function APC20:point_to_value(pt,elm,ceiling)
 end
 
 
---==============================================================================
-
--- Include these configurations for the APC20
-
-local CTRL_PATH = "Duplex/Controllers/APC20/Configurations/"
-require (CTRL_PATH.."MatrixNavigatorTransportMixer")
-
-

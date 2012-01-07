@@ -431,7 +431,7 @@ end
 -- {"^ControlMap:", "^Display:"} -> show "Display:" and "ControlMap:"
 
 local _trace_filters = nil
---local _trace_filters = {"^XYPad"}
+--local _trace_filters = {"^XYPad","^UISlider"}
 --local _trace_filters = {"^XYPad","^Automation"}
 --local _trace_filters = {".*"}
 

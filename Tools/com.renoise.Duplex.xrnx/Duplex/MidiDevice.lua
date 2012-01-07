@@ -285,8 +285,6 @@ function MidiDevice:send_cc_message(number,value,channel)
     channel = self.default_midi_channel
   end
 
-  --print("MidiDevice:send_cc_message: "..channel.." "..number.." "..value);
-
   -- ## NRPN
   if duplex_preferences.nrpn_support then
     -- hack to stop NRPN messages from being forwarded
@@ -436,7 +434,7 @@ function MidiDevice:extract_midi_cc(str)
   TRACE("MidiDevice:extract_midi_cc()",str)
 
   str = strip_channel_info(str)
-  return string.sub(str,4)
+  return tonumber(string.sub(str,4))
 end
 
 --------------------------------------------------------------------------------
@@ -469,9 +467,9 @@ function MidiDevice:point_to_value(pt,elm,ceiling)
   
   if (type(pt.val) == "boolean") then
     if (pt.val) then
-      value = elm.maximum
+      value = tonumber(elm.maximum)
     else
-      value = elm.minimum
+      value = tonumber(elm.minimum)
     end
 
   else

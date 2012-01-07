@@ -25,10 +25,3 @@ function ZoomR16:__init(display_name, message_stream, port_in, port_out)
 end
 
 
---==============================================================================
-
--- Include these configurations for the ZoomR16
-
-local CTRL_PATH = "Duplex/Controllers/ZoomR16/Configurations/"
-require (CTRL_PATH.."Transport")
-
