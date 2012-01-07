@@ -517,10 +517,10 @@ function Device:_send_message(message,xarg)
     end
     ]]
     if (xarg.invert_x) then
-      message.value[1] = xarg.maximum-message.value[1]
+      message.value[1] = (xarg.maximum-message.value[1])+xarg.minimum
     end
     if (xarg.invert_y) then
-      message.value[2] = xarg.maximum-message.value[2]
+      message.value[2] = (xarg.maximum-message.value[2])+xarg.minimum
     end
   else
     error(("Internal Error. Please report: " ..

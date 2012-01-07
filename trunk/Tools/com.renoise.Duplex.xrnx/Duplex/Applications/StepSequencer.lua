@@ -450,7 +450,16 @@ function StepSequencer:_build_grid()
           palette.foreground = table.rcopy(self.palette.slot_empty)
           obj:set_palette(palette)
           self._update_grid_requested = true
+
+          -- bring focus to track
+          if (orientation==HORIZONTAL) then
+            renoise.song().selected_track_index = y
+          else
+            renoise.song().selected_track_index = x
+          end
+          print("renoise.song().selected_track_index",renoise.song().selected_track_index)
         end
+
       end
       self:_add_component(c)
       self._buttons[x][y] = c
@@ -1007,13 +1016,24 @@ function StepSequencer:_process_grid_event(x,y, state, btn)
   
   local note = renoise.song().selected_pattern.tracks[track_idx]:line(
     line_idx).note_columns[1]
-  
+
+  -- determine instrument by matching track title with instruments
+  -- a matching title will select that instrument 
+  local track_name = renoise.song().tracks[track_idx].name
+  local instr_index = self:_obtain_instrument_by_name(track_name)
+  if not instr_index then
+    instr_index = renoise.song().selected_instrument_index
+  else
+    local msg = "StepSequencer: matched track/instrument name"..track_name
+    renoise.app():show_status(msg)
+  end
+
   if (state) then -- press
     self._keys_down[x][y] = true
     if (note.note_string == "OFF" or note.note_string == "---") then
       local base_note = (self._base_note-1) + 
         (self._base_octave-1)*12
-      self:_set_note(note, base_note, renoise.song().selected_instrument_index-1, 
+      self:_set_note(note, base_note, instr_index-1, 
         self._base_volume)
       self._toggle_exempt[x][y] = true
       -- and update the button ...
@@ -1038,6 +1058,20 @@ function StepSequencer:_process_grid_event(x,y, state, btn)
   return true
 end
 
+--------------------------------------------------------------------------------
+
+--  return (number) instrument index
+
+function StepSequencer:_obtain_instrument_by_name(name)
+  TRACE("StepSequencer:_obtain_instrument_by_name()",name)
+
+  for instr_index,instr in ipairs(renoise.song().instruments) do
+    if (instr.name == name) then
+      return instr_index
+    end
+  end
+
+end
 
 --------------------------------------------------------------------------------
 

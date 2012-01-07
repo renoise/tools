@@ -29,6 +29,7 @@ function Monome:__init(name, message_stream,prefix,address,port_in,port_out)
   -- set the default communication protocol 
   self.comm_protocol = self.MONOMESERIAL
 
+  self.bundle_messages = false
 
 end
 
@@ -78,11 +79,18 @@ end
 --------------------------------------------------------------------------------
 
 -- quantize value to determine lit/off state
-function Monome:point_to_value(pt)
-  TRACE("Monome:point_to_value")
+function Monome:point_to_value(pt,elm,ceiling)
+  TRACE("Monome:point_to_value",pt,elm,ceiling)
 
-  local color = self:quantize_color(pt.color)
-  return (color[1]==0xff) and 1 or 0
+  local value = OscDevice.point_to_value(self,pt,elm,ceiling)
+
+  if (type(pt.val) == "boolean") then
+    -- quantize value to determine lit/off state
+    local color = self:quantize_color(pt.color)
+    value = (color[1]==0xff) and 1 or 0
+  end
+
+  return value
 
 end
 
@@ -90,7 +98,7 @@ end
 
 -- override default OscDevice method (comm protocol support)
 function Monome:send_osc_message(message,value)
-  TRACE("Monome:send_osc_message()",message,value)
+  --TRACE("Monome:send_osc_message()",message,value)
 
   if (self.comm_protocol==self.MONOMESERIAL) 
   and (string.sub(message,1,13)=="/grid/led/set") then
@@ -106,7 +114,7 @@ end
 
 -- override default OscDevice method (comm protocol support)
 function Monome:receive_osc_message(value_str)
-  TRACE("Monome:receive_osc_message()",value_str)
+  --TRACE("Monome:receive_osc_message()",value_str)
 
   if (self.comm_protocol==self.MONOMESERIAL) 
   and (string.sub(value_str,1,6)=="/press") then
@@ -119,19 +127,3 @@ end
 
 
 
---==============================================================================
-
--- Include these configurations for the monome
-
-local CTRL_PATH = "Duplex/Controllers/Monome/Configurations/"
-require (CTRL_PATH.."m64_Matrix")
-require (CTRL_PATH.."m64_MixerTransport")
-require (CTRL_PATH.."m64_Recorder")
-require (CTRL_PATH.."m64_StepSequencer")
-require (CTRL_PATH.."m64_GridPie")
-require (CTRL_PATH.."m128_MatrixEffect")
-require (CTRL_PATH.."m128_MixerTransport")
-require (CTRL_PATH.."m128_RecorderMixer")
-require (CTRL_PATH.."m128_RecorderMatrix")
-require (CTRL_PATH.."m128_StepSequencer")
-require (CTRL_PATH.."m128_GridPie")

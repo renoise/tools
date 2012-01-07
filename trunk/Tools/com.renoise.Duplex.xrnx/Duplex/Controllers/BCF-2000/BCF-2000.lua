@@ -19,13 +19,3 @@ function BCF2000:__init(display_name, message_stream, port_in, port_out)
 end
 
 
---==============================================================================
-
--- Include these configurations 
-
-local CTRL_PATH = "Duplex/Controllers/BCF-2000/Configurations/"
-require (CTRL_PATH.."BCF2000_Effect")
-require (CTRL_PATH.."BCF2000_Mixer")
-require (CTRL_PATH.."BCF2000_NotesOnWheels")
-require (CTRL_PATH.."BCF2000_Recorder")
-

@@ -43,5 +43,12 @@ for _, foldername in pairs(os.dirnames("./Duplex/Controllers")) do
       require(subpath .. "/" .. split_filename(filename))
     end
   end
+
+  -- include any device configurations (Controller/Configurations/XXX.lua)
+  subpath = "./Duplex/Controllers/" .. foldername .. "/Configurations"
+  for _, filename in pairs(os.filenames(subpath, "*.lua")) do
+    require(subpath .. "/" .. split_filename(filename))
+  end
+
 end
 

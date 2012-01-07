@@ -974,11 +974,7 @@ function GridPie:toggler(x, y, pattern)
 
     self.active_slots[x] = y
 
-
   end
-
-  print("*** self.active_slots:")
-  rprint(self.active_slots)
 
   self.update_requested = true
 

@@ -134,10 +134,8 @@ function OscDevice:socket_message(socket, binary_data)
         value_str = string.sub(value_str,string.len(self.prefix)+1)
       end
 
-      --print("osc value_str",value_str)
-
       if value_str then
-        print("*** received message",value_str)
+        --print("incoming OSC",value_str)
         self:receive_osc_message(value_str)
       end
 
@@ -229,7 +227,7 @@ end
 
 --------------------------------------------------------------------------------
 
--- bundle & send queued messages, clear queue
+-- bundle & send queued messages
 
 function OscDevice:on_idle()
 
@@ -253,7 +251,6 @@ function OscDevice:construct_osc_message(message,value)
     local osc_vars = table.create()
     local counter = 1
     for vars in str_vars do
-      --print("vars",vars)
       
       if (string.sub(vars,0,1)=="/") then
         -- the message part
@@ -262,11 +259,10 @@ function OscDevice:construct_osc_message(message,value)
         -- the variable part
         local entry = table.create()
         if (type(value)=="table") then
+	
           local counter2 = 1
           for k,v in pairs(value) do
-            --print("*** got here",counter,counter2)
             if (counter==counter2) then
-              --print(k,v)
               entry = self:produce_entry(vars,v)
             end
             counter2 = counter2+1
@@ -290,20 +286,19 @@ end
 
 --------------------------------------------------------------------------------
 
---  send bundle of OSC messages
+--  send queued bundle of OSC messages
 
 function OscDevice:send_osc_bundle()
 
-  local msgs = table.create()
-  for k,v in ipairs(self.message_queue) do
-    msgs:insert(self:construct_osc_message(v.message,v.value))
+  if (self.client) and (self.client.is_open) then
+    local msgs = table.create()
+    for k,v in ipairs(self.message_queue) do
+      msgs:insert(self:construct_osc_message(v.message,v.value))
+    end
+    local osc_bundle = renoise.Osc.Bundle(os.clock(),msgs)
+    self.client:send(osc_bundle)
   end
-  --[[
-  print("msgs",msgs)
-  rprint(msgs)
-  ]]
-  local bundle = renoise.Osc.Bundle(os.clock(),msgs)
-  self:send_osc_message(bundle)
+
   self.message_queue:clear()
   self.message_queue = nil
 
@@ -316,12 +311,12 @@ end
 --  @param message (string) the message string
 --  @param value (number) the value to inject
 
-function OscDevice:send_osc_message(message)
-  TRACE("OscDevice:send_osc_message()",message)
+function OscDevice:send_osc_message(message,value)
+  TRACE("OscDevice:send_osc_message()",message,value)
 
   if (self.client) and (self.client.is_open) then
-
-    self.client:send(message)
+    local osc_msg = self:construct_osc_message(message,value)
+    self.client:send(osc_msg)
   end
 
 end
@@ -332,17 +327,16 @@ end
 -- produce an OSC message entry 
 
 function OscDevice:produce_entry(vars,value)
+  --TRACE("OscDevice:produce_entry()",vars,value)
 
   local entry = table.create()
   if (vars=="%i") then
     entry.tag = "i"
     entry.value = tonumber(value)
   elseif (vars=="%f") then
-    --print("*** got here B")
     entry.tag = "f"
     entry.value = tonumber(value)
   elseif (tonumber(vars)~=nil) then
-    --print("*** got here A")
     entry.tag = "f"
     entry.value = tonumber(vars)
   end
@@ -358,7 +352,7 @@ end
 -- @return value (number, or table of numbers)
 
 function OscDevice:point_to_value(pt,elm,ceiling)
-  TRACE("OscDevice:point_to_value()",pt,elm,ceiling)
+  --TRACE("OscDevice:point_to_value()",pt,elm,ceiling)
 
   local value = nil
   local val_type = type(pt.val)
@@ -376,7 +370,6 @@ function OscDevice:point_to_value(pt,elm,ceiling)
     for k,v in ipairs(pt.val) do
       value:insert((v * (1 / ceiling)) * 1)
     end
-    --rprint(value)
 
   else
     -- scale the value from "local" to "external"
@@ -423,7 +416,7 @@ end
 -- e.g. "/this/is/the/pattern 1 2 3"
 
 function OscDevice:_msg_to_string(msg)
-  --TRACE("OscDevice:_msg_to_string()",msg)
+  TRACE("OscDevice:_msg_to_string()",msg)
 
   local rslt = msg.pattern
   for k,v in ipairs(msg.arguments) do

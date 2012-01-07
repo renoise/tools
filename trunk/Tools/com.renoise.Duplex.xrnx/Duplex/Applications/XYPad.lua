@@ -101,13 +101,17 @@ XYPad.default_options = {
     description = "Disable locking if you want the controls to"
                 .."\nfollow the currently selected device ",
     on_change = function(app)
+      if (app.options.locked.value == app.LOCKED_DISABLED) then
+        app:clear_device()
+        app.current_device_requested = true
+      end
       app:tag_device(app.target_device)
     end,
     items = {
       "Lock to device",
       "Roam freely"
     },
-    value = 1,
+    value = 2,
   },
   record_method = {
     label = "Automation rec.",
@@ -148,9 +152,11 @@ function XYPad:__init(process,mappings,options,cfg_name,palette)
     },
     x_slider = {
       description = "XYPad: X-Axis",
+      orientation = HORIZONTAL
     },
     y_slider = {
       description = "XYPad: Y-Axis",
+      orientation = VERTICAL
     },
     next_device = {
       description = "XYPad: Next device",
@@ -169,11 +175,11 @@ function XYPad:__init(process,mappings,options,cfg_name,palette)
   self.palette = {
     foreground = {
       color={0xFF,0xFF,0x00}, 
-      text="",
+      text="■",
     },  
     background = {
       color={0x40,0x40,0x00}, 
-      text="",
+      text="□",
     },  
   }
 
@@ -219,12 +225,24 @@ function XYPad:__init(process,mappings,options,cfg_name,palette)
   self._blink = false
 
   -- current value
-  self.value = {0.33,0.55}
+  self.value = {nil,nil}
 
-  -- min/max values (imported from control-map)
+
+  -- remember any values from the control-map, such
+  -- as minimum and maximum values 
+  -- xypad 
   self.min_value = 0
   self.max_value = 1
+  -- x/y_slider 
+  self.x_slider_args = nil
+  self.y_slider_args = nil
 
+  -- TODO use the XYPad device's settings
+  --self.reset_value = {0.5,0.5}
+  --self._reset_delay_ms = 200
+  --self._reset_time = nil
+
+  -- the detected grid width/height
   self.grid_width = nil
   self.grid_height = nil
 
@@ -259,19 +277,21 @@ end
 -- check configuration, build & start the application
 
 function XYPad:start_app()
-  TRACE("XYPad:update_renoise()")
+  TRACE("XYPad:start_app()")
 
   if not Application.start_app(self) then
     return
   end
   self:initial_select()
+  self:update_renoise()
+  --self:update_controller()
 
 end
 
 
 --------------------------------------------------------------------------------
 
--- attempt to select the current device when in free-roaming mode
+-- attempt to select the current device 
 -- failing to do so will clear the target device
 
 function XYPad:attach_to_selected_device()
@@ -285,8 +305,11 @@ function XYPad:attach_to_selected_device()
       local device_idx = song.selected_device_index
       self:attach_to_device(track_idx,device_idx,device)
       local params = self:get_xy_params()
-      self.value = {params.x.value,params.y.value}
-      --rprint(self.value)
+      local val_x = scale_value(params.x.value,0,1,self.min_value,self.max_value)
+      local val_y = scale_value(params.y.value,0,1,self.min_value,self.max_value)
+      self.value = {val_x,val_y}
+      --print("*** attach_to_selected_device value",self.value[1],self.value[2])
+
     else
       self:clear_device()
     end
@@ -345,10 +368,27 @@ function XYPad:on_idle()
     self:update_focus_button()
   end
 
+  --[[
+  if self.update_controller_requested then
+    self._reset_time = os.clock() + self._reset_delay_ms / 1000
+  end
+  if self._reset_time then
+    if (os.clock() >= self._reset_time) then
+      print("os.clock()",os.clock())
+      print("_reset_time")
+      self._reset_time = nil
+      self.value = table.rcopy(self.reset_value)
+      self:update_renoise()
+      self.update_controller_requested = true
+    end 
+  end 
+  ]]
+
   if self.update_controller_requested then
     self.update_controller_requested = false
     self:update_controller()
   end
+
 
   if self._record_mode then
     self.automation:update()
@@ -401,19 +441,28 @@ end
 -- update display state of the various controls
 
 function XYPad:update_controller()
+  TRACE("XYPad:update_controller()")
 
   local skip_event = true
 
   if self._xy_pad then
     self._xy_pad:set_value(self.value[1],self.value[2],skip_event)
+    --print("set UIPad to ",self.value[1],self.value[2])
   end
   if self._x_slider then
-    --print("setting x slider to",self.value[1])
-    self._x_slider:set_value(self.value[1]*self._x_slider.ceiling,skip_event)
+    local slider_min = self.x_slider_args.minimum
+    local slider_max = self.x_slider_args.maximum
+    local val_scaled = round_value(scale_value(self.value[1],self.min_value,self.max_value,slider_min,slider_max))
+    self._x_slider:set_value(val_scaled,skip_event)
+    --print("set X UISlider to ",self.value[1])
   end
   if self._y_slider then
     --print("setting y slider to",self.value[2])
-    self._y_slider:set_value(self.value[2]*self._y_slider.ceiling,skip_event)
+    local slider_min = self.x_slider_args.minimum
+    local slider_max = self.x_slider_args.maximum
+    local val_scaled = round_value(scale_value(self.value[2],self.min_value,self.max_value,slider_min,slider_max))
+    self._y_slider:set_value(val_scaled,skip_event)
+    --print("set Y UISlider to ",self.value[2])
   end
   if self._xy_grid then
 
@@ -431,7 +480,6 @@ function XYPad:update_controller()
         self._xy_grid[x][flipped_y]:set(matched,skip_event)
       end
     end
-
 
   end
 
@@ -497,45 +545,55 @@ function XYPad:_build_app()
 
   local cm = self.display.device.control_map
 
+  -- create the xypad?
   local xy_pad_idx = self.mappings.xy_pad.index or 1
   local xy_pad_name = self.mappings.xy_pad.group_name
   local xy_pad_args = cm:get_indexed_element(xy_pad_idx,xy_pad_name)
 
+  -- create a grid?
   local xy_grid_idx = self.mappings.xy_grid.index or 1
   local xy_grid_name = self.mappings.xy_grid.group_name
   local xy_grid_args = cm:get_indexed_element(xy_grid_idx,xy_grid_name)
 
-  local x_slider_idx,x_slider_name,x_slider_args
-  local y_slider_idx,y_slider_name,y_slider_args
+  -- create sliders?
+  self.x_slider_args = nil
+  self.y_slider_args = nil
+
+  -- 
+  local x_slider_idx,x_slider_name
+  local y_slider_idx,y_slider_name
 
   if xy_pad_args then
 
     self.min_value = xy_pad_args.minimum
     self.max_value = xy_pad_args.maximum
 
+--[[
   elseif xy_grid_args then
 
     -- when using a grid, min/max will use defaults
-
+]]
   else
     
     x_slider_idx = self.mappings.x_slider.index or 1
     x_slider_name = self.mappings.x_slider.group_name
-    x_slider_args = cm:get_indexed_element(x_slider_idx,x_slider_name)
+    self.x_slider_args = cm:get_indexed_element(x_slider_idx,x_slider_name)
 
     y_slider_idx = self.mappings.y_slider.index or 1
     y_slider_name = self.mappings.y_slider.group_name
-    y_slider_args = cm:get_indexed_element(y_slider_idx,y_slider_name)
+    self.y_slider_args = cm:get_indexed_element(y_slider_idx,y_slider_name)
 
-    if not x_slider_args and not y_slider_args then
+    if not xy_grid_args and not self.x_slider_args and not self.y_slider_args then
       local msg = "Could not start instance of Duplex XYPad:"
                 .."\nneither 'xy_pad', 'x_slider/y_slider' or 'xy_grid'"
                 .."\nmapping has been specified"
       renoise.app():show_warning(msg)
       return false
     else
-      self.min_value = x_slider_args.minimum
-      self.max_value = x_slider_args.maximum
+      if self.x_slider_args then
+        self.min_value = self.x_slider_args.minimum
+        self.max_value = self.x_slider_args.maximum
+      end
     end
   end
 
@@ -546,14 +604,23 @@ function XYPad:_build_app()
     return false
   end
 
+  -- default value is between min and max
+  local center_val = self.min_value + ((self.max_value-self.min_value)/2)
+  self.value = {center_val,center_val}
+  --print("*** initial value",self.value[1],self.value[2])
+
   -- XY pad
   if xy_pad_args then
+
     local c = UIPad(self.display)
     c.group_name = xy_pad_name
     c.secondary_index = y_slider_idx
     c:set_pos(xy_pad_idx)
     c.tooltip = self.mappings.xy_pad.description
     c.value = self.value
+    --c.floor = self.min_value
+    --c.ceiling = self.max_value
+
     c.on_change = function(obj)
       if not self.active then return false end
       self.value = obj.value
@@ -575,12 +642,30 @@ function XYPad:_build_app()
   end
 
   -- X Axis
-  if x_slider_args then
+  if self.x_slider_args then
+
+    -- check for pad/grid style mapping
+    local x_slider_size = 1
+    local grid_mode = cm:is_grid_group(x_slider_name,self.mappings.x_slider.index)
+    local x_slider_orientation = self.mappings.x_slider.orientation
+    if grid_mode then
+      if (x_slider_orientation == HORIZONTAL) then
+        x_slider_size = cm:count_columns(x_slider_name)
+      else
+        x_slider_size = cm:count_rows(x_slider_name)
+      end
+    end
+
     local c = UISlider(self.display)
     c.group_name = x_slider_name
-    c.secondary_index = y_slider_idx -- hackaround for detecting paired values
+    c.secondary_index = y_slider_idx -- for detecting paired values
     c:set_pos(x_slider_idx)
-    c.ceiling = self.max_value
+    c.flipped = true
+    c.toggleable = true
+    c.palette.track = table.rcopy(c.palette.background)
+    c:set_orientation(x_slider_orientation)
+    c:set_size(x_slider_size)
+    c.ceiling = self.x_slider_args.maximum
     c.tooltip = self.mappings.x_slider.description
     c.value = self.value[1]
     c.on_change = function(obj)
@@ -595,11 +680,29 @@ function XYPad:_build_app()
   end
 
   -- Y Axis
-  if y_slider_args then
+  if self.y_slider_args then
+
+    -- check for pad/grid style mapping
+    local y_slider_size = 1
+    local grid_mode = cm:is_grid_group(y_slider_name,self.mappings.y_slider.index)
+    local y_slider_orientation = self.mappings.y_slider.orientation
+    if grid_mode then
+      if (y_slider_orientation == HORIZONTAL) then
+        y_slider_size = cm:count_columns(y_slider_name)
+      else
+        y_slider_size = cm:count_rows(y_slider_name)
+      end
+    end
+
     local c = UISlider(self.display)
     c.group_name = y_slider_name
     c:set_pos(y_slider_idx or 1)
-    c.ceiling = self.max_value
+    c.flipped = true
+    c.toggleable = true
+    c.palette.track = table.rcopy(c.palette.background)
+    c:set_orientation(y_slider_orientation)
+    c:set_size(y_slider_size)
+    c.ceiling = self.y_slider_args.maximum
     c.tooltip = self.mappings.y_slider.description
     c.value = self.value[2]
     c.on_change = function(obj)
@@ -757,7 +860,7 @@ function XYPad:select_grid_cell(x,y)
 
   local x_val = (x==1) and 0 or scale_value(x,1,self.grid_width,0,1)
   local y_val = (y==1) and 0 or scale_value(y,1,self.grid_height,0,1)
-
+  
   -- record clean value 
   if self._record_mode then
     local params = self:get_xy_params()
@@ -783,8 +886,12 @@ function XYPad:select_grid_cell(x,y)
   if (new_y > 1) then
     new_y = y_val - noise
   end
-  
+
+  -- scale to the min/max range
+  new_x = scale_value(new_x,0,1,self.min_value,self.max_value)
+  new_y = scale_value(new_y,0,1,self.min_value,self.max_value)
   self.value = {new_x,new_y}
+
   self:update_renoise()
   self.update_controller_requested = true
 
@@ -885,8 +992,14 @@ function XYPad:goto_device(track_index,device_index,device,skip_tag)
   
   self:attach_to_device(track_index,device_index,device)
   local params = self:get_xy_params()
+  local val_x = params.x.value
+  local val_y = params.y.value
 
-  self.value = {params.x.value,params.y.value}
+  val_x = scale_value(params.x.value,0,1,self.min_value,self.max_value)
+  val_y = scale_value(params.y.value,0,1,self.min_value,self.max_value)
+
+  self.value = {val_x,val_y}
+
   if not skip_tag and 
     (self.options.locked.value == self.LOCKED_ENABLED) 
   then
@@ -1135,7 +1248,6 @@ function XYPad:_attach_to_song()
   renoise.song().tracks_observable:add_notifier(
     function(notifier)
       TRACE("XYPad:tracks_observable fired...")
-      --rprint(notifier)
       if (notifier.type=="remove") then
         if (self.options.locked.value == self.LOCKED_ENABLED) and
           (self.track_index==notifier.index)
@@ -1200,7 +1312,6 @@ function XYPad:_attach_to_track_devices(track)
       if (notifier.type == "remove") then
 
         local search = self:do_device_search()
-        --rprint(search)
         if not search then
           self:clear_device()
         else
@@ -1243,7 +1354,7 @@ function XYPad:initial_select()
 
   local song = renoise.song()
   local device,track_idx,device_idx
-  if (self.options.locked.value == self.LOCKED_ENABLED) then
+  --if (self.options.locked.value == self.LOCKED_ENABLED) then
     local search = self:do_device_search()
     if search then
       device = search.device
@@ -1257,7 +1368,7 @@ function XYPad:initial_select()
         self._lock_button:set(false,true)
       end
     end
-  end
+  --end
   if not device then
     device = song.selected_device
     track_idx = song.selected_track_index
@@ -1345,7 +1456,7 @@ function XYPad:attach_to_device(track_idx,device_idx,device)
       function()
         if not self.suppress_value_observable then
           --print("X value_observable fired...",params.x.value)
-          self.value[1] = params.x.value
+          self.value[1] = scale_value(params.x.value,0,1,self.min_value,self.max_value)
           self.update_controller_requested = true
         end
       end 
@@ -1356,7 +1467,7 @@ function XYPad:attach_to_device(track_idx,device_idx,device)
       function()
         if not self.suppress_value_observable then
           --print("Y value_observable fired...",params.y.value)
-          self.value[2] = params.y.value
+          self.value[2] = scale_value(params.y.value,0,1,self.min_value,self.max_value)
           self.update_controller_requested = true
         end
       end 

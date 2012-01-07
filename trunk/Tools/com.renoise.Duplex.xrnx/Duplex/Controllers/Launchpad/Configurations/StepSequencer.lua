@@ -23,17 +23,15 @@ duplex_configurations:insert {
 
   applications = {
     StepSequencer = {
-
       -- vertical layout (default)
-
       mappings = {
         grid = {
           group_name = "Grid",
-          orientation = VERTICAL,
+          orientation = HORIZONTAL,
         },
         level = {
-          group_name = "Triggers",
-          orientation = VERTICAL,
+          group_name = "Position",
+          orientation = HORIZONTAL,
         },
         line = {
           group_name = "Controls",
@@ -46,7 +44,7 @@ duplex_configurations:insert {
           index = 3
         },
         transpose = {
-          group_name = "Controls",
+          group_name = "Treatments",
           orientation = HORIZONTAL,
           index = 5
         },
@@ -88,6 +86,58 @@ duplex_configurations:insert {
       },
       ]]
     },
+    Rotate = {
+      mappings = {
+        track_in_pattern_up = {
+          group_name = "Treatments",
+          index = 1
+        },
+        track_in_pattern_down = {
+          group_name = "Treatments",
+          index = 2
+        },
+        whole_pattern_up = {
+          group_name = "Treatments",
+          index = 3
+        },
+        whole_pattern_down = {
+          group_name = "Treatments",
+          index = 4
+        }
+      }
+    },
+    
+    Transport = {
+      mappings = {
+        start_playback = {
+          group_name = "Controls",
+          index = 5,
+        },
+        loop_pattern = {
+          group_name = "Controls",
+          index = 6,
+        },
+        follow_player = {
+          group_name= "Controls",
+          index = 7,
+        },
+        block_loop = {
+          group_name = "Controls",
+          index = 8,
+        },
+      },
+      options = {
+        pattern_play = 3, -- toggle start/stop with single button
+      },
+    },
+    Navigator = {
+      mappings = {
+        blockpos = {
+          group_name = "Triggers",
+        }
+      }
+    },
+
   }
 }
 

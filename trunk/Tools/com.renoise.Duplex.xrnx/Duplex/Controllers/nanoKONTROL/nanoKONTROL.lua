@@ -24,9 +24,3 @@ function NanoKontrol:__init(display_name, message_stream, port_in, port_out)
 end
 
 
---==============================================================================
-
--- Include these configurations for the NanoKontrol
-
-local CTRL_PATH = "Duplex/Controllers/nanoKONTROL/Configurations/"
-require (CTRL_PATH.."MixerTransport")
