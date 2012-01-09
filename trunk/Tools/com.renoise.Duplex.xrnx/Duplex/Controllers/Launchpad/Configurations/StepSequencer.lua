@@ -36,12 +36,12 @@ duplex_configurations:insert {
         line = {
           group_name = "Controls",
           orientation = HORIZONTAL,
-          index = 1
+          index = 3
         },
         track = {
           group_name = "Controls",
           orientation = HORIZONTAL,
-          index = 3
+          index = 1
         },
         transpose = {
           group_name = "Treatments",

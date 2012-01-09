@@ -16,13 +16,7 @@ Requires: Globals
 class 'OscDevice' (Device)
 
 function OscDevice:__init(name, message_stream,prefix,address,port_in,port_out)
-  TRACE("OscDevice:__init()",
-    name, 
-    message_stream,
-    prefix,
-    address,
-    port_in,
-    port_out)
+  TRACE("OscDevice:__init()",name,message_stream,prefix,address,port_in,port_out)
   
   Device.__init(self, name, message_stream, DEVICE_OSC_PROTOCOL)
 
@@ -135,7 +129,7 @@ function OscDevice:socket_message(socket, binary_data)
       end
 
       if value_str then
-        --print("incoming OSC",value_str)
+        print("incoming OSC",value_str)
         self:receive_osc_message(value_str)
       end
 
@@ -174,6 +168,7 @@ end
 
 function OscDevice:release()
   TRACE("OscDevice:release()")
+  print("OscDevice:release()")
   if (self.client) and (self.client.is_open) then
     self.client:close()
     self.client = nil
@@ -242,6 +237,7 @@ end
 -- construct_osc_message
 
 function OscDevice:construct_osc_message(message,value)
+  TRACE("OscDevice:construct_osc_message()",message,value)
 
     -- split the message into non-whitespace chunks
     local str_vars = string.gmatch(message,"[^%s]+")
@@ -315,7 +311,9 @@ function OscDevice:send_osc_message(message,value)
   TRACE("OscDevice:send_osc_message()",message,value)
 
   if (self.client) and (self.client.is_open) then
+    print("about to send osc message",message,value)
     local osc_msg = self:construct_osc_message(message,value)
+    --rprint(osc_msg)
     self.client:send(osc_msg)
   end
 

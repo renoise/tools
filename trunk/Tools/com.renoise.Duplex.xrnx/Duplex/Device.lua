@@ -45,11 +45,13 @@ function Device:__init(name, message_stream, protocol)
   ---- configuration
   
   -- specify a color-space like this: (r, g, b) or empty
-  -- example#1 : {4,4,0} - four degrees of red and grees
+  -- example#1 : {4,4,0} - four degrees of red and green
   -- example#2 : {1,1,1} - monochrome display (black/white)
   -- example#3 : {0,0,1} - monochrome display (blue)
   -- example#4 : {} - no colors, display as text
-  self.colorspace = {}
+  if not self.colorspace then
+    self.colorspace = {}
+  end
   
   -- allow sending back the same messages we got from the device as answer 
   -- to the device. some controller which cannot deal with message feedback,
