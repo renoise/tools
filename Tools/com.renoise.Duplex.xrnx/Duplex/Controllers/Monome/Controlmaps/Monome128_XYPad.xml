@@ -153,7 +153,7 @@
 					</Group>
 				</Column>
 				<Group name="ADC">
-					<Param value="/tilt %f %f" size="8" type="xypad" invert_y="true" skip_echo="true" maximum="162" minimum="88"/>
+					<Param value="/tilt 0 %i %i %i" size="8" type="xypad" invert_y="true" skip_echo="true" maximum="162" minimum="88"/>
 				</Group>
 				<!--
 				-->
