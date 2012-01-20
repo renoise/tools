@@ -1423,25 +1423,6 @@ function(message)
 end)
 
 
-add_action("Navigation:Sequencer:Current Pattern [Set]",
-function(message)
-  song().selected_pattern_index = message_value(
-    message, song().selected_pattern_index, 1, 1000)
-end)
-
-add_action("Navigation:Sequencer:Decrease Current Pattern [Trigger]",
-function(message)
-  song().selected_pattern_index = dec_message_value(
-    message, song().selected_pattern_index, 1, 1000)
-end)
-
-add_action("Navigation:Sequencer:Increase Current Pattern [Trigger]",
-function(message)
-  song().selected_pattern_index = inc_message_value(
-    message, song().selected_pattern_index, 1, 1000)
-end)
-
-
 -- Navigation:Tracks
 
 add_action("Navigation:Tracks:Current Track [Set]",
