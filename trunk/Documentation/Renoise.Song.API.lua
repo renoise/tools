@@ -115,7 +115,7 @@ renoise.song():delete_track_at(index)
 -- The Master can not be swapped at all.
 renoise.song():swap_tracks_at(index1, index2)
 
--- Access to a single track by index. Use properties 'tracks' to iterate over
+-- Access to a single track by index. Use properties 'tracks' to iterate over 
 -- all tracks and to query the track count.
 renoise.song():track(index)
   -> [renoise.Track object]
@@ -130,6 +130,10 @@ renoise.song():insert_group_at(int index)
 -- is not a group track, a new group track will be created and both tracks
 -- will be added to it.
 renoise.song():add_track_to_group(int track_index, int group_index)
+
+-- Removes track from its immediate parent group and places it outside it to
+-- the left. Can only be called for tracks that are actually part of a group.
+renoise.song():remove_track_from_group(int track_index)
 
 -- Delete the group with the given index and all its member tracks.
 -- Index must be that of a group or a track that is a member of a group.
@@ -151,7 +155,7 @@ renoise.song():delete_instrument_at(index)
 -- patterns and update all other instrument links in the song.
 renoise.song():swap_instruments_at(index2, index2)
 
--- Access to a single instrument by index. Use properties 'instruments' to iterate
+-- Access to a single instrument by index. Use properties 'instruments' to iterate 
 -- over all instruments and to query the instrument count.
 renoise.song():instrument(index)
   -> [renoise.Instrument object]
@@ -169,7 +173,7 @@ renoise.song():capture_instrument_from_pattern()
 -- track, nothing will be done.
 renoise.song():capture_nearest_instrument_from_pattern()
 
--- Access to a single pattern by index. Use properties 'patterns' to iterate
+-- Access to a single pattern by index. Use properties 'patterns' to iterate 
 -- over all patterns and to query the pattern count.
 renoise.song():pattern(index)
   -> [renoise.Pattern object]
@@ -220,7 +224,7 @@ renoise.song():render([options, ] filename, rendering_done_callback)
 renoise.song().file_name
   -> [read-only, string]
 
--- Song Comments
+-- Song Comments  
 -- Note: All property tables of basic types in the API are temporary copies.
 -- In other words `renoise.song().comments = { "Hello", "World" }` will work,
 -- `renoise.song().comments[1] = "Hello"; renoise.song().comments[2] = "World"`
@@ -345,37 +349,36 @@ renoise.song().selected_sub_column_type
 -- Read/write access to the selection in the pattern editor.
 -- The property is a table with the following members:
 --
---      {
---        start_line,     -- Start pattern line index
---        start_track,    -- Start track index
---        start_column,   -- Start column index within start_track
+--  {
+--    start_line,     -- Start pattern line index
+--    start_track,    -- Start track index
+--    start_column,   -- Start column index within start_track   
+-- 
+--    end_line,       -- End pattern line index
+--    end_track,      -- End track index
+--    end_column      -- End column index within end_track
+--  }
 --
---        end_line,       -- End pattern line index
---        end_track,      -- End track index
---        end_column      -- End column index within end_track
---      }
+-- Line indexes are valid from 1 to renoise.song().patterns[].number_of_lines
 --
--- Line indexes are valid from 1 to `renoise.song().patterns[].number_of_lines`
+-- Track indexes are valid from 1 to #renoise.song().tracks
 --
--- Track indexes are valid from 1 to `#renoise.song().tracks`
+-- Column indexes are valid from 1 to 
+--   (renoise.song().tracks[].visible_note_columns +
+--    renoise.song().tracks[].visible_effect_columns)
 --
--- Column indexes are valid from 1 to
---   `(renoise.song().tracks[].visible_note_columns +
---    renoise.song().tracks[].visible_effect_columns)`
---
--- When setting the selection, all members are optional. Combining them in
--- various different ways will affect how specific the selection is. When
+-- When setting the selection, all members are optional. Combining them in 
+-- various different ways will affect how specific the selection is. When 
 -- 'selection_in_pattern' returns nil or is set to nil, no selection is present.
 --
--- Examples:
---
---      renoise.song().selection_in_pattern = {}
---        --> clear
---      renoise.song().selection_in_pattern = { start_line = 1, end_line = 4 }
---        --> select line 1 to 4, first to last track
---      renoise.song().selection_in_pattern =
---        { start_line = 1, start_track = 1, end_line = 4, end_track = 1 }
---        --> select line 1 to 4, in the first track only
+-- Examples: 
+-- renoise.song().selection_in_pattern = {} 
+--   --> clear
+-- renoise.song().selection_in_pattern = { start_line = 1, end_line = 4 } 
+--   --> select line 1 to 4, first to last track
+-- renoise.song().selection_in_pattern = 
+--   { start_line = 1, start_track = 1, end_line = 4, end_track = 1 } 
+--   --> select line 1 to 4, in the first track only 
 --
 renoise.song().selection_in_pattern
   -> [table of start/end values or nil]
@@ -439,7 +442,7 @@ renoise.song().transport.playing, _observable
   -> [boolean]
 
 -- Old school speed or new LPB timing used?
--- With TIMING_MODEL_SPEED, tpl is used as speed factor. The lpb property
+-- With TIMING_MODEL_SPEED, tpl is used as speed factor. The lpb property 
 -- is unused then. With TIMING_MODEL_LPB, tpl is used as event rate for effects
 -- only and lpb defines relationship between pattern lines and beats.
 renoise.song().transport.timing_model
@@ -452,7 +455,7 @@ renoise.song().transport.lpb, _observable
   -> [number, 1-256]
 renoise.song().transport.tpl, _observable
   -> [number, 1-16]
-
+ 
 -- Playback position.
 renoise.song().transport.playback_pos
   -> [renoise.SongPos object]
@@ -563,16 +566,16 @@ renoise.song().transport.groove_assignment_observable
 -- To convert to dB:   dB = math.lin2db(renoise.song().transport.track_headroom)
 -- To convert from dB: renoise.song().transport.track_headroom = math.db2lin(dB)
 renoise.song().transport.track_headroom, _observable
-  -> [float, math.db2lin(-12) - math.db2lin(0)]
-
+  -> [float, math.db2lin(-12) - math.db2lin(0)]  
+  
 -- Computer Keyboard Velocity.
 -- Will return the default value of 127 when keyboard_velocity_enabled == false.
 renoise.song().transport.keyboard_velocity_enabled, _observable
-  -> [boolean]
+  -> [boolean] 
 renoise.song().transport.keyboard_velocity, _observable
-  -> [number, 0 - 127]
-
-
+  -> [number, 0 - 127]  
+  
+  
 --------------------------------------------------------------------------------
 -- renoise.PatternSequencer
 --------------------------------------------------------------------------------
@@ -592,8 +595,8 @@ renoise.song().sequencer:insert_new_pattern_at(sequence_pos)
 renoise.song().sequencer.delete_sequence_at(sequence_pos)
 
 
--- Access to a single sequence by index (the pattern number). Use properties
--- 'pattern_sequence' to iterate over the whole sequence and to query the
+-- Access to a single sequence by index (the pattern number). Use properties 
+-- 'pattern_sequence' to iterate over the whole sequence and to query the 
 -- sequence count.
 renoise.song().sequencer:pattern(sequence_pos)
   -> [number - pattern index]
@@ -612,35 +615,35 @@ renoise.song().sequencer:make_range_unique(from_sequence_pos, to_sequence_pos)
 renoise.song().sequencer:sort()
 
 
--- Access to pattern sequence sections. When the 'is_start_of_section flag' is
+-- Access to pattern sequence sections. When the 'is_start_of_section flag' is 
 -- set for a sequence pos, a section ranges from this pos to the next pos
 -- which starts a section, or till the end of the song when there are no others.
-renoise.song().sequencer:sequence_is_start_of_section(sequence_index)
+renoise.song().sequencer:sequence_is_start_of_section(sequence_index) 
   -> [boolean]
 renoise.song().sequencer:set_sequence_is_start_of_section(
-  sequence_index, true_or_false)
-renoise.song().sequencer:sequence_is_start_of_section_observable(sequence_index)
+  sequence_index, true_or_false) 
+renoise.song().sequencer:sequence_is_start_of_section_observable(sequence_index) 
   -> [renoise.Observable object]
 
 -- Access to a pattern sequence section's name. Section names are only visible
 -- for a sequence pos which starts the section (see sequence_is_start_of_section).
-renoise.song().sequencer:sequence_section_name(sequence_index)
+renoise.song().sequencer:sequence_section_name(sequence_index) 
   -> [string]
-renoise.song().sequencer:set_sequence_section_name(sequence_index, string)
-renoise.song().sequencer:sequence_section_name_observable(sequence_index)
+renoise.song().sequencer:set_sequence_section_name(sequence_index, string) 
+renoise.song().sequencer:sequence_section_name_observable(sequence_index) 
   -> [renoise.Observable object]
 
 -- Returns true if the given sequence pos is part of a section, else false.
-renoise.song().sequencer:sequence_is_part_of_section(sequence_index)
+renoise.song().sequencer:sequence_is_part_of_section(sequence_index) 
   -> [boolean]
 -- Returns true if the given sequence pos is the end of a section, else false
-renoise.song().sequencer:sequence_is_end_of_section(sequence_index)
+renoise.song().sequencer:sequence_is_end_of_section(sequence_index) 
   -> [boolean]
-
+  
 
 -- Observable, which is fired, whenever the section laout in the sequence
 -- changed in any way, i.e. new sections got added, existing ones got deleted
-renoise.song().sequencer:sequence_sections_changed_observable()
+renoise.song().sequencer:sequence_sections_changed_observable() 
   -> [renoise.Observable object]
 
 
@@ -652,7 +655,7 @@ renoise.song().sequencer:set_track_sequence_slot_is_muted(
   track_index, sequence_index, muted)
 
 
--- Access to sequencer slot selection states.
+-- Access to sequencer slot selection states. 
 renoise.song().sequencer:track_sequence_slot_is_selected(track_index, sequence_index)
   -> [boolean]
 renoise.song().sequencer:set_track_sequence_slot_is_selected(
@@ -796,7 +799,7 @@ renoise.song().tracks[]:delete_device_at(device_index)
 -- index 1 can not be swapped or moved.
 renoise.song().tracks[]:swap_devices_at(device_index1, device_index2)
 
--- Access to a single device by index. Use properties 'devices' to iterate
+-- Access to a single device by index. Use properties 'devices' to iterate 
 -- over all devices and to query the device count.
 renoise.song().tracks:device(index)
   -> [renoise.TrackDevice object]
@@ -894,7 +897,7 @@ renoise.song().tracks[].delay_column_visible, _observable
 renoise.song().tracks[].available_devices[]
   -> [read-only, array of strings]
 
--- Returns a list of tables containing more information about the devices.
+-- Returns a list of tables containing more information about the devices. 
 -- Each table has the following fields:
 --  {
 --    path,           -- The device's path used by insert_device_at()
@@ -932,12 +935,12 @@ renoise.song().tracks[].group_collapsed
 
 -------- Functions
 
--- Access to a single preset name by index. Use properties 'presets' to iterate
+-- Access to a single preset name by index. Use properties 'presets' to iterate 
 -- over all presets and to query the presets count.
 renoise.song().tracks:preset(index)
   -> [string]
 
--- Access to a single parameter by index. Use properties 'parameters' to iterate
+-- Access to a single parameter by index. Use properties 'parameters' to iterate 
 -- over all parameters and to query the parameter count.
 renoise.song().tracks:parameter(index)
   -> [renoise.DeviceParameter object]
@@ -949,7 +952,7 @@ renoise.song().tracks:parameter(index)
 renoise.song().tracks[].devices[].name
   -> [read-only, string -> device identifier]
 
-renoise.song().tracks[].devices[].display_name, observable
+renoise.song().tracks[].devices[].display_name, observable 
   -> [string, custom name]
 
 renoise.song().tracks[].devices[].is_active, _observable
@@ -979,7 +982,7 @@ renoise.song().tracks[].devices[].external_editor_available
 -- external_editor_available), otherwise the external editor is opened/closed.
 renoise.song().tracks[].devices[].external_editor_visible
   -> [boolean, set to true to show the editor, false to close it]
-
+  
 -- Returns a string that uniquely identifies the device, from "available_devices".
 -- The string can be passed into: renoise.song().tracks[]:insert_device_at()
 renoise.song().tracks[].devices[].device_path
@@ -1022,6 +1025,9 @@ renoise.song().tracks[].devices[].parameters[].value_quantum
 renoise.song().tracks[].devices[].parameters[].value_default
   -> [read-only, float]
 
+renoise.song().tracks[].devices[].parameters[].time_quantum
+  -> [read-only, float in pattern lines]
+
 -- Not valid for parameters of instrument devices. Returns true if creating
 -- envelope automation is possible for the parameter (see also
 -- renoise.song().patterns[].tracks[]:create_automation)
@@ -1033,9 +1039,9 @@ renoise.song().tracks[].devices[].parameters[].is_automated, _observable
   -> [read-only, boolean]
 
 -- parameter has a custom MIDI mapping in the current song.
-renoise.song().tracks[].devices[].parameters[].is_midi_mapped, _observable
+renoise.song().tracks[].devices[].parameters[].is_midi_mapped, _observable 
   -> [read-only, boolean]
-
+  
 -- Show in mixer. Not valid for parameters of instrument devices.
 renoise.song().tracks[].devices[].parameters[].show_in_mixer, _observable
   -> [boolean]
@@ -1059,8 +1065,8 @@ renoise.Instrument.TAB_EXT_MIDI
 
 renoise.Instrument.LAYER_NOTE_ON
 renoise.Instrument.LAYER_NOTE_OFF
-
-
+  
+  
 -------- Functions
 
 -- Reset, clear all settings and all samples.
@@ -1077,24 +1083,24 @@ renoise.song().instruments[]:delete_sample_at(index)
 -- Swap positions of two samples.
 renoise.song().instruments[]:swap_samples_at(index1, index2)
 
--- Access to a single sample by index. Use properties 'samples' to iterate
+-- Access to a single sample by index. Use properties 'samples' to iterate 
 -- over all samples and to query the sample count.
 renoise.song().instruments[]:sample(index)
   -> [renoise.Sample object]
 
 -- Insert a new sample mapping for the given sample by index. Optionally
 -- pass initial base note, note and velocity ranges in a table. When no initial
--- ranges are specified, newly created mappings have a velocity range of (0-127)
+-- ranges are specified, newly created mappings have a velocity range of (0-127) 
 -- and a note range of (0-119). Default base note is 48 (C-4).
 -- Note that mappings are internally sorted by sample index, so don't rely on
 -- that the mapping gets appended to the 'sample_mappings' property.
 -- Manipulating sample lists (removing swapping) will automatically update
--- existing mappings. Sample mappings of sliced samples are read-only: can
--- not be modified. Test for `#samples[1].slice_markers > 1` to find out if the
+-- existing mappings. Sample mappings of sliced samples are read-only: can 
+-- not be modified. Test for `#samples[1].slice_markers > 1` to find out if the 
 -- instrument is sliced.
 renoise.song().instruments[]:insert_sample_mapping(
   layer, sample_index [, base_note] [, note_range] [, vel_range])
-  -> [new renoise.SampleMapping object]
+  -> [new renoise.SampleMapping object]  
 -- Delete an existing mapping at the given index (see property 'sample_mappings').
 renoise.song().instruments[]:delete_sample_mapping_at(layer, index)
 
@@ -1107,7 +1113,7 @@ renoise.song().instruments[]:sample_mapping(layer, index)
 -------- Properties
 
 -- Currently active tab in the instrument GUI (samples or plugin).
-renoise.song().instruments[].active_tab, _observable
+renoise.song().instruments[].active_tab, _observable 
   -> [enum = TAB]
 
 -- Name.
@@ -1124,13 +1130,13 @@ renoise.song().instruments[].sample_mappings[], _observable
   -> [read-only, table of lists of renoise.SampleMapping objects]
 
 -- Sample Envelopes.
-renoise.song().instruments[].sample_envelopes
+renoise.song().instruments[].sample_envelopes 
   -> [read-only, renoise.InstrumentSampleEnvelopes object]
 
 -- MIDI input properties.
 renoise.song().instruments[].midi_input_properties
   -> [read-only, renoise.InstrumentMidiInputProperties object]
-
+  
 -- MIDI output properties.
 renoise.song().instruments[].midi_output_properties
   -> [read-only, renoise.InstrumentMidiOutputProperties object]
@@ -1176,7 +1182,7 @@ renoise.song().instruments[].sample_envelopes.XXX:copy_points_from(other_envelop
 renoise.song().instruments[].sample_envelopes.XXX:has_point_at(time)
   -> [boolean]
 
--- Add a new point value (or replace any existing value) at time.
+-- Add a new point value (or replace any existing value) at time. 
 renoise.song().instruments[].sample_envelopes.XXX:add_point_at(time, value)
 
 -- Removes a point at the given time. Point must exist.
@@ -1246,7 +1252,7 @@ renoise.InstrumentEnvelopeLfo.MODE_SAW
 renoise.InstrumentEnvelopeLfo.MODE_PULSE
 renoise.InstrumentEnvelopeLfo.MODE_RANDOM
 
-renoise.InstrumentEnvelopeLfo.MIN_FREQUENCY -- 0
+renoise.InstrumentEnvelopeLfo.MIN_FREQUENCY -- 0 
 renoise.InstrumentEnvelopeLfo.MAX_FREQUENCY -- 127
 
 renoise.InstrumentEnvelopeLfo.MIN_AMOUNT -- 0
@@ -1462,7 +1468,7 @@ renoise.song().instruments[].midi_input_properties.channel, _observable
 renoise.song().instruments[].midi_input_properties.assigned_track, _observable
   -> [number, 1 - renoise.song().sequencer_track_count, 0 = Current track]
 
-
+  
 --------------------------------------------------------------------------------
 -- renoise.InstrumentMidiOutputProperties
 --------------------------------------------------------------------------------
@@ -1526,7 +1532,7 @@ renoise.song().instruments[].plugin_properties:load_plugin(plugin_path)
 renoise.song().instruments[].plugin_properties.available_plugins[]
   -> [read_only, list of strings]
 
--- Returns a list of tables containing more information about the plugins.
+-- Returns a list of tables containing more information about the plugins. 
 -- Each table has the following fields:
 --  {
 --    path,           -- The plugin's path used by load_plugin()
@@ -1538,7 +1544,7 @@ renoise.song().instruments[].plugin_properties.available_plugins[]
 --  }
 renoise.song().instruments[].plugin_properties.available_plugin_infos[]
   -> [read-only, list of plugin info tables]
-
+  
 -- Returns true when a plugin is present; loaded successfully.
 renoise.song().instruments[].plugin_properties.plugin_loaded
   -> [read-only, boolean]
@@ -1578,12 +1584,12 @@ renoise.song().instruments[].plugin_properties.auto_suspend, _observable
 
 -------- Functions
 
--- Access to a single preset name by index. Use properties 'presets' to iterate
+-- Access to a single preset name by index. Use properties 'presets' to iterate 
 -- over all presets and to query the presets count.
 renoise.song().instruments[].plugin_properties.plugin_device:preset(index)
   -> [string]
 
--- Access to a single parameter by index. Use properties 'parameters' to iterate
+-- Access to a single parameter by index. Use properties 'parameters' to iterate 
 -- over all parameters and to query the parameter count.
 renoise.song().instruments[].plugin_properties.plugin_device:parameter(index)
   -> [renoise.DeviceParameter object]
@@ -1631,37 +1637,37 @@ renoise.song().instruments[].plugin_properties.plugin_device.device_path
 
 -------- Properties
 
--- True for sliced insturments. No sample mapping properties are allowed to
+-- True for sliced insturments. No sample mapping properties are allowed to 
 -- be modified, but can be read.
 renoise.song().instruments[].sample_mappings[].read_only
   -> [read-only, booelan]
-
+  
 -- Linked sample index within the instrument. When setting new values,
 -- ony existing sample indices are allowed.
-renoise.song().instruments[].sample_mappings[].sample_index, _observable
+renoise.song().instruments[].sample_mappings[].sample_index, _observable 
   -> [number]
 
 
 -- When enabled, the mapping triggers/uses the instrument's envelopes.
-renoise.song().instruments[].sample_mappings[].use_envelopes, _observable
+renoise.song().instruments[].sample_mappings[].use_envelopes, _observable 
   -> [booelan]
 
 -- When enabled, velocity will be mapped to the sample's volume when triggering.
-renoise.song().instruments[].sample_mappings[].map_velocity_to_volume, _observable
+renoise.song().instruments[].sample_mappings[].map_velocity_to_volume, _observable 
   -> [boolean]
+  
 
-
--- Mappings base note. Final pitch of the palyed sample is:
+-- Mappings base note. Final pitch of the played sample is:
 --   played_note - mapping.base_note + sample.transpose + sample.finetune
-renoise.song().instruments[].sample_mappings[].base_note, _observable
+renoise.song().instruments[].sample_mappings[].base_note, _observable 
   -> [number (0-119, c-4=48)]
 
 -- Note range the mapping is triggered for.
-renoise.song().instruments[].sample_mappings[].note_range, _observable
+renoise.song().instruments[].sample_mappings[].note_range, _observable 
   -> [table with two numbers (0-119, c-4=48)]
 
 -- Velocity range the mapping is triggered for.
-renoise.song().instruments[].sample_mappings[].velocity_range, _observable
+renoise.song().instruments[].sample_mappings[].velocity_range, _observable 
   -> [table with two numbers (0-127)]
 
 
@@ -1696,21 +1702,21 @@ renoise.song().instruments[].samples[]:copy_from(other_sample object)
 
 -- Insert a new slice marker at the given sample position. Only samples in
 -- the first sample slot may use slices. Creating slices will automatically
--- create sample aliases in the following slots: read-only sample slots that
--- play the sampe slice and are mapped to notes. Sliced sample lists can not
--- be modified manually then. To update such aliases, modify the slice marker
--- list instead.
+-- create sample aliases in the following slots: read-only sample slots that 
+-- play the sampe slice and are mapped to notes. Sliced sample lists can not 
+-- be modified manually then. To update such aliases, modify the slice marker 
+-- list instead. 
 -- Existing 0S effects or notes will be updated to ensure that the old slices
 -- are played back just as before.
 renoise.song().instruments[].samples[]:insert_slice_marker(marker_sample_pos)
 
 -- Delete an existing slice marker. marker_sample_pos must point to an existing
--- marker. See also property 'samples[].slice_markers'. Existing 0S effects or
--- notes will be updated to ensure that the old slices are played back just as
+-- marker. See also property 'samples[].slice_markers'. Existing 0S effects or 
+-- notes will be updated to ensure that the old slices are played back just as 
 -- before.
 renoise.song().instruments[].samples[]:delete_slice_marker(marker_sample_pos)
 
--- Change the sample position of an existing slice marker. see also property
+-- Change the sample position of an existing slice marker. see also property 
 -- 'samples[].slice_markers'.
 -- When moving a marker behind or before an existing other marker, existing 0S
 -- effects or notes will automatically be updated to ensure that the old slices
@@ -1718,24 +1724,24 @@ renoise.song().instruments[].samples[]:delete_slice_marker(marker_sample_pos)
 renoise.song().instruments[].samples[]:move_slice_marker(
   old_marker_pos, new_marker_pos)
 
-
+    
 -------- Properties
 
--- True, when the sample slot is an alias to a sliced master sample. Such sample
--- slots are read-only and automatically managed with the master samples slice
+-- True, when the sample slot is an alias to a sliced master sample. Such sample 
+-- slots are read-only and automatically managed with the master samples slice 
 -- list.
-renoise.song().instruments[].samples[].is_slice_alias
+renoise.song().instruments[].samples[].is_slice_alias 
   -> [read-only, boolean]
-
--- Read/write access to the slice marker list of a sample. When new markers are
--- set or existing ones unset, existing 0S effects or notes to existing slices
+    
+-- Read/write access to the slice marker list of a sample. When new markers are 
+-- set or existing ones unset, existing 0S effects or notes to existing slices 
 -- will NOT be remapped (unlike its done with the insert/remove/move_slice_marker
--- functions). See function insert_slice_marker for info about marker limitations
+-- functions). See function insert_slice_marker for info about marker limitations 
 -- and preconditions.
-renoise.song().instruments[].samples[].slice_markers, _observable
+renoise.song().instruments[].samples[].slice_markers, _observable 
   -> [table of numbers - sample positions]
 
-
+    
 -- Name.
 renoise.song().instruments[].samples[].name, _observable
   -> [string]
@@ -1813,8 +1819,8 @@ renoise.song().instruments[].samples[].sample_buffer:sample_data(
   -> [float -1 - 1]
 
 -- Write access to samples in a sample data buffer. New samples values must be
--- within [-1, 1] and will be clipped automatically. Sample buffers may be
--- read-only (see property 'read_only'). Attempts to write on such buffers
+-- within [-1, 1] and will be clipped automatically. Sample buffers may be 
+-- read-only (see property 'read_only'). Attempts to write on such buffers 
 -- will result into errors.
 -- IMPORTANT: before modifying buffers, call 'prepare_sample_data_changes'.
 -- When you are done, call 'finalize_sample_data_changes' to generate undo/redo
@@ -1856,11 +1862,11 @@ renoise.song().instruments[].samples[].sample_buffer.has_sample_data
 -- 'has_sample_data' returns false:_
 
 -- True, when the sample buffer can only be read, but not be modified. true for
--- sample aliases of sliced samples. To modify such sample buffers, modify the
+-- sample aliases of sliced samples. To modify such sample buffers, modify the 
 -- sliced master sample buffer instead.
 renoise.song().instruments[].samples[].sample_buffer.read_only
   -> [read-only, boolean]
-
+  
 -- The current sample rate in Hz, like 44100.
 renoise.song().instruments[].samples[].sample_buffer.sample_rate
   -> [read-only, number]
@@ -1886,6 +1892,10 @@ renoise.song().instruments[].samples[].sample_buffer.display_start, _observable
 -- DisplayStart to control zooming.
 renoise.song().instruments[].samples[].sample_buffer.display_length, _observable
   -> [number >= 1 <= number_of_frames]
+
+-- The start and end points of the sample editor display.
+renoise.song().instruments[].samples[].sample_buffer.display_range, _observable
+  -> [array of two numbers, >= 1 <= number_of_frames]
 
 -- The vertical zoom level where 1.0 is fully zoomed out.
 renoise.song().instruments[].samples[].sample_buffer.vertical_zoom_factor, _observable
@@ -1996,7 +2006,7 @@ renoise.song().patterns[].tracks[]:clear()
 -- Copy contents from other pattern tracks, including automation when possible.
 renoise.song().patterns[].tracks[]:copy_from(other_pattern_track object)
 
--- Access to a single line by index. Line must be [1 - MAX_NUMBER_OF_LINES]).
+-- Access to a single line by index. Line must be [1 - MAX_NUMBER_OF_LINES]). 
 -- This is a !lot! more efficient than calling the property: lines[index] to
 -- randomly access lines.
 renoise.song().patterns[].tracks[]:line(index)
@@ -2027,12 +2037,12 @@ renoise.song().patterns[].tracks[]:delete_automation(parameter)
 -------- Properties
 
 -- Ghosting (aliases)
-renoise.song().patterns[].tracks[].is_alias
+renoise.song().patterns[].tracks[].is_alias 
   -> [read-only, boolean]
 -- Pattern index the pattern track is aliased or 0 when its not aliased.
 renoise.song().patterns[].tracks[].alias_pattern_index , _observable
   -> [number]
-
+  
 -- Color.
 renoise.song().patterns[].tracks[].color, _observable
   -> [table with 3 numbers (0-0xFF, RGB) or nil when no custom slot color is set]
@@ -2061,8 +2071,8 @@ renoise.song().patterns[].tracks[].automation[], _observable
 -- renoise.PatternTrackAutomation
 --------------------------------------------------------------------------------
 
--- General remarks: Automation "time" is specified in lines + optional 1/256
--- line fraction for the sub line grid. The sub line grid has 256 units per
+-- General remarks: Automation "time" is specified in lines + optional 1/256 
+-- line fraction for the sub line grid. The sub line grid has 256 units per 
 -- line. All times are internally quantized to this sub line grid.
 -- For example a time of 1.5 means: line 1 with a note column delay of 128
 
@@ -2083,7 +2093,7 @@ renoise.song().patterns[].tracks[].automation[]:clear()
 -- Copy all points and playback settings from another track automation.
 renoise.song().patterns[].tracks[].automation[]:copy_from()
 
--- Test if a point exists at the given time (in lines
+-- Test if a point exists at the given time (in lines 
 renoise.song().patterns[].tracks[].automation[]:has_point_at(time)
    -> [boolean]
 
@@ -2097,12 +2107,12 @@ renoise.song().patterns[].tracks[].automation[]:remove_point_at(time)
 
 -------- Properties
 
--- Destination device. Can in some rare circumstances be nil, i.e. when
+-- Destination device. Can in some rare circumstances be nil, i.e. when 
 -- a device or track is about to be deleted.
 renoise.song().patterns[].tracks[].automation[].dest_device
   -> [renoise.TrackDevice or nil]
 
--- Destination device's parameter. Can in some rare circumstances be nil,
+-- Destination device's parameter. Can in some rare circumstances be nil, 
 -- i.e. when a device or track is about to be deleted.
 renoise.song().patterns[].tracks[].automation[].dest_parameter
   -> [renoise.DeviceParameter or nil]
@@ -2166,17 +2176,17 @@ renoise.song().patterns[].tracks[].lines[]:clear()
 -- Copy contents from other_line, trashing column content.
 renoise.song().patterns[].tracks[].lines[]:copy_from(other_line object)
 
--- Access to a single note column by index. Use properties 'note_columns'
+-- Access to a single note column by index. Use properties 'note_columns' 
 -- to iterate over all note columns and to query the note_column count.
--- This is a !lot! more efficient than calling the property:
+-- This is a !lot! more efficient than calling the property: 
 -- note_columns[index] to randomly access columns. When iterating over all
 -- columns, use pairs(note_columns).
 renoise.song().patterns[].tracks[].lines[]:note_column(index)
   -> [renoise.NoteColumn object]
 
--- Access to a single effect column by index. Use properties 'effect_columns'
+-- Access to a single effect column by index. Use properties 'effect_columns' 
 -- to iterate over all effect columns and to query the effect_column count.
--- This is a !lot! more efficient than calling the property:
+-- This is a !lot! more efficient than calling the property: 
 -- effect_columns[index] to randomly access columns. When iterating over all
 -- columns, use pairs(effect_columns).
 renoise.song().patterns[].tracks[].lines[]:effect_column(index)

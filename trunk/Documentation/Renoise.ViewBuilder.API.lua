@@ -128,7 +128,7 @@ control.active
 -- Target strings are not verified. When they point to nothing, the mapped MIDI
 -- message will do nothing and no error is fired.
 control.midi_mapping
-  -> [boolean]
+  -> [string]
 
 
 --------------------------------------------------------------------------------
