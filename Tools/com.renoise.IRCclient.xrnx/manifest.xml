@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<RenoiseScriptingTool doc_version="0">
+  <ApiVersion>3</ApiVersion>
+  <AutoUpgraded>true</AutoUpgraded>
+  <Id>com.renoise.IRCclient</Id>
+  <Version>1.21</Version>
+  <Author>Vincent Voois ( http://tinyurl.com/vvrns )</Author>
+  <Name>Simple IRC Client</Name>
+  <Category>Tools</Category>
+  <Description>Log on to #renoise on espernet</Description>
+  <Homepage>http://tools.renoise.com</Homepage>
+</RenoiseScriptingTool>
