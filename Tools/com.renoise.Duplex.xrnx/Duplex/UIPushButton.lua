@@ -100,12 +100,11 @@ end
 
 -- user input via button
 
-function UIPushButton:do_press()
-  TRACE("UIPushButton:do_press")
+function UIPushButton:do_press(msg)
+  TRACE("UIPushButton:do_press",msg)
   
   if (self.on_press ~= nil) then
 
-    local msg = self:get_msg()
     if not (self.group_name == msg.group_name) then
       return 
     end
@@ -120,13 +119,12 @@ function UIPushButton:do_press()
 
 end
 
-function UIPushButton:do_release()
-  TRACE("UIPushButton:do_release")
+function UIPushButton:do_release(msg)
+  TRACE("UIPushButton:do_release",msg)
   
   if (self.on_release ~= nil) and
     (self.wait_for_release) then
 
-    local msg = self:get_msg()
     if not (self.group_name == msg.group_name) then
       return 
     end
@@ -141,12 +139,11 @@ function UIPushButton:do_release()
 
 end
 
-function UIPushButton:do_hold()
-  TRACE("UIPushButton:do_release")
+function UIPushButton:do_hold(msg)
+  TRACE("UIPushButton:do_release",msg)
   
   if (self.on_hold ~= nil) then
 
-    local msg = self:get_msg()
     if not (self.group_name == msg.group_name) then
       return 
     end
@@ -244,15 +241,15 @@ function UIPushButton:add_listeners()
 
   self._display.device.message_stream:add_listener(
     self, DEVICE_EVENT_BUTTON_PRESSED,
-    function() self:do_press() end )
+    function(msg) self:do_press(msg) end )
 
   self._display.device.message_stream:add_listener(
     self,DEVICE_EVENT_BUTTON_RELEASED,
-    function() self:do_release() end )
+    function(msg) self:do_release(msg) end )
 
   self._display.device.message_stream:add_listener(
     self,DEVICE_EVENT_BUTTON_HELD,
-    function() self:do_hold() end )
+    function(msg) self:do_hold(msg) end )
 
 end
 

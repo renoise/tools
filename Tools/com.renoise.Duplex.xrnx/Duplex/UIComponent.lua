@@ -82,7 +82,7 @@ end
 --  request update on next refresh
 
 function UIComponent:invalidate()
-  TRACE("UIComponent:invalidate")
+  --TRACE("UIComponent:invalidate")
 
   self.dirty = true
 end
@@ -93,7 +93,7 @@ end
 -- draw() - update the visual definition
 
 function UIComponent:draw()
-  TRACE("UIComponent:draw")
+  --TRACE("UIComponent:draw")
 
   self.dirty = false
   
@@ -151,6 +151,7 @@ function UIComponent:set_pos(x,y)
     -- obtain the size of the group
     local cm = self._display.device.control_map
     local cols = cm:count_columns(self.group_name)
+    --print("cols",cols,self.group_name)
     -- calculate x/y from index
     if (idx>0) then
       y = math.ceil(idx/cols)

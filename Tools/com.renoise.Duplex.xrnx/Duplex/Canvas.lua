@@ -88,7 +88,7 @@ end
 -- write a single point to the canvas
 
 function Canvas:write(point,x,y)
-  TRACE("Canvas:write", point, x, y)
+  --TRACE("Canvas:write", point, x, y)
   
   if not y then y = 1 end -- if one-dimensional 
   self:check_delta(point,x,y)
@@ -182,7 +182,7 @@ end
 -- use this to quickly customize the look of a single point
 
 function CanvasPoint:apply(obj)
-  TRACE("CanvasPoint:apply", obj)
+  --TRACE("CanvasPoint:apply", obj)
   
   for k,v in pairs(obj) do
     if (k=="text")then

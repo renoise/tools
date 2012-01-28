@@ -34,10 +34,20 @@ class 'MessageStream'
 function MessageStream:__init()
   TRACE('MessageStream:__init')
 
-  self.change_listeners = table.create() -- for faders,dials
-  self.press_listeners = table.create() -- for buttons
-  self.hold_listeners = table.create()  -- buttons
-  self.release_listeners = table.create()  -- buttons
+  -- for faders,dials
+  self.change_listeners = table.create()
+
+  -- for buttons
+  self.press_listeners = table.create()
+  self.hold_listeners = table.create()
+  self.release_listeners = table.create()
+
+  -- for keys
+  self.key_press_listeners = table.create() 
+  self.key_hold_listeners = table.create()
+  self.key_release_listeners = table.create()
+  self.pitch_change_listeners = table.create()
+  self.channel_pressure_listeners = table.create()
 
   --self.button_hold_time = 1 -- seconds
   self.button_hold_time = self:_get_button_hold_time()
@@ -72,7 +82,7 @@ function MessageStream:on_idle()
        (msg.timestamp + self.button_hold_time < os.clock()) then
       -- broadcast to attached listeners
       for _,listener in ipairs(self.hold_listeners)  do 
-        listener.handler() 
+        listener.handler(msg) 
       end
       msg.held_event_fired = true
     end
@@ -106,13 +116,32 @@ function MessageStream:add_listener(obj,evt_type,handler)
     self.release_listeners:insert({ handler = handler, obj = obj })
     TRACE("MessageStream:onrelease handler added")
   
+  elseif (evt_type == DEVICE_EVENT_KEY_PRESSED) then
+    self.key_press_listeners:insert({ handler = handler, obj = obj })
+    TRACE("MessageStream:DEVICE_EVENT_KEY_PRESSED")
+
+  elseif (evt_type == DEVICE_EVENT_KEY_HELD) then
+    self.key_hold_listeners:insert({ handler = handler, obj = obj })
+    TRACE("MessageStream:DEVICE_EVENT_KEY_HELD")
+    
+  elseif (evt_type == DEVICE_EVENT_KEY_RELEASED) then
+    self.key_release_listeners:insert({ handler = handler, obj = obj })
+    TRACE("MessageStream:DEVICE_EVENT_KEY_RELEASED")
+  
+  elseif (evt_type == DEVICE_EVENT_PITCH_CHANGED) then
+    self.pitch_change_listeners:insert({ handler = handler, obj = obj })
+    TRACE("MessageStream:DEVICE_EVENT_PITCH_CHANGED")
+  
+  elseif (evt_type == DEVICE_EVENT_CHANNEL_PRESSURE) then
+    self.channel_pressure_listeners:insert({ handler = handler, obj = obj })
+    TRACE("MessageStream:DEVICE_EVENT_CHANNEL_PRESSURE")
+  
   else
     error(("Internal Error. Please report: " ..
       "unknown evt_type '%s'"):format(tostring(evt_type) or "nil"))
   end
 
-  TRACE("MessageStream:Number of listeners after addition:",
-     #self.press_listeners, #self.change_listeners, #self.hold_listeners, #self.release_listeners)
+  TRACE("MessageStream:Number of listeners after addition:",#self.press_listeners, #self.change_listeners, #self.hold_listeners, #self.release_listeners, #self.key_press_listeners, #self.key_hold_listeners, #self.key_release_listeners, #self.pitch_change_listeners, #self.channel_pressure_listeners)
 end
 
 
@@ -155,7 +184,47 @@ function MessageStream:remove_listener(obj,evt_type)
         return true
       end
     end 
- 
+
+  elseif (evt_type == DEVICE_EVENT_KEY_RELEASED) then
+    for i,listener in ipairs(self.key_release_listeners) do
+      if (obj == listener.obj) then
+        self.key_release_listeners:remove(i)
+        return true
+      end
+    end 
+
+  elseif (evt_type == DEVICE_EVENT_KEY_HELD) then
+    for i,listener in ipairs(self.key_hold_listeners) do
+      if (obj == listener.obj) then
+        self.key_hold_listeners:remove(i)
+        return true
+      end
+    end 
+
+  elseif (evt_type == DEVICE_EVENT_KEY_PRESSED) then
+    for i,listener in ipairs(self.key_press_listeners) do
+      if (obj == listener.obj) then
+        self.key_press_listeners:remove(i)
+        return true
+      end
+    end 
+
+  elseif (evt_type == DEVICE_EVENT_PITCH_CHANGED) then
+    for i,listener in ipairs(self.pitch_change_listeners) do
+      if (obj == listener.obj) then
+        self.pitch_change_listeners:remove(i)
+        return true
+      end
+    end 
+
+  elseif (evt_type == DEVICE_EVENT_CHANNEL_PRESSURE) then
+    for i,listener in ipairs(self.channel_pressure_listeners) do
+      if (obj == listener.obj) then
+        self.channel_pressure_listeners:remove(i)
+        return true
+      end
+    end 
+
   else
      error(("Internal Error. Please report: " .. 
       "unknown evt_type '%s'"):format(tostring(evt_type) or "nil"))
@@ -170,6 +239,17 @@ end
 function MessageStream:input_message(msg)
   TRACE('MessageStream:input_message(',msg,')')
 
+  --[[
+  print("*** MessageStream: msg.input_method",msg.input_method)
+  print("*** MessageStream: msg.context",msg.context)
+  print("*** MessageStream: msg.group_name",msg.group_name)
+  print("*** MessageStream: msg.is_note_off",msg.is_note_off)
+  print("*** MessageStream: msg.index",msg.index)
+  print("*** MessageStream: msg.row",msg.row)
+  print("*** MessageStream: msg.column",msg.column)
+  rprint(msg.value)
+  rprint(msg)
+  ]]
 
   self.current_message = msg
 
@@ -177,27 +257,87 @@ function MessageStream:input_message(msg)
       msg.input_method == CONTROLLER_DIAL or
       msg.input_method == CONTROLLER_XYPAD) then
 
+    if (msg.context == MIDI_NOTE_MESSAGE) then
+      --print("*** MessageStream: CONTROLLER_FADER/DIAL/XYPAD + MIDI_NOTE_MESSAGE")
+      if (msg.context == MIDI_NOTE_MESSAGE) and (msg.is_note_off) then
+        return
+      end
+
+    end
+
     -- "analogue" input, value between max/min
-    --print(msg)
-    --print("msg.max",msg.max)
-    --rprint(msg.value)
 
     for _,listener in ipairs(self.change_listeners)  do 
-      listener.handler() 
+      listener.handler(msg) 
     end
-  
+
+    if (msg.context == MIDI_PITCH_BEND_MESSAGE) then
+      --print("MessageStream: CONTROLLER_FADER/DIAL/XYPAD + MIDI_PITCH_BEND_MESSAGE")
+      for _,listener in ipairs(self.pitch_change_listeners) do 
+        listener.handler(msg) 
+      end
+    end
+
+  elseif (msg.input_method == CONTROLLER_KEYBOARD) then
+
+    --print("*** MessageStream: msg.context == CONTROLLER_KEYBOARD")
+
+    if (msg.context == MIDI_NOTE_MESSAGE) then
+      --print("*** MessageStream: CONTROLLER_KEYBOARD + MIDI_NOTE_MESSAGE")
+      if (msg.value[2] == msg.min) or (msg.is_note_off) then
+        -- interpret this as release
+        for _,listener in ipairs(self.key_release_listeners) do 
+          listener.handler(msg) 
+        end
+
+      else
+        -- interpret this as pressed
+        --print("*** MessageStream: interpret this as pressed")
+        for _,listener in ipairs(self.key_press_listeners) do 
+          listener.handler(msg) 
+        end
+
+      end
+
+    elseif (msg.context == MIDI_PITCH_BEND_MESSAGE) then
+      --print("*** MessageStream: CONTROLLER_KEYBOARD + MIDI_PITCH_BEND_MESSAGE")
+      for _,listener in ipairs(self.pitch_change_listeners) do 
+        listener.handler(msg) 
+      end
+
+    elseif (msg.context == MIDI_CHANNEL_PRESSURE) then
+      --print("*** MessageStream: CONTROLLER_KEYBOARD + MIDI_CHANNEL_PRESSURE")
+      for _,listener in ipairs(self.channel_pressure_listeners) do 
+        listener.handler(msg) 
+      end
+
+    elseif (msg.context == OSC_MESSAGE) then
+
+      --print("*** MessageStream: CONTROLLER_KEYBOARD + OSC_MESSAGE")
+
+    end
+
+
   elseif (msg.input_method == CONTROLLER_BUTTON or 
-          msg.input_method == CONTROLLER_TOGGLEBUTTON or
-          msg.input_method == CONTROLLER_PUSHBUTTON) then
+      msg.input_method == CONTROLLER_TOGGLEBUTTON or
+      msg.input_method == CONTROLLER_PUSHBUTTON) 
+    then
 
     --  "binary" input, value either max or min 
+
+    -- special case: note-on will be "maximixed" (as it has 
+    -- a variable value, and would otherwise not be able to
+    -- trigger buttons)
+    if (msg.context == MIDI_NOTE_MESSAGE) and (not msg.is_note_off) then
+      msg.value = msg.max
+    end
 
     if (msg.value == msg.max) and (not msg.is_note_off) then
       -- interpret this as pressed
       self.pressed_buttons:insert(msg)
       -- broadcast to listeners
       for _,listener in ipairs(self.press_listeners) do 
-        listener.handler() 
+        listener.handler(msg) 
       end
 
     elseif (msg.value == msg.min) or (msg.is_note_off) then
@@ -207,11 +347,11 @@ function MessageStream:input_message(msg)
       if (not msg.is_virtual) and
         (msg.input_method == CONTROLLER_TOGGLEBUTTON) then
         for _,listener in ipairs(self.press_listeners) do 
-          listener.handler() 
+          listener.handler(msg) 
         end
       else
         for _,listener in ipairs(self.release_listeners) do 
-          listener.handler() 
+          listener.handler(msg) 
         end
       end
       
@@ -223,7 +363,6 @@ function MessageStream:input_message(msg)
       end
 
     end
-
   else
     error(("Internal Error. Please report: " ..
       "unknown msg.input_method '%s'"):format(msg.input_method or "nil"))
@@ -236,7 +375,6 @@ end
 --[[
 
 The Message class is a container for messages, closely related to the ControlMap
-
 ? use meta-table methods to control "undefined" values ?
 
 --]]
@@ -247,7 +385,7 @@ class 'Message'
 function Message:__init(device)
   TRACE('Message:__init')
 
-  -- the context indicate the "type" of message
+  -- the context indicates the "type" of message
   -- (set to one of the "Message type" properties defined in Globals.lua,
   -- such as MIDI_CC_MESSAGE or OSC_MESSAGE)
   self.context = nil
@@ -258,7 +396,6 @@ function Message:__init(device)
   
   -- the is the actual value for the chosen parameter
   -- (not to be confused with the control-map value)
-  -- TODO: support multiple values, to allow control of XY pads etc.
   self.value = nil
 
   -- MIDI only, the channel of the message (1-16)
@@ -267,7 +404,13 @@ function Message:__init(device)
   -- MIDI only, to distinguish between NOTE-ON and NOTE-OFF events
   self.is_note_off = false
 
-  self.id = nil --  unique id for each parameter
+  -- MIDI only, tell if we are dealing with a disguised OSC message
+  self.is_osc_msg = false
+
+  -- whether or not a "key/keyboard" is pressure sensitive
+  self.velocity_enabled = true
+
+  self.id = nil --  unique ViewBuilder id for each parameter
   self.group_name = nil --  name of the parent group 
   self.index = nil --  (int) index within control-map group, starting from 1
   self.column = nil --  (int) column, starting from 1
@@ -275,7 +418,7 @@ function Message:__init(device)
   self.timestamp = nil --  set by os.clock() 
   self.name = nil --  the parameter name
   
-  --  min/max values for every other type of control
+  --  min/max values for every type of control
   self.max = nil  
   self.min = nil
 

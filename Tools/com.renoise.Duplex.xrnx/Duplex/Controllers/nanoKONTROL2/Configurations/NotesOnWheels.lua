@@ -45,6 +45,10 @@ duplex_configurations:insert {
           group_name = "Transport",
           index = 4,
         },
+        metronome_toggle = {
+          group_name = "MARKER",
+          index = 1,
+        },
       },
     },
     NotesOnWheels = {
@@ -129,14 +133,6 @@ duplex_configurations:insert {
       mappings = {
         prev_next_track = {
           group_name = "TRACK",
-          index = 1,
-        },
-      },
-    },
-    Metronome = {
-      mappings = {
-        toggle = {
-          group_name = "MARKER",
           index = 1,
         },
       },

@@ -1,0 +1,146 @@
+<Device>
+  <Name>Mackie-Control</Name>
+  <Author></Author>
+  <Description>General-purpose controlmap for the device based upon Mackie Control layout
+  </Description>
+  <Parameters>
+    <Row>
+      <Column>
+        <Group name="Encoders" orientation="horizontal">
+          <Param value="CC#16" type="dial" name="Dial #1"  maximum="127" minimum="0"/>
+          <Param value="CC#17" type="dial" name="Dial #2"  maximum="127" minimum="0"/>
+          <Param value="CC#18" type="dial" name="Dial #3"  maximum="127" minimum="0"/>
+          <Param value="CC#19" type="dial" name="Dial #4"  maximum="127" minimum="0"/>
+          <Param value="CC#20" type="dial" name="Dial #5"  maximum="127" minimum="0"/>
+          <Param value="CC#21" type="dial" name="Dial #6"  maximum="127" minimum="0"/>
+          <Param value="CC#22" type="dial" name="Dial #7"  maximum="127" minimum="0"/>
+          <Param value="CC#23" type="dial" name="Dial #8"  maximum="127" minimum="0"/>
+        </Group>
+        
+        <Group name="Rec" orientation="horizontal" columns="8">
+          <Param value="C--1" type="button" name="Rec #1" aspect="0.6" maximum="127" minimum="0"/>
+          <Param value="C#-1" type="button" name="Rec #2" aspect="0.6" maximum="127" minimum="0"/>
+          <Param value="D--1" type="button" name="Rec #3" aspect="0.6" maximum="127" minimum="0"/>
+          <Param value="D#-1" type="button" name="Rec #4" aspect="0.6" maximum="127" minimum="0"/>
+          <Param value="E--1" type="button" name="Rec #5" aspect="0.6" maximum="127" minimum="0"/>
+          <Param value="F--1" type="button" name="Rec #6" aspect="0.6" maximum="127" minimum="0"/>
+          <Param value="F#-1" type="button" name="Rec #7" aspect="0.6" maximum="127" minimum="0"/>
+          <Param value="G--1" type="button" name="Rec #8" aspect="0.6" maximum="127" minimum="0"/>
+        </Group>
+        
+        <Group name="Solo" orientation="horizontal" columns="8">
+          <Param value="G#-1" type="button" name="Solo #1" aspect="0.6" maximum="127" minimum="0"/>
+          <Param value="A--1" type="button" name="Solo #2" aspect="0.6" maximum="127" minimum="0"/>
+          <Param value="A#-1" type="button" name="Solo #3" aspect="0.6" maximum="127" minimum="0"/>
+          <Param value="B--1" type="button" name="Solo #4" aspect="0.6" maximum="127" minimum="0"/>
+          <Param value="C-0" type="button" name="Solo #5" aspect="0.6" maximum="127" minimum="0"/>
+          <Param value="C#0" type="button" name="Solo #6" aspect="0.6" maximum="127" minimum="0"/>
+          <Param value="D-0" type="button" name="Solo #7" aspect="0.6" maximum="127" minimum="0"/>
+          <Param value="D#0" type="button" name="Solo #8" aspect="0.6" maximum="127" minimum="0"/>
+        </Group>
+        
+        <Group name="Mute" orientation="horizontal" columns="8">
+          <Param value="E-0" type="button" name="Mute #1" aspect="0.6" maximum="127" minimum="0"/>
+          <Param value="F-0" type="button" name="Mute #2" aspect="0.6" maximum="127" minimum="0"/>
+          <Param value="F#0" type="button" name="Mute #3" aspect="0.6" maximum="127" minimum="0"/>
+          <Param value="G-0" type="button" name="Mute #4" aspect="0.6" maximum="127" minimum="0"/>
+          <Param value="G#0" type="button" name="Mute #5" aspect="0.6" maximum="127" minimum="0"/>
+          <Param value="A-0" type="button" name="Mute #6" aspect="0.6" maximum="127" minimum="0"/>
+          <Param value="A#0" type="button" name="Mute #7" aspect="0.6" maximum="127" minimum="0"/>
+          <Param value="B-0" type="button" name="Mute #8" aspect="0.6" maximum="127" minimum="0"/>
+        </Group>
+        
+        <Group name="Select" orientation="horizontal" columns="8">
+          <Param value="C-1" type="button" name="Select #1" aspect="0.6" maximum="127" minimum="0"/>
+          <Param value="C#1" type="button" name="Select #2" aspect="0.6" maximum="127" minimum="0"/>
+          <Param value="D-1" type="button" name="Select #3" aspect="0.6" maximum="127" minimum="0"/>
+          <Param value="D#1" type="button" name="Select #4" aspect="0.6" maximum="127" minimum="0"/>
+          <Param value="E-1" type="button" name="Select #5" aspect="0.6" maximum="127" minimum="0"/>
+          <Param value="F-1" type="button" name="Select #6" aspect="0.6" maximum="127" minimum="0"/>
+          <Param value="F#1" type="button" name="Select #7" aspect="0.6" maximum="127" minimum="0"/>
+          <Param value="G-1" type="button" name="Select #8" aspect="0.6" maximum="127" minimum="0"/>
+        </Group>
+
+        <Group name="Faders" orientation="horizontal">
+          <Param value="PB|Ch1" type="fader" name="Fader #1"  orientation="vertical" size="4"  maximum="127" minimum="0"/>
+          <Param value="PB|Ch2" type="fader" name="Fader #2"  orientation="vertical" size="4"  maximum="127" minimum="0"/>
+          <Param value="PB|Ch3" type="fader" name="Fader #3"  orientation="vertical" size="4"  maximum="127" minimum="0"/>
+          <Param value="PB|Ch4" type="fader" name="Fader #4"  orientation="vertical" size="4"  maximum="127" minimum="0"/>
+          <Param value="PB|Ch5" type="fader" name="Fader #5"  orientation="vertical" size="4"  maximum="127" minimum="0"/>
+          <Param value="PB|Ch6" type="fader" name="Fader #6"  orientation="vertical" size="4"  maximum="127" minimum="0"/>
+          <Param value="PB|Ch7" type="fader" name="Fader #7"  orientation="vertical" size="4"  maximum="127" minimum="0"/>
+          <Param value="PB|Ch8" type="fader" name="Fader #8"  orientation="vertical" size="4"  maximum="127" minimum="0"/>
+        </Group>
+
+      </Column>        
+
+
+      <Column>
+        <Row>
+          <Group name="Fader_Bank" orientation="horizontal">
+            <Param value="A#2" type="button" name="Fader_Bank Left" aspect="0.7"  maximum="127" minimum="0"/>
+            <Param value="B-2" type="button" name="Fader_Bank Right" aspect="0.7"  maximum="127" minimum="0"/>
+          </Group>
+        </Row>
+      
+        <Row>          
+          <Group name="Function" orientation="horizontal" columns="8">
+            <Param value="F#3" type="button" name="Function #1" size="0.75" maximum="127" minimum="0"/>
+            <Param value="G-3" type="button" name="Function #2" size="0.75" maximum="127" minimum="0"/>
+            <Param value="G#3" type="button" name="Function #3" size="0.75" maximum="127" minimum="0"/>
+            <Param value="A-3" type="button" name="Function #4" size="0.75" maximum="127" minimum="0"/>
+            <Param value="A#3" type="button" name="Function #5" size="0.75" maximum="127" minimum="0"/>
+            <Param value="B-3" type="button" name="Function #6" size="0.75" maximum="127" minimum="0"/>
+            <Param value="C-4" type="button" name="Function #7" size="0.75" maximum="127" minimum="0"/>
+            <Param value="C#4" type="button" name="Function #8" size="0.75" maximum="127" minimum="0"/>
+            
+            <Param value="D-4" type="button" name="Function #9" size="0.75" maximum="127" minimum="0"/>
+            <Param value="D#4" type="button" name="Function #10" size="0.75" maximum="127" minimum="0"/>
+            <Param value="E-4" type="button" name="Function #11" size="0.75" maximum="127" minimum="0"/>
+            <Param value="F-4" type="button" name="Function #12" size="0.75" maximum="127" minimum="0"/>
+            <Param value="F#4" type="button" name="Function #13" size="0.75" maximum="127" minimum="0"/>
+            <Param value="G-4" type="button" name="Function #14" size="0.75" maximum="127" minimum="0"/>
+            <Param value="G#4" type="button" name="Function #15" size="0.75" maximum="127" minimum="0"/>
+            <Param value="A-4" type="button" name="Function #16" size="0.75" maximum="127" minimum="0"/>
+          </Group>
+        </Row>
+        
+        <Row>  
+          <Group name="Transport" orientation="horizontal">
+            <Param value="G-6" type="button" name="Transport Button #1" size="1.23" aspect="0.69" maximum="127" minimum="0"/>
+            <Param value="G#6" type="button" name="Transport Button #2" size="1.23" aspect="0.69" maximum="127" minimum="0"/>
+            <Param value="A-6" type="button" name="Transport Button #3" size="1.23" aspect="0.69" maximum="127" minimum="0"/>
+            <Param value="A#6" type="button" name="Transport Button #4" size="1.23" aspect="0.69" maximum="127" minimum="0"/>
+            <Param value="B-6" type="button" name="Transport Button #5" size="1.23" aspect="0.69" maximum="127" minimum="0"/>
+          </Group>
+        </Row>
+
+        <Row>
+        <Column>
+        <Group name="Master_Fader" orientation="horizontal">
+          <Param value="PB|Ch9" type="fader" name="Master Fader"  orientation="vertical" size="4.85"  maximum="127" minimum="0"/>
+        </Group>
+        </Column>
+
+        
+        <Column>
+        <Row>
+          <Group name="Cursor" orientation="horizontal" columns="2">
+            <Param value="E-7" type="button" name="Cursor Left" maximum="127" minimum="0"/>
+            <Param value="F-7" type="button" name="Cursor Right" maximum="127" minimum="0"/>
+            <Param value="C-7" type="button" name="Cursor Up" maximum="127" minimum="0"/>
+            <Param value="C#7" type="button" name="Cursor Down" maximum="127" minimum="0"/>
+          </Group>
+          
+          <Group name="Wheel" orientation="horizontal">
+            <Param value="CC#60" type="dial" name="Scrub Wheel" size="2" maximum="127" minimum="0"/>
+          </Group>
+        </Row>
+        </Column>
+        </Row>
+
+
+      </Column>
+    </Row>
+  </Parameters>
+</Device>

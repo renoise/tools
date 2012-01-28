@@ -276,13 +276,11 @@ renoise.tool().app_idle_observable:add_notifier(function()
     browser:on_idle()
   end
 end)
---[[
 renoise.tool().app_release_document_observable:add_notifier(function()
   if (browser) then
-    browser:set_device("None")
+    browser:on_release_document()
   end
 end)
-]]
 renoise.tool().app_new_document_observable:add_notifier(function()
   if (browser) then
     browser:on_new_document()

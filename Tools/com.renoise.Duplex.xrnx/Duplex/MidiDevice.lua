@@ -102,7 +102,6 @@ function MidiDevice:midi_callback(message)
   TRACE(("MidiDevice: %s received MIDI %X %X %X"):format(
     self.port_in, message[1], message[2], message[3]))
 
-  local msg = Message()
 
   local value_str = nil
 
@@ -111,149 +110,195 @@ function MidiDevice:midi_callback(message)
       self.port_in, message[1], message[2], message[3]))
   end
 
+  -- message attributes
+  local msg_value,msg_context,msg_channel,msg_value,msg_is_note_off
 
   -- determine the type of signal : note/cc/etc
   if (message[1]>=128) and (message[1]<=159) then
-    msg.context = MIDI_NOTE_MESSAGE
+    msg_context = MIDI_NOTE_MESSAGE
     if(message[1]>143)then -- on
-      msg.channel = message[1]-143  
-      msg.value = message[3]
-      if (msg.value==0) then -- off
-        msg.is_note_off = true      
+      msg_channel = message[1]-143  
+      msg_value = message[3]
+      if (msg_value==0) then -- off
+        msg_is_note_off = true      
       end
     else  -- off
-      msg.channel = message[1]-127 
-      msg.is_note_off = true
+      msg_channel = message[1]-127 
+      msg_is_note_off = true
     end
     value_str = self._note_to_string(self,message[2])
   elseif (message[1]>=176) and (message[1]<=191) then
-    msg.context = MIDI_CC_MESSAGE
-    msg.value = message[3]
-    msg.channel = message[1]-175
+    msg_context = MIDI_CC_MESSAGE
+    msg_value = message[3]
+    msg_channel = message[1]-175
     value_str = self._midi_cc_to_string(self,message[2])
+  elseif (message[1]>=208) and (message[1]<=223) then
+    msg_context = MIDI_CHANNEL_PRESSURE
+    msg_value = message[2]
+    msg_channel = message[1]-207
+    --print("*** MidiDevice:midi_callback() - MIDI_CHANNEL_PRESSURE",msg_value)
+    value_str = "CP"
   elseif (message[1]>=224) and (message[1]<=239) then
-    msg.context = MIDI_PITCH_BEND_MESSAGE
-    msg.value = message[3]
-    msg.channel = message[1]-223
+    msg_context = MIDI_PITCH_BEND_MESSAGE
+    msg_value = message[3]
+    msg_channel = message[1]-223
     value_str = "PB"
+    --return
   else
     -- ignore unsupported type...
+    print("MidiDevice:midi_callback() - unsupported input type")
   end
 
 
   if (value_str) then
 
-    value_str = string.format("%s|Ch%i",value_str,msg.channel)
-    local param = self.control_map:get_param_by_value(value_str)
-  
-    if not duplex_preferences.nrpn_support then
+    --print("*** value_str",value_str,msg_context)
 
-      if (param) then
-        self:_send_message(msg,param["xarg"])
+    -- add the channel info to the value
+    value_str = string.format("%s|Ch%i",value_str,msg_channel)
+
+    -- retrieve all matching parameters
+    local params = self.control_map:get_params_by_value(value_str)
+
+    -- remember the current value, reset on each loop
+    -- (as send_message might change it)
+
+
+    for k,v in ipairs(params) do
+
+      -- deep-copy the parameter table, so we can modify   
+      -- it's values without changing the original 
+      local param = table.rcopy(v)
+    
+      -- create the message
+      local msg = Message()
+      msg.value = msg_value
+      msg.context = msg_context
+      msg.channel = msg_channel
+      msg.value = msg_value
+      msg.is_note_off = msg_is_note_off
+
+      -- special case: if we have received input from a MIDI keyboard
+      -- by means of the "keyboard" input method, stick the note back on
+      if (msg.context == MIDI_NOTE_MESSAGE) and
+        (param["xarg"].value=="|Ch"..msg_channel) 
+      then
+        param["xarg"].value = value_str
       end
 
-    else
+      --rprint(param["xarg"])
+      --print('param["xarg"].value',param["xarg"].value)
 
-      -- ## NRPN
+      if not duplex_preferences.nrpn_support then
 
-      local pace = 1
-
-      -- if NRPN message, write to buffer and handle when complete.
-      if (string.sub(value_str,4,5) == "99") then
-        -- CC#99 is either the parameter-MSB or a finetuning value.
-        -- we'll buffer it, so we can use this later when there is an unambigous NRPN-message
-        self.buffer99 = msg.value
-        if (self.nrpn_message.msb) then --assume this must be the fine1 value then
-          self.nrpn_message.fine1 = msg.value
+        if (param) then
+          self:_send_message(msg,param["xarg"])
         end
-      elseif (string.sub(value_str,4,5) == "98") then
-        -- CC#98 is either the parameter-LSB or another finetuning value.
-        self.buffer98 = msg.value
-        if (self.nrpn_message.lsb) then --assume this must be the fine2 value then, which means that the NRPN message is complete
-          self.nrpn_message.fine2 = msg.value
-          -- NRPN message (should be) completely received. Now, make a pseudo-CC-message out of it
-          value_str = string.format("CC#%s|Ch%i",self.nrpn_message.msb,self.nrpn_message.channel)
-          param = self.control_map:get_param_by_value(value_str)
-          if (param and self.nrpn_message.is_valid) then
-            TRACE('MidiDevice: NRPN complete. value_str=',value_str,', param=',param)
-            TRACE('MidiDevice: ',self.nrpn_message)
-            msg.context = self.nrpn_message.context
-            local track = renoise.song().tracks[renoise.song().selected_track_index]
-            local device = track.devices[renoise.song().selected_device_index]
-            local parameter = device.parameters[param["xarg"].index]
-            local quantum = (parameter.value_max - parameter.value_min)/127
-            local value_norm = parameter.value - parameter.value_min --if value_min is negative, transpose value into positive range
-            local value_midi = math.floor( value_norm / quantum )
-            if (value_norm/quantum-value_midi >= 0.5) then value_midi = value_midi + 1 end --round to nearest integer
 
-            --print('parameter.name = ',parameter.name)
-            --print('parameter.value = ',parameter.value)
-            --print('parameter.value_quantum = ',parameter.value_quantum)
-            --print('parameter.value_min = ',parameter.value_min)
-            --print('parameter.value_max = ',parameter.value_max)
-            --print('            quantum = ',quantum)
-            --print('         value_norm = ',value_norm)
-            --print('         value_midi = ',value_midi)
-            msg.value = value_midi
+      else
 
-            -- try to detect fast changes and apply configurable pace 
-            local currtime = os.clock()
-            TRACE("MidiDevice: NRPN 'pace' = " .. 1000*(currtime - self.nrpn_timestamp) .. " (" .. currtime .. " - " .. self.nrpn_timestamp .. ")")
-            pace = currtime - self.nrpn_timestamp
-            self.nrpn_timestamp = currtime
+        -- ## NRPN
 
-            -- if messages arrive faster than 20/s, speed up
-            if( pace < 0.03 ) then pace = self.nrpn_message.lsb else pace = 1 end
-            if( pace > 32 )   then pace = 3 end  --avoid misconfiguration by applying a mild default
-            msg.channel = self.nrpn_message.channel
-            
-          elseif( not self.nrpn_message.is_valid() ) then
-            -- something ran out of sync. Clean up.
-            TRACE("MidiDevice: NRPN message is incomplete. Ignoring.")
-            self.nrpn_message = NRPNMessage()
+        local pace = 1
+
+        -- if NRPN message, write to buffer and handle when complete.
+        if (string.sub(value_str,4,5) == "99") then
+          -- CC#99 is either the parameter-MSB or a finetuning value.
+          -- we'll buffer it, so we can use this later when there is an unambigous NRPN-message
+          self.buffer99 = msg.value
+          if (self.nrpn_message.msb) then --assume this must be the fine1 value then
+            self.nrpn_message.fine1 = msg.value
           end
+        elseif (string.sub(value_str,4,5) == "98") then
+          -- CC#98 is either the parameter-LSB or another finetuning value.
+          self.buffer98 = msg.value
+          if (self.nrpn_message.lsb) then --assume this must be the fine2 value then, which means that the NRPN message is complete
+            self.nrpn_message.fine2 = msg.value
+            -- NRPN message (should be) completely received. Now, make a pseudo-CC-message out of it
+            value_str = string.format("CC#%s|Ch%i",self.nrpn_message.msb,self.nrpn_message.channel)
+            local params2 = self.control_map:get_params_by_value(value_str)
+            param = table.rcopy(param2[1])
+            if (param and self.nrpn_message.is_valid) then
+              TRACE('MidiDevice: NRPN complete. value_str=',value_str,', param=',param)
+              TRACE('MidiDevice: ',self.nrpn_message)
+              msg.context = self.nrpn_message.context
+              local track = renoise.song().tracks[renoise.song().selected_track_index]
+              local device = track.devices[renoise.song().selected_device_index]
+              local parameter = device.parameters[param["xarg"].index]
+              local quantum = (parameter.value_max - parameter.value_min)/127
+              local value_norm = parameter.value - parameter.value_min --if value_min is negative, transpose value into positive range
+              local value_midi = math.floor( value_norm / quantum )
+              if (value_norm/quantum-value_midi >= 0.5) then value_midi = value_midi + 1 end --round to nearest integer
+
+              --print('parameter.name = ',parameter.name)
+              --print('parameter.value = ',parameter.value)
+              --print('parameter.value_quantum = ',parameter.value_quantum)
+              --print('parameter.value_min = ',parameter.value_min)
+              --print('parameter.value_max = ',parameter.value_max)
+              --print('            quantum = ',quantum)
+              --print('         value_norm = ',value_norm)
+              --print('         value_midi = ',value_midi)
+              msg.value = value_midi
+
+              -- try to detect fast changes and apply configurable pace 
+              local currtime = os.clock()
+              TRACE("MidiDevice: NRPN 'pace' = " .. 1000*(currtime - self.nrpn_timestamp) .. " (" .. currtime .. " - " .. self.nrpn_timestamp .. ")")
+              pace = currtime - self.nrpn_timestamp
+              self.nrpn_timestamp = currtime
+
+              -- if messages arrive faster than 20/s, speed up
+              if( pace < 0.03 ) then pace = self.nrpn_message.lsb else pace = 1 end
+              if( pace > 32 )   then pace = 3 end  --avoid misconfiguration by applying a mild default
+              msg.channel = self.nrpn_message.channel
+              
+            elseif( not self.nrpn_message.is_valid() ) then
+              -- something ran out of sync. Clean up.
+              TRACE("MidiDevice: NRPN message is incomplete. Ignoring.")
+              self.nrpn_message = NRPNMessage()
+            end
+          end
+        elseif (string.sub(value_str,4,5) == "96") then
+          -- CC#96 = NRPN-Increment
+          self.nrpn_message = NRPNMessage()
+          self.nrpn_message.msb = self.buffer99
+          self.nrpn_message.lsb = self.buffer98
+          self.nrpn_message.channel = msg.channel
+          self.nrpn_message.increment = true
+          self.nrpn_message.decrement = false
+        elseif (string.sub(value_str,4,5) == "97") then
+          -- CC#97 = NRPN-Decrement
+          self.nrpn_message = NRPNMessage()
+          self.nrpn_message.msb = self.buffer99
+          self.nrpn_message.lsb = self.buffer98
+          self.nrpn_message.channel = msg.channel
+          self.nrpn_message.increment = false
+          self.nrpn_message.decrement = true
+        elseif (string.sub(value_str,4,5) == "6") then
+          -- CC#6 = NRPN-SetValue
+          self.nrpn_message = NRPNMessage()
+          self.nrpn_message.msb = self.buffer99
+          self.nrpn_message.lsb = self.buffer98
+          self.nrpn_message.channel = msg.channel
+          self.nrpn_message.increment = false
+          self.nrpn_message.decrement = false
+          self.nrpn_message.value = msg.value
         end
-      elseif (string.sub(value_str,4,5) == "96") then
-        -- CC#96 = NRPN-Increment
-        self.nrpn_message = NRPNMessage()
-        self.nrpn_message.msb = self.buffer99
-        self.nrpn_message.lsb = self.buffer98
-        self.nrpn_message.channel = msg.channel
-        self.nrpn_message.increment = true
-        self.nrpn_message.decrement = false
-      elseif (string.sub(value_str,4,5) == "97") then
-        -- CC#97 = NRPN-Decrement
-        self.nrpn_message = NRPNMessage()
-        self.nrpn_message.msb = self.buffer99
-        self.nrpn_message.lsb = self.buffer98
-        self.nrpn_message.channel = msg.channel
-        self.nrpn_message.increment = false
-        self.nrpn_message.decrement = true
-      elseif (string.sub(value_str,4,5) == "6") then
-        -- CC#6 = NRPN-SetValue
-        self.nrpn_message = NRPNMessage()
-        self.nrpn_message.msb = self.buffer99
-        self.nrpn_message.lsb = self.buffer98
-        self.nrpn_message.channel = msg.channel
-        self.nrpn_message.increment = false
-        self.nrpn_message.decrement = false
-        self.nrpn_message.value = msg.value
-      end
 
-      if (param) then
-        for i=1, pace, 1 do
-          if( self.nrpn_message.increment ) then msg.value = math.min(127, msg.value+1) end
-          if( self.nrpn_message.decrement ) then msg.value = math.max(0,   msg.value-1) end
-        self:_send_message(msg,param["xarg"])
-      end
-        -- as we have parsed the NRPNMessage (if there was one), we can reset it.
-        self.nrpn_message = NRPNMessage()
-      end
+        if (param) then
+          for i=1, pace, 1 do
+            if( self.nrpn_message.increment ) then msg.value = math.min(127, msg.value+1) end
+            if( self.nrpn_message.decrement ) then msg.value = math.max(0,   msg.value-1) end
+          self:_send_message(msg,param["xarg"])
+        end
+          -- as we have parsed the NRPNMessage (if there was one), we can reset it.
+          self.nrpn_message = NRPNMessage()
+        end
 
-      -- -- NRPN
+        -- -- NRPN
+
+      end
 
     end
-
   end
 
 end
@@ -360,7 +405,7 @@ function MidiDevice:send_note_message(key,velocity,channel)
     channel = self.default_midi_channel
   end
 
-  if (velocity == 0) then
+  if (velocity == 0) and not (self.allow_zero_velocity_note_on) then
     message[1] = 0x7F+channel -- note off
   else
     message[1] = 0x8F+channel -- note-on
@@ -460,7 +505,7 @@ end
 -- @param ceiling - the UIComponent ceiling value
 
 function MidiDevice:point_to_value(pt,elm,ceiling)
-  TRACE("MidiDevice:point_to_value()",pt,elm,ceiling)
+  --TRACE("MidiDevice:point_to_value()",pt,elm,ceiling)
 
   local ceiling = ceiling or 127
   local value

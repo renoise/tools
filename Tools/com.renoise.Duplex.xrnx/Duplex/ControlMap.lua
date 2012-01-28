@@ -170,7 +170,7 @@ end
 
 --------------------------------------------------------------------------------
 
--- get_param_by_value() 
+-- get_params_by_value() 
 -- used by the MidiDevice to retrieves a parameter by it's note/cc-value-string
 -- the function will match values on the default channel, if not defined:
 -- "CC#105|Ch1" will match both "CC#105|Ch1" and "CC#105" 
@@ -178,20 +178,35 @@ end
 -- @param str (string, control-map value attribute)
 -- @return table
 
-function ControlMap:get_param_by_value(str)
-  TRACE("ControlMap:get_param_by_value",str)
+function ControlMap:get_params_by_value(str)
+  TRACE("ControlMap:get_params_by_value",str)
 
+  local matches = table.create()
+
+  -- first, look for an exact match
   local str2 = strip_channel_info(str)
-  
   for _,group in pairs(self.groups) do
     for k,v in ipairs(group) do
+      --rprint(v["xarg"])
       if (v["xarg"]["value"] == str) or (v["xarg"]["value"] == str2) then
-        return v
+        matches:insert(v)
       end
     end
   end
 
-  return nil
+  -- less exact matching (keyboard)
+  local str2 = strip_note_info(str)
+  for _,group in pairs(self.groups) do
+    for k,v in ipairs(group) do
+      --rprint(v["xarg"])
+      if (v["xarg"]["value"] == str) or (v["xarg"]["value"] == str2) then
+        --print("stripped note",str2)
+        matches:insert(v)
+      end
+    end
+  end
+
+  return matches
 end
 
 
@@ -200,7 +215,8 @@ end
 -- get_param_by_action() - used for parsing OSC messages
 -- retrieve a parameter by matching it's value or action attribute, 
 -- with wildcard support for particular types of value:
--- "/press 1 %i" matches "/press 1 1" but not "/press 1 A". 
+-- "/press 1 %i" matches "/press 1 1" but not "/press 1 A"
+-- "/pre** 1 %f" matches "/press 1 1" and "/preff 10 1.42"
 --
 -- use the action property if it's available, otherwise use
 -- the "value" property - the action property is needed when
@@ -230,6 +246,9 @@ function ControlMap:get_param_by_action(str)
     str_table:insert(v)
   end
 
+  local wildcard_idx = nil
+  local replace_char = ""
+
   for _,group in pairs(self.groups) do
     for _,v in ipairs(group) do
       local str_prop = v["xarg"]["action"] or v["xarg"]["value"]
@@ -240,17 +259,54 @@ function ControlMap:get_param_by_action(str)
         for p in string.gmatch(str_prop,"[^%s]+") do
           prop_table:insert(p)
         end
+        local matched = true
         if (#str_table~=#prop_table) then
           -- ignore if different number of parts
-
+          matched = false
         elseif(str_table[1]~=prop_table[1]) then
-          -- ignore if different pattern 
+          -- ignore if different pattern, but first we 
+          -- check of there's a wildcard present
+          --print("*** ControlMap: ignore if different pattern",str_table[1],prop_table[1])
+          if (prop_table[1]):find("*",1,true) then
+            local char2 = nil
+            for i = 1,#str_table[1] do
+              local char1 = (str_table[1]):sub(i,i)
+              -- only proceed with source token when we have not yet
+              -- found a wildcard 
+              if (replace_char =="") then
+                char2 = (prop_table[1]):sub(i,i)
+              end
+              --print("*** ControlMap: char1,char2",char1,char2)
+              if (char1~=char2) then
+                -- capture the target parameter's index
+                -- (as long as it's a number)
+                if (char2 == "*") and ((char1):match("(%d*)")) then
+                  wildcard_idx = i
+                  replace_char = replace_char..char1
+                  --print("replace_char",replace_char)
+                  matched = true
 
-        else
+                else
+                  -- failed to match a character
+                  matched = false
+                  break
+                end
+              end
+            end
+          else
+            --print("*** no wildcard detected")
+            matched = false
+          end
+        end
+        --print("*** ControlMap: str_table[1],prop_table[1]",str_table[1],prop_table[1])
+
+        if matched then
+        --else
           -- return matching group + extracted value
           local values = table.create()
           local ignore = false
           for o=2,#prop_table do
+            --print("prop_table[",o,"]",prop_table[o])
             if (not ignore) then
               if (prop_table[o]=="%f") then
                 values:insert(tonumber(str_table[o]))
@@ -263,7 +319,7 @@ function ControlMap:get_param_by_action(str)
             end
           end
           if not ignore then
-            return v,values
+            return v,values,wildcard_idx,replace_char
           end
 
         end
@@ -431,7 +487,7 @@ end
 function ControlMap:determine_type(str)
   TRACE("ControlMap:determine_type",str)
 
-  -- url
+  -- osc messages begin with a slash
   if string.sub(str,0,1)=="/" then
     return OSC_MESSAGE
   
@@ -446,6 +502,11 @@ function ControlMap:determine_type(str)
   -- pitch bend, if it matches the pich-bend name
   elseif string.sub(str,1,2)=="PB" then
     return MIDI_PITCH_BEND_MESSAGE
+
+  -- keyboard
+  elseif string.sub(str,0,1)=="|" then
+    return MIDI_KEY_MESSAGE
+  
 
   else
     error(("Internal Error. Please report: " ..
@@ -531,11 +592,16 @@ function ControlMap:_parse_xml(s)
       if (xargs["minimum"]) then
         xargs["minimum"] = tonumber(xargs["minimum"])
       end
+      if (xargs["range"]) then
+        xargs["range"] = tonumber(xargs["range"])
+      end
 
       -- meta-attr - cast as booleans:
       xargs["skip_echo"] = bool(xargs["skip_echo"])
       xargs["invert_x"] = bool(xargs["invert_x"])
       xargs["invert_y"] = bool(xargs["invert_y"])
+      xargs["velocity_enabled"] = bool(xargs["velocity_enabled"])
+
 
       table.insert(top, {label=label, xarg=xargs, empty=1})
     

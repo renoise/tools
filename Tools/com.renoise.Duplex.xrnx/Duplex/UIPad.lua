@@ -36,10 +36,8 @@ end
 
 -- user input via control
 
-function UIPad:do_change()
-  TRACE("UIPad:do_change()")
-
-  local msg = self:get_msg()
+function UIPad:do_change(msg)
+  TRACE("UIPad:do_change()",msg)
 
   if not (self.group_name == msg.group_name) then
     return
@@ -100,7 +98,7 @@ function UIPad:add_listeners()
 
   self._display.device.message_stream:add_listener(
     self,DEVICE_EVENT_VALUE_CHANGED,
-    function() self:do_change() end )
+    function(msg) self:do_change(msg) end )
 
 end
 

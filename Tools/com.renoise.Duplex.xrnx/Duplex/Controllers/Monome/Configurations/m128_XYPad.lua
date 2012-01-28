@@ -99,6 +99,11 @@ duplex_configurations:insert {
         xy_grid = {
           group_name = "Grid7x7",
         },
+        focus_button = {
+          group_name = "Controls",
+          index = 4
+        },
+
       },
       options = {
         unique_id = 5,
@@ -111,9 +116,13 @@ duplex_configurations:insert {
           group_name = "ADC",
           index = 1,
         },
+        lock_button = {
+          group_name = "Controls",
+          index = 3
+        },
         focus_button = {
           group_name = "Controls",
-          index = 7
+          index = 5
         },
       },
       options = {
@@ -122,6 +131,20 @@ duplex_configurations:insert {
     },
     --[[
     ]]
+    Transport = {
+    
+      mappings = {
+      
+        start_playback = {
+          group_name = "Controls",
+          index = 1,
+        },
+        edit_mode = {
+          group_name = "Controls",
+          index = 2,
+        },
+      }
+    }
   }
 }
 

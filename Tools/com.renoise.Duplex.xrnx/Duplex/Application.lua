@@ -191,6 +191,17 @@ end
 
 --------------------------------------------------------------------------------
 
+-- called when releasing the active document
+
+function Application:on_release_document()
+  TRACE("Application:on_release_document()")
+  
+  -- nothing done by default
+end
+
+
+--------------------------------------------------------------------------------
+
 -- called when a new document becomes available
 
 function Application:on_new_document()
@@ -371,6 +382,7 @@ function Application:_add_option_row(t,key,process)
       width=90,
     },
     vb:popup{
+      id=("dpx_app_options_%s"):format(key),
       items=t.items,
       value=(t.value>#t.items) and 1 or t.value, -- if invalid, set to first
       width=175,
@@ -386,8 +398,11 @@ end
 --------------------------------------------------------------------------------
 
 -- set option value 
+-- @param key, val: the key/value to change
+-- @process (BrowserProcess) supply this parameter to update permanently
 
 function Application:_set_option(key, val, process)
+  TRACE("Application:_set_option()",key, val, process)
 
   -- set local value
   for k,v in pairs(self.options) do
@@ -409,6 +424,16 @@ function Application:_set_option(key, val, process)
     else
       app_options_node:property(key).value = val
     end
+  
+    -- update settings UI
+    if (self._settings_view)then
+      local elm_id = ("dpx_app_options_%s"):format(key)
+      --print("elm_id",elm_id)
+      local elm = self._vb.views[elm_id]
+      --print("elm",elm)
+      elm.value = val
+    end
+
   end
 
 end

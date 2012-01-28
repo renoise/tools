@@ -18,6 +18,11 @@ of the device complete with native sliders, knobs etc.
 local UNIT_HEIGHT = 32
 local UNIT_WIDTH = 32
 
+local KEYS_COLOR_WHITE = {0x9F,0x9F,0x9F}
+local KEYS_COLOR_BLACK = {0x00,0x00,0x00}
+local KEYS_WIDTH = 28
+local KEYS_HEIGHT = 64
+
 
 --==============================================================================
 
@@ -174,7 +179,6 @@ function Display:update()
     if (obj.group_name and obj.dirty) then
 
       obj:draw()
-
       local columns = control_map.groups[obj.group_name].columns
 
       -- loop through the delta array - it contains all recent updates
@@ -189,8 +193,14 @@ function Display:update()
               else
                 local idx = (x+obj.x_pos-1)+((y+obj.y_pos-2)*columns)
                 local elm = control_map:get_indexed_element(idx, obj.group_name)
+                -- if element is a UIKey and part of a keyboard, 
+                -- provide a dynamically generated entry
+                if not elm and (type(obj)=="UIKey") then
+                  elm = control_map:get_indexed_element(1, obj.group_name)
+                  elm.skip_echo = true
+                end
                 if (elm) then
-                  -- update the display, using everything we've got
+                  -- update the display & hardware
                   self:set_parameter(elm, obj, obj.canvas.delta[x][y])
                 end
               end
@@ -235,7 +245,7 @@ end
 -- @secondary: boolean, specified when function call itself (xypad/value-pairs)
 
 function Display:set_parameter(elm, obj, point, secondary)
-  TRACE('Display:set_parameter',elm, obj, point, secondary)
+  --TRACE('Display:set_parameter',elm, obj, point, secondary)
 
   -- resulting numeric value, or table of values (XYPad)
   local value = self.device:point_to_value(point, elm, obj.ceiling)
@@ -293,7 +303,6 @@ function Display:set_parameter(elm, obj, point, secondary)
           end
         else
           -- value-pair, invoke method again
-          --print("set_parameter",self, elm, obj, point)
           Display.set_parameter(self, elm, obj, point,true)
         end
 
@@ -310,25 +319,17 @@ function Display:set_parameter(elm, obj, point, secondary)
       then
         self.device:send_cc_message(num,value,channel)
       end
+    
     elseif (msg_type == MIDI_PITCH_BEND_MESSAGE) then
 
-      --[[ TODO      
-      value = self.device:point_to_value(
-        point, elm, obj.ceiling)
+      -- not implemented
 
-      -- do not loop back the original value change back to the sender, 
-      -- unless the device explicitly wants this
-      if (not current_message) or
-         (current_message.is_virtual) or
-         (current_message.context ~= MIDI_PITCH_BEND_MESSAGE) or
-         (current_message.id ~= elm.id) or
-         (current_message.value ~= value) or
-         (self.device.loopback_received_messages)
-      then
-        self.device:send_pb_message(num,value)
-      end
-      ]]    
+    elseif (msg_type == MIDI_KEY_MESSAGE) then
+
+      -- do nothing
+
     elseif (msg_type == OSC_MESSAGE) then
+
 
       -- value comparison on OSC, might be a table
       local values_are_equal = false
@@ -360,8 +361,10 @@ function Display:set_parameter(elm, obj, point, secondary)
           if (type(osc_value)=="table") then
             osc_value = table.rcopy(value)
           end
-          osc_value[1] = elm.invert_x and elm.maximum-osc_value[1] or osc_value[1]
-          osc_value[2] = elm.invert_y and elm.maximum-osc_value[2] or osc_value[2]
+          osc_value[1] = elm.invert_x and 
+            elm.maximum-osc_value[1] or osc_value[1]
+          osc_value[2] = elm.invert_y and 
+            elm.maximum-osc_value[2] or osc_value[2]
         end
 
         -- it's recommended that wireless devices have their 
@@ -398,15 +401,11 @@ function Display:set_parameter(elm, obj, point, secondary)
 
   if (widget) then
     local widget_type = type(widget)
-    --print("widget_type",widget_type)
     if (widget_type == "Button") then
       -- either use text or colors for a button
-      --local colorspace = self.device.colorspace
       local colorspace = elm.colorspace or self.device.colorspace
       if (colorspace[1] or colorspace[2] or colorspace[3]) then
         widget.color = self.device:quantize_color(point.color,colorspace)
-        --widget.text = point.text
-        --widget.text = nil
       else
         widget.color = { 0, 0, 0 }
         widget.text = point.text
@@ -427,6 +426,66 @@ function Display:set_parameter(elm, obj, point, secondary)
         y=value[2]
       }
       widget:add_notifier(self.ui_notifiers[elm.id])
+
+    elseif (widget_type == "Rack") then
+
+      -- keyboard, locate the right button
+
+      local key_idx = nil
+      local is_osc_msg = (elm.value):sub(0,1)=="/"
+      local is_virtual = (current_message) and current_message.is_virtual or false
+
+      if is_osc_msg then
+        if obj.pitch then
+          key_idx = obj.pitch
+        else
+          key_idx = obj.x_pos
+        end
+        if (is_virtual) then
+          key_idx = key_idx + 1
+        end
+      else
+        if obj.pitch then
+          -- MIDI keyboard
+          --key_idx = (obj.pitch+1) + obj.transpose +12
+          key_idx = (obj.pitch+1) + 12
+        else
+          -- no pitch means "match all" 
+          key_idx = obj.x_pos
+        end
+      end
+
+      -- initial index can't always be determined (OSC messages)
+      if key_idx then
+
+        local key_id = ("%s_%i"):format(elm.id,key_idx)
+        local key_widget = self.vb.views[key_id]
+
+        if key_widget then
+
+          local key_offset = elm.offset
+          -- figure out if it's a black or white key
+          local is_white_key = true
+          -- normalize the position (no octave)
+          local key_pos = key_idx%12
+          if (key_pos==2) or 
+            (key_pos==4) or
+            (key_pos==7) or
+            (key_pos==9) or
+            (key_pos==11) 
+          then
+            is_white_key = false
+          end
+
+          if not obj.pressed then
+            key_widget.color = is_white_key and KEYS_COLOR_WHITE or KEYS_COLOR_BLACK
+          else
+            key_widget.color = is_white_key and {0xCF,0xCF,0xCF} or {0x6F,0x6F,0x6F}
+          end
+
+        end
+        
+      end
 
     else
       error(("Internal Error. Please report: " .. 
@@ -473,9 +532,9 @@ end
 --------------------------------------------------------------------------------
 
 --  generate message : used by virtual control-surface elements
---  @value : the value
+--  @value : the value (number or table)
 --  @metadata : metadata table (min/max etc.)
---  @release: boolean, true when button has been released
+--  @released: boolean, true when button has been released
 
 function Display:generate_message(value, metadata, released)
   TRACE('Display:generate_message:',value)
@@ -496,6 +555,9 @@ function Display:generate_message(value, metadata, released)
 
   -- the type of message (MIDI/OSC...)
   msg.context = self.device.control_map:determine_type(metadata.value)
+  if (msg.context == OSC_MESSAGE) then
+    msg.is_osc_msg = true
+  end 
   -- add channel/note-off for MIDI devices
   if (self.device.protocol == DEVICE_MIDI_PROTOCOL) then
     msg.channel = self.device:extract_midi_channel(metadata.value) or 
@@ -526,6 +588,20 @@ function Display:generate_message(value, metadata, released)
 
   elseif (metadata.type == "xypad") then
     msg.input_method = CONTROLLER_XYPAD
+
+  elseif (metadata.type == "key") then
+    msg.input_method = CONTROLLER_KEYBOARD
+    local note_val = metadata.index
+    if msg.is_osc_msg then
+      msg.context = MIDI_NOTE_MESSAGE
+    else
+      note_val = value_to_midi_pitch(metadata.value)
+    end
+    msg.velocity_enabled = false
+
+  elseif (metadata.type == "keyboard") then
+    msg.input_method = CONTROLLER_KEYBOARD
+    msg.velocity_enabled = false
 
   else
     error(("Internal Error. Please report: " .. 
@@ -559,7 +635,7 @@ function Display:_walk_table(t, done, deep)
       local view_obj = {
         meta = t[key].xarg  -- xml attributes
       }
-  
+
       --- Param
   
       if (t[key].label == "Param") then
@@ -586,12 +662,12 @@ function Display:_walk_table(t, done, deep)
           adj_height = adj_height*view_obj.meta.aspect
         end
 
-
-        --- Param:button, togglebutton or pushbutton
-
         if (view_obj.meta.type == "button" or 
             view_obj.meta.type == "togglebutton" or
             view_obj.meta.type == "pushbutton") then
+
+          --- Param:button, togglebutton or pushbutton
+
           local notifier = function(value) 
             -- output the maximum value
             self:generate_message(view_obj.meta.maximum,view_obj.meta)
@@ -616,11 +692,41 @@ function Display:_walk_table(t, done, deep)
             pressed = press_notifier,
             released = release_notifier
           }
+        elseif (view_obj.meta.type == "key") then
+
+          --- Param:key
         
-        
-        --- Param:encoder
+          local notifier = function(value) 
+            -- output the maximum value
+            self:generate_message(view_obj.meta.maximum,view_obj.meta)
+          end
+
+          local press_notifier = function(value) 
+            local pitch = view_obj.meta.index
+            local velocity = view_obj.meta.maximum
+            self:generate_message({pitch,velocity},view_obj.meta)
+          end
+          local release_notifier = function(value) 
+            local pitch = view_obj.meta.index
+            local velocity = view_obj.meta.minimum
+            local released = true
+            self:generate_message({pitch,velocity},view_obj.meta,released)
+          end
+
+          self.ui_notifiers[view_obj.meta.id] = notifier
+          view_obj.view = self.vb:button{
+            id = view_obj.meta.id,
+            width = adj_width,
+            height = adj_height,
+            tooltip = tooltip,
+            pressed = press_notifier,
+            released = release_notifier
+          }
         --[[
         elseif (view_obj.meta.type == "encoder") then
+        
+          --- Param:encoder
+
           local notifier = function(value) 
             -- output the current value
             self:generate_message(value,view_obj.meta)
@@ -637,10 +743,10 @@ function Display:_walk_table(t, done, deep)
               notifier = notifier
             }
         ]]
-          
-        --- Param:dial
-        
         elseif (view_obj.meta.type == "dial") then
+            
+          --- Param:dial
+          
           local notifier = function(value) 
             -- output the current value
             self:generate_message(value,view_obj.meta)
@@ -657,12 +763,10 @@ function Display:_walk_table(t, done, deep)
             notifier = notifier
           }
           
-          
-        --- Param:fader
-                  
         elseif (view_obj.meta.type == "fader") then
-
-
+            
+          --- Param:fader
+                    
           local notifier = function(value) 
             --[[
             ]]
@@ -694,6 +798,8 @@ function Display:_walk_table(t, done, deep)
             }
           else
             
+            --- Param:fader
+                    
             view_obj.view = self.vb:slider {
               id  =view_obj.meta.id,
               min = view_obj.meta.minimum,
@@ -704,9 +810,10 @@ function Display:_walk_table(t, done, deep)
               notifier = notifier
             }
           end
-        
-        --- Param:xypad
+
         elseif (view_obj.meta.type == "xypad") then
+
+          --- Param:xypad
 
           local notifier = function(value) 
             self:generate_message({value.x,value.y},view_obj.meta)
@@ -729,32 +836,246 @@ function Display:_walk_table(t, done, deep)
             height = adj_height,
             notifier = notifier
           }
+        elseif (view_obj.meta.type == "keyboard") then
+
+          --- Param:keyboard
+
+          local keys_color_white = KEYS_COLOR_WHITE
+          local keys_color_black = KEYS_COLOR_BLACK
+          local keys_width = KEYS_WIDTH
+          local keys_height = KEYS_HEIGHT
+
+          if view_obj.meta.size then
+            keys_width = keys_width * view_obj.meta.size
+            keys_height = keys_height * view_obj.meta.size
+          end
+
+          if view_obj.meta.aspect then
+            keys_height = keys_height*view_obj.meta.aspect
+          end
+
+          -- take a copy of the meta-info, and modify it
+          -- so actions are detected as MIDI_NOTE_MESSAGE
+          -- (use a bogus note string to pass)
+
+          local meta = table.rcopy(view_obj.meta)
+          meta.value = "H#1"..meta.value
+
+          -- the keyboard parts
+          local black_keys = self.vb:row {
+            style = "panel",
+          }
+          local white_keys = self.vb:row {
+            style = "border",
+          }
+          local keyboard = self.vb:column {
+            id  = meta.id,
+          }
+
+          -- build the keyboard
+
+          for i = 1,meta.range do
+
+            local press_notifier = function(value) 
+              local pitch = i-1
+              local velocity = meta.maximum
+              self:generate_message({pitch,velocity},meta)
+            end
+            local release_notifier = function(value) 
+              local pitch = i-1
+              local velocity = meta.minimum
+              local released = true
+              self:generate_message({pitch,velocity},meta,released)
+            end
+
+            if (i%12==1) then
+              if (i==1) then
+                local scale = (i==1) and 2 or 1
+                black_keys:add_child(self.vb:space {
+                  width = (keys_width/scale),
+                  height = keys_height
+                })
+              elseif (i==meta.range) then
+                black_keys:add_child(self.vb:space {
+                  width = keys_width/2,
+                  height = keys_height
+                })
+              end
+              white_keys:add_child(self.vb:button {
+                id = meta.id.."_"..i,
+                width = keys_width,
+                height = keys_height,
+                color = keys_color_white,
+                pressed = press_notifier,
+                released = release_notifier,
+              })
+            elseif (i%12==2) then
+              black_keys:add_child(self.vb:button {
+                id = meta.id.."_"..i,
+                width = keys_width,
+                height = keys_height,
+                color = keys_color_black,
+                pressed = press_notifier,
+                released = release_notifier,
+              })
+            elseif (i%12==3) then
+              if (i==meta.range) then
+                black_keys:add_child(self.vb:space {
+                  width = keys_width/2,
+                  height = keys_height
+                })
+              end
+              white_keys:add_child(self.vb:button {
+                id = meta.id.."_"..i,
+                width = keys_width,
+                height = keys_height,
+                color = keys_color_white,
+                pressed = press_notifier,
+                released = release_notifier,
+              })
+            elseif (i%12==4) then
+              black_keys:add_child(self.vb:button {
+                id = meta.id.."_"..i,
+                width = keys_width,
+                height = keys_height,
+                color = keys_color_black,
+                pressed = press_notifier,
+                released = release_notifier,
+              })
+            elseif (i%12==5) then
+              local scale = (i==meta.range) and 2 or 1
+              black_keys:add_child(self.vb:space {
+                width = keys_width/scale,
+                height = keys_height
+              })
+              white_keys:add_child(self.vb:button {
+                id = meta.id.."_"..i,
+                width = keys_width,
+                height = keys_height,
+                color = keys_color_white,
+                pressed = press_notifier,
+                released = release_notifier,
+              })
+            elseif (i%12==6) then
+              if (i==meta.range) then
+                black_keys:add_child(self.vb:space {
+                  width = keys_width/2,
+                  height = keys_height
+                })
+              end
+              white_keys:add_child(self.vb:button {
+                id = meta.id.."_"..i,
+                width = keys_width,
+                height = keys_height,
+                color = keys_color_white,
+                pressed = press_notifier,
+                released = release_notifier,
+              })
+            elseif (i%12==7) then
+              black_keys:add_child(self.vb:button {
+                id = meta.id.."_"..i,
+                width = keys_width,
+                height = keys_height,
+                color = keys_color_black,
+                pressed = press_notifier,
+                released = release_notifier,
+              })
+            elseif (i%12==8) then
+              if (i==meta.range) then
+                black_keys:add_child(self.vb:space {
+                  width = keys_width/2,
+                  height = keys_height
+                })
+              end
+              white_keys:add_child(self.vb:button {
+                id = meta.id.."_"..i,
+                width = keys_width,
+                height = keys_height,
+                color = keys_color_white,
+                pressed = press_notifier,
+                released = release_notifier,
+              })
+            elseif (i%12==9) then
+              black_keys:add_child(self.vb:button {
+                id = meta.id.."_"..i,
+                width = keys_width,
+                height = keys_height,
+                color = keys_color_black,
+                pressed = press_notifier,
+                released = release_notifier,
+              })
+            elseif (i%12==10) then
+              if (i==meta.range) then
+                black_keys:add_child(self.vb:space {
+                  width = keys_width/2,
+                  height = keys_height
+                })
+              end
+              white_keys:add_child(self.vb:button {
+                id = meta.id.."_"..i,
+                width = keys_width,
+                height = keys_height,
+                color = keys_color_white,
+                pressed = press_notifier,
+                released = release_notifier,
+              })
+            elseif (i%12==11) then
+              black_keys:add_child(self.vb:button {
+                id = meta.id.."_"..i,
+                width = keys_width,
+                height = keys_height,
+                color = keys_color_black,
+                pressed = press_notifier,
+                released = release_notifier,
+              })
+            elseif (i%12==0) then
+              local scale = (i==meta.range) and 2 or 1
+              black_keys:add_child(self.vb:space {
+                width = keys_width/scale,
+                height = keys_height
+              })
+              white_keys:add_child(self.vb:button {
+                id = meta.id.."_"..i,
+                width = keys_width,
+                height = keys_height,
+                color = keys_color_white,
+                pressed = press_notifier,
+                released = release_notifier,
+              })
+            end
+
+          end
+
+          -- assemble the parts
+          keyboard:add_child(black_keys)
+          keyboard:add_child(white_keys)
+          view_obj.view = keyboard
+
         end
         
-  
-      --- Column
-  
       elseif (t[key].label == "Column") then
+    
+        --- Column
+    
         view_obj.view = self.vb:column{
           spacing = DEFAULT_SPACING
         }
         self._parents[deep] = view_obj
         self._grid_obj = nil
   
-  
-      --- Row
-  
       elseif (t[key].label == "Row") then
+    
+        --- Row
+    
         view_obj.view = self.vb:row{
           spacing = DEFAULT_SPACING,
         }
         self._parents[deep] = view_obj
         self._grid_obj = nil
-
-      --- Group
-  
       elseif (t[key].label == "Group") then
-      
+
+        --- Group
+    
         self:_validate_group(t[key].xarg)
 
         -- the group
@@ -918,15 +1239,13 @@ function Display:_validate_param(xargs)
     xargs.value = "CC#0"
   end
   
-  -- type
-  local valid_types = {"button", "togglebutton", "pushbutton", "encoder", "dial", "fader", "xypad"}
           
-  if (xargs.type == nil or not table.find(valid_types, xargs.type)) then
+  if (xargs.type == nil or not table.find(CONTROLMAP_TYPES, xargs.type)) then
     renoise.app():show_warning(
       ('Whoops! The controlmap \'%s\' specifies no valid \'type\' property '..
        'in one of its \'Param\' fields.\n\n'..
        'Please use one of: %s'):format(self.device.control_map.file_path, 
-       table.concat(valid_types, ", ")))
+       table.concat(CONTROLMAP_TYPES, ", ")))
 
     xargs.type = "button"
   end

@@ -39,6 +39,14 @@ function Browser:__init(initial_configuration, start_configuration)
   -- to avoid doubling updates when the changes are not fired from the GUI
   self._suppress_notifiers = false
   
+  -- cast these as standard types instead of Observable-X types,
+  -- as the socket will only accept basic string & numbers as arguments
+  local osc_host = tostring(duplex_preferences.osc_server_host)
+  local osc_port = duplex_preferences.osc_server_port*1
+
+  -- the OSC client takes care of sending internally routed notes
+  -- to Renoise (not created if host/port is not defined)
+  self._osc_client = OscClient(osc_host,osc_port)
   
   ---- components
   
@@ -172,6 +180,19 @@ function Browser:on_new_document()
 
   for _,process in pairs(self._processes) do
     process:on_new_document()
+  end
+end
+
+
+--------------------------------------------------------------------------------
+
+-- forwards new document notifications to all active processes
+
+function Browser:on_release_document()
+  TRACE("Browser:on_new_document()")
+
+  for _,process in pairs(self._processes) do
+    process:on_release_document()
   end
 end
 
@@ -1025,6 +1046,7 @@ function Browser:_device_ports_changed()
 end
 
 
+
 --------------------------------------------------------------------------------
 
 -- build and assign the application dialog
@@ -1770,6 +1792,21 @@ function BrowserProcess:on_idle()
     -- then refresh the display 
     for _,app in pairs(self._applications) do
       app:on_idle()
+    end
+  end
+end
+
+
+--------------------------------------------------------------------------------
+
+-- provide document released notification for all active apps
+
+function BrowserProcess:on_release_document()
+  TRACE("BrowserProcess:on_release_document")
+
+  if (self:instantiated()) then
+    for _,app in pairs(self._applications) do
+      app:on_release_document()
     end
   end
 end

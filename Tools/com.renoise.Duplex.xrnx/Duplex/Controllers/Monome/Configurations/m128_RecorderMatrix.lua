@@ -97,37 +97,24 @@ duplex_configurations:insert {
         pattern_play = 3,
       }
     },
-    Mixer = {
+    Matrix = {
       mappings = {
-        levels = {
+        matrix = {
           group_name = "Grid2",
         },
-        mute = {
-          group_name = "Grid2",
-        },
-        master = {
+        triggers = {
           group_name = "Grid2",
         },
         --[[
-        page = {
-          group_name = "Controls2",
-          index = 1
+        sequence = {
+          group_name = "Controls",
+          index = 1,
         },
+        track = {
+          group_name = "Controls",
+          index = 3,
+        }
         ]]
-        mode = {
-          group_name = "Controls2",
-          index = 8
-        },
-        --panning = {},
-        --solo = {},
-      },
-      options = {
-        invert_mute = 2,
-        follow_track = 1,
-        page_size = 3,
-        --track_offset
-        --pre_post
-        --mute_mode
       }
     }
   }

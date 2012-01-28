@@ -630,8 +630,11 @@ function XYPad:_build_app()
         local params = self:get_xy_params()
         if params then
           --local track_idx = renoise.song().selected_track_index
-          self.automation:add_automation(self.track_index,params.x,obj.value[1])
-          self.automation:add_automation(self.track_index,params.y,obj.value[2])
+          print("about to record",obj.value[1],obj.value[2])
+          local val_x = scale_value(obj.value[1],self.min_value,self.max_value,0,1)
+          local val_y = scale_value(obj.value[2],self.min_value,self.max_value,0,1)
+          self.automation:add_automation(self.track_index,params.x,val_x)
+          self.automation:add_automation(self.track_index,params.y,val_y)
         end
       end
       self.suppress_value_observable = false
@@ -1207,13 +1210,22 @@ end
 
 --------------------------------------------------------------------------------
 
+-- called when releasing the active document
+
+function XYPad:on_release_document()
+  TRACE("XYPad:on_release_document()")
+  self:clear_device()
+
+end
+
+--------------------------------------------------------------------------------
+
 -- called whenever a new document becomes available
 
 function XYPad:on_new_document()
   TRACE("XYPad:on_new_document()")
 
   self:_remove_notifiers(self._device_observables)
-  self:clear_device()
   self:_attach_to_song()
   self:initial_select()
 

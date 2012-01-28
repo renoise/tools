@@ -375,7 +375,7 @@ function Mixer:__init(process,mappings,options,cfg_name,palette)
   -- the observed width of the mixer, and the step size for
   -- scrolling tracks (the value is derived from one of the
   -- available mappings: volume, mute, solo and panning)
-  self._width = nil
+  self._width = 0
 
   -- offset of the track, as controlled by the track navigator
   -- (not to be confused with the option with the same name)
@@ -853,6 +853,7 @@ function Mixer:_build_app()
   end
 
   -- set the overall mixer size from our groups
+  self._width = 0
   if volume_count then
     self._width = volume_count
   elseif mutes_count then
@@ -862,8 +863,6 @@ function Mixer:_build_app()
   elseif pannings_count then
     self._width = pannings_count
   end
-
-  TRACE("Mixer:established mixer width",self._width)
 
   -- confirm that the various groups have the same size
   local identical_size = true
@@ -1148,13 +1147,14 @@ function Mixer:_build_app()
           self._volume[control_index]:set_value(obj.value,true)
         end
         local track = get_master_track()
-        local is_master = true
 
         local volume = (self._postfx_mode) and 
           track.postfx_volume or track.prefx_volume
 
+        local was_set = self:_set_volume(volume,track_index,obj)
+
         -- when take-over is enabled, this can return false 
-        return self:_set_volume(volume,track_index,obj)
+        return was_set
         
       end
     end 
