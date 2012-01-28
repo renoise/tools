@@ -129,7 +129,8 @@ function OscDevice:socket_message(socket, binary_data)
       end
 
       if value_str then
-        print("incoming OSC",value_str)
+        
+        --print("incoming OSC",os.clock(),value_str)
         self:receive_osc_message(value_str)
       end
 
@@ -146,20 +147,33 @@ end
 --------------------------------------------------------------------------------
 
 -- look up value, once we have unpacked the message
+
 function OscDevice:receive_osc_message(value_str)
   TRACE("OscDevice:receive_message",value_str)
 
-  local param,val = self.control_map:get_param_by_action(value_str)
+  local param,val,w_idx,r_char = self.control_map:get_param_by_action(value_str)
+  --print("*** OscDevice: param,val,w_idx,r_char",param,val,w_idx,r_char)
+
   if (param) then
+
+    -- take copy before modifying stuff
+    local xarg = table.rcopy(param["xarg"])
+    if w_idx then
+      -- insert the wildcard index
+      xarg["index"] = tonumber(r_char)
+      --print('*** OscDevice: wildcard replace param["xarg"]["value"]',xarg["value"])
+    end
     local message = Message()
     message.context = OSC_MESSAGE
+    message.is_osc_msg = true
     -- cap to the range specified in the control-map
     for k,v in pairs(val) do
-      val[k] = clamp_value(v,param["xarg"].minimum,param["xarg"].maximum)
+      val[k] = clamp_value(v,xarg.minimum,xarg.maximum)
     end
-    -- multiple values?
+    --rprint(xarg)
+    -- multiple messages are tables, single value a number...
     message.value = (#val>1) and val or val[1]
-    self:_send_message(message,param["xarg"])
+    self:_send_message(message,xarg)
   end
 
 end
@@ -168,7 +182,6 @@ end
 
 function OscDevice:release()
   TRACE("OscDevice:release()")
-  print("OscDevice:release()")
   if (self.client) and (self.client.is_open) then
     self.client:close()
     self.client = nil
@@ -311,7 +324,7 @@ function OscDevice:send_osc_message(message,value)
   TRACE("OscDevice:send_osc_message()",message,value)
 
   if (self.client) and (self.client.is_open) then
-    print("about to send osc message",message,value)
+    --print("about to send osc message",message,value)
     local osc_msg = self:construct_osc_message(message,value)
     --rprint(osc_msg)
     self.client:send(osc_msg)

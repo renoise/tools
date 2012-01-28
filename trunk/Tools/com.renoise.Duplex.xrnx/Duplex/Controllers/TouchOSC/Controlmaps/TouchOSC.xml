@@ -2,8 +2,7 @@
 <Device>
 	<Name>TouchOSC</Name>
 	<Author>Danoise</Author>
-	<Description>Controlmap for TouchOSC (simple layout)
-Note that XY controllers are not yet implemented in Duplex</Description>
+	<Description>Controlmap for TouchOSC (simple layout)</Description>
 	<Parameters>
 		<Row>
 			<Page>

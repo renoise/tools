@@ -399,13 +399,15 @@ end
 -- handle paged navigation
 
 function GridPie:goto_prev_track_page()
-  local limit = renoise.song().sequencer_track_count-(self.page_size_h-1)
+  TRACE("GridPie:goto_prev_track_page()")
+  local limit = self:_get_h_limit()
   local new_x = math.min(limit,math.max(1,self.X_POS-self.page_size_h))
   self:set_horizontal_pos(new_x)
   self:align_track()
 end
 
 function GridPie:goto_next_track_page()
+  TRACE("GridPie:goto_next_track_page()")
   if(self.X_POS<self:_get_h_limit()) then
     local new_x = self.X_POS+self.page_size_h
     self:set_horizontal_pos(new_x)
@@ -414,11 +416,13 @@ function GridPie:goto_next_track_page()
 end
 
 function GridPie:goto_first_track_page()
+  TRACE("GridPie:goto_first_track_page()")
   self:set_horizontal_pos(1)
   self:align_track()
 end
 
 function GridPie:goto_last_track_page()
+  TRACE("GridPie:goto_last_track_page()")
   local new_x = 1
   local limit = self:_get_h_limit()
   while (new_x<limit) do
@@ -429,6 +433,7 @@ function GridPie:goto_last_track_page()
 end
 
 function GridPie:goto_next_seq_page()
+  TRACE("GridPie:goto_next_seq_page()")
   if(self.Y_POS<self:_get_v_limit()) then
     local new_y = self.Y_POS+self.page_size_v
     self:set_vertical_pos(new_y)
@@ -437,6 +442,7 @@ function GridPie:goto_next_seq_page()
 end
 
 function GridPie:goto_prev_seq_page()
+  TRACE("GridPie:goto_prev_seq_page()")
   local limit = 1
   local new_y = math.max(limit,self.Y_POS-self.page_size_v)
   self:set_vertical_pos(new_y)
@@ -444,11 +450,13 @@ function GridPie:goto_prev_seq_page()
 end
 
 function GridPie:goto_first_seq_page()
+  TRACE("GridPie:goto_first_seq_page()")
   self:set_vertical_pos(1)
   self:align_pattern()
 end
 
 function GridPie:goto_last_seq_page()
+  TRACE("GridPie:goto_last_seq_page()")
   local new_y = 1
   local limit = self:_get_v_limit()
   while (new_y<limit) do

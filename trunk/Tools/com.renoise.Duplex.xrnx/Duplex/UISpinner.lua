@@ -85,11 +85,9 @@ end
 -- user input via fader, dial,
 -- set index from entire range
 
-function UISpinner:do_change()
+function UISpinner:do_change(msg)
   TRACE("UISpinner:do_change()")
 
-  local msg = self:get_msg()
-  
   if not (self.group_name == msg.group_name) then
     return
   end
@@ -117,11 +115,10 @@ end
 
 -- user input via button(s)
 
-function UISpinner:do_press()
+function UISpinner:do_press(msg)
   TRACE("UISpinner:do_press")
   
   if (self.on_change ~= nil) then
-    local msg = self:get_msg()
     
     if not (self.group_name == msg.group_name) then
       return 
@@ -385,12 +382,12 @@ function UISpinner:add_listeners()
 
   self._display.device.message_stream:add_listener(
     self, DEVICE_EVENT_BUTTON_PRESSED,
-    function() self:do_press() end )
+    function(msg) self:do_press(msg) end )
 
 
   self._display.device.message_stream:add_listener(
     self,DEVICE_EVENT_VALUE_CHANGED,
-    function() self:do_change() end )
+    function(msg) self:do_change(msg) end )
 
 end
 

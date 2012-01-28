@@ -7,7 +7,7 @@
 duplex_configurations:insert {
 
   -- configuration properties
-  name = "Handset (simple template)",
+  name = "Handset (simple)",
   pinned = true,
 
   -- device properties

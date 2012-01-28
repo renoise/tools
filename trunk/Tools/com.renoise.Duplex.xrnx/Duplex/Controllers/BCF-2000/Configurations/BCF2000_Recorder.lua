@@ -115,16 +115,6 @@ duplex_configurations:insert {
       options = {
       }
     },
-    --[[
-    Metronome = {
-      mappings = {
-        toggle = {
-          group_name = "DialPush1",
-          index = 8,
-        },
-      },
-    },
-    ]]
     SwitchConfiguration = {
       mappings = {
         goto_previous = {

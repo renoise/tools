@@ -128,10 +128,8 @@ end
 -- user input via button(s)
 -- set index
 
-function UISlider:do_press()
-  TRACE("UISlider:do_press()")
-
-  local msg = self:get_msg()
+function UISlider:do_press(msg)
+  TRACE("UISlider:do_press()",msg)
 
   if not (self.group_name == msg.group_name) then
     return
@@ -157,10 +155,9 @@ end
 -- the release handler is here to force-update controls   
 -- that handle their internal state automatically
 
-function UISlider:do_release()
-  TRACE("UISlider:do_press()")
+function UISlider:do_release(msg)
+  TRACE("UISlider:do_press()",msg)
 
-  local msg = self:get_msg()
   if not (self.group_name == msg.group_name) then
     return
   end
@@ -180,10 +177,8 @@ end
 -- user input via slider, dial: 
 -- set index + precise value within the index
 
-function UISlider:do_change()
-  --TRACE("UISlider:do_change()")
-
-  local msg = self:get_msg()
+function UISlider:do_change(msg)
+  --TRACE("UISlider:do_change()",msg)
 
   if not (self.group_name == msg.group_name) then
     return
@@ -386,15 +381,15 @@ function UISlider:add_listeners()
 
   self._display.device.message_stream:add_listener(
     self,DEVICE_EVENT_BUTTON_PRESSED,
-    function() self:do_press() end )
+    function(msg) self:do_press(msg) end )
 
   self._display.device.message_stream:add_listener(
     self,DEVICE_EVENT_VALUE_CHANGED,
-    function() self:do_change() end )
+    function(msg) self:do_change(msg) end )
 
   self._display.device.message_stream:add_listener(
     self,DEVICE_EVENT_BUTTON_RELEASED,
-    function() self:do_release() end )
+    function(msg) self:do_release(msg) end )
 
 end
 

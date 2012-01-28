@@ -191,10 +191,8 @@ end
 
 --------------------------------------------------------------------------------
 
-function UIButtonStrip:do_press()
-  TRACE("UIButtonStrip:do_press()")
-
-  local msg = self:get_msg()
+function UIButtonStrip:do_press(msg)
+  TRACE("UIButtonStrip:do_press()",msg)
 
   if not (self.group_name == msg.group_name) then
     return 
@@ -232,10 +230,8 @@ end
 
 --------------------------------------------------------------------------------
 
-function UIButtonStrip:do_release()
-  TRACE("UIButtonStrip:do_release()")
-
-  local msg = self:get_msg()
+function UIButtonStrip:do_release(msg)
+  TRACE("UIButtonStrip:do_release()",msg)
 
   if not (self.group_name == msg.group_name) then
     return 
@@ -279,10 +275,8 @@ end
 
 --------------------------------------------------------------------------------
 
-function UIButtonStrip:do_hold()
-  TRACE("UIButtonStrip:do_hold()")
-
-  local msg = self:get_msg()
+function UIButtonStrip:do_hold(msg)
+  TRACE("UIButtonStrip:do_hold()",msg)
 
   if not (self.group_name == msg.group_name) then
     return 
@@ -588,15 +582,15 @@ function UIButtonStrip:add_listeners()
 
   self._display.device.message_stream:add_listener(
     self, DEVICE_EVENT_BUTTON_PRESSED,
-    function() self:do_press() end )
+    function(msg) self:do_press(msg) end )
 
   self._display.device.message_stream:add_listener(
     self,DEVICE_EVENT_BUTTON_HELD,
-    function() self:do_hold() end )
+    function(msg) self:do_hold(msg) end )
 
   self._display.device.message_stream:add_listener(
     self,DEVICE_EVENT_BUTTON_RELEASED,
-    function() self:do_release() end )
+    function(msg) self:do_release(msg) end )
 
 end
 

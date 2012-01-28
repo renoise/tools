@@ -1,0 +1,19 @@
+
+<Device>
+	<Name>TouchOSC</Name>
+	<Author>Danoise</Author>
+	<Description>Controlmap for TouchOSC (simple layout)</Description>
+	<Parameters>
+		<Row>
+			<Group name="Keyboard1">
+				<Param value="/1/push* %i" type="keyboard" name="OneOctaveKB" size="1" velocity_enabled="false" aspect="1" range="12" maximum="1" minimum="0"/>
+			</Group>
+			<!--
+			<Group name="Keyboard2">
+				<Param value="/2/push* %i" type="keyboard" name="OneOctaveKB" size="1" velocity_enabled="false" aspect="1" range="12" maximum="1" minimum="0"/>
+			</Group>
+			-->
+		</Row>
+	</Parameters>
+</Device>
+

@@ -18,7 +18,9 @@ DEVICE_MIDI_PROTOCOL = 1
 MIDI_CC_MESSAGE = 2
 MIDI_NOTE_MESSAGE = 3
 MIDI_PITCH_BEND_MESSAGE = 4
-OSC_MESSAGE = 5
+MIDI_CHANNEL_PRESSURE = 5
+MIDI_KEY_MESSAGE = 6 -- non-specific key (keyboard)
+OSC_MESSAGE = 7
 
 -- Event types
 
@@ -30,6 +32,16 @@ DEVICE_EVENT_BUTTON_RELEASED = 2
 DEVICE_EVENT_VALUE_CHANGED = 3    
 --  button event
 DEVICE_EVENT_BUTTON_HELD = 4
+--  key event
+DEVICE_EVENT_KEY_PRESSED = 5
+--  key event
+DEVICE_EVENT_KEY_RELEASED = 6
+--  key event
+DEVICE_EVENT_KEY_HELD = 7
+--  key event
+DEVICE_EVENT_PITCH_CHANGED = 8
+--  key event
+DEVICE_EVENT_CHANNEL_PRESSURE = 9
 
 -- Input methods
 
@@ -59,15 +71,25 @@ CONTROLLER_DIAL = 5
 -- XY pad 
 -- (a control-map @type="xypad" attribute)
 CONTROLLER_XYPAD = 6
+-- Keyboard
+-- (a control-map @type="keyboard" attribute)
+CONTROLLER_KEYBOARD = 7
 
--- UIComponents
 
-UI_COMPONENT_TOGGLEBUTTON = 1
-UI_COMPONENT_PUSHBUTTON = 2
-UI_COMPONENT_SLIDER = 3
-UI_COMPONENT_SPINNER = 4
-UI_COMPONENT_CUSTOM = 5
-UI_COMPONENT_BUTTONSTRIP = 6
+-- Control-map types
+
+CONTROLMAP_TYPES = {
+  "button", 
+  "togglebutton", 
+  "pushbutton", 
+  "encoder", 
+  "dial", 
+  "fader", 
+  "xypad", 
+  "key",
+  "keyboard"
+}
+
 
 -- Miscellaneous
 
@@ -148,6 +170,10 @@ duplex_preferences = renoise.Document.create("ScriptingToolPreferences") {
   -- debug option: when enabled, dump MIDI messages received and send by duplex
   -- to the sdt out (Renoise terminal)
   dump_midi = false,
+
+  -- the internal OSC connection (disabled if no host/port is specified)
+  osc_server_host = "127.0.0.1",
+  osc_server_port = 8000,
 
   -- list of user configuration settings (like MIDI device names, app configs)
   -- added during runtime for all available configs:
@@ -246,6 +272,12 @@ function split_filename(filename)
   end
 end
 
+-- replace character in string
+
+function replace_char(pos, str, r)
+  return str:sub(1, pos-1) .. r .. str:sub(pos+1)
+end
+
 -- convert note-column pitch number into string value
 -- @param val - NoteColumn note-value, e.g. 120
 -- @return nil or NoteColumn note-string, e.g. "OFF"
@@ -264,6 +296,25 @@ function note_pitch_to_value(val)
     local note = NOTE_ARRAY[(val%12)+1]
     return string.format("%s%s",note,oct)
   end
+end
+
+-- interpret note-string
+-- some examples of input: C#5  C--1  C-1 C#-1
+-- @return number
+
+function value_to_midi_pitch(str_val)
+  local note = nil
+  local octave = nil
+  -- use first letter to match note
+  local note_part = str_val:sub(0,2)
+  for k,v in ipairs(NOTE_ARRAY) do
+    if (note_part==v) then
+      note = k-1
+      break
+    end
+  end
+  octave = tonumber((strip_channel_info(str_val)):sub(3))
+  return note+octave*12
 end
 
 -- get_playing_pattern
@@ -316,6 +367,13 @@ end
 
 function strip_channel_info(str)
   return string.gsub (str, "(|Ch[0-9]+)", "")
+end
+
+-- remove note info from value-string
+
+function strip_note_info(str)
+  local idx = (str):find("|") or 0
+  return str:sub(idx)
 end
 
 
@@ -431,8 +489,7 @@ end
 -- {"^ControlMap:", "^Display:"} -> show "Display:" and "ControlMap:"
 
 local _trace_filters = nil
---local _trace_filters = {"^XYPad","^UISlider"}
---local _trace_filters = {"^XYPad","^Automation"}
+--local _trace_filters = {"^Keyboard"} --,"^MessageStream","^MidiDevice"}
 --local _trace_filters = {".*"}
 
 --------------------------------------------------------------------------------
