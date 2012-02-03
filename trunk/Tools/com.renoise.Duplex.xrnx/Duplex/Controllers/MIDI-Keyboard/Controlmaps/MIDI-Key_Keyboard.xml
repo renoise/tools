@@ -7,6 +7,9 @@
 		<Group name="MOD" >
 			<Param value="PB|Ch1" type="fader" size="4" orientation="vertical" name="" maximum="127" minimum="0"/>
 		</Group>
+		<Group name="CP" >
+			<Param value="CP|Ch1" type="fader" size="4" orientation="vertical" name="" maximum="127" minimum="0"/>
+		</Group>
 		<Group name="Keyboard" orientation="horizontal" >
 			<Param value="|Ch1" type="keyboard" name="" size="0.75" velocity_enabled="true" aspect="1.4" range="48" maximum="127" minimum="126"/>
 		</Group>

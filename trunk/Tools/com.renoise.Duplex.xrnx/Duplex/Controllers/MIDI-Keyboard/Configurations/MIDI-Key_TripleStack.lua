@@ -2,7 +2,7 @@
 -- Duplex.MIDI-Keyboard
 ----------------------------------------------------------------------------]]--
 
--- default configuration of a MIDI-Keyboard
+-- "Stacked" configuration of a MIDI-Keyboard
 
 --==============================================================================
 
@@ -15,8 +15,9 @@ duplex_configurations:insert {
   -- device properties
   device = {
     display_name = "MIDI-Keyboard",
-    device_port_in = "USB MIDI Keyboard",
-    device_port_out = "USB MIDI Keyboard",
+    class_name = "MidiKeyboard",
+    device_port_in = "None",
+    device_port_out = "None",
     control_map = "Controllers/MIDI-Keyboard/Controlmaps/MIDI-Key_TripleStack.xml",
     thumbnail = "Controllers/MIDI-Keyboard/MIDI-Keyboard.bmp",
     protocol = DEVICE_MIDI_PROTOCOL
@@ -32,7 +33,11 @@ duplex_configurations:insert {
           group_name = "Keyboard1",
         },
         pitch_bend = {
-          group_name = "MOD1",
+          group_name = "PB1",
+          index = 1,
+        },
+        pressure = {
+          group_name = "CP1",
           index = 1,
         },
         volume = {
@@ -50,6 +55,10 @@ duplex_configurations:insert {
         octave_down = {
           group_name = "Octave1",
           index = 2,
+        },
+        octave_sync = {
+          group_name = "Octave1",
+          index = 3,
         },
       },
       options = {
@@ -72,12 +81,12 @@ duplex_configurations:insert {
           index = 2,
         },
         octave_set = {
-          group_name = "Buttons2",
+          group_name = "Buttons2a",
           orientation = VERTICAL,
           index = 1,
         },
         octave_sync = {
-          group_name = "Button2",
+          group_name = "Button2a",
           index = 1,
         },
         octave_up = {
@@ -88,9 +97,30 @@ duplex_configurations:insert {
           group_name = "Octave2",
           index = 2,
         },
+        track_set = {
+          group_name = "Buttons2b",
+          orientation = VERTICAL,
+          index = 1,
+        },
+        track_sync = {
+          group_name = "Button2b",
+          index = 1,
+        },
+        instr_set = {
+          group_name = "Buttons2c",
+          orientation = VERTICAL,
+          index = 1,
+        },
+        instr_sync = {
+          group_name = "Button2c",
+          index = 1,
+        },
 
       },
-
+      options = {
+        upper_note = 36,
+        lower_note = 6,
+      },
     },
     KeyboardLower = {
       application = "Keyboard",
@@ -107,12 +137,12 @@ duplex_configurations:insert {
           index = 2,
         },
         octave_set = {
-          group_name = "Buttons3",
+          group_name = "Buttons3a",
           orientation = VERTICAL,
           index = 1,
         },
         octave_sync = {
-          group_name = "Button3",
+          group_name = "Button3a",
           index = 1,
         },
         octave_up = {
@@ -123,7 +153,31 @@ duplex_configurations:insert {
           group_name = "Octave3",
           index = 2,
         },
-      }
+        track_set = {
+          group_name = "Buttons3b",
+          orientation = VERTICAL,
+          index = 1,
+        },
+        track_sync = {
+          group_name = "Button3b",
+          index = 1,
+        },
+        instr_set = {
+          group_name = "Buttons3c",
+          orientation = VERTICAL,
+          index = 1,
+        },
+        instr_sync = {
+          group_name = "Button3c",
+          index = 1,
+        },
+
+      },
+      options = {
+        upper_note = 84,
+        lower_note = 37,
+      },
+
     },
 
 

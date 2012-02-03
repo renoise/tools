@@ -44,6 +44,7 @@ Changes (equal to Duplex version number)
 --==============================================================================
 
 
+
 class 'Keyboard' (Application)
 
 Keyboard.default_options = {
@@ -51,6 +52,14 @@ Keyboard.default_options = {
   instr_index = {
     label = "Active Instr.",
     description = "Choose which instrument to control",
+    on_change = function(app)
+      local val = app.options.instr_index.value
+      if (val>1) then
+        app:set_instr(val-1,true)
+      else
+        app:set_instr(renoise.song().selected_instrument_index,true)
+      end
+    end,
     items = {
       "Follow selection"
     },
@@ -59,6 +68,14 @@ Keyboard.default_options = {
   track_index = {
     label = "Active Track",
     description = "Choose which track to use ",
+    on_change = function(app)
+      local val = app.options.track_index.value
+      if (val>1) then
+        app:set_track(val-1,true)
+      else
+        app:set_track(renoise.song().selected_track_index,true)
+      end
+    end,
     items = {
       "Follow selection"
     },
@@ -144,6 +161,26 @@ Keyboard.default_options = {
       "Sync with Renoise","0","1","2","3","4","5","6","7","8",
     },
     value = 1,
+  },
+  upper_note = {
+    label = "Upper note",
+    description = "Specify a note as upper boundary",
+    on_change = function(app)
+      local val = app.options.upper_note.value
+      app:set_upper_boundary(val-13,true)
+    end,
+    items = {},
+    value = 120,
+  },
+  lower_note = {
+    label = "Lower note",
+    description = "Specify a note as lower boundary",
+    on_change = function(app)
+      local val = app.options.lower_note.value
+      app:set_lower_boundary(val-13,true)
+    end,
+    items = {},
+    value = 1,
   }
 
 }
@@ -159,8 +196,13 @@ end
 for i = 1,64 do
   local str_val = ("Instrument #%i"):format(i-1)
   Keyboard.default_options.instr_index.items[i+1] = str_val
-  local str_val = ("Track #%i"):format(i-1)
+  local str_val = ("Track #%i"):format(i)
   Keyboard.default_options.track_index.items[i+1] = str_val
+end
+for i = LOWER_NOTE,UPPER_NOTE do
+  local str_val = note_pitch_to_value(i+12)
+  Keyboard.default_options.upper_note.items[i+13] = str_val
+  Keyboard.default_options.lower_note.items[i+13] = str_val
 end
 
 function Keyboard:__init(process,mappings,options,cfg_name,palette)
@@ -174,6 +216,9 @@ function Keyboard:__init(process,mappings,options,cfg_name,palette)
     },
     pitch_bend = {
       description = "Keyboard: pitch-bend wheel"
+    },
+    pressure = {
+      description = "Keyboard: trigger notes using keyboard"
     },
     volume = {
       description = "Keyboard: volume control",
@@ -197,7 +242,25 @@ function Keyboard:__init(process,mappings,options,cfg_name,palette)
       toggleable = true,
     },
     octave_sync = {
-      description = "Keyboard: sync octave to Renoise"
+      description = "Keyboard: sync octave with Renoise"
+    },
+    track_set = {
+      description = "Keyboard: set active keyboard track",
+      orientation = VERTICAL,
+      flipped = false,
+      toggleable = true,
+    },
+    track_sync = {
+      description = "Keyboard: sync track with Renoise"
+    },
+    instr_set = {
+      description = "Keyboard: set active keyboard instrument",
+      orientation = VERTICAL,
+      flipped = false,
+      toggleable = true,
+    },
+    instr_sync = {
+      description = "Keyboard: sync instrument with Renoise"
     },
   }
 
@@ -250,6 +313,10 @@ function Keyboard:__init(process,mappings,options,cfg_name,palette)
   -- this is set once the application is started
   self.curr_octave = nil
   self.curr_volume = nil
+  self.curr_track = nil
+  self.curr_instr = nil
+  self.lower_note = nil
+  self.upper_note = nil
 
   -- the various UIComponents
   self._grid = table.create()
@@ -262,6 +329,8 @@ function Keyboard:__init(process,mappings,options,cfg_name,palette)
   self._octave_set = nil
   self._volume = nil
   self._volume_sync = nil
+  self._track_sync = nil
+  self._track_set = nil
 
   -- control-map parameters
   self._key_args = nil
@@ -271,6 +340,7 @@ function Keyboard:__init(process,mappings,options,cfg_name,palette)
   self._instr_observables = table.create()
 
   self._grid_update_requested = false
+  self._track_update_requested = false
 
 end
 
@@ -291,8 +361,13 @@ function Keyboard:trigger(note_on,pitch,velocity,grid_index)
     "expected internal OSC client to be present")
 
   -- reject notes that are outside valid range
-  if (pitch>107) or (pitch<-12) then
+  if (pitch>UPPER_NOTE) or (pitch<LOWER_NOTE) then
     print("Cannot trigger note, pitch is outside valid range")
+    return false
+  end
+
+  -- reject notes that are outside user-defined range
+  if (pitch>self.upper_note) or (pitch<self.lower_note) then
     return false
   end
 
@@ -364,11 +439,20 @@ function Keyboard:start_app()
 
   self:obtain_octave()
   self:obtain_volume()
+  self:obtain_track()
+  self:obtain_instr()
   if not Application.start_app(self) then
     return
   end
   self:set_octave(self.curr_octave)
   self:set_volume(self.curr_volume)
+  self:set_track(self.curr_track)
+  self:set_instr(self.curr_instr)
+
+  self.lower_note = self.options.lower_note.value-13
+  self.upper_note = self.options.upper_note.value-13
+  self:set_boundaries()
+
 end
 
 --------------------------------------------------------------------------------
@@ -378,9 +462,22 @@ end
 function Keyboard:on_idle()
   --TRACE("Keyboard:on_idle()")
 
+  if self._instr_update_requested then
+    self._instr_update_requested = false
+    -- clear, and re-attach all instrument notifiers
+    self:attach_to_instrument()
+  end
+
   if self._grid_update_requested then
+    --print("Keyboard: _grid_update_requested")
     self._grid_update_requested = false
     self:visualize_sample_mappings()
+  end
+
+  if self._track_update_requested then
+    --print("Keyboard: _track_update_requested")
+    self._track_update_requested = false
+    self:update_track_controls()
   end
 
 end
@@ -416,8 +513,7 @@ function Keyboard:_build_app()
       local msg = self.display.device.message_stream.current_message
       local note_on = true
       local velocity = obj.velocity
-      local pitch = self:translate_pitch(obj,msg)
-      local triggered = self:trigger(note_on,pitch,velocity)
+      local triggered = self:trigger(note_on,obj.pitch,velocity)
       return (not msg.is_virtual) and triggered or false
     end
     c.on_release = function(obj)
@@ -427,36 +523,11 @@ function Keyboard:_build_app()
       local msg = self.display.device.message_stream.current_message
       local note_on = false
       local velocity = obj.velocity
-      local pitch = self:translate_pitch(obj,msg)
-      local triggered = self:trigger(note_on,pitch,velocity)
+      local triggered = self:trigger(note_on,obj.pitch,velocity)
       return (not msg.is_virtual) and triggered or false
     end
     self:_add_component(c)
     self._keymatcher = c
-
-
-    -- handle channel pressure
-
-    local c = UIKeyPressure(self.display)
-    c.group_name = self.mappings.keys.group_name
-    c.ceiling = 127
-    c.on_change = function(obj)
-      if not self.active then
-        return
-      end
-      local msg = nil
-      if (self.options.channel_pressure.value == self.BROADCAST_PRESSURE) then
-        msg = {208,obj.value,0}
-      elseif (self.options.channel_pressure.value > self.BROADCAST_PRESSURE) then
-        local cc_num = self.options.channel_pressure.value-3
-        msg = {176,cc_num,obj.value}
-      end
-      if msg then
-        self:send_midi(msg)
-      end
-    end
-    self:_add_component(c)
-    self._channel_pressure = c
 
   end
 
@@ -542,6 +613,35 @@ function Keyboard:_build_app()
       end
     end
   end
+
+
+  -- handle channel pressure
+
+  local map = self.mappings.pressure
+  if (map.group_name) then
+    local c = UIKeyPressure(self.display)
+    c.group_name = map.group_name
+    c.ceiling = 127
+    c.value = 0
+    c.on_change = function(obj)
+      if not self.active then
+        return
+      end
+      local msg = nil
+      if (self.options.channel_pressure.value == self.BROADCAST_PRESSURE) then
+        msg = {208,obj.value,0}
+      elseif (self.options.channel_pressure.value > self.BROADCAST_PRESSURE) then
+        local cc_num = self.options.channel_pressure.value-3
+        msg = {176,cc_num,obj.value}
+      end
+      if msg then
+        self:send_midi(msg)
+      end
+    end
+    self:_add_component(c)
+    self._channel_pressure = c
+  end
+
 
   -- add pitch bend
 
@@ -684,12 +784,146 @@ function Keyboard:_build_app()
         val = renoise.song().transport.octave+2
       else
         val = self.OCTAVE_FOLLOW
-        self:set_octave(renoise.song().transport.octave,true)
       end
       self:_set_option("base_octave",val,self._process)
+      self:set_octave(renoise.song().transport.octave,true)
     end
     self:_add_component(c)
     self._octave_sync = c
+  end
+
+
+  -- track set (supports grid mode)
+
+  local map = self.mappings.track_set
+  if map.group_name then
+    -- check for pad/grid style mapping
+    local slider_size = 1
+    local grid_mode = cm:is_grid_group(map.group_name,map.index)
+    if grid_mode then
+      if (map.orientation == HORIZONTAL) then
+        slider_size = cm:count_columns(map.group_name)
+      else
+        slider_size = cm:count_rows(map.group_name)
+      end
+    end
+    local c = UISlider(self.display)
+    c.group_name = map.group_name
+    c:set_pos(map.index)
+    c.flipped = map.flipped
+    c.toggleable = map.toggleable
+    --c.ceiling = self.MAX_OCTAVE
+    c:set_size(slider_size)
+    c:set_orientation(map.orientation)
+    c.tooltip = map.description
+    c.palette.track = table.rcopy(self.display.palette.background)
+    c.value = self.curr_track
+    c.on_change = function(obj)
+      if not self.active then 
+        return false 
+      end
+      if (self.options.track_index.value == self.TRACK_FOLLOW) then
+        return false 
+      else
+        self:set_track(obj.index)
+      end
+    end
+    self:_add_component(c)
+    self._track_set = c
+
+  end
+
+  -- track sync
+
+  local map = self.mappings.track_sync
+  if map.group_name then
+    local c = UIToggleButton(self.display)
+    c.group_name = map.group_name
+    c.tooltip = map.description
+    c:set_pos(map.index)
+    c.active = (self.options.track_index.value == self.TRACK_FOLLOW)
+    c.on_change = function(obj)
+      if not self.active then 
+        return false 
+      end
+      local val = nil
+      if (self.options.track_index.value == self.TRACK_FOLLOW) then
+        val = renoise.song().selected_track_index+1
+      else
+        val = self.TRACK_FOLLOW
+        self:set_track(renoise.song().selected_track_index,true)
+      end
+      self:_set_option("track_index",val,self._process)
+    end
+    self:_add_component(c)
+    self._track_sync = c
+  end
+
+
+  -- instr set (supports grid mode)
+
+  local map = self.mappings.instr_set
+  if map.group_name then
+    -- check for pad/grid style mapping
+    local slider_size = 1
+    local grid_mode = cm:is_grid_group(map.group_name,map.index)
+    if grid_mode then
+      if (map.orientation == HORIZONTAL) then
+        slider_size = cm:count_columns(map.group_name)
+      else
+        slider_size = cm:count_rows(map.group_name)
+      end
+    end
+    local c = UISlider(self.display)
+    c.group_name = map.group_name
+    c:set_pos(map.index)
+    c.flipped = map.flipped
+    c.toggleable = map.toggleable
+    --c.ceiling = self.MAX_OCTAVE
+    c:set_size(slider_size)
+    c:set_orientation(map.orientation)
+    c.tooltip = map.description
+    c.palette.track = table.rcopy(self.display.palette.background)
+    c.value = self.curr_instr
+    c.on_change = function(obj)
+      if not self.active then 
+        return false 
+      end
+      if (self.options.instr_index.value == self.TRACK_FOLLOW) then
+        return false 
+      else
+        self:set_instr(obj.index)
+      end
+    end
+    self:_add_component(c)
+    self._instr_set = c
+
+  end
+
+  -- instr sync
+
+  local map = self.mappings.instr_sync
+  if map.group_name then
+    local c = UIToggleButton(self.display)
+    c.group_name = map.group_name
+    c.tooltip = map.description
+    c:set_pos(map.index)
+    c.active = (self.options.instr_index.value == self.INSTR_FOLLOW)
+    c.on_change = function(obj)
+      if not self.active then 
+        return false 
+      end
+      local val = nil
+      if (self.options.instr_index.value == self.INSTR_FOLLOW) then
+        val = renoise.song().selected_instrument_index+2
+      else
+        val = self.TRACK_FOLLOW
+        self:set_instr(renoise.song().selected_instrument_index,true)
+      end
+      self:_set_option("instr_index",val,self._process)
+    end
+    self:_add_component(c)
+    self._instr_sync = c
   end
 
 
@@ -755,7 +989,7 @@ function Keyboard:_build_app()
       end
       local val = nil
       if (self.options.base_volume.value == self.VOLUME_FOLLOW) then
-        val = renoise.song().transport.keyboard_velocity+1
+        val = renoise.song().transport.keyboard_velocity
       else
         val = self.VOLUME_FOLLOW
         self:set_volume(renoise.song().transport.keyboard_velocity,true)
@@ -775,7 +1009,7 @@ end
 
 --------------------------------------------------------------------------------
 
--- called when application is first started, sets the current base octave
+-- called when application is first started
 
 function Keyboard:obtain_octave()
   TRACE("Keyboard:obtain_octave()")
@@ -788,9 +1022,27 @@ function Keyboard:obtain_octave()
 
 end
 
---------------------------------------------------------------------------------
+function Keyboard:obtain_track()
+  TRACE("Keyboard:obtain_track()")
 
--- called when application is first started, sets the current base volume
+  if (self.options.track_index.value == self.TRACK_FOLLOW) then
+    self.curr_track = renoise.song().selected_track_index
+  else
+    self.curr_track = self.options.track_index.value-2
+  end
+
+end
+
+function Keyboard:obtain_instr()
+  TRACE("Keyboard:obtain_instr()")
+
+  if (self.options.instr_index.value == self.INSTR_FOLLOW) then
+    self.curr_instr = renoise.song().selected_instrument_index
+  else
+    self.curr_instr = self.options.instr_index.value-2
+  end
+
+end
 
 function Keyboard:obtain_volume()
   TRACE("Keyboard:obtain_volume()")
@@ -800,28 +1052,6 @@ function Keyboard:obtain_volume()
   else
     self.curr_volume = self.options.base_volume.value-1
   end
-
-end
-
---------------------------------------------------------------------------------
-
--- translate_pitch() - use this method to determine the correct pitch 
--- @param obj (UIKey)
--- @param msg (Message)
--- @return pitch (Number)
-
-function Keyboard:translate_pitch(obj,msg)
-  TRACE("Keyboard:translate_pitch()",obj,msg)
-  
-  local pitch = nil
-  if msg.is_virtual then
-    pitch = obj.pitch + (self.curr_octave*12) - 12
-  elseif (msg.is_osc_msg) then
-    pitch = obj.pitch + obj.transpose - 13 -- OSC message
-  else
-    pitch = obj.pitch + obj.transpose -- actual MIDI keyboard
-  end
-  return pitch
 
 end
 
@@ -837,15 +1067,96 @@ function Keyboard:set_octave(val,skip_option)
   self.curr_octave = val
   if self._keymatcher then
     self._keymatcher.transpose = (self.curr_octave)*12 
+    self._keymatcher:refresh()
   end
   self:update_octave_controls()
   if not skip_option and 
     (self.options.base_octave.value ~= self.OCTAVE_FOLLOW) 
   then
-    -- modify the persistent settings
-    local oct = self.curr_octave
-    self:_set_option("base_octave",oct+2,self._process)
+    self:_set_option("base_octave",self.curr_octave+2,self._process)
   end
+
+end
+
+--------------------------------------------------------------------------------
+
+-- switch to the selected track, optionally update options
+-- @param val (Integer), track index
+-- @param skip_option (Boolean) set this to skip setting option
+
+function Keyboard:set_track(val,skip_option)
+  TRACE("Keyboard:set_track()",val,skip_option)
+
+  self.curr_track = val
+  self:update_track_controls()
+  if not skip_option and 
+    (self.options.track_index.value ~= self.TRACK_FOLLOW) 
+  then
+    self:_set_option("track_index",self.curr_track+2,self._process)
+  end
+
+end
+
+--------------------------------------------------------------------------------
+
+-- switch to the selected instrument, optionally update options
+-- @param val (Integer), track index
+-- @param skip_option (Boolean) set this to skip setting option
+
+function Keyboard:set_instr(val,skip_option)
+  TRACE("Keyboard:set_instr()",val,skip_option)
+
+  self.curr_instr = val
+  self:update_instr_controls()
+  if not skip_option and 
+    (self.options.instr_index.value ~= self.INSTR_FOLLOW) 
+  then
+    self:_set_option("instr_index",self.curr_instr+2,self._process)
+  end
+
+end
+
+--------------------------------------------------------------------------------
+
+function Keyboard:set_upper_boundary(pitch)
+  TRACE("Keyboard:set_upper_boundary()",pitch)
+
+  self.upper_note = pitch
+  self:set_boundaries()
+
+end
+
+--------------------------------------------------------------------------------
+
+function Keyboard:set_lower_boundary(pitch)
+  TRACE("Keyboard:set_lower_boundary()",pitch)
+
+  self.lower_note = pitch
+  self:set_boundaries()
+
+end
+
+--------------------------------------------------------------------------------
+
+function Keyboard:set_boundaries()
+  TRACE("Keyboard:set_boundaries()")
+  --[[
+  TRACE("Keyboard:set_boundaries() - self.upper_note",self.upper_note)
+  TRACE("Keyboard:set_boundaries() - self.lower_note",self.lower_note)
+  ]]
+
+  if self._keymatcher then
+    for i=LOWER_NOTE, UPPER_NOTE do
+      local disabled = false
+      if (i > self.upper_note) or (i < self.lower_note) then
+        disabled = true
+      end
+      self._keymatcher.key_states[i+13] = disabled
+      --print("self._keymatcher.key_states[",i+13,"]",self._keymatcher.key_states[i+13])
+
+    end
+    self._keymatcher:refresh()
+ end
 
 end
 
@@ -867,15 +1178,14 @@ function Keyboard:set_volume(val,skip_option)
     (self.options.base_volume.value ~= self.OCTAVE_FOLLOW) 
   then
     -- modify the persistent settings
-    self:_set_option("base_volume",self.curr_volume+2,self._process)
+    self:_set_option("base_volume",self.curr_volume+1,self._process)
   end
 
 end
 
 --------------------------------------------------------------------------------
 
--- update_octave_controls() 
--- called when a new document becomes available, or the octave has changed
+-- called when a new document becomes available, or controls should update
 
 function Keyboard:update_octave_controls()
   TRACE("Keyboard:update_octave_controls()")
@@ -894,8 +1204,64 @@ function Keyboard:update_octave_controls()
   if self._octave_set then
     self._octave_set:set_index(self.curr_octave,skip_event)
   end
+  if self._octave_sync then
+    local synced = (self.options.base_octave.value == self.OCTAVE_FOLLOW)
+    self._octave_sync:set(synced,skip_event)
+  end
 
   self._grid_update_requested = true
+
+end
+
+function Keyboard:update_track_controls()
+  TRACE("Keyboard:update_track_controls()")
+
+  local skip_event = true
+  --[[
+  if self._track_down then
+    --local lit = (renoise.song().transport.octave>0)
+    local lit = (self.curr_track>0)
+    self._track_down:set(lit,skip_event)
+  end
+  if self._track_up then
+    --local lit = (renoise.song().transport.octave<8)
+    local lit = (self.curr_track<8)
+    self._track_up:set(lit,skip_event)
+  end
+  ]]
+  if self._track_set then
+    self._track_set:set_index(self.curr_track-1,skip_event)
+  end
+  if self._track_sync then
+    local synced = (self.options.track_index.value == self.TRACK_FOLLOW)
+    self._track_sync:set(synced,skip_event)
+  end
+
+end
+
+function Keyboard:update_instr_controls()
+  TRACE("Keyboard:update_instr_controls()")
+
+  local skip_event = true
+  --[[
+  if self._instr_down then
+    --local lit = (renoise.song().transport.octave>0)
+    local lit = (self.curr_instr>0)
+    self._instr_down:set(lit,skip_event)
+  end
+  if self._instr_up then
+    --local lit = (renoise.song().transport.octave<8)
+    local lit = (self.curr_instr<8)
+    self._instr_up:set(lit,skip_event)
+  end
+  ]]
+  if self._instr_set then
+    self._instr_set:set_index(self.curr_instr-1,skip_event)
+  end
+  if self._instr_sync then
+    local synced = (self.options.instr_index.value == self.INSTR_FOLLOW)
+    self._instr_sync:set(synced,skip_event)
+  end
 
 end
 
@@ -1019,6 +1385,16 @@ function Keyboard:_attach_to_song()
       if (self.options.instr_index.value == self.INSTR_FOLLOW) then
         self._grid_update_requested = true
         self:attach_to_instrument()
+        self:set_instr(renoise.song().selected_instrument_index)
+      end
+    end
+  )
+
+  renoise.song().selected_track_observable:add_notifier(
+    function()
+      if (self.options.track_index.value == self.TRACK_FOLLOW) then
+        --self._track_update_requested = true
+        self:set_track(renoise.song().selected_track_index)
       end
     end
   )
@@ -1071,8 +1447,8 @@ function Keyboard:attach_to_instrument()
   self._instr_observables:insert(instr.sample_mappings_observable[1])
   instr.sample_mappings_observable[1]:add_notifier(
     function(notifier)
-      -- clear, and re-attach all instrument notifiers
-      self:attach_to_instrument()
+      --print("sample_mappings_observable fired...")
+      self._instr_update_requested = true
       self._grid_update_requested = true
     end
   )
@@ -1082,6 +1458,7 @@ function Keyboard:attach_to_instrument()
     self._instr_observables:insert(s_map.note_range_observable) 
     s_map.note_range_observable:add_notifier(
       function(notifier)
+        --print("note_range_observable fired...")
         self._grid_update_requested = true
       end
     )
@@ -1090,6 +1467,7 @@ function Keyboard:attach_to_instrument()
   -- update when selected sample changes
   renoise.song().selected_sample_observable:add_notifier(
     function(notifier)
+      --print("selected_sample_observable fired...")
       self._grid_update_requested = true
     end
   )

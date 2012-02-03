@@ -7,35 +7,31 @@ The lower keyboard has custom velocity (full velocity, no matter how hard you pr
     <Row>
 		<Column>
 			<Row>
-				<Group name="MOD1" >
-					<Param value="PB|Ch1" type="fader" size="4" orientation="vertical" name="Master" maximum="127" minimum="0"/>
-				</Group>
 				<Column>
 					<Group name="Volume1" orientation="vertical">
 					   <Param value="CC#7" type="dial" size="1" orientation="vertical" name="Volume" maximum="127" minimum="0"/>
-					   <Param value="CC#8" type="togglebutton" size="1" orientation="vertical" name="" aspect="0.6" maximum="127" minimum="0"/>
+					   <Param value="CC#8" type="togglebutton" size="1" orientation="vertical" name="" aspect="0.7" maximum="127" minimum="0"/>
 					 </Group>
 					 <Group name="Octave1" orientation="vertical">
 					   <Param value="CC#9" type="togglebutton" size="1" orientation="vertical" name="OctUp" aspect="0.6" maximum="127" minimum="0"/>
 					   <Param value="CC#10" type="togglebutton" size="1" orientation="vertical" name="OctDn" aspect="0.6" maximum="127" minimum="0"/>
+					   <Param value="CC#10" type="togglebutton" size="1" name="OctSync" aspect="0.7" maximum="127" minimum="0"/>
 					 </Group>
 				</Column>
+				<Group name="PB1" >
+					<Param value="PB|Ch1" type="fader" size="4" orientation="vertical" name="Master" maximum="127" minimum="0"/>
+				</Group>
+				<Group name="MOD1" >
+					<Param value="CC#10" type="fader" size="4" orientation="vertical" name="Master" maximum="127" minimum="0"/>
+				</Group>
+				<Group name="CP1" >
+					<Param value="CP|Ch1" type="fader" size="4" orientation="vertical" name="Master" maximum="127" minimum="0"/>
+				</Group>
 				<Group name="Keyboard1" orientation="horizontal" >
 					<Param value="|Ch1" type="keyboard" name="TwoOctaves" size="1" velocity_enabled="true" aspect="1" range="48" maximum="127" minimum="0"/>
 				</Group>
 			</Row>
 			<Row>
-				<Column>
-					<Group name="Buttons2" orientation="vertical" columns="1">
-						   <Param value="CC#28" type="togglebutton" size="1" orientation="vertical" name="" aspect="0.6" maximum="127" minimum="0"/>
-						   <Param value="CC#28" type="togglebutton" size="1" orientation="vertical" name="" aspect="0.6" maximum="127" minimum="0"/>
-						   <Param value="CC#28" type="togglebutton" size="1" orientation="vertical" name="" aspect="0.6" maximum="127" minimum="0"/>
-						   <Param value="CC#28" type="togglebutton" size="1" orientation="vertical" name="" aspect="0.6" maximum="127" minimum="0"/>
-					</Group>
-					<Group name="Button2" >
-						   <Param value="CC#21" type="togglebutton" size="1" orientation="vertical" name="" aspect="0.6" maximum="127" minimum="0"/>
-					</Group>
-				</Column>
 				<Column>
 					<Group name="Volume2" orientation="vertical">
 					   <Param value="CC#27" type="dial" size="1" orientation="vertical" name="Volume" maximum="127" minimum="0"/>
@@ -46,22 +42,44 @@ The lower keyboard has custom velocity (full velocity, no matter how hard you pr
 					   <Param value="CC#20" type="togglebutton" size="1" orientation="vertical" name="OctDn" aspect="0.6" maximum="127" minimum="0"/>
 					 </Group>
 				</Column>
+				<Column>
+					<Group name="Buttons2a" orientation="vertical" columns="1">
+						   <Param value="CC#28" type="togglebutton" size="1" orientation="vertical" name="" aspect="0.6" maximum="127" minimum="0"/>
+						   <Param value="CC#28" type="togglebutton" size="1" orientation="vertical" name="" aspect="0.6" maximum="127" minimum="0"/>
+						   <Param value="CC#28" type="togglebutton" size="1" orientation="vertical" name="" aspect="0.6" maximum="127" minimum="0"/>
+						   <Param value="CC#28" type="togglebutton" size="1" orientation="vertical" name="" aspect="0.6" maximum="127" minimum="0"/>
+					</Group>
+					<Group name="Button2a" >
+						   <Param value="CC#21" type="togglebutton" size="1" orientation="vertical" name="" aspect="0.6" maximum="127" minimum="0"/>
+					</Group>
+				</Column>
+				<Column>
+					<Group name="Buttons2b" orientation="vertical" columns="1">
+						   <Param value="CC#28" type="togglebutton" size="1" orientation="vertical" name="" aspect="0.6" maximum="127" minimum="0"/>
+						   <Param value="CC#28" type="togglebutton" size="1" orientation="vertical" name="" aspect="0.6" maximum="127" minimum="0"/>
+						   <Param value="CC#28" type="togglebutton" size="1" orientation="vertical" name="" aspect="0.6" maximum="127" minimum="0"/>
+						   <Param value="CC#28" type="togglebutton" size="1" orientation="vertical" name="" aspect="0.6" maximum="127" minimum="0"/>
+					</Group>
+					<Group name="Button2b" >
+						   <Param value="CC#21" type="togglebutton" size="1" orientation="vertical" name="" aspect="0.6" maximum="127" minimum="0"/>
+					</Group>
+				</Column>
+				<Column>
+					<Group name="Buttons2c" orientation="vertical" columns="1">
+						   <Param value="CC#28" type="togglebutton" size="1" orientation="vertical" name="" aspect="0.6" maximum="127" minimum="0"/>
+						   <Param value="CC#28" type="togglebutton" size="1" orientation="vertical" name="" aspect="0.6" maximum="127" minimum="0"/>
+						   <Param value="CC#28" type="togglebutton" size="1" orientation="vertical" name="" aspect="0.6" maximum="127" minimum="0"/>
+						   <Param value="CC#28" type="togglebutton" size="1" orientation="vertical" name="" aspect="0.6" maximum="127" minimum="0"/>
+					</Group>
+					<Group name="Button2c" >
+						   <Param value="CC#21" type="togglebutton" size="1" orientation="vertical" name="" aspect="0.6" maximum="127" minimum="0"/>
+					</Group>
+				</Column>
 				<Group name="Keyboard2" orientation="horizontal" >
-					<Param value="|Ch1" type="keyboard" name="TwoOctaves" size="2" velocity_enabled="true" aspect="0.4" range="24" maximum="127" minimum="0"/>
+					<Param value="|Ch1" type="keyboard" name="TwoOctaves" size="2" velocity_enabled="true" aspect="0.4" range="24" maximum="127" minimum="60"/>
 				</Group>
 			</Row>
 			<Row>
-				<Column>
-					<Group name="Buttons3" orientation="vertical" columns="1">
-						   <Param value="CC#8" type="togglebutton" size="1" name="" aspect="0.6" maximum="127" minimum="0"/>
-						   <Param value="CC#8" type="togglebutton" size="1" name="" aspect="0.6" maximum="127" minimum="0"/>
-						   <Param value="CC#8" type="togglebutton" size="1" name="" aspect="0.6" maximum="127" minimum="0"/>
-						   <Param value="CC#8" type="togglebutton" size="1" name="" aspect="0.6" maximum="127" minimum="0"/>
-					</Group>
-					<Group name="Button3" >
-						   <Param value="CC#8" type="togglebutton" size="1" name="" aspect="0.6" maximum="127" minimum="0"/>
-					</Group>
-				</Column>
 				<Column>
 					<Group name="Volume3" orientation="vertical">
 					   <Param value="CC#7" type="dial" size="1" orientation="vertical" name="Volume" maximum="127" minimum="0"/>
@@ -71,6 +89,39 @@ The lower keyboard has custom velocity (full velocity, no matter how hard you pr
 					   <Param value="CC#9" type="togglebutton" size="1" name="OctUp" aspect="0.7" maximum="127" minimum="0"/>
 					   <Param value="CC#10" type="togglebutton" size="1" name="OctDn" aspect="0.7" maximum="127" minimum="0"/>
 					 </Group>
+				</Column>
+				<Column>
+					<Group name="Buttons3a" orientation="vertical" columns="1">
+						   <Param value="CC#8" type="togglebutton" size="1" name="" aspect="0.6" maximum="127" minimum="0"/>
+						   <Param value="CC#8" type="togglebutton" size="1" name="" aspect="0.6" maximum="127" minimum="0"/>
+						   <Param value="CC#8" type="togglebutton" size="1" name="" aspect="0.6" maximum="127" minimum="0"/>
+						   <Param value="CC#8" type="togglebutton" size="1" name="" aspect="0.6" maximum="127" minimum="0"/>
+					</Group>
+					<Group name="Button3a" >
+						   <Param value="CC#8" type="togglebutton" size="1" name="" aspect="0.6" maximum="127" minimum="0"/>
+					</Group>
+				</Column>
+				<Column>
+					<Group name="Buttons3b" orientation="vertical" columns="1">
+						   <Param value="CC#8" type="togglebutton" size="1" name="" aspect="0.6" maximum="127" minimum="0"/>
+						   <Param value="CC#8" type="togglebutton" size="1" name="" aspect="0.6" maximum="127" minimum="0"/>
+						   <Param value="CC#8" type="togglebutton" size="1" name="" aspect="0.6" maximum="127" minimum="0"/>
+						   <Param value="CC#8" type="togglebutton" size="1" name="" aspect="0.6" maximum="127" minimum="0"/>
+					</Group>
+					<Group name="Button3b" >
+						   <Param value="CC#8" type="togglebutton" size="1" name="" aspect="0.6" maximum="127" minimum="0"/>
+					</Group>
+				</Column>
+				<Column>
+					<Group name="Buttons3c" orientation="vertical" columns="1">
+						   <Param value="CC#8" type="togglebutton" size="1" name="" aspect="0.6" maximum="127" minimum="0"/>
+						   <Param value="CC#8" type="togglebutton" size="1" name="" aspect="0.6" maximum="127" minimum="0"/>
+						   <Param value="CC#8" type="togglebutton" size="1" name="" aspect="0.6" maximum="127" minimum="0"/>
+						   <Param value="CC#8" type="togglebutton" size="1" name="" aspect="0.6" maximum="127" minimum="0"/>
+					</Group>
+					<Group name="Button3c" >
+						   <Param value="CC#8" type="togglebutton" size="1" name="" aspect="0.6" maximum="127" minimum="0"/>
+					</Group>
 				</Column>
 				<Group name="Keyboard3" orientation="horizontal" >
 					<Param value="|Ch1" type="keyboard" name="TwoOctaves" size="0.5" velocity_enabled="true" aspect="1.4" range="96" maximum="127" minimum="126"/>

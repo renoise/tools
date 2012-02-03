@@ -1,0 +1,61 @@
+<Device>
+  <Name>MIDI-Key_GridPie</Name>
+  <Author>Renoise Team</Author>
+  <Description>Controlmap for Grid Pie (MIDI-Keyboard version)
+Use white keys in the lower four octaves to toggle slots, C#,D#,G#,A# to scroll</Description>
+  <Parameters>
+    <Row>
+      <Group name="MOD">
+        <Param value="PB|Ch1" type="fader" size="4" orientation="vertical" name="Master" maximum="127" minimum="0"/>
+      </Group>
+		<!--
+		<Group name="Keyboard" orientation="horizontal" >
+			<Param value="|Ch1" type="keyboard" name="" size="0.75" velocity_enabled="true" aspect="1.4" range="48" maximum="127" minimum="126"/>
+		</Group>
+		-->
+		<Row>
+		  <Group name="Black_Keys_0" orientation="horizontal" columns="8">
+			<Param value="C#*|Ch1" type="button" name="Black Key 1" maximum="127" minimum="0"/>
+			<Param value="D#*|Ch1" type="button" name="Black Key 2" maximum="127" minimum="0"/>
+			<Param value="F#*|Ch1" type="button" name="Black Key 3" maximum="127" minimum="0"/>
+			<Param value="G#*|Ch1" type="button" name="Black Key 4" maximum="127" minimum="0"/>
+			<Param value="A#*|Ch1" type="button" name="Black Key 5" maximum="127" minimum="0"/>
+		  </Group>
+		</Row>
+		<Row>
+		  <Group name="White_Keys" orientation="horizontal" columns="7">
+			<Param value="C--1|Ch1" type="button" name="White Key 1" maximum="127" minimum="0"/>
+			<Param value="D--1|Ch1" type="button" name="White Key 2" maximum="127" minimum="0"/>
+			<Param value="E--1|Ch1" type="button" name="White Key 3" maximum="127" minimum="0"/>
+			<Param value="F--1|Ch1" type="button" name="White Key 4" maximum="127" minimum="0"/>
+			<Param value="G--1|Ch1" type="button" name="White Key 5" maximum="127" minimum="0"/>
+			<Param value="A--1|Ch1" type="button" name="White Key 6" maximum="127" minimum="0"/>
+			<Param value="B--1|Ch1" type="button" name="White Key 7" maximum="127" minimum="0"/>
+			<Param value="C-0|Ch1" type="button" name="White Key 1" maximum="127" minimum="0"/>
+			<Param value="D-0|Ch1" type="button" name="White Key 2" maximum="127" minimum="0"/>
+			<Param value="E-0|Ch1" type="button" name="White Key 3" maximum="127" minimum="0"/>
+			<Param value="F-0|Ch1" type="button" name="White Key 4" maximum="127" minimum="0"/>
+			<Param value="G-0|Ch1" type="button" name="White Key 5" maximum="127" minimum="0"/>
+			<Param value="A-0|Ch1" type="button" name="White Key 6" maximum="127" minimum="0"/>
+			<Param value="B-0|Ch1" type="button" name="White Key 7" maximum="127" minimum="0"/>
+			<Param value="C-1|Ch1" type="button" name="White Key 1" maximum="127" minimum="0"/>
+			<Param value="D-1|Ch1" type="button" name="White Key 2" maximum="127" minimum="0"/>
+			<Param value="E-1|Ch1" type="button" name="White Key 3" maximum="127" minimum="0"/>
+			<Param value="F-1|Ch1" type="button" name="White Key 4" maximum="127" minimum="0"/>
+			<Param value="G-1|Ch1" type="button" name="White Key 5" maximum="127" minimum="0"/>
+			<Param value="A-1|Ch1" type="button" name="White Key 6" maximum="127" minimum="0"/>
+			<Param value="B-1|Ch1" type="button" name="White Key 7" maximum="127" minimum="0"/>
+			<Param value="C-2|Ch1" type="button" name="White Key 1" maximum="127" minimum="0"/>
+			<Param value="D-2|Ch1" type="button" name="White Key 2" maximum="127" minimum="0"/>
+			<Param value="E-2|Ch1" type="button" name="White Key 3" maximum="127" minimum="0"/>
+			<Param value="F-2|Ch1" type="button" name="White Key 4" maximum="127" minimum="0"/>
+			<Param value="G-2|Ch1" type="button" name="White Key 5" maximum="127" minimum="0"/>
+			<Param value="A-2|Ch1" type="button" name="White Key 6" maximum="127" minimum="0"/>
+			<Param value="B-2|Ch1" type="button" name="White Key 7" maximum="127" minimum="0"/>
+		  </Group>         
+		</Row>
+
+    </Row>
+
+  </Parameters>
+</Device>

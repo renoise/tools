@@ -7,13 +7,15 @@
 MODULE_PATH = "./Duplex/"  
 NOTE_ARRAY = { "C-","C#","D-","D#","E-","F-","F#","G-","G#","A-","A#","B-" }
 
+LOWER_NOTE = -12
+UPPER_NOTE = 107
 
 -- Protocols
 
 DEVICE_OSC_PROTOCOL = 0
 DEVICE_MIDI_PROTOCOL = 1
 
--- Message types
+-- Message types (a.k.a. "context")
 
 MIDI_CC_MESSAGE = 2
 MIDI_NOTE_MESSAGE = 3
@@ -376,6 +378,13 @@ function strip_note_info(str)
   return str:sub(idx)
 end
 
+-- remove note info from value-string
+
+function has_note_info(str)
+  local idx = (str):find("|") or 0
+  return str:sub(idx)
+end
+
 
 -- get the type of track: sequencer/master/send
 
@@ -489,7 +498,7 @@ end
 -- {"^ControlMap:", "^Display:"} -> show "Display:" and "ControlMap:"
 
 local _trace_filters = nil
---local _trace_filters = {"^Keyboard"} --,"^MessageStream","^MidiDevice"}
+--local _trace_filters = {"^Browser"}--,"^UIKey"}
 --local _trace_filters = {".*"}
 
 --------------------------------------------------------------------------------

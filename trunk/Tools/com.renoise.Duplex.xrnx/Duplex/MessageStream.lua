@@ -253,7 +253,19 @@ function MessageStream:input_message(msg)
 
   self.current_message = msg
 
-  if (msg.input_method == CONTROLLER_FADER or 
+  if (msg.context == MIDI_CHANNEL_PRESSURE) then
+    --print("*** MessageStream: CONTROLLER_KEYBOARD + MIDI_CHANNEL_PRESSURE")
+    for _,listener in ipairs(self.channel_pressure_listeners) do 
+      listener.handler(msg) 
+    end
+
+  elseif (msg.context == MIDI_PITCH_BEND_MESSAGE) then
+    --print("*** MessageStream: CONTROLLER_KEYBOARD + MIDI_PITCH_BEND_MESSAGE")
+    for _,listener in ipairs(self.pitch_change_listeners) do 
+      listener.handler(msg) 
+    end
+
+  elseif (msg.input_method == CONTROLLER_FADER or 
       msg.input_method == CONTROLLER_DIAL or
       msg.input_method == CONTROLLER_XYPAD) then
 
@@ -298,7 +310,7 @@ function MessageStream:input_message(msg)
         end
 
       end
-
+--[[
     elseif (msg.context == MIDI_PITCH_BEND_MESSAGE) then
       --print("*** MessageStream: CONTROLLER_KEYBOARD + MIDI_PITCH_BEND_MESSAGE")
       for _,listener in ipairs(self.pitch_change_listeners) do 
@@ -306,7 +318,7 @@ function MessageStream:input_message(msg)
       end
 
     elseif (msg.context == MIDI_CHANNEL_PRESSURE) then
-      --print("*** MessageStream: CONTROLLER_KEYBOARD + MIDI_CHANNEL_PRESSURE")
+      print("*** MessageStream: CONTROLLER_KEYBOARD + MIDI_CHANNEL_PRESSURE")
       for _,listener in ipairs(self.channel_pressure_listeners) do 
         listener.handler(msg) 
       end
@@ -314,7 +326,7 @@ function MessageStream:input_message(msg)
     elseif (msg.context == OSC_MESSAGE) then
 
       --print("*** MessageStream: CONTROLLER_KEYBOARD + OSC_MESSAGE")
-
+]]
     end
 
 
@@ -324,6 +336,7 @@ function MessageStream:input_message(msg)
     then
 
     --  "binary" input, value either max or min 
+    --print("*** MessageStream: binary input")
 
     -- special case: note-on will be "maximixed" (as it has 
     -- a variable value, and would otherwise not be able to
@@ -421,7 +434,6 @@ function Message:__init(device)
   --  min/max values for every type of control
   self.max = nil  
   self.min = nil
-
   -- the input method type - CONTROLLER_BUTTON/DIAL/etc. 
   self.input_method = nil 
 

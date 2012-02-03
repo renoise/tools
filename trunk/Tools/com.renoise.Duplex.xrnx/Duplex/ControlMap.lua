@@ -178,8 +178,8 @@ end
 -- @param str (string, control-map value attribute)
 -- @return table
 
-function ControlMap:get_params_by_value(str)
-  TRACE("ControlMap:get_params_by_value",str)
+function ControlMap:get_params_by_value(str,msg_context)
+  TRACE("ControlMap:get_params_by_value",str,msg_context)
 
   local matches = table.create()
 
@@ -187,26 +187,42 @@ function ControlMap:get_params_by_value(str)
   local str2 = strip_channel_info(str)
   for _,group in pairs(self.groups) do
     for k,v in ipairs(group) do
-      --rprint(v["xarg"])
-      if (v["xarg"]["value"] == str) or (v["xarg"]["value"] == str2) then
+      -- check if we are dealing with an octave wildcard
+      local match_against = v["xarg"]["value"]
+      if (msg_context == MIDI_NOTE_MESSAGE) and (v["xarg"]["value"]):find("*") then
+        local oct = str2:sub(#str2-1,#str2)
+        if (oct~="-1") then
+          oct = str2:sub(#str2)
+        end
+        match_against = (v["xarg"]["value"]):gsub("*",oct)
+      end
+      if (match_against == str) or (match_against == str2) then
         matches:insert(v)
       end
     end
   end
 
-  -- less exact matching (keyboard)
-  local str2 = strip_note_info(str)
-  for _,group in pairs(self.groups) do
-    for k,v in ipairs(group) do
-      --rprint(v["xarg"])
-      if (v["xarg"]["value"] == str) or (v["xarg"]["value"] == str2) then
-        --print("stripped note",str2)
-        matches:insert(v)
+  -- match keyboard without note information
+  if (msg_context == MIDI_NOTE_MESSAGE) then
+    local str2 = strip_note_info(str)
+    for _,group in pairs(self.groups) do
+      for k,v in ipairs(group) do
+        -- check if we already have matched the value
+        local skip = false
+        for k2,v2 in ipairs(matches) do
+          if (v2["xarg"]["value"] == v["xarg"]["value"]) then
+            skip = true
+          end
+        end
+        if not skip and (v["xarg"]["value"] == str) or (v["xarg"]["value"] == str2) then
+          matches:insert(v)
+        end
       end
     end
   end
 
   return matches
+
 end
 
 
@@ -499,9 +515,13 @@ function ControlMap:determine_type(str)
   elseif string.sub(str,2,2)=="#" or string.sub(str,2,2)=="-" then
     return MIDI_NOTE_MESSAGE
 
-  -- pitch bend, if it matches the pich-bend name
+  -- pitch bend
   elseif string.sub(str,1,2)=="PB" then
     return MIDI_PITCH_BEND_MESSAGE
+
+  -- channel pressure
+  elseif string.sub(str,1,2)=="CP" then
+    return MIDI_CHANNEL_PRESSURE
 
   -- keyboard
   elseif string.sub(str,0,1)=="|" then
@@ -555,6 +575,10 @@ function ControlMap:_parse_xml(s)
     if (not ni) then 
       break 
     end
+      --[[
+      print("Controlmap xargs")
+      rprint(xarg)
+      ]]
     
     local text = string.sub(s, i, ni - 1)
     
@@ -564,10 +588,6 @@ function ControlMap:_parse_xml(s)
     
     if (empty == "/") then  -- empty element tag
       local xargs=parseargs(xarg)
-      --[[
-      print("Controlmap xargs")
-      rprint(xargs)
-      ]]
 
       -- meta-attr: index each <Param> node
       if (label == "Param") then
@@ -601,7 +621,6 @@ function ControlMap:_parse_xml(s)
       xargs["invert_x"] = bool(xargs["invert_x"])
       xargs["invert_y"] = bool(xargs["invert_y"])
       xargs["velocity_enabled"] = bool(xargs["velocity_enabled"])
-
 
       table.insert(top, {label=label, xarg=xargs, empty=1})
     

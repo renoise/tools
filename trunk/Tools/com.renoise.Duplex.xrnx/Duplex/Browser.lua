@@ -38,6 +38,10 @@ function Browser:__init(initial_configuration, start_configuration)
   -- true while updating the GUI from within the internal browser functions, 
   -- to avoid doubling updates when the changes are not fired from the GUI
   self._suppress_notifiers = false
+
+  -- set when we temporarily have selected "None" as device, 
+  -- and want to revert the list choice 
+  self._requested_device = nil
   
   -- cast these as standard types instead of Observable-X types,
   -- as the socket will only accept basic string & numbers as arguments
@@ -168,6 +172,13 @@ function Browser:on_idle()
   for _,process in pairs(self._processes) do
     process:on_idle()
   end
+
+  -- 
+  if self._requested_device then
+    self._requested_device = nil
+    self:set_device(self._device_name)
+  end
+
 end
 
 
@@ -280,7 +291,7 @@ function Browser:set_device(device_display_name, configuration_hint)
     
     self._device_name = self:_strip_postfixes(device_display_name)
     self._configuration_name = "None"
-  
+    
     if (device_display_name == "None") then
       TRACE("Browser:releasing all processes")
       
@@ -289,7 +300,7 @@ function Browser:set_device(device_display_name, configuration_hint)
         self._processes[#self._processes]:invalidate()
         self._processes:remove(#self._processes)
       end
-
+      
       -- make sure all configuration settings are also cleared
       self:set_configuration(nil)
     
@@ -332,7 +343,6 @@ function Browser:set_device(device_display_name, configuration_hint)
     end
   end
   
-
   ---- update the GUI, in case this function was not fired from the GUI
 
   local suppress_notifiers = self._suppress_notifiers
@@ -343,6 +353,7 @@ function Browser:set_device(device_display_name, configuration_hint)
 
   self._vb.views.dpx_browser_configurations.items = 
     available_configuration_names
+
 
   local index = self:_device_index_by_name(self._device_name)
   self._vb.views.dpx_browser_input_device.value = index
@@ -1096,8 +1107,9 @@ function Browser:_create_content_view()
                 {"OK","Cancel"})
                     
               if (choice == "Cancel") then
-                -- revert to the last used device
-                self:set_device(self._device_name)
+                -- revert to the last used device in idle loop
+                -- (otherwise, we would trigger a notifier feedback)
+                self._requested_device = self._device_name
               else
                 self:set_device(self:_strip_postfixes(device_list[e]))
               end
