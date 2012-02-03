@@ -28,12 +28,13 @@ Events
 
 --==============================================================================
 
-class 'UIKeyPressure' (UIComponent)
+class 'UIKeyPressure' (UISlider)
 
 function UIKeyPressure:__init(display)
   TRACE('UIKeyPressure:__init')
 
-  UIComponent.__init(self,display)
+  --UIComponent.__init(self,display)
+  UISlider.__init(self,display)
 
   self.value = nil
   self.on_change = nil
@@ -47,9 +48,9 @@ end
 --------------------------------------------------------------------------------
 
 -- user input 
-
+--[[
 function UIKeyPressure:do_change(msg)
-  TRACE("UIKeyPressure:do_change",msg)
+  print("UIKeyPressure:do_change",msg)
   
   if (self.on_change ~= nil) then
 
@@ -63,7 +64,7 @@ function UIKeyPressure:do_change(msg)
   end
 
 end
-
+]]
 
 --------------------------------------------------------------------------------
 

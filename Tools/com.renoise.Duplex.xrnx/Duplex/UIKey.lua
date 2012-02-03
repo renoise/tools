@@ -60,6 +60,9 @@ function UIKey:__init(display)
   -- true while the key is pressed 
   self.pressed = false
 
+  -- if key is disabled, draw "dimmed" version
+  self.disabled = false
+
   -- the current pitch
   self.pitch = nil
 
@@ -83,6 +86,13 @@ function UIKey:__init(display)
   self.on_release = nil
   self.on_hold = nil
 
+  -- maintain the display states (decide which keys should be disabled)
+  self.key_states = {}
+
+  -- when acting as keyboard, Display should refresh entire
+  -- keyboard (taking key_states into consideration)
+  self.refresh_requested = false
+
   -- internal stuff
   self:add_listeners()
 
@@ -97,12 +107,16 @@ end
 
 function UIKey:test(msg)
 
+  if self.disabled then
+    return
+  end
+
   if not (self.group_name == msg.group_name) then
     return 
   end
 
   if self.match_any_note then 
-    self.pitch = msg.value[1]
+    self.pitch = self:translate_pitch(msg)
   elseif not UIComponent.test(self,msg.column,msg.row) then
     return false
   end
@@ -165,26 +179,65 @@ function UIKey:do_hold(msg)
 end
 
 --------------------------------------------------------------------------------
+
+-- translate_pitch() - use this method to determine the correct pitch 
+-- @param msg (Message)
+-- @return pitch (Number)
+
+function UIKey:translate_pitch(msg)
+  TRACE("UIKey:translate_pitch()",msg)
+  
+  local pitch = msg.value[1]
+  if msg.is_virtual then
+    pitch = pitch + self.transpose - 12 -- virtual control surface
+  elseif (msg.is_osc_msg) then
+    pitch = pitch + self.transpose - 13 -- OSC message
+  else
+    pitch = pitch + self.transpose -- actual MIDI keyboard
+  end
+
+  return pitch
+
+end
+
+
+--------------------------------------------------------------------------------
 -- Overridden from UIComponent
 --------------------------------------------------------------------------------
 
 function UIKey:draw()
-  --TRACE("UIKey:draw")
+  TRACE("UIKey:draw")
 
   local point = CanvasPoint()
 
   if self.pressed then
     point.text = self.pitch
-    point.color = self.palette.pressed.color  --{0xFF,0xFF,0xFF}
+    point.color = self.palette.pressed.color
     point.val = true        
   else
     point.text = self.pitch
-    point.color = self.palette.released.color -- {0x00,0x00,0x00}
+    point.color = self.palette.released.color
     point.val = false        
   end
 
   self.canvas:fill(point)
   UIComponent.draw(self)
+
+end
+
+--------------------------------------------------------------------------------
+
+-- force complete refresh when used as keyboard - this is a bit of a hack as 
+-- the display will reset the "refresh_requested" property once it's done
+
+function UIKey:refresh()
+  TRACE("UIKey:refresh")
+
+  self.refresh_requested = true
+  local point = CanvasPoint()
+  point.val = not self.pressed
+  self.canvas:fill(point)
+  self:invalidate()
 
 end
 
@@ -243,6 +296,5 @@ function UIKey:_invoke_handler()
     self:invalidate()
   end
 end
-
 
 

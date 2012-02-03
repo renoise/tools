@@ -158,7 +158,8 @@ function MidiDevice:midi_callback(message)
     value_str = string.format("%s|Ch%i",value_str,msg_channel)
 
     -- retrieve all matching parameters
-    local params = self.control_map:get_params_by_value(value_str)
+    local params = self.control_map:get_params_by_value(value_str,msg_context)
+    --print("#params",#params)
 
     -- remember the current value, reset on each loop
     -- (as send_message might change it)
@@ -460,6 +461,8 @@ function MidiDevice:extract_midi_note(str)
     if (NOTE_ARRAY[k] == note_segment) then 
       if (octave_segment == "-1") then
         rslt=(k-1)
+      elseif(octave_segment == "*") then
+        rslt=(k-1)+12
       else
         rslt=(k-1)+(12*octave_segment)+12
       end

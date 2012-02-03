@@ -17,10 +17,15 @@ of the device complete with native sliders, knobs etc.
 
 local UNIT_HEIGHT = 32
 local UNIT_WIDTH = 32
-
 local KEYS_COLOR_WHITE = {0x9F,0x9F,0x9F}
+local KEYS_COLOR_WHITE_PRESSED = {0xCF,0xCF,0xCF}
+local KEYS_COLOR_WHITE_DISABLED = {0x5F,0x5F,0x5F}
 local KEYS_COLOR_BLACK = {0x00,0x00,0x00}
+local KEYS_COLOR_BLACK_PRESSED = {0x6F,0x6F,0x6F}
+local KEYS_COLOR_BLACK_DISABLED = {0x3F,0x3F,0x3F}
+local KEYS_COLOR_OUT_OF_BOUNDS = {0x46,0x47,0x4B}
 local KEYS_WIDTH = 28
+local KEYS_MIN_WIDTH = 18 
 local KEYS_HEIGHT = 64
 
 
@@ -322,7 +327,11 @@ function Display:set_parameter(elm, obj, point, secondary)
     
     elseif (msg_type == MIDI_PITCH_BEND_MESSAGE) then
 
-      -- not implemented
+      -- do nothing
+
+    elseif (msg_type == MIDI_CHANNEL_PRESSURE) then
+
+      -- do nothing
 
     elseif (msg_type == MIDI_KEY_MESSAGE) then
 
@@ -429,62 +438,55 @@ function Display:set_parameter(elm, obj, point, secondary)
 
     elseif (widget_type == "Rack") then
 
-      -- keyboard, locate the right button
 
-      local key_idx = nil
-      local is_osc_msg = (elm.value):sub(0,1)=="/"
-      local is_virtual = (current_message) and current_message.is_virtual or false
+      if obj.refresh_requested then
+        -- complete refresh requested
+        --print("Display: complete refresh requested")
+        obj.refresh_requested = false
+        for i=LOWER_NOTE,UPPER_NOTE do
+          self:update_key(i+13,elm,obj)
+        end
 
-      if is_osc_msg then
-        if obj.pitch then
-          key_idx = obj.pitch
-        else
-          key_idx = obj.x_pos
-        end
-        if (is_virtual) then
-          key_idx = key_idx + 1
-        end
       else
-        if obj.pitch then
-          -- MIDI keyboard
-          --key_idx = (obj.pitch+1) + obj.transpose +12
-          key_idx = (obj.pitch+1) + 12
-        else
-          -- no pitch means "match all" 
-          key_idx = obj.x_pos
-        end
-      end
+        -- single key, locate the right button
 
-      -- initial index can't always be determined (OSC messages)
-      if key_idx then
+        local is_osc_msg = (elm.value):sub(0,1)=="/"
+        local is_virtual = (current_message) and current_message.is_virtual or false
 
-        local key_id = ("%s_%i"):format(elm.id,key_idx)
-        local key_widget = self.vb.views[key_id]
+        local key_idx = nil
 
-        if key_widget then
+        --[[
+        print("Display: is_osc_msg",is_osc_msg)
+        print("Display: obj.pitch",obj.pitch)
+        print("Display: is_virtual",is_virtual)
+        ]]
 
-          local key_offset = elm.offset
-          -- figure out if it's a black or white key
-          local is_white_key = true
-          -- normalize the position (no octave)
-          local key_pos = key_idx%12
-          if (key_pos==2) or 
-            (key_pos==4) or
-            (key_pos==7) or
-            (key_pos==9) or
-            (key_pos==11) 
-          then
-            is_white_key = false
-          end
-
-          if not obj.pressed then
-            key_widget.color = is_white_key and KEYS_COLOR_WHITE or KEYS_COLOR_BLACK
+        if is_osc_msg then
+          if obj.pitch then
+            key_idx = obj.pitch - obj.transpose +13
           else
-            key_widget.color = is_white_key and {0xCF,0xCF,0xCF} or {0x6F,0x6F,0x6F}
+            key_idx = obj.x_pos
           end
-
+          if (is_virtual) then
+            key_idx = key_idx + 1
+          end
+        else
+          if obj.pitch then
+            -- MIDI keyboard
+            key_idx = (obj.pitch+1) - obj.transpose +12
+            --key_idx = (obj.pitch+1) + 12
+          else
+            -- no pitch means "match all" 
+            key_idx = obj.x_pos
+            --key_idx = obj.x_pos - obj.transpose +12
+          end
         end
-        
+
+        -- initial index can't always be determined (OSC messages)
+        if key_idx then
+          self:update_key(key_idx,elm,obj)
+        end
+
       end
 
     else
@@ -494,6 +496,73 @@ function Display:set_parameter(elm, obj, point, secondary)
   end 
 end
 
+--------------------------------------------------------------------------------
+
+-- update_key()
+-- locate a given UI key widget and update it (pressed, normal, disabled)
+-- @param key_idx (number)
+-- @param elm 
+-- @param obj (UIKey)
+
+
+function Display:update_key(key_idx,elm,obj)
+  TRACE("Display:update_key()",key_idx,type(key_idx),elm,obj)
+
+  local key_id = ("%s_%i"):format(elm.id,key_idx)
+  local key_widget = self.vb.views[key_id]
+
+  if key_widget then
+
+    -- figure out if it's a black or white key
+    local is_white_key = true
+    -- normalize the position (no octave)
+    local key_pos = key_idx%12
+    if (key_pos==2) or 
+      (key_pos==4) or
+      (key_pos==7) or
+      (key_pos==9) or
+      (key_pos==11) 
+    then
+      is_white_key = false
+    end
+    
+    --print("Display: obj.key_states[",key_idx,"]",obj.key_states[key_idx])
+    
+    local label = ""
+    local color = nil
+
+    if (key_idx+obj.transpose-13 > UPPER_NOTE) then
+      color = KEYS_COLOR_OUT_OF_BOUNDS
+      key_widget.active = false
+    else
+      key_widget.active = true
+      -- assign every octave as label
+      if (key_idx%12==1) then
+        label = ("%d"):format(math.floor(obj.transpose+key_idx)/12)
+      end
+      if obj.key_states[key_idx+obj.transpose] then
+        color = is_white_key and KEYS_COLOR_WHITE_DISABLED or KEYS_COLOR_BLACK_DISABLED
+      else
+        if not obj.pressed then
+          color = is_white_key and KEYS_COLOR_WHITE or KEYS_COLOR_BLACK
+        else
+          color = is_white_key and KEYS_COLOR_WHITE_PRESSED or KEYS_COLOR_BLACK_PRESSED
+        end
+      end
+    end
+
+    -- add text only when there's room
+    if(key_widget.width<KEYS_MIN_WIDTH)then
+      key_widget.text = ""
+    else
+      key_widget.text = label
+    end
+
+    key_widget.color = color
+
+  end
+
+end
 
 --------------------------------------------------------------------------------
 
