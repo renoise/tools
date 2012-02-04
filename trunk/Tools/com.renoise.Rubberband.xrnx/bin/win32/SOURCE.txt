@@ -1,0 +1,11 @@
+
+The source code for all of the dependent libraries included in this build,
+as well as for the Rubber Band library itself, are found in the same location
+as this file (http://code.breakfastquay.com/projects/rubberband/files/) under
+the name rubberband-1.7.0-dependent-lib-source.tar.bz2.  Note that if you
+redistribute this binary, you must also redistribute the source code (or make
+other provisions for which you should refer to the terms of the GPLv2).
+
+If you have any trouble retrieving the source code necessary to build this
+executable, please contact us at bq@breakfastquay.com.
+
