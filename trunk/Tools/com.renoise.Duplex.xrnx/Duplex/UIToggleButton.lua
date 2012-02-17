@@ -80,15 +80,16 @@ end
 --------------------------------------------------------------------------------
 
 -- user input via button
+-- @return boolean, true when message was handled
 
 function UIToggleButton:do_press(msg)
   --TRACE("UIToggleButton:do_press")
   
   if (self.group_name ~= msg.group_name) then
-    return 
+    return false
   end
   if not self:test(msg.column,msg.row) then
-    return 
+    return false
   end
 
   -- force-update controls that maintain their
@@ -105,21 +106,23 @@ function UIToggleButton:do_press(msg)
     self:toggle()
   end
 
+  return true
 
 end
 
 --------------------------------------------------------------------------------
 
 -- user input via button(s)
+-- @return boolean, true when message was handled
 
 function UIToggleButton:do_release(msg)
   --TRACE("UIToggleButton:do_release()",msg)
 
   if not (self.group_name == msg.group_name) then
-    return
+    return false
   end
   if not (self:test(msg.column, msg.row)) then
-    return
+    return false
   end
 
   -- force-update controls that maintain their
@@ -132,34 +135,24 @@ function UIToggleButton:do_release(msg)
     self:on_release()
   end
 
-end
-
---------------------------------------------------------------------------------
-
--- force-update controls that are handling 
--- their internal state automatically...
-
-function UIToggleButton:force_update()
-
-  self.canvas.delta = table.rcopy(self.canvas.buffer)
-  self.canvas.has_changed = true
-  self:invalidate()
+  return true
 
 end
 
 --------------------------------------------------------------------------------
 
 -- user input via fader, dial
+-- @return boolean, true when message was handled
 
 function UIToggleButton:do_change(msg)
   --TRACE("UIToggleButton:do_change()")
 
   if (self.on_change ~= nil) then
     if not (self.group_name == msg.group_name) then
-      return 
+      return false
     end
     if not self:test(msg.column,msg.row) then
-      return 
+      return false
     end
     -- toggle when moved away from min/max values
     if self.active and msg.value < msg.max then
@@ -167,7 +160,12 @@ function UIToggleButton:do_change(msg)
     elseif not self.active and msg.value > msg.min then
       self:toggle()
     end
+
+    return true
+
   end
+
+  return false
 
 end
 
@@ -175,6 +173,7 @@ end
 
 -- user input via (held) button
 -- on_hold() is an optional handler, which is only supported by "button" input
+-- @return boolean, true when message was handled
 
 function UIToggleButton:do_hold(msg)
   --TRACE("UIToggleButton:do_hold()",msg)
@@ -190,6 +189,8 @@ function UIToggleButton:do_hold(msg)
     end
     self:on_hold()
   end
+
+  return true
 
 end
 
@@ -227,6 +228,19 @@ function UIToggleButton:set(value,skip_event)
 
 end
 
+
+--------------------------------------------------------------------------------
+
+-- force-update controls that are handling their internal state by themselves,
+-- achieved by changing the canvas so that it get's painted the next time...
+
+function UIToggleButton:force_update()
+
+  self.canvas.delta = table.rcopy(self.canvas.buffer)
+  self.canvas.has_changed = true
+  self:invalidate()
+
+end
 
 --------------------------------------------------------------------------------
 
@@ -287,36 +301,20 @@ function UIToggleButton:add_listeners()
 
   self._display.device.message_stream:add_listener(
     self, DEVICE_EVENT_BUTTON_PRESSED,
-    function(msg) self:do_press(msg) end )
+    function(msg) return self:do_press(msg) end )
 
   self._display.device.message_stream:add_listener(
     self, DEVICE_EVENT_BUTTON_RELEASED,
-    function(msg) self:do_release(msg) end )
+    function(msg) return self:do_release(msg) end )
 
   self._display.device.message_stream:add_listener(
     self,DEVICE_EVENT_VALUE_CHANGED,
-    function(msg) self:do_change(msg) end )
+    function(msg) return self:do_change(msg) end )
 
   self._display.device.message_stream:add_listener(
     self,DEVICE_EVENT_BUTTON_HELD,
-    function(msg) self:do_hold(msg) end )
+    function(msg) return self:do_hold(msg) end )
 
-  --[[
-  self._display.device.message_stream:add_listener(
-    self, DEVICE_EVENT_KEY_PRESSED,
-    function() 
-      print("got here")
-      self:do_press() 
-    end )
-
-  self._display.device.message_stream:add_listener(
-    self, DEVICE_EVENT_KEY_RELEASED,
-    function() self:do_release() end )
-
-  self._display.device.message_stream:add_listener(
-    self,DEVICE_EVENT_KEY_HELD,
-    function() self:do_hold() end )
-  ]]
 
 end
 

@@ -172,7 +172,7 @@ duplex_preferences = renoise.Document.create("ScriptingToolPreferences") {
   -- debug option: when enabled, dump MIDI messages received and send by duplex
   -- to the sdt out (Renoise terminal)
   dump_midi = false,
-
+  
   -- the internal OSC connection (disabled if no host/port is specified)
   osc_server_host = "127.0.0.1",
   osc_server_port = 8000,
@@ -262,6 +262,18 @@ function table_count(t)
   end
 end
 
+-- look for value within table
+-- @return boolean
+
+function table_find(t,val)
+  for _,v in ipairs(t)do
+    if (val==v) then
+      return true
+    end
+  end
+  return false
+end
+
 -- split_filename
 
 function split_filename(filename)
@@ -302,6 +314,7 @@ end
 
 -- interpret note-string
 -- some examples of input: C#5  C--1  C-1 C#-1
+-- note that wildcard will return a fixed octave (1)
 -- @return number
 
 function value_to_midi_pitch(str_val)
@@ -315,9 +328,21 @@ function value_to_midi_pitch(str_val)
       break
     end
   end
-  octave = tonumber((strip_channel_info(str_val)):sub(3))
+  local oct_part = strip_channel_info(str_val)
+  if (oct_part):find("*") then
+    octave = 1
+  else
+    octave = tonumber((oct_part):sub(3))
+  end
   return note+octave*12
 end
+
+-- extract cc number from a parameter
+
+function extract_cc_num(str_val)
+ return str_val:match("%d+")
+end
+
 
 -- get_playing_pattern
 
@@ -498,7 +523,8 @@ end
 -- {"^ControlMap:", "^Display:"} -> show "Display:" and "ControlMap:"
 
 local _trace_filters = nil
---local _trace_filters = {"^Browser"}--,"^UIKey"}
+--local _trace_filters = {"^OscVoiceMgr","^Keyboard"}
+--local _trace_filters = {"^OscClient"}--,"^UIKey"}
 --local _trace_filters = {".*"}
 
 --------------------------------------------------------------------------------

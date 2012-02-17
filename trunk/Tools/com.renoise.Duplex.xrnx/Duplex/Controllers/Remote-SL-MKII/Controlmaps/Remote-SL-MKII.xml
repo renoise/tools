@@ -5,6 +5,11 @@
 Load the provided automap configuration before using (the file is located in Controllers/Remote-SL-MKII)</Description>
 	<Parameters>
 		<Row>
+			<!--
+			<Group name="PB" >
+				<Param value="PB|Ch1" type="fader" size="4" orientation="vertical" name="" maximum="127" minimum="0"/>
+			</Group>
+			-->
 			<Column>
 				<Group name="EncoderButtons" orientation="horizontal">
 					<Param value="CC#24" type="pushbutton" name="CC# 24" maximum="127" minimum="0" />
@@ -47,14 +52,14 @@ Load the provided automap configuration before using (the file is located in Con
 					<Param value="CC#15" type="dial" name="CC# 15" maximum="127" minimum="0" />
 				</Group>
 				<Group name="Drumpads" orientation="horizontal">
-					<Param value="C-4" name="" type="button" maximum="127" minimum="0"/>
-					<Param value="C#4" name="" type="button" maximum="127" minimum="0"/>
-					<Param value="D-4" name="" type="button" maximum="127" minimum="0"/>
-					<Param value="D#4" name="" type="button" maximum="127" minimum="0"/>
-					<Param value="E-4" name="" type="button" maximum="127" minimum="0"/>
-					<Param value="F-4" name="" type="button" maximum="127" minimum="0"/>
-					<Param value="F#4" name="" type="button" maximum="127" minimum="0"/>
-					<Param value="G-4" name="" type="button" maximum="127" minimum="0"/>
+					<Param value="C-4" name="" type="key" skip_echo="true" maximum="127" minimum="0"/>
+					<Param value="C#4" name="" type="key" skip_echo="true" maximum="127" minimum="0"/>
+					<Param value="D-4" name="" type="key" skip_echo="true" maximum="127" minimum="0"/>
+					<Param value="D#4" name="" type="key" skip_echo="true" maximum="127" minimum="0"/>
+					<Param value="E-4" name="" type="key" skip_echo="true" maximum="127" minimum="0"/>
+					<Param value="F-4" name="" type="key" skip_echo="true" maximum="127" minimum="0"/>
+					<Param value="F#4" name="" type="key" skip_echo="true" maximum="127" minimum="0"/>
+					<Param value="G-4" name="" type="key" skip_echo="true" maximum="127" minimum="0"/>
 				</Group>
 			</Column>
 			<Column>

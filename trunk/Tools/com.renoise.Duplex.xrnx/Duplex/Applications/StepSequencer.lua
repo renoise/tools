@@ -487,7 +487,7 @@ function StepSequencer:_build_level()
   c:set_orientation(self.mappings.level.orientation)
   c:set_size(self._line_count)
   c.on_index_change = function(obj) 
-    
+    print("StepSequencer: on_index_change A")
     if not self.active then 
       return false 
     end
@@ -528,7 +528,7 @@ function StepSequencer:_build_level()
     c.palette.range = p
     c:set_range(idx,obj._size)
     c:invalidate()
-    
+    print("StepSequencer: on_index_change B")
     return true
   end
   self:_add_component(c)
@@ -1290,6 +1290,8 @@ function UIStepSeqButton:do_press()
       return 
     end
     self:on_press()
+    return true
+
   end
 
 end
@@ -1308,6 +1310,7 @@ function UIStepSeqButton:do_release()
       return 
     end
     self:on_release()
+    return true
   end
 
 end
@@ -1330,6 +1333,7 @@ function UIStepSeqButton:do_hold()
       return 
     end
     self:on_hold()
+    return true
   end
 
 end
@@ -1362,15 +1366,15 @@ function UIStepSeqButton:add_listeners()
 
   self._display.device.message_stream:add_listener(
     self, DEVICE_EVENT_BUTTON_PRESSED,
-    function() self:do_press() end )
+    function(msg) return self:do_press(msg) end )
 
   self._display.device.message_stream:add_listener(
     self,DEVICE_EVENT_BUTTON_HELD,
-    function() self:do_hold() end )
+    function(msg) return self:do_hold(msg) end )
 
   self._display.device.message_stream:add_listener(
     self,DEVICE_EVENT_BUTTON_RELEASED,
-    function() self:do_release() end )
+    function(msg) return self:do_release(msg) end )
 
 end
 

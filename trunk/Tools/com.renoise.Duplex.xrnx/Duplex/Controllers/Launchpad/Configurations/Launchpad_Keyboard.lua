@@ -47,7 +47,10 @@ duplex_configurations:insert {
       },
       options = {
         base_octave = 4
-      }
+      },
+      hidden_options = {  -- display minimal set of options
+        "channel_pressure","pitch_bend","release_type","button_width","button_height"
+      },
     },
     KeypadsRight = {
       application = "Keyboard",
@@ -72,9 +75,13 @@ duplex_configurations:insert {
       },
       options = {
         base_octave = 5
-      }
+      },
+      hidden_options = {  -- display minimal set of options
+        "channel_pressure","pitch_bend","release_type","button_width","button_height"
+      },
     },
-    Keyboard = {
+    KeyboardSplit1 = {
+      application = "Keyboard",
       mappings = {
         key_grid = {
           group_name = "LargeGrid",
@@ -93,8 +100,26 @@ duplex_configurations:insert {
           orientation = VERTICAL,
           index = 1
         }
-      } 
+      },
+      palette = {
+        key_pressed = {
+          color = {0xFF,0x00,0xFF}
+        },
+        key_released = {
+          color = {0x40,0x00,0x00}
+        },
+        key_released_content = {
+          color = {0x80,0x00,0x00}
+        },
+        key_released_selected = {
+          color = {0xC0,0x00,0x00}
+        },
+      },
+      hidden_options = {  -- display minimal set of options
+        "channel_pressure","pitch_bend","release_type","button_width","button_height"
+      },
     },
+
     TrackSelector = {
       mappings = {
         prev_next_track = {

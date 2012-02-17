@@ -125,18 +125,18 @@ end
 
 --------------------------------------------------------------------------------
 
--- user input via button(s)
--- set index
+-- user input via button
+-- @return boolean, true when message was handled
 
 function UISlider:do_press(msg)
   TRACE("UISlider:do_press()",msg)
 
   if not (self.group_name == msg.group_name) then
-    return
+    return false
   end
 
   if not (self:test(msg.column, msg.row)) then
-    return
+    return false
   end
 
   local idx = self:_determine_index_by_pos(msg.column, msg.row)
@@ -146,29 +146,32 @@ function UISlider:do_press(msg)
 
   self.set_index(self,idx)
 
+  return true
+
 end
 
 
 --------------------------------------------------------------------------------
 
--- user input via button(s)
+-- user input via button
 -- the release handler is here to force-update controls   
 -- that handle their internal state automatically
+-- @return boolean, true when message was handled
 
 function UISlider:do_release(msg)
-  TRACE("UISlider:do_press()",msg)
+  TRACE("UISlider:do_release()",msg)
 
   if not (self.group_name == msg.group_name) then
-    return
+    return false
   end
   if not (self:test(msg.column, msg.row)) then
-    return
+    return false
   end
   if (msg.input_method == CONTROLLER_PUSHBUTTON) then
-    self.canvas.delta = table.rcopy(self.canvas.buffer)
-    self.canvas.has_changed = true
-    self:invalidate()
+    self:force_update()
   end
+
+  return true
 
 end
 
@@ -176,19 +179,29 @@ end
 
 -- user input via slider, dial: 
 -- set index + precise value within the index
+-- @return boolean, true when message was handled
 
 function UISlider:do_change(msg)
-  --TRACE("UISlider:do_change()",msg)
+  TRACE("UISlider:do_change()",msg)
 
-  if not (self.group_name == msg.group_name) then
-    return
+  if (self.on_change ~= nil) then
+
+    if not (self.group_name == msg.group_name) then
+      return false
+    end
+    if not self:test(msg.column,msg.row) then
+      return false
+    end
+    -- scale from the message range to the sliders range
+    local val = (msg.value / msg.max) * self.ceiling
+    self:set_value(val)
+
+    return true
+
   end
-  if not self:test(msg.column,msg.row) then
-    return
-  end
-  -- scale from the message range to the sliders range
-  local val = (msg.value / msg.max) * self.ceiling
-  self:set_value(val)
+
+  return false
+
 end
 
 
@@ -228,7 +241,6 @@ end
 function UISlider:set_index(idx,skip_event)
   TRACE("UISlider:set_index()",idx,skip_event)
 
-  -- todo: cap value
   local rslt = false
   if (self._cached_index ~= idx) then
     self._cached_index = idx
@@ -245,6 +257,18 @@ function UISlider:set_index(idx,skip_event)
   end
 end
 
+--------------------------------------------------------------------------------
+
+-- force-update controls that are handling their internal state by themselves,
+-- achieved by changing the canvas so that it get's painted the next time...
+
+function UISlider:force_update()
+
+  self.canvas.delta = table.rcopy(self.canvas.buffer)
+  self.canvas.has_changed = true
+  self:invalidate()
+
+end
 
 --------------------------------------------------------------------------------
 
@@ -378,18 +402,19 @@ end
 --------------------------------------------------------------------------------
 
 function UISlider:add_listeners()
+  TRACE("UISlider:add_listeners()")
 
   self._display.device.message_stream:add_listener(
     self,DEVICE_EVENT_BUTTON_PRESSED,
-    function(msg) self:do_press(msg) end )
+    function(msg) return self:do_press(msg) end )
 
   self._display.device.message_stream:add_listener(
     self,DEVICE_EVENT_VALUE_CHANGED,
-    function(msg) self:do_change(msg) end )
+    function(msg) return self:do_change(msg) end )
 
   self._display.device.message_stream:add_listener(
     self,DEVICE_EVENT_BUTTON_RELEASED,
-    function(msg) self:do_release(msg) end )
+    function(msg) return self:do_release(msg) end )
 
 end
 
@@ -397,6 +422,7 @@ end
 --------------------------------------------------------------------------------
 
 function UISlider:remove_listeners()
+  TRACE("UISlider:remove_listeners()")
 
   self._display.device.message_stream:remove_listener(
     self,DEVICE_EVENT_BUTTON_PRESSED)

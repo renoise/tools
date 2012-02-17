@@ -428,9 +428,7 @@ function Application:_set_option(key, val, process)
     -- update settings UI
     if (self._settings_view)then
       local elm_id = ("dpx_app_options_%s"):format(key)
-      --print("elm_id",elm_id)
       local elm = self._vb.views[elm_id]
-      --print("elm",elm)
       elm.value = val
     end
 

@@ -14,8 +14,8 @@ duplex_configurations:insert {
   device = {
     class_name = "APC20",
     display_name = "APC20",
-    device_port_in = "APC20",
-    device_port_out = "APC20",
+    device_port_in = "Akai APC20",
+    device_port_out = "Akai APC20",
     control_map = "Controllers/APC20/Controlmaps/APC20.xml",
     thumbnail = "Controllers/APC20/APC20.bmp",
     protocol = DEVICE_MIDI_PROTOCOL,
@@ -30,14 +30,17 @@ duplex_configurations:insert {
         triggers = {
           group_name = "Trigger",
         },
+        track = {
+          group_name = "Transport",
+          index = 5,
+        },
         sequence = {
-          group_name = "Activator",
+          group_name = "Transport",
           index = 7,
         },
-        track = {
-          group_name = "Activator",
-          index = 5,
-        }
+      },
+      options = {
+        follow_track = 1,
       }
     },
     Transport = {
@@ -55,24 +58,28 @@ duplex_configurations:insert {
           index = 3,
         },
         loop_pattern = {
-          group_name = "Transport",
-          index = 4,
+          group_name = "Activator",
+          index = 1,
         },
         follow_player = {
           group_name = "Transport",
-          index = 5,
+          index = 4,
+        },
+        metronome_toggle = {
+          group_name = "Activator",
+          index = 3,
         },
         block_loop = {
-          group_name = "Transport",
-          index = 6,
+          group_name = "Activator",
+          index = 2,
         },
         goto_previous = {
-          group_name = "Transport",
-          index = 7,
+          group_name = "Activator",
+          index = 5,
         },
         goto_next = {
-          group_name = "Transport",
-          index = 8,
+          group_name = "Activator",
+          index = 6,
         },
       }
     },
@@ -95,12 +102,14 @@ duplex_configurations:insert {
           group_name = "Master Fader",
         },
         page = {
-          group_name = "Activator",
+          group_name = "Transport",
           index = 5,
         },
       },
       options = {
         invert_mute = 1,
+        follow_track = 1,
+        take_over_volumes = 2,
       }
     },
     Navigator = {
@@ -108,6 +117,18 @@ duplex_configurations:insert {
         blockpos = {
           group_name = "Navigator",
           orientation = HORIZONTAL,
+        },
+      }
+    },
+    SwitchConfiguration = {
+      mappings = {
+        goto_previous = {
+          group_name = "Activator",
+          index = 7,
+        },
+        goto_next = {
+          group_name = "Activator",
+          index = 8,
         },
       }
     },

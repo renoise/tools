@@ -65,7 +65,7 @@ end
 --------------------------------------------------------------------------------
 
 function Automation:_get_extrapolation_strength()
-  return duplex_preferences.extrapolation_strength
+  return duplex_preferences.extrapolation_strength.value
 end
 
 --------------------------------------------------------------------------------

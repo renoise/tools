@@ -33,6 +33,8 @@ duplex_configurations:insert {
           group_name = "EncoderButtons",
           index = 7,
         },
+        --[[
+        ]]
         mute = {
           group_name = "SliderButtons",
         },
@@ -78,6 +80,38 @@ duplex_configurations:insert {
         },
       }
     },
+    Drumpads = {
+      application = "Keyboard",
+      mappings = {
+        key_grid = {
+          group_name = "Drumpads",
+          index = 1,
+        },
+      },
+      options = {
+        release_type = 2  -- the Remote sends multiple note-on, but only a single note-off
+      },
+      hidden_options = {  -- display minimal set of options
+        "channel_pressure","pitch_bend","release_type","button_width","button_height"
+      },
+    },
+    --[[
+    Drumpads2 = {
+      application = "Keyboard",
+      mappings = {
+        key_grid = {
+          group_name = "Drumpads",
+          index = 1,
+        },
+      },
+      options = {
+        release_type = 2, -- the Remote sends multiple note-on, but only a single note-off
+      },
+      hidden_options = {  -- display minimal set of options
+        "channel_pressure","pitch_bend","release_type","button_width","button_height"
+      },
+    },
+    ]]
     Transport = {
       mappings = {
         goto_previous = {

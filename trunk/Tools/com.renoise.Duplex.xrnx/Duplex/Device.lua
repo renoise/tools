@@ -521,11 +521,6 @@ function Device:_send_message(message,xarg)
     message.input_method = CONTROLLER_DIAL
   elseif (xarg.type == "xypad") then
     message.input_method = CONTROLLER_XYPAD
-    --[[
-    if (xarg.swap_axes) then
-      message.value[1],message.value[2] = message.value[2],message.value[1]
-    end
-    ]]
     if (xarg.invert_x) then
       message.value[1] = (xarg.maximum-message.value[1])+xarg.minimum
     end
@@ -534,16 +529,8 @@ function Device:_send_message(message,xarg)
     end
   elseif (xarg.type == "key") then
     message.input_method = CONTROLLER_KEYBOARD
-    local note_val = xarg.index
-    --print("*** Device: (message.context == OSC_MESSAGE)",(message.context == OSC_MESSAGE))
-    --print("*** Device: message.is_osc_msg",message.is_osc_msg)
-    if message.is_osc_msg then
-      message.context = MIDI_NOTE_MESSAGE
-    else
-      note_val = value_to_midi_pitch(xarg.value)
-    end
-    --print("*** Device: note_val",note_val)
-    message.value = {note_val,message.value}
+    message.context = MIDI_NOTE_MESSAGE
+    message.value = {xarg.index,message.value}
     message.velocity_enabled = xarg.velocity_enabled
     --print("*** Device:message.input_method = MIDI_NOTE_MESSAGE")
   elseif (xarg.type == "keyboard") then
@@ -567,6 +554,7 @@ function Device:_send_message(message,xarg)
   end
 
   -- include meta-properties
+  message.param = xarg
   message.name = xarg.name
   message.group_name = xarg.group_name
   message.id = xarg.id
@@ -574,14 +562,15 @@ function Device:_send_message(message,xarg)
   message.column = xarg.column
   message.row = xarg.row
   message.timestamp = os.clock()
-  message.max = tonumber(xarg.maximum)
-  message.min = tonumber(xarg.minimum)
+  message.max = xarg.maximum
+  message.min = xarg.minimum
+  message.device = self
 
   -- send the message
   self.message_stream:input_message(message)
  
-  -- immediately update the display after having received a message
-  -- to improve response of the display
+  -- immediately update after having received a message,
+  -- to improve the overall response time of the display
   if (self.display) then
     self.display:update()
   end

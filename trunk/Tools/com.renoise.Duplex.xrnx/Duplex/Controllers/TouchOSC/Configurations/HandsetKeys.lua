@@ -7,7 +7,7 @@
 duplex_configurations:insert {
 
   -- configuration properties
-  name = "Handset (keys)",
+  name = "Handset - keys",
   pinned = true,
 
   -- device properties
@@ -32,7 +32,6 @@ duplex_configurations:insert {
         }
       }
     },
-    --[[
     Keyboard2 = {
       application = "Keyboard",
       mappings = {
@@ -41,7 +40,6 @@ duplex_configurations:insert {
         }
       }
     }
-    ]]
   }
 }
 

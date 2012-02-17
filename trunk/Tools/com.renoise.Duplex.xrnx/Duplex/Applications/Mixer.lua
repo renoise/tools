@@ -900,7 +900,6 @@ function Mixer:_build_app()
 
   if self._volume then
     for control_index = 1,volume_count do
-      TRACE("Mixer:adding level#",control_index)
       local y_pos = (embed_mutes) and ((embed_solos) and 3 or 2) or 1
       local c = UISlider(self.display)
       c.group_name = self.mappings.levels.group_name
@@ -1167,7 +1166,6 @@ function Mixer:_build_app()
   
   -- track scrolling ---------------------------
   if (self.mappings.page.group_name) then
-    TRACE("Mixer:adding track scrolling")
     local c = UISpinner(self.display)
     c.group_name = self.mappings.page.group_name
     c.tooltip = self.mappings.page.description
@@ -1197,6 +1195,7 @@ function Mixer:_build_app()
 
       end
       self:_init_take_over_volume()
+      return true
     end
     
     self:_add_component(c)

@@ -356,6 +356,7 @@ for _,device_name in pairs(available_devices) do
             configuration_settings_key(config), 
             renoise.Document.create("MidiDevice") {
               autostart = false,
+              pass_unhandled = false,
               device_port_in = "",
               device_port_out = "",
             }
@@ -365,6 +366,7 @@ for _,device_name in pairs(available_devices) do
             configuration_settings_key(config), 
             renoise.Document.create("OscDevice") {
               autostart = false,
+              pass_unhandled = false,
               device_prefix = "",
               device_address = "",
               device_port_in = "",

@@ -99,6 +99,7 @@ end
 --------------------------------------------------------------------------------
 
 -- user input via button
+-- @return boolean, true when message was handled
 
 function UIPushButton:do_press(msg)
   TRACE("UIPushButton:do_press",msg)
@@ -106,18 +107,31 @@ function UIPushButton:do_press(msg)
   if (self.on_press ~= nil) then
 
     if not (self.group_name == msg.group_name) then
-      return 
+      return false
     end
     if not self:test(msg.column,msg.row) then
-      return 
+      return false
     end
 
     self._pressed = true
-    self:trigger()
+    self._seq_index = 1
+    self:_cancel_scheduled_task()
+
+    local rslt = self:on_press()
+    if (rslt~=false) then
+      self:invalidate()
+    end
+    return true
 
   end
 
+  return false
+
 end
+
+--------------------------------------------------------------------------------
+
+-- @return boolean, true when message was handled
 
 function UIPushButton:do_release(msg)
   TRACE("UIPushButton:do_release",msg)
@@ -126,18 +140,26 @@ function UIPushButton:do_release(msg)
     (self.wait_for_release) then
 
     if not (self.group_name == msg.group_name) then
-      return 
+      return false
     end
     if not self:test(msg.column,msg.row) then
-      return 
+      return false
     end
 
     self._pressed = false
     self:invalidate()
 
+    return true
+
   end
 
+  return false
+
 end
+
+--------------------------------------------------------------------------------
+
+-- @return boolean, true when message was handled
 
 function UIPushButton:do_hold(msg)
   TRACE("UIPushButton:do_release",msg)
@@ -145,26 +167,18 @@ function UIPushButton:do_hold(msg)
   if (self.on_hold ~= nil) then
 
     if not (self.group_name == msg.group_name) then
-      return 
+      return false
     end
     if not self:test(msg.column,msg.row) then
-      return 
+      return false
     end
 
     self.on_hold()
+    return true
 
   end
 
-end
-
---------------------------------------------------------------------------------
-
-function UIPushButton:trigger()
-  TRACE("UIPushButton:trigger()")
-
-    self._seq_index = 1
-    self:_cancel_scheduled_task()
-    self:_invoke_handler()
+  return false
 
 end
 
@@ -241,15 +255,15 @@ function UIPushButton:add_listeners()
 
   self._display.device.message_stream:add_listener(
     self, DEVICE_EVENT_BUTTON_PRESSED,
-    function(msg) self:do_press(msg) end )
+    function(msg) return self:do_press(msg) end )
 
   self._display.device.message_stream:add_listener(
     self,DEVICE_EVENT_BUTTON_RELEASED,
-    function(msg) self:do_release(msg) end )
+    function(msg) return self:do_release(msg) end )
 
   self._display.device.message_stream:add_listener(
     self,DEVICE_EVENT_BUTTON_HELD,
-    function(msg) self:do_hold(msg) end )
+    function(msg) return self:do_hold(msg) end )
 
 end
 
@@ -272,22 +286,6 @@ end
 
 --------------------------------------------------------------------------------
 -- Private
---------------------------------------------------------------------------------
-
--- trigger the external handler method
-
-function UIPushButton:_invoke_handler()
-  TRACE("UIPushButton:_invoke_handler()")
-
-  if (self.on_press == nil) then return end
-
-  local rslt = self:on_press()
-  if (rslt~=false) then
-    self:invalidate()
-  end
-end
-
-
 --------------------------------------------------------------------------------
 
 function UIPushButton:_cancel_scheduled_task()

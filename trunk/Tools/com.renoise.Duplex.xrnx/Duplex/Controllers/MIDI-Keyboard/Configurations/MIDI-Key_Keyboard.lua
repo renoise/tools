@@ -40,6 +40,9 @@ duplex_configurations:insert {
       options = {
         pitch_bend = 2,
         channel_pressure = 2,
+      },
+      hidden_options = {
+        "button_width","button_height","release_type",
       }
     },
   }

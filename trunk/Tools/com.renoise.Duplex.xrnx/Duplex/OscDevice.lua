@@ -151,7 +151,7 @@ end
 function OscDevice:receive_osc_message(value_str)
   TRACE("OscDevice:receive_message",value_str)
 
-  local param,val,w_idx,r_char = self.control_map:get_param_by_action(value_str)
+  local param,val,w_idx,r_char = self.control_map:get_osc_param(value_str)
   --print("*** OscDevice: param,val,w_idx,r_char",param,val,w_idx,r_char)
 
   if (param) then

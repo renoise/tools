@@ -27,6 +27,7 @@ local KEYS_COLOR_OUT_OF_BOUNDS = {0x46,0x47,0x4B}
 local KEYS_WIDTH = 28
 local KEYS_MIN_WIDTH = 18 
 local KEYS_HEIGHT = 64
+local BOGUS_NOTE = "H#1"
 
 
 --==============================================================================
@@ -47,8 +48,10 @@ function Display:__init(device)
 
   -- array of UIComponent instances
   self.ui_objects = table.create()
+
   -- each UI object notifier method is referenced by id, 
-  -- so we can attach/detach the method when we need
+  -- so we can attach/detach the method (this is done 
+  -- when we need to change the UI Object's value)
   self.ui_notifiers = table.create()
 
   -- use the scheduler to perform periodic updates
@@ -267,26 +270,26 @@ function Display:set_parameter(elm, obj, point, secondary)
 
   -- update hardware display
 
-  local channel = nil
-  if (self.device.protocol==DEVICE_MIDI_PROTOCOL) then
-    channel = self.device:extract_midi_channel(elm.value) or 
-      self.device.default_midi_channel
-  end
 
   -- when this is specified, device is not updated
-  if not elm.skip_echo then
+  if not elm.skip_echo and self.device.loopback_received_messages then
+
+    -- determine the channel (specified or default)
+    local channel = nil
+    if (self.device.protocol==DEVICE_MIDI_PROTOCOL) then
+      channel = self.device:extract_midi_channel(elm.value) or 
+        self.device.default_midi_channel
+    end
 
     if (msg_type == MIDI_NOTE_MESSAGE) then
       local num = self.device:extract_midi_note(elm.value)
 
-      -- do not loop back the original value change back to the sender, 
-      -- unless the device explicitly wants this
+      -- check if we should send message back to the sender
       if (not current_message) or
          (current_message.is_virtual) or
          (current_message.context ~= MIDI_NOTE_MESSAGE) or
          (current_message.id ~= elm.id) or
-         (current_message.value ~= value) or
-         (self.device.loopback_received_messages)
+         (current_message.value ~= value)
       then
         self.device:send_note_message(num,value,channel)
       end
@@ -313,21 +316,32 @@ function Display:set_parameter(elm, obj, point, secondary)
 
       end
 
-      -- do not loop back the original value change back to the sender, 
-      -- unless the device explicitly wants this
+      -- check if we should send message back to the sender
       if (not current_message) or
          (current_message.is_virtual) or
          (current_message.context ~= MIDI_CC_MESSAGE) or
          (current_message.id ~= elm.id) or
-         (current_message.value ~= value) or
-         (self.device.loopback_received_messages)
+         (current_message.value ~= value)
       then
         self.device:send_cc_message(num,value,channel)
       end
     
     elseif (msg_type == MIDI_PITCH_BEND_MESSAGE) then
 
-      -- do nothing
+      -- sending pitch-bend back to a device doesn't make sense when
+      -- you're using a keyboard - it's generally recommended to tag 
+      -- the parameter with the "skip_echo" attribute in such a case...
+      -- however, some device setups are different (e.g. Mackie Control)
+
+      if (not current_message) or
+         (current_message.is_virtual) or
+         (current_message.context ~= MIDI_PITCH_BEND_MESSAGE) or
+         (current_message.id ~= elm.id) or
+         (current_message.value ~= value)
+      then
+        self.device:send_pitch_bend_message(value,channel)
+      end
+
 
     elseif (msg_type == MIDI_CHANNEL_PRESSURE) then
 
@@ -360,8 +374,7 @@ function Display:set_parameter(elm, obj, point, secondary)
          (current_message.is_virtual) or
          (current_message.context ~= OSC_MESSAGE) or
          (current_message.id ~= elm.id) or
-         (not values_are_equal) or
-         (self.device.loopback_received_messages)
+         (not values_are_equal)
       then
 
         -- invert XYPad values before sending?
@@ -383,16 +396,7 @@ function Display:set_parameter(elm, obj, point, secondary)
         else
           self.device:send_osc_message(elm.value,osc_value)
         end
-      --[[
-      else 
-        print("*** rejected osc message:")
-        if current_message then
-          print("current_message.is_virtual",current_message.is_virtual)
-          print("current_message.context",current_message.context,OSC_MESSAGE)
-          print("current_message.id",current_message.id,elm.id)
-          --print("values_are_equal",values_are_equal)
-        end
-      ]]
+
       end
     else
       error(("Internal Error. Please report: " ..
@@ -439,28 +443,18 @@ function Display:set_parameter(elm, obj, point, secondary)
     elseif (widget_type == "Rack") then
 
 
-      if obj.refresh_requested then
+      if obj._key_update_requested then
         -- complete refresh requested
-        --print("Display: complete refresh requested")
-        obj.refresh_requested = false
+        obj._key_update_requested = false
         for i=LOWER_NOTE,UPPER_NOTE do
           self:update_key(i+13,elm,obj)
         end
 
       else
         -- single key, locate the right button
-
         local is_osc_msg = (elm.value):sub(0,1)=="/"
         local is_virtual = (current_message) and current_message.is_virtual or false
-
         local key_idx = nil
-
-        --[[
-        print("Display: is_osc_msg",is_osc_msg)
-        print("Display: obj.pitch",obj.pitch)
-        print("Display: is_virtual",is_virtual)
-        ]]
-
         if is_osc_msg then
           if obj.pitch then
             key_idx = obj.pitch - obj.transpose +13
@@ -506,7 +500,7 @@ end
 
 
 function Display:update_key(key_idx,elm,obj)
-  TRACE("Display:update_key()",key_idx,type(key_idx),elm,obj)
+  --TRACE("Display:update_key()",key_idx,type(key_idx),elm,obj)
 
   local key_id = ("%s_%i"):format(elm.id,key_idx)
   local key_widget = self.vb.views[key_id]
@@ -526,7 +520,7 @@ function Display:update_key(key_idx,elm,obj)
       is_white_key = false
     end
     
-    --print("Display: obj.key_states[",key_idx,"]",obj.key_states[key_idx])
+    --rprint(obj.pressed_keys)
     
     local label = ""
     local color = nil
@@ -540,10 +534,12 @@ function Display:update_key(key_idx,elm,obj)
       if (key_idx%12==1) then
         label = ("%d"):format(math.floor(obj.transpose+key_idx)/12)
       end
-      if obj.key_states[key_idx+obj.transpose] then
+      if obj.disabled_keys[key_idx+obj.transpose] then
         color = is_white_key and KEYS_COLOR_WHITE_DISABLED or KEYS_COLOR_BLACK_DISABLED
+        --key_widget.active = false
       else
-        if not obj.pressed then
+        if not obj.pressed_keys[key_idx+obj.transpose] then
+        --if not obj.pressed then
           color = is_white_key and KEYS_COLOR_WHITE or KEYS_COLOR_BLACK
         else
           color = is_white_key and KEYS_COLOR_WHITE_PRESSED or KEYS_COLOR_BLACK_PRESSED
@@ -606,10 +602,13 @@ end
 --  @released: boolean, true when button has been released
 
 function Display:generate_message(value, metadata, released)
-  TRACE('Display:generate_message:',value)
+  TRACE('Display:generate_message:',value, metadata, released)
 
   local msg = Message()
   msg.value = value
+
+  --print("Display:generate_message() value",value, metadata, released)
+  --rprint(value)
 
   -- include additional useful meta-properties
   msg.name = metadata.name
@@ -627,13 +626,34 @@ function Display:generate_message(value, metadata, released)
   if (msg.context == OSC_MESSAGE) then
     msg.is_osc_msg = true
   end 
-  -- add channel/note-off for MIDI devices
+  -- for MIDI devices, create the "virtual" midi message
+  -- todo: optimize by checking if midi_msg is needed
   if (self.device.protocol == DEVICE_MIDI_PROTOCOL) then
     msg.channel = self.device:extract_midi_channel(metadata.value) or 
       self.device.default_midi_channel
-    if (msg.context==MIDI_NOTE_MESSAGE) and released then
+    if released then
       msg.is_note_off = true
     end
+    if (msg.context==MIDI_NOTE_MESSAGE) then
+      local note_pitch = value[1]
+      -- if available, use the pitch defined in the control-map 
+      --print("Display: metadata.value",(metadata.value):sub(0,3))
+      if ((metadata.value):sub(0,3)~=BOGUS_NOTE) then
+        note_pitch = value_to_midi_pitch(metadata.value)+12
+      end
+      --print("Display: note_pitch",note_pitch)
+      msg.midi_msg = {143+msg.channel,note_pitch,value[2]}
+    elseif (msg.context==MIDI_CC_MESSAGE) then
+      local cc_num = extract_cc_num(metadata.value)
+      msg.midi_msg = {175+msg.channel,cc_num,math.floor(value)}
+    elseif (msg.context==MIDI_CHANNEL_PRESSURE) then
+      msg.midi_msg = {207+msg.channel,0,math.floor(value)}
+    elseif (msg.context==MIDI_PITCH_BEND_MESSAGE) then
+      msg.midi_msg = {223+msg.channel,math.floor(value),0}
+    end
+    --print("Display: virtually generated midi msg...")
+    --rprint(msg.midi_msg)
+    --print("msg.is_note_off",msg.is_note_off,released)
   end
 
   -- input method : make sure we're using the right handler 
@@ -660,12 +680,7 @@ function Display:generate_message(value, metadata, released)
 
   elseif (metadata.type == "key") then
     msg.input_method = CONTROLLER_KEYBOARD
-    local note_val = metadata.index
-    if msg.is_osc_msg then
-      msg.context = MIDI_NOTE_MESSAGE
-    else
-      note_val = value_to_midi_pitch(metadata.value)
-    end
+    msg.context = MIDI_NOTE_MESSAGE
     msg.velocity_enabled = false
 
   elseif (metadata.type == "keyboard") then
@@ -679,6 +694,8 @@ function Display:generate_message(value, metadata, released)
 
   -- mark as virtual generated message
   msg.is_virtual = true
+
+  msg.device = self.device
 
   -- send the message
   self.device.message_stream:input_message(msg)
@@ -734,25 +751,56 @@ function Display:_walk_table(t, done, deep)
         if (view_obj.meta.type == "button" or 
             view_obj.meta.type == "togglebutton" or
             view_obj.meta.type == "pushbutton") then
-
-          --- Param:button, togglebutton or pushbutton
-
+          
+          -- Param:button, togglebutton or pushbutton
+          
+          -- check if we are sending a note message:
+          local context = self.device.control_map:determine_type(view_obj.meta.value)
+          
+          --[[
           local notifier = function(value) 
             -- output the maximum value
-            self:generate_message(view_obj.meta.maximum,view_obj.meta)
+            if (context==MIDI_NOTE_MESSAGE) then
+              local pitch = view_obj.meta.index
+              local velocity = view_obj.meta.maximum
+              self:generate_message({pitch,velocity},view_obj.meta)
+            else
+              self:generate_message(view_obj.meta.maximum,view_obj.meta)
+            end
           end
+          self.ui_notifiers[view_obj.meta.id] = notifier
+          ]]
           local press_notifier = function(value) 
             -- output the maximum value
-            self:generate_message(view_obj.meta.maximum,view_obj.meta)
+            --print("Display: press_notifier - (context==MIDI_NOTE_MESSAGE):",(context==MIDI_NOTE_MESSAGE))
+            if (context==MIDI_NOTE_MESSAGE) then
+              local pitch = view_obj.meta.index
+              local velocity = view_obj.meta.maximum
+              self:generate_message({pitch,velocity},view_obj.meta)
+            else
+              self:generate_message(view_obj.meta.maximum,view_obj.meta)
+            end
+
+            --self:generate_message(view_obj.meta.maximum,view_obj.meta)
           end
           local release_notifier = function(value) 
             -- output the minimum value
             local released = true
+            --print("Display: release_notifier - (context==MIDI_NOTE_MESSAGE):",(context==MIDI_NOTE_MESSAGE))
+            if (context==MIDI_NOTE_MESSAGE) then
+              local pitch = view_obj.meta.index
+              local velocity = view_obj.meta.minimum
+              self:generate_message({pitch,velocity},view_obj.meta,released)
+            else
+              self:generate_message(
+                view_obj.meta.maximum,view_obj.meta,released)
+            end
+            --[[
             self:generate_message(
               view_obj.meta.minimum,view_obj.meta,released)
+            ]]
           end
             
-          self.ui_notifiers[view_obj.meta.id] = notifier
           view_obj.view = self.vb:button{
             id = view_obj.meta.id,
             width = adj_width,
@@ -764,11 +812,13 @@ function Display:_walk_table(t, done, deep)
         elseif (view_obj.meta.type == "key") then
 
           --- Param:key
-        
+          --[[
           local notifier = function(value) 
             -- output the maximum value
             self:generate_message(view_obj.meta.maximum,view_obj.meta)
           end
+          self.ui_notifiers[view_obj.meta.id] = notifier
+          ]]
 
           local press_notifier = function(value) 
             local pitch = view_obj.meta.index
@@ -782,7 +832,6 @@ function Display:_walk_table(t, done, deep)
             self:generate_message({pitch,velocity},view_obj.meta,released)
           end
 
-          self.ui_notifiers[view_obj.meta.id] = notifier
           view_obj.view = self.vb:button{
             id = view_obj.meta.id,
             width = adj_width,
@@ -925,10 +974,10 @@ function Display:_walk_table(t, done, deep)
 
           -- take a copy of the meta-info, and modify it
           -- so actions are detected as MIDI_NOTE_MESSAGE
-          -- (use a bogus note string to pass)
+          -- (use a bogus note string to make it pass)
 
           local meta = table.rcopy(view_obj.meta)
-          meta.value = "H#1"..meta.value
+          meta.value = BOGUS_NOTE..meta.value
 
           -- the keyboard parts
           local black_keys = self.vb:row {
