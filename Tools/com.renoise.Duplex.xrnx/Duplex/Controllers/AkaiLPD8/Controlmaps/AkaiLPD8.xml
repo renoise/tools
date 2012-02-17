@@ -4,8 +4,6 @@ Allows control of track mute, level and effect parameters
 v1.0
 by Per Abrahamsen (Per128 - www.per128.com)
 Preset file for LPD8 Editor included
-Note: The UI layout is not consistent with the hardware because the "columns" property is broken ATM.
-Extract into "Duplex/Controllers/"
 -->
 
 <Device>

@@ -14,8 +14,8 @@ duplex_configurations:insert {
   device = {
     class_name = "APC40",
     display_name = "APC40",
-    device_port_in = "APC40",
-    device_port_out = "APC40",
+    device_port_in = "Akai APC40",
+    device_port_out = "Akai APC40",
     control_map = "Controllers/APC40/Controlmaps/APC40.xml",
     thumbnail = "Controllers/APC40/APC40.bmp",
     protocol = DEVICE_MIDI_PROTOCOL,
@@ -38,6 +38,9 @@ duplex_configurations:insert {
           group_name = "Move",
           index = 1,
         }
+      },
+      options = {
+        follow_track = 1,
       }
     },
     TrackSelector = {
@@ -45,6 +48,10 @@ duplex_configurations:insert {
         prev_next_page = {
           group_name = "Move",
           index = 1,
+        },
+        prev_next_track = {
+          group_name = "Activator",
+          index = 3,
         },
         select_track = {
           group_name = "Track Selector",
@@ -67,20 +74,28 @@ duplex_configurations:insert {
           index = 3,
         },
         goto_previous = {
-          group_name = "Control",
+          group_name = "Activator",
           index = 5,
         },
         goto_next = {
-          group_name = "Control",
+          group_name = "Activator",
           index = 6,
         },
         follow_player = {
           group_name = "Control",
           index = 7,
         },
-        block_loop = {
-          group_name = "Block Loop",
+        metronome_toggle = {
+          group_name = "Control",
+          index = 8,
+        },
+        loop_pattern = {
+          group_name = "Activator",
           index = 1,
+        },
+        block_loop = {
+          group_name = "Activator",
+          index = 2,
         },
       }
     },
@@ -103,7 +118,7 @@ duplex_configurations:insert {
           index = 1,
         },
         panning = {
-          group_name = "Panning Knob",
+          group_name = "Upper Knob1",
         },
         mode = {
           group_name = "Note Mode",
@@ -111,20 +126,34 @@ duplex_configurations:insert {
       },
       options = {
         invert_mute = 1,
+        follow_track = 1,
         take_over_volumes = 2
       }
     },
     Effect = {
       mappings = {
         parameters = {
-          group_name = "Device Knob",
+          group_name = "Lower Knob1",
         },
         page = {
           group_name = "Control",
+          index = 1,
+        },
+        device_prev = {
+          group_name = "Control",
           index = 3,
         },
-        device = {
-          group_name = "Device Selector",
+        device_next = {
+          group_name = "Control",
+          index = 4,
+        },
+        preset_prev = {
+          group_name = "Control",
+          index = 5,
+        },
+        preset_next = {
+          group_name = "Control",
+          index = 6,
         },
       }
     },
@@ -133,6 +162,18 @@ duplex_configurations:insert {
         blockpos = {
           group_name = "Navigator",
           orientation = HORIZONTAL,
+        },
+      }
+    },
+    SwitchConfiguration = {
+      mappings = {
+        goto_previous = {
+          group_name = "Activator",
+          index = 7,
+        },
+        goto_next = {
+          group_name = "Activator",
+          index = 8,
         },
       }
     },

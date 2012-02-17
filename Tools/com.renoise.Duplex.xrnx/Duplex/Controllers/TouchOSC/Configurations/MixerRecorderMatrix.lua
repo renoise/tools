@@ -7,7 +7,7 @@
 duplex_configurations:insert {
 
   -- configuration properties
-  name = "Handset (simple)",
+  name = "Handset - simple",
   pinned = true,
 
   -- device properties
@@ -47,6 +47,19 @@ duplex_configurations:insert {
         },
       },
       options = {
+      },
+      palette = {
+        slider_dimmed = {
+          color = {0x80,0x80,0x80},
+          text="□",
+        },
+      --[[
+        slider_lit = {
+          -- the active recording
+          color = {0x00,0x00,0x00},
+          text="■",
+        },
+      ]]
       }
     },
     PadXY = {

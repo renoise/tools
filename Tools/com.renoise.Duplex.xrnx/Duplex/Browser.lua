@@ -45,13 +45,17 @@ function Browser:__init(initial_configuration, start_configuration)
   
   -- cast these as standard types instead of Observable-X types,
   -- as the socket will only accept basic string & numbers as arguments
-  local osc_host = tostring(duplex_preferences.osc_server_host)
-  local osc_port = duplex_preferences.osc_server_port*1
+  local osc_host = duplex_preferences.osc_server_host.value
+  local osc_port = duplex_preferences.osc_server_port.value
 
   -- the OSC client takes care of sending internally routed notes
   -- to Renoise (not created if host/port is not defined)
   self._osc_client = OscClient(osc_host,osc_port)
   
+  -- the voice manager is handling triggered note messages
+  -- (needs the osc_client)
+  self._voice_mgr = OscVoiceMgr()
+
   ---- components
   
   -- view builder that we do use for all our views
@@ -1391,7 +1395,7 @@ function BrowserProcess:instantiate(configuration)
 
   ---- instantiate the device
 
-  self._message_stream = MessageStream()
+  self._message_stream = MessageStream(self)
 
   if (configuration.device.protocol == DEVICE_MIDI_PROTOCOL) then
 
@@ -1459,6 +1463,7 @@ function BrowserProcess:instantiate(configuration)
 
     local mappings = configuration.applications[app_class_name].mappings or {}
     local palette = configuration.applications[app_class_name].palette or {}
+    local hidden = configuration.applications[app_class_name].hidden_options or {}
     local options = table.rcopy(_G[actual_class_name]["default_options"]) or {}
     local config_name = app_class_name
 
@@ -1468,6 +1473,9 @@ function BrowserProcess:instantiate(configuration)
       if app_node then
         if app_node.options and app_node.options:property(k) then
           options[k].value = app_node.options:property(k).value
+          if table_find(hidden,k) then
+            options[k].hidden = true
+          end
         end
       end
     end
@@ -1683,6 +1691,14 @@ function BrowserProcess:show_settings_dialog()
 
   local vb = self._vb
 
+  local val_unhandled = self.settings.pass_unhandled.value
+  --print("BrowserProcess:show_settings_dialog() - val_unhandled",val_unhandled)
+  local txt_unhandled = "When enabled, messages that are not handled by an "
+                      .."\napplication are forwarded to Renoise (this also "
+                      .."\napplies when the whole configuration is stopped). "
+                      .."\nAllows you to use Renoise MIDI mapping-features in "
+                      .."\ncombination with Duplex"
+
   -- define the basic settings view
   if not self._settings_view then
     self._settings_view = vb:column{
@@ -1690,6 +1706,27 @@ function BrowserProcess:show_settings_dialog()
       margin = renoise.ViewBuilder.DEFAULT_DIALOG_MARGIN,
       vb:row{
         id="dpx_device_settings_root",
+      },
+      vb:column{
+        id="dpx_unhandled_root",
+        --[[
+        vb:space{
+          height = 4,
+        },
+        ]]
+        vb:row{
+          vb:checkbox{
+            value = val_unhandled,
+            notifier = function(v)
+              self.settings.pass_unhandled.value = v
+              --print("*** self.settings.pass_unhandled.value",self.settings.pass_unhandled.value)
+            end,
+          },
+          vb:text {
+            text = "Pass unhandled MIDI messages to Renoise",
+            tooltip = txt_unhandled,
+          }
+        },
       },
       vb:space{
         height = 4,
@@ -1712,6 +1749,12 @@ function BrowserProcess:show_settings_dialog()
       app:_build_options(self)
       vb.views.dpx_app_settings_root:add_child(app._settings_view)
     end
+
+    -- show/hide the "unhandled message" part
+    local elm = vb.views.dpx_unhandled_root
+    local show_unhandled = (self.device.protocol == DEVICE_MIDI_PROTOCOL)
+    vb.views.dpx_unhandled_root.visible = show_unhandled
+
   end
 
   self._settings_dialog = renoise.app():show_custom_dialog(

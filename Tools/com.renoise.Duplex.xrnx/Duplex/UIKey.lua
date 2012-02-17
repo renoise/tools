@@ -69,6 +69,9 @@ function UIKey:__init(display)
   -- the current transpose (semitones)
   self.transpose = 0
 
+  -- default ceiling is for standard MIDI (override if needed)
+  --self.ceiling = 127
+
   -- the current velocity
   self.velocity = nil
 
@@ -78,7 +81,8 @@ function UIKey:__init(display)
   -- specify the default palette 
   self.palette = {
     pressed = table.rcopy(display.palette.color_1),
-    released = table.rcopy(display.palette.background)
+    released = table.rcopy(display.palette.color_1_dimmed),
+    disabled = table.rcopy(display.palette.background)
   }
 
   -- external event handlers
@@ -86,12 +90,16 @@ function UIKey:__init(display)
   self.on_release = nil
   self.on_hold = nil
 
-  -- maintain the display states (decide which keys should be disabled)
-  self.key_states = {}
+  -- when acting as keyboard, maintain the display state:
+  -- decide which keys should be disabled (upper/lower range)
+  self.disabled_keys = {}
+  -- decide which keys are currently pressed 
+  self.pressed_keys = {}
 
-  -- when acting as keyboard, Display should refresh entire
-  -- keyboard (taking key_states into consideration)
-  self.refresh_requested = false
+  -- when acting as keyboard, raise this flag to tell the 
+  -- display to refresh the entire keyboard (a bit of a hack but 
+  -- the keyboard is entirely virtual, so it's a special case)
+  self._key_update_requested = false
 
   -- internal stuff
   self:add_listeners()
@@ -103,16 +111,18 @@ end
 
 -- perform a test of the incoming value:
 -- if we pass any note (keyboard mode), the incoming pitch is remembered
--- else, match pitch by row/column (grid mode)
+-- else, pitch is assigned when the UIKey is first created (and the
+-- containing application will then apply it's own transpose)
+-- @return boolean, true when message was considered valid
 
 function UIKey:test(msg)
 
   if self.disabled then
-    return
+    return true
   end
 
   if not (self.group_name == msg.group_name) then
-    return 
+    return false
   end
 
   if self.match_any_note then 
@@ -127,54 +137,77 @@ end
 
 --------------------------------------------------------------------------------
 
--- user input 
+-- @return boolean, true when message was handled
 
 function UIKey:do_press(msg)
-  --TRACE("UIKey:do_press",msg)
-  
+  TRACE("UIKey:do_press()",msg)
+
+  if not self:test(msg) then
+    return false
+  end
+  self.velocity = msg.value[2]
+  self.pressed = true
+
   if (self.on_press ~= nil) then
-
-    if not self:test(msg) then
-      return 
+    if (self:on_press()==false) then
+      -- allow message to be passed on
+      --print("UIKey: on_press - allow message to be passed on")
+      return false
+    else
+      self:invalidate()
     end
-
-    self.velocity = msg.value[2]
-    self.pressed = true
-    self:_invoke_handler()
-
+    return true
   end
 
+  return false
+
 end
+
+--------------------------------------------------------------------------------
+
+-- @return boolean, true when message was handled
 
 function UIKey:do_release(msg)
-  --TRACE("UIKey:do_release",msg)
-  
-  if (self.on_release ~= nil) then
+  TRACE("UIKey:do_release",msg)
 
-    if not self:test(msg) then
-      return 
-    end
-
-    self.pressed = false
-    self:on_release()
-    self:invalidate()
-
+  if not self:test(msg) then
+    return false
   end
+
+  self.pressed = false
+
+  if (self.on_release ~= nil) then
+    if (self:on_release()==false) then
+      -- allow message to be passed on
+      --print("UIKey: on_release - allow message to be passed on")
+      return false
+    else
+      self:invalidate()
+    end
+    return true
+  end
+
+  return false
 
 end
 
+--------------------------------------------------------------------------------
+
+-- @return boolean, true when message was handled
+
 function UIKey:do_hold(msg)
-  --TRACE("UIKey:do_hold",msg)
-  
-  if (self.on_hold ~= nil) then
+  TRACE("UIKey:do_hold",msg)
 
-    if not self:test(msg) then
-      return 
-    end
-
-    self.on_hold()
-
+  if not self:test(msg) then
+    return false
   end
+
+  if (self.on_hold ~= nil) then
+    self.on_hold()
+    return true
+  end
+
+  return false
 
 end
 
@@ -205,19 +238,32 @@ end
 -- Overridden from UIComponent
 --------------------------------------------------------------------------------
 
+-- draw() is the main update method: we need to assign a new value to either
+-- text, color or val in order to make the UIKey update. Checks if the UIKey 
+-- is acting like a keyboard (uses pitch to change value), or buttons 
+-- (uses the pressed state)
+
 function UIKey:draw()
-  TRACE("UIKey:draw")
+
+  -- the pitch value may not be defined initially
+  if not self.pitch then
+    return
+  end
 
   local point = CanvasPoint()
 
-  if self.pressed then
-    point.text = self.pitch
+  if self.disabled then
+    point.text = self.palette.disabled.text
+    point.color = self.palette.disabled.color
+    point.val = (self.match_any_note) and self.pitch or false
+  elseif self.pressed then
+    point.text = self.palette.pressed.text
     point.color = self.palette.pressed.color
-    point.val = true        
+    point.val = (self.match_any_note) and self.pitch or true
   else
-    point.text = self.pitch
+    point.text = self.palette.released.text
     point.color = self.palette.released.color
-    point.val = false        
+    point.val = (self.match_any_note) and self.pitch or false
   end
 
   self.canvas:fill(point)
@@ -227,13 +273,13 @@ end
 
 --------------------------------------------------------------------------------
 
--- force complete refresh when used as keyboard - this is a bit of a hack as 
--- the display will reset the "refresh_requested" property once it's done
+-- force complete refresh when used as keyboard - a bit of a hack  
+-- (the display will reset the "refresh_requested" property)
 
-function UIKey:refresh()
-  TRACE("UIKey:refresh")
+function UIKey:update_keys()
+  TRACE("UIKey:update_keys")
 
-  self.refresh_requested = true
+  self._key_update_requested = true
   local point = CanvasPoint()
   point.val = not self.pressed
   self.canvas:fill(point)
@@ -247,16 +293,15 @@ function UIKey:add_listeners()
 
   self._display.device.message_stream:add_listener(
     self, DEVICE_EVENT_KEY_PRESSED,
-    function(msg) self:do_press(msg) end )
+    function(msg) return self:do_press(msg) end )
 
   self._display.device.message_stream:add_listener(
     self, DEVICE_EVENT_KEY_RELEASED,
-    function(msg) self:do_release(msg) end )
+    function(msg) return self:do_release(msg) end )
 
   self._display.device.message_stream:add_listener(
     self, DEVICE_EVENT_KEY_HELD,
-    function(msg) self:do_hold(msg) end )
-
+    function(msg) return self:do_hold(msg) end )
 
 end
 
@@ -274,27 +319,6 @@ function UIKey:remove_listeners()
   self._display.device.message_stream:remove_listener(
     self,DEVICE_EVENT_KEY_HELD)
 
-
-end
-
-
---------------------------------------------------------------------------------
--- Private
---------------------------------------------------------------------------------
-
--- trigger the external handler method
-
-function UIKey:_invoke_handler()
-  TRACE("UIKey:_invoke_handler()")
-
-  if (self.on_press == nil) then 
-    return 
-  end
-
-  local rslt = self:on_press()
-  if (rslt~=false) then
-    self:invalidate()
-  end
 end
 
 

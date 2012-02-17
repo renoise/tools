@@ -44,7 +44,7 @@ function MidiDevice:__init(display_name, message_stream, port_in, port_out)
   self.nrpn_step = 3
   self.nrpn_timestamp = os.clock()
   -- -- NRPN
-  
+
   self:open()
 
 end
@@ -136,17 +136,17 @@ function MidiDevice:midi_callback(message)
     msg_context = MIDI_CHANNEL_PRESSURE
     msg_value = message[2]
     msg_channel = message[1]-207
-    --print("*** MidiDevice:midi_callback() - MIDI_CHANNEL_PRESSURE",msg_value)
     value_str = "CP"
   elseif (message[1]>=224) and (message[1]<=239) then
     msg_context = MIDI_PITCH_BEND_MESSAGE
-    msg_value = message[3]
+    msg_value = message[3] -- todo: support LSB for higher resolution
     msg_channel = message[1]-223
     value_str = "PB"
-    --return
+    --print("MidiDevice: - msg_value",msg_value)
   else
-    -- ignore unsupported type...
-    print("MidiDevice:midi_callback() - unsupported input type")
+    -- ignore unsupported/undhandled messages...
+    -- possible data include timing clock, active sensing etc.
+    --print("MidiDevice:midi_callback() - unsupported input type")
   end
 
 
@@ -174,6 +174,7 @@ function MidiDevice:midi_callback(message)
       -- create the message
       local msg = Message()
       msg.value = msg_value
+      msg.midi_msg = message
       msg.context = msg_context
       msg.channel = msg_channel
       msg.value = msg_value
@@ -182,7 +183,8 @@ function MidiDevice:midi_callback(message)
       -- special case: if we have received input from a MIDI keyboard
       -- by means of the "keyboard" input method, stick the note back on
       if (msg.context == MIDI_NOTE_MESSAGE) and
-        (param["xarg"].value=="|Ch"..msg_channel) 
+        (param["xarg"].value=="|Ch"..msg_channel) or
+        (param["xarg"].value=="|") 
       then
         param["xarg"].value = value_str
       end
@@ -190,7 +192,7 @@ function MidiDevice:midi_callback(message)
       --rprint(param["xarg"])
       --print('param["xarg"].value',param["xarg"].value)
 
-      if not duplex_preferences.nrpn_support then
+      if (duplex_preferences.nrpn_support.value == false) then
 
         if (param) then
           self:_send_message(msg,param["xarg"])
@@ -284,13 +286,12 @@ function MidiDevice:midi_callback(message)
           self.nrpn_message.decrement = false
           self.nrpn_message.value = msg.value
         end
-
         if (param) then
           for i=1, pace, 1 do
             if( self.nrpn_message.increment ) then msg.value = math.min(127, msg.value+1) end
             if( self.nrpn_message.decrement ) then msg.value = math.max(0,   msg.value-1) end
-          self:_send_message(msg,param["xarg"])
-        end
+            self:_send_message(msg,param["xarg"])
+          end
           -- as we have parsed the NRPNMessage (if there was one), we can reset it.
           self.nrpn_message = NRPNMessage()
         end
@@ -308,8 +309,13 @@ end
 --------------------------------------------------------------------------------
 
 function MidiDevice:sysex_callback(message)
-  TRACE(("MidiDevice: %s got SYSEX with %d bytes"):format(
+  TRACE("MidiDevice:sysex_callback()",message)
+
+  if(self.dump_midi)then
+    print(("MidiDevice: %s got SYSEX with %d bytes"):format(
     self.port_in, #message))
+  end
+  
 end
 
 
@@ -332,7 +338,7 @@ function MidiDevice:send_cc_message(number,value,channel)
   end
 
   -- ## NRPN
-  if duplex_preferences.nrpn_support then
+  if (duplex_preferences.nrpn_support.value == true) then
     -- hack to stop NRPN messages from being forwarded
     if (type(number) ~= "number") then 
       return 
@@ -342,12 +348,13 @@ function MidiDevice:send_cc_message(number,value,channel)
 
   local message = {0xAF+channel, math.floor(number), math.floor(value)}
 
-  TRACE(("MidiDevice: %s send MIDI %X %X %X"):format(
-    self.port_out, message[1], message[2], message[3]))
+  local dump_str = ("MidiDevice: %s send MIDI %X %X %X"):format(
+      self.port_out, message[1], message[2], message[3])
 
   if(self.dump_midi)then
-    print(("MidiDevice: %s send MIDI %X %X %X"):format(
-      self.port_out, message[1], message[2], message[3]))
+    print(dump_str)
+  else
+    TRACE(dump_str)
   end
 
 
@@ -387,7 +394,31 @@ function MidiDevice:send_sysex_message(...)
   self.midi_out:send(message)
 end
 
+--------------------------------------------------------------------------------
 
+function MidiDevice:send_pitch_bend_message(value,channel)
+  TRACE("MidiDevice:send_pitch_bend_message()",value,channel)
+
+  if (not self.midi_out or not self.midi_out.is_open) then
+    return
+  end
+  if not channel then
+    channel = self.default_midi_channel
+  end
+
+  local message = {223+channel, 0, value} -- todo: LSB for higher precision
+
+  TRACE(("MidiDevice: %s send MIDI %X %X %X"):format(
+    self.port_out, message[1], message[2], message[3]))
+    
+  if(self.dump_midi)then
+    print(("MidiDevice: %s send MIDI %X %X %X"):format(
+      self.port_out, message[1], message[2], message[3]))
+  end
+
+  self.midi_out:send(message) 
+
+end
 
 --------------------------------------------------------------------------------
 
@@ -406,6 +437,8 @@ function MidiDevice:send_note_message(key,velocity,channel)
     channel = self.default_midi_channel
   end
 
+  -- some devices cannot cope with note-off messages 
+  -- being note-on messages with zero velocity...
   if (velocity == 0) and not (self.allow_zero_velocity_note_on) then
     message[1] = 0x7F+channel -- note off
   else

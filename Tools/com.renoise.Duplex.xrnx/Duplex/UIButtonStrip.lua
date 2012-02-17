@@ -191,8 +191,10 @@ end
 
 --------------------------------------------------------------------------------
 
+-- @return boolean, true when message was handled
+
 function UIButtonStrip:do_press(msg)
-  TRACE("UIButtonStrip:do_press()",msg)
+  print("UIButtonStrip:do_press()",msg)
 
   if not (self.group_name == msg.group_name) then
     return 
@@ -200,6 +202,8 @@ function UIButtonStrip:do_press(msg)
   if not self:test(msg.column,msg.row) then
     return 
   end
+
+  print("UIButtonStrip:do_press() A",msg)
 
   local idx = self:_determine_index_by_pos(msg.column, msg.row)
 
@@ -221,14 +225,19 @@ function UIButtonStrip:do_press(msg)
       self:set_index(idx)
     end
   end
-
-  if (self.on_press ~= nil) then
-    self:on_press()
+  print("UIButtonStrip:do_press B")
+  if (self.on_release ~= nil) then
+    self:on_release() 
   end
+
+  return true
+
 
 end
 
 --------------------------------------------------------------------------------
+
+-- @return boolean, true when message was handled
 
 function UIButtonStrip:do_release(msg)
   TRACE("UIButtonStrip:do_release()",msg)
@@ -250,10 +259,8 @@ function UIButtonStrip:do_release(msg)
       if (not self._held_event_fired) and (not self._range_set) then
         if (self.toggleable) and (idx==self._index) then
           self:set_index(0)
-
         else
           self:set_index(idx)
-
         end
       end
     end
@@ -266,25 +273,30 @@ function UIButtonStrip:do_release(msg)
     self.canvas.has_changed = true
     self:invalidate()
   end
-
   if (self.on_release ~= nil) then
     self:on_release()
   end
+
+  return true
+
 
 end
 
 --------------------------------------------------------------------------------
 
+-- @return true (hold message are always handled)
+
 function UIButtonStrip:do_hold(msg)
   TRACE("UIButtonStrip:do_hold()",msg)
 
   if not (self.group_name == msg.group_name) then
-    return 
+    return true
   end
 
   if not self:test(msg.column,msg.row) then
-    return 
+    return true
   end
+
 
   if (self.mode == self.MODE_NORMAL) then
     -- toggle current range when held
@@ -300,10 +312,11 @@ function UIButtonStrip:do_hold(msg)
     self._held_event_fired = true
   end
 
-
   if (self.on_hold ~= nil) then
     self:on_hold()
   end
+
+  return true
 
 end
 
@@ -582,15 +595,15 @@ function UIButtonStrip:add_listeners()
 
   self._display.device.message_stream:add_listener(
     self, DEVICE_EVENT_BUTTON_PRESSED,
-    function(msg) self:do_press(msg) end )
+    function(msg) return self:do_press(msg) end )
 
   self._display.device.message_stream:add_listener(
     self,DEVICE_EVENT_BUTTON_HELD,
-    function(msg) self:do_hold(msg) end )
+    function(msg) return self:do_hold(msg) end )
 
   self._display.device.message_stream:add_listener(
     self,DEVICE_EVENT_BUTTON_RELEASED,
-    function(msg) self:do_release(msg) end )
+    function(msg) return self:do_release(msg) end )
 
 end
 
@@ -643,6 +656,27 @@ function UIButtonStrip:_determine_index_by_pos(column,row)
   end
 
   return idx
+end
+
+--------------------------------------------------------------------------------
+
+-- extended test: check if we have no events assigned at all
+-- (so we can pass message on to Renoise)
+
+function UIButtonStrip:test(column,row)
+  
+  if (self.on_index_change == nil) and
+    (self.on_range_change == nil) and
+    (self.on_press == nil) and
+    (self.on_change == nil) and
+    (self.on_release == nil) 
+  then
+    print("this component has no event handlers")
+    return false
+  end
+
+  return UIComponent.test(self,column,row)
+
 end
 
 --------------------------------------------------------------------------------

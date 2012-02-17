@@ -292,18 +292,22 @@ function Recorder:__init(process,mappings,options,cfg_name,palette)
       text="·",
     },
     slider_lit = {
+      -- the active recording
       color = {0xff,0xff,0xff},
       text="■",
     },
     slider_dimmed = {
+      -- "a recording"
       color = {0x40,0x40,0x40},
       text="□",
     },
     recorder_lit = {
+      -- record button
       color = {0xff,0x00,0xff},
       text="■",
     },
     recorder_dimmed = {
+      -- record button
       color = {0x40,0x00,0x40},
       text="□",
     },
@@ -519,7 +523,8 @@ function Recorder:on_idle()
             local slider = self._sliders[self._active_control_idx]
             local palette = (blink) 
               and {tip=table.rcopy(self.palette.slider_lit)} 
-              or {tip=table.rcopy(self.palette.slider_dimmed)}
+              --or {tip=table.rcopy(self.palette.slider_dimmed)}
+              or {tip=table.rcopy(self.palette.background)}
             slider:set_palette(palette)
           end
         end
@@ -554,6 +559,7 @@ function Recorder:on_idle()
         local palette = (blink) 
           and {tip=table.rcopy(self.palette.slider_lit)} 
           or {tip=table.rcopy(self.palette.slider_dimmed)}
+          --or {tip=table.rcopy(self.palette.background)}
         slider:set_palette(palette)
       end
     end
@@ -825,7 +831,7 @@ end
 -- @param track_idx - renoise track number
 
 function Recorder:_remove_ghost(track_idx)
-  TRACE("Recorder:_remove_ghost",track_idx)
+  print("Recorder:_remove_ghost",track_idx)
 
   local skip_event=true
   local control_idx = self:_get_control_idx(track_idx)
@@ -836,8 +842,10 @@ function Recorder:_remove_ghost(track_idx)
     if control_idx then
       local slider = self._sliders[control_idx]
       self:_set_slider_steps(slider,count)
+      print("Recorder:_remove_ghost - set slider steps",slider,count)
       self:_restore_slider_tip(track_idx)
       slider:set_index((track.selected_sample or 0),skip_event)
+      print("Recorder:_remove_ghost - set_index",(track.selected_sample or 0),skip_event)
     end
   end
 end
@@ -888,6 +896,7 @@ function Recorder:_restore_slider_tip(track_idx)
       control_idx then
     local slider = self._sliders[control_idx]
     slider:set_palette({tip=table.rcopy(self.palette.slider_lit)})
+    print("slider:set_palette({tip=table.rcopy(self.palette.slider_lit)})")
   end
 end 
 
@@ -1476,13 +1485,14 @@ function Recorder:_attempt_track_switch(track_idx)
   end
 
   -- remove ghost from previous track
-  if (self._active_track_idx) and 
-      (self._active_track_idx~=track_idx) then
-    local control_idx = self:_get_control_idx(self._active_track_idx)
-    if control_idx then
-      self._buttons[control_idx]:set(false,skip_event)
+  if (self._active_track_idx) then
+    if (self._active_track_idx~=track_idx) then
+      local control_idx = self:_get_control_idx(self._active_track_idx)
+      if control_idx then
+        self._buttons[control_idx]:set(false,skip_event)
+      end
+      self:_remove_ghost(self._active_track_idx)
     end
-    self:_remove_ghost(self._active_track_idx)
   end
 
   self:_set_active_track(track_idx)
@@ -1508,6 +1518,7 @@ function Recorder:_attempt_track_switch(track_idx)
     if self._grid_mode then
       -- grid mode: hide recording dialog
       self:_abort_recording()
+
     else
       -- normal mode: control recording stage
       local return_code = self:_process_input(track)

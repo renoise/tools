@@ -35,28 +35,37 @@ end
 --------------------------------------------------------------------------------
 
 -- user input via control
+-- @return boolean, true when message was handled
 
 function UIPad:do_change(msg)
   TRACE("UIPad:do_change()",msg)
 
-  if not (self.group_name == msg.group_name) then
-    return
+  if (self.on_change ~= nil) then
+
+    if not (self.group_name == msg.group_name) then
+      return false
+    end
+    if not self:test(msg.column,msg.row) then
+      return false
+    end
+    local val_x = msg.value[1]
+    local val_y = msg.value[2]
+    
+    return self:set_value(val_x,val_y)
+
   end
-  if not self:test(msg.column,msg.row) then
-    return
-  end
-  -- scale from the message range to the sliders range
-  local val_x = msg.value[1]
-  local val_y = msg.value[2]
-  self:set_value(val_x,val_y)
+
+  return false
+
 end
 
 
 --------------------------------------------------------------------------------
 
--- setting value will also set index
+-- set value
 -- @val (float) 
 -- @skip_event (boolean) skip event handler
+-- @return boolean, true when value was set
 
 function UIPad:set_value(val_x,val_y,skip_event)
   TRACE("UIPad:set_value()",val_x,val_y,skip_event)
@@ -64,15 +73,27 @@ function UIPad:set_value(val_x,val_y,skip_event)
   if (self._cached_value[1] ~= val_x) or
     (self._cached_value[2] ~= val_y)
   then
-    self._cached_value = {val_x,val_y}
+    self._cached_value = {self.value[1],self.value[2]}
     self.value = {val_x,val_y}
 
     if (skip_event) then
       self:invalidate()
     else
-      self:_invoke_handler()
+
+      if (self.on_change == nil) then 
+        return false
+      end
+      if (self:on_change()==false) then 
+        self._value = self._cached_value  
+        return false
+      else
+        self:invalidate()
+      end
     end
   end  
+
+  return true
+
 end
 
 
@@ -98,7 +119,7 @@ function UIPad:add_listeners()
 
   self._display.device.message_stream:add_listener(
     self,DEVICE_EVENT_VALUE_CHANGED,
-    function(msg) self:do_change(msg) end )
+    function(msg) return self:do_change(msg) end )
 
 end
 
@@ -111,21 +132,4 @@ function UIPad:remove_listeners()
     self,DEVICE_EVENT_VALUE_CHANGED)
 
 end
-
---------------------------------------------------------------------------------
-
--- trigger the external handler method
-
-function UIPad:_invoke_handler()
-
-  if (self.on_change == nil) then return end
-  local rslt = self:on_change()  
-  if (rslt==false) then  -- revert
-    self._value = self._cached_value  
-
-  else
-    self:invalidate()
-  end
-end
-
 

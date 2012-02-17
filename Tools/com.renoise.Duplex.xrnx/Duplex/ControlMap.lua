@@ -49,13 +49,8 @@ function ControlMap:__init()
 
   -- internal stuff
 
-  --[[
-    TODO - multiple message support, remember messages by value
-    (also for quickly looking up if the value is defined, before
-    we use string matching)
-  self.value_buffer = table.create()
-  --]]
-  
+  self.midi_buffer = table.create()
+
   -- unique id, reset each time a control-map is parsed
   self.id = nil 
 
@@ -174,20 +169,27 @@ end
 -- used by the MidiDevice to retrieves a parameter by it's note/cc-value-string
 -- the function will match values on the default channel, if not defined:
 -- "CC#105|Ch1" will match both "CC#105|Ch1" and "CC#105" 
--- TODO: update value_buffer when a match was made
+-- also, we have wildcard support: 
+-- "C#*|Ch1" will match both "C#1|Ch1" and "C#5" 
 -- @param str (string, control-map value attribute)
--- @return table
+-- @return table of matched parameters
 
 function ControlMap:get_params_by_value(str,msg_context)
   TRACE("ControlMap:get_params_by_value",str,msg_context)
 
   local matches = table.create()
 
+  -- check if we have previously matched the pattern
+  if (self.midi_buffer[str]) then
+    return self.midi_buffer[str] 
+  end
+
   -- first, look for an exact match
   local str2 = strip_channel_info(str)
   for _,group in pairs(self.groups) do
     for k,v in ipairs(group) do
       -- check if we are dealing with an octave wildcard
+      -- (method will only work with range -1 to 9)
       local match_against = v["xarg"]["value"]
       if (msg_context == MIDI_NOTE_MESSAGE) and (v["xarg"]["value"]):find("*") then
         local oct = str2:sub(#str2-1,#str2)
@@ -202,9 +204,10 @@ function ControlMap:get_params_by_value(str,msg_context)
     end
   end
 
-  -- match keyboard without note information
+  -- next, match keyboard (no note information)
   if (msg_context == MIDI_NOTE_MESSAGE) then
     local str2 = strip_note_info(str)
+    --print("controlMap: str2",str2)
     for _,group in pairs(self.groups) do
       for k,v in ipairs(group) do
         -- check if we already have matched the value
@@ -214,12 +217,19 @@ function ControlMap:get_params_by_value(str,msg_context)
             skip = true
           end
         end
-        if not skip and (v["xarg"]["value"] == str) or (v["xarg"]["value"] == str2) then
+        if not skip and 
+          (v["xarg"]["value"] == str) or 
+          (v["xarg"]["value"] == str2) or
+          (v["xarg"]["value"] == "|") -- match any channel
+        then
           matches:insert(v)
         end
       end
     end
   end
+
+  -- remember match 
+  self.midi_buffer[str] = matches
 
   return matches
 
@@ -228,35 +238,27 @@ end
 
 --------------------------------------------------------------------------------
 
--- get_param_by_action() - used for parsing OSC messages
--- retrieve a parameter by matching it's value or action attribute, 
--- with wildcard support for particular types of value:
+-- get_osc_param() - used for parsing OSC messages
+-- retrieve a parameter by matching it's "value" or "action" attribute, 
+-- with pattern-matching for particular types of values:
 -- "/press 1 %i" matches "/press 1 1" but not "/press 1 A"
 -- "/pre** 1 %f" matches "/press 1 1" and "/preff 10 1.42"
 --
--- use the action property if it's available, otherwise use
--- the "value" property - the action property is needed when
--- a device transmit a different outgoing than incoming value 
+-- the method will match the action property if it's available, otherwise 
+-- the "value" property (the action property is needed when a device 
+-- transmit a different outgoing than incoming value)
 -- 
 -- @param str (string, control-map value/action attribute)
 -- @return  <Param> node as table (only the first match is returned),
---          and the value (if matched against a wildcard)
+--          values (table), if matched against a wildcard,
+--          wildcard_idx (integer), the matched index
+--          replace_char (string), the characters to insert
 
-function ControlMap:get_param_by_action(str)
-  TRACE("ControlMap:get_param_by_action",str)
+function ControlMap:get_osc_param(str)
+  TRACE("ControlMap:get_osc_param",str)
 
-  -- todo: attempt a literal match (faster)
-  --[[
-  for _,group in pairs(self.groups) do
-    for k,v in ipairs(group) do
-      local str_prop = v["xarg"]["action"] or v["xarg"]["value"]
-      if (str_prop == str) then
-        return v
-      end
-    end
-  end
-  ]]
-  -- check with wildcard support:
+
+  -- split incoming message into parts, separated by whitespace
   local str_table = table.create()
   for v in string.gmatch(str,"[^%s]+") do
     str_table:insert(v)
@@ -282,7 +284,6 @@ function ControlMap:get_param_by_action(str)
         elseif(str_table[1]~=prop_table[1]) then
           -- ignore if different pattern, but first we 
           -- check of there's a wildcard present
-          --print("*** ControlMap: ignore if different pattern",str_table[1],prop_table[1])
           if (prop_table[1]):find("*",1,true) then
             local char2 = nil
             for i = 1,#str_table[1] do
@@ -292,16 +293,13 @@ function ControlMap:get_param_by_action(str)
               if (replace_char =="") then
                 char2 = (prop_table[1]):sub(i,i)
               end
-              --print("*** ControlMap: char1,char2",char1,char2)
               if (char1~=char2) then
                 -- capture the target parameter's index
                 -- (as long as it's a number)
                 if (char2 == "*") and ((char1):match("(%d*)")) then
                   wildcard_idx = i
                   replace_char = replace_char..char1
-                  --print("replace_char",replace_char)
                   matched = true
-
                 else
                   -- failed to match a character
                   matched = false
@@ -314,15 +312,12 @@ function ControlMap:get_param_by_action(str)
             matched = false
           end
         end
-        --print("*** ControlMap: str_table[1],prop_table[1]",str_table[1],prop_table[1])
 
         if matched then
-        --else
           -- return matching group + extracted value
           local values = table.create()
           local ignore = false
           for o=2,#prop_table do
-            --print("prop_table[",o,"]",prop_table[o])
             if (not ignore) then
               if (prop_table[o]=="%f") then
                 values:insert(tonumber(str_table[o]))
@@ -334,6 +329,7 @@ function ControlMap:get_param_by_action(str)
               end
             end
           end
+          --rprint(values)
           if not ignore then
             return v,values,wildcard_idx,replace_char
           end
@@ -342,6 +338,7 @@ function ControlMap:get_param_by_action(str)
       end
     end
   end
+
 
 end
 
@@ -401,6 +398,7 @@ function ControlMap:get_group_dimensions(group_name)
   if (group) then
     for attr, param in pairs(group) do
       if (attr == "xarg") then
+        --local width = tonumber(param["columns"])
         local width = tonumber(param["columns"])
         local height = math.ceil(#group / width)
         return width,height

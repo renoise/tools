@@ -65,7 +65,7 @@
       
       <Row>
         <Column>
-          <Group name="Navigator" orientation="horizontal" colorspace="0,1,0">
+          <Group name="Navigator" orientation="horizontal" columns="8" colorspace="0,1,0">
             <Param value="E-3|Ch1" type="pushbutton" name="Block 1"  maximum="127" minimum="0"/>
             <Param value="E-3|Ch2" type="pushbutton" name="Block 2"  maximum="127" minimum="0"/>
             <Param value="E-3|Ch3" type="pushbutton" name="Block 3"  maximum="127" minimum="0"/>
@@ -92,9 +92,9 @@
             <Param value="D#3|Ch6" type="pushbutton" name="Block Loop"  maximum="127" minimum="0"/>
             <Param value="D#3|Ch7" type="pushbutton" name="Previous"  maximum="127" minimum="0"/>
             <Param value="D#3|Ch8" type="pushbutton" name="Next"  maximum="127" minimum="0"/>
-		  </Group>
-		  <Group name="Activator" colorspace="0,1,0">
-			<Param value="D-3|Ch1" type="pushbutton" name="" aspect="0.6" maximum="127" minimum="0"/>
+      </Group>
+      <Group name="Activator" colorspace="0,1,0">
+      <Param value="D-3|Ch1" type="pushbutton" name="" aspect="0.6" maximum="127" minimum="0"/>
             <Param value="D-3|Ch2" type="pushbutton" name="" aspect="0.6" maximum="127" minimum="0"/>
             <Param value="D-3|Ch3" type="pushbutton" name="" aspect="0.6" maximum="127" minimum="0"/>
             <Param value="D-3|Ch4" type="pushbutton" name="" aspect="0.6" maximum="127" minimum="0"/>

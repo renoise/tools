@@ -1266,10 +1266,12 @@ function XYPad:_attach_to_song()
         then
           -- 'soft' unlock
           --self.options.locked.value = self.LOCKED_DISABLED
+          --[[
           self:clear_device()
           if self._lock_button then
             self._lock_button:set(false,true)
           end
+          ]]
         end
       end
     end

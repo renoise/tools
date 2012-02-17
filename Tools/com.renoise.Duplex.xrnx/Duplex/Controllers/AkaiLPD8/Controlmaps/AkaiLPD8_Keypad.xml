@@ -16,23 +16,21 @@ Pad CCs: 110-117, Knob CCs: 21-28. Preset file for LPD8 Editor included</Descrip
 		<Column>
 			<Row>
 				<Group name="Pads" columns="4">
-					<Param value="CC#110" type="togglebutton" name="PAD5"  maximum="127" minimum="0"/>
-					<Param value="CC#111" type="togglebutton" name="PAD6"  maximum="127" minimum="0"/>
-					<Param value="CC#112" type="togglebutton" name="PAD7"  maximum="127" minimum="0"/>
-					<Param value="CC#113" type="togglebutton" name="PAD8"  maximum="127" minimum="0"/>
-					<Param value="CC#114" type="togglebutton" name="PAD1"  maximum="127" minimum="0"/>
-					<Param value="CC#115" type="togglebutton" name="PAD2"  maximum="127" minimum="0"/>
-					<Param value="CC#116" type="togglebutton" name="PAD3"  maximum="127" minimum="0"/>
-					<Param value="CC#117" type="togglebutton" name="PAD4"  maximum="127" minimum="0"/>
+					<Param value="CC#110" type="key" name="PAD5"  maximum="127" minimum="0"/>
+					<Param value="CC#111" type="key" name="PAD6"  maximum="127" minimum="0"/>
+					<Param value="CC#112" type="key" name="PAD7"  maximum="127" minimum="0"/>
+					<Param value="CC#113" type="key" name="PAD8"  maximum="127" minimum="0"/>
+					<Param value="CC#114" type="key" name="PAD1"  maximum="127" minimum="0"/>
+					<Param value="CC#115" type="key" name="PAD2"  maximum="127" minimum="0"/>
+					<Param value="CC#116" type="key" name="PAD3"  maximum="127" minimum="0"/>
+					<Param value="CC#117" type="key" name="PAD4"  maximum="127" minimum="0"/>
 				</Group>
-				<Group name="Knobs" columns="1">
+				<Group name="Knobs" columns="4">
 					<Param value="CC#21" type="dial" name="K1"  maximum="127" minimum="0"/>
-					<Param value="CC#25" type="dial" name="K5"  maximum="127" minimum="0"/>
-				</Group>
-				<Group name="Knobs2" columns="3">
 					<Param value="CC#22" type="dial" name="K2"  maximum="127" minimum="0"/>
 					<Param value="CC#23" type="dial" name="K3"  maximum="127" minimum="0"/>
 					<Param value="CC#24" type="dial" name="K4"  maximum="127" minimum="0"/>
+					<Param value="CC#25" type="dial" name="K5"  maximum="127" minimum="0"/>
 					<Param value="CC#26" type="dial" name="K6"  maximum="127" minimum="0"/>
 					<Param value="CC#27" type="dial" name="K7"  maximum="127" minimum="0"/>
 					<Param value="CC#28" type="dial" name="K8"  maximum="127" minimum="0"/>

@@ -64,6 +64,9 @@ duplex_configurations:insert {
       options = {
         pitch_bend = 2,
         channel_pressure = 2,
+      },
+      hidden_options = {
+        "button_width","button_height"
       }
     },
     KeyboardMiddle = {
@@ -121,6 +124,9 @@ duplex_configurations:insert {
         upper_note = 36,
         lower_note = 6,
       },
+      hidden_options = {
+        "button_width","button_height","pitch_bend","channel_pressure",
+      }
     },
     KeyboardLower = {
       application = "Keyboard",
@@ -177,7 +183,9 @@ duplex_configurations:insert {
         upper_note = 84,
         lower_note = 37,
       },
-
+      hidden_options = {
+        "button_width","button_height","pitch_bend","channel_pressure",
+      }
     },
 
 

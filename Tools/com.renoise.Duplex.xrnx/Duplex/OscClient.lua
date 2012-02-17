@@ -6,9 +6,7 @@
 
 About 
 
-  OscClient is a simply OSC client that connect to the built-in OSC server, producing realtime messages that trigger notes or send MIDI messages
-
-  
+  OscClient is a simple OSC client that connect to the built-in OSC server in Renoise, producing realtime messages that trigger notes or send MIDI messages
 
 
 --]]
@@ -40,19 +38,19 @@ end
 
 -- internal sample-trigger function, shared across applications
 
-function OscClient:_trigger_instrument(note_on,instr,track,note,velocity)
-  TRACE("OscClient:_trigger_instrument(note_on,instr,track,note,velocity)",note_on,instr,track,note,velocity)
+function OscClient:trigger_instrument(note_on,instr,track,note,velocity)
+  TRACE("OscClient:trigger_instrument()",note_on,instr,track,note,velocity)
   
   if not self._connection then
     return false
   end
 
-  local header = nil
   local osc_vars = table.create()
   osc_vars:insert({tag = "i",value = instr})
   osc_vars:insert({tag = "i",value = track})
   osc_vars:insert({tag = "i",value = note})
 
+  local header = nil
   if (note_on) then
     header = "/renoise/trigger/note_on"
     osc_vars:insert({tag = "i",value = velocity})
@@ -74,19 +72,21 @@ end
 
 -- internal midi-message function, shared across applications
 
-function OscClient:_trigger_midi(val)
-  TRACE("OscClient:_trigger_instrument(val)",val)
+function OscClient:trigger_midi(t)
+  TRACE("OscClient:trigger_midi()",t)
   
   if not self._connection then
     return false
   end
 
+  --rprint(t)
   local header = "/renoise/trigger/midi"
+  local val = math.floor(t[1])+
+             (math.floor(t[2])*256)+
+             (math.floor(t[3])*65536)
+
   local osc_vars = table.create()
   osc_vars:insert({tag = "i",value = val})
-
-  --print("about to send internally routed midi message",header)
-  --rprint(osc_vars)
 
   local osc_msg = renoise.Osc.Message(header,osc_vars)
   self._connection:send(osc_msg)
@@ -94,3 +94,4 @@ function OscClient:_trigger_midi(val)
   return true
 
 end
+

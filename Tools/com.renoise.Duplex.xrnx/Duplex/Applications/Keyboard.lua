@@ -48,7 +48,6 @@ Changes (equal to Duplex version number)
 class 'Keyboard' (Application)
 
 Keyboard.default_options = {
-
   instr_index = {
     label = "Active Instr.",
     description = "Choose which instrument to control",
@@ -81,12 +80,22 @@ Keyboard.default_options = {
     },
     value = 1,
   },
-  velocity = {
+  velocity_mode = {
     label = "Velocity Mode",
-    description = "Determine how to act on velocity range (specified in control-map)",
+    description = "Determine how to act on velocity range (the range specified in the control-map)",
     items = {
       "Clamp (restrict to range)",
       "Clip (within range only)",
+    },
+    value = 1,
+  },
+  keyboard_mode = {
+    label = "Keyboard Mode",
+    description = "Determine how notes should be triggered",
+    items = {
+      "Trigger notes in range (OSC)",
+      "Trigger all (range as OSC, others as MIDI)",
+      "Trigger nothing (disable)",
     },
     value = 1,
   },
@@ -121,6 +130,19 @@ Keyboard.default_options = {
     items = {
       "Ignore",
       "Broadcast as MIDI",
+    },
+    value = 1,
+  },
+  release_type = {
+    label = "Key-release",
+    description = "Determine how to respond when the same key is triggered"
+                .."\nmultiple times without being released inbetween hits: "
+                .."\n'wait' means to wait until all pressed keys are released, "
+                .."\n'release when possible' will use the first opportunity to "
+                .."\n release the note (enable if you experience stuck notes)",
+    items = {
+      "Wait for all keys",
+      "Release when possible",
     },
     value = 1,
   },
@@ -218,7 +240,7 @@ function Keyboard:__init(process,mappings,options,cfg_name,palette)
       description = "Keyboard: pitch-bend wheel"
     },
     pressure = {
-      description = "Keyboard: trigger notes using keyboard"
+      description = "Keyboard: channel pressure"
     },
     volume = {
       description = "Keyboard: volume control",
@@ -279,16 +301,26 @@ function Keyboard:__init(process,mappings,options,cfg_name,palette)
     },
     key_released_content = {
       color = {0x40,0x40,0x40},
-      text="□",
+      text="■",
     },
     key_released_selected = {
       color = {0x80,0x80,0x40},
       text="□",
     },
+    key_out_of_bounds = {
+      color = {0x00,0x00,0x00},
+      text="·",
+    },
   }
 
   self.VELOCITY_CLAMP = 1
   self.VELOCITY_CLIP = 2
+
+  self.KEYBOARD_TRIGGER_RANGE = 1
+  self.KEYBOARD_TRIGGER_ALL = 2
+  self.KEYBOARD_TRIGGER_NONE = 3
+
+  self.RELEASE_TYPE_WAIT = 1
 
   self.IGNORE_PRESSURE = 1
   self.BROADCAST_PRESSURE = 2
@@ -341,35 +373,38 @@ function Keyboard:__init(process,mappings,options,cfg_name,palette)
 
   self._grid_update_requested = false
   self._track_update_requested = false
-
+  self._boundary_update_requested = false
 end
 
 --------------------------------------------------------------------------------
 
--- trigger notes using the internal OSC server
+-- trigger notes using the internal voice manager (OSC server)
 -- @param note_on (boolean), whether to send trigger or release
 -- @param pitch (number)
 -- @param velocity (number)
 -- @param grid_index (number), when using individual buttons as triggers
--- @return true when note was succesfully sent
+-- @return true when originating control should update
 
 function Keyboard:trigger(note_on,pitch,velocity,grid_index)
   TRACE("Keyboard:trigger()",note_on,pitch,velocity,grid_index)
 
-  local osc_client = self._process.browser._osc_client
-  assert(osc_client,"Internal Error. Please report: " ..
-    "expected internal OSC client to be present")
+  if (self.options.keyboard_mode.value == self.KEYBOARD_TRIGGER_NONE) then
+    print("Cannot trigger note, keyboard has been disabled")
+    return false
+  end
+
+  local voice_mgr = self._process.browser._voice_mgr
+  assert(voice_mgr,"Internal Error. Please report: " ..
+    "expected OSC voice-manager to be present")
 
   -- reject notes that are outside valid range
-  if (pitch>UPPER_NOTE) or (pitch<LOWER_NOTE) then
+  if note_on and (pitch>UPPER_NOTE) or (pitch<LOWER_NOTE) then
     print("Cannot trigger note, pitch is outside valid range")
     return false
   end
 
-  -- reject notes that are outside user-defined range
-  if (pitch>self.upper_note) or (pitch<self.lower_note) then
-    return false
-  end
+  -- notes outside user-defined range are sent as MIDI
+  local is_midi = not self:inside_note_range(pitch)
 
   pitch = pitch+12 -- fix Renoise octave difference 
 
@@ -387,30 +422,82 @@ function Keyboard:trigger(note_on,pitch,velocity,grid_index)
     key_max = msg.max
   end
 
-  -- clip/clamp velocity
-  if (self.options.velocity.value == self.VELOCITY_CLAMP) then
-    velocity = clamp_value(velocity,key_min,key_max)
-  elseif note_on and (self.options.velocity.value == self.VELOCITY_CLIP) then
-    if (velocity<key_min) or
-      (velocity>key_max) 
-    then
-      return false
+  if velocity then
+    -- clip/clamp velocity
+    if (self.options.velocity_mode.value == self.VELOCITY_CLAMP) then
+      velocity = clamp_value(velocity,key_min,key_max)
+    elseif note_on and (self.options.velocity_mode.value == self.VELOCITY_CLIP) then
+      if (velocity<key_min) or
+        (velocity>key_max) 
+      then
+        return false
+      end
+    end
+    -- scale velocity from device range to keyboard range (0-127)
+    velocity = scale_value(velocity,0,key_max,0,127)
+    -- apply user-specified volume 
+    velocity = math.floor(velocity * (self.curr_volume/self.KEYBOARD_VELOCITIES))
+  end
+
+  --print("trigger note_on,instr,track,pitch,velocity",note_on,instr,track,pitch,velocity)
+  local transp = 0
+  local keep = (self.options.release_type.value == self.RELEASE_TYPE_WAIT)
+  --if note_on and not release_only then
+  if note_on then
+    --print("*** trigger note,is_midi",is_midi)
+    local do_trigger = true
+    if is_midi and (self.options.keyboard_mode.value ~= self.KEYBOARD_TRIGGER_ALL) then
+      do_trigger = false
+    end
+    if do_trigger then
+      voice_mgr:trigger(self,instr,track,pitch,velocity,keep,is_midi)
+    end
+  else
+    --print("*** release note,is_midi",is_midi)
+    transp = voice_mgr:release(self,instr,track,pitch,velocity,is_midi)
+  end
+
+  -- update the keyboard's visual representation 
+  if self._keymatcher then
+    self._keymatcher.pressed_keys[pitch+transp+1] = note_on
+    if (transp~=0) then
+      -- note is in a different position, refresh entire keyboard
+      self._keymatcher:update_keys()
     end
   end
 
-  -- scale velocity from device range to keyboard range (0-127)
-  velocity = scale_value(velocity,0,key_max,0,127)
-
-  -- apply user-specified volume 
-  velocity = math.floor(velocity * (self.curr_volume/self.KEYBOARD_VELOCITIES))
-
-  --print("trigger note_on,instr,track,pitch,velocity",note_on,instr,track,pitch,velocity)
-  if not osc_client:_trigger_instrument(note_on,instr,track,pitch,velocity) then
-    print("Cannot trigger notes, the internal OSC server was not started")
-  end
+  -- detect if we still have an active notes playing
+  -- (to connect a button's lit state with the voice manager)
+  --if not transp then
+    if not note_on and keep then
+      --rprint(voice_mgr.playing)
+      local is_active = voice_mgr:note_is_active(self,instr,pitch)
+      --print("Keyboard:trigger() - is_active",is_active)
+      if is_active then
+        return false
+      end
+    end
+  --end
 
   return true
 
+end
+
+--------------------------------------------------------------------------------
+
+-- test whether a given pitch is inside the specified note-range
+
+function Keyboard:inside_note_range(pitch)
+  TRACE("Keyboard:inside_note_range()",pitch)
+  --[[
+  print("Keyboard:inside_note_range() - self.upper_note",self.upper_note)
+  print("Keyboard:inside_note_range() - self.lower_note",self.lower_note)
+  ]]
+
+  if (pitch>self.upper_note) or (pitch<self.lower_note) then
+    return false
+  end
+  return true
 end
 
 --------------------------------------------------------------------------------
@@ -421,10 +508,7 @@ function Keyboard:send_midi(msg)
   TRACE("Keyboard:send_midi(msg)",msg)
 
   local osc_client = self._process.browser._osc_client
-  local val = math.floor(msg[1])+
-             (math.floor(msg[2])*256)+
-             (math.floor(msg[3])*65536)
-  if not osc_client:_trigger_midi(val) then
+  if not osc_client:trigger_midi(msg) then
     print("Cannot send MIDI, the internal OSC server was not started")
   end
 
@@ -437,13 +521,17 @@ end
 function Keyboard:start_app()
   TRACE("Keyboard:start_app()")
 
+  -- obtain values that (may) have been defined in options,
+  -- should happen before constructing the application 
   self:obtain_octave()
   self:obtain_volume()
   self:obtain_track()
   self:obtain_instr()
+
   if not Application.start_app(self) then
     return
   end
+
   self:set_octave(self.curr_octave)
   self:set_volume(self.curr_volume)
   self:set_track(self.curr_track)
@@ -457,10 +545,29 @@ end
 
 --------------------------------------------------------------------------------
 
+-- shut down application
+
+function Keyboard:stop_app()
+  TRACE("Keyboard:stop_app()")
+
+  -- stop any active voices that originate from this app
+  local voice_mgr = self._process.browser._voice_mgr
+  voice_mgr:remove_app(self)
+  self:_remove_notifiers(self._instr_observables)
+  Application.stop_app(self)
+
+end
+
+--------------------------------------------------------------------------------
+
 -- perform periodic updates
 
 function Keyboard:on_idle()
   --TRACE("Keyboard:on_idle()")
+
+  if not self.active then
+    return false
+  end
 
   if self._instr_update_requested then
     self._instr_update_requested = false
@@ -480,6 +587,11 @@ function Keyboard:on_idle()
     self:update_track_controls()
   end
 
+  if self._boundary_update_requested then
+    self._boundary_update_requested = false
+    self:set_boundaries()
+  end
+
 end
 
 
@@ -493,16 +605,14 @@ function Keyboard:_build_app()
 
   local cm = self.display.device.control_map
 
+  -- keymatcher: a single UIKey for matching all notes...
+  
   if (self.mappings.keys.group_name) then
-
-    -- add keyboard
 
     local key_group = self.mappings.keys.group_name
     local key_index = self.mappings.keys.index or 1
     self._key_args = cm:get_indexed_element(key_index,key_group)
 
-    -- keymatcher: a single UIKey will match all incoming notes...
-    
     local c = UIKey(self.display)
     c.group_name = self.mappings.keys.group_name
     c.match_any_note = true
@@ -510,32 +620,32 @@ function Keyboard:_build_app()
       if not self.active then
         return false
       end
-      local msg = self.display.device.message_stream.current_message
       local note_on = true
-      local velocity = obj.velocity
-      local triggered = self:trigger(note_on,obj.pitch,velocity)
-      return (not msg.is_virtual) and triggered or false
+      local msg = self.display.device.message_stream.current_message
+      local triggered = self:trigger(note_on,obj.pitch,obj.velocity)
+      --print("Keyboard: triggered",triggered)
+      return triggered
     end
     c.on_release = function(obj)
       if not self.active then
         return false
       end
-      local msg = self.display.device.message_stream.current_message
       local note_on = false
-      local velocity = obj.velocity
-      local triggered = self:trigger(note_on,obj.pitch,velocity)
-      return (not msg.is_virtual) and triggered or false
+      local msg = self.display.device.message_stream.current_message
+      local released = self:trigger(note_on,obj.pitch,obj.velocity)
+      --print("Keyboard: released",released)
+      return released
     end
     self:_add_component(c)
     self._keymatcher = c
 
   end
 
-  if (self.mappings.key_grid.group_name) then
+  -- add grid keys (for buttons/pads)
 
-    -- add grid keys (for buttons/pads)
+  local map = self.mappings.key_grid
+  if (map.group_name) then
 
-    local map = self.mappings.key_grid
     -- determine width and height of grid
     local grid_w = cm:count_columns(map.group_name)
     local grid_h = cm:count_rows(map.group_name)
@@ -543,7 +653,7 @@ function Keyboard:_build_app()
     local unit_h = self.options.button_height.value
 
     -- adapt to grid orientation 
-    local orientation = self.mappings.key_grid.orientation or HORIZONTAL
+    local orientation = map.orientation or HORIZONTAL
     if (orientation == HORIZONTAL) then
       grid_w,grid_h = grid_h,grid_w
     end
@@ -567,16 +677,10 @@ function Keyboard:_build_app()
           if not skip then
             local ctrl_idx = #self._grid+1
             local args = cm:get_indexed_element(ctrl_idx,map.group_name)
-            -- determine if we are dealing with fixed-value keys (MIDI),
-            -- or OSC (which doesn't need pitch, as it is using the 
-            -- assigned row/column value for matching the notes)
-            local pitch = nil 
-            if (self.display.device.protocol==DEVICE_MIDI_PROTOCOL) then
-              pitch = value_to_midi_pitch(args.value)
-            end
             local c = UIKey(self.display)
             c.group_name = map.group_name
-            c.pitch = pitch
+            c.ceiling = args.maximum
+            c.pitch = ctrl_idx
             c.palette.pressed = self.palette.key_pressed
             c.palette.released = self.palette.key_released
             if (orientation == HORIZONTAL) then
@@ -593,7 +697,9 @@ function Keyboard:_build_app()
               local pitch = ctrl_idx+(self.curr_octave*12)-1
               local msg = self.display.device.message_stream.current_message
               local velocity = obj.velocity
-              return self:trigger(note_on,pitch,velocity,ctrl_idx)
+              local triggered = self:trigger(note_on,pitch,velocity,ctrl_idx)
+              --print("Keyboard: triggered",triggered)
+              return triggered
             end
             c.on_release = function(obj)
               if not self.active then
@@ -603,7 +709,9 @@ function Keyboard:_build_app()
               local pitch = ctrl_idx+(self.curr_octave*12)-1
               local msg = self.display.device.message_stream.current_message
               local velocity = obj.velocity
-              return self:trigger(note_on,pitch,velocity,ctrl_idx)
+              local released = self:trigger(note_on,pitch,velocity,ctrl_idx)
+              --print("Keyboard: released",released)
+              return released
             end
             self:_add_component(c)
             self._grid:insert(c)
@@ -658,6 +766,7 @@ function Keyboard:_build_app()
         return
       end
       local msg = nil
+      --print(obj.value)
       if (self.options.pitch_bend.value == self.BROADCAST_PITCHBEND) then
         msg = {224,0,obj.value}
       elseif (self.options.pitch_bend.value > self.BROADCAST_PITCHBEND) then
@@ -726,7 +835,7 @@ function Keyboard:_build_app()
     self._octave_up = c
   end
 
-  -- octave set (supports grid mode)
+  -- octave set (slider, supports grid mode)
 
   local map = self.mappings.octave_set
   if map.group_name then
@@ -793,7 +902,7 @@ function Keyboard:_build_app()
   end
 
 
-  -- track set (supports grid mode)
+  -- track set (slider, supports grid mode)
 
   local map = self.mappings.track_set
   if map.group_name then
@@ -812,7 +921,6 @@ function Keyboard:_build_app()
     c:set_pos(map.index)
     c.flipped = map.flipped
     c.toggleable = map.toggleable
-    --c.ceiling = self.MAX_OCTAVE
     c:set_size(slider_size)
     c:set_orientation(map.orientation)
     c.tooltip = map.description
@@ -860,7 +968,7 @@ function Keyboard:_build_app()
   end
 
 
-  -- instr set (supports grid mode)
+  -- instr set (slider, supports grid mode)
 
   local map = self.mappings.instr_set
   if map.group_name then
@@ -879,7 +987,6 @@ function Keyboard:_build_app()
     c:set_pos(map.index)
     c.flipped = map.flipped
     c.toggleable = map.toggleable
-    --c.ceiling = self.MAX_OCTAVE
     c:set_size(slider_size)
     c:set_orientation(map.orientation)
     c.tooltip = map.description
@@ -927,7 +1034,7 @@ function Keyboard:_build_app()
   end
 
 
-  -- volume
+  -- volume set (slider, supports grid mode)
 
   local map = self.mappings.volume
   if map.group_name then
@@ -1064,10 +1171,22 @@ end
 function Keyboard:set_octave(val,skip_option)
   TRACE("Keyboard:set_octave()",val,skip_option)
 
+  if (not self.active) then
+    return
+  end
+
+  -- voice manager needs to know the difference
+  local voice_mgr = self._process.browser._voice_mgr
+  if voice_mgr then
+    local semitones = (self.curr_octave-val)*12
+    voice_mgr:transpose(self,semitones)
+  end
+
   self.curr_octave = val
+  
   if self._keymatcher then
     self._keymatcher.transpose = (self.curr_octave)*12 
-    self._keymatcher:refresh()
+    self._keymatcher:update_keys()
   end
   self:update_octave_controls()
   if not skip_option and 
@@ -1086,6 +1205,10 @@ end
 
 function Keyboard:set_track(val,skip_option)
   TRACE("Keyboard:set_track()",val,skip_option)
+
+  if (not self.active) then
+    return
+  end
 
   self.curr_track = val
   self:update_track_controls()
@@ -1106,6 +1229,10 @@ end
 function Keyboard:set_instr(val,skip_option)
   TRACE("Keyboard:set_instr()",val,skip_option)
 
+  if (not self.active) then
+    return
+  end
+
   self.curr_instr = val
   self:update_instr_controls()
   if not skip_option and 
@@ -1122,7 +1249,7 @@ function Keyboard:set_upper_boundary(pitch)
   TRACE("Keyboard:set_upper_boundary()",pitch)
 
   self.upper_note = pitch
-  self:set_boundaries()
+  self._boundary_update_requested = true
 
 end
 
@@ -1132,31 +1259,31 @@ function Keyboard:set_lower_boundary(pitch)
   TRACE("Keyboard:set_lower_boundary()",pitch)
 
   self.lower_note = pitch
-  self:set_boundaries()
+  self._boundary_update_requested = true
 
 end
 
 --------------------------------------------------------------------------------
 
+-- update the upper/lower boundaries of the virtual keyboard
+
 function Keyboard:set_boundaries()
   TRACE("Keyboard:set_boundaries()")
-  --[[
-  TRACE("Keyboard:set_boundaries() - self.upper_note",self.upper_note)
-  TRACE("Keyboard:set_boundaries() - self.lower_note",self.lower_note)
-  ]]
 
+  -- update keyboard
   if self._keymatcher then
     for i=LOWER_NOTE, UPPER_NOTE do
       local disabled = false
       if (i > self.upper_note) or (i < self.lower_note) then
         disabled = true
       end
-      self._keymatcher.key_states[i+13] = disabled
-      --print("self._keymatcher.key_states[",i+13,"]",self._keymatcher.key_states[i+13])
-
+      self._keymatcher.disabled_keys[i+13] = disabled
     end
-    self._keymatcher:refresh()
- end
+    self._keymatcher:update_keys()
+  end
+
+  -- update grid
+ self:visualize_sample_mappings()
 
 end
 
@@ -1168,6 +1295,10 @@ end
 
 function Keyboard:set_volume(val,skip_option)
   TRACE("Keyboard:set_volume()",val,skip_option)
+
+  if (not self.active) then
+    return
+  end
 
   self.curr_volume = val
   if self._volume then
@@ -1189,6 +1320,10 @@ end
 
 function Keyboard:update_octave_controls()
   TRACE("Keyboard:update_octave_controls()")
+
+  if (not self.active) then
+    return
+  end
 
   local skip_event = true
   if self._octave_down then
@@ -1216,19 +1351,11 @@ end
 function Keyboard:update_track_controls()
   TRACE("Keyboard:update_track_controls()")
 
+  if (not self.active) then
+    return
+  end
+
   local skip_event = true
-  --[[
-  if self._track_down then
-    --local lit = (renoise.song().transport.octave>0)
-    local lit = (self.curr_track>0)
-    self._track_down:set(lit,skip_event)
-  end
-  if self._track_up then
-    --local lit = (renoise.song().transport.octave<8)
-    local lit = (self.curr_track<8)
-    self._track_up:set(lit,skip_event)
-  end
-  ]]
   if self._track_set then
     self._track_set:set_index(self.curr_track-1,skip_event)
   end
@@ -1242,19 +1369,11 @@ end
 function Keyboard:update_instr_controls()
   TRACE("Keyboard:update_instr_controls()")
 
+  if (not self.active) then
+    return
+  end
+
   local skip_event = true
-  --[[
-  if self._instr_down then
-    --local lit = (renoise.song().transport.octave>0)
-    local lit = (self.curr_instr>0)
-    self._instr_down:set(lit,skip_event)
-  end
-  if self._instr_up then
-    --local lit = (renoise.song().transport.octave<8)
-    local lit = (self.curr_instr<8)
-    self._instr_up:set(lit,skip_event)
-  end
-  ]]
   if self._instr_set then
     self._instr_set:set_index(self.curr_instr-1,skip_event)
   end
@@ -1268,18 +1387,28 @@ end
 --------------------------------------------------------------------------------
 
 -- visualize sample mappings in the grid
--- called after switching octave, instrument or track
+-- called after switching octave, instrument
 
 function Keyboard:visualize_sample_mappings()
   TRACE("Keyboard:visualize_sample_mappings()")
+
+  if (not self.active) then
+    return
+  end
 
   if (#self._grid>0) then
     local instr_idx = self:get_instrument_index()
     local instr = renoise.song().instruments[instr_idx]
     for idx = 1,#self._grid do
       local ui_obj = self._grid[idx]
-      ui_obj.palette.pressed = self.palette.key_pressed
-      ui_obj.palette.released = self.palette.key_released
+      local pitch = idx + (self.curr_octave*12)+11
+      local inside_range = self:inside_note_range(pitch-12)
+      if inside_range then
+        ui_obj.palette.pressed = self.palette.key_pressed
+        ui_obj.palette.released = self.palette.key_released
+      else
+        ui_obj.palette.released = self.palette.key_out_of_bounds
+      end
       ui_obj:invalidate()
     end
     for k,s_map in ipairs(instr.sample_mappings[1]) do
@@ -1289,14 +1418,17 @@ function Keyboard:visualize_sample_mappings()
         if (s_map.note_range[1]<=pitch) and
           (s_map.note_range[2]>=pitch) 
         then
-          local s_index = renoise.song().selected_sample_index
-          ui_obj.palette.pressed = self.palette.key_pressed_content
-          if (s_index == s_map.sample_index) then
-            ui_obj.palette.released = self.palette.key_released_selected
-          else
-            ui_obj.palette.released = self.palette.key_released_content
+          local inside_range = self:inside_note_range(pitch-12)
+          if inside_range then
+            local s_index = renoise.song().selected_sample_index
+            ui_obj.palette.pressed = self.palette.key_pressed_content
+            if (s_index == s_map.sample_index) then
+              ui_obj.palette.released = self.palette.key_released_selected
+            else
+              ui_obj.palette.released = self.palette.key_released_content
+            end
+            ui_obj:invalidate()
           end
-          ui_obj:invalidate()
         end
       end
     end
@@ -1374,6 +1506,7 @@ function Keyboard:_attach_to_song()
 
   renoise.song().transport.octave_observable:add_notifier(
     function()
+      --print("octave_observable fired...")
       if (self.options.base_octave.value == self.OCTAVE_FOLLOW) then
         self:set_octave(renoise.song().transport.octave)
       end
