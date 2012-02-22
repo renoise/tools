@@ -176,6 +176,7 @@ duplex_preferences = renoise.Document.create("ScriptingToolPreferences") {
   -- the internal OSC connection (disabled if no host/port is specified)
   osc_server_host = "127.0.0.1",
   osc_server_port = 8000,
+  osc_first_run = true,
 
   -- list of user configuration settings (like MIDI device names, app configs)
   -- added during runtime for all available configs:
@@ -499,11 +500,12 @@ function lcm(m,n)
   return ( m ~= 0 and n ~= 0 ) and m * n / gcd( m, n ) or 0
 end
 
--- find least common multiplier with N args
-function least_common(...)
-  local cm = arg[1]
-  for i=1,#arg-1,1 do
-    cm = lcm(cm,arg[i+1])
+-- find least common multiplier 
+-- @t (table), use values in table as argument
+function least_common(t)
+  local cm = t[1]
+  for i=1,#t-1,1 do
+    cm = lcm(cm,t[i+1])
   end
   return cm
 end

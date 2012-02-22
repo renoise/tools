@@ -194,7 +194,7 @@ end
 -- @return boolean, true when message was handled
 
 function UIButtonStrip:do_press(msg)
-  print("UIButtonStrip:do_press()",msg)
+  TRACE("UIButtonStrip:do_press()",msg)
 
   if not (self.group_name == msg.group_name) then
     return 
@@ -202,8 +202,6 @@ function UIButtonStrip:do_press(msg)
   if not self:test(msg.column,msg.row) then
     return 
   end
-
-  print("UIButtonStrip:do_press() A",msg)
 
   local idx = self:_determine_index_by_pos(msg.column, msg.row)
 
@@ -225,7 +223,6 @@ function UIButtonStrip:do_press(msg)
       self:set_index(idx)
     end
   end
-  print("UIButtonStrip:do_press B")
   if (self.on_release ~= nil) then
     self:on_release() 
   end
@@ -671,7 +668,7 @@ function UIButtonStrip:test(column,row)
     (self.on_change == nil) and
     (self.on_release == nil) 
   then
-    print("this component has no event handlers")
+    --print("this component has no event handlers")
     return false
   end
 

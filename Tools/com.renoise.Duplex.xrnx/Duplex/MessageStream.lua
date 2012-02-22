@@ -269,8 +269,7 @@ function MessageStream:input_message(msg)
 
       -- for toggle/push buttons, broadcast releases to listeners as well
       if (not msg.is_virtual) and
-        (msg.input_method == CONTROLLER_TOGGLEBUTTON) --or
-        --(msg.input_method == CONTROLLER_PUSHBUTTON) 
+        (msg.input_method == CONTROLLER_TOGGLEBUTTON) 
       then
         self:_handle_or_pass(msg,self.press_listeners)
       else
