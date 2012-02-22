@@ -45,6 +45,7 @@ function OscClient:trigger_instrument(note_on,instr,track,note,velocity)
     return false
   end
 
+
   local osc_vars = table.create()
   osc_vars:insert({tag = "i",value = instr})
   osc_vars:insert({tag = "i",value = track})
@@ -56,6 +57,8 @@ function OscClient:trigger_instrument(note_on,instr,track,note,velocity)
     osc_vars:insert({tag = "i",value = velocity})
   else
     header = "/renoise/trigger/note_off"
+    -- show instructions when releasing note
+    self:_show_instructions()
   end
 
   --print("about to send internally routed note",header)
@@ -92,6 +95,27 @@ function OscClient:trigger_midi(t)
   self._connection:send(osc_msg)
 
   return true
+
+end
+
+
+--------------------------------------------------------------------------------
+
+-- display usage instructions the first time the class is used
+
+function OscClient:_show_instructions()
+
+  if (duplex_preferences.osc_first_run.value) then
+    duplex_preferences.osc_first_run.value = false
+    local msg = "IMPORTANT ONE-TIME MESSAGE FROM DUPLEX"
+              .."\n"
+              .."\nTo be able to trigger instruments and send MIDI messages, the"
+              .."\ninternal OSC server in Renoise needs to be enabled (go to "
+              .."\nRenoise preferences > OSC settings to enable this feature)"
+              .."\n"
+              .."\nThanks!"
+    renoise.app():show_message(msg)
+  end
 
 end
 
