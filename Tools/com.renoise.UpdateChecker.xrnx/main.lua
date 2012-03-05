@@ -333,21 +333,21 @@ local function check_product_version_jsonrpc(menu)
       method="product-version-checker.get",
       params={title='renoise', demo=is_demo() },      
     },
-    error=function(xml_http_request, text_status, error_thrown)
+    error=function(json_http_request, text_status, error_thrown)
       if (options.Shown.value) then        
         local error_msg = ("Update check failed: \n"
         .. (error_thrown or ""))
         show_error(error_msg)                
       end
     end,
-    success=function(data, text_status, xml_http_request)
+    success=function(data, text_status, json_http_request)
       if (DEBUG) then
         print("-------service response-------")
         rprint(data)
         print("------------------------------")
       end
       
-      if (type(data) ~= "table") then
+      if (type(data) ~= "table" or type(data.result) ~= "table") then
         local error_msg = ("Update check failed: \n"
           .."The server sent data I did not expect and"
           .."\nI don't know what to do with it.")
