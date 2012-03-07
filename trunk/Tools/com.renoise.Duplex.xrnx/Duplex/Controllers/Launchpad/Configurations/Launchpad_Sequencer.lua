@@ -111,11 +111,17 @@ duplex_configurations:insert {
       mappings = {
         start_playback = {
           group_name = "Controls",
-          index = 5,
+          index = 6,
         },
+        --[[
         loop_pattern = {
           group_name = "Controls",
           index = 6,
+        },
+        ]]
+        metronome_toggle = {
+          group_name = "Controls",
+          index = 5,
         },
         follow_player = {
           group_name= "Controls",
@@ -130,6 +136,16 @@ duplex_configurations:insert {
         pattern_play = 3, -- toggle start/stop with single button
       },
     },
+    --[[
+    Metronome = {
+      mappings = {
+        toggle = {
+          group_name = "Controls",
+          index = 5,
+        },
+      },
+    },
+    ]]
     Navigator = {
       mappings = {
         blockpos = {

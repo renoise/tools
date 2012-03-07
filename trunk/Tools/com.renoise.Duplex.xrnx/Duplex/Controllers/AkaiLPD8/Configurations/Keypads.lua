@@ -25,7 +25,8 @@ duplex_configurations:insert {
           index = 1,
         },
       },
-      options = {},
+      options = {
+      },
       hidden_options = {  -- display minimal set of options
         "channel_pressure","pitch_bend","release_type","button_width","button_height"
       },

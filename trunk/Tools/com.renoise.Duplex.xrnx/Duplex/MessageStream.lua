@@ -195,6 +195,7 @@ function MessageStream:input_message(msg)
 
   --[[
   print("*** MessageStream: msg.input_method",msg.input_method)
+  print("*** MessageStream: msg.max",msg.max)
   print("*** MessageStream: msg.context",msg.context)
   print("*** MessageStream: msg.group_name",msg.group_name)
   print("*** MessageStream: msg.is_note_off",msg.is_note_off)
@@ -258,6 +259,7 @@ function MessageStream:input_message(msg)
 
     if (msg.value == msg.max) and (not msg.is_note_off) then
       -- interpret this as pressed
+      --print("MessageStream:  interpret this as pressed")
       self.pressed_buttons:insert(msg)
       -- broadcast to listeners
       self:_handle_or_pass(msg,self.press_listeners)

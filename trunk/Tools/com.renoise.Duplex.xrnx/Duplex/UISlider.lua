@@ -106,11 +106,11 @@ function UISlider:__init(display)
   
   -- default palette
   self.palette = {
-    background = table.rcopy(display.palette.background),
-    tip = table.rcopy(display.palette.color_1),
-    tip_dimmed = table.rcopy(display.palette.color_1_dimmed),
-    track = table.rcopy(display.palette.color_2),
-    track_dimmed = table.rcopy(display.palette.color_2_dimmed),
+    background    = {color = {0x00,0x00,0x00}, text = "·", val=false},
+    tip           = {color = {0xFF,0xFF,0xFF}, text = "▪", val=true},
+    tip_dimmed    = {color = {0xD0,0xD0,0xD0}, text = "▫", val=true},
+    track         = {color = {0xD0,0xD0,0xD0}, text = "▪", val=true},
+    track_dimmed  = {color = {0x80,0x80,0x80}, text = "▫", val=true},
   }
 
   -- internal values

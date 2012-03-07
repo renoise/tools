@@ -92,14 +92,29 @@ function Rotate:__init(process,mappings,options,cfg_name,palette)
   }
 
   self.palette = {
-    bright = {
-      color = {0xFF,0xFF,0x00},
+    up_bright = {
+      color = {0xFF,0xFF,0xFF},
+      text = "▲"
     },
-    dimmed = {
-      color = {0x80,0x80,0x00},
+    up_dimmed = {
+      color = {0x80,0x80,0x80},
+      text = "▲"
     },
-    off = {
-      color = {0x40,0x40,0x00},
+    up_off = {
+      color = {0x40,0x40,0x40},
+      text = "▲"
+    },
+    down_bright = {
+      color = {0xFF,0xFF,0xFF},
+      text = "▼"
+    },
+    down_dimmed = {
+      color = {0x80,0x80,0x80},
+      text = "▼"
+    },
+    down_off = {
+      color = {0x40,0x40,0x40},
+      text = "▼"
     },
   }
 
@@ -404,19 +419,13 @@ end
 function Rotate:_build_app()
   TRACE("Rotate:_build_app()")
 
-  -- show a nice light effect when pushed
-  local push_sequence = {
-    self.palette.bright,self.palette.dimmed,self.palette.off
-  }
 
   if self.mappings.track_in_pattern_up.group_name then
-    local c = UIPushButton(self.display)
+    local c = UIButton(self.display)
     c.group_name = self.mappings.track_in_pattern_up.group_name
     c.tooltip = self.mappings.track_in_pattern_up.description
     c:set_pos(self.mappings.track_in_pattern_up.index)
-    c.palette.background.color = {0x40,0x40,0x00}
-    c.palette.background.text = "▲"
-    c.sequence = push_sequence
+    c:set(self.palette.up_off)
     c.on_press = function(obj)
       if not self.active then return false end
       local shift_amount = -self.options.shift_amount.value
@@ -424,19 +433,19 @@ function Rotate:_build_app()
       local shift_automation = 
         (self.options.shift_automation.value == self.SHIFT_AUTOMATION_ON)
       self:process(shift_amount,range_mode,shift_automation)
+      obj:flash(
+        0.1,self.palette.up_bright,self.palette.up_dimmed,self.palette.up_off)
     end
     self:_add_component(c)
     self._track_in_pattern_up = c
   end
 
   if self.mappings.track_in_pattern_down.group_name then
-    local c = UIPushButton(self.display)
+    local c = UIButton(self.display)
     c.group_name = self.mappings.track_in_pattern_down.group_name
     c.tooltip = self.mappings.track_in_pattern_down.description
     c:set_pos(self.mappings.track_in_pattern_down.index)
-    c.palette.background.color = {0x40,0x40,0x00}
-    c.palette.background.text = "▼"
-    c.sequence = push_sequence
+    c:set(self.palette.down_off)
     c.on_press = function(obj)
       if not self.active then return false end
       local shift_amount = self.options.shift_amount.value
@@ -444,19 +453,19 @@ function Rotate:_build_app()
       local shift_automation = 
         (self.options.shift_automation.value == self.SHIFT_AUTOMATION_ON)
       self:process(shift_amount,range_mode,shift_automation)
+      obj:flash(
+        0.1,self.palette.down_bright,self.palette.down_dimmed,self.palette.down_off)
     end
     self:_add_component(c)
     self._track_in_pattern_down = c
   end
 
   if self.mappings.whole_pattern_up.group_name then
-    local c = UIPushButton(self.display)
+    local c = UIButton(self.display)
     c.group_name = self.mappings.whole_pattern_up.group_name
     c.tooltip = self.mappings.whole_pattern_up.description
     c:set_pos(self.mappings.whole_pattern_up.index)
-    c.palette.background.color = {0x40,0x40,0x00}
-    c.palette.background.text = "▲"
-    c.sequence = push_sequence
+    c:set(self.palette.up_off)
     c.on_press = function(obj)
       if not self.active then return false end
       local shift_amount = -self.options.shift_amount.value
@@ -464,19 +473,19 @@ function Rotate:_build_app()
       local shift_automation = 
         (self.options.shift_automation.value == self.SHIFT_AUTOMATION_ON)
       self:process(shift_amount,range_mode,shift_automation)
+      obj:flash(
+        0.1,self.palette.up_bright,self.palette.up_dimmed,self.palette.up_off)
     end
     self:_add_component(c)
     self._whole_pattern_up = c
   end
 
   if self.mappings.whole_pattern_down.group_name then
-    local c = UIPushButton(self.display)
+    local c = UIButton(self.display)
     c.group_name = self.mappings.whole_pattern_down.group_name
     c.tooltip = self.mappings.whole_pattern_down.description
     c:set_pos(self.mappings.whole_pattern_down.index)
-    c.palette.background.color = {0x40,0x40,0x00}
-    c.palette.background.text = "▼"
-    c.sequence = push_sequence
+    c:set(self.palette.down_off)
     c.on_press = function(obj)
       if not self.active then return false end
       local shift_amount = self.options.shift_amount.value
@@ -484,6 +493,8 @@ function Rotate:_build_app()
       local shift_automation = 
         (self.options.shift_automation.value == self.SHIFT_AUTOMATION_ON)
       self:process(shift_amount,range_mode,shift_automation)
+      obj:flash(
+        0.1,self.palette.down_bright,self.palette.down_dimmed,self.palette.down_off)
     end
     self:_add_component(c)
     self._whole_pattern_down = c

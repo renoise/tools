@@ -422,6 +422,29 @@ end
 
 --------------------------------------------------------------------------------
 
+-- check if previous configuration exist
+-- @return boolean
+
+function Browser:has_previous_configuration()
+  TRACE("Browser:has_previous_configuration()")
+  if not self._configuration_name or not self._device_name then
+    return
+  end
+  local available_configuration_names = 
+    self:_available_configuration_names_for_device(self._device_name)
+  for config_idx, config_name in ripairs(available_configuration_names) do
+    if (config_name == self._configuration_name) then
+      local config_list = 
+        self:_available_configurations_for_device(self._device_name)
+      return config_list[config_idx-1]
+    end
+  end
+      
+end
+
+
+--------------------------------------------------------------------------------
+
 -- activate the next configuration (if active, has next)
 
 function Browser:set_next_configuration()
@@ -440,6 +463,28 @@ function Browser:set_next_configuration()
           self:set_configuration(config_list[config_idx+1], start_running)
        return
       end
+    end
+  end
+      
+end
+
+--------------------------------------------------------------------------------
+
+-- check if next configuration exist
+-- @return boolean
+
+function Browser:has_next_configuration()
+  TRACE("Browser:has_next_configuration()")
+  if not self._configuration_name or not self._device_name then
+    return
+  end
+  local available_configuration_names = 
+    self:_available_configuration_names_for_device(self._device_name)
+  for config_idx, config_name in ipairs(available_configuration_names) do
+    if (config_name == self._configuration_name) then
+      local config_list = 
+        self:_available_configurations_for_device(self._device_name)
+      return config_list[config_idx+1]
     end
   end
       
@@ -997,6 +1042,7 @@ function Browser:_disable_configuration_autostart()
 end
 
 
+
 --------------------------------------------------------------------------------
 
 -- notifier, fired when device input or output port setting changed
@@ -1264,6 +1310,8 @@ function BrowserProcess:__init(p_browser)
 
   -- list of instantiated apps for the current configuration
   self._applications = table.create() 
+
+
   
   -- true when this process was running at least once after instantiated
   self._was_running = false

@@ -85,10 +85,7 @@ end
 function UIToggleButton:do_press(msg)
   --TRACE("UIToggleButton:do_press")
   
-  if (self.group_name ~= msg.group_name) then
-    return false
-  end
-  if not self:test(msg.column,msg.row) then
+  if not self:test(msg.group_name,msg.column,msg.row) then
     return false
   end
 
@@ -98,15 +95,11 @@ function UIToggleButton:do_press(msg)
     self:force_update()
   end
 
+  local handled = false
   if (self.on_press ~= nil) then
-    self:on_press()
+    handled = self:on_press()
   end
-
-  if (self.on_change ~= nil) then
-    self:toggle()
-  end
-
-  return true
+  return handled
 
 end
 
@@ -118,10 +111,7 @@ end
 function UIToggleButton:do_release(msg)
   --TRACE("UIToggleButton:do_release()",msg)
 
-  if not (self.group_name == msg.group_name) then
-    return false
-  end
-  if not (self:test(msg.column, msg.row)) then
+  if not self:test(msg.group_name,msg.column,msg.row) then
     return false
   end
 
@@ -130,12 +120,11 @@ function UIToggleButton:do_release(msg)
   if (msg.input_method ~= CONTROLLER_BUTTON) then
     self:force_update()
   end
-
+  local handled = false
   if (self.on_release ~= nil) then
-    self:on_release()
+    handled = self:on_release()
   end
-
-  return true
+  return handled
 
 end
 
@@ -147,22 +136,18 @@ end
 function UIToggleButton:do_change(msg)
   --TRACE("UIToggleButton:do_change()")
 
-  if (self.on_change ~= nil) then
-    if not (self.group_name == msg.group_name) then
-      return false
-    end
-    if not self:test(msg.column,msg.row) then
-      return false
-    end
+  if not self:test(msg.group_name,msg.column,msg.row) then
+    return false
+  end
+
+  if (self.on_change ~= nil) then 
     -- toggle when moved away from min/max values
     if self.active and msg.value < msg.max then
       self:toggle()
     elseif not self.active and msg.value > msg.min then
       self:toggle()
     end
-
     return true
-
   end
 
   return false
@@ -178,19 +163,15 @@ end
 function UIToggleButton:do_hold(msg)
   --TRACE("UIToggleButton:do_hold()",msg)
 
+  if not self:test(msg.group_name,msg.column,msg.row) then
+    return 
+  end
+  local handled = false
   if (self.on_hold ~= nil) then
-    --print("*** UIToggleButton:do_hold() - self.group_name",self.group_name,"msg.group_name",msg.group_name)
-    if not (self.group_name == msg.group_name) then
-      return 
-    end
-    --print("*** UIToggleButton:do_hold() - msg.column,msg.row",msg.column,msg.row)
-    if not self:test(msg.column,msg.row) then
-      return 
-    end
-    self:on_hold()
+    handled = self:on_hold()
   end
 
-  return true
+  return handled
 
 end
 
@@ -199,7 +180,7 @@ end
 -- toggle button state
 
 function UIToggleButton:toggle()
-  TRACE("UIToggleButton:toggle")
+  --TRACE("UIToggleButton:toggle")
 
   self._cached_active = self.active
   self.active = not self.active
@@ -213,7 +194,7 @@ end
 -- set button state
 
 function UIToggleButton:set(value,skip_event)
-  TRACE("UIToggleButton:set", value)
+  --TRACE("UIToggleButton:set", value,skip_event)
   if (self.active~=value) then
     if(skip_event)then
       self._cached_active = value
@@ -261,6 +242,28 @@ function UIToggleButton:_invoke_handler()
   end
 end
 
+--------------------------------------------------------------------------------
+
+-- expand UIComponent test by looking for group name & event handlers
+-- (if none are defined, we return false)
+
+function UIToggleButton:test(group_name,column,row)
+
+  if not (self.group_name == group_name) then
+    return false
+  end
+
+  if (self.on_change == nil) 
+    and (self.on_press == nil) 
+    and (self.on_release == nil) 
+    and (self.on_hold == nil) 
+  then  
+    return false
+  end 
+
+  return UIComponent.test(self,column,row)
+
+end
 
 --------------------------------------------------------------------------------
 
@@ -335,16 +338,6 @@ function UIToggleButton:remove_listeners()
   self._display.device.message_stream:remove_listener(
     self,DEVICE_EVENT_BUTTON_HELD)
 
-  --[[
-  self._display.device.message_stream:remove_listener(
-    self,DEVICE_EVENT_KEY_PRESSED)
-
-  self._display.device.message_stream:remove_listener(
-    self,DEVICE_EVENT_KEY_RELEASED)
-
-  self._display.device.message_stream:remove_listener(
-    self,DEVICE_EVENT_KEY_HELD)
-  ]]
 
 end
 

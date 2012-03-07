@@ -12,12 +12,12 @@ About
 Mappings
 
   levels  - (UISlider...)       volume *
-  mute    - (UIToggleButton...) track mute *
-  solo    - (UIToggleButton...) track solo *
+  mute    - (UIButton...) track mute *
+  solo    - (UIButton...) track solo *
   master  - (UISlider)          master volume *
   panning - (UISlider...)       track panning
   page    - (UISpinner)         paged track navigation
-  mode    - (UIToggleButton)    PRE/POST fx toggle
+  mode    - (UIButton)    PRE/POST fx toggle
 
   *  Automatic layout when using a grid controller
 
@@ -25,7 +25,6 @@ Mappings
 Options
 
   pre_post      - decide if Mixer should start in PRE or POST fx mode
-  invert_mute   - toggle inverted mute state (on when off)
   mute_mode     - decide if mute means MUTE or OFF
   offset_track  - specify how many tracks to offset the mixer by
   follow_track  - align with the selected track in Renoise
@@ -113,16 +112,6 @@ Mixer.default_options = {
     },
     value = 1,
   },
-  invert_mute = {
-    label = "Mute display",
-    hidden = true,
-    description = "Decide how to display muted tracks",
-    items = {
-      "Button is lit when track is muted",
-      "Button is lit when track is active",
-    },
-    value = 2,
-  },
   follow_track = {
     label = "Follow track",
     description = "Enable this if you want the Mixer to align with " 
@@ -175,17 +164,6 @@ Mixer.default_options = {
     },
     value = 1,
   },
-  --[[
-  edit_sync = {
-    label = "Edit-sync",
-    description = "Record automation while edit-mode (red border in Renoise) is active",
-    items = {
-      "Edit-sync enabled",
-      "Edit-sync disabled",
-    },
-    value = 1,
-  },
-  ]]
   record_method = {
     label = "Automation rec.",
     description = "Determine how to record automation ",
@@ -201,23 +179,6 @@ Mixer.default_options = {
     end
   }
 
-  --[[
-  -- TODO
-  include_tracks = {
-    label = "Tracks",
-    description = "Select any combination of tracks that you want to " ..
-      "include: normal, master and send tracks.",
-    items = {
-      "Include all tracks",
-      "Normal tracks only",
-      "Normal + master tracks",
-      "Master track only",
-      "Master + send tracks",
-      "Send tracks only",
-    },
-    value = 1,
-  },
-  ]]
 }
 
 -- add Renoise 2.7+ specific options
@@ -238,24 +199,11 @@ end
 function Mixer:__init(process,mappings,options,cfg_name,palette)
   TRACE("Mixer:__init",process,mappings,options,cfg_name,palette)
 
-    -- define the options (with defaults)
-  --[[
-  self.ALL_TRACKS = 1
-  self.NORMAL = 2
-  self.NORMAL_MASTER = 3
-  self.MASTER = 4
-  self.MASTER_SEND = 5
-  self.SEND = 6
-  ]]
-
   self.MODE_PREFX = 1
   self.MODE_POSTFX = 2
 
   self.MODE_PREPOSTSYNC_ON = 1
   self.MODE_PREPOSTSYNC_OFF = 2
-
-  self.MUTE_NORMAL = 1
-  self.MUTE_INVERTED = 2
 
   self.MUTE_MODE_OFF = 1
   self.MUTE_MODE_MUTE = 2
@@ -268,16 +216,10 @@ function Mixer:__init(process,mappings,options,cfg_name,palette)
   self.TAKE_OVER_VOLUME_OFF = 1
   self.TAKE_OVER_VOLUME_ON = 2
   
-  --[[
-  self.EDIT_SYNC_ON = 1
-  self.EDIT_SYNC_OFF = 2
-  ]]
-
   self.RECORD_NONE = 1
   self.RECORD_TOUCH = 2
   self.RECORD_LATCH = 3
 
-  -- define control-maps groups 
   self.mappings = {
     master = {
       description = "Mixer: Master volume",
@@ -303,64 +245,34 @@ function Mixer:__init(process,mappings,options,cfg_name,palette)
     },
   }
 
-  -- default palette: should degrade nicely for all supported devices
-
   self.palette = {
-    background = {
-      color={0,0,0},
-      text="·",
-    },
-      -- normal tracks are green
-    normal_tip = {
-      color={0x00,0xff,0xff},
-      text="■",
-    },
-    normal_tip_dimmed = {
-      color={0x00,0x40,0xff},
-      text="□",
-    },
-    normal_lane = {
-      color={0x00,0x81,0xff},
-      text="▪",
-    },
-    normal_lane_dimmed = {
-      color={0x00,0x40,0xff},
-      text="▫",
-    },
-    normal_mute = {
-      color={0x00,0xff,0xff},
-      text="■",
-    },
-      -- master track is yellow
-    master_tip = {
-      color={0xff,0xff,0xff},
-      text="■",
-    },
-    master_lane = {
-      color={0x80,0x80,0xff},
-      text="▪",
-    },
+    -- 
+    background        = { color={0x00,0x00,0x00}, val = false,text="·",},
+    -- normal tracks are green
+    normal_tip = {        color={0x00,0xff,0xff}, val = true, },
+    normal_tip_dimmed = { color={0x00,0x40,0xff}, val = true, },
+    normal_lane       = { color={0x00,0x81,0xff}, val = true, },
+    normal_lane_dimmed = {color={0x00,0x40,0xff}, val = true, },
+    normal_mute_on    = { color={0x40,0xff,0x40}, val = true, text ="M"},
+    normal_mute_off   = { color={0x00,0x00,0x00}, val = false,text ="M",},
+    -- master track is yellow
+    master_tip        = { color={0xff,0xff,0xff}, val = true, },
+    master_lane       = { color={0x80,0x80,0xff}, val = true, },
+    master_mute_on    = { color={0xff,0xff,0x40}, val = true, },
     -- send tracks are red
-    send_tip = {
-      color={0xff,0x00,0xff},
-      text="■",
-    },
-    send_tip_dimmed = {
-      color={0x40,0x00,0xff},
-      text="□",
-    },
-    send_lane = {
-      color={0x81,0x00,0xff},
-      text="▪",
-    },
-    send_lane_dimmed = {
-      color={0x40,0x00,0xff},
-      text="▫",
-    },
-    send_mute = {
-      color={0xff,0x00,0xff},
-      text="■",
-    },
+    send_tip          = { color={0xff,0x40,0x00}, val = true, },
+    send_tip_dimmed   = { color={0x40,0x00,0xff}, val = true, },
+    send_lane         = { color={0x81,0x00,0xff}, val = true, },
+    send_lane_dimmed  = { color={0x40,0x00,0xff}, val = true, },
+    send_mute_on      = { color={0xff,0x40,0x00}, val = true, text = "M", },
+    send_mute_off     = { color={0x00,0x00,0x00}, val = false,text = "M", },
+    -- pre/post buttons
+    mixer_mode_pre    = { color={0xff,0xff,0xff}, val = true, text = "Pre",},
+    mixer_mode_post   = { color={0x00,0x00,0x00}, val = false,text = "Post",},
+    -- solo buttons
+    solo_on           = { color={0xff,0x40,0x00}, val = true, text = "S",},
+    solo_off          = { color={0x00,0x00,0x00}, val = false,text = "S", },
+
   }
 
   -- the various controls
@@ -445,21 +357,19 @@ end
 
 -- volume level changed from Renoise
 
-function Mixer:set_track_volume(control_index, value, skip_event_handler)
-  TRACE("Mixer:set_track_volume", control_index, value, skip_event_handler)
-
-  if not skip_event_handler then
-    skip_event_handler = true
-  end
+function Mixer:set_track_volume(control_index, value)
+  TRACE("Mixer:set_track_volume", control_index, value)
 
   if not self.active then
     return
   end
 
+  local skip_event = true
+
   if (self._volume ~= nil) then
 
     -- update track control
-    self._volume[control_index]:set_value(value, skip_event_handler)
+    self._volume[control_index]:set_value(value, skip_event)
     
     -- reset the takeover hook (when not recording, as automation recording  
     -- output a stream of new values, and we would get caught in a "reset-loop")
@@ -473,7 +383,7 @@ function Mixer:set_track_volume(control_index, value, skip_event_handler)
     if (self._master ~= nil) and 
        (control_index + self._track_offset == get_master_track_index()) 
     then
-      self._master:set_value(value, skip_event_handler)
+      self._master:set_value(value, skip_event)
     end
   end
   
@@ -501,16 +411,29 @@ end
 
 -- mute state changed from Renoise
 
-function Mixer:set_track_mute(control_index, state, skip_event_handler)
-  TRACE("Mixer:set_track_mute", control_index, state, skip_event_handler)
+function Mixer:set_track_mute(control_index, state)
+  TRACE("Mixer:set_track_mute", control_index, state)
 
-  if (not skip_event_handler) then
-    skip_event_handler = true
-  end
   if (self.active and self._mutes ~= nil) then
-    -- set mute state to the button
-    local active = (state == MUTE_STATE_ACTIVE)
-    self._mutes[control_index]:set(active, skip_event_handler)
+    local muted = (state == MUTE_STATE_ACTIVE)
+    local master_track_index = get_master_track_index()
+    local track_index = self._track_offset+control_index
+    local button = self._mutes[control_index]
+    if (track_index > master_track_index) then
+      if muted then
+        button:set(self.palette.send_mute_on)
+      else
+        button:set(self.palette.send_mute_off)
+      end
+    elseif (track_index == master_track_index) then
+      button:set(self.palette.master_mute_on)
+    else
+      if muted then
+        button:set(self.palette.normal_mute_on)
+      else
+        button:set(self.palette.normal_mute_off)
+      end
+    end
   end
 end
 
@@ -526,8 +449,11 @@ function Mixer:set_track_solo(control_index, state, skip_event_handler)
     skip_event_handler = true
   end
   if (self.active and self._solos ~= nil) then
-    self._solos[control_index]:set(state, skip_event_handler)
-
+    if state then
+      self._solos[control_index]:set(self.palette.solo_on)
+    else
+      self._solos[control_index]:set(self.palette.solo_off)
+    end
   end
 end
 
@@ -615,61 +541,46 @@ function Mixer:update()
     
     -- define palette 
     local track_palette = {}
-    local mute_palette = {}
     if (track_type==TRACK_TYPE_SEQUENCER) then
       track_palette.tip           = self.palette.normal_tip
       track_palette.tip_dimmed    = self.palette.normal_tip_dimmed
       track_palette.track         = self.palette.normal_lane
       track_palette.track_dimmed  = self.palette.normal_lane_dimmed
-      mute_palette.foreground     = self.palette.normal_mute
     elseif (track_type==TRACK_TYPE_MASTER) then
       track_palette.tip           = self.palette.master_tip
       track_palette.track         = self.palette.master_lane
-      mute_palette.foreground     = self.palette.background
     elseif (track_type==TRACK_TYPE_SEND) then
       track_palette.tip           = self.palette.send_tip
       track_palette.tip_dimmed    = self.palette.send_tip_dimmed
       track_palette.track         = self.palette.send_lane
       track_palette.track_dimmed  = self.palette.send_lane_dimmed
-      mute_palette.foreground     = self.palette.send_mute
-    else
-      -- out of bounds
-      mute_palette.foreground     = self.palette.background
     end
 
-    -- set default values
+    -- assign values, update appearance
     if (track_index <= #tracks) then
       
       if valid_level then
-        if (self._postfx_mode) then
-          self:set_track_volume(control_index, track.postfx_volume.value)
-        else
-          self:set_track_volume(control_index, track.prefx_volume.value)
-        end
+        local value = (self._postfx_mode) and
+          track.postfx_volume.value or track.prefx_volume.value
+        self:set_track_volume(control_index, value)
         self._volume[control_index]:set_palette(track_palette)
       end
 
       if valid_panning then
-        if (self._postfx_mode) then
-          self:set_track_panning(control_index, track.postfx_panning.value)
-        else
-          self:set_track_panning(control_index, track.prefx_panning.value)
-        end
+        local value = (self._postfx_mode) and 
+          track.postfx_panning.value or track.prefx_panning.value
+        self:set_track_panning(control_index, value)
         self._panning[control_index]:set_palette(track_palette)
       end
 
       if valid_mute then
-        if (track_index == master_track_index) then
-          self:set_track_mute(control_index, MUTE_STATE_ACTIVE)
-        else
-          self:set_track_mute(control_index, track.mute_state)
-        end
-        self._mutes[control_index]:set_palette(mute_palette)
+        local mute_state = (track_index == master_track_index) and
+          MUTE_STATE_ACTIVE or track.mute_state
+        self:set_track_mute(control_index, mute_state)
       end
 
       if valid_solo then
-         self:set_track_solo(control_index, track.solo_state)
-        self._solos[control_index]:set_palette(mute_palette)
+        self:set_track_solo(control_index, track.solo_state)
       end
 
     else
@@ -678,15 +589,11 @@ function Mixer:update()
       self:set_track_panning(control_index, 0)
       self:set_track_mute(control_index, MUTE_STATE_OFF)
       self:set_track_solo(control_index, false)
-      if self._mutes then
-        self._mutes[control_index]:set_palette(mute_palette)
-      end
 
     end
 
     -- update the dimmed state 
     self:set_dimmed(control_index)
-
 
   end
 
@@ -708,7 +615,11 @@ function Mixer:update()
 
   -- mode controls
   if (self._mode_control) then
-    self._mode_control:set(self._postfx_mode)
+    if self._postfx_mode then
+      self._mode_control:set(self.palette.mixer_mode_pre)
+    else
+      self._mode_control:set(self.palette.mixer_mode_post)
+    end
   end
 
 end
@@ -768,7 +679,7 @@ function Mixer:_build_app()
   local cm = self.display.device.control_map
   local slider_grid_mode = cm:is_grid_group(self.mappings.levels.group_name)
   
-  TRACE("Mixer:slider_grid_mode",slider_grid_mode)
+  --TRACE("Mixer:slider_grid_mode",slider_grid_mode)
 
   local embed_mutes = (self.mappings.mute.group_name == 
     self.mappings.levels.group_name)
@@ -777,8 +688,8 @@ function Mixer:_build_app()
   local embed_master = (self.mappings.master.group_name == 
     self.mappings.levels.group_name)
 
-  TRACE("Mixer:embed_mutes",embed_mutes)
-  TRACE("Mixer:embed_master",embed_master)
+  --TRACE("Mixer:embed_mutes",embed_mutes)
+  --TRACE("Mixer:embed_master",embed_master)
 
   -- check that embedded controls are for grid controller
   --[[
@@ -1004,16 +915,15 @@ function Mixer:_build_app()
   if self._mutes then
     for control_index = 1,mutes_count do
       TRACE("Mixer:adding mute#",control_index)
-      local c = UIToggleButton(self.display)
+      local c = UIButton(self.display)
       c.group_name = self.mappings.mute.group_name
       c.tooltip = self.mappings.mute.description
       c:set_pos(control_index)
-      c.inverted = (self.options.invert_mute.value == self.MUTE_NORMAL) or false
       c.active = false
 
       -- mute state changed from controller
       -- (update the slider.dimmed property)
-      c.on_change = function(obj) 
+      c.on_press = function(obj) 
         local track_index = self._track_offset + control_index
 
         if (not self.active) then
@@ -1021,31 +931,26 @@ function Mixer:_build_app()
         
         elseif (track_index == get_master_track_index()) then
           -- can't mute the master track
-          return false
+          return 
         
         elseif (track_index > #renoise.song().tracks) then
-          -- track is outside bound
-          return false
+          -- track is outside bounds
+          return 
         end
         
         local track = renoise.song().tracks[track_index]
+        local track_is_muted = (track.mute_state ~= MUTE_STATE_ACTIVE)
 
-        if (obj.active) then
+        if (track_is_muted) then
           track:unmute()
         else 
           track:mute()
-          local mute_state
-          if (self.options.mute_mode.value == self.MUTE_MODE_MUTE) then
-            mute_state = MUTE_STATE_MUTED
-          else
-            mute_state = MUTE_STATE_OFF
-          end
+          local mute_state = (self.options.mute_mode.value==self.MUTE_MODE_MUTE)
+            and MUTE_STATE_MUTED or MUTE_STATE_OFF
           track.mute_state = mute_state
         end
 
         self:set_dimmed(control_index)
-       
-        return true
 
       end
 
@@ -1079,7 +984,7 @@ function Mixer:_build_app()
   if self._solos then
     for control_index = 1,solos_count do
       TRACE("Mixer:adding solo#",control_index)
-      local c = UIToggleButton(self.display)
+      local c = UIButton(self.display)
       c.group_name = self.mappings.solo.group_name
       c.tooltip = self.mappings.solo.description
       if embed_solos then
@@ -1088,27 +993,25 @@ function Mixer:_build_app()
       else
         c:set_pos(control_index)
       end
-      c.inverted = false
       c.active = false
 
       -- mute state changed from controller
       -- (update the slider.dimmed property)
-      c.on_change = function(obj) 
-
-        local track_index = self._track_offset + control_index
+      c.on_press = function(obj) 
 
         if (not self.active) then
           return false
-        
-        elseif (track_index > #renoise.song().tracks) then
+        end
+
+        local track_index = self._track_offset + control_index
+        if (track_index > #renoise.song().tracks) then
           -- track is outside bounds
-          return false
+          return 
         end
         
         local track = renoise.song().tracks[track_index]
-        track.solo_state = obj.active
+        track.solo_state = not track.solo_state
 
-        return true
       end
       
       self:_add_component(c)
@@ -1132,6 +1035,10 @@ function Mixer:_build_app()
     c.ceiling = RENOISE_DECIBEL
     c:set_size(master_size)
     c:set_orientation(VERTICAL)
+    c:set_palette({
+      tip=self.palette.master_tip,
+      track=self.palette.master_lane,
+    })
     c.on_change = function(obj) 
       if (not self.active) then
         return false
@@ -1182,12 +1089,10 @@ function Mixer:_build_app()
         return false
       end
 
-     --local track_idx = (obj.index*self._width)
       local page_width = self:_get_page_width()
       local track_idx = (obj.index*page_width)
       if (self.options.follow_track.value == self.FOLLOW_TRACK_ON) then
-        -- if the follow_track option is specified, we set the
-        -- track index and let the _follow_track() method handle it
+        -- set track index and let the _follow_track() method handle it
         renoise.song().selected_track_index = 1+track_idx
       else
         self._track_offset = track_idx
@@ -1208,33 +1113,29 @@ function Mixer:_build_app()
 
   if (self.mappings.mode.group_name) then
     TRACE("Mixer:adding Pre/Post FX mode")
-    local c = UIToggleButton(self.display)
+    local c = UIButton(self.display)
     c.group_name = self.mappings.mode.group_name
     c.tooltip = self.mappings.mode.description
     c:set_pos(self.mappings.mode.index or 1)
-    c.inverted = false
     c.active = false
 
     -- mode state changed from controller
-    c.on_change = function(obj) 
+    c.on_press = function(obj) 
       if (not self.active) then
         return false
       end
       
-      if (self._postfx_mode ~= obj.active) then
-        self._postfx_mode = obj.active
-        self._update_requested = true
-        self:_init_take_over_volume()
+      self._postfx_mode = not self._postfx_mode
+      self._update_requested = true
+      self:_init_take_over_volume()
 
-        if self.options.sync_pre_post and
-            (self.options.sync_pre_post.value == self.MODE_PREPOSTSYNC_ON) 
-        then
-          renoise.app().window.mixer_view_post_fx = self._postfx_mode
+      if self.options.sync_pre_post and
+        (self.options.sync_pre_post.value == self.MODE_PREPOSTSYNC_ON) 
+      then
+        renoise.app().window.mixer_view_post_fx = self._postfx_mode
         end
 
-      end
 
-      return true
     end
     
     self:_add_component(c)
@@ -1264,7 +1165,8 @@ function Mixer:_set_volume(parameter,track_index,obj)
   end
   if value_set and self._record_mode then
     -- scale back value to 0-1 range
-    self.automation:add_automation(track_index,parameter,obj.value/RENOISE_DECIBEL)
+    self.automation:add_automation(
+      track_index,parameter,obj.value/RENOISE_DECIBEL)
   end
 
   return value_set
@@ -1506,7 +1408,7 @@ function Mixer:_attach_to_tracks(new_song)
     end
   end
 
-      -- track solo-state 
+  -- track solo-state 
   if self._solos then
     for control_index = 1,math.min(#tracks, #self._solos) do
       local track_index = self._track_offset + control_index

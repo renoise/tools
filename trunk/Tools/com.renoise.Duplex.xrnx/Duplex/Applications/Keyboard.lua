@@ -203,7 +203,7 @@ Keyboard.default_options = {
     end,
     items = {},
     value = 1,
-  }
+  },
 
 }
 
@@ -287,30 +287,32 @@ function Keyboard:__init(process,mappings,options,cfg_name,palette)
   }
 
   self.palette = {
-    key_pressed = {
-      color = {0xFF,0xFF,0xFF},
-      text="■",
-    },
-    key_pressed_content = {
-      color = {0xFF,0xFF,0xFF},
-      text="■",
-    },
-    key_released = {
-      color = {0x00,0x00,0x00},
-      text="□",
-    },
-    key_released_content = {
-      color = {0x40,0x40,0x40},
-      text="■",
-    },
-    key_released_selected = {
-      color = {0x80,0x80,0x40},
-      text="□",
-    },
-    key_out_of_bounds = {
-      color = {0x00,0x00,0x00},
-      text="·",
-    },
+    -- keyboard (grid buttons)
+    key_pressed = {         color = {0xFF,0xFF,0xFF}, text="·", },
+    key_pressed_content = { color = {0xFF,0xFF,0xFF}, text="·", },
+    key_released = {        color = {0x00,0x00,0x00}, text="·", },
+    key_released_content = {color = {0x40,0x40,0x40}, text="·", },
+    key_released_selected = { color = {0x80,0x80,0x40}, text="·", },
+    key_out_of_bounds = {     color = {0x00,0x00,0x00}, text="·", },
+    -- other buttons
+    instr_sync_on = {         color = {0xFF,0xFF,0xFF}, text="■", },
+    instr_sync_off = {        color = {0x00,0x00,0x00}, text="·", },
+    track_sync_on = {         color = {0xFF,0xFF,0xFF}, text="■", },
+    track_sync_off = {        color = {0x00,0x00,0x00}, text="·", },
+    track_sync_on = {         color = {0xFF,0xFF,0xFF}, text="■", },
+    track_sync_off = {        color = {0x00,0x00,0x00}, text="·", },
+    volume_sync_on = {        color = {0xFF,0xFF,0xFF}, text="■", },
+    volume_sync_off = {       color = {0x00,0x00,0x00}, text="·", },
+    octave_down_on = {        color = {0xFF,0xFF,0xFF}, text="-12", },
+    octave_down_off = {       color = {0x00,0x00,0x00}, text="-12", },
+    octave_up_on = {          color = {0xFF,0xFF,0xFF}, text="+12", },
+    octave_up_off = {         color = {0x00,0x00,0x00}, text="+12", },
+    octave_sync_on = {        color = {0xFF,0xFF,0xFF}, text="■", },
+    octave_sync_off = {       color = {0x00,0x00,0x00}, text="·", },
+    -- sliders
+    vol_slider_on   = { color = {0xFF,0xFF,0xFF}, text = "▪" },
+    vol_slider_off  = { color = {0x00,0x00,0x00}, text = "·" },
+
   }
 
   self.VELOCITY_CLAMP = 1
@@ -338,7 +340,8 @@ function Keyboard:__init(process,mappings,options,cfg_name,palette)
   self.KEYBOARD_VELOCITIES = 127
   self.MAX_OCTAVE = 8
 
-  -- reference to process
+
+  -- reference to BrowserProcess
   -- (access the internal OSC server, modify options in realtime)
   self._process = process
 
@@ -374,6 +377,7 @@ function Keyboard:__init(process,mappings,options,cfg_name,palette)
   self._grid_update_requested = false
   self._track_update_requested = false
   self._boundary_update_requested = false
+
 end
 
 --------------------------------------------------------------------------------
@@ -540,6 +544,7 @@ function Keyboard:start_app()
   self.lower_note = self.options.lower_note.value-13
   self.upper_note = self.options.upper_note.value-13
   self:set_boundaries()
+
 
 end
 
@@ -785,10 +790,10 @@ function Keyboard:_build_app()
 
   local map = self.mappings.octave_down
   if map.group_name then
-    local c = UIToggleButton(self.display)
+    local c = UIButton(self.display)
     c.group_name = map.group_name
     c.tooltip = map.description
-    c.palette.background.text = "-12"
+    --c.palette.background.text = "-12"
     c.palette.foreground.text = "-12"
     c:set_pos(map.index)
     c.on_press = function(obj)
@@ -802,7 +807,6 @@ function Keyboard:_build_app()
           self:set_octave(self.curr_octave-1)
         end
       end
-      return false -- do not toggle
     end
     self:_add_component(c)
     self._octave_down = c
@@ -812,10 +816,10 @@ function Keyboard:_build_app()
 
   local map = self.mappings.octave_up
   if map.group_name then
-    local c = UIToggleButton(self.display)
+    local c = UIButton(self.display)
     c.group_name = map.group_name
     c.tooltip = map.description
-    c.palette.background.text = "+12"
+    --c.palette.background.text = "+12"
     c.palette.foreground.text = "+12"
     c:set_pos(map.index)
     c.on_press = function(obj)
@@ -829,7 +833,6 @@ function Keyboard:_build_app()
           self:set_octave(self.curr_octave+1)
         end
       end
-      return false -- do not toggle
     end
     self:_add_component(c)
     self._octave_up = c
@@ -879,12 +882,12 @@ function Keyboard:_build_app()
 
   local map = self.mappings.octave_sync
   if map.group_name then
-    local c = UIToggleButton(self.display)
+    local c = UIButton(self.display)
     c.group_name = map.group_name
     c.tooltip = map.description
     c:set_pos(map.index)
-    c.active = (self.options.base_octave.value == self.OCTAVE_FOLLOW)
-    c.on_change = function(obj)
+    --c.active = (self.options.base_octave.value == self.OCTAVE_FOLLOW)
+    c.on_press = function()
       if not self.active then 
         return false 
       end
@@ -945,12 +948,12 @@ function Keyboard:_build_app()
 
   local map = self.mappings.track_sync
   if map.group_name then
-    local c = UIToggleButton(self.display)
+    local c = UIButton(self.display)
     c.group_name = map.group_name
     c.tooltip = map.description
     c:set_pos(map.index)
-    c.active = (self.options.track_index.value == self.TRACK_FOLLOW)
-    c.on_change = function(obj)
+    --c.active = (self.options.track_index.value == self.TRACK_FOLLOW)
+    c.on_press = function()
       if not self.active then 
         return false 
       end
@@ -1011,12 +1014,12 @@ function Keyboard:_build_app()
 
   local map = self.mappings.instr_sync
   if map.group_name then
-    local c = UIToggleButton(self.display)
+    local c = UIButton(self.display)
     c.group_name = map.group_name
     c.tooltip = map.description
     c:set_pos(map.index)
-    c.active = (self.options.instr_index.value == self.INSTR_FOLLOW)
-    c.on_change = function(obj)
+    --c.active = (self.options.instr_index.value == self.INSTR_FOLLOW)
+    c.on_press = function()
       if not self.active then 
         return false 
       end
@@ -1057,6 +1060,10 @@ function Keyboard:_build_app()
     c:set_size(slider_size)
     c.ceiling = self.KEYBOARD_VELOCITIES
     c.tooltip = map.description
+    c:set_palette({
+      tip = self.palette.vol_slider_on,
+      track = self.palette.vol_slider_on,
+    })
     c.value = self.curr_volume
     c.on_change = function(obj)
       if not self.active then 
@@ -1085,12 +1092,12 @@ function Keyboard:_build_app()
 
   local map = self.mappings.volume_sync
   if map.group_name then
-    local c = UIToggleButton(self.display)
+    local c = UIButton(self.display)
     c.group_name = map.group_name
     c.tooltip = map.description
     c:set_pos(map.index)
-    c.active = (self.options.base_volume.value == self.VOLUME_FOLLOW)
-    c.on_change = function(obj)
+    --c.active = (self.options.base_volume.value == self.VOLUME_FOLLOW)
+    c.on_press = function()
       if not self.active then 
         return false 
       end
@@ -1311,6 +1318,7 @@ function Keyboard:set_volume(val,skip_option)
     -- modify the persistent settings
     self:_set_option("base_volume",self.curr_volume+1,self._process)
   end
+  self:update_volume_controls()
 
 end
 
@@ -1325,23 +1333,34 @@ function Keyboard:update_octave_controls()
     return
   end
 
-  local skip_event = true
   if self._octave_down then
     --local lit = (renoise.song().transport.octave>0)
     local lit = (self.curr_octave>0)
-    self._octave_down:set(lit,skip_event)
+    if lit then
+      self._octave_down:set(self.palette.octave_down_on)
+    else
+      self._octave_down:set(self.palette.octave_down_off)
+    end
   end
   if self._octave_up then
-    --local lit = (renoise.song().transport.octave<8)
     local lit = (self.curr_octave<8)
-    self._octave_up:set(lit,skip_event)
+    if lit then
+      self._octave_up:set(self.palette.octave_up_on)
+    else
+      self._octave_up:set(self.palette.octave_up_off)
+    end
   end
   if self._octave_set then
+    local skip_event = true
     self._octave_set:set_index(self.curr_octave,skip_event)
   end
   if self._octave_sync then
     local synced = (self.options.base_octave.value == self.OCTAVE_FOLLOW)
-    self._octave_sync:set(synced,skip_event)
+    if synced then
+      self._octave_sync:set(self.palette.octave_sync_on)
+    else
+      self._octave_sync:set(self.palette.octave_sync_off)
+    end
   end
 
   self._grid_update_requested = true
@@ -1355,13 +1374,17 @@ function Keyboard:update_track_controls()
     return
   end
 
-  local skip_event = true
   if self._track_set then
+    local skip_event = true
     self._track_set:set_index(self.curr_track-1,skip_event)
   end
   if self._track_sync then
     local synced = (self.options.track_index.value == self.TRACK_FOLLOW)
-    self._track_sync:set(synced,skip_event)
+    if synced then
+      self._track_sync:set(self.palette.track_sync_on)
+    else
+      self._track_sync:set(self.palette.track_sync_off)
+    end
   end
 
 end
@@ -1373,13 +1396,36 @@ function Keyboard:update_instr_controls()
     return
   end
 
-  local skip_event = true
   if self._instr_set then
+    local skip_event = true
     self._instr_set:set_index(self.curr_instr-1,skip_event)
   end
   if self._instr_sync then
     local synced = (self.options.instr_index.value == self.INSTR_FOLLOW)
-    self._instr_sync:set(synced,skip_event)
+    if synced then
+      self._instr_sync:set(self.palette.instr_sync_on)
+    else
+      self._instr_sync:set(self.palette.instr_sync_off)
+    end
+  end
+
+end
+
+
+function Keyboard:update_volume_controls()
+  TRACE("Keyboard:update_volume_controls()")
+
+  if (not self.active) then
+    return
+  end
+
+  if self._volume_sync then
+    local synced = (self.options.base_volume.value == self.VOLUME_FOLLOW)
+    if synced then
+      self._volume_sync:set(self.palette.volume_sync_on)
+    else
+      self._volume_sync:set(self.palette.volume_sync_off)
+    end
   end
 
 end
@@ -1542,7 +1588,6 @@ function Keyboard:_attach_to_song()
 
   renoise.song().transport.keyboard_velocity_enabled_observable:add_notifier(
     function()
-      local skip_event = true
       local enabled = renoise.song().transport.keyboard_velocity_enabled
 
       if (self.options.base_volume.value == self.VOLUME_FOLLOW) then

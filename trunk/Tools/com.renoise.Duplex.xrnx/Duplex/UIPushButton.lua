@@ -203,7 +203,7 @@ function UIPushButton:draw()
     -- apply the color from the sequence
     point:apply(seq)
     -- if the color is completely dark, this is also how
-    -- LED buttons will represent the value (turned off)
+    -- LED buttons will represent the value (as turned off)
     if(get_color_average(seq.color)>0x00)then
       point.val = true        
     else

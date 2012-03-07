@@ -41,6 +41,25 @@ function SwitchConfiguration:__init(process, mappings, options, cfg_name,palette
 
     }
 
+    self.palette = {    
+      previous_config_on = {
+        color = {0xFF,0xFF,0xFF},
+        text = "◄",
+      },
+      previous_config_off = {
+        color = {0x00,0x00,0x00},
+        text = "◄",
+      },
+      next_config_on = {
+        color = {0xFF,0xFF,0xFF},
+        text = "►",
+      },
+      next_config_off = {
+        color = {0x00,0x00,0x00},
+        text = "►",
+      }
+    }
+
     -- the various UIComponents
     self.controls = {}
     self._browser = process.browser
@@ -58,6 +77,29 @@ function SwitchConfiguration:start_app()
     if not Application.start_app(self) then
         return
     end
+    self:update()
+end
+
+
+--------------------------------------------------------------------------------
+
+function SwitchConfiguration:update()
+  TRACE("SwitchConfiguration.update()")
+
+  if self.controls.next then
+    if self._browser:has_next_configuration() then
+      self.controls.next:set(self.palette.next_config_on)
+    else
+      self.controls.next:set(self.palette.next_config_off)
+    end
+  end
+  if self.controls.previous then
+    if self._browser:has_previous_configuration() then
+      self.controls.previous:set(self.palette.previous_config_on)
+    else
+      self.controls.previous:set(self.palette.previous_config_off)
+    end
+  end
 
 end
 
@@ -68,15 +110,11 @@ function SwitchConfiguration:_build_app()
     TRACE("SwitchConfiguration:_build_app()")
 
     if self.mappings.goto_next.group_name then
-        local c = UIPushButton(self.display)
+        local c = UIButton(self.display)
         c.group_name = self.mappings.goto_next.group_name
         c.tooltip = self.mappings.goto_next.description
         c:set_pos(self.mappings.goto_next.index)
-        c.interval = 0.5
-        c.sequence = {
-            {color={0xff,0xff,0xff},text="►"},
-            {color={0x00,0x00,0x00},text=" "},
-        }
+        c:set(self.palette.next_config)
         c.on_press = function(obj)
             if not self.active then return false end
             self._browser:set_next_configuration() 
@@ -86,15 +124,11 @@ function SwitchConfiguration:_build_app()
     end
 
     if self.mappings.goto_previous.group_name then
-        local c = UIPushButton(self.display)
+        local c = UIButton(self.display)
         c.group_name = self.mappings.goto_previous.group_name
         c.tooltip = self.mappings.goto_previous.description
         c:set_pos(self.mappings.goto_previous.index)
-        c.interval = 0.5
-        c.sequence = {
-            {color={0xff,0xff,0xff},text="◄"},
-            {color={0x00,0x00,0x00},text=" "},
-        }
+        c:set(self.palette.previous_config)
         c.on_press = function(obj)
             if not self.active then return false end
             self._browser:set_previous_configuration() 

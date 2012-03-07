@@ -62,20 +62,24 @@ function Canvas:set_size(width,height)
   end
 
   -- if size is reduced, update the "clear" buffer
-  self.clear = {}
+  local new_table,is_reduced = {},false
   for x = width,old_width do
     for y = height,old_height do
       if(x>width) or (y>height) then
+        is_reduced = true
         if not self.clear[x] then
-          self.clear[x] = {}
+          new_table[x] = {}
         end
-        self.clear[x][y] = true
+        new_table[x][y] = true
         self.buffer[x][y] = nil
         if (x>width) then
           self.buffer[x] = nil
         end
       end
     end
+  end
+  if is_reduced then 
+    self.clear = new_table
   end
 
 
@@ -116,6 +120,7 @@ end
 -- both color, text and value are considered when doing the comparison
 
 function Canvas:check_delta(point,x,y)
+
   if not self.buffer[x][y] 
   or not(self.buffer[x][y].color == point.color) 
   or not(self.buffer[x][y].text == point.text) 
