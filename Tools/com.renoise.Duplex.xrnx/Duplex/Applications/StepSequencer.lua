@@ -167,36 +167,24 @@ function StepSequencer:__init(process,mappings,options,cfg_name,palette)
 
   -- define default palette
   self.palette = {
-    out_of_bounds = {
-      color={0x40,0x40,0x00}, 
-      text="",
+    out_of_bounds = { color={0x40,0x40,0x00}, text="",},
+    slot_empty    = { color={0x00,0x00,0x00}, text="",},
+    slot_muted    = { color={0x40,0x00,0x00}, text="·",},
+    slot_level = {  
+                    { color={0x00,0x40,0xff}, text="",},
+                    { color={0x00,0x80,0xff}, text="",},
+                    { color={0x00,0xc0,0xff}, text="",},
+                    { color={0x00,0xff,0xff}, text="",},
+                    { color={0x40,0xff,0xff}, text="",},
+                    { color={0x80,0xff,0xff}, text="",},
     },
-    slot_empty = {
-      color={0x00,0x00,0x00},
-      text="",
-    },
-    slot_muted = { -- volume 0 or note_cut
-      color={0x40,0x00,0x00},
-      text="□",
-    },
-    slot_level = { -- at different volume levels (automatically scales to #slot_level levels
-      { color={0x00,0x40,0xff}, },
-      { color={0x00,0x80,0xff}, },
-      { color={0x00,0xc0,0xff}, },
-      { color={0x00,0xff,0xff}, },
-      { color={0x40,0xff,0xff}, },
-      { color={0x80,0xff,0xff}, },
-    },
-    
     transpose = {
-      { color={0xff,0x00,0xff}, }, -- down an octave
-      { color={0xc0,0x40,0xff}, }, -- down a semi
-      { color={0x40,0xc0,0xff}, }, -- up a semi
-      { color={0x00,0xff,0xff}, }, -- up an octave
+                    { color={0xff,0x00,0xff}, text="-12" },
+                    { color={0xc0,0x40,0xff}, text="-1"  },
+                    { color={0x40,0xc0,0xff}, text="+1"  },
+                    { color={0x00,0xff,0xff}, text="+12"  },
     },
-    position = {
-      color={0x00,0xff,0x00},
-    },
+    position = {  color={0x00,0xff,0x00}, },
 
   }
 
@@ -402,7 +390,7 @@ function StepSequencer:_build_grid()
         self._toggle_exempt[x] = {}
       end
 
-      local c = UIStepSeqButton(self.display)
+      local c = UIButton(self.display)
       c.group_name = self.mappings.grid.group_name
       c.tooltip = self.mappings.grid.description
       c.x_pos = x
@@ -416,7 +404,7 @@ function StepSequencer:_build_grid()
           return false 
         end
 
-        return self:_process_grid_event(x, y, true,obj)
+        self:_process_grid_event(x, y, true,obj)
 
       end
       c.on_release = function(obj)
@@ -425,7 +413,7 @@ function StepSequencer:_build_grid()
           return false 
         end
 
-        return self:_process_grid_event(x, y, false,obj)
+        self:_process_grid_event(x, y, false,obj)
 
       end
       
@@ -457,7 +445,6 @@ function StepSequencer:_build_grid()
           else
             renoise.song().selected_track_index = x
           end
-          print("renoise.song().selected_track_index",renoise.song().selected_track_index)
         end
 
       end
@@ -487,7 +474,6 @@ function StepSequencer:_build_level()
   c:set_orientation(self.mappings.level.orientation)
   c:set_size(self._line_count)
   c.on_index_change = function(obj) 
-    print("StepSequencer: on_index_change A")
     if not self.active then 
       return false 
     end
@@ -528,7 +514,6 @@ function StepSequencer:_build_level()
     c.palette.range = p
     c:set_range(idx,obj._size)
     c:invalidate()
-    print("StepSequencer: on_index_change B")
     return true
   end
   self:_add_component(c)
@@ -544,7 +529,7 @@ function StepSequencer:_build_transpose()
   local transposes = { -12, -1, 1, 12 }
   for k,v in ipairs(transposes) do
     
-    local c = UIStepSeqButton(self.display)
+    local c = UIButton(self.display)
     c.group_name = self.mappings.transpose.group_name
     c.tooltip = self.mappings.transpose.description
     c:set_pos(self.mappings.transpose.index+(k-1))
@@ -1131,26 +1116,21 @@ end
 function StepSequencer:_draw_grid_button(button, note)
   --TRACE("StepSequencer:_draw_grid_button()",button, note)
 
-  local palette = {}
   
   if (note ~= nil) then
     if (note.note_value == 121) then
-      -- empty
-      palette.foreground = table.rcopy(self.palette.slot_empty)
+      button:set(self.palette.slot_empty)
     elseif (note.note_value == 120 or note.volume_value == 0) then
-      -- turned off 
-      palette.foreground = table.rcopy(self.palette.slot_muted)
+      button:set(self.palette.slot_muted)
     else
-      -- some volume
+      local palette = {}
       palette.foreground = self:_volume_palette(note.volume_value, 127)
+      button:set_palette(palette)
     end
-  
   else
-    -- out of bounds
-    palette.foreground = table.rcopy(self.palette.out_of_bounds)
+    button:set(self.palette.out_of_bounds)
   end
 
-  button:set_palette(palette)
 end
 
 
@@ -1217,180 +1197,4 @@ function StepSequencer:_walk_held_keys(callback, toggleExempt)
   return ct
 end
 
-
---[[----------------------------------------------------------------------------
--- Duplex.UIStepSeqButton
-----------------------------------------------------------------------------]]--
-
---[[
-
-Inheritance: UIComponent > UIStepSeqButton
-
-About
-
-UIStepSeqButton is a simple button with press & release handlers, 
-with limited support for input methods - see UIToggleButton for a more 
-general-purpose type of button.
-
-Supported input methods
-
-- button
-- pushbutton
-- togglebutton*
-
-* release/hold events are not supported for this type 
-
-
-Events
-
-  on_press()
-  on_release()
-  on_hold()
-
-
---]]
-
-
---==============================================================================
-
-class 'UIStepSeqButton' (UIComponent)
-
-function UIStepSeqButton:__init(display)
-  TRACE('UIStepSeqButton:__init')
-
-  UIComponent.__init(self,display)
-
-  self.palette = {
-    foreground = table.rcopy(display.palette.color_1),
-  }
-
-  self.add_listeners(self)
-  
-  -- external event handlers
-  self.on_press = nil
-  self.on_release = nil
-  self.on_hold = nil
-
-end
-
-
---------------------------------------------------------------------------------
-
--- user input via button
-
-function UIStepSeqButton:do_press()
-  TRACE("UIStepSeqButton:do_press()")
-
-  if (self.on_press ~= nil) then
-    local msg = self:get_msg()
-    if not (self.group_name == msg.group_name) then
-      return 
-    end
-    if not self:test(msg.column,msg.row) then
-      return 
-    end
-    self:on_press()
-    return true
-
-  end
-
-end
-
--- ... and release
-
-function UIStepSeqButton:do_release()
-  TRACE("UIStepSeqButton:do_release()")
-
-  if (self.on_release ~= nil) then
-    local msg = self:get_msg()
-    if not (self.group_name == msg.group_name) then
-      return 
-    end
-    if not self:test(msg.column,msg.row) then
-      return 
-    end
-    self:on_release()
-    return true
-  end
-
-end
-
-
---------------------------------------------------------------------------------
-
--- user input via (held) button
--- on_hold() is the optional handler method
-
-function UIStepSeqButton:do_hold()
-  TRACE("UIStepSeqButton:do_hold()")
-
-  if (self.on_hold ~= nil) then
-    local msg = self:get_msg()
-    if not (self.group_name == msg.group_name) then
-      return 
-    end
-    if not self:test(msg.column,msg.row) then
-      return 
-    end
-    self:on_hold()
-    return true
-  end
-
-end
-
-
---------------------------------------------------------------------------------
-
-function UIStepSeqButton:draw()
-  TRACE("UIStepSeqButton:draw")
-
-  local color = self.palette.foreground
-  local point = CanvasPoint()
-  point:apply(color)
-  -- if the color is completely dark, this is also how
-  -- LED buttons will represent the value (turned off)
-  if(get_color_average(color.color)>0x00)then
-    point.val = true        
-  else
-    point.val = false        
-  end
-  self.canvas:fill(point)
-  UIComponent.draw(self)
-
-end
-
-
---------------------------------------------------------------------------------
-
-function UIStepSeqButton:add_listeners()
-
-  self._display.device.message_stream:add_listener(
-    self, DEVICE_EVENT_BUTTON_PRESSED,
-    function(msg) return self:do_press(msg) end )
-
-  self._display.device.message_stream:add_listener(
-    self,DEVICE_EVENT_BUTTON_HELD,
-    function(msg) return self:do_hold(msg) end )
-
-  self._display.device.message_stream:add_listener(
-    self,DEVICE_EVENT_BUTTON_RELEASED,
-    function(msg) return self:do_release(msg) end )
-
-end
-
-
---------------------------------------------------------------------------------
-
-function UIStepSeqButton:remove_listeners()
-
-  self._display.device.message_stream:remove_listener(
-    self,DEVICE_EVENT_BUTTON_PRESSED)
-
-  self._display.device.message_stream:remove_listener(
-    self,DEVICE_EVENT_BUTTON_HELD)
-    
-  self._display.device.message_stream:remove_listener(
-    self,DEVICE_EVENT_BUTTON_RELEASED)
-
-end
 

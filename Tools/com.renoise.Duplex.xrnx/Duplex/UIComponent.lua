@@ -21,7 +21,7 @@ DEVICE_EVENT_BUTTON_RELEASED
 DEVICE_EVENT_BUTTON_HELD
 
 For examples on how to create/handle events with UIComponents, see either 
-the UISlider or the UIToggleButton class (both extensions of this class).
+the UISlider or the UIButton class (both extensions of this class).
 
 --]]
 
@@ -151,7 +151,6 @@ function UIComponent:set_pos(x,y)
     -- obtain the size of the group
     local cm = self._display.device.control_map
     local cols = cm:count_columns(self.group_name)
-    --print("cols",cols,self.group_name)
     -- calculate x/y from index
     if (idx>0) then
       y = math.ceil(idx/cols)
@@ -195,21 +194,22 @@ end
 --------------------------------------------------------------------------------
 
 -- set palette, invalidate if changed
--- @colors: a table of color values, e.g {background={color={0x00,0x00,0x00}}}
+-- @palette: a table of values, e.g {foreground={color={0x00,0x00,0x00}}}
 
 function UIComponent:set_palette(palette)
+  TRACE("UIComponent:set_palette()",palette)
 
   local changed = false
 
   for i,_ in pairs(palette)do
     for k,v in pairs(palette[i])do
-      if self.palette[i] and self.palette[i][k] then
+      if self.palette[i] and (type(self.palette[i][k])~="nil") then
         if(type(v)=="table")then -- color
           if(not table_compare(self.palette[i][k],v))then
             self.palette[i][k] = table.rcopy(v)
             changed = true
           end
-        elseif(type(v)=="string")then --text
+        elseif((type(v)=="string") or (type(v)=="boolean")) then 
           if(self.palette[i][k] ~= v)then
             self.palette[i][k] = v
             changed = true
@@ -218,7 +218,6 @@ function UIComponent:set_palette(palette)
       end
     end
   end
-
   if (changed) then
     self:invalidate()
   end

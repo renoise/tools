@@ -46,10 +46,10 @@ duplex_configurations:insert {
         }
       },
       palette = {
-        foreground = {
+        grid_on = {
           color={0x80,0xFF,0x00}, 
         },
-        background = {
+        grid_off = {
           color={0x00,0x40,0x00}, 
         }
       },
@@ -69,10 +69,10 @@ duplex_configurations:insert {
         }
       },
       palette = {
-        foreground = {
+        grid_on = {
           color={0x80,0xFF,0x00}, 
         },
-        background = {
+        grid_off = {
           color={0x00,0x40,0x00}, 
         }
       },
@@ -89,10 +89,10 @@ duplex_configurations:insert {
         }
       },
       palette = {
-        foreground = {
+        grid_on = {
           color={0xFF,0x80,0x00}, 
         },
-        background = {
+        grid_off = {
           color={0x40,0x00,0x00}, 
         }
       },
@@ -109,10 +109,10 @@ duplex_configurations:insert {
         }
       },
       palette = {
-        foreground = {
+        grid_on = {
           color={0xFF,0x80,0x00}, 
         },
-        background = {
+        grid_off = {
           color={0x40,0x00,0x00}, 
         }
       },

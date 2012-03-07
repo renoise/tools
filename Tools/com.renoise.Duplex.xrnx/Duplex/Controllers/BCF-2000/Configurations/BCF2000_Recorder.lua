@@ -107,7 +107,7 @@ duplex_configurations:insert {
           index = 7,
         },
         metronome_toggle = {
-          group_name = "DialPush2",
+          group_name = "DialPush1",
           index = 8,
         },
 

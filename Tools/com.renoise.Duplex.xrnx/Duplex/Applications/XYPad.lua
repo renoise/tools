@@ -40,7 +40,7 @@ Mappings
                                 both X and Y axis simultaneously
   -- or --
 
-  xy_grid     (UIToggleButtons) This is a multiple-button "emulation" of
+  xy_grid     (UIButtons)       This is a multiple-button "emulation" of
                                 an XYPad on your grid controller. Minimum
                                 required resolution is 2x2
   -- or --
@@ -50,10 +50,10 @@ Mappings
 
   -- and optionally --
 
-  lock_button (UIToggleButton)  Lock/unlock currently selected XYPad device
-  focus_button (UIToggleButton) Bring focus to locked device (if it exists)
-  next_device (UIToggleButton)  Select next XYPad (+locking)
-  prev_device (UIToggleButton)  Select previous XYPad (+locking)
+  lock_button   (UIButton)  Lock/unlock currently selected XYPad device
+  focus_button  (UIButton)  Bring focus to locked device (if it exists)
+  next_device   (UIButton)  Select next XYPad (+locking)
+  prev_device   (UIButton)  Select previous XYPad (+locking)
 
 
 Options
@@ -173,14 +173,16 @@ function XYPad:__init(process,mappings,options,cfg_name,palette)
   }
 
   self.palette = {
-    foreground = {
-      color={0xFF,0xFF,0x00}, 
-      text="■",
-    },  
-    background = {
-      color={0x40,0x40,0x00}, 
-      text="□",
-    },  
+    grid_on         = { color = {0xFF,0xFF,0x00}, text = "▪", },  
+    grid_off        = { color = {0x40,0x40,0x00}, text = "·", },  
+    prev_device_on  = { color = {0xFF,0xFF,0xFF}, text = "◄" },
+    prev_device_off = { color = {0x00,0x00,0x00}, text = "◄" },
+    next_device_on  = { color = {0xFF,0xFF,0xFF}, text = "►" },
+    next_device_off = { color = {0x00,0x00,0x00}, text = "►" },
+    focus_on        = { color = {0xFF,0xFF,0xFF}, text = "⌂" },
+    focus_off       = { color = {0x00,0x00,0x00}, text = "⌂" },
+    lock_on         = { color = {0xFF,0xFF,0xFF}, text = "♥" },
+    lock_off        = { color = {0x00,0x00,0x00}, text = "♥" },
   }
 
   -- option constants
@@ -255,13 +257,13 @@ function XYPad:__init(process,mappings,options,cfg_name,palette)
 
   -- controls
   self._xy_pad = nil  -- UIXYPad
-  self._xy_grid = nil -- UIToggleButtons...
+  self._xy_grid = nil -- UIButtons...
   self._x_slider = nil  -- UISlider
   self._y_slider = nil  -- UISlider
-  self._lock_button = nil   -- UIToggleButton
-  self._focus_button = nil  -- UIToggleButton
-  self._prev_button = nil -- UIToggleButton
-  self._next_button = nil -- UIToggleButton
+  self._lock_button = nil   -- UIButton
+  self._focus_button = nil  -- UIButton
+  self._prev_button = nil   -- UIButton
+  self._next_button = nil   -- UIButton
 
   Application.__init(self,process,mappings,options,cfg_name, palette)
 
@@ -328,7 +330,7 @@ function XYPad:on_idle()
     return 
   end
 
-  local skip_event = true
+  --local skip_event = true
   local song = renoise.song()
 
   -- set to the current device
@@ -343,9 +345,9 @@ function XYPad:on_idle()
     if self.target_device and self._lock_button then
       -- update lock button status
       if (self.options.locked.value == self.LOCKED_ENABLED) then
-        self._lock_button:set(true,skip_event)
+        self._lock_button:set(self.palette.lock_on)
       else
-        self._lock_button:set(false,skip_event)
+        self._lock_button:set(self.palette.lock_off)
       end
 
     end
@@ -359,7 +361,11 @@ function XYPad:on_idle()
     local blink = (math.floor(os.clock()%2)==1)
     if blink~=self._blink then
       self._blink = blink
-      self._lock_button:set(blink,skip_event)
+      if blink then
+        self._lock_button:set(self.palette.lock_on)
+      else
+        self._lock_button:set(self.palette.lock_off)
+      end
     end
   end
 
@@ -469,7 +475,6 @@ function XYPad:update_controller()
     local x_scaled = round_value(scale_value(self.value[1],0,1,1,self.grid_width))
     local y_scaled = round_value(scale_value(self.value[2],0,1,1,self.grid_height))
 
-    local skip_event = true
     for x=1,self.grid_width do
       for y=self.grid_height,1,-1 do
         local matched = false
@@ -477,7 +482,11 @@ function XYPad:update_controller()
           matched = true
         end
         local flipped_y = math.abs(y-self.grid_height)+1
-        self._xy_grid[x][flipped_y]:set(matched,skip_event)
+        if matched then
+          self._xy_grid[x][flipped_y]:set(self.palette.grid_on)
+        else
+          self._xy_grid[x][flipped_y]:set(self.palette.grid_off)
+        end
       end
     end
 
@@ -630,7 +639,7 @@ function XYPad:_build_app()
         local params = self:get_xy_params()
         if params then
           --local track_idx = renoise.song().selected_track_index
-          print("about to record",obj.value[1],obj.value[2])
+          --print("about to record",obj.value[1],obj.value[2])
           local val_x = scale_value(obj.value[1],self.min_value,self.max_value,0,1)
           local val_y = scale_value(obj.value[2],self.min_value,self.max_value,0,1)
           self.automation:add_automation(self.track_index,params.x,val_x)
@@ -723,19 +732,18 @@ function XYPad:_build_app()
   -- lock button
   local map = self.mappings.lock_button
   if map.group_name then
-    local c = UIToggleButton(self.display)
+    local c = UIButton(self.display)
     c.group_name = map.group_name
-    c.palette.foreground = self.palette.foreground
-    c.palette.background = self.palette.background
+    --c.palette = self.palette.foreground
     c.tooltip = map.description
     c:set_pos(map.index)
-    c.on_change = function(obj)
+    c.on_press = function(obj)
       if not self.active then return false end
       local track_idx = renoise.song().selected_track_index
       if obj.active then
         -- attempt to lock device
         if not self.target_device then
-          return false
+          return 
         end
         -- set preference and update device name 
         self:_set_option("locked",self.LOCKED_ENABLED,self.pad_process)
@@ -759,13 +767,14 @@ function XYPad:_build_app()
   -- focus button
   local map = self.mappings.focus_button
   if map.group_name then
-    local c = UIToggleButton(self.display)
+    local c = UIButton(self.display)
     c.group_name = map.group_name
-    c.palette.foreground = self.palette.foreground
-    c.palette.background = self.palette.background
+    --c.palette.foreground = self.palette.foreground
+    --c.palette.background = self.palette.background
+    c:set(self.palette.focus_off)
     c.tooltip = map.description
     c:set_pos(map.index)
-    c.on_change = function(obj)
+    c.on_press = function(obj)
       if not self.active then return false end
       self:bring_focus_to_locked_device()
       self:update_focus_button()
@@ -777,16 +786,15 @@ function XYPad:_build_app()
   -- previous device button
   local map = self.mappings.prev_device
   if map.group_name then
-    local c = UIToggleButton(self.display)
+    local c = UIButton(self.display)
     c.group_name = map.group_name
-    c.palette.foreground = self.palette.foreground
-    c.palette.background = self.palette.background
+    --c.palette.foreground = self.palette.foreground
+    --c.palette.background = self.palette.background
     c.tooltip = map.description
     c:set_pos(map.index)
     c.on_press = function(obj)
       if not self.active then return false end
       self:goto_previous_device()
-      return false
     end
     self:_add_component(c)
     self._prev_button = c
@@ -795,16 +803,15 @@ function XYPad:_build_app()
   -- next device button
   local map = self.mappings.next_device
   if map.group_name then
-    local c = UIToggleButton(self.display)
+    local c = UIButton(self.display)
     c.group_name = map.group_name
-    c.palette.foreground = self.palette.foreground
-    c.palette.background = self.palette.background
+    --c.palette.foreground = self.palette.foreground
+    --c.palette.background = self.palette.background
     c.tooltip = map.description
     c:set_pos(map.index)
     c.on_press = function(obj)
       if not self.active then return false end
       self:goto_next_device()
-      return false
     end
     self:_add_component(c)
     self._next_button = c
@@ -823,12 +830,10 @@ function XYPad:_build_app()
       self._xy_grid[x] = table.create()
       --for y=self.grid_height,1,-1 do
       for y=1,self.grid_height do
-        local c = UIToggleButton(self.display)
+        local c = UIButton(self.display)
         c.group_name = map.group_name
         c.tooltip = map.description
-        -- always fully lit when pressed
-        c.palette.foreground = self.palette.foreground
-        c.palette.background = self.palette.background
+        c:set(self.palette.grid_off)
         c:set_pos(x,y)
         c.on_press = function(obj)
           if not self.active then return false end
@@ -1022,8 +1027,6 @@ end
 function XYPad:update_prev_next(track_index,device_index,prev_state,next_state)
   TRACE("XYPad:update_prev_next()",track_index,device_index,prev_state,next_state)
 
-  local skip_event = true
-
   -- use locked device if available
   if (self.options.locked.value == self.LOCKED_ENABLED) then
     track_index = self.track_index
@@ -1035,14 +1038,22 @@ function XYPad:update_prev_next(track_index,device_index,prev_state,next_state)
       local prev_search = self:search_previous_device(track_index,device_index)
       prev_state = (prev_search) and true or false
     end
-    self._prev_button:set(prev_state,skip_event)
+    if prev_state then
+      self._prev_button:set(self.palette.prev_device_on)
+    else
+      self._prev_button:set(self.palette.prev_device_off)
+    end
   end
   if self._next_button then
     if not next_state then
       local next_search = self:search_next_device(track_index,device_index)
       next_state = (next_search) and true or false
     end
-    self._next_button:set(next_state,skip_event)
+    if next_state then
+      self._next_button:set(self.palette.next_device_on)
+    else
+      self._next_button:set(self.palette.next_device_off)
+    end
   end
 
 end
@@ -1083,8 +1094,11 @@ function XYPad:update_focus_button()
       lit = selected and 
         (song.selected_device.display_name ~= display_name) 
     end
-    local skip_event = true
-    self._focus_button:set(lit,skip_event)
+    if lit then
+      self._focus_button:set(self.palette.focus_on)
+    else
+      self._focus_button:set(self.palette.focus_off)
+    end
   
   end
 
@@ -1257,6 +1271,7 @@ function XYPad:_attach_to_song()
 
 
   -- listen for changes to tracks (remove)
+  --[[
   renoise.song().tracks_observable:add_notifier(
     function(notifier)
       TRACE("XYPad:tracks_observable fired...")
@@ -1266,16 +1281,15 @@ function XYPad:_attach_to_song()
         then
           -- 'soft' unlock
           --self.options.locked.value = self.LOCKED_DISABLED
-          --[[
           self:clear_device()
           if self._lock_button then
             self._lock_button:set(false,true)
           end
-          ]]
         end
       end
     end
   )
+  ]]
 
   -- handle devices insert/remove/swap when we switch track
   --[[
@@ -1379,7 +1393,7 @@ function XYPad:initial_select()
       -- perform a 'soft' unlock
       self.options.locked.value = self.LOCKED_DISABLED
       if self._lock_button then
-        self._lock_button:set(false,true)
+        self._lock_button:set(self.palette.lock_off)
       end
     end
   --end
@@ -1498,8 +1512,7 @@ function XYPad:attach_to_device(track_idx,device_idx,device)
   -- update the locked status
   if (self.options.locked.value == self.LOCKED_ENABLED) then
     if self._lock_button then
-      local skip_event = true
-      self._lock_button:set(true,skip_event)
+      self._lock_button:set(self.palette.lock_on)
     end
   end
 

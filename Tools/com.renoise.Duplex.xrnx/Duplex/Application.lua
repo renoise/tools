@@ -425,11 +425,13 @@ function Application:_set_option(key, val, process)
       app_options_node:property(key).value = val
     end
   
-    -- update settings UI
+    -- update settings UI (might be hidden/non-existent)
     if (self._settings_view)then
       local elm_id = ("dpx_app_options_%s"):format(key)
       local elm = self._vb.views[elm_id]
-      elm.value = val
+      if elm then
+        elm.value = val
+      end
     end
 
   end

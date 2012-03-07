@@ -23,7 +23,7 @@ How to use
 
 Mappings
 
-  matrix    - (UIToggleButton...) toggle slot muted state
+  matrix    - (UIButton...) toggle slot muted state
   triggers  - (UIButtonStrip) sequence pattern-triggers
   sequence  - (UISpinner) control visible sequence page 
   track     - (UISpinner) control visible track page
@@ -204,46 +204,16 @@ function Matrix:__init(process,mappings,options,cfg_name,palette)
   -- define default palette
 
   self.palette = {
-    out_of_bounds = {
-      color={0x40,0x40,0x00}, 
-      text="",
-    },
-    slot_empty = {
-      color={0x00,0x00,0x00},
-      text="·",
-    },
-    slot_empty_muted = {
-      color={0x40,0x00,0x00},
-      text="▫",
-    },
-    slot_filled = {
-      color={0xff,0xff,0x00},
-      text="■",
-    },
-    slot_filled_muted = {
-      color={0xff,0x40,0x00},
-      text="□",
-    },
-    slot_master_filled = {
-      color={0x00,0xff,0x00},
-      text="■",
-    },
-    slot_master_empty = {
-      color={0x00,0x40,0x00},
-      text="·",
-    },
-    trigger_active = {
-      color={0xff,0xff,0xff},
-      text="►",
-    },
-    trigger_loop = {
-      color={0x40,0x40,0xff},
-      text="·",
-    },
-    trigger_back = {
-      color={0x00,0x00,0x00},
-      text="",
-    },
+    out_of_bounds = {     color={0x40,0x40,0x00}, text="·",  val=false  },
+    slot_empty = {        color={0x00,0x00,0x00}, text="·", val=false },
+    slot_empty_muted = {  color={0x40,0x00,0x00}, text="·", val=false },
+    slot_filled = {       color={0xff,0xff,0x00}, text="▪", val=true },
+    slot_filled_muted = { color={0xff,0x40,0x00}, text="▫", val=false },
+    slot_master_filled = {color={0x00,0xff,0x00}, text="▪", val=true },
+    slot_master_empty = { color={0x00,0x40,0x00}, text="·", val=false },
+    trigger_active = {    color={0xff,0xff,0xff}, text="►", val=false },
+    trigger_loop = {      color={0x40,0x40,0xff}, text="·", val=false },
+    trigger_back = {      color={0x00,0x00,0x00}, text="",  val=false  },
   }
 
   -- the various controls
@@ -324,44 +294,30 @@ function Matrix:_update_slots()
 
           if (not slot_empty) then
             if (track_idx==master_idx)then -- master track
-              palette.foreground = table.rcopy(self.palette.slot_master_filled)
-              palette.background = table.rcopy(self.palette.slot_master_filled)
+              button:set(self.palette.slot_master_filled)
             else
-              palette.foreground = table.rcopy(self.palette.slot_filled)
-              palette.background = table.rcopy(self.palette.slot_filled_muted)
+              if slot_muted then
+                button:set(self.palette.slot_filled_muted)
+              else
+                button:set(self.palette.slot_filled)
+              end
             end
           else
             -- empty slot 
             if (track_idx==master_idx)then
-              palette.foreground = table.rcopy(self.palette.slot_master_empty)
-              palette.background = table.rcopy(self.palette.slot_master_empty)
+              button:set(self.palette.slot_master_empty)
             else
-              palette.foreground = table.rcopy(self.palette.slot_empty)
-              palette.background = table.rcopy(self.palette.slot_empty_muted)
+              if slot_muted then
+                button:set(self.palette.slot_empty_muted)
+              else
+                button:set(self.palette.slot_empty)
+              end
             end
-          end
-          -- workaround for devices with no colorspace:
-          -- revert to the unlit state 
-          if is_monochrome(self.display.device.colorspace) then
-            if slot_empty then
-              button:set(false,skip_event)
-            else
-              button:set(not slot_muted,skip_event)
-            end
-          else
-            button:set(not slot_muted,skip_event)
           end
 
         elseif button then
-
           -- out-of-bounds space (below/next to song)
-          palette.background = table.rcopy(self.palette.out_of_bounds)
-          button:set(false,skip_event)
-
-        end
-        
-        if(button)then
-          button:set_palette(palette)
+          button:set(self.palette.out_of_bounds)
         end
 
       end
@@ -989,39 +945,32 @@ function Matrix:_build_app()
     self._buttons = {}
     for x=1,self._width do
       self._buttons[x] = {}
-
       for y=1,self._height do
-
-        local c = UIToggleButton(self.display)
+        local c = UIButton(self.display)
         c.group_name = self.mappings.matrix.group_name
         c.tooltip = self.mappings.matrix.description
         c:set_pos(x,y)
         c.active = false
-
-        -- controller button pressed & held
-        c.on_hold = function(obj) 
+        c.on_hold = function() 
+          -- bring focus to pattern/track
+          if not self.active then
+            return false
+          end
 
           local x_pos = x + self._track_offset
           local y_pos = y + (self._height*self._edit_page)
-          obj:toggle()
-
-          -- bring focus to pattern/track
+          --obj:toggle()
           if (#renoise.song().tracks>=x_pos) then
             renoise.song().selected_track_index = x_pos
           end
           if renoise.song().sequencer.pattern_sequence[y_pos] then
             renoise.song().selected_sequence_index = y_pos
           end
-
         end
-
-        -- controller button was pressed
-        c.on_change = function(obj) 
-
+        c.on_press = function() 
           if not self.active then
             return false
           end
-
           local seq = renoise.song().sequencer
           local patt_seq = renoise.song().sequencer.pattern_sequence
           local master_idx = get_master_track_index()
@@ -1031,42 +980,25 @@ function Matrix:_build_app()
           local seq_idx = y+seq_offset
           local patt_idx = patt_seq[y+seq_offset]
           local patt = renoise.song().patterns[patt_idx]
-
           if track_idx == master_idx then
             -- master track is not toggle-able
-            return false
+            return 
           elseif not renoise.song().tracks[track_idx] then
             -- outside track bounds
-            return false
+            return 
           elseif not patt_seq[y+seq_offset] then
             -- outside sequence bounds
-            return false
+            return 
           else
             -- toggle matrix slot state
             local is_muted = seq:track_sequence_slot_is_muted(track_idx,seq_idx)
             renoise.song().sequencer:set_track_sequence_slot_is_muted(
               (track_idx),(y+seq_offset),(not is_muted))
           end
-          -- don't update the entire grid the next time
-          self._mute_notifier_disabled = true
 
-          -- workaround for devices with no colorspace:
-          -- revert to the unlit state 
-          if is_monochrome(self.display.device.colorspace) then
-            local slot_empty = patt.tracks[x+self._track_offset].is_empty
-            if slot_empty then
-              obj:set(false,true)
-              obj:force_update()
-              return false
-            end
-          end
-            
-          return true
         end
-
         self:_add_component(c)
         self._buttons[x][y] = c
-
       end  
     end
   end

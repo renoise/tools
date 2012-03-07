@@ -115,6 +115,8 @@ duplex_configurations:insert {
           color = {0xC0,0x00,0x00}
         },
       },
+      options = {
+      },
       hidden_options = {  -- display minimal set of options
         "channel_pressure","pitch_bend","release_type","button_width","button_height"
       },

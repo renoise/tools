@@ -25,7 +25,6 @@ end
 --------------------------------------------------------------------------------
 
 function Scheduler:on_idle()
-  --TRACE("Scheduler:on_idle()",os.clock())
 
   -- check time
   for idx,task in ripairs(self.tasks) do
@@ -39,10 +38,10 @@ end
 
 --------------------------------------------------------------------------------
 
-function Scheduler:add_task(ref,func,delay)
+function Scheduler:add_task(ref,func,delay, ...)
   TRACE("Scheduler:add_task()",ref,func,delay)
 
-  local task = ScheduledTask(ref,func,delay)
+  local task = ScheduledTask(ref,func,delay,arg)
   self.tasks:insert(task)
   return task
 
@@ -69,7 +68,11 @@ end
 function Scheduler:_execute_task(task)
   TRACE("Scheduler:_execute_task",task)
 
-  task.func(task.ref)
+  if task.ref then
+    task.func(task.ref,unpack(task.args))
+  else
+    task.func(unpack(task.args))
+  end
 end
 
 
@@ -79,10 +82,11 @@ end
 
 class 'ScheduledTask' 
 
-function ScheduledTask:__init(ref, func, delay)
-  TRACE("ScheduledTask:__init", ref, func, delay)
+function ScheduledTask:__init(ref, func, delay, args)
+  TRACE("ScheduledTask:__init", ref, func, delay, args)
 
   self.time = os.clock()+delay
+  self.args = args
   self.ref = ref
   self.func = func
 

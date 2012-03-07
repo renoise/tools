@@ -58,30 +58,13 @@ function Display:__init(device)
   self.scheduler = Scheduler()
 
   -- this is the default palette for any display,
-  -- the UIComponents use these values as defaults
-  -- (note that color values with an average below 0x80
-  -- might not display on monochrome devices)
+  -- the UIComponents can use these values as defaults
   self.palette = {
-    background = {
-      text="·",
-      color={0x00,0x00,0x00}
-    },
-    color_1 = {
-      text="■",
-      color={0xff,0xff,0xff}
-    },
-    color_1_dimmed = {
-      text="□",
-      color={0x40,0x40,0x40}
-    },
-    color_2 = {
-      text="▪",
-      color={0x80,0x80,0x80}
-    },
-    color_2_dimmed = {
-      text="▫",
-      color={0x40,0x40,0x40}
-    },
+    background      = { text="",  color={0x00,0x00,0x00},val=false  },
+    color_1         = { text="■", color={0xff,0xff,0xff},val=true   },
+    color_1_dimmed  = { text="□", color={0x40,0x40,0x40},val=false  },
+    color_2         = { text="▪", color={0x80,0x80,0x80},val=true   },
+    color_2_dimmed  = { text="▫", color={0x40,0x40,0x40},val=false  },
   }    
   
   --  temp values (construction of control surface)
@@ -183,18 +166,24 @@ function Display:update()
   
   for _,obj in pairs(self.ui_objects) do
 
+    local columns = control_map.groups[obj.group_name].columns
+
+    --print("*** obj.group_name, obj.dirty, obj.canvas.clear",obj.group_name, obj.dirty, obj.canvas.clear)
     -- skip unused objects, objects that doesn't need update
     if (obj.group_name and obj.dirty) then
 
       obj:draw()
-      local columns = control_map.groups[obj.group_name].columns
+
+      --print("*** obj, obj.canvas.has_changed",obj, obj.canvas.has_changed)
 
       -- loop through the delta array - it contains all recent updates
       if (obj.canvas.has_changed) then
 
         for x = 1,obj.width do
           for y = 1, obj.height do
+            --print("*** obj.canvas.delta["..x.."]["..y.."]",obj.canvas.delta[x][y])
             if (obj.canvas.delta[x][y]) then
+
               if not (control_map.groups[obj.group_name]) then
                 print(("Warning: '%s' is not specified in control-map "..
                   "group '%s'"):format(type(obj), tostring(obj.group_name)))
@@ -216,14 +205,14 @@ function Display:update()
 
           end
         end
-        
         obj.canvas:clear_delta()
-
       end
 
       -- check if the canvas has extraneous points that need to be cleared
+      local got_cleared = false
       for x,v in pairs(obj.canvas.clear) do
         for y,v2 in pairs(obj.canvas.clear[x]) do
+          --print("Display:update() - clear point x,y",x,y)
           -- clear point (TODO: clear tooltips as well)
           local idx = (x+obj.x_pos-1)+((y+obj.y_pos-2)*columns)
           local elm = control_map:get_indexed_element(idx, obj.group_name)
@@ -232,12 +221,14 @@ function Display:update()
             point:apply(self.palette.background)
             point.val = false      
             self:set_parameter(elm,obj,point)
+            got_cleared = true
           end
 
         end
       end
-
-      obj.canvas.clear = {}
+      if got_cleared then
+        obj.canvas.clear = {}
+      end
 
     end
   end
@@ -246,7 +237,7 @@ end
 
 --------------------------------------------------------------------------------
 
--- set_parameter: update object states
+-- set_parameter: update hardware & virtual control surface 
 -- @elm : control-map definition of the element
 -- @obj : UIComponent instance
 -- @point : canvas point (text/value/color)
@@ -257,6 +248,8 @@ function Display:set_parameter(elm, obj, point, secondary)
 
   -- resulting numeric value, or table of values (XYPad)
   local value = self.device:point_to_value(point, elm, obj.ceiling)
+
+  --print("Display:set_parameter() - value",value)
 
   -- reference to control-map
   local cm = self.device.control_map
@@ -325,7 +318,6 @@ function Display:set_parameter(elm, obj, point, secondary)
       then
         self.device:send_cc_message(num,value,channel)
       end
-    
     elseif (msg_type == MIDI_PITCH_BEND_MESSAGE) then
 
       -- sending pitch-bend back to a device doesn't make sense when
@@ -341,20 +333,14 @@ function Display:set_parameter(elm, obj, point, secondary)
       then
         self.device:send_pitch_bend_message(value,channel)
       end
-
-
     elseif (msg_type == MIDI_CHANNEL_PRESSURE) then
-
       -- do nothing
-
     elseif (msg_type == MIDI_KEY_MESSAGE) then
-
       -- do nothing
-
     elseif (msg_type == OSC_MESSAGE) then
-
-
       -- value comparison on OSC, might be a table
+      --[[
+      print("*** got here A")
       local values_are_equal = false
       local osc_value = value
       if current_message then
@@ -369,35 +355,46 @@ function Display:set_parameter(elm, obj, point, secondary)
           values_are_equal = current_message.value == value
         end
       end
+      print("*** (not current_message)",(not current_message))
+      if current_message then
+        print("*** (current_message.is_virtual)",(current_message.is_virtual))
+        print("*** (current_message.context ~= OSC_MESSAGE)",(current_message.context ~= OSC_MESSAGE))
+        print("*** (current_message.id ~= elm.id)",(current_message.id ~= elm.id))
+      end
+      --print("*** (not values_are_equal)",(not values_are_equal))
+      ]]
 
+      --[[
       if (not current_message) or
          (current_message.is_virtual) or
          (current_message.context ~= OSC_MESSAGE) or
          (current_message.id ~= elm.id) or
          (not values_are_equal)
       then
+        print("*** got here B")
+      ]]
 
-        -- invert XYPad values before sending?
-        local osc_value = value
-        if (elm.type == "xypad") then
-          if (type(osc_value)=="table") then
-            osc_value = table.rcopy(value)
-          end
-          osc_value[1] = elm.invert_x and 
-            elm.maximum-osc_value[1] or osc_value[1]
-          osc_value[2] = elm.invert_y and 
-            elm.maximum-osc_value[2] or osc_value[2]
+      -- invert XYPad values before sending?
+      local osc_value = value
+      if (elm.type == "xypad") then
+        if (type(osc_value)=="table") then
+          osc_value = table.rcopy(value)
         end
-
-        -- it's recommended that wireless devices have their 
-        -- messages bundled (or some might get lost)
-        if self.device.bundle_messages then
-          self.device:queue_osc_message(elm.value,osc_value)
-        else
-          self.device:send_osc_message(elm.value,osc_value)
-        end
-
+        osc_value[1] = elm.invert_x and 
+          elm.maximum-osc_value[1] or osc_value[1]
+        osc_value[2] = elm.invert_y and 
+          elm.maximum-osc_value[2] or osc_value[2]
       end
+
+      -- it's recommended that wireless devices have their 
+      -- messages bundled (or some might get lost)
+      if self.device.bundle_messages then
+        self.device:queue_osc_message(elm.value,osc_value)
+      else
+        self.device:send_osc_message(elm.value,osc_value)
+      end
+
+      --end
     else
       error(("Internal Error. Please report: " ..
         "unknown or unhandled msg_type: '%s'"):format(msg_type or "nil"))
@@ -415,14 +412,16 @@ function Display:set_parameter(elm, obj, point, secondary)
   if (widget) then
     local widget_type = type(widget)
     if (widget_type == "Button") then
-      -- either use text or colors for a button
       local colorspace = elm.colorspace or self.device.colorspace
-      if (colorspace[1] or colorspace[2] or colorspace[3]) then
+      if not point.val or not is_monochrome(colorspace) then
         widget.color = self.device:quantize_color(point.color,colorspace)
       else
-        widget.color = { 0, 0, 0 }
-        widget.text = point.text
+        local theme_color = {duplex_preferences.theme_color_R.value,
+          duplex_preferences.theme_color_G.value,
+          duplex_preferences.theme_color_B.value}
+        widget.color = point.val and theme_color or {0x00,0x00,0x00}
       end
+      widget.text = point.text
     elseif (widget_type == "RotaryEncoder") or 
       (widget_type == "MiniSlider") or
       (widget_type == "Slider")
@@ -621,6 +620,10 @@ function Display:generate_message(value, metadata, released)
   msg.max = metadata.maximum
   msg.min = metadata.minimum
 
+  if released then
+    msg.is_note_off = true
+  end
+
   -- the type of message (MIDI/OSC...)
   msg.context = self.device.control_map:determine_type(metadata.value)
   if (msg.context == OSC_MESSAGE) then
@@ -631,9 +634,6 @@ function Display:generate_message(value, metadata, released)
   if (self.device.protocol == DEVICE_MIDI_PROTOCOL) then
     msg.channel = self.device:extract_midi_channel(metadata.value) or 
       self.device.default_midi_channel
-    if released then
-      msg.is_note_off = true
-    end
     if (msg.context==MIDI_NOTE_MESSAGE) then
       local note_pitch = value[1]
       -- if available, use the pitch defined in the control-map 

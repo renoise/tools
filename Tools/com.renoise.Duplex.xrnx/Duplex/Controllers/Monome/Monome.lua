@@ -99,7 +99,7 @@ end
 
 
 --------------------------------------------------------------------------------
-
+--[[
 -- quantize value to determine lit/off state
 function Monome:point_to_value(pt,elm,ceiling)
   TRACE("Monome:point_to_value",pt,elm,ceiling)
@@ -115,6 +115,7 @@ function Monome:point_to_value(pt,elm,ceiling)
   return value
 
 end
+]]
 
 --------------------------------------------------------------------------------
 

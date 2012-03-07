@@ -80,9 +80,9 @@ function UIKey:__init(display)
 
   -- specify the default palette 
   self.palette = {
-    pressed = table.rcopy(display.palette.color_1),
-    released = table.rcopy(display.palette.color_1_dimmed),
-    disabled = table.rcopy(display.palette.background)
+    pressed  = {  color={0xFF,0xFF,0xFF}, text="▪"},
+    released  = { color={0x40,0x40,0x40}, text="▫" },
+    disabled  = { color={0x00,0x00,0x00}, text="·" },
   }
 
   -- external event handlers
@@ -251,6 +251,12 @@ function UIKey:draw()
   end
 
   local point = CanvasPoint()
+
+  --[[
+  print("self.palette.pressed.text",self.palette.pressed.text)
+  print("self.palette.disabled.text",self.palette.disabled.text)
+  print("self.palette.released.text",self.palette.released.text)
+  ]]
 
   if self.disabled then
     point.text = self.palette.disabled.text

@@ -173,6 +173,7 @@ function OscDevice:receive_osc_message(value_str)
     --rprint(xarg)
     -- multiple messages are tables, single value a number...
     message.value = (#val>1) and val or val[1]
+    --print("*** OscDevice:receive_osc_message - message.value",message.value)
     self:_send_message(message,xarg)
   end
 

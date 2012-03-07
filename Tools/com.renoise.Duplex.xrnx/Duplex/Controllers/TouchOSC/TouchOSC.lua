@@ -31,14 +31,9 @@ end
 
 
 --------------------------------------------------------------------------------
-
+--[[
 function TouchOSC:point_to_value(pt,elm,ceiling)
   TRACE("TouchOSC:point_to_value()",pt,elm,ceiling)
-
-  --[[
-  local val_type = type(pt.val)
-  print("val_type",val_type)
-  ]]
 
   local value = OscDevice.point_to_value(self,pt,elm,ceiling)
 
@@ -51,4 +46,4 @@ function TouchOSC:point_to_value(pt,elm,ceiling)
   return value
 
 end
-
+]]
