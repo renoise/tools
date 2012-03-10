@@ -214,8 +214,8 @@ function rotate(shift_amount, range_mode, shift_automation)
           local rotated_points = table.create(
             table.rcopy(automation.points))
           
-          for _,point in pairs(rotated_points) do
-            if (point.time >= line_start and point.time <= line_end) then
+          for _,point in pairs(rotated_points) do            
+            if (point.time >= line_start and point.time < line_end + 1) then
               point.time = rotate_index(point.time, 
                 shift_amount, line_start, line_end)
             end
