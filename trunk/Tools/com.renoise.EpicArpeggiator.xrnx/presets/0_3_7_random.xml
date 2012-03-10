@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<PresetTable doc_version="0">
+  <PresetVersion>2.00</PresetVersion>
+  <Scheme>1</Scheme>
+  <NoteMatrix>false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,true,false,false,true,false,false,false,true,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false</NoteMatrix>
+  <NoteProfile>C-5, C#5, D#5, F#5, G#5, G#5, F#5, D#5, C#5, C-5, C-5, C#5, D#5, F#5, G#5, G#5, F#5, D#5, C#5, C-5, C-5, C#5, D#5, F#5, G#5, G#5, F#5, D#5, C#5, C-5, C-5, C#5, D#5, F#5, G#5, G#5, F#5, D#5, C#5, C-5, C-5, C#5, D#5, F#5, G#5, G#5, F#5, D#5, </NoteProfile>
+  <Distance>0</Distance>
+  <DistanceMode>1</DistanceMode>
+  <OctaveRotation>5</OctaveRotation>
+  <OctaveRepeat>true</OctaveRepeat>
+  <Termination>10</Termination>
+  <TerminationMode>2</TerminationMode>
+  <NoteRotation>5</NoteRotation>
+  <NoteRepeat>false</NoteRepeat>
+  <ArpeggioPattern>1</ArpeggioPattern>
+  <CustomPattern>1,0,1,1,0,1,0,0</CustomPattern>
+  <NoteColumns>1</NoteColumns>
+  <ChordMode>false</ChordMode>
+  <InstrumentPool/>
+  <InstrumentRotation>1</InstrumentRotation>
+  <InstrumentRepeat>false</InstrumentRepeat>
+  <VolumePool>0x20,0x40,0x50,0x80</VolumePool>
+  <VolumeRotation>5</VolumeRotation>
+  <VolumeRepeat>false</VolumeRepeat>
+</PresetTable>

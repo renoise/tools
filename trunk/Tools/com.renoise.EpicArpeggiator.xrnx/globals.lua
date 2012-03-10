@@ -34,6 +34,7 @@ obj_valuebox = 7
 obj_slider = 8 
 obj_minislider = 9 
 obj_textfield = 10 
+ea_gui = nil
 
 --Instrument properties
 process_instrument_index = 1
@@ -44,6 +45,7 @@ pinstruments_field = "example: 00,01,02,03,0x0a,0x0b,12,13"
 instruments_pool_empty = 0
 ins_pointer = 1
 repeat_se_instrument = false
+instrument_pool = {} --For randomisation
 
 --Velocity properties
 process_velocity = {}
@@ -54,12 +56,14 @@ pvelocity_field = "example: 10,20,128 or 0x10,0x7f, also fx values are granted!"
 velocity_pool_empty = 0
 vel_pointer = 1
 repeat_se_velocity = false
+velocity_pool = {} --For randomisation
 
 --Octave pointers
 popup_octave_index = 1
 octave_pointer = 1
 repeat_se_octave = true
 --custom_octave_field = "0,1,2,3,4,5,6,7,8,9"
+octave_pool = {} --For randomisation
 
 --Note positions and pointers and processing method
 popup_note_index = 1
@@ -67,6 +71,8 @@ note_pointer = 1
 new_note_pos = 1
 repeat_se_note = false
 custom_note_field = "example: C-4,F-5,A#6,G-7"
+note_pool = {} --For randomisation
+noteoct_pool = {} --For special randomisation.
 
 --Note off positions
 note_off_pos = 0
@@ -89,8 +95,10 @@ reset_new_note = {}
 
 --Custom line positions
 custom_note_pos = {}
-custom_arpeggiator_field = "example: 0,2,5,7,9,11,nt OR 1,3,5,bn"
+binary_note_table = {}
+custom_arpeggiator_field = "example: 0,2,5,7,9,11,nt OR 1,3,5,bn OR 0,1,0,1,0,0,1,1,bn"
 custom_index = 1
+binary_custom_note = false
 
 --Pattern pointers
 previous_pattern = 0
@@ -99,6 +107,7 @@ cur_pat_size = 0
 
 --Generic option checkbox states
 skip_fx = false
+overwrite_alias = false
 clear_track = true
 auto_play_pattern = false
 
@@ -159,24 +168,42 @@ key_matrix = {
    [7]='Ff', [8]='G_', [9]='Gf', [10]='A_', [11]='Af', [12]='B_'
 }
 
+--Preset manager
+PATH_SEPARATOR = "/"
+
+if (os.platform() == "WINDOWS") then
+  PATH_SEPARATOR = "\\"
+end
+preset_field = nil
+preset_file = nil
+preset_list = {}
+preset_table = {
+  "Scheme", "NoteMatrix","NoteProfile","Distance","DistanceMode",
+  "OctaveRotation","OctaveRepeat","Termination","TerminationMode",
+  "NoteRotation","NoteRepeat","ArpeggioPattern","CustomPattern",
+  "NoteColumns", "ChordMode","InstrumentPool","InstrumentRotation",
+  "InstrumentRepeat","VolumePool", "VolumeRotation", "VolumeRepeat"
+  }
+
 
 --------------------------------------------------------------------------------
 -- helper functions
 --------------------------------------------------------------------------------
 
-function randomize(tstart, tend)
-   local number = tostring(os.clock())
-
-   if string.find(number,"%.") ~= nil then
-      number = string.sub(number, string.find(number,"%.")+1)
-   end
-
-   math.randomseed( tonumber(number))
-   number  = number + math.random(1, 7)
-   math.randomseed( tonumber(number))
-   math.random(tstart, tend); math.random(tstart, tend); math.random(tstart, tend)
-   local result = math.random(tstart, tend)
-   return result
+function randomize(tstart, tend, buffer, compare)
+  local number = tostring(os.clock())
+  local approved = false
+   
+  if string.find(number,"%.") ~= nil then
+    number = string.sub(number, string.find(number,"%.")+1)
+  end
+  
+  math.randomseed( tonumber(number))
+--   number  = number + math.random(1, 30)
+--   math.randomseed( tonumber(number))
+--   math.random(tstart, tend); math.random(tstart, tend); math.random(tstart, tend)
+  local result = math.random(tstart, tend)
+  return result
 end
 
 
@@ -193,5 +220,36 @@ string.split = function(str, pattern)
   setmetatable(parts, nil)
   parts.__index = nil
   return parts
+end
+
+--------------------------------------------------------------------------------
+
+function get_tools_root()    
+  local dir = renoise.tool().bundle_path
+  return dir:sub(1,dir:find("Tools")+5)      
+end
+
+--------------------------------------------------------------------------------
+
+function toboolean(value)
+  if string.lower(tostring(value)) == "false" or value == 0 or value == "0" then
+    return false
+  end
+  
+  return true
+end
+
+--------------------------------------------------------------------------------
+
+table.serialize = function(table, separator)
+  local stream = nil
+  for _ = 1, #table do
+    if stream == nil then
+      stream = table[_]
+    else
+      stream = stream .. separator.. table[_]
+    end
+  end
+  return stream  
 end
 

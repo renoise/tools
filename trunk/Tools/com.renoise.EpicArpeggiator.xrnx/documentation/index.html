@@ -1,0 +1,129 @@
+<html>
+
+<head>
+<title>Epic Arpeggiator 2.0 Documentation</title>
+<meta name="generator" content="Namo WebEditor">
+</head>
+
+<body bgcolor="#525358" text="#B7BABE" link="#FFCC66" vlink="#333333" alink="yellow">
+<p><font face="Arial Black">Epic Arpeggiator 2.0 Documentation</font></p>
+<p>Thanks for installing my tool.<br>
+You are most likely here because you either want to know more detailed about the new functions, or you haven't used this tool before at all.<br>
+Well either case, sit back and relax. If the documentation fails to answer all your questions, then feel free to ask me some questions on the <a href="http://www.renoise.com/board/">Renoise Forum</a> or drop me <a href="http://tinyurl.com/vvrns">a personal line</a> (You have to be logged on though).<br>
+<br>
+Regards,</p>
+<p>Vincent Voois.</p>
+<p>Version history:</p>
+<p>2.00<br>
+-Added preset saving<br>
+-Added binary mode for arpeggiator scheme<br>
+-Fixed bug with double pattern checking<br>
+-Added check for track aliasses<br>
+-Converted routines to support new 2.8 effect commands<br>
+-Improved random scheme generation, had to&nbsp;limit random mode for the note and octave combination to make this work correctly though<br>
+-Fixed clearing mode. (apparently note_column:clear() no longer clears instrument and pan/vol/del columns)</p>
+<p><br>
+Common Creative License applies to this tool.<br>
+If you feel the need to donate some kudos, then click the donation button, but you don't have to ofcourse.<br>
+My sincere thanks in advance if you do.<br>
+<br>
+</p>
+<form action="https://www.paypal.com/cgi-bin/webscr" method="post">
+<!-- Identify your business so that you can collect the payments. -->  
+ <input type="hidden" name="business"   
+ value="vincent.voois@gmail.com">
+
+<!-- Specify a Donate button. -->  
+ <input type="hidden" name="cmd" value="_donations">
+
+<!-- Specify details about the contribution -->  
+ <input type="hidden" name="item_name" value="Epic Arpeggiator">
+ <input type="hidden" name="item_number" value="donation">
+ <input type="hidden" name="currency_code" value="USD">
+
+<!-- Display the payment button. -->  
+ <input type="image" name="submit" border="0"  
+ src="https://www.paypal.com/en_US/i/btn/btn_donate_LG.gif"  
+ alt="PayPal - The safer, easier way to pay online">
+ <img alt="" border="0" width="1" height="1"  
+ src="https://www.paypal.com/en_US/i/scr/pixel.gif">  
+</form>
+<br>
+Side-notes:<br>
+Song sized generation of track or column content pops up a warning if double pattern references in the sequencer are found or if the track contains aliasses.<br>
+The tool is pretty experimental&nbsp;organised so some combinations may have nice surprizes and some combinations don't work as expected or don't work at all.<br>
+The best thing here is just try out different options and settings and store whatever works good for you.<br>
+<br>
+Lets start picking out the different areas of the main window:</p>
+<p><img src="images/EA_main_window.png" width="461" height="669" border="0"></p>
+<p><br>
+<b>Note matrix</b></p>
+<p><img src="images/EA_tone_matrix.png" width="460" height="231" border="0"></p>
+<p>Vertical axis: Octave figures<br>
+Horizontal axis: Note selections<br>
+the arrowed buttons invert the state of all the buttons in the respective row or column they are pointing to.<br>
+[off] toggles all buttons off<br>
+[inf] inverts all buttons<br>
+</p>
+<p><b>Note &amp; octave properties</b><br>
+<img src="images/EA_note_octave.png" width="444" height="87" border="0">&nbsp;</p>
+<p>The Custom note profile turns visible if the Custom button is selected. In that case, the Note matrix also disappears from the dialog as it is not applicable in that mode.<br>
+<u>The custom note profile</u> is a block of note phrases that should be literally written as they also appear in the pattern. Flag&nbsp;notes are not supported (Bb4 etc). It is being used for note blocks that the note matrix cannot support. (e.g. percussion kits and repeating notes or highly separated octave distances)<br>
+<u>Fetch from current track</u>: Gets the notes from the track and populates the custom note profile or the note matrix with the contents.<br>
+The fetcher routine does not detect repetitions in the patterns. If you want to fetch a limited block of notes, select the area that you want to have scanned and then select the &quot;Selection in track&quot; option in the lower left area of the dialog, then click the &quot;Fetch from current track&quot; button.</p>
+<p><b>Arpeggiator options</b></p>
+<p><img src="images/EA_arpeggiator.png" width="446" height="107" border="0"><br>
+<u>Min. distance between notes</u>: The amount of lines (line mode) that should be between two notes or two blocks (custom arpeggio&nbsp;profile if the 'bn' keyword closes the profile scheme). If delay (del) mode is selected, delay values appear on the second and higher note columns if present. (Delay mode only has an effect if the note columns is set to minimum of&nbsp;2).<br>
+<u>Note termination</u>: On which line (line mode) to place a note-off or at which tick (tck mode) each note should be cut. the value is also used to separate note blocks from the custom arpeggio profile if the 'nt' keyword closes the profile scheme. take care the note termination is at least one figure lower than the distance figure else you won't see note off symbols when using line mode.<br>
+<u>Arpeggio pattern</u>: Distance -&gt; Apply the distance between each note sequentially generated; Random - &gt; Place notes randomly in the track, yet respect the distance and termination value; Custom -&gt; Generate a note scheme using the block notation in the custom arpeggio pattern line. <br>
+Two modes are available with the custom option: Literal and binary mode:<br>
+&nbsp;<b>Literal mode</b>: With literal mode you setup the exact line positions a note has to be placed: 0,2,5,7 means a note is placed on line 00, 02, 05 and 07 after that, either the distance amount of lines ('bn') is used to separate the next block from the last one or the termination amount of lines ('nt') is used for that (depends on the termination&nbsp;keyword used for that) If no termination keyword is used then 'bn' is assumed and applied. Also the distance should always be set to lines if you want to
+use the 'nt' spacing mode between blocks.<br>
+&nbsp;<b>Binary mode</b>: In binary mode, you define positions to be enabled or empty setting its value to 0 or 1. 0,2,5,7 would then look like: 1,0,1,0,0,1,0,1. the next block is directly pasted behind the previous block. If you want to add lines, simply set the distance amount of lines or add the amount of zeros behind the last 1. (It will automatically adjust the distance value). The termination keywords aren't applicable ('bn' or distance mode is always used here)<br>
+<u>Note cols</u>.:How much note columns should be used? If 2 or higher, the delay value can be applied.<br>
+<u>Chord Mode</u>: (Only appears if note cols is 2 or higher) If chord mode is checked, each row is filled until all note-columns are full, then the distance amount is applied. If it is unchecked, the distance amount of lines is applied after each generated note (in multi column mode you get shifted notes).<br>
+</p>
+<p><u><br>
+Rotation schemes</u><br>
+There are five rotation schemes for several options in Epic Arpeggiator. The octave rotation scheme only appears when the Note Matrix is present. The repeat option only appears when a cyclic scheme is selected (TdT and DtD).<br>
+TopDown - follow the scheme as the order is in the custom note profile or the note matrix.<br>
+DownTop - reverse the order<br>
+TopDownTop - Follow the scheme and then reverse the order behind it. If repeat is checked, the last note in the middle of the cycle is doubled so you have two notes in the middle, else you only have one.<br>
+DownTopDown - The opposite operation of the previous<br>
+Random - Pick a random note&amp;octave/ins/velocity value from the scheme and post it in the pattern. (note and octave can not be seperately configured to deliver selected notes from the note matrix)</p>
+<p><b>Instrument &amp; volume pool selection</b></p>
+<p><img src="images/EA_Instrument_velocity.png" width="446" height="73" border="0"><br>
+</p>
+<p><u>Inst. pool</u>: Rotate through a set of different instruments with each note.<br>
+<u>Volume pool</u>: Rotate through different velocity values *and/or* volume column effects.<br>
+Both decimal as well as hexadecimal values are accepted as input here. Precede hex values with &quot;0x&quot; for the routine to detect hex values.<br>
+</p>
+<p><b>Area of generation</b></p>
+<p><img src="images/EA_area.png" width="450" height="74" border="0"></p>
+<p><u>Selection in track</u>: Apply the generation of the configured options to the selection in the current selected track or fetch notes from the selected area. (Take care that the selection *is* in fact in the current selected track!)<br>
+<u>Track in pattern</u>: generate notes across the track in the pattern<br>
+<u>Track in song</u>: generate the notes across the track in the whole song (Not supported when song contains repetetive patterns or selected track has aliassed tracks)<br>
+<u>Column in track</u>:Generate notes only for the current selected column in the current selected track.<br>
+<u>Column in Song</u>: Same as previous, though now for the song. (Also here, no support when repetitive patterns in the sequencer appear or when the selected track contains aliasses elsewhere)<br>
+<u>Skip pan/vol/del</u>: Existing values in the panning, volume and delay column are *not* overwritten if they contain any value.<br>
+<u>Overwrite alias</u>: When doing track in pattern, column in track or selection in track, if the track is an existing alias, there will be no generation and no warning. however if you know what you are doing and want the note scheme generated in the alias, then check this box and the scheme is generated.<br>
+<u>Clear area</u>: Clear target area before generating track data.<br>
+<u>Auto play result</u>: Play pattern after generation</p>
+<p>&nbsp;</p>
+<p><b>Preset management</b><br>
+<img src="images/EA_presets.png" width="445" height="26" border="0"></p>
+<p><u>Load</u>: load the current displaying preset in the drop-down (and/or repopulate the preset dropdown list if you have manually added a new preset file in the preset folder)<br>
+<u>Save</u>: Save the current configuration to a preset file. Opens a dialog where the current selected preset name is suggested, you can change the name however. <br>
+<u>Loc</u>: Display the location of the preset files so you can copy them elsewhere for distribution or add ones you got from someone else.<br>
+&nbsp;</p>
+<p><img src="images/EA_execute.png" width="83" height="28" border="0"><br>
+Simply execute the configured options!<br>
+<br>
+Well, you have reached the end of the documentation.<br>
+<br>
+Now start enjoy experimenting with Epic Arpeggiator!</p>
+<p><br>
+&nbsp;</p>
+</body>
+
+</html>

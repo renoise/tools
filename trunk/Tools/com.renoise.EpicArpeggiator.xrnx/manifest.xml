@@ -2,7 +2,7 @@
 <RenoiseScriptingTool doc_version="0">
   <Name>Epic Arpeggiator</Name>
   <Id>com.renoise.EpicArpeggiator</Id>
-  <Version>1.99</Version>
+  <Version>2</Version>
   <ApiVersion>3.0</ApiVersion>
   <Author>Vincent Voois [ http://tinyurl.com/vvrns ]</Author>
   <AutoUpgraded>false</AutoUpgraded>
