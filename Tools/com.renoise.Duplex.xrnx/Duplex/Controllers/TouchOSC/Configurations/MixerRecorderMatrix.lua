@@ -107,6 +107,18 @@ duplex_configurations:insert {
       },
       options = {
         sequence_mode = 2,  -- to support "togglebutton" input
+      },
+      palette = {
+        -- remove text from matrix, there's not enough room...
+        out_of_bounds       = { text=""},
+        slot_empty          = { text=""},
+        slot_empty_muted    = { text=""},
+        slot_filled         = { text=""},
+        slot_filled_muted   = { text=""},
+        slot_master_filled  = { text=""},
+        trigger_active      = { text=""},
+        trigger_loop        = { text=""},
+        trigger_back        = { text=""},
       }
     },
     TiltSensorPad = {

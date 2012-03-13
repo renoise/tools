@@ -47,9 +47,9 @@ function ControlMap:__init()
   -- setting it will not do anything useful)
   self.file_path = ""
 
-  -- internal stuff
-
+  -- remember matched patterns (optimize)
   self.midi_buffer = table.create()
+  self.osc_buffer = table.create()
 
   -- unique id, reset each time a control-map is parsed
   self.id = nil 
@@ -257,6 +257,11 @@ end
 function ControlMap:get_osc_param(str)
   TRACE("ControlMap:get_osc_param",str)
 
+  -- check if we have previously matched the pattern
+  if self.osc_buffer[str] then
+    local buf = self.osc_buffer[str]
+    return buf[1],buf[2],buf[3],buf[4]
+  end
 
   -- split incoming message into parts, separated by whitespace
   local str_table = table.create()
@@ -315,12 +320,14 @@ function ControlMap:get_osc_param(str)
 
         if matched then
           -- return matching group + extracted value
+          local add_to_buffer = true
           local values = table.create()
           local ignore = false
           for o=2,#prop_table do
             if (not ignore) then
               if (prop_table[o]=="%f") then
                 values:insert(tonumber(str_table[o]))
+                add_to_buffer = false -- floats can't be buffered
               elseif (prop_table[o]=="%i") then
                 values:insert(tonumber(str_table[o]))
               elseif (prop_table[o]~=str_table[o]) then
@@ -331,6 +338,9 @@ function ControlMap:get_osc_param(str)
           end
           --rprint(values)
           if not ignore then
+            if add_to_buffer then
+              self.osc_buffer[str] = {v,values,wildcard_idx,replace_char}
+            end
             return v,values,wildcard_idx,replace_char
           end
 

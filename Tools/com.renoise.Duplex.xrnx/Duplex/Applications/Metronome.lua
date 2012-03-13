@@ -24,14 +24,8 @@ function Metronome:__init(process,mappings,options,cfg_name,palette)
     }
   }
   self.palette = {
-    enabled = {
-      color = {0xFF,0x80,0x80},
-      text = "M"
-    },
-    disabled = {
-      color = {0x00,0x00,0x00},
-      text = "M"
-    }
+    enabled   = { color = {0xFF,0x80,0x80}, text = "M", val=true  },
+    disabled  = { color = {0x00,0x00,0x00}, text = "M", val=false }
   }
 
   Application.__init(self,process,mappings,options,cfg_name,palette)

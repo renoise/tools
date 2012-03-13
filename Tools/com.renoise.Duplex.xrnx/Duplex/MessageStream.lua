@@ -340,14 +340,14 @@ end
 
 -- loop through listeners, invoke event handler methods
 -- @return boolean, true when message was handled, false if handler didn't 
---    exist, or the handler actively rejected the message (pass on)
+--    exist, or (any) handler actively rejected the message 
 
 function MessageStream:_handle_events(msg,listeners)
   TRACE("MessageStream:_handle_events()",msg,#listeners)
-  local was_handled = false
+  local was_handled = true
   for _,listener in ipairs(listeners) do 
-    if (listener.handler(msg)==true) then
-      was_handled = true
+    if (listener.handler(msg)==false) then
+      was_handled = false
     end
     --print("MessageStream: - was_handled",was_handled,_)
   end

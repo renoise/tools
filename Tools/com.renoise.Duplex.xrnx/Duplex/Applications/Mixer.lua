@@ -246,20 +246,19 @@ function Mixer:__init(process,mappings,options,cfg_name,palette)
   }
 
   self.palette = {
-    -- 
     background        = { color={0x00,0x00,0x00}, val = false,text="·",},
-    -- normal tracks are green
+    -- normal tracks
     normal_tip = {        color={0x00,0xff,0xff}, val = true, },
     normal_tip_dimmed = { color={0x00,0x40,0xff}, val = true, },
     normal_lane       = { color={0x00,0x81,0xff}, val = true, },
     normal_lane_dimmed = {color={0x00,0x40,0xff}, val = true, },
     normal_mute_on    = { color={0x40,0xff,0x40}, val = true, text ="M"},
     normal_mute_off   = { color={0x00,0x00,0x00}, val = false,text ="M",},
-    -- master track is yellow
+    -- master track
     master_tip        = { color={0xff,0xff,0xff}, val = true, },
     master_lane       = { color={0x80,0x80,0xff}, val = true, },
-    master_mute_on    = { color={0xff,0xff,0x40}, val = true, },
-    -- send tracks are red
+    master_mute_on    = { color={0xff,0xff,0x40}, val = true, text ="M",},
+    -- send tracks
     send_tip          = { color={0xff,0x40,0x00}, val = true, },
     send_tip_dimmed   = { color={0x40,0x00,0xff}, val = true, },
     send_lane         = { color={0x81,0x00,0xff}, val = true, },

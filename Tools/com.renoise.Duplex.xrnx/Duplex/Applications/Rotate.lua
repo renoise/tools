@@ -92,32 +92,13 @@ function Rotate:__init(process,mappings,options,cfg_name,palette)
   }
 
   self.palette = {
-    up_bright = {
-      color = {0xFF,0xFF,0xFF},
-      text = "▲"
-    },
-    up_dimmed = {
-      color = {0x80,0x80,0x80},
-      text = "▲"
-    },
-    up_off = {
-      color = {0x40,0x40,0x40},
-      text = "▲"
-    },
-    down_bright = {
-      color = {0xFF,0xFF,0xFF},
-      text = "▼"
-    },
-    down_dimmed = {
-      color = {0x80,0x80,0x80},
-      text = "▼"
-    },
-    down_off = {
-      color = {0x40,0x40,0x40},
-      text = "▼"
-    },
+    up_bright   = { color = {0xFF,0xFF,0xFF}, text = "▲", val=true  },
+    up_dimmed   = { color = {0x80,0x80,0x80}, text = "▲", val=false },
+    up_off      = { color = {0x40,0x40,0x40}, text = "▲", val=false },
+    down_bright = { color = {0xFF,0xFF,0xFF}, text = "▼", val=true  },
+    down_dimmed = { color = {0x80,0x80,0x80}, text = "▼", val=false },
+    down_off    = { color = {0x40,0x40,0x40}, text = "▼", val=false },
   }
-
 
   Application.__init(self,process,mappings,options,cfg_name,palette)
 

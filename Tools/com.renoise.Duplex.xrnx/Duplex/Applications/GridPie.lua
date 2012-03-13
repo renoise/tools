@@ -209,8 +209,6 @@ function GridPie:__init(process,mappings,options,cfg_name,palette)
   self.update_requested = false
   self.v_update_requested = false
   self.h_update_requested = false
-  self.disable_follow_player = false
-  --self.suppress_track_notification = false
 
   -- keep reference to process, so we stop/abort the application
   self._process = process
@@ -868,13 +866,6 @@ function GridPie:toggler(x, y, pattern)
     print("could not switch to appointed track/pattern:",x,y,pattern)
     return 
   end
-
-  --[[
-  if (self.options.follow_pos.value ~= self.FOLLOW_OFF) then
-    self.actual_x = x
-    self.suppress_track_notification = true
-  end
-  ]]
   
   local rns = renoise.song()
   local source = rns.patterns[rns.sequencer:pattern(y)]
@@ -1413,11 +1404,6 @@ function GridPie:on_idle()
     self:adjust_grid()
   end
 
-  if self.disable_follow_player then
-    self.disable_follow_player = false
-    renoise.song().transport.follow_player = false
-  end
-
   local grid_pie_pos = #rns.sequencer.pattern_sequence
   if (renoise.song().transport.playback_pos.sequence~=grid_pie_pos) then
     self:playback_pos_to_gridpie()
@@ -1427,6 +1413,21 @@ function GridPie:on_idle()
     self.play_requested = false
     renoise.song().transport.playing = true
   end
+
+end
+
+--------------------------------------------------------------------------------
+
+-- determine if edit-position is inside the __GRID PIE__ pattern
+-- @return boolean
+
+function GridPie:edit_pos_in_gridpie()
+
+  local rns = renoise.song()
+  local total_sequence = #rns.sequencer.pattern_sequence
+  local last_patt_idx = rns.sequencer:pattern(total_sequence)
+  local rslt = (last_patt_idx == rns.selected_pattern_index) 
+  return rslt
 
 end
 
@@ -1519,31 +1520,11 @@ function GridPie:_attach_to_song()
     end
   )
 
-  -- when follow_pos is enabled, enforce a disabled "follow_player"
-  renoise.song().transport.follow_player_observable:add_notifier(
-    function()
-      TRACE("GridPie:follow_player_observable fired...")
-      if not self.active then return end
-      if renoise.song().transport.follow_player and
-        (self.options.follow_pos.value ~= self.FOLLOW_OFF) 
-      then
-        self.disable_follow_player = true
-      end
-    end
-  )
-
   -- when changing track, update horizontal page
   renoise.song().selected_track_index_observable:add_notifier(
     function()
       TRACE("GridPie:selected_track_index_observable fired...")
       if not self.active then return end
-      --[[
-      if self.suppress_track_notification then
-        self.suppress_track_notification = false
-        print("suppressed_track_notification")
-        return
-      end
-      ]]
       if (self.options.follow_pos.value ~= self.FOLLOW_OFF) then
         local track_idx = renoise.song().selected_track_index
         self.actual_x = track_idx
@@ -1556,14 +1537,25 @@ function GridPie:_attach_to_song()
     end
   )
 
-  -- when changing pattern in the sequence, update vertical page
+  -- when changing pattern in the sequence
   renoise.song().selected_sequence_index_observable:add_notifier(
     function()
-      --print("GridPie:selected_sequence_index_observable fired...")
+      TRACE("GridPie:selected_sequence_index_observable fired...")
       if not self.active then return end
 
+      -- update vertical page
       local seq_idx = renoise.song().selected_sequence_index
       self:set_vertical_pos_page(seq_idx)
+
+      -- disabled "follow_player" ? 
+      if renoise.song().transport.follow_player and
+        (self.options.follow_pos.value ~= self.FOLLOW_OFF) and
+        not self:edit_pos_in_gridpie()
+      then
+        renoise.song().transport.follow_player = false
+      end
+
+
     end
   )
 

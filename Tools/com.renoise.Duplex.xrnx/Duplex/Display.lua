@@ -237,7 +237,7 @@ end
 
 --------------------------------------------------------------------------------
 
--- set_parameter: update hardware & virtual control surface 
+-- set_parameter: "atomic" update of hardware & virtual control surface 
 -- @elm : control-map definition of the element
 -- @obj : UIComponent instance
 -- @point : canvas point (text/value/color)
@@ -249,7 +249,8 @@ function Display:set_parameter(elm, obj, point, secondary)
   -- resulting numeric value, or table of values (XYPad)
   local value = self.device:point_to_value(point, elm, obj.ceiling)
 
-  --print("Display:set_parameter() - value",value)
+  --print("*** Display:set_parameter() - value",value)
+  --print("*** Display:set_parameter() - elm.skip_echo",elm.skip_echo)
 
   -- reference to control-map
   local cm = self.device.control_map
@@ -412,14 +413,25 @@ function Display:set_parameter(elm, obj, point, secondary)
   if (widget) then
     local widget_type = type(widget)
     if (widget_type == "Button") then
-      local colorspace = elm.colorspace or self.device.colorspace
-      if not point.val or not is_monochrome(colorspace) then
-        widget.color = self.device:quantize_color(point.color,colorspace)
+      local c_space = elm.colorspace or self.device.colorspace
+      if not is_monochrome(c_space) then
+        widget.color = self.device:quantize_color(point.color,c_space)
       else
-        local theme_color = {duplex_preferences.theme_color_R.value,
-          duplex_preferences.theme_color_G.value,
-          duplex_preferences.theme_color_B.value}
-        widget.color = point.val and theme_color or {0x00,0x00,0x00}
+        if (point.val==false) then
+          widget.color = {0x00,0x00,0x00}
+        else
+          local color = nil
+          if table_has_equal_values(c_space) then
+            -- all white monochrome: use the theme color
+            color = {duplex_preferences.theme_color_R.value,
+              duplex_preferences.theme_color_G.value,
+              duplex_preferences.theme_color_B.value}
+          else
+            -- tinted color, use the colorspace
+            color = {c_space[1]*255,c_space[2]*255,c_space[3]*255}
+          end
+          widget.color = color
+        end
       end
       widget.text = point.text
     elseif (widget_type == "RotaryEncoder") or 
@@ -518,8 +530,6 @@ function Display:update_key(key_idx,elm,obj)
     then
       is_white_key = false
     end
-    
-    --rprint(obj.pressed_keys)
     
     local label = ""
     local color = nil
@@ -625,15 +635,20 @@ function Display:generate_message(value, metadata, released)
   end
 
   -- the type of message (MIDI/OSC...)
+  -- todo: optimize by including context as function argument
   msg.context = self.device.control_map:determine_type(metadata.value)
   if (msg.context == OSC_MESSAGE) then
     msg.is_osc_msg = true
   end 
+
   -- for MIDI devices, create the "virtual" midi message
-  -- todo: optimize by checking if midi_msg is needed
+  -- todo: optimize by checking if midi_msg is needed (for example, it's 
+  -- most likely defined when coming from an actual MIDI device)
   if (self.device.protocol == DEVICE_MIDI_PROTOCOL) then
     msg.channel = self.device:extract_midi_channel(metadata.value) or 
       self.device.default_midi_channel
+
+
     if (msg.context==MIDI_NOTE_MESSAGE) then
       local note_pitch = value[1]
       -- if available, use the pitch defined in the control-map 
@@ -645,7 +660,14 @@ function Display:generate_message(value, metadata, released)
       msg.midi_msg = {143+msg.channel,note_pitch,value[2]}
     elseif (msg.context==MIDI_CC_MESSAGE) then
       local cc_num = extract_cc_num(metadata.value)
-      msg.midi_msg = {175+msg.channel,cc_num,math.floor(value)}
+      local cc_value = value
+      -- A #CC button might have produced a MIDI-note message (thank to it's 
+      -- application), but it's virtual message should still be a CC message.
+      -- Detect if the value is a table and treat the value correspondingly
+      if (type(value)=="table") and (msg.context~=MIDI_NOTE_MESSAGE) then
+        cc_value = value[2]
+      end
+      msg.midi_msg = {175+msg.channel,cc_num,math.floor(cc_value)}
     elseif (msg.context==MIDI_CHANNEL_PRESSURE) then
       msg.midi_msg = {207+msg.channel,0,math.floor(value)}
     elseif (msg.context==MIDI_PITCH_BEND_MESSAGE) then
@@ -666,8 +688,8 @@ function Display:generate_message(value, metadata, released)
   elseif (metadata.type == "pushbutton") then
     msg.input_method = CONTROLLER_PUSHBUTTON
 
---  elseif (metadata.type == "encoder") then
---    msg.input_method = CONTROLLER_ENCODER
+  --  elseif (metadata.type == "encoder") then
+  --    msg.input_method = CONTROLLER_ENCODER
 
   elseif (metadata.type == "fader") then
     msg.input_method = CONTROLLER_FADER

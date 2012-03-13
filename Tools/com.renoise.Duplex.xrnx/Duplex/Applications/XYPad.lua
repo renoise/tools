@@ -173,16 +173,16 @@ function XYPad:__init(process,mappings,options,cfg_name,palette)
   }
 
   self.palette = {
-    grid_on         = { color = {0xFF,0xFF,0x00}, text = "▪", },  
-    grid_off        = { color = {0x40,0x40,0x00}, text = "·", },  
-    prev_device_on  = { color = {0xFF,0xFF,0xFF}, text = "◄" },
-    prev_device_off = { color = {0x00,0x00,0x00}, text = "◄" },
-    next_device_on  = { color = {0xFF,0xFF,0xFF}, text = "►" },
-    next_device_off = { color = {0x00,0x00,0x00}, text = "►" },
-    focus_on        = { color = {0xFF,0xFF,0xFF}, text = "⌂" },
-    focus_off       = { color = {0x00,0x00,0x00}, text = "⌂" },
-    lock_on         = { color = {0xFF,0xFF,0xFF}, text = "♥" },
-    lock_off        = { color = {0x00,0x00,0x00}, text = "♥" },
+    grid_on         = { color = {0xFF,0xFF,0x00}, text = "▪", val=true  },  
+    grid_off        = { color = {0x40,0x40,0x00}, text = "·", val=false },  
+    prev_device_on  = { color = {0xFF,0xFF,0xFF}, text = "◄", val=true  },
+    prev_device_off = { color = {0x00,0x00,0x00}, text = "◄", val=false },
+    next_device_on  = { color = {0xFF,0xFF,0xFF}, text = "►", val=true  },
+    next_device_off = { color = {0x00,0x00,0x00}, text = "►", val=false },
+    focus_on        = { color = {0xFF,0xFF,0xFF}, text = "⌂", val=true  },
+    focus_off       = { color = {0x00,0x00,0x00}, text = "⌂", val=false },
+    lock_on         = { color = {0xFF,0xFF,0xFF}, text = "♥", val=true  },
+    lock_off        = { color = {0x00,0x00,0x00}, text = "♥", val=false },
   }
 
   -- option constants

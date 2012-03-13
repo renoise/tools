@@ -162,7 +162,7 @@ function Effect:__init(process,mappings,options,cfg_name,palette)
   -- define default palette
   self.palette = {
     -- parameter sliders
-    background = {        color={0x00,0x00,0x00},   text="·",    val=false },
+    background = {        color={0x00,0x00,0x00},   text="·",   val=false },
     slider_background = { color={0x00,0x40,0x00},   text="·",   val=false },
     slider_tip = {        color={0XFF,0XFF,0XFF},   text="·",   val=true },
     slider_track = {      color={0XFF,0XFF,0XFF},   text="·",   val=true },

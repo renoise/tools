@@ -1385,7 +1385,11 @@ function Recorder:_update_all()
         self:_set_slider_steps(control_idx,0)
       end
       -- update button state 
-      local button_state = (track_idx==self._active_track_idx) and track.has_ghost
+      local has_ghost = false
+      if track and track.has_ghost then
+        has_ghost = true
+      end
+      local button_state = (track_idx==self._active_track_idx) and has_ghost
       if button_state then
         button:set(self.palette.recorder_on)
       else
