@@ -280,6 +280,26 @@ function table_find(t,val)
   return false
 end
 
+-- check if values are the same
+-- (useful for detecting if a color is tinted)
+-- @return boolean
+
+function table_has_equal_values(t)
+
+  local val = nil
+  for k,v in ipairs(t) do
+    if (val==nil) then
+      val = v
+    end
+    if (val~=v) then
+      return false
+    end
+  end
+  return true
+
+end
+
+
 -- split_filename
 
 function split_filename(filename)
@@ -531,7 +551,7 @@ end
 
 local _trace_filters = nil
 --local _trace_filters = {"^OscVoiceMgr","^Keyboard"}
---local _trace_filters = {"^Recorder"}
+--local _trace_filters = {"^UISlider"}
 --local _trace_filters = {".*"}
 
 --------------------------------------------------------------------------------

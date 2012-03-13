@@ -81,7 +81,11 @@ function Navigator:__init(process,mappings,options,cfg_name,palette)
     },
   }
 
-  self.palette = {}
+  self.palette = {
+    active      = { color={0XFF,0XFF,0XFF},  text="▪", val=true },
+    looped      = { color={0X80,0X80,0X80},  text="▫", val=true },
+    background  = { color={0X00,0x00,0x00},  text="·", val=false },
+  }
 
   -- (boolean) keep track of the playing state
   self._playing = nil
@@ -671,6 +675,11 @@ function Navigator:_build_app()
     c.tooltip = self.mappings.blockpos.description
     c:set_orientation(self.mappings.blockpos.orientation)
     c.monochrome = is_monochrome(self.display.device.colorspace)
+    c:set_palette({
+      index = self.palette.active,
+      range = self.palette.looped,
+      background = self.palette.background
+    })
     c.flipped = true
     if (self.mappings.blockpos.orientation == VERTICAL) then
       c:set_size(cm:count_rows(self.mappings.blockpos.group_name))

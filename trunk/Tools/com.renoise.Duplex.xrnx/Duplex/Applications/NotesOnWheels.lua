@@ -422,131 +422,34 @@ function NotesOnWheels:__init(process,mappings,options,cfg_name,palette)
 
   self.palette = {
     -- position buttons
-    position_on = {
-      color={0xFF,0xFF,0xFF},
-      text="▪",
-    },
-    position_off = {
-      color={0x00,0x00,0x00},
-      text="▫",
-    },
-    -- write button
-    write_on = {
-      color={0xFF,0xFF,0xFF},
-      text="Write",
-    },
-    write_off = {
-      color={0x00,0x00,0x00},
-      text="Write",
-    },
-    -- learn button
-    learn_on = {
-      text="Learn",
-      color={0xFF,0xFF,0xFF},
-    },
-    learn_off = {
-      text="Learn",
-      color={0x00,0x00,0x00},
-    },
-    -- fill button
-    fill_on = {
-      text="Fill",
-      color={0xFF,0xFF,0xFF},
-    },
-    fill_off = {
-      text="Fill",
-      color={0x00,0x00,0x00},
-    },
-    -- global button
-    global_on = {
-      text="Global",
-      color={0xFF,0xFF,0xFF},
-    },
-    global_off = {
-      text="Global",
-      color={0x00,0x00,0x00},
-    },
-    -- 'shift up' button
-    shift_up_on = {
-      text="↑",
-      color={0xFF,0xFF,0xFF},
-    },
-    shift_up_off = {
-      text="↑",
-      color={0x00,0x00,0x00},
-    },
-    -- 'shift down' button
-    shift_down_on = {
-      text="↓",
-      color={0xFF,0xFF,0xFF},
-    },
-    shift_down_off = {
-      text="↓",
-      color={0x00,0x00,0x00},
-    },
-    -- extend button
-    extend_on = {
-      text="x²",
-      color={0xFF,0xFF,0xFF},
-    },
-    extend_off = {
-      text="x²",
-      color={0x00,0x00,0x00},
-    },
-    -- shrink button
-    shrink_on = {
-      text="½",
-      color={0xFF,0xFF,0xFF},
-    },
-    shrink_off = {
-      text="½",
-      color={0x00,0x00,0x00},
-    },
-    -- 'set_mode_pitch' button
-    set_pitch_on = {
-      text="Pitch",
-      color={0xFF,0xFF,0xFF},
-    },
-    set_pitch_off = {
-      text="Pitch",
-      color={0x00,0x00,0x00},
-    },
-    -- 'set_mode_velocity' button
-    set_velocity_on = {
-      text="Velocity",
-      color={0xFF,0xFF,0xFF},
-    },
-    set_velocity_off = {
-      text="Velocity",
-      color={0x00,0x00,0x00},
-    },
-    -- 'set_mode_offset' button
-    set_offset_on = {
-      text="Offset",
-      color={0xFF,0xFF,0xFF},
-    },
-    set_offset_off = {
-      text="Offset",
-      color={0x00,0x00,0x00},
-    },
-    -- 'set_mode_gate' button
-    set_gate_on = {
-      text="Gate",
-      color={0xFF,0xFF,0xFF},
-    },
-    set_gate_off = {
-      text="Gate",
-      color={0x00,0x00,0x00},
-    },
-    -- 'set_mode_retrig' button
-    set_retrig_on = {
-      text="Retrig",
-      color={0xFF,0xFF,0xFF},
-    },
-    set_retrig_off = {
-      text="Retrig",
-      color={0x00,0x00,0x00},
-    },
+    position_on     = { color={0xFF,0xFF,0xFF}, val=true, text="▪", },
+    position_off    = { color={0x00,0x00,0x00}, val=false, text="▫", },
+    write_on        = { color={0xFF,0xFF,0xFF}, val=true, text="Write", },
+    write_off       = { color={0x00,0x00,0x00}, val=false, text="Write", },
+    learn_on        = { color={0xFF,0xFF,0xFF}, val=true, text="Learn", },
+    learn_off       = { color={0x00,0x00,0x00}, val=false, text="Learn", },
+    fill_on         = { color={0xFF,0xFF,0xFF}, val=true, text="Fill",  },
+    fill_off        = { color={0x00,0x00,0x00}, val=false, text="Fill",  },
+    global_on       = { color={0xFF,0xFF,0xFF}, val=true, text="Global",},
+    global_off      = { color={0x00,0x00,0x00}, val=false, text="Global",},
+    shift_up_on     = { color={0xFF,0xFF,0xFF}, val=true, text="↑",},
+    shift_up_off    = { color={0x00,0x00,0x00}, val=false, text="↑",},
+    shift_down_on   = { color={0xFF,0xFF,0xFF}, val=true, text="↓", },
+    shift_down_off  = { color={0x00,0x00,0x00}, val=false, text="↓",},
+    extend_on       = { color={0xFF,0xFF,0xFF}, val=true, text="x²",},
+    extend_off      = { color={0x00,0x00,0x00}, val=false, text="x²",},
+    shrink_on       = { color={0xFF,0xFF,0xFF}, val=true, text="½", },
+    shrink_off      = { color={0x00,0x00,0x00}, val=false, text="½",},
+    set_pitch_on    = { color={0xFF,0xFF,0xFF}, val=true, text="Pitch",},
+    set_pitch_off   = { color={0x00,0x00,0x00}, val=false, text="Pitch", },
+    set_velocity_on = { color={0xFF,0xFF,0xFF}, val=true, text="Velocity",},
+    set_velocity_off= { color={0x00,0x00,0x00}, val=false, text="Velocity",},
+    set_offset_on   = { color={0xFF,0xFF,0xFF}, val=true, text="Offset",  },
+    set_offset_off  = { color={0x00,0x00,0x00}, val=false, text="Offset",},
+    set_gate_on     = { color={0xFF,0xFF,0xFF}, val=true, text="Gate",},
+    set_gate_off    = { color={0x00,0x00,0x00}, val=false, text="Gate",  },
+    set_retrig_on   = { color={0xFF,0xFF,0xFF}, val=true, text="Retrig",},
+    set_retrig_off  = { color={0x00,0x00,0x00}, val=false, text="Retrig",  },
 
   }
 

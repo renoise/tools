@@ -131,11 +131,7 @@ end
 function UISlider:do_press(msg)
   TRACE("UISlider:do_press()",msg)
 
-  if not (self.group_name == msg.group_name) then
-    return false
-  end
-
-  if not (self:test(msg.column, msg.row)) then
+  if not self:test(msg.group_name,msg.column, msg.row) then
     return false
   end
 
@@ -144,7 +140,9 @@ function UISlider:do_press(msg)
     idx = 0
   end
 
-  self.set_index(self,idx)
+  if not self.set_index(self,idx) then
+    return false
+  end
 
   return true
 
@@ -161,10 +159,7 @@ end
 function UISlider:do_release(msg)
   TRACE("UISlider:do_release()",msg)
 
-  if not (self.group_name == msg.group_name) then
-    return false
-  end
-  if not (self:test(msg.column, msg.row)) then
+  if not self:test(msg.group_name,msg.column, msg.row) then
     return false
   end
   if (msg.input_method == CONTROLLER_PUSHBUTTON) then
@@ -184,23 +179,17 @@ end
 function UISlider:do_change(msg)
   TRACE("UISlider:do_change()",msg)
 
-  if (self.on_change ~= nil) then
-
-    if not (self.group_name == msg.group_name) then
-      return false
-    end
-    if not self:test(msg.column,msg.row) then
-      return false
-    end
-    -- scale from the message range to the sliders range
-    local val = (msg.value / msg.max) * self.ceiling
-    self:set_value(val)
-
-    return true
-
+  if not self:test(msg.group_name,msg.column,msg.row) then
+    return false
   end
-
-  return false
+  -- scale from the message range to the sliders range
+  local val = (msg.value / msg.max) * self.ceiling
+  
+  if not self:set_value(val) then
+    return false
+  end
+  
+  return true
 
 end
 
@@ -208,8 +197,9 @@ end
 --------------------------------------------------------------------------------
 
 -- setting value will also set index
--- @val (float) 
+-- @val (float), a number between 0 and .ceiling
 -- @skip_event (boolean) skip event handler
+-- @return (boolean), false when rejected by handler 
 
 function UISlider:set_value(val,skip_event)
   TRACE("UISlider:set_value()",val,skip_event)
@@ -226,9 +216,11 @@ function UISlider:set_value(val,skip_event)
     if (skip_event) then
       self:invalidate()
     else
-      self:_invoke_handler()
+      return self:_invoke_handler()
     end
+
   end  
+
 end
 
 
@@ -237,6 +229,7 @@ end
 -- setting index will also set value
 -- @idx (integer) 
 -- @skip_event (boolean) skip event handler
+-- @return (boolean), false when rejected by handler 
 
 function UISlider:set_index(idx,skip_event)
   TRACE("UISlider:set_index()",idx,skip_event)
@@ -251,10 +244,12 @@ function UISlider:set_index(idx,skip_event)
     if (skip_event) then
       self:invalidate()
     else
-      self:_invoke_handler()
+      return self:_invoke_handler()
     end
 
   end
+
+
 end
 
 --------------------------------------------------------------------------------
@@ -272,14 +267,19 @@ end
 
 --------------------------------------------------------------------------------
 
+-- when a slider is assigned to buttons, display the slider as "dimmed"
+
 function UISlider:set_dimmed(bool)
-  -- TODO: only invalidate if we can dimm
+
   self.dimmed = bool
   self:invalidate()
+
 end
 
 
 --------------------------------------------------------------------------------
+
+-- get/set slider orientation (only relevant when assigned to buttons)
 
 function UISlider:set_orientation(value)
   TRACE("UISlider:set_orientation",value)
@@ -319,6 +319,28 @@ function UISlider:set_size(size)
   end
 end
 
+--------------------------------------------------------------------------------
+
+-- expanded UIComponent test
+-- @return boolean, false when criteria is not met
+
+function UISlider:test(group_name,column,row)
+
+  -- look for group name
+  if not (self.group_name == group_name) then
+    return false
+  end
+
+  -- look for event handlers
+  if (self.on_change == nil) then  
+    return false
+  end 
+
+  -- test the X/Y position
+  return UIComponent.test(self,column,row)
+
+end
+
 
 --------------------------------------------------------------------------------
 
@@ -353,18 +375,11 @@ function UISlider:draw()
 
         if (i == idx) then
           -- update the tip of the slider
-          -- ensure that monochrome devices get this right! 
-          local color = self.palette.tip.color
-          local quantized = self._display.device:quantize_color(color)
-          if(quantized[1]>0x00)then
-            point.val = true        
-          else
-            point.val = false        
-          end
+          point.val = self.palette.tip.val        
           point:apply((self.dimmed) and 
             self.palette.tip_dimmed or self.palette.tip)
         elseif (self.flipped) then
-          if (i <= idx)then
+          if (i <= idx) then
             apply_track = true
           end
         elseif ((self._size - i) < self.index) then
@@ -372,13 +387,7 @@ function UISlider:draw()
         end
         
         if(apply_track)then
-          local color = self.palette.track.color
-          local quantized = self._display.device:quantize_color(color)
-          if(quantized[1]>0x00)then
-            point.val = true        
-          else
-            point.val = false        
-          end
+          point.val = self.palette.track.val        
           point:apply((self.dimmed) and 
             self.palette.track_dimmed or self.palette.track)
         end
@@ -473,18 +482,24 @@ end
 --------------------------------------------------------------------------------
 
 -- trigger the external handler method
+-- @return true when message was handled, false when not
 
 function UISlider:_invoke_handler()
 
-  if (self.on_change == nil) then return end
+  -- when calling set_index() and set_value() before we
+  -- have assigned a method, return 'true' (so we don't
+  -- accidentially pass messages at construction time)
+  if not self.on_change then
+    return true
+  end
 
-  local rslt = self:on_change()  
-  if (rslt==false) then  -- revert
+  if (self:on_change()==false) then
     self.index = self._cached_index    
     self.value = self._cached_value  
-
+    return false
   else
     self:invalidate()
+    return true
   end
 end
 

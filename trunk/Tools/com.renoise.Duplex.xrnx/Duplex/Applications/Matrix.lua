@@ -204,16 +204,18 @@ function Matrix:__init(process,mappings,options,cfg_name,palette)
   -- define default palette
 
   self.palette = {
-    out_of_bounds = {     color={0x40,0x40,0x00}, text="·",  val=false  },
-    slot_empty = {        color={0x00,0x00,0x00}, text="·", val=false },
-    slot_empty_muted = {  color={0x40,0x00,0x00}, text="·", val=false },
-    slot_filled = {       color={0xff,0xff,0x00}, text="▪", val=true },
-    slot_filled_muted = { color={0xff,0x40,0x00}, text="▫", val=false },
-    slot_master_filled = {color={0x00,0xff,0x00}, text="▪", val=true },
-    slot_master_empty = { color={0x00,0x40,0x00}, text="·", val=false },
-    trigger_active = {    color={0xff,0xff,0xff}, text="►", val=false },
-    trigger_loop = {      color={0x40,0x40,0xff}, text="·", val=false },
-    trigger_back = {      color={0x00,0x00,0x00}, text="",  val=false  },
+    -- pattern matrix
+    out_of_bounds       = { color={0x40,0x40,0x00}, text="·", val=false },
+    slot_empty          = { color={0x00,0x00,0x00}, text="·", val=false },
+    slot_empty_muted    = { color={0x40,0x00,0x00}, text="·", val=false },
+    slot_filled         = { color={0xff,0xff,0x00}, text="▪", val=true  },
+    slot_filled_muted   = { color={0xff,0x40,0x00}, text="▫", val=false },
+    slot_master_filled  = { color={0x00,0xff,0x00}, text="▪", val=true  },
+    slot_master_empty   = { color={0x00,0x40,0x00}, text="·", val=false },
+    -- pattern sequence
+    trigger_active      = { color={0xff,0xff,0xff}},
+    trigger_loop        = { color={0x40,0x40,0xff}},
+    trigger_back        = { color={0x00,0x00,0x00}},
   }
 
   -- the various controls
@@ -786,6 +788,11 @@ function Matrix:_build_app()
     c.flipped = true
     c:set_pos(x_pos)
     c:set_size(self._height)
+    c:set_palette({
+      index = self.palette.trigger_active,
+      range = self.palette.trigger_loop,
+      background = self.palette.trigger_back,
+    })
     c:set_orientation(self.mappings.triggers.orientation)
 
     c.on_index_change = function(obj)

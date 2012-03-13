@@ -113,40 +113,14 @@ function TrackSelector:__init(process,mappings,options,cfg_name,palette)
   }
 
   self.palette = {
-    --[[
-    next_track_on = {
-    
-    },
-    next_track_off = {
-    
-    },
-    previous_track_on = {
-    
-    },
-    previous_track_off = {
-    
-    },
-    next_page_on = {
-    
-    },
-    next_page_off = {
-    
-    },
-    previous_page_on = {
-    
-    },
-    previous_page_off = {
-    
-    },
-    ]]
-    track_sequencer_on = {  color = {0xFF,0xFF,0xFF}, text = "T"  },
-    track_sequencer_off = { color = {0x00,0x00,0x00}, text = "T"  },
-    track_master_on     = { color = {0xFF,0xFF,0xFF}, text = "M"  },
-    track_master_off    = { color = {0x00,0x00,0x00}, text = "M"  },
-    track_send_on       = { color = {0xFF,0xFF,0xFF}, text = "S"  },
-    track_send_off      = { color = {0x00,0x00,0x00}, text = "S"  },
-    select_device_tip   = { color = {0xFF,0xFF,0xFF}  },
-    select_device_back  = { color = {0x40,0x40,0x80}, text = "·"  },
+    track_sequencer_on  = { color = {0xFF,0xFF,0xFF}, text = "T", val=true  },
+    track_sequencer_off = { color = {0x00,0x00,0x00}, text = "T", val=false },
+    track_master_on     = { color = {0xFF,0xFF,0xFF}, text = "M", val=true  },
+    track_master_off    = { color = {0x00,0x00,0x00}, text = "M", val=false },
+    track_send_on       = { color = {0xFF,0xFF,0xFF}, text = "S", val=true  },
+    track_send_off      = { color = {0x00,0x00,0x00}, text = "S", val=false },
+    select_device_tip   = { color = {0xFF,0xFF,0xFF}, text = "▪", val=true  },
+    select_device_back  = { color = {0x40,0x40,0x80}, text = "▫", val=false },
   }
 
   Application.__init(self,process,mappings,options,cfg_name,palette)

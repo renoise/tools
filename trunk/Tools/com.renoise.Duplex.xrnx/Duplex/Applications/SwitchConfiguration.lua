@@ -42,22 +42,10 @@ function SwitchConfiguration:__init(process, mappings, options, cfg_name,palette
     }
 
     self.palette = {    
-      previous_config_on = {
-        color = {0xFF,0xFF,0xFF},
-        text = "◄",
-      },
-      previous_config_off = {
-        color = {0x00,0x00,0x00},
-        text = "◄",
-      },
-      next_config_on = {
-        color = {0xFF,0xFF,0xFF},
-        text = "►",
-      },
-      next_config_off = {
-        color = {0x00,0x00,0x00},
-        text = "►",
-      }
+      previous_config_on = {  color = {0xFF,0xFF,0xFF}, text = "◄", val=true},
+      previous_config_off = { color = {0x00,0x00,0x00}, text = "◄", val=false},
+      next_config_on      = { color = {0xFF,0xFF,0xFF}, text = "►", val=true},
+      next_config_off     = { color = {0x00,0x00,0x00}, text = "►", val=false}
     }
 
     -- the various UIComponents

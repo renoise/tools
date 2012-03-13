@@ -288,30 +288,28 @@ function Keyboard:__init(process,mappings,options,cfg_name,palette)
 
   self.palette = {
     -- keyboard (grid buttons)
-    key_pressed = {         color = {0xFF,0xFF,0xFF}, text="·", },
-    key_pressed_content = { color = {0xFF,0xFF,0xFF}, text="·", },
-    key_released = {        color = {0x00,0x00,0x00}, text="·", },
-    key_released_content = {color = {0x40,0x40,0x40}, text="·", },
-    key_released_selected = { color = {0x80,0x80,0x40}, text="·", },
-    key_out_of_bounds = {     color = {0x00,0x00,0x00}, text="·", },
+    key_pressed           = { color = {0xFF,0xFF,0xFF}, val=true, text="·", },
+    key_pressed_content   = { color = {0xFF,0xFF,0xFF}, val=true, text="·", },
+    key_released          = { color = {0x00,0x00,0x00}, val=true, text="·", },
+    key_released_content  = { color = {0x40,0x40,0x40}, val=false,text="·", },
+    key_released_selected = { color = {0x80,0x80,0x40}, val=false,text="·", },
+    key_out_of_bounds     = { color = {0x00,0x00,0x00}, val=false,text="·", },
     -- other buttons
-    instr_sync_on = {         color = {0xFF,0xFF,0xFF}, text="■", },
-    instr_sync_off = {        color = {0x00,0x00,0x00}, text="·", },
-    track_sync_on = {         color = {0xFF,0xFF,0xFF}, text="■", },
-    track_sync_off = {        color = {0x00,0x00,0x00}, text="·", },
-    track_sync_on = {         color = {0xFF,0xFF,0xFF}, text="■", },
-    track_sync_off = {        color = {0x00,0x00,0x00}, text="·", },
-    volume_sync_on = {        color = {0xFF,0xFF,0xFF}, text="■", },
-    volume_sync_off = {       color = {0x00,0x00,0x00}, text="·", },
-    octave_down_on = {        color = {0xFF,0xFF,0xFF}, text="-12", },
-    octave_down_off = {       color = {0x00,0x00,0x00}, text="-12", },
-    octave_up_on = {          color = {0xFF,0xFF,0xFF}, text="+12", },
-    octave_up_off = {         color = {0x00,0x00,0x00}, text="+12", },
-    octave_sync_on = {        color = {0xFF,0xFF,0xFF}, text="■", },
-    octave_sync_off = {       color = {0x00,0x00,0x00}, text="·", },
+    instr_sync_on         = { color = {0xFF,0xFF,0xFF}, val=true, text="■", },
+    instr_sync_off        = { color = {0x00,0x00,0x00}, val=false,text="·", },
+    track_sync_on         = { color = {0xFF,0xFF,0xFF}, val=true, text="■", },
+    track_sync_off        = { color = {0x00,0x00,0x00}, val=false,text="·", },
+    volume_sync_on        = { color = {0xFF,0xFF,0xFF}, val=true, text="■", },
+    volume_sync_off       = { color = {0x00,0x00,0x00}, val=false,text="·", },
+    octave_down_on        = { color = {0xFF,0xFF,0xFF}, val=true, text="-12", },
+    octave_down_off       = { color = {0x00,0x00,0x00}, val=false,text="-12", },
+    octave_up_on          = { color = {0xFF,0xFF,0xFF}, val=true, text="+12", },
+    octave_up_off         = { color = {0x00,0x00,0x00}, val=false,text="+12", },
+    octave_sync_on        = { color = {0xFF,0xFF,0xFF}, val=true, text="■", },
+    octave_sync_off       = { color = {0x00,0x00,0x00}, val=false,text="·", },
     -- sliders
-    vol_slider_on   = { color = {0xFF,0xFF,0xFF}, text = "▪" },
-    vol_slider_off  = { color = {0x00,0x00,0x00}, text = "·" },
+    slider_on             = { color = {0xFF,0xFF,0xFF}, val=true, text = "▪" },
+    slider_off            = { color = {0x00,0x00,0x00}, val=false,text = "·" },
 
   }
 
@@ -793,8 +791,7 @@ function Keyboard:_build_app()
     local c = UIButton(self.display)
     c.group_name = map.group_name
     c.tooltip = map.description
-    --c.palette.background.text = "-12"
-    c.palette.foreground.text = "-12"
+    c:set(self.palette.octave_down_off)
     c:set_pos(map.index)
     c.on_press = function(obj)
       if not self.active then 
@@ -819,8 +816,7 @@ function Keyboard:_build_app()
     local c = UIButton(self.display)
     c.group_name = map.group_name
     c.tooltip = map.description
-    --c.palette.background.text = "+12"
-    c.palette.foreground.text = "+12"
+    c:set(self.palette.octave_up_off)
     c:set_pos(map.index)
     c.on_press = function(obj)
       if not self.active then 
@@ -861,7 +857,10 @@ function Keyboard:_build_app()
     c:set_size(slider_size)
     c:set_orientation(map.orientation)
     c.tooltip = map.description
-    c.palette.track = table.rcopy(self.display.palette.background)
+    c:set_palette({
+      tip = self.palette.slider_on,
+      track = self.palette.slider_off,
+    })
     c.value = self.curr_octave
     c.on_change = function(obj)
       if not self.active then 
@@ -886,7 +885,7 @@ function Keyboard:_build_app()
     c.group_name = map.group_name
     c.tooltip = map.description
     c:set_pos(map.index)
-    --c.active = (self.options.base_octave.value == self.OCTAVE_FOLLOW)
+    c:set(self.palette.octave_sync_off)
     c.on_press = function()
       if not self.active then 
         return false 
@@ -927,7 +926,10 @@ function Keyboard:_build_app()
     c:set_size(slider_size)
     c:set_orientation(map.orientation)
     c.tooltip = map.description
-    c.palette.track = table.rcopy(self.display.palette.background)
+    c:set_palette({
+      tip = self.palette.slider_on,
+      track = self.palette.slider_off,
+    })
     c.value = self.curr_track
     c.on_change = function(obj)
       if not self.active then 
@@ -952,7 +954,7 @@ function Keyboard:_build_app()
     c.group_name = map.group_name
     c.tooltip = map.description
     c:set_pos(map.index)
-    --c.active = (self.options.track_index.value == self.TRACK_FOLLOW)
+    c:set(self.palette.track_sync_off)
     c.on_press = function()
       if not self.active then 
         return false 
@@ -993,7 +995,10 @@ function Keyboard:_build_app()
     c:set_size(slider_size)
     c:set_orientation(map.orientation)
     c.tooltip = map.description
-    c.palette.track = table.rcopy(self.display.palette.background)
+    c:set_palette({
+      tip = self.palette.slider_on,
+      track = self.palette.slider_off,
+    })
     c.value = self.curr_instr
     c.on_change = function(obj)
       if not self.active then 
@@ -1018,7 +1023,7 @@ function Keyboard:_build_app()
     c.group_name = map.group_name
     c.tooltip = map.description
     c:set_pos(map.index)
-    --c.active = (self.options.instr_index.value == self.INSTR_FOLLOW)
+    c:set(self.palette.instr_sync_off)
     c.on_press = function()
       if not self.active then 
         return false 
@@ -1061,8 +1066,8 @@ function Keyboard:_build_app()
     c.ceiling = self.KEYBOARD_VELOCITIES
     c.tooltip = map.description
     c:set_palette({
-      tip = self.palette.vol_slider_on,
-      track = self.palette.vol_slider_on,
+      tip = self.palette.slider_on,
+      track = self.palette.slider_off,
     })
     c.value = self.curr_volume
     c.on_change = function(obj)
@@ -1096,7 +1101,7 @@ function Keyboard:_build_app()
     c.group_name = map.group_name
     c.tooltip = map.description
     c:set_pos(map.index)
-    --c.active = (self.options.base_volume.value == self.VOLUME_FOLLOW)
+    c:set(self.palette.volume_sync_off)
     c.on_press = function()
       if not self.active then 
         return false 

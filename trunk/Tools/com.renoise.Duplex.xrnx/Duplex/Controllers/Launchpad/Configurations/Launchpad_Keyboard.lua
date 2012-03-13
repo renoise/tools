@@ -22,8 +22,6 @@ duplex_configurations:insert {
   },
 
   applications = {
-    --[[
-    ]]
     KeypadsLeft = {
       application = "Keyboard",
       mappings = {
