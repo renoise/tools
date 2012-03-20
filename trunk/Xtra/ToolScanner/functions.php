@@ -112,7 +112,10 @@ function is_binary($file)
         clearstatcache();
 
         return (
-            false || substr_count($blk, "^ -~", "^\r\n")/512 > 0.3 || substr_count($blk, "\x00") > 0
+        	false ||
+        	substr_count($blk, "^\r\n")/512 > 0.3 ||
+        	substr_count($blk, "^ -~")/512 > 0.3 ||
+        	substr_count($blk, "\x00") > 0
             );
     }
     return false;
