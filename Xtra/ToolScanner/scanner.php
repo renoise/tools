@@ -100,7 +100,9 @@ function scan($file) {
                         foreach ($suspicious as $findme) {
                             $pos = strtolower($tmp3) == strtolower($findme);
                             if ($pos !== false) {
-                                $warnings[] = "$relpath contains suspect code `$findme` on line " . ($line + 1);
+                            	$suspect_code = "$relpath contains suspect code `$findme` on line " . ($line + 1) . ":\n";
+                            	$suspect_code .= "\t -> " . trim($tmp2);
+                            	$warnings[] = $suspect_code;
                             }
                         }
                     }
