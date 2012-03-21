@@ -1,0 +1,105 @@
+<Device>
+	<Name>Novation Launchpad</Name>
+	<Author>Danoise</Author>
+	<Description>Controlmap for Novation Launchpad
+Note: If you have the Automap software running in the background, please disable it on the Launchpad to avoid conflicts between Duplex and Automap: simply press User2 + Down at the same time (this will toggle Automap on/off for the Launchpad)</Description>
+	<Parameters>
+		<Column>
+			<Row>
+				<Group name="Controls" orientation="horizontal">
+					<Param value="CC#104" type="button" name="Up"		maximum="127" minimum="0"/>
+					<Param value="CC#105" type="button" name="Down"		maximum="127" minimum="0"/>
+					<Param value="CC#106" type="button" name="Left"		maximum="127" minimum="0"/>
+					<Param value="CC#107" type="button" name="Right"	maximum="127" minimum="0"/>
+					<Param value="CC#108" type="button" name="Session"	maximum="127" minimum="0"/>
+					<Param value="CC#109" type="button" name="User1"	maximum="127" minimum="0"/>
+					<Param value="CC#110" type="button" name="User2"	maximum="127" minimum="0"/>
+					<Param value="CC#111" type="button" name="Mixer"	maximum="127" minimum="0"/>
+				</Group>
+			</Row>
+			<Row>
+				<Column>
+					<Group name="Row" columns="8">
+						<Param value="C--1" type="button" name="Button 1,1"	maximum="127" minimum="0"/>
+						<Param value="C#-1" type="button" name="Button 1,2"	maximum="127" minimum="0"/>
+						<Param value="D--1" type="button" name="Button 1,3"	maximum="127" minimum="0"/>
+						<Param value="D#-1" type="button" name="Button 1,4"	maximum="127" minimum="0"/>
+						<Param value="E--1" type="button" name="Button 1,5"	maximum="127" minimum="0"/>
+						<Param value="F--1" type="button" name="Button 1,6"	maximum="127" minimum="0"/>
+						<Param value="F#-1" type="button" name="Button 1,7"	maximum="127" minimum="0"/>
+						<Param value="G--1" type="button" name="Button 1,8"	maximum="127" minimum="0"/>
+					</Group>
+					
+					<Group name="Grid" columns="8">
+						<Param value="E-0" type="button" name="Button 2,1"	maximum="127" minimum="0"/>
+						<Param value="F-0" type="button" name="Button 2,2"	maximum="127" minimum="0"/>
+						<Param value="F#0" type="button" name="Button 2,3"	maximum="127" minimum="0"/>
+						<Param value="G-0" type="button" name="Button 2,4"	maximum="127" minimum="0"/>
+						<Param value="G#0" type="button" name="Button 2,5"	maximum="127" minimum="0"/>
+						<Param value="A-0" type="button" name="Button 2,6"	maximum="127" minimum="0"/>
+						<Param value="A#0" type="button" name="Button 2,7"	maximum="127" minimum="0"/>
+						<Param value="B-0" type="button" name="Button 2,8"	maximum="127" minimum="0"/>
+						<Param value="G#1" type="button" name="Button 3,1"	maximum="127" minimum="0"/>
+						<Param value="A-1" type="button" name="Button 3,2"	maximum="127" minimum="0"/>
+						<Param value="A#1" type="button" name="Button 3,3"	maximum="127" minimum="0"/>
+						<Param value="B-1" type="button" name="Button 3,4"	maximum="127" minimum="0"/>
+						<Param value="C-2" type="button" name="Button 3,5"	maximum="127" minimum="0"/>
+						<Param value="C#2" type="button" name="Button 3,6"	maximum="127" minimum="0"/>
+						<Param value="D-2" type="button" name="Button 3,7"	maximum="127" minimum="0"/>
+						<Param value="D#2" type="button" name="Button 3,8"	maximum="127" minimum="0"/>
+						<Param value="C-3" type="button" name="Button 4,1"	maximum="127" minimum="0"/>
+						<Param value="C#3" type="button" name="Button 4,2"	maximum="127" minimum="0"/>
+						<Param value="D-3" type="button" name="Button 4,3"	maximum="127" minimum="0"/>
+						<Param value="D#3" type="button" name="Button 4,4"	maximum="127" minimum="0"/>
+						<Param value="E-3" type="button" name="Button 4,5"	maximum="127" minimum="0"/>
+						<Param value="F-3" type="button" name="Button 4,6"	maximum="127" minimum="0"/>
+						<Param value="F#3" type="button" name="Button 4,7"	maximum="127" minimum="0"/>
+						<Param value="G-3" type="button" name="Button 4,8"	maximum="127" minimum="0"/>
+						<Param value="E-4" type="button" name="Button 5,1"	maximum="127" minimum="0"/>
+						<Param value="F-4" type="button" name="Button 5,2"	maximum="127" minimum="0"/>
+						<Param value="F#4" type="button" name="Button 5,3"	maximum="127" minimum="0"/>
+						<Param value="G-4" type="button" name="Button 5,4"	maximum="127" minimum="0"/>
+						<Param value="G#4" type="button" name="Button 5,5"	maximum="127" minimum="0"/>
+						<Param value="A-4" type="button" name="Button 5,6"	maximum="127" minimum="0"/>
+						<Param value="A#4" type="button" name="Button 5,7"	maximum="127" minimum="0"/>
+						<Param value="B-4" type="button" name="Button 5,8"	maximum="127" minimum="0"/>
+						<Param value="G#5" type="button" name="Button 6,1"	maximum="127" minimum="0"/>
+						<Param value="A-5" type="button" name="Button 6,2"	maximum="127" minimum="0"/>
+						<Param value="A#5" type="button" name="Button 6,3"	maximum="127" minimum="0"/>
+						<Param value="B-5" type="button" name="Button 6,4"	maximum="127" minimum="0"/>
+						<Param value="C-6" type="button" name="Button 6,5"	maximum="127" minimum="0"/>
+						<Param value="C#6" type="button" name="Button 6,6"	maximum="127" minimum="0"/>
+						<Param value="D-6" type="button" name="Button 6,7"	maximum="127" minimum="0"/>
+						<Param value="D#6" type="button" name="Button 6,8"	maximum="127" minimum="0"/>
+						<Param value="C-7" type="button" name="Button 7,1"	maximum="127" minimum="0"/>
+						<Param value="C#7" type="button" name="Button 7,2"	maximum="127" minimum="0"/>
+						<Param value="D-7" type="button" name="Button 7,3"	maximum="127" minimum="0"/>
+						<Param value="D#7" type="button" name="Button 7,4"	maximum="127" minimum="0"/>
+						<Param value="E-7" type="button" name="Button 7,5"	maximum="127" minimum="0"/>
+						<Param value="F-7" type="button" name="Button 7,6"	maximum="127" minimum="0"/>
+						<Param value="F#7" type="button" name="Button 7,7"	maximum="127" minimum="0"/>
+						<Param value="G-7" type="button" name="Button 7,8"	maximum="127" minimum="0"/>
+						<Param value="E-8" type="button" name="Button 8,1"	maximum="127" minimum="0"/>
+						<Param value="F-8" type="button" name="Button 8,2"	maximum="127" minimum="0"/>
+						<Param value="F#8" type="button" name="Button 8,3"	maximum="127" minimum="0"/>
+						<Param value="G-8" type="button" name="Button 8,4"	maximum="127" minimum="0"/>
+						<Param value="G#8" type="button" name="Button 8,5"	maximum="127" minimum="0"/>
+						<Param value="A-8" type="button" name="Button 8,6"	maximum="127" minimum="0"/>
+						<Param value="A#8" type="button" name="Button 8,7"	maximum="127" minimum="0"/>
+						<Param value="B-8" type="button" name="Button 8,8"	maximum="127" minimum="0"/>
+					</Group>
+				</Column>
+				<Group name="Triggers" orientation="vertical">
+					<Param value="G#-1" type="button" name="Trigger #1"	maximum="127" minimum="0"/>
+					<Param value="C-1" type="button" name="Trigger #2"	maximum="127" minimum="0"/>
+					<Param value="E-2" type="button" name="Trigger #3"	maximum="127" minimum="0"/>
+					<Param value="G#3" type="button" name="Trigger #4"	maximum="127" minimum="0"/>
+					<Param value="C-5" type="button" name="Trigger #5"	maximum="127" minimum="0"/>
+					<Param value="E-6" type="button" name="Trigger #6"	maximum="127" minimum="0"/>
+					<Param value="G#7" type="button" name="Trigger #7"	maximum="127" minimum="0"/>
+					<Param value="C-9" type="button" name="Trigger #8"	maximum="127" minimum="0"/>
+				</Group>
+			</Row>
+		</Column>
+	</Parameters>
+</Device>

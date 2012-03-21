@@ -1,0 +1,41 @@
+<Device>
+  <Name>Novation Nocturn</Name>
+  <Author>Danoise</Author>
+  <Description>Controlmap for Novation Nocturn.
+Load the provided automap configuration before using (the file is located in Controllers/Nocturn). Also, make sure that the input/output port is set to "Automap MIDI" in both the Automap GUI and Duplex' device settings.</Description>
+  <Parameters>
+    <Page>
+      <Column>
+        <Row>
+          <Group name="Encoders" orientation="horizontal">
+            <Param value="CC#64" type="dial" maximum="127" minimum="0"/>
+            <Param value="CC#65" type="dial" maximum="127" minimum="0"/>
+            <Param value="CC#66" type="dial" maximum="127" minimum="0"/>
+            <Param value="CC#67" type="dial" maximum="127" minimum="0"/>
+            <Param value="CC#68" type="dial" maximum="127" minimum="0"/>
+            <Param value="CC#69" type="dial" maximum="127" minimum="0"/>
+            <Param value="CC#70" type="dial" maximum="127" minimum="0"/>
+            <Param value="CC#71" type="dial" maximum="127" minimum="0"/>
+          </Group>
+        </Row>
+        <Row>
+          <Group name="Pots" orientation="horizontal">
+            <Param value="CC#72" type="pushbutton" maximum="127" minimum="0"/>
+            <Param value="CC#73" type="pushbutton" maximum="127" minimum="0"/>
+            <Param value="CC#74" type="pushbutton" maximum="127" minimum="0"/>
+            <Param value="CC#75" type="pushbutton" maximum="127" minimum="0"/>
+            <Param value="CC#76" type="pushbutton" maximum="127" minimum="0"/>
+            <Param value="CC#77" type="pushbutton" maximum="127" minimum="0"/>
+            <Param value="CC#78" type="pushbutton" maximum="127" minimum="0"/>
+            <Param value="CC#79" type="pushbutton" maximum="127" minimum="0"/>
+          </Group>
+        </Row>
+        <Row>
+          <Group name="XFader" orientation="horizontal" align="center">
+            <Param value="PB" type="fader" orientation="horizontal" size="8" maximum="127" minimum="0"/>
+          </Group>
+        </Row>
+      </Column>
+    </Page>
+  </Parameters>
+</Device>

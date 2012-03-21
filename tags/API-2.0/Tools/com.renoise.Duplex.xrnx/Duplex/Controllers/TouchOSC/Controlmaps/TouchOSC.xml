@@ -1,0 +1,156 @@
+
+<Device>
+	<Name>TouchOSC</Name>
+	<Author>Danoise</Author>
+	<Description>Controlmap for TouchOSC (simple layout)
+Note that XY controllers are not yet implemented in Duplex</Description>
+	<Parameters>
+		<Row>
+			<Page>
+				<Column>
+					<Row>
+						<Group name="1_Fader" >
+							<Param value="/1/fader5 %f"  type="fader" orientation="horizontal" size="4" name="fader1" maximum="1" minimum="0"/>
+						</Group>
+					</Row>
+					<Row>
+						<Group name="1_Faders" >
+							<Param value="/1/fader1 %f"  type="fader" orientation="vertical" size="3.18" name="1_fader1" maximum="1" minimum="0"/>
+							<Param value="/1/fader2 %f"  type="fader" orientation="vertical" size="3.18" name="1_fader2" maximum="1" minimum="0"/>
+							<Param value="/1/fader3 %f"  type="fader" orientation="vertical" size="3.18" name="1_fader3" maximum="1" minimum="0"/>
+							<Param value="/1/fader4 %f"  type="fader" orientation="vertical" size="3.18" name="1_fader4" maximum="1" minimum="0"/>
+						</Group>
+					</Row>
+					<Row>
+						<Group name="1_Buttons" >
+							<Param value="/1/toggle1 %i"  type="togglebutton" name="1_toggle1" maximum="1" minimum="0"/>
+							<Param value="/1/toggle2 %i"  type="togglebutton" name="1_toggle2" maximum="1" minimum="0"/>
+							<Param value="/1/toggle3 %i"  type="togglebutton" name="1_toggle3" maximum="1" minimum="0"/>
+							<Param value="/1/toggle4 %i"  type="togglebutton" name="1_toggle4" maximum="1" minimum="0"/>
+						</Group>
+					</Row>	
+				</Column>
+			</Page>
+			<Page>
+				<Column>
+					<Group name="2_TriggerPad" columns="4">
+						<Param value="/2/push1 %i" type="pushbutton" name="1_push1" maximum="1" minimum="0" />
+						<Param value="/2/push2 %i" type="pushbutton" name="1_push2" maximum="1" minimum="0" />
+						<Param value="/2/push3 %i" type="pushbutton" name="1_push3" maximum="1" minimum="0" />
+						<Param value="/2/push4 %i" type="pushbutton" name="1_push4" maximum="1" minimum="0" />
+						<Param value="/2/push5 %i" type="pushbutton" name="1_push5" maximum="1" minimum="0" />
+						<Param value="/2/push6 %i" type="pushbutton" name="1_push6" maximum="1" minimum="0" />
+						<Param value="/2/push7 %i" type="pushbutton" name="1_push7" maximum="1" minimum="0" />
+						<Param value="/2/push8 %i" type="pushbutton" name="1_push8" maximum="1" minimum="0" />
+						<Param value="/2/push9 %i" type="pushbutton" name="1_push9" maximum="1" minimum="0" />
+						<Param value="/2/push10 %i" type="pushbutton" name="1_push10" maximum="1" minimum="0" />
+						<Param value="/2/push11 %i" type="pushbutton" name="1_push11" maximum="1" minimum="0" />
+						<Param value="/2/push12 %i" type="pushbutton" name="1_push12" maximum="1" minimum="0" />
+						<Param value="/2/push13 %i" type="pushbutton" name="1_push13" maximum="1" minimum="0" />
+						<Param value="/2/push14 %i" type="pushbutton" name="1_push14" maximum="1" minimum="0" />
+						<Param value="/2/push15 %i" type="pushbutton" name="1_push15" maximum="1" minimum="0" />
+						<Param value="/2/push16 %i" type="pushbutton" name="1_push16" maximum="1" minimum="0" />
+					</Group>
+					<Group name="2_Buttons" >
+						<Param value="/2/toggle1 %i" type="togglebutton" name="1_toggle1" maximum="1" minimum="0" />
+						<Param value="/2/toggle2 %i" type="togglebutton" name="1_toggle2" maximum="1" minimum="0" />
+						<Param value="/2/toggle3 %i" type="togglebutton" name="1_toggle3" maximum="1" minimum="0" />
+						<Param value="/2/toggle4 %i" type="togglebutton" name="1_toggle4" maximum="1" minimum="0" />							
+					</Group>
+				</Column>
+			</Page>
+			<Page>
+				<Column>
+					<!-- this is just for looks -->
+					<Group name="3_XYPad" columns="1">
+						<Param value="/3/xy %f %f"  type="button" orientation="horizontal" size="4" name="3_Xfader" maximum="1" minimum="0"/>
+					</Group>
+					<!-- end of faked section -->
+					<Group name="3_Buttons" >
+						<Param value="/3/toggle1 %i"  type="togglebutton" name="3_toggle1" maximum="1" minimum="0"/>
+						<Param value="/3/toggle2 %i"  type="togglebutton" name="3_toggle2" maximum="1" minimum="0"/>
+						<Param value="/3/toggle3 %i"  type="togglebutton" name="3_toggle3" maximum="1" minimum="0"/>
+						<Param value="/3/toggle4 %i"  type="togglebutton" name="3_toggle4" maximum="1" minimum="0"/>
+					</Group>
+				</Column>
+			</Page>
+			<Page>
+				<Column>
+					<Group name="4_Grid" columns="8">
+						<Param value="/4/multitoggle/1/1 %i" type="togglebutton" name="1_multitoggle" size="0.49" maximum="1" minimum="0" />
+						<Param value="/4/multitoggle/2/1 %i" type="togglebutton" name="1_multitoggle" size="0.49" maximum="1" minimum="0" />
+						<Param value="/4/multitoggle/3/1 %i" type="togglebutton" name="1_multitoggle" size="0.49" maximum="1" minimum="0" />
+						<Param value="/4/multitoggle/4/1 %i" type="togglebutton" name="1_multitoggle" size="0.49" maximum="1" minimum="0" />
+						<Param value="/4/multitoggle/5/1 %i" type="togglebutton" name="1_multitoggle" size="0.49" maximum="1" minimum="0" />
+						<Param value="/4/multitoggle/6/1 %i" type="togglebutton" name="1_multitoggle" size="0.49" maximum="1" minimum="0" />
+						<Param value="/4/multitoggle/7/1 %i" type="togglebutton" name="1_multitoggle" size="0.49" maximum="1" minimum="0" />
+						<Param value="/4/multitoggle/8/1 %i" type="togglebutton" name="1_multitoggle" size="0.49" maximum="1" minimum="0" />
+						<Param value="/4/multitoggle/1/2 %i" type="togglebutton" name="1_multitoggle" size="0.49" maximum="1" minimum="0" />
+						<Param value="/4/multitoggle/2/2 %i" type="togglebutton" name="1_multitoggle" size="0.49" maximum="1" minimum="0" />
+						<Param value="/4/multitoggle/3/2 %i" type="togglebutton" name="1_multitoggle" size="0.49" maximum="1" minimum="0" />
+						<Param value="/4/multitoggle/4/2 %i" type="togglebutton" name="1_multitoggle" size="0.49" maximum="1" minimum="0" />
+						<Param value="/4/multitoggle/5/2 %i" type="togglebutton" name="1_multitoggle" size="0.49" maximum="1" minimum="0" />
+						<Param value="/4/multitoggle/6/2 %i" type="togglebutton" name="1_multitoggle" size="0.49" maximum="1" minimum="0" />
+						<Param value="/4/multitoggle/7/2 %i" type="togglebutton" name="1_multitoggle" size="0.49" maximum="1" minimum="0" />
+						<Param value="/4/multitoggle/8/2 %i" type="togglebutton" name="1_multitoggle" size="0.49" maximum="1" minimum="0" />
+						<Param value="/4/multitoggle/1/3 %i" type="togglebutton" name="1_multitoggle" size="0.49" maximum="1" minimum="0" />
+						<Param value="/4/multitoggle/2/3 %i" type="togglebutton" name="1_multitoggle" size="0.49" maximum="1" minimum="0" />
+						<Param value="/4/multitoggle/3/3 %i" type="togglebutton" name="1_multitoggle" size="0.49" maximum="1" minimum="0" />
+						<Param value="/4/multitoggle/4/3 %i" type="togglebutton" name="1_multitoggle" size="0.49" maximum="1" minimum="0" />
+						<Param value="/4/multitoggle/5/3 %i" type="togglebutton" name="1_multitoggle" size="0.49" maximum="1" minimum="0" />
+						<Param value="/4/multitoggle/6/3 %i" type="togglebutton" name="1_multitoggle" size="0.49" maximum="1" minimum="0" />
+						<Param value="/4/multitoggle/7/3 %i" type="togglebutton" name="1_multitoggle" size="0.49" maximum="1" minimum="0" />
+						<Param value="/4/multitoggle/8/3 %i" type="togglebutton" name="1_multitoggle" size="0.49" maximum="1" minimum="0" />
+						<Param value="/4/multitoggle/1/4 %i" type="togglebutton" name="1_multitoggle" size="0.49" maximum="1" minimum="0" />
+						<Param value="/4/multitoggle/2/4 %i" type="togglebutton" name="1_multitoggle" size="0.49" maximum="1" minimum="0" />
+						<Param value="/4/multitoggle/3/4 %i" type="togglebutton" name="1_multitoggle" size="0.49" maximum="1" minimum="0" />
+						<Param value="/4/multitoggle/4/4 %i" type="togglebutton" name="1_multitoggle" size="0.49" maximum="1" minimum="0" />
+						<Param value="/4/multitoggle/5/4 %i" type="togglebutton" name="1_multitoggle" size="0.49" maximum="1" minimum="0" />
+						<Param value="/4/multitoggle/6/4 %i" type="togglebutton" name="1_multitoggle" size="0.49" maximum="1" minimum="0" />
+						<Param value="/4/multitoggle/7/4 %i" type="togglebutton" name="1_multitoggle" size="0.49" maximum="1" minimum="0" />
+						<Param value="/4/multitoggle/8/4 %i" type="togglebutton" name="1_multitoggle" size="0.49" maximum="1" minimum="0" />
+						<Param value="/4/multitoggle/1/5 %i" type="togglebutton" name="1_multitoggle" size="0.49" maximum="1" minimum="0" />
+						<Param value="/4/multitoggle/2/5 %i" type="togglebutton" name="1_multitoggle" size="0.49" maximum="1" minimum="0" />
+						<Param value="/4/multitoggle/3/5 %i" type="togglebutton" name="1_multitoggle" size="0.49" maximum="1" minimum="0" />
+						<Param value="/4/multitoggle/4/5 %i" type="togglebutton" name="1_multitoggle" size="0.49" maximum="1" minimum="0" />
+						<Param value="/4/multitoggle/5/5 %i" type="togglebutton" name="1_multitoggle" size="0.49" maximum="1" minimum="0" />
+						<Param value="/4/multitoggle/6/5 %i" type="togglebutton" name="1_multitoggle" size="0.49" maximum="1" minimum="0" />
+						<Param value="/4/multitoggle/7/5 %i" type="togglebutton" name="1_multitoggle" size="0.49" maximum="1" minimum="0" />
+						<Param value="/4/multitoggle/8/5 %i" type="togglebutton" name="1_multitoggle" size="0.49" maximum="1" minimum="0" />
+						<Param value="/4/multitoggle/1/6 %i" type="togglebutton" name="1_multitoggle" size="0.49" maximum="1" minimum="0" />
+						<Param value="/4/multitoggle/2/6 %i" type="togglebutton" name="1_multitoggle" size="0.49" maximum="1" minimum="0" />
+						<Param value="/4/multitoggle/3/6 %i" type="togglebutton" name="1_multitoggle" size="0.49" maximum="1" minimum="0" />
+						<Param value="/4/multitoggle/4/6 %i" type="togglebutton" name="1_multitoggle" size="0.49" maximum="1" minimum="0" />
+						<Param value="/4/multitoggle/5/6 %i" type="togglebutton" name="1_multitoggle" size="0.49" maximum="1" minimum="0" />
+						<Param value="/4/multitoggle/6/6 %i" type="togglebutton" name="1_multitoggle" size="0.49" maximum="1" minimum="0" />
+						<Param value="/4/multitoggle/7/6 %i" type="togglebutton" name="1_multitoggle" size="0.49" maximum="1" minimum="0" />
+						<Param value="/4/multitoggle/8/6 %i" type="togglebutton" name="1_multitoggle" size="0.49" maximum="1" minimum="0" />
+						<Param value="/4/multitoggle/1/7 %i" type="togglebutton" name="1_multitoggle" size="0.49" maximum="1" minimum="0" />
+						<Param value="/4/multitoggle/2/7 %i" type="togglebutton" name="1_multitoggle" size="0.49" maximum="1" minimum="0" />
+						<Param value="/4/multitoggle/3/7 %i" type="togglebutton" name="1_multitoggle" size="0.49" maximum="1" minimum="0" />
+						<Param value="/4/multitoggle/4/7 %i" type="togglebutton" name="1_multitoggle" size="0.49" maximum="1" minimum="0" />
+						<Param value="/4/multitoggle/5/7 %i" type="togglebutton" name="1_multitoggle" size="0.49" maximum="1" minimum="0" />
+						<Param value="/4/multitoggle/6/7 %i" type="togglebutton" name="1_multitoggle" size="0.49" maximum="1" minimum="0" />
+						<Param value="/4/multitoggle/7/7 %i" type="togglebutton" name="1_multitoggle" size="0.49" maximum="1" minimum="0" />
+						<Param value="/4/multitoggle/8/7 %i" type="togglebutton" name="1_multitoggle" size="0.49" maximum="1" minimum="0" />
+						<Param value="/4/multitoggle/1/8 %i" type="togglebutton" name="1_multitoggle" size="0.49" maximum="1" minimum="0" />
+						<Param value="/4/multitoggle/2/8 %i" type="togglebutton" name="1_multitoggle" size="0.49" maximum="1" minimum="0" />
+						<Param value="/4/multitoggle/3/8 %i" type="togglebutton" name="1_multitoggle" size="0.49" maximum="1" minimum="0" />
+						<Param value="/4/multitoggle/4/8 %i" type="togglebutton" name="1_multitoggle" size="0.49" maximum="1" minimum="0" />
+						<Param value="/4/multitoggle/5/8 %i" type="togglebutton" name="1_multitoggle" size="0.49" maximum="1" minimum="0" />
+						<Param value="/4/multitoggle/6/8 %i" type="togglebutton" name="1_multitoggle" size="0.49" maximum="1" minimum="0" />
+						<Param value="/4/multitoggle/7/8 %i" type="togglebutton" name="1_multitoggle" size="0.49" maximum="1" minimum="0" />
+						<Param value="/4/multitoggle/8/8 %i" type="togglebutton" name="1_multitoggle" size="0.49" maximum="1" minimum="0" />
+					</Group>
+					<Group name="4_Buttons" >
+						<Param value="/4/toggle1 %i" type="togglebutton" name="4_toggle1" maximum="1" minimum="0" />
+						<Param value="/4/toggle2 %i" type="togglebutton" name="4_toggle2" maximum="1" minimum="0" />
+						<Param value="/4/toggle3 %i" type="togglebutton" name="4_toggle3" maximum="1" minimum="0" />
+						<Param value="/4/toggle4 %i" type="togglebutton" name="4_toggle4" maximum="1" minimum="0" />							
+					</Group>
+				</Column>
+			</Page>
+		</Row>	
+	</Parameters>
+</Device>
+

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<RenoiseScriptingTool doc_version="0">
+  <Name>Update Checker</Name>
+  <Id>com.renoise.UpdateChecker</Id>
+  <Version>7</Version>
+  <ApiVersion>2</ApiVersion>
+  <Author>bantai [marvin@renoise.com]</Author>
+  <Category>Networking</Category>
+  <Description>Checks for Renoise updates.</Description>
+  <Homepage>http://www.renoise.com/product-version-checker?prod=Renoise</Homepage>
+  <Icon/>
+</RenoiseScriptingTool>

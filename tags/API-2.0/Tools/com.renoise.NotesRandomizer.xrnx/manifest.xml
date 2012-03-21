@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<RenoiseScriptingTool>
+  <ApiVersion>2.0</ApiVersion>
+  <Id>com.renoise.NotesRandomizer</Id>
+  <Version>0.9</Version>
+  <Name>Randomize Notes</Name>
+  <Author>Dac Chartrand [dac@renoise.com]</Author>
+  <Description>Randomizes or shuffles notes in various tonal modes and ranges, in order to create new random variations of existing sequences. Shows up as 'Randomize Notes...' in the Pattern Editors context menu and also creates some shortcuts (look for 'randomize') in the Pattern Editor. </Description>
+  <Category>Pattern Editor</Category>
+</RenoiseScriptingTool>
