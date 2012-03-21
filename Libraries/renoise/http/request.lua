@@ -7,9 +7,6 @@
 
 -- Author: bantai [marvin@renoise.com]
 
--- Library version
-local REQUEST_VERSION = "101228"
-
 
 -------------------------------------------------------------------------------
 --  Dependencies
@@ -41,18 +38,6 @@ local log = Log(Log.ERROR)
 
 
 -------------------------------------------------------------------------------
--- SETTINGS (for public settings see Request class)
--------------------------------------------------------------------------------
-
--- Defines the number of concurrent requests. A too high number will choke 
--- both Renoise and the server. In general, internet browsers are pretty 
--- conservative, supporting about 2 to 15 total concurrent requests, of which 
--- a maximum of 2 per server. Since the HTTP library runs in Renoise's graphics 
--- thread, we should be even more conservative. 
-local CONCURRENT_REQUESTS = 4
-
-
--------------------------------------------------------------------------------
 -- Idle notifier/handler
 -------------------------------------------------------------------------------
 
@@ -61,73 +46,52 @@ local requests_pool = table.create()
 
 local read = nil
 
-local function attach()  
+local function attach()
   renoise.tool().app_idle_observable:add_notifier(read)
-  log:info("Idle notifier attached. Started rotating the requests pool.")
 end
 
-local function detach()  
+local function detach()
   renoise.tool().app_idle_observable:remove_notifier(read)
-  log:info("Idle notifier removed. Stopped rotating the requests pool.")
 end
 
 -- Read a few bytes from every request
 read = function()
   
-  -- Loop through the Requests pool    
-  -- TODO paused requests can clog up other queued requests
-  for k=1,CONCURRENT_REQUESTS do
+  -- Loop through the Requests pool
+  for k,request in ipairs(requests_pool) do
     
-    local request = requests_pool[k]
-    
-    if (request) then
-    
-      -- Send Header
-      if (not request.sent_header) then
-        request.progress:_set_status(Progress.SENDING_HEADER)
-        local success, socket_error = request:_send_header()
-        request.sent_header = true
-        if (not success) then          
-          request.text_status = Request.ERROR
-          log:error(("%s failed: %s."):format(request.url,
-            (socket_error or "[unknown error]")))
-          request:_do_callback(socket_error)  
-          requests_pool:remove(k)
-        end          
-    
-      -- Read Header
-      elseif (not request.header_received) then                  
-        request.progress:_set_status(Progress.READING_HEADER)
-        request:_read_header()
-        
-      -- Paused        
-      elseif (request.paused and request.progress.status ~= Progress.PAUSED) then
-        -- stop polling when the only request in the pool is paused
-        if (#requests_pool == 1) then
-          detach()
-        end            
+    -- Read Header
+    if (not request.header_received) then                  
+      request:_read_header()
       
-      -- Cancelled  
-      elseif (request.cancelled) then          
-        requests_pool:remove(k)
-        log:info("Request cancelled, removed from pool.")      
-      
-      -- Timeout
-      elseif (request.text_status == Request.TIMEOUT and request.wait > 0) then      
-        request.wait = request.wait - 1   
-        
-      -- Busy  
-      elseif (request.header_received and not request.complete) then
-        request.complete = not (request:_read_content())  
-        
-      -- Complete
-      elseif (request.complete) then
-        log:info("Request complete, removed from pool.")
-        requests_pool:remove(k)
-      end
+    -- Paused  
+    elseif (request.paused and request.progress.status ~= Progress.PAUSED) then            
+      request.progress:_set_status(Progress.PAUSED)            
+      log:info("Request paused.")
+      -- stop polling when the only request is paused
+      if (#requests_pool == 1) then
+        detach()
+      end            
     
+    -- Cancelled  
+    elseif (request.cancelled) then          
+      requests_pool:remove(k)
+      log:info("Request cancelled, removed from pool.")      
+    
+    -- Timeout
+    elseif (request.text_status == Request.TIMEOUT and request.wait > 0) then      
+      request.wait = request.wait - 1   
+      
+    -- Busy  
+    elseif not (request.complete) then          
+      request.complete = not (request:_read_content())  
+      
+    -- Complete
+    else 
+      log:info("Request complete, removed from pool.")
+      requests_pool:remove(k)
     end
-  end  
+  end
 
   if (requests_pool:is_empty()) then
     detach()
@@ -137,38 +101,16 @@ read = function()
 end
 
 
--- Determine the default download folder depending on the platform
--- Taken from Google Chrome:
--- Windows XP: \Documents and Settings\<username>\My Documents\Downloads
--- Windows Vista/7: \Users\<username>\Downloads
--- Mac: /Users/<username>/Downloads
--- Linux: home\<username>\Downloads
--- http://support.google.com/chrome/bin/answer.py?hl=en&answer=95574
-local function _get_default_download_folder()
-  local dir = "Downloads"
-  
-  if (os.platform() == "WINDOWS") then
-    
-    if (os.getenv("HOMEPATH"):find("\\Users\\", 1)) then
-      -- Windows Vista/7: \Users\<username>\Downloads
-      dir = os.getenv("USERPROFILE")..'\\Downloads\\Renoise'
-      
-    elseif (os.getenv("HOMEPATH"):find("\\Documents")) then  
-      -- Windows XP: \Documents and Settings\<username>\My Documents\Downloads
-      -- TODO International location of Windows XP My Documents
-      --"HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Explorer\Shell Folders" > "Personal"
-      local MYDOCUMENTS = "MY DOCUMENTS"
-      dir = os.getenv("USERPROFILE")..MYDOCUMENTS..'\\Downloads\\Renoise'
-    end    
-  elseif (os.platform() == "MACINTOSH") then
-    -- Mac: /Users/<username>/Downloads
-    dir = os.getenv('HOME').."/Downloads/Renoise"
-    
-  elseif (os.platform() == "LINUX") then
-    -- Linux: home\<username>\Downloads  
-    dir = os.getenv('HOME').."/Downloads/Renoise"
-  end  
-  return dir
+-- Get Scripts Dir
+local function get_appdata_dir()    
+  local dir = renoise.tool().bundle_path  
+  local a,z
+  if (os.platform() == "LINUX") then
+    a,z = dir:find(".renoise")
+  else
+    a,z = dir:find("Renoise")
+  end
+  return dir:sub(1,z+1)
 end
 
 
@@ -179,7 +121,7 @@ end
 class "Request"
 
 -- Library version
-Request.VERSION = REQUEST_VERSION
+Request.VERSION = "100510"
 
 -- Definition of HTTP request methods
 Request.GET = "GET"
@@ -213,12 +155,10 @@ Request.default_settings = table.create{
     path = "/"
   },
   
-  -- Enable to save files to disk by default and return the path. 
-  -- Disable to keep the file in RAM and return its contents.
+  -- Enable to save files to disk by default
   save_file = false,
   
-  -- Enable to write file into default download folder. If not set, keep in temp folder.
-  default_download_folder = false,
+  default_download_folder = get_appdata_dir() .."Downloads",
 
   -- When sending data to the server, use this content-type. Default is
   -- "application/x-www-form-urlencoded", which is fine for most cases. If you
@@ -293,16 +233,12 @@ Request.default_settings = table.create{
   -- multiple values with same key based on the value of the traditional setting.
   data = table.create{},
 
-  -- RAM buffer size in KB. It's the threshold before streaming 
-  -- an ongoing download into a temporary file.
-  ram_buffer_max_size = 5000,
-
   -- TODO If set to false it will force the pages that you request to not be
   -- cached by the browser.
-  cache = false,
+  cache = true,
   
   -- Cache size in KB
-  cache_max_size = 50000,
+  max_cache_size = 5000,
 
   -- TODO A username to be used in response to an HTTP access authentication
   -- request.
@@ -335,7 +271,7 @@ Request.default_settings = table.create{
   
   -- A function to be called whenever the download progress changes.  
   progress = function(progress_obj) 
-    log:info(("%d bytes received [%s]"):format(progress_obj.bytes, progress_obj.url))
+    log:info(progress_obj.bytes .. " bytes received.")
   end
 }
 
@@ -387,11 +323,11 @@ function Request:__init(custom_settings)
   -- Content length
   self.length = 0
   
-  -- RAM buffer 
-  self.ram_buffer = table.create()
+  -- Cache 
+  self.cache = table.create()
   
-  -- The size of the RAM buffer
-  self.ram_buffer_len = 0
+  -- Cache size
+  self.cache_len = 0
   
   -- Retried timeouts 
   self.retries = 0
@@ -405,9 +341,7 @@ function Request:__init(custom_settings)
   -- Number of redirects
   self.redirects = 0
 
-  -- Connection statuses
-  self.sent_header = false
-  
+  -- Connection status
   self.complete = false
   
   self.paused = false
@@ -463,12 +397,6 @@ function Request:__init(custom_settings)
     self:_do_callback("Incorrect URL")
     return false
   end
-  
-  -- If the file needs to be saved into the default download folder,
-  -- determine its location now.
-  if (self.settings.default_download_folder) then    
-      self.download_folder = _get_default_download_folder()
-  end
     
   -- Start 
   self:_enqueue()
@@ -486,7 +414,6 @@ end
 function Request:pause()
   if (not self.paused) then
     log:warn("Pausing request.")    
-    self.progress:_set_status(Progress.PAUSED)
   end
   self.paused = true
 end
@@ -509,18 +436,10 @@ end
 ---## cancel ##---
 function Request:cancel()
   self.cancelled = true
-  self:_do_callback("cancelled")
-  
-  -- Remove any cancelled requests from pool.
-  for k,request in ipairs(requests_pool) do
-    if (request.cancelled) then    
-      log:info(("Request was cancelled and removed from pool. [%s]"):format(request.url))
-      requests_pool:remove(k)
-    end  
-  end
-  
+  self:_do_callback("cancelled")      
   self.text_status = Request.CANCELERROR        
-  self.progress:_set_status(Progress.CANCELLED)  
+  self.progress:_set_status(Progress.CANCELLED)
+  log:warn("Request cancelled by user.")  
 end
 
 
@@ -531,13 +450,22 @@ end
 ---## enqueue ##---
 -- Retrieves the header from the server and 
 -- schedules the request for further download
-function Request:_enqueue()  
-    requests_pool:insert(self)    
+function Request:_enqueue()
+  local success, socket_error = self:_send_header()
+  
+  if (success) then
+    requests_pool:insert(self)
     self.progress:_set_status(Progress.QUEUED)
     if (#requests_pool == 1) then
        attach()
     end
-end    
+  else
+    self.text_status = Request.ERROR
+    log:error(("%s failed: %s."):format(self.url,
+      (socket_error or "[unknown error]")))
+    self:_do_callback(socket_error)  
+  end
+end
 
 
 ---## set_header ##---
@@ -589,16 +517,12 @@ function Request:_create_multipart_message(data)
 end
 
 ---## create_json_message ##---
-function Request:_create_json_message(data)  
-  log:info("Create JSON message. Data:")
+function Request:_create_json_message(data)
+  log:info("Create JSON message")
   log:info(data)
-  
-  local ok, res = pcall(json.encode, data)   
-  
-  log:info("Resulting JSON string:")
+  local ok, res = pcall(json.encode, data) 
   log:info(res)
-    
-  return res  
+  return res
 end
 
 ---## create_xml_message ##---
@@ -668,9 +592,6 @@ function Request:_send_header()
   end
   self.redirects = self.redirects + 1 
   
-    -- Sanitize the URL
-  self.url = Util:encode_for_url(self.url)
-  
   -- Reparse the URL, in case there's a redirect
   self.url_parts = URL:parse(self.url, self.settings.default_parts)
   
@@ -692,8 +613,8 @@ function Request:_send_header()
     )
   end
   
-  if (not self.client_socket) then
-    return false, (socket_error or "Could not connect.")
+  if not (self.client_socket) then
+     return false, socket_error
   end  
   
   -- Determine Content-Length. With GET requests the body is empty. 
@@ -774,10 +695,7 @@ function Request:_read_header()
       self.lines_per_cycle = 1
       self.retries = 0
       self.header_received = true
-      
-      -- parse header
       local success, error = self:_parse_header()
-      
       if (error) then
         self:_do_callback(error)
       end
@@ -812,9 +730,9 @@ function Request:_parse_header()
   local header_lines = self.header_lines
   log:info(("=== RESPONSE HEADER (%s) ==="):format(self.url))
   log:info(header_lines)
-  log:info("--- end of response header ---")
+  log:info()
   
-  self.response.header = Util:parse_message(header_lines:concat("\n"))    
+  self.response.header = Util:parse_message(header_lines:concat("\n"))  
   
   if (self.response.header and #self.response.header > 0) then
     -- TODO check content-length and HTTP status code  
@@ -848,25 +766,8 @@ function Request:_parse_header()
         new_url_parts.scheme = self.url_parts.scheme        
         location = URL:build(new_url_parts)
       end
-      
-      -- Specify new location
-      self.url = location                  
-      
-      -- Initialize data containers      
-      self.ram_buffer:clear()
-      self.ram_buffer_len = 0
-      self.contents:clear() 
-      self.length = 0    
-               
-      -- Initialize state to start over.
-      self.sent_header = false
-      self.header_received = false
-      
-      -- Flush socket buffer
-      self.client_socket:receive("*all", self.settings.timeout)
-      
-      -- Suppress error callback. The idle handler will take over from here.
-      return true, nil
+      self.url = location
+      return self:_send_header()
     end
     return true
   else
@@ -890,8 +791,8 @@ function Request:_read_content()
   
   if (buffer) then
     -- We got a new buffer, so we reset the retry count
-    self.retries = 0    
-
+    self.retries = 0
+        
     if (self.response.transfer_encoding == "chunked") then
       log:info("Unchunking buffer")
       self:_process_chunk(buffer)      
@@ -921,9 +822,7 @@ function Request:_read_content()
         self.contents = self.chunks
       end 
       --]]       
-      
-      self:_do_callback(nil)
-   
+      self:_do_callback()
       return false
     else
       -- continue reading      
@@ -977,7 +876,7 @@ function Request:_process_chunk(buffer, same)
   if (not same) then
     log:info()  
     log:info("New buffer. Size: " .. #buffer .. " byte")    
-    --Util:file_put_contents(self._get_default_download_folder().."/raw.txt", buffer, "wb") 
+    --Util:file_put_contents(self.settings.default_download_folder.."/raw.txt", buffer, "wb") 
      -- add buffer length to total message length
     self.length = self.length + #buffer     
     log:info("Total message size: " .. self.length .. " byte")
@@ -1091,20 +990,20 @@ function Request:_save_content(buffer)
   if (not self.settings.save_file) then
      self.contents:insert(buffer) 
   else     
-    self.ram_buffer_len = self.ram_buffer_len + #buffer
+    self.cache_len = self.cache_len + #buffer
     
     if (#buffer > 0) then
-      self.ram_buffer:insert(buffer)
+      self.cache:insert(buffer)
     end
     
-    local ram_buffer_full = self.ram_buffer_len > 
-      (self.settings.ram_buffer_max_size * 1024)
+    local cache_full = self.cache_len > 
+      (self.settings.max_cache_size * 1024)
     
-    -- write buffer to disk when EOF or RAM buffer is full           
-    if (#buffer == 0 or ram_buffer_full) then      
-      self:_write_file(self.ram_buffer)
-      self.ram_buffer:clear()       
-      self.ram_buffer_len = 0      
+    -- write buffer when EOF or cache is full           
+    if (#buffer == 0 or cache_full) then      
+      self:_write_file(self.cache)
+      self.cache:clear()       
+      self.cache_len = 0      
     end       
   end
 end
@@ -1118,7 +1017,7 @@ function Request:_write_file(data)
       local err
       self.handle, err = io.open(self.tempfile, "wb")
     end
-    log:info("Writing data to temporary file: " .. self.tempfile or "")
+    log:info("Writing data to temporary file.")
     if (type(data)=="table") then
       data = table.concat(data)
     end
@@ -1155,9 +1054,9 @@ function Request:_do_callback(socket_error)
   end  
   self.client_socket = nil    
   
-  -- Flush RAM buffer
+  -- Flush cache
   if (self.settings.save_file) then
-    self:_write_file(self.ram_buffer)
+    self:_write_file(self.cache)
   end
   if (self.tempfile and io.exists(self.tempfile) and io.type(self.handle) == "file") then
     self.handle:flush()
@@ -1177,20 +1076,17 @@ function Request:_do_callback(socket_error)
     log:info(("%s has completed."):format(self.url))    
     
     if (self.settings.save_file) then         
-    
-      if (self.tempfile and io.exists(self.tempfile)) then        
-      
-        -- Get the temporary folder.
+      if (io.exists(self.tempfile)) then        
         if (not self.settings.default_download_folder) then
-          self.download_folder = self.tempfile:match("^(.+[/\\])")  
+          self.settings.default_download_folder = self.tempfile:match("^(.+[/\\])")  
         end
 
-        -- Get a clean path
-        local dir = Util:get_path(self.download_folder)
+        -- "/" is supported on all supported platforms as path seperator
+        local dir = self.settings.default_download_folder:gsub("\\","/")
 
-        -- Try to create target folder
+        -- Try to create target dir
         if (not io.exists(dir)) then          
-          local ok, err = Util:mkdir(dir)          
+          local ok, err = os.mkdir(dir)          
           log:info("Created download dir: "..dir .." Ok: ".. 
             tostring(ok).."; Err: " .. tostring(err))
         end
@@ -1216,32 +1112,25 @@ function Request:_do_callback(socket_error)
           -- add extension depending on content type
           local type = self:_get_header("Content-Type")
           type = type:match("^[^;]+")
-          local extension = Request:_get_ext_by_mime(type)
-          filename = filename .. extension                     
+          filename = filename .. Request:_get_ext_by_mime(type)                      
           
           -- generate unique name (1).txt
-          local target = dir..'/'..filename          
-          local name = filename:match("^(.*)%.")
-          local extension = Util:get_extension(filename)
-          if (extension) then
-            extension = "."..extension 
-          else
-            extension = ""
-          end
-          local i = 1
-          while (io.exists(target)) do              
-            target = ("%s%s%s (%d)%s"):format(dir,'/',name,i, extension)
+          local target = dir.."/"..filename
+          local i = 1          
+          while (io.exists(target)) do            
+            local name = filename:match("^(.*)%.")
+            local extension = Util:get_extension(filename)
+            if (extension) then
+              extension = "."..extension 
+            else
+              extension = ""
+            end
+            target = ("%s%s%s (%d)%s"):format(dir,"/",name,i, extension)
             i = i + 1
           end
-          target = Util:get_path(target)
           
-          log:info("Moving temporary file to folder: " .. (target or ""))
-          
-          -- Renoise 2.8 API supports os.move(), which can move files across disks
-          -- Compared to os.rename(), os.move() is more picky about slashes.
-          local targetdir = Util:get_path(dir..'/') 
-          local result, error_message = os.move(self.tempfile, Util:get_path(target))                    
-   
+          log:info("Moving tempfile to download dir: " .. target )          
+          local result, error_message = os.rename(self.tempfile, target)
           if (not result) then
             log:error(error_message)
           else
@@ -1260,7 +1149,7 @@ function Request:_do_callback(socket_error)
     if (self.download_target and io.exists(self.download_target)) then    
       data = self.download_target
     else
-      parser_error = "Downloaded file not found: " .. (self.download_target or "")
+      parser_error = "Downloaded file not found"
     end
   elseif (self.length > 0) then
     data, parser_error = self:_decode(self.contents)
@@ -1277,15 +1166,12 @@ function Request:_do_callback(socket_error)
   -- invoke the external callbacks (if set)
   if (socket_error or parser_error) then
     -- TODO handle more errors    
-    log:info(("Invoking ERROR callback [%s]"):format(self.url))
     local error = socket_error or parser_error
     self.settings.error( xml_http_request, self.text_status, error)    
-  else     
-    log:info(("Invoking SUCCESS callback [%s]"):format(self.url))
+  else    
     self.settings.success( data, self.text_status, xml_http_request )
   end
 
-  log:info(("Invoking COMPLETE callback [%s]"):format(self.url))
   self.settings.complete( xml_http_request, self.text_status )   
 end
 

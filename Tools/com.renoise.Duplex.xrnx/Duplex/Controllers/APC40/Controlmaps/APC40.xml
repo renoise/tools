@@ -68,7 +68,7 @@
       
       <Row>
         <Column>
-          <Group name="Navigator" orientation="horizontal" columns="8" colorspace="0,1,0">
+          <Group name="Navigator" orientation="horizontal" colorspace="0,1,0">
             <Param value="E-3|Ch1" type="pushbutton" name="Block 1"  maximum="127" minimum="0"/>
             <Param value="E-3|Ch2" type="pushbutton" name="Block 2"  maximum="127" minimum="0"/>
             <Param value="E-3|Ch3" type="pushbutton" name="Block 3"  maximum="127" minimum="0"/>
@@ -97,7 +97,7 @@
             <Param value="D#3|Ch8" type="pushbutton" name="Track 8"  maximum="127" minimum="0"/>
           </Group>  
             
-          <Group name="Activator" orientation="horizontal" columns="8" colorspace="0,1,0">  
+          <Group name="Device Selector" orientation="horizontal" columns="8" colorspace="0,1,0">  
             <Param value="D-3|Ch1" type="pushbutton" name="Vol Pan" aspect="0.6"  maximum="127" minimum="0"/>
             <Param value="D-3|Ch2" type="pushbutton" name="Device 1" aspect="0.6"  maximum="127" minimum="0"/>
             <Param value="D-3|Ch3" type="pushbutton" name="Device 2" aspect="0.6"  maximum="127" minimum="0"/>
@@ -170,7 +170,7 @@
     
       <Row>
         <Column>
-          <Group name="Upper Knob1" columns="4">
+          <Group name="Panning Knob" columns="4">
             <Param value="CC#48|Ch1" type="dial" name="Knob 1"  size="1.1" maximum="127" minimum="0"/>
             <Param value="CC#49|Ch1" type="dial" name="Knob 2"  size="1.1" maximum="127" minimum="0"/>
             <Param value="CC#50|Ch1" type="dial" name="Knob 3"  size="1.1" maximum="127" minimum="0"/>
@@ -194,15 +194,15 @@
       
       <Row>
         <Column>
-          <Group name="Lower Knob1" columns="4">
-            <Param value="CC#16" type="dial" name="Knob 1"  size="1.1" maximum="127" minimum="0"/>
-            <Param value="CC#17" type="dial" name="Knob 2"  size="1.1" maximum="127" minimum="0"/>
-            <Param value="CC#18" type="dial" name="Knob 3"  size="1.1" maximum="127" minimum="0"/>
-            <Param value="CC#19" type="dial" name="Knob 4"  size="1.1" maximum="127" minimum="0"/>
-            <Param value="CC#20" type="dial" name="Knob 5"  size="1.1" maximum="127" minimum="0"/>
-            <Param value="CC#21" type="dial" name="Knob 6"  size="1.1" maximum="127" minimum="0"/>
-            <Param value="CC#22" type="dial" name="Knob 7"  size="1.1" maximum="127" minimum="0"/>
-            <Param value="CC#23" type="dial" name="Knob 8"  size="1.1" maximum="127" minimum="0"/>
+          <Group name="Device Knob" columns="4">
+            <Param value="CC#16|Ch1" type="dial" name="Knob 1"  size="1.1" maximum="127" minimum="0"/>
+            <Param value="CC#17|Ch1" type="dial" name="Knob 2"  size="1.1" maximum="127" minimum="0"/>
+            <Param value="CC#18|Ch1" type="dial" name="Knob 3"  size="1.1" maximum="127" minimum="0"/>
+            <Param value="CC#19|Ch1" type="dial" name="Knob 4"  size="1.1" maximum="127" minimum="0"/>
+            <Param value="CC#20|Ch1" type="dial" name="Knob 5"  size="1.1" maximum="127" minimum="0"/>
+            <Param value="CC#21|Ch1" type="dial" name="Knob 6"  size="1.1" maximum="127" minimum="0"/>
+            <Param value="CC#22|Ch1" type="dial" name="Knob 7"  size="1.1" maximum="127" minimum="0"/>
+            <Param value="CC#23|Ch1" type="dial" name="Knob 8"  size="1.1" maximum="127" minimum="0"/>
           </Group>
           <Group name="Control" orientation="horizontal" columns="4" colorspace="0,1,0">
             <Param value="A#3|Ch1" type="pushbutton" name="" size="1.1" aspect="0.6" maximum="127" minimum="0"/>

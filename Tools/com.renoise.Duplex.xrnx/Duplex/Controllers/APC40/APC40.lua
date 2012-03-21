@@ -70,4 +70,11 @@ function APC40:point_to_value(pt,elm,ceiling)
 
 end
 
+--==============================================================================
+
+-- Include these configurations for the APC40
+
+local CTRL_PATH = "Duplex/Controllers/APC40/Configurations/"
+require (CTRL_PATH.."MatrixEffectNavigatorTransportMixer")
+
 

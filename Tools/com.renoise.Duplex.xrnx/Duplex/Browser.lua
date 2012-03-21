@@ -38,24 +38,8 @@ function Browser:__init(initial_configuration, start_configuration)
   -- true while updating the GUI from within the internal browser functions, 
   -- to avoid doubling updates when the changes are not fired from the GUI
   self._suppress_notifiers = false
-
-  -- set when we temporarily have selected "None" as device, 
-  -- and want to revert the list choice 
-  self._requested_device = nil
   
-  -- cast these as standard types instead of Observable-X types,
-  -- as the socket will only accept basic string & numbers as arguments
-  local osc_host = duplex_preferences.osc_server_host.value
-  local osc_port = duplex_preferences.osc_server_port.value
-
-  -- the OSC client takes care of sending internally routed notes
-  -- to Renoise (not created if host/port is not defined)
-  self._osc_client = OscClient(osc_host,osc_port)
   
-  -- the voice manager is handling triggered note messages
-  -- (needs the osc_client)
-  self._voice_mgr = OscVoiceMgr()
-
   ---- components
   
   -- view builder that we do use for all our views
@@ -176,13 +160,6 @@ function Browser:on_idle()
   for _,process in pairs(self._processes) do
     process:on_idle()
   end
-
-  -- 
-  if self._requested_device then
-    self._requested_device = nil
-    self:set_device(self._device_name)
-  end
-
 end
 
 
@@ -195,19 +172,6 @@ function Browser:on_new_document()
 
   for _,process in pairs(self._processes) do
     process:on_new_document()
-  end
-end
-
-
---------------------------------------------------------------------------------
-
--- forwards new document notifications to all active processes
-
-function Browser:on_release_document()
-  TRACE("Browser:on_new_document()")
-
-  for _,process in pairs(self._processes) do
-    process:on_release_document()
   end
 end
 
@@ -295,7 +259,7 @@ function Browser:set_device(device_display_name, configuration_hint)
     
     self._device_name = self:_strip_postfixes(device_display_name)
     self._configuration_name = "None"
-    
+  
     if (device_display_name == "None") then
       TRACE("Browser:releasing all processes")
       
@@ -304,7 +268,7 @@ function Browser:set_device(device_display_name, configuration_hint)
         self._processes[#self._processes]:invalidate()
         self._processes:remove(#self._processes)
       end
-      
+
       -- make sure all configuration settings are also cleared
       self:set_configuration(nil)
     
@@ -347,6 +311,7 @@ function Browser:set_device(device_display_name, configuration_hint)
     end
   end
   
+
   ---- update the GUI, in case this function was not fired from the GUI
 
   local suppress_notifiers = self._suppress_notifiers
@@ -357,7 +322,6 @@ function Browser:set_device(device_display_name, configuration_hint)
 
   self._vb.views.dpx_browser_configurations.items = 
     available_configuration_names
-
 
   local index = self:_device_index_by_name(self._device_name)
   self._vb.views.dpx_browser_input_device.value = index
@@ -422,29 +386,6 @@ end
 
 --------------------------------------------------------------------------------
 
--- check if previous configuration exist
--- @return boolean
-
-function Browser:has_previous_configuration()
-  TRACE("Browser:has_previous_configuration()")
-  if not self._configuration_name or not self._device_name then
-    return
-  end
-  local available_configuration_names = 
-    self:_available_configuration_names_for_device(self._device_name)
-  for config_idx, config_name in ripairs(available_configuration_names) do
-    if (config_name == self._configuration_name) then
-      local config_list = 
-        self:_available_configurations_for_device(self._device_name)
-      return config_list[config_idx-1]
-    end
-  end
-      
-end
-
-
---------------------------------------------------------------------------------
-
 -- activate the next configuration (if active, has next)
 
 function Browser:set_next_configuration()
@@ -463,28 +404,6 @@ function Browser:set_next_configuration()
           self:set_configuration(config_list[config_idx+1], start_running)
        return
       end
-    end
-  end
-      
-end
-
---------------------------------------------------------------------------------
-
--- check if next configuration exist
--- @return boolean
-
-function Browser:has_next_configuration()
-  TRACE("Browser:has_next_configuration()")
-  if not self._configuration_name or not self._device_name then
-    return
-  end
-  local available_configuration_names = 
-    self:_available_configuration_names_for_device(self._device_name)
-  for config_idx, config_name in ipairs(available_configuration_names) do
-    if (config_name == self._configuration_name) then
-      local config_list = 
-        self:_available_configurations_for_device(self._device_name)
-      return config_list[config_idx+1]
     end
   end
       
@@ -1042,7 +961,6 @@ function Browser:_disable_configuration_autostart()
 end
 
 
-
 --------------------------------------------------------------------------------
 
 -- notifier, fired when device input or output port setting changed
@@ -1107,7 +1025,6 @@ function Browser:_device_ports_changed()
 end
 
 
-
 --------------------------------------------------------------------------------
 
 -- build and assign the application dialog
@@ -1157,9 +1074,8 @@ function Browser:_create_content_view()
                 {"OK","Cancel"})
                     
               if (choice == "Cancel") then
-                -- revert to the last used device in idle loop
-                -- (otherwise, we would trigger a notifier feedback)
-                self._requested_device = self._device_name
+                -- revert to the last used device
+                self:set_device(self._device_name)
               else
                 self:set_device(self:_strip_postfixes(device_list[e]))
               end
@@ -1310,8 +1226,6 @@ function BrowserProcess:__init(p_browser)
 
   -- list of instantiated apps for the current configuration
   self._applications = table.create() 
-
-
   
   -- true when this process was running at least once after instantiated
   self._was_running = false
@@ -1443,7 +1357,7 @@ function BrowserProcess:instantiate(configuration)
 
   ---- instantiate the device
 
-  self._message_stream = MessageStream(self)
+  self._message_stream = MessageStream()
 
   if (configuration.device.protocol == DEVICE_MIDI_PROTOCOL) then
 
@@ -1510,8 +1424,6 @@ function BrowserProcess:instantiate(configuration)
     end
 
     local mappings = configuration.applications[app_class_name].mappings or {}
-    local palette = configuration.applications[app_class_name].palette or {}
-    local hidden = configuration.applications[app_class_name].hidden_options or {}
     local options = table.rcopy(_G[actual_class_name]["default_options"]) or {}
     local config_name = app_class_name
 
@@ -1521,9 +1433,6 @@ function BrowserProcess:instantiate(configuration)
       if app_node then
         if app_node.options and app_node.options:property(k) then
           options[k].value = app_node.options:property(k).value
-          if table_find(hidden,k) then
-            options[k].hidden = true
-          end
         end
       end
     end
@@ -1531,7 +1440,7 @@ function BrowserProcess:instantiate(configuration)
     local app_instance = nil
 
     app_instance = _G[actual_class_name](
-        self, mappings, options, config_name, palette)
+        self, mappings, options, config_name)
     
     self._applications:insert(app_instance)
   end
@@ -1739,14 +1648,6 @@ function BrowserProcess:show_settings_dialog()
 
   local vb = self._vb
 
-  local val_unhandled = self.settings.pass_unhandled.value
-  --print("BrowserProcess:show_settings_dialog() - val_unhandled",val_unhandled)
-  local txt_unhandled = "When enabled, messages that are not handled by an "
-                      .."\napplication are forwarded to Renoise (this also "
-                      .."\napplies when the whole configuration is stopped). "
-                      .."\nAllows you to use Renoise MIDI mapping-features in "
-                      .."\ncombination with Duplex"
-
   -- define the basic settings view
   if not self._settings_view then
     self._settings_view = vb:column{
@@ -1754,27 +1655,6 @@ function BrowserProcess:show_settings_dialog()
       margin = renoise.ViewBuilder.DEFAULT_DIALOG_MARGIN,
       vb:row{
         id="dpx_device_settings_root",
-      },
-      vb:column{
-        id="dpx_unhandled_root",
-        --[[
-        vb:space{
-          height = 4,
-        },
-        ]]
-        vb:row{
-          vb:checkbox{
-            value = val_unhandled,
-            notifier = function(v)
-              self.settings.pass_unhandled.value = v
-              --print("*** self.settings.pass_unhandled.value",self.settings.pass_unhandled.value)
-            end,
-          },
-          vb:text {
-            text = "Pass unhandled MIDI messages to Renoise",
-            tooltip = txt_unhandled,
-          }
-        },
       },
       vb:space{
         height = 4,
@@ -1797,12 +1677,6 @@ function BrowserProcess:show_settings_dialog()
       app:_build_options(self)
       vb.views.dpx_app_settings_root:add_child(app._settings_view)
     end
-
-    -- show/hide the "unhandled message" part
-    local elm = vb.views.dpx_unhandled_root
-    local show_unhandled = (self.device.protocol == DEVICE_MIDI_PROTOCOL)
-    vb.views.dpx_unhandled_root.visible = show_unhandled
-
   end
 
   self._settings_dialog = renoise.app():show_custom_dialog(
@@ -1895,21 +1769,6 @@ function BrowserProcess:on_idle()
     -- then refresh the display 
     for _,app in pairs(self._applications) do
       app:on_idle()
-    end
-  end
-end
-
-
---------------------------------------------------------------------------------
-
--- provide document released notification for all active apps
-
-function BrowserProcess:on_release_document()
-  TRACE("BrowserProcess:on_release_document")
-
-  if (self:instantiated()) then
-    for _,app in pairs(self._applications) do
-      app:on_release_document()
     end
   end
 end

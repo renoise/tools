@@ -14,22 +14,16 @@ A generic application class for Duplex
 class 'Application'
 
 -- constructor 
--- @process BrowserProcess
--- @mappings (table, imported from the device configuration)
--- @palette (table, imported from the device configuration)
--- @options (table, imported from the application default options)
--- @cfg_name (string, imported from the application default options)
-
-function Application:__init(process,mappings,options,cfg_name,palette)
+function Application:__init(browser_process,mappings,options,config_name)
   TRACE("Application:__init()")
 
   -- this is the Display that our application is using
-  self.display = process.display
+  self.display = browser_process.display
   
   -- (string) this is the name of the application as it appears
   -- in the device configuration, e.g. "MySecondMixer" - used for looking 
   -- up the correct preferences-key when specifying custom options 
-  self._cfg_name = cfg_name
+  self._config_name = config_name
 
   -- when the application is inactive, it should 
   -- sleep during idle time and ignore any user input
@@ -47,9 +41,6 @@ function Application:__init(process,mappings,options,cfg_name,palette)
   --  group_name = "Main",
   --  index = 3,
   -- }
-
-  -- note: mappings are specified in the application 
-  self.mappings = self.mappings or {}
 
   -- update "self.mappings" with values from the provided configuration
   self:_apply_mappings(mappings)
@@ -73,9 +64,6 @@ function Application:__init(process,mappings,options,cfg_name,palette)
 
   -- define a default palette for the application
   self.palette = self.palette or {}
-
-  -- update "self.palette" with values from the device-configuration
-  self:_apply_palette(palette)
 
   -- private stuff
 
@@ -191,17 +179,6 @@ end
 
 --------------------------------------------------------------------------------
 
--- called when releasing the active document
-
-function Application:on_release_document()
-  TRACE("Application:on_release_document()")
-  
-  -- nothing done by default
-end
-
-
---------------------------------------------------------------------------------
-
 -- called when a new document becomes available
 
 function Application:on_new_document()
@@ -244,28 +221,6 @@ function Application:_apply_mappings(mappings)
       if (v==v2) then
         for k3,v3 in pairs(mappings[v]) do
           self.mappings[v][k3] = v3
-        end
-      end
-    end
-  end
-end
-
---------------------------------------------------------------------------------
-
--- assign matching palette entries
-
-function Application:_apply_palette(palette)
-  TRACE("Application:_apply_palette",palette)
-  
-  if not palette then
-    return
-  end
-
-  for v,k in pairs(self.palette) do
-    for v2,k2 in pairs(palette) do
-      if (v==v2) then
-        for k3,v3 in pairs(palette[v]) do
-          self.palette[v][k3] = v3
         end
       end
     end
@@ -319,7 +274,7 @@ function Application:_build_options(process)
   self._settings_view = vb:column{
     style = "group",
     vb:button{
-      text = self._cfg_name,
+      text = self._config_name,
       width=273,
       notifier = function()
         local view = vb.views.dpx_app_options
@@ -382,7 +337,6 @@ function Application:_add_option_row(t,key,process)
       width=90,
     },
     vb:popup{
-      id=("dpx_app_options_%s"):format(key),
       items=t.items,
       value=(t.value>#t.items) and 1 or t.value, -- if invalid, set to first
       width=175,
@@ -398,11 +352,8 @@ end
 --------------------------------------------------------------------------------
 
 -- set option value 
--- @param key, val: the key/value to change
--- @process (BrowserProcess) supply this parameter to update permanently
 
 function Application:_set_option(key, val, process)
-  TRACE("Application:_set_option()",key, val, process)
 
   -- set local value
   for k,v in pairs(self.options) do
@@ -417,23 +368,13 @@ function Application:_set_option(key, val, process)
   if process then
     -- update relevant device configuration
     local app_options_node = 
-      process.settings.applications:property(self._cfg_name).options
+      process.settings.applications:property(self._config_name).options
     -- check if we need to create the node 
     if not app_options_node:property(key) then
       app_options_node:add_property(key,val)
     else
       app_options_node:property(key).value = val
     end
-  
-    -- update settings UI (might be hidden/non-existent)
-    if (self._settings_view)then
-      local elm_id = ("dpx_app_options_%s"):format(key)
-      local elm = self._vb.views[elm_id]
-      if elm then
-        elm.value = val
-      end
-    end
-
   end
 
 end

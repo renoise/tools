@@ -14,9 +14,9 @@ Mappings
   prev_next_track  - (UISpinner) assign to two contiguous buttons
   prev_next_page   - (UISpinner) assign to two contiguous buttons
   select_track     - (UISlider) assign to dial/fader or multiple buttons
-  select_first     - (UIButton) assign to single button
-  select_master    - (UIButton) assign to single button
-  select_sends     - (UIButton) assign to single button
+  select_first     - (UIPushButton) assign to single button
+  select_master    - (UIPushButton) assign to single button
+  select_sends     - (UIPushButton) assign to single button
 
 Options
 
@@ -55,7 +55,7 @@ TrackSelector.default_options = {
 
 }
 
-function TrackSelector:__init(process,mappings,options,cfg_name,palette)
+function TrackSelector:__init(browser_process,mappings,options,config_name)
 
   -- globals
   self.TRACK_PAGE_AUTO = 1
@@ -111,19 +111,7 @@ function TrackSelector:__init(process,mappings,options,cfg_name,palette)
       description = "TrackSelector: Select first track",
     },
   }
-
-  self.palette = {
-    track_sequencer_on  = { color = {0xFF,0xFF,0xFF}, text = "T", val=true  },
-    track_sequencer_off = { color = {0x00,0x00,0x00}, text = "T", val=false },
-    track_master_on     = { color = {0xFF,0xFF,0xFF}, text = "M", val=true  },
-    track_master_off    = { color = {0x00,0x00,0x00}, text = "M", val=false },
-    track_send_on       = { color = {0xFF,0xFF,0xFF}, text = "S", val=true  },
-    track_send_off      = { color = {0x00,0x00,0x00}, text = "S", val=false },
-    select_device_tip   = { color = {0xFF,0xFF,0xFF}, text = "▪", val=true  },
-    select_device_back  = { color = {0x40,0x40,0x80}, text = "▫", val=false },
-  }
-
-  Application.__init(self,process,mappings,options,cfg_name,palette)
+  Application.__init(self,browser_process,mappings,options,config_name)
 
 end
 
@@ -253,31 +241,6 @@ function TrackSelector:update()
     self._select_track:set_index(slider_pos,skip_event)
   end
 
-  local master_idx = get_master_track_index()
-
-  -- set the seq./master/send buttons
-  if self._select_first then
-    if (track_index == 1) then
-      self._select_first:set(self.palette.track_sequencer_on)
-    else
-      self._select_first:set(self.palette.track_sequencer_off)
-    end
-  end
-  if self._select_master then
-    if (track_index == master_idx) then
-      self._select_master:set(self.palette.track_master_on)
-    else
-      self._select_master:set(self.palette.track_master_off)
-    end
-  end
-  if self._select_sends then
-    if (track_index == (master_idx+1)) then
-      self._select_sends:set(self.palette.track_send_on)
-    else
-      self._select_sends:set(self.palette.track_send_off)
-    end
-  end
-
 end
 
 --------------------------------------------------------------------------------
@@ -292,7 +255,18 @@ function TrackSelector:_build_app(song)
 
   local slider_grid_mode = false
 
-  -- add next/previous track control
+  -- check if required mappings are present
+  --[[
+  if not self.mappings.select_track.group_name then
+    local msg = "A required mapping is missing from the " 
+    .."TrackSelector configuration. You need to specify the "
+    .."'select_track' mapping"
+    renoise.app():show_warning(msg)
+    return false
+  end
+  ]]
+
+  -- add next/previous track control (spinner)
   local map = self.mappings.prev_next_track
   if map.group_name then
     TRACE("TrackSelector:add next/previous track control (spinner)")
@@ -319,6 +293,7 @@ function TrackSelector:_build_app(song)
       end
       -- the notifier will take care of the rest
       renoise.song().selected_track_index = track_idx
+      --self._selected_track_index = track_idx
  
     end
     
@@ -326,7 +301,7 @@ function TrackSelector:_build_app(song)
     self._prev_next_track = c
   end
 
-  -- add previous/next page control
+  -- add previous/next page control (spinner)
   local map = self.mappings.prev_next_page
   if map.group_name then
     TRACE("TrackSelector:add previous/next page control (spinner)")
@@ -339,23 +314,13 @@ function TrackSelector:_build_app(song)
       if (not self.active) then
         return false
       end
-      local track_idx = renoise.song().selected_track_index
-      local track_page = self:_get_track_page(track_idx)
       -- figure out the resulting track index
       if self._out_of_bounds_track_index then
-        track_idx = self._out_of_bounds_track_index
+        self._selected_track_index = self._out_of_bounds_track_index
       end
       local page_width = self:_get_page_width()
-      local page_diff = (obj.index-track_page)*page_width
-      local track_idx = page_diff+track_idx
-      --[[
-      print("track_idx B",track_idx)
-      print("obj.index",obj.index)
-      print("track_page",track_page)
-      print("page_width",page_width)
-      print("page_diff",page_diff)
-      print("track_idx A ",track_idx)
-      ]]
+      local page_diff = (obj.index-self._track_page)*page_width
+      local track_idx = page_diff+self._selected_track_index
       -- outside bounds?
       if (track_idx>#renoise.song().tracks) then
         self._out_of_bounds_track_index = track_idx
@@ -370,7 +335,7 @@ function TrackSelector:_build_app(song)
     self._prev_next_page = c
   end
 
-  -- add track-activator control
+  -- add track-activator control (slider)
   local map = self.mappings.select_track
   if map.group_name then
     TRACE("TrackSelector:add track-activator control (slider)")
@@ -392,11 +357,7 @@ function TrackSelector:_build_app(song)
     c:set_pos(map.index or 1)
     c.toggleable = false
     c.flipped = true
-    c:set_palette({
-      tip = self.palette.select_device_tip,
-      track = self.palette.select_device_back,
-      background = self.palette.select_device_back,
-    })
+    c.palette.track = table.rcopy(self.display.palette.background)
     c:set_orientation(map.orientation)
     c:set_size(self._slider_units)
     c.on_change = function(obj) 
@@ -416,7 +377,7 @@ function TrackSelector:_build_app(song)
         end
         -- outside bounds?
         if (track_idx>#renoise.song().tracks) then
-          return 
+          return false
         end
         -- reset the 'out of bounds' track 
         -- (since we manually selected this track)
@@ -431,11 +392,11 @@ function TrackSelector:_build_app(song)
     self._select_track = c
   end
 
-  -- add first track select 
+  -- add first track select (pushbutton)
   local map = self.mappings.select_first
   if map.group_name then
     TRACE("TrackSelector:add first track select (pushbutton)")
-    local c = UIButton(self.display)
+    local c = UIPushButton(self.display)
     c.group_name = map.group_name
     c.tooltip = map.description
     c:set_pos(map.index)
@@ -449,11 +410,11 @@ function TrackSelector:_build_app(song)
     self._select_first = c
   end
 
-  -- add master-track select 
+  -- add master-track select (pushbutton)
   local map = self.mappings.select_master
   if map.group_name then
     TRACE("TrackSelector:add master-track select (pushbutton)")
-    local c = UIButton(self.display)
+    local c = UIPushButton(self.display)
     c.group_name = map.group_name
     c.tooltip = map.description
     c:set_pos(map.index)
@@ -468,11 +429,11 @@ function TrackSelector:_build_app(song)
     self._select_master = c
   end
 
-  -- add send-track select 
+  -- add send-track select (pushbutton)
   local map = self.mappings.select_sends
   if map.group_name then
     TRACE("TrackSelector:add master-track select (pushbutton)")
-    local c = UIButton(self.display)
+    local c = UIPushButton(self.display)
     c.group_name = map.group_name
     c.tooltip = map.description
     c:set_pos(map.index)
@@ -483,7 +444,7 @@ function TrackSelector:_build_app(song)
       local track_idx = get_master_track_index()+1
       -- outside bounds?
       if (track_idx>#renoise.song().tracks) then
-        return 
+        return false
       end
       renoise.song().selected_track_index = track_idx
     end

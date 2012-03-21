@@ -52,11 +52,11 @@
     3. Offset (set the sample offset of each step)
     4. Gate (set the length of each step, max is infinite)
 
-  @mapping set_mode_pitch   (UIButton)
-  @mapping set_mode_velocity(UIButton)
-  @mapping set_mode_offset  (UIButton)
-  @mapping set_mode_gate    (UIButton)
-  @mapping set_mode_retrig  (UIButton)
+  @mapping set_mode_pitch   (pushbutton)
+  @mapping set_mode_velocity(pushbutton)
+  @mapping set_mode_offset  (pushbutton)
+  @mapping set_mode_gate    (pushbutton)
+  @mapping set_mode_retrig  (pushbutton)
 
     These mappings work simularly to the choose_mode, but allows you to assign a mode directly to a specific button. If two or more modes are assigned in this way, they will act as radio buttons.
     As a secondary feature, hold any of these buttons for a moment, and the sequence will be written to the pattern, 'fill mode'
@@ -82,11 +82,11 @@
     This value will determine the space between each note in lines. 
     A value of 0 will output all notes simultaneously 
 
-  @mapping shift_up/down (UIButton)
+  @mapping shift_up/down (UIPushButton)
 
     Control the line-number offset using two buttons (increase/decrease offset by a single line)
 
-  @mapping extend/shrink (UIButton)
+  @mapping extend/shrink (UIPushButton)
 
     The 'extend' button will multiply the sequence's length by two, by cloning all steps and doubling the global retrig rate. Pressing 'shrink' will reduce the length of the sequence and global retrig rate by 50%
 
@@ -126,24 +126,24 @@
   @mapping gate_adjust   (UISlider)
   @mapping retrig_adjust (UISlider)
 
-  @mapping global (UIButton)
+  @mapping global (UIToggleButton)
 
     Enable 'global' to output all parameters (pitch, velocity, etc.) at the same time. When off, only the modified parameter type is output
 
-  @mapping fill (UIButton)
+  @mapping fill (UIToggleButton)
 
     Fill the entire track with the sequence, each time something changes. Use with caution, as this might be heavy on the CPU (with long patterns and many note columns)
     OBSOLETE?
 
-  @mapping position (UIButton)
+  @mapping position (UIPushButton)
 
     Set the position of the sequence (modifies the line offset), based on the position of the edit cursor
 
-  @mapping learn (UIButton)
+  @mapping learn (UIPushButton)
 
     Import pattern editor data beginning from the cursor position
 
-  @mapping write (UIButton)
+  @mapping write (UIToggleButton)
 
     Toggles between output and no output (if you don't have room for this, check out @edit_sync)
 
@@ -281,8 +281,8 @@ NotesOnWheels.default_options = {
 
 }
 
-function NotesOnWheels:__init(process,mappings,options,cfg_name,palette)
-  TRACE("NotesOnWheels:__init",process,mappings,options,cfg_name,palette)
+function NotesOnWheels:__init(browser_process,mappings,options,config_name)
+  TRACE("NotesOnWheels:__init",browser_process,mappings,options,config_name)
 
   -- constants
 
@@ -308,16 +308,14 @@ function NotesOnWheels:__init(process,mappings,options,cfg_name,palette)
   self.WRAP_OFFSET_ON = 1
   self.WRAP_OFFSET_OFF = 2
 
-  --[[
   self.TEXT_WRITE_ON = "■ Write"
   self.TEXT_WRITE_OFF = "□ Write"
 
   self.TEXT_LEARN_ON = "■ Learn"
   self.TEXT_LEARN_OFF = "□ Learn"
 
-  {0xFF,0xFF,0xFF} = {0xFF,0xFF,0xFF}
-  {0xFF,0xFF,0xFF} = {0x00,0x00,0x00}
-  ]]
+  self.BUTTON_COLOR_ON = self.BUTTON_COLOR_ON
+  self.BUTTON_COLOR_ON = self.BUTTON_COLOR_OFF
 
   -- control-map groups 
   self.mappings = {
@@ -418,38 +416,6 @@ function NotesOnWheels:__init(process,mappings,options,cfg_name,palette)
     position = {
       description = "NOW: Displays position within sequence",
     },
-  }
-
-  self.palette = {
-    -- position buttons
-    position_on     = { color={0xFF,0xFF,0xFF}, val=true, text="▪", },
-    position_off    = { color={0x00,0x00,0x00}, val=false, text="▫", },
-    write_on        = { color={0xFF,0xFF,0xFF}, val=true, text="Write", },
-    write_off       = { color={0x00,0x00,0x00}, val=false, text="Write", },
-    learn_on        = { color={0xFF,0xFF,0xFF}, val=true, text="Learn", },
-    learn_off       = { color={0x00,0x00,0x00}, val=false, text="Learn", },
-    fill_on         = { color={0xFF,0xFF,0xFF}, val=true, text="Fill",  },
-    fill_off        = { color={0x00,0x00,0x00}, val=false, text="Fill",  },
-    global_on       = { color={0xFF,0xFF,0xFF}, val=true, text="Global",},
-    global_off      = { color={0x00,0x00,0x00}, val=false, text="Global",},
-    shift_up_on     = { color={0xFF,0xFF,0xFF}, val=true, text="↑",},
-    shift_up_off    = { color={0x00,0x00,0x00}, val=false, text="↑",},
-    shift_down_on   = { color={0xFF,0xFF,0xFF}, val=true, text="↓", },
-    shift_down_off  = { color={0x00,0x00,0x00}, val=false, text="↓",},
-    extend_on       = { color={0xFF,0xFF,0xFF}, val=true, text="x²",},
-    extend_off      = { color={0x00,0x00,0x00}, val=false, text="x²",},
-    shrink_on       = { color={0xFF,0xFF,0xFF}, val=true, text="½", },
-    shrink_off      = { color={0x00,0x00,0x00}, val=false, text="½",},
-    set_pitch_on    = { color={0xFF,0xFF,0xFF}, val=true, text="Pitch",},
-    set_pitch_off   = { color={0x00,0x00,0x00}, val=false, text="Pitch", },
-    set_velocity_on = { color={0xFF,0xFF,0xFF}, val=true, text="Velocity",},
-    set_velocity_off= { color={0x00,0x00,0x00}, val=false, text="Velocity",},
-    set_offset_on   = { color={0xFF,0xFF,0xFF}, val=true, text="Offset",  },
-    set_offset_off  = { color={0x00,0x00,0x00}, val=false, text="Offset",},
-    set_gate_on     = { color={0xFF,0xFF,0xFF}, val=true, text="Gate",},
-    set_gate_off    = { color={0x00,0x00,0x00}, val=false, text="Gate",  },
-    set_retrig_on   = { color={0xFF,0xFF,0xFF}, val=true, text="Retrig",},
-    set_retrig_off  = { color={0x00,0x00,0x00}, val=false, text="Retrig",  },
 
   }
 
@@ -550,7 +516,7 @@ function NotesOnWheels:__init(process,mappings,options,cfg_name,palette)
   end
 
   -- apply user-specified arguments
-  Application.__init(self,process,mappings,options,cfg_name,palette)
+  Application.__init(self,browser_process,mappings,options,config_name)
 
   -- set these values after configuration has been applied
   self.mode = self.MODE_PITCH
@@ -728,6 +694,8 @@ function NotesOnWheels:output_sequence(seq_step,mask_mode,stream,force)
   -- expand the sequence to step length
   if seq_step and (seq_step>self.seq.num_steps) then
     self.seq:set_num_steps(seq_step,true)
+    --print("raise steps to ",seq_step)
+    --self.seq:mute_columns(seq_step)
   end
 
   -- latch mode can also prevent output
@@ -758,6 +726,7 @@ function NotesOnWheels:output_sequence(seq_step,mask_mode,stream,force)
   -- write sequence to pattern
   local recursive = false
   self.seq:write_to_pattern(patt_idx,begin_line,seq_step,mask_mode,stream,recursive,self.line_offset)
+
 
 end
 
@@ -791,13 +760,15 @@ function NotesOnWheels:on_idle()
     if (tmp~=self.realtime_pos)then
       local ctrl_pos = self._controls.pos_buttons[self.realtime_pos]
       if ctrl_pos then
-        ctrl_pos:set(self.palette.position_off)
+        ctrl_pos:set(false,false) 
       end
       self.realtime_pos = tmp
       ctrl_pos = self._controls.pos_buttons[self.realtime_pos]
       if ctrl_pos then
-        ctrl_pos:set(self.palette.position_on)
+        ctrl_pos:set(true,false)
       end
+
+
     end
     -- continuous mode support: we have arrived at the desired position 
     if (self.pending_seq_pos and pos.sequence==self.pending_seq_pos) then
@@ -824,6 +795,7 @@ function NotesOnWheels:on_idle()
   local pos = playing 
     and renoise.song().transport.playback_pos 
     or renoise.song().transport.edit_pos
+  -- 'blink' when we have moved a certain distance
   local blink = (math.floor((((pos.line-2)/lpb)+1)%2)==1)
   local changed = false
   if (blink~=self._blink) then
@@ -848,17 +820,22 @@ function NotesOnWheels:on_idle()
         lit = (math.floor(os.clock()*2)%2==0) and true or false
       end
       if (lit~=self.write_button_state) then
-        if lit then
-          ctrl:set(self.palette.write_on)
-        else
-          ctrl:set(self.palette.write_off)
-        end
+        local palette = (lit) 
+          and {foreground = {text=self.TEXT_WRITE_ON,color=self.BUTTON_COLOR_ON}}
+          or {foreground = {text=self.TEXT_WRITE_OFF,color=self.BUTTON_COLOR_OFF}}
+        ctrl:set_palette(palette)
+        ctrl:set(lit,true)
         self.write_button_state = lit
       end
-    elseif ctrl and (self.write_button_state==false) then
-      -- make sure write button is always lit 
-      ctrl:set(self.palette.write_on)
-      self.write_button_state = true
+    else
+      if ctrl then
+        -- make sure write button is always lit 
+        local palette = {foreground = {text=self.TEXT_WRITE_ON}} 
+        ctrl:set_palette(palette)
+        ctrl:set(true,true)
+        self.write_button_state = true
+
+      end
     end
   end
 
@@ -871,11 +848,11 @@ function NotesOnWheels:on_idle()
         lit = (math.floor(os.clock()*2)%2==0) and true or false
       end
       if (lit~=self.learn_button_state) then
-        if lit then
-          c:set(self.palette.learn_on)
-        else
-          c:set(self.palette.learn_off)
-        end
+        local palette = (lit) 
+          and {background = {text=self.TEXT_LEARN_ON,color=self.BUTTON_COLOR_ON}} 
+          or {background = {text=self.TEXT_LEARN_OFF,color=self.BUTTON_COLOR_OFF}} 
+        c:set_palette(palette)
+        c:set(lit,true)
         self.learn_button_state = lit
       end
     end
@@ -893,7 +870,8 @@ function NotesOnWheels:on_idle()
     self.pending_seq_pos = nil
     -- update write mode button
     if (ctrl) then
-      ctrl:set(self.palette.write_on)
+      local palette = {foreground = {text=self.TEXT_WRITE_ON}}
+      ctrl:set_palette(palette)
     end
     -- switch off realtime position
     self.realtime_pos = nil
@@ -932,7 +910,7 @@ function NotesOnWheels:disable_write_mode()
   local skip_event = true
   local ctrl = self._controls.write
   if ctrl then
-    ctrl:set(self.palette.write_off)
+    ctrl:set(false,skip_event) 
   end
 
 end
@@ -1064,12 +1042,7 @@ function NotesOnWheels:_attach_to_song()
         if (self.options.edit_sync.value == self.EDIT_SYNC_ON) then
           self.write_mode = renoise.song().transport.edit_mode
           if (self._controls.write) then
-            if self.write_mode then
-              self._controls.write:set(self.palette.write_off)
-            else
-              self._controls.write:set(self.palette.write_off)
-            end
-            --self._controls.write:set(self.write_mode)
+            self._controls.write:set(self.write_mode)
           end
         end
         if not self.write_mode then
@@ -1118,7 +1091,6 @@ function NotesOnWheels:_attach_to_instrument(new_song)
 end
 
 function NotesOnWheels:detect_slices()
-  TRACE("NotesOnWheels:detect_slices()")
 
   local inst_idx = renoise.song().selected_instrument_index
   local mappings = renoise.song().instruments[inst_idx].sample_mappings[1] -- Note On Layer
@@ -1138,7 +1110,6 @@ function NotesOnWheels:detect_slices()
     self.lower_note = mappings[1].base_note
     self.upper_note = mappings[#mappings].base_note
   end
-
 end
 
 
@@ -1147,7 +1118,7 @@ end
 -- @param value (number) the value to scale
 -- @param invert (boolean) when the value is sent to a control
 function NotesOnWheels:to_sliced_pitch_range(int_val,invert)
-  TRACE("NotesOnWheels:to_sliced_pitch_range",int_val,invert)
+  TRACE("NotesOnWheels:to_sliced_pitch_range",int_val)
 
   -- special value, leave alone...
   if (int_val==0) then
@@ -1165,18 +1136,30 @@ function NotesOnWheels:to_sliced_pitch_range(int_val,invert)
         int_val = int_val-1
       end
     end
-    int_val = clamp_value(int_val,self.lower_note,self.upper_note)
   end
+  -- ensure value is within range
+  int_val = clamp_value(int_val,self.lower_note,self.upper_note)
   return int_val
 end
 
+-- helper function for simulating radio buttons
+-- used by change_mode()
+function NotesOnWheels:desel(c1,c2)
+  TRACE("NotesOnWheels:desel",c1,c2)
+ if c1 then
+    local skip_event = true
+    if (c2 ~= c1) then
+      c1:set(false,skip_event)
+    end
+  end
+end
 
 -- when mode has changed
 -- @param mode (int, MODE_PITCH,MODE_VELOCITY,etc)
 -- @param update (boolean, update mode button state)
 
-function NotesOnWheels:change_mode(mode)
-  TRACE("NotesOnWheels:change_mode",mode)
+function NotesOnWheels:change_mode(mode,update)
+  TRACE("NotesOnWheels:change_mode",mode,update)
 
   if (self.mode == mode) then
     return
@@ -1184,31 +1167,35 @@ function NotesOnWheels:change_mode(mode)
 
   self.mode = mode
 
-  -- update buttons
+  -- map mode to buttons
+  local ctrl_pitch = self._controls.set_mode_pitch
+  local ctrl_velocity = self._controls.set_mode_velocity
+  local ctrl_offset = self._controls.set_mode_offset
+  local ctrl_gate = self._controls.set_mode_gate
+  local ctrl_retrig = self._controls.set_mode_retrig
+
+  local ctrl = nil
   if (mode==self.MODE_PITCH) then
-    self._controls.set_mode_pitch:set(self.palette.set_pitch_on)
-  else
-    self._controls.set_mode_pitch:set(self.palette.set_pitch_off)
+    ctrl = ctrl_pitch
+  elseif (mode==self.MODE_VELOCITY) then
+    ctrl = ctrl_velocity
+  elseif (mode==self.MODE_OFFSET) then
+    ctrl = ctrl_offset
+  elseif (mode==self.MODE_GATE) then
+    ctrl = ctrl_gate
+  elseif (mode==self.MODE_RETRIG) then
+    ctrl = ctrl_retrig
   end
-  if (mode==self.MODE_VELOCITY) then
-    self._controls.set_mode_velocity:set(self.palette.set_velocity_on)
-  else
-    self._controls.set_mode_velocity:set(self.palette.set_velocity_off)
-  end
-  if (mode==self.MODE_OFFSET) then
-    self._controls.set_mode_offset:set(self.palette.set_offset_on)
-  else
-    self._controls.set_mode_offset:set(self.palette.set_offset_off)
-  end
-  if (mode==self.MODE_GATE) then
-    self._controls.set_mode_gate:set(self.palette.set_gate_on)
-  else
-    self._controls.set_mode_gate:set(self.palette.set_gate_off)
-  end
-  if (mode==self.MODE_RETRIG) then
-    self._controls.set_mode_retrig:set(self.palette.set_retrig_on)
-  else
-    self._controls.set_mode_retrig:set(self.palette.set_retrig_off)
+
+  self:desel(ctrl_pitch,ctrl)
+  self:desel(ctrl_velocity,ctrl)
+  self:desel(ctrl_offset,ctrl)
+  self:desel(ctrl_gate,ctrl)
+  self:desel(ctrl_retrig,ctrl)
+
+  if update and ctrl then
+    local skip_event = true
+    ctrl:set(true,skip_event)
   end
 
   -- update the multi-controls 
@@ -1220,9 +1207,6 @@ function NotesOnWheels:change_mode(mode)
         local int_val = self.seq.pitch_steps[control_index]
         if (int_val==121) then 
           int_val = 0 
-        end
-        if (self.number_of_slices>0) then
-          int_val = self:to_sliced_pitch_range(int_val,true)
         end
         self.seq:update_pitch_ctrl(int_val,ctrl)
       elseif (self.mode == self.MODE_VELOCITY) then
@@ -1253,6 +1237,7 @@ function NotesOnWheels:change_mode(mode)
     end
     ctrl:set_value(val,true)
   end
+
 end
 
 
@@ -1284,13 +1269,22 @@ function NotesOnWheels:_build_app()
     local group = cm.groups[group_name]
     if group then
       for control_index = 1, #group do
-        local c = UIButton(self.display)
+        local c = UIToggleButton(self.display)
         c.group_name = self.mappings.position.group_name
         c.tooltip = self.mappings.position.description
         c:set_pos(control_index)
-        c:set(self.palette.position_off)
+        c.palette = {
+          background = {
+            text="▫",
+            color=self.BUTTON_COLOR_OFF
+          },
+          foreground = {
+            text="▪",
+            color=self.BUTTON_COLOR_ON
+          },
+        }
         c.active = false
-        c.on_press = function() 
+        c.on_change = function(obj) 
           if (not self.active) then
             return false
           end
@@ -1333,7 +1327,7 @@ function NotesOnWheels:_build_app()
             end
             self.seq:update_pitch_ctrl(pitch_val,ctrl)
           end
-          self:change_mode(self.MODE_PITCH)
+          self:change_mode(self.MODE_PITCH,true)
           self.step_focus = control_index
           self.touched = true
         end 
@@ -1363,7 +1357,7 @@ function NotesOnWheels:_build_app()
           if self.seq:set_velocity(control_index,int_val,nil,true) then
             self:schedule_output(control_index,self.MODE_VELOCITY)
           end
-          self:change_mode(self.MODE_VELOCITY)
+          self:change_mode(self.MODE_VELOCITY,true)
           self.step_focus = control_index
           self.touched = true
         end 
@@ -1393,7 +1387,7 @@ function NotesOnWheels:_build_app()
           if self.seq:set_offset(control_index,int_val,nil,true) then
             self:schedule_output(control_index,self.MODE_OFFSET)
           end
-          self:change_mode(self.MODE_OFFSET)
+          self:change_mode(self.MODE_OFFSET,true)
           self.step_focus = control_index
           self.touched = true
         end 
@@ -1423,7 +1417,7 @@ function NotesOnWheels:_build_app()
           if self.seq:set_gate(control_index,int_val,nil,true) then
             self:schedule_output(control_index,self.MODE_GATE)
           end
-          self:change_mode(self.MODE_GATE)
+          self:change_mode(self.MODE_GATE,true)
           self.step_focus = control_index
           self.touched = true
         end 
@@ -1454,7 +1448,7 @@ function NotesOnWheels:_build_app()
           if self.seq:set_retrig(control_index,val_exp,nil,true) then
             self:schedule_output(control_index,self.MODE_RETRIG)
           end
-          self:change_mode(self.MODE_RETRIG)
+          self:change_mode(self.MODE_RETRIG,true)
           self.step_focus = control_index
           self.touched = true
         end 
@@ -1770,20 +1764,22 @@ function NotesOnWheels:_build_app()
   -- create 'write' button
   group_name = self.mappings.write.group_name
   if group_name then
-    local update_button = function()
-      if self.write_mode then
-        self._controls.write:set(self.palette.write_on)
-      else
-        self._controls.write:set(self.palette.write_off)
-      end
-    end
     local group = cm.groups[group_name]
     if group then
-      local c = UIButton(self.display)
+      local c = UIToggleButton(self.display)
       c.group_name = self.mappings.write.group_name
       c.tooltip = self.mappings.write.description
       c:set_pos(self.mappings.write.index or 1)
-      c:set(self.palette.write_off)
+      c.palette = {
+        background = {
+          text=self.TEXT_WRITE_OFF,
+          color=self.BUTTON_COLOR_OFF
+        },
+        foreground = {
+          text=self.TEXT_WRITE_ON,
+          color=self.BUTTON_COLOR_ON
+        },
+      }
       c.active = self.write_mode
       c.on_press = function(obj) 
         if (not self.active) then
@@ -1791,14 +1787,13 @@ function NotesOnWheels:_build_app()
         end
         self.write_mode = not self.write_mode
         self.touched = false
-        update_button()
       end
-      c.on_release = function()
+      c.on_release = function(obj)
         if (not self.active) then
           return false
         end
-        --obj:set(self.write_mode,true)
-        update_button()
+        obj:set(self.write_mode,true)
+        
       end
       self:_add_component(c)
       self._controls.write = c    
@@ -1810,19 +1805,28 @@ function NotesOnWheels:_build_app()
   if group_name then
     local group = cm.groups[group_name]
     if group then
-      local c = UIButton(self.display)
+      --local c = UIPushButton(self.display)
+      local c = UIToggleButton(self.display)
       c.group_name = self.mappings.learn.group_name
       c.tooltip = self.mappings.learn.description
       c:set_pos(self.mappings.learn.index or 1)
-      c:set(self.palette.learn_off)
+      c.palette = {
+        background = {
+          text=self.TEXT_LEARN_OFF,
+          color=self.BUTTON_COLOR_OFF
+        },
+        foreground = {
+          text=self.TEXT_LEARN_ON,
+          color=self.BUTTON_COLOR_ON
+        },
+      }
       c.on_press = function(obj) 
         if (not self.active) then
           return false
         end
         self:reset_adjustments()
         self.seq:learn_sequence()
-        --obj:set_palette({background = {text=self.TEXT_LEARN_ON,color={0xFF,0xFF,0xFF}}})
-        obj:set(self.palette.learn_on)
+        obj:set_palette({background = {text=self.TEXT_LEARN_ON,color=self.BUTTON_COLOR_ON}})
       end
       c.on_hold = function(obj)
         if (not self.active) then
@@ -1832,14 +1836,11 @@ function NotesOnWheels:_build_app()
         self.autolearn = true
         self.just_entered_autolearn = true
       end
-      c.on_release = function()
+      c.on_release = function(obj)
         if not self.just_entered_autolearn then
           self.autolearn = false
-          --[[
-          obj:set_palette({background = {text=self.TEXT_LEARN_OFF,color={0x00,0x00,0x00}}})
+          obj:set_palette({background = {text=self.TEXT_LEARN_OFF,color=self.BUTTON_COLOR_OFF}})
           obj:set(false,true)
-          ]]
-          self._controls.learn:set(self.palette.learn_off)
         else
           self.just_entered_autolearn = false
         end
@@ -1854,27 +1855,29 @@ function NotesOnWheels:_build_app()
   if group_name then
     local group = cm.groups[group_name]
     if group then
-      local update_button = function()
-        if self.fill_mode then
-          self._controls.fill:set(self.palette.fill_on)
-        else
-          self._controls.fill:set(self.palette.fill_off)
-        end
-      end
-      local c = UIButton(self.display)
+      local c = UIToggleButton(self.display)
       c.group_name = self.mappings.fill.group_name
       c.tooltip = self.mappings.fill.description
       c:set_pos(self.mappings.fill.index or 1)
-      c.on_press = function() 
+      c.palette = {
+        background = {
+          text="□ Fill",
+          color=self.BUTTON_COLOR_OFF
+        },
+        foreground = {
+          text="■ Fill",
+          color=self.BUTTON_COLOR_ON
+        },
+      }
+      c.active = self.fill_mode
+      c.on_change = function(obj) 
         if (not self.active) then
           return false
         end
-        self.fill_mode = not self.fill_mode
-        update_button()
+        self.fill_mode = obj.active
       end
       self:_add_component(c)
       self._controls.fill = c    
-      update_button()
     end
   end
 
@@ -1883,27 +1886,29 @@ function NotesOnWheels:_build_app()
   if group_name then
     local group = cm.groups[group_name]
     if group then
-      local update_button = function()
-        if self.global_mode then
-          self._controls.global:set(self.palette.global_on)
-        else
-          self._controls.global:set(self.palette.global_off)
-        end
-      end
-      local c = UIButton(self.display)
+      local c = UIToggleButton(self.display)
       c.group_name = self.mappings.global.group_name
       c.tooltip = self.mappings.global.description
       c:set_pos(self.mappings.global.index or 1)
-      c.on_press = function(obj) 
+      c.palette = {
+        background = {
+          text="□ Global",
+          color=self.BUTTON_COLOR_OFF
+        },
+        foreground = {
+          text="■ Global",
+          color=self.BUTTON_COLOR_ON
+        },
+      }
+      c.active = self.global_mode
+      c.on_change = function(obj) 
         if (not self.active) then
           return false
         end
-        self.global_mode = not self.global_mode
-        update_button()
+        self.global_mode = obj.active
       end
       self:_add_component(c)
       self._controls.global = c    
-      update_button()
     end
   end
 
@@ -1912,11 +1917,20 @@ function NotesOnWheels:_build_app()
   if group_name then
     local group = cm.groups[group_name]
     if group then
-      local c = UIButton(self.display)
+      local c = UIPushButton(self.display)
       c.group_name = self.mappings.shift_up.group_name
       c.tooltip = self.mappings.shift_up.description
       c:set_pos(self.mappings.shift_up.index or 1)
-      c:set(self.palette.shift_up_off)
+      c.palette = {
+        background = {
+          text="↑",
+          color=self.BUTTON_COLOR_OFF
+        },
+        foreground = {
+          text="↑",
+          color=self.BUTTON_COLOR_ON
+        },
+      }
       c.on_press = function(obj) 
         if (not self.active) then
           return false
@@ -1924,8 +1938,6 @@ function NotesOnWheels:_build_app()
         self.touched = true
         self:shift(1) 
         self:output_sequence(self.step)
-        self._controls.shift_up:flash(
-          0.1,self.palette.shift_up_on,self.palette.shift_up_off)
       end
       self:_add_component(c)
       self._controls.shift_up = c    
@@ -1937,11 +1949,20 @@ function NotesOnWheels:_build_app()
   if group_name then
     local group = cm.groups[group_name]
     if group then
-      local c = UIButton(self.display)
+      local c = UIPushButton(self.display)
       c.group_name = self.mappings.shift_down.group_name
       c.tooltip = self.mappings.shift_down.description
       c:set_pos(self.mappings.shift_down.index or 1)
-      c:set(self.palette.shift_down_off)
+      c.palette = {
+        background = {
+          text="↓",
+          color=self.BUTTON_COLOR_OFF
+        },
+        foreground = {
+          text="↓",
+          color=self.BUTTON_COLOR_ON
+        },
+      }
       c.on_press = function(obj) 
         if (not self.active) then
           return false
@@ -1949,8 +1970,6 @@ function NotesOnWheels:_build_app()
         self.touched = true
         self:shift(-1) 
         self:output_sequence(self.step)
-        self._controls.shift_down:flash(
-          0.1,self.palette.shift_down_on,self.palette.shift_down_off)
       end
       self:_add_component(c)
       self._controls.shift_down = c    
@@ -1962,11 +1981,20 @@ function NotesOnWheels:_build_app()
   if group_name then
     local group = cm.groups[group_name]
     if group then
-      local c = UIButton(self.display)
+      local c = UIPushButton(self.display)
       c.group_name = self.mappings.extend.group_name
       c.tooltip = self.mappings.extend.description
       c:set_pos(self.mappings.extend.index or 1)
-      c:set(self.palette.extend_off)
+      c.palette = {
+        background = {
+          text="x²",
+          color=self.BUTTON_COLOR_OFF
+        },
+        foreground = {
+          text="x²",
+          color=self.BUTTON_COLOR_ON
+        },
+      }
       c.on_press = function(obj) 
         if (not self.active) then
           return false
@@ -1986,11 +2014,20 @@ function NotesOnWheels:_build_app()
   if group_name then
     local group = cm.groups[group_name]
     if group then
-      local c = UIButton(self.display)
+      local c = UIPushButton(self.display)
       c.group_name = self.mappings.shrink.group_name
       c.tooltip = self.mappings.shrink.description
       c:set_pos(self.mappings.shrink.index or 1)
-      c:set(self.palette.shrink_off)
+      c.palette = {
+        background = {
+          text="½",
+          color=self.BUTTON_COLOR_OFF
+        },
+        foreground = {
+          text="½",
+          color=self.BUTTON_COLOR_ON
+        },
+      }
       c.on_press = function(obj) 
         if (not self.active) then
           return false
@@ -2010,24 +2047,31 @@ function NotesOnWheels:_build_app()
   if group_name then
     local group = cm.groups[group_name]
     if group then
-      local c = UIButton(self.display)
+      local c = UIToggleButton(self.display)
       c.group_name = self.mappings.set_mode_pitch.group_name
       c.tooltip = self.mappings.set_mode_pitch.description
       c:set_pos(self.mappings.set_mode_pitch.index or 1)
-      c:set(self.palette.set_pitch_on)
+      c.palette = {
+        background = {
+          text="□ Pitch",
+          color=self.BUTTON_COLOR_OFF
+        },
+        foreground = {
+          text="■ Pitch",
+          color=self.BUTTON_COLOR_ON
+        },
+      }
       c.active = true
-      c.on_press = function(obj) 
+      c.on_change = function(obj) 
         if (not self.active) then
           return false
         end
         self:change_mode(self.MODE_PITCH)
-        --[[
         if not obj.active then
           self.touched = true
           self:output_sequence(nil,self.MODE_PITCH)
-          return 
+          return false
         end
-        ]]
       end
       c.on_hold = function(obj)
         if (not self.active) then
@@ -2048,23 +2092,30 @@ function NotesOnWheels:_build_app()
   if group_name then
     local group = cm.groups[group_name]
     if group then
-      local c = UIButton(self.display)
+      local c = UIToggleButton(self.display)
       c.group_name = self.mappings.set_mode_velocity.group_name
       c.tooltip = self.mappings.set_mode_velocity.description
       c:set_pos(self.mappings.set_mode_velocity.index or 1)
-      c:set(self.palette.set_velocity_off)
-      c.on_press = function(obj) 
+      c.palette = {
+        background = {
+          text="□ Velocity",
+          color=self.BUTTON_COLOR_OFF
+        },
+        foreground = {
+          text="■ Velocity",
+          color=self.BUTTON_COLOR_ON
+        },
+      }
+      c.on_change = function(obj) 
         if (not self.active) then
           return false
         end
         self:change_mode(self.MODE_VELOCITY)
-        --[[
         if not obj.active then
           self.touched = true
           self:output_sequence(nil,self.MODE_VELOCITY)
           return false
         end
-        ]]
       end
       c.on_hold = function(obj)
         if (not self.active) then
@@ -2085,23 +2136,30 @@ function NotesOnWheels:_build_app()
   if group_name then
     local group = cm.groups[group_name]
     if group then
-      local c = UIButton(self.display)
+      local c = UIToggleButton(self.display)
       c.group_name = self.mappings.set_mode_offset.group_name
       c.tooltip = self.mappings.set_mode_offset.description
       c:set_pos(self.mappings.set_mode_offset.index or 1)
-      c:set(self.palette.set_offset_off)
-      c.on_press = function(obj) 
+      c.palette = {
+        background = {
+          text="□ Offset",
+          color=self.BUTTON_COLOR_OFF
+        },
+        foreground = {
+          text="■ Offset",
+          color=self.BUTTON_COLOR_ON
+        },
+      }
+      c.on_change = function(obj) 
         if (not self.active) then
           return false
         end
         self:change_mode(self.MODE_OFFSET)
-        --[[
         if not obj.active then
           self.touched = true
           self:output_sequence(nil,self.MODE_OFFSET)
           return false
         end
-        ]]
       end
       c.on_hold = function(obj)
         if (not self.active) then
@@ -2122,23 +2180,30 @@ function NotesOnWheels:_build_app()
   if group_name then
     local group = cm.groups[group_name]
     if group then
-      local c = UIButton(self.display)
+      local c = UIToggleButton(self.display)
       c.group_name = self.mappings.set_mode_gate.group_name
       c.tooltip = self.mappings.set_mode_gate.description
       c:set_pos(self.mappings.set_mode_gate.index or 1)
-      c:set(self.palette.set_gate_off)
-      c.on_press = function(obj) 
+      c.palette = {
+        background = {
+          text="□ Gate",
+          color=self.BUTTON_COLOR_OFF
+        },
+        foreground = {
+          text="■ Gate",
+          color=self.BUTTON_COLOR_ON
+        },
+      }
+      c.on_change = function(obj) 
         if (not self.active) then
-          return false
-        end
-        self:change_mode(self.MODE_GATE)
-        --[[
-        if not obj.active then
           self.touched = true
           self:output_sequence(nil,self.MODE_GATE)
           return false
         end
-        ]]
+        self:change_mode(self.MODE_GATE)
+        if not obj.active then
+          return false
+        end
       end
       c.on_hold = function(obj)
         if (not self.active) then
@@ -2159,23 +2224,30 @@ function NotesOnWheels:_build_app()
   if group_name then
     local group = cm.groups[group_name]
     if group then
-      local c = UIButton(self.display)
+      local c = UIToggleButton(self.display)
       c.group_name = self.mappings.set_mode_retrig.group_name
       c.tooltip = self.mappings.set_mode_retrig.description
       c:set_pos(self.mappings.set_mode_retrig.index or 1)
-      c:set(self.palette.set_retrig_off)
-      c.on_press = function(obj) 
+      c.palette = {
+        background = {
+          text="□ Retrig",
+          color=self.BUTTON_COLOR_OFF
+        },
+        foreground = {
+          text="■ Retrig",
+          color=self.BUTTON_COLOR_ON
+        },
+      }
+      c.on_change = function(obj) 
         if (not self.active) then
           return false
         end
         self:change_mode(self.MODE_RETRIG)
-        --[[
         if not obj.active then
           self.touched = true
           self:output_sequence(nil,self.MODE_RETRIG)
           return false
         end
-        ]]
       end
       c.on_hold = function(obj)
         if (not self.active) then
@@ -2298,20 +2370,11 @@ NOW_Sequence.DEFAULT_RETRIG_ADJUST = 1/NOW_Sequence.MAX_RETRIGS
 function NOW_Sequence:__init(owner)
   TRACE("NOW_Sequence:__init()")
   
-  local api_version = renoise.API_VERSION
-  if (api_version>=3) then
-    self.GATE_PAN_LOWER = 3072
-    self.GATE_PAN_UPPER = 3087
-    self.RETRIG_PAN_LOWER = 6912
-    self.RETRIG_PAN_UPPER = 6926
-    self.OFFSET_NUM_VALUE = 28
-  elseif (api_version>=2) then
-    self.GATE_PAN_LOWER = 240
-    self.GATE_PAN_UPPER = 255
-    self.RETRIG_PAN_LOWER = 224
-    self.RETRIG_PAN_UPPER = 240
-    self.OFFSET_NUM_VALUE = 9
-  end
+  self.GATE_PAN_LOWER = 240
+  self.GATE_PAN_UPPER = 255
+  self.RETRIG_PAN_LOWER = 224
+  self.RETRIG_PAN_UPPER = 240
+  self.OFFSET_NUM_VALUE = 9
 
   -- reference to the main class
   self.owner = owner
@@ -2526,6 +2589,7 @@ end
 
 function NOW_Sequence:update_retrig_ctrl(int_val,ctrl)
   if (ctrl) then
+    --int_val = self:scale_log(int_val,NOW_Sequence.MAX_RETRIGS,4)
     ctrl:set_value(int_val/NOW_Sequence.MAX_RETRIGS,true)
   end
 end

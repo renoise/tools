@@ -70,7 +70,6 @@ options:add_property("Author", "My Name")
 options:add_property("Category", "In Progress")
 options:add_property("Description",  "")
 options:add_property("Homepage", "http://tools.renoise.com")
-options:add_property("Platform", "")
 options:add_property("Icon", "")  
 
 local categories = {"Pattern Editor", "Sample Editor", "Instruments", "Algorithmic composition"}
@@ -91,13 +90,11 @@ class "RenoiseScriptingTool"(renoise.Document.DocumentNode)
     self:add_property("Name", "")
     self:add_property("Id", "")        
     self:add_property("Version", "1")
-    self:add_property("ApiVersion", tostring(renoise.API_VERSION))    
-    self:add_property("Author", "")    
-    self:add_property("AutoUpgraded", "false")
+    self:add_property("ApiVersion", tostring(renoise.API_VERSION))
+    self:add_property("Author", "")
     self:add_property("Category", "")
     self:add_property("Description", "")
     self:add_property("Homepage", "")
-    self:add_property("Platform", "")
     self:add_property("Icon", "")
   end
   
@@ -114,10 +111,10 @@ class "RenoiseScriptingTool"(renoise.Document.DocumentNode)
       self.Author.value = options.Author.value .. " | " .. options.Email.value      
     else
       self.Author.value = options.Author.value    
-    end    
+    end
     
     -- copied fields
-    self.Name.value = options.Name.value        
+    self.Name.value = options.Name.value    
     self.Description.value = options.Description.value
     self.Category.value = options.Category.value    
     self.Homepage.value = options.Homepage.value
@@ -130,7 +127,6 @@ local manifest = RenoiseScriptingTool()
 local API_VERSIONS = table.create()
 API_VERSIONS[1] = "1"
 API_VERSIONS[2] = "2"
-API_VERSIONS[3] = "3"
   
 --------------------------------------------------------------------------------
 -- I/O and file system functions
@@ -701,8 +697,6 @@ local function zip_tool(tool, version)
       renoise_version = "_Rns260"
     elseif (renoise.API_VERSION == 2) then
       renoise_version = "_Rns270"
-    elseif (renoise.API_VERSION == 3) then
-      renoise_version = "_Rns280"  
     end
   end
   
@@ -733,7 +727,7 @@ local function zip_tool(tool, version)
   if (options.ExportExcludePreferencesXml.value) then
     excludes:insert("preferences.xml")
   end
-  excludes:insert("__MACOSX/*")
+  excludes:insert("/__MACOSX/*")
   
   -- zip
   local ok, err = zip(source_folder, destination, excludes)
@@ -827,7 +821,7 @@ function show_confirm_export_dialog(tool)
   vbc = renoise.ViewBuilder()
   
   local mf_path = tool.bundle_path .. "manifest.xml"
-  local mf = load_manifest(mf_path)  
+  local mf = load_manifest(mf_path)    
   
   local content = vbc:column{ 
     margin = DEFAULT_DIALOG_MARGIN, 
@@ -854,7 +848,7 @@ function show_confirm_export_dialog(tool)
     
     local t = type(mf[name])    
     local c = nil
-        
+    
     if (name == "Id") then
       c = vbc:text {
         text = mf[name].value,  
@@ -866,7 +860,7 @@ function show_confirm_export_dialog(tool)
         notifier = function(text)           
           mf[name].value = trim(text)
         end
-      }             
+      }       
     elseif (name == "ApiVersion") then
       c = vbc:popup {
         items = API_VERSIONS,        
@@ -877,7 +871,7 @@ function show_confirm_export_dialog(tool)
       }       
     elseif (name == "Version") then      
         c = vbc:valuefield {
-          tostring = function(val)                         
+          tostring = function(val)             
             return version_formatter(val)
           end,
           tonumber = function(str)
@@ -947,15 +941,6 @@ function show_confirm_export_dialog(tool)
   end
   
   content.uniform = true
-  if (mf["AutoUpgraded"] ~= nil and mf["AutoUpgraded"].value == "true") then
-    content:add_child(
-      vbc:text {
-        text = "This Tool was AutoUpgraded. If you are sure the Tool\n"..
-        "works correctly, continue to remove the flag and export.",
-        font = "bold"
-    })
-    mf["AutoUpgraded"].value = "false"
-  end
   content:add_child(vbc:text{text="Save to manifest.xml and export?"})  
   
   local incomplete_form = vbc:text{
@@ -981,10 +966,7 @@ function show_confirm_export_dialog(tool)
             vbc.views.incomplete_form.visible = true
             return
           end
-        end        
-        
-        -- format version number
-        mf["Version"].value = version_formatter(mf["Version"].value)
+        end
         
         mf:save_as(mf_path)    
                 

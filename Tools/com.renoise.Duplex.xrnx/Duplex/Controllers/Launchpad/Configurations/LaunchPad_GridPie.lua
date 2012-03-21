@@ -45,6 +45,8 @@ duplex_configurations:insert {
         },
     	},
       options = {
+        follow_pos = 1,
+        polyrhythms = 1,
         page_size_v = 5,
         page_size_h = 2,
       },

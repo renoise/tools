@@ -84,38 +84,31 @@ end
 
 -- user input via fader, dial,
 -- set index from entire range
--- @return boolean, true when message was handled
 
-function UISpinner:do_change(msg)
-  TRACE("UISpinner:do_change",msg)
+function UISpinner:do_change()
+  TRACE("UISpinner:do_change()")
 
-  if (self.on_change ~= nil) then
-
-    if not (self.group_name == msg.group_name) then
-      return false
-    end
-    
-    if not self:test(msg.column,msg.row) then
-      return false
-    end
-
-    -- restrict the value to fit within the range 
-    self.value = (msg.value / ((msg.max-msg.min) /
-      (self.maximum - self.minimum))) + self.minimum
-
-    local index = math.floor(self.value+.5)
-
-    if (index ~= self.index) then
-      self._cached_index = self.index
-      self.index = index
-      self:_invoke_handler()
-    end
-
-    return true
-
+  local msg = self:get_msg()
+  
+  if not (self.group_name == msg.group_name) then
+    return
+  end
+  
+  if not self:test(msg.column,msg.row) then
+    return
   end
 
-  return true
+  -- restrict the value to fit within the range 
+  self.value = (msg.value / ((msg.max-msg.min) /
+    (self.maximum - self.minimum))) + self.minimum
+
+  local index = math.floor(self.value+.5)
+
+  if (index ~= self.index) then
+    self._cached_index = self.index
+    self.index = index
+    self:_invoke_handler()
+  end
 
 end
 
@@ -124,17 +117,18 @@ end
 
 -- user input via button(s)
 
-function UISpinner:do_press(msg)
-  TRACE("UISpinner:do_press",msg)
+function UISpinner:do_press()
+  TRACE("UISpinner:do_press")
   
   if (self.on_change ~= nil) then
+    local msg = self:get_msg()
     
     if not (self.group_name == msg.group_name) then
-      return false
+      return 
     end
     
     if not self:test(msg.column,msg.row) then
-      return false
+      return 
     end
     
     local changed = false
@@ -181,13 +175,7 @@ function UISpinner:do_press(msg)
       self.canvas.has_changed = true
       self:invalidate()
     end
-
-    return true
-
   end
-
-  return false
-
 end
 
 
@@ -397,12 +385,12 @@ function UISpinner:add_listeners()
 
   self._display.device.message_stream:add_listener(
     self, DEVICE_EVENT_BUTTON_PRESSED,
-    function(msg) return self:do_press(msg) end )
+    function() self:do_press() end )
 
 
   self._display.device.message_stream:add_listener(
     self,DEVICE_EVENT_VALUE_CHANGED,
-    function(msg) return self:do_change(msg) end )
+    function() self:do_change() end )
 
 end
 

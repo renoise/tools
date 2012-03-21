@@ -6,7 +6,7 @@
 	<Parameters>
 		<Column>
 			<Row>
-				<Group name="Controls" orientation="vertical">
+				<Group name="Controls" columns="1">
 					<Param value="/grid/led/set 0 0 %i"  action="/grid/key 0 0 %i"  type="button" maximum="1" minimum="0"/>
 					<Param value="/grid/led/set 0 1 %i"  action="/grid/key 0 1 %i"  type="button" maximum="1" minimum="0"/>
 					<Param value="/grid/led/set 0 2 %i"  action="/grid/key 0 2 %i"  type="button" maximum="1" minimum="0"/>

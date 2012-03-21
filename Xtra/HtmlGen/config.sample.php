@@ -6,12 +6,12 @@ error_reporting(E_ALL | E_STRICT);
 // Config
 // ----------------------------------------------------------------------------
 
-// IMPORTANT! No trailing slashes for any of the following variables:
+// IMPORTANT!
+// No trailing slashes for any of the following variables!!!
 
-// absolute paths required:
 $CONFIG['DOCS_DIR'] = '/Users/dac514/code/xrnx/svn/trunk/Documentation';
-$CONFIG['OUT_DIR'] = $CONFIG['DOCS_DIR'].'/html';
 
-// absolute path or URL or relative path from $CONFIG['OUT_DIR']:
-$CONFIG['IMAGES_URL'] = 'images';
+$CONFIG['OUT_DIR'] = '/Users/dac514/Desktop/test';
+
+$CONFIG['IMAGES_URL'] = 'http://www.trotch.com/tmp/api_to_html-alpha-version_02/images';
 ?>

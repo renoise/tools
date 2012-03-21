@@ -26,7 +26,6 @@ end
 
 --------------------------------------------------------------------------------
 
---[[
 function Ohm64:point_to_value(pt,elm,ceiling)
 
   local ceiling = ceiling or 127
@@ -41,8 +40,16 @@ function Ohm64:point_to_value(pt,elm,ceiling)
     value = math.floor((pt.val * (1 / ceiling)) * elm.maximum)
   end
 
-  return value
+  return tonumber(value)
 end
 
-]]
 
+--------------------------------------------------------------------------------
+
+-- Include these configurations
+
+local CTRL_PATH = "Duplex/Controllers/Ohm64/Configurations/"
+require (CTRL_PATH.."MixerMatrixEffects")
+require (CTRL_PATH.."MixerMatrixEffectsSwitch")
+require (CTRL_PATH.."SequencerNavigatorMixerEffects")
+require (CTRL_PATH.."SequencerNavigatorMixerEffectsSwitch")

@@ -14,7 +14,6 @@ function open_arp_dialog()
   end
 
   local vb = renoise.ViewBuilder()
-  ea_gui = vb
   
   local DIALOG_MARGIN = renoise.ViewBuilder.DEFAULT_DIALOG_MARGIN
   local CONTENT_MARGIN = renoise.ViewBuilder.DEFAULT_CONTROL_MARGIN
@@ -557,17 +556,6 @@ function open_arp_dialog()
         },
 
         vb:row {
-          create_obj(obj_checkbox, '', 18,0,0,overwrite_alias,'pacbx2',
-          "When checked, alias tracks will be overwritten\n" ..
-          "NOT supported with track in song and "..
-          "column in song!!!",
-          0,function(value)overwrite_alias = value end,vb),
-
-          create_obj(obj_textlabel, '', TEXT_ROW_WIDTH,0,0,0,'idpatl9','',
-          'Overwrite Alias',0,vb),
-        },
-
-        vb:row {
           create_obj(obj_checkbox, '', 18,0,0,clear_track,'idpacb2',
           'Clear area before generating new notes',0,
           function(value) clear_track = value end,vb),
@@ -587,60 +575,20 @@ function open_arp_dialog()
       },
     },
 
-
-    vb:row {
-     create_obj(obj_textlabel, '', TEXT_ROW_WIDTH,0,0,0,'idpapu5','',
-      'Preset',0,vb),
-        create_obj(obj_popup, '', 248,0,0,1,'popup_preset',
-        "Select previously saved preset\n",
-        preset_list,function(value)preset_field = value end,vb),
-
-      vb:space {width = 10,},
-
-      create_obj(obj_button, '', 10,0,0,0,'idpabu3','Load selected preset / '..
-      'refresh presetlist (if you  have added new preset files)','Load',
-      function()
-        local preset_file = vb.views.popup_preset.items[vb.views.popup_preset.value]
-        load_preset(preset_file,vb)
-      end,vb),
-
-
-      create_obj(obj_button, '', 10,0,0,0,'idpabu4','Save current configuration','Save',
-      function()save_dialog(vb)end,vb),
-
-      create_obj(obj_button, '', 10,0,0,0,'idpabu6','Show preset-folder'..
-      ' location in platform explorer','Loc',
-      function()show_folder()end,vb),
-    },
-
     vb:space{height = 3*CONTENT_SPACING},
+
   --- Let's do it!!
     vb:row {
       vb:space {width = 185},
 
       create_obj(obj_button, '', 60,0,0,0,'idpabu1','','Arpeggiate!',
-      function()
-        local seq_status = 0
-        
-        if vb.views.chooser.value == 3 or vb.views.chooser.value == 5 then
-          seq_status = check_unique_pattern(vb)
-        end
-
-        if seq_status == 0 then
-          add_notes(1,1,vb)
-          note_pool = {} 
-          noteoct_pool = {} 
-          octave_pool = {}
-          instrument_pool = {}
-          velocity_pool = {}
-        end
-      end,vb),
+      function()add_notes(1,1,vb)end,vb),
 
       vb:space {width = 165,},
 
   --- Help function
       create_obj(obj_button, '', 10,0,0,0,'idpabu2','','?',
-      function()show_help()end,vb),
+      function()show_help() end,vb),
     }
   }
 
@@ -775,8 +723,7 @@ function open_arp_dialog()
      end
     end
   end      
-  get_preset_list(vb)
-  
+
   arpeg_option_dialog = renoise.app():show_custom_dialog("Epic Arpeggiator", 
   total_layout, key_control)
     
@@ -830,20 +777,7 @@ function change_octave_order(value,vb)
     vb.views.octave_repeat_mode.visible = false
     vb.views.octave_repeat_mode_text.visible = false
   end
-  if value == PLACE_RANDOM then
-    vb.views.popup_note_order.value = PLACE_RANDOM
-    if vb.views.popup_octave_order.active == true then
-      vb.views.popup_note_order.active = false
-    end
-  else
-    if vb.views.popup_note_order.value == PLACE_RANDOM then
-      vb.views.popup_note_order.value = PLACE_TOP_DOWN
-    end
-    
-    if vb.views.popup_note_order.active == false then
-      vb.views.popup_note_order.active = true
-    end
-  end
+
 end
 
 
@@ -909,21 +843,7 @@ function change_note_order(value,vb)
     vb.views.repeat_note.visible = false
     vb.views.repeat_note_title.visible = false
   end
-  if value == PLACE_RANDOM then
-    if vb.views.switch_note_pattern.value == NOTE_PATTERN_MATRIX then
-      vb.views.popup_octave_order.value = PLACE_RANDOM
-      if vb.views.popup_note_order.active == true then
-        vb.views.popup_octave_order.active = false
-      end
-    end
-  else
-    if vb.views.popup_octave_order.value == PLACE_RANDOM then
-      vb.views.popup_octave_order.value = PLACE_TOP_DOWN
-    end
-    if vb.views.popup_octave_order.active == false then
-      vb.views.popup_octave_order.active = true
-    end
-  end
+
 end
 
 
@@ -970,10 +890,10 @@ function set_area_selection(value,vb)
   local chooser = vb.views.chooser
 
   if value==OPTION_TRACK_IN_SONG or value==OPTION_COLUMN_IN_SONG then
-    local seq_status = check_unique_pattern(vb)
+    local seq_status = check_unique_pattern()
 
     if seq_status== -1 then
---      vb.views.chooser.value = area_to_process
+      vb.views.chooser.value = area_to_process
     else
       area_to_process = value
       vb.views.chooser.value = value
@@ -1009,7 +929,6 @@ function toggle_custom_arpeggiator_profile_visibility(value, vb)
   -- option is toggled.
   switch_arp_pattern_index = value
 
-  
   if value == ARPEGGIO_PATTERN_CUSTOM then
     value = true
   else         
@@ -1060,12 +979,9 @@ function toggle_chord_mode_visibility(value,vb)
   if value == true then
     vb.views.chord_mode_box_title.visible = true
     vb.views.chord_mode_box.visible = true
-    vb.views.popup_distance_mode.active = true
   else
     vb.views.chord_mode_box_title.visible = false
     vb.views.chord_mode_box.visible = false
-    vb.views.popup_distance_mode.value = 1
-    vb.views.popup_distance_mode.active = false
   end
 
 end
@@ -1095,7 +1011,6 @@ function toggle_octave_visibility(show, vb)
   else
     vb.views.popup_octave_order_text.visible = false
     vb.views.popup_octave_order.visible = false
-    vb.views.popup_octave_order.value = PLACE_TOP_DOWN
     vb.views.octave_repeat_mode_text.visible = false
     vb.views.octave_repeat_mode.visible = false
   end
@@ -1108,17 +1023,10 @@ end
 function toggle_note_matrix_visibility(show,fm,vb)
   -- Show the note matrix when selected, hide it when
   -- the custom note profile option is selected.
-
   if show == NOTE_PATTERN_MATRIX then
    fm.visible = true
    toggle_note_profile_visibility(false, vb)
    toggle_octave_visibility(true, vb)
-   if vb.views.popup_note_order.value == PLACE_RANDOM then
-    if vb.views.popup_note_order.active == true then
-      vb.views.popup_octave_order.active = false
-    end
-    vb.views.popup_octave_order.value = PLACE_RANDOM
-   end
   else
    fm.visible = false
    toggle_note_profile_visibility(true, vb)
@@ -1251,84 +1159,47 @@ end
 -- Warning dialog pattern sequence
 --------------------------------------------------------------------------------
 
-function cross_write_dialog(return_val, double, doubles, alias, vrb)
+function cross_write_dialog(return_val, double, doubles)
   local vb = renoise.ViewBuilder() 
   local CONTENT_MARGIN = renoise.ViewBuilder.DEFAULT_CONTROL_MARGIN
   local CONTENT_SPACING = renoise.ViewBuilder.DEFAULT_CONTROL_SPACING
   local dialog_title = "Cross-write warning"
 
-  local dialog_content = nil
-  if alias == false then
-    dialog_content = vb:column { 
-      margin = CONTENT_MARGIN,
-      spacing = CONTENT_SPACING,
-      uniform = true,
-      vb:text {
-        align="center",
-        text = "You have "..#double.." patterns that repeat on "..doubles..
-        " positions\n".."If you arpeggiate across the song, you"..
-        " might\nunawarely overwrite previously filled areas.\n\nDo you want to"..
-        " make the pattern order\nunique in the pattern sequencer?"
-      },
-  
-      vb:horizontal_aligner{
-        mode = "center",
-        vb:row{
-          spacing = 8,
-  
-          create_obj(obj_button, '', 50,0,0,0,'idwdbut1',
-          'Making all patterns unique by copying the pattern to a new instance',
-          'Make unique',function()
-            make_unique_pattern()
-            pseq_warn_dialog:close()
-            pseq_warn_dialog = nil
-            return_val = 0
-          end,vb),
-  
-          create_obj(obj_button, '', 50,0,0,0,'idwdbut2',
-          'reverts to previous area choice','Cancel',function()
-            pseq_warn_dialog:close()
-            pseq_warn_dialog = nil
-            if vrb.views.chooser.value == 3 then
-              vrb.views.chooser.value = 2
-            else
-              vrb.views.chooser.value = 4
-            end             
-          end,vb)
-        }
+  local dialog_content = vb:column { 
+    margin = CONTENT_MARGIN,
+    spacing = CONTENT_SPACING,
+    uniform = true,
+    vb:text {
+      align="center",
+      text = "You have "..#double.." patterns that repeat on "..doubles..
+      " positions\n".."If you arpeggiate across the song, you"..
+      " might\nunawarely overwrite previously filled areas.\n\nDo you want to"..
+      " make the pattern order\nunique in the pattern sequencer?"
+    },
+
+    vb:horizontal_aligner{
+      mode = "center",
+      vb:row{
+        spacing = 8,
+
+        create_obj(obj_button, '', 50,0,0,0,'idwdbut1',
+        'Making all patterns unique by copying the pattern to a new instance',
+        'Make unique',function()
+          make_unique_pattern()
+          pseq_warn_dialog:close()
+          pseq_warn_dialog = nil
+          return_val = 0
+        end,vb),
+
+        create_obj(obj_button, '', 50,0,0,0,'idwdbut2',
+        'reverts to previous area choice','Cancel',function()
+          pseq_warn_dialog:close()
+          pseq_warn_dialog = nil
+        end,vb)
       }
     }
-  else
-    dialog_content = vb:column { 
-      margin = CONTENT_MARGIN,
-      spacing = CONTENT_SPACING,
-      uniform = true,
-      vb:text {
-        align="center",
-        text = "Alias tracks are present, song mode is not supported for aliassed "..
-        " tracks. either unalias the track, or pick a different track."
-      },
-  
-      vb:horizontal_aligner{
-        mode = "center",
-        vb:row{
-          spacing = 8,
-   
-          create_obj(obj_button, '', 50,0,0,0,'idwdbut2',
-          'reverts to previous area choice','Ok',function()
-            pseq_warn_dialog:close()
-            pseq_warn_dialog = nil
-            if vrb.views.chooser.value == 3 then
-              vrb.views.chooser.value = 2
-            else
-              vrb.views.chooser.value = 4
-            end             
-          end,vb)
-        }
-      }
-    }
-  end
-  
+  }
+
   if (pseq_warn_dialog and pseq_warn_dialog.visible)then
     pseq_warn_dialog:show()
   else
@@ -1341,84 +1212,12 @@ function cross_write_dialog(return_val, double, doubles, alias, vrb)
 
 end
 
---------------------------------------------------------------------------------
--- Saving dialog presets
---------------------------------------------------------------------------------
-
-function save_dialog(vrb)
-  local vb = renoise.ViewBuilder() 
-  local CONTENT_MARGIN = renoise.ViewBuilder.DEFAULT_CONTROL_MARGIN
-  local CONTENT_SPACING = renoise.ViewBuilder.DEFAULT_CONTROL_SPACING
-  local dialog_title = "Save preset"
-  local preset_file = vrb.views.popup_preset.items[vrb.views.popup_preset.value]
-  local saving_dialog = nil
-  
-  local dialog_content = vb:column { 
-      margin = CONTENT_MARGIN,
-      spacing = CONTENT_SPACING,
-      uniform = true,
-      vb:text {
-        align="center",
-        text = "Preset name"
-      },
-      create_obj(obj_textfield, '', 230,0,0,preset_file,'textfield_filename',
-        "enter presetname without extensions",
-        0,function(value)preset_file = value end,vb),
-  
-      vb:horizontal_aligner{
-        mode = "center",
-        vb:row{
-          spacing = 8,
-  
-          create_obj(obj_button, '', 50,0,0,0,'idsvdbut1',
-          'Save the preset under this name (existing files will be overwritten'..
-          ' without warning!!',
-          'Save',function()
-            save_preset(preset_file,vrb)
-            saving_dialog:close()
-            saving_dialog = nil
-          end,vb),
-  
-          create_obj(obj_button, '', 50,0,0,0,'idsvdbut2',
-          'Abort saving','Cancel',function()
-            saving_dialog:close()
-            saving_dialog = nil
-          end,vb)
-        }
-      }
-    }
-  if (saving_dialog and saving_dialog.visible)then
-    saving_dialog:show()
-  else
-    saving_dialog = nil
-    saving_dialog = renoise.app():show_custom_dialog(dialog_title,
-    dialog_content)
-  end
-
-end
-
-function file_exists_dialog(preset_name)
-  local vb = renoise.ViewBuilder()
-
-  local DIALOG_MARGIN = renoise.ViewBuilder.DEFAULT_DIALOG_MARGIN
-  local DIALOG_SPACING = renoise.ViewBuilder.DEFAULT_DIALOG_SPACING
-  local message = "Preset "..preset_name.." already exists... Overwrite?"
-  local choice = renoise.app():show_prompt("Warning",message, {"Overwrite", "Cancel"})
-  print (choice)
-  if choice == 1 or choice == "Overwrite" then 
-    return true
-  else
-    return false
-  end
-end
-
 
 --------------------------------------------------------------------------------
 -- Help dialog
 --------------------------------------------------------------------------------
 
-
-function deprecated_show_help()
+function show_help()
   local vb = renoise.ViewBuilder()
 
   local DIALOG_MARGIN = renoise.ViewBuilder.DEFAULT_DIALOG_MARGIN
@@ -1492,23 +1291,17 @@ book ;).
 
 Arpeggio pattern
 Custom:places notes according to your personal line-scheme inserted in the text-
-line. You can use two modes:literal or binary. Literal means:line numbers match
-with the figures entered in the textfield. Binary means: a line is enabled on 
-positions if the value is not 0: 1,0,1,0,0: add note on the first and second
-line, then follow with two empty lines, repeat pattern after that (Distance is
-automatically adjusted if you end with one or more multiple 0 characters!)
-Closure type (literal mode only!):
-using nt means closing with a line-termination (note-off or cut defined above)
+line. using nt means closing with a line-termination (note-off or cut defined above)
 using bn means uphold the minimum defined distance between the last defined 
 row position and the next repetition of your custom pattern. The pattern will be 
 repeated until the pattern has been filled out. In song mode only the notes are
 shifted across the song, the custom pattern will be restarted from each pattern.
 If you do not insert any values in the custom pattern field (leaving the demo 
 contents there), distance mode will be automatically selected. You have to add a
-pattern. You can't use nt and nb in the same pattern, bn is always assumed if
-any is lacking.
-If you want your last note directly being followed, use bn and set the distance 
-between notes to 00. If you desire surprises, attempt to disobey the rules. 
+pattern. Also, you can't use nt and nb in the same pattern, you also have to close 
+your pattern with either "nt" or "bn". If you want your last note directly being 
+followed, select bn and set the distance between notes to 00. If you desire 
+surprises, attempt to disobey the rules. 
 
 Instrument and volume pool
 No instruments or volume values inserted in the textfield result in the current
@@ -1532,5 +1325,4 @@ checkbox should not be toggled in this case!
   )
 
 end
-
 

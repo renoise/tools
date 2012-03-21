@@ -2,10 +2,7 @@
 -- Duplex.Akai-MPK49
 ----------------------------------------------------------------------------]]--
 
---[[
+-- Include these configurations
 
-Inheritance: MidiDevice > Device
-
-A generic MidiDevice class 
-
---]]
+local CTRL_PATH = "Duplex/Controllers/Akai-MPK49/Configurations/"
+require (CTRL_PATH.."MixerTransport")

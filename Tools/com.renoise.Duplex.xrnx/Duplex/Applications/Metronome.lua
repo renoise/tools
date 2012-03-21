@@ -16,19 +16,15 @@ class 'Metronome' (Application)
 
 Metronome.default_options = {}
 
-function Metronome:__init(process,mappings,options,cfg_name,palette)
+function Metronome:__init(browser_process,mappings,options,config_name)
 
   self.mappings = {
     toggle = {
       description = "Metronome: toggle on/off"
     }
   }
-  self.palette = {
-    enabled   = { color = {0xFF,0x80,0x80}, text = "M", val=true  },
-    disabled  = { color = {0x00,0x00,0x00}, text = "M", val=false }
-  }
 
-  Application.__init(self,process,mappings,options,cfg_name,palette)
+  Application.__init(self,browser_process,mappings,options,config_name)
 
 end
 
@@ -51,17 +47,14 @@ end
 
 function Metronome:_build_app()
 
-  local c = UIButton(self.display)
+  local c = UIToggleButton(self.display)
   c.group_name = self.mappings.toggle.group_name
   c:set_pos(self.mappings.toggle.index)
-  c.tooltip = self.mappings.toggle.description
-  c.on_press = function(obj)
+  c.on_change = function(obj)
     if not self.active then
       return false
     end
-    local enabled = renoise.song().transport.metronome_enabled
-    renoise.song().transport.metronome_enabled = not enabled
-    self:update()
+    renoise.song().transport.metronome_enabled = obj.active
   end
   self:_add_component(c)
   self._toggle = c
@@ -79,11 +72,7 @@ end
 
 function Metronome:update()
   if self._toggle then
-    if renoise.song().transport.metronome_enabled then
-      self._toggle:set(self.palette.enabled)
-    else
-      self._toggle:set(self.palette.disabled)
-    end
+    self._toggle:set(renoise.song().transport.metronome_enabled)
   end
 end
 
@@ -103,7 +92,9 @@ function Metronome:_attach_to_song()
 
   renoise.song().transport.metronome_enabled_observable:add_notifier(
     function()
-      self:update()
+      if self._toggle then
+        self._toggle:set(renoise.song().transport.metronome_enabled)
+      end
     end
   )
 

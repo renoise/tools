@@ -47,16 +47,12 @@ function ControlMap:__init()
   -- setting it will not do anything useful)
   self.file_path = ""
 
-  -- remember matched patterns (optimize)
-  self.midi_buffer = table.create()
-  self.osc_buffer = table.create()
-
+  -- internal stuff
+  
   -- unique id, reset each time a control-map is parsed
   self.id = nil 
-
   -- control-map parsed into table
   self.definition = nil 
-
 end
 
 
@@ -165,112 +161,64 @@ end
 
 --------------------------------------------------------------------------------
 
--- get_params_by_value() 
+-- get_param_by_value() 
 -- used by the MidiDevice to retrieves a parameter by it's note/cc-value-string
 -- the function will match values on the default channel, if not defined:
 -- "CC#105|Ch1" will match both "CC#105|Ch1" and "CC#105" 
--- also, we have wildcard support: 
--- "C#*|Ch1" will match both "C#1|Ch1" and "C#5" 
 -- @param str (string, control-map value attribute)
--- @return table of matched parameters
+-- @return table
 
-function ControlMap:get_params_by_value(str,msg_context)
-  TRACE("ControlMap:get_params_by_value",str,msg_context)
+function ControlMap:get_param_by_value(str)
+  TRACE("ControlMap:get_param_by_value",str)
 
-  local matches = table.create()
-
-  -- check if we have previously matched the pattern
-  if (self.midi_buffer[str]) then
-    return self.midi_buffer[str] 
-  end
-
-  -- first, look for an exact match
   local str2 = strip_channel_info(str)
+  
   for _,group in pairs(self.groups) do
     for k,v in ipairs(group) do
-      -- check if we are dealing with an octave wildcard
-      -- (method will only work with range -1 to 9)
-      local match_against = v["xarg"]["value"]
-      if (msg_context == MIDI_NOTE_MESSAGE) and (v["xarg"]["value"]):find("*") then
-        local oct = str2:sub(#str2-1,#str2)
-        if (oct~="-1") then
-          oct = str2:sub(#str2)
-        end
-        match_against = (v["xarg"]["value"]):gsub("*",oct)
-      end
-      if (match_against == str) or (match_against == str2) then
-        matches:insert(v)
+      if (v["xarg"]["value"] == str) or (v["xarg"]["value"] == str2) then
+        return v
       end
     end
   end
 
-  -- next, match keyboard (no note information)
-  if (msg_context == MIDI_NOTE_MESSAGE) then
-    local str2 = strip_note_info(str)
-    --print("controlMap: str2",str2)
-    for _,group in pairs(self.groups) do
-      for k,v in ipairs(group) do
-        -- check if we already have matched the value
-        local skip = false
-        for k2,v2 in ipairs(matches) do
-          if (v2["xarg"]["value"] == v["xarg"]["value"]) then
-            skip = true
-          end
-        end
-        if not skip and 
-          (v["xarg"]["value"] == str) or 
-          (v["xarg"]["value"] == str2) or
-          (v["xarg"]["value"] == "|") -- match any channel
-        then
-          matches:insert(v)
-        end
-      end
-    end
-  end
-
-  -- remember match 
-  self.midi_buffer[str] = matches
-
-  return matches
-
+  return nil
 end
 
 
 --------------------------------------------------------------------------------
 
--- get_osc_param() - used for parsing OSC messages
--- retrieve a parameter by matching it's "value" or "action" attribute, 
--- with pattern-matching for particular types of values:
--- "/press 1 %i" matches "/press 1 1" but not "/press 1 A"
--- "/pre** 1 %f" matches "/press 1 1" and "/preff 10 1.42"
+-- get_param_by_action() - used for parsing OSC messages
+-- retrieve a parameter by matching it's value or action attribute, 
+-- with wildcard support for particular types of value:
+-- "/press 1 %i" matches "/press 1 1" but not "/press 1 A". 
 --
--- the method will match the action property if it's available, otherwise 
--- the "value" property (the action property is needed when a device 
--- transmit a different outgoing than incoming value)
+-- use the action property if it's available, otherwise use
+-- the "value" property - the action property is needed when
+-- a device transmit a different outgoing than incoming value 
 -- 
 -- @param str (string, control-map value/action attribute)
 -- @return  <Param> node as table (only the first match is returned),
---          values (table), if matched against a wildcard,
---          wildcard_idx (integer), the matched index
---          replace_char (string), the characters to insert
+--          and the value (if matched against a wildcard)
 
-function ControlMap:get_osc_param(str)
-  TRACE("ControlMap:get_osc_param",str)
+function ControlMap:get_param_by_action(str)
+  TRACE("ControlMap:get_param_by_action",str)
 
-  -- check if we have previously matched the pattern
-  if self.osc_buffer[str] then
-    local buf = self.osc_buffer[str]
-    return buf[1],buf[2],buf[3],buf[4]
+  -- todo: attempt a literal match (faster)
+  --[[
+  for _,group in pairs(self.groups) do
+    for k,v in ipairs(group) do
+      local str_prop = v["xarg"]["action"] or v["xarg"]["value"]
+      if (str_prop == str) then
+        return v
+      end
+    end
   end
-
-  -- split incoming message into parts, separated by whitespace
+  ]]
+  -- check with wildcard support:
   local str_table = table.create()
   for v in string.gmatch(str,"[^%s]+") do
     str_table:insert(v)
   end
-
-  local wildcard_idx = nil
-  local replace_char = ""
 
   for _,group in pairs(self.groups) do
     for _,v in ipairs(group) do
@@ -282,73 +230,33 @@ function ControlMap:get_osc_param(str)
         for p in string.gmatch(str_prop,"[^%s]+") do
           prop_table:insert(p)
         end
-        local matched = true
         if (#str_table~=#prop_table) then
           -- ignore if different number of parts
-          matched = false
-        elseif(str_table[1]~=prop_table[1]) then
-          -- ignore if different pattern, but first we 
-          -- check of there's a wildcard present
-          if (prop_table[1]):find("*",1,true) then
-            local char2 = nil
-            for i = 1,#str_table[1] do
-              local char1 = (str_table[1]):sub(i,i)
-              -- only proceed with source token when we have not yet
-              -- found a wildcard 
-              if (replace_char =="") then
-                char2 = (prop_table[1]):sub(i,i)
-              end
-              if (char1~=char2) then
-                -- capture the target parameter's index
-                -- (as long as it's a number)
-                if (char2 == "*") and ((char1):match("(%d*)")) then
-                  wildcard_idx = i
-                  replace_char = replace_char..char1
-                  matched = true
-                else
-                  -- failed to match a character
-                  matched = false
-                  break
-                end
-              end
-            end
-          else
-            --print("*** no wildcard detected")
-            matched = false
-          end
-        end
 
-        if matched then
+        elseif(str_table[1]~=prop_table[1]) then
+          -- ignore if different pattern 
+
+        else
           -- return matching group + extracted value
-          local add_to_buffer = true
-          local values = table.create()
           local ignore = false
           for o=2,#prop_table do
             if (not ignore) then
               if (prop_table[o]=="%f") then
-                values:insert(tonumber(str_table[o]))
-                add_to_buffer = false -- floats can't be buffered
+                return v,tonumber(str_table[o])
               elseif (prop_table[o]=="%i") then
-                values:insert(tonumber(str_table[o]))
+                return v,tonumber(str_table[o])
+              --elseif (prop_table[o]=="(%s)") then
+                --return v,tostring(str_table[o])
               elseif (prop_table[o]~=str_table[o]) then
                 -- wrong argument, ignore
                 ignore = true
               end
             end
           end
-          --rprint(values)
-          if not ignore then
-            if add_to_buffer then
-              self.osc_buffer[str] = {v,values,wildcard_idx,replace_char}
-            end
-            return v,values,wildcard_idx,replace_char
-          end
-
         end
       end
     end
   end
-
 
 end
 
@@ -399,7 +307,8 @@ end
 --------------------------------------------------------------------------------
 
 -- get width/height of provided group
--- @group_name (string) the group-name we want to match
+-- also used for checking if a control-map group is a grid 
+-- @match_grid (boolean) only match groups with column attribute
 -- @return width/height or nil if not matched
 
 function ControlMap:get_group_dimensions(group_name)
@@ -408,7 +317,6 @@ function ControlMap:get_group_dimensions(group_name)
   if (group) then
     for attr, param in pairs(group) do
       if (attr == "xarg") then
-        --local width = tonumber(param["columns"])
         local width = tonumber(param["columns"])
         local height = math.ceil(#group / width)
         return width,height
@@ -416,6 +324,25 @@ function ControlMap:get_group_dimensions(group_name)
     end
   end
 end
+
+--[[
+function ControlMap:get_group_dimensions(group_name,match_grid)
+  
+  local group = self.groups[group_name]
+  if (group) then
+    for attr, param in pairs(group) do
+      if (attr == "xarg") then
+        if (match_grid) and (not param["columns"]) then
+          return
+        end
+        local width = tonumber(param["columns"])
+        local height = math.ceil(#group / width)
+        return width,height
+      end
+    end
+  end
+end
+]]
 
 --------------------------------------------------------------------------------
 
@@ -511,7 +438,7 @@ end
 function ControlMap:determine_type(str)
   TRACE("ControlMap:determine_type",str)
 
-  -- osc messages begin with a slash
+  -- url
   if string.sub(str,0,1)=="/" then
     return OSC_MESSAGE
   
@@ -523,18 +450,9 @@ function ControlMap:determine_type(str)
   elseif string.sub(str,2,2)=="#" or string.sub(str,2,2)=="-" then
     return MIDI_NOTE_MESSAGE
 
-  -- pitch bend
+  -- pitch bend, if it matches the pich-bend name
   elseif string.sub(str,1,2)=="PB" then
     return MIDI_PITCH_BEND_MESSAGE
-
-  -- channel pressure
-  elseif string.sub(str,1,2)=="CP" then
-    return MIDI_CHANNEL_PRESSURE
-
-  -- keyboard
-  elseif string.sub(str,0,1)=="|" then
-    return MIDI_KEY_MESSAGE
-  
 
   else
     error(("Internal Error. Please report: " ..
@@ -561,7 +479,7 @@ function ControlMap:_parse_xml(s)
   
   local function parseargs(s)
     local arg = {}
-    string.gsub(s, "([%w_]+)=([\"'])(.-)%2", function (w, _, a)
+    string.gsub(s, "(%w+)=([\"'])(.-)%2", function (w, _, a)
       arg[w] = a
     end)
 
@@ -571,10 +489,6 @@ function ControlMap:_parse_xml(s)
 
     return arg
   end
-
-  local function bool(s)
-    return (s=="true") and true or false
-  end
   
   while true do
     local ni,j,c,label,xarg, empty = string.find(
@@ -583,10 +497,6 @@ function ControlMap:_parse_xml(s)
     if (not ni) then 
       break 
     end
-      --[[
-      print("Controlmap xargs")
-      rprint(xarg)
-      ]]
     
     local text = string.sub(s, i, ni - 1)
     
@@ -603,7 +513,8 @@ function ControlMap:_parse_xml(s)
         parameter_index = parameter_index + 1
       end
 
-      -- meta-attr: add size attribute to (toggle)buttons
+      -- meta-attr: add size attribute to (toggle)buttons, if not defined
+      --if (not)xargs["size"]
       if (xargs["type"]) and
         (xargs["type"]=="button") or
         (xargs["type"]=="togglebutton") then
@@ -611,24 +522,6 @@ function ControlMap:_parse_xml(s)
           xargs["size"] = 1
         end
       end
-
-      -- meta-atrr - cast as numbers
-
-      if (xargs["maximum"]) then
-        xargs["maximum"] = tonumber(xargs["maximum"])
-      end
-      if (xargs["minimum"]) then
-        xargs["minimum"] = tonumber(xargs["minimum"])
-      end
-      if (xargs["range"]) then
-        xargs["range"] = tonumber(xargs["range"])
-      end
-
-      -- meta-attr - cast as booleans:
-      xargs["skip_echo"] = bool(xargs["skip_echo"])
-      xargs["invert_x"] = bool(xargs["invert_x"])
-      xargs["invert_y"] = bool(xargs["invert_y"])
-      xargs["velocity_enabled"] = bool(xargs["velocity_enabled"])
 
       table.insert(top, {label=label, xarg=xargs, empty=1})
     

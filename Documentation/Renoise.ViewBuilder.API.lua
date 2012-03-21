@@ -128,7 +128,7 @@ control.active
 -- Target strings are not verified. When they point to nothing, the mapped MIDI
 -- message will do nothing and no error is fired.
 control.midi_mapping
-  -> [string]
+  -> [boolean]
 
 
 --------------------------------------------------------------------------------
@@ -569,9 +569,9 @@ bitmapview.mode
 -- default resource folder as base (like "Icons/ArrowRight.bmp"). Or specify a
 -- file relative from your XRNX tool bundle:
 -- Lets say your tool is called "com.foo.MyTool.xrnx" and you pass
--- "MyBitmap.bmp" as the name. Then the bitmap is loaded from
+-- "MyBitmap.bmp" as teh name. Then the bitmap is loaded from
 -- "PATH_TO/com.foo.MyTool.xrnx/MyBitmap.bmp".
--- Supported bitmap file formats are *.bmp, *.png or *.tif (no transparency).
+-- Currently, only ".bmp" (Windows bitmap) is supported.
 bitmapview.bitmap
   -> [string]
 

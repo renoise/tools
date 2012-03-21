@@ -16,7 +16,13 @@ Requires: Globals
 class 'OscDevice' (Device)
 
 function OscDevice:__init(name, message_stream,prefix,address,port_in,port_out)
-  TRACE("OscDevice:__init()",name,message_stream,prefix,address,port_in,port_out)
+  TRACE("OscDevice:__init()",
+    name, 
+    message_stream,
+    prefix,
+    address,
+    port_in,
+    port_out)
   
   Device.__init(self, name, message_stream, DEVICE_OSC_PROTOCOL)
 
@@ -28,10 +34,6 @@ function OscDevice:__init(name, message_stream,prefix,address,port_in,port_out)
 
   self.client = nil
   self.server = nil
-
-  self.message_queue = nil
-
-  self.bundle_messages = false
 
   self:open()
 
@@ -128,12 +130,9 @@ function OscDevice:socket_message(socket, binary_data)
         value_str = string.sub(value_str,string.len(self.prefix)+1)
       end
 
-      if value_str then
-        
-        --print("incoming OSC",os.clock(),value_str)
+      if (value_str) then
         self:receive_osc_message(value_str)
       end
-
     end
   
   else
@@ -147,34 +146,15 @@ end
 --------------------------------------------------------------------------------
 
 -- look up value, once we have unpacked the message
-
 function OscDevice:receive_osc_message(value_str)
   TRACE("OscDevice:receive_message",value_str)
 
-  local param,val,w_idx,r_char = self.control_map:get_osc_param(value_str)
-  --print("*** OscDevice: param,val,w_idx,r_char",param,val,w_idx,r_char)
-
+  local param,val = self.control_map:get_param_by_action(value_str)
   if (param) then
-
-    -- take copy before modifying stuff
-    local xarg = table.rcopy(param["xarg"])
-    if w_idx then
-      -- insert the wildcard index
-      xarg["index"] = tonumber(r_char)
-      --print('*** OscDevice: wildcard replace param["xarg"]["value"]',xarg["value"])
-    end
     local message = Message()
     message.context = OSC_MESSAGE
-    message.is_osc_msg = true
-    -- cap to the range specified in the control-map
-    for k,v in pairs(val) do
-      val[k] = clamp_value(v,xarg.minimum,xarg.maximum)
-    end
-    --rprint(xarg)
-    -- multiple messages are tables, single value a number...
-    message.value = (#val>1) and val or val[1]
-    --print("*** OscDevice:receive_osc_message - message.value",message.value)
-    self:_send_message(message,xarg)
+    message.value = val
+    self:_send_message(message,param["xarg"])
   end
 
 end
@@ -216,104 +196,6 @@ function OscDevice:set_device_prefix(prefix)
 
 end
 
---------------------------------------------------------------------------------
-
-function OscDevice:queue_osc_message(message,value)
-
-  if not self.message_queue then
-    self.message_queue = table.create()
-  end
-
-  -- TODO when queue reach certain size, send bundle
-  -- (for increased responsiveness)
-    
-  self.message_queue:insert({
-    message=message,
-    value=value
-  })
-
-end
-
---------------------------------------------------------------------------------
-
--- bundle & send queued messages
-
-function OscDevice:on_idle()
-
-  if self.message_queue then
-    self:send_osc_bundle()
-  end
-
-end
-
---------------------------------------------------------------------------------
-
--- construct_osc_message
-
-function OscDevice:construct_osc_message(message,value)
-  TRACE("OscDevice:construct_osc_message()",message,value)
-
-    -- split the message into non-whitespace chunks
-    local str_vars = string.gmatch(message,"[^%s]+")
-
-    -- construct the table of variables
-    local header = nil
-    local osc_vars = table.create()
-    local counter = 1
-    for vars in str_vars do
-      
-      if (string.sub(vars,0,1)=="/") then
-        -- the message part
-        header = vars
-      else
-        -- the variable part
-        local entry = table.create()
-        if (type(value)=="table") then
-	
-          local counter2 = 1
-          for k,v in pairs(value) do
-            if (counter==counter2) then
-              entry = self:produce_entry(vars,v)
-            end
-            counter2 = counter2+1
-          end
-        else
-          entry = self:produce_entry(vars,value)
-        end
-        if (entry.tag) then
-          osc_vars:insert(entry)
-        end
-        counter = counter+1
-      end
-
-    end
-
-    header = self.prefix and ("%s%s"):format(self.prefix,header) or header
-
-    return renoise.Osc.Message(header,osc_vars)
-
-end
-
---------------------------------------------------------------------------------
-
---  send queued bundle of OSC messages
-
-function OscDevice:send_osc_bundle()
-
-  if (self.client) and (self.client.is_open) then
-    local msgs = table.create()
-    for k,v in ipairs(self.message_queue) do
-      msgs:insert(self:construct_osc_message(v.message,v.value))
-    end
-    local osc_bundle = renoise.Osc.Bundle(os.clock(),msgs)
-    self.client:send(osc_bundle)
-  end
-
-  self.message_queue:clear()
-  self.message_queue = nil
-
-end
-
 
 --------------------------------------------------------------------------------
 
@@ -325,35 +207,44 @@ function OscDevice:send_osc_message(message,value)
   TRACE("OscDevice:send_osc_message()",message,value)
 
   if (self.client) and (self.client.is_open) then
-    --print("about to send osc message",message,value)
-    local osc_msg = self:construct_osc_message(message,value)
-    --rprint(osc_msg)
-    self.client:send(osc_msg)
+    -- split the message into non-whitespace chunks
+    local str_vars = string.gmatch(message,"[^%s]+")
+    -- construct the table of variables
+    local header = nil
+    local osc_vars = table.create()
+    for vars in str_vars do
+      if (string.sub(vars,0,1)=="/") then
+        -- the message part
+        header = vars
+      else
+        -- the variable part
+        local entry = table.create()
+        if (vars=="%i") then
+          entry.tag = "i"
+          entry.value = tonumber(value)
+        elseif (vars=="%f") then
+          entry.tag = "f"
+          entry.value = tonumber(value)
+        elseif (tonumber(vars)~=nil) then
+          entry.tag = "f"
+          entry.value = tonumber(vars)
+        end
+        if (entry.tag) then
+          osc_vars:insert(entry)
+        end
+
+      end
+    end
+
+    header = self.prefix and ("%s%s"):format(self.prefix,header) or header
+
+    self.client:send(
+      renoise.Osc.Message(header,osc_vars)
+    )
   end
 
 end
 
-
---------------------------------------------------------------------------------
-
--- produce an OSC message entry 
-
-function OscDevice:produce_entry(vars,value)
-  --TRACE("OscDevice:produce_entry()",vars,value)
-
-  local entry = table.create()
-  if (vars=="%i") then
-    entry.tag = "i"
-    entry.value = tonumber(value)
-  elseif (vars=="%f") then
-    entry.tag = "f"
-    entry.value = tonumber(value)
-  elseif (tonumber(vars)~=nil) then
-    entry.tag = "f"
-    entry.value = tonumber(vars)
-  end
-  return entry
-end
 
 --------------------------------------------------------------------------------
 
@@ -361,26 +252,18 @@ end
 -- @param pt (CanvasPoint)
 -- @param elm - control-map parameter
 -- @param ceiling - the UIComponent ceiling value
--- @return value (number, or table of numbers)
 
 function OscDevice:point_to_value(pt,elm,ceiling)
-  --TRACE("OscDevice:point_to_value()",pt,elm,ceiling)
+  TRACE("OscDevice:point_to_value()",pt,elm,ceiling)
 
-  local value = nil
-  local val_type = type(pt.val)
+  local value
 
-  if (val_type == "boolean") then
+  if (type(pt.val) == "boolean") then
 
     if (pt.val) then
       value = elm.maximum
     else
       value = elm.minimum
-    end
-  elseif (val_type == "table") then
-    -- multiple-parameter: tilt sensors, xy-pad...
-    value = table.create()
-    for k,v in ipairs(pt.val) do
-      value:insert((v * (1 / ceiling)) * 1)
     end
 
   else
@@ -390,7 +273,7 @@ function OscDevice:point_to_value(pt,elm,ceiling)
     value = (pt.val * (1 / ceiling)) * elm.maximum
   end
 
-  return value
+  return tonumber(value)
 end
 
 
@@ -428,7 +311,7 @@ end
 -- e.g. "/this/is/the/pattern 1 2 3"
 
 function OscDevice:_msg_to_string(msg)
-  TRACE("OscDevice:_msg_to_string()",msg)
+  --TRACE("OscDevice:_msg_to_string()",msg)
 
   local rslt = msg.pattern
   for k,v in ipairs(msg.arguments) do

@@ -45,25 +45,17 @@ function Device:__init(name, message_stream, protocol)
   ---- configuration
   
   -- specify a color-space like this: (r, g, b) or empty
-  -- example#1 : {4,4,0} - four degrees of red and green
+  -- example#1 : {4,4,0} - four degrees of red and grees
   -- example#2 : {1,1,1} - monochrome display (black/white)
   -- example#3 : {0,0,1} - monochrome display (blue)
   -- example#4 : {} - no colors, display as text
-  if not self.colorspace then
-    self.colorspace = {}
-  end
+  self.colorspace = {}
   
   -- allow sending back the same messages we got from the device as answer 
   -- to the device. some controller which cannot deal with message feedback,
-  -- may want to disable this in its device class...(see also "skip_echo", which 
-  -- is similar but per-parameter instead of being set for the whole device)
+  -- may want to disable this in its device class...
   self.loopback_received_messages = true
 
-
-  -- for MIDI devices, this will allow Duplex to transmit note-on
-  -- messages with zero velocity (normally, such a message is converted
-  -- into a note-off message just before being sent)
-  self.allow_zero_velocity_note_on = false
 
   -- private stuff
 
@@ -105,7 +97,7 @@ end
 --------------------------------------------------------------------------------
 
 function Device:quantize_color(color,colorspace)
-  --TRACE("Device:quantize_color()",color,colorspace)
+  TRACE("Device:quantize_color()",color,colorspace)
 
   local function quantize_color(value, depth)
     if (depth and depth > 0) then
@@ -506,8 +498,6 @@ end
 function Device:_send_message(message,xarg)
   TRACE("Device:_send_message()",message,xarg)
 
-  --print("*** Device:xarg.type",xarg.type)
-
   -- determine input method
   if (xarg.type == "button") then
     message.input_method = CONTROLLER_BUTTON
@@ -519,58 +509,27 @@ function Device:_send_message(message,xarg)
     message.input_method = CONTROLLER_FADER
   elseif (xarg.type == "dial") then
     message.input_method = CONTROLLER_DIAL
-  elseif (xarg.type == "xypad") then
-    message.input_method = CONTROLLER_XYPAD
-    if (xarg.invert_x) then
-      message.value[1] = (xarg.maximum-message.value[1])+xarg.minimum
-    end
-    if (xarg.invert_y) then
-      message.value[2] = (xarg.maximum-message.value[2])+xarg.minimum
-    end
-  elseif (xarg.type == "key") then
-    message.input_method = CONTROLLER_KEYBOARD
-    message.context = MIDI_NOTE_MESSAGE
-    message.value = {xarg.index,message.value}
-    message.velocity_enabled = xarg.velocity_enabled
-    --print("*** Device:message.input_method = MIDI_NOTE_MESSAGE")
-  elseif (xarg.type == "keyboard") then
-    message.input_method = CONTROLLER_KEYBOARD
-    -- split message into {pitch,velocity}
-    if (message.context == OSC_MESSAGE) then
-      -- disguise as MIDI_NOTE_MESSAGE
-      message.value = {xarg.index,message.value}
-      message.context = MIDI_NOTE_MESSAGE
-      message.is_osc_msg = true
-    elseif (message.context == MIDI_NOTE_MESSAGE) then
-      --print("*** Device:message.input_method = CONTROLLER_KEYBOARD + MIDI_NOTE_MESSAGE")
-      local note_val = value_to_midi_pitch(xarg.value)
-      message.value = {note_val,message.value}
-      message.velocity_enabled = xarg.velocity_enabled
-    end    
-
   else
     error(("Internal Error. Please report: " ..
       "unknown message.input_method %s"):format(xarg.type or "nil"))
   end
 
   -- include meta-properties
-  message.param = xarg
   message.name = xarg.name
   message.group_name = xarg.group_name
+  message.max = tonumber(xarg.maximum)
+  message.min = tonumber(xarg.minimum)
   message.id = xarg.id
   message.index = xarg.index
   message.column = xarg.column
   message.row = xarg.row
   message.timestamp = os.clock()
-  message.max = xarg.maximum
-  message.min = xarg.minimum
-  message.device = self
 
   -- send the message
   self.message_stream:input_message(message)
  
-  -- immediately update after having received a message,
-  -- to improve the overall response time of the display
+  -- immediately update the display after having received a message
+  -- to improve response of the display
   if (self.display) then
     self.display:update()
   end

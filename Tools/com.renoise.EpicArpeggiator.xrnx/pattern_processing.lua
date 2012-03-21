@@ -15,12 +15,8 @@ function add_notes(n_column, c_line, vb)
    local track_type = song.selected_track.type
 
    if track_type == renoise.Track.TRACK_TYPE_MASTER or
-   track_type == renoise.Track.TRACK_TYPE_SEND or 
-   track_type == renoise.Track.TRACK_TYPE_GROUP or
-   (song.patterns[pattern_index].tracks[track_index].is_alias == true and 
-   overwrite_alias == false) then
-    print(song.patterns[pattern_index].tracks[track_index].is_alias)
-     return --Do not process master, send, group or aliassed track!!
+   track_type == renoise.Track.TRACK_TYPE_SEND then
+     return --Do not process master or sendtrack!!
    end
 
    if max_note_columns ~= vb.views.max_note_colums.value then
@@ -41,10 +37,7 @@ function add_notes(n_column, c_line, vb)
    next_column = column_offset
    
    if track_type ~= renoise.Track.TRACK_TYPE_MASTER and
-   track_type ~= renoise.Track.TRACK_TYPE_SEND and 
-   track_type ~= renoise.Track.TRACK_TYPE_GROUP and
-   ((song.patterns[pattern_index].tracks[track_index].is_alias == true and 
-   overwrite_alias == true) or song.patterns[pattern_index].tracks[track_index].is_alias == false) then
+   track_type ~= renoise.Track.TRACK_TYPE_SEND then
       --show delay column in case it is invisible      
       song.tracks[track_index].delay_column_visible = true
 
@@ -121,44 +114,13 @@ function add_notes(n_column, c_line, vb)
 
          for i,j in ipairs(custom_note_pos) do
 
-            if tonumber(j) ~= nil and i > 2 then
-              if tonumber(j) < 2 then
-                binary_custom_note = true
-                break
-              end
-            end
-
-         end
-
---One situation where binary mode should also be turned on:If only two figures are used
---and the second figure is lower than the first.
-         if binary_custom_note == false then
-            if #custom_note_pos > 1 then
-              if tonumber(custom_note_pos[2]) ~= nil then
-                if tonumber(custom_note_pos[2]) < tonumber(custom_note_pos[1]) then
-                  binary_custom_note = true
-                end
-              end
-            end
-         end
-
-         local nb_value = -1
-         
-         for i,j in ipairs(custom_note_pos) do
-
             if tonumber(j) == nil then
 
                if j == "nt" then
 
                   if i-1 > 0 then
                      custom_note_pos[i] = 'nt' --termination_step
-
                      pattern_closure = 1
-
-                     if binary_custom_note then
-                       pattern_closure = 0 --note termination not supported for binary mode
-                     end
-                     
                   else
                      renoise.app():show_warning("Please do not start with a termination or distance step")               
                      return
@@ -174,65 +136,28 @@ function add_notes(n_column, c_line, vb)
                      return
                   end 
 
-               elseif j == "nb" then --autocorrect user-typo
-
-                  if i-1 > 0 then
-                     custom_note_pos[i] = 'bn' --distance_step 
-                     pattern_closure = 1
-                  else
-                     renoise.app():show_warning("Please do not start with a termination or distance step")               
-                     return
-                  end 
-
                else
-                  custom_note_pos[i] = 'bn'
-                  pattern_closure = 1
+                  custom_note_pos[i] = 0
                end
 
             else
 
-               if not binary_custom_note then
-                 if tonumber(j+1) <=pattern_lines and tonumber(j+1)> 0 then
+               if tonumber(j+1) <=pattern_lines and tonumber(j+1)> 0 then
                   custom_note_pos[i] =tonumber(j+1)
-                else
+               else
                   invalid_lines = invalid_lines + 1
                   custom_note_pos[i] = 1
-                end 
-              else
-                if i <=pattern_lines and tonumber(j)~= 0 then
-                  binary_note_table[#binary_note_table+1] = i
-                  nb_value = -1
-                else
-                  if i > pattern_lines then
-                    invalid_lines = invalid_lines + 1
-                  end
-                  nb_value = nb_value + 1
-                  custom_note_pos[i] = 1
-                end 
-              
-              end              
+               end 
+
             end
          end
 
-         if binary_custom_note then
-          if nb_value > -1 then
-            vb.views.vbox_distance_step.value = nb_value + 1
-          end
-          custom_note_pos= {}
-          for i,j in ipairs(binary_note_table) do
-            custom_note_pos[i] = j
-          end
-          
-          binary_custom_note = false
-          binary_note_table = {}
-         end
-      
          if pattern_closure == 0 then
             custom_note_pos[#custom_note_pos+1] = 'bn'
---            custom_arpeggiator_field = custom_arpeggiator_field..",bn"
---            vb.views.custom_arpeggiator_profile.value = custom_arpeggiator_field 
---            renoise.app():show_warning("No 'bn' or 'nt' closure used, 'bn' has been"..
---            " added\nPlease check your custom pattern-line pool for typo's")               
+            custom_arpeggiator_field = custom_arpeggiator_field..",bn"
+            vb.views.custom_arpeggiator_profile.value = custom_arpeggiator_field 
+            renoise.app():show_warning("No 'bn' or 'nt' closure used, 'bn' has been"..
+            " added\nPlease check your custom pattern-line pool for typo's")               
          end
 
          if invalid_lines > 0 then
@@ -350,7 +275,6 @@ function add_notes(n_column, c_line, vb)
       end
 
       octave_order = ferris_wheel (octave_scheme, octave_order, popup_octave_index, repeat_se_octave) 
-      
       ins_order = ferris_wheel (process_instruments, ins_order, instrument_insertion_index, repeat_se_instrument)
       vel_order = ferris_wheel (process_velocity, vel_order, velocity_insertion_index, repeat_se_velocity)
 
@@ -463,7 +387,7 @@ function add_notes(n_column, c_line, vb)
 --]]
 
    else
-      renoise.app():show_warning("Cannot insert notes in master/send or group-track!")
+      renoise.app():show_warning("Cannot insert notes in master or send-track!")
    end
 end
 
@@ -500,16 +424,8 @@ function clear_track_first()
 
             if area_to_process < OPTION_COLUMN_IN_PATTERN then
                note_column:clear()
-               note_column.instrument_value = EMPTY
-               note_column.volume_value = EMPTY
-               note_column.panning_value = EMPTY
-               note_column.delay_value = 0
             elseif c == column_offset then
                note_column:clear()
-               note_column.instrument_value = EMPTY
-               note_column.volume_value = EMPTY
-               note_column.panning_value = EMPTY
-               note_column.delay_value = 0
             end
 
          end
@@ -528,17 +444,8 @@ function clear_track_first()
 
             if area_to_process < OPTION_COLUMN_IN_PATTERN and note_column.is_selected then
                note_column:clear()
-               note_column.instrument_value = EMPTY
-               note_column.volume_value = EMPTY
-               note_column.panning_value = EMPTY
-               note_column.delay_value = 0
-               
             elseif c == column_offset and note_column.is_selected then
                note_column:clear()
-               note_column.instrument_value = EMPTY
-               note_column.volume_value = EMPTY
-               note_column.panning_value = EMPTY
-               note_column.delay_value = 0
             end
 
          end
@@ -569,9 +476,7 @@ function set_process_note(octave_order, vel_order)
 
    if switch_note_pattern_index == NOTE_PATTERN_CUSTOM then
       note_scheme = custom_note_field:split( "[^,%s]+" )
-      
-      custom_error_flag = false
-      
+
       if note_scheme[1] == nil then
          custom_error_flag = true
          note_scheme[1] = "C-4"
@@ -629,19 +534,7 @@ function set_process_note(octave_order, vel_order)
          end
 
       end
-      --Better attempt to improve note randomization by slimming used elements
-      if #note_pool < 1 then
-        local note_stream = table.serialize(note_order,",")
-        note_pool = note_stream:split( "[^,%s]+" )
-      end
-
-      local pool_position = randomize(1, #note_pool)
-      ordnot = note_pool[pool_position] 
-
-      if #note_pool > 0 then
-        table.remove(note_pool,pool_position)
-      end
-
+      ordnot = note_order[randomize(1, #note_order)] 
    end
    return ordnot
 end
@@ -657,10 +550,6 @@ function fix_full_note(tempvar)
    local valid_note_found = false
    tempvar = string.sub(tempvar,1,3)
 
-   if string.sub(tempvar,1,2) == "nt" or string.sub(tempvar,1,2) == "bn" then
-    return tempvar
-   end
-   
    --Are we tricked with invalid split-chars?
    if string.sub(tempvar,2,2) ~= "#" and string.sub(tempvar,2,2) ~= "-" then
       tempvar = string.sub(tempvar,1,1) .. "-" .. string.sub(tempvar,3,3)
@@ -712,28 +601,6 @@ function set_process_octave(octave_order)
 
    else
       ordoct = octave_order[randomize(1, #octave_order)] 
-      
---[[
-      --Better attempt to improve note randomization by slimming used elements
-      if #octave_pool < 1 then
-        --I don't find the fact funny that when i do an octave_pool = octave_order
-        --octave_pool is only a copy of the address to the contents.
-        --Reason for that is when i perform a table.remove() on the octave_pool it also 
-        --removes the contents of the octave_order, which is *not* intended.
-        --But alas, Lua operates this way, so the only decent way to copy the real *contents*
-        --from one table to another is by first serializing them into a string and then
-        --split them back into another table.
-        
-        local octave_stream = table.serialize(octave_order,",")
-        octave_pool = octave_stream:split( "[^,%s]+" )
-      end
-      local pool_position = randomize(1,  #octave_pool)
-      ordoct = octave_pool[pool_position] 
-
-      if #octave_pool > 0 then
-        table.remove(octave_pool,pool_position)
-      end
---]]
    end
 
    return ordoct
@@ -757,21 +624,7 @@ function set_process_instrument(ins_order)
       end
 
    else
---      tempins = tonumber(ins_order[randomize(1,#ins_order)]) 
-
-      --Better attempt to improve note randomization by slimming used elements
-      if #instrument_pool < 1 then
-        local instrument_stream = table.serialize(ins_order,",")
-        instrument_pool = instrument_stream:split( "[^,%s]+" )
-      end
-
-      local pool_position = randomize(1, #instrument_pool)
-      tempins = tonumber(instrument_pool[pool_position])
-
-      if #instrument_pool > 0 then
-        table.remove(instrument_pool,pool_position)
-      end
-      
+      tempins = tonumber(ins_order[randomize(1,#ins_order)]) 
    end
 
    return tempins
@@ -791,19 +644,7 @@ function set_process_velocity(vel_order)
          tempvel = tonumber(vel_order[vel_pointer])
       end
    else
---      tempvel = tonumber(vel_order[randomize(1, #vel_order)])
-      if #velocity_pool < 1 then
-        local velocity_stream = table.serialize(vel_order,",")
-        velocity_pool = velocity_stream:split( "[^,%s]+" )
-      end
-
-      local pool_position = randomize(1, #velocity_pool)
-      tempvel = tonumber(velocity_pool[pool_position])
-
-      if #velocity_pool > 0 then
-        table.remove(velocity_pool,pool_position)
-      end
-
+      tempvel = tonumber(vel_order[randomize(1, #vel_order)])
    end
 
    return tempvel
@@ -893,11 +734,11 @@ current_column, track, pattern)
             end
             
             if termination_index == NOTE_OFF_DISTANCE_TICKS then
-               cut_value = tonumber(0xc00 + termination_step)
+               cut_value = tonumber(0xf0 + termination_step)
             else
                cut_value = EMPTY
             end
-            
+
             if note ~= nil then
 
                if note_column.is_selected and area_to_process == OPTION_SELECTION_IN_TRACK or 
@@ -1037,43 +878,9 @@ current_column, track, pattern)
                else
                   note = ordnot
                end   
-              --If octave or note order is random, then use a special trick 
-              --to pull the complete note from the note matrix instead of trying to combine it
-               if ea_gui.views.popup_octave_order.value == PLACE_RANDOM then
-
-                local checkbox = nil
-                local cb = ea_gui.views
-                local note_changed = false
-                if #noteoct_pool < 1 then
-                
-                  for t = 0, NUM_OCTAVES-1 do
-                    local oct = tostring(t)
-                    for i = 1, NUM_NOTES do
-                      if string.find(note_matrix[i], "#") then
-                        checkbox = note_matrix[i-1].."f"..oct
-                      else
-                        checkbox = note_matrix[i].."_"..oct
-                      end
-                      if cb[checkbox].value == true then
-                        checkbox = string.gsub(checkbox,"f","#")
-                        checkbox = string.gsub(checkbox,"_","-")
-                        noteoct_pool[#noteoct_pool +1] = checkbox
-                      end
-                    end
-                  end
-                  local noteoct_position = randomize(1, #noteoct_pool)
-                  note = noteoct_pool[noteoct_position] 
-                  table.remove(noteoct_pool, noteoct_position)
-                else
-                  local noteoct_position = randomize(1, #noteoct_pool)
-                  note = noteoct_pool[noteoct_position] 
-                  table.remove(noteoct_pool, noteoct_position)
-                end
-
-               end               
 
                if termination_index == NOTE_OFF_DISTANCE_TICKS then
-                  cut_value = tonumber(0xc00 + termination_step)
+                  cut_value = tonumber(0xf0 + termination_step)
                else
                   cut_value = EMPTY
                end
@@ -1218,17 +1025,14 @@ function fill_cells(note_column, note, instrument, velocity,
       if cut_value > 0 then
 
          if note_column.panning_value ~= EMPTY then
-            print(note_column.panning_value)
-            if (note_column.panning_value >= 129 and note_column.panning_value <= EMPTY) or 
-               (note_column.panning_value >= 0xc00 and note_column.panning_value <= 0xc0f) then
+
+            if note_column.panning_value >= 240 and note_column.panning_value <= EMPTY then
                note_column.panning_value = cut_value
-               
             else
 
                if note_column.volume_value ~= EMPTY then                  
 
-                  if (note_column.volume_value >= 129 or note_column.volume_value <= EMPTY) or 
-                     (note_column.volume_value >= 0xc00 or note_column.volume_value <= 0xc0f) then
+                  if note_column.volume_value >= 240 or note_column.volume_value <= EMPTY then
                      note_column.volume_value = cut_value
                   end
 
@@ -1249,9 +1053,7 @@ function fill_cells(note_column, note, instrument, velocity,
 
          if note_column.panning_value ~= EMPTY then
 
-            if (note_column.panning_value >= 129 and note_column.panning_value <= EMPTY) or 
-               (note_column.panning_value >= 0xc00 and note_column.panning_value <= 0xc0f) then
-
+            if note_column.panning_value >= 240 and note_column.panning_value <= EMPTY then
                note_column.panning_value = cut_value
             else
                --Sorry whatever is in the volume column will now be exchanged.
@@ -1304,8 +1106,7 @@ function fetch_notes_from_track(vb)
    end
 
    if track_type ~= renoise.Track.TRACK_TYPE_MASTER and
-   track_type ~= renoise.Track.TRACK_TYPE_SEND and 
-   track_type ~= renoise.Track.TRACK_TYPE_GROUP then
+   track_type ~= renoise.Track.TRACK_TYPE_SEND then
 
       if switch_note_pattern_index == NOTE_PATTERN_MATRIX then
 
@@ -1497,28 +1298,21 @@ end
 Checks if the song sequence has patterns that are repeated
 --]]
 
-function check_unique_pattern(vb)
+function check_unique_pattern()
    local song = renoise.song()
    local double = {}
    local doubles = 1
    local add_one = 0
    local hyve = 2
-   local track_index = song.selected_track_index
    double[1] = song.sequencer.pattern_sequence[1]
    local i = 2
    local sp_bound = #song.sequencer.pattern_sequence
-   local alias_encountered = false
    local return_val = 0
-  
-   while i <= sp_bound do
-      local sequence_index = song.sequencer.pattern_sequence[i]
 
-      if song.patterns[sequence_index].tracks[track_index].is_alias == true then
-        alias_encountered = true
-        break
-      end
+   while i <= sp_bound do
 
       for j = 1, #double do
+
          if song.sequencer.pattern_sequence[i] == double[j] then
             doubles = doubles + 1
             add_one = 0
@@ -1538,8 +1332,8 @@ function check_unique_pattern(vb)
 
    end
 
-   if doubles > 1 or alias_encountered == true then
-      return_val = cross_write_dialog(-1, double, doubles, alias_encountered,vb) 
+   if doubles > 1 then
+      return_val = cross_write_dialog(-1, double, doubles) 
    end      
 
    return return_val

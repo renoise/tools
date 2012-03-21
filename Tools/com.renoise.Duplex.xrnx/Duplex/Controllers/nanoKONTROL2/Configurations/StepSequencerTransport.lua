@@ -43,10 +43,6 @@ duplex_configurations:insert {
           orientation = HORIZONTAL,
           index = 1
         },
-        metronome_toggle = {
-          group_name = "MARKER",
-          index = 1,
-        },
       },
       options = {
         follow_track = 1,
@@ -97,6 +93,14 @@ duplex_configurations:insert {
       },
       options = {
       }
+    },
+    Metronome = {
+      mappings = {
+        toggle = {
+          group_name = "MARKER",
+          index = 1,
+        },
+      },
     },
     SwitchConfiguration = {
       mappings = {

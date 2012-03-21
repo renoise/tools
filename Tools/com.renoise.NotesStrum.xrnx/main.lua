@@ -321,8 +321,7 @@ function strum(direction, range_option)
    end   
 
    if track_type ~= renoise.Track.TRACK_TYPE_MASTER and
-      track_type ~= renoise.Track.TRACK_TYPE_SEND and 
-      track_type ~= renoise.Track.TRACK_TYPE_GROUP
+      track_type ~= renoise.Track.TRACK_TYPE_SEND 
    then
       --show delay column in case it is invisible      
       song.tracks[track_index].delay_column_visible = true
@@ -386,7 +385,7 @@ function strum(direction, range_option)
       end
 
    else
-      renoise.app():show_warning("Cannot strum tracks that cannot contain notes!")
+      renoise.app():show_warning("Cannot strum Master or Send-tracks!")
    end
 
 end
@@ -410,8 +409,7 @@ function strum_two_ways(direction, range_option)
    end   
    
    if track_type ~= renoise.Track.TRACK_TYPE_MASTER and
-      track_type ~= renoise.Track.TRACK_TYPE_SEND and 
-      track_type ~= renoise.Track.TRACK_TYPE_GROUP 
+      track_type ~= renoise.Track.TRACK_TYPE_SEND 
    then
       --show delay column in case it is invisible      
       song.tracks[track_index].delay_column_visible = true
@@ -484,7 +482,7 @@ function strum_two_ways(direction, range_option)
       end
 
    else
-      renoise.app():show_warning("Cannot strum tracks that cannot contain notes!")
+      renoise.app():show_warning("Cannot strum Master or Send-tracks!")
    end
 end
 

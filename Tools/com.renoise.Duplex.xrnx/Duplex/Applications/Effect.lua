@@ -26,12 +26,12 @@ Mappings
   
   parameters    (UISliders) parameter values, assignable to buttons
   page          (UISpinner) effect parameter navigator
-  device        (UIButton,...) device navigator for buttons
+  device        (UIToggleButton,...) device navigator for buttons
   device_select (UISlider) device navigator for knobs/sliders
-  device_next   (UIButton) select next device
-  device_prev   (UIButton) select previous device
-  preset_next   (UIButton) select next preset
-  preset_prev   (UIButton) select previous preset
+  device_next   (UIToggleButton) select next device
+  device_prev   (UIToggleButton) select previous device
+  preset_next   (UIToggleButton) select next preset
+  preset_prev   (UIToggleButton) select previous preset
 
 Options
 
@@ -103,7 +103,7 @@ Effect.default_options = {
     items = {
       "Disabled, do not record automation",
       "Touch: record only when touched",
-      "Latch (experimental) ",
+      "Latch: touch to start output",
     },
     value = 1,
     on_change = function(inst)
@@ -112,8 +112,8 @@ Effect.default_options = {
   }
 }
 
-function Effect:__init(process,mappings,options,cfg_name,palette)
-  TRACE("Effect:__init", process,mappings,options,cfg_name,palette)
+function Effect:__init(browser_process,mappings,options,config_name)
+  TRACE("Effect:__init", browser_process,mappings,options,config_name)
 
    -- define option constants
 
@@ -160,25 +160,27 @@ function Effect:__init(process,mappings,options,cfg_name,palette)
   }
 
   -- define default palette
+
   self.palette = {
-    -- parameter sliders
-    background = {        color={0x00,0x00,0x00},   text="·",   val=false },
-    slider_background = { color={0x00,0x40,0x00},   text="·",   val=false },
-    slider_tip = {        color={0XFF,0XFF,0XFF},   text="·",   val=true },
-    slider_track = {      color={0XFF,0XFF,0XFF},   text="·",   val=true },
-    -- device-buttons
-    device_nav_on = {     color={0XFF,0XFF,0XFF},   text="■",   val=true },
-    device_nav_off = {    color={0x00,0x00,0x00},   text="·",   val=false },
-    prev_device_on = {    color = {0xFF,0xFF,0xFF}, text = "◄", val=true },
-    prev_device_off = {   color = {0x00,0x00,0x00}, text = "◄", val=false },
-    next_device_on = {    color = {0xFF,0xFF,0xFF}, text = "►", val=true },
-    next_device_off = {   color = {0x00,0x00,0x00}, text = "►", val=false },
-    -- preset buttons
-    prev_preset_on = {    color = {0xFF,0xFF,0xFF}, text = "◄", val=true },
-    prev_preset_off = {   color = {0x00,0x00,0x00}, text = "◄", val=false },
-    next_preset_on = {    color = {0xFF,0xFF,0xFF}, text = "►", val=true },
-    next_preset_off = {   color = {0x00,0x00,0x00}, text = "►", val=false },
+  
+    background = {
+      color={0x00,0x00,0x00}, 
+      text="",
+    },
+    slider_background = {
+      color={0x00,0x40,0x00},
+      text="·",    
+    },
+    slider_tip = {
+      color={0xff,0xff,0xff},
+      text="■",
+    },
+    slider_track = {
+      color={0xff,0xff,0xff},
+      text="■",
+    }
   }
+
 
   -- the controls
   self._parameter_sliders = nil
@@ -220,7 +222,7 @@ function Effect:__init(process,mappings,options,cfg_name,palette)
   -- set while recording automation
   self._record_mode = false
 
-  Application.__init(self,process,mappings,options,cfg_name,palette)
+  Application.__init(self,browser_process,mappings,options,config_name)
 
   -- do stuff after options have been set
 
@@ -304,11 +306,7 @@ function Effect:update()
     if (self.options.include_parameters.value == self.ALL_PARAMETERS) then
       -- set the device navigator to the current fx
       for control_index = 1,#self._device_navigators do
-        if (device_idx==control_index) then
-          self._device_navigators[control_index]:set(self.palette.device_nav_on)
-        else
-          self._device_navigators[control_index]:set(self.palette.device_nav_off)
-        end
+        self._device_navigators[control_index]:set((device_idx==control_index),true)  
 
         -- update tooltip
         local device = renoise.song().tracks[track_idx].devices[control_index]   
@@ -332,11 +330,7 @@ function Effect:update()
             break
           end
         end
-        if is_current then
-          self._device_navigators[control_idx]:set(self.palette.device_nav_on)
-        else
-          self._device_navigators[control_idx]:set(self.palette.device_nav_off)
-        end
+        self._device_navigators[control_idx]:set(is_current,skip_event)  
         -- update tooltip
         self._device_navigators[control_idx].tooltip = (device) and 
           string.format("Set focus to %s",device.name) or
@@ -464,11 +458,11 @@ function Effect:_build_app()
 
       local group_cols = cm:count_columns(self.mappings.device.group_name)
 
-      local c = UIButton(self.display)
+      local c = UIToggleButton(self.display)
       c.group_name = self.mappings.device.group_name
       c.tooltip = self.mappings.device.description
       c:set_pos(control_index)
-      c.on_press = function() 
+      c.on_change = function(obj) 
 
         if (not self.active) then 
           return false 
@@ -489,19 +483,29 @@ function Effect:_build_app()
             local sel_index = song.selected_device_index
             if (sel_index ~= control_index) and
                 self._device_navigators[sel_index] then
-              self._device_navigators[sel_index]:set(self.palette.device_nav_off)
-
+              self._device_navigators[sel_index]:set(false,true)
             end
           else
             for control_index2 = 1,#self._device_navigators do
               local prm_table = self._parameter_set[control_index2]
               if prm_table and
                   (prm_table.device_index ~= new_index) then
-                self._device_navigators[control_index2]:set(self.palette.device_nav_off)
+                self._device_navigators[control_index2]:set(false,true)
               end
             end
           end
+
+        else
+          return false      
         end
+
+        -- emulate radiobuttons, refuse to toggle when active
+        if (not obj.active) then 
+          obj:set(true,true)
+          return false      
+        end
+
+        return true      
 
       end
       self:_add_component(c)
@@ -580,12 +584,12 @@ function Effect:_build_app()
 
   if (self.mappings.device_next.group_name) then
 
-    local c = UIButton(self.display)
+    local c = UIToggleButton(self.display)
     c.group_name = self.mappings.device_next.group_name
     c.tooltip = self.mappings.device_next.description
-    --c.palette.foreground.text = "►"
+    c.palette.foreground.text = "►"
     c:set_pos(self.mappings.device_next.index)
-    c.on_press = function()
+    c.on_press = function(obj)
 
       if not self.active then 
         return false 
@@ -594,6 +598,7 @@ function Effect:_build_app()
       local device_idx = renoise.song().selected_device_index
       local new_index = self:_get_next_device_index(device_idx)
       self:_set_selected_device_index(new_index)
+      return false
 
     end
     self:_add_component(c)
@@ -605,12 +610,12 @@ function Effect:_build_app()
 
   if (self.mappings.device_prev.group_name) then
 
-    local c = UIButton(self.display)
+    local c = UIToggleButton(self.display)
     c.group_name = self.mappings.device_prev.group_name
     c.tooltip = self.mappings.device_prev.description
-    --c.palette.foreground.text = "◄"
+    c.palette.foreground.text = "◄"
     c:set_pos(self.mappings.device_prev.index)
-    c.on_press = function()
+    c.on_change = function(obj)
 
       if not self.active then 
         return false 
@@ -619,6 +624,7 @@ function Effect:_build_app()
       local device_idx = renoise.song().selected_device_index
       local new_index = self:_get_previous_device_index(device_idx)
       self:_set_selected_device_index(new_index)
+      return false
 
     end
     self:_add_component(c)
@@ -631,12 +637,12 @@ function Effect:_build_app()
 
   if (self.mappings.preset_next.group_name) then
 
-    local c = UIButton(self.display)
+    local c = UIToggleButton(self.display)
     c.group_name = self.mappings.preset_next.group_name
     c.tooltip = self.mappings.preset_next.description
-    --c.palette.foreground.text = "►"
+    c.palette.foreground.text = "►"
     c:set_pos(self.mappings.preset_next.index)
-    c.on_press = function()
+    c.on_press = function(obj)
 
       if not self.active then 
         return false 
@@ -644,6 +650,7 @@ function Effect:_build_app()
       
       local device = self:_get_selected_device()
       device.active_preset = math.min(#device.presets,device.active_preset+1)
+      return false
 
     end
     self:_add_component(c)
@@ -655,12 +662,12 @@ function Effect:_build_app()
 
   if (self.mappings.preset_prev.group_name) then
 
-    local c = UIButton(self.display)
+    local c = UIToggleButton(self.display)
     c.group_name = self.mappings.preset_prev.group_name
     c.tooltip = self.mappings.preset_prev.description
-    --c.palette.foreground.text = "◄"
+    c.palette.foreground.text = "◄"
     c:set_pos(self.mappings.preset_prev.index)
-    c.on_press = function()
+    c.on_change = function(obj)
 
       if not self.active then 
         return false 
@@ -668,6 +675,7 @@ function Effect:_build_app()
       
       local device = self:_get_selected_device()
       device.active_preset = math.max(1,device.active_preset-1)
+      return false
 
     end
     self:_add_component(c)
@@ -723,18 +731,18 @@ function Effect:_update_prev_next_device_buttons(device_idx)
     local prev_idx = self:_get_previous_device_index(device_idx)
     local previous_device = song.tracks[track_idx].devices[prev_idx]
     if previous_device then
-      self._device_prev:set(self.palette.prev_device_on)
+      self._device_prev:set(true,skip_event)
     else
-      self._device_prev:set(self.palette.prev_device_off)
+      self._device_prev:set(false,skip_event)
     end
   end
   if self._device_next then
     local next_idx = self:_get_next_device_index(device_idx)
     local next_device = song.tracks[track_idx].devices[next_idx]
     if next_device then
-      self._device_next:set(self.palette.next_device_on)
+      self._device_next:set(true,skip_event)
     else
-      self._device_next:set(self.palette.next_device_off)
+      self._device_next:set(false,skip_event)
     end
   end
 
@@ -758,16 +766,16 @@ function Effect:_update_prev_next_preset_buttons(device_idx)
   local skip_event = true
   if self._preset_prev then
     if device.presets[preset_idx-1] then
-      self._preset_prev:set(self.palette.prev_preset_on)
+      self._preset_prev:set(true,skip_event)
     else
-      self._preset_prev:set(self.palette.prev_preset_off)
+      self._preset_prev:set(false,skip_event)
     end
   end
   if self._preset_next then
     if device.presets[preset_idx+1] then
-      self._preset_next:set(self.palette.next_preset_on)
+      self._preset_next:set(true,skip_event)
     else
-      self._preset_next:set(self.palette.next_preset_off)
+      self._preset_next:set(false,skip_event)
     end
   end
 
@@ -826,7 +834,7 @@ end
 -- obtain previous device index (supports parameter subsets)
 
 function Effect:_get_previous_device_index(idx)
-  TRACE("Effect._get_previous_device_index()",idx)
+  --TRACE("Effect._get_previous_device_index()",idx)
 
   if (self.options.include_parameters.value == self.ALL_PARAMETERS) then
     return idx-1
@@ -1164,7 +1172,7 @@ function Effect:_attach_to_track_devices(track,new_song)
   -- todo: only perform update when in current track
   self._device_observables:insert(track.devices_observable)
   track.devices_observable:add_notifier(
-    function()
+    function(obj)
       TRACE("Effect:devices_observable fired...")
       self._track_update_requested = true
 
@@ -1179,7 +1187,7 @@ function Effect:_attach_to_track_devices(track,new_song)
     -- listen for preset changes 
     self._preset_observables:insert(device.active_preset_observable)
     device.active_preset_observable:add_notifier(
-        function()
+        function(obj)
             TRACE("Effect:active_preset_observable fired...")
             -- update prev/next device buttons
             --self:_update_prev_next_preset_buttons(device_idx)
@@ -1194,7 +1202,7 @@ function Effect:_attach_to_track_devices(track,new_song)
 
       self._mixer_observables:insert(parameter.show_in_mixer_observable)
       parameter.show_in_mixer_observable:add_notifier(
-        function()
+        function(obj)
           if (self.options.include_parameters.value == self.MIXER_PARAMETERS) then
             TRACE("Effect:show_in_mixer_observable fired...")
             -- todo: only perform update when in current track
@@ -1206,7 +1214,7 @@ function Effect:_attach_to_track_devices(track,new_song)
 
       self._mixer_observables:insert(parameter.is_automated_observable)
       parameter.is_automated_observable:add_notifier(
-        function()
+        function(obj)
           if (self.options.include_parameters.value == self.AUTOMATED_PARAMETERS) then
             TRACE("Effect:is_automated_observable fired...")
             -- todo: only perform update when in current track

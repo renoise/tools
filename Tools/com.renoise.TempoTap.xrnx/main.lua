@@ -33,24 +33,11 @@ local options = renoise.Document.create("ScriptingToolPreferences") {
 renoise.tool().preferences = options
 
 renoise.tool():add_menu_entry {
-  name = "Main Menu:Tools:TempoTap...",
-  invoke = function() show_dialog() end
-}
-
-local keybinding = {
-  name = "Global:Tools:Show/Hide TempoTap",
+  name = "Main Menu:Tools:Tempo Tap...",
   invoke = function() 
-    if (dialog and dialog.visible) then
-      dialog:close()      
-    else
-      show_dialog()
-    end
+    show_dialog() 
   end
 }
-
-if (not renoise.tool():has_keybinding(keybinding.name)) then
-  renoise.tool():add_keybinding(keybinding)
-end
 
 --------------------------------------------------------------------------------
 -- helper functions
@@ -67,18 +54,6 @@ local function resize_table(t, length)
   while (#t > length) do 
     table.remove(t, 1) 
   end
-end
-
-
---------------------------------------------------------------------------------
-
--- set_text
-
-local function set_text(str)
-  renoise.app():show_status("[TempoTap] " .. str)
-  if (vb) then
-    vb.views.bpm_text.text = str    
-  end    
 end
 
 
@@ -120,7 +95,7 @@ end
 local function insert_bpm(bpm)
   if (bpm > 255) then 
      renoise.app():show_status( 
-       ("[TempoTap] Error: tempos higher than 255 BPM can not be written to the Tempo Track, tapped tempo was: %d"):format(bpm)
+       ("[TempoTap] Error: tempo exceeds max effect value 255: %d"):format(bpm)
      )
      return
   end
@@ -142,10 +117,8 @@ local function insert_bpm(bpm)
     lines[line_index].
     effect_columns[1]
   
-  fx.number_string = "ZT"
+  fx.number_string = "F0"
   fx.amount_value = bpm    
-  
-  set_text(string.format("Tapped tempo (%d BPM) written to Tempo Track.", bpm)) 
 end
 
 
@@ -156,11 +129,22 @@ end
 local function save_bpm(bpm)
   if (bpm >= 32 and bpm <= 999) then
     renoise.song().transport.bpm = bpm      
-    set_text(string.format("Playback tempo set to %d BPM.", bpm)) 
     if (options.tempo_track.value) then
       insert_bpm(bpm)      
-    end    
+    end
   end
+end
+
+
+--------------------------------------------------------------------------------
+
+-- set_text
+
+local function set_text(str)
+  renoise.app():show_status("[TempoTap] " .. str)
+  if (vb) then
+    vb.views.bpm_text.text = str    
+  end    
 end
 
 
@@ -183,7 +167,7 @@ reset = function()
     timetable:remove(1) 
   end    
 
-  set_text("Tap counter has been reset.")  
+  set_text(string.format("Tap counter has been reset."))  
   
 end
   
@@ -275,7 +259,7 @@ function show_dialog()
   local TEXT_ROW_WIDTH = 100
   local WIDE = 180
 
-  local dialog_title = "TempoTap"
+  local dialog_title = "Tempo Tap"
   local dialog_buttons = {"Close"};
 
   
@@ -290,7 +274,7 @@ function show_dialog()
       text = "TAP",
       width = WIDE,
       height = 80,
-      midi_mapping = "TempoTap:Tap [Trigger]",
+      midi_mapping = "Transport:Record:Tap Tempo [Trigger]",
       pressed = function()
         tap()
       end
@@ -356,7 +340,6 @@ function show_dialog()
       margin = 4,
       vb:button {
         text = "Save Tempo",        
-        midi_mapping = "TempoTap:Save Tempo [Trigger]",
         tooltip = "Save Playback Tempo, and write to Tempo Track if enabled (Return)",        
         height = DEFAULT_BUTTON_HEIGHT*2,
         notifier = function()       
@@ -367,7 +350,6 @@ function show_dialog()
       },
       vb:button {
         text = "Reset Taps",        
-        midi_mapping = "TempoTap:Reset [Trigger]",
         tooltip = "Start over with tapping (Del)",
         height = DEFAULT_BUTTON_HEIGHT*2,
         notifier = function()                 
@@ -417,20 +399,7 @@ end
 --------------------------------------------------------------------------------
 
 renoise.tool():add_midi_mapping{
-  name = "TempoTap:Show/Hide TempoTap [Trigger]",
-  invoke = function(message)
-    if (message:is_trigger()) then      
-      if (dialog and dialog.visible) then
-        dialog:close()  
-      else
-        show_dialog()
-      end
-    end
-  end
-}
-
-renoise.tool():add_midi_mapping{
-  name = "TempoTap:Tap [Trigger]",
+  name = "Transport:Record:Tap Tempo [Trigger]",
   invoke = function(message)
     if (message:is_trigger()) then      
       tap()      
@@ -439,16 +408,7 @@ renoise.tool():add_midi_mapping{
 }
 
 renoise.tool():add_midi_mapping{
-  name = "TempoTap:Save Tempo [Trigger]",
-  invoke = function(message)
-    if (message:is_trigger() and tempo) then             
-      save_bpm(tempo)          
-    end
-  end
-}
-
-renoise.tool():add_midi_mapping{
-  name = "TempoTap:Reset [Trigger]",
+  name = "Transport:Record:Tap Tempo Reset [Trigger]",
   invoke = function(message)
     if (message:is_trigger()) then      
       reset()      

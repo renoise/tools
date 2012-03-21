@@ -86,17 +86,17 @@ pattern_track_scope.iter = function(note_mode, visible_only)
   end
 end
 
-local scopes = table.create {
+local scopes = {
   song_scope,
   pattern_scope,
   song_track_scope,
   pattern_track_scope
 }
 
-local scope_names = table.create { }
+local scope_names = {}
 
 for _,scope in pairs(scopes) do
-  scope_names:insert(scope.name)
+  table.insert(scope_names, scope.name)
 end
 
 
@@ -104,30 +104,27 @@ end
 -- search set
 --------------------------------------------------------------------------------
 
-local note_properties = table.create {
-  "note", "instrument", "volume", "panning", "delay"
+local note_properties = {
+  "note",
+  "instrument",
+  "volume",
+  "panning",
+  "delay"
 }
 
-local effect_properties = table.create {
-  "number", "amount"
+local effect_properties = {
+  "number",
+  "amount"
 }
 
-local hex_properties = table.create {
-  "instrument", "delay", "amount"
-}
-
-local z_properties = table.create {
-  "volume", "panning", "number"
-}
-
-local note_and_effect_properties = table.create { }
+local note_and_effect_properties = {}
 
 for _,property in pairs(note_properties) do
-  note_and_effect_properties:insert(property)
+  table.insert(note_and_effect_properties, property)
 end
 
 for _,property in pairs(effect_properties) do
-  note_and_effect_properties:insert(property)
+  table.insert(note_and_effect_properties, property)
 end
 
 
@@ -169,23 +166,15 @@ valid_notes["---"] = true
 valid_notes["OFF"] = true
 
 local function is_valid_property(str_value, property)
-  -- note
   if (property == "note") then
     return valid_notes[str_value:upper()]
-  
-  -- hex or 0Z mnemonic
   else
     if (#str_value == 2) then
       if (str_value == "..") then
         return true
-      
       else
-        if (z_properties:find(property)) then
-          return (str_value:match("[%d%a][%d%a]") ~= nil);
-        else
-          assert(hex_properties:find(property))
-          return (str_value:match("%x%x") ~= nil);
-        end
+        local number = tonumber(str_value, 0x10)
+        return (number and number >= 0 and number < 256)
       end
     end
   end
@@ -357,13 +346,8 @@ function validate_find_set()
       renoise.app():show_error(([[
 The find set contains an invalid '%s' entry: '%s'
 
-Valid entries for notes are something like 'C-4'.
-Valid entries for effect numbers, volume and pan are 0Z chars like 'R6'.
-Valid entries for effect values, instruments and delays are HEX chars like '1F'.
-
-The wildcard string '*' will match any non empty value.
-The string '---' or '..' will match empty values.
-Completely empty lines in the song will never be searched & replaced.
+Valid entries for notes are something like 'C-4' or '*'.
+Valid entries for effects are two chars like '2A' or '*'.
 
 Search or Replace was aborted...]]):format(property, value))
 
@@ -387,9 +371,9 @@ function validate_replace_set()
       renoise.app():show_error(([[
 The replace set contains an invalid '%s' entry: '%s'
 
-Valid entries for notes are something like 'C-4'.
-Valid entries for effect numbers, volume and pan are 0Z chars like 'R6'.
-Valid entries for effect values, instruments and delays are HEX chars like '1F'.
+
+Valid entries for notes are something like 'C-4' or and empty value.
+Valid entries for effects are two chars like '2A' or an empty value.
 
 Replace was aborted...]]):format(property, value))
 

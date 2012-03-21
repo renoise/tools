@@ -2,10 +2,8 @@
 -- Duplex.MPD32
 ----------------------------------------------------------------------------]]--
 
---[[
+-- Include these configurations for the MPD32
 
-Inheritance: MidiDevice > Device
+local CTRL_PATH = "Duplex/Controllers/MPD32/Configurations/"
+require (CTRL_PATH.."MixerMatrixEffectsTransport")
 
-A generic MidiDevice class 
-
---]]

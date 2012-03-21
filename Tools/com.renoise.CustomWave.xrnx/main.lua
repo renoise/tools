@@ -536,7 +536,7 @@ function generate()
   
     buffer_new:finalize_sample_data_changes()
   
---    sample_new.base_note = int_note - 1  //removed in v2.8
+    sample_new.base_note = int_note - 1
     sample_new.name = "Generated " .. note_number_to_string(int_note) .. " sample"
   
     int_generated_samples = int_generated_samples + 1
@@ -559,7 +559,7 @@ function generate()
   for int_note = int_start_note, int_end_note do
     local sample_index = int_note - int_start_note + 1
     
-    local base_note = int_note - 1 
+    local base_note = int_note - 1
     
     local note_range = {0, 119}
     

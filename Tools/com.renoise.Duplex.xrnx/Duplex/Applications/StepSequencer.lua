@@ -46,10 +46,6 @@ Options
 
 Changes (equal to Duplex version number)
 
-  0.98  - Palette now uses the standard format (easier to customize)
-        - Sequencer tracks can be linked with instruments, simply by assigning 
-          the same name to both. 
-
   0.95  - The sequencer is now fully synchronized with the currently selected 
           pattern in  Renoise. You can copy, delete or move notes around, 
           and the StepSequencer will update it's display accordingly
@@ -118,8 +114,8 @@ StepSequencer.default_options = {
   },
 }
 
-function StepSequencer:__init(process,mappings,options,cfg_name,palette)
-  TRACE("StepSequencer:__init(",process,mappings,options,cfg_name,palette)
+function StepSequencer:__init(browser_process,mappings,options,config_name)
+  TRACE("StepSequencer:__init(",browser_process,mappings,options,config_name)
 
   self.COLUMNS_SINGLE = 1
   self.COLUMNS_MULTI = 2
@@ -171,20 +167,36 @@ function StepSequencer:__init(process,mappings,options,cfg_name,palette)
 
   -- define default palette
   self.palette = {
-    out_of_bounds     = { color={0x40,0x40,0x00}, text="·", val=false},
-    slot_empty        = { color={0x00,0x00,0x00}, text="·", val=false},
-    slot_muted        = { color={0x40,0x00,0x00}, text="▫", val=false},
-    slot_level_1      = { color={0x00,0x40,0xff}, text="▪", val=true},
-    slot_level_2      = { color={0x00,0x80,0xff}, text="▪", val=true},
-    slot_level_3      = { color={0x00,0xc0,0xff}, text="▪", val=true},
-    slot_level_4      = { color={0x00,0xff,0xff}, text="▪", val=true},
-    slot_level_5      = { color={0x40,0xff,0xff}, text="▪", val=true},
-    slot_level_6      = { color={0x80,0xff,0xff}, text="▪", val=true},
-    transpose_12_down = { color={0xff,0x00,0xff}, text="-12",val=false},
-    transpose_1_down  = { color={0xc0,0x40,0xff}, text="-1", val=false},
-    transpose_1_up    = { color={0x40,0xc0,0xff}, text="+1", val=false},
-    transpose_12_up   = { color={0x00,0xff,0xff}, text="+12",val=false},
-    --position          = { color={0x00,0xff,0x00}, },
+    out_of_bounds = {
+      color={0x40,0x40,0x00}, 
+      text="",
+    },
+    slot_empty = {
+      color={0x00,0x00,0x00},
+      text="",
+    },
+    slot_muted = { -- volume 0 or note_cut
+      color={0x40,0x00,0x00},
+      text="□",
+    },
+    slot_level = { -- at different volume levels (automatically scales to #slot_level levels
+      { color={0x00,0x40,0xff}, },
+      { color={0x00,0x80,0xff}, },
+      { color={0x00,0xc0,0xff}, },
+      { color={0x00,0xff,0xff}, },
+      { color={0x40,0xff,0xff}, },
+      { color={0x80,0xff,0xff}, },
+    },
+    
+    transpose = {
+      { color={0xff,0x00,0xff}, }, -- down an octave
+      { color={0xc0,0x40,0xff}, }, -- down a semi
+      { color={0x40,0xc0,0xff}, }, -- up a semi
+      { color={0x00,0xff,0xff}, }, -- up an octave
+    },
+    position = {
+      color={0x00,0xff,0x00},
+    },
 
   }
 
@@ -232,7 +244,7 @@ function StepSequencer:__init(process,mappings,options,cfg_name,palette)
   -- don't toggle off if pressing multiple on / transposing / etc
   self._toggle_exempt = { } 
 
-  Application.__init(self,process,mappings,options,cfg_name,palette)
+  Application.__init(self,browser_process,mappings,options,config_name)
 
 end
 
@@ -266,11 +278,6 @@ function StepSequencer:_build_app()
   local cm_group = self.display.device.control_map.groups[
     self.mappings.grid.group_name]
   
-  if not cm_group then
-    local msg = "StepSequencer cannot initialize, the required mapping 'grid' is missing"
-    renoise.app():show_warning(msg)
-    return false
-  end
   if (cm_group["columns"])then
     if(self:_get_orientation()==VERTICAL) then
       self._track_count = cm_group["columns"]
@@ -281,11 +288,9 @@ function StepSequencer:_build_app()
     end
   else
     -- not a grid controller? 
-    local msg = "StepSequencer: the 'grid' mapping can only be assigned to a grid of buttons"
+    local msg = "The StepSequencer can only be used with a grid controller"
     renoise.app():show_warning(msg)
-    return false
   end
-
 
   -- build each section's controllers
   self:_build_line()
@@ -305,80 +310,67 @@ end
 
 --------------------------------------------------------------------------------
 
--- line (up/down scrolling)
-
 function StepSequencer:_build_line()
+  -- line (up/down scrolling)
+  local c = UISpinner(self.display)
+  c.group_name = self.mappings.line.group_name
+  c.tooltip = self.mappings.line.description
+  c:set_pos(self.mappings.line.index)
+  c:set_orientation(self.mappings.line.orientation)
+  c.text_orientation = VERTICAL
+  c.step_size = 1
+  c.on_change = function(obj) 
 
-  if self.mappings.line.group_name then
-
-    local c = UISpinner(self.display)
-    c.group_name = self.mappings.line.group_name
-    c.tooltip = self.mappings.line.description
-    c:set_pos(self.mappings.line.index)
-    c:set_orientation(self.mappings.line.orientation)
-    c.text_orientation = VERTICAL
-    c.step_size = 1
-    c.on_change = function(obj) 
-
-      if (not self.active) then 
-        return false 
-      end
-
-      if(self._edit_page~=obj.index)then
-        self._edit_page = obj.index
-        self._follow_player = false
-        self:_update_grid()
-        return true
-      end
-
-      return false
-
+    if (not self.active) then 
+      return false 
     end
-    self:_add_component(c)
-    self._line_navigator = c
-  
-  end
 
+    if(self._edit_page~=obj.index)then
+      self._edit_page = obj.index
+      self._follow_player = false
+      self:_update_grid()
+      return true
+    end
+
+    return false
+
+  end
+  self:_add_component(c)
+  self._line_navigator = c
 end
 
 
 --------------------------------------------------------------------------------
 
---  track (sideways scrolling)
-
 function StepSequencer:_build_track()
-  
-  if self.mappings.track.group_name then
+  --  track (sideways scrolling)
+  local c = UISpinner(self.display)
+  c.group_name = self.mappings.track.group_name
+  c.tooltip = self.mappings.track.description
+  c:set_pos(self.mappings.track.index)
+  c:set_orientation(self.mappings.track.orientation)
+  c.text_orientation = HORIZONTAL
+  c.on_change = function(obj) 
 
-    local c = UISpinner(self.display)
-    c.group_name = self.mappings.track.group_name
-    c.tooltip = self.mappings.track.description
-    c:set_pos(self.mappings.track.index)
-    c:set_orientation(self.mappings.track.orientation)
-    c.text_orientation = HORIZONTAL
-    c.on_change = function(obj) 
-
-      if (not self.active) then 
-        return false 
-      end
-
-      local page_width = self:_get_page_width()
-      local track_idx = (obj.index*page_width)
-
-      if (self.options.follow_track.value == self.FOLLOW_TRACK_ON) then
-        -- if the follow_track option is specified, we set the
-        -- track index and let the _follow_track() method handle it
-        renoise.song().selected_track_index = 1+track_idx
-      else
-        self._track_offset = obj.index*self:_get_page_width()
-        self:_update_grid()
-      end
-
+    if (not self.active) then 
+      return false 
     end
-    self:_add_component(c)
-    self._track_navigator = c
-  end
 
+    local page_width = self:_get_page_width()
+    local track_idx = (obj.index*page_width)
+
+    if (self.options.follow_track.value == self.FOLLOW_TRACK_ON) then
+      -- if the follow_track option is specified, we set the
+      -- track index and let the _follow_track() method handle it
+      renoise.song().selected_track_index = 1+track_idx
+    else
+      self._track_offset = obj.index*self:_get_page_width()
+      self:_update_grid()
+    end
+
+  end
+  self:_add_component(c)
+  self._track_navigator = c
 end
 
 
@@ -410,7 +402,7 @@ function StepSequencer:_build_grid()
         self._toggle_exempt[x] = {}
       end
 
-      local c = UIButton(self.display)
+      local c = UIStepSeqButton(self.display)
       c.group_name = self.mappings.grid.group_name
       c.tooltip = self.mappings.grid.description
       c.x_pos = x
@@ -424,7 +416,7 @@ function StepSequencer:_build_grid()
           return false 
         end
 
-        self:_process_grid_event(x, y, true,obj)
+        return self:_process_grid_event(x, y, true,obj)
 
       end
       c.on_release = function(obj)
@@ -433,7 +425,7 @@ function StepSequencer:_build_grid()
           return false 
         end
 
-        self:_process_grid_event(x, y, false,obj)
+        return self:_process_grid_event(x, y, false,obj)
 
       end
       
@@ -458,15 +450,7 @@ function StepSequencer:_build_grid()
           palette.foreground = table.rcopy(self.palette.slot_empty)
           obj:set_palette(palette)
           self._update_grid_requested = true
-
-          -- bring focus to track
-          if (orientation==HORIZONTAL) then
-            renoise.song().selected_track_index = y
-          else
-            renoise.song().selected_track_index = x
-          end
         end
-
       end
       self:_add_component(c)
       self._buttons[x][y] = c
@@ -479,71 +463,67 @@ end
 
 function StepSequencer:_build_level()
 
-  if self.mappings.level.group_name then
+  -- figure out the number of rows in our level-slider group
 
-    -- figure out the number of rows in our level-slider group
-    local cm = self.display.device.control_map
+  local cm = self.display.device.control_map
 
-    -- level buttons
-    local c = UIButtonStrip(self.display)
-    c.group_name = self.mappings.level.group_name
-    c.tooltip = self.mappings.level.description
-    c.toggleable = false
-    c.monochrome = is_monochrome(self.display.device.colorspace)
-    c.mode = c.MODE_INDEX
-    c.flipped = true
-    c:set_orientation(self.mappings.level.orientation)
-    c:set_size(self._line_count)
-    c.on_index_change = function(obj) 
-      if not self.active then 
-        return false 
-      end
-
-      local idx = obj:get_index()
-      local idx_flipped = obj._size-obj:get_index()+1
-      local newval = (127/(obj._size-1)) * (idx_flipped-1)
-
-      -- check for held grid notes
-      local held = self:_walk_held_keys(
-        function(track_idx,line_idx)
-          if (self:_get_orientation()==HORIZONTAL) then
-            track_idx,line_idx = line_idx,track_idx
-          end
-          local tracks = renoise.song().selected_pattern.tracks[track_idx + self._track_offset]
-          local inc = self.options.line_increment.value
-          local note = tracks:line(line_idx + self._edit_page * inc).note_columns[1]
-          note.volume_value = newval
-        end,
-        true
-      )
-      if (held == 0) then 
-        -- no keys down, change basenote instead of transpose
-        self._base_volume = newval
-        local msg = string.format(
-          "StepSequencer: Volume changed to %X",newval)
-        renoise.app():show_status(msg)
-      end
-      self._update_grid_requested = true
-      
-      -- draw buttons
-      local p = { }
-      if (newval == 0) then
-        p = table.rcopy(self.palette.slot_muted)
-      else 
-        p = self:_volume_palette(newval, 127)
-      end
-      --[[
-      c.palette.range = p
-      c:set_range(idx,obj._size)
-      c:invalidate()
-      ]]
-      c:set_palette({range = p})
-      c:set_range(idx,obj._size)
-      return true
+  -- level buttons
+  local c = UIButtonStrip(self.display)
+  c.group_name = self.mappings.level.group_name
+  c.tooltip = self.mappings.level.description
+  c.toggleable = false
+  c.monochrome = is_monochrome(self.display.device.colorspace)
+  c.mode = c.MODE_INDEX
+  c.flipped = true
+  c:set_orientation(self.mappings.level.orientation)
+  c:set_size(self._line_count)
+  c.on_index_change = function(obj) 
+    
+    if not self.active then 
+      return false 
     end
-    self:_add_component(c)
-    self._level = c
+
+    local idx = obj:get_index()
+    local idx_flipped = obj._size-obj:get_index()+1
+    local newval = (127/(obj._size-1)) * (idx_flipped-1)
+
+    -- check for held grid notes
+    local held = self:_walk_held_keys(
+      function(track_idx,line_idx)
+        if (self:_get_orientation()==HORIZONTAL) then
+          track_idx,line_idx = line_idx,track_idx
+        end
+        local tracks = renoise.song().selected_pattern.tracks[track_idx + self._track_offset]
+        local inc = self.options.line_increment.value
+        local note = tracks:line(line_idx + self._edit_page * inc).note_columns[1]
+        note.volume_value = newval
+      end,
+      true
+    )
+    if (held == 0) then 
+      -- no keys down, change basenote instead of transpose
+      self._base_volume = newval
+      local msg = string.format(
+        "StepSequencer: Volume changed to %X",newval)
+      renoise.app():show_status(msg)
+    end
+    self._update_grid_requested = true
+    
+    -- draw buttons
+    local p = { }
+    if (newval == 0) then
+      p = table.rcopy(self.palette.slot_muted)
+    else 
+      p = self:_volume_palette(newval, 127)
+    end
+    c.palette.range = p
+    c:set_range(idx,obj._size)
+    c:invalidate()
+    
+    return true
   end
+  self:_add_component(c)
+  self._level = c
 
 end
 
@@ -551,62 +531,48 @@ end
 --------------------------------------------------------------------------------
 
 function StepSequencer:_build_transpose()
-
-  if self.mappings.transpose.group_name then
-
-    self._transpose = { }
-    local transposes = { -12, -1, 1, 12 }
-    for k,v in ipairs(transposes) do
+  self._transpose = { }
+  local transposes = { -12, -1, 1, 12 }
+  for k,v in ipairs(transposes) do
+    
+    local c = UIStepSeqButton(self.display)
+    c.group_name = self.mappings.transpose.group_name
+    c.tooltip = self.mappings.transpose.description
+    c:set_pos(self.mappings.transpose.index+(k-1))
+    c.active = false
+    c.transpose = v
+    
+    c.on_press = function(obj)
       
-      local c = UIButton(self.display)
-      c.group_name = self.mappings.transpose.group_name
-      c.tooltip = self.mappings.transpose.description
-      c:set_pos(self.mappings.transpose.index+(k-1))
-      c.active = false
-      c.transpose = v
-      if (k==1) then
-        c:set(self.palette.transpose_12_down)
-      elseif (k==2) then
-        c:set(self.palette.transpose_1_down)
-      elseif (k==3) then
-        c:set(self.palette.transpose_1_up)
-      elseif (k==4) then
-        c:set(self.palette.transpose_12_up)
-      end
-      c.on_press = function(obj)
-        
-        if not self.active then 
-          return false
-        end
-        
-        -- check for held grid notes
-        local held = self:_walk_held_keys(
-          function(x,y)
-            if (self:_get_orientation()==HORIZONTAL) then
-              x,y = y,x
-            end
-            local inc = self.options.line_increment.value
-            local note = renoise.song().selected_pattern.tracks[x + self._track_offset]:line(
-              y + self._edit_page * inc).note_columns[1]
-            local newval = note.note_value + obj.transpose
-            if (newval > 0 and newval < 120) then 
-              note.note_value = newval
-            end
-          end,
-          true
-        )
-        if (held == 0) then -- no keys down, change basenote instead of transpose
-          self:_transpose_basenote(obj.transpose)
-        end
+      if not self.active then 
+        return false
       end
       
-      self:_add_component(c)
-      self._transpose[k] = c
-      
+      -- check for held grid notes
+      local held = self:_walk_held_keys(
+        function(x,y)
+          if (self:_get_orientation()==HORIZONTAL) then
+            x,y = y,x
+          end
+          local inc = self.options.line_increment.value
+          local note = renoise.song().selected_pattern.tracks[x + self._track_offset]:line(
+            y + self._edit_page * inc).note_columns[1]
+          local newval = note.note_value + obj.transpose
+          if (newval > 0 and newval < 120) then 
+            note.note_value = newval
+          end
+        end,
+        true
+      )
+      if (held == 0) then -- no keys down, change basenote instead of transpose
+        self:_transpose_basenote(obj.transpose)
+      end
     end
-
+    
+    self:_add_component(c)
+    self._transpose[k] = c
+    
   end
-
 end
 
 
@@ -648,7 +614,7 @@ function StepSequencer:on_idle()
   if self._update_grid_requested then
     self._update_grid_requested = false
     self:_update_grid()
-    --self:_update_transpose()
+    self:_update_transpose()
   end
   
   if renoise.song().transport.playing then
@@ -717,9 +683,7 @@ function StepSequencer:_update_page()
   if (page~=self._edit_page) or
     (self._start_tracking) then
     self._edit_page = page
-    if self._line_navigator then
-      self._line_navigator:set_index(page,true)
-    end
+    self._line_navigator:set_index(page,true)
     self._update_grid_requested = true
   end
 
@@ -732,11 +696,11 @@ end
 
 function StepSequencer:_draw_position(idx)
 
-  if self._level and renoise.song().transport.playing then
+  if renoise.song().transport.playing then
     local ctrl_idx = self._level:get_index()
     if (ctrl_idx~=idx) then
       self._level:set_index(idx,true)
-      TRACE("StepSequencer:_draw_position(",idx,")")
+  TRACE("StepSequencer:_draw_position(",idx,")")
     end
   end
 
@@ -763,9 +727,7 @@ function StepSequencer:_update_line_count()
   local inc = self.options.line_increment.value
   local rng = math.ceil(math.floor(pattern.number_of_lines)/inc)-1
 
-  if self._line_navigator then
-    self._line_navigator:set_range(0,rng)
-  end
+  self._line_navigator:set_range(0,rng)
 
 end
 
@@ -813,7 +775,7 @@ end
 
 
 --------------------------------------------------------------------------------
---[[
+
 function StepSequencer:_update_transpose()
 
   if not self.active then 
@@ -827,7 +789,6 @@ function StepSequencer:_update_transpose()
   end
   
 end
-]]
 
 --------------------------------------------------------------------------------
 
@@ -972,7 +933,7 @@ function StepSequencer:_attach_to_song()
     function()
       -- remove existing line notifier (if it exists)
       local patt = song.patterns[self._current_pattern]
-      if patt and (song.selected_pattern_index ~= self._current_pattern) and
+      if (song.selected_pattern_index ~= self._current_pattern) and
         (patt:has_line_notifier(self._track_changes,self)) then
         patt:remove_line_notifier(self._track_changes,self)
       end
@@ -1046,24 +1007,13 @@ function StepSequencer:_process_grid_event(x,y, state, btn)
   
   local note = renoise.song().selected_pattern.tracks[track_idx]:line(
     line_idx).note_columns[1]
-
-  -- determine instrument by matching track title with instruments
-  -- a matching title will select that instrument 
-  local track_name = renoise.song().tracks[track_idx].name
-  local instr_index = self:_obtain_instrument_by_name(track_name)
-  if not instr_index then
-    instr_index = renoise.song().selected_instrument_index
-  else
-    local msg = "StepSequencer: matched track/instrument name"..track_name
-    renoise.app():show_status(msg)
-  end
-
+  
   if (state) then -- press
     self._keys_down[x][y] = true
     if (note.note_string == "OFF" or note.note_string == "---") then
       local base_note = (self._base_note-1) + 
         (self._base_octave-1)*12
-      self:_set_note(note, base_note, instr_index-1, 
+      self:_set_note(note, base_note, renoise.song().selected_instrument_index-1, 
         self._base_volume)
       self._toggle_exempt[x][y] = true
       -- and update the button ...
@@ -1088,20 +1038,6 @@ function StepSequencer:_process_grid_event(x,y, state, btn)
   return true
 end
 
---------------------------------------------------------------------------------
-
---  return (number) instrument index
-
-function StepSequencer:_obtain_instrument_by_name(name)
-  TRACE("StepSequencer:_obtain_instrument_by_name()",name)
-
-  for instr_index,instr in ipairs(renoise.song().instruments) do
-    if (instr.name == name) then
-      return instr_index
-    end
-  end
-
-end
 
 --------------------------------------------------------------------------------
 
@@ -1161,32 +1097,35 @@ end
 function StepSequencer:_draw_grid_button(button, note)
   --TRACE("StepSequencer:_draw_grid_button()",button, note)
 
+  local palette = {}
   
   if (note ~= nil) then
     if (note.note_value == 121) then
-      button:set(self.palette.slot_empty)
+      -- empty
+      palette.foreground = table.rcopy(self.palette.slot_empty)
     elseif (note.note_value == 120 or note.volume_value == 0) then
-      button:set(self.palette.slot_muted)
+      -- turned off 
+      palette.foreground = table.rcopy(self.palette.slot_muted)
     else
-      button:set(self:_volume_palette(note.volume_value, 127))
+      -- some volume
+      palette.foreground = self:_volume_palette(note.volume_value, 127)
     end
+  
   else
-    button:set(self.palette.out_of_bounds)
+    -- out of bounds
+    palette.foreground = table.rcopy(self.palette.out_of_bounds)
   end
 
+  button:set_palette(palette)
 end
 
 
 --------------------------------------------------------------------------------
 
 function StepSequencer:_volume_palette(vol, max)
-  if (vol > max) then 
-    vol = max 
-  end
-  local available_levels = 6 -- the number of slot_level colors
-  local vol_level = 1+ math.floor(vol / max * (available_levels-1))
-  local swatch_name = ("slot_level_%d"):format(vol_level)
-  return table.rcopy(self.palette[swatch_name])
+  if (vol > max) then vol = max end
+  local vol_level = 1+ math.floor(vol / max * (#self.palette.slot_level-1))
+  return table.rcopy(self.palette.slot_level[vol_level])
 end
 
 
@@ -1244,4 +1183,176 @@ function StepSequencer:_walk_held_keys(callback, toggleExempt)
   return ct
 end
 
+
+--[[----------------------------------------------------------------------------
+-- Duplex.UIStepSeqButton
+----------------------------------------------------------------------------]]--
+
+--[[
+
+Inheritance: UIComponent > UIStepSeqButton
+
+About
+
+UIStepSeqButton is a simple button with press & release handlers, 
+with limited support for input methods - see UIToggleButton for a more 
+general-purpose type of button.
+
+Supported input methods
+
+- button
+- pushbutton
+- togglebutton*
+
+* release/hold events are not supported for this type 
+
+
+Events
+
+  on_press()
+  on_release()
+  on_hold()
+
+
+--]]
+
+
+--==============================================================================
+
+class 'UIStepSeqButton' (UIComponent)
+
+function UIStepSeqButton:__init(display)
+  TRACE('UIStepSeqButton:__init')
+
+  UIComponent.__init(self,display)
+
+  self.palette = {
+    foreground = table.rcopy(display.palette.color_1),
+  }
+
+  self.add_listeners(self)
+  
+  -- external event handlers
+  self.on_press = nil
+  self.on_release = nil
+  self.on_hold = nil
+
+end
+
+
+--------------------------------------------------------------------------------
+
+-- user input via button
+
+function UIStepSeqButton:do_press()
+  TRACE("UIStepSeqButton:do_press()")
+
+  if (self.on_press ~= nil) then
+    local msg = self:get_msg()
+    if not (self.group_name == msg.group_name) then
+      return 
+    end
+    if not self:test(msg.column,msg.row) then
+      return 
+    end
+    self:on_press()
+  end
+
+end
+
+-- ... and release
+
+function UIStepSeqButton:do_release()
+  TRACE("UIStepSeqButton:do_release()")
+
+  if (self.on_release ~= nil) then
+    local msg = self:get_msg()
+    if not (self.group_name == msg.group_name) then
+      return 
+    end
+    if not self:test(msg.column,msg.row) then
+      return 
+    end
+    self:on_release()
+  end
+
+end
+
+
+--------------------------------------------------------------------------------
+
+-- user input via (held) button
+-- on_hold() is the optional handler method
+
+function UIStepSeqButton:do_hold()
+  TRACE("UIStepSeqButton:do_hold()")
+
+  if (self.on_hold ~= nil) then
+    local msg = self:get_msg()
+    if not (self.group_name == msg.group_name) then
+      return 
+    end
+    if not self:test(msg.column,msg.row) then
+      return 
+    end
+    self:on_hold()
+  end
+
+end
+
+
+--------------------------------------------------------------------------------
+
+function UIStepSeqButton:draw()
+  TRACE("UIStepSeqButton:draw")
+
+  local color = self.palette.foreground
+  local point = CanvasPoint()
+  point:apply(color)
+  -- if the color is completely dark, this is also how
+  -- LED buttons will represent the value (turned off)
+  if(get_color_average(color.color)>0x00)then
+    point.val = true        
+  else
+    point.val = false        
+  end
+  self.canvas:fill(point)
+  UIComponent.draw(self)
+
+end
+
+
+--------------------------------------------------------------------------------
+
+function UIStepSeqButton:add_listeners()
+
+  self._display.device.message_stream:add_listener(
+    self, DEVICE_EVENT_BUTTON_PRESSED,
+    function() self:do_press() end )
+
+  self._display.device.message_stream:add_listener(
+    self,DEVICE_EVENT_BUTTON_HELD,
+    function() self:do_hold() end )
+
+  self._display.device.message_stream:add_listener(
+    self,DEVICE_EVENT_BUTTON_RELEASED,
+    function() self:do_release() end )
+
+end
+
+
+--------------------------------------------------------------------------------
+
+function UIStepSeqButton:remove_listeners()
+
+  self._display.device.message_stream:remove_listener(
+    self,DEVICE_EVENT_BUTTON_PRESSED)
+
+  self._display.device.message_stream:remove_listener(
+    self,DEVICE_EVENT_BUTTON_HELD)
+    
+  self._display.device.message_stream:remove_listener(
+    self,DEVICE_EVENT_BUTTON_RELEASED)
+
+end
 

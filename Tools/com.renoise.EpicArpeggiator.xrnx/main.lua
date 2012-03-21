@@ -8,7 +8,6 @@ require "globals"
 require "gui"
 require "tone_matrix"
 require "pattern_processing"
-require "preset_manager"
 
 
 --------------------------------------------------------------------------------

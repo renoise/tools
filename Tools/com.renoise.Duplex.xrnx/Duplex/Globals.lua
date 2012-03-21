@@ -7,22 +7,18 @@
 MODULE_PATH = "./Duplex/"  
 NOTE_ARRAY = { "C-","C#","D-","D#","E-","F-","F#","G-","G#","A-","A#","B-" }
 
-LOWER_NOTE = -12
-UPPER_NOTE = 107
 
 -- Protocols
 
 DEVICE_OSC_PROTOCOL = 0
 DEVICE_MIDI_PROTOCOL = 1
 
--- Message types (a.k.a. "context")
+-- Message types
 
 MIDI_CC_MESSAGE = 2
 MIDI_NOTE_MESSAGE = 3
 MIDI_PITCH_BEND_MESSAGE = 4
-MIDI_CHANNEL_PRESSURE = 5
-MIDI_KEY_MESSAGE = 6 -- non-specific key (keyboard)
-OSC_MESSAGE = 7
+OSC_MESSAGE = 5
 
 -- Event types
 
@@ -34,16 +30,6 @@ DEVICE_EVENT_BUTTON_RELEASED = 2
 DEVICE_EVENT_VALUE_CHANGED = 3    
 --  button event
 DEVICE_EVENT_BUTTON_HELD = 4
---  key event
-DEVICE_EVENT_KEY_PRESSED = 5
---  key event
-DEVICE_EVENT_KEY_RELEASED = 6
---  key event
-DEVICE_EVENT_KEY_HELD = 7
---  key event
-DEVICE_EVENT_PITCH_CHANGED = 8
---  key event
-DEVICE_EVENT_CHANNEL_PRESSURE = 9
 
 -- Input methods
 
@@ -69,29 +55,16 @@ CONTROLLER_PUSHBUTTON = 3
 CONTROLLER_FADER = 4
 -- basic rotary encoder 
 -- (a control-map @type="dial" attribute)
-CONTROLLER_DIAL = 5     
--- XY pad 
--- (a control-map @type="xypad" attribute)
-CONTROLLER_XYPAD = 6
--- Keyboard
--- (a control-map @type="keyboard" attribute)
-CONTROLLER_KEYBOARD = 7
+CONTROLLER_DIAL = 5      
 
+-- UIComponents
 
--- Control-map types
-
-CONTROLMAP_TYPES = {
-  "button", 
-  "togglebutton", 
-  "pushbutton", 
-  "encoder", 
-  "dial", 
-  "fader", 
-  "xypad", 
-  "key",
-  "keyboard"
-}
-
+UI_COMPONENT_TOGGLEBUTTON = 1
+UI_COMPONENT_PUSHBUTTON = 2
+UI_COMPONENT_SLIDER = 3
+UI_COMPONENT_SPINNER = 4
+UI_COMPONENT_CUSTOM = 5
+UI_COMPONENT_BUTTONSTRIP = 6
 
 -- Miscellaneous
 
@@ -163,25 +136,12 @@ duplex_preferences = renoise.Document.create("ScriptingToolPreferences") {
   -- automation: the amount of extrapolation applied to linear envelopes
   extrapolation_strength = 3,
 
-  -- theming support: specify the default button color
-  theme_color_R = 0xFF,
-  theme_color_G = 0xFF,
-  theme_color_B = 0xFF,
-
   -- option: when enabled, the Duplex browser is displayed on startup
   display_browser_on_start = false,
-
-  -- option: enable realtime NRPN message support
-  nrpn_support = false,
 
   -- debug option: when enabled, dump MIDI messages received and send by duplex
   -- to the sdt out (Renoise terminal)
   dump_midi = false,
-  
-  -- the internal OSC connection (disabled if no host/port is specified)
-  osc_server_host = "127.0.0.1",
-  osc_server_port = 8000,
-  osc_first_run = true,
 
   -- list of user configuration settings (like MIDI device names, app configs)
   -- added during runtime for all available configs:
@@ -268,38 +228,6 @@ function table_count(t)
   end
 end
 
--- look for value within table
--- @return boolean
-
-function table_find(t,val)
-  for _,v in ipairs(t)do
-    if (val==v) then
-      return true
-    end
-  end
-  return false
-end
-
--- check if values are the same
--- (useful for detecting if a color is tinted)
--- @return boolean
-
-function table_has_equal_values(t)
-
-  local val = nil
-  for k,v in ipairs(t) do
-    if (val==nil) then
-      val = v
-    end
-    if (val~=v) then
-      return false
-    end
-  end
-  return true
-
-end
-
-
 -- split_filename
 
 function split_filename(filename)
@@ -310,12 +238,6 @@ function split_filename(filename)
   else
     return filename 
   end
-end
-
--- replace character in string
-
-function replace_char(pos, str, r)
-  return str:sub(1, pos-1) .. r .. str:sub(pos+1)
 end
 
 -- convert note-column pitch number into string value
@@ -337,38 +259,6 @@ function note_pitch_to_value(val)
     return string.format("%s%s",note,oct)
   end
 end
-
--- interpret note-string
--- some examples of input: C#5  C--1  C-1 C#-1
--- note that wildcard will return a fixed octave (1)
--- @return number
-
-function value_to_midi_pitch(str_val)
-  local note = nil
-  local octave = nil
-  -- use first letter to match note
-  local note_part = str_val:sub(0,2)
-  for k,v in ipairs(NOTE_ARRAY) do
-    if (note_part==v) then
-      note = k-1
-      break
-    end
-  end
-  local oct_part = strip_channel_info(str_val)
-  if (oct_part):find("*") then
-    octave = 1
-  else
-    octave = tonumber((oct_part):sub(3))
-  end
-  return note+octave*12
-end
-
--- extract cc number from a parameter
-
-function extract_cc_num(str_val)
- return str_val:match("%d+")
-end
-
 
 -- get_playing_pattern
 
@@ -422,20 +312,6 @@ function strip_channel_info(str)
   return string.gsub (str, "(|Ch[0-9]+)", "")
 end
 
--- remove note info from value-string
-
-function strip_note_info(str)
-  local idx = (str):find("|") or 0
-  return str:sub(idx)
-end
-
--- remove note info from value-string
-
-function has_note_info(str)
-  local idx = (str):find("|") or 0
-  return str:sub(idx)
-end
-
 
 -- get the type of track: sequencer/master/send
 
@@ -451,11 +327,6 @@ function determine_track_type(track_index)
   end
 end
 
--- round_value (from http://lua-users.org/wiki/SimpleRound)
-function round_value(num) 
-  if num >= 0 then return math.floor(num+.5) 
-  else return math.ceil(num-.5) end
-end
 -- clamp_value: ensure value is within min/max
 function clamp_value(value, min_value, max_value)
   return math.min(max_value, math.max(value, min_value))
@@ -525,12 +396,11 @@ function lcm(m,n)
   return ( m ~= 0 and n ~= 0 ) and m * n / gcd( m, n ) or 0
 end
 
--- find least common multiplier 
--- @t (table), use values in table as argument
-function least_common(t)
-  local cm = t[1]
-  for i=1,#t-1,1 do
-    cm = lcm(cm,t[i+1])
+-- find least common multiplier with N args
+function least_common(...)
+  local cm = arg[1]
+  for i=1,#arg-1,1 do
+    cm = lcm(cm,arg[i+1])
   end
   return cm
 end
@@ -550,8 +420,11 @@ end
 -- {"^ControlMap:", "^Display:"} -> show "Display:" and "ControlMap:"
 
 local _trace_filters = nil
---local _trace_filters = {"^OscVoiceMgr","^Keyboard"}
---local _trace_filters = {"^UISlider"}
+--local _trace_filters = {"^GridPie"}
+--local _trace_filters = {"^Recorder","^UISlider"}
+--local _trace_filters = {"^UIButtonStrip", "^UISlider","^Browser"}
+--local _trace_filters = {"^Recorder", "^Effect","^Navigator","^Mixer","^Matrix"}
+--local _trace_filters = {"^StepSequencer", "^Transport","^MidiDevice","^MessageStream","^"}
 --local _trace_filters = {".*"}
 
 --------------------------------------------------------------------------------

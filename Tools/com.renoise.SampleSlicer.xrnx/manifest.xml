@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<RenoiseScriptingTool>
+  <ApiVersion>2.0</ApiVersion>
+  <Id>com.renoise.SampleSlicer</Id>
+  <Version>1.5</Version>
+  <Name>Sample Slicer</Name>
+  <Author>Fabio Napodano | It-Alien (it-alien@renoise.com)</Author>
+  <Description>Divides a sample into a batch of new small samples or markers of equal size. This can be useful to create drum kits from loops, or to split long waves into smaller ones that should be triggerd pattern by pattern. Adds a new context context menu entry 'Process/BeatSlicer...' into the Renoise Sample Editor.</Description>
+  <Category>Sample Editor</Category>
+  <Homepage>http://tools.renoise.com</Homepage>
+</RenoiseScriptingTool>
+

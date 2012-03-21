@@ -31,7 +31,8 @@ local ok,err = manifest:load_from("manifest.xml")
 local TOOL_NAME = manifest:property("Name").value
 local TOOL_ID = manifest:property("Id").value
 
-local DOMAIN  = 'http://www.renoise.com'
+local DOMAIN  = 'http://tools.renoise.com/'
+local JSON_RPC_URL = DOMAIN .. 'services/json-rpc'
 
 -- Maximum number of tool updates per page in the browser
 local MAX_TOOLS = 10
@@ -77,7 +78,6 @@ end
   [47] => table
     [api_version] =>  2
     [author] =>  PeanutHead
-    [auto_upgraded] => false
     [bundle_path] =>  C:\Users\PeanutHead\AppData\Roaming\Renoise\V2.7.0\Scripts\Tools\se.peanuts.PeanutButter.xrnx\
     [category] =>  Food
     [description] =>  Nice and sticky
@@ -126,14 +126,13 @@ local function is_update_available(localtool, remotetool)
   -- Do the Tool IDs match?  
   if (not (localtool and localtool.id == remotetool.Id)) then
     return false
-  end
+  end  
   
   -- Is the installed tool older than the one on the server?
   -- Also update any tools with older API versions. The API 
   -- version of the remote tool is guaranteed to match the 
-  -- running Renoise instance (Service argument).
+  -- running Renoise instance (Service argument). 
   return (tonumber(localtool.version) < tonumber(remotetool.Version)
-    or (localtool.auto_upgraded and tonumber(localtool.version) == tonumber(remotetool.Version))
     or tonumber(localtool.api_version) < tonumber(renoise.API_VERSION)
   ) 
 end
@@ -212,7 +211,7 @@ end
 -- After the last update, trigger a validation function.
 local function download_update(meta, progress_callback, completed_one, completed_all, error_callback)
   
-  local url = DOMAIN.."/"..meta.path 
+  local url = DOMAIN .. meta.path 
   
     -- ERROR CALLBACK
   local error = function(x, t, e)            
@@ -336,7 +335,7 @@ local function json_find_updates(success, error, complete)
   -- Request settings
   local settings = {
     content_type='application/json',
-    url=DOMAIN..'/services/json-rpc',
+    url=JSON_RPC_URL,
     method=Request.POST,
     data=json_post_data,
     
@@ -344,28 +343,28 @@ local function json_find_updates(success, error, complete)
     error = error,
     
     -- success callback
-    success = function(response, text_status, json_http_request) 
+    success = function(response, text_status, xml_http_request) 
       if (response and response.result) then        
         if (type(response.result) == "table") then
-          success(response, text_status, json_http_request) 
+          success(response, text_status, xml_http_request) 
         else
           -- No Table received
           local error_thrown = "Unexpected reponse data format."
           if (type(response.result) == "string") then
             error_thrown = response.result
           end
-          error(json_http_request, text_status, error_thrown)  
+          error(xml_http_request, text_status, error_thrown)  
         end        
       elseif (response and response.error) then
         -- JSONRPC Error
         local error_thrown = ("%s: %s"):format(
           response.error.name,
           response.error.message)
-        error(json_http_request, text_status, error_thrown)         
+        error(xml_http_request, text_status, error_thrown)         
       else
         local error_thrown = "The server sent data I did not expect " ..
           "and I don't know what to do with it."
-        error(json_http_request, text_status, error_thrown)
+        error(xml_http_request, text_status, error_thrown)
       end
     end,
     
@@ -478,12 +477,12 @@ local function browser_init(autoclose, silent)
   end      
   
    -- ERROR CALLBACK            
-  error = function(json_http_request, text_status, error_thrown)
+  error = function(xml_http_request, text_status, error_thrown)
       status.text = "Could not load update info. Maybe a connection problem.\nReason given: " .. (error_thrown or "")
   end
         
   -- SUCCESS CALLBACK
-  success = function(response, text_status, json_http_request)     
+  success = function(response, text_status, xml_http_request)     
     
     -- Metadata from all installed Tools
     local metadata = response.result        
@@ -578,7 +577,7 @@ local function browser_init(autoclose, silent)
           mode = "body_color",
           bitmap = "images/link-icon.bmp",
           notifier = function() 
-            renoise.app():open_url(DOMAIN.."/node/"..toolmeta.nid) 
+            renoise.app():open_url(DOMAIN.."node/"..toolmeta.nid) 
           end
         },
         

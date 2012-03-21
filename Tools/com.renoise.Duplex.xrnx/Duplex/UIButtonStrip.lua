@@ -130,7 +130,7 @@ Special methods
 class 'UIButtonStrip' (UIComponent)
 
 function UIButtonStrip:__init(display)
-  --TRACE("UIButtonStrip:__init(",display,")")
+  TRACE("UIButtonStrip:__init(",display,")")
 
   UIComponent.__init(self,display)
 
@@ -141,9 +141,9 @@ function UIButtonStrip:__init(display)
   self.mode = self.MODE_NORMAL
 
   self.palette = {
-    index       = { color={0XFF,0XFF,0XFF},  text="▪", val=true },
-    range       = { color={0X80,0X80,0X80},  text="▫", val=true },
-    background  = { color={0X00,0x00,0x00},  text="·", val=false },
+    index = table.rcopy(display.palette.color_1),
+    range = table.rcopy(display.palette.color_1_dimmed), 
+    background = table.rcopy(display.palette.background)
   }
 
   self.add_listeners(self)
@@ -191,10 +191,10 @@ end
 
 --------------------------------------------------------------------------------
 
--- @return boolean, true when message was handled
+function UIButtonStrip:do_press()
+  TRACE("UIButtonStrip:do_press()")
 
-function UIButtonStrip:do_press(msg)
-  --TRACE("UIButtonStrip:do_press()",msg)
+  local msg = self:get_msg()
 
   if not (self.group_name == msg.group_name) then
     return 
@@ -223,21 +223,19 @@ function UIButtonStrip:do_press(msg)
       self:set_index(idx)
     end
   end
-  if (self.on_release ~= nil) then
-    self:on_release() 
+
+  if (self.on_press ~= nil) then
+    self:on_press()
   end
-
-  return true
-
 
 end
 
 --------------------------------------------------------------------------------
 
--- @return boolean, true when message was handled
+function UIButtonStrip:do_release()
+  TRACE("UIButtonStrip:do_release()")
 
-function UIButtonStrip:do_release(msg)
-  --TRACE("UIButtonStrip:do_release()",msg)
+  local msg = self:get_msg()
 
   if not (self.group_name == msg.group_name) then
     return 
@@ -256,8 +254,10 @@ function UIButtonStrip:do_release(msg)
       if (not self._held_event_fired) and (not self._range_set) then
         if (self.toggleable) and (idx==self._index) then
           self:set_index(0)
+
         else
           self:set_index(idx)
+
         end
       end
     end
@@ -270,30 +270,27 @@ function UIButtonStrip:do_release(msg)
     self.canvas.has_changed = true
     self:invalidate()
   end
+
   if (self.on_release ~= nil) then
     self:on_release()
   end
-
-  return true
-
 
 end
 
 --------------------------------------------------------------------------------
 
--- @return true (hold message are always handled)
+function UIButtonStrip:do_hold()
+  TRACE("UIButtonStrip:do_hold()")
 
-function UIButtonStrip:do_hold(msg)
-  --TRACE("UIButtonStrip:do_hold()",msg)
+  local msg = self:get_msg()
 
   if not (self.group_name == msg.group_name) then
-    return true
+    return 
   end
 
   if not self:test(msg.column,msg.row) then
-    return true
+    return 
   end
-
 
   if (self.mode == self.MODE_NORMAL) then
     -- toggle current range when held
@@ -309,11 +306,10 @@ function UIButtonStrip:do_hold(msg)
     self._held_event_fired = true
   end
 
+
   if (self.on_hold ~= nil) then
     self:on_hold()
   end
-
-  return true
 
 end
 
@@ -403,7 +399,7 @@ end
 -- get/set the current index
 
 function UIButtonStrip:set_index(idx,skip_event)
-  --TRACE("UIButtonStrip:set_index(",idx,skip_event,")")
+  TRACE("UIButtonStrip:set_index(",idx,skip_event,")")
   
   if not skip_event then
     if self._steps and (self._steps~=self._size) then
@@ -445,7 +441,7 @@ end
 -- get/set the current range
 
 function UIButtonStrip:set_range(idx1,idx2,skip_event)
-  --TRACE("UIButtonStrip:set_range(",idx1,idx2,skip_event,")")
+  TRACE("UIButtonStrip:set_range(",idx1,idx2,skip_event,")")
 
 
   -- swap values if needed (first should be lowest)
@@ -480,7 +476,7 @@ end
 
 
 function UIButtonStrip:get_range()
-  --TRACE("UIButtonStrip:get_range()")
+  TRACE("UIButtonStrip:get_range()")
 
   return self._range
 end
@@ -490,7 +486,7 @@ end
 -- get/set the number of steps 
 
 function UIButtonStrip:set_steps(steps)
-  --TRACE("UIButtonStrip:set_steps()")
+  TRACE("UIButtonStrip:set_steps()")
 
   if (steps ~= self._steps) then
 
@@ -516,7 +512,7 @@ end
 --------------------------------------------------------------------------------
 
 function UIButtonStrip:start_blink(idx)
-  --TRACE("UIButtonStrip:start_blink(",idx,")")
+  TRACE("UIButtonStrip:start_blink(",idx,")")
 
   self:stop_blink()
   self._blink_idx = idx
@@ -528,7 +524,7 @@ end
 --------------------------------------------------------------------------------
 
 function UIButtonStrip:pause_blink(idx)
-  --TRACE("UIButtonStrip:pause_blink(",idx,")")
+  TRACE("UIButtonStrip:pause_blink(",idx,")")
 
   if self._blink_task then
     self._display.scheduler:remove_task(self._blink_task)
@@ -541,7 +537,7 @@ end
 --------------------------------------------------------------------------------
 
 function UIButtonStrip:stop_blink()
-  --TRACE("UIButtonStrip:stop_blink()")
+  TRACE("UIButtonStrip:stop_blink()")
 
   self._blink_idx = 0
   if self._blink_task then
@@ -553,7 +549,7 @@ end
 --------------------------------------------------------------------------------
 
 function UIButtonStrip:set_orientation(value)
-  --TRACE("UIButtonStrip:set_orientation(",value,")")
+  TRACE("UIButtonStrip:set_orientation(",value,")")
 
   if (value == HORIZONTAL) or (value == VERTICAL) then
     self._orientation = value
@@ -562,7 +558,7 @@ function UIButtonStrip:set_orientation(value)
 end
 
 function UIButtonStrip:get_orientation()
-  --TRACE("UIButtonStrip:get_orientation()")
+  TRACE("UIButtonStrip:get_orientation()")
   return self._orientation
 end
 
@@ -571,7 +567,7 @@ end
 --------------------------------------------------------------------------------
 
 function UIButtonStrip:set_size(size)
-  --TRACE("UIButtonStrip:set_size(",size,")")
+  TRACE("UIButtonStrip:set_size(",size,")")
 
   self._size = size
 
@@ -588,19 +584,19 @@ end
 --------------------------------------------------------------------------------
 
 function UIButtonStrip:add_listeners()
-  --TRACE("UIButtonStrip:add_listeners()")
+  TRACE("UIButtonStrip:add_listeners()")
 
   self._display.device.message_stream:add_listener(
     self, DEVICE_EVENT_BUTTON_PRESSED,
-    function(msg) return self:do_press(msg) end )
+    function() self:do_press() end )
 
   self._display.device.message_stream:add_listener(
     self,DEVICE_EVENT_BUTTON_HELD,
-    function(msg) return self:do_hold(msg) end )
+    function() self:do_hold() end )
 
   self._display.device.message_stream:add_listener(
     self,DEVICE_EVENT_BUTTON_RELEASED,
-    function(msg) return self:do_release(msg) end )
+    function() self:do_release() end )
 
 end
 
@@ -608,7 +604,7 @@ end
 --------------------------------------------------------------------------------
 
 function UIButtonStrip:remove_listeners()
-  --TRACE("UIButtonStrip:remove_listeners()")
+  TRACE("UIButtonStrip:remove_listeners()")
 
   self._display.device.message_stream:remove_listener(
     self,DEVICE_EVENT_BUTTON_PRESSED)
@@ -657,29 +653,8 @@ end
 
 --------------------------------------------------------------------------------
 
--- extended test: check if we have no events assigned at all
--- (so we can pass message on to Renoise)
-
-function UIButtonStrip:test(column,row)
-  
-  if (self.on_index_change == nil) and
-    (self.on_range_change == nil) and
-    (self.on_press == nil) and
-    (self.on_change == nil) and
-    (self.on_release == nil) 
-  then
-    --print("this component has no event handlers")
-    return false
-  end
-
-  return UIComponent.test(self,column,row)
-
-end
-
---------------------------------------------------------------------------------
-
 function UIButtonStrip:_toggle_blink()
-  --TRACE("UIButtonStrip:_toggle_blink()")
+  TRACE("UIButtonStrip:_toggle_blink()")
 
   self._blink_is_lit = not self._blink_is_lit
 

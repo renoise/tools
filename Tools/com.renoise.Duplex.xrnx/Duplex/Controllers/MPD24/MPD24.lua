@@ -2,10 +2,9 @@
 -- Duplex.MPD24
 ----------------------------------------------------------------------------]]--
 
---[[
+-- Include these configurations for the MPD24
 
-Inheritance: MidiDevice > Device
+local CTRL_PATH = "Duplex/Controllers/MPD24/Configurations/"
+require (CTRL_PATH.."MatrixMixerEffects")
 
-A generic MidiDevice class 
 
---]]

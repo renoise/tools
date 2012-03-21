@@ -157,12 +157,6 @@ os.filenames(path [, {file_extensions}]) -> [table of strings]
 -- returns nil plus an error string.
 os.mkdir(path) -> [boolean, error_string or nil]
 
--- Moves a file or a directory from path 'src' to 'dest'. Unlike 'os.rename'
--- this also supports moving a file from one file system to another one. Returns
--- true if the operation was successful; in case of error, it returns nil plus 
--- an error string.
-os.move(src, dest) -> [boolean, error_string or nil]
-
 
 ------- Changed
 

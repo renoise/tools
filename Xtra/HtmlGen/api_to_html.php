@@ -32,7 +32,7 @@ $files = array();
 foreach(new DirectoryIterator($CONFIG['DOCS_DIR']) as $file) {
 
     if (!$file->isFile()) continue;
-    if (!preg_match('/(\.lua|\.txt)$/', $file->getFilename())) continue;
+    if (!preg_match('/(lua|txt)$/', $file->getFilename())) continue;
     $files[] = $file->getPathname();
 }
 
@@ -217,6 +217,5 @@ $tmp = trim(
     $footer
     );
 file_put_contents($CONFIG['OUT_DIR'] . '/index.html', $tmp);
-
 
 ?>

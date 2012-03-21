@@ -62,24 +62,20 @@ function Canvas:set_size(width,height)
   end
 
   -- if size is reduced, update the "clear" buffer
-  local new_table,is_reduced = {},false
+  self.clear = {}
   for x = width,old_width do
     for y = height,old_height do
       if(x>width) or (y>height) then
-        is_reduced = true
         if not self.clear[x] then
-          new_table[x] = {}
+          self.clear[x] = {}
         end
-        new_table[x][y] = true
+        self.clear[x][y] = true
         self.buffer[x][y] = nil
         if (x>width) then
           self.buffer[x] = nil
         end
       end
     end
-  end
-  if is_reduced then 
-    self.clear = new_table
   end
 
 
@@ -92,7 +88,7 @@ end
 -- write a single point to the canvas
 
 function Canvas:write(point,x,y)
-  --TRACE("Canvas:write", point, x, y)
+  TRACE("Canvas:write", point, x, y)
   
   if not y then y = 1 end -- if one-dimensional 
   self:check_delta(point,x,y)
@@ -120,7 +116,6 @@ end
 -- both color, text and value are considered when doing the comparison
 
 function Canvas:check_delta(point,x,y)
-
   if not self.buffer[x][y] 
   or not(self.buffer[x][y].color == point.color) 
   or not(self.buffer[x][y].text == point.text) 
@@ -187,7 +182,7 @@ end
 -- use this to quickly customize the look of a single point
 
 function CanvasPoint:apply(obj)
-  --TRACE("CanvasPoint:apply", obj)
+  TRACE("CanvasPoint:apply", obj)
   
   for k,v in pairs(obj) do
     if (k=="text")then

@@ -67,8 +67,8 @@ class 'Navigator' (Application)
 
 Navigator.default_options = {}
 
-function Navigator:__init(process,mappings,options,cfg_name,palette)
-  TRACE("Navigator:__init(",process,mappings,options,cfg_name,palette)
+function Navigator:__init(browser_process,mappings,options,config_name)
+  TRACE("Navigator:__init(",browser_process,mappings,options,config_name)
 
   self.mappings = {
     blockpos = {
@@ -81,11 +81,7 @@ function Navigator:__init(process,mappings,options,cfg_name,palette)
     },
   }
 
-  self.palette = {
-    active      = { color={0XFF,0XFF,0XFF},  text="▪", val=true },
-    looped      = { color={0X80,0X80,0X80},  text="▫", val=true },
-    background  = { color={0X00,0x00,0x00},  text="·", val=false },
-  }
+  self.palette = {}
 
   -- (boolean) keep track of the playing state
   self._playing = nil
@@ -131,7 +127,7 @@ function Navigator:__init(process,mappings,options,cfg_name,palette)
   -- (boolean) true when number of lines has changed
   self._changed_num_lines = false
 
-  Application.__init(self,process,mappings,options,cfg_name,palette)
+  Application.__init(self,browser_process,mappings,options,config_name)
 
 
 end
@@ -675,11 +671,6 @@ function Navigator:_build_app()
     c.tooltip = self.mappings.blockpos.description
     c:set_orientation(self.mappings.blockpos.orientation)
     c.monochrome = is_monochrome(self.display.device.colorspace)
-    c:set_palette({
-      index = self.palette.active,
-      range = self.palette.looped,
-      background = self.palette.background
-    })
     c.flipped = true
     if (self.mappings.blockpos.orientation == VERTICAL) then
       c:set_size(cm:count_rows(self.mappings.blockpos.group_name))

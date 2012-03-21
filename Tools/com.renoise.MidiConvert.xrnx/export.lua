@@ -177,17 +177,17 @@ function export_build_data(plan)
               not constrain_to_selected or
               constrain_to_selected and fx_col.is_selected
             then
-              if 'ZT' == fx_col.number_string then
-                -- ZTxx - Set Beats Per Minute (BPM) (20 - FF, 00 = stop song)
+              if 'F0' == fx_col.number_string then
+                -- F0xx - Set Beats Per Minute (BPM) (20 - FF, 00 = stop song)
                 data_bpm[pos] = fx_col.amount_string
-              elseif 'ZL' == fx_col.number_string  then
-                -- ZLxx - Set Lines Per Beat (LPB) (01 - FF, 00 = stop song).
+              elseif 'F1' == fx_col.number_string  then
+                -- F1xx - Set Lines Per Beat (LPB) (01 - FF, 00 = stop song).
                  data_lpb[pos] = fx_col.amount_string
-              elseif 'ZK' == fx_col.number_string  then
-                -- ZKxx - Set Ticks Per Line (TPL) (01 - 10).
+              elseif 'F2' == fx_col.number_string  then
+                -- F2xx - Set Ticks Per Line (TPL) (01 - 10).
                 data_tpl[pos] = fx_col.amount_string
-              elseif '0Q' == fx_col.number_string  then
-                -- 0Qxx, Delay all notes by xx ticks.
+              elseif '0D' == fx_col.number_string  then
+                -- 0Dxx, Delay all notes by xx ticks.
                 data_tick_delay[pos] = fx_col.amount_string
               end
             end
@@ -216,17 +216,17 @@ function export_build_data(plan)
               -- Volume column
               if 0 <= note_col.volume_value and note_col.volume_value <= 128 then
                 volume = note_col.volume_value
-              elseif note_col.volume_string:find('Q') == 1 then
+              elseif note_col.volume_string:find('D') == 1 then
                 tick_delay = note_col.volume_string:sub(2)
-              elseif note_col.volume_string:find('C') == 1 then
+              elseif note_col.volume_string:find('F') == 1 then
                 tick_cut = note_col.volume_string:sub(2)
               end
               -- Panning col
               if 0 <= note_col.panning_value and note_col.panning_value <= 128 then
                 panning = note_col.panning_value
-              elseif note_col.panning_string:find('Q') == 1 then
+              elseif note_col.panning_string:find('D') == 1 then
                 tick_delay = note_col.panning_string:sub(2)
-              elseif note_col.panning_string:find('C') == 1 then
+              elseif note_col.panning_string:find('F') == 1 then
                 tick_cut = note_col.panning_string:sub(2)
               end
               -- Note OFF

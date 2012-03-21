@@ -86,7 +86,7 @@ Using the Recorder
 
 Mappings
 
-  recorders - (UIButton...) toggle recording mode for track X
+  recorders - (UIToggleButton...) toggle recording mode for track X
   sliders   - (UISlider...) sample-select sliders, assignable to grid controller
 
 
@@ -246,8 +246,8 @@ Recorder.default_options = {
   }
 }
 
-function Recorder:__init(process,mappings,options,cfg_name,palette)
-  TRACE("Recorder:__init(",process,mappings,options,cfg_name,palette)
+function Recorder:__init(browser_process,mappings,options,config_name)
+  TRACE("Recorder:__init(",browser_process,mappings,options,config_name)
 
   --self.WRITEAHEAD_ON = 1
   --self.WRITEAHEAD_OFF = 2
@@ -287,11 +287,26 @@ function Recorder:__init(process,mappings,options,cfg_name,palette)
   }
 
   self.palette = {
-    background    = { color = {0x00,0x00,0x00}, val = false },
-    slider_lit    = { color = {0xff,0xff,0xff}, val = true  },
-    slider_dimmed = { color = {0x40,0x40,0x40}, val = false },
-    recorder_on   = { color = {0xff,0x40,0x40}, text="●", val = true  },
-    recorder_off  = { color = {0x40,0x00,0x00}, text="○", val = false },
+    background = {
+      color={0,0,0},
+      text="·",
+    },
+    slider_lit = {
+      color = {0xff,0xff,0xff},
+      text="■",
+    },
+    slider_dimmed = {
+      color = {0x40,0x40,0x40},
+      text="□",
+    },
+    recorder_lit = {
+      color = {0xff,0x00,0xff},
+      text="■",
+    },
+    recorder_dimmed = {
+      color = {0x40,0x00,0x40},
+      text="□",
+    },
 
   }
 
@@ -334,6 +349,14 @@ function Recorder:__init(process,mappings,options,cfg_name,palette)
   -- internal sample counter (+1 for each "Recorded Sample")
   self._sample_count = nil
 
+  -- this is the instrument we *guess* is the next recording
+  -- before it has actually been recorded/created
+  --self._bogus_instrument_idx = nil
+
+  -- set when we have written the bogus note
+  -- (cleared after each recording is done)
+  --self._bogus_written = false
+
   -- set this to disable the pattern editor line notifier
   self._line_notifier_disabled = false
 
@@ -371,9 +394,11 @@ function Recorder:__init(process,mappings,options,cfg_name,palette)
 
   -- keep reference to browser process, or we couldn't 
   -- set options while running (used by first_run) 
-  self.recorder_process = process
+  self.recorder_process = browser_process
 
-  Application.__init(self,process,mappings,options,cfg_name,palette)
+  Application.__init(self,browser_process,mappings,options,config_name)
+
+  self._first_run = self.options.first_run.value
 
 end
 
@@ -431,7 +456,19 @@ function Recorder:on_idle()
       self:_finalize_recording()
     end
   end
-
+--[[
+  if (self._finalizing) then
+    if (self.options.writeahead.value==self.WRITEAHEAD_ON) and 
+      not (self._bogus_written) then
+      local track = self._tracks[self._active_track_idx]
+      if (track) then
+        local trigger_mode = self.options.trigger_mode.value
+        self:_write_bogus_note(track,trigger_mode)
+        self._bogus_written = true
+      end
+    end
+  end
+]]
   -- detect when recording is started/done
   if (line<self._songpos_line) then
     if (self._finalizing) then
@@ -466,7 +503,11 @@ function Recorder:on_idle()
       blink = true
     end
     -- look for final recording
-
+    --[[
+    if self._post_recording and self._recent_sample then
+      self:_do_post_recording()
+    end
+    ]]
     if (self._active_track_idx) then
       -- blink: ghost sample
       if (self._grid_mode) then
@@ -476,25 +517,18 @@ function Recorder:on_idle()
             not self._prepare then
           if self._active_control_idx then
             local slider = self._sliders[self._active_control_idx]
-            if blink then
-              slider:set_palette({tip=self.palette.slider_lit})
-            else
-              slider:set_palette({tip=self.palette.background})
-            end
+            local palette = (blink) 
+              and {tip=table.rcopy(self.palette.slider_lit)} 
+              or {tip=table.rcopy(self.palette.slider_dimmed)}
+            slider:set_palette(palette)
           end
         end
       end
       -- blink: recorder 
-      if self._active_control_idx 
-        and self._recording 
-        and not self._short_take 
-      then
-        local button = self._buttons[self._active_control_idx]
-        if blink then
-          button:set(self.palette.recorder_on)
-        else
-          button:set(self.palette.recorder_off)
-        end
+      if self._active_control_idx and
+          self._recording and 
+          not self._short_take then
+        self._buttons[self._active_control_idx]:set(blink,true)
       end
     end
 
@@ -517,22 +551,16 @@ function Recorder:on_idle()
       local track = self._tracks[track_idx]
       if self._active_control_idx then
         local slider = self._sliders[self._active_control_idx]
-        if blink then
-          slider:set_palette({tip=self.palette.slider_lit})
-        else
-          slider:set_palette({tip=self.palette.background})
-        end
+        local palette = (blink) 
+          and {tip=table.rcopy(self.palette.slider_lit)} 
+          or {tip=table.rcopy(self.palette.slider_dimmed)}
+        slider:set_palette(palette)
       end
     end
     if self._active_control_idx then 
       if (not self._grid_mode and self._prepare) or
         (self._finalizing) or (self._short_take) then
-        local button = self._buttons[self._active_control_idx]
-        if blink then
-          button:set(self.palette.recorder_on)
-        else
-          button:set(self.palette.recorder_off)
-        end
+        self._buttons[self._active_control_idx]:set(blink,true)
       end
     end
   end
@@ -579,6 +607,23 @@ function Recorder:_abort_recording()
   TRACE("Recorder:_abort_recording()")
 
 
+  if (self._active_track_idx) then
+    local skip_event = true
+    if self._active_control_idx then
+      self._buttons[self._active_control_idx]:set(false,skip_event)
+    end
+    renoise.app().window.sample_record_dialog_is_visible = false
+    self:_remove_ghost(self._active_track_idx)
+    --[[
+    if self._bogus_written then
+      -- write to the pattern editor 
+      -- this should remove bogus note from previous recording process
+      local track = self._tracks[self._active_track_idx]
+      self:_write_to_pattern(track,self.options.trigger_mode.value)
+    end
+    ]]
+  end
+  
   -- remove unreferenced "samples" 
   -- 1. because nothing got recorded (we aborted)
   -- 2. because we might just have deleted the take
@@ -594,24 +639,17 @@ function Recorder:_abort_recording()
       end
       -- resize sliders (except the selected track, which 
       -- already got resized by the "remove_ghost" method)
-      TRACE("track_idx,self._active_track_idx",track_idx,self._active_track_idx)
       if changed and 
           (track_idx~=self._active_track_idx) then
         local control_idx = self:_get_control_idx(track_idx)
-        self:_set_slider_steps(control_idx,#track.samples)
+        if control_idx then
+          local slider = self._sliders[control_idx]
+          self:_set_slider_steps(slider,#track.samples)
+        end
       end
     end
   end
 
-  if (self._active_track_idx) then
-    if self._active_control_idx then
-      local button = self._buttons[self._active_control_idx]
-      button:set(self.palette.recorder_off)
-    end
-    renoise.app().window.sample_record_dialog_is_visible = false
-    self:_remove_ghost(self._active_track_idx)
-  end
-  
   -- get ready for next recording
   self:_reset_flags()
 
@@ -620,6 +658,7 @@ end
 --------------------------------------------------------------------------------
 
 -- enter the final stage of the recording
+-- grid controllers will allow "bogus note" output while in this stage
 
 function Recorder:_finalize_recording()
   TRACE("Recorder:_finalize_recording()")
@@ -640,9 +679,12 @@ function Recorder:_process_recording()
   TRACE("Recorder:_process_recording()")
 
   -- set recorder button to default state
+  local skip_event = true
+  local palette = {foreground=table.rcopy(self.palette.recorder_lit)}
   if self._active_control_idx then
     local button = self._buttons[self._active_control_idx]
-    button:set(self.palette.recorder_off)
+    button:set(false,skip_event)
+    button:set_palette(palette)
   end
 
   local track_idx = self._active_track_idx
@@ -708,6 +750,9 @@ function Recorder:_do_post_recording()
     local instr = renoise.song().instruments[instr_idx]
     instr.name = sample.name
 
+    -- increase sample count
+    --self._sample_count = self._sample_count+1
+
     -- select the sample
     track.selected_sample = count
     self:_select_sample(track,instr_idx)
@@ -735,21 +780,7 @@ function Recorder:_reset_flags()
   self._immediate_take = false
   self._short_take = false
   self._recent_sample = nil
-
-end
-
---------------------------------------------------------------------------------
-
--- @return boolean, true when one of the recorder-tracks have a ghost
-
-function Recorder:_has_ghost()
-
-  for k,v in ipairs(self._tracks) do
-    if v and v.has_ghost then
-      return true
-    end
-  end
-  return false 
+  --self._bogus_written = false
 
 end
 
@@ -775,14 +806,12 @@ function Recorder:_add_ghost(track_idx)
     local count = #track.samples
     local slider = self._sliders[control_idx]
     if (self._grid_mode) then
-      if self._blink then
-        slider:set_palette({tip=self.palette.slider_lit})
-      else
-        slider:set_palette({tip=self.palette.background})
-      end
-
+      local palette = (self._blink) 
+        and {tip=table.rcopy(self.palette.slider_lit)} 
+        or {tip=table.rcopy(self.palette.slider_dimmed)}
+      slider:set_palette(palette)
     end
-    self:_set_slider_steps(control_idx,count+1)
+    self:_set_slider_steps(slider,count+1)
     slider:set_index(count+1,skip_event)
   end
 
@@ -806,7 +835,7 @@ function Recorder:_remove_ghost(track_idx)
     local count = #track.samples
     if control_idx then
       local slider = self._sliders[control_idx]
-      self:_set_slider_steps(control_idx,count)
+      self:_set_slider_steps(slider,count)
       self:_restore_slider_tip(track_idx)
       slider:set_index((track.selected_sample or 0),skip_event)
     end
@@ -829,16 +858,13 @@ end
 -- @param slider - UISlider
 -- @param steps - integer, 0=hide slider
 
-function Recorder:_set_slider_steps(control_idx,steps)
-  TRACE("Recorder:_set_slider_steps(",control_idx,steps,")")
-
-  local slider = self._sliders[control_idx]
+function Recorder:_set_slider_steps(slider,steps)
+  TRACE("Recorder:_set_slider_steps(",slider,steps,")")
 
   assert(slider, 
     "Internal Error. Please report: missing slider component")
 
   if (self._grid_mode) then
-    --print("*** old, new step size",slider.steps,steps)
     slider:set_size(steps)
   elseif (steps==0) then
     -- since dials doesn't support zero steps...
@@ -861,7 +887,7 @@ function Recorder:_restore_slider_tip(track_idx)
   if self._grid_mode and
       control_idx then
     local slider = self._sliders[control_idx]
-    slider:set_palette({tip=self.palette.slider_lit})
+    slider:set_palette({tip=table.rcopy(self.palette.slider_lit)})
   end
 end 
 
@@ -1145,13 +1171,13 @@ function Recorder:_track_changes(pos)
 
     TRACE("Recorder:_track_changes()",pos.pattern,pos.track,pos.line)
 
+    local skip_event = true
     local track = self._tracks[pos.track]
     -- respond if the note located in the currently edited track,
     -- and the track is a recorder-track
     if track and 
-      (pos.pattern==self._current_pattern) and 
-      (pos.line == 1) 
-    then
+        (pos.pattern==self._current_pattern) and 
+        (pos.line == 1) then
       self:_update_selected_sample(track,pos.pattern)
     end
   end
@@ -1214,6 +1240,7 @@ function Recorder:_update_sample_count()
       end
     end
   end
+  --TRACE("Recorder:_update_sample_count:",num)
 
   self._sample_count = num or 0
 
@@ -1241,6 +1268,28 @@ function Recorder:_get_recording_index()
 
 end
 
+--------------------------------------------------------------------------------
+
+-- before the instrument has actually been created, we try to guess the index
+-- by going through the list of available instruments, starting from the active
+-- instrument - any empty instrument will be chosen, otherwise #instruments 
+-- @return integer
+--[[
+function Recorder:_guess_recording_index()
+  TRACE("Recorder:_guess_recording_index()")
+
+  local idx = renoise.song().selected_instrument_index
+  for i=idx, #renoise.song().instruments do
+    local instr = renoise.song().instruments[i]
+    if not instr.samples[1].sample_buffer.has_sample_data then
+      return i-1
+    end
+  end
+  
+  return #renoise.song().instruments
+
+end
+]]
 
 --------------------------------------------------------------------------------
 
@@ -1285,10 +1334,8 @@ function Recorder:_process_input(track,obj)
     if not obj then
       return
     end
-    local idx = #track.samples+1
     local skip_event = true
-    obj:set_size(idx)
-    obj:set_index(idx,skip_event)
+    obj:set_index((#track.samples+1),skip_event)
   end
 
   if self._prepare then
@@ -1299,6 +1346,12 @@ function Recorder:_process_input(track,obj)
     return false
 
   elseif self._finalizing then
+
+    -- output bogus notes while finalizing
+    --[[
+    self:_write_bogus_note(track,self.options.trigger_mode.value)
+    self._bogus_written = true
+    ]]
 
     restore_index()
     return false
@@ -1333,7 +1386,7 @@ function Recorder:_select_sample(track,idx)
   -- bring focus to the actual instrument
   if (track.samples[idx]) then
     local sample = track.samples[idx]
-    if sample and sample.instrument_value then
+    if sample then
       local real_index = sample.instrument_value+1
       if (renoise.song().instruments[real_index]) then
         renoise.song().selected_instrument_index = real_index
@@ -1354,24 +1407,22 @@ function Recorder:_update_all()
     return false
   end
 
+  local skip_event = true
   local page_width = self:_get_page_width()
   local page_width = self:_get_page_width()
   local track_idx = renoise.song().selected_track_index 
 
   for control_idx=1,#self._sliders do
-    local button = self._buttons[control_idx]
+
     local slider = self._sliders[control_idx]
     local track_idx = control_idx+self._track_offset
     local track = self._tracks[track_idx]
     local track_type = determine_track_type(track_idx)
+    local button_palette = {}
     if (track_type == TRACK_TYPE_SEQUENCER) then
       if (track) then
-        -- an active recorder track
-        -- set number of steps
         local count = #track.samples
-        self:_set_slider_steps(control_idx,count)
         if not (track.has_ghost) then
-          --print("*** about to remove ghost with track idx",track_idx)
           self:_remove_ghost(track_idx)
           if (count~=0) then
             local patt_idx = renoise.song().selected_pattern_index
@@ -1382,24 +1433,22 @@ function Recorder:_update_all()
         end
       else
         -- not a recorder-track 
-        self:_set_slider_steps(control_idx,0)
+        self:_set_slider_steps(slider,0)
       end
       -- update button state 
-      local has_ghost = false
-      if track and track.has_ghost then
-        has_ghost = true
-      end
-      local button_state = (track_idx==self._active_track_idx) and has_ghost
-      if button_state then
-        button:set(self.palette.recorder_on)
-      else
-        button:set(self.palette.recorder_off)
-      end
+      local button_state = (track_idx==self._active_track_idx) and true or false
+      self._buttons[control_idx]:set(button_state,skip_event)
+      button_palette.foreground = self.palette.recorder_lit
+      button_palette.background = self.palette.recorder_dimmed
     else
       -- out of bounds
-      self:_set_slider_steps(control_idx,0)
-      button:set(self.palette.background)
+      self:_set_slider_steps(slider,0)
+      button_palette.foreground = self.palette.background
+      button_palette.background = self.palette.background
     end
+
+    self._buttons[control_idx]:set_palette(button_palette)
+
 
   end
 
@@ -1408,13 +1457,14 @@ end
 --------------------------------------------------------------------------------
 
 -- switch to track: only sequencer tracks are possible targets
--- - will move ghost track from previous track to current, or create it
+-- will also move ghost track from previous track to current, or create it
 -- @param track_idx - renoise track number
 -- @return boolean - true if switched, false if not
 
 function Recorder:_attempt_track_switch(track_idx)
   TRACE("Recorder:_attempt_track_switch(",track_idx,")")
 
+  local skip_event = true
   local track = self._tracks[track_idx]
   local track_type = determine_track_type(track_idx)
 
@@ -1426,15 +1476,13 @@ function Recorder:_attempt_track_switch(track_idx)
   end
 
   -- remove ghost from previous track
-  if (self._active_track_idx) then
-    if (self._active_track_idx~=track_idx) then
-      local control_idx = self:_get_control_idx(self._active_track_idx)
-      local button = self._buttons[control_idx]
-      if control_idx then
-        button:set(self.palette.recorder_off)
-      end
-      self:_remove_ghost(self._active_track_idx)
+  if (self._active_track_idx) and 
+      (self._active_track_idx~=track_idx) then
+    local control_idx = self:_get_control_idx(self._active_track_idx)
+    if control_idx then
+      self._buttons[control_idx]:set(false,skip_event)
     end
+    self:_remove_ghost(self._active_track_idx)
   end
 
   self:_set_active_track(track_idx)
@@ -1443,7 +1491,7 @@ function Recorder:_attempt_track_switch(track_idx)
     renoise.app().window.sample_record_dialog_is_visible = true
     self:_add_ghost(track_idx)
 
-    if (self.options.first_run.value==self.FIRST_RUN_ON) then
+    if (self._first_run==self.FIRST_RUN_ON) then
       local msg = "IMPORTANT ONE-TIME MESSAGE FROM DUPLEX RECORDER"
                 .."\n"
                 .."\nPlease ensure that the recording dialog in Renoise is set to "
@@ -1452,6 +1500,7 @@ function Recorder:_attempt_track_switch(track_idx)
                 .."\nThanks!"
       renoise.app():show_message(msg)
       self:_set_option("first_run",self.FIRST_RUN_OFF,self.recorder_process)
+      self._first_run = self.FIRST_RUN_OFF
     end
 
 
@@ -1459,7 +1508,6 @@ function Recorder:_attempt_track_switch(track_idx)
     if self._grid_mode then
       -- grid mode: hide recording dialog
       self:_abort_recording()
-
     else
       -- normal mode: control recording stage
       local return_code = self:_process_input(track)
@@ -1531,11 +1579,12 @@ function Recorder:_build_app()
   -- create recorder buttons --------------------------------------------------
 
   for i=1,button_count do
-    local c = UIButton(self.display)
+    local c = UIToggleButton(self.display)
     c.group_name = self.mappings.recorders.group_name
     c.tooltip = self.mappings.recorders.description
     c:set_pos(i,1)
-    c:set(self.palette.recorder_off)
+    c.palette.foreground = table.rcopy(self.palette.recorder_lit)
+    c.palette.background = table.rcopy(self.palette.recorder_dimmed)
     c.on_hold = function(obj)
       if not self.active then
         return false
@@ -1546,19 +1595,17 @@ function Recorder:_build_app()
       end
 
     end
-    c.on_press = function(obj)
+    c.on_change = function(obj)
       if not self.active then 
         return false 
       end
       -- do not allow switching track while in post-recording stage
       if self._post_recording then
-        return  
+        return false 
       end
       local track_idx = i+self._track_offset
-      if (self:_attempt_track_switch(track_idx)) then
-        self:_update_all()
-      end
-
+      local result = self:_attempt_track_switch(track_idx)
+      return result
     end
     self:_add_component(c)
     self._buttons[i] = c
@@ -1573,11 +1620,12 @@ function Recorder:_build_app()
     c:set_pos(i,sliders_y_pos)
     c.toggleable = true
     c.flipped = true
-    c:set_palette({track=self.palette.slider_dimmed,background=self.palette.slider_dimmed})
     c.ceiling = 1.0
     c:set_index(0,true)
     c.button_mode = self._grid_mode
     c:set_orientation(VERTICAL)
+    c.palette.track = table.rcopy(self.palette.slider_dimmed)
+    c.palette.background = table.rcopy(self.palette.slider_dimmed)
     if (self._grid_mode) then
       c:set_size(0)
     else
@@ -1681,6 +1729,17 @@ end
 
 --------------------------------------------------------------------------------
 
+--[[
+function Recorder:_write_bogus_note(track,trigger_mode)
+  local instr_val = self:_guess_recording_index()
+  self._line_notifier_disabled = true
+  track:write_bogus_note(instr_val,trigger_mode)
+  self._line_notifier_disabled = false
+end
+]]
+
+--------------------------------------------------------------------------------
+
 -- calculate the number of lines in the current sample, based on the tempo 
 -- if the sample is synced to the beat, we use that value instead
 -- @return integer
@@ -1715,15 +1774,8 @@ function RecorderTrack:__init()
   self.selected_sample = 0    -- the selected RecorderSample index
   self.has_ghost = false      -- true while dialog is "on" this track
 
-  -- effect commands depend on API version
-  local api_version = renoise.API_VERSION
-  if (api_version>=3) then
-    self.GLIDE_NUM_VALUE = 16
-    self.OFFSET_NUM_VALUE = 28
-  elseif (api_version>=2) then
-    self.GLIDE_NUM_VALUE = 5
-    self.OFFSET_NUM_VALUE = 9
-  end
+  self.GLIDE_NUM_VALUE = 5
+  self.OFFSET_NUM_VALUE = 9
 
 
 end
@@ -1755,8 +1807,12 @@ function RecorderTrack:write_to_pattern(trigger_mode,sample_lines,autostart)
     note.note_value = note_val
     note.volume_value = volume_val
     if continuous_mode then
+      --fx.number_string = "05"
+      --fx.amount_string = "00"
       fx.number_value = self.GLIDE_NUM_VALUE
     else
+      --fx.number_string = "00"
+      --fx.amount_string = "00"
       fx.number_value = 0
     end
     fx.amount_value = 0
@@ -1818,11 +1874,17 @@ function RecorderTrack:write_to_pattern(trigger_mode,sample_lines,autostart)
       end
       note.volume_value = volume_val
       if continuous_mode then
+        --fx1.number_string = "05"
+        --fx1.amount_string = "00"
         fx1.number_value = self.GLIDE_NUM_VALUE
       else
+        --fx1.number_string = "00"
+        --fx1.amount_string = "00"
         fx1.number_value = 0
       end
       fx1.amount_value = 0
+      --fx2.number_string = "09"
+      --fx2.amount_string = string.format("%02X",math.floor(math.min(offset,255)))
       fx2.number_value = self.OFFSET_NUM_VALUE
       fx2.amount_value = math.floor(math.min(offset,255))
     else
@@ -1846,6 +1908,37 @@ function RecorderTrack:write_to_pattern(trigger_mode,sample_lines,autostart)
 
 end
 
+--------------------------------------------------------------------------------
+
+-- write (what we guess is) the next note to the pattern
+-- (note that the pattern editor notifier is temporarily disabled before 
+-- writing bogus notes, since the instrument is yet-to-be...)
+--[[
+function RecorderTrack:write_bogus_note(instr_val,trigger_mode)
+  TRACE("RecorderTrack:write_bogus_note(",instr_val,trigger_mode,")")
+
+  local continuous_mode = (trigger_mode==1)
+  local note_val = 48
+  local volume_val = 128
+  --local track_index = renoise.song().selected_track_index
+  local track_index = self.index
+  local real_track = renoise.song().selected_pattern.tracks[track_index]
+  local note = real_track:line(1).note_columns[1]
+  local fx = real_track:line(1).effect_columns[1]
+  note.instrument_value = instr_val
+  note.note_value = note_val
+  note.volume_value = volume_val
+  if continuous_mode then
+    fx.number_string = "05"
+    fx.amount_string = "00"
+  else
+    fx.number_string = "00"
+    fx.amount_string = "00"
+  end
+
+end
+
+]]
 
 --------------------------------------------------------------------------------
 

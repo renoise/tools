@@ -69,10 +69,6 @@ duplex_configurations:insert {
           group_name = "Transport",
           index = 5,
         },
-        metronome_toggle = {
-          group_name = "MARKER",
-          index = 1,
-        },
       },
       options = {
       }
@@ -85,6 +81,14 @@ duplex_configurations:insert {
         },
         select_track = {
           group_name = "Buttons3",
+          index = 1,
+        },
+      },
+    },
+    Metronome = {
+      mappings = {
+        toggle = {
+          group_name = "MARKER",
           index = 1,
         },
       },

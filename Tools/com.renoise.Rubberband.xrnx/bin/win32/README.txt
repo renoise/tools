@@ -4,28 +4,9 @@ Rubber Band
 
 An audio time-stretching and pitch-shifting library and utility program.
 
-Copyright 2007-2011 Chris Cannam, chris.cannam@breakfastquay.com.
+Copyright 2007-2010 Chris Cannam, cannam@all-day-breakfast.com.
 
 Distributed under the GNU General Public License.
-
-
-Contents
-========
-
-1. About Rubber Band
-    - Attractive features
-    - Limitations
-
-2. Compiling Rubber Band
-
-3. Using the Rubber Band utility
-
-4. Using the Rubber Band library
-
-
-
-About Rubber Band
------------------
 
 Rubber Band is a library and utility program that permits you to
 change the tempo and pitch of an audio recording independently of one
@@ -109,15 +90,12 @@ Limitations
 Compiling Rubber Band
 ---------------------
 
-Rubber Band Library is supplied with a configure script for Linux and
-other systems with pkg-config, and a separate Makefile for basic OS/X
-builds without pkg-config.  It's also possible to build the Rubber
-Band Library GPL edition for Windows using MinGW, though you'll have
-to hack your own Makefile for that.
-
-
-Using configure
-~~~~~~~~~~~~~~~
+Rubber Band is supplied with build scripts that have been tested on
+Linux platforms.  It is also possible to build Rubber Band on other
+platforms, including both POSIX platforms such as OS/X and non-POSIX
+platforms such as Win32.  There are some example Makefiles in the misc
+directory, but if you're using a proprietary platform and you get
+stuck I'm afraid you're on your own, unless you want to pay us...
 
 To build Rubber Band you will also need libsndfile, libsamplerate,
 FFTW3, the Vamp plugin SDK, the LADSPA plugin header, the pthread
@@ -134,18 +112,6 @@ to compile, and optionally
   # make install
 
 to install.
-
-
-Simple build for OS/X
-~~~~~~~~~~~~~~~~~~~~~
-
-To build just the library (but not the command-line utility, Vamp
-plugin or LADSPA plugin) for OS/X, run
-
-  $ make -f build/Makefile.osx
-
-You will need libsamplerate and libfftw3 installed, but no other
-non-system dependencies.
 
 
 Using the Rubber Band utility
@@ -183,10 +149,10 @@ requires linkage against the C++ standard libraries.  It is not yet
 documented separately from the C++ header.  You should include only
 one of the two headers, not both.
 
-The source code for the command-line utility (main/main.cpp) provides
-a good example of how to use Rubber Band in offline mode; the LADSPA
-pitch shifter plugin (ladspa/RubberBandPitchShifter.cpp) may be used
-as an example of Rubber Band in real-time mode.
+The source code for the command-line utility (src/main.cpp) provides a
+good example of how to use Rubber Band in offline mode; the LADSPA
+pitch shifter plugin (src/ladspa/RubberBandPitchShifter.cpp) may be
+used as an example of Rubber Band in real-time mode.
 
 IMPORTANT: Please ensure you have read and understood the licensing
 terms for Rubber Band before using it in another application.  This

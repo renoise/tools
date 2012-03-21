@@ -7,7 +7,7 @@
 duplex_configurations:insert {
 
   -- configuration properties
-  name = "Handset - simple",
+  name = "Handset (simple template)",
   pinned = true,
 
   -- device properties
@@ -47,45 +47,6 @@ duplex_configurations:insert {
         },
       },
       options = {
-      },
-      palette = {
-        slider_dimmed = {
-          color = {0x80,0x80,0x80},
-          text="□",
-        },
-      --[[
-        slider_lit = {
-          -- the active recording
-          color = {0x00,0x00,0x00},
-          text="■",
-        },
-      ]]
-      }
-    },
-    PadXY = {
-      application = "XYPad",
-      mappings = {
-        xy_pad = {
-          group_name = "3_XYPad",
-        },
-        lock_button = {
-          group_name = "3_Buttons",
-          index = 1
-        },
-        focus_button = {
-          group_name = "3_Buttons",
-          index = 2
-        },
-        prev_device = {
-          group_name = "3_Buttons",
-          index = 3
-        },
-        next_device = {
-          group_name = "3_Buttons",
-          index = 4
-        }
-      },
-      options = {
       }
     },
     Matrix = {
@@ -107,28 +68,6 @@ duplex_configurations:insert {
       },
       options = {
         sequence_mode = 2,  -- to support "togglebutton" input
-      },
-      palette = {
-        -- remove text from matrix, there's not enough room...
-        out_of_bounds       = { text=""},
-        slot_empty          = { text=""},
-        slot_empty_muted    = { text=""},
-        slot_filled         = { text=""},
-        slot_filled_muted   = { text=""},
-        slot_master_filled  = { text=""},
-        trigger_active      = { text=""},
-        trigger_loop        = { text=""},
-        trigger_back        = { text=""},
-      }
-    },
-    TiltSensorPad = {
-      application = "XYPad",
-      mappings = {
-        xy_pad = {
-          group_name = "Extra",
-        },
-      },
-      options = {
       }
     }
   }

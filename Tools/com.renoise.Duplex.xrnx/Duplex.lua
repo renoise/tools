@@ -11,21 +11,14 @@ require "Duplex/Display"
 require "Duplex/Canvas"
 require "Duplex/UIComponent"
 require "Duplex/UIButtonStrip"
-require "Duplex/UIButton"
---require "Duplex/UIToggleButton"
---require "Duplex/UIPushButton"
+require "Duplex/UIToggleButton"
+require "Duplex/UIPushButton"
 require "Duplex/UISlider"
 require "Duplex/UISpinner"
-require "Duplex/UIPad"
-require "Duplex/UIKey"
-require "Duplex/UIKeyPressure"
-require "Duplex/UIPitchBend"
 require "Duplex/ControlMap"
 require "Duplex/Device"
 require "Duplex/MidiDevice"
 require "Duplex/OscDevice"
-require "Duplex/OscClient"
-require "Duplex/OscVoiceMgr"
 require "Duplex/Application"
 require "Duplex/Browser"
 require "Duplex/Scheduler"
@@ -49,12 +42,5 @@ for _, foldername in pairs(os.dirnames("./Duplex/Controllers")) do
       require(subpath .. "/" .. split_filename(filename))
     end
   end
-
-  -- include any device configurations (Controller/Configurations/XXX.lua)
-  subpath = "./Duplex/Controllers/" .. foldername .. "/Configurations"
-  for _, filename in pairs(os.filenames(subpath, "*.lua")) do
-    require(subpath .. "/" .. split_filename(filename))
-  end
-
 end
 

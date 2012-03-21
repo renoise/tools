@@ -106,11 +106,11 @@ function UISlider:__init(display)
   
   -- default palette
   self.palette = {
-    background    = {color = {0x00,0x00,0x00}, text = "·", val=false},
-    tip           = {color = {0xFF,0xFF,0xFF}, text = "▪", val=true},
-    tip_dimmed    = {color = {0xD0,0xD0,0xD0}, text = "▫", val=true},
-    track         = {color = {0xD0,0xD0,0xD0}, text = "▪", val=true},
-    track_dimmed  = {color = {0x80,0x80,0x80}, text = "▫", val=true},
+    background = table.rcopy(display.palette.background),
+    tip = table.rcopy(display.palette.color_1),
+    tip_dimmed = table.rcopy(display.palette.color_1_dimmed),
+    track = table.rcopy(display.palette.color_2),
+    track_dimmed = table.rcopy(display.palette.color_2_dimmed),
   }
 
   -- internal values
@@ -125,14 +125,20 @@ end
 
 --------------------------------------------------------------------------------
 
--- user input via button
--- @return boolean, true when message was handled
+-- user input via button(s)
+-- set index
 
-function UISlider:do_press(msg)
-  TRACE("UISlider:do_press()",msg)
+function UISlider:do_press()
+  TRACE("UISlider:do_press()")
 
-  if not self:test(msg.group_name,msg.column, msg.row) then
-    return false
+  local msg = self:get_msg()
+
+  if not (self.group_name == msg.group_name) then
+    return
+  end
+
+  if not (self:test(msg.column, msg.row)) then
+    return
   end
 
   local idx = self:_determine_index_by_pos(msg.column, msg.row)
@@ -140,33 +146,32 @@ function UISlider:do_press(msg)
     idx = 0
   end
 
-  if not self.set_index(self,idx) then
-    return false
-  end
-
-  return true
+  self.set_index(self,idx)
 
 end
 
 
 --------------------------------------------------------------------------------
 
--- user input via button
+-- user input via button(s)
 -- the release handler is here to force-update controls   
 -- that handle their internal state automatically
--- @return boolean, true when message was handled
 
-function UISlider:do_release(msg)
-  TRACE("UISlider:do_release()",msg)
+function UISlider:do_release()
+  TRACE("UISlider:do_press()")
 
-  if not self:test(msg.group_name,msg.column, msg.row) then
-    return false
+  local msg = self:get_msg()
+  if not (self.group_name == msg.group_name) then
+    return
+  end
+  if not (self:test(msg.column, msg.row)) then
+    return
   end
   if (msg.input_method == CONTROLLER_PUSHBUTTON) then
-    self:force_update()
+    self.canvas.delta = table.rcopy(self.canvas.buffer)
+    self.canvas.has_changed = true
+    self:invalidate()
   end
-
-  return true
 
 end
 
@@ -174,32 +179,29 @@ end
 
 -- user input via slider, dial: 
 -- set index + precise value within the index
--- @return boolean, true when message was handled
 
-function UISlider:do_change(msg)
-  TRACE("UISlider:do_change()",msg)
+function UISlider:do_change()
+  --TRACE("UISlider:do_change()")
 
-  if not self:test(msg.group_name,msg.column,msg.row) then
-    return false
+  local msg = self:get_msg()
+
+  if not (self.group_name == msg.group_name) then
+    return
+  end
+  if not self:test(msg.column,msg.row) then
+    return
   end
   -- scale from the message range to the sliders range
   local val = (msg.value / msg.max) * self.ceiling
-  
-  if not self:set_value(val) then
-    return false
-  end
-  
-  return true
-
+  self:set_value(val)
 end
 
 
 --------------------------------------------------------------------------------
 
 -- setting value will also set index
--- @val (float), a number between 0 and .ceiling
+-- @val (float) 
 -- @skip_event (boolean) skip event handler
--- @return (boolean), false when rejected by handler 
 
 function UISlider:set_value(val,skip_event)
   TRACE("UISlider:set_value()",val,skip_event)
@@ -216,11 +218,9 @@ function UISlider:set_value(val,skip_event)
     if (skip_event) then
       self:invalidate()
     else
-      return self:_invoke_handler()
+      self:_invoke_handler()
     end
-
   end  
-
 end
 
 
@@ -229,11 +229,11 @@ end
 -- setting index will also set value
 -- @idx (integer) 
 -- @skip_event (boolean) skip event handler
--- @return (boolean), false when rejected by handler 
 
 function UISlider:set_index(idx,skip_event)
   TRACE("UISlider:set_index()",idx,skip_event)
 
+  -- todo: cap value
   local rslt = false
   if (self._cached_index ~= idx) then
     self._cached_index = idx
@@ -244,42 +244,23 @@ function UISlider:set_index(idx,skip_event)
     if (skip_event) then
       self:invalidate()
     else
-      return self:_invoke_handler()
+      self:_invoke_handler()
     end
 
   end
-
-
 end
 
---------------------------------------------------------------------------------
-
--- force-update controls that are handling their internal state by themselves,
--- achieved by changing the canvas so that it get's painted the next time...
-
-function UISlider:force_update()
-
-  self.canvas.delta = table.rcopy(self.canvas.buffer)
-  self.canvas.has_changed = true
-  self:invalidate()
-
-end
 
 --------------------------------------------------------------------------------
-
--- when a slider is assigned to buttons, display the slider as "dimmed"
 
 function UISlider:set_dimmed(bool)
-
+  -- TODO: only invalidate if we can dimm
   self.dimmed = bool
   self:invalidate()
-
 end
 
 
 --------------------------------------------------------------------------------
-
--- get/set slider orientation (only relevant when assigned to buttons)
 
 function UISlider:set_orientation(value)
   TRACE("UISlider:set_orientation",value)
@@ -319,28 +300,6 @@ function UISlider:set_size(size)
   end
 end
 
---------------------------------------------------------------------------------
-
--- expanded UIComponent test
--- @return boolean, false when criteria is not met
-
-function UISlider:test(group_name,column,row)
-
-  -- look for group name
-  if not (self.group_name == group_name) then
-    return false
-  end
-
-  -- look for event handlers
-  if (self.on_change == nil) then  
-    return false
-  end 
-
-  -- test the X/Y position
-  return UIComponent.test(self,column,row)
-
-end
-
 
 --------------------------------------------------------------------------------
 
@@ -375,11 +334,18 @@ function UISlider:draw()
 
         if (i == idx) then
           -- update the tip of the slider
-          point.val = self.palette.tip.val        
+          -- ensure that monochrome devices get this right! 
+          local color = self.palette.tip.color
+          local quantized = self._display.device:quantize_color(color)
+          if(quantized[1]>0x00)then
+            point.val = true        
+          else
+            point.val = false        
+          end
           point:apply((self.dimmed) and 
             self.palette.tip_dimmed or self.palette.tip)
         elseif (self.flipped) then
-          if (i <= idx) then
+          if (i <= idx)then
             apply_track = true
           end
         elseif ((self._size - i) < self.index) then
@@ -387,7 +353,13 @@ function UISlider:draw()
         end
         
         if(apply_track)then
-          point.val = self.palette.track.val        
+          local color = self.palette.track.color
+          local quantized = self._display.device:quantize_color(color)
+          if(quantized[1]>0x00)then
+            point.val = true        
+          else
+            point.val = false        
+          end
           point:apply((self.dimmed) and 
             self.palette.track_dimmed or self.palette.track)
         end
@@ -411,19 +383,18 @@ end
 --------------------------------------------------------------------------------
 
 function UISlider:add_listeners()
-  TRACE("UISlider:add_listeners()")
 
   self._display.device.message_stream:add_listener(
     self,DEVICE_EVENT_BUTTON_PRESSED,
-    function(msg) return self:do_press(msg) end )
+    function() self:do_press() end )
 
   self._display.device.message_stream:add_listener(
     self,DEVICE_EVENT_VALUE_CHANGED,
-    function(msg) return self:do_change(msg) end )
+    function() self:do_change() end )
 
   self._display.device.message_stream:add_listener(
     self,DEVICE_EVENT_BUTTON_RELEASED,
-    function(msg) return self:do_release(msg) end )
+    function() self:do_release() end )
 
 end
 
@@ -431,7 +402,6 @@ end
 --------------------------------------------------------------------------------
 
 function UISlider:remove_listeners()
-  TRACE("UISlider:remove_listeners()")
 
   self._display.device.message_stream:remove_listener(
     self,DEVICE_EVENT_BUTTON_PRESSED)
@@ -482,24 +452,18 @@ end
 --------------------------------------------------------------------------------
 
 -- trigger the external handler method
--- @return true when message was handled, false when not
 
 function UISlider:_invoke_handler()
 
-  -- when calling set_index() and set_value() before we
-  -- have assigned a method, return 'true' (so we don't
-  -- accidentially pass messages at construction time)
-  if not self.on_change then
-    return true
-  end
+  if (self.on_change == nil) then return end
 
-  if (self:on_change()==false) then
+  local rslt = self:on_change()  
+  if (rslt==false) then  -- revert
     self.index = self._cached_index    
     self.value = self._cached_value  
-    return false
+
   else
     self:invalidate()
-    return true
   end
 end
 

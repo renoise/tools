@@ -23,26 +23,9 @@ duplex_configurations:insert {
         parameters = {
           group_name= "Knobs",
         },
-        device_prev = {
-          group_name = "Pads",
-          index = 1
-        },
-        device_next = {
-          group_name = "Pads",
-          index = 2
-        },
-        preset_prev = {
-          group_name = "Pads",
-          index = 3
-        },
-        preset_next = {
-          group_name = "Pads",
-          index = 4
-        },
         page = {
-          group_name = "Pads",
-          index = 5
-        },
+          group_name = "Pads"
+        }
       }
     }
   }

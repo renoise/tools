@@ -70,14 +70,11 @@ local inputs = renoise.Midi.available_input_devices()
 if not table.is_empty(inputs) then
   local device_name = inputs[1]
   
-  -- should be global to avoid premature garbage collection when
-  -- going out of scope.
   midi_dumper = MidiDumper(device_name)
+  midi_dumper:start()
   
   -- will dump till midi_dumper:stop() is called or the MidiDumber object 
   -- is garbage collected ...
-  midi_dumper:start()  
-  
 end
 
 

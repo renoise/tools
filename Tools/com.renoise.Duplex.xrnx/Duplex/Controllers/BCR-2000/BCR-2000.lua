@@ -20,3 +20,12 @@ function BCR2000:__init(display_name, message_stream, port_in, port_out)
 end
 
 
+--==============================================================================
+
+-- Include these configurations 
+
+local CTRL_PATH = "Duplex/Controllers/BCR-2000/Configurations/"
+require (CTRL_PATH.."BCR2000_MixerEffect")
+require (CTRL_PATH.."BCR2000_NotesOnWheels")
+require (CTRL_PATH.."BCR2000_RecorderEffect")
+

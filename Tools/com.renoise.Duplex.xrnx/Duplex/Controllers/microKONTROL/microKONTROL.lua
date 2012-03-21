@@ -2,10 +2,8 @@
 -- Duplex.microKONTROL
 ----------------------------------------------------------------------------]]--
 
---[[
+-- Include these configurations
 
-Inheritance: MidiDevice > Device
-
-A generic MidiDevice class 
-
---]]
+local CTRL_PATH = "Duplex/Controllers/microKONTROL/Configurations/"
+require (CTRL_PATH.."Effect")
+require (CTRL_PATH.."Mixer")

@@ -61,6 +61,18 @@ function Launchpad:point_to_value(pt)
 
 end
 
+--==============================================================================
+
+-- Include these configurations for the Launchpad
+
+local CTRL_PATH = "Duplex/Controllers/Launchpad/Configurations/"
+require (CTRL_PATH.."EffectTrackSelectorTransport")
+require (CTRL_PATH.."MatrixMixerTransport")
+require (CTRL_PATH.."MatrixNavigatorTransport")
+require (CTRL_PATH.."MixerTransport")
+require (CTRL_PATH.."RecorderNavigator")
+require (CTRL_PATH.."StepSequencer")
+require (CTRL_PATH.."LaunchPad_GridPie")
 
 --------------------------------------------------------------------------------
 -- A couple of sample configurations

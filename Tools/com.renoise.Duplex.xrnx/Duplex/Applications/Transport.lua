@@ -70,8 +70,8 @@ Transport.default_options = {
 
 }
 
-function Transport:__init(process,mappings,options,cfg_name,palette)
-  TRACE("Transport:__init(",process,mappings,options,cfg_name,palette)
+function Transport:__init(browser_process,mappings,options,config_name)
+  TRACE("Transport:__init(",browser_process,mappings,options,config_name)
 
   -- define the options (with defaults)
 
@@ -124,30 +124,18 @@ function Transport:__init(process,mappings,options,cfg_name,palette)
     metronome_toggle = {
       description = "Metronome: toggle on/off",
     },
-
-  }
-
-  self.palette = {
-    edit_mode_off = {     color = {0x00,0x00,0x00}, text = "●", val = false,},
-    edit_mode_on = {      color = {0xff,0x40,0x40}, text = "●", val = true, },
-    follow_player_off = { color = {0x00,0x00,0x00}, text = "↓", val = false },
-    follow_player_on = {  color = {0x40,0xff,0x40}, text = "↓", val = true  },
-    loop_block_off = {    color = {0x00,0x00,0x00}, text = "═", val = false,},
-    loop_block_on = {     color = {0xff,0xff,0xff}, text = "═", val = true  },
-    loop_pattern_off = {  color = {0x00,0x00,0x00}, text = "∞", val = false,},
-    loop_pattern_on = {   color = {0x80,0xD0,0x40}, text = "∞", val = true  },
-    metronome_off = {     color = {0x00,0x00,0x00}, text = "∆", val = false,},
-    metronome_on = {      color = {0x80,0x80,0x80}, text = "∆", val = true, },
-    next_patt_dimmed = {  color = {0x80,0x80,0x80}, text = "►|",val = false,},
-    next_patt_off = {     color = {0x00,0x00,0x00}, text = "►|",val = false,},
-    next_patt_on = {      color = {0xff,0xff,0xff}, text = "►|",val = true, },
-    playing_off = {       color = {0x00,0x00,0x00}, text = "►", val = false,},
-    playing_on = {        color = {0xff,0xff,0xff}, text = "►", val = true  },
-    prev_patt_dimmed = {  color = {0x80,0x80,0x80}, text = "|◄",val = false,},
-    prev_patt_off = {     color = {0x00,0x00,0x00}, text = "|◄",val = false,},
-    prev_patt_on = {      color = {0xff,0xff,0xff}, text = "|◄",val = true, },
-    stop_playback_off = { color = {0x00,0x00,0x00}, text = "■", val = false,},
-    stop_playback_on = {  color = {0xff,0xff,0xff}, text = "□", val = true, },
+    --[[
+    -- TODO
+    set_bpm = {
+      description = "Adjust the BPM rate. Assign to a dial or fader",    
+    },
+    increase_bpm = {
+      description = "Increase BPM (hold to repeat)",
+    },
+    decrease_bpm = {
+      description = "Decrease BPM (hold to repeat)",
+    },
+    ]]
   }
 
 
@@ -163,7 +151,7 @@ function Transport:__init(process,mappings,options,cfg_name,palette)
   -- the various UIComponents
   self.controls = {}
 
-  Application.__init(self,process,mappings,options,cfg_name,palette)
+  Application.__init(self,browser_process,mappings,options,config_name)
 
 
 end
@@ -197,19 +185,19 @@ function Transport:on_idle()
 
   -- never blink when we enter block mode
   if loop_block_enabled and (not loop_block_enabled) then
-    --[[
     if self.controls.next then
       self.controls.next.loop = false
     end
     if self.controls.previous then
       self.controls.previous.loop = false
     end
-    ]]
   end
 
   -- update 'block_loop' status
   if (self._block_loop ~= loop_block_enabled) then
-    self:update_block_loop()
+    if self.controls.block then
+      self.controls.block:set(loop_block_enabled,true)
+    end
     self._block_loop = loop_block_enabled
   end
 
@@ -218,63 +206,16 @@ function Transport:on_idle()
     local pos = renoise.song().transport.playback_pos.sequence
     if(self._scheduled_pattern==pos) or
       (pos~=self._source_pattern) then
-      
-      self:clear_schedule()
-    elseif (self._scheduled_button) then
-      self:update_scheduled_buttons()
-    end
-
-  end
-
-end
-
---------------------------------------------------------------------------------
-
--- control periodic blinking by the playback line number 
-
-function Transport:update_scheduled_buttons()
-
-    local playing = renoise.song().transport.playing
-    local lpb = renoise.song().transport.lpb
-    local pos = playing 
-      and renoise.song().transport.playback_pos 
-      or renoise.song().transport.edit_pos
-    -- 'blink' when we have moved a certain distance
-    local is_prev = (self._scheduled_button==self.controls.previous)
-    local blink = (math.floor((((pos.line-1)/lpb))%2)==0)
-    if blink then
-      if is_prev then
-        self.controls.previous:set(self.palette.prev_patt_off)
-      else
-        self.controls.next:set(self.palette.next_patt_off)
+      self._scheduled_pattern = nil
+      -- stop the blinking
+      if self.controls.next then
+        self.controls.next.loop = false
       end
-    else
-      if is_prev then
-        self.controls.previous:set(self.palette.prev_patt_on)
-      else
-        self.controls.next:set(self.palette.next_patt_on)
+      if self.controls.previous then
+        self.controls.previous.loop = false
       end
     end
 
-end
-
---------------------------------------------------------------------------------
-
--- set the schedule buttons to default state, and tell the application that
--- no pattern has been scheduled (note that if the current pattern has been 
--- scheduled, it is not considered as we can't access the schedule list)
-
-function Transport:clear_schedule()
-
-  self._scheduled_pattern = nil
-
-  local bt_next = self.controls.next
-  local bt_prev = self.controls.previous
-  if bt_next then
-    bt_next:set(self.palette.next_patt_off)
-  end
-  if bt_prev then
-    bt_prev:set(self.palette.prev_patt_off)
   end
 
 end
@@ -319,10 +260,6 @@ function Transport:_attach_to_song()
     function()
       TRACE("Transport.playing_observable fired...")
       self:update_playing()
-      if not renoise.song().transport.playing then
-        self:clear_schedule()
-      end
-
     end
   )
 
@@ -352,66 +289,35 @@ end
 function Transport:update_metronome_enabled()
   if not self.active then return false end
   if self.controls.metronome_toggle then
-    if (renoise.song().transport.metronome_enabled) then
-      self.controls.metronome_toggle:set(self.palette.metronome_on)
-    else
-      self.controls.metronome_toggle:set(self.palette.metronome_off)
-    end
+    self.controls.metronome_toggle:set(renoise.song().transport.metronome_enabled,true)
   end
 end
 
 function Transport:update_follow_player()
   if not self.active then return false end
   if self.controls.follow_player then
-    if (renoise.song().transport.follow_player) then
-      self.controls.follow_player:set(self.palette.follow_player_on)
-    else
-      self.controls.follow_player:set(self.palette.follow_player_off)
-    end
+    self.controls.follow_player:set(renoise.song().transport.follow_player,true)
   end
 end
 
 function Transport:update_playing()
   if not self.active then return false end
   if self.controls.play then
-    if renoise.song().transport.playing then
-      self.controls.play:set(self.palette.playing_on)
-    else
-      self.controls.play:set(self.palette.playing_off)
-    end
+    self.controls.play:set(renoise.song().transport.playing,true)
   end
 end
 
 function Transport:update_loop_pattern()
   if not self.active then return false end
   if self.controls.loop then
-    if renoise.song().transport.loop_pattern then
-      self.controls.loop:set(self.palette.loop_pattern_on)
-    else
-      self.controls.loop:set(self.palette.loop_pattern_off)
-    end
+    self.controls.loop:set(renoise.song().transport.loop_pattern,true)
   end
 end
 
 function Transport:update_edit_mode()
   if not self.active then return false end
   if self.controls.edit then
-    if renoise.song().transport.edit_mode then
-      self.controls.edit:set(self.palette.edit_mode_on)
-    else
-      self.controls.edit:set(self.palette.edit_mode_off)
-    end
-  end
-end
-
-function Transport:update_block_loop()
-  if not self.active then return false end
-  if self.controls.block then
-    if renoise.song().transport.loop_block_enabled then
-      self.controls.block:set(self.palette.loop_block_on)
-    else
-      self.controls.block:set(self.palette.loop_block_off)
-    end
+    self.controls.edit:set(renoise.song().transport.edit_mode,true)
   end
 end
 
@@ -427,7 +333,6 @@ function Transport:update_everything()
   self:update_playing()
   self:update_loop_pattern()
   self:update_edit_mode()
-  self:update_block_loop()
 
 end
 
@@ -437,129 +342,148 @@ function Transport:_build_app()
   TRACE("Transport:_build_app()")
 
   if self.mappings.stop_playback.group_name then
-    local c = UIButton(self.display)
+    local c = UIPushButton(self.display)
     c.group_name = self.mappings.stop_playback.group_name
     c.tooltip = self.mappings.stop_playback.description
     c:set_pos(self.mappings.stop_playback.index)
-    c:set(self.palette.stop_playback_off)
     c.on_press = function(obj)
       if not self.active then return false end
       self:_stop_playback()
-      obj:flash(
-        0.1,self.palette.stop_playback_on,self.palette.stop_playback_off)
+      if(self.controls.play)then
+        self.controls.play:set(false,true)
+      end
     end
     self:_add_component(c)
     self.controls.stop = c
   end
 
   if self.mappings.start_playback.group_name then
-    local c = UIButton(self.display)
+    local c = UIToggleButton(self.display)
     c.group_name = self.mappings.start_playback.group_name
     c.tooltip = self.mappings.start_playback.description
     c:set_pos(self.mappings.start_playback.index)
-    c.on_press = function(obj)
+    c.palette.foreground.color = {0xff,0xff,0xff} -- bright yellow
+    c.palette.foreground.text = "►"
+    c.on_change = function(obj)
       if not self.active then return false end
+      local is_playing = renoise.song().transport.playing
       self:_start_playback()
+      obj:set(true,true)
+      -- trick control into being 'always on'
+      return (not is_playing)
     end
     self:_add_component(c)
     self.controls.play = c
   end
 
   if self.mappings.loop_pattern.group_name then
-    local c = UIButton(self.display)
+    local c = UIToggleButton(self.display)
     c.group_name = self.mappings.loop_pattern.group_name
     c.tooltip = self.mappings.loop_pattern.description
     c:set_pos(self.mappings.loop_pattern.index)
-    c.on_press = function(obj)
+    c.palette.foreground.color = {0x80,0xff,0xff} -- bright green
+    c.palette.foreground.text = "○"
+    c.on_change = function(obj)
       if not self.active then return false end
-      local loop_pattern = renoise.song().transport.loop_pattern
-      renoise.song().transport.loop_pattern = not loop_pattern
+      renoise.song().transport.loop_pattern = obj.active
     end
     self:_add_component(c)
     self.controls.loop = c
   end
 
   if self.mappings.edit_mode.group_name then
-    local c = UIButton(self.display)
+    local c = UIToggleButton(self.display)
     c.group_name = self.mappings.edit_mode.group_name
     c.tooltip = self.mappings.edit_mode.description
     c:set_pos(self.mappings.edit_mode.index)
-    c.on_press = function(obj)
+    c.palette.foreground.color = {0xff,0x40,0xff} -- red
+    c.palette.foreground.text = "●"
+    c.on_change = function(obj)
       if not self.active then return false end
-      local edit_mode = renoise.song().transport.edit_mode
-      renoise.song().transport.edit_mode = not edit_mode
+      renoise.song().transport.edit_mode = obj.active
     end
     self:_add_component(c)
     self.controls.edit = c
   end
 
   if self.mappings.goto_next.group_name then
-    local c = UIButton(self.display)
+    local c = UIPushButton(self.display)
     c.group_name = self.mappings.goto_next.group_name
     c.tooltip = self.mappings.goto_next.description
     c:set_pos(self.mappings.goto_next.index)
-    c:set(self.palette.next_patt_off)
+    c.interval = 0.5
+    c.palette.background.text = "►|"
+    c.sequence = {
+      {color={0xff,0xff,0xff},text="►|"},
+    }
     c.on_press = function(obj)
       if not self.active then return false end
       self:_next()
     end
+    --c.on_hold = function(obj)
+    --end
     self:_add_component(c)
     self.controls.next = c
   end
 
   if self.mappings.goto_previous.group_name then
-    local c = UIButton(self.display)
+    local c = UIPushButton(self.display)
     c.group_name = self.mappings.goto_previous.group_name
     c.tooltip = self.mappings.goto_previous.description
     c:set_pos(self.mappings.goto_previous.index)
-    c:set(self.palette.prev_patt_off)
+    c.interval = 0.5
+    c.palette.background.text = "|◄"
+    c.sequence = {
+      {color={0xff,0xff,0xff},text="|◄"},
+    }
     c.on_press = function(obj)
       if not self.active then return false end
       self:_previous()
     end
+    --c.on_hold = function(obj)
+    --end
     self:_add_component(c)
     self.controls.previous = c
   end
 
   if self.mappings.block_loop.group_name then
-    local c = UIButton(self.display)
+    local c = UIToggleButton(self.display)
     c.group_name = self.mappings.block_loop.group_name
     c.tooltip = self.mappings.block_loop.description
     c:set_pos(self.mappings.block_loop.index)
-    c.on_press = function(obj)
+    c.palette.foreground.text = "□"
+    c.on_change = function(obj)
       if not self.active then return false end
-      local block_enabled = renoise.song().transport.loop_block_enabled
-      renoise.song().transport.loop_block_enabled = not block_enabled
+      renoise.song().transport.loop_block_enabled = obj.active
     end
     self:_add_component(c)
     self.controls.block = c
   end
 
   if self.mappings.follow_player.group_name then
-   local c = UIButton(self.display)
+   local c = UIToggleButton(self.display)
     c.group_name = self.mappings.follow_player.group_name
     c.tooltip = self.mappings.follow_player.description
     c:set_pos(self.mappings.follow_player.index)
-    c.on_press = function(obj)
-      if not self.active then 
-        return false 
-      end
-      local active = renoise.song().transport.follow_player
-      renoise.song().transport.follow_player = not active
+    c.palette.foreground.color = {0x40,0xff,0xff} -- green
+    c.palette.foreground.text = "▬"
+    c.on_change = function(obj)
+      if not self.active then return false end
+      renoise.song().transport.follow_player = obj.active
     end
     self:_add_component(c)
     self.controls.follow_player = c
   end
 
   if self.mappings.metronome_toggle.group_name then
-    local c = UIButton(self.display)
+    local c = UIToggleButton(self.display)
     c.group_name = self.mappings.metronome_toggle.group_name
     c.tooltip = self.mappings.metronome_toggle.description
     c:set_pos(self.mappings.metronome_toggle.index)
-    c.on_press = function(obj)
+    c.palette.foreground.text = "∆"
+    c.on_change = function(obj)
       if not self.active then return false end
-      local metronome_enabled = renoise.song().transport.metronome_enabled
-      renoise.song().transport.metronome_enabled = not metronome_enabled
+      renoise.song().transport.metronome_enabled = obj.active
     end
     self:_add_component(c)
     self.controls.metronome_toggle = c
@@ -573,8 +497,6 @@ function Transport:_build_app()
 end
 
 --------------------------------------------------------------------------------
-
--- when "play" button is pressed
 
 function Transport:_start_playback()
   TRACE("Transport:_start_playback()")
@@ -599,8 +521,6 @@ end
 
 --------------------------------------------------------------------------------
 
--- when "stop" button is pressed
-
 function Transport:_stop_playback()
   TRACE("Transport:_stop_playback()")
 
@@ -612,19 +532,20 @@ function Transport:_stop_playback()
     end
   end
 
-  self:clear_schedule()
-
-  renoise.song().transport.playing = false
-
-  if(self.controls.play)then
-    self.controls.play:set(self.palette.playing_off)
+  self._scheduled_pattern = nil
+  if self.controls.next then
+    self.controls.next.loop = false
   end
+  if self.controls.previous then
+    self.controls.previous.loop = false
+  end
+  renoise.song().transport.playing = false
 
 end
 
 --------------------------------------------------------------------------------
 
--- when "next" button is pressed
+-- goto next pattern/block
 
 function Transport:_next()
   TRACE("Transport:_next()")
@@ -638,12 +559,6 @@ function Transport:_next()
       -- switch instantly
       local new_pos = renoise.song().transport.playback_pos
       self:_switch_to_seq_index(new_pos.sequence+1)
-      if self.controls.next then
-        self.controls.next:flash(0.1,
-          self.palette.next_patt_on,
-          self.palette.next_patt_dimmed,
-          self.palette.next_patt_off)
-      end
     else
       -- schedule
       local pos = self._scheduled_pattern or 
@@ -652,15 +567,24 @@ function Transport:_next()
       if(pos < seq_count)then
         pos = pos+1
       end
-      self:_schedule_pattern(pos,self.controls.next)
+      self:_schedule_pattern(pos)
+      if self.controls.previous then
+        self.controls.previous.loop = false
+      end
+      if self.controls.next then
+        self.controls.next.loop = true
+      end
+
     end
+
   end
+
 
 end
 
 --------------------------------------------------------------------------------
 
--- when "previous" button is pressed
+-- goto previous pattern/block
 
 function Transport:_previous()
   TRACE("Transport:_previous()")
@@ -674,12 +598,6 @@ function Transport:_previous()
       -- switch instantly
       local new_pos = renoise.song().transport.playback_pos
       self:_switch_to_seq_index(new_pos.sequence-1)
-      if self.controls.previous then
-        self.controls.previous:flash(0.1,
-          self.palette.prev_patt_on,
-          self.palette.prev_patt_dimmed,
-          self.palette.prev_patt_off)
-      end
     else
       -- schedule
       local pos = self._scheduled_pattern or 
@@ -687,7 +605,13 @@ function Transport:_previous()
       if(pos > 1)then
         pos = pos-1
       end
-      self:_schedule_pattern(pos,self.controls.previous)
+      self:_schedule_pattern(pos)
+      if self.controls.previous then
+        self.controls.previous.loop = true
+      end
+      if self.controls.next then
+        self.controls.next.loop = false
+      end
     end
   end
 
@@ -696,14 +620,12 @@ end
 --------------------------------------------------------------------------------
 
 -- schedule the provided pattern index
--- @param idx  - the pattern to schedule
--- @param button UIButton, the pressed button (next or previous)
+-- @idx  - the pattern to schedule
 
-function Transport:_schedule_pattern(idx,button)
+function Transport:_schedule_pattern(idx)
   TRACE("Transport:_schedule_pattern()",idx)
 
   self._scheduled_pattern = idx
-  self._scheduled_button = button
   self._source_pattern = renoise.song().transport.playback_pos.sequence
   renoise.song().transport:set_scheduled_sequence(idx)
 
@@ -728,7 +650,6 @@ end
 function Transport:_reschedule_pattern()
   TRACE("Transport:_reschedule_pattern()")
 
-  self:clear_schedule()
   local pos = renoise.song().transport.playback_pos.sequence
   renoise.song().transport:set_scheduled_sequence(pos)
 
