@@ -195,6 +195,7 @@ function export_build_data(plan)
 
           -- Notes data
           if
+            tracks[track_index].type ~= renoise.Track.TRACK_TYPE_GROUP and
             tracks[track_index].type ~= renoise.Track.TRACK_TYPE_MASTER and
             tracks[track_index].type ~= renoise.Track.TRACK_TYPE_SEND
           then
