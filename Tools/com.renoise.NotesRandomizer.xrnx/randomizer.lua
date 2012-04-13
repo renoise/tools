@@ -242,6 +242,10 @@ class "Shuffle"
 
 function Shuffle:__init()
   math.randomseed(os.time())
+  -- Fix for poor OSX/BSD random behavior
+  -- @see: http://lua-users.org/lists/lua-l/2007-03/msg00564.html
+  local garbage = math.random()
+  garbage = math.random()  
   self.stack = {}
 end
 
