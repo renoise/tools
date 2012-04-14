@@ -42,7 +42,7 @@ Based on Valentin Schmidt's PHP MIDI CLASS
 # MF2T textfile format:
 -----------------------
 
-File header:        Mfile <format> <ntrks> <division>
+File header:        MFile <format> <ntrks> <division>
 Start of track:     MTrk
 End of track:       TrkEnd
 
@@ -132,7 +132,8 @@ function Midi:setTempo(tempo)
   else
     local tempoTrack = table.create{
       "0 TimeSig 4/4 24 8",
-      "0 Tempo " .. tempo
+      "0 Tempo " .. tempo,
+      "0 Meta TrkEnd"
     }
     self.tracks:insert(1, tempoTrack)
     self.tempoMsgNum = 2
@@ -368,7 +369,7 @@ function Midi:getTxt(ttype)
   local tc = self.tracks:count()
   local type_ = 0
   if tc > 1 then type_ = 1 end
-  local str = string.format("Mfile %d %d %d", type_, tc, self.timebase) .. "\n"
+  local str = string.format("MFile %d %d %d", type_, tc, self.timebase) .. "\n"
   for i=1, tc do
     str = str .. self:getTrackTxt(i, ttype)
   end

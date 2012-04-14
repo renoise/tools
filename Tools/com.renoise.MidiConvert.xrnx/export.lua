@@ -416,6 +416,7 @@ function export_midi()
   -- dbug(data_tick_delay)
 
   -- Whenever we encounter a BPM change, write it to the MIDI tempo track
+  -- reuse "sort_me" table:
   local sort_me = table.create()
   local lpb = rns.transport.lpb -- Initial LPB
   for pos,bpm in pairs(data_bpm) do
@@ -454,7 +455,9 @@ function export_midi()
         string.gsub(rns.instruments[i].name, '"', '') .. '"'
       )
 
+      -- reuse "sort_me" table:
       -- [1] = Pos+Delay, [2] = Msg, [3] = Track number (tn)
+
       for j=1,#data[i] do
         _export_note_on(tn, sort_me, data[i][j], idx)
         _export_note_off(tn, sort_me, data[i][j], idx)
@@ -479,7 +482,9 @@ function export_midi()
   -- Current algorithm only uses last known LBP on pos:5
   -- But, pos:3 will affect the timeline?
 
+  -- reuse "sort_me" table:
   -- [1] = MF2T Timestamp, [2] = Msg, [3] = Track number (tn)
+
   idx = _export_max_pos(data_lpb) or 1
   for j=1,#sort_me do
     sort_me[j][1] = _export_float_to_time(sort_me[j][1], midi_division, idx)
@@ -491,14 +496,23 @@ function export_midi()
     end
   end
   table.sort(sort_me, export_compare)
+
+  -- Meta TrkEnd
+  local end_of_track = table.create()
   for i=1,#sort_me do
     midi:addMsg(sort_me[i][3], trim(sort_me[i][1] .. " " .. sort_me[i][2]))
+    if (end_of_track[sort_me[i][3]] == nil or end_of_track[sort_me[i][3]] < sort_me[i][1]) then
+        end_of_track[sort_me[i][3]] = sort_me[i][1]
+    end
     -- Yield every 1000 messages to avoid timeout nag screens
     if (i % 1000 == 0) then
       renoise.app():show_status(export_status_progress())
       if coroutine_mode then coroutine.yield() end
       dbug(("Process(midi()) Msg: %d."):format(i))
     end
+  end
+  for track,timestamp in pairs(end_of_track) do
+    -- midi:addMsg(track, trim(timestamp .. " Meta TrkEnd"))
   end
 
   -- Save files
