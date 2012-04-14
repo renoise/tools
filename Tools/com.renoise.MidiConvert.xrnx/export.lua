@@ -512,7 +512,7 @@ function export_midi()
     end
   end
   for track,timestamp in pairs(end_of_track) do
-    -- midi:addMsg(track, trim(timestamp .. " Meta TrkEnd"))
+    midi:addMsg(track, trim(timestamp .. " Meta TrkEnd"))
   end
 
   -- Save files
