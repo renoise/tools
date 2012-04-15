@@ -19,21 +19,21 @@ Good times.
 ]]--
 
 --------------------------------------------------------------------------------
--- Variables & Globals
+-- Variables & Globals, captialized for easier recognition
 --------------------------------------------------------------------------------
 
-local midi_division = 96 -- MIDI clicks per quarter note
-local midi_channel = 1   -- Initial MIDI channel
+local MIDI_DIVISION = 96 -- MIDI clicks per quarter note
+local MIDI_CHANNEL = 1   -- Initial MIDI channel
 
-local filepath = nil
-local rns = nil
+local FILEPATH = nil
+local RNS = nil
 
-local data = table.create()
-local data_bpm = table.create()
-local data_lpb = table.create()
-local data_tpl = table.create()
-local data_tick_delay = table.create()
-local data_tick_cut = table.create()
+local DATA = table.create()
+local DATA_BPM = table.create()
+local DATA_LPB = table.create()
+local DATA_TPL = table.create()
+local DATA_TICK_DELAY = table.create()
+local DATA_TICK_CUT = table.create()
 
 
 --------------------------------------------------------------------------------
@@ -42,8 +42,8 @@ local data_tick_cut = table.create()
 
 -- Go to next midi channel
 function ch_rotator()
-  midi_channel = midi_channel + 1
-  if midi_channel > 16 then midi_channel = 1 end
+  MIDI_CHANNEL = MIDI_CHANNEL + 1
+  if MIDI_CHANNEL > 16 then MIDI_CHANNEL = 1 end
 end
 
 -- MF2T Timestamp
@@ -86,13 +86,13 @@ end
 
 function export_build_data(plan)
 
-  midi_channel = 1
-  data:clear(); data_bpm:clear(); data_lpb:clear(); data_tpl:clear()
-  data_tick_delay:clear(); data_tick_cut:clear()
+  MIDI_CHANNEL = 1
+  DATA:clear(); DATA_BPM:clear(); DATA_LPB:clear(); DATA_TPL:clear()
+  DATA_TICK_DELAY:clear(); DATA_TICK_CUT:clear()
 
-  local instruments = rns.instruments
-  local tracks = rns.tracks
-  local sequencer = rns.sequencer
+  local instruments = RNS.instruments
+  local tracks = RNS.tracks
+  local sequencer = RNS.sequencer
   local total_instruments = #instruments
   local total_tracks = #tracks
   local total_sequence = #sequencer.pattern_sequence
@@ -100,23 +100,23 @@ function export_build_data(plan)
   local constrain_to_selected = false
 
   -- Plan
-  rns.transport:stop()
+  RNS.transport:stop()
   if plan == 'selection' then
     constrain_to_selected = true
-    start.sequence_index = rns.selected_sequence_index
+    start.sequence_index = RNS.selected_sequence_index
     start.line_start, start.line_end = selection_line_range()
     total_sequence = start.sequence_index
   else
-    rns.transport.playback_pos = renoise.SongPos(1, 1)
+    RNS.transport.playback_pos = renoise.SongPos(1, 1)
   end
 
   -- Setup data table
   for i=1,total_instruments do
-    data[i] = table.create()
+    DATA[i] = table.create()
   end
 
   local i = 255 -- instrument_value, 255 means empty
-  local j = 0 -- e.g. data[i][j]
+  local j = 0 -- e.g. DATA[i][j]
 
   -- # TRACKS
   for track_index=1,total_tracks do
@@ -143,13 +143,13 @@ function export_build_data(plan)
       for sequence_index=start.sequence_index,total_sequence do
 
         local pattern_index = sequencer.pattern_sequence[sequence_index]
-        local current_pattern_track = rns.patterns[pattern_index].tracks[track_index]
+        local current_pattern_track = RNS.patterns[pattern_index].tracks[track_index]
 
         -- Calculate offset
         if pattern_current ~= sequence_index then
           pattern_current = sequence_index
           if k > 1 then
-            pattern_offset = pattern_offset + rns.patterns[pattern_previous].number_of_lines
+            pattern_offset = pattern_offset + RNS.patterns[pattern_previous].number_of_lines
           end
         end
 
@@ -157,7 +157,7 @@ function export_build_data(plan)
         if constrain_to_selected then
           pattern_length = start.line_end
         else
-          pattern_length = rns.patterns[pattern_index].number_of_lines
+          pattern_length = RNS.patterns[pattern_index].number_of_lines
         end
 
         -- # LINES
@@ -179,16 +179,16 @@ function export_build_data(plan)
             then
               if 'ZT' == fx_col.number_string then
                 -- ZTxx - Set Beats Per Minute (BPM) (20 - FF, 00 = stop song)
-                data_bpm[pos] = fx_col.amount_string
+                DATA_BPM[pos] = fx_col.amount_string
               elseif 'ZL' == fx_col.number_string  then
                 -- ZLxx - Set Lines Per Beat (LPB) (01 - FF, 00 = stop song).
-                 data_lpb[pos] = fx_col.amount_string
+                 DATA_LPB[pos] = fx_col.amount_string
               elseif 'ZK' == fx_col.number_string  then
                 -- ZKxx - Set Ticks Per Line (TPL) (01 - 10).
-                data_tpl[pos] = fx_col.amount_string
+                DATA_TPL[pos] = fx_col.amount_string
               elseif '0Q' == fx_col.number_string  then
                 -- 0Qxx, Delay all notes by xx ticks.
-                data_tick_delay[pos] = fx_col.amount_string
+                DATA_TICK_DELAY[pos] = fx_col.amount_string
               end
             end
           end
@@ -233,26 +233,26 @@ function export_build_data(plan)
               -- Note OFF
               if
                 not note_col.is_empty and
-                j > 0 and data[i][j].pos_end == 0
+                j > 0 and DATA[i][j].pos_end == 0
               then
-                data[i][j].pos_end = pos
-                data[i][j].delay_end = note_col.delay_value
-                data[i][j].tick_delay_end = tick_delay
+                DATA[i][j].pos_end = pos
+                DATA[i][j].delay_end = note_col.delay_value
+                DATA[i][j].tick_delay_end = tick_delay
               elseif
                 tick_cut ~= nil and
-                j > 0 and data[i][j].pos_end == 0
+                j > 0 and DATA[i][j].pos_end == 0
               then
-                data[i][j].pos_end = pos
-                data[i][j].delay_end = note_col.delay_value
-                data[i][j].tick_delay_end = tick_cut
+                DATA[i][j].pos_end = pos
+                DATA[i][j].delay_end = note_col.delay_value
+                DATA[i][j].tick_delay_end = tick_cut
               end
               -- Note ON
               if
                 note_col.instrument_value ~= 255 and
-                data[note_col.instrument_value + 1] ~= nil
+                DATA[note_col.instrument_value + 1] ~= nil
               then
                 i = note_col.instrument_value + 1 -- Lua vs C++
-                data[i]:insert{
+                DATA[i]:insert{
                   note = note_col.note_value,
                   pos_start = pos,
                   pos_end = 0,
@@ -266,10 +266,10 @@ function export_build_data(plan)
                   -- column = column_index,
                   -- sequence_index = sequence_index,
                 }
-                j = table.count(data[i])
+                j = table.count(DATA[i])
                 if tick_cut ~= nil then
-                  data[i][j].pos_end = pos
-                  data[i][j].tick_delay_end = tick_cut
+                  DATA[i][j].pos_end = pos
+                  DATA[i][j].tick_delay_end = tick_cut
                 end
               end
             end
@@ -284,8 +284,8 @@ function export_build_data(plan)
         end -- LINES #
 
         -- Insert terminating Note OFF
-        if j > 0 and data[i][j].pos_end == 0 then
-          data[i][j].pos_end = pattern_offset + pattern_length + rns.transport.lpb
+        if j > 0 and DATA[i][j].pos_end == 0 then
+          DATA[i][j].pos_end = pattern_offset + pattern_length + RNS.transport.lpb
         end
 
         -- Increment pattern counter
@@ -295,7 +295,7 @@ function export_build_data(plan)
 
       -- Yield every column to avoid timeout nag screens
       renoise.app():show_status(export_status_progress())
-      if coroutine_mode then coroutine.yield() end
+      if COROUTINE_MODE then coroutine.yield() end
       dbug(("Process(build_data()) Track: %d; Column: %d")
         :format(track_index, column_index))
 
@@ -338,10 +338,10 @@ end
 --
 function _export_pos_to_float(pos, delay, tick, idx)
   -- Find last known tpl value
-  local tpl = rns.transport.tpl
+  local tpl = RNS.transport.tpl
   for i=idx,1,-1 do
-    if data_tpl[i] ~= nil and i <= pos then
-      tpl = tonumber(data_tpl[i], 16)
+    if DATA_TPL[i] ~= nil and i <= pos then
+      tpl = tonumber(DATA_TPL[i], 16)
       break
     end
   end
@@ -349,8 +349,8 @@ function _export_pos_to_float(pos, delay, tick, idx)
   local float = export_tick_to_delay(tick, tpl)
   if float == false then return false end
   -- Calculate and override with global tick delay
-  if data_tick_delay[pos] ~= nil then
-    local g_float = export_tick_to_delay(tonumber(data_tick_delay[pos], 16), tpl)
+  if DATA_TICK_DELAY[pos] ~= nil then
+    local g_float = export_tick_to_delay(tonumber(DATA_TICK_DELAY[pos], 16), tpl)
     if g_float == false then return false
     else float = g_float end
   end
@@ -363,11 +363,11 @@ end
 -- Return a MF2T timestamp
 function _export_float_to_time(float, division, idx)
   -- Find last known tick value
-  local lpb = rns.transport.lpb
+  local lpb = RNS.transport.lpb
   local tmp = math.floor(float + .5)
   for i=idx,1,-1 do
-    if data_lpb[i] ~= nil and i <= tmp then
-      lpb = tonumber(data_lpb[i], 16)
+    if DATA_LPB[i] ~= nil and i <= tmp then
+      lpb = tonumber(DATA_LPB[i], 16)
       break
     end
   end
@@ -383,7 +383,7 @@ function _export_note_on(tn, sort_me, data, idx)
   local pos_d = _export_pos_to_float(data.pos_start, data.delay_start,
     tonumber(data.tick_delay_start, 16), idx)
   if pos_d ~= false then
-    local msg = "On ch=" .. midi_channel .. " n=" ..  data.note .. " v=" .. math.min(data.volume, 127)
+    local msg = "On ch=" .. MIDI_CHANNEL .. " n=" ..  data.note .. " v=" .. math.min(data.volume, 127)
     sort_me:insert{pos_d, msg, tn}
   end
 end
@@ -395,7 +395,7 @@ function _export_note_off(tn, sort_me, data, idx)
   local pos_d = _export_pos_to_float(data.pos_end, data.delay_end,
     tonumber(data.tick_delay_end, 16), idx)
   if pos_d ~= false then
-    local msg = "Off ch=" .. midi_channel .. " n=" ..  data.note .. " v=0"
+    local msg = "Off ch=" .. MIDI_CHANNEL .. " n=" ..  data.note .. " v=0"
     sort_me:insert{pos_d, msg, tn}
   end
 end
@@ -405,21 +405,22 @@ function export_midi()
 
   local midi = Midi()
   midi:open()
-  midi:setTimebase(midi_division);
-  midi:setBpm(rns.transport.bpm); -- Initial BPM
+  midi:setTimebase(MIDI_DIVISION);
+  midi:setBpm(RNS.transport.bpm); -- Initial BPM
 
   -- Debug
-  -- dbug(data)
-  -- dbug(data_bpm)
-  -- dbug(data_lpb)
-  -- dbug(data_tpl)
-  -- dbug(data_tick_delay)
+  -- dbug(DATA)
+  -- dbug(DATA_BPM)
+  -- dbug(DATA_LPB)
+  -- dbug(DATA_TPL)
+  -- dbug(DATA_TICK_DELAY)
+
+  -- reusable/mutable "sort_me" table
+  local sort_me = table.create()
 
   -- Whenever we encounter a BPM change, write it to the MIDI tempo track
-  -- reuse "sort_me" table:
-  local sort_me = table.create()
-  local lpb = rns.transport.lpb -- Initial LPB
-  for pos,bpm in pairs(data_bpm) do
+  local lpb = RNS.transport.lpb -- Initial LPB
+  for pos,bpm in pairs(DATA_BPM) do
     sort_me:insert{ pos, bpm }
   end
   -- [1] = Pos, [2] = BPM
@@ -429,7 +430,7 @@ function export_midi()
     if  bpm > 0 then
       -- TODO:
       -- Apply LPB changes here? See "LBP procedure is flawed?" note below...
-      local timestamp = export_pos_to_time(sort_me[i][1], 0, midi_division, lpb)
+      local timestamp = export_pos_to_time(sort_me[i][1], 0, MIDI_DIVISION, lpb)
       if timestamp > 0 then
         midi:addMsg(1, timestamp .. " Tempo " .. bpm_to_tempo(bpm))
       end
@@ -437,34 +438,34 @@ function export_midi()
   end
 
   -- Create a new MIDI track for each Renoise Instrument
-  local idx = _export_max_pos(data_tpl) or 1
+  local idx = _export_max_pos(DATA_TPL) or 1
   sort_me:clear()
-  for i=1,#data do
-    if table.count(data[i]) > 0 then
+  for i=1,#DATA do
+    if table.count(DATA[i]) > 0 then
       local tn = midi:newTrack()
       -- Renoise Instrument Name as MIDI TrkName
       midi:addMsg(tn,
         '0 Meta TrkName "' ..
         string.format("%02d", i - 1) .. ": " ..
-        string.gsub(rns.instruments[i].name, '"', '') .. '"'
+        string.gsub(RNS.instruments[i].name, '"', '') .. '"'
       )
       -- Renoise Instrument Name as MIDI InstrName
       midi:addMsg(tn,
         '0 Meta InstrName "' ..
         string.format("%02d", i - 1) .. ": " ..
-        string.gsub(rns.instruments[i].name, '"', '') .. '"'
+        string.gsub(RNS.instruments[i].name, '"', '') .. '"'
       )
 
       -- reuse "sort_me" table:
       -- [1] = Pos+Delay, [2] = Msg, [3] = Track number (tn)
 
-      for j=1,#data[i] do
-        _export_note_on(tn, sort_me, data[i][j], idx)
-        _export_note_off(tn, sort_me, data[i][j], idx)
+      for j=1,#DATA[i] do
+        _export_note_on(tn, sort_me, DATA[i][j], idx)
+        _export_note_off(tn, sort_me, DATA[i][j], idx)
         -- Yield every 250 notes to avoid timeout nag screens
         if (j % 250 == 0) then
           renoise.app():show_status(export_status_progress())
-          if coroutine_mode then coroutine.yield() end
+          if COROUTINE_MODE then coroutine.yield() end
           dbug(("Process(midi()) Instr: %d; Note: %d."):format(i, j))
         end
       end
@@ -472,7 +473,7 @@ function export_midi()
     end
     -- Yield every instrument to avoid timeout nag screens
     renoise.app():show_status(export_status_progress())
-    if coroutine_mode then coroutine.yield() end
+    if COROUTINE_MODE then coroutine.yield() end
     dbug(("Process(midi()) Instr: %d."):format(i))
   end
 
@@ -485,13 +486,13 @@ function export_midi()
   -- reuse "sort_me" table:
   -- [1] = MF2T Timestamp, [2] = Msg, [3] = Track number (tn)
 
-  idx = _export_max_pos(data_lpb) or 1
+  idx = _export_max_pos(DATA_LPB) or 1
   for j=1,#sort_me do
-    sort_me[j][1] = _export_float_to_time(sort_me[j][1], midi_division, idx)
+    sort_me[j][1] = _export_float_to_time(sort_me[j][1], MIDI_DIVISION, idx)
     -- Yield every 250 index to avoid timeout nag screens
     if (j % 250 == 0) then
       renoise.app():show_status(export_status_progress())
-      if coroutine_mode then coroutine.yield() end
+      if COROUTINE_MODE then coroutine.yield() end
       dbug(("Process(midi()) _float_to time: %d."):format(j))
     end
   end
@@ -507,7 +508,7 @@ function export_midi()
     -- Yield every 1000 messages to avoid timeout nag screens
     if (i % 1000 == 0) then
       renoise.app():show_status(export_status_progress())
-      if coroutine_mode then coroutine.yield() end
+      if COROUTINE_MODE then coroutine.yield() end
       dbug(("Process(midi()) Msg: %d."):format(i))
     end
   end
@@ -516,8 +517,8 @@ function export_midi()
   end
 
   -- Save files
-  midi:saveTxtFile(filepath .. '.txt')
-  midi:saveMidFile(filepath)
+  midi:saveTxtFile(FILEPATH .. '.txt')
+  midi:saveMidFile(FILEPATH)
 
 end
 
@@ -527,11 +528,11 @@ end
 --------------------------------------------------------------------------------
 
 function export_procedure(plan)
-  filepath = renoise.app():prompt_for_filename_to_write("mid", "Export MIDI")
-  if filepath == '' then return end
+  FILEPATH = renoise.app():prompt_for_filename_to_write("mid", "Export MIDI")
+  if FILEPATH == '' then return end
 
-  rns = renoise.song()
-  if coroutine_mode then
+  RNS = renoise.song()
+  if COROUTINE_MODE then
     local process = ProcessSlicer(function() export_build(plan) end, export_done)
     renoise.tool().app_release_document_observable
       :add_notifier(function()

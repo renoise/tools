@@ -2,8 +2,8 @@
 main.lua
 ============================================================================]]--
 
-dbug_mode = false
-coroutine_mode = true
+DBUG_MODE = false
+COROUTINE_MODE = true
 
 require "toolbox"
 require "ProcessSlicer"
@@ -18,7 +18,7 @@ require "export"
 
 -- Debug print
 function dbug(msg)
-  if dbug_mode == false then return end
+  if DBUG_MODE == false then return end
   local base_types = {
     ["nil"]=true, ["boolean"]=true, ["number"]=true,
     ["string"]=true, ["thread"]=true, ["table"]=true
