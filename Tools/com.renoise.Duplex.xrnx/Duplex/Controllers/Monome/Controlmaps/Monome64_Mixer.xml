@@ -74,12 +74,6 @@
 					<Param value="/grid/led/set 6 7 %i"  action="/grid/key 6 7 %i"  type="button" name="06" maximum="1" minimum="0"/>
 					<Param value="/grid/led/set 7 7 %i"  action="/grid/key 7 7 %i"  type="button" name="07" maximum="1" minimum="0"/>
 				</Group>
-				<!--
-				<Group name="ADC">
-					<Param value="/tilt" orientation="vertical" size="8" type="fader" name="tilt1" maximum="200" minimum="0"/>
-					<Param value="/tilt" orientation="vertical" size="8" type="fader" name="tilt2" maximum="200" minimum="0"/>
-				</Group>
-				-->
 			</Row>
 		</Column>
 	</Parameters>

@@ -220,10 +220,10 @@ end
 -- return a unique name for any running process/application
 
 function OscVoiceMgr:_get_originating_app(app)
-  TRACE("OscVoiceMgr:_get_originating_app()",app._cfg_name)
+  TRACE("OscVoiceMgr:_get_originating_app()",app._app_name)
 
   local device_name = app._process.configuration.device.display_name
-  return ("%s_%s"):format(device_name,app._cfg_name)
+  return ("%s_%s"):format(device_name,app._app_name)
 
 end
 

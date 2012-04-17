@@ -2021,13 +2021,7 @@ function NotesOnWheels:_build_app()
           return false
         end
         self:change_mode(self.MODE_PITCH)
-        --[[
-        if not obj.active then
-          self.touched = true
-          self:output_sequence(nil,self.MODE_PITCH)
-          return 
-        end
-        ]]
+
       end
       c.on_hold = function(obj)
         if (not self.active) then
@@ -2058,13 +2052,7 @@ function NotesOnWheels:_build_app()
           return false
         end
         self:change_mode(self.MODE_VELOCITY)
-        --[[
-        if not obj.active then
-          self.touched = true
-          self:output_sequence(nil,self.MODE_VELOCITY)
-          return false
-        end
-        ]]
+
       end
       c.on_hold = function(obj)
         if (not self.active) then
@@ -2095,13 +2083,7 @@ function NotesOnWheels:_build_app()
           return false
         end
         self:change_mode(self.MODE_OFFSET)
-        --[[
-        if not obj.active then
-          self.touched = true
-          self:output_sequence(nil,self.MODE_OFFSET)
-          return false
-        end
-        ]]
+
       end
       c.on_hold = function(obj)
         if (not self.active) then
@@ -2132,13 +2114,7 @@ function NotesOnWheels:_build_app()
           return false
         end
         self:change_mode(self.MODE_GATE)
-        --[[
-        if not obj.active then
-          self.touched = true
-          self:output_sequence(nil,self.MODE_GATE)
-          return false
-        end
-        ]]
+
       end
       c.on_hold = function(obj)
         if (not self.active) then
@@ -2169,13 +2145,7 @@ function NotesOnWheels:_build_app()
           return false
         end
         self:change_mode(self.MODE_RETRIG)
-        --[[
-        if not obj.active then
-          self.touched = true
-          self:output_sequence(nil,self.MODE_RETRIG)
-          return false
-        end
-        ]]
+
       end
       c.on_hold = function(obj)
         if (not self.active) then

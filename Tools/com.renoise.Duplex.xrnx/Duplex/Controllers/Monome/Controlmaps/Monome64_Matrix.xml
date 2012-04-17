@@ -86,12 +86,6 @@
 					</Group>
 				</Row>
 			</Column>
-			<!--
-			<Group name="ADC">
-				<Param value="/tilt" orientation="vertical" size="8" type="fader" name="tilt1" maximum="200" minimum="0"/>
-				<Param value="/tilt" orientation="vertical" size="8" type="fader" name="tilt2" maximum="200" minimum="0"/>
-			</Group>
-			-->
 		</Row>
 
 	</Parameters>

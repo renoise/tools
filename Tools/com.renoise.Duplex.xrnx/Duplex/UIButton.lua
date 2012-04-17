@@ -187,7 +187,7 @@ end
 -- @param foreground (table), new color/text values
 
 function UIButton:set(fg_val)
-  --TRACE("UIButton:set()",fg_val)
+  TRACE("UIButton:set()",fg_val)
 
   if not fg_val then
     return
@@ -204,6 +204,7 @@ end
 -- @param ..., palette entries
 
 function UIButton:flash(delay, ...)
+  TRACE("UIButton:flash()",delay,arg)
 
   self._display.scheduler:remove_task(self._task)
   for i,args in ipairs(arg) do
@@ -220,7 +221,7 @@ end
 --------------------------------------------------------------------------------
 
 function UIButton:draw()
-  --TRACE("UIButton:draw")
+  --TRACE("UIButton:draw()")
 
   local point = CanvasPoint()
   point.color = self.palette.foreground.color
@@ -248,6 +249,7 @@ end
 -- achieved by changing the canvas so that it get's painted the next time...
 
 function UIButton:force_update()
+  TRACE("UIButton:force_update()")
 
   self.canvas.delta = table.rcopy(self.canvas.buffer)
   self.canvas.has_changed = true

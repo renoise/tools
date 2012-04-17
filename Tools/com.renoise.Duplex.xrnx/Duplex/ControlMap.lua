@@ -259,6 +259,7 @@ function ControlMap:get_osc_param(str)
 
   -- check if we have previously matched the pattern
   if self.osc_buffer[str] then
+    print("retrieve buffered OSC message:",str)
     local buf = self.osc_buffer[str]
     return buf[1],buf[2],buf[3],buf[4]
   end

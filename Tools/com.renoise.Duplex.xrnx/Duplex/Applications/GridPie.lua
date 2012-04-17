@@ -48,10 +48,14 @@ Mappings
 
 
 Options
-  follow_pos    - enable to make Renoise follow the pattern/track
-  polyrhythms   - allow/disallow polyrhythms when combining patterns (save CPU)
-  page_size_v        - determine how many patterns to scroll with each step
-  page_size_h        - determine how many tracks to scroll with each step
+  follow_pos  - enable to make Renoise follow the pattern/track
+  polyrhythms - allow/disallow polyrhythms when combining patterns (save CPU)
+  page_size_v - determine how many patterns to scroll with each step
+  page_size_h - determine how many tracks to scroll with each step
+  auto_start  - Start playing when Grid Pie is launched
+  hold_enabled - Enable this option only if your controller is capable
+                of transmitting 'release' events (copy a pattern
+                by pressing and holding a button in the grid)
 
 Changes (equal to Duplex version number)
 

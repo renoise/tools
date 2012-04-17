@@ -615,9 +615,9 @@ function Mixer:update()
   -- mode controls
   if (self._mode_control) then
     if self._postfx_mode then
-      self._mode_control:set(self.palette.mixer_mode_pre)
-    else
       self._mode_control:set(self.palette.mixer_mode_post)
+    else
+      self._mode_control:set(self.palette.mixer_mode_pre)
     end
   end
 
