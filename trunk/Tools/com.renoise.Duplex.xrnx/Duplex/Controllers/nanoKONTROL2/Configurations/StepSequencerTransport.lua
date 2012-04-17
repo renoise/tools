@@ -52,6 +52,7 @@ duplex_configurations:insert {
         follow_track = 1,
       }
     },
+    --[[
     Navigator = {
       mappings = {
         blockpos = {
@@ -68,7 +69,7 @@ duplex_configurations:insert {
         },
       },
     },
-     Transport = {
+    Transport = {
       mappings = {
         loop_pattern = {
           group_name = "CYCLE",
@@ -98,6 +99,7 @@ duplex_configurations:insert {
       options = {
       }
     },
+    ]]
     SwitchConfiguration = {
       mappings = {
         goto_previous = {

@@ -58,8 +58,6 @@ Mappings
 
 Options
 
-  unique_id     - Choose how to distinguish between 
-                  different XYPad-controlled devices
   locked        - Disable locking if you want the controls to
                   follow the currently selected device
   record_method - Determine how to record automation
@@ -83,18 +81,6 @@ Changes (equal to Duplex version number)
 class 'XYPad' (Application)
 
 XYPad.default_options = {
-  unique_id = {
-    label = "Choose XYPad ID",
-    description = "Choose how to distinguish between"
-                .."\ndifferent XYPad-controlled devices",
-    on_change = function(app)
-      -- TODO: maintain tag
-    end,
-    items = {
-      "PAD1","PAD2","PAD3","PAD4","PAD5","PAD6","PAD7","PAD8"
-    },
-    value = 1,
-  },
   locked = {
     --hidden = true,
     label = "Lock to device",
@@ -196,9 +182,6 @@ function XYPad:__init(process,mappings,options,cfg_name,palette)
 
   self.FOLLOW_POS_ENABLED = 1
   self.FOLLOW_POS_DISABLED = 2
-
-  -- assign this + unique ID as name 
-  self.UNIQUE_NAME = "*XY Pad __%s"
 
   -- keep reference to browser process, so we can
   -- maintain the "locked" options at all times
@@ -342,16 +325,9 @@ function XYPad:on_idle()
     local track_idx = song.selected_track_index
     local device_idx = song.selected_device_index
     self:update_prev_next(track_idx,device_idx)
-    if self.target_device and self._lock_button then
-      -- update lock button status
-      if (self.options.locked.value == self.LOCKED_ENABLED) then
-        self._lock_button:set(self.palette.lock_on)
-      else
-        self._lock_button:set(self.palette.lock_off)
-      end
-
+    if self.target_device then
+      self:update_lock_button()
     end
-
     self:update_focus_button()
 
   end
@@ -740,7 +716,7 @@ function XYPad:_build_app()
     c.on_press = function(obj)
       if not self.active then return false end
       local track_idx = renoise.song().selected_track_index
-      if obj.active then
+      if (self.options.locked.value ~= self.LOCKED_ENABLED) then
         -- attempt to lock device
         if not self.target_device then
           return 
@@ -757,6 +733,7 @@ function XYPad:_build_app()
           self:tag_device(nil)
         end
       end
+      self:update_lock_button()
       self:update_focus_button()
 
     end
@@ -1076,9 +1053,24 @@ end
 
 --------------------------------------------------------------------------------
 
+-- update the state of the lock button
+
+function XYPad:update_lock_button()
+
+  if self._lock_button then
+    if (self.options.locked.value == self.LOCKED_ENABLED) then
+      self._lock_button:set(self.palette.lock_on)
+    else
+      self._lock_button:set(self.palette.lock_off)
+    end
+  end
+
+end
+
+--------------------------------------------------------------------------------
+
 -- update the state of the focus button
 -- unlit when not locked, or locked device has focus
-
 
 function XYPad:update_focus_button()
   TRACE("XYPad:update_focus_button()")
@@ -1361,13 +1353,15 @@ end
 
 function XYPad:get_unique_name()
   TRACE("XYPad:get_unique_name()")
+  
+  local dev_name = self.pad_process.browser._device_name
+  local cfg_name = self.pad_process.browser._configuration_name
+  local app_name = self._app_name
 
-  local idx = self.options.unique_id.value
-  local uid = self.options.unique_id.items[idx]
-  local display_name = string.format(self.UNIQUE_NAME,uid)
-
-  return display_name
-
+  local unique_name = ("XYPad:%s_%s_%s"):format(dev_name,cfg_name,app_name)
+  --print("unique_name",unique_name)
+  return unique_name
+  
 end
 
 --------------------------------------------------------------------------------
@@ -1392,9 +1386,12 @@ function XYPad:initial_select()
       -- we failed to match a locked device,
       -- perform a 'soft' unlock
       self.options.locked.value = self.LOCKED_DISABLED
+      self:update_lock_button()
+      --[[
       if self._lock_button then
         self._lock_button:set(self.palette.lock_off)
       end
+      ]]
     end
   --end
   if not device then
@@ -1509,12 +1506,15 @@ function XYPad:attach_to_device(track_idx,device_idx,device)
     self:_attach_to_track_devices(track)
   end
 
+  --[[
   -- update the locked status
   if (self.options.locked.value == self.LOCKED_ENABLED) then
     if self._lock_button then
       self._lock_button:set(self.palette.lock_on)
     end
   end
+  ]]
+  self:update_lock_button()
 
 end
 

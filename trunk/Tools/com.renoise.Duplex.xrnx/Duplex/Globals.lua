@@ -165,8 +165,8 @@ duplex_preferences = renoise.Document.create("ScriptingToolPreferences") {
 
   -- theming support: specify the default button color
   theme_color_R = 0xFF,
-  theme_color_G = 0xFF,
-  theme_color_B = 0xFF,
+  theme_color_G = 0x7F,
+  theme_color_B = 0x00,
 
   -- option: when enabled, the Duplex browser is displayed on startup
   display_browser_on_start = false,
@@ -551,7 +551,7 @@ end
 
 local _trace_filters = nil
 --local _trace_filters = {"^OscVoiceMgr","^Keyboard"}
---local _trace_filters = {"^UISlider"}
+--local _trace_filters = {"^UIButton","^MidiDevice"}
 --local _trace_filters = {".*"}
 
 --------------------------------------------------------------------------------

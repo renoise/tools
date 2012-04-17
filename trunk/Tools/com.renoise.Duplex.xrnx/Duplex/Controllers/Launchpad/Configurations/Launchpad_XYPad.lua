@@ -54,33 +54,10 @@ duplex_configurations:insert {
         }
       },
       options = {
-        unique_id = 1,
         record_method = 2,
         locked = 1
       }
     },
-    --[[
-    XYPadControl = {
-      application = "XYPad",
-      mappings = {
-        xy_grid = {
-          group_name = "Pad_1_Controls",
-          index = 5
-        }
-      },
-      palette = {
-        grid_on = {
-          color={0x80,0xFF,0x00}, 
-        },
-        grid_off = {
-          color={0x00,0x40,0x00}, 
-        }
-      },
-      options = {
-        unique_id = 2
-      }
-    },
-    ]]
     Pad5_Red = {
       application = "XYPad",
       mappings = {
@@ -97,7 +74,6 @@ duplex_configurations:insert {
         }
       },
       options = {
-        unique_id = 5,
         locked = 1
       }
     },
@@ -117,7 +93,6 @@ duplex_configurations:insert {
         }
       },
       options = {
-        unique_id = 6,
         locked = 1
       }
     }

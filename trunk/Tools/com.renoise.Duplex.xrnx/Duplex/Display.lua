@@ -279,6 +279,8 @@ function Display:set_parameter(elm, obj, point, secondary)
       local num = self.device:extract_midi_note(elm.value)
 
       -- check if we should send message back to the sender
+      self.device:send_note_message(num,value,channel)
+      --[[
       if (not current_message) or
          (current_message.is_virtual) or
          (current_message.context ~= MIDI_NOTE_MESSAGE) or
@@ -287,6 +289,7 @@ function Display:set_parameter(elm, obj, point, secondary)
       then
         self.device:send_note_message(num,value,channel)
       end
+      ]]
     elseif (msg_type == MIDI_CC_MESSAGE) then
       local num = self.device:extract_midi_cc(elm.value)
       local multiple_params = (type(point.val) == "table")
@@ -309,8 +312,19 @@ function Display:set_parameter(elm, obj, point, secondary)
         end
 
       end
+      
+      --[[
+      if current_message then
+        print("current_message.is_virtual",current_message.is_virtual)
+        print("current_message.context",current_message.context,"MIDI_CC_MESSAGE",MIDI_CC_MESSAGE)
+        print("current_message.id",current_message.id,"elm.id",elm.id)
+        print("current_message.value",current_message.value,"value",value)
+      end
+      ]]
 
       -- check if we should send message back to the sender
+      self.device:send_cc_message(num,value,channel)
+      --[[
       if (not current_message) or
          (current_message.is_virtual) or
          (current_message.context ~= MIDI_CC_MESSAGE) or
@@ -319,13 +333,15 @@ function Display:set_parameter(elm, obj, point, secondary)
       then
         self.device:send_cc_message(num,value,channel)
       end
+      ]]
     elseif (msg_type == MIDI_PITCH_BEND_MESSAGE) then
 
       -- sending pitch-bend back to a device doesn't make sense when
       -- you're using a keyboard - it's generally recommended to tag 
       -- the parameter with the "skip_echo" attribute in such a case...
       -- however, some device setups are different (e.g. Mackie Control)
-
+      self.device:send_pitch_bend_message(value,channel)
+      --[[
       if (not current_message) or
          (current_message.is_virtual) or
          (current_message.context ~= MIDI_PITCH_BEND_MESSAGE) or
@@ -334,6 +350,7 @@ function Display:set_parameter(elm, obj, point, secondary)
       then
         self.device:send_pitch_bend_message(value,channel)
       end
+      ]]
     elseif (msg_type == MIDI_CHANNEL_PRESSURE) then
       -- do nothing
     elseif (msg_type == MIDI_KEY_MESSAGE) then

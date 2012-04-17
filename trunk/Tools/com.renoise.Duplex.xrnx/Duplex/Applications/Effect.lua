@@ -362,7 +362,7 @@ function Effect:_build_app()
   self._parameter_sliders = {}
   self._device_navigators = (self.mappings.device.group_name) and {} or nil
 
-  local song = renoise.song()
+  --local song = renoise.song()
   local cm = self.display.device.control_map
 
   -- check if the control-map describes a grid controller
@@ -473,7 +473,8 @@ function Effect:_build_app()
         if (not self.active) then 
           return false 
         end
-
+        
+        local song = renoise.song()
         local track_idx = song.selected_track_index
         local new_index = self:_get_device_index_by_ctrl(control_index)
         local device = song.tracks[track_idx].devices[new_index]   
@@ -519,7 +520,7 @@ function Effect:_build_app()
     c.group_name = self.mappings.device_select.group_name
     c.tooltip = map.description
     c:set_pos(map.index or 1)
-    c.palette.track = table.rcopy(self.display.palette.background)
+    c.palette.track = self.palette.background
     c.toggleable = false
     c.flipped = true
     c.value = 0
@@ -530,6 +531,7 @@ function Effect:_build_app()
         return false 
       end
 
+      local song = renoise.song()
       local track_idx = song.selected_track_index
       local new_index = self:_get_device_index_by_ctrl(math.ceil(obj.value*self._num_devices))
       self:_set_selected_device_index(new_index)

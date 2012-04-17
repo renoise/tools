@@ -29,7 +29,7 @@ function Application:__init(process,mappings,options,cfg_name,palette)
   -- (string) this is the name of the application as it appears
   -- in the device configuration, e.g. "MySecondMixer" - used for looking 
   -- up the correct preferences-key when specifying custom options 
-  self._cfg_name = cfg_name
+  self._app_name = cfg_name
 
   -- when the application is inactive, it should 
   -- sleep during idle time and ignore any user input
@@ -319,7 +319,7 @@ function Application:_build_options(process)
   self._settings_view = vb:column{
     style = "group",
     vb:button{
-      text = self._cfg_name,
+      text = self._app_name,
       width=273,
       notifier = function()
         local view = vb.views.dpx_app_options
@@ -417,7 +417,7 @@ function Application:_set_option(key, val, process)
   if process then
     -- update relevant device configuration
     local app_options_node = 
-      process.settings.applications:property(self._cfg_name).options
+      process.settings.applications:property(self._app_name).options
     -- check if we need to create the node 
     if not app_options_node:property(key) then
       app_options_node:add_property(key,val)

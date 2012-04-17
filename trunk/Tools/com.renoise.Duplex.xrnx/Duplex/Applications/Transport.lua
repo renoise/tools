@@ -445,8 +445,9 @@ function Transport:_build_app()
     c.on_press = function(obj)
       if not self.active then return false end
       self:_stop_playback()
-      obj:flash(
-        0.1,self.palette.stop_playback_on,self.palette.stop_playback_off)
+      obj:flash(0.1,
+        self.palette.stop_playback_on,
+        self.palette.stop_playback_off)
     end
     self:_add_component(c)
     self.controls.stop = c

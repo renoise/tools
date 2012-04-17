@@ -31,13 +31,12 @@ duplex_configurations:insert {
         xy_grid = {
           group_name = "Grid8x5",
         },
+        --[[
         focus_button = {
-          group_name = "Grid8x5",
-          index = 5
+          group_name = "Controls",
+          index = 7
         },
-      },
-      options = {
-        unique_id = 1,
+        ]]
       }
     },
     Grid8x3 = {
@@ -46,10 +45,12 @@ duplex_configurations:insert {
         xy_grid = {
           group_name = "Grid8x3",
         },
+        --[[
         focus_button = {
           group_name = "Controls",
           index = 6
         },
+        ]]
       },
       palette = {
         foreground = {
@@ -58,9 +59,6 @@ duplex_configurations:insert {
         background = {
           color={0xFF,0xFF,0x00}, 
         },  
-      },
-      options = {
-        unique_id = 2,
       }
     },
     Grid8x3_Extra = {
@@ -69,9 +67,6 @@ duplex_configurations:insert {
         xy_grid = {
           group_name = "Grid8x3_Extra",
         },
-      },
-      options = {
-        unique_id = 3,
       }
     },
     Grid1x5 = {
@@ -88,9 +83,6 @@ duplex_configurations:insert {
         background = {
           color={0xFF,0xFF,0x00}, 
         },  
-      },
-      options = {
-        unique_id = 4,
       }
     },
     Grid7x7 = {
@@ -99,14 +91,24 @@ duplex_configurations:insert {
         xy_grid = {
           group_name = "Grid7x7",
         },
+        --[[
         focus_button = {
           group_name = "Controls",
           index = 4
         },
-
-      },
-      options = {
-        unique_id = 5,
+        ]]
+        prev_device = {
+          group_name = "Controls",
+          index = 4
+        },
+        next_device = {
+          group_name = "Controls",
+          index = 5
+        },
+        lock_button = {
+          group_name = "Controls",
+          index = 6
+        },
       }
     },
     TiltSensor = {
@@ -118,15 +120,14 @@ duplex_configurations:insert {
         },
         lock_button = {
           group_name = "Controls",
-          index = 3
+          index = 7
         },
+        --[[
         focus_button = {
           group_name = "Controls",
           index = 5
         },
-      },
-      options = {
-        unique_id = 6,
+        ]]
       }
     },
     --[[

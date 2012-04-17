@@ -83,9 +83,11 @@ duplex_configurations:insert {
           index = 1,
         },
       },
+      --[[
       options = {      
         page_size = 3,
       }
+      ]]
     },
     Effect = {
       mappings = {
