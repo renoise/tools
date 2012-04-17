@@ -41,7 +41,7 @@ local DATA_TICK_CUT = table.create()
 --------------------------------------------------------------------------------
 
 -- Go to next midi channel
-function ch_rotator()
+function export_ch_rotator()
   MIDI_CHANNEL = MIDI_CHANNEL + 1
   if MIDI_CHANNEL > 16 then MIDI_CHANNEL = 1 end
 end
@@ -469,7 +469,7 @@ function export_midi()
           dbug(("Process(midi()) Instr: %d; Note: %d."):format(i, j))
         end
       end
-      ch_rotator()
+      export_ch_rotator()
     end
     -- Yield every instrument to avoid timeout nag screens
     renoise.app():show_status(export_status_progress())
