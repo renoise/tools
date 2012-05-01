@@ -551,7 +551,7 @@ end
 
 local _trace_filters = nil
 --local _trace_filters = {"^OscVoiceMgr","^Keyboard"}
---local _trace_filters = {"^UIButton","^MidiDevice"}
+--local _trace_filters = {"^GridPie"}
 --local _trace_filters = {".*"}
 
 --------------------------------------------------------------------------------
