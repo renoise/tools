@@ -460,11 +460,13 @@ function StepSequencer:_build_grid()
           self._update_grid_requested = true
 
           -- bring focus to track
+          local track_idx = nil
           if (orientation==HORIZONTAL) then
-            renoise.song().selected_track_index = y
+            track_idx = y + self._track_offset
           else
-            renoise.song().selected_track_index = x
+            track_idx = x + self._track_offset
           end
+          renoise.song().selected_track_index = track_idx
         end
 
       end

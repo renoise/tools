@@ -45,8 +45,7 @@ duplex_configurations:insert {
         },
     	},
       options = {
-        page_size_v = 5,
-        page_size_h = 2,
+        follow_pos = 2
       },
     },
     Mixer = {
@@ -56,10 +55,11 @@ duplex_configurations:insert {
         }
       },
       options = {
-        page_size = 2,
+        page_size = 1,
         follow_track = 1
       }
     },
+    --[[
     Navigator = {
       mappings = {
         blockpos = {
@@ -67,7 +67,6 @@ duplex_configurations:insert {
         },
       },
     },
-    --[[
     Matrix = {
       mappings = {
         matrix = {
@@ -99,6 +98,47 @@ duplex_configurations:insert {
         pattern_play = 3, -- toggle start/stop with single button
       },
     },
-
+    PatternSequence = {
+      mappings = {
+        display_previous = {
+          group_name = "SequencerControls",
+          index = 1,
+        },
+        display_next = {
+          group_name = "SequencerControls",
+          index = 2,
+        }
+      },
+    },
+    TrackSelector = {
+      mappings = {
+        select_track = {
+          group_name = "Tracks"
+        }
+      },
+      options = {
+        page_size = 1
+      }
+    },
+    StepSequencer = {
+      mappings = {
+        grid = {
+          group_name = "Sequencer"
+        },
+        transpose = {
+          group_name = "SequencerControls",
+          index = 5,
+          orientation = "vertical"
+        },
+        level = {
+          group_name = "Triggers"
+        }
+      },
+      options = {
+        line_increment = 8,
+        page_size = 1,
+        follow_track = 1,
+      }
+    }
   }
 }
