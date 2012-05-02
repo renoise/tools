@@ -1463,7 +1463,7 @@ function BrowserProcess:instantiate(configuration)
     -- MIDI port setup changed
     -- 0.95
     renoise.Midi.devices_changed_observable():add_notifier(
-      BrowserProcess._available_device_ports_changed, self.device
+      BrowserProcess._available_device_ports_changed, self
     )
 
   
