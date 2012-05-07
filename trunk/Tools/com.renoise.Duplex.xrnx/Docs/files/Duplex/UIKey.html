@@ -1,0 +1,486 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+<head>
+    <title>Reference</title>
+    <link rel="stylesheet" href="../../luadoc.css" type="text/css" />
+	<!--meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/-->
+</head>
+
+<body>
+<div id="container">
+
+<div id="product">
+	<div id="product_logo"></div>
+	<div id="product_name"><big><b></b></big></div>
+	<div id="product_description"></div>
+</div> <!-- id="product" -->
+
+<div id="main">
+
+<div id="navigation">
+
+
+<h1>LuaDoc</h1>
+<ul>
+	
+	<li><a href="../../index.html">Index</a></li>
+	
+</ul>
+
+
+<!-- Module list -->
+
+
+
+<!-- File list -->
+
+<h1>Files</h1>
+<ul>
+
+	<li>
+		<a href="../../files/Duplex/Application.html">Duplex/Application.lua</a>
+	</li>
+
+	<li>
+		<a href="../../files/Duplex/Automation.html">Duplex/Automation.lua</a>
+	</li>
+
+	<li>
+		<a href="../../files/Duplex/Browser.html">Duplex/Browser.lua</a>
+	</li>
+
+	<li>
+		<a href="../../files/Duplex/Canvas.html">Duplex/Canvas.lua</a>
+	</li>
+
+	<li>
+		<a href="../../files/Duplex/ControlMap.html">Duplex/ControlMap.lua</a>
+	</li>
+
+	<li>
+		<a href="../../files/Duplex/Device.html">Duplex/Device.lua</a>
+	</li>
+
+	<li>
+		<a href="../../files/Duplex/Display.html">Duplex/Display.lua</a>
+	</li>
+
+	<li>
+		<a href="../../files/Duplex/Globals.html">Duplex/Globals.lua</a>
+	</li>
+
+	<li>
+		<a href="../../files/Duplex/MessageStream.html">Duplex/MessageStream.lua</a>
+	</li>
+
+	<li>
+		<a href="../../files/Duplex/MidiDevice.html">Duplex/MidiDevice.lua</a>
+	</li>
+
+	<li>
+		<a href="../../files/Duplex/OscClient.html">Duplex/OscClient.lua</a>
+	</li>
+
+	<li>
+		<a href="../../files/Duplex/OscDevice.html">Duplex/OscDevice.lua</a>
+	</li>
+
+	<li>
+		<a href="../../files/Duplex/OscVoiceMgr.html">Duplex/OscVoiceMgr.lua</a>
+	</li>
+
+	<li>
+		<a href="../../files/Duplex/Scheduler.html">Duplex/Scheduler.lua</a>
+	</li>
+
+	<li>
+		<a href="../../files/Duplex/UIButton.html">Duplex/UIButton.lua</a>
+	</li>
+
+	<li>
+		<a href="../../files/Duplex/UIButtonStrip.html">Duplex/UIButtonStrip.lua</a>
+	</li>
+
+	<li>
+		<a href="../../files/Duplex/UIComponent.html">Duplex/UIComponent.lua</a>
+	</li>
+
+	<li><strong>Duplex/UIKey.lua</strong></li>
+	
+	<li>
+		<a href="../../files/Duplex/UIKeyPressure.html">Duplex/UIKeyPressure.lua</a>
+	</li>
+
+	<li>
+		<a href="../../files/Duplex/UIPad.html">Duplex/UIPad.lua</a>
+	</li>
+
+	<li>
+		<a href="../../files/Duplex/UIPitchBend.html">Duplex/UIPitchBend.lua</a>
+	</li>
+
+	<li>
+		<a href="../../files/Duplex/UISlider.html">Duplex/UISlider.lua</a>
+	</li>
+
+	<li>
+		<a href="../../files/Duplex/UISpinner.html">Duplex/UISpinner.lua</a>
+	</li>
+
+</ul>
+
+
+
+
+
+
+</div> <!-- id="navigation" -->
+
+<div id="content">
+
+<h1>File <code>Duplex/UIKey.lua</code></h1>
+
+
+
+
+
+
+
+<h2>Functions</h2>
+<table class="function_list">
+
+	<tr>
+	<td class="name" nowrap><a href="#UIKey:__init">UIKey:__init</a>&nbsp;(display)</td>
+	<td class="summary">Initialize the UIKey class </td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#UIKey:add_listeners">UIKey:add_listeners</a>&nbsp;()</td>
+	<td class="summary">Add event listeners (press, release, hold) </td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#UIKey:do_hold">UIKey:do_hold</a>&nbsp;(msg)</td>
+	<td class="summary">A key was held </td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#UIKey:do_press">UIKey:do_press</a>&nbsp;(msg)</td>
+	<td class="summary">A key was pressed </td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#UIKey:do_release">UIKey:do_release</a>&nbsp;(msg)</td>
+	<td class="summary">A key was released </td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#UIKey:draw">UIKey:draw</a>&nbsp;()</td>
+	<td class="summary">Update the control's apperance </td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#UIKey:remove_listeners">UIKey:remove_listeners</a>&nbsp;()</td>
+	<td class="summary">Remove previously attached event listeners </td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#UIKey:test">UIKey:test</a>&nbsp;(msg)</td>
+	<td class="summary">Perform a test of the incoming value: if we pass any note (keyboard mode), the incoming pitch is remembered else, pitch is assigned when the UIKey is first created (and the containing application will then apply it's own transpose) </td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#UIKey:translate_pitch">UIKey:translate_pitch</a>&nbsp;(msg)</td>
+	<td class="summary">Translate_pitch, used for determining the correct pitch </td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#UIKey:update_keys">UIKey:update_keys</a>&nbsp;()</td>
+	<td class="summary">Force complete refresh when used as keyboard - a bit of a hack (the display will reset the "refresh_requested" property) </td>
+	</tr>
+
+</table>
+
+
+
+
+
+
+<br/>
+<br/>
+
+
+
+
+<h2><a name="functions"></a>Functions</h2>
+<dl class="function">
+
+
+
+<dt><a name="UIKey:__init"></a><strong>UIKey:__init</strong>&nbsp;(display)</dt>
+<dd>
+Initialize the UIKey class
+
+
+<h3>Parameters:</h3>
+<ul>
+	
+	<li>
+	  <code><em>display</em></code>: (Duplex.Display)
+	</li>
+	
+</ul>
+
+
+
+
+
+
+
+
+</dd>
+
+
+
+
+<dt><a name="UIKey:add_listeners"></a><strong>UIKey:add_listeners</strong>&nbsp;()</dt>
+<dd>
+Add event listeners (press, release, hold)
+
+
+
+
+
+
+
+
+
+</dd>
+
+
+
+
+<dt><a name="UIKey:do_hold"></a><strong>UIKey:do_hold</strong>&nbsp;(msg)</dt>
+<dd>
+A key was held
+
+
+<h3>Parameters:</h3>
+<ul>
+	
+	<li>
+	  <code><em>msg</em></code>: (Duplex.Message)
+	</li>
+	
+</ul>
+
+
+
+
+
+
+<h3>Return value:</h3>
+<ul>boolean, true when message was handled</ul>
+
+
+
+</dd>
+
+
+
+
+<dt><a name="UIKey:do_press"></a><strong>UIKey:do_press</strong>&nbsp;(msg)</dt>
+<dd>
+A key was pressed
+
+
+<h3>Parameters:</h3>
+<ul>
+	
+	<li>
+	  <code><em>msg</em></code>: (Duplex.Message)
+	</li>
+	
+</ul>
+
+
+
+
+
+
+<h3>Return value:</h3>
+<ul>boolean, true when message was handled</ul>
+
+
+
+</dd>
+
+
+
+
+<dt><a name="UIKey:do_release"></a><strong>UIKey:do_release</strong>&nbsp;(msg)</dt>
+<dd>
+A key was released
+
+
+<h3>Parameters:</h3>
+<ul>
+	
+	<li>
+	  <code><em>msg</em></code>: (Duplex.Message)
+	</li>
+	
+</ul>
+
+
+
+
+
+
+<h3>Return value:</h3>
+<ul>boolean, true when message was handled</ul>
+
+
+
+</dd>
+
+
+
+
+<dt><a name="UIKey:draw"></a><strong>UIKey:draw</strong>&nbsp;()</dt>
+<dd>
+Update the control's apperance
+
+
+
+
+
+
+
+
+
+</dd>
+
+
+
+
+<dt><a name="UIKey:remove_listeners"></a><strong>UIKey:remove_listeners</strong>&nbsp;()</dt>
+<dd>
+Remove previously attached event listeners
+
+
+
+
+
+
+
+
+
+<h3>See also:</h3>
+<ul>
+	
+	<!-- <li><a href="#../../files/Duplex/UIKey.html#UIKey:add_listenersUIKey:add_listeners"> -->
+	<li><a href="#UIKey:add_listeners">
+		UIKey:add_listeners</li>
+	</a>
+	
+</ul>
+
+</dd>
+
+
+
+
+<dt><a name="UIKey:test"></a><strong>UIKey:test</strong>&nbsp;(msg)</dt>
+<dd>
+Perform a test of the incoming value: if we pass any note (keyboard mode), the incoming pitch is remembered else, pitch is assigned when the UIKey is first created (and the containing application will then apply it's own transpose)
+
+
+<h3>Parameters:</h3>
+<ul>
+	
+	<li>
+	  <code><em>msg</em></code>: (Duplex.Message)
+	</li>
+	
+</ul>
+
+
+
+
+
+
+<h3>Return value:</h3>
+<ul>(Boolean), true when message was considered valid</ul>
+
+
+
+</dd>
+
+
+
+
+<dt><a name="UIKey:translate_pitch"></a><strong>UIKey:translate_pitch</strong>&nbsp;(msg)</dt>
+<dd>
+Translate_pitch, used for determining the correct pitch
+
+
+<h3>Parameters:</h3>
+<ul>
+	
+	<li>
+	  <code><em>msg</em></code>: (Message)
+	</li>
+	
+</ul>
+
+
+
+
+
+
+<h3>Return value:</h3>
+<ul>pitch (Number)</ul>
+
+
+
+</dd>
+
+
+
+
+<dt><a name="UIKey:update_keys"></a><strong>UIKey:update_keys</strong>&nbsp;()</dt>
+<dd>
+Force complete refresh when used as keyboard - a bit of a hack (the display will reset the "refresh_requested" property)
+
+
+
+
+
+
+
+
+
+</dd>
+
+
+</dl>
+
+
+
+
+
+
+
+</div> <!-- id="content" -->
+
+</div> <!-- id="main" -->
+
+<div id="about">
+	<p><a href="http://validator.w3.org/check?uri=referer"><img src="http://www.w3.org/Icons/valid-xhtml10" alt="Valid XHTML 1.0!" height="31" width="88" /></a></p>
+</div> <!-- id="about" -->
+
+</div> <!-- id="container" -->	
+</body>
+</html>

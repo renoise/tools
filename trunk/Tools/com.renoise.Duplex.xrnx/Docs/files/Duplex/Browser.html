@@ -1,0 +1,1673 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+<head>
+    <title>Reference</title>
+    <link rel="stylesheet" href="../../luadoc.css" type="text/css" />
+	<!--meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/-->
+</head>
+
+<body>
+<div id="container">
+
+<div id="product">
+	<div id="product_logo"></div>
+	<div id="product_name"><big><b></b></big></div>
+	<div id="product_description"></div>
+</div> <!-- id="product" -->
+
+<div id="main">
+
+<div id="navigation">
+
+
+<h1>LuaDoc</h1>
+<ul>
+	
+	<li><a href="../../index.html">Index</a></li>
+	
+</ul>
+
+
+<!-- Module list -->
+
+
+
+<!-- File list -->
+
+<h1>Files</h1>
+<ul>
+
+	<li>
+		<a href="../../files/Duplex/Application.html">Duplex/Application.lua</a>
+	</li>
+
+	<li>
+		<a href="../../files/Duplex/Automation.html">Duplex/Automation.lua</a>
+	</li>
+
+	<li><strong>Duplex/Browser.lua</strong></li>
+	
+	<li>
+		<a href="../../files/Duplex/Canvas.html">Duplex/Canvas.lua</a>
+	</li>
+
+	<li>
+		<a href="../../files/Duplex/ControlMap.html">Duplex/ControlMap.lua</a>
+	</li>
+
+	<li>
+		<a href="../../files/Duplex/Device.html">Duplex/Device.lua</a>
+	</li>
+
+	<li>
+		<a href="../../files/Duplex/Display.html">Duplex/Display.lua</a>
+	</li>
+
+	<li>
+		<a href="../../files/Duplex/Globals.html">Duplex/Globals.lua</a>
+	</li>
+
+	<li>
+		<a href="../../files/Duplex/MessageStream.html">Duplex/MessageStream.lua</a>
+	</li>
+
+	<li>
+		<a href="../../files/Duplex/MidiDevice.html">Duplex/MidiDevice.lua</a>
+	</li>
+
+	<li>
+		<a href="../../files/Duplex/OscClient.html">Duplex/OscClient.lua</a>
+	</li>
+
+	<li>
+		<a href="../../files/Duplex/OscDevice.html">Duplex/OscDevice.lua</a>
+	</li>
+
+	<li>
+		<a href="../../files/Duplex/OscVoiceMgr.html">Duplex/OscVoiceMgr.lua</a>
+	</li>
+
+	<li>
+		<a href="../../files/Duplex/Scheduler.html">Duplex/Scheduler.lua</a>
+	</li>
+
+	<li>
+		<a href="../../files/Duplex/UIButton.html">Duplex/UIButton.lua</a>
+	</li>
+
+	<li>
+		<a href="../../files/Duplex/UIButtonStrip.html">Duplex/UIButtonStrip.lua</a>
+	</li>
+
+	<li>
+		<a href="../../files/Duplex/UIComponent.html">Duplex/UIComponent.lua</a>
+	</li>
+
+	<li>
+		<a href="../../files/Duplex/UIKey.html">Duplex/UIKey.lua</a>
+	</li>
+
+	<li>
+		<a href="../../files/Duplex/UIKeyPressure.html">Duplex/UIKeyPressure.lua</a>
+	</li>
+
+	<li>
+		<a href="../../files/Duplex/UIPad.html">Duplex/UIPad.lua</a>
+	</li>
+
+	<li>
+		<a href="../../files/Duplex/UIPitchBend.html">Duplex/UIPitchBend.lua</a>
+	</li>
+
+	<li>
+		<a href="../../files/Duplex/UISlider.html">Duplex/UISlider.lua</a>
+	</li>
+
+	<li>
+		<a href="../../files/Duplex/UISpinner.html">Duplex/UISpinner.lua</a>
+	</li>
+
+</ul>
+
+
+
+
+
+
+</div> <!-- id="navigation" -->
+
+<div id="content">
+
+<h1>File <code>Duplex/Browser.lua</code></h1>
+
+
+
+
+
+
+
+<h2>Functions</h2>
+<table class="function_list">
+
+	<tr>
+	<td class="name" nowrap><a href="#Browser:__init">Browser:__init</a>&nbsp;(initial_configuration, start_configuration)</td>
+	<td class="summary">Initialize the Browser class </td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#Browser:_available_configuration_names_for_device">Browser:_available_configuration_names_for_device</a>&nbsp;(device_display_name)</td>
+	<td class="summary">Retrieve list of configuration-names present for the provided device </td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#Browser:_available_configurations_for_device">Browser:_available_configurations_for_device</a>&nbsp;(device_display_name)</td>
+	<td class="summary">Retrieve list of configurations present for the provided device </td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#Browser:_available_device_ports_changed">Browser:_available_device_ports_changed</a>&nbsp;()</td>
+	<td class="summary">Notifier, fired when device input or output port setting changed </td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#Browser:_configuration_autostart_enabled">Browser:_configuration_autostart_enabled</a>&nbsp;()</td>
+	<td class="summary">Check whether the current configuration should be autostarted return (Boolean) </td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#Browser:_configuration_index_by_name">Browser:_configuration_index_by_name</a>&nbsp;(config_name)</td>
+	<td class="summary">Retrieve index of the given configuration name </td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#Browser:_create_content_view">Browser:_create_content_view</a>&nbsp;()</td>
+	<td class="summary">Build and assign the application dialog </td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#Browser:_current_process">Browser:_current_process</a>&nbsp;()</td>
+	<td class="summary">Retrieve the current process </td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#Browser:_decorate_configuration_list">Browser:_decorate_configuration_list</a>&nbsp;()</td>
+	<td class="summary">Add/remove the "running" postfix for relevant configurations.</td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#Browser:_decorate_device_list">Browser:_decorate_device_list</a>&nbsp;()</td>
+	<td class="summary">Add/remove the "running" postfix for relevant devices.</td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#Browser:_device_index_by_name">Browser:_device_index_by_name</a>&nbsp;(device_display_name)</td>
+	<td class="summary">Retrieve index of the given device display name </td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#Browser:_device_ports_changed">Browser:_device_ports_changed</a>&nbsp;()</td>
+	<td class="summary">Notifier, fired when device input or output port setting changed </td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#Browser:_disable_configuration_autostart">Browser:_disable_configuration_autostart</a>&nbsp;()</td>
+	<td class="summary">Remove the current configuration from the autostart prefs </td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#Browser:_enable_configuration_autostart">Browser:_enable_configuration_autostart</a>&nbsp;()</td>
+	<td class="summary">Add the current configuration to the autostart prefs </td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#Browser:_process_running">Browser:_process_running</a>&nbsp;()</td>
+	<td class="summary">Check if any processes are running </td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#Browser:_strip_postfixes">Browser:_strip_postfixes</a>&nbsp;(name)</td>
+	<td class="summary">Remove NOT_AVAILABLE_POSTFIX and RUNNING_POSTFIX from the passed name </td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#Browser:_update_device_description">Browser:_update_device_description</a>&nbsp;()</td>
+	<td class="summary">Show info about the current device, as specified in the control-map </td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#Browser:available_configurations">Browser:available_configurations</a>&nbsp;(device_name)</td>
+	<td class="summary">Return list of valid configurations for the given device </td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#Browser:available_devices">Browser:available_devices</a>&nbsp;()</td>
+	<td class="summary">Return a list of valid devices (plus a "None" option) existing devices (ones that we found MIDI ports for) are listed first, all others are listed as (N/A) to indicate that they are not present in the users device setup </td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#Browser:configuration_running">Browser:configuration_running</a>&nbsp;(configuration)</td>
+	<td class="summary">Determine if the given config is instantiated and running </td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#Browser:dump_midi">Browser:dump_midi</a>&nbsp;()</td>
+	<td class="summary">Check if we should write debug data to the std out (console) </td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#Browser:has_next_configuration">Browser:has_next_configuration</a>&nbsp;()</td>
+	<td class="summary">Check if next configuration exist </td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#Browser:has_previous_configuration">Browser:has_previous_configuration</a>&nbsp;()</td>
+	<td class="summary">Check if previous configuration exist </td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#Browser:hide">Browser:hide</a>&nbsp;()</td>
+	<td class="summary">Hide the dialog </td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#Browser:on_idle">Browser:on_idle</a>&nbsp;()</td>
+	<td class="summary">Forward idle notifications to all active processes </td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#Browser:on_new_document">Browser:on_new_document</a>&nbsp;()</td>
+	<td class="summary">Forward new document notifications to all active processes </td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#Browser:on_release_document">Browser:on_release_document</a>&nbsp;()</td>
+	<td class="summary">Forward released document notifications to all active processes </td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#Browser:set_configuration">Browser:set_configuration</a>&nbsp;(configuration, start_running)</td>
+	<td class="summary">Activate a new configuration for the currently active device </td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#Browser:set_device">Browser:set_device</a>&nbsp;(device_display_name, configuration_hint)</td>
+	<td class="summary">Change the active input device: instantiates a new device, using the first avilable configuration for it, or reusing an already running configuration </td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#Browser:set_dump_midi">Browser:set_dump_midi</a>&nbsp;(dump)</td>
+	<td class="summary">Set the MIDI dump status </td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#Browser:set_next_configuration">Browser:set_next_configuration</a>&nbsp;()</td>
+	<td class="summary">Activate the next configuration (if active, has next) </td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#Browser:set_previous_configuration">Browser:set_previous_configuration</a>&nbsp;()</td>
+	<td class="summary">Activate the previous configuration (if active, has previous) </td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#Browser:show">Browser:show</a>&nbsp;()</td>
+	<td class="summary">Activate and shows the dialog, or bring the existing one to front </td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#Browser:start_current_configuration">Browser:start_current_configuration</a>&nbsp;()</td>
+	<td class="summary">Start current configuration (and all apps within it) </td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#Browser:stop_current_configuration">Browser:stop_current_configuration</a>&nbsp;()</td>
+	<td class="summary">Stop current configuration (and all apps within it) </td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#BrowserProcess:__eq">BrowserProcess:__eq</a>&nbsp;(other)</td>
+	<td class="summary">Comparison operator (check configs only) </td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#BrowserProcess:__init">BrowserProcess:__init</a>&nbsp;(p_browser)</td>
+	<td class="summary">Initialize the BrowserProcess class </td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#BrowserProcess:_available_device_ports_changed">BrowserProcess:_available_device_ports_changed</a>&nbsp;()</td>
+	<td class="summary">Handle device hot-plugging (ports changing while Renoise is running) </td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#BrowserProcess:clear_display">BrowserProcess:clear_display</a>&nbsp;()</td>
+	<td class="summary">Clears/repaints the display, device, virtual UI </td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#BrowserProcess:close_settings_dialog">BrowserProcess:close_settings_dialog</a>&nbsp;()</td>
+	<td class="summary">Close the device settings, when open </td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#BrowserProcess:control_surface_visible">BrowserProcess:control_surface_visible</a>&nbsp;()</td>
+	<td class="summary">Returns true when the processes control surface is currently visible (this is also an indication of whether this is the selected device) </td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#BrowserProcess:hide_control_surface">BrowserProcess:hide_control_surface</a>&nbsp;()</td>
+	<td class="summary">Hide the device control surfaces, when showing it...</td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#BrowserProcess:instantiate">BrowserProcess:instantiate</a>&nbsp;(configuration)</td>
+	<td class="summary">Initialize a process from the passed configuration.</td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#BrowserProcess:instantiated">BrowserProcess:instantiated</a>&nbsp;()</td>
+	<td class="summary">Decide whether the process instantiated correctly </td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#BrowserProcess:invalidate">BrowserProcess:invalidate</a>&nbsp;()</td>
+	<td class="summary">Deinitialize a process actively.</td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#BrowserProcess:matches">BrowserProcess:matches</a>&nbsp;(device_display_name, config_name)</td>
+	<td class="summary">Check if this process matches the given device configurations </td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#BrowserProcess:matches_configuration">BrowserProcess:matches_configuration</a>&nbsp;(config)</td>
+	<td class="summary">Check if this process matches the given configuration </td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#BrowserProcess:on_idle">BrowserProcess:on_idle</a>&nbsp;()</td>
+	<td class="summary">Provide idle support for all active apps </td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#BrowserProcess:on_new_document">BrowserProcess:on_new_document</a>&nbsp;()</td>
+	<td class="summary">Provide new document notification for all active apps </td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#BrowserProcess:on_release_document">BrowserProcess:on_release_document</a>&nbsp;()</td>
+	<td class="summary">Provide document released notification for all active apps </td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#BrowserProcess:running">BrowserProcess:running</a>&nbsp;()</td>
+	<td class="summary">Decide if process is running (its apps are running) </td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#BrowserProcess:set_dump_midi">BrowserProcess:set_dump_midi</a>&nbsp;(dump)</td>
+	<td class="summary">Start/stop device midi dump </td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#BrowserProcess:settings_dialog_visible">BrowserProcess:settings_dialog_visible</a>&nbsp;()</td>
+	<td class="summary">Decide whether the device settings dialog is visible </td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#BrowserProcess:show_control_surface">BrowserProcess:show_control_surface</a>&nbsp;(parent_view)</td>
+	<td class="summary">Show a device control surfaces in the browser gui </td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#BrowserProcess:show_settings_dialog">BrowserProcess:show_settings_dialog</a>&nbsp;()</td>
+	<td class="summary">Display, or bring the browser dialog to front </td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#BrowserProcess:start">BrowserProcess:start</a>&nbsp;()</td>
+	<td class="summary">Start running a fully configured process.</td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#BrowserProcess:stop">BrowserProcess:stop</a>&nbsp;()</td>
+	<td class="summary">Stop a running process.</td>
+	</tr>
+
+</table>
+
+
+
+
+
+
+<br/>
+<br/>
+
+
+
+
+<h2><a name="functions"></a>Functions</h2>
+<dl class="function">
+
+
+
+<dt><a name="Browser:__init"></a><strong>Browser:__init</strong>&nbsp;(initial_configuration, start_configuration)</dt>
+<dd>
+Initialize the Browser class
+
+
+<h3>Parameters:</h3>
+<ul>
+	
+	<li>
+	  <code><em>initial_configuration</em></code>: (Table) set to this configuration
+	</li>
+	
+	<li>
+	  <code><em>start_configuration</em></code>: (Boolean) true to start the application
+	</li>
+	
+</ul>
+
+
+
+
+
+
+
+
+</dd>
+
+
+
+
+<dt><a name="Browser:_available_configuration_names_for_device"></a><strong>Browser:_available_configuration_names_for_device</strong>&nbsp;(device_display_name)</dt>
+<dd>
+Retrieve list of configuration-names present for the provided device
+
+
+<h3>Parameters:</h3>
+<ul>
+	
+	<li>
+	  <code><em>device_display_name</em></code>: (String) device_display_name
+	</li>
+	
+</ul>
+
+
+
+
+
+
+<h3>Return value:</h3>
+<ul>(Table) list of configuration names</ul>
+
+
+
+</dd>
+
+
+
+
+<dt><a name="Browser:_available_configurations_for_device"></a><strong>Browser:_available_configurations_for_device</strong>&nbsp;(device_display_name)</dt>
+<dd>
+Retrieve list of configurations present for the provided device
+
+
+<h3>Parameters:</h3>
+<ul>
+	
+	<li>
+	  <code><em>device_display_name</em></code>: (String) device_display_name
+	</li>
+	
+</ul>
+
+
+
+
+
+
+<h3>Return value:</h3>
+<ul>(Table) list of configurations</ul>
+
+
+
+</dd>
+
+
+
+
+<dt><a name="Browser:_available_device_ports_changed"></a><strong>Browser:_available_device_ports_changed</strong>&nbsp;()</dt>
+<dd>
+Notifier, fired when device input or output port setting changed
+
+
+
+
+
+
+
+
+
+</dd>
+
+
+
+
+<dt><a name="Browser:_configuration_autostart_enabled"></a><strong>Browser:_configuration_autostart_enabled</strong>&nbsp;()</dt>
+<dd>
+Check whether the current configuration should be autostarted return (Boolean)
+
+
+
+
+
+
+
+
+
+</dd>
+
+
+
+
+<dt><a name="Browser:_configuration_index_by_name"></a><strong>Browser:_configuration_index_by_name</strong>&nbsp;(config_name)</dt>
+<dd>
+Retrieve index of the given configuration name
+
+
+<h3>Parameters:</h3>
+<ul>
+	
+	<li>
+	  <code><em>config_name</em></code>: (String)
+	</li>
+	
+</ul>
+
+
+
+
+
+
+<h3>Return value:</h3>
+<ul>(Number or nil)</ul>
+
+
+
+</dd>
+
+
+
+
+<dt><a name="Browser:_create_content_view"></a><strong>Browser:_create_content_view</strong>&nbsp;()</dt>
+<dd>
+Build and assign the application dialog
+
+
+
+
+
+
+
+
+
+</dd>
+
+
+
+
+<dt><a name="Browser:_current_process"></a><strong>Browser:_current_process</strong>&nbsp;()</dt>
+<dd>
+Retrieve the current process
+
+
+
+
+
+
+
+<h3>Return value:</h3>
+<ul>(BrowserProcess object or nil)</ul>
+
+
+
+</dd>
+
+
+
+
+<dt><a name="Browser:_decorate_configuration_list"></a><strong>Browser:_decorate_configuration_list</strong>&nbsp;()</dt>
+<dd>
+Add/remove the "running" postfix for relevant configurations. called when we start/stop apps, and choose a device/config
+
+
+
+
+
+
+
+
+
+</dd>
+
+
+
+
+<dt><a name="Browser:_decorate_device_list"></a><strong>Browser:_decorate_device_list</strong>&nbsp;()</dt>
+<dd>
+Add/remove the "running" postfix for relevant devices. called when we start/stop apps, and choose a device/config
+
+
+
+
+
+
+
+
+
+</dd>
+
+
+
+
+<dt><a name="Browser:_device_index_by_name"></a><strong>Browser:_device_index_by_name</strong>&nbsp;(device_display_name)</dt>
+<dd>
+Retrieve index of the given device display name
+
+
+<h3>Parameters:</h3>
+<ul>
+	
+	<li>
+	  <code><em>device_display_name</em></code>: (String)
+	</li>
+	
+</ul>
+
+
+
+
+
+
+<h3>Return value:</h3>
+<ul>(Number or nil)</ul>
+
+
+
+</dd>
+
+
+
+
+<dt><a name="Browser:_device_ports_changed"></a><strong>Browser:_device_ports_changed</strong>&nbsp;()</dt>
+<dd>
+Notifier, fired when device input or output port setting changed
+
+
+
+
+
+
+
+
+
+</dd>
+
+
+
+
+<dt><a name="Browser:_disable_configuration_autostart"></a><strong>Browser:_disable_configuration_autostart</strong>&nbsp;()</dt>
+<dd>
+Remove the current configuration from the autostart prefs
+
+
+
+
+
+
+
+
+
+</dd>
+
+
+
+
+<dt><a name="Browser:_enable_configuration_autostart"></a><strong>Browser:_enable_configuration_autostart</strong>&nbsp;()</dt>
+<dd>
+Add the current configuration to the autostart prefs
+
+
+
+
+
+
+
+
+
+</dd>
+
+
+
+
+<dt><a name="Browser:_process_running"></a><strong>Browser:_process_running</strong>&nbsp;()</dt>
+<dd>
+Check if any processes are running
+
+
+
+
+
+
+
+<h3>Return value:</h3>
+<ul>(Boolean) true when at least one process is instantiated and running</ul>
+
+
+
+</dd>
+
+
+
+
+<dt><a name="Browser:_strip_postfixes"></a><strong>Browser:_strip_postfixes</strong>&nbsp;(name)</dt>
+<dd>
+Remove NOT_AVAILABLE_POSTFIX and RUNNING_POSTFIX from the passed name
+
+
+<h3>Parameters:</h3>
+<ul>
+	
+	<li>
+	  <code><em>name</em></code>: (String)
+	</li>
+	
+</ul>
+
+
+
+
+
+
+<h3>Return value:</h3>
+<ul>(String) the name without decoration</ul>
+
+
+
+</dd>
+
+
+
+
+<dt><a name="Browser:_update_device_description"></a><strong>Browser:_update_device_description</strong>&nbsp;()</dt>
+<dd>
+Show info about the current device, as specified in the control-map
+
+
+
+
+
+
+
+
+
+</dd>
+
+
+
+
+<dt><a name="Browser:available_configurations"></a><strong>Browser:available_configurations</strong>&nbsp;(device_name)</dt>
+<dd>
+Return list of valid configurations for the given device
+
+
+<h3>Parameters:</h3>
+<ul>
+	
+	<li>
+	  <code><em>device_name</em></code>: (String) the device name
+	</li>
+	
+</ul>
+
+
+
+
+
+
+
+
+</dd>
+
+
+
+
+<dt><a name="Browser:available_devices"></a><strong>Browser:available_devices</strong>&nbsp;()</dt>
+<dd>
+Return a list of valid devices (plus a "None" option) existing devices (ones that we found MIDI ports for) are listed first, all others are listed as (N/A) to indicate that they are not present in the users device setup
+
+
+
+
+
+
+
+<h3>Return value:</h3>
+<ul>(Table) list of device names</ul>
+
+
+
+</dd>
+
+
+
+
+<dt><a name="Browser:configuration_running"></a><strong>Browser:configuration_running</strong>&nbsp;(configuration)</dt>
+<dd>
+Determine if the given config is instantiated and running
+
+
+<h3>Parameters:</h3>
+<ul>
+	
+	<li>
+	  <code><em>configuration</em></code>: (Table) the configuration to check
+	</li>
+	
+</ul>
+
+
+
+
+
+
+<h3>Return value:</h3>
+<ul>(Boolean) true if config is running</ul>
+
+
+
+</dd>
+
+
+
+
+<dt><a name="Browser:dump_midi"></a><strong>Browser:dump_midi</strong>&nbsp;()</dt>
+<dd>
+Check if we should write debug data to the std out (console)
+
+
+
+
+
+
+
+<h3>Return value:</h3>
+<ul>(Boolean)</ul>
+
+
+
+</dd>
+
+
+
+
+<dt><a name="Browser:has_next_configuration"></a><strong>Browser:has_next_configuration</strong>&nbsp;()</dt>
+<dd>
+Check if next configuration exist
+
+
+
+
+
+
+
+<h3>Return value:</h3>
+<ul>(Boolean)</ul>
+
+
+
+</dd>
+
+
+
+
+<dt><a name="Browser:has_previous_configuration"></a><strong>Browser:has_previous_configuration</strong>&nbsp;()</dt>
+<dd>
+Check if previous configuration exist
+
+
+
+
+
+
+
+<h3>Return value:</h3>
+<ul>(Boolean)</ul>
+
+
+
+</dd>
+
+
+
+
+<dt><a name="Browser:hide"></a><strong>Browser:hide</strong>&nbsp;()</dt>
+<dd>
+Hide the dialog
+
+
+
+
+
+
+
+
+
+</dd>
+
+
+
+
+<dt><a name="Browser:on_idle"></a><strong>Browser:on_idle</strong>&nbsp;()</dt>
+<dd>
+Forward idle notifications to all active processes
+
+
+
+
+
+
+
+
+
+</dd>
+
+
+
+
+<dt><a name="Browser:on_new_document"></a><strong>Browser:on_new_document</strong>&nbsp;()</dt>
+<dd>
+Forward new document notifications to all active processes
+
+
+
+
+
+
+
+
+
+</dd>
+
+
+
+
+<dt><a name="Browser:on_release_document"></a><strong>Browser:on_release_document</strong>&nbsp;()</dt>
+<dd>
+Forward released document notifications to all active processes
+
+
+
+
+
+
+
+
+
+</dd>
+
+
+
+
+<dt><a name="Browser:set_configuration"></a><strong>Browser:set_configuration</strong>&nbsp;(configuration, start_running)</dt>
+<dd>
+Activate a new configuration for the currently active device
+
+
+<h3>Parameters:</h3>
+<ul>
+	
+	<li>
+	  <code><em>configuration</em></code>: (Table)
+	</li>
+	
+	<li>
+	  <code><em>start_running</em></code>: (Boolean)
+	</li>
+	
+</ul>
+
+
+
+
+
+
+
+
+</dd>
+
+
+
+
+<dt><a name="Browser:set_device"></a><strong>Browser:set_device</strong>&nbsp;(device_display_name, configuration_hint)</dt>
+<dd>
+Change the active input device: instantiates a new device, using the first avilable configuration for it, or reusing an already running configuration
+
+
+<h3>Parameters:</h3>
+<ul>
+	
+	<li>
+	  <code><em>device_display_name</em></code>: (string) device display-name, without postfix
+	</li>
+	
+	<li>
+	  <code><em>configuration_hint</em></code>: (optional table) configuration that should be used to instantiate the device. when nil, a default one is selected from the available device configs
+	</li>
+	
+</ul>
+
+
+
+
+
+
+
+
+</dd>
+
+
+
+
+<dt><a name="Browser:set_dump_midi"></a><strong>Browser:set_dump_midi</strong>&nbsp;(dump)</dt>
+<dd>
+Set the MIDI dump status
+
+
+<h3>Parameters:</h3>
+<ul>
+	
+	<li>
+	  <code><em>dump</em></code>: (Boolean)
+	</li>
+	
+</ul>
+
+
+
+
+
+
+
+
+</dd>
+
+
+
+
+<dt><a name="Browser:set_next_configuration"></a><strong>Browser:set_next_configuration</strong>&nbsp;()</dt>
+<dd>
+Activate the next configuration (if active, has next)
+
+
+
+
+
+
+
+
+
+</dd>
+
+
+
+
+<dt><a name="Browser:set_previous_configuration"></a><strong>Browser:set_previous_configuration</strong>&nbsp;()</dt>
+<dd>
+Activate the previous configuration (if active, has previous)
+
+
+
+
+
+
+
+
+
+</dd>
+
+
+
+
+<dt><a name="Browser:show"></a><strong>Browser:show</strong>&nbsp;()</dt>
+<dd>
+Activate and shows the dialog, or bring the existing one to front
+
+
+
+
+
+
+
+
+
+</dd>
+
+
+
+
+<dt><a name="Browser:start_current_configuration"></a><strong>Browser:start_current_configuration</strong>&nbsp;()</dt>
+<dd>
+Start current configuration (and all apps within it)
+
+
+
+
+
+
+
+
+
+</dd>
+
+
+
+
+<dt><a name="Browser:stop_current_configuration"></a><strong>Browser:stop_current_configuration</strong>&nbsp;()</dt>
+<dd>
+Stop current configuration (and all apps within it)
+
+
+
+
+
+
+
+
+
+</dd>
+
+
+
+
+<dt><a name="BrowserProcess:__eq"></a><strong>BrowserProcess:__eq</strong>&nbsp;(other)</dt>
+<dd>
+Comparison operator (check configs only)
+
+
+<h3>Parameters:</h3>
+<ul>
+	
+	<li>
+	  <code><em>other</em></code>: (BrowserProcess) the process to compare against
+	</li>
+	
+</ul>
+
+
+
+
+
+
+
+
+</dd>
+
+
+
+
+<dt><a name="BrowserProcess:__init"></a><strong>BrowserProcess:__init</strong>&nbsp;(p_browser)</dt>
+<dd>
+Initialize the BrowserProcess class
+
+
+<h3>Parameters:</h3>
+<ul>
+	
+	<li>
+	  <code><em>p_browser</em></code>: (Browser), instance of Browser class
+	</li>
+	
+</ul>
+
+
+
+
+
+
+
+
+</dd>
+
+
+
+
+<dt><a name="BrowserProcess:_available_device_ports_changed"></a><strong>BrowserProcess:_available_device_ports_changed</strong>&nbsp;()</dt>
+<dd>
+Handle device hot-plugging (ports changing while Renoise is running)
+
+
+
+
+
+
+
+
+
+</dd>
+
+
+
+
+<dt><a name="BrowserProcess:clear_display"></a><strong>BrowserProcess:clear_display</strong>&nbsp;()</dt>
+<dd>
+Clears/repaints the display, device, virtual UI
+
+
+
+
+
+
+
+
+
+</dd>
+
+
+
+
+<dt><a name="BrowserProcess:close_settings_dialog"></a><strong>BrowserProcess:close_settings_dialog</strong>&nbsp;()</dt>
+<dd>
+Close the device settings, when open
+
+
+
+
+
+
+
+
+
+</dd>
+
+
+
+
+<dt><a name="BrowserProcess:control_surface_visible"></a><strong>BrowserProcess:control_surface_visible</strong>&nbsp;()</dt>
+<dd>
+Returns true when the processes control surface is currently visible (this is also an indication of whether this is the selected device)
+
+
+
+
+
+
+
+
+
+</dd>
+
+
+
+
+<dt><a name="BrowserProcess:hide_control_surface"></a><strong>BrowserProcess:hide_control_surface</strong>&nbsp;()</dt>
+<dd>
+Hide the device control surfaces, when showing it...
+
+
+
+
+
+
+
+
+
+</dd>
+
+
+
+
+<dt><a name="BrowserProcess:instantiate"></a><strong>BrowserProcess:instantiate</strong>&nbsp;(configuration)</dt>
+<dd>
+Initialize a process from the passed configuration. this will only create the device, display and app, but not start it. to start a process, "start" must be called.
+
+
+<h3>Parameters:</h3>
+<ul>
+	
+	<li>
+	  <code><em>configuration</em></code>: (Table) the device configuration
+	</li>
+	
+</ul>
+
+
+
+
+
+
+<h3>Return value:</h3>
+<ul>(Boolean) true when instantiated</ul>
+
+
+
+</dd>
+
+
+
+
+<dt><a name="BrowserProcess:instantiated"></a><strong>BrowserProcess:instantiated</strong>&nbsp;()</dt>
+<dd>
+Decide whether the process instantiated correctly
+
+
+
+
+
+
+
+<h3>Return value:</h3>
+<ul>(Boolean)</ul>
+
+
+
+</dd>
+
+
+
+
+<dt><a name="BrowserProcess:invalidate"></a><strong>BrowserProcess:invalidate</strong>&nbsp;()</dt>
+<dd>
+Deinitialize a process actively. can always be called, even when initialization never happened
+
+
+
+
+
+
+
+
+
+</dd>
+
+
+
+
+<dt><a name="BrowserProcess:matches"></a><strong>BrowserProcess:matches</strong>&nbsp;(device_display_name, config_name)</dt>
+<dd>
+Check if this process matches the given device configurations
+
+
+<h3>Parameters:</h3>
+<ul>
+	
+	<li>
+	  <code><em>device_display_name</em></code>: (String)
+	</li>
+	
+	<li>
+	  <code><em>config_name</em></code>: (String)
+	</li>
+	
+</ul>
+
+
+
+
+
+
+<h3>Return value:</h3>
+<ul>(Boolean)</ul>
+
+
+
+</dd>
+
+
+
+
+<dt><a name="BrowserProcess:matches_configuration"></a><strong>BrowserProcess:matches_configuration</strong>&nbsp;(config)</dt>
+<dd>
+Check if this process matches the given configuration
+
+
+<h3>Parameters:</h3>
+<ul>
+	
+	<li>
+	  <code><em>config</em></code>: (String)
+	</li>
+	
+</ul>
+
+
+
+
+
+
+<h3>Return value:</h3>
+<ul>(Boolean)</ul>
+
+
+
+</dd>
+
+
+
+
+<dt><a name="BrowserProcess:on_idle"></a><strong>BrowserProcess:on_idle</strong>&nbsp;()</dt>
+<dd>
+Provide idle support for all active apps
+
+
+
+
+
+
+
+
+
+</dd>
+
+
+
+
+<dt><a name="BrowserProcess:on_new_document"></a><strong>BrowserProcess:on_new_document</strong>&nbsp;()</dt>
+<dd>
+Provide new document notification for all active apps
+
+
+
+
+
+
+
+
+
+</dd>
+
+
+
+
+<dt><a name="BrowserProcess:on_release_document"></a><strong>BrowserProcess:on_release_document</strong>&nbsp;()</dt>
+<dd>
+Provide document released notification for all active apps
+
+
+
+
+
+
+
+
+
+</dd>
+
+
+
+
+<dt><a name="BrowserProcess:running"></a><strong>BrowserProcess:running</strong>&nbsp;()</dt>
+<dd>
+Decide if process is running (its apps are running)
+
+
+
+
+
+
+
+<h3>Return value:</h3>
+<ul>Boolean</ul>
+
+
+
+</dd>
+
+
+
+
+<dt><a name="BrowserProcess:set_dump_midi"></a><strong>BrowserProcess:set_dump_midi</strong>&nbsp;(dump)</dt>
+<dd>
+Start/stop device midi dump
+
+
+<h3>Parameters:</h3>
+<ul>
+	
+	<li>
+	  <code><em>dump</em></code>: (Boolean), true to start dumping MIDI
+	</li>
+	
+</ul>
+
+
+
+
+
+
+
+
+</dd>
+
+
+
+
+<dt><a name="BrowserProcess:settings_dialog_visible"></a><strong>BrowserProcess:settings_dialog_visible</strong>&nbsp;()</dt>
+<dd>
+Decide whether the device settings dialog is visible
+
+
+
+
+
+
+
+<h3>Return value:</h3>
+<ul>(Boolean)</ul>
+
+
+
+</dd>
+
+
+
+
+<dt><a name="BrowserProcess:show_control_surface"></a><strong>BrowserProcess:show_control_surface</strong>&nbsp;(parent_view)</dt>
+<dd>
+Show a device control surfaces in the browser gui
+
+
+<h3>Parameters:</h3>
+<ul>
+	
+	<li>
+	  <code><em>parent_view</em></code>: (ViewBuilder) the browser GUI
+	</li>
+	
+</ul>
+
+
+
+
+
+
+
+
+</dd>
+
+
+
+
+<dt><a name="BrowserProcess:show_settings_dialog"></a><strong>BrowserProcess:show_settings_dialog</strong>&nbsp;()</dt>
+<dd>
+Display, or bring the browser dialog to front
+
+
+
+
+
+
+
+
+
+</dd>
+
+
+
+
+<dt><a name="BrowserProcess:start"></a><strong>BrowserProcess:start</strong>&nbsp;()</dt>
+<dd>
+Start running a fully configured process. returns true when successfully started, else false (may happen if one of the apps failed to start)
+
+
+
+
+
+
+
+
+
+</dd>
+
+
+
+
+<dt><a name="BrowserProcess:stop"></a><strong>BrowserProcess:stop</strong>&nbsp;()</dt>
+<dd>
+Stop a running process. will not invalidate it, just stop all apps
+
+
+
+
+
+
+
+
+
+</dd>
+
+
+</dl>
+
+
+
+
+
+
+
+</div> <!-- id="content" -->
+
+</div> <!-- id="main" -->
+
+<div id="about">
+	<p><a href="http://validator.w3.org/check?uri=referer"><img src="http://www.w3.org/Icons/valid-xhtml10" alt="Valid XHTML 1.0!" height="31" width="88" /></a></p>
+</div> <!-- id="about" -->
+
+</div> <!-- id="container" -->	
+</body>
+</html>

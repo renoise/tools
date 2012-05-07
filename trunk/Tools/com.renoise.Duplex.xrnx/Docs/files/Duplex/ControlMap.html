@@ -1,0 +1,701 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+<head>
+    <title>Reference</title>
+    <link rel="stylesheet" href="../../luadoc.css" type="text/css" />
+	<!--meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/-->
+</head>
+
+<body>
+<div id="container">
+
+<div id="product">
+	<div id="product_logo"></div>
+	<div id="product_name"><big><b></b></big></div>
+	<div id="product_description"></div>
+</div> <!-- id="product" -->
+
+<div id="main">
+
+<div id="navigation">
+
+
+<h1>LuaDoc</h1>
+<ul>
+	
+	<li><a href="../../index.html">Index</a></li>
+	
+</ul>
+
+
+<!-- Module list -->
+
+
+
+<!-- File list -->
+
+<h1>Files</h1>
+<ul>
+
+	<li>
+		<a href="../../files/Duplex/Application.html">Duplex/Application.lua</a>
+	</li>
+
+	<li>
+		<a href="../../files/Duplex/Automation.html">Duplex/Automation.lua</a>
+	</li>
+
+	<li>
+		<a href="../../files/Duplex/Browser.html">Duplex/Browser.lua</a>
+	</li>
+
+	<li>
+		<a href="../../files/Duplex/Canvas.html">Duplex/Canvas.lua</a>
+	</li>
+
+	<li><strong>Duplex/ControlMap.lua</strong></li>
+	
+	<li>
+		<a href="../../files/Duplex/Device.html">Duplex/Device.lua</a>
+	</li>
+
+	<li>
+		<a href="../../files/Duplex/Display.html">Duplex/Display.lua</a>
+	</li>
+
+	<li>
+		<a href="../../files/Duplex/Globals.html">Duplex/Globals.lua</a>
+	</li>
+
+	<li>
+		<a href="../../files/Duplex/MessageStream.html">Duplex/MessageStream.lua</a>
+	</li>
+
+	<li>
+		<a href="../../files/Duplex/MidiDevice.html">Duplex/MidiDevice.lua</a>
+	</li>
+
+	<li>
+		<a href="../../files/Duplex/OscClient.html">Duplex/OscClient.lua</a>
+	</li>
+
+	<li>
+		<a href="../../files/Duplex/OscDevice.html">Duplex/OscDevice.lua</a>
+	</li>
+
+	<li>
+		<a href="../../files/Duplex/OscVoiceMgr.html">Duplex/OscVoiceMgr.lua</a>
+	</li>
+
+	<li>
+		<a href="../../files/Duplex/Scheduler.html">Duplex/Scheduler.lua</a>
+	</li>
+
+	<li>
+		<a href="../../files/Duplex/UIButton.html">Duplex/UIButton.lua</a>
+	</li>
+
+	<li>
+		<a href="../../files/Duplex/UIButtonStrip.html">Duplex/UIButtonStrip.lua</a>
+	</li>
+
+	<li>
+		<a href="../../files/Duplex/UIComponent.html">Duplex/UIComponent.lua</a>
+	</li>
+
+	<li>
+		<a href="../../files/Duplex/UIKey.html">Duplex/UIKey.lua</a>
+	</li>
+
+	<li>
+		<a href="../../files/Duplex/UIKeyPressure.html">Duplex/UIKeyPressure.lua</a>
+	</li>
+
+	<li>
+		<a href="../../files/Duplex/UIPad.html">Duplex/UIPad.lua</a>
+	</li>
+
+	<li>
+		<a href="../../files/Duplex/UIPitchBend.html">Duplex/UIPitchBend.lua</a>
+	</li>
+
+	<li>
+		<a href="../../files/Duplex/UISlider.html">Duplex/UISlider.lua</a>
+	</li>
+
+	<li>
+		<a href="../../files/Duplex/UISpinner.html">Duplex/UISpinner.lua</a>
+	</li>
+
+</ul>
+
+
+
+
+
+
+</div> <!-- id="navigation" -->
+
+<div id="content">
+
+<h1>File <code>Duplex/ControlMap.lua</code></h1>
+
+
+
+
+
+
+
+<h2>Functions</h2>
+<table class="function_list">
+
+	<tr>
+	<td class="name" nowrap><a href="#ControlMap:__init">ControlMap:__init</a>&nbsp;()</td>
+	<td class="summary">Initializate the ControlMap class </td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#ControlMap:_parse_xml">ControlMap:_parse_xml</a>&nbsp;(str)</td>
+	<td class="summary">Parse the control-map into a table (add meta-info - such as unique ids - while parsing) </td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#ControlMap:count_columns">ControlMap:count_columns</a>&nbsp;(group_name)</td>
+	<td class="summary">Count number of columns for the provided group </td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#ControlMap:count_rows">ControlMap:count_rows</a>&nbsp;(group_name)</td>
+	<td class="summary">Count number of rows for the provided group </td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#ControlMap:determine_type">ControlMap:determine_type</a>&nbsp;(str)</td>
+	<td class="summary">Determine the type of message (OSC/Note/CC) </td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#ControlMap:get_group_dimensions">ControlMap:get_group_dimensions</a>&nbsp;(group_name)</td>
+	<td class="summary">Get width/height of provided group </td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#ControlMap:get_group_size">ControlMap:get_group_size</a>&nbsp;(group_name)</td>
+	<td class="summary">Count number of parameters in group </td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#ControlMap:get_indexed_element">ControlMap:get_indexed_element</a>&nbsp;(index, group_name)</td>
+	<td class="summary">Retrieve <param> by position within group </td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#ControlMap:get_osc_param">ControlMap:get_osc_param</a>&nbsp;(str)</td>
+	<td class="summary">Get OSC parameters: retrieve a parameter by matching it's "value" or "action" attribute, with pattern-matching for particular types of values: "/press 1 %i" matches "/press 1 1" but not "/press 1 A" "/pre** 1 %f" matches "/press 1 1" and "/preff 10 1.42"  the method will match the action property if it's available, otherwise the "value" property (the action property is needed when a device transmit a different outgoing than incoming value)  </td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#ControlMap:get_params_by_value">ControlMap:get_params_by_value</a>&nbsp;(str, msg_context)</td>
+	<td class="summary">Get parameters by value: used by the MidiDevice to retrieves a parameter by it's note/cc-value-string.</td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#ControlMap:import_colorspace">ControlMap:import_colorspace</a>&nbsp;(str)</td>
+	<td class="summary">Parse a string into a colorspace table </td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#ControlMap:is_button">ControlMap:is_button</a>&nbsp;(group_name, index)</td>
+	<td class="summary">Test if the parameter describes a button </td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#ControlMap:is_grid_group">ControlMap:is_grid_group</a>&nbsp;(group_name)</td>
+	<td class="summary">Test if the group describe a grid group (meaning: it contains columns, and each member is a button) </td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#ControlMap:load_definition">ControlMap:load_definition</a>&nbsp;(file_path)</td>
+	<td class="summary">Load_definition: load and parse xml </td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#ControlMap:parse_definition">ControlMap:parse_definition</a>&nbsp;(control_map_name, xml_string)</td>
+	<td class="summary">Parse the supplied xml string (reset the counter first) </td>
+	</tr>
+
+</table>
+
+
+
+
+
+
+<br/>
+<br/>
+
+
+
+
+<h2><a name="functions"></a>Functions</h2>
+<dl class="function">
+
+
+
+<dt><a name="ControlMap:__init"></a><strong>ControlMap:__init</strong>&nbsp;()</dt>
+<dd>
+Initializate the ControlMap class
+
+
+
+
+
+
+
+
+
+</dd>
+
+
+
+
+<dt><a name="ControlMap:_parse_xml"></a><strong>ControlMap:_parse_xml</strong>&nbsp;(str)</dt>
+<dd>
+Parse the control-map into a table (add meta-info - such as unique ids - while parsing)
+
+
+<h3>Parameters:</h3>
+<ul>
+	
+	<li>
+	  <code><em>str</em></code>: (String) the xml string
+	</li>
+	
+</ul>
+
+
+
+
+
+
+<h3>Return value:</h3>
+<ul>Table</ul>
+
+
+
+</dd>
+
+
+
+
+<dt><a name="ControlMap:count_columns"></a><strong>ControlMap:count_columns</strong>&nbsp;(group_name)</dt>
+<dd>
+Count number of columns for the provided group
+
+
+<h3>Parameters:</h3>
+<ul>
+	
+	<li>
+	  <code><em>group_name</em></code>: (String) the control-map group name, e.g. "Encoders"
+	</li>
+	
+</ul>
+
+
+
+
+
+
+<h3>Return value:</h3>
+<ul>Number</ul>
+
+
+
+</dd>
+
+
+
+
+<dt><a name="ControlMap:count_rows"></a><strong>ControlMap:count_rows</strong>&nbsp;(group_name)</dt>
+<dd>
+Count number of rows for the provided group
+
+
+<h3>Parameters:</h3>
+<ul>
+	
+	<li>
+	  <code><em>group_name</em></code>: (String) the control-map group name, e.g. "Encoders"
+	</li>
+	
+</ul>
+
+
+
+
+
+
+<h3>Return value:</h3>
+<ul>Number</ul>
+
+
+
+</dd>
+
+
+
+
+<dt><a name="ControlMap:determine_type"></a><strong>ControlMap:determine_type</strong>&nbsp;(str)</dt>
+<dd>
+Determine the type of message (OSC/Note/CC)
+
+
+<h3>Parameters:</h3>
+<ul>
+	
+	<li>
+	  <code><em>str</em></code>: (String), supply a control-map value such as "C#4"
+	</li>
+	
+</ul>
+
+
+
+
+
+
+<h3>Return value:</h3>
+<ul>integer (e.g. MIDI_NOTE_MESSAGE)</ul>
+
+
+
+</dd>
+
+
+
+
+<dt><a name="ControlMap:get_group_dimensions"></a><strong>ControlMap:get_group_dimensions</strong>&nbsp;(group_name)</dt>
+<dd>
+Get width/height of provided group
+
+
+<h3>Parameters:</h3>
+<ul>
+	
+	<li>
+	  <code><em>group_name</em></code>: (String) the control-map group name, e.g. "Encoders"
+	</li>
+	
+</ul>
+
+
+
+
+
+
+<h3>Return values:</h3>
+<ol>
+	
+	<li>width (or nil if not matched)</li>
+	
+	<li>height (or nil if not matched)</li>
+	
+</ol>
+
+
+
+</dd>
+
+
+
+
+<dt><a name="ControlMap:get_group_size"></a><strong>ControlMap:get_group_size</strong>&nbsp;(group_name)</dt>
+<dd>
+Count number of parameters in group
+
+
+<h3>Parameters:</h3>
+<ul>
+	
+	<li>
+	  <code><em>group_name</em></code>: (String) the control-map group name, e.g. "Encoders"
+	</li>
+	
+</ul>
+
+
+
+
+
+
+<h3>Return value:</h3>
+<ul>Number</ul>
+
+
+
+</dd>
+
+
+
+
+<dt><a name="ControlMap:get_indexed_element"></a><strong>ControlMap:get_indexed_element</strong>&nbsp;(index, group_name)</dt>
+<dd>
+Retrieve <param> by position within group
+
+
+<h3>Parameters:</h3>
+<ul>
+	
+	<li>
+	  <code><em>index</em></code>: (Number) the index/position
+	</li>
+	
+	<li>
+	  <code><em>group_name</em></code>: (String) the control-map group name, e.g. "Encoders"
+	</li>
+	
+</ul>
+
+
+
+
+
+
+<h3>Return value:</h3>
+<ul>the <param> attributes array</ul>
+
+
+
+</dd>
+
+
+
+
+<dt><a name="ControlMap:get_osc_param"></a><strong>ControlMap:get_osc_param</strong>&nbsp;(str)</dt>
+<dd>
+Get OSC parameters: retrieve a parameter by matching it's "value" or "action" attribute, with pattern-matching for particular types of values: "/press 1 %i" matches "/press 1 1" but not "/press 1 A" "/pre** 1 %f" matches "/press 1 1" and "/preff 10 1.42"  the method will match the action property if it's available, otherwise the "value" property (the action property is needed when a device transmit a different outgoing than incoming value) 
+
+
+<h3>Parameters:</h3>
+<ul>
+	
+	<li>
+	  <code><em>str</em></code>: (string, control-map value/action attribute)
+	</li>
+	
+</ul>
+
+
+
+
+
+
+<h3>Return value:</h3>
+<ul>Table (<Param> node), values (table), if matched against a wildcard, wildcard_idx (integer), the matched index replace_char (string), the characters to insert</ul>
+
+
+
+</dd>
+
+
+
+
+<dt><a name="ControlMap:get_params_by_value"></a><strong>ControlMap:get_params_by_value</strong>&nbsp;(str, msg_context)</dt>
+<dd>
+Get parameters by value: used by the MidiDevice to retrieves a parameter by it's note/cc-value-string. The function will match values on the default channel, if not defined: "CC#105|Ch1" will match both "CC#105|Ch1" and "CC#105". Also, we have wildcard support: "C#*|Ch1" will match both "C#1|Ch1" and "C#5"
+
+
+<h3>Parameters:</h3>
+<ul>
+	
+	<li>
+	  <code><em>str</em></code>: (string, control-map value attribute)
+	</li>
+	
+	<li>
+	  <code><em>msg_context</em></code>: (String/Enum) the message context, e.g. MIDI_NOTE_MESSAGE
+	</li>
+	
+</ul>
+
+
+
+
+
+
+<h3>Return value:</h3>
+<ul>Table containing matched parameters</ul>
+
+
+
+</dd>
+
+
+
+
+<dt><a name="ControlMap:import_colorspace"></a><strong>ControlMap:import_colorspace</strong>&nbsp;(str)</dt>
+<dd>
+Parse a string into a colorspace table
+
+
+<h3>Parameters:</h3>
+<ul>
+	
+	<li>
+	  <code><em>str</em></code>: (String) a comma-separated string of RGB values, e.g. "4,4,0"
+	</li>
+	
+</ul>
+
+
+
+
+
+
+<h3>Return value:</h3>
+<ul>Table</ul>
+
+
+
+</dd>
+
+
+
+
+<dt><a name="ControlMap:is_button"></a><strong>ControlMap:is_button</strong>&nbsp;(group_name, index)</dt>
+<dd>
+Test if the parameter describes a button
+
+
+<h3>Parameters:</h3>
+<ul>
+	
+	<li>
+	  <code><em>group_name</em></code>: (String) the control-map group name, e.g. "Encoders"
+	</li>
+	
+	<li>
+	  <code><em>index</em></code>: (Number/Int) index within group
+	</li>
+	
+</ul>
+
+
+
+
+
+
+<h3>Return value:</h3>
+<ul>(Boolean) true if matched, false if not</ul>
+
+
+
+</dd>
+
+
+
+
+<dt><a name="ControlMap:is_grid_group"></a><strong>ControlMap:is_grid_group</strong>&nbsp;(group_name)</dt>
+<dd>
+Test if the group describe a grid group (meaning: it contains columns, and each member is a button)
+
+
+<h3>Parameters:</h3>
+<ul>
+	
+	<li>
+	  <code><em>group_name</em></code>: (String) the control-map group name, e.g. "Encoders"
+	</li>
+	
+</ul>
+
+
+
+
+
+
+<h3>Return value:</h3>
+<ul>boolean</ul>
+
+
+
+</dd>
+
+
+
+
+<dt><a name="ControlMap:load_definition"></a><strong>ControlMap:load_definition</strong>&nbsp;(file_path)</dt>
+<dd>
+Load_definition: load and parse xml
+
+
+<h3>Parameters:</h3>
+<ul>
+	
+	<li>
+	  <code><em>file_path</em></code>: (String) the name of the file, e.g. "my_map.xml"
+	</li>
+	
+</ul>
+
+
+
+
+
+
+
+
+</dd>
+
+
+
+
+<dt><a name="ControlMap:parse_definition"></a><strong>ControlMap:parse_definition</strong>&nbsp;(control_map_name, xml_string)</dt>
+<dd>
+Parse the supplied xml string (reset the counter first)
+
+
+<h3>Parameters:</h3>
+<ul>
+	
+	<li>
+	  <code><em>control_map_name</em></code>: (String) path to XML file
+	</li>
+	
+	<li>
+	  <code><em>xml_string</em></code>: (String) the XML string
+	</li>
+	
+</ul>
+
+
+
+
+
+
+
+
+</dd>
+
+
+</dl>
+
+
+
+
+
+
+
+</div> <!-- id="content" -->
+
+</div> <!-- id="main" -->
+
+<div id="about">
+	<p><a href="http://validator.w3.org/check?uri=referer"><img src="http://www.w3.org/Icons/valid-xhtml10" alt="Valid XHTML 1.0!" height="31" width="88" /></a></p>
+</div> <!-- id="about" -->
+
+</div> <!-- id="container" -->	
+</body>
+</html>
