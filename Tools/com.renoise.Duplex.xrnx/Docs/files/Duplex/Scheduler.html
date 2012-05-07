@@ -1,0 +1,379 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+<head>
+    <title>Reference</title>
+    <link rel="stylesheet" href="../../luadoc.css" type="text/css" />
+	<!--meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/-->
+</head>
+
+<body>
+<div id="container">
+
+<div id="product">
+	<div id="product_logo"></div>
+	<div id="product_name"><big><b></b></big></div>
+	<div id="product_description"></div>
+</div> <!-- id="product" -->
+
+<div id="main">
+
+<div id="navigation">
+
+
+<h1>LuaDoc</h1>
+<ul>
+	
+	<li><a href="../../index.html">Index</a></li>
+	
+</ul>
+
+
+<!-- Module list -->
+
+
+
+<!-- File list -->
+
+<h1>Files</h1>
+<ul>
+
+	<li>
+		<a href="../../files/Duplex/Application.html">Duplex/Application.lua</a>
+	</li>
+
+	<li>
+		<a href="../../files/Duplex/Automation.html">Duplex/Automation.lua</a>
+	</li>
+
+	<li>
+		<a href="../../files/Duplex/Browser.html">Duplex/Browser.lua</a>
+	</li>
+
+	<li>
+		<a href="../../files/Duplex/Canvas.html">Duplex/Canvas.lua</a>
+	</li>
+
+	<li>
+		<a href="../../files/Duplex/ControlMap.html">Duplex/ControlMap.lua</a>
+	</li>
+
+	<li>
+		<a href="../../files/Duplex/Device.html">Duplex/Device.lua</a>
+	</li>
+
+	<li>
+		<a href="../../files/Duplex/Display.html">Duplex/Display.lua</a>
+	</li>
+
+	<li>
+		<a href="../../files/Duplex/Globals.html">Duplex/Globals.lua</a>
+	</li>
+
+	<li>
+		<a href="../../files/Duplex/MessageStream.html">Duplex/MessageStream.lua</a>
+	</li>
+
+	<li>
+		<a href="../../files/Duplex/MidiDevice.html">Duplex/MidiDevice.lua</a>
+	</li>
+
+	<li>
+		<a href="../../files/Duplex/OscClient.html">Duplex/OscClient.lua</a>
+	</li>
+
+	<li>
+		<a href="../../files/Duplex/OscDevice.html">Duplex/OscDevice.lua</a>
+	</li>
+
+	<li>
+		<a href="../../files/Duplex/OscVoiceMgr.html">Duplex/OscVoiceMgr.lua</a>
+	</li>
+
+	<li><strong>Duplex/Scheduler.lua</strong></li>
+	
+	<li>
+		<a href="../../files/Duplex/UIButton.html">Duplex/UIButton.lua</a>
+	</li>
+
+	<li>
+		<a href="../../files/Duplex/UIButtonStrip.html">Duplex/UIButtonStrip.lua</a>
+	</li>
+
+	<li>
+		<a href="../../files/Duplex/UIComponent.html">Duplex/UIComponent.lua</a>
+	</li>
+
+	<li>
+		<a href="../../files/Duplex/UIKey.html">Duplex/UIKey.lua</a>
+	</li>
+
+	<li>
+		<a href="../../files/Duplex/UIKeyPressure.html">Duplex/UIKeyPressure.lua</a>
+	</li>
+
+	<li>
+		<a href="../../files/Duplex/UIPad.html">Duplex/UIPad.lua</a>
+	</li>
+
+	<li>
+		<a href="../../files/Duplex/UIPitchBend.html">Duplex/UIPitchBend.lua</a>
+	</li>
+
+	<li>
+		<a href="../../files/Duplex/UISlider.html">Duplex/UISlider.lua</a>
+	</li>
+
+	<li>
+		<a href="../../files/Duplex/UISpinner.html">Duplex/UISpinner.lua</a>
+	</li>
+
+</ul>
+
+
+
+
+
+
+</div> <!-- id="navigation" -->
+
+<div id="content">
+
+<h1>File <code>Duplex/Scheduler.lua</code></h1>
+
+
+
+
+
+
+
+<h2>Functions</h2>
+<table class="function_list">
+
+	<tr>
+	<td class="name" nowrap><a href="#ScheduledTask:__init">ScheduledTask:__init</a>&nbsp;(ref, func, delay, args)</td>
+	<td class="summary">A class representing a scheduled task </td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#Scheduler:__init">Scheduler:__init</a>&nbsp;()</td>
+	<td class="summary">Initialize the Scheduler class </td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#Scheduler:_execute_task">Scheduler:_execute_task</a>&nbsp;(task)</td>
+	<td class="summary">Execute a given task (using the provided context or anonymously) </td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#Scheduler:add_task">Scheduler:add_task</a>&nbsp;(ref, func, delay, ...)</td>
+	<td class="summary">Add a new task to the scheduler </td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#Scheduler:on_idle">Scheduler:on_idle</a>&nbsp;()</td>
+	<td class="summary">Perform idle task (check when it's time to execute a task) </td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#Scheduler:remove_task">Scheduler:remove_task</a>&nbsp;(ref)</td>
+	<td class="summary">Remove a previously scheduled task </td>
+	</tr>
+
+</table>
+
+
+
+
+
+
+<br/>
+<br/>
+
+
+
+
+<h2><a name="functions"></a>Functions</h2>
+<dl class="function">
+
+
+
+<dt><a name="ScheduledTask:__init"></a><strong>ScheduledTask:__init</strong>&nbsp;(ref, func, delay, args)</dt>
+<dd>
+A class representing a scheduled task
+
+
+<h3>Parameters:</h3>
+<ul>
+	
+	<li>
+	  <code><em>ref</em></code>: (Object) the object to use as context (optional)
+	</li>
+	
+	<li>
+	  <code><em>func</em></code>: (Function) the function to call
+	</li>
+	
+	<li>
+	  <code><em>delay</em></code>: (Number) the delay before executing task
+	</li>
+	
+	<li>
+	  <code><em>args</em></code>: (Table) variable number of extra arguments
+	</li>
+	
+</ul>
+
+
+
+
+
+
+
+
+</dd>
+
+
+
+
+<dt><a name="Scheduler:__init"></a><strong>Scheduler:__init</strong>&nbsp;()</dt>
+<dd>
+Initialize the Scheduler class
+
+
+
+
+
+
+
+
+
+</dd>
+
+
+
+
+<dt><a name="Scheduler:_execute_task"></a><strong>Scheduler:_execute_task</strong>&nbsp;(task)</dt>
+<dd>
+Execute a given task (using the provided context or anonymously)
+
+
+<h3>Parameters:</h3>
+<ul>
+	
+	<li>
+	  <code><em>task</em></code>: (ScheduledTask) reference to the task
+	</li>
+	
+</ul>
+
+
+
+
+
+
+
+
+</dd>
+
+
+
+
+<dt><a name="Scheduler:add_task"></a><strong>Scheduler:add_task</strong>&nbsp;(ref, func, delay, ...)</dt>
+<dd>
+Add a new task to the scheduler
+
+
+<h3>Parameters:</h3>
+<ul>
+	
+	<li>
+	  <code><em>ref</em></code>: (Object) the object to use as context (optional)
+	</li>
+	
+	<li>
+	  <code><em>func</em></code>: (Function) the function to call
+	</li>
+	
+	<li>
+	  <code><em>delay</em></code>: (Number) the delay before executing task
+	</li>
+	
+	<li>
+	  <code><em>...</em></code>: (Vararg) variable number of extra arguments
+	</li>
+	
+</ul>
+
+
+
+
+
+
+
+
+</dd>
+
+
+
+
+<dt><a name="Scheduler:on_idle"></a><strong>Scheduler:on_idle</strong>&nbsp;()</dt>
+<dd>
+Perform idle task (check when it's time to execute a task)
+
+
+
+
+
+
+
+
+
+</dd>
+
+
+
+
+<dt><a name="Scheduler:remove_task"></a><strong>Scheduler:remove_task</strong>&nbsp;(ref)</dt>
+<dd>
+Remove a previously scheduled task
+
+
+<h3>Parameters:</h3>
+<ul>
+	
+	<li>
+	  <code><em>ref</em></code>: (ScheduledTask) reference to the task
+	</li>
+	
+</ul>
+
+
+
+
+
+
+
+
+</dd>
+
+
+</dl>
+
+
+
+
+
+
+
+</div> <!-- id="content" -->
+
+</div> <!-- id="main" -->
+
+<div id="about">
+	<p><a href="http://validator.w3.org/check?uri=referer"><img src="http://www.w3.org/Icons/valid-xhtml10" alt="Valid XHTML 1.0!" height="31" width="88" /></a></p>
+</div> <!-- id="about" -->
+
+</div> <!-- id="container" -->	
+</body>
+</html>

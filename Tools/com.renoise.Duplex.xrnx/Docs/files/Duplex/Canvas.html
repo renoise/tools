@@ -1,0 +1,428 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+<head>
+    <title>Reference</title>
+    <link rel="stylesheet" href="../../luadoc.css" type="text/css" />
+	<!--meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/-->
+</head>
+
+<body>
+<div id="container">
+
+<div id="product">
+	<div id="product_logo"></div>
+	<div id="product_name"><big><b></b></big></div>
+	<div id="product_description"></div>
+</div> <!-- id="product" -->
+
+<div id="main">
+
+<div id="navigation">
+
+
+<h1>LuaDoc</h1>
+<ul>
+	
+	<li><a href="../../index.html">Index</a></li>
+	
+</ul>
+
+
+<!-- Module list -->
+
+
+
+<!-- File list -->
+
+<h1>Files</h1>
+<ul>
+
+	<li>
+		<a href="../../files/Duplex/Application.html">Duplex/Application.lua</a>
+	</li>
+
+	<li>
+		<a href="../../files/Duplex/Automation.html">Duplex/Automation.lua</a>
+	</li>
+
+	<li>
+		<a href="../../files/Duplex/Browser.html">Duplex/Browser.lua</a>
+	</li>
+
+	<li><strong>Duplex/Canvas.lua</strong></li>
+	
+	<li>
+		<a href="../../files/Duplex/ControlMap.html">Duplex/ControlMap.lua</a>
+	</li>
+
+	<li>
+		<a href="../../files/Duplex/Device.html">Duplex/Device.lua</a>
+	</li>
+
+	<li>
+		<a href="../../files/Duplex/Display.html">Duplex/Display.lua</a>
+	</li>
+
+	<li>
+		<a href="../../files/Duplex/Globals.html">Duplex/Globals.lua</a>
+	</li>
+
+	<li>
+		<a href="../../files/Duplex/MessageStream.html">Duplex/MessageStream.lua</a>
+	</li>
+
+	<li>
+		<a href="../../files/Duplex/MidiDevice.html">Duplex/MidiDevice.lua</a>
+	</li>
+
+	<li>
+		<a href="../../files/Duplex/OscClient.html">Duplex/OscClient.lua</a>
+	</li>
+
+	<li>
+		<a href="../../files/Duplex/OscDevice.html">Duplex/OscDevice.lua</a>
+	</li>
+
+	<li>
+		<a href="../../files/Duplex/OscVoiceMgr.html">Duplex/OscVoiceMgr.lua</a>
+	</li>
+
+	<li>
+		<a href="../../files/Duplex/Scheduler.html">Duplex/Scheduler.lua</a>
+	</li>
+
+	<li>
+		<a href="../../files/Duplex/UIButton.html">Duplex/UIButton.lua</a>
+	</li>
+
+	<li>
+		<a href="../../files/Duplex/UIButtonStrip.html">Duplex/UIButtonStrip.lua</a>
+	</li>
+
+	<li>
+		<a href="../../files/Duplex/UIComponent.html">Duplex/UIComponent.lua</a>
+	</li>
+
+	<li>
+		<a href="../../files/Duplex/UIKey.html">Duplex/UIKey.lua</a>
+	</li>
+
+	<li>
+		<a href="../../files/Duplex/UIKeyPressure.html">Duplex/UIKeyPressure.lua</a>
+	</li>
+
+	<li>
+		<a href="../../files/Duplex/UIPad.html">Duplex/UIPad.lua</a>
+	</li>
+
+	<li>
+		<a href="../../files/Duplex/UIPitchBend.html">Duplex/UIPitchBend.lua</a>
+	</li>
+
+	<li>
+		<a href="../../files/Duplex/UISlider.html">Duplex/UISlider.lua</a>
+	</li>
+
+	<li>
+		<a href="../../files/Duplex/UISpinner.html">Duplex/UISpinner.lua</a>
+	</li>
+
+</ul>
+
+
+
+
+
+
+</div> <!-- id="navigation" -->
+
+<div id="content">
+
+<h1>File <code>Duplex/Canvas.lua</code></h1>
+
+
+
+
+
+
+
+<h2>Functions</h2>
+<table class="function_list">
+
+	<tr>
+	<td class="name" nowrap><a href="#Canvas:__init">Canvas:__init</a>&nbsp;(device)</td>
+	<td class="summary">Initialize the Canvas class </td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#Canvas:__tostring">Canvas:__tostring</a>&nbsp;()</td>
+	<td class="summary"> </td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#Canvas:check_delta">Canvas:check_delta</a>&nbsp;(point, x, y)</td>
+	<td class="summary">If point is different from existing value, mark the canvas as changed both color, text and value are considered when doing the comparison </td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#Canvas:clear_delta">Canvas:clear_delta</a>&nbsp;()</td>
+	<td class="summary">After the display has finished drawing the object, this is called to clear the delta buffer and mark the canvas as unchanged </td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#Canvas:fill">Canvas:fill</a>&nbsp;(point)</td>
+	<td class="summary">Fill/flood entire canvas with given point </td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#Canvas:set_size">Canvas:set_size</a>&nbsp;(width, height)</td>
+	<td class="summary">Call whenever the size of the parent UIComponent changes </td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#Canvas:write">Canvas:write</a>&nbsp;(point, x, y)</td>
+	<td class="summary">Write a single point to the canvas at the provided x/y coordinates </td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#CanvasPoint:__tostring">CanvasPoint:__tostring</a>&nbsp;()</td>
+	<td class="summary"> </td>
+	</tr>
+
+</table>
+
+
+
+
+
+
+<br/>
+<br/>
+
+
+
+
+<h2><a name="functions"></a>Functions</h2>
+<dl class="function">
+
+
+
+<dt><a name="Canvas:__init"></a><strong>Canvas:__init</strong>&nbsp;(device)</dt>
+<dd>
+Initialize the Canvas class
+
+
+<h3>Parameters:</h3>
+<ul>
+	
+	<li>
+	  <code><em>device</em></code>: (Device)
+	</li>
+	
+</ul>
+
+
+
+
+
+
+
+
+</dd>
+
+
+
+
+<dt><a name="Canvas:__tostring"></a><strong>Canvas:__tostring</strong>&nbsp;()</dt>
+<dd>
+
+
+
+
+
+
+
+
+
+
+</dd>
+
+
+
+
+<dt><a name="Canvas:check_delta"></a><strong>Canvas:check_delta</strong>&nbsp;(point, x, y)</dt>
+<dd>
+If point is different from existing value, mark the canvas as changed both color, text and value are considered when doing the comparison
+
+
+<h3>Parameters:</h3>
+<ul>
+	
+	<li>
+	  <code><em>point</em></code>: (CanvasPoint)
+	</li>
+	
+	<li>
+	  <code><em>x</em></code>: (Number)
+	</li>
+	
+	<li>
+	  <code><em>y</em></code>: (Number)
+	</li>
+	
+</ul>
+
+
+
+
+
+
+
+
+</dd>
+
+
+
+
+<dt><a name="Canvas:clear_delta"></a><strong>Canvas:clear_delta</strong>&nbsp;()</dt>
+<dd>
+After the display has finished drawing the object, this is called to clear the delta buffer and mark the canvas as unchanged
+
+
+
+
+
+
+
+
+
+</dd>
+
+
+
+
+<dt><a name="Canvas:fill"></a><strong>Canvas:fill</strong>&nbsp;(point)</dt>
+<dd>
+Fill/flood entire canvas with given point
+
+
+<h3>Parameters:</h3>
+<ul>
+	
+	<li>
+	  <code><em>point</em></code>: (CanvasPoint)
+	</li>
+	
+</ul>
+
+
+
+
+
+
+
+
+</dd>
+
+
+
+
+<dt><a name="Canvas:set_size"></a><strong>Canvas:set_size</strong>&nbsp;(width, height)</dt>
+<dd>
+Call whenever the size of the parent UIComponent changes
+
+
+<h3>Parameters:</h3>
+<ul>
+	
+	<li>
+	  <code><em>width</em></code>: (Number)
+	</li>
+	
+	<li>
+	  <code><em>height</em></code>: (Number)
+	</li>
+	
+</ul>
+
+
+
+
+
+
+
+
+</dd>
+
+
+
+
+<dt><a name="Canvas:write"></a><strong>Canvas:write</strong>&nbsp;(point, x, y)</dt>
+<dd>
+Write a single point to the canvas at the provided x/y coordinates
+
+
+<h3>Parameters:</h3>
+<ul>
+	
+	<li>
+	  <code><em>point</em></code>: (CanvasPoint)
+	</li>
+	
+	<li>
+	  <code><em>x</em></code>: (Number)
+	</li>
+	
+	<li>
+	  <code><em>y</em></code>: (Number)
+	</li>
+	
+</ul>
+
+
+
+
+
+
+
+
+</dd>
+
+
+
+
+<dt><a name="CanvasPoint:__tostring"></a><strong>CanvasPoint:__tostring</strong>&nbsp;()</dt>
+<dd>
+
+
+
+
+
+
+
+
+
+
+</dd>
+
+
+</dl>
+
+
+
+
+
+
+
+</div> <!-- id="content" -->
+
+</div> <!-- id="main" -->
+
+<div id="about">
+	<p><a href="http://validator.w3.org/check?uri=referer"><img src="http://www.w3.org/Icons/valid-xhtml10" alt="Valid XHTML 1.0!" height="31" width="88" /></a></p>
+</div> <!-- id="about" -->
+
+</div> <!-- id="container" -->	
+</body>
+</html>

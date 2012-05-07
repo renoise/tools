@@ -1,0 +1,686 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+<head>
+    <title>Reference</title>
+    <link rel="stylesheet" href="../../luadoc.css" type="text/css" />
+	<!--meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/-->
+</head>
+
+<body>
+<div id="container">
+
+<div id="product">
+	<div id="product_logo"></div>
+	<div id="product_name"><big><b></b></big></div>
+	<div id="product_description"></div>
+</div> <!-- id="product" -->
+
+<div id="main">
+
+<div id="navigation">
+
+
+<h1>LuaDoc</h1>
+<ul>
+	
+	<li><a href="../../index.html">Index</a></li>
+	
+</ul>
+
+
+<!-- Module list -->
+
+
+
+<!-- File list -->
+
+<h1>Files</h1>
+<ul>
+
+	<li><strong>Duplex/Application.lua</strong></li>
+	
+	<li>
+		<a href="../../files/Duplex/Automation.html">Duplex/Automation.lua</a>
+	</li>
+
+	<li>
+		<a href="../../files/Duplex/Browser.html">Duplex/Browser.lua</a>
+	</li>
+
+	<li>
+		<a href="../../files/Duplex/Canvas.html">Duplex/Canvas.lua</a>
+	</li>
+
+	<li>
+		<a href="../../files/Duplex/ControlMap.html">Duplex/ControlMap.lua</a>
+	</li>
+
+	<li>
+		<a href="../../files/Duplex/Device.html">Duplex/Device.lua</a>
+	</li>
+
+	<li>
+		<a href="../../files/Duplex/Display.html">Duplex/Display.lua</a>
+	</li>
+
+	<li>
+		<a href="../../files/Duplex/Globals.html">Duplex/Globals.lua</a>
+	</li>
+
+	<li>
+		<a href="../../files/Duplex/MessageStream.html">Duplex/MessageStream.lua</a>
+	</li>
+
+	<li>
+		<a href="../../files/Duplex/MidiDevice.html">Duplex/MidiDevice.lua</a>
+	</li>
+
+	<li>
+		<a href="../../files/Duplex/OscClient.html">Duplex/OscClient.lua</a>
+	</li>
+
+	<li>
+		<a href="../../files/Duplex/OscDevice.html">Duplex/OscDevice.lua</a>
+	</li>
+
+	<li>
+		<a href="../../files/Duplex/OscVoiceMgr.html">Duplex/OscVoiceMgr.lua</a>
+	</li>
+
+	<li>
+		<a href="../../files/Duplex/Scheduler.html">Duplex/Scheduler.lua</a>
+	</li>
+
+	<li>
+		<a href="../../files/Duplex/UIButton.html">Duplex/UIButton.lua</a>
+	</li>
+
+	<li>
+		<a href="../../files/Duplex/UIButtonStrip.html">Duplex/UIButtonStrip.lua</a>
+	</li>
+
+	<li>
+		<a href="../../files/Duplex/UIComponent.html">Duplex/UIComponent.lua</a>
+	</li>
+
+	<li>
+		<a href="../../files/Duplex/UIKey.html">Duplex/UIKey.lua</a>
+	</li>
+
+	<li>
+		<a href="../../files/Duplex/UIKeyPressure.html">Duplex/UIKeyPressure.lua</a>
+	</li>
+
+	<li>
+		<a href="../../files/Duplex/UIPad.html">Duplex/UIPad.lua</a>
+	</li>
+
+	<li>
+		<a href="../../files/Duplex/UIPitchBend.html">Duplex/UIPitchBend.lua</a>
+	</li>
+
+	<li>
+		<a href="../../files/Duplex/UISlider.html">Duplex/UISlider.lua</a>
+	</li>
+
+	<li>
+		<a href="../../files/Duplex/UISpinner.html">Duplex/UISpinner.lua</a>
+	</li>
+
+</ul>
+
+
+
+
+
+
+</div> <!-- id="navigation" -->
+
+<div id="content">
+
+<h1>File <code>Duplex/Application.lua</code></h1>
+
+
+
+
+
+
+
+<h2>Functions</h2>
+<table class="function_list">
+
+	<tr>
+	<td class="name" nowrap><a href="#Application:__init">Application:__init</a>&nbsp;(process, mappings, options, cfg_name, palette)</td>
+	<td class="summary">initialize the Application class </td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#Application:__tostring">Application:__tostring</a>&nbsp;()</td>
+	<td class="summary">Prints the type of application (class name) </td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#Application:_add_component">Application:_add_component</a>&nbsp;(c)</td>
+	<td class="summary">Register a UIComponent so we can automatically remove it when exiting note that the display might not be present, so use with caution </td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#Application:_add_option_row">Application:_add_option_row</a>&nbsp;(t, key, process)</td>
+	<td class="summary">Build a row of option controls </td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#Application:_apply_mappings">Application:_apply_mappings</a>&nbsp;(mappings)</td>
+	<td class="summary">Assign matching group-names </td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#Application:_apply_palette">Application:_apply_palette</a>&nbsp;(palette)</td>
+	<td class="summary">Assign matching palette entries </td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#Application:_build_app">Application:_build_app</a>&nbsp;()</td>
+	<td class="summary">Create application (build interface) </td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#Application:_build_options">Application:_build_options</a>&nbsp;(process)</td>
+	<td class="summary">Create application options dialog </td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#Application:_check_mappings">Application:_check_mappings</a>&nbsp;(mappings)</td>
+	<td class="summary">Check mappings: should be called before application is started </td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#Application:_set_option">Application:_set_option</a>&nbsp;(key, val, process)</td>
+	<td class="summary">Set option value </td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#Application:destroy_app">Application:destroy_app</a>&nbsp;()</td>
+	<td class="summary">Destroy application (remove listeners, set to inactive state) </td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#Application:on_idle">Application:on_idle</a>&nbsp;()</td>
+	<td class="summary">Handle idle updates for the application (nothing is done by default) </td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#Application:on_keypress">Application:on_keypress</a>&nbsp;(key)</td>
+	<td class="summary">Receive keypress events from the Duplex Browser dialog </td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#Application:on_new_document">Application:on_new_document</a>&nbsp;()</td>
+	<td class="summary">Called when a new document becomes available </td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#Application:on_release_document">Application:on_release_document</a>&nbsp;()</td>
+	<td class="summary">Called when releasing the active document </td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#Application:start_app">Application:start_app</a>&nbsp;()</td>
+	<td class="summary">Start/resume application </td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#Application:stop_app">Application:stop_app</a>&nbsp;()</td>
+	<td class="summary">Stop application </td>
+	</tr>
+
+</table>
+
+
+
+
+
+
+<br/>
+<br/>
+
+
+
+
+<h2><a name="functions"></a>Functions</h2>
+<dl class="function">
+
+
+
+<dt><a name="Application:__init"></a><strong>Application:__init</strong>&nbsp;(process, mappings, options, cfg_name, palette)</dt>
+<dd>
+initialize the Application class
+
+
+<h3>Parameters:</h3>
+<ul>
+	
+	<li>
+	  <code><em>process</em></code>: BrowserProcess
+	</li>
+	
+	<li>
+	  <code><em>mappings</em></code>: (table, imported from the device configuration)
+	</li>
+	
+	<li>
+	  <code><em>options</em></code>: (table, imported from the application default options)
+	</li>
+	
+	<li>
+	  <code><em>cfg_name</em></code>: (string, imported from the application default options)
+	</li>
+	
+	<li>
+	  <code><em>palette</em></code>: (table, imported from the device configuration)
+	</li>
+	
+</ul>
+
+
+
+
+
+
+
+
+</dd>
+
+
+
+
+<dt><a name="Application:__tostring"></a><strong>Application:__tostring</strong>&nbsp;()</dt>
+<dd>
+Prints the type of application (class name)
+
+
+
+
+
+
+
+
+
+</dd>
+
+
+
+
+<dt><a name="Application:_add_component"></a><strong>Application:_add_component</strong>&nbsp;(c)</dt>
+<dd>
+Register a UIComponent so we can automatically remove it when exiting note that the display might not be present, so use with caution
+
+
+<h3>Parameters:</h3>
+<ul>
+	
+	<li>
+	  <code><em>c</em></code>: 
+	</li>
+	
+</ul>
+
+
+
+
+
+
+
+
+</dd>
+
+
+
+
+<dt><a name="Application:_add_option_row"></a><strong>Application:_add_option_row</strong>&nbsp;(t, key, process)</dt>
+<dd>
+Build a row of option controls
+
+
+<h3>Parameters:</h3>
+<ul>
+	
+	<li>
+	  <code><em>t</em></code>: 
+	</li>
+	
+	<li>
+	  <code><em>key</em></code>: 
+	</li>
+	
+	<li>
+	  <code><em>process</em></code>: 
+	</li>
+	
+</ul>
+
+
+
+
+
+
+<h3>Return value:</h3>
+<ul>ViewBuilder view</ul>
+
+
+
+</dd>
+
+
+
+
+<dt><a name="Application:_apply_mappings"></a><strong>Application:_apply_mappings</strong>&nbsp;(mappings)</dt>
+<dd>
+Assign matching group-names
+
+
+<h3>Parameters:</h3>
+<ul>
+	
+	<li>
+	  <code><em>mappings</em></code>: 
+	</li>
+	
+</ul>
+
+
+
+
+
+
+
+
+</dd>
+
+
+
+
+<dt><a name="Application:_apply_palette"></a><strong>Application:_apply_palette</strong>&nbsp;(palette)</dt>
+<dd>
+Assign matching palette entries
+
+
+<h3>Parameters:</h3>
+<ul>
+	
+	<li>
+	  <code><em>palette</em></code>: 
+	</li>
+	
+</ul>
+
+
+
+
+
+
+
+
+</dd>
+
+
+
+
+<dt><a name="Application:_build_app"></a><strong>Application:_build_app</strong>&nbsp;()</dt>
+<dd>
+Create application (build interface)
+
+
+
+
+
+
+
+<h3>Return value:</h3>
+<ul>(Boolean) true when application was built</ul>
+
+
+
+</dd>
+
+
+
+
+<dt><a name="Application:_build_options"></a><strong>Application:_build_options</strong>&nbsp;(process)</dt>
+<dd>
+Create application options dialog
+
+
+<h3>Parameters:</h3>
+<ul>
+	
+	<li>
+	  <code><em>process</em></code>: 
+	</li>
+	
+</ul>
+
+
+
+
+
+
+
+
+</dd>
+
+
+
+
+<dt><a name="Application:_check_mappings"></a><strong>Application:_check_mappings</strong>&nbsp;(mappings)</dt>
+<dd>
+Check mappings: should be called before application is started
+
+
+<h3>Parameters:</h3>
+<ul>
+	
+	<li>
+	  <code><em>mappings</em></code>: 
+	</li>
+	
+</ul>
+
+
+
+
+
+
+<h3>Return value:</h3>
+<ul>boolean (false if missing group-names were encountered)</ul>
+
+
+
+</dd>
+
+
+
+
+<dt><a name="Application:_set_option"></a><strong>Application:_set_option</strong>&nbsp;(key, val, process)</dt>
+<dd>
+Set option value
+
+
+<h3>Parameters:</h3>
+<ul>
+	
+	<li>
+	  <code><em>key</em></code>: (String) the key to change
+	</li>
+	
+	<li>
+	  <code><em>val</em></code>: (Number) the value to change
+	</li>
+	
+	<li>
+	  <code><em>process</em></code>: (BrowserProcess) supply this parameter to modify the persistent settings
+	</li>
+	
+</ul>
+
+
+
+
+
+
+
+
+</dd>
+
+
+
+
+<dt><a name="Application:destroy_app"></a><strong>Application:destroy_app</strong>&nbsp;()</dt>
+<dd>
+Destroy application (remove listeners, set to inactive state)
+
+
+
+
+
+
+
+
+
+</dd>
+
+
+
+
+<dt><a name="Application:on_idle"></a><strong>Application:on_idle</strong>&nbsp;()</dt>
+<dd>
+Handle idle updates for the application (nothing is done by default)
+
+
+
+
+
+
+
+
+
+</dd>
+
+
+
+
+<dt><a name="Application:on_keypress"></a><strong>Application:on_keypress</strong>&nbsp;(key)</dt>
+<dd>
+Receive keypress events from the Duplex Browser dialog
+
+
+<h3>Parameters:</h3>
+<ul>
+	
+	<li>
+	  <code><em>key</em></code>: (table) forwarded from the keyhandler
+	</li>
+	
+</ul>
+
+
+
+
+
+
+<h3>Return value:</h3>
+<ul>(boolean) if false, key event is not forwarded to Renoise</ul>
+
+
+
+</dd>
+
+
+
+
+<dt><a name="Application:on_new_document"></a><strong>Application:on_new_document</strong>&nbsp;()</dt>
+<dd>
+Called when a new document becomes available
+
+
+
+
+
+
+
+
+
+</dd>
+
+
+
+
+<dt><a name="Application:on_release_document"></a><strong>Application:on_release_document</strong>&nbsp;()</dt>
+<dd>
+Called when releasing the active document
+
+
+
+
+
+
+
+
+
+</dd>
+
+
+
+
+<dt><a name="Application:start_app"></a><strong>Application:start_app</strong>&nbsp;()</dt>
+<dd>
+Start/resume application
+
+
+
+
+
+
+
+
+
+</dd>
+
+
+
+
+<dt><a name="Application:stop_app"></a><strong>Application:stop_app</strong>&nbsp;()</dt>
+<dd>
+Stop application
+
+
+
+
+
+
+
+
+
+</dd>
+
+
+</dl>
+
+
+
+
+
+
+
+</div> <!-- id="content" -->
+
+</div> <!-- id="main" -->
+
+<div id="about">
+	<p><a href="http://validator.w3.org/check?uri=referer"><img src="http://www.w3.org/Icons/valid-xhtml10" alt="Valid XHTML 1.0!" height="31" width="88" /></a></p>
+</div> <!-- id="about" -->
+
+</div> <!-- id="container" -->	
+</body>
+</html>

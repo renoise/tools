@@ -1,0 +1,870 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+<head>
+    <title>Reference</title>
+    <link rel="stylesheet" href="../../luadoc.css" type="text/css" />
+	<!--meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/-->
+</head>
+
+<body>
+<div id="container">
+
+<div id="product">
+	<div id="product_logo"></div>
+	<div id="product_name"><big><b></b></big></div>
+	<div id="product_description"></div>
+</div> <!-- id="product" -->
+
+<div id="main">
+
+<div id="navigation">
+
+
+<h1>LuaDoc</h1>
+<ul>
+	
+	<li><a href="../../index.html">Index</a></li>
+	
+</ul>
+
+
+<!-- Module list -->
+
+
+
+<!-- File list -->
+
+<h1>Files</h1>
+<ul>
+
+	<li>
+		<a href="../../files/Duplex/Application.html">Duplex/Application.lua</a>
+	</li>
+
+	<li>
+		<a href="../../files/Duplex/Automation.html">Duplex/Automation.lua</a>
+	</li>
+
+	<li>
+		<a href="../../files/Duplex/Browser.html">Duplex/Browser.lua</a>
+	</li>
+
+	<li>
+		<a href="../../files/Duplex/Canvas.html">Duplex/Canvas.lua</a>
+	</li>
+
+	<li>
+		<a href="../../files/Duplex/ControlMap.html">Duplex/ControlMap.lua</a>
+	</li>
+
+	<li>
+		<a href="../../files/Duplex/Device.html">Duplex/Device.lua</a>
+	</li>
+
+	<li>
+		<a href="../../files/Duplex/Display.html">Duplex/Display.lua</a>
+	</li>
+
+	<li>
+		<a href="../../files/Duplex/Globals.html">Duplex/Globals.lua</a>
+	</li>
+
+	<li>
+		<a href="../../files/Duplex/MessageStream.html">Duplex/MessageStream.lua</a>
+	</li>
+
+	<li>
+		<a href="../../files/Duplex/MidiDevice.html">Duplex/MidiDevice.lua</a>
+	</li>
+
+	<li>
+		<a href="../../files/Duplex/OscClient.html">Duplex/OscClient.lua</a>
+	</li>
+
+	<li>
+		<a href="../../files/Duplex/OscDevice.html">Duplex/OscDevice.lua</a>
+	</li>
+
+	<li>
+		<a href="../../files/Duplex/OscVoiceMgr.html">Duplex/OscVoiceMgr.lua</a>
+	</li>
+
+	<li>
+		<a href="../../files/Duplex/Scheduler.html">Duplex/Scheduler.lua</a>
+	</li>
+
+	<li>
+		<a href="../../files/Duplex/UIButton.html">Duplex/UIButton.lua</a>
+	</li>
+
+	<li><strong>Duplex/UIButtonStrip.lua</strong></li>
+	
+	<li>
+		<a href="../../files/Duplex/UIComponent.html">Duplex/UIComponent.lua</a>
+	</li>
+
+	<li>
+		<a href="../../files/Duplex/UIKey.html">Duplex/UIKey.lua</a>
+	</li>
+
+	<li>
+		<a href="../../files/Duplex/UIKeyPressure.html">Duplex/UIKeyPressure.lua</a>
+	</li>
+
+	<li>
+		<a href="../../files/Duplex/UIPad.html">Duplex/UIPad.lua</a>
+	</li>
+
+	<li>
+		<a href="../../files/Duplex/UIPitchBend.html">Duplex/UIPitchBend.lua</a>
+	</li>
+
+	<li>
+		<a href="../../files/Duplex/UISlider.html">Duplex/UISlider.lua</a>
+	</li>
+
+	<li>
+		<a href="../../files/Duplex/UISpinner.html">Duplex/UISpinner.lua</a>
+	</li>
+
+</ul>
+
+
+
+
+
+
+</div> <!-- id="navigation" -->
+
+<div id="content">
+
+<h1>File <code>Duplex/UIButtonStrip.lua</code></h1>
+
+
+
+
+
+
+
+<h2>Functions</h2>
+<table class="function_list">
+
+	<tr>
+	<td class="name" nowrap><a href="#UIButtonStrip:__init">UIButtonStrip:__init</a>&nbsp;(display)</td>
+	<td class="summary">Initialize the UIButtonStrip class </td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#UIButtonStrip:_determine_index_by_pos">UIButtonStrip:_determine_index_by_pos</a>&nbsp;(column, row)</td>
+	<td class="summary">Determine the control's index by it's position </td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#UIButtonStrip:_in_range">UIButtonStrip:_in_range</a>&nbsp;(idx)</td>
+	<td class="summary">Check if provided index is within the current range </td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#UIButtonStrip:_toggle_blink">UIButtonStrip:_toggle_blink</a>&nbsp;()</td>
+	<td class="summary">Toggle the control's blinking behaviour </td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#UIButtonStrip:add_listeners">UIButtonStrip:add_listeners</a>&nbsp;()</td>
+	<td class="summary">Add event listeners (press, release, hold) </td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#UIButtonStrip:do_hold">UIButtonStrip:do_hold</a>&nbsp;(msg)</td>
+	<td class="summary">User held a button </td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#UIButtonStrip:do_press">UIButtonStrip:do_press</a>&nbsp;(msg)</td>
+	<td class="summary">User pressed a button </td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#UIButtonStrip:do_release">UIButtonStrip:do_release</a>&nbsp;(msg)</td>
+	<td class="summary">User released a button </td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#UIButtonStrip:draw">UIButtonStrip:draw</a>&nbsp;()</td>
+	<td class="summary">Update the control's visual appearance </td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#UIButtonStrip:get_index">UIButtonStrip:get_index</a>&nbsp;()</td>
+	<td class="summary">Get the current index </td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#UIButtonStrip:get_orientation">UIButtonStrip:get_orientation</a>&nbsp;()</td>
+	<td class="summary">Get the orientation </td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#UIButtonStrip:get_range">UIButtonStrip:get_range</a>&nbsp;()</td>
+	<td class="summary">Get the current range </td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#UIButtonStrip:get_steps">UIButtonStrip:get_steps</a>&nbsp;()</td>
+	<td class="summary">Get the number of steps </td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#UIButtonStrip:pause_blink">UIButtonStrip:pause_blink</a>&nbsp;()</td>
+	<td class="summary">Pause blinking behaviour </td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#UIButtonStrip:remove_listeners">UIButtonStrip:remove_listeners</a>&nbsp;()</td>
+	<td class="summary">Remove previously attached event listeners </td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#UIButtonStrip:set_index">UIButtonStrip:set_index</a>&nbsp;(idx, skip_event)</td>
+	<td class="summary">Set the current index </td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#UIButtonStrip:set_orientation">UIButtonStrip:set_orientation</a>&nbsp;(value)</td>
+	<td class="summary">Set the control's orientation </td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#UIButtonStrip:set_range">UIButtonStrip:set_range</a>&nbsp;(idx1, idx2, skip_event)</td>
+	<td class="summary">Set the current range (swap values if needed, first should be lowest) </td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#UIButtonStrip:set_size">UIButtonStrip:set_size</a>&nbsp;(size)</td>
+	<td class="summary">(Override UIComponent with this method) </td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#UIButtonStrip:set_steps">UIButtonStrip:set_steps</a>&nbsp;(steps)</td>
+	<td class="summary">Set the number of steps </td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#UIButtonStrip:start_blink">UIButtonStrip:start_blink</a>&nbsp;(idx)</td>
+	<td class="summary">Start blinking behaviour for one of the buttons </td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#UIButtonStrip:stop_blink">UIButtonStrip:stop_blink</a>&nbsp;()</td>
+	<td class="summary">Stop blinking behaviour </td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#UIButtonStrip:test">UIButtonStrip:test</a>&nbsp;(column, row)</td>
+	<td class="summary">Expanded UIComponent test.</td>
+	</tr>
+
+</table>
+
+
+
+
+
+
+<br/>
+<br/>
+
+
+
+
+<h2><a name="functions"></a>Functions</h2>
+<dl class="function">
+
+
+
+<dt><a name="UIButtonStrip:__init"></a><strong>UIButtonStrip:__init</strong>&nbsp;(display)</dt>
+<dd>
+Initialize the UIButtonStrip class
+
+
+<h3>Parameters:</h3>
+<ul>
+	
+	<li>
+	  <code><em>display</em></code>: (Duplex.Display)
+	</li>
+	
+</ul>
+
+
+
+
+
+
+
+
+</dd>
+
+
+
+
+<dt><a name="UIButtonStrip:_determine_index_by_pos"></a><strong>UIButtonStrip:_determine_index_by_pos</strong>&nbsp;(column, row)</dt>
+<dd>
+Determine the control's index by it's position
+
+
+<h3>Parameters:</h3>
+<ul>
+	
+	<li>
+	  <code><em>column</em></code>: (Number)
+	</li>
+	
+	<li>
+	  <code><em>row</em></code>: (Number)
+	</li>
+	
+</ul>
+
+
+
+
+
+
+<h3>Return value:</h3>
+<ul>Number</ul>
+
+
+
+</dd>
+
+
+
+
+<dt><a name="UIButtonStrip:_in_range"></a><strong>UIButtonStrip:_in_range</strong>&nbsp;(idx)</dt>
+<dd>
+Check if provided index is within the current range
+
+
+<h3>Parameters:</h3>
+<ul>
+	
+	<li>
+	  <code><em>idx</em></code>: 
+	</li>
+	
+</ul>
+
+
+
+
+
+
+<h3>Return value:</h3>
+<ul>Boolean</ul>
+
+
+
+</dd>
+
+
+
+
+<dt><a name="UIButtonStrip:_toggle_blink"></a><strong>UIButtonStrip:_toggle_blink</strong>&nbsp;()</dt>
+<dd>
+Toggle the control's blinking behaviour
+
+
+
+
+
+
+
+
+
+</dd>
+
+
+
+
+<dt><a name="UIButtonStrip:add_listeners"></a><strong>UIButtonStrip:add_listeners</strong>&nbsp;()</dt>
+<dd>
+Add event listeners (press, release, hold)
+
+
+
+
+
+
+
+
+
+</dd>
+
+
+
+
+<dt><a name="UIButtonStrip:do_hold"></a><strong>UIButtonStrip:do_hold</strong>&nbsp;(msg)</dt>
+<dd>
+User held a button
+
+
+<h3>Parameters:</h3>
+<ul>
+	
+	<li>
+	  <code><em>msg</em></code>: (Duplex.Message)
+	</li>
+	
+</ul>
+
+
+
+
+
+
+<h3>Return value:</h3>
+<ul>true (hold message are always handled)</ul>
+
+
+
+</dd>
+
+
+
+
+<dt><a name="UIButtonStrip:do_press"></a><strong>UIButtonStrip:do_press</strong>&nbsp;(msg)</dt>
+<dd>
+User pressed a button
+
+
+<h3>Parameters:</h3>
+<ul>
+	
+	<li>
+	  <code><em>msg</em></code>: (Duplex.Message)
+	</li>
+	
+</ul>
+
+
+
+
+
+
+<h3>Return value:</h3>
+<ul>boolean, true when message was handled</ul>
+
+
+
+</dd>
+
+
+
+
+<dt><a name="UIButtonStrip:do_release"></a><strong>UIButtonStrip:do_release</strong>&nbsp;(msg)</dt>
+<dd>
+User released a button
+
+
+<h3>Parameters:</h3>
+<ul>
+	
+	<li>
+	  <code><em>msg</em></code>: (Duplex.Message)
+	</li>
+	
+</ul>
+
+
+
+
+
+
+<h3>Return value:</h3>
+<ul>boolean, true when message was handled</ul>
+
+
+
+</dd>
+
+
+
+
+<dt><a name="UIButtonStrip:draw"></a><strong>UIButtonStrip:draw</strong>&nbsp;()</dt>
+<dd>
+Update the control's visual appearance
+
+
+
+
+
+
+
+
+
+</dd>
+
+
+
+
+<dt><a name="UIButtonStrip:get_index"></a><strong>UIButtonStrip:get_index</strong>&nbsp;()</dt>
+<dd>
+Get the current index
+
+
+
+
+
+
+
+<h3>Return value:</h3>
+<ul>Number</ul>
+
+
+
+</dd>
+
+
+
+
+<dt><a name="UIButtonStrip:get_orientation"></a><strong>UIButtonStrip:get_orientation</strong>&nbsp;()</dt>
+<dd>
+Get the orientation
+
+
+
+
+
+
+
+<h3>Return value:</h3>
+<ul>(Enum) either VERTICAL or HORIZONTAL</ul>
+
+
+
+</dd>
+
+
+
+
+<dt><a name="UIButtonStrip:get_range"></a><strong>UIButtonStrip:get_range</strong>&nbsp;()</dt>
+<dd>
+Get the current range
+
+
+
+
+
+
+
+<h3>Return value:</h3>
+<ul>Table containing upper/lower index</ul>
+
+
+
+</dd>
+
+
+
+
+<dt><a name="UIButtonStrip:get_steps"></a><strong>UIButtonStrip:get_steps</strong>&nbsp;()</dt>
+<dd>
+Get the number of steps
+
+
+
+
+
+
+
+<h3>Return value:</h3>
+<ul>Number</ul>
+
+
+
+</dd>
+
+
+
+
+<dt><a name="UIButtonStrip:pause_blink"></a><strong>UIButtonStrip:pause_blink</strong>&nbsp;()</dt>
+<dd>
+Pause blinking behaviour
+
+
+
+
+
+
+
+
+
+</dd>
+
+
+
+
+<dt><a name="UIButtonStrip:remove_listeners"></a><strong>UIButtonStrip:remove_listeners</strong>&nbsp;()</dt>
+<dd>
+Remove previously attached event listeners
+
+
+
+
+
+
+
+
+
+<h3>See also:</h3>
+<ul>
+	
+	<!-- <li><a href="#../../files/Duplex/UIButtonStrip.html#UIButtonStrip:add_listenersUIButtonStrip:add_listeners"> -->
+	<li><a href="#UIButtonStrip:add_listeners">
+		UIButtonStrip:add_listeners</li>
+	</a>
+	
+</ul>
+
+</dd>
+
+
+
+
+<dt><a name="UIButtonStrip:set_index"></a><strong>UIButtonStrip:set_index</strong>&nbsp;(idx, skip_event)</dt>
+<dd>
+Set the current index
+
+
+<h3>Parameters:</h3>
+<ul>
+	
+	<li>
+	  <code><em>idx</em></code>: (Number) the index to set
+	</li>
+	
+	<li>
+	  <code><em>skip_event</em></code>: (Boolean) if true, invoke the event handler
+	</li>
+	
+</ul>
+
+
+
+
+
+
+
+
+</dd>
+
+
+
+
+<dt><a name="UIButtonStrip:set_orientation"></a><strong>UIButtonStrip:set_orientation</strong>&nbsp;(value)</dt>
+<dd>
+Set the control's orientation
+
+
+<h3>Parameters:</h3>
+<ul>
+	
+	<li>
+	  <code><em>value</em></code>: (Enum) either VERTICAL or HORIZONTAL
+	</li>
+	
+</ul>
+
+
+
+
+
+
+
+
+</dd>
+
+
+
+
+<dt><a name="UIButtonStrip:set_range"></a><strong>UIButtonStrip:set_range</strong>&nbsp;(idx1, idx2, skip_event)</dt>
+<dd>
+Set the current range (swap values if needed, first should be lowest)
+
+
+<h3>Parameters:</h3>
+<ul>
+	
+	<li>
+	  <code><em>idx1</em></code>: (Number) range 1
+	</li>
+	
+	<li>
+	  <code><em>idx2</em></code>: (Number) range 2
+	</li>
+	
+	<li>
+	  <code><em>skip_event</em></code>: (Boolean) if true, invoke the event handler
+	</li>
+	
+</ul>
+
+
+
+
+
+
+
+
+</dd>
+
+
+
+
+<dt><a name="UIButtonStrip:set_size"></a><strong>UIButtonStrip:set_size</strong>&nbsp;(size)</dt>
+<dd>
+(Override UIComponent with this method)
+
+
+<h3>Parameters:</h3>
+<ul>
+	
+	<li>
+	  <code><em>size</em></code>: (Number) the size in units
+	</li>
+	
+</ul>
+
+
+
+
+
+
+
+
+</dd>
+
+
+
+
+<dt><a name="UIButtonStrip:set_steps"></a><strong>UIButtonStrip:set_steps</strong>&nbsp;(steps)</dt>
+<dd>
+Set the number of steps
+
+
+<h3>Parameters:</h3>
+<ul>
+	
+	<li>
+	  <code><em>steps</em></code>: (Number)
+	</li>
+	
+</ul>
+
+
+
+
+
+
+
+
+</dd>
+
+
+
+
+<dt><a name="UIButtonStrip:start_blink"></a><strong>UIButtonStrip:start_blink</strong>&nbsp;(idx)</dt>
+<dd>
+Start blinking behaviour for one of the buttons
+
+
+<h3>Parameters:</h3>
+<ul>
+	
+	<li>
+	  <code><em>idx</em></code>: (Number) the button index
+	</li>
+	
+</ul>
+
+
+
+
+
+
+
+
+</dd>
+
+
+
+
+<dt><a name="UIButtonStrip:stop_blink"></a><strong>UIButtonStrip:stop_blink</strong>&nbsp;()</dt>
+<dd>
+Stop blinking behaviour
+
+
+
+
+
+
+
+
+
+</dd>
+
+
+
+
+<dt><a name="UIButtonStrip:test"></a><strong>UIButtonStrip:test</strong>&nbsp;(column, row)</dt>
+<dd>
+Expanded UIComponent test. Check if we have no events assigned at all, before proceeding with the standard UIComponent test
+
+
+<h3>Parameters:</h3>
+<ul>
+	
+	<li>
+	  <code><em>column</em></code>: (Number)
+	</li>
+	
+	<li>
+	  <code><em>row</em></code>: (Number)
+	</li>
+	
+</ul>
+
+
+
+
+
+
+<h3>Return value:</h3>
+<ul>Boolean</ul>
+
+
+
+</dd>
+
+
+</dl>
+
+
+
+
+
+
+
+</div> <!-- id="content" -->
+
+</div> <!-- id="main" -->
+
+<div id="about">
+	<p><a href="http://validator.w3.org/check?uri=referer"><img src="http://www.w3.org/Icons/valid-xhtml10" alt="Valid XHTML 1.0!" height="31" width="88" /></a></p>
+</div> <!-- id="about" -->
+
+</div> <!-- id="container" -->	
+</body>
+</html>
