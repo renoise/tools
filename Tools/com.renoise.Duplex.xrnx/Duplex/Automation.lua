@@ -64,13 +64,15 @@ end
 
 --------------------------------------------------------------------------------
 
+--- Retrieve the extrapolation strength from Duplex setting
+
 function Automation:_get_extrapolation_strength()
   return duplex_preferences.extrapolation_strength.value
 end
 
 --------------------------------------------------------------------------------
 
--- updates currently recording automation lanes
+--- Update currently recording automation lanes
 -- (this method is designed to be called from within an idle loop)
 
 function Automation:update()
@@ -127,7 +129,8 @@ end
 
 --------------------------------------------------------------------------------
 
--- add a point at current time (will add new automations on the fly)
+--- Add a point at current time (will add new automations on the fly)
+-- @param track_idx (Number) the track index
 -- @param parameter (DeviceParameter object)
 -- @param value (number between 0-1)
 
@@ -304,9 +307,8 @@ end
 
 --------------------------------------------------------------------------------
 
--- add_point is an enhanced add_point_at()
--- + wrap at pattern boundaries
--- + create automation on the fly
+--- This method is an enhanced version of add_point_at(), as it will wrap at 
+--  pattern boundaries and create automation on the fly
 -- @param ptrack_auto (PatternTrackAutomation)
 -- @param line (number), line in pattern
 -- @param value (number), between 0 and 1
@@ -372,10 +374,10 @@ end
 
 --------------------------------------------------------------------------------
 
--- write ahead using extrapolated values
+--- "Write-ahead" using extrapolated values
 -- (enabled when dealing with cubic/linear envelopes)
 -- @param amount (int), number of extrapolated points, 0 and up
--- @param automation (PatternTrackAutomation)
+-- @param ptrack_auto (PatternTrackAutomation)
 -- @param lane (AutomationLane)
 
 function Automation:writeahead(amount,ptrack_auto,lane)
@@ -403,7 +405,7 @@ end
 
 --------------------------------------------------------------------------------
 
--- find_or_create will always return a PatternTrackAutomation index when
+--- Find_or_create will always return a PatternTrackAutomation index when
 -- provided with a valid PatternTrack. The PatternTrackAutomation object is 
 -- created on-the-fly if not already present
 -- note: when playback progress into pattern that does not (yet) contain 
@@ -437,7 +439,7 @@ end
 
 --------------------------------------------------------------------------------
 
--- figure out the track automation's index
+--- Figure out the track automation's index
 -- @param ptrack (PatternTrack)
 -- @param ptrack_auto (PatternTrackAutomation)
 -- @return (number) the automation index
@@ -456,9 +458,10 @@ end
 
 --------------------------------------------------------------------------------
 
--- figure out the device by supplying a parameter 
+--- Figure out the device by supplying a parameter 
 -- @param track_idx (number)
 -- @param parameter (DeviceParameter)
+-- @return TrackDevice
 
 function Automation:get_device_by_param(track_idx,parameter)
   TRACE("Automation:get_device_by_param",track_idx,parameter)
@@ -477,7 +480,7 @@ end
 
 --------------------------------------------------------------------------------
 
--- stop all currently recording automation
+--- Stop all currently recording automation
 
 function Automation:stop_automation()
   TRACE("Automation:stop_automation()")
@@ -489,7 +492,7 @@ end
 
 --------------------------------------------------------------------------------
 
--- call this from the host application 
+--- Attach to song (call this from the host application)
 
 function Automation:attach_to_song(new_song)
   TRACE("Automation:attach_to_song() new_song",new_song)
@@ -597,17 +600,20 @@ end
 
 --------------------------------------------------------------------------------
 
+--- Remove all notifiers associated with this class instance
+-- @param new_song (Boolean) if defined, do not attempt to remove notifiers
+
 function Automation:_remove_notifiers(new_song)
   TRACE("Automation:_remove_notifiers()",new_song)
 
-  if (not new_song) then
-    for _,autolane in ipairs(self._automations) do
+  for _,autolane in ipairs(self._automations) do
+    if (not new_song) then
       for __,observable in ipairs(autolane.observables) do
         --print("about to remove _automation_observable ",observable)
         pcall(function() observable:remove_notifier(self) end)
       end
-      autolane.observables:clear()
     end
+    autolane.observables:clear()
   end
 
 end

@@ -18,6 +18,11 @@ only if something has *actually* changed in the Display the update is performed.
 
 class 'Canvas' 
 
+--------------------------------------------------------------------------------
+
+--- Initialize the Canvas class
+-- @param device (Device) 
+
 function Canvas:__init(device)
   TRACE("Canvas:__init")
 
@@ -42,7 +47,9 @@ end
 
 --------------------------------------------------------------------------------
 
--- this should be called whenever the size of the parent UIComponent changes
+--- Call whenever the size of the parent UIComponent changes
+-- @param width (Number)
+-- @param height (Number)
 
 function Canvas:set_size(width,height)
   TRACE('Canvas:set_size',width,height)
@@ -89,7 +96,10 @@ end
 
 --------------------------------------------------------------------------------
 
--- write a single point to the canvas
+--- Write a single point to the canvas at the provided x/y coordinates
+-- @param point (CanvasPoint)
+-- @param x (Number) 
+-- @param y (Number)
 
 function Canvas:write(point,x,y)
   --TRACE("Canvas:write", point, x, y)
@@ -102,7 +112,8 @@ end
 
 --------------------------------------------------------------------------------
 
--- fill entire canvas with given point
+--- Fill/flood entire canvas with given point
+-- @param point (CanvasPoint)
 
 function Canvas:fill(point)
   for x = 1,self.width do
@@ -116,8 +127,11 @@ end
 
 --------------------------------------------------------------------------------
 
--- if point is different from existing value, mark the canvas as changed 
+--- If point is different from existing value, mark the canvas as changed 
 -- both color, text and value are considered when doing the comparison
+-- @param point (CanvasPoint)
+-- @param x (Number) 
+-- @param y (Number)
 
 function Canvas:check_delta(point,x,y)
 
@@ -133,7 +147,7 @@ end
 
 --------------------------------------------------------------------------------
 
--- after the display has finished drawing the object, this is called
+--- After the display has finished drawing the object, this is called
 -- to clear the delta buffer and mark the canvas as unchanged
 
 function Canvas:clear_delta()

@@ -40,6 +40,11 @@ Events
 
 class 'UIButton' (UIComponent)
 
+--------------------------------------------------------------------------------
+
+--- Initialize the UIButton class
+-- @param display (Duplex.Display)
+
 function UIButton:__init(display)
   TRACE('UIButton:__init')
 
@@ -66,8 +71,9 @@ end
 
 --------------------------------------------------------------------------------
 
--- user input via button
--- @return boolean, true when message was handled
+--- User pressed button
+-- @param msg (Duplex.Message)
+-- @return (Boolean), true when message was handled
 
 function UIButton:do_press(msg)
   TRACE("UIButton:do_press")
@@ -92,8 +98,9 @@ end
 
 --------------------------------------------------------------------------------
 
--- user input via button(s)
--- @return boolean, true when message was handled
+--- User released button
+-- @param msg (Duplex.Message)
+-- @return (Boolean), true when message was handled
 
 function UIButton:do_release(msg)
   TRACE("UIButton:do_release()")
@@ -117,8 +124,9 @@ end
 
 --------------------------------------------------------------------------------
 
--- user input via fader, dial
--- @return boolean, true when message was handled
+--- User changed value via fader, dial ...
+-- @param msg (Duplex.Message)
+-- @return (Boolean), true when message was handled
 
 function UIButton:do_change(msg)
   TRACE("UIButton:do_change()")
@@ -136,9 +144,11 @@ end
 
 --------------------------------------------------------------------------------
 
--- user input via (held) button
--- on_hold() is an optional handler, which is only supported by "button" input
--- @return boolean, true when message was handled
+--- User held button for a while (exact time is specified in preferences).
+--  Note that this event is only supported by controllers that transmit the 
+--  "release" event
+-- @param msg (Duplex.Message)
+-- @return (Boolean), true when message was handled
 
 function UIButton:do_hold(msg)
   TRACE("UIButton:do_hold()")
@@ -157,8 +167,12 @@ end
 
 --------------------------------------------------------------------------------
 
--- expanded UIComponent test
--- @return boolean, false when criteria is not met
+--- Expanded UIComponent test. Look for group name, event handlers, then 
+--  proceed with the standard UIComponent test
+-- @param group_name (String) control-map group name
+-- @param column (Number) 
+-- @param row (Number) 
+-- @return (Boolean), false when criteria is not met
 
 function UIButton:test(group_name,column,row)
 
@@ -183,8 +197,8 @@ end
 
 --------------------------------------------------------------------------------
 
--- shorthand method for setting the @foreground palette 
--- @param foreground (table), new color/text values
+--- Shorthand method for setting the foreground palette 
+-- @param fg_val (Table), new color/text values
 
 function UIButton:set(fg_val)
   TRACE("UIButton:set()",fg_val)
@@ -199,9 +213,9 @@ end
 
 --------------------------------------------------------------------------------
 
--- easy way to animate the appearance of the button
--- @param delay, number of ms between updates
--- @param ..., palette entries
+--- Easy way to animate the appearance of the button
+-- @param delay (Number) number of ms between updates
+-- @param ... (Vararg) palette entries
 
 function UIButton:flash(delay, ...)
   TRACE("UIButton:flash()",delay,arg)
@@ -219,6 +233,8 @@ function UIButton:flash(delay, ...)
 end
 
 --------------------------------------------------------------------------------
+
+--- Update the appearance of the button 
 
 function UIButton:draw()
   --TRACE("UIButton:draw()")
@@ -245,8 +261,10 @@ end
 
 --------------------------------------------------------------------------------
 
--- force-update controls that are handling their internal state by themselves,
--- achieved by changing the canvas so that it get's painted the next time...
+--- Force the button to update: some controllers handle their internal state 
+-- by themselves, and as a result, we never know their actual state. For those
+-- controls, we "force-update" them by changing the canvas so that it always 
+-- get output the next time the display is updated
 
 function UIButton:force_update()
   TRACE("UIButton:force_update()")
@@ -258,6 +276,8 @@ function UIButton:force_update()
 end
 
 --------------------------------------------------------------------------------
+
+--- Add event listeners to the button (press, release, change, hold)
 
 function UIButton:add_listeners()
 
@@ -282,6 +302,9 @@ end
 
 
 --------------------------------------------------------------------------------
+
+--- Remove previously attached event listeners
+-- @see UIButton:add_listeners
 
 function UIButton:remove_listeners()
 

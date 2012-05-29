@@ -14,6 +14,11 @@ Inheritance: UIComponent > UISlider > UIPitchBend
 
 class 'UIPitchBend' (UISlider)
 
+--------------------------------------------------------------------------------
+
+--- Initialize the UIPitchBend class
+-- @param display (Duplex.Display)
+
 function UIPitchBend:__init(display)
   TRACE("UIPitchBend:__init()",display)
 
@@ -21,6 +26,9 @@ function UIPitchBend:__init(display)
 
 end
 
+--------------------------------------------------------------------------------
+
+--- Add event listener (pitchbend)
 
 function UIPitchBend:add_listeners()
   TRACE("UIPitchBend:add_listeners()")
@@ -31,6 +39,11 @@ function UIPitchBend:add_listeners()
 	UISlider.add_listeners(self)
 
 end
+
+--------------------------------------------------------------------------------
+
+--- Remove previously attached event listener
+-- @see UIPitchBend:add_listeners
 
 function UIPitchBend:remove_listeners()
   TRACE("UIPitchBend:remove_listeners()")

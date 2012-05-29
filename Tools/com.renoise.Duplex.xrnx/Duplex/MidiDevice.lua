@@ -15,6 +15,14 @@ Requires: Globals, ControlMap, Message
 
 class 'MidiDevice' (Device)
 
+--------------------------------------------------------------------------------
+
+--- Initialize MidiDevice class
+-- @param display_name (String) the friendly name of the device
+-- @param message_stream (MessageStream) the msg-stream we should attach to
+-- @param port_in (String) the MIDI input port 
+-- @param port_out (String) the MIDI output port 
+
 function MidiDevice:__init(display_name, message_stream, port_in, port_out)
   TRACE("MidiDevice:__init()",display_name, message_stream, port_in, port_out)
 
@@ -52,6 +60,8 @@ end
 
 --------------------------------------------------------------------------------
 
+--- Attempt to open the device MIDI ports
+
 function MidiDevice:open()
 
   local input_devices = renoise.Midi.available_input_devices()
@@ -76,6 +86,8 @@ end
 
 --------------------------------------------------------------------------------
 
+--- Attempt to release the device MIDI ports
+
 function MidiDevice:release()
   TRACE("MidiDevice:release()")
 
@@ -94,9 +106,10 @@ end
 
 --------------------------------------------------------------------------------
 
--- receive MIDI from device
--- construct a string identical to the <Param> value attribute
--- and use this to locate the parameter in the control-map
+--- Invoked when we receive MIDI from device, construct a string identical 
+-- to the <Param> value attribute, which is then used to locate the parameter 
+-- in the control-map
+-- @param message (Table/MIDIMessage)
 
 function MidiDevice:midi_callback(message)
   TRACE(("MidiDevice: %s received MIDI %X %X %X"):format(
@@ -308,6 +321,9 @@ end
 
 --------------------------------------------------------------------------------
 
+--- Invoked when we receive sysex data from the device
+-- @param message (Table/MIDIMessage)
+
 function MidiDevice:sysex_callback(message)
   TRACE("MidiDevice:sysex_callback()",message)
 
@@ -321,10 +337,10 @@ end
 
 --------------------------------------------------------------------------------
 
---  send CC message
---  @param number (int) the control-number (0-127)
---  @param value (int) the control-value (0-127)
---  @param channel (int, optional) the midi channel (1-16)
+---  Send CC message to device
+--  @param number (Number/7BitInt) the control-number 
+--  @param value (Number/7BitInt) the control-value
+--  @param channel (Number) the midi channel, between 1-16
 
 function MidiDevice:send_cc_message(number,value,channel)
   TRACE("MidiDevice:send_cc_message()",number,value,channel)
@@ -364,8 +380,7 @@ end
 
 --------------------------------------------------------------------------------
 
---  send sysex message
---  the method will take care of adding the initial 0xF0 and 0xF7 values
+---  Send sysex message to device (adding the initial 0xF0 and 0xF7 values)
 --  @param ... (vararg) values to send, e.g. 0x47, 0x7F, 0x7B,...
 
 function MidiDevice:send_sysex_message(...)
@@ -396,6 +411,10 @@ end
 
 --------------------------------------------------------------------------------
 
+--- Send Pitch-Bend message to device
+-- @param value (Number) the pitch-bend value
+-- @param channel (Number) the MIDI channel
+
 function MidiDevice:send_pitch_bend_message(value,channel)
   TRACE("MidiDevice:send_pitch_bend_message()",value,channel)
 
@@ -421,6 +440,11 @@ function MidiDevice:send_pitch_bend_message(value,channel)
 end
 
 --------------------------------------------------------------------------------
+
+--- Send note message to device
+-- @param key (Number) the MIDI note pitch 
+-- @param velocity (Number) the MIDI note velocity
+-- @param channel (Number) the MIDI channel
 
 function MidiDevice:send_note_message(key,velocity,channel)
 
@@ -459,9 +483,9 @@ end
 
 --------------------------------------------------------------------------------
 
--- convert MIDI note to string, range 0 (C--1) to 120 (C-9)
--- @param key: the key (7-bit integer)
--- @return string (e.g. "C#5")
+--- Convert MIDI note to control-map string, range 0 (C--1) to 120 (C-9)
+-- @param int (Number/7BitInt): the MIDI note key
+-- @return String
 
 function MidiDevice:_note_to_string(int)
   local key = (int%12)+1
@@ -472,6 +496,9 @@ end
 
 --------------------------------------------------------------------------------
 
+--- Convert MIDI CC value to string, e.g. "CC#%d"
+-- @param int (Number/7BitInt) the CC number
+
 function MidiDevice:_midi_cc_to_string(int)
   return string.format("CC#%d",int)
 end
@@ -479,9 +506,9 @@ end
 
 --------------------------------------------------------------------------------
 
--- Extract MIDI message note-value (range C--1 to C9)
--- @param str  - string, e.g. "C-4" or "F#-1"
--- @return #note (7-bit integer)
+--- Extract MIDI note-value (range C--1 to C9)
+-- @param str (String), control-map value such as "C-4" or "F#-1"
+-- @return (Number) the MIDI note pitch, 0-127
 
 function MidiDevice:extract_midi_note(str) 
   TRACE("MidiDevice:extract_midi_note()",str)
@@ -507,9 +534,9 @@ end
 
 --------------------------------------------------------------------------------
 
--- Extract MIDI CC number (range 0-127)
+--- Extract MIDI CC number (range 0-127)
 -- @param str (string, control-map value attribute)
--- @return #cc (integer) 
+-- @return (Number) the MIDI CC number, 0-127
 
 function MidiDevice:extract_midi_cc(str)
   TRACE("MidiDevice:extract_midi_cc()",str)
@@ -521,10 +548,9 @@ end
 --------------------------------------------------------------------------------
 
 
--- Determine channel for the given message
--- Use the default port if nothing is explicitly set
--- @param str (string, control-map value)
--- @return integer (1-16)
+--- Determine channel for the given message (use default port if not specified)
+-- @param str (String), control-map value)
+-- @return (Number) the MIDI channel, 1-16
 
 function MidiDevice:extract_midi_channel(str)
   TRACE("MidiDevice:extract_midi_channel()",str)
@@ -535,10 +561,11 @@ end
 
 --------------------------------------------------------------------------------
 
--- Convert the point to an output value
+--- Convert the point to an output value
 -- @param pt (CanvasPoint)
--- @param elm - control-map parameter
--- @param ceiling - the UIComponent ceiling value
+-- @param elm (Table), control-map parameter
+-- @param ceiling (Number), the UIComponent ceiling value
+-- @return (Number), the output value
 
 function MidiDevice:point_to_value(pt,elm,ceiling)
   --TRACE("MidiDevice:point_to_value()",pt,elm,ceiling)

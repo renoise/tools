@@ -117,6 +117,7 @@ SOLO_STATE_OFF = 2
 TRACK_TYPE_SEQUENCER = 1
 TRACK_TYPE_MASTER = 2
 TRACK_TYPE_SEND = 3
+TRACK_TYPE_GROUP = 4
 
 --------------------------------------------------------------------------------
 -- device configurations & preferences
@@ -551,7 +552,7 @@ end
 
 local _trace_filters = nil
 --local _trace_filters = {"^OscVoiceMgr","^Keyboard"}
---local _trace_filters = {"^GridPie"}
+--local _trace_filters = {"^GridPie","^Scheduler"}
 --local _trace_filters = {".*"}
 
 --------------------------------------------------------------------------------

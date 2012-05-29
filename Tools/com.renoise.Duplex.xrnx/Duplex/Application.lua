@@ -13,12 +13,12 @@ A generic application class for Duplex
 
 class 'Application'
 
--- constructor 
--- @process BrowserProcess
--- @mappings (table, imported from the device configuration)
--- @palette (table, imported from the device configuration)
--- @options (table, imported from the application default options)
--- @cfg_name (string, imported from the application default options)
+--- initialize the Application class
+-- @param process BrowserProcess
+-- @param mappings (table, imported from the device configuration)
+-- @param palette (table, imported from the device configuration)
+-- @param options (table, imported from the application default options)
+-- @param cfg_name (string, imported from the application default options)
 
 function Application:__init(process,mappings,options,cfg_name,palette)
   TRACE("Application:__init()")
@@ -94,7 +94,7 @@ end
 
 --------------------------------------------------------------------------------
 
--- start/resume application
+--- Start/resume application
 
 function Application:start_app()
   TRACE("Application:start_app()")
@@ -129,7 +129,7 @@ end
 
 --------------------------------------------------------------------------------
 
--- stop application
+--- Stop application
 
 function Application:stop_app()
   TRACE("Application:stop_app()")
@@ -144,18 +144,20 @@ end
 
 --------------------------------------------------------------------------------
 
--- create application
+--- Create application (build interface)
+-- @return (Boolean) true when application was built
 
 function Application:_build_app()
   TRACE("Application:_build_app()")
   
+  return true
 
 end
 
 
 --------------------------------------------------------------------------------
 
--- destroy application
+--- Destroy application (remove listeners, set to inactive state)
 
 function Application:destroy_app()
   TRACE("Application:destroy_app()")
@@ -175,8 +177,8 @@ end
 
 --------------------------------------------------------------------------------
 
--- handle periodic updates (many times per second)
--- nothing is done by default
+--- Handle idle updates for the application
+-- (nothing is done by default)
 
 function Application:on_idle()
   -- TRACE("Application:on_idle()")
@@ -191,7 +193,7 @@ end
 
 --------------------------------------------------------------------------------
 
--- called when releasing the active document
+--- Called when releasing the active document
 
 function Application:on_release_document()
   TRACE("Application:on_release_document()")
@@ -202,7 +204,7 @@ end
 
 --------------------------------------------------------------------------------
 
--- called when a new document becomes available
+--- Called when a new document becomes available
 
 function Application:on_new_document()
   TRACE("Application:on_new_document()")
@@ -213,7 +215,7 @@ end
 
 --------------------------------------------------------------------------------
 
--- receive keypress events from the Duplex Browser dialog
+--- Receive keypress events from the Duplex Browser dialog
 -- @param key (table) forwarded from the keyhandler 
 -- @return (boolean) if false, key event is not forwarded to Renoise
 
@@ -228,7 +230,7 @@ end
 
 --------------------------------------------------------------------------------
 
--- assign matching group-names
+--- Assign matching group-names
 
 function Application:_apply_mappings(mappings)
   TRACE("Application:_apply_mappings",mappings)
@@ -252,7 +254,7 @@ end
 
 --------------------------------------------------------------------------------
 
--- assign matching palette entries
+--- Assign matching palette entries
 
 function Application:_apply_palette(palette)
   TRACE("Application:_apply_palette",palette)
@@ -274,7 +276,7 @@ end
 
 --------------------------------------------------------------------------------
 
--- check mappings: should be called before application is started
+--- Check mappings: should be called before application is started
 -- @return boolean (false if missing group-names were encountered)
 
 function Application:_check_mappings(mappings)
@@ -304,7 +306,7 @@ end
 
 --------------------------------------------------------------------------------
 
--- create application options dialog
+--- Create application options dialog
 
 function Application:_build_options(process)
   TRACE("Application:_build_options")
@@ -368,7 +370,7 @@ end
 --                         Private Helper Functions
 --------------------------------------------------------------------------------
 
--- build a row of option controls
+--- Build a row of option controls
 -- @return ViewBuilder view
 
 function Application:_add_option_row(t,key,process)
@@ -397,9 +399,11 @@ end
 
 --------------------------------------------------------------------------------
 
--- set option value 
--- @param key, val: the key/value to change
--- @process (BrowserProcess) supply this parameter to update permanently
+--- Set option value 
+-- @param key (String) the key to change 
+-- @param val (Number) the value to change
+-- @param process (BrowserProcess) supply this parameter to modify the 
+--  persistent settings
 
 function Application:_set_option(key, val, process)
   TRACE("Application:_set_option()",key, val, process)
@@ -440,7 +444,7 @@ end
 
 --------------------------------------------------------------------------------
 
--- register a UIComponent so we can automatically remove it when exiting
+--- Register a UIComponent so we can automatically remove it when exiting
 -- note that the display might not be present, so use with caution
 
 function Application:_add_component(c)
@@ -456,6 +460,8 @@ end
 
 --------------------------------------------------------------------------------
 
+--- Prints the type of application (class name)
+
 function Application:__tostring()
   return type(self)
 end  
@@ -463,8 +469,9 @@ end
 
 --------------------------------------------------------------------------------
 
+-- Compare application to another class instance (check for object identity)
+
 function Application:__eq(other)
-  -- only check for object identity
   return rawequal(self, other)
 end  
 

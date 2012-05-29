@@ -37,6 +37,10 @@ Notes on the XML syntax:
 
 class 'ControlMap' 
 
+--------------------------------------------------------------------------------
+
+--- Initializate the ControlMap class
+
 function ControlMap:__init()
   TRACE("ControlMap:__init")
 
@@ -62,8 +66,8 @@ end
 
 --------------------------------------------------------------------------------
 
--- load_definition: load and parse xml
--- @param file_path (string) the name of the file, e.g. "my_map.xml"
+--- Load_definition: load and parse xml
+-- @param file_path (String) the name of the file, e.g. "my_map.xml"
 
 function ControlMap:load_definition(file_path)
   TRACE("ControlMap:load_definition",file_path)
@@ -107,7 +111,9 @@ end
 
 --------------------------------------------------------------------------------
 
--- parse the supplied xml string (reset the counter first)
+--- Parse the supplied xml string (reset the counter first)
+-- @param control_map_name (String) path to XML file
+-- @param xml_string (String) the XML string
 
 function ControlMap:parse_definition(control_map_name, xml_string)
   --TRACE("ControlMap:parse_definition",control_map_name, xml_string)
@@ -135,7 +141,9 @@ end
 
 --------------------------------------------------------------------------------
 
--- retrieve <param> by position within group
+--- Retrieve <param> by position within group
+-- @param index (Number) the index/position
+-- @param group_name (String) the control-map group name, e.g. "Encoders"
 -- @return the <param> attributes array
 
 function ControlMap:get_indexed_element(index,group_name)
@@ -150,7 +158,9 @@ end
 
 --------------------------------------------------------------------------------
 
--- parse a string like this "4,4,0" into a colorspace table
+--- Parse a string into a colorspace table
+-- @param str (String) a comma-separated string of RGB values, e.g. "4,4,0" 
+-- @return Table
 
 function ControlMap:import_colorspace(str)
   TRACE("ControlMap:import_colorspace",str)
@@ -165,14 +175,15 @@ end
 
 --------------------------------------------------------------------------------
 
--- get_params_by_value() 
--- used by the MidiDevice to retrieves a parameter by it's note/cc-value-string
--- the function will match values on the default channel, if not defined:
--- "CC#105|Ch1" will match both "CC#105|Ch1" and "CC#105" 
--- also, we have wildcard support: 
+--- Get parameters by value: 
+-- used by the MidiDevice to retrieves a parameter by it's note/cc-value-string.
+-- The function will match values on the default channel, if not defined:
+-- "CC#105|Ch1" will match both "CC#105|Ch1" and "CC#105". 
+-- Also, we have wildcard support: 
 -- "C#*|Ch1" will match both "C#1|Ch1" and "C#5" 
 -- @param str (string, control-map value attribute)
--- @return table of matched parameters
+-- @param msg_context (String/Enum) the message context, e.g. MIDI_NOTE_MESSAGE
+-- @return Table containing matched parameters
 
 function ControlMap:get_params_by_value(str,msg_context)
   TRACE("ControlMap:get_params_by_value",str,msg_context)
@@ -238,7 +249,7 @@ end
 
 --------------------------------------------------------------------------------
 
--- get_osc_param() - used for parsing OSC messages
+--- Get OSC parameters: 
 -- retrieve a parameter by matching it's "value" or "action" attribute, 
 -- with pattern-matching for particular types of values:
 -- "/press 1 %i" matches "/press 1 1" but not "/press 1 A"
@@ -249,7 +260,7 @@ end
 -- transmit a different outgoing than incoming value)
 -- 
 -- @param str (string, control-map value/action attribute)
--- @return  <Param> node as table (only the first match is returned),
+-- @return  Table (<Param> node),
 --          values (table), if matched against a wildcard,
 --          wildcard_idx (integer), the matched index
 --          replace_char (string), the characters to insert
@@ -356,7 +367,9 @@ end
 
 --------------------------------------------------------------------------------
 
--- return number of columns for the provided group
+--- Count number of columns for the provided group
+-- @param group_name (String) the control-map group name, e.g. "Encoders"
+-- @return Number
 
 function ControlMap:count_columns(group_name)
   TRACE("ControlMap:count_columns",group_name)
@@ -372,7 +385,9 @@ end
 
 --------------------------------------------------------------------------------
 
--- return number of rows for the provided group
+--- Count number of rows for the provided group
+-- @param group_name (String) the control-map group name, e.g. "Encoders"
+-- @return Number
 
 function ControlMap:count_rows(group_name)
   TRACE("ControlMap:count_rows",group_name)
@@ -388,7 +403,9 @@ end
 
 --------------------------------------------------------------------------------
 
--- get number of parameters in group
+--- Count number of parameters in group
+-- @param group_name (String) the control-map group name, e.g. "Encoders"
+-- @return Number
 
 function ControlMap:get_group_size(group_name)
   TRACE("ControlMap:get_group_size",group_name)
@@ -399,9 +416,10 @@ end
 
 --------------------------------------------------------------------------------
 
--- get width/height of provided group
--- @group_name (string) the group-name we want to match
--- @return width/height or nil if not matched
+--- Get width/height of provided group
+-- @param group_name (String) the control-map group name, e.g. "Encoders"
+-- @return width (or nil if not matched)
+-- @return height (or nil if not matched)
 
 function ControlMap:get_group_dimensions(group_name)
   
@@ -420,7 +438,9 @@ end
 
 --------------------------------------------------------------------------------
 
--- test if the group describe a grid (columns, with each member being a button)
+--- Test if the group describe a grid group 
+-- (meaning: it contains columns, and each member is a button)
+-- @param group_name (String) the control-map group name, e.g. "Encoders"
 -- @return boolean
 
 function ControlMap:is_grid_group(group_name)
@@ -454,10 +474,10 @@ end
 
 --------------------------------------------------------------------------------
 
--- test if the parameter describes a button
--- @param group_name (string, control-map group name)
--- @param index (integer, index within group)
--- @return boolean (false if not matched)
+--- Test if the parameter describes a button
+-- @param group_name (String) the control-map group name, e.g. "Encoders"
+-- @param index (Number/Int) index within group
+-- @return (Boolean) true if matched, false if not 
 
 function ControlMap:is_button(group_name,index)
   
@@ -487,6 +507,8 @@ end
 
 --------------------------------------------------------------------------------
 
+-- Internal method for reading a file into a string
+
 function ControlMap:read_file(file_path)
   TRACE("ControlMap:read_file",file_path)
 
@@ -505,8 +527,8 @@ end
 
 --------------------------------------------------------------------------------
 
--- Determine the type of message (OSC/Note/CC)
--- @param str (string, control-map value)
+--- Determine the type of message (OSC/Note/CC)
+-- @param str (String), supply a control-map value such as "C#4"
 -- @return integer (e.g. MIDI_NOTE_MESSAGE)
 
 function ControlMap:determine_type(str)
@@ -547,10 +569,12 @@ end
 
 --------------------------------------------------------------------------------
 
--- Parse the control-map, and add runtime
--- information (element id's and group names)
+--- Parse the control-map into a table
+-- (add meta-info - such as unique ids - while parsing)
+-- @param str (String) the xml string
+-- @return Table
 
-function ControlMap:_parse_xml(s)
+function ControlMap:_parse_xml(str)
   TRACE('ControlMap:_parse_xml(...)')
 
   local stack = {}
@@ -560,9 +584,9 @@ function ControlMap:_parse_xml(s)
   local i, j = 1, 1
   local parameter_index = 1
   
-  local function parseargs(s)
+  local function parseargs(str)
     local arg = {}
-    string.gsub(s, "([%w_]+)=([\"'])(.-)%2", function (w, _, a)
+    string.gsub(str, "([%w_]+)=([\"'])(.-)%2", function (w, _, a)
       arg[w] = a
     end)
 
@@ -573,13 +597,13 @@ function ControlMap:_parse_xml(s)
     return arg
   end
 
-  local function bool(s)
-    return (s=="true") and true or false
+  local function bool(str)
+    return (str=="true") and true or false
   end
   
   while true do
     local ni,j,c,label,xarg, empty = string.find(
-      s, "<(%/?)([%w:]+)(.-)(%/?)>", i)
+      str, "<(%/?)([%w:]+)(.-)(%/?)>", i)
 
     if (not ni) then 
       break 
@@ -589,7 +613,7 @@ function ControlMap:_parse_xml(s)
       rprint(xarg)
       ]]
     
-    local text = string.sub(s, i, ni - 1)
+    local text = string.sub(str, i, ni - 1)
     
     if (not string.find(text, "^%s*$")) then
       table.insert(top, text)
@@ -706,7 +730,7 @@ function ControlMap:_parse_xml(s)
     i = j + 1
   end
   
-  local text = string.sub(s, i)
+  local text = string.sub(str, i)
   
   if (not string.find(text, "^%s*$")) then
     table.insert(stack[#stack], text)

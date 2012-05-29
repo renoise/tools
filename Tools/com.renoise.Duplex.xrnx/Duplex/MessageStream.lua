@@ -27,6 +27,11 @@ recieving it's input from several devices.
 
 class 'MessageStream' 
 
+--------------------------------------------------------------------------------
+
+--- Initialize the MessageStream class
+-- @param process (BrowserProcess) reference to BrowserProcess
+
 function MessageStream:__init(process)
   TRACE('MessageStream:__init')
 
@@ -60,13 +65,16 @@ end
 
 --------------------------------------------------------------------------------
 
+--- Retrieve the button hold time from the global preferences
+-- @return Number
+
 function MessageStream:_get_button_hold_time()
   return duplex_preferences.button_hold_time.value
 end
 
 --------------------------------------------------------------------------------
 
--- on_idle() : check if buttons have been pressed for some time 
+--- The MessageStream idle time method, checks for held buttons
 
 function MessageStream:on_idle()
   --TRACE("MessageStream:on_idle()")
@@ -88,10 +96,10 @@ end
 
 --------------------------------------------------------------------------------
 
--- add event listener 
--- @param obj (UIComponent)
--- @param evt_type (DEVICE_EVENT_[...])
--- @param handler (function)
+--- Add an event listener (used by UIComponents)
+-- @param obj (UIComponent) the UIComponent instance
+-- @param evt_type (Enum) event type, e.g. DEVICE_EVENT_BUTTON_PRESSED
+-- @param handler (Function) reference to the handling method
 
 function MessageStream:add_listener(obj,evt_type,handler)
   TRACE('MessageStream:add_listener:'..evt_type)
@@ -134,8 +142,10 @@ end
 
 --------------------------------------------------------------------------------
 
--- remove event listener
--- @return (boolean) true if successfull. false if not
+--- Remove event listener from previously attached UIComponent
+-- @param obj (UIComponent) the UIComponent instance
+-- @param evt_type (Enum) event type, e.g. DEVICE_EVENT_BUTTON_PRESSED
+-- @return (Boolean) true if successfull. false if not
 
 function MessageStream:remove_listener(obj,evt_type)
   TRACE("MessageStream:remove_listener:",obj,evt_type)
@@ -186,9 +196,11 @@ end
 
 --------------------------------------------------------------------------------
 
--- here we receive a message from the device, and pass it to all the relevant
+--- Here we receive a message from the device, and pass it to all the relevant
 -- UIComponents. If a listener's handler method actively reject the message 
--- we can instead choose to pass the message to Renoise (via osc_client)
+-- (by explicitly returning false in the event-handling method), we instead 
+-- (can choose to) pass the message on to Renoise as a MIDI message
+-- @param msg (Message)
 
 function MessageStream:input_message(msg)
   TRACE("MessageStream:input_message()",msg)
@@ -303,10 +315,10 @@ end
 
 --------------------------------------------------------------------------------
 
--- handle or pass: invoke event handlers or pass on to Renoise 
--- valid msg context: MIDI_NOTE_MESSAGE
+--- Handle or pass: invoke event handlers or pass on to Renoise as MIDI
+-- (only valid msg context is MIDI_NOTE_MESSAGE)
 -- @param msg (Message)
--- @param listeners (table), listener methods
+-- @param listeners (Table), listener methods
 
 function MessageStream:_handle_or_pass(msg,listeners)
 
@@ -338,7 +350,9 @@ end
 
 --------------------------------------------------------------------------------
 
--- loop through listeners, invoke event handler methods
+--- Loop through listeners, invoke event handler methods
+-- @param msg (Message)
+-- @param listeners (Table)
 -- @return boolean, true when message was handled, false if handler didn't 
 --    exist, or (any) handler actively rejected the message 
 
@@ -367,6 +381,11 @@ The Message class is a container for messages, closely related to the ControlMap
 
 
 class 'Message' 
+
+--------------------------------------------------------------------------------
+
+--- Initialize Message class
+-- @param device (Device)
 
 function Message:__init(device)
   TRACE('Message:__init')
@@ -427,6 +446,8 @@ end
 
 
 --------------------------------------------------------------------------------
+
+--- Print message (for debugging purposes)
 
 function Message:__tostring()
   return string.format("message: context:%s, group_name:%s, value:%s",

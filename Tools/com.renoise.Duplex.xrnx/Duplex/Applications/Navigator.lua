@@ -169,12 +169,12 @@ function Navigator:on_idle()
   local active_pattern = self:_is_active_seq_index()
   if active_pattern then
     if not self._active_pattern then
-      TRACE("Navigator: ** enter active pattern")
+      --TRACE("Navigator: ** enter active pattern")
       self._active_pattern = true
     end
   else
     if self._active_pattern then
-      TRACE("Navigator: ** exit active pattern")
+      --TRACE("Navigator: ** exit active pattern")
       self._blockpos:set_index(0,skip_event)
       self._active_pattern = false
     end
@@ -189,7 +189,7 @@ function Navigator:on_idle()
   -- update pattern position?
   if active_pattern and self._playing then
     local fit_line = math.ceil((line)/patt.number_of_lines*self._steps)
-    if (fit_line~=self._fit_line_pos) then
+    if fit_line and (fit_line~=self._fit_line_pos) then
       --TRACE("Navigator: ** changed position")
       self._blockpos:set_index(fit_line,skip_event)
       self._fit_line_pos = fit_line
@@ -211,14 +211,14 @@ function Navigator:on_idle()
    not self._pending_loop and
    not self._pending_index then
     if (self._loop_block_range_coeff~=actual_coeff) then
-      TRACE("Navigator: ** coeff changed",actual_coeff,self._loop_block_range_coeff)
+      --TRACE("Navigator: ** coeff changed",actual_coeff,self._loop_block_range_coeff)
       self._loop_block_range_coeff = actual_coeff
       update_requested = true
     end
     -- track changes to the blockloop start_pos
     local actual_start_line = song.transport.loop_block_start_pos.line
     if (self._loop_block_start_line~=actual_start_line) then
-      TRACE("Navigator: ** start_pos changed",actual_start_line,self._loop_block_start_line)
+      --TRACE("Navigator: ** start_pos changed",actual_start_line,self._loop_block_start_line)
       self._loop_block_start_line = actual_start_line
       update_requested = true
     end
@@ -246,10 +246,10 @@ function Navigator:on_idle()
   if (playing ~= self._playing) then
     self._playing = playing
     if (not self._playing) then
-      TRACE("Navigator: ** stopped playing")
+      --TRACE("Navigator: ** stopped playing")
       self._blockpos:set_index(0,skip_event)
-    else 
-      TRACE("Navigator: ** started playing")
+    elseif self._fit_line_pos then
+      --TRACE("Navigator: ** started playing")
       self._blockpos:set_index(self._fit_line_pos,skip_event)
     end
   end
@@ -259,11 +259,11 @@ function Navigator:on_idle()
     --TRACE("Navigator: ** pending loop")
     if self._pending_coeff or self._pending_loop then
       if self._pending_coeff and (actual_coeff~=self._pending_coeff) then
-        TRACE("Navigator: ** set coeff")
+        --TRACE("Navigator: ** set coeff")
         song.transport.loop_block_range_coeff = self._pending_coeff
       else
         if song.transport.loop_block_enabled then
-          TRACE("Navigator: ** set range")
+          --TRACE("Navigator: ** set range")
           self._pending_coeff = nil
           self._pending_loop = nil
           self:_set_blockloop_range(self._blockpos)
@@ -271,19 +271,19 @@ function Navigator:on_idle()
           -- try to enable loop (again)
           song.transport.loop_block_enabled = true
           self._loop_block_enabled = true
-          TRACE("Navigator: ** try to enable loop (again)")
+          --TRACE("Navigator: ** try to enable loop (again)")
         end
       end
     end
   elseif (self._pending_loop==false) then 
     if not song.transport.loop_block_enabled then
-      TRACE("Navigator: ** exit pending_loop ")
+      --TRACE("Navigator: ** exit pending_loop ")
       self._pending_loop = nil
     else
       -- try to disable loop (again)
       song.transport.loop_block_enabled = false
       self._loop_block_enabled = false
-      TRACE("Navigator: ** try to disable loop (again)")
+      --TRACE("Navigator: ** try to disable loop (again)")
     end
   end
 
@@ -291,7 +291,7 @@ function Navigator:on_idle()
   if self._pending_index and 
     song.transport.loop_block_enabled 
   then
-    TRACE("Navigator: ** set pending index",self._pending_index)
+    --TRACE("Navigator: ** set pending index",self._pending_index)
     self._blockpos:set_range(self._pending_index,self._pending_index,true)
     self:_set_blockloop_range(self._blockpos)
     self._pending_index = nil
@@ -578,7 +578,7 @@ function Navigator:_toggle_blockloop(obj)
   local rng = obj:get_range()
 
   if (rng[1]==0) and (rng[2]==0) then
-    TRACE("Navigator: ** blockloop disabled **")
+    --TRACE("Navigator: ** blockloop disabled **")
     renoise.song().transport.loop_block_enabled = false
     self._loop_block_enabled = false
     self._pending_loop = false
@@ -594,7 +594,7 @@ function Navigator:_toggle_blockloop(obj)
     if not renoise.song().transport.loop_block_enabled or 
       (playing_section~=curr_section) 
     then
-      TRACE("Navigator: ** blockloop enabled **")
+      --TRACE("Navigator: ** blockloop enabled **")
       renoise.song().transport.loop_block_enabled = true
       self._loop_block_enabled = true
     end
@@ -602,7 +602,7 @@ function Navigator:_toggle_blockloop(obj)
     if (renoise.song().transport.loop_block_range_coeff~=coeff) then
       renoise.song().transport.loop_block_range_coeff = coeff
       self._loop_block_range_coeff = coeff
-      TRACE("Navigator:_toggle_blockloop - coeff = ",coeff)
+      --TRACE("Navigator:_toggle_blockloop - coeff = ",coeff)
       -- wait in idle loop for this to be set...
       self._pending_coeff = coeff
     end
