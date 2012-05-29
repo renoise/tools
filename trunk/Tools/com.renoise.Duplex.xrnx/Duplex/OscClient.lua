@@ -6,7 +6,8 @@
 
 About 
 
-  OscClient is a simple OSC client that connect to the built-in OSC server in Renoise, producing realtime messages that trigger notes or send MIDI messages
+  OscClient is a simple OSC client that connect to the built-in OSC server in 
+  Renoise, producing realtime messages that trigger notes or send MIDI messages
 
 
 --]]
@@ -15,6 +16,12 @@ About
 --==============================================================================
 
 class 'OscClient' 
+
+--------------------------------------------------------------------------------
+
+--- Initialize the OscClient class
+-- @param osc_host (String) the host-address name (can be an IP address)
+-- @param osc_port (Number) the host port
 
 function OscClient:__init(osc_host,osc_port)
 
@@ -36,7 +43,11 @@ end
 
 --------------------------------------------------------------------------------
 
--- internal sample-trigger function, shared across applications
+--- Trigger instrument-note
+-- @param note_on (Boolean), true when note-on and false when note-off
+-- @param instr (Number), the Renoise instrument index 
+-- @param note (Number), the desired pitch
+-- @param velocity (Number), the desired velocity
 
 function OscClient:trigger_instrument(note_on,instr,track,note,velocity)
   TRACE("OscClient:trigger_instrument()",note_on,instr,track,note,velocity)
@@ -73,7 +84,8 @@ end
 
 --------------------------------------------------------------------------------
 
--- internal midi-message function, shared across applications
+--- Internal midi-message function, shared across applications
+-- @param t (Table/MIDIMessage), a ready-to-send MIDI message
 
 function OscClient:trigger_midi(t)
   TRACE("OscClient:trigger_midi()",t)
@@ -101,7 +113,7 @@ end
 
 --------------------------------------------------------------------------------
 
--- display usage instructions the first time the class is used
+--- Display usage instructions the first time the class is used
 
 function OscClient:_show_instructions()
 

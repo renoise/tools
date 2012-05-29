@@ -30,6 +30,11 @@ the UISlider or the UIButton class (both extensions of this class).
 
 class 'UIComponent' 
 
+--------------------------------------------------------------------------------
+
+--- Initialize the UIComponent class
+-- @param display (Duplex.Display)
+
 function UIComponent:__init(display)
   TRACE("UIComponent:__init")
   
@@ -69,17 +74,7 @@ end
 
 --------------------------------------------------------------------------------
 
--- get_msg()  returns the last broadcast event 
--- (used by event handlers)
-
-function UIComponent:get_msg()
-  return self._display.device.message_stream.current_message
-end
-
-
---------------------------------------------------------------------------------
-
---  request update on next refresh
+---  Request update on next refresh
 
 function UIComponent:invalidate()
   --TRACE("UIComponent:invalidate")
@@ -90,7 +85,7 @@ end
 
 --------------------------------------------------------------------------------
 
--- draw() - update the visual definition
+--- Update the control's visual appearance 
 
 function UIComponent:draw()
   --TRACE("UIComponent:draw")
@@ -103,22 +98,30 @@ end
 
 --------------------------------------------------------------------------------
 
+--- Attach listeners to the events 
+-- (applications override this with their own implementation)
+
 function UIComponent:add_listeners()
-  -- override to specify your own event handlers 
+
 end
 
 
 --------------------------------------------------------------------------------
+
+--- Remove previously attached event listeners
+-- (applications override this with their own implementation)
 
 function UIComponent:remove_listeners()
-  -- override to remove specified event handlers 
+
 end
 
 
 --------------------------------------------------------------------------------
 
--- set_size()  important to use this instead 
--- of setting width/height directly (because of canvas)
+--- Method to set the control's size in units - it is important to use this 
+-- instead of setting width/height directly, as this method will resize Canvas
+-- @param width (Number)
+-- @param height (Number)
 
 function UIComponent:set_size(width, height)
   TRACE("UIComponent:set_size", width, height)
@@ -137,7 +140,9 @@ end
 
 --------------------------------------------------------------------------------
 
--- set_pos()  set the position using x/y or index within group
+--- Set the position using x/y or index within group
+-- @param x (Number)
+-- @param y (Number)
 
 function UIComponent:set_pos(x,y)
   TRACE("UIComponent:set_pos", x, y)
@@ -167,8 +172,10 @@ end
 
 --------------------------------------------------------------------------------
 
--- perform simple "inside square" hit test
--- @return (boolean) true if inside area
+--- Perform simple "inside square" hit test
+-- @param x_pos (Number)
+-- @param y_pos (Number)
+-- @return (Boolean) true if inside area
 
 function UIComponent:test(x_pos, y_pos)
 --TRACE("UIComponent:test(",x_pos, y_pos,")")
@@ -193,8 +200,8 @@ end
 
 --------------------------------------------------------------------------------
 
--- set palette, invalidate if changed
--- @palette: a table of values, e.g {foreground={color={0x00,0x00,0x00}}}
+--- Set palette, invalidate if changed
+-- @param palette (Table), e.g {foreground={color={0x00,0x00,0x00}}}
 
 function UIComponent:set_palette(palette)
   TRACE("UIComponent:set_palette()",palette)
@@ -226,13 +233,18 @@ end
 
 --------------------------------------------------------------------------------
 
+--- Compare with another instance (only check for object identity)
+-- @param other (UIComponent) another UIComponent instance
+-- @return Boolean
+
 function UIComponent:__eq(other)
-  -- only check for object identity
   return rawequal(self, other)
 end  
 
 
 --------------------------------------------------------------------------------
+
+--- Prints the type of UIComponent
 
 function UIComponent:__tostring()
   return type(self)

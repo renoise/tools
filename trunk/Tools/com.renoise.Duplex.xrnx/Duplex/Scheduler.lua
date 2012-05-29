@@ -14,6 +14,10 @@ The Scheduler class will execute tasks after a defined amount of time
 
 class 'Scheduler' 
 
+--------------------------------------------------------------------------------
+
+--- Initialize the Scheduler class
+
 function Scheduler:__init()
 	TRACE("Scheduler:__init()")
 
@@ -23,6 +27,8 @@ end
 
 
 --------------------------------------------------------------------------------
+
+--- Perform idle task (check when it's time to execute a task)
 
 function Scheduler:on_idle()
 
@@ -38,6 +44,12 @@ end
 
 --------------------------------------------------------------------------------
 
+--- Add a new task to the scheduler
+-- @param ref  (Object) the object to use as context (optional)
+-- @param func (Function) the function to call
+-- @param delay (Number) the delay before executing task
+-- @param ... (Vararg) variable number of extra arguments
+
 function Scheduler:add_task(ref,func,delay, ...)
   TRACE("Scheduler:add_task()",ref,func,delay)
 
@@ -49,6 +61,9 @@ end
 
 
 --------------------------------------------------------------------------------
+
+--- Remove a previously scheduled task 
+-- @param ref (ScheduledTask) reference to the task
 
 function Scheduler:remove_task(ref)
   TRACE("Scheduler:remove_task()",ref)
@@ -64,6 +79,9 @@ end
 
 
 --------------------------------------------------------------------------------
+
+--- Execute a given task (using the provided context or anonymously)
+-- @param task (ScheduledTask) reference to the task
 
 function Scheduler:_execute_task(task)
   TRACE("Scheduler:_execute_task",task)
@@ -82,6 +100,14 @@ end
 
 class 'ScheduledTask' 
 
+--------------------------------------------------------------------------------
+
+--- A class representing a scheduled task
+-- @param ref  (Object) the object to use as context (optional)
+-- @param func (Function) the function to call
+-- @param delay (Number) the delay before executing task
+-- @param args (Table) variable number of extra arguments
+
 function ScheduledTask:__init(ref, func, delay, args)
   TRACE("ScheduledTask:__init", ref, func, delay, args)
 
@@ -92,8 +118,6 @@ function ScheduledTask:__init(ref, func, delay, args)
 
 end
 
-
---------------------------------------------------------------------------------
 
 function ScheduledTask:__eq(other)
   return rawequal(self, other)

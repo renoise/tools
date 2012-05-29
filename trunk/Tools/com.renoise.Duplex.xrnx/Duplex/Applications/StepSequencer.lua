@@ -173,6 +173,7 @@ function StepSequencer:__init(process,mappings,options,cfg_name,palette)
   self.palette = {
     out_of_bounds     = { color={0x40,0x40,0x00}, text="·", val=false},
     slot_empty        = { color={0x00,0x00,0x00}, text="·", val=false},
+    slot_current      = { color={0x00,0x00,0x00}, text="·", val=false },
     slot_muted        = { color={0x40,0x00,0x00}, text="▫", val=false},
     slot_level_1      = { color={0x00,0x40,0xff}, text="▪", val=true},
     slot_level_2      = { color={0x00,0x80,0xff}, text="▪", val=true},
@@ -219,6 +220,16 @@ function StepSequencer:__init(process,mappings,options,cfg_name,palette)
   self._update_tracks_requested = false
   self._update_grid_requested = false
 
+  -- collect patterns indices with line_notifiers 
+  self._line_notifiers = table.create()
+
+  -- collect references to pattern-alias notifier methods
+  self._alias_notifiers = table.create()
+  
+  -- true when current track should be highlighted
+  -- (actual value is derived from the palette)
+  self._highlight_track = false
+
   -- the various controls
   self._buttons = {}
   self._level = nil
@@ -248,6 +259,14 @@ function StepSequencer:start_app()
 
   self._follow_player = renoise.song().transport.follow_player
 
+  -- determine if we should highlight the current track
+  if not table_compare(self.palette.slot_empty.color,self.palette.slot_current.color)
+    or (self.palette.slot_empty.text ~= self.palette.slot_current.text)
+    or (self.palette.slot_empty.val ~= self.palette.slot_current.val)
+  then
+    self._highlight_track = true
+  end
+
   -- update everything!
   self:_update_line_count()
   self:_update_track_count()
@@ -256,6 +275,14 @@ function StepSequencer:start_app()
 
 end
 
+--------------------------------------------------------------------------------
+
+function StepSequencer:stop_app()
+  
+  self:remove_line_notifiers()
+  Application.stop_app(self)
+
+end
 
 --------------------------------------------------------------------------------
 
@@ -526,21 +553,7 @@ function StepSequencer:_build_level()
         renoise.app():show_status(msg)
       end
       self._update_grid_requested = true
-      
-      -- draw buttons
-      local p = { }
-      if (newval == 0) then
-        p = table.rcopy(self.palette.slot_muted)
-      else 
-        p = self:_volume_palette(newval, 127)
-      end
-      --[[
-      c.palette.range = p
-      c:set_range(idx,obj._size)
-      c:invalidate()
-      ]]
-      c:set_palette({range = p})
-      c:set_range(idx,obj._size)
+      self:_draw_volume_slider(newval)
       return true
     end
     self:_add_component(c)
@@ -630,6 +643,12 @@ function StepSequencer:on_idle()
       function()
         TRACE("StepSequencer: pattern length changed")
         self._update_lines_requested = true
+        -- check if the edit-page exceed the new length 
+        local line_offset = self._edit_page*self.options.line_increment.value
+        local patt = renoise.song().patterns[self._current_pattern]
+        if (line_offset>patt.number_of_lines) then
+          self._edit_page = 0 -- reset
+        end
       end
     )
   end
@@ -791,6 +810,7 @@ function StepSequencer:_update_grid()
   local selected_pattern_lines = renoise.song().selected_pattern.number_of_lines
   for track_idx = (1 + self._track_offset),(self._track_count+self._track_offset) do
     local pattern_track = selected_pattern_tracks[track_idx]
+    local current_track = (track_idx==renoise.song().selected_track_index)
     for line_idx = (1 + line_offset),(self._line_count + line_offset) do
 
       local button = nil
@@ -806,7 +826,7 @@ function StepSequencer:_update_grid()
           (track_idx <= track_count) then
           note = pattern_track:line(line_idx).note_columns[1]
         end
-        self:_draw_grid_button(button, note)
+        self:_draw_grid_button(button,note,current_track)
       end
 
     end
@@ -838,6 +858,7 @@ end
 -- cutting all notes from a pattern, so we need it to be really simple
 
 function StepSequencer:_track_changes(pos)
+  TRACE("StepSequencer:_track_changes()",pos)
 
   if (self:_track_is_visible(pos.track)) and
     (self:_line_is_visible(pos.line)) then
@@ -890,10 +911,15 @@ function StepSequencer:_follow_track()
   if (page~=self._track_page) then
     self._track_page = page
     self._track_offset = page*page_width
-    self:_update_grid()
+    --self:_update_grid()
+    self._update_grid_requested = true
     if self._track_navigator then
       self._track_navigator:set_index(page,true)
     end
+  end
+
+  if self._highlight_track then
+    self._update_grid_requested = true
   end
 
 end
@@ -969,21 +995,6 @@ function StepSequencer:_attach_to_song()
     end
   )
 
-  -- monitor changes to the pattern 
-  song.selected_pattern_observable:add_notifier(
-    function()
-      -- remove existing line notifier (if it exists)
-      local patt = song.patterns[self._current_pattern]
-      if patt and (song.selected_pattern_index ~= self._current_pattern) and
-        (patt:has_line_notifier(self._track_changes,self)) then
-        patt:remove_line_notifier(self._track_changes,self)
-      end
-      self:_attach_line_notifier()
-    end
-  )
-
-  self:_attach_line_notifier()
-
   -- follow active track in Renoise
   song.selected_track_index_observable:add_notifier(
     function()
@@ -992,23 +1003,111 @@ function StepSequencer:_attach_to_song()
     end
   )
 
+  -- monitor changes to the pattern (line notifiers, aliases)
+  song.selected_pattern_observable:add_notifier(
+    function()
+      TRACE("song.selected_pattern_observable fired...")
+      local new_song = false
+      self:_attach_to_pattern(new_song,self._current_pattern)
+    end
+  )
+  local new_song = true
+  self:_attach_to_pattern(new_song,song.selected_pattern_index)
+
 
 end
 
 --------------------------------------------------------------------------------
 
--- attach line notifier (check for existing notifier first)
+function StepSequencer:_attach_to_pattern(new_song,patt_idx)
+  TRACE("StepSequencer:_attach_to_pattern()",new_song,patt_idx)
 
-function StepSequencer:_attach_line_notifier()
+  self:_attach_line_notifiers(new_song,patt_idx)
+  self:_attach_alias_notifiers(new_song,patt_idx)
 
-  local song = renoise.song()
-  local patt = song.patterns[song.selected_pattern_index]
-  if not (patt:has_line_notifier(self._track_changes,self))then
-    patt:add_line_notifier(self._track_changes,self)
+end
+
+--------------------------------------------------------------------------------
+
+--- Monitor the current pattern for changes to it's aliases
+
+function StepSequencer:_attach_alias_notifiers(new_song,patt_idx)
+  TRACE("StepSequencer:_attach_alias_notifiers()",new_song,patt_idx)
+
+  self:_remove_notifiers(new_song,self._alias_notifiers)
+
+  local rns = renoise.song()
+  local patt = rns.patterns[patt_idx]
+  for track_idx = 1,rns.sequencer_track_count do
+    local track = patt.tracks[track_idx]
+    self._alias_notifiers:insert(track.alias_pattern_index_observable)
+    track.alias_pattern_index_observable:add_notifier(self,
+      function(notification)
+        TRACE("StepSequencer - alias_pattern_index_observable fired...",notification)
+        local new_song = false
+        self:_attach_line_notifiers(new_song,renoise.song().selected_pattern_index)
+        self._update_tracks_requested = true
+      end
+    )
   end
 
 end
 
+--------------------------------------------------------------------------------
+
+--- Attach line notifiers to pattern 
+-- check for existing notifiers first, and remove those
+-- then add pattern notifiers to pattern (including aliased slots)
+
+function StepSequencer:_attach_line_notifiers(new_song,patt_idx)
+  TRACE("StepSequencer:_attach_line_notifiers()",new_song,patt_idx)
+
+  local rns = renoise.song()
+
+  self:remove_line_notifiers(new_song)
+
+  local patt = rns.patterns[patt_idx]
+  if not patt then
+    print("Couldn't attach line notifiers: pattern #",patt_idx,"does not exist")
+    return
+  end
+
+  local function attach_to_pattern_lines(patt_idx) 
+    TRACE("StepSequencer:_attach_line_notifiers() - attach_to_pattern",patt_idx)
+    if not (patt:has_line_notifier(self._track_changes,self))then
+      patt:add_line_notifier(self._track_changes,self)
+      self._line_notifiers:insert(patt_idx)
+    end
+  end
+
+  for track_idx = 1,rns.sequencer_track_count do
+    local alias_idx = patt.tracks[track_idx].alias_pattern_index
+    if (alias_idx~=0) then
+      attach_to_pattern_lines(alias_idx)
+    else
+      attach_to_pattern_lines(patt_idx)
+    end
+  end
+
+end
+
+--------------------------------------------------------------------------------
+
+--- Remove currently attached line notifiers 
+
+function StepSequencer:remove_line_notifiers(new_song)
+  TRACE("StepSequencer:remove_line_notifiers()",new_song)
+
+  local rns = renoise.song()
+  for patt_idx in ipairs(self._line_notifiers) do
+    local patt = rns.patterns[patt_idx]
+    TRACE("*** StepSequencer - remove_line_notifier from patt",patt,type(patt))
+    if patt and (type(patt)~="number") and (patt:has_line_notifier(self._track_changes,self)) then
+      patt:remove_line_notifier(self._track_changes,self)
+    end
+  end
+  self._line_notifiers = table.create()
+end
 
 --------------------------------------------------------------------------------
 
@@ -1017,6 +1116,7 @@ end
 function StepSequencer:on_new_document()
   TRACE("StepSequencer:on_new_document()")
 
+  local new_song = true
   self:_attach_to_song()
   self:_update_line_count()
   self:_update_track_count()
@@ -1046,6 +1146,15 @@ function StepSequencer:_process_grid_event(x,y, state, btn)
     return false 
   end
   
+  -- check if we are dealing with a group track
+  local track = renoise.song().tracks[track_idx]
+  if (track.type == TRACK_TYPE_GROUP) then
+    --print("Group tracks are ignored")
+    return
+  end
+
+  local current_track = (track_idx==renoise.song().selected_track_index)
+
   local note = renoise.song().selected_pattern.tracks[track_idx]:line(
     line_idx).note_columns[1]
 
@@ -1069,7 +1178,7 @@ function StepSequencer:_process_grid_event(x,y, state, btn)
         self._base_volume)
       self._toggle_exempt[x][y] = true
       -- and update the button ...
-      self:_draw_grid_button(btn, note)
+      self:_draw_grid_button(btn,note,current_track)
     end
       
   else -- release
@@ -1082,7 +1191,7 @@ function StepSequencer:_process_grid_event(x,y, state, btn)
         -- reset to "out of bounds" color
         note = nil
       end
-      self:_draw_grid_button(btn, note)
+      self:_draw_grid_button(btn,note,current_track)
     else
       self._toggle_exempt[x][y] = nil
     end
@@ -1123,13 +1232,19 @@ function StepSequencer:_copy_grid_button(lx,ly, btn)
 
   local note = renoise.song().selected_pattern.tracks[gx]:line(gy).note_columns[1]
   
+  if not note then
+    return false
+  end
   -- copy note to base note
   if (note.note_value < 120) then
     self:_set_basenote(note.note_value)
   end
   -- copy volume to base volume
-  if (note.volume_value <= 127) then
-    self._base_volume = note.volume_value
+  local note_vol = math.min(128,note.volume_value)
+  print("note.volume_value,note_vol",note.volume_value,note_vol)
+  if (note_vol <= 128) then
+    self._base_volume = note_vol
+    self:_draw_volume_slider(note_vol)
   end
   -- change selected instrument
   if (note.instrument_value < #renoise.song().instruments) then
@@ -1139,10 +1254,36 @@ function StepSequencer:_copy_grid_button(lx,ly, btn)
   return true
 end
 
+--------------------------------------------------------------------------------
+
+function StepSequencer:_draw_volume_slider(volume)
+  TRACE("StepSequencer:_draw_volume_slider()",volume)
+  
+  if self._level then
+
+    if not volume then
+      volume = self._base_volume
+    end 
+
+    local p = { }
+    if (volume == 0) then
+      p = table.rcopy(self.palette.slot_muted)
+    else 
+      p = self:_volume_palette(volume, 127)
+    end
+
+    local idx = self._level._size-math.floor((volume/127)*self._level._size)
+    --print("idx",idx)
+    self._level:set_palette({range = p})
+    self._level:set_range(idx,self._level._size)
+
+  end
+
+end
 
 --------------------------------------------------------------------------------
 
-function StepSequencer:_set_note(note_obj, note, instrument, volume)
+function StepSequencer:_set_note(note_obj,note,instrument,volume)
   note_obj.note_value = note
   note_obj.instrument_value = instrument
   note_obj.volume_value = volume
@@ -1160,13 +1301,17 @@ end
 
 -- assign color to button, based on note properties
 
-function StepSequencer:_draw_grid_button(button, note)
-  --TRACE("StepSequencer:_draw_grid_button()",button, note)
+function StepSequencer:_draw_grid_button(button,note,current_track)
+  TRACE("StepSequencer:_draw_grid_button()",button,note,current_track)
 
   
   if (note ~= nil) then
     if (note.note_value == 121) then
-      button:set(self.palette.slot_empty)
+      if current_track then
+        button:set(self.palette.slot_current)
+      else
+        button:set(self.palette.slot_empty)
+      end
     elseif (note.note_value == 120 or note.volume_value == 0) then
       button:set(self.palette.slot_muted)
     else
@@ -1215,6 +1360,27 @@ function StepSequencer:_transpose_basenote(steps)
   if (0 <= newval and newval < 120) then
     self:_set_basenote(newval)
   end
+end
+
+
+--------------------------------------------------------------------------------
+
+--- Detach all previously attached notifiers first
+-- but don't even try to detach when a new song arrived. old observables
+-- will no longer be alive then...
+-- @param new_song - boolean, true to leave existing notifiers alone
+-- @param observables - list of observables
+function StepSequencer:_remove_notifiers(new_song,observables)
+  TRACE("StepSequencer:_remove_notifiers()",new_song,observables)
+
+  if (not new_song) then
+    for _,observable in pairs(observables) do
+      pcall(function() observable:remove_notifier(self) end)
+    end
+  end
+    
+  observables:clear()
+
 end
 
 

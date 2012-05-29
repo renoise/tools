@@ -12,6 +12,11 @@ Inheritance: UIComponent > UIPad
 
 class 'UIPad' (UIComponent)
 
+--------------------------------------------------------------------------------
+
+--- Initialize the UIPad class
+-- @param display (Duplex.Display)
+
 function UIPad:__init(display)
   TRACE('UIPad:__init')
 
@@ -34,7 +39,8 @@ end
 
 --------------------------------------------------------------------------------
 
--- user input via control
+--- Value was changed
+-- @param msg (Duplex.Message)
 -- @return boolean, true when message was handled
 
 function UIPad:do_change(msg)
@@ -62,9 +68,10 @@ end
 
 --------------------------------------------------------------------------------
 
--- set value
--- @val (float) 
--- @skip_event (boolean) skip event handler
+--- Set the UIPads values
+-- @param val_x (Number) 
+-- @param val_y (Number) 
+-- @param skip_event (boolean) skip event handler
 -- @return boolean, true when value was set
 
 function UIPad:set_value(val_x,val_y,skip_event)
@@ -99,7 +106,7 @@ end
 
 --------------------------------------------------------------------------------
 
--- update the UIComponent canvas
+--- update the UIComponent canvas
 
 function UIPad:draw()
   TRACE("UIPad:draw()")
@@ -115,6 +122,8 @@ end
 
 --------------------------------------------------------------------------------
 
+--- Add event listener (change)
+
 function UIPad:add_listeners()
 
   self._display.device.message_stream:add_listener(
@@ -125,6 +134,9 @@ end
 
 
 --------------------------------------------------------------------------------
+
+--- Remove previously attached event listener
+-- @see UIPad:add_listeners
 
 function UIPad:remove_listeners()
 

@@ -3,6 +3,196 @@ Duplex Changelog
 ================================================================================
 
 --------------------------------------------------------------------------------
+Done 0.98
+--------------------------------------------------------------------------------
+
+-- Duplex 0.98b21 -----------
+
+TrackSelector
+* Fixed: application was updating display when stopped/paused
+
+StepSequencer
+* Support line_notifier when slots are aliased (also when created and/or removed)
+* Workflow: when navigating from a long pattern into a shorter one, start from the top (IOW, always restrict to the actual pattern length)
+* Fixed: update the volume-level display when base volume is changed
+* Fixed: selecting a group track could cause an error
+
+Navigator
+* Fixed: issue when loading a new song while Navigator was displaying nothing
+ (playback happening in a different pattern)
+
+GridPie
+* Fixed: retain mute state when toggling a pattern off (hold x2)
+* Fixed: track navigation could show wrong track on startup
+* Feature: turbocharged mode (using a pattern cache along with aliased slots)
+* Feature/workflow: (even) closer integration into Renoise
+ - detect changes to mute states in the Renoise matrix (mouse+alt-click)
+ - detect when a pattern has been scheduled in Renoise
+ - disable pattern loop to allow song to play, pattern-by-pattern (1)
+* Feature/workflow: ability to clone gridpie pattern while playing
+
+(1) This, and pattern scheduling via Renoise can be considered experimental as we can’t reliably detect a scheduled pattern. As a result, the first few note(s) might be skipped!
+
+Duplex Core
+* Fixed: bug when handling MIDI ports that are added/removed while running
+* Streamlined documentation with lua-doc friendly code formatting
+
+
+-- Duplex 0.98b20 -----------
+
+GridPie
+* Edit-sync: automatic background-synchronization of pattern data
+* Edit-sync: detect changes to the pattern length (source tracks)
+* Update grid display as content is created or removed in the matrix
+* Visualize the currently selected pattern (when the controller is able to)
+* Attempt to maintain pattern matrix slot mute states at all times (1)
+* Ability to clone the __GRID PIE__ pattern without stopping the application
+* New option: Beat-measures (related to the improved ‘keep the beat’ feature)
+* Fixed: removed display-glitch in the virtual UI (on startup)
+* Fixed: remove all notifiers when app is stopped
+
+PatternSequence
+* New application: simple sequence navigation (first/next/previous/last)
+
+StepSequencer
+* Fixed: focus bug when holding button
+
+(1) GridPie will attempt to retain as much information about the mute state of the song as possible, as this is restored when we exit GridPie. Note however that using drag-and-drop within the pattern sequence will cause the mute state to become lost for the rearranged patterns. Simple insert/clone and delete actions should not cause this to happen.
+
+
+-- Duplex 0.98b19 -----------
+
+Duplex core API
+* Display: removed some checks before updating hardware display
+
+Effect application
+* Fixed: device-navigator now works after switching song/document
+
+Monome XYPad control-map
+* Fixed, corrected tilt-sensors to use floating-point values - was incorrectly labelled as integers
+
+Monome XYPad config
+* Fixed incorrect placement of “focus button”, improved layout
+
+Launchpad Effect config
+* TrackSelector now using full width (8) as the default page-size
+
+XYPad application
+* Simplified setup: use unique, automatically-generated names to identify “managed” XYPads (no more need for manually specified id’s)
+
+-- Duplex 0.98b18 -----------
+
+Duplex core API
+* Applications: all palettes standardized
+* For devices with mixed colorspaces (APC20/40), prefer “tinting” over “theming”
+* Fixed error when using #CC buttons on a virtual display as keyboard keys (the issue affected AKAI LPD8)
+* OSC buffering: all but float-based arguments are now buffered
+
+StepSequencer
+* Mappings track, level, line, transpose are now optional. This should fix an issue with the nano2K config that didn’t specify ‘track’
+* Fixed: under certain conditions, could throw error on startup
+
+Grid Pie
+* Disable of “follow_player” now only enforced outside the grid-pie pattern
+
+Recorder
+* Fixed: under certain conditions, could throw error on startup
+
+Launchpad/Matrix config
+* Made “control loop+position” the default option
+
+
+-- Duplex 0.98b17 -----------
+
+* Fixme: Metronome: wrong placement on launchpad? #5 lights up #7 ??
+* Refactor: UIButton (replaces UIPushButton, UIToggleButton, UIStepSeqButton)
+* UIComponent event handlers should always return “false” when actively rejecting an event (such as when the application is sleeping/inactive), allowing the MIDI message to be passed on to Renoise
+* Virtual control surface able to display text & color simultaneously
+* Theming support: specify the default button color (default is white). No UI is provided for changing the value, so in order to match Duplex with your own theme color, modify the value in Globals.lua (search for “theme”) and delete your preferences before restarting.
+
+SwitchConfiguration
+* Light up arrow only if next/previous config is available
+
+Transport
+* Stop scheduled blinking when current pattern is re-scheduled
+
+Mixer
+* remove “invert” option in favor of customizable palette
+
+GridPie
+* fixed a bug in the “running start” feature (when switching away from Grid without having run the application)
+
+-- Duplex 0.98b16 -----------
+
+Duplex core API
+* Fixme: stuck notes when transposing into unhandled range
+* Fixme: stuck notes when transposing into handled range
+ Solution: make the voice-manager support passed messages (differentiating between handled OSC notes and unhandled MIDI notes - detecting the active track & instruments for MIDI notes the moment they’re triggered)
+* Fixme: UIPushButton double-fires press in virtual control surface
+
+Keyboard
+* Display message on how to enable OSC server (first time only)
+
+Grid Pie
+* Features: “Keep the beat” and “running start”
+
+Config: APC
+* Add sato’s extended configurations
+
+-- Duplex 0.98b15 -----------
+
+-- Duplex core API --
+* MIDI pass-on: allow native MIDI mapping for unhandled parameters
+* MIDI pass-on: virtual control surface able to generate MIDI
+* MIDI pass-on: all UIComponents can “actively reject” an event
+* Control-map: MIDI channel support for keyboards (specific/any channel)
+* Control-map: pitch-bend mappings receive + send
+* New class: OscVoiceMgr, provides voice-management features
+* Device-config: hide specific application options (hidden_options)
+* Fixed: choosing “cancel” when shutting down devices would throw an error
+* Fixed: proper access to document nodes (.value)
+-- Applications/XYPad.lua --
+* Fixed: No longer looses focus when navigating to a new track
+-- Applications/Keyboard.lua --
+* New option: “Keyboard Mode”, choose which notes (if any) to trigger
+
+-- Duplex 0.98b14 -----------
+
+* Message now sent directly to the UIComponentm, more reliable
+* Application.on_release_document method (to complement on_new_document)
+* OscDevice: optional message bundling
+ o No more lost messages on wireless devices?
+ o Set per-device (for example, see the TouchOSC device class)
+* ControlMap: cache parameters
+ o Faster retrieval of MIDI parameters (put in cache once requested)
+* NRPN support (experimental, see http://goo.gl/xOAvf for details)
+ o Feature is disabled per default, enable in Duplex menu)
+* Restructured device folders, auto-include configs when Duplex is started
+* Customizable palette for each application configuration
+ o Will import specified values on top of default palette
+ o See e.g. Launchpad XYPad configuration for an example
+* Automation class, for recording movements into automation envelopes
+ o Touch and latch recording (latch is considered experimental)
+* New class: OscClient, a shared connection for sending internally routed messages (simple interface, accessible to all applications)
+* New class: OscVoiceMgr, for keeping the currently triggered notes in order (avoid stuck notes, problems with release). Requires OscClient.
+* New class: UIKey, a UIComponent designed to receive and represent note information (pitch & velocity). UIKeys can either be linked to individual keys, or process all incoming note messages from a keyboard (see Keyboard app).
+* New class: UIKeyPressure (UISlider), for receiving a continuous stream of velocity information from a keyboard
+* New class: UIPitchBend (UISlider), will enable an application to receive pitch-bend information from a keyboard
+* New class: UIPad (UIComponent), implemented as paired axes (for OSC) or independent X/Y axis (for MIDI devices)
+* ControlMap: New input method “xypad”, for creating XYPad controls in the virtual control surface (paired-value support, however only OSC devices can define this input method)
+* Control-map, new input method: “key” - for accepting note-input from individual buttons/pads
+* Control-map/virtual control surface: “keyboard” - a new input method for representing a keyboard (the control surface will draw a series of keys)
+ o In the control-map, you can specify it’s range (number of keys)
+* Control-map/XML parsing:
+ o Attribute names can now contain underscore
+* Control-map/note value syntax: octave wildcard - you can now put an asterisk in place of the octave to make mapping respond to the note only (e.g. “C-*”). Used in the Midi-keyboard Grid Pie configuration to make navigation buttons appear across all the black keys
+Duplex browser/menu
+* Tool menu: devices organized into sub-menu’s
+* Tool menu: display on startup (only when active config)
+* Tool menu: release all devices (useful shortcut)
+* Tool menu: enable NRPN support
+
+--------------------------------------------------------------------------------
 Done 0.9
 --------------------------------------------------------------------------------
 
@@ -309,3 +499,4 @@ Done 0.98
 
 * Transport
   o New mapping: "toggle_metronome"
+

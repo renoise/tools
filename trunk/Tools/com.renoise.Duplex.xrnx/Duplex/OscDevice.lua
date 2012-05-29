@@ -15,6 +15,16 @@ Requires: Globals
 
 class 'OscDevice' (Device)
 
+--------------------------------------------------------------------------------
+
+--- Initialize OSCDevice class
+-- @param name (String) the friendly name of the device
+-- @param message_stream (MessageStream) the msg-stream we should attach to
+-- @param prefix (String) the OSC prefix to use
+-- @param address (String) the OSC address (can be an IP address)
+-- @param port_in (Number) the OSC input port 
+-- @param port_out (Number) the OSC output port 
+
 function OscDevice:__init(name, message_stream,prefix,address,port_in,port_out)
   TRACE("OscDevice:__init()",name,message_stream,prefix,address,port_in,port_out)
   
@@ -40,7 +50,7 @@ end
 
 --------------------------------------------------------------------------------
 
--- create the OSC client/server sockets, set prefix (if any)
+--- Create the OSC client/server sockets, set prefix (if any)
 
 function OscDevice:open()
   TRACE("OscDevice:open()")
@@ -87,8 +97,7 @@ end
 
 --------------------------------------------------------------------------------
 
--- an error happened in the servers background thread
--- (note: this should not happen)
+--- En error happened in the servers background thread (this should not happen)
 
 function OscDevice:socket_error(error_message)
   TRACE("OscDevice:socket_error",error_message)
@@ -99,11 +108,12 @@ end
 
 --------------------------------------------------------------------------------
 
--- receive/unpack incoming osc messages
--- largely identical to the MidiDevice implementation, except that we 
--- look for the control-map "action" instead of the "value" attribute
--- (but still using the "value" as fallback if "action" is undefined)
-
+--- Receive/unpack incoming osc messages: largely identical to the 
+-- MidiDevice implementation, except that we look for the control-map "action" 
+-- instead of the "value" attribute
+-- @param socket (
+-- @param binary_data
+--[[
 function OscDevice:socket_message(socket, binary_data)
   TRACE("OscDevice:socket_message",socket, binary_data)
 
@@ -142,11 +152,12 @@ function OscDevice:socket_message(socket, binary_data)
   end
   
 end
-
+]]
 
 --------------------------------------------------------------------------------
 
--- look up value, once we have unpacked the message
+--- Look up value, once we have unpacked the message
+-- @param value_str (String), control-map string
 
 function OscDevice:receive_osc_message(value_str)
   TRACE("OscDevice:receive_message",value_str)
@@ -181,6 +192,8 @@ end
 
 --------------------------------------------------------------------------------
 
+--- Release the device
+
 function OscDevice:release()
   TRACE("OscDevice:release()")
   if (self.client) and (self.client.is_open) then
@@ -201,9 +214,9 @@ end
 
 --------------------------------------------------------------------------------
 
--- set prefix for this device (pattern is appended to all outgoing traffic,
--- and also act as a filter for incoming messages). 
--- @param prefix (string), e.g. "/my_device" 
+--- Set prefix for this device (a pattern which is appended to all outgoing 
+-- traffic, and also act as a filter for incoming messages)
+-- @param prefix (String)
 
 function OscDevice:set_device_prefix(prefix)
   TRACE("OscDevice:set_device_prefix()",prefix)
@@ -217,6 +230,11 @@ function OscDevice:set_device_prefix(prefix)
 end
 
 --------------------------------------------------------------------------------
+
+--- Queue a message instead of sending it right away. Some devices need data
+-- to arrive in fewer packets due to network conditions
+--  @param message (String) the message string
+--  @param value (Number or Table) the value(s) to inject
 
 function OscDevice:queue_osc_message(message,value)
 
@@ -296,7 +314,8 @@ end
 
 --------------------------------------------------------------------------------
 
---  send queued bundle of OSC messages
+---  Send a queued bundle of OSC messages 
+-- @see OscDevice:queue_osc_message
 
 function OscDevice:send_osc_bundle()
 
@@ -317,9 +336,9 @@ end
 
 --------------------------------------------------------------------------------
 
---  send OSC message
---  @param message (string) the message string
---  @param value (number) the value to inject
+---  Send a OSC message right away
+--  @param message (String) the message string
+--  @param value (Number or Table) the value(s) to inject
 
 function OscDevice:send_osc_message(message,value)
   TRACE("OscDevice:send_osc_message()",message,value)
@@ -336,7 +355,11 @@ end
 
 --------------------------------------------------------------------------------
 
--- produce an OSC message entry 
+--- Produce an OSC message value entry. If only "vars" is defined, it will 
+--  be treated as a standalone floating-point value. Otherwise, "vars" will 
+--  indicate the type of value - Integer is "%i", while floating-point is "%f"
+-- @param vars (Number or String), value or the type of value
+-- @param value (Number)
 
 function OscDevice:produce_entry(vars,value)
   --TRACE("OscDevice:produce_entry()",vars,value)
@@ -357,11 +380,13 @@ end
 
 --------------------------------------------------------------------------------
 
--- Convert the point to an output value
--- @param pt (CanvasPoint)
--- @param elm - control-map parameter
--- @param ceiling - the UIComponent ceiling value
--- @return value (number, or table of numbers)
+--- Convert the point to an output value. If the point has multiple values, it
+--  is describing a multidimensional value, such as a tilt sensor or XY-pad. In
+--  such a case, the method will return a table of values
+-- @param pt (CanvasPoint), point containing the current value
+-- @param elm (Table), control-map parameter
+-- @param ceiling (Number), the UIComponent ceiling value
+-- @return value (Number, or Table of Numbers)
 
 function OscDevice:point_to_value(pt,elm,ceiling)
   --TRACE("OscDevice:point_to_value()",pt,elm,ceiling)
@@ -398,9 +423,11 @@ end
 -- Private
 --------------------------------------------------------------------------------
 
--- recursively unpacks all OSC messages from the given bundle or message. 
+--- Recursively unpacks all OSC messages from the given bundle or message. 
 -- when message_or_bundle is a single message, only this one will be added
 -- to the given message list
+-- @param message_or_bundle (renoise.Osc.Message or renoise.Osc.Bundle) 
+-- @param messages (Table) table to insert unpacked messages into
 
 function OscDevice:_unpack_messages(message_or_bundle, messages)
    --TRACE("OscDevice:_unpack_messages()",message_or_bundle)
@@ -424,8 +451,9 @@ end
 
 --------------------------------------------------------------------------------
 
--- create string representation of OSC message:
+--- Create string representation of OSC message:
 -- e.g. "/this/is/the/pattern 1 2 3"
+-- @param msg (renoise.Osc.Message)
 
 function OscDevice:_msg_to_string(msg)
   TRACE("OscDevice:_msg_to_string()",msg)

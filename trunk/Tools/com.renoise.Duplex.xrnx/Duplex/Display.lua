@@ -34,6 +34,11 @@ local BOGUS_NOTE = "H#1"
 
 class 'Display' 
 
+--------------------------------------------------------------------------------
+
+--- Initialize the Display class
+-- @param device (Device) associate the Display with this device
+
 function Display:__init(device)
   TRACE('Display:__init')
 
@@ -76,7 +81,8 @@ end
 
 --------------------------------------------------------------------------------
 
--- register a UIComponent with this display
+--- Register a UIComponent with this display
+-- @param obj_instance (UIComponent) a UIComponent class instance
 
 function Display:add(obj_instance)
   TRACE('Display:add',obj_instance)
@@ -87,8 +93,7 @@ end
 
 --------------------------------------------------------------------------------
 
--- clear display. force an update of all UI components
--- TODO: also use hardware-specific feature if possible
+--- Clear display, force update of all UI components
 
 function Display:clear()
   TRACE("Display:clear()")
@@ -109,9 +114,9 @@ end
 
 --------------------------------------------------------------------------------
 
--- apply_tooltips: set tooltips on the virtual display based on the 
+--- Apply_tooltips: set tooltips on the virtual display based on the 
 -- tooltip property assigned to existing ui_objects 
--- @param group_name: limit to a specific control-map group
+-- @param group_name (String) the control-map group name, e.g. "Encoders"
 
 function Display:apply_tooltips(group_name)
   TRACE("Display:apply_tooltips()",group_name)
@@ -146,7 +151,8 @@ end
 
 --------------------------------------------------------------------------------
 
--- update: will update virtual/hardware displays (called continously)
+--- Update any UIComponent that has been modified since the last update
+-- (this function is called continously)
 
 function Display:update()
 
@@ -237,11 +243,11 @@ end
 
 --------------------------------------------------------------------------------
 
--- set_parameter: "atomic" update of hardware & virtual control surface 
--- @elm : control-map definition of the element
--- @obj : UIComponent instance
--- @point : canvas point (text/value/color)
--- @secondary: boolean, specified when function call itself (xypad/value-pairs)
+--- Set_parameter: apply parameter changes, update the display
+-- @param elm (Table) control-map definition of the element
+-- @param obj (UIComponent) instance of UIComponent
+-- @param point (CanvasPoint) point containing text/value/color
+-- @param secondary (Boolean), true when method call itself (value-pairs)
 
 function Display:set_parameter(elm, obj, point, secondary)
   --TRACE('Display:set_parameter',elm, obj, point, secondary)
@@ -258,8 +264,6 @@ function Display:set_parameter(elm, obj, point, secondary)
   -- the type of message, based on the control-map
   local msg_type = cm:determine_type(elm.value)
 
-  -- the most recent message
-  local current_message = self.device.message_stream.current_message
 
 
   -- update hardware display
@@ -280,16 +284,7 @@ function Display:set_parameter(elm, obj, point, secondary)
 
       -- check if we should send message back to the sender
       self.device:send_note_message(num,value,channel)
-      --[[
-      if (not current_message) or
-         (current_message.is_virtual) or
-         (current_message.context ~= MIDI_NOTE_MESSAGE) or
-         (current_message.id ~= elm.id) or
-         (current_message.value ~= value)
-      then
-        self.device:send_note_message(num,value,channel)
-      end
-      ]]
+
     elseif (msg_type == MIDI_CC_MESSAGE) then
       local num = self.device:extract_midi_cc(elm.value)
       local multiple_params = (type(point.val) == "table")
@@ -312,28 +307,11 @@ function Display:set_parameter(elm, obj, point, secondary)
         end
 
       end
-      
-      --[[
-      if current_message then
-        print("current_message.is_virtual",current_message.is_virtual)
-        print("current_message.context",current_message.context,"MIDI_CC_MESSAGE",MIDI_CC_MESSAGE)
-        print("current_message.id",current_message.id,"elm.id",elm.id)
-        print("current_message.value",current_message.value,"value",value)
-      end
-      ]]
+
 
       -- check if we should send message back to the sender
       self.device:send_cc_message(num,value,channel)
-      --[[
-      if (not current_message) or
-         (current_message.is_virtual) or
-         (current_message.context ~= MIDI_CC_MESSAGE) or
-         (current_message.id ~= elm.id) or
-         (current_message.value ~= value)
-      then
-        self.device:send_cc_message(num,value,channel)
-      end
-      ]]
+
     elseif (msg_type == MIDI_PITCH_BEND_MESSAGE) then
 
       -- sending pitch-bend back to a device doesn't make sense when
@@ -341,56 +319,12 @@ function Display:set_parameter(elm, obj, point, secondary)
       -- the parameter with the "skip_echo" attribute in such a case...
       -- however, some device setups are different (e.g. Mackie Control)
       self.device:send_pitch_bend_message(value,channel)
-      --[[
-      if (not current_message) or
-         (current_message.is_virtual) or
-         (current_message.context ~= MIDI_PITCH_BEND_MESSAGE) or
-         (current_message.id ~= elm.id) or
-         (current_message.value ~= value)
-      then
-        self.device:send_pitch_bend_message(value,channel)
-      end
-      ]]
+
     elseif (msg_type == MIDI_CHANNEL_PRESSURE) then
       -- do nothing
     elseif (msg_type == MIDI_KEY_MESSAGE) then
       -- do nothing
     elseif (msg_type == OSC_MESSAGE) then
-      -- value comparison on OSC, might be a table
-      --[[
-      print("*** got here A")
-      local values_are_equal = false
-      local osc_value = value
-      if current_message then
-        if (type(osc_value)=="table") then
-          osc_value = table.rcopy(value)
-        end
-        if (type(value) == "table") and 
-          (type(current_message.value) == "table")
-        then
-          values_are_equal = table_compare(current_message.value,osc_value)
-        else
-          values_are_equal = current_message.value == value
-        end
-      end
-      print("*** (not current_message)",(not current_message))
-      if current_message then
-        print("*** (current_message.is_virtual)",(current_message.is_virtual))
-        print("*** (current_message.context ~= OSC_MESSAGE)",(current_message.context ~= OSC_MESSAGE))
-        print("*** (current_message.id ~= elm.id)",(current_message.id ~= elm.id))
-      end
-      --print("*** (not values_are_equal)",(not values_are_equal))
-      ]]
-
-      --[[
-      if (not current_message) or
-         (current_message.is_virtual) or
-         (current_message.context ~= OSC_MESSAGE) or
-         (current_message.id ~= elm.id) or
-         (not values_are_equal)
-      then
-        print("*** got here B")
-      ]]
 
       -- invert XYPad values before sending?
       local osc_value = value
@@ -481,6 +415,8 @@ function Display:set_parameter(elm, obj, point, secondary)
       else
         -- single key, locate the right button
         local is_osc_msg = (elm.value):sub(0,1)=="/"
+        -- the most recent message
+        local current_message = self.device.message_stream.current_message
         local is_virtual = (current_message) and current_message.is_virtual or false
         local key_idx = nil
         if is_osc_msg then
@@ -520,12 +456,10 @@ end
 
 --------------------------------------------------------------------------------
 
--- update_key()
--- locate a given UI key widget and update it (pressed, normal, disabled)
--- @param key_idx (number)
--- @param elm 
--- @param obj (UIKey)
-
+--- Update special UI key widgets (pressed, normal, disabled)
+-- @param key_idx (Number) the keys index
+-- @param elm (Table) control-map definition of the element
+-- @param obj (UIKey) instance of a UIKey component
 
 function Display:update_key(key_idx,elm,obj)
   --TRACE("Display:update_key()",key_idx,type(key_idx),elm,obj)
@@ -588,7 +522,8 @@ end
 
 --------------------------------------------------------------------------------
 
--- build the virtual control-surface based on the parsed control-map
+--- Build the virtual control-surface (based on the parsed control-map)
+-- @return ViewBuilder
 
 function Display:build_control_surface()
   TRACE('Display:build_control_surface')
@@ -617,15 +552,16 @@ function Display:build_control_surface()
   end
   
   return self.view
+
 end
 
 
 --------------------------------------------------------------------------------
 
---  generate message : used by virtual control-surface elements
---  @value : the value (number or table)
---  @metadata : metadata table (min/max etc.)
---  @released: boolean, true when button has been released
+---  Generate message : used by virtual control-surface elements
+--  @param value (Number or Table) value, or table of values
+--  @param metadata (Table) metadata, such as min/max etc.
+--  @param released (Boolean), true when button has been released
 
 function Display:generate_message(value, metadata, released)
   TRACE('Display:generate_message:',value, metadata, released)
@@ -743,13 +679,14 @@ end
 
 --------------------------------------------------------------------------------
 
---  _walk_table: create the virtual control surface
---  iterate through the control-map, while adding/collecting 
---  relevant meta-information 
+---  Walk control-map defition, and create the virtual control surface
+-- @param t (Table) the control-map defition
+-- @param done (Table) internal calculation table 
+-- @param deep (Number/Int) the nesting level
 
 function Display:_walk_table(t, done, deep)
 
-  deep = deep and deep + 1 or 1  --  the nesting level
+  deep = deep and deep + 1 or 1  --  
   done = done or {}
 
   for key, value in pairs(t) do
@@ -1328,8 +1265,9 @@ end
 
 --------------------------------------------------------------------------------
 
--- validate and fix a groups arg and try to give the control map author some
--- hints of what might be wroing with the control map
+--- Validate/fix groups and try to give the control map author some
+-- hints of what might be wrong with the control map
+-- @param xargs (Table) the control-map attributes
 
 function Display:_validate_group(xargs)
 
@@ -1360,8 +1298,9 @@ end
  
 --------------------------------------------------------------------------------
 
--- validate and fix param xargs and try to give the control map author some
--- hints of what might be wroing with the control map
+--- Validate/fix parameters and try to give the control map author some
+-- hints of what might be wrong with the control map
+-- @param xargs (Table) the control-map attributes
 
 function Display:_validate_param(xargs)
 

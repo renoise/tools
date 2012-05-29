@@ -52,6 +52,11 @@ Events
 
 class 'UIKey' (UIComponent)
 
+--------------------------------------------------------------------------------
+
+--- Initialize the UIKey class
+-- @param display (Duplex.Display)
+
 function UIKey:__init(display)
   TRACE('UIKey:__init')
 
@@ -109,11 +114,12 @@ end
 
 --------------------------------------------------------------------------------
 
--- perform a test of the incoming value:
+--- Perform a test of the incoming value:
 -- if we pass any note (keyboard mode), the incoming pitch is remembered
 -- else, pitch is assigned when the UIKey is first created (and the
 -- containing application will then apply it's own transpose)
--- @return boolean, true when message was considered valid
+-- @param msg (Duplex.Message)
+-- @return (Boolean), true when message was considered valid
 
 function UIKey:test(msg)
 
@@ -137,6 +143,8 @@ end
 
 --------------------------------------------------------------------------------
 
+--- A key was pressed
+-- @param msg (Duplex.Message)
 -- @return boolean, true when message was handled
 
 function UIKey:do_press(msg)
@@ -165,6 +173,8 @@ end
 
 --------------------------------------------------------------------------------
 
+--- A key was released
+-- @param msg (Duplex.Message)
 -- @return boolean, true when message was handled
 
 function UIKey:do_release(msg)
@@ -193,6 +203,8 @@ end
 
 --------------------------------------------------------------------------------
 
+--- A key was held
+-- @param msg (Duplex.Message)
 -- @return boolean, true when message was handled
 
 function UIKey:do_hold(msg)
@@ -213,7 +225,7 @@ end
 
 --------------------------------------------------------------------------------
 
--- translate_pitch() - use this method to determine the correct pitch 
+--- Translate_pitch, used for determining the correct pitch 
 -- @param msg (Message)
 -- @return pitch (Number)
 
@@ -238,10 +250,7 @@ end
 -- Overridden from UIComponent
 --------------------------------------------------------------------------------
 
--- draw() is the main update method: we need to assign a new value to either
--- text, color or val in order to make the UIKey update. Checks if the UIKey 
--- is acting like a keyboard (uses pitch to change value), or buttons 
--- (uses the pressed state)
+--- Update the control's apperance
 
 function UIKey:draw()
 
@@ -279,7 +288,7 @@ end
 
 --------------------------------------------------------------------------------
 
--- force complete refresh when used as keyboard - a bit of a hack  
+--- Force complete refresh when used as keyboard - a bit of a hack  
 -- (the display will reset the "refresh_requested" property)
 
 function UIKey:update_keys()
@@ -294,6 +303,8 @@ function UIKey:update_keys()
 end
 
 --------------------------------------------------------------------------------
+
+--- Add event listeners (press, release, hold)
 
 function UIKey:add_listeners()
 
@@ -313,6 +324,9 @@ end
 
 
 --------------------------------------------------------------------------------
+
+--- Remove previously attached event listeners
+-- @see UIKey:add_listeners
 
 function UIKey:remove_listeners()
 

@@ -57,6 +57,11 @@ Usage
 
 class 'UISlider' (UIComponent)
 
+--------------------------------------------------------------------------------
+
+--- Initialize the UISlider class
+-- @param display (Duplex.Display)
+
 function UISlider:__init(display)
   TRACE('UISlider:__init')
 
@@ -125,7 +130,8 @@ end
 
 --------------------------------------------------------------------------------
 
--- user input via button
+--- A button was pressed
+-- @param msg (Duplex.Message)
 -- @return boolean, true when message was handled
 
 function UISlider:do_press(msg)
@@ -151,9 +157,8 @@ end
 
 --------------------------------------------------------------------------------
 
--- user input via button
--- the release handler is here to force-update controls   
--- that handle their internal state automatically
+--- A button was released
+-- @param msg (Duplex.Message)
 -- @return boolean, true when message was handled
 
 function UISlider:do_release(msg)
@@ -172,8 +177,9 @@ end
 
 --------------------------------------------------------------------------------
 
--- user input via slider, dial: 
+--- A value was changed (slider, dial)
 -- set index + precise value within the index
+-- @param msg (Duplex.Message)
 -- @return boolean, true when message was handled
 
 function UISlider:do_change(msg)
@@ -196,9 +202,9 @@ end
 
 --------------------------------------------------------------------------------
 
--- setting value will also set index
--- @val (float), a number between 0 and .ceiling
--- @skip_event (boolean) skip event handler
+--- Set the value (will also update the index)
+-- @param val (float), a number between 0 and .ceiling
+-- @param skip_event (boolean) skip event handler
 -- @return (boolean), false when rejected by handler 
 
 function UISlider:set_value(val,skip_event)
@@ -226,9 +232,9 @@ end
 
 --------------------------------------------------------------------------------
 
--- setting index will also set value
--- @idx (integer) 
--- @skip_event (boolean) skip event handler
+--- Set index (will also update the value)
+-- @param idx (integer) 
+-- @param skip_event (boolean) skip event handler
 -- @return (boolean), false when rejected by handler 
 
 function UISlider:set_index(idx,skip_event)
@@ -254,8 +260,7 @@ end
 
 --------------------------------------------------------------------------------
 
--- force-update controls that are handling their internal state by themselves,
--- achieved by changing the canvas so that it get's painted the next time...
+--- Force-update controls that are handling their internal state by themselves
 
 function UISlider:force_update()
 
@@ -267,7 +272,8 @@ end
 
 --------------------------------------------------------------------------------
 
--- when a slider is assigned to buttons, display the slider as "dimmed"
+--- Display the slider as "dimmed" (use alternative palette)
+-- @param bool (Boolean) true for dimmed state, false for normal state
 
 function UISlider:set_dimmed(bool)
 
@@ -279,7 +285,9 @@ end
 
 --------------------------------------------------------------------------------
 
--- get/set slider orientation (only relevant when assigned to buttons)
+--- Set the slider orientation 
+-- (only relevant when assigned to buttons)
+-- @param value (Enum) either VERTICAL or HORIZONTAL
 
 function UISlider:set_orientation(value)
   TRACE("UISlider:set_orientation",value)
@@ -289,6 +297,11 @@ function UISlider:set_orientation(value)
     self:set_size(self._size) -- update canvas
   end
 end
+
+--------------------------------------------------------------------------------
+
+--- Get the orientation 
+-- @return (Enum) either VERTICAL or HORIZONTAL
 
 function UISlider:get_orientation()
   TRACE("UISlider:get_orientation()")
@@ -300,8 +313,8 @@ end
 -- Overridden from UIComponent
 --------------------------------------------------------------------------------
 
--- setting the size will change the canvas too
--- @size (integer)
+--- Set the size (will change the canvas too)
+-- @param size (Number)
 
 function UISlider:set_size(size)
   TRACE("UISlider:set_size",size)
@@ -321,7 +334,11 @@ end
 
 --------------------------------------------------------------------------------
 
--- expanded UIComponent test
+--- Expanded UIComponent test: look for group name, event handlers before
+-- proceeding with the normal UIComponent test
+-- @param group_name (String)
+-- @param column (Number)
+-- @param row (Number)
 -- @return boolean, false when criteria is not met
 
 function UISlider:test(group_name,column,row)
@@ -344,7 +361,7 @@ end
 
 --------------------------------------------------------------------------------
 
--- update the UIComponent canvas
+--- Update the UIComponent canvas
 
 function UISlider:draw()
   TRACE("UISlider:draw()")
@@ -410,6 +427,8 @@ end
 
 --------------------------------------------------------------------------------
 
+--- Add event listeners (press, release, change)
+
 function UISlider:add_listeners()
   TRACE("UISlider:add_listeners()")
 
@@ -429,6 +448,9 @@ end
 
 
 --------------------------------------------------------------------------------
+
+--- Remove previously attached event listeners
+-- @see UISlider:add_listeners
 
 function UISlider:remove_listeners()
   TRACE("UISlider:remove_listeners()")
@@ -450,9 +472,9 @@ end
 -- Private
 --------------------------------------------------------------------------------
 
--- determine index by position, depends on orientation
--- @column (integer)
--- @row (integer)
+--- Determine index by position, depends on orientation
+-- @param column (Number)
+-- @param row (Number)
 
 function UISlider:_determine_index_by_pos(column,row)
 
@@ -481,7 +503,7 @@ end
 
 --------------------------------------------------------------------------------
 
--- trigger the external handler method
+--- Trigger the external handler method
 -- @return true when message was handled, false when not
 
 function UISlider:_invoke_handler()

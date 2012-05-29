@@ -33,6 +33,11 @@ Events
 
 class 'UISpinner' (UIComponent)
 
+--------------------------------------------------------------------------------
+
+--- Initialize the UISpinner class
+-- @param display (Duplex.Display)
+
 function UISpinner:__init(display)
   TRACE('UISpinner:__init',display)
 
@@ -82,8 +87,8 @@ end
 
 --------------------------------------------------------------------------------
 
--- user input via fader, dial,
--- set index from entire range
+--- A value was changed (fader, dial)
+-- @param msg (Duplex.Message)
 -- @return boolean, true when message was handled
 
 function UISpinner:do_change(msg)
@@ -122,7 +127,9 @@ end
 
 --------------------------------------------------------------------------------
 
--- user input via button(s)
+--- A button was pressed
+-- @param msg (Duplex.Message)
+-- @return boolean, true when message was handled
 
 function UISpinner:do_press(msg)
   TRACE("UISpinner:do_press",msg)
@@ -193,6 +200,10 @@ end
 
 --------------------------------------------------------------------------------
 
+--- Set the slider orientation 
+-- (only relevant when assigned to buttons)
+-- @param value (Enum) either VERTICAL or HORIZONTAL
+
 function UISpinner:set_orientation(value)
   TRACE("UISpinner:set_orientation",value)
 
@@ -202,6 +213,11 @@ function UISpinner:set_orientation(value)
   end
 end
 
+--------------------------------------------------------------------------------
+
+--- Get the orientation 
+-- @return (Enum) either VERTICAL or HORIZONTAL
+
 function UISpinner:get_orientation()
   TRACE("UISpinner:get_orientation()")
   return self._orientation
@@ -209,10 +225,10 @@ end
 
 --------------------------------------------------------------------------------
 
--- set a new value range, clipping the current index when needed
--- you can set just one value, since we skip nil values
--- @minimum (integer)
--- @maximum (integer)
+--- Set a new value range, clipping the current index when needed (you can set 
+--  just one value, since we skip nil values)
+-- @param minimum (Number)
+-- @param maximum (Number)
 
 function UISpinner:set_range(minimum,maximum)
   TRACE("UISpinner:set_range",minimum,maximum)
@@ -250,9 +266,9 @@ end
   
 --------------------------------------------------------------------------------
 
--- set index to specified value
--- @idx (integer)
--- @skip_event (boolean) skip event handler
+--- Set index to specified value
+-- @param idx (Number)
+-- @param skip_event_handler (Boolean) skip event handler
 
 function UISpinner:set_index(idx, skip_event_handler)
   TRACE("UISpinner:set_index",idx, skip_event_handler)
@@ -286,6 +302,8 @@ end
 --------------------------------------------------------------------------------
 -- Overridden from UIComponent
 --------------------------------------------------------------------------------
+
+--- Overridden draw() method
 
 function UISpinner:draw()
   TRACE("UISpinner:draw")
@@ -377,7 +395,8 @@ end
 
 --------------------------------------------------------------------------------
 
--- set_size()  - also used when switching orientation
+--- (Override UIComponent with this method)
+-- @param size (Number) the size in units
 
 function UISpinner:set_size(size)
   
@@ -392,6 +411,8 @@ end
 
 
 --------------------------------------------------------------------------------
+
+--- Add event listeners (press, change)
 
 function UISpinner:add_listeners()
 
@@ -409,6 +430,9 @@ end
 
 --------------------------------------------------------------------------------
 
+--- Remove previously attached event listeners
+-- @see UISpinner:add_listeners
+
 function UISpinner:remove_listeners()
 
   self._display.device.message_stream:remove_listener(
@@ -424,9 +448,10 @@ end
 -- Private
 --------------------------------------------------------------------------------
 
--- determine index by position, depends on orientation
--- @column (integer)
--- @row (integer)
+--- Determine index by position
+-- @param column (Number)
+-- @param row (Number)
+-- @return (Number)
 
 function UISpinner:_determine_index_by_pos(column, row)
 
@@ -455,7 +480,7 @@ end
 
 --------------------------------------------------------------------------------
 
--- trigger the external handler method
+--- Trigger the external handler method
 
 function UISpinner:_invoke_handler()
   TRACE("UISpinner:_invoke_handler()")

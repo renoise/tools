@@ -15,6 +15,12 @@ local RUNNING_POSTFIX = " (running)"
 
 class 'Browser'
 
+--------------------------------------------------------------------------------
+
+--- Initialize the Browser class
+-- @param initial_configuration (Table) set to this configuration 
+-- @param start_configuration (Boolean) true to start the application
+
 function Browser:__init(initial_configuration, start_configuration)
   TRACE("Browser:__init")
 
@@ -107,7 +113,7 @@ end
 
 --------------------------------------------------------------------------------
 
--- activates and shows the dialog, or brings the existing one to front
+--- Activate and shows the dialog, or bring the existing one to front
 
 function Browser:show()
   TRACE("Browser:show()")
@@ -152,7 +158,7 @@ end
 
 --------------------------------------------------------------------------------
 
--- hide the dialog
+--- Hide the dialog
 
 function Browser:hide()
   TRACE("Browser:hide()")
@@ -168,7 +174,7 @@ end
 
 --------------------------------------------------------------------------------
 
--- forwards idle notifications to all active processes
+--- Forward idle notifications to all active processes
 
 function Browser:on_idle()
   -- TRACE("Browser:on_idle()")
@@ -188,7 +194,7 @@ end
 
 --------------------------------------------------------------------------------
 
--- forwards new document notifications to all active processes
+--- Forward new document notifications to all active processes
 
 function Browser:on_new_document()
   TRACE("Browser:on_new_document()")
@@ -201,7 +207,7 @@ end
 
 --------------------------------------------------------------------------------
 
--- forwards new document notifications to all active processes
+--- Forward released document notifications to all active processes
 
 function Browser:on_release_document()
   TRACE("Browser:on_new_document()")
@@ -214,10 +220,11 @@ end
 
 --------------------------------------------------------------------------------
 
--- return a list of valid devices (plus a "None" option)
+--- Return a list of valid devices (plus a "None" option)
 -- existing devices (ones that we found MIDI ports for) are listed first,
 -- all others are listed as (N/A) to indicate that they are not present
 -- in the users device setup
+-- @return (Table) list of device names
 
 function Browser:available_devices()
 
@@ -277,10 +284,10 @@ end
 
 --------------------------------------------------------------------------------
 
--- change the active input device:
+--- Change the active input device:
 -- instantiates a new device, using the first avilable configuration for it,
 -- or reusing an already running configuration
--- @param name (string) device display-name, without postfix
+-- @param device_display_name (string) device display-name, without postfix
 -- @param configuration_hint (optional table) configuration that should be 
 -- used to instantiate the device. when nil, a default one is selected from the 
 -- available device configs
@@ -370,7 +377,8 @@ end
 
 --------------------------------------------------------------------------------
 
--- return list of valid configurations for the given device 
+--- Return list of valid configurations for the given device 
+-- @param device_name (String) the device name
 
 function Browser:available_configurations(device_name)
   TRACE("Browser:available_configurations:",device_name)
@@ -381,7 +389,9 @@ end
 
 --------------------------------------------------------------------------------
 
--- returns true if the given config is instantiated and running
+--- Determine if the given config is instantiated and running
+-- @param configuration (Table) the configuration to check
+-- @return (Boolean) true if config is running
 
 function Browser:configuration_running(configuration)
   TRACE("Browser:configuration_running:",configuration.name)
@@ -397,7 +407,7 @@ end
 
 --------------------------------------------------------------------------------
 
--- activate the previous configuration (if active, has previous)
+--- Activate the previous configuration (if active, has previous)
 
 function Browser:set_previous_configuration()
   TRACE("Browser:set_previous_configuration()")
@@ -422,8 +432,8 @@ end
 
 --------------------------------------------------------------------------------
 
--- check if previous configuration exist
--- @return boolean
+--- Check if previous configuration exist
+-- @return (Boolean)
 
 function Browser:has_previous_configuration()
   TRACE("Browser:has_previous_configuration()")
@@ -445,7 +455,7 @@ end
 
 --------------------------------------------------------------------------------
 
--- activate the next configuration (if active, has next)
+--- Activate the next configuration (if active, has next)
 
 function Browser:set_next_configuration()
   TRACE("Browser:set_next_configuration()")
@@ -470,8 +480,8 @@ end
 
 --------------------------------------------------------------------------------
 
--- check if next configuration exist
--- @return boolean
+--- Check if next configuration exist
+-- @return (Boolean)
 
 function Browser:has_next_configuration()
   TRACE("Browser:has_next_configuration()")
@@ -492,7 +502,9 @@ end
 
 --------------------------------------------------------------------------------
 
--- activate a new configuration for the currently active device
+--- Activate a new configuration for the currently active device
+-- @param configuration (Table)
+-- @param start_running (Boolean)
 
 function Browser:set_configuration(configuration, start_running)
   TRACE("Browser:set_configuration:", configuration and 
@@ -639,7 +651,7 @@ end
 
 --------------------------------------------------------------------------------
 
--- starts all apps for the current configuration
+--- Start current configuration (and all apps within it)
 
 function Browser:start_current_configuration()
   TRACE("Browser:start_configuration()")
@@ -665,7 +677,7 @@ end
   
 --------------------------------------------------------------------------------
 
--- stops all apps that run with in the current configuration
+--- Stop current configuration (and all apps within it)
 
 function Browser:stop_current_configuration()
   TRACE("Browser:stop_configuration()")
@@ -691,7 +703,8 @@ end
 
 --------------------------------------------------------------------------------
 
--- true when devices dump received midi to the std out
+--- Check if we should write debug data to the std out (console)
+-- @return (Boolean) 
 
 function Browser:dump_midi()
   return self._dump_midi
@@ -700,7 +713,8 @@ end
 
 --------------------------------------------------------------------------------
 
--- start/stop device midi dump
+--- Set the MIDI dump status
+-- @param dump (Boolean)
 
 function Browser:set_dump_midi(dump)
   self._dump_midi = dump
@@ -714,7 +728,9 @@ end
 -------  private helper functions
 --------------------------------------------------------------------------------
 
--- removes NOT_AVAILABLE_POSTFIX and RUNNING_POSTFIX from the passed name
+--- Remove NOT_AVAILABLE_POSTFIX and RUNNING_POSTFIX from the passed name
+-- @param name (String)
+-- @return (String) the name without decoration
 
 function Browser:_strip_postfixes(name)
   --TRACE("Browser:_strip_postfixes", name)
@@ -735,7 +751,8 @@ end
 
 --------------------------------------------------------------------------------
 
--- retuns true when at least one process is instantiated and running
+--- Check if any processes are running
+-- @return (Boolean) true when at least one process is instantiated and running
 
 function Browser:_process_running()
   --TRACE("Browser:_process_running()")
@@ -752,7 +769,8 @@ end
 
 --------------------------------------------------------------------------------
 
--- returns the currently selected process, a BrowserProcess object or nil
+--- Retrieve the current process
+-- @return (BrowserProcess object or nil)
 
 function Browser:_current_process()
   TRACE("Browser:_current_process")
@@ -769,8 +787,9 @@ end
 
 --------------------------------------------------------------------------------
 
--- return index of the given device display name, as it's displayed in the 
--- device popup
+--- Retrieve index of the given device display name
+-- @param device_display_name (String) 
+-- @return (Number or nil)
 
 function Browser:_device_index_by_name(device_display_name)
   TRACE("Browser:_device_index_by_name", device_display_name)
@@ -795,8 +814,9 @@ end
 
 --------------------------------------------------------------------------------
 
--- return index of the given configuration name, as it's displayed in the 
--- configuration popup
+--- Retrieve index of the given configuration name
+-- @param config_name (String) 
+-- @return (Number or nil)
 
 function Browser:_configuration_index_by_name(config_name)
   TRACE("Browser:_configuration_index_by_name", config_name)
@@ -821,8 +841,9 @@ end
 
 --------------------------------------------------------------------------------
 
--- return list of configurations that are present for the given device
--- @param (string) device name, as it's displayed in the device popup  
+--- Retrieve list of configurations present for the provided device
+-- @param device_display_name (String) device_display_name
+-- @return (Table) list of configurations
 
 function Browser:_available_configurations_for_device(device_display_name)
   TRACE("Browser:_available_configurations_for_device:", device_display_name)
@@ -841,8 +862,9 @@ end
 
 --------------------------------------------------------------------------------
 
--- return list of configurations names that are present for the given device
--- @param (string) device name, as it's displayed in the device popup  
+--- Retrieve list of configuration-names present for the provided device
+-- @param device_display_name (String) device_display_name
+-- @return (Table) list of configuration names
 
 function Browser:_available_configuration_names_for_device(device_display_name)
   TRACE("Browser:_available_configuration_names_for_device:", device_display_name)
@@ -862,7 +884,7 @@ end
 
 --------------------------------------------------------------------------------
 
--- add/remove the "running" postfix for relevant devices.
+--- Add/remove the "running" postfix for relevant devices.
 -- called when we start/stop apps, and choose a device/config
 
 function Browser:_decorate_device_list()
@@ -894,7 +916,7 @@ end
 
 --------------------------------------------------------------------------------
 
--- add/remove the "running" postfix for relevant configurations.
+--- Add/remove the "running" postfix for relevant configurations.
 -- called when we start/stop apps, and choose a device/config
 
 function Browser:_decorate_configuration_list()
@@ -926,7 +948,7 @@ end
 
 --------------------------------------------------------------------------------
 
--- show info about the current device, gathered by the control maps info field
+--- Show info about the current device, as specified in the control-map 
 
 function Browser:_update_device_description() 
 
@@ -985,7 +1007,8 @@ end
 
 --------------------------------------------------------------------------------
 
--- returns true when the current configuration should be autostarted, else false
+--- Check whether the current configuration should be autostarted
+-- return (Boolean) 
 
 function Browser:_configuration_autostart_enabled()
 
@@ -1003,8 +1026,7 @@ end
 
 --------------------------------------------------------------------------------
 
--- add the current configuration to the autostart prefs, so that it automatically 
--- starts when renoise starts
+--- Add the current configuration to the autostart prefs
 
 function Browser:_enable_configuration_autostart()
   TRACE("Browser:_enable_configuration_autostart()")
@@ -1029,7 +1051,7 @@ end
 
 --------------------------------------------------------------------------------
 
--- remove the current configuration from the autostart prefs
+--- Remove the current configuration from the autostart prefs
 
 function Browser:_disable_configuration_autostart()
   TRACE("Browser:_disable_configuration_autostart()")
@@ -1045,7 +1067,7 @@ end
 
 --------------------------------------------------------------------------------
 
--- notifier, fired when device input or output port setting changed
+--- Notifier, fired when device input or output port setting changed
 
 function Browser:_available_device_ports_changed()
   TRACE("Browser:_available_device_ports_changed()")
@@ -1090,7 +1112,7 @@ end
 
 --------------------------------------------------------------------------------
 
--- notifier, fired when device input or output port setting changed
+--- Notifier, fired when device input or output port setting changed
 
 function Browser:_device_ports_changed()
 
@@ -1110,7 +1132,7 @@ end
 
 --------------------------------------------------------------------------------
 
--- build and assign the application dialog
+--- Build and assign the application dialog
 
 function Browser:_create_content_view()
   
@@ -1283,6 +1305,11 @@ end
 
 class 'BrowserProcess'
 
+--------------------------------------------------------------------------------
+
+--- Initialize the BrowserProcess class
+-- @param p_browser (Browser), instance of Browser class
+
 function BrowserProcess:__init(p_browser)
   TRACE("BrowserProcess:__init")
 
@@ -1325,7 +1352,10 @@ end
 
 --------------------------------------------------------------------------------
 
--- returns true if this process matches the given device configurations
+--- Check if this process matches the given device configurations
+-- @param device_display_name (String)
+-- @param config_name (String)
+-- @return (Boolean) 
 
 function BrowserProcess:matches(device_display_name, config_name)
 
@@ -1334,6 +1364,12 @@ function BrowserProcess:matches(device_display_name, config_name)
     (self.configuration.name == config_name)
 end
 
+--------------------------------------------------------------------------------
+
+--- Check if this process matches the given configuration
+-- @param config (String)
+-- @return (Boolean) 
+
 function BrowserProcess:matches_configuration(config)
   return self:matches(config.device.display_name, config.name)
 end
@@ -1341,7 +1377,8 @@ end
 
 --------------------------------------------------------------------------------
 
--- returns true when the process instantiated correctly
+--- Decide whether the process instantiated correctly
+-- @return (Boolean)
 
 function BrowserProcess:instantiated()
   return (self.configuration ~= nil and self.device ~= nil)
@@ -1350,9 +1387,11 @@ end
 
 --------------------------------------------------------------------------------
 
--- initialize a process from the passed configuration. this will only 
+--- Initialize a process from the passed configuration. this will only 
 -- create the device, display and app, but not start it. to start a process,
--- "start" must be called. returns success
+-- "start" must be called. 
+-- @param configuration (Table) the device configuration
+-- @return (Boolean) true when instantiated
 
 function BrowserProcess:instantiate(configuration)
   TRACE("BrowserProcess:instantiate:", 
@@ -1461,7 +1500,6 @@ function BrowserProcess:instantiate(configuration)
     )
 
     -- MIDI port setup changed
-    -- 0.95
     renoise.Midi.devices_changed_observable():add_notifier(
       BrowserProcess._available_device_ports_changed, self
     )
@@ -1543,7 +1581,8 @@ end
 
 --------------------------------------------------------------------------------
 
--- handle device hot-plugging (ports changing while Renoise is running)
+--- Handle device hot-plugging (ports changing while Renoise is running)
+
 function BrowserProcess:_available_device_ports_changed()
   TRACE("BrowserProcess:_available_device_ports_changed()")
 
@@ -1557,7 +1596,8 @@ end
 
 --------------------------------------------------------------------------------
 
--- returns true when the device settings dialog is visible 
+--- Decide whether the device settings dialog is visible 
+-- @return (Boolean) 
 
 function BrowserProcess:settings_dialog_visible()
   TRACE("BrowserProcess:settings_dialog_visible()")
@@ -1567,7 +1607,7 @@ end
 
 --------------------------------------------------------------------------------
 
--- deinitializes a process actively. can always be called, even when 
+--- Deinitialize a process actively. can always be called, even when 
 -- initialization never happened
 
 function BrowserProcess:invalidate()
@@ -1607,7 +1647,8 @@ end
 
 --------------------------------------------------------------------------------
 
--- returns true if this process is running (its apps are running)
+--- Decide if process is running (its apps are running)
+-- @return Boolean
 
 function BrowserProcess:running()
 
@@ -1627,7 +1668,7 @@ end
 
 --------------------------------------------------------------------------------
 
--- start running a fully configured process. returns true when successfully 
+--- Start running a fully configured process. returns true when successfully 
 -- started, else false (may happen if one of the apps failed to start)
 
 function BrowserProcess:start()
@@ -1671,7 +1712,7 @@ end
 
 --------------------------------------------------------------------------------
 
--- stop a running process. will not invalidate it, just stop all apps
+--- Stop a running process. will not invalidate it, just stop all apps
 
 function BrowserProcess:stop()
   TRACE("BrowserProcess:stop")
@@ -1690,7 +1731,7 @@ end
 
 --------------------------------------------------------------------------------
 
--- returns true when the processes control surface is currently visible
+--- Returns true when the processes control surface is currently visible
 -- (this is also an indication of whether this is the selected device)
 
 function BrowserProcess:control_surface_visible()
@@ -1700,7 +1741,8 @@ end
 
 --------------------------------------------------------------------------------
 
--- show a device control surfaces in the browser gui
+--- Show a device control surfaces in the browser gui
+-- @param parent_view (ViewBuilder) the browser GUI
 
 function BrowserProcess:show_control_surface(parent_view)
   TRACE("BrowserProcess:show_control_surface")
@@ -1728,6 +1770,8 @@ end
 
 
 --------------------------------------------------------------------------------
+
+--- Display, or bring the browser dialog to front
 
 function BrowserProcess:show_settings_dialog()
 
@@ -1813,7 +1857,7 @@ end
 
 --------------------------------------------------------------------------------
 
--- close the device settings, when open
+--- Close the device settings, when open
 
 function BrowserProcess:close_settings_dialog()
   TRACE("BrowserProcess:close_settings_dialog()")
@@ -1828,7 +1872,7 @@ end
 
 --------------------------------------------------------------------------------
 
--- hide the device control surfaces, when showing it...
+--- Hide the device control surfaces, when showing it...
 
 function BrowserProcess:hide_control_surface()
   TRACE("BrowserProcess:hide_control_surface")
@@ -1848,7 +1892,7 @@ end
 
 --------------------------------------------------------------------------------
 
--- clears/repaints the display, device, virtual UI
+--- Clears/repaints the display, device, virtual UI
 
 function BrowserProcess:clear_display()
   TRACE("BrowserProcess:clear_display")
@@ -1864,7 +1908,8 @@ end
 
 --------------------------------------------------------------------------------
 
--- start/stop device midi dump
+--- Start/stop device midi dump
+-- @param dump (Boolean), true to start dumping MIDI
 
 function BrowserProcess:set_dump_midi(dump)
   TRACE("BrowserProcess:set_dump_midi", dump)
@@ -1879,7 +1924,7 @@ end
 
 --------------------------------------------------------------------------------
 
--- provide idle support for all active apps
+--- Provide idle support for all active apps
 
 function BrowserProcess:on_idle()
   -- TRACE("BrowserProcess:idle")
@@ -1902,7 +1947,7 @@ end
 
 --------------------------------------------------------------------------------
 
--- provide document released notification for all active apps
+--- Provide document released notification for all active apps
 
 function BrowserProcess:on_release_document()
   TRACE("BrowserProcess:on_release_document")
@@ -1917,7 +1962,7 @@ end
 
 --------------------------------------------------------------------------------
 
--- provide new document notification for all active apps
+--- Provide new document notification for all active apps
 
 function BrowserProcess:on_new_document()
   TRACE("BrowserProcess:on_new_document")
@@ -1932,7 +1977,8 @@ end
 
 --------------------------------------------------------------------------------
 
--- comparison operator (check configs only)
+--- Comparison operator (check configs only)
+-- @param other (BrowserProcess) the process to compare against
 
 function BrowserProcess:__eq(other)
   return self:matches_configuration(other.configuration)

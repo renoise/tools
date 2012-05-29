@@ -129,6 +129,11 @@ Special methods
 
 class 'UIButtonStrip' (UIComponent)
 
+--------------------------------------------------------------------------------
+
+--- Initialize the UIButtonStrip class
+-- @param display (Duplex.Display)
+
 function UIButtonStrip:__init(display)
   --TRACE("UIButtonStrip:__init(",display,")")
 
@@ -191,6 +196,8 @@ end
 
 --------------------------------------------------------------------------------
 
+--- User pressed a button
+-- @param msg (Duplex.Message)
 -- @return boolean, true when message was handled
 
 function UIButtonStrip:do_press(msg)
@@ -234,6 +241,8 @@ end
 
 --------------------------------------------------------------------------------
 
+--- User released a button
+-- @param msg (Duplex.Message)
 -- @return boolean, true when message was handled
 
 function UIButtonStrip:do_release(msg)
@@ -281,6 +290,8 @@ end
 
 --------------------------------------------------------------------------------
 
+--- User held a button
+-- @param msg (Duplex.Message)
 -- @return true (hold message are always handled)
 
 function UIButtonStrip:do_hold(msg)
@@ -318,6 +329,8 @@ function UIButtonStrip:do_hold(msg)
 end
 
 --------------------------------------------------------------------------------
+
+--- Update the control's visual appearance
 
 function UIButtonStrip:draw()
   --TRACE("UIButtonStrip:draw()")
@@ -400,16 +413,17 @@ end
 
 --------------------------------------------------------------------------------
 
--- get/set the current index
+--- Set the current index
+-- @param idx (Number) the index to set
+-- @param skip_event (Boolean) if true, invoke the event handler
 
 function UIButtonStrip:set_index(idx,skip_event)
-  --TRACE("UIButtonStrip:set_index(",idx,skip_event,")")
+  TRACE("UIButtonStrip:set_index()",idx,skip_event)
   
   if not skip_event then
     if self._steps and (self._steps~=self._size) then
       local factor = self._steps/self._size
       idx = math.ceil(idx*factor)
-      --return idx
     end
   end
 
@@ -433,22 +447,28 @@ function UIButtonStrip:set_index(idx,skip_event)
 
 end
 
+--------------------------------------------------------------------------------
+
+--- Get the current index
+-- @return Number
 
 function UIButtonStrip:get_index()
-  --TRACE("UIButtonStrip:get_index()")
+  TRACE("UIButtonStrip:get_index()")
 
   return self._index
 end
 
 --------------------------------------------------------------------------------
 
--- get/set the current range
+--- Set the current range (swap values if needed, first should be lowest)
+-- @param idx1 (Number) range 1
+-- @param idx2 (Number) range 2
+-- @param skip_event (Boolean) if true, invoke the event handler
 
 function UIButtonStrip:set_range(idx1,idx2,skip_event)
-  --TRACE("UIButtonStrip:set_range(",idx1,idx2,skip_event,")")
+  TRACE("UIButtonStrip:set_range(",idx1,idx2,skip_event,")")
 
 
-  -- swap values if needed (first should be lowest)
   if (idx1>idx2) then
     idx1,idx2 = idx2,idx1
   end
@@ -478,19 +498,36 @@ function UIButtonStrip:set_range(idx1,idx2,skip_event)
 
 end
 
+--------------------------------------------------------------------------------
+
+--- Get the current range 
+-- @return Table containing upper/lower index
 
 function UIButtonStrip:get_range()
-  --TRACE("UIButtonStrip:get_range()")
+  TRACE("UIButtonStrip:get_range()")
 
   return self._range
 end
 
 --------------------------------------------------------------------------------
 
--- get/set the number of steps 
+--- Check if provided index is within the current range
+-- @return Boolean
+
+function UIButtonStrip:_in_range(idx)
+
+  return not((idx<self._range[1]) or (idx>self._range[2]))
+
+end
+
+
+--------------------------------------------------------------------------------
+
+--- Set the number of steps 
+-- @param steps (Number)
 
 function UIButtonStrip:set_steps(steps)
-  --TRACE("UIButtonStrip:set_steps()")
+  TRACE("UIButtonStrip:set_steps()",steps)
 
   if (steps ~= self._steps) then
 
@@ -507,6 +544,11 @@ function UIButtonStrip:set_steps(steps)
 
 end
 
+--------------------------------------------------------------------------------
+
+--- Get the number of steps
+-- @return Number
+
 function UIButtonStrip:get_steps()
 
   return self._steps
@@ -514,6 +556,9 @@ function UIButtonStrip:get_steps()
 end
 
 --------------------------------------------------------------------------------
+
+--- Start blinking behaviour for one of the buttons
+-- @param idx (Number) the button index 
 
 function UIButtonStrip:start_blink(idx)
   --TRACE("UIButtonStrip:start_blink(",idx,")")
@@ -527,8 +572,10 @@ end
 
 --------------------------------------------------------------------------------
 
-function UIButtonStrip:pause_blink(idx)
-  --TRACE("UIButtonStrip:pause_blink(",idx,")")
+--- Pause blinking behaviour
+
+function UIButtonStrip:pause_blink()
+  --TRACE("UIButtonStrip:pause_blink()")
 
   if self._blink_task then
     self._display.scheduler:remove_task(self._blink_task)
@@ -539,6 +586,8 @@ function UIButtonStrip:pause_blink(idx)
 end
 
 --------------------------------------------------------------------------------
+
+--- Stop blinking behaviour
 
 function UIButtonStrip:stop_blink()
   --TRACE("UIButtonStrip:stop_blink()")
@@ -552,6 +601,25 @@ end
 
 --------------------------------------------------------------------------------
 
+--- Toggle the control's blinking behaviour
+
+function UIButtonStrip:_toggle_blink()
+  --TRACE("UIButtonStrip:_toggle_blink()")
+
+  self._blink_is_lit = not self._blink_is_lit
+
+  self._blink_task = self._display.scheduler:add_task(
+    self, UIButtonStrip._toggle_blink, self._blink_interval)
+
+  self:invalidate()
+
+end
+
+--------------------------------------------------------------------------------
+
+--- Set the control's orientation
+-- @param value (Enum) either VERTICAL or HORIZONTAL
+
 function UIButtonStrip:set_orientation(value)
   --TRACE("UIButtonStrip:set_orientation(",value,")")
 
@@ -560,6 +628,11 @@ function UIButtonStrip:set_orientation(value)
     self:set_size(self._size) -- update canvas
   end
 end
+
+--------------------------------------------------------------------------------
+
+--- Get the orientation 
+-- @return (Enum) either VERTICAL or HORIZONTAL
 
 function UIButtonStrip:get_orientation()
   --TRACE("UIButtonStrip:get_orientation()")
@@ -570,8 +643,11 @@ end
 -- Overridden from UIComponent
 --------------------------------------------------------------------------------
 
+--- (Override UIComponent with this method)
+-- @param size (Number) the size in units
+
 function UIButtonStrip:set_size(size)
-  --TRACE("UIButtonStrip:set_size(",size,")")
+  TRACE("UIButtonStrip:set_size()",size)
 
   self._size = size
 
@@ -586,6 +662,8 @@ function UIButtonStrip:set_size(size)
 end
 
 --------------------------------------------------------------------------------
+
+--- Add event listeners (press, release, hold)
 
 function UIButtonStrip:add_listeners()
   --TRACE("UIButtonStrip:add_listeners()")
@@ -607,6 +685,9 @@ end
 
 --------------------------------------------------------------------------------
 
+--- Remove previously attached event listeners
+-- @see UIButtonStrip:add_listeners
+
 function UIButtonStrip:remove_listeners()
   --TRACE("UIButtonStrip:remove_listeners()")
 
@@ -627,9 +708,10 @@ end
 -- Private
 --------------------------------------------------------------------------------
 
--- determine index by position, depends on orientation
--- @column (integer)
--- @row (integer)
+--- Determine the control's index by it's position 
+-- @param column (Number)
+-- @param row (Number)
+-- @return Number
 
 function UIButtonStrip:_determine_index_by_pos(column,row)
 
@@ -657,8 +739,11 @@ end
 
 --------------------------------------------------------------------------------
 
--- extended test: check if we have no events assigned at all
--- (so we can pass message on to Renoise)
+--- Expanded UIComponent test. Check if we have no events assigned at all,
+-- before proceeding with the standard UIComponent test
+-- @param column (Number)
+-- @param row (Number)
+-- @return Boolean
 
 function UIButtonStrip:test(column,row)
   
@@ -673,28 +758,6 @@ function UIButtonStrip:test(column,row)
   end
 
   return UIComponent.test(self,column,row)
-
-end
-
---------------------------------------------------------------------------------
-
-function UIButtonStrip:_toggle_blink()
-  --TRACE("UIButtonStrip:_toggle_blink()")
-
-  self._blink_is_lit = not self._blink_is_lit
-
-  self._blink_task = self._display.scheduler:add_task(
-    self, UIButtonStrip._toggle_blink, self._blink_interval)
-
-  self:invalidate()
-
-end
-
---------------------------------------------------------------------------------
-
-function UIButtonStrip:_in_range(idx)
-
-  return not((idx<self._range[1]) or (idx>self._range[2]))
 
 end
 

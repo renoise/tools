@@ -5,6 +5,7 @@
 
 --[[
 
+
 About:
 
   The Effect application will enable control of every parameter in the 
@@ -111,6 +112,10 @@ Effect.default_options = {
     end
   }
 }
+
+--------------------------------------------------------------------------------
+
+--- initialize the Effect application
 
 function Effect:__init(process,mappings,options,cfg_name,palette)
   TRACE("Effect:__init", process,mappings,options,cfg_name,palette)
@@ -231,7 +236,7 @@ end
 
 --------------------------------------------------------------------------------
 
--- parameter value changed from Renoise
+--- parameter value changed from Renoise
 
 function Effect:set_parameter(control_index, value, skip_event)
   TRACE("Effect:set_parameter", control_index, value, skip_event)
@@ -244,7 +249,7 @@ end
 
 --------------------------------------------------------------------------------
 
--- update: set all controls to current values from renoise
+--- update: set all controls to current values from renoise
 
 function Effect:update()  
   TRACE("Effect:update()")
@@ -354,7 +359,7 @@ end
 --------------------------------------------------------------------------------
 
 
--- build_app: create the fader/dial layout
+--- build_app: create the fader/dial layout
 
 function Effect:_build_app()
   TRACE("Effect:_build_app(")
@@ -687,7 +692,7 @@ end
 
 --------------------------------------------------------------------------------
 
--- set device index, but only when valid
+--- set device index, but only when valid
 
 function Effect:_set_selected_device_index(idx)
   TRACE("Effect:_set_selected_device_index()",idx)
@@ -703,6 +708,8 @@ end
 
 --------------------------------------------------------------------------------
 
+--- return the currently selected device (can be nil)
+
 function Effect:_get_selected_device()
 
   local song = renoise.song()
@@ -713,6 +720,8 @@ function Effect:_get_selected_device()
 end
 
 --------------------------------------------------------------------------------
+
+--- update display for prev/next device-navigation buttons
 
 function Effect:_update_prev_next_device_buttons(device_idx)
   TRACE("Effect:_update_prev_next_device_buttons()",device_idx)
@@ -743,6 +752,8 @@ function Effect:_update_prev_next_device_buttons(device_idx)
 end
 
 --------------------------------------------------------------------------------
+
+--- update display for prev/next device-preset buttons
 
 function Effect:_update_prev_next_preset_buttons(device_idx)
   TRACE("Effect:_update_prev_next_preset_buttons()",device_idx)
@@ -777,7 +788,7 @@ end
 
 --------------------------------------------------------------------------------
 
--- start/resume application
+--- start/resume application
 
 function Effect:start_app()
   TRACE("Effect.start_app()")
@@ -794,6 +805,8 @@ end
 
 --------------------------------------------------------------------------------
 
+--- get specific effect parameter from current parameter-set
+
 function Effect:_get_parameter_by_index(idx)
   --TRACE("Effect._get_parameter_by_index()",idx)
 
@@ -805,7 +818,7 @@ end
 
 --------------------------------------------------------------------------------
 
--- obtain next device index (supports parameter subsets)
+--- obtain next device index (supports parameter subsets)
 
 function Effect:_get_next_device_index(idx)
   --TRACE("Effect._get_next_device_index()",idx)
@@ -825,7 +838,7 @@ end
 
 --------------------------------------------------------------------------------
 
--- obtain previous device index (supports parameter subsets)
+--- obtain previous device index (supports parameter subsets)
 
 function Effect:_get_previous_device_index(idx)
   TRACE("Effect._get_previous_device_index()",idx)
@@ -846,7 +859,7 @@ end
 
 --------------------------------------------------------------------------------
 
--- obtain actual device index by specifying the control index
+--- obtain actual device index by specifying the control index
 -- (useful when dealing with parameter subsets)
 
 function Effect:_get_device_index_by_ctrl(idx)
@@ -872,7 +885,7 @@ end
 
 --------------------------------------------------------------------------------
 
--- obtain control index by specifying the actual device index
+--- obtain control index by specifying the actual device index
 -- (useful when dealing with parameter subsets)
 
 function Effect:_get_ctrl_index_by_device(idx)
@@ -897,6 +910,8 @@ end
 
 --------------------------------------------------------------------------------
 
+--- called when a new document becomes available
+
 function Effect:on_new_document()
   TRACE("Effect:on_new_document")
   
@@ -911,7 +926,7 @@ end
 
 --------------------------------------------------------------------------------
 
--- in grid mode, when encountering a quantized parameter that
+--- in grid mode, when encountering a quantized parameter that
 -- has a larger range than the number of buttons we lower the ceiling
 -- for the slider, so only the 'settable' range is displayed
 -- (called when modifying and attaching parameter) 
@@ -928,7 +943,7 @@ end
 
 --------------------------------------------------------------------------------
 
--- in non-grid mode, if the parameters is quantized and has a range of 255, 
+--- in non-grid mode, if the parameters is quantized and has a range of 255, 
 -- we provide the 7-bit value as maximum - otherwise, we'd only be able to 
 -- access every second value
 
@@ -944,7 +959,7 @@ end
 
 --------------------------------------------------------------------------------
 
--- convert a [0-1] value to the given parameter value-range
+--- convert a [0-1] value to the given parameter value-range
 
 function Effect:_normalized_value_to_parameter_value(parameter, value)
 
@@ -955,7 +970,7 @@ end
 
 --------------------------------------------------------------------------------
 
--- convert a parameter value to a [0-1] value 
+--- convert a parameter value to a [0-1] value 
 
 function Effect:_parameter_value_to_normalized_value(parameter, value)
 
@@ -967,7 +982,7 @@ end
 
 --------------------------------------------------------------------------------
 
--- perform periodic updates
+--- perform periodic updates
 
 function Effect:on_idle()
 
@@ -996,7 +1011,7 @@ end
 
 --------------------------------------------------------------------------------
 
--- returns the current parameter set that we control
+--- returns the current parameter set that we control
 
 function Effect:_define_parameters()
   TRACE("Effect:_define_parameters()")
@@ -1040,7 +1055,7 @@ end
 
 --------------------------------------------------------------------------------
 
--- look for the number of devices in the current parameter set
+--- look for the number of devices in the current parameter set
 
 function Effect:_get_num_devices()
   TRACE("Effect:_get_num_devices()")
@@ -1078,7 +1093,7 @@ end
 
 --------------------------------------------------------------------------------
 
--- update the record mode (when editmode or record_method has changed)
+--- update the record mode (when editmode or record_method has changed)
 
 function Effect:_update_record_mode()
   TRACE("Effect:_update_record_mode()")
@@ -1091,7 +1106,7 @@ end
 
 --------------------------------------------------------------------------------
 
--- adds notifiers to song
+--- adds notifiers to song
 -- invoked when a new document becomes available
 
 function Effect:_attach_to_song()
@@ -1149,7 +1164,7 @@ end
 
 --------------------------------------------------------------------------------
 
--- attach notifier methods to devices & parameters...
+--- attach notifier methods to devices & parameters...
 
 function Effect:_attach_to_track_devices(track,new_song)
   TRACE("Effect:_attach_to_track_devices",track,new_song)
@@ -1225,7 +1240,7 @@ end
 
 --------------------------------------------------------------------------------
 
--- detect when a parameter set has changed
+--- detect when a parameter set has changed
 -- @param new_song - boolean, true to leave existing notifiers alone
 function Effect:_attach_to_parameters(new_song)
   TRACE("Effect:_attach_to_parameters", new_song)
@@ -1319,7 +1334,7 @@ end
 
 --------------------------------------------------------------------------------
 
--- detach all previously attached notifiers first
+--- detach all previously attached notifiers first
 -- but don't even try to detach when a new song arrived. old observables
 -- will no longer be alive then...
 -- @param new_song - boolean, true to leave existing notifiers alone

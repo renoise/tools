@@ -182,6 +182,9 @@ function TrackSelector:_attach_to_song(song)
   song.selected_track_index_observable:add_notifier(
     function()
       TRACE("TrackSelector:selected_track_observable fired...")
+      if not self.active then 
+        return 
+      end
       if (self._selected_track_index ~= song.selected_track_index)then
       -- request update on next idle() loop
         self._selected_track_index = song.selected_track_index

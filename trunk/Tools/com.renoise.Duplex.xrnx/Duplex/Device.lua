@@ -19,6 +19,13 @@ The Device class also contains methods for managing basic device settings
 
 class 'Device'
 
+--------------------------------------------------------------------------------
+
+--- Initialize the Device class
+-- @param name (String) the 'friendly name' of the device
+-- @param message_stream (MessageStream) 
+-- @param protocol (Enum), the protocol, e.g. DEVICE_MIDI_PROTOCOL
+
 function Device:__init(name, message_stream, protocol)
   TRACE('Device:__init()',name, message_stream, protocol)
 
@@ -76,6 +83,9 @@ end
 
 --------------------------------------------------------------------------------
 
+--- Retrieve the protocol of this device
+-- @return (Enum) communication protocol, e.g. DEVICE_MIDI_PROTOCOL
+
 function Device:get_protocol()
   TRACE("Device:get_protocol()")
 
@@ -83,6 +93,9 @@ function Device:get_protocol()
 end
 
 --------------------------------------------------------------------------------
+
+--- Set the device to the provided control-map 
+-- @param xml_file (String) path to file
 
 function Device:set_control_map(xml_file)
   TRACE("Device:set_control_map()",xml_file)
@@ -93,8 +106,9 @@ end
 
 --------------------------------------------------------------------------------
 
--- Convert a display/canvas point to an actual value
--- (always overridden with device-specific implementation)
+--- Convert a display/canvas point to an actual value, ready for output
+-- (always overridden with device-specific implementation, as the device will
+-- use MIDI or OSC-specific features at this stage)
 
 function Device:point_to_value()
   TRACE("Device:point_to_value()")
@@ -103,6 +117,11 @@ end
 
 
 --------------------------------------------------------------------------------
+
+--- Function for quantizing RGB color values to a device color-space
+-- @param color (Number), table containing RGB colors
+-- @param colorspace (Number), table containing colorspace
+-- @return (Table), the quantized color
 
 function Device:quantize_color(color,colorspace)
   --TRACE("Device:quantize_color()",color,colorspace)
@@ -146,9 +165,8 @@ end
 
 --------------------------------------------------------------------------------
 
--- open the device settings, includes a reference to the browser so that we
--- can update the browser state when releasing a device
--- @param process : reference to the BrowserProcess
+--- Open the device settings dialog
+-- @param process (BrowserProcess) 
 
 function Device:show_settings_dialog(process)
   TRACE("Device:show_settings_dialog()",process)
@@ -433,7 +451,8 @@ end
   
 --------------------------------------------------------------------------------
 
--- construct the device settings view (for both MIDI and OSC devices)
+--- Construct the device settings view (for both MIDI and OSC devices)
+-- @return ViewBuilder
 
 function Device:_build_settings()
   TRACE("Device:_build_settings()")
@@ -501,7 +520,9 @@ end
 
 --------------------------------------------------------------------------------
 
--- construct & send internal messages (for both MIDI and OSC devices)
+--- Construct & send internal messages (for both MIDI and OSC devices)
+-- @param message (Message) the message to send
+-- @param xarg (Table) parameter attributes
 
 function Device:_send_message(message,xarg)
   TRACE("Device:_send_message()",message,xarg)
