@@ -113,7 +113,6 @@ end
 -- instead of the "value" attribute
 -- @param socket (
 -- @param binary_data
---[[
 function OscDevice:socket_message(socket, binary_data)
   TRACE("OscDevice:socket_message",socket, binary_data)
 
@@ -152,7 +151,6 @@ function OscDevice:socket_message(socket, binary_data)
   end
   
 end
-]]
 
 --------------------------------------------------------------------------------
 
