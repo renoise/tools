@@ -96,8 +96,8 @@ end
 
 --- Start/resume application
 
-function Application:start_app()
-  TRACE("Application:start_app()")
+function Application:start_app(start_running)
+  TRACE("Application:start_app()",start_running)
 
   if (self.active) then
     return false

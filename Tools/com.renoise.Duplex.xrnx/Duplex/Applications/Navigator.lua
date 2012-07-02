@@ -621,13 +621,18 @@ function Navigator:_get_num_lines()
 
   local patt_idx = renoise.song().selected_pattern_index
   local num_lines = renoise.song().patterns[patt_idx].number_of_lines
-  if (num_lines<self._blockpos._size) then
-    self._steps = num_lines
-  else
-    self._steps = self._blockpos._size
+
+  if self._blockpos then
+
+    if (num_lines<self._blockpos._size) then
+      self._steps = num_lines
+    else
+      self._steps = self._blockpos._size
+    end
+    self._blockpos:set_steps(self._steps)
+    return num_lines
+  
   end
-  self._blockpos:set_steps(self._steps)
-  return num_lines
 
 end
 

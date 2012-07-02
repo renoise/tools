@@ -609,7 +609,7 @@ function Browser:set_configuration(configuration, start_running)
   ---- apply start options
   
   if (self:_current_process() and start_running) then
-    self:start_current_configuration()
+    self:start_current_configuration(start_running)
   end
   
     
@@ -653,12 +653,12 @@ end
 
 --- Start current configuration (and all apps within it)
 
-function Browser:start_current_configuration()
-  TRACE("Browser:start_configuration()")
+function Browser:start_current_configuration(start_running)
+  TRACE("Browser:start_configuration()",start_running)
   
   local process = self:_current_process()
   if (process and not process:running()) then
-    process:start()
+    process:start(start_running)
   end
 
   -- adjust the GUI, in case this was not fired from the GUI
@@ -1671,8 +1671,8 @@ end
 --- Start running a fully configured process. returns true when successfully 
 -- started, else false (may happen if one of the apps failed to start)
 
-function BrowserProcess:start()
-  TRACE("BrowserProcess:start")
+function BrowserProcess:start(start_running)
+  TRACE("BrowserProcess:start",start_running)
 
   assert(self:instantiated(), "Internal Error. Please report: " .. 
     "trying to start a process which was not instantiated")
@@ -1684,7 +1684,7 @@ function BrowserProcess:start()
   
   -- start every single app we have
   for _,app in pairs(self._applications) do
-    if (app:start_app() == false) then
+    if (app:start_app(start_running) == false) then
       succeeded = false
       break
     end

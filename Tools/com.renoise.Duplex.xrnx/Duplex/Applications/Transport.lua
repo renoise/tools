@@ -195,18 +195,6 @@ function Transport:on_idle()
   local loop_block_enabled = renoise.song().transport.loop_block_enabled
   local loop_pattern = renoise.song().transport.loop_pattern
 
-  -- never blink when we enter block mode
-  if loop_block_enabled and (not loop_block_enabled) then
-    --[[
-    if self.controls.next then
-      self.controls.next.loop = false
-    end
-    if self.controls.previous then
-      self.controls.previous.loop = false
-    end
-    ]]
-  end
-
   -- update 'block_loop' status
   if (self._block_loop ~= loop_block_enabled) then
     self:update_block_loop()
