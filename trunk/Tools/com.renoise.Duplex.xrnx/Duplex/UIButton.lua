@@ -53,7 +53,7 @@ function UIButton:__init(display)
   self.palette = {
     foreground = {
       color = {0x00,0x00,0x80},
-      text = "bt",
+      text = "",
       val = false
     }
   }
