@@ -68,7 +68,7 @@ function UISlider:__init(display)
   UIComponent.__init(self,display)
 
   -- current value, between 0 and .ceiling
-  self.value = nil
+  self.value = 0
 
   -- TODO the minimum value (the opposite of ceiling)
   -- self.floor = 0
@@ -78,7 +78,7 @@ function UISlider:__init(display)
   self.steps = 1
 
   -- the selected index, between 0 - number of steps
-  self.index = nil
+  self.index = 0
 
   -- if true, press twice to switch to deselected state
   -- only applies when input method is a button
