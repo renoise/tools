@@ -19,6 +19,40 @@
 
 --==============================================================================
 
+-- constants
+
+local RANGE_WHOLE_SONG = 1
+local RANGE_WHOLE_PATTERN = 2
+local RANGE_TRACK_IN_SONG = 3
+local RANGE_TRACK_IN_PATTERN = 4
+local RANGE_SELECTION_IN_PATTERN = 5
+local SHIFT_AUTOMATION_ON = 1
+local SHIFT_AUTOMATION_OFF = 2
+
+local RANGE_NAMES = {
+  "Whole Song",
+  "Whole Pattern",
+  "Track in Song",
+  "Track in Pattern",
+  "Selection in Pattern"
+}
+
+local EFFECT_COLUMN_PROPERTIES = {
+  "number_value",
+  "amount_value",
+}
+
+local NOTE_COLUMN_PROPERTIES = {
+  "note_value",
+  "instrument_value",
+  "volume_value",
+  "panning_value",
+  "delay_value",
+}
+
+
+
+--==============================================================================
 
 class 'Rotate' (Application)
 
@@ -41,66 +75,39 @@ Rotate.default_options = {
   },
 }
 
-function Rotate:__init(process,mappings,options,cfg_name,palette)
+Rotate.available_mappings = {
+  track_in_pattern_up = { 
+    description = "Rotate: nudge track up"
+  },
+  track_in_pattern_down = {
+    description = "Rotate: nudge track down"
+  },
+  whole_pattern_up = {
+    description = "Rotate: nudge pattern up"
+  },
+  whole_pattern_down = {
+    description = "Rotate: nudge pattern down"
+  },
+}
+
+Rotate.default_palette = {
+  up_bright   = { color = {0xFF,0xFF,0xFF}, text = "▲", val=true  },
+  up_dimmed   = { color = {0x80,0x80,0x80}, text = "▲", val=false },
+  up_off      = { color = {0x40,0x40,0x40}, text = "▲", val=false },
+  down_bright = { color = {0xFF,0xFF,0xFF}, text = "▼", val=true  },
+  down_dimmed = { color = {0x80,0x80,0x80}, text = "▼", val=false },
+  down_off    = { color = {0x40,0x40,0x40}, text = "▼", val=false },
+}
 
 
-  -- ranges
+--------------------------------------------------------------------------------
 
-  self.RANGE_WHOLE_SONG = 1
-  self.RANGE_WHOLE_PATTERN = 2
-  self.RANGE_TRACK_IN_SONG = 3
-  self.RANGE_TRACK_IN_PATTERN = 4
-  self.RANGE_SELECTION_IN_PATTERN = 5
+--- Constructor method
+-- @param (VarArg), see Application to learn more
 
-  self.SHIFT_AUTOMATION_ON = 1
-  self.SHIFT_AUTOMATION_OFF = 2
+function Rotate:__init(...)
 
-  self.range_names = {
-    "Whole Song",
-    "Whole Pattern",
-    "Track in Song",
-    "Track in Pattern",
-    "Selection in Pattern"
-  }
-
-  self.effect_column_properties = {
-    "number_value",
-    "amount_value",
-  }
-
-  self.note_column_properties = {
-    "note_value",
-    "instrument_value",
-    "volume_value",
-    "panning_value",
-    "delay_value",
-  }
-
-  self.mappings = {
-    track_in_pattern_up = { 
-      description = "Rotate: toggle on/off"
-    },
-    track_in_pattern_down = {
-      description = "Rotate: toggle on/off"
-    },
-    whole_pattern_up = {
-      description = "Rotate: toggle on/off"
-    },
-    whole_pattern_down = {
-      description = "Rotate: toggle on/off"
-    },
-  }
-
-  self.palette = {
-    up_bright   = { color = {0xFF,0xFF,0xFF}, text = "▲", val=true  },
-    up_dimmed   = { color = {0x80,0x80,0x80}, text = "▲", val=false },
-    up_off      = { color = {0x40,0x40,0x40}, text = "▲", val=false },
-    down_bright = { color = {0xFF,0xFF,0xFF}, text = "▼", val=true  },
-    down_dimmed = { color = {0x80,0x80,0x80}, text = "▼", val=false },
-    down_off    = { color = {0x40,0x40,0x40}, text = "▼", val=false },
-  }
-
-  Application.__init(self,process,mappings,options,cfg_name,palette)
+  Application.__init(self,...)
 
 end
 
@@ -133,12 +140,12 @@ function Rotate:process(shift_amount, range_mode, shift_automation)
   
   shift_automation = (shift_automation ~= nil) and 
     shift_automation or 
-    (self.options.shift_automation.value == self.SHIFT_AUTOMATION_ON)
+    (self.options.shift_automation.value == SHIFT_AUTOMATION_ON)
   
   assert(type(shift_amount) == "number", 
     "Internal Error: Unexpected shift_amount argument")
   assert(type(range_mode) == "number" and 
-    range_mode >= 1 and range_mode <= #self.range_names, 
+    range_mode >= 1 and range_mode <= #RANGE_NAMES, 
     "Internal Error: Unexpected range_mode argument")
   assert(type(shift_automation) == "boolean" and 
     "Internal Error: Unexpected shift_automation argument")
@@ -152,28 +159,28 @@ function Rotate:process(shift_amount, range_mode, shift_automation)
   
   ----- get the processing pattern & track range
 
-  local process_selection = (range_mode == self.RANGE_SELECTION_IN_PATTERN)
+  local process_selection = (range_mode == RANGE_SELECTION_IN_PATTERN)
 
   local pattern_start, pattern_end
   local track_start, track_end
   
-  if (range_mode == self.RANGE_WHOLE_SONG) then
+  if (range_mode == RANGE_WHOLE_SONG) then
     pattern_start, pattern_end = 1, #patterns
     track_start, track_end = 1, #tracks
   
-  elseif (range_mode == self.RANGE_WHOLE_PATTERN) then
+  elseif (range_mode == RANGE_WHOLE_PATTERN) then
     pattern_start, pattern_end = selected_pattern_index, selected_pattern_index
     track_start, track_end = 1, #tracks
   
-  elseif (range_mode == self.RANGE_TRACK_IN_SONG) then
+  elseif (range_mode == RANGE_TRACK_IN_SONG) then
     pattern_start, pattern_end = 1, #patterns
     track_start, track_end = selected_track_index, selected_track_index
   
-  elseif (range_mode == self.RANGE_TRACK_IN_PATTERN) then
+  elseif (range_mode == RANGE_TRACK_IN_PATTERN) then
     pattern_start, pattern_end = selected_pattern_index, selected_pattern_index
     track_start, track_end = selected_track_index, selected_track_index
   
-  elseif (range_mode == self.RANGE_SELECTION_IN_PATTERN) then
+  elseif (range_mode == RANGE_SELECTION_IN_PATTERN) then
     pattern_start, pattern_end = selected_pattern_index, selected_pattern_index
     track_start, track_end = 1, #tracks
   
@@ -297,7 +304,7 @@ function Rotate:process(shift_amount, range_mode, shift_automation)
     end
   end
 
-  local range_name = self.range_names[range_mode]
+  local range_name = RANGE_NAMES[range_mode]
   local shift_autom = (shift_automation) and "(including automation)" or ""
   local msg = "Rotate: %s by %i %s"
   msg = string.format(msg,range_name,shift_amount,shift_autom)
@@ -316,7 +323,7 @@ pattern_line_tools.lua
 
 
 function Rotate:copy_effect_column(src_column, dest_column)
-  for _,property in pairs(self.effect_column_properties) do
+  for _,property in pairs(EFFECT_COLUMN_PROPERTIES) do
     dest_column[property] = src_column[property]
   end
 end
@@ -328,7 +335,7 @@ end
 
 
 function Rotate:copy_note_column(src_column, dest_column)
-  for _,property in pairs(self.note_column_properties) do
+  for _,property in pairs(NOTE_COLUMN_PROPERTIES) do
     dest_column[property] = src_column[property]
   end
 end
@@ -410,9 +417,9 @@ function Rotate:_build_app()
     c.on_press = function(obj)
       if not self.active then return false end
       local shift_amount = -self.options.shift_amount.value
-      local range_mode = self.RANGE_TRACK_IN_PATTERN
+      local range_mode = RANGE_TRACK_IN_PATTERN
       local shift_automation = 
-        (self.options.shift_automation.value == self.SHIFT_AUTOMATION_ON)
+        (self.options.shift_automation.value == SHIFT_AUTOMATION_ON)
       self:process(shift_amount,range_mode,shift_automation)
       obj:flash(
         0.1,self.palette.up_bright,self.palette.up_dimmed,self.palette.up_off)
@@ -430,9 +437,9 @@ function Rotate:_build_app()
     c.on_press = function(obj)
       if not self.active then return false end
       local shift_amount = self.options.shift_amount.value
-      local range_mode = self.RANGE_TRACK_IN_PATTERN
+      local range_mode = RANGE_TRACK_IN_PATTERN
       local shift_automation = 
-        (self.options.shift_automation.value == self.SHIFT_AUTOMATION_ON)
+        (self.options.shift_automation.value == SHIFT_AUTOMATION_ON)
       self:process(shift_amount,range_mode,shift_automation)
       obj:flash(
         0.1,self.palette.down_bright,self.palette.down_dimmed,self.palette.down_off)
@@ -450,9 +457,9 @@ function Rotate:_build_app()
     c.on_press = function(obj)
       if not self.active then return false end
       local shift_amount = -self.options.shift_amount.value
-      local range_mode = self.RANGE_WHOLE_PATTERN
+      local range_mode = RANGE_WHOLE_PATTERN
       local shift_automation = 
-        (self.options.shift_automation.value == self.SHIFT_AUTOMATION_ON)
+        (self.options.shift_automation.value == SHIFT_AUTOMATION_ON)
       self:process(shift_amount,range_mode,shift_automation)
       obj:flash(
         0.1,self.palette.up_bright,self.palette.up_dimmed,self.palette.up_off)
@@ -470,9 +477,9 @@ function Rotate:_build_app()
     c.on_press = function(obj)
       if not self.active then return false end
       local shift_amount = self.options.shift_amount.value
-      local range_mode = self.RANGE_WHOLE_PATTERN
+      local range_mode = RANGE_WHOLE_PATTERN
       local shift_automation = 
-        (self.options.shift_automation.value == self.SHIFT_AUTOMATION_ON)
+        (self.options.shift_automation.value == SHIFT_AUTOMATION_ON)
       self:process(shift_amount,range_mode,shift_automation)
       obj:flash(
         0.1,self.palette.down_bright,self.palette.down_dimmed,self.palette.down_off)

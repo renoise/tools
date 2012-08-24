@@ -34,15 +34,18 @@ duplex_configurations:insert {
           index = 7,
         },
         --[[
-        ]]
         mute = {
           group_name = "SliderButtons",
         },
+        ]]
       }
     },
-    --[[
     TrackSelector = {
       mappings = {
+        select_track = {
+          group_name = "SliderButtons",
+        }
+        --[[
         prev_next_track = {
           group_name = "SliderButtons",
           index = 1,
@@ -51,9 +54,10 @@ duplex_configurations:insert {
           group_name = "SliderButtons",
           index = 3,
         },
+        ]]
+
       }
     },
-    ]]
     Effect = {
       mappings = {
         parameters = {
@@ -68,6 +72,8 @@ duplex_configurations:insert {
         }
       }
     },
+    --[[
+    ]]
     XYPad = {
       mappings = {
         y_slider = {
@@ -150,5 +156,6 @@ duplex_configurations:insert {
       options = {
       }
     },
+
   }
 }

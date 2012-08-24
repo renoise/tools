@@ -753,7 +753,7 @@ function UIButtonStrip:test(column,row)
     (self.on_change == nil) and
     (self.on_release == nil) 
   then
-    --print("this component has no event handlers")
+    -- this component has no event handler 
     return false
   end
 

@@ -214,7 +214,7 @@ end
 --------------------------------------------------------------------------------
 
 --- Easy way to animate the appearance of the button
--- @param delay (Number) number of ms between updates
+-- @param delay (Number) number of seconds between updates
 -- @param ... (Vararg) palette entries
 
 function UIButton:flash(delay, ...)

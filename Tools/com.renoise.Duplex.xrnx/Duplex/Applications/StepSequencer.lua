@@ -70,6 +70,18 @@ Changes (equal to Duplex version number)
 
 --==============================================================================
 
+-- constants
+
+local COLUMNS_SINGLE = 1
+local COLUMNS_MULTI = 2
+local FOLLOW_TRACK_ON = 1
+local FOLLOW_TRACK_OFF = 2
+local TRACK_PAGE_AUTO = 1
+
+
+--==============================================================================
+
+
 class 'StepSequencer' (Application)
 
 StepSequencer.default_options = {
@@ -118,76 +130,66 @@ StepSequencer.default_options = {
   },
 }
 
-function StepSequencer:__init(process,mappings,options,cfg_name,palette)
-  TRACE("StepSequencer:__init(",process,mappings,options,cfg_name,palette)
+StepSequencer.available_mappings = {
+  grid = {
+    description = "Sequencer: press to toggle note on/off"
+                .."\nHold single button to copy note"
+                .."\nHold multiple buttons to adjust level/transpose"
+                .."\nControl value: ",
+    orientation = VERTICAL,
+  },
+  level = {
+    -- note: this control serves two purposes, as it will also display the 
+    -- currently playing line - therefore, it needs to be the same size
+    -- as the grid (rows if vertical, columns if horizontal)
+    description = "Sequencer: Adjust note volume",
+    orientation = VERTICAL,
+  },
+  line = { 
+    description = "Sequencer: Flip up/down through lines",
+    orientation = HORIZONTAL,
+  },
+  track = {
+    description = "Sequencer: Flip through tracks",
+    orientation = HORIZONTAL,
+  },
+  transpose = {
+    description = "Sequencer: 4 buttons for transpose"
+                .."\n1st: Oct down"
+                .."\n2nd: Semi down"
+                .."\n3rd: Semi up"
+                .."\n4th: Oct up"
+                .."\nControl value: ",
+  },
+}
 
-  self.COLUMNS_SINGLE = 1
-  self.COLUMNS_MULTI = 2
+StepSequencer.default_palette = {
+  out_of_bounds     = { color={0x40,0x40,0x00}, text="·", val=false},
+  slot_empty        = { color={0x00,0x00,0x00}, text="·", val=false},
+  slot_current      = { color={0x00,0x00,0x00}, text="·", val=false },
+  slot_muted        = { color={0x40,0x00,0x00}, text="▫", val=false},
+  slot_level_1      = { color={0x00,0x40,0xff}, text="▪", val=true},
+  slot_level_2      = { color={0x00,0x80,0xff}, text="▪", val=true},
+  slot_level_3      = { color={0x00,0xc0,0xff}, text="▪", val=true},
+  slot_level_4      = { color={0x00,0xff,0xff}, text="▪", val=true},
+  slot_level_5      = { color={0x40,0xff,0xff}, text="▪", val=true},
+  slot_level_6      = { color={0x80,0xff,0xff}, text="▪", val=true},
+  transpose_12_down = { color={0xff,0x00,0xff}, text="-12",val=false},
+  transpose_1_down  = { color={0xc0,0x40,0xff}, text="-1", val=false},
+  transpose_1_up    = { color={0x40,0xc0,0xff}, text="+1", val=false},
+  transpose_12_up   = { color={0x00,0xff,0xff}, text="+12",val=false},
+  --position          = { color={0x00,0xff,0x00}, },
 
-  self.FOLLOW_TRACK_ON = 1
-  self.FOLLOW_TRACK_OFF = 2
+}
 
-  self.TRACK_PAGE_AUTO = 1
 
-  --self.ORIENTATION_VERTICAL = 1
-  --self.ORIENTATION_HORIZONTAL = 2
+--------------------------------------------------------------------------------
 
-  --self:_set_default_options(true)
+--- Constructor method
+-- @param (VarArg), see Application to learn more
 
-  -- define the mappings (unassigned)
-  self.mappings = {
-    grid = {
-      description = "Sequencer: press to toggle note on/off"
-                  .."\nHold single button to copy note"
-                  .."\nHold multiple buttons to adjust level/transpose"
-                  .."\nControl value: ",
-      orientation = VERTICAL,
-    },
-    level = {
-      -- note: this control serves two purposes, as it will also display the 
-      -- currently playing line - therefore, it needs to be the same size
-      -- as the grid (rows if vertical, columns if horizontal)
-      description = "Sequencer: Adjust note volume",
-      orientation = VERTICAL,
-    },
-    line = { 
-      description = "Sequencer: Flip up/down through lines",
-      orientation = HORIZONTAL,
-    },
-    track = {
-      description = "Sequencer: Flip through tracks",
-      orientation = HORIZONTAL,
-    },
-    transpose = {
-      description = "Sequencer: 4 buttons for transpose"
-                  .."\n1st: Oct down"
-                  .."\n2nd: Semi down"
-                  .."\n3rd: Semi up"
-                  .."\n4th: Oct up"
-                  .."\nControl value: ",
-    },
-
-  }
-
-  -- define default palette
-  self.palette = {
-    out_of_bounds     = { color={0x40,0x40,0x00}, text="·", val=false},
-    slot_empty        = { color={0x00,0x00,0x00}, text="·", val=false},
-    slot_current      = { color={0x00,0x00,0x00}, text="·", val=false },
-    slot_muted        = { color={0x40,0x00,0x00}, text="▫", val=false},
-    slot_level_1      = { color={0x00,0x40,0xff}, text="▪", val=true},
-    slot_level_2      = { color={0x00,0x80,0xff}, text="▪", val=true},
-    slot_level_3      = { color={0x00,0xc0,0xff}, text="▪", val=true},
-    slot_level_4      = { color={0x00,0xff,0xff}, text="▪", val=true},
-    slot_level_5      = { color={0x40,0xff,0xff}, text="▪", val=true},
-    slot_level_6      = { color={0x80,0xff,0xff}, text="▪", val=true},
-    transpose_12_down = { color={0xff,0x00,0xff}, text="-12",val=false},
-    transpose_1_down  = { color={0xc0,0x40,0xff}, text="-1", val=false},
-    transpose_1_up    = { color={0x40,0xc0,0xff}, text="+1", val=false},
-    transpose_12_up   = { color={0x00,0xff,0xff}, text="+12",val=false},
-    --position          = { color={0x00,0xff,0x00}, },
-
-  }
+function StepSequencer:__init(...)
+  TRACE("StepSequencer:__init(",...)
 
   -- default note/volume
   self._base_note = 1
@@ -243,7 +245,7 @@ function StepSequencer:__init(process,mappings,options,cfg_name,palette)
   -- don't toggle off if pressing multiple on / transposing / etc
   self._toggle_exempt = { } 
 
-  Application.__init(self,process,mappings,options,cfg_name,palette)
+  Application.__init(self,...)
 
 end
 
@@ -392,7 +394,7 @@ function StepSequencer:_build_track()
       local page_width = self:_get_page_width()
       local track_idx = (obj.index*page_width)
 
-      if (self.options.follow_track.value == self.FOLLOW_TRACK_ON) then
+      if (self.options.follow_track.value == FOLLOW_TRACK_ON) then
         -- if the follow_track option is specified, we set the
         -- track index and let the _follow_track() method handle it
         renoise.song().selected_track_index = 1+track_idx
@@ -899,7 +901,7 @@ end
 function StepSequencer:_follow_track()
   TRACE("StepSequencer:_follow_track()")
 
-  if (self.options.follow_track.value == self.FOLLOW_TRACK_OFF) then
+  if (self.options.follow_track.value == FOLLOW_TRACK_OFF) then
     return
   end
 
@@ -942,7 +944,7 @@ end
 
 function StepSequencer:_get_page_width()
 
-  return (self.options.page_size.value==self.TRACK_PAGE_AUTO)
+  return (self.options.page_size.value == TRACK_PAGE_AUTO)
     and self._track_count or self.options.page_size.value-1
 
 end
@@ -985,7 +987,7 @@ function StepSequencer:_attach_to_song()
       TRACE("StepSequencer:follow_player_observable fired...")
       -- if switching on, start tracking actively
       local follow = renoise.song().transport.follow_player
-      if not (follow==self._follow_player) then
+      if not (follow == self._follow_player) then
         self._start_tracking = follow
       end
       self._follow_player = follow
@@ -1135,7 +1137,7 @@ function StepSequencer:_process_grid_event(x,y, state, btn)
 
   local track_idx,line_idx = x,y
 
-  if not (self:_get_orientation()==VERTICAL) then
+  if not (self:_get_orientation() == VERTICAL) then
     line_idx,track_idx = track_idx,line_idx
   end
 
@@ -1149,11 +1151,10 @@ function StepSequencer:_process_grid_event(x,y, state, btn)
   -- check if we are dealing with a group track
   local track = renoise.song().tracks[track_idx]
   if (track.type == TRACK_TYPE_GROUP) then
-    --print("Group tracks are ignored")
     return
   end
 
-  local current_track = (track_idx==renoise.song().selected_track_index)
+  local current_track = (track_idx == renoise.song().selected_track_index)
 
   local note = renoise.song().selected_pattern.tracks[track_idx]:line(
     line_idx).note_columns[1]
@@ -1222,7 +1223,7 @@ function StepSequencer:_copy_grid_button(lx,ly, btn)
   local gx = lx+self._track_offset
   local gy = ly+self._edit_page*self._line_count
 
-  if not (self:_get_orientation()==VERTICAL) then
+  if not (self:_get_orientation() == VERTICAL) then
     gx,gy = gy,gx
   end
 
@@ -1241,7 +1242,6 @@ function StepSequencer:_copy_grid_button(lx,ly, btn)
   end
   -- copy volume to base volume
   local note_vol = math.min(128,note.volume_value)
-  print("note.volume_value,note_vol",note.volume_value,note_vol)
   if (note_vol <= 128) then
     self._base_volume = note_vol
     self:_draw_volume_slider(note_vol)
@@ -1273,7 +1273,6 @@ function StepSequencer:_draw_volume_slider(volume)
     end
 
     local idx = self._level._size-math.floor((volume/127)*self._level._size)
-    --print("idx",idx)
     self._level:set_palette({range = p})
     self._level:set_range(idx,self._level._size)
 

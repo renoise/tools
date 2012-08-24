@@ -30,39 +30,39 @@ Changes (equal to Duplex version number)
 
 class 'PatternSequence' (Application)
 
-PatternSequence.default_options = {
+PatternSequence.default_options = {}
+
+PatternSequence.available_mappings = {
+  display_next = {
+    description = "PatternSequence: Display next pattern",
+  },
+  display_previous = {
+    description = "PatternSequence: Display previous pattern",
+  }
 }
 
-function PatternSequence:__init(process,mappings,options,cfg_name,palette)
-  TRACE("PatternSequence:__init(",process,mappings,options,cfg_name,palette)
+PatternSequence.default_palette = {
+  previous_enabled  = { color={0xff,0xff,0x00}, text="▲", val=true  },
+  previous_disabled = { color={0x00,0x00,0x00}, text="▲", val=false },
+  next_enabled      = { color={0xff,0xff,0x00}, text="▼", val=true  },
+  next_disabled     = { color={0x00,0x00,0x00}, text="▼", val=false },
 
-  --self:_set_default_options(true)
+}
+
+--------------------------------------------------------------------------------
+
+--- Constructor method
+-- @param (VarArg), see Application to learn more
+
+function PatternSequence:__init(...)
+  TRACE("PatternSequence:__init(",...)
 
   self._update_pos_requested = false
-
-  -- define the mappings (unassigned)
-  self.mappings = {
-    display_next = {
-      description = "PatternSequence: Display next pattern",
-    },
-    display_previous = {
-      description = "PatternSequence: Display previous pattern",
-    }
-  }
-
-  -- define default palette
-  self.palette = {
-    previous_enabled  = { color={0xff,0xff,0x00}, text="▲", val=true  },
-    previous_disabled = { color={0x00,0x00,0x00}, text="▲", val=false },
-    next_enabled      = { color={0xff,0xff,0x00}, text="▼", val=true  },
-    next_disabled     = { color={0x00,0x00,0x00}, text="▼", val=false },
-
-  }
 
   -- the various UIComponents
   self.controls = {}
 
-  Application.__init(self,process,mappings,options,cfg_name,palette)
+  Application.__init(self,...)
 
 end
 

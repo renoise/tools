@@ -15,20 +15,25 @@
 class 'Metronome' (Application)
 
 Metronome.default_options = {}
-
-function Metronome:__init(process,mappings,options,cfg_name,palette)
-
-  self.mappings = {
-    toggle = {
-      description = "Metronome: toggle on/off"
-    }
+Metronome.available_mappings = {
+  toggle = {
+    description = "Metronome: toggle on/off"
   }
-  self.palette = {
-    enabled   = { color = {0xFF,0x80,0x80}, text = "M", val=true  },
-    disabled  = { color = {0x00,0x00,0x00}, text = "M", val=false }
-  }
+}
+Metronome.default_palette = {
+  enabled   = { color = {0xFF,0x80,0x80}, text = "M", val=true  },
+  disabled  = { color = {0x00,0x00,0x00}, text = "M", val=false }
+}
 
-  Application.__init(self,process,mappings,options,cfg_name,palette)
+
+--------------------------------------------------------------------------------
+
+--- Constructor method
+-- @param (VarArg), see Application to learn more
+
+function Metronome:__init(...)
+
+  Application.__init(self,...)
 
 end
 

@@ -218,7 +218,6 @@ function ControlMap:get_params_by_value(str,msg_context)
   -- next, match keyboard (no note information)
   if (msg_context == MIDI_NOTE_MESSAGE) then
     local str2 = strip_note_info(str)
-    --print("controlMap: str2",str2)
     for _,group in pairs(self.groups) do
       for k,v in ipairs(group) do
         -- check if we already have matched the value
@@ -270,7 +269,6 @@ function ControlMap:get_osc_param(str)
 
   -- check if we have previously matched the pattern
   if self.osc_buffer[str] then
-    print("retrieve buffered OSC message:",str)
     local buf = self.osc_buffer[str]
     return buf[1],buf[2],buf[3],buf[4]
   end
@@ -608,10 +606,6 @@ function ControlMap:_parse_xml(str)
     if (not ni) then 
       break 
     end
-      --[[
-      print("Controlmap xargs")
-      rprint(xarg)
-      ]]
     
     local text = string.sub(str, i, ni - 1)
     

@@ -86,6 +86,26 @@ Changes (equal to Duplex version number)
 
 --==============================================================================
 
+-- constants
+
+local MODE_PREFX = 1
+local MODE_POSTFX = 2
+local MODE_PREPOSTSYNC_ON = 1
+local MODE_PREPOSTSYNC_OFF = 2
+local MUTE_MODE_OFF = 1
+local MUTE_MODE_MUTE = 2
+local FOLLOW_TRACK_ON = 1
+local FOLLOW_TRACK_OFF = 2
+local TRACK_PAGE_AUTO = 1
+local TAKE_OVER_VOLUME_OFF = 1
+local TAKE_OVER_VOLUME_ON = 2
+local RECORD_NONE = 1
+local RECORD_TOUCH = 2
+local RECORD_LATCH = 3
+
+
+--==============================================================================
+
 class 'Mixer' (Application)
 
 Mixer.default_options = {
@@ -93,7 +113,7 @@ Mixer.default_options = {
     label = "Pre/Post mode",
     description = "Change if either Pre or Post FX volume/pan is controlled",
     on_change = function(inst)
-      inst._postfx_mode = (inst.options.pre_post.value==inst.MODE_POSTFX) and 
+      inst._postfx_mode = (inst.options.pre_post.value==MODE_POSTFX) and 
         true or false
       inst._update_requested = true
     end,
@@ -174,7 +194,7 @@ Mixer.default_options = {
     },
     value = 1,
     on_change = function(inst)
-      inst.automation.latch_record = (inst.options.record_method.value==inst.RECORD_LATCH) 
+      inst.automation.latch_record = (inst.options.record_method.value==RECORD_LATCH) 
       inst:update_record_mode()
     end
   }
@@ -195,84 +215,68 @@ if (renoise.API_VERSION >=2) then
   }
 end
 
+Mixer.available_mappings = {
+  master = {
+    description = "Mixer: Master volume",
+  },
+  levels = {
+    description = "Mixer: Track volume",
+  },
+  panning = {
+    description = "Mixer: Track panning",
+  },
+  mute = {
+    description = "Mixer: Mute track",
+  },
+  solo = {
+    description = "Mixer: Solo track",
+  },
+  page = {
+    description = "Mixer: Track navigator",
+    orientation = HORIZONTAL,
+  },
+  mode = {
+    description = "Mixer: Pre/Post FX mode",
+  },
+}
 
-function Mixer:__init(process,mappings,options,cfg_name,palette)
-  TRACE("Mixer:__init",process,mappings,options,cfg_name,palette)
+Mixer.default_palette = {
+  background        = { color={0x00,0x00,0x00}, val = false,text="·",},
+  -- normal tracks
+  normal_tip = {        color={0x00,0xff,0xff}, val = true, },
+  normal_tip_dimmed = { color={0x00,0x40,0xff}, val = true, },
+  normal_lane       = { color={0x00,0x81,0xff}, val = true, },
+  normal_lane_dimmed = {color={0x00,0x40,0xff}, val = true, },
+  normal_mute_on    = { color={0x40,0xff,0x40}, val = true, text ="M"},
+  normal_mute_off   = { color={0x00,0x00,0x00}, val = false,text ="M",},
+  -- master track
+  master_tip        = { color={0xff,0xff,0xff}, val = true, },
+  master_lane       = { color={0x80,0x80,0xff}, val = true, },
+  master_mute_on    = { color={0xff,0xff,0x40}, val = true, text ="M",},
+  -- send tracks
+  send_tip          = { color={0xff,0x40,0x00}, val = true, },
+  send_tip_dimmed   = { color={0x40,0x00,0xff}, val = true, },
+  send_lane         = { color={0x81,0x00,0xff}, val = true, },
+  send_lane_dimmed  = { color={0x40,0x00,0xff}, val = true, },
+  send_mute_on      = { color={0xff,0x40,0x00}, val = true, text = "M", },
+  send_mute_off     = { color={0x00,0x00,0x00}, val = false,text = "M", },
+  -- pre/post buttons
+  mixer_mode_pre    = { color={0xff,0xff,0xff}, val = true, text = "Pre",},
+  mixer_mode_post   = { color={0x00,0x00,0x00}, val = false,text = "Post",},
+  -- solo buttons
+  solo_on           = { color={0xff,0x40,0x00}, val = true, text = "S",},
+  solo_off          = { color={0x00,0x00,0x00}, val = false,text = "S", },
 
-  self.MODE_PREFX = 1
-  self.MODE_POSTFX = 2
+}
 
-  self.MODE_PREPOSTSYNC_ON = 1
-  self.MODE_PREPOSTSYNC_OFF = 2
 
-  self.MUTE_MODE_OFF = 1
-  self.MUTE_MODE_MUTE = 2
+--------------------------------------------------------------------------------
 
-  self.FOLLOW_TRACK_ON = 1
-  self.FOLLOW_TRACK_OFF = 2
+--- Constructor method
+-- @param (VarArg), see Application to learn more
 
-  self.TRACK_PAGE_AUTO = 1
-
-  self.TAKE_OVER_VOLUME_OFF = 1
-  self.TAKE_OVER_VOLUME_ON = 2
-  
-  self.RECORD_NONE = 1
-  self.RECORD_TOUCH = 2
-  self.RECORD_LATCH = 3
-
-  self.mappings = {
-    master = {
-      description = "Mixer: Master volume",
-    },
-    levels = {
-      description = "Mixer: Track volume",
-    },
-    panning = {
-      description = "Mixer: Track panning",
-    },
-    mute = {
-      description = "Mixer: Mute track",
-    },
-    solo = {
-      description = "Mixer: Solo track",
-    },
-    page = {
-      description = "Mixer: Track navigator",
-      orientation = HORIZONTAL,
-    },
-    mode = {
-      description = "Mixer: Pre/Post FX mode",
-    },
-  }
-
-  self.palette = {
-    background        = { color={0x00,0x00,0x00}, val = false,text="·",},
-    -- normal tracks
-    normal_tip = {        color={0x00,0xff,0xff}, val = true, },
-    normal_tip_dimmed = { color={0x00,0x40,0xff}, val = true, },
-    normal_lane       = { color={0x00,0x81,0xff}, val = true, },
-    normal_lane_dimmed = {color={0x00,0x40,0xff}, val = true, },
-    normal_mute_on    = { color={0x40,0xff,0x40}, val = true, text ="M"},
-    normal_mute_off   = { color={0x00,0x00,0x00}, val = false,text ="M",},
-    -- master track
-    master_tip        = { color={0xff,0xff,0xff}, val = true, },
-    master_lane       = { color={0x80,0x80,0xff}, val = true, },
-    master_mute_on    = { color={0xff,0xff,0x40}, val = true, text ="M",},
-    -- send tracks
-    send_tip          = { color={0xff,0x40,0x00}, val = true, },
-    send_tip_dimmed   = { color={0x40,0x00,0xff}, val = true, },
-    send_lane         = { color={0x81,0x00,0xff}, val = true, },
-    send_lane_dimmed  = { color={0x40,0x00,0xff}, val = true, },
-    send_mute_on      = { color={0xff,0x40,0x00}, val = true, text = "M", },
-    send_mute_off     = { color={0x00,0x00,0x00}, val = false,text = "M", },
-    -- pre/post buttons
-    mixer_mode_pre    = { color={0xff,0xff,0xff}, val = true, text = "Pre",},
-    mixer_mode_post   = { color={0x00,0x00,0x00}, val = false,text = "Post",},
-    -- solo buttons
-    solo_on           = { color={0xff,0x40,0x00}, val = true, text = "S",},
-    solo_off          = { color={0x00,0x00,0x00}, val = false,text = "S", },
-
-  }
+function Mixer:__init(...)
+  TRACE("Mixer:__init",...)
 
   -- the various controls
   self._master = nil
@@ -308,13 +312,13 @@ function Mixer:__init(process,mappings,options,cfg_name,palette)
   self._take_over_volumes = {}
 
   -- apply arguments
-  Application.__init(self,process,mappings,options,cfg_name,palette)
+  Application.__init(self,...)
 
   -- toggle, which defines if we're controlling the pre or post fx vol/pans
-  self._postfx_mode = (self.options.pre_post.value == self.MODE_POSTFX)
+  self._postfx_mode = (self.options.pre_post.value == MODE_POSTFX)
 
   -- possible after options have been set
-  self.automation.latch_record = (self.options.record_method.value==self.RECORD_LATCH)
+  self.automation.latch_record = (self.options.record_method.value==RECORD_LATCH)
 
 end
 
@@ -944,7 +948,7 @@ function Mixer:_build_app()
           track:unmute()
         else 
           track:mute()
-          local mute_state = (self.options.mute_mode.value==self.MUTE_MODE_MUTE)
+          local mute_state = (self.options.mute_mode.value==MUTE_MODE_MUTE)
             and MUTE_STATE_MUTED or MUTE_STATE_OFF
           track.mute_state = mute_state
         end
@@ -1090,7 +1094,7 @@ function Mixer:_build_app()
 
       local page_width = self:_get_page_width()
       local track_idx = (obj.index*page_width)
-      if (self.options.follow_track.value == self.FOLLOW_TRACK_ON) then
+      if (self.options.follow_track.value == FOLLOW_TRACK_ON) then
         -- set track index and let the _follow_track() method handle it
         renoise.song().selected_track_index = 1+track_idx
       else
@@ -1129,7 +1133,7 @@ function Mixer:_build_app()
       self:_init_take_over_volume()
 
       if self.options.sync_pre_post and
-        (self.options.sync_pre_post.value == self.MODE_PREPOSTSYNC_ON) 
+        (self.options.sync_pre_post.value == MODE_PREPOSTSYNC_ON) 
       then
         renoise.app().window.mixer_view_post_fx = self._postfx_mode
         end
@@ -1156,7 +1160,7 @@ function Mixer:_set_volume(parameter,track_index,obj)
   TRACE("Mixer:_set_volume()",parameter,track_index,obj)
 
   local value_set = false
-  if self.options.take_over_volumes.value == self.TAKE_OVER_VOLUME_ON then
+  if self.options.take_over_volumes.value == TAKE_OVER_VOLUME_ON then
     value_set = self:_set_take_over_volume(parameter, obj, track_index)
   else
     parameter.value = obj.value
@@ -1179,7 +1183,7 @@ end
 
 function Mixer:update_record_mode()
   TRACE("Mixer:update_record_mode")
-  if (self.options.record_method.value ~= self.RECORD_NONE) then
+  if (self.options.record_method.value ~= RECORD_NONE) then
     self._record_mode = renoise.song().transport.edit_mode 
   else
     self._record_mode = false
@@ -1201,7 +1205,7 @@ function Mixer:_attach_to_song()
     renoise.app().window.mixer_view_post_fx_observable:add_notifier(
       function()
         TRACE("Mixer:mixer_view_post_fx_observable fired...")
-        if (self.options.sync_pre_post.value == self.MODE_PREPOSTSYNC_ON) then
+        if (self.options.sync_pre_post.value == MODE_PREPOSTSYNC_ON) then
           self._postfx_mode = renoise.app().window.mixer_view_post_fx
           self._update_requested = true
         end
@@ -1253,7 +1257,7 @@ end
 function Mixer:_follow_track()
   TRACE("Mixer:_follow_track()")
 
-  if (self.options.follow_track.value == self.FOLLOW_TRACK_OFF) then
+  if (self.options.follow_track.value == FOLLOW_TRACK_OFF) then
     return
   end
 
@@ -1288,7 +1292,7 @@ end
 
 function Mixer:_get_page_width()
 
-  return (self.options.page_size.value==self.TRACK_PAGE_AUTO)
+  return (self.options.page_size.value==TRACK_PAGE_AUTO)
     and self._width or self.options.page_size.value-1
 
 end

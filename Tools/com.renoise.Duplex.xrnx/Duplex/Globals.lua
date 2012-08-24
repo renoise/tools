@@ -166,11 +166,11 @@ duplex_preferences = renoise.Document.create("ScriptingToolPreferences") {
 
   -- theming support: specify the default button color
   theme_color_R = 0xFF,
-  theme_color_G = 0x7F,
-  theme_color_B = 0x00,
+  theme_color_G = 0xFF,
+  theme_color_B = 0xFF,
 
   -- option: when enabled, the Duplex browser is displayed on startup
-  display_browser_on_start = false,
+  display_browser_on_start = true,
 
   -- option: enable realtime NRPN message support
   nrpn_support = false,
@@ -399,6 +399,18 @@ function get_master_track_index()
   end
 end
 
+-- get send track
+
+function send_track(send_index)
+  if (send_index <= renoise.song().send_track_count) then
+    -- send tracks are always behind the master track
+    local trk_idx = renoise.song().sequencer_track_count + 1 + send_index
+    return renoise.song():track(trk_idx)
+  else
+    return nil
+  end
+end
+
 -- get average from color
 
 function get_color_average(color)
@@ -406,6 +418,7 @@ function get_color_average(color)
 end
 
 -- check if colorspace is monochromatic
+
 function is_monochrome(colorspace)
   if table.is_empty(colorspace) then
     return true
@@ -488,11 +501,23 @@ function scale_value(value,low_val,high_val,min_val,max_val)
   return(((value-low_val)*incr2)+min_val)
 end
 
+-- logarithmic scaling within a fixed space
+-- @param ceiling (number) the upper boundary 
+-- @param val (number) the value to scale
+function log_scale(ceiling,val)
+  local log_const = ceiling/math.log(ceiling)
+  return math.log(val)*log_const
+end
+-- inverse logarithmic scaling (exponential)
+function inv_log_scale(ceiling,val)
+  local ref_val = ceiling-val+1
+  return ceiling-log_scale(ceiling,ref_val)
+end
+
 -- return the fractional part of a number
 function fraction(val)
   return val-math.floor(val)
 end
-
 
 -- determine the sign of a number
 
@@ -551,8 +576,8 @@ end
 -- {"^ControlMap:", "^Display:"} -> show "Display:" and "ControlMap:"
 
 local _trace_filters = nil
---local _trace_filters = {"^OscVoiceMgr","^Keyboard"}
---local _trace_filters = {"^GridPie","^Scheduler"}
+--local _trace_filters = {"^OscDevice","^Keyboard"}
+--local _trace_filters = {"^MidiActions"} --,"^Application"}
 --local _trace_filters = {".*"}
 
 --------------------------------------------------------------------------------

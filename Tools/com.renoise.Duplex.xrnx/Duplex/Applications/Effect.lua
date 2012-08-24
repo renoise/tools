@@ -74,6 +74,15 @@ Changes (equal to Duplex version number)
 
 local FLOAT_COMPARE_QUANTUM = 1000
 
+-- option constants
+
+local ALL_PARAMETERS = 1
+local AUTOMATED_PARAMETERS = 2
+local MIXER_PARAMETERS = 3
+local RECORD_NONE = 1
+local RECORD_TOUCH = 2
+local RECORD_LATCH = 3
+
 
 --==============================================================================
 
@@ -91,7 +100,7 @@ Effect.default_options = {
     value = 1,
     on_change = function(inst)
       local mode = (inst.options.include_parameters.value) 
-      if (mode == inst.ALL_PARAMETERS) then
+      if (mode == ALL_PARAMETERS) then
         inst._update_requested = true
       else
         inst._track_update_requested = true
@@ -108,82 +117,71 @@ Effect.default_options = {
     },
     value = 1,
     on_change = function(inst)
-      inst.automation.latch_record = (inst.options.record_method.value==inst.RECORD_LATCH) and true or false
+      inst.automation.latch_record = (inst.options.record_method.value == RECORD_LATCH) and true or false
     end
   }
 }
 
+-- apply control-maps groups 
+Effect.available_mappings = {
+  parameters = {
+    description = "Parameter value",
+  },
+  page = {
+    description = "Parameter page",
+    orientation = HORIZONTAL,
+  },
+  device = {
+    description = "Select device via buttons",
+  },
+  device_select = {
+    description = "Select device via knob/slider",
+    orientation = HORIZONTAL,
+  },
+  device_next = {
+    description = "Select next device",
+  },
+  device_prev = {
+    description = "Select previous device",
+  },
+  preset_next = {
+    description = "Select next device preset",
+  },
+  preset_prev = {
+    description = "Select previous device preset",
+  },
+
+}
+
+-- define default palette
+Effect.default_palette = {
+  -- parameter sliders
+  background = {        color={0x00,0x00,0x00},   text="·",   val=false },
+  slider_background = { color={0x00,0x40,0x00},   text="·",   val=false },
+  slider_tip = {        color={0XFF,0XFF,0XFF},   text="·",   val=true },
+  slider_track = {      color={0XFF,0XFF,0XFF},   text="·",   val=true },
+  -- device-buttons
+  device_nav_on = {     color={0XFF,0XFF,0XFF},   text="■",   val=true },
+  device_nav_off = {    color={0x00,0x00,0x00},   text="·",   val=false },
+  prev_device_on = {    color = {0xFF,0xFF,0xFF}, text = "◄", val=true },
+  prev_device_off = {   color = {0x00,0x00,0x00}, text = "◄", val=false },
+  next_device_on = {    color = {0xFF,0xFF,0xFF}, text = "►", val=true },
+  next_device_off = {   color = {0x00,0x00,0x00}, text = "►", val=false },
+  -- preset buttons
+  prev_preset_on = {    color = {0xFF,0xFF,0xFF}, text = "◄", val=true },
+  prev_preset_off = {   color = {0x00,0x00,0x00}, text = "◄", val=false },
+  next_preset_on = {    color = {0xFF,0xFF,0xFF}, text = "►", val=true },
+  next_preset_off = {   color = {0x00,0x00,0x00}, text = "►", val=false },
+}
+
+
 --------------------------------------------------------------------------------
 
---- initialize the Effect application
+--- Constructor method
+-- @param (VarArg), see Application to learn more
 
-function Effect:__init(process,mappings,options,cfg_name,palette)
-  TRACE("Effect:__init", process,mappings,options,cfg_name,palette)
-
-   -- define option constants
-
-  self.ALL_PARAMETERS = 1
-  self.AUTOMATED_PARAMETERS = 2
-  self.MIXER_PARAMETERS = 3
-
-  self.EDIT_SYNC_ON = 1
-  self.EDIT_SYNC_OFF = 2
-
-  self.RECORD_NONE = 1
-  self.RECORD_TOUCH = 2
-  self.RECORD_LATCH = 3
-
-  -- apply control-maps groups 
-  self.mappings = {
-    parameters = {
-      description = "Parameter value",
-    },
-    page = {
-      description = "Parameter page",
-      orientation = HORIZONTAL,
-    },
-    device = {
-      description = "Select device via buttons",
-    },
-    device_select = {
-      description = "Select device via knob/slider",
-      orientation = HORIZONTAL,
-    },
-    device_next = {
-      description = "Select next device",
-    },
-    device_prev = {
-      description = "Select previous device",
-    },
-    preset_next = {
-      description = "Select next device preset",
-    },
-    preset_prev = {
-      description = "Select previous device preset",
-    },
-
-  }
-
-  -- define default palette
-  self.palette = {
-    -- parameter sliders
-    background = {        color={0x00,0x00,0x00},   text="·",   val=false },
-    slider_background = { color={0x00,0x40,0x00},   text="·",   val=false },
-    slider_tip = {        color={0XFF,0XFF,0XFF},   text="·",   val=true },
-    slider_track = {      color={0XFF,0XFF,0XFF},   text="·",   val=true },
-    -- device-buttons
-    device_nav_on = {     color={0XFF,0XFF,0XFF},   text="■",   val=true },
-    device_nav_off = {    color={0x00,0x00,0x00},   text="·",   val=false },
-    prev_device_on = {    color = {0xFF,0xFF,0xFF}, text = "◄", val=true },
-    prev_device_off = {   color = {0x00,0x00,0x00}, text = "◄", val=false },
-    next_device_on = {    color = {0xFF,0xFF,0xFF}, text = "►", val=true },
-    next_device_off = {   color = {0x00,0x00,0x00}, text = "►", val=false },
-    -- preset buttons
-    prev_preset_on = {    color = {0xFF,0xFF,0xFF}, text = "◄", val=true },
-    prev_preset_off = {   color = {0x00,0x00,0x00}, text = "◄", val=false },
-    next_preset_on = {    color = {0xFF,0xFF,0xFF}, text = "►", val=true },
-    next_preset_off = {   color = {0x00,0x00,0x00}, text = "►", val=false },
-  }
+function Effect:__init(...)
+  TRACE("Effect:__init", ...)
 
   -- the controls
   self._parameter_sliders = nil
@@ -225,11 +223,11 @@ function Effect:__init(process,mappings,options,cfg_name,palette)
   -- set while recording automation
   self._record_mode = false
 
-  Application.__init(self,process,mappings,options,cfg_name,palette)
+  Application.__init(self,...)
 
   -- do stuff after options have been set
 
-  self.automation.latch_record = (self.options.record_method.value==self.RECORD_LATCH)
+  self.automation.latch_record = (self.options.record_method.value == RECORD_LATCH)
 
 
 end
@@ -306,7 +304,7 @@ function Effect:update()
   -- update button-based device selectors
   if (self._device_navigators) then
 
-    if (self.options.include_parameters.value == self.ALL_PARAMETERS) then
+    if (self.options.include_parameters.value == ALL_PARAMETERS) then
       -- set the device navigator to the current fx
       for control_index = 1,#self._device_navigators do
         if (device_idx==control_index) then
@@ -491,7 +489,7 @@ function Effect:_build_app()
           self:_set_selected_device_index(new_index)
 
           -- turn off previously selected device
-          if (self.options.include_parameters.value == self.ALL_PARAMETERS) then
+          if (self.options.include_parameters.value == ALL_PARAMETERS) then
             local sel_index = song.selected_device_index
             if (sel_index ~= control_index) and
                 self._device_navigators[sel_index] then
@@ -823,7 +821,7 @@ end
 function Effect:_get_next_device_index(idx)
   --TRACE("Effect._get_next_device_index()",idx)
 
-  if (self.options.include_parameters.value == self.ALL_PARAMETERS) then
+  if (self.options.include_parameters.value == ALL_PARAMETERS) then
     return idx+1
   else
     for _,prm in ipairs(self._parameter_set) do
@@ -843,7 +841,7 @@ end
 function Effect:_get_previous_device_index(idx)
   TRACE("Effect._get_previous_device_index()",idx)
 
-  if (self.options.include_parameters.value == self.ALL_PARAMETERS) then
+  if (self.options.include_parameters.value == ALL_PARAMETERS) then
     return idx-1
   else
     for _,prm in ripairs(self._parameter_set) do
@@ -865,7 +863,7 @@ end
 function Effect:_get_device_index_by_ctrl(idx)
   --TRACE("Effect._get_device_index_by_ctrl()",idx)
 
-  if (self.options.include_parameters.value == self.ALL_PARAMETERS) then
+  if (self.options.include_parameters.value == ALL_PARAMETERS) then
     return idx
   else
     local count,matched = 0,0
@@ -891,7 +889,7 @@ end
 function Effect:_get_ctrl_index_by_device(idx)
   --TRACE("Effect._get_ctrl_index_by_device()",idx)
 
-  if (self.options.include_parameters.value == self.ALL_PARAMETERS) then
+  if (self.options.include_parameters.value == ALL_PARAMETERS) then
     return idx
   else
     local count,matched = 0,0
@@ -1018,7 +1016,7 @@ function Effect:_define_parameters()
 
   self._parameter_set = table.create()
 
-  if (self.options.include_parameters.value == self.ALL_PARAMETERS) then
+  if (self.options.include_parameters.value == ALL_PARAMETERS) then
     local device = renoise.song().selected_device   
     if device then
       for _,parameter in ipairs(device.parameters) do
@@ -1035,13 +1033,13 @@ function Effect:_define_parameters()
     for device_idx,device in ipairs(track.devices) do
       for _,parameter in ipairs(device.parameters) do
         if(parameter.show_in_mixer) and
-            (self.options.include_parameters.value == self.MIXER_PARAMETERS) then
+            (self.options.include_parameters.value == MIXER_PARAMETERS) then
           self._parameter_set:insert({
             device_index=device_idx,
             ref=parameter
           })
         elseif (parameter.is_automated) and
-            (self.options.include_parameters.value == self.AUTOMATED_PARAMETERS) then
+            (self.options.include_parameters.value == AUTOMATED_PARAMETERS) then
           self._parameter_set:insert({
             device_index=device_idx,
             ref=parameter
@@ -1060,7 +1058,7 @@ end
 function Effect:_get_num_devices()
   TRACE("Effect:_get_num_devices()")
 
-  if (self.options.include_parameters.value == self.ALL_PARAMETERS) then
+  if (self.options.include_parameters.value == ALL_PARAMETERS) then
     local track_idx = renoise.song().selected_track_index
     self._num_devices = #renoise.song().tracks[track_idx].devices
   else
@@ -1071,10 +1069,10 @@ function Effect:_get_num_devices()
       for _,parameter in ipairs(device.parameters) do
         local matched = false
         if(parameter.show_in_mixer) and
-            (self.options.include_parameters.value == self.MIXER_PARAMETERS) then
+            (self.options.include_parameters.value == MIXER_PARAMETERS) then
           matched = true
         elseif (parameter.is_automated) and
-            (self.options.include_parameters.value == self.AUTOMATED_PARAMETERS) then
+            (self.options.include_parameters.value == AUTOMATED_PARAMETERS) then
           matched = true
         end
         if matched and not devices[device_idx] then
@@ -1097,7 +1095,7 @@ end
 
 function Effect:_update_record_mode()
   TRACE("Effect:_update_record_mode()")
-  if (self.options.record_method.value ~= self.RECORD_NONE) then
+  if (self.options.record_method.value ~= RECORD_NONE) then
     self._record_mode = renoise.song().transport.edit_mode 
   else
     self._record_mode = false
@@ -1118,7 +1116,7 @@ function Effect:_attach_to_song()
     function()
       TRACE("Effect:selected_device_observable fired...")
       -- always update when display all parameters 
-      if (self.options.include_parameters.value == self.ALL_PARAMETERS) then
+      if (self.options.include_parameters.value == ALL_PARAMETERS) then
         self._update_requested = true
       end
       -- update the device selector
@@ -1135,8 +1133,8 @@ function Effect:_attach_to_song()
     function()
       TRACE("Effect:selected_track_index_observable fired...")
       TRACE("Effect:self.options.include_parameters.value",self.options.include_parameters.value)
-      if (self.options.include_parameters.value == self.MIXER_PARAMETERS) or
-          (self.options.include_parameters.value == self.AUTOMATED_PARAMETERS) then
+      if (self.options.include_parameters.value == MIXER_PARAMETERS) or
+          (self.options.include_parameters.value == AUTOMATED_PARAMETERS) then
         self._track_update_requested = true
       end
       self:_get_num_devices()
@@ -1212,7 +1210,7 @@ function Effect:_attach_to_track_devices(track,new_song)
       self._mixer_observables:insert(parameter.show_in_mixer_observable)
       parameter.show_in_mixer_observable:add_notifier(
         function()
-          if (self.options.include_parameters.value == self.MIXER_PARAMETERS) then
+          if (self.options.include_parameters.value == MIXER_PARAMETERS) then
             TRACE("Effect:show_in_mixer_observable fired...")
             -- todo: only perform update when in current track
             self._update_requested = true
@@ -1224,7 +1222,7 @@ function Effect:_attach_to_track_devices(track,new_song)
       self._mixer_observables:insert(parameter.is_automated_observable)
       parameter.is_automated_observable:add_notifier(
         function()
-          if (self.options.include_parameters.value == self.AUTOMATED_PARAMETERS) then
+          if (self.options.include_parameters.value == AUTOMATED_PARAMETERS) then
             TRACE("Effect:is_automated_observable fired...")
             -- todo: only perform update when in current track
             self._update_requested = true

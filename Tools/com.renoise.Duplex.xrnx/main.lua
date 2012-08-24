@@ -294,7 +294,7 @@ end)
 -- preferences
 --------------------------------------------------------------------------------
 
--- dynamicall register configuration settings for each config
+-- dynamically register configuration settings for each config
 
 local configuration_root_node = duplex_preferences:add_property(
   "configurations", renoise.Document.create("Configurations"){ })
@@ -340,7 +340,19 @@ for _,device_name in pairs(available_devices) do
                   then
                     option_value = app.options[option_key] 
                   end
-                  options_node:add_property(option_key,option_value)
+                  -- resolve literal keys into their index
+                  if (type(option_value)=="string") then
+                    for k,v in pairs(option.items) do
+                      if (v == option_value) then
+                        option_value = k
+                      end
+                    end 
+                  end
+                  if (type(option_value)=="string") then
+                    -- could not resolve literal string
+                  else
+                    options_node:add_property(option_key,option_value)
+                  end
                 end
               end
 

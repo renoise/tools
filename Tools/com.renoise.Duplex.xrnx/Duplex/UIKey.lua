@@ -133,6 +133,9 @@ function UIKey:test(msg)
 
   if self.match_any_note then 
     self.pitch = self:translate_pitch(msg)
+    if not self.pitch then
+      return false
+    end
   elseif not UIComponent.test(self,msg.column,msg.row) then
     return false
   end
@@ -159,7 +162,6 @@ function UIKey:do_press(msg)
   if (self.on_press ~= nil) then
     if (self:on_press()==false) then
       -- allow message to be passed on
-      --print("UIKey: on_press - allow message to be passed on")
       return false
     else
       self:invalidate()
@@ -189,7 +191,6 @@ function UIKey:do_release(msg)
   if (self.on_release ~= nil) then
     if (self:on_release()==false) then
       -- allow message to be passed on
-      --print("UIKey: on_release - allow message to be passed on")
       return false
     else
       self:invalidate()
@@ -232,6 +233,10 @@ end
 function UIKey:translate_pitch(msg)
   TRACE("UIKey:translate_pitch()",msg)
   
+  if not msg.value[1] then
+    return false
+  end
+
   local pitch = msg.value[1]
   if msg.is_virtual then
     pitch = pitch + self.transpose - 12 -- virtual control surface
@@ -260,12 +265,6 @@ function UIKey:draw()
   end
 
   local point = CanvasPoint()
-
-  --[[
-  print("self.palette.pressed.text",self.palette.pressed.text)
-  print("self.palette.disabled.text",self.palette.disabled.text)
-  print("self.palette.released.text",self.palette.released.text)
-  ]]
 
   if self.disabled then
     point.text = self.palette.disabled.text

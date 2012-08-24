@@ -21,6 +21,31 @@ Changes (equal to Duplex version number)
 
 --==============================================================================
 
+-- option constants
+
+local FOLLOW_OFF = 1
+local FOLLOW_TRACK = 2
+local FOLLOW_TRACK_PATTERN = 3
+local STEPSIZE_AUTO = 1
+local AUTOSTART_MANUAL = 1
+local AUTOSTART_STOP = 2
+local AUTOSTART_PLAY = 3
+local SHUTDOWN_KEEP_ALL = 1
+local SHUTDOWN_CLEAR_ALL = 2
+local HOLD_ENABLED = 1
+local HOLD_DISABLED = 2
+
+-- special pattern names
+
+local GRIDPIE_NAME = "__GRID PIE__"
+local GRIDPIE_BUFFER_NAME = "__GRID TMP__"
+
+-- shortest possible number of lines when session
+-- recording (enough to clone patterns on the fly)
+
+local RECORD_PATT_MIN_LINES = 16
+
+--==============================================================================
 
 class 'GridPie' (Application)
 
@@ -112,39 +137,77 @@ GridPie.default_options = {
     value = 1,
   }
 }
+GridPie.available_mappings = {
+  grid = {
+    description = "GridPie: Press and release to copy track"
+                .."\nPress and hold to copy pattern"
+                .."\nControl value: ",
+  },
+  h_slider = {
+    description = "GridPie: select pattern in sequence"
+  },
+  v_prev = {
+    description = "GridPie: Press and release to display previous part of sequence"
+                .."\nPress and hold to display first pattern"
+  },
+  v_next = {
+    description = "GridPie: Press and release to display next part of sequence"
+                .."\nPress and hold to display last pattern"
+  },
+  h_prev = {
+    description = "GridPie: Press and release to display previous tracks in pattern"
+                .."\nPress and hold to go display first track"
+  },
+  h_next = {
+    description = "GridPie: Press and release to display next tracks in pattern"
+                .."\nPress and hold to go display last track"
+  },
+  v_slider = {
+    description = "GridPie: select track in pattern"
+  },
+}
+
+GridPie.default_palette = {
+  empty                   = { color={0x00,0x00,0x00}, text="·", val=false },
+  empty_current           = { color={0x00,0x40,0x00}, text="·", val=false },
+  empty_active            = { color={0x40,0x40,0x00}, text="·", val=true  },
+  empty_active_current    = { color={0x40,0x40,0x00}, text="·", val=true  },
+  content_selected        = { color={0xFF,0xFF,0x00}, text="·", val=true  },
+  content_active          = { color={0x80,0x40,0x00}, text="·", val=false },
+  content_active_master   = { color={0x80,0x80,0x00}, text="·", val=false },
+  content_active_current  = { color={0x40,0x80,0x00}, text="·", val=false },
+  inactive_content        = { color={0x40,0x00,0x00}, text="·", val=false },
+  out_of_bounds           = { color={0x00,0x00,0x00}, text="·", val=false },  
+  out_of_bounds_current   = { color={0x40,0x80,0x00}, text="·", val=false },  
+  gridpie_normal          = { color={0x80,0x80,0x00}, text="·", val=false },  
+  gridpie_alias           = { color={0xFF,0xFF,0x00}, text="·", val=true  },
+  gridpie_current         = { color={0x40,0x80,0x00}, text="·", val=false },  
+  gridpie_homeless        = { color={0xFF,0xFF,0x00}, text="·", val=true  },  
+  button_next_track_off   = { color={0x00,0x00,0x00}, text="►", val=false },  
+  button_next_track_on    = { color={0xFF,0x80,0x00}, text="►", val=true  },
+  button_prev_track_on    = { color={0xFF,0x80,0x00}, text="◄", val=true  },
+  button_prev_track_off   = { color={0x00,0x00,0x00}, text="◄", val=false },
+  button_next_patt_on     = { color={0xFF,0x80,0x00}, text="▼", val=true  },
+  button_next_patt_off    = { color={0x00,0x00,0x00}, text="▼", val=false },
+  button_prev_patt_on     = { color={0xFF,0x80,0x00}, text="▲", val=true  },
+  button_prev_patt_off    = { color={0x00,0x00,0x00}, text="▲", val=false },
+}
+
 
 --------------------------------------------------------------------------------
 
---- initialize the GridPie application
+--- Constructor method
+-- @param (VarArg), see Application to learn more
 
-function GridPie:__init(process,mappings,options,cfg_name,palette)
-  TRACE("GridPie:__init(",process,mappings,options,cfg_name,palette)
-
-  -- option constants
-  self.FOLLOW_OFF = 1
-  self.FOLLOW_TRACK = 2
-  self.FOLLOW_TRACK_PATTERN = 3
-  self.STEPSIZE_AUTO = 1
-
-  self.AUTOSTART_MANUAL = 1
-  self.AUTOSTART_STOP = 2
-  self.AUTOSTART_PLAY = 3
-
-  self.SHUTDOWN_KEEP_ALL = 1
-  self.SHUTDOWN_CLEAR_ALL = 2
-
-  self.HOLD_ENABLED = 1
-  self.HOLD_DISABLED = 2
-
-  self.GRIDPIE_NAME = "__GRID PIE__"
-  self.GRIDPIE_BUFFER_NAME = "__GRID TMP__"
+function GridPie:__init(...)
+  TRACE("GridPie:__init()")
 
   -- width/height of the "grid" control-map group
   self.matrix_height = 0
   self.matrix_width = 0
 
   -- references to the grid's buttons
-  self.MATRIX_CELLS = table.create()
+  self.matrix_cells = table.create()
 
   -- pattern index of gridpie pattern
   self.gridpie_patt_idx = nil
@@ -157,6 +220,10 @@ function GridPie:__init(process,mappings,options,cfg_name,palette)
   -- true when we shouldn't listen for changes to the 
   -- gridpie pattern (when copying pattern data)
   self.skip_gp_notifier = false
+
+  -- remember playback-pos line on each idle
+  -- (for detecting when we arrive at the beginning of a pattern)
+  self.last_playback_line = nil
 
   -- when we record changes in realtime (no aliasing)
   self.realtime_record = false
@@ -175,6 +242,10 @@ function GridPie:__init(process,mappings,options,cfg_name,palette)
   -- number of lines between incremental updates
   self.writeahead_interval = nil
 
+  -- table of lines that should be skipped 
+  -- (for when we have written a note-off)
+  self.skip_line_updates = table.create()
+
   -- list of lengths (pattern-lines) for each track
   -- the value is nil when the track isn't active
   self.poly_counter = table.create()
@@ -182,11 +253,11 @@ function GridPie:__init(process,mappings,options,cfg_name,palette)
   -- memorized state of the matrix 
   self.revert_pm_slot = table.create()
 
-  -- indexed list of homeless tracks, 
+  -- indexed list of homeless tracks
   self.homeless_tracks = table.create()
 
   -- (number) the scheduled pattern (if any)
-  self.scheduled_seq_idx = nil
+  --self.scheduled_seq_idx = nil
 
   -- the state of our slow blink rate
   -- (alternates between true and false)
@@ -242,7 +313,7 @@ function GridPie:__init(process,mappings,options,cfg_name,palette)
   self.page_size_v = nil
   self.page_size_h = nil
 
-  -- remember the current pattern (for line notifier)
+  -- remember the current pattern
   self._current_seq_index = nil
 
   -- pattern seq. index from when we started, and the 
@@ -264,7 +335,7 @@ function GridPie:__init(process,mappings,options,cfg_name,palette)
   self.h_update_requested = false
 
   -- keep reference to process, so we stop/abort the application
-  self._process = process
+  self._process = select(1,...)
 
   -- observable tables
   self._song_observables = table.create()
@@ -279,63 +350,7 @@ function GridPie:__init(process,mappings,options,cfg_name,palette)
   self._v_slider = nil
   self._h_slider = nil
 
-  self.mappings = {
-    grid = {
-      description = "GridPie: Press and release to copy track"
-                  .."\nPress and hold to copy pattern"
-                  .."\nControl value: ",
-    },
-    h_slider = {
-      description = "GridPie: select pattern in sequence"
-    },
-    v_prev = {
-      description = "GridPie: Press and release to display previous part of sequence"
-                  .."\nPress and hold to display first pattern"
-    },
-    v_next = {
-      description = "GridPie: Press and release to display next part of sequence"
-                  .."\nPress and hold to display last pattern"
-    },
-    h_prev = {
-      description = "GridPie: Press and release to display previous tracks in pattern"
-                  .."\nPress and hold to go display first track"
-    },
-    h_next = {
-      description = "GridPie: Press and release to display next tracks in pattern"
-                  .."\nPress and hold to go display last track"
-    },
-    v_slider = {
-      description = "GridPie: select track in pattern"
-    },
-  }
-
-  self.palette = {
-    empty                   = { color={0x00,0x00,0x00}, text="·", val=false },
-    empty_current           = { color={0x00,0x40,0x00}, text="·", val=false },
-    empty_active            = { color={0x40,0x40,0x00}, text="·", val=true  },
-    empty_active_current    = { color={0x40,0x40,0x00}, text="·", val=true  },
-    content_selected        = { color={0xFF,0xFF,0x00}, text="·", val=true  },
-    content_active          = { color={0x80,0x40,0x00}, text="·", val=false },
-    content_active_master   = { color={0x80,0x80,0x00}, text="·", val=false },
-    content_active_current  = { color={0x40,0x80,0x00}, text="·", val=false },
-    inactive_content        = { color={0x40,0x00,0x00}, text="·", val=false },
-    out_of_bounds           = { color={0x00,0x00,0x00}, text="·", val=false },  
-    out_of_bounds_current   = { color={0x40,0x80,0x00}, text="·", val=false },  
-    gridpie_normal          = { color={0x80,0x80,0x00}, text="·", val=false },  
-    gridpie_alias           = { color={0xFF,0xFF,0x00}, text="·", val=true  },
-    gridpie_current         = { color={0x40,0x80,0x00}, text="·", val=false },  
-    gridpie_homeless        = { color={0xFF,0xFF,0x00}, text="·", val=true  },  
-    button_next_track_off   = { color={0x00,0x00,0x00}, text="►", val=false },  
-    button_next_track_on    = { color={0xFF,0x80,0x00}, text="►", val=true  },
-    button_prev_track_on    = { color={0xFF,0x80,0x00}, text="◄", val=true  },
-    button_prev_track_off   = { color={0x00,0x00,0x00}, text="◄", val=false },
-    button_next_patt_on     = { color={0xFF,0x80,0x00}, text="▼", val=true  },
-    button_next_patt_off    = { color={0x00,0x00,0x00}, text="▼", val=false },
-    button_prev_patt_on     = { color={0xFF,0x80,0x00}, text="▲", val=true  },
-    button_prev_patt_off    = { color={0x00,0x00,0x00}, text="▲", val=false },
-  }
-
-  Application.__init(self,process,mappings,options,cfg_name,palette)
+  Application.__init(self,...)
 
 end
 
@@ -430,25 +445,10 @@ function GridPie:_apply_pending_updates()
 
 end
 
---------------------------------------------------------------------------------
-
---- Method used to determine the length of a given slot
-
-function GridPie:determine_slot_length(seq_idx,patt_idx,track_idx)
-
-  -- check if the slot is actively being used in the GP pattern
-  -- yes, use that length
-  -- no, use the length from the originating pattern
-
-
-end
-
 
 --------------------------------------------------------------------------------
 
---- Prepare a newly cloned Grid Pie pattern
--- we should call this method right after having cloned the pattern, 
--- and before we clear/update active_slots, homeless_tracks etc.
+--- prepare a newly cloned Grid Pie pattern before playback reaches it
 
 function GridPie:adapt_gridpie_pattern()
   TRACE("GridPie:adapt_gridpie_pattern()")
@@ -460,8 +460,15 @@ function GridPie:adapt_gridpie_pattern()
   local old_seq_idx = new_seq_idx-1
   local old_patt_idx = rns.sequencer:pattern(old_seq_idx)
   local old_patt = rns.patterns[old_patt_idx]
-  --local gp_patt = rns.patterns[self.gridpie_patt_idx]
   local session_recording = self:is_session_recording()
+
+  -- start by looping the new pattern
+  rns.transport.loop_sequence_range = {new_seq_idx,new_seq_idx}
+  --print("adapt_gridpie_pattern - rns.transport.loop_sequence_range",new_seq_idx)
+
+  -- assign name to the new pattern
+  old_patt.name = ""
+  new_patt.name = GRIDPIE_NAME
 
   -- mute slots in the former GP pattern - unless they are 
   -- homeless slots that we are going to settle in their new home
@@ -473,24 +480,35 @@ function GridPie:adapt_gridpie_pattern()
       end
     end
   end
-  -- assign name to the new pattern
-  old_patt.name = ""
-  new_patt.name = self.GRIDPIE_NAME
 
   self.gridpie_patt_idx = new_patt_idx
   --print("*** adapt_gridpie_pattern - new_patt_idx",self.gridpie_patt_idx)
 
-  -- loop through tracks in the new pattern
+  -- loop through tracks in the new pattern, add to cache & create aliases 
   for track_idx,ptrack in ipairs(new_patt.tracks) do
+
+
     -- skip non-sequencer tracks
     if (track_idx <= rns.sequencer_track_count) then
       --print("*** loop through new pattern track #",track_idx)
+
+      -- clear track if we are actively session recording
+      -- (otherwise, remnants from outside the pattern boundary
+      -- could turn up as the pattern was resized)
+      if session_recording then
+        if not self.poly_counter[track_idx] or
+          self.realtime_tracks[track_idx]
+        then
+          new_patt.tracks[track_idx]:clear()
+          --print("*** cleared track #",track_idx)
+        end
+      end
+
       if not ptrack.is_alias then
         -- add unique slots to the cache
         self:set_pattern_cache(old_patt_idx,track_idx,old_patt.number_of_lines)
         -- if not recording, create alias for unique/homeless slot
         if not session_recording and not self.realtime_tracks[track_idx] then
-        --if not session_recording then
           if self.homeless_tracks[track_idx] then
             -- reference homeless tracks 
             ptrack.alias_pattern_index = old_patt_idx
@@ -507,19 +525,18 @@ function GridPie:adapt_gridpie_pattern()
         else
           --print("*** skip alias for realtime record-track",track_idx)
         end
+
       end
     end
     -- unmute all slots in the new pattern
     rns.sequencer:set_track_sequence_slot_is_muted(track_idx,new_seq_idx,false)
   end
 
-  -- set any (formerly) homeless track as active, unless
-  -- we are session recording
-  for track_idx,_ in pairs(self.homeless_tracks) do
-    --if not self.realtime_tracks[track_idx] then
-    if not session_recording then
-      -- mute the previously active slot
+  if not session_recording then
+    -- set any (formerly) homeless track as active
+    for track_idx,_ in pairs(self.homeless_tracks) do
       if self.active_slots[track_idx] then
+        -- mute the previously active slot
         rns.sequencer:set_track_sequence_slot_is_muted(track_idx,self.active_slots[track_idx],true)
       end
       self.active_slots[track_idx] = old_seq_idx
@@ -539,10 +556,6 @@ function GridPie:adapt_gridpie_pattern()
     rns.transport.edit_pos = edit_pos
     --print("*** adapt_gridpie_pattern: rns.transport.edit_pos",edit_pos)
   end
-
-  -- establish loop 
-  rns.transport.loop_sequence_range = {new_seq_idx,new_seq_idx}
-
 
 end
 
@@ -567,10 +580,19 @@ function GridPie:clear_lines(track_idx,patt_idx,start_line,end_line)
   local iter = rns.pattern_iterator:lines_in_pattern_track(patt_idx,track_idx)
 
   for pos,line in iter do
-    if (pos.line >= start_line) and (pos.line <= end_line) then
-      --print("*** clear line #",pos.line)
-      line:clear()
+    if self.skip_line_updates[track_idx] and
+      self.skip_line_updates[track_idx][pos.line] 
+    then
+      self.skip_line_updates[track_idx][pos.line] = nil
+      --print("skipped this line!",track_idx,pos.line)
+    else
+      if (pos.line >= start_line) and (pos.line <= end_line) then
+        --print("*** clear line #",pos.line)
+        line:clear()
+      end
+
     end
+
   end
 
 end
@@ -664,10 +686,10 @@ end
 function GridPie:_set_page_sizes()
   --TRACE("GridPie:_set_page_sizes()")
 
-  self.page_size_v = (self.options.page_size_v.value==self.STEPSIZE_AUTO) and
+  self.page_size_v = (self.options.page_size_v.value == STEPSIZE_AUTO) and
     self.matrix_height or self.options.page_size_v.value-1
   
-  self.page_size_h = (self.options.page_size_h.value==self.STEPSIZE_AUTO) and
+  self.page_size_h = (self.options.page_size_h.value == STEPSIZE_AUTO) and
     self.matrix_width or self.options.page_size_h.value-1
 
 end
@@ -726,8 +748,8 @@ function GridPie:set_vertical_pos_page(seq_idx)
   local page = math.floor((seq_idx-1)/self.page_size_v)
   local new_y = page*self.page_size_v+1
 
-  if (self.options.follow_pos.value ~= self.FOLLOW_OFF) then
-    if (self.options.follow_pos.value == self.FOLLOW_TRACK_PATTERN) then
+  if (self.options.follow_pos.value ~= FOLLOW_OFF) then
+    if (self.options.follow_pos.value == FOLLOW_TRACK_PATTERN) then
       self:set_vertical_pos(new_y)
     end
   end
@@ -914,7 +936,7 @@ end
 -- align selected track with current grid-pie position
 
 function GridPie:align_track()
-  if (self.options.follow_pos.value ~= self.FOLLOW_OFF) then
+  if (self.options.follow_pos.value ~= FOLLOW_OFF) then
     renoise.song().selected_track_index = self.x_pos
   end
 end
@@ -922,7 +944,7 @@ end
 -- align selected pattern with current grid-pie position
 
 function GridPie:align_pattern()
-  if (self.options.follow_pos.value == self.FOLLOW_TRACK_PATTERN) then
+  if (self.options.follow_pos.value == FOLLOW_TRACK_PATTERN) then
     renoise.song().selected_sequence_index = self.y_pos
   end
 end
@@ -1051,8 +1073,8 @@ end
 function GridPie:matrix_cell(x,y)
   --TRACE("GridPie:matrix_cell()",x,y)
 
-  if (self.MATRIX_CELLS[x] ~= nil) then
-    return self.MATRIX_CELLS[x][y]
+  if (self.matrix_cells[x] ~= nil) then
+    return self.matrix_cells[x][y]
   end
 end
 
@@ -1104,7 +1126,36 @@ function GridPie:init_gp_pattern()
   local rns = renoise.song()
   local sequencer = rns.sequencer
   local total_sequence = #sequencer.pattern_sequence
-  local last_pattern = rns.sequencer:pattern(total_sequence)
+  local last_patt_idx = rns.sequencer:pattern(total_sequence)
+
+  local gridpie_exist = rns.patterns[last_patt_idx].name == GRIDPIE_NAME
+  --print("GridPie:init_gp_pattern - gridpie_exist",gridpie_exist)
+  if not gridpie_exist then
+    -- create new pattern
+    local new_pattern = rns.sequencer:insert_new_pattern_at(total_sequence + 1)
+    rns.patterns[new_pattern].name = GRIDPIE_NAME
+    self.gridpie_patt_idx = new_pattern
+    total_sequence = total_sequence + 1
+  else
+    -- clear pattern, unmute slot
+    rns.patterns[last_patt_idx]:clear()
+    rns.patterns[last_patt_idx].name = GRIDPIE_NAME
+    for x = 1, rns.sequencer_track_count do
+      rns.sequencer:set_track_sequence_slot_is_muted(x , total_sequence, false)
+    end
+    self.gridpie_patt_idx = last_patt_idx
+  end
+
+  -- Establish loop 
+  rns.transport.loop_sequence_range = {total_sequence,total_sequence}
+
+  -- Cleanup any other pattern named __GRID_PIE__
+  for x = 1, total_sequence - 1 do
+    local tmp = rns.sequencer:pattern(x)
+    if rns.patterns[tmp].name:find(GRIDPIE_NAME) ~= nil then
+      rns.patterns[tmp].name = ""
+    end
+  end
 
   -- determine the position we should start from:
   -- if playing, use the playback position
@@ -1112,37 +1163,20 @@ function GridPie:init_gp_pattern()
   if rns.transport.playing then
     local playback_pos = rns.transport.playback_pos
     self._aligned_playpos = playback_pos.sequence
+    self:playback_pos_to_gridpie()
   else
     self._aligned_playpos = rns.selected_sequence_index
-  end
-
-  local gridpie_exist = rns.patterns[last_pattern].name == self.GRIDPIE_NAME
-  --print("GridPie:init_gp_pattern - gridpie_exist",gridpie_exist)
-  if not gridpie_exist then
-    -- create new pattern
-    local new_pattern = rns.sequencer:insert_new_pattern_at(total_sequence + 1)
-    rns.patterns[new_pattern].name = self.GRIDPIE_NAME
-    self.gridpie_patt_idx = new_pattern
-    total_sequence = total_sequence + 1
-  else
-    -- clear pattern, unmute slot
-    rns.patterns[last_pattern]:clear()
-    rns.patterns[last_pattern].name = self.GRIDPIE_NAME
-    for x = 1, rns.sequencer_track_count do
-      rns.sequencer:set_track_sequence_slot_is_muted(x , total_sequence, false)
+    -- set playback pos to gridpie pattern
+    local gridpie_patt = rns.patterns[self.gridpie_patt_idx]
+    local playback_pos = rns.transport.playback_pos 
+    playback_pos.sequence = total_sequence
+    --print("*** playback_pos...")
+    --rprint(playback_pos)
+    if (playback_pos.line > gridpie_patt.number_of_lines) then
+      playback_pos.line = gridpie_patt.number_of_lines
     end
-    self.gridpie_patt_idx = last_pattern
-  end
+    rns.transport.playback_pos = playback_pos 
 
-  -- establish loop 
-  rns.transport.loop_sequence_range = {total_sequence,total_sequence}
-
-  -- Cleanup any other pattern named __GRID_PIE__
-  for x = 1, total_sequence - 1 do
-    local tmp = rns.sequencer:pattern(x)
-    if rns.patterns[tmp].name:find(self.GRIDPIE_NAME) ~= nil then
-      rns.patterns[tmp].name = ""
-    end
   end
 
   -- Running start: copy contents into pattern
@@ -1185,13 +1219,15 @@ function GridPie:check_recording_status()
 
   -- turn pattern-loop off when session recording
   if self.realtime_record and not rns.transport.loop_pattern then
-    rns.transport.loop_sequence_range = {}
+    --rns.transport.loop_sequence_range = {}
   else
     local gp_seq_idx = self:get_gridpie_seq_pos()
     rns.transport.loop_sequence_range = {gp_seq_idx,gp_seq_idx}
+    --print("*** check_recording_status - rns.transport.loop_sequence_range",gp_seq_idx)
+
   end
 
-  --print("self.realtime_record",self.realtime_record)
+  --print("*** check_recording_status - self.realtime_record",self.realtime_record)
 
 end
 
@@ -1205,8 +1241,6 @@ function GridPie:build_cache()
   TRACE("GridPie:build_cache()")
 
   -- determine the total number of lines
-  --self.patt_cache_lines = self:get_max_pattern_length()
-  --print("GridPie:build_cache() - total lines:",self.patt_cache_lines)
   local rns = renoise.song()
   local gridpie_seq_pos = self:get_gridpie_seq_pos()
 
@@ -1219,7 +1253,7 @@ function GridPie:build_cache()
     -- their length to the originating/master slot
     local num_lines = patt.number_of_lines
 
-    if (patt.name ~= self.GRIDPIE_NAME) then
+    if (patt.name ~= GRIDPIE_NAME) then
       --print("GridPie:build_cache() - patt_idx",patt_idx)
       for track_idx=1,rns.sequencer_track_count do
         local alias_p_idx = self:resolve_patt_idx(patt_idx,track_idx)
@@ -1341,8 +1375,8 @@ end
 function GridPie:paint_cell(cell,x,y)
   --TRACE("GridPie:paint_cell()",cell,x,y)
   
-  local track_idx,seq_idx = self:get_idx_from_coords(x,y)
   local rns = renoise.song()
+  local track_idx,seq_idx = self:get_idx_from_coords(x,y)
   local sel_seq_idx = rns.selected_sequence_index
   local sel_track_idx = renoise.song().selected_track_index
   local gridpie_seq_pos = self:get_gridpie_seq_pos()
@@ -1357,12 +1391,13 @@ function GridPie:paint_cell(cell,x,y)
     (seq_idx%self.matrix_height == sel_seq_idx%self.matrix_height) 
 
   -- determine if the slot has an aliased master
+  --[[
   local has_aliased_master = function(ptrk,t_idx)
     local is_alias = false
     if ptrk.is_alias then
       local mst_seq_idx = self.active_slots[track_idx]
       if mst_seq_idx and 
-        rns.sequencer.pattern_sequence[self.active_slots[t_idx]] 
+        rns.sequencer.pattern_sequence[self.active_slots[t_idx] ] 
       then
         local mst_patt_idx = rns.sequencer:pattern(mst_seq_idx)
         local mst_ptrack = rns.patterns[mst_patt_idx].tracks[track_idx]
@@ -1373,6 +1408,7 @@ function GridPie:paint_cell(cell,x,y)
     end
     return is_alias
   end
+  ]]
 
   local is_master_slot = function(ptrk,t_idx,p_idx)
     local is_master = false
@@ -1400,7 +1436,7 @@ function GridPie:paint_cell(cell,x,y)
       local patt_idx = rns.sequencer.pattern_sequence[seq_idx]
       local ptrack = rns.patterns[patt_idx].tracks[track_idx]
       -- show that an aliased slot can be resolved
-      local is_alias = has_aliased_master(ptrack,track_idx)
+      local is_alias = self:has_aliased_master(ptrack,track_idx)
       if is_alias then
         cell:set(self.palette.gridpie_alias)
       elseif (current_seq or current_trk) then
@@ -1464,7 +1500,7 @@ end
 
 --------------------------------------------------------------------------------
 
---- Clear a given track (briefly mute to stop sound)
+--- Clear a given track, and briefly mute it
 
 function GridPie:clear_track(track_idx)
   TRACE("GridPie:clear_track()",track_idx)
@@ -1472,12 +1508,7 @@ function GridPie:clear_track(track_idx)
   local rns = renoise.song()
   rns.patterns[self.gridpie_patt_idx].tracks[track_idx]:clear()
   self.poly_counter[track_idx] = nil
-
-  if (rns.tracks[track_idx].type == renoise.Track.TRACK_TYPE_SEQUENCER) and
-    (rns.tracks[track_idx].mute_state==MUTE_STATE_ACTIVE) 
-  then
-    self:brief_track_mute(track_idx)
-  end
+  self:brief_track_mute(track_idx)
 
 end
 
@@ -1489,10 +1520,16 @@ end
 function GridPie:brief_track_mute(track_idx)
 
   local rns = renoise.song()
-  rns.tracks[track_idx].mute_state = MUTE_STATE_OFF
-  OneShotIdleNotifier(100, function() 
-    rns.tracks[track_idx].mute_state = renoise.Track.MUTE_STATE_ACTIVE 
-  end)
+
+  if (rns.tracks[track_idx].type == renoise.Track.TRACK_TYPE_SEQUENCER) and
+    (rns.tracks[track_idx].mute_state==MUTE_STATE_ACTIVE) 
+  then
+    rns.tracks[track_idx].mute_state = MUTE_STATE_OFF
+    OneShotIdleNotifier(100, function() 
+      rns.tracks[track_idx].mute_state = renoise.Track.MUTE_STATE_ACTIVE 
+    end)
+  end
+
 
 end
 
@@ -1534,6 +1571,11 @@ function GridPie:copy_and_expand(patt_idx,dest_patt_idx,track_idx,num_lines,offs
     offset = 0
   end
   
+  local max_lines = renoise.Pattern.MAX_NUMBER_OF_LINES
+  if end_line and (end_line > max_lines) then
+    end_line = max_lines
+  end
+  
   local incremental = (start_line or end_line)
 
   -- optimization: skip if num_lines and lines_total are the same
@@ -1566,6 +1608,8 @@ function GridPie:copy_and_expand(patt_idx,dest_patt_idx,track_idx,num_lines,offs
 
     self.skip_gp_notifier = true
 
+    --local skipped_lines = table.create()
+
     for i=1, num_lines do
 
       for j=1, multiplier do
@@ -1581,6 +1625,17 @@ function GridPie:copy_and_expand(patt_idx,dest_patt_idx,track_idx,num_lines,offs
 
         if do_copy then
 
+          -- check if line should be skipped
+          --[[
+          if self.skip_line_updates[track_idx] and
+            self.skip_line_updates[track_idx][to_line] 
+          then
+            print("skipped this line",to_line)
+            self.skip_line_updates[track_idx][to_line] = nil
+            skipped_lines:insert(to_line)
+          end
+          ]]
+
           local dest_line = dest_track:line(to_line)
 
           -- optimize: if empty, simply clear the lines
@@ -1589,8 +1644,8 @@ function GridPie:copy_and_expand(patt_idx,dest_patt_idx,track_idx,num_lines,offs
             dest_line:clear()
           else
             -- Copy the top of pattern to the expanded lines
-            local source_line = track:line(i+offset)
             --print("*** copy from",i+offset,"to",to_line)
+            local source_line = track:line(i+offset)
             dest_line:copy_from(source_line)
           end
 
@@ -1649,7 +1704,7 @@ function GridPie:goto_slot(track_idx)
         self.y_pos = self:set_vertical_pos_page(s_idx)
         --print("*** jumped page, y-pos is now",self.y_pos)
         self.v_update_requested = true
-        if (self.options.follow_pos.value == self.FOLLOW_TRACK_PATTERN) then
+        if (self.options.follow_pos.value == FOLLOW_TRACK_PATTERN) then
           rns.transport.follow_player = false
           --print("*** dealing with an aliased slot, follow_player is disabled")
           rns.selected_sequence_index = s_idx
@@ -1701,8 +1756,8 @@ function GridPie:toggler(x, y, pattern)
     -- only allow events that happened in supported
     -- parts of the matrix (no master/send/gridpie pattern)
 
-    --[[
     -- print some debug information...
+    --[[
     print("self.revert_pm_slot...")
     rprint(self.revert_pm_slot)
     print("self.patt_cache...")
@@ -1713,6 +1768,8 @@ function GridPie:toggler(x, y, pattern)
     rprint(self.poly_counter)
     print("self.homeless_tracks...")
     rprint(self.homeless_tracks)
+    print("self.realtime_tracks...")
+    rprint(self.realtime_tracks)
     ]]
     return 
   end
@@ -1737,20 +1794,6 @@ function GridPie:toggler(x, y, pattern)
     --print("*** toggler - re-attach line notifiers...")
     self:_attach_line_notifiers()
   end
-
-  -- update the track/sequence position, but
-  -- only when we have turned something on
-  --[[
-  if not muted then
-    if (self.options.follow_pos.value ~= self.FOLLOW_OFF) then
-      rns.selected_track_index = track_idx
-      if (self.options.follow_pos.value == self.FOLLOW_TRACK_PATTERN) then
-        rns.selected_sequence_index = seq_idx
-      end
-    end
-  end
-  ]]
-
   
 
 end
@@ -1768,10 +1811,15 @@ function GridPie:_toggle_slot(seq_idx,track_idx)
 
   local rns = renoise.song()
   local patt_idx = rns.sequencer:pattern(seq_idx)
-  local patt = rns.patterns[seq_idx]
+  --print("*** toggle_slot - patt_idx",patt_idx)
+  local patt = rns.patterns[patt_idx]
   local gridpie_patt = rns.patterns[self.gridpie_patt_idx]
   local old_lines = gridpie_patt.number_of_lines
   local old_pos = rns.transport.playback_pos
+  local old_lc = least_common(self.poly_counter:values())
+  --print("*** _toggle_slot - old_lc",old_lc)
+
+  --print("*** toggle_slot - patt",patt)
 
   -- true when we perform a recorded action (create a homeless slot)
   local stay_homeless = false
@@ -1784,33 +1832,23 @@ function GridPie:_toggle_slot(seq_idx,track_idx)
   then 
     muted = true 
   end
+  
+  self:_update_pm_mutes(seq_idx,track_idx,muted)
+  self.active_slots[track_idx] = seq_idx
+  --print("*** _toggle_slot - active_slots[",track_idx,"] = ",seq_idx)
 
   if muted then
+
     if self.realtime_record then
       -- mute track 
-      self.poly_counter[track_idx] = nil
-      self:brief_track_mute(track_idx)
-      self:incremental_update(track_idx)
-      -- output note-off across note columns
-      local line_idx = rns.transport.playback_pos.line
-      local line = gridpie_patt.tracks[track_idx]:line(line_idx)
-      local note_col_count = rns.tracks[track_idx].visible_note_columns
-      for col_idx = 1,note_col_count do
-        line.note_columns[col_idx].note_value = 120
-      end
-
+      --print("*** _toggle_slot - mute track#",track_idx)
+      self:toggle_slot_record(gridpie_patt,track_idx,true)
     else
-
       -- clear, mute track and update poly_counter
       self:clear_track(track_idx) 
-      -- check if we have changed the length
-      local lc = least_common(self.poly_counter:values())
-      if lc then
-        gridpie_patt.number_of_lines = self:_restrict_to_pattern_length(lc)
-        self:_keep_the_beat(old_lines,old_pos)
-      end
-
     end
+
+    self:shorten_pattern(gridpie_patt,old_lc)
 
   else
 
@@ -1845,39 +1883,41 @@ function GridPie:_toggle_slot(seq_idx,track_idx)
       -- the current position and a few lines ahead (LPS), writing
       -- the data directly into the GP pattern. 
       if self.realtime_record then
-
-        if not self.realtime_tracks[track_idx] then
-          --print("*** set up realtime recording for this track:",track_idx)
-          -- make sure any existing alias is removed
-          -- (copy existing contents into the slot)
-          local gp_slot = gridpie_patt.tracks[track_idx]
-          if gp_slot.is_alias then
-            local existing_slot = self:get_ptrack(self.active_slots[track_idx],track_idx)
-            gp_slot.alias_pattern_index = 0
-            gp_slot:copy_from(existing_slot)
-          end
-        end
-
-        -- define the realtime track, and output at once
-
-        self.realtime_tracks[track_idx] = {
-          src_patt_idx = alias_p_idx,
-          track_idx = track_idx,
-          last_output_pos = nil
-        }
-        self:incremental_update(track_idx)
-
-        -- make sure track stays homeless >:p
-        self.homeless_tracks[track_idx] = true
+        self:toggle_slot_record(gridpie_patt,track_idx,false,alias_p_idx)
         stay_homeless = true
 
-      else
+        self:set_record_patt_length(gridpie_patt,lc,old_lc)
 
+        --[[
+        local new_num_lines = self:_restrict_to_pattern_length(lc,gridpie_patt)
+        if (new_num_lines > gridpie_patt.number_of_lines) then
+          -- pattern has become longer,
+          -- have we already created a buffer? 
+          print("*** _toggle_slot - self.gp_buffer_seq_pos",self.gp_buffer_seq_pos)
+          if self.gp_buffer_seq_pos then
+            -- remove buffer (turn into gridpie pattern)
+            local gridpie_seq_pos = self:get_gridpie_seq_pos()
+            self.gridpie_patt_idx = self.gp_buffer_patt_idx
+            gridpie_patt = rns.patterns[self.gridpie_patt_idx]
+            gridpie_patt.name = GRIDPIE_NAME
+            self.gp_buffer_seq_pos = nil
+            self.gp_buffer_patt_idx = nil
+            rns.sequencer:delete_sequence_at(gridpie_seq_pos)
+            print("*** _toggle_slot - turned buffer into gridpie pattern")
+          end
+          gridpie_patt.number_of_lines = self:_restrict_to_pattern_length(lc,gridpie_patt)
+          print("*** _toggle_slot - gridpie_patt lines extended to",gridpie_patt.number_of_lines)
+        else
+          -- pattern has become shorter
+          self:shorten_pattern(gridpie_patt,old_lc)
+        end
+        ]]
+
+      else
         -- see if we can retrieve fully expanded tracks from the cache
         -- for all relevant tracks (we then perform a simple copy)
         local simple_copy = true
         for t_idx = 1, rns.sequencer_track_count do
-          --if self.active_slots[t_idx] then
           if self.poly_counter[t_idx] then
             local s_idx = (t_idx==track_idx) and seq_idx or self.active_slots[t_idx]
             local p_idx = rns.sequencer.pattern_sequence[s_idx]
@@ -1891,6 +1931,7 @@ function GridPie:_toggle_slot(seq_idx,track_idx)
         end
         --print("*** GridPie:toggler() - do simple_copy ? ",simple_copy)
         
+        --shorten_pattern(gridpie_patt)
         
         if simple_copy then
 
@@ -1899,6 +1940,8 @@ function GridPie:_toggle_slot(seq_idx,track_idx)
 
           --print("*** GridPie:toggler() - Simple copy")
 
+          --[[
+          ]]
           -- changed the recombination pattern's length?
           local length_matched = (lc == gridpie_patt.number_of_lines)
           if not length_matched then
@@ -1915,7 +1958,7 @@ function GridPie:_toggle_slot(seq_idx,track_idx)
           
           --print("*** GridPie:toggler() - Complex copy")
           
-          gridpie_patt.number_of_lines = self:_restrict_to_pattern_length(lc)
+          gridpie_patt.number_of_lines = self:_restrict_to_pattern_length(lc,gridpie_patt)
           self:_keep_the_beat(old_lines,old_pos)
 
           --if old_lines < gridpie_patt.number_of_lines then
@@ -1937,7 +1980,7 @@ function GridPie:_toggle_slot(seq_idx,track_idx)
                   (cached_lines < gridpie_patt.number_of_lines) 
                 then
                   self.skip_gp_notifier = true
-                  TRACE("GridPie:Expanding track ",idx,"with patt_idx",slot_alias_idx,"from",self.poly_counter[idx],"to",gridpie_patt.number_of_lines,"lines") 
+                  --print("GridPie:Expanding track ",idx,"with patt_idx",slot_alias_idx,"from",self.poly_counter[idx],"to",gridpie_patt.number_of_lines,"lines") 
                   self:copy_and_expand(slot_alias_idx,nil,idx,self.poly_counter[idx],nil,gridpie_patt.number_of_lines)
                   self.skip_gp_notifier = false
                 else
@@ -1980,8 +2023,8 @@ function GridPie:_toggle_slot(seq_idx,track_idx)
   --print("*** toggler - self._aligned_playpos",self._aligned_playpos)
     ]]
 
-  self:_update_pm_mutes(seq_idx,track_idx,muted)
-  self.active_slots[track_idx] = seq_idx
+  --self:_update_pm_mutes(seq_idx,track_idx,muted)
+  --self.active_slots[track_idx] = seq_idx
   if not stay_homeless then
     self.homeless_tracks[track_idx] = nil
   end
@@ -2003,23 +2046,59 @@ function GridPie:_toggle_pattern(seq_idx,track_idx)
   local gridpie_patt = rns.patterns[self.gridpie_patt_idx]
   local old_lines = gridpie_patt.number_of_lines
   local old_pos = rns.transport.playback_pos
+  local old_lc = least_common(self.poly_counter:values())
 
   local muted = self:can_mute_pattern(seq_idx)
   --print("*** muted",muted)
   if muted then
-    -- mute/clear pattern, nullify playpos
-    for t_idx=1,rns.sequencer_track_count do
-      self:clear_track(t_idx)
+
+    if self.realtime_record then
+      for track_idx = 1,rns.sequencer_track_count do
+        local ptrk = gridpie_patt.tracks[track_idx]
+        local has_master,master_p_idx = self:has_aliased_master(ptrk,track_idx)
+        --print("*** has_master,master_p_idx",has_master,master_p_idx)
+        local record_p_idx = (has_master) and master_p_idx or patt_idx
+        self:toggle_slot_record(gridpie_patt,track_idx,true,record_p_idx)
+      end
+    else
+
+      -- mute/clear pattern, nullify playpos
+      for t_idx=1,rns.sequencer_track_count do
+        self:clear_track(t_idx)
+      end
+
     end
+
     self._aligned_playpos = nil
 
   else
-    -- copy/import the pattern 
-    local patt_idx = rns.sequencer:pattern(seq_idx)
-    for track_idx = 1,rns.sequencer_track_count do
-      local alias_p_idx = self:resolve_patt_idx(patt_idx,track_idx)
-      gridpie_patt.tracks[track_idx].alias_pattern_index = alias_p_idx
-      -- todo: copy-expand if needed?
+
+    if self.realtime_record then
+      for track_idx = 1,rns.sequencer_track_count do
+        local ptrk = gridpie_patt.tracks[track_idx]
+        local has_master,master_p_idx = self:has_aliased_master(ptrk,track_idx)
+        --print("*** has_master,master_p_idx",has_master,master_p_idx)
+        local record_p_idx = (has_master) and master_p_idx or patt_idx
+        self:toggle_slot_record(gridpie_patt,track_idx,false,record_p_idx)
+      end
+    else
+
+      -- copy/import the pattern 
+      local patt_idx = rns.sequencer:pattern(seq_idx)
+      for track_idx = 1,rns.sequencer_track_count do
+        local alias_p_idx = self:resolve_patt_idx(patt_idx,track_idx)
+        gridpie_patt.tracks[track_idx].alias_pattern_index = alias_p_idx
+      end
+
+      -- update tracks
+      for t_idx = 1, rns.sequencer_track_count do
+        local alias_patt_idx = self:resolve_patt_idx(self.gridpie_patt_idx,t_idx)
+        local alias_patt = rns.patterns[alias_patt_idx]
+        --self.active_slots[t_idx] = seq_idx
+        self.poly_counter[t_idx] = (not muted) and 
+          alias_patt.number_of_lines or nil 
+      end
+
     end
 
     -- toggling a pattern will align the slots
@@ -2027,24 +2106,27 @@ function GridPie:_toggle_pattern(seq_idx,track_idx)
 
   end
 
-  -- update track poly-count (nullify when muted)
-  for t_idx = 1, rns.sequencer_track_count do
-    local alias_patt_idx = self:resolve_patt_idx(self.gridpie_patt_idx,t_idx)
-    local alias_patt = rns.patterns[alias_patt_idx]
-    self.poly_counter[t_idx] = (not muted) and 
-      alias_patt.number_of_lines or nil 
+  -- update pattern length 
+  local num_lines = nil
+  local lc = least_common(self.poly_counter:values())
+  if lc then
+    num_lines = lc
+  else
+    num_lines = source_patt.number_of_lines 
   end
 
-  -- update length of GP pattern
-  local lc = least_common(self.poly_counter:values())
-  --print("*** toggle pattern - lc",lc)
-  if lc then
-    gridpie_patt.number_of_lines = self:_restrict_to_pattern_length(lc)
+  if self.realtime_record then
+
+    self:set_record_patt_length(gridpie_patt,num_lines,old_lc)
+
   else
-    gridpie_patt.number_of_lines = source_patt.number_of_lines 
+
+    num_lines = self:_restrict_to_pattern_length(num_lines,gridpie_patt)
+    --print("*** toggle pattern - num_lines",num_lines)
+    gridpie_patt.number_of_lines = num_lines
+    self:_keep_the_beat(old_lines,old_pos)
+
   end
-  -- adjust playback position
-  self:_keep_the_beat(old_lines,old_pos)
 
   -- update PM mute state (do this _before_ active slots)
   self:_update_pm_mutes(seq_idx,nil,muted)
@@ -2063,6 +2145,184 @@ end
 
 --------------------------------------------------------------------------------
 
+--- Determine if a (gridpie) slot has an aliased master
+-- @param ptrk (RenoisePatternTrack)
+-- @param t_idx (Number), track index
+-- @return (Boolean[,Number]) - is_alias & alias_pattern_index (optional)
+
+function GridPie:has_aliased_master(ptrk,track_idx)
+
+  local rns = renoise.song()
+  if ptrk.is_alias then
+    local mst_seq_idx = self.active_slots[track_idx]
+    if mst_seq_idx and 
+      rns.sequencer.pattern_sequence[self.active_slots[track_idx]] 
+    then
+      local mst_patt_idx = rns.sequencer:pattern(mst_seq_idx)
+      local mst_ptrack = rns.patterns[mst_patt_idx].tracks[track_idx]
+      return mst_ptrack.is_alias,mst_ptrack.alias_pattern_index
+    else
+      --print("*** GridPie.paint_cell - failed to access an active slot for track #" .. track_idx)
+    end
+  end
+  return false
+end
+
+--------------------------------------------------------------------------------
+
+--- Method for toggling slots while realtime recording 
+-- @param gridpie_patt (RenoisePattern) reference to gridpie pattern
+-- @param track_idx (Number) the track index
+-- @param mute (Boolean) true when track should be muted
+-- @param master_p_idx (Number) index of the originating/master pattern
+
+function GridPie:toggle_slot_record(gridpie_patt,track_idx,mute,master_p_idx)
+  TRACE("GridPie:toggle_slot_record()",gridpie_patt,track_idx,mute,master_p_idx)
+
+  local rns = renoise.song()
+
+  if mute then
+
+    self.poly_counter[track_idx] = nil
+    self:brief_track_mute(track_idx)
+
+    -- if we have a buffer gp pattern, redirect output 
+    if self.gp_buffer_patt_idx then
+      gridpie_patt = rns.patterns[self.gp_buffer_patt_idx]
+    end
+
+    -- output note-off across note columns
+    if not self.skip_line_updates[track_idx] then
+      self.skip_line_updates[track_idx] = table.create()
+    end
+    local line_idx = rns.transport.playback_pos.line
+    local line = gridpie_patt.tracks[track_idx]:line(line_idx)
+    local note_col_count = rns.tracks[track_idx].visible_note_columns
+    for col_idx = 1,note_col_count do
+      -- produce note-off 
+      local note_col = line.note_columns[col_idx]
+      --print("*** toggle_slot_record - note_col.note_value",note_col.note_value)
+      local write_note_off = true
+      if (note_col.note_value < 120) then
+        --print("*** toggle_slot_record - track_idx,line_idx",track_idx,line_idx)
+        -- active instr./note-value, delay OFF by one
+        if gridpie_patt.tracks[track_idx].lines[line_idx+1] then
+          local line_next = gridpie_patt.tracks[track_idx]:line(line_idx+1)
+          line_next.note_columns[col_idx].note_value = 120
+          self.skip_line_updates[track_idx][line_idx+1] = true
+        end
+        self.skip_line_updates[track_idx][line_idx] = true
+        write_note_off = false
+      end
+      if write_note_off then
+        line.note_columns[col_idx].note_value = 120
+        self.skip_line_updates[track_idx][line_idx] = true
+      end
+    end
+    self:incremental_update(track_idx)
+  else
+
+    local num_lines = rns.patterns[master_p_idx].number_of_lines
+    self.poly_counter[track_idx] = num_lines
+    --print("*** toggle_slot_record- num_lines",num_lines)
+
+    if not self.realtime_tracks[track_idx] then
+      --print("*** toggle_slot_record - enable realtime recording for this track:",track_idx)
+      -- make sure any existing alias is removed
+      -- (copy existing contents into the slot)
+      local gp_slot = gridpie_patt.tracks[track_idx]
+      if gp_slot.is_alias then
+        local existing_slot = self:get_ptrack(self.active_slots[track_idx],track_idx)
+        gp_slot.alias_pattern_index = 0
+        gp_slot:copy_from(existing_slot)
+      end
+    end
+
+    self.realtime_tracks[track_idx] = {
+      src_patt_idx = master_p_idx,
+      track_idx = track_idx,
+      last_output_pos = nil
+    }
+    --print("*** toggle_slot_record - realtime_tracks[",track_idx,"]...")
+    --rprint(self.realtime_tracks[track_idx])
+    --self:incremental_update(track_idx)
+    self:incremental_update(track_idx,master_p_idx)
+
+    -- turn pattern-loop off when starting a session recording
+    if self.realtime_record and not rns.transport.loop_pattern then
+      rns.transport.loop_sequence_range = {}
+      --print("*** toggle_slot_record - loop_sequence_range nullified")
+
+    end
+
+    -- make sure track stays homeless >:p
+    self.homeless_tracks[track_idx] = true
+
+  end
+
+end
+
+--------------------------------------------------------------------------------
+
+--- When recording, we need to pay special attention to the pattern length
+
+function GridPie:set_record_patt_length(gridpie_patt,num_lines,old_num_lines)
+  TRACE("GridPie:set_record_patt_length()",gridpie_patt,num_lines,old_num_lines)
+
+  local rns = renoise.song()
+  --local new_num_lines = self:_restrict_to_pattern_length(num_lines,gridpie_patt)
+  if (num_lines > gridpie_patt.number_of_lines) then
+    -- if the pattern is being extended we check for the existence of
+    -- a buffer pattern and remove it/turn it into a normal gridpie pattern. 
+    --print("*** _toggle_slot - self.gp_buffer_seq_pos",self.gp_buffer_seq_pos)
+    if self:remove_buffer_pattern() then
+      gridpie_patt = rns.patterns[self.gridpie_patt_idx]
+    end
+    gridpie_patt.number_of_lines = self:_restrict_to_pattern_length(num_lines,gridpie_patt)
+    --print("*** _toggle_slot - gridpie_patt lines extended to",gridpie_patt.number_of_lines)
+  else
+    -- when size is not extended and num_lines/old_num_lines are equal,   
+    -- they act as a "hard limit" to the final pattern size.
+    if (num_lines ~= old_num_lines) then
+      self:shorten_pattern(gridpie_patt,old_num_lines)
+    else
+      self:_restrict_to_pattern_length(num_lines,gridpie_patt)
+    end
+  end
+
+end
+
+--------------------------------------------------------------------------------
+
+--- Remove buffer, turn back into gridpie pattern
+
+function GridPie:remove_buffer_pattern()
+
+  if self.gp_buffer_seq_pos then
+    local rns = renoise.song()
+    local gridpie_seq_pos = self:get_gridpie_seq_pos()
+    self.gridpie_patt_idx = self.gp_buffer_patt_idx
+    local gridpie_patt = rns.patterns[self.gridpie_patt_idx]
+    gridpie_patt.name = GRIDPIE_NAME
+    self.gp_buffer_seq_pos = nil
+    self.gp_buffer_patt_idx = nil
+    for track_idx,rt_trk in pairs(self.realtime_tracks) do
+      rt_trk.crossed_boundary = false
+      --print("*** incremental_update - realtime_tracks#",track_idx," no longer crossed_boundary")
+    end
+    rns.sequencer:delete_sequence_at(gridpie_seq_pos)
+    --print("*** _toggle_slot - turned buffer into gridpie pattern")
+
+    return true
+
+  end
+
+  return false
+
+end
+
+--------------------------------------------------------------------------------
+
 --- Update PM mute state, called after toggling slot/pattern
 -- @param seq_idx (number)
 -- @param track_idx (number or nil), leave out to target the whole pattern
@@ -2074,20 +2334,18 @@ function GridPie:_update_pm_mutes(seq_idx,track_idx,muted)
   local rns = renoise.song()
   for o = 1, rns.sequencer_track_count do
     local update_track = true
-    if track_idx then
-      if (track_idx~=o) then
-        update_track = false
-      end
+    if track_idx and (track_idx~=o) then
+      update_track = false
     end
     if update_track then
       if self.active_slots[o] then
-        -- change only affected slots (more efficient)
+        --print("change only affected slots (more efficient)")
         self:mute_selected_track_slot(o)
         if rns.sequencer:pattern(seq_idx) then
           rns.sequencer:set_track_sequence_slot_is_muted(o , seq_idx, muted)
         end
       else
-        -- loop through entire sequence
+        --print("loop through entire sequence")
         --local total_sequence = #rns.sequencer.pattern_sequence
         local gridpie_seq_pos = self:get_gridpie_seq_pos()
         for i = 1, gridpie_seq_pos-1 do
@@ -2204,7 +2462,7 @@ function GridPie:_build_app()
   if (self.mappings.grid.group_name) then
     self._buttons = {}
     for x = 1, self.matrix_width do
-      self.MATRIX_CELLS[x] = table.create()
+      self.matrix_cells[x] = table.create()
       for y = 1, self.matrix_height do
 
         local c = UIButton(self.display)
@@ -2212,7 +2470,7 @@ function GridPie:_build_app()
         c.tooltip = self.mappings.grid.description
         c:set_pos(x,y)
         c.active = false
-        if (self.options.hold_enabled.value == self.HOLD_DISABLED) then
+        if (self.options.hold_enabled.value == HOLD_DISABLED) then
           c.on_press = function(obj) 
             -- track copy
             if not self.active then 
@@ -2247,8 +2505,8 @@ function GridPie:_build_app()
                 if not bt.void then
                   renoise.app():show_status("Grid Pie: button released, toggle slot")
                   self:toggler(x,y)
-                --else
-                --  print("*** normal slot void, do nothing...")
+                else
+                  --print("*** normal slot void, do nothing...")
                 end
               end
               self.src_button = nil
@@ -2296,15 +2554,6 @@ function GridPie:_build_app()
                 if self.src_button and not bt.void then
                   renoise.app():show_status("Grid Pie: second button held, force assign")
                   self:assign_to_slot(bt,true)
-                  --[[
-                  if (self.src_button.seq_idx == gp_seq_idx) then
-                    renoise.app():show_status("normal slot is held after GP was pressed, force assign...")
-                    self:assign_to_slot(bt,true)
-                  else
-                    renoise.app():show_status("normal slot is held after normal slot, force assign")
-                    self:assign_to_slot(bt,true)
-                  end
-                  ]]
                 end
               end
             end
@@ -2320,6 +2569,8 @@ function GridPie:_build_app()
             --print("self.held_buttons["..x.."]",self.held_buttons[x])
             self.held_buttons[x][y] = {
               obj = obj,
+              x = x,
+              y = y,
               ptrack = ptrack,
               track_idx = t_idx,
               seq_idx = s_idx,
@@ -2330,12 +2581,19 @@ function GridPie:_build_app()
               --print("*** the first pressed button",x,y)
               self.src_button = bt
             elseif (self.src_button.obj ~= obj) then
+              --print("*** any other button after the first")
               local same_track = (bt.track_idx == self.src_button.track_idx)
               if not same_track then
-                --print("*** not the same track, void the source")
-                self.src_button.void = true
+                --print("*** not the same track, void the source+pressed button and toggle")
+                if not self.src_button.void then
+                  -- toggle source the first time
+                  self:toggler(self.src_button.x,self.src_button.y)
+                  self.src_button.void = true
+                end
+                -- toggle the pressed button
+                bt.void = true
+                self:toggler(bt.x,bt.y)
               else
-                --print("*** any other button after the first")
                 -- if any button in the same track was pressed, 
                 -- flag it as "void" to suppress it's event
                 for i = 1, self.matrix_height do
@@ -2345,6 +2603,8 @@ function GridPie:_build_app()
                     tmp_bt.void = true
                   end
                 end
+                --print("*** t_idx",t_idx)
+                --print("*** self.src_button.track_idx",self.src_button.track_idx)
                 if (self.src_button.seq_idx == gp_seq_idx) then
                   --print("*** normal slot is pressed after GP was pressed, assign...")
                   if not self:assign_to_slot(bt) then
@@ -2372,7 +2632,7 @@ function GridPie:_build_app()
 
         end
         self:_add_component(c)
-        self.MATRIX_CELLS[x][y] = c
+        self.matrix_cells[x][y] = c
       end
     end
   end
@@ -2420,7 +2680,8 @@ end
 --------------------------------------------------------------------------------
 
 --- A unified method for multi-touch assign/unassign of slot aliases
--- @param bt (table) a table which contain details about the pressed button
+-- (is using the src_button variable to determine combinations)
+-- @param bt (table) a table with details about the pressed button
 -- @param force (boolean) force-assign (otherwise, unique slots are left alone)
 -- @return boolean, true when assigned, false when we need to force-assign
 
@@ -2437,7 +2698,6 @@ function GridPie:assign_to_slot(bt,force)
     return
   end
 
-  --local target_ptrack,target_track_idx,target_seq_idx = self:get_ptrack_from_coords(x,y,true)
   local target_ptrack = bt.ptrack
   local target_track_idx = bt.track_idx
   local target_seq_idx = bt.seq_idx
@@ -2483,7 +2743,7 @@ function GridPie:assign_to_slot(bt,force)
 
   elseif not self.src_button.ptrack then
     -- cannot continue
-    --print("*** cannot assign, as source has no pattern-track")
+    --print("*** cannot assign, source has no pattern-track")
   elseif target_is_gp then
     -- grid-pie pattern, make unique (un-alias)
     --print("*** make slot unique (un-alias)")
@@ -2496,8 +2756,9 @@ function GridPie:assign_to_slot(bt,force)
     (force or target_ptrack.is_empty or target_ptrack.is_alias) 
   then
     -- button in the same track (normal/force-assign)
-    
-    local resolved_src_patt_idx = self:resolve_patt_idx(self.src_button.seq_idx,self.src_button.track_idx)
+    --print("*** self.src_button.seq_idx",self.src_button.seq_idx)
+    local resolved_src_patt_idx = rns.sequencer.pattern_sequence[self.src_button.seq_idx]
+    resolved_src_patt_idx = self:resolve_patt_idx(resolved_src_patt_idx,self.src_button.track_idx)
 
     if not target_ptrack.is_alias and
       (target_patt_idx == resolved_src_patt_idx) 
@@ -2547,7 +2808,7 @@ function GridPie:start_app(start_running)
   end
 
   if start_running and
-    (self.options.initialization.value == self.AUTOSTART_MANUAL) 
+    (self.options.initialization.value == AUTOSTART_MANUAL) 
   then
     --print("AUTOSTART_MANUAL, application was halted...")
     self.active = false
@@ -2567,6 +2828,7 @@ function GridPie:start_app(start_running)
   self:build_cache()
   self:set_writeahead()
 
+  self.last_playback_line = rns.transport.playback_pos.line
   self._track_count = rns.sequencer_track_count
 
   -- attach notifiers (after we have init'ed GP pattern!)
@@ -2578,7 +2840,7 @@ function GridPie:start_app(start_running)
   rns.transport.follow_player = false
 
   -- start playing as soon as we have initialized?
-  if (self.options.initialization.value == self.AUTOSTART_PLAY) then
+  if (self.options.initialization.value == AUTOSTART_PLAY) then
     self.play_requested = true
   end
 
@@ -2618,7 +2880,7 @@ function GridPie:stop_app()
     self:reset_tables()
 
     -- optional shutdown procedure
-    if (self.options.shutdown.value == self.SHUTDOWN_CLEAR_ALL) then
+    if (self.options.shutdown.value == SHUTDOWN_CLEAR_ALL) then
       local gp_seq_idx = self:get_gridpie_seq_pos()
       local gp_patt_idx = rns.sequencer:pattern(gp_seq_idx)
       local gp_patt = rns.patterns[gp_patt_idx]
@@ -2628,7 +2890,6 @@ function GridPie:stop_app()
   end
 
   self._has_been_started = false
-
   Application.stop_app(self)
 
 end
@@ -2641,10 +2902,14 @@ end
 function GridPie:abort(notification)
   TRACE("GridPie:abort()",notification)
 
-  self.active = false
+  --print("self._has_been_started",self._has_been_started)
+  if not self._has_been_started then
+    return
+  end
+
+  --self.active = false
   renoise.app():show_message("You dun goofed! Grid Pie needs to be restarted.")
   self._process.browser:stop_current_configuration()
-
 
 end
 
@@ -2662,15 +2927,12 @@ function GridPie:_attach_line_notifiers()
   -- remove, then attach new notifiers
   self:_remove_line_notifiers()
   for track_idx = 1,rns.sequencer_track_count do
-
     local resolved_idx = self:resolve_patt_idx(patt_idx,track_idx)
     local patt = rns.patterns[resolved_idx]
-
     if not (patt:has_line_notifier(self._track_changes,self))then
       self._line_notifiers[resolved_idx] = true
       patt:add_line_notifier(self._track_changes,self)
       --print("*** attach line notifier to source pattern #",resolved_idx)
-
     end
   end
 end
@@ -2690,14 +2952,10 @@ function GridPie:_remove_line_notifiers()
 
     --print("*** _remove_line_notifiers: _,patt_idx",_,patt_idx)
 
-    --local patt_idx = rns.sequencer.pattern_sequence[self._current_seq_index]
     local patt = rns.patterns[patt_idx]
-    if patt then
-      if (rns.selected_sequence_index ~= self._current_seq_index) and
-        (patt:has_line_notifier(self._track_changes,self)) then
-        patt:remove_line_notifier(self._track_changes,self)
-        --print("*** removed line notifier from source pattern")
-      end
+    if patt and (patt:has_line_notifier(self._track_changes,self)) then
+      patt:remove_line_notifier(self._track_changes,self)
+      --print("*** removed line notifier from source pattern")
     end
 
   end
@@ -2709,9 +2967,30 @@ end
 
 --- Safe way to set pattern length
 
-function GridPie:_restrict_to_pattern_length(num_lines)
-  TRACE("GridPie:_restrict_to_pattern_length()",num_lines)
-  return math.max(0,math.min(num_lines,renoise.Pattern.MAX_NUMBER_OF_LINES))
+function GridPie:_restrict_to_pattern_length(num_lines,patt)
+  TRACE("GridPie:_restrict_to_pattern_length()",num_lines,patt)
+
+  if patt and (patt.number_of_lines == num_lines) then
+    return num_lines
+  end
+
+  local rns = renoise.song()
+  local session_recording = self:is_session_recording()
+
+  if patt and session_recording then
+    -- if considered too small, continue with the current length 
+    if (num_lines < RECORD_PATT_MIN_LINES) then
+      num_lines = patt.number_of_lines
+    end
+    -- hard limit to avoid timing glitches
+    num_lines = math.max(num_lines,RECORD_PATT_MIN_LINES)
+  end
+
+  -- fit value between min and max
+  local max_lines = renoise.Pattern.MAX_NUMBER_OF_LINES
+  num_lines = math.max(0,math.min(num_lines,max_lines))
+  --print("*** _restrict_to_pattern_length - num_lines",num_lines)
+  return num_lines
 
 end
 
@@ -2733,12 +3012,19 @@ function GridPie:_track_changes(pos)
     return
   end
 
-  --TRACE("GridPie:_track_changes()",pos)
+  TRACE("GridPie:_track_changes()",pos)
 
   local rns = renoise.song()
 
   if (pos.track > rns.sequencer_track_count) then
     --print("*** track_changes - ignore changes to non-sequencer tracks")
+    return
+  end
+
+  if self.realtime_tracks[pos.track] then
+    -- this check shouldn't be needed, but sometimes a call
+    -- can slip through anyway (investigate...)
+    --print("*** track_changes - ignore changes to recordin tracks#",pos.track)
     return
   end
 
@@ -2869,11 +3155,13 @@ function GridPie:update_homeless_tracks()
           cell_y = self.matrix_height
         end 
         local cell = self:matrix_cell(track_idx,cell_y)
-        --print("*** update_homeless_tracks - seq_is_visible,cell_y",seq_is_visible,cell_y)
-        if self._blink then
-            cell:set(self.palette.gridpie_homeless)
-        else
-          self:paint_cell(cell,track_idx,cell_y)
+        --print("*** update_homeless_tracks - seq_is_visible,cell_y,cell",seq_is_visible,cell_y,cell)
+        if cell then
+          if self._blink then
+              cell:set(self.palette.gridpie_homeless)
+          else
+            self:paint_cell(cell,track_idx,cell_y)
+          end
         end
       end
 
@@ -2964,14 +3252,17 @@ function GridPie:on_idle()
 
   local rns = renoise.song()
   local gridpie_seq_pos = self:get_gridpie_seq_pos()
-  local gridpie_patt_idx = rns.sequencer:pattern(gridpie_seq_pos)
   local playing_pos = rns.transport.playback_pos.sequence
+  local playback_line = rns.transport.playback_pos.line
+  local lc = least_common(self.poly_counter:values())
 
   -- session recording: check if we have arrived at the new gp pattern
   if self.gp_buffer_seq_pos and (self.gp_buffer_seq_pos ~= playing_pos) then
-    -- mute the previous gp slots 
-    for t_idx = 1,rns.sequencer_track_count do
-      rns.sequencer:set_track_sequence_slot_is_muted(t_idx,self.gp_buffer_seq_pos,true)
+    if (rns.sequencer.pattern_sequence[self.gp_buffer_seq_pos]) then
+      -- mute the previous gp slots 
+      for t_idx = 1,rns.sequencer_track_count do
+        rns.sequencer:set_track_sequence_slot_is_muted(t_idx,self.gp_buffer_seq_pos,true)
+      end
     end
     self.gp_buffer_seq_pos = nil
     self.gp_buffer_patt_idx = nil
@@ -2980,23 +3271,72 @@ function GridPie:on_idle()
   -- always make sure gridpie pattern is present
   -- (soft check, allow a #copy of the GP pattern to be 
   -- present until picked up by the sequence_notifier)
-  if rns.patterns[gridpie_patt_idx].name:find(self.GRIDPIE_NAME) == nil then
+  local gp_patt = rns.patterns[rns.sequencer:pattern(gridpie_seq_pos)]
+  if gp_patt.name:find(GRIDPIE_NAME) == nil then
     self:abort()
   end
-  --[[
-  if rns.patterns[gridpie_patt_idx].name ~= self.GRIDPIE_NAME then
-    self:abort()
+
+  -- check when we arrive in a pattern or block loop
+  local crossed = false
+  if rns.transport.playing and
+    (playback_line < self.last_playback_line) 
+  then
+    --print("crossed - playback_line",playback_line)
+    crossed = true
+    self.skip_line_updates = table.create()
   end
-  ]]
+
+  if crossed then
+  
+    -- detect if we have crossed into a new pattern 
+    local crossed_pattern = false
+    if (self._current_seq_index ~= rns.selected_sequence_index) then
+      crossed_pattern = true
+    end
+
+    -- detect if we have wrapped around the pattern
+    -- (really, this is just a hackish way to determine it)
+    if (playback_line < self.writeahead_length) then
+      crossed_pattern = true
+    end
+
+    --print("crossed_pattern",crossed_pattern)
+    if crossed_pattern then
+
+      -- make sure gridpie pattern is always resized
+      if gp_patt and lc then
+        gp_patt.number_of_lines = self:_restrict_to_pattern_length(lc,gp_patt)
+      end
+
+      -- force recording tracks to start output
+      for track_idx,rt_trk in pairs(self.realtime_tracks) do
+        rt_trk.crossed_boundary =true
+      end
+
+    else
+      -- attempt to remove buffer (if it exists)
+      if self:remove_buffer_pattern() then
+        gridpie_seq_pos = playing_pos
+      end
+      -- pull back output to our playback position
+      -- todo: detect in incremental_update, to support block-loops
+      for track_idx,rt_trk in pairs(self.realtime_tracks) do
+        rt_trk.last_output_pos = math.max(1,playback_line-1)
+      end
+
+    end
+    --print("self.realtime_tracks...")
+    rprint(self.realtime_tracks)
+
+  end
+
 
   -- realtime output, have we travelled far enough? 
   if self.realtime_record then
-    local playback_line = rns.transport.playback_pos.line
     for track_idx,trk in pairs(self.realtime_tracks) do
       if trk.crossed_boundary and (playback_line < trk.last_output_pos) then
         trk.crossed_boundary = false
         trk.last_output_pos = -self.writeahead_interval
-        --print("*** continue incremental output from playback_line",playback_line)
       end
       if not trk.crossed_boundary then
         local check_line = trk.last_output_pos + self.writeahead_interval
@@ -3005,6 +3345,8 @@ function GridPie:on_idle()
         end
       end
     end
+
+
   end
 
   if self.v_update_requested then
@@ -3031,7 +3373,13 @@ function GridPie:on_idle()
     if (playing_pos~=gridpie_seq_pos) and
       (playing_pos~= self.gp_buffer_seq_pos)
     then 
-      --print("*** we have moved to a pattern outside gridpie",playing_pos)
+      --[[
+      print("*** we have moved to a pattern outside gridpie")
+      print("*** playing_pos",playing_pos)
+      print("*** gridpie_seq_pos",gridpie_seq_pos)
+      print("*** self._playing_seq_idx",self._playing_seq_idx)
+      print("*** self.gp_buffer_seq_pos",self.gp_buffer_seq_pos)
+      ]]
 
       -- determine if this is the result of a scheduled 
       -- pattern (a huge hack, since we cannot reliably 
@@ -3044,7 +3392,7 @@ function GridPie:on_idle()
         self:toggler(1,y_pos,true)
       end
 
-      rns.transport.follow_player = false
+      rns.transport.loop_sequence_range = {gridpie_seq_pos,gridpie_seq_pos}
       self:playback_pos_to_gridpie()
 
     end
@@ -3068,23 +3416,16 @@ function GridPie:on_idle()
     --self:update_scheduled_pattern()
   end
 
-  --[[
-  if rns.transport.playing then
-    -- use playback line number 
-    local lpb = rns.transport.lpb
-    local pos = rns.transport.playback_pos 
-      or rns.transport.edit_pos
-    blink = (math.floor((((pos.line-2)/lpb)+1)%2)==1)
-  else -- use the clock 
-    blink = (math.floor(os.clock()*2)%2==0) and true or false
-  end
-  ]]
+  self.last_playback_line = playback_line
+  self._current_seq_index = rns.selected_sequence_index
 
 end
 
 --------------------------------------------------------------------------------
 
 --- Call this to produce output for one of the realtime tracks
+-- @param track_idx (Number) 
+-- @param gp_seq_idx (Number) optional, index of the originating/master pattern
 
 function GridPie:incremental_update(track_idx)
   TRACE("GridPie:incremental_update()",track_idx)
@@ -3092,68 +3433,109 @@ function GridPie:incremental_update(track_idx)
   local rns = renoise.song()
   local rt_trk = self.realtime_tracks[track_idx]
   if not rt_trk then
-    --print("*** incremental_update - cannot update track",track_idx)
+    print("*** incremental_update - cannot update track",track_idx)
     return
   end
 
   local start_line = rns.transport.playback_pos.line
   local end_line = start_line + self.writeahead_length
+  local gp_patt_idx = self.gridpie_patt_idx
+  local gp_patt = rns.patterns[gp_patt_idx]
+  local new_gp_seq_pos = self:get_gridpie_seq_pos()
 
   -- if we have a buffer gp pattern, we should output to that one
-  local gridpie_patt = rns.patterns[self.gridpie_patt_idx]
   if self.gp_buffer_patt_idx then
-    gridpie_patt = rns.patterns[self.gp_buffer_patt_idx]
+    gp_patt = rns.patterns[self.gp_buffer_patt_idx]
+    gp_patt_idx = self.gp_buffer_patt_idx
   end
 
   self.skip_gp_notifier = true
 
+  -- figure out how many lines to use before repeating output
+  -- (the value is determined from the master slot)
+  local gp_slot_patt = nil
+  if rt_trk.src_patt_idx then
+    gp_slot_patt = rns.patterns[rt_trk.src_patt_idx]
+  else
+    local gp_slot_seq_idx = self.active_slots[track_idx]
+    --print("*** incremental update - gp_slot_seq_idx",gp_slot_seq_idx)
+    if gp_slot_seq_idx then
+      local gp_slot_patt_idx = rns.sequencer:pattern(gp_slot_seq_idx)
+      if gp_slot_patt_idx then
+        --print("*** incremental update - gp_slot_patt_idx #A",gp_slot_patt_idx)
+        gp_slot_patt_idx = self:resolve_patt_idx(gp_slot_patt_idx,track_idx)
+        --print("*** incremental update - gp_slot_patt_idx #B",gp_slot_patt_idx)
+        gp_slot_patt = rns.patterns[gp_slot_patt_idx]
+      end
+    end
+  end
+  -- now that we (might) have the master slot, use it's length
+  local num_lines = nil
+  if gp_slot_patt then
+    num_lines = gp_slot_patt.number_of_lines
+    --print("*** incremental update - track #",track_idx,"master slot lines",num_lines)
+  end
+
   -- todo: optimize by setting the start line to the last output
 
   if not self.poly_counter[track_idx] then
-    --print("*** slot is turned off, clear lines")
-    self:clear_lines(track_idx,self.gridpie_patt_idx,start_line,end_line)
+    --print("*** incremental_update - slot is turned off, clear lines")
+    self:clear_lines(track_idx,gp_patt_idx,start_line,end_line)
   else
-    --print("*** realtime output ",track_idx," from patt_idx",rt_trk.src_patt_idx," to dest patt_idx",self.gridpie_patt_idx," from line #",start_line," to #",end_line) 
-    self:copy_and_expand(rt_trk.src_patt_idx,self.gridpie_patt_idx,rt_trk.track_idx,nil,nil,gridpie_patt.number_of_lines,start_line,end_line)
+    --print("*** incremental_update - realtime output from line #",start_line," to #",end_line) 
+    self:copy_and_expand(rt_trk.src_patt_idx,gp_patt_idx,rt_trk.track_idx,num_lines,nil,gp_patt.number_of_lines,start_line,end_line)
   end
 
   rt_trk.last_output_pos = rns.transport.playback_pos.line
 
+  -- check if we need to create a copy of the gridpie pattern
+  -- (use triple the writeahead_length, so it's ready in good time)
+  if not rns.transport.loop_pattern and not self.gp_buffer_seq_pos then
+    local tmp_line = rt_trk.last_output_pos + self.writeahead_length*3
+    local create_copy = (tmp_line >= gp_patt.number_of_lines)
+    if create_copy then
+      self:clone_pattern()
+      self.gp_buffer_seq_pos = new_gp_seq_pos
+      self.gp_buffer_patt_idx = self.gridpie_patt_idx
+      new_gp_seq_pos = new_gp_seq_pos+1
+      --print("*** incremental_update - created a copy of the GP pattern")
+      -- loop, whenever we have the chance
+      rns.transport.loop_sequence_range = {new_gp_seq_pos,new_gp_seq_pos}
+
+    end
+
+  end
+
+
   -- check if the next update would meet/cross the pattern boundary
+  --print("*** incremental_update - gp_patt.number_of_lines",gp_patt.number_of_lines)
+  --print("*** incremental_update - gp_patt_old.number_of_lines",rns.patterns[self.gridpie_patt_idx].number_of_lines)
   local next_output_line = rt_trk.last_output_pos + self.writeahead_interval
-  local crossed_boundary = (next_output_line >= gridpie_patt.number_of_lines)
+  local old_lines = rns.patterns[self.gridpie_patt_idx].number_of_lines
+  --print("*** incremental_update - next_output_line",next_output_line)
+  local crossed_boundary = (next_output_line >= old_lines)
   if crossed_boundary then
-    --print("*** crossed_boundary")
+    --print("*** incremental_update - crossed_boundary")
     local dst_patt_idx = self.gridpie_patt_idx
     if not rns.transport.loop_pattern then
-      -- "session recording" (when pattern is not looped)
-      -- check if we have already created a copy of the GP pattern,
-      local new_gp_seq_pos = self:get_gridpie_seq_pos()
-      if not self.gp_buffer_seq_pos then
-        self:clone_pattern()
-        self.gp_buffer_seq_pos = new_gp_seq_pos
-        self.gp_buffer_patt_idx = self.gridpie_patt_idx
-        new_gp_seq_pos = new_gp_seq_pos+1
-      end
-      --print("*** self.gp_buffer_seq_pos",self.gp_buffer_seq_pos)
-      -- set the target to the new pattern
-      dst_patt_idx = rns.sequencer:pattern(new_gp_seq_pos)
       -- prepare "record-tracks" (empty/unique)
+      dst_patt_idx = rns.sequencer:pattern(new_gp_seq_pos)
       local new_gp_patt = rns.patterns[dst_patt_idx]
       for track_idx,trk in pairs(self.realtime_tracks) do
         new_gp_patt.tracks[track_idx].alias_pattern_index = 0
-        --print("*** prepared record-track ",track_idx," in new gp pattern ",dst_patt_idx)
+        --print("*** incremental_update - removed alias from record-track ",track_idx," in new gp pattern ",dst_patt_idx)
       end
+
     end
     -- extend into beginning of pattern & reset the output_pos
     start_line = 1
     end_line = self.writeahead_length
 
     if not self.poly_counter[track_idx] then
-      --print("*** slot is turned off, clear lines")
+      --print("*** incremental_update - slot is turned off, clear lines")
       self:clear_lines(track_idx,dst_patt_idx,start_line,end_line)
     else
-      --print("*** realtime output ",track_idx," from patt_idx",rt_trk.src_patt_idx," to dest patt_idx",dst_patt_idx," from line #",start_line," to #",end_line) 
+      --print("*** incremental_update - realtime output (across boundary) from line #",start_line," to #",end_line) 
       self:copy_and_expand(rt_trk.src_patt_idx,dst_patt_idx,rt_trk.track_idx,nil,nil,nil,start_line,end_line)
     end
 
@@ -3200,9 +3582,11 @@ end
 --- Mute existing selected slot (if any) in the pattern matrix
 
 function GridPie:mute_selected_track_slot(track_idx)
+  TRACE("GridPie:mute_selected_track_slot()",track_idx)
 
   local rns = renoise.song()
   if rns.sequencer.pattern_sequence[self.active_slots[track_idx]] then
+    --print("*** about to mute track #",track_idx,"at seq-pos",self.active_slots[track_idx])
     rns.sequencer:set_track_sequence_slot_is_muted(
       track_idx,self.active_slots[track_idx],true)
   end
@@ -3247,13 +3631,15 @@ function GridPie:playback_pos_to_gridpie(restart)
 
   local rns = renoise.song()
   local gp_seq_pos = self:get_gridpie_seq_pos()
+  --[[
   if (rns.transport.playback_pos.sequence==gp_seq_pos) then
     return
   end
+  ]]
 
   local gp_patt = rns.patterns[self.gridpie_patt_idx]
   local songpos = rns.transport.playback_pos
-  songpos.sequence = gp_seq_pos
+  songpos.sequence = math.min(gp_seq_pos,#rns.sequencer.pattern_sequence)
 
   if songpos.line > gp_patt.number_of_lines then
     songpos.line = gp_patt.number_of_lines 
@@ -3266,23 +3652,7 @@ function GridPie:playback_pos_to_gridpie(restart)
 
   rns.transport.playback_pos = songpos
 
-end
 
---------------------------------------------------------------------------------
-
---- Update the "gridpie_patt_idx" property
-
-function GridPie:_maintain_gridpie_reference()
-  TRACE("GridPie:_maintain_gridpie_reference()")
-
-  local rns = renoise.song()
-  local gp_seq_pos = self:get_gridpie_seq_pos()
-  local gp_patt_idx = rns.sequencer:pattern(gp_seq_pos)
-  local gp_patt = rns.patterns[gp_patt_idx]
-  if (gp_patt.name == self.GRIDPIE_NAME) then
-    self.gridpie_patt_idx = rns.sequencer.pattern_sequence[gp_seq_pos]
-    --print("*** _maintain_gridpie_reference - self.gridpie_patt_idx",self.gridpie_patt_idx)
-  end
 
 end
 
@@ -3293,9 +3663,16 @@ end
 function GridPie:reset_tables()
 
   self.src_button = nil
+  self.gp_buffer_seq_pos = nil
+  self.gp_buffer_patt_idx = nil
+  self.skip_gp_notifier = nil
+  self.last_playback_line = nil
+  self.realtime_record = false
+  self._update_task = nil
   self.patt_cache = table.create()
   self.revert_pm_slot = table.create()
   self.active_slots = table.create()
+  self.skip_line_updates = table.create()
   self.homeless_tracks = table.create()
   self.held_buttons = table.create()
   for x=1,self.matrix_width do
@@ -3417,6 +3794,9 @@ function GridPie:_attach_to_song(new_song)
       local gridpie_seq_pos = self:get_gridpie_seq_pos()
       if (notification.type == "remove") then
 
+        -- todo: check if pattern is a gridpie/buffer pattern
+        -- and skip maintaining table if this is the case...
+
         -- maintain matrix revert-state 
         --local seq_len = #rns.sequencer.pattern_sequence
         for x = 1, rns.sequencer_track_count do
@@ -3456,7 +3836,7 @@ function GridPie:_attach_to_song(new_song)
         local gp_patt_idx = rns.sequencer.pattern_sequence[gridpie_seq_pos]
         local gp_patt = rns.patterns[gp_patt_idx]
         if (notification.index == gridpie_seq_pos) and 
-          gp_patt.name:find(self.GRIDPIE_NAME) ~= nil 
+          gp_patt.name:find(GRIDPIE_NAME) ~= nil 
         then
           --print("*** pattern_sequence_observable - dealing with a copy of the gridpie pattern")
           self:adapt_gridpie_pattern()
@@ -3493,25 +3873,39 @@ function GridPie:_attach_to_song(new_song)
         end
 
         -- mute all slots in the new pattern,
-        -- and add any unique slots to the cache
+        -- and add unique slots to the cache
         local patt_idx = rns.sequencer.pattern_sequence[notification.index]
         local patt = rns.patterns[patt_idx]
-        for track_idx = 1, rns.sequencer_track_count do
-          rns.sequencer:set_track_sequence_slot_is_muted(track_idx,notification.index,true)
-          local ptrack = rns.patterns[patt_idx].tracks[track_idx]
-          if not ptrack.is_alias then
-            self:set_pattern_cache(patt_idx,track_idx,patt.number_of_lines)
+        -- why do we have to perform this check???
+        -- seems to be API-related, as I've gotten the following error:
+        -- 'invalid sequence_pos index '39'. valid values are (1 to 39).'
+        if patt then
+          for track_idx = 1, rns.sequencer_track_count do
+            rns.sequencer:set_track_sequence_slot_is_muted(track_idx,notification.index,true)
+            local ptrack = patt.tracks[track_idx]
+            if not ptrack.is_alias then
+              self:set_pattern_cache(patt_idx,track_idx,patt.number_of_lines)
+            end
           end
+        else
+          print("Oops, Grid Pie should have been able to prepare newly inserted pattern...")
         end
-        
 
       end
 
-      self:_maintain_gridpie_reference()
+      -- update the "gridpie_patt_idx" property
+      local gp_patt_idx = rns.sequencer:pattern(gridpie_seq_pos)
+      local gp_patt = rns.patterns[gp_patt_idx]
+      if (gp_patt.name == GRIDPIE_NAME) then
+        self.gridpie_patt_idx = gp_patt_idx
+        --print("*** self.gridpie_patt_idx",self.gridpie_patt_idx)
+      end
+
       self.v_update_requested = true
 
       -- maintain loop in pattern-sequence 
       rns.transport.loop_sequence_range = {gridpie_seq_pos,gridpie_seq_pos}
+      --print("*** pattern_sequence_observable - rns.transport.loop_sequence_range",gridpie_seq_pos)
 
       -- always enforce position to gridpie pattern
       if rns.transport.playing then
@@ -3525,7 +3919,7 @@ function GridPie:_attach_to_song(new_song)
   self._song_observables:insert(rns.transport.playing_observable)
   rns.transport.playing_observable:add_notifier(self,
     function()
-      --TRACE("GridPie:playing_observable fired...")
+      TRACE("GridPie:playing_observable fired...")
       if not self.active then return end
       if renoise.song().transport.playing then
         self:playback_pos_to_gridpie(true)
@@ -3543,11 +3937,11 @@ function GridPie:_attach_to_song(new_song)
   self._song_observables:insert(rns.selected_track_index_observable)
   rns.selected_track_index_observable:add_notifier(self,
     function()
-      --TRACE("GridPie:selected_track_index_observable fired...")
+      TRACE("GridPie:selected_track_index_observable fired...")
       if not self.active then 
         return 
       end
-      if (self.options.follow_pos.value ~= self.FOLLOW_OFF) then
+      if (self.options.follow_pos.value ~= FOLLOW_OFF) then
         local track_idx = renoise.song().selected_track_index
 
         local page = math.floor((track_idx-1)/self.page_size_h)
@@ -3565,7 +3959,7 @@ function GridPie:_attach_to_song(new_song)
   self._song_observables:insert(rns.selected_sequence_index_observable)
   rns.selected_sequence_index_observable:add_notifier(self,
     function()
-      --TRACE("GridPie:selected_sequence_index_observable fired...")
+      TRACE("GridPie:selected_sequence_index_observable fired...")
       
       if not self.active then 
         return 
@@ -3579,11 +3973,11 @@ function GridPie:_attach_to_song(new_song)
 
       self.update_requested = true
 
-      self._current_seq_index = rns.selected_sequence_index
-
       -- attach pattern notifier
+      -- todo: check if we are already attached (faster)
       local new_song = false
       self:_attach_to_pattern(new_song)
+
 
     end
   )
@@ -3659,6 +4053,8 @@ function GridPie:_attach_to_pattern(new_song)
   local rns = renoise.song()
   local patt = rns.patterns[rns.selected_pattern_index]
 
+  --print("*** _attach_to_pattern - rns.selected_pattern_index",rns.selected_pattern_index)
+
   -- remove notifier first 
   self:_remove_notifiers(new_song,self._pattern_observables)
   self._pattern_observables = table.create()
@@ -3685,10 +4081,10 @@ function GridPie:_attach_to_pattern(new_song)
         self.patt_cache[patt_idx] = table.create()
       end
       local patt = rns.patterns[patt_idx]
+      --print("*** GridPie: number_of_lines_observable - patt.number_of_lines",patt.number_of_lines)
       for t_idx = 1, rns.sequencer_track_count do
         -- update existing cache entries for this pattern
         if self.patt_cache[patt_idx][t_idx] then
-          --print("*** change self.patt_cache[",patt_idx,"][",t_idx,"]",self.patt_cache[patt_idx][t_idx],"into",patt.number_of_lines)
           self.patt_cache[patt_idx][t_idx] = patt.number_of_lines
         end
         -- update poly counter 
@@ -3705,8 +4101,9 @@ function GridPie:_attach_to_pattern(new_song)
         local gp_patt = rns.patterns[self.gridpie_patt_idx]
         local old_lines = gp_patt.number_of_lines
         local old_pos = rns.transport.playback_pos
-        gp_patt.number_of_lines = self:_restrict_to_pattern_length(lc)
 
+        gp_patt.number_of_lines = self:_restrict_to_pattern_length(lc,gp_patt)
+        --print("*** number of lines changed - gp_patt.number_of_lines",gp_patt.number_of_lines)
         --print("output all active tracks that originate from this position")
         for t_idx = 1, rns.sequencer_track_count do
           if self.active_slots[t_idx] and 
@@ -3719,6 +4116,7 @@ function GridPie:_attach_to_pattern(new_song)
               line = 1
             }
             local patt_idx = rns.sequencer.pattern_sequence[self.active_slots[t_idx]]
+            --print("*** number of lines changed - copy and expand this track",t_idx)
             self:_add_pending_update(patt_idx,pos)
           end
         end
@@ -3727,7 +4125,7 @@ function GridPie:_attach_to_pattern(new_song)
           self:_keep_the_beat(old_lines,old_pos)
         end
       else
-        --print("number_of_lines_observable - no grid pie tracks available")
+        print("number_of_lines_observable - no grid pie tracks available")
       end
 
     end
@@ -3748,7 +4146,8 @@ function GridPie:set_writeahead()
   local bpm = rns.transport.bpm
   local lpb = rns.transport.lpb
 
-  self.writeahead_length = math.ceil(math.max(2,(bpm*lpb)/160))
+  --self.writeahead_length = math.ceil(math.max(2,(bpm*lpb)/160))
+  self.writeahead_length = math.ceil(math.max(2,(bpm*lpb)/80))
   self.writeahead_interval = math.ceil(self.writeahead_length/2)
 
 end
@@ -3757,8 +4156,7 @@ end
 
 --- Keep the beat: perform a number of tricks in order to keep the playback
 -- inside the __GRID PIE__ pattern steady, even as it's size is being changed
--- note: to avoid glitches, call this method *before* doing anything heavy, 
--- CPU-wise (this method in itself is quite light on the CPU)
+-- note: to avoid glitches, call this method *before* doing anything heavy
 -- @param old_lines (Number) the previous number of lines
 -- @param old_pos (SongPosition) the songposition to translate
 
@@ -3768,44 +4166,142 @@ function GridPie:_keep_the_beat(old_lines,old_pos)
   local rns = renoise.song()
   local meter = self.options.measure.value
   local gridpie_patt = rns.patterns[self.gridpie_patt_idx]
-  
-  if (old_lines > gridpie_patt.number_of_lines) then
-    -- If the playhead is within the valid range, do nothing
-    if (old_pos.line > gridpie_patt.number_of_lines) then
-      local lpb = rns.transport.lpb
-      -- The playhead jumps back in the pattern by the same amount of lines as we, 
-      -- at the moment the length changed, were located from the end of that 
-      -- pattern. This should cause us to arrive at line 1 in the same time
-      local new_line = (old_pos.line-old_lines) + gridpie_patt.number_of_lines
-      -- If the resulting line difference turned out negative, 
-      -- go forward in line-increments that match the LPB 
-      if (new_line<0) then
-        while (new_line<0) do
-          new_line = new_line+lpb
-        end
-      else
-        -- lower the value to the first line within the LPB range
-        new_line = new_line%lpb
-      end
-      -- add the number of beats
-      local num_beats = math.floor((old_lines)/lpb)%meter
-      local num_beats_reached = math.floor((old_pos.line)/lpb)%meter
-      new_line = new_line+(num_beats_reached*lpb)
-      -- ensure that the new line fit within new pattern
-      -- (will happen when lpb is larger than pattern length)
-      if (new_line>gridpie_patt.number_of_lines) then
-        new_line = new_line%gridpie_patt.number_of_lines
-      end
-      -- finally, ensure we *never* go to line 0
-      if (new_line==0) then
-        new_line = gridpie_patt.number_of_lines
-      end
-      old_pos.line = new_line
+  local gridpie_seq_idx = self:get_gridpie_seq_pos()
+  --print("*** keep the beat - gridpie_patt",gridpie_patt)
+
+  local new_lines = gridpie_patt.number_of_lines
+  --print("*** keep the beat - old_lines,new_lines",old_lines,new_lines)
+  --print("*** keep the beat - old_pos.sequence",old_pos.sequence)
+  --print("*** keep the beat - old_pos.line",old_pos.line)
+
+  -- our current position is within the pattern boundaries? 
+  if (rns.transport.playback_pos.line < new_lines) then
+
+    -- if the old pattern was just one line, 
+    -- trigger from the beginning (== last line)
+    if (old_lines == 1) then
+      old_pos.line = new_lines
+      old_pos.sequence = gridpie_seq_idx
       rns.transport.playback_pos = old_pos
-      --print("*** keep the beat - playback_pos.sequence",old_pos.sequence)
-      --print("*** keep the beat - playback_pos.line",old_pos.line)
     end
+    return
   end
+
+  -- try to jump back by the same amount of lines as we, the moment the 
+  -- length changed, were located from the pattern end. This should 
+  -- cause us to arrive at line 1 in the same amount of time
+  local new_line = new_lines - (old_lines - old_pos.line)
+  --print("*** keep the beat - new_line A",new_line)
+
+  -- if we are not inside the gridpie patterns boundaries
+  if (new_line > new_lines) or (new_line < 0) then
+
+    local lpb = rns.transport.lpb
+
+    --[[
+    ]]
+    -- The playhead jumps back in the pattern by the same amount of lines as we, 
+    -- at the moment the length changed, were located from the end of that 
+    -- pattern. This should cause us to arrive at line 1 in the same time
+    new_line = (old_pos.line-old_lines) + new_lines
+    -- If the resulting line difference turned out negative, 
+    -- go forward in line-increments that match the LPB 
+    if (new_line<0) then
+      while (new_line<0) do
+        new_line = new_line+lpb
+      end
+    else
+      -- lower the value to the first line within the LPB range
+      new_line = new_line%lpb
+    end
+    --print("*** keep the beat - new_line B",new_line)
+
+    -- add the number of beats
+    local num_beats = math.floor((old_lines)/lpb)%meter
+    local num_beats_reached = math.floor((old_pos.line)/lpb)%meter
+    new_line = new_line+(num_beats_reached*lpb)
+    -- ensure that the new line fit within new pattern
+    -- (will happen when lpb is larger than pattern length)
+    if (new_line>new_lines) then
+      new_line = new_line%new_lines
+    end
+    --print("*** keep the beat - new_line C",new_line)
+  end
+
+  -- finally, ensure we *never* go to line 0
+  if (new_line==0) then
+    new_line = new_lines
+  end
+  --print("*** keep the beat - new_line D",new_line)
+  --print("*** keep the beat - playback_pos.sequence",old_pos.sequence)
+  --print("*** keep the beat - playback_pos.line",old_pos.line)
+  old_pos.line = new_line
+  rns.transport.playback_pos = old_pos
+
+end
+
+--------------------------------------------------------------------------------
+
+-- Allow the pattern to (attempt to ) shorten it's length 
+-- The result is a multiple of the gridpie length up to our current position
+-- (cutting the pattern short if we are close to a boundary and the old and 
+-- new lc values are not identical). Note that the pattern might actually
+-- *increase* it's size if we are close to a boundary (a.k.a. "clone region")
+-- @return boolean, true when size was changed
+
+function GridPie:shorten_pattern(patt,old_len)
+  TRACE("GridPie:shorten_pattern()",patt,old_len)
+
+  local rns = renoise.song()
+  local lc = least_common(self.poly_counter:values())
+  local changed = false
+  local playpos = rns.transport.playback_pos
+  --print("*** shorten_pattern - _toggle_slot #A lc,playpos.line",lc,playpos.line)
+  if lc then
+    local new_len,new_len2 = lc,old_len
+    --local exceeded = 1
+    --print("*** shorten_pattern - old_len",old_len)
+    if (new_len ~= 1) then
+      -- build up length 
+      while (new_len < playpos.line) do
+        new_len = new_len+lc
+        --exceeded = exceeded + 1
+      end
+      --print("*** shorten_pattern - new_len #A",new_len)
+      -- check if in "clone region", and add extra round 
+      -- (allow clone only when we have sufficient lines left)
+      if self.realtime_record and
+        ((playpos.line + self.writeahead_length) >= new_len) 
+      then
+        new_len = new_len+lc
+        --print("*** shorten_pattern - new_len #B",new_len)
+      end
+    end
+    -- check if playback is left in a "dead zone"
+    if old_len and (old_len > lc) then
+      --print("*** shorten_pattern - exceeded*lc",exceeded*lc)
+      --print("*** shorten_pattern - exceeded*old_len",exceeded*old_len)
+      local mod_pos = playpos.line%old_len
+      if (mod_pos == 0) then
+        mod_pos = old_len
+      end
+      --print("*** shorten_pattern - mod_pos",mod_pos)
+      local in_dead_zone = (mod_pos > lc)
+      --print("in_dead_zone",in_dead_zone)
+      if in_dead_zone then
+        -- (attempt to) cut pattern short
+        while (new_len2 < playpos.line) do
+          new_len2 = new_len2+old_len
+        end
+        --print("*** shorten_pattern - new_len #C",new_len2)
+      end
+      new_len = math.min(new_len,new_len2)
+    end
+    patt.number_of_lines = self:_restrict_to_pattern_length(new_len,patt)
+    return true
+  end
+
+  return false
 
 end
 
