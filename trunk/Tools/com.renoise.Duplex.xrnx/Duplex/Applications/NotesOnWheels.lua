@@ -197,6 +197,28 @@
 
 --==============================================================================
 
+-- constants
+
+local MODE_PITCH = 1
+local MODE_VELOCITY = 2
+local MODE_OFFSET = 3
+local MODE_GATE = 4
+local MODE_RETRIG = 5
+local EDIT_SYNC_ON = 1
+local EDIT_SYNC_OFF = 2
+local GLOBAL_MODE_ON = 1
+local GLOBAL_MODE_OFF = 2
+local WRITE_METHOD_TOUCH = 1
+local WRITE_METHOD_LATCH = 2
+local WRITE_METHOD_WRITE = 3
+local FILL_MODE_ON = 1
+local FILL_MODE_OFF = 2
+local WRAP_OFFSET_ON = 1
+local WRAP_OFFSET_OFF = 2
+
+
+--==============================================================================
+
 class 'NotesOnWheels' (Application)
 
 NotesOnWheels.default_options = {
@@ -205,7 +227,7 @@ NotesOnWheels.default_options = {
     description = "Determine how to write to the pattern",
     on_change = function(inst)
       -- TODO update write button state
-      if (inst.options.write_method.value ~= inst.WRITE_METHOD_LATCH) then
+      if (inst.options.write_method.value ~= WRITE_METHOD_LATCH) then
         inst.touched = false
       end
     end,
@@ -278,180 +300,147 @@ NotesOnWheels.default_options = {
       inst:select_midi_port(inst.options.midi_keyboard.value-1)
     end,
   },
+}
+
+NotesOnWheels.available_mappings = {
+
+  choose_mode = {
+    description = "NOW: Choose mode",
+  },
+  set_mode_pitch = {
+    description = "NOW: Set mode to 'pitch'"..
+                  "\nHold to write sequence to entire pattern",
+  },
+  set_mode_velocity = {
+    description = "NOW: Set mode to 'velocity'"..
+                  "\nHold to write sequence to entire pattern",
+  },
+  set_mode_offset = {
+    description = "NOW: Set mode to 'offset'"..
+                  "\nHold to write sequence to entire pattern",
+  },
+  set_mode_gate = {
+    description = "NOW: Set mode to 'duration'"..
+                  "\nHold to write sequence to entire pattern",
+  },
+  set_mode_retrig = {
+    description = "NOW: Set mode to 'retrigger)"..
+                  "\nHold to write sequence to entire pattern",
+  },
+  multi_sliders = {
+    description = "NOW: Mode-dependant slider",
+  },
+  pitch_sliders = {
+    description = "NOW: Change pitch for step ",
+  },
+  velocity_sliders = {
+    description = "NOW: Change velocity for step ",
+  },
+  offset_sliders = {
+    description = "NOW: Change sample-offset for step ",
+  },
+  gate_sliders = {
+    description = "NOW: Change gate/duration for step ",
+  },
+  retrig_sliders = {
+    description = "NOW: Change number of retrigs for step ",
+  },
+  num_steps = {
+    description = "NOW: Number of steps",
+    orientation = HORIZONTAL, -- supports grid mode
+  },
+  step_spacing = {
+    description = "NOW: Line-space between steps",
+  },
+  num_lines = {
+    description = "NOW: Sequence length (lines)",
+  },
+  pitch_adjust = {
+    description = "NOW: Transpose all steps",
+  },
+  velocity_adjust = {
+    description = "NOW: Adjust volume for all steps",
+  },
+  offset_adjust = {
+    description = "NOW: Adjust sample-offset for all steps",
+  },
+  gate_adjust = {
+    description = "NOW: Adjust note length for all steps",
+  },
+  retrig_adjust = {
+    description = "NOW: Adjust retriggering for all steps",
+  },
+  multi_adjust = {
+    description = "NOW: Adjust all steps (mode-dependant)",
+  },
+  write = {
+    description = "NOW: Write to pattern in realtime",
+  },
+  learn = {
+    description = "NOW: Import sequence from pattern",
+  },
+  fill = {
+    description = "NOW: Fill entire track (can be very CPU intensive, use with caution!!)",
+  },
+  global = {
+    description = "NOW: Toggle between global/parameter-only output",
+  },
+  shift_up = {
+    description = "NOW: Decrease line offset",
+  },
+  shift_down = {
+    description = "NOW: Increase line offset",
+  },
+  extend = {
+    description = "NOW: Repeat sequence twice",
+  },
+  shrink = {
+    description = "NOW: Reduce sequence to half the size",
+  },
+  position = {
+    description = "NOW: Displays position within sequence",
+  },
+}
+
+NotesOnWheels.default_palette = {
+  position_on     = { color={0xFF,0xFF,0xFF}, val=true, text="▪", },
+  position_off    = { color={0x00,0x00,0x00}, val=false, text="▫", },
+  write_on        = { color={0xFF,0xFF,0xFF}, val=true, text="Write", },
+  write_off       = { color={0x00,0x00,0x00}, val=false, text="Write", },
+  learn_on        = { color={0xFF,0xFF,0xFF}, val=true, text="Learn", },
+  learn_off       = { color={0x00,0x00,0x00}, val=false, text="Learn", },
+  fill_on         = { color={0xFF,0xFF,0xFF}, val=true, text="Fill",  },
+  fill_off        = { color={0x00,0x00,0x00}, val=false, text="Fill",  },
+  global_on       = { color={0xFF,0xFF,0xFF}, val=true, text="Global",},
+  global_off      = { color={0x00,0x00,0x00}, val=false, text="Global",},
+  shift_up_on     = { color={0xFF,0xFF,0xFF}, val=true, text="↑",},
+  shift_up_off    = { color={0x00,0x00,0x00}, val=false, text="↑",},
+  shift_down_on   = { color={0xFF,0xFF,0xFF}, val=true, text="↓", },
+  shift_down_off  = { color={0x00,0x00,0x00}, val=false, text="↓",},
+  extend_on       = { color={0xFF,0xFF,0xFF}, val=true, text="x²",},
+  extend_off      = { color={0x00,0x00,0x00}, val=false, text="x²",},
+  shrink_on       = { color={0xFF,0xFF,0xFF}, val=true, text="½", },
+  shrink_off      = { color={0x00,0x00,0x00}, val=false, text="½",},
+  set_pitch_on    = { color={0xFF,0xFF,0xFF}, val=true, text="Pitch",},
+  set_pitch_off   = { color={0x00,0x00,0x00}, val=false, text="Pitch", },
+  set_velocity_on = { color={0xFF,0xFF,0xFF}, val=true, text="Velocity",},
+  set_velocity_off= { color={0x00,0x00,0x00}, val=false, text="Velocity",},
+  set_offset_on   = { color={0xFF,0xFF,0xFF}, val=true, text="Offset",  },
+  set_offset_off  = { color={0x00,0x00,0x00}, val=false, text="Offset",},
+  set_gate_on     = { color={0xFF,0xFF,0xFF}, val=true, text="Gate",},
+  set_gate_off    = { color={0x00,0x00,0x00}, val=false, text="Gate",  },
+  set_retrig_on   = { color={0xFF,0xFF,0xFF}, val=true, text="Retrig",},
+  set_retrig_off  = { color={0x00,0x00,0x00}, val=false, text="Retrig",  },
 
 }
 
-function NotesOnWheels:__init(process,mappings,options,cfg_name,palette)
-  TRACE("NotesOnWheels:__init",process,mappings,options,cfg_name,palette)
+--------------------------------------------------------------------------------
 
-  -- constants
+--- Constructor method
+-- @param (VarArg), see Application to learn more
 
-  self.MODE_PITCH = 1
-  self.MODE_VELOCITY = 2
-  self.MODE_OFFSET = 3
-  self.MODE_GATE = 4
-  self.MODE_RETRIG = 5
-
-  self.EDIT_SYNC_ON = 1
-  self.EDIT_SYNC_OFF = 2
-
-  self.GLOBAL_MODE_ON = 1
-  self.GLOBAL_MODE_OFF = 2
-
-  self.WRITE_METHOD_TOUCH = 1
-  self.WRITE_METHOD_LATCH = 2
-  self.WRITE_METHOD_WRITE = 3
-
-  self.FILL_MODE_ON = 1
-  self.FILL_MODE_OFF = 2
-
-  self.WRAP_OFFSET_ON = 1
-  self.WRAP_OFFSET_OFF = 2
-
-  --[[
-  self.TEXT_WRITE_ON = "■ Write"
-  self.TEXT_WRITE_OFF = "□ Write"
-
-  self.TEXT_LEARN_ON = "■ Learn"
-  self.TEXT_LEARN_OFF = "□ Learn"
-
-  {0xFF,0xFF,0xFF} = {0xFF,0xFF,0xFF}
-  {0xFF,0xFF,0xFF} = {0x00,0x00,0x00}
-  ]]
-
-  -- control-map groups 
-  self.mappings = {
-
-    choose_mode = {
-      description = "NOW: Choose mode",
-    },
-    set_mode_pitch = {
-      description = "NOW: Set mode to 'pitch'"..
-                    "\nHold to write sequence to entire pattern",
-    },
-    set_mode_velocity = {
-      description = "NOW: Set mode to 'velocity'"..
-                    "\nHold to write sequence to entire pattern",
-    },
-    set_mode_offset = {
-      description = "NOW: Set mode to 'offset'"..
-                    "\nHold to write sequence to entire pattern",
-    },
-    set_mode_gate = {
-      description = "NOW: Set mode to 'duration'"..
-                    "\nHold to write sequence to entire pattern",
-    },
-    set_mode_retrig = {
-      description = "NOW: Set mode to 'retrigger)"..
-                    "\nHold to write sequence to entire pattern",
-    },
-    multi_sliders = {
-      description = "NOW: Mode-dependant slider",
-    },
-    pitch_sliders = {
-      description = "NOW: Change pitch for step ",
-    },
-    velocity_sliders = {
-      description = "NOW: Change velocity for step ",
-    },
-    offset_sliders = {
-      description = "NOW: Change sample-offset for step ",
-    },
-    gate_sliders = {
-      description = "NOW: Change gate/duration for step ",
-    },
-    retrig_sliders = {
-      description = "NOW: Change number of retrigs for step ",
-    },
-    num_steps = {
-      description = "NOW: Number of steps",
-      orientation = HORIZONTAL, -- supports grid mode
-    },
-    step_spacing = {
-      description = "NOW: Line-space between steps",
-    },
-    num_lines = {
-      description = "NOW: Sequence length (lines)",
-    },
-    pitch_adjust = {
-      description = "NOW: Transpose all steps",
-    },
-    velocity_adjust = {
-      description = "NOW: Adjust volume for all steps",
-    },
-    offset_adjust = {
-      description = "NOW: Adjust sample-offset for all steps",
-    },
-    gate_adjust = {
-      description = "NOW: Adjust note length for all steps",
-    },
-    retrig_adjust = {
-      description = "NOW: Adjust retriggering for all steps",
-    },
-    multi_adjust = {
-      description = "NOW: Adjust all steps (mode-dependant)",
-    },
-    write = {
-      description = "NOW: Write to pattern in realtime",
-    },
-    learn = {
-      description = "NOW: Import sequence from pattern",
-    },
-    fill = {
-      description = "NOW: Fill entire track (can be very CPU intensive, use with caution!!)",
-    },
-    global = {
-      description = "NOW: Toggle between global/parameter-only output",
-    },
-    shift_up = {
-      description = "NOW: Decrease line offset",
-    },
-    shift_down = {
-      description = "NOW: Increase line offset",
-    },
-    extend = {
-      description = "NOW: Repeat sequence twice",
-    },
-    shrink = {
-      description = "NOW: Reduce sequence to half the size",
-    },
-    position = {
-      description = "NOW: Displays position within sequence",
-    },
-  }
-
-  self.palette = {
-    -- position buttons
-    position_on     = { color={0xFF,0xFF,0xFF}, val=true, text="▪", },
-    position_off    = { color={0x00,0x00,0x00}, val=false, text="▫", },
-    write_on        = { color={0xFF,0xFF,0xFF}, val=true, text="Write", },
-    write_off       = { color={0x00,0x00,0x00}, val=false, text="Write", },
-    learn_on        = { color={0xFF,0xFF,0xFF}, val=true, text="Learn", },
-    learn_off       = { color={0x00,0x00,0x00}, val=false, text="Learn", },
-    fill_on         = { color={0xFF,0xFF,0xFF}, val=true, text="Fill",  },
-    fill_off        = { color={0x00,0x00,0x00}, val=false, text="Fill",  },
-    global_on       = { color={0xFF,0xFF,0xFF}, val=true, text="Global",},
-    global_off      = { color={0x00,0x00,0x00}, val=false, text="Global",},
-    shift_up_on     = { color={0xFF,0xFF,0xFF}, val=true, text="↑",},
-    shift_up_off    = { color={0x00,0x00,0x00}, val=false, text="↑",},
-    shift_down_on   = { color={0xFF,0xFF,0xFF}, val=true, text="↓", },
-    shift_down_off  = { color={0x00,0x00,0x00}, val=false, text="↓",},
-    extend_on       = { color={0xFF,0xFF,0xFF}, val=true, text="x²",},
-    extend_off      = { color={0x00,0x00,0x00}, val=false, text="x²",},
-    shrink_on       = { color={0xFF,0xFF,0xFF}, val=true, text="½", },
-    shrink_off      = { color={0x00,0x00,0x00}, val=false, text="½",},
-    set_pitch_on    = { color={0xFF,0xFF,0xFF}, val=true, text="Pitch",},
-    set_pitch_off   = { color={0x00,0x00,0x00}, val=false, text="Pitch", },
-    set_velocity_on = { color={0xFF,0xFF,0xFF}, val=true, text="Velocity",},
-    set_velocity_off= { color={0x00,0x00,0x00}, val=false, text="Velocity",},
-    set_offset_on   = { color={0xFF,0xFF,0xFF}, val=true, text="Offset",  },
-    set_offset_off  = { color={0x00,0x00,0x00}, val=false, text="Offset",},
-    set_gate_on     = { color={0xFF,0xFF,0xFF}, val=true, text="Gate",},
-    set_gate_off    = { color={0x00,0x00,0x00}, val=false, text="Gate",  },
-    set_retrig_on   = { color={0xFF,0xFF,0xFF}, val=true, text="Retrig",},
-    set_retrig_off  = { color={0x00,0x00,0x00}, val=false, text="Retrig",  },
-
-  }
+function NotesOnWheels:__init(...)
+  TRACE("NotesOnWheels:__init",...)
 
   -- the step which was last modified (used for non-global output)
   self.step_focus = nil
@@ -542,7 +531,9 @@ function NotesOnWheels:__init(process,mappings,options,cfg_name,palette)
   }
 
   -- extend default options with the available midi ports
+  -- ("options" is a vararg - please see Application.lua for more info)
   local input_devices = renoise.Midi.available_input_devices()
+  local options = select(3,...)
   local items = NotesOnWheels.default_options.midi_keyboard.items
   for k,v in ipairs(input_devices) do
     items[k+1] = v
@@ -550,16 +541,16 @@ function NotesOnWheels:__init(process,mappings,options,cfg_name,palette)
   end
 
   -- apply user-specified arguments
-  Application.__init(self,process,mappings,options,cfg_name,palette)
+  Application.__init(self,...)
 
   -- set these values after configuration has been applied
-  self.mode = self.MODE_PITCH
+  self.mode = MODE_PITCH
   self.write_method = self.options.write_method.value
-  self.global_mode = (self.options.global_mode.value == self.GLOBAL_MODE_ON)
-  self.fill_mode = (self.options.fill_mode.value == self.FILL_MODE_ON)
+  self.global_mode = (self.options.global_mode.value == GLOBAL_MODE_ON)
+  self.fill_mode = (self.options.fill_mode.value == FILL_MODE_ON)
   self.write_mode = false
 
-  if (self.options.edit_sync.value == self.EDIT_SYNC_ON) then
+  if (self.options.edit_sync.value == EDIT_SYNC_ON) then
     self.write_mode = renoise.song().transport.edit_mode
   end
   
@@ -660,7 +651,7 @@ function NotesOnWheels:midi_callback(message)
     end
   elseif (message[1]>=176) and (message[1]<=191) then
     --print("MIDI_CC_MESSAGE")
-    if (self.mode ~= self.MODE_PITCH) then
+    if (self.mode ~= MODE_PITCH) then
       self.seq:adjust_multi(message[3]/127,true,true)
     end
   elseif (message[1]>=224) and (message[1]<=239) then
@@ -717,7 +708,7 @@ function NotesOnWheels:output_sequence(seq_step,mask_mode,stream,force)
 	end
 
   -- touch mode can prevent output next time
-  if (self.options.write_method.value == self.WRITE_METHOD_TOUCH) then
+  if (self.options.write_method.value == WRITE_METHOD_TOUCH) then
     if not self.touched then
       --print("touch mode prevented output")
       return
@@ -732,7 +723,7 @@ function NotesOnWheels:output_sequence(seq_step,mask_mode,stream,force)
 
   -- latch mode can also prevent output
   if not self.touched and
-  (self.options.write_method.value == self.WRITE_METHOD_LATCH) then
+  (self.options.write_method.value == WRITE_METHOD_LATCH) then
     --print("latch prevented output")
     return
   end
@@ -833,7 +824,7 @@ function NotesOnWheels:on_idle()
   
   if(self.write_mode) then
     local enforce_latch_delay = not self.touched and 
-      (self.options.write_method.value == self.WRITE_METHOD_LATCH)
+      (self.options.write_method.value == WRITE_METHOD_LATCH)
     if changed then
       if not enforce_latch_delay then
         self:output_sequence(self.step_focus,self.mode,playing)
@@ -1061,7 +1052,7 @@ function NotesOnWheels:_attach_to_song()
   renoise.song().transport.edit_mode_observable:add_notifier(
     function()
       TRACE("NotesOnWheels:edit_mode_observable fired...")
-        if (self.options.edit_sync.value == self.EDIT_SYNC_ON) then
+        if (self.options.edit_sync.value == EDIT_SYNC_ON) then
           self.write_mode = renoise.song().transport.edit_mode
           if (self._controls.write) then
             if self.write_mode then
@@ -1185,27 +1176,27 @@ function NotesOnWheels:change_mode(mode)
   self.mode = mode
 
   -- update buttons
-  if (mode==self.MODE_PITCH) then
+  if (mode == MODE_PITCH) then
     self._controls.set_mode_pitch:set(self.palette.set_pitch_on)
   else
     self._controls.set_mode_pitch:set(self.palette.set_pitch_off)
   end
-  if (mode==self.MODE_VELOCITY) then
+  if (mode == MODE_VELOCITY) then
     self._controls.set_mode_velocity:set(self.palette.set_velocity_on)
   else
     self._controls.set_mode_velocity:set(self.palette.set_velocity_off)
   end
-  if (mode==self.MODE_OFFSET) then
+  if (mode == MODE_OFFSET) then
     self._controls.set_mode_offset:set(self.palette.set_offset_on)
   else
     self._controls.set_mode_offset:set(self.palette.set_offset_off)
   end
-  if (mode==self.MODE_GATE) then
+  if (mode == MODE_GATE) then
     self._controls.set_mode_gate:set(self.palette.set_gate_on)
   else
     self._controls.set_mode_gate:set(self.palette.set_gate_off)
   end
-  if (mode==self.MODE_RETRIG) then
+  if (mode == MODE_RETRIG) then
     self._controls.set_mode_retrig:set(self.palette.set_retrig_on)
   else
     self._controls.set_mode_retrig:set(self.palette.set_retrig_off)
@@ -1225,13 +1216,13 @@ function NotesOnWheels:change_mode(mode)
           int_val = self:to_sliced_pitch_range(int_val,true)
         end
         self.seq:update_pitch_ctrl(int_val,ctrl)
-      elseif (self.mode == self.MODE_VELOCITY) then
+      elseif (self.mode == MODE_VELOCITY) then
         self.seq:update_velocity_ctrl(self.seq.velocity_steps[control_index],ctrl)
-      elseif (self.mode == self.MODE_OFFSET) then
+      elseif (self.mode == MODE_OFFSET) then
         self.seq:update_offset_ctrl(self.seq.offset_steps[control_index],ctrl)
-      elseif (self.mode == self.MODE_GATE) then
+      elseif (self.mode == MODE_GATE) then
         self.seq:update_gate_ctrl(self.seq.gate_steps[control_index],ctrl)
-      elseif (self.mode == self.MODE_RETRIG) then
+      elseif (self.mode == MODE_RETRIG) then
         self.seq:update_retrig_ctrl(self.seq.retrig_steps[control_index],ctrl)
       end
     end
@@ -1240,15 +1231,15 @@ function NotesOnWheels:change_mode(mode)
   local ctrl = self._controls.multi_adjust
   if ctrl then
     local val = nil
-    if (self.mode == self.MODE_PITCH) then
+    if (self.mode == MODE_PITCH) then
       val = self.seq.pitch_adjust 
-    elseif (self.mode == self.MODE_VELOCITY) then
+    elseif (self.mode == MODE_VELOCITY) then
       val = self.seq.velocity_adjust 
-    elseif (self.mode == self.MODE_OFFSET) then
+    elseif (self.mode == MODE_OFFSET) then
       val = self.seq.offset_adjust 
-    elseif (self.mode == self.MODE_GATE) then
+    elseif (self.mode == MODE_GATE) then
       val = self.seq.gate_adjust 
-    elseif (self.mode == self.MODE_RETRIG) then
+    elseif (self.mode == MODE_RETRIG) then
       val = self.seq.retrig_adjust 
     end
     ctrl:set_value(val,true)
@@ -1323,7 +1314,7 @@ function NotesOnWheels:_build_app()
             int_val = self:to_sliced_pitch_range(int_val)
           end
           if self.seq:set_pitch(control_index,int_val) then
-            self:schedule_output(control_index,self.MODE_PITCH)
+            self:schedule_output(control_index,MODE_PITCH)
             -- display hack: update the multi slider as well, but check
             -- if we have reached the minimum value while going downward
             local ctrl = self._controls.multi_sliders[control_index]
@@ -1333,7 +1324,7 @@ function NotesOnWheels:_build_app()
             end
             self.seq:update_pitch_ctrl(pitch_val,ctrl)
           end
-          self:change_mode(self.MODE_PITCH)
+          self:change_mode(MODE_PITCH)
           self.step_focus = control_index
           self.touched = true
         end 
@@ -1361,9 +1352,9 @@ function NotesOnWheels:_build_app()
           end
           local int_val = math.floor(obj.value*127)
           if self.seq:set_velocity(control_index,int_val,nil,true) then
-            self:schedule_output(control_index,self.MODE_VELOCITY)
+            self:schedule_output(control_index,MODE_VELOCITY)
           end
-          self:change_mode(self.MODE_VELOCITY)
+          self:change_mode(MODE_VELOCITY)
           self.step_focus = control_index
           self.touched = true
         end 
@@ -1391,9 +1382,9 @@ function NotesOnWheels:_build_app()
           end
           local int_val = math.floor(obj.value*255)
           if self.seq:set_offset(control_index,int_val,nil,true) then
-            self:schedule_output(control_index,self.MODE_OFFSET)
+            self:schedule_output(control_index,MODE_OFFSET)
           end
-          self:change_mode(self.MODE_OFFSET)
+          self:change_mode(MODE_OFFSET)
           self.step_focus = control_index
           self.touched = true
         end 
@@ -1421,9 +1412,9 @@ function NotesOnWheels:_build_app()
           end
           local int_val = math.floor(obj.value*255)
           if self.seq:set_gate(control_index,int_val,nil,true) then
-            self:schedule_output(control_index,self.MODE_GATE)
+            self:schedule_output(control_index,MODE_GATE)
           end
-          self:change_mode(self.MODE_GATE)
+          self:change_mode(MODE_GATE)
           self.step_focus = control_index
           self.touched = true
         end 
@@ -1452,9 +1443,9 @@ function NotesOnWheels:_build_app()
           --local int_val = math.floor(obj.value*NOW_Sequence.MAX_RETRIGS)
           local val_exp = math.floor(self.seq:scale_exp(obj.value,1,4)*NOW_Sequence.MAX_RETRIGS)
           if self.seq:set_retrig(control_index,val_exp,nil,true) then
-            self:schedule_output(control_index,self.MODE_RETRIG)
+            self:schedule_output(control_index,MODE_RETRIG)
           end
-          self:change_mode(self.MODE_RETRIG)
+          self:change_mode(MODE_RETRIG)
           self.step_focus = control_index
           self.touched = true
         end 
@@ -1483,30 +1474,30 @@ function NotesOnWheels:_build_app()
           -- route output to active parameter
           -- and update dedicated control (if it exists)
           local update = true
-          if (self.mode == self.MODE_PITCH) then
+          if (self.mode == MODE_PITCH) then
             local int_val = math.floor(obj.value*121)
             if (self.number_of_slices>0) then
               int_val = self:to_sliced_pitch_range(int_val)
             end
             if self.seq:set_pitch(control_index,int_val,update) then
-              self:schedule_output(control_index,self.MODE_PITCH)
+              self:schedule_output(control_index,MODE_PITCH)
             end
-          elseif (self.mode == self.MODE_VELOCITY) then
+          elseif (self.mode == MODE_VELOCITY) then
             if self.seq:set_velocity(control_index,math.floor(obj.value*127),update) then
-              self:schedule_output(control_index,self.MODE_VELOCITY)
+              self:schedule_output(control_index,MODE_VELOCITY)
             end
-          elseif (self.mode == self.MODE_OFFSET) then
+          elseif (self.mode == MODE_OFFSET) then
             if self.seq:set_offset(control_index,math.floor(obj.value*255),update) then
-              self:schedule_output(control_index,self.MODE_OFFSET)
+              self:schedule_output(control_index,MODE_OFFSET)
             end
-          elseif (self.mode == self.MODE_GATE) then
+          elseif (self.mode == MODE_GATE) then
             if self.seq:set_gate(control_index,math.floor(obj.value*255),update) then
-              self:schedule_output(control_index,self.MODE_GATE)
+              self:schedule_output(control_index,MODE_GATE)
             end
-          elseif (self.mode == self.MODE_RETRIG) then
+          elseif (self.mode == MODE_RETRIG) then
             local val_exp = math.floor(self.seq:scale_exp(obj.value,1,4)*NOW_Sequence.MAX_RETRIGS)
             if self.seq:set_retrig(control_index,val_exp,update) then
-              self:schedule_output(control_index,self.MODE_RETRIG)
+              self:schedule_output(control_index,MODE_RETRIG)
             end
           end
           self.step_focus = control_index
@@ -1540,9 +1531,9 @@ function NotesOnWheels:_build_app()
           return false
         end
         self.touched = true
-        --self:change_mode(self.MODE_PITCH,true)
+        --self:change_mode(MODE_PITCH,true)
         if self.seq:adjust_pitch(obj.value) then
-          self:schedule_output(nil,self.MODE_PITCH)
+          self:schedule_output(nil,MODE_PITCH)
           set_multi(obj.value)
         end
       end 
@@ -1566,9 +1557,9 @@ function NotesOnWheels:_build_app()
           return false
         end
         self.touched = true
-        --self:change_mode(self.MODE_VELOCITY,true)
+        --self:change_mode(MODE_VELOCITY,true)
         if self.seq:adjust_velocity(obj.value) then
-          self:schedule_output(nil,self.MODE_VELOCITY)
+          self:schedule_output(nil,MODE_VELOCITY)
           set_multi(obj.value)
         end
       end 
@@ -1592,9 +1583,9 @@ function NotesOnWheels:_build_app()
           return false
         end
         self.touched = true
-        --self:change_mode(self.MODE_OFFSET,true)
+        --self:change_mode(MODE_OFFSET,true)
         if self.seq:adjust_offset(obj.value) then
-          self:schedule_output(nil,self.MODE_OFFSET)
+          self:schedule_output(nil,MODE_OFFSET)
           set_multi(obj.value)
         end
       end 
@@ -1618,9 +1609,9 @@ function NotesOnWheels:_build_app()
           return false
         end
         self.touched = true
-        --self:change_mode(self.MODE_GATE,true)
+        --self:change_mode(MODE_GATE,true)
         if self.seq:adjust_gate(obj.value) then
-          self:schedule_output(nil,self.MODE_GATE)
+          self:schedule_output(nil,MODE_GATE)
           set_multi(obj.value)
         end
       end 
@@ -1646,7 +1637,7 @@ function NotesOnWheels:_build_app()
         self.touched = true
         local val_exp = self.seq:scale_exp(obj.value,1,4)
         if self.seq:adjust_retrig(val_exp) then
-          self:schedule_output(nil,self.MODE_RETRIG)
+          self:schedule_output(nil,MODE_RETRIG)
           set_multi(val_exp)
         end
       end 
@@ -2020,7 +2011,7 @@ function NotesOnWheels:_build_app()
         if (not self.active) then
           return false
         end
-        self:change_mode(self.MODE_PITCH)
+        self:change_mode(MODE_PITCH)
 
       end
       c.on_hold = function(obj)
@@ -2029,7 +2020,7 @@ function NotesOnWheels:_build_app()
         end
         self.touched = true
         self.fill_mode = true
-        self:output_sequence(nil,self.MODE_PITCH,nil,true)
+        self:output_sequence(nil,MODE_PITCH,nil,true)
         self.fill_mode = false
       end
       self:_add_component(c)
@@ -2051,7 +2042,7 @@ function NotesOnWheels:_build_app()
         if (not self.active) then
           return false
         end
-        self:change_mode(self.MODE_VELOCITY)
+        self:change_mode(MODE_VELOCITY)
 
       end
       c.on_hold = function(obj)
@@ -2060,7 +2051,7 @@ function NotesOnWheels:_build_app()
         end
         self.touched = true
         self.fill_mode = true
-        self:output_sequence(nil,self.MODE_VELOCITY,nil,true)
+        self:output_sequence(nil,MODE_VELOCITY,nil,true)
         self.fill_mode = false
       end
       self:_add_component(c)
@@ -2082,7 +2073,7 @@ function NotesOnWheels:_build_app()
         if (not self.active) then
           return false
         end
-        self:change_mode(self.MODE_OFFSET)
+        self:change_mode(MODE_OFFSET)
 
       end
       c.on_hold = function(obj)
@@ -2091,7 +2082,7 @@ function NotesOnWheels:_build_app()
         end
         self.touched = true
         self.fill_mode = true
-        self:output_sequence(nil,self.MODE_OFFSET,nil,true)
+        self:output_sequence(nil,MODE_OFFSET,nil,true)
         self.fill_mode = false
       end
       self:_add_component(c)
@@ -2113,7 +2104,7 @@ function NotesOnWheels:_build_app()
         if (not self.active) then
           return false
         end
-        self:change_mode(self.MODE_GATE)
+        self:change_mode(MODE_GATE)
 
       end
       c.on_hold = function(obj)
@@ -2122,7 +2113,7 @@ function NotesOnWheels:_build_app()
         end
         self.touched = true
         self.fill_mode = true
-        self:output_sequence(nil,self.MODE_GATE,nil,true)
+        self:output_sequence(nil,MODE_GATE,nil,true)
         self.fill_mode = false
       end
       self:_add_component(c)
@@ -2144,7 +2135,7 @@ function NotesOnWheels:_build_app()
         if (not self.active) then
           return false
         end
-        self:change_mode(self.MODE_RETRIG)
+        self:change_mode(MODE_RETRIG)
 
       end
       c.on_hold = function(obj)
@@ -2153,7 +2144,7 @@ function NotesOnWheels:_build_app()
         end
         self.touched = true
         self.fill_mode = true
-        self:output_sequence(nil,self.MODE_RETRIG,nil,true)
+        self:output_sequence(nil,MODE_RETRIG,nil,true)
         self.fill_mode = false
       end
       self:_add_component(c)
@@ -2184,7 +2175,7 @@ function NotesOnWheels:reset_adjustments()
     c:set_value(val,skip_event)
     self.seq.pitch_adjust = val
     self.seq.transpose = 0
-    if (self.mode==self.MODE_PITCH) then
+    if (self.mode==MODE_PITCH) then
       if multi_adj then
         multi_adj:set_value(val,skip_event)
       end
@@ -2196,7 +2187,7 @@ function NotesOnWheels:reset_adjustments()
     local val = self.seq.DEFAULT_VELOCITY_ADJUST
     c:set_value(val,skip_event)
     self.seq.velocity_adjust = self.seq.DEFAULT_VELOCITY_ADJUST
-    if (self.mode==self.MODE_VELOCITY) then
+    if (self.mode==MODE_VELOCITY) then
       if multi_adj then
         multi_adj:set_value(val,skip_event)
       end
@@ -2208,7 +2199,7 @@ function NotesOnWheels:reset_adjustments()
     local val = self.seq.DEFAULT_OFFSET_ADJUST
     c:set_value(val,skip_event)
     self.seq.offset_adjust = val
-    if (self.mode==self.MODE_OFFSET) then
+    if (self.mode == MODE_OFFSET) then
       if multi_adj then
         multi_adj:set_value(val,skip_event)
       end
@@ -2220,7 +2211,7 @@ function NotesOnWheels:reset_adjustments()
     local val = self.seq.DEFAULT_GATE_ADJUST
     c:set_value(val,skip_event)
     self.seq.gate_adjust = val
-    if (self.mode==self.MODE_GATE) then
+    if (self.mode == MODE_GATE) then
       if multi_adj then
         multi_adj:set_value(val,skip_event)
       end
@@ -2232,7 +2223,7 @@ function NotesOnWheels:reset_adjustments()
     local val = self.seq.DEFAULT_RETRIG_ADJUST
     c:set_value(val,skip_event)
     self.seq.retrig_adjust = val
-    if (self.mode==self.MODE_RETRIG) then
+    if (self.mode==MODE_RETRIG) then
       if multi_adj then
         multi_adj:set_value(val,skip_event)
       end
@@ -2351,7 +2342,7 @@ function NOW_Sequence:set_pitch(idx,int_val,update,multi)
     self:update_pitch_ctrl(display_val,self.owner._controls.pitch_sliders[idx])
   end
   if multi then
-    if (self.owner.mode==self.owner.MODE_PITCH) then
+    if (self.owner.mode==MODE_PITCH) then
       self:update_pitch_ctrl(display_val,self.owner._controls.multi_sliders[idx])
     end
   end
@@ -2377,7 +2368,7 @@ function NOW_Sequence:set_velocity(idx,int_val,update,multi)
     self:update_velocity_ctrl(int_val,self.owner._controls.velocity_sliders[idx])
   end
   if multi then
-    if (self.owner.mode==self.owner.MODE_VELOCITY) then
+    if (self.owner.mode==MODE_VELOCITY) then
       self:update_velocity_ctrl(int_val,self.owner._controls.multi_sliders[idx])
     end
   end
@@ -2400,7 +2391,7 @@ function NOW_Sequence:set_offset(idx,int_val,update,multi)
     self:update_offset_ctrl(int_val,self.owner._controls.offset_sliders[idx])
   end
   if multi then
-    if (self.owner.mode==self.owner.MODE_OFFSET) then
+    if (self.owner.mode == MODE_OFFSET) then
       self:update_offset_ctrl(int_val,self.owner._controls.multi_sliders[idx])
     end
   end
@@ -2422,7 +2413,7 @@ function NOW_Sequence:set_gate(idx,int_val,update,multi)
     self:update_gate_ctrl(int_val,self.owner._controls.gate_sliders[idx])
   end
   if multi then
-    if (self.owner.mode==self.owner.MODE_GATE) then
+    if (self.owner.mode == MODE_GATE) then
       self:update_gate_ctrl(int_val,self.owner._controls.multi_sliders[idx])
     end
   end
@@ -2451,7 +2442,7 @@ function NOW_Sequence:set_retrig(idx,int_val,update,multi)
       self:update_retrig_ctrl(display_val,self.owner._controls.retrig_sliders[idx])
     end
     if multi then
-      if (self.owner.mode==self.owner.MODE_RETRIG) then
+      if (self.owner.mode == MODE_RETRIG) then
         self:update_retrig_ctrl(display_val,self.owner._controls.multi_sliders[idx])
       end
     end
@@ -2734,15 +2725,15 @@ function NOW_Sequence:adjust_multi(val,update,update_self)
   if update_self and ctrl then
     ctrl:set_value(val,true)
   end
-  if (self.owner.mode == self.owner.MODE_PITCH) then
+  if (self.owner.mode == MODE_PITCH) then
     return self:adjust_pitch(val,update)
-  elseif (self.owner.mode == self.owner.MODE_VELOCITY) then
+  elseif (self.owner.mode == MODE_VELOCITY) then
     return self:adjust_velocity(val,update) 
-  elseif (self.owner.mode == self.owner.MODE_OFFSET) then
+  elseif (self.owner.mode == MODE_OFFSET) then
     return self:adjust_offset(val,update)
-  elseif (self.owner.mode == self.owner.MODE_GATE) then
+  elseif (self.owner.mode == MODE_GATE) then
     return self:adjust_gate(val,update)
-  elseif (self.owner.mode == self.owner.MODE_RETRIG) then
+  elseif (self.owner.mode == MODE_RETRIG) then
     return self:adjust_retrig(val,update)
   end
 end
@@ -2962,15 +2953,15 @@ function NOW_Sequence:clear()
       self:set_offset(idx,self.DEFAULT_OFFSET_VALUE,true,true)
       self:set_gate(idx,self.DEFAULT_GATE_VALUE,true,true)
       self:set_retrig(idx,self.DEFAULT_RETRIG_VALUE,true,true)
-    elseif (mode == self.owner.MODE_PITCH) then
+    elseif (mode == MODE_PITCH) then
       self:set_pitch(idx,self.DEFAULT_PITCH_VALUE,true,true)
-    elseif (mode == self.owner.MODE_VELOCITY) then
+    elseif (mode == MODE_VELOCITY) then
       self:set_velocity(idx,self.DEFAULT_VELOCITY_VALUE,true,true)
-    elseif (mode == self.owner.MODE_OFFSET) then
+    elseif (mode == MODE_OFFSET) then
       self:set_offset(idx,self.DEFAULT_OFFSET_VALUE,true,true)
-    elseif (mode == self.owner.MODE_GATE) then
+    elseif (mode == MODE_GATE) then
       self:set_gate(idx,self.DEFAULT_GATE_VALUE,true,true)
-    elseif (mode == self.owner.MODE_RETRIG) then
+    elseif (mode == MODE_RETRIG) then
       self:set_retrig(idx,self.DEFAULT_RETRIG_VALUE,true,true)
     end
 
@@ -3275,11 +3266,11 @@ function NOW_Sequence:write_to_pattern(patt_idx,begin_line,seq_step,mask_type,st
   --print("writeahead_length",writeahead_length)
 
 	if mask_type then
-		set_note = (mask_type == self.owner.MODE_PITCH)
-		set_gate = (mask_type == self.owner.MODE_GATE)
-		set_offset = (mask_type == self.owner.MODE_OFFSET)
-		set_velocity = (mask_type == self.owner.MODE_VELOCITY)
-		set_retrig = (mask_type == self.owner.MODE_RETRIG)
+		set_note = (mask_type == MODE_PITCH)
+		set_gate = (mask_type == MODE_GATE)
+		set_offset = (mask_type == MODE_OFFSET)
+		set_velocity = (mask_type == MODE_VELOCITY)
+		set_retrig = (mask_type == MODE_RETRIG)
     -- always output note when setting retriggers and vice versa
     if set_retrig then
       set_note = true
@@ -3647,7 +3638,7 @@ function NOW_Sequence:write_to_pattern(patt_idx,begin_line,seq_step,mask_type,st
 								if val==256 then
 									val=255
 								end
-                if (self.owner.options.offset_wrap.value==self.owner.WRAP_OFFSET_ON) then
+                if (self.owner.options.offset_wrap.value == WRAP_OFFSET_ON) then
   								val = wrap_value(val+(math.floor(self.offset_adjust*255)),0,255)	
                 else
                   val = clamp_value(val+(math.floor(self.offset_adjust*255)),0,255)	
@@ -3810,11 +3801,11 @@ function NOW_Sequence:learn_sequence()
 		get_retrig = true
 		self:clear()
 	else
-		get_note = (self.owner.mode == self.owner.MODE_PITCH)
-		get_gate = (self.owner.mode == self.owner.MODE_GATE)
-		get_offset = (self.owner.mode == self.owner.MODE_OFFSET)
-		get_volume = (self.owner.mode == self.owner.MODE_VELOCITY)
-		get_retrig = (self.owner.mode == self.owner.MODE_RETRIG)
+		get_note = (self.owner.mode == MODE_PITCH)
+		get_gate = (self.owner.mode == MODE_GATE)
+		get_offset = (self.owner.mode == MODE_OFFSET)
+		get_volume = (self.owner.mode == MODE_VELOCITY)
+		get_retrig = (self.owner.mode == MODE_RETRIG)
 	end	
   
 	local done = false

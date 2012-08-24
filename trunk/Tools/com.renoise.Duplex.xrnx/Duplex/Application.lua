@@ -6,6 +6,35 @@
 
 A generic application class for Duplex
 
+mappings allows us to choose where to put controls,
+see actual application implementations for examples
+
+@group_name: (required) the control-map group-name 
+@index: the position where the control should be located (set in config)
+@description: provide a sensible tooltip text for the virtual display
+@orientation: defines the UIComponent orientation (VERTICAL/HORIZONTAL)
+
+example_mapping = {
+ group_name = "Main",
+ index = 3,
+}
+
+
+(device-specific options are specified in the device configuration)
+
+@label: displayed in options dialog
+@description: tooltip in options dialog
+@on_change: (function) code to execute when option is changed
+@items: brief descriptions of each available choice (list)
+@value: the default choice among the @items
+
+example_option = {
+ label = "My option",
+ on_change = function() end,
+ items = {"Choice 1", "Choice 2"},
+ value = 1 -- this is the default value ("Choice 1")
+}
+
 --]]
 
 
@@ -13,66 +42,38 @@ A generic application class for Duplex
 
 class 'Application'
 
---- initialize the Application class
--- @param process BrowserProcess
--- @param mappings (table, imported from the device configuration)
--- @param palette (table, imported from the device configuration)
--- @param options (table, imported from the application default options)
--- @param cfg_name (string, imported from the application default options)
+--- Initialize the Application class
+-- @param ... (VarArg), containing:
+--  [1] = process (BrowserProcess)
+--  [2] = mappings (table, imported from device-config)
+--  [3] = palette (table, imported from device-config)
+--  [4] = options (table, imported from application default options)
+--  [5] = config_name (string, imported from application default options)
 
-function Application:__init(process,mappings,options,cfg_name,palette)
+function Application:__init(...)
   TRACE("Application:__init()")
 
-  -- this is the Display that our application is using
+  -- extract varargs using select
+  local process, mappings, options, config_name, palette = select(1,...)
+
+  self.mappings = mappings or {}
+  self.palette = palette or {}
+  self.options = options or {}
+
+  -- instance of the Display class
   self.display = process.display
   
   -- (string) this is the name of the application as it appears
   -- in the device configuration, e.g. "MySecondMixer" - used for looking 
   -- up the correct preferences-key when specifying custom options 
-  self._app_name = cfg_name
+  self._app_name = config_name
 
   -- when the application is inactive, it should 
   -- sleep during idle time and ignore any user input
   self.active = false
 
-  -- mappings allows us to choose where to put controls,
-  -- see actual application implementations for examples
-  --
-  -- @group_name: (required) the control-map group-name 
-  -- @index: the position where the control should be located (set in config)
-  -- @description: provide a sensible tooltip text for the virtual display
-  -- @orientation: defines the UIComponent orientation (VERTICAL/HORIZONTAL)
-  -- 
-  -- example_mapping = {
-  --  group_name = "Main",
-  --  index = 3,
-  -- }
-
-  -- note: mappings are specified in the application 
-  self.mappings = self.mappings or {}
-
   -- update "self.mappings" with values from the provided configuration
-  self:_apply_mappings(mappings)
-
-  -- you can choose to expose your application's options here
-  -- (device-specific options are specified in the device configuration)
-  --
-  -- @label: displayed in options dialog
-  -- @description: tooltip in options dialog
-  -- @on_change: (function) code to execute when option is changed
-  -- @items: brief descriptions of each available choice (list)
-  -- @value: the default choice among the @items
-  --
-  -- example_option = {
-  --  label = "My option",
-  --  on_change = function() end,
-  --  items = {"Choice 1", "Choice 2"},
-  --  value = 1 -- this is the default value ("Choice 1")
-  -- }
-  self.options = options or {}
-
-  -- define a default palette for the application
-  self.palette = self.palette or {}
+  --self:_apply_mappings(mappings)
 
   -- update "self.palette" with values from the device-configuration
   self:_apply_palette(palette)
@@ -226,32 +227,6 @@ function Application:on_keypress(key)
 
 end
 
-
-
---------------------------------------------------------------------------------
-
---- Assign matching group-names
-
-function Application:_apply_mappings(mappings)
-  TRACE("Application:_apply_mappings",mappings)
-  
-  if not self.mappings then
-    -- we've got no mappings
-    self.mappings = {}
-    return
-  end
-
-  for v,k in pairs(self.mappings) do
-    for v2,k2 in pairs(mappings) do
-      if (v==v2) then
-        for k3,v3 in pairs(mappings[v]) do
-          self.mappings[v][k3] = v3
-        end
-      end
-    end
-  end
-end
-
 --------------------------------------------------------------------------------
 
 --- Assign matching palette entries
@@ -355,9 +330,18 @@ function Application:_build_options(process)
   local elm_group = vb.views.dpx_app_options
   local hidden_field = vb.views.dpx_app_options_hidden_field
   if (self.options)then
+
+    -- sort alphabetically
+    local sorted_options = table.create()
     for k,v in pairs(self.options) do
-      if not v.hidden then
-        elm_group:add_child(self:_add_option_row(v,k,process))
+      sorted_options:insert({key=k,val=v})
+    end
+    table.sort(sorted_options,function(a,b)
+      return (a.val.label < b.val.label)
+    end)
+    for k,v in pairs(sorted_options) do
+      if not v.val.hidden then
+        elm_group:add_child(self:_add_option_row(v.val,v.key,process))
         hidden_field.value = hidden_field.value+1
       end
     end
@@ -378,7 +362,9 @@ function Application:_add_option_row(t,key,process)
 
   local vb = self._vb
   local elm = vb:row{
+    id=("dpx_app_options_row_%s"):format(key),
     tooltip=t.description,
+    visible = not t.hidden,
     vb:text{
       text=t.label,
       width=90,

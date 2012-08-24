@@ -45,6 +45,13 @@ function MidiDevice:__init(display_name, message_stream, port_in, port_out)
   -- doesn't specify a specific channel, use this value: 
   self.default_midi_channel = 1
 
+  -- when we generate output, quantize to this resolution
+  self.default_midi_resolution = 127
+
+  -- enable this to quantize output to given resolution before
+  -- it's actually being sent to the MIDI controller
+  self.output_quantize = true
+
   -- ## NRPN
   self.nrpn_message = NRPNMessage()
   self.buffer99 = nil
@@ -157,9 +164,8 @@ function MidiDevice:midi_callback(message)
     value_str = "PB"
     --print("MidiDevice: - msg_value",msg_value)
   else
-    -- ignore unsupported/undhandled messages...
+    -- ignore unsupported/unhandled messages...
     -- possible data include timing clock, active sensing etc.
-    --print("MidiDevice:midi_callback() - unsupported input type")
   end
 
 
@@ -201,9 +207,6 @@ function MidiDevice:midi_callback(message)
       then
         param["xarg"].value = value_str
       end
-
-      --rprint(param["xarg"])
-      --print('param["xarg"].value',param["xarg"].value)
 
       if (duplex_preferences.nrpn_support.value == false) then
 

@@ -39,7 +39,7 @@ duplex_configurations:insert {
           group_name = "Keyboard2",
         }
       }
-    }
+    },
   }
 }
 

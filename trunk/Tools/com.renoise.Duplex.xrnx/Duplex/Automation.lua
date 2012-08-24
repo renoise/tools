@@ -224,7 +224,7 @@ function Automation:add_automation(track_idx,parameter,value)
   local automation_handler = function(...)
     TRACE("Automation:automation_observable fired...")
 
-    local obj = arg[2]
+    local obj = select(2,...)
 
     -- this is a pseudo-value, will only work for as 
     -- long as the current pattern is also the one that

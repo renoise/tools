@@ -1,0 +1,180 @@
+<Device>
+  <Name>MidiActions Controller</Name>
+  <Author>danoise</Author>
+  <Description>A demonstration of the MidiActions application</Description>
+  <Parameters>
+	<Row>
+		<Column>
+			<Row>
+				<Group name="MstVolume">
+					<Param value="CC#1" type="fader" orientation="horizontal" size="4" minimum="0" maximum="127" />
+				</Group>
+				<Group name="UndoRedo">
+					<Param value="CC#2" type="button" aspect="0.5" minimum="0" maximum="127" />
+					<Param value="CC#3" type="button" aspect="0.5" minimum="0" maximum="127" />
+				</Group>
+			</Row>
+			<Group name="Transport">
+				<Param value="CC#4" type="button" aspect="0.75" minimum="0" maximum="127" />
+				<Param value="CC#5" type="button" aspect="0.75" minimum="0" maximum="127" />
+				<Param value="CC#6" type="button" aspect="0.75" minimum="0" maximum="127" />
+				<Param value="CC#7" type="button" aspect="0.75" minimum="0" maximum="127" />
+				<Param value="CC#8" type="button" aspect="0.75" minimum="0" maximum="127" />
+				<Param value="CC#9" type="button" aspect="0.75" minimum="0" maximum="127" />
+			</Group>
+			<Group name="LoopBlock">
+				<Param value="CC#10" type="button" aspect="0.75" minimum="0" maximum="127" />
+				<Param value="CC#11" type="dial" size="0.75" minimum="0" maximum="127" />
+				<Param value="CC#12" type="button" aspect="0.75" minimum="0" maximum="127" />
+				<Param value="CC#13" type="button" aspect="0.75" minimum="0" maximum="127" />
+			</Group>
+			<Group name="BPM">
+				<Param value="CC#14" type="button" size="1.5" aspect="0.5" minimum="0" maximum="127" />
+				<Param value="CC#15" type="dial" size="1" minimum="0" maximum="127" />
+				<Param value="CC#16" type="button" size="1.5" aspect="0.5" minimum="0" maximum="127" />
+			</Group>
+			<Group name="LPB">
+				<Param value="CC#17" type="button" size="1.5" aspect="0.5" minimum="0" maximum="127" />
+				<Param value="CC#18" type="dial" size="1" minimum="0" maximum="127" />
+				<Param value="CC#19" type="button" size="1.5" aspect="0.5" minimum="0" maximum="127" />
+			</Group>
+			<Group name="Oct">
+				<Param value="CC#20" type="button" size="1.5" aspect="0.5" minimum="0" maximum="127" />
+				<Param value="CC#21" type="dial" size="1" minimum="0" maximum="127" />
+				<Param value="CC#22" type="button" size="1.5" aspect="0.5" minimum="0" maximum="127" />
+			</Group>
+
+		</Column>
+		<Column>
+			<Group name="UpperTabs">
+				<Param value="CC#23" type="button" size="3" aspect="0.2" minimum="0" maximum="127" />
+				<Param value="CC#24" type="button" size="3" aspect="0.2" minimum="0" maximum="127" />
+				<Param value="CC#25" type="button" size="3" aspect="0.2" minimum="0" maximum="127" />
+				<Param value="CC#26" type="button" size="3" aspect="0.2" minimum="0" maximum="127" />
+			</Group>
+			<Group name="MuteTracks" colorspace="1,1,0">
+				<Param value="CC#27" type="button" size="2.2" aspect="0.33" minimum="0" maximum="127" />
+				<Param value="CC#28" type="button" size="2.2" aspect="0.33" minimum="0" maximum="127" />
+				<Param value="CC#29" type="button" size="2.2" aspect="0.33" minimum="0" maximum="127" />
+				<Param value="CC#30" type="button" size="2.2" aspect="0.33" minimum="0" maximum="127" />
+				<Param value="CC#31" type="button" size="2.2" aspect="0.33" minimum="0" maximum="127" />
+				<Param value="CC#32" type="button" size="2.2" aspect="0.33" minimum="0" maximum="127" />
+				<Param value="CC#33" type="button" size="2.2" aspect="0.33" minimum="0" maximum="127" />
+				<Param value="CC#34" type="button" size="2.2" aspect="0.33" minimum="0" maximum="127" />
+			</Group>
+			<Group name="SoloTracks">
+				<Param value="CC#35" type="button" size="2.2" aspect="0.33" minimum="0" maximum="127" />
+				<Param value="CC#36" type="button" size="2.2" aspect="0.33" minimum="0" maximum="127" />
+				<Param value="CC#37" type="button" size="2.2" aspect="0.33" minimum="0" maximum="127" />
+				<Param value="CC#38" type="button" size="2.2" aspect="0.33" minimum="0" maximum="127" />
+				<Param value="CC#39" type="button" size="2.2" aspect="0.33" minimum="0" maximum="127" />
+				<Param value="CC#40" type="button" size="2.2" aspect="0.33" minimum="0" maximum="127" />
+				<Param value="CC#41" type="button" size="2.2" aspect="0.33" minimum="0" maximum="127" />
+				<Param value="CC#42" type="button" size="2.2" aspect="0.33" minimum="0" maximum="127" />
+			</Group>
+			<Group name="SeqMuteTracks">
+				<Param value="CC#43" type="button" size="2.2" aspect="0.33" minimum="0" maximum="127" />
+				<Param value="CC#44" type="button" size="2.2" aspect="0.33" minimum="0" maximum="127" />
+				<Param value="CC#45" type="button" size="2.2" aspect="0.33" minimum="0" maximum="127" />
+				<Param value="CC#46" type="button" size="2.2" aspect="0.33" minimum="0" maximum="127" />
+				<Param value="CC#47" type="button" size="2.2" aspect="0.33" minimum="0" maximum="127" />
+				<Param value="CC#48" type="button" size="2.2" aspect="0.33" minimum="0" maximum="127" />
+				<Param value="CC#49" type="button" size="2.2" aspect="0.33" minimum="0" maximum="127" />
+				<Param value="CC#50" type="button" size="2.2" aspect="0.33" minimum="0" maximum="127" />
+			</Group>
+			<Row>
+				<Column>
+					<Row>
+						<Group name="TrackVol1">
+							<Param value="CC#51" type="fader" size="4" orientation="vertical" minimum="0" maximum="127" />
+						</Group>
+						<Group name="TrackPanWidth1" orientation="vertical">
+							<Param value="CC#52" type="dial" size="0.75" minimum="0" maximum="127" />
+							<Param value="CC#53" type="dial" size="0.75" minimum="0" maximum="127" />
+						</Group>
+					</Row>
+				</Column>
+				<Column>
+					<Row>
+						<Group name="TrackVol2">
+							<Param value="CC#54" type="fader" size="4" orientation="vertical" minimum="0" maximum="127" />
+						</Group>
+						<Group name="TrackPanWidth2" orientation="vertical">
+							<Param value="CC#55" type="dial" size="0.75" minimum="0" maximum="127" />
+							<Param value="CC#56" type="dial" size="0.75" minimum="0" maximum="127" />
+						</Group>
+					</Row>
+				</Column>
+				<Column>
+					<Row>
+						<Group name="TrackVol3">
+							<Param value="CC#57" type="fader" size="4" orientation="vertical" minimum="0" maximum="127" />
+						</Group>
+						<Group name="TrackPanWidth3" orientation="vertical">
+							<Param value="CC#58" type="dial" size="0.75" minimum="0" maximum="127" />
+							<Param value="CC#59" type="dial" size="0.75" minimum="0" maximum="127" />
+						</Group>
+					</Row>
+				</Column>
+				<Column>
+					<Row>
+						<Group name="TrackVol4">
+							<Param value="CC#60" type="fader" size="4" orientation="vertical" minimum="0" maximum="127" />
+						</Group>
+						<Group name="TrackPanWidth4" orientation="vertical">
+							<Param value="CC#61" type="dial" size="0.75" minimum="0" maximum="127" />
+							<Param value="CC#62" type="dial" size="0.75" minimum="0" maximum="127" />
+						</Group>
+					</Row>
+				</Column>
+				<Column>
+					<Row>
+						<Group name="TrackVol5">
+							<Param value="CC#63" type="fader" size="4" orientation="vertical" minimum="0" maximum="127" />
+						</Group>
+						<Group name="TrackPanWidth5" orientation="vertical">
+							<Param value="CC#64" type="dial" size="0.75" minimum="0" maximum="127" />
+							<Param value="CC#65" type="dial" size="0.75" minimum="0" maximum="127" />
+						</Group>
+					</Row>
+				</Column>
+				<Column>
+					<Row>
+						<Group name="TrackVol6">
+							<Param value="CC#66" type="fader" size="4" orientation="vertical" minimum="0" maximum="127" />
+						</Group>
+						<Group name="TrackPanWidth6" orientation="vertical">
+							<Param value="CC#67" type="dial" size="0.75" minimum="0" maximum="127" />
+							<Param value="CC#68" type="dial" size="0.75" minimum="0" maximum="127" />
+						</Group>
+					</Row>
+				</Column>
+				<Column>
+					<Row>
+						<Group name="TrackVol7">
+							<Param value="CC#69" type="fader" size="4" orientation="vertical" minimum="0" maximum="127" />
+						</Group>
+						<Group name="TrackPanWidth7" orientation="vertical">
+							<Param value="CC#70" type="dial" size="0.75" minimum="0" maximum="127" />
+							<Param value="CC#71" type="dial" size="0.75" minimum="0" maximum="127" />
+						</Group>
+					</Row>
+				</Column>
+				<Column>
+					<Row>
+						<Group name="TrackVol8">
+							<Param value="CC#72" type="fader" size="4" orientation="vertical" minimum="0" maximum="127" />
+						</Group>
+						<Group name="TrackPanWidth8" orientation="vertical">
+							<Param value="CC#73" type="dial" size="0.75" minimum="0" maximum="127" />
+							<Param value="CC#74" type="dial" size="0.75" minimum="0" maximum="127" />
+						</Group>
+					</Row>
+				</Column>
+			</Row>
+
+		</Column>
+
+	</Row>
+  </Parameters>
+</Device>

@@ -1538,22 +1538,26 @@ function BrowserProcess:instantiate(configuration)
 
   ---- instantiate all applications
 
+  local config_apps = configuration.applications
+
   self._applications = table.create()
 
-  for app_class_name,_ in pairs(configuration.applications) do
+  for app_class_name,_ in pairs(config_apps) do
 
-    local actual_class_name = app_class_name
-    if configuration.applications[app_class_name].application then
-      actual_class_name = configuration.applications[app_class_name].application
+    local actual_cname = app_class_name
+    if config_apps[app_class_name].application then
+      actual_cname = config_apps[app_class_name].application
     end
 
-    local mappings = configuration.applications[app_class_name].mappings or {}
-    local palette = configuration.applications[app_class_name].palette or {}
-    local hidden = configuration.applications[app_class_name].hidden_options or {}
-    local options = table.rcopy(_G[actual_class_name]["default_options"]) or {}
+    --local mappings = config_apps[app_class_name].mappings or {}
+    --local palette = config_apps[app_class_name].palette or {}
+    local hidden = config_apps[app_class_name].hidden_options or {}
+    local mappings = table.rcopy(_G[actual_cname]["available_mappings"]) or {}
+    local options = table.rcopy(_G[actual_cname]["default_options"]) or {}
+    local palette = table.rcopy(_G[actual_cname]["default_palette"]) or {}
     local config_name = app_class_name
 
-    -- import device-config/user-specified options
+    -- import user-specified options from the preferences
     for k,v in pairs(options) do
       local app_node = self.settings.applications:property(app_class_name)
       if app_node then
@@ -1565,10 +1569,34 @@ function BrowserProcess:instantiate(configuration)
         end
       end
     end
+
+    -- import mappings from device-config
+    for k,v in pairs(mappings) do
+      local user_mappings = config_apps[app_class_name].mappings or {}
+      for k2,v2 in pairs(user_mappings) do
+        if (k == k2) then
+          for k3,v3 in pairs(v2) do
+            mappings[k][k3] = v3
+          end
+        end
+      end
+    end
     
+    -- merge with palette from device-config
+    for k,v in pairs(palette) do
+      local user_palette = config_apps[app_class_name].palette or {}
+      for k2,v2 in pairs(user_palette) do
+        if (k == k2) then
+          for k3,v3 in pairs(v2) do
+            palette[k][k3] = v3
+          end
+        end
+      end
+    end
+
     local app_instance = nil
 
-    app_instance = _G[actual_class_name](
+    app_instance = _G[actual_cname](
         self, mappings, options, config_name, palette)
     
     self._applications:insert(app_instance)
@@ -1784,7 +1812,6 @@ function BrowserProcess:show_settings_dialog()
   local vb = self._vb
 
   local val_unhandled = self.settings.pass_unhandled.value
-  --print("BrowserProcess:show_settings_dialog() - val_unhandled",val_unhandled)
   local txt_unhandled = "When enabled, messages that are not handled by an "
                       .."\napplication are forwarded to Renoise (this also "
                       .."\napplies when the whole configuration is stopped). "
@@ -1801,17 +1828,11 @@ function BrowserProcess:show_settings_dialog()
       },
       vb:column{
         id="dpx_unhandled_root",
-        --[[
-        vb:space{
-          height = 4,
-        },
-        ]]
         vb:row{
           vb:checkbox{
             value = val_unhandled,
             notifier = function(v)
               self.settings.pass_unhandled.value = v
-              --print("*** self.settings.pass_unhandled.value",self.settings.pass_unhandled.value)
             end,
           },
           vb:text {
@@ -1823,23 +1844,43 @@ function BrowserProcess:show_settings_dialog()
       vb:space{
         height = 4,
       },
-      vb:column{
+      vb:row{
         id="dpx_app_settings_root",
         spacing = DEFAULT_SPACING,
-        --width = "100%",
-        --width = 200,
-      },
+        vb:column{id="dpx_app_settings_col1",spacing = DEFAULT_SPACING},
+        vb:column{id="dpx_app_settings_col2",spacing = DEFAULT_SPACING},
+        vb:column{id="dpx_app_settings_col3",spacing = DEFAULT_SPACING},
+        vb:column{id="dpx_app_settings_col4",spacing = DEFAULT_SPACING},
+        vb:column{id="dpx_app_settings_col5",spacing = DEFAULT_SPACING},
+        vb:column{id="dpx_app_settings_col6",spacing = DEFAULT_SPACING},
+      }
     }
 
     -- attach the device settings
     self.device:show_settings_dialog(self)
     vb.views.dpx_device_settings_root:add_child(self.device._settings_view)
 
-    -- attach the configuration settings
-    -- (one view for each application)
+    -- sort alphabetically
+    table.sort(self._applications,function(a,b)
+      return (a._app_name < b._app_name)
+    end)
+
+    -- create & attach the various application settings
+    local app_count = 0
+    local apps_per_col = 16
     for _,app in pairs(self._applications) do
       app:_build_options(self)
-      vb.views.dpx_app_settings_root:add_child(app._settings_view)
+      local col_idx = math.floor(app_count/apps_per_col)+1
+      local col_id = ("dpx_app_settings_col%d"):format(col_idx)
+      if not vb.views[col_id] then
+        local msg = "The device configuration contains too many applications,"
+                  .."\nsome options will not be available"
+        renoise.app():show_warning(msg)
+        break
+      else
+        vb.views[col_id]:add_child(app._settings_view)
+        app_count = app_count + 1 
+      end
     end
 
     -- show/hide the "unhandled message" part

@@ -28,14 +28,12 @@ function OscClient:__init(osc_host,osc_port)
   -- the socket connection, nil if not established
   self._connection = nil
 
-	--print("*** about to connect to the internal osc_server",osc_host,osc_port,type(osc_host),type(osc_port))
 	local client, socket_error = renoise.Socket.create_client(osc_host, osc_port, renoise.Socket.PROTOCOL_UDP)
 	if (socket_error) then 
     renoise.app():show_warning("Warning: Duplex failed to start the internal OSC client")
     self._connection = nil
 	else
     self._connection = client
-    --print("*** started the internal osc_server",osc_host,osc_port)
 	end
 
 end
@@ -72,9 +70,6 @@ function OscClient:trigger_instrument(note_on,instr,track,note,velocity)
     self:_show_instructions()
   end
 
-  --print("about to send internally routed note",header)
-  --rprint(osc_vars)
-
   local osc_msg = renoise.Osc.Message(header,osc_vars)
   self._connection:send(osc_msg)
 
@@ -94,7 +89,6 @@ function OscClient:trigger_midi(t)
     return false
   end
 
-  --rprint(t)
   local header = "/renoise/trigger/midi"
   local val = math.floor(t[1])+
              (math.floor(t[2])*256)+

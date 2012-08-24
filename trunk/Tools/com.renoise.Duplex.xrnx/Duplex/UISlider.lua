@@ -212,23 +212,60 @@ function UISlider:set_value(val,skip_event)
 
   local idx = math.abs(math.ceil(((self.steps/self.ceiling)*val)-0.5))
   if (self._cached_index ~= idx) or
-     (self._cached_value ~= val) 
+     (self._cached_value ~= val)
   then
-    self._cached_index = idx
-    self._cached_value = val
-    self.value = val
-    self.index = idx
 
-    if (skip_event) then
-      self:invalidate()
+    if not self:output_quantize(val) then
+      -- silently ignore message
+      return
     else
-      return self:_invoke_handler()
+
+      self._cached_index = idx
+      self._cached_value = val
+      self.value = val
+      self.index = idx
+
+      if (skip_event) then
+        self:invalidate()
+      else
+        return self:_invoke_handler()
+      end
     end
 
   end  
 
 end
 
+--------------------------------------------------------------------------------
+
+--- Check if parameter-quantization is in force
+-- @return (Boolean) true when the message can pass, false when not
+
+function UISlider:output_quantize(val)
+
+  if not (self._display.device.protocol == DEVICE_MIDI_PROTOCOL) then
+    return true
+  end
+
+  if self._display.device.output_quantize then
+
+    local cached_val = self:quantize_value(self._cached_value)
+    local val = self:quantize_value(val)
+    if (cached_val == val) then
+      return false
+    end
+  end
+
+  return true
+
+end
+
+function UISlider:quantize_value(val)
+
+  local midi_res = self._display.device.default_midi_resolution
+  return math.floor((val/self.ceiling)*midi_res)
+
+end
 
 --------------------------------------------------------------------------------
 

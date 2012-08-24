@@ -174,7 +174,6 @@ function Display:update()
 
     local columns = control_map.groups[obj.group_name].columns
 
-    --print("*** obj.group_name, obj.dirty, obj.canvas.clear",obj.group_name, obj.dirty, obj.canvas.clear)
     -- skip unused objects, objects that doesn't need update
     if (obj.group_name and obj.dirty) then
 
@@ -385,6 +384,7 @@ function Display:set_parameter(elm, obj, point, secondary)
         end
       end
       widget.text = point.text
+
     elseif (widget_type == "RotaryEncoder") or 
       (widget_type == "MiniSlider") or
       (widget_type == "Slider")

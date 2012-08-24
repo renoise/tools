@@ -23,7 +23,20 @@ Changes (equal to Duplex version number)
 
 --==============================================================================
 
+-- constants
 
+local SWITCH_MODE_SWITCH = 1
+local SWITCH_MODE_SCHEDULE = 2
+local PLAY_MODE_RETRIG = 1
+local PLAY_MODE_SCHEDULE = 2
+local PLAY_MODE_STOP = 3
+local STOP_MODE_PANIC = 1
+local STOP_MODE_JUMP = 2
+local JUMP_MODE_NORMAL = 1
+local JUMP_MODE_BLOCK = 2
+
+
+--==============================================================================
 
 class 'Transport' (Application)
 
@@ -66,89 +79,78 @@ Transport.default_options = {
       },
       value = 1,
     },
+}
 
+Transport.available_mappings = {
+  stop_playback = {
+    description = "Transport: Stop playback"
+                .."\nControl value: ",
+  },
+  start_playback = {
+    description = "Transport: Start playback"    
+                .."\nControl value: ",
+  },
+  loop_pattern = {
+    description = "Transport: Toggle pattern looping"
+                .."\nControl value: ",
+  },
+  edit_mode = {
+    description = "Transport: Toggle edit-mode"
+                 .."\nControl value: ",
+  },
+  follow_player = {
+    description = "Transport: Toggle play-follow mode"
+                .."\nControl value: ",
+  },
+  goto_next = {
+    description = "Transport: Goto next pattern/block"    
+                .."\nControl value: ",
+  },
+  goto_previous = {
+    description = "Transport: Goto previous pattern/block"    
+                .."\nControl value: ",
+  },
+  block_loop = {
+    description = "Transport: Toggle block-loop mode"    
+                .."\nControl value: ",
+  },
+  metronome_toggle = {
+    description = "Metronome: toggle on/off",
+  },
 
 }
 
-function Transport:__init(process,mappings,options,cfg_name,palette)
-  TRACE("Transport:__init(",process,mappings,options,cfg_name,palette)
+Transport.default_palette = {
+  edit_mode_off = {     color = {0x00,0x00,0x00}, text = "●", val = false,},
+  edit_mode_on = {      color = {0xff,0x40,0x40}, text = "●", val = true, },
+  follow_player_off = { color = {0x00,0x00,0x00}, text = "↓", val = false },
+  follow_player_on = {  color = {0x40,0xff,0x40}, text = "↓", val = true  },
+  loop_block_off = {    color = {0x00,0x00,0x00}, text = "═", val = false,},
+  loop_block_on = {     color = {0xff,0xff,0xff}, text = "═", val = true  },
+  loop_pattern_off = {  color = {0x00,0x00,0x00}, text = "∞", val = false,},
+  loop_pattern_on = {   color = {0x80,0xD0,0x40}, text = "∞", val = true  },
+  metronome_off = {     color = {0x00,0x00,0x00}, text = "∆", val = false,},
+  metronome_on = {      color = {0x80,0x80,0x80}, text = "∆", val = true, },
+  next_patt_dimmed = {  color = {0x80,0x80,0x80}, text = "►|",val = false,},
+  next_patt_off = {     color = {0x00,0x00,0x00}, text = "►|",val = false,},
+  next_patt_on = {      color = {0xff,0xff,0xff}, text = "►|",val = true, },
+  playing_off = {       color = {0x00,0x00,0x00}, text = "►", val = false,},
+  playing_on = {        color = {0xff,0xff,0xff}, text = "►", val = true  },
+  prev_patt_dimmed = {  color = {0x80,0x80,0x80}, text = "|◄",val = false,},
+  prev_patt_off = {     color = {0x00,0x00,0x00}, text = "|◄",val = false,},
+  prev_patt_on = {      color = {0xff,0xff,0xff}, text = "|◄",val = true, },
+  stop_playback_off = { color = {0x00,0x00,0x00}, text = "■", val = false,},
+  stop_playback_on = {  color = {0xff,0xff,0xff}, text = "□", val = true, },
+}
 
-  -- define the options (with defaults)
 
-  self.SWITCH_MODE_SWITCH = 1
-  self.SWITCH_MODE_SCHEDULE = 2
+--------------------------------------------------------------------------------
 
-  self.PLAY_MODE_RETRIG = 1
-  self.PLAY_MODE_SCHEDULE = 2
-  self.PLAY_MODE_STOP = 3
+--- Constructor method
+-- @param (VarArg), see Application to learn more
 
-  self.STOP_MODE_PANIC = 1
-  self.STOP_MODE_JUMP = 2
-
-  self.JUMP_MODE_NORMAL = 1
-  self.JUMP_MODE_BLOCK = 2
-
-  self.mappings = {
-    stop_playback = {
-      description = "Transport: Stop playback"
-                  .."\nControl value: ",
-    },
-    start_playback = {
-      description = "Transport: Start playback"    
-                  .."\nControl value: ",
-    },
-    loop_pattern = {
-      description = "Transport: Toggle pattern looping"
-                  .."\nControl value: ",
-    },
-    edit_mode = {
-      description = "Transport: Toggle edit-mode"
-                   .."\nControl value: ",
-    },
-    follow_player = {
-      description = "Transport: Toggle play-follow mode"
-                  .."\nControl value: ",
-    },
-    goto_next = {
-      description = "Transport: Goto next pattern/block"    
-                  .."\nControl value: ",
-    },
-    goto_previous = {
-      description = "Transport: Goto previous pattern/block"    
-                  .."\nControl value: ",
-    },
-    block_loop = {
-      description = "Transport: Toggle block-loop mode"    
-                  .."\nControl value: ",
-    },
-    metronome_toggle = {
-      description = "Metronome: toggle on/off",
-    },
-
-  }
-
-  self.palette = {
-    edit_mode_off = {     color = {0x00,0x00,0x00}, text = "●", val = false,},
-    edit_mode_on = {      color = {0xff,0x40,0x40}, text = "●", val = true, },
-    follow_player_off = { color = {0x00,0x00,0x00}, text = "↓", val = false },
-    follow_player_on = {  color = {0x40,0xff,0x40}, text = "↓", val = true  },
-    loop_block_off = {    color = {0x00,0x00,0x00}, text = "═", val = false,},
-    loop_block_on = {     color = {0xff,0xff,0xff}, text = "═", val = true  },
-    loop_pattern_off = {  color = {0x00,0x00,0x00}, text = "∞", val = false,},
-    loop_pattern_on = {   color = {0x80,0xD0,0x40}, text = "∞", val = true  },
-    metronome_off = {     color = {0x00,0x00,0x00}, text = "∆", val = false,},
-    metronome_on = {      color = {0x80,0x80,0x80}, text = "∆", val = true, },
-    next_patt_dimmed = {  color = {0x80,0x80,0x80}, text = "►|",val = false,},
-    next_patt_off = {     color = {0x00,0x00,0x00}, text = "►|",val = false,},
-    next_patt_on = {      color = {0xff,0xff,0xff}, text = "►|",val = true, },
-    playing_off = {       color = {0x00,0x00,0x00}, text = "►", val = false,},
-    playing_on = {        color = {0xff,0xff,0xff}, text = "►", val = true  },
-    prev_patt_dimmed = {  color = {0x80,0x80,0x80}, text = "|◄",val = false,},
-    prev_patt_off = {     color = {0x00,0x00,0x00}, text = "|◄",val = false,},
-    prev_patt_on = {      color = {0xff,0xff,0xff}, text = "|◄",val = true, },
-    stop_playback_off = { color = {0x00,0x00,0x00}, text = "■", val = false,},
-    stop_playback_on = {  color = {0xff,0xff,0xff}, text = "□", val = true, },
-  }
+function Transport:__init(...)
+  TRACE("Transport:__init(",...)
 
 
   -- private stuff
@@ -163,7 +165,7 @@ function Transport:__init(process,mappings,options,cfg_name,palette)
   -- the various UIComponents
   self.controls = {}
 
-  Application.__init(self,process,mappings,options,cfg_name,palette)
+  Application.__init(self,...)
 
 
 end
@@ -204,7 +206,7 @@ function Transport:on_idle()
   -- check if we have arrived at the scheduled pattern
   if (self._scheduled_pattern)then
     local pos = renoise.song().transport.playback_pos.sequence
-    if(self._scheduled_pattern==pos) or
+    if(self._scheduled_pattern == pos) or
       (pos~=self._source_pattern) then
       
       self:clear_schedule()
@@ -228,8 +230,8 @@ function Transport:update_scheduled_buttons()
       and renoise.song().transport.playback_pos 
       or renoise.song().transport.edit_pos
     -- 'blink' when we have moved a certain distance
-    local is_prev = (self._scheduled_button==self.controls.previous)
-    local blink = (math.floor((((pos.line-1)/lpb))%2)==0)
+    local is_prev = (self._scheduled_button == self.controls.previous)
+    local blink = (math.floor((((pos.line-1)/lpb))%2) == 0)
     if blink then
       if is_prev then
         self.controls.previous:set(self.palette.prev_patt_off)
@@ -570,11 +572,11 @@ function Transport:_start_playback()
 
   if renoise.song().transport.playing then
     -- retriggered
-    if (self.options.pattern_play.value == self.PLAY_MODE_RETRIG) then
+    if (self.options.pattern_play.value == PLAY_MODE_RETRIG) then
       self:_retrigger_pattern()
-    elseif (self.options.pattern_play.value == self.PLAY_MODE_SCHEDULE) then
+    elseif (self.options.pattern_play.value == PLAY_MODE_SCHEDULE) then
       self:_reschedule_pattern()
-    elseif (self.options.pattern_play.value == self.PLAY_MODE_STOP) then
+    elseif (self.options.pattern_play.value == PLAY_MODE_STOP) then
       self:_stop_playback()
     end
   else
@@ -594,9 +596,9 @@ function Transport:_stop_playback()
   TRACE("Transport:_stop_playback()")
 
   if (not renoise.song().transport.playing) then
-    if (self.options.pattern_stop.value == self.STOP_MODE_PANIC) then
+    if (self.options.pattern_stop.value == STOP_MODE_PANIC) then
       renoise.song().transport:panic()
-    elseif (self.options.pattern_stop.value == self.STOP_MODE_JUMP) then
+    elseif (self.options.pattern_stop.value == STOP_MODE_JUMP) then
       self:_jump_to_beginning()
     end
   end
@@ -618,12 +620,12 @@ end
 function Transport:_next()
   TRACE("Transport:_next()")
 
-  local block_mode = (self.options.jump_mode.value == self.JUMP_MODE_BLOCK)
+  local block_mode = (self.options.jump_mode.value == JUMP_MODE_BLOCK)
   if self._block_loop and block_mode then
     -- move to next block loop
     renoise.song().transport:loop_block_move_forwards()
   else
-    if (self.options.pattern_switch.value == self.SWITCH_MODE_SWITCH) then
+    if (self.options.pattern_switch.value == SWITCH_MODE_SWITCH) then
       -- switch instantly
       local new_pos = renoise.song().transport.playback_pos
       self:_switch_to_seq_index(new_pos.sequence+1)
@@ -654,12 +656,12 @@ end
 function Transport:_previous()
   TRACE("Transport:_previous()")
 
-  local block_mode = (self.options.jump_mode.value == self.JUMP_MODE_BLOCK)
+  local block_mode = (self.options.jump_mode.value == JUMP_MODE_BLOCK)
   if self._block_loop and block_mode then
     -- move to previous block loop
     renoise.song().transport:loop_block_move_backwards()
   else
-    if (self.options.pattern_switch.value == self.SWITCH_MODE_SWITCH) then
+    if (self.options.pattern_switch.value == SWITCH_MODE_SWITCH) then
       -- switch instantly
       local new_pos = renoise.song().transport.playback_pos
       self:_switch_to_seq_index(new_pos.sequence-1)

@@ -33,6 +33,12 @@ Changes (equal to Duplex version number)
 
 --==============================================================================
 
+-- constants
+
+local TRACK_PAGE_AUTO = 1
+
+
+--==============================================================================
 
 class 'TrackSelector' (Application)
 
@@ -55,10 +61,47 @@ TrackSelector.default_options = {
 
 }
 
-function TrackSelector:__init(process,mappings,options,cfg_name,palette)
+TrackSelector.available_mappings = {
+  prev_next_track = {    
+    description = "TrackSelector: Select next/previous track",
+    orientation = HORIZONTAL,    
+  },
+  prev_next_page = {
+    description = "TrackSelector: Select track-page",
+    orientation = HORIZONTAL,    
+  },
+  select_track = {
+    description = "TrackSelector: Select active track",
+    orientation = HORIZONTAL,    
+  },
+  select_master = {
+    description = "TrackSelector: Select master-track",
+  },
+  select_sends = {
+    description = "TrackSelector: Select 1st send-track",
+  },
+  select_first = {
+    description = "TrackSelector: Select first track",
+  },
+}
 
-  -- globals
-  self.TRACK_PAGE_AUTO = 1
+TrackSelector.default_palette = {
+  track_sequencer_on  = { color = {0xFF,0xFF,0xFF}, text = "T", val=true  },
+  track_sequencer_off = { color = {0x00,0x00,0x00}, text = "T", val=false },
+  track_master_on     = { color = {0xFF,0xFF,0xFF}, text = "M", val=true  },
+  track_master_off    = { color = {0x00,0x00,0x00}, text = "M", val=false },
+  track_send_on       = { color = {0xFF,0xFF,0xFF}, text = "S", val=true  },
+  track_send_off      = { color = {0x00,0x00,0x00}, text = "S", val=false },
+  select_device_tip   = { color = {0xFF,0xFF,0xFF}, text = "▪", val=true  },
+  select_device_back  = { color = {0x40,0x40,0x80}, text = "▫", val=false },
+}
+
+--------------------------------------------------------------------------------
+
+--- Constructor method
+-- @param (VarArg), see Application to learn more
+
+function TrackSelector:__init(...)
 
   -- (Int) number of tracks available on controller
   self._slider_units = 1
@@ -87,43 +130,7 @@ function TrackSelector:__init(process,mappings,options,cfg_name,palette)
   self._select_sends = nil
   self._select_first = nil
 
-  -- define the mappings
-  self.mappings = {
-    prev_next_track = {    
-      description = "TrackSelector: Select next/previous track",
-      orientation = HORIZONTAL,    
-    },
-    prev_next_page = {
-      description = "TrackSelector: Select track-page",
-      orientation = HORIZONTAL,    
-    },
-    select_track = {
-      description = "TrackSelector: Select active track",
-      orientation = HORIZONTAL,    
-    },
-    select_master = {
-      description = "TrackSelector: Select master-track",
-    },
-    select_sends = {
-      description = "TrackSelector: Select 1st send-track",
-    },
-    select_first = {
-      description = "TrackSelector: Select first track",
-    },
-  }
-
-  self.palette = {
-    track_sequencer_on  = { color = {0xFF,0xFF,0xFF}, text = "T", val=true  },
-    track_sequencer_off = { color = {0x00,0x00,0x00}, text = "T", val=false },
-    track_master_on     = { color = {0xFF,0xFF,0xFF}, text = "M", val=true  },
-    track_master_off    = { color = {0x00,0x00,0x00}, text = "M", val=false },
-    track_send_on       = { color = {0xFF,0xFF,0xFF}, text = "S", val=true  },
-    track_send_off      = { color = {0x00,0x00,0x00}, text = "S", val=false },
-    select_device_tip   = { color = {0xFF,0xFF,0xFF}, text = "▪", val=true  },
-    select_device_back  = { color = {0x40,0x40,0x80}, text = "▫", val=false },
-  }
-
-  Application.__init(self,process,mappings,options,cfg_name,palette)
+  Application.__init(self,...)
 
 end
 
@@ -213,7 +220,7 @@ end
 --------------------------------------------------------------------------------
 
 function TrackSelector:_get_page_width()
-  return (self.options.page_size.value==self.TRACK_PAGE_AUTO)
+  return (self.options.page_size.value == TRACK_PAGE_AUTO)
     and self._slider_units or self.options.page_size.value-1
 end
 
@@ -351,14 +358,7 @@ function TrackSelector:_build_app(song)
       local page_width = self:_get_page_width()
       local page_diff = (obj.index-track_page)*page_width
       local track_idx = page_diff+track_idx
-      --[[
-      print("track_idx B",track_idx)
-      print("obj.index",obj.index)
-      print("track_page",track_page)
-      print("page_width",page_width)
-      print("page_diff",page_diff)
-      print("track_idx A ",track_idx)
-      ]]
+
       -- outside bounds?
       if (track_idx>#renoise.song().tracks) then
         self._out_of_bounds_track_index = track_idx

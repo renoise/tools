@@ -12,8 +12,6 @@ require "Duplex/Canvas"
 require "Duplex/UIComponent"
 require "Duplex/UIButtonStrip"
 require "Duplex/UIButton"
---require "Duplex/UIToggleButton"
---require "Duplex/UIPushButton"
 require "Duplex/UISlider"
 require "Duplex/UISpinner"
 require "Duplex/UIPad"
@@ -34,7 +32,8 @@ require "Duplex/Scheduler"
 -- load all application scripts dynamically (Applications/XXX.lua)
 
 for _, filename in pairs(os.filenames("./Duplex/Applications", "*.lua")) do
-  require("Duplex/Applications/" .. split_filename(filename))
+  local app_name = split_filename(filename)
+  require("Duplex/Applications/" .. app_name)
 end
 
 

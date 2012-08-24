@@ -66,26 +66,31 @@ Changes (equal to Duplex version number)
 class 'Navigator' (Application)
 
 Navigator.default_options = {}
+Navigator.available_mappings = {
+  blockpos = {
+    description = "Navigator: Pattern position/blockloop"
+                .."\nPress and release to change position/block"
+                .."\nPress and hold to enable/disable loop"
+                .."\nPress multiple buttons to define blockloop"
+                .."\nControl-map value: ",
+    orientation = VERTICAL,
+  },
+}
 
-function Navigator:__init(process,mappings,options,cfg_name,palette)
-  TRACE("Navigator:__init(",process,mappings,options,cfg_name,palette)
+Navigator.default_palette = {
+  active      = { color={0XFF,0XFF,0XFF},  text="▪", val=true },
+  looped      = { color={0X80,0X80,0X80},  text="▫", val=true },
+  background  = { color={0X00,0x00,0x00},  text="·", val=false },
+}
 
-  self.mappings = {
-    blockpos = {
-      description = "Navigator: Pattern position/blockloop"
-                  .."\nPress and release to change position/block"
-                  .."\nPress and hold to enable/disable loop"
-                  .."\nPress multiple buttons to define blockloop"
-                  .."\nControl-map value: ",
-      orientation = VERTICAL,
-    },
-  }
 
-  self.palette = {
-    active      = { color={0XFF,0XFF,0XFF},  text="▪", val=true },
-    looped      = { color={0X80,0X80,0X80},  text="▫", val=true },
-    background  = { color={0X00,0x00,0x00},  text="·", val=false },
-  }
+--------------------------------------------------------------------------------
+
+--- Constructor method
+-- @param (VarArg), see Application to learn more
+
+function Navigator:__init(...)
+  TRACE("Navigator:__init(",...)
 
   -- (boolean) keep track of the playing state
   self._playing = nil
@@ -131,7 +136,7 @@ function Navigator:__init(process,mappings,options,cfg_name,palette)
   -- (boolean) true when number of lines has changed
   self._changed_num_lines = false
 
-  Application.__init(self,process,mappings,options,cfg_name,palette)
+  Application.__init(self,...)
 
 
 end

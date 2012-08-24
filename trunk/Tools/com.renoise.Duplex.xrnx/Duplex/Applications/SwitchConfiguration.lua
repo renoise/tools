@@ -24,35 +24,40 @@ Changes (equal to Duplex version number)
 class 'SwitchConfiguration' (Application)
 
 SwitchConfiguration.default_options = {}
-SwitchConfiguration.need_browser = true
 
-function SwitchConfiguration:__init(process, mappings, options, cfg_name,palette)
-    TRACE("SwitchConfiguration:__init(",process,mappings,options,cfg_name,palette)
+SwitchConfiguration.available_mappings = {
+    goto_next = {
+        description = "SwitchConfiguration: Goto next configuration"    
+        .."\nControl value: ",
+    },
+    goto_previous = {
+        description = "SwitchConfiguration: Goto previous configuration"    
+        .."\nControl value: ",
+    },
 
-    self.mappings = {
-        goto_next = {
-            description = "SwitchConfiguration: Goto next configuration"    
-            .."\nControl value: ",
-        },
-        goto_previous = {
-            description = "SwitchConfiguration: Goto previous configuration"    
-            .."\nControl value: ",
-        },
+}
 
-    }
+SwitchConfiguration.default_palette = {    
+  previous_config_on = {  color = {0xFF,0xFF,0xFF}, text = "◄", val=true},
+  previous_config_off = { color = {0x00,0x00,0x00}, text = "◄", val=false},
+  next_config_on      = { color = {0xFF,0xFF,0xFF}, text = "►", val=true},
+  next_config_off     = { color = {0x00,0x00,0x00}, text = "►", val=false}
+}
 
-    self.palette = {    
-      previous_config_on = {  color = {0xFF,0xFF,0xFF}, text = "◄", val=true},
-      previous_config_off = { color = {0x00,0x00,0x00}, text = "◄", val=false},
-      next_config_on      = { color = {0xFF,0xFF,0xFF}, text = "►", val=true},
-      next_config_off     = { color = {0x00,0x00,0x00}, text = "►", val=false}
-    }
+
+--------------------------------------------------------------------------------
+
+--- Constructor method
+-- @param (VarArg), see Application to learn more
+
+function SwitchConfiguration:__init(...)
+    TRACE("SwitchConfiguration:__init()")
 
     -- the various UIComponents
     self.controls = {}
-    self._browser = process.browser
+    self._browser = select(1,...).browser
 
-    Application.__init(self,process,mappings,options,cfg_name,palette)
+    Application.__init(self,...)
 
 
 end

@@ -246,8 +246,31 @@ Recorder.default_options = {
   }
 }
 
-function Recorder:__init(process,mappings,options,cfg_name,palette)
-  TRACE("Recorder:__init(",process,mappings,options,cfg_name,palette)
+Recorder.available_mappings = {
+  recorders = {
+    description = "Recorder: Toggle recording mode",
+  },
+  sliders = {
+    description = "Recorder: Switch between takes",
+  },
+}
+
+Recorder.default_palette = {
+  background    = { color = {0x00,0x00,0x00}, val = false },
+  slider_lit    = { color = {0xff,0xff,0xff}, val = true  },
+  slider_dimmed = { color = {0x40,0x40,0x40}, val = false },
+  recorder_on   = { color = {0xff,0x40,0x40}, text="●", val = true  },
+  recorder_off  = { color = {0x40,0x00,0x00}, text="○", val = false },
+
+}
+
+--------------------------------------------------------------------------------
+
+--- Constructor method
+-- @param (VarArg), see Application to learn more
+
+function Recorder:__init(...)
+  TRACE("Recorder:__init(",...)
 
   --self.WRITEAHEAD_ON = 1
   --self.WRITEAHEAD_OFF = 2
@@ -276,24 +299,6 @@ function Recorder:__init(process,mappings,options,cfg_name,palette)
   self.FOLLOW_TRACK_OFF = 2
 
   self.TRACK_PAGE_AUTO = 1
-
-  self.mappings = {
-    recorders = {
-      description = "Recorder: Toggle recording mode",
-    },
-    sliders = {
-      description = "Recorder: Switch between takes",
-    },
-  }
-
-  self.palette = {
-    background    = { color = {0x00,0x00,0x00}, val = false },
-    slider_lit    = { color = {0xff,0xff,0xff}, val = true  },
-    slider_dimmed = { color = {0x40,0x40,0x40}, val = false },
-    recorder_on   = { color = {0xff,0x40,0x40}, text="●", val = true  },
-    recorder_off  = { color = {0x40,0x00,0x00}, text="○", val = false },
-
-  }
 
   -- true if sliders are made from buttons
   self._grid_mode = false
@@ -371,9 +376,9 @@ function Recorder:__init(process,mappings,options,cfg_name,palette)
 
   -- keep reference to browser process, or we couldn't 
   -- set options while running (used by first_run) 
-  self.recorder_process = process
+  self.recorder_process = select(1,...)
 
-  Application.__init(self,process,mappings,options,cfg_name,palette)
+  Application.__init(self,...)
 
 end
 

@@ -58,6 +58,26 @@ Changes (equal to Duplex version number)
 
 --==============================================================================
 
+-- constants
+
+local PLAY_MODE_PLAY = 1
+local PLAY_MODE_TOGGLE = 2
+local PLAY_MODE_RETRIG = 3
+local PLAY_MODE_SCHEDULE = 4
+local SWITCH_MODE_STOP = 1
+local SWITCH_MODE_SWITCH = 2
+local SWITCH_MODE_TRIG = 3
+local SWITCH_MODE_SCHEDULE = 4
+local BOUNDS_MODE_STOP = 1
+local BOUNDS_MODE_IGNORE = 2
+local FOLLOW_TRACK_ON = 1
+local FOLLOW_TRACK_OFF = 2
+local TRACK_PAGE_AUTO = 1
+local SEQUENCE_MODE_NORMAL = 1
+local SEQUENCE_MODE_INDEX = 2
+
+
+--==============================================================================
 
 class 'Matrix' (Application)
 
@@ -143,80 +163,57 @@ Matrix.default_options = {
 
 }
 
-function Matrix:__init(process,mappings,options,cfg_name,palette)
-  TRACE("Matrix:__init(",process,mappings,options,cfg_name,palette)
 
-  -- define the options (with defaults)
+Matrix.available_mappings = {
+  matrix = {
+    description = "Matrix: Press to toggle muted state"
+                .."\nHold to focus this track/pattern"
+                .."\nControl value: ",
+  },
+  triggers = {
+    description = "Matrix: Pattern-sequence triggers"
+                .."\nPress and release to trigger pattern"
+                .."\nPress multiple buttons to define loop"
+                .."\nPress and hold to toggle loop"
+                .."\nControl value: ",
+    orientation = VERTICAL,
+  },
+  sequence = { 
+    description = "Matrix: Flip through pattern sequence"
+                .."\nControl value: ",
+    orientation = HORIZONTAL,
+    index = 1,
+  },
+  track = {
+    description = "Matrix: Flip though tracks"
+                .."\nControl value: ",
+    orientation = HORIZONTAL,
+    index = 3,
+  },
+}
 
-  self.PLAY_MODE_PLAY = 1
-  self.PLAY_MODE_TOGGLE = 2
-  self.PLAY_MODE_RETRIG = 3
-  self.PLAY_MODE_SCHEDULE = 4
+Matrix.default_palette = {
+  -- pattern matrix
+  out_of_bounds       = { color={0x40,0x40,0x00}, text="·", val=false },
+  slot_empty          = { color={0x00,0x00,0x00}, text="·", val=false },
+  slot_empty_muted    = { color={0x40,0x00,0x00}, text="·", val=false },
+  slot_filled         = { color={0xff,0xff,0x00}, text="▪", val=true  },
+  slot_filled_muted   = { color={0xff,0x40,0x00}, text="▫", val=false },
+  slot_master_filled  = { color={0x00,0xff,0x00}, text="▪", val=true  },
+  slot_master_empty   = { color={0x00,0x40,0x00}, text="·", val=false },
+  -- pattern sequence
+  trigger_active      = { color={0xff,0xff,0xff}},
+  trigger_loop        = { color={0x40,0x40,0xff}},
+  trigger_back        = { color={0x00,0x00,0x00}},
+}
 
-  self.SWITCH_MODE_STOP = 1
-  self.SWITCH_MODE_SWITCH = 2
-  self.SWITCH_MODE_TRIG = 3
-  self.SWITCH_MODE_SCHEDULE = 4
+--------------------------------------------------------------------------------
 
-  self.BOUNDS_MODE_STOP = 1
-  self.BOUNDS_MODE_IGNORE = 2
+--- Constructor method
+-- @param (VarArg), see Application to learn more
 
-  self.FOLLOW_TRACK_ON = 1
-  self.FOLLOW_TRACK_OFF = 2
-
-  self.TRACK_PAGE_AUTO = 1
-
-  self.SEQUENCE_MODE_NORMAL = 1
-  self.SEQUENCE_MODE_INDEX = 2
-
-  --self:_set_default_options(true)
-
-  -- define the mappings (unassigned)
-
-  self.mappings = {
-    matrix = {
-      description = "Matrix: Press to toggle muted state"
-                  .."\nHold to focus this track/pattern"
-                  .."\nControl value: ",
-    },
-    triggers = {
-      description = "Matrix: Pattern-sequence triggers"
-                  .."\nPress and release to trigger pattern"
-                  .."\nPress multiple buttons to define loop"
-                  .."\nPress and hold to toggle loop"
-                  .."\nControl value: ",
-      orientation = VERTICAL,
-    },
-    sequence = { 
-      description = "Matrix: Flip through pattern sequence"
-                  .."\nControl value: ",
-      orientation = HORIZONTAL,
-      index = 1,
-    },
-    track = {
-      description = "Matrix: Flip though tracks"
-                  .."\nControl value: ",
-      orientation = HORIZONTAL,
-      index = 3,
-    },
-  }
-
-  -- define default palette
-
-  self.palette = {
-    -- pattern matrix
-    out_of_bounds       = { color={0x40,0x40,0x00}, text="·", val=false },
-    slot_empty          = { color={0x00,0x00,0x00}, text="·", val=false },
-    slot_empty_muted    = { color={0x40,0x00,0x00}, text="·", val=false },
-    slot_filled         = { color={0xff,0xff,0x00}, text="▪", val=true  },
-    slot_filled_muted   = { color={0xff,0x40,0x00}, text="▫", val=false },
-    slot_master_filled  = { color={0x00,0xff,0x00}, text="▪", val=true  },
-    slot_master_empty   = { color={0x00,0x40,0x00}, text="·", val=false },
-    -- pattern sequence
-    trigger_active      = { color={0xff,0xff,0xff}},
-    trigger_loop        = { color={0x40,0x40,0xff}},
-    trigger_back        = { color={0x00,0x00,0x00}},
-  }
+function Matrix:__init(...)
+  TRACE("Matrix:__init(",...)
 
   -- the various controls
   self._buttons = nil
@@ -243,7 +240,7 @@ function Matrix:__init(process,mappings,options,cfg_name,palette)
   self._update_tracks_requested = false
   self._mute_notifier_disabled = false
 
-  Application.__init(self,process,mappings,options,cfg_name,palette)
+  Application.__init(self,...)
 
 end
 
@@ -620,7 +617,7 @@ function Matrix:_set_trigger_mode()
 
   if (self._trigger) then
     local is_normal = 
-      (self.options.sequence_mode.value==self.SEQUENCE_MODE_NORMAL)
+      (self.options.sequence_mode.value == SEQUENCE_MODE_NORMAL)
     self._trigger.mode = is_normal and 
       self._trigger.MODE_NORMAL or self._trigger.MODE_INDEX 
   end
@@ -646,7 +643,7 @@ end
 function Matrix:_follow_track()
   TRACE("Matrix:_follow_track()")
 
-  if (self.options.follow_track.value == self.FOLLOW_TRACK_OFF) then
+  if (self.options.follow_track.value == FOLLOW_TRACK_OFF) then
     return
   end
 
@@ -684,7 +681,7 @@ end
 
 function Matrix:_get_page_width()
 
-  return (self.options.page_size.value==self.TRACK_PAGE_AUTO)
+  return (self.options.page_size.value == TRACK_PAGE_AUTO)
     and self._width or self.options.page_size.value-1
 
 end
@@ -756,7 +753,7 @@ function Matrix:_build_app()
       --local track_idx = (obj.index*self._width)
       local page_width = self:_get_page_width()
       local track_idx = (obj.index*page_width)
-      if (self.options.follow_track.value == self.FOLLOW_TRACK_ON) then
+      if (self.options.follow_track.value == FOLLOW_TRACK_ON) then
         -- let the notifier method deal with the track change...
         renoise.song().selected_track_index = 1+track_idx
       else
@@ -809,13 +806,13 @@ function Matrix:_build_app()
 
         TRACE("Matrix: position was toggled off")
 
-        if (self.options.play_mode.value == self.PLAY_MODE_RETRIG) then
+        if (self.options.play_mode.value == PLAY_MODE_RETRIG) then
           self:_retrigger_pattern()
-        elseif (self.options.play_mode.value == self.PLAY_MODE_PLAY) then
+        elseif (self.options.play_mode.value == PLAY_MODE_PLAY) then
           return false
-        elseif (self.options.play_mode.value == self.PLAY_MODE_TOGGLE) then
+        elseif (self.options.play_mode.value == PLAY_MODE_TOGGLE) then
           renoise.song().transport:stop()
-        elseif (self.options.play_mode.value == self.PLAY_MODE_SCHEDULE) then
+        elseif (self.options.play_mode.value == PLAY_MODE_SCHEDULE) then
           seq_index = self._playback_pos.sequence + 
             (self._height*self._edit_page)
           if renoise.song().sequencer.pattern_sequence[seq_index] then
@@ -834,7 +831,7 @@ function Matrix:_build_app()
 
         TRACE("Matrix: position out of bounds")
 
-        if (self.options.bounds_mode.value == self.BOUNDS_MODE_STOP) then
+        if (self.options.bounds_mode.value == BOUNDS_MODE_STOP) then
           renoise.song().transport:stop()
         end
         obj._cached_index = 0 -- hackish  
@@ -844,19 +841,19 @@ function Matrix:_build_app()
 
         TRACE("Matrix: position toggled back on")
 
-        if (self.options.play_mode.value == self.PLAY_MODE_RETRIG) then
+        if (self.options.play_mode.value == PLAY_MODE_RETRIG) then
           self:_retrigger_pattern()
-        elseif (self.options.play_mode.value == self.PLAY_MODE_PLAY) then
+        elseif (self.options.play_mode.value == PLAY_MODE_PLAY) then
           if (not renoise.song().transport.playing) then
             if renoise.song().sequencer.pattern_sequence[seq_index] then
               renoise.song().transport:trigger_sequence(seq_index)
             end
           end
-        elseif (self.options.play_mode.value == self.PLAY_MODE_SCHEDULE) then
+        elseif (self.options.play_mode.value == PLAY_MODE_SCHEDULE) then
           if renoise.song().sequencer.pattern_sequence[seq_index] then
             renoise.song().transport:set_scheduled_sequence(seq_index)
           end
-        elseif (self.options.play_mode.value == self.PLAY_MODE_TOGGLE) then
+        elseif (self.options.play_mode.value == PLAY_MODE_TOGGLE) then
           if (not renoise.song().transport.playing) then
             if renoise.song().sequencer.pattern_sequence[seq_index] then
               renoise.song().transport:trigger_sequence(seq_index)
@@ -877,7 +874,7 @@ function Matrix:_build_app()
             return false
           end
         else
-          if(self.options.switch_mode.value == self.SWITCH_MODE_SCHEDULE) then
+          if(self.options.switch_mode.value == SWITCH_MODE_SCHEDULE) then
             if renoise.song().sequencer.pattern_sequence[seq_index] then
               -- schedule, but do not update display
               renoise.song().transport:set_scheduled_sequence(seq_index)
@@ -885,7 +882,7 @@ function Matrix:_build_app()
               obj:start_blink(obj_index)
               return false
             end
-          elseif(self.options.switch_mode.value == self.SWITCH_MODE_SWITCH) then
+          elseif(self.options.switch_mode.value == SWITCH_MODE_SWITCH) then
             -- instantly switch position:
             local new_pos = renoise.song().transport.playback_pos
             new_pos.sequence = seq_index
@@ -896,9 +893,9 @@ function Matrix:_build_app()
               new_pos.line = 1
             end
             renoise.song().transport.playback_pos = new_pos
-          elseif(self.options.switch_mode.value == self.SWITCH_MODE_STOP) then
+          elseif(self.options.switch_mode.value == SWITCH_MODE_STOP) then
             renoise.song().transport:stop()
-          elseif(self.options.switch_mode.value == self.SWITCH_MODE_TRIG) then
+          elseif(self.options.switch_mode.value == SWITCH_MODE_TRIG) then
             if renoise.song().sequencer.pattern_sequence[seq_index] then
               self._playback_pos.sequence = seq_index
               self:_retrigger_pattern()
