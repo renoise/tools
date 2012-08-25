@@ -6,6 +6,74 @@ Duplex Changelog
 Done 0.98
 --------------------------------------------------------------------------------
 
+-- Duplex 0.98b23 -----------
+
+MidiActions
+* New application: MidiActions.lua (designed to piggy-back on GlobalMidiActions)
+
+Duplex Core
+* Feature: optional MIDI quantize (MIDI controllers, when using UISlider)
+* Applications now receive __init arguments via vararg (easier to expand)
+* Application mappings, palette now defined as static tables
+* Device config: allow “literal” option values (supply string value)
+* Application options: sort entries alphabetically
+* Application options: “break” into columns for every xx entries
+
+Grid Pie
+* FIXME (Recording) better handling of patt. cloning near boundaries
+* TWEAK “Keep the beat” changed to modify playback-pos less often
+* FIXME Sess-rec.: “Stuttering” after short pattern (incremental_update)
+* FIXME Assign to slot: use patt-idx, not seq-idx (doh!)
+* FIXME Do not block “trigger gestures” in separate tracks
+* FEATURE Record: when triggering a pattern, use incremental updates
+* FEATURE Shorten pattern instead of modifying playback-pos (when possible)
+* FEATURE skip group tracks when temp-muting
+* FEATURE When muting track, delay note-off (to keep existing instr.)
+* FIXME Incremental updates should use the master slot range only
+* FIXME Don’t signal “dun goofed” when not started
+* USABILITY Restore matrix state when GP pattern is “dun goofed”
+
+Device-configs
+* Remote-SL-MKII/MixerEffectsTransport: swapped Mixer(mutes) with TrackSelector
+* Custombuilt MidiActions_Demo (demonstrates an 8-track mixer and transport)
+* Remote SLMKII MidiActionsTest (demo of button-slider and fixed BPM buttons)
+* Launchpad MuteGrid (as an example of "control-map hacking")
+
+
+-- Duplex 0.98b22 -----------
+
+Grid Pie
+* Overview of new features:
+ - Realtime recording (including session recording)
+ - Multitouch gestures (assign/resolve aliases, save combination, etc.)
+ - Visualization of aliased slots, current track + pattern etc.
+ - Configurable initialization and shutdown process (options)
+ - Many smaller bug fixes, cleaner code ...
+* Feature: assign an alias by pressing and holding a slot button (source), and   
+ then pressing another button in the same track. The procedure will only
+ work when the source slot is already aliased or empty (to avoid accidents)
+* Feature: to complement the assignment gesture just mentioned, you can hold
+ the button pressed to “force-assign” slots that are empty, or unique
+* Feature: resolve any aliased slots in the gridpie pattern to it’s master slot
+ by pressing a slot in the gridpie pattern (the last pattern). Conceptually
+ similar to the pattern-editor (arrow in the lower part of an aliased track)
+* Feature: quickly store “homeless” content (a track in the gridpie pattern with
+ no master slot), either by creating a new pattern to hold the data or by
+ assigning the content to an existing slot
+* Feature: hold a gridpie button to save the combination as a new pattern
+* Feature: make an alias unique (un-alias) by holding it, then it’s gridpie slot
+* Tweak: highlight the selected alias master slot (if any exists)
+* Tweak: better visualization of the current track/sequence position
+* New option: “highlight”, toggles track/sequence highlighting on/off
+* New option: auto-start has been expanded into “initialization”
+* New option: “shutdown”, use it to control the shutdown procedure
+* Fixed: de-activating a group track will not send the brief mute (avoid click)
+* Fixed: properly update mute state when gridpie is cloned
+* Fixed: line notifiers could get lost when scrolling through the song
+* Fixed: UI integration with Renoise pattern-matrix is gone (buggy)
+* Restructured code, simplified things...
+
+
 -- Duplex 0.98b21 -----------
 
 TrackSelector
