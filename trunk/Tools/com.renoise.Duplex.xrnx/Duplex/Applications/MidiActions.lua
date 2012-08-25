@@ -6,36 +6,12 @@
 --[[
 
 
-Trying to change volume of a non-existing track
-----------------------------------------------------------------------------
-
-std::logic_error: 'trying to access a nil object of type 'class FilterDeviceParameter'. the object is not or no longer available.'
-stack traceback:
-  [C]: ?
-  [C]: in function '__index'
-  [string "do..."]:36: in function <[string "do..."]:35>
-  .\Duplex/Applications/MidiActions.lua:705: in function '_get_min_max'
-  .\Duplex/Applications/MidiActions.lua:362: in function '_update_control'
-  .\Duplex/Applications/MidiActions.lua:1166: in function 'on_change'
-  .\Duplex/UISlider.lua:555: in function <.\Duplex/UISlider.lua:546>
-  (tail call): ?
-  .\Duplex/UISlider.lua:194: in function <.\Duplex/UISlider.lua:185>
-  (tail call): ?
-  .\Duplex/MessageStream.lua:363: in function '_handle_events'
-  .\Duplex/MessageStream.lua:334: in function '_handle_or_pass'
-  .\Duplex/MessageStream.lua:241: in function 'input_message'
-  .\Duplex/Display.lua:677: in function 'generate_message'
-  .\Duplex/Display.lua:869: in function <.\Duplex/Display.lua:865>
-
-
-
-
   What is MidiActions
 
-  MidiActions is an application which is able to import the default MIDI 
-  mappings from Renoise and present them as Duplex mappings. Technically,
-  this is achieved by interpreting the script which specifies all the MIDI 
-  mappings in Renoise, a file called "GlobalMidiActions.lua"
+  MidiActions is designed to import the default MIDI mappings from Renoise 
+  and present them as Duplex mappings. Technically, this is achieved by 
+  interpreting the file which contain the MIDI mappings, a file called 
+  "GlobalMidiActions.lua"
 
   Advantages of this approach: 
   - Create persistent mappings that work across songs
@@ -61,25 +37,23 @@ stack traceback:
    possible to map to a slider and a button, with a configurable range.
 
   [Toggle] is representing something which can be toggled on and off, 
-   such as a pattern loop. Toggle is often available along with Set when
-   it makes sense, such as when controlling the active state of a device,
-   but not when controlling e.g. the volume of a track.
+   such as a pattern loop. Toggle is ignored in this application, as Duplex
+   is based around bi-directional communication and every action that
+   can be toggled comes with a matching [Set] method. 
 
 
-  Notes
-
-  For this application, we have the ability to specify a slider or
-  a button, but only one of them can be mapped at once (the application will
-  detect this on startup, and complain if both types have been mapped)
-
-  Some MIDI actions are not available - as we have access to more than 34.000 
-  mappings in Renoise, some had to be skipped for practical reasons
-  (the skipped ones are essentially pattern-sequence mute+trigger actions). 
+  Notes that ome MIDI actions are not available - as we have access to more 
+  than a total of 34.000 mappings in Renoise, some had to be skipped for 
+  practical reasons (essentially, pattern-sequence mute/trigger actions). 
 
   If other tools create MIDI mapping entries on-the-fly, these are not
   included in the MidiActions application, as the entire selection is
-  based on the mappings that are defined in GlobalMidiActions.lua.
-  However, any action added to these files will be available. 
+  based on the mappings that are defined in GlobalMidiActions.lua
+
+  If you have specified you own copy of GlobalMidiActions, the application
+  will import that version instead of the default one. You will however need
+  to add an entry to the MidiActions_bindings.lua document before it would
+  be possible to have full, bi-directional communication. 
 
 
 --]]
@@ -91,18 +65,69 @@ stack traceback:
 -- mappings (MidiActions_bindings.lua) is automatically 
 -- imported when Duplex starts
 
+
 local actions_loaded = false
-local user_provided = "./../../GlobalMidiActions.lua"
-if (io.exists(user_provided)) then
-  -- attempt to locate the user-specified version
-  local old_package_path = package.path
-  package.path = package.path .. ";./../../?.lua"
-  require "GlobalMidiActions"
-  package.path = old_package_path
-  actions_loaded = true
+
+if (os.platform() == "WINDOWS") then
+
+  -- Windows: load user-specified or custom file
+
+  local user_provided = "./../../GlobalMidiActions.lua"
+  if (io.exists(user_provided)) then
+    local old_package_path = package.path
+    package.path = package.path .. ";./../../?.lua"
+    require "GlobalMidiActions"
+    package.path = old_package_path
+    actions_loaded = true
+  else
+    require "Scripts/GlobalMidiActions"
+    actions_loaded = true
+  end
+
 else
-  require "Scripts/GlobalMidiActions"
-  actions_loaded = true
+
+  -- Linux, OSX: look for locations by parsing "package.path" 
+
+  local default_location = nil
+  local user_provided = nil
+  local iterator = string.gmatch(package.path,";([^;]+)")
+
+  for str in iterator do
+    if (string.sub(str,-24)=="/Scripts/Libraries/?.lua") then
+      if string.find(str,"Resources") then
+        default_location = str    
+      else
+        user_provided = str
+      end
+    end
+  end
+
+  local make_path = function(str_path)
+    return str_path:gsub("/Libraries","")
+  end
+
+  local literal_path = function(str_path)
+    return str_path:gsub("?","GlobalMidiActions")
+  end
+
+  default_location = make_path(default_location)
+  user_provided = make_path(user_provided)
+
+  local path_addendum = nil
+  if io.exists(literal_path(user_provided)) then
+    path_addendum = user_provided
+  elseif io.exists(literal_path(default_location)) then
+    path_addendum = default_location
+  end
+  
+  if path_addendum then
+    local old_package_path = package.path
+    package.path = package.path .. ";" .. path_addendum
+    require "GlobalMidiActions"
+    package.path = old_package_path
+    actions_loaded = true  
+  end
+
 end
 
 --==============================================================================
