@@ -235,6 +235,18 @@ math.lin2db(number) -> [number]
 -- >          print(math.db2lin(6.0)) -> 1.9952623149689
 math.db2lin(number) -> [number]
 
+-- Converts a dB value to a normalized linear fader value between 0-1 within 
+-- the given dB range. 
+-- > example: print(math.db2fader(-96, 0, 1)) -> 0  
+-- >          print(math.db2fader(-48, 6, 0)) -> 0.73879611492157
+math.db2fader(min_dB, max_dB, dB_to_convert)
+
+-- Converts a normalized linear mixer fader value to a db value within 
+-- the given dB range.
+-- > example: print(math.fader2db(-96, 0, 1)) -> 0  
+-- >          print(math.fader2db(-96, 0, 0)) -> -96
+math.fader2db(min_dB, max_dB, fader_value)
+
 -- db values at and below this value will be treated as silent (linearly 0)
 math.infdb -> [-200]
 

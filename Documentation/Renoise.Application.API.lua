@@ -171,6 +171,10 @@ renoise.ApplicationWindow.LOWER_FRAME_TRACK_AUTOMATION
 renoise.ApplicationWindow.LOWER_FRAME_INSTRUMENT_PROPERTIES
 renoise.ApplicationWindow.LOWER_FRAME_SONG_PROPERTIES
 
+renoise.ApplicationWindow.MIXER_FADER_TYPE_24DB 
+renoise.ApplicationWindow.MIXER_FADER_TYPE_48DB
+renoise.ApplicationWindow.MIXER_FADER_TYPE_96DB
+renoise.ApplicationWindow.MIXER_FADER_TYPE_LINEAR
 
 -------- Functions
 
@@ -243,3 +247,7 @@ renoise.app().window.pattern_advanced_edit_is_visible, _observable
 renoise.app().window.mixer_view_post_fx, _observable
   -> [boolean]  
 
+-- Mixer fader type setting.
+renoise.app().window.mixer_fader_type, _observable
+  -> [enum=MIXER_FADER_TYPE_XXX]
+  

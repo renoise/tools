@@ -120,6 +120,11 @@ renoise.song():swap_tracks_at(index1, index2)
 renoise.song():track(index)
   -> [renoise.Track object]
 
+-- Set the selected track to prev/next relative to the current track. Takes
+-- care of skipping over hidden tracks and wrapping around at the edges.
+renoise.song():select_previous_track()
+renoise.song():select_next_track()
+
 -- Insert a new group track at the given index. Group tracks can only be
 -- inserted before the Master track.
 renoise.song():insert_group_at(int index)
@@ -260,10 +265,10 @@ renoise.song().sequencer
 renoise.song().pattern_iterator
   -> [read-only, renoise.PatternIterator object]
 
--- number of renoise.Track.TRACK_TYPE_SEQUENCER tracks in song.
+-- number of normal playback tracks (non-master or sends) in song.
 renoise.song().sequencer_track_count
   -> [read-only, number]
--- number of renoise.Track.TRACK_TYPE_SEND tracks in song.
+-- number of send tracks in song.
 renoise.song().send_track_count
   -> [read-only, number]
 
@@ -283,7 +288,7 @@ renoise.song().selected_instrument_index, _observable
 
 -- Selected in the instrument box. Never nil.
 renoise.song().selected_sample, _observable
-  -> [read-only, array of renoise.Sample objects]
+  -> [read-only, renoise.Sample object]
 renoise.song().selected_sample_index, _observable
   -> [number]
 
@@ -583,7 +588,7 @@ renoise.song().transport.keyboard_velocity, _observable
 -------- Functions
 
 -- Insert the specified pattern at the given position in the sequence.
-renoise.song().sequencer.insert_sequence_at(sequence_pos, pattern_index)
+renoise.song().sequencer:insert_sequence_at(sequence_pos, pattern_index)
 
 -- Insert an empty, unreferenced pattern at the given position.
 renoise.song().sequencer:insert_new_pattern_at(sequence_pos)
@@ -592,7 +597,7 @@ renoise.song().sequencer:insert_new_pattern_at(sequence_pos)
 -- Delete an existing position in the sequence. Renoise needs at least one
 -- sequence in the song for playback. Completely removing all sequence positions
 -- is not allowed.
-renoise.song().sequencer.delete_sequence_at(sequence_pos)
+renoise.song().sequencer:delete_sequence_at(sequence_pos)
 
 
 -- Access to a single sequence by index (the pattern number). Use properties 
