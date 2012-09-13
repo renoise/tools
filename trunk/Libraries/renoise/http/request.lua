@@ -1206,7 +1206,11 @@ function Request:_do_callback(socket_error)
           local cd = self:_get_header("Content-Disposition")          
           if (cd and #cd > 0) then
             log:info("Content-Disposition: " .. cd)
-            filename = cd:match("filename=(.+)$") 
+            filename = cd:match('filename\s*=\s*(.+)$')
+            -- remove quotes, when present
+            if (filename and filename:match('^"(.+)"$')) then
+              filename = filename:match('^"(.+)"$')
+            end 
           end
           
           if (not filename) then
