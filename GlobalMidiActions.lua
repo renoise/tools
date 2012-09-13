@@ -389,6 +389,91 @@ local function parameter_message_value(message, parameter)
 end
 
 
+-- parameter_message_fader_value
+
+local function parameter_message_fader_value(message, volume_parameter)
+
+  if (message:is_abs_value() and message.int_value == 0 and message.value_min_scaling == 0) then
+    return 0 -- always -INF at the bottom
+  end
+
+  if (message:is_abs_value() or message:is_rel_value()) then
+
+    local range_min_db
+    local range_max_db
+  
+    if (app().window.mixer_fader_type == renoise.ApplicationWindow.MIXER_FADER_TYPE_24DB) then
+      range_min_db = -24
+      range_max_db = 3
+    elseif (app().window.mixer_fader_type == renoise.ApplicationWindow.MIXER_FADER_TYPE_48DB)   then 
+      range_min_db = -48
+      range_max_db = 3
+    elseif (app().window.mixer_fader_type == renoise.ApplicationWindow.MIXER_FADER_TYPE_96DB) then
+      range_min_db = -96
+      range_max_db = 3
+    else
+      return parameter_message_value(message, volume_parameter)
+    end
+    
+    local hardware_value = message.int_value / 127
+
+    -- scaling is entered on a linear 0-1 scale so must convert to fv
+    -- with the right fader type before we can scale the value
+
+    local param_range = volume_parameter.value_max - volume_parameter.value_min
+    
+    local min_lin = volume_parameter.value_min + message.value_min_scaling * param_range
+    local max_lin = volume_parameter.value_min + message.value_max_scaling * param_range
+
+    local min_db = math.lin2db(min_lin)
+    local max_db = math.lin2db(max_lin)
+
+    local min_fv = math.db2fader(range_min_db, range_max_db, min_db)
+    local max_fv = math.db2fader(range_min_db, range_max_db, max_db)
+
+    local fader_value
+
+    if (message:is_abs_value()) then
+  
+      fader_value = min_fv + hardware_value * (max_fv - min_fv)
+  
+    else
+  
+      local quantum = volume_parameter.value_quantum
+      if (quantum < 1) then
+        quantum = 1/127
+      end
+  
+      local old_db = math.lin2db(volume_parameter.value)
+      local old_fv = math.db2fader(range_min_db, range_max_db, old_db)
+  
+      if (hardware_value > 0) then
+        fader_value = old_fv + quantum * (max_fv - min_fv)
+      else
+        fader_value = old_fv - quantum * (max_fv - min_fv)
+      end
+
+      if (fader_value < 0) then
+        return 0 -- always -INF at the bottom
+      else
+        fader_value = clamp_value(fader_value, min_fv, max_fv)
+      end
+    end    
+
+    local db_value = math.fader2db(range_min_db, range_max_db, fader_value);
+
+    local lin_value = math.db2lin(db_value);
+    lin_value = clamp_value(lin_value, volume_parameter.value_min, volume_parameter.value_max) 
+
+    return lin_value
+
+  else
+    return parameter_message_value(message, volume_parameter)
+
+  end
+end
+
+
 --------------------------------------------------------------------------------
 -- Transport
 --------------------------------------------------------------------------------
@@ -500,7 +585,7 @@ end)
 
 -- Transport:Record
 
-add_action("Transport:Record:Undo Last Action",
+add_action("Transport:Record:Undo Last Action [Trigger]",
 function(message)
   if message:is_trigger() then
     if(song():can_undo()) then
@@ -509,7 +594,7 @@ function(message)
   end
 end)
 
-add_action("Transport:Record:Redo Last Action",
+add_action("Transport:Record:Redo Last Action [Trigger]",
 function(message)
   if message:is_trigger() then
     if(song():can_redo()) then
@@ -661,14 +746,14 @@ end)
 
 add_action("Transport:Song:Shuffle Enabled [Set]",
 function(message)
-  song().transport.shuffle_enabled = boolean_message_value(
-    message, song().transport.shuffle_enabled)
+  song().transport.groove_enabled = boolean_message_value(
+    message, song().transport.groove_enabled)
 end)
 
 add_action("Transport:Song:Shuffle Enabled [Toggle]",
 function(message)
-  song().transport.shuffle_enabled = toggle_message_value(
-    message, song().transport.shuffle_enabled)
+  song().transport.groove_enabled = toggle_message_value(
+    message, song().transport.groove_enabled)
 end)
 
 
@@ -1114,7 +1199,7 @@ end
 add_action("Track Levels:Volume:Current Track (Pre) [Set]",
 function(message)
   selected_track().prefx_volume:record_value(
-    parameter_message_value(message, selected_track().prefx_volume))
+    parameter_message_fader_value(message, selected_track().prefx_volume))
 end)
 
 add_action("Track Levels:Panning:Current Track (Pre) [Set]",
@@ -1132,7 +1217,7 @@ end)
 add_action("Track Levels:Volume:Current Track (Post) [Set]",
 function(message)
   selected_track().postfx_volume:record_value(
-    parameter_message_value(message, selected_track().postfx_volume))
+    parameter_message_fader_value(message, selected_track().postfx_volume))
 end)
 
 add_action("Track Levels:Panning:Current Track (Post) [Set]",
@@ -1147,7 +1232,7 @@ end)
 add_action("Track Levels:Volume:Master Track (Pre) [Set]",
 function(message)
   master_track().prefx_volume:record_value(
-    parameter_message_value(message, master_track().prefx_volume))
+    parameter_message_fader_value(message, master_track().prefx_volume))
 end)
 
 add_action("Track Levels:Panning:Master Track (Pre) [Set]",
@@ -1165,7 +1250,7 @@ end)
 add_action("Track Levels:Volume:Master Track (Post) [Set]",
 function(message)
   master_track().postfx_volume:record_value(
-    parameter_message_value(message, master_track().postfx_volume))
+    parameter_message_fader_value(message, master_track().postfx_volume))
 end)
 
 add_action("Track Levels:Panning:Master Track (Post) [Set]",
@@ -1186,7 +1271,7 @@ for track_index = 1,MAX_TRACK_MAPPINGS do
     local track = sequencer_track(track_index)
     if track ~= nil then
       track.prefx_volume:record_value(
-        parameter_message_value(message, track.prefx_volume))
+        parameter_message_fader_value(message, track.prefx_volume))
     end
   end)
 
@@ -1197,7 +1282,7 @@ for track_index = 1,MAX_TRACK_MAPPINGS do
     local track = sequencer_track(track_index)
     if track ~= nil then
       track.postfx_volume:record_value(
-        parameter_message_value(message, track.postfx_volume))
+        parameter_message_fader_value(message, track.postfx_volume))
     end
   end)
 
@@ -1246,7 +1331,7 @@ for send_index = 1,MAX_SEND_TRACK_MAPPINGS do
     local track = send_track(send_index)
     if track ~= nil then
       track.prefx_volume:record_value(
-        parameter_message_value(message, track.prefx_volume))
+        parameter_message_fader_value(message, track.prefx_volume))
     end
   end)
 
@@ -1257,7 +1342,7 @@ for send_index = 1,MAX_SEND_TRACK_MAPPINGS do
     local track = send_track(send_index)
     if track ~= nil then
       track.postfx_volume:record_value(
-        parameter_message_value(message, track.postfx_volume))
+        parameter_message_fader_value(message, track.postfx_volume))
     end
   end)
 
@@ -1423,6 +1508,25 @@ function(message)
 end)
 
 
+add_action("Navigation:Sequencer:Current Pattern [Set]",
+function(message)
+  song().selected_pattern_index = message_value(
+    message, song().selected_pattern_index, 1, 1000)
+end)
+
+add_action("Navigation:Sequencer:Decrease Current Pattern [Trigger]",
+function(message)
+  song().selected_pattern_index = dec_message_value(
+    message, song().selected_pattern_index, 1, 1000)
+end)
+
+add_action("Navigation:Sequencer:Increase Current Pattern [Trigger]",
+function(message)
+  song().selected_pattern_index = inc_message_value(
+    message, song().selected_pattern_index, 1, 1000)
+end)
+
+
 -- Navigation:Tracks
 
 add_action("Navigation:Tracks:Current Track [Set]",
@@ -1433,10 +1537,15 @@ function(message)
       message.int_value, 1, #song().tracks)
 
   elseif message:is_rel_value() then
-    song().selected_track_index = clamp_value(
-      song().selected_track_index + message.int_value,
-      1, #song().tracks)
-
+    if (message.int_value < 0) then
+      for i = -1, message.int_value, -1 do
+        song():select_previous_track()
+      end
+    elseif (message.int_value > 0) then
+      for i = 1, message.int_value do
+        song():select_next_track()
+      end
+    end
   end
 
 end)
@@ -1445,9 +1554,7 @@ add_action("Navigation:Tracks:Select Previous Track [Trigger]",
 function(message)
 
   if message:is_trigger() then
-    song().selected_track_index = wrap_value(
-      song().selected_track_index - 1,
-      1, #song().tracks)
+    song():select_previous_track()
   end
 
 end)
@@ -1456,9 +1563,7 @@ add_action("Navigation:Tracks:Select Next Track [Trigger]",
 function(message)
 
   if message:is_trigger() then
-    song().selected_track_index = wrap_value(
-      song().selected_track_index + 1,
-      1, #song().tracks)
+    song():select_next_track()
   end
 
 end)
@@ -1807,7 +1912,7 @@ end)
 
 add_action("GUI:Window:Fullscreen Mode [Toggle]",
 function(message)
-  song().window.fullscreen = toggle_message_value(
+  app().window.fullscreen = toggle_message_value(
     message, app().window.fullscreen)
 end)
 
