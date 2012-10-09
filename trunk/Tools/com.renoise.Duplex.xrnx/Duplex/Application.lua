@@ -261,16 +261,33 @@ function Application:_check_mappings(mappings)
     local cm = self.display.device.control_map
     for k,v in pairs(mappings) do
       for k2,v2 in pairs(v) do
-        if(k2 == "group_name") and not (cm.groups[v2])then
-          local app_name = type(self)
-          local msg = "Message from Duplex: the application %s "
-                    .."has been stopped - the control-map group '%s', "
-                    .."does not exist. Please review the device settings "
-                    .."and/or control-map (other applications will "
-                    .."continue to run)"
-          msg = string.format(msg,app_name,v2)
-          renoise.app():show_warning(msg)
-          return false
+        if(k2 == "group_name") then
+          local matched_group = false
+          local wildcard_idx = string.find(v2,"*")
+          if not wildcard_idx then
+            matched_group = cm.groups[v2]
+          else
+            -- loop through groups, looking for a wildcard match
+            -- (the part until the underscore, followed by digits)
+            local group_basename = v2:sub(0,wildcard_idx-1)
+            for k3,v3 in pairs(cm.groups) do
+              matched_group = string.match(k3,group_basename.."(%d+)")
+              if matched_group then
+                break
+              end
+            end
+          end
+          if not matched_group then
+            local app_name = type(self)
+            local msg = "Message from Duplex: the application %s "
+                      .."has been stopped - the control-map group '%s', "
+                      .."does not exist. Please review the device settings "
+                      .."and/or control-map (other applications will "
+                      .."continue to run)"
+            msg = string.format(msg,app_name,v2)
+            renoise.app():show_warning(msg)
+            return false
+          end
         end
       end
     end

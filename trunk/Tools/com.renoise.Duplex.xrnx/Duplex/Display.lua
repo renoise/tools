@@ -116,7 +116,8 @@ end
 
 --- Apply_tooltips: set tooltips on the virtual display based on the 
 -- tooltip property assigned to existing ui_objects 
--- @param group_name (String) the control-map group name, e.g. "Encoders"
+-- @param group_name (String) optional, restrict to named control-map group 
+--  (note that this value support the use of wildcards, e.g. "Pads_*")
 
 function Display:apply_tooltips(group_name)
   TRACE("Display:apply_tooltips()",group_name)
@@ -129,9 +130,24 @@ function Display:apply_tooltips(group_name)
 
   for _,obj in pairs(self.ui_objects) do
     if (control_map.groups[obj.group_name]) then
-      if (group_name) and (group_name~=obj.group_name) then
-        -- skip this element
+      local matched_group = false
+      if group_name then
+        -- check if group name contain a wildcard (asterisk)
+        local wildcard_pos = string.find(group_name,"*")
+        if wildcard_pos then
+          if ((group_name):sub(1,wildcard_pos-1) == (obj.group_name):sub(1,wildcard_pos-1)) then
+            -- matched group by wildcard
+            matched_group = true
+          end
+        elseif (group_name) and (group_name~=obj.group_name) then
+          -- matched named group
+          matched_group = true
+        end
       else
+        -- match any group
+        matched_group = true
+      end
+      if matched_group then
         for x = 1,obj.width do
           for y = 1, obj.height do
             local columns = control_map.groups[obj.group_name].columns
@@ -172,17 +188,18 @@ function Display:update()
   
   for _,obj in pairs(self.ui_objects) do
 
-    local columns = control_map.groups[obj.group_name].columns
 
     -- skip unused objects, objects that doesn't need update
     if (obj.group_name and obj.dirty) then
 
       obj:draw()
 
-      --print("*** obj, obj.canvas.has_changed",obj, obj.canvas.has_changed)
+      --print("*** Display.update - obj.group_name",obj.group_name)
+      local columns = control_map.groups[obj.group_name].columns
 
       -- loop through the delta array - it contains all recent updates
       if (obj.canvas.has_changed) then
+
 
         for x = 1,obj.width do
           for y = 1, obj.height do
@@ -285,30 +302,32 @@ function Display:set_parameter(elm, obj, point, secondary)
       self.device:send_note_message(num,value,channel)
 
     elseif (msg_type == MIDI_CC_MESSAGE) then
-      local num = self.device:extract_midi_cc(elm.value)
-      local multiple_params = (type(point.val) == "table")
-      if multiple_params and 
-        obj.secondary_index
-      then
-        -- split message in two
-        if secondary then
-          elm = cm:get_indexed_element(obj.secondary_index, obj.group_name)
-          if elm then
-            point.val = point.val[2]
-            value = self.device:point_to_value(
-              point, elm, obj.ceiling)
+
+      if (type(point.val) == "table") then
+
+        -- special case: xypad value is a table 
+
+        if obj.secondary_index then
+
+          if secondary then
+            elm = cm:get_indexed_element(obj.secondary_index, obj.group_name)
+            if elm then
+              point.val = point.val[2]
+              value = self.device:point_to_value(
+                point, elm, obj.ceiling)
+            else
+              --print("could not locate secondary elm")
+            end
           else
-            --print("could not locate secondary elm")
+            -- value-pair, invoke method again
+            Display.set_parameter(self, elm, obj, point,true)
           end
-        else
-          -- value-pair, invoke method again
-          Display.set_parameter(self, elm, obj, point,true)
+
         end
 
       end
 
-
-      -- check if we should send message back to the sender
+      local num = self.device:extract_midi_cc(elm.value)
       self.device:send_cc_message(num,value,channel)
 
     elseif (msg_type == MIDI_PITCH_BEND_MESSAGE) then
@@ -397,13 +416,14 @@ function Display:set_parameter(elm, obj, point, secondary)
 
       widget:remove_notifier(self.ui_notifiers[elm.id])
       widget.value = {
-        x=value[1],
-        y=value[2]
+        x=point.val[1],
+        y=point.val[2]
       }
       widget:add_notifier(self.ui_notifiers[elm.id])
 
     elseif (widget_type == "Rack") then
 
+      -- A keyboard is represented by a Rack ...
 
       if obj._key_update_requested then
         -- complete refresh requested
@@ -569,10 +589,13 @@ function Display:generate_message(value, metadata, released)
   local msg = Message()
   msg.value = value
 
-  --print("Display:generate_message() value",value, metadata, released)
-  --rprint(value)
+  -- the type of message (MIDI/OSC...)
+  -- todo: optimize by including context as function argument
+  msg.context = self.device.control_map:determine_type(metadata.value)
 
-  -- include additional useful meta-properties
+
+
+  -- include these meta-properties
   msg.name = metadata.name
   msg.group_name = metadata.group_name
   msg.id = metadata.id
@@ -587,16 +610,12 @@ function Display:generate_message(value, metadata, released)
     msg.is_note_off = true
   end
 
-  -- the type of message (MIDI/OSC...)
-  -- todo: optimize by including context as function argument
-  msg.context = self.device.control_map:determine_type(metadata.value)
   if (msg.context == OSC_MESSAGE) then
     msg.is_osc_msg = true
   end 
 
   -- for MIDI devices, create the "virtual" midi message
-  -- todo: optimize by checking if midi_msg is needed (for example, it's 
-  -- most likely defined when coming from an actual MIDI device)
+
   if (self.device.protocol == DEVICE_MIDI_PROTOCOL) then
     msg.channel = self.device:extract_midi_channel(metadata.value) or 
       self.device.default_midi_channel
@@ -748,7 +767,7 @@ function Display:_walk_table(t, done, deep)
           ]]
           local press_notifier = function(value) 
             -- output the maximum value
-            --print("Display: press_notifier - (context==MIDI_NOTE_MESSAGE):",(context==MIDI_NOTE_MESSAGE))
+            --print("*** Display: press_notifier - (context==MIDI_NOTE_MESSAGE):",(context==MIDI_NOTE_MESSAGE))
             if (context==MIDI_NOTE_MESSAGE) then
               local pitch = view_obj.meta.index
               local velocity = view_obj.meta.maximum
@@ -762,7 +781,7 @@ function Display:_walk_table(t, done, deep)
           local release_notifier = function(value) 
             -- output the minimum value
             local released = true
-            --print("Display: release_notifier - (context==MIDI_NOTE_MESSAGE):",(context==MIDI_NOTE_MESSAGE))
+            --print("*** Display: release_notifier - (context==MIDI_NOTE_MESSAGE):",(context==MIDI_NOTE_MESSAGE))
             if (context==MIDI_NOTE_MESSAGE) then
               local pitch = view_obj.meta.index
               local velocity = view_obj.meta.minimum
@@ -1306,19 +1325,6 @@ function Display:_validate_param(xargs)
 
   -- common Param properties
   
-  -- name
-  --[[
-  if (xargs.name == nil) then
-    renoise.app():show_warning(
-      ('Whoops! The controlmap \'%s\' specifies no \'name\' property in one '..
-       'of its \'Param\' fields.\n\n'..
-       'Please add a name like name="Button #1" to all <Param>\'s in the '..
-       'controlmap.'):format(self.device.control_map.file_path))
-
-    xargs.name = "Undefined"
-  end
-  ]]
-  
   -- value
   if (xargs.value == nil or 
       self.device.control_map:determine_type(xargs.value) == nil)
@@ -1360,9 +1366,9 @@ function Display:_validate_param(xargs)
     then
       renoise.app():show_warning(
         ('Whoops! The controlmap \'%s\' specifies no valid \'minimum\' '..
-         'or \'maximum\' property in one of its \'Param\' fields.\n\n'..
+         'or \'maximum\' property in the \'Param\' field named \'%s\'.\n\n'..
          'Please use a number >= 0  (depending on the value, MIDI type).'
-        ):format(self.device.control_map.file_path))
+        ):format(self.device.control_map.file_path,xargs.name))
 
       xargs.minimum = 0 
       xargs.maximum = 127

@@ -5,11 +5,13 @@
 Load the provided automap configuration before using (the file is located in Controllers/Remote-SL-MKII)</Description>
 	<Parameters>
 		<Row>
-			<!--
+			<Group name="XYPad" >
+				<Param value="CC#57" type="fader" name="XYPad_X" orientation="vertical" size="4" maximum="127" minimum="0" />
+				<Param value="CC#56" type="fader" name="XYPad_Y" orientation="vertical" size="4" maximum="127" minimum="0" />
+			</Group>
 			<Group name="PB" >
 				<Param value="PB|Ch1" type="fader" size="4" orientation="vertical" name="" maximum="127" minimum="0"/>
 			</Group>
-			-->
 			<Column>
 				<Group name="EncoderButtons" orientation="horizontal">
 					<Param value="CC#24" type="pushbutton" name="CC# 24" maximum="127" minimum="0" />
@@ -94,14 +96,6 @@ Load the provided automap configuration before using (the file is located in Con
 					<Param value="CC#55" name="" type="pushbutton" maximum="127" minimum="0"/>
 				</Group>
 			</Column>
-			<Column>
-				<Group name="XYPad" orientation="horizontal">
-					<Param value="CC#56" name="XYPadY" type="fader" skip_echo="true" orientation="vertical" size="6" maximum="127" minimum="0"/>
-					<Param value="CC#57" name="XYPadX" type="fader" skip_echo="true" orientation="vertical" size="6" maximum="127" minimum="0"/>
-				</Group>
-			</Column>
-			<!--
-			-->
 		</Row>
 	</Parameters>
 </Device>

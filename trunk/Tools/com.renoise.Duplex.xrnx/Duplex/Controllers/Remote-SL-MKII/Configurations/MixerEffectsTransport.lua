@@ -3,7 +3,7 @@
 duplex_configurations:insert {
 
   -- configuration properties
-  name = "Mixer + Effects + Transport",
+  name = "Mixer + Effects + Drums + Transport",
   pinned = true,
 
   -- device properties
@@ -38,6 +38,10 @@ duplex_configurations:insert {
           group_name = "SliderButtons",
         },
         ]]
+      },
+      options = {
+        page_size = 2,     -- "1",
+        follow_track = 1,  -- "Follow track enabled"
       }
     },
     TrackSelector = {
@@ -72,26 +76,12 @@ duplex_configurations:insert {
         }
       }
     },
-    --[[
-    ]]
-    XYPad = {
-      mappings = {
-        y_slider = {
-          group_name = "XYPad",
-          index = 1,
-        },
-        x_slider = {
-          group_name = "XYPad",
-          index = 2,
-        },
-      }
-    },
     Drumpads = {
       application = "Keyboard",
       mappings = {
         key_grid = {
           group_name = "Drumpads",
-          index = 1,
+          --index = 1,
         },
       },
       options = {
@@ -101,23 +91,6 @@ duplex_configurations:insert {
         "channel_pressure","pitch_bend","release_type","button_width","button_height"
       },
     },
-    --[[
-    Drumpads2 = {
-      application = "Keyboard",
-      mappings = {
-        key_grid = {
-          group_name = "Drumpads",
-          index = 1,
-        },
-      },
-      options = {
-        release_type = 2, -- the Remote sends multiple note-on, but only a single note-off
-      },
-      hidden_options = {  -- display minimal set of options
-        "channel_pressure","pitch_bend","release_type","button_width","button_height"
-      },
-    },
-    ]]
     Transport = {
       mappings = {
         goto_previous = {

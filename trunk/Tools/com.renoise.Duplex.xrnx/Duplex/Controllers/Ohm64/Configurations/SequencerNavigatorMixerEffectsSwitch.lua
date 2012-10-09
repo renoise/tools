@@ -25,10 +25,10 @@ duplex_configurations:insert {
     Mixer = {
         mappings = {
             panning = {
-                group_name = "PanningLeft",
+                group_name = "Panning_*",
             },
             levels = {
-                group_name = "VolumeLeft",
+                group_name = "Volume_*",
             },
         },
         options = {
@@ -38,35 +38,13 @@ duplex_configurations:insert {
             page_size = 5,
         }
     },
-    Mixer2 = {
-        application = "Mixer",
-        mappings = {
-            panning = {
-                group_name = "PanningRight",
-            },
-            levels = {
-                group_name = "VolumeRight",
-            }, 
-            --       Setting the crossfader to master volume may be too annoying, uncomment if you wish to try it!
-            master = {
-                group_name = "CrossFader",
-                index = 2
-            },
-        },
-        options = {
-            --        invert_mute = 1,
-            follow_track = 1,
-            track_offset = 5,
-            page_size = 5,
-        }
-    },
     StepSequencer = {
         mappings = {
             grid = {
                 group_name = "Grid",
             },
             level = {
-                group_name = "ButtonsRight",
+                group_name = "Buttons_2",
                 orientation = HORIZONTAL,
                 index = 1
             },
@@ -81,7 +59,7 @@ duplex_configurations:insert {
                 index = 2
             },
             transpose = {
-                group_name = "ButtonsLeft",
+                group_name = "Buttons_1",
                 index = 1
             },
         },

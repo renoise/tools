@@ -221,15 +221,22 @@ Mixer.available_mappings = {
   },
   levels = {
     description = "Mixer: Track volume",
+    distributable = true,
+    greedy = true,
   },
   panning = {
     description = "Mixer: Track panning",
+    distributable = true,
+    greedy = true,
   },
   mute = {
     description = "Mixer: Mute track",
+    distributable = true,
+    greedy = true,
   },
   solo = {
     description = "Mixer: Solo track",
+    greedy = true,
   },
   page = {
     description = "Mixer: Track navigator",
@@ -669,47 +676,41 @@ end
 function Mixer:_build_app()
   TRACE("Mixer:_build_app(")
 
+  local volume_group = nil
   local volume_count = nil
+
+  local mutes_group = nil
   local mutes_count = nil
+
+  local pannings_group = nil
   local pannings_count = nil
+
   local solos_count = nil
+
   local volume_size = nil
   local master_size = nil
   local grid_w = nil
   local grid_h = nil
 
-  -- check if the control-map describes a grid controller
   local cm = self.display.device.control_map
+
+  -- check if the control-map describes a grid controller
   local slider_grid_mode = cm:is_grid_group(self.mappings.levels.group_name)
   
   --TRACE("Mixer:slider_grid_mode",slider_grid_mode)
 
-  local embed_mutes = (self.mappings.mute.group_name == 
+  local embed_mutes = slider_grid_mode and (self.mappings.mute.group_name == 
     self.mappings.levels.group_name)
   local embed_solos = (self.mappings.solo.group_name == 
     self.mappings.levels.group_name)
   local embed_master = (self.mappings.master.group_name == 
     self.mappings.levels.group_name)
 
-  --TRACE("Mixer:embed_mutes",embed_mutes)
-  --TRACE("Mixer:embed_master",embed_master)
-
-  -- check that embedded controls are for grid controller
-  --[[
-  if not slider_grid_mode and
-    (embed_mutes or embed_solos) 
-  then
-    local msg = "Message from Mixer: embedded mappings are only "
-              .."available for a grid controller (please read the "
-              .."Mixer.lua file for more information)"
-    renoise.app():show_warning(msg)
-    return false
-  end
-  ]]
 
   -- determine the size of each group of controls
-  local group = cm.groups[self.mappings.levels.group_name]
-  if group then
+  volume_group = cm:get_params(self.mappings.levels.group_name,self.mappings.levels.index)
+
+  if volume_group then
     if slider_grid_mode then
       grid_w,grid_h = cm:get_group_dimensions(self.mappings.levels.group_name)
     end
@@ -717,14 +718,14 @@ function Mixer:_build_app()
       volume_count = (embed_master) and grid_w-1 or grid_w
       volume_size = grid_h
     else
-      volume_count = #group
+      volume_count = #volume_group
       volume_size = 1
     end
   end
 
-  local group = cm.groups[self.mappings.panning.group_name]
-  if group then
-    pannings_count = #group
+  pannings_group = cm:get_params(self.mappings.panning.group_name,self.mappings.panning.index)
+  if pannings_group then
+    pannings_count = #pannings_group
   end
 
   local group = cm.groups[self.mappings.solo.group_name]
@@ -740,8 +741,8 @@ function Mixer:_build_app()
     end
   end
 
-  local group = cm.groups[self.mappings.mute.group_name]
-  if group then
+  mutes_group = cm:get_params(self.mappings.mute.group_name,self.mappings.mute.index)
+  if mutes_group then
     if slider_grid_mode then
       if embed_mutes then
         mutes_count = (embed_master) and grid_w-1 or grid_w
@@ -749,7 +750,7 @@ function Mixer:_build_app()
         mutes_count = volume_count
       end
     else
-      mutes_count = #group
+      mutes_count = #mutes_group
     end
   end
 
@@ -810,18 +811,19 @@ function Mixer:_build_app()
   self._mutes = (self.mappings.mute.group_name) and {} or nil
   self._solos = (self.mappings.solo.group_name) and {} or nil
 
-    -- sliders --------------------------------------------
+    -- volume --------------------------------------------
 
   if self._volume then
     for control_index = 1,volume_count do
+      local param = volume_group[control_index]
       local y_pos = (embed_mutes) and ((embed_solos) and 3 or 2) or 1
       local c = UISlider(self.display)
-      c.group_name = self.mappings.levels.group_name
+      c.group_name = param.group_name
       c.tooltip = self.mappings.levels.description
       if (slider_grid_mode) then
-        c:set_pos(control_index,y_pos)
+        c:set_pos(param.index,y_pos)
       else
-        c:set_pos(control_index)
+        c:set_pos(param.index)
       end
       c.toggleable = true
       c.flipped = false
@@ -831,11 +833,13 @@ function Mixer:_build_app()
       -- slider changed from controller
       c.on_change = function(obj) 
 
+        --print("*** volume changed from controller - obj.value",obj.value)
+
         if (not self.active) then
           return false
         end
 
-        local track_index = self._track_offset+control_index
+        local track_index = self._track_offset + control_index
 
         if (track_index == get_master_track_index()) then
           if (self._master) then
@@ -844,15 +848,15 @@ function Mixer:_build_app()
           end
         elseif (track_index > #renoise.song().tracks) then
           -- track is outside bounds
-          return false
+          return 
         end
 
         local track = renoise.song().tracks[track_index]
         local volume = (self._postfx_mode) and 
           track.postfx_volume or track.prefx_volume
 
-        -- when take-over is enabled, this can return false 
-        return self:_set_volume(volume,track_index,obj)
+        self:_set_volume(volume,track_index,obj)
+
       end
       
       self:_add_component(c)
@@ -864,15 +868,15 @@ function Mixer:_build_app()
     
 
 
-    -- encoders -------------------------------------------
+    -- panning -------------------------------------------
 
   if self._panning then
     for control_index = 1,pannings_count do
-      TRACE("Mixer:adding panning#",control_index)
+      local param = pannings_group[control_index]
       local c = UISlider(self.display)
-      c.group_name = self.mappings.panning.group_name
+      c.group_name = param.group_name
       c.tooltip = self.mappings.panning.description
-      c:set_pos(control_index)
+      c:set_pos(param.index)
       c.toggleable = true
       c.flipped = false
       c.ceiling = 1.0
@@ -881,6 +885,9 @@ function Mixer:_build_app()
       
       -- slider changed from controller
       c.on_change = function(obj) 
+
+        --print("*** panning changed from controller - obj.value",obj.value)
+        
         local track_index = self._track_offset + control_index
 
         if (not self.active) then
@@ -888,21 +895,18 @@ function Mixer:_build_app()
 
         elseif (track_index > #renoise.song().tracks) then
           -- track is outside bounds
-          return false
+          return 
 
         else
+
           local track = renoise.song().tracks[track_index]
-          
           local panning = (self._postfx_mode) and 
             track.postfx_panning or track.prefx_panning
-        
           panning.value = obj.value
-          
           if self._record_mode then
             self.automation:add_automation(track_index,panning,obj.value)
           end
 
-          return true
         end
       end
       
@@ -914,28 +918,32 @@ function Mixer:_build_app()
         
 
     -- mute buttons -----------------------------------
+
+    local precheck = function(track_index)
+
+    end
     
   if self._mutes then
     for control_index = 1,mutes_count do
       TRACE("Mixer:adding mute#",control_index)
+      local param = mutes_group[control_index]
       local c = UIButton(self.display)
-      c.group_name = self.mappings.mute.group_name
+      c.group_name = param.group_name
       c.tooltip = self.mappings.mute.description
-      c:set_pos(control_index)
+      c:set_pos(param.index)
       c.active = false
 
-      -- mute state changed from controller
-      -- (update the slider.dimmed property)
+      -- value changed via button
       c.on_press = function(obj) 
         local track_index = self._track_offset + control_index
 
+        --print("on_press")
+
         if (not self.active) then
           return false
-        
         elseif (track_index == get_master_track_index()) then
           -- can't mute the master track
           return 
-        
         elseif (track_index > #renoise.song().tracks) then
           -- track is outside bounds
           return 
@@ -943,6 +951,38 @@ function Mixer:_build_app()
         
         local track = renoise.song().tracks[track_index]
         local track_is_muted = (track.mute_state ~= MUTE_STATE_ACTIVE)
+
+        if (track_is_muted) then
+          track:unmute()
+        else 
+          track:mute()
+          local mute_state = (self.options.mute_mode.value==MUTE_MODE_MUTE)
+            and MUTE_STATE_MUTED or MUTE_STATE_OFF
+          track.mute_state = mute_state
+        end
+
+        self:set_dimmed(control_index)
+
+      end
+
+      -- value changed via slider
+      c.on_change = function(obj,val)
+        local track_index = self._track_offset + control_index
+
+        if (not self.active) then
+          return false
+        elseif (track_index == get_master_track_index()) then
+          -- can't mute the master track
+          return 
+        elseif (track_index > #renoise.song().tracks) then
+          -- track is outside bounds
+          return 
+        end
+  
+        -- turn on if more than midways
+        local ceiling = 127 -- todo !!!
+        local track_is_muted = (val > ceiling/2)
+        local track = renoise.song().tracks[track_index]
 
         if (track_is_muted) then
           track:unmute()
@@ -1060,10 +1100,7 @@ function Mixer:_build_app()
         local volume = (self._postfx_mode) and 
           track.postfx_volume or track.prefx_volume
 
-        local was_set = self:_set_volume(volume,track_index,obj)
-
-        -- when take-over is enabled, this can return false 
-        return was_set
+        self:_set_volume(volume,track_index,obj)
         
       end
     end 
@@ -1103,7 +1140,7 @@ function Mixer:_build_app()
 
       end
       self:_init_take_over_volume()
-      return true
+
     end
     
     self:_add_component(c)

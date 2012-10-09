@@ -25,44 +25,18 @@ duplex_configurations:insert {
     Mixer = {
       mappings = {
         panning = {
-          group_name = "PanningLeft",
+          group_name = "Panning_*",
         },
         levels = {
-          group_name = "VolumeLeft",
+          group_name = "Volume_*",
         },
         mute = {
-          group_name = "ButtonsLeft",
+          group_name = "Buttons_*",
         },
       },
       options = {
         invert_mute = 1,
         follow_track = 1,
---        track_offset = 1,
-        page_size = 5,
-      }
-    },
-    Mixer2 = {
-      application = "Mixer",
-      mappings = {
-        panning = {
-          group_name = "PanningRight",
-        },
-        levels = {
-          group_name = "VolumeRight",
-        },
-        mute = {
-          group_name = "ButtonsRight",
-        },
---       Setting the crossfader to master volume may be too annoying, uncomment if you wish to try it!
---        master = {
---          group_name = "CrossFader",
---          index = 2
---        },
-      },
-      options = {
-        invert_mute = 1,
-        follow_track = 1,
-        track_offset = 5,
         page_size = 5,
       }
     },

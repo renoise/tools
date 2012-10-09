@@ -40,7 +40,8 @@ duplex_configurations:insert {
         }
       },
       options = {
-        pre_post = 2
+        pre_post = 2,
+        follow_track = 1,  -- "Follow track enabled"
       }
     }
   }

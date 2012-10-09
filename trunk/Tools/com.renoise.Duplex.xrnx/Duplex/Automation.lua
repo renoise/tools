@@ -133,9 +133,10 @@ end
 -- @param track_idx (Number) the track index
 -- @param parameter (DeviceParameter object)
 -- @param value (number between 0-1)
+-- @param playmode (number), see renoise.PatternTrackAutomation
 
-function Automation:add_automation(track_idx,parameter,value)
-  TRACE("Automation:add_automation",track_idx,parameter,value)
+function Automation:add_automation(track_idx,parameter,value,playmode)
+  TRACE("Automation:add_automation",track_idx,parameter,value,playmode)
 
   if not parameter.is_automatable then
     print("Could not write automation, parameter is not automatable")
@@ -180,7 +181,7 @@ function Automation:add_automation(track_idx,parameter,value)
   -- touch mode, write to pattern and return
   if not self.latch_record then
     --print("*** touch mode: add point at ",line,value)
-    self:add_point(ptrack_auto,line,value)
+    self:add_point(ptrack_auto,line,value,nil,playmode)
     return
   end
 
@@ -261,7 +262,7 @@ function Automation:add_automation(track_idx,parameter,value)
 
 
   if lane then
-    self:add_point(ptrack_auto,line,value)
+    self:add_point(ptrack_auto,line,value,nil,playmode)
     if add_notifier then
       lane.observables:insert(ptrack.automation_observable)
       ptrack.automation_observable:add_notifier(self,automation_handler)
@@ -297,7 +298,7 @@ function Automation:add_automation(track_idx,parameter,value)
     end
     --a.device_name = ptrack_auto.dest_device.name
 
-    self:add_point(ptrack_auto,line,value)
+    self:add_point(ptrack_auto,line,value,nil,playmode)
 
   end
 
@@ -313,14 +314,20 @@ end
 -- @param line (number), line in pattern
 -- @param value (number), between 0 and 1
 -- @param automation_lane (AutomationLane), when called from update()
+-- @param playmode (number), [optional] PatternTrackAutomation.PLAYMODE_xx
 
-function Automation:add_point(ptrack_auto,line,value,automation_lane)
-  TRACE("Automation:add_point()",ptrack_auto,line,value,automation_lane)
+function Automation:add_point(ptrack_auto,line,value,automation_lane,playmode)
+  TRACE("Automation:add_point()",ptrack_auto,line,value,automation_lane,playmode)
 
   local seq_idx = renoise.song().selected_sequence_index
   local pattern = renoise.song().selected_pattern
   local seq_loop_end = renoise.song().transport.loop_sequence_end
   local seq_loop_start = renoise.song().transport.loop_sequence_start
+
+  if playmode and (ptrack_auto.playmode ~= playmode) then
+    print("switched playmode from/to",ptrack_auto.playmode,playmode)
+    ptrack_auto.playmode = playmode
+  end
 
   if (line <= pattern.number_of_lines) then
     -- normal point

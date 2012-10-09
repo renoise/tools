@@ -61,10 +61,7 @@
 --==============================================================================
 
 -- Before we launch the application, import GlobalMidiActions
--- Note: the file containing extra information about these
--- mappings (MidiActions_bindings.lua) is automatically 
--- imported when Duplex starts
-
+-- (prefer the user-specified version, then the default)
 
 local actions_loaded = false
 
@@ -253,6 +250,15 @@ MidiActions.default_palette = {
   active   = { color = {0xFF,0xFF,0xFF}, text = "■", val=true },
   inactive = { color = {0x00,0x00,0x00}, text = "·", val=false },
 }
+
+
+-- include the file with extra bindings info 
+-- (such as which observable values to look for, etc.)
+
+local old_package_path = package.path
+package.path = renoise.tool().bundle_path .. "Duplex/Applications/Extra/?.lua"
+require "MidiActions_bindings"
+package.path = old_package_path
 
 
 --==============================================================================
@@ -1138,8 +1144,13 @@ function MidiActions:_build_app()
     else
       -- check if we are dealing with a slider 
       -- made from individual buttons ("grid mode")
-      grid_size = cm:get_group_size(map.group_name)
-      print("grid_size",grid_size)
+      if map.orientation == HORIZONTAL then
+        grid_size = cm:count_columns(map.group_name)
+      elseif map.orientation == VERTICAL then
+        grid_size = cm:count_rows(map.group_name)
+      else
+        grid_size = cm:get_group_size(map.group_name)
+      end
       if grid_size then
         input_method = "slider"
       end

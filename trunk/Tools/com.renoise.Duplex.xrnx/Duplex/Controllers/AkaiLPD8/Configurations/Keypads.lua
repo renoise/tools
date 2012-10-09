@@ -22,7 +22,6 @@ duplex_configurations:insert {
       mappings = {
         key_grid = {
           group_name = "Pads",
-          index = 1,
         },
       },
       options = {

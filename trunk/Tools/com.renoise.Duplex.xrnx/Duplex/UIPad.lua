@@ -46,22 +46,34 @@ end
 function UIPad:do_change(msg)
   TRACE("UIPad:do_change()",msg)
 
+  -- test for group
+  if not (self.group_name == msg.group_name) then
+    return
+  end
+
+  -- test for position
+  if not self:test(msg.column,msg.row) then
+    return
+  end
+
   if (self.on_change ~= nil) then
 
-    if not (self.group_name == msg.group_name) then
-      return false
+    local val_x,val_y = nil,nil
+
+    -- check if message was sent from a sub-parameter
+    if msg.param.parent_id then
+      val_x = (msg.param.index == 1) and msg.value or self.value[1]
+      val_y = (msg.param.index == 2) and msg.value or self.value[2]
+    else
+      val_x = msg.value[1]
+      val_y = msg.value[2]
     end
-    if not self:test(msg.column,msg.row) then
-      return false
-    end
-    local val_x = msg.value[1]
-    local val_y = msg.value[2]
     
     return self:set_value(val_x,val_y)
 
   end
 
-  return false
+  return true
 
 end
 
@@ -82,6 +94,8 @@ function UIPad:set_value(val_x,val_y,skip_event)
   then
     self._cached_value = {self.value[1],self.value[2]}
     self.value = {val_x,val_y}
+
+    --print("*** UIPad:set_value - val_x,val_y",val_x,val_y)
 
     if (skip_event) then
       self:invalidate()
@@ -109,7 +123,7 @@ end
 --- update the UIComponent canvas
 
 function UIPad:draw()
-  TRACE("UIPad:draw()")
+  TRACE("UIPad:draw() - self.value",self.value)
 
   -- update dial/fader 
   local point = CanvasPoint()

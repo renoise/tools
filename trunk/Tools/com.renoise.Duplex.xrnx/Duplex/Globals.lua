@@ -97,7 +97,7 @@ CONTROLMAP_TYPES = {
 
 VERTICAL = 80
 HORIZONTAL = 81
-
+NO_ORIENTATION = 82
 
 -- Renoise API consts
 
@@ -576,8 +576,8 @@ end
 -- {"^ControlMap:", "^Display:"} -> show "Display:" and "ControlMap:"
 
 local _trace_filters = nil
---local _trace_filters = {"^OscDevice","^Keyboard"}
---local _trace_filters = {"^MidiActions"} --,"^Application"}
+--local _trace_filters = {"^Repeater"}
+--local _trace_filters = {"^Automation","^Repeater"}
 --local _trace_filters = {".*"}
 
 --------------------------------------------------------------------------------

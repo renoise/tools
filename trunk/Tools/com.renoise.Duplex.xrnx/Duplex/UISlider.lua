@@ -137,11 +137,18 @@ end
 function UISlider:do_press(msg)
   TRACE("UISlider:do_press()",msg)
 
-  if not self:test(msg.group_name,msg.column, msg.row) then
-    return false
+  if not self:test(msg) then
+    return 
   end
 
-  local idx = self:_determine_index_by_pos(msg.column, msg.row)
+  local idx = nil
+
+  if (self._orientation == HORIZONTAL) or (self._orientation == VERTICAL) then
+    idx = self:_determine_index_by_pos(msg.column, msg.row)
+  else
+    idx = msg.index
+  end
+
   if (self.toggleable and self.index == idx) then
     idx = 0
   end
@@ -164,9 +171,10 @@ end
 function UISlider:do_release(msg)
   TRACE("UISlider:do_release()",msg)
 
-  if not self:test(msg.group_name,msg.column, msg.row) then
-    return false
+  if not self:test(msg) then
+    return 
   end
+
   if (msg.input_method == CONTROLLER_PUSHBUTTON) then
     self:force_update()
   end
@@ -185,16 +193,26 @@ end
 function UISlider:do_change(msg)
   TRACE("UISlider:do_change()",msg)
 
-  if not self:test(msg.group_name,msg.column,msg.row) then
-    return false
+  if not self:test(msg) then
+    return 
   end
-  -- scale from the message range to the sliders range
-  local val = (msg.value / msg.max) * self.ceiling
-  
-  if not self:set_value(val) then
-    return false
-  end
-  
+
+  -- look for event handlers
+  if (self.on_change ~= nil) then
+
+    -- scale from the message range to the sliders range
+    local val = (msg.value / msg.max) * self.ceiling
+    
+    if not self:output_quantize(val) then
+      return true
+    end
+
+    if (self:set_value(val)==false) then
+      return false
+    end
+
+  end 
+
   return true
 
 end
@@ -210,29 +228,27 @@ end
 function UISlider:set_value(val,skip_event)
   TRACE("UISlider:set_value()",val,skip_event)
 
+
+  --local idx = math.abs(math.ceil(((self.steps/self.ceiling)*val)-0.5))
+  --print("*** SET_VALUE, idx",idx,"self._cached_index",self._cached_index,"self._cached_value",self._cached_value,"val",val)
+  --if (self._cached_index ~= idx) or
+  --   (self._cached_value ~= val)
+  --then
+
+
   local idx = math.abs(math.ceil(((self.steps/self.ceiling)*val)-0.5))
-  if (self._cached_index ~= idx) or
-     (self._cached_value ~= val)
-  then
+  self._cached_index = idx
+  self._cached_value = val
+  self.value = val
+  self.index = idx
 
-    if not self:output_quantize(val) then
-      -- silently ignore message
-      return
-    else
+  if (skip_event) then
+    self:invalidate()
+  else
+    return self:_invoke_handler()
+  end
 
-      self._cached_index = idx
-      self._cached_value = val
-      self.value = val
-      self.index = idx
-
-      if (skip_event) then
-        self:invalidate()
-      else
-        return self:_invoke_handler()
-      end
-    end
-
-  end  
+  --end  
 
 end
 
@@ -329,10 +345,14 @@ end
 function UISlider:set_orientation(value)
   TRACE("UISlider:set_orientation",value)
 
-  if (value == HORIZONTAL) or (value == VERTICAL) then
-    self._orientation = value
-    self:set_size(self._size) -- update canvas
-  end
+  assert((value == NO_ORIENTATION) or 
+    (value == HORIZONTAL) or 
+    (value == VERTICAL),
+    "Warning: UISlider received unexpected UI orientation")
+
+  self._orientation = value
+  self:set_size(self._size)
+
 end
 
 --------------------------------------------------------------------------------
@@ -361,10 +381,9 @@ function UISlider:set_size(size)
 
   if (self._orientation == VERTICAL) then
     UIComponent.set_size(self, 1, size)
-  else
-    assert(self._orientation == HORIZONTAL, 
-      "Internal Error. Please report: unexpected UI orientation")
-      
+  elseif (self._orientation == HORIZONTAL) or
+    (self._orientation == NO_ORIENTATION)
+  then
     UIComponent.set_size(self, size, 1)
   end
 end
@@ -373,25 +392,24 @@ end
 
 --- Expanded UIComponent test: look for group name, event handlers before
 -- proceeding with the normal UIComponent test
--- @param group_name (String)
--- @param column (Number)
--- @param row (Number)
+-- @param msg (Message)
 -- @return boolean, false when criteria is not met
 
-function UISlider:test(group_name,column,row)
+function UISlider:test(msg)
 
   -- look for group name
-  if not (self.group_name == group_name) then
+  if not (self.group_name == msg.group_name) then
     return false
   end
 
-  -- look for event handlers
-  if (self.on_change == nil) then  
-    return false
-  end 
-
   -- test the X/Y position
-  return UIComponent.test(self,column,row)
+  if (self._orientation == VERTICAL) or
+    (self._orientation == HORIZONTAL)
+  then
+    return UIComponent.test(self,msg.column,msg.row)
+  end
+
+  return true
 
 end
 
@@ -401,7 +419,7 @@ end
 --- Update the UIComponent canvas
 
 function UISlider:draw()
-  TRACE("UISlider:draw()")
+  TRACE("UISlider:draw() - self.value",self.value)
 
   if (self._size==1) and not (self.button_mode) then
     -- update dial/fader 
@@ -419,7 +437,13 @@ function UISlider:draw()
       end
 
       for i = 1,self._size do
+
         local x,y = 1,1
+        if (self._orientation == VERTICAL) then 
+          y = i
+        else
+          x = i  
+        end
 
         local point = CanvasPoint()
         point:apply(self.palette.background)
@@ -446,11 +470,6 @@ function UISlider:draw()
             self.palette.track_dimmed or self.palette.track)
         end
 
-        if (self._orientation == VERTICAL) then 
-          y = i
-        else
-          x = i  
-        end
         self.canvas:write(point, x, y)
       end
 
@@ -520,12 +539,14 @@ function UISlider:_determine_index_by_pos(column,row)
   if (self._orientation == VERTICAL) then
     idx = row
     offset = self.y_pos
-  else
-    assert(self._orientation == HORIZONTAL, 
-      "Internal Error. Please report: unexpected UI orientation")
-      
+  elseif (self._orientation == HORIZONTAL) then
     idx = column
     offset = self.x_pos
+  elseif (self._orientation == NO_ORIENTATION) then
+    idx = column
+    offset = self.x_pos
+    --[[
+    ]]
   end
 
   if not (self.flipped) then
@@ -544,11 +565,12 @@ end
 -- @return true when message was handled, false when not
 
 function UISlider:_invoke_handler()
+  TRACE("UISlider:_invoke_handler")
 
   -- when calling set_index() and set_value() before we
   -- have assigned a method, return 'true' (so we don't
   -- accidentially pass messages at construction time)
-  if not self.on_change then
+  if (self.on_change == nil) then
     return true
   end
 
