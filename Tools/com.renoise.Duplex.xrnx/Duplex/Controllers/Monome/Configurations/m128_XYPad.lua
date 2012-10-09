@@ -7,7 +7,7 @@
 duplex_configurations:insert {
 
   -- configuration properties
-  name = "XYPad",
+  name = "XYPad + Repeater",
   pinned = true,
 
   -- device properties
@@ -23,6 +23,7 @@ duplex_configurations:insert {
     protocol = DEVICE_OSC_PROTOCOL,
   },
   applications = {
+    --[[
     Grid8x3 = {
       application = "XYPad",
       mappings = {
@@ -43,7 +44,27 @@ duplex_configurations:insert {
       application = "XYPad",
       mappings = {
         xy_grid = {
-          group_name = "Grid8x3_Extra",
+          group_name = "Grid8x1",
+        },
+      }
+    },
+    ]]
+    Repeater = {
+      mappings = {
+        grid = {
+          group_name = "Grid8x3"
+        },
+        lock_button = {
+          group_name = "Grid8x1",
+          index = 1
+        },
+        prev_device = {
+          group_name = "Grid8x1",
+          index = 2
+        },
+        next_device = {
+          group_name = "Grid8x1",
+          index = 3
         },
       }
     },
