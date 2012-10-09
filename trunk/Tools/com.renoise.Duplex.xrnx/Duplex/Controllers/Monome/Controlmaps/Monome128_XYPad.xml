@@ -84,7 +84,7 @@
 						<Param value="/grid/led/set 8 3 %i"  action="/grid/key 8 3 %i"  type="button" maximum="1" minimum="0"/>
 						<Param value="/grid/led/set 8 4 %i"  action="/grid/key 8 4 %i"  type="button" maximum="1" minimum="0"/>
 					</Group>
-					<Group name="Grid8x3_Extra" columns="1">
+					<Group name="Grid8x1" columns="1">
 						<Param value="/grid/led/set 8 5 %i"  action="/grid/key 8 5 %i"  type="button" maximum="1" minimum="0"/>
 						<Param value="/grid/led/set 8 6 %i"  action="/grid/key 8 6 %i"  type="button" maximum="1" minimum="0"/>
 						<Param value="/grid/led/set 8 7 %i"  action="/grid/key 8 7 %i"  type="button" maximum="1" minimum="0"/>
