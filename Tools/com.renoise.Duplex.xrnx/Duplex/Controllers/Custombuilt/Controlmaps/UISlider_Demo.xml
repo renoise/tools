@@ -1,0 +1,90 @@
+<Device>
+  <Name>UISlider Controller</Name>
+  <Author>danoise</Author>
+  <Description>Meant to be controlled with the UISlider demo-configuration</Description>
+  <Parameters>
+	<Row>
+		<Column>
+			<Row>
+				<Group name="UISlider">
+					<Param value="CC#1" type="dial" size="4" minimum="0" maximum="127" />
+					<Param value="CC#2" type="fader" size="4" orientation="vertical" minimum="0" maximum="127" />
+				</Group>
+				<Column>
+					<Group name="UISlider_button" orientation="vertical">
+						<Param value="CC#3" type="button" size="1" minimum="0" maximum="127" />
+					</Group>
+					<Group name="UISlider_column" orientation="vertical">
+						<Param value="CC#4" type="button" size="1" minimum="0" maximum="127" />
+						<Param value="CC#5" type="button" size="1" minimum="0" maximum="127" />
+						<Param value="CC#6" type="button" size="1" minimum="0" maximum="127" />
+						<Param value="CC#7" type="button" size="1" minimum="0" maximum="127" />
+						<Param value="CC#8" type="button" size="1" minimum="0" maximum="127" />
+						<Param value="CC#9" type="button" size="1" minimum="0" maximum="127" />
+					</Group>
+				</Column>
+				<Column>
+					<Group name="UISlider_row" orientation="horizontal">
+						<Param value="CC#3" type="button" size="1" minimum="0" maximum="127" />
+						<Param value="CC#4" type="button" size="1" minimum="0" maximum="127" />
+						<Param value="CC#5" type="button" size="1" minimum="0" maximum="127" />
+						<Param value="CC#6" type="button" size="1" minimum="0" maximum="127" />
+						<Param value="CC#7" type="button" size="1" minimum="0" maximum="127" />
+						<Param value="CC#8" type="button" size="1" minimum="0" maximum="127" />
+					</Group>
+					<Group name="UISlider_grid" orientation="horizontal" columns="6">
+
+						<Param value="CC#3" type="button" size="1" minimum="0" maximum="127" />
+						<Param value="CC#4" type="button" size="1" minimum="0" maximum="127" />
+						<Param value="CC#5" type="button" size="1" minimum="0" maximum="127" />
+						<Param value="CC#6" type="button" size="1" minimum="0" maximum="127" />
+						<Param value="CC#7" type="button" size="1" minimum="0" maximum="127" />
+						<Param value="CC#8" type="button" size="1" minimum="0" maximum="127" />
+
+						<Param value="CC#9" type="button" size="1" minimum="0" maximum="127" />
+						<Param value="CC#3" type="button" size="1" minimum="0" maximum="127" />
+						<Param value="CC#4" type="button" size="1" minimum="0" maximum="127" />
+						<Param value="CC#5" type="button" size="1" minimum="0" maximum="127" />
+						<Param value="CC#6" type="button" size="1" minimum="0" maximum="127" />
+						<Param value="CC#7" type="button" size="1" minimum="0" maximum="127" />
+
+						<Param value="CC#8" type="button" size="1" minimum="0" maximum="127" />
+						<Param value="CC#9" type="button" size="1" minimum="0" maximum="127" />
+						<Param value="CC#3" type="button" size="1" minimum="0" maximum="127" />
+						<Param value="CC#4" type="button" size="1" minimum="0" maximum="127" />
+						<Param value="CC#5" type="button" size="1" minimum="0" maximum="127" />
+						<Param value="CC#6" type="button" size="1" minimum="0" maximum="127" />
+
+						<Param value="CC#7" type="button" size="1" minimum="0" maximum="127" />
+						<Param value="CC#8" type="button" size="1" minimum="0" maximum="127" />
+						<Param value="CC#9" type="button" size="1" minimum="0" maximum="127" />
+						<Param value="CC#3" type="button" size="1" minimum="0" maximum="127" />
+						<Param value="CC#4" type="button" size="1" minimum="0" maximum="127" />
+						<Param value="CC#5" type="button" size="1" minimum="0" maximum="127" />
+
+						<Param value="CC#6" type="button" size="1" minimum="0" maximum="127" />
+						<Param value="CC#7" type="button" size="1" minimum="0" maximum="127" />
+						<Param value="CC#8" type="button" size="1" minimum="0" maximum="127" />
+						<Param value="CC#9" type="button" size="1" minimum="0" maximum="127" />
+						<Param value="CC#3" type="button" size="1" minimum="0" maximum="127" />
+						<Param value="CC#4" type="button" size="1" minimum="0" maximum="127" />
+
+						<Param value="CC#5" type="button" size="1" minimum="0" maximum="127" />
+						<Param value="CC#6" type="button" size="1" minimum="0" maximum="127" />
+						<Param value="CC#7" type="button" size="1" minimum="0" maximum="127" />
+						<Param value="CC#8" type="button" size="1" minimum="0" maximum="127" />
+						<Param value="CC#9" type="button" size="1" minimum="0" maximum="127" />
+						<Param value="CC#9" type="button" size="1" minimum="0" maximum="127" />
+
+
+
+					</Group>
+				</Column>
+
+			</Row>
+
+		</Column>
+
+	</Row>
+  </Parameters>
+</Device>

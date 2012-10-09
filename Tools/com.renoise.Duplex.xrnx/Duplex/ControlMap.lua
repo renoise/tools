@@ -27,8 +27,6 @@ Notes on the XML syntax:
   
   - Use "size" attribute to control the unit size of certain controls like 
     sliders
-  
-  - Underscore is not allowed in attribute names
 
 --]]
 
@@ -143,7 +141,7 @@ end
 
 --- Retrieve <param> by position within group
 -- @param index (Number) the index/position
--- @param group_name (String) the control-map group name, e.g. "Encoders"
+-- @param group_name (String) the control-map group name
 -- @return the <param> attributes array
 
 function ControlMap:get_indexed_element(index,group_name)
@@ -153,8 +151,88 @@ function ControlMap:get_indexed_element(index,group_name)
     return self.groups[group_name][index].xarg
   end
 
+
   return nil
 end
+
+
+--------------------------------------------------------------------------------
+
+--- Retrieve <param> in indicated group, supporting wildcard syntax
+--  * group_name="Pad_1" and index=3 would collect the third parameter 
+--    from the group named Pad_1
+--  * group_name="Pad_1" and index=nil would collect all parameters
+--    from the group named Pad_1
+--  * group_name="Pad_*" and index=3 would collect the third parameter 
+--    from groups Pad_1,Pad_2, etc.
+--  * group_name="Pad_*" and index=nil would collect every parameter 
+--    from groups Pad_1,Pad_2, etc.
+-- @param group_name (String) the control-map group name
+-- @param index (Number) optional index/position
+-- @return the <param> attributes array
+
+function ControlMap:get_params(group_name,index)
+  TRACE("ControlMap:get_params",group_name,index)
+
+  local params = table.create()
+
+  -- perform wildcard search? 
+  if group_name and string.find(group_name,"*") then
+
+    -- loop through "more than enough" groups
+    for count=1,9999 do
+
+      local tmp_group_name = (group_name):gsub("*",count)
+      --print("tmp_group_name",tmp_group_name)
+
+      if not self.groups[tmp_group_name] then
+        break
+      else
+        -- matched a group using wildcard 
+        for k,v in ipairs(self.groups[tmp_group_name]) do
+          if index then
+            if (index == k) then
+              -- collect indexed parameter
+              --print("collect indexed parameter")
+              params:insert(v.xarg)
+            end
+          else
+            -- collect all parameters
+            params:insert(v.xarg)
+          end
+        end
+        --[[
+        if (self.groups[tmp_group_name] and self.groups[tmp_group_name][index]) then
+          params:insert(v.xarg)
+        end
+        ]]
+      end
+    end
+  
+  else -- non-wildcard matching
+    if (self.groups[group_name]) then
+      for k,v in ipairs(self.groups[group_name]) do
+        if index then
+          if (index == k) then
+            params:insert(v.xarg)
+          end
+        else
+          params:insert(v.xarg)
+        end
+      end
+    end
+
+  end
+
+  if not table.is_empty(params) then
+    return params
+  else
+    return nil
+  end
+
+
+end
+
 
 --------------------------------------------------------------------------------
 
@@ -189,6 +267,8 @@ function ControlMap:get_params_by_value(str,msg_context)
   TRACE("ControlMap:get_params_by_value",str,msg_context)
 
   local matches = table.create()
+
+  --print("get_params_by_value",str,msg_context)
 
   -- check if we have previously matched the pattern
   if (self.midi_buffer[str]) then
@@ -447,6 +527,7 @@ function ControlMap:is_grid_group(group_name)
   local group = self.groups[group_name]
   if (group) then
     -- look for "columns" group attribute
+    --[[
     for attr, param in pairs(group) do
       if (attr == "xarg") then
         if (not param["columns"]) then
@@ -454,6 +535,7 @@ function ControlMap:is_grid_group(group_name)
         end
       end
     end
+    ]]
     -- check parameter type
     for _, param in ipairs(group) do
       if (param["xarg"] and param["xarg"]["type"]) then
@@ -582,22 +664,56 @@ function ControlMap:_parse_xml(str)
   local i, j = 1, 1
   local parameter_index = 1
   
+  -- helper function to extract attributes (args) from a given node,
+  -- casting values to their respective type (number, boolean) 
+
   local function parseargs(str)
+
+    --print("parseargs",str)
+
+    local function bool(str)
+      return (str=="true") and true or false
+    end
+
     local arg = {}
     string.gsub(str, "([%w_]+)=([\"'])(.-)%2", function (w, _, a)
       arg[w] = a
     end)
 
-    -- meta-attr: add unique id for every node
+    -- add unique id for every node
     arg.id = string.format("%d", self.id)
     self.id = self.id+1
 
+    -- add size attribute to buttons
+    if (arg["type"]) and
+      (arg["type"]=="button") or
+      (arg["type"]=="togglebutton") then
+      if (not arg["size"]) then
+        arg["size"] = 1
+      end
+    end
+
+    -- cast as numbers
+    if (arg["maximum"]) then
+      arg["maximum"] = tonumber(arg["maximum"])
+    end
+    if (arg["minimum"]) then
+      arg["minimum"] = tonumber(arg["minimum"])
+    end
+    if (arg["range"]) then
+      arg["range"] = tonumber(arg["range"])
+    end
+
+    -- cast as booleans:
+    arg["skip_echo"] = bool(arg["skip_echo"])
+    arg["invert_x"] = bool(arg["invert_x"])
+    arg["invert_y"] = bool(arg["invert_y"])
+    arg["velocity_enabled"] = bool(arg["velocity_enabled"])
+
     return arg
+
   end
 
-  local function bool(str)
-    return (str=="true") and true or false
-  end
   
   while true do
     local ni,j,c,label,xarg, empty = string.find(
@@ -614,7 +730,9 @@ function ControlMap:_parse_xml(str)
     end
     
     if (empty == "/") then  -- empty element tag
-      local xargs=parseargs(xarg)
+
+      --print("empty element tag - label",label)
+      local xargs = parseargs(xarg)
 
       -- meta-attr: index each <Param> node
       if (label == "Param") then
@@ -622,41 +740,20 @@ function ControlMap:_parse_xml(str)
         parameter_index = parameter_index + 1
       end
 
-      -- meta-attr: add size attribute to (toggle)buttons
-      if (xargs["type"]) and
-        (xargs["type"]=="button") or
-        (xargs["type"]=="togglebutton") then
-        if (not xargs["size"]) then
-          xargs["size"] = 1
-        end
-      end
-
-      -- meta-atrr - cast as numbers
-
-      if (xargs["maximum"]) then
-        xargs["maximum"] = tonumber(xargs["maximum"])
-      end
-      if (xargs["minimum"]) then
-        xargs["minimum"] = tonumber(xargs["minimum"])
-      end
-      if (xargs["range"]) then
-        xargs["range"] = tonumber(xargs["range"])
-      end
-
-      -- meta-attr - cast as booleans:
-      xargs["skip_echo"] = bool(xargs["skip_echo"])
-      xargs["invert_x"] = bool(xargs["invert_x"])
-      xargs["invert_y"] = bool(xargs["invert_y"])
-      xargs["velocity_enabled"] = bool(xargs["velocity_enabled"])
-
       table.insert(top, {label=label, xarg=xargs, empty=1})
     
     elseif (c == "") then   -- start tag
-      top = {label=label, xarg=parseargs(xarg)}
+
+      --print("start tag - label",label)
+
+      local xargs = parseargs(xarg)
+      top = {label=label, xarg = xargs}
       table.insert(stack, top)   -- new level
     
     else  -- end tag
-      local toclose = table.remove(stack) -- remove top
+
+      -- remove top
+      local toclose = table.remove(stack)
       top = stack[#stack]
       
       if (#stack < 1) then
@@ -669,7 +766,6 @@ function ControlMap:_parse_xml(str)
       
       table.insert(top, toclose)
 
-      -- meta-attr : columns and rows
       if (label == "Group") then
         
         -- add "columns" attribute to *all* groups
@@ -698,16 +794,19 @@ function ControlMap:_parse_xml(str)
         
         local counter = 0
         
-        for key,val in ipairs(toclose) do
-          
-          -- extend some group properties to it's members
-          toclose[key].xarg.group_name =  toclose.xarg.name
-          toclose[key].xarg.colorspace =  toclose.xarg.colorspace
+        -- loop through parameters in group ...
+
+        for idx,val in ipairs(toclose) do
+
+          -- extend properties to parameters
+          toclose[idx].xarg.group_name =  toclose.xarg.name
+          --print("*** toclose["..idx.."].xarg.group_name",toclose[idx].xarg.group_name)
+          toclose[idx].xarg.colorspace =  toclose.xarg.colorspace
           -- figure out active row/column
-          toclose[key].xarg.column = counter + 1
-          toclose[key].xarg.row = math.floor(
-            ((toclose[key].xarg.index - 1) / columns) + 1)
-          
+          toclose[idx].xarg.column = counter + 1
+          toclose[idx].xarg.row = math.floor(
+            ((toclose[idx].xarg.index - 1) / columns) + 1)
+
           counter = counter + 1
           if (counter >= columns) then
             counter = 0
@@ -715,10 +814,12 @@ function ControlMap:_parse_xml(str)
         end
         
         self.groups[toclose.xarg.name] = toclose
+
+        -- reset parameter_index
+        parameter_index = 1
+
       end
 
-      -- reset parameter_index
-      parameter_index = 1
 
     end
     i = j + 1

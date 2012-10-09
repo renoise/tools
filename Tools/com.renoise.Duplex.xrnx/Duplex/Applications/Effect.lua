@@ -126,6 +126,8 @@ Effect.default_options = {
 Effect.available_mappings = {
   parameters = {
     description = "Parameter value",
+    distributable = true,
+    greedy = true,
   },
   page = {
     description = "Parameter page",
@@ -133,6 +135,8 @@ Effect.available_mappings = {
   },
   device = {
     description = "Select device via buttons",
+    distributable = true,
+    greedy = true,
   },
   device_select = {
     description = "Select device via knob/slider",
@@ -239,9 +243,18 @@ end
 function Effect:set_parameter(control_index, value, skip_event)
   TRACE("Effect:set_parameter", control_index, value, skip_event)
 
-  if (self.active) then
-    self._parameter_sliders[control_index]:set_value(value, skip_event)
+  if not self.active then
+    return
   end
+
+  -- value needs to be positive (this is not true with the multitap-
+  -- delay, in which the "panic" button will output a negative value)
+  if (value<0) then
+    value = 0
+  end
+
+  self._parameter_sliders[control_index]:set_value(value, skip_event)
+
 end
 
 
@@ -365,20 +378,27 @@ function Effect:_build_app()
   self._parameter_sliders = {}
   self._device_navigators = (self.mappings.device.group_name) and {} or nil
 
-  --local song = renoise.song()
   local cm = self.display.device.control_map
 
-  -- check if the control-map describes a grid controller
-  local cm = self.display.device.control_map
-  self._slider_grid_mode = cm:is_grid_group(self.mappings.parameters.group_name)
+  -- check if the control-map describe
+  -- (1) a distributed group or (2) a grid controller
+  local map = self.mappings.parameters
+  local distributed_group = string.find(map.group_name,"*")
+  local params = nil
+  self._slider_grid_mode = cm:is_grid_group(map.group_name)
 
   if self._slider_grid_mode then
-    local w,h = cm:get_group_dimensions(self.mappings.parameters.group_name)
+    local w,h = cm:get_group_dimensions(map.group_name)
     self._slider_group_size = h
     self._slider_max_size = w
   else
-    self._slider_group_size = cm:get_group_size(self.mappings.parameters.group_name)
     self._slider_max_size = 1
+    if distributed_group then
+      params = cm:get_params(map.group_name,map.index)
+      self._slider_group_size = #params
+    else
+      self._slider_group_size = cm:get_group_size(map.group_name)
+    end
   end
 
   for control_index = 1,self._slider_group_size do
@@ -386,9 +406,9 @@ function Effect:_build_app()
     -- sliders for parameters --
 
     local c = UISlider(self.display)
-    c.group_name = self.mappings.parameters.group_name
-    c.tooltip = self.mappings.parameters.description
+    c.tooltip = map.description
     if self._slider_grid_mode then
+      c.group_name = map.group_name
       c:set_pos(1,control_index)
       c:set_orientation(HORIZONTAL)
       c.flipped = true
@@ -396,8 +416,13 @@ function Effect:_build_app()
       c.palette.background = table.rcopy(self.palette.slider_background)
       c.palette.tip = table.rcopy(self.palette.slider_tip)
       c.palette.track = table.rcopy(self.palette.slider_track)
-
+    elseif distributed_group then
+      c.group_name = params[control_index].group_name
+      c:set_pos(map.index)
+      c:set_size(1)
+      c.toggleable = false
     else
+      c.group_name = map.group_name
       c:set_pos(control_index)
       c:set_size(1)
       c.toggleable = false
@@ -415,7 +440,7 @@ function Effect:_build_app()
   
       if (parameter_index > #parameters) then
         -- parameter is outside bounds
-        return false
+        return 
 
       else
         local parameter = self:_get_parameter_by_index(parameter_index)
@@ -447,8 +472,7 @@ function Effect:_build_app()
             end
           end
         end
-        
-        return true
+
       end
     end
     self:_add_component(c)
@@ -457,20 +481,34 @@ function Effect:_build_app()
   end
 
 
-  -- device navigator (optional) --
-  -- wrappable across control-map groups, as it's made from individual buttons
+  -- device navigator (optional)
 
-  if (self.mappings.device.group_name) then
+  local map = self.mappings.device
+  if (map.group_name) then
 
-    local group_size = cm:get_group_size(self.mappings.device.group_name)
+    local distributed_group = string.find(map.group_name,"*")
+    local params = nil
+    local group_size = nil
+    
+    if distributed_group then
+      params = cm:get_params(map.group_name,map.index)
+      group_size = #params
+    else
+      group_size = cm:get_group_size(map.group_name)
+    end
+
     for control_index = 1,group_size do
 
-      local group_cols = cm:count_columns(self.mappings.device.group_name)
-
+      local group_cols = cm:count_columns(map.group_name)
       local c = UIButton(self.display)
-      c.group_name = self.mappings.device.group_name
-      c.tooltip = self.mappings.device.description
-      c:set_pos(control_index)
+      if distributed_group then
+        c.group_name = params[control_index].group_name
+        c:set_pos(map.index)
+      else
+        c.group_name = map.group_name
+        c:set_pos(control_index)
+      end
+      c.tooltip = map.description
       c.on_press = function() 
 
         if (not self.active) then 
@@ -573,7 +611,7 @@ function Effect:_build_app()
       local new_song = false
       self:_attach_to_parameters(new_song)
       self:update()
-      return true
+
     end
     self:_add_component(c)
     self._page_control = c

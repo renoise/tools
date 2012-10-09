@@ -37,6 +37,10 @@ duplex_configurations:insert {
         mute = {
           group_name = "SliderButtons",
         },
+      },
+      options = {
+        page_size = 2,     -- "1",
+        follow_track = 1,  -- "Follow track enabled"
       }
     },
     NotesOnWheels = {
@@ -127,18 +131,6 @@ duplex_configurations:insert {
 
       },
       options = {
-      }
-    },
-    XYPad = {
-      mappings = {
-        y_slider = {
-          group_name = "XYPad",
-          index = 1,
-        },
-        x_slider = {
-          group_name = "XYPad",
-          index = 2,
-        },
       }
     },
     Transport = {

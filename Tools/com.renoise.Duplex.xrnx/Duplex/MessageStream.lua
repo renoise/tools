@@ -271,7 +271,7 @@ function MessageStream:input_message(msg)
 
     if (msg.value == msg.max) and (not msg.is_note_off) then
       -- interpret this as pressed
-      --print("MessageStream:  interpret this as pressed")
+      --print("*** MessageStream:  interpret this as pressed")
       self.pressed_buttons:insert(msg)
       -- broadcast to listeners
       self:_handle_or_pass(msg,self.press_listeners)
@@ -279,12 +279,14 @@ function MessageStream:input_message(msg)
     elseif (msg.value == msg.min) or (msg.is_note_off) then
       -- interpret this as release
 
-      --print("MessageStream:  interpret this as release")
+      --print("*** MessageStream:  interpret this as release")
 
-      -- for toggle/push buttons, broadcast releases to listeners as well
+      -- for toggle buttons, broadcast releases to listeners as well
       if (not msg.is_virtual) and
-        (msg.input_method == CONTROLLER_TOGGLEBUTTON) 
+        (msg.input_method == CONTROLLER_TOGGLEBUTTON) --or
+        --(msg.input_method == CONTROLLER_PUSHBUTTON) 
       then
+        print("broadcast release to press listeners")
         self:_handle_or_pass(msg,self.press_listeners)
       else
         self:_handle_or_pass(msg,self.release_listeners)
@@ -324,11 +326,10 @@ function MessageStream:_handle_or_pass(msg,listeners)
 
   local events_handled = false
   local pass_on = self.process.settings.pass_unhandled.value
-  --[[
-  print("MessageStream:_handle_or_pass() - pass_on",pass_on)
-  print("MessageStream:_handle_or_pass() - msg.midi_msg",msg.midi_msg)
-  rprint(msg.midi_msg)
-  ]]
+
+  --print("MessageStream:_handle_or_pass() - pass_on",pass_on)
+  --print("MessageStream:_handle_or_pass() - msg.midi_msg",msg.midi_msg)
+  --rprint(msg.midi_msg)
 
   if self.process:running() then
     events_handled = self:_handle_events(msg,listeners)
@@ -336,11 +337,11 @@ function MessageStream:_handle_or_pass(msg,listeners)
   --print("MessageStream:_handle_or_pass() - events_handled",events_handled)
 
   if pass_on and 
-    not events_handled and
+    (events_handled==false) and -- actively rejected
     msg.midi_msg and
     (msg.device.protocol == DEVICE_MIDI_PROTOCOL) 
   then
-    --print("*** MessageStream: unhandled MIDI message, pass on to Renoise")
+    --print("*** MessageStream: unhandled MIDI message, pass on to Renoise",msg.group_name,msg.index,msg.name,msg.midi_msg)
     --rprint(msg.midi_msg)
     local osc_client = self.process.browser._osc_client
     osc_client:trigger_midi(msg.midi_msg)
@@ -353,19 +354,26 @@ end
 --- Loop through listeners, invoke event handler methods
 -- @param msg (Message)
 -- @param listeners (Table)
--- @return boolean, true when message was handled, false if handler didn't 
---    exist, or (any) handler actively rejected the message 
+-- @return boolean, false if actively rejected
 
 function MessageStream:_handle_events(msg,listeners)
   TRACE("MessageStream:_handle_events()",msg,#listeners)
-  local was_handled = true
+  local was_handled = nil
   for _,listener in ipairs(listeners) do 
-    if (listener.handler(msg)==false) then
+    local handled = listener.handler(msg)
+    --print("*** MessageStream: - handled",handled,msg.group_name,msg.index,was_handled)
+    if (was_handled==true) or (handled==true) then
+      was_handled = true
+    elseif (handled==false) then
       was_handled = false
     end
-    --print("MessageStream: - was_handled",was_handled,_)
   end
-  --print("MessageStream:input_message() - was_handled",was_handled)
+  -- pass on if no listeners exist, or message was ignored by all listeners
+  if (#listeners==0) or ((was_handled == nil) and (#listeners >0)) then
+    --print("*** MessageStream: - nothing was handled",was_handled,msg.group_name,msg.index)
+    was_handled = false
+  end
+  --print("*** MessageStream:input_message() - was_handled",was_handled,msg.group_name,msg.index,msg.name)
   return was_handled
 end
 
@@ -399,7 +407,7 @@ function Message:__init(device)
   self.input_method = nil 
 
   -- reference to the control-map parameter
-  self.param = nil
+  self.param = table.create()
 
   -- reference to the originating device
   self.device = nil
@@ -408,8 +416,7 @@ function Message:__init(device)
   -- from the virtual UI components or other MessageStream clients
   self.is_virtual = nil
   
-  -- the is the actual value for the chosen parameter
-  -- (not to be confused with the control-map value)
+  -- the value for the chosen parameter (table or number)
   self.value = nil
 
   -- MIDI only, the channel of the message (1-16)

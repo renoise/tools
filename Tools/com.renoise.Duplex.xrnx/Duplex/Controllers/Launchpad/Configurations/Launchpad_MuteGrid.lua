@@ -9,7 +9,7 @@ duplex_configurations:insert {
     device_port_in = "Launchpad",
     device_port_out = "Launchpad",
     control_map = "Controllers/Launchpad/Controlmaps/Launchpad_Mixer.xml",
-    thumbnail = "Launchpad.bmp",
+    thumbnail = "Controllers/Launchpad/Launchpad.bmp",
     protocol = DEVICE_MIDI_PROTOCOL,
   },
   applications = {
@@ -21,6 +21,11 @@ duplex_configurations:insert {
       },
       options = {
         follow_track = 2, -- track follow is disabled
+      },
+      palette = {
+        normal_mute_on = {
+          color={0xff,0x00,0x00}
+        },
       }
     },
     Navigator = {
@@ -40,7 +45,7 @@ duplex_configurations:insert {
       },
       options = {
         sequence_mode = 2,
-      }
+      },
     },
   }
 }

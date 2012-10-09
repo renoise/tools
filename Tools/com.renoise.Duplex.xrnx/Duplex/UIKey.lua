@@ -122,6 +122,7 @@ end
 -- @return (Boolean), true when message was considered valid
 
 function UIKey:test(msg)
+  
 
   if self.disabled then
     return true
@@ -148,28 +149,28 @@ end
 
 --- A key was pressed
 -- @param msg (Duplex.Message)
--- @return boolean, true when message was handled
+-- @return boolean or nil
 
 function UIKey:do_press(msg)
   TRACE("UIKey:do_press()",msg)
 
-  if not self:test(msg) then
-    return false
+  if not self:test(msg) then  
+    return
   end
-  self.velocity = msg.value[2]
-  self.pressed = true
 
-  if (self.on_press ~= nil) then
-    if (self:on_press()==false) then
-      -- allow message to be passed on
-      return false
-    else
+  if (self.on_press ~= nil) and
+    self:test(msg) 
+  then
+    self.velocity = msg.value[2]
+    self.pressed = true
+    local handled = self:on_press()
+    if (handled==true) then
       self:invalidate()
     end
-    return true
+    return handled
   end
 
-  return false
+  return true
 
 end
 
@@ -177,28 +178,25 @@ end
 
 --- A key was released
 -- @param msg (Duplex.Message)
--- @return boolean, true when message was handled
+-- @return boolean or nil
 
 function UIKey:do_release(msg)
   TRACE("UIKey:do_release",msg)
 
-  if not self:test(msg) then
-    return false
+  if not self:test(msg) then  
+    return
   end
-
-  self.pressed = false
 
   if (self.on_release ~= nil) then
-    if (self:on_release()==false) then
-      -- allow message to be passed on
-      return false
-    else
+    self.pressed = false
+    local handled = self:on_release()
+    if (handled==true) then
       self:invalidate()
     end
-    return true
+    return handled
   end
 
-  return false
+  return true
 
 end
 
@@ -206,21 +204,20 @@ end
 
 --- A key was held
 -- @param msg (Duplex.Message)
--- @return boolean, true when message was handled
+-- @return boolean, true when message was handled 
 
 function UIKey:do_hold(msg)
   TRACE("UIKey:do_hold",msg)
 
-  if not self:test(msg) then
-    return false
+  if not self:test(msg) then  
+    return
   end
 
   if (self.on_hold ~= nil) then
-    self.on_hold()
-    return true
+    return self.on_hold()
   end
 
-  return false
+  return true
 
 end
 
@@ -258,6 +255,7 @@ end
 --- Update the control's apperance
 
 function UIKey:draw()
+  TRACE("UIKey:draw")
 
   -- the pitch value may not be defined initially
   if not self.pitch then

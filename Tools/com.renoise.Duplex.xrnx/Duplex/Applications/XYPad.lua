@@ -36,7 +36,7 @@ Mappings
 
   For basic operation, you can either map 
 
-  xy_pad      (UIXYPad)         This is the OSC-only(?) mapping that accept
+  xy_pad      (UIPad)         This is the OSC-only(?) mapping that accept
                                 both X and Y axis simultaneously
   -- or --
 
@@ -592,7 +592,7 @@ function XYPad:_build_app()
     c.tooltip = self.mappings.xy_pad.description
     c.value = self.value
     --c.floor = self.min_value
-    --c.ceiling = self.max_value
+    c.ceiling = self.max_value
 
     c.on_change = function(obj)
       if not self.active then return false end

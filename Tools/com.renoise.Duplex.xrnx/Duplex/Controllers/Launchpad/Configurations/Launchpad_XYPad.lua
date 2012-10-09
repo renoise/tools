@@ -7,7 +7,7 @@
 duplex_configurations:insert {
 
   -- configuration properties
-  name = "XYPad",
+  name = "XYPad + Repeater",
   pinned = true,
 
   -- device properties
@@ -58,6 +58,7 @@ duplex_configurations:insert {
         locked = 1
       }
     },
+    --[[
     Pad5_Red = {
       application = "XYPad",
       mappings = {
@@ -94,6 +95,26 @@ duplex_configurations:insert {
       },
       options = {
         locked = 1
+      }
+    }
+    ]]
+    Repeater = {
+      mappings = {
+        grid = {
+          group_name = "Pad_5"
+        },
+        lock_button = {
+          group_name = "Pad_6",
+          index = 1
+        },
+        prev_device = {
+          group_name = "Pad_6",
+          index = 2
+        },
+        next_device = {
+          group_name = "Pad_6",
+          index = 3
+        },
       }
     }
   }

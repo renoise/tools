@@ -78,21 +78,21 @@ end
 function UIButton:do_press(msg)
   TRACE("UIButton:do_press")
   
-  if not self:test(msg.group_name,msg.column,msg.row) then
-    return false
+  if not self:test(msg) then
+    return
   end
-
-  -- force-update controls that maintain their
-  -- internal state (togglebutton, pushbutton)
-  if (msg.input_method ~= CONTROLLER_BUTTON) then
-    self:force_update()
-  end
-
-  local handled = false
+  
   if (self.on_press ~= nil) then
-    handled = self:on_press()
+    -- force-update controls that maintain their
+    -- internal state (togglebutton, pushbutton)
+    if (msg.input_method ~= CONTROLLER_BUTTON) then
+      self:force_update()
+    end
+    return (self:on_press()~=false) and true or false
+
   end
-  return handled
+
+  return true
 
 end
 
@@ -105,20 +105,21 @@ end
 function UIButton:do_release(msg)
   TRACE("UIButton:do_release()")
 
-  if not self:test(msg.group_name,msg.column,msg.row) then
-    return false
+  if not self:test(msg) then
+    return
   end
-
+  
   -- force-update controls that maintain their
   -- internal state (togglebutton, pushbutton)
   if (msg.input_method ~= CONTROLLER_BUTTON) then
     self:force_update()
   end
-  local handled = false
+
   if (self.on_release ~= nil) then
-    handled = self:on_release()
+    return (self:on_release()~=false) and true or false
   end
-  return handled
+
+  return true
 
 end
 
@@ -131,14 +132,15 @@ end
 function UIButton:do_change(msg)
   TRACE("UIButton:do_change()")
 
-  if not self:test(msg.group_name,msg.column,msg.row) then
-    return false
+  if not self:test(msg) then
+    return
   end
-  local handled = false
-  if (self.on_change ~= nil) then 
-    handled = self:on_release()
+
+  if (self.on_change ~= nil) then
+    return self:on_change(msg.value)
   end
-  return handled
+
+  return true
 
 end
 
@@ -153,45 +155,35 @@ end
 function UIButton:do_hold(msg)
   TRACE("UIButton:do_hold()")
 
-  if not self:test(msg.group_name,msg.column,msg.row) then
-    return 
-  end
-  local handled = false
-  if (self.on_hold ~= nil) then
-    handled = self:on_hold()
+  if not self:test(msg) then
+    return
   end
 
-  return handled
+  if (self.on_hold ~= nil) then
+    return self:on_hold()
+  end
+
+  return true
 
 end
 
 --------------------------------------------------------------------------------
 
---- Expanded UIComponent test. Look for group name, event handlers, then 
---  proceed with the standard UIComponent test
+--- Expanded UIComponent test. Look for group name + standard test
 -- @param group_name (String) control-map group name
 -- @param column (Number) 
 -- @param row (Number) 
 -- @return (Boolean), false when criteria is not met
 
-function UIButton:test(group_name,column,row)
+function UIButton:test(msg)
 
-  -- look for group name
-  if not (self.group_name == group_name) then
+  -- test for group name
+  if not (self.group_name == msg.group_name) then
     return false
   end
 
-  -- look for event handlers
-  if (self.on_change == nil) 
-    and (self.on_press == nil) 
-    and (self.on_release == nil) 
-    and (self.on_hold == nil) 
-  then  
-    return false
-  end 
-
-  -- test the X/Y position
-  return UIComponent.test(self,column,row)
+  -- test for position
+  return UIComponent.test(self,msg.column,msg.row)
 
 end
 

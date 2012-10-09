@@ -23,34 +23,12 @@ duplex_configurations:insert {
     protocol = DEVICE_OSC_PROTOCOL,
   },
   applications = {
-    --[[
-    ]]
-    Grid8x5 = {
-      application = "XYPad",
-      mappings = {
-        xy_grid = {
-          group_name = "Grid8x5",
-        },
-        --[[
-        focus_button = {
-          group_name = "Controls",
-          index = 7
-        },
-        ]]
-      }
-    },
     Grid8x3 = {
       application = "XYPad",
       mappings = {
         xy_grid = {
           group_name = "Grid8x3",
         },
-        --[[
-        focus_button = {
-          group_name = "Controls",
-          index = 6
-        },
-        ]]
       },
       palette = {
         foreground = {
@@ -69,42 +47,20 @@ duplex_configurations:insert {
         },
       }
     },
-    Grid1x5 = {
-      application = "XYPad",
-      mappings = {
-        xy_grid = {
-          group_name = "Grid1x5",
-        },
-      },
-      palette = {
-        foreground = {
-          color={0x00,0x00,0x00}, 
-        },  
-        background = {
-          color={0xFF,0xFF,0x00}, 
-        },  
-      }
-    },
     Grid7x7 = {
       application = "XYPad",
       mappings = {
         xy_grid = {
           group_name = "Grid7x7",
         },
-        --[[
-        focus_button = {
-          group_name = "Controls",
-          index = 4
-        },
-        ]]
-        prev_device = {
-          group_name = "Controls",
-          index = 4
-        },
-        next_device = {
-          group_name = "Controls",
-          index = 5
-        },
+        --prev_device = {
+        --  group_name = "Controls",
+        --  index = 4
+        --},
+        --next_device = {
+        --  group_name = "Controls",
+        --  index = 5
+        --},
         lock_button = {
           group_name = "Controls",
           index = 6
@@ -122,20 +78,10 @@ duplex_configurations:insert {
           group_name = "Controls",
           index = 7
         },
-        --[[
-        focus_button = {
-          group_name = "Controls",
-          index = 5
-        },
-        ]]
       }
     },
-    --[[
-    ]]
     Transport = {
-    
       mappings = {
-      
         start_playback = {
           group_name = "Controls",
           index = 1,
@@ -144,8 +90,48 @@ duplex_configurations:insert {
           group_name = "Controls",
           index = 2,
         },
+        goto_previous = {
+          group_name= "Grid1x5",
+          index = 4,
+        },
+        goto_next = {
+          group_name= "Grid1x5",
+          index = 5,
+        },
       }
+    },
+    Effect = {
+      mappings = {
+        parameters = {
+          group_name= "Grid8x5",
+        },
+        --device = {
+        --  group_name = "Controls2",
+        --},
+        --device_prev = {
+        --  group_name = "Grid1x5",
+        --  index = 4
+        --},
+        --device_next = {
+        --  group_name = "Grid1x5",
+        --  index = 5
+        --}
+      },
+    },
+    TrackSelector = {
+      mappings = {
+        select_master = {
+          group_name = "Grid1x5",
+          index = 1
+        },
+        prev_next_track = {
+          group_name = "Grid1x5",
+          index = 2,
+          orientation = VERTICAL
+        }
+      },
     }
+
   }
 }
 

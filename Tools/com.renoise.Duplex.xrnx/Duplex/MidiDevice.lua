@@ -574,15 +574,23 @@ function MidiDevice:point_to_value(pt,elm,ceiling)
   --TRACE("MidiDevice:point_to_value()",pt,elm,ceiling)
 
   local ceiling = ceiling or 127
-  local value
-  
-  if (type(pt.val) == "boolean") then
-    if (pt.val) then
-      value = tonumber(elm.maximum)
-    else
-      value = tonumber(elm.minimum)
-    end
+  local value = nil
+  local val_type = type(pt.val)
 
+  if (val_type == "boolean") then
+    if (pt.val) then
+      value = elm.maximum
+    else
+      value = elm.minimum
+    end
+  --[[
+  elseif (val_type == "table") then
+    -- multiple-parameter: tilt sensors, xy-pad...
+    value = table.create()
+    for k,v in ipairs(pt.val) do
+      value:insert((v * (1 / ceiling)) * elm.maximum)
+    end
+  ]]
   else
     -- scale the value from "local" to "external"
     -- for instance, from Renoise dB range (1.4125375747681) 
@@ -590,7 +598,7 @@ function MidiDevice:point_to_value(pt,elm,ceiling)
     value = math.floor((pt.val * (1 / ceiling)) * elm.maximum)
   end
 
-  return tonumber(value)
+  return value
 end
 
 

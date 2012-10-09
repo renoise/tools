@@ -89,20 +89,16 @@ end
 
 --- A value was changed (fader, dial)
 -- @param msg (Duplex.Message)
--- @return boolean, true when message was handled
+-- @return boolean or nil
 
 function UISpinner:do_change(msg)
   TRACE("UISpinner:do_change",msg)
 
-  if (self.on_change ~= nil) then
+  if not self:test(msg) then
+    return
+  end
 
-    if not (self.group_name == msg.group_name) then
-      return false
-    end
-    
-    if not self:test(msg.column,msg.row) then
-      return false
-    end
+  if (self.on_change ~= nil) then
 
     -- restrict the value to fit within the range 
     self.value = (msg.value / ((msg.max-msg.min) /
@@ -116,8 +112,6 @@ function UISpinner:do_change(msg)
       self:_invoke_handler()
     end
 
-    return true
-
   end
 
   return true
@@ -129,20 +123,16 @@ end
 
 --- A button was pressed
 -- @param msg (Duplex.Message)
--- @return boolean, true when message was handled
+-- @return boolean or nil
 
 function UISpinner:do_press(msg)
   TRACE("UISpinner:do_press",msg)
   
+  if not self:test(msg) then
+    return 
+  end
+
   if (self.on_change ~= nil) then
-    
-    if not (self.group_name == msg.group_name) then
-      return false
-    end
-    
-    if not self:test(msg.column,msg.row) then
-      return false
-    end
     
     local changed = false
     local idx = self:_determine_index_by_pos(msg.column,msg.row)
@@ -182,18 +172,53 @@ function UISpinner:do_press(msg)
       self:_invoke_handler()
     end
 
-    if (msg.input_method == CONTROLLER_TOGGLEBUTTON) then
-      -- force update togglebuttons...
-      self.canvas.delta = table.rcopy(self.canvas.buffer)
-      self.canvas.has_changed = true
-      self:invalidate()
-    end
-
-    return true
-
   end
 
-  return false
+  if (msg.input_method == CONTROLLER_TOGGLEBUTTON) then
+    -- force update togglebuttons...
+    self.canvas.delta = table.rcopy(self.canvas.buffer)
+    self.canvas.has_changed = true
+    self:invalidate()
+  end
+
+  return true
+
+end
+
+--------------------------------------------------------------------------------
+
+-- @param msg (Duplex.Message)
+-- @return boolean or nil
+
+function UISpinner:do_release(msg)
+
+  if not self:test(msg) then
+    return 
+  end
+
+  -- we have no action, but the message was handled
+  -- (prevent it from being passed on)
+
+  return true
+
+end
+
+
+
+--------------------------------------------------------------------------------
+
+--- UIComponent test. Look for group name + standard test
+-- @param msg (Duplex.Message)
+-- @return (Boolean), false when criteria is not met
+
+function UISpinner:test(msg)
+
+  -- test for group name
+  if not (self.group_name == msg.group_name) then
+    return false
+  end
+
+  return UIComponent.test(self,msg.column,msg.row)
 
 end
 
@@ -420,6 +445,9 @@ function UISpinner:add_listeners()
     self, DEVICE_EVENT_BUTTON_PRESSED,
     function(msg) return self:do_press(msg) end )
 
+  self._display.device.message_stream:add_listener(
+    self, DEVICE_EVENT_BUTTON_RELEASED,
+    function(msg) return self:do_release(msg) end )
 
   self._display.device.message_stream:add_listener(
     self,DEVICE_EVENT_VALUE_CHANGED,
@@ -437,6 +465,9 @@ function UISpinner:remove_listeners()
 
   self._display.device.message_stream:remove_listener(
     self,DEVICE_EVENT_BUTTON_PRESSED)
+
+  self._display.device.message_stream:remove_listener(
+    self,DEVICE_EVENT_BUTTON_RELEASED)
 
   self._display.device.message_stream:remove_listener(
     self,DEVICE_EVENT_VALUE_CHANGED)

@@ -253,7 +253,9 @@ Keyboard.available_mappings = {
     description = "Keyboard: trigger notes using keyboard"
   },
   key_grid = {
-    description = "Keyboard: trigger notes using buttons or pads"
+    description = "Keyboard: trigger notes using buttons or pads",
+    distributable = true,
+    greedy = true,
   },
   pitch_bend = {
     description = "Keyboard: pitch-bend wheel"
@@ -625,12 +627,12 @@ function Keyboard:_build_app()
       if not self.active then
         return false
       end
-      print("obj...")
-      rprint(obj)
+      --print("*** Keyboard.build_app -obj...")
+      --rprint(obj)
       local note_on = true
       local msg = self.display.device.message_stream.current_message
       local triggered = self:trigger(note_on,obj.pitch,obj.velocity)
-      --print("Keyboard: triggered",triggered)
+      --print("*** Keyboard: keys triggered",triggered)
       return triggered
     end
     c.on_release = function(obj)
@@ -640,7 +642,7 @@ function Keyboard:_build_app()
       local note_on = false
       local msg = self.display.device.message_stream.current_message
       local released = self:trigger(note_on,obj.pitch,obj.velocity)
-      --print("Keyboard: released",released)
+      --print("*** Keyboard: keys released",released)
       return released
     end
     self:_add_component(c)
@@ -651,19 +653,59 @@ function Keyboard:_build_app()
   -- add grid keys (for buttons/pads)
 
   local map = self.mappings.key_grid
-  if (map.group_name) then
+  local key_params = cm:get_params(map.group_name,map.index)
+  if key_params then
 
-    -- determine width and height of grid
-    local grid_w = cm:count_columns(map.group_name)
-    local grid_h = cm:count_rows(map.group_name)
     local unit_w = self.options.button_width.value
     local unit_h = self.options.button_height.value
 
-    -- adapt to grid orientation 
+    local grid_w,grid_h 
     local orientation = map.orientation or HORIZONTAL
-    if (orientation == HORIZONTAL) then
-      grid_w,grid_h = grid_h,grid_w
+
+    -- (only defined for distributed layouts)
+    local distributed_group = false
+    local group_size,col_count,unit_x,unit_y 
+
+    --print("*** Keyboard.build_app - map.group_name",map.group_name)
+
+    if string.find(map.group_name,"*") then
+
+      distributed_group = true
+
+      -- determine size, columns from first group
+      group_size = cm:get_group_size(key_params[1].group_name)
+      col_count = cm:count_columns(key_params[1].group_name)
+
+      grid_w = #key_params
+      grid_h = 1
+
+      if map.index then
+        if (orientation == HORIZONTAL) then
+          unit_x = map.index
+          unit_y = 1
+        else
+          unit_x = 1
+          unit_y = map.index
+        end
+
+      end
+
+      --print("*** Keyboard.build_app - #key_params",#key_params)
+
+    else
+
+      -- standard grid layout
+
+      grid_w = cm:count_columns(key_params[1].group_name)
+      grid_h = cm:count_rows(key_params[1].group_name)
+      if (orientation == HORIZONTAL) then
+        grid_w,grid_h = grid_h,grid_w
+      end
+
     end
+
+    --print("*** Keyboard.build_app - unit_x,unit_y",unit_x,unit_y)
+    --print("*** Keyboard.build_app - grid_w,grid_h",grid_w,grid_h)
 
     local count = 1
     local skip = nil
@@ -683,18 +725,41 @@ function Keyboard:_build_app()
           end
           if not skip then
             local ctrl_idx = #self._grid+1
-            local args = cm:get_indexed_element(ctrl_idx,map.group_name)
+            local param = key_params[ctrl_idx]
+            --print("*** Keyboard - build_app - key",ctrl_idx)
+            --local args = cm:get_indexed_element(ctrl_idx,map.group_name)
             local c = UIKey(self.display)
-            c.group_name = map.group_name
-            c.ceiling = args.maximum
+            c.group_name = param.group_name
+            c.ceiling = param.maximum
             c.pitch = ctrl_idx
             c.palette.pressed = self.palette.key_pressed
             c.palette.released = self.palette.key_released
-            if (orientation == HORIZONTAL) then
-              c:set_pos(y,x)
+            if distributed_group then
+              if unit_x then
+                -- distr. group with index
+                c:set_pos(unit_x,unit_y)
+              else
+                -- distr. group without index
+                -- figure out the position within the current group
+                --local group_index = math.floor(x/group_size)
+                local ctrl_index = ((x-1)%group_size)+1
+                local ctrl_col = ((ctrl_index-1)%col_count)+1
+                local ctrl_row = math.floor((ctrl_index-1)/col_count)+1
+                --print("*** Keyboard - ctrl_index,ctrl_col,ctrl_row",ctrl_index,ctrl_col,ctrl_row)
+                if (orientation == HORIZONTAL) then
+                  c:set_pos(ctrl_row,ctrl_col)
+                else
+                  c:set_pos(ctrl_col,ctrl_row)
+                end
+              end
             else
-              c:set_pos(x,y)
+              if (orientation == HORIZONTAL) then
+                c:set_pos(y,x)
+              else
+                c:set_pos(x,y)
+              end
             end
+            --print("*** Keyboard - build_app - x,y",x,y)
             c:set_size(unit_w,unit_h)
             c.on_press = function(obj)
               if not self.active then
@@ -705,7 +770,7 @@ function Keyboard:_build_app()
               local msg = self.display.device.message_stream.current_message
               local velocity = obj.velocity
               local triggered = self:trigger(note_on,pitch,velocity,ctrl_idx)
-              --print("Keyboard: triggered",triggered)
+              --print("*** Keyboard: key_grid triggered",triggered)
               return triggered
             end
             c.on_release = function(obj)
@@ -717,7 +782,7 @@ function Keyboard:_build_app()
               local msg = self.display.device.message_stream.current_message
               local velocity = obj.velocity
               local released = self:trigger(note_on,pitch,velocity,ctrl_idx)
-              --print("Keyboard: released",released)
+              --print("*** Keyboard: key_grid released",released)
               return released
             end
             self:_add_component(c)

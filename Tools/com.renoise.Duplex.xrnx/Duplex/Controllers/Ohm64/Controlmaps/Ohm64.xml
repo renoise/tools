@@ -16,19 +16,19 @@
             <Param value="CC#11" type="dial" name="Effect #7" maximum="127" minimum="0"/>
             <Param value="CC#10" type="dial" name="Effect #8" maximum="127" minimum="0"/>
           </Group>
-          <Group name="PanningLeft" columns="4">
+          <Group name="Panning_1" columns="4">
             <Param value="CC#21" type="dial" name="Track Pan #1" maximum="127" minimum="0"/>
             <Param value="CC#20" type="dial" name="Track Pan #2" maximum="127" minimum="0"/>
             <Param value="CC#13" type="dial" name="Track Pan #3" maximum="127" minimum="0"/>
             <Param value="CC#12" type="dial" name="Track Pan #4" maximum="127" minimum="0"/>
           </Group>
-          <Group name="VolumeLeft" orientation="horizontal">
+          <Group name="Volume_1" orientation="horizontal">
             <Param value="CC#23" type="fader" orientation="vertical" size="4.32" name="Track Volume #1" maximum="127" minimum="0"/>
             <Param value="CC#22" type="fader" orientation="vertical" size="4.32" name="Track Volume #2" maximum="127" minimum="0"/>
             <Param value="CC#15" type="fader" orientation="vertical" size="4.32" name="Track Volume #3" maximum="127" minimum="0"/>
             <Param value="CC#14" type="fader" orientation="vertical" size="4.32" name="Track Volume #4" maximum="127" minimum="0"/>
           </Group>
-          <Group name="ButtonsLeft" orientation="horizontal">
+          <Group name="Buttons_1" orientation="horizontal">
             <Param value="F-4" type="button" name="Track Select #1" maximum="64" minimum="0"/>
             <Param value="C#5" type="button" name="Track Select #2" maximum="64" minimum="0"/>
             <Param value="F#4" type="button" name="Track Select #3" maximum="64" minimum="0"/>
@@ -126,19 +126,19 @@
             <Param value="D#6" type="button" size="1.2" name="Big Button" maximum="64" minimum="0"/>
           </Group>
          </Row>
-          <Group name="PanningRight" orientation="horizontal">
+          <Group name="Panning_2" orientation="horizontal">
             <Param value="CC#3" type="dial" name="Track Pan #5" maximum="127" minimum="0"/>
             <Param value="CC#1" type="dial" name="Track Pan #6" maximum="127" minimum="0"/>
             <Param value="CC#0"  type="dial" name="Track Pan #7" maximum="127" minimum="0"/>
             <Param value="CC#2"  type="dial" name="Track Pan #8" maximum="127" minimum="0"/>
           </Group>
-          <Group name="VolumeRight" orientation="horizontal">
+          <Group name="Volume_2" orientation="horizontal">
             <Param value="CC#5" type="fader" orientation="vertical" size="4.6" name="Track Volume #5" maximum="127" minimum="0"/>
             <Param value="CC#7" type="fader" orientation="vertical" size="4.6" name="Track Volume #6" maximum="127" minimum="0"/>
             <Param value="CC#6" type="fader" orientation="vertical" size="4.6" name="Track Volume #7" maximum="127" minimum="0"/>
             <Param value="CC#4" type="fader" orientation="vertical" size="4.6" name="Track Volume #8" maximum="127" minimum="0"/>
           </Group>
-          <Group name="ButtonsRight" orientation="horizontal">
+          <Group name="Buttons_2" orientation="horizontal">
             <Param value="G-4" type="button" name="Track Select #5" maximum="64" minimum="0"/>
             <Param value="D#5" type="button" name="Track Select #6" maximum="64" minimum="0"/>
             <Param value="G#4" type="button" name="Track Select #7" maximum="64" minimum="0"/>
