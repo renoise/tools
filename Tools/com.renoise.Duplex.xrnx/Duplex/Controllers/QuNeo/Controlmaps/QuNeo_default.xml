@@ -1,0 +1,93 @@
+<Device>
+	<Name>Keith McMillan QuNeo</Name>
+	<Author>decibillionaire + danoise</Author>
+	<Description>Controller mapping layout for QuNeo</Description>
+	<Parameters>
+		<Page>
+			<Row>
+				<Column>
+					<Group name="Transport" orientation="horizontal">
+						<Param value="A-1" type="button" size="1.2" aspect="0.5" name="Transport Diamond" maximum="127" minimum="0"/>
+						<Param value="A#1" type="button" size="1.2" aspect="0.5" name="Transport Square" maximum="127" minimum="0"/>
+						<Param value="B-1" type="button" size="1.2" aspect="0.5" name="Transport Triangle" maximum="127" minimum="0"/>
+					</Group>
+					<Row>
+						<Column>
+							<Group name="HorizontalArrowsLeft" columns="1">
+								<Param value="C-2" type="button" size="0.6" name="Arrow 1/1" maximum="127" minimum="0"/>
+								<Param value="D-2" type="button" size="0.6" name="Arrow 2/1" maximum="127" minimum="0"/>
+								<Param value="E-2" type="button" size="0.6" name="Arrow 3/1" maximum="127" minimum="0"/>
+								<Param value="F#2" type="button" size="0.6" name="Arrow 4/1" maximum="127" minimum="0"/>
+							</Group>
+						</Column>
+						<Column>
+							<Group name="HorizontalArrowsRight" columns="1">
+								<Param value="C#2" type="button" size="0.6" name="Arrow 1/2" maximum="127" minimum="0"/>
+								<Param value="D#2" type="button" size="0.6" name="Arrow 2/2" maximum="127" minimum="0"/>
+								<Param value="F-2" type="button" size="0.6" name="Arrow 3/2" maximum="127" minimum="0"/>
+								<Param value="G-2" type="button" size="0.6" name="Arrow 4/2" maximum="127" minimum="0"/>
+							</Group>
+						</Column>
+						<Column>
+							<Group name="HorizontalFaders" orientation="vertical" >
+								<Param value="CC#11" type="fader" name="Fader 1" size="3.4" orientation="horizontal" maximum="127" minimum="0"/>
+								<Param value="CC#10" type="fader" name="Fader 2" size="3.4" orientation="horizontal" maximum="127" minimum="0"/>
+								<Param value="CC#9" type="fader" name="Fader 3" size="3.4" orientation="horizontal" maximum="127" minimum="0"/>
+								<Param value="CC#8" type="fader" name="Fader 4" size="3.4" orientation="horizontal" maximum="127" minimum="0"/>
+							</Group>
+						</Column>
+					</Row>
+					<Group name="Encoders" >
+						<Param value="CC#6" type="dial" name="Encoder 1" size="2.4" maximum="127" minimum="0" mode="rel_7_twos_comp"/>
+						<Param value="CC#7" type="dial" name="Encoder 2" size="2.4" maximum="127" minimum="0" mode="rel_7_twos_comp"/>
+					</Group>
+					<Row>
+						<Group name="AnythingButton" >
+							<Param value="G#2" type="button" size="0.6" name="Ambiguous Button" maximum="127" minimum="0"/>
+						</Group>
+						<Group name="VerticalFaders" >
+							<Param value="CC#1" type="fader" name="Fader 1" size="4" orientation="vertical" maximum="127" minimum="0"/>
+							<Param value="CC#2" type="fader" name="Fader 2" size="4" orientation="vertical" maximum="127" minimum="0"/>
+							<Param value="CC#3" type="fader" name="Fader 3" size="4" orientation="vertical" maximum="127" minimum="0"/>
+							<Param value="CC#4" type="fader" name="Fader 4" size="4" orientation="vertical" maximum="127" minimum="0"/>
+						</Group>
+					</Row>
+
+				</Column>
+				<Column>
+					<Group name="Grid" columns="4">
+						<Param value="C-1" type="button" name="Pad 13" size="1.7" maximum="127" minimum="0" quneo_pad_mode="pad" />
+						<Param value="D-1" type="button" name="Pad 14" size="1.7" maximum="127" minimum="0" quneo_pad_mode="pad" />
+						<Param value="E-1" type="button" name="Pad 15" size="1.7" maximum="127" minimum="0" quneo_pad_mode="pad" />
+						<Param value="F#1" type="button" name="Pad 16" size="1.7" maximum="127" minimum="0" quneo_pad_mode="pad" />
+						<Param value="E-0" type="button" name="Pad 9"  size="1.7" maximum="127" minimum="0" quneo_pad_mode="pad" />
+						<Param value="F#0" type="button" name="Pad 10" size="1.7" maximum="127" minimum="0" quneo_pad_mode="pad" />
+						<Param value="G#0" type="button" name="Pad 11" size="1.7" maximum="127" minimum="0" quneo_pad_mode="pad" />
+						<Param value="A#0" type="button" name="Pad 12" size="1.7" maximum="127" minimum="0" quneo_pad_mode="pad" />
+						<Param value="G#-1" type="button" name="Pad 5"  size="1.7" maximum="127" minimum="0" quneo_pad_mode="pad" />
+						<Param value="A#-1" type="button" name="Pad 6"  size="1.7" maximum="127" minimum="0" quneo_pad_mode="pad" />
+						<Param value="C-0" type="button" name="Pad 7"  size="1.7" maximum="127" minimum="0" quneo_pad_mode="pad" />
+						<Param value="D-0" type="button" name="Pad 8"  size="1.7" maximum="127" minimum="0" quneo_pad_mode="pad" />
+						<Param value="C--1" type="button" name="Pad 1"  size="1.7" maximum="127" minimum="0" quneo_pad_mode="pad" />
+						<Param value="D--1" type="button" name="Pad 2"  size="1.7" maximum="127" minimum="0" quneo_pad_mode="pad" />
+						<Param value="E--1" type="button" name="Pad 3"  size="1.7" maximum="127" minimum="0" quneo_pad_mode="pad" />
+						<Param value="F#-1" type="button" name="Pad 4"  size="1.7" maximum="127" minimum="0" quneo_pad_mode="pad" />
+					</Group>
+					<Row>
+						<Group name="VerticalArrows1" columns="1" >
+							<Param value="A#2" type="button" size="0.6" name="VA1up" maximum="127" minimum="0"/>
+							<Param value="B-2" type="button" size="0.6" name="VA1down" maximum="127" minimum="0"/>
+						</Group>
+						<Group name="CentralFader" >
+							<Param value="CC#5" type="fader" orientation="horizontal" size="7" name="Crossfader" maximum="127" minimum="0"/>
+						</Group>
+						<Group name="VerticalArrows2" columns="1" >
+							<Param value="C-3" type="button" size="0.6" name="VA2up" maximum="127" minimum="0"/>
+							<Param value="C#3" type="button" size="0.6" name="VA2down" maximum="127" minimum="0"/>
+						</Group>
+					</Row>
+				</Column>
+			</Row>
+		</Page>
+	</Parameters>
+</Device>

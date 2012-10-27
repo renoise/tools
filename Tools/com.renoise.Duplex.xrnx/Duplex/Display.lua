@@ -207,7 +207,7 @@ function Display:update()
             if (obj.canvas.delta[x][y]) then
 
               if not (control_map.groups[obj.group_name]) then
-                print(("Warning: '%s' is not specified in control-map "..
+                LOG(("Warning: '%s' is not specified in control-map "..
                   "group '%s'"):format(type(obj), tostring(obj.group_name)))
               else
                 local idx = (x+obj.x_pos-1)+((y+obj.y_pos-2)*columns)
@@ -299,7 +299,7 @@ function Display:set_parameter(elm, obj, point, secondary)
       local num = self.device:extract_midi_note(elm.value)
 
       -- check if we should send message back to the sender
-      self.device:send_note_message(num,value,channel)
+      self.device:send_note_message(num,value,channel,elm,point)
 
     elseif (msg_type == MIDI_CC_MESSAGE) then
 
@@ -596,7 +596,7 @@ function Display:generate_message(value, metadata, released)
 
 
   -- include these meta-properties
-  msg.name = metadata.name
+  msg.param = metadata
   msg.group_name = metadata.group_name
   msg.id = metadata.id
   msg.index = metadata.index

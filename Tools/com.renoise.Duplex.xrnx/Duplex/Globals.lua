@@ -562,6 +562,14 @@ function least_common(t)
 end
 
 
+-- alternative print method: since print statements are automatically
+-- stripped from the source code when a version is released, this
+-- method exist as an alternative for when console logging is desired
+function LOG(str)
+  print(str)
+end
+
+
 
 --------------------------------------------------------------------------------
 -- debug tracing

@@ -25,6 +25,7 @@ require "Duplex/OscDevice"
 require "Duplex/OscClient"
 require "Duplex/OscVoiceMgr"
 require "Duplex/Application"
+require "Duplex/RoamingDSP" -- depends on Application
 require "Duplex/Browser"
 require "Duplex/Scheduler"
 
