@@ -38,18 +38,18 @@ function MidiDevice:__init(display_name, message_stream, port_in, port_out)
   self.midi_in = nil
   self.midi_out = nil
 
-  -- todo: update all MIDI devices when this setting change
+  -- boolean, specifies if the device dumps midi to the console
   self.dump_midi = false
 
   -- when using the virtual control surface, and the control-map
-  -- doesn't specify a specific channel, use this value: 
+  -- doesn't specify a specific channel, we use this value: 
   self.default_midi_channel = 1
 
-  -- when we generate output, quantize to this resolution
+  -- number, used for quantized output and relative step size
   self.default_midi_resolution = 127
 
   -- enable this to quantize output to given resolution before
-  -- it's actually being sent to the MIDI controller
+  -- actually sending it to the MIDI controller (less traffic)
   self.output_quantize = true
 
   -- ## NRPN
@@ -80,13 +80,13 @@ function MidiDevice:open()
       {self, MidiDevice.sysex_callback}
     )
   else
-    print("Notice: Could not create MIDI input device ", self.port_in)
+    LOG("Notice: Could not create MIDI input device ", self.port_in)
   end
 
   if table.find(output_devices, self.port_out) then
     self.midi_out = renoise.Midi.create_output_device(self.port_out)
   else
-    print("Notice: Could not create MIDI output device ", self.port_out)
+    LOG("Notice: Could not create MIDI output device ", self.port_out)
   end
 
 end
@@ -126,7 +126,7 @@ function MidiDevice:midi_callback(message)
   local value_str = nil
 
   if (self.dump_midi) then
-    print(("MidiDevice: %s received MIDI %X %X %X"):format(
+    LOG(("MidiDevice: %s received MIDI %X %X %X"):format(
       self.port_in, message[1], message[2], message[3]))
   end
 
@@ -331,8 +331,8 @@ function MidiDevice:sysex_callback(message)
   TRACE("MidiDevice:sysex_callback()",message)
 
   if(self.dump_midi)then
-    print(("MidiDevice: %s got SYSEX with %d bytes"):format(
-    self.port_in, #message))
+    LOG(("MidiDevice: %s got SYSEX with %d bytes"):format(
+      self.port_in, #message))
   end
   
 end
@@ -371,7 +371,7 @@ function MidiDevice:send_cc_message(number,value,channel)
       self.port_out, message[1], message[2], message[3])
 
   if(self.dump_midi)then
-    print(dump_str)
+    LOG(dump_str)
   else
     TRACE(dump_str)
   end
@@ -405,7 +405,7 @@ function MidiDevice:send_sysex_message(...)
   message_str = string.format("%s,0x%02X",message_str,0xF7)
 
   if(self.dump_midi)then
-    print(("MidiDevice: %s send MIDI %s"):format(
+    LOG(("MidiDevice: %s send MIDI %s"):format(
       self.port_out, message_str))
   end
 
@@ -434,7 +434,7 @@ function MidiDevice:send_pitch_bend_message(value,channel)
     self.port_out, message[1], message[2], message[3]))
     
   if(self.dump_midi)then
-    print(("MidiDevice: %s send MIDI %X %X %X"):format(
+    LOG(("MidiDevice: %s send MIDI %X %X %X"):format(
       self.port_out, message[1], message[2], message[3]))
   end
 
@@ -476,7 +476,7 @@ function MidiDevice:send_note_message(key,velocity,channel)
     self.port_out, message[1], message[2], message[3]))
     
   if(self.dump_midi)then
-    print(("MidiDevice: %s send MIDI %X %X %X"):format(
+    LOG(("MidiDevice: %s send MIDI %X %X %X"):format(
       self.port_out, message[1], message[2], message[3]))
   end
 

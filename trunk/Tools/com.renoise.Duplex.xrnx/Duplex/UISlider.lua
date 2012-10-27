@@ -200,14 +200,81 @@ function UISlider:do_change(msg)
   -- look for event handlers
   if (self.on_change ~= nil) then
 
-    -- scale from the message range to the sliders range
-    local val = (msg.value / msg.max) * self.ceiling
-    
-    if not self:output_quantize(val) then
+    local new_val = nil
+
+    local is_midi_device = (self._display.device.protocol == DEVICE_MIDI_PROTOCOL)
+
+    local is_relative_7 = ((msg.param.mode == "rel_7_signed") or 
+      (msg.param.mode == "rel_7_signed2") or
+      (msg.param.mode == "rel_7_offset") or
+      (msg.param.mode == "rel_7_twos_comp"))
+
+    if not msg.is_virtual and is_midi_device and is_relative_7 then
+
+      -- check midi resolution
+      local midi_res = self._display.device.default_midi_resolution
+      if not (midi_res == 127) then
+        LOG("UISlider: rel_7_signed2 mode expected '127' as the midi resolution")
+        return false
+      end
+
+      -- treat as relative control
+      new_val = self.value
+      local step_size = self.ceiling/midi_res
+
+      if (msg.param.mode == "rel_7_signed") then
+        if (msg.midi_msg[3] < 64) then
+          new_val = math.max(new_val-(step_size*msg.midi_msg[3]),0)
+        elseif (msg.midi_msg[3] > 64) then
+          new_val = math.min(new_val+(step_size*(msg.midi_msg[3]-64)),self.ceiling)
+        end
+      elseif (msg.param.mode == "rel_7_signed2") then
+        if (msg.midi_msg[3] > 64) then
+          new_val = math.max(new_val-(step_size*(msg.midi_msg[3]-64)),0)
+        elseif (msg.midi_msg[3] < 64) then
+          new_val = math.min(new_val+(step_size*msg.midi_msg[3]),self.ceiling)
+        end
+      elseif (msg.param.mode == "rel_7_offset") then
+        if (msg.midi_msg[3] < 64) then
+          new_val = math.max(new_val-(step_size*(msg.midi_msg[3]-62)),0)
+        elseif (msg.midi_msg[3] > 64) then
+          new_val = math.min(new_val+(step_size*(msg.midi_msg[3]-64)),self.ceiling)
+        end
+
+      elseif (msg.param.mode == "rel_7_twos_comp") then
+        if (msg.midi_msg[3] > 64) then
+          new_val = math.max(new_val-(step_size*(msg.midi_msg[3]-126)),0)
+        elseif (msg.midi_msg[3] < 65) then
+          new_val = math.min(new_val+(step_size*msg.midi_msg[3]),self.ceiling)
+        end
+      end
+
+      -- check if outside range
+      if ((new_val*midi_res) > midi_res) then
+        LOG("UISlider: trying to assign out-of-range value, probably due to"
+          .."/na parameter which has been set to an incorrect 'mode'")
+        return false
+      end
+
+    else
+
+      -- treat as absolute control:
+      -- scale from the message range to the sliders range
+      new_val = (msg.value / msg.max) * self.ceiling
+      
+    end
+
+
+    -- if the quantized value isn't different from the current, 
+    -- ignore the value but signal that the message got handled 
+    -- (mostly relevant when changing the value from Renoise)
+    if not self:output_quantize(new_val) then
       return true
     end
 
-    if (self:set_value(val)==false) then
+    -- set the value, and let us know if the event handler 
+    -- actively rejected the request
+    if (self:set_value(new_val)==false) then
       return false
     end
 

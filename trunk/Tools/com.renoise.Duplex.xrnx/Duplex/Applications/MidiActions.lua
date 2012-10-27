@@ -91,7 +91,10 @@ else
 
   for str in iterator do
     if (string.sub(str,-24)=="/Scripts/Libraries/?.lua") then
-      if string.find(str,"Resources") then
+      -- "resources" for unix/osc, "/usr/" for linux
+      if string.find(str,"Resources") or
+        string.find(str,"/usr/")
+      then
         default_location = str    
       else
         user_provided = str
@@ -99,31 +102,46 @@ else
     end
   end
 
-  local make_path = function(str_path)
-    return str_path:gsub("/Libraries","")
+  print("default_location #1",default_location)
+  print("user_provided #1",user_provided)
+
+  if default_location or user_provided then
+
+    local make_path = function(str_path)
+      return str_path:gsub("/Libraries","")
+    end
+
+    local literal_path = function(str_path)
+      return str_path:gsub("?","GlobalMidiActions")
+    end
+
+    if default_location then
+      default_location = make_path(default_location)
+    end
+    if user_provided then
+      user_provided = make_path(user_provided)
+    end
+
+    print("default_location #2",default_location)
+    print("user_provided #2",user_provided)
+
+    local path_addendum = nil
+    if user_provided and io.exists(literal_path(user_provided)) then
+      path_addendum = user_provided
+    elseif default_location and io.exists(literal_path(default_location)) then
+      path_addendum = default_location
+    end
+    
+    if path_addendum then
+      local old_package_path = package.path
+      package.path = package.path .. ";" .. path_addendum
+      require "GlobalMidiActions"
+      package.path = old_package_path
+      actions_loaded = true  
+    end
+
   end
 
-  local literal_path = function(str_path)
-    return str_path:gsub("?","GlobalMidiActions")
-  end
-
-  default_location = make_path(default_location)
-  user_provided = make_path(user_provided)
-
-  local path_addendum = nil
-  if io.exists(literal_path(user_provided)) then
-    path_addendum = user_provided
-  elseif io.exists(literal_path(default_location)) then
-    path_addendum = default_location
-  end
-  
-  if path_addendum then
-    local old_package_path = package.path
-    package.path = package.path .. ";" .. path_addendum
-    require "GlobalMidiActions"
-    package.path = old_package_path
-    actions_loaded = true  
-  end
 
 end
 
