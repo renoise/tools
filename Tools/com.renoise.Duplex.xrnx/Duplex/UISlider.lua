@@ -236,14 +236,14 @@ function UISlider:do_change(msg)
         end
       elseif (msg.param.mode == "rel_7_offset") then
         if (msg.midi_msg[3] < 64) then
-          new_val = math.max(new_val-(step_size*(msg.midi_msg[3]-62)),0)
+          new_val = math.max(new_val-(step_size*(64-msg.midi_msg[3])),0)
         elseif (msg.midi_msg[3] > 64) then
           new_val = math.min(new_val+(step_size*(msg.midi_msg[3]-64)),self.ceiling)
         end
 
       elseif (msg.param.mode == "rel_7_twos_comp") then
         if (msg.midi_msg[3] > 64) then
-          new_val = math.max(new_val-(step_size*(msg.midi_msg[3]-126)),0)
+          new_val = math.max(new_val-(step_size*(128-msg.midi_msg[3])),0)
         elseif (msg.midi_msg[3] < 65) then
           new_val = math.min(new_val+(step_size*msg.midi_msg[3]),self.ceiling)
         end
