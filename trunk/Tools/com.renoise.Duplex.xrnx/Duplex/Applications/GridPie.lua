@@ -3863,7 +3863,10 @@ function GridPie:_attach_to_song(new_song)
         if (self.patt_cache[notification.index]) then
           --print("*** ordered sequence was detected")
           for idx = gridpie_seq_pos-2,1,-1 do
-            if (idx>=notification.index) then
+            if not self.patt_cache[idx] then
+              -- do nothing
+            elseif (idx>=notification.index) then
+              -- backwards update of pattern cache
               self.patt_cache[idx+1] = table.rcopy(self.patt_cache[idx])
             end
             if (idx==notification.index) then
