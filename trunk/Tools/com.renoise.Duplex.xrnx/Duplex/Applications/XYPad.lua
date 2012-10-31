@@ -187,6 +187,7 @@ function XYPad:on_idle()
   end
 
   if self.update_requested then
+    self.update_requested = false
     self:update_controller()
   end
 
@@ -279,6 +280,7 @@ end
 -- @return DeviceParameter
 
 function XYPad:get_xy_params()
+  TRACE("XYPad:get_xy_params()")
 
   if not self.target_device then
     return

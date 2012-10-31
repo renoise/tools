@@ -137,7 +137,7 @@
           </Group>
         </Column>
         <Group name="Cue Level">
-          <Param value="CC#47|Ch1" type="dial" name="dial 1"  size="1" maximum="127" minimum="0"/>
+          <Param value="CC#47|Ch1" type="dial" mode="rel_7_twos_comp" name="dial 1"  size="1" maximum="127" minimum="0"/>
         </Group>
       </Row>
       

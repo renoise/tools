@@ -71,14 +71,14 @@
 					</Group>
 				</Column>
 				<Group name="Navigator" columns="1">
-					<Param value="/grid/led/set 15 0 %i" action="/grid/key 15 0 %i" type="button" maximum="1" minimum="0"/>
-					<Param value="/grid/led/set 15 1 %i" action="/grid/key 15 1 %i" type="button" maximum="1" minimum="0"/>
-					<Param value="/grid/led/set 15 2 %i" action="/grid/key 15 2 %i" type="button" maximum="1" minimum="0"/>
-					<Param value="/grid/led/set 15 3 %i" action="/grid/key 15 3 %i" type="button" maximum="1" minimum="0"/>
-					<Param value="/grid/led/set 15 4 %i" action="/grid/key 15 4 %i" type="button" maximum="1" minimum="0"/>
-					<Param value="/grid/led/set 15 5 %i" action="/grid/key 15 5 %i" type="button" maximum="1" minimum="0"/>
-					<Param value="/grid/led/set 15 6 %i" action="/grid/key 15 6 %i" type="button" maximum="1" minimum="0"/>
-					<Param value="/grid/led/set 15 7 %i" action="/grid/key 15 7 %i" type="button" maximum="1" minimum="0"/>
+					<Param value="/grid/led/set 7 0 %i" action="/grid/key 7 0 %i" type="button" maximum="1" minimum="0"/>
+					<Param value="/grid/led/set 7 1 %i" action="/grid/key 7 1 %i" type="button" maximum="1" minimum="0"/>
+					<Param value="/grid/led/set 7 2 %i" action="/grid/key 7 2 %i" type="button" maximum="1" minimum="0"/>
+					<Param value="/grid/led/set 7 3 %i" action="/grid/key 7 3 %i" type="button" maximum="1" minimum="0"/>
+					<Param value="/grid/led/set 7 4 %i" action="/grid/key 7 4 %i" type="button" maximum="1" minimum="0"/>
+					<Param value="/grid/led/set 7 5 %i" action="/grid/key 7 5 %i" type="button" maximum="1" minimum="0"/>
+					<Param value="/grid/led/set 7 6 %i" action="/grid/key 7 6 %i" type="button" maximum="1" minimum="0"/>
+					<Param value="/grid/led/set 7 7 %i" action="/grid/key 7 7 %i" type="button" maximum="1" minimum="0"/>
 				</Group>
 			</Row>
 		</Column>
