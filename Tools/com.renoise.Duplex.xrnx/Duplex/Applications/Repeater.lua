@@ -218,6 +218,7 @@ function Repeater:on_idle()
   end
 
   if self.update_requested then
+    self.update_requested = false
     self:set_mode()
     self:set_divisor()
     self:update_grid()
@@ -237,6 +238,7 @@ end
 -- or are freely roaming the tracks
 
 function Repeater:attach_to_device(track_idx,device_idx,device)
+  TRACE("Repeater:attach_to_device()",track_idx,device_idx,device)
 
   -- clear observables, attach to track (if needed)
   RoamingDSP.attach_to_device(self,track_idx,device_idx,device)
@@ -275,6 +277,7 @@ end
 -- and the grid cells are drawn accordingly. Also, record automation. 
 
 function Repeater:set_value_from_coords(x,y)
+  TRACE("Repeater:set_value_from_coords()",x,y)
 
   if not self.target_device then
     return

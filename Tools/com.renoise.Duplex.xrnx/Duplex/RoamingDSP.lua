@@ -11,7 +11,18 @@
   The class comes with features for locking onto the selected device, and 
   quickly navigating between all similar devices in the song 
   
-  For an example on how to implement this class, please see
+  Mappings
+
+  lock_button : control the locked state of the selected device
+  next_device : used for locating a device across tracks
+  prev_device : -//-
+
+  Options
+
+  Automation recording   : record whenever edit mode is enabled in Renoise
+  Envelope interpolation : specify the playmode - point, linear, curve
+  Follow position	       : whether the next/previous buttons affect the selected device 
+  Lock to device:	       : control the locked state (useful when you have no mapping)
 
 
 

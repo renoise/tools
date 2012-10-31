@@ -422,8 +422,8 @@ function Browser:set_previous_configuration()
         local config_list = 
           self:_available_configurations_for_device(self._device_name)
         local start_running = true
-          self:set_configuration(config_list[config_idx-1], start_running)
-       return
+        self:set_configuration(config_list[config_idx-1], start_running)
+        return
       end
     end
   end
@@ -470,8 +470,8 @@ function Browser:set_next_configuration()
         local config_list = 
           self:_available_configurations_for_device(self._device_name)
         local start_running = true
-          self:set_configuration(config_list[config_idx+1], start_running)
-       return
+        self:set_configuration(config_list[config_idx+1], start_running)
+        return
       end
     end
   end
@@ -498,6 +498,60 @@ function Browser:has_next_configuration()
     end
   end
       
+end
+
+--------------------------------------------------------------------------------
+
+--- Activate a configuration based on the provided index  
+-- (silently fails if no configuration exist at that index, or already active)
+-- @param idx (Number)
+
+function Browser:goto_configuration(idx)
+  TRACE("Browser:goto_configuration()",idx)
+  if not self._configuration_name or not self._device_name then
+    return
+  end
+  local available_configuration_names = 
+    self:_available_configuration_names_for_device(self._device_name)
+
+  if (idx > #available_configuration_names) then
+    -- configuration does not exist
+    return 
+  end
+
+  local cfg_idx = self:get_configuration_index(self._configuration_name)
+  if (cfg_idx == idx) then
+    -- configuration is already active 
+    return
+  end
+
+  local config_list = 
+    self:_available_configurations_for_device(self._device_name)
+
+  local start_running = true
+  self:set_configuration(config_list[idx], start_running)
+
+end
+
+
+--------------------------------------------------------------------------------
+
+--- Retrieve the index for the configuration matching the provided name
+-- @return Number or nil
+
+function Browser:get_configuration_index(cfg_name)
+  TRACE("Browser:get_configuration_index()",cfg_name)
+  if not self._configuration_name or not self._device_name then
+    return
+  end
+  local available_configuration_names = 
+    self:_available_configuration_names_for_device(self._device_name)
+  for config_idx, config_name in ipairs(available_configuration_names) do
+    if (config_name == cfg_name) then
+      return config_idx
+    end
+  end
+
 end
 
 --------------------------------------------------------------------------------

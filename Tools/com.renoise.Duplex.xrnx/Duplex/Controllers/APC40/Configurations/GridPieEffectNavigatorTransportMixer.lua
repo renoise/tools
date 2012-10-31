@@ -190,6 +190,16 @@ duplex_configurations:insert {
         },
       }
     },
+    BPM_Set = {
+      application = "MidiActions",
+      mappings = {control = {group_name = "Cue Level"}},
+      options = {
+        action = "Transport:Song:BPM [Set]",
+        min_scaling = "64",
+        max_scaling = "200",
+        scaling = "Exp+"
+      }
+    },
     SwitchConfiguration = {
       mappings = {
         goto_previous = {
