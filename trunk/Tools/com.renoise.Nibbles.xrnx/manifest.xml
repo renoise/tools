@@ -2,9 +2,9 @@
 <RenoiseScriptingTool>
   <ApiVersion>3</ApiVersion>
   <Id>com.renoise.Nibbles</Id>
-  <Version>0.5</Version>
+  <Version>2.0</Version>
   <Name>Nibbles</Name>
-  <Author>Dac Chartrand [dac@renoise.com]</Author>
+  <Author>4Tey, KMaki, Dac Chartrand [dac@renoise.com]</Author>
   <Description>Nibbles, what else?</Description>
   <Category>Game</Category>
 </RenoiseScriptingTool>
