@@ -19,7 +19,7 @@ function add_notes(n_column, c_line, vb)
    track_type == renoise.Track.TRACK_TYPE_GROUP or
    (song.patterns[pattern_index].tracks[track_index].is_alias == true and 
    overwrite_alias == false) then
-    print(song.patterns[pattern_index].tracks[track_index].is_alias)
+--    print(song.patterns[pattern_index].tracks[track_index].is_alias)
      return --Do not process master, send, group or aliassed track!!
    end
 
@@ -711,9 +711,9 @@ function set_process_octave(octave_order)
       ordoct = tonumber(octave_order[octave_pointer])
 
    else
+   
       ordoct = octave_order[randomize(1, #octave_order)] 
-      
---[[
+--[[      
       --Better attempt to improve note randomization by slimming used elements
       if #octave_pool < 1 then
         --I don't find the fact funny that when i do an octave_pool = octave_order
@@ -762,7 +762,13 @@ function set_process_instrument(ins_order)
       --Better attempt to improve note randomization by slimming used elements
       if #instrument_pool < 1 then
         local instrument_stream = table.serialize(ins_order,",")
-        instrument_pool = instrument_stream:split( "[^,%s]+" )
+
+        if string.find(instrument_stream, ',') then
+          instrument_pool = instrument_stream:split( "[^,%s]+" )
+        else
+          instrument_pool={instrument_stream}
+        end
+        
       end
 
       local pool_position = randomize(1, #instrument_pool)
@@ -794,7 +800,13 @@ function set_process_velocity(vel_order)
 --      tempvel = tonumber(vel_order[randomize(1, #vel_order)])
       if #velocity_pool < 1 then
         local velocity_stream = table.serialize(vel_order,",")
-        velocity_pool = velocity_stream:split( "[^,%s]+" )
+
+        if string.find(velocity_stream, ',') then
+          velocity_pool = velocity_stream:split( "[^,%s]+" )
+        else
+          velocity_pool = {velocity_stream}
+        end
+
       end
 
       local pool_position = randomize(1, #velocity_pool)
@@ -1218,7 +1230,7 @@ function fill_cells(note_column, note, instrument, velocity,
       if cut_value > 0 then
 
          if note_column.panning_value ~= EMPTY then
-            print(note_column.panning_value)
+--            print(note_column.panning_value)
             if (note_column.panning_value >= 129 and note_column.panning_value <= EMPTY) or 
                (note_column.panning_value >= 0xc00 and note_column.panning_value <= 0xc0f) then
                note_column.panning_value = cut_value
@@ -1558,4 +1570,10 @@ function make_unique_pattern()
    song.sequencer:make_range_unique(1, #song.sequencer.pattern_sequence)
    return
 end
+
+
+
+--------------------------------------------------------------------------------
+--      End of teh road...
+--------------------------------------------------------------------------------
 

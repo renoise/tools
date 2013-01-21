@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<EnvelopePresetTable doc_version="0">
+  <PresetVersion>3.00</PresetVersion>
+  <Scheme>1,3,7</Scheme>
+  <ToneFactor>3</ToneFactor>
+  <Transpose>-12</Transpose>
+  <TransposeLink>false</TransposeLink>
+  <Frequency>1</Frequency>
+  <FrequencyMode>1</FrequencyMode>
+  <PointSequences>0,4,8</PointSequences>
+  <LoopMode>2</LoopMode>
+</EnvelopePresetTable>
