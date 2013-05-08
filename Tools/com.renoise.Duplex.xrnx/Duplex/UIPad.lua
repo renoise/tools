@@ -15,12 +15,12 @@ class 'UIPad' (UIComponent)
 --------------------------------------------------------------------------------
 
 --- Initialize the UIPad class
--- @param display (Duplex.Display)
+-- @param app (Duplex.Application)
 
-function UIPad:__init(display)
+function UIPad:__init(app)
   TRACE('UIPad:__init')
 
-  UIComponent.__init(self,display)
+  UIComponent.__init(self,app)
 
   -- current values, between 0 and .ceiling
   self.value = {nil,nil}
@@ -41,17 +41,19 @@ end
 
 --- Value was changed
 -- @param msg (Duplex.Message)
--- @return boolean, true when message was handled
+-- @return self or nil
 
 function UIPad:do_change(msg)
   TRACE("UIPad:do_change()",msg)
 
-  -- test for group
   if not (self.group_name == msg.group_name) then
     return
   end
 
-  -- test for position
+  if not self.app.active then
+    return 
+  end
+  
   if not self:test(msg.column,msg.row) then
     return
   end
@@ -69,11 +71,11 @@ function UIPad:do_change(msg)
       val_y = msg.value[2]
     end
     
-    return self:set_value(val_x,val_y)
+    self:set_value(val_x,val_y)
 
   end
 
-  return true
+  return self
 
 end
 
@@ -84,36 +86,25 @@ end
 -- @param val_x (Number) 
 -- @param val_y (Number) 
 -- @param skip_event (boolean) skip event handler
--- @return boolean, true when value was set
 
 function UIPad:set_value(val_x,val_y,skip_event)
   TRACE("UIPad:set_value()",val_x,val_y,skip_event)
 
-  if (self._cached_value[1] ~= val_x) or
-    (self._cached_value[2] ~= val_y)
-  then
-    self._cached_value = {self.value[1],self.value[2]}
-    self.value = {val_x,val_y}
+  self._cached_value = {self.value[1],self.value[2]}
+  self.value = {val_x,val_y}
 
-    --print("*** UIPad:set_value - val_x,val_y",val_x,val_y)
+  --print("*** UIPad:set_value - val_x,val_y",val_x,val_y)
 
-    if (skip_event) then
-      self:invalidate()
+  if (skip_event) then
+    self:invalidate()
+  elseif (self.on_change) then 
+    if (self:on_change()==false) then 
+      self._value = self._cached_value  
     else
-
-      if (self.on_change == nil) then 
-        return false
-      end
-      if (self:on_change()==false) then 
-        self._value = self._cached_value  
-        return false
-      else
-        self:invalidate()
-      end
+      self:invalidate()
     end
-  end  
+  end
 
-  return true
 
 end
 
@@ -140,7 +131,7 @@ end
 
 function UIPad:add_listeners()
 
-  self._display.device.message_stream:add_listener(
+  self.app.display.device.message_stream:add_listener(
     self,DEVICE_EVENT_VALUE_CHANGED,
     function(msg) return self:do_change(msg) end )
 
@@ -154,7 +145,7 @@ end
 
 function UIPad:remove_listeners()
 
-  self._display.device.message_stream:remove_listener(
+  self.app.display.device.message_stream:remove_listener(
     self,DEVICE_EVENT_VALUE_CHANGED)
 
 end

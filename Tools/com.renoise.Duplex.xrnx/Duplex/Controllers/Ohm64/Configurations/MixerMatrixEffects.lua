@@ -48,10 +48,18 @@ duplex_configurations:insert {
         triggers = {
           group_name = "Grid2",
         },
-        sequence = {
+        --sequence = {
+        --  group_name = "ControlsRight",
+        --  orientation = VERTICAL,
+        --  index = 1,
+        --},
+        prev_seq_page = {
           group_name = "ControlsRight",
-          orientation = VERTICAL,
           index = 1,
+        },
+        next_seq_page = {
+          group_name = "ControlsRight",
+          index = 2,
         },
         track = {
           group_name = "ControlsRight",
@@ -68,10 +76,18 @@ duplex_configurations:insert {
         parameters = {
           group_name= "EncodersEffect",
         },
-        page = {
+        --page = {
+        --  group_name = "ControlsRight",
+        --  index = 5,
+        --}
+        param_prev = {
           group_name = "ControlsRight",
           index = 5,
-        }
+        },
+        param_next = {
+          group_name = "ControlsRight",
+          index = 6,
+        },
       }
     },
     Transport = {

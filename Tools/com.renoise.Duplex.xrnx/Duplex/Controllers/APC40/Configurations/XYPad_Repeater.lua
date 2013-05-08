@@ -2,12 +2,12 @@
 -- Duplex.APC40
 ----------------------------------------------------------------------------]]--
 
--- setup "Matrix + Effect + Navigator + Transport + Mixer",
+-- setup "XYPad + Effect + Navigator + Transport + Mixer",
 
 duplex_configurations:insert {
 
   -- configuration properties
-  name = "Matrix + Effect + Navigator + Transport + Mixer",
+  name = "XYPad + Repeater",
   pinned = true,
   
   -- device properties
@@ -16,39 +16,137 @@ duplex_configurations:insert {
     display_name = "APC40",
     device_port_in = "Akai APC40",
     device_port_out = "Akai APC40",
-    control_map = "Controllers/APC40/Controlmaps/APC40.xml",
+    control_map = "Controllers/APC40/Controlmaps/APC40_XYPad_Repeater.xml",
     thumbnail = "Controllers/APC40/APC40.bmp",
     protocol = DEVICE_MIDI_PROTOCOL,
   },
 
   applications = {
-    Matrix = {
+    XYPad_1 = {
+      application = "XYPad",
       mappings = {
-        matrix = {
-          group_name = "Slot",
+        x_slider = {
+          group_name = "Track Fader",
+          index = 1
         },
-        triggers = {
+        y_slider = {
+          group_name = "Track Fader",
+          index = 2
+        },
+        xy_grid = {
+          group_name = "Slot_1",
+        },
+        lock_button = {
           group_name = "Trigger",
+          index = 1
         },
-        --sequence = {
-        --  group_name = "Move",
-        --  index = 3,
-        --},
-        prev_seq_page = {
-          group_name = "Move",
-          index = 3,
+        prev_device = {
+          group_name = "Slot_2",
+          index = 1
         },
-        next_seq_page = {
-          group_name = "Move",
-          index = 4,
+        next_device = {
+          group_name = "Slot_2",
+          index = 2
+        }
+               
+      },        
+      palette = {
+        foreground = {
+          color={0xFF,0x00,0x00}, 
         },
-        track = {
-          group_name = "Move",
-          index = 1,
+        background = {
+          color={0xFF,0xFF,0x00}, 
         }
       },
       options = {
-        follow_track = 1,
+        unique_id = 1,
+        record_method = 2,
+        locked = 1
+      }
+    },
+    XYPad_2 = {
+      application = "XYPad",
+      mappings = {
+        x_slider = {
+          group_name = "Track Fader",
+          index = 3
+        },
+        y_slider = {
+          group_name = "Track Fader",
+          index = 4
+        },
+        xy_grid = {
+          group_name = "Slot_3",
+        },
+        lock_button = {
+          group_name = "Trigger",
+          index = 2
+        },
+        prev_device = {
+          group_name = "Slot_2",
+          index = 3
+        },
+        next_device = {
+          group_name = "Slot_2",
+          index = 4
+        }
+               
+      },        
+      palette = {
+        foreground = {
+          color={0xFF,0x00,0x00}, 
+        },
+        background = {
+          color={0xFF,0xFF,0x00}, 
+        }
+      },
+      options = {
+        unique_id = 1,
+        record_method = 2,
+        locked = 1
+      }
+    },
+    Repeater = {
+      mappings = {
+        grid = {
+          group_name = "Slot_4",
+        },
+        prev_device = {
+          group_name = "Slot_5",
+          index = 7
+        },
+        next_device = {
+          group_name = "Slot_5",
+          index = 8
+        },
+        mode_free = {
+          group_name = "Slot_5",
+          index = 1
+        },
+        mode_even = {
+          group_name = "Slot_5",
+          index = 2
+        },
+        mode_triplet = {
+          group_name = "Slot_5",
+          index = 3
+        },
+        mode_dotted = {
+          group_name = "Slot_5",
+          index = 4
+        },
+        lock_button = {
+          group_name = "Trigger",
+          index = 4
+        },
+        mode_slider = {
+          group_name = "Track Fader",
+          index = 5
+        },
+        divisor_slider = {
+          group_name = "Track Fader",
+          index = 6
+        }
       }
     },
     TrackSelector = {
@@ -64,8 +162,8 @@ duplex_configurations:insert {
         select_track = {
           group_name = "Track Selector",
           index = 1,
-        },
-      },
+        }
+      }
     },
     Transport = {
       mappings = {
@@ -109,9 +207,6 @@ duplex_configurations:insert {
     },
     Mixer = {
       mappings = {
-        levels = {
-          group_name = "Track Fader",
-        },
         mute = {
           group_name = "Mute",
         },
@@ -120,10 +215,6 @@ duplex_configurations:insert {
         },
         master = {
           group_name = "Master Fader",
-        },
-        page = {
-          group_name = "Move",
-          index = 1,
         },
         panning = {
           group_name = "Upper Knob1",
@@ -143,17 +234,9 @@ duplex_configurations:insert {
         parameters = {
           group_name = "Lower Knob1",
         },
-        --page = {
-        --  group_name = "Control",
-        --  index = 1,
-        --},
-        param_prev = {
+        page = {
           group_name = "Control",
           index = 1,
-        },
-        param_next = {
-          group_name = "Control",
-          index = 2,
         },
         device_prev = {
           group_name = "Control",

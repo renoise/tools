@@ -102,9 +102,6 @@ else
     end
   end
 
-  print("default_location #1",default_location)
-  print("user_provided #1",user_provided)
-
   if default_location or user_provided then
 
     local make_path = function(str_path)
@@ -121,9 +118,6 @@ else
     if user_provided then
       user_provided = make_path(user_provided)
     end
-
-    print("default_location #2",default_location)
-    print("user_provided #2",user_provided)
 
     local path_addendum = nil
     if user_provided and io.exists(literal_path(user_provided)) then
@@ -1184,14 +1178,11 @@ function MidiActions:_build_app()
   if (input_method == "button") then
 
     if map.group_name then
-      local c = UIButton(self.display)
+      local c = UIButton(self)
       c.group_name = map.group_name
       c:set_pos(map.index)
       c.tooltip = map.description
       c.on_press = function(obj)
-        if not self.active then
-          return false
-        end
         self:_update_control()
       end
       self:_add_component(c)
@@ -1201,7 +1192,7 @@ function MidiActions:_build_app()
   else
 
     if map.group_name then
-      local c = UISlider(self.display)
+      local c = UISlider(self)
       c.group_name = map.group_name
       c:set_pos(map.index or 1)
       c.flipped = map.flipped
@@ -1214,9 +1205,6 @@ function MidiActions:_build_app()
       c.ceiling = 1
       c.tooltip = map.description
       c.on_change = function(obj)
-        if not self.active then 
-          return false 
-        end
         self:_update_control()
       end
       self:_add_component(c)

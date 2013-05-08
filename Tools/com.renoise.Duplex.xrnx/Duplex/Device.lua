@@ -548,6 +548,9 @@ function Device:_send_message(message,xarg)
     if (xarg.invert_y) then
       message.value[2] = (xarg.maximum-message.value[2])+xarg.minimum
     end
+    if (xarg.swap_axes) then
+      message.value[1],message.value[2] = message.value[2],message.value[1]
+    end
   elseif (xarg.type == "key") then
     message.input_method = CONTROLLER_KEYBOARD
     message.context = MIDI_NOTE_MESSAGE

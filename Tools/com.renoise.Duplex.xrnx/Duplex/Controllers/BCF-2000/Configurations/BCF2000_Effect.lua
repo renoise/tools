@@ -58,9 +58,17 @@ duplex_configurations:insert {
         device = {
           group_name= "Buttons1",
         },
-        page = {
-          group_name= "ControlButtonRow2",
+        --page = {
+        --  group_name= "ControlButtonRow2",
+        --  index = 1,
+        --},
+        param_prev = {
+          group_name = "ControlButtonRow2",
           index = 1,
+        },
+        param_next = {
+          group_name = "ControlButtonRow2",
+          index = 2,
         },
       },
     },

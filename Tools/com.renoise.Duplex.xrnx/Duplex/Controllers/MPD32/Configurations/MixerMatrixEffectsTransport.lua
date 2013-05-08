@@ -44,10 +44,19 @@ duplex_configurations:insert {
         parameters = {
           group_name= "Knobs",
         },
-        page = {
+        --page = {
+        --  group_name = "Switches",
+        --  index = 7,
+        --}
+        param_prev = {
           group_name = "Switches",
           index = 7,
-        }
+        },
+        param_next = {
+          group_name = "Switches",
+          index = 8,
+        },
+
       }
     },
     Transport = {

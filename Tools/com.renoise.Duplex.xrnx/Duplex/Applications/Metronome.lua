@@ -56,14 +56,11 @@ end
 
 function Metronome:_build_app()
 
-  local c = UIButton(self.display)
+  local c = UIButton(self)
   c.group_name = self.mappings.toggle.group_name
   c:set_pos(self.mappings.toggle.index)
   c.tooltip = self.mappings.toggle.description
   c.on_press = function(obj)
-    if not self.active then
-      return false
-    end
     local enabled = renoise.song().transport.metronome_enabled
     renoise.song().transport.metronome_enabled = not enabled
     self:update()

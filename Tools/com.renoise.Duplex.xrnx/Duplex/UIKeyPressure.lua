@@ -22,12 +22,12 @@ class 'UIKeyPressure' (UISlider)
 --------------------------------------------------------------------------------
 
 --- Initialize the UIKeyPressure class
--- @param display (Duplex.Display)
+-- @param app (Duplex.Application)
 
-function UIKeyPressure:__init(display)
-  TRACE("UIKeyPressure:__init()",display)
+function UIKeyPressure:__init(app)
+  TRACE("UIKeyPressure:__init()",app)
 
-  UISlider.__init(self,display)
+  UISlider.__init(self,app)
 
 end
 
@@ -39,7 +39,7 @@ end
 function UIKeyPressure:add_listeners()
   TRACE("UIKeyPressure:add_listeners()")
 
-  self._display.device.message_stream:add_listener(
+  self.app.display.device.message_stream:add_listener(
     self, DEVICE_EVENT_CHANNEL_PRESSURE,
     function(msg) return self:do_change(msg) end )
 
@@ -53,7 +53,7 @@ end
 function UIKeyPressure:remove_listeners()
   TRACE("UIKeyPressure:remove_listeners()")
 
-  self._display.device.message_stream:remove_listener(
+  self.app.display.device.message_stream:remove_listener(
     self,DEVICE_EVENT_CHANNEL_PRESSURE)
 
 end

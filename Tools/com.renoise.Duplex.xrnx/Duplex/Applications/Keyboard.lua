@@ -395,7 +395,7 @@ function Keyboard:trigger(note_on,pitch,velocity,grid_index)
   TRACE("Keyboard:trigger()",note_on,pitch,velocity,grid_index)
 
   if (self.options.keyboard_mode.value == KEYBOARD_TRIGGER_NONE) then
-    print("Cannot trigger note, keyboard has been disabled")
+    LOG("Cannot trigger note, keyboard has been disabled")
     return false
   end
 
@@ -405,7 +405,7 @@ function Keyboard:trigger(note_on,pitch,velocity,grid_index)
 
   -- reject notes that are outside valid range
   if note_on and (pitch>UPPER_NOTE) or (pitch<LOWER_NOTE) then
-    print("Cannot trigger note, pitch is outside valid range")
+    LOG("Cannot trigger note, pitch is outside valid range")
     return false
   end
 
@@ -515,7 +515,7 @@ function Keyboard:send_midi(msg)
 
   local osc_client = self._process.browser._osc_client
   if not osc_client:trigger_midi(msg) then
-    print("Cannot send MIDI, the internal OSC server was not started")
+    LOG("Cannot send MIDI, the internal OSC server was not started")
   end
 
 end
@@ -620,13 +620,10 @@ function Keyboard:_build_app()
     local key_index = self.mappings.keys.index or 1
     self._key_args = cm:get_indexed_element(key_index,key_group)
 
-    local c = UIKey(self.display)
+    local c = UIKey(self)
     c.group_name = self.mappings.keys.group_name
     c.match_any_note = true
     c.on_press = function(obj)
-      if not self.active then
-        return false
-      end
       --print("*** Keyboard.build_app -obj...")
       --rprint(obj)
       local note_on = true
@@ -636,9 +633,6 @@ function Keyboard:_build_app()
       return triggered
     end
     c.on_release = function(obj)
-      if not self.active then
-        return false
-      end
       local note_on = false
       local msg = self.display.device.message_stream.current_message
       local released = self:trigger(note_on,obj.pitch,obj.velocity)
@@ -728,7 +722,7 @@ function Keyboard:_build_app()
             local param = key_params[ctrl_idx]
             --print("*** Keyboard - build_app - key",ctrl_idx)
             --local args = cm:get_indexed_element(ctrl_idx,map.group_name)
-            local c = UIKey(self.display)
+            local c = UIKey(self)
             c.group_name = param.group_name
             c.ceiling = param.maximum
             c.pitch = ctrl_idx
@@ -762,9 +756,6 @@ function Keyboard:_build_app()
             --print("*** Keyboard - build_app - x,y",x,y)
             c:set_size(unit_w,unit_h)
             c.on_press = function(obj)
-              if not self.active then
-                return false
-              end
               local note_on = true
               local pitch = ctrl_idx+(self.curr_octave*12)-1
               local msg = self.display.device.message_stream.current_message
@@ -774,9 +765,6 @@ function Keyboard:_build_app()
               return triggered
             end
             c.on_release = function(obj)
-              if not self.active then
-                return false
-              end
               local note_on = false
               local pitch = ctrl_idx+(self.curr_octave*12)-1
               local msg = self.display.device.message_stream.current_message
@@ -799,14 +787,11 @@ function Keyboard:_build_app()
 
   local map = self.mappings.pressure
   if (map.group_name) then
-    local c = UIKeyPressure(self.display)
+    local c = UIKeyPressure(self)
     c.group_name = map.group_name
     c.ceiling = 127
     c.value = 0
     c.on_change = function(obj)
-      if not self.active then
-        return
-      end
       local msg = nil
       if (self.options.channel_pressure.value == BROADCAST_PRESSURE) then
         msg = {208,obj.value,0}
@@ -827,16 +812,13 @@ function Keyboard:_build_app()
 
   local mapping = self.mappings.pitch_bend
   if (mapping.group_name) then
-    local c = UIPitchBend(self.display)
+    local c = UIPitchBend(self)
     local c_args = cm:get_indexed_element(mapping.index,mapping.group_name)
     c.group_name = mapping.group_name
     c.value = (c_args.maximum-c_args.minimum)/2
     c.ceiling = c_args.maximum
     c:set_pos(mapping.index or 1)
     c.on_change = function(obj)
-      if not self.active then
-        return
-      end
       local msg = nil
       --print(obj.value)
       if (self.options.pitch_bend.value == BROADCAST_PITCHBEND) then
@@ -857,15 +839,12 @@ function Keyboard:_build_app()
 
   local map = self.mappings.octave_down
   if map.group_name then
-    local c = UIButton(self.display)
+    local c = UIButton(self)
     c.group_name = map.group_name
     c.tooltip = map.description
     c:set(self.palette.octave_down_off)
     c:set_pos(map.index)
     c.on_press = function(obj)
-      if not self.active then 
-        return false 
-      end
       if (self.options.base_octave.value == OCTAVE_FOLLOW) then
         renoise.song().transport.octave = math.max(0,renoise.song().transport.octave - 1)
       else
@@ -882,15 +861,12 @@ function Keyboard:_build_app()
 
   local map = self.mappings.octave_up
   if map.group_name then
-    local c = UIButton(self.display)
+    local c = UIButton(self)
     c.group_name = map.group_name
     c.tooltip = map.description
     c:set(self.palette.octave_up_off)
     c:set_pos(map.index)
     c.on_press = function(obj)
-      if not self.active then 
-        return false 
-      end
       if (self.options.base_octave.value == OCTAVE_FOLLOW) then
         renoise.song().transport.octave = math.min(8,renoise.song().transport.octave + 1)
       else
@@ -917,7 +893,7 @@ function Keyboard:_build_app()
         slider_size = cm:count_rows(map.group_name)
       end
     end
-    local c = UISlider(self.display)
+    local c = UISlider(self)
     c.group_name = map.group_name
     c:set_pos(map.index)
     c.flipped = map.flipped
@@ -932,9 +908,6 @@ function Keyboard:_build_app()
     })
     c.value = self.curr_octave
     c.on_change = function(obj)
-      if not self.active then 
-        return false 
-      end
       if (self.options.base_octave.value == OCTAVE_FOLLOW) then
         renoise.song().transport.octave = obj.index
       else
@@ -950,15 +923,12 @@ function Keyboard:_build_app()
 
   local map = self.mappings.octave_sync
   if map.group_name then
-    local c = UIButton(self.display)
+    local c = UIButton(self)
     c.group_name = map.group_name
     c.tooltip = map.description
     c:set_pos(map.index)
     c:set(self.palette.octave_sync_off)
     c.on_press = function()
-      if not self.active then 
-        return false 
-      end
       local val = nil
       if (self.options.base_octave.value == OCTAVE_FOLLOW) then
         val = renoise.song().transport.octave+2
@@ -987,7 +957,7 @@ function Keyboard:_build_app()
         slider_size = cm:count_rows(map.group_name)
       end
     end
-    local c = UISlider(self.display)
+    local c = UISlider(self)
     c.group_name = map.group_name
     c:set_pos(map.index)
     c.flipped = map.flipped
@@ -1001,9 +971,6 @@ function Keyboard:_build_app()
     })
     c.value = self.curr_track
     c.on_change = function(obj)
-      if not self.active then 
-        return false 
-      end
       if (self.options.track_index.value == TRACK_FOLLOW) then
         return false 
       else
@@ -1019,15 +986,12 @@ function Keyboard:_build_app()
 
   local map = self.mappings.track_sync
   if map.group_name then
-    local c = UIButton(self.display)
+    local c = UIButton(self)
     c.group_name = map.group_name
     c.tooltip = map.description
     c:set_pos(map.index)
     c:set(self.palette.track_sync_off)
     c.on_press = function()
-      if not self.active then 
-        return false 
-      end
       local val = nil
       if (self.options.track_index.value == TRACK_FOLLOW) then
         val = renoise.song().selected_track_index+1
@@ -1056,7 +1020,7 @@ function Keyboard:_build_app()
         slider_size = cm:count_rows(map.group_name)
       end
     end
-    local c = UISlider(self.display)
+    local c = UISlider(self)
     c.group_name = map.group_name
     c:set_pos(map.index)
     c.flipped = map.flipped
@@ -1070,9 +1034,6 @@ function Keyboard:_build_app()
     })
     c.value = self.curr_instr
     c.on_change = function(obj)
-      if not self.active then 
-        return false 
-      end
       if (self.options.instr_index.value == TRACK_FOLLOW) then
         return false 
       else
@@ -1088,15 +1049,12 @@ function Keyboard:_build_app()
 
   local map = self.mappings.instr_sync
   if map.group_name then
-    local c = UIButton(self.display)
+    local c = UIButton(self)
     c.group_name = map.group_name
     c.tooltip = map.description
     c:set_pos(map.index)
     c:set(self.palette.instr_sync_off)
     c.on_press = function()
-      if not self.active then 
-        return false 
-      end
       local val = nil
       if (self.options.instr_index.value == INSTR_FOLLOW) then
         val = renoise.song().selected_instrument_index+2
@@ -1125,7 +1083,7 @@ function Keyboard:_build_app()
         slider_size = cm:count_rows(map.group_name)
       end
     end
-    local c = UISlider(self.display)
+    local c = UISlider(self)
     c.group_name = map.group_name
     c:set_pos(map.index)
     c.flipped = map.flipped
@@ -1140,9 +1098,6 @@ function Keyboard:_build_app()
     })
     c.value = self.curr_volume
     c.on_change = function(obj)
-      if not self.active then 
-        return false 
-      end
       if (self.options.base_volume.value == VOLUME_FOLLOW) then
         -- do not allow setting volume if velocity is disabled
         local enabled = renoise.song().transport.keyboard_velocity_enabled
@@ -1166,15 +1121,12 @@ function Keyboard:_build_app()
 
   local map = self.mappings.volume_sync
   if map.group_name then
-    local c = UIButton(self.display)
+    local c = UIButton(self)
     c.group_name = map.group_name
     c.tooltip = map.description
     c:set_pos(map.index)
     c:set(self.palette.volume_sync_off)
     c.on_press = function()
-      if not self.active then 
-        return false 
-      end
       local val = nil
       if (self.options.base_volume.value == VOLUME_FOLLOW) then
         val = renoise.song().transport.keyboard_velocity
@@ -1572,7 +1524,7 @@ function Keyboard:get_instrument_index()
   else
     instr_index = self.options.instr_index.value - 1
     if not renoise.song().instruments[instr_index] then
-      print("Notice from Duplex Keyboard: appointed instrument does not exist")
+      LOG("Notice from Duplex Keyboard: appointed instrument does not exist")
       instr_index = renoise.song().selected_instrument_index
     end
   end
@@ -1597,7 +1549,7 @@ function Keyboard:get_track_index()
   else
     track_index = self.options.track_index.value - 1
     if not renoise.song().tracks[track_index] then
-      print("Notice from Duplex Keyboard: appointed track does not exist")
+      LOG("Notice from Duplex Keyboard: appointed track does not exist")
       track_index = renoise.song().selected_track_index
     end
   end

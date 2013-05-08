@@ -155,7 +155,11 @@ function Display:apply_tooltips(group_name)
             local elm = control_map:get_indexed_element(idx, obj.group_name)
             if (elm) then
               local widget = self.vb.views[elm.id]
-              widget.tooltip = string.format("%s (%s)",obj.tooltip,elm.value)
+              if elm.value then
+                widget.tooltip = string.format("%s (%s)",obj.tooltip,elm.value)
+              else
+                widget.tooltip = obj.tooltip
+              end
             end
           end
         end
@@ -212,6 +216,8 @@ function Display:update()
               else
                 local idx = (x+obj.x_pos-1)+((y+obj.y_pos-2)*columns)
                 local elm = control_map:get_indexed_element(idx, obj.group_name)
+
+                --print("*** elm,idx,obj.group_name",elm,idx,obj.group_name)
                 -- if element is a UIKey and part of a keyboard, 
                 -- provide a dynamically generated entry
                 if not elm and (type(obj)=="UIKey") then
@@ -272,21 +278,21 @@ function Display:set_parameter(elm, obj, point, secondary)
   local value = self.device:point_to_value(point, elm, obj.ceiling)
 
   --print("*** Display:set_parameter() - value",value)
+  --print("*** Display:set_parameter() - elm",elm)
+  --rprint(elm)
   --print("*** Display:set_parameter() - elm.skip_echo",elm.skip_echo)
 
   -- reference to control-map
   local cm = self.device.control_map
 
-  -- the type of message, based on the control-map
-  local msg_type = cm:determine_type(elm.value)
-
-
 
   -- update hardware display
 
-
   -- when this is specified, device is not updated
   if not elm.skip_echo and self.device.loopback_received_messages then
+
+    -- the type of message, based on the control-map
+    local msg_type = cm:determine_type(elm.value)
 
     -- determine the channel (specified or default)
     local channel = nil
@@ -344,17 +350,27 @@ function Display:set_parameter(elm, obj, point, secondary)
       -- do nothing
     elseif (msg_type == OSC_MESSAGE) then
 
-      -- invert XYPad values before sending?
       local osc_value = value
+
       if (elm.type == "xypad") then
         if (type(osc_value)=="table") then
           osc_value = table.rcopy(value)
         end
+        -- invert xypad axes? 
         osc_value[1] = elm.invert_x and 
           elm.maximum-osc_value[1] or osc_value[1]
         osc_value[2] = elm.invert_y and 
           elm.maximum-osc_value[2] or osc_value[2]
+        -- swap xypad axes? 
+        if (elm.swap_axes) then
+          osc_value[1],osc_value[2] = osc_value[2],osc_value[1]
+        end
       end
+      
+
+      --print("*** elm.type",elm.type)
+      --print("*** elm.value",elm.value)
+      --print("*** osc_value",osc_value)
 
       -- it's recommended that wireless devices have their 
       -- messages bundled (or some might get lost)
@@ -420,6 +436,13 @@ function Display:set_parameter(elm, obj, point, secondary)
         y=point.val[2]
       }
       widget:add_notifier(self.ui_notifiers[elm.id])
+
+    elseif (widget_type == "MultiLineText") then
+
+      -- Label...
+
+      --print("*** widget.text",value)
+      widget.text = value
 
     elseif (widget_type == "Rack") then
 
@@ -728,7 +751,10 @@ function Display:_walk_table(t, done, deep)
       
         --- common properties
 
-        local tooltip = string.format("%s (unassigned)",view_obj.meta.value)
+        local tooltip = nil
+        if view_obj.meta.value then
+          tooltip = string.format("%s (unassigned)",view_obj.meta.value)
+        end
 
         --  relative size
         local adj_width = UNIT_WIDTH
@@ -881,21 +907,21 @@ function Display:_walk_table(t, done, deep)
           --- Param:fader
                     
           local notifier = function(value) 
-            --[[
-            ]]
-            -- output the current value
             self:generate_message(value,view_obj.meta)
           end
             
           self.ui_notifiers[view_obj.meta.id] = notifier
 
           if (view_obj.meta.orientation == "vertical") then
+            adj_width = UNIT_WIDTH * (view_obj.meta.aspect or 1)
+            --[[
             view_obj.view = self.vb:row {
               -- padd with spaces to center DEFAULT_CONTROL_HEIGHT in UNIT_WIDTH
               self.vb:space { 
                 width = (UNIT_WIDTH -  DEFAULT_CONTROL_HEIGHT) / 2 
               },
-              self.vb:slider{
+              --self.vb:slider{
+              self.vb:minislider{
                 id = view_obj.meta.id,
                 min = view_obj.meta.minimum,
                 max = view_obj.meta.maximum,
@@ -909,20 +935,24 @@ function Display:_walk_table(t, done, deep)
                 width = (UNIT_WIDTH -  DEFAULT_CONTROL_HEIGHT) / 2 
               }
             }
+            ]]
           else
-            
-            --- Param:fader
-                    
-            view_obj.view = self.vb:slider {
-              id  =view_obj.meta.id,
-              min = view_obj.meta.minimum,
-              max = view_obj.meta.maximum,
-              tooltip = tooltip,
-              width = (UNIT_WIDTH*view_obj.meta.size) + 
-                (DEFAULT_SPACING*(view_obj.meta.size-1)),
-              notifier = notifier
-            }
+            adj_height = UNIT_HEIGHT * (view_obj.meta.aspect or 1)
+            --print("adj_height",adj_height)
           end
+
+          --view_obj.view = self.vb:slider {
+          view_obj.view = self.vb:minislider {
+            id  =view_obj.meta.id,
+            min = view_obj.meta.minimum,
+            max = view_obj.meta.maximum,
+            tooltip = tooltip,
+            --width = (UNIT_WIDTH*view_obj.meta.size) + 
+            --  (DEFAULT_SPACING*(view_obj.meta.size-1)),
+            width = adj_width,
+            height = adj_height,
+            notifier = notifier
+          }
 
         elseif (view_obj.meta.type == "xypad") then
 
@@ -1164,6 +1194,28 @@ function Display:_walk_table(t, done, deep)
           keyboard:add_child(white_keys)
           view_obj.view = keyboard
 
+        elseif (view_obj.meta.type == "label") then
+
+          --print("*** view_obj.meta.text",view_obj.meta.text)
+
+          local str_text = ""
+          if view_obj.meta.text then
+            str_text = view_obj.meta.text:gsub("\\n","\n")
+          end
+
+          view_obj.view = self.vb:multiline_text{
+            id = view_obj.meta.id,
+            text = str_text,
+            font = (view_obj.meta.font or "normal"),
+            width = adj_width,
+            height = adj_height,
+            tooltip = tooltip,
+            --style = "border",
+            --align = "center",
+            --pressed = press_notifier,
+            --released = release_notifier
+          }
+
         end
         
       elseif (t[key].label == "Column") then
@@ -1325,22 +1377,24 @@ function Display:_validate_param(xargs)
 
   -- common Param properties
   
-  -- value
-  if (xargs.value == nil or 
-      self.device.control_map:determine_type(xargs.value) == nil)
-  then
-    renoise.app():show_warning(
-      ('Whoops! The controlmap \'%s\' specifies no or an invalid \'value\' '..
-       'property in one of its \'Param\' fields: %s.\n\n'..
-       'You have to map a control to a MIDI message via the name property, '..
-       'i.e: value="CC#10" (control change number 10, any hannel) or PB|1 '..
-       '(pitchbend on channel 1).'):format(
-       self.device.control_map.file_path, xargs.value or "")
-    )
-  
-    xargs.value = "CC#0"
+  -- check value (label does not need this)
+  if (xargs.type ~= "label") then
+    if (xargs.value == nil or 
+        self.device.control_map:determine_type(xargs.value) == nil)
+    then
+      renoise.app():show_warning(
+        ('Whoops! The controlmap \'%s\' specifies no or an invalid \'value\' '..
+         'property in one of its \'Param\' fields: %s.\n\n'..
+         'You have to map a control to a MIDI message via the name property, '..
+         'i.e: value="CC#10" (control change number 10, any hannel) or PB|1 '..
+         '(pitchbend on channel 1).'):format(
+         self.device.control_map.file_path, xargs.value or "")
+      )
+    
+      xargs.value = "CC#0"
+    end
   end
-  
+    
           
   if (xargs.type == nil or not table.find(CONTROLMAP_TYPES, xargs.type)) then
     renoise.app():show_warning(
@@ -1356,6 +1410,10 @@ function Display:_validate_param(xargs)
 
     -- TODO: validate that required attributes exist for XYPad
 
+  elseif (xargs.type == "label") then
+
+    -- for this type of control, no min/max value is required
+
   else
   
     -- minimum/maximum
@@ -1368,7 +1426,7 @@ function Display:_validate_param(xargs)
         ('Whoops! The controlmap \'%s\' specifies no valid \'minimum\' '..
          'or \'maximum\' property in the \'Param\' field named \'%s\'.\n\n'..
          'Please use a number >= 0  (depending on the value, MIDI type).'
-        ):format(self.device.control_map.file_path,xargs.name))
+        ):format(self.device.control_map.file_path,xargs.name or xargs.value))
 
       xargs.minimum = 0 
       xargs.maximum = 127

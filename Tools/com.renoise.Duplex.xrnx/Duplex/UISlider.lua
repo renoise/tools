@@ -25,7 +25,6 @@ Events
   on_change() - invoked whenever the slider recieve a new value
 
   - if an event handler return false, we cancel/revert any changed values
-  - if an event handler return true, the value (and appearance) is updated
 
 
 -------------------------------------------------------------------------------
@@ -60,12 +59,12 @@ class 'UISlider' (UIComponent)
 --------------------------------------------------------------------------------
 
 --- Initialize the UISlider class
--- @param display (Duplex.Display)
+-- @param app (Duplex.Application)
 
-function UISlider:__init(display)
+function UISlider:__init(app)
   TRACE('UISlider:__init')
 
-  UIComponent.__init(self,display)
+  UIComponent.__init(self,app)
 
   -- current value, between 0 and .ceiling
   self.value = 0
@@ -132,7 +131,7 @@ end
 
 --- A button was pressed
 -- @param msg (Duplex.Message)
--- @return boolean, true when message was handled
+-- @return self or nil
 
 function UISlider:do_press(msg)
   TRACE("UISlider:do_press()",msg)
@@ -153,11 +152,9 @@ function UISlider:do_press(msg)
     idx = 0
   end
 
-  if not self.set_index(self,idx) then
-    return false
-  end
+  self.set_index(self,idx)
 
-  return true
+  return self
 
 end
 
@@ -166,8 +163,7 @@ end
 
 --- A button was released
 -- @param msg (Duplex.Message)
--- @return boolean, true when message was handled
-
+--[[
 function UISlider:do_release(msg)
   TRACE("UISlider:do_release()",msg)
 
@@ -179,16 +175,17 @@ function UISlider:do_release(msg)
     self:force_update()
   end
 
-  return true
 
 end
+
+]]
 
 --------------------------------------------------------------------------------
 
 --- A value was changed (slider, dial)
 -- set index + precise value within the index
 -- @param msg (Duplex.Message)
--- @return boolean, true when message was handled
+-- @return self or nil
 
 function UISlider:do_change(msg)
   TRACE("UISlider:do_change()",msg)
@@ -197,31 +194,27 @@ function UISlider:do_change(msg)
     return 
   end
 
-  -- look for event handlers
   if (self.on_change ~= nil) then
-
+    
     local new_val = nil
-
-    local is_midi_device = (self._display.device.protocol == DEVICE_MIDI_PROTOCOL)
-
+    
+    local is_midi_device = (self.app.display.device.protocol == DEVICE_MIDI_PROTOCOL)
+    
     local is_relative_7 = ((msg.param.mode == "rel_7_signed") or 
       (msg.param.mode == "rel_7_signed2") or
       (msg.param.mode == "rel_7_offset") or
       (msg.param.mode == "rel_7_twos_comp"))
-
+    
     if not msg.is_virtual and is_midi_device and is_relative_7 then
-
       -- check midi resolution
-      local midi_res = self._display.device.default_midi_resolution
+      local midi_res = self.app.display.device.default_midi_resolution
       if not (midi_res == 127) then
         LOG("UISlider: rel_7_signed2 mode expected '127' as the midi resolution")
-        return false
+        return 
       end
-
       -- treat as relative control
       new_val = self.value
       local step_size = self.ceiling/midi_res
-
       if (msg.param.mode == "rel_7_signed") then
         if (msg.midi_msg[3] < 64) then
           new_val = math.max(new_val-(step_size*msg.midi_msg[3]),0)
@@ -240,7 +233,6 @@ function UISlider:do_change(msg)
         elseif (msg.midi_msg[3] > 64) then
           new_val = math.min(new_val+(step_size*(msg.midi_msg[3]-64)),self.ceiling)
         end
-
       elseif (msg.param.mode == "rel_7_twos_comp") then
         if (msg.midi_msg[3] > 64) then
           new_val = math.max(new_val-(step_size*(128-msg.midi_msg[3])),0)
@@ -248,39 +240,27 @@ function UISlider:do_change(msg)
           new_val = math.min(new_val+(step_size*msg.midi_msg[3]),self.ceiling)
         end
       end
-
       -- check if outside range
       if ((new_val*midi_res) > midi_res) then
         LOG("UISlider: trying to assign out-of-range value, probably due to"
           .."/na parameter which has been set to an incorrect 'mode'")
-        return false
+        return 
       end
-
     else
-
       -- treat as absolute control:
       -- scale from the message range to the sliders range
       new_val = (msg.value / msg.max) * self.ceiling
-      
     end
 
-
-    -- if the quantized value isn't different from the current, 
-    -- ignore the value but signal that the message got handled 
-    -- (mostly relevant when changing the value from Renoise)
     if not self:output_quantize(new_val) then
-      return true
+      return 
     end
 
-    -- set the value, and let us know if the event handler 
-    -- actively rejected the request
-    if (self:set_value(new_val)==false) then
-      return false
-    end
+    self:set_value(new_val) 
 
   end 
 
-  return true
+  return self
 
 end
 
@@ -290,32 +270,21 @@ end
 --- Set the value (will also update the index)
 -- @param val (float), a number between 0 and .ceiling
 -- @param skip_event (boolean) skip event handler
--- @return (boolean), false when rejected by handler 
 
 function UISlider:set_value(val,skip_event)
   TRACE("UISlider:set_value()",val,skip_event)
 
-
-  --local idx = math.abs(math.ceil(((self.steps/self.ceiling)*val)-0.5))
-  --print("*** SET_VALUE, idx",idx,"self._cached_index",self._cached_index,"self._cached_value",self._cached_value,"val",val)
-  --if (self._cached_index ~= idx) or
-  --   (self._cached_value ~= val)
-  --then
-
-
   local idx = math.abs(math.ceil(((self.steps/self.ceiling)*val)-0.5))
-  self._cached_index = idx
-  self._cached_value = val
+  self._cached_value = self.value
+  self._cached_index = self.index
   self.value = val
   self.index = idx
 
-  if (skip_event) then
-    self:invalidate()
-  else
-    return self:_invoke_handler()
-  end
+  self:invalidate()
 
-  --end  
+  if not skip_event then
+    return self:_invoke_handler() 
+  end
 
 end
 
@@ -326,14 +295,19 @@ end
 
 function UISlider:output_quantize(val)
 
-  if not (self._display.device.protocol == DEVICE_MIDI_PROTOCOL) then
+  if not (self.app.display.device.protocol == DEVICE_MIDI_PROTOCOL) then
     return true
   end
 
-  if self._display.device.output_quantize then
+  local quantize_value = function(val)
+    local midi_res = self.app.display.device.default_midi_resolution
+    return math.floor((val/self.ceiling)*midi_res)
+  end
 
-    local cached_val = self:quantize_value(self._cached_value)
-    local val = self:quantize_value(val)
+  if self.app.display.device.output_quantize then
+
+    local cached_val = quantize_value(self._cached_value)
+    local val = quantize_value(val)
     if (cached_val == val) then
       return false
     end
@@ -343,38 +317,25 @@ function UISlider:output_quantize(val)
 
 end
 
-function UISlider:quantize_value(val)
-
-  local midi_res = self._display.device.default_midi_resolution
-  return math.floor((val/self.ceiling)*midi_res)
-
-end
-
 --------------------------------------------------------------------------------
 
 --- Set index (will also update the value)
 -- @param idx (integer) 
 -- @param skip_event (boolean) skip event handler
--- @return (boolean), false when rejected by handler 
 
 function UISlider:set_index(idx,skip_event)
   TRACE("UISlider:set_index()",idx,skip_event)
 
-  local rslt = false
-  if (self._cached_index ~= idx) then
-    self._cached_index = idx
-    self._cached_value = self.value
-    self.index = idx
-    self.value = (idx~=0) and ((self.ceiling/self.steps)*idx) or 0
+  self._cached_index = self.index
+  self._cached_value = self.value
+  self.index = idx
+  self.value = (idx~=0) and ((self.ceiling/self.steps)*idx) or 0
 
-    if (skip_event) then
-      self:invalidate()
-    else
-      return self:_invoke_handler()
-    end
+  self:invalidate()
 
+  if not skip_event then
+    return self:_invoke_handler()
   end
-
 
 end
 
@@ -457,25 +418,27 @@ end
 
 --------------------------------------------------------------------------------
 
---- Expanded UIComponent test: look for group name, event handlers before
--- proceeding with the normal UIComponent test
+--- Expanded UIComponent test
 -- @param msg (Message)
 -- @return boolean, false when criteria is not met
 
 function UISlider:test(msg)
 
-  -- look for group name
   if not (self.group_name == msg.group_name) then
     return false
   end
 
-  -- test the X/Y position
+  if not self.app.active then
+    return false
+  end
+  
   if (self._orientation == VERTICAL) or
     (self._orientation == HORIZONTAL)
   then
     return UIComponent.test(self,msg.column,msg.row)
   end
 
+  -- no-orientation, fill the entire group
   return true
 
 end
@@ -550,22 +513,24 @@ end
 
 --------------------------------------------------------------------------------
 
---- Add event listeners (press, release, change)
+--- Add event listeners (press, change)
 
 function UISlider:add_listeners()
   TRACE("UISlider:add_listeners()")
 
-  self._display.device.message_stream:add_listener(
+  self.app.display.device.message_stream:add_listener(
     self,DEVICE_EVENT_BUTTON_PRESSED,
     function(msg) return self:do_press(msg) end )
 
-  self._display.device.message_stream:add_listener(
+  self.app.display.device.message_stream:add_listener(
     self,DEVICE_EVENT_VALUE_CHANGED,
     function(msg) return self:do_change(msg) end )
 
-  self._display.device.message_stream:add_listener(
+  --[[
+  self.app.display.device.message_stream:add_listener(
     self,DEVICE_EVENT_BUTTON_RELEASED,
-    function(msg) return self:do_release(msg) end )
+    function(msg) self:do_release(msg) end )
+  ]]
 
 end
 
@@ -578,15 +543,16 @@ end
 function UISlider:remove_listeners()
   TRACE("UISlider:remove_listeners()")
 
-  self._display.device.message_stream:remove_listener(
+  self.app.display.device.message_stream:remove_listener(
     self,DEVICE_EVENT_BUTTON_PRESSED)
 
-  self._display.device.message_stream:remove_listener(
+  self.app.display.device.message_stream:remove_listener(
     self,DEVICE_EVENT_VALUE_CHANGED)
 
-  self._display.device.message_stream:remove_listener(
+  --[[
+  self.app.display.device.message_stream:remove_listener(
     self,DEVICE_EVENT_BUTTON_RELEASED)
-
+  ]]
 
 end
 
@@ -612,8 +578,6 @@ function UISlider:_determine_index_by_pos(column,row)
   elseif (self._orientation == NO_ORIENTATION) then
     idx = column
     offset = self.x_pos
-    --[[
-    ]]
   end
 
   if not (self.flipped) then
@@ -634,21 +598,18 @@ end
 function UISlider:_invoke_handler()
   TRACE("UISlider:_invoke_handler")
 
-  -- when calling set_index() and set_value() before we
-  -- have assigned a method, return 'true' (so we don't
-  -- accidentially pass messages at construction time)
-  if (self.on_change == nil) then
+  if self.on_change then
+    if (self:on_change()==false) then
+      --print("*** UISlider - revert to old value")
+      self.index = self._cached_index    
+      self.value = self._cached_value  
+    end
     return true
+  else
+    return false
   end
 
-  if (self:on_change()==false) then
-    self.index = self._cached_index    
-    self.value = self._cached_value  
-    return false
-  else
-    self:invalidate()
-    return true
-  end
+
 end
 
 

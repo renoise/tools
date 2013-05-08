@@ -37,6 +37,9 @@ Hydra.available_mappings = {
   input_slider = {
     description = "Hydra: control value",
   },
+  value_display = {
+    description = "Hydra: display current value",
+  }
 }
 
 --  merge with superclass 
@@ -61,8 +64,10 @@ function Hydra:__init(...)
   -- boolean, set to temporarily skip value notifier
   self.suppress_value_observable = false
 
-  -- the UISlider we use for controlling the value
+  -- the various UIComponents
   self._input_slider = nil
+  self._value_display = nil
+
 
   -- initialize the superclass
   RoamingDSP.__init(self,...)
@@ -72,12 +77,12 @@ end
 --------------------------------------------------------------------------------
 
 -- attach notifier to the device 
--- called when we use previous/next device, set the initial device
--- or are freely roaming the tracks
+-- called when we use previous/next device, set the initial device,
+-- are freely roaming the tracks or inserting a new device
 
 function Hydra:attach_to_device(track_idx,device_idx,device)
 
-  -- clear observables, attach to track (if needed)
+  -- clear observables, attach to track (if needed
   RoamingDSP.attach_to_device(self,track_idx,device_idx,device)
 
   -- listen for changes to the mode/divisor parameters
@@ -92,6 +97,7 @@ function Hydra:attach_to_device(track_idx,device_idx,device)
     end 
   )
 
+  self:update_controller()
 
 end
 
@@ -113,13 +119,17 @@ function Hydra:_build_app()
     -- locate the control-map "maximum" attribute,
     -- and make the slider use this range as "ceiling"
     local args = cm:get_indexed_element(map.index,map.group_name)
+    
+    --print("*** Hydra _build_app")
 
-    local c = UISlider(self.display)
+    local c = UISlider(self)
     c.group_name = map.group_name
     c:set_pos(map.index)
     c.ceiling = args.maximum
     c.tooltip = map.description
     c.on_change = function()
+
+      --print("*** Hydra on_change")
 
       -- don't respond to user input when 
       -- the application is paused
@@ -134,6 +144,18 @@ function Hydra:_build_app()
     self._input_slider = c
   end
 
+  local map = self.mappings.value_display
+  if map.group_name then
+    --print("*** Hydra - adding value_display")
+    local c = UILabel(self)
+    c.group_name = map.group_name
+    c:set_pos(map.index)
+    self:_add_component(c)
+    self._value_display = c
+
+  end
+
+  
   -- attach to song at first run
   self:_attach_to_song()
 
@@ -147,11 +169,16 @@ end
 -- This method is called when the controller is changed
 
 function Hydra:update_device()
+  TRACE("Hydra:update_device()")
+
+  --print("*** self.target_device",self.target_device)
 
   if self.target_device and self._input_slider then
 
     -- this should scale the value to between 0 and 1
     local new_val = self._input_slider.value/self._input_slider.ceiling
+
+    --print("new_val",new_val)
 
     -- update the device without triggering another event
     local device_param = self:get_device_param("Input")
@@ -163,6 +190,10 @@ function Hydra:update_device()
     local playmode = self.options.interpolation.value
     self:update_automation(self.track_index,device_param,new_val,playmode)
 
+    if self._value_display then
+      self._value_display:set_text(device_param.value_string)
+    end
+
   end
 
 end
@@ -173,16 +204,25 @@ end
 
 function Hydra:update_controller()
 
-  if self.target_device and self._input_slider then
+  if self.target_device then
 
-    -- scale the value from between 0 and 1 to the controller's range
     local device_param = self:get_device_param("Input")
-    local new_val = device_param.value
-    local new_val = new_val * self._input_slider.ceiling
 
-    -- update the slider value without triggering an event
-    local skip_event = true
-    self._input_slider:set_value(new_val,skip_event)
+    if self._input_slider then
+
+      -- scale the value from between 0 and 1 to the controller's range
+      local new_val = device_param.value
+      local new_val = new_val * self._input_slider.ceiling
+
+      -- update the slider value without triggering an event
+      local skip_event = true
+      self._input_slider:set_value(new_val,skip_event)
+
+    end
+
+    if self._value_display then
+      self._value_display:set_text(device_param.value_string)
+    end
 
   end
 

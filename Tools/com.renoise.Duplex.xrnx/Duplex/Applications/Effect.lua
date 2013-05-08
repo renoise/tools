@@ -23,22 +23,6 @@ Features
   - Supports automation recording (touch or latch mode)
 
 
-Mappings
-  
-  parameters    (UISliders) parameter values, assignable to buttons
-  page          (UISpinner) effect parameter navigator
-  device        (UIButton,...) device navigator for buttons
-  device_select (UISlider) device navigator for knobs/sliders
-  device_next   (UIButton) select next device
-  device_prev   (UIButton) select previous device
-  preset_next   (UIButton) select next preset
-  preset_prev   (UIButton) select previous preset
-
-Options
-
-  include_parameters  (parameter subset)
-  record_method       (automation recording)
-
 
 Changes (equal to Duplex version number)
 
@@ -128,10 +112,21 @@ Effect.available_mappings = {
     description = "Parameter value",
     distributable = true,
     greedy = true,
+    orientation = HORIZONTAL,
+    flipped = true,
+    toggleable = true,
   },
   page = {
     description = "Parameter page",
     orientation = HORIZONTAL,
+  },
+  param_next = {
+    description = "Parameter page",
+    distributable = true,
+  },
+  param_prev = {
+    description = "Parameter page",
+    distributable = true,
   },
   device = {
     description = "Select device via buttons",
@@ -153,6 +148,15 @@ Effect.available_mappings = {
   },
   preset_prev = {
     description = "Select previous device preset",
+  },
+  device_name = {
+    description = "Display device name",
+  },
+  param_names = {
+    description = "Display parameter name",
+  },
+  param_values = {
+    description = "Display parameter value",
   },
 
 }
@@ -176,6 +180,12 @@ Effect.default_palette = {
   prev_preset_off = {   color = {0x00,0x00,0x00}, text = "◄", val=false },
   next_preset_on = {    color = {0xFF,0xFF,0xFF}, text = "►", val=true },
   next_preset_off = {   color = {0x00,0x00,0x00}, text = "►", val=false },
+  -- parameter pages
+  prev_param_on = {     color = {0xFF,0xFF,0xFF}, text = "◄", val=true },
+  prev_param_off = {    color = {0x00,0x00,0x00}, text = "◄", val=false },
+  next_param_on = {     color = {0xFF,0xFF,0xFF}, text = "►", val=true },
+  next_param_off = {    color = {0x00,0x00,0x00}, text = "►", val=false },
+
 }
 
 
@@ -189,13 +199,17 @@ function Effect:__init(...)
 
   -- the controls
   self._parameter_sliders = nil
-  self._page_control = nil
+  --self._page_control = nil
   self._device_navigators = nil
   self._device_select = nil
   self._device_next = nil
   self._device_prev = nil
   self._preset_next = nil
   self._preset_prev = nil
+  self._device_name = nil
+  self._param_names = nil
+  self._param_next = nil
+  self._param_prev = nil
 
   -- the number of controls assigned as sliders
   self._slider_group_size = nil
@@ -287,7 +301,14 @@ function Effect:update()
     end
   end
 
+  -- update device label
+  if self._device_name and renoise.song().selected_device then
+    self._device_name:set_text(renoise.song().selected_device.name)
+  end
+
   for control_index = 1,self._slider_group_size do
+
+    local param_value = nil
     local parameter_index = self._parameter_offset + control_index
     local parameter = self:_get_parameter_by_index(parameter_index)
     -- set default values  
@@ -307,11 +328,22 @@ function Effect:update()
       else
         self:set_parameter(control_index, 0, skip_event)
       end
-      
+
+      param_value = parameter.value_string
+
     else
       -- deactivate, reset controls which have no parameter assigned
       self:set_parameter(control_index, 0, skip_event)
+      param_value = ""
+
     end
+
+    --print("*** param_value",param_value)
+    
+    if self._param_values and self._param_values[control_index] then
+      self._param_values[control_index]:set_text(param_value)
+    end
+
   end
   
   -- update button-based device selectors
@@ -380,17 +412,31 @@ function Effect:_build_app()
 
   local cm = self.display.device.control_map
 
+  -- TODO check for required mappings
+  if not (self.mappings.parameters.group_name) then
+    local msg = "Effect cannot initialize, the required mapping 'parameters' is missing"
+    renoise.app():show_warning(msg)
+    return false
+  end
+
   -- check if the control-map describe
   -- (1) a distributed group or (2) a grid controller
   local map = self.mappings.parameters
+  --print("*** map",map.group_name)
+  --print("*** map.group_name",map.group_name)
   local distributed_group = string.find(map.group_name,"*")
   local params = nil
   self._slider_grid_mode = cm:is_grid_group(map.group_name)
 
   if self._slider_grid_mode then
     local w,h = cm:get_group_dimensions(map.group_name)
-    self._slider_group_size = h
-    self._slider_max_size = w
+    if (map.orientation == HORIZONTAL) then
+      self._slider_group_size = h
+      self._slider_max_size = w
+    else
+      self._slider_group_size = w
+      self._slider_max_size = h
+    end
   else
     self._slider_max_size = 1
     if distributed_group then
@@ -405,14 +451,23 @@ function Effect:_build_app()
 
     -- sliders for parameters --
 
-    local c = UISlider(self.display)
+    local c = UISlider(self)
     c.tooltip = map.description
     if self._slider_grid_mode then
       c.group_name = map.group_name
-      c:set_pos(1,control_index)
-      c:set_orientation(HORIZONTAL)
-      c.flipped = true
-      c.toggleable = true
+      if (map.orientation == HORIZONTAL) then
+        c:set_pos(1,control_index)
+      else
+        c:set_pos(control_index,1)
+      end
+      c:set_orientation(map.orientation)
+      if (map.orientation == HORIZONTAL) then
+        c:set_pos(1,control_index)
+      else
+        c:set_pos(control_index,1)
+      end
+      c.flipped = map.flipped
+      c.toggleable = map.toggleable
       c.palette.background = table.rcopy(self.palette.slider_background)
       c.palette.tip = table.rcopy(self.palette.slider_tip)
       c.palette.track = table.rcopy(self.palette.slider_track)
@@ -431,10 +486,6 @@ function Effect:_build_app()
 
     c.on_change = function(obj) 
 
-      if (not self.active) then 
-        return false 
-      end
-      
       local parameter_index = self._parameter_offset + control_index
       local parameters = self._parameter_set
   
@@ -465,11 +516,17 @@ function Effect:_build_app()
               parameter_value <= parameter.value_max) 
           then
             parameter.value = parameter_value
+
             if self._record_mode then
               -- todo: proper detection of track
               local track_idx = renoise.song().selected_track_index
               self.automation:add_automation(track_idx,parameter,obj.value)
             end
+
+            if self._param_values and self._param_values[control_index] then
+              self._param_values[control_index]:set_text(parameter.value_string)
+            end
+
           end
         end
 
@@ -500,7 +557,7 @@ function Effect:_build_app()
     for control_index = 1,group_size do
 
       local group_cols = cm:count_columns(map.group_name)
-      local c = UIButton(self.display)
+      local c = UIButton(self)
       if distributed_group then
         c.group_name = params[control_index].group_name
         c:set_pos(map.index)
@@ -511,10 +568,6 @@ function Effect:_build_app()
       c.tooltip = map.description
       c.on_press = function() 
 
-        if (not self.active) then 
-          return false 
-        end
-        
         local song = renoise.song()
         local track_idx = song.selected_track_index
         local new_index = self:_get_device_index_by_ctrl(control_index)
@@ -557,7 +610,7 @@ function Effect:_build_app()
   local map = self.mappings.device_select
   if (map.group_name) then
 
-    local c = UISlider(self.display)
+    local c = UISlider(self)
     c.group_name = self.mappings.device_select.group_name
     c.tooltip = map.description
     c:set_pos(map.index or 1)
@@ -567,10 +620,6 @@ function Effect:_build_app()
     c.value = 0
     c:set_orientation(map.orientation)
     c.on_change = function(obj) 
-
-      if (not self.active) then 
-        return false 
-      end
 
       local song = renoise.song()
       local track_idx = song.selected_track_index
@@ -584,38 +633,44 @@ function Effect:_build_app()
 
   end
 
-  -- parameter scrolling (optional) --
 
-  if (self.mappings.page.group_name) then
+  -- next parameter page
 
-    local group_cols = cm:count_columns(self.mappings.page.group_name)
-
-    local c = UISpinner(self.display)
-    c.group_name = self.mappings.page.group_name
-    c.tooltip = self.mappings.page.description
-    c.index = 0
-    c.step_size = self._slider_group_size
-    c.minimum = 0
-    c.maximum = math.max(0, #self._parameter_set - group_cols)
-    c:set_pos(self.mappings.page.index or 1)
-    c:set_orientation(self.mappings.page.orientation)
-    c:set_orientation(self.mappings.page.orientation)
-    c.text_orientation = HORIZONTAL
-    c.on_change = function(obj) 
-
-      if not self.active then 
-        return false 
-      end
-
-      self._parameter_offset = obj.index
-      local new_song = false
-      self:_attach_to_parameters(new_song)
+  local map = self.mappings.param_next
+  if (map.group_name) then
+    local c = UIButton(self)
+    c.group_name = map.group_name
+    c.tooltip = map.description
+    c:set_pos(map.index)
+    c.on_press = function()
+      local max_offset = self._slider_group_size * 
+        math.floor(#self._parameter_set/self._slider_group_size)
+      self._parameter_offset = math.min(max_offset,
+        self._parameter_offset + self._slider_group_size)
+      self:_attach_to_parameters(false)
       self:update()
-
     end
     self:_add_component(c)
-    self._page_control = c
+    self._param_next = c
+  end
 
+
+  -- previous parameter page
+
+  local map = self.mappings.param_prev
+  if (map.group_name) then
+    local c = UIButton(self)
+    c.group_name = map.group_name
+    c.tooltip = map.description
+    c:set_pos(map.index)
+    c.on_press = function()
+      self._parameter_offset = math.max(0,
+        self._parameter_offset - self._slider_group_size)
+      self:_attach_to_parameters(false)
+      self:update()
+    end
+    self:_add_component(c)
+    self._param_prev = c
   end
 
 
@@ -623,16 +678,11 @@ function Effect:_build_app()
 
   if (self.mappings.device_next.group_name) then
 
-    local c = UIButton(self.display)
+    local c = UIButton(self)
     c.group_name = self.mappings.device_next.group_name
     c.tooltip = self.mappings.device_next.description
-    --c.palette.foreground.text = "►"
     c:set_pos(self.mappings.device_next.index)
     c.on_press = function()
-
-      if not self.active then 
-        return false 
-      end
 
       local device_idx = renoise.song().selected_device_index
       local new_index = self:_get_next_device_index(device_idx)
@@ -648,17 +698,12 @@ function Effect:_build_app()
 
   if (self.mappings.device_prev.group_name) then
 
-    local c = UIButton(self.display)
+    local c = UIButton(self)
     c.group_name = self.mappings.device_prev.group_name
     c.tooltip = self.mappings.device_prev.description
-    --c.palette.foreground.text = "◄"
     c:set_pos(self.mappings.device_prev.index)
     c.on_press = function()
 
-      if not self.active then 
-        return false 
-      end
-      
       local device_idx = renoise.song().selected_device_index
       local new_index = self:_get_previous_device_index(device_idx)
       self:_set_selected_device_index(new_index)
@@ -674,17 +719,12 @@ function Effect:_build_app()
 
   if (self.mappings.preset_next.group_name) then
 
-    local c = UIButton(self.display)
+    local c = UIButton(self)
     c.group_name = self.mappings.preset_next.group_name
     c.tooltip = self.mappings.preset_next.description
-    --c.palette.foreground.text = "►"
     c:set_pos(self.mappings.preset_next.index)
     c.on_press = function()
 
-      if not self.active then 
-        return false 
-      end
-      
       local device = self:_get_selected_device()
       device.active_preset = math.min(#device.presets,device.active_preset+1)
 
@@ -698,17 +738,12 @@ function Effect:_build_app()
 
   if (self.mappings.preset_prev.group_name) then
 
-    local c = UIButton(self.display)
+    local c = UIButton(self)
     c.group_name = self.mappings.preset_prev.group_name
     c.tooltip = self.mappings.preset_prev.description
-    --c.palette.foreground.text = "◄"
     c:set_pos(self.mappings.preset_prev.index)
     c.on_press = function()
 
-      if not self.active then 
-        return false 
-      end
-      
       local device = self:_get_selected_device()
       device.active_preset = math.max(1,device.active_preset-1)
 
@@ -718,6 +753,46 @@ function Effect:_build_app()
 
   end
 
+  local map = self.mappings.device_name
+  if (map) then
+    local c = UILabel(self)
+    c.group_name = map.group_name
+    --c.tooltip = map.description
+    c:set_pos(map.index)
+    self:_add_component(c)
+    self._device_name = c
+
+  end
+
+  local map = self.mappings.param_names
+  if (map.group_name) then
+    self._param_names = {}
+    local params = cm:get_params(map.group_name,map.index)
+    for control_index = 1,#params do
+      local c = UILabel(self)
+      --c.group_name = map.group_name
+      c.group_name = params[control_index].group_name
+      --c.tooltip = map.description
+      c:set_pos(map.index)
+      self:_add_component(c)
+      self._param_names[control_index] = c
+    end
+  end
+
+  local map = self.mappings.param_values
+  if (map.group_name) then
+    self._param_values = {}
+    local params = cm:get_params(map.group_name,map.index)
+    for control_index = 1,#params do
+      local c = UILabel(self)
+      --c.group_name = map.group_name
+      c.group_name = params[control_index].group_name
+      --c.tooltip = map.description
+      c:set_pos(map.index)
+      self:_add_component(c)
+      self._param_values[control_index] = c
+    end
+  end
 
   -- the finishing touches --
   self:_attach_to_song()
@@ -738,6 +813,12 @@ function Effect:_set_selected_device_index(idx)
   local device = song.tracks[song.selected_track_index].devices[idx]   
   if device then
     song.selected_device_index = idx
+    self._parameter_offset = 0
+
+    -- update the label
+    if self._device_name then
+      self._device_name:set_text(device.name)
+    end
   end
 
 end
@@ -1028,6 +1109,7 @@ function Effect:on_idle()
 
   if self._track_update_requested then
     self._track_update_requested = false
+    self._parameter_offset = 0
     self:_attach_to_track_devices(renoise.song().selected_track)
     self._update_requested = true
   end
@@ -1126,6 +1208,31 @@ function Effect:_get_num_devices()
 
 end
 
+--------------------------------------------------------------------------------
+
+--- update the parameter navigation buttons
+
+function Effect:update_param_page()
+  TRACE("Effect:update_param_page()")
+
+  if self._param_next then
+    if ((self._parameter_offset + self._slider_group_size) 
+      < #self._parameter_set)
+    then
+      self._param_next:set(self.palette.next_param_on)
+    else
+      self._param_next:set(self.palette.next_param_off)
+    end
+  end
+  if self._param_prev then
+    if (self._parameter_offset > 0) then
+      self._param_prev:set(self.palette.prev_param_on)
+    else
+      self._param_prev:set(self.palette.prev_param_off)
+    end
+  end
+
+end
 
 --------------------------------------------------------------------------------
 
@@ -1298,11 +1405,14 @@ function Effect:_attach_to_parameters(new_song)
   local cm = self.display.device.control_map
 
   -- validate and update the sequence/parameter offset
+  self:update_param_page()
+  --[[
   if (self._page_control) then
     self._page_control:set_range(nil,
       math.max(0, #self._parameter_set - self._slider_group_size))
   end
-    
+  ]]
+
   self:_remove_notifiers(new_song,self._parameter_observables)
   
   -- then attach to the new ones in the order we want them
@@ -1310,7 +1420,9 @@ function Effect:_attach_to_parameters(new_song)
     local parameter_index = self._parameter_offset + control_index
     local parameter = self:_get_parameter_by_index(parameter_index)
     local control = self._parameter_sliders[control_index]
-    local outside_bounds = (control_index>#self._parameter_set)
+    local outside_bounds = (parameter_index>#self._parameter_set)
+
+    --print("*** control_index, parameter_index,#self._parameter_set",control_index,parameter_index,#self._parameter_set)
 
     -- different tooltip for unassigned controls
     local tooltip = outside_bounds and "Effect: param N/A" or 
@@ -1356,13 +1468,40 @@ function Effect:_attach_to_parameters(new_song)
             then
               local skip_event = true -- only update the Duplex UI
 	            self:set_parameter(control_index, normalized_value, skip_event)
+
+              if self._param_values and self._param_values[control_index] then
+                self._param_values[control_index]:set_text(parameter.value_string)
+              end
+
             end
           end
         end 
       )
     end
-
+    
+    if self._param_names and self._param_names[control_index] then
+      local param_name = parameter and parameter.name or "-"
+      self._param_names[control_index]:set_text(param_name)
+    end
+    --if self._param_values and self._param_values[control_index] then
+    --  local param_value = parameter and parameter.value_string or ""
+    --  self._param_values[control_index]:set_text(param_value)
+    --end
   end
+
+  -- clear additional labels 
+  --[[
+  if self._param_names then
+    for control_index = self._slider_group_size,#self._param_names do
+      self._param_names[control_index]:set_text("-")
+    end
+  end
+  if self._param_values then
+    for control_index = self._slider_group_size,#self._param_values do
+      self._param_names[control_index]:set_text("-")
+    end
+  end
+  ]]
 
   self.display:apply_tooltips(self.mappings.parameters.group_name)
 

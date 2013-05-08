@@ -29,9 +29,17 @@ duplex_configurations:insert {
           index = 2,
         },
         ]]
-        page = {
+        --page = {
+        --  group_name = "EncoderButtons",
+        --  index = 7,
+        --},
+        param_prev = {
           group_name = "EncoderButtons",
           index = 7,
+        },
+        param_next = {
+          group_name = "EncoderButtons",
+          index = 8,
         },
         --[[
         mute = {

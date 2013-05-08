@@ -618,19 +618,13 @@ function Repeater:_build_app()
       for x=1,self._grid_width do
         self._grid[x] = table.create()
         for y=1,self._grid_height do
-          local c = UIButton(self.display)
+          local c = UIButton(self)
           c.group_name = map.group_name
           c:set_pos(x,y)
           c.on_press = function()
-            if not self.active then
-              return false
-            end
             self:set_value_from_coords(x,y)
           end
           c.on_release = function(obj)
-            if not self.active then
-              return false
-            end
             if (self.options.hold_option.value == HOLD_DISABLED) then
               if self._grid_coords and
                 (x == self._grid_coords.x) and 
@@ -658,14 +652,11 @@ function Repeater:_build_app()
   if map.group_name then
     TRACE("Repeater - creating @mode_slider ")
     --local args = cm:get_indexed_element(map.index,map.group_name)
-    local c = UISlider(self.display)
+    local c = UISlider(self)
     c.group_name = map.group_name
     c:set_pos(map.index)
     c.tooltip = map.description
     c.on_change = function(obj)
-      if not self.active then 
-        return false 
-      end
       local mode_val = round_value(obj.value*4)
       self:set_mode(mode_val)
     end
@@ -676,15 +667,12 @@ function Repeater:_build_app()
   -- divisor slider
   local map = self.mappings.divisor_slider
   if map.group_name then
-    local c = UISlider(self.display)
+    local c = UISlider(self)
     c.group_name = map.group_name
     c:set_pos(map.index)
     --c.ceiling = 127
     c.tooltip = map.description
     c.on_change = function(obj)
-      if not self.active then 
-        return false 
-      end
       local divisor_val = self:divisor_from_linear_value(obj.value)
       self:set_divisor(divisor_val)
       self.update_requested = true
@@ -697,15 +685,12 @@ function Repeater:_build_app()
   -- mode_even
   local map = self.mappings.mode_even
   if map.group_name then
-    local c = UIButton(self.display)
+    local c = UIButton(self)
     c.group_name = map.group_name
     c.tooltip = map.description
     c:set(self.palette.mode_even_off)
     c:set_pos(map.index)
     c.on_press = function(obj)
-      if not self.active then 
-        return false 
-      end
       self:set_mode(MODE_EVEN,true)
     end
     self:_add_component(c)
@@ -715,15 +700,12 @@ function Repeater:_build_app()
   -- mode_triplet
   local map = self.mappings.mode_triplet
   if map.group_name then
-    local c = UIButton(self.display)
+    local c = UIButton(self)
     c.group_name = map.group_name
     c.tooltip = map.description
     c:set(self.palette.mode_triplet_off)
     c:set_pos(map.index)
     c.on_press = function(obj)
-      if not self.active then 
-        return false 
-      end
       self:set_mode(MODE_TRIPLET,true)
     end
     self:_add_component(c)
@@ -733,15 +715,12 @@ function Repeater:_build_app()
   -- mode_dotted
   local map = self.mappings.mode_dotted
   if map.group_name then
-    local c = UIButton(self.display)
+    local c = UIButton(self)
     c.group_name = map.group_name
     c.tooltip = map.description
     c:set(self.palette.mode_dotted_off)
     c:set_pos(map.index)
     c.on_press = function(obj)
-      if not self.active then 
-        return false 
-      end
       self:set_mode(MODE_DOTTED,true)
     end
     self:_add_component(c)
@@ -751,15 +730,12 @@ function Repeater:_build_app()
   -- mode_free
   local map = self.mappings.mode_free
   if map.group_name then
-    local c = UIButton(self.display)
+    local c = UIButton(self)
     c.group_name = map.group_name
     c.tooltip = map.description
     c:set(self.palette.mode_free_off)
     c:set_pos(map.index)
     c.on_press = function(obj)
-      if not self.active then 
-        return false 
-      end
       self:set_mode(MODE_FREE,true)
     end
     self:_add_component(c)
@@ -781,12 +757,12 @@ function Repeater:update_grid(x,y)
   TRACE("Repeater:update_grid(x,y)",x,y)
 
   if not self.target_device then
-    LOG("no target device, cannot update grid")
+    --print("no target device, cannot update grid")
     return
   end
 
   if not self._grid then
-    LOG("no grid present, cannot update")
+    --print("no grid present, cannot update")
     return
   end
 

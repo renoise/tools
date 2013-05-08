@@ -1,71 +1,119 @@
 --[[----------------------------------------------------------------------------
--- Duplex.Navigator
--- Inheritance: Application > Navigator
+-- Duplex.Metronome
+-- Inheritance: Application > Metronome
 ----------------------------------------------------------------------------]]--
 
 --[[
 
 About
 
-  The Navigator controls the pattern playback & blockloop size/position
-  It is designed to work a bit like the pattern-trigger from the Matrix, but
-  using block-loops as sections, instead of a pattern sequence
-
-
-How to use
+  The "Navigator" application allows you to take control of the pattern/block-loop and playback position. This version has been re-built from the ground up, hopefully with a more robust features, as well as a few extra features thrown on top. 
   
-  - When a button is pressed, and there's no active block-loop, the playback
-    will instantly move to that position
-  - When a button is pressed and blockloop is active, the block-loop will
-    instantly be moved to that position 
-  - When multiple buttons are pressed, the Navigator will create a block-loop
-    range which is approximately the same size, and in the same position
-    as the pressed buttons (the range/pos is determined by the coefficient)
-  - When a button is pressed and held, and there's no active block-loop,
-    a block-loop range of one unit is created. 
-  - When a button is pressed and held, and block-loop is active, tbe current
-    block-loop is disabled and playback will continue throughout the pattern
+  Basic operation is as follows:
 
-Notes     
+  When playing, a single press & release on will cause the playback to move to the indicated position. When playback is stopped, the same press & release will cause the edit-cursor to move to the indicated position (when stopped, the position will always follow the edit-cursor).
 
-    The Navigator is always working on the currently displayed pattern. This
-    means that any position changes while in decoupled playback mode will cause
-    the playback to return to the current pattern. If this is not what you 
-    desire, simple enable "playback follow mode" in Renoise.
+  Holding one button pressed, and then quickly pressing another button will cause a loop to be created (the order in which the buttons are pressed does not matter). When such a range has been created, holding any button pressed
+  for a moment will cause the looped range to be cleared. 
 
-    Just like block-loops in Renoise, the Navigator works best for ranges 
-    that are power-of-two, such as 1,2 or 4. This is the reason why some 
-    combinations of ranges and positions work better than others. 
-  
-    Navigator attempts to avoid breaking the tempo, even if this sometimes 
-    involves jumping to the last bit of the (previous) pattern. For example,
-    if we are jumping to the very start of a pattern, we actually need to 
-    jump to the line *before* that
+What has changed?
 
+  - The starting position of a block-loops can be specified more freely, 
+    e.g. a block-loop spanning 16 lines can now start from the 8th line
+  - A loop can be created in any pattern (previously, only the playing pattern)
+  - In options, select the loop size that fit the musical content (e.g. 4/4)
+  - Playback position will no longer "escape" the looped region by accident
+  - Song playback will not start when creating a loop
+  - More options: 
+    o Whether to control position and range, or just position
+    o Whether changing the position/range should carry the block loop along
 
-Mappings
+Suggested configuration
 
-  blockpos  - (UIButtonStrip) control playback + block-loop
+  To take advantage of this application, you need to assign a number of buttons to the "blockpos" - the more buttons, the higher precision you will get. Generally speaking, you want to map either 4, 8 or 16 buttons for music which is based on a 4/4 measure. 
 
-
-Options
-
-  This application has no options
-
-
-Changes (equal to Duplex version number)
-
-  0.95  - First release
 
 
 --]]
 
+
 --==============================================================================
 
+-- constants
+
+local LOOP_BLOCK = 1
+local LOOP_SEQUENCE = 2
+local LOOP_CUSTOM = 3
+
+local MODE_POSITION = 1
+local MODE_POSITION_RANGE = 2
+
+local LOOP_CARRY_ON = 1
+local LOOP_CARRY_OFF = 2
+
+local VALID_COEFF_ALL = 1
+local VALID_COEFF_FOUR = 2
+local VALID_COEFF_THREE = 3
+
+local SELECT_NONE = 1
+local SELECT_PATTERN = 2
+local SELECT_TRACK = 3
+local SELECT_COLUMN = 4
+
+
+--==============================================================================
 
 class 'Navigator' (Application)
 
-Navigator.default_options = {}
+Navigator.default_options = {
+  operation = {
+    label = "Operating mode",
+    description = "Here you can choose if you want to be able to"
+                .."\ncontrol both the position and looped range,"
+                .."\nor just the position. Note that setting the"
+                .."\nrange will require that your controller is "
+                .."\ncapable of transmitting 'release' events.",
+    items = {
+      "Control position only",
+      "Control position + range",
+    },
+    value = 2,
+  },
+  loop_carry = {
+    label = "Loop carry-over",
+    description = "Enable this feature to have the looped range"
+                .."\n'carried over' when a new position is set",
+    items = {
+      "Enabled",
+      "Disabled",
+    },
+    value = 1,
+  },
+  valid_coeffs = {
+    label = "Coefficients",
+    description = "Select the set of coefficients that best "
+                .."\nfit your particular musical content ",
+    items = {
+      "Allow all",
+      "Fourths: 2/4/8/16",
+      "Thirds: 2/3/6/12",
+    },
+    value = 2,
+  },
+  pattern_select = {
+    label = "Pattern select",
+    description = "Match the pattern selection with the loop",
+    items = {
+      "Do no select anything",
+      "Select all tracks",
+      "Select active track",
+      "Select active column",
+    },
+    value = 1,
+  },
+  
+}
+
 Navigator.available_mappings = {
   blockpos = {
     description = "Navigator: Pattern position/blockloop"
@@ -75,69 +123,81 @@ Navigator.available_mappings = {
                 .."\nControl-map value: ",
     orientation = VERTICAL,
   },
+  prev_block = {
+    description = "Navigator: Move the blockloop backwards"
+  },
+  next_block = {
+    description = "Navigator: Move the blockloop forward"
+  },
+  --selection = {
+  --  description = "Navigator: Sync selection with looped range"
+  --}
 }
-
 Navigator.default_palette = {
-  active      = { color={0XFF,0XFF,0XFF},  text="▪", val=true },
-  looped      = { color={0X80,0X80,0X80},  text="▫", val=true },
-  background  = { color={0X00,0x00,0x00},  text="·", val=false },
+  blockpos_index      = {color = {0xFF,0xFF,0xFF}, text="▪", val = true },
+  blockpos_range      = {color = {0X80,0X80,0X80}, text="▫", val = true },
+  blockpos_background = {color = {0X00,0X00,0X00}, text="·", val = true },
+  prev_block_on       = {color = {0xFF,0xFF,0xFF}, text="▲", val = true },
+  prev_block_off      = {color = {0X00,0X00,0X00}, text="▲", val = false },
+  next_block_on       = {color = {0xFF,0xFF,0xFF}, text="▼", val = true },
+  next_block_off      = {color = {0X00,0X00,0X00}, text="▼", val = false },
 }
 
 
 --------------------------------------------------------------------------------
 
---- Constructor method
--- @param (VarArg), see Application to learn more
-
 function Navigator:__init(...)
-  TRACE("Navigator:__init(",...)
 
-  -- (boolean) keep track of the playing state
-  self._playing = nil
+  -- boolean, true when we are playing the selected pattern
+  self._inside_pattern = nil
 
-  -- (boolean) keep track of block loop state
-  self._loop_block_enabled = false
+  -- number, the current control index as determined by the playback 
+  -- position within the pattern, quantized against the number of steps
+  -- Note: a value of 0 means "no index is selected"
+  self._active_index = nil
 
-  -- (number) blockloop starting line
-  -- (used for checking if start has been changed from Renoise)
-  self._loop_block_start_line = nil
+  -- number, the current line in the edited pattern
+  self._edit_line = nil
 
-  -- (number, 2-16) blockloop coefficient 
-  -- (used for checking if coeff has been changed from Renoise)
-  self._loop_block_range_coeff = nil
+  -- number, the size of the blockpos control in units
+  self._blockpos_size = nil
 
-  -- (boolean or nil) change block-loop state during idle loop
-  -- true: enable loop when possible
-  -- false: disable loop when possible
-  -- nil: ignore
-  self._pending_loop = nil
+  -- boolean, true when we need to update the blockpos index
+  self._index_update_requested = nil
 
-  -- (integer or nil) change to this index during idle loop
-  self._pending_index = nil
+  -- boolean, true when we need to update the blockpos range
+  self._range_update_requested = nil
 
-  -- (boolean or nil) change to this coeff during idle loop
-  self._pending_coeff = nil
+  -- enum, one of the LOOP_xxx constants
+  self._loop_mode = nil
 
-  -- (integer) the visible pattern index
-  self._editing_idx = nil
+  -- renoise.SongPos, where the loop starts
+  self._loop_start = nil
 
-  -- (boolean) true when sequence play_pos==edit_pos
-  self._active_pattern = nil
+  -- renoise.SongPos, where the loop ends
+  self._loop_end = nil
 
-  -- (integer) line position adjusted to fit control
-  self._fit_line_pos = nil
+  -- renoise.SongPos, disallow multiple playback_pos jumps
+  self._jump_pos = nil
 
-  -- (UIButtonStrip) the UIComponent instance
+  -- renoise.SongPos, the first pressed button 
+  self._first_pos = nil
+
+  -- number, the first pressed index
+  self._first_idx = nil
+
+  -- renoise.SongPos, the second pressed button 
+  self._second_pos = nil
+
+  -- boolean, true once the blockpos hold event has fired
+  self._held_event_fired = nil
+
+  -- UIComponents
+  self._prev_block = nil
+  self._next_block = nil
   self._blockpos = nil
 
-  -- (integer) the number of steps within the buttonstrip
-  self._steps = nil
-
-  -- (boolean) true when number of lines has changed
-  self._changed_num_lines = false
-
   Application.__init(self,...)
-
 
 end
 
@@ -149,9 +209,359 @@ function Navigator:start_app()
   if not Application.start_app(self) then
     return
   end
-  self:_attach_to_song(renoise.song())
+  self:_attach_to_song()
 
 end
+
+--------------------------------------------------------------------------------
+
+-- called when a new document becomes available
+
+function Navigator:on_new_document()
+  TRACE("Navigator:on_new_document()")
+
+  self:_attach_to_song()
+
+end
+
+
+--------------------------------------------------------------------------------
+
+-- build the application, 
+-- @return boolean (false if requirements were not met)
+
+function Navigator:_build_app()
+  TRACE("Navigator:_build_app()")
+
+  local rns = renoise.song()
+  local cm = self.display.device.control_map
+
+  -- create the pattern position/length control 
+  local map = self.mappings.blockpos
+  if (map.group_name) then
+
+    if (map.orientation == VERTICAL) then
+      self._blockpos_size = cm:count_rows(map.group_name)
+    else
+      self._blockpos_size = cm:count_columns(map.group_name)
+    end
+    local c = UIButtonStrip(self)
+    c.mode = UIButtonStrip.MODE_BASIC 
+    c.group_name = map.group_name
+    c.tooltip = map.description
+    c:set_orientation(map.orientation)
+    c.monochrome = is_monochrome(self.display.device.colorspace)
+    c.flipped = true
+    c:set_size(self._blockpos_size)
+    c:set_palette({
+      index = self.palette.blockpos_index,
+      range = self.palette.blockpos_range,
+      background = self.palette.blockpos_background
+    })
+    c.on_press = function(obj,idx)
+      --print("blockpos on_press",obj,idx)
+
+      local rns = renoise.song()
+
+      if (self.options.operation.value == MODE_POSITION) then
+        self:_jump_to_index(idx)
+      else
+        if not self._first_pos then
+          --print("remember this pressed button")
+          local first_pos = rns.transport.edit_pos
+          first_pos.line = self:_get_line_from_index(idx-1)
+          self._first_pos = first_pos
+          self._first_idx = idx
+          --print("self._first_pos",self._first_pos)
+          --print("self._first_idx",self._first_idx)
+          self._held_event_fired = false
+        else
+          --print("the second pressed button",self._first_idx)
+          self._second_pos = rns.transport.edit_pos
+          self._second_pos.line = self:_get_line_from_index(idx-1)
+          self:_set_looped_range()
+          --self._held_event_fired = true
+
+        end
+      end
+
+    end
+    c.on_release = function(obj,idx)
+      --print("blockpos on_release",obj,idx)
+      
+      if (self.options.operation.value == MODE_POSITION) then
+        return
+      end
+
+      local rns = renoise.song()
+
+      --print("idx",idx)
+      if (idx == self._first_idx) then
+        --print("released the first pressed button")
+        if not self._held_event_fired then
+          self._held_event_fired = true
+          local seq_idx = rns.selected_sequence_index
+          if (self._first_pos.sequence == seq_idx) then
+            --print("within the same pattern")
+            self:_jump_to_index(idx)
+          else
+            --print("within a different pattern")
+          end
+        end
+        self._first_pos = nil
+        self._first_idx = nil
+
+      end
+
+    end
+    c.on_hold = function(obj,idx)
+      --print("blockpos on_hold",obj,idx)
+
+      if (self.options.operation.value == MODE_POSITION) then
+        return
+      end
+
+      if self._held_event_fired then
+        return
+      end
+
+      local rns = renoise.song()
+
+      -- only the first pressed button can be held
+      if (self._first_idx ~= idx) then
+       --print("not the first pressed button",self._first_idx,idx)
+       return
+      end
+
+      local rng = c:get_range()
+      local inside_range = false
+      if (idx >= rng[1]) and (idx <= rng[2]) then
+        inside_range = true
+      end
+      --print("inside_range",inside_range)
+      if inside_range then
+        self:_clear_looped_range()
+      else
+        -- establish a single-unit range
+        self._second_pos = rns.transport.edit_pos
+        self._second_pos.line = self:_get_line_from_index(idx-1)
+        self:_set_looped_range()
+        if (self.options.loop_carry.value == LOOP_CARRY_ON) then
+          self:_jump_to_index(idx)
+        end
+
+      end
+
+
+    end
+    self:_add_component(c)
+    self._blockpos = c
+
+  end
+
+  local map = self.mappings.prev_block
+  if map.group_name then
+    local c = UIButton(self)
+    c.group_name = map.group_name
+    c:set_pos(map.index)
+    c.tooltip = map.description
+    c.palette.foreground = self.palette.prev_block_off
+    c.on_press = function()
+      --print("prev_block on_press")
+      if self:_goto_prev_block() then
+        self._prev_block:flash(0.1,
+          self.palette.prev_block_on,
+          self.palette.prev_block_off)
+      end
+    end
+    self:_add_component(c)
+    self._prev_block = c
+  end
+
+
+  local map = self.mappings.next_block
+  if map.group_name then
+    local c = UIButton(self)
+    c.group_name = map.group_name
+    c:set_pos(map.index)
+    c.tooltip = map.description
+    c.palette.foreground = self.palette.next_block_off
+    c.on_press = function()
+      --print("next_block on_press")
+      if self:_goto_next_block() then
+        self._next_block:flash(0.1,
+          self.palette.next_block_on,
+          self.palette.next_block_off)
+      end
+    end
+    self:_add_component(c)
+    self._next_block = c
+  end
+
+  -- final steps
+  Application._build_app(self)
+  return true
+
+end
+
+--------------------------------------------------------------------------------
+
+-- adds notifiers to song, set essential values
+
+function Navigator:_attach_to_song()
+  TRACE("Navigator:_attach_to_song")
+
+  local rns = renoise.song()
+
+  -- initialize important stuff
+  self._playing = rns.transport.playing
+  self._index_update_requested = true
+  self._range_update_requested = true
+  self._held_event_fired = false
+  self._first_pos = nil
+  self._first_idx = nil
+  self._jump_pos = nil
+
+  rns.selected_sequence_index_observable:add_notifier(
+    function()
+      self._index_update_requested = true
+      self._range_update_requested = true
+      if self._first_pos then
+        -- allow pattern-spanning loops
+        self._held_event_fired = true
+      end
+      --[[
+      if self._jump_pos then
+        local rns = renoise.song()
+        print("disallowed, move range to this sequence pos ",self._jump_pos)
+        local seq_count = #rns.sequencer.pattern_sequence
+        rprint(rns.transport.loop_range)
+        local start_pos = rns.transport.loop_range[1]
+        local end_pos = rns.transport.loop_range[2]
+        if (self._jump_pos.sequence == seq_count) then
+          -- if last pattern, restore to first pattern
+          start_pos.sequence = 1
+          end_pos.sequence = 1
+        else
+          -- move to next pattern
+          start_pos.sequence = self._jump_pos.sequence+1
+          end_pos.sequence = self._jump_pos.sequence+1
+        end
+        rns.transport.loop_range = {start_pos,end_pos}
+      end
+      ]]
+    end
+  )
+
+  rns.transport.playing_observable:add_notifier(
+    function()
+      local rns = renoise.song()
+      local playing = rns.transport.playing
+      if playing ~= self._playing then
+        self._index_update_requested = true
+      end
+      self._playing = playing
+    end
+  )
+
+
+end
+
+--------------------------------------------------------------------------------
+
+function Navigator:_goto_prev_block()
+  TRACE("Navigator:_goto_prev_block")
+
+  local rns = renoise.song()
+  if rns.transport.loop_block_enabled then
+    local coeff = rns.transport.loop_block_range_coeff
+    local block_start = rns.transport.loop_block_start_pos.line
+    local num_lines = rns.selected_pattern.number_of_lines
+    local shift_lines = math.floor(num_lines/coeff)
+    local new_pos = block_start-shift_lines
+    if (new_pos >= 1) then
+      local idx = self:_get_index_from_line(new_pos)
+      self:_jump_to_index(idx)
+      return true
+    end
+  end
+
+  return false
+
+end
+
+--------------------------------------------------------------------------------
+
+function Navigator:_goto_next_block()
+  TRACE("Navigator:_goto_next_block")
+
+  local rns = renoise.song()
+  if rns.transport.loop_block_enabled then
+    local coeff = rns.transport.loop_block_range_coeff
+    local block_start = rns.transport.loop_block_start_pos.line
+    local num_lines = rns.selected_pattern.number_of_lines
+    local shift_lines = math.floor(num_lines/coeff)
+    local new_pos = block_start+shift_lines
+    if (new_pos < num_lines) then
+      local idx = self:_get_index_from_line(new_pos)
+      self:_jump_to_index(idx)
+      return true
+    end
+  end
+
+  return false
+
+end
+
+--------------------------------------------------------------------------------
+
+--- update the looped range of the blockpos control
+
+function Navigator:_update_blockpos_range()
+  TRACE("Navigator:_update_blockpos_range")
+
+  local rns = renoise.song()
+
+  if not self._loop_start then
+    self._blockpos:set_range(0,0,true)
+  else
+
+    local seq_idx = rns.selected_sequence_index
+
+    -- a sequence loop will include the first line in the next pattern
+    local seq_end_fix = 0
+    if (self._loop_mode == LOOP_SEQUENCE) then
+      if (self._loop_end.line == 1) and 
+        ((self._loop_end.sequence-1) ~= seq_idx)
+      then
+        seq_end_fix = -1
+      end
+    end
+
+    if (self._loop_start.sequence <= seq_idx) and
+      (self._loop_end.sequence+seq_end_fix >= seq_idx) 
+    then
+      -- the loop is covering our pattern, at least partially
+      local start_index,end_index = nil,nil
+      if (self._loop_start.sequence < seq_idx) then
+        start_index = 1
+      else
+        start_index = self:_get_index_from_line(self._loop_start.line)
+      end
+
+      if (self._loop_end.sequence+seq_end_fix > seq_idx) then
+        end_index = self._blockpos_size
+      else
+        end_index = self:_get_index_from_line(self._loop_end.line-1)
+      end
+      self._blockpos:set_range(start_index,end_index,true)
+    else
+      -- the loop is somewhere else in the song
+      self._blockpos:set_range(0,0,true)
+    end
+  end
+end
+
 
 --------------------------------------------------------------------------------
 
@@ -163,592 +573,628 @@ function Navigator:on_idle()
     return 
   end
 
-  local song = renoise.song()
-  local skip_event = true
-  local playing = song.transport.playing
-  local line =  song.transport.playback_pos.line
-  local patt = song.patterns[self._editing_idx]
-  local actual_coeff = song.transport.loop_block_range_coeff
+  local rns = renoise.song()
 
-  -- detect if we've entered/exited the active pattern
-  local active_pattern = self:_is_active_seq_index()
-  if active_pattern then
-    if not self._active_pattern then
-      --TRACE("Navigator: ** enter active pattern")
-      self._active_pattern = true
+  ---------------------------------------------------------
+  -- prevent loop from migrating into a new pattern when
+  -- it shouldn't 
+  ---------------------------------------------------------
+
+  if self._jump_pos then
+    local rns = renoise.song()
+    local seq_count = #rns.sequencer.pattern_sequence
+    rprint(rns.transport.loop_range)
+    local start_pos = rns.transport.loop_range[1]
+    local end_pos = rns.transport.loop_range[2]
+    if (self._jump_pos.sequence == seq_count) then
+      -- if last pattern, restore to first pattern
+      start_pos.sequence = 1
+      end_pos.sequence = 1
+    else
+      -- move to next pattern
+      start_pos.sequence = self._jump_pos.sequence+1
+      end_pos.sequence = self._jump_pos.sequence+1
+    end
+    --print("disallowed, move range here",start_pos,end_pos)
+    rns.transport.loop_range = {start_pos,end_pos}
+    self._jump_pos = nil
+  end
+
+  ---------------------------------------------------------
+  --  handle changes to loop/range
+  ---------------------------------------------------------
+
+  local loop_has_changed = false
+  local has_looped_range, loop_mode = self:_has_looped_range()
+  --print("has_looped_range, loop_mode",has_looped_range, loop_mode)
+  if not self:_has_looped_range() then
+    if self._loop_start then
+      -- loop has been disabled
+      self._loop_mode = nil
+      self._loop_start = nil
+      self._loop_end = nil
+      loop_has_changed = true
     end
   else
-    if self._active_pattern then
-      --TRACE("Navigator: ** exit active pattern")
-      self._blockpos:set_index(0,skip_event)
-      self._active_pattern = false
-    end
-  end
-
-  -- update number of lines?
-  if self._changed_num_lines then
-    self:_get_num_lines()
-    self._changed_num_lines = false
-  end
-
-  -- update pattern position?
-  if active_pattern and self._playing then
-    local fit_line = math.ceil((line)/patt.number_of_lines*self._steps)
-    if fit_line and (fit_line~=self._fit_line_pos) then
-      --TRACE("Navigator: ** changed position")
-      self._blockpos:set_index(fit_line,skip_event)
-      self._fit_line_pos = fit_line
-    end
-  end
-
-
-  -------------------------------------------------------
-  -- handle changes from within Renoise 
-  -- (pending changes will cause these to be skipped)
-  -------------------------------------------------------
-
-  local update_requested = false
-
-  -- track changes to the blockloop coeff
-  if not self._pending_coeff and
-   not (self._pending_loop==false) and 
-   not self._pending_loop and
-   not self._pending_loop and
-   not self._pending_index then
-    if (self._loop_block_range_coeff~=actual_coeff) then
-      --TRACE("Navigator: ** coeff changed",actual_coeff,self._loop_block_range_coeff)
-      self._loop_block_range_coeff = actual_coeff
-      update_requested = true
-    end
-    -- track changes to the blockloop start_pos
-    local actual_start_line = song.transport.loop_block_start_pos.line
-    if (self._loop_block_start_line~=actual_start_line) then
-      --TRACE("Navigator: ** start_pos changed",actual_start_line,self._loop_block_start_line)
-      self._loop_block_start_line = actual_start_line
-      update_requested = true
-    end
-    -- changes to on/off stage
-    if (self._loop_block_enabled~=song.transport.loop_block_enabled) then
-      self._loop_block_enabled = song.transport.loop_block_enabled
-      update_requested = true
-    end
-    -- handle changes
-    if update_requested then
-      if self._loop_block_enabled then
-        self:_update()
-      else
-        self._blockpos:set_range(0,0,true)
+    if not self._loop_start then
+      -- loop was enabled
+      self._loop_start = rns.transport.loop_start
+      self._loop_end = rns.transport.loop_end
+      loop_has_changed = true
+    elseif self._loop_start then
+      -- detect changes to loop 
+      local loop_start = rns.transport.loop_start
+      local loop_end = rns.transport.loop_end
+      if (loop_start.sequence ~= self._loop_start.sequence) or
+        (loop_end.sequence ~= self._loop_end.sequence) or
+        (loop_start.line ~= self._loop_start.line) or
+        (loop_end.line ~= self._loop_end.line) 
+      then
+        loop_has_changed = true
+        self._loop_start = loop_start
+        self._loop_end = loop_end
       end
     end
-
   end
 
-  -------------------------------------------------------
-  -- handle pending changes 
-  -------------------------------------------------------
-
-  -- check if playback is stopped/started
-  if (playing ~= self._playing) then
-    self._playing = playing
-    if (not self._playing) then
-      --TRACE("Navigator: ** stopped playing")
-      self._blockpos:set_index(0,skip_event)
-    elseif self._fit_line_pos then
-      --TRACE("Navigator: ** started playing")
-      self._blockpos:set_index(self._fit_line_pos,skip_event)
-    end
+  if loop_has_changed or self._range_update_requested then
+    --print("loop_has_changed",self._loop_start,self._loop_end,loop_mode)
+    self._loop_mode = loop_mode
+    self._range_update_requested = false
+    self:_update_blockpos_range()
   end
 
-  -- try to enable/disable blockloop 
-  if (self._pending_loop==true) then
-    --TRACE("Navigator: ** pending loop")
-    if self._pending_coeff or self._pending_loop then
-      if self._pending_coeff and (actual_coeff~=self._pending_coeff) then
-        --TRACE("Navigator: ** set coeff")
-        song.transport.loop_block_range_coeff = self._pending_coeff
-      else
-        if song.transport.loop_block_enabled then
-          --TRACE("Navigator: ** set range")
-          self._pending_coeff = nil
-          self._pending_loop = nil
-          self:_set_blockloop_range(self._blockpos)
-        else
-          -- try to enable loop (again)
-          song.transport.loop_block_enabled = true
-          self._loop_block_enabled = true
-          --TRACE("Navigator: ** try to enable loop (again)")
-        end
+  ---------------------------------------------------------
+  --  handle changes to position/index
+  ---------------------------------------------------------
+
+  local active_index = nil
+  if self._playing then
+    self._index_update_requested = true
+  else
+    -- check if edit-pos line has changed
+    local edit_pos = rns.transport.edit_pos
+    if (self._edit_line~= edit_pos.line) then
+      self._edit_line = edit_pos.line
+      active_index = self:_get_index_from_line(edit_pos.line)
+      if (active_index ~= self._active_index) then
+        self._index_update_requested = true
       end
     end
-  elseif (self._pending_loop==false) then 
-    if not song.transport.loop_block_enabled then
-      --TRACE("Navigator: ** exit pending_loop ")
-      self._pending_loop = nil
+  end
+
+  if self._index_update_requested then
+    self._index_update_requested = false
+    self._inside_pattern = self:_is_inside_pattern()
+    --print("*** self._inside_pattern",self._inside_pattern)
+    if (active_index == nil) then
+      active_index = self:_obtain_active_index()
+    end
+    --print("*** active_index",active_index)
+    if (active_index ~= self._active_index) then
+      self._active_index = active_index
+      self._blockpos:set_index(self._active_index,true)
+    end
+
+  end
+
+
+end
+
+--------------------------------------------------------------------------------
+
+--- obtain the current play/editpos, quantized to the number of steps
+-- @return number (0 to display "no index")
+
+function Navigator:_obtain_active_index()
+  TRACE("Navigator:_obtain_active_index()")
+
+  local rns = renoise.song()
+  if self._inside_pattern then
+    local active_line =  (self._playing) and 
+      rns.transport.playback_pos.line or rns.transport.edit_pos.line
+    return self:_get_index_from_line(active_line)
+  else
+    if self._playing then
+      return 0
     else
-      -- try to disable loop (again)
-      song.transport.loop_block_enabled = false
-      self._loop_block_enabled = false
-      --TRACE("Navigator: ** try to disable loop (again)")
+      local active_line =  rns.transport.edit_pos.line
+      return self:_get_index_from_line(active_line)
     end
   end
-
-  -- update index
-  if self._pending_index and 
-    song.transport.loop_block_enabled 
-  then
-    --TRACE("Navigator: ** set pending index",self._pending_index)
-    self._blockpos:set_range(self._pending_index,self._pending_index,true)
-    self:_set_blockloop_range(self._blockpos)
-    self._pending_index = nil
-  end
-
-
 
 end
 
 --------------------------------------------------------------------------------
 
--- called when a new document becomes available
+--- calculate the control index from the provided line
+-- using the selected pattern as the basis for the calculation
 
-function Navigator:on_new_document()
-  TRACE("Navigator:on_new_document()")
-  self:_attach_to_song(renoise.song())
+function Navigator:_get_index_from_line(line)
+  TRACE("Navigator:_get_index_from_line()",line)
+
+  local lines_per_unit = self:_get_lines_per_unit()
+  local active_index = math.floor((line-1)/lines_per_unit)+1
+  return active_index
 
 end
 
 --------------------------------------------------------------------------------
 
--- adds notifiers to song, set essential values
+--- return the line number for the provided index
+-- @param idx (number), 0-blockpos_size
+-- @return number (0-number of lines)
 
-function Navigator:_attach_to_song(song)
-  TRACE("Navigator:_attach_to_song",song)
+function Navigator:_get_line_from_index(idx)
+  TRACE("Navigator:_get_line_from_index()",idx)
 
-  self:_get_num_lines()
-  self._active_pattern = self:_is_active_seq_index()
-  self._playing = song.transport.playing
-  self._editing_idx = song.selected_pattern_index
-  self._loop_block_range_coeff = song.transport.loop_block_range_coeff
-  self._loop_block_start_line = song.transport.loop_block_start_pos.line
+  local lines_per_unit = self:_get_lines_per_unit()
+  local active_line = (idx * lines_per_unit)+1
+  return active_line
 
-  song.selected_pattern_index_observable:add_notifier(
-    function()
-      TRACE("Navigator:selected_pattern_index_observable fired...")
-      self._editing_idx = song.selected_pattern_index
-      self:_update_num_lines_notifier()
-    end
-  )
+end
 
-  self:_update_num_lines_notifier()
+--------------------------------------------------------------------------------
 
+--- obtain the number of lines per "unit" (blockpos size)
+-- using the selected pattern as the basis for the calculation
+-- @return number (lines per unit),number (number of lines in pattern)
+
+function Navigator:_get_lines_per_unit(patt_idx)
+  TRACE("Navigator:_get_lines_per_unit()")
+
+  local rns = renoise.song()
+  patt_idx = patt_idx or rns.selected_pattern_index
+  local num_lines = rns.patterns[patt_idx].number_of_lines
+  local lines_per_unit = math.floor(num_lines/self._blockpos_size)
+  return lines_per_unit,num_lines
   
-
 end
 
 --------------------------------------------------------------------------------
 
-function Navigator:_update_num_lines_notifier()
-  TRACE("Navigator:_update_num_lines_notifier()")
-  local song = renoise.song()
-  local patt = song.patterns[self._editing_idx]
-  local observable = patt.number_of_lines_observable
-  if not (observable:has_notifier(Navigator._changed_num_lines,self))then
-    observable:add_notifier(Navigator._changed_num_lines,self)
+--- check if edit-pos and play-pos is the same? 
+-- note: when not playing, this will always return true
+
+function Navigator:_is_inside_pattern()
+  TRACE("Navigator:_is_inside_pattern()")
+
+  if not self._playing then
+    return true
   end
 
-end
-
---------------------------------------------------------------------------------
-
-function Navigator:_changed_num_lines()
-  TRACE("Navigator:_changed_num_lines()")
-  self._changed_num_lines = true
+  local rns = renoise.song()
+  local edit_pos = rns.transport.edit_pos.sequence
+  local playback_pos = rns.transport.playback_pos.sequence
+  return (edit_pos == playback_pos) 
 
 end
 
 --------------------------------------------------------------------------------
 
--- set to values from Renoise
+--- navigate to the line indicated by the index¨
+-- also: carry over loop, if this option has been enabled
+-- @param ctrl_idx (number), 1-blockpos_size
 
-function Navigator:_update()
-  TRACE("Navigator:_update()")
-  local coeff = self._loop_block_range_coeff
+function Navigator:_jump_to_index(ctrl_idx)
+  TRACE("Navigator:_jump_to_index()",ctrl_idx)
 
-  -- figure out how many buttons the new range is spanning
-  local rng_len = math.ceil(self._steps/coeff)
-
-  -- figure out the starting position of the range
-  local patt_idx = renoise.song().selected_pattern_index
-  local num_lines = renoise.song().patterns[patt_idx].number_of_lines
-  local block_start = renoise.song().transport.loop_block_start_pos.line-1
-  local curr_section = math.floor(self._steps*(block_start/num_lines))+1
-
-  self._blockpos:set_range(curr_section,curr_section+rng_len-1,true)
-
-end
-
---------------------------------------------------------------------------------
-
--- set the active blockloop based the index of the button
--- @obj: UIButtonStrip
-
-function Navigator:_set_blockloop_index(idx)
-  TRACE("Navigator:_set_blockloop_index(",idx,")")
-
+  local rns = renoise.song()
+  local active_line = self:_get_line_from_index(ctrl_idx-1)
   local rng = self._blockpos:get_range()
+  local line_count = nil
+  local coeff = nil
+  
+  local inside_range = false
+  if (ctrl_idx >= rng[1]) and (ctrl_idx <= rng[2]) then
+    inside_range = true
+  end
+  --print("inside_range",inside_range)
 
-  -- if the index is within the range
-  if (idx>=rng[1]) and (idx<=rng[2]) then
-    self:_set_playback_index(idx)
+  -- skip, if the index is inside the range,
+  -- and the range is no larger than one unit
+  local range_size = rng[2]-rng[1]
+  --print("range_size",range_size)
+  if inside_range and (range_size == 0) and 
+    (self._active_index == ctrl_idx) 
+  then
+    --print("skip jump within single-unit range")
     return
   end
 
-  local line =  renoise.song().transport.playback_pos.line
-  local num_lines = self:_get_num_lines()
-  local coeff = self:_get_control_coeff()
-  local target_section = math.ceil((idx/self._steps)*coeff)
-  local block_start = renoise.song().transport.loop_block_start_pos.line-1
-  local curr_section = math.ceil((block_start/num_lines)*coeff)+1
-
-  -- move blockloop to the desired location
-  local block_moves = math.floor(target_section-curr_section)
-  self:_move_block_loop(block_moves)
-
-  -- update the displayed range
-  local rng_len = math.ceil(self._steps/coeff)
-  local rng_start = ((target_section-1)*rng_len)+1
-  local rng_end = rng_start+rng_len-1
-  self._blockpos:set_range(rng_start,rng_end,true)
-
-  -- determine the line
-  local block_lines = num_lines/coeff
-  local start_pos = 1+math.floor(block_lines*(target_section-1))
-  self._loop_block_start_line = start_pos
-
-  -- adjust line number
-  local mod = line%block_lines
-  local play_pos = math.floor(((target_section-1)*block_lines)+mod)
-  self:_set_playback_pos(play_pos)
-
-  -- apply the new coefficient
-  --renoise.song().transport.loop_block_range_coeff = coeff
-  self._loop_block_range_coeff = coeff
-
-end
-
---------------------------------------------------------------------------------
-
--- set the active blockloop range based on controller input/range
--- (this function should not be called before the on_idle loop has set the
--- proper coefficient and enabled the loop)
--- @obj: UIButtonStrip
-
-function Navigator:_set_blockloop_range(obj)
-  TRACE("Navigator:_set_blockloop_range(",obj,")")
-
-  local rng = obj:get_range()
-  local idx = obj:get_index()
-  if not idx then
-    idx = rng[1]
-  end
-  local line =  renoise.song().transport.playback_pos.line
-  local num_lines = self:_get_num_lines()
-  local coeff = self:_get_control_coeff()
-  local rng_len = math.ceil(self._steps/coeff)
-  local block_start = renoise.song().transport.loop_block_start_pos.line-1
-  local curr_section = math.ceil((block_start/num_lines)*coeff)+1
-  local playing_section = math.ceil((idx/self._steps)*coeff)
-  local start_section = math.ceil((rng[1]/self._steps)*coeff)
-  local end_section = math.ceil((rng[2]/self._steps)*coeff)
-
-  -- check if playing section is outside range
-  local outside = false
-  if not (playing_section>=start_section) or
-     not (playing_section<=end_section) 
+  if self._loop_start and
+    (self.options.loop_carry.value == LOOP_CARRY_ON) 
   then
-    outside = true
-  end
+    
+    if not inside_range then
+      --print("carry over - self._loop_start",self._loop_start,"end",self._loop_end)
+      if (self._loop_start.sequence == self._loop_end.sequence) or
+        ((self._loop_start.sequence == self._loop_end.sequence-1)  and
+        (self._loop_end.line == 1))
+      then
 
-  local section = (outside) and start_section or playing_section
-
-  -- spanning multiple sections, adjust the range on-the-fly
-  -- and choose the one where playback is currently at
-  if (start_section~=end_section) then
-    local rng_start = ((section-1)*rng_len)+1
-    local rng_end = rng_start+rng_len-1
-    obj:set_range(rng_start,rng_end,true)
-  end
-
-  local block_lines = num_lines/coeff
-
-  -- blockloop start
-  local block_moves = nil
-  if (curr_section<start_section) then 
-    block_moves = math.floor(start_section-curr_section) -- forwards
-  else 
-    block_moves = -math.floor(curr_section-start_section) -- backwards
-  end
-  self:_move_block_loop(block_moves)
-  self._loop_block_start_line = 1+((section-1)*block_lines)
-
-  if outside then
-    -- adjust playback position
-    local mod = line%block_lines
-    local play_pos = math.floor(((section-1)*block_lines)+mod)
-    if (block_lines==1) then
-      -- don't jump to previous line when block is a single line
-      play_pos = play_pos+1
-    end
-    self:_set_playback_pos(play_pos)
-  end
-
-  -- apply the new coefficient
-  --renoise.song().transport.loop_block_range_coeff = coeff
-  self._loop_block_range_coeff = coeff
-
-end
-
---------------------------------------------------------------------------------
-
-function Navigator:_move_block_loop(block_moves)
-  TRACE("Navigator:_move_block_loop(",block_moves,")")
-
-  if (block_moves<0) then
-    for i=1,math.abs(block_moves) do
-      renoise.song().transport:loop_block_move_backwards()
-    end
-  else
-    for i=1,block_moves do
-      renoise.song().transport:loop_block_move_forwards()
-    end
-  end
-end
-
---------------------------------------------------------------------------------
-
--- foolproof method for setting playback position:
--- - for continuous playback, we always go to the previous line
--- - if that line does not exist, we go to the last line instead
--- - also attempt to use the previous pattern if pattern-loop is disabled
-
-function Navigator:_set_playback_pos(line)
-  TRACE("Navigator:_set_playback_pos(",line,")")
-
-  local seq_idx = renoise.song().selected_sequence_index
-  local num_lines = self:_get_num_lines()
-  if (line==0) then
-    if (renoise.song().transport.loop_pattern) then
-      line = num_lines
-    else
-      line = num_lines
-      if (seq_idx>1) then
-        seq_idx = seq_idx-1
-      end
-    end
-  end
-  -- just to be on the safe side, restrict to valid range
-  line = math.max(1,math.min(num_lines,line))
-  local new_pos = renoise.song().transport.playback_pos
-  new_pos.line = line
-  new_pos.sequence = seq_idx
-  renoise.song().transport.playback_pos = new_pos
-
-end
-
---------------------------------------------------------------------------------
-
--- set the playback to the specified index from the controller
--- @idx - the index 
-
-function Navigator:_set_playback_index(idx)
-  TRACE("Navigator:_set_playback_index(",idx,")")
-
-  local line =  renoise.song().transport.playback_pos.line
-  local num_lines = self:_get_num_lines()
-  local block_lines = math.ceil(num_lines/self._blockpos:get_steps())
-  local mod = line%block_lines
-  local jump_line = (block_lines*(idx-1))+mod
-  self:_set_playback_pos(jump_line)
-
-end
-
-
---------------------------------------------------------------------------------
-
--- toggle blockloop on/off: wait for idle mode to do the actual work
--- @obj: UIButtonStrip
-
-function Navigator:_toggle_blockloop(obj)
-  TRACE("Navigator:_toggle_blockloop(",obj,")")
-
-  local rng = obj:get_range()
-
-  if (rng[1]==0) and (rng[2]==0) then
-    --TRACE("Navigator: ** blockloop disabled **")
-    renoise.song().transport.loop_block_enabled = false
-    self._loop_block_enabled = false
-    self._pending_loop = false
-  else
-    -- activating the loop will make it seek the current edit position,
-    -- so we check if we need to enable the blockloop 
-    local coeff = self:_get_control_coeff()
-    local num_lines = self:_get_num_lines()
-    local block_start = renoise.song().transport.loop_block_start_pos.line-1
-    local idx = obj:get_index()
-    local playing_section = math.ceil((idx/self._steps)*coeff)
-    local curr_section = math.ceil((block_start/num_lines)*coeff)+1
-    if not renoise.song().transport.loop_block_enabled or 
-      (playing_section~=curr_section) 
-    then
-      --TRACE("Navigator: ** blockloop enabled **")
-      renoise.song().transport.loop_block_enabled = true
-      self._loop_block_enabled = true
-    end
-    self._pending_loop = true
-    if (renoise.song().transport.loop_block_range_coeff~=coeff) then
-      renoise.song().transport.loop_block_range_coeff = coeff
-      self._loop_block_range_coeff = coeff
-      --TRACE("Navigator:_toggle_blockloop - coeff = ",coeff)
-      -- wait in idle loop for this to be set...
-      self._pending_coeff = coeff
-    end
-  end
-
-end
-
---------------------------------------------------------------------------------
-
--- this function performs double-duty: it will return the number of lines
--- in the current pattern, and at the same time, update the blockpos control
--- if the number of lines is less than the size of the control
-
-function Navigator:_get_num_lines()
-  TRACE("Navigator:_get_num_lines()")
-
-  local patt_idx = renoise.song().selected_pattern_index
-  local num_lines = renoise.song().patterns[patt_idx].number_of_lines
-
-  if self._blockpos then
-
-    if (num_lines<self._blockpos._size) then
-      self._steps = num_lines
-    else
-      self._steps = self._blockpos._size
-    end
-    self._blockpos:set_steps(self._steps)
-    return num_lines
-  
-  end
-
-end
-
---------------------------------------------------------------------------------
-
--- get coefficient based on the range on the controller
--- @return integer (2-16)
-
-function Navigator:_get_control_coeff()
-
-  local rng = self._blockpos:get_range()
-  local coeff = math.ceil(self._steps/(rng[2]-(rng[1]-1)))
-  return math.max(2,math.min(16,coeff)) -- fit within range
-
-end
-
---------------------------------------------------------------------------------
-
--- check if the sequence play-pos match the edit-pos
--- @return boolean
-
-function Navigator:_is_active_seq_index()
-
-  local seq_pos = renoise.song().transport.playback_pos.sequence
-  local edit_pos = renoise.song().transport.edit_pos.sequence
-  return (seq_pos == edit_pos)
-
-end
-
---------------------------------------------------------------------------------
-
--- build the application, 
--- @return boolean (false if requirements were not met)
-
-function Navigator:_build_app()
-  TRACE("Navigator:_build_app()")
-
-  local cm = self.display.device.control_map
-
-  -- create the pattern position/length control
-  if (self.mappings.blockpos.group_name) then
-    local c = UIButtonStrip(self.display)
-    c.mode = 1 -- "position+range" mode
-    c.group_name = self.mappings.blockpos.group_name
-    c.tooltip = self.mappings.blockpos.description
-    c:set_orientation(self.mappings.blockpos.orientation)
-    c.monochrome = is_monochrome(self.display.device.colorspace)
-    c:set_palette({
-      index = self.palette.active,
-      range = self.palette.looped,
-      background = self.palette.background
-    })
-    c.flipped = true
-    if (self.mappings.blockpos.orientation == VERTICAL) then
-      c:set_size(cm:count_rows(self.mappings.blockpos.group_name))
-    else
-      c:set_size(cm:count_columns(self.mappings.blockpos.group_name))
-    end
-    c.on_range_change = function(obj)
-
-      if not self.active then
-        return false
-      end
-      -- wait for idle loop to set the range
-      self:_toggle_blockloop(obj)
-
-    end
-
-    c.on_index_change = function(obj)
-
-      if not self.active then
-        return false
-      end
-
-      local idx = obj:get_index()
-      local rng = obj:get_range()
-
-      if (rng[1]==rng[2]) then
-        if not renoise.song().transport.loop_block_enabled then
-          -- jump to position, cancel the range
-          self:_set_playback_index(idx)
-          obj:set_range(0,0,true)
-          if not self._playing then
-            -- update control when not playing
-            return true
-          end
-        else
-          -- wait for idle loop to set the range
-          self._pending_index = idx
-          renoise.song().transport.loop_block_enabled = true
-          self._loop_block_enabled = true
+        local lines_per_unit,num_lines = 
+          self:_get_lines_per_unit(self._loop_start.sequence)
+        -- fix for when end line is first line in next pattern
+        local end_line = self._loop_end.line
+        if (end_line==1) then
+          end_line = num_lines+1
         end
+        line_count = end_line - self._loop_start.line
+        coeff = num_lines/line_count
+        --print("carry over - active_line",active_line)
+        --print("carry over - line_count",line_count)
+        --print("carry over - lines_per_unit",lines_per_unit)
+        --print("carry over - coeff",coeff)
 
-      else
-        -- switch to this position
-        self:_set_blockloop_index(idx)
+        local new_line = 1+ math.floor((active_line/num_lines)*coeff)*(num_lines/coeff)
+        --print("carry over - new_line",new_line)
+
+        self._first_pos = rns.transport.edit_pos
+        self._first_pos.sequence = self._loop_start.sequence
+        self._first_pos.line = new_line
+        self._second_pos = rns.transport.edit_pos
+        self._second_pos.sequence = self._loop_start.sequence
+        self._second_pos.line = new_line + line_count - lines_per_unit
+        --print("carry over - self._first_pos,self._second_pos",self._first_pos,self._second_pos)
+
+        self:_set_looped_range()
+        self._range_update_requested = true
+
       end
 
-      return false
-
     end
-    self:_add_component(c)
-    self._blockpos = c
 
   end
 
+  if self._playing then
 
-  -- final steps
-  Application._build_app(self)
-  return true
+    local play_pos = rns.transport.playback_pos
+
+    -- make sure we can't jump multiple times 
+    local skip_jump = false
+    if self._jump_pos then
+      if (self._jump_pos.sequence == play_pos.sequence) and
+        (self._jump_pos.line == play_pos.line)
+      then
+        skip_jump = true
+      else
+        self._jump_pos = nil
+      end
+    end
+    --print("skip_jump",skip_jump,self._jump_pos)
+
+    if not skip_jump then
+      -- to have continuous playback, we need to apply the current line offset
+      -- to the resulting value. If the resulting value is < 1, we either 
+      -- go the end of the last/previous pattern, or the current pattern 
+      -- (if the pattern is looped)
+      local lines_per_unit,num_lines = self:_get_lines_per_unit()
+      local playback_line = nil
+      --print("play_pos.line",play_pos.line)
+      if line_count then
+        local line_offset = (play_pos.line%line_count)
+        --print("line_offset",line_offset)
+        --print("line_count",line_count)
+        --print("coeff",coeff)
+        local section_line = math.floor(((ctrl_idx-1)/self._blockpos_size)*coeff)*line_count
+        --print("section_line",section_line)
+        playback_line = section_line+line_offset
+      else
+        local line_offset = (play_pos.line%lines_per_unit)-1
+        playback_line = active_line+line_offset
+      end
+      
+      --print("playback_line",playback_line)
+
+      if (playback_line < 1) then
+        play_pos.line = num_lines
+        if rns.transport.loop_pattern then -- use current pattern
+          play_pos.sequence = rns.selected_sequence_index
+        elseif (rns.selected_sequence_index == 1) then -- use last pattern
+          play_pos.sequence = #rns.sequencer.pattern_sequence
+        else -- use previous pattern
+          play_pos.sequence = rns.selected_sequence_index-1
+        end
+        self._jump_pos = play_pos
+      else
+        play_pos.line = playback_line
+        play_pos.sequence = rns.selected_sequence_index
+      end
+      --print("jump to pos",play_pos)
+      rns.transport.playback_pos = play_pos
+    end
+
+  else
+    local edit_pos = rns.transport.edit_pos
+    edit_pos.sequence = rns.selected_sequence_index
+    edit_pos.line = active_line
+    rns.transport.edit_pos = edit_pos
+  end
+
 
 end
 
+--------------------------------------------------------------------------------
 
+--- set the looped range using controller input
+-- also: maintain the pattern selection, if this feature has been enabled
+
+function Navigator:_set_looped_range()
+  TRACE("Navigator:_set_looped_range")
+
+  local rns = renoise.song()
+
+  -- figure out which of the positions that should come first
+  local swap_pos = false
+  if (self._first_pos.sequence > self._second_pos.sequence) then
+    swap_pos = true
+  elseif (self._first_pos.sequence == self._second_pos.sequence) then
+    if (self._first_pos.line > self._second_pos.line) then
+      swap_pos = true
+    end
+  end
+  --print("swap_pos",swap_pos)
+  if swap_pos then
+    self._first_pos,self._second_pos = self._second_pos,self._first_pos
+  end
+  --print("self._first_pos,self._second_pos",self._first_pos,self._second_pos)
+
+  -- add one "unit" to the length of the end position
+  local lines_per_unit,num_lines = 
+    self:_get_lines_per_unit(self._second_pos.sequence)
+  self._second_pos.line = self._second_pos.line + lines_per_unit
+
+
+  if (self._first_pos.sequence == self._second_pos.sequence) then
+
+    -- the following will enforece a valid coefficient range
+
+    --print("self._first_pos,self._second_pos",self._first_pos,self._second_pos)
+    local line_count = self._second_pos.line - self._first_pos.line
+    --print("line_count",line_count)
+    local coeff = num_lines/line_count
+    --print("coeff",coeff)
+    local matched_coeff = false
+    local valid_coeffs = nil
+    if (self.options.valid_coeffs.value == VALID_COEFF_ALL) then
+      valid_coeffs = {1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16}
+    elseif (self.options.valid_coeffs.value == VALID_COEFF_FOUR) then
+      valid_coeffs = {1,2,4,8,16}
+    elseif (self.options.valid_coeffs.value == VALID_COEFF_THREE) then
+      valid_coeffs = {1,2,3,6,12}
+    end
+    local closest_match = nil
+    for k,v in ipairs(valid_coeffs) do
+      if (v == coeff) then
+        matched_coeff = true
+      elseif (v > coeff) then
+        --print("k,v",k,v)
+        if (math.ceil(coeff) == v) then
+          closest_match = valid_coeffs[k]
+        else
+          closest_match = valid_coeffs[k-1]
+        end
+        break
+      end
+    end
+    --print("matched_coeff",matched_coeff)
+    --print("closest_match",closest_match)
+
+    -- if not a valid coefficient, expand the size
+    if not matched_coeff then
+      matched_coeff = closest_match
+      line_count = math.floor(num_lines/closest_match)
+      self._second_pos.line = self._first_pos.line+line_count
+    end
+
+    --print("line_count",line_count)
+    --print("self._second_pos.line #A",self._second_pos.line)
+
+    -- if result goes beyond boundary, move back
+    if (self._second_pos.line > num_lines+1) then
+      local offset = num_lines-self._second_pos.line+1
+      self._first_pos.line = self._first_pos.line + offset
+      self._second_pos.line = self._second_pos.line + offset
+    end
+    --print("self._second_pos.line #B",self._second_pos.line)
+
+  end
+
+  --print("self._first_pos,self._second_pos",self._first_pos,self._second_pos)
+  rns.transport.loop_range = {self._first_pos,self._second_pos}
+
+  self._loop_mode = LOOP_CUSTOM
+
+  -- maintain the pattern selection
+  if (self.options.pattern_select.value ~=  SELECT_NONE) then
+
+    if (self.options.pattern_select.value == SELECT_PATTERN) then
+      rns.selection_in_pattern = { 
+        start_line = self._first_pos.line, 
+        end_line = math.min(num_lines,self._second_pos.line)
+      } 
+    elseif (self.options.pattern_select.value == SELECT_TRACK) then
+      rns.selection_in_pattern = { 
+        start_track = rns.selected_track_index,
+        end_track = rns.selected_track_index,
+        start_line = self._first_pos.line, 
+        end_line = math.min(num_lines,self._second_pos.line)
+      } 
+    elseif (self.options.pattern_select.value == SELECT_COLUMN) then
+      local track_idx = rns.selected_track_index
+      local column_idx = rns.selected_note_column_index > 0 and 
+        rns.selected_note_column_index or
+        rns.selected_effect_column_index + 
+          renoise.song().tracks[track_idx].visible_note_columns
+      --print("column_idx",column_idx)
+      rns.selection_in_pattern = { 
+        start_column = column_idx,
+        end_column = column_idx,
+        start_track = rns.selected_track_index,
+        end_track = rns.selected_track_index,
+        start_line = self._first_pos.line, 
+        end_line = math.min(num_lines,self._second_pos.line)
+      } 
+    end
+
+  end
+
+  -- prepare for a new selection
+  self._held_event_fired = true
+  self._first_pos = nil
+  self._first_idx = nil
+
+
+end
+
+--------------------------------------------------------------------------------
+
+--- clear the looped range using controller input
+-- if you clear a block loop, the sequence loop should remain unaffected
+
+function Navigator:_clear_looped_range()
+
+  local rns = renoise.song()
+
+  local has_sequence_range,cached_seq = false,nil
+  if (rns.transport.loop_sequence_range[1] ~= 0) and
+    (rns.transport.loop_sequence_range[2] ~= 0) 
+  then
+    has_sequence_range = true
+    cached_seq = rns.transport.loop_sequence_range
+  end
+  --print("has_sequence_range",has_sequence_range)
+
+  rns.transport.loop_range_beats = {0,rns.transport.song_length_beats}
+
+  if (self._loop_mode == LOOP_SEQUENCE) then
+    --print("avoid that the sequence range expands")
+    rns.transport.loop_sequence_range = {}
+  elseif has_sequence_range then
+    --print("restore the sequence range")
+    rns.transport.loop_sequence_range = cached_seq
+  else
+    --print("clear sequence range")
+    rns.transport.loop_sequence_range = {}
+  end
+
+  self._held_event_fired = true
+  self._first_pos = nil
+  self._first_idx = nil
+
+  -- clear the pattern selection
+  if (self.options.pattern_select.value ~=  SELECT_NONE) then
+    rns.selection_in_pattern = {}
+  end
+
+end
+
+--------------------------------------------------------------------------------
+
+--- determine if the song contain a looped range
+-- (this can be a sequence loop, a block loop or a custom looped range)
+-- @return boolean, enum (Navigator.LOOP_xxx)
+
+function Navigator:_has_looped_range()
+  --TRACE("Navigator:_has_looped_range")
+
+  local rns = renoise.song()
+
+  -- check if block loop is active
+  if rns.transport.loop_block_enabled then
+    return true,LOOP_BLOCK
+  end
+
+  -- check sequence range
+  local range = rns.transport.loop_sequence_range
+  if (range[1] == 0) and (range[2] == 0) then
+    -- check custom range
+    local range = rns.transport.loop_range_beats
+    if (range[1] == 0) and
+      (range[2] == rns.transport.song_length_beats)
+    then
+      return false
+    else
+      if rns.transport.loop_pattern then
+        -- we ignore the pattern loop!
+        return false
+      else
+        return true,LOOP_CUSTOM
+      end
+    end
+  else
+    return true,LOOP_SEQUENCE
+  end
+
+end
+
+--------------------------------------------------------------------------------
+--[[
+---- calculate the number of beats based on supplied number of lines
+-- (supports both the LPB and SPEED/tick-based timing models)
+-- @return float
+
+function Navigator:_get_beats_by_lines(num_lines)
+  TRACE("Navigator:_get_beats_by_lines",num_lines)
+
+  local rns = renoise.song()
+  local beats = nil
+  if (rns.transport.timing_model == renoise.Transport.TIMING_MODEL_SPEED) then
+    local tpl = rns.transport.tpl
+    if (tpl == 1) then
+      beats = num_lines * (1/24)
+    elseif (tpl == 2) then
+      beats = num_lines * (1/12)
+    elseif (tpl == 3) then
+      beats = num_lines * (1/8)
+    else 
+      beats = num_lines * (1/4)
+    end
+  else -- TIMING_MODEL_LPB
+    local lpb = rns.transport.lpb
+    beats = num_lines * (1/lpb)
+  end
+
+  return beats
+
+end
+
+--------------------------------------------------------------------------------
+
+--- calculate the number of beats based on supplied song-position
+-- @param seq_idx (integer)
+-- @param line_idx (integer)
+-- @return float
+
+function Navigator:_get_beats_by_songpos(pos)
+  TRACE("Navigator:_get_beats_by_songpos",pos)
+
+  local rns = renoise.song()
+  local seq_idx = pos.sequence
+  local line_idx = pos.line
+
+  assert(#rns.sequencer.pattern_sequence>=seq_idx,
+    "Oops, the sequence index is higher than the available number of patterns")
+   
+  local total_lines = 0
+  for i = 1, seq_idx do
+    local patt_idx = rns.sequencer:pattern(i)
+    --print("patt_idx",patt_idx)
+    local num_lines = renoise.song().patterns[patt_idx].number_of_lines
+    --print("num_lines",num_lines)
+    if (i == seq_idx) then
+      if (num_lines < line_idx) then
+        --print("The provided line does not exist, using the pattern length")
+        line_idx = num_lines
+      end
+      total_lines = total_lines + line_idx
+    else
+      total_lines = total_lines + num_lines
+    end
+  end
+
+  return self:_get_beats_by_lines(total_lines)
+
+end
+]]

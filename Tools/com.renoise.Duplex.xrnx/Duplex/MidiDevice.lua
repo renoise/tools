@@ -189,14 +189,13 @@ function MidiDevice:midi_callback(message)
       -- deep-copy the parameter table, so we can modify   
       -- it's values without changing the original 
       local param = table.rcopy(v)
-    
+      
       -- create the message
       local msg = Message()
       msg.value = msg_value
       msg.midi_msg = message
       msg.context = msg_context
       msg.channel = msg_channel
-      msg.value = msg_value
       msg.is_note_off = msg_is_note_off
 
       -- special case: if we have received input from a MIDI keyboard

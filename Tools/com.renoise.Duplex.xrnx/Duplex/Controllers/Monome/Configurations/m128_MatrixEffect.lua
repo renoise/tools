@@ -35,9 +35,17 @@ duplex_configurations:insert {
         triggers = {
           group_name = "Grid1",
         },
-        sequence = {
+        --sequence = {
+        --  group_name = "Controls",
+        --  index = 1,
+        --},
+        prev_seq_page = {
           group_name = "Controls",
           index = 1,
+        },
+        next_seq_page = {
+          group_name = "Controls",
+          index = 2,
         },
         track = {
           group_name = "Controls",

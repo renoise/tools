@@ -306,16 +306,13 @@ function TrackSelector:_build_app(song)
   local map = self.mappings.prev_next_track
   if map.group_name then
     TRACE("TrackSelector:add next/previous track control (spinner)")
-    local c = UISpinner(self.display)
+    local c = UISpinner(self)
     c.group_name = map.group_name
     c.tooltip = map.description
     c:set_pos(map.index or 1)
     c:set_orientation(map.orientation or HORIZONTAL)
     c.on_change = function(obj) 
 
-      if (not self.active) then
-        return false
-      end
       -- to learn if we increased or decreased the track,
       -- compare cached value in spinner (the old value
       -- is kept before new the new value is applied)
@@ -340,15 +337,12 @@ function TrackSelector:_build_app(song)
   local map = self.mappings.prev_next_page
   if map.group_name then
     TRACE("TrackSelector:add previous/next page control (spinner)")
-    local c = UISpinner(self.display)
+    local c = UISpinner(self)
     c.group_name = map.group_name
     c.tooltip = map.description
     c:set_pos(map.index or 1)
     c:set_orientation(map.orientation or HORIZONTAL)
     c.on_change = function(obj)
-      if (not self.active) then
-        return false
-      end
       local track_idx = renoise.song().selected_track_index
       local track_page = self:_get_track_page(track_idx)
       -- figure out the resulting track index
@@ -389,7 +383,7 @@ function TrackSelector:_build_app(song)
       end
     end
 
-    local c = UISlider(self.display)
+    local c = UISlider(self)
     c.group_name = map.group_name
     c.tooltip = map.description
     c:set_pos(map.index or 1)
@@ -404,10 +398,6 @@ function TrackSelector:_build_app(song)
     c:set_size(self._slider_units)
     c.on_change = function(obj) 
 
-      if (not self.active) then
-        return false
-      end
-
       if (obj.index>0) then
         local track_idx = nil
         local page_width = self:_get_page_width()
@@ -419,6 +409,7 @@ function TrackSelector:_build_app(song)
         end
         -- outside bounds?
         if (track_idx>#renoise.song().tracks) then
+          -- TODO if button-based, revert to previous index
           return 
         end
         -- reset the 'out of bounds' track 
@@ -438,14 +429,11 @@ function TrackSelector:_build_app(song)
   local map = self.mappings.select_first
   if map.group_name then
     TRACE("TrackSelector:add first track select (pushbutton)")
-    local c = UIButton(self.display)
+    local c = UIButton(self)
     c.group_name = map.group_name
     c.tooltip = map.description
     c:set_pos(map.index)
     c.on_press = function(obj)
-      if not self.active then 
-        return false 
-      end
       renoise.song().selected_track_index = 1
     end
     self:_add_component(c)
@@ -456,14 +444,11 @@ function TrackSelector:_build_app(song)
   local map = self.mappings.select_master
   if map.group_name then
     TRACE("TrackSelector:add master-track select (pushbutton)")
-    local c = UIButton(self.display)
+    local c = UIButton(self)
     c.group_name = map.group_name
     c.tooltip = map.description
     c:set_pos(map.index)
     c.on_press = function(obj)
-      if not self.active then 
-        return false 
-      end
       local track_idx = get_master_track_index()
       renoise.song().selected_track_index = track_idx
     end
@@ -475,14 +460,11 @@ function TrackSelector:_build_app(song)
   local map = self.mappings.select_sends
   if map.group_name then
     TRACE("TrackSelector:add master-track select (pushbutton)")
-    local c = UIButton(self.display)
+    local c = UIButton(self)
     c.group_name = map.group_name
     c.tooltip = map.description
     c:set_pos(map.index)
     c.on_press = function(obj)
-      if not self.active then 
-        return false 
-      end
       local track_idx = get_master_track_index()+1
       -- outside bounds?
       if (track_idx>#renoise.song().tracks) then

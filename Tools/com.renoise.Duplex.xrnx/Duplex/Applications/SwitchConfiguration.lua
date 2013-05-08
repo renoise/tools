@@ -139,13 +139,12 @@ function SwitchConfiguration:_build_app()
 
   local map = self.mappings.goto_next
   if map.group_name then
-    local c = UIButton(self.display)
+    local c = UIButton(self)
     c.group_name = map.group_name
     c.tooltip = map.description
     c:set_pos(map.index)
     --c:set(self.palette.next_config)
     c.on_press = function(obj)
-      if not self.active then return false end
       self._browser:set_next_configuration() 
     end
     self:_add_component(c)
@@ -154,13 +153,12 @@ function SwitchConfiguration:_build_app()
 
   local map = self.mappings.goto_previous
   if map.group_name then
-    local c = UIButton(self.display)
+    local c = UIButton(self)
     c.group_name = map.group_name
     c.tooltip = map.description
     c:set_pos(map.index)
     --c:set(self.palette.previous_config)
     c.on_press = function(obj)
-      if not self.active then return false end
       self._browser:set_previous_configuration() 
     end
     self:_add_component(c)
@@ -171,13 +169,12 @@ function SwitchConfiguration:_build_app()
     local map_name = ("goto_%d"):format(i)
     local map = self.mappings[map_name]
     if map.group_name then
-      local c = UIButton(self.display)
+      local c = UIButton(self)
       c.group_name = map.group_name
       c.tooltip = map.description
       c:set_pos(map.index)
       --c:set(self.palette.set_config)
       c.on_press = function(obj)
-        if not self.active then return false end
         self._browser:goto_configuration(i) 
       end
       self:_add_component(c)

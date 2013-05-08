@@ -9,26 +9,6 @@ About
 
   The Mixer is a generic class for controlling the Renoise mixer
 
-Mappings
-
-  levels  - (UISlider...)       volume *
-  mute    - (UIButton...) track mute *
-  solo    - (UIButton...) track solo *
-  master  - (UISlider)          master volume *
-  panning - (UISlider...)       track panning
-  page    - (UISpinner)         paged track navigation
-  mode    - (UIButton)    PRE/POST fx toggle
-
-  *  Automatic layout when using a grid controller
-
-
-Options
-
-  pre_post      - decide if Mixer should start in PRE or POST fx mode
-  mute_mode     - decide if mute means MUTE or OFF
-  offset_track  - specify how many tracks to offset the mixer by
-  follow_track  - align with the selected track in Renoise
-  page_size     - specify step size when using paged navigation
 
 Automatic grid controller layout
 
@@ -157,19 +137,6 @@ Mixer.default_options = {
     },
     value = 1,
   },
-  track_offset = {
-    label = "Track offset",
-    description = "Change the offset if you want the Mixer to begin " 
-                .."\nwith a different track. This is mostly useful if you "
-                .."\nwant to run two Mixer instances simultaneously, with "
-                .."\none of them being offset by a number of tracks",
-    on_change = function(inst)
-      inst._track_offset = inst.options.track_offset.value-1
-      inst._update_requested = true
-    end,
-    items = {"0","1","2","3","4","5","6","7"},
-    value = 1,
-  },
   take_over_volumes = {
     label = "Soft takeover",
     description = "Enables soft take-over for volume: useful if faders of the device are not motorized. "
@@ -238,9 +205,15 @@ Mixer.available_mappings = {
     description = "Mixer: Solo track",
     greedy = true,
   },
-  page = {
-    description = "Mixer: Track navigator",
-    orientation = HORIZONTAL,
+  --page = {
+  --  description = "Mixer: Track navigator",
+  --  orientation = HORIZONTAL,
+  --},
+  next_page = {
+    description = "Mixer: Next track page",
+  },
+  prev_page = {
+    description = "Mixer: Previous track page",
   },
   mode = {
     description = "Mixer: Pre/Post FX mode",
@@ -273,7 +246,11 @@ Mixer.default_palette = {
   -- solo buttons
   solo_on           = { color={0xff,0x40,0x00}, val = true, text = "S",},
   solo_off          = { color={0x00,0x00,0x00}, val = false,text = "S", },
-
+  -- prev/next page buttons
+  prev_page_on      = { color={0xff,0xff,0xff}, val = true, text = "◄",},
+  prev_page_off     = { color={0x00,0x00,0x00}, val = false,text = "◄",},
+  next_page_on      = { color={0xff,0xff,0xff}, val = true, text = "►",},
+  next_page_off     = { color={0x00,0x00,0x00}, val = false,text = "►",},
 }
 
 
@@ -291,7 +268,7 @@ function Mixer:__init(...)
   self._panning = nil
   self._mutes = nil
   self._solos = nil
-  self._page_control = nil
+  --self._page_control = nil
   self._mode_control = nil
 
   -- the observed width of the mixer, and the step size for
@@ -300,8 +277,12 @@ function Mixer:__init(...)
   self._width = 0
 
   -- offset of the track, as controlled by the track navigator
-  -- (not to be confused with the option with the same name)
   self._track_offset = nil
+
+  -- number, the total number of track pages
+  self._page_count = nil
+
+  -- number, the current track page
   self._track_page = nil
 
   -- current track properties we are listening to
@@ -617,10 +598,27 @@ function Mixer:update()
   end
   
   -- page controls
+  --[[
   if (self._page_control) then
     local page_width = self:_get_page_width()
     local page = math.floor(self._track_offset/page_width)
     self._page_control:set_index(page,skip_event)
+  end
+  ]]
+
+  if self._prev_page then
+    if (self._track_page > 0) then
+      self._prev_page:set(self.palette.prev_page_on)
+    else
+      self._prev_page:set(self.palette.prev_page_off)
+    end
+  end
+  if self._next_page then
+    if (self._track_page < self._page_count) then
+      self._next_page:set(self.palette.next_page_on)
+    else
+      self._next_page:set(self.palette.next_page_off)
+    end
   end
 
   -- mode controls
@@ -648,7 +646,6 @@ function Mixer:start_app()
 
   self:_attach_to_song()
   self:update()
-
 
 end
 
@@ -817,7 +814,7 @@ function Mixer:_build_app()
     for control_index = 1,volume_count do
       local param = volume_group[control_index]
       local y_pos = (embed_mutes) and ((embed_solos) and 3 or 2) or 1
-      local c = UISlider(self.display)
+      local c = UISlider(self)
       c.group_name = param.group_name
       c.tooltip = self.mappings.levels.description
       if (slider_grid_mode) then
@@ -834,10 +831,6 @@ function Mixer:_build_app()
       c.on_change = function(obj) 
 
         --print("*** volume changed from controller - obj.value",obj.value)
-
-        if (not self.active) then
-          return false
-        end
 
         local track_index = self._track_offset + control_index
 
@@ -873,7 +866,7 @@ function Mixer:_build_app()
   if self._panning then
     for control_index = 1,pannings_count do
       local param = pannings_group[control_index]
-      local c = UISlider(self.display)
+      local c = UISlider(self)
       c.group_name = param.group_name
       c.tooltip = self.mappings.panning.description
       c:set_pos(param.index)
@@ -890,10 +883,7 @@ function Mixer:_build_app()
         
         local track_index = self._track_offset + control_index
 
-        if (not self.active) then
-          return false
-
-        elseif (track_index > #renoise.song().tracks) then
+        if (track_index > #renoise.song().tracks) then
           -- track is outside bounds
           return 
 
@@ -927,11 +917,10 @@ function Mixer:_build_app()
     for control_index = 1,mutes_count do
       TRACE("Mixer:adding mute#",control_index)
       local param = mutes_group[control_index]
-      local c = UIButton(self.display)
+      local c = UIButton(self)
       c.group_name = param.group_name
       c.tooltip = self.mappings.mute.description
       c:set_pos(param.index)
-      c.active = false
 
       -- value changed via button
       c.on_press = function(obj) 
@@ -939,9 +928,7 @@ function Mixer:_build_app()
 
         --print("on_press")
 
-        if (not self.active) then
-          return false
-        elseif (track_index == get_master_track_index()) then
+        if (track_index == get_master_track_index()) then
           -- can't mute the master track
           return 
         elseif (track_index > #renoise.song().tracks) then
@@ -969,9 +956,7 @@ function Mixer:_build_app()
       c.on_change = function(obj,val)
         local track_index = self._track_offset + control_index
 
-        if (not self.active) then
-          return false
-        elseif (track_index == get_master_track_index()) then
+        if (track_index == get_master_track_index()) then
           -- can't mute the master track
           return 
         elseif (track_index > #renoise.song().tracks) then
@@ -1003,9 +988,7 @@ function Mixer:_build_app()
 
         local track_index = self._track_offset + control_index
 
-        if (not self.active) then
-          return false
-        elseif (track_index > #renoise.song().tracks) then
+        if (track_index > #renoise.song().tracks) then
           -- track is outside bounds
           return false
         end
@@ -1027,7 +1010,7 @@ function Mixer:_build_app()
   if self._solos then
     for control_index = 1,solos_count do
       TRACE("Mixer:adding solo#",control_index)
-      local c = UIButton(self.display)
+      local c = UIButton(self)
       c.group_name = self.mappings.solo.group_name
       c.tooltip = self.mappings.solo.description
       if embed_solos then
@@ -1036,15 +1019,10 @@ function Mixer:_build_app()
       else
         c:set_pos(control_index)
       end
-      c.active = false
 
       -- mute state changed from controller
       -- (update the slider.dimmed property)
       c.on_press = function(obj) 
-
-        if (not self.active) then
-          return false
-        end
 
         local track_index = self._track_offset + control_index
         if (track_index > #renoise.song().tracks) then
@@ -1070,7 +1048,7 @@ function Mixer:_build_app()
   if (self.mappings.master.group_name) then
     TRACE("Mixer:adding master")
     local master_pos = self.mappings.master.index or 1
-    local c = UISlider(self.display)
+    local c = UISlider(self)
     c.group_name = self.mappings.master.group_name
     c.tooltip = self.mappings.master.description
     c:set_pos((embed_master) and (volume_count + 1) or master_pos)
@@ -1083,26 +1061,22 @@ function Mixer:_build_app()
       track=self.palette.master_lane,
     })
     c.on_change = function(obj) 
-      if (not self.active) then
-        return false
-      else
-        local track_index = get_master_track_index()
-        local control_index = track_index - self._track_offset
-        if (self._volume and 
-            control_index > 0 and 
-            control_index <= volume_count) 
-        then
-          -- update visible master level slider
-          self._volume[control_index]:set_value(obj.value,true)
-        end
-        local track = get_master_track()
-
-        local volume = (self._postfx_mode) and 
-          track.postfx_volume or track.prefx_volume
-
-        self:_set_volume(volume,track_index,obj)
-        
+      local track_index = get_master_track_index()
+      local control_index = track_index - self._track_offset
+      if (self._volume and 
+          control_index > 0 and 
+          control_index <= volume_count) 
+      then
+        -- update visible master level slider
+        self._volume[control_index]:set_value(obj.value,true)
       end
+      local track = get_master_track()
+
+      local volume = (self._postfx_mode) and 
+        track.postfx_volume or track.prefx_volume
+
+      self:_set_volume(volume,track_index,obj)
+        
     end 
     
     self:_add_component(c)
@@ -1110,42 +1084,35 @@ function Mixer:_build_app()
 
   end
   
-  
-  -- track scrolling ---------------------------
-  if (self.mappings.page.group_name) then
-    local c = UISpinner(self.display)
-    c.group_name = self.mappings.page.group_name
-    c.tooltip = self.mappings.page.description
-    c.index = 0
-    c.step_size = 1
-    c.minimum = 0
-    c.maximum = math.max(0,#renoise.song().tracks-self._width)
-    c:set_pos(self.mappings.page.index or 1)
-    c:set_orientation(self.mappings.page.orientation)
-    c.text_orientation = HORIZONTAL
 
-    c.on_change = function(obj) 
-      if (not self.active) then
-        return false
+  local map = self.mappings.prev_page
+  if map.group_name then
+    local c = UIButton(self)
+    c.group_name = map.group_name
+    c:set_pos(map.index or 1)
+    c.tooltip = map.description
+    c.on_press = function()
+      if (self._track_page>0) then
+        self:_set_track_page(self._track_page-1)
       end
-
-      local page_width = self:_get_page_width()
-      local track_idx = (obj.index*page_width)
-      if (self.options.follow_track.value == FOLLOW_TRACK_ON) then
-        -- set track index and let the _follow_track() method handle it
-        renoise.song().selected_track_index = 1+track_idx
-      else
-        self._track_offset = track_idx
-        self._update_requested = true
-
-      end
-      self:_init_take_over_volume()
-
     end
-    
     self:_add_component(c)
-    self._page_control = c
+    self._prev_page = c
+  end
 
+  local map = self.mappings.next_page
+  if map.group_name then
+    local c = UIButton(self)
+    c.group_name = map.group_name
+    c:set_pos(map.index or 1)
+    c.tooltip = map.description
+    c.on_press = function()
+      if (self._track_page<self._page_count) then
+        self:_set_track_page(self._track_page+1)
+      end
+    end
+    self:_add_component(c)
+    self._next_page = c
   end
 
 
@@ -1153,17 +1120,13 @@ function Mixer:_build_app()
 
   if (self.mappings.mode.group_name) then
     TRACE("Mixer:adding Pre/Post FX mode")
-    local c = UIButton(self.display)
+    local c = UIButton(self)
     c.group_name = self.mappings.mode.group_name
     c.tooltip = self.mappings.mode.description
     c:set_pos(self.mappings.mode.index or 1)
-    c.active = false
 
     -- mode state changed from controller
     c.on_press = function(obj) 
-      if (not self.active) then
-        return false
-      end
       
       self._postfx_mode = not self._postfx_mode
       self._update_requested = true
@@ -1234,8 +1197,12 @@ end
 
 function Mixer:_attach_to_song()
   TRACE("Mixer:_attach_to_song")
-  
-  local song = renoise.song()
+
+  -- initialize important parameters
+  local track_idx = renoise.song().selected_track_index 
+  self._track_page = self:_get_track_page(track_idx)
+  self:_update_page_count()
+  self._track_offset = 0  
 
   -- attach to mixer PRE/POST 
   if (renoise.API_VERSION >=2) then
@@ -1250,9 +1217,8 @@ function Mixer:_attach_to_song()
     )
   end
 
-  self._track_offset = self.options.track_offset.value-1
   -- update on track changes in the song
-  song.tracks_observable:add_notifier(
+  renoise.song().tracks_observable:add_notifier(
     function()
       TRACE("Mixer:tracks_changed fired...")
       self._update_requested = true
@@ -1264,7 +1230,7 @@ function Mixer:_attach_to_song()
   self:_attach_to_tracks(new_song)
 
   -- follow active track in Renoise
-  song.selected_track_index_observable:add_notifier(
+  renoise.song().selected_track_index_observable:add_notifier(
     function()
       TRACE("Mixer:selected_track_observable fired...")
       self:_follow_track()
@@ -1299,7 +1265,7 @@ function Mixer:_follow_track()
   end
 
   local song = renoise.song()
-  local track_idx = song.selected_track_index+self.options.track_offset.value-1
+  local track_idx = song.selected_track_index 
   local page = self:_get_track_page(track_idx)
   if (page~=self._track_page) then
     self._track_page = page
@@ -1318,6 +1284,7 @@ end
 -- return integer (0-number of pages)
 
 function Mixer:_get_track_page(track_idx)
+  TRACE("Mixer:_get_track_page()",track_idx)
 
   local page_width = self:_get_page_width()
   return math.floor((track_idx-1)/page_width)
@@ -1327,10 +1294,45 @@ end
 
 --------------------------------------------------------------------------------
 
+--- paged navigation: if follow track is enabled, this will set the active
+-- track - otherwise, only the track offset is updated
+-- @param track_idx, renoise track number
+
+function Mixer:_set_track_page(page_idx)
+  TRACE("Mixer:_set_track_page()",page_idx)
+
+  local page_width = self:_get_page_width()
+
+  if (self.options.follow_track.value == FOLLOW_TRACK_ON) then
+    local offset = (renoise.song().selected_track_index%page_width)
+    local num_tracks = #renoise.song().tracks
+    local track_idx = (page_idx * page_width) + offset  
+    renoise.song().selected_track_index = math.min(num_tracks,track_idx)
+  else
+    self._track_offset = (page_idx * page_width)
+    self._update_requested = true
+    self:_init_take_over_volume()
+  end
+
+end
+
+--------------------------------------------------------------------------------
+
 function Mixer:_get_page_width()
+  TRACE("Mixer:_get_page_width()")
 
   return (self.options.page_size.value==TRACK_PAGE_AUTO)
     and self._width or self.options.page_size.value-1
+
+end
+
+
+--------------------------------------------------------------------------------
+
+function Mixer:_update_page_count()
+
+  local page_width = self:_get_page_width()
+  self._page_count = math.floor((#renoise.song().tracks-1)/page_width)
 
 end
 
@@ -1345,11 +1347,13 @@ function Mixer:_attach_to_tracks(new_song)
   local tracks = renoise.song().tracks
 
   -- validate and update the sequence/track offset
+  --[[
   if (self._page_control) then
     local page_width = self:_get_page_width()
     local pages = math.floor((#renoise.song().tracks-1)/page_width)
     self._page_control:set_range(nil,math.max(0,pages))
   end
+  ]]
     
   -- detach all previously added notifiers first
   -- but don't even try to detach when a new song arrived. old observables

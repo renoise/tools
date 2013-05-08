@@ -116,7 +116,7 @@ function Automation:update()
         msg = string.format("%s %s (%d), ",msg,v.parameter.name,v.track_idx)
         self:writeahead(writeahead_amount,automation,v)
       else
-        print("*** expected automation")
+        LOG("*** expected automation")
       end
     end
   end

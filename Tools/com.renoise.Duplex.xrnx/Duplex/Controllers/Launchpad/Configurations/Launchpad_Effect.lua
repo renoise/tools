@@ -94,9 +94,17 @@ duplex_configurations:insert {
         parameters = {
           group_name= "Grid",
         },
-        page = {
+        --page = {
+        --  group_name = "Controls",
+        --  index = 1,
+        --},
+        param_prev = {
           group_name = "Controls",
           index = 1,
+        },
+        param_next = {
+          group_name = "Controls",
+          index = 2,
         },
         device = {
           group_name = "Triggers",

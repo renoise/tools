@@ -33,10 +33,10 @@ class 'UIComponent'
 --------------------------------------------------------------------------------
 
 --- Initialize the UIComponent class
--- @param display (Duplex.Display)
+-- @param app (Duplex.Application)
 
-function UIComponent:__init(display)
-  TRACE("UIComponent:__init")
+function UIComponent:__init(app)
+  TRACE("UIComponent:__init",app)
   
   self.canvas = Canvas()
 
@@ -67,8 +67,9 @@ function UIComponent:__init(display)
   -- request refresh
   self.dirty = true 
   
-  -- the parent display
-  self._display = display 
+  -- reference to containing application
+  self.app = app
+
 end
 
 
@@ -154,7 +155,7 @@ function UIComponent:set_pos(x,y)
 
   if (idx) then
     -- obtain the size of the group
-    local cm = self._display.device.control_map
+    local cm = self.app.display.device.control_map
     local cols = cm:count_columns(self.group_name)
     -- calculate x/y from index
     if (idx>0) then
@@ -178,7 +179,7 @@ end
 -- @return (Boolean) true if inside area
 
 function UIComponent:test(x_pos, y_pos)
---TRACE("UIComponent:test(",x_pos, y_pos,")")
+  TRACE("UIComponent:test(",x_pos, y_pos,")")
 
   -- pressed to the left or above?
   if (x_pos < self.x_pos) or 

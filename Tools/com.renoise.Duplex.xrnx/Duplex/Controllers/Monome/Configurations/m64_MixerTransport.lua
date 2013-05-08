@@ -78,7 +78,6 @@ duplex_configurations:insert {
         invert_mute = 2,
         follow_track = 1,
         --page_size
-        --track_offset
         --mute_mode
         --pre_post
       }

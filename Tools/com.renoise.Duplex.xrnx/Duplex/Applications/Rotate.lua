@@ -409,13 +409,12 @@ function Rotate:_build_app()
 
 
   if self.mappings.track_in_pattern_up.group_name then
-    local c = UIButton(self.display)
+    local c = UIButton(self)
     c.group_name = self.mappings.track_in_pattern_up.group_name
     c.tooltip = self.mappings.track_in_pattern_up.description
     c:set_pos(self.mappings.track_in_pattern_up.index)
     c:set(self.palette.up_off)
     c.on_press = function(obj)
-      if not self.active then return false end
       local shift_amount = -self.options.shift_amount.value
       local range_mode = RANGE_TRACK_IN_PATTERN
       local shift_automation = 
@@ -429,13 +428,12 @@ function Rotate:_build_app()
   end
 
   if self.mappings.track_in_pattern_down.group_name then
-    local c = UIButton(self.display)
+    local c = UIButton(self)
     c.group_name = self.mappings.track_in_pattern_down.group_name
     c.tooltip = self.mappings.track_in_pattern_down.description
     c:set_pos(self.mappings.track_in_pattern_down.index)
     c:set(self.palette.down_off)
     c.on_press = function(obj)
-      if not self.active then return false end
       local shift_amount = self.options.shift_amount.value
       local range_mode = RANGE_TRACK_IN_PATTERN
       local shift_automation = 
@@ -449,13 +447,12 @@ function Rotate:_build_app()
   end
 
   if self.mappings.whole_pattern_up.group_name then
-    local c = UIButton(self.display)
+    local c = UIButton(self)
     c.group_name = self.mappings.whole_pattern_up.group_name
     c.tooltip = self.mappings.whole_pattern_up.description
     c:set_pos(self.mappings.whole_pattern_up.index)
     c:set(self.palette.up_off)
     c.on_press = function(obj)
-      if not self.active then return false end
       local shift_amount = -self.options.shift_amount.value
       local range_mode = RANGE_WHOLE_PATTERN
       local shift_automation = 
@@ -469,13 +466,12 @@ function Rotate:_build_app()
   end
 
   if self.mappings.whole_pattern_down.group_name then
-    local c = UIButton(self.display)
+    local c = UIButton(self)
     c.group_name = self.mappings.whole_pattern_down.group_name
     c.tooltip = self.mappings.whole_pattern_down.description
     c:set_pos(self.mappings.whole_pattern_down.index)
     c:set(self.palette.down_off)
     c.on_press = function(obj)
-      if not self.active then return false end
       local shift_amount = self.options.shift_amount.value
       local range_mode = RANGE_WHOLE_PATTERN
       local shift_automation = 

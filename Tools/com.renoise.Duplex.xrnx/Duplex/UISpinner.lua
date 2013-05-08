@@ -36,12 +36,12 @@ class 'UISpinner' (UIComponent)
 --------------------------------------------------------------------------------
 
 --- Initialize the UISpinner class
--- @param display (Duplex.Display)
+-- @param app (Duplex.Application)
 
-function UISpinner:__init(display)
-  TRACE('UISpinner:__init',display)
+function UISpinner:__init(app)
+  TRACE('UISpinner:__init',app)
 
-  UIComponent.__init(self,display)
+  UIComponent.__init(self,app)
 
   -- the current index (for buttons)
   self.index = 0
@@ -62,9 +62,9 @@ function UISpinner:__init(display)
   self.flipped = false
 
   self.palette = {
-    foreground_dec = {color=display.palette.color_1.color},
-    foreground_inc = {color=display.palette.color_1.color},
-    background = {color=display.palette.background.color},
+    foreground_dec = {color=app.display.palette.color_1.color},
+    foreground_inc = {color=app.display.palette.color_1.color},
+    background = {color=app.display.palette.background.color},
     up_arrow = {text="▲"},
     down_arrow = {text="▼"},
     left_arrow = {text="◄"},
@@ -114,7 +114,7 @@ function UISpinner:do_change(msg)
 
   end
 
-  return true
+  return self
 
 end
 
@@ -181,7 +181,7 @@ function UISpinner:do_press(msg)
     self:invalidate()
   end
 
-  return true
+  return self
 
 end
 
@@ -189,8 +189,9 @@ end
 
 -- @param msg (Duplex.Message)
 -- @return boolean or nil
-
+--[[
 function UISpinner:do_release(msg)
+  TRACE("UISpinner:do_release",msg)
 
   if not self:test(msg) then
     return 
@@ -199,25 +200,30 @@ function UISpinner:do_release(msg)
   -- we have no action, but the message was handled
   -- (prevent it from being passed on)
 
-  return true
+  return self
 
 end
 
+]]
 
 
 --------------------------------------------------------------------------------
 
---- UIComponent test. Look for group name + standard test
+--- Expanded UIComponent test
 -- @param msg (Duplex.Message)
 -- @return (Boolean), false when criteria is not met
 
 function UISpinner:test(msg)
+  TRACE("UISpinner:test",msg)
 
-  -- test for group name
   if not (self.group_name == msg.group_name) then
     return false
   end
 
+  if not self.app.active then
+    return false
+  end
+  
   return UIComponent.test(self,msg.column,msg.row)
 
 end
@@ -297,11 +303,9 @@ end
 
 function UISpinner:set_index(idx, skip_event_handler)
   TRACE("UISpinner:set_index",idx, skip_event_handler)
-  --assert(idx >= self.minimum and idx <= self.maximum, 
-  --  "Internal Error. Please report: invalid index for a spinner")
 
   if(idx < self.minimum or idx > self.maximum)then
-    print("Notice: tried to set an invalid index for a UISpinner")
+    --print("Notice: tried to set an invalid index for a UISpinner")
     return
   end
 
@@ -441,15 +445,17 @@ end
 
 function UISpinner:add_listeners()
 
-  self._display.device.message_stream:add_listener(
+  self.app.display.device.message_stream:add_listener(
     self, DEVICE_EVENT_BUTTON_PRESSED,
     function(msg) return self:do_press(msg) end )
 
-  self._display.device.message_stream:add_listener(
+  --[[
+  self.app.display.device.message_stream:add_listener(
     self, DEVICE_EVENT_BUTTON_RELEASED,
     function(msg) return self:do_release(msg) end )
+  ]]
 
-  self._display.device.message_stream:add_listener(
+  self.app.display.device.message_stream:add_listener(
     self,DEVICE_EVENT_VALUE_CHANGED,
     function(msg) return self:do_change(msg) end )
 
@@ -463,13 +469,15 @@ end
 
 function UISpinner:remove_listeners()
 
-  self._display.device.message_stream:remove_listener(
+  self.app.display.device.message_stream:remove_listener(
     self,DEVICE_EVENT_BUTTON_PRESSED)
 
-  self._display.device.message_stream:remove_listener(
+  --[[
+  self.app.display.device.message_stream:remove_listener(
     self,DEVICE_EVENT_BUTTON_RELEASED)
+  ]]
 
-  self._display.device.message_stream:remove_listener(
+  self.app.display.device.message_stream:remove_listener(
     self,DEVICE_EVENT_VALUE_CHANGED)
 
 end
