@@ -30,14 +30,22 @@ duplex_configurations:insert {
         triggers = {
           group_name = "Triggers",
         },
-        sequence = {
+        prev_seq_page = {
           group_name = "Controls",
           index = 1,
         },
-        track = {
+        next_seq_page = {
+          group_name = "Controls",
+          index = 2,
+        },
+        prev_track_page = {
           group_name = "Controls",
           index = 3,
-        }
+        },
+        next_track_page = {
+          group_name = "Controls",
+          index = 4,
+        },
       },
     },
     Navigator = {

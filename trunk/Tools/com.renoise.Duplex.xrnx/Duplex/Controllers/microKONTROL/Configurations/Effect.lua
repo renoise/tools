@@ -29,9 +29,17 @@ duplex_configurations:insert {
         device = {
           group_name = "Pads B"
         },
-        page = {
-          group_name = "Joystick"
-        }
+        --page = {
+        --  group_name = "Joystick"
+        --}
+        param_prev = {
+          group_name = "Joystick",
+          index = 1,
+        },
+        param_next = {
+          group_name = "Joystick",
+          index = 2,
+        },
       }
     }
   }

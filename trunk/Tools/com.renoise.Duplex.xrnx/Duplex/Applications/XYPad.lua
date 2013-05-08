@@ -384,7 +384,7 @@ function XYPad:_build_app()
   -- XY pad
   if xy_pad_args then
 
-    local c = UIPad(self.display)
+    local c = UIPad(self)
     c.group_name = xy_pad_name
     c.secondary_index = y_slider_idx
     c:set_pos(xy_pad_idx)
@@ -394,7 +394,6 @@ function XYPad:_build_app()
     c.ceiling = self.max_value
 
     c.on_change = function(obj)
-      if not self.active then return false end
       self.value = obj.value
       self.suppress_value_observable = true
       self:update_renoise()
@@ -429,7 +428,7 @@ function XYPad:_build_app()
       end
     end
 
-    local c = UISlider(self.display)
+    local c = UISlider(self)
     c.group_name = x_slider_name
     c.secondary_index = y_slider_idx -- for detecting paired values
     c:set_pos(x_slider_idx)
@@ -442,7 +441,6 @@ function XYPad:_build_app()
     c.tooltip = self.mappings.x_slider.description
     c.value = self.value[1]
     c.on_change = function(obj)
-      if not self.active then return false end
       self.value[1] = obj.value
       self.suppress_value_observable = true
       self:update_renoise()
@@ -467,7 +465,7 @@ function XYPad:_build_app()
       end
     end
 
-    local c = UISlider(self.display)
+    local c = UISlider(self)
     c.group_name = y_slider_name
     c:set_pos(y_slider_idx or 1)
     c.flipped = true
@@ -479,7 +477,6 @@ function XYPad:_build_app()
     c.tooltip = self.mappings.y_slider.description
     c.value = self.value[2]
     c.on_change = function(obj)
-      if not self.active then return false end
       self.value[2] = obj.value
       self.suppress_value_observable = true
       self:update_renoise()
@@ -504,13 +501,12 @@ function XYPad:_build_app()
       self._xy_grid[x] = table.create()
       --for y=self.grid_height,1,-1 do
       for y=1,self.grid_height do
-        local c = UIButton(self.display)
+        local c = UIButton(self)
         c.group_name = map.group_name
         c.tooltip = map.description
         c:set(self.palette.grid_off)
         c:set_pos(x,y)
         c.on_press = function(obj)
-          if not self.active then return false end
           -- flip Y index, so the top may represent the highest value
           local flipped_y = math.abs(y-self.grid_height)+1
           self:select_grid_cell(x,flipped_y)

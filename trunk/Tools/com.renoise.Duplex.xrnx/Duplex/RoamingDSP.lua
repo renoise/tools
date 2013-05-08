@@ -754,7 +754,7 @@ function RoamingDSP:_build_app()
   -- lock button
   local map = self.mappings.lock_button
   if map.group_name then
-    local c = UIButton(self.display)
+    local c = UIButton(self)
     c.group_name = map.group_name
     c.tooltip = map.description
     c:set_pos(map.index)
@@ -792,7 +792,7 @@ function RoamingDSP:_build_app()
   -- previous device button
   local map = self.mappings.prev_device
   if map.group_name then
-    local c = UIButton(self.display)
+    local c = UIButton(self)
     c.group_name = map.group_name
     c.tooltip = map.description
     c:set_pos(map.index)
@@ -808,7 +808,7 @@ function RoamingDSP:_build_app()
   -- next device button
   local map = self.mappings.next_device
   if map.group_name then
-    local c = UIButton(self.display)
+    local c = UIButton(self)
     c.group_name = map.group_name
     c.tooltip = map.description
     c:set_pos(map.index)

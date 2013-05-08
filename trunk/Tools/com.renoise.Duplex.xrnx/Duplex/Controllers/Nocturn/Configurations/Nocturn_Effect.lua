@@ -46,9 +46,17 @@ duplex_configurations:insert {
           group_name = "Pots",
           index = 4,
         },
-        page = {
+        --page = {
+        --  group_name = "Pots",
+        -- index = 5,
+        --},
+        param_prev = {
           group_name = "Pots",
           index = 5,
+        },
+        param_next = {
+          group_name = "Pots",
+          index = 6,
         },
         --[[
         device = {

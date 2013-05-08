@@ -89,20 +89,14 @@ function PatternSequence:_build_app()
   -- add buttons
 
   if self.mappings.display_next.group_name then
-    local c = UIButton(self.display)
+    local c = UIButton(self)
     c.group_name = self.mappings.display_next.group_name
     c.tooltip = self.mappings.display_next.description
     c:set_pos(self.mappings.display_next.index)
     c.on_press = function(obj)
-      if not self.active then 
-        return false 
-      end
       self:_display_next()
     end
     c.on_hold = function(obj)
-      if not self.active then 
-        return false 
-      end
       self:_display_last()
     end
     self:_add_component(c)
@@ -110,20 +104,14 @@ function PatternSequence:_build_app()
   end
 
   if self.mappings.display_previous.group_name then
-    local c = UIButton(self.display)
+    local c = UIButton(self)
     c.group_name = self.mappings.display_previous.group_name
     c.tooltip = self.mappings.display_previous.description
     c:set_pos(self.mappings.display_previous.index)
     c.on_press = function(obj)
-      if not self.active then 
-        return false 
-      end
       self:_display_previous()
     end
     c.on_hold = function(obj)
-      if not self.active then 
-        return false 
-      end
       self:_display_first()
     end
     self:_add_component(c)

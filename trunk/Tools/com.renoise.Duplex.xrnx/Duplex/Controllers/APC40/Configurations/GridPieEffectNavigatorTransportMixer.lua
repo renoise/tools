@@ -160,9 +160,17 @@ duplex_configurations:insert {
         parameters = {
           group_name = "Lower Knob1",
         },
-        page = {
+        --page = {
+        --  group_name = "Control",
+        --  index = 1,
+        --},
+        param_prev = {
           group_name = "Control",
           index = 1,
+        },
+        param_next = {
+          group_name = "Control",
+          index = 2,
         },
         device_prev = {
           group_name = "Control",

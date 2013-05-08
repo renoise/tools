@@ -689,7 +689,7 @@ function Recorder:_do_post_recording()
 
   local instr_idx = self:_get_recording_index()
   if not instr_idx then
-    print("Message from Recorder: could not locate recorded sample!")
+    LOG("Message from Recorder: could not locate recorded sample!")
   else
     -- create reference to the sample 
     local track = self._tracks[self._active_track_idx]
@@ -1536,15 +1536,12 @@ function Recorder:_build_app()
   -- create recorder buttons --------------------------------------------------
 
   for i=1,button_count do
-    local c = UIButton(self.display)
+    local c = UIButton(self)
     c.group_name = self.mappings.recorders.group_name
     c.tooltip = self.mappings.recorders.description
     c:set_pos(i,1)
     c:set(self.palette.recorder_off)
     c.on_hold = function(obj)
-      if not self.active then
-        return false
-      end
       -- start recording as soon as possible
       if renoise.app().window.sample_record_dialog_is_visible then
         self._immediate_take = true
@@ -1552,9 +1549,6 @@ function Recorder:_build_app()
 
     end
     c.on_press = function(obj)
-      if not self.active then 
-        return false 
-      end
       -- do not allow switching track while in post-recording stage
       if self._post_recording then
         return  
@@ -1572,7 +1566,7 @@ function Recorder:_build_app()
   -- create sample-selecting sliders ------------------------------------------
 
   for i=1,button_count do
-    local c = UISlider(self.display)
+    local c = UISlider(self)
     c.group_name = self.mappings.sliders.group_name
     c.tooltip = self.mappings.sliders.description
     c:set_pos(i,sliders_y_pos)
@@ -1590,9 +1584,6 @@ function Recorder:_build_app()
     end
     c.on_change = function(obj) 
 
-      if not self.active then
-        return false
-      end
       local track_idx = i+self._track_offset
       local track = self._tracks[track_idx]
 
@@ -1793,7 +1784,7 @@ function RecorderTrack:write_to_pattern(trigger_mode,sample_lines,autostart)
   local insert_line = autostart
   if not (patt_track:line(insert_line)) then
     local msg = "Notice: Could not write offset note: pattern is too short"
-    print(msg)
+    LOG(msg)
     renoise.app():show_status(msg)
     return
   else

@@ -55,12 +55,12 @@ class 'UIKey' (UIComponent)
 --------------------------------------------------------------------------------
 
 --- Initialize the UIKey class
--- @param display (Duplex.Display)
+-- @param app (Duplex.Application)
 
-function UIKey:__init(display)
+function UIKey:__init(app)
   TRACE('UIKey:__init')
 
-  UIComponent.__init(self,display)
+  UIComponent.__init(self,app)
 
   -- true while the key is pressed 
   self.pressed = false
@@ -123,11 +123,14 @@ end
 
 function UIKey:test(msg)
   
-
   if self.disabled then
     return true
   end
 
+  if not self.app.active then
+    return false
+  end
+  
   if not (self.group_name == msg.group_name) then
     return false
   end
@@ -149,7 +152,7 @@ end
 
 --- A key was pressed
 -- @param msg (Duplex.Message)
--- @return boolean or nil
+-- @return self or nil
 
 function UIKey:do_press(msg)
   TRACE("UIKey:do_press()",msg)
@@ -158,19 +161,16 @@ function UIKey:do_press(msg)
     return
   end
 
-  if (self.on_press ~= nil) and
-    self:test(msg) 
-  then
+  if (self.on_press ~= nil) then
     self.velocity = msg.value[2]
     self.pressed = true
     local handled = self:on_press()
     if (handled==true) then
       self:invalidate()
     end
-    return handled
   end
 
-  return true
+  return self
 
 end
 
@@ -178,7 +178,7 @@ end
 
 --- A key was released
 -- @param msg (Duplex.Message)
--- @return boolean or nil
+-- @return self or nil
 
 function UIKey:do_release(msg)
   TRACE("UIKey:do_release",msg)
@@ -193,10 +193,9 @@ function UIKey:do_release(msg)
     if (handled==true) then
       self:invalidate()
     end
-    return handled
   end
 
-  return true
+  return self
 
 end
 
@@ -204,7 +203,6 @@ end
 
 --- A key was held
 -- @param msg (Duplex.Message)
--- @return boolean, true when message was handled 
 
 function UIKey:do_hold(msg)
   TRACE("UIKey:do_hold",msg)
@@ -214,10 +212,8 @@ function UIKey:do_hold(msg)
   end
 
   if (self.on_hold ~= nil) then
-    return self.on_hold()
+    self.on_hold()
   end
-
-  return true
 
 end
 
@@ -305,15 +301,15 @@ end
 
 function UIKey:add_listeners()
 
-  self._display.device.message_stream:add_listener(
+  self.app.display.device.message_stream:add_listener(
     self, DEVICE_EVENT_KEY_PRESSED,
     function(msg) return self:do_press(msg) end )
 
-  self._display.device.message_stream:add_listener(
+  self.app.display.device.message_stream:add_listener(
     self, DEVICE_EVENT_KEY_RELEASED,
     function(msg) return self:do_release(msg) end )
 
-  self._display.device.message_stream:add_listener(
+  self.app.display.device.message_stream:add_listener(
     self, DEVICE_EVENT_KEY_HELD,
     function(msg) return self:do_hold(msg) end )
 
@@ -327,13 +323,13 @@ end
 
 function UIKey:remove_listeners()
 
-  self._display.device.message_stream:remove_listener(
+  self.app.display.device.message_stream:remove_listener(
     self,DEVICE_EVENT_KEY_PRESSED)
 
-  self._display.device.message_stream:remove_listener(
+  self.app.display.device.message_stream:remove_listener(
     self,DEVICE_EVENT_KEY_RELEASED)
 
-  self._display.device.message_stream:remove_listener(
+  self.app.display.device.message_stream:remove_listener(
     self,DEVICE_EVENT_KEY_HELD)
 
 end

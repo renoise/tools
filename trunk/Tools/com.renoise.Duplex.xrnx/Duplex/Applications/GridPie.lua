@@ -2384,11 +2384,10 @@ function GridPie:_build_app()
 
   -- button: vertical, previous 
   if (self.mappings.v_prev.group_name) then
-    local c = UIButton(self.display)
+    local c = UIButton(self)
     c.group_name = self.mappings.v_prev.group_name
     c.tooltip = self.mappings.v_prev.description
     c:set_pos(self.mappings.v_prev.index)
-    c.active = false
     c.on_hold = function()
       if not self.active then return false end
       self:goto_first_seq_page()
@@ -2403,11 +2402,10 @@ function GridPie:_build_app()
 
   -- button: vertical, next 
   if (self.mappings.v_next.group_name) then
-    local c = UIButton(self.display)
+    local c = UIButton(self)
     c.group_name = self.mappings.v_next.group_name
     c.tooltip = self.mappings.v_next.description
     c:set_pos(self.mappings.v_next.index)
-    c.active = false
     c.on_hold = function()
       if not self.active then return false end
       self:goto_last_seq_page()
@@ -2422,11 +2420,10 @@ function GridPie:_build_app()
 
   -- button: horizontal, previous
   if (self.mappings.h_prev.group_name) then
-    local c = UIButton(self.display)
+    local c = UIButton(self)
     c.group_name = self.mappings.h_prev.group_name
     c.tooltip = self.mappings.h_prev.description
     c:set_pos(self.mappings.h_prev.index)
-    c.active = false
     c.on_hold = function()
       if not self.active then return false end
       self:goto_first_track_page()
@@ -2441,11 +2438,10 @@ function GridPie:_build_app()
 
   -- button: horizontal, next
   if (self.mappings.h_next.group_name) then
-    local c = UIButton(self.display)
+    local c = UIButton(self)
     c.group_name = self.mappings.h_next.group_name
     c.tooltip = self.mappings.h_next.description
     c:set_pos(self.mappings.h_next.index)
-    c.active = false
     c.on_hold = function()
       if not self.active then return false end
       self:goto_last_track_page()
@@ -2465,11 +2461,10 @@ function GridPie:_build_app()
       self.matrix_cells[x] = table.create()
       for y = 1, self.matrix_height do
 
-        local c = UIButton(self.display)
+        local c = UIButton(self)
         c.group_name = self.mappings.grid.group_name
         c.tooltip = self.mappings.grid.description
         c:set_pos(x,y)
-        c.active = false
         if (self.options.hold_enabled.value == HOLD_DISABLED) then
           c.on_press = function(obj) 
             -- track copy
@@ -2639,7 +2634,7 @@ function GridPie:_build_app()
 
   -- vertical slider
   if (self.mappings.v_slider.group_name) then
-    local c = UISlider(self.display)
+    local c = UISlider(self)
     c.group_name = self.mappings.v_slider.group_name
     c.tooltip = self.mappings.v_slider.description
     c:set_pos(self.mappings.v_slider.index or 1)
@@ -2656,7 +2651,7 @@ function GridPie:_build_app()
 
   -- horizontal slider
   if (self.mappings.h_slider.group_name) then
-    local c = UISlider(self.display)
+    local c = UISlider(self)
     c.group_name = self.mappings.h_slider.group_name
     c.tooltip = self.mappings.h_slider.description
     c:set_pos(self.mappings.h_slider.index or 1)
@@ -3066,19 +3061,19 @@ function GridPie:_track_changes(pos)
 
     -- change happened somewhere in the song
     -- (track changes only if active)
-          local source_patt = rns.patterns[pos.pattern]
-      local gp_ptrack = gp_patt.tracks[pos.track]
-      if (pos.pattern==gp_ptrack.alias_pattern_index) then
-        -- the source pattern-track is grid-pie'd 
-        if source_patt and 
-          (source_patt.number_of_lines == gp_patt.number_of_lines) 
-        then
-          --print("*** track_changes: same size - no copying is needed")
-        else
-          --print("*** track_changes: different size - copy and expand")
-          self:_add_pending_update(pos.pattern,pos)
-        end
+    local source_patt = rns.patterns[pos.pattern]
+    local gp_ptrack = gp_patt.tracks[pos.track]
+    if (pos.pattern==gp_ptrack.alias_pattern_index) then
+      -- the source pattern-track is grid-pie'd 
+      if source_patt and 
+        (source_patt.number_of_lines == gp_patt.number_of_lines) 
+      then
+        --print("*** track_changes: same size - no copying is needed")
+      else
+        --print("*** track_changes: different size - copy and expand")
+        self:_add_pending_update(pos.pattern,pos)
       end
+    end
   else
     --print("*** track_changes: ignore change to this pattern-track")
 
@@ -3891,7 +3886,7 @@ function GridPie:_attach_to_song(new_song)
             end
           end
         else
-          print("Oops, Grid Pie should have been able to prepare newly inserted pattern...")
+          LOG("Oops, Grid Pie should have been able to prepare newly inserted pattern...")
         end
 
       end

@@ -61,6 +61,22 @@ function MessageStream:__init(process)
 
   -- [Message,...] - currently pressed buttons, in order of arrival
   self.pressed_buttons = table.create() 
+
+  -- table, containing each type of event and messages by value:
+  -- [DEVICE_EVENT_BUTTON_RELEASED] = {
+  --   "F#4|Ch1" = [UIComponent instance]
+  -- }
+  self.message_cache = table.create()
+  self.message_cache[DEVICE_EVENT_BUTTON_PRESSED] = {}
+  self.message_cache[DEVICE_EVENT_BUTTON_RELEASED] = {}
+  self.message_cache[DEVICE_EVENT_VALUE_CHANGED] = {}
+  self.message_cache[DEVICE_EVENT_BUTTON_HELD] = {}
+  self.message_cache[DEVICE_EVENT_KEY_PRESSED] = {}
+  self.message_cache[DEVICE_EVENT_KEY_RELEASED] = {}
+  self.message_cache[DEVICE_EVENT_KEY_HELD] = {}
+  self.message_cache[DEVICE_EVENT_PITCH_CHANGED] = {}
+  self.message_cache[DEVICE_EVENT_CHANNEL_PRESSURE] = {}
+
 end
 
 --------------------------------------------------------------------------------
@@ -203,7 +219,7 @@ end
 -- @param msg (Message)
 
 function MessageStream:input_message(msg)
-  TRACE("MessageStream:input_message()",msg)
+  TRACE("MessageStream:input_message()")
 
   --[[
   print("*** MessageStream: msg.input_method",msg.input_method)
@@ -232,13 +248,13 @@ function MessageStream:input_message(msg)
     --print("*** MessageStream: CONTROLLER_XFADER")
     if (msg.context == MIDI_CHANNEL_PRESSURE) then
       --print("*** MessageStream: MIDI_CHANNEL_PRESSURE")
-      self:_handle_events(msg,self.channel_pressure_listeners)
+      self:_handle_or_pass(msg,self.channel_pressure_listeners,DEVICE_EVENT_CHANNEL_PRESSURE)
     elseif (msg.context == MIDI_PITCH_BEND_MESSAGE) then
       --print("*** MessageStream: MIDI_PITCH_BEND_MESSAGE")
-      self:_handle_events(msg,self.pitch_change_listeners)
+      self:_handle_or_pass(msg,self.pitch_change_listeners,DEVICE_EVENT_PITCH_CHANGED)
     end
     --print("*** MessageStream: standard change event")
-    self:_handle_or_pass(msg,self.change_listeners)
+    self:_handle_or_pass(msg,self.change_listeners,DEVICE_EVENT_VALUE_CHANGED)
 
   elseif (msg.input_method == CONTROLLER_KEYBOARD) then
 
@@ -247,10 +263,10 @@ function MessageStream:input_message(msg)
     if (msg.context == MIDI_NOTE_MESSAGE) then
       --print("*** MessageStream: CONTROLLER_KEYBOARD + MIDI_NOTE_MESSAGE")
       if (msg.value[2] == msg.min) or (msg.is_note_off) then
-        self:_handle_or_pass(msg,self.key_release_listeners)
+        self:_handle_or_pass(msg,self.key_release_listeners,DEVICE_EVENT_KEY_RELEASED)
       else
         --print("MessageStream:_handle_or_pass - key_press_listeners")
-        self:_handle_or_pass(msg,self.key_press_listeners)
+        self:_handle_or_pass(msg,self.key_press_listeners,DEVICE_EVENT_KEY_PRESSED)
       end
     end
 
@@ -274,7 +290,7 @@ function MessageStream:input_message(msg)
       --print("*** MessageStream:  interpret this as pressed")
       self.pressed_buttons:insert(msg)
       -- broadcast to listeners
-      self:_handle_or_pass(msg,self.press_listeners)
+      self:_handle_or_pass(msg,self.press_listeners,DEVICE_EVENT_BUTTON_PRESSED)
 
     elseif (msg.value == msg.min) or (msg.is_note_off) then
       -- interpret this as release
@@ -286,10 +302,10 @@ function MessageStream:input_message(msg)
         (msg.input_method == CONTROLLER_TOGGLEBUTTON) --or
         --(msg.input_method == CONTROLLER_PUSHBUTTON) 
       then
-        print("broadcast release to press listeners")
-        self:_handle_or_pass(msg,self.press_listeners)
+        --print("broadcast release to press listeners")
+        self:_handle_or_pass(msg,self.press_listeners,DEVICE_EVENT_BUTTON_PRESSED)
       else
-        self:_handle_or_pass(msg,self.release_listeners)
+        self:_handle_or_pass(msg,self.release_listeners,DEVICE_EVENT_BUTTON_RELEASED)
       end
       
       -- remove from pressed_buttons
@@ -321,30 +337,63 @@ end
 -- (only valid msg context is MIDI_NOTE_MESSAGE)
 -- @param msg (Message)
 -- @param listeners (Table), listener methods
+-- @param evt_type (event-type enum, e.g. DEVICE_EVENT_BUTTON_RELEASED)
 
-function MessageStream:_handle_or_pass(msg,listeners)
+function MessageStream:_handle_or_pass(msg,listeners,evt_type)
+  TRACE("MessageStream:_handle_or_pass()")
 
-  local events_handled = false
   local pass_on = self.process.settings.pass_unhandled.value
 
-  --print("MessageStream:_handle_or_pass() - pass_on",pass_on)
-  --print("MessageStream:_handle_or_pass() - msg.midi_msg",msg.midi_msg)
-  --rprint(msg.midi_msg)
-
   if self.process:running() then
-    events_handled = self:_handle_events(msg,listeners)
-  end
-  --print("MessageStream:_handle_or_pass() - events_handled",events_handled)
 
-  if pass_on and 
-    (events_handled==false) and -- actively rejected
-    msg.midi_msg and
-    (msg.device.protocol == DEVICE_MIDI_PROTOCOL) 
-  then
-    --print("*** MessageStream: unhandled MIDI message, pass on to Renoise",msg.group_name,msg.index,msg.name,msg.midi_msg)
-    --rprint(msg.midi_msg)
-    local osc_client = self.process.browser._osc_client
-    osc_client:trigger_midi(msg.midi_msg)
+    -- attempt to look up previously cached UIComponents
+    local ui_component_ref = self.message_cache[evt_type][msg.param.value]
+    if ui_component_ref then
+      --print("*** use cached message",msg.param.value,ui_component_ref)
+      -- note: put the most often used / frequent messages at the top
+      if (evt_type == DEVICE_EVENT_VALUE_CHANGED) then
+        ui_component_ref:do_change(msg)
+      elseif (evt_type == DEVICE_EVENT_BUTTON_PRESSED) then
+        ui_component_ref:do_press(msg)
+      elseif (evt_type == DEVICE_EVENT_BUTTON_RELEASED) then
+        ui_component_ref:do_release(msg)
+      elseif (evt_type == DEVICE_EVENT_BUTTON_HELD) then
+        ui_component_ref:do_hold(msg)
+      elseif (evt_type == DEVICE_EVENT_KEY_PRESSED) then
+        ui_component_ref:do_press(msg)
+      elseif (evt_type == DEVICE_EVENT_KEY_RELEASED) then
+        ui_component_ref:do_release(msg)
+      elseif (evt_type == DEVICE_EVENT_KEY_HELD) then
+        ui_component_ref:do_hold(msg)
+      elseif (evt_type == DEVICE_EVENT_PITCH_CHANGED) then
+        ui_component_ref:do_change(msg)
+      elseif (evt_type == DEVICE_EVENT_CHANNEL_PRESSURE) then
+        ui_component_ref:do_change(msg)
+      end
+    else
+      -- broadcast to all relevant UIComponents, let them decide
+      -- whether to act on the message or not ...
+      for _,listener in ipairs(listeners) do 
+        ui_component_ref = listener.handler(msg)
+        if ui_component_ref then
+          self.message_cache[evt_type][msg.param.value] = ui_component_ref
+          --print("self.message_cache...")
+          --rprint(self.message_cache)
+        end
+      end
+
+      -- TODO if no UI component was matched, pass on
+
+    end
+
+  else
+    if pass_on and msg.midi_msg and
+      (msg.device.protocol == DEVICE_MIDI_PROTOCOL) 
+    then
+      local osc_client = self.process.browser._osc_client
+      osc_client:trigger_midi(msg.midi_msg)
+    end
+
   end
 
 end
@@ -355,12 +404,11 @@ end
 -- @param msg (Message)
 -- @param listeners (Table)
 -- @return boolean, false if actively rejected
-
+--[[
 function MessageStream:_handle_events(msg,listeners)
   TRACE("MessageStream:_handle_events()",msg,#listeners)
-  local was_handled = nil
   for _,listener in ipairs(listeners) do 
-    local handled = listener.handler(msg)
+    listener.handler(msg)
     --print("*** MessageStream: - handled",handled,msg.group_name,msg.index,was_handled)
     if (was_handled==true) or (handled==true) then
       was_handled = true
@@ -376,15 +424,14 @@ function MessageStream:_handle_events(msg,listeners)
   --print("*** MessageStream:input_message() - was_handled",was_handled,msg.group_name,msg.index,msg.name)
   return was_handled
 end
-
+]]
 
 --==============================================================================
 
 --[[
 
 The Message class is a container for messages, closely related to the ControlMap
-? use meta-table methods to control access to "undefined" values ?
-? move all control-map/parameter attributes into "Param" ?
+TODO move all control-map/parameter attributes into "Param" ?
 --]]
 
 

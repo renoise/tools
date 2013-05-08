@@ -6,31 +6,96 @@
 
 Inheritance: UIComponent > UIButton
 
-About 
+-- About the UIButton component --
 
-  The UIButton is a generic button that accept a wide range of input methods,
-  as you can assign any button type, fader or dial to control it.
+  The UIButton is a generic button component that accept a wide range of input 
+  methods - you can assign any button type, fader or dial to control it.
+  The button has no internal "active" or "enabled" state, it merely tells you 
+  when an event has occurred. Then, it is up to you to change it's visual state. 
 
 
-Events
+-- Working with events --
 
-- on_change()   - invoked when a slider/dial is changed
-- on_press()    - invoked when the button is pressed
-- on_release()  - invoked when the button is released
-- on_hold()     - invoked when the button is held for a while*
+  To listen for an event, you add one of these to your code: 
 
-* The amount of time is specified in the preferences (Globals.lua)
+  on_change()   - invoked when a slider/dial is changed
+  on_press()    - invoked when the button is pressed
+  on_release()  - invoked when the button is released
+  on_hold()     - invoked when the button is held for a while*
+                  (the standard amount of time is 0.5 seconds)
+
+  -- Here is an example
+  my_button.on_change = function()
+    -- do something
+  end
+
 
   Each input method may or may not support specific events. See this table:
 
                   | on_change | on_press |  on_release | on_hold
   ----------------+-----------+----------+-------------+----------
-  - button        |           |     X    |       X     |    X
-  - pushbutton    |           |     X    |             |
-  - togglebutton  |           |     X    |             |
-  - fader         |    X      |          |             |
-  - dial          |    X      |          |             |
+  @button         |           |     X    |       X     |    X
+  @pushbutton     |           |     X    |             |
+  @togglebutton   |           |     X    |             |
+  @fader          |    X      |          |             |
+  @dial           |    X      |          |             |
 
+
+-- Controlling the visual representation --
+
+  In Duplex, the UIButton stores it's visual representation in something known
+  as a Canvas. The Canvas is made from indivual points, each of which can
+  contain the following values: 
+
+  Value   This is a simple boolean value which will tell if the button is lit 
+          or not - relevant for most hardware with LEDs that can turn on/off
+
+  Color   Depending on the capabilities of your hardware, color might be an
+          interesting feature to make use of. Most hardware doesn't support
+          the use of color (this is determined by the device colorspace). 
+
+  Text    this is merely for display purposes on the computer screen, but still,
+          it's nice to be able to e.g. label a play button with a "►" symbol.
+
+  In order to actually change these values, you have a couple of methods 
+  at your disposal: 
+
+  Method #1 : set
+  
+  The set() method is the most simple, and will allow you to instantly set 
+  any (or all) of the following properties: color, text, value 
+
+  -- Here is an example, setting the button color to full white:
+  my_button:set({color={0xFF,0xFF,0xFF}})
+
+  -- Here is another example, setting the button color along with text:
+  my_button:set({
+    color = {0xFF,0x40,0x00}, 
+    text = "HELLO"
+  })
+
+  Method #2 : flash
+
+  If you are using a button to produce a "one-shot" type of event, you would
+  want it to briefly flash and then go back to it's default state. Of course,
+  you could use the set() method twice (schedule the second one shortly after
+  the first), but it is a much simpler option to use the built-in method 
+  "flash". This method will allow you to assign a list of palette entries 
+  that the button should cycle through, even controlling the speed of updates. 
+  Just as with the set() method, you can choose to update any or all of the 
+  properties, this is entirely up to you.
+
+  -- Here is an example of a brief flash, going to lit state and back
+  my_button:flash(0.1,{value=true},{value=false})
+
+  -- Here is an example of an extended flash, slowly fading to black
+  my_button:flash(0.5,
+    {color=0xFF,0xFF,0xFF},
+    {color=0xBF,0xBF,0xBF},
+    {color=0x7F,0x7F,0x7F},
+    {color=0x3F,0x3F,0x3F},
+    {color=0x1F,0x1F,0x1F},
+    {color=0x00,0x00,0x00})
 
 
 --]]
@@ -43,12 +108,12 @@ class 'UIButton' (UIComponent)
 --------------------------------------------------------------------------------
 
 --- Initialize the UIButton class
--- @param display (Duplex.Display)
+-- @param app (Duplex.Application)
 
-function UIButton:__init(display)
+function UIButton:__init(app)
   TRACE('UIButton:__init')
 
-  UIComponent.__init(self,display)
+  UIComponent.__init(self,app)
 
   self.palette = {
     foreground = {
@@ -81,18 +146,16 @@ function UIButton:do_press(msg)
   if not self:test(msg) then
     return
   end
-  
+
   if (self.on_press ~= nil) then
     -- force-update controls that maintain their
     -- internal state (togglebutton, pushbutton)
     if (msg.input_method ~= CONTROLLER_BUTTON) then
       self:force_update()
     end
-    return (self:on_press()~=false) and true or false
-
+    self:on_press()
+    return self
   end
-
-  return true
 
 end
 
@@ -116,10 +179,9 @@ function UIButton:do_release(msg)
   end
 
   if (self.on_release ~= nil) then
-    return (self:on_release()~=false) and true or false
+    self:on_release()
+    return self
   end
-
-  return true
 
 end
 
@@ -137,10 +199,9 @@ function UIButton:do_change(msg)
   end
 
   if (self.on_change ~= nil) then
-    return self:on_change(msg.value)
+    self:on_change(msg.value)
+    return self
   end
-
-  return true
 
 end
 
@@ -150,7 +211,6 @@ end
 --  Note that this event is only supported by controllers that transmit the 
 --  "release" event
 -- @param msg (Duplex.Message)
--- @return (Boolean), true when message was handled
 
 function UIButton:do_hold(msg)
   TRACE("UIButton:do_hold()")
@@ -160,10 +220,8 @@ function UIButton:do_hold(msg)
   end
 
   if (self.on_hold ~= nil) then
-    return self:on_hold()
+    self:on_hold()
   end
-
-  return true
 
 end
 
@@ -177,12 +235,14 @@ end
 
 function UIButton:test(msg)
 
-  -- test for group name
   if not (self.group_name == msg.group_name) then
     return false
   end
 
-  -- test for position
+  if not self.app.active then
+    return
+  end
+
   return UIComponent.test(self,msg.column,msg.row)
 
 end
@@ -212,12 +272,12 @@ end
 function UIButton:flash(delay, ...)
   TRACE("UIButton:flash()",delay,arg)
 
-  self._display.scheduler:remove_task(self._task)
+  self.app.display.scheduler:remove_task(self._task)
   for i,args in ipairs(arg) do
     if (i==1) then
       self:set(arg[i]) -- set first one at once
     else
-      self._task = self._display.scheduler:add_task(
+      self._task = self.app.display.scheduler:add_task(
         self, UIButton.set, delay*(i-1), arg[i])
     end
   end
@@ -273,21 +333,21 @@ end
 
 function UIButton:add_listeners()
 
-  self._display.device.message_stream:add_listener(
+  self.app.display.device.message_stream:add_listener(
     self, DEVICE_EVENT_BUTTON_PRESSED,
     function(msg) return self:do_press(msg) end )
 
-  self._display.device.message_stream:add_listener(
+  self.app.display.device.message_stream:add_listener(
     self, DEVICE_EVENT_BUTTON_RELEASED,
     function(msg) return self:do_release(msg) end )
 
-  self._display.device.message_stream:add_listener(
+  self.app.display.device.message_stream:add_listener(
     self,DEVICE_EVENT_VALUE_CHANGED,
     function(msg) return self:do_change(msg) end )
 
-  self._display.device.message_stream:add_listener(
+  self.app.display.device.message_stream:add_listener(
     self,DEVICE_EVENT_BUTTON_HELD,
-    function(msg) return self:do_hold(msg) end )
+    function(msg) self:do_hold(msg) end )
 
 
 end
@@ -300,16 +360,16 @@ end
 
 function UIButton:remove_listeners()
 
-  self._display.device.message_stream:remove_listener(
+  self.app.display.device.message_stream:remove_listener(
     self,DEVICE_EVENT_BUTTON_PRESSED)
 
-  self._display.device.message_stream:remove_listener(
+  self.app.display.device.message_stream:remove_listener(
     self,DEVICE_EVENT_BUTTON_RELEASED)
 
-  self._display.device.message_stream:remove_listener(
+  self.app.display.device.message_stream:remove_listener(
     self,DEVICE_EVENT_VALUE_CHANGED)
 
-  self._display.device.message_stream:remove_listener(
+  self.app.display.device.message_stream:remove_listener(
     self,DEVICE_EVENT_BUTTON_HELD)
 
 

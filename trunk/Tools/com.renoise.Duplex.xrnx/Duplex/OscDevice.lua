@@ -322,6 +322,7 @@ function OscDevice:send_osc_bundle()
     for k,v in ipairs(self.message_queue) do
       msgs:insert(self:construct_osc_message(v.message,v.value))
     end
+    --rprint(msgs)
     local osc_bundle = renoise.Osc.Bundle(os.clock(),msgs)
     self.client:send(osc_bundle)
   end
@@ -369,6 +370,9 @@ function OscDevice:produce_entry(vars,value)
   elseif (vars=="%f") then
     entry.tag = "f"
     entry.value = tonumber(value)
+  elseif (vars=="%s") then
+    entry.tag = "s"
+    entry.value = value
   elseif (tonumber(vars)~=nil) then
     entry.tag = "f"
     entry.value = tonumber(vars)
@@ -392,7 +396,11 @@ function OscDevice:point_to_value(pt,elm,ceiling)
   local value = nil
   local val_type = type(pt.val)
 
-  if (val_type == "boolean") then
+  if (elm.type == "label") then
+
+    return pt.text
+
+  elseif (val_type == "boolean") then
 
     if (pt.val) then
       value = elm.maximum

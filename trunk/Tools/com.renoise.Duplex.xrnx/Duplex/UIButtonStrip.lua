@@ -33,53 +33,41 @@ This control has a number of interaction modes:
     as this length is otherwise unobtainable).
 
     Events
+    - on_index_change
+    - on_range_change
 
-      on_index_change
-      on_range_change
-      on_press
-      on_release
-      on_hold
+    Note: it is possible to return "false" to leave the index/range unchanged
 
     Supported input methods
-
-      "button"
+    - "button"
 
 
   2:MODE_INDEX - togglebutton compatible mode, only index can be set
 
     Events
+    - on_index_change
 
-      on_index_change
-      on_press
-      on_release*
-      on_hold*
+    Note: it is possible to return "false" to leave the index unchanged
 
     Supported input methods
-
-      "button"
-      "togglebutton"
-
-    * "togglebutton" not supported 
+    - "button"
+    - "togglebutton"
 
 
   3:MODE_BASIC - free mode, supply your own logic
 
-    It's up to you to decide what happens when events are received, only
-    basic operation (events, visual updates) are taken care of
+    It's up to you to decide what happens when events are received
 
     Events
+    - on_press(idx)
+    - on_release(idx)*
+    - on_hold(idx)*
 
-      on_press 
-      on_release*
-      on_hold*
+    * "togglebutton" not supported for this type of event
 
     Supported input methods
-
-      "button"
-      "togglebutton" 
-
-    * "togglebutton" not supported 
-
+    - "button"
+    - "togglebutton" 
 
 
 Display logic 
@@ -115,9 +103,9 @@ Special methods
 
   UIButtonStrip:set_steps(steps)
 
+  Will display the strip "stretched" along it's axis
   Sets the number of steps, in case the buttonstrip is larger than the number
   of steps it is controlling (like having 8 buttons to control 4 steps). 
-  Will display the strip "stretched" along it's axis
 
 
 
@@ -129,21 +117,24 @@ Special methods
 
 class 'UIButtonStrip' (UIComponent)
 
+-- constants
+
+UIButtonStrip.MODE_NORMAL = 1
+UIButtonStrip.MODE_INDEX = 2
+UIButtonStrip.MODE_BASIC = 3
+
 --------------------------------------------------------------------------------
 
 --- Initialize the UIButtonStrip class
--- @param display (Duplex.Display)
+-- @param app (Duplex.Application)
 
-function UIButtonStrip:__init(display)
-  --TRACE("UIButtonStrip:__init(",display,")")
+function UIButtonStrip:__init(app)
+  --TRACE("UIButtonStrip:__init(",app,")")
 
-  UIComponent.__init(self,display)
+  UIComponent.__init(self,app)
 
-  self.MODE_NORMAL = 1
-  self.MODE_INDEX = 2
-  self.MODE_BASIC = 3
 
-  self.mode = self.MODE_NORMAL
+  self.mode = UIButtonStrip.MODE_NORMAL
 
   self.palette = {
     index       = { color={0XFF,0XFF,0XFF},  text="▪", val=true },
@@ -198,21 +189,18 @@ end
 
 --- User pressed a button
 -- @param msg (Duplex.Message)
--- @return boolean, true when message was handled
+-- @return self or nil if not handled
 
 function UIButtonStrip:do_press(msg)
   --TRACE("UIButtonStrip:do_press()",msg)
 
-  if not (self.group_name == msg.group_name) then
-    return 
-  end
-  if not self:test(msg.column,msg.row) then
+  if not self:test(msg) then
     return 
   end
 
   local idx = self:_determine_index_by_pos(msg.column, msg.row)
 
-  if (self.mode == self.MODE_NORMAL) then
+  if (self.mode == UIButtonStrip.MODE_NORMAL) then
     if not (self._pressed_idx) then
       -- this is the first button being pressed, remember it
       self._pressed_idx = idx
@@ -223,19 +211,19 @@ function UIButtonStrip:do_press(msg)
       self:set_range(idx,self._pressed_idx)
       self._range_set = true
     end
-  elseif (self.mode == self.MODE_INDEX) then
+  elseif (self.mode == UIButtonStrip.MODE_INDEX) then
     if (self.toggleable) and (idx==self._index) then
       self:set_index(0)
     else
       self:set_index(idx)
     end
-  end
-  if (self.on_release ~= nil) then
-    self:on_release() 
+  elseif (self.mode == UIButtonStrip.MODE_BASIC) then
+    if (self.on_press ~= nil) then
+      self:on_press(idx) 
+    end
   end
 
-  return true
-
+  return self
 
 end
 
@@ -243,22 +231,18 @@ end
 
 --- User released a button
 -- @param msg (Duplex.Message)
--- @return boolean, true when message was handled
+-- @return self or nil if not handled
 
 function UIButtonStrip:do_release(msg)
   --TRACE("UIButtonStrip:do_release()",msg)
 
-  if not (self.group_name == msg.group_name) then
+  if not self:test(msg) then
     return 
   end
 
-  if not self:test(msg.column,msg.row) then
-    return 
-  end
-
-  if (self.mode == self.MODE_NORMAL) then
+  local idx = self:_determine_index_by_pos(msg.column, msg.row)
+  if (self.mode == UIButtonStrip.MODE_NORMAL) then
     -- set index when the first button is being released
-    local idx = self:_determine_index_by_pos(msg.column, msg.row)
 
     if (idx==self._pressed_idx) then
       self._pressed_idx = nil
@@ -270,21 +254,22 @@ function UIButtonStrip:do_release(msg)
         end
       end
     end
+    -- force-update controls that are handling 
+    -- their internal state automatically...
+    if (msg.input_method == CONTROLLER_PUSHBUTTON) then
+      self.canvas.delta = table.rcopy(self.canvas.buffer)
+      self.canvas.has_changed = true
+      self:invalidate()
+    end
   end
 
-  -- force-update controls that are handling 
-  -- their internal state automatically...
-  if (msg.input_method == CONTROLLER_PUSHBUTTON) then
-    self.canvas.delta = table.rcopy(self.canvas.buffer)
-    self.canvas.has_changed = true
-    self:invalidate()
-  end
-  if (self.on_release ~= nil) then
-    self:on_release()
+  if (self.mode == UIButtonStrip.MODE_BASIC) then
+    if (self.on_release ~= nil) then
+      self:on_release(idx)
+    end
   end
 
-  return true
-
+  return self
 
 end
 
@@ -292,39 +277,31 @@ end
 
 --- User held a button
 -- @param msg (Duplex.Message)
--- @return true (hold message are always handled)
 
 function UIButtonStrip:do_hold(msg)
   --TRACE("UIButtonStrip:do_hold()",msg)
 
-  if not (self.group_name == msg.group_name) then
-    return true
+  if not self:test(msg) then
+    return
   end
 
-  if not self:test(msg.column,msg.row) then
-    return true
-  end
-
-
-  if (self.mode == self.MODE_NORMAL) then
+  local idx = self:_determine_index_by_pos(msg.column, msg.row)
+  if (self.mode == UIButtonStrip.MODE_NORMAL) then
     -- toggle current range when held
     if (not self._range_set) then
       if (self._range[1]~=0) then
         self:set_range(0,0)
       else
-        local idx = self:_determine_index_by_pos(msg.column, msg.row)
         self:set_range(idx,idx)
       end
       self._range_set = false
     end
     self._held_event_fired = true
+  elseif (self.mode == UIButtonStrip.MODE_BASIC) then
+    if (self.on_hold ~= nil) then
+      self:on_hold(idx)
+    end
   end
-
-  if (self.on_hold ~= nil) then
-    self:on_hold()
-  end
-
-  return true
 
 end
 
@@ -420,30 +397,40 @@ end
 function UIButtonStrip:set_index(idx,skip_event)
   TRACE("UIButtonStrip:set_index()",idx,skip_event)
   
-  if not skip_event then
+  --if not skip_event then
     if self._steps and (self._steps~=self._size) then
       local factor = self._steps/self._size
       idx = math.ceil(idx*factor)
     end
-  end
+  --end
 
-  if (idx~=self._index) then
+  --if (idx~=self._index) then
 
     self._cached_index = self._index
     self._index = idx
 
-    if (not skip_event) and (self.on_index_change~=nil) then
-      local rslt = self:on_index_change()  
-      if (rslt==false) then  -- revert
-        self._index = self._cached_index    
-      else
-        self:invalidate()
-      end
-    else
+    if skip_event then
+      --print("set_index:",idx)
       self:invalidate()
+    else
+      -- event return value is considered
+      if (self.mode == UIButtonStrip.MODE_NORMAL) or
+        (self.mode == UIButtonStrip.MODE_INDEX) 
+      then
+        if (self.on_index_change~=nil) then
+          local rslt = self:on_index_change()  
+          if (rslt==false) then  -- revert
+            self._index = self._cached_index    
+          else
+            self:invalidate()
+          end
+        else
+          self:invalidate()
+        end
+      end
     end
 
-  end
+  --end
 
 end
 
@@ -468,32 +455,38 @@ end
 function UIButtonStrip:set_range(idx1,idx2,skip_event)
   TRACE("UIButtonStrip:set_range(",idx1,idx2,skip_event,")")
 
-
+  -- lower index comes first! 
   if (idx1>idx2) then
     idx1,idx2 = idx2,idx1
   end
 
-  if not skip_event then
-    if self._steps and (self._steps~=self._size) then
-      local factor = self._steps/self._size
-      local range = {}
-      idx1 = math.ceil(idx1*factor)
-      idx2 = math.ceil(idx2*factor)
-      --return range
-    end
+  if self._steps and (self._steps~=self._size) then
+    local factor = self._steps/self._size
+    local range = {}
+    idx1 = math.ceil(idx1*factor)
+    idx2 = math.ceil(idx2*factor)
   end
 
   self._cached_range = self._range
   self._range = {idx1,idx2}
-  if (not skip_event) and (self.on_range_change~=nil) then
-    local rslt = self:on_range_change()  
-    if (rslt==false) then  -- revert
-      self._range = self._cached_range  
-    else
-      self:invalidate()
-    end
-  else
+
+  if skip_event then
     self:invalidate()
+  else
+    -- event return value is considered
+    if (self.mode == UIButtonStrip.MODE_NORMAL) then
+      if (self.on_range_change~=nil) then
+        local rslt = self:on_range_change()  
+        if (rslt==false) then  -- revert
+          self._range = self._cached_range  
+        else
+          self:invalidate()
+        end
+      else
+        self:invalidate()
+      end
+    end
+
   end
 
 end
@@ -578,7 +571,7 @@ function UIButtonStrip:pause_blink()
   --TRACE("UIButtonStrip:pause_blink()")
 
   if self._blink_task then
-    self._display.scheduler:remove_task(self._blink_task)
+    self.app.display.scheduler:remove_task(self._blink_task)
   end
   self._blink_is_lit = false
   self:invalidate()
@@ -594,7 +587,7 @@ function UIButtonStrip:stop_blink()
 
   self._blink_idx = 0
   if self._blink_task then
-    self._display.scheduler:remove_task(self._blink_task)
+    self.app.display.scheduler:remove_task(self._blink_task)
   end
 
 end
@@ -608,7 +601,7 @@ function UIButtonStrip:_toggle_blink()
 
   self._blink_is_lit = not self._blink_is_lit
 
-  self._blink_task = self._display.scheduler:add_task(
+  self._blink_task = self.app.display.scheduler:add_task(
     self, UIButtonStrip._toggle_blink, self._blink_interval)
 
   self:invalidate()
@@ -668,17 +661,17 @@ end
 function UIButtonStrip:add_listeners()
   --TRACE("UIButtonStrip:add_listeners()")
 
-  self._display.device.message_stream:add_listener(
+  self.app.display.device.message_stream:add_listener(
     self, DEVICE_EVENT_BUTTON_PRESSED,
     function(msg) return self:do_press(msg) end )
 
-  self._display.device.message_stream:add_listener(
-    self,DEVICE_EVENT_BUTTON_HELD,
-    function(msg) return self:do_hold(msg) end )
-
-  self._display.device.message_stream:add_listener(
+  self.app.display.device.message_stream:add_listener(
     self,DEVICE_EVENT_BUTTON_RELEASED,
     function(msg) return self:do_release(msg) end )
+
+  self.app.display.device.message_stream:add_listener(
+    self,DEVICE_EVENT_BUTTON_HELD,
+    function(msg) self:do_hold(msg) end )
 
 end
 
@@ -691,15 +684,15 @@ end
 function UIButtonStrip:remove_listeners()
   --TRACE("UIButtonStrip:remove_listeners()")
 
-  self._display.device.message_stream:remove_listener(
+  self.app.display.device.message_stream:remove_listener(
     self,DEVICE_EVENT_BUTTON_PRESSED)
 
-  self._display.device.message_stream:remove_listener(
-    self,DEVICE_EVENT_BUTTON_HELD)
-    
-  self._display.device.message_stream:remove_listener(
+  self.app.display.device.message_stream:remove_listener(
     self,DEVICE_EVENT_BUTTON_RELEASED)
 
+  self.app.display.device.message_stream:remove_listener(
+    self,DEVICE_EVENT_BUTTON_HELD)
+    
 end
 
 
@@ -739,25 +732,21 @@ end
 
 --------------------------------------------------------------------------------
 
---- Expanded UIComponent test. Check if we have no events assigned at all,
--- before proceeding with the standard UIComponent test
--- @param column (Number)
--- @param row (Number)
+--- Expanded UIComponent test
+-- @param msg (Duplex.Message)
 -- @return Boolean
 
-function UIButtonStrip:test(column,row)
+function UIButtonStrip:test(msg)
   
-  if (self.on_index_change == nil) and
-    (self.on_range_change == nil) and
-    (self.on_press == nil) and
-    (self.on_change == nil) and
-    (self.on_release == nil) 
-  then
-    -- this component has no event handler 
+  if not (self.group_name == msg.group_name) then
     return false
   end
 
-  return UIComponent.test(self,column,row)
+  if not self.app.active then
+    return false
+  end
+  
+  return UIComponent.test(self,msg.column,msg.row)
 
 end
 

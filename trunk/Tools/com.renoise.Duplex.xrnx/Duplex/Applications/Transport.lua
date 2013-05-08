@@ -35,6 +35,8 @@ local STOP_MODE_JUMP = 2
 local JUMP_MODE_NORMAL = 1
 local JUMP_MODE_BLOCK = 2
 
+local BPM_MINIMUM = 32
+local BPM_MAXIMUM = 999
 
 --==============================================================================
 
@@ -115,9 +117,20 @@ Transport.available_mappings = {
                 .."\nControl value: ",
   },
   metronome_toggle = {
-    description = "Metronome: toggle on/off",
+    description = "Transport: toggle on/off",
   },
-
+  bpm_increase = {
+    description = "Transport: increase BPM",
+  },
+  bpm_decrease = {
+    description = "Transport: decrease BPM",
+  },
+  bpm_display = {
+    description = "Transport: display current BPM",
+  },
+  songpos_display = {
+    description = "Transport: display song-position",
+  }
 }
 
 Transport.default_palette = {
@@ -141,6 +154,10 @@ Transport.default_palette = {
   prev_patt_on = {      color = {0xff,0xff,0xff}, text = "|◄",val = true, },
   stop_playback_off = { color = {0x00,0x00,0x00}, text = "■", val = false,},
   stop_playback_on = {  color = {0xff,0xff,0xff}, text = "□", val = true, },
+  bpm_increase_off = {  color = {0x00,0x00,0x00}, text = "+", val = false,},
+  bpm_increase_on = {   color = {0xff,0xff,0xff}, text = "+", val = true, },
+  bpm_decrease_off = {  color = {0x00,0x00,0x00}, text = "-", val = false,},
+  bpm_decrease_on = {   color = {0xff,0xff,0xff}, text = "-", val = true, },
 }
 
 
@@ -158,6 +175,8 @@ function Transport:__init(...)
   -- number, set when not yet arrived at the scheduled pattern 
   self._scheduled_pattern = nil
   self._source_pattern = nil
+
+  self._pos_beats = nil
 
   -- current status of the block loop
   self._block_loop = nil
@@ -214,6 +233,23 @@ function Transport:on_idle()
       self:update_scheduled_buttons()
     end
 
+  end
+
+  -- update song-position display
+  if self.controls.songpos_display then
+    local pos_beats = renoise.song().transport.playback_pos_beats
+    if pos_beats ~= self._pos_beats then
+      --print("*** pos_beats",pos_beats)
+      self._pos_beats = pos_beats
+      -- format output like this: bars:beats.fraction (16:03.2)
+      local lpb = renoise.song().transport.lpb
+      local bars = math.floor(pos_beats/lpb)
+      local beats = (math.floor(pos_beats)%lpb)
+      local fraction = select(2,math.modf(pos_beats))*100
+      local str_songpos = ("%.02d:%.02d.%.1s"):format(bars,beats,fraction)
+      --print("*** str_songpos",str_songpos)
+      self.controls.songpos_display:set_text(str_songpos)
+    end
   end
 
 end
@@ -332,15 +368,37 @@ function Transport:_attach_to_song()
     end
   )
 
+  song.transport.bpm_observable:add_notifier(
+    function()
+      TRACE("Transport.bpm_observable fired...")
+      self:update_bpm_display()
+    end
+  )
+  self:update_bpm_display()
+
 end
 
+--------------------------------------------------------------------------------
+
+function Transport:update_bpm_display()
+  TRACE("Transport:update_bpm_display()")
+
+  --print("*** self.controls.bpm_display",self.controls.bpm_display)
+  if self.controls.bpm_display then
+    self.controls.bpm_display:set_text(renoise.song().transport.bpm)
+  end
+
+end
 
 --------------------------------------------------------------------------------
 
 -- update methods for the various UIComponents
 
 function Transport:update_metronome_enabled()
-  if not self.active then return false end
+  TRACE("Transport:update_metronome_enabled()")
+  if not self.active then 
+    return false 
+  end
   if self.controls.metronome_toggle then
     if (renoise.song().transport.metronome_enabled) then
       self.controls.metronome_toggle:set(self.palette.metronome_on)
@@ -351,7 +409,9 @@ function Transport:update_metronome_enabled()
 end
 
 function Transport:update_follow_player()
-  if not self.active then return false end
+  if not self.active then 
+    return false 
+  end
   if self.controls.follow_player then
     if (renoise.song().transport.follow_player) then
       self.controls.follow_player:set(self.palette.follow_player_on)
@@ -362,7 +422,9 @@ function Transport:update_follow_player()
 end
 
 function Transport:update_playing()
-  if not self.active then return false end
+  if not self.active then 
+    return false 
+  end
   if self.controls.play then
     if renoise.song().transport.playing then
       self.controls.play:set(self.palette.playing_on)
@@ -373,7 +435,9 @@ function Transport:update_playing()
 end
 
 function Transport:update_loop_pattern()
-  if not self.active then return false end
+  if not self.active then 
+    return false 
+  end
   if self.controls.loop then
     if renoise.song().transport.loop_pattern then
       self.controls.loop:set(self.palette.loop_pattern_on)
@@ -384,7 +448,9 @@ function Transport:update_loop_pattern()
 end
 
 function Transport:update_edit_mode()
-  if not self.active then return false end
+  if not self.active then 
+    return false 
+  end
   if self.controls.edit then
     if renoise.song().transport.edit_mode then
       self.controls.edit:set(self.palette.edit_mode_on)
@@ -395,7 +461,9 @@ function Transport:update_edit_mode()
 end
 
 function Transport:update_block_loop()
-  if not self.active then return false end
+  if not self.active then 
+    return false 
+  end
   if self.controls.block then
     if renoise.song().transport.loop_block_enabled then
       self.controls.block:set(self.palette.loop_block_on)
@@ -426,14 +494,14 @@ end
 function Transport:_build_app()
   TRACE("Transport:_build_app()")
 
-  if self.mappings.stop_playback.group_name then
-    local c = UIButton(self.display)
-    c.group_name = self.mappings.stop_playback.group_name
-    c.tooltip = self.mappings.stop_playback.description
-    c:set_pos(self.mappings.stop_playback.index)
+  local map = self.mappings.stop_playback
+  if map.group_name then
+    local c = UIButton(self)
+    c.group_name = map.group_name
+    c.tooltip = map.description
+    c:set_pos(map.index)
     c:set(self.palette.stop_playback_off)
     c.on_press = function(obj)
-      if not self.active then return false end
       self:_stop_playback()
       obj:flash(0.1,
         self.palette.stop_playback_on,
@@ -443,26 +511,26 @@ function Transport:_build_app()
     self.controls.stop = c
   end
 
-  if self.mappings.start_playback.group_name then
-    local c = UIButton(self.display)
-    c.group_name = self.mappings.start_playback.group_name
-    c.tooltip = self.mappings.start_playback.description
-    c:set_pos(self.mappings.start_playback.index)
+  local map = self.mappings.start_playback
+  if map.group_name then
+    local c = UIButton(self)
+    c.group_name = map.group_name
+    c.tooltip = map.description
+    c:set_pos(map.index)
     c.on_press = function(obj)
-      if not self.active then return false end
       self:_start_playback()
     end
     self:_add_component(c)
     self.controls.play = c
   end
 
-  if self.mappings.loop_pattern.group_name then
-    local c = UIButton(self.display)
-    c.group_name = self.mappings.loop_pattern.group_name
-    c.tooltip = self.mappings.loop_pattern.description
-    c:set_pos(self.mappings.loop_pattern.index)
+  local map = self.mappings.loop_pattern
+  if map.group_name then
+    local c = UIButton(self)
+    c.group_name = map.group_name
+    c.tooltip = map.description
+    c:set_pos(map.index)
     c.on_press = function(obj)
-      if not self.active then return false end
       local loop_pattern = renoise.song().transport.loop_pattern
       renoise.song().transport.loop_pattern = not loop_pattern
     end
@@ -470,13 +538,13 @@ function Transport:_build_app()
     self.controls.loop = c
   end
 
-  if self.mappings.edit_mode.group_name then
-    local c = UIButton(self.display)
-    c.group_name = self.mappings.edit_mode.group_name
-    c.tooltip = self.mappings.edit_mode.description
-    c:set_pos(self.mappings.edit_mode.index)
+  local map = self.mappings.edit_mode
+  if map.group_name then
+    local c = UIButton(self)
+    c.group_name = map.group_name
+    c.tooltip = map.description
+    c:set_pos(map.index)
     c.on_press = function(obj)
-      if not self.active then return false end
       local edit_mode = renoise.song().transport.edit_mode
       renoise.song().transport.edit_mode = not edit_mode
     end
@@ -484,41 +552,41 @@ function Transport:_build_app()
     self.controls.edit = c
   end
 
-  if self.mappings.goto_next.group_name then
-    local c = UIButton(self.display)
-    c.group_name = self.mappings.goto_next.group_name
-    c.tooltip = self.mappings.goto_next.description
-    c:set_pos(self.mappings.goto_next.index)
+  local map = self.mappings.goto_next
+  if map.group_name then
+    local c = UIButton(self)
+    c.group_name = map.group_name
+    c.tooltip = map.description
+    c:set_pos(map.index)
     c:set(self.palette.next_patt_off)
     c.on_press = function(obj)
-      if not self.active then return false end
       self:_next()
     end
     self:_add_component(c)
     self.controls.next = c
   end
 
-  if self.mappings.goto_previous.group_name then
-    local c = UIButton(self.display)
-    c.group_name = self.mappings.goto_previous.group_name
-    c.tooltip = self.mappings.goto_previous.description
-    c:set_pos(self.mappings.goto_previous.index)
+  local map = self.mappings.goto_previous
+  if map.group_name then
+    local c = UIButton(self)
+    c.group_name = map.group_name
+    c.tooltip = map.description
+    c:set_pos(map.index)
     c:set(self.palette.prev_patt_off)
     c.on_press = function(obj)
-      if not self.active then return false end
       self:_previous()
     end
     self:_add_component(c)
     self.controls.previous = c
   end
 
-  if self.mappings.block_loop.group_name then
-    local c = UIButton(self.display)
-    c.group_name = self.mappings.block_loop.group_name
-    c.tooltip = self.mappings.block_loop.description
-    c:set_pos(self.mappings.block_loop.index)
+  local map = self.mappings.block_loop
+  if map.group_name then
+    local c = UIButton(self)
+    c.group_name = map.group_name
+    c.tooltip = map.description
+    c:set_pos(map.index)
     c.on_press = function(obj)
-      if not self.active then return false end
       local block_enabled = renoise.song().transport.loop_block_enabled
       renoise.song().transport.loop_block_enabled = not block_enabled
     end
@@ -526,15 +594,13 @@ function Transport:_build_app()
     self.controls.block = c
   end
 
-  if self.mappings.follow_player.group_name then
-   local c = UIButton(self.display)
-    c.group_name = self.mappings.follow_player.group_name
-    c.tooltip = self.mappings.follow_player.description
-    c:set_pos(self.mappings.follow_player.index)
+  local map = self.mappings.follow_player
+  if map.group_name then
+   local c = UIButton(self)
+    c.group_name = map.group_name
+    c.tooltip = map.description
+    c:set_pos(map.index)
     c.on_press = function(obj)
-      if not self.active then 
-        return false 
-      end
       local active = renoise.song().transport.follow_player
       renoise.song().transport.follow_player = not active
     end
@@ -542,18 +608,76 @@ function Transport:_build_app()
     self.controls.follow_player = c
   end
 
-  if self.mappings.metronome_toggle.group_name then
-    local c = UIButton(self.display)
-    c.group_name = self.mappings.metronome_toggle.group_name
-    c.tooltip = self.mappings.metronome_toggle.description
-    c:set_pos(self.mappings.metronome_toggle.index)
+  local map = self.mappings.metronome_toggle
+  if map.group_name then
+    local c = UIButton(self)
+    c.group_name = map.group_name
+    c.tooltip = map.description
+    c:set_pos(map.index)
     c.on_press = function(obj)
-      if not self.active then return false end
       local metronome_enabled = renoise.song().transport.metronome_enabled
       renoise.song().transport.metronome_enabled = not metronome_enabled
     end
     self:_add_component(c)
     self.controls.metronome_toggle = c
+  end
+
+  local map = self.mappings.bpm_increase
+  if map.group_name then
+    local c = UIButton(self)
+    c.group_name = map.group_name
+    c.tooltip = map.description
+    c:set_pos(map.index)
+    c:set(self.palette.bpm_increase_off)
+    c.on_press = function(obj)
+      local bpm = math.min(BPM_MAXIMUM,renoise.song().transport.bpm+1)
+      if (bpm~=renoise.song().transport.bpm) then
+        renoise.song().transport.bpm = bpm
+        self.controls.bpm_increase:flash(0.1,
+          self.palette.bpm_increase_on,
+          self.palette.bpm_increase_off)
+      end
+    end
+    self:_add_component(c)
+    self.controls.bpm_increase = c
+  end
+
+  local map = self.mappings.bpm_decrease
+  if map.group_name then
+    local c = UIButton(self)
+    c.group_name = map.group_name
+    c.tooltip = map.description
+    c:set_pos(map.index)
+    c:set(self.palette.bpm_decrease_off)
+    c.on_press = function(obj)
+      local bpm = math.max(BPM_MINIMUM,renoise.song().transport.bpm-1)
+      if (bpm~=renoise.song().transport.bpm) then
+        renoise.song().transport.bpm = bpm
+        self.controls.bpm_decrease:flash(0.1,
+          self.palette.bpm_decrease_on,
+          self.palette.bpm_decrease_off)
+      end
+    end
+    self:_add_component(c)
+    self.controls.bpm_decrease = c
+  end
+
+  local map = self.mappings.bpm_display
+  if map.group_name then
+    local c = UILabel(self)
+    c.group_name = map.group_name
+    c:set_pos(map.index)
+    self:_add_component(c)
+    self.controls.bpm_display = c
+  end
+
+  local map = self.mappings.songpos_display
+  if map.group_name then
+    local c = UILabel(self)
+    c.group_name = map.group_name
+    c:set_pos(map.index)
+    self:_add_component(c)
+    self.controls.songpos_display = c
   end
 
   -- the finishing touches --

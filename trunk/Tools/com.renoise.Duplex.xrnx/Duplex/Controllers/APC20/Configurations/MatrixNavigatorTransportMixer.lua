@@ -34,9 +34,17 @@ duplex_configurations:insert {
           group_name = "Transport",
           index = 5,
         },
-        sequence = {
+        --sequence = {
+        --  group_name = "Transport",
+        --  index = 7,
+        --},
+        prev_seq_page = {
           group_name = "Transport",
           index = 7,
+        },
+        next_seq_page = {
+          group_name = "Transport",
+          index = 8,
         },
       },
       options = {

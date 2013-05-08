@@ -26,12 +26,21 @@ duplex_configurations:insert {
         parameters = {
           group_name= "Encoders"
         },
-        page = {
-          group_name = "Switches"
-        },
+        --page = {
+        --  group_name = "Switches"
+        --},
         device = {
           group_name = "Pads B"
-        }
+        },
+        param_prev = {
+          group_name = "Switches",
+          index = 1,
+        },
+        param_next = {
+          group_name = "Switches",
+          index = 2,
+        },
+
       }
     }
   }

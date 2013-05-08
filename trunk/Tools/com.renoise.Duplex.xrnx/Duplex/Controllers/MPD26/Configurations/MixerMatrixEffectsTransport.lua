@@ -51,9 +51,17 @@ duplex_configurations:insert {
           group_name = "Pad-Page",
           index = 1,
         },
-        sequence = {
+        --sequence = {
+        --  group_name = "Pad-Page",
+        --  index = 3,
+        --},
+        prev_seq_page = {
           group_name = "Pad-Page",
           index = 3,
+        },
+        next_seq_page = {
+          group_name = "Pad-Page",
+          index = 4,
         },
       }
     },
@@ -65,10 +73,18 @@ duplex_configurations:insert {
         device = {
           group_name = "Pad-FX-1",
         },
-        page = {
+        --page = {
+        --  group_name = "Pad-FX-2",
+        --  index = 3,
+        --}
+        param_prev = {
           group_name = "Pad-FX-2",
           index = 3,
-        }
+        },
+        param_next = {
+          group_name = "Pad-FX-2",
+          index = 4,
+        },
       }
     },
     Transport = {

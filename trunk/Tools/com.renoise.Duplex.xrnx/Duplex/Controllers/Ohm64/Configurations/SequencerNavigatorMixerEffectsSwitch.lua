@@ -32,9 +32,7 @@ duplex_configurations:insert {
             },
         },
         options = {
-            --        invert_mute = 1,
             follow_track = 1,
-            track_offset = 1,
             page_size = 5,
         }
     },
@@ -81,10 +79,18 @@ duplex_configurations:insert {
             parameters = {
                 group_name= "EncodersEffect",
             },
-            page = {
-                group_name = "ControlsRight",
-                index = 5,
-            }
+            --page = {
+            --    group_name = "ControlsRight",
+            --    index = 5,
+            --}
+            param_prev = {
+              group_name = "ControlsRight",
+              index = 5,
+            },
+            param_next = {
+              group_name = "ControlsRight",
+              index = 6,
+            },
         }
     },
     Transport = {

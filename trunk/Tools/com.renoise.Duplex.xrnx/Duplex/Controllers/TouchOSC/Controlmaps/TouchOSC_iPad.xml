@@ -1,0 +1,331 @@
+
+<Device>
+	<Name>TouchOSC</Name>
+	<Author>Danoise</Author>
+	<Description>Controlmap for TouchOSC/iPad. Load the provided layout from the presets folder</Description>
+	<Parameters>
+		<Row>
+			<Column>
+				<Group name="SongPos" orientation="vertical">
+					<Param type="label" size="2.2" aspect="0.25" text="Song-pos"/>
+					<Param type="label" size="2.2" aspect="0.25" text="$song_pos" value="/1/SongPos %s"/>
+				</Group>
+				<Row>
+					<Column>
+						<Group name="NavigatorPrev" >
+							<Param value="/1/NavigatorPrev %i" type="pushbutton" aspect="0.8" maximum="1" minimum="0" />
+						</Group>
+						<Group name="Navigator" orientation="vertical">
+							<Param value="/1/Navigator/16/1 %i" type="pushbutton" aspect="0.9" maximum="1" minimum="0" />
+							<Param value="/1/Navigator/15/1 %i" type="pushbutton" aspect="0.9" maximum="1" minimum="0" />
+							<Param value="/1/Navigator/14/1 %i" type="pushbutton" aspect="0.9" maximum="1" minimum="0" />
+							<Param value="/1/Navigator/13/1 %i" type="pushbutton" aspect="0.9" maximum="1" minimum="0" />
+							<Param value="/1/Navigator/12/1 %i" type="pushbutton" aspect="0.9" maximum="1" minimum="0" />
+							<Param value="/1/Navigator/11/1 %i" type="pushbutton" aspect="0.9" maximum="1" minimum="0" />
+							<Param value="/1/Navigator/10/1 %i" type="pushbutton" aspect="0.9" maximum="1" minimum="0" />
+							<Param value="/1/Navigator/9/1 %i" type="pushbutton"  aspect="0.9" maximum="1" minimum="0" />
+							<Param value="/1/Navigator/8/1 %i" type="pushbutton"  aspect="0.9" maximum="1" minimum="0" />
+							<Param value="/1/Navigator/7/1 %i" type="pushbutton"  aspect="0.9" maximum="1" minimum="0" />
+							<Param value="/1/Navigator/6/1 %i" type="pushbutton"  aspect="0.9" maximum="1" minimum="0" />
+							<Param value="/1/Navigator/5/1 %i" type="pushbutton"  aspect="0.9" maximum="1" minimum="0" />
+							<Param value="/1/Navigator/4/1 %i" type="pushbutton"  aspect="0.9" maximum="1" minimum="0" />
+							<Param value="/1/Navigator/3/1 %i" type="pushbutton"  aspect="0.9" maximum="1" minimum="0" />
+							<Param value="/1/Navigator/2/1 %i" type="pushbutton"  aspect="0.9" maximum="1" minimum="0" />
+							<Param value="/1/Navigator/1/1 %i" type="pushbutton"  aspect="0.9" maximum="1" minimum="0" />
+						</Group>
+						<Group name="NavigatorNext" >
+							<Param value="/1/NavigatorNext %i" type="pushbutton" aspect="0.8" maximum="1" minimum="0" />
+						</Group>
+					</Column>
+					<Column>
+						<Group name="SequencePrev" >
+							<Param value="/1/SequencePrev %i" type="pushbutton" aspect="0.8" maximum="1" minimum="0" />
+						</Group>
+						<Group name="Sequence" orientation="vertical">
+							<Param value="/1/Sequence/16/1 %i" type="pushbutton" aspect="0.9" maximum="1" minimum="0" />
+							<Param value="/1/Sequence/15/1 %i" type="pushbutton" aspect="0.9" maximum="1" minimum="0" />
+							<Param value="/1/Sequence/14/1 %i" type="pushbutton" aspect="0.9" maximum="1" minimum="0" />
+							<Param value="/1/Sequence/13/1 %i" type="pushbutton" aspect="0.9" maximum="1" minimum="0" />
+							<Param value="/1/Sequence/12/1 %i" type="pushbutton" aspect="0.9" maximum="1" minimum="0" />
+							<Param value="/1/Sequence/11/1 %i" type="pushbutton" aspect="0.9" maximum="1" minimum="0" />
+							<Param value="/1/Sequence/10/1 %i" type="pushbutton" aspect="0.9" maximum="1" minimum="0" />
+							<Param value="/1/Sequence/9/1 %i" type="pushbutton"  aspect="0.9" maximum="1" minimum="0" />
+							<Param value="/1/Sequence/8/1 %i" type="pushbutton"  aspect="0.9" maximum="1" minimum="0" />
+							<Param value="/1/Sequence/7/1 %i" type="pushbutton"  aspect="0.9" maximum="1" minimum="0" />
+							<Param value="/1/Sequence/6/1 %i" type="pushbutton"  aspect="0.9" maximum="1" minimum="0" />
+							<Param value="/1/Sequence/5/1 %i" type="pushbutton"  aspect="0.9" maximum="1" minimum="0" />
+							<Param value="/1/Sequence/4/1 %i" type="pushbutton"  aspect="0.9" maximum="1" minimum="0" />
+							<Param value="/1/Sequence/3/1 %i" type="pushbutton"  aspect="0.9" maximum="1" minimum="0" />
+							<Param value="/1/Sequence/2/1 %i" type="pushbutton"  aspect="0.9" maximum="1" minimum="0" />
+							<Param value="/1/Sequence/1/1 %i" type="pushbutton"  aspect="0.9" maximum="1" minimum="0" />
+						</Group>
+						<Group name="SequenceNext" >
+							<Param value="/1/SequenceNext %i" type="pushbutton" aspect="0.8" maximum="1" minimum="0" />
+						</Group>
+					</Column>
+				</Row>
+
+			</Column>
+
+			<Column>
+				<Row>
+					<Group name="FirstTrack">
+						<Param type="label" text="Track" size="2" aspect="0.5"  />
+						<Param type="pushbutton" value="/1/FirstTrack %i" maximum="1" minimum="0"/>
+					</Group>
+					<Group name="TrackSelector" columns="16">
+						<Param value="/1/TrackSelector/1/1 %i" type="pushbutton" maximum="1" minimum="0" />
+						<Param value="/1/TrackSelector/1/2 %i" type="pushbutton" maximum="1" minimum="0" />
+						<Param value="/1/TrackSelector/1/3 %i" type="pushbutton" maximum="1" minimum="0" />
+						<Param value="/1/TrackSelector/1/4 %i" type="pushbutton" maximum="1" minimum="0" />
+						<Param value="/1/TrackSelector/1/5 %i" type="pushbutton" maximum="1" minimum="0" />
+						<Param value="/1/TrackSelector/1/6 %i" type="pushbutton" maximum="1" minimum="0" />
+						<Param value="/1/TrackSelector/1/7 %i" type="pushbutton" maximum="1" minimum="0" />
+						<Param value="/1/TrackSelector/1/8 %i" type="pushbutton"  maximum="1" minimum="0" />
+						<Param value="/1/TrackSelector/1/9 %i" type="pushbutton"  maximum="1" minimum="0" />
+						<Param value="/1/TrackSelector/1/10 %i" type="pushbutton"  maximum="1" minimum="0" />
+						<Param value="/1/TrackSelector/1/11 %i" type="pushbutton"  maximum="1" minimum="0" />
+						<Param value="/1/TrackSelector/1/12 %i" type="pushbutton"  maximum="1" minimum="0" />
+						<Param value="/1/TrackSelector/1/13 %i" type="pushbutton"  maximum="1" minimum="0" />
+						<Param value="/1/TrackSelector/1/14 %i" type="pushbutton"  maximum="1" minimum="0" />
+						<Param value="/1/TrackSelector/1/15 %i" type="pushbutton"  maximum="1" minimum="0" />
+						<Param value="/1/TrackSelector/1/16 %i" type="pushbutton"  maximum="1" minimum="0" />
+					</Group>
+					<Group name="MasterTrack">
+						<Param type="pushbutton" value="/1/MasterTrack %i" maximum="1" minimum="0"/>
+					</Group>
+				</Row>
+				<Row>
+					<Group name="MixerPrev">
+						<Param type="label" text="Mute" size="2" aspect="0.5"/>
+						<Param type="pushbutton" value="/1/MixerPrev %i" maximum="1" minimum="0"/>
+					</Group>
+					<Group name="MixerMutes" columns="16">
+						<Param value="/1/MixerMutes/1/1 %i" type="pushbutton" maximum="1" minimum="0" />
+						<Param value="/1/MixerMutes/1/2 %i" type="pushbutton" maximum="1" minimum="0" />
+						<Param value="/1/MixerMutes/1/3 %i" type="pushbutton" maximum="1" minimum="0" />
+						<Param value="/1/MixerMutes/1/4 %i" type="pushbutton" maximum="1" minimum="0" />
+						<Param value="/1/MixerMutes/1/5 %i" type="pushbutton" maximum="1" minimum="0" />
+						<Param value="/1/MixerMutes/1/6 %i" type="pushbutton" maximum="1" minimum="0" />
+						<Param value="/1/MixerMutes/1/7 %i" type="pushbutton" maximum="1" minimum="0" />
+						<Param value="/1/MixerMutes/1/8 %i" type="pushbutton"  maximum="1" minimum="0" />
+						<Param value="/1/MixerMutes/1/9 %i" type="pushbutton"  maximum="1" minimum="0" />
+						<Param value="/1/MixerMutes/1/10 %i" type="pushbutton"  maximum="1" minimum="0" />
+						<Param value="/1/MixerMutes/1/11 %i" type="pushbutton"  maximum="1" minimum="0" />
+						<Param value="/1/MixerMutes/1/12 %i" type="pushbutton"  maximum="1" minimum="0" />
+						<Param value="/1/MixerMutes/1/13 %i" type="pushbutton"  maximum="1" minimum="0" />
+						<Param value="/1/MixerMutes/1/14 %i" type="pushbutton"  maximum="1" minimum="0" />
+						<Param value="/1/MixerMutes/1/15 %i" type="pushbutton"  maximum="1" minimum="0" />
+						<Param value="/1/MixerMutes/1/16 %i" type="pushbutton"  maximum="1" minimum="0" />
+					</Group>
+					<Group name="MixerNext">
+						<Param type="pushbutton" value="/1/MixerNext %i" maximum="1" minimum="0"/>
+					</Group>
+
+				</Row>
+
+				<Row>
+					<Group name="DSPPrev">
+						<Param type="label" text="DSP" size="2" aspect="0.5"/>
+						<Param type="pushbutton" value="/1/DSPNext %i" maximum="1" minimum="0"/>
+					</Group>
+					<Group name="Devices" columns="11">
+						<Param value="/1/Devices/1/1 %i" type="pushbutton" maximum="1" minimum="0" />
+						<Param value="/1/Devices/1/2 %i" type="pushbutton" maximum="1" minimum="0" />
+						<Param value="/1/Devices/1/3 %i" type="pushbutton"  maximum="1" minimum="0" />
+						<Param value="/1/Devices/1/4 %i" type="pushbutton"  maximum="1" minimum="0" />
+						<Param value="/1/Devices/1/5 %i" type="pushbutton"  maximum="1" minimum="0" />
+						<Param value="/1/Devices/1/6 %i" type="pushbutton"  maximum="1" minimum="0" />
+						<Param value="/1/Devices/1/7 %i" type="pushbutton"  maximum="1" minimum="0" />
+						<Param value="/1/Devices/1/8 %i" type="pushbutton"  maximum="1" minimum="0" />
+						<Param value="/1/Devices/1/9 %i" type="pushbutton"  maximum="1" minimum="0" />
+						<Param value="/1/Devices/1/10 %i" type="pushbutton"  maximum="1" minimum="0" />
+						<Param value="/1/Devices/1/11 %i" type="pushbutton"  maximum="1" minimum="0" />
+					</Group>
+					<Group name="DSPNext">
+						<Param type="pushbutton" value="/1/DSPNext %i" maximum="1" minimum="0"/>
+					</Group>
+					<Column>
+						<Group name="DeviceName" orientation="vertical">
+							<Param type="label" size="3" aspect="0.2" text="Selected effect"/>
+							<Param type="label" size="3" aspect="0.2" text="-" value="/1/DeviceName %s"/>
+						</Group>
+					</Column>
+					<Column>
+						<Group name="DevicePreset" orientation="horizontal">
+							<Param type="pushbutton" value="/1/DevicePresetPrev %i" size="0.7" maximum="1" minimum="0"/>
+							<Param type="pushbutton" value="/1/DevicePresetNext %i" size="0.7" maximum="1" minimum="0"/>
+						</Group>
+					</Column>
+
+				</Row>
+
+				<Row>
+
+					<Column>
+
+						<Row>
+							
+							<Column>
+								<Group name="EffectParamLabels1" orientation="vertical">
+									<Param type="label" text="-" size="3" aspect=".18" value="/1/ParamName1 %s"/>
+									<Param type="label" text="" size="3" aspect=".18" value="/1/ParamValue1 %s"/>
+								</Group>
+								<Group name="EffectParamLabels2" orientation="vertical">
+									<Param type="label" text="-" size="3" aspect=".18" value="/1/ParamName2 %s"/>
+									<Param type="label" text="" size="3" aspect=".18" value="/1/ParamValue2 %s"/>
+								</Group>
+								<Group name="EffectParamLabels3" orientation="vertical">
+									<Param type="label" text="-" size="3" aspect=".18" value="/1/ParamName3 %s"/>
+									<Param type="label" text="" size="3" aspect=".18" value="/1/ParamValue3 %s"/>
+								</Group>
+								<Group name="EffectParamLabels4" orientation="vertical">
+									<Param type="label" text="-" size="3" aspect=".18" value="/1/ParamName4 %s"/>
+									<Param type="label" text="" size="3" aspect=".18" value="/1/ParamValue4 %s"/>
+								</Group>
+								<Group name="EffectParamLabels5" orientation="vertical">
+									<Param type="label" text="-" size="3" aspect=".18" value="/1/ParamName5 %s"/>
+									<Param type="label" text="" size="3" aspect=".18" value="/1/ParamValue5 %s"/>
+								</Group>
+								<Group name="EffectParamLabels6" orientation="vertical">
+									<Param type="label" text="-" size="3" aspect=".18" value="/1/ParamName6 %s"/>
+									<Param type="label" text="" size="3" aspect=".18" value="/1/ParamValue6 %s"/>
+								</Group>
+								<Group name="EffectParamLabels7" orientation="vertical">
+									<Param type="label" text="-" size="3" aspect=".18" value="/1/ParamName7 %s"/>
+									<Param type="label" text="" size="3" aspect=".18" value="/1/ParamValue7 %s"/>
+								</Group>
+								<Group name="EffectParamLabels8" orientation="vertical">
+									<Param type="label" text="-" size="3" aspect=".18" value="/1/ParamName8 %s"/>
+									<Param type="label" text="" size="3" aspect=".18" value="/1/ParamValue8 %s"/>
+								</Group>
+								<Group name="EffectParamLabels9" orientation="vertical">
+									<Param type="label" text="-" size="3" aspect=".18" value="/1/ParamName9 %s"/>
+									<Param type="label" text="" size="3" aspect=".18" value="/1/ParamValue9 %s"/>
+								</Group>
+							</Column>
+
+							<Column>
+								<Group name="EffectFaders" orientation="vertical">
+									<Param type="fader" orientation="horizontal" value="/1/EffectFader1 %f" size="7" aspect="1.4" maximum="1" minimum="0"/>
+									<Param type="fader" orientation="horizontal" value="/1/EffectFader2 %f" size="7" aspect="1.4" maximum="1" minimum="0"/>
+									<Param type="fader" orientation="horizontal" value="/1/EffectFader3 %f" size="7" aspect="1.4" maximum="1" minimum="0"/>
+									<Param type="fader" orientation="horizontal" value="/1/EffectFader4 %f" size="7" aspect="1.4" maximum="1" minimum="0"/>
+									<Param type="fader" orientation="horizontal" value="/1/EffectFader5 %f" size="7" aspect="1.4" maximum="1" minimum="0"/>
+									<Param type="fader" orientation="horizontal" value="/1/EffectFader6 %f" size="7" aspect="1.4" maximum="1" minimum="0"/>
+									<Param type="fader" orientation="horizontal" value="/1/EffectFader7 %f" size="7" aspect="1.4" maximum="1" minimum="0"/>
+									<Param type="fader" orientation="horizontal" value="/1/EffectFader8 %f" size="7" aspect="1.4" maximum="1" minimum="0"/>
+									<Param type="fader" orientation="horizontal" value="/1/EffectFader9 %f" size="7" aspect="1.4" maximum="1" minimum="0"/>
+								</Group>
+							</Column>
+
+						</Row>
+
+
+					</Column>
+
+					<Column>
+
+						<Row>
+							<Group name="FXPage" orientation="vertical" >
+								<Param type="pushbutton" value="/1/FXPagePrev %i" maximum="1" minimum="0"/>
+								<Param type="pushbutton" value="/1/FXPageNext %i" maximum="1" minimum="0"/>
+							</Group>
+
+							<!--<Param type="label" size="3.75" aspect="0.33" />-->
+
+							<Group name="HydraDial" >
+								<Param type="label" value="/1/HydraDisplay %s" size="3.75" aspect="0.5" text="0.000 %"/>
+								<Param type="dial" value="/1/HydraDial %f" size="3" maximum="1" minimum="0"/>
+							</Group>
+
+							<Group name="HydraControls" orientation="vertical" >
+								<Param type="label" text="Hydra" size="2" aspect=".5"/>
+								<Param type="togglebutton" value="/1/HydraLock %i" size="1.5" aspect="0.4" maximum="1" minimum="0"/>
+								<Param type="pushbutton" value="/1/HydraPrev %i" size="1.5" aspect="0.4" maximum="1" minimum="0"/>
+								<Param type="pushbutton" value="/1/HydraNext %i" size="1.5" aspect="0.4" maximum="1" minimum="0"/>
+							</Group>
+
+						</Row>
+						<Row>
+							<Group name="XYPad" >
+								<Param type="xypad" value="/1/XYPad %f %f" size="8" aspect="0.7" swap_axes="true" maximum="1" minimum="0"/>
+							</Group>
+
+							<Group name="XYPadControls" orientation="vertical" >
+								<Param type="label" text="XY-Pad" size="2" aspect=".5"/>
+								<Param type="togglebutton" value="/1/XYPadLock %i" size="1.5" aspect="0.4" maximum="1" minimum="0"/>
+								<Param type="pushbutton" value="/1/XYPadPrev %i" size="1.5" aspect="0.4" maximum="1" minimum="0"/>
+								<Param type="pushbutton" value="/1/XYPadNext %i" size="1.5" aspect="0.4" maximum="1" minimum="0"/>
+							</Group>
+
+						</Row>
+
+						<Row>
+							<Group name="RepeaterGrid" columns="8">
+								<Param value="/1/RepeaterGrid/3/1 %i" type="pushbutton" maximum="1" minimum="0" />
+								<Param value="/1/RepeaterGrid/3/2 %i" type="pushbutton" maximum="1" minimum="0" />
+								<Param value="/1/RepeaterGrid/3/3 %i" type="pushbutton" maximum="1" minimum="0" />
+								<Param value="/1/RepeaterGrid/3/4 %i" type="pushbutton" maximum="1" minimum="0" />
+								<Param value="/1/RepeaterGrid/3/5 %i" type="pushbutton" maximum="1" minimum="0" />
+								<Param value="/1/RepeaterGrid/3/6 %i" type="pushbutton" maximum="1" minimum="0" />
+								<Param value="/1/RepeaterGrid/3/7 %i" type="pushbutton" maximum="1" minimum="0" />
+								<Param value="/1/RepeaterGrid/3/8 %i" type="pushbutton" maximum="1" minimum="0" />
+								<Param value="/1/RepeaterGrid/2/1 %i" type="pushbutton" maximum="1" minimum="0" />
+								<Param value="/1/RepeaterGrid/2/2 %i" type="pushbutton" maximum="1" minimum="0" />
+								<Param value="/1/RepeaterGrid/2/3 %i" type="pushbutton" maximum="1" minimum="0" />
+								<Param value="/1/RepeaterGrid/2/4 %i" type="pushbutton" maximum="1" minimum="0" />
+								<Param value="/1/RepeaterGrid/2/5 %i" type="pushbutton" maximum="1" minimum="0" />
+								<Param value="/1/RepeaterGrid/2/6 %i" type="pushbutton" maximum="1" minimum="0" />
+								<Param value="/1/RepeaterGrid/2/7 %i" type="pushbutton" maximum="1" minimum="0" />
+								<Param value="/1/RepeaterGrid/2/8 %i" type="pushbutton" maximum="1" minimum="0" />
+								<Param value="/1/RepeaterGrid/1/1 %i" type="pushbutton" maximum="1" minimum="0" />
+								<Param value="/1/RepeaterGrid/1/2 %i" type="pushbutton" maximum="1" minimum="0" />
+								<Param value="/1/RepeaterGrid/1/3 %i" type="pushbutton" maximum="1" minimum="0" />
+								<Param value="/1/RepeaterGrid/1/4 %i" type="pushbutton" maximum="1" minimum="0" />
+								<Param value="/1/RepeaterGrid/1/5 %i" type="pushbutton" maximum="1" minimum="0" />
+								<Param value="/1/RepeaterGrid/1/6 %i" type="pushbutton" maximum="1" minimum="0" />
+								<Param value="/1/RepeaterGrid/1/7 %i" type="pushbutton" maximum="1" minimum="0" />
+								<Param value="/1/RepeaterGrid/1/8 %i" type="pushbutton" maximum="1" minimum="0" />
+							</Group>
+
+							<Group name="RepeaterControls" orientation="vertical" >
+								<Param type="label" text="Repeater" size="2" aspect=".5"/>
+								<Param type="togglebutton" value="/1/RepeaterLock %i" size="1.5" aspect="0.4" maximum="1" minimum="0"/>
+								<Param type="pushbutton" value="/1/RepeaterPrev %i" size="1.5" aspect="0.4" maximum="1" minimum="0"/>
+								<Param type="pushbutton" value="/1/RepeaterNext %i" size="1.5" aspect="0.4" maximum="1" minimum="0"/>
+							</Group>
+
+						</Row>
+
+					</Column>
+
+
+				</Row>
+
+				<Group name="Controls">
+
+					<Param value="/1/DecreaseBPM %i" type="pushbutton" maximum="1" minimum="0"/>
+					<Param value="/1/DisplayBPM %s" type="label" size="1" text="BPM" />
+					<Param value="/1/IncreaseBPM %i" type="pushbutton" maximum="1" minimum="0"/>
+
+					<Param type="label" value="/1/ControlSpacer1 %s" />
+
+					<Param type="pushbutton" value="/1/PrevPattern %i" maximum="1" minimum="0"/>
+					<Param type="pushbutton" value="/1/PlayToggleLED %i" action="/1/PlayToggle %i" maximum="1" minimum="0"/>
+					<Param type="pushbutton" value="/1/StopPlayback %i" maximum="1" minimum="0"/>
+					<Param type="pushbutton" value="/1/NextPattern %i" maximum="1" minimum="0"/>
+					<Param type="pushbutton" value="/1/LoopToggleLED %i" action="/1/LoopToggle %i" maximum="1" minimum="0"/>
+					<Param type="pushbutton" value="/1/BlockToggleLED %i" action="/1/BlockToggle %i" maximum="1" minimum="0"/>
+					<Param type="pushbutton" value="/1/FollowToggleLED %i" action="/1/FollowToggle %i" maximum="1" minimum="0"/>
+					<Param type="pushbutton" value="/1/EditToggleLED %i" action="/1/EditToggle %i" maximum="1" minimum="0"/>
+					<Param type="pushbutton" value="/1/MetronomeToggleLED %i" action="/1/MetronomeToggle %i" maximum="1" minimum="0"/>
+
+				</Group>
+
+			</Column>
+
+		</Row>
+	</Parameters>
+</Device>
+

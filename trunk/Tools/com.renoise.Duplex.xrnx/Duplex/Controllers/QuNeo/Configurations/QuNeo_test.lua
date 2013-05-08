@@ -49,10 +49,10 @@ duplex_configurations:insert {
 	    matrix = {
 	      group_name = "Grid",
 	    },
-	    sequence = {
-	      group_name = "Encoders",
-	      index = 1,
-	    },
+	    --sequence = {
+	    --  group_name = "Encoders",
+	    --  index = 1,
+	    --},
 	    track = {
 	      group_name = "Encoders",
 	      index = 2,

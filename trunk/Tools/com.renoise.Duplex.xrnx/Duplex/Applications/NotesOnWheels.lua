@@ -1275,16 +1275,13 @@ function NotesOnWheels:_build_app()
     local group = cm.groups[group_name]
     if group then
       for control_index = 1, #group do
-        local c = UIButton(self.display)
+        local c = UIButton(self)
         c.group_name = self.mappings.position.group_name
         c.tooltip = self.mappings.position.description
         c:set_pos(control_index)
         c:set(self.palette.position_off)
-        c.active = false
         c.on_press = function() 
-          if (not self.active) then
-            return false
-          end
+          -- TODO do "something"
         end
         self:_add_component(c)
         self._controls.pos_buttons[control_index] = c    
@@ -1298,16 +1295,13 @@ function NotesOnWheels:_build_app()
     local group = cm.groups[group_name]
     if group then
       for control_index = 1, #group do
-        local c = UISlider(self.display)
+        local c = UISlider(self)
         c.group_name = group_name
         c:set_pos(control_index)
         c.ceiling = 1
         c.tooltip = self.mappings.pitch_sliders.description.." #"..control_index
         c:set_value(0)
         c.on_change = function(obj) 
-          if (not self.active) then
-            return false
-          end
           local int_val = math.floor(obj.value*121)
 
           if (self.number_of_slices>0) then
@@ -1340,16 +1334,13 @@ function NotesOnWheels:_build_app()
     local group = cm.groups[self.mappings.velocity_sliders.group_name]
     if group then
       for control_index = 1, #group do
-        local c = UISlider(self.display)
+        local c = UISlider(self)
         c.group_name = group_name
         c:set_pos(control_index)
         c.ceiling = 1
         c.tooltip = self.mappings.velocity_sliders.description.." #"..control_index
         c:set_value(1)
         c.on_change = function(obj) 
-          if (not self.active) then
-            return false
-          end
           local int_val = math.floor(obj.value*127)
           if self.seq:set_velocity(control_index,int_val,nil,true) then
             self:schedule_output(control_index,MODE_VELOCITY)
@@ -1370,16 +1361,13 @@ function NotesOnWheels:_build_app()
     local group = cm.groups[self.mappings.offset_sliders.group_name]
     if group then
       for control_index = 1, #group do
-        local c = UISlider(self.display)
+        local c = UISlider(self)
         c.group_name = group_name
         c:set_pos(control_index)
         c.ceiling = 1
         c.tooltip = self.mappings.offset_sliders.description.." #"..control_index
         c:set_value(0)
         c.on_change = function(obj) 
-          if (not self.active) then
-            return false
-          end
           local int_val = math.floor(obj.value*255)
           if self.seq:set_offset(control_index,int_val,nil,true) then
             self:schedule_output(control_index,MODE_OFFSET)
@@ -1400,16 +1388,13 @@ function NotesOnWheels:_build_app()
     local group = cm.groups[self.mappings.gate_sliders.group_name]
     if group then
       for control_index = 1, #group do
-        local c = UISlider(self.display)
+        local c = UISlider(self)
         c.group_name = group_name
         c:set_pos(control_index)
         c.ceiling = 1
         c.tooltip = self.mappings.gate_sliders.description.." #"..control_index
         c:set_value(1)
         c.on_change = function(obj) 
-          if (not self.active) then
-            return false
-          end
           local int_val = math.floor(obj.value*255)
           if self.seq:set_gate(control_index,int_val,nil,true) then
             self:schedule_output(control_index,MODE_GATE)
@@ -1430,16 +1415,13 @@ function NotesOnWheels:_build_app()
     local group = cm.groups[self.mappings.retrig_sliders.group_name]
     if group then
       for control_index = 1, #group do
-        local c = UISlider(self.display)
+        local c = UISlider(self)
         c.group_name = group_name
         c:set_pos(control_index)
         c.ceiling = 1
         c.tooltip = self.mappings.retrig_sliders.description.." #"..control_index
         c:set_value(0)
         c.on_change = function(obj) 
-          if (not self.active) then
-            return false
-          end
           --local int_val = math.floor(obj.value*NOW_Sequence.MAX_RETRIGS)
           local val_exp = math.floor(self.seq:scale_exp(obj.value,1,4)*NOW_Sequence.MAX_RETRIGS)
           if self.seq:set_retrig(control_index,val_exp,nil,true) then
@@ -1461,16 +1443,13 @@ function NotesOnWheels:_build_app()
     local group = cm.groups[group_name]
     if group then
       for control_index = 1, #group do
-        local c = UISlider(self.display)
+        local c = UISlider(self)
         c.group_name = group_name
         c:set_pos(control_index)
         c.ceiling = 1
         c.tooltip = self.mappings.multi_sliders.description.." #"..control_index
         c:set_value(0)
         c.on_change = function(obj) 
-          if (not self.active) then
-            return false
-          end
           -- route output to active parameter
           -- and update dedicated control (if it exists)
           local update = true
@@ -1521,15 +1500,12 @@ function NotesOnWheels:_build_app()
   if group_name then
     local group = cm.groups[group_name]
     if group then
-      local c = UISlider(self.display)
+      local c = UISlider(self)
       c.group_name = group_name
       c.ceiling = 1
       c:set_pos(self.mappings.pitch_adjust.index or 1)
       c.tooltip = self.mappings.pitch_adjust.description
       c.on_change = function(obj) 
-        if (not self.active) then
-          return false
-        end
         self.touched = true
         --self:change_mode(MODE_PITCH,true)
         if self.seq:adjust_pitch(obj.value) then
@@ -1547,15 +1523,12 @@ function NotesOnWheels:_build_app()
   if group_name then
     local group = cm.groups[group_name]
     if group then
-      local c = UISlider(self.display)
+      local c = UISlider(self)
       c.group_name = group_name
       c.ceiling = 1
       c:set_pos(self.mappings.velocity_adjust.index or 1)
       c.tooltip = self.mappings.velocity_adjust.description
       c.on_change = function(obj) 
-        if (not self.active) then
-          return false
-        end
         self.touched = true
         --self:change_mode(MODE_VELOCITY,true)
         if self.seq:adjust_velocity(obj.value) then
@@ -1573,15 +1546,12 @@ function NotesOnWheels:_build_app()
   if group_name then
     local group = cm.groups[group_name]
     if group then
-      local c = UISlider(self.display)
+      local c = UISlider(self)
       c.group_name = group_name
       c.ceiling = 1
       c:set_pos(self.mappings.offset_adjust.index or 1)
       c.tooltip = self.mappings.offset_adjust.description
       c.on_change = function(obj) 
-        if (not self.active) then
-          return false
-        end
         self.touched = true
         --self:change_mode(MODE_OFFSET,true)
         if self.seq:adjust_offset(obj.value) then
@@ -1599,15 +1569,12 @@ function NotesOnWheels:_build_app()
   if group_name then
     local group = cm.groups[group_name]
     if group then
-      local c = UISlider(self.display)
+      local c = UISlider(self)
       c.group_name = group_name
       c.ceiling = 1
       c.tooltip = self.mappings.gate_adjust.description
       c:set_pos(self.mappings.gate_adjust.index or 1)
       c.on_change = function(obj) 
-        if (not self.active) then
-          return false
-        end
         self.touched = true
         --self:change_mode(MODE_GATE,true)
         if self.seq:adjust_gate(obj.value) then
@@ -1625,15 +1592,12 @@ function NotesOnWheels:_build_app()
   if group_name then
     local group = cm.groups[group_name]
     if group then
-      local c = UISlider(self.display)
+      local c = UISlider(self)
       c.group_name = group_name
       c.ceiling = 1
       c:set_pos(self.mappings.retrig_adjust.index or 1)
       c.tooltip = self.mappings.retrig_adjust.description
       c.on_change = function(obj) 
-        if (not self.active) then
-          return false
-        end
         self.touched = true
         local val_exp = self.seq:scale_exp(obj.value,1,4)
         if self.seq:adjust_retrig(val_exp) then
@@ -1651,16 +1615,13 @@ function NotesOnWheels:_build_app()
   if group_name then
     local group = cm.groups[group_name]
     if group then
-      local c = UISlider(self.display)
+      local c = UISlider(self)
       c.group_name = group_name
       c.ceiling = 1
       c:set_pos(self.mappings.multi_adjust.index or 1)
       c.tooltip = self.mappings.multi_adjust.description
       c:set_value(0)
       c.on_change = function(obj) 
-        if (not self.active) then
-          return false
-        end
         self.touched = true
 
         local update = true
@@ -1679,7 +1640,7 @@ function NotesOnWheels:_build_app()
   if group_name then
     local group = cm.groups[group_name]
     if group then
-      local c = UISlider(self.display)
+      local c = UISlider(self)
       c.group_name = group_name
       c.ceiling = 12
       local gridbased = cm:is_grid_group(self.mappings.num_steps.group_name)
@@ -1693,9 +1654,6 @@ function NotesOnWheels:_build_app()
       c.tooltip = self.mappings.num_steps.description
       c:set_value(0)
       c.on_change = function(obj) 
-        if (not self.active) then
-          return false
-        end
         self.touched = true
         if (self.seq:set_num_steps(math.floor(obj.value))) then
           self:schedule_output(self.step,self.mode)
@@ -1711,16 +1669,13 @@ function NotesOnWheels:_build_app()
   if group_name then
     local group = cm.groups[group_name]
     if group then
-      local c = UISlider(self.display)
+      local c = UISlider(self)
       c.group_name = group_name
       c:set_pos(self.mappings.step_spacing.index or 1)
       c.tooltip = self.mappings.step_spacing.description
       c.ceiling = NOW_Sequence.MAX_LINE_SPACING
       c:set_value(NOW_Sequence.DEFAULT_STEP_SPACING)
       c.on_change = function(obj) 
-        if (not self.active) then
-          return false
-        end
         self.touched = true
         if (self.seq:set_spacing(math.floor(obj.value))) then
           self:schedule_output()
@@ -1737,16 +1692,13 @@ function NotesOnWheels:_build_app()
   if group_name then
     local group = cm.groups[group_name]
     if group then
-      local c = UISlider(self.display)
+      local c = UISlider(self)
       c.group_name = group_name
       c:set_pos(self.mappings.num_lines.index or 1)
       c.ceiling = 32
       c.tooltip = self.mappings.num_lines.description
       c:set_value(0)
       c.on_change = function(obj) 
-        if (not self.active) then
-          return false
-        end
         self.touched = true
         if (self.seq:set_num_lines(math.floor(obj.value))) then
           self:schedule_output()
@@ -1770,24 +1722,17 @@ function NotesOnWheels:_build_app()
     end
     local group = cm.groups[group_name]
     if group then
-      local c = UIButton(self.display)
+      local c = UIButton(self)
       c.group_name = self.mappings.write.group_name
       c.tooltip = self.mappings.write.description
       c:set_pos(self.mappings.write.index or 1)
       c:set(self.palette.write_off)
-      c.active = self.write_mode
       c.on_press = function(obj) 
-        if (not self.active) then
-          return false
-        end
         self.write_mode = not self.write_mode
         self.touched = false
         update_button()
       end
       c.on_release = function()
-        if (not self.active) then
-          return false
-        end
         --obj:set(self.write_mode,true)
         update_button()
       end
@@ -1801,24 +1746,18 @@ function NotesOnWheels:_build_app()
   if group_name then
     local group = cm.groups[group_name]
     if group then
-      local c = UIButton(self.display)
+      local c = UIButton(self)
       c.group_name = self.mappings.learn.group_name
       c.tooltip = self.mappings.learn.description
       c:set_pos(self.mappings.learn.index or 1)
       c:set(self.palette.learn_off)
       c.on_press = function(obj) 
-        if (not self.active) then
-          return false
-        end
         self:reset_adjustments()
         self.seq:learn_sequence()
         --obj:set_palette({background = {text=self.TEXT_LEARN_ON,color={0xFF,0xFF,0xFF}}})
         obj:set(self.palette.learn_on)
       end
       c.on_hold = function(obj)
-        if (not self.active) then
-          return false
-        end
         self:disable_write_mode()
         self.autolearn = true
         self.just_entered_autolearn = true
@@ -1852,14 +1791,11 @@ function NotesOnWheels:_build_app()
           self._controls.fill:set(self.palette.fill_off)
         end
       end
-      local c = UIButton(self.display)
+      local c = UIButton(self)
       c.group_name = self.mappings.fill.group_name
       c.tooltip = self.mappings.fill.description
       c:set_pos(self.mappings.fill.index or 1)
       c.on_press = function() 
-        if (not self.active) then
-          return false
-        end
         self.fill_mode = not self.fill_mode
         update_button()
       end
@@ -1881,14 +1817,11 @@ function NotesOnWheels:_build_app()
           self._controls.global:set(self.palette.global_off)
         end
       end
-      local c = UIButton(self.display)
+      local c = UIButton(self)
       c.group_name = self.mappings.global.group_name
       c.tooltip = self.mappings.global.description
       c:set_pos(self.mappings.global.index or 1)
       c.on_press = function(obj) 
-        if (not self.active) then
-          return false
-        end
         self.global_mode = not self.global_mode
         update_button()
       end
@@ -1903,15 +1836,12 @@ function NotesOnWheels:_build_app()
   if group_name then
     local group = cm.groups[group_name]
     if group then
-      local c = UIButton(self.display)
+      local c = UIButton(self)
       c.group_name = self.mappings.shift_up.group_name
       c.tooltip = self.mappings.shift_up.description
       c:set_pos(self.mappings.shift_up.index or 1)
       c:set(self.palette.shift_up_off)
       c.on_press = function(obj) 
-        if (not self.active) then
-          return false
-        end
         self.touched = true
         self:shift(1) 
         self:output_sequence(self.step)
@@ -1928,15 +1858,12 @@ function NotesOnWheels:_build_app()
   if group_name then
     local group = cm.groups[group_name]
     if group then
-      local c = UIButton(self.display)
+      local c = UIButton(self)
       c.group_name = self.mappings.shift_down.group_name
       c.tooltip = self.mappings.shift_down.description
       c:set_pos(self.mappings.shift_down.index or 1)
       c:set(self.palette.shift_down_off)
       c.on_press = function(obj) 
-        if (not self.active) then
-          return false
-        end
         self.touched = true
         self:shift(-1) 
         self:output_sequence(self.step)
@@ -1953,15 +1880,12 @@ function NotesOnWheels:_build_app()
   if group_name then
     local group = cm.groups[group_name]
     if group then
-      local c = UIButton(self.display)
+      local c = UIButton(self)
       c.group_name = self.mappings.extend.group_name
       c.tooltip = self.mappings.extend.description
       c:set_pos(self.mappings.extend.index or 1)
       c:set(self.palette.extend_off)
       c.on_press = function(obj) 
-        if (not self.active) then
-          return false
-        end
         self.touched = true
         if self.seq:extend() then
           self:output_sequence(self.step)
@@ -1977,15 +1901,12 @@ function NotesOnWheels:_build_app()
   if group_name then
     local group = cm.groups[group_name]
     if group then
-      local c = UIButton(self.display)
+      local c = UIButton(self)
       c.group_name = self.mappings.shrink.group_name
       c.tooltip = self.mappings.shrink.description
       c:set_pos(self.mappings.shrink.index or 1)
       c:set(self.palette.shrink_off)
       c.on_press = function(obj) 
-        if (not self.active) then
-          return false
-        end
         self.touched = true
         if self.seq:shrink() then
           self:output_sequence(self.step)
@@ -2001,23 +1922,16 @@ function NotesOnWheels:_build_app()
   if group_name then
     local group = cm.groups[group_name]
     if group then
-      local c = UIButton(self.display)
+      local c = UIButton(self)
       c.group_name = self.mappings.set_mode_pitch.group_name
       c.tooltip = self.mappings.set_mode_pitch.description
       c:set_pos(self.mappings.set_mode_pitch.index or 1)
       c:set(self.palette.set_pitch_on)
-      c.active = true
       c.on_press = function(obj) 
-        if (not self.active) then
-          return false
-        end
         self:change_mode(MODE_PITCH)
 
       end
       c.on_hold = function(obj)
-        if (not self.active) then
-          return false
-        end
         self.touched = true
         self.fill_mode = true
         self:output_sequence(nil,MODE_PITCH,nil,true)
@@ -2033,22 +1947,16 @@ function NotesOnWheels:_build_app()
   if group_name then
     local group = cm.groups[group_name]
     if group then
-      local c = UIButton(self.display)
+      local c = UIButton(self)
       c.group_name = self.mappings.set_mode_velocity.group_name
       c.tooltip = self.mappings.set_mode_velocity.description
       c:set_pos(self.mappings.set_mode_velocity.index or 1)
       c:set(self.palette.set_velocity_off)
       c.on_press = function(obj) 
-        if (not self.active) then
-          return false
-        end
         self:change_mode(MODE_VELOCITY)
 
       end
       c.on_hold = function(obj)
-        if (not self.active) then
-          return false
-        end
         self.touched = true
         self.fill_mode = true
         self:output_sequence(nil,MODE_VELOCITY,nil,true)
@@ -2064,22 +1972,16 @@ function NotesOnWheels:_build_app()
   if group_name then
     local group = cm.groups[group_name]
     if group then
-      local c = UIButton(self.display)
+      local c = UIButton(self)
       c.group_name = self.mappings.set_mode_offset.group_name
       c.tooltip = self.mappings.set_mode_offset.description
       c:set_pos(self.mappings.set_mode_offset.index or 1)
       c:set(self.palette.set_offset_off)
       c.on_press = function(obj) 
-        if (not self.active) then
-          return false
-        end
         self:change_mode(MODE_OFFSET)
 
       end
       c.on_hold = function(obj)
-        if (not self.active) then
-          return false
-        end
         self.touched = true
         self.fill_mode = true
         self:output_sequence(nil,MODE_OFFSET,nil,true)
@@ -2095,22 +1997,16 @@ function NotesOnWheels:_build_app()
   if group_name then
     local group = cm.groups[group_name]
     if group then
-      local c = UIButton(self.display)
+      local c = UIButton(self)
       c.group_name = self.mappings.set_mode_gate.group_name
       c.tooltip = self.mappings.set_mode_gate.description
       c:set_pos(self.mappings.set_mode_gate.index or 1)
       c:set(self.palette.set_gate_off)
       c.on_press = function(obj) 
-        if (not self.active) then
-          return false
-        end
         self:change_mode(MODE_GATE)
 
       end
       c.on_hold = function(obj)
-        if (not self.active) then
-          return false
-        end
         self.touched = true
         self.fill_mode = true
         self:output_sequence(nil,MODE_GATE,nil,true)
@@ -2126,22 +2022,16 @@ function NotesOnWheels:_build_app()
   if group_name then
     local group = cm.groups[group_name]
     if group then
-      local c = UIButton(self.display)
+      local c = UIButton(self)
       c.group_name = self.mappings.set_mode_retrig.group_name
       c.tooltip = self.mappings.set_mode_retrig.description
       c:set_pos(self.mappings.set_mode_retrig.index or 1)
       c:set(self.palette.set_retrig_off)
       c.on_press = function(obj) 
-        if (not self.active) then
-          return false
-        end
         self:change_mode(MODE_RETRIG)
 
       end
       c.on_hold = function(obj)
-        if (not self.active) then
-          return false
-        end
         self.touched = true
         self.fill_mode = true
         self:output_sequence(nil,MODE_RETRIG,nil,true)

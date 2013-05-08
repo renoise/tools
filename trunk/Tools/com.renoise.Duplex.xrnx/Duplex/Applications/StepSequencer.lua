@@ -340,7 +340,7 @@ function StepSequencer:_build_line()
 
   if self.mappings.line.group_name then
 
-    local c = UISpinner(self.display)
+    local c = UISpinner(self)
     c.group_name = self.mappings.line.group_name
     c.tooltip = self.mappings.line.description
     c:set_pos(self.mappings.line.index)
@@ -348,10 +348,6 @@ function StepSequencer:_build_line()
     c.text_orientation = VERTICAL
     c.step_size = 1
     c.on_change = function(obj) 
-
-      if (not self.active) then 
-        return false 
-      end
 
       if(self._edit_page~=obj.index)then
         self._edit_page = obj.index
@@ -379,17 +375,13 @@ function StepSequencer:_build_track()
   
   if self.mappings.track.group_name then
 
-    local c = UISpinner(self.display)
+    local c = UISpinner(self)
     c.group_name = self.mappings.track.group_name
     c.tooltip = self.mappings.track.description
     c:set_pos(self.mappings.track.index)
     c:set_orientation(self.mappings.track.orientation)
     c.text_orientation = HORIZONTAL
     c.on_change = function(obj) 
-
-      if (not self.active) then 
-        return false 
-      end
 
       local page_width = self:_get_page_width()
       local track_idx = (obj.index*page_width)
@@ -439,39 +431,22 @@ function StepSequencer:_build_grid()
         self._toggle_exempt[x] = {}
       end
 
-      local c = UIButton(self.display)
+      local c = UIButton(self)
       c.group_name = self.mappings.grid.group_name
       c.tooltip = self.mappings.grid.description
       c.x_pos = x
       c.y_pos = y
-      c.active = false
 
       -- grid toggling
       c.on_press = function(obj)
-
-        if (not self.active) then 
-          return false 
-        end
-
         self:_process_grid_event(x, y, true,obj)
-
       end
       c.on_release = function(obj)
-
-        if (not self.active) then 
-          return false 
-        end
-
         self:_process_grid_event(x, y, false,obj)
-
       end
       
       -- hold to "pick up" note, volume & instrument (ie copy step)
       c.on_hold = function(obj)
-
-        if (not self.active) then 
-          return false 
-        end
 
         -- check if we're holding multiple keys
         local held = self:_walk_held_keys(nil, false)
@@ -516,7 +491,7 @@ function StepSequencer:_build_level()
     local cm = self.display.device.control_map
 
     -- level buttons
-    local c = UIButtonStrip(self.display)
+    local c = UIButtonStrip(self)
     c.group_name = self.mappings.level.group_name
     c.tooltip = self.mappings.level.description
     c.toggleable = false
@@ -526,9 +501,6 @@ function StepSequencer:_build_level()
     c:set_orientation(self.mappings.level.orientation)
     c:set_size(self._line_count)
     c.on_index_change = function(obj) 
-      if not self.active then 
-        return false 
-      end
 
       local idx = obj:get_index()
       local idx_flipped = obj._size-obj:get_index()+1
@@ -575,11 +547,10 @@ function StepSequencer:_build_transpose()
     local transposes = { -12, -1, 1, 12 }
     for k,v in ipairs(transposes) do
       
-      local c = UIButton(self.display)
+      local c = UIButton(self)
       c.group_name = self.mappings.transpose.group_name
       c.tooltip = self.mappings.transpose.description
       c:set_pos(self.mappings.transpose.index+(k-1))
-      c.active = false
       c.transpose = v
       if (k==1) then
         c:set(self.palette.transpose_12_down)
@@ -591,10 +562,6 @@ function StepSequencer:_build_transpose()
         c:set(self.palette.transpose_12_up)
       end
       c.on_press = function(obj)
-        
-        if not self.active then 
-          return false
-        end
         
         -- check for held grid notes
         local held = self:_walk_held_keys(
@@ -1070,7 +1037,7 @@ function StepSequencer:_attach_line_notifiers(new_song,patt_idx)
 
   local patt = rns.patterns[patt_idx]
   if not patt then
-    print("Couldn't attach line notifiers: pattern #",patt_idx,"does not exist")
+    LOG("Couldn't attach line notifiers: pattern #",patt_idx,"does not exist")
     return
   end
 

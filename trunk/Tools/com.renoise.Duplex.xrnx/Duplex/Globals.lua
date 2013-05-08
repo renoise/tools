@@ -89,7 +89,8 @@ CONTROLMAP_TYPES = {
   "fader", 
   "xypad", 
   "key",
-  "keyboard"
+  "keyboard",
+  "label"
 }
 
 
@@ -584,8 +585,8 @@ end
 -- {"^ControlMap:", "^Display:"} -> show "Display:" and "ControlMap:"
 
 local _trace_filters = nil
---local _trace_filters = {"^Repeater"}
---local _trace_filters = {"^Automation","^Repeater"}
+local _trace_filters = {"^Recorder"}
+--local _trace_filters = {"^Navigator","^UIButtonStrip"}
 --local _trace_filters = {".*"}
 
 --------------------------------------------------------------------------------

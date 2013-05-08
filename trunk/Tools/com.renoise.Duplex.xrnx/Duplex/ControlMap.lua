@@ -708,6 +708,7 @@ function ControlMap:_parse_xml(str)
     arg["skip_echo"] = bool(arg["skip_echo"])
     arg["invert_x"] = bool(arg["invert_x"])
     arg["invert_y"] = bool(arg["invert_y"])
+    arg["swap_axes"] = bool(arg["swap_axes"])
     arg["velocity_enabled"] = bool(arg["velocity_enabled"])
 
     return arg
