@@ -1570,7 +1570,7 @@ function Recorder:_build_app()
     c.group_name = self.mappings.sliders.group_name
     c.tooltip = self.mappings.sliders.description
     c:set_pos(i,sliders_y_pos)
-    c.toggleable = true
+    c.toggleable = false
     c.flipped = true
     c:set_palette({track=self.palette.slider_dimmed,background=self.palette.slider_dimmed})
     c.ceiling = 1.0
@@ -1593,9 +1593,10 @@ function Recorder:_build_app()
 
       local is_current_track = (self._active_track_idx == track_idx)
 
-      if(is_current_track) 
-        and (track.has_ghost)
-        and (obj.index==0) 
+      if self._grid_mode and
+        is_current_track and
+        track.has_ghost and
+        (obj.index==obj._size) 
       then
         -- only for grid buttons: control recording stage
         local return_code = self:_process_input(track,obj)
