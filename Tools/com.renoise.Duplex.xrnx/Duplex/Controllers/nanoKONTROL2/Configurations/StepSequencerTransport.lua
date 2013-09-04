@@ -33,10 +33,13 @@ duplex_configurations:insert {
           group_name = "Buttons2",
           orientation = HORIZONTAL,
         },
-        line = {
+        prev_line = {
           group_name = "Encoders",
-          orientation = HORIZONTAL,
           index = 7
+        },
+        next_line = {
+          group_name = "Encoders",
+          index = 8
         },
         transpose = {
           group_name = "Encoders",
@@ -52,54 +55,6 @@ duplex_configurations:insert {
         follow_track = 1,
       }
     },
-    --[[
-    Navigator = {
-      mappings = {
-        blockpos = {
-          group_name = "Buttons3",
-          orientation = HORIZONTAL,
-        },
-      },
-    },
-    TrackSelector = {
-      mappings = {
-        prev_next_track = {
-          group_name = "TRACK",
-          index = 1,
-        },
-      },
-    },
-    Transport = {
-      mappings = {
-        loop_pattern = {
-          group_name = "CYCLE",
-          index = 1,
-        },
-        goto_previous = {
-          group_name = "Transport",
-          index = 1,
-        },
-        goto_next = {
-          group_name = "Transport",
-          index = 2,
-        },
-        stop_playback = {
-          group_name = "Transport",
-          index = 3,
-        },
-        start_playback = {
-          group_name = "Transport",
-          index = 4,
-        },
-        edit_mode = {
-          group_name = "Transport",
-          index = 5,
-        },
-      },
-      options = {
-      }
-    },
-    ]]
     SwitchConfiguration = {
       mappings = {
         goto_previous = {

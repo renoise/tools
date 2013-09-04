@@ -305,8 +305,7 @@ function UISlider:output_quantize(val)
   end
 
   if self.app.display.device.output_quantize then
-
-    local cached_val = quantize_value(self._cached_value)
+    local cached_val = quantize_value(self.value)
     local val = quantize_value(val)
     if (cached_val == val) then
       return false

@@ -26,9 +26,13 @@ duplex_configurations:insert {
   applications = {
     TrackSelector = {
       mappings = {
-        prev_next_page = {
+        prev_page = {
           group_name = "Controls",
           index = 1,
+        },
+        next_page = {
+          group_name = "Controls",
+          index = 2,
         },
       },
       options = {

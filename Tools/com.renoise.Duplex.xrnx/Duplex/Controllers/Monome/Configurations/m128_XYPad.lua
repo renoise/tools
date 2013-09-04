@@ -145,12 +145,22 @@ duplex_configurations:insert {
           group_name = "Grid1x5",
           index = 1
         },
-        prev_next_track = {
-          group_name = "Grid1x5",
+        prev_track = {
+          group_name = "Cursor",
           index = 2,
-          orientation = VERTICAL
-        }
+        },
+        next_track = {
+          group_name = "Cursor",
+          index = 3,
+        },
+
       },
+      palette = {
+        track_prev_on       = { text = "?"},
+        track_prev_off      = { text = "?"},
+        track_next_on       = { text = "?"},
+        track_next_off      = { text = "?"},
+      }
     }
 
   }

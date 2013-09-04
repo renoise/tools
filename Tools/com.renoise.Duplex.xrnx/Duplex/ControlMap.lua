@@ -630,6 +630,10 @@ function ControlMap:determine_type(str)
   elseif string.sub(str,1,2)=="PB" then
     return MIDI_PITCH_BEND_MESSAGE
 
+  -- program change
+  elseif string.sub(str,1,3)=="Prg" then
+    return MIDI_PROGRAM_CHANGE_MESSAGE
+
   -- channel pressure
   elseif string.sub(str,1,2)=="CP" then
     return MIDI_CHANNEL_PRESSURE

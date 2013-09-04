@@ -141,11 +141,6 @@ duplex_configurations:insert {
           group_name = "Master",
           index = 1
         },
-        --prev_next_track = {
-        --  group_name = "Grid1x5",
-        --  index = 2,
-        --  orientation = VERTICAL
-        --}
       },
     },
     Matrix = {

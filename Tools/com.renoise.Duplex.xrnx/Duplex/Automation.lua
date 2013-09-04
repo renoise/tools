@@ -139,17 +139,17 @@ function Automation:add_automation(track_idx,parameter,value,playmode)
   TRACE("Automation:add_automation",track_idx,parameter,value,playmode)
 
   if not parameter.is_automatable then
-    print("Could not write automation, parameter is not automatable")
+    LOG("Could not write automation, parameter is not automatable")
     return
   end
   -- obtain ptrack by selected track_idx
   if not renoise.song().tracks[track_idx] then
-    print("Could not write automation, invalid track index #",track_idx)
+    LOG("Could not write automation, invalid track index #",track_idx)
   end
   local seq_idx = renoise.song().selected_sequence_index
   local patt_idx = renoise.song().sequencer.pattern_sequence[seq_idx]
   if not patt_idx then
-    print("Could not write automation, invalid sequence index #",seq_idx)
+    LOG("Could not write automation, invalid sequence index #",seq_idx)
   end
   local ptrack = renoise.song().patterns[patt_idx]:track(track_idx)
   --local ptrack = renoise.song().selected_pattern_track
@@ -161,11 +161,10 @@ function Automation:add_automation(track_idx,parameter,value,playmode)
   local ptrack_auto = ptrack:find_automation(parameter)
   if not ptrack_auto then
     ptrack_auto = ptrack:create_automation(parameter)
-    --print("*** created automation",ptrack_auto)
     -- when the automation class is first instantiated, the 
     -- ptrack instance may not appear and we abort
     if not ptrack_auto then
-      print("Automation:add_automation() - could not create automation")
+      TRACE("Automation:add_automation() - could not create automation")
       return
     end
     if self.latch_record then
@@ -325,7 +324,7 @@ function Automation:add_point(ptrack_auto,line,value,automation_lane,playmode)
   local seq_loop_start = renoise.song().transport.loop_sequence_start
 
   if playmode and (ptrack_auto.playmode ~= playmode) then
-    print("switched playmode from/to",ptrack_auto.playmode,playmode)
+    -- print("switched playmode from/to",ptrack_auto.playmode,playmode)
     ptrack_auto.playmode = playmode
   end
 

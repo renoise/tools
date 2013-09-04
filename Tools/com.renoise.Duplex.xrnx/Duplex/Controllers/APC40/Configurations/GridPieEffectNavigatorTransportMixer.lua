@@ -78,9 +78,14 @@ duplex_configurations:insert {
     },
     TrackSelector = {
       mappings = {
-        prev_next_track = {
+
+        prev_track = {
           group_name = "Activator",
           index = 3,
+        },
+        next_track = {
+          group_name = "Activator",
+          index = 4,
         },
         select_track = {
           group_name = "Track Selector",

@@ -92,13 +92,21 @@ duplex_configurations:insert {
     },
     TrackSelector = {
       mappings = {
-        prev_next_page = {
+        prev_page = {
           group_name = "Fader_Bank",
           index = 1,
         },
-        prev_next_track = {
+        next_page = {
+          group_name = "Fader_Bank",
+          index = 2,
+        },
+        prev_track = {
           group_name = "Cursor",
           index = 1,
+        },
+        next_track = {
+          group_name = "Cursor",
+          index = 2,
         },
         select_track = {
           group_name = "Select",

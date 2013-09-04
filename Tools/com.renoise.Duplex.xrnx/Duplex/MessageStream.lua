@@ -342,7 +342,8 @@ end
 function MessageStream:_handle_or_pass(msg,listeners,evt_type)
   TRACE("MessageStream:_handle_or_pass()")
 
-  local pass_on = self.process.settings.pass_unhandled.value
+  local pass_setting = self.process.settings.pass_unhandled.value
+  local pass_msg = false
 
   if self.process:running() then
 
@@ -373,27 +374,37 @@ function MessageStream:_handle_or_pass(msg,listeners,evt_type)
     else
       -- broadcast to all relevant UIComponents, let them decide
       -- whether to act on the message or not ...
+      local ui_component_matched = false
       for _,listener in ipairs(listeners) do 
         ui_component_ref = listener.handler(msg)
         if ui_component_ref then
           self.message_cache[evt_type][msg.param.value] = ui_component_ref
           --print("self.message_cache...")
           --rprint(self.message_cache)
+          ui_component_matched = true
         end
       end
 
-      -- TODO if no UI component was matched, pass on
-
+      -- if no UI component was matched, pass on
+      if pass_setting and not ui_component_matched then
+        pass_msg = true
+      end
     end
 
   else
-    if pass_on and msg.midi_msg and
-      (msg.device.protocol == DEVICE_MIDI_PROTOCOL) 
-    then
-      local osc_client = self.process.browser._osc_client
-      osc_client:trigger_midi(msg.midi_msg)
+    -- pass on messages when process is not running
+    if pass_setting then
+      pass_msg = true
     end
 
+  end
+
+  -- ensure that we have MIDI data before passing message
+  if pass_msg and msg.midi_msg and
+    (msg.device.protocol == DEVICE_MIDI_PROTOCOL) 
+  then
+    local osc_client = self.process.browser._osc_client
+    osc_client:trigger_midi(msg.midi_msg)
   end
 
 end

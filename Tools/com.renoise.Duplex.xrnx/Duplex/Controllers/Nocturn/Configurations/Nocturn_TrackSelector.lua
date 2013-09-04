@@ -24,24 +24,8 @@ duplex_configurations:insert {
   applications = {
     TrackSelector = {
       mappings = {
-      --[[
-        prev_next_track = {
-          -- mapped to a UISpinner
-          group_name= "Pots",
-          orientation = HORIZONTAL,
-          index = 1,
-        },
-        ]]
-        prev_next_page = {
-          -- mapped to a UISpinner
-          group_name= "XFader",
-          orientation = HORIZONTAL,
-          index = 1,
-        },
         select_track = {
-          -- mapped to a UISlider
           group_name= "Pots",
-          --orientation = HORIZONTAL,
           index = 1,
         },
       },
