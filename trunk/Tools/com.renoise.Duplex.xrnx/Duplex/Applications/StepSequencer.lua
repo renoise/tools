@@ -26,29 +26,12 @@ How to use:
 - Press level/transpose buttons when no notes are held, to adjust the base-note 
   and default volume
 
-
-Mappings
-
-  grid          - the note grid 
-  transpose     - 4 buttons, oct-/semi-/semi+/oct+
-  level         - adjust note volume/display current line
-  line          - flip through lines
-  track         - flip through tracks
-
-
-Options
-
-  orientation   - display horizontally or vertically
-  line_increment- the amount of lines to jump by when scrolling
-  follow_track  - align with the selected track in Renoise
-  page_size     - specify step size when using paged navigation
-
-
 Changes (equal to Duplex version number)
 
   0.98  - Palette now uses the standard format (easier to customize)
         - Sequencer tracks can be linked with instruments, simply by assigning 
           the same name to both. 
+          UISpinner (deprecated) control replaced with UISlider+UIButton(s)
 
   0.95  - The sequencer is now fully synchronized with the currently selected 
           pattern in  Renoise. You can copy, delete or move notes around, 
@@ -146,8 +129,16 @@ StepSequencer.available_mappings = {
     orientation = VERTICAL,
   },
   line = { 
+    component = UISlider,
     description = "Sequencer: Flip up/down through lines",
-    orientation = HORIZONTAL,
+  },
+  prev_line = { 
+    component = UIButton,
+    description = "Sequencer: Go to previous line",
+  },
+  next_line = { 
+    component = UIButton,
+    description = "Sequencer: Go to next line",
   },
   track = {
     description = "Sequencer: Flip through tracks",
@@ -202,6 +193,7 @@ function StepSequencer:__init(...)
 
   -- the currently editing "page"
   self._edit_page = 0          
+  self._edit_page_count = nil
 
   -- the track offset (0-#tracks)
   self._track_offset = 0       
@@ -338,8 +330,10 @@ end
 
 function StepSequencer:_build_line()
 
-  if self.mappings.line.group_name then
+  local map = self.mappings.line
+  if map.group_name then
 
+    --[[
     local c = UISpinner(self)
     c.group_name = self.mappings.line.group_name
     c.tooltip = self.mappings.line.description
@@ -361,7 +355,57 @@ function StepSequencer:_build_line()
     end
     self:_add_component(c)
     self._line_navigator = c
+    ]]
+
+    local c = UISlider(self)
+    c.group_name = map.group_name
+    c.tooltip = map.description
+    c:set_pos(map.index)
+    c:set_orientation(map.orientation)
+    c.on_change = function(obj) 
+      if(self._edit_page~=obj.index)then
+        self._edit_page = obj.index
+        self._follow_player = false
+        self:_update_grid()
+      end
+    end
+    self:_add_component(c)
+    self._line_navigator = c
   
+  end
+
+  local map = self.mappings.prev_line
+  if map.group_name then
+    local c = UIButton(self)
+    c.group_name = map.group_name
+    c.tooltip = map.description
+    c:set_pos(map.index)
+    c.on_press = function() 
+      if (self._edit_page > 0) then
+        self._edit_page = self._edit_page-1
+        self._follow_player = false
+        self:_update_grid()
+      end
+    end
+    self:_add_component(c)
+    self._prev_line = c
+  end
+
+  local map = self.mappings.next_line
+  if map.group_name then
+    local c = UIButton(self)
+    c.group_name = map.group_name
+    c.tooltip = map.description
+    c:set_pos(map.index)
+    c.on_press = function() 
+      if (self._edit_page < (self._edit_page_count-1)) then
+        self._edit_page = self._edit_page+1
+        self._follow_player = false
+        self:_update_grid()
+      end
+    end
+    self:_add_component(c)
+    self._prev_line = c
   end
 
 end
@@ -380,7 +424,7 @@ function StepSequencer:_build_track()
     c.tooltip = self.mappings.track.description
     c:set_pos(self.mappings.track.index)
     c:set_orientation(self.mappings.track.orientation)
-    c.text_orientation = HORIZONTAL
+    --c.text_orientation = HORIZONTAL
     c.on_change = function(obj) 
 
       local page_width = self:_get_page_width()
@@ -744,17 +788,18 @@ function StepSequencer:_update_line_count()
     return 
   end
 
-  local pattern = nil
-  if (self._follow_player) then
-    pattern = get_playing_pattern()
-  else
-    pattern = renoise.song().selected_pattern
-  end
-  local inc = self.options.line_increment.value
-  local rng = math.ceil(math.floor(pattern.number_of_lines)/inc)-1
-
   if self._line_navigator then
-    self._line_navigator:set_range(0,rng)
+    local pattern = nil
+    if (self._follow_player) then
+      pattern = get_playing_pattern()
+    else
+      pattern = renoise.song().selected_pattern
+    end
+    local inc = self.options.line_increment.value
+    self._edit_page_count = math.ceil(math.floor(pattern.number_of_lines)/inc)-1
+    --self._line_navigator:set_range(0,rng)
+    self._line_navigator.steps = self._edit_page_count
+    print("self._edit_page_count:",self._edit_page_count)
   end
 
 end

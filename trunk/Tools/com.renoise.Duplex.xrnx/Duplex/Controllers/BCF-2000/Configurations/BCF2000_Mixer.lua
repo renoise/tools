@@ -51,13 +51,21 @@ duplex_configurations:insert {
         select_track = {
           group_name = "DialPush2",
         },
-        prev_next_page = {
+        prev_page = {
           group_name = "ControlButtonRow1",
           index = 1,
         },
-        prev_next_track = {
+        next_page = {
+          group_name = "ControlButtonRow1",
+          index = 2,
+        },
+        prev_track = {
           group_name = "ControlButtonRow2",
           index = 1,
+        },
+        next_track = {
+          group_name = "ControlButtonRow2",
+          index = 2,
         },
       },
     },

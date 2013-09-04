@@ -55,11 +55,14 @@ duplex_configurations:insert {
     },
     TrackSelector = {
       mappings = {
-        prev_next_page = {
+        prev_page = {
           group_name = "Controls2",
-          orientation = HORIZONTAL,
           index = 1,
-        }
+        },
+        next_page = {
+          group_name = "Controls2",
+          index = 2,
+        },
       },
       options = {
         --page_size

@@ -9,22 +9,9 @@ About
 
   The TrackSelector's purpose is to control the active Renoise track
 
-Mappings
-
-  prev_next_track  - (UISpinner) assign to two contiguous buttons
-  prev_next_page   - (UISpinner) assign to two contiguous buttons
-  select_track     - (UISlider) assign to dial/fader or multiple buttons
-  select_first     - (UIButton) assign to single button
-  select_master    - (UIButton) assign to single button
-  select_sends     - (UIButton) assign to single button
-
-Options
-
-  page_size     - specify step size when using paged navigation
-
-
 Changes (equal to Duplex version number)
 
+  0.98  - Deprecated UISpinner controls exchanged with UIButtons
   0.96  - First release
 
 
@@ -62,26 +49,50 @@ TrackSelector.default_options = {
 }
 
 TrackSelector.available_mappings = {
+  --[[
   prev_next_track = {    
     description = "TrackSelector: Select next/previous track",
     orientation = HORIZONTAL,    
   },
+  ]]
+  prev_track = {    
+    description = "TrackSelector: Select previous track",
+    component = UIButton,
+  },
+  next_track = {    
+    description = "TrackSelector: Select next track",
+    component = UIButton,
+  },
+  --[[
   prev_next_page = {
     description = "TrackSelector: Select track-page",
     orientation = HORIZONTAL,    
   },
+  ]]
+  prev_page = {
+    description = "TrackSelector: Select previous track-page",
+    component = UIButton,
+  },
+  next_page = {
+    description = "TrackSelector: Select next track-page",
+    component = UIButton,
+  },
   select_track = {
     description = "TrackSelector: Select active track",
+    component = UISlider,
     orientation = HORIZONTAL,    
   },
   select_master = {
     description = "TrackSelector: Select master-track",
+    component = UIButton,
   },
   select_sends = {
     description = "TrackSelector: Select 1st send-track",
+    component = UIButton,
   },
   select_first = {
     description = "TrackSelector: Select first track",
+    component = UIButton,
   },
 }
 
@@ -94,6 +105,15 @@ TrackSelector.default_palette = {
   track_send_off      = { color = {0x00,0x00,0x00}, text = "S", val=false },
   select_device_tip   = { color = {0xFF,0xFF,0xFF}, text = "▪", val=true  },
   select_device_back  = { color = {0x40,0x40,0x80}, text = "▫", val=false },
+  track_prev_on       = { color = {0xFF,0xFF,0xFF}, text = "◄", val=true  },
+  track_prev_off      = { color = {0x00,0x00,0x00}, text = "◄", val=false },
+  track_next_on       = { color = {0xFF,0xFF,0xFF}, text = "►", val=true  },
+  track_next_off      = { color = {0x00,0x00,0x00}, text = "►", val=false },
+  page_prev_on        = { color = {0xFF,0xFF,0xFF}, text = "◄", val=true  },
+  page_prev_off       = { color = {0x00,0x00,0x00}, text = "◄", val=false },
+  page_next_on        = { color = {0xFF,0xFF,0xFF}, text = "►", val=true  },
+  page_next_off       = { color = {0x00,0x00,0x00}, text = "►", val=false },
+
 }
 
 --------------------------------------------------------------------------------
@@ -123,8 +143,12 @@ function TrackSelector:__init(...)
   self._tracks_observable_fired = false
 
   -- UIComponent instances
-  self._prev_next_track = nil
-  self._prev_next_page = nil
+  --self._prev_next_track = nil
+  self._prev_track = nil
+  self._next_track = nil
+  --self._prev_next_page = nil
+  self._prev_page = nil
+  self._next_page = nil
   self._select_track = nil
   self._select_master = nil
   self._select_sends = nil
@@ -234,11 +258,27 @@ function TrackSelector:update()
   local page_width = self:_get_page_width()
 
   -- set the active track index + range
+  --[[
   if (self._prev_next_track) then
     local track_min = 1
     local track_max = #renoise.song().tracks
     self._prev_next_track:set_range(track_min,track_max)
     self._prev_next_track:set_index(self._selected_track_index,skip_event)
+  end
+  ]]
+  if (self._prev_track) then
+    if (self._selected_track_index <= 1) then
+      self._prev_track:set(self.palette.track_prev_off)
+    else
+      self._prev_track:set(self.palette.track_prev_on)
+    end
+  end
+  if (self._next_track) then
+    if (self._selected_track_index >= #renoise.song().tracks) then
+      self._next_track:set(self.palette.track_next_off)
+    else
+      self._next_track:set(self.palette.track_next_on)
+    end
   end
 
   -- set the active track page + range
@@ -247,9 +287,25 @@ function TrackSelector:update()
   local page = self:_get_track_page(track_index)
   self._track_page = page
   local pages = math.ceil(track_max/page_width)
+  --[[
   if (self._prev_next_page) then
     self._prev_next_page:set_range(1,pages)
     self._prev_next_page:set_index(page,skip_event)
+  end
+  ]]
+  if (self._prev_page) then
+    if (page > 1) then
+      self._prev_page:set(self.palette.page_prev_on)
+    else
+      self._prev_page:set(self.palette.page_prev_off)
+    end
+  end
+  if (self._next_page) then
+    if (page < pages) then
+      self._next_page:set(self.palette.page_next_on)
+    else
+      self._next_page:set(self.palette.page_next_off)
+    end
   end
 
   -- set the active slider index
@@ -303,6 +359,7 @@ function TrackSelector:_build_app(song)
   local slider_grid_mode = false
 
   -- add next/previous track control
+  --[[
   local map = self.mappings.prev_next_track
   if map.group_name then
     TRACE("TrackSelector:add next/previous track control (spinner)")
@@ -332,8 +389,46 @@ function TrackSelector:_build_app(song)
     self:_add_component(c)
     self._prev_next_track = c
   end
+  ]]
+  local map = self.mappings.prev_track
+  if map.group_name then
+    local c = UIButton(self)
+    c.group_name = map.group_name
+    c.tooltip = map.description
+    c:set_pos(map.index or 1)
+    c.on_press = function() 
+      local track_idx = renoise.song().selected_track_index
+      track_idx = math.max(track_idx-1,1)
+      renoise.song().selected_track_index = track_idx
+    end
+    c.on_hold = function() 
+      renoise.song().selected_track_index = 1
+    end
+    self:_add_component(c)
+    self._prev_track = c
+  end
+
+  local map = self.mappings.next_track
+  if map.group_name then
+    local c = UIButton(self)
+    c.group_name = map.group_name
+    c.tooltip = map.description
+    c:set_pos(map.index or 1)
+    c.on_press = function() 
+      local track_idx = renoise.song().selected_track_index
+      track_idx = math.min(track_idx+1,#renoise.song().tracks)
+      renoise.song().selected_track_index = track_idx
+    end
+    c.on_hold = function() 
+      renoise.song().selected_track_index = #renoise.song().tracks
+    end
+    self:_add_component(c)
+    self._next_track = c
+  end
+
 
   -- add previous/next page control
+  --[[
   local map = self.mappings.prev_next_page
   if map.group_name then
     TRACE("TrackSelector:add previous/next page control (spinner)")
@@ -365,6 +460,67 @@ function TrackSelector:_build_app(song)
     end
     self:_add_component(c)
     self._prev_next_page = c
+  end
+  ]]
+
+  -- obtain track index, and set the "out of bounds"
+  -- value if needed. Used by previous/next track page
+  -- @param offset: -1 to decrease page, +1 to increase
+  local get_track_index = function(offset)
+
+    local track_idx = renoise.song().selected_track_index
+    local track_page = self:_get_track_page(track_idx)
+
+    -- figure out the resulting track index
+    if self._out_of_bounds_track_index then
+      track_idx = self._out_of_bounds_track_index
+    end
+    local page_width = self:_get_page_width()
+    local track_idx = (offset*page_width)+track_idx
+
+    -- outside bounds?
+    if (track_idx>#renoise.song().tracks) then
+      if not self._out_of_bounds_track_index then
+        self._out_of_bounds_track_index = track_idx
+      end
+      track_idx=#renoise.song().tracks
+    else
+      if (track_idx<1) then
+        track_idx = renoise.song().selected_track_index
+      end
+      self._out_of_bounds_track_index = nil
+    end
+
+    return track_idx
+
+  end
+
+  local map = self.mappings.prev_page
+  if map.group_name then
+    local c = UIButton(self)
+    c.group_name = map.group_name
+    c.tooltip = map.description
+    c:set_pos(map.index or 1)
+    c.on_press = function()
+      local track_idx = get_track_index(-1)
+      renoise.song().selected_track_index = track_idx
+    end
+    self:_add_component(c)
+    self._prev_page = c
+  end
+
+  local map = self.mappings.next_page
+  if map.group_name then
+    local c = UIButton(self)
+    c.group_name = map.group_name
+    c.tooltip = map.description
+    c:set_pos(map.index or 1)
+    c.on_press = function()
+      local track_idx = get_track_index(1)
+      renoise.song().selected_track_index = track_idx
+    end
+    self:_add_component(c)
+    self._next_page = c
   end
 
   -- add track-activator control

@@ -22,7 +22,8 @@ MIDI_NOTE_MESSAGE = 3
 MIDI_PITCH_BEND_MESSAGE = 4
 MIDI_CHANNEL_PRESSURE = 5
 MIDI_KEY_MESSAGE = 6 -- non-specific key (keyboard)
-OSC_MESSAGE = 7
+MIDI_PROGRAM_CHANGE_MESSAGE = 7
+OSC_MESSAGE = 8
 
 -- Event types
 
@@ -585,7 +586,7 @@ end
 -- {"^ControlMap:", "^Display:"} -> show "Display:" and "ControlMap:"
 
 local _trace_filters = nil
-local _trace_filters = {"^Recorder"}
+--local _trace_filters = {"^OscClient"}
 --local _trace_filters = {"^Navigator","^UIButtonStrip"}
 --local _trace_filters = {".*"}
 

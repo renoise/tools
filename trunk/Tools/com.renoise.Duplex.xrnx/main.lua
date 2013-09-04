@@ -200,13 +200,63 @@ renoise.tool():add_menu_entry {
 --------------------------------------------------------------------------------
 
 renoise.tool():add_keybinding {
-  name = "Global:Tools:Duplex Browser...",
+  name = "Global:Duplex:Show Browser...",
   invoke = function(repeated) 
     if (not repeated) then 
       show_dialog() 
     end
   end
 }
+
+renoise.tool():add_keybinding {
+  name = "Global:Duplex:Hide Browser...",
+  invoke = function(repeated) 
+    if (not repeated) then 
+      if (browser) then
+        browser:show() 
+      end
+    end
+  end
+}
+
+renoise.tool():add_keybinding({
+  name = "Global:Duplex:Next configuration",
+  invoke = function(repeated)
+    if (not repeated) then 
+      if (browser) then
+        renoise.app():show_status("Next Duplex Configuration")
+        browser:set_next_configuration()
+      end
+    end
+  end
+})
+
+renoise.tool():add_keybinding({
+  name = "Global:Duplex:Previous configuration",
+  invoke = function(repeated)
+    if (not repeated) then 
+      if (browser) then
+        renoise.app():show_status("Previous Duplex Configuration")
+        browser:set_previous_configuration()
+      end
+    end
+  end
+})
+
+for config_idx = 1,8 do
+  renoise.tool():add_keybinding({
+    name = string.format("Global:Duplex:Set Configuration #%02d",config_idx ),
+    invoke = function(repeated)
+      if (browser) then
+        local config_list = 
+          browser:_available_configurations_for_device(browser._device_name)
+        if (config_list[config_idx]) then
+          browser:set_configuration(config_list[config_idx], true)
+        end
+      end
+    end
+  })
+end
 
 --------------------------------------------------------------------------------
 -- MIDI mappings
@@ -265,6 +315,24 @@ renoise.tool():add_midi_mapping({
     end
   end
 })
+
+for config_idx = 1,8 do
+  renoise.tool():add_midi_mapping({
+    
+    name = string.format("Global:Tools:Duplex:Select configuration #%02d [Trigger]",config_idx ),
+    invoke = function(msg)
+      if(browser)then
+        if msg:is_trigger() then 
+          local config_list = 
+            browser:_available_configurations_for_device(browser._device_name)
+          if (config_list[config_idx]) then
+            browser:set_configuration(config_list[config_idx], true)
+          end
+        end
+      end
+    end
+  })
+end
 
 
 --------------------------------------------------------------------------------

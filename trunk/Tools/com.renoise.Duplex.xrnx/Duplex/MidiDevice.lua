@@ -152,6 +152,11 @@ function MidiDevice:midi_callback(message)
     msg_value = message[3]
     msg_channel = message[1]-175
     value_str = self._midi_cc_to_string(self,message[2])
+  elseif (message[1]>=192) and (message[1]<=207) then
+    msg_context = MIDI_PROGRAM_CHANGE_MESSAGE
+    msg_value = message[2]
+    msg_channel = message[1]-191
+    value_str = self._program_change_to_string(self,message[2])
   elseif (message[1]>=208) and (message[1]<=223) then
     msg_context = MIDI_CHANNEL_PRESSURE
     msg_value = message[2]
@@ -503,6 +508,16 @@ end
 
 function MidiDevice:_midi_cc_to_string(int)
   return string.format("CC#%d",int)
+end
+
+
+--------------------------------------------------------------------------------
+
+--- Convert Program Change value to string, e.g. "Prg#%d"
+-- @param int (Number/7BitInt) the Program Change number
+
+function MidiDevice:_program_change_to_string(int)
+  return string.format("Prg#%d",int)
 end
 
 

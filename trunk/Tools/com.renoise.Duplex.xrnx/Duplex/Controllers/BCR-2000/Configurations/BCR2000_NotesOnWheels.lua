@@ -189,9 +189,13 @@ duplex_configurations:insert {
     },
     TrackSelector = {
       mappings = {
-        prev_next_track = {
+        prev_track = {
           group_name = "ControlButtonRow2",
           index = 1,
+        },
+        next_track = {
+          group_name = "ControlButtonRow2",
+          index = 2,
         },
       },
     },

@@ -35,11 +35,11 @@ duplex_configurations:insert {
         --},
         param_prev = {
           group_name = "EncoderButtons",
-          index = 7,
+          index = 3,
         },
         param_next = {
           group_name = "EncoderButtons",
-          index = 8,
+          index = 4,
         },
         --[[
         mute = {
@@ -56,18 +56,23 @@ duplex_configurations:insert {
       mappings = {
         select_track = {
           group_name = "SliderButtons",
-        }
-        --[[
-        prev_next_track = {
-          group_name = "SliderButtons",
-          index = 1,
         },
-        prev_next_page = {
-          group_name = "SliderButtons",
-          index = 3,
+        prev_track = {
+          group_name = "EncoderButtons",
+          index = 7,
         },
-        ]]
-
+        next_track = {
+          group_name = "EncoderButtons",
+          index = 8,
+        },
+        prev_page = {
+          group_name = "EncoderButtons",
+          index = 5,
+        },
+        next_page = {
+          group_name = "EncoderButtons",
+          index = 6,
+        },
       }
     },
     Effect = {
@@ -75,10 +80,12 @@ duplex_configurations:insert {
         parameters = {
           group_name= "Encoders",
         },
+        --[[
         page = {
           group_name = "EncoderButtons",
           index = 1
         },
+        ]]
         device = {
           group_name = "PotButtons",
         }

@@ -73,10 +73,15 @@ duplex_configurations:insert {
     },
     TrackSelector = {
       mappings = {
-        prev_next_track = {
+        prev_track = {
           group_name = "TRACK",
           index = 1,
         },
+        next_track = {
+          group_name = "TRACK",
+          index = 2,
+        },
+
       },
     },
     Recorder = {

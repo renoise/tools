@@ -122,10 +122,15 @@ duplex_configurations:insert {
 
     TrackSelector = {
       mappings = {
-        prev_next_track = {
+        prev_track = {
           group_name = "Controls",
           index = 3,
-        }
+        },
+        next_track = {
+          group_name = "Controls",
+          index = 4,
+        },
+
       }
     },
     Transport = {

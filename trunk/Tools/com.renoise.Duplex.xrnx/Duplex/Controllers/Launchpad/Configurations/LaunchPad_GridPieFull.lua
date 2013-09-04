@@ -27,6 +27,7 @@ duplex_configurations:insert {
 	      grid = {
           group_name = "Grid",
         },
+        --[[
 	      v_prev = {
           group_name = "Controls",
           index = 1,
@@ -43,6 +44,8 @@ duplex_configurations:insert {
           group_name = "Controls",
           index = 4,
         },
+        ]]
+
     	},
       options = {
         follow_pos = 2

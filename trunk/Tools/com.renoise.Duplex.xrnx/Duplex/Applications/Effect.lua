@@ -116,10 +116,12 @@ Effect.available_mappings = {
     flipped = true,
     toggleable = true,
   },
+  --[[
   page = {
     description = "Parameter page",
     orientation = HORIZONTAL,
   },
+  ]]
   param_next = {
     description = "Parameter page",
     distributable = true,
