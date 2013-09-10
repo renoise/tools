@@ -272,8 +272,6 @@ function Navigator:_build_app()
           first_pos.line = self:_get_line_from_index(idx-1)
           self._first_pos = first_pos
           self._first_idx = idx
-          --print("self._first_pos",self._first_pos)
-          --print("self._first_idx",self._first_idx)
           self._held_event_fired = false
         else
           --print("the second pressed button",self._first_idx)
@@ -287,7 +285,6 @@ function Navigator:_build_app()
 
     end
     c.on_release = function(obj,idx)
-      --print("blockpos on_release",obj,idx)
       
       if (self.options.operation.value == MODE_POSITION) then
         return
@@ -295,14 +292,13 @@ function Navigator:_build_app()
 
       local rns = renoise.song()
 
-      --print("idx",idx)
       if (idx == self._first_idx) then
         --print("released the first pressed button")
         if not self._held_event_fired then
           self._held_event_fired = true
           local seq_idx = rns.selected_sequence_index
           if (self._first_pos.sequence == seq_idx) then
-            --print("within the same pattern")
+            --print("within the same pattern",idx)
             self:_jump_to_index(idx)
           else
             --print("within a different pattern")
@@ -315,7 +311,6 @@ function Navigator:_build_app()
 
     end
     c.on_hold = function(obj,idx)
-      --print("blockpos on_hold",obj,idx)
 
       if (self.options.operation.value == MODE_POSITION) then
         return
@@ -338,7 +333,6 @@ function Navigator:_build_app()
       if (idx >= rng[1]) and (idx <= rng[2]) then
         inside_range = true
       end
-      --print("inside_range",inside_range)
       if inside_range then
         self:_clear_looped_range()
       else
@@ -367,7 +361,6 @@ function Navigator:_build_app()
     c.tooltip = map.description
     c.palette.foreground = self.palette.prev_block_off
     c.on_press = function()
-      --print("prev_block on_press")
       if self:_goto_prev_block() then
         self._prev_block:flash(0.1,
           self.palette.prev_block_on,
@@ -387,7 +380,6 @@ function Navigator:_build_app()
     c.tooltip = map.description
     c.palette.foreground = self.palette.next_block_off
     c.on_press = function()
-      --print("next_block on_press")
       if self:_goto_next_block() then
         self._next_block:flash(0.1,
           self.palette.next_block_on,
@@ -430,26 +422,7 @@ function Navigator:_attach_to_song()
         -- allow pattern-spanning loops
         self._held_event_fired = true
       end
-      --[[
-      if self._jump_pos then
-        local rns = renoise.song()
-        print("disallowed, move range to this sequence pos ",self._jump_pos)
-        local seq_count = #rns.sequencer.pattern_sequence
-        rprint(rns.transport.loop_range)
-        local start_pos = rns.transport.loop_range[1]
-        local end_pos = rns.transport.loop_range[2]
-        if (self._jump_pos.sequence == seq_count) then
-          -- if last pattern, restore to first pattern
-          start_pos.sequence = 1
-          end_pos.sequence = 1
-        else
-          -- move to next pattern
-          start_pos.sequence = self._jump_pos.sequence+1
-          end_pos.sequence = self._jump_pos.sequence+1
-        end
-        rns.transport.loop_range = {start_pos,end_pos}
-      end
-      ]]
+
     end
   )
 
@@ -583,7 +556,6 @@ function Navigator:on_idle()
   if self._jump_pos then
     local rns = renoise.song()
     local seq_count = #rns.sequencer.pattern_sequence
-    rprint(rns.transport.loop_range)
     local start_pos = rns.transport.loop_range[1]
     local end_pos = rns.transport.loop_range[2]
     if (self._jump_pos.sequence == seq_count) then
@@ -606,7 +578,6 @@ function Navigator:on_idle()
 
   local loop_has_changed = false
   local has_looped_range, loop_mode = self:_has_looped_range()
-  --print("has_looped_range, loop_mode",has_looped_range, loop_mode)
   if not self:_has_looped_range() then
     if self._loop_start then
       -- loop has been disabled
@@ -638,7 +609,6 @@ function Navigator:on_idle()
   end
 
   if loop_has_changed or self._range_update_requested then
-    --print("loop_has_changed",self._loop_start,self._loop_end,loop_mode)
     self._loop_mode = loop_mode
     self._range_update_requested = false
     self:_update_blockpos_range()
@@ -666,11 +636,9 @@ function Navigator:on_idle()
   if self._index_update_requested then
     self._index_update_requested = false
     self._inside_pattern = self:_is_inside_pattern()
-    --print("*** self._inside_pattern",self._inside_pattern)
     if (active_index == nil) then
       active_index = self:_obtain_active_index()
     end
-    --print("*** active_index",active_index)
     if (active_index ~= self._active_index) then
       self._active_index = active_index
       self._blockpos:set_index(self._active_index,true)
@@ -789,12 +757,10 @@ function Navigator:_jump_to_index(ctrl_idx)
   if (ctrl_idx >= rng[1]) and (ctrl_idx <= rng[2]) then
     inside_range = true
   end
-  --print("inside_range",inside_range)
 
   -- skip, if the index is inside the range,
   -- and the range is no larger than one unit
   local range_size = rng[2]-rng[1]
-  --print("range_size",range_size)
   if inside_range and (range_size == 0) and 
     (self._active_index == ctrl_idx) 
   then
@@ -807,7 +773,6 @@ function Navigator:_jump_to_index(ctrl_idx)
   then
     
     if not inside_range then
-      --print("carry over - self._loop_start",self._loop_start,"end",self._loop_end)
       if (self._loop_start.sequence == self._loop_end.sequence) or
         ((self._loop_start.sequence == self._loop_end.sequence-1)  and
         (self._loop_end.line == 1))
@@ -822,13 +787,8 @@ function Navigator:_jump_to_index(ctrl_idx)
         end
         line_count = end_line - self._loop_start.line
         coeff = num_lines/line_count
-        --print("carry over - active_line",active_line)
-        --print("carry over - line_count",line_count)
-        --print("carry over - lines_per_unit",lines_per_unit)
-        --print("carry over - coeff",coeff)
 
         local new_line = 1+ math.floor((active_line/num_lines)*coeff)*(num_lines/coeff)
-        --print("carry over - new_line",new_line)
 
         self._first_pos = rns.transport.edit_pos
         self._first_pos.sequence = self._loop_start.sequence
@@ -836,7 +796,6 @@ function Navigator:_jump_to_index(ctrl_idx)
         self._second_pos = rns.transport.edit_pos
         self._second_pos.sequence = self._loop_start.sequence
         self._second_pos.line = new_line + line_count - lines_per_unit
-        --print("carry over - self._first_pos,self._second_pos",self._first_pos,self._second_pos)
 
         self:_set_looped_range()
         self._range_update_requested = true
@@ -862,7 +821,6 @@ function Navigator:_jump_to_index(ctrl_idx)
         self._jump_pos = nil
       end
     end
-    --print("skip_jump",skip_jump,self._jump_pos)
 
     if not skip_jump then
       -- to have continuous playback, we need to apply the current line offset
@@ -871,22 +829,15 @@ function Navigator:_jump_to_index(ctrl_idx)
       -- (if the pattern is looped)
       local lines_per_unit,num_lines = self:_get_lines_per_unit()
       local playback_line = nil
-      --print("play_pos.line",play_pos.line)
       if line_count then
         local line_offset = (play_pos.line%line_count)
-        --print("line_offset",line_offset)
-        --print("line_count",line_count)
-        --print("coeff",coeff)
         local section_line = math.floor(((ctrl_idx-1)/self._blockpos_size)*coeff)*line_count
-        --print("section_line",section_line)
         playback_line = section_line+line_offset
       else
         local line_offset = (play_pos.line%lines_per_unit)-1
         playback_line = active_line+line_offset
       end
       
-      --print("playback_line",playback_line)
-
       if (playback_line < 1) then
         play_pos.line = num_lines
         if rns.transport.loop_pattern then -- use current pattern
@@ -894,14 +845,16 @@ function Navigator:_jump_to_index(ctrl_idx)
         elseif (rns.selected_sequence_index == 1) then -- use last pattern
           play_pos.sequence = #rns.sequencer.pattern_sequence
         else -- use previous pattern
-          play_pos.sequence = rns.selected_sequence_index-1
+          local prev_seq_idx = rns.selected_sequence_index-1
+          local prev_patt_idx = rns.sequencer.pattern_sequence[prev_seq_idx]
+          play_pos.sequence = prev_seq_idx
+          play_pos.line = rns.patterns[prev_patt_idx].number_of_lines
         end
         self._jump_pos = play_pos
       else
         play_pos.line = playback_line
         play_pos.sequence = rns.selected_sequence_index
       end
-      --print("jump to pos",play_pos)
       rns.transport.playback_pos = play_pos
     end
 
@@ -934,11 +887,9 @@ function Navigator:_set_looped_range()
       swap_pos = true
     end
   end
-  --print("swap_pos",swap_pos)
   if swap_pos then
     self._first_pos,self._second_pos = self._second_pos,self._first_pos
   end
-  --print("self._first_pos,self._second_pos",self._first_pos,self._second_pos)
 
   -- add one "unit" to the length of the end position
   local lines_per_unit,num_lines = 
@@ -950,11 +901,8 @@ function Navigator:_set_looped_range()
 
     -- the following will enforece a valid coefficient range
 
-    --print("self._first_pos,self._second_pos",self._first_pos,self._second_pos)
     local line_count = self._second_pos.line - self._first_pos.line
-    --print("line_count",line_count)
     local coeff = num_lines/line_count
-    --print("coeff",coeff)
     local matched_coeff = false
     local valid_coeffs = nil
     if (self.options.valid_coeffs.value == VALID_COEFF_ALL) then
@@ -969,7 +917,6 @@ function Navigator:_set_looped_range()
       if (v == coeff) then
         matched_coeff = true
       elseif (v > coeff) then
-        --print("k,v",k,v)
         if (math.ceil(coeff) == v) then
           closest_match = valid_coeffs[k]
         else
@@ -978,8 +925,6 @@ function Navigator:_set_looped_range()
         break
       end
     end
-    --print("matched_coeff",matched_coeff)
-    --print("closest_match",closest_match)
 
     -- if not a valid coefficient, expand the size
     if not matched_coeff then
@@ -988,20 +933,15 @@ function Navigator:_set_looped_range()
       self._second_pos.line = self._first_pos.line+line_count
     end
 
-    --print("line_count",line_count)
-    --print("self._second_pos.line #A",self._second_pos.line)
-
     -- if result goes beyond boundary, move back
     if (self._second_pos.line > num_lines+1) then
       local offset = num_lines-self._second_pos.line+1
       self._first_pos.line = self._first_pos.line + offset
       self._second_pos.line = self._second_pos.line + offset
     end
-    --print("self._second_pos.line #B",self._second_pos.line)
 
   end
 
-  --print("self._first_pos,self._second_pos",self._first_pos,self._second_pos)
   rns.transport.loop_range = {self._first_pos,self._second_pos}
 
   self._loop_mode = LOOP_CUSTOM
@@ -1027,7 +967,6 @@ function Navigator:_set_looped_range()
         rns.selected_note_column_index or
         rns.selected_effect_column_index + 
           renoise.song().tracks[track_idx].visible_note_columns
-      --print("column_idx",column_idx)
       rns.selection_in_pattern = { 
         start_column = column_idx,
         end_column = column_idx,
@@ -1064,7 +1003,6 @@ function Navigator:_clear_looped_range()
     has_sequence_range = true
     cached_seq = rns.transport.loop_sequence_range
   end
-  --print("has_sequence_range",has_sequence_range)
 
   rns.transport.loop_range_beats = {0,rns.transport.song_length_beats}
 
@@ -1129,72 +1067,3 @@ function Navigator:_has_looped_range()
 
 end
 
---------------------------------------------------------------------------------
---[[
----- calculate the number of beats based on supplied number of lines
--- (supports both the LPB and SPEED/tick-based timing models)
--- @return float
-
-function Navigator:_get_beats_by_lines(num_lines)
-  TRACE("Navigator:_get_beats_by_lines",num_lines)
-
-  local rns = renoise.song()
-  local beats = nil
-  if (rns.transport.timing_model == renoise.Transport.TIMING_MODEL_SPEED) then
-    local tpl = rns.transport.tpl
-    if (tpl == 1) then
-      beats = num_lines * (1/24)
-    elseif (tpl == 2) then
-      beats = num_lines * (1/12)
-    elseif (tpl == 3) then
-      beats = num_lines * (1/8)
-    else 
-      beats = num_lines * (1/4)
-    end
-  else -- TIMING_MODEL_LPB
-    local lpb = rns.transport.lpb
-    beats = num_lines * (1/lpb)
-  end
-
-  return beats
-
-end
-
---------------------------------------------------------------------------------
-
---- calculate the number of beats based on supplied song-position
--- @param seq_idx (integer)
--- @param line_idx (integer)
--- @return float
-
-function Navigator:_get_beats_by_songpos(pos)
-  TRACE("Navigator:_get_beats_by_songpos",pos)
-
-  local rns = renoise.song()
-  local seq_idx = pos.sequence
-  local line_idx = pos.line
-
-  assert(#rns.sequencer.pattern_sequence>=seq_idx,
-    "Oops, the sequence index is higher than the available number of patterns")
-   
-  local total_lines = 0
-  for i = 1, seq_idx do
-    local patt_idx = rns.sequencer:pattern(i)
-    --print("patt_idx",patt_idx)
-    local num_lines = renoise.song().patterns[patt_idx].number_of_lines
-    --print("num_lines",num_lines)
-    if (i == seq_idx) then
-      if (num_lines < line_idx) then
-        --print("The provided line does not exist, using the pattern length")
-        line_idx = num_lines
-      end
-      total_lines = total_lines + line_idx
-    else
-      total_lines = total_lines + num_lines
-    end
-  end
-
-  return self:_get_beats_by_lines(total_lines)
-
-end
-]]
