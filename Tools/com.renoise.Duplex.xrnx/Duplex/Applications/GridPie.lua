@@ -309,6 +309,10 @@ function GridPie:__init(...)
   -- the button which was first pressed
   self.src_button = nil -- UIButton
 
+  -- set once application has been initialized
+  -- (if true then use alternative draw method)
+  self._is_monochrome = nil
+
   -- page size (horizontal/vertical)
   self.page_size_v = nil
   self.page_size_h = nil
@@ -1416,43 +1420,66 @@ function GridPie:paint_cell(cell,x,y)
     local ptrack = rns.patterns[patt_idx].tracks[track_idx]
     local empty = ptrack.is_empty
     if empty then
-      if muted then 
-        local is_master = is_master_slot(ptrack,track_idx,patt_idx)
-        if is_master then
-          cell:set(self.palette.empty_active)
-        elseif (current_seq or current_trk) then
-          cell:set(self.palette.empty_current)
-        else
+
+      if self._is_monochrome then
+        cell:set(self.palette.empty)
+        --[[
+        if (not self._blink) then
           cell:set(self.palette.empty)
-        end
-      else 
-        if current_trk then
-          cell:set(self.palette.empty_active_current)
         else
-          cell:set(self.palette.empty_active)
+          cell:set(self.palette.content_selected)
+        end
+        ]]
+      else -- display supports color
+        if muted then 
+          local is_master = is_master_slot(ptrack,track_idx,patt_idx)
+          if is_master then
+            cell:set(self.palette.empty_active)
+          elseif (current_seq or current_trk) then
+            cell:set(self.palette.empty_current)
+          else
+            cell:set(self.palette.empty)
+          end
+        else -- not muted
+          if current_trk then
+            cell:set(self.palette.empty_active_current)
+          else
+            cell:set(self.palette.empty_active)
+          end
         end
       end
     else
       -- slots with content
-      if muted then 
-        local active_track = self.poly_counter[track_idx] and true or false
-        if active_track then
-          local is_master = is_master_slot(ptrack,track_idx,patt_idx)
-          if is_master then
-            cell:set(self.palette.content_active_master)
-          else
-            if current_trk then
-              cell:set(self.palette.content_active_current)
-            else
-              cell:set(self.palette.content_active)
-            end
-
-          end
+      if self._is_monochrome then
+        if muted then
+          cell:set(self.palette.content_active)
         else
-          cell:set(self.palette.inactive_content)
+          if (not self._blink) then
+            cell:set(self.palette.empty)
+          else
+            cell:set(self.palette.content_selected)
+          end
         end
-      else 
-        cell:set(self.palette.content_selected)
+      else -- display has color
+        if muted then 
+          local active_track = self.poly_counter[track_idx] and true or false
+          if active_track then
+            local is_master = is_master_slot(ptrack,track_idx,patt_idx)
+            if is_master then
+              cell:set(self.palette.content_active_master)
+            else
+              if current_trk then
+                cell:set(self.palette.content_active_current)
+              else
+                cell:set(self.palette.content_active)
+              end
+            end
+          else
+            cell:set(self.palette.inactive_content)
+          end
+        else -- unmuted
+          cell:set(self.palette.content_selected)
+        end
       end
     end
   end
@@ -2720,6 +2747,7 @@ function GridPie:start_app(start_running)
     return
   end
 
+  self._is_monochrome = is_monochrome(self.display.device.colorspace)
   self._has_been_started = true
 
   local rns = renoise.song()
@@ -3185,6 +3213,25 @@ function GridPie:on_idle()
 
   end
 
+
+  -- do stuff at a certain rate (seconds) 
+  local blink = (math.floor(os.clock()*2)%2==0) and true or false
+  if (blink ~= self._blink) then
+    self._blink = blink
+
+    self:update_homeless_tracks()
+
+    -- alternative draw method for monochrome displays
+    if self._is_monochrome then
+      print("*** alternative draw method for monochrome displays")
+      self.update_requested = true
+    end
+
+  end
+
+
+  -- update grid
+
   if self.v_update_requested then
     self.v_update_requested = false
     self.update_requested = true
@@ -3252,12 +3299,6 @@ function GridPie:on_idle()
     rns.transport.playing = true
   end
 
-  -- do stuff at a certain rate (seconds) 
-  local blink = (math.floor(os.clock()*2)%2==0) and true or false
-  if (blink ~= self._blink) then
-    self._blink = blink
-    self:update_homeless_tracks()
-  end
 
   self.last_playback_line = playback_line
   self._current_seq_index = rns.selected_sequence_index
