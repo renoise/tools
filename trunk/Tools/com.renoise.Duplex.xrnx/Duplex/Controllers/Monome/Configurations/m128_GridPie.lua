@@ -46,9 +46,12 @@ duplex_configurations:insert {
         },
       },
       options = {
-        v_step = 5,     -- every 4th
-        h_step = 3,     -- every 2nd
-        follow_pos = 2, -- disable follow
+        page_size_v = 5,     -- every 4th
+        page_size_h = 3,     -- every 2nd
+        follow_pos = "Disabled", -- disable follow
+      },
+      palette = { 
+        content_active  = { val=true }, -- show content
       }
     },
     Navigator = {
