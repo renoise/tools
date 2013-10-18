@@ -156,7 +156,7 @@ function Display:apply_tooltips(group_name)
             if (elm) then
               local widget = self.vb.views[elm.id]
               if elm.value then
-                widget.tooltip = string.format("%s (%s)",obj.tooltip,elm.value)
+                widget.tooltip = string.format("%s\nValue: %s",obj.tooltip,elm.value)
               else
                 widget.tooltip = obj.tooltip
               end
@@ -275,7 +275,20 @@ function Display:set_parameter(elm, obj, point, secondary)
   --TRACE('Display:set_parameter',elm, obj, point, secondary)
 
   -- resulting numeric value, or table of values (XYPad)
-  local value = self.device:point_to_value(point, elm, obj.ceiling)
+  local value = nil
+
+  -- bypass the device class for this parameter?
+  if elm.is_virtual then
+    --print("bypass the device class for this parameter")
+    if (self.device.protocol==DEVICE_MIDI_PROTOCOL) then
+      value = MidiDevice:point_to_value(point,elm,obj.ceiling)
+    elseif (self.device.protocol==DEVICE_OSC_PROTOCOL) then
+      value = OscDevice:point_to_value(point,elm,obj.ceiling)
+    end
+    elm.skip_echo = true
+  else
+    value = self.device:point_to_value(point,elm,obj.ceiling)
+  end
 
   --print("*** Display:set_parameter() - value",value)
   --print("*** Display:set_parameter() - elm",elm)
@@ -398,8 +411,10 @@ function Display:set_parameter(elm, obj, point, secondary)
   if (widget) then
     local widget_type = type(widget)
     if (widget_type == "Button") then
+
       local c_space = elm.colorspace or self.device.colorspace
       if not is_monochrome(c_space) then
+
         widget.color = self.device:quantize_color(point.color,c_space)
       else
         if (point.val==false) then
@@ -415,6 +430,8 @@ function Display:set_parameter(elm, obj, point, secondary)
             -- tinted color, use the colorspace
             color = {c_space[1]*255,c_space[2]*255,c_space[3]*255}
           end
+          --print("set button widget to this color")
+          --rprint(color)
           widget.color = color
         end
       end

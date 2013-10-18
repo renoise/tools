@@ -591,12 +591,21 @@ function MidiDevice:point_to_value(pt,elm,ceiling)
   local value = nil
   local val_type = type(pt.val)
 
-  if (val_type == "boolean") then
+  --print("val_type",val_type)
+
+  if (elm.type == "label") then
+
+    --print("mididevice label")
+    return pt.text
+
+  elseif (val_type == "boolean") then
     if (pt.val) then
       value = elm.maximum
     else
       value = elm.minimum
     end
+
+
   --[[
   elseif (val_type == "table") then
     -- multiple-parameter: tilt sensors, xy-pad...

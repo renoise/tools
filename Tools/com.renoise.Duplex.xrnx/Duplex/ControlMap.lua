@@ -244,9 +244,9 @@ function ControlMap:import_colorspace(str)
   TRACE("ControlMap:import_colorspace",str)
 
   local rslt = table.create()
-  rslt:insert(tonumber(string.sub(str,1,1)))
-  rslt:insert(tonumber(string.sub(str,3,3)))
-  rslt:insert(tonumber(string.sub(str,5,5)))
+  for i,v in string.gmatch(str,"[%d]+") do 
+    rslt:insert(tonumber(i)) 
+  end
   return rslt
 
 end

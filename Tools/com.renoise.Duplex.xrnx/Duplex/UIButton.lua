@@ -259,6 +259,12 @@ function UIButton:set(fg_val)
     return
   end
 
+  -- if an animated sequence was previously defined, 
+  -- this task is removed before we proceed
+  if self._task then
+    self.app.display.scheduler:remove_task(self._task)
+  end
+
   UIComponent.set_palette(self,{foreground=fg_val})
 
 end
@@ -278,7 +284,8 @@ function UIButton:flash(delay, ...)
       self:set(arg[i]) -- set first one at once
     else
       self._task = self.app.display.scheduler:add_task(
-        self, UIButton.set, delay*(i-1), arg[i])
+        self, UIButton.set_palette, delay*(i-1), {foreground=arg[i]})
+        --self, UIButton.set, delay*(i-1), arg[i])
     end
   end
 

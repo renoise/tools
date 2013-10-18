@@ -128,10 +128,8 @@ function Device:quantize_color(color,colorspace)
 
   local function quantize_color(value, depth)
     if (depth and depth > 0) then
-      assert(depth <= 256, "invalid device colorspace value")
-      local a = 256/(depth+1)
-      local b = a*(math.floor(value/a))
-      return math.min(math.floor(b*256/(256-b)),255)
+      assert(depth <= 256, "invalid device colorspace value, should be between 1 - 256")
+      return math.min(255,math.floor(((value+1)/256)*depth)*( 256/depth))
     else
       return 0
     end
