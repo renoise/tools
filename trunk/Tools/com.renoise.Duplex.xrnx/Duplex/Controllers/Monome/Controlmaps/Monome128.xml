@@ -136,8 +136,12 @@
 					<Param value="/grid/led/set 14 7 %i" action="/grid/key 14 7 %i" type="button" maximum="1" minimum="0"/>
 					<Param value="/grid/led/set 15 7 %i" action="/grid/key 15 7 %i" type="button" maximum="1" minimum="0"/>
 				</Group>
+				<Group name="ADC">
+					<Param value="/tilt 0 %f %f %f" size="8" type="xypad" invert_y="true" invert_x="true" skip_echo="true" maximum="162" minimum="88"/>
+				</Group>
 			</Row>
 		</Column>
+
 	</Parameters>
 </Device>
 
