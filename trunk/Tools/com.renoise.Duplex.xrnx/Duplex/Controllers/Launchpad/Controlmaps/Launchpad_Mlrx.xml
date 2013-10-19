@@ -27,45 +27,45 @@
 			</Row>
 			<Row>
 				<Group name="group_matrix" columns="4" >
-					<Param value="CC#1017"  type="button" maximum="1" minimum="0"/>
-					<Param value="CC#1018"  type="button" maximum="1" minimum="0"/>
-					<Param value="CC#1019"  type="button" maximum="1" minimum="0"/>
-					<Param value="CC#1020"  type="button" maximum="1" minimum="0"/>
+					<Param value="CC#1017"  is_virtual="true" type="button" maximum="1" minimum="0"/>
+					<Param value="CC#1018"  is_virtual="true" type="button" maximum="1" minimum="0"/>
+					<Param value="CC#1019"  is_virtual="true" type="button" maximum="1" minimum="0"/>
+					<Param value="CC#1020"  is_virtual="true" type="button" maximum="1" minimum="0"/>
 
-					<Param value="CC#1021"  type="button" maximum="1" minimum="0"/>
-					<Param value="CC#1022"  type="button" maximum="1" minimum="0"/>
-					<Param value="CC#1023"  type="button" maximum="1" minimum="0"/>
-					<Param value="CC#1024"  type="button" maximum="1" minimum="0"/>
+					<Param value="CC#1021"  is_virtual="true" type="button" maximum="1" minimum="0"/>
+					<Param value="CC#1022"  is_virtual="true" type="button" maximum="1" minimum="0"/>
+					<Param value="CC#1023"  is_virtual="true" type="button" maximum="1" minimum="0"/>
+					<Param value="CC#1024"  is_virtual="true" type="button" maximum="1" minimum="0"/>
 
-					<Param value="CC#1025"  type="button" maximum="1" minimum="0"/>
-					<Param value="CC#1026"  type="button" maximum="1" minimum="0"/>
-					<Param value="CC#1027"  type="button" maximum="1" minimum="0"/>
-					<Param value="CC#1028"  type="button" maximum="1" minimum="0"/>						
+					<Param value="CC#1025"  is_virtual="true" type="button" maximum="1" minimum="0"/>
+					<Param value="CC#1026"  is_virtual="true" type="button" maximum="1" minimum="0"/>
+					<Param value="CC#1027"  is_virtual="true" type="button" maximum="1" minimum="0"/>
+					<Param value="CC#1028"  is_virtual="true" type="button" maximum="1" minimum="0"/>						
 
-					<Param value="CC#1029"  type="button" maximum="1" minimum="0"/>
-					<Param value="CC#1030"  type="button" maximum="1" minimum="0"/>
-					<Param value="CC#1031"  type="button" maximum="1" minimum="0"/>
-					<Param value="CC#1032"  type="button" maximum="1" minimum="0"/>						
+					<Param value="CC#1029"  is_virtual="true" type="button" maximum="1" minimum="0"/>
+					<Param value="CC#1030"  is_virtual="true" type="button" maximum="1" minimum="0"/>
+					<Param value="CC#1031"  is_virtual="true" type="button" maximum="1" minimum="0"/>
+					<Param value="CC#1032"  is_virtual="true" type="button" maximum="1" minimum="0"/>						
 
-					<Param value="CC#1033"  type="button" maximum="1" minimum="0"/>
-					<Param value="CC#1034"  type="button" maximum="1" minimum="0"/>
-					<Param value="CC#1035"  type="button" maximum="1" minimum="0"/>
-					<Param value="CC#1036"  type="button" maximum="1" minimum="0"/>						
+					<Param value="CC#1033"  is_virtual="true" type="button" maximum="1" minimum="0"/>
+					<Param value="CC#1034"  is_virtual="true" type="button" maximum="1" minimum="0"/>
+					<Param value="CC#1035"  is_virtual="true" type="button" maximum="1" minimum="0"/>
+					<Param value="CC#1036"  is_virtual="true" type="button" maximum="1" minimum="0"/>						
 
-					<Param value="CC#1037"  type="button" maximum="1" minimum="0"/>
-					<Param value="CC#1038"  type="button" maximum="1" minimum="0"/>
-					<Param value="CC#1039"  type="button" maximum="1" minimum="0"/>
-					<Param value="CC#1040"  type="button" maximum="1" minimum="0"/>						
+					<Param value="CC#1037"  is_virtual="true" type="button" maximum="1" minimum="0"/>
+					<Param value="CC#1038"  is_virtual="true" type="button" maximum="1" minimum="0"/>
+					<Param value="CC#1039"  is_virtual="true" type="button" maximum="1" minimum="0"/>
+					<Param value="CC#1040"  is_virtual="true" type="button" maximum="1" minimum="0"/>						
 
-					<Param value="CC#1041"  type="button" maximum="1" minimum="0"/>
-					<Param value="CC#1042"  type="button" maximum="1" minimum="0"/>
-					<Param value="CC#1043"  type="button" maximum="1" minimum="0"/>
-					<Param value="CC#1044"  type="button" maximum="1" minimum="0"/>						
+					<Param value="CC#1041"  is_virtual="true" type="button" maximum="1" minimum="0"/>
+					<Param value="CC#1042"  is_virtual="true" type="button" maximum="1" minimum="0"/>
+					<Param value="CC#1043"  is_virtual="true" type="button" maximum="1" minimum="0"/>
+					<Param value="CC#1044"  is_virtual="true" type="button" maximum="1" minimum="0"/>						
 
-					<Param value="CC#1045"  type="button" maximum="1" minimum="0"/>
-					<Param value="CC#1046"  type="button" maximum="1" minimum="0"/>
-					<Param value="CC#1047"  type="button" maximum="1" minimum="0"/>
-					<Param value="CC#1048"  type="button" maximum="1" minimum="0"/>						
+					<Param value="CC#1045"  is_virtual="true" type="button" maximum="1" minimum="0"/>
+					<Param value="CC#1046"  is_virtual="true" type="button" maximum="1" minimum="0"/>
+					<Param value="CC#1047"  is_virtual="true" type="button" maximum="1" minimum="0"/>
+					<Param value="CC#1048"  is_virtual="true" type="button" maximum="1" minimum="0"/>						
 
 				</Group>
 
@@ -160,22 +160,22 @@
 			<Row>
 
 					<Group name="trigger_mode" >
-						<Param value="CC#1001" text="Mode" size="2" aspect="0.5" type="label" maximum="1" minimum="0"/>
-						<Param value="CC#1002" type="button" maximum="1" minimum="0"/>
-						<Param value="CC#1003" type="button" maximum="1" minimum="0"/>
+						<Param value="CC#1001" is_virtual="true" text="Mode" size="2" aspect="0.5" type="label" maximum="1" minimum="0"/>
+						<Param value="CC#1002" is_virtual="true" type="button" maximum="1" minimum="0"/>
+						<Param value="CC#1003" is_virtual="true" type="button" maximum="1" minimum="0"/>
 					</Group>
 					<Group name="toggle_offsets" >
-						<Param value="CC#1004" text="Offset" size="2" aspect="0.5" type="label" maximum="1" minimum="0"/>
-						<Param value="CC#1005" type="button" maximum="1" minimum="0"/>
-						<Param value="CC#1006" type="button" maximum="1" minimum="0"/>
+						<Param value="CC#1004" is_virtual="true" text="Offset" size="2" aspect="0.5" type="label" maximum="1" minimum="0"/>
+						<Param value="CC#1005" is_virtual="true" type="button" maximum="1" minimum="0"/>
+						<Param value="CC#1006" is_virtual="true" type="button" maximum="1" minimum="0"/>
 					</Group>
 					<Group name="cycle_length" >
-						<Param value="CC#1007" text="Cycle length" size="2" aspect="0.5" type="label" maximum="1" minimum="0"/>
-						<Param value="CC#1008" type="button" maximum="1" minimum="0"/>
-						<Param value="CC#1009" type="button" maximum="1" minimum="0"/>
-						<Param value="CC#1010" type="button" maximum="1" minimum="0"/>
-						<Param value="CC#1011" type="button" maximum="1" minimum="0"/>
-						<Param value="CC#1012" type="button" maximum="1" minimum="0"/>
+						<Param value="CC#1007" is_virtual="true" text="Cycle length" size="2" aspect="0.5" type="label" maximum="1" minimum="0"/>
+						<Param value="CC#1008" is_virtual="true" type="button" maximum="1" minimum="0"/>
+						<Param value="CC#1009" is_virtual="true" type="button" maximum="1" minimum="0"/>
+						<Param value="CC#1010" is_virtual="true" type="button" maximum="1" minimum="0"/>
+						<Param value="CC#1011" is_virtual="true" type="button" maximum="1" minimum="0"/>
+						<Param value="CC#1012" is_virtual="true" type="button" maximum="1" minimum="0"/>
 						<!--
 						<Param value="/mlrx/cycle_increase" type="button" maximum="1" minimum="0"/>
 						<Param value="/mlrx/cycle_decrease" type="button" maximum="1" minimum="0"/>
