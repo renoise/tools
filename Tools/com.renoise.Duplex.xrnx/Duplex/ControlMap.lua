@@ -714,6 +714,7 @@ function ControlMap:_parse_xml(str)
     arg["invert_y"] = bool(arg["invert_y"])
     arg["swap_axes"] = bool(arg["swap_axes"])
     arg["velocity_enabled"] = bool(arg["velocity_enabled"])
+    arg["is_virtual"] = bool(arg["is_virtual"])
 
     return arg
 
