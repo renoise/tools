@@ -373,6 +373,7 @@ function Mlrx:update()
   self:update_group_toggles()
   self:update_track_selector()
   self:update_track()
+  self:update_summary()
 
 end
 
@@ -472,7 +473,7 @@ function Mlrx:_build_app()
   else
     num_tracks = cm:count_columns(map.group_name)
   end
-  print("num_tracks",num_tracks)
+  --print("num_tracks",num_tracks)
   --num_tracks = 4
 
   -- determine the number of triggers
@@ -481,7 +482,7 @@ function Mlrx:_build_app()
   else
     self._num_divisions = cm:count_rows(map.group_name)
   end
-  print("self._num_divisions",self._num_divisions)
+  --print("self._num_divisions",self._num_divisions)
 
 
   for track_idx = 1, num_tracks do
@@ -2236,7 +2237,7 @@ function Mlrx_group:switch_to_track(trk_idx)
   end
 
   self.last_triggered = trk_idx
-  print("switch_to_track - last_triggered is now",trk_idx)
+  --print("switch_to_track - last_triggered is now",trk_idx)
 
 end
 
