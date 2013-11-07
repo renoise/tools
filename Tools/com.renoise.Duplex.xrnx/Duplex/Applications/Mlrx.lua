@@ -215,8 +215,8 @@ Mlrx.default_palette = {
 
   group_a       = {color={0xFF,0x00,0x00},val=true},  -- RED
   group_a_dimmed= {color={0x40,0x00,0x00},val=true},  -- RED
-  group_b       = {color={0xFF,0x40,0x00},val=true},  -- ORANGE
-  group_b_dimmed= {color={0x80,0x40,0x00},val=true},  -- ORANGE
+  group_b       = {color={0xFF,0x70,0x00},val=true},  -- ORANGE
+  group_b_dimmed= {color={0x80,0x50,0x00},val=true},  -- ORANGE
   group_c       = {color={0xFF,0xFF,0x00},val=true},  -- YELLOW
   group_c_dimmed= {color={0x40,0x40,0x00},val=true},  -- YELLOW
   group_d       = {color={0x00,0xFF,0x00},val=true},  -- GREEN
@@ -539,30 +539,6 @@ function Mlrx:_build_app()
   end
 
   -- track selector ---------------------------------------
-  -- TODO support slider and not just grid mode
-  -- if grid-based, check if group is equal to number of tracks
-
-  --[[
-  local map = self.mappings.select_track
-  if map.group_name then
-    local c = UISlider(self)
-    c.group_name = map.group_name
-    c.tooltip = map.description
-    c.orientation = map.orientation
-    --c:set_pos(map.index or 1)
-    c:set_size(#self.tracks)
-    c.palette.track = c.palette.background
-    c.flipped = true
-    c.value = self.selected_track
-    c.on_change = function() 
-      print("select_track on_change,c.value",c.value,"c.index",c.index)
-      self:select_track(c.index)
-    end
-
-    self._controls.select_track = c
-    self:_add_component(c)
-  end
-  ]]
 
   local map = self.mappings.select_track
   if map.group_name then
@@ -807,6 +783,7 @@ function Mlrx:_build_app()
       --print("trk",trk)
       trk:set_transpose(1)
       self:update_track()
+      self:update_summary()
     end
     self._controls.transpose_up = c
     self:_add_component(c)
@@ -825,6 +802,7 @@ function Mlrx:_build_app()
       --print("trk",trk)
       trk:set_transpose(-1)
       self:update_track()
+      self:update_summary()
     end
     self._controls.transpose_down = c
     self:_add_component(c)
@@ -844,6 +822,7 @@ function Mlrx:_build_app()
       local trk = self.tracks[self.selected_track]
       trk:toggle_sync()
       self:update_track()
+      self:update_summary()
     end
     self._controls.toggle_sync = c
     self:_add_component(c)
@@ -863,6 +842,7 @@ function Mlrx:_build_app()
       local trk = self.tracks[self.selected_track]
       trk:toggle_keys()
       self:update_track()
+      self:update_summary()
     end
     self._controls.toggle_keys = c
     self:_add_component(c)
@@ -884,6 +864,7 @@ function Mlrx:_build_app()
       local trk = self.tracks[self.selected_track]
       trk:set_cycle_length(1)
       self:update_track()
+      self:update_summary()
     end
     self._controls.set_cycle_1 = c
     self:_add_component(c)
@@ -901,6 +882,7 @@ function Mlrx:_build_app()
       local trk = self.tracks[self.selected_track]
       trk:set_cycle_length(2)
       self:update_track()
+      self:update_summary()
     end
     self._controls.set_cycle_2 = c
     self:_add_component(c)
@@ -918,6 +900,7 @@ function Mlrx:_build_app()
       local trk = self.tracks[self.selected_track]
       trk:set_cycle_length(4)
       self:update_track()
+      self:update_summary()
     end
     self._controls.set_cycle_4 = c
     self:_add_component(c)
@@ -935,6 +918,7 @@ function Mlrx:_build_app()
       local trk = self.tracks[self.selected_track]
       trk:set_cycle_length(8)
       self:update_track()
+      self:update_summary()
     end
     self._controls.set_cycle_8 = c
     self:_add_component(c)
@@ -952,6 +936,7 @@ function Mlrx:_build_app()
       local trk = self.tracks[self.selected_track]
       trk:set_cycle_length(16)
       self:update_track()
+      self:update_summary()
     end
     self._controls.set_cycle_16 = c
     self:_add_component(c)
@@ -1007,6 +992,7 @@ function Mlrx:_attach_to_song()
     function()
       TRACE("Mlrx:instruments_observable fired...")
       self:update_track()
+      self:update_summary()
       self:decorate_tracks()
       self:initiate_settings_task()
     end
@@ -1214,9 +1200,6 @@ function Mlrx:import_session()
   
   self:retrieve_local_settings()
 
-
-  --self:store_local_settings()
-
 end
 
 --------------------------------------------------------------------------------
@@ -1390,6 +1373,8 @@ function Mlrx:select_track(idx)
   self.selected_track = idx
   self:update_track()
 
+  --print("select_track - trk.sync_to_lines",self.tracks[idx].sync_to_lines)
+
   self:initiate_settings_task()
 
 end
@@ -1555,6 +1540,7 @@ function Mlrx:update_group_toggles()
     local grp = self.groups[grp_idx]
     enabled.color = grp.color
     -- determine if there's an active note
+    -- OPTIMIZE base on group "active" property
     local grp_active = false
     local grp_muted = false
     for _,trk in ipairs(grp.tracks) do
@@ -2120,7 +2106,7 @@ end
 -- @param on_idle (boolean) true when method is invoked by idle loop
 
 function Mlrx_group:group_output(on_idle)
-  --TRACE("Mlrx_group:group_output()",on_idle)
+  TRACE("Mlrx_group:group_output()",on_idle)
 
   local writeahead = Mlrx.writeahead
   local writepos = Mlrx_pos()
@@ -2129,10 +2115,11 @@ function Mlrx_group:group_output(on_idle)
   for _,trk in ipairs(self.tracks) do
 
     -- skip output for tracks without an instrument 
-    if not trk.sync_to_lines then
-      return
-    end 
+    --if not trk.sync_to_lines then
+    --  return
+    --end 
 
+    --print("about to group-output track#",trk.rns_track_idx,"position",writepos)
     trk:track_output(writepos,writeahead,wraparound,on_idle) 
 
   end
@@ -2164,10 +2151,16 @@ function Mlrx_group:toggle()
   local rns = renoise.song()
   local toggle_mute = true
   local mute_state = MUTE_STATE_ACTIVE
+
+  -- calculate the quantized position in advance...
+  local pos = Mlrx_pos()
+  local quant_pos = Mlrx_pos(pos)
+  quant_pos:quantize()
+
   for _,trk in ipairs(self.tracks) do
     local rns_trk = rns.tracks[trk.rns_track_idx] 
     if trk.note then
-      trk:schedule_noteoff()
+      trk:schedule_noteoff(pos,quant_pos)
       toggle_mute = false
     end
     if (rns_trk.mute_state ~= MUTE_STATE_ACTIVE) then
@@ -2193,45 +2186,19 @@ function Mlrx_group:switch_to_track(trk_idx)
   TRACE("Mlrx_group:switch_to_track()",trk_idx)
 
   local rns = renoise.song()
-  
-  --[[
-  if self.last_triggered and (self.last_triggered == trk_idx) then
-    --print("switch_to_track - no need to switch, already there")
-    return
-  end
-  ]]
 
   if self.last_triggered then
 
-    local offpos = Mlrx_pos()
-    offpos.line = offpos.line+1
-    offpos:normalize()
+    -- calculate the quantized position in advance...
+    local pos = Mlrx_pos()
+    local quant_pos = Mlrx_pos(pos)
+    quant_pos:quantize()
 
     for _,trk in ipairs(self.main.tracks) do
-      if (trk.group == self) and -- our group
-        (trk_idx ~= trk.mlrx_track_idx) -- other track
+      if (trk.group == self) and 
+        (trk_idx ~= trk.mlrx_track_idx) 
       then 
-        --if (trk.note) then
-          trk:schedule_noteoff()
-        --else
-
-          -- non-playing tracks will receive a note-off directly
-          --[[
-          local patt_idx = rns.sequencer.pattern_sequence[offpos.sequence]
-          local track = rns.patterns[patt_idx].tracks[trk.rns_track_idx]
-          if track.is_empty then
-            print("switch_to_track - skipped note-off for empty track",trk.rns_track_idx)
-          else
-            local line = rns.patterns[patt_idx].tracks[trk.rns_track_idx].lines[offpos.line]
-            --assert(line,"Line not found")
-            line:clear()
-            line:note_column(1).note_value = NOTE_OFF
-
-            print("switch_to_track - note-off written @line",offpos.line,", track",trk.rns_track_idx)
-          end
-          ]]
-
-        --end
+        trk:schedule_noteoff(pos,quant_pos)
       end
     end
   end
@@ -2274,9 +2241,9 @@ Mlrx_track.TRIG_LOOP = 1  -- output from offset, looped playback
 --Mlrx_track.TRIG_SHOT = 2  -- output from offset -> end of sample
 Mlrx_track.TRIG_HOLD = 3  -- output for as long as trigger is held
 
-Mlrx_track.NOTE_CUT = 1
-Mlrx_track.NOTE_OFF = 2
-Mlrx_track.NOTE_CONTINUE = 3
+--Mlrx_track.NOTE_CUT = 1
+--Mlrx_track.NOTE_OFF = 2
+--Mlrx_track.NOTE_CONTINUE = 3
 
 function Mlrx_track:__init(main)
   TRACE("Mlrx_track:__init()")
@@ -2308,7 +2275,7 @@ function Mlrx_track:__init(main)
 
   -- (int) the line-sync value
   -- (note: this property should reflect the actual instrument)
-  self.sync_to_lines = nil
+  self.sync_to_lines = 64
 
   -- (int) the user-specified transpose amount (in semitones)
   self.transpose = 0
@@ -2375,7 +2342,7 @@ end
 -- @param on_idle (bool) optional, true when invoked by idle loop (we then detect notes being active or turned off)
 
 function Mlrx_track:track_output(writepos,writeahead,wraparound,on_idle)
-  --TRACE("Mlrx_track:track_output()",writepos,writeahead,wraparound,on_idle)
+  --print("Mlrx_track:track_output()",writepos,writeahead,wraparound,on_idle)
 
   local rns = renoise.song()
   --assert(rns.tracks[self.rns_track_idx],"Oops, track ",self.rns_track_idx," not found")
@@ -2387,18 +2354,21 @@ function Mlrx_track:track_output(writepos,writeahead,wraparound,on_idle)
   local readahead = Mlrx.readahead
 
   -- check if sibling tracks are active 
-  -- (if active, wipe those tracks)
+  -- OPTIMIZE base on group "active" property
   local group_active = self.note
   if not self.note then
     --local grp = self.main.groups[self.group_index]
     for _,trk in ipairs(self.group.tracks) do
       if (trk.note) then
         group_active = true
+        --print("found this track to be active:",trk.rns_track_idx)
         break
       end
     end
   end
   if group_active then
+    -- enter "wipe mode" when group 
+    -- contains no active tracks
     do_wipe = not self.note
   else
     -- enter "read mode" when group does 
@@ -2407,7 +2377,7 @@ function Mlrx_track:track_output(writepos,writeahead,wraparound,on_idle)
   end
 
   local playpos = Mlrx_pos()
-  --print("playpos",playpos)
+  --print("playpos",playpos," track",self.rns_track_idx)
 
   -- the rate at which looped notes should repeat
   -- (if rate is very fast, use alternative write method)
@@ -2438,7 +2408,6 @@ function Mlrx_track:track_output(writepos,writeahead,wraparound,on_idle)
     self.note.repeatpos.line = line+cycle_lines
     self.note.repeatpos:normalize()
     --print("*** scheduled repeatpos",self.note.repeatpos)
-
   end
 
   local write_note = function(line)
@@ -2466,12 +2435,15 @@ function Mlrx_track:track_output(writepos,writeahead,wraparound,on_idle)
   local exceeded = false
   local exceeded_by = nil
   local line_to = writepos.line+writeahead
+
+  --print("line_to",line_to,"patt.number_of_lines",patt.number_of_lines," track",self.rns_track_idx)
+
   if (line_to > patt.number_of_lines) then
     exceeded = true
     exceeded_by = line_to-patt.number_of_lines-1
     line_to = patt.number_of_lines
     writeahead = writeahead - exceeded_by
-    --print("pattern exceeded_by",exceeded_by,"line_to",line_to)
+    --print("pattern exceeded_by",exceeded_by,"line_to",line_to," track",self.rns_track_idx)
   end
 
   local lines = patt.tracks[self.rns_track_idx]:lines_in_range(writepos.line,line_to)
@@ -2489,10 +2461,19 @@ function Mlrx_track:track_output(writepos,writeahead,wraparound,on_idle)
       -- wipe inactive track in active group
       ---------------------------------------------------
 
-      if (line_idx > playpos.line) then
+      --print("do wipe - wraparound",wraparound)
+
+      --[[
+      if wraparound then
+        --print("*** perform track wipe (exceeded) @line",line_idx,"track index",self.rns_track_idx)
+        line:clear()
+      elseif (line_idx > playpos.line) then
         --print("*** perform track wipe @line",line_idx,"track index",self.rns_track_idx)
         line:clear()
       end
+      ]]
+      --print("*** perform track wipe @line",line_idx,"track index",self.rns_track_idx)
+      line:clear()
 
     elseif do_read then 
 
@@ -2597,19 +2578,21 @@ function Mlrx_track:track_output(writepos,writeahead,wraparound,on_idle)
 
         else
 
-          if (line_idx > playpos.line) then
+          --if (line_idx > playpos.line) then
 
             -- if already output, clear the line 
             -- (excerpt if repeat has written some content there)
             local ignore = false
-            if self.note.repeatpos then
-            ignore = self.note:on_ignore_list(line_idx)
+            if (#self.note.ignore_lines >0) then
+              ignore = self.note:on_ignore_list(line_idx)
             end
             if not ignore then
-            --print("*** clear line (instead of note)",line_idx,"playback_pos",rns.transport.playback_pos,", track",self.rns_track_idx)
-            line:clear()
+              --print("*** clear line (instead of note)",line_idx,"playback_pos",rns.transport.playback_pos,", track",self.rns_track_idx)
+              line:clear()
+            else
+              --print("*** clear line instead of note (ignored)",line_idx,"playback_pos",rns.transport.playback_pos,", track",self.rns_track_idx)
             end
-          end
+          --end
         end
 
 
@@ -2672,7 +2655,7 @@ function Mlrx_track:track_output(writepos,writeahead,wraparound,on_idle)
   -- detect note (de)activation and travel length only when 
   -- we have a note, and method is invoked by the idle loop...
 
-  if self.note and on_idle then
+  if not wraparound and self.note and on_idle then
 
     -- check if playback has wrapped around in same pattern
     local repeated = false
@@ -2738,9 +2721,9 @@ function Mlrx_track:track_output(writepos,writeahead,wraparound,on_idle)
           end
 
           --print("*** self.note.travelled",self.note.travelled,"playpos",playpos)
-          if not wraparound then
+          --if not wraparound then
             self:light_position(self.note.travelled)
-          end
+          --end
 
 
         end
@@ -2752,16 +2735,36 @@ function Mlrx_track:track_output(writepos,writeahead,wraparound,on_idle)
     -- playback has continued past the endpos of the sound? (then nullify)
     if self.note.endpos and self.note.offed then
       if 
-        -- passed the note-off
+        -- passed the note-off,
         (not repeated and 
-          (self.note.endpos.sequence == playpos.sequence) and (self.note.endpos.line <= playpos.line)) or
-        -- wrapped around same pattern
-        (repeated and self.note.endpos.line > playpos.line) 
+          (self.note.endpos.sequence == playpos.sequence) and 
+          (self.note.endpos.line <= playpos.line) and
+          -- have passed the note-off with a sufficient number of lines 
+          -- (avoid matches when playback reach end of pattern)
+          not (playpos.line-Mlrx.writeahead >= self.note.endpos.line)) or
+        -- or wrapped around same pattern
+        (repeated and self.note.endpos.line > playpos.line+1) 
       then
         --print("*** nullify the sound @playpos",playpos,"track index",self.rns_track_idx)
+
+        -- clear the line after the note-off, as normal wiping 
+        -- will not always manage to clear this line...
+        local post_endpos = Mlrx_pos(self.note.endpos)
+        post_endpos.line = post_endpos.line +1
+        post_endpos:normalize()
+        local post_patt = patt
+        if (post_endpos.sequence ~= playpos.sequence) then
+          local post_patt_idx = rns.sequencer.pattern_sequence[post_endpos.sequence]
+          post_patt = rns:pattern(post_patt_idx)
+        end
+        post_patt.tracks[self.rns_track_idx].lines[post_endpos.line]:clear()
+
+        -- nullify the note and turn off the light
         self.note = nil
-        self.main:update_trigger_pos(self.mlrx_track_idx) -- clear the light
+        self.main:update_trigger_pos(self.mlrx_track_idx) 
+
         return
+
       end
     end
 
@@ -2770,7 +2773,7 @@ function Mlrx_track:track_output(writepos,writeahead,wraparound,on_idle)
       -- check if we are close enough to the end of the pattern to have wrapped
       --local wrapped = (playpos.line >= patt.number_of_lines) 
       local wrapped = (playpos.line+Mlrx.writeahead > patt.number_of_lines) 
-      if not wraparound then -- ignore when writing into a different pattern
+      --if not wraparound then -- ignore when writing into a different pattern
         for i,v in ipairs(self.note.ignore_lines) do
           if (v < playpos) then
             --if wrapped and (v.line < Mlrx.writeahead) then
@@ -2786,7 +2789,7 @@ function Mlrx_track:track_output(writepos,writeahead,wraparound,on_idle)
           end
         end
 
-      end
+      --end
       --print("*** post-purge ignore_lines")
       --rprint(self.note.ignore_lines)
     end
@@ -2799,11 +2802,12 @@ function Mlrx_track:track_output(writepos,writeahead,wraparound,on_idle)
 
   if exceeded then 
     -- call function again, supply the new writepos
-    writepos.line = patt.number_of_lines+1
-    writepos:normalize()
+    local wrapped_pos = Mlrx_pos(writepos)
+    wrapped_pos.line = patt.number_of_lines+1
+    wrapped_pos:normalize()
     wraparound = true
-    --print("*** wraparound - exceeded_by",exceeded_by,writepos)
-    self:track_output(writepos,exceeded_by,wraparound,on_idle)
+    --print("*** wraparound - exceeded_by",exceeded_by,wrapped_pos)
+    self:track_output(wrapped_pos,exceeded_by,wraparound,on_idle)
   end
 
 end
@@ -3020,30 +3024,29 @@ end
 
 -- kindly ask a playing track to schedule a note-off 
 -- (this will ensure that the light is properly turned off, etc)
+-- @param pos (Mlrx_pos) playback/edit position
+-- @param quant_pos (Mlrx_pos) quantized version of pos
 
-function Mlrx_track:schedule_noteoff()
+function Mlrx_track:schedule_noteoff(pos,quant_pos)
   TRACE("Mlrx_track:schedule_noteoff()")
 
   if not self.note then
     self.note = Mlrx_note()
+    --print("create note for scheduled note-off")
   end
-
-  local playpos = Mlrx_pos()
 
   -- do not output or clear anything else!!
   self.note.startpos = nil
   self.note.repeatpos = nil
 
-  local endpos = Mlrx_pos(playpos)
-  endpos.line = endpos.line+1
-  endpos:normalize()
-  self.note.endpos = endpos
-  self.note.ignore_lines:insert(playpos)
-  --print("Mlrx_track.schedule_noteoff - endpos",endpos)
+  self.note.endpos = quant_pos
+  --self.note.ignore_lines:insert(pos)
+  self.note.ignore_lines:insert(quant_pos)
 
   -- immediately output
-  self:track_output(playpos,1)
-
+  if self.sync_to_lines then
+    self:track_output(pos,1)
+  end 
 
 end
 
@@ -3139,37 +3142,14 @@ function Mlrx_track:trigger_press(trigger_idx)
   TRACE("Mlrx_track:trigger_press()",trigger_idx)
 
   local rns = renoise.song()
-  local is_playing = rns.transport.playing
-
 
   -- figure out the closest quantized line
-  local quant = Mlrx.get_quantize()
   local playpos = Mlrx_pos()
-  --print("trigger_press - playpos",playpos)
-  local tmp = playpos.line%quant
-  if (tmp==0) then
-    tmp = quant
-  end
-  --print("trigger_press - tmp",tmp)
-
-  -- calculate the time spent waiting for the
-  -- quantize to be applied (used on release)
-  local quant_time_delay = (quant-tmp)/Mlrx.lps
-  --print("quant_time_delay",quant_time_delay)
-
   local startpos = Mlrx_pos(playpos)
-  --print("trigger_press - startpos",startpos)
-
-  startpos.line = playpos.line+(quant-tmp)+1
-  if (tmp == 1) and not is_playing then
-    startpos.line = playpos.line
-  end
-  startpos.sequence = playpos.sequence
-  
-  local force_to_start = true
-  startpos:normalize(force_to_start)
+  local quant_time_delay = startpos:quantize()
 
   --print("trigger_press - startpos",startpos.line)
+  --print("trigger_press - quant_time_delay",quant_time_delay)
 
   self.note = Mlrx_note()
   self.note.index = trigger_idx
@@ -3182,6 +3162,7 @@ function Mlrx_track:trigger_press(trigger_idx)
   --print("trigger_press - note.time_pressed",self.note.time_pressed)
   --print("trigger_press - note.time_quant",self.note.time_quant)
 
+  -- output asap (increase chance of _not_ missing notes)
   self:track_output(playpos,Mlrx.writeahead)
 
   self.group:switch_to_track(self.mlrx_track_idx)
@@ -3192,11 +3173,8 @@ function Mlrx_track:trigger_press(trigger_idx)
     self.main:update_track_selector()
   end
 
-  -- ask the group to perform the update
-  --self.group:group_output()
-
   -- if not playing, note notes are cleared at once
-  if not is_playing then
+  if not rns.transport.playing then
     self.note = nil
   end
 
@@ -3240,11 +3218,19 @@ function Mlrx_track:trigger_release(trigger_idx)
   if (time_released > self.note.time_quant) then
     --print("released after note-on - output note-off at first given chance")
     pos.line = pos.line+1
-  elseif self.note.startpos then -- released before note-on, use held time as duration
+    -- guard against a _really_ quick release of the trigger-button
+    -- (otherwise, we'd clear the note as soon as it was written)
+    --self.note.repeatpos = self.note.startpos
+    self.note.ignore_lines:insert(self.note.startpos)
+
+  elseif self.note.startpos then 
+    --print("released before note-on, use held time as duration")
     pos = self.note.startpos
     local time_diff = time_released - self.note.time_pressed
+    --print("time_diff",time_diff)
     line_count = math.ceil(Mlrx.lps * (time_released - self.note.time_pressed))
-    line_count = math.min(1,line_count) -- duration should be at least one line
+    --print("line_count",line_count)
+    line_count = math.max(1,line_count) -- duration should be at least one line
   end
 
   self.note.endpos = Mlrx_pos({
@@ -3390,7 +3376,7 @@ end
 
 function Mlrx_pos:__eq(other)
 
-  -- TODO faster if both are native SongPos objects:
+  -- OPTIMIZE faster if both are native SongPos objects:
   --return rawequal(self, other)
 
   if (self.line == other.line) and
@@ -3405,7 +3391,7 @@ end
 
 function Mlrx_pos:__lt(other)
 
-  -- TODO faster if both are native SongPos objects:
+  -- OPTIMIZE faster if both are native SongPos objects:
   --return (self < other)
 
   if (self.sequence == other.sequence) then
@@ -3467,3 +3453,43 @@ function Mlrx_pos:normalize(force_to_start)
   end
 
 end
+
+--------------------------------------------------------------------------------
+
+-- quantize the position to the nearest match, in a forward-going direction
+-- note that quantize will always start reset at line 1 (same as Renoise),
+-- and that quantize will be able to match the _current position_ if playback
+-- is stopped (but only then)
+-- @param amount (int) the amount of quantize/lines to apply
+-- @return delay (float) the time that the note got pushed, in seconds
+
+function Mlrx_pos:quantize(quant)
+
+  if not quant then
+    quant = Mlrx.get_quantize()
+  end
+
+  local rns = renoise.song()
+
+  local tmp = self.line%quant
+  if (tmp==0) then
+    tmp = quant
+  end
+
+  local quant_time_delay = (quant-tmp)/Mlrx.lps
+
+  local quantized = Mlrx_pos(self)
+  quantized.line = self.line+(quant-tmp)+1
+  if (tmp == 1) and not rns.transport.playing then
+    quantized.line = self.line
+  end
+  quantized.sequence = self.sequence
+  quantized:normalize(true) -- force to start
+
+  self.line = quantized.line
+  self.sequence = quantized.sequence
+
+  return quant_time_delay
+
+end
+
