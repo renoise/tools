@@ -102,6 +102,7 @@ Keyboard.default_options = {
   },
   velocity_mode = {
     label = "Velocity Mode",
+    hidden = true,
     description = "Determine how to act on velocity range (the range specified in the control-map)",
     items = {
       "Clamp (restrict to range)",
@@ -111,6 +112,7 @@ Keyboard.default_options = {
   },
   keyboard_mode = {
     label = "Keyboard Mode",
+    hidden = true,
     description = "Determine how notes should be triggered",
     items = {
       "Trigger notes in range (OSC)",
@@ -155,6 +157,7 @@ Keyboard.default_options = {
   },
   release_type = {
     label = "Key-release",
+    hidden = true,
     description = "Determine how to respond when the same key is triggered"
                 .."\nmultiple times without being released inbetween hits: "
                 .."\n'wait' means to wait until all pressed keys are released, "
@@ -168,6 +171,7 @@ Keyboard.default_options = {
   },
   button_width = {
     label = "Grid Button-W",
+    hidden = true,
     on_change = function(app)
       local msg = "This change will be applied the next time Duplex is started"
       renoise.app():show_message(msg)
@@ -180,6 +184,7 @@ Keyboard.default_options = {
   },
   button_height = {
     label = "Grid Button-H",
+    hidden = true,
     on_change = function(app)
       local msg = "This change will be applied the next time Duplex is started"
       renoise.app():show_message(msg)
@@ -409,6 +414,8 @@ function Keyboard:trigger(note_on,pitch,velocity,grid_index)
     return false
   end
 
+  local rns = renoise.song()
+
   -- notes outside user-defined range are sent as MIDI
   local is_midi = not self:inside_note_range(pitch)
 
@@ -439,10 +446,20 @@ function Keyboard:trigger(note_on,pitch,velocity,grid_index)
         return false
       end
     end
-    -- scale velocity from device range to keyboard range (0-127)
-    velocity = scale_value(velocity,0,key_max,0,127)
-    -- apply user-specified volume 
-    velocity = math.floor(velocity * (self.curr_volume/KEYBOARD_VELOCITIES))
+
+    local fixed_velocity = false
+    if (rns.transport.keyboard_velocity_enabled and 
+      (self.options.base_volume.value == VOLUME_FOLLOW)) or
+      (self.options.base_volume.value > VOLUME_FOLLOW)
+    then
+      -- attach fixed velocity to message
+      velocity = self.curr_volume
+    else
+      -- scale velocity from device range to keyboard range (0-127)
+      velocity = scale_value(velocity,0,key_max,0,127)
+      -- apply user-specified volume 
+      velocity = math.floor(velocity * (self.curr_volume/KEYBOARD_VELOCITIES))
+    end
   end
 
   --print("trigger note_on,instr,track,pitch,velocity",note_on,instr,track,pitch,velocity)
@@ -1322,7 +1339,7 @@ end
 
 --------------------------------------------------------------------------------
 
--- set_octave() - sets the current volume 
+-- set_volume() - sets the current volume 
 -- @param val (Integer), between 0 and 127
 -- @param skip_option (Boolean) set this to skip setting option
 
@@ -1339,7 +1356,7 @@ function Keyboard:set_volume(val,skip_option)
     self._volume:set_value(self.curr_volume,skip_event)
   end
   if not skip_option and 
-    (self.options.base_volume.value ~= OCTAVE_FOLLOW) 
+    (self.options.base_volume.value ~= VOLUME_FOLLOW) 
   then
     -- modify the persistent settings
     self:_set_option("base_volume",self.curr_volume+1,self._process)
