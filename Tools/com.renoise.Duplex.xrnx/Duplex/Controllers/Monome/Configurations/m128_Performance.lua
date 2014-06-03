@@ -2,8 +2,6 @@
 -- Duplex.Monome 
 ----------------------------------------------------------------------------]]--
 
--- setup "StepSequencer" for this configuration
-
 duplex_configurations:insert {
 
   -- configuration properties
@@ -20,7 +18,7 @@ duplex_configurations:insert {
     device_port_out = "8082",
     control_map = "Controllers/Monome/Controlmaps/Monome128_Performance.xml",
     thumbnail = "Controllers/Monome/Monome.bmp",
-    protocol = DEVICE_OSC_PROTOCOL,
+    protocol = DEVICE_PROTOCOL.OSC,
   },
   applications = {
 
@@ -29,18 +27,6 @@ duplex_configurations:insert {
         grid = {
           group_name = "Repeater",
         },
-        --lock_button = {
-        --  group_name = "Grid8x1",
-        --  index = 1
-        --},
-        --prev_device = {
-        --  group_name = "Grid8x1",
-        --  index = 2
-        --},
-        --next_device = {
-        --  group_name = "Grid8x1",
-        --  index = 3
-        --},
       }
     },
     TiltSensor = {
@@ -60,7 +46,7 @@ duplex_configurations:insert {
       mappings = {
         blockpos = {
           group_name = "Navigator",
-          orientation = VERTICAL,
+          orientation = ORIENTATION.VERTICAL,
         }
       }
     },
@@ -82,53 +68,24 @@ duplex_configurations:insert {
           group_name = "Controls",
           index = 4,
         },
-        --goto_previous = {
-        --  group_name= "Controls",
-        --  index = 5,
-        --},
-        --goto_next = {
-        --  group_name= "Controls",
-        --  index = 6,
-        --},
+
       }
     },
     Effect = {
       mappings = {
         parameters = {
           group_name= "Effects",
-          orientation = VERTICAL,
+          orientation = ORIENTATION.VERTICAL,
           flipped = false,
         },
-        --device = {
-        --  group_name = "Controls2",
-        --},
-        --device_prev = {
-        --  group_name = "Grid1x5",
-        --  index = 4
-        --},
-        --device_next = {
-        --  group_name = "Grid1x5",
-        --  index = 5
-        --}
       },
     },
     Mixer = {
       mappings = {
-        --levels = {
-        --  group_name = "Grid",
-        --},
         mute = {
           group_name = "MixerMute",
         },
-        --page = {
-        --  group_name = "Controls1",
-        --  orientation = HORIZONTAL,
-        --  index = 1,
-        --},
-        --mode = {
-        --  group_name = "Controls2",
-        --  index = 1,
-        --},
+
       },
       options = {
         invert_mute = 2,
@@ -151,11 +108,6 @@ duplex_configurations:insert {
         triggers = {
           group_name = "Triggers",
         },
-        --sequence = {
-        --  group_name = "Controls",
-        --  index = 5,
-        --  orientation = HORIZONTAL
-        --},
         prev_seq_page = {
           group_name = "Controls",
           index = 5,
@@ -164,10 +116,6 @@ duplex_configurations:insert {
           group_name = "Controls",
           index = 6,
         },
-        --track = {
-        --  group_name = "Controls",
-        --  index = 3,
-        --}
       }
     },
 

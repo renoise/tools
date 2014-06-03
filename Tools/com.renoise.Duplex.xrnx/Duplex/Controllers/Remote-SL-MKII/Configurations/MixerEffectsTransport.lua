@@ -1,4 +1,3 @@
--- setup Mixer + Effect + Transport for this configuration
 
 duplex_configurations:insert {
 
@@ -14,7 +13,7 @@ duplex_configurations:insert {
     device_port_out = "Automap MIDI",
     control_map = "Controllers/Remote-SL-MKII/Controlmaps/Remote-SL-MKII.xml",
     thumbnail = "Controllers/Remote-SL-MKII/Remote-SL-MKII.bmp",
-    protocol = DEVICE_MIDI_PROTOCOL
+    protocol = DEVICE_PROTOCOL.MIDI
   },
   
   applications = {
@@ -23,16 +22,6 @@ duplex_configurations:insert {
         levels = {
           group_name = "Sliders",
         },
-        --[[
-        master = {
-          group_name = "Modulators",
-          index = 2,
-        },
-        ]]
-        --page = {
-        --  group_name = "EncoderButtons",
-        --  index = 7,
-        --},
         param_prev = {
           group_name = "EncoderButtons",
           index = 3,
@@ -41,11 +30,6 @@ duplex_configurations:insert {
           group_name = "EncoderButtons",
           index = 4,
         },
-        --[[
-        mute = {
-          group_name = "SliderButtons",
-        },
-        ]]
       },
       options = {
         page_size = 2,     -- "1",
@@ -80,12 +64,6 @@ duplex_configurations:insert {
         parameters = {
           group_name= "Encoders",
         },
-        --[[
-        page = {
-          group_name = "EncoderButtons",
-          index = 1
-        },
-        ]]
         device = {
           group_name = "PotButtons",
         }

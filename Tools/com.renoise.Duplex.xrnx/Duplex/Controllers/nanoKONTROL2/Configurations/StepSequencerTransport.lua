@@ -2,9 +2,6 @@
 -- Duplex.NanoKontrol2
 ----------------------------------------------------------------------------]]--
 
-
--- setup "StepSeq + Transport" for this configuration
-
 duplex_configurations:insert {
 
   -- configuration properties
@@ -19,7 +16,7 @@ duplex_configurations:insert {
     device_port_out = "nanoKONTROL2",
     control_map = "Controllers/nanoKONTROL2/Controlmaps/nanoKONTROL2_Seq.xml",
     thumbnail = "Controllers/nanoKONTROL2/nanoKONTROL2.bmp",
-    protocol = DEVICE_MIDI_PROTOCOL
+    protocol = DEVICE_PROTOCOL.MIDI
   },
   
   applications = {
@@ -27,11 +24,11 @@ duplex_configurations:insert {
       mappings = {
         level = {
           group_name = "Buttons1",
-          orientation = HORIZONTAL,
+          orientation = ORIENTATION.HORIZONTAL,
         },
         grid = {
           group_name = "Buttons2",
-          orientation = HORIZONTAL,
+          orientation = ORIENTATION.HORIZONTAL,
         },
         prev_line = {
           group_name = "Encoders",
@@ -43,7 +40,7 @@ duplex_configurations:insert {
         },
         transpose = {
           group_name = "Encoders",
-          orientation = HORIZONTAL,
+          orientation = ORIENTATION.HORIZONTAL,
           index = 1
         },
         metronome_toggle = {

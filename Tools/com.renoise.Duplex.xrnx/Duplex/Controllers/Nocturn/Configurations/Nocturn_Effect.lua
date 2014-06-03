@@ -2,8 +2,6 @@
 -- Duplex.Nocturn
 ----------------------------------------------------------------------------]]--
 
--- setup Effect as the only app for this configuration
-
 duplex_configurations:insert {
 
   -- configuration properties
@@ -18,7 +16,7 @@ duplex_configurations:insert {
     device_port_out = "Automap MIDI",
     control_map = "Controllers/Nocturn/Controlmaps/Nocturn.xml",
     thumbnail = "Controllers/Nocturn/Nocturn.bmp",
-    protocol = DEVICE_MIDI_PROTOCOL
+    protocol = DEVICE_PROTOCOL.MIDI
   },
   
   applications = {
@@ -46,10 +44,6 @@ duplex_configurations:insert {
           group_name = "Pots",
           index = 4,
         },
-        --page = {
-        --  group_name = "Pots",
-        -- index = 5,
-        --},
         param_prev = {
           group_name = "Pots",
           index = 5,
@@ -58,11 +52,6 @@ duplex_configurations:insert {
           group_name = "Pots",
           index = 6,
         },
-        --[[
-        device = {
-          group_name = "Pots",
-        },
-        ]]
       },
       options = {
         

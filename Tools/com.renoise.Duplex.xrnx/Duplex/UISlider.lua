@@ -1,56 +1,17 @@
---[[----------------------------------------------------------------------------
+--[[============================================================================
 -- Duplex.UISlider
-----------------------------------------------------------------------------]]--
+-- Inheritance: UIComponent > UISlider
+============================================================================]]--
 
---[[
-
-Inheritance: UIComponent > UISlider
-Requires: Globals, Display, CanvasPoint
-
--------------------------------------------------------------------------------
-
-About
-
+--[[--
 The Slider supports different input methods: buttons or faders/dials
-- - use buttons to quantize the slider input
-- - use faders/dials to divide value into smaller segments
-- supports horizontal/vertical and axis flipping
+
+- use multiple buttons to divide the value into discrete steps
+- built-in quantize for MIDI devices (only output when 7bit values change)
+- supports ORIENTATION.HORIZONTAL/vertical orientation and axis flipping
 - display as normal/dimmed version (if supported in hardware)
-- minimum size: 1
-
--------------------------------------------------------------------------------
-
-Events
-
-  on_change() - invoked whenever the slider recieve a new value
-
-  - if an event handler return false, we cancel/revert any changed values
-
-
--------------------------------------------------------------------------------
-
-Usage
-
-  -- create a vertical slider, 4 units in height
-
-  local slider = UISlider(self.display)
-  slider.group_name = "some_group_name"
-  slider.x_pos = 1
-  slider.y_pos = 1
-  slider.toggleable = true
-  slider.inverted = false
-  slider.ceiling = 10
-  slider:set_orientation(VERTICAL)
-  slider:set_size(4)
-  slider.on_change = function(obj) 
-    -- on_change needs to be specified, if we
-    -- want the slider to respond to input
-  end
-  self.display:add(slider)
-
 
 --]]
-
 
 --==============================================================================
 
@@ -59,56 +20,62 @@ class 'UISlider' (UIComponent)
 --------------------------------------------------------------------------------
 
 --- Initialize the UISlider class
--- @param app (Duplex.Application)
+-- @param app (@{Duplex.Application})
 
 function UISlider:__init(app)
   TRACE('UISlider:__init')
 
   UIComponent.__init(self,app)
 
-  -- current value, between 0 and .ceiling
+  --- current value, between 0 and .ceiling
   self.value = 0
 
-  -- TODO the minimum value (the opposite of ceiling)
+  --- TODO the minimum value (the opposite of ceiling)
   -- self.floor = 0
 
-  -- set the number of steps to quantize the value
+  --- (int), set the number of steps to quantize the value
   -- (this value is automatically set when we assign a size)
   self.steps = 1
 
-  -- the selected index, between 0 - number of steps
+  --- (int) the selected index, between 0 - number of steps
   self.index = 0
 
-  -- if true, press twice to switch to deselected state
+  --- (bool) if true, press twice to switch to deselected state
   -- only applies when input method is a button
   self.toggleable = false
 
-  -- paint a dimmed version
+  --- (bool) paint a dimmed version
   -- only applies when input method is a button
   self.dimmed = false
 
-  -- set this mode to ensure that slider is always displayed 
+  --- (bool) set this mode to ensure that slider is always displayed 
   -- correctly when using an array of buttons 
   -- (normally, this is not a problem, but when a slider is 
   -- resized to a single unit, this is the only way it will be 
   -- able to tell that it's a button)
   self.button_mode = false
 
-  -- flip top/bottom direction 
+  --- (bool) flip top/bottom direction 
   self.flipped = false
 
-  -- slider is vertical or horizontal?
+  --- slider is ORIENTATION.VERTICAL or ORIENTATION.HORIZONTAL?
   -- (use set_orientation() method to set this value)
-  self._orientation = VERTICAL 
+  self._orientation = ORIENTATION.VERTICAL 
 
-  -- the 'physical' size (should always be 1 for dials/faders)
+  --- (int) the 'physical' size, should always be 1 for dials/faders
   -- (use set_size() method to set this value)
   self._size = 1
 
   -- apply size 
   self:set_size(self._size)
   
-  -- default palette
+  --- default palette
+  -- @field background The background color 
+  -- @field tip The active point
+  -- @field tip_dimmed The active point (when dimmed)
+  -- @field track The track color
+  -- @field track_dimmed The track color (when dimmed)
+  -- @table palette
   self.palette = {
     background    = {color = {0x00,0x00,0x00}, text = "·", val=false},
     tip           = {color = {0xFF,0xFF,0xFF}, text = "▪", val=true},
@@ -117,7 +84,7 @@ function UISlider:__init(app)
     track_dimmed  = {color = {0x80,0x80,0x80}, text = "▫", val=true},
   }
 
-  -- internal values
+  --- internal values
   self._cached_index = self.index
   self._cached_value = self.value
 
@@ -130,7 +97,7 @@ end
 --------------------------------------------------------------------------------
 
 --- A button was pressed
--- @param msg (Duplex.Message)
+-- @param msg (@{Duplex.Message})
 -- @return self or nil
 
 function UISlider:do_press(msg)
@@ -142,7 +109,7 @@ function UISlider:do_press(msg)
 
   local idx = nil
 
-  if (self._orientation == HORIZONTAL) or (self._orientation == VERTICAL) then
+  if (self._orientation == ORIENTATION.HORIZONTAL) or (self._orientation == ORIENTATION.VERTICAL) then
     idx = self:_determine_index_by_pos(msg.column, msg.row)
   else
     idx = msg.index
@@ -158,33 +125,11 @@ function UISlider:do_press(msg)
 
 end
 
-
---------------------------------------------------------------------------------
-
---- A button was released
--- @param msg (Duplex.Message)
---[[
-function UISlider:do_release(msg)
-  TRACE("UISlider:do_release()",msg)
-
-  if not self:test(msg) then
-    return 
-  end
-
-  if (msg.input_method == CONTROLLER_PUSHBUTTON) then
-    self:force_update()
-  end
-
-
-end
-
-]]
-
 --------------------------------------------------------------------------------
 
 --- A value was changed (slider, dial)
 -- set index + precise value within the index
--- @param msg (Duplex.Message)
+-- @param msg (@{Duplex.Message})
 -- @return self or nil
 
 function UISlider:do_change(msg)
@@ -198,7 +143,7 @@ function UISlider:do_change(msg)
     
     local new_val = nil
     
-    local is_midi_device = (self.app.display.device.protocol == DEVICE_MIDI_PROTOCOL)
+    local is_midi_device = (self.app.display.device.protocol == DEVICE_PROTOCOL.MIDI)
     
     local is_relative_7 = ((msg.param.mode == "rel_7_signed") or 
       (msg.param.mode == "rel_7_signed2") or
@@ -269,7 +214,7 @@ end
 
 --- Set the value (will also update the index)
 -- @param val (float), a number between 0 and .ceiling
--- @param skip_event (boolean) skip event handler
+-- @param skip_event (bool) skip event handler
 
 function UISlider:set_value(val,skip_event)
   TRACE("UISlider:set_value()",val,skip_event)
@@ -291,11 +236,12 @@ end
 --------------------------------------------------------------------------------
 
 --- Check if parameter-quantization is in force
--- @return (Boolean) true when the message can pass, false when not
+-- @return (bool) true when the message can pass, false when not
 
 function UISlider:output_quantize(val)
 
-  if not (self.app.display.device.protocol == DEVICE_MIDI_PROTOCOL) then
+  -- MIDI devices quantize their output by default
+  if not (self.app.display.device.protocol == DEVICE_PROTOCOL.MIDI) then
     return true
   end
 
@@ -320,7 +266,7 @@ end
 
 --- Set index (will also update the value)
 -- @param idx (integer) 
--- @param skip_event (boolean) skip event handler
+-- @param skip_event (bool) skip event handler
 
 function UISlider:set_index(idx,skip_event)
   TRACE("UISlider:set_index()",idx,skip_event)
@@ -353,7 +299,7 @@ end
 --------------------------------------------------------------------------------
 
 --- Display the slider as "dimmed" (use alternative palette)
--- @param bool (Boolean) true for dimmed state, false for normal state
+-- @param bool (bool) true for dimmed state, false for normal state
 
 function UISlider:set_dimmed(bool)
 
@@ -367,14 +313,14 @@ end
 
 --- Set the slider orientation 
 -- (only relevant when assigned to buttons)
--- @param value (Enum) either VERTICAL or HORIZONTAL
+-- @param value (@{Duplex.Globals.ORIENTATION}) 
 
 function UISlider:set_orientation(value)
   TRACE("UISlider:set_orientation",value)
 
-  assert((value == NO_ORIENTATION) or 
-    (value == HORIZONTAL) or 
-    (value == VERTICAL),
+  assert((value == ORIENTATION.NONE) or 
+    (value == ORIENTATION.HORIZONTAL) or 
+    (value == ORIENTATION.VERTICAL),
     "Warning: UISlider received unexpected UI orientation")
 
   self._orientation = value
@@ -385,7 +331,7 @@ end
 --------------------------------------------------------------------------------
 
 --- Get the orientation 
--- @return (Enum) either VERTICAL or HORIZONTAL
+-- @return @{Duplex.Globals.ORIENTATION}
 
 function UISlider:get_orientation()
   TRACE("UISlider:get_orientation()")
@@ -397,8 +343,9 @@ end
 -- Overridden from UIComponent
 --------------------------------------------------------------------------------
 
---- Set the size (will change the canvas too)
+--- Override UIComponent with this method
 -- @param size (Number)
+-- @see Duplex.UIComponent
 
 function UISlider:set_size(size)
   TRACE("UISlider:set_size",size)
@@ -406,10 +353,10 @@ function UISlider:set_size(size)
   self.steps = size
   self._size = size
 
-  if (self._orientation == VERTICAL) then
+  if (self._orientation == ORIENTATION.VERTICAL) then
     UIComponent.set_size(self, 1, size)
-  elseif (self._orientation == HORIZONTAL) or
-    (self._orientation == NO_ORIENTATION)
+  elseif (self._orientation == ORIENTATION.HORIZONTAL) or
+    (self._orientation == ORIENTATION.NONE)
   then
     UIComponent.set_size(self, size, 1)
   end
@@ -418,8 +365,9 @@ end
 --------------------------------------------------------------------------------
 
 --- Expanded UIComponent test
--- @param msg (Message)
--- @return boolean, false when criteria is not met
+-- @param msg (@{Duplex.Message})
+-- @return bool, false when criteria is not met
+-- @see Duplex.UIComponent.test
 
 function UISlider:test(msg)
 
@@ -431,8 +379,8 @@ function UISlider:test(msg)
     return false
   end
   
-  if (self._orientation == VERTICAL) or
-    (self._orientation == HORIZONTAL)
+  if (self._orientation == ORIENTATION.VERTICAL) or
+    (self._orientation == ORIENTATION.HORIZONTAL)
   then
     return UIComponent.test(self,msg.column,msg.row)
   end
@@ -445,7 +393,8 @@ end
 
 --------------------------------------------------------------------------------
 
---- Update the UIComponent canvas
+--- Update the appearance - inherited from UIComponent
+-- @see Duplex.UIComponent
 
 function UISlider:draw()
   TRACE("UISlider:draw() - self.value",self.value)
@@ -468,7 +417,7 @@ function UISlider:draw()
       for i = 1,self._size do
 
         local x,y = 1,1
-        if (self._orientation == VERTICAL) then 
+        if (self._orientation == ORIENTATION.VERTICAL) then 
           y = i
         else
           x = i  
@@ -512,22 +461,25 @@ end
 
 --------------------------------------------------------------------------------
 
---- Add event listeners (press, change)
+--- Add event listeners
+--    DEVICE_EVENT.BUTTON_PRESSED
+--    DEVICE_EVENT.VALUE_CHANGED
+-- @see Duplex.UIComponent.add_listeners
 
 function UISlider:add_listeners()
   TRACE("UISlider:add_listeners()")
 
   self.app.display.device.message_stream:add_listener(
-    self,DEVICE_EVENT_BUTTON_PRESSED,
+    self,DEVICE_EVENT.BUTTON_PRESSED,
     function(msg) return self:do_press(msg) end )
 
   self.app.display.device.message_stream:add_listener(
-    self,DEVICE_EVENT_VALUE_CHANGED,
+    self,DEVICE_EVENT.VALUE_CHANGED,
     function(msg) return self:do_change(msg) end )
 
   --[[
   self.app.display.device.message_stream:add_listener(
-    self,DEVICE_EVENT_BUTTON_RELEASED,
+    self,DEVICE_EVENT.BUTTON_RELEASED,
     function(msg) self:do_release(msg) end )
   ]]
 
@@ -537,20 +489,20 @@ end
 --------------------------------------------------------------------------------
 
 --- Remove previously attached event listeners
--- @see UISlider:add_listeners
+-- @see Duplex.UIComponent
 
 function UISlider:remove_listeners()
   TRACE("UISlider:remove_listeners()")
 
   self.app.display.device.message_stream:remove_listener(
-    self,DEVICE_EVENT_BUTTON_PRESSED)
+    self,DEVICE_EVENT.BUTTON_PRESSED)
 
   self.app.display.device.message_stream:remove_listener(
-    self,DEVICE_EVENT_VALUE_CHANGED)
+    self,DEVICE_EVENT.VALUE_CHANGED)
 
   --[[
   self.app.display.device.message_stream:remove_listener(
-    self,DEVICE_EVENT_BUTTON_RELEASED)
+    self,DEVICE_EVENT.BUTTON_RELEASED)
   ]]
 
 end
@@ -568,13 +520,13 @@ function UISlider:_determine_index_by_pos(column,row)
 
   local idx,offset
 
-  if (self._orientation == VERTICAL) then
+  if (self._orientation == ORIENTATION.VERTICAL) then
     idx = row
     offset = self.y_pos
-  elseif (self._orientation == HORIZONTAL) then
+  elseif (self._orientation == ORIENTATION.HORIZONTAL) then
     idx = column
     offset = self.x_pos
-  elseif (self._orientation == NO_ORIENTATION) then
+  elseif (self._orientation == ORIENTATION.NONE) then
     idx = column
     offset = self.x_pos
   end

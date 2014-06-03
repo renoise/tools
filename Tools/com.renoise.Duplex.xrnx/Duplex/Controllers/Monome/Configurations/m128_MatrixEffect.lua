@@ -20,7 +20,7 @@ duplex_configurations:insert {
     device_port_out = "8082",
     control_map = "Controllers/Monome/Controlmaps/Monome128_MatrixEffect.xml",
     thumbnail = "Controllers/Monome/Monome.bmp",
-    protocol = DEVICE_OSC_PROTOCOL,
+    protocol = DEVICE_PROTOCOL.OSC,
     options = {
       --cable_orientation = 2 -- up
     }
@@ -35,10 +35,6 @@ duplex_configurations:insert {
         triggers = {
           group_name = "Grid1",
         },
-        --sequence = {
-        --  group_name = "Controls",
-        --  index = 1,
-        --},
         prev_seq_page = {
           group_name = "Controls",
           index = 1,
@@ -57,7 +53,7 @@ duplex_configurations:insert {
       mappings = {
         blockpos = {
           group_name = "Column",
-          orientation = VERTICAL,
+          orientation = ORIENTATION.VERTICAL,
         }
       }
     },

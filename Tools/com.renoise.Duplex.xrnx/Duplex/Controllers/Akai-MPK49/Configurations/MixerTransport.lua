@@ -2,8 +2,6 @@
 -- Duplex.Akai-MPK49
 ----------------------------------------------------------------------------]]--
 
--- setup a Mixer app as the only app for this configuration
-
 duplex_configurations:insert {
 
   -- configuration properties
@@ -18,7 +16,7 @@ duplex_configurations:insert {
     device_port_out = "Akai MPK49",
     control_map = "Controllers/Akai-MPK49/Controlmaps/Akai-MPK49.xml",
     thumbnail = "Controllers/Akai-MPK49/Akai-MPK49.bmp",
-    protocol = DEVICE_MIDI_PROTOCOL
+    protocol = DEVICE_PROTOCOL.MIDI
   },
   
   applications = {

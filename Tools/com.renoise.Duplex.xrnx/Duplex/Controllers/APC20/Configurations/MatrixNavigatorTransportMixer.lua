@@ -2,8 +2,6 @@
 -- Duplex.APC20
 ----------------------------------------------------------------------------]]--
 
--- setup "Matrix + Navigator + Transport + Mixer",
-
 duplex_configurations:insert {
 
   -- configuration properties
@@ -18,7 +16,7 @@ duplex_configurations:insert {
     device_port_out = "Akai APC20",
     control_map = "Controllers/APC20/Controlmaps/APC20.xml",
     thumbnail = "Controllers/APC20/APC20.bmp",
-    protocol = DEVICE_MIDI_PROTOCOL,
+    protocol = DEVICE_PROTOCOL.MIDI,
   },
 
   applications = {
@@ -34,10 +32,6 @@ duplex_configurations:insert {
           group_name = "Transport",
           index = 5,
         },
-        --sequence = {
-        --  group_name = "Transport",
-        --  index = 7,
-        --},
         prev_seq_page = {
           group_name = "Transport",
           index = 7,
@@ -124,7 +118,7 @@ duplex_configurations:insert {
       mappings = {
         blockpos = {
           group_name = "Navigator",
-          orientation = HORIZONTAL,
+          orientation = ORIENTATION.HORIZONTAL,
         },
       }
     },

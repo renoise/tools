@@ -1,105 +1,25 @@
---[[----------------------------------------------------------------------------
+--[[============================================================================
 -- Duplex.UIButton
-----------------------------------------------------------------------------]]--
+-- Inheritance: UIComponent > UIButton
+============================================================================]]--
 
---[[
+--[[--
+The UIButton is a generic button. It is very flexible, as you can assign any button type, fader or dial to control it
+     __________ __________ _______________
+    |   ____   |    __    |               |
+    |  / __ \  |   |  |   |   ____        |
+    | / /  \ \ |   |  |   |  |    |       |
+    | \ \__/ / |   |__|   |  | // |       |
+    |  \/___/  |   |__|   |  |____|       |
+    |          |          |               |
+    |  Dial    |  Fader   |  Button       |
+    |          |          |  PushButton   |
+    |          |          |  ToggleButton |
+    |__________|__________|_______________|
 
-Inheritance: UIComponent > UIButton
-
--- About the UIButton component --
-
-  The UIButton is a generic button component that accept a wide range of input 
-  methods - you can assign any button type, fader or dial to control it.
-  The button has no internal "active" or "enabled" state, it merely tells you 
-  when an event has occurred. Then, it is up to you to change it's visual state. 
-
-
--- Working with events --
-
-  To listen for an event, you add one of these to your code: 
-
-  on_change()   - invoked when a slider/dial is changed
-  on_press()    - invoked when the button is pressed
-  on_release()  - invoked when the button is released
-  on_hold()     - invoked when the button is held for a while*
-                  (the standard amount of time is 0.5 seconds)
-
-  -- Here is an example
-  my_button.on_change = function()
-    -- do something
-  end
-
-
-  Each input method may or may not support specific events. See this table:
-
-                  | on_change | on_press |  on_release | on_hold
-  ----------------+-----------+----------+-------------+----------
-  @button         |           |     X    |       X     |    X
-  @pushbutton     |           |     X    |             |
-  @togglebutton   |           |     X    |             |
-  @fader          |    X      |          |             |
-  @dial           |    X      |          |             |
-
-
--- Controlling the visual representation --
-
-  In Duplex, the UIButton stores it's visual representation in something known
-  as a Canvas. The Canvas is made from indivual points, each of which can
-  contain the following values: 
-
-  Value   This is a simple boolean value which will tell if the button is lit 
-          or not - relevant for most hardware with LEDs that can turn on/off
-
-  Color   Depending on the capabilities of your hardware, color might be an
-          interesting feature to make use of. Most hardware doesn't support
-          the use of color (this is determined by the device colorspace). 
-
-  Text    this is merely for display purposes on the computer screen, but still,
-          it's nice to be able to e.g. label a play button with a "►" symbol.
-
-  In order to actually change these values, you have a couple of methods 
-  at your disposal: 
-
-  Method #1 : set
-  
-  The set() method is the most simple, and will allow you to instantly set 
-  any (or all) of the following properties: color, text, value 
-
-  -- Here is an example, setting the button color to full white:
-  my_button:set({color={0xFF,0xFF,0xFF}})
-
-  -- Here is another example, setting the button color along with text:
-  my_button:set({
-    color = {0xFF,0x40,0x00}, 
-    text = "HELLO"
-  })
-
-  Method #2 : flash
-
-  If you are using a button to produce a "one-shot" type of event, you would
-  want it to briefly flash and then go back to it's default state. Of course,
-  you could use the set() method twice (schedule the second one shortly after
-  the first), but it is a much simpler option to use the built-in method 
-  "flash". This method will allow you to assign a list of palette entries 
-  that the button should cycle through, even controlling the speed of updates. 
-  Just as with the set() method, you can choose to update any or all of the 
-  properties, this is entirely up to you.
-
-  -- Here is an example of a brief flash, going to lit state and back
-  my_button:flash(0.1,{value=true},{value=false})
-
-  -- Here is an example of an extended flash, slowly fading to black
-  my_button:flash(0.5,
-    {color=0xFF,0xFF,0xFF},
-    {color=0xBF,0xBF,0xBF},
-    {color=0x7F,0x7F,0x7F},
-    {color=0x3F,0x3F,0x3F},
-    {color=0x1F,0x1F,0x1F},
-    {color=0x00,0x00,0x00})
-
+It has no internal "active" or "enabled" state, it merely tells you when an event has occurred. Then, it is up to you to change it's visual state. 
 
 --]]
-
 
 --==============================================================================
 
@@ -108,7 +28,7 @@ class 'UIButton' (UIComponent)
 --------------------------------------------------------------------------------
 
 --- Initialize the UIButton class
--- @param app (Duplex.Application)
+-- @param app (@{Duplex.Application})
 
 function UIButton:__init(app)
   TRACE('UIButton:__init')
@@ -137,8 +57,8 @@ end
 --------------------------------------------------------------------------------
 
 --- User pressed button
--- @param msg (Duplex.Message)
--- @return (Boolean), true when message was handled
+-- @param msg (@{Duplex.Message})
+-- @return (bool), true when message was handled
 
 function UIButton:do_press(msg)
   TRACE("UIButton:do_press")
@@ -150,7 +70,7 @@ function UIButton:do_press(msg)
   if (self.on_press ~= nil) then
     -- force-update controls that maintain their
     -- internal state (togglebutton, pushbutton)
-    if (msg.input_method ~= CONTROLLER_BUTTON) then
+    if (msg.input_method ~= INPUT_TYPE.BUTTON) then
       self:force_update()
     end
     self:on_press()
@@ -162,8 +82,8 @@ end
 --------------------------------------------------------------------------------
 
 --- User released button
--- @param msg (Duplex.Message)
--- @return (Boolean), true when message was handled
+-- @param msg (@{Duplex.Message})
+-- @return (bool), true when message was handled
 
 function UIButton:do_release(msg)
   TRACE("UIButton:do_release()")
@@ -174,7 +94,7 @@ function UIButton:do_release(msg)
   
   -- force-update controls that maintain their
   -- internal state (togglebutton, pushbutton)
-  if (msg.input_method ~= CONTROLLER_BUTTON) then
+  if (msg.input_method ~= INPUT_TYPE.BUTTON) then
     self:force_update()
   end
 
@@ -188,8 +108,8 @@ end
 --------------------------------------------------------------------------------
 
 --- User changed value via fader, dial ...
--- @param msg (Duplex.Message)
--- @return (Boolean), true when message was handled
+-- @param msg (@{Duplex.Message})
+-- @return (bool), true when message was handled
 
 function UIButton:do_change(msg)
   TRACE("UIButton:do_change()")
@@ -210,7 +130,7 @@ end
 --- User held button for a while (exact time is specified in preferences).
 --  Note that this event is only supported by controllers that transmit the 
 --  "release" event
--- @param msg (Duplex.Message)
+-- @param msg (@{Duplex.Message})
 
 function UIButton:do_hold(msg)
   TRACE("UIButton:do_hold()")
@@ -228,10 +148,9 @@ end
 --------------------------------------------------------------------------------
 
 --- Expanded UIComponent test. Look for group name + standard test
--- @param group_name (String) control-map group name
--- @param column (Number) 
--- @param row (Number) 
--- @return (Boolean), false when criteria is not met
+-- @param msg (@{Duplex.Message})
+-- @return (bool), false when criteria is not met
+-- @see Duplex.UIComponent.test
 
 function UIButton:test(msg)
 
@@ -249,13 +168,13 @@ end
 
 --------------------------------------------------------------------------------
 
---- Shorthand method for setting the foreground palette 
--- @param fg_val (Table), new color/text values
+--- method for setting the palette 
+-- @param val (table), new color/text values
 
-function UIButton:set(fg_val)
-  TRACE("UIButton:set()",fg_val)
+function UIButton:set(val)
+  TRACE("UIButton:set()",val)
 
-  if not fg_val then
+  if not val then
     return
   end
 
@@ -265,15 +184,15 @@ function UIButton:set(fg_val)
     self.app.display.scheduler:remove_task(self._task)
   end
 
-  UIComponent.set_palette(self,{foreground=fg_val})
+  UIComponent.set_palette(self,{foreground=val})
 
 end
 
 --------------------------------------------------------------------------------
 
 --- Easy way to animate the appearance of the button
--- @param delay (Number) number of seconds between updates
--- @param ... (Vararg) palette entries
+-- @param delay (number) number of seconds between updates
+-- @param ... (vararg) palette entries
 
 function UIButton:flash(delay, ...)
   TRACE("UIButton:flash()",delay,arg)
@@ -293,7 +212,8 @@ end
 
 --------------------------------------------------------------------------------
 
---- Update the appearance of the button 
+--- Update the appearance - inherited from UIComponent
+-- @see Duplex.UIComponent
 
 function UIButton:draw()
   --TRACE("UIButton:draw()")
@@ -336,24 +256,29 @@ end
 
 --------------------------------------------------------------------------------
 
---- Add event listeners to the button (press, release, change, hold)
+--- Add event listeners to the button
+--    DEVICE_EVENT.BUTTON_PRESSED
+--    DEVICE_EVENT.BUTTON_RELEASED
+--    DEVICE_EVENT.VALUE_CHANGED
+--    DEVICE_EVENT.BUTTON_HELD
+-- @see Duplex.UIComponent.add_listeners
 
 function UIButton:add_listeners()
 
   self.app.display.device.message_stream:add_listener(
-    self, DEVICE_EVENT_BUTTON_PRESSED,
+    self, DEVICE_EVENT.BUTTON_PRESSED,
     function(msg) return self:do_press(msg) end )
 
   self.app.display.device.message_stream:add_listener(
-    self, DEVICE_EVENT_BUTTON_RELEASED,
+    self, DEVICE_EVENT.BUTTON_RELEASED,
     function(msg) return self:do_release(msg) end )
 
   self.app.display.device.message_stream:add_listener(
-    self,DEVICE_EVENT_VALUE_CHANGED,
+    self,DEVICE_EVENT.VALUE_CHANGED,
     function(msg) return self:do_change(msg) end )
 
   self.app.display.device.message_stream:add_listener(
-    self,DEVICE_EVENT_BUTTON_HELD,
+    self,DEVICE_EVENT.BUTTON_HELD,
     function(msg) self:do_hold(msg) end )
 
 
@@ -363,21 +288,21 @@ end
 --------------------------------------------------------------------------------
 
 --- Remove previously attached event listeners
--- @see UIButton:add_listeners
+-- @see Duplex.UIComponent
 
 function UIButton:remove_listeners()
 
   self.app.display.device.message_stream:remove_listener(
-    self,DEVICE_EVENT_BUTTON_PRESSED)
+    self,DEVICE_EVENT.BUTTON_PRESSED)
 
   self.app.display.device.message_stream:remove_listener(
-    self,DEVICE_EVENT_BUTTON_RELEASED)
+    self,DEVICE_EVENT.BUTTON_RELEASED)
 
   self.app.display.device.message_stream:remove_listener(
-    self,DEVICE_EVENT_VALUE_CHANGED)
+    self,DEVICE_EVENT.VALUE_CHANGED)
 
   self.app.display.device.message_stream:remove_listener(
-    self,DEVICE_EVENT_BUTTON_HELD)
+    self,DEVICE_EVENT.BUTTON_HELD)
 
 
 end

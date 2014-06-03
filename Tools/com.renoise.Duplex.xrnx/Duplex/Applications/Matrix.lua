@@ -1,30 +1,32 @@
---[[----------------------------------------------------------------------------
+--[[============================================================================
 -- Duplex.Matrix
 -- Inheritance: Application > Matrix
-----------------------------------------------------------------------------]]--
+============================================================================]]--
 
---[[
-
-About
-
-  This application will take control of the pattern matrix in Renoise 
-  Apart from the matrix itself, it has controls for navigating the matrix
-  ("sequence"/"track") and a number of pattern triggers ("triggers")
+--[[--
+Take control of the pattern matrix in Renoise with the unfinitely scrollable matrix application. It contains pattern-triggers, too
   
-  See also the video at http://www.youtube.com/watch?v=K_kCaYV_T78
+### Demonstration video
 
-Changes (equal to Duplex version number)
+See a video demonstrating this application at [Youtube][1]
+[1]:http://www.youtube.com/watch?v=K_kCaYV_T78
 
-  0.95  - Added changelog, more thourough documentation
+### Changes
 
-  0.93  - Inclusion of UIButtonStrip for more flexible control of playback-pos
-        - Utilize "blinking" feature to display a scheduled pattern
-        - "follow_player" mode in Renoise will update the matrix immediately
+  0.95  
+    - Added changelog, more thourough documentation
 
-  0.92  - Removed the destroy_app() method (not needed anymore)
-        - Assign tooltips to the virtual control surface
+  0.93  
+    - Inclusion of UIButtonStrip for more flexible control of playback-pos
+    - Utilize "blinking" feature to display a scheduled pattern
+    - "follow_player" mode in Renoise will update the matrix immediately
 
-  0.91  - All mappings are now without dependancies (no more "required" groups)
+  0.92  
+    - Removed the destroy_app() method (not needed anymore)
+    - Assign tooltips to the virtual control surface
+
+  0.91  
+    - All mappings are now without dependancies (no more "required" groups)
 
   0.81  - First release
 
@@ -151,7 +153,7 @@ Matrix.available_mappings = {
                 .."\nPress multiple buttons to define loop"
                 .."\nPress and hold to toggle loop"
                 .."\nControl value: ",
-    orientation = VERTICAL,
+    orientation = ORIENTATION.VERTICAL,
   },
   next_seq_page = {
     description = "Matrix: display next sequence page"
@@ -169,7 +171,7 @@ Matrix.available_mappings = {
   track = {
     description = "Matrix: Flip though tracks"
                 .."\nControl value: ",
-    orientation = HORIZONTAL,
+    orientation = ORIENTATION.HORIZONTAL,
     index = 3,
   },
   ]]
@@ -204,46 +206,55 @@ Matrix.default_palette = {
 --------------------------------------------------------------------------------
 
 --- Constructor method
--- @param (VarArg), see Application to learn more
+-- @param (VarArg)
+-- @see Duplex.Application
 
 function Matrix:__init(...)
   TRACE("Matrix:__init(",...)
 
-  -- the various controls
-  self._buttons = nil
-  self._trigger = nil
-  self._next_track_page = nil
-  self._prev_track_page = nil
-  self._next_seq_page = nil
-  self._prev_seq_page = nil
+  --- (table) keep references to UI controls here
+  self._controls = table.create()
 
-  -- size of the matrix grid 
+  --- (int) width of the matrix grid 
   self._width = nil
+
+  --- (int) height of the matrix grid 
   self._height = nil
 
-  -- misc. properties 
+  --- (bool) true if currently playing
   self._playing = nil
+
+  --- (int) the currently playing page
   self._play_page = nil  
 
-  -- 
+  --- (int) current edit page
   self._edit_page = nil  
 
-  -- number, the total number of sequence pages
+  --- (int) the total number of sequence pages
   self._seq_page_count = nil
 
-  -- number, the total number of track pages
+  --- (int) the total number of track pages
   self._track_page_count = nil
 
+  --- (int) the current track offset
   self._track_offset = 0  
 
-  -- number, the current track page
+  --- (int) the current track page
   self._track_page = nil
 
+  --- (table) the loop sequence range
+  -- @field 1 (int) begin
+  -- @field 2 (int) end
+  -- @table _loop_sequence_range
   self._loop_sequence_range = {0,0}
+
+  --- (int) scheduled sequence index
   self._scheduled_pattern = nil
+
+  --- (renoise.SongPos) current playback pos
   self._playback_pos = nil
 
-  -- idle flags
+  --- idle flags
   self._update_slots_requested = false
   self._update_tracks_requested = false
   self._mute_notifier_disabled = false
@@ -254,7 +265,7 @@ end
 
 --------------------------------------------------------------------------------
 
--- update slots visual appeareance 
+--- update slots visual appeareance 
 
 function Matrix:_update_slots()
   TRACE("Matrix:_update_slots()")
@@ -284,12 +295,12 @@ function Matrix:_update_slots()
   local palette = {}
 
   -- loop through matrix & buttons
-  if (self._buttons) then
+  if (self._controls._buttons) then
     for track_idx = (1+self._track_offset),(self._width+self._track_offset) do
       for seq_index = (1+seq_offset),(self._height+seq_offset) do
         local bt_x = track_idx-self._track_offset
         local bt_y = seq_index-seq_offset
-        button = self._buttons[bt_x][bt_y]
+        button = self._controls._buttons[bt_x][bt_y]
 
         if((sequence[seq_index]) and (song.tracks[track_idx]))then
 
@@ -335,6 +346,10 @@ end
 
 --------------------------------------------------------------------------------
 
+--- inherited from Application
+-- @see Duplex.Application.start_app
+-- @return bool or nil
+
 function Matrix:start_app()
   TRACE("Matrix.start_app()")
 
@@ -344,25 +359,14 @@ function Matrix:start_app()
 
   self:_attach_to_song(renoise.song())
 
-  --self._playing = renoise.song().transport.playing
-  --self._playback_pos = renoise.song().transport.playback_pos
-  --self._play_page = self:_get_play_page()
-  --self._edit_page = self:_get_edit_page()
-  --self:_set_trigger_mode()
-  -- update everything!
-  --self:_update_seq_page_count()
-  --self:_update_seq_navigation()
-  --self:_update_track_navigation()
-  --self:_update_position()
-  --self:_update_range()
-  --self:_update_slots()
 
 end
 
 
 --------------------------------------------------------------------------------
 
--- periodic updates: handle "un-observable" things here
+--- inherited from Application
+-- @see Duplex.Application.on_idle
 
 function Matrix:on_idle()
 --TRACE("Matrix:idle_app()",self._update_slots_requested)
@@ -404,8 +408,8 @@ function Matrix:on_idle()
       -- changed pattern
       self._playback_pos = pos
 
-      if (self._trigger) then
-        self._trigger:stop_blink()
+      if (self._controls._trigger) then
+        self._controls._trigger:stop_blink()
       end
       -- entered a new play-page
       local play_page = self:_get_play_page()
@@ -419,8 +423,8 @@ function Matrix:on_idle()
       -- playback resumed
       TRACE("Matrix:on_idle ** playback resumed")
       self:_update_position()
-    elseif (self._trigger) and 
-      (self._trigger:get_index() == 0) and 
+    elseif (self._controls._trigger) and 
+      (self._controls._trigger:get_index() == 0) and 
       (self._play_page==self._edit_page) 
     then
       -- position now in play-range
@@ -436,8 +440,8 @@ function Matrix:on_idle()
       TRACE("Matrix:on_idle ** stopped playing")
       self:_update_position(0)
       self._playing = false
-      if (self._trigger) then
-        self._trigger:stop_blink()
+      if (self._controls._trigger) then
+        self._controls._trigger:stop_blink()
       end
     end
 
@@ -446,7 +450,8 @@ end
 
 --------------------------------------------------------------------------------
 
--- called when a new document becomes available
+--- inherited from Application
+-- @see Duplex.Application.on_new_document
 
 function Matrix:on_new_document()
   TRACE("Matrix:on_new_document()")
@@ -459,7 +464,7 @@ end
 -- private methods
 --------------------------------------------------------------------------------
 
--- check if we need to change page, but update only when following play-pos
+--- check if we need to change page, but update only when following play-pos
 -- called when page changes and when "follow_player" is enabled
 
 function Matrix:_check_page_change() 
@@ -479,50 +484,52 @@ end
 
 --------------------------------------------------------------------------------
 
--- update track navigator,
+--- update track navigator,
 -- on new song, and when tracks have been changed
 
 function Matrix:_update_track_navigation() 
   TRACE("Matrix:_update_track_navigation")
 
-  if self._next_track_page then
+  if self._controls._next_track_page then
     if self:_has_next_track_page() then
-      self._next_track_page:set(self.palette.next_track_on)
+      self._controls._next_track_page:set(self.palette.next_track_on)
     else
-      self._next_track_page:set(self.palette.next_track_off)
+      self._controls._next_track_page:set(self.palette.next_track_off)
     end
   end
 
-  if self._prev_track_page then
+  if self._controls._prev_track_page then
     if self:_has_prev_track_page() then
-      self._prev_track_page:set(self.palette.prev_track_on)
+      self._controls._prev_track_page:set(self.palette.prev_track_on)
     else
-      self._prev_track_page:set(self.palette.prev_track_off)
+      self._controls._prev_track_page:set(self.palette.prev_track_off)
     end
   end
 
 end
 
 --------------------------------------------------------------------------------
+
+--- update_seq_navigation
 
 function Matrix:_update_seq_navigation()
   TRACE("Matrix:_update_seq_navigation()")
 
   -- we can go backwards?
-  if self._prev_seq_page then
+  if self._controls._prev_seq_page then
     if self:_has_prev_seq_page() then
-      self._prev_seq_page:set(self.palette.prev_seq_on)
+      self._controls._prev_seq_page:set(self.palette.prev_seq_on)
     else
-      self._prev_seq_page:set(self.palette.prev_seq_off)
+      self._controls._prev_seq_page:set(self.palette.prev_seq_off)
     end
   end
 
   -- we can go forward?
-  if self._prev_seq_page then
+  if self._controls._prev_seq_page then
     if self:_has_next_seq_page() then
-      self._next_seq_page:set(self.palette.next_seq_on)
+      self._controls._next_seq_page:set(self.palette.next_seq_on)
     else
-      self._next_seq_page:set(self.palette.next_seq_off)
+      self._controls._next_seq_page:set(self.palette.next_seq_off)
     end
   end
 
@@ -530,7 +537,8 @@ end
 
 --------------------------------------------------------------------------------
 
--- @return boolean
+--- has_next_seq_page
+-- @return bool
 
 function Matrix:_has_next_seq_page()
   local has_next = (self._edit_page < self._seq_page_count) 
@@ -539,7 +547,8 @@ end
 
 --------------------------------------------------------------------------------
 
--- @return boolean
+--- has_prev_seq_page
+-- @return bool
 
 function Matrix:_has_prev_seq_page()
   local has_prev = (self._edit_page > 0)
@@ -548,7 +557,8 @@ end
 
 --------------------------------------------------------------------------------
 
--- @return boolean
+--- has_next_track_page
+-- @return bool
 
 function Matrix:_has_next_track_page()
   local has_next = (self._track_page < self._track_page_count) 
@@ -557,7 +567,8 @@ end
 
 --------------------------------------------------------------------------------
 
--- @return boolean
+--- has_prev_track_page
+-- @return bool
 
 function Matrix:_has_prev_track_page()
   local has_prev = (self._track_page > 0)
@@ -565,6 +576,8 @@ function Matrix:_has_prev_track_page()
 end
 
 --------------------------------------------------------------------------------
+
+--- update_seq_page_count
 
 function Matrix:_update_seq_page_count()
   TRACE("Matrix:_update_seq_page_count()")
@@ -577,6 +590,8 @@ end
 
 --------------------------------------------------------------------------------
 
+--- update_track_page_count
+
 function Matrix:_update_track_page_count()
   TRACE("Matrix:_update_track_page_count()")
 
@@ -588,13 +603,13 @@ end
 
 --------------------------------------------------------------------------------
 
--- update range in sequence trigger
+--- update range in sequence trigger
 
 function Matrix:_update_range()
 
-  if (self._trigger) then
+  if (self._controls._trigger) then
 
-    --local rng = self._trigger:get_range()
+    --local rng = self._controls._trigger:get_range()
     local rng = renoise.song().transport.loop_sequence_range
     self._loop_sequence_range = rng
 
@@ -615,20 +630,20 @@ function Matrix:_update_range()
         index_end = self._height
       end
 
-      self._trigger:set_range(index_start,index_end,true)
+      self._controls._trigger:set_range(index_start,index_end,true)
 
     else
-      self._trigger:set_range(0,0,true)
+      self._controls._trigger:set_range(0,0,true)
     end
-    self._trigger:invalidate()
+    self._controls._trigger:invalidate()
   end
 end
 
 --------------------------------------------------------------------------------
 
--- update index in sequence trigger
+--- update index in sequence trigger
 -- called when starting/stopping playback, changing page
--- @idx: (integer) the index, 0 - song-end (use current position if undefined)
+-- @param idx (integer) the index, 0 - song-end (use current position if undefined)
 
 function Matrix:_update_position(idx)
   TRACE("Matrix:_update_position()",idx)
@@ -650,27 +665,27 @@ function Matrix:_update_position(idx)
     pos_idx = 0 -- stopped, hide sequence index 
   end
 
-  if (self._trigger) then
-    self._trigger:set_index(pos_idx,true)
+  if (self._controls._trigger) then
+    self._controls._trigger:set_index(pos_idx,true)
 
     -- control trigger blinking
     if (self._scheduled_pattern) then
       local schedule_page = math.floor(self._scheduled_pattern/self._height)
       if (schedule_page==self._edit_page) then
-        self._trigger:start_blink(self._trigger._blink_idx)
+        self._controls._trigger:start_blink(self._controls._trigger._blink_idx)
       else
-        self._trigger:pause_blink()
+        self._controls._trigger:pause_blink()
       end
     end
 
-    self._trigger:invalidate()
+    self._controls._trigger:invalidate()
   end
 
 end
 
 --------------------------------------------------------------------------------
 
--- retrigger the current pattern
+--- retrigger the current pattern
 
 function Matrix:_retrigger_pattern()
   TRACE("Matrix:retrigger_pattern()")
@@ -684,18 +699,23 @@ end
 
 --------------------------------------------------------------------------------
 
+--- set the current trigger mode, depending on options
+
 function Matrix:_set_trigger_mode()
 
-  if (self._trigger) then
+  if (self._controls._trigger) then
     local is_normal = 
       (self.options.sequence_mode.value == SEQUENCE_MODE_NORMAL)
-    self._trigger.mode = is_normal and 
-      self._trigger.MODE_NORMAL or self._trigger.MODE_INDEX 
+    self._controls._trigger.mode = is_normal and 
+      self._controls._trigger.MODE_NORMAL or self._controls._trigger.MODE_INDEX 
   end
 
 end
 
 --------------------------------------------------------------------------------
+
+--- get the currently playing page
+-- @return int
 
 function Matrix:_get_play_page()
   TRACE("Matrix:_get_play_page()")
@@ -708,6 +728,9 @@ end
 
 --------------------------------------------------------------------------------
 
+--- get the currently edited page
+-- @return int
+
 function Matrix:_get_edit_page()
   TRACE("Matrix:_get_edit_page()")
 
@@ -719,7 +742,7 @@ end
 
 --------------------------------------------------------------------------------
 
--- when following the active track in Renoise, we call this method
+--- when following the active track in Renoise, we call this method
 -- it will check if we are inside the current page, and update if not
 
 function Matrix:_follow_track()
@@ -747,7 +770,7 @@ end
 
 --------------------------------------------------------------------------------
 
--- figure out the active "track page" based on the supplied track index
+--- figure out the active "track page" based on the supplied track index
 -- @param track_idx, renoise track number
 -- return integer (0-number of pages)
 
@@ -760,6 +783,9 @@ end
 
 --------------------------------------------------------------------------------
 
+--- get track page width
+-- @return int
+
 function Matrix:_get_track_page_width()
 
   return (self.options.page_size.value == TRACK_PAGE_AUTO)
@@ -768,6 +794,10 @@ function Matrix:_get_track_page_width()
 end
 
 --------------------------------------------------------------------------------
+
+--- inherited from Application
+-- @see Duplex.Application._build_app
+-- @return bool
 
 function Matrix:_build_app()
   TRACE("Matrix:_build_app()")
@@ -810,7 +840,7 @@ function Matrix:_build_app()
       end
     end
     self:_add_component(c)
-    self._next_seq_page = c
+    self._controls._next_seq_page = c
   end
 
   -- previous sequence page
@@ -832,7 +862,7 @@ function Matrix:_build_app()
       end
     end
     self:_add_component(c)
-    self._prev_seq_page = c
+    self._controls._prev_seq_page = c
   end
 
   -- next track page
@@ -852,7 +882,7 @@ function Matrix:_build_app()
       end
     end
     self:_add_component(c)
-    self._next_track_page = c
+    self._controls._next_track_page = c
   end
 
   -- previous track page
@@ -872,7 +902,7 @@ function Matrix:_build_app()
       end
     end
     self:_add_component(c)
-    self._prev_track_page = c
+    self._controls._prev_track_page = c
   end
 
 
@@ -1035,15 +1065,15 @@ function Matrix:_build_app()
     end
 
     self:_add_component(c)
-    self._trigger = c
+    self._controls._trigger = c
 
   end
 
   -- grid buttons
   if (self.mappings.matrix.group_name) then
-    self._buttons = {}
+    self._controls._buttons = {}
     for x=1,self._width do
-      self._buttons[x] = {}
+      self._controls._buttons[x] = {}
       for y=1,self._height do
         local c = UIButton(self)
         c.group_name = self.mappings.matrix.group_name
@@ -1090,7 +1120,7 @@ function Matrix:_build_app()
 
         end
         self:_add_component(c)
-        self._buttons[x][y] = c
+        self._controls._buttons[x][y] = c
       end  
     end
   end
@@ -1103,7 +1133,7 @@ end
 
 --------------------------------------------------------------------------------
 
--- adds notifiers to slot relevant states
+--- add notifiers to relevant parts of the song
 
 function Matrix:_attach_to_song(song)
   TRACE("Matrix:_attach_to_song()",song)

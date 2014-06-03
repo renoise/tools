@@ -2,8 +2,6 @@
 -- Duplex.KONTROL49
 ----------------------------------------------------------------------------]]--
 
--- set up "GridPie + Mixer" for this configuration
-
 duplex_configurations:insert {
 
   -- configuration properties
@@ -17,7 +15,7 @@ duplex_configurations:insert {
     device_port_out = "MIDIOUT2 (KONTROL49)",
     control_map = "Controllers/KONTROL49/Controlmaps/KONTROL49_GridPie.xml",
     thumbnail = "Controllers/KONTROL49/KONTROL49.bmp",
-    protocol = DEVICE_MIDI_PROTOCOL
+    protocol = DEVICE_PROTOCOL.MIDI
   },
 
   applications = {
@@ -42,25 +40,12 @@ duplex_configurations:insert {
     },
     Mixer = {
       mappings = {
-        --[[
-        mute = {
-          group_name = "Pads A"
-        },
-        solo = {
-          group_name = "Pads B"
-        },
-        ]]
         panning = {
           group_name = "Encoders"
         },
         levels = {
           group_name = "Sliders"
         },
-        --[[
-        page = {
-          group_name = "Switches"
-        }
-        ]]
         master = {
           group_name = "Master"
         }

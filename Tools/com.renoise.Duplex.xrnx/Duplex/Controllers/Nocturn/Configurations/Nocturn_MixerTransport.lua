@@ -2,8 +2,6 @@
 -- Duplex.Nocturn
 ----------------------------------------------------------------------------]]--
 
--- setup Mixer + Transport for this configuration
-
 duplex_configurations:insert {
 
   -- configuration properties
@@ -18,7 +16,7 @@ duplex_configurations:insert {
     device_port_out = "Automap MIDI",
     control_map = "Controllers/Nocturn/Controlmaps/Nocturn.xml",
     thumbnail = "Controllers/Nocturn/Nocturn.bmp",
-    protocol = DEVICE_MIDI_PROTOCOL
+    protocol = DEVICE_PROTOCOL.MIDI
   },
   
   applications = {
@@ -59,16 +57,6 @@ duplex_configurations:insert {
           group_name = "Pots",
           index = 5,
         },
-        --[[
-        edit_mode = {
-          group_name = "Pots",
-          index = 6,
-        },
-        block_loop = {
-          group_name = "Pots",
-          index = 7,
-        },
-        ]]
         follow_player = {
           group_name = "Pots",
           index = 6,

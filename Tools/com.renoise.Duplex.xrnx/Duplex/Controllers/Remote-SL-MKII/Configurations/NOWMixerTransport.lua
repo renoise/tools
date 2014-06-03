@@ -1,6 +1,4 @@
 
--- setup NotesOnWheels + Recorder + Transport for this configuration
-
 duplex_configurations:insert {
 
   -- configuration properties
@@ -15,7 +13,7 @@ duplex_configurations:insert {
     device_port_out = "Automap MIDI",
     control_map = "Controllers/Remote-SL-MKII/Controlmaps/Remote-SL-MKII.xml",
     thumbnail = "Controllers/Remote-SL-MKII/Remote-SL-MKII.bmp",
-    protocol = DEVICE_MIDI_PROTOCOL
+    protocol = DEVICE_PROTOCOL.MIDI
   },
   
   applications = {
@@ -24,12 +22,6 @@ duplex_configurations:insert {
         levels = {
           group_name = "Sliders",
         },
-        --[[
-        master = {
-          group_name = "Modulators",
-          index = 2,
-        },
-        ]]
         page = {
           group_name = "EncoderButtons",
           index = 7,

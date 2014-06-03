@@ -10,7 +10,7 @@ duplex_configurations:insert {
     device_port_out = "Launchpad",
     control_map = "Controllers/Launchpad/Controlmaps/Launchpad_Mixer.xml",
     thumbnail = "Controllers/Launchpad/Launchpad.bmp",
-    protocol = DEVICE_MIDI_PROTOCOL,
+    protocol = DEVICE_PROTOCOL.MIDI,
   },
   applications = {
     Mixer = {
@@ -32,7 +32,7 @@ duplex_configurations:insert {
       mappings = {
         blockpos = {
           group_name = "Controls",
-          orientation = HORIZONTAL,
+          orientation = ORIENTATION.HORIZONTAL,
         }
       }
     },
@@ -40,7 +40,7 @@ duplex_configurations:insert {
       mappings = {
         triggers = {
           group_name = "Triggers",
-          --orientation = HORIZONTAL,
+          --orientation = ORIENTATION.HORIZONTAL,
         },
       },
       options = {

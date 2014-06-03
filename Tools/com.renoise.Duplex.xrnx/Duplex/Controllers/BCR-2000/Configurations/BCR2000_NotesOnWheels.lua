@@ -2,8 +2,6 @@
 -- Duplex.BCR2000
 ----------------------------------------------------------------------------]]--
 
--- setup Notes On Wheels application
-
 duplex_configurations:insert {
 
   -- configuration properties
@@ -18,20 +16,12 @@ duplex_configurations:insert {
     device_port_out = "BCR2000",
     control_map = "Controllers/BCR-2000/Controlmaps/BCR-2000_NOW.xml",
     thumbnail = "Controllers/BCR-2000/BCR-2000.bmp",
-    protocol = DEVICE_MIDI_PROTOCOL
+    protocol = DEVICE_PROTOCOL.MIDI
   },
   
   applications = {
     NotesOnWheels = {
       mappings = {
-        --[[
-        multi_sliders = {
-          group_name = "DialRow_1",
-        },
-        multi_adjust = {
-          group_name = "Fader_1",
-        },
-        ]]
         pitch_sliders = {
           group_name = "EffectEncoders1",
         },
@@ -69,16 +59,12 @@ duplex_configurations:insert {
         },
         num_steps = {
           group_name = "Buttons1",
-          --orientation = HORIZONTAL,
+          --orientation = ORIENTATION.HORIZONTAL,
         },
         step_spacing = {
           group_name = "Encoders1",
           index = 8,
         },
-        --num_lines = {
-        --  group_name = "Dials",
-        --  index = 2,
-        --},
         write = {
           group_name = "Buttons2",
           index = 1,
@@ -87,10 +73,6 @@ duplex_configurations:insert {
           group_name = "Buttons2",
           index = 2,
         },
-        --fill = {
-        --  group_name = "Buttons2",
-        --  index = 3,
-        --},
         global = {
           group_name = "Buttons2",
           index = 3,
@@ -123,17 +105,6 @@ duplex_configurations:insert {
           group_name = "Buttons2",
           index = 8,
         },
-        --shift_up = {
-        --  group_name = "ButtonPair",
-        --  index = 1,
-        --},
-        --shift_down = {
-        --  group_name = "ButtonPair",
-        --  index = 2,
-        --},
-        --position = {
-        --  group_name = "LedRow",
-        --},
       }
     },
     Transport = {

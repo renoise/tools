@@ -2,8 +2,6 @@
 -- Duplex.MPD26
 ----------------------------------------------------------------------------]]--
 
--- setup Mixer, Matrix and Effects application
-
 duplex_configurations:insert {
 
   -- configuration properties
@@ -18,7 +16,7 @@ duplex_configurations:insert {
     device_port_out = "Akai MPD26",
     control_map = "Controllers/MPD26/Controlmaps/MPD26-Generic.xml",
     thumbnail = "Controllers/MPD26/MPD26.bmp",
-    protocol = DEVICE_MIDI_PROTOCOL
+    protocol = DEVICE_PROTOCOL.MIDI
   },
   
   applications = {
@@ -51,10 +49,6 @@ duplex_configurations:insert {
           group_name = "Pad-Page",
           index = 1,
         },
-        --sequence = {
-        --  group_name = "Pad-Page",
-        --  index = 3,
-        --},
         prev_seq_page = {
           group_name = "Pad-Page",
           index = 3,
@@ -73,10 +67,6 @@ duplex_configurations:insert {
         device = {
           group_name = "Pad-FX-1",
         },
-        --page = {
-        --  group_name = "Pad-FX-2",
-        --  index = 3,
-        --}
         param_prev = {
           group_name = "Pad-FX-2",
           index = 3,

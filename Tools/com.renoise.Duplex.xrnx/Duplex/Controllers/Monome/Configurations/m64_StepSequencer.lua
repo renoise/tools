@@ -1,4 +1,6 @@
--- setup StepSequencer for this configuration
+--[[----------------------------------------------------------------------------
+-- Duplex.Monome 
+----------------------------------------------------------------------------]]--
 
 duplex_configurations:insert {
 
@@ -16,14 +18,14 @@ duplex_configurations:insert {
     device_port_out = "8082",
     control_map = "Controllers/Monome/Controlmaps/Monome64_StepSequencer.xml",
     thumbnail = "Controllers/Monome/Monome.bmp",
-    protocol = DEVICE_OSC_PROTOCOL,
+    protocol = DEVICE_PROTOCOL.OSC,
   },
   applications = {
     Navigator = {
       mappings = {
         blockpos = {
           group_name = "Column1",
-          orientation = VERTICAL,
+          orientation = ORIENTATION.VERTICAL,
         }
       }
     },
@@ -36,14 +38,19 @@ duplex_configurations:insert {
           group_name = "Column2",
           index = 1,
         },
-        line = { 
+        prev_line = {
           group_name = "Column3",
-          orientation = VERTICAL,
-          index = 1,
+          orientation = ORIENTATION.HORIZONTAL,
+          index = 1
+        },
+        next_line = {
+          group_name = "Column3",
+          orientation = ORIENTATION.HORIZONTAL,
+          index = 2
         },
         track = {
           group_name = "Column3",
-          orientation = VERTICAL,
+          orientation = ORIENTATION.VERTICAL,
           index = 3,
         },
         transpose = {

@@ -18,7 +18,7 @@ duplex_configurations:insert {
     device_port_out = "8081",
     control_map = "Controllers/TouchOSC/Controlmaps/TouchOSC_iPad.xml",
     thumbnail = "Controllers/TouchOSC/TouchOSC.bmp",
-    protocol = DEVICE_OSC_PROTOCOL,
+    protocol = DEVICE_PROTOCOL.OSC,
   },
 
   applications = {
@@ -39,13 +39,9 @@ duplex_configurations:insert {
     },
     Matrix = {
       mappings = {
-        --sequence = {
-        --  group_name = "",
-        --  index = 1
-        --},
         triggers = {
           group_name = "Sequence",
-          orientation = VERTICAL
+          orientation = ORIENTATION.VERTICAL
         },
         prev_seq_page = {
           group_name = "SequencePrev",
@@ -89,8 +85,6 @@ duplex_configurations:insert {
     },
     Effect = {
       mappings = {
---[[
-]]
         parameters = {
           group_name = "EffectFaders",        
           index = 1
@@ -110,10 +104,6 @@ duplex_configurations:insert {
           group_name = "DeviceName",
           index = 2,
         },
-        --page = {
-        --  group_name = "FXPage",
-        --  index = 1,
-        --},
         preset_prev = {
           group_name = "DevicePreset",
           index = 1,

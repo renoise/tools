@@ -1,18 +1,14 @@
---[[----------------------------------------------------------------------------
+--[[============================================================================
 -- Duplex.Rotate
 -- Inheritance: Application > Rotate
-----------------------------------------------------------------------------]]--
+============================================================================]]--
 
---[[
+--[[--
+Rotate a track/pattern upwards or downwards, optionally including automation.
 
-  Based on taktik's Rotate tool:
-  http://tools.renoise.com/tools/rotate-pattern
+This application is an implementation of taktik's [Rotate tool][1]
+[1]: http://tools.renoise.com/tools/rotate-pattern
 
-  This implementation currently only comes with mappings for some actions
-  - track_in_pattern_up
-  - track_in_pattern_down
-  - whole_pattern_up
-  - whole_pattern_down
 
 
 --]]
@@ -103,7 +99,8 @@ Rotate.default_palette = {
 --------------------------------------------------------------------------------
 
 --- Constructor method
--- @param (VarArg), see Application to learn more
+-- @param (VarArg)
+-- @see Duplex.Application
 
 function Rotate:__init(...)
 
@@ -115,7 +112,7 @@ end
 -- local tools
 --------------------------------------------------------------------------------
 
--- shifts and wraps an index into a specified range
+--- shifts and wraps an index into a specified range
 
 function Rotate:rotate_index(index, shift_amount, range_start, range_end)
   assert(index >= 0, "Internal error: unexpected rotate index")
@@ -131,7 +128,7 @@ end
 -- processing
 --------------------------------------------------------------------------------
 
--- rotate patterns in the specified range by the given amount
+--- rotate patterns in the specified range by the given amount
 
 function Rotate:process(shift_amount, range_mode, shift_automation)
   
@@ -319,7 +316,7 @@ pattern_line_tools.lua
 
 --------------------------------------------------------------------------------
 
--- copy all effect column properties from src to dest column
+--- copy all effect column properties from src to dest column
 
 
 function Rotate:copy_effect_column(src_column, dest_column)
@@ -331,7 +328,7 @@ end
 
 --------------------------------------------------------------------------------
 
--- copy all note column properties from src to dest column
+--- copy all note column properties from src to dest column
 
 
 function Rotate:copy_note_column(src_column, dest_column)
@@ -343,7 +340,7 @@ end
 
 --------------------------------------------------------------------------------
 
--- creates a copy of the given patternline
+--- creates a copy of the given patternline
 
 function Rotate:copy_line(src_line, dest_line)
 
@@ -369,7 +366,7 @@ end
 
 --------------------------------------------------------------------------------
 
--- queries the selection range start and end lines
+--- queries the selection range start and end lines
 
 function Rotate:selection_line_range(pattern_index)
 
@@ -402,7 +399,9 @@ end
 -- GUI
 --------------------------------------------------------------------------------
 
--- construct the user interface
+--- inherited from Application
+-- @see Duplex.Application._build_app
+-- @return bool
 
 function Rotate:_build_app()
   TRACE("Rotate:_build_app()")
@@ -492,7 +491,9 @@ end
 -- tool registration
 --------------------------------------------------------------------------------
 
--- check configuration, build & start the application
+--- inherited from Application
+-- @see Duplex.Application.start_app
+-- @return bool or nil
 
 function Rotate:start_app()
 

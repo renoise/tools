@@ -1,16 +1,13 @@
---[[----------------------------------------------------------------------------
+--[[============================================================================
 -- Duplex.Scheduler
+============================================================================]]--
+
+--[[--
+Schedule tasks to execute after a defined amount of time
+
+]]--
+
 ----------------------------------------------------------------------------]]--
-
---[[
-
-The Scheduler class will execute tasks after a defined amount of time
-- UIComponents use this for scheduling updates to their display
-
---]]
-
-
---==============================================================================
 
 class 'Scheduler' 
 
@@ -46,8 +43,8 @@ end
 
 --- Add a new task to the scheduler
 -- @param ref  (Object) the object to use as context (optional)
--- @param func (Function) the function to call
--- @param delay (Number) the delay before executing task
+-- @param func (func) the function to call
+-- @param delay (number) the delay before executing task
 -- @param ... (Vararg) variable number of extra arguments
 
 function Scheduler:add_task(ref,func,delay, ...)
@@ -55,6 +52,7 @@ function Scheduler:add_task(ref,func,delay, ...)
 
   local task = ScheduledTask(ref,func,delay,arg)
   self.tasks:insert(task)
+
   return task
 
 end
@@ -104,9 +102,9 @@ class 'ScheduledTask'
 
 --- A class representing a scheduled task
 -- @param ref  (Object) the object to use as context (optional)
--- @param func (Function) the function to call
--- @param delay (Number) the delay before executing task
--- @param args (Table) variable number of extra arguments
+-- @param func (func) the function to call
+-- @param delay (number) the delay before executing task
+-- @param args (table) variable number of extra arguments
 
 function ScheduledTask:__init(ref, func, delay, args)
   TRACE("ScheduledTask:__init", ref, func, delay, args)

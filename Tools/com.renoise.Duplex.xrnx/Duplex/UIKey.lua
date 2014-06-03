@@ -1,112 +1,92 @@
---[[----------------------------------------------------------------------------
+--[[============================================================================
 -- Duplex.UIKey
-----------------------------------------------------------------------------]]--
+-- Inheritance: UIComponent > UIKey
+============================================================================]]--
 
---[[
+--[[--
 
-Inheritance: UIComponent > UIKey
+A UIComponent designed to work with a standard keyboard, it responds to a `keyboard` or `key` type parameter
 
+Instead of a single numeric value, the UIKey can represent both pitch and velocity. UIKey does not produce sound or trigger notes by itself, you need to tie it together with you own application logic in order to achieve this. 
 
-About
+The component can be used in two different ways:
 
-  UIKey is a UIComponent designed to work with a standard keyboard. It 
-  responds to any control-map containing a "keyboard" or "key" parameter
+1. Hidden, matching any note (`match_any_note=true`) In this mode, the UIKey receive any incoming notes, which you can use as the basis for building your own keyboard implementation.
 
-  Instead of a single numeric value, the UIKey can represent both pitch and 
-  velocity. UIKey does not produce sound or trigger notes by itself, you need to 
-  tie it together with you own application logic in order to achieve this. 
-
-  The component can be used in two different ways:
-
-  1. Hidden, matching any note (match_any_note=true)
-     In this mode, the UIKey receive any incoming notes, which you
-     can use as the basis for building your own keyboard implementation.
-
-  2. Interactive, mapping to individual inputs (match_any_note=false)
-     In this mode, the UIKey will respond when the right area has
-     been triggered by the user (the UIKey, like any UIComponent, isn't 
-     limited to a single button, but can have any rectangular size). 
-     Use this to visualize the input from the keyboard.
-
-  The events are designed to be similar to the events employed by the 
-  other UI component: press, release and hold events are standard. 
-
-
+2. Interactive, mapping to individual inputs (`match_any_note=false`) In this mode, the UIKey will respond when the right area has been triggered by the user (the UIKey, like any UIComponent, isn't limited to a single button, but can have any rectangular size). Use this to visualize the input from the keyboard. The events are designed to be similar to the events employed by the other UI component: press, release and hold events are standard. 
 
 Supported input methods
 
-- keyboard
-- key
-
-Events
-
-- on_press()
-- on_release()
-- on_hold()
-
+* keyboard
+* key
 
 --]]
 
-
 --==============================================================================
+
 
 class 'UIKey' (UIComponent)
 
 --------------------------------------------------------------------------------
 
 --- Initialize the UIKey class
--- @param app (Duplex.Application)
+-- @param app (@{Duplex.Application})
 
 function UIKey:__init(app)
   TRACE('UIKey:__init')
 
   UIComponent.__init(self,app)
 
-  -- true while the key is pressed 
+  --- true while the key is pressed 
   self.pressed = false
 
-  -- if key is disabled, draw "dimmed" version
+  --- if key is disabled, draw "dimmed" version
   self.disabled = false
 
-  -- the current pitch
+  --- the current pitch
   self.pitch = nil
 
-  -- the current transpose (semitones)
+  --- the current transpose (semitones)
   self.transpose = 0
 
-  -- default ceiling is for standard MIDI (override if needed)
+  --- default ceiling is for standard MIDI (override if needed)
   --self.ceiling = 127
 
-  -- the current velocity
+  --- the current velocity
   self.velocity = nil
 
-  -- when true, we match any incoming note
+  --- when true, we match any incoming note
   self.match_any_note = false
 
-  -- specify the default palette 
+  --- specify the default palette 
+  -- @field pressed The pressed state
+  -- @field released The released state
+  -- @field disabled The disabled state
+  -- @table palette
   self.palette = {
     pressed  = {  color={0xFF,0xFF,0xFF}, text="▪"},
     released  = { color={0x40,0x40,0x40}, text="▫" },
     disabled  = { color={0x00,0x00,0x00}, text="·" },
   }
 
-  -- external event handlers
+  --- external event handlers
   self.on_press = nil
   self.on_release = nil
   self.on_hold = nil
 
-  -- when acting as keyboard, maintain the display state:
+  --- when acting as keyboard, maintain the display state:
   -- decide which keys should be disabled (upper/lower range)
   self.disabled_keys = {}
-  -- decide which keys are currently pressed 
+
+  --- decide which keys are currently pressed 
   self.pressed_keys = {}
 
-  -- when acting as keyboard, raise this flag to tell the 
+  --- when acting as keyboard, raise this flag to tell the 
   -- display to refresh the entire keyboard (a bit of a hack but 
   -- the keyboard is entirely virtual, so it's a special case)
   self._key_update_requested = false
 
-  -- internal stuff
+  --- internal stuff
   self:add_listeners()
 
 end
@@ -118,11 +98,13 @@ end
 -- if we pass any note (keyboard mode), the incoming pitch is remembered
 -- else, pitch is assigned when the UIKey is first created (and the
 -- containing application will then apply it's own transpose)
--- @param msg (Duplex.Message)
--- @return (Boolean), true when message was considered valid
+-- @param msg (@{Duplex.Message})
+-- @return (bool), true when message was considered valid
+-- @see Duplex.UIComponent.test
 
 function UIKey:test(msg)
-  
+  TRACE("UIKey:test()",msg)
+
   if self.disabled then
     return true
   end
@@ -151,7 +133,7 @@ end
 --------------------------------------------------------------------------------
 
 --- A key was pressed
--- @param msg (Duplex.Message)
+-- @param msg (@{Duplex.Message})
 -- @return self or nil
 
 function UIKey:do_press(msg)
@@ -177,7 +159,7 @@ end
 --------------------------------------------------------------------------------
 
 --- A key was released
--- @param msg (Duplex.Message)
+-- @param msg (@{Duplex.Message})
 -- @return self or nil
 
 function UIKey:do_release(msg)
@@ -202,7 +184,7 @@ end
 --------------------------------------------------------------------------------
 
 --- A key was held
--- @param msg (Duplex.Message)
+-- @param msg (@{Duplex.Message})
 
 function UIKey:do_hold(msg)
   TRACE("UIKey:do_hold",msg)
@@ -220,8 +202,8 @@ end
 --------------------------------------------------------------------------------
 
 --- Translate_pitch, used for determining the correct pitch 
--- @param msg (Message)
--- @return pitch (Number)
+-- @param msg (@{Duplex.Message})
+-- @return pitch (int)
 
 function UIKey:translate_pitch(msg)
   TRACE("UIKey:translate_pitch()",msg)
@@ -248,7 +230,8 @@ end
 -- Overridden from UIComponent
 --------------------------------------------------------------------------------
 
---- Update the control's apperance
+--- Update the appearance - inherited from UIComponent
+-- @see Duplex.UIComponent
 
 function UIKey:draw()
   TRACE("UIKey:draw")
@@ -297,20 +280,24 @@ end
 
 --------------------------------------------------------------------------------
 
---- Add event listeners (press, release, hold)
+--- Add event listeners
+--    DEVICE_EVENT.BUTTON_PRESSED
+--    DEVICE_EVENT.BUTTON_RELEASED
+--    DEVICE_EVENT.BUTTON_HELD
+-- @see Duplex.UIComponent
 
 function UIKey:add_listeners()
 
   self.app.display.device.message_stream:add_listener(
-    self, DEVICE_EVENT_KEY_PRESSED,
+    self, DEVICE_EVENT.KEY_PRESSED,
     function(msg) return self:do_press(msg) end )
 
   self.app.display.device.message_stream:add_listener(
-    self, DEVICE_EVENT_KEY_RELEASED,
+    self, DEVICE_EVENT.KEY_RELEASED,
     function(msg) return self:do_release(msg) end )
 
   self.app.display.device.message_stream:add_listener(
-    self, DEVICE_EVENT_KEY_HELD,
+    self, DEVICE_EVENT.KEY_HELD,
     function(msg) return self:do_hold(msg) end )
 
 end
@@ -319,18 +306,18 @@ end
 --------------------------------------------------------------------------------
 
 --- Remove previously attached event listeners
--- @see UIKey:add_listeners
+-- @see Duplex.UIComponent
 
 function UIKey:remove_listeners()
 
   self.app.display.device.message_stream:remove_listener(
-    self,DEVICE_EVENT_KEY_PRESSED)
+    self,DEVICE_EVENT.KEY_PRESSED)
 
   self.app.display.device.message_stream:remove_listener(
-    self,DEVICE_EVENT_KEY_RELEASED)
+    self,DEVICE_EVENT.KEY_RELEASED)
 
   self.app.display.device.message_stream:remove_listener(
-    self,DEVICE_EVENT_KEY_HELD)
+    self,DEVICE_EVENT.KEY_HELD)
 
 end
 

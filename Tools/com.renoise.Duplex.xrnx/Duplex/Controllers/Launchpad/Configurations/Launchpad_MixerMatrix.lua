@@ -2,8 +2,6 @@
 -- Duplex.Launchpad 
 ----------------------------------------------------------------------------]]--
 
--- setup "Matrix + Mixer + Transport", vertically split
-
 duplex_configurations:insert {
 
   -- configuration properties
@@ -18,7 +16,7 @@ duplex_configurations:insert {
     device_port_out = "Launchpad",
     control_map = "Controllers/Launchpad/Controlmaps/Launchpad_MatrixMixer.xml",
     thumbnail = "Controllers/Launchpad/Launchpad.bmp",
-    protocol = DEVICE_MIDI_PROTOCOL,
+    protocol = DEVICE_PROTOCOL.MIDI,
   },
 
   applications = {
@@ -30,10 +28,6 @@ duplex_configurations:insert {
         triggers = {
           group_name = "Triggers",
         },
-        --sequence = {
-        --  group_name = "Controls",
-        --  index = 1,
-        --},
         prev_seq_page = {
           group_name = "Controls",
           index = 1,

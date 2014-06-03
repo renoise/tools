@@ -1,66 +1,20 @@
---[[----------------------------------------------------------------------------
+--[[============================================================================
 -- Duplex.MidiActions
 -- Inheritance: Application > MidiActions
-----------------------------------------------------------------------------]]--
+============================================================================]]--
 
---[[
+--[[--
+MidiActions will expose most of the standard Renoise mappings to Duplex. 
 
+MidiActions will expose standard Renoise mappings as fully bi-directional mappings, with customizable scaling (exponential, logarithmic, linear) and range. 
 
-  What is MidiActions
-
-  MidiActions is designed to import the default MIDI mappings from Renoise 
-  and present them as Duplex mappings. Technically, this is achieved by 
-  interpreting the file which contain the MIDI mappings, a file called 
-  "GlobalMidiActions.lua"
-
-  Advantages of this approach: 
-  - Create persistent mappings that work across songs
-  - Bi-directional communication for most parameters
-  - Access Renoise MIDI actions from an OSC device
-  - Easily customize the scaling & range of parameters
-
-  Some background: how native MIDI mappings work
-
-  In Renoise, we have three types of MIDI actions: Trigger, Set and Toggle. 
-  If you open GlobalMidiActions.lua, you'll see that all mappings have been 
-  labelled with the type they represent, e.g. "Transport:Song:BPM [Set]"
-  
-  You will need to understand how the various mappings are working in order
-  to decide which ones are suitable for your own needs:
-
-  [Trigger] is a "one-shot" type of event, such as when selecting the 
-   previous or next track in a pattern. This type of action is most commonly
-   mapped to a button - when pressed, the button will briefly light up. 
-
-  [Set] is available for controlling parameters with an internal state, 
-   such as the track volume for the currently selected track. [Set] is 
-   possible to map to a slider and a button, with a configurable range.
-
-  [Toggle] is representing something which can be toggled on and off, 
-   such as a pattern loop. Toggle is ignored in this application, as Duplex
-   is based around bi-directional communication and every action that
-   can be toggled comes with a matching [Set] method. 
-
-
-  Notes that ome MIDI actions are not available - as we have access to more 
-  than a total of 34.000 mappings in Renoise, some had to be skipped for 
-  practical reasons (essentially, pattern-sequence mute/trigger actions). 
-
-  If other tools create MIDI mapping entries on-the-fly, these are not
-  included in the MidiActions application, as the entire selection is
-  based on the mappings that are defined in GlobalMidiActions.lua
-
-  If you have specified you own copy of GlobalMidiActions, the application
-  will import that version instead of the default one. You will however need
-  to add an entry to the MidiActions_bindings.lua document before it would
-  be possible to have full, bi-directional communication. 
-
+By parsing the GlobalMidiActions file, it literally provides access to hundreds of features inside Renoise, such as BPM, LPB, and even UI view presets. You will have to map each feature manually, but only once - once mapped, the target will remain accessible. 
 
 --]]
 
 --==============================================================================
 
--- Before we launch the application, import GlobalMidiActions
+--- Before we launch the application, import GlobalMidiActions
 -- (prefer the user-specified version, then the default)
 
 local actions_loaded = false
@@ -69,15 +23,27 @@ if (os.platform() == "WINDOWS") then
 
   -- Windows: load user-specified or custom file
 
+  local default_location = nil
   local user_provided = "./../../GlobalMidiActions.lua"
+  local iterator = string.gmatch(package.path,";([^;]+)")
+
+  for str in iterator do
+    if (string.sub(str,-34)=="\\Resources\\Scripts\\Libraries\\?.lua") then
+      default_location = string.sub(str,0,49)   
+    end
+  end
+
   if (io.exists(user_provided)) then
     local old_package_path = package.path
     package.path = package.path .. ";./../../?.lua"
     require "GlobalMidiActions"
     package.path = old_package_path
     actions_loaded = true
-  else
-    require "Scripts/GlobalMidiActions"
+  elseif (io.exists(default_location .."GlobalMidiActions.lua")) then
+    local old_package_path = package.path
+    package.path = package.path .. ";" .. default_location .. "?.lua"
+    require "GlobalMidiActions"
+    package.path = old_package_path
     actions_loaded = true
   end
 
@@ -218,34 +184,37 @@ end
 -- we filter out the mappings that cause the list to grow
 -- to an unmanageble size (> 34000 items!)
 
-local retrieve_midi_mappings = function()
+if actions_loaded then
 
-  local entire_list = available_actions()
-  local result_list = {}
-  for k,v in ipairs(entire_list) do
-    local skip = false
-    if (v:sub(-8) == "[Toggle]") or
-      (v:sub(1,19) == "Seq. Muting:Seq. XX") or
-      (v:sub(1,37)  == "Seq. Triggering:Schedule:Sequence XX:") or
-      (v:sub(1,36)  == "Seq. Triggering:Trigger:Sequence XX:")
-    then
-      skip = true
+  local retrieve_midi_mappings = function()
+    local entire_list = available_actions()
+    local result_list = {}
+    for k,v in ipairs(entire_list) do
+      local skip = false
+      if (v:sub(-8) == "[Toggle]") or
+        (v:sub(1,19) == "Seq. Muting:Seq. XX") or
+        (v:sub(1,37)  == "Seq. Triggering:Schedule:Sequence XX:") or
+        (v:sub(1,36)  == "Seq. Triggering:Trigger:Sequence XX:")
+      then
+        skip = true
+      end
+      if not skip then
+        result_list[#result_list+1] = v
+      end
     end
-    if not skip then
-      result_list[#result_list+1] = v
-    end
+    return result_list
   end
-  return result_list
+
+  MidiActions.midi_mappings = retrieve_midi_mappings()
+
+  for k,v in ipairs(MidiActions.midi_mappings) do
+    --local str_name = string.format("%.50s",v)
+    local str_name = string.format("%s",v)
+    MidiActions.default_options.action.items[k+1] = str_name
+  end
 
 end
 
-MidiActions.midi_mappings = retrieve_midi_mappings()
-
-for k,v in ipairs(MidiActions.midi_mappings) do
-  --local str_name = string.format("%.50s",v)
-  local str_name = string.format("%s",v)
-  MidiActions.default_options.action.items[k+1] = str_name
-end
 
 
 MidiActions.available_mappings = {
@@ -254,7 +223,7 @@ MidiActions.available_mappings = {
   control = {
     description = "MidiActions: designated control",
     flipped = true,
-    orientation = HORIZONTAL,
+    orientation = ORIENTATION.HORIZONTAL,
   }
 }
 
@@ -268,54 +237,53 @@ MidiActions.default_palette = {
 -- (such as which observable values to look for, etc.)
 
 local old_package_path = package.path
-package.path = renoise.tool().bundle_path .. "Duplex/Applications/Extra/?.lua"
-require "MidiActions_bindings"
+package.path = renoise.tool().bundle_path .. "Duplex/Applications/MidiActions/?.lua"
+require "Bindings"
 package.path = old_package_path
 
 
 --==============================================================================
 
 --- Constructor method
--- @param (VarArg), see Application to learn more
+-- @param (VarArg)
+-- @see Duplex.Application
 
 function MidiActions:__init(...)
   TRACE("MidiActions:__init()")
 
-  -- BrowserProcess
+  --- BrowserProcess
   self._process = select(1,...)
 
-  -- List of UIComponents
+  --- List of UIComponents
   self._controls = {}
 
-  -- List of MIDI mappings (filtered)
-  --self._midi_mappings = {}
-
-  -- number, between 1 - #_midi_mappings, or nil if no action
+  --- (int), between 1 - #_midi_mappings, or nil if no action
   self._active_map_index = nil
 
-  -- boolean values, interpreted from the MIDI action 
-  -- (acts as foundation for the generated TriggerMessage)
+  --- (bool), interpreted from the MIDI action 
   self._is_switch = nil
+
+  --- (bool), interpreted from the MIDI action 
   self._is_trigger = nil
 
-  -- boolean values, control the visual state of a button
+  --- (bool), control the visual state of a button
   self._is_toggle = nil
 
-  -- Table, contains extra information about mapping
+  --- (table), contains extra information about mapping
   -- (see MidiActions.assist_table)
   self._assist = {}
 
-  -- number/boolean/nil, represents the current value 
+  --- (number/bool/nil), represents the current value 
   -- (literal value, "64" for 64 BPM, "1.2" for 1.2 db, etc.)
   self._value = nil
 
-  -- boolean, set when updating a parameter which is being observed
+  --- (bool), set when updating a parameter which is being observed
   self._skip_notifier = nil
 
-  -- boolean, set when options should be reset
+  --- (bool), set when options should be reset
   self._revert_requested = false
 
-  -- number, last "good" user-specified value
+  --- (number), last "good" user-specified value
   self._user_min = nil
   self._user_max = nil
 
@@ -325,16 +293,20 @@ end
 
 --------------------------------------------------------------------------------
 
---- Check configuration, build & start the application
+--- inherited from Application
+-- @see Duplex.Application.start_app
+-- @return bool or nil
 
 function MidiActions:start_app()
   TRACE("MidiActions:start_app()")
 
   if not actions_loaded then
+    -- show warning in console + status bar
     local msg = "Duplex MidiActions: could not locate the required file"
-              .."\n'GlobalMidiActions.lua' (this file should be located"
-              .."\n'in the Renoise program, or user folder)"
-    renoise.app():show_warning(msg)
+              .."'GlobalMidiActions.lua' (this file should be located"
+              .."'in the Renoise program, or user folder)"
+    renoise.app():show_status(msg)
+    LOG(msg)
     return
   end
 
@@ -361,6 +333,9 @@ function MidiActions:start_app()
 end
 
 --------------------------------------------------------------------------------
+
+--- inherited from Application
+-- @see Duplex.Application.stop_app
 
 function MidiActions:stop_app()
   TRACE("MidiActions:stop_app()")
@@ -420,7 +395,7 @@ end
 --------------------------------------------------------------------------------
 
 --- Bi-directional update (controller/Renoise)
--- @param skip_transmit (boolean) 
+-- @param skip_transmit (bool) 
 
 function MidiActions:_update_control(skip_transmit)
   TRACE("MidiActions:_update_control(skip_transmit)",skip_transmit)
@@ -568,7 +543,7 @@ end
 --------------------------------------------------------------------------------
 
 --- Scale value log/exponentially
--- @return boolean
+-- @return bool
 
 function MidiActions:_scale_value(val,method)
   TRACE("MidiActions:_scale_value(val,method)",val,method)
@@ -603,7 +578,7 @@ end
 --------------------------------------------------------------------------------
 
 --- Determine if we are able to retrieve value for the current assignment
--- @return boolean
+-- @return bool
 
 function MidiActions:_has_value()
   --TRACE("MidiActions:_has_value()")
@@ -620,7 +595,7 @@ end
 --------------------------------------------------------------------------------
 
 --- Determine ability to retrieve an Observable for the current assignment
--- @return boolean
+-- @return bool
 
 function MidiActions:_has_observable()
   --TRACE("MidiActions:_has_observable()")
@@ -635,7 +610,7 @@ end
 --------------------------------------------------------------------------------
 
 --- Retrieve value for the current assignment
--- @return boolean, number or nil
+-- @return bool, number or nil
 
 function MidiActions:_get_value()
   --TRACE("MidiActions:_get_value()")
@@ -653,7 +628,7 @@ end
 --------------------------------------------------------------------------------
 
 --- Retrieve Observable for the current assignment
--- @return boolean, number or nil
+-- @return bool, number or nil
 
 function MidiActions:_get_observable()
   TRACE("MidiActions:_get_observable()")
@@ -669,7 +644,7 @@ end
 
 --- Transmit message
 -- when routed to MIDI, we generate an emulated 'TriggerMessage'
--- @param val (number, boolean or nil)
+-- @param val (number, bool or nil)
 
 function MidiActions:_transmit()
   TRACE("MidiActions:_transmit()")
@@ -767,6 +742,7 @@ function MidiActions:_retrieve_assist_by_name(str_name)
   -- first, try a literal string match
   for k,v in pairs(MidiActions.assist_table) do
     if (v.name == str_name) then
+      --print("*** got here - literal match")
       return v
     end
   end
@@ -782,6 +758,7 @@ function MidiActions:_retrieve_assist_by_name(str_name)
     patt = "([^#]+#)*(.+)"
     local matches = string.gmatch(v.name,patt)
     for v1,v2 in matches do
+      --print("*** got here - v1,v2",v1,v2)
       if (v1==str_start) and (v2==str_end) then
 
         -- assign functions, using the extracted index as argument 
@@ -968,7 +945,7 @@ end
 --------------------------------------------------------------------------------
 
 --- Look up the mapping and gather as much information as possible
--- @param first_run (boolean) true when app is first instantiated
+-- @param first_run (bool) true when app is first instantiated
 
 function MidiActions:_establish_routing(first_run)
   TRACE("MidiActions:_establish_routing(first_run)",first_run)
@@ -978,14 +955,12 @@ function MidiActions:_establish_routing(first_run)
     self:_clear_routing()
     self:_reset_min_max_options()
   end
-  --print("*** MidiActions - establish_routing - self.options.action.value",self.options.action.value)
   local map_index = self.options.action.value - 1
   if (map_index == 0) then
     return
   else
     self._active_map_index = map_index
   end
-
   local mapping = MidiActions.midi_mappings[self._active_map_index]
   assert(mapping,"MidiActions error: the target mapping wes not found!")
 
@@ -1067,7 +1042,8 @@ end
 
 --------------------------------------------------------------------------------
 
---- Idle method, called continously while app is running...
+--- inherited from Application
+-- @see Duplex.Application.on_idle
 
 function MidiActions:on_idle()
 
@@ -1133,7 +1109,9 @@ end
 
 --------------------------------------------------------------------------------
 
---- Construct the user interface
+--- inherited from Application
+-- @see Duplex.Application._build_app
+-- @return bool
 
 function MidiActions:_build_app()
 
@@ -1146,7 +1124,7 @@ function MidiActions:_build_app()
     local args = cm:get_indexed_element(map.index,map.group_name)
     if args then
       if (args.type == "dial") or
-        (args.type == "encoder") or
+        --(args.type == "encoder") or
         (args.type == "fader") 
       then
         input_method = "slider"
@@ -1156,9 +1134,9 @@ function MidiActions:_build_app()
     else
       -- check if we are dealing with a slider 
       -- made from individual buttons ("grid mode")
-      if map.orientation == HORIZONTAL then
+      if map.orientation == ORIENTATION.HORIZONTAL then
         grid_size = cm:count_columns(map.group_name)
-      elseif map.orientation == VERTICAL then
+      elseif map.orientation == ORIENTATION.VERTICAL then
         grid_size = cm:count_rows(map.group_name)
       else
         grid_size = cm:get_group_size(map.group_name)
@@ -1238,7 +1216,7 @@ function TriggerMessage:__init()
   self.value_min_scaling = nil
   self.value_max_scaling = nil
 
-  -- booleans, for internal use
+  -- bools, for internal use
   self._is_trigger = nil
   self._is_switch = nil
   self._is_rel_value = nil

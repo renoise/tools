@@ -2,9 +2,6 @@
 -- Duplex.NanoKontrol2
 ----------------------------------------------------------------------------]]--
 
-
--- setup "Recorder + Transport" for this configuration
-
 duplex_configurations:insert {
 
   -- configuration properties
@@ -19,7 +16,7 @@ duplex_configurations:insert {
     device_port_out = "nanoKONTROL2",
     control_map = "Controllers/nanoKONTROL2/Controlmaps/nanoKONTROL2.xml",
     thumbnail = "Controllers/nanoKONTROL2/nanoKONTROL2.bmp",
-    protocol = DEVICE_MIDI_PROTOCOL
+    protocol = DEVICE_PROTOCOL.MIDI
   },
   
   applications = {

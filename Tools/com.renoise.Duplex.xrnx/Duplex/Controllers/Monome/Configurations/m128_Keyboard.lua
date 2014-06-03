@@ -2,8 +2,6 @@
 -- Duplex.Monome 
 ----------------------------------------------------------------------------]]--
 
--- setup "StepSequencer" for this configuration
-
 duplex_configurations:insert {
 
   -- configuration properties
@@ -20,7 +18,7 @@ duplex_configurations:insert {
     device_port_out = "8082",
     control_map = "Controllers/Monome/Controlmaps/Monome128_Keyboard.xml",
     thumbnail = "Controllers/Monome/Monome.bmp",
-    protocol = DEVICE_OSC_PROTOCOL,
+    protocol = DEVICE_PROTOCOL.OSC,
   },
   applications = {
     KeyBoard = {
@@ -31,14 +29,7 @@ duplex_configurations:insert {
         }
       }, 
       palette = {
-        --[[
-        key_pressed_content = {
-          color = {0x00,0x00,0x00}
-        },      
-        key_released_content = {
-          color = {0xFF,0xFF,0xFF}
-        },  
-        ]]
+
       }
     },
     KeyPads = {

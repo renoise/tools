@@ -1,10 +1,10 @@
---[[----------------------------------------------------------------------------
+--[[============================================================================
 -- Duplex.UIPad
-----------------------------------------------------------------------------]]--
+-- Inheritance: UIComponent > UIPad
+============================================================================]]--
 
---[[
-
-Inheritance: UIComponent > UIPad
+--[[--
+UIPad is designed to take control of a X/Y Pad
 
 --]]
 
@@ -15,24 +15,24 @@ class 'UIPad' (UIComponent)
 --------------------------------------------------------------------------------
 
 --- Initialize the UIPad class
--- @param app (Duplex.Application)
+-- @param app (@{Duplex.Application})
 
 function UIPad:__init(app)
   TRACE('UIPad:__init')
 
   UIComponent.__init(self,app)
 
-  -- current values, between 0 and .ceiling
+  --- current values, between 0 and .ceiling
   self.value = {nil,nil}
   
-  -- the second index, used when we specify each axis seperately
+  --- the second index, used when we specify each axis seperately
   -- (assign the X to main index, and Y axis to this one)
   self.secondary_index = nil
 
-  -- internal values
+  --- internal values
   self._cached_value = self.value
 
-  -- attach ourself to the display message stream
+  --- attach ourself to the display message stream
   self:add_listeners()
 
 end
@@ -40,7 +40,7 @@ end
 --------------------------------------------------------------------------------
 
 --- Value was changed
--- @param msg (Duplex.Message)
+-- @param msg (@{Duplex.Message})
 -- @return self or nil
 
 function UIPad:do_change(msg)
@@ -83,9 +83,9 @@ end
 --------------------------------------------------------------------------------
 
 --- Set the UIPads values
--- @param val_x (Number) 
--- @param val_y (Number) 
--- @param skip_event (boolean) skip event handler
+-- @param val_x (number) 
+-- @param val_y (number) 
+-- @param skip_event (bool) skip event handler
 
 function UIPad:set_value(val_x,val_y,skip_event)
   TRACE("UIPad:set_value()",val_x,val_y,skip_event)
@@ -111,7 +111,8 @@ end
 
 --------------------------------------------------------------------------------
 
---- update the UIComponent canvas
+--- Update the appearance - inherited from UIComponent
+-- @see Duplex.UIComponent
 
 function UIPad:draw()
   TRACE("UIPad:draw() - self.value",self.value)
@@ -127,12 +128,14 @@ end
 
 --------------------------------------------------------------------------------
 
---- Add event listener (change)
+--- Add event listener
+--    DEVICE_EVENT.VALUE_CHANGED
+-- @see Duplex.UIComponent
 
 function UIPad:add_listeners()
 
   self.app.display.device.message_stream:add_listener(
-    self,DEVICE_EVENT_VALUE_CHANGED,
+    self,DEVICE_EVENT.VALUE_CHANGED,
     function(msg) return self:do_change(msg) end )
 
 end
@@ -140,13 +143,13 @@ end
 
 --------------------------------------------------------------------------------
 
---- Remove previously attached event listener
--- @see UIPad:add_listeners
+--- Remove previously attached event listeners
+-- @see Duplex.UIComponent
 
 function UIPad:remove_listeners()
 
   self.app.display.device.message_stream:remove_listener(
-    self,DEVICE_EVENT_VALUE_CHANGED)
+    self,DEVICE_EVENT.VALUE_CHANGED)
 
 end
 

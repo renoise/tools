@@ -1,11 +1,15 @@
 --[[============================================================================
- The Duplex Library
+--- The Duplex Library
 ============================================================================]]--
 
--- include the duplex core
+--[[--
+  Include the duplex core, applications and device configurations
+]]
 
 require "Duplex/Globals"
+require "Duplex/Preferences"
 require "Duplex/Automation"
+require "Duplex/Message"
 require "Duplex/MessageStream"
 require "Duplex/Display"
 require "Duplex/Canvas"
@@ -28,7 +32,9 @@ require "Duplex/OscVoiceMgr"
 require "Duplex/Application"
 require "Duplex/RoamingDSP" -- depends on Application
 require "Duplex/Browser"
+require "Duplex/BrowserProcess"
 require "Duplex/Scheduler"
+require "Duplex/ProcessSlicer"
 
 
 -- load all application scripts dynamically (Applications/XXX.lua)

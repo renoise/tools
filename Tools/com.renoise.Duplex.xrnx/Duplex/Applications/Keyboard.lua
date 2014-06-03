@@ -1,40 +1,44 @@
---[[----------------------------------------------------------------------------
+--[[============================================================================
 -- Duplex.Keyboard
 -- Inheritance: Application > Keyboard
-----------------------------------------------------------------------------]]--
+============================================================================]]--
 
---[[
+--[[--
 
-About
+A replacement of the standard Renoise keyboard, supporting for MIDI and OSC.
 
-  The Keyboard application is designed as a drop-in replacement of the standard Renoise keyboard, with support for both MIDI and OSC devices.
+### Features
 
-  Essentially, the Keyboard application can be used in two ways: as a standard keyboard (visulized as black & white keys in the virtual control surface), and as individually-mapped keys/pads, suitable for grid and pad controllers.
+* Integrate with standard MIDI Keyboard or Pad/Grid controller
+* Produce keyboard splits and customize the behaviour
+* Route specific splits to specific instruments and/or tracks
 
-  When you are using the application in the standard keyboard mode, it might receive pitch bend and channel pressure information from the device, which can then be A) ignored, B) broadcast as MIDI (unchanged), C) or routed internally to any MIDI CC message (this in turn means that you can easily use the native MIDI mapping in Renoise to map the pitch bend to any parameter) 
+### In more details
 
-  In grid mode, the Keyboard application is able to visualize the currently selected instrument's keyzone/sample mappings in realtime. This makes it a lot easier to see exactly where each sound is located, and even works as you are moving mappings around, or transposing the keyboard (octave up/down). Also, all of the UISlider mappings (volume, octave, pitch bend, etc.) support grid mode, as their mappings can be mapped to buttons just as easily as they can be mapped to a physical slider or fader. 
+The Keyboard application can be used as a standard keyboard (visulized as black & white keys in the virtual control surface), or as individually-mapped keys/pads, suitable for grid and pad controllers.
 
-  Furthermore, since we are using internally-triggered notes we have the ability to trigger notes inside a specific track, using a specific instrument. 
-  The default setting is identical to the standard behaviour in Renoise, and simply uses the currently selected track/instrument. But it's possible to select any track or instrument using the options "Active track/instr.", choosing any number between 1-64 (a planned feature is to "lock" the track or instrument by assigning a special name to it, something which has not made it into this initial release).
+When you are using the application in the standard keyboard mode, it might receive pitch bend and channel pressure information from the device, which can then be A) ignored, B) broadcast as MIDI (unchanged), C) or routed internally to any MIDI CC message (this in turn means that you can easily use the native MIDI mapping in Renoise to map the pitch bend to any parameter) 
 
-  Finally, you can stack multiple Keyboard applications to control/trigger multiple instruments with a single master keyboard. The "MIDI-Keyboard" device comes with a configuration that demonstrate this ("Stacked Keys"), in which three instrument are triggered, each with different velocity settings.
+In grid mode, the Keyboard application is able to visualize the currently selected instrument's keyzone/sample mappings in realtime. This makes it a lot easier to see exactly where each sound is located, and even works as you are moving mappings around, or transposing the keyboard (octave up/down). Also, all of the UISlider mappings (volume, octave, pitch bend, etc.) support grid mode, as their mappings can be mapped to buttons just as easily as they can be mapped to a physical slider or fader. 
 
-How to add Keyboard to your control-map:
+Furthermore, since we are using internally-triggered notes we have the ability to trigger notes inside a specific track, using a specific instrument. 
+The default setting is identical to the standard behaviour in Renoise, and simply uses the currently selected track/instrument. But it's possible to select any track or instrument using the options "Active track/instr.", choosing any number between 1-64 (a planned feature is to "lock" the track or instrument by assigning a special name to it, something which has not made it into this initial release).
 
-  ...
-
-
-
-Prerequisites
-
-  The Keyboard application will not work unless you have enabled the internal
-  OSC server in Renoise (Renoise prefereces -> OSC settings). It should be set
-  to "UPD" protocol, and use the same port as specified in Duplex/Globals.lua
-  (by default, this is set to the same value as Renoise, "8000").
+Finally, you can stack multiple Keyboard applications to control/trigger multiple instruments with a single master keyboard. The "MIDI-Keyboard" device comes with a configuration that demonstrate this ("Stacked Keys"), in which three instrument are triggered, each with different velocity settings.
 
 
-Changes (equal to Duplex version number)
+### Prerequisites
+
+  The Keyboard application will not work unless you have enabled the internal OSC server in Renoise (Renoise prefereces -> OSC settings). It should be set to "UPD" protocol, and use the same port as specified in Duplex/Globals.lua (by default, this is set to the same value as Renoise, "8000").
+
+
+### Discuss
+
+Tool discussion is located on the [Renoise forum][1]
+[1]: http://forum.renoise.com/index.php?/topic/33806-new-tool-duplex-keyboard/
+
+
+### Changes
 
   0.98 - First release 
 
@@ -102,7 +106,6 @@ Keyboard.default_options = {
   },
   velocity_mode = {
     label = "Velocity Mode",
-    hidden = true,
     description = "Determine how to act on velocity range (the range specified in the control-map)",
     items = {
       "Clamp (restrict to range)",
@@ -112,7 +115,6 @@ Keyboard.default_options = {
   },
   keyboard_mode = {
     label = "Keyboard Mode",
-    hidden = true,
     description = "Determine how notes should be triggered",
     items = {
       "Trigger notes in range (OSC)",
@@ -157,7 +159,6 @@ Keyboard.default_options = {
   },
   release_type = {
     label = "Key-release",
-    hidden = true,
     description = "Determine how to respond when the same key is triggered"
                 .."\nmultiple times without being released inbetween hits: "
                 .."\n'wait' means to wait until all pressed keys are released, "
@@ -171,7 +172,6 @@ Keyboard.default_options = {
   },
   button_width = {
     label = "Grid Button-W",
-    hidden = true,
     on_change = function(app)
       local msg = "This change will be applied the next time Duplex is started"
       renoise.app():show_message(msg)
@@ -184,7 +184,6 @@ Keyboard.default_options = {
   },
   button_height = {
     label = "Grid Button-H",
-    hidden = true,
     on_change = function(app)
       local msg = "This change will be applied the next time Duplex is started"
       renoise.app():show_message(msg)
@@ -270,7 +269,7 @@ Keyboard.available_mappings = {
   },
   volume = {
     description = "Keyboard: volume control",
-    orientation = VERTICAL,
+    orientation = ORIENTATION.VERTICAL,
     flipped = false,
     toggleable = true,
   },
@@ -285,7 +284,7 @@ Keyboard.available_mappings = {
   },
   octave_set = {
     description = "Keyboard: set active keyboard octave",
-    orientation = VERTICAL,
+    orientation = ORIENTATION.VERTICAL,
     flipped = false,
     toggleable = true,
   },
@@ -294,7 +293,7 @@ Keyboard.available_mappings = {
   },
   track_set = {
     description = "Keyboard: set active keyboard track",
-    orientation = VERTICAL,
+    orientation = ORIENTATION.VERTICAL,
     flipped = false,
     toggleable = true,
   },
@@ -303,7 +302,7 @@ Keyboard.available_mappings = {
   },
   instr_set = {
     description = "Keyboard: set active keyboard instrument",
-    orientation = VERTICAL,
+    orientation = ORIENTATION.VERTICAL,
     flipped = false,
     toggleable = true,
   },
@@ -343,24 +342,30 @@ Keyboard.default_palette = {
 --------------------------------------------------------------------------------
 
 --- Constructor method
--- @param (VarArg), see Application to learn more
+-- @param (VarArg)
+-- @see Duplex.Application
 
 function Keyboard:__init(...)
   TRACE("Keyboard:__init()")
 
-  -- reference to BrowserProcess
+  --- reference to BrowserProcess
   -- (access the internal OSC server, modify options in realtime)
   self._process = select(1,...)
 
-  -- this is set once the application is started
-  self.curr_octave = nil
-  self.curr_volume = nil
-  self.curr_track = nil
-  self.curr_instr = nil
-  self.lower_note = nil
-  self.upper_note = nil
+  --- octave
+  self.curr_octave = nil 
+  --- volume
+  self.curr_volume = nil 
+  --- track index
+  self.curr_track = nil  
+  --- instrument index
+  self.curr_instr = nil  
+  --- lower note
+  self.lower_note = nil  
+  --- upper note
+  self.upper_note = nil  
 
-  -- the various UIComponents
+  --- the various UIComponents
   self._grid = table.create()
   self._keymatcher = nil
   self._channel_pressure = nil
@@ -374,11 +379,12 @@ function Keyboard:__init(...)
   self._track_sync = nil
   self._track_set = nil
 
-  -- control-map parameters
+  --- control-map parameters
   self._key_args = nil
 
   Application.__init(self,...)
 
+  --- instrument observables
   self._instr_observables = table.create()
 
   self._grid_update_requested = false
@@ -389,11 +395,11 @@ end
 
 --------------------------------------------------------------------------------
 
--- trigger notes using the internal voice manager (OSC server)
--- @param note_on (boolean), whether to send trigger or release
--- @param pitch (number)
--- @param velocity (number)
--- @param grid_index (number), when using individual buttons as triggers
+--- trigger notes using the internal voice manager (OSC server)
+-- @param note_on (bool), whether to send trigger or release
+-- @param pitch (int) 0-120
+-- @param velocity (int) 0-127
+-- @param grid_index (int), when using individual buttons as triggers
 -- @return true when originating control should update
 
 function Keyboard:trigger(note_on,pitch,velocity,grid_index)
@@ -414,15 +420,19 @@ function Keyboard:trigger(note_on,pitch,velocity,grid_index)
     return false
   end
 
-  local rns = renoise.song()
-
   -- notes outside user-defined range are sent as MIDI
   local is_midi = not self:inside_note_range(pitch)
 
   pitch = pitch+12 -- fix Renoise octave difference 
 
-  local instr = self:get_instrument_index()-1
-  local track = self:get_track_index()-1
+  local instr,matched_instr = self:get_instrument_index() 
+  local track = self:get_track_index()
+
+  -- reject notes if target instr. or track is missing
+  if not matched_instr then
+    LOG("Cannot trigger note, target instrument is missing")
+    return false
+  end
 
   local key_min = nil
   local key_max = nil
@@ -446,20 +456,10 @@ function Keyboard:trigger(note_on,pitch,velocity,grid_index)
         return false
       end
     end
-
-    local fixed_velocity = false
-    if (rns.transport.keyboard_velocity_enabled and 
-      (self.options.base_volume.value == VOLUME_FOLLOW)) or
-      (self.options.base_volume.value > VOLUME_FOLLOW)
-    then
-      -- attach fixed velocity to message
-      velocity = self.curr_volume
-    else
-      -- scale velocity from device range to keyboard range (0-127)
-      velocity = scale_value(velocity,0,key_max,0,127)
-      -- apply user-specified volume 
-      velocity = math.floor(velocity * (self.curr_volume/KEYBOARD_VELOCITIES))
-    end
+    -- scale velocity from device range to keyboard range (0-127)
+    velocity = scale_value(velocity,0,key_max,0,127)
+    -- apply user-specified volume 
+    velocity = math.floor(velocity * (self.curr_volume/KEYBOARD_VELOCITIES))
   end
 
   --print("trigger note_on,instr,track,pitch,velocity",note_on,instr,track,pitch,velocity)
@@ -508,14 +508,14 @@ end
 
 --------------------------------------------------------------------------------
 
--- test whether a given pitch is inside the specified note-range
+--- test whether a given pitch is inside the specified note-range
+-- @param pitch (int) note pitch
 
 function Keyboard:inside_note_range(pitch)
   TRACE("Keyboard:inside_note_range()",pitch)
-  --[[
-  print("Keyboard:inside_note_range() - self.upper_note",self.upper_note)
-  print("Keyboard:inside_note_range() - self.lower_note",self.lower_note)
-  ]]
+
+  --print("Keyboard:inside_note_range() - self.upper_note",self.upper_note)
+  --print("Keyboard:inside_note_range() - self.lower_note",self.lower_note)
 
   if (pitch>self.upper_note) or (pitch<self.lower_note) then
     return false
@@ -525,7 +525,8 @@ end
 
 --------------------------------------------------------------------------------
 
--- send MIDI message using the internal OSC server
+--- send MIDI message using the internal OSC server
+-- @param msg (table) MIDI message with three bytes
 
 function Keyboard:send_midi(msg)
   TRACE("Keyboard:send_midi(msg)",msg)
@@ -539,7 +540,9 @@ end
 
 --------------------------------------------------------------------------------
 
--- check configuration, build & start the application
+--- inherited from Application
+-- @see Duplex.Application.start_app
+-- @return bool or nil
 
 function Keyboard:start_app()
   TRACE("Keyboard:start_app()")
@@ -569,7 +572,8 @@ end
 
 --------------------------------------------------------------------------------
 
--- shut down application
+--- inherited from Application
+-- @see Duplex.Application.stop_app
 
 function Keyboard:stop_app()
   TRACE("Keyboard:stop_app()")
@@ -584,7 +588,8 @@ end
 
 --------------------------------------------------------------------------------
 
--- perform periodic updates
+--- inherited from Application
+-- @see Duplex.Application.on_idle
 
 function Keyboard:on_idle()
   --TRACE("Keyboard:on_idle()")
@@ -621,8 +626,9 @@ end
 
 --------------------------------------------------------------------------------
 
--- construct the user interface
--- @return boolean, false if condition was not met
+--- inherited from Application
+-- @see Duplex.Application._build_app
+-- @return bool
 
 function Keyboard:_build_app()
   TRACE("Keyboard:_build_app()")
@@ -667,11 +673,11 @@ function Keyboard:_build_app()
   local key_params = cm:get_params(map.group_name,map.index)
   if key_params then
 
-    local unit_w = self.options.button_width.value
-    local unit_h = self.options.button_height.value
+    local unit_w = self.options.button_width.value or 1
+    local unit_h = self.options.button_height.value or 1
 
     local grid_w,grid_h 
-    local orientation = map.orientation or HORIZONTAL
+    local orientation = map.orientation or ORIENTATION.HORIZONTAL
 
     -- (only defined for distributed layouts)
     local distributed_group = false
@@ -691,7 +697,7 @@ function Keyboard:_build_app()
       grid_h = 1
 
       if map.index then
-        if (orientation == HORIZONTAL) then
+        if (orientation == ORIENTATION.HORIZONTAL) then
           unit_x = map.index
           unit_y = 1
         else
@@ -709,13 +715,13 @@ function Keyboard:_build_app()
 
       grid_w = cm:count_columns(key_params[1].group_name)
       grid_h = cm:count_rows(key_params[1].group_name)
-      if (orientation == HORIZONTAL) then
+      if (orientation == ORIENTATION.HORIZONTAL) then
         grid_w,grid_h = grid_h,grid_w
       end
 
     end
 
-    --print("*** Keyboard.build_app - unit_x,unit_y",unit_x,unit_y)
+    --print("*** Keyboard.build_app #B - unit_x,unit_y",unit_x,unit_y)
     --print("*** Keyboard.build_app - grid_w,grid_h",grid_w,grid_h)
 
     local count = 1
@@ -757,20 +763,20 @@ function Keyboard:_build_app()
                 local ctrl_col = ((ctrl_index-1)%col_count)+1
                 local ctrl_row = math.floor((ctrl_index-1)/col_count)+1
                 --print("*** Keyboard - ctrl_index,ctrl_col,ctrl_row",ctrl_index,ctrl_col,ctrl_row)
-                if (orientation == HORIZONTAL) then
+                if (orientation == ORIENTATION.HORIZONTAL) then
                   c:set_pos(ctrl_row,ctrl_col)
                 else
                   c:set_pos(ctrl_col,ctrl_row)
                 end
               end
             else
-              if (orientation == HORIZONTAL) then
+              if (orientation == ORIENTATION.HORIZONTAL) then
                 c:set_pos(y,x)
               else
                 c:set_pos(x,y)
               end
+              --print("*** Keyboard - build_app - x,y",x,y)
             end
-            --print("*** Keyboard - build_app - x,y",x,y)
             c:set_size(unit_w,unit_h)
             c.on_press = function(obj)
               local note_on = true
@@ -904,7 +910,7 @@ function Keyboard:_build_app()
     local slider_size = 1
     local grid_mode = cm:is_grid_group(map.group_name,map.index)
     if grid_mode then
-      if (map.orientation == HORIZONTAL) then
+      if (map.orientation == ORIENTATION.HORIZONTAL) then
         slider_size = cm:count_columns(map.group_name)
       else
         slider_size = cm:count_rows(map.group_name)
@@ -968,7 +974,7 @@ function Keyboard:_build_app()
     local slider_size = 1
     local grid_mode = cm:is_grid_group(map.group_name,map.index)
     if grid_mode then
-      if (map.orientation == HORIZONTAL) then
+      if (map.orientation == ORIENTATION.HORIZONTAL) then
         slider_size = cm:count_columns(map.group_name)
       else
         slider_size = cm:count_rows(map.group_name)
@@ -1031,7 +1037,7 @@ function Keyboard:_build_app()
     local slider_size = 1
     local grid_mode = cm:is_grid_group(map.group_name,map.index)
     if grid_mode then
-      if (map.orientation == HORIZONTAL) then
+      if (map.orientation == ORIENTATION.HORIZONTAL) then
         slider_size = cm:count_columns(map.group_name)
       else
         slider_size = cm:count_rows(map.group_name)
@@ -1094,7 +1100,7 @@ function Keyboard:_build_app()
     local slider_size = 1
     local grid_mode = cm:is_grid_group(map.group_name,map.index)
     if grid_mode then
-      if (map.orientation == HORIZONTAL) then
+      if (map.orientation == ORIENTATION.HORIZONTAL) then
         slider_size = cm:count_columns(map.group_name)
       else
         slider_size = cm:count_rows(map.group_name)
@@ -1166,7 +1172,7 @@ end
 
 --------------------------------------------------------------------------------
 
--- called when application is first started
+--- called when application is first started
 
 function Keyboard:obtain_octave()
   TRACE("Keyboard:obtain_octave()")
@@ -1179,6 +1185,8 @@ function Keyboard:obtain_octave()
 
 end
 
+--- called when application is first started
+
 function Keyboard:obtain_track()
   TRACE("Keyboard:obtain_track()")
 
@@ -1190,6 +1198,8 @@ function Keyboard:obtain_track()
 
 end
 
+--- called when application is first started
+
 function Keyboard:obtain_instr()
   TRACE("Keyboard:obtain_instr()")
 
@@ -1200,6 +1210,8 @@ function Keyboard:obtain_instr()
   end
 
 end
+
+--- called when application is first started
 
 function Keyboard:obtain_volume()
   TRACE("Keyboard:obtain_volume()")
@@ -1214,9 +1226,9 @@ end
 
 --------------------------------------------------------------------------------
 
--- set_octave() - sets the current octave 
--- @param val (Integer), between 0 and 8
--- @param skip_option (Boolean) set this to skip setting option
+--- set_octave() - sets the current octave 
+-- @param val (int), between 0 and 8
+-- @param skip_option (bool) set this to skip setting option
 
 function Keyboard:set_octave(val,skip_option)
   TRACE("Keyboard:set_octave()",val,skip_option)
@@ -1249,9 +1261,9 @@ end
 
 --------------------------------------------------------------------------------
 
--- switch to the selected track, optionally update options
--- @param val (Integer), track index
--- @param skip_option (Boolean) set this to skip setting option
+--- switch to the selected track, optionally update options
+-- @param val (int), track index
+-- @param skip_option (bool) set this to skip setting option
 
 function Keyboard:set_track(val,skip_option)
   TRACE("Keyboard:set_track()",val,skip_option)
@@ -1272,9 +1284,9 @@ end
 
 --------------------------------------------------------------------------------
 
--- switch to the selected instrument, optionally update options
--- @param val (Integer), track index
--- @param skip_option (Boolean) set this to skip setting option
+--- switch to the selected instrument, optionally update options
+-- @param val (int), track index
+-- @param skip_option (bool) set this to skip setting option
 
 function Keyboard:set_instr(val,skip_option)
   TRACE("Keyboard:set_instr()",val,skip_option)
@@ -1295,6 +1307,9 @@ end
 
 --------------------------------------------------------------------------------
 
+--- set the upper note on the keyboard
+-- @param pitch (int) note pitch
+
 function Keyboard:set_upper_boundary(pitch)
   TRACE("Keyboard:set_upper_boundary()",pitch)
 
@@ -1304,6 +1319,9 @@ function Keyboard:set_upper_boundary(pitch)
 end
 
 --------------------------------------------------------------------------------
+
+--- set the lower note on the keyboard
+-- @param pitch (int) note pitch
 
 function Keyboard:set_lower_boundary(pitch)
   TRACE("Keyboard:set_lower_boundary()",pitch)
@@ -1315,7 +1333,7 @@ end
 
 --------------------------------------------------------------------------------
 
--- update the upper/lower boundaries of the virtual keyboard
+--- update the upper/lower boundaries of the virtual keyboard
 
 function Keyboard:set_boundaries()
   TRACE("Keyboard:set_boundaries()")
@@ -1339,9 +1357,9 @@ end
 
 --------------------------------------------------------------------------------
 
--- set_volume() - sets the current volume 
--- @param val (Integer), between 0 and 127
--- @param skip_option (Boolean) set this to skip setting option
+--- set_octave() - sets the current volume 
+-- @param val (int), between 0 and 127
+-- @param skip_option (bool) set this to skip setting option
 
 function Keyboard:set_volume(val,skip_option)
   TRACE("Keyboard:set_volume()",val,skip_option)
@@ -1356,7 +1374,7 @@ function Keyboard:set_volume(val,skip_option)
     self._volume:set_value(self.curr_volume,skip_event)
   end
   if not skip_option and 
-    (self.options.base_volume.value ~= VOLUME_FOLLOW) 
+    (self.options.base_volume.value ~= OCTAVE_FOLLOW) 
   then
     -- modify the persistent settings
     self:_set_option("base_volume",self.curr_volume+1,self._process)
@@ -1367,7 +1385,7 @@ end
 
 --------------------------------------------------------------------------------
 
--- called when a new document becomes available, or controls should update
+--- update display of octave controls
 
 function Keyboard:update_octave_controls()
   TRACE("Keyboard:update_octave_controls()")
@@ -1410,6 +1428,10 @@ function Keyboard:update_octave_controls()
 
 end
 
+--------------------------------------------------------------------------------
+
+--- update display of track controls
+
 function Keyboard:update_track_controls()
   TRACE("Keyboard:update_track_controls()")
 
@@ -1431,6 +1453,10 @@ function Keyboard:update_track_controls()
   end
 
 end
+
+--------------------------------------------------------------------------------
+
+--- update display of instrument controls
 
 function Keyboard:update_instr_controls()
   TRACE("Keyboard:update_instr_controls()")
@@ -1454,6 +1480,9 @@ function Keyboard:update_instr_controls()
 
 end
 
+--------------------------------------------------------------------------------
+
+--- update display of volume controls
 
 function Keyboard:update_volume_controls()
   TRACE("Keyboard:update_volume_controls()")
@@ -1475,7 +1504,7 @@ end
 
 --------------------------------------------------------------------------------
 
--- visualize sample mappings in the grid
+--- visualize sample mappings in the grid
 -- called after switching octave, instrument
 
 function Keyboard:visualize_sample_mappings()
@@ -1500,7 +1529,10 @@ function Keyboard:visualize_sample_mappings()
       end
       ui_obj:invalidate()
     end
-    for k,s_map in ipairs(instr.sample_mappings[1]) do
+    for s_index,s_map in ipairs(instr.sample_mappings[1]) do
+      --print("s_map",s_map)
+      --rprint(s_map)
+      --oprint(s_map)
       for idx = 1,#self._grid do
         local ui_obj = self._grid[idx]
         local pitch = idx + (self.curr_octave*12)+11
@@ -1509,9 +1541,9 @@ function Keyboard:visualize_sample_mappings()
         then
           local inside_range = self:inside_note_range(pitch-12)
           if inside_range then
-            local s_index = renoise.song().selected_sample_index
+            local sample_index = renoise.song().selected_sample_index
             ui_obj.palette.pressed = self.palette.key_pressed_content
-            if (s_index == s_map.sample_index) then
+            if (sample_index == s_index) then
               ui_obj.palette.released = self.palette.key_released_selected
             else
               ui_obj.palette.released = self.palette.key_released_content
@@ -1527,7 +1559,7 @@ end
 
 --------------------------------------------------------------------------------
 
--- obtain the current instrument 
+--- obtain the current instrument 
 -- this method should ALWAYS be able to produce an instrument
 -- (fall back on the currently selected instrument if none was matched)
 
@@ -1535,6 +1567,7 @@ function Keyboard:get_instrument_index()
   TRACE("Keyboard:get_instrument_index()")
 
   local instr_index = nil
+  local matched = true
 
   if (self.options.instr_index.value == INSTR_FOLLOW) then
     instr_index = renoise.song().selected_instrument_index
@@ -1543,16 +1576,17 @@ function Keyboard:get_instrument_index()
     if not renoise.song().instruments[instr_index] then
       LOG("Notice from Duplex Keyboard: appointed instrument does not exist")
       instr_index = renoise.song().selected_instrument_index
+      matched = false
     end
   end
   
-  return instr_index
+  return instr_index,matched
 
 end
 
 --------------------------------------------------------------------------------
 
--- obtain the current track
+--- obtain the current track
 -- this method should ALWAYS be able to produce a valid track index
 -- (fall back on the currently selected track if none was matched)
 
@@ -1577,7 +1611,8 @@ end
 
 --------------------------------------------------------------------------------
 
--- called whenever a new document becomes available
+--- inherited from Application
+-- @see Duplex.Application.on_new_document
 
 function Keyboard:on_new_document()
   TRACE("Keyboard:on_new_document()")
@@ -1588,7 +1623,7 @@ end
 
 --------------------------------------------------------------------------------
 
--- attach notifier to the song, handle changes
+--- attach notifier to the song, handle changes
 
 function Keyboard:_attach_to_song()
   TRACE("Keyboard:_attach_to_song()")
@@ -1654,7 +1689,7 @@ end
 
 --------------------------------------------------------------------------------
 
--- attach notifiers to selected instrument 
+--- attach notifiers to selected instrument 
 -- (watch for swapped keyzones, keyzone note-ranges)
 
 function Keyboard:attach_to_instrument()
@@ -1697,7 +1732,9 @@ end
 
 --------------------------------------------------------------------------------
 
+--- brute force method for removing observables
 -- @param observables - list of observables
+
 function Keyboard:_remove_notifiers(observables)
   TRACE("Keyboard:_remove_notifiers()",observables)
 

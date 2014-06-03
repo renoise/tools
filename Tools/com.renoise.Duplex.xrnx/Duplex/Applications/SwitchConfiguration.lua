@@ -1,19 +1,16 @@
---[[----------------------------------------------------------------------------
+--[[============================================================================
 -- Duplex.SwitchConfiguration
 -- Inheritance: Application > SwitchConfiguration
-----------------------------------------------------------------------------]]--
+============================================================================]]--
 
---[[
-
-About
-
-  The SwitchConfiguration application is aimed at controlling the different
-  configurations for a device and to switch between them (next and previous).
+--[[--
+Switch between different configurations (next, previous and set)
 
 
-Changes (equal to Duplex version number)
+### Changes
 
-  0.98  First release
+  0.98
+    - First release
 
 --]]
 
@@ -59,14 +56,16 @@ SwitchConfiguration.default_palette = {
 --------------------------------------------------------------------------------
 
 --- Constructor method
--- @param (VarArg), see Application to learn more
+-- @param (VarArg)
+-- @see Duplex.Application
 
 function SwitchConfiguration:__init(...)
   TRACE("SwitchConfiguration:__init()")
 
-  -- the various UIComponents
+  --- the various UIComponents
   self.controls = {}
 
+  --- (@{Duplex.Browser}) reference to the duplex browser
   self._browser = select(1,...).browser
 
   Application.__init(self,...)
@@ -74,6 +73,10 @@ function SwitchConfiguration:__init(...)
 end
 
 --------------------------------------------------------------------------------
+
+--- inherited from Application
+-- @see Duplex.Application.start_app
+-- @return bool or nil
 
 function SwitchConfiguration:start_app()
   TRACE("SwitchConfiguration.start_app()")
@@ -86,6 +89,8 @@ end
 
 
 --------------------------------------------------------------------------------
+
+--- Update display
 
 function SwitchConfiguration:update()
   TRACE("SwitchConfiguration.update()")
@@ -122,7 +127,7 @@ end
 --------------------------------------------------------------------------------
 
 --- Retrieve the current configuration index 
--- @return Number
+-- @return int
 
 function SwitchConfiguration:get_config_index()
 
@@ -133,6 +138,10 @@ function SwitchConfiguration:get_config_index()
 end
 
 --------------------------------------------------------------------------------
+
+--- inherited from Application
+-- @see Duplex.Application._build_app
+-- @return bool
 
 function SwitchConfiguration:_build_app()
     TRACE("SwitchConfiguration:_build_app()")

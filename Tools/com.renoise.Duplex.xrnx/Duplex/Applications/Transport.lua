@@ -1,23 +1,37 @@
---[[----------------------------------------------------------------------------
+--[[============================================================================
 -- Duplex.Transport
 -- Inheritance: Application > Transport
-----------------------------------------------------------------------------]]--
+============================================================================]]--
 
---[[
+--[[--
+The Transport application offers transport controls for Renoise
 
-About
+     _______ _______ ______ ______ ______ ______ ________ _______
+    |       |       |      |      |      |      |        |       |
+    |  |◄   |   ►   |  ►|  | ∞/═  |  ■   |  ●   |   ↓    |   ∆   |
+    | Prev  | Play  | Next | Loop | Stop | Edit | Follow | Metro |
+    |_______|_______|______|______|______|______|________|_______|
+     _______________ ______ ______ ______
+    |               |      |      |      |
+    |   01:04.25    |  +   | 95.2 |  -   |
+    |  Song playpos | BPM  | BPM  | BPM  |
+    |_______________|______|______|______|
 
-  The Transport application is aimed at controlling the playback position
 
-
-Changes (equal to Duplex version number)
+### Changes
   
-  0.98  New mapping: "metronome_toggle", minor optimizations
-  0.96  Fixed: Option "pattern_switch" didn't switch instantly
-  0.92  New option: "stop playback" (playback toggle button)
-  0.91  Fixed: always turn off "start" when hitting "stop"
-  0.90  Follow player option
-  0.81  First release
+  0.98  
+    - New mapping: "metronome_toggle", minor optimizations
+  0.96  
+    - Fixed: Option "pattern_switch" didn't switch instantly
+  0.92  
+    - New option: "stop playback" (playback toggle button)
+  0.91  
+    - Fixed: always turn off "start" when hitting "stop"
+  0.90  
+    - Follow player option
+  0.81  
+    - First release
 
 --]]
 
@@ -27,11 +41,14 @@ Changes (equal to Duplex version number)
 
 local SWITCH_MODE_SWITCH = 1
 local SWITCH_MODE_SCHEDULE = 2
+
 local PLAY_MODE_RETRIG = 1
 local PLAY_MODE_SCHEDULE = 2
 local PLAY_MODE_STOP = 3
+
 local STOP_MODE_PANIC = 1
 local STOP_MODE_JUMP = 2
+
 local JUMP_MODE_NORMAL = 1
 local JUMP_MODE_BLOCK = 2
 
@@ -42,6 +59,13 @@ local BPM_MAXIMUM = 999
 
 class 'Transport' (Application)
 
+--- These are the default options for the application
+--
+-- @field pattern_switch Choose how next/previous buttons will work
+-- @field pattern_play When play is pressed, choose an action
+-- @field pattern_stop When stop is pressed *twice*, choose an action
+-- @field jump_mode Choose between standard pattern or hybrid pattern/block-loop control
+-- @table default_options
 Transport.default_options = {
     pattern_switch = {
       label = "Next/previous",
@@ -83,6 +107,8 @@ Transport.default_options = {
     },
 }
 
+--- These are the available mappings for the application
+--
 Transport.available_mappings = {
   stop_playback = {
     description = "Transport: Stop playback"
@@ -164,7 +190,8 @@ Transport.default_palette = {
 --------------------------------------------------------------------------------
 
 --- Constructor method
--- @param (VarArg), see Application to learn more
+-- @param (VarArg)
+-- @see Duplex.Application
 
 function Transport:__init(...)
   TRACE("Transport:__init(",...)
@@ -172,13 +199,16 @@ function Transport:__init(...)
 
   -- private stuff
 
-  -- number, set when not yet arrived at the scheduled pattern 
+  -- (int), scheduled target sequence index 
   self._scheduled_pattern = nil
+
+  -- (int), scheduled source sequence index 
   self._source_pattern = nil
 
+  -- (number) copy of playback_pos_beats
   self._pos_beats = nil
 
-  -- current status of the block loop
+  -- (bool) current status of the block loop
   self._block_loop = nil
 
   -- the various UIComponents
@@ -190,6 +220,10 @@ function Transport:__init(...)
 end
 
 --------------------------------------------------------------------------------
+
+--- inherited from Application
+-- @see Duplex.Application.start_app
+-- @return bool or nil
 
 function Transport:start_app()
   TRACE("Transport.start_app()")
@@ -204,7 +238,7 @@ end
 
 --------------------------------------------------------------------------------
 
--- periodic updates: check if any of the "un-observable" 
+--- periodic updates: check if any of the "un-observable" 
 -- properties have changed (block loop and schedule pattern)
 
 function Transport:on_idle()
@@ -256,7 +290,7 @@ end
 
 --------------------------------------------------------------------------------
 
--- control periodic blinking by the playback line number 
+--- control periodic blinking by the playback line number 
 
 function Transport:update_scheduled_buttons()
 
@@ -286,7 +320,7 @@ end
 
 --------------------------------------------------------------------------------
 
--- set the schedule buttons to default state, and tell the application that
+--- set the schedule buttons to default state, and tell the application that
 -- no pattern has been scheduled (note that if the current pattern has been 
 -- scheduled, it is not considered as we can't access the schedule list)
 
@@ -307,6 +341,9 @@ end
 
 --------------------------------------------------------------------------------
 
+--- inherited from Application
+-- @see Duplex.Application.on_new_document
+
 function Transport:on_new_document()
   TRACE("Transport.on_new_document()")
 
@@ -316,8 +353,7 @@ end
 
 --------------------------------------------------------------------------------
 
--- adds notifiers to song, initialize certain properties
--- invoked when a new document becomes available
+--- add notifiers to song, initialize certain properties
 
 function Transport:_attach_to_song()
   TRACE("Transport._attach_to_song()")
@@ -380,6 +416,8 @@ end
 
 --------------------------------------------------------------------------------
 
+--- Update display of the BPM 
+
 function Transport:update_bpm_display()
   TRACE("Transport:update_bpm_display()")
 
@@ -392,7 +430,7 @@ end
 
 --------------------------------------------------------------------------------
 
--- update methods for the various UIComponents
+--- Update display of the metronome 
 
 function Transport:update_metronome_enabled()
   TRACE("Transport:update_metronome_enabled()")
@@ -408,6 +446,10 @@ function Transport:update_metronome_enabled()
   end
 end
 
+--------------------------------------------------------------------------------
+
+--- Update display of play-follow 
+
 function Transport:update_follow_player()
   if not self.active then 
     return false 
@@ -420,6 +462,10 @@ function Transport:update_follow_player()
     end
   end
 end
+
+--------------------------------------------------------------------------------
+
+--- Update display of the play button 
 
 function Transport:update_playing()
   if not self.active then 
@@ -434,6 +480,10 @@ function Transport:update_playing()
   end
 end
 
+--------------------------------------------------------------------------------
+
+--- Update display of the loop button 
+
 function Transport:update_loop_pattern()
   if not self.active then 
     return false 
@@ -447,6 +497,10 @@ function Transport:update_loop_pattern()
   end
 end
 
+--------------------------------------------------------------------------------
+
+--- Update display of the edit-mode button 
+
 function Transport:update_edit_mode()
   if not self.active then 
     return false 
@@ -459,6 +513,10 @@ function Transport:update_edit_mode()
     end
   end
 end
+
+--------------------------------------------------------------------------------
+
+--- Update display of the block-loop button 
 
 function Transport:update_block_loop()
   if not self.active then 
@@ -475,7 +533,7 @@ end
 
 --------------------------------------------------------------------------------
 
--- update all UIComponents to the present state
+-- Update display of everything
 
 function Transport:update_everything()
   TRACE("Transport:update_everything()")
@@ -490,6 +548,10 @@ function Transport:update_everything()
 end
 
 --------------------------------------------------------------------------------
+
+--- inherited from Application
+-- @see Duplex.Application._build_app
+-- @return bool
 
 function Transport:_build_app()
   TRACE("Transport:_build_app()")
@@ -689,7 +751,7 @@ end
 
 --------------------------------------------------------------------------------
 
--- when "play" button is pressed
+--- when "play" button is pressed
 
 function Transport:_start_playback()
   TRACE("Transport:_start_playback()")
@@ -714,7 +776,7 @@ end
 
 --------------------------------------------------------------------------------
 
--- when "stop" button is pressed
+--- when "stop" button is pressed
 
 function Transport:_stop_playback()
   TRACE("Transport:_stop_playback()")
@@ -739,7 +801,7 @@ end
 
 --------------------------------------------------------------------------------
 
--- when "next" button is pressed
+--- when "next" button is pressed
 
 function Transport:_next()
   TRACE("Transport:_next()")
@@ -775,7 +837,7 @@ end
 
 --------------------------------------------------------------------------------
 
--- when "previous" button is pressed
+--- when "previous" button is pressed
 
 function Transport:_previous()
   TRACE("Transport:_previous()")
@@ -810,7 +872,7 @@ end
 
 --------------------------------------------------------------------------------
 
--- schedule the provided pattern index
+--- schedule the provided pattern index
 -- @param idx  - the pattern to schedule
 -- @param button UIButton, the pressed button (next or previous)
 
@@ -826,7 +888,7 @@ end
 
 --------------------------------------------------------------------------------
 
--- re-trigger the current pattern
+--- re-trigger the current pattern
 
 function Transport:_retrigger_pattern()
   TRACE("Transport:_retrigger_pattern()")
@@ -838,7 +900,7 @@ end
 
 --------------------------------------------------------------------------------
 
--- re-schedule the current pattern
+--- re-schedule the current pattern
 
 function Transport:_reschedule_pattern()
   TRACE("Transport:_reschedule_pattern()")
@@ -851,7 +913,7 @@ end
 
 --------------------------------------------------------------------------------
 
--- instantly switch to specified sequence index
+--- instantly switch to specified sequence index
 -- if the line in the target pattern does not exist,start from the beginning
 
 function Transport:_switch_to_seq_index(seq_index)
@@ -874,7 +936,7 @@ end
 
 --------------------------------------------------------------------------------
 
--- jump to beginning of song
+--- jump to beginning of song
 
 function Transport:_jump_to_beginning()
   TRACE("Transport:_jump_to_beginning()")

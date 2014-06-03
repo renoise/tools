@@ -50,7 +50,7 @@
 				<Param value="CC#23" type="button" size="3" aspect="0.2" minimum="0" maximum="127" />
 				<Param value="CC#24" type="button" size="3" aspect="0.2" minimum="0" maximum="127" />
 				<Param value="CC#25" type="button" size="3" aspect="0.2" minimum="0" maximum="127" />
-				<Param value="CC#26" type="button" size="3" aspect="0.2" minimum="0" maximum="127" />
+				<!--<Param value="CC#26" type="button" size="3" aspect="0.2" minimum="0" maximum="127" />-->
 			</Group>
 			<Group name="MuteTracks" colorspace="1,1,0">
 				<Param value="CC#27" type="button" size="2.2" aspect="0.33" minimum="0" maximum="127" />

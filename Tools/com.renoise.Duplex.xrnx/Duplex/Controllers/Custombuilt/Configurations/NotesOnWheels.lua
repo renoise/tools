@@ -18,20 +18,12 @@ duplex_configurations:insert {
     device_port_out = "",
     control_map = "Controllers/Custombuilt/Controlmaps/NOW_Controller.xml",
     thumbnail = "Controllers/Custombuilt/NOW_Controller.bmp",
-    protocol = DEVICE_MIDI_PROTOCOL
+    protocol = DEVICE_PROTOCOL.MIDI
   },
   
   applications = {
     NotesOnWheels = {
       mappings = {
-        --[[
-        multi_sliders = {
-          group_name = "DialRow_1",
-        },
-        multi_adjust = {
-          group_name = "Fader_1",
-        },
-        ]]
         pitch_sliders = {
           group_name = "DialRow_2",
         },
@@ -64,16 +56,12 @@ duplex_configurations:insert {
         },
         num_steps = {
           group_name = "ButtonRow",
-          --orientation = HORIZONTAL,
+          --orientation = ORIENTATION.HORIZONTAL,
         },
         step_spacing = {
           group_name = "Dials",
           index = 1,
         },
-        --num_lines = {
-        --  group_name = "Dials",
-        --  index = 2,
-        --},
         write = {
           group_name = "Controls",
           index = 1,

@@ -20,6 +20,8 @@ local browser = nil
 -- instantiate the browser, if needed, or load a new controller configuration
 
 local function create_browser(config, start_running)
+  --LOG("main:create_browser()",config, start_running)
+
   start_running = start_running or true
   
   if (not browser) then
@@ -46,10 +48,44 @@ end
 -- show the duplex browser dialog and optionally lauch a configuration
 
 local function show_dialog(config, start_running)
+  --LOG("main:show_dialog()",config, start_running)
 
   create_browser(config, start_running)
   browser:show()
 end
+
+--------------------------------------------------------------------------------
+
+--- returns a hopefully unique, xml node friendly key, that is used in the 
+-- preferences tree for the given configuration
+
+function configuration_settings_key(config)
+
+  -- use device_name + config_name as base
+  local key = (config.device.display_name .. " " .. config.name):lower()
+  
+  -- convert spaces to _'s
+  key = key:gsub("%s", "_")
+  -- remove all non alnums
+  key = key:gsub("[^%w_]", "")
+  -- and removed doubled _'s
+  key = key:gsub("[_]+", "_")
+  
+  return key
+end
+
+
+--------------------------------------------------------------------------------
+
+--- returns the preferences user settings node for the given configuration.
+-- always valid, but properties in the settings will be empty by default
+
+function configuration_settings(config)
+
+  local key = configuration_settings_key(config)
+  return duplex_preferences.configurations[key]
+end
+
 
 
 --------------------------------------------------------------------------------
@@ -60,6 +96,7 @@ end
 local applied_autostart_configurations = false
 
 local function apply_autostart_configurations() 
+  --LOG("main:apply_autostart_configurations()")
 
   -- only needs to be done once, when the first song gets activated
   if (not applied_autostart_configurations) then
@@ -345,16 +382,29 @@ renoise.tool().app_idle_observable:add_notifier(function()
   end
 end)
 renoise.tool().app_release_document_observable:add_notifier(function()
+  --LOG("main:app_release_document_observable fired...")
   if (browser) then
     browser:on_release_document()
   end
 end)
 renoise.tool().app_new_document_observable:add_notifier(function()
+  --LOG("main:app_new_document_observable fired...")
   if (browser) then
     browser:on_new_document()
   end
-
   apply_autostart_configurations()
+end)
+renoise.tool().app_became_active_observable:add_notifier(function()
+  --LOG("main:app_new_document_observable fired...")
+  if (browser) then
+    browser:on_window_became_active()
+  end
+end)
+renoise.tool().app_resigned_active_observable:add_notifier(function()
+  --LOG("main:app_new_document_observable fired...")
+  if (browser) then
+    browser:on_window_resigned_active()
+  end
 end)
 
 
@@ -368,6 +418,9 @@ local configuration_root_node = duplex_preferences:add_property(
   "configurations", renoise.Document.create("Configurations"){ })
 
 for _,device_name in pairs(available_devices) do
+
+  --LOG("main:register configurations for this device:" .. device_name)
+
   for _,config in pairs(device_configuration_map[device_name]) do
 
     if (config.device.display_name and config.name) then
@@ -431,7 +484,7 @@ for _,device_name in pairs(available_devices) do
 
         -- add devices...
         local device_root_node
-        if (config.device.protocol == DEVICE_MIDI_PROTOCOL) then
+        if (config.device.protocol == DEVICE_PROTOCOL.MIDI) then
           device_root_node = configuration_root_node:add_property(
             configuration_settings_key(config), 
             renoise.Document.create("MidiDevice") {
@@ -441,7 +494,7 @@ for _,device_name in pairs(available_devices) do
               device_port_out = "",
             }
           )
-        else -- protocol == DEVICE_OSC_PROTOCOL
+        else -- protocol == DEVICE_PROTOCOL.OSC
           device_root_node = configuration_root_node:add_property(
             configuration_settings_key(config), 
             renoise.Document.create("OscDevice") {
@@ -464,11 +517,14 @@ end
 -- and assign the global duplex prefs as tool preferences to activate them
 renoise.tool().preferences = duplex_preferences
 
-
 --------------------------------------------------------------------------------
 -- debug
 --------------------------------------------------------------------------------
 
 -- makes things easier for controller map authors...
-_AUTO_RELOAD_DEBUG = true
+--_AUTO_RELOAD_DEBUG = true
+
+
+--LOG("main:done initializing...")
+
 

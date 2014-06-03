@@ -2,9 +2,6 @@
 -- Duplex.Mackie-Control
 ----------------------------------------------------------------------------]]--
 
-
--- setup "Recorder + Transport" for this configuration
-
 duplex_configurations:insert {
 
   -- configuration properties
@@ -19,7 +16,7 @@ duplex_configurations:insert {
     device_port_out = "",
     control_map = "Controllers/Mackie-Control/Controlmaps/Mackie-Control.xml",
     thumbnail = "Controllers/Mackie-Control/Mackie-Control.bmp",
-    protocol = DEVICE_MIDI_PROTOCOL
+    protocol = DEVICE_PROTOCOL.MIDI
   },
   
   applications = {

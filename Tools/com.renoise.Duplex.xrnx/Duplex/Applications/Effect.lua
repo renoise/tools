@@ -1,53 +1,53 @@
---[[----------------------------------------------------------------------------
--- Duplex.Effect
--- Inheritance: Application > Effect
-----------------------------------------------------------------------------]]--
+--[[============================================================================
+Duplex.Effect
+Inheritance: Application > Effect 
+============================================================================]]--
 
---[[
+--[[--
+The Effect application enables control of DSP chain parameters
 
+### Features
 
-About:
+* Using a paged navigation mechanism 
+* Access every parameter of every effect device (including plugins)
+* Flip through parameters using paged navigation
+* Select between devices using a number of fixed buttons
+* Enable grid-controller mode by assigning "parameters" to a grid
+* Parameter subsets make it possible to control only certain values
+* Supports automation recording (touch or latch mode)
 
-  The Effect application will enable control of every parameter in the 
-  DSP chain. The application will follow the currently selected device,  
-  and display all of it's parameters using a paged navigation mechanism. 
+### Changes
 
+  0.98  
+    - Support for automation recording
+    - New mapping: select device via knob/slider
+    - New mappings: previous/next device
+    - New mappings: previous/next preset
 
-Features
-
-  - Access every parameter of every effect device (including plugins)
-  - Flip through parameters using paged navigation
-  - Select between devices using a number of fixed buttons
-  - Enable grid-controller mode by assigning "parameters" to a grid
-  - Parameter subsets make it possible to control only certain values
-  - Supports automation recording (touch or latch mode)
-
-
-
-Changes (equal to Duplex version number)
-
-  0.98  - Support for automation recording
-        - New mapping: select device via knob/slider
-        - New mappings: previous/next device
-        - New mappings: previous/next preset
-
-  0.97  - Better performance, as UI updates now happen in idle loop 
-        - Option to include parameters based on criteria:
-          ALL/MIXER/AUTOMATED_PARAMETERS
+  0.97  
+    - Better performance, as UI updates now happen in idle loop 
+    - Option to include parameters based on criteria 
+      ALL/MIXER/AUTOMATED_PARAMETERS
   
-  0.95  - Grid controller support (with configurations for Launchpad, etc)
-        - Seperated device-navigator group size from parameter group size
-        - Use standard (customizable) palette instead of hard-coded values
-        - Applied feedback fix, additional check for invalid meta-device values
+  0.95  
+    - Grid controller support (with configurations for Launchpad, etc)
+    - Seperated device-navigator group size from parameter group size
+    - Use standard (customizable) palette instead of hard-coded values
+    - Applied feedback fix, additional check for invalid meta-device values
 
-  0.92  - Contextual tooltip support: show name of DSP parameter
+  0.92  
+    - Contextual tooltip support: show name of DSP parameter
 
-  0.91  - Fixed: check if "no device" is selected (initial state)
+  0.91  
+    - Fixed: check if "no device" is selected (initial state)
 
-  0.90  - Check group sizes when building application
-        - Various bug fixes
+  0.90  
+    - Check group sizes when building application
+    - Various bug fixes
 
-  0.81  - First release
+  0.81  
+    - First release
+
 
 --]]
 
@@ -112,16 +112,10 @@ Effect.available_mappings = {
     description = "Parameter value",
     distributable = true,
     greedy = true,
-    orientation = HORIZONTAL,
+    orientation = ORIENTATION.HORIZONTAL,
     flipped = true,
     toggleable = true,
   },
-  --[[
-  page = {
-    description = "Parameter page",
-    orientation = HORIZONTAL,
-  },
-  ]]
   param_next = {
     description = "Parameter page",
     distributable = true,
@@ -137,7 +131,7 @@ Effect.available_mappings = {
   },
   device_select = {
     description = "Select device via knob/slider",
-    orientation = HORIZONTAL,
+    orientation = ORIENTATION.HORIZONTAL,
   },
   device_next = {
     description = "Select next device",
@@ -194,14 +188,14 @@ Effect.default_palette = {
 --------------------------------------------------------------------------------
 
 --- Constructor method
--- @param (VarArg), see Application to learn more
+-- @param (VarArg) 
+-- @see Application
 
 function Effect:__init(...)
   TRACE("Effect:__init", ...)
 
   -- the controls
   self._parameter_sliders = nil
-  --self._page_control = nil
   self._device_navigators = nil
   self._device_select = nil
   self._device_next = nil
@@ -213,34 +207,36 @@ function Effect:__init(...)
   self._param_next = nil
   self._param_prev = nil
 
-  -- the number of controls assigned as sliders
+  --- (int) the number of controls assigned as sliders
   self._slider_group_size = nil
 
-  -- the maximum size of a slider
+  --- (int or nil) the maximum size of a slider
   self._slider_max_size = nil
 
-  -- true if sliders are in grid mode
-  self._slider_grid_mode = nil
+  --- (bool) true if sliders are in grid mode
+  self._slider_grid_mode = false
 
-  -- the current parameter set 
+  --- (table) indexed table, each entry contains:
+  --    device_index (int)
+  --    ref (renoise.DeviceParameter)
   self._parameter_set = table.create()
 
-  -- how many devices are included in our parameter set?
+  --- (int) how many devices are included in our parameter set?
   self._num_devices = 1
 
-  -- offset of the whole parameter mapping, controlled by the page navigator
+  --- (int) offset of the whole parameter mapping, controlled by the page navigator
   self._parameter_offset = 0
   
-  -- list of parameters we are currently listening to
+  --- list of parameters we are currently listening to
   self._parameter_observables = table.create()
   self._device_observables = table.create()
   self._preset_observables = table.create()
   self._mixer_observables = table.create()
 
-  -- use Automation class to record movements
+  --- (@{Duplex.Automation}) used for recording movements
   self.automation = Automation()
 
-  -- set while recording automation
+  --- (bool) set while recording automation
   self._record_mode = false
 
   Application.__init(self,...)
@@ -255,6 +251,9 @@ end
 --------------------------------------------------------------------------------
 
 --- parameter value changed from Renoise
+-- @param control_index (int) 
+-- @param value (number) _mostly_ between 0 and 1
+-- @param skip_event (bool) do not trigger event
 
 function Effect:set_parameter(control_index, value, skip_event)
   TRACE("Effect:set_parameter", control_index, value, skip_event)
@@ -263,7 +262,7 @@ function Effect:set_parameter(control_index, value, skip_event)
     return
   end
 
-  -- value needs to be positive (this is not true with the multitap-
+  --- value needs to be positive (this is not true with the multitap-
   -- delay, in which the "panic" button will output a negative value)
   if (value<0) then
     value = 0
@@ -403,8 +402,9 @@ end
 
 --------------------------------------------------------------------------------
 
-
---- build_app: create the fader/dial layout
+--- inherited from Application
+-- @see Duplex.Application._build_app
+-- @return bool
 
 function Effect:_build_app()
   TRACE("Effect:_build_app(")
@@ -432,7 +432,7 @@ function Effect:_build_app()
 
   if self._slider_grid_mode then
     local w,h = cm:get_group_dimensions(map.group_name)
-    if (map.orientation == HORIZONTAL) then
+    if (map.orientation == ORIENTATION.HORIZONTAL) then
       self._slider_group_size = h
       self._slider_max_size = w
     else
@@ -457,13 +457,13 @@ function Effect:_build_app()
     c.tooltip = map.description
     if self._slider_grid_mode then
       c.group_name = map.group_name
-      if (map.orientation == HORIZONTAL) then
+      if (map.orientation == ORIENTATION.HORIZONTAL) then
         c:set_pos(1,control_index)
       else
         c:set_pos(control_index,1)
       end
       c:set_orientation(map.orientation)
-      if (map.orientation == HORIZONTAL) then
+      if (map.orientation == ORIENTATION.HORIZONTAL) then
         c:set_pos(1,control_index)
       else
         c:set_pos(control_index,1)
@@ -805,7 +805,8 @@ end
 
 --------------------------------------------------------------------------------
 
---- set device index, but only when valid
+--- set device index, will only succeed when device exist
+-- @param idx (int)
 
 function Effect:_set_selected_device_index(idx)
   TRACE("Effect:_set_selected_device_index()",idx)
@@ -828,6 +829,7 @@ end
 --------------------------------------------------------------------------------
 
 --- return the currently selected device (can be nil)
+-- @return renoise.AudioDevice
 
 function Effect:_get_selected_device()
 
@@ -841,6 +843,7 @@ end
 --------------------------------------------------------------------------------
 
 --- update display for prev/next device-navigation buttons
+-- @param device_idx (int)
 
 function Effect:_update_prev_next_device_buttons(device_idx)
   TRACE("Effect:_update_prev_next_device_buttons()",device_idx)
@@ -873,6 +876,7 @@ end
 --------------------------------------------------------------------------------
 
 --- update display for prev/next device-preset buttons
+-- @param device_idx (int)
 
 function Effect:_update_prev_next_preset_buttons(device_idx)
   TRACE("Effect:_update_prev_next_preset_buttons()",device_idx)
@@ -907,7 +911,9 @@ end
 
 --------------------------------------------------------------------------------
 
---- start/resume application
+--- inherited from Application
+-- @see Duplex.Application.start_app
+-- @return bool or nil
 
 function Effect:start_app()
   TRACE("Effect.start_app()")
@@ -920,11 +926,14 @@ function Effect:start_app()
   self:_attach_to_parameters(new_song)
 
   self:update()
+
 end
 
 --------------------------------------------------------------------------------
 
 --- get specific effect parameter from current parameter-set
+-- @param idx (int)
+-- @return renoise.DeviceParameter
 
 function Effect:_get_parameter_by_index(idx)
   --TRACE("Effect._get_parameter_by_index()",idx)
@@ -938,6 +947,8 @@ end
 --------------------------------------------------------------------------------
 
 --- obtain next device index (supports parameter subsets)
+-- @param idx (int)
+-- @return int
 
 function Effect:_get_next_device_index(idx)
   --TRACE("Effect._get_next_device_index()",idx)
@@ -958,6 +969,8 @@ end
 --------------------------------------------------------------------------------
 
 --- obtain previous device index (supports parameter subsets)
+-- @param idx (int)
+-- @return int
 
 function Effect:_get_previous_device_index(idx)
   TRACE("Effect._get_previous_device_index()",idx)
@@ -980,6 +993,8 @@ end
 
 --- obtain actual device index by specifying the control index
 -- (useful when dealing with parameter subsets)
+-- @param idx (int)
+-- @return int
 
 function Effect:_get_device_index_by_ctrl(idx)
   --TRACE("Effect._get_device_index_by_ctrl()",idx)
@@ -1006,6 +1021,8 @@ end
 
 --- obtain control index by specifying the actual device index
 -- (useful when dealing with parameter subsets)
+-- @param idx (int)
+-- @return int
 
 function Effect:_get_ctrl_index_by_device(idx)
   --TRACE("Effect._get_ctrl_index_by_device()",idx)
@@ -1029,7 +1046,8 @@ end
 
 --------------------------------------------------------------------------------
 
---- called when a new document becomes available
+--- inherited from Application
+-- @see Duplex.Application.on_new_document
 
 function Effect:on_new_document()
   TRACE("Effect:on_new_document")
@@ -1049,6 +1067,8 @@ end
 -- has a larger range than the number of buttons we lower the ceiling
 -- for the slider, so only the 'settable' range is displayed
 -- (called when modifying and attaching parameter) 
+-- @param obj (@{Duplex.UISlider})
+-- @param prm (renoise.DeviceParameter)
 
 function Effect:_modify_ceiling(obj,prm)
   if self._slider_grid_mode and 
@@ -1065,6 +1085,7 @@ end
 --- in non-grid mode, if the parameters is quantized and has a range of 255, 
 -- we provide the 7-bit value as maximum - otherwise, we'd only be able to 
 -- access every second value
+-- @param prm (renoise.DeviceParameter)
 
 function Effect:_get_quant_max(prm)
 
@@ -1079,6 +1100,8 @@ end
 --------------------------------------------------------------------------------
 
 --- convert a [0-1] value to the given parameter value-range
+-- @param parameter (renoise.DeviceParameter)
+-- @param value (number)
 
 function Effect:_normalized_value_to_parameter_value(parameter, value)
 
@@ -1090,6 +1113,8 @@ end
 --------------------------------------------------------------------------------
 
 --- convert a parameter value to a [0-1] value 
+-- @param parameter (renoise.DeviceParameter)
+-- @param value (number)
 
 function Effect:_parameter_value_to_normalized_value(parameter, value)
 
@@ -1101,7 +1126,8 @@ end
 
 --------------------------------------------------------------------------------
 
---- perform periodic updates
+--- inherited from Application
+-- @see Duplex.Application.on_idle
 
 function Effect:on_idle()
 
@@ -1131,7 +1157,8 @@ end
 
 --------------------------------------------------------------------------------
 
---- returns the current parameter set that we control
+--- update the current parameter set 
+-- (updates Effect._num_devices)
 
 function Effect:_define_parameters()
   TRACE("Effect:_define_parameters()")
@@ -1175,7 +1202,8 @@ end
 
 --------------------------------------------------------------------------------
 
---- look for the number of devices in the current parameter set
+--- update the number of devices in the current parameter set 
+-- (updates Effect._num_devices)
 
 function Effect:_get_num_devices()
   TRACE("Effect:_get_num_devices()")
@@ -1212,7 +1240,7 @@ end
 
 --------------------------------------------------------------------------------
 
---- update the parameter navigation buttons
+--- update display of the parameter navigation buttons
 
 function Effect:update_param_page()
   TRACE("Effect:update_param_page()")
@@ -1238,7 +1266,7 @@ end
 
 --------------------------------------------------------------------------------
 
---- update the record mode (when editmode or record_method has changed)
+--- update display of the record mode 
 
 function Effect:_update_record_mode()
   TRACE("Effect:_update_record_mode()")
@@ -1310,6 +1338,8 @@ end
 --------------------------------------------------------------------------------
 
 --- attach notifier methods to devices & parameters...
+-- @param track (renoise.Track)
+-- @param new_song (bool)
 
 function Effect:_attach_to_track_devices(track,new_song)
   TRACE("Effect:_attach_to_track_devices",track,new_song)
@@ -1386,7 +1416,8 @@ end
 --------------------------------------------------------------------------------
 
 --- detect when a parameter set has changed
--- @param new_song - boolean, true to leave existing notifiers alone
+-- @param new_song (bool) true to leave existing notifiers alone
+
 function Effect:_attach_to_parameters(new_song)
   TRACE("Effect:_attach_to_parameters", new_song)
 
@@ -1408,12 +1439,6 @@ function Effect:_attach_to_parameters(new_song)
 
   -- validate and update the sequence/parameter offset
   self:update_param_page()
-  --[[
-  if (self._page_control) then
-    self._page_control:set_range(nil,
-      math.max(0, #self._parameter_set - self._slider_group_size))
-  end
-  ]]
 
   self:_remove_notifiers(new_song,self._parameter_observables)
   
@@ -1491,20 +1516,6 @@ function Effect:_attach_to_parameters(new_song)
     --end
   end
 
-  -- clear additional labels 
-  --[[
-  if self._param_names then
-    for control_index = self._slider_group_size,#self._param_names do
-      self._param_names[control_index]:set_text("-")
-    end
-  end
-  if self._param_values then
-    for control_index = self._slider_group_size,#self._param_values do
-      self._param_names[control_index]:set_text("-")
-    end
-  end
-  ]]
-
   self.display:apply_tooltips(self.mappings.parameters.group_name)
 
 end
@@ -1514,8 +1525,9 @@ end
 --- detach all previously attached notifiers first
 -- but don't even try to detach when a new song arrived. old observables
 -- will no longer be alive then...
--- @param new_song - boolean, true to leave existing notifiers alone
--- @param observables - list of observables
+-- @param new_song (bool), true to leave existing notifiers alone
+-- @param observables (table), list of observables
+
 function Effect:_remove_notifiers(new_song,observables)
 
   if (not new_song) then

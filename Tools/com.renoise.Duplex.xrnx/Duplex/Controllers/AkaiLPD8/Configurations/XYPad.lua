@@ -2,8 +2,6 @@
 -- Duplex.AkaiLPD8
 ----------------------------------------------------------------------------]]--
 
--- setup "XYPad" for this configuration
-
 duplex_configurations:insert {
   -- configuration properties
   name = "XYPad",
@@ -15,25 +13,20 @@ duplex_configurations:insert {
     device_port_out = "MIDIOUT2 (AkaiLPD8)",
     control_map = "Controllers/AkaiLPD8/Controlmaps/AkaiLPD8_XYPad.xml",
     thumbnail = "Controllers/AkaiLPD8/AkaiLPD8.bmp",
-    protocol = DEVICE_MIDI_PROTOCOL
+    protocol = DEVICE_PROTOCOL.MIDI
   },
   applications = {
     XYPad = {
       mappings = {
-        --[[
-        xy_grid = {
-          group_name = "Pads"
-        },
-        ]]
         x_slider = {
           group_name = "Pads_X",
           index = 1,
-          orientation = HORIZONTAL
+          orientation = ORIENTATION.HORIZONTAL
         },
         y_slider = {
           group_name = "Pads_Y",
           index = 1,
-          orientation = HORIZONTAL
+          orientation = ORIENTATION.HORIZONTAL
         }
       },
     }

@@ -1,34 +1,23 @@
---[[----------------------------------------------------------------------------
+--[[============================================================================
 -- Duplex.RoamingDSP
 -- Inheritance: Application > RoamingDSP
-----------------------------------------------------------------------------]]--
+============================================================================]]--
 
---[[
+--[[--
 
-  This class is meant to act as a base class for "roaming applications", 
-  applications that attach themselves to a native Renoise DSP device. 
-
-  The class comes with features for locking onto the selected device, and 
-  quickly navigating between all similar devices in the song 
+Extend this class if you want an application to lock onto a specific type of device, or navigate between similar devices
   
-  Mappings
+The application can target any device that has been selected in Renoise, freely roaming the tracks. If the lock button starts to blink slowly, it is to remind you that the application is currently 'homeless', has no matching device to control. 
 
-  lock_button : control the locked state of the selected device
-  next_device : used for locating a device across tracks
-  prev_device : -//-
+Opposite to the "free-roaming mode" we have the "locked mode" which will lock to a single device. The locked mode can either be set by being mapped to a button, or via the options dialog. In either case, the application will 'tag' the device with a unique name. 
 
-  Options
+To complement the "lock" button, we also have a "focus" button. This button brings focus back to the locked device, whenever you have (manually) selected an un-locked device.
 
-  Automation recording   : record whenever edit mode is enabled in Renoise
-  Envelope interpolation : specify the playmode - point, linear, curve
-  Follow position	       : whether the next/previous buttons affect the selected device 
-  Lock to device:	       : control the locked state (useful when you have no mapping)
+Finally, we can navigate between devices by using the 'next' and 'previous' buttons. In case we have locked to a device, previous/next will "transfer" the lock to that device.
 
+]]--
 
-
---]]
-
---==============================================================================
+----------------------------------------------------------------------------]]--
 
 class 'RoamingDSP' (Application)
 
@@ -36,10 +25,15 @@ RoamingDSP.FOLLOW_POS_ENABLED = 1
 RoamingDSP.FOLLOW_POS_DISABLED = 2
 RoamingDSP.LOCKED_ENABLED = 1
 RoamingDSP.LOCKED_DISABLED = 2
-RoamingDSP.RECORD_NONE = 1
-RoamingDSP.RECORD_TOUCH = 2
-RoamingDSP.RECORD_LATCH = 3
+RoamingDSP.RECORD_NONE = 1 -- No recording
+RoamingDSP.RECORD_TOUCH = 2 -- Record when touched
+RoamingDSP.RECORD_LATCH = 3 -- Record once touched
 
+---  Options
+-- @field locked Enable/Disable locking
+-- @field record_method Determine how to record automation
+-- @field follow_pos Follow the selected device in the DSP chain
+-- @table default_options
 RoamingDSP.default_options = {
   locked = {
     label = "Lock to device",
@@ -84,6 +78,12 @@ RoamingDSP.default_options = {
 
 }
 
+
+---  Mappings
+-- @field lock_button control the locked state of the selected device
+-- @field next_device used for locating a device across tracks
+-- @field prev_device used for locating a device across tracks
+-- @table available_mappings
 RoamingDSP.available_mappings = {
   lock_button = {
     description = "Lock/unlock device",
@@ -143,7 +143,7 @@ function RoamingDSP:__init(...)
   self.track_index = nil
   self.device_index = nil
 
-  -- boolean, set when we should attempt to attach to 
+  -- (bool), set when we should attempt to attach to 
   -- the current device (althought we might not succeed)
   self.current_device_requested = false
 
@@ -162,7 +162,9 @@ end
 
 --------------------------------------------------------------------------------
 
--- check configuration, build & start the application
+--- inherited from Application
+-- @see Duplex.Application.start_app
+-- @return bool or nil
 
 function RoamingDSP:start_app()
   TRACE("RoamingDSP:start_app()")
@@ -224,7 +226,7 @@ end
 
 -- goto previous device
 -- search from locked device (if available), otherwise use the selected device
--- @return boolean
+-- @return bool
 
 function RoamingDSP:goto_previous_device()
   TRACE("RoamingDSP:goto_previous_device()")
@@ -252,7 +254,7 @@ end
 
 -- goto next device
 -- search from locked device (if available), otherwise use the selected device
--- @return boolean
+-- @return bool
 
 function RoamingDSP:goto_next_device()
   TRACE("RoamingDSP:goto_next_device()")
@@ -395,7 +397,8 @@ end
 --------------------------------------------------------------------------------
 
 -- update the lit state of the previous/next device buttons
--- @track_index,device_index (number) the active track/device
+-- @param track_index (int) 
+-- @param device_index (int) 
 
 function RoamingDSP:update_prev_next(track_index,device_index)
 
@@ -513,7 +516,8 @@ end
 
 --------------------------------------------------------------------------------
 
--- perform periodic updates
+--- inherited from Application
+-- @see Duplex.Application.on_idle
 
 function RoamingDSP:on_idle()
 
@@ -642,7 +646,7 @@ end
 --------------------------------------------------------------------------------
 
 -- update automation 
--- @param track_idx (number)
+-- @param track_idx (int)
 -- @param device_param (DeviceParameter)
 -- @param value (number) 
 -- @param playmode (enum) 
@@ -744,7 +748,9 @@ end
 
 --------------------------------------------------------------------------------
 
--- construct the user interface
+--- inherited from Application
+-- @see Duplex.Application._build_app
+-- @return bool
 
 function RoamingDSP:_build_app()
   TRACE("RoamingDSP:_build_app()")
@@ -828,7 +834,8 @@ end
 
 --------------------------------------------------------------------------------
 
--- called whenever a new document becomes available
+--- inherited from Application
+-- @see Duplex.Application.on_new_document
 
 function RoamingDSP:on_new_document()
 
@@ -839,7 +846,8 @@ end
 
 --------------------------------------------------------------------------------
 
---- Called when releasing the active document
+--- inherited from Application
+-- @see Duplex.Application.on_release_document
 
 function RoamingDSP:on_release_document()
   

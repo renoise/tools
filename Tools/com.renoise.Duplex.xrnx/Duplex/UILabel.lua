@@ -1,23 +1,22 @@
---[[----------------------------------------------------------------------------
+--[[============================================================================
 -- Duplex.UILabel
-----------------------------------------------------------------------------]]--
+-- Inheritance: UIComponent > UILabel
+============================================================================]]--
 
---[[
-
-Inheritance: UIComponent > UILabel
-
+--[[--
+UILabel is a component designed for basic text display
 
 --]]
 
-
 --==============================================================================
+
 
 class 'UILabel' (UIComponent)
 
 --------------------------------------------------------------------------------
 
 --- Initialize the UILabel class
--- @param app (Duplex.Application)
+-- @param app (@{Duplex.Application})
 
 function UILabel:__init(app)
   TRACE("UILabel:__init()",app)

@@ -2,8 +2,6 @@
 -- Duplex.BCR2000
 ----------------------------------------------------------------------------]]--
 
--- setup a Recorder and Effect application
-
 duplex_configurations:insert {
 
   -- configuration properties
@@ -18,7 +16,7 @@ duplex_configurations:insert {
     device_port_out = "BCR2000",
     control_map = "Controllers/BCR-2000/Controlmaps/BCR-2000.xml",
     thumbnail = "Controllers/BCR-2000/BCR-2000.bmp",
-    protocol = DEVICE_MIDI_PROTOCOL
+    protocol = DEVICE_PROTOCOL.MIDI
   },
   
   applications = {
@@ -76,10 +74,6 @@ duplex_configurations:insert {
         device = {
           group_name= "DialPush3",
         },
-        --page = {
-        --  group_name= "ControlButtonRow2",
-        --  index = 1,
-        --},
         param_prev = {
           group_name = "ControlButtonRow2",
           index = 1,
