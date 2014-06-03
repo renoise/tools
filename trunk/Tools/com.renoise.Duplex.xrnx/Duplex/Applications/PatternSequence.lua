@@ -1,26 +1,15 @@
---[[----------------------------------------------------------------------------
+--[[============================================================================
 -- Duplex.PatternSequence
 -- Inheritance: Application > PatternSequence
-----------------------------------------------------------------------------]]--
+============================================================================]]--
 
---[[
+--[[--
+Basic control of the Renoise pattern-sequence
 
-About
+### Changes
 
-
-
-Mappings
-
-  display_next
-  display_previous	
-
-
-Options
-
-
-Changes (equal to Duplex version number)
-
-  0.98  - Initial version
+  0.98  
+    - Initial version
 
 
 --]]
@@ -52,7 +41,8 @@ PatternSequence.default_palette = {
 --------------------------------------------------------------------------------
 
 --- Constructor method
--- @param (VarArg), see Application to learn more
+-- @param (VarArg)
+-- @see Duplex.Application
 
 function PatternSequence:__init(...)
   TRACE("PatternSequence:__init(",...)
@@ -69,6 +59,10 @@ end
 
 --------------------------------------------------------------------------------
 
+--- inherited from Application
+-- @see Duplex.Application.start_app
+-- @return bool or nil
+
 function PatternSequence:start_app()
   TRACE("PatternSequence.start_app()")
 
@@ -82,6 +76,10 @@ end
 
 
 --------------------------------------------------------------------------------
+
+--- inherited from Application
+-- @see Duplex.Application._build_app
+-- @return bool
 
 function PatternSequence:_build_app()
   TRACE("PatternSequence:_build_app()")
@@ -131,7 +129,9 @@ end
 
 --------------------------------------------------------------------------------
 
--- periodic updates: handle "un-observable" things here
+--- inherited from Application
+-- @see Duplex.Application.on_idle
+
 function PatternSequence:on_idle()
 
   if not self.active then 
@@ -148,6 +148,8 @@ end
 
 --------------------------------------------------------------------------------
 
+---
+
 function PatternSequence:_attach_to_song()
   TRACE("PatternSequence:_attach_to_song()")
 
@@ -163,7 +165,8 @@ end
 
 --------------------------------------------------------------------------------
 
--- called when a new document becomes available
+--- inherited from Application
+-- @see Duplex.Application.on_new_document
 
 function PatternSequence:on_new_document()
   TRACE("PatternSequence:on_new_document()")
@@ -175,6 +178,8 @@ end
 
 --------------------------------------------------------------------------------
 
+---
+
 function PatternSequence:_get_pattern(idx)
 
   local patt_seq = renoise.song().sequencer.pattern_sequence
@@ -184,6 +189,8 @@ end
 
 
 --------------------------------------------------------------------------------
+
+---
 
 function PatternSequence:_update_prev_next()
 
@@ -209,6 +216,8 @@ end
 
 --------------------------------------------------------------------------------
 
+---
+
 function PatternSequence:_display_next()
 
   local new_idx = renoise.song().selected_sequence_index+1
@@ -220,6 +229,8 @@ function PatternSequence:_display_next()
 end
 
 --------------------------------------------------------------------------------
+
+---
 
 function PatternSequence:_display_previous()
 
@@ -233,6 +244,8 @@ end
 
 --------------------------------------------------------------------------------
 
+---
+
 function PatternSequence:_display_first()
 
   renoise.song().selected_sequence_index = 1
@@ -240,6 +253,8 @@ function PatternSequence:_display_first()
 end
 
 --------------------------------------------------------------------------------
+
+---
 
 function PatternSequence:_display_last()
 

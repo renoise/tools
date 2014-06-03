@@ -1,64 +1,61 @@
---[[----------------------------------------------------------------------------
+--[[============================================================================
 -- Duplex.Mixer
 -- Inheritance: Application > Mixer
-----------------------------------------------------------------------------]]--
+============================================================================]]--
 
---[[
-
-About
-
-  The Mixer is a generic class for controlling the Renoise mixer
+--[[--
+The Mixer is a generic class for controlling the Renoise mixer
 
 
-Automatic grid controller layout
+### Grid controller layout
 
-  Assigning the levels, mute and/or solo mapping to the same group
-  (the grid) will automaticaly produce the following layout:
+Assigning the levels, mute and/or solo mapping to the same group
+(the grid) will automaticaly produce the following layout:
 
-  +---- - --- - --- - --- +    +---- +  The master track 
-  |mute1|mute2|mute3|mute4| -> |  m  |  will, when specified, 
-  +---- - --- - --- - --- +    +  a  +  show up in the 
-  |solo1|solo2|solo3|solo4| -> |  s  |  rightmost side 
-  +---- - --- - --- - --- +    +  t  +  and use full height
-  |  l  |  l  |  l  |  l  | -> |  e  |  
-  +  e  +  e  +  e  +  e  +    +  r  +  
-  |  v  |  v  |  v  |  v  |    |     |  
-  +  e  +  e  +  e  +  e  +    +     +  
-  |  l  |  l  |  l  |  l  |    |     |
-  +     +     +     +     +    +     +
-  |  1  |  2  |  3  |  4  |    |     |
-  +---- - --- - --- - --- +    +---- +
+    +---- - --- - --- - --- +    +---- +  The master track 
+    |mute1|mute2|mute3|mute4| -> |  m  |  will, when specified, 
+    +---- - --- - --- - --- +    +  a  +  show up in the 
+    |solo1|solo2|solo3|solo4| -> |  s  |  rightmost side 
+    +---- - --- - --- - --- +    +  t  +  and use full height
+    |  l  |  l  |  l  |  l  | -> |  e  |  
+    +  e  +  e  +  e  +  e  +    +  r  +  
+    |  v  |  v  |  v  |  v  |    |     |  
+    +  e  +  e  +  e  +  e  +    +     +  
+    |  l  |  l  |  l  |  l  |    |     |
+    +     +     +     +     +    +     +
+    |  1  |  2  |  3  |  4  |    |     |
+    +---- - --- - --- - --- +    +---- +
   
 
-Notes
 
-  The Mixer will automatically check on startup, to 
-  see if all specified groups have an identical size
+### Changes
 
+  0.97  
+    - Renoise's 2.7 multi-solo mode supported/visualized
+    - Main display updates now happen in on_idle loop
+    - Ability to embed both mute & solo mappings into grid
+    - New option: "sync_pre_post" (Renoise 2.7+)
 
-Changes (equal to Duplex version number)
+  0.96  
+    - Option: paged navigation features (page_size)
+    - Option: offset tracks by X (for the Ohm64 configuration)
 
-  0.97  - Renoise's 2.7 multi-solo mode supported/visualized
-        - Main display updates now happen in on_idle loop
-        - Ability to embed both mute & solo mappings into grid
-        - New option: "sync_pre_post" (Renoise 2.7+)
+  0.95  
+    - The various mappings now have less dependancies 
+    - Feature: hold mute button to toggle solo state for the given track
+    - Applied feedback fix (cascading mutes when solo'ing)
+    - Options: follow_track, mute_mode
 
-  0.96  - Option: paged navigation features (page_size)
-        - Option: offset tracks by X (for the Ohm64 configuration)
+  0.92  
+    - Remove the destroy_app() method (not needed anymore)
+    - Assign tooltips to the virtual control surface
 
-  0.95  - Dependancies are gone for the various mappings. For example, it's
-          possible to run a Mixer instance without the "levels" specified
-        - Feature: hold mute button to toggle solo state for the given track
-        - Applied feedback fix (cascading mutes when solo'ing)
-        - Options: follow_track, mute_mode
+  0.90  
+    - Use the new UIComponent.set_pos() method throughout the class
+    - Adjusted colors to degrade better on various devices
 
-  0.92  - Remove the destroy_app() method (not needed anymore)
-        - Assign tooltips to the virtual control surface
-
-  0.90  - Use the new UIComponent.set_pos() method throughout the class
-        - Adjusted colors to degrade better on various devices
-
-  0.81  - First release
+  0.81  
+    - First release
 
 
 --]]
@@ -207,7 +204,7 @@ Mixer.available_mappings = {
   },
   --page = {
   --  description = "Mixer: Track navigator",
-  --  orientation = HORIZONTAL,
+  --  orientation = ORIENTATION.HORIZONTAL,
   --},
   next_page = {
     description = "Mixer: Next track page",
@@ -257,7 +254,8 @@ Mixer.default_palette = {
 --------------------------------------------------------------------------------
 
 --- Constructor method
--- @param (VarArg), see Application to learn more
+-- @param (VarArg)
+-- @see Duplex.Application
 
 function Mixer:__init(...)
   TRACE("Mixer:__init",...)
@@ -279,10 +277,10 @@ function Mixer:__init(...)
   -- offset of the track, as controlled by the track navigator
   self._track_offset = nil
 
-  -- number, the total number of track pages
+  -- (int), the total number of track pages
   self._page_count = nil
 
-  -- number, the current track page
+  -- (int), the current track page
   self._track_page = nil
 
   -- current track properties we are listening to
@@ -323,7 +321,8 @@ end
 
 --------------------------------------------------------------------------------
 
--- perform periodic updates
+--- inherited from Application
+-- @see Duplex.Application.on_idle
 
 function Mixer:on_idle()
 
@@ -406,7 +405,7 @@ function Mixer:set_track_mute(control_index, state)
   TRACE("Mixer:set_track_mute", control_index, state)
 
   if (self.active and self._mutes ~= nil) then
-    local muted = (state == MUTE_STATE_ACTIVE)
+    local muted = (state == renoise.Track.MUTE_STATE_ACTIVE)
     local master_track_index = get_master_track_index()
     local track_index = self._track_offset+control_index
     local button = self._mutes[control_index]
@@ -483,7 +482,7 @@ function Mixer:set_dimmed(control_index)
     if any_solo then
       dimmed = (not track.solo_state)
     else
-      dimmed = (track.mute_state~=MUTE_STATE_ACTIVE)
+      dimmed = (track.mute_state~=renoise.Track.MUTE_STATE_ACTIVE)
     end
 
     local monochrome = is_monochrome(self.display.device.colorspace)
@@ -532,15 +531,15 @@ function Mixer:update()
     
     -- define palette 
     local track_palette = {}
-    if (track_type==TRACK_TYPE_SEQUENCER) then
+    if (track_type==renoise.Track.TRACK_TYPE_SEQUENCER) then
       track_palette.tip           = self.palette.normal_tip
       track_palette.tip_dimmed    = self.palette.normal_tip_dimmed
       track_palette.track         = self.palette.normal_lane
       track_palette.track_dimmed  = self.palette.normal_lane_dimmed
-    elseif (track_type==TRACK_TYPE_MASTER) then
+    elseif (track_type==renoise.Track.TRACK_TYPE_MASTER) then
       track_palette.tip           = self.palette.master_tip
       track_palette.track         = self.palette.master_lane
-    elseif (track_type==TRACK_TYPE_SEND) then
+    elseif (track_type==renoise.Track.TRACK_TYPE_SEND) then
       track_palette.tip           = self.palette.send_tip
       track_palette.tip_dimmed    = self.palette.send_tip_dimmed
       track_palette.track         = self.palette.send_lane
@@ -566,7 +565,7 @@ function Mixer:update()
 
       if valid_mute then
         local mute_state = (track_index == master_track_index) and
-          MUTE_STATE_ACTIVE or track.mute_state
+          renoise.Track.MUTE_STATE_ACTIVE or track.mute_state
         self:set_track_mute(control_index, mute_state)
       end
 
@@ -578,7 +577,7 @@ function Mixer:update()
       -- deactivate, reset controls which have no track
       self:set_track_volume(control_index, 0)
       self:set_track_panning(control_index, 0)
-      self:set_track_mute(control_index, MUTE_STATE_OFF)
+      self:set_track_mute(control_index, renoise.Track.MUTE_STATE_OFF)
       self:set_track_solo(control_index, false)
 
     end
@@ -635,7 +634,9 @@ end
 
 --------------------------------------------------------------------------------
 
--- start/resume application
+--- inherited from Application
+-- @see Duplex.Application.start_app
+-- @return bool or nil
 
 function Mixer:start_app()
   TRACE("Mixer.start_app()")
@@ -652,6 +653,9 @@ end
 
 --------------------------------------------------------------------------------
 
+--- inherited from Application
+-- @see Duplex.Application.on_new_document
+
 function Mixer:on_new_document()
   TRACE("Mixer:on_new_document")
   
@@ -667,8 +671,9 @@ end
 
 --------------------------------------------------------------------------------
 
--- build_app
--- @return boolean (false if requirements were not met)
+--- inherited from Application
+-- @see Duplex.Application._build_app
+-- @return bool
 
 function Mixer:_build_app()
   TRACE("Mixer:_build_app(")
@@ -825,7 +830,7 @@ function Mixer:_build_app()
       c.toggleable = true
       c.flipped = false
       c.ceiling = RENOISE_DECIBEL
-      c:set_orientation(VERTICAL)
+      c:set_orientation(ORIENTATION.VERTICAL)
       c:set_size(volume_size-(y_pos-1))
       -- slider changed from controller
       c.on_change = function(obj) 
@@ -873,7 +878,7 @@ function Mixer:_build_app()
       c.toggleable = true
       c.flipped = false
       c.ceiling = 1.0
-      c:set_orientation(VERTICAL)
+      c:set_orientation(ORIENTATION.VERTICAL)
       c:set_size(1)
       
       -- slider changed from controller
@@ -937,14 +942,14 @@ function Mixer:_build_app()
         end
         
         local track = renoise.song().tracks[track_index]
-        local track_is_muted = (track.mute_state ~= MUTE_STATE_ACTIVE)
+        local track_is_muted = (track.mute_state ~= renoise.Track.MUTE_STATE_ACTIVE)
 
         if (track_is_muted) then
           track:unmute()
         else 
           track:mute()
           local mute_state = (self.options.mute_mode.value==MUTE_MODE_MUTE)
-            and MUTE_STATE_MUTED or MUTE_STATE_OFF
+            and renoise.Track.MUTE_STATE_MUTED or renoise.Track.MUTE_STATE_OFF
           track.mute_state = mute_state
         end
 
@@ -974,7 +979,7 @@ function Mixer:_build_app()
         else 
           track:mute()
           local mute_state = (self.options.mute_mode.value==MUTE_MODE_MUTE)
-            and MUTE_STATE_MUTED or MUTE_STATE_OFF
+            and renoise.Track.MUTE_STATE_MUTED or renoise.Track.MUTE_STATE_OFF
           track.mute_state = mute_state
         end
 
@@ -1055,7 +1060,7 @@ function Mixer:_build_app()
     c.toggleable = true
     c.ceiling = RENOISE_DECIBEL
     c:set_size(master_size)
-    c:set_orientation(VERTICAL)
+    c:set_orientation(ORIENTATION.VERTICAL)
     c:set_palette({
       tip=self.palette.master_tip,
       track=self.palette.master_lane,
@@ -1154,7 +1159,7 @@ end
 --------------------------------------------------------------------------------
 
 -- set volume with support for automation recording and soft takeover
--- @return boolean (true when volume has been set)
+-- @return bool (true when volume has been set)
 
 function Mixer:_set_volume(parameter,track_index,obj)
   TRACE("Mixer:_set_volume()",parameter,track_index,obj)
@@ -1280,7 +1285,7 @@ end
 --------------------------------------------------------------------------------
 
 -- figure out the active "track page" based on the supplied track index
--- @param track_idx, renoise track number
+-- @param track_idx (int), renoise track number
 -- return integer (0-number of pages)
 
 function Mixer:_get_track_page(track_idx)
@@ -1296,7 +1301,7 @@ end
 
 --- paged navigation: if follow track is enabled, this will set the active
 -- track - otherwise, only the track offset is updated
--- @param track_idx, renoise track number
+-- @param page_idx (int)
 
 function Mixer:_set_track_page(page_idx)
   TRACE("Mixer:_set_track_page()",page_idx)
@@ -1504,8 +1509,8 @@ end
 -- volume of the track.
 -- @param p_volume (DeviceParameter)
 -- @param p_obj (UIComponent) the control that contain the value
--- @param p_track_index (number) look for / remember by this index 
--- @return (boolean) true when value was set
+-- @param p_track_index (int) look for / remember by this index 
+-- @return (bool) true when value was set
 function Mixer:_set_take_over_volume(p_volume, p_obj, p_track_index)
   TRACE("Mixer:_set_take_over_volume()",p_volume, p_obj, p_track_index)
 

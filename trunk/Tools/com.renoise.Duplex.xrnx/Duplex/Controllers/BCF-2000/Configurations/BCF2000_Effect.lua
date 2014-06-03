@@ -2,8 +2,6 @@
 -- Duplex.BCF2000
 ----------------------------------------------------------------------------]]--
 
--- setup a Effect app for this configuration
-
 duplex_configurations:insert {
 
   -- configuration properties
@@ -18,7 +16,7 @@ duplex_configurations:insert {
     device_port_out = "BCF2000",
     control_map = "Controllers/BCF-2000/Controlmaps/BCF-2000_Effect.xml",
     thumbnail = "Controllers/BCF-2000/BCF-2000.bmp",
-    protocol = DEVICE_MIDI_PROTOCOL
+    protocol = DEVICE_PROTOCOL.MIDI
   },
   
   applications = {
@@ -63,10 +61,6 @@ duplex_configurations:insert {
         device = {
           group_name= "Buttons1",
         },
-        --page = {
-        --  group_name= "ControlButtonRow2",
-        --  index = 1,
-        --},
         param_prev = {
           group_name = "ControlButtonRow2",
           index = 1,

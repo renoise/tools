@@ -2,8 +2,6 @@
 -- Duplex.Launchpad 
 ----------------------------------------------------------------------------]]--
 
--- setup GridPie for the Launchpad
-
 duplex_configurations:insert {
 
   -- configuration properties
@@ -18,7 +16,7 @@ duplex_configurations:insert {
     device_port_out = "Launchpad",
     control_map = "Controllers/Launchpad/Controlmaps/Launchpad.xml",
     thumbnail = "Controllers/Launchpad/Launchpad.bmp",
-    protocol = DEVICE_MIDI_PROTOCOL,
+    protocol = DEVICE_PROTOCOL.MIDI,
   },
 
   applications = {

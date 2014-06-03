@@ -1,18 +1,14 @@
---[[----------------------------------------------------------------------------
+--[[============================================================================
 -- Duplex.Canvas
-----------------------------------------------------------------------------]]--
+============================================================================]]--
 
---[[
+--[[--
 
-About 
+Employed by the UIComponents to represent their visual state
 
-Canvas is employed by the UIComponents to represent it's visible state. The 
-canvas is essentially an extra layer that we perform updates "through". Think of 
-it as pre-optimization before we output to a potentially slow protocol (MIDI),
-only if something has *actually* changed in the Display the update is performed. 
+The canvas is essentially an extra layer that we perform updates "through". Think of it as pre-optimization before we output to a potentially slow protocol (MIDI), only if something has *actually* changed in the Display the update is performed. 
 
 --]]
-
 
 --==============================================================================
 
@@ -26,17 +22,22 @@ class 'Canvas'
 function Canvas:__init(device)
   TRACE("Canvas:__init")
 
+  --- (bool) flag when we need to update the display
   self.has_changed = false
+
+  --- (int) canvas width 
   self.width = 0
+
+  --- (int) canvas height
   self.height = 0      
 
-  -- difference buffer, cleared on each update
+  --- (table) difference buffer, cleared on each update
   self.delta = {{}}   
 
-  -- the current (complete) representation
+  --- (table) the current, complete representation
   self.buffer = {{}}  
 
-  -- table of extraneous points that should be cleared on next update
+  --- table of extraneous points that should be cleared on next update
   -- created when the canvas is reduced in size, and contains just a 
   -- simple set of booleans (the Display class will create the empty
   -- points when needed)
@@ -48,8 +49,8 @@ end
 --------------------------------------------------------------------------------
 
 --- Call whenever the size of the parent UIComponent changes
--- @param width (Number)
--- @param height (Number)
+-- @param width (int)
+-- @param height (int)
 
 function Canvas:set_size(width,height)
   TRACE('Canvas:set_size',width,height)
@@ -98,8 +99,8 @@ end
 
 --- Write a single point to the canvas at the provided x/y coordinates
 -- @param point (CanvasPoint)
--- @param x (Number) 
--- @param y (Number)
+-- @param x (int) 
+-- @param y (int)
 
 function Canvas:write(point,x,y)
   --TRACE("Canvas:write", point, x, y)
@@ -130,8 +131,8 @@ end
 --- If point is different from existing value, mark the canvas as changed 
 -- both color, text and value are considered when doing the comparison
 -- @param point (CanvasPoint)
--- @param x (Number) 
--- @param y (Number)
+-- @param x (int) 
+-- @param y (int)
 
 function Canvas:check_delta(point,x,y)
 

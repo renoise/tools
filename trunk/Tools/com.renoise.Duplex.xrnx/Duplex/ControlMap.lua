@@ -1,35 +1,28 @@
---[[----------------------------------------------------------------------------
+--[[============================================================================
 -- Duplex.ControlMap
-----------------------------------------------------------------------------]]--
+============================================================================]]--
 
---[[
+--[[--
 
-Requires: Globals
+Load and parse XML based control-map files, add extra methods, handy accessors. 
 
-About:
+### XML syntax:
 
-  Essentially, the ControlMap class will import a control-map file, and add 
-  some extra methods, more handy methods for accessing the groups. 
+  - Supported elements are: `Row`, `Column`, `Group` and `Param`
+  - `Group` nodes cannot be nested 
+  - Only `Param` nodes are supported inside a `Group` node
 
-Notes on the XML syntax:
 
-  - Supported elements are: <Row>, <Column>, <Group> and <Param>
-  
-  - <Group> nodes cannot be nested 
-  
-  - Only <Param> nodes are supported inside a <Group> node
-  
-  - Use <Row> and <Column> nodes for controlling the layout 
-    - Use "orientation" attribute to control vertical/horizontal layout 
-  
-  - Indicate grid layout by supplying a "column" attribute for a <Group> node
-    - Note that orientation is then ignored (using a grid layout)
-  
-  - Use "size" attribute to control the unit size of certain controls like 
+### In more detail
+
+  - Use `Row` and `Column` nodes for controlling the layout 
+    - Use `orientation` attribute to control vertical/horizontal layout 
+  - Indicate grid layout by supplying a `column` attribute for a `Group` node
+    - Note that `orientation` is then ignored (using a grid layout)
+  - Use `size` attribute to control the unit size of certain controls like 
     sliders
 
 --]]
-
 
 --==============================================================================
 
@@ -140,8 +133,8 @@ end
 --------------------------------------------------------------------------------
 
 --- Retrieve <param> by position within group
--- @param index (Number) the index/position
--- @param group_name (String) the control-map group name
+-- @param index (int) the index/position
+-- @param group_name (string) the control-map group name
 -- @return the <param> attributes array
 
 function ControlMap:get_indexed_element(index,group_name)
@@ -159,17 +152,22 @@ end
 --------------------------------------------------------------------------------
 
 --- Retrieve <param> in indicated group, supporting wildcard syntax
---  * group_name="Pad_1" and index=3 would collect the third parameter 
---    from the group named Pad_1
---  * group_name="Pad_1" and index=nil would collect all parameters
---    from the group named Pad_1
---  * group_name="Pad_*" and index=3 would collect the third parameter 
---    from groups Pad_1,Pad_2, etc.
---  * group_name="Pad_*" and index=nil would collect every parameter 
---    from groups Pad_1,Pad_2, etc.
+-- 
+-- Collect the third parameter from Pad_1:
+--    group_name="Pad_1", index=3 
+--
+-- Collect all parameters from Pad_1
+--    group_name="Pad_1", index=nil 
+--
+-- Collect the third parameter from Pad_1,Pad_2, etc.
+--    group_name="Pad_*", index=3 
+--
+-- Collect every parameter from Pad_1,Pad_2, etc.
+--    group_name="Pad_*", index=nil  
+--
 -- @param group_name (String) the control-map group name
--- @param index (Number) optional index/position
--- @return the <param> attributes array
+-- @param index (int) optional index/position
+-- @return the param> attributes array
 
 function ControlMap:get_params(group_name,index)
   TRACE("ControlMap:get_params",group_name,index)
@@ -253,15 +251,17 @@ end
 
 --------------------------------------------------------------------------------
 
---- Get parameters by value: 
--- used by the MidiDevice to retrieves a parameter by it's note/cc-value-string.
--- The function will match values on the default channel, if not defined:
--- "CC#105|Ch1" will match both "CC#105|Ch1" and "CC#105". 
--- Also, we have wildcard support: 
--- "C#*|Ch1" will match both "C#1|Ch1" and "C#5" 
+--- This function will match values on the default channel, if not defined:
+-- 
+-- `CC#105|Ch1` will match both `CC#105|Ch1` and `CC#105`
+-- 
+-- Also, we have wildcard support:
+-- 
+-- `C#*|Ch1` will match both `C#1|Ch1` and `C#5`
+-- 
 -- @param str (string, control-map value attribute)
--- @param msg_context (String/Enum) the message context, e.g. MIDI_NOTE_MESSAGE
--- @return Table containing matched parameters
+-- @param msg_context (@{Duplex.Globals.DEVICE_MESSAGE}) 
+-- @return table containing matched parameters
 
 function ControlMap:get_params_by_value(str,msg_context)
   TRACE("ControlMap:get_params_by_value",str,msg_context)
@@ -282,7 +282,7 @@ function ControlMap:get_params_by_value(str,msg_context)
       -- check if we are dealing with an octave wildcard
       -- (method will only work with range -1 to 9)
       local match_against = v["xarg"]["value"]
-      if (msg_context == MIDI_NOTE_MESSAGE) and (v["xarg"]["value"]):find("*") then
+      if (msg_context == DEVICE_MESSAGE.MIDI_NOTE) and (v["xarg"]["value"]):find("*") then
         local oct = str2:sub(#str2-1,#str2)
         if (oct~="-1") then
           oct = str2:sub(#str2)
@@ -296,7 +296,7 @@ function ControlMap:get_params_by_value(str,msg_context)
   end
 
   -- next, match keyboard (no note information)
-  if (msg_context == MIDI_NOTE_MESSAGE) then
+  if (msg_context == DEVICE_MESSAGE.MIDI_NOTE) then
     local str2 = strip_note_info(str)
     for _,group in pairs(self.groups) do
       for k,v in ipairs(group) do
@@ -328,18 +328,18 @@ end
 
 --------------------------------------------------------------------------------
 
---- Get OSC parameters: 
--- retrieve a parameter by matching it's "value" or "action" attribute, 
--- with pattern-matching for particular types of values:
--- "/press 1 %i" matches "/press 1 1" but not "/press 1 A"
--- "/pre** 1 %f" matches "/press 1 1" and "/preff 10 1.42"
---
--- the method will match the action property if it's available, otherwise 
--- the "value" property (the action property is needed when a device 
+--- Retrieve a parameter by matching it's `value` or `action` attribute
+-- 
+-- `/press 1 %i` matches `/press 1 1` but not `/press 1 A`
+-- 
+-- `/pre** 1 %f` matches `/press 1 1` and `/preff 10 1.42`
+-- 
+-- The method will match the action property if it's available, otherwise 
+-- the `value` property (the `action` property is needed when a device 
 -- transmit a different outgoing than incoming value)
 -- 
 -- @param str (string, control-map value/action attribute)
--- @return  Table (<Param> node),
+-- @return  Table (`Param` node),
 --          values (table), if matched against a wildcard,
 --          wildcard_idx (integer), the matched index
 --          replace_char (string), the characters to insert
@@ -349,6 +349,7 @@ function ControlMap:get_osc_param(str)
 
   -- check if we have previously matched the pattern
   if self.osc_buffer[str] then
+    --print("*** get_osc_param - retrieve buffered message...",str)
     local buf = self.osc_buffer[str]
     return buf[1],buf[2],buf[3],buf[4]
   end
@@ -446,8 +447,8 @@ end
 --------------------------------------------------------------------------------
 
 --- Count number of columns for the provided group
--- @param group_name (String) the control-map group name, e.g. "Encoders"
--- @return Number
+-- @param group_name (string) the control-map group name, e.g. `Encoders`
+-- @return int
 
 function ControlMap:count_columns(group_name)
   TRACE("ControlMap:count_columns",group_name)
@@ -464,8 +465,8 @@ end
 --------------------------------------------------------------------------------
 
 --- Count number of rows for the provided group
--- @param group_name (String) the control-map group name, e.g. "Encoders"
--- @return Number
+-- @param group_name (string) the control-map group name, e.g. `Encoders`
+-- @return int
 
 function ControlMap:count_rows(group_name)
   TRACE("ControlMap:count_rows",group_name)
@@ -482,8 +483,8 @@ end
 --------------------------------------------------------------------------------
 
 --- Count number of parameters in group
--- @param group_name (String) the control-map group name, e.g. "Encoders"
--- @return Number
+-- @param group_name (string) the control-map group name, e.g. `Encoders`
+-- @return int
 
 function ControlMap:get_group_size(group_name)
   TRACE("ControlMap:get_group_size",group_name)
@@ -495,7 +496,7 @@ end
 --------------------------------------------------------------------------------
 
 --- Get width/height of provided group
--- @param group_name (String) the control-map group name, e.g. "Encoders"
+-- @param group_name (String) the control-map group name, e.g. `Encoders`
 -- @return width (or nil if not matched)
 -- @return height (or nil if not matched)
 
@@ -518,8 +519,8 @@ end
 
 --- Test if the group describe a grid group 
 -- (meaning: it contains columns, and each member is a button)
--- @param group_name (String) the control-map group name, e.g. "Encoders"
--- @return boolean
+-- @param group_name (String) the control-map group name, e.g. `Encoders`
+-- @return bool
 
 function ControlMap:is_grid_group(group_name)
   
@@ -555,9 +556,9 @@ end
 --------------------------------------------------------------------------------
 
 --- Test if the parameter describes a button
--- @param group_name (String) the control-map group name, e.g. "Encoders"
--- @param index (Number/Int) index within group
--- @return (Boolean) true if matched, false if not 
+-- @param group_name (string) the control-map group name, e.g. `Encoders`
+-- @param index (int) index within group
+-- @return bool, true if matched, false if not 
 
 function ControlMap:is_button(group_name,index)
   
@@ -608,39 +609,39 @@ end
 --------------------------------------------------------------------------------
 
 --- Determine the type of message (OSC/Note/CC)
--- @param str (String), supply a control-map value such as "C#4"
--- @return integer (e.g. MIDI_NOTE_MESSAGE)
+-- @param str (String), supply a control-map `value` such as `C#4`
+-- @return enum (@{Duplex.Globals.DEVICE_MESSAGE})
 
 function ControlMap:determine_type(str)
   TRACE("ControlMap:determine_type",str)
 
   -- osc messages begin with a slash
   if string.sub(str,0,1)=="/" then
-    return OSC_MESSAGE
+    return DEVICE_MESSAGE.OSC
   
   -- cc, if first two characters match "CC"
   elseif string.sub(str,1,2)=="CC" then
-    return MIDI_CC_MESSAGE
+    return DEVICE_MESSAGE.MIDI_CC
 
   -- note, if message has a "#" or "-" as the second character
   elseif string.sub(str,2,2)=="#" or string.sub(str,2,2)=="-" then
-    return MIDI_NOTE_MESSAGE
+    return DEVICE_MESSAGE.MIDI_NOTE
 
   -- pitch bend
   elseif string.sub(str,1,2)=="PB" then
-    return MIDI_PITCH_BEND_MESSAGE
+    return DEVICE_MESSAGE.MIDI_PITCH_BEND
 
   -- program change
   elseif string.sub(str,1,3)=="Prg" then
-    return MIDI_PROGRAM_CHANGE_MESSAGE
+    return DEVICE_MESSAGE.MIDI_PROGRAM_CHANGE
 
   -- channel pressure
   elseif string.sub(str,1,2)=="CP" then
-    return MIDI_CHANNEL_PRESSURE
+    return DEVICE_MESSAGE.MIDI_CHANNEL_PRESSURE
 
   -- keyboard
   elseif string.sub(str,0,1)=="|" then
-    return MIDI_KEY_MESSAGE
+    return DEVICE_MESSAGE.MIDI_KEY
   
 
   else
@@ -665,11 +666,12 @@ function ControlMap:_parse_xml(str)
   local top = {}
   table.insert(stack, top)
 
+  local uid = 0
   local i, j = 1, 1
   local parameter_index = 1
   
   -- helper function to extract attributes (args) from a given node,
-  -- casting values to their respective type (number, boolean) 
+  -- casting values to their respective type (number, bool) 
 
   local function parseargs(str)
 
@@ -715,6 +717,14 @@ function ControlMap:_parse_xml(str)
     arg["swap_axes"] = bool(arg["swap_axes"])
     arg["velocity_enabled"] = bool(arg["velocity_enabled"])
     arg["is_virtual"] = bool(arg["is_virtual"])
+
+    -- missing or empty value means virtual too
+    -- provide a unique bogus value for the device
+    if not arg["value"] or (arg["value"] == "") then
+      arg["is_virtual"] = true
+      arg["value"] = ("/duplex_uid_%d"):format(uid)
+      uid = uid+1
+    end
 
     return arg
 

@@ -1,17 +1,15 @@
---[[----------------------------------------------------------------------------
+--[[============================================================================
 -- Duplex.Display
-----------------------------------------------------------------------------]]--
+============================================================================]]--
 
---[[
+--[[--
+The Display is the base class for device displays and the virtual UI
 
-The Display is the base class for device displays, and performs many duties;
-it manages UIComponents, as it will both send and recieve their 
-messages, and take care of their visual updates on the idle time update. 
-The Display will also build the control surface, an interactive representation 
-of the device complete with native sliders, knobs etc. 
+Display performs many duties; it manages UIComponents, as it will both send and recieve their messages, and take care of their visual updates on the idle time update. 
+
+The Display will also build the control surface, an interactive representation of the device complete with native sliders, knobs etc. 
 
 --]]
-
 
 --==============================================================================
 
@@ -171,6 +169,61 @@ end
 
 --------------------------------------------------------------------------------
 
+-- TODO refactor into controlmap (along with apply tooltip)
+-- @param group_name (String) optional, restrict to named control-map group 
+--  (note that this value support the use of wildcards, e.g. "Pads_*")
+
+function Display:apply_midi_mappings(group_name)
+  TRACE("Display:apply_midi_mappings()",group_name)
+
+  if (not self.view) then
+    return
+  end
+
+  local control_map = self.device.control_map
+
+  for _,obj in pairs(self.ui_objects) do
+    if (control_map.groups[obj.group_name]) then
+      local matched_group = false
+      if group_name then
+        -- check if group name contain a wildcard (asterisk)
+        local wildcard_pos = string.find(group_name,"*")
+        if wildcard_pos then
+          if ((group_name):sub(1,wildcard_pos-1) == (obj.group_name):sub(1,wildcard_pos-1)) then
+            -- matched group by wildcard
+            matched_group = true
+          end
+        elseif (group_name) and (group_name~=obj.group_name) then
+          -- matched named group
+          matched_group = true
+        end
+      else
+        -- match any group
+        matched_group = true
+      end
+      if matched_group then
+        for x = 1,obj.width do
+          for y = 1, obj.height do
+            local columns = control_map.groups[obj.group_name].columns
+            local idx = (x+obj.x_pos-1)+((y+obj.y_pos-2)*columns)
+            local elm = control_map:get_indexed_element(idx, obj.group_name)
+            if (elm) then
+              local widget = self.vb.views[elm.id]
+              --print("obj.midi_mapping",obj.midi_mapping)
+              if obj.midi_mapping then
+                widget.midi_mapping = obj.midi_mapping
+              end
+            end
+          end
+        end
+      end
+    end
+  end
+
+end
+
+--------------------------------------------------------------------------------
+
 --- Update any UIComponent that has been modified since the last update
 -- (this function is called continously)
 
@@ -269,7 +322,7 @@ end
 -- @param elm (Table) control-map definition of the element
 -- @param obj (UIComponent) instance of UIComponent
 -- @param point (CanvasPoint) point containing text/value/color
--- @param secondary (Boolean), true when method call itself (value-pairs)
+-- @param secondary (bool), true when method call itself (value-pairs)
 
 function Display:set_parameter(elm, obj, point, secondary)
   --TRACE('Display:set_parameter',elm, obj, point, secondary)
@@ -280,11 +333,18 @@ function Display:set_parameter(elm, obj, point, secondary)
   -- bypass the device class for this parameter?
   if elm.is_virtual then
     --print("bypass the device class for this parameter")
-    if (self.device.protocol==DEVICE_MIDI_PROTOCOL) then
+    --[[
+    if (self.device.protocol==DEVICE_PROTOCOL.MIDI) then
       value = MidiDevice:point_to_value(point,elm,obj.ceiling)
-    elseif (self.device.protocol==DEVICE_OSC_PROTOCOL) then
+    elseif (self.device.protocol==DEVICE_PROTOCOL.OSC) then
       value = OscDevice:point_to_value(point,elm,obj.ceiling)
     end
+    ]]
+
+    -- using the OscDevice because it doesn't do any
+    -- 7Bit quantization...
+    value = OscDevice:point_to_value(point,elm,obj.ceiling)
+
     elm.skip_echo = true
   else
     value = self.device:point_to_value(point,elm,obj.ceiling)
@@ -309,18 +369,18 @@ function Display:set_parameter(elm, obj, point, secondary)
 
     -- determine the channel (specified or default)
     local channel = nil
-    if (self.device.protocol==DEVICE_MIDI_PROTOCOL) then
+    if (self.device.protocol==DEVICE_PROTOCOL.MIDI) then
       channel = self.device:extract_midi_channel(elm.value) or 
         self.device.default_midi_channel
     end
 
-    if (msg_type == MIDI_NOTE_MESSAGE) then
+    if (msg_type == DEVICE_MESSAGE.MIDI_NOTE) then
       local num = self.device:extract_midi_note(elm.value)
 
       -- check if we should send message back to the sender
       self.device:send_note_message(num,value,channel,elm,point)
 
-    elseif (msg_type == MIDI_CC_MESSAGE) then
+    elseif (msg_type == DEVICE_MESSAGE.MIDI_CC) then
 
       if (type(point.val) == "table") then
 
@@ -349,7 +409,7 @@ function Display:set_parameter(elm, obj, point, secondary)
       local num = self.device:extract_midi_cc(elm.value)
       self.device:send_cc_message(num,value,channel)
 
-    elseif (msg_type == MIDI_PITCH_BEND_MESSAGE) then
+    elseif (msg_type == DEVICE_MESSAGE.MIDI_PITCH_BEND) then
 
       -- sending pitch-bend back to a device doesn't make sense when
       -- you're using a keyboard - it's generally recommended to tag 
@@ -357,11 +417,11 @@ function Display:set_parameter(elm, obj, point, secondary)
       -- however, some device setups are different (e.g. Mackie Control)
       self.device:send_pitch_bend_message(value,channel)
 
-    elseif (msg_type == MIDI_CHANNEL_PRESSURE) then
+    elseif (msg_type == DEVICE_MESSAGE.MIDI_CHANNEL_PRESSURE) then
       -- do nothing
-    elseif (msg_type == MIDI_KEY_MESSAGE) then
+    elseif (msg_type == DEVICE_MESSAGE.MIDI_KEY) then
       -- do nothing
-    elseif (msg_type == OSC_MESSAGE) then
+    elseif (msg_type == DEVICE_MESSAGE.OSC) then
 
       local osc_value = value
 
@@ -423,9 +483,11 @@ function Display:set_parameter(elm, obj, point, secondary)
           local color = nil
           if table_has_equal_values(c_space) then
             -- all white monochrome: use the theme color
-            color = {duplex_preferences.theme_color_R.value,
-              duplex_preferences.theme_color_G.value,
-              duplex_preferences.theme_color_B.value}
+            color = {
+              duplex_preferences.theme_color[1].value,
+              duplex_preferences.theme_color[2].value,
+              duplex_preferences.theme_color[3].value,
+            }
           else
             -- tinted color, use the colorspace
             color = {c_space[1]*255,c_space[2]*255,c_space[3]*255}
@@ -442,7 +504,9 @@ function Display:set_parameter(elm, obj, point, secondary)
       (widget_type == "Slider")
     then
       widget:remove_notifier(self.ui_notifiers[elm.id])
+      --print("*** Display - set_parameter - value",value)
       widget.value = tonumber(value)
+      --print("*** Display - set_parameter - widget.value",widget.value)
       widget:add_notifier(self.ui_notifiers[elm.id])
     
     elseif (widget_type == "XYPad") then
@@ -517,8 +581,8 @@ end
 --------------------------------------------------------------------------------
 
 --- Update special UI key widgets (pressed, normal, disabled)
--- @param key_idx (Number) the keys index
--- @param elm (Table) control-map definition of the element
+-- @param key_idx (int) the keys index
+-- @param elm (table) control-map definition of the element
 -- @param obj (UIKey) instance of a UIKey component
 
 function Display:update_key(key_idx,elm,obj)
@@ -619,9 +683,9 @@ end
 --------------------------------------------------------------------------------
 
 ---  Generate message : used by virtual control-surface elements
---  @param value (Number or Table) value, or table of values
---  @param metadata (Table) metadata, such as min/max etc.
---  @param released (Boolean), true when button has been released
+--  @param value (number or table) value, or table of values
+--  @param metadata (table) metadata, such as min/max etc.
+--  @param released (bool), true when button has been released
 
 function Display:generate_message(value, metadata, released)
   TRACE('Display:generate_message:',value, metadata, released)
@@ -650,18 +714,18 @@ function Display:generate_message(value, metadata, released)
     msg.is_note_off = true
   end
 
-  if (msg.context == OSC_MESSAGE) then
+  if (msg.context == DEVICE_MESSAGE.OSC) then
     msg.is_osc_msg = true
   end 
 
   -- for MIDI devices, create the "virtual" midi message
 
-  if (self.device.protocol == DEVICE_MIDI_PROTOCOL) then
+  if (self.device.protocol == DEVICE_PROTOCOL.MIDI) then
     msg.channel = self.device:extract_midi_channel(metadata.value) or 
       self.device.default_midi_channel
 
 
-    if (msg.context==MIDI_NOTE_MESSAGE) then
+    if (msg.context==DEVICE_MESSAGE.MIDI_NOTE) then
       local note_pitch = value[1]
       -- if available, use the pitch defined in the control-map 
       --print("Display: metadata.value",(metadata.value):sub(0,3))
@@ -670,19 +734,19 @@ function Display:generate_message(value, metadata, released)
       end
       --print("Display: note_pitch",note_pitch)
       msg.midi_msg = {143+msg.channel,note_pitch,value[2]}
-    elseif (msg.context==MIDI_CC_MESSAGE) then
+    elseif (msg.context==DEVICE_MESSAGE.MIDI_CC) then
       local cc_num = extract_cc_num(metadata.value)
       local cc_value = value
       -- A #CC button might have produced a MIDI-note message (thank to it's 
       -- application), but it's virtual message should still be a CC message.
       -- Detect if the value is a table and treat the value correspondingly
-      if (type(value)=="table") and (msg.context~=MIDI_NOTE_MESSAGE) then
+      if (type(value)=="table") and (msg.context~=DEVICE_MESSAGE.MIDI_NOTE) then
         cc_value = value[2]
       end
       msg.midi_msg = {175+msg.channel,cc_num,math.floor(cc_value)}
-    elseif (msg.context==MIDI_CHANNEL_PRESSURE) then
+    elseif (msg.context==DEVICE_MESSAGE.MIDI_CHANNEL_PRESSURE) then
       msg.midi_msg = {207+msg.channel,0,math.floor(value)}
-    elseif (msg.context==MIDI_PITCH_BEND_MESSAGE) then
+    elseif (msg.context==DEVICE_MESSAGE.MIDI_PITCH_BEND) then
       msg.midi_msg = {223+msg.channel,math.floor(value),0}
     end
     --print("Display: virtually generated midi msg...")
@@ -692,33 +756,33 @@ function Display:generate_message(value, metadata, released)
 
   -- input method : make sure we're using the right handler 
   if (metadata.type == "button") then
-    msg.input_method = CONTROLLER_BUTTON
+    msg.input_method = INPUT_TYPE.BUTTON
 
   elseif (metadata.type == "togglebutton") then
-    msg.input_method = CONTROLLER_TOGGLEBUTTON
+    msg.input_method = INPUT_TYPE.TOGGLEBUTTON
 
   elseif (metadata.type == "pushbutton") then
-    msg.input_method = CONTROLLER_PUSHBUTTON
+    msg.input_method = INPUT_TYPE.PUSHBUTTON
 
   --  elseif (metadata.type == "encoder") then
-  --    msg.input_method = CONTROLLER_ENCODER
+  --    msg.input_method = INPUT_TYPE.ENCODER
 
   elseif (metadata.type == "fader") then
-    msg.input_method = CONTROLLER_FADER
+    msg.input_method = INPUT_TYPE.FADER
 
   elseif (metadata.type == "dial") then
-    msg.input_method = CONTROLLER_DIAL
+    msg.input_method = INPUT_TYPE.DIAL
 
   elseif (metadata.type == "xypad") then
-    msg.input_method = CONTROLLER_XYPAD
+    msg.input_method = INPUT_TYPE.XYPAD
 
   elseif (metadata.type == "key") then
-    msg.input_method = CONTROLLER_KEYBOARD
-    msg.context = MIDI_NOTE_MESSAGE
+    msg.input_method = INPUT_TYPE.KEYBOARD
+    msg.context = DEVICE_MESSAGE.MIDI_NOTE
     msg.velocity_enabled = false
 
   elseif (metadata.type == "keyboard") then
-    msg.input_method = CONTROLLER_KEYBOARD
+    msg.input_method = INPUT_TYPE.KEYBOARD
     msg.velocity_enabled = false
 
   else
@@ -739,9 +803,9 @@ end
 --------------------------------------------------------------------------------
 
 ---  Walk control-map defition, and create the virtual control surface
--- @param t (Table) the control-map defition
--- @param done (Table) internal calculation table 
--- @param deep (Number/Int) the nesting level
+-- @param t (table) the control-map defition
+-- @param done (table) internal calculation table 
+-- @param deep (int) the nesting level
 
 function Display:_walk_table(t, done, deep)
 
@@ -798,7 +862,7 @@ function Display:_walk_table(t, done, deep)
           --[[
           local notifier = function(value) 
             -- output the maximum value
-            if (context==MIDI_NOTE_MESSAGE) then
+            if (context==DEVICE_MESSAGE.MIDI_NOTE) then
               local pitch = view_obj.meta.index
               local velocity = view_obj.meta.maximum
               self:generate_message({pitch,velocity},view_obj.meta)
@@ -810,8 +874,8 @@ function Display:_walk_table(t, done, deep)
           ]]
           local press_notifier = function(value) 
             -- output the maximum value
-            --print("*** Display: press_notifier - (context==MIDI_NOTE_MESSAGE):",(context==MIDI_NOTE_MESSAGE))
-            if (context==MIDI_NOTE_MESSAGE) then
+            --print("*** Display: press_notifier - (context==DEVICE_MESSAGE.MIDI_NOTE):",(context==DEVICE_MESSAGE.MIDI_NOTE))
+            if (context==DEVICE_MESSAGE.MIDI_NOTE) then
               local pitch = view_obj.meta.index
               local velocity = view_obj.meta.maximum
               self:generate_message({pitch,velocity},view_obj.meta)
@@ -824,8 +888,8 @@ function Display:_walk_table(t, done, deep)
           local release_notifier = function(value) 
             -- output the minimum value
             local released = true
-            --print("*** Display: release_notifier - (context==MIDI_NOTE_MESSAGE):",(context==MIDI_NOTE_MESSAGE))
-            if (context==MIDI_NOTE_MESSAGE) then
+            --print("*** Display: release_notifier - (context==DEVICE_MESSAGE.MIDI_NOTE):",(context==DEVICE_MESSAGE.MIDI_NOTE))
+            if (context==DEVICE_MESSAGE.MIDI_NOTE) then
               local pitch = view_obj.meta.index
               local velocity = view_obj.meta.minimum
               self:generate_message({pitch,velocity},view_obj.meta,released)
@@ -931,41 +995,16 @@ function Display:_walk_table(t, done, deep)
 
           if (view_obj.meta.orientation == "vertical") then
             adj_width = UNIT_WIDTH * (view_obj.meta.aspect or 1)
-            --[[
-            view_obj.view = self.vb:row {
-              -- padd with spaces to center DEFAULT_CONTROL_HEIGHT in UNIT_WIDTH
-              self.vb:space { 
-                width = (UNIT_WIDTH -  DEFAULT_CONTROL_HEIGHT) / 2 
-              },
-              --self.vb:slider{
-              self.vb:minislider{
-                id = view_obj.meta.id,
-                min = view_obj.meta.minimum,
-                max = view_obj.meta.maximum,
-                tooltip = tooltip,
-                width = DEFAULT_CONTROL_HEIGHT,
-                height = (UNIT_WIDTH * view_obj.meta.size) + 
-                  (DEFAULT_SPACING * (view_obj.meta.size - 1)),
-                notifier = notifier
-              },
-              self.vb:space {
-                width = (UNIT_WIDTH -  DEFAULT_CONTROL_HEIGHT) / 2 
-              }
-            }
-            ]]
           else
             adj_height = UNIT_HEIGHT * (view_obj.meta.aspect or 1)
-            --print("adj_height",adj_height)
           end
 
-          --view_obj.view = self.vb:slider {
           view_obj.view = self.vb:minislider {
             id  =view_obj.meta.id,
             min = view_obj.meta.minimum,
             max = view_obj.meta.maximum,
+            --midi_mapping = string.format("Global:Tools:Duplex:Mlrx:Group %d Level [Set]",1),
             tooltip = tooltip,
-            --width = (UNIT_WIDTH*view_obj.meta.size) + 
-            --  (DEFAULT_SPACING*(view_obj.meta.size-1)),
             width = adj_width,
             height = adj_height,
             notifier = notifier
@@ -1015,7 +1054,7 @@ function Display:_walk_table(t, done, deep)
           end
 
           -- take a copy of the meta-info, and modify it
-          -- so actions are detected as MIDI_NOTE_MESSAGE
+          -- so actions are detected as DEVICE_MESSAGE.MIDI_NOTE
           -- (use a bogus note string to make it pass)
 
           local meta = table.rcopy(view_obj.meta)
@@ -1413,12 +1452,13 @@ function Display:_validate_param(xargs)
   end
     
           
-  if (xargs.type == nil or not table.find(CONTROLMAP_TYPES, xargs.type)) then
+  --if (xargs.type == nil or not table.find(CONTROLMAP_TYPES, xargs.type)) then
+  if (xargs.type == nil or not table.find(table.keys(INPUT_TYPE), string.upper(xargs.type))) then
     renoise.app():show_warning(
       ('Whoops! The controlmap \'%s\' specifies no valid \'type\' property '..
        'in one of its \'Param\' fields.\n\n'..
        'Please use one of: %s'):format(self.device.control_map.file_path, 
-       table.concat(CONTROLMAP_TYPES, ", ")))
+       string.lower(table.concat(table.keys(INPUT_TYPE),", "))))
 
     xargs.type = "button"
   end

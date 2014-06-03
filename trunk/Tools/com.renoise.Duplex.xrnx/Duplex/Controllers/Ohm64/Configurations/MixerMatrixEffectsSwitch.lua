@@ -2,8 +2,6 @@
 -- Duplex.Ohm64 
 ----------------------------------------------------------------------------]]--
 
--- setup Mixer + Matrix + Effect + SwitchConfiguration
-
 duplex_configurations:insert {
 
   -- configuration properties
@@ -18,7 +16,7 @@ duplex_configurations:insert {
     device_port_out = "Ohm64 MIDI 1",
     control_map = "Controllers/Ohm64/Controlmaps/Ohm64.xml",
     thumbnail = "Controllers/Ohm64/Ohm64.bmp",
-    protocol = DEVICE_MIDI_PROTOCOL
+    protocol = DEVICE_PROTOCOL.MIDI
   },
 
   applications = {
@@ -48,11 +46,6 @@ duplex_configurations:insert {
         triggers = {
           group_name = "Grid2",
         },
-        --sequence = {
-        --  group_name = "ControlsRight",
-        --  orientation = VERTICAL,
-        --  index = 1,
-        --},
         prev_seq_page = {
           group_name = "ControlsRight",
           index = 1,
@@ -76,10 +69,6 @@ duplex_configurations:insert {
         parameters = {
           group_name= "EncodersEffect",
         },
-        --page = {
-        --  group_name = "ControlsRight",
-        --  index = 5,
-        --}
         param_prev = {
           group_name = "ControlsRight",
           index = 5,

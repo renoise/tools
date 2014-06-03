@@ -2,8 +2,6 @@
 -- Duplex.TouchOSC 
 ----------------------------------------------------------------------------]]--
 
--- setup "Mixer + Recorder + Matrix" for this configuration
-
 duplex_configurations:insert {
 
   -- configuration properties
@@ -20,7 +18,7 @@ duplex_configurations:insert {
     device_port_out = "8081",
     control_map = "Controllers/TouchOSC/Controlmaps/TouchOSC.xml",
     thumbnail = "Controllers/TouchOSC/TouchOSC.bmp",
-    protocol = DEVICE_OSC_PROTOCOL,
+    protocol = DEVICE_PROTOCOL.OSC,
   },
 
   applications = {
@@ -53,13 +51,6 @@ duplex_configurations:insert {
           color = {0x80,0x80,0x80},
           text="□",
         },
-      --[[
-        slider_lit = {
-          -- the active recording
-          color = {0x00,0x00,0x00},
-          text="■",
-        },
-      ]]
       }
     },
     PadXY = {
@@ -96,10 +87,6 @@ duplex_configurations:insert {
         triggers = {
           group_name = "4_Grid",
         },
-        --sequence = {
-        --  group_name = "4_Buttons",
-        --  index = 1,
-        --},
         prev_seq_page = {
           group_name = "4_Buttons",
           index = 1,

@@ -1,27 +1,22 @@
---[[----------------------------------------------------------------------------
+--[[============================================================================
 -- Duplex.UIButtonStrip
-----------------------------------------------------------------------------]]--
+-- Inheritance: UIComponent > UIButtonStrip
+============================================================================]]--
 
---[[
+--[[--
 
-Inheritance: UIComponent > UIButtonStrip
+The UIButtonStrip is an array of buttons that control an active index/range,
+especially useful for controlling a sequence with an a looped region. 
 
---
+In addition to the basic set_range() and set_index() methods, there's two
+additional methods, start/stop_blink(), which are used by the Matrix app
+to display that a pattern has been scheduled.
 
-About
-
-  The UIButtonStrip is an array of buttons that control an active index/range, 
-  especially useful for controlling a sequence with an a looped region. 
-
-  In addition to the basic set_range() and set_index() methods, there's two
-  additional methods, start/stop_blink(), which are used by the Matrix app
-  to display that a pattern has been scheduled.
-
+### Usage
 
 This control has a number of interaction modes:
 
-
-  1:MODE_NORMAL - set range/index using button combinations 
+1.  MODE_NORMAL - set range/index using button combinations 
     
     In this mode, you set the index by pressing a button and releasing it, 
     or set the range by pressing multiple buttons at the same time, and then 
@@ -42,7 +37,7 @@ This control has a number of interaction modes:
     - "button"
 
 
-  2:MODE_INDEX - togglebutton compatible mode, only index can be set
+2.  MODE_INDEX - togglebutton compatible mode, only index can be set
 
     Events
     - on_index_change
@@ -54,9 +49,9 @@ This control has a number of interaction modes:
     - "togglebutton"
 
 
-  3:MODE_BASIC - free mode, supply your own logic
+3.  MODE_BASIC - free mode, supply your own logic
 
-    It's up to you to decide what happens when events are received
+  It's up to you to decide what happens when events are received
 
     Events
     - on_press(idx)
@@ -70,48 +65,33 @@ This control has a number of interaction modes:
     - "togglebutton" 
 
 
-Display logic 
+### Display logic 
 
-  For color displays, it's possible to differentiate 
-  between the index and range
+For color displays, it's possible to differentiate 
+between the index and range
 
-  [ ] = Background
-  [x] = Selected index
-  [o] = Range
+    [ ] = Background
+    [x] = Selected index
+    [o] = Range
 
-  [x][o][o][o][ ][ ] <- Index set to 1, range set to 1,4
-  [o][o][x][o][ ][ ] <- Index set to 3, range set to 1,4
-  [o][o][o][o][ ][x] <- Index set to 6, range set to 1,4
+    [x][o][o][o][ ][ ] <- Index set to 1, range set to 1,4
+    [o][o][x][o][ ][ ] <- Index set to 3, range set to 1,4
+    [o][o][o][o][ ][x] <- Index set to 6, range set to 1,4
 
-  For monochromatic devices / LED buttons, if the "index" color 
-  is identical to the "range" color, the draw() method will use
-  an alternative/inverted color scheme:
+    For monochromatic devices / LED buttons, if the "index" color 
+    is identical to the "range" color, the draw() method will use
+    an alternative/inverted color scheme:
 
-  [ ]     = Background
-  [x]/[ ] = Selected index
-  [x]     = Range
+    [ ]     = Background
+    [x]/[ ] = Selected index
+    [x]     = Range
 
-  [ ][x][x][x][ ][ ] <- Index set to 1, range set to 1,4
-  [x][x][ ][x][ ][ ] <- Index set to 3, range set to 1,4
-  [ ][ ][x][ ][ ][ ] <- Index set to 3, range set to 3,3
-  [x][x][x][x][ ][x] <- Index set to 6, range set to 1,4
-
-
-
-Special methods  
-
-
-  UIButtonStrip:set_steps(steps)
-
-  Will display the strip "stretched" along it's axis
-  Sets the number of steps, in case the buttonstrip is larger than the number
-  of steps it is controlling (like having 8 buttons to control 4 steps). 
-
-
-
+    [ ][x][x][x][ ][ ] <- Index set to 1, range set to 1,4
+    [x][x][ ][x][ ][ ] <- Index set to 3, range set to 1,4
+    [ ][ ][x][ ][ ][ ] <- Index set to 3, range set to 3,3
+    [x][x][x][x][ ][x] <- Index set to 6, range set to 1,4
 
 --]]
-
 
 --==============================================================================
 
@@ -126,7 +106,7 @@ UIButtonStrip.MODE_BASIC = 3
 --------------------------------------------------------------------------------
 
 --- Initialize the UIButtonStrip class
--- @param app (Duplex.Application)
+-- @param app (@{Duplex.Application})
 
 function UIButtonStrip:__init(app)
   --TRACE("UIButtonStrip:__init(",app,")")
@@ -157,9 +137,9 @@ function UIButtonStrip:__init(app)
   -- (for example, when using 16 buttons to control 8 steps)
   self._steps = nil
 
-  -- vertical or horizontal orientation?
+  -- ORIENTATION.VERTICAL or ORIENTATION.HORIZONTAL orientation?
   -- (use set_orientation() method to set this value)
-  self._orientation = VERTICAL 
+  self._orientation = ORIENTATION.VERTICAL 
 
   -- external event handlers
   self.on_press = nil
@@ -188,7 +168,7 @@ end
 --------------------------------------------------------------------------------
 
 --- User pressed a button
--- @param msg (Duplex.Message)
+-- @param msg (@{Duplex.Message})
 -- @return self or nil if not handled
 
 function UIButtonStrip:do_press(msg)
@@ -230,7 +210,7 @@ end
 --------------------------------------------------------------------------------
 
 --- User released a button
--- @param msg (Duplex.Message)
+-- @param msg (@{Duplex.Message})
 -- @return self or nil if not handled
 
 function UIButtonStrip:do_release(msg)
@@ -256,7 +236,7 @@ function UIButtonStrip:do_release(msg)
     end
     -- force-update controls that are handling 
     -- their internal state automatically...
-    if (msg.input_method == CONTROLLER_PUSHBUTTON) then
+    if (msg.input_method == INPUT_TYPE.PUSHBUTTON) then
       self.canvas.delta = table.rcopy(self.canvas.buffer)
       self.canvas.has_changed = true
       self:invalidate()
@@ -276,7 +256,7 @@ end
 --------------------------------------------------------------------------------
 
 --- User held a button
--- @param msg (Duplex.Message)
+-- @param msg (@{Duplex.Message})
 
 function UIButtonStrip:do_hold(msg)
   --TRACE("UIButtonStrip:do_hold()",msg)
@@ -307,7 +287,8 @@ end
 
 --------------------------------------------------------------------------------
 
---- Update the control's visual appearance
+--- Update the appearance - inherited from UIComponent
+-- @see Duplex.UIComponent
 
 function UIButtonStrip:draw()
   --TRACE("UIButtonStrip:draw()")
@@ -374,7 +355,7 @@ function UIButtonStrip:draw()
       end
     end
 
-    if (self._orientation == VERTICAL) then 
+    if (self._orientation == ORIENTATION.VERTICAL) then 
       y = i
     else
       x = i
@@ -391,8 +372,8 @@ end
 --------------------------------------------------------------------------------
 
 --- Set the current index
--- @param idx (Number) the index to set
--- @param skip_event (Boolean) if true, invoke the event handler
+-- @param idx (int) the index to set
+-- @param skip_event (bool) if true, invoke the event handler
 
 function UIButtonStrip:set_index(idx,skip_event)
   TRACE("UIButtonStrip:set_index()",idx,skip_event)
@@ -437,7 +418,7 @@ end
 --------------------------------------------------------------------------------
 
 --- Get the current index
--- @return Number
+-- @return int
 
 function UIButtonStrip:get_index()
   TRACE("UIButtonStrip:get_index()")
@@ -448,9 +429,9 @@ end
 --------------------------------------------------------------------------------
 
 --- Set the current range (swap values if needed, first should be lowest)
--- @param idx1 (Number) range 1
--- @param idx2 (Number) range 2
--- @param skip_event (Boolean) if true, invoke the event handler
+-- @param idx1 (int) range 1
+-- @param idx2 (int) range 2
+-- @param skip_event (bool) if true, invoke the event handler
 
 function UIButtonStrip:set_range(idx1,idx2,skip_event)
   TRACE("UIButtonStrip:set_range(",idx1,idx2,skip_event,")")
@@ -505,7 +486,7 @@ end
 --------------------------------------------------------------------------------
 
 --- Check if provided index is within the current range
--- @return Boolean
+-- @return bool
 
 function UIButtonStrip:_in_range(idx)
 
@@ -517,7 +498,10 @@ end
 --------------------------------------------------------------------------------
 
 --- Set the number of steps 
--- @param steps (Number)
+--  Will display the strip "stretched" along it's axis
+--  Sets the number of steps, in case the buttonstrip is larger than the number
+--  of steps it is controlling (like having 8 buttons to control 4 steps). 
+-- @param steps (int)
 
 function UIButtonStrip:set_steps(steps)
   TRACE("UIButtonStrip:set_steps()",steps)
@@ -540,7 +524,7 @@ end
 --------------------------------------------------------------------------------
 
 --- Get the number of steps
--- @return Number
+-- @return int
 
 function UIButtonStrip:get_steps()
 
@@ -551,7 +535,7 @@ end
 --------------------------------------------------------------------------------
 
 --- Start blinking behaviour for one of the buttons
--- @param idx (Number) the button index 
+-- @param idx (int) the button index 
 
 function UIButtonStrip:start_blink(idx)
   --TRACE("UIButtonStrip:start_blink(",idx,")")
@@ -611,12 +595,12 @@ end
 --------------------------------------------------------------------------------
 
 --- Set the control's orientation
--- @param value (Enum) either VERTICAL or HORIZONTAL
+-- @param value (@{Duplex.Globals.ORIENTATION}) 
 
 function UIButtonStrip:set_orientation(value)
   --TRACE("UIButtonStrip:set_orientation(",value,")")
 
-  if (value == HORIZONTAL) or (value == VERTICAL) then
+  if (value == ORIENTATION.HORIZONTAL) or (value == ORIENTATION.VERTICAL) then
     self._orientation = value
     self:set_size(self._size) -- update canvas
   end
@@ -625,7 +609,7 @@ end
 --------------------------------------------------------------------------------
 
 --- Get the orientation 
--- @return (Enum) either VERTICAL or HORIZONTAL
+-- @return @{Duplex.Globals.ORIENTATION}
 
 function UIButtonStrip:get_orientation()
   --TRACE("UIButtonStrip:get_orientation()")
@@ -636,18 +620,19 @@ end
 -- Overridden from UIComponent
 --------------------------------------------------------------------------------
 
---- (Override UIComponent with this method)
--- @param size (Number) the size in units
+--- Override UIComponent with this method
+-- @param size (int) the size in units
+-- @see Duplex.UIComponent
 
 function UIButtonStrip:set_size(size)
   TRACE("UIButtonStrip:set_size()",size)
 
   self._size = size
 
-  if (self._orientation == VERTICAL) then
+  if (self._orientation == ORIENTATION.VERTICAL) then
     UIComponent.set_size(self, 1, size)
   else
-    assert(self._orientation == HORIZONTAL, 
+    assert(self._orientation == ORIENTATION.HORIZONTAL, 
       "Internal Error. Please report: unexpected UI orientation")
       
     UIComponent.set_size(self, size, 1)
@@ -656,21 +641,25 @@ end
 
 --------------------------------------------------------------------------------
 
---- Add event listeners (press, release, hold)
+--- Add event listeners
+--    DEVICE_EVENT.BUTTON_PRESSED
+--    DEVICE_EVENT.BUTTON_RELEASED
+--    DEVICE_EVENT.BUTTON_HELD
+-- @see Duplex.UIComponent.add_listeners
 
 function UIButtonStrip:add_listeners()
   --TRACE("UIButtonStrip:add_listeners()")
 
   self.app.display.device.message_stream:add_listener(
-    self, DEVICE_EVENT_BUTTON_PRESSED,
+    self, DEVICE_EVENT.BUTTON_PRESSED,
     function(msg) return self:do_press(msg) end )
 
   self.app.display.device.message_stream:add_listener(
-    self,DEVICE_EVENT_BUTTON_RELEASED,
+    self,DEVICE_EVENT.BUTTON_RELEASED,
     function(msg) return self:do_release(msg) end )
 
   self.app.display.device.message_stream:add_listener(
-    self,DEVICE_EVENT_BUTTON_HELD,
+    self,DEVICE_EVENT.BUTTON_HELD,
     function(msg) self:do_hold(msg) end )
 
 end
@@ -679,19 +668,19 @@ end
 --------------------------------------------------------------------------------
 
 --- Remove previously attached event listeners
--- @see UIButtonStrip:add_listeners
+-- @see Duplex.UIComponent
 
 function UIButtonStrip:remove_listeners()
   --TRACE("UIButtonStrip:remove_listeners()")
 
   self.app.display.device.message_stream:remove_listener(
-    self,DEVICE_EVENT_BUTTON_PRESSED)
+    self,DEVICE_EVENT.BUTTON_PRESSED)
 
   self.app.display.device.message_stream:remove_listener(
-    self,DEVICE_EVENT_BUTTON_RELEASED)
+    self,DEVICE_EVENT.BUTTON_RELEASED)
 
   self.app.display.device.message_stream:remove_listener(
-    self,DEVICE_EVENT_BUTTON_HELD)
+    self,DEVICE_EVENT.BUTTON_HELD)
     
 end
 
@@ -702,19 +691,19 @@ end
 --------------------------------------------------------------------------------
 
 --- Determine the control's index by it's position 
--- @param column (Number)
--- @param row (Number)
--- @return Number
+-- @param column (int)
+-- @param row (int)
+-- @return int
 
 function UIButtonStrip:_determine_index_by_pos(column,row)
 
   local idx,offset
 
-  if (self._orientation == VERTICAL) then
+  if (self._orientation == ORIENTATION.VERTICAL) then
     idx = row
     offset = self.y_pos
   else
-    assert(self._orientation == HORIZONTAL, 
+    assert(self._orientation == ORIENTATION.HORIZONTAL, 
       "Internal Error. Please report: unexpected UI orientation")
       
     idx = column
@@ -733,8 +722,9 @@ end
 --------------------------------------------------------------------------------
 
 --- Expanded UIComponent test
--- @param msg (Duplex.Message)
--- @return Boolean
+-- @param msg (@{Duplex.Message})
+-- @return bool
+-- @see Duplex.UIComponent.test
 
 function UIButtonStrip:test(msg)
   

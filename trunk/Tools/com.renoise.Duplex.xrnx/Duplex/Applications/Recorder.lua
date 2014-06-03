@@ -1,96 +1,78 @@
---[[----------------------------------------------------------------------------
+--[[============================================================================
 -- Duplex.Recorder
 -- Inheritance: Application > Recorder
-----------------------------------------------------------------------------]]--
+============================================================================]]--
 
---[[
-
-About
-
-  The Recorder is a looping sample-recorder that you can use for recording any 
-  signal that you feed into Renoise, be that your voice, a guitar etc. Operation 
-  is designed to be really simple,: press a button to select the track and bring 
-  up the recording dialog, press again to start recording. Once the recording is 
-  done, it’s (optionally) looped/synced to the beat, and you’re then instantly 
-  able to switch among this, and all the other recordings you’ve made. The 
-  Recorder will even allow samples with different lengths to loop continuously, 
-  allowing for poly-rhythms.
-
-  Whenever a song is saved, references to your recorded samples are not “lost” - 
-  the Recorder is smart enough to remember and restore recording sessions. Each 
-  recording is assigned a special name which is automatically recognized by the 
-  application - and the next time you load the song, the recordings should be 
-  right where you left them.
+--[[--
+Looping sample-recorder that can capture recordings in real-time, using a simple and straight-forward interface
+Record any signal that you feed into Renoise, be that your voice, a guitar etc. 
 
 
+### Features
 
-Using the Recorder 
+* flexible mappings: record using buttons, dials etc.
+* loop samples with different lengths, allowing for poly-rhythms.
+* supports sessions - restore recorded sessions next song is loaded
 
-  Note that when reading the following description, and using a controller with 
-  faders/dials instead of a (button-based) grid controller, you don’t have 
-  “sample slots” that you can press - instead, the recorder button is used for 
-  this purpose. But otherwise, the description is pretty much the same. 
+### Usage
 
-  IMPORTANT: before you record anything, please ensure that the recording dialog 
-  in Renoise is set to create a new instrument on each take, and that the 
-  recording is synced to the pattern length. If this is not done, the results 
-  may be unpredictable. 
+Recorder operation is designed to be really simple:
 
-  1. Track select stage
+* Press a button to select the track and bring up the recording dialog
+* Press again to start recording
+* Once done, the sample is (optionally) looped/synced to the beat, and you’re then instantly able to switch among this, and all the other recordings you’ve made. 
 
-  Press any recorder button to open/close the recording dialog for the desired 
-  track (you can only record into sequencer tracks). When the recording dialog 
-  has been opened, a sample slot will start to blink slowly. Press the sample 
-  slot to enter the next stage. If your controller supports “hold” events, you 
-  can also hold a recorder button for a moment to start recording as soon as 
-  possible. 
+Note that when reading the following description, and using a controller with faders/dials instead of a (button-based) grid controller, you don’t have “sample slots” that you can press - instead, the recorder button is used for this purpose. But otherwise, the description is pretty much the same. 
 
-  2. Preparation stage
+ 1. *Track select stage*
+    Press any recorder button to open/close the recording dialog for the desired 
+    track (you can only record into sequencer tracks). When the recording dialog 
+    has been opened, a sample slot will start to blink slowly. Press the sample 
+    slot to enter the next stage. If your controller supports “hold” events, you 
+    can also hold a recorder button for a moment to start recording as soon as 
+    possible. 
+ 
+ 2. *Preparation stage*
+    The preparation stage is the time spent before the playback position enters 
+    the beginning of the pattern and begin the actual recording. On the recording 
+    dialog it will read “Starting in XX lines...”, and the selected sample slot 
+    will be  flashing rapidly. As long as you’re in the preparation stage, you can 
+    hit the sample slot again to tell the Recorder that you wish to record only a 
+    single pattern (now, both the the recorder button and the sample slot will 
+    start flashing rapidly). This is known as a short take, and will take you 
+    straight from the preparation stage to the finalizing stage.
+ 
+ 3. *Recording stage*
+    In the recording stage, you’ll see both the recorder button and the sample 
+    slot blinking slowly, in time with the beat. There is no limit to the length 
+    of the recording, except of course the amount of RAM you computer has 
+    installed, so you can keep it going for as long as you desire. 
+    Press the sample slot again to stop the recording and enter the finalizing 
+    stage.
+ 
+ 4. *Finalizing stage* 
+    The finalizing stage is the time spent while recording before the playback 
+    reaches the beginning of a pattern. On the recording dialog it will read 
+    “Stopping in XX lines...”, and the recording button will be flashing rapidly. 
+    While you’re in the finalizing stage, pressing the sample slot will write the 
+    yet-to-be sample to the pattern (however, this is only useful if you’ve not 
+    enabled the writeahead mode, which does this automatically for you). 
+ 
+ 5. *Post-recording stage*
+    Immediately after the recording has been made, the resulting sample is 
+    automatically renamed, and the recording dialog is closed. We’re ready for 
+    another recording. 
 
-  The preparation stage is the time spent before the playback position enters 
-  the beginning of the pattern and begin the actual recording. On the recording 
-  dialog it will read “Starting in XX lines...”, and the selected sample slot 
-  will be  flashing rapidly. As long as you’re in the preparation stage, you can 
-  hit the sample slot again to tell the Recorder that you wish to record only a 
-  single pattern (now, both the the recorder button and the sample slot will 
-  start flashing rapidly). This is known as a short take, and will take you 
-  straight from the preparation stage to the finalizing stage.
-
-  3. Recording stage
-
-  In the recording stage, you’ll see both the recorder button and the sample 
-  slot blinking slowly, in time with the beat. There is no limit to the length 
-  of the recording, except of course the amount of RAM you computer has 
-  installed, so you can keep it going for as long as you desire. 
-  Press the sample slot again to stop the recording and enter the finalizing 
-  stage.
-
-  4. Finalizing stage
-
-  The finalizing stage is the time spent while recording before the playback 
-  reaches the beginning of a pattern. On the recording dialog it will read 
-  “Stopping in XX lines...”, and the recording button will be flashing rapidly. 
-  While you’re in the finalizing stage, pressing the sample slot will write the 
-  yet-to-be sample to the pattern (however, this is only useful if you’ve not 
-  enabled the writeahead mode, which does this automatically for you). 
-  5: Post-recording stage
-
-  Immediately after the recording has been made, the resulting sample is 
-  automatically renamed, and the recording dialog is closed. We’re ready for 
-  another recording. 
-
-  Hint: you can choose another destination track for the recording, or abort the 
-  recording at any time. Use the recorder button to select another track, and 
-  turn a dial/select an existing sample slot to abort the recording.
+> Hint: you can choose another destination track for the recording, or abort the recording at any time. Use the recorder button to select another track, and turn a dial/select an existing sample slot to abort the recording.
 
 
-Mappings
+### Mappings
 
   recorders - (UIButton...) toggle recording mode for track X
   sliders   - (UISlider...) sample-select sliders, assignable to grid controller
 
 
-Options
+### Options
 
   loop_mode     - determine the looping mode of recordings 
   beat_sync     - determine if the recording should be synced to the beat
@@ -100,7 +82,7 @@ Options
   follow_track  - align with the selected track in Renoise
   page_size     - specify step size when using paged navigation
 
-Notes
+### Notes
 
   - The Recorder has been designed for recording samples that are synced to the 
     pattern length, creating a new instrument for each recording. If you choose 
@@ -123,14 +105,16 @@ Notes
     never get the notification that the pattern has changed while in the 
     instrument/sample editor
 
-Changes (equal to Duplex version number)
+### Changes
 
-  0.95  - First release
+  0.95  
+    - First release
 
-  0.96  - Detect when tracks are swapped/inserted/removed
-        - Full undo support (tracks changes to pattern and recordings)
-        - Unlimited number of tracks (paged navigation)
-        - Option: page_size & follow_track
+  0.96  
+    - Detect when tracks are swapped/inserted/removed
+    - Full undo support (tracks changes to pattern and recordings)
+    - Unlimited number of tracks (paged navigation)
+    - Option: page_size & follow_track
 
 
 --]]
@@ -267,7 +251,8 @@ Recorder.default_palette = {
 --------------------------------------------------------------------------------
 
 --- Constructor method
--- @param (VarArg), see Application to learn more
+-- @param (VarArg)
+-- @see Duplex.Application
 
 function Recorder:__init(...)
   TRACE("Recorder:__init(",...)
@@ -332,7 +317,7 @@ function Recorder:__init(...)
   -- this is the "virtual" sample, before post-recording
   self._recent_sample = nil
 
-  -- blinking booleans
+  -- blinking bools
   self._blink = false
   self._blink_fast = false
 
@@ -384,6 +369,10 @@ end
 
 --------------------------------------------------------------------------------
 
+--- inherited from Application
+-- @see Duplex.Application.start_app
+-- @return bool or nil
+
 function Recorder:start_app()
   TRACE("Recorder.start_app()")
 
@@ -398,8 +387,8 @@ end
 
 --------------------------------------------------------------------------------
 
--- periodic updates: this is where we check if any of the watched 
--- properties have changed (most are not observable)
+--- inherited from Application
+-- @see Duplex.Application.on_idle
 
 function Recorder:on_idle()
   --TRACE("Recorder:on_idle()")
@@ -566,7 +555,8 @@ end
 
 --------------------------------------------------------------------------------
 
--- called when a new document becomes available
+--- inherited from Application
+-- @see Duplex.Application.on_new_document
 
 function Recorder:on_new_document()
   TRACE("Recorder:on_new_document()")
@@ -745,7 +735,7 @@ end
 
 --------------------------------------------------------------------------------
 
--- @return boolean, true when one of the recorder-tracks have a ghost
+-- @return bool, true when one of the recorder-tracks have a ghost
 
 function Recorder:_has_ghost()
 
@@ -762,7 +752,7 @@ end
 
 -- add temporary ghost recording to a track:
 -- increase the size of the slider by one, set visual state
--- @param track_idx - renoise track number
+-- @param track_idx (int)
 
 function Recorder:_add_ghost(track_idx)
   TRACE("Recorder:_add_ghost(",track_idx,")")
@@ -798,7 +788,7 @@ end
 
 -- remove temporary ghost recording from a track 
 -- match the size of the slider to #samples, restore visual state
--- @param track_idx - renoise track number
+-- @param track_idx (int)
 
 function Recorder:_remove_ghost(track_idx)
   TRACE("Recorder:_remove_ghost",track_idx)
@@ -831,8 +821,8 @@ end
 
 -- set number of slider steps to the provided value
 -- (for grid mode, expand the unit size as well...)
--- @param slider - UISlider
--- @param steps - integer, 0=hide slider
+-- @param control_idx (int)
+-- @param steps (int), 0=hide slider
 
 function Recorder:_set_slider_steps(control_idx,steps)
   TRACE("Recorder:_set_slider_steps(",control_idx,steps,")")
@@ -1166,8 +1156,8 @@ end
 --------------------------------------------------------------------------------
 
 -- locate the note in the pattern-track, and select it (if present)
--- @param track - RecorderTrack
--- @param patt_idx - integer, the desired pattern to check
+-- @param track (RecorderTrack)
+-- @param patt_idx (int), the desired pattern to check
 
 function Recorder:_update_selected_sample(track,patt_idx)
   TRACE("Recorder:_update_selected_sample()",track,patt_idx)
@@ -1176,7 +1166,7 @@ function Recorder:_update_selected_sample(track,patt_idx)
   local skip_event = true
   local patt = renoise.song().patterns[patt_idx]
   local track_type = determine_track_type(track.index)
-  if (track_type==TRACK_TYPE_SEQUENCER) then
+  if (track_type==renoise.Track.TRACK_TYPE_SEQUENCER) then
     local note = patt.tracks[track.index].lines[1].note_columns[1]
     for k,sample in ipairs(track.samples) do
       if (sample.instrument_value==note.instrument_value) then
@@ -1228,7 +1218,7 @@ end
 --------------------------------------------------------------------------------
 
 -- look for the newly created sample 
--- @return integer
+-- @return int
 
 function Recorder:_get_recording_index()
   TRACE("Recorder:_get_recording_index()")
@@ -1250,8 +1240,8 @@ end
 --------------------------------------------------------------------------------
 
 -- supplied with a track index, this method will return the control index 
--- @param track_idx, renoise track number
--- @return integer or nil if the control is outside the visible range
+-- @param track_idx (int)
+-- @return int or nil if the control is outside the visible range
 
 function Recorder:_get_control_idx(track_idx)
   TRACE("Recorder:_get_control_idx(",track_idx,")")
@@ -1369,7 +1359,7 @@ function Recorder:_update_all()
     local track_idx = control_idx+self._track_offset
     local track = self._tracks[track_idx]
     local track_type = determine_track_type(track_idx)
-    if (track_type == TRACK_TYPE_SEQUENCER) then
+    if (track_type == renoise.Track.TRACK_TYPE_SEQUENCER) then
       if (track) then
         -- an active recorder track
         -- set number of steps
@@ -1414,8 +1404,8 @@ end
 
 -- switch to track: only sequencer tracks are possible targets
 -- - will move ghost track from previous track to current, or create it
--- @param track_idx - renoise track number
--- @return boolean - true if switched, false if not
+-- @param track_idx (int)
+-- @return bool - true if switched, false if not
 
 function Recorder:_attempt_track_switch(track_idx)
   TRACE("Recorder:_attempt_track_switch(",track_idx,")")
@@ -1424,7 +1414,7 @@ function Recorder:_attempt_track_switch(track_idx)
   local track_type = determine_track_type(track_idx)
 
   -- do not allow selecting non-sequencer tracks
-  if (track_type~=TRACK_TYPE_SEQUENCER) then
+  if (track_type~=renoise.Track.TRACK_TYPE_SEQUENCER) then
     local msg = "The Recorder can only record in sequencer-tracks"
     renoise.app():show_status(msg)
     return false 
@@ -1478,7 +1468,8 @@ end
 
 --------------------------------------------------------------------------------
 
--- @param track_idx - renoise track number
+--- set the active track
+-- @param track_idx (int)
 
 function Recorder:_set_active_track(track_idx)
   TRACE("Recorder:_set_active_track(",track_idx,")")
@@ -1490,8 +1481,9 @@ end
 
 --------------------------------------------------------------------------------
 
--- build app
--- @return boolean (false if requirements were not met)
+--- inherited from Application
+-- @see Duplex.Application._build_app
+-- @return bool
 
 function Recorder:_build_app()
   TRACE("Recorder:_build_app()")
@@ -1576,7 +1568,7 @@ function Recorder:_build_app()
     c.ceiling = 1.0
     c:set_index(0,true)
     c.button_mode = self._grid_mode
-    c:set_orientation(VERTICAL)
+    c:set_orientation(ORIENTATION.VERTICAL)
     if (self._grid_mode) then
       c:set_size(0)
     else
@@ -1653,7 +1645,7 @@ end
 -- wrapper methods for writing to pattern, will temporarily disable
 -- the pattern editor line nofifier
 -- @param track (RecorderTrack)
--- @param sample_lines (integer)
+-- @param sample_lines (int)
 
 function Recorder:_write_to_pattern(track,sample_lines)
   TRACE("Recorder:_write_to_pattern(",track,sample_lines,")")
@@ -1680,7 +1672,7 @@ end
 
 -- calculate the number of lines in the current sample, based on the tempo 
 -- if the sample is synced to the beat, we use that value instead
--- @return integer
+-- @return int
 
 function Recorder:get_sample_lines(sample)
   TRACE("Recorder:get_sample_lines(",sample,")")
@@ -1729,8 +1721,8 @@ end
 
 -- write the note to the currently edited pattern
 -- @param trigger_mode (Recorder.CONTINUOUS_MODE_ON/OFF)
--- @param sample_lines (integer) 
--- @param autostart (integer) number of lines to delay autostart
+-- @param sample_lines (int) 
+-- @param autostart (int) number of lines to delay autostart
 
 function RecorderTrack:write_to_pattern(trigger_mode,sample_lines,autostart)
   TRACE("RecorderTrack:write_to_pattern(",trigger_mode,sample_lines,autostart,")")
@@ -1847,7 +1839,7 @@ end
 --------------------------------------------------------------------------------
 
 -- recordings are automatically renamed when tracks are moved around
--- @param idx - integer, track index (leave out to rename as "N/A")
+-- @param idx (int), track index - leave out to rename as "N/A"
 
 function RecorderTrack:_rename_samples(idx)
   TRACE("Recorder:_rename_samples()",idx)

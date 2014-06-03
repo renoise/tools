@@ -2,10 +2,6 @@
 -- Duplex.MIDI-Keyboard
 ----------------------------------------------------------------------------]]--
 
--- "Stacked" configuration of a MIDI-Keyboard
-
---==============================================================================
-
 duplex_configurations:insert {
 
   -- configuration properties
@@ -20,7 +16,7 @@ duplex_configurations:insert {
     device_port_out = "None",
     control_map = "Controllers/MIDI-Keyboard/Controlmaps/MIDI-Key_TripleStack.xml",
     thumbnail = "Controllers/MIDI-Keyboard/MIDI-Keyboard.bmp",
-    protocol = DEVICE_MIDI_PROTOCOL
+    protocol = DEVICE_PROTOCOL.MIDI
   },
 
 
@@ -85,7 +81,7 @@ duplex_configurations:insert {
         },
         octave_set = {
           group_name = "Buttons2a",
-          orientation = VERTICAL,
+          orientation = ORIENTATION.VERTICAL,
           index = 1,
         },
         octave_sync = {
@@ -102,7 +98,7 @@ duplex_configurations:insert {
         },
         track_set = {
           group_name = "Buttons2b",
-          orientation = VERTICAL,
+          orientation = ORIENTATION.VERTICAL,
           index = 1,
         },
         track_sync = {
@@ -111,7 +107,7 @@ duplex_configurations:insert {
         },
         instr_set = {
           group_name = "Buttons2c",
-          orientation = VERTICAL,
+          orientation = ORIENTATION.VERTICAL,
           index = 1,
         },
         instr_sync = {
@@ -144,7 +140,7 @@ duplex_configurations:insert {
         },
         octave_set = {
           group_name = "Buttons3a",
-          orientation = VERTICAL,
+          orientation = ORIENTATION.VERTICAL,
           index = 1,
         },
         octave_sync = {
@@ -161,7 +157,7 @@ duplex_configurations:insert {
         },
         track_set = {
           group_name = "Buttons3b",
-          orientation = VERTICAL,
+          orientation = ORIENTATION.VERTICAL,
           index = 1,
         },
         track_sync = {
@@ -170,7 +166,7 @@ duplex_configurations:insert {
         },
         instr_set = {
           group_name = "Buttons3c",
-          orientation = VERTICAL,
+          orientation = ORIENTATION.VERTICAL,
           index = 1,
         },
         instr_sync = {

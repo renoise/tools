@@ -18,7 +18,7 @@ duplex_configurations:insert {
     device_port_out = "Automap MIDI",
     control_map = "Controllers/Nocturn/Controlmaps/Nocturn.xml",
     thumbnail = "Controllers/Nocturn/Nocturn.bmp",
-    protocol = DEVICE_MIDI_PROTOCOL
+    protocol = DEVICE_PROTOCOL.MIDI
   },
   
   applications = {
@@ -26,7 +26,7 @@ duplex_configurations:insert {
       mappings = {
         blockpos = {
           group_name= "Pots",
-          orientation = HORIZONTAL,
+          orientation = ORIENTATION.HORIZONTAL,
         },
       },
     }

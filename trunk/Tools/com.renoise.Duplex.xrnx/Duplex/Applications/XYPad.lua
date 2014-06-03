@@ -1,76 +1,39 @@
---[[----------------------------------------------------------------------------
+--[[============================================================================
 -- Duplex.XYPad
 -- Inheritance: Application > RoamingDSP > XYPad
-----------------------------------------------------------------------------]]--
+============================================================================]]--
 
---[[
+--[[--
+Control any XYPad device in any Renoise DSP Chain. The XYPad application can control and record movement via knobs, a MIDI keyboard's touchpad or an OSC device's accelerometer
 
-About
+### Features
 
-  The XYPad application is designed to take over/auto-map any XYPad device in any Renoise DSP Chain. You can control and record movement on the X/Y axis via knobs, a MIDI keyboard's touchpad or an OSC device's accelerometer
+* Flexible mappings - many supported input methods 
+* Free roaming - jump between different XYPad devices in the song
+* Device Lock - remember focused device between sessions
+* Built-in automation recording 
 
-  At it's most basic level, the application is targeting any XYPad that has been selected in Renoise, freely roaming the tracks. It supports automation recording as well - hit the edit-button, and it will record automation envelopes (according to the selected mode in options). 
+### Usage
 
-  While the free-roaming mode is useful, you also have the locked mode. This is the complete opposite, as it will always target a single device, no matter the track or device that's currently selected. The locked mode can either be set by being mapped to a button, or via the options dialog. In either case, the locked state of a device can be restored between sessions, as the application will 'tag' the device with a unique name. 
-  
-  By selecting a different unique name, we can run multiple XYPad applications, and each one will be controlling a different XYPad device. Even when you move devices and tracks around, things should not break.
-  
-  If you select an unassignable (non-XYPad) device in free-roaming mode, and you have assigned lock_button somewhere on your controller, the button will start to blink slowly, to remind you that the application is currently 'homeless', has no parameter to control. 
+  For basic operation, you can map _either_ `xy_pad`, `xy_grid` or `x_slider`/`y_slider` to your controller. Without any of these mappings, the application will refuse to start.
 
-  To complement the "lock" button, we also have a "focus" button. This button brings focus back to the locked device, whenever you have (manually) selected an un-locked device.
+  To map an OSC device, add a `Param` node to the control-map which look like this:
 
-  Finally, we can navigate between XYPad devices by using the 'next' and 'previous' buttons. Pressing one will search across all tracks in the song, so we can putting our XYPad device in any track we want. In case we have locked to a device, previous/next will "transfer" the lock to that device (use carefully if you have other locked XYPad devices, as this will overwrite their special name).
+    <Param name="MyDevicePad" type="xypad" invert_x="false" invert_y="true" minimum="-2" maximum="2"/>
 
-  How to add XYPad to your control-map (applies only to OSC devices)
-
-  The application include some additions to the Duplex control-map implementation. In order to use the application with something like tilt-sensors, a special "xypad" type has been introduced. It can receive input from such things as tilt sensors or virtual XY pads (which often send their value in pairs). In the virtual control surface, the xypad is displayed as a native XY pad, while MIDI devices continues to be slider/knob-based. 
-
-  <Param name="MyDevicePad" type="xypad" invert_x="false" invert_y="true"
-    minimum="-2" maximum="2"/>
-
-  To enter the correct minimum and maximum values, it's important you know a bit 
-  about your device as the application will base it's min/max/axis values 
+  Note: to enter the correct minimum and maximum values, it's important you know a bit about your device as the application will base it's min/max/axis values 
   directly on the information specified here. 
 
-Mappings
 
-  For basic operation, you can either map 
+### Discuss
 
-  xy_pad      (UIPad)         This is the OSC-only(?) mapping that accept
-                                both X and Y axis simultaneously
-  -- or --
+Tool discussion is located on the [Renoise forum][1]
+[1]: http://forum.renoise.com/index.php?/topic/33154-new-tool-duplex-xypad/
 
-  xy_grid     (UIButtons)       This is a multiple-button "emulation" of
-                                an XYPad on your grid controller. Minimum
-                                required resolution is 2x2
-  -- or --
+### Changes
 
-  x_slider      (UISlider)        Map each axis to it's own fader/knob
-  y_slider      (UISlider)        --//--
-
-  -- and optionally --
-
-  lock_button   (UIButton)  Lock/unlock currently selected XYPad device
-  focus_button  (UIButton)  Bring focus to locked device (if it exists)
-  next_device   (UIButton)  Select next XYPad (+locking)
-  prev_device   (UIButton)  Select previous XYPad (+locking)
-
-
-Options
-
-  locked        - Disable locking if you want the controls to
-                  follow the currently selected device
-  record_method - Determine how to record automation
-
-
-Idea/planned features
-
-  Support custom/combined display-names 
-  
-
-Changes (equal to Duplex version number)
-
-  0.98 - First release 
+  0.98 
+    - First release 
 
 
 --]]
@@ -81,10 +44,21 @@ Changes (equal to Duplex version number)
 
 class 'XYPad' (RoamingDSP)
 
+--- The XYPad application has no default options 
+-- @see Duplex.RoamingDSP
+
 XYPad.default_options = {
 
 }
 
+--- These are the available mappings for the application
+-- @see Duplex.RoamingDSP
+--
+-- @field xy_pad (UIPad) OSC-only mapping that accept both X and Y axis simultaneously
+-- @field xy_grid (UIButton,...) This is a multiple-button "emulation" of an XYPad on your grid controller. Minimum required resolution is 2x2
+-- @field x_slider (UISlider) Map x axis to it's own fader/knob
+-- @field y_slider (UISlider) Map y axis to it's own fader/knob
+-- @table available_mappings
 XYPad.available_mappings = {
   xy_pad = {
     description = "XYPad: XY Pad",
@@ -94,11 +68,11 @@ XYPad.available_mappings = {
   },
   x_slider = {
     description = "XYPad: X-Axis",
-    orientation = HORIZONTAL
+    orientation = ORIENTATION.HORIZONTAL
   },
   y_slider = {
     description = "XYPad: Y-Axis",
-    orientation = VERTICAL
+    orientation = ORIENTATION.VERTICAL
   },
 }
 
@@ -123,7 +97,8 @@ end
 --------------------------------------------------------------------------------
 
 --- Constructor method
--- @param (VarArg), see Application to learn more
+-- @param (VarArg)
+-- @see Duplex.Application
 
 function XYPad:__init(...)
   TRACE("XYPad:__init()",...)
@@ -134,7 +109,7 @@ function XYPad:__init(...)
   -- update display
   self.update_requested = true
 
-  -- boolean, set to temporarily skip value notifier
+  -- (bool) set to temporarily skip value notifier
   self.suppress_value_observable = false
 
   -- current value
@@ -173,7 +148,8 @@ end
 
 --------------------------------------------------------------------------------
 
--- perform periodic updates
+--- inherited from Application
+-- @see Duplex.Application.on_idle
 
 function XYPad:on_idle()
 	--TRACE("XYPad:on_idle")
@@ -312,7 +288,9 @@ end
 
 --------------------------------------------------------------------------------
 
--- construct the user interface
+--- inherited from Application
+-- @see Duplex.Application._build_app
+-- @return bool
 
 function XYPad:_build_app()
   TRACE("XYPad:_build_app()")
@@ -421,7 +399,7 @@ function XYPad:_build_app()
     local grid_mode = cm:is_grid_group(x_slider_name,self.mappings.x_slider.index)
     local x_slider_orientation = self.mappings.x_slider.orientation
     if grid_mode then
-      if (x_slider_orientation == HORIZONTAL) then
+      if (x_slider_orientation == ORIENTATION.HORIZONTAL) then
         x_slider_size = cm:count_columns(x_slider_name)
       else
         x_slider_size = cm:count_rows(x_slider_name)
@@ -458,7 +436,7 @@ function XYPad:_build_app()
     local grid_mode = cm:is_grid_group(y_slider_name,self.mappings.y_slider.index)
     local y_slider_orientation = self.mappings.y_slider.orientation
     if grid_mode then
-      if (y_slider_orientation == HORIZONTAL) then
+      if (y_slider_orientation == ORIENTATION.HORIZONTAL) then
         y_slider_size = cm:count_columns(y_slider_name)
       else
         y_slider_size = cm:count_rows(y_slider_name)
@@ -615,5 +593,4 @@ function XYPad:attach_to_device(track_idx,device_idx,device)
   end
 
 end
-
 

@@ -2,9 +2,6 @@
 -- Duplex.microKONTROL
 ----------------------------------------------------------------------------]]--
 
--- set up "Mixer" for this configuration
-
-
 duplex_configurations:insert {
 
   -- configuration properties
@@ -18,7 +15,7 @@ duplex_configurations:insert {
     device_port_out = "MIDIOUT2 (microKONTROL)",
     control_map = "Controllers/microKONTROL/Controlmaps/microKONTROL.xml",
     thumbnail = "Controllers/microKONTROL/microKONTROL.bmp",
-    protocol = DEVICE_MIDI_PROTOCOL
+    protocol = DEVICE_PROTOCOL.MIDI
   },
 
   applications = {

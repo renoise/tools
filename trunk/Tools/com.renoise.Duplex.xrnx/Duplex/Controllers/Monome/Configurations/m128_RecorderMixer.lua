@@ -2,8 +2,6 @@
 -- Duplex.Monome 
 ----------------------------------------------------------------------------]]--
 
--- setup "Recorder + Mixer" for this configuration
-
 duplex_configurations:insert {
 
   -- configuration properties
@@ -20,7 +18,7 @@ duplex_configurations:insert {
     device_port_out = "8082",
     control_map = "Controllers/Monome/Controlmaps/Monome128_RecorderMixer.xml",
     thumbnail = "Controllers/Monome/Monome.bmp",
-    protocol = DEVICE_OSC_PROTOCOL,
+    protocol = DEVICE_PROTOCOL.OSC,
 
   },
 
@@ -49,7 +47,7 @@ duplex_configurations:insert {
       mappings = {
         blockpos = {
           group_name = "Column",
-          orientation = VERTICAL,
+          orientation = ORIENTATION.VERTICAL,
         }
       }
     },
@@ -112,12 +110,6 @@ duplex_configurations:insert {
         master = {
           group_name = "Grid2",
         },
-        --[[
-        page = {
-          group_name = "Controls2",
-          index = 1
-        },
-        ]]
         mode = {
           group_name = "Controls2",
           index = 8

@@ -1,4 +1,3 @@
--- setup XYPad for this configuration
 
 duplex_configurations:insert {
 
@@ -14,7 +13,7 @@ duplex_configurations:insert {
     device_port_out = "Automap MIDI",
     control_map = "Controllers/Remote-SL-MKII/Controlmaps/Remote-SL-MKII.xml",
     thumbnail = "Controllers/Remote-SL-MKII/Remote-SL-MKII.bmp",
-    protocol = DEVICE_MIDI_PROTOCOL
+    protocol = DEVICE_PROTOCOL.MIDI
   },
   
   applications = {
@@ -45,23 +44,5 @@ duplex_configurations:insert {
         "instr_index","track_index","velocity_mode","keyboard_mode","base_volume","channel_pressure","release_type","button_width","button_height","base_octave","upper_note","lower_note",
       },
     },
-    --[[
-    Mixer = {
-      mappings = {
-        master = {
-          group_name = "XYPad",
-          index = 1,
-        },
-        panning = {
-          group_name = "XYPad",
-          index = 2,
-        }
-      },
-      options = {
-        page_size = 2,     -- "1",
-        follow_track = 1,  -- "Follow track enabled"
-      }
-    },
-    ]]
   }
 }

@@ -18,7 +18,7 @@ duplex_configurations:insert {
     device_port_out = "Launchpad",
     control_map = "Controllers/Launchpad/Controlmaps/Launchpad_XYPad.xml",
     thumbnail = "Controllers/Launchpad/Launchpad.bmp",
-    protocol = DEVICE_MIDI_PROTOCOL,
+    protocol = DEVICE_PROTOCOL.MIDI,
   },
 
   applications = {
@@ -58,46 +58,7 @@ duplex_configurations:insert {
         locked = 1
       }
     },
-    --[[
-    Pad5_Red = {
-      application = "XYPad",
-      mappings = {
-        xy_grid = {
-          group_name = "Pad_5"
-        }
-      },
-      palette = {
-        grid_on = {
-          color={0xFF,0x80,0x00}, 
-        },
-        grid_off = {
-          color={0x40,0x00,0x00}, 
-        }
-      },
-      options = {
-        locked = 1
-      }
-    },
-    Pad5_Red_Extra = {
-      application = "XYPad",
-      mappings = {
-        xy_grid = {
-          group_name = "Pad_6"
-        }
-      },
-      palette = {
-        grid_on = {
-          color={0xFF,0x80,0x00}, 
-        },
-        grid_off = {
-          color={0x40,0x00,0x00}, 
-        }
-      },
-      options = {
-        locked = 1
-      }
-    }
-    ]]
+
     Repeater = {
       mappings = {
         grid = {

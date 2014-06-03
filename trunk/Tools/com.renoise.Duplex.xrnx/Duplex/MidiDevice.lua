@@ -1,17 +1,15 @@
---[[----------------------------------------------------------------------------
+--[[============================================================================
 -- Duplex.MidiDevice
-----------------------------------------------------------------------------]]--
+-- Inheritance: MidiDevice -> Device
+============================================================================]]--
 
---[[
-
-Inheritance: MidiDevice -> Device
-
-Requires: Globals, ControlMap, Message
+--[[--
+A generic MIDI device class, providing the ability to send and receive MIDI
 
 --]]
 
-
 --==============================================================================
+
 
 class 'MidiDevice' (Device)
 
@@ -30,7 +28,7 @@ function MidiDevice:__init(display_name, message_stream, port_in, port_out)
     "Internal Error. Please report: " ..
     "expected a valid display-name, stream and in/output device names for a MIDI device")
 
-  Device.__init(self, display_name, message_stream, DEVICE_MIDI_PROTOCOL)
+  Device.__init(self, display_name, message_stream, DEVICE_PROTOCOL.MIDI)
 
   self.port_in = port_in
   self.port_out = port_out
@@ -38,14 +36,14 @@ function MidiDevice:__init(display_name, message_stream, port_in, port_out)
   self.midi_in = nil
   self.midi_out = nil
 
-  -- boolean, specifies if the device dumps midi to the console
+  -- (bool) specifies if the device dumps midi to the console
   self.dump_midi = false
 
   -- when using the virtual control surface, and the control-map
   -- doesn't specify a specific channel, we use this value: 
   self.default_midi_channel = 1
 
-  -- number, used for quantized output and relative step size
+  -- (int) used for quantized output and relative step size
   self.default_midi_resolution = 127
 
   -- enable this to quantize output to given resolution before
@@ -135,7 +133,7 @@ function MidiDevice:midi_callback(message)
 
   -- determine the type of signal : note/cc/etc
   if (message[1]>=128) and (message[1]<=159) then
-    msg_context = MIDI_NOTE_MESSAGE
+    msg_context = DEVICE_MESSAGE.MIDI_NOTE
     if(message[1]>143)then -- on
       msg_channel = message[1]-143  
       msg_value = message[3]
@@ -148,22 +146,22 @@ function MidiDevice:midi_callback(message)
     end
     value_str = self._note_to_string(self,message[2])
   elseif (message[1]>=176) and (message[1]<=191) then
-    msg_context = MIDI_CC_MESSAGE
+    msg_context = DEVICE_MESSAGE.MIDI_CC
     msg_value = message[3]
     msg_channel = message[1]-175
     value_str = self._midi_cc_to_string(self,message[2])
   elseif (message[1]>=192) and (message[1]<=207) then
-    msg_context = MIDI_PROGRAM_CHANGE_MESSAGE
+    msg_context = DEVICE_MESSAGE.MIDI_PROGRAM_CHANGE
     msg_value = message[2]
     msg_channel = message[1]-191
     value_str = self._program_change_to_string(self,message[2])
   elseif (message[1]>=208) and (message[1]<=223) then
-    msg_context = MIDI_CHANNEL_PRESSURE
+    msg_context = DEVICE_MESSAGE.MIDI_CHANNEL_PRESSURE
     msg_value = message[2]
     msg_channel = message[1]-207
     value_str = "CP"
   elseif (message[1]>=224) and (message[1]<=239) then
-    msg_context = MIDI_PITCH_BEND_MESSAGE
+    msg_context = DEVICE_MESSAGE.MIDI_PITCH_BEND
     msg_value = message[3] -- todo: support LSB for higher resolution
     msg_channel = message[1]-223
     value_str = "PB"
@@ -205,7 +203,7 @@ function MidiDevice:midi_callback(message)
 
       -- special case: if we have received input from a MIDI keyboard
       -- by means of the "keyboard" input method, stick the note back on
-      if (msg.context == MIDI_NOTE_MESSAGE) and
+      if (msg.context == DEVICE_MESSAGE.MIDI_NOTE) and
         (param["xarg"].value=="|Ch"..msg_channel) or
         (param["xarg"].value=="|") 
       then
@@ -329,7 +327,7 @@ end
 --------------------------------------------------------------------------------
 
 --- Invoked when we receive sysex data from the device
--- @param message (Table/MIDIMessage)
+-- @param message (table) MIDIMessage
 
 function MidiDevice:sysex_callback(message)
   TRACE("MidiDevice:sysex_callback()",message)
@@ -345,9 +343,9 @@ end
 --------------------------------------------------------------------------------
 
 ---  Send CC message to device
---  @param number (Number/7BitInt) the control-number 
---  @param value (Number/7BitInt) the control-value
---  @param channel (Number) the midi channel, between 1-16
+--  @param number (int) 7-bit control-number 
+--  @param value (int) 7-bit control-value
+--  @param channel (int) midi channel, between 1-16
 
 function MidiDevice:send_cc_message(number,value,channel)
   TRACE("MidiDevice:send_cc_message()",number,value,channel)
@@ -419,8 +417,8 @@ end
 --------------------------------------------------------------------------------
 
 --- Send Pitch-Bend message to device
--- @param value (Number) the pitch-bend value
--- @param channel (Number) the MIDI channel
+-- @param value (int) the pitch-bend value, 7 bit value
+-- @param channel (int) the MIDI channel, 1-16 (optional)
 
 function MidiDevice:send_pitch_bend_message(value,channel)
   TRACE("MidiDevice:send_pitch_bend_message()",value,channel)
@@ -449,9 +447,9 @@ end
 --------------------------------------------------------------------------------
 
 --- Send note message to device
--- @param key (Number) the MIDI note pitch 
--- @param velocity (Number) the MIDI note velocity
--- @param channel (Number) the MIDI channel
+-- @param key (int) the MIDI note pitch, 0-127
+-- @param velocity (int) the MIDI note velocity, 0-127
+-- @param channel (int) the MIDI channel, 1-16
 
 function MidiDevice:send_note_message(key,velocity,channel)
 
@@ -490,9 +488,9 @@ end
 
 --------------------------------------------------------------------------------
 
---- Convert MIDI note to control-map string, range 0 (C--1) to 120 (C-9)
--- @param int (Number/7BitInt): the MIDI note key
--- @return String
+--- Convert MIDI note to control-map string, range C--1 to C-9
+-- @param int (int) the MIDI note key, between 0-120
+-- @return string
 
 function MidiDevice:_note_to_string(int)
   local key = (int%12)+1
@@ -504,7 +502,7 @@ end
 --------------------------------------------------------------------------------
 
 --- Convert MIDI CC value to string, e.g. "CC#%d"
--- @param int (Number/7BitInt) the CC number
+-- @param int (int) the 7-bit CC number
 
 function MidiDevice:_midi_cc_to_string(int)
   return string.format("CC#%d",int)
@@ -514,7 +512,7 @@ end
 --------------------------------------------------------------------------------
 
 --- Convert Program Change value to string, e.g. "Prg#%d"
--- @param int (Number/7BitInt) the Program Change number
+-- @param int (int) the 7-bit Program Change number
 
 function MidiDevice:_program_change_to_string(int)
   return string.format("Prg#%d",int)
@@ -524,8 +522,8 @@ end
 --------------------------------------------------------------------------------
 
 --- Extract MIDI note-value (range C--1 to C9)
--- @param str (String), control-map value such as "C-4" or "F#-1"
--- @return (Number) the MIDI note pitch, 0-127
+-- @param str (string), control-map value such as "C-4" or "F#-1"
+-- @return (int) the MIDI note pitch, 0-127
 
 function MidiDevice:extract_midi_note(str) 
   TRACE("MidiDevice:extract_midi_note()",str)
@@ -552,8 +550,8 @@ end
 --------------------------------------------------------------------------------
 
 --- Extract MIDI CC number (range 0-127)
--- @param str (string, control-map value attribute)
--- @return (Number) the MIDI CC number, 0-127
+-- @param str (string), control-map value attribute
+-- @return (int) the MIDI CC number, 0-127
 
 function MidiDevice:extract_midi_cc(str)
   TRACE("MidiDevice:extract_midi_cc()",str)
@@ -566,8 +564,8 @@ end
 
 
 --- Determine channel for the given message (use default port if not specified)
--- @param str (String), control-map value)
--- @return (Number) the MIDI channel, 1-16
+-- @param str (string), control-map value
+-- @return (int) the MIDI channel, 1-16
 
 function MidiDevice:extract_midi_channel(str)
   TRACE("MidiDevice:extract_midi_channel()",str)
@@ -591,11 +589,8 @@ function MidiDevice:point_to_value(pt,elm,ceiling)
   local value = nil
   local val_type = type(pt.val)
 
-  --print("val_type",val_type)
-
   if (elm.type == "label") then
 
-    --print("mididevice label")
     return pt.text
 
   elseif (val_type == "boolean") then
@@ -605,15 +600,6 @@ function MidiDevice:point_to_value(pt,elm,ceiling)
       value = elm.minimum
     end
 
-
-  --[[
-  elseif (val_type == "table") then
-    -- multiple-parameter: tilt sensors, xy-pad...
-    value = table.create()
-    for k,v in ipairs(pt.val) do
-      value:insert((v * (1 / ceiling)) * elm.maximum)
-    end
-  ]]
   else
     -- scale the value from "local" to "external"
     -- for instance, from Renoise dB range (1.4125375747681) 
@@ -646,7 +632,7 @@ function NRPNMessage:__init(device)
 
   Message:__init(device)
   
-  self.context = MIDI_CC_MESSAGE
+  self.context = DEVICE_MESSAGE.MIDI_CC
 end
 
 function NRPNMessage:__tostring()

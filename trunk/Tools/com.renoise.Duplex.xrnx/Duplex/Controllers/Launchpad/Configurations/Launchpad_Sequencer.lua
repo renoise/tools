@@ -2,8 +2,6 @@
 -- Duplex.Launchpad 
 ----------------------------------------------------------------------------]]--
 
--- setup Daxton's Step Sequencer for the Launchpad
-
 duplex_configurations:insert {
 
   -- configuration properties
@@ -18,34 +16,39 @@ duplex_configurations:insert {
     device_port_out = "Launchpad",
     control_map = "Controllers/Launchpad/Controlmaps/Launchpad_StepSequencer.xml",
     thumbnail = "Controllers/Launchpad/Launchpad.bmp",
-    protocol = DEVICE_MIDI_PROTOCOL,
+    protocol = DEVICE_PROTOCOL.MIDI,
   },
 
   applications = {
     StepSequencer = {
-      -- vertical layout (default)
+      -- ORIENTATION.VERTICAL layout (default)
       mappings = {
         grid = {
           group_name = "Grid",
-          orientation = HORIZONTAL,
+          orientation = ORIENTATION.HORIZONTAL,
         },
         level = {
           group_name = "Position",
-          orientation = HORIZONTAL,
+          orientation = ORIENTATION.HORIZONTAL,
         },
-        line = {
+        prev_line = {
           group_name = "Controls",
-          orientation = HORIZONTAL,
+          orientation = ORIENTATION.HORIZONTAL,
           index = 3
+        },
+        next_line = {
+          group_name = "Controls",
+          orientation = ORIENTATION.HORIZONTAL,
+          index = 4
         },
         track = {
           group_name = "Controls",
-          orientation = HORIZONTAL,
+          orientation = ORIENTATION.HORIZONTAL,
           index = 1
         },
         transpose = {
           group_name = "Treatments",
-          orientation = HORIZONTAL,
+          orientation = ORIENTATION.HORIZONTAL,
           index = 5
         },
       },
@@ -57,30 +60,30 @@ duplex_configurations:insert {
 
       --[[
 
-      -- enable this instead for horizontal layout
+      -- enable this instead for ORIENTATION.HORIZONTAL layout
 
       mappings = {
         grid = {
           group_name = "Grid",
-          orientation = HORIZONTAL,
+          orientation = ORIENTATION.HORIZONTAL,
         },
         level = {
           group_name = "Controls",
-          orientation = HORIZONTAL,
+          orientation = ORIENTATION.HORIZONTAL,
         },
         line = {
           group_name = "Triggers",
-          orientation = VERTICAL,
+          orientation = ORIENTATION.VERTICAL,
           index = 1
         },
         track = {
           group_name = "Triggers",
-          orientation = VERTICAL,
+          orientation = ORIENTATION.VERTICAL,
           index = 3
         },
         transpose = {
           group_name = "Triggers",
-          orientation = VERTICAL,
+          orientation = ORIENTATION.VERTICAL,
           index = 5
         },
       },
@@ -113,12 +116,6 @@ duplex_configurations:insert {
           group_name = "Controls",
           index = 6,
         },
-        --[[
-        loop_pattern = {
-          group_name = "Controls",
-          index = 6,
-        },
-        ]]
         metronome_toggle = {
           group_name = "Controls",
           index = 5,
@@ -136,16 +133,7 @@ duplex_configurations:insert {
         pattern_play = 3, -- toggle start/stop with single button
       },
     },
-    --[[
-    Metronome = {
-      mappings = {
-        toggle = {
-          group_name = "Controls",
-          index = 5,
-        },
-      },
-    },
-    ]]
+
     Navigator = {
       mappings = {
         blockpos = {

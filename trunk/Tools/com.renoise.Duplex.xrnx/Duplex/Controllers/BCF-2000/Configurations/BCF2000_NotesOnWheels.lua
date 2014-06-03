@@ -2,8 +2,6 @@
 -- Duplex.BCF2000
 ----------------------------------------------------------------------------]]--
 
--- Compact Notes On Wheels configuration
-
 duplex_configurations:insert {
 
   -- configuration properties
@@ -18,7 +16,7 @@ duplex_configurations:insert {
     device_port_out = "BCF2000",
     control_map = "Controllers/BCF-2000/Controlmaps/BCF-2000.xml",
     thumbnail = "Controllers/BCF-2000/BCF-2000.bmp",
-    protocol = DEVICE_MIDI_PROTOCOL
+    protocol = DEVICE_PROTOCOL.MIDI
   },
   
   applications = {
@@ -49,16 +47,11 @@ duplex_configurations:insert {
         },
         num_steps = {
           group_name = "Buttons1",
-          --orientation = HORIZONTAL,
         },
         step_spacing = {
           group_name = "Encoders1",
           index = 8,
         },
-        --num_lines = {
-        --  group_name = "Dials",
-        --  index = 2,
-        --},
         write = {
           group_name = "Buttons2",
           index = 1,
@@ -67,12 +60,6 @@ duplex_configurations:insert {
           group_name = "Buttons2",
           index = 2,
         },
-        --[[
-        fill = {
-          group_name = "Controls",
-          index = 3,
-        },
-        ]]
         global = {
           group_name = "Buttons2",
           index = 3,

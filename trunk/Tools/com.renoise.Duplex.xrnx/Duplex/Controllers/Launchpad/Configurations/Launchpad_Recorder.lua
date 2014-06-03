@@ -2,8 +2,6 @@
 -- Duplex.Launchpad 
 ----------------------------------------------------------------------------]]--
 
--- setup "Recorder + Navigator" for this configuration
-
 duplex_configurations:insert {
 
   -- configuration properties
@@ -18,7 +16,7 @@ duplex_configurations:insert {
     device_port_out = "Launchpad",
     control_map = "Controllers/Launchpad/Controlmaps/Launchpad_Recorder.xml",
     thumbnail = "Controllers/Launchpad/Launchpad.bmp",
-    protocol = DEVICE_MIDI_PROTOCOL,
+    protocol = DEVICE_PROTOCOL.MIDI,
   },
 
   applications = {

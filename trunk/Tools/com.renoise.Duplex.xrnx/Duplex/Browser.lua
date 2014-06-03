@@ -1,17 +1,19 @@
---[[----------------------------------------------------------------------------
+--[[============================================================================
 -- Duplex.Browser
-----------------------------------------------------------------------------]]--
+============================================================================]]--
 
+--[[--
+
+The Browser class shows and instantiates registered device configurations and shows the virtual UI for them. More than one configuration can be active and running for multiple devices.
+
+--]]
+
+--==============================================================================
 
 local NOT_AVAILABLE_POSTFIX = " [N/A]"
 local RUNNING_POSTFIX = " (running)"
 
-
 --==============================================================================
-
--- The Browser class shows and instantiates registered device configurations
--- and shows the virtual UI for them. More than one configuration can be 
--- active and running for multiple devices.
 
 class 'Browser'
 
@@ -19,64 +21,61 @@ class 'Browser'
 
 --- Initialize the Browser class
 -- @param initial_configuration (Table) set to this configuration 
--- @param start_configuration (Boolean) true to start the application
+-- @param start_configuration (bool) true to start the application
 
 function Browser:__init(initial_configuration, start_configuration)
   TRACE("Browser:__init")
 
-  
-  ---- properties
 
-  -- list of duplex device configuration definitions
+  --- list of duplex device configuration definitions
   self._available_configurations = duplex_configurations
 
-  -- processes is a table containing BrowserProcess processes
+  --- processes is a table containing BrowserProcess processes
   self._processes = table.create()
   
-  -- string, selected device display-name 
+  --- string, selected device display-name 
   self._device_name = nil 
-  -- string, selected configuration for the current device
+  --- string, selected configuration for the current device
   self._configuration_name = nil
 
-  -- dump midi information to console (debug option)
+  --- dump midi information to console (debug option)
   self._dump_midi = false
 
-  -- true while updating the GUI from within the internal browser functions, 
+  --- true while updating the GUI from within the internal browser functions, 
   -- to avoid doubling updates when the changes are not fired from the GUI
   self._suppress_notifiers = false
 
-  -- set when we temporarily have selected "None" as device, 
+  --- set when we temporarily have selected "None" as device, 
   -- and want to revert the list choice 
   self._requested_device = nil
   
-  -- cast these as standard types instead of Observable-X types,
+  --- cast these as standard types instead of Observable-X types,
   -- as the socket will only accept basic string & numbers as arguments
   local osc_host = duplex_preferences.osc_server_host.value
   local osc_port = duplex_preferences.osc_server_port.value
 
-  -- the OSC client takes care of sending internally routed notes
+  --- the OSC client takes care of sending internally routed notes
   -- to Renoise (not created if host/port is not defined)
   self._osc_client = OscClient(osc_host,osc_port)
   
-  -- the voice manager is handling triggered note messages
+  --- the voice manager is handling triggered note messages
   -- (needs the osc_client)
   self._voice_mgr = OscVoiceMgr()
-
-  ---- components
   
-  -- view builder that we do use for all our views
+  --- view builder that we do use for all our views
   self._vb = renoise.ViewBuilder()
   
-  -- referenc eto the main dialog that we create
+  --- referenc eto the main dialog that we create
   self._dialog = nil
   
 
-  ---- build the GUI
+  -- build the GUI
+  -------------------------------------
 
   self:_create_content_view()
 
   
-  ---- activate default config
+  -- activate default config
 
   -- select none by default
   self:set_device("None")
@@ -88,7 +87,8 @@ function Browser:__init(initial_configuration, start_configuration)
 
 
   ---- attach to configuration settings
-  
+  -------------------------------------
+
   -- MIDI port setup changed
   renoise.Midi.devices_changed_observable():add_notifier(
     Browser._available_device_ports_changed, self
@@ -122,16 +122,23 @@ function Browser:show()
     assert(self._content_view, "Internal Error. Please report: " .. 
       "browser always needs a valid content view")
 
-    -- switch configuration using the function keys
     local function keyhandler(dialog, key)
+      rprint(key)
       local fkey = (string.match(key.name,"f([%d]+)"))
       if (key.modifiers=="") and (fkey~=nil) then
+        -- switch configuration using the function keys
         fkey = fkey *1
         local config_list = 
           self:_available_configurations_for_device(self._device_name)
         if (config_list[fkey]) then
           self:set_configuration(config_list[fkey], true)
         end
+      elseif (key.modifiers=="") and 
+        (key.name == "tab") and
+        (key.repeated == false)
+      then
+        -- toggle virtual UI on/off
+        self:toggle_browser_size()
       else
         local notify_main_window = true
         for _,process in ipairs(self._processes) do
@@ -144,7 +151,16 @@ function Browser:show()
           end
         end
         if notify_main_window then
-          return key
+          -- special case: escape toggles edit mode
+          if (key.name == "esc") 
+            and (key.modifiers=="") 
+            and not (key.repeated)
+          then
+            local em = renoise.song().transport.edit_mode
+            renoise.song().transport.edit_mode = not em
+          else
+            return key
+          end
         end
       end
     end
@@ -214,6 +230,32 @@ function Browser:on_release_document()
 
   for _,process in pairs(self._processes) do
     process:on_release_document()
+  end
+end
+
+
+--------------------------------------------------------------------------------
+
+--- Forward notifications to all active processes
+
+function Browser:on_window_became_active()
+  TRACE("Browser:on_window_became_active()")
+
+  for _,process in pairs(self._processes) do
+    process:on_window_became_active()
+  end
+end
+
+
+--------------------------------------------------------------------------------
+
+--- Forward notifications to all active processes
+
+function Browser:on_window_resigned_active()
+  TRACE("Browser:on_window_resigned_active()")
+
+  for _,process in pairs(self._processes) do
+    process:on_window_resigned_active()
   end
 end
 
@@ -391,7 +433,7 @@ end
 
 --- Determine if the given config is instantiated and running
 -- @param configuration (Table) the configuration to check
--- @return (Boolean) true if config is running
+-- @return (bool) true if config is running
 
 function Browser:configuration_running(configuration)
   TRACE("Browser:configuration_running:",configuration.name)
@@ -433,7 +475,7 @@ end
 --------------------------------------------------------------------------------
 
 --- Check if previous configuration exist
--- @return (Boolean)
+-- @return (bool)
 
 function Browser:has_previous_configuration()
   TRACE("Browser:has_previous_configuration()")
@@ -481,7 +523,7 @@ end
 --------------------------------------------------------------------------------
 
 --- Check if next configuration exist
--- @return (Boolean)
+-- @return (bool)
 
 function Browser:has_next_configuration()
   TRACE("Browser:has_next_configuration()")
@@ -504,7 +546,7 @@ end
 
 --- Activate a configuration based on the provided index  
 -- (silently fails if no configuration exist at that index, or already active)
--- @param idx (Number)
+-- @param idx (int)
 
 function Browser:goto_configuration(idx)
   TRACE("Browser:goto_configuration()",idx)
@@ -537,7 +579,7 @@ end
 --------------------------------------------------------------------------------
 
 --- Retrieve the index for the configuration matching the provided name
--- @return Number or nil
+-- @return int or nil
 
 function Browser:get_configuration_index(cfg_name)
   TRACE("Browser:get_configuration_index()",cfg_name)
@@ -558,7 +600,7 @@ end
 
 --- Activate a new configuration for the currently active device
 -- @param configuration (Table)
--- @param start_running (Boolean)
+-- @param start_running (bool)
 
 function Browser:set_configuration(configuration, start_running)
   TRACE("Browser:set_configuration:", configuration and 
@@ -691,10 +733,8 @@ function Browser:set_configuration(configuration, start_running)
   self._vb.views.dpx_browser_configuration_running_checkbox.value = 
     (process and process:running()) or false
 
-  --self._vb.views.dpx_browser_device_ui_row:resize()
-  --self._vb.views.dpx_browser_rootnode:resize()
-
   self:_update_device_description()
+  self:_update_resize_button()
     
   self:_decorate_device_list()
   self:_decorate_configuration_list()
@@ -758,7 +798,7 @@ end
 --------------------------------------------------------------------------------
 
 --- Check if we should write debug data to the std out (console)
--- @return (Boolean) 
+-- @return (bool) 
 
 function Browser:dump_midi()
   return self._dump_midi
@@ -768,7 +808,7 @@ end
 --------------------------------------------------------------------------------
 
 --- Set the MIDI dump status
--- @param dump (Boolean)
+-- @param dump (bool)
 
 function Browser:set_dump_midi(dump)
   self._dump_midi = dump
@@ -806,7 +846,7 @@ end
 --------------------------------------------------------------------------------
 
 --- Check if any processes are running
--- @return (Boolean) true when at least one process is instantiated and running
+-- @return (bool) true when at least one process is instantiated and running
 
 function Browser:_process_running()
   --TRACE("Browser:_process_running()")
@@ -842,8 +882,8 @@ end
 --------------------------------------------------------------------------------
 
 --- Retrieve index of the given device display name
--- @param device_display_name (String) 
--- @return (Number or nil)
+-- @param device_display_name (string) 
+-- @return (int or nil)
 
 function Browser:_device_index_by_name(device_display_name)
   TRACE("Browser:_device_index_by_name", device_display_name)
@@ -869,8 +909,8 @@ end
 --------------------------------------------------------------------------------
 
 --- Retrieve index of the given configuration name
--- @param config_name (String) 
--- @return (Number or nil)
+-- @param config_name (string) 
+-- @return (int or nil)
 
 function Browser:_configuration_index_by_name(config_name)
   TRACE("Browser:_configuration_index_by_name", config_name)
@@ -896,7 +936,7 @@ end
 --------------------------------------------------------------------------------
 
 --- Retrieve list of configurations present for the provided device
--- @param device_display_name (String) device_display_name
+-- @param device_display_name (String) device display-name
 -- @return (Table) list of configurations
 
 function Browser:_available_configurations_for_device(device_display_name)
@@ -917,7 +957,7 @@ end
 --------------------------------------------------------------------------------
 
 --- Retrieve list of configuration-names present for the provided device
--- @param device_display_name (String) device_display_name
+-- @param device_display_name (String) device display-name
 -- @return (Table) list of configuration names
 
 function Browser:_available_configuration_names_for_device(device_display_name)
@@ -999,6 +1039,57 @@ function Browser:_decorate_configuration_list()
   self._vb.views.dpx_browser_configurations.items = config_list
 end
 
+--------------------------------------------------------------------------------
+
+--- Show/hide the virtual control surface
+
+function Browser:toggle_browser_size()
+
+  local ui_row = self._vb.views.dpx_browser_device_ui_row
+  local info_row = self._vb.views.dpx_browser_device_info_text
+  if (ui_row.visible) then
+    ui_row.visible = false
+    info_row.visible = false
+  else
+    ui_row.visible = true
+    info_row.visible = true
+  end
+
+  self:_update_resize_button()
+
+end
+
+--------------------------------------------------------------------------------
+
+--- Update dialog after virtual control surface is shown/hidden
+
+function Browser:_update_resize_button()
+  TRACE("Browser:_update_resize_button()")
+
+  --print("_device_name",self._device_name)
+
+  local bt = self._vb.views.dpx_browser_device_resize
+
+  if (self._device_name == "None") then
+    bt.visible = false
+    return
+  end
+
+  bt.visible = true
+
+  local top_row = self._vb.views.dpx_browser_top_row
+  local ui_row = self._vb.views.dpx_browser_device_ui_row
+  if (ui_row.visible) then
+    bt.text = "─"
+    top_row.width = math.max(top_row.width,ui_row.width)
+  else
+    local device_row = self._vb.views.dpx_browser_input_device_row
+    local device_resize = self._vb.views.dpx_browser_device_resize
+    bt.text = "+"
+    top_row.width = device_row.width+device_resize.width
+  end
+
+end
 
 --------------------------------------------------------------------------------
 
@@ -1008,6 +1099,7 @@ function Browser:_update_device_description()
 
   local active_process = self:_current_process()      
   local info_text_view = self._vb.views.dpx_browser_device_info_text
+  local browser_top_row = self._vb.views.dpx_browser_top_row
   
   if (active_process == nil) then
     info_text_view.text = ""
@@ -1045,16 +1137,18 @@ function Browser:_update_device_description()
   end
   
   -- fill up the entire dialog width
-  info_text_view.width = math.max(
-    self._vb.views.dpx_browser_input_device_row.width, 
+  local dlg_width = math.max(
+    self._vb.views.dpx_browser_input_device_row.width+
+      self._vb.views.dpx_browser_device_resize.width, 
     self._vb.views.dpx_browser_device_ui_row.width)
+
+  info_text_view.width = dlg_width
+  browser_top_row.width = dlg_width
 
   local text_rows = math.min(5, math.max(1, #info_text_view.paragraphs))
   if (text_rows ~= math.floor(info_text_view.height / 16)) then
     self._vb.views.dpx_browser_device_info_text.height = text_rows*16
     
-    --self._vb.views.dpx_browser_device_ui_row:resize()
-    --self._vb.views.dpx_browser_rootnode:resize()
   end
 end
 
@@ -1062,7 +1156,7 @@ end
 --------------------------------------------------------------------------------
 
 --- Check whether the current configuration should be autostarted
--- return (Boolean) 
+-- return (bool) 
 
 function Browser:_configuration_autostart_enabled()
 
@@ -1134,7 +1228,7 @@ function Browser:_available_device_ports_changed()
     if (process:running()) then
       local device = process.device
       
-      if (device.protocol == DEVICE_MIDI_PROTOCOL) then
+      if (device.protocol == DEVICE_PROTOCOL.MIDI) then
         local now_available = (input_devices:find(device.port_in) ~= nil) and 
           (output_devices:find(device.port_out) ~= nil)
         
@@ -1212,54 +1306,72 @@ function Browser:_create_content_view()
     width = 400,
     
     -- device chooser
-    vb:row {
-      id = 'dpx_browser_input_device_row',
-      vb:text {
-        text = "Device",
-        width = 50,
-      },
-      vb:popup {
-        id = 'dpx_browser_input_device',
-        tooltip = txt_device,
-        items = self:available_devices(),
-        width = 200,
-        notifier = function(e)
-          if (not self._suppress_notifiers) then
-            local device_list = self:available_devices()
-            
-            if (e == 1 and self:_process_running()) then -- "None"
-              local choice = renoise.app():show_prompt("", 
-                "This will close all open devices. Are you sure?", 
-                {"OK","Cancel"})
-                    
-              if (choice == "Cancel") then
-                -- revert to the last used device in idle loop
-                -- (otherwise, we would trigger a notifier feedback)
-                self._requested_device = self._device_name
+    --vb:row {
+    vb:horizontal_aligner { 
+      mode = 'justify',
+      id = 'dpx_browser_top_row',
+      --width = "100%",
+      vb:row{
+        id = 'dpx_browser_input_device_row',
+        vb:text {
+          text = "Device",
+          width = 50,
+        },
+        vb:popup {
+          id = 'dpx_browser_input_device',
+          tooltip = txt_device,
+          items = self:available_devices(),
+          width = 200,
+          notifier = function(e)
+            if (not self._suppress_notifiers) then
+              local device_list = self:available_devices()
+              
+              if (e == 1 and self:_process_running()) then -- "None"
+                local choice = renoise.app():show_prompt("", 
+                  "This will close all open devices. Are you sure?", 
+                  {"OK","Cancel"})
+                      
+                if (choice == "Cancel") then
+                  -- revert to the last used device in idle loop
+                  -- (otherwise, we would trigger a notifier feedback)
+                  self._requested_device = self._device_name
+                else
+                  self:set_device(self:_strip_postfixes(device_list[e]))
+                end
               else
                 self:set_device(self:_strip_postfixes(device_list[e]))
               end
-            else
-              self:set_device(self:_strip_postfixes(device_list[e]))
             end
           end
-        end
-      },
-      vb:button {
-        id = 'dpx_browser_device_settings',
-        tooltip = txt_settings,
-        text = "Settings",
-        width = 60,
-        notifier = function()
-          local process = self:_current_process()
-          if (process) then
-            --process.device:show_settings_dialog(process)
-            process:show_settings_dialog()
-            return
-          end
+        },
+        vb:button {
+          id = 'dpx_browser_device_settings',
+          tooltip = txt_settings,
+          text = "Settings",
+          width = 60,
+          notifier = function()
+            local process = self:_current_process()
+            if (process) then
+              process:show_settings_dialog()
+              return
+            end
 
-        end
+          end
+        },
       },
+      vb:row{
+        vb:button {
+          id = 'dpx_browser_device_resize',
+          tooltip = "Hide/show the virtual UI \n[Tab]",
+          text = "",
+          width = 20,
+          notifier = function()
+            self:toggle_browser_size()
+
+          end
+        },
+      },
+
     },
 
     -- configuration chooser
@@ -1351,731 +1463,4 @@ function Browser:_create_content_view()
   }
 end
 
-
---==============================================================================
-
--- BrowserProcess describes a processes that is launched by the browser - a 
--- device with one or more applications, set up by a device configuration
-
-class 'BrowserProcess'
-
---------------------------------------------------------------------------------
-
---- Initialize the BrowserProcess class
--- @param p_browser (Browser), instance of Browser class
-
-function BrowserProcess:__init(p_browser)
-  TRACE("BrowserProcess:__init")
-
-  -- the full configuration we got instantiated with (if any)
-  self.configuration = nil
-  -- shortcut for the configurations user settings
-  self.settings = nil
-  -- Device class instance
-  self.device = nil 
-
-  
-  -- Display class instance
-  self.display = nil 
-
-  -- MessageStream class instance
-  self._message_stream = nil
-
-  -- View that got build by the display for the device
-  self._control_surface_view = nil
-  self._control_surface_parent_view = nil
-
-  -- view for displaying/editing device settings
-  self._settings_dialog = nil
-  self._settings_view = nil
-
-  -- list of instantiated apps for the current configuration
-  self._applications = table.create() 
-
-
-  
-  -- true when this process was running at least once after instantiated
-  self._was_running = false
-
-  self._vb = renoise.ViewBuilder()
-
-  self.browser = p_browser
-
-end
-
-
---------------------------------------------------------------------------------
-
---- Check if this process matches the given device configurations
--- @param device_display_name (String)
--- @param config_name (String)
--- @return (Boolean) 
-
-function BrowserProcess:matches(device_display_name, config_name)
-
-  return (self.configuration ~= nil) and
-    (self.configuration.device.display_name == device_display_name) and  
-    (self.configuration.name == config_name)
-end
-
---------------------------------------------------------------------------------
-
---- Check if this process matches the given configuration
--- @param config (String)
--- @return (Boolean) 
-
-function BrowserProcess:matches_configuration(config)
-  return self:matches(config.device.display_name, config.name)
-end
-
-
---------------------------------------------------------------------------------
-
---- Decide whether the process instantiated correctly
--- @return (Boolean)
-
-function BrowserProcess:instantiated()
-  return (self.configuration ~= nil and self.device ~= nil)
-end
-
-
---------------------------------------------------------------------------------
-
---- Initialize a process from the passed configuration. this will only 
--- create the device, display and app, but not start it. to start a process,
--- "start" must be called. 
--- @param configuration (Table) the device configuration
--- @return (Boolean) true when instantiated
-
-function BrowserProcess:instantiate(configuration)
-  TRACE("BrowserProcess:instantiate:", 
-    configuration.device.display_name, configuration.name)
-
-  assert(not self:instantiated(), "Internal Error. Please report: " .. 
-    "browser process already instantiated")
-
-
-  ---- validate the configuration (help controller developers to spot bugs)
-  
-  -- device node specified?
-  if (not configuration.device) then
-    renoise.app():show_warning(
-      "Whoops! This configuration has no device definition")
-      
-    return false
-  end
-
-  -- control map specified?
-  if (not configuration.device.control_map) then
-    renoise.app():show_warning(
-      "Whoops! This configuration has no control-map")
-      
-    return false
-  end
-
-  -- device class specified?
-  local device_class_name = configuration.device.class_name
-
-  if (not device_class_name) then
-    local protocol = configuration.device.protocol
-    
-    -- use a generic class if the config does not specify one  
-    if (protocol == DEVICE_MIDI_PROTOCOL)then
-      device_class_name = "MidiDevice"
-    
-    elseif (protocol == DEVICE_OSC_PROTOCOL)then
-      device_class_name = "OscDevice"
-    
-    else
-      renoise.app():show_warning(
-        ("Whoops! This configuration uses an " .. 
-         "unexpected protocol (%s)"):format(protocol or "nil"))
-        
-      return false
-    end
-  end
-
-  -- device class valid?
-  if (not rawget(_G, device_class_name)) then
-    renoise.app():show_warning(
-      ("Whoops! Cannot instantiate device with " ..
-       "unknown class: '%s'"):format(device_class_name))
-
-    return false      
-  end
-
-  -- application class node specified?
-  if (configuration.applications == nil) then 
-    renoise.app():show_warning(("Whoops! Device configuration "..
-       "contains no applications"))
-
-    return false
-  end
-  
-  -- application classes valid?
-  for app_class_name in pairs(configuration.applications) do
-
-    if configuration.applications[app_class_name].application then
-      app_class_name = configuration.applications[app_class_name].application
-    end
-    if (not rawget(_G, app_class_name)) then
-      renoise.app():show_warning(
-        ("Whoops! Device configuration "..
-         "contains unknown application class: '%s'"):format(
-         app_class_name or "nil"))
-
-      return false
-    end
-  end
-  
-
-  ---- assign the config and settings
-
-  self.configuration = configuration
-  self.settings = configuration_settings(configuration)
-
-  ---- instantiate the device
-
-  self._message_stream = MessageStream(self)
-
-  if (configuration.device.protocol == DEVICE_MIDI_PROTOCOL) then
-
-    local device_port_in = (self.settings.device_port_in.value ~= "") and 
-      self.settings.device_port_in.value or configuration.device.device_port_in
-      
-    local device_port_out = (self.settings.device_port_out.value ~= "") and 
-      self.settings.device_port_out.value or configuration.device.device_port_out
-    
-    self.device = _G[device_class_name](
-      configuration.device.display_name, 
-      self._message_stream,
-      device_port_in,
-      device_port_out
-    )
-
-    -- MIDI port setup changed
-    renoise.Midi.devices_changed_observable():add_notifier(
-      BrowserProcess._available_device_ports_changed, self
-    )
-
-  
-  else  -- protocol == DEVICE_OSC_PROTOCOL
-
-    local prefix = (self.settings.device_prefix.value ~= "") and 
-      self.settings.device_prefix.value or configuration.device.device_prefix
-    
-    local address = (self.settings.device_address.value ~= "") and 
-      self.settings.device_address.value or configuration.device.device_address
-    
-    local port_in = (self.settings.device_port_in.value ~= "") and 
-      self.settings.device_port_in.value or configuration.device.device_port_in
-
-    local port_out = (self.settings.device_port_out.value ~= "") and 
-      self.settings.device_port_out.value or configuration.device.device_port_out
-
-    self.device = _G[device_class_name](
-      configuration.device.display_name,
-      self._message_stream,
-      prefix,
-      address,
-      tonumber(port_in),
-      tonumber(port_out)
-    )
-  end
-    
-  self.device:set_control_map(
-    configuration.device.control_map)
-
-  self.display = Display(self.device)
-  self.device.display = self.display
-
-
-  ---- instantiate all applications
-
-  local config_apps = configuration.applications
-
-  self._applications = table.create()
-
-  for app_class_name,_ in pairs(config_apps) do
-
-    local actual_cname = app_class_name
-    if config_apps[app_class_name].application then
-      actual_cname = config_apps[app_class_name].application
-    end
-
-    --local mappings = config_apps[app_class_name].mappings or {}
-    --local palette = config_apps[app_class_name].palette or {}
-    local hidden = config_apps[app_class_name].hidden_options or {}
-    local mappings = table.rcopy(_G[actual_cname]["available_mappings"]) or {}
-    local options = table.rcopy(_G[actual_cname]["default_options"]) or {}
-    local palette = table.rcopy(_G[actual_cname]["default_palette"]) or {}
-    local config_name = app_class_name
-
-    -- import user-specified options from the preferences
-    for k,v in pairs(options) do
-      local app_node = self.settings.applications:property(app_class_name)
-      if app_node then
-        if app_node.options and app_node.options:property(k) then
-          options[k].value = app_node.options:property(k).value
-          if table_find(hidden,k) then
-            options[k].hidden = true
-          end
-        end
-      end
-    end
-
-    -- import mappings from device-config
-    for k,v in pairs(mappings) do
-      local user_mappings = config_apps[app_class_name].mappings or {}
-      for k2,v2 in pairs(user_mappings) do
-        if (k == k2) then
-          for k3,v3 in pairs(v2) do
-            mappings[k][k3] = v3
-          end
-        end
-      end
-    end
-    
-    -- merge with palette from device-config
-    for k,v in pairs(palette) do
-      local user_palette = config_apps[app_class_name].palette or {}
-      for k2,v2 in pairs(user_palette) do
-        if (k == k2) then
-          for k3,v3 in pairs(v2) do
-            palette[k][k3] = v3
-          end
-        end
-      end
-    end
-
-    local app_instance = nil
-
-    app_instance = _G[actual_cname](
-        self, mappings, options, config_name, palette)
-    
-    self._applications:insert(app_instance)
-  end
-
-  self._was_running = false
-  
-  return true
-end
-
---------------------------------------------------------------------------------
-
---- Handle device hot-plugging (ports changing while Renoise is running)
-
-function BrowserProcess:_available_device_ports_changed()
-  TRACE("BrowserProcess:_available_device_ports_changed()")
-
-  -- close the device setting dialogs on MIDI port changes 
-  -- so we don't have to bother updating them
-  
-  if (self:settings_dialog_visible()) then
-      self:close_settings_dialog()
-  end
-end
-
---------------------------------------------------------------------------------
-
---- Decide whether the device settings dialog is visible 
--- @return (Boolean) 
-
-function BrowserProcess:settings_dialog_visible()
-  TRACE("BrowserProcess:settings_dialog_visible()")
-
-  return (self._settings_dialog and self._settings_dialog.visible)
-end
-
---------------------------------------------------------------------------------
-
---- Deinitialize a process actively. can always be called, even when 
--- initialization never happened
-
-function BrowserProcess:invalidate()
-  TRACE("BrowserProcess:invalidate")
-
-  while (not self._applications:is_empty()) do
-    local last_app = self._applications[#self._applications]
-    if (last_app.running) then 
-      last_app:stop_app() 
-    end
-    last_app:destroy_app()
-    
-    self._applications:remove(#self._applications)
-  end
-  
-  self._was_running = false
-  
-  self._message_stream = nil
-  self.display = nil
-
-  if (self.device) then
-    if (self:settings_dialog_visible()) then
-      self:close_settings_dialog()
-    end
-    
-    if (self:control_surface_visible()) then
-      self:hide_control_surface()
-    end
-    
-    self.device:release()
-    self.device = nil
-  end
-  
-  self.configuration = nil
-end
-
-
---------------------------------------------------------------------------------
-
---- Decide if process is running (its apps are running)
--- @return Boolean
-
-function BrowserProcess:running()
-
-  if (#self._applications == 0) then
-    return false -- can't run without apps
-  end
-  
-  for _,app in pairs(self._applications) do
-    if (not app.active) then
-      return false
-    end
-  end
-    
-  return true
-end
-
-
---------------------------------------------------------------------------------
-
---- Start running a fully configured process. returns true when successfully 
--- started, else false (may happen if one of the apps failed to start)
-
-function BrowserProcess:start(start_running)
-  TRACE("BrowserProcess:start",start_running)
-
-  assert(self:instantiated(), "Internal Error. Please report: " .. 
-    "trying to start a process which was not instantiated")
-
-  assert(not self:running(), "Internal Error. Please report: " ..
-    "trying to start a browser process which is already running")
-  
-  local succeeded = true
-  
-  -- start every single app we have
-  for _,app in pairs(self._applications) do
-    if (app:start_app(start_running) == false) then
-      succeeded = false
-      break
-    end
-  end
-  
-  -- stop already started apps on failures
-  if (not succeeded) then
-    for _,app in pairs(self._applications) do
-      if (app.running) then
-        app:stop_app()
-      end
-    end
-  end
-  
-  -- refresh the display when reactivating an old process
-  if (succeeded and self._was_running) then
-    self.display:clear()
-  end
-
-  self._was_running = succeeded
-    
-  return succeeded
-end
-
-
---------------------------------------------------------------------------------
-
---- Stop a running process. will not invalidate it, just stop all apps
-
-function BrowserProcess:stop()
-  TRACE("BrowserProcess:stop")
-
-  assert(self:instantiated(), "Internal Error. Please report: " ..
-    "trying to stop a process which was not instantiated")
-
-  assert(self:running(), "Internal Error. Please report: " ..
-    "trying to stop a browser process which is not running")
-  
-  for _,app in pairs(self._applications) do
-    app:stop_app()
-  end
-end
-
-
---------------------------------------------------------------------------------
-
---- Returns true when the processes control surface is currently visible
--- (this is also an indication of whether this is the selected device)
-
-function BrowserProcess:control_surface_visible()
-  return (self._control_surface_view ~= nil)
-end
-
-
---------------------------------------------------------------------------------
-
---- Show a device control surfaces in the browser gui
--- @param parent_view (ViewBuilder) the browser GUI
-
-function BrowserProcess:show_control_surface(parent_view)
-  TRACE("BrowserProcess:show_control_surface")
-
-  assert(self:instantiated(), "Internal Error. Please report: " ..
-    "trying to show a control map GUI which was not instantiated")
-  
-  assert(not self:control_surface_visible(), 
-    "Internal Error. Please report: " ..
-    "trying to show a control map GUI which is already shown")
-    
-  -- add the device GUI to the browser GUI
-  self._control_surface_parent_view = parent_view
-
-  self._control_surface_view = 
-    self.display:build_control_surface()
-
-  parent_view:add_child(self._control_surface_view)
-
-  -- refresh the display when reactivating an old process
-  if (self:running()) then
-    self.display:clear()
-  end
-end
-
-
---------------------------------------------------------------------------------
-
---- Display, or bring the browser dialog to front
-
-function BrowserProcess:show_settings_dialog()
-
-  -- already visible? bring to front...
-  if (self._settings_dialog and self._settings_dialog.visible) then
-    self._settings_dialog:show()
-    return    
-  end
-
-  local vb = self._vb
-
-  local val_unhandled = self.settings.pass_unhandled.value
-  local txt_unhandled = "When enabled, messages that are not handled by an "
-                      .."\napplication are forwarded to Renoise (this also "
-                      .."\napplies when the whole configuration is stopped). "
-                      .."\nAllows you to use Renoise MIDI mapping-features in "
-                      .."\ncombination with Duplex"
-
-  -- define the basic settings view
-  if not self._settings_view then
-    self._settings_view = vb:column{
-      spacing = DEFAULT_SPACING,
-      margin = renoise.ViewBuilder.DEFAULT_DIALOG_MARGIN,
-      vb:row{
-        id="dpx_device_settings_root",
-      },
-      vb:column{
-        id="dpx_unhandled_root",
-        vb:row{
-          vb:checkbox{
-            value = val_unhandled,
-            notifier = function(v)
-              self.settings.pass_unhandled.value = v
-            end,
-          },
-          vb:text {
-            text = "Pass unhandled MIDI messages to Renoise",
-            tooltip = txt_unhandled,
-          }
-        },
-      },
-      vb:space{
-        height = 4,
-      },
-      vb:row{
-        id="dpx_app_settings_root",
-        spacing = DEFAULT_SPACING,
-        vb:column{id="dpx_app_settings_col1",spacing = DEFAULT_SPACING},
-        vb:column{id="dpx_app_settings_col2",spacing = DEFAULT_SPACING},
-        vb:column{id="dpx_app_settings_col3",spacing = DEFAULT_SPACING},
-        vb:column{id="dpx_app_settings_col4",spacing = DEFAULT_SPACING},
-        vb:column{id="dpx_app_settings_col5",spacing = DEFAULT_SPACING},
-        vb:column{id="dpx_app_settings_col6",spacing = DEFAULT_SPACING},
-      }
-    }
-
-    -- attach the device settings
-    self.device:show_settings_dialog(self)
-    vb.views.dpx_device_settings_root:add_child(self.device._settings_view)
-
-    -- sort alphabetically
-    table.sort(self._applications,function(a,b)
-      return (a._app_name < b._app_name)
-    end)
-
-    -- create & attach the various application settings
-    local app_count = 0
-    local apps_per_col = 16
-    for _,app in pairs(self._applications) do
-      app:_build_options(self)
-      local col_idx = math.floor(app_count/apps_per_col)+1
-      local col_id = ("dpx_app_settings_col%d"):format(col_idx)
-      if not vb.views[col_id] then
-        local msg = "The device configuration contains too many applications,"
-                  .."\nsome options will not be available"
-        renoise.app():show_warning(msg)
-        break
-      else
-        vb.views[col_id]:add_child(app._settings_view)
-        app_count = app_count + 1 
-      end
-    end
-
-    -- show/hide the "unhandled message" part
-    local elm = vb.views.dpx_unhandled_root
-    local show_unhandled = (self.device.protocol == DEVICE_MIDI_PROTOCOL)
-    vb.views.dpx_unhandled_root.visible = show_unhandled
-
-  end
-
-  self._settings_dialog = renoise.app():show_custom_dialog(
-    "Duplex: Device Settings", self._settings_view)
-
-
-end
-
---------------------------------------------------------------------------------
-
---- Close the device settings, when open
-
-function BrowserProcess:close_settings_dialog()
-  TRACE("BrowserProcess:close_settings_dialog()")
-
-  if (self._settings_dialog and self._settings_dialog.visible) then
-    self._settings_dialog:close()
-  end
-
-  self._settings_dialog = nil
-end
-  
-
---------------------------------------------------------------------------------
-
---- Hide the device control surfaces, when showing it...
-
-function BrowserProcess:hide_control_surface()
-  TRACE("BrowserProcess:hide_control_surface")
-
-  assert(self:instantiated() and self:control_surface_visible(), 
-    "Internal Error. Please report: " .. 
-    "trying to hide a control map GUI which was not shown")
-    
-  -- remove the device GUI from the browser GUI
-  self._control_surface_parent_view:remove_child(
-    self._control_surface_view)
-
-  self._control_surface_view = nil
-  self._control_surface_parent_view = nil
-end
-
-
---------------------------------------------------------------------------------
-
---- Clears/repaints the display, device, virtual UI
-
-function BrowserProcess:clear_display()
-  TRACE("BrowserProcess:clear_display")
-  
-  assert(self:instantiated(), "Internal Error. Please report: " ..
-    "trying to clear a control map GUI which was not instantiated")
-  
-  if (self:running()) then
-    self.display:clear() 
-  end
-end
-
-
---------------------------------------------------------------------------------
-
---- Start/stop device midi dump
--- @param dump (Boolean), true to start dumping MIDI
-
-function BrowserProcess:set_dump_midi(dump)
-  TRACE("BrowserProcess:set_dump_midi", dump)
-
-  if (self:instantiated()) then
-    if (self.device.protocol == DEVICE_MIDI_PROTOCOL) then
-      self.device.dump_midi = dump
-    end
-  end
-end
-
-
---------------------------------------------------------------------------------
-
---- Provide idle support for all active apps
-
-function BrowserProcess:on_idle()
-  -- TRACE("BrowserProcess:idle")
-  
-  if (self:instantiated()) then
-    
-    -- idle process for stream
-    self._message_stream:on_idle()
-    
-    -- modify ui components
-    self.display:update()
-  
-    -- then refresh the display 
-    for _,app in pairs(self._applications) do
-      app:on_idle()
-    end
-  end
-end
-
-
---------------------------------------------------------------------------------
-
---- Provide document released notification for all active apps
-
-function BrowserProcess:on_release_document()
-  TRACE("BrowserProcess:on_release_document")
-
-  if (self:instantiated()) then
-    for _,app in pairs(self._applications) do
-      app:on_release_document()
-    end
-  end
-end
-
-
---------------------------------------------------------------------------------
-
---- Provide new document notification for all active apps
-
-function BrowserProcess:on_new_document()
-  TRACE("BrowserProcess:on_new_document")
-
-  if (self:instantiated()) then
-    for _,app in pairs(self._applications) do
-      app:on_new_document()
-    end
-  end
-end
-
-
---------------------------------------------------------------------------------
-
---- Comparison operator (check configs only)
--- @param other (BrowserProcess) the process to compare against
-
-function BrowserProcess:__eq(other)
-  return self:matches_configuration(other.configuration)
-end
 

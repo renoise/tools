@@ -1,18 +1,16 @@
---[[----------------------------------------------------------------------------
+--[[============================================================================
 -- Duplex.Hydra
 -- Inheritance: Application > RoamingDSP > Hydra
-----------------------------------------------------------------------------]]--
+============================================================================]]--
 
---[[
+--[[--
+Control any Hydra device in the current song
 
-  This is our sample Hydra application 
+Assign it to a slider and you gain the features from the RoamingDSP class
+as well: device locking, navigation and automation recording
 
-  It demonstrates the following things:
+Also comes with a label for displaying the current value
 
-  1. Extending a class (RoamingDSP)
-  2. Creating options and mappings for our application
-  3. Scaling values between a controller and a device parameter
-  4. Time-based interpolation of 
 
 --]]
 
@@ -53,18 +51,20 @@ end
 --------------------------------------------------------------------------------
 
 --- Constructor method
--- @param (VarArg), see Application to learn more
+-- @param (VarArg)
+-- @see Duplex.Application
+
 
 function Hydra:__init(...)
 
-  -- the name of the device we are controlling
+  --- the name of the device we are controlling
   -- (the exact name of the device, as it appears in the DSP chain)
   self._instance_name = "*Hydra"
 
-  -- boolean, set to temporarily skip value notifier
+  --- (bool) set to temporarily skip value notifier
   self.suppress_value_observable = false
 
-  -- the various UIComponents
+  --- the various UIComponents
   self._input_slider = nil
   self._value_display = nil
 
@@ -76,7 +76,7 @@ end
 
 --------------------------------------------------------------------------------
 
--- attach notifier to the device 
+--- attach notifier to the device 
 -- called when we use previous/next device, set the initial device,
 -- are freely roaming the tracks or inserting a new device
 
@@ -103,7 +103,9 @@ end
 
 --------------------------------------------------------------------------------
 
--- construct the user interface
+--- inherited from Application
+-- @see Duplex.Application._build_app
+-- @return bool
 
 function Hydra:_build_app()
   
@@ -166,7 +168,7 @@ end
 
 --------------------------------------------------------------------------------
 
--- This method is called when the controller is changed
+--- This method is called when the controller is changed
 
 function Hydra:update_device()
   TRACE("Hydra:update_device()")
@@ -200,7 +202,7 @@ end
 
 --------------------------------------------------------------------------------
 
--- This method is called when the device is changed from Renoise
+--- This method is called when the device is changed from Renoise
 
 function Hydra:update_controller()
 

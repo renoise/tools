@@ -2,8 +2,6 @@
 -- Duplex.Launchpad 
 ----------------------------------------------------------------------------]]--
 
--- setup Daxton's Step Sequencer for the Launchpad
-
 duplex_configurations:insert {
 
   -- configuration properties
@@ -18,7 +16,7 @@ duplex_configurations:insert {
     device_port_out = "Launchpad",
     control_map = "Controllers/Launchpad/Controlmaps/Launchpad_Keyboard.xml",
     thumbnail = "Controllers/Launchpad/Launchpad.bmp",
-    protocol = DEVICE_MIDI_PROTOCOL,
+    protocol = DEVICE_PROTOCOL.MIDI,
   },
 
   applications = {
@@ -83,7 +81,7 @@ duplex_configurations:insert {
       mappings = {
         key_grid = {
           group_name = "LargeGrid",
-          orientation = HORIZONTAL,
+          orientation = ORIENTATION.HORIZONTAL,
         },
         octave_down = {
           group_name = "Controls",
@@ -95,7 +93,7 @@ duplex_configurations:insert {
         },
         volume = {
           group_name = "Triggers",
-          orientation = VERTICAL,
+          orientation = ORIENTATION.VERTICAL,
           index = 1
         }
       },

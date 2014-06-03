@@ -2,8 +2,6 @@
 -- Duplex.Monome 
 ----------------------------------------------------------------------------]]--
 
--- setup "Matrix" for this configuration
-
 duplex_configurations:insert {
 
   -- configuration properties
@@ -20,7 +18,7 @@ duplex_configurations:insert {
     device_port_out = "8082",
     control_map = "Controllers/Monome/Controlmaps/Monome64_Matrix.xml",
     thumbnail = "Controllers/Monome/Monome.bmp",
-    protocol = DEVICE_OSC_PROTOCOL,
+    protocol = DEVICE_PROTOCOL.OSC,
 
   },
   applications = {
@@ -32,10 +30,6 @@ duplex_configurations:insert {
         triggers = {
           group_name = "TrigControls",
         },
-        --sequence = {
-        --  group_name = "Controls",
-        --  index = 1,
-        --},
         prev_seq_page = {
           group_name = "Controls",
           index = 1,

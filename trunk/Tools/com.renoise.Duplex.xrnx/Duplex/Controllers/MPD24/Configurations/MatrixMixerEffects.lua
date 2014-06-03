@@ -2,8 +2,6 @@
 -- Duplex.MPD24
 ----------------------------------------------------------------------------]]--
 
--- setup a Mixer, Matrix and Effect application
-
 duplex_configurations:insert {
 
   -- configuration properties
@@ -18,7 +16,7 @@ duplex_configurations:insert {
     device_port_out = "Akai MPD24 (Port 1)",
     control_map = "Controllers/MPD24/Controlmaps/MPD24.xml",
     thumbnail = "Controllers/MPD24/MPD24.bmp",
-    protocol = DEVICE_MIDI_PROTOCOL
+    protocol = DEVICE_PROTOCOL.MIDI
   },
   
   applications = {

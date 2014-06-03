@@ -2,8 +2,6 @@
 -- Duplex.Ohm64 
 ----------------------------------------------------------------------------]]--
 
--- setup Mixer + Step sequencer + Navigator + Effects
-
 duplex_configurations:insert {
 
   -- configuration properties
@@ -18,7 +16,7 @@ duplex_configurations:insert {
     device_port_out = "Ohm64 MIDI 1",
     control_map = "Controllers/Ohm64/Controlmaps/Ohm64.xml",
     thumbnail = "Controllers/Ohm64/Ohm64.bmp",
-    protocol = DEVICE_MIDI_PROTOCOL
+    protocol = DEVICE_PROTOCOL.MIDI
   },
   
   applications = {
@@ -37,13 +35,10 @@ duplex_configurations:insert {
 --        },
       },
       options = {
---        invert_mute = 1,
         follow_track = 1,
         page_size = 5,
       }
     },
-    --[[
-     ]]
     StepSequencer = {
       mappings = {
         grid = {
@@ -51,17 +46,21 @@ duplex_configurations:insert {
         },
         level = {
           group_name = "Buttons_2",
-          orientation = HORIZONTAL,
+          orientation = ORIENTATION.HORIZONTAL,
           index = 1
         },
-        line = {
+        prev_line = {
           group_name = "ControlsRight",
-          orientation = VERTICAL,
           index = 1
         },
+        next_line = {
+          group_name = "ControlsRight",
+          index = 4
+        },
+
         track = {
           group_name = "ControlsRight",
-          orientation = HORIZONTAL,
+          orientation = ORIENTATION.HORIZONTAL,
           index = 2
         },
         transpose = {
@@ -87,10 +86,6 @@ duplex_configurations:insert {
         parameters = {
           group_name= "EncodersEffect",
         },
-        --page = {
-        --  group_name = "ControlsRight",
-        --  index = 5,
-        --}
         param_prev = {
           group_name = "ControlsRight",
           index = 5,

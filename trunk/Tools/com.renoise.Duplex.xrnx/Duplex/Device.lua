@@ -1,19 +1,12 @@
---[[----------------------------------------------------------------------------
+--[[============================================================================
 -- Duplex.Device
-----------------------------------------------------------------------------]]--
+============================================================================]]--
 
---[[
-Requires: ControlMap
+--[[--
 
-About
-
-The Device class is the base class for any device. Both the MIDIDevice and 
-OSCDevice extend this class.
-
-The Device class also contains methods for managing basic device settings
+The Device class is the base class for any OSC or MIDI device. It also contains methods for managing basic device settings
 
 --]]
-
 
 --==============================================================================
 
@@ -23,8 +16,8 @@ class 'Device'
 
 --- Initialize the Device class
 -- @param name (String) the 'friendly name' of the device
--- @param message_stream (MessageStream) 
--- @param protocol (Enum), the protocol, e.g. DEVICE_MIDI_PROTOCOL
+-- @param message_stream (@{Duplex.MessageStream}) 
+-- @param protocol (@{Duplex.Globals.DEVICE_PROTOCOL})
 
 function Device:__init(name, message_stream, protocol)
   TRACE('Device:__init()',name, message_stream, protocol)
@@ -84,7 +77,7 @@ end
 --------------------------------------------------------------------------------
 
 --- Retrieve the protocol of this device
--- @return (Enum) communication protocol, e.g. DEVICE_MIDI_PROTOCOL
+-- @return @{Duplex.Globals.DEVICE_PROTOCOL}
 
 function Device:get_protocol()
   TRACE("Device:get_protocol()")
@@ -119,9 +112,9 @@ end
 --------------------------------------------------------------------------------
 
 --- Function for quantizing RGB color values to a device color-space
--- @param color (Number), table containing RGB colors
--- @param colorspace (Number), table containing colorspace
--- @return (Table), the quantized color
+-- @param color (table), RGB colors
+-- @param colorspace (table), colorspace
+-- @return (table), the quantized color
 
 function Device:quantize_color(color,colorspace)
   --TRACE("Device:quantize_color()",color,colorspace)
@@ -164,7 +157,7 @@ end
 --------------------------------------------------------------------------------
 
 --- Open the device settings dialog
--- @param process (BrowserProcess) 
+-- @param process (@{Duplex.BrowserProcess}) 
 
 function Device:show_settings_dialog(process)
   TRACE("Device:show_settings_dialog()",process)
@@ -188,7 +181,7 @@ function Device:show_settings_dialog(process)
     end
 
 
-    if (self.protocol == DEVICE_MIDI_PROTOCOL) then
+    if (self.protocol == DEVICE_PROTOCOL.MIDI) then
       
       -- collect MIDI ports
       
@@ -224,9 +217,9 @@ function Device:show_settings_dialog(process)
     -- update "device type" text
     
     if (self._vb.views.dpx_device_protocol) then
-      if (self.protocol == DEVICE_MIDI_PROTOCOL) then
+      if (self.protocol == DEVICE_PROTOCOL.MIDI) then
         self._vb.views.dpx_device_protocol.text = "Type: MIDI Device"
-      elseif (self.protocol == DEVICE_OSC_PROTOCOL) then
+      elseif (self.protocol == DEVICE_PROTOCOL.OSC) then
         self._vb.views.dpx_device_protocol.text = "Type: OSC Device"
       end
     end
@@ -263,7 +256,7 @@ function Device:show_settings_dialog(process)
     )
 
 
-    if (self.protocol == DEVICE_MIDI_PROTOCOL) then
+    if (self.protocol == DEVICE_PROTOCOL.MIDI) then
 
       -- match input port
 
@@ -346,7 +339,7 @@ function Device:show_settings_dialog(process)
         self._vb.views.dpx_device_port_out_root:add_child(view)
       end
 
-    elseif (self.protocol == DEVICE_OSC_PROTOCOL) then
+    elseif (self.protocol == DEVICE_PROTOCOL.OSC) then
 
       -- input port + address
 
@@ -450,7 +443,7 @@ end
 --------------------------------------------------------------------------------
 
 --- Construct the device settings view (for both MIDI and OSC devices)
--- @return ViewBuilder
+-- @return renoise.ViewBuilder.view
 
 function Device:_build_settings()
   TRACE("Device:_build_settings()")
@@ -519,8 +512,8 @@ end
 --------------------------------------------------------------------------------
 
 --- Construct & send internal messages (for both MIDI and OSC devices)
--- @param message (Message) the message to send
--- @param xarg (Table) parameter attributes
+-- @param message (@{Duplex.Message}) the message to send
+-- @param xarg (table) parameter attributes
 
 function Device:_send_message(message,xarg)
   TRACE("Device:_send_message()",message,xarg)
@@ -529,17 +522,17 @@ function Device:_send_message(message,xarg)
 
   -- determine input method
   if (xarg.type == "button") then
-    message.input_method = CONTROLLER_BUTTON
+    message.input_method = INPUT_TYPE.BUTTON
   elseif (xarg.type == "togglebutton") then
-    message.input_method = CONTROLLER_TOGGLEBUTTON
+    message.input_method = INPUT_TYPE.TOGGLEBUTTON
   elseif (xarg.type == "pushbutton") then
-    message.input_method = CONTROLLER_PUSHBUTTON
+    message.input_method = INPUT_TYPE.PUSHBUTTON
   elseif (xarg.type == "fader") then
-    message.input_method = CONTROLLER_FADER
+    message.input_method = INPUT_TYPE.FADER
   elseif (xarg.type == "dial") then
-    message.input_method = CONTROLLER_DIAL
+    message.input_method = INPUT_TYPE.DIAL
   elseif (xarg.type == "xypad") then
-    message.input_method = CONTROLLER_XYPAD
+    message.input_method = INPUT_TYPE.XYPAD
     if (xarg.invert_x) then
       message.value[1] = (xarg.maximum-message.value[1])+xarg.minimum
     end
@@ -550,21 +543,21 @@ function Device:_send_message(message,xarg)
       message.value[1],message.value[2] = message.value[2],message.value[1]
     end
   elseif (xarg.type == "key") then
-    message.input_method = CONTROLLER_KEYBOARD
-    message.context = MIDI_NOTE_MESSAGE
+    message.input_method = INPUT_TYPE.KEYBOARD
+    message.context = DEVICE_MESSAGE.MIDI_NOTE
     message.value = {xarg.index,message.value}
     message.velocity_enabled = xarg.velocity_enabled
-    --print("*** Device:message.input_method = MIDI_NOTE_MESSAGE")
+    --print("*** Device:message.input_method = DEVICE_MESSAGE.MIDI_NOTE")
   elseif (xarg.type == "keyboard") then
-    message.input_method = CONTROLLER_KEYBOARD
+    message.input_method = INPUT_TYPE.KEYBOARD
     -- split message into {pitch,velocity}
-    if (message.context == OSC_MESSAGE) then
-      -- disguise as MIDI_NOTE_MESSAGE
+    if (message.context == DEVICE_MESSAGE.OSC) then
+      -- disguise as DEVICE_MESSAGE.MIDI_NOTE
       message.value = {xarg.index,message.value}
-      message.context = MIDI_NOTE_MESSAGE
+      message.context = DEVICE_MESSAGE.MIDI_NOTE
       message.is_osc_msg = true
-    elseif (message.context == MIDI_NOTE_MESSAGE) then
-      --print("*** Device:message.input_method = CONTROLLER_KEYBOARD + MIDI_NOTE_MESSAGE")
+    elseif (message.context == DEVICE_MESSAGE.MIDI_NOTE) then
+      --print("*** Device:message.input_method = INPUT_TYPE.KEYBOARD + DEVICE_MESSAGE.MIDI_NOTE")
       local note_val = value_to_midi_pitch(xarg.value)
       message.value = {note_val,message.value}
       message.velocity_enabled = xarg.velocity_enabled
@@ -576,6 +569,7 @@ function Device:_send_message(message,xarg)
   end
 
   -- include meta-properties
+  -- TODO remove xarg stuff, leave in "param"
   message.param = xarg
   message.name = xarg.name
   message.group_name = xarg.group_name

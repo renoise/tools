@@ -1,11 +1,10 @@
---[[----------------------------------------------------------------------------
+--[[============================================================================
 -- Duplex.Repeater
 -- Inheritance: Application > RoamingDSP > Repeater
-----------------------------------------------------------------------------]]--
+============================================================================]]--
 
---[[
-
-  This is our sample Repeater application 
+--[[--
+This is our sample Repeater application 
 
 --]]
 
@@ -103,6 +102,15 @@ Repeater.default_options = {
   },
 }
 
+--- available_mappings
+-- @field grid
+-- @field divisor_slider
+-- @field mode_slider
+-- @field mode_even
+-- @field mode_triplet
+-- @field mode_dotted
+-- @field mode_free
+-- @table available_mappings
 Repeater.available_mappings = {
   grid = {
     description = "Repeater: button grid"
@@ -158,21 +166,22 @@ end
 --------------------------------------------------------------------------------
 
 --- Constructor method
--- @param (VarArg), see Application to learn more
+-- @param (VarArg)
+-- @see Duplex.Application
 
 function Repeater:__init(...)
   TRACE("Repeater:__init()")
 
-  -- the name of the device we are controlling
+  --- the name of the device we are controlling
   self._instance_name = "Repeater"
 
-  -- update display
+  --- update display
   self.update_requested = true
 
-  -- boolean, set to temporarily skip value notifier
+  --- boolean, set to temporarily skip value notifier
   self.suppress_value_observable = false
 
-  -- the various UIComponents
+  --- the various UIComponents
   self._grid = nil          -- UIButtons...
   self._mode_slider = nil   -- UISlider
   self._mode_even = nil     -- UIButton
@@ -181,21 +190,22 @@ function Repeater:__init(...)
   self._mode_free = nil     -- UIButton
   self._divisor_slider = nil -- UISlider
 
-  -- number, grid size in units
+  --- (int), grid size in units
   self._grid_width = nil
   self._grid_height = nil
 
-  -- table, organized by [x][y], each containing the following
-  -- .divisor (number), the divisor value
-  -- .mode (number), the mode value (0-4)
-  -- .tooltip (string)
+  --- table, organized by [x][y], each containing the following
+  --    divisor (number), the divisor value
+  --    mode (int), the mode value (0-4)
+  --    tooltip (string)
   self._grid_map = table.create()
 
-  -- (table or nil) in grid mode, current coordinate 
-  -- e.g. {x=number,y=number} 
+  --- (table or nil) in grid mode, current coordinate 
+  --    x=number
+  --    y=number
   self._grid_coords = nil
 
-  -- (enum) default automation mode is points (recommended)
+  --- (enum) default automation mode is points (recommended)
   self.playmode = renoise.PatternTrackAutomation.PLAYMODE_POINTS
 
   RoamingDSP.__init(self,...)
@@ -312,7 +322,7 @@ end
 --------------------------------------------------------------------------------
 
 -- switch the mode (update device, mode buttons/slider)
--- @param enum_mode (number) one of the MODE_xx constants
+-- @param enum_mode (int) one of the MODE_xx constants
 -- @param toggle (boolean) when mode-select button is pushed
 
 function Repeater:set_mode(enum_mode,toggle)
@@ -587,7 +597,9 @@ end
 
 --------------------------------------------------------------------------------
 
--- construct the user interface
+--- inherited from Application
+-- @see Duplex.Application._build_app
+-- @return bool
 
 function Repeater:_build_app()
   TRACE("Repeater:_build_app()")

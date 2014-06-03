@@ -17,7 +17,7 @@ duplex_configurations:insert {
     device_port_in = "",
     device_port_out = "",
     control_map = "Controllers/Custombuilt/Controlmaps/MidiActions.xml",
-    protocol = DEVICE_MIDI_PROTOCOL
+    protocol = DEVICE_PROTOCOL.MIDI
   },
   
   applications = {
@@ -160,23 +160,25 @@ duplex_configurations:insert {
     UpperTabsBrowser = {
       application = "MidiActions",
       mappings = {control = {group_name = "UpperTabs",index = 1}},
-      options = {action = "GUI:Upper Frame:Show Disk Browser [Trigger]"},
+      options = {action = "GUI:Show Disk Browser [Trigger]"},
     },
     UpperTabsScopes = {
       application = "MidiActions",
       mappings = {control = {group_name = "UpperTabs",index = 2}},
       options = {action = "GUI:Upper Frame:Show Track Scopes [Trigger]"},
     },
-    UpperTabsMstScopes = {
-      application = "MidiActions",
-      mappings = {control = {group_name = "UpperTabs",index = 3}},
-      options = {action = "GUI:Upper Frame:Show Master Scopes [Trigger]"},
-    },
     UpperTabsSpectrum = {
       application = "MidiActions",
-      mappings = {control = {group_name = "UpperTabs",index = 4}},
+      mappings = {control = {group_name = "UpperTabs",index = 3}},
       options = {action = "GUI:Upper Frame:Show Master Spectrum [Trigger]"},
     },
+    --[[
+    UpperTabsMstScopes = {
+      application = "MidiActions",
+      mappings = {control = {group_name = "UpperTabs",index = 2}},
+      options = {action = "GUI:Upper Frame:Show Master Scopes [Trigger]"},
+    },
+    ]]
 
     -- track mute --
 

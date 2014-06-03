@@ -1,0 +1,192 @@
+<Device>
+  <Name>Behringer BCD 3000</Name>
+  <Author>E-Fir</Author>
+  <Description>Controlmap for Behringer BCD 3000</Description>
+  <Parameters>
+    <Page>
+      <Column>
+        <Row>
+          <Column>
+            <Row>
+              <Group name="non midi">
+                <Param value="CC#255" type="dial" name="Non-MIDI rotary" maximum="127" minimum="0" />
+                <Param value="CC#255" type="dial" name="Non-MIDI rotary" maximum="127" minimum="0" />
+              </Group>
+            </Row>
+            <Row>
+              <Group name="non midi">
+                <Param value="CC#255" type="dial" name="Non-MIDI rotary" maximum="127" minimum="0"/>
+              </Group>
+              <Column>
+                <Group name="ext in" orientation="vertical">
+                  <Param value="F-1" value_back="CC#8" filter_input_note_off="true" type="togglebutton" name="ext in a" aspect="0.5" maximum="127" minimum="0" />
+                  <Param value="F#1" value_back="CC#7" filter_input_note_off="true" type="togglebutton" name="ext in b" aspect="0.5" maximum="127" minimum="0" />
+                </Group>
+              </Column>
+            </Row>
+          </Column>
+          <Column>
+            <Row>
+              <Group name="fx control dials" orientation="horizontal">
+                <Param value="CC#13" type="dial" loopback="false" name="Dial 1" maximum="127" minimum="0"/>
+                <Param value="CC#14" type="dial" loopback="false" name="Dial 2" maximum="127" minimum="0"/>
+                <Param value="CC#15" type="dial" loopback="false" name="Dial 3" maximum="127" minimum="0"/>
+                <Param value="CC#16" type="dial" loopback="false" name="Dial 4" maximum="127" minimum="0"/>
+              </Group>
+            </Row>
+            <Row>
+              <Group name="fx control buttons" orientation="horizontal">
+                <Param value="G-1" value_back="CC#6" filter_input_note_off="true" type="togglebutton" name="on" aspect="0.5" maximum="127" minimum="0" />
+                <Param value="G#1" value_back="CC#5" filter_input_note_off="true" type="togglebutton" name="fx v" aspect="0.5" maximum="127" minimum="0" />
+                <Param value="A-1" value_back="CC#4" filter_input_note_off="true" type="togglebutton" name="fx ^" aspect="0.5" maximum="127" minimum="0" />
+                <Param value="A#1" value_back="CC#3" filter_input_note_off="true" type="togglebutton" name="action" aspect="0.5" maximum="127" minimum="0" />
+              </Group>
+            </Row>
+            <Row>
+              <Group name="cue select" orientation="horizontal">
+                <Param value="B-1" value_back="CC#2" filter_input_note_off="true" type="togglebutton" name="cue a" aspect="0.5" maximum="127" minimum="0" />
+                <Param value="C-2" value_back="CC#1" filter_input_note_off="true" type="togglebutton" name="cue b" aspect="0.5" maximum="127" minimum="0" />
+              </Group>
+            </Row>
+          </Column>
+          <Column>
+            <Row>
+              <Column>
+                <Group name="key deck">
+                  <Param value="E-1" value_back="CC#25" filter_input_note_off="true" type="togglebutton" name="key deck a+b" aspect="0.5" maximum="127" minimum="0" />
+                </Group>
+              </Column>
+              <Group name="non midi">
+                <Param value="CC#255" type="dial" name="Non-MIDI rotary" maximum="127" minimum="0"/>
+              </Group>
+            </Row>
+            <Row>
+              <Group name="non midi">
+                <Param value="CC#255" type="dial" name="Non-MIDI rotary" maximum="127" minimum="0" />
+                <Param value="CC#255" type="dial" name="Non-MIDI rotary" maximum="127" minimum="0" />
+              </Group>
+            </Row>
+          </Column>
+        </Row>
+        <Row>
+          <Column>
+            <Group name="deck a search" orientation="vertical">
+              <Param value="C--1" filter_input_note_off="true" type="button" name="deck a search back" aspect="0.5" maximum="127" minimum="0" />
+              <Param value="C#-1" filter_input_note_off="true" type="button" name="deck a search forward" aspect="0.5" maximum="127" minimum="0" />
+            </Group>
+            <Group name="deck a pitch">
+              <Param value="CC#11" type="fader" loopback="false" name="deck a pitch" orientation="vertical" size="3" maximum="127" minimum="0"/>
+            </Group>
+          </Column>
+          <Column>
+            <Row>
+              <Group name="deck a eq dials" orientation="horizontal">
+                <Param value="CC#3" type="dial" loopback="false" name="low" maximum="127" minimum="0"/>
+                <Param value="CC#4" type="dial" loopback="false" name="mid" maximum="127" minimum="0"/>
+                <Param value="CC#5" type="dial" loopback="false" name="high" maximum="127" minimum="0"/>
+              </Group>
+            </Row>
+            <Row>
+              <Group name="deck a eq buttons" orientation="horizontal">
+                <Param value="C-0" value_back="CC#24" filter_input_note_off="true" type="togglebutton" name="low" aspect="0.5" maximum="127" minimum="0" />
+                <Param value="C#0" value_back="CC#23" filter_input_note_off="true" type="togglebutton" name="mid" aspect="0.5" maximum="127" minimum="0" />
+                <Param value="D-0" value_back="CC#22" filter_input_note_off="true" type="togglebutton" name="high" aspect="0.5" maximum="127" minimum="0" />
+              </Group>
+            </Row>
+            <Row>
+              <Group name="deck a wheel">
+                <Param value="CC#19" type="dial" loopback="false" name="deck a wheel" size="2" maximum="127" minimum="0"/>
+              </Group>
+              <Group name="deck a volume">
+                <Param value="CC#0" type="fader" loopback="false" name="deck a volume" orientation="vertical" size="3" maximum="127" minimum="0"/>
+              </Group>
+            </Row>
+          </Column>
+          <Column>
+            <Group name="deck a gain">
+              <Param value="CC#6" type="dial" loopback="false" name="gain" maximum="127" minimum="0"/>
+            </Group>
+            <Group name="deck a control buttons" orientation="vertical">
+              <Param value="E--1" filter_input_note_off="true" type="button" name="set cue" aspect="0.5" maximum="127" minimum="0" />
+              <Param value="D#0" filter_input_note_off="true" type="button" name="set loop" aspect="0.5" maximum="127" minimum="0" />
+              <Param value="F--1" value_back="CC#21" filter_input_note_off="true" type="togglebutton" name="reloop" aspect="0.5" maximum="127" minimum="0" />
+              <Param value="E-0" value_back="CC#20" filter_input_note_off="true" type="togglebutton" name="sync" aspect="0.5" maximum="127" minimum="0" />
+              <Param value="F-0" value_back="CC#19" filter_input_note_off="true" type="togglebutton" name="scratch" aspect="0.5" maximum="127" minimum="0" />
+            </Group>
+          </Column>
+
+          <Column>
+            <Group name="deck b gain">
+              <Param value="CC#10" type="dial" loopback="false" name="gain" maximum="127" minimum="0"/>
+            </Group>
+            <Group name="deck b control buttons" orientation="vertical">
+              <Param value="A#-1" filter_input_note_off="true" type="button" name="set cue" aspect="0.5" maximum="127" minimum="0" />
+              <Param value="B-0" filter_input_note_off="true" type="button" name="set loop" aspect="0.5" maximum="127" minimum="0" />
+              <Param value="B--1" value_back="CC#13" filter_input_note_off="true" type="togglebutton" name="reloop" aspect="0.5" maximum="127" minimum="0" />
+              <Param value="C-1" value_back="CC#12" filter_input_note_off="true" type="togglebutton" name="sync" aspect="0.5" maximum="127" minimum="0" />
+              <Param value="C#1" value_back="CC#11" filter_input_note_off="true" type="togglebutton" name="scratch" aspect="0.5" maximum="127" minimum="0" />
+            </Group>
+          </Column>
+          <Column>
+            <Row>
+              <Group name="deck b eq dials" orientation="horizontal">
+                <Param value="CC#7" type="dial" loopback="false" name="low" maximum="127" minimum="0"/>
+                <Param value="CC#8" type="dial" loopback="false" name="mid" maximum="127" minimum="0"/>
+                <Param value="CC#9" type="dial" loopback="false" name="high" maximum="127" minimum="0"/>
+              </Group>
+            </Row>
+            <Row>
+              <Group name="deck b eq buttons" orientation="horizontal">
+                <Param value="G#0" value_back="CC#16" filter_input_note_off="true" type="togglebutton" name="low" aspect="0.5" maximum="127" minimum="0" />
+                <Param value="A-0" value_back="CC#15" filter_input_note_off="true" type="togglebutton" name="mid" aspect="0.5" maximum="127" minimum="0" />
+                <Param value="A#0" value_back="CC#14" filter_input_note_off="true" type="togglebutton" name="high" aspect="0.5" maximum="127" minimum="0" />
+              </Group>
+            </Row>
+            <Row>
+              <Group name="deck b volume">
+                <Param value="CC#2" type="fader" loopback="false" name="deck a volume" orientation="vertical" size="3" maximum="127" minimum="0"/>
+              </Group>
+              <Group name="deck b wheel">
+                <Param value="CC#18" type="dial" loopback="false" name="deck a wheel" size="2" maximum="127" minimum="0"/>
+              </Group>
+            </Row>
+          </Column>
+          <Column>
+            <Group name="deck b search" orientation="vertical">
+              <Param value="F#-1" filter_input_note_off="true" type="button" name="deck b search back" aspect="0.5" maximum="127" minimum="0" />
+              <Param value="G--1" filter_input_note_off="true" type="button" name="deck b search forward" aspect="0.5" maximum="127" minimum="0" />
+            </Group>
+            <Group name="deck b pitch">
+              <Param value="CC#12" type="fader" loopback="false" name="deck b pitch" orientation="vertical" size="3" maximum="127" minimum="0"/>
+            </Group>
+          </Column>
+        </Row>
+        <Row>
+          <Column>
+            <Group name="deck a bend" orientation="vertical">
+              <Param value="D--1" filter_input_note_off="true" type="button" name="minus" aspect="0.5" maximum="127" minimum="0" />
+              <Param value="D#-1" filter_input_note_off="true" type="button" name="plus" aspect="0.5" maximum="127" minimum="0" />
+            </Group>
+          </Column>
+          <Group name="deck a play/cue" orientation="horizontal">
+            <Param value="F#0" value_back="CC#18" filter_input_note_off="true" type="togglebutton" name="play" aspect="0.5" maximum="127" minimum="0" />
+            <Param value="G-0" value_back="CC#17" filter_input_note_off="true" type="togglebutton" name="cue" aspect="0.5" maximum="127" minimum="0" />
+          </Group>
+          <Group name="crossfader">
+            <Param value="CC#1" type="fader" loopback="false" name="crossfader" orientation="horizontal" size="3" maximum="127" minimum="0"/>
+          </Group>
+          <Group name="deck b play/cue" orientation="horizontal">
+            <Param value="D-1" value_back="CC#10" filter_input_note_off="true" type="togglebutton" name="play" aspect="0.5" maximum="127" minimum="0" />
+            <Param value="D#1" value_back="CC#9" filter_input_note_off="true" type="togglebutton" name="cue" aspect="0.5" maximum="127" minimum="0" />
+          </Group>
+          <Column>
+            <Group name="deck b bend" orientation="vertical">
+              <Param value="G#-1" filter_input_note_off="true" type="button" name="minus" aspect="0.5" maximum="127" minimum="0" />
+              <Param value="A--1" filter_input_note_off="true" type="button" name="plus" aspect="0.5" maximum="127" minimum="0" />
+            </Group>
+          </Column>
+        </Row>
+      </Column>
+    </Page>
+  </Parameters>
+</Device>

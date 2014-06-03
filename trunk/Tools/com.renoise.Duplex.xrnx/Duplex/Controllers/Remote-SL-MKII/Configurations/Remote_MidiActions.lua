@@ -1,4 +1,3 @@
--- setup MidiActions for this configuration
 
 duplex_configurations:insert {
 
@@ -14,7 +13,7 @@ duplex_configurations:insert {
     device_port_out = "Automap MIDI",
     control_map = "Controllers/Remote-SL-MKII/Controlmaps/Remote-SL-MKII.xml",
     thumbnail = "Controllers/Remote-SL-MKII/Remote-SL-MKII.bmp",
-    protocol = DEVICE_MIDI_PROTOCOL
+    protocol = DEVICE_PROTOCOL.MIDI
   },
   
   applications = {

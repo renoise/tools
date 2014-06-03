@@ -1,18 +1,18 @@
---[[----------------------------------------------------------------------------
+--[[============================================================================
 -- Duplex.TrackSelector
 -- Inheritance: Application > TrackSelector
-----------------------------------------------------------------------------]]--
+============================================================================]]--
 
---[[
+--[[--
+Select the active Renoise track, including shortcuts for master & send tracks
 
-About
+### Changes
 
-  The TrackSelector's purpose is to control the active Renoise track
+  0.98  
+    - Deprecated UISpinner controls (exchanged with UIButtons)
 
-Changes (equal to Duplex version number)
-
-  0.98  - Deprecated UISpinner controls exchanged with UIButtons
-  0.96  - First release
+  0.96  
+    - First release
 
 
 --]]
@@ -52,7 +52,7 @@ TrackSelector.available_mappings = {
   --[[
   prev_next_track = {    
     description = "TrackSelector: Select next/previous track",
-    orientation = HORIZONTAL,    
+    orientation = ORIENTATION.HORIZONTAL,    
   },
   ]]
   prev_track = {    
@@ -66,7 +66,7 @@ TrackSelector.available_mappings = {
   --[[
   prev_next_page = {
     description = "TrackSelector: Select track-page",
-    orientation = HORIZONTAL,    
+    orientation = ORIENTATION.HORIZONTAL,    
   },
   ]]
   prev_page = {
@@ -80,7 +80,7 @@ TrackSelector.available_mappings = {
   select_track = {
     description = "TrackSelector: Select active track",
     component = UISlider,
-    orientation = HORIZONTAL,    
+    orientation = ORIENTATION.HORIZONTAL,    
   },
   select_master = {
     description = "TrackSelector: Select master-track",
@@ -119,11 +119,12 @@ TrackSelector.default_palette = {
 --------------------------------------------------------------------------------
 
 --- Constructor method
--- @param (VarArg), see Application to learn more
+-- @param (VarArg)
+-- @see Duplex.Application
 
 function TrackSelector:__init(...)
 
-  -- (Int) number of tracks available on controller
+  -- (Int) #tracks available on controller
   self._slider_units = 1
 
   -- the active track page
@@ -138,7 +139,7 @@ function TrackSelector:__init(...)
   -- (used when jumping back from topmost track)
   self._out_of_bounds_track_index = nil
 
-  -- (boolean) notifier flags: set when update is needed
+  -- (bool) notifier flags: set when update is needed
   self._selected_track_observable_fired = false
   self._tracks_observable_fired = false
 
@@ -159,7 +160,10 @@ function TrackSelector:__init(...)
 end
 
 --------------------------------------------------------------------------------
--- called when application is started
+
+--- inherited from Application
+-- @see Duplex.Application.start_app
+-- @return bool or nil
 
 function TrackSelector:start_app()
 
@@ -174,7 +178,9 @@ function TrackSelector:start_app()
 end
 
 --------------------------------------------------------------------------------
--- called when a new document becomes available
+
+--- inherited from Application
+-- @see Duplex.Application.on_new_document
 
 function TrackSelector:on_new_document()
   TRACE("TrackSelector:on_new_document()")
@@ -185,7 +191,9 @@ function TrackSelector:on_new_document()
 end
 
 --------------------------------------------------------------------------------
--- on_idle is automatically called many times per second
+
+--- inherited from Application
+-- @see Duplex.Application.on_idle
 
 function TrackSelector:on_idle()
 
@@ -347,8 +355,10 @@ function TrackSelector:update()
 end
 
 --------------------------------------------------------------------------------
--- build_app - construct the various UIComponents
--- @return boolean (false if requirements were not met)
+
+--- inherited from Application
+-- @see Duplex.Application._build_app
+-- @return bool
 
 function TrackSelector:_build_app(song)
   TRACE("TrackSelector:_build_app",song)
@@ -367,7 +377,7 @@ function TrackSelector:_build_app(song)
     c.group_name = map.group_name
     c.tooltip = map.description
     c:set_pos(map.index or 1)
-    c:set_orientation(map.orientation or HORIZONTAL)
+    c:set_orientation(map.orientation or ORIENTATION.HORIZONTAL)
     c.on_change = function(obj) 
 
       -- to learn if we increased or decreased the track,
@@ -436,7 +446,7 @@ function TrackSelector:_build_app(song)
     c.group_name = map.group_name
     c.tooltip = map.description
     c:set_pos(map.index or 1)
-    c:set_orientation(map.orientation or HORIZONTAL)
+    c:set_orientation(map.orientation or ORIENTATION.HORIZONTAL)
     c.on_change = function(obj)
       local track_idx = renoise.song().selected_track_index
       local track_page = self:_get_track_page(track_idx)
@@ -531,8 +541,8 @@ function TrackSelector:_build_app(song)
     -- is the control button-based?
     slider_grid_mode = cm:is_button(map.group_name,map.index)
     if slider_grid_mode then
-      -- yes, count the number of available buttons
-      if (map.orientation==HORIZONTAL) then
+      -- yes, count the # available buttons
+      if (map.orientation==ORIENTATION.HORIZONTAL) then
         self._slider_units = cm:count_columns(map.group_name)
       else
         self._slider_units = cm:count_rows(map.group_name)

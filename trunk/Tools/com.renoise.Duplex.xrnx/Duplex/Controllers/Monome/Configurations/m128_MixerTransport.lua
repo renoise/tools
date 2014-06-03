@@ -2,8 +2,6 @@
 -- Duplex.Monome 
 ----------------------------------------------------------------------------]]--
 
--- setup Mixer + Transport for this configuration
-
 duplex_configurations:insert {
 
   -- configuration properties
@@ -20,7 +18,7 @@ duplex_configurations:insert {
     device_port_out = "8082",
     control_map = "Controllers/Monome/Controlmaps/Monome128_Mixer.xml",
     thumbnail = "Controllers/Monome/Monome.bmp",
-    protocol = DEVICE_OSC_PROTOCOL,
+    protocol = DEVICE_PROTOCOL.OSC,
   },
 
   applications = {
@@ -34,7 +32,7 @@ duplex_configurations:insert {
         },
         page = {
           group_name = "Controls1",
-          orientation = HORIZONTAL,
+          orientation = ORIENTATION.HORIZONTAL,
           index = 1,
         },
         mode = {
@@ -50,7 +48,7 @@ duplex_configurations:insert {
       mappings = {
         blockpos = {
           group_name = "Navigator",
-          orientation = HORIZONTAL,
+          orientation = ORIENTATION.HORIZONTAL,
         }
       }
     },
@@ -64,12 +62,6 @@ duplex_configurations:insert {
           group_name= "Controls1",
           index = 4,
         },
-        --[[
-        edit_mode = {
-          group_name = "Controls",
-          index = 5,
-        },
-        ]]
         start_playback = {
           group_name = "Controls2",
           index = 2,

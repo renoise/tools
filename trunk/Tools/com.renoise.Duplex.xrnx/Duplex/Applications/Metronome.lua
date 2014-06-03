@@ -1,11 +1,16 @@
---[[----------------------------------------------------------------------------
+--[[============================================================================
 -- Duplex.Metronome
 -- Inheritance: Application > Metronome
-----------------------------------------------------------------------------]]--
+============================================================================]]--
 
---[[
+--[[--
+Simple application aimed at taking control of the Renoise metronome (mapping that allows you to toggle it on and off)
 
-  This is our sample Metronome application 
+Metronome is a sample application that is meant to demonstrate how to write an application with Duplex. It demonstrates how to listen for events within Renoise and produce a proper response on the controller (bi-directional communication). 
+
+To read the whole tutorial, visit [this topic][1] on the Renoise forum. 
+[1]: http://forum.renoise.com/index.php?/topic/30577-duplex-how-to-create-a-new-duplex-application/
+
 
 --]]
 
@@ -29,7 +34,8 @@ Metronome.default_palette = {
 --------------------------------------------------------------------------------
 
 --- Constructor method
--- @param (VarArg), see Application to learn more
+-- @param (VarArg)
+-- @see Duplex.Application
 
 function Metronome:__init(...)
 
@@ -39,7 +45,9 @@ end
 
 --------------------------------------------------------------------------------
 
--- check configuration, build & start the application
+--- inherited from Application
+-- @see Duplex.Application.start_app
+-- @return bool or nil
 
 function Metronome:start_app()
 
@@ -52,7 +60,9 @@ end
 
 --------------------------------------------------------------------------------
 
--- construct the user interface
+--- inherited from Application
+-- @see Duplex.Application._build_app
+-- @return bool
 
 function Metronome:_build_app()
 
@@ -77,7 +87,7 @@ end
 
 --------------------------------------------------------------------------------
 
--- set button to current state
+--- set button to current state
 
 function Metronome:update()
   if self._toggle then
@@ -91,7 +101,8 @@ end
 
 --------------------------------------------------------------------------------
 
--- called whenever a new document becomes available
+--- inherited from Application
+-- @see Duplex.Application.on_new_document
 
 function Metronome:on_new_document()
   self:_attach_to_song()
@@ -99,7 +110,7 @@ end
 
 --------------------------------------------------------------------------------
 
--- attach notifier to the song, handle changes
+--- attach notifier to the song, handle changes
 
 function Metronome:_attach_to_song()
 

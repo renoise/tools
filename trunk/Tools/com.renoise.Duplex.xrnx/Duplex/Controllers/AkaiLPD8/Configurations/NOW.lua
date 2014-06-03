@@ -2,8 +2,6 @@
 -- Duplex.AkaiLPD8
 ----------------------------------------------------------------------------]]--
 
--- setup "NotesOnWheels" for this configuration
-
 duplex_configurations:insert {
   -- configuration properties
   name = "NotesOnWheels",
@@ -15,7 +13,7 @@ duplex_configurations:insert {
     device_port_out = "MIDIOUT2 (AkaiLPD8)",
     control_map = "Controllers/AkaiLPD8/Controlmaps/AkaiLPD8_NOW.xml",
     thumbnail = "Controllers/AkaiLPD8/AkaiLPD8.bmp",
-    protocol = DEVICE_MIDI_PROTOCOL
+    protocol = DEVICE_PROTOCOL.MIDI
   },
   applications = {
     NotesOnWheels = {
@@ -47,12 +45,6 @@ duplex_configurations:insert {
           group_name = "Knobs2",
           index = 1,
         },
-        --[[
-        num_steps = {
-          group_name = "Knobs2",
-          index = 1,
-        },
-        ]]
         step_spacing = {
           group_name = "Knobs2",
           index = 2,

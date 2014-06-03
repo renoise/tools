@@ -1,34 +1,32 @@
---[[----------------------------------------------------------------------------
+--[[============================================================================
 -- Duplex.OscDevice
-----------------------------------------------------------------------------]]--
+-- Inheritance: OscDevice -> Device
+============================================================================]]--
 
---[[
-
-Inheritance: OscDevice -> Device
-
-Requires: Globals
+--[[--
+A generic OSC device class, providing the ability to send and receive OSC
 
 --]]
 
-
 --==============================================================================
+
 
 class 'OscDevice' (Device)
 
 --------------------------------------------------------------------------------
 
 --- Initialize OSCDevice class
--- @param name (String) the friendly name of the device
+-- @param name (string) the friendly name of the device
 -- @param message_stream (MessageStream) the msg-stream we should attach to
--- @param prefix (String) the OSC prefix to use
--- @param address (String) the OSC address (can be an IP address)
--- @param port_in (Number) the OSC input port 
--- @param port_out (Number) the OSC output port 
+-- @param prefix (string) the OSC prefix to use
+-- @param address (string) the OSC address (can be an IP address)
+-- @param port_in (int) the OSC input port 
+-- @param port_out (int) the OSC output port 
 
 function OscDevice:__init(name, message_stream,prefix,address,port_in,port_out)
   TRACE("OscDevice:__init()",name,message_stream,prefix,address,port_in,port_out)
   
-  Device.__init(self, name, message_stream, DEVICE_OSC_PROTOCOL)
+  Device.__init(self, name, message_stream, DEVICE_PROTOCOL.OSC)
 
   self.prefix = prefix
   self.address = address
@@ -126,6 +124,8 @@ function OscDevice:socket_message(socket, binary_data)
     for _,msg in pairs(messages) do
       local value_str = self:_msg_to_string(msg)
 
+      --print("incoming OSC",os.clock(),value_str)
+
       -- (only if defined) check the prefix:
       -- ignore messages that doesn't match our prefix
       if (self.prefix) then
@@ -138,8 +138,6 @@ function OscDevice:socket_message(socket, binary_data)
       end
 
       if value_str then
-        
-        --print("incoming OSC",os.clock(),value_str)
         self:receive_osc_message(value_str)
       end
 
@@ -161,7 +159,17 @@ function OscDevice:receive_osc_message(value_str)
   TRACE("OscDevice:receive_message",value_str)
 
   local param,val,w_idx,r_char = self.control_map:get_osc_param(value_str)
+
   --print("*** OscDevice - receive_message: param,val,w_idx,r_char",param,val,w_idx,r_char)
+  --print("*** receive_osc_message - param")
+  --rprint(param)
+  --print("*** receive_osc_message - val")
+  --rprint(val)
+  --print("*** receive_osc_message - w_idx")
+  --rprint(w_idx)
+  --print("*** receive_osc_message - r_char")
+  --rprint(r_char)
+
 
   if (param) then
 
@@ -173,7 +181,7 @@ function OscDevice:receive_osc_message(value_str)
       --print('*** OscDevice: wildcard replace param["xarg"]["value"]',xarg["value"])
     end
     local message = Message()
-    message.context = OSC_MESSAGE
+    message.context = DEVICE_MESSAGE.OSC
     message.is_osc_msg = true
     -- cap to the range specified in the control-map
     for k,v in pairs(val) do
@@ -231,8 +239,8 @@ end
 
 --- Queue a message instead of sending it right away. Some devices need data
 -- to arrive in fewer packets due to network conditions
---  @param message (String) the message string
---  @param value (Number or Table) the value(s) to inject
+--  @param message (string) the message string
+--  @param value (number or table) the value(s) to inject
 
 function OscDevice:queue_osc_message(message,value)
 
@@ -336,8 +344,8 @@ end
 --------------------------------------------------------------------------------
 
 ---  Send a OSC message right away
---  @param message (String) the message string
---  @param value (Number or Table) the value(s) to inject
+--  @param message (string) the message string
+--  @param value (number or table) the value(s) to inject
 
 function OscDevice:send_osc_message(message,value)
   TRACE("OscDevice:send_osc_message()",message,value)
@@ -357,8 +365,8 @@ end
 --- Produce an OSC message value entry. If only "vars" is defined, it will 
 --  be treated as a standalone floating-point value. Otherwise, "vars" will 
 --  indicate the type of value - Integer is "%i", while floating-point is "%f"
--- @param vars (Number or String), value or the type of value
--- @param value (Number)
+-- @param vars (number or string), value or the type of value
+-- @param value (number)
 
 function OscDevice:produce_entry(vars,value)
   --TRACE("OscDevice:produce_entry()",vars,value)
@@ -386,9 +394,9 @@ end
 --  is describing a multidimensional value, such as a tilt sensor or XY-pad. In
 --  such a case, the method will return a table of values
 -- @param pt (CanvasPoint), point containing the current value
--- @param elm (Table), control-map parameter
--- @param ceiling (Number), the UIComponent ceiling value
--- @return value (Number, or Table of Numbers)
+-- @param elm (table), control-map parameter
+-- @param ceiling (number), the UIComponent ceiling value
+-- @return value (number, or table of numbers)
 
 function OscDevice:point_to_value(pt,elm,ceiling)
   --TRACE("OscDevice:point_to_value()",pt,elm,ceiling)

@@ -1,74 +1,54 @@
---[[----------------------------------------------------------------------------
+--[[============================================================================
 -- Duplex.Application
-----------------------------------------------------------------------------]]--
+============================================================================]]--
 
---[[
+--[[--
 
-A generic application class for Duplex
+The generic application class for Duplex. Supplies any class that extend it with 
+basic methods like start, stop, idle time notifications.
 
-mappings allows us to choose where to put controls,
-see actual application implementations for examples
+Applications are instantiated by the Duplex Browser, and all .lua files in the 
+Duplex/Applications folder are included on startup. 
 
-@group_name: (required) the control-map group-name 
-@index: the position where the control should be located (set in config)
-@description: provide a sensible tooltip text for the virtual display
-@orientation: defines the UIComponent orientation (VERTICAL/HORIZONTAL)
-
-example_mapping = {
- group_name = "Main",
- index = 3,
-}
-
-
-(device-specific options are specified in the device configuration)
-
-@label: displayed in options dialog
-@description: tooltip in options dialog
-@on_change: (function) code to execute when option is changed
-@items: brief descriptions of each available choice (list)
-@value: the default choice among the @items
-
-example_option = {
- label = "My option",
- on_change = function() end,
- items = {"Choice 1", "Choice 2"},
- value = 1 -- this is the default value ("Choice 1")
-}
+To create a new Duplex application, you must extend this class and put it in 
+that folder. 
 
 --]]
-
 
 --==============================================================================
 
 class 'Application'
 
+--==============================================================================
+
 --- Initialize the Application class
 -- @param ... (VarArg), containing:
---  [1] = process (BrowserProcess)
---  [2] = mappings (table, imported from device-config)
---  [3] = palette (table, imported from device-config)
---  [4] = options (table, imported from application default options)
---  [5] = config_name (string, imported from application default options)
+--
+--  1.  process (@{Duplex.BrowserProcess})
+--  2.  mappings (table, imported from device-config)
+--  3.  palette (table, imported from device-config)
+--  4.  options (table, imported from application default options)
+--  5.  config_name (string, imported from application default options)
 
 function Application:__init(...)
   TRACE("Application:__init()")
 
-  -- extract varargs using select
+  --- extract varargs using select
   local process, mappings, options, config_name, palette = select(1,...)
 
   self.mappings = mappings or {}
   self.palette = palette or {}
   self.options = options or {}
 
-  -- instance of the Display class
+  --- (@{Duplex.Display}) instance of the display class
   self.display = process.display
   
-  -- (string) this is the name of the application as it appears
+  --- (string) this is the name of the application as it appears
   -- in the device configuration, e.g. "MySecondMixer" - used for looking 
   -- up the correct preferences-key when specifying custom options 
   self._app_name = config_name
 
-  -- when the application is inactive, it should 
+  --- (bool) when the application is inactive, it should 
   -- sleep during idle time and ignore any user input
   self.active = false
 
@@ -80,22 +60,25 @@ function Application:__init(...)
 
   -- private stuff
 
-  -- (boolean) true once build_app has been run
+  --- (bool) true once build_app has been run
   self._created = false
   
-  -- the options view
+  --- (renoise.ViewBuilder) the options view
   self._vb = renoise.ViewBuilder()
+
+  --- (renoise.ViewBuilder) the settings view
   self._settings_view = nil
 
-  -- UIComponents registered via add_component method
+  --- (table) UIComponents registered via add_component method
   self._ui_components = table.create()
 
 end
 
-
 --------------------------------------------------------------------------------
 
 --- Start/resume application
+-- @param start_running (bool) when requested to auto-start 
+-- @return bool or nil, false when application failed to start
 
 function Application:start_app(start_running)
   TRACE("Application:start_app()",start_running)
@@ -119,6 +102,7 @@ function Application:start_app(start_running)
 
   if (self.display) then
     self.display:apply_tooltips()
+    self.display:apply_midi_mappings()
   end
 
   self.active = true
@@ -130,23 +114,21 @@ end
 
 --------------------------------------------------------------------------------
 
---- Stop application
+--- Stop application, set active flag to false
 
 function Application:stop_app()
   TRACE("Application:stop_app()")
   
-  if (not self.active) then
-    return
-  end
-
   self.active = false
+
 end
 
 
 --------------------------------------------------------------------------------
 
 --- Create application (build interface)
--- @return (Boolean) true when application was built
+-- @return (bool) true when application was built. Can fail e.g. when a 
+-- device configuration fails to provide a required mapping
 
 function Application:_build_app()
   TRACE("Application:_build_app()")
@@ -158,14 +140,14 @@ end
 
 --------------------------------------------------------------------------------
 
---- Destroy application (remove listeners, set to inactive state)
+--- Destroy application: unregister components, set to inactive state
+-- (not actually a used feature anymore?)
 
 function Application:destroy_app()
   TRACE("Application:destroy_app()")
   
   self:stop_app()
 
-  -- unregister components
   if(self._ui_components)then
     for _,v in pairs(self._ui_components) do
       v:remove_listeners()
@@ -216,9 +198,38 @@ end
 
 --------------------------------------------------------------------------------
 
+--- Called when window loose focus
+
+function Application:on_window_resigned_active()
+  TRACE("Application:on_window_resigned_active()")
+  
+  -- nothing done by default
+end
+
+
+--------------------------------------------------------------------------------
+
+--- Called when window receive/regain focus
+
+function Application:on_window_became_active()
+  TRACE("Application:on_window_became_active()")
+  
+  -- nothing done by default
+end
+
+
+--------------------------------------------------------------------------------
+
 --- Receive keypress events from the Duplex Browser dialog
 -- @param key (table) forwarded from the keyhandler 
--- @return (boolean) if false, key event is not forwarded to Renoise
+--    key = {  
+--      name,      -- name of the key, like 'esc' or 'a' - always valid  
+--      modifiers, -- modifier states. 'shift + control' - always valid  
+--      character, -- character representation of the key or nil  
+--      note,      -- virtual keyboard piano key value (starting from 0) or nil  
+--      repeated,  -- true when the key is soft repeated (hold down)  
+--    }
+-- @return (bool) if false, key event is not forwarded to Renoise
 
 function Application:on_keypress(key)
   TRACE("Application:on_keypress",key)
@@ -230,6 +241,7 @@ end
 --------------------------------------------------------------------------------
 
 --- Assign matching palette entries
+-- @param palette (table)
 
 function Application:_apply_palette(palette)
   TRACE("Application:_apply_palette",palette)
@@ -252,7 +264,8 @@ end
 --------------------------------------------------------------------------------
 
 --- Check mappings: should be called before application is started
--- @return boolean (false if missing group-names were encountered)
+-- @param mappings (table) available_mappings 
+-- @return bool, false if missing group-names were encountered
 
 function Application:_check_mappings(mappings)
   TRACE("Application:_check_mappings",mappings)
@@ -299,6 +312,7 @@ end
 --------------------------------------------------------------------------------
 
 --- Create application options dialog
+-- @param process (@{Duplex.BrowserProcess})  
 
 function Application:_build_options(process)
   TRACE("Application:_build_options")
@@ -372,7 +386,7 @@ end
 --------------------------------------------------------------------------------
 
 --- Build a row of option controls
--- @return ViewBuilder view
+-- @return renoise.Views.View
 
 function Application:_add_option_row(t,key,process)
   TRACE("Application:_add_option_row()",t,key,process)
@@ -403,9 +417,9 @@ end
 --------------------------------------------------------------------------------
 
 --- Set option value 
--- @param key (String) the key to change 
--- @param val (Number) the value to change
--- @param process (BrowserProcess) supply this parameter to modify the 
+-- @param key (string) the key to change 
+-- @param val (int or string) the value to change
+-- @param process (@{Duplex.BrowserProcess}) supply this parameter to modify the 
 --  persistent settings
 
 function Application:_set_option(key, val, process)
@@ -449,6 +463,7 @@ end
 
 --- Register a UIComponent so we can automatically remove it when exiting
 -- note that the display might not be present, so use with caution
+-- @param c (@{Duplex.UIComponent})
 
 function Application:_add_component(c)
   
@@ -458,12 +473,15 @@ function Application:_add_component(c)
   self._ui_components:insert(c)
   self.display:add(c)
 
+
+
 end  
 
 
 --------------------------------------------------------------------------------
 
 --- Prints the type of application (class name)
+-- @return string
 
 function Application:__tostring()
   return type(self)
@@ -472,7 +490,8 @@ end
 
 --------------------------------------------------------------------------------
 
--- Compare application to another class instance (check for object identity)
+--- Compare application to another class instance (check for object identity)
+-- @return bool
 
 function Application:__eq(other)
   return rawequal(self, other)

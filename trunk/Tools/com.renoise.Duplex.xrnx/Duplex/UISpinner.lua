@@ -1,33 +1,23 @@
---[[----------------------------------------------------------------------------
+--[[============================================================================
 -- Duplex.UISpinner
-----------------------------------------------------------------------------]]--
+-- Inheritance: UIComponent > UISpinner
+============================================================================]]--
 
---[[
-
-Inheritance: UIComponent > UISpinner
-
-
-About
-
+--[[--
 UISpinner makes it possible to select among a list of options
+
+*This UIComponent has been deprecated in Duplex 0.98*
+
 Flexible operating mode depend on if the unit-size is set to 1 or 2:
 1 ( ) - single dial, will trigger event for each quantized value
 2 [<][>]  - two buttons, for next/previous style operation
-
 
 Supported input methods
 
 - use "button" type input (next/previous buttons)
 - use "dial" or "slider" (outputs quantized values)
 
-
-Events
-
-- on_change() - invoked when a button is pressed / control is changed
-
-
 --]]
-
 
 --==============================================================================
 
@@ -36,7 +26,7 @@ class 'UISpinner' (UIComponent)
 --------------------------------------------------------------------------------
 
 --- Initialize the UISpinner class
--- @param app (Duplex.Application)
+-- @param app (@{Duplex.Application})
 
 function UISpinner:__init(app)
   TRACE('UISpinner:__init',app)
@@ -56,7 +46,7 @@ function UISpinner:__init(app)
 
   -- up/down or left/right arrows?
   -- if specified, text arrows will appear
-  self.text_orientation = HORIZONTAL 
+  self.text_orientation = ORIENTATION.HORIZONTAL 
 
   -- flip direction 
   self.flipped = false
@@ -71,8 +61,8 @@ function UISpinner:__init(app)
     right_arrow = {text="►"},
   }
   
-  -- draw vertical or horizontal?
-  self._orientation = HORIZONTAL 
+  -- draw ORIENTATION.VERTICAL or ORIENTATION.HORIZONTAL?
+  self._orientation = ORIENTATION.HORIZONTAL 
 
   -- internal stuff
   self._cached_index = self.index
@@ -88,8 +78,8 @@ end
 --------------------------------------------------------------------------------
 
 --- A value was changed (fader, dial)
--- @param msg (Duplex.Message)
--- @return boolean or nil
+-- @param msg (@{Duplex.Message})
+-- @return bool or nil
 
 function UISpinner:do_change(msg)
   TRACE("UISpinner:do_change",msg)
@@ -122,8 +112,8 @@ end
 --------------------------------------------------------------------------------
 
 --- A button was pressed
--- @param msg (Duplex.Message)
--- @return boolean or nil
+-- @param msg (@{Duplex.Message})
+-- @return bool or nil
 
 function UISpinner:do_press(msg)
   TRACE("UISpinner:do_press",msg)
@@ -174,7 +164,7 @@ function UISpinner:do_press(msg)
 
   end
 
-  if (msg.input_method == CONTROLLER_TOGGLEBUTTON) then
+  if (msg.input_method == INPUT_TYPE.TOGGLEBUTTON) then
     -- force update togglebuttons...
     self.canvas.delta = table.rcopy(self.canvas.buffer)
     self.canvas.has_changed = true
@@ -185,33 +175,13 @@ function UISpinner:do_press(msg)
 
 end
 
---------------------------------------------------------------------------------
-
--- @param msg (Duplex.Message)
--- @return boolean or nil
---[[
-function UISpinner:do_release(msg)
-  TRACE("UISpinner:do_release",msg)
-
-  if not self:test(msg) then
-    return 
-  end
-
-  -- we have no action, but the message was handled
-  -- (prevent it from being passed on)
-
-  return self
-
-end
-
-]]
-
 
 --------------------------------------------------------------------------------
 
 --- Expanded UIComponent test
--- @param msg (Duplex.Message)
--- @return (Boolean), false when criteria is not met
+-- @param msg (@{Duplex.Message})
+-- @return (bool), false when criteria is not met
+-- @see Duplex.UIComponent.test
 
 function UISpinner:test(msg)
   TRACE("UISpinner:test",msg)
@@ -233,12 +203,12 @@ end
 
 --- Set the slider orientation 
 -- (only relevant when assigned to buttons)
--- @param value (Enum) either VERTICAL or HORIZONTAL
+-- @param value (@{Duplex.Globals.ORIENTATION}) 
 
 function UISpinner:set_orientation(value)
   TRACE("UISpinner:set_orientation",value)
 
-  if (value == HORIZONTAL) or (value == VERTICAL) then
+  if (value == ORIENTATION.HORIZONTAL) or (value == ORIENTATION.VERTICAL) then
     self._orientation = value
     self:set_size(self._size) -- update canvas
   end
@@ -247,7 +217,7 @@ end
 --------------------------------------------------------------------------------
 
 --- Get the orientation 
--- @return (Enum) either VERTICAL or HORIZONTAL
+-- @return @{Duplex.Globals.ORIENTATION}
 
 function UISpinner:get_orientation()
   TRACE("UISpinner:get_orientation()")
@@ -258,8 +228,8 @@ end
 
 --- Set a new value range, clipping the current index when needed (you can set 
 --  just one value, since we skip nil values)
--- @param minimum (Number)
--- @param maximum (Number)
+-- @param minimum (number)
+-- @param maximum (number)
 
 function UISpinner:set_range(minimum,maximum)
   TRACE("UISpinner:set_range",minimum,maximum)
@@ -298,8 +268,8 @@ end
 --------------------------------------------------------------------------------
 
 --- Set index to specified value
--- @param idx (Number)
--- @param skip_event_handler (Boolean) skip event handler
+-- @param idx (int)
+-- @param skip_event_handler (bool) skip event handler
 
 function UISpinner:set_index(idx, skip_event_handler)
   TRACE("UISpinner:set_index",idx, skip_event_handler)
@@ -332,7 +302,8 @@ end
 -- Overridden from UIComponent
 --------------------------------------------------------------------------------
 
---- Overridden draw() method
+--- Update the appearance - inherited from UIComponent
+-- @see Duplex.UIComponent
 
 function UISpinner:draw()
   TRACE("UISpinner:draw")
@@ -354,10 +325,10 @@ function UISpinner:draw()
     local blank = {text="·"}
     local arrow1,arrow2 = blank,blank
 
-    if(self.text_orientation == HORIZONTAL)then
+    if(self.text_orientation == ORIENTATION.HORIZONTAL)then
       arrow1 = self.palette.left_arrow
       arrow2 = self.palette.right_arrow
-    elseif(self.text_orientation == VERTICAL)then
+    elseif(self.text_orientation == ORIENTATION.VERTICAL)then
       arrow1 = self.palette.up_arrow
       arrow2 = self.palette.down_arrow
     end
@@ -392,7 +363,7 @@ function UISpinner:draw()
       point2.val = true
     end
 
-    if (self._orientation == HORIZONTAL) then
+    if (self._orientation == ORIENTATION.HORIZONTAL) then
 
       if (self.flipped) then
         self.canvas:write(point1,2,1)
@@ -403,7 +374,7 @@ function UISpinner:draw()
       end
     
     else
-      assert(self._orientation == VERTICAL, 
+      assert(self._orientation == ORIENTATION.VERTICAL, 
         "Internal Error. Please report: unexpected UI orientation")
 
       if (self.flipped) then
@@ -424,14 +395,15 @@ end
 
 --------------------------------------------------------------------------------
 
---- (Override UIComponent with this method)
--- @param size (Number) the size in units
+--- Override UIComponent with this method
+-- @param size (int) the size in units
+-- @see Duplex.UIComponent
 
 function UISpinner:set_size(size)
   
   self._size = size
   
-  if self._orientation == VERTICAL then
+  if self._orientation == ORIENTATION.VERTICAL then
     UIComponent.set_size(self, 1, self._size)
   else
     UIComponent.set_size(self, self._size, 1)
@@ -441,22 +413,19 @@ end
 
 --------------------------------------------------------------------------------
 
---- Add event listeners (press, change)
+--- Add event listeners
+--    DEVICE_EVENT.BUTTON_PRESSED
+--    DEVICE_EVENT.VALUE_CHANGED
+-- @see Duplex.UIComponent
 
 function UISpinner:add_listeners()
 
   self.app.display.device.message_stream:add_listener(
-    self, DEVICE_EVENT_BUTTON_PRESSED,
+    self, DEVICE_EVENT.BUTTON_PRESSED,
     function(msg) return self:do_press(msg) end )
 
-  --[[
   self.app.display.device.message_stream:add_listener(
-    self, DEVICE_EVENT_BUTTON_RELEASED,
-    function(msg) return self:do_release(msg) end )
-  ]]
-
-  self.app.display.device.message_stream:add_listener(
-    self,DEVICE_EVENT_VALUE_CHANGED,
+    self,DEVICE_EVENT.VALUE_CHANGED,
     function(msg) return self:do_change(msg) end )
 
 end
@@ -465,20 +434,15 @@ end
 --------------------------------------------------------------------------------
 
 --- Remove previously attached event listeners
--- @see UISpinner:add_listeners
+-- @see Duplex.UIComponent
 
 function UISpinner:remove_listeners()
 
   self.app.display.device.message_stream:remove_listener(
-    self,DEVICE_EVENT_BUTTON_PRESSED)
-
-  --[[
-  self.app.display.device.message_stream:remove_listener(
-    self,DEVICE_EVENT_BUTTON_RELEASED)
-  ]]
+    self,DEVICE_EVENT.BUTTON_PRESSED)
 
   self.app.display.device.message_stream:remove_listener(
-    self,DEVICE_EVENT_VALUE_CHANGED)
+    self,DEVICE_EVENT.VALUE_CHANGED)
 
 end
 
@@ -488,20 +452,20 @@ end
 --------------------------------------------------------------------------------
 
 --- Determine index by position
--- @param column (Number)
--- @param row (Number)
--- @return (Number)
+-- @param column (int)
+-- @param row (int)
+-- @return (int)
 
 function UISpinner:_determine_index_by_pos(column, row)
 
   local idx,offset = nil,nil
 
-  if (self._orientation == VERTICAL) then
+  if (self._orientation == ORIENTATION.VERTICAL) then
     idx = row
     offset = self.y_pos
 
   else
-   assert(self._orientation == HORIZONTAL, 
+   assert(self._orientation == ORIENTATION.HORIZONTAL, 
       "Internal Error. Please report: unexpected UI orientation")
     idx = column
     offset = self.x_pos

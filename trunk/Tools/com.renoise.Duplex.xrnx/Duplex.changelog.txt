@@ -3,10 +3,165 @@ Duplex Changelog
 ================================================================================
 
 --------------------------------------------------------------------------------
+Done 0.99
+--------------------------------------------------------------------------------
+
+-- Duplex 0.99.1 -----------
+
+Duplex Core
+* Some classes split into separate files (MessageStream, BrowserProcess etc.)
+* Updated documentation (/Docs), now including application classes
+* Global enumerators now stored in tables instead of separate variables
+ (ORIENTATION.VERTICAL instead of ORIENTATION_VERTICAL)
+
+Core/MessageStream 
+* FIXME Caching can break multiple UIComponents listening to the same signal,
+  as reported here: 
+
+Core/Application
+* FEATURE Specify "midi_mapping" property (string) when creating a UIComponent 
+  instance (will make it highlight when Renoise MIDI mapping dialog is open)
+* FEATURE Hooks for when Renoise gain/loose focus:
+ on_window_became_active/on_window_resigned_active
+
+Core/Automation
+* FIXME make it possible to record from any track, any pattern (follow_pos)
+* FEATURE specify preferred playmode (points/linear/cubic)
+
+Core/Controlmap
+* TWEAK No more need to explicitly state "is_virtual" for parameters that only
+  exist in the virtual UI - just leave the value attribute blank
+
+Core/Browser
+* FEATURE Button to show/hide virtual control surface (access with TAB key)
+
+Core/ProcessSlicer
+* Implementation of lua coroutines (see Mlrx_track.lua for example)
+
+Applications/MidiActions
+* FIXME Problem on Windows when looking for user-specified  GlobalMidiActions
+
+Applications/Mlrx 
+* FEATURE Phrase recording
+
+Controllers/MPD32
+* New configuration: PerformancePads
+
+Controllers/BCD-3000
+* New controller template, no configurations yet...
+
+
+
+--------------------------------------------------------------------------------
 Done 0.98
 --------------------------------------------------------------------------------
 
--- Duplex 0.98b23 -----------
+-- Duplex 0.98.32 -----------
+(including versions 0.98.30-0.98.31)
+
+Duplex Core
+* Preliminary support for Renoise 3 (applications that needed upgrade)
+* Ability to specify persistent option values as string as well as integer
+ (used by MidiActions to memorize options and make them more readable)
+
+Applications/Mlrx 
+* Mlrx (new application, preview release)
+
+Applications/Grid Pie
+* FEATURE Support for blinking LEDs on monochrome devices
+
+Application/Keyboard
+* TWEAK: velocity now is set to an explicit value, or synced to Renoise keyboard 
+ velocity will output a fixed velocity (previously it was relative to messages)
+
+
+-- Duplex 0.98.29 -----------
+
+Applications/Navigator
+* FIXME When jumping back in pattern, and briefly going to the previous pattern,
+ the navigator would break if the previous pattern hadn’t same number of lines
+
+Applications/Grid Pie
+* FIXME Ignore pattern switching, when arriving in the last line of pattern
+ (this avoids that using the Navigator will cause the pattern to switch)
+
+
+-- Duplex 0.98.28 -----------
+
+Duplex Core
+* FIXME MIDI pass-on got ignored when message was not handled by any controls
+* FIXME: UISlider / value at “turnaround point” was ignored
+* INTERNAL remove print() statements in favor of LOG()
+* FEATURE Duplex now support Program Change as standard MIDI-message type
+
+Duplex Browser
+* FEATURE Expanded set of key/MIDI mappings
+  - [Next] / [Previous] configuration for the selected device
+  - [Set] the active configuration for the selected device
+  - [Show] / [Hide] the Duplex browser dialog
+
+Applications/Recorder
+* FIXME issue with “autostart” option (broke the recording workflow)
+
+Applications/Matrix
+* FIXME trigger in schedule mode could schedule a pattern on the wrong page
+
+Applications/TrackSelector
+* New mappings: “next_track”,”prev_track” (UIButtons, replaces UISpinner)
+* New mappings: “next_page”,”prev_page” (UIButtons, replaces UISpinner)
+* FEATURE: Hold prev/next track to select first/last track
+* New mappings: “next_line”,”prev_line” (UIButtons)
+* New mappings: “line”(UISlider, replaces UISpinner)
+
+
+-- Duplex 0.98.27 -----------
+
+(including versions 0.98.24-0.98.26)
+
+Duplex Core
+* New control-map attribute, relevant for parameters with a @type=’xypad’
+  swap_axes=“true” (replace X with Y and vice versa)
+* OscDevice: support text values
+* UILabel: for displaying text values (used in iPad config)
+* UIComponents in general: reference application instead of display
+* UIComponents in general: constants are made class members
+* MessageStream - better performance when many controls are present
+
+Applications/Mixer
+* New mappings: “prev_page”, “next_page” (replace UISpinner @page)
+* options.track_offset has been removed
+
+Applications/Effect
+* New mapping: “device_name” (UILabel)
+* New mappings: “param_names”,”param_values” (UILabels for parameters)
+* New mappings: “param_next”,”param_next” (UIButtons, replaces UISpinner)
+
+Applications/Navigator
+* rewritten, should be more solid and support off-pattern updates
+* New mappings: “prev_block”,”next_block”
+
+Applications/Transport
+* New mapping: “songpos_display” (UILabel)
+* New mapping: “bpm_display” (UILabel)
+* New mappings: “bpm_increase”,”bpm_decrease”
+
+Applications/Hydra
+* new mapping: value_string (UILabel), FIXME Attach to newly inserted device
+(update controller)
+
+Applications/Matrix
+* Mappings sequence/track (UISpinner) have been removed
+* Changed default retrigger method to “play/continue”
+* New mappings: next_track_page/prev_track_page (UIButtons)
+* New mappings: “prev_seq_page/next_seq_page” (UIButtons)
+
+Device-configs
+* TouchOSC_iPad
+* APC20/40 XYPad+repeater
+* monome128_performance
+
+
+-- Duplex 0.98.23 -----------
 
 MidiActions
 * New application: MidiActions.lua (designed to piggy-back on GlobalMidiActions)
@@ -40,7 +195,7 @@ Device-configs
 * Launchpad MuteGrid (as an example of "control-map hacking")
 
 
--- Duplex 0.98b22 -----------
+-- Duplex 0.98.22 -----------
 
 Grid Pie
 * Overview of new features:
@@ -74,7 +229,7 @@ Grid Pie
 * Restructured code, simplified things...
 
 
--- Duplex 0.98b21 -----------
+-- Duplex 0.98.21 -----------
 
 TrackSelector
 * Fixed: application was updating display when stopped/paused
@@ -106,7 +261,7 @@ Duplex Core
 * Streamlined documentation with lua-doc friendly code formatting
 
 
--- Duplex 0.98b20 -----------
+-- Duplex 0.98.20 -----------
 
 GridPie
 * Edit-sync: automatic background-synchronization of pattern data
@@ -128,7 +283,7 @@ StepSequencer
 (1) GridPie will attempt to retain as much information about the mute state of the song as possible, as this is restored when we exit GridPie. Note however that using drag-and-drop within the pattern sequence will cause the mute state to become lost for the rearranged patterns. Simple insert/clone and delete actions should not cause this to happen.
 
 
--- Duplex 0.98b19 -----------
+-- Duplex 0.98.19 -----------
 
 Duplex core API
 * Display: removed some checks before updating hardware display
@@ -148,7 +303,7 @@ Launchpad Effect config
 XYPad application
 * Simplified setup: use unique, automatically-generated names to identify “managed” XYPads (no more need for manually specified id’s)
 
--- Duplex 0.98b18 -----------
+-- Duplex 0.98.18 -----------
 
 Duplex core API
 * Applications: all palettes standardized
@@ -170,7 +325,7 @@ Launchpad/Matrix config
 * Made “control loop+position” the default option
 
 
--- Duplex 0.98b17 -----------
+-- Duplex 0.98.17 -----------
 
 * Fixme: Metronome: wrong placement on launchpad? #5 lights up #7 ??
 * Refactor: UIButton (replaces UIPushButton, UIToggleButton, UIStepSeqButton)
@@ -190,7 +345,7 @@ Mixer
 GridPie
 * fixed a bug in the “running start” feature (when switching away from Grid without having run the application)
 
--- Duplex 0.98b16 -----------
+-- Duplex 0.98.16 -----------
 
 Duplex core API
 * Fixme: stuck notes when transposing into unhandled range
@@ -207,7 +362,7 @@ Grid Pie
 Config: APC
 * Add sato’s extended configurations
 
--- Duplex 0.98b15 -----------
+-- Duplex 0.98.15 -----------
 
 -- Duplex core API --
 * MIDI pass-on: allow native MIDI mapping for unhandled parameters
@@ -224,7 +379,7 @@ Config: APC
 -- Applications/Keyboard.lua --
 * New option: “Keyboard Mode”, choose which notes (if any) to trigger
 
--- Duplex 0.98b14 -----------
+-- Duplex 0.98.14 -----------
 
 * Message now sent directly to the UIComponentm, more reliable
 * Application.on_release_document method (to complement on_new_document)

@@ -2,8 +2,6 @@
 -- Duplex.AkaiLPD8
 ----------------------------------------------------------------------------]]--
 
--- setup "Effect" for this configuration
-
 duplex_configurations:insert {
   -- configuration properties
   name = "Effects",
@@ -15,7 +13,7 @@ duplex_configurations:insert {
     device_port_out = "MIDIOUT2 (AkaiLPD8)",
     control_map = "Controllers/AkaiLPD8/Controlmaps/AkaiLPD8.xml",
     thumbnail = "Controllers/AkaiLPD8/AkaiLPD8.bmp",
-    protocol = DEVICE_MIDI_PROTOCOL
+    protocol = DEVICE_PROTOCOL.MIDI
   },
   applications = {
     Effect = {

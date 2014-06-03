@@ -2,8 +2,6 @@
 -- Duplex.KONTROL49
 ----------------------------------------------------------------------------]]--
 
--- set up "Mixer" for this configuration
-
 duplex_configurations:insert {
 
   -- configuration properties
@@ -17,7 +15,7 @@ duplex_configurations:insert {
     device_port_out = "MIDIOUT2 (KONTROL49)",
     control_map = "Controllers/KONTROL49/Controlmaps/KONTROL49.xml",
     thumbnail = "Controllers/KONTROL49/KONTROL49.bmp",
-    protocol = DEVICE_MIDI_PROTOCOL
+    protocol = DEVICE_PROTOCOL.MIDI
   },
 
   applications = {

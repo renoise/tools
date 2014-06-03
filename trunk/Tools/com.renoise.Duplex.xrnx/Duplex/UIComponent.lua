@@ -1,30 +1,18 @@
---[[----------------------------------------------------------------------------
+--[[============================================================================
 -- Duplex.UIComponent
-----------------------------------------------------------------------------]]--
+============================================================================]]--
 
---[[
+--[[--
 
-Inheritance: UIComponent 
+The UIComponent is the basic building block from which you can create a Duplex application user interface 
 
-About 
-
-The UIComponent is the basic building block from which you model the user 
-interface, and how it interacts with you. You will need to extend the 
-UIComponent class, as it doesn't come with any type of pre-defined events.
+All classes that extend this class are prefixed with 'UI': UIButton, UISlider etc. 
 
 The UIComponent pretty much leaves it up to you how to specify events. 
-However, there's only a limited number of different events:
-
-DEVICE_EVENT_VALUE_CHANGED 
-DEVICE_EVENT_BUTTON_PRESSED
-DEVICE_EVENT_BUTTON_RELEASED
-DEVICE_EVENT_BUTTON_HELD
-
 For examples on how to create/handle events with UIComponents, see either 
 the UISlider or the UIButton class (both extensions of this class).
 
 --]]
-
 
 --==============================================================================
 
@@ -33,42 +21,50 @@ class 'UIComponent'
 --------------------------------------------------------------------------------
 
 --- Initialize the UIComponent class
--- @param app (Duplex.Application)
+-- @param app (@{Duplex.Application})
 
 function UIComponent:__init(app)
   TRACE("UIComponent:__init",app)
   
+  --- (@{Duplex.Canvas})
   self.canvas = Canvas()
 
-  -- for indexed elements
+  --- (string) control-map group name
   self.group_name = nil
 
-  -- default palette
+  --- (table) default palette
   self.palette = {}
 
-  -- position within display
+  --- (int) ORIENTATION.HORIZONTAL position within display
   self.x_pos = 1
+
+  -- (int) ORIENTATION.VERTICAL position within display
   self.y_pos = 1
 
-  -- "ceiling" will inform the device how to scale values
-  -- for an example, check MidiDevice.point_to_value()
+  --- (number) the maximum value for this component
   self.ceiling = 1
   
-  -- set width/height through the set_size() method
+  --- (int) internal width (always use @{set_size})
   self.width = 1 
+
+  --- (int) internal height (always use @{set_size})
   self.height = 1 
 
-  -- text to display on the virtual UI
+  --- (string) text to display on the virtual UI
   self.tooltip = ""
 
-  -- sync our width, height with the canvas
-  self.canvas:set_size(self.width, self.height)
+  --- (string) link to a renoise midi-mapping
+  self.midi_mapping = nil
 
-  -- request refresh
+  --- (bool) request refresh on next update
   self.dirty = true 
   
-  -- reference to containing application
+  --- (@{Duplex.Application}) containing application
   self.app = app
+
+  -- do some preparation
+  -- sync our width, height with the canvas
+  self.canvas:set_size(self.width, self.height)
 
 end
 
@@ -100,7 +96,7 @@ end
 --------------------------------------------------------------------------------
 
 --- Attach listeners to the events 
--- (applications override this with their own implementation)
+-- (override this with your own implementation)
 
 function UIComponent:add_listeners()
 
@@ -110,7 +106,7 @@ end
 --------------------------------------------------------------------------------
 
 --- Remove previously attached event listeners
--- (applications override this with their own implementation)
+-- (override this with your own implementation)
 
 function UIComponent:remove_listeners()
 
@@ -121,8 +117,8 @@ end
 
 --- Method to set the control's size in units - it is important to use this 
 -- instead of setting width/height directly, as this method will resize Canvas
--- @param width (Number)
--- @param height (Number)
+-- @param width (int)
+-- @param height (int)
 
 function UIComponent:set_size(width, height)
   TRACE("UIComponent:set_size", width, height)
@@ -142,11 +138,11 @@ end
 --------------------------------------------------------------------------------
 
 --- Set the position using x/y or index within group
--- @param x (Number)
--- @param y (Number)
+-- @param x (int)
+-- @param y (int)
 
 function UIComponent:set_pos(x,y)
-  TRACE("UIComponent:set_pos", x, y)
+  TRACE("UIComponent:set_pos",x,y)
   
   local idx = nil
   if x and (not y) then
@@ -174,9 +170,9 @@ end
 --------------------------------------------------------------------------------
 
 --- Perform simple "inside square" hit test
--- @param x_pos (Number)
--- @param y_pos (Number)
--- @return (Boolean) true if inside area
+-- @param x_pos (int)
+-- @param y_pos (int)
+-- @return (bool), true if inside area
 
 function UIComponent:test(x_pos, y_pos)
   TRACE("UIComponent:test(",x_pos, y_pos,")")
@@ -202,7 +198,7 @@ end
 --------------------------------------------------------------------------------
 
 --- Set palette, invalidate if changed
--- @param palette (Table), e.g {foreground={color={0x00,0x00,0x00}}}
+-- @param palette (table), e.g {foreground={color={0x00,0x00,0x00}}}
 
 function UIComponent:set_palette(palette)
   TRACE("UIComponent:set_palette()",palette)
@@ -235,8 +231,8 @@ end
 --------------------------------------------------------------------------------
 
 --- Compare with another instance (only check for object identity)
--- @param other (UIComponent) another UIComponent instance
--- @return Boolean
+-- @param other (@{Duplex.UIComponent}) 
+-- @return bool
 
 function UIComponent:__eq(other)
   return rawequal(self, other)
@@ -245,7 +241,8 @@ end
 
 --------------------------------------------------------------------------------
 
---- Prints the type of UIComponent
+--- Output the type of UIComponent
+-- @return string
 
 function UIComponent:__tostring()
   return type(self)

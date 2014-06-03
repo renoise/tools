@@ -17,7 +17,7 @@ duplex_configurations:insert {
     device_port_out = "",
     control_map = "Controllers/Custombuilt/Controlmaps/R-control.xml",
     thumbnail = "Controllers/Custombuilt/R-control.bmp",
-    protocol = DEVICE_MIDI_PROTOCOL
+    protocol = DEVICE_PROTOCOL.MIDI
   },
 
   applications = {

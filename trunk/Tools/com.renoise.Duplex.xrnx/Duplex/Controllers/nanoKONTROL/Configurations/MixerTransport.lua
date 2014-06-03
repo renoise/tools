@@ -2,8 +2,6 @@
 -- Duplex.NanoKontrol
 ----------------------------------------------------------------------------]]--
 
--- setup a Mixer app as the only app for this configuration
-
 duplex_configurations:insert {
 
   -- configuration properties
@@ -18,7 +16,7 @@ duplex_configurations:insert {
     device_port_out = "nanoKONTROL",
     control_map = "Controllers/nanoKONTROL/Controlmaps/nanoKONTROL.xml",
     thumbnail = "Controllers/nanoKONTROL/nanoKONTROL.bmp",
-    protocol = DEVICE_MIDI_PROTOCOL
+    protocol = DEVICE_PROTOCOL.MIDI
   },
   
   applications = {

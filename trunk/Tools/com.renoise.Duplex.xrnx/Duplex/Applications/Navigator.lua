@@ -1,41 +1,24 @@
---[[----------------------------------------------------------------------------
--- Duplex.Metronome
--- Inheritance: Application > Metronome
-----------------------------------------------------------------------------]]--
+--[[============================================================================
+-- Duplex.Navigator
+-- Inheritance: Application > Navigator
+============================================================================]]--
 
---[[
+--[[--
 
-About
+The "Navigator" application allows you to take control of the pattern/block-loop and playback position. 
 
-  The "Navigator" application allows you to take control of the pattern/block-loop and playback position. This version has been re-built from the ground up, hopefully with a more robust features, as well as a few extra features thrown on top. 
-  
-  Basic operation is as follows:
+### Usage 
 
-  When playing, a single press & release on will cause the playback to move to the indicated position. When playback is stopped, the same press & release will cause the edit-cursor to move to the indicated position (when stopped, the position will always follow the edit-cursor).
+  * Single press & release to move playback to the indicated position
+  * When stopped, press & release will cause the edit-pos to move 
+  * Pressing two buttons will create a block-loop with that approximate size
+  * When a loop has been created, hold any button to cleared it again
 
-  Holding one button pressed, and then quickly pressing another button will cause a loop to be created (the order in which the buttons are pressed does not matter). When such a range has been created, holding any button pressed
-  for a moment will cause the looped range to be cleared. 
+### Suggested configuration
 
-What has changed?
+To take advantage of this application, you need to assign a number of buttons to the "blockpos" - the more buttons, the higher precision you will get. Generally speaking, you want to map either 4, 8 or 16 buttons for music which is based on a 4/4 measure. 
 
-  - The starting position of a block-loops can be specified more freely, 
-    e.g. a block-loop spanning 16 lines can now start from the 8th line
-  - A loop can be created in any pattern (previously, only the playing pattern)
-  - In options, select the loop size that fit the musical content (e.g. 4/4)
-  - Playback position will no longer "escape" the looped region by accident
-  - Song playback will not start when creating a loop
-  - More options: 
-    o Whether to control position and range, or just position
-    o Whether changing the position/range should carry the block loop along
-
-Suggested configuration
-
-  To take advantage of this application, you need to assign a number of buttons to the "blockpos" - the more buttons, the higher precision you will get. Generally speaking, you want to map either 4, 8 or 16 buttons for music which is based on a 4/4 measure. 
-
-
-
---]]
-
+]]
 
 --==============================================================================
 
@@ -121,7 +104,7 @@ Navigator.available_mappings = {
                 .."\nPress and hold to enable/disable loop"
                 .."\nPress multiple buttons to define blockloop"
                 .."\nControl-map value: ",
-    orientation = VERTICAL,
+    orientation = ORIENTATION.VERTICAL,
   },
   prev_block = {
     description = "Navigator: Move the blockloop backwards"
@@ -129,9 +112,6 @@ Navigator.available_mappings = {
   next_block = {
     description = "Navigator: Move the blockloop forward"
   },
-  --selection = {
-  --  description = "Navigator: Sync selection with looped range"
-  --}
 }
 Navigator.default_palette = {
   blockpos_index      = {color = {0xFF,0xFF,0xFF}, text="▪", val = true },
@@ -146,53 +126,57 @@ Navigator.default_palette = {
 
 --------------------------------------------------------------------------------
 
+--- Constructor method
+-- @param (VarArg), 
+-- @see Duplex.Application
+
 function Navigator:__init(...)
 
-  -- boolean, true when we are playing the selected pattern
+  --- bool, true when we are playing the selected pattern
   self._inside_pattern = nil
 
-  -- number, the current control index as determined by the playback 
+  --- (int), the current control index as determined by the playback 
   -- position within the pattern, quantized against the number of steps
   -- Note: a value of 0 means "no index is selected"
   self._active_index = nil
 
-  -- number, the current line in the edited pattern
+  --- (int), the current line in the edited pattern
   self._edit_line = nil
 
-  -- number, the size of the blockpos control in units
+  --- (int), the size of the blockpos control in units
   self._blockpos_size = nil
 
-  -- boolean, true when we need to update the blockpos index
+  --- bool, true when we need to update the blockpos index
   self._index_update_requested = nil
 
-  -- boolean, true when we need to update the blockpos range
+  --- bool, true when we need to update the blockpos range
   self._range_update_requested = nil
 
-  -- enum, one of the LOOP_xxx constants
+  --- enum, one of the LOOP_xxx constants
   self._loop_mode = nil
 
-  -- renoise.SongPos, where the loop starts
+  --- renoise.SongPos, where the loop starts
   self._loop_start = nil
 
-  -- renoise.SongPos, where the loop ends
+  --- renoise.SongPos, where the loop ends
   self._loop_end = nil
 
-  -- renoise.SongPos, disallow multiple playback_pos jumps
+  --- renoise.SongPos, disallow multiple playback_pos jumps
   self._jump_pos = nil
 
-  -- renoise.SongPos, the first pressed button 
+  --- renoise.SongPos, the first pressed button 
   self._first_pos = nil
 
-  -- number, the first pressed index
+  --- (int), the first pressed index
   self._first_idx = nil
 
-  -- renoise.SongPos, the second pressed button 
+  --- renoise.SongPos, the second pressed button 
   self._second_pos = nil
 
-  -- boolean, true once the blockpos hold event has fired
+  --- bool, true once the blockpos hold event has fired
   self._held_event_fired = nil
 
-  -- UIComponents
+  --- UIComponents
   self._prev_block = nil
   self._next_block = nil
   self._blockpos = nil
@@ -202,6 +186,10 @@ function Navigator:__init(...)
 end
 
 --------------------------------------------------------------------------------
+
+--- inherited from Application
+-- @see Duplex.Application.start_app
+-- @return bool or nil
 
 function Navigator:start_app()
   TRACE("Navigator.start_app()")
@@ -215,7 +203,8 @@ end
 
 --------------------------------------------------------------------------------
 
--- called when a new document becomes available
+--- inherited from Application
+-- @see Duplex.Application.on_new_document
 
 function Navigator:on_new_document()
   TRACE("Navigator:on_new_document()")
@@ -227,8 +216,9 @@ end
 
 --------------------------------------------------------------------------------
 
--- build the application, 
--- @return boolean (false if requirements were not met)
+--- inherited from Application
+-- @see Duplex.Application._build_app
+-- @return bool
 
 function Navigator:_build_app()
   TRACE("Navigator:_build_app()")
@@ -240,7 +230,7 @@ function Navigator:_build_app()
   local map = self.mappings.blockpos
   if (map.group_name) then
 
-    if (map.orientation == VERTICAL) then
+    if (map.orientation == ORIENTATION.VERTICAL) then
       self._blockpos_size = cm:count_rows(map.group_name)
     else
       self._blockpos_size = cm:count_columns(map.group_name)
@@ -538,7 +528,8 @@ end
 
 --------------------------------------------------------------------------------
 
--- periodic updates: check if properties have changed
+--- inherited from Application
+-- @see Duplex.Application.on_idle
 
 function Navigator:on_idle()
 
@@ -548,7 +539,6 @@ function Navigator:on_idle()
 
   local rns = renoise.song()
 
-  ---------------------------------------------------------
   -- prevent loop from migrating into a new pattern when
   -- it shouldn't 
   ---------------------------------------------------------
@@ -572,7 +562,6 @@ function Navigator:on_idle()
     self._jump_pos = nil
   end
 
-  ---------------------------------------------------------
   --  handle changes to loop/range
   ---------------------------------------------------------
 
@@ -614,7 +603,6 @@ function Navigator:on_idle()
     self:_update_blockpos_range()
   end
 
-  ---------------------------------------------------------
   --  handle changes to position/index
   ---------------------------------------------------------
 
@@ -652,7 +640,7 @@ end
 --------------------------------------------------------------------------------
 
 --- obtain the current play/editpos, quantized to the number of steps
--- @return number (0 to display "no index")
+-- @return int (0 to display "no index")
 
 function Navigator:_obtain_active_index()
   TRACE("Navigator:_obtain_active_index()")
@@ -690,11 +678,11 @@ end
 --------------------------------------------------------------------------------
 
 --- return the line number for the provided index
--- @param idx (number), 0-blockpos_size
--- @return number (0-number of lines)
+-- @param idx (int), 0-blockpos_size
+-- @return int (0-number of lines)
 
 function Navigator:_get_line_from_index(idx)
-  TRACE("Navigator:_get_line_from_index()",idx)
+  TRACE("Navigator:_get_line_from_index(idx)",idx)
 
   local lines_per_unit = self:_get_lines_per_unit()
   local active_line = (idx * lines_per_unit)+1
@@ -706,13 +694,16 @@ end
 
 --- obtain the number of lines per "unit" (blockpos size)
 -- using the selected pattern as the basis for the calculation
--- @return number (lines per unit),number (number of lines in pattern)
+-- @param seq_idx (int)
+-- @return int (lines per unit), number of lines in pattern
 
-function Navigator:_get_lines_per_unit(patt_idx)
-  TRACE("Navigator:_get_lines_per_unit()")
+function Navigator:_get_lines_per_unit(seq_idx)
+  TRACE("Navigator:_get_lines_per_unit(seq_idx)",seq_idx)
 
   local rns = renoise.song()
-  patt_idx = patt_idx or rns.selected_pattern_index
+  seq_idx = seq_idx or rns.selected_sequence_index
+
+  local patt_idx = rns.sequencer:pattern(seq_idx)
   local num_lines = rns.patterns[patt_idx].number_of_lines
   local lines_per_unit = math.floor(num_lines/self._blockpos_size)
   return lines_per_unit,num_lines
@@ -742,10 +733,10 @@ end
 
 --- navigate to the line indicated by the index¨
 -- also: carry over loop, if this option has been enabled
--- @param ctrl_idx (number), 1-blockpos_size
+-- @param ctrl_idx (int), 1-blockpos_size
 
 function Navigator:_jump_to_index(ctrl_idx)
-  TRACE("Navigator:_jump_to_index()",ctrl_idx)
+  TRACE("Navigator:_jump_to_index(ctrl_idx)",ctrl_idx)
 
   local rns = renoise.song()
   local active_line = self:_get_line_from_index(ctrl_idx-1)
@@ -993,6 +984,7 @@ end
 -- if you clear a block loop, the sequence loop should remain unaffected
 
 function Navigator:_clear_looped_range()
+  --TRACE("Navigator:_clear_looped_range")
 
   local rns = renoise.song()
 
@@ -1032,7 +1024,7 @@ end
 
 --- determine if the song contain a looped range
 -- (this can be a sequence loop, a block loop or a custom looped range)
--- @return boolean, enum (Navigator.LOOP_xxx)
+-- @return bool, enum (Navigator.LOOP_xxx)
 
 function Navigator:_has_looped_range()
   --TRACE("Navigator:_has_looped_range")

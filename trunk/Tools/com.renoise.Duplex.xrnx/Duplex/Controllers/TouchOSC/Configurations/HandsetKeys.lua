@@ -2,8 +2,6 @@
 -- Duplex.TouchOSC 
 ----------------------------------------------------------------------------]]--
 
--- setup "Mixer + Recorder + Matrix" for this configuration
-
 duplex_configurations:insert {
 
   -- configuration properties
@@ -20,7 +18,7 @@ duplex_configurations:insert {
     device_port_out = "8081",
     control_map = "Controllers/TouchOSC/Controlmaps/TouchOSC_Keys.xml",
     thumbnail = "Controllers/TouchOSC/TouchOSC.bmp",
-    protocol = DEVICE_OSC_PROTOCOL,
+    protocol = DEVICE_PROTOCOL.OSC,
   },
 
   applications = {

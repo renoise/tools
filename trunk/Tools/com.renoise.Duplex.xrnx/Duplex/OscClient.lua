@@ -1,17 +1,11 @@
---[[----------------------------------------------------------------------------
+--[[============================================================================
 -- Duplex.OscClient
-----------------------------------------------------------------------------]]--
+============================================================================]]--
 
---[[
-
-About 
-
-  OscClient is a simple OSC client that connect to the built-in OSC server in 
-  Renoise, producing realtime messages that trigger notes or send MIDI messages
-
+--[[--
+OscClient is a simple OSC client that connect to the built-in OSC server in Renoise, producing realtime messages that trigger notes or send MIDI messages
 
 --]]
-
 
 --==============================================================================
 
@@ -20,8 +14,8 @@ class 'OscClient'
 --------------------------------------------------------------------------------
 
 --- Initialize the OscClient class
--- @param osc_host (String) the host-address name (can be an IP address)
--- @param osc_port (Number) the host port
+-- @param osc_host (string) the host-address name (can be an IP address)
+-- @param osc_port (int) the host port
 
 function OscClient:__init(osc_host,osc_port)
 
@@ -42,10 +36,11 @@ end
 --------------------------------------------------------------------------------
 
 --- Trigger instrument-note
--- @param note_on (Boolean), true when note-on and false when note-off
--- @param instr (Number), the Renoise instrument index 
--- @param note (Number), the desired pitch
--- @param velocity (Number), the desired velocity
+-- @param note_on (bool), true when note-on and false when note-off
+-- @param instr (int), the Renoise instrument index 
+-- @param track (int) the Renoise track index
+-- @param note (int), the desired pitch, 0-120
+-- @param velocity (int), the desired velocity, 0-127
 
 function OscClient:trigger_instrument(note_on,instr,track,note,velocity)
   TRACE("OscClient:trigger_instrument()",note_on,instr,track,note,velocity)
@@ -80,7 +75,7 @@ end
 --------------------------------------------------------------------------------
 
 --- Internal midi-message function, shared across applications
--- @param t (Table/MIDIMessage), a ready-to-send MIDI message
+-- @param t (table), a ready-to-send MIDI message
 
 function OscClient:trigger_midi(t)
   TRACE("OscClient:trigger_midi()",t)

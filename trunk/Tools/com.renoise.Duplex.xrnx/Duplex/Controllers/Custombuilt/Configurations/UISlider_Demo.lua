@@ -17,8 +17,7 @@ duplex_configurations:insert {
     device_port_in = "",
     device_port_out = "",
     control_map = "Controllers/Custombuilt/Controlmaps/UISlider_Demo.xml",
-    --thumbnail = "Controllers/Custombuilt/R-control.bmp",
-    protocol = DEVICE_MIDI_PROTOCOL
+    protocol = DEVICE_PROTOCOL.MIDI
   },
 
   applications = {
@@ -69,7 +68,7 @@ duplex_configurations:insert {
       mappings = {
         control = {
           group_name = "UISlider_column",
-          orientation = VERTICAL,
+          orientation = ORIENTATION.VERTICAL,
         },
       },
       options = {
@@ -83,7 +82,7 @@ duplex_configurations:insert {
       mappings = {
         control = {
           group_name = "UISlider_row",
-          orientation = HORIZONTAL,
+          orientation = ORIENTATION.HORIZONTAL,
         },
       },
       options = {
@@ -97,7 +96,7 @@ duplex_configurations:insert {
       mappings = {
         control = {
           group_name = "UISlider_grid",
-          orientation = NO_ORIENTATION,
+          orientation = ORIENTATION.NONE,
         },
       },
       options = {

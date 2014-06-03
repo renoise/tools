@@ -2,10 +2,6 @@
 -- Duplex.MIDI-Keyboard
 ----------------------------------------------------------------------------]]--
 
--- default configuration of a MIDI-Keyboard
-
---==============================================================================
-
 duplex_configurations:insert {
 
   -- configuration properties
@@ -20,7 +16,7 @@ duplex_configurations:insert {
     device_port_out = "None",
     control_map = "Controllers/MIDI-Keyboard/Controlmaps/MIDI-Key_Keyboard.xml",
     thumbnail = "Controllers/MIDI-Keyboard/MIDI-Keyboard.bmp",
-    protocol = DEVICE_MIDI_PROTOCOL
+    protocol = DEVICE_PROTOCOL.MIDI
   },
   applications = {
     Keyboard = {

@@ -2,8 +2,6 @@
 -- Duplex.Monome 
 ----------------------------------------------------------------------------]]--
 
--- setup "StepSequencer" for this configuration
-
 duplex_configurations:insert {
 
   -- configuration properties
@@ -20,35 +18,9 @@ duplex_configurations:insert {
     device_port_out = "8082",
     control_map = "Controllers/Monome/Controlmaps/Monome128_XYPad.xml",
     thumbnail = "Controllers/Monome/Monome.bmp",
-    protocol = DEVICE_OSC_PROTOCOL,
+    protocol = DEVICE_PROTOCOL.OSC,
   },
   applications = {
-    --[[
-    Grid8x3 = {
-      application = "XYPad",
-      mappings = {
-        xy_grid = {
-          group_name = "Grid8x3",
-        },
-      },
-      palette = {
-        foreground = {
-          color={0x00,0x00,0x00}, 
-        },  
-        background = {
-          color={0xFF,0xFF,0x00}, 
-        },  
-      }
-    },
-    Grid8x3_Extra = {
-      application = "XYPad",
-      mappings = {
-        xy_grid = {
-          group_name = "Grid8x1",
-        },
-      }
-    },
-    ]]
     Repeater = {
       mappings = {
         grid = {
@@ -74,14 +46,6 @@ duplex_configurations:insert {
         xy_grid = {
           group_name = "Grid7x7",
         },
-        --prev_device = {
-        --  group_name = "Controls",
-        --  index = 4
-        --},
-        --next_device = {
-        --  group_name = "Controls",
-        --  index = 5
-        --},
         lock_button = {
           group_name = "Controls",
           index = 6
@@ -126,17 +90,6 @@ duplex_configurations:insert {
         parameters = {
           group_name= "Grid8x5",
         },
-        --device = {
-        --  group_name = "Controls2",
-        --},
-        --device_prev = {
-        --  group_name = "Grid1x5",
-        --  index = 4
-        --},
-        --device_next = {
-        --  group_name = "Grid1x5",
-        --  index = 5
-        --}
       },
     },
     TrackSelector = {
@@ -146,11 +99,11 @@ duplex_configurations:insert {
           index = 1
         },
         prev_track = {
-          group_name = "Cursor",
+          group_name = "Grid1x5",
           index = 2,
         },
         next_track = {
-          group_name = "Cursor",
+          group_name = "Grid1x5",
           index = 3,
         },
 

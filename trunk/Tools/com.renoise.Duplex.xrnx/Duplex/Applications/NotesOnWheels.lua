@@ -1,199 +1,59 @@
---[[----------------------------------------------------------------------------
+--[[============================================================================
 -- Duplex.NotesOnWheels (NOW)
 -- Inheritance: Application > NotesOnWheels
-----------------------------------------------------------------------------]]--
+============================================================================]]--
 
---[[
+--[[--
+Notes On Wheels (N.O.W) is an arpeggiating (alternating between pressed keys) step sequencer. 
 
--- About -----------------------------------------------------------------------
+### Features
+N.O.W. allows you to create a sequence and control all aspects of each step (such as the pitch, velocity etc.) in realtime. 
 
-  Notes On Wheels (NOW) is a realtime phrase arpeggiator/sequencer for Renoise, basically a mix between an arpeggiator (oscillating between pressed keys) and a step sequencer (repeating a programmed a series of notes). It allows us to create a sequence and control all aspects of each step (such as the pitch, velocity etc.) in realtime. 
+As for input, N.O.W. is very flexible, as you can control it via an additional MIDI input. Also, the virtual control surface will, when focused, detect and respond to keypresses within a specific range. 
 
-  As for input, N.O.W. is very flexible, as you can both control it via the virtual control surface and your controller (obviously), but it also features an additional MIDI input which you can use for hooking up an external keyboard. Finally, the virtual control surface will, when focused, detect and respond to keypresses within a specific range (identical to the virtual keyboard in Renoise, but only for two full octaves). 
-  The virtual keyboard supports both ordinary transpose (one octave up/down from the middle C), and multi-step sequences (press keys while holding the SHIFT modifier). Same goes for the external MIDI keyboard, which can be set up to act upon CC messages and pitch bend. 
+The virtual keyboard supports both ordinary transpose (one octave up/down from the middle C), and multi-step sequences (press keys while holding the SHIFT modifier). Same goes for the external MIDI keyboard, which can be set up to act upon CC messages and pitch bend. 
 
 
--- Controller setup ------------------------------------------------------------
+### Controller setup
 
-  A dedicated control surface is located in the Renoise tools menu:
-  Duplex > Custombuilt > Notes On Wheels
-  _________________________________________________
-  |  _  _  _  _  _  _  _  _  _  _  _  _   _  _    | 
-  | |_||_||_||_||_||_||_||_||_||_||_||_| |_||_|   | <- Position + Line offset
-  |  _  _  _  _  _  _  _  _  _  _  _  _   ______  | 
-  | (_)(_)(_)(_)(_)(_)(_)(_)(_)(_)(_)(_) |__||__| | <- Pitch controls
-  |  _  _  _  _  _  _  _  _  _  _  _  _   ______  | 
-  | (_)(_)(_)(_)(_)(_)(_)(_)(_)(_)(_)(_) |__||__| | <- Velocity controls
-  |  _  _  _  _  _  _  _  _  _  _  _  _   ______  | 
-  | (_)(_)(_)(_)(_)(_)(_)(_)(_)(_)(_)(_) |__||__| | <- Offset controls
-  |  _  _  _  _  _  _  _  _  _  _  _  _   ______  | 
-  | (_)(_)(_)(_)(_)(_)(_)(_)(_)(_)(_)(_) |__||__| | <- Gate controls
-  |  _  _  _  _  _  _  _  _  _  _  _  _   ______  | 
-  | (_)(_)(_)(_)(_)(_)(_)(_)(_)(_)(_)(_) |__||__| | <- Retrigger controls
-  |  _  _  _  _  _  _  _  _  _  _  _  _   _  _    | 
-  | |_||_||_||_||_||_||_||_||_||_||_||_| (_)(_)   | <- Steps + Spacing/Length
-  |                                               |
-  | |Write| |Learn| |Fill| |Global| |Modes...|    | <- Various controls
-  | ______________________________________________|
+A dedicated control surface is located in the Renoise tools menu:
+Duplex > Custombuilt > Notes On Wheels
+    _________________________________________________
+    |  _  _  _  _  _  _  _  _  _  _  _  _   _  _    | 
+    | |_||_||_||_||_||_||_||_||_||_||_||_| |_||_|   | <- Position + Line offset
+    |  _  _  _  _  _  _  _  _  _  _  _  _   ______  | 
+    | (_)(_)(_)(_)(_)(_)(_)(_)(_)(_)(_)(_) |__||__| | <- Pitch controls
+    |  _  _  _  _  _  _  _  _  _  _  _  _   ______  | 
+    | (_)(_)(_)(_)(_)(_)(_)(_)(_)(_)(_)(_) |__||__| | <- Velocity controls
+    |  _  _  _  _  _  _  _  _  _  _  _  _   ______  | 
+    | (_)(_)(_)(_)(_)(_)(_)(_)(_)(_)(_)(_) |__||__| | <- Offset controls
+    |  _  _  _  _  _  _  _  _  _  _  _  _   ______  | 
+    | (_)(_)(_)(_)(_)(_)(_)(_)(_)(_)(_)(_) |__||__| | <- Gate controls
+    |  _  _  _  _  _  _  _  _  _  _  _  _   ______  | 
+    | (_)(_)(_)(_)(_)(_)(_)(_)(_)(_)(_)(_) |__||__| | <- Retrigger controls
+    |  _  _  _  _  _  _  _  _  _  _  _  _   _  _    | 
+    | |_||_||_||_||_||_||_||_||_||_||_||_| (_)(_)   | <- Steps + Spacing/Length
+    |                                               |
+    | |Write| |Learn| |Fill| |Global| |Modes...|    | <- Various controls
+    | ______________________________________________|
 
-  Also, check out the compact version, which use fewer controls, but still manages to contain every feature of it's bigger brother. This is possible because the sliders in that version are switching between the currently active mode (pitch, velocity etc.), and therefore, require only a small set of physical controls. Perhaps it's a more realistic starting point for your wn controller mapping than the fully expanded version? It's located here: 
-  Duplex > Custombuilt > Notes On Wheels (compact)
+Also, check out the compact version, which use fewer controls, but still manages to contain every feature of it's bigger brother. This is possible because the sliders in that version are switching between the currently active mode (pitch, velocity etc.), and therefore, require only a small set of physical controls. Perhaps it's a more realistic starting point for your wn controller mapping than the fully expanded version? It's located here: 
+Duplex > Custombuilt > Notes On Wheels (compact)
 
 
--- Mappings --------------------------------------------------------------------
+### Discuss
 
+Tool discussion is located on the [Renoise forum][1]
+[1]: http://forum.renoise.com/index.php?/topic/31136-notes-on-wheels-now/
 
-  @mapping choose_mode (UISlider)
 
-    The mode determine which kind of output the 'Steps' dials will generate
+### Changelog
 
-    1. Pitch (set the pitch of each step - max/min value will clear)
-    2. Velocity (set the volume of each step)
-    3. Offset (set the sample offset of each step)
-    4. Gate (set the length of each step, max is infinite)
-
-  @mapping set_mode_pitch   (UIButton)
-  @mapping set_mode_velocity(UIButton)
-  @mapping set_mode_offset  (UIButton)
-  @mapping set_mode_gate    (UIButton)
-  @mapping set_mode_retrig  (UIButton)
-
-    These mappings work simularly to the choose_mode, but allows you to assign a mode directly to a specific button. If two or more modes are assigned in this way, they will act as radio buttons.
-    As a secondary feature, hold any of these buttons for a moment, and the sequence will be written to the pattern, 'fill mode'
-
-  @mapping multi_sliders    (group of fader/sdials)
-
-    Specifies mode-dependant input dials (can control any parameter by switching mode). Recommended if you don't have a lot of physical UISliders
-
-    It's also possible to assign controls directly to each function:
-
-  @mapping pitch_sliders     (group of UISliders)
-  @mapping velocity_sliders  (group of UISliders)
-  @mapping offset_sliders    (group of UISliders)
-  @mapping gate_sliders      (group of UISliders)
-  @mapping retrig_sliders    (group of UISliders)
-
-  @mapping num_steps (UISlider, 1-12)
-
-    Set the number of steps in the sequence (mode-dependant)
-
-  @mapping step_spacing (UISlider, 1-16)
-
-    This value will determine the space between each note in lines. 
-    A value of 0 will output all notes simultaneously 
-
-  @mapping shift_up/down (UIButton)
-
-    Control the line-number offset using two buttons (increase/decrease offset by a single line)
-
-  @mapping extend/shrink (UIButton)
-
-    The 'extend' button will multiply the sequence's length by two, by cloning all steps and doubling the global retrig rate. Pressing 'shrink' will reduce the length of the sequence and global retrig rate by 50%
-
-  @mapping multi_adjust (UISlider)
-
-    The multi_adjust fader adjust all steps in a sequence simultaneously, but only one type of parameter (pitch, velocity, etc.). Which parameter is adjusted depend on the currently selected mode. 
-    
-    Adjustments work like this:
-
-    1.  In 'pitch' mode, the fader will transpose each note's pitch 
-        0%   = -12 semitones
-        50%	 = Original pitch
-        100% = +12 semitones
-
-    2.  In 'velocity' mode, the fader will scale each note's volume
-        relative to it's original value
-        0%   = Silent (volume is 00)
-        100% = Loudest (full volume, 80)
-
-    3.  In 'offset' mode, the fader will shift the sample offsets
-        0%   = Minimum (no shift)
-        100% = Maximum (full shift)
-
-    4.  In 'gate' mode, you control the duration of all notes
-        0%   = Shortest duration (closed)
-        100% = Unaltered gate duration
-
-    5.  In 'retrig' mode, you control the number of retrigs for all notes
-        0%   = No retriggering
-        100% = Maximum retriggering (32x)
-
-    You can also choose to control each parameter individually:
-
-  @mapping pitch_adjust  (UISlider)
-  @mapping velocity_adjust (UISlider)
-  @mapping offset_adjust (UISlider)
-  @mapping gate_adjust   (UISlider)
-  @mapping retrig_adjust (UISlider)
-
-  @mapping global (UIButton)
-
-    Enable 'global' to output all parameters (pitch, velocity, etc.) at the same time. When off, only the modified parameter type is output
-
-  @mapping fill (UIButton)
-
-    Fill the entire track with the sequence, each time something changes. Use with caution, as this might be heavy on the CPU (with long patterns and many note columns)
-    OBSOLETE?
-
-  @mapping position (UIButton)
-
-    Set the position of the sequence (modifies the line offset), based on the position of the edit cursor
-
-  @mapping learn (UIButton)
-
-    Import pattern editor data beginning from the cursor position
-
-  @mapping write (UIButton)
-
-    Toggles between output and no output (if you don't have room for this, check out @edit_sync)
-
-
--- Options ---------------------------------------------------------------------
-
-
-  @option write_method (touch, latch, write)
-
-    It's possible to write pattern data in three different ways:
-    1. 'Touch' will only output notes while the controller is being used
-    2. 'Latch' will start output once the controller is being used
-    3. 'Write' will output notes continously, no matter what
-
-  @option edit_sync (enabled,disabled)
-
-    Enable output when recording/edit-mode in Renoise is active
-
-  @option offset_quantize (free or 2 - 32)
-
-    Adjust this to divide a sample into a number of equally sized segments when (applied when using the sample-offset controls). 
-
-  @option offset_wrap (true,false)
-
-    Enable this to wrap the sample-offset 
-
-  @option global_mode (true,false)
-
-    Enable this to start the application in global mode
-
-  @option fill_mode (true,false)
-
-    Enable this to start the application in fill mode
-
-  TODO @option learn_method (true,false)
-
-    1. 'Strict', only import a sequences with matching length
-    2. 'Loose', attempt to import anything
-
-    In any case, learning a completely empty pattern will empty the sequence
-
-
-
--- Changelog ------------------------------------------------------------------
-
-  0.98  - First release
+  0.98  
+    - First release
 
 
 --]]
-
 
 --==============================================================================
 
@@ -204,15 +64,20 @@ local MODE_VELOCITY = 2
 local MODE_OFFSET = 3
 local MODE_GATE = 4
 local MODE_RETRIG = 5
+
 local EDIT_SYNC_ON = 1
 local EDIT_SYNC_OFF = 2
+
 local GLOBAL_MODE_ON = 1
 local GLOBAL_MODE_OFF = 2
+
 local WRITE_METHOD_TOUCH = 1
 local WRITE_METHOD_LATCH = 2
 local WRITE_METHOD_WRITE = 3
+
 local FILL_MODE_ON = 1
 local FILL_MODE_OFF = 2
+
 local WRAP_OFFSET_ON = 1
 local WRAP_OFFSET_OFF = 2
 
@@ -221,6 +86,19 @@ local WRAP_OFFSET_OFF = 2
 
 class 'NotesOnWheels' (Application)
 
+--- These are the default options for the application
+-- 
+-- @field write_method Select the desired write method 
+--    WRITE_METHOD_TOUCH will only output notes while the controller is being used
+--    WRITE_METHOD_LATCH will start output once the controller is being used
+--    WRITE_METHOD_WRITE will output notes continously, no matter what
+-- @field edit_sync Enable output when recording/edit-mode in Renoise is active
+-- @field global_mode Enable this to start the application in global mode
+-- @field fill_mode Enable this to start the application in fill mode
+-- @field offset_quantize Adjust this to divide a sample into a number of equally sized segments when (applied when using the sample-offset controls). 
+-- @field offset_wrap Enable this to wrap the sample-offset 
+-- @field midi_keyboard Select among available MIDI devices
+-- @table default_options
 NotesOnWheels.default_options = {
   write_method = {
     label = "Write method",
@@ -302,11 +180,51 @@ NotesOnWheels.default_options = {
   },
 }
 
+--- These are the available mappings for the application
+-- 
+-- Note: the `set_mode_[...]` mappings allow you to assign a mode directly to a specific button. If two or more modes are assigned in this way, they will act as radio buttons.
+-- As a secondary feature, hold any of these buttons for a moment, and the sequence will be written to the pattern, `fill mode`
+-- @field choose_mode (UISlider) The mode determine which kind of output the 'Steps' dials will generate
+--    1 = Pitch - set the pitch of each step - max/min value will clear
+--    2 = Velocity - set the volume of each step
+--    3 = Offset - set the sample offset of each step
+--    4 = Gate - set the length of each step, max is infinite
+--    5 = Retrig - set the retrig rate of each step
+-- @field set_mode_pitch (UIButton) Set mode to Pitch* 
+-- @field set_mode_velocity (UIButton) Set mode to Velocity*
+-- @field set_mode_offset (UIButton) Set mode to Offset*
+-- @field set_mode_gate (UIButton) Set mode to Gate*
+-- @field set_mode_retrig (UIButton) Set mode to Gate*
+-- @field multi_sliders (group of UISliders) Specifies mode-dependant input dials (can control any parameter by switching mode)
+-- @field pitch_sliders (group of UISliders) Direct pitch control of each step
+-- @field velocity_sliders (group of UISliders) Direct velocity control of each step
+-- @field offset_sliders (group of UISliders) Direct offset control of each step
+-- @field gate_sliders (group of UISliders) Direct gate control of each step
+-- @field retrig_sliders (group of UISliders) Direct retrig control of each step
+-- @field num_steps (UISlider, 1-12) Set the number of steps in the sequence (mode-dependant)
+-- @field step_spacing (UISlider, 1-16) This value will determine the space between each note in lines (a value of 0 will output all notes simultaneously)
+-- @field pitch_adjust (UISlider) global pitch adjust (affects all steps)
+-- @field velocity_adjust (UISlider) global velocity adjust (affects all steps)
+-- @field offset_adjust (UISlider) global offset adjust (affects all steps)
+-- @field gate_adjust (UISlider) global gate adjust (affects all steps)
+-- @field retrig_adjust (UISlider) global retrig adjust (affects all steps)
+-- @field multi_adjust (UISlider) global adjust (affects all steps in given mode)
+-- @field write (UIButton) Toggles between output and no output (if you don't have room for this, check out @edit_sync)
+-- @field learn (UIButton) Import pattern editor data beginning from the cursor position
+-- @field fill (UIButton) Fill the entire track with the sequence, each time something changes. Use with caution, as this might be heavy on the CPU (with long patterns and many note columns)
+-- @field global (UIButton) Enable 'global' to output all parameters (pitch, velocity, etc.) at the same time. When off, only the modified parameter type is output
+-- @field shift_up (UIButton) Control the line-number offset (increase offset by a single line)
+-- @field shift_down (UIButton) Control the line-number offset (decrease offset by a single line)
+-- @field extend (UIButton) The 'extend' button will multiply the sequence's length by two, by cloning all steps and doubling the global retrig rate. 
+-- @field shrink (UIButton) Pressing 'shrink' will reduce the length of the sequence and global retrig rate by 50%
+-- @field position (UIButton) Set the position of the sequence, based on the position of the edit cursor
+-- @table available_mappings
 NotesOnWheels.available_mappings = {
 
   choose_mode = {
     description = "NOW: Choose mode",
-  },
+  }, 
+
   set_mode_pitch = {
     description = "NOW: Set mode to 'pitch'"..
                   "\nHold to write sequence to entire pattern",
@@ -329,7 +247,7 @@ NotesOnWheels.available_mappings = {
   },
   multi_sliders = {
     description = "NOW: Mode-dependant slider",
-  },
+  }, 
   pitch_sliders = {
     description = "NOW: Change pitch for step ",
   },
@@ -347,14 +265,14 @@ NotesOnWheels.available_mappings = {
   },
   num_steps = {
     description = "NOW: Number of steps",
-    orientation = HORIZONTAL, -- supports grid mode
+    orientation = ORIENTATION.HORIZONTAL, -- supports grid mode
   },
   step_spacing = {
     description = "NOW: Line-space between steps",
   },
-  num_lines = {
-    description = "NOW: Sequence length (lines)",
-  },
+  --num_lines = {
+  --  description = "NOW: Sequence length (lines)",
+  --},
   pitch_adjust = {
     description = "NOW: Transpose all steps",
   },
@@ -437,87 +355,93 @@ NotesOnWheels.default_palette = {
 --------------------------------------------------------------------------------
 
 --- Constructor method
--- @param (VarArg), see Application to learn more
+-- @param (VarArg)
+-- @see Duplex.Application
 
 function NotesOnWheels:__init(...)
   TRACE("NotesOnWheels:__init",...)
 
-  -- the step which was last modified (used for non-global output)
+  --- the step which was last modified (used for non-global output)
   self.step_focus = nil
 
-  -- set to something else than 0 when instrument is sliced
+  --- set to something else than 0 when instrument is sliced
   -- (tracked in realtime via the sample_mappings property)
   self.number_of_slices = 0
 
-  -- remember where the sample mappings start/end
+  --- remember where the sample mappings start/end
   -- (tracked in realtime via the sample_mappings property)
   self.lower_note = nil
   self.upper_note = nil
 
-  -- detect if sample mappings are 'white keys only'
+  --- detect if sample mappings are 'white keys only'
   -- (tracked in realtime via the sample_mappings property)
   self.white_keys_only = true
 
-  -- list of white keys
+  --- list of white keys
+  -- @field ... lot of keys
+  -- @table white_keys
   self.white_keys = {0,2,4,5,7,9,11,12,14,16,17,19,21,23,24,26,28,29,31,33,35,36,38,40,41,43,45,47,48,50,52,53,55,57,59,60,62,64,65,67,69,71,72,74,76,77,79,81,83,84,86,88,89,91,93,95,96,98,100,101,103,105,107,108,110,112,113,115,117,119}
 
-  -- reference to the instrument observable
+  --- reference to the instrument observable
   --self._attached_instr_observable = nil
 
-  -- true while the sequencer accepts incoming notes
+  --- true while the sequencer accepts incoming notes
   -- PC keyboard: when shift modifier is pressed
   self.accept_note_input = false
 
-  -- true, once we input using shift modifier
+  --- true, once we input using shift modifier
   self.has_received_input = false
 
-  -- MIDI keys: remember pressed keys
+  --- MIDI keys: remember pressed keys
   self.midi_pressed_keys = table.create()
 
-  -- MIDI keys: max number of simultaneously pressed keys
+  --- MIDI keys: max number of simultaneously pressed keys
   self.midi_max_keys = 0
 
-  -- use these for scheduled output
+  --- use these for scheduled output
   -- (assign a special value to make them output first time)
   self.scheduled_step = -1
   self.scheduled_mode = -1
 
-  -- track playback progress in 'blinks' 
+  --- track playback progress in 'blinks' 
   self._blink = false
 
-  -- the lit state of buttons
+  --- the lit state of buttons
   self.write_button_state = nil
   self.learn_button_state = nil
 
-  -- track changed? check via idle loop
+  --- track changed? check via idle loop
   self.track_changed = false
 
-  -- when using the 'latch' write method, this will indicate
+  --- when using the 'latch' write method, this will indicate
   -- that no control has yet been touched 
   self.touched = false
 
-  -- the song is playing? check via idle loop
+  --- the song is playing? check via idle loop
   self._playing = renoise.song().transport.playing
 
-  -- realtime position 
+  --- realtime position 
   self.realtime_pos = nil
 
-  -- when auto-learning is enabled
+  --- when auto-learning is enabled
   self.autolearn = false
 
+  --- (bool) temporary flag set when entering autolearn mode
   self.just_entered_autolearn = false
 
-  -- internal sequence representation 
-  -- (instance of 'NOW_Sequence')
+  --- (NOW_Sequence) internal sequence representation 
   self.seq = nil
 
-  -- continuous mode support
-  self.last_line = 0              -- the pattern-line last detected by idle loop
-  self.line_offset = 0            -- the current line offset
-  self.pending_line_offset = 0    -- the upcoming pattern's line offset
-  self.pending_seq_pos = nil      -- sequence-pos of upcoming pattern 
+  --- the pattern-line last detected by idle loop
+  self.last_line = 0              
+  --- the current line offset
+  self.line_offset = 0            
+  --- the upcoming pattern's line offset
+  self.pending_line_offset = 0    
+  --- sequence-pos of upcoming pattern 
+  self.pending_seq_pos = nil      
 
-  -- all UIComponent references are kept here
+  --- all UIComponent references are kept here
   -- create tables in advance, the rest ad hoc
   self._controls = {
     multi_sliders = table.create(),
@@ -544,23 +468,38 @@ function NotesOnWheels:__init(...)
   Application.__init(self,...)
 
   -- set these values after configuration has been applied
+
+  --- (enum) the current mode
   self.mode = MODE_PITCH
+
+  --- (enum) write method
   self.write_method = self.options.write_method.value
+
+  --- (bool) global mode 
   self.global_mode = (self.options.global_mode.value == GLOBAL_MODE_ON)
+
+  --- (bool) fill mode
   self.fill_mode = (self.options.fill_mode.value == FILL_MODE_ON)
+
+  --- (bool) write mode
   self.write_mode = false
 
   if (self.options.edit_sync.value == EDIT_SYNC_ON) then
     self.write_mode = renoise.song().transport.edit_mode
   end
   
-  -- set up external midi control
+  --- (renoise.Midi.MidiDevice) 
   self.midi_in = nil
   self:select_midi_port(self.options.midi_keyboard.value-1)
 
 end
 
--- start/resume application
+-------------------------------------------------------------------------------
+
+--- inherited from Application
+-- @see Duplex.Application.start_app
+-- @return bool or nil
+
 function NotesOnWheels:start_app()
   TRACE("NotesOnWheels.start_app()")
 
@@ -575,7 +514,10 @@ function NotesOnWheels:start_app()
 
 end
 
--- initialize MIDI input
+-------------------------------------------------------------------------------
+
+--- initialize MIDI input
+
 function NotesOnWheels:select_midi_port(port_idx)
   TRACE("NotesOnWheels.select_midi_port()",port_idx)
 
@@ -597,14 +539,16 @@ function NotesOnWheels:select_midi_port(port_idx)
 
 end
 
--- receive MIDI from device
+-------------------------------------------------------------------------------
+
+--- receive MIDI from device
 
 function NotesOnWheels:midi_callback(message)
   TRACE("NotesOnWheels:midi_callback",message[1], message[2], message[3])
 
   -- determine the type of signal : note/cc/etc
   if (message[1]>=128) and (message[1]<=159) then
-    --print("MIDI_NOTE_MESSAGE")
+    --print("DEVICE_MESSAGE.MIDI_NOTE")
     local is_note_off = false
     if(message[1]>143)then -- on
       if (message[3]==0) then -- off
@@ -650,12 +594,12 @@ function NotesOnWheels:midi_callback(message)
       end
     end
   elseif (message[1]>=176) and (message[1]<=191) then
-    --print("MIDI_CC_MESSAGE")
+    --print("DEVICE_MESSAGE.MIDI_CC")
     if (self.mode ~= MODE_PITCH) then
       self.seq:adjust_multi(message[3]/127,true,true)
     end
   elseif (message[1]>=224) and (message[1]<=239) then
-    --print("MIDI_PITCH_BEND_MESSAGE")
+    --print("DEVICE_MESSAGE.MIDI_PITCH_BEND")
     self.seq:adjust_pitch(message[3]/127,true)
   else
     -- unsupported message...
@@ -663,7 +607,9 @@ function NotesOnWheels:midi_callback(message)
 
 end
 
--- schedule output, simple way to reduce number of pattern writes:
+-------------------------------------------------------------------------------
+
+--- schedule output, simple way to reduce number of pattern writes:
 -- remember the last step / mode - if either change, output immediately 
 -- @param seq_step (int), step to output (can be nil)
 -- @param mask_mode (enum), restrict to specific mode (can be nil)
@@ -691,12 +637,13 @@ function NotesOnWheels:schedule_output(seq_step,mask_mode)
 
 end
 
+-------------------------------------------------------------------------------
 
--- output sequence to pattern 
+--- output sequence to pattern 
 -- @param seq_step (int), step to output (can be nil)
 -- @param mask_mode (enum), restrict to specific mode (can be nil)
--- @param stream (boolean), produce output in 'short bursts'
--- @param force (boolean), force output (e.g. when mode buttons are held)
+-- @param stream (bool), produce output in 'short bursts'
+-- @param force (bool), force output (e.g. when mode buttons are held)
 
 function NotesOnWheels:output_sequence(seq_step,mask_mode,stream,force)
   TRACE("NotesOnWheels:output_sequence",seq_step,mask_mode,stream,force)
@@ -753,7 +700,10 @@ function NotesOnWheels:output_sequence(seq_step,mask_mode,stream,force)
 end
 
 
--- perform periodic updates
+-------------------------------------------------------------------------------
+
+--- inherited from Application
+-- @see Duplex.Application.on_idle
 
 function NotesOnWheels:on_idle()
 
@@ -905,6 +855,10 @@ function NotesOnWheels:on_idle()
 
 end
 
+-------------------------------------------------------------------------------
+
+--- inherited from Application
+-- @see Duplex.Application.on_new_document
 
 function NotesOnWheels:on_new_document()
   TRACE("NotesOnWheels:on_new_document")
@@ -914,6 +868,9 @@ function NotesOnWheels:on_new_document()
 
 end
 
+-------------------------------------------------------------------------------
+
+--- Update display of write mode
 
 function NotesOnWheels:disable_write_mode()
   TRACE("NotesOnWheels:disable_write_mode")
@@ -927,6 +884,12 @@ function NotesOnWheels:disable_write_mode()
   end
 
 end
+
+-------------------------------------------------------------------------------
+
+--- inherited from Application
+-- @see Duplex.Application.on_keypress
+-- @param key (table)
 
 function NotesOnWheels:on_keypress(key)
   TRACE("NotesOnWheels:on_keypress")
@@ -1018,6 +981,9 @@ function NotesOnWheels:on_keypress(key)
 
 end
 
+-------------------------------------------------------------------------------
+
+--- create or empty sequence
 
 function NotesOnWheels:create_empty_sequence()
   TRACE("NotesOnWheels:create_empty_sequence()")
@@ -1041,6 +1007,8 @@ function NotesOnWheels:create_empty_sequence()
 
 
 end
+
+-------------------------------------------------------------------------------
 
 -- adds notifiers to song
 -- invoked when a new document becomes available
@@ -1092,6 +1060,10 @@ function NotesOnWheels:_attach_to_song()
 
 end
 
+-------------------------------------------------------------------------------
+
+--- attach to selected instrument 
+
 function NotesOnWheels:_attach_to_instrument(new_song)
   TRACE("NotesOnWheels:_attach_to_instrument",new_song)
 
@@ -1107,6 +1079,10 @@ function NotesOnWheels:_attach_to_instrument(new_song)
   self:detect_slices()
 
 end
+
+-------------------------------------------------------------------------------
+
+--- detect number of slices, and if using "white keys" 
 
 function NotesOnWheels:detect_slices()
   TRACE("NotesOnWheels:detect_slices()")
@@ -1132,11 +1108,12 @@ function NotesOnWheels:detect_slices()
 
 end
 
+-------------------------------------------------------------------------------
 
--- convert the pitch range (normally 0-121) to the sliced sample range
+--- convert the pitch range (normally 0-121) to the sliced sample range
 -- (for example, middle C and every white key for the next two octaves)
--- @param value (number) the value to scale
--- @param invert (boolean) when the value is sent to a control
+-- @param int_val (number) the value to scale
+-- @param invert (bool) when the value is sent to a control
 function NotesOnWheels:to_sliced_pitch_range(int_val,invert)
   TRACE("NotesOnWheels:to_sliced_pitch_range",int_val,invert)
 
@@ -1161,10 +1138,10 @@ function NotesOnWheels:to_sliced_pitch_range(int_val,invert)
   return int_val
 end
 
+-------------------------------------------------------------------------------
 
--- when mode has changed
+--- when mode has changed
 -- @param mode (int, MODE_PITCH,MODE_VELOCITY,etc)
--- @param update (boolean, update mode button state)
 
 function NotesOnWheels:change_mode(mode)
   TRACE("NotesOnWheels:change_mode",mode)
@@ -1246,8 +1223,9 @@ function NotesOnWheels:change_mode(mode)
   end
 end
 
+-------------------------------------------------------------------------------
 
--- shift sequence in either direction
+--- shift sequence in either direction
 -- if we have a pending offset, update that one as well
 -- @param amount (int) 
 
@@ -1262,6 +1240,13 @@ function NotesOnWheels:shift(amount)
   renoise.app():show_status(msg)
 
 end
+
+
+-------------------------------------------------------------------------------
+
+--- inherited from Application
+-- @see Duplex.Application._build_app
+-- @return bool
 
 function NotesOnWheels:_build_app()
   TRACE("NotesOnWheels:_build_app()")
@@ -1645,7 +1630,7 @@ function NotesOnWheels:_build_app()
       c.ceiling = 12
       local gridbased = cm:is_grid_group(self.mappings.num_steps.group_name)
       if gridbased then
-        local orientation = self.mappings.num_steps.orientation or HORIZONTAL
+        local orientation = self.mappings.num_steps.orientation or ORIENTATION.HORIZONTAL
         c.flipped = true
         c:set_orientation(orientation)
         c:set_size(12)
@@ -1685,30 +1670,6 @@ function NotesOnWheels:_build_app()
       self._controls.step_spacing = c
     end
   end
-
-  -- create 'num_lines' slider
-  --[[
-  group_name = self.mappings.num_lines.group_name
-  if group_name then
-    local group = cm.groups[group_name]
-    if group then
-      local c = UISlider(self)
-      c.group_name = group_name
-      c:set_pos(self.mappings.num_lines.index or 1)
-      c.ceiling = 32
-      c.tooltip = self.mappings.num_lines.description
-      c:set_value(0)
-      c.on_change = function(obj) 
-        self.touched = true
-        if (self.seq:set_num_lines(math.floor(obj.value))) then
-          self:schedule_output()
-        end
-      end 
-      self:_add_component(c)
-      self._controls.num_lines = c
-    end
-  end
-  ]]
 
   -- create 'write' button
   group_name = self.mappings.write.group_name
@@ -2047,7 +2008,9 @@ function NotesOnWheels:_build_app()
 
 end
 
--- reset adjustments
+-------------------------------------------------------------------------------
+
+--- reset adjustments
 -- will apply the default adjustment for each parameter,
 -- and update the display (dedicated/multi-control) 
 
@@ -2216,8 +2179,8 @@ end
 -- set value for the various parameters,
 -- optionally update the dedicated control
 -- @param idx (int, between 1 & #number_of_steps)
--- @param update (boolean), update dedicated control 
--- @param multi (boolean), update multi-control
+-- @param update (bool), update dedicated control 
+-- @param multi (bool), update multi-control
 -- @return true when changed, false when not
 
 -- @param int_val (int), range 0-121
@@ -2382,7 +2345,7 @@ function NOW_Sequence:update_retrig_ctrl(int_val,ctrl)
 end
 
 -- set step distance 
--- @param update (boolean, when control needs update)
+-- @param update (bool, when control needs update)
 -- @return true when changed, false when not
 
 function NOW_Sequence:set_spacing(int_val,update)
@@ -2481,7 +2444,7 @@ function NOW_Sequence:mute_columns(idx)
 end
 
 -- TODO set sequence to specific number of lines
--- @param update (boolean, when control needs update)
+-- @param update (bool, when control needs update)
 -- @return true when changed, false when not
 --[[
 function NOW_Sequence:set_num_lines(int_val,update)
@@ -2504,8 +2467,8 @@ end
 
 -- adjust value (when using controller)
 -- @param val (number) between 0-1
--- @param update (boolean) update control
--- @return boolean (true when adjusted)
+-- @param update (bool) update control
+-- @return bool (true when adjusted)
 
 function NOW_Sequence:adjust_pitch(val,update)
   TRACE("NOW_Sequence:adjust_pitch()",val,update)
@@ -2770,7 +2733,7 @@ end
 
 -- @param val (int) pitch value
 -- @param note_column (renoise.NoteColumn object)
--- @param skip_instr (boolean) don't set instrument number (for retriggers)
+-- @param skip_instr (bool) don't set instrument number (for retriggers)
 function NOW_Sequence:write_note(val,note_column,skip_instr)
   --TRACE("NOW_Sequence:write_note",val,note_column,skip_instr)
   --local val = self.pitch_steps[offset2]
@@ -3121,8 +3084,8 @@ end
 -- @param patt_idx (int) pattern index
 -- @param seq_step (int) optional, limit output to sequence step
 -- @param mask_type (int) optional, limit output to parameter
--- @param stream (boolean) set when when realtime writing
--- @param recursive (boolean) when function call itself, limit to single run 
+-- @param stream (bool) set when when realtime writing
+-- @param recursive (bool) when function call itself, limit to single run 
 -- @param line_offset (int) number of lines to offset output by
 
 function NOW_Sequence:write_to_pattern(patt_idx,begin_line,seq_step,mask_type,stream,recursive,line_offset)
@@ -3228,7 +3191,7 @@ function NOW_Sequence:write_to_pattern(patt_idx,begin_line,seq_step,mask_type,st
     end
   end
 
-  -- boolean value for each step, true when gate has been set
+  -- bool value for each step, true when gate has been set
   local gates_set = table.create()
 
   -- create table for note-cut distribution (gate)

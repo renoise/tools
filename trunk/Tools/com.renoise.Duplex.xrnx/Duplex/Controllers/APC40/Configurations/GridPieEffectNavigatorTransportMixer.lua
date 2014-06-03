@@ -2,8 +2,6 @@
 -- Duplex.APC40
 ----------------------------------------------------------------------------]]--
 
--- setup "GridPie + Effect + Navigator + Transport + Mixer",
-
 duplex_configurations:insert {
 
   -- configuration properties
@@ -18,7 +16,7 @@ duplex_configurations:insert {
     device_port_out = "Akai APC40",
     control_map = "Controllers/APC40/Controlmaps/APC40.xml",
     thumbnail = "Controllers/APC40/APC40.bmp",
-    protocol = DEVICE_MIDI_PROTOCOL,
+    protocol = DEVICE_PROTOCOL.MIDI,
   },
 
   applications = {
@@ -165,10 +163,6 @@ duplex_configurations:insert {
         parameters = {
           group_name = "Lower Knob1",
         },
-        --page = {
-        --  group_name = "Control",
-        --  index = 1,
-        --},
         param_prev = {
           group_name = "Control",
           index = 1,
@@ -199,7 +193,7 @@ duplex_configurations:insert {
       mappings = {
         blockpos = {
           group_name = "Navigator",
-          orientation = HORIZONTAL,
+          orientation = ORIENTATION.HORIZONTAL,
         },
       }
     },

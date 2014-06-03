@@ -2,8 +2,6 @@
 -- Duplex.AkaiLPD8
 ----------------------------------------------------------------------------]]--
 
--- setup "GridPie" for this configuration
-
 duplex_configurations:insert {
   -- configuration properties
   name = "GridPie",
@@ -15,7 +13,7 @@ duplex_configurations:insert {
     device_port_out = "MIDIOUT2 (AkaiLPD8)",
     control_map = "Controllers/AkaiLPD8/Controlmaps/AkaiLPD8_GridPie.xml",
     thumbnail = "Controllers/AkaiLPD8/AkaiLPD8.bmp",
-    protocol = DEVICE_MIDI_PROTOCOL
+    protocol = DEVICE_PROTOCOL.MIDI
   },
   applications = {
     GridPie = {
@@ -38,14 +36,6 @@ duplex_configurations:insert {
         h_step = 2,
       }
     },
-    --[[
-    Mixer = {
-      mappings = {
-        levels = {
-          group_name = "Knobs2",
-        },
-      }
-    }
-    ]]
+
   }
 }

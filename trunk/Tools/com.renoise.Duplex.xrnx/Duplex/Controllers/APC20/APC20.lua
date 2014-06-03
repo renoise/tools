@@ -56,7 +56,7 @@ function APC20:point_to_value(pt,elm,ceiling)
       end
     else
       -- normal LED buttons are monochrome
-      value = (color[1]==0xff) and elm.maximum or elm.minimum
+      value = (pt.val == true) and elm.maximum or elm.minimum
     end
 
   else

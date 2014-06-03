@@ -1,25 +1,20 @@
---[[----------------------------------------------------------------------------
+--[[============================================================================
 -- Duplex.OscVoiceMgr
-----------------------------------------------------------------------------]]--
+============================================================================]]--
 
---[[
+--[[--
+The OscVoiceMgr is a class for handling internally triggered notes, keeping track of the active voices and their context
 
-About
+The purpose is to keep track of active voices, and their context: how the note got triggered: which device/application/instrument/pitch etc.
 
-	The OscVoiceMgr is a class for handling internally triggered notes, keeping track of active voices, and the context in which the note got triggered: the device, application, instrument, pitch etc.
+Some of the problems that a voice-manager can solve:
 
-  Some of the problems that a voice-manager can solve:
-
-  Notes are getting stuck when a keyboard octave is "virtually transposed", as the released key will transmit a different pitch than the pressed one. Solution: simply tell the voice-manager that your application's base octave has been changed with this & that many semitones. 
-
-  When the same note is triggered multiple times, once any key is released, the remaining voices are also stopped. Solution: Trigger notes with the "keep_until_all_released" flag, and we will keep the note alive until all pressed notes are released
-
-
+* Notes are getting stuck when a keyboard octave is "virtually transposed", as the released key will transmit a different pitch than the pressed one. Solution: simply tell the voice-manager that your application's base octave has been changed with this & that many semitones. 
+* When the same note is triggered multiple times, once any key is released, the remaining voices are also stopped. Solution: Trigger notes with the `keep_until_all_released` flag, and the note is kept alive until all pressed notes are released
 
 --]]
 
 --==============================================================================
-
 
 class 'OscVoiceMgr'
 
@@ -29,7 +24,7 @@ class 'OscVoiceMgr'
 
 function OscVoiceMgr:__init()
 
-  -- table of OscVoiceMgrNotes
+  -- table,OscVoiceMgrNote
   self.playing = table.create()
 
 end
@@ -38,13 +33,13 @@ end
 
 --- This is the main trigger function
 -- @param app (Application) the calling application 
--- @param instr (Number) the Renoise instrument index
--- @param track (Number) the Renoise track index
--- @param pitch (Number) 
--- @param velocity (Number)
--- @param keep (Boolean) if true, keep all notes until release
--- @param is_midi (Boolean) to distinguish between OSC and MIDI notes
--- @param channel (Number) the MIDI channel
+-- @param instr (int) the Renoise instrument index
+-- @param track (int) the Renoise track index
+-- @param pitch (int) 0-120
+-- @param velocity (int) 0-127
+-- @param keep (bool) if true, keep all notes until release
+-- @param is_midi (bool) to distinguish between OSC and MIDI notes
+-- @param channel (int) the MIDI channel, 1-16 (not used!!)
 
 function OscVoiceMgr:trigger(app,instr,track,pitch,velocity,keep,is_midi,channel)
   TRACE("OscVoiceMgr:trigger()",app,instr,track,pitch,velocity,keep,is_midi,channel)
@@ -76,13 +71,13 @@ end
 --- The main release function. Will ensure that the right notes are released, 
 -- even when the keyboard has been transposed since the notes were triggered
 -- @param app (Application) the calling application 
--- @param instr (Number) the Renoise instrument index
--- @param track (Number) the Renoise track index
--- @param pitch (Number)
--- @param velocity (Number)
--- @param is_midi (Boolean) to distinguish between OSC and MIDI notes
--- @param channel (Number) the MIDI channel
--- @return (Number), the amount of temp-transpose detected (in semitones)
+-- @param instr (int) the Renoise instrument index
+-- @param track (int) the Renoise track index
+-- @param pitch (int) 0-120
+-- @param velocity (int) 0-127
+-- @param is_midi (bool) to distinguish between OSC and MIDI notes
+-- @param channel (int) the MIDI channel, 1-16
+-- @return int, the amount of temp-transpose detected (in semitones)
 -- @see OscVoiceMgr:_release_note
 
 function OscVoiceMgr:release(app,instr,track,pitch,velocity,is_midi,channel)
@@ -95,15 +90,15 @@ function OscVoiceMgr:release(app,instr,track,pitch,velocity,is_midi,channel)
 
   for k,v in ripairs(self.playing) do
     local release_note = false
-    --[[
-    print("OscVoiceMgr:release() - v.instr",v)
-    print("OscVoiceMgr:release() - v.instr",v.instr,instr)
-    print("OscVoiceMgr:release() - v.originating_app",v.originating_app,org_app)
-    print("OscVoiceMgr:release() - v.is_midi",v.is_midi)
-    print("OscVoiceMgr:release() - v.temp_transpose",v.temp_transpose)
-    print("OscVoiceMgr:release() - v.pitch",v.pitch,pitch)
-    print("OscVoiceMgr:release() - v.pitch-v.temp_transpose",v.pitch-v.temp_transpose)
-    ]]
+
+    --print("OscVoiceMgr:release() - v.instr",v)
+    --print("OscVoiceMgr:release() - v.instr",v.instr,instr)
+    --print("OscVoiceMgr:release() - v.originating_app",v.originating_app,org_app)
+    --print("OscVoiceMgr:release() - v.is_midi",v.is_midi)
+    --print("OscVoiceMgr:release() - v.temp_transpose",v.temp_transpose)
+    --print("OscVoiceMgr:release() - v.pitch",v.pitch,pitch)
+    --print("OscVoiceMgr:release() - v.pitch-v.temp_transpose",v.pitch-v.temp_transpose)
+
     if (v.instr == instr) 
       and (v.is_held) 
       and (v.originating_app == org_app) 
@@ -152,9 +147,9 @@ end
 
 --- If OSC triggered this note, return true
 -- @param org_app (Application), the originating application
--- @param pitch (Number)
--- @param channel (Number) the MIDI channel
--- @return (Boolean)
+-- @param pitch (int) 0-120
+-- @param channel (int) the MIDI channel, 1-16
+-- @return bool
 
 function OscVoiceMgr:_was_osc_triggered(org_app,pitch,channel)
   TRACE("OscVoiceMgr:_was_osc_triggered()",org_app,pitch,channel)
@@ -175,9 +170,9 @@ end
 
 --- If MIDI triggered this note, return true
 -- @param org_app (Application), the originating application
--- @param pitch (Number)
--- @param channel (Number) the MIDI channel
--- @return (Boolean)
+-- @param pitch (int) 0-120
+-- @param channel (int) the MIDI channel, 1-16
+-- @return bool
 
 function OscVoiceMgr:_was_midi_triggered(org_app,pitch,channel)
   TRACE("OscVoiceMgr:_was_midi_triggered()",org_app,pitch,channel)
@@ -200,12 +195,12 @@ end
 -- this method is called by the main release() method when it has been 
 -- determined that a note should be released
 -- @param app (Application), the originating application
--- @param instr (Number) the Renoise instrument index
--- @param track (Number) the Renoise track index
--- @param pitch (Number)
--- @param velocity (Number)
--- @param is_midi (Boolean) to distinguish between OSC and MIDI notes
--- @param channel (Number) the MIDI channel
+-- @param instr (int) the Renoise instrument index
+-- @param track (int) the Renoise track index
+-- @param pitch (int) 0-120
+-- @param velocity (int) 0-127
+-- @param is_midi (bool) to distinguish between OSC and MIDI notes
+-- @param channel (int) the MIDI channel, 1-16
 -- @see OscVoiceMgr:release
 
 function OscVoiceMgr:_release_note(app,instr,track,pitch,velocity,is_midi,channel)
@@ -250,7 +245,7 @@ end
 --- Return the pitch offset, a value which is used to "counter-transpose"
 -- the transposition amount which Renoise automatically assign to MIDI-notes
 -- (the value of which based on the current octave). 
--- @return (Number), number of semitones
+-- @return int, number of semitones
 
 function OscVoiceMgr:_get_pitch_offset()
 
@@ -276,8 +271,8 @@ end
 
 --- Check if a particular instrument-note is still playing, somewhere...
 -- @param app (Application), check originating app
--- @param instr (Number)
--- @param pitch (Number)
+-- @param instr (int) instrument index
+-- @param pitch (int) note pitch
 
 function OscVoiceMgr:note_is_active(app,instr,pitch)
   TRACE("OscVoiceMgr:note_is_active()",app,instr,pitch)
@@ -302,8 +297,8 @@ end
 -- would need to be "de-transposed" once it's released - this function will
 -- apply the amount of transpose to the currently held notes (the ones that 
 -- match the application as their originating_app)
--- @param app (Duplex.Application)
--- @param semitones (Number)
+-- @param app (@{Duplex.Application})
+-- @param semitones (int)
 
 function OscVoiceMgr:transpose(app,semitones)
   TRACE("OscVoiceMgr:transpose()",app,semitones)

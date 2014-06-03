@@ -1,18 +1,19 @@
---[[----------------------------------------------------------------------------
+--[[============================================================================
 -- Duplex.StepSequencer
 -- Inheritance: Application > StepSequencer
-----------------------------------------------------------------------------]]--
+============================================================================]]--
 
---[[
+--[[--
 
-About
+Use your grid controller as a basic step sequencer
 
-  The StepSequencer allows you to use your (grid) controller as a basic step 
-  sequencer. Each button in the grid corresponds to a line in a track. The grid 
-  is scrollable too - use the line/track mappings to access any part of the 
-  pattern you're editing. 
+Each button in the grid corresponds to a line in a track. The grid 
+is scrollable too - use the line/track mappings to access any part of the 
+pattern you're editing. 
 
-How to use:
+Originally written by daxton.fleming@gmail.com
+
+### How to use:
 
 - Press an empty button to put a note down, using the currently selected 
   instrument, base-note and volume
@@ -26,32 +27,40 @@ How to use:
 - Press level/transpose buttons when no notes are held, to adjust the base-note 
   and default volume
 
-Changes (equal to Duplex version number)
+### Changes
 
-  0.98  - Palette now uses the standard format (easier to customize)
-        - Sequencer tracks can be linked with instruments, simply by assigning 
-          the same name to both. 
-          UISpinner (deprecated) control replaced with UISlider+UIButton(s)
+  0.98  
+    - Palette now uses the standard format (easier to customize)
+    - Sequencer tracks can be linked with instruments, simply by assigning 
+      the same name to both. 
+      UISpinner (deprecated) control replaced with UISlider+UIButton(s)
 
-  0.95  - The sequencer is now fully synchronized with the currently selected 
-          pattern in  Renoise. You can copy, delete or move notes around, 
-          and the StepSequencer will update it's display accordingly
-        - Enabling Renoise's follow mode will cause instant catch-up
-        - Display volume/base-note changes in the status bar
-        - Orientation: use as sideways 16-step sequencer on monome128 etc.
-        - Option: "increment by this amount" value for navigating lines
-        - Improved performance 
+  0.95  
+    - The sequencer is now fully synchronized with the currently selected 
+      pattern in  Renoise. You can copy, delete or move notes around, 
+      and the StepSequencer will update it's display accordingly
+    - Enabling Renoise's follow mode will cause instant catch-up
+    - Display volume/base-note changes in the status bar
+    - Orientation: use as sideways 16-step sequencer on monome128 etc.
+    - Option: "increment by this amount" value for navigating lines
+    - Improved performance 
 
-  0.93  - Support other devices than the Launchpad (such as the monome)
-        - Display playposition and volume simultaneously 
+  0.93  
+    - Support other devices than the Launchpad (such as the monome)
+    - Display playposition and volume simultaneously 
 
-  0.92  - Original version by daxton.fleming@gmail.com
+  0.92  
+    - Original version
 
 
 --]]
 
 
 --==============================================================================
+
+-- global song reference 
+
+rns = nil
 
 -- constants
 
@@ -60,7 +69,8 @@ local COLUMNS_MULTI = 2
 local FOLLOW_TRACK_ON = 1
 local FOLLOW_TRACK_OFF = 2
 local TRACK_PAGE_AUTO = 1
-
+local FOLLOW_LINE_ON = 1
+local FOLLOW_LINE_OFF = 2
 
 --==============================================================================
 
@@ -96,6 +106,19 @@ StepSequencer.default_options = {
     },
     value = 2,
   },
+  follow_line = {
+    label = "Follow line",
+    description = "Enable this if you want to align the sequencer with " 
+                .."\nthe selected line in Renoise",
+    --on_change = function(inst)
+    --  inst:_follow_track()
+    --end,
+    items = {
+      "Follow line enabled",
+      "Follow line disabled"
+    },
+    value = 2,
+  },
   page_size = {
     label = "Page size",
     description = "Specify the step size when using paged navigation",
@@ -119,14 +142,14 @@ StepSequencer.available_mappings = {
                 .."\nHold single button to copy note"
                 .."\nHold multiple buttons to adjust level/transpose"
                 .."\nControl value: ",
-    orientation = VERTICAL,
+    orientation = ORIENTATION.VERTICAL,
   },
   level = {
     -- note: this control serves two purposes, as it will also display the 
     -- currently playing line - therefore, it needs to be the same size
-    -- as the grid (rows if vertical, columns if horizontal)
+    -- as the grid (rows if ORIENTATION.VERTICAL, columns if ORIENTATION.HORIZONTAL)
     description = "Sequencer: Adjust note volume",
-    orientation = VERTICAL,
+    orientation = ORIENTATION.VERTICAL,
   },
   line = { 
     component = UISlider,
@@ -142,7 +165,7 @@ StepSequencer.available_mappings = {
   },
   track = {
     description = "Sequencer: Flip through tracks",
-    orientation = HORIZONTAL,
+    orientation = ORIENTATION.HORIZONTAL,
   },
   transpose = {
     description = "Sequencer: 4 buttons for transpose"
@@ -169,55 +192,65 @@ StepSequencer.default_palette = {
   transpose_1_down  = { color={0xc0,0x40,0xff}, text="-1", val=false},
   transpose_1_up    = { color={0x40,0xc0,0xff}, text="+1", val=false},
   transpose_12_up   = { color={0x00,0xff,0xff}, text="+12",val=false},
-  --position          = { color={0x00,0xff,0x00}, },
+  prev_line_off     = { color={0x00,0x00,0x00}, text="-ln", val=false},
+  prev_line_on      = { color={0xff,0xff,0xff}, text="-ln", val=true},
+  next_line_off     = { color={0x00,0x00,0x00}, text="+ln", val=false},
+  next_line_on      = { color={0xff,0xff,0xff}, text="+ln", val=true},
+
 
 }
 
 
 --------------------------------------------------------------------------------
 
---- Constructor method
--- @param (VarArg), see Application to learn more
+--- constructor method
+-- @param (VarArg)
+-- @see Duplex.Application
 
 function StepSequencer:__init(...)
   TRACE("StepSequencer:__init(",...)
 
-  -- default note/volume
+  rns = renoise.song()
+
+  --- default note/volume
   self._base_note = 1
   self._base_octave = 4
   self._base_volume = 100
 
-  -- default note-grid size 
+  --- default note-grid size 
   self._track_count = 8
   self._line_count = 8
 
-  -- the currently editing "page"
+  --- the currently editing "page"
   self._edit_page = 0          
   self._edit_page_count = nil
 
-  -- the track offset (0-#tracks)
+  --- the track offset (0-#tracks)
   self._track_offset = 0       
   self._track_page = nil
 
-  -- true when song follow is enabled, 
+  --- true when song follow is enabled, 
   -- set to false when using the line navigator
   self._follow_player = nil    
 
-  -- a "fire once" flag, which is set when
+  --- a "fire once" flag, which is set when
   -- switching from "not follow" to "follow"
   self._start_tracking = false 
                                 
-  -- remember the current pattern index here
+  --- remember the current pattern index here
   self._current_pattern = nil  
+  
+  --- remember the current line index
+  self._current_line_index = nil  
   
   self._update_lines_requested = false
   self._update_tracks_requested = false
   self._update_grid_requested = false
 
-  -- collect patterns indices with line_notifiers 
+  --- collect patterns indices with line_notifiers 
   self._line_notifiers = table.create()
 
-  -- collect references to pattern-alias notifier methods
+  --- collect references to pattern-alias notifier methods
   self._alias_notifiers = table.create()
   
   -- true when current track should be highlighted
@@ -231,10 +264,10 @@ function StepSequencer:__init(...)
   self._track_navigator = nil
   self._transpose = nil
 
-  -- track held grid keys
+  --- track held grid keys
   self._keys_down = { } 
   
-  -- don't toggle off if pressing multiple on / transposing / etc
+  --- don't toggle off if pressing multiple on / transposing / etc
   self._toggle_exempt = { } 
 
   Application.__init(self,...)
@@ -244,6 +277,10 @@ end
 
 --------------------------------------------------------------------------------
 
+--- inherited from Application
+-- @see Duplex.Application.start_app
+-- @return bool or nil
+
 function StepSequencer:start_app()
   TRACE("StepSequencer.start_app()")
 
@@ -251,7 +288,7 @@ function StepSequencer:start_app()
     return
   end
 
-  self._follow_player = renoise.song().transport.follow_player
+  self._follow_player = rns.transport.follow_player
 
   -- determine if we should highlight the current track
   if not table_compare(self.palette.slot_empty.color,self.palette.slot_current.color)
@@ -264,6 +301,7 @@ function StepSequencer:start_app()
   -- update everything!
   self:_update_line_count()
   self:_update_track_count()
+  self:_update_line_buttons()
   self:_update_grid()
   self:_follow_track()
 
@@ -271,14 +309,22 @@ end
 
 --------------------------------------------------------------------------------
 
+--- inherited from Application
+-- @see Duplex.Application.stop_app
+
 function StepSequencer:stop_app()
-  
+  TRACE("StepSequencer:stop_app()")
+
   self:remove_line_notifiers()
   Application.stop_app(self)
 
 end
 
 --------------------------------------------------------------------------------
+
+--- inherited from Application
+-- @see Duplex.Application._build_app
+-- @return bool
 
 function StepSequencer:_build_app()
   TRACE("StepSequencer:_build_app()")
@@ -293,7 +339,7 @@ function StepSequencer:_build_app()
     return false
   end
   if (cm_group["columns"])then
-    if(self:_get_orientation()==VERTICAL) then
+    if(self:_get_orientation()==ORIENTATION.VERTICAL) then
       self._track_count = cm_group["columns"]
       self._line_count = math.ceil(#cm_group/self._track_count)
     else
@@ -326,9 +372,10 @@ end
 
 --------------------------------------------------------------------------------
 
--- line (up/down scrolling)
+--- line (up/down scrolling)
 
 function StepSequencer:_build_line()
+  TRACE("StepSequencer:_build_line()")
 
   local map = self.mappings.line
   if map.group_name then
@@ -339,7 +386,7 @@ function StepSequencer:_build_line()
     c.tooltip = self.mappings.line.description
     c:set_pos(self.mappings.line.index)
     c:set_orientation(self.mappings.line.orientation)
-    c.text_orientation = VERTICAL
+    c.text_orientation = ORIENTATION.VERTICAL
     c.step_size = 1
     c.on_change = function(obj) 
 
@@ -363,11 +410,7 @@ function StepSequencer:_build_line()
     c:set_pos(map.index)
     c:set_orientation(map.orientation)
     c.on_change = function(obj) 
-      if(self._edit_page~=obj.index)then
-        self._edit_page = obj.index
-        self._follow_player = false
-        self:_update_grid()
-      end
+      set_page(obj.index)
     end
     self:_add_component(c)
     self._line_navigator = c
@@ -380,12 +423,11 @@ function StepSequencer:_build_line()
     c.group_name = map.group_name
     c.tooltip = map.description
     c:set_pos(map.index)
-    c.on_press = function() 
-      if (self._edit_page > 0) then
-        self._edit_page = self._edit_page-1
-        self._follow_player = false
-        self:_update_grid()
-      end
+    c.on_release = function() 
+      self:jump_to_prev_lines()
+    end
+    c.on_hold = function() 
+      self:jump_to_top()
     end
     self:_add_component(c)
     self._prev_line = c
@@ -397,15 +439,14 @@ function StepSequencer:_build_line()
     c.group_name = map.group_name
     c.tooltip = map.description
     c:set_pos(map.index)
-    c.on_press = function() 
-      if (self._edit_page < (self._edit_page_count-1)) then
-        self._edit_page = self._edit_page+1
-        self._follow_player = false
-        self:_update_grid()
-      end
+    c.on_release = function() 
+      self:jump_to_next_lines()
+    end
+    c.on_hold = function()
+      self:jump_to_bottom()
     end
     self:_add_component(c)
-    self._prev_line = c
+    self._next_line = c
   end
 
 end
@@ -413,10 +454,11 @@ end
 
 --------------------------------------------------------------------------------
 
---  track (sideways scrolling)
+---  track (sideways scrolling)
 
 function StepSequencer:_build_track()
-  
+  TRACE("StepSequencer:_build_track()")
+
   if self.mappings.track.group_name then
 
     local c = UISpinner(self)
@@ -424,16 +466,15 @@ function StepSequencer:_build_track()
     c.tooltip = self.mappings.track.description
     c:set_pos(self.mappings.track.index)
     c:set_orientation(self.mappings.track.orientation)
-    --c.text_orientation = HORIZONTAL
+    --c.text_orientation = ORIENTATION.HORIZONTAL
     c.on_change = function(obj) 
 
       local page_width = self:_get_page_width()
       local track_idx = (obj.index*page_width)
-
       if (self.options.follow_track.value == FOLLOW_TRACK_ON) then
         -- if the follow_track option is specified, we set the
         -- track index and let the _follow_track() method handle it
-        renoise.song().selected_track_index = 1+track_idx
+        rns.selected_track_index = 1+track_idx
       else
         self._track_offset = obj.index*self:_get_page_width()
         self:_update_grid()
@@ -449,9 +490,10 @@ end
 
 --------------------------------------------------------------------------------
 
-function StepSequencer:_build_grid()
+--- construct user interface
 
-  --self._buttons = {}
+function StepSequencer:_build_grid()
+  TRACE("StepSequencer:_build_grid()")
 
   local orientation = self:_get_orientation()
 
@@ -460,7 +502,7 @@ function StepSequencer:_build_grid()
 
       local x,y = track_idx,line_idx
 
-      if not (orientation==VERTICAL) then
+      if not (orientation==ORIENTATION.VERTICAL) then
         x,y = y,x
       end
 
@@ -509,12 +551,12 @@ function StepSequencer:_build_grid()
 
           -- bring focus to track
           local track_idx = nil
-          if (orientation==HORIZONTAL) then
+          if (orientation==ORIENTATION.HORIZONTAL) then
             track_idx = y + self._track_offset
           else
             track_idx = x + self._track_offset
           end
-          renoise.song().selected_track_index = track_idx
+          rns.selected_track_index = track_idx
         end
 
       end
@@ -527,9 +569,13 @@ end
 
 --------------------------------------------------------------------------------
 
+--- construct user interface
+
 function StepSequencer:_build_level()
+  TRACE("StepSequencer:_build_level()")
 
   if self.mappings.level.group_name then
+
 
     -- figure out the number of rows in our level-slider group
     local cm = self.display.device.control_map
@@ -553,10 +599,10 @@ function StepSequencer:_build_level()
       -- check for held grid notes
       local held = self:_walk_held_keys(
         function(track_idx,line_idx)
-          if (self:_get_orientation()==HORIZONTAL) then
+          if (self:_get_orientation()==ORIENTATION.HORIZONTAL) then
             track_idx,line_idx = line_idx,track_idx
           end
-          local tracks = renoise.song().selected_pattern.tracks[track_idx + self._track_offset]
+          local tracks = rns.selected_pattern.tracks[track_idx + self._track_offset]
           local inc = self.options.line_increment.value
           local note = tracks:line(line_idx + self._edit_page * inc).note_columns[1]
           note.volume_value = newval
@@ -583,9 +629,13 @@ end
 
 --------------------------------------------------------------------------------
 
+--- construct user interface
+
 function StepSequencer:_build_transpose()
+  TRACE("StepSequencer:_build_transpose()")
 
   if self.mappings.transpose.group_name then
+
 
     self._transpose = { }
     local transposes = { -12, -1, 1, 12 }
@@ -610,11 +660,11 @@ function StepSequencer:_build_transpose()
         -- check for held grid notes
         local held = self:_walk_held_keys(
           function(x,y)
-            if (self:_get_orientation()==HORIZONTAL) then
+            if (self:_get_orientation()==ORIENTATION.HORIZONTAL) then
               x,y = y,x
             end
             local inc = self.options.line_increment.value
-            local note = renoise.song().selected_pattern.tracks[x + self._track_offset]:line(
+            local note = rns.selected_pattern.tracks[x + self._track_offset]:line(
               y + self._edit_page * inc).note_columns[1]
             local newval = note.note_value + obj.transpose
             if (newval > 0 and newval < 120) then 
@@ -640,30 +690,44 @@ end
 
 --------------------------------------------------------------------------------
 
--- periodic updates: handle "un-observable" things here
+--- inherited from Application
+-- @see Duplex.Application.on_idle
+
 function StepSequencer:on_idle()
+  --TRACE("StepSequencer:on_idle()")
 
   if not self.active then 
     return 
   end
   
   -- did we change current_pattern?
-  if (self._current_pattern ~= renoise.song().selected_pattern_index) then
-    self._current_pattern = renoise.song().selected_pattern_index
+  if (self._current_pattern ~= rns.selected_pattern_index) then
+    self._current_pattern = rns.selected_pattern_index
     self._update_lines_requested = true
     -- attach notifier to pattern length
-    renoise.song().patterns[self._current_pattern].number_of_lines_observable:add_notifier(
+    rns.patterns[self._current_pattern].number_of_lines_observable:add_notifier(
       function()
-        TRACE("StepSequencer: pattern length changed")
+        --TRACE("StepSequencer: pattern length changed")
         self._update_lines_requested = true
         -- check if the edit-page exceed the new length 
         local line_offset = self._edit_page*self.options.line_increment.value
-        local patt = renoise.song().patterns[self._current_pattern]
+        local patt = rns.patterns[self._current_pattern]
         if (line_offset>patt.number_of_lines) then
           self._edit_page = 0 -- reset
         end
       end
     )
+  end
+
+  -- check if the current line changed
+  if not rns.transport.follow_player and
+    (self.options.follow_line.value == FOLLOW_LINE_ON) 
+  then
+    local line_index = rns.transport.edit_pos.line
+    if (self._current_line_index ~= line_index) then
+      self._current_line_index = line_index
+      self:_update_page()
+    end
   end
 
   -- check update flags
@@ -682,10 +746,9 @@ function StepSequencer:on_idle()
   if self._update_grid_requested then
     self._update_grid_requested = false
     self:_update_grid()
-    --self:_update_transpose()
   end
   
-  if renoise.song().transport.playing then
+  if rns.transport.playing then
     self:_update_position()
   else
     -- clear level?
@@ -696,7 +759,7 @@ end
 
 --------------------------------------------------------------------------------
 
--- update track navigator,
+--- update track navigator,
 -- on new song, and when tracks have been changed
 
 function StepSequencer:_update_track_count()
@@ -713,7 +776,7 @@ end
 
 --------------------------------------------------------------------------------
 
--- if the playback position is inside visible range of the sequencer, update
+--- if the playback position is inside visible range of the sequencer, update
 -- the position indicator
 -- else, if follow mode is active, display the current page
 -- (called on_idle when playing)
@@ -721,10 +784,10 @@ end
 function StepSequencer:_update_position()
   --TRACE("StepSequencer:_update_position()")
 
-  local pos = renoise.song().transport.playback_pos.line
-  if self:_line_is_visible(pos) then
+  local pos = self:get_pos()
+  if self:_line_is_visible(pos.line) then
     local line_offset = self._edit_page*self.options.line_increment.value
-    self:_draw_position(((pos-1-line_offset)%self._line_count)+1)
+    self:_draw_position(((pos.line-1-line_offset)%self._line_count)+1)
   else
     if self._follow_player or
        self._start_tracking 
@@ -741,13 +804,14 @@ end
 
 --------------------------------------------------------------------------------
 
--- check if we should switch the active page/range inside the pattern
--- invoked only when follow mode is enabled
+--- check if we should switch the active page/range inside the pattern
 
 function StepSequencer:_update_page()
+  TRACE("StepSequencer:_update_page")
 
-  local line = renoise.song().transport.playback_pos.line
-  local page = math.ceil(line/self.options.line_increment.value)-1
+  local pos = self:get_pos()
+
+  local page = math.ceil(pos.line/self.options.line_increment.value)-1
   if (page~=self._edit_page) or
     (self._start_tracking) then
     self._edit_page = page
@@ -759,14 +823,105 @@ function StepSequencer:_update_page()
 
 end
 
+--------------------------------------------------------------------------------
+
+--- get the current position (edit-pos when stopped, playpos when playing)
+-- @return SongPos
+
+function StepSequencer:get_pos()
+  TRACE("StepSequencer:get_pos")
+
+  local pos = nil
+  if not rns.transport.follow_player and
+    (self.options.follow_line.value == FOLLOW_LINE_ON) 
+  then
+    pos = rns.transport.edit_pos
+  else
+    pos = rns.transport.playback_pos
+  end
+
+  return pos
+
+end
 
 --------------------------------------------------------------------------------
 
--- called on_idle 
+--- set the current edit page
+-- @param index (int)
+
+function StepSequencer:set_page(idx)
+  TRACE("StepSequencer:set_page(idx)",idx)
+  if(self._edit_page~=idx)then
+    self._edit_page = idx
+    self:post_jump_update()
+  end
+end
+
+--------------------------------------------------------------------------------
+
+--- jump to topmost page
+
+function StepSequencer:jump_to_top()
+  TRACE("StepSequencer:jump_to_top()")
+  self._edit_page = 1
+  self:post_jump_update()
+end
+
+--------------------------------------------------------------------------------
+
+--- jump to bottommost page
+
+function StepSequencer:jump_to_bottom()
+  TRACE("StepSequencer:jump_to_bottom()")
+  self._edit_page = self._edit_page_count
+  self:post_jump_update()
+end
+
+--------------------------------------------------------------------------------
+
+--- jump to previous page
+
+function StepSequencer:jump_to_prev_lines()
+  TRACE("StepSequencer:jump_to_prev_lines()")
+  if (self._edit_page > 0) then
+    self._edit_page = self._edit_page-1
+    self:post_jump_update()
+  end
+end
+
+--------------------------------------------------------------------------------
+
+--- jump to next page
+
+function StepSequencer:jump_to_next_lines()
+  TRACE("StepSequencer:jump_to_next_lines()")
+  if (self._edit_page <= (self._edit_page_count-1)) then
+    self._edit_page = self._edit_page+1
+    self:post_jump_update()
+  end
+end
+
+--------------------------------------------------------------------------------
+
+--- update display after a jump
+
+function StepSequencer:post_jump_update()
+  --TRACE("StepSequencer:post_jump_update()")
+
+  self._follow_player = false
+  self:_update_grid()
+  self:_update_line_buttons()
+
+end
+
+--------------------------------------------------------------------------------
+
+--- called on_idle 
 
 function StepSequencer:_draw_position(idx)
+  --TRACE("StepSequencer:_draw_position(idx)",idx)
 
-  if self._level and renoise.song().transport.playing then
+  if self._level and rns.transport.playing then
     local ctrl_idx = self._level:get_index()
     if (ctrl_idx~=idx) then
       self._level:set_index(idx,true)
@@ -779,7 +934,7 @@ end
 
 --------------------------------------------------------------------------------
 
--- update the range of the line navigator
+--- update the range of the line navigator
 
 function StepSequencer:_update_line_count()
   TRACE("StepSequencer:_update_line_count()")
@@ -788,24 +943,55 @@ function StepSequencer:_update_line_count()
     return 
   end
 
+  local pattern = nil
+  if (self._follow_player) then
+    pattern = get_playing_pattern()
+  else
+    pattern = rns.selected_pattern
+  end
+  local inc = self.options.line_increment.value
+  self._edit_page_count = math.ceil(math.floor(pattern.number_of_lines)/inc)-1
   if self._line_navigator then
-    local pattern = nil
-    if (self._follow_player) then
-      pattern = get_playing_pattern()
-    else
-      pattern = renoise.song().selected_pattern
-    end
-    local inc = self.options.line_increment.value
-    self._edit_page_count = math.ceil(math.floor(pattern.number_of_lines)/inc)-1
     --self._line_navigator:set_range(0,rng)
     self._line_navigator.steps = self._edit_page_count
-    print("self._edit_page_count:",self._edit_page_count)
+    --print("self._edit_page_count:",self._edit_page_count)
   end
 
 end
 
 
 --------------------------------------------------------------------------------
+
+--- update the display (line buttons)
+
+function StepSequencer:_update_line_buttons()
+  TRACE("StepSequencer:_update_line_buttons()")
+
+  local ctrl = self._next_line 
+  local palette = {}
+  if ctrl then
+    if (self._edit_page <= (self._edit_page_count-1)) then
+      palette.foreground = table.rcopy(self.palette.next_line_on)
+    else
+      palette.foreground = table.rcopy(self.palette.next_line_off)
+    end
+    ctrl:set_palette(palette)
+  end
+  local ctrl = self._prev_line 
+  if ctrl then
+    if (self._edit_page > 0) then
+      palette.foreground = table.rcopy(self.palette.prev_line_on)
+    else
+      palette.foreground = table.rcopy(self.palette.prev_line_off)
+    end
+    ctrl:set_palette(palette)
+  end
+
+end
+
+--------------------------------------------------------------------------------
+
+--- update the display (main grid)
 
 function StepSequencer:_update_grid()
   TRACE("StepSequencer:_update_grid()")
@@ -819,16 +1005,16 @@ function StepSequencer:_update_grid()
   -- loop through grid & buttons
   local line_offset = self._edit_page*self.options.line_increment.value
   local master_idx = get_master_track_index()
-  local track_count = #renoise.song().tracks
-  local selected_pattern_tracks = renoise.song().selected_pattern.tracks
-  local selected_pattern_lines = renoise.song().selected_pattern.number_of_lines
+  local track_count = #rns.tracks
+  local selected_pattern_tracks = rns.selected_pattern.tracks
+  local selected_pattern_lines = rns.selected_pattern.number_of_lines
   for track_idx = (1 + self._track_offset),(self._track_count+self._track_offset) do
     local pattern_track = selected_pattern_tracks[track_idx]
-    local current_track = (track_idx==renoise.song().selected_track_index)
+    local current_track = (track_idx==rns.selected_track_index)
     for line_idx = (1 + line_offset),(self._line_count + line_offset) do
 
       local button = nil
-      if(orientation==VERTICAL) then
+      if(orientation==ORIENTATION.VERTICAL) then
         button = self._buttons[track_idx - self._track_offset][line_idx - line_offset]
       else
         button = self._buttons[line_idx - line_offset][track_idx - self._track_offset]
@@ -849,25 +1035,8 @@ end
 
 
 --------------------------------------------------------------------------------
---[[
-function StepSequencer:_update_transpose()
 
-  if not self.active then 
-    return
-  end
-
-  local palette = { }
-  for k,btn in ipairs(self._transpose) do
-    palette.foreground = table.rcopy(self.palette.transpose[k])
-    btn:set_palette(palette)
-  end
-  
-end
-]]
-
---------------------------------------------------------------------------------
-
--- decide if we need to update the display when the pattern editor has changed 
+--- decide if we need to update the display when the pattern editor has changed 
 -- note: this method might be called hundreds of times when doing edits like
 -- cutting all notes from a pattern, so we need it to be really simple
 
@@ -884,7 +1053,8 @@ end
 
 --------------------------------------------------------------------------------
 
--- check if a given line is within the visible range
+--- check if a given line is within the visible range
+-- @param line_pos (int)
 
 function StepSequencer:_line_is_visible(line_pos)
   
@@ -896,7 +1066,8 @@ end
 
 --------------------------------------------------------------------------------
 
--- check if a given track is within the visible range
+--- check if a given track is within the visible range
+-- @param track_idx (int)
 
 function StepSequencer:_track_is_visible(track_idx)
 
@@ -907,7 +1078,7 @@ end
 
 --------------------------------------------------------------------------------
 
--- when following the active track in Renoise, we call this method
+--- when following the active track in Renoise, we call this method
 -- (track following is limited to sequencer tracks)
 
 function StepSequencer:_follow_track()
@@ -917,9 +1088,8 @@ function StepSequencer:_follow_track()
     return
   end
 
-  local song = renoise.song()
   local master_idx = get_master_track_index()
-  local track_idx = math.min(song.selected_track_index,master_idx-1)
+  local track_idx = math.min(rns.selected_track_index,master_idx-1)
   local page = self:_get_track_page(track_idx)
   local page_width = self:_get_page_width()
   if (page~=self._track_page) then
@@ -940,11 +1110,12 @@ end
 
 --------------------------------------------------------------------------------
 
--- figure out the active "track page" based on the supplied track index
+--- figure out the active "track page" based on the supplied track index
 -- @param track_idx, renoise track number
 -- return integer (0-number of pages)
 
 function StepSequencer:_get_track_page(track_idx)
+  TRACE("StepSequencer:_get_track_page(track_idx)",track_idx)
 
   local page_width = self:_get_page_width()
   local page = math.floor((track_idx-1)/page_width)
@@ -954,7 +1125,11 @@ end
 
 --------------------------------------------------------------------------------
 
+--- get the currently set page width
+-- @return int
+
 function StepSequencer:_get_page_width()
+  TRACE("StepSequencer:_get_page_width()")
 
   return (self.options.page_size.value == TRACK_PAGE_AUTO)
     and self._track_count or self.options.page_size.value-1
@@ -964,6 +1139,8 @@ end
 
 --------------------------------------------------------------------------------
 
+--- get the orientation of the main grid
+
 function StepSequencer:_get_orientation()
   TRACE("StepSequencer:_get_orientation()")
   
@@ -972,13 +1149,13 @@ function StepSequencer:_get_orientation()
 end
 --------------------------------------------------------------------------------
 
+--- add notifiers to relevant parts of the song
+
 function StepSequencer:_attach_to_song()
   TRACE("StepSequencer:_attach_to_song()")
   
-  local song = renoise.song()
-
   -- song notifiers
-  song.tracks_observable:add_notifier(
+  rns.tracks_observable:add_notifier(
     function()
       TRACE("StepSequencer:tracks_observable fired...")
       -- do this right away (updating the spinner is easily done, and we
@@ -988,17 +1165,17 @@ function StepSequencer:_attach_to_song()
       self._update_tracks_requested = true
     end
   )
-  song.patterns_observable:add_notifier(
+  rns.patterns_observable:add_notifier(
     function()
       TRACE("StepSequencer:patterns_observable fired...")
       self._update_lines_requested = true
     end
   )
-  song.transport.follow_player_observable:add_notifier(
+  rns.transport.follow_player_observable:add_notifier(
     function()
       TRACE("StepSequencer:follow_player_observable fired...")
       -- if switching on, start tracking actively
-      local follow = renoise.song().transport.follow_player
+      local follow = rns.transport.follow_player
       if not (follow == self._follow_player) then
         self._start_tracking = follow
       end
@@ -1010,7 +1187,7 @@ function StepSequencer:_attach_to_song()
   )
 
   -- follow active track in Renoise
-  song.selected_track_index_observable:add_notifier(
+  rns.selected_track_index_observable:add_notifier(
     function()
       TRACE("StepSequencer:selected_track_observable fired...")
       self:_follow_track()
@@ -1018,20 +1195,23 @@ function StepSequencer:_attach_to_song()
   )
 
   -- monitor changes to the pattern (line notifiers, aliases)
-  song.selected_pattern_observable:add_notifier(
+  rns.selected_pattern_observable:add_notifier(
     function()
-      TRACE("song.selected_pattern_observable fired...")
+      TRACE("StepSequencer:selected_pattern_observable fired...")
       local new_song = false
       self:_attach_to_pattern(new_song,self._current_pattern)
     end
   )
   local new_song = true
-  self:_attach_to_pattern(new_song,song.selected_pattern_index)
+  self:_attach_to_pattern(new_song,rns.selected_pattern_index)
+
 
 
 end
 
 --------------------------------------------------------------------------------
+
+--- add notifiers to the pattern
 
 function StepSequencer:_attach_to_pattern(new_song,patt_idx)
   TRACE("StepSequencer:_attach_to_pattern()",new_song,patt_idx)
@@ -1043,14 +1223,13 @@ end
 
 --------------------------------------------------------------------------------
 
---- Monitor the current pattern for changes to it's aliases
+--- monitor the current pattern for changes to it's aliases
 
 function StepSequencer:_attach_alias_notifiers(new_song,patt_idx)
   TRACE("StepSequencer:_attach_alias_notifiers()",new_song,patt_idx)
 
   self:_remove_notifiers(new_song,self._alias_notifiers)
 
-  local rns = renoise.song()
   local patt = rns.patterns[patt_idx]
   for track_idx = 1,rns.sequencer_track_count do
     local track = patt.tracks[track_idx]
@@ -1059,7 +1238,7 @@ function StepSequencer:_attach_alias_notifiers(new_song,patt_idx)
       function(notification)
         TRACE("StepSequencer - alias_pattern_index_observable fired...",notification)
         local new_song = false
-        self:_attach_line_notifiers(new_song,renoise.song().selected_pattern_index)
+        self:_attach_line_notifiers(new_song,rns.selected_pattern_index)
         self._update_tracks_requested = true
       end
     )
@@ -1069,14 +1248,12 @@ end
 
 --------------------------------------------------------------------------------
 
---- Attach line notifiers to pattern 
+--- attach line notifiers to pattern 
 -- check for existing notifiers first, and remove those
 -- then add pattern notifiers to pattern (including aliased slots)
 
 function StepSequencer:_attach_line_notifiers(new_song,patt_idx)
   TRACE("StepSequencer:_attach_line_notifiers()",new_song,patt_idx)
-
-  local rns = renoise.song()
 
   self:remove_line_notifiers(new_song)
 
@@ -1107,12 +1284,11 @@ end
 
 --------------------------------------------------------------------------------
 
---- Remove currently attached line notifiers 
+--- remove currently attached line notifiers 
 
 function StepSequencer:remove_line_notifiers(new_song)
   TRACE("StepSequencer:remove_line_notifiers()",new_song)
 
-  local rns = renoise.song()
   for patt_idx in ipairs(self._line_notifiers) do
     local patt = rns.patterns[patt_idx]
     TRACE("*** StepSequencer - remove_line_notifier from patt",patt,type(patt))
@@ -1125,15 +1301,19 @@ end
 
 --------------------------------------------------------------------------------
 
--- called when a new document becomes available
+--- inherited from Application
+-- @see Duplex.Application.on_new_document
 
 function StepSequencer:on_new_document()
   TRACE("StepSequencer:on_new_document()")
+
+  rns = renoise.song()
 
   local new_song = true
   self:_attach_to_song()
   self:_update_line_count()
   self:_update_track_count()
+  self:_update_line_buttons()
   self:_update_grid()
   self:_follow_track()
 
@@ -1144,12 +1324,13 @@ end
 -- STEP SEQUENCER FUNCTIONS
 --------------------------------------------------------------------------------
 
+--- handle when button in main grid is pressed
+
 function StepSequencer:_process_grid_event(x,y, state, btn)
   TRACE("StepSequencer:_process_grid_event()",x,y, state, btn)
 
   local track_idx,line_idx = x,y
-
-  if not (self:_get_orientation() == VERTICAL) then
+  if not (self:_get_orientation() == ORIENTATION.VERTICAL) then
     line_idx,track_idx = track_idx,line_idx
   end
 
@@ -1161,22 +1342,22 @@ function StepSequencer:_process_grid_event(x,y, state, btn)
   end
   
   -- check if we are dealing with a group track
-  local track = renoise.song().tracks[track_idx]
-  if (track.type == TRACK_TYPE_GROUP) then
+  local track = rns.tracks[track_idx]
+  if (track.type == renoise.Track.TRACK_TYPE_GROUP) then
     return
   end
 
-  local current_track = (track_idx == renoise.song().selected_track_index)
+  local current_track = (track_idx == rns.selected_track_index)
 
-  local note = renoise.song().selected_pattern.tracks[track_idx]:line(
+  local note = rns.selected_pattern.tracks[track_idx]:line(
     line_idx).note_columns[1]
 
   -- determine instrument by matching track title with instruments
   -- a matching title will select that instrument 
-  local track_name = renoise.song().tracks[track_idx].name
+  local track_name = rns.tracks[track_idx].name
   local instr_index = self:_obtain_instrument_by_name(track_name)
   if not instr_index then
-    instr_index = renoise.song().selected_instrument_index
+    instr_index = rns.selected_instrument_index
   else
     local msg = "StepSequencer: matched track/instrument name"..track_name
     renoise.app():show_status(msg)
@@ -1200,7 +1381,7 @@ function StepSequencer:_process_grid_event(x,y, state, btn)
     if (not self._toggle_exempt[x][y]) then 
       self:_clear_note(note)
       -- and update the button ...
-      if (renoise.song().selected_pattern.number_of_lines<line_idx) then
+      if (rns.selected_pattern.number_of_lines<line_idx) then
         -- reset to "out of bounds" color
         note = nil
       end
@@ -1214,12 +1395,13 @@ end
 
 --------------------------------------------------------------------------------
 
---  return (number) instrument index
+--- obtain instrument by name (track<>instrument synchronization)
+-- @return (int) instrument index
 
 function StepSequencer:_obtain_instrument_by_name(name)
   TRACE("StepSequencer:_obtain_instrument_by_name()",name)
 
-  for instr_index,instr in ipairs(renoise.song().instruments) do
+  for instr_index,instr in ipairs(rns.instruments) do
     if (instr.name == name) then
       return instr_index
     end
@@ -1229,13 +1411,18 @@ end
 
 --------------------------------------------------------------------------------
 
+--- invoked when starting a note-copy gesture (first held button)
+-- @param lx (int)
+-- @param ly (int)
+-- @param btn (@{Duplex.UIButton})
+
 function StepSequencer:_copy_grid_button(lx,ly, btn)
   TRACE("StepSequencer:_copy_grid_button()",lx,ly, btn)
 
   local gx = lx+self._track_offset
   local gy = ly+self._edit_page*self._line_count
 
-  if not (self:_get_orientation() == VERTICAL) then
+  if not (self:_get_orientation() == ORIENTATION.VERTICAL) then
     gx,gy = gy,gx
   end
 
@@ -1243,7 +1430,7 @@ function StepSequencer:_copy_grid_button(lx,ly, btn)
     return false 
   end
 
-  local note = renoise.song().selected_pattern.tracks[gx]:line(gy).note_columns[1]
+  local note = rns.selected_pattern.tracks[gx]:line(gy).note_columns[1]
   
   if not note then
     return false
@@ -1259,14 +1446,17 @@ function StepSequencer:_copy_grid_button(lx,ly, btn)
     self:_draw_volume_slider(note_vol)
   end
   -- change selected instrument
-  if (note.instrument_value < #renoise.song().instruments) then
-    renoise.song().selected_instrument_index = note.instrument_value+1
+  if (note.instrument_value < #rns.instruments) then
+    rns.selected_instrument_index = note.instrument_value+1
   end
   
   return true
 end
 
 --------------------------------------------------------------------------------
+
+--- update display of volume slider
+-- @param volume (int), between 0-127
 
 function StepSequencer:_draw_volume_slider(volume)
   TRACE("StepSequencer:_draw_volume_slider()",volume)
@@ -1294,7 +1484,15 @@ end
 
 --------------------------------------------------------------------------------
 
+--- write properties into provided note column
+-- @param note_obj (NoteColumn)
+-- @param note (int) note pitch
+-- @param instrument (int) instrument number
+-- @param volume (int) note velocity
+
 function StepSequencer:_set_note(note_obj,note,instrument,volume)
+  TRACE("StepSequencer:_set_note(note_obj,note,instrument,volume)",note_obj,note,instrument,volume)
+
   note_obj.note_value = note
   note_obj.instrument_value = instrument
   note_obj.volume_value = volume
@@ -1303,14 +1501,18 @@ end
 
 --------------------------------------------------------------------------------
 
+--- clear properties for note column
+-- @param note_obj (NoteColumn)
+
 function StepSequencer:_clear_note(note_obj)
+  TRACE("StepSequencer:_clear_note(note_obj)",note_obj)
   self:_set_note(note_obj, 121, 255, 255)
 end
 
 
 --------------------------------------------------------------------------------
 
--- assign color to button, based on note properties
+--- assign color to button, based on note properties
 
 function StepSequencer:_draw_grid_button(button,note,current_track)
   TRACE("StepSequencer:_draw_grid_button()",button,note,current_track)
@@ -1337,7 +1539,12 @@ end
 
 --------------------------------------------------------------------------------
 
+--- figure out the color for a given volume level 
+-- @param vol (int), between 0-127
+-- @param max (int), 127
+
 function StepSequencer:_volume_palette(vol, max)
+  TRACE("StepSequencer:_volume_palette(vol, max)",vol, max)
   if (vol > max) then 
     vol = max 
   end
@@ -1350,7 +1557,11 @@ end
 
 --------------------------------------------------------------------------------
 
+--- set basenote for new notes
+-- @param note_value (int) note pitch
+
 function StepSequencer:_set_basenote(note_value)
+  TRACE("StepSequencer:_set_basenote(note_value)",note_value)
   local note = note_value % 12 +1
   local oct = math.floor(note_value / 12) +1
   self._base_note = note
@@ -1365,7 +1576,11 @@ end
 
 --------------------------------------------------------------------------------
 
+--- transpose existing basenote by given amount
+-- @param steps (int) relative amount to add 
+
 function StepSequencer:_transpose_basenote(steps)
+  TRACE("StepSequencer:_transpose_basenote(steps)",steps)
   local baseNote = (self._base_note-1)+(self._base_octave-1)*12
   local newval = baseNote + steps
   if (0 <= newval and newval < 120) then
@@ -1376,10 +1591,10 @@ end
 
 --------------------------------------------------------------------------------
 
---- Detach all previously attached notifiers first
+--- detach all previously attached notifiers first
 -- but don't even try to detach when a new song arrived. old observables
 -- will no longer be alive then...
--- @param new_song - boolean, true to leave existing notifiers alone
+-- @param new_song (bool), true to leave existing notifiers alone
 -- @param observables - list of observables
 function StepSequencer:_remove_notifiers(new_song,observables)
   TRACE("StepSequencer:_remove_notifiers()",new_song,observables)
@@ -1397,10 +1612,12 @@ end
 
 --------------------------------------------------------------------------------
 
--- apply a function to all held grid buttons, optionally adding them 
+--- apply a function to all held grid buttons, optionally adding them 
 -- all to toggle_exempt table.  return the number of held keys
+-- @param callback (function), the callback function
+-- @param toggle_exempt (bool), do not toggle off
 
-function StepSequencer:_walk_held_keys(callback, toggleExempt)
+function StepSequencer:_walk_held_keys(callback, toggle_exempt)
   local newval = nil
   local note = nil
   
@@ -1414,7 +1631,7 @@ function StepSequencer:_walk_held_keys(callback, toggleExempt)
         if (callback ~= nil) then
           callback(x,y)
         end
-        if (toggleExempt) then
+        if (toggle_exempt) then
           self._toggle_exempt[x][y] = true
         end
       end

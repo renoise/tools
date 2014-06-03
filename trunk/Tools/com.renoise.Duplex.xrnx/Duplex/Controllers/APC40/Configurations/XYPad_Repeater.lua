@@ -2,8 +2,6 @@
 -- Duplex.APC40
 ----------------------------------------------------------------------------]]--
 
--- setup "XYPad + Effect + Navigator + Transport + Mixer",
-
 duplex_configurations:insert {
 
   -- configuration properties
@@ -18,7 +16,7 @@ duplex_configurations:insert {
     device_port_out = "Akai APC40",
     control_map = "Controllers/APC40/Controlmaps/APC40_XYPad_Repeater.xml",
     thumbnail = "Controllers/APC40/APC40.bmp",
-    protocol = DEVICE_MIDI_PROTOCOL,
+    protocol = DEVICE_PROTOCOL.MIDI,
   },
 
   applications = {
@@ -260,7 +258,7 @@ duplex_configurations:insert {
       mappings = {
         blockpos = {
           group_name = "Navigator",
-          orientation = HORIZONTAL,
+          orientation = ORIENTATION.HORIZONTAL,
         },
       }
     },

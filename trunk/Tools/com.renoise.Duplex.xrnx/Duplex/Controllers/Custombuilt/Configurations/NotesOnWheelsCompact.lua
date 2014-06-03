@@ -18,7 +18,7 @@ duplex_configurations:insert {
     device_port_out = "",
     control_map = "Controllers/Custombuilt/Controlmaps/NOW_Controller_compact.xml",
     thumbnail = "Controllers/Custombuilt/NOW_Controller.bmp",
-    protocol = DEVICE_MIDI_PROTOCOL
+    protocol = DEVICE_PROTOCOL.MIDI
   },
   
   applications = {
@@ -30,50 +30,15 @@ duplex_configurations:insert {
         multi_adjust = {
           group_name = "Fader_1",
         },
-        --[[
-        pitch_sliders = {
-          group_name = "DialRow_2",
-        },
-        pitch_adjust = {
-          group_name = "Fader_2",
-        },
-        velocity_sliders = {
-          group_name = "DialRow_3",
-        },
-        velocity_adjust = {
-          group_name = "Fader_3",
-        },
-        offset_sliders = {
-          group_name = "DialRow_4",
-        },
-        offset_adjust = {
-          group_name = "Fader_4",
-        },
-        gate_sliders = {
-          group_name = "DialRow_5",
-        },
-        gate_adjust = {
-          group_name = "Fader_5",
-        },
-        retrig_sliders = {
-          group_name = "DialRow_6",
-        },
-        retrig_adjust = {
-          group_name = "Fader_6",
-        },
-        ]]
+
         num_steps = {
           group_name = "ButtonRow",
-          --orientation = HORIZONTAL,
+          --orientation = ORIENTATION.HORIZONTAL,
         },
         step_spacing = {
           group_name = "Dials",
           index = 1,
         },
-        --num_lines = {
-        --  group_name = "Dials",
-        --  index = 2,
-        --},
         write = {
           group_name = "Controls",
           index = 1,
@@ -82,12 +47,6 @@ duplex_configurations:insert {
           group_name = "Controls",
           index = 2,
         },
-        --[[
-        fill = {
-          group_name = "Controls",
-          index = 3,
-        },
-        ]]
         global = {
           group_name = "Controls",
           index = 3,
