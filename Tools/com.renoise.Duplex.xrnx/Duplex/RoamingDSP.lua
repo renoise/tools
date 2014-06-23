@@ -1,12 +1,11 @@
 --[[============================================================================
 -- Duplex.RoamingDSP
--- Inheritance: Application > RoamingDSP
 ============================================================================]]--
 
 --[[--
+Extend this class if you want an application to lock onto a specific type of device, or navigate between similar devices.
+Inheritance: @{Duplex.Application} > Duplex.RoamingDSP
 
-Extend this class if you want an application to lock onto a specific type of device, or navigate between similar devices
-  
 The application can target any device that has been selected in Renoise, freely roaming the tracks. If the lock button starts to blink slowly, it is to remind you that the application is currently 'homeless', has no matching device to control. 
 
 Opposite to the "free-roaming mode" we have the "locked mode" which will lock to a single device. The locked mode can either be set by being mapped to a button, or via the options dialog. In either case, the application will 'tag' the device with a unique name. 
@@ -115,40 +114,38 @@ RoamingDSP.default_palette = {
 function RoamingDSP:__init(...)
   TRACE("RoamingDSP:__init()")
 
-  -- keep reference to browser process, so we can
-  -- maintain the "locked" options at all times
-  self._process = select(1,...)
-
-  -- use Automation class to record movements
+  --- (@{Duplex.Automation}) used for recording movements
   self.automation = Automation()
 
-  -- set while recording automation
+  --- (bool) set while recording automation
   self._record_mode = true
 
-  -- string, overridden by implementing class
-  --self._instance_name = "RoamingDSP"
-
   -- the various UIComponents
-  self._lock_button = nil   -- UIButton
-  self._prev_button = nil   -- UIButton
-  self._next_button = nil   -- UIButton
+  self._controls = {}
+  --self._controls.lock_button = nil   -- UIButton
+  --self._controls.prev_button = nil   -- UIButton
+  --self._controls.next_button = nil   -- UIButton
 
-  -- TrackDevice, the device we are currently controlling
+  --- (renoise.AudioDevice) the device we are currently controlling
   self.target_device = nil
 
-  -- current blink-state (lock button)
+  --- (bool) current blink-state (lock button)
   self._blink = false
 
-  -- the target's track-index/device-index 
+  --- (int) the target track index
   self.track_index = nil
+
+  --- (int) the target device index 
   self.device_index = nil
 
-  -- (bool), set when we should attempt to attach to 
+  --- (bool), set when we should attempt to attach to 
   -- the current device (althought we might not succeed)
   self.current_device_requested = false
 
-  -- list of observable parameters
+  --- (table) list of observable parameters
   self._parameter_observables = table.create()
+
+    --- (table) list of observable device parameters
   self._device_observables = table.create()
 
   Application.__init(self,...)
@@ -187,7 +184,7 @@ end
 
 --------------------------------------------------------------------------------
 
--- this search is performed on application start
+--- this search is performed on application start
 -- if not in locked mode: use the currently focused track->device
 -- if we are in locked mode: recognize any locked devices, but fall back
 --  to the focused track->device if no locked device was found
@@ -224,7 +221,7 @@ end
 
 --------------------------------------------------------------------------------
 
--- goto previous device
+--- goto previous device
 -- search from locked device (if available), otherwise use the selected device
 -- @return bool
 
@@ -252,7 +249,7 @@ end
 
 --------------------------------------------------------------------------------
 
--- goto next device
+--- goto next device
 -- search from locked device (if available), otherwise use the selected device
 -- @return bool
 
@@ -280,8 +277,9 @@ end
 
 --------------------------------------------------------------------------------
 
--- locate the prior device
--- @param track_index/device_index, start search from here
+--- locate the prior device
+-- @param track_index (int) start search from here
+-- @param device_index (int) start search from here
 -- @return table or nil
 
 function RoamingDSP:search_previous_device(track_index,device_index)
@@ -328,8 +326,9 @@ end
 
 --------------------------------------------------------------------------------
 
--- locate the next device
--- @param track_index/device_index, start search from here
+--- locate the next device
+-- @param track_index (int) start search from here
+-- @param device_index (int) start search from here
 -- @return table or nil
 
 function RoamingDSP:search_next_device(track_index,device_index)
@@ -375,9 +374,13 @@ end
 
 --------------------------------------------------------------------------------
 
--- attach to a device, transferring the 'tag' if needed
+--- attach to a device, transferring the 'tag' if needed
 -- this is the final step of a "previous/next device" operation,
 -- or called during the initial search
+-- @param track_index (int) start search from here
+-- @param device_index (int) start search from here
+-- @param device (renoise.AudioDevice)
+-- @param skip_tag (bool) don't tag device
 
 function RoamingDSP:goto_device(track_index,device_index,device,skip_tag)
   TRACE("RoamingDSP:goto_device()",track_index,device_index,device,skip_tag)
@@ -396,7 +399,7 @@ end
 
 --------------------------------------------------------------------------------
 
--- update the lit state of the previous/next device buttons
+--- update the lit state of the previous/next device buttons
 -- @param track_index (int) 
 -- @param device_index (int) 
 
@@ -408,22 +411,22 @@ function RoamingDSP:update_prev_next(track_index,device_index)
     device_index = self.device_index
   end
 
-  if self._prev_button then
+  if self._controls.prev_button then
     local prev_search = self:search_previous_device(track_index,device_index)
     local prev_state = (prev_search) and true or false
     if prev_state then
-      self._prev_button:set(self.palette.prev_device_on)
+      self._controls.prev_button:set(self.palette.prev_device_on)
     else
-      self._prev_button:set(self.palette.prev_device_off)
+      self._controls.prev_button:set(self.palette.prev_device_off)
     end
   end
-  if self._next_button then
+  if self._controls.next_button then
     local next_search = self:search_next_device(track_index,device_index)
     local next_state = (next_search) and true or false
     if next_state then
-      self._next_button:set(self.palette.next_device_on)
+      self._controls.next_button:set(self.palette.next_device_on)
     else
-      self._next_button:set(self.palette.next_device_off)
+      self._controls.next_button:set(self.palette.next_device_off)
     end
   end
 
@@ -432,7 +435,7 @@ end
 
 --------------------------------------------------------------------------------
 
--- look for a device that match the provided name
+--- look for a device that match the provided name
 -- it is called right after the target device has been removed,
 -- or by initial_select()
 
@@ -460,7 +463,8 @@ end
 
 --------------------------------------------------------------------------------
 
--- get the unique name of the device, as specified in options
+--- get the unique name of the device, as specified in options
+-- @return string
 
 function RoamingDSP:get_unique_name()
   
@@ -478,7 +482,9 @@ end
 
 --------------------------------------------------------------------------------
 
--- test if the device is a valid target 
+--- test if the device is a valid target 
+-- @param device (renoise.AudioDevice)
+-- @return bool
 
 function RoamingDSP:device_is_valid(device)
 
@@ -493,8 +499,8 @@ end
 
 --------------------------------------------------------------------------------
 
--- tag device (add unique identifier), clearing existing one(s)
--- @device (TrackDevice), leave out to simply clear
+--- tag device (add unique identifier), clearing existing one(s)
+-- @param device (renoise.AudioDevice), leave out to simply clear
 
 function RoamingDSP:tag_device(device)
 
@@ -543,14 +549,14 @@ function RoamingDSP:on_idle()
   end
 
   -- when device is unassignable, blink lock button
-  if self._lock_button and not self.target_device then
+  if self._controls.lock_button and not self.target_device then
     local blink = (math.floor(os.clock()%2)==1)
     if blink~=self._blink then
       self._blink = blink
       if blink then
-        self._lock_button:set(self.palette.lock_on)
+        self._controls.lock_button:set(self.palette.lock_on)
       else
-        self._lock_button:set(self.palette.lock_off)
+        self._controls.lock_button:set(self.palette.lock_off)
       end
     end
   end
@@ -564,7 +570,7 @@ end
 
 --------------------------------------------------------------------------------
 
--- return the currently focused track->device in Renoise
+--- return the currently focused track->device in Renoise
 -- @return Device
 
 function RoamingDSP:get_selected_device()
@@ -578,7 +584,7 @@ end
 
 --------------------------------------------------------------------------------
 
--- attempt to select the current device 
+--- attempt to select the current device 
 -- failing to do so will clear the target device
 
 function RoamingDSP:attach_to_selected_device()
@@ -599,7 +605,7 @@ end
 
 --------------------------------------------------------------------------------
 
--- attach notifier to the device 
+--- attach notifier to the device 
 -- called when we use previous/next device, set the initial device
 -- or are freely roaming the tracks
 
@@ -668,8 +674,9 @@ end
 
 --------------------------------------------------------------------------------
 
--- keep track of devices (insert,remove,swap...)
--- invoked by attach_to_device()
+--- keep track of devices (insert,remove,swap...)
+-- invoked by `attach_to_device()`
+-- @param track (renoise.Track)
 
 function RoamingDSP:_attach_to_track_devices(track)
   TRACE("RoamingDSP:_attach_to_track_devices()",track)
@@ -713,7 +720,7 @@ end
 
 --------------------------------------------------------------------------------
 
--- select track + device, but only when follow_pos is enabled
+--- select track + device, but only when follow_pos is enabled
 
 function RoamingDSP:follow_device_pos()
   TRACE("RoamingDSP:follow_device_pos()")
@@ -730,16 +737,16 @@ end
 
 --------------------------------------------------------------------------------
 
--- update the state of the lock button
+--- update the state of the lock button
 
 function RoamingDSP:update_lock_button()
   TRACE("RoamingDSP:update_lock_button()")
 
-  if self._lock_button then
+  if self._controls.lock_button then
     if (self.options.locked.value == RoamingDSP.LOCKED_ENABLED) then
-      self._lock_button:set(self.palette.lock_on)
+      self._controls.lock_button:set(self.palette.lock_on)
     else
-      self._lock_button:set(self.palette.lock_off)
+      self._controls.lock_button:set(self.palette.lock_off)
     end
   end
 
@@ -766,9 +773,6 @@ function RoamingDSP:_build_app()
     c:set_pos(map.index)
     c.on_press = function(obj)
       TRACE("RoamingDSP - lock_button.on_press()")
-      if not self.active then 
-        return false 
-      end
       local track_idx = renoise.song().selected_track_index
       if (self.options.locked.value ~= RoamingDSP.LOCKED_ENABLED) then
         -- attempt to lock device
@@ -791,8 +795,7 @@ function RoamingDSP:_build_app()
       self:update_lock_button()
 
     end
-    self:_add_component(c)
-    self._lock_button = c
+    self._controls.lock_button = c
   end
 
   -- previous device button
@@ -804,11 +807,9 @@ function RoamingDSP:_build_app()
     c:set_pos(map.index)
     c.on_press = function(obj)
       TRACE("RoamingDSP - prev_device.on_press()")
-      if not self.active then return false end
       self:goto_previous_device()
     end
-    self:_add_component(c)
-    self._prev_button = c
+    self._controls.prev_button = c
   end
 
   -- next device button
@@ -820,11 +821,9 @@ function RoamingDSP:_build_app()
     c:set_pos(map.index)
     c.on_press = function(obj)
       TRACE("RoamingDSP - next_device.on_press()")
-      if not self.active then return false end
       self:goto_next_device()
     end
-    self:_add_component(c)
-    self._next_button = c
+    self._controls.next_button = c
   end
 
   return true
@@ -860,7 +859,7 @@ end
 
 --------------------------------------------------------------------------------
 
--- de-attach from the device
+--- de-attach from the device
 
 function RoamingDSP:clear_device()
 
@@ -875,7 +874,7 @@ end
 
 --------------------------------------------------------------------------------
 
--- update the record mode (when editmode or record_method has changed)
+--- update the record mode (when editmode or record_method has changed)
 
 function RoamingDSP:_update_record_mode()
   if (self.options.record_method.value ~= RoamingDSP.RECORD_NONE) then
@@ -887,7 +886,7 @@ end
 
 --------------------------------------------------------------------------------
 
--- attach notifier to the song, handle changes
+--- attach notifier to the song, handle changes
 
 function RoamingDSP:_attach_to_song()
 
@@ -913,7 +912,9 @@ end
 
 --------------------------------------------------------------------------------
 
+--- "brute force" removal of registered notifiers 
 -- @param observables - list of observables
+
 function RoamingDSP:_remove_notifiers(observables)
 
   for _,observable in pairs(observables) do

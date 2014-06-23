@@ -1,10 +1,10 @@
 --[[============================================================================
--- Duplex.GridPie
--- Inheritance: Application > GridPie
+-- Duplex.Application.GridPie
 ============================================================================]]--
 
 --[[--
-Grid Pie lets you combine different parts of song, non-linearly, in real time
+Grid Pie lets you combine different parts of song, non-linearly, in real time.
+Inheritance: @{Duplex.Application} > Duplex.Application.GridPie 
 
 ### Discussion
 
@@ -339,9 +339,6 @@ function GridPie:__init(...)
   self.update_requested = false
   self.v_update_requested = false
   self.h_update_requested = false
-
-  --- (@{Duplex.BrowserProcess}) 
-  self._process = select(1,...)
 
   self._song_observables = table.create()   --- song observables
   self._pattern_observables = table.create()--- pattern observables
@@ -2367,14 +2364,11 @@ function GridPie:_build_app()
     c.tooltip = self.mappings.v_prev.description
     c:set_pos(self.mappings.v_prev.index)
     c.on_hold = function()
-      if not self.active then return false end
       self:goto_first_seq_page()
     end
     c.on_press = function(obj) 
-      if not self.active then return false end
       self:goto_prev_seq_page()
     end
-    self:_add_component(c)
     self._bt_prev_seq = c
   end
 
@@ -2385,14 +2379,11 @@ function GridPie:_build_app()
     c.tooltip = self.mappings.v_next.description
     c:set_pos(self.mappings.v_next.index)
     c.on_hold = function()
-      if not self.active then return false end
       self:goto_last_seq_page()
     end
     c.on_press = function(obj) 
-      if not self.active then return false end
       self:goto_next_seq_page()
     end
-    self:_add_component(c)
     self._bt_next_seq = c
   end
 
@@ -2403,14 +2394,11 @@ function GridPie:_build_app()
     c.tooltip = self.mappings.h_prev.description
     c:set_pos(self.mappings.h_prev.index)
     c.on_hold = function()
-      if not self.active then return false end
       self:goto_first_track_page()
     end
     c.on_press = function() 
-      if not self.active then return false end
       self:goto_prev_track_page()
     end
-    self:_add_component(c)
     self._bt_prev_track = c
   end
 
@@ -2421,14 +2409,11 @@ function GridPie:_build_app()
     c.tooltip = self.mappings.h_next.description
     c:set_pos(self.mappings.h_next.index)
     c.on_hold = function()
-      if not self.active then return false end
       self:goto_last_track_page()
     end
     c.on_press = function(obj) 
-      if not self.active then return false end
       self:goto_next_track_page()
     end
-    self:_add_component(c)
     self._bt_next_track = c
   end
 
@@ -2446,16 +2431,10 @@ function GridPie:_build_app()
         if (self.options.hold_enabled.value == HOLD_DISABLED) then
           c.on_press = function(obj) 
             -- track copy
-            if not self.active then 
-              return false 
-            end
             self:toggler(x,y) 
           end
         else
           c.on_release = function(obj) 
-            if not self.active then 
-              return false 
-            end
             local bt = self.held_buttons[x][y]
             local gp_seq_idx = self:get_gridpie_seq_pos()
             if self.src_button and (bt.obj == self.src_button.obj) then
@@ -2493,9 +2472,7 @@ function GridPie:_build_app()
 
           end
           c.on_hold = function(obj) 
-            if not self.active then 
-              return false 
-            end
+            print("grid pie - on_hold")
             local bt = self.held_buttons[x][y]
             local gp_seq_idx = self:get_gridpie_seq_pos()
             if (self.held_buttons[x][y].seq_idx == gp_seq_idx) then
@@ -2533,9 +2510,6 @@ function GridPie:_build_app()
 
           end
           c.on_press = function(obj) 
-            if not self.active then 
-              return false 
-            end
             --print("obj",obj)
             local gp_seq_idx = self:get_gridpie_seq_pos()
             local ptrack,t_idx,s_idx = self:get_ptrack_from_coords(x,y,true)
@@ -2604,7 +2578,6 @@ function GridPie:_build_app()
           end
 
         end
-        self:_add_component(c)
         self.matrix_cells[x][y] = c
       end
     end
@@ -2617,13 +2590,11 @@ function GridPie:_build_app()
     c.tooltip = self.mappings.v_slider.description
     c:set_pos(self.mappings.v_slider.index or 1)
     c.on_change = function(obj) 
-      if not self.active then return false end
       local limit = self:_get_v_limit()
       local val = math.min(limit,obj.index+1)
       self:set_vertical_pos(val)
       self:align_pattern()
     end
-    self:_add_component(c)
     self._v_slider = c
   end
 
@@ -2634,13 +2605,11 @@ function GridPie:_build_app()
     c.tooltip = self.mappings.h_slider.description
     c:set_pos(self.mappings.h_slider.index or 1)
     c.on_change = function(obj) 
-      if not self.active then return false end
       local limit = self:_get_h_limit()
       local val = math.min(limit,obj.index+1)
       self:set_horizontal_pos(val)
       self:align_track()
     end
-    self:_add_component(c)
     self._h_slider = c
   end
 

@@ -22,52 +22,64 @@ class 'Device'
 function Device:__init(name, message_stream, protocol)
   TRACE('Device:__init()',name, message_stream, protocol)
 
-  ---- initialization
-  
   assert(name and message_stream and protocol, 
     "Internal Error. Please report: " ..
     "expected a valid name, stream and protocol for a device")
 
-  -- this is the 'friendly name' of the device
+  --- this is the 'friendly name' of the device
   -- (any/all characters are supported)
   self.name = name
 
-  -- MIDI or OSC?
+  --- MIDI or OSC?
   self.protocol = protocol  
 
-  -- transmit messages through this stream
+  --- transmit messages through this stream
   self.message_stream = message_stream
 
-  -- create our control-map
+  --- create our control-map
   self.control_map = ControlMap()
   
   
   ---- configuration
   
-  -- specify a color-space like this: (r, g, b) or empty
-  -- example#1 : {4,4,0} - four degrees of red and green
-  -- example#2 : {1,1,1} - monochrome display (black/white)
-  -- example#3 : {0,0,1} - monochrome display (blue)
-  -- example#4 : {} - no colors, display as text
+  --- specify a color-space like this: (r, g, b) or empty
+  --    example#1 : {4,4,0} - four degrees of red and green
+  --    example#2 : {1,1,1} - monochrome display (black/white)
+  --    example#3 : {0,0,1} - monochrome display (blue)
+  --    example#4 : {} - no colors, display as text
   if not self.colorspace then
     self.colorspace = {}
   end
   
-  -- allow sending back the same messages we got from the device as answer 
+  --- allow sending back the same messages we got from the device as answer 
   -- to the device. some controller which cannot deal with message feedback,
   -- may want to disable this in its device class...(see also "skip_echo", which 
   -- is similar but per-parameter instead of being set for the whole device)
   self.loopback_received_messages = true
 
-
-  -- for MIDI devices, this will allow Duplex to transmit note-on
-  -- messages with zero velocity (normally, such a message is converted
-  -- into a note-off message just before being sent)
+  --- allow Duplex to transmit MIDI note-on messages with zero velocity 
+  -- (normally, such a message is converted to note-off just before being sent)
   self.allow_zero_velocity_note_on = false
 
-  -- private stuff
+  --- (bool) feedback prevention: when connected to an external source that 
+  -- simply echoes anything back, this will help us avoid getting bogged down
+  -- ignore messages that bounce back within a certain time window - 
+  -- only applies to messages that can be reconstructed (no wildcards)
+  self.feedback_prevention_enabled = false
 
+  --- (bool) memoize previously matched parameters (more efficient)
+  self.parameter_caching = true
+
+  ---- private members
+
+  --- (table) indexed table of the most recent messages, stored as strings...
+  -- (This is part of a simple mechanism for avoiding message feedback)
+  self._feedback_buffer = {}
+
+  --- renoise.Viewbuilder
   self._vb = nil
+
+  --- renoise.Views.View
   self._settings_view = nil
   
   
@@ -76,7 +88,7 @@ end
 
 --------------------------------------------------------------------------------
 
---- Retrieve the protocol of this device
+--- Retrieve the protocol of this device.
 -- @return @{Duplex.Globals.DEVICE_PROTOCOL}
 
 function Device:get_protocol()
@@ -87,31 +99,23 @@ end
 
 --------------------------------------------------------------------------------
 
---- Set the device to the provided control-map 
+--- Set the device to the provided control-map, including memoizing 
+-- of patterns (making pattern-matching a lot more efficient)
 -- @param xml_file (String) path to file
 
 function Device:set_control_map(xml_file)
   TRACE("Device:set_control_map()",xml_file)
   
-  self.control_map.load_definition(self.control_map,xml_file)
+  local cm = self.control_map
+  cm.load_definition(self.control_map,xml_file)
+  cm:memoize()
+
 end
 
 
 --------------------------------------------------------------------------------
 
---- Convert a display/canvas point to an actual value, ready for output
--- (always overridden with device-specific implementation, as the device will
--- use MIDI or OSC-specific features at this stage)
-
-function Device:point_to_value()
-  TRACE("Device:point_to_value()")
-  return 0
-end
-
-
---------------------------------------------------------------------------------
-
---- Function for quantizing RGB color values to a device color-space
+--- Function for quantizing RGB color values to a device color-space.
 -- @param color (table), RGB colors
 -- @param colorspace (table), colorspace
 -- @return (table), the quantized color
@@ -156,7 +160,7 @@ end
 
 --------------------------------------------------------------------------------
 
---- Open the device settings dialog
+--- Open the device settings dialog.
 -- @param process (@{Duplex.BrowserProcess}) 
 
 function Device:show_settings_dialog(process)
@@ -442,7 +446,7 @@ end
   
 --------------------------------------------------------------------------------
 
---- Construct the device settings view (for both MIDI and OSC devices)
+--- Construct the device settings view (for both MIDI and OSC devices).
 -- @return renoise.ViewBuilder.view
 
 function Device:_build_settings()
@@ -511,85 +515,170 @@ end
 
 --------------------------------------------------------------------------------
 
---- Construct & send internal messages (for both MIDI and OSC devices)
--- @param message (@{Duplex.Message}) the message to send
--- @param xarg (table) parameter attributes
+--- Construct & send internal messages (for both MIDI and OSC devices).
+-- this function is invoked by the device class when a new message is received, 
+-- and will populate the message with properties that are device-independent
+-- before sending it off to the @{Duplex.MessageStream}
+-- 
+-- @param msg (@{Duplex.Message}) passed on from the device class
+-- @param param (table) `Param` node attributes, see @{Duplex.ControlMap}
+-- @param regex (table) regex matches, see @{Duplex.ControlMap.get_osc_params}
 
-function Device:_send_message(message,xarg)
-  TRACE("Device:_send_message()",message,xarg)
+function Device:_send_message(msg,param,regex)
+  --TRACE("Device:_send_message()",msg,param)
+  --TRACE("Device:_send_message()",rprint(param.xarg))
 
-  --print("*** Device:xarg.type",xarg.type)
+  msg.timestamp = os.clock()
+  msg.device = self
+  msg.xarg = param.xarg
 
-  -- determine input method
-  if (xarg.type == "button") then
-    message.input_method = INPUT_TYPE.BUTTON
-  elseif (xarg.type == "togglebutton") then
-    message.input_method = INPUT_TYPE.TOGGLEBUTTON
-  elseif (xarg.type == "pushbutton") then
-    message.input_method = INPUT_TYPE.PUSHBUTTON
-  elseif (xarg.type == "fader") then
-    message.input_method = INPUT_TYPE.FADER
-  elseif (xarg.type == "dial") then
-    message.input_method = INPUT_TYPE.DIAL
-  elseif (xarg.type == "xypad") then
-    message.input_method = INPUT_TYPE.XYPAD
-    if (xarg.invert_x) then
-      message.value[1] = (xarg.maximum-message.value[1])+xarg.minimum
-    end
-    if (xarg.invert_y) then
-      message.value[2] = (xarg.maximum-message.value[2])+xarg.minimum
-    end
-    if (xarg.swap_axes) then
-      message.value[1],message.value[2] = message.value[2],message.value[1]
-    end
-  elseif (xarg.type == "key") then
-    message.input_method = INPUT_TYPE.KEYBOARD
-    message.context = DEVICE_MESSAGE.MIDI_NOTE
-    message.value = {xarg.index,message.value}
-    message.velocity_enabled = xarg.velocity_enabled
-    --print("*** Device:message.input_method = DEVICE_MESSAGE.MIDI_NOTE")
-  elseif (xarg.type == "keyboard") then
-    message.input_method = INPUT_TYPE.KEYBOARD
-    -- split message into {pitch,velocity}
-    if (message.context == DEVICE_MESSAGE.OSC) then
-      -- disguise as DEVICE_MESSAGE.MIDI_NOTE
-      message.value = {xarg.index,message.value}
-      message.context = DEVICE_MESSAGE.MIDI_NOTE
-      message.is_osc_msg = true
-    elseif (message.context == DEVICE_MESSAGE.MIDI_NOTE) then
-      --print("*** Device:message.input_method = INPUT_TYPE.KEYBOARD + DEVICE_MESSAGE.MIDI_NOTE")
-      local note_val = value_to_midi_pitch(xarg.value)
-      message.value = {note_val,message.value}
-      message.velocity_enabled = xarg.velocity_enabled
-    end    
-
-  else
-    error(("Internal Error. Please report: " ..
-      "unknown message.input_method %s"):format(xarg.type or "nil"))
+  local on_receive = widget_hooks[param.xarg.type].on_receive
+  if on_receive then
+    on_receive(self,param,msg,regex)
   end
 
-  -- include meta-properties
-  -- TODO remove xarg stuff, leave in "param"
-  message.param = xarg
-  message.name = xarg.name
-  message.group_name = xarg.group_name
-  message.id = xarg.id
-  message.index = xarg.index
-  message.column = xarg.column
-  message.row = xarg.row
-  message.timestamp = os.clock()
-  message.max = xarg.maximum
-  message.min = xarg.minimum
-  message.device = self
-
   -- send the message
-  self.message_stream:input_message(message)
+  self.message_stream:input_message(msg)
  
   -- immediately update after having received a message,
   -- to improve the overall response time of the display
   if (self.display) then
     self.display:update()
   end
+
+end
+
+--------------------------------------------------------------------------------
+
+--- Convert values into a something that the display & device can understand. 
+--
+-- Each type of value (number, boolean or text) is handled by a specific 
+-- submethod: @{output_number}, @{output_boolean}, @{output_text}
+-- 
+-- Numbers are generally used for dials and faders, booleans are 
+-- used for objects with an on/off state (buttons), and text is used for 
+-- things like labels and segmented displays 
+--
+-- Depending on the device, you might want to override these submethods with 
+-- your own implementation. For example, the Launchpad has it's own method for 
+-- converting a value into a color. You can also implement your own code for 
+-- direct communication with the device by overriding these methods - 
+-- in such a case, adding an additional boolean return value ("skip_hardware") 
+-- will update the virtual display, but skip the hardware part
+--
+-- @param pt (@{Duplex.CanvasPoint})
+-- @param xarg (table), control-map parameter
+-- @param ui_obj (@{Duplex.UIComponent})
+-- @return number, table or text (the value output to the display/device)
+-- @return bool (skip_hardware)
+
+function Device:output_value(pt,xarg,ui_obj)
+  TRACE("Device:output_value()",pt,xarg,ui_obj)
+
+  local value,skip_hardware = nil,false
+  local val_type = type(pt.val)
+
+  --print("*** val_type",val_type)
+
+  if (val_type == "number") then
+    value,skip_hardware = self:output_number(pt,xarg,ui_obj)
+
+  elseif (val_type == "boolean") then
+    value,skip_hardware = self:output_boolean(pt,xarg,ui_obj)
+
+  elseif (val_type == "string") then
+    value,skip_hardware = self:output_text(pt,xarg,ui_obj)
+
+  elseif (val_type == "table") then
+
+    -- when the value is a table, we iterate through each value 
+    -- and call the appropriate methods. 
+
+    value = table.create()
+    for _,v in ipairs(pt.val) do
+
+      local pt2 = {
+        text = pt.text,
+        color = pt.color,
+        val = v,
+      }
+
+      local value2,skip2 = nil,false
+      local val_type2 = type(v)
+
+      if (val_type2 == "number") then
+        value2,skip2 = self:output_number(pt2,xarg,ui_obj)
+
+      elseif (val_type2 == "boolean") then
+        value2,skip2 = self:output_boolean(pt2,xarg,ui_obj)
+
+      elseif (val_type2 == "text") then
+        value2,skip2 = self:output_text(pt2,xarg,ui_obj)
+
+      end
+      value:insert(value2)
+
+      if (skip2) then
+        skip_hardware = true
+      end
+
+    end
+
+    --print("*** output_value (table)")
+    --rprint(value)
+
+  end
+
+  return value,skip_hardware
+
+end
+
+--------------------------------------------------------------------------------
+
+--- output a text-based value (e.g. for segmented text displays)
+-- @param pt (@{Duplex.CanvasPoint})
+-- @param xarg (table), control-map parameter
+-- @param ui_obj (@{Duplex.UIComponent})
+-- @see Device.output_value
+
+function Device:output_text(pt,xarg,ui_obj)
+  --TRACE("Device:output_text(pt,xarg,ui_obj)",pt,xarg,ui_obj)
+
+  return pt.val
+
+end
+
+--------------------------------------------------------------------------------
+
+--- represents a button's lit state and will output either min or max
+-- (only relevant for basic, monochrome buttons)
+-- @param pt (@{Duplex.CanvasPoint})
+-- @param xarg (table), control-map parameter
+-- @param ui_obj (@{Duplex.UIComponent})
+-- @see Device.output_value
+
+function Device:output_boolean(pt,xarg,ui_obj)
+
+  if (pt.val==true) then
+    return xarg.maximum
+  else
+    return xarg.minimum
+  end
+
+end
+
+--------------------------------------------------------------------------------
+
+--- scale a numeric value from our UIComponent range to the range of the 
+-- external device (for example, from decibel to 0-127)
+-- @param pt (@{Duplex.CanvasPoint})
+-- @param xarg (table), control-map parameter
+-- @param ui_obj (@{Duplex.UIComponent})
+-- @see Device.output_value
+
+function Device:output_number(pt,xarg,ui_obj)
+
+  return scale_value(pt.val,ui_obj.floor,ui_obj.ceiling,xarg.minimum,xarg.maximum)
 
 end
 

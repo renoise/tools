@@ -14,24 +14,23 @@ require "Duplex"
 -- the one and only browser
 local browser = nil
 
+-- workaround for http://goo.gl/UnSDnw
+local waiting_to_show_browser = nil
+
 
 --------------------------------------------------------------------------------
 
 -- instantiate the browser, if needed, or load a new controller configuration
 
 local function create_browser(config, start_running)
-  --LOG("main:create_browser()",config, start_running)
+  TRACE("main:create_browser()",config, start_running)
 
   start_running = start_running or true
   
   if (not browser) then
     browser = Browser()
     browser:set_dump_midi(duplex_preferences.dump_midi.value)
-
-    local display = duplex_preferences.display_browser_on_start.value
-    if display then
-      browser:show()
-    end
+    waiting_to_show_browser = duplex_preferences.display_browser_on_start.value
 
   end
     
@@ -380,28 +379,32 @@ renoise.tool().app_idle_observable:add_notifier(function()
   if (browser) then
     browser:on_idle()
   end
+  if (waiting_to_show_browser) then
+    waiting_to_show_browser = false
+    browser:show()
+  end
 end)
 renoise.tool().app_release_document_observable:add_notifier(function()
-  --LOG("main:app_release_document_observable fired...")
+  --TRACE("main:app_release_document_observable fired...")
   if (browser) then
     browser:on_release_document()
   end
 end)
 renoise.tool().app_new_document_observable:add_notifier(function()
-  --LOG("main:app_new_document_observable fired...")
+  --TRACE("main:app_new_document_observable fired...")
   if (browser) then
     browser:on_new_document()
   end
   apply_autostart_configurations()
 end)
 renoise.tool().app_became_active_observable:add_notifier(function()
-  --LOG("main:app_new_document_observable fired...")
+  --TRACE("main:app_new_document_observable fired...")
   if (browser) then
     browser:on_window_became_active()
   end
 end)
 renoise.tool().app_resigned_active_observable:add_notifier(function()
-  --LOG("main:app_new_document_observable fired...")
+  --TRACE("main:app_new_document_observable fired...")
   if (browser) then
     browser:on_window_resigned_active()
   end

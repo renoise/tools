@@ -38,58 +38,58 @@
 					<Column>
 						<Row columns="4">
 							<Group name="Pad13" >
-								<Param value="C-4" type="key" name="Pad 13" size="1.7" maximum="127" minimum="0"/>
+								<Param value="C-4" type="button" name="Pad 13" size="1.7" maximum="127" minimum="0"/>
 							</Group>
 							<Group name="Pad14" >
-							  <Param value="C#4" type="key" name="Pad 14" size="1.7" maximum="127" minimum="0"/>
+							  <Param value="C#4" type="button" name="Pad 14" size="1.7" maximum="127" minimum="0"/>
 							</Group>
 							<Group name="Pad15" >
-							  <Param value="D-4" type="key" name="Pad 15" size="1.7" maximum="127" minimum="0"/>
+							  <Param value="D-4" type="button" name="Pad 15" size="1.7" maximum="127" minimum="0"/>
 							</Group>
 							<Group name="Pad16" >
-							  <Param value="D#4" type="key" name="Pad 16" size="1.7" maximum="127" minimum="0"/>
+							  <Param value="D#4" type="button" name="Pad 16" size="1.7" maximum="127" minimum="0"/>
 							</Group>
 						</Row>
 						<Row columns="4">
 							<Group name="Pad9" >
-							  <Param value="G#3" type="key" name="Pad 9"  size="1.7" maximum="127" minimum="0"/>
+							  <Param value="G#3" type="button" name="Pad 9"  size="1.7" maximum="127" minimum="0"/>
 							</Group>
 							<Group name="Pad10" >
-							  <Param value="A-3" type="key" name="Pad 10" size="1.7" maximum="127" minimum="0"/>
+							  <Param value="A-3" type="button" name="Pad 10" size="1.7" maximum="127" minimum="0"/>
 							</Group>
 							<Group name="Pad11" >
-							  <Param value="A#3" type="key" name="Pad 11" size="1.7" maximum="127" minimum="0"/>
+							  <Param value="A#3" type="button" name="Pad 11" size="1.7" maximum="127" minimum="0"/>
 							</Group>
 							<Group name="Pad12" >
-							  <Param value="B-3" type="key" name="Pad 12" size="1.7" maximum="127" minimum="0"/>
+							  <Param value="B-3" type="button" name="Pad 12" size="1.7" maximum="127" minimum="0"/>
 							</Group>
 						</Row>
 						<Row columns="4">
 							<Group name="Pad5" >
-							  <Param value="E-3" type="key" name="Pad 5"  size="1.7" maximum="127" minimum="0"/>
+							  <Param value="E-3" type="button" name="Pad 5"  size="1.7" maximum="127" minimum="0"/>
 							</Group>
 							<Group name="Pad6" >
-							  <Param value="F-3" type="key" name="Pad 6"  size="1.7" maximum="127" minimum="0"/>
+							  <Param value="F-3" type="button" name="Pad 6"  size="1.7" maximum="127" minimum="0"/>
 							</Group>
 							<Group name="Pad7" >
-							  <Param value="F#3" type="key" name="Pad 7"  size="1.7" maximum="127" minimum="0"/>
+							  <Param value="F#3" type="button" name="Pad 7"  size="1.7" maximum="127" minimum="0"/>
 							</Group>
 							<Group name="Pad8" >
-							  <Param value="G-3" type="key" name="Pad 8"  size="1.7" maximum="127" minimum="0"/>
+							  <Param value="G-3" type="button" name="Pad 8"  size="1.7" maximum="127" minimum="0"/>
 							</Group>
 						</Row>
 						<Row columns="4">
 							<Group name="Pad1" >
-							  <Param value="C-3" type="key" name="Pad 1"  size="1.7" maximum="127" minimum="0"/>
+							  <Param value="C-3" type="button" name="Pad 1"  size="1.7" maximum="127" minimum="0"/>
 							</Group>
 							<Group name="Pad2" >
-							  <Param value="C#3" type="key" name="Pad 2"  size="1.7" maximum="127" minimum="0"/>
+							  <Param value="C#3" type="button" name="Pad 2"  size="1.7" maximum="127" minimum="0"/>
 							</Group>
 							<Group name="Pad3" >
-							  <Param value="D-3" type="key" name="Pad 3"  size="1.7" maximum="127" minimum="0"/>
+							  <Param value="D-3" type="button" name="Pad 3"  size="1.7" maximum="127" minimum="0"/>
 							</Group>
 							<Group name="Pad4" >
-							  <Param value="D#3" type="key" name="Pad 4"  size="1.7" maximum="127" minimum="0"/>
+							  <Param value="D#3" type="button" name="Pad 4"  size="1.7" maximum="127" minimum="0"/>
 							</Group>
 						</Row>
 					</Column>

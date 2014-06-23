@@ -10,15 +10,15 @@
 					<Param type="label" size="4" aspect="0.15" text="group matrix / mixer"/>
 				</Group>
 				<Group name="group_matrix" columns="4" colorspace="255,255,255">
-					<Param value="/mlrx/matrix 1 1 %i"  type="button" maximum="1" minimum="0"/>
-					<Param value="/mlrx/matrix 1 2 %i"  type="button" maximum="1" minimum="0"/>
-					<Param value="/mlrx/matrix 1 3 %i"  type="button" maximum="1" minimum="0"/>
-					<Param value="/mlrx/matrix 1 4 %i"  type="button" maximum="1" minimum="0"/>
+					<Param value="/mlrx/matrix 1 1 %i" type="button" maximum="1" minimum="0"/>
+					<Param value="/mlrx/matrix 1 2 %i" type="button" maximum="1" minimum="0"/>
+					<Param value="/mlrx/matrix 1 3 %i" type="button" maximum="1" minimum="0"/>
+					<Param value="/mlrx/matrix 1 4 %i" type="button" maximum="1" minimum="0"/>
 
-					<Param value="/mlrx/matrix 2 1 %i"  type="button" maximum="1" minimum="0"/>
-					<Param value="/mlrx/matrix 2 2 %i"  type="button" maximum="1" minimum="0"/>
-					<Param value="/mlrx/matrix 2 3 %i"  type="button" maximum="1" minimum="0"/>
-					<Param value="/mlrx/matrix 2 4 %i"  type="button" maximum="1" minimum="0"/>
+					<Param value="/mlrx/matrix 2 1 %i" type="button" maximum="1" minimum="0"/>
+					<Param value="/mlrx/matrix 2 2 %i" type="button" maximum="1" minimum="0"/>
+					<Param value="/mlrx/matrix 2 3 %i" type="button" maximum="1" minimum="0"/>
+					<Param value="/mlrx/matrix 2 4 %i" type="button" maximum="1" minimum="0"/>
 
 					<Param value="/mlrx/matrix 3 1 %i"  type="button" maximum="1" minimum="0"/>
 					<Param value="/mlrx/matrix 3 2 %i"  type="button" maximum="1" minimum="0"/>
@@ -58,17 +58,17 @@
 					<!-- <Param value="/mlrx/toggle_group_x %i"  type="button" maximum="1" minimum="0"/> -->
 				</Group>
 				<Group name="group_levels" >
-					<Param value="/mlrx/set_group_velocity_a %f"  skip_echo="true" type="fader" orientation="vertical" size="2.75" maximum="1" minimum="0"/>
-					<Param value="/mlrx/set_group_velocity_b %f"  skip_echo="true" type="fader" orientation="vertical" size="2.75" maximum="1" minimum="0"/>
-					<Param value="/mlrx/set_group_velocity_c %f"  skip_echo="true" type="fader" orientation="vertical" size="2.75" maximum="1" minimum="0"/>
-					<Param value="/mlrx/set_group_velocity_d %f"  skip_echo="true" type="fader" orientation="vertical" size="2.75" maximum="1" minimum="0"/>
+					<Param value="/mlrx/set_group_velocity 1 %f" type="fader" orientation="vertical" size="2.75" maximum="1" minimum="0"/>
+					<Param value="/mlrx/set_group_velocity 2 %f" type="fader" orientation="vertical" size="2.75" maximum="1" minimum="0"/>
+					<Param value="/mlrx/set_group_velocity 3 %f" type="fader" orientation="vertical" size="2.75" maximum="1" minimum="0"/>
+					<Param value="/mlrx/set_group_velocity 4 %f" type="fader" orientation="vertical" size="2.75" maximum="1" minimum="0"/>
 					<!-- <Param value="/mlrx/set_group_velocity_x %f"  skip_echo="true" type="fader" orientation="vertical" size="2.75" maximum="1" minimum="0"/> -->
 				</Group>
 				<Group name="group_panning">
-					<Param value="/mlrx/set_group_panning_a %f"  skip_echo="true" type="dial" maximum="1" minimum="0"/>
-					<Param value="/mlrx/set_group_panning_b %f"  skip_echo="true" type="dial" maximum="1" minimum="0"/>
-					<Param value="/mlrx/set_group_panning_c %f"  skip_echo="true" type="dial" maximum="1" minimum="0"/>
-					<Param value="/mlrx/set_group_panning_d %f"  skip_echo="true" type="dial" maximum="1" minimum="0"/>
+					<Param value="/mlrx/set_group_panning 1 %f" type="dial" maximum="1" minimum="0"/>
+					<Param value="/mlrx/set_group_panning 2 %f" type="dial" maximum="1" minimum="0"/>
+					<Param value="/mlrx/set_group_panning 3 %f" type="dial" maximum="1" minimum="0"/>
+					<Param value="/mlrx/set_group_panning 4 %f" type="dial" maximum="1" minimum="0"/>
 					<!-- <Param value="/mlrx/set_group_panning_x %f"  skip_echo="true" type="dial" maximum="1" minimum="0"/> -->
 				</Group>
 			</Column>
@@ -223,38 +223,38 @@
 					</Group>
 					<Column>
 						<Group name="track_levels" orientation="vertical" colums="1" >
-							<Param value="/mlrx/track_volume_1 %f"  type="dial" maximum="1" minimum="0"/>
-							<Param value="/mlrx/track_volume_2 %f"  type="dial" maximum="1" minimum="0"/>
-							<Param value="/mlrx/track_volume_3 %f"  type="dial" maximum="1" minimum="0"/>
-							<Param value="/mlrx/track_volume_4 %f"  type="dial" maximum="1" minimum="0"/>
-							<Param value="/mlrx/track_volume_5 %f"  type="dial" maximum="1" minimum="0"/>
-							<Param value="/mlrx/track_volume_6 %f"  type="dial" maximum="1" minimum="0"/>
-							<Param value="/mlrx/track_volume_7 %f"  type="dial" maximum="1" minimum="0"/>
-							<Param value="/mlrx/track_volume_8 %f"  type="dial" maximum="1" minimum="0"/>
+							<Param value="/mlrx/track_velocity 1 %f"  type="dial" maximum="1" minimum="0"/>
+							<Param value="/mlrx/track_velocity 2 %f"  type="dial" maximum="1" minimum="0"/>
+							<Param value="/mlrx/track_velocity 3 %f"  type="dial" maximum="1" minimum="0"/>
+							<Param value="/mlrx/track_velocity 4 %f"  type="dial" maximum="1" minimum="0"/>
+							<Param value="/mlrx/track_velocity 5 %f"  type="dial" maximum="1" minimum="0"/>
+							<Param value="/mlrx/track_velocity 6 %f"  type="dial" maximum="1" minimum="0"/>
+							<Param value="/mlrx/track_velocity 7 %f"  type="dial" maximum="1" minimum="0"/>
+							<Param value="/mlrx/track_velocity 8 %f"  type="dial" maximum="1" minimum="0"/>
 						</Group>
 					</Column>
 					<Column>
 						<Group name="track_panning" orientation="vertical" colums="1" >
-							<Param value="/mlrx/track_panning_1 %f"  type="dial" maximum="1" minimum="0"/>
-							<Param value="/mlrx/track_panning_2 %f"  type="dial" maximum="1" minimum="0"/>
-							<Param value="/mlrx/track_panning_3 %f"  type="dial" maximum="1" minimum="0"/>
-							<Param value="/mlrx/track_panning_4 %f"  type="dial" maximum="1" minimum="0"/>
-							<Param value="/mlrx/track_panning_5 %f"  type="dial" maximum="1" minimum="0"/>
-							<Param value="/mlrx/track_panning_6 %f"  type="dial" maximum="1" minimum="0"/>
-							<Param value="/mlrx/track_panning_7 %f"  type="dial" maximum="1" minimum="0"/>
-							<Param value="/mlrx/track_panning_8 %f"  type="dial" maximum="1" minimum="0"/>
+							<Param value="/mlrx/track_panning 1 %f"  type="dial" maximum="1" minimum="0"/>
+							<Param value="/mlrx/track_panning 2 %f"  type="dial" maximum="1" minimum="0"/>
+							<Param value="/mlrx/track_panning 3 %f"  type="dial" maximum="1" minimum="0"/>
+							<Param value="/mlrx/track_panning 4 %f"  type="dial" maximum="1" minimum="0"/>
+							<Param value="/mlrx/track_panning 5 %f"  type="dial" maximum="1" minimum="0"/>
+							<Param value="/mlrx/track_panning 6 %f"  type="dial" maximum="1" minimum="0"/>
+							<Param value="/mlrx/track_panning 7 %f"  type="dial" maximum="1" minimum="0"/>
+							<Param value="/mlrx/track_panning 8 %f"  type="dial" maximum="1" minimum="0"/>
 						</Group>
 					</Column>
 					<Column>
 						<Group name="track_select" orientation="vertical" colums="1" colorspace="255,255,255">
-							<Param value="/mlrx/select_track 1"  type="button" maximum="1" minimum="0"/>
-							<Param value="/mlrx/select_track 2"  type="button" maximum="1" minimum="0"/>
-							<Param value="/mlrx/select_track 3"  type="button" maximum="1" minimum="0"/>
-							<Param value="/mlrx/select_track 4"  type="button" maximum="1" minimum="0"/>
-							<Param value="/mlrx/select_track 5"  type="button" maximum="1" minimum="0"/>
-							<Param value="/mlrx/select_track 6"  type="button" maximum="1" minimum="0"/>
-							<Param value="/mlrx/select_track 7"  type="button" maximum="1" minimum="0"/>
-							<Param value="/mlrx/select_track 8"  type="button" maximum="1" minimum="0"/>
+							<Param value="/mlrx/select_track 1 %i"  type="button" maximum="1" minimum="0"/>
+							<Param value="/mlrx/select_track 2 %i"  type="button" maximum="1" minimum="0"/>
+							<Param value="/mlrx/select_track 3 %i"  type="button" maximum="1" minimum="0"/>
+							<Param value="/mlrx/select_track 4 %i"  type="button" maximum="1" minimum="0"/>
+							<Param value="/mlrx/select_track 5 %i"  type="button" maximum="1" minimum="0"/>
+							<Param value="/mlrx/select_track 6 %i"  type="button" maximum="1" minimum="0"/>
+							<Param value="/mlrx/select_track 7 %i"  type="button" maximum="1" minimum="0"/>
+							<Param value="/mlrx/select_track 8 %i"  type="button" maximum="1" minimum="0"/>
 						</Group>
 					</Column>
 					<Column>
@@ -268,6 +268,7 @@
 							<Param value="/mlrx/set_track_label 7 %s" type="label" size="5" aspect="0.19" text="07"/>
 							<Param value="/mlrx/set_track_label 8 %s" type="label" size="5" aspect="0.19" text="08"/>
 						</Group>
+
 					</Column>
 				</Row>
 
@@ -278,7 +279,7 @@
 							<Param value="/mlrx/clone"  size="2" aspect="0.5" type="button" maximum="1" minimum="0"/>
 						</Group>
 						<Group name="ADC">
-							<Param value="/tilt 0 %f %f %f" size="4" type="xypad" invert_y="true" invert_x="true" skip_echo="true" maximum="162" minimum="88"/>
+							<Param value="/tilt 0 %f %f %f" size="4" type="xypad" invert_y="true" invert_x="true" maximum="162" minimum="88"/>
 						</Group>
 					</Column>
 					<Column>
@@ -293,9 +294,9 @@
 								<Param value="/mlrx/toggle_loop %i" type="button" maximum="1" minimum="0"/>
 							</Group>
 							<Group name="shuffle" orientation="horizontal" rows="5" >
-								<Param type="label" size="1.75" aspect="0.6" text="shuffle"/>
-								<Param type="dial" value="/mlrx/set_shuffle_amount %f" maximum="1" minimum="0"/>
-								<Param type="button" value="/mlrx/toggle_shuffle_cut %i" maximum="1" minimum="0"/>
+								<Param value="/mlrx/set_shuffle_label %s" type="label" size="1.75" aspect="0.6" text="shuffle"/>
+								<Param value="/mlrx/set_shuffle_amount %i" type="dial" maximum="255" minimum="0"/>
+								<Param value="/mlrx/toggle_shuffle_cut %i" type="button" maximum="1" minimum="0"/>
 							</Group>
 							<Group name="automation" >
 								<Param type="label" size="1.75" aspect="0.6" text="automate"/>
@@ -306,10 +307,10 @@
 						<Row>
 							<Group name="trigger_mode" >
 								<Param type="label" size="1.75" aspect="0.6" text="trigger mode"/>
-								<Param value="/mlrx/set_trig_mode_hold %i" type="button" maximum="1" minimum="0"/>
-								<Param value="/mlrx/set_trig_mode_toggle %i" type="button" maximum="1" minimum="0"/>
-								<Param value="/mlrx/set_trig_mode_write %i" type="button" maximum="1" minimum="0"/>
-								<Param value="/mlrx/set_trig_mode_touch %i" type="button" maximum="1" minimum="0"/>
+								<Param value="/mlrx/set_trig_mode 1 %i" type="button" maximum="1" minimum="0"/>
+								<Param value="/mlrx/set_trig_mode 2 %i" type="button" maximum="1" minimum="0"/>
+								<Param value="/mlrx/set_trig_mode 3 %i" type="button" maximum="1" minimum="0"/>
+								<Param value="/mlrx/set_trig_mode 4 %i" type="button" maximum="1" minimum="0"/>
 							</Group>
 							<Group name="arpeggiator" >
 								<Param type="label" size="1.75" aspect="0.6" text="arp run / random"/>

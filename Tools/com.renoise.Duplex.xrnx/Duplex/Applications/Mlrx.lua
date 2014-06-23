@@ -1,10 +1,10 @@
 --[[============================================================================
--- Duplex.Mlrx
--- Inheritance: Application > Mlrx
+-- Duplex.Application.Mlrx
 ============================================================================]]--
 
 --[[--
-Mlrx is a comphrehensive live performance environment for Renoise
+Mlrx is a comphrehensive live performance environment for Renoise.
+Inheritance: @{Duplex.Application} > Duplex.Application.Mlrx 
 
 ### Features
 
@@ -485,9 +485,6 @@ function Mlrx:__init(...)
 
   -- (int) this value is observed in Renoise (between 1 - 32)
   self._quantize = nil
-
-  -- (BrowserProcess) so we stop/abort the application
-  self._process = select(1,...)
 
   -- (SongPos) store the last playback position in this variable
   -- (to save us from unneeded idle updates)
@@ -985,7 +982,7 @@ function Mlrx:_build_app()
         self.tracks[track_idx]:trigger_release(trigger_idx)
       end
       self._controls.triggers:insert(c)
-      self:_add_component(c)
+      
     end
   end
 
@@ -1010,7 +1007,7 @@ function Mlrx:_build_app()
 
       end
       self._controls.matrix:insert(c)
-      self:_add_component(c)
+      
       ctrl_idx = ctrl_idx+1
     end
   end
@@ -1030,19 +1027,17 @@ function Mlrx:_build_app()
       c.midi_mapping = midi_map_name
       c:set_pos(track_index)
       c.on_change = function() 
-        if not self.active then return false end
         local trk = self.tracks[track_index]
         trk:set_trk_velocity(c.value)
       end
       self._controls.track_levels:insert(c)
-      self:_add_component(c)
+      
     end
 
     if not tool:has_midi_mapping(midi_map_name) then
       tool:add_midi_mapping({
         name = midi_map_name,
         invoke = function(msg)
-          if not self.active then return false end
           if msg:is_abs_value() then
             local trk = self.tracks[track_index]
             trk:set_trk_velocity(msg.int_value)
@@ -1068,19 +1063,17 @@ function Mlrx:_build_app()
       c.ceiling = Mlrx.INT_7BIT
       c:set_pos(track_index)
       c.on_change = function() 
-        if not self.active then return false end
         local trk = self.tracks[track_index]
         trk:set_trk_panning(c.value)
       end
       self._controls.track_panning:insert(c)
-      self:_add_component(c)
+      
     end
 
     if not tool:has_midi_mapping(midi_map_name) then
       tool:add_midi_mapping({
         name = midi_map_name,
         invoke = function(msg)
-          if not self.active then return false end
           if msg:is_abs_value() then
             local trk = self.tracks[track_index]
             trk:set_trk_panning(msg.int_value)
@@ -1119,7 +1112,7 @@ function Mlrx:_build_app()
         -- TODO import instr. from track 
       end
       self._controls.select_track[track_idx] = c
-      self:_add_component(c)
+      
 
       if not tool:has_midi_mapping(midi_map_name) then
         tool:add_midi_mapping({
@@ -1163,7 +1156,7 @@ function Mlrx:_build_app()
       end
     end
     self._controls.group_toggles:insert(c)
-    self:_add_component(c)
+    
   end
 
   -- group levels -----------------------------------------
@@ -1171,7 +1164,6 @@ function Mlrx:_build_app()
   local map = self.mappings.group_levels
   for group_index = 1, Mlrx.NUM_GROUPS do
 
-    --local xargs = cm:get_indexed_element(1,map.group_name)
     local midi_map_name = string.format("Global:Tools:Duplex:Mlrx:Group %d Level [Set]",group_index)
     if map.group_name then
       local c = UISlider(self)
@@ -1179,22 +1171,18 @@ function Mlrx:_build_app()
       c.tooltip = map.description
       c.midi_mapping = midi_map_name
       c.ceiling = Mlrx.INT_8BIT
-      --print("xargs.maximum",xargs.maximum)
-      --rprint(xargs)
-      --c.ceiling = xargs.maximum
       c:set_pos(group_index)
       c.on_change = function() 
         local grp = self.groups[group_index]
         grp:set_grp_velocity(c.value)
       end
       self._controls.group_levels:insert(c)
-      self:_add_component(c)
+      
     end
     if not tool:has_midi_mapping(midi_map_name) then
       tool:add_midi_mapping({
         name = midi_map_name,
         invoke = function(msg)
-          --print("Group Level [Set] - self.active",self,self.active)
           if not self.active then return false end
           if msg:is_abs_value() then
             local grp = self.groups[group_index]
@@ -1216,16 +1204,16 @@ function Mlrx:_build_app()
     if map.group_name then
       local c = UISlider(self)
       c.group_name = map.group_name
-      c.midi_mapping = midi_map_name
       c.tooltip = map.description
-      c.ceiling = Mlrx.INT_8BIT
       c:set_pos(group_index)
+      c.midi_mapping = midi_map_name
+      c.ceiling = Mlrx.INT_8BIT
       c.on_change = function() 
         local grp = self.groups[group_index]
         grp:set_grp_panning(c.value)
       end
       self._controls.group_panning:insert(c)
-      self:_add_component(c)
+      
     end
 
     if not tool:has_midi_mapping(midi_map_name) then
@@ -1248,20 +1236,12 @@ function Mlrx:_build_app()
 
   local map = self.mappings.automation
   if map.group_name then
-    local c = UIButton(self)
-    c.group_name = map.group_name
-    c.tooltip = map.description
-    c:set_pos(map.index)
+    local c = UIButton(self,map)
     c.on_press = function() 
-      --print("ERASE on_press")
-    end
-    --c:set({text="ERASE"})
-    c.on_press = function() 
-      if not self.active then return false end
       self:cycle_automation_mode()
     end
     self._controls.automation = c
-    self:_add_component(c)
+    
 
   end
 
@@ -1269,22 +1249,15 @@ function Mlrx:_build_app()
 
   local map = self.mappings.erase
   if map.group_name then
-    local c = UIButton(self)
-    c.group_name = map.group_name
-    c.tooltip = map.description
-    c:set_pos(map.index)
+    local c = UIButton(self,map)
     c.on_press = function() 
-      --print("ERASE on_press")
+
     end
     c:set({text="ERASE"})
     c.on_release = function() 
-      if not self.active then return false end
-      self:erase_pattern()
-      
+      self:erase_pattern()      
     end
     self._controls.erase = c
-    self:_add_component(c)
-
   end
 
 
@@ -1292,23 +1265,17 @@ function Mlrx:_build_app()
 
   local map = self.mappings.clone
   if map.group_name then
-    local c = UIButton(self)
-    c.group_name = map.group_name
-    c.tooltip = map.description
-    c:set_pos(map.index)
+    local c = UIButton(self,map)
     c.on_press = function() 
-      if not self.active then return false end
-      --print("CLONE on_press")
     end
     c:set({text="CLONE"})
     c.on_release = function() 
-      if not self.active then return false end
       local playpos = Mlrx_pos()
       local migrate_playpos = true
       self:clone_pattern(playpos.sequence,migrate_playpos)
     end
     self._controls.clone = c
-    self:_add_component(c)
+    
 
   end
 
@@ -1322,7 +1289,7 @@ function Mlrx:_build_app()
       c.tooltip = map.description
       c:set_pos(track_idx)
       self._controls.track_labels:insert(c)
-      self:_add_component(c)
+      
     end
   end
 
@@ -1330,33 +1297,24 @@ function Mlrx:_build_app()
 
   local map = self.mappings.set_source_slice
   if map.group_name then
-    local c = UIButton(self)
-    c.group_name = map.group_name
-    c.tooltip = map.description
-    c:set_pos(map.index)
+    local c = UIButton(self,map)
     c:set({text="SLICE"})
     c.on_press = function() 
-      if not self.active then return false end
       self.tracks[self.selected_track]:toggle_slicing()
     end
     c.on_hold = function() 
-      if not self.active then return false end
       self.tracks[self.selected_track]:toggle_slicing(true)
     end
     self._controls.set_source_slice = c
-    self:_add_component(c)
+    
   end
 
   local map = self.mappings.set_source_phrase
   if map.group_name then
     local phrase_button_held = false
-    local c = UIButton(self)
-    c.group_name = map.group_name
-    c.tooltip = map.description
-    c:set_pos(map.index)
+    local c = UIButton(self,map)
     c:set({text="PHRASE"})
     c.on_release = function() 
-      if not self.active then return false end
       if phrase_button_held then
         phrase_button_held = false
         return
@@ -1373,7 +1331,6 @@ function Mlrx:_build_app()
       end
     end
     c.on_hold = function()
-      if not self.active then return false end
       local trk = self.tracks[self.selected_track]
       if rns.transport.playing then
         trk:prepare_phrase_recording()
@@ -1384,7 +1341,6 @@ function Mlrx:_build_app()
       phrase_button_held = true
     end
     self._controls.set_source_phrase = c
-    self:_add_component(c)
   end
 
 
@@ -1392,70 +1348,53 @@ function Mlrx:_build_app()
 
   local map = self.mappings.set_mode_hold
   if map.group_name then
-    local c = UIButton(self)
-    c.group_name = map.group_name
-    c.tooltip = map.description
-    c:set_pos(map.index)
+    local c = UIButton(self,map)
     c:set({text="HOLD"})
     c.on_press = function() 
-      if not self.active then return false end
       local trk = self.tracks[self.selected_track]
       trk:set_trig_mode(Mlrx_track.TRIG_HOLD)
       self:update_track()
     end
     self._controls.set_mode_hold = c
-    self:_add_component(c)
   end
 
   local map = self.mappings.set_mode_toggle
   if map.group_name then
-    local c = UIButton(self)
-    c.group_name = map.group_name
-    c.tooltip = map.description
-    c:set_pos(map.index)
+    local c = UIButton(self,map)
     c:set({text="TOGGLE"})
     c.on_press = function() 
-      if not self.active then return false end
       local trk = self.tracks[self.selected_track]
       trk:set_trig_mode(Mlrx_track.TRIG_TOGGLE)
       self:update_track()
     end
     self._controls.set_mode_toggle = c
-    self:_add_component(c)
+    
   end
 
   local map = self.mappings.set_mode_write
   if map.group_name then
-    local c = UIButton(self)
-    c.group_name = map.group_name
-    c.tooltip = map.description
-    c:set_pos(map.index)
+    local c = UIButton(self,map)
     c:set({text="WRITE"})
     c.on_press = function() 
-      if not self.active then return false end
       local trk = self.tracks[self.selected_track]
       trk:set_trig_mode(Mlrx_track.TRIG_WRITE)
       self:update_track()
     end
     self._controls.set_mode_write = c
-    self:_add_component(c)
+    
   end
 
   local map = self.mappings.set_mode_touch
   if map.group_name then
-    local c = UIButton(self)
-    c.group_name = map.group_name
-    c.tooltip = map.description
-    c:set_pos(map.index)
+    local c = UIButton(self,map)
     c:set({text="TOUCH"})
     c.on_press = function() 
-      if not self.active then return false end
       local trk = self.tracks[self.selected_track]
       trk:set_trig_mode(Mlrx_track.TRIG_TOUCH)
       self:update_track()
     end
     self._controls.set_mode_touch = c
-    self:_add_component(c)
+    
   end
 
 
@@ -1463,56 +1402,44 @@ function Mlrx:_build_app()
 
   local map = self.mappings.toggle_arp
   if map.group_name then
-    local c = UIButton(self)
-    c.group_name = map.group_name
-    c.tooltip = map.description
-    c:set_pos(map.index)
+    local c = UIButton(self,map)
     c:set({text="ARP"})
     c.on_press = function() 
-      if not self.active then return false end
       local trk = self.tracks[self.selected_track]
       trk.arp_enabled = not trk.arp_enabled
       self.initiate_settings_requested = true
       self:update_arp_mode()
     end
     self._controls.toggle_arp = c
-    self:_add_component(c)
+    
   end
 
   local map = self.mappings.arp_mode
   if map.group_name then
-    local c = UIButton(self)
-    c.group_name = map.group_name
-    c.tooltip = map.description
-    c:set_pos(map.index)
+    local c = UIButton(self,map)
     --c:set({text="RND"})
     c.on_press = function() 
-      if not self.active then return false end
       local trk = self.tracks[self.selected_track]
       trk:cycle_arp_mode()
       self:update_arp_mode()
     end
     self._controls.arp_mode = c
-    self:_add_component(c)
+    
   end
 
   -- track: loop mode ----------------------------------
 
   local map = self.mappings.toggle_loop
   if map.group_name then
-    local c = UIButton(self)
-    c.group_name = map.group_name
-    c.tooltip = map.description
-    c:set_pos(map.index)
+    local c = UIButton(self,map)
     --c:set({text="RND"})
     c.on_press = function() 
-      if not self.active then return false end
       local trk = self.tracks[self.selected_track]
       trk:toggle_loop()
       self:update_toggle_loop(trk)
     end
     self._controls.toggle_loop = c
-    self:_add_component(c)
+    
   end
 
   -- track: shuffle amount ----------------------------------
@@ -1523,25 +1450,21 @@ function Mlrx:_build_app()
     c.group_name = map.group_name
     c.tooltip = map.description
     self._controls.shuffle_label = c
-    self:_add_component(c)
+    
   end
 
   local map = self.mappings.shuffle_amount
   local midi_map_name = "Global:Tools:Duplex:Mlrx:Track Shuffle Amount [Set]"
   if map.group_name then
-    local c = UISlider(self)
-    c.group_name = map.group_name
+    local c = UISlider(self,map)
     c.midi_mapping = midi_map_name
-    c.tooltip = map.description
     c.ceiling = Mlrx.INT_8BIT
-    c:set_pos(map.index)
     c.on_change = function() 
-      if not self.active then return false end
+      --print("got here C")
       local trk = self.tracks[self.selected_track]
       trk:set_shuffle_amount(c.value)
     end
     self._controls.shuffle_amount = c
-    self:_add_component(c)
   end
 
   if not tool:has_midi_mapping(midi_map_name) then
@@ -1550,7 +1473,7 @@ function Mlrx:_build_app()
       invoke = function(msg)
         if not self.active then return false end
         if msg:is_abs_value() then
-          local trk = self.tracks[track_index]
+          local trk = self.tracks[self.selected_track]
           trk:set_shuffle_amount(msg.int_value * 2)
         end
       end
@@ -1559,18 +1482,13 @@ function Mlrx:_build_app()
 
   local map = self.mappings.toggle_shuffle_cut
   if map.group_name then
-    local c = UIButton(self)
-    c.group_name = map.group_name
-    c.tooltip = map.description
+    local c = UIButton(self,map)
     c:set({text="Cxx"})
-    c:set_pos(map.index)
     c.on_press = function() 
-      if not self.active then return false end
       local trk = self.tracks[self.selected_track]
       trk:toggle_shuffle_cut()
     end
     self._controls.toggle_shuffle_cut = c
-    self:_add_component(c)
   end
 
   -- track: offset drifting ----------------------------------
@@ -1581,26 +1499,21 @@ function Mlrx:_build_app()
     c.group_name = map.group_name
     c.tooltip = map.description
     self._controls.drift_label = c
-    self:_add_component(c)
   end
 
   local map = self.mappings.drift_amount
   local midi_map_name = "Global:Tools:Duplex:Mlrx:Track Drift Amount [Set]"
   if map.group_name then
-    local c = UISlider(self)
-    c.group_name = map.group_name
+    local c = UISlider(self,map)
     c.midi_mapping = midi_map_name
-    c.tooltip = map.description
     c.ceiling = Mlrx.DRIFT_RANGE
-    c:set_pos(map.index)
     c:set_value(Mlrx.DRIFT_RANGE/2) 
     c.on_change = function() 
-      if not self.active then return false end
       local trk = self.tracks[self.selected_track]
       trk:set_drift_amount(c.value - (Mlrx.DRIFT_RANGE/2))
     end
     self._controls.drift_amount = c
-    self:_add_component(c)
+    
   end
   if not tool:has_midi_mapping(midi_map_name) then
     tool:add_midi_mapping({
@@ -1616,18 +1529,13 @@ function Mlrx:_build_app()
   end
   local map = self.mappings.drift_enable
   if map.group_name then
-    local c = UIButton(self)
-    c.group_name = map.group_name
-    c.tooltip = map.description
+    local c = UIButton(self,map)
     --c:set({text="ON"})
-    c:set_pos(map.index)
     c.on_press = function() 
-      if not self.active then return false end
       local trk = self.tracks[self.selected_track]
       trk:cycle_drift_mode()
     end
     self._controls.drift_enable = c
-    self:_add_component(c)
   end
 
 
@@ -1635,55 +1543,37 @@ function Mlrx:_build_app()
 
   local map = self.mappings.toggle_note_output
   if map.group_name then
-    local c = UIButton(self)
-    c.group_name = map.group_name
-    c.tooltip = map.description
-    c:set_pos(map.index)
+    local c = UIButton(self,map)
     c:set({text="---"})
     c.on_press = function() 
-      if not self.active then return false end
       local trk = self.tracks[self.selected_track]
       trk:toggle_note_output()
     end
     self._controls.toggle_note_output = c
-    self:_add_component(c)
-
   end
 
   -- track: offset modes ----------------------------------
 
   local map = self.mappings.toggle_sxx_output
   if map.group_name then
-    local c = UIButton(self)
-    c.group_name = map.group_name
-    c.tooltip = map.description
-    c:set_pos(map.index)
+    local c = UIButton(self,map)
     c:set({text="Sxx"})
     c.on_press = function() 
-      if not self.active then return false end
       local trk = self.tracks[self.selected_track]
       trk:toggle_sxx_output()
     end
     self._controls.toggle_sxx_output = c
-    self:_add_component(c)
-
   end
 
   local map = self.mappings.toggle_exx_output
   if map.group_name then
-    local c = UIButton(self)
-    c.group_name = map.group_name
-    c.tooltip = map.description
-    c:set_pos(map.index)
+    local c = UIButton(self,map)
     c:set({text="Exx"})
     c.on_press = function() 
-      if not self.active then return false end
       local trk = self.tracks[self.selected_track]
       trk:toggle_exx_output()
     end
     self._controls.toggle_exx_output = c
-    self:_add_component(c)
-
   end
 
 
@@ -1692,14 +1582,10 @@ function Mlrx:_build_app()
 
   local map = self.mappings.transpose_up
   local tu_triggered = false
-if map.group_name then
-    local c = UIButton(self)
-    c.group_name = map.group_name
-    c.tooltip = map.description
-    c:set_pos(map.index)
+  if map.group_name then
+    local c = UIButton(self,map)
     c:set({text="♪+"})
     c.on_release = function() 
-      if not self.active then return false end
       if tu_triggered then
         tu_triggered = false
         return
@@ -1710,7 +1596,6 @@ if map.group_name then
       self:update_track()
     end
     c.on_hold = function() 
-      if not self.active then return false end
       c:flash(0.2,self.palette.enabled,self.palette.disabled)
       local trk = self.tracks[self.selected_track]
       trk:set_transpose(12)
@@ -1718,19 +1603,15 @@ if map.group_name then
       tu_triggered = true
     end
     self._controls.transpose_up = c
-    self:_add_component(c)
+    
   end
 
   local map = self.mappings.transpose_down
   local td_triggered = false
   if map.group_name then
-    local c = UIButton(self)
-    c.group_name = map.group_name
-    c.tooltip = map.description
-    c:set_pos(map.index)
+    local c = UIButton(self,map)
     c:set({text="♪-"})
     c.on_release = function() 
-      if not self.active then return false end
       if td_triggered then
         td_triggered = false
         return
@@ -1741,7 +1622,6 @@ if map.group_name then
       self:update_track()
     end
     c.on_hold = function() 
-      if not self.active then return false end
       c:flash(0.2,self.palette.enabled,self.palette.disabled)
       local trk = self.tracks[self.selected_track]
       trk:set_transpose(-12)
@@ -1749,7 +1629,7 @@ if map.group_name then
       td_triggered = true
     end
     self._controls.transpose_down = c
-    self:_add_component(c)
+    
   end
 
   -- track: tempo_up/down -----------------------------
@@ -1757,13 +1637,9 @@ if map.group_name then
   local map = self.mappings.tempo_up
   local tempo_up_triggered = false
   if map.group_name then
-    local c = UIButton(self)
-    c.group_name = map.group_name
-    c.tooltip = map.description
-    c:set_pos(map.index)
+    local c = UIButton(self,map)
     c:set({text="∆+"})
     c.on_release = function() 
-      if not self.active then return false end
       if tempo_up_triggered then
         tempo_up_triggered = false
         return
@@ -1777,7 +1653,6 @@ if map.group_name then
       self:update_track()
     end
     c.on_hold = function() 
-      if not self.active then return false end
       local trk = self.tracks[self.selected_track]
       if trk.phrase then
         trk:set_double_lpb()
@@ -1788,19 +1663,15 @@ if map.group_name then
       tempo_up_triggered = true
     end
     self._controls.tempo_up = c
-    self:_add_component(c)
+    
   end
 
   local map = self.mappings.tempo_down
   local tempo_down_triggered = false
   if map.group_name then
-    local c = UIButton(self)
-    c.group_name = map.group_name
-    c.tooltip = map.description
-    c:set_pos(map.index)
+    local c = UIButton(self,map)
     c:set({text="∆-"})
     c.on_release = function() 
-      if not self.active then return false end
       if tempo_down_triggered then
         tempo_down_triggered = false
         return
@@ -1815,7 +1686,6 @@ if map.group_name then
 
     end
     c.on_hold = function() 
-      if not self.active then return false end
       local trk = self.tracks[self.selected_track]
       if trk.phrase then
         trk:set_half_lpb()
@@ -1827,7 +1697,7 @@ if map.group_name then
 
     end
     self._controls.tempo_down = c
-    self:_add_component(c)
+    
   end
 
 
@@ -1836,13 +1706,9 @@ if map.group_name then
   local map = self.mappings.toggle_sync
   local beatsync_applied = false
   if map.group_name then
-    local c = UIButton(self)
-    c.group_name = map.group_name
-    c.tooltip = map.description
-    c:set_pos(map.index)
+    local c = UIButton(self,map)
     --c:set({text="BEAT\nSYNC"})
     c.on_release = function() 
-      if not self.active then return false end
       if beatsync_applied then
         beatsync_applied = false
         return
@@ -1852,7 +1718,6 @@ if map.group_name then
       self:update_track()
     end
     c.on_hold = function()
-      if not self.active then return false end
       local trk = self.tracks[self.selected_track]
       if trk.phrase and trk.instr.phrase_playback_enabled then
         -- align transpose with phrase basenote 
@@ -1870,7 +1735,7 @@ if map.group_name then
       end
     end
     self._controls.toggle_sync = c
-    self:_add_component(c)
+    
   end
 
 
@@ -1878,138 +1743,106 @@ if map.group_name then
 
   local map = self.mappings.set_cycle_2
   if map.group_name then
-    local c = UIButton(self)
-    c.group_name = map.group_name
-    c.tooltip = map.description
-    c:set_pos(map.index)
+    local c = UIButton(self,map)
     c:set({text="1/2"})
     c.on_press = function() 
-      if not self.active then return false end
       local trk = self.tracks[self.selected_track]
       trk:set_cycle_length(Mlrx_track.CYCLE.HALF)
       self:update_track()
     end
     self._controls.set_cycle_2 = c
-    self:_add_component(c)
+    
   end
 
   local map = self.mappings.set_cycle_4
   if map.group_name then
-    local c = UIButton(self)
-    c.group_name = map.group_name
-    c.tooltip = map.description
-    c:set_pos(map.index)
+    local c = UIButton(self,map)
     c:set({text="1/4"})
     c.on_press = function() 
-      if not self.active then return false end
       local trk = self.tracks[self.selected_track]
       trk:set_cycle_length(Mlrx_track.CYCLE.FOURTH)
       self:update_track()
     end
     self._controls.set_cycle_4 = c
-    self:_add_component(c)
+    
   end
 
   local map = self.mappings.set_cycle_8
   if map.group_name then
-    local c = UIButton(self)
-    c.group_name = map.group_name
-    c.tooltip = map.description
-    c:set_pos(map.index)
+    local c = UIButton(self,map)
     c:set({text="1/8"})
     c.on_press = function() 
-      if not self.active then return false end
       local trk = self.tracks[self.selected_track]
       trk:set_cycle_length(Mlrx_track.CYCLE.EIGHTH)
       self:update_track()
     end
     self._controls.set_cycle_8 = c
-    self:_add_component(c)
+    
   end
 
   local map = self.mappings.set_cycle_16
   if map.group_name then
-    local c = UIButton(self)
-    c.group_name = map.group_name
-    c.tooltip = map.description
-    c:set_pos(map.index)
+    local c = UIButton(self,map)
     c:set({text="1/16"})
     c.on_press = function() 
-      if not self.active then return false end
       local trk = self.tracks[self.selected_track]
       trk:set_cycle_length(Mlrx_track.CYCLE.SIXTEENTH)
       self:update_track()
     end
     self._controls.set_cycle_16 = c
-    self:_add_component(c)
+    
   end
 
   local map = self.mappings.set_cycle_es
   if map.group_name then
-    local c = UIButton(self)
-    c.group_name = map.group_name
-    c.tooltip = map.description
-    c:set_pos(map.index)
+    local c = UIButton(self,map)
     c:set({text="Step"})
     c.on_press = function() 
-      if not self.active then return false end
       local trk = self.tracks[self.selected_track]
       trk:set_cycle_length(Mlrx_track.CYCLE.EDITSTEP)
       self:update_track()
     end
     self._controls.set_cycle_es = c
-    self:_add_component(c)
+    
   end
 
   local map = self.mappings.set_cycle_custom
   if map.group_name then
-    local c = UIButton(self)
-    c.group_name = map.group_name
-    c.tooltip = map.description
-    c:set_pos(map.index)
+    local c = UIButton(self,map)
     c:set({text="-"})
     c.on_press = function() 
-      if not self.active then return false end
       local trk = self.tracks[self.selected_track]
       trk:set_cycle_length(Mlrx_track.CYCLE.CUSTOM)
       self:update_track()
     end
     self._controls.set_cycle_custom = c
-    self:_add_component(c)
+    
   end
 
   local map = self.mappings.increase_cycle
   if map.group_name then
-    local c = UIButton(self)
-    c.group_name = map.group_name
-    c.tooltip = map.description
-    c:set_pos(map.index)
+    local c = UIButton(self,map)
     c:set({text="+"})
     c.on_press = function() 
-      if not self.active then return false end
       local trk = self.tracks[self.selected_track]
       trk:increase_cycle()
       self:update_track()
     end
     self._controls.increase_cycle = c
-    self:_add_component(c)
+    
   end
 
   local map = self.mappings.decrease_cycle
   if map.group_name then
-    local c = UIButton(self)
-    c.group_name = map.group_name
-    c.tooltip = map.description
-    c:set_pos(map.index)
+    local c = UIButton(self,map)
     c:set({text="-"})
     c.on_press = function() 
-      if not self.active then return false end
       local trk = self.tracks[self.selected_track]
       trk:decrease_cycle()
       self:update_track()
     end
     self._controls.decrease_cycle = c
-    self:_add_component(c)
+    
   end
 
   -- special input assignments ----------------------------
@@ -2018,20 +1851,10 @@ if map.group_name then
   if map.group_name then
 
     -- initially set the value to the center
-    local xargs = cm:get_indexed_element(map.index,map.group_name)
-    local center_value = ((xargs.maximum - xargs.minimum) / 2) + xargs.minimum
+    local param = cm:get_param_by_index(map.index,map.group_name)
 
-    local c = UIPad(self)
-    c.group_name = map.group_name
-    c.secondary_index = 2
-    c:set_pos(map.index)
-    c.tooltip = map.description
-    c.floor = xargs.minimum
-    c.ceiling = xargs.maximum
-    c.value = {center_value,center_value}
-
+    local c = UIPad(self,map)
     c.on_change = function(obj)
-      if not self.active then return false end
       local val = {
         scale_value(obj.value[1],obj.floor,obj.ceiling,0,1),
         scale_value(obj.value[2],obj.floor,obj.ceiling,0,1)
@@ -2039,7 +1862,7 @@ if map.group_name then
       self:input_xy(val)
     end
     self._controls.xy_pad = c
-    self:_add_component(c)
+    
 
     local midi_map_name = "Global:Tools:Duplex:Mlrx:XYPad X-Axis [Set]"
     if not tool:has_midi_mapping(midi_map_name) then
@@ -2048,7 +1871,7 @@ if map.group_name then
         invoke = function(msg)
           if not self.active then return false end
           if msg:is_abs_value() then
-            local val_x = scale_value(msg.int_value,0,Mlrx.INT_7BIT,xargs.minimum,xargs.maximum)
+            local val_x = scale_value(msg.int_value,0,Mlrx.INT_7BIT,param.xarg.minimum,param.xarg.maximum)
             local val_y = self._controls.xy_pad.value[2]
             self._controls.xy_pad:set_value(val_x,val_y)
           end
@@ -2064,7 +1887,7 @@ if map.group_name then
           if not self.active then return false end
           if msg:is_abs_value() then
             local val_x = self._controls.xy_pad.value[1]
-            local val_y = scale_value(msg.int_value,0,Mlrx.INT_7BIT,xargs.minimum,xargs.maximum)
+            local val_y = scale_value(msg.int_value,0,Mlrx.INT_7BIT,param.xarg.minimum,param.xarg.maximum)
             self._controls.xy_pad:set_value(val_x,val_y)
           end
         end
@@ -2656,7 +2479,13 @@ function Mlrx:select_track(idx)
     return
   end
 
+  if (self.selected_track == idx) then
+    return
+  end
+
   self.selected_track = idx
+  --print("*** select_track - self.selected_track",self.selected_track)
+
   self:update_track()
   self:update_track_selector()
 
@@ -2837,7 +2666,7 @@ function Mlrx:update_matrix()
       local bt_title = string.char(64+grp_idx)..trk_idx
 
       if (trk and trk.group == grp) then   
-        ctrl:set({val=true,color=color,text=bt_title})
+        ctrl:set({val=not trk.group.void_mutes,color=color,text=bt_title})
         --print("active: trk_idx",trk_idx, "grp_idx",grp_idx,", ctrl_idx:",ctrl_idx)
         trk:decorate_track_task()
       else
@@ -3229,9 +3058,9 @@ function Mlrx:update_track_selector()
 
   for idx,ctrl in ipairs(self._controls.select_track) do
     if (idx == self.selected_track) then
-      ctrl:set({color = self.tracks[idx].group.color})
+      ctrl:set({color = self.tracks[idx].group.color, val=true})
     else
-      ctrl:set({color = self.tracks[idx].group.color_dimmed})
+      ctrl:set({color = self.tracks[idx].group.color_dimmed, val=false})
     end
   end
 

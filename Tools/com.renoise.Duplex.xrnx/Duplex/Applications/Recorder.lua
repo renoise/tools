@@ -1,11 +1,11 @@
 --[[============================================================================
--- Duplex.Recorder
--- Inheritance: Application > Recorder
+-- Duplex.Application.Recorder 
 ============================================================================]]--
 
 --[[--
-Looping sample-recorder that can capture recordings in real-time, using a simple and straight-forward interface
-Record any signal that you feed into Renoise, be that your voice, a guitar etc. 
+***
+Record and loop any signal that you feed into Renoise, be that your voice, a guitar etc. 
+Inheritance: @{Duplex.Application} > Duplex.Application.Recorder 
 
 
 ### Features
@@ -353,8 +353,9 @@ function Recorder:__init(...)
   self._active_control_idx = nil
 
   -- the various UIComponents
-  self._buttons = {}
-  self._sliders = {}
+  self._controls = {}
+  self._controls.buttons = {}
+  self._controls.sliders = {}
 
   -- maintain track/instrument references here
   self._tracks = {}
@@ -469,7 +470,7 @@ function Recorder:on_idle()
             track.has_ghost and 
             not self._prepare then
           if self._active_control_idx then
-            local slider = self._sliders[self._active_control_idx]
+            local slider = self._controls.sliders[self._active_control_idx]
             if blink then
               slider:set_palette({tip=self.palette.slider_lit})
             else
@@ -483,7 +484,7 @@ function Recorder:on_idle()
         and self._recording 
         and not self._short_take 
       then
-        local button = self._buttons[self._active_control_idx]
+        local button = self._controls.buttons[self._active_control_idx]
         if blink then
           button:set(self.palette.recorder_on)
         else
@@ -510,7 +511,7 @@ function Recorder:on_idle()
       local track_idx = self._active_track_idx
       local track = self._tracks[track_idx]
       if self._active_control_idx then
-        local slider = self._sliders[self._active_control_idx]
+        local slider = self._controls.sliders[self._active_control_idx]
         if blink then
           slider:set_palette({tip=self.palette.slider_lit})
         else
@@ -521,7 +522,7 @@ function Recorder:on_idle()
     if self._active_control_idx then 
       if (not self._grid_mode and self._prepare) or
         (self._finalizing) or (self._short_take) then
-        local button = self._buttons[self._active_control_idx]
+        local button = self._controls.buttons[self._active_control_idx]
         if blink then
           button:set(self.palette.recorder_on)
         else
@@ -600,7 +601,7 @@ function Recorder:_abort_recording()
 
   if (self._active_track_idx) then
     if self._active_control_idx then
-      local button = self._buttons[self._active_control_idx]
+      local button = self._controls.buttons[self._active_control_idx]
       button:set(self.palette.recorder_off)
     end
     renoise.app().window.sample_record_dialog_is_visible = false
@@ -636,7 +637,7 @@ function Recorder:_process_recording()
 
   -- set recorder button to default state
   if self._active_control_idx then
-    local button = self._buttons[self._active_control_idx]
+    local button = self._controls.buttons[self._active_control_idx]
     button:set(self.palette.recorder_off)
   end
 
@@ -768,7 +769,7 @@ function Recorder:_add_ghost(track_idx)
   local control_idx = self:_get_control_idx(track_idx)
   if control_idx then
     local count = #track.samples
-    local slider = self._sliders[control_idx]
+    local slider = self._controls.sliders[control_idx]
     if (self._grid_mode) then
       if self._blink then
         slider:set_palette({tip=self.palette.slider_lit})
@@ -800,7 +801,7 @@ function Recorder:_remove_ghost(track_idx)
     track.has_ghost = false
     local count = #track.samples
     if control_idx then
-      local slider = self._sliders[control_idx]
+      local slider = self._controls.sliders[control_idx]
       self:_set_slider_steps(control_idx,count)
       self:_restore_slider_tip(track_idx)
       slider:set_index((track.selected_sample or 0),skip_event)
@@ -827,7 +828,7 @@ end
 function Recorder:_set_slider_steps(control_idx,steps)
   TRACE("Recorder:_set_slider_steps(",control_idx,steps,")")
 
-  local slider = self._sliders[control_idx]
+  local slider = self._controls.sliders[control_idx]
 
   assert(slider, 
     "Internal Error. Please report: missing slider component")
@@ -855,7 +856,7 @@ function Recorder:_restore_slider_tip(track_idx)
   local control_idx = self:_get_control_idx(track_idx)
   if self._grid_mode and
       control_idx then
-    local slider = self._sliders[control_idx]
+    local slider = self._controls.sliders[control_idx]
     slider:set_palette({tip=self.palette.slider_lit})
   end
 end 
@@ -1106,7 +1107,7 @@ end
 
 function Recorder:_get_page_width()
   return (self.options.page_size.value==self.TRACK_PAGE_AUTO)
-    and #self._sliders or self.options.page_size.value-1
+    and #self._controls.sliders or self.options.page_size.value-1
 end
 
 --------------------------------------------------------------------------------
@@ -1179,7 +1180,7 @@ function Recorder:_update_selected_sample(track,patt_idx)
   local page_width = self:_get_page_width()
   local control_idx = self:_get_control_idx(track.index)
   if control_idx then
-    local slider = self._sliders[control_idx]
+    local slider = self._controls.sliders[control_idx]
     if (track.selected_sample) then
       slider:set_index(track.selected_sample,skip_event)
     else
@@ -1250,7 +1251,7 @@ function Recorder:_get_control_idx(track_idx)
     return nil
   end
 
-  local width = #self._sliders
+  local width = #self._controls.sliders
 
   if ((self._track_offset+width)<track_idx) then
     --print("above visible range")
@@ -1353,9 +1354,9 @@ function Recorder:_update_all()
   local page_width = self:_get_page_width()
   local track_idx = renoise.song().selected_track_index 
 
-  for control_idx=1,#self._sliders do
-    local button = self._buttons[control_idx]
-    local slider = self._sliders[control_idx]
+  for control_idx=1,#self._controls.sliders do
+    local button = self._controls.buttons[control_idx]
+    local slider = self._controls.sliders[control_idx]
     local track_idx = control_idx+self._track_offset
     local track = self._tracks[track_idx]
     local track_type = determine_track_type(track_idx)
@@ -1424,7 +1425,7 @@ function Recorder:_attempt_track_switch(track_idx)
   if (self._active_track_idx) then
     if (self._active_track_idx~=track_idx) then
       local control_idx = self:_get_control_idx(self._active_track_idx)
-      local button = self._buttons[control_idx]
+      local button = self._controls.buttons[control_idx]
       if control_idx then
         button:set(self.palette.recorder_off)
       end
@@ -1551,14 +1552,14 @@ function Recorder:_build_app()
       end
 
     end
-    self:_add_component(c)
-    self._buttons[i] = c
+    self._controls.buttons[i] = c
   end
 
   -- create sample-selecting sliders ------------------------------------------
 
+  local map = self.mappings.sliders
   for i=1,button_count do
-    local c = UISlider(self)
+    local c = UISlider(self,map)
     c.group_name = self.mappings.sliders.group_name
     c.tooltip = self.mappings.sliders.description
     c:set_pos(i,sliders_y_pos)
@@ -1567,7 +1568,6 @@ function Recorder:_build_app()
     c:set_palette({track=self.palette.slider_dimmed,background=self.palette.slider_dimmed})
     c.ceiling = 1.0
     c:set_index(0,true)
-    c.button_mode = self._grid_mode
     c:set_orientation(ORIENTATION.VERTICAL)
     if (self._grid_mode) then
       c:set_size(0)
@@ -1575,6 +1575,8 @@ function Recorder:_build_app()
       c:set_size(1)
     end
     c.on_change = function(obj) 
+
+      print("self._controls.sliders[",i,"].on_change")
 
       local track_idx = i+self._track_offset
       local track = self._tracks[track_idx]
@@ -1628,8 +1630,7 @@ function Recorder:_build_app()
 
     end
 
-    self:_add_component(c)
-    self._sliders[i] = c
+    self._controls.sliders[i] = c
 
   end
 

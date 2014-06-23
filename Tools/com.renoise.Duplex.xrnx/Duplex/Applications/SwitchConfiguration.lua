@@ -1,10 +1,10 @@
 --[[============================================================================
--- Duplex.SwitchConfiguration
--- Inheritance: Application > SwitchConfiguration
+-- Duplex.Application.SwitchConfiguration
 ============================================================================]]--
 
 --[[--
-Switch between different configurations (next, previous and set)
+Switch between different configurations (next, previous and set).
+Inheritance: @{Duplex.Application} > Duplex.Application.SwitchConfiguration
 
 
 ### Changes
@@ -156,7 +156,6 @@ function SwitchConfiguration:_build_app()
     c.on_press = function(obj)
       self._browser:set_next_configuration() 
     end
-    self:_add_component(c)
     self.controls.next = c
   end
 
@@ -170,7 +169,6 @@ function SwitchConfiguration:_build_app()
     c.on_press = function(obj)
       self._browser:set_previous_configuration() 
     end
-    self:_add_component(c)
     self.controls.previous = c
   end
 
@@ -186,7 +184,6 @@ function SwitchConfiguration:_build_app()
       c.on_press = function(obj)
         self._browser:goto_configuration(i) 
       end
-      self:_add_component(c)
       self.controls[map_name] = c
     end
 

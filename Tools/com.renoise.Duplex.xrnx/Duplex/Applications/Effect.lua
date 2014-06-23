@@ -1,10 +1,10 @@
 --[[============================================================================
-Duplex.Effect
-Inheritance: Application > Effect 
+Duplex.Application.Effect
 ============================================================================]]--
 
 --[[--
-The Effect application enables control of DSP chain parameters
+The Effect application enables control of DSP chain parameters.
+Inheritance: @{Duplex.Application} > Duplex.Application.Effect 
 
 ### Features
 
@@ -534,7 +534,6 @@ function Effect:_build_app()
 
       end
     end
-    self:_add_component(c)
     self._parameter_sliders[control_index] = c
 
   end
@@ -601,7 +600,6 @@ function Effect:_build_app()
         end
 
       end
-      self:_add_component(c)
       self._device_navigators[control_index] = c
     end
   end
@@ -630,7 +628,6 @@ function Effect:_build_app()
 
     end
 
-    self:_add_component(c)
     self._device_select = c
 
   end
@@ -652,7 +649,6 @@ function Effect:_build_app()
       self:_attach_to_parameters(false)
       self:update()
     end
-    self:_add_component(c)
     self._param_next = c
   end
 
@@ -671,7 +667,6 @@ function Effect:_build_app()
       self:_attach_to_parameters(false)
       self:update()
     end
-    self:_add_component(c)
     self._param_prev = c
   end
 
@@ -691,7 +686,6 @@ function Effect:_build_app()
       self:_set_selected_device_index(new_index)
 
     end
-    self:_add_component(c)
     self._device_next = c
 
   end
@@ -711,7 +705,6 @@ function Effect:_build_app()
       self:_set_selected_device_index(new_index)
 
     end
-    self:_add_component(c)
     self._device_prev = c
 
   end
@@ -731,7 +724,6 @@ function Effect:_build_app()
       device.active_preset = math.min(#device.presets,device.active_preset+1)
 
     end
-    self:_add_component(c)
     self._preset_next = c
 
   end
@@ -750,7 +742,6 @@ function Effect:_build_app()
       device.active_preset = math.max(1,device.active_preset-1)
 
     end
-    self:_add_component(c)
     self._preset_prev = c
 
   end
@@ -761,7 +752,6 @@ function Effect:_build_app()
     c.group_name = map.group_name
     --c.tooltip = map.description
     c:set_pos(map.index)
-    self:_add_component(c)
     self._device_name = c
 
   end
@@ -773,10 +763,9 @@ function Effect:_build_app()
     for control_index = 1,#params do
       local c = UILabel(self)
       --c.group_name = map.group_name
-      c.group_name = params[control_index].group_name
+      c.group_name = params[control_index].xarg.group_name
       --c.tooltip = map.description
       c:set_pos(map.index)
-      self:_add_component(c)
       self._param_names[control_index] = c
     end
   end
@@ -788,10 +777,9 @@ function Effect:_build_app()
     for control_index = 1,#params do
       local c = UILabel(self)
       --c.group_name = map.group_name
-      c.group_name = params[control_index].group_name
+      c.group_name = params[control_index].xarg.group_name
       --c.tooltip = map.description
       c:set_pos(map.index)
-      self:_add_component(c)
       self._param_values[control_index] = c
     end
   end

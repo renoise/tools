@@ -4,14 +4,9 @@
 
 --[[--
 
-The generic application class for Duplex. Supplies any class that extend it with 
-basic methods like start, stop, idle time notifications.
+The generic application class for Duplex. Supplies any class that extend it with basic methods like start, stop, idle time notifications.
 
-Applications are instantiated by the Duplex Browser, and all .lua files in the 
-Duplex/Applications folder are included on startup. 
-
-To create a new Duplex application, you must extend this class and put it in 
-that folder. 
+Applications are instantiated by the Duplex Browser, and all .lua files in the Duplex/Applications folder are included on startup. To create a new Duplex application, you must extend this class and put it in that folder. 
 
 --]]
 
@@ -19,16 +14,37 @@ that folder.
 
 class 'Application'
 
+--- (table) the application default options, are overridden by any user-
+-- specified choice (those are stored in Preferences.xml)
+Application.default_options = {}
+
+--- (table) the default mappings for this class
+-- eacb named entry can contain the following fields
+-- @field description
+-- @field distributable
+-- @field flipped
+-- @field greedy
+-- @field orientation
+-- @field toggleable
+-- @table available_mappings
+Application.available_mappings = {}
+
+--- (table) specify custom colors, values and text for the application, e.g. 
+--     button_on     = { color={0xFF,0x80,0x00}, text="▼", val=true  },
+--     button_off    = { color={0x00,0x00,0x00}, text="▼", val=false },
+--
+Application.default_palette = {}
+
 --==============================================================================
 
 --- Initialize the Application class
 -- @param ... (VarArg), containing:
 --
 --  1.  process (@{Duplex.BrowserProcess})
---  2.  mappings (table, imported from device-config)
---  3.  palette (table, imported from device-config)
---  4.  options (table, imported from application default options)
---  5.  config_name (string, imported from application default options)
+--  2.  mappings (table)
+--  3.  palette (table)
+--  4.  options (table)
+--  5.  config_name (string)
 
 function Application:__init(...)
   TRACE("Application:__init()")
@@ -36,11 +52,19 @@ function Application:__init(...)
   --- extract varargs using select
   local process, mappings, options, config_name, palette = select(1,...)
 
+  --- (@{Duplex.BrowserProcess}) where our application got instantiated 
+  self._process = process
+
+  --- (table) imported from device-config
   self.mappings = mappings or {}
+
+  --- (table) imported from device-config
   self.palette = palette or {}
+
+  --- (table) imported from application default options
   self.options = options or {}
 
-  --- (@{Duplex.Display}) instance of the display class
+  --- (@{Duplex.Display}) the display associated with our process
   self.display = process.display
   
   --- (string) this is the name of the application as it appears
@@ -66,7 +90,7 @@ function Application:__init(...)
   --- (renoise.ViewBuilder) the options view
   self._vb = renoise.ViewBuilder()
 
-  --- (renoise.ViewBuilder) the settings view
+  --- (renoise.Views.View) the settings view
   self._settings_view = nil
 
   --- (table) UIComponents registered via add_component method
@@ -98,6 +122,21 @@ function Application:start_app(start_running)
       end
       self._created = true
     end
+  end
+
+  -- iterate through all registered UI components 
+  for k,v in ipairs(self._ui_components) do
+
+    --print("Application:start_app - _ui_components k,v",k,v)
+    v:add_listeners()
+
+    -- cap values to allowed range
+    -- (floor/ceiling might have been set after creation)
+    -- TODO refactor into widget_hooks (support complex values)
+    if v.value and (type(v.value) == "number") then
+      v.value = clamp_value(v.value,v.floor,v.ceiling)
+    end
+
   end
 
   if (self.display) then
@@ -201,7 +240,7 @@ end
 --- Called when window loose focus
 
 function Application:on_window_resigned_active()
-  TRACE("Application:on_window_resigned_active()")
+  --TRACE("Application:on_window_resigned_active()")
   
   -- nothing done by default
 end
@@ -212,7 +251,7 @@ end
 --- Called when window receive/regain focus
 
 function Application:on_window_became_active()
-  TRACE("Application:on_window_became_active()")
+  --TRACE("Application:on_window_became_active()")
   
   -- nothing done by default
 end
@@ -474,13 +513,12 @@ function Application:_add_component(c)
   self.display:add(c)
 
 
-
 end  
 
 
 --------------------------------------------------------------------------------
 
---- Prints the type of application (class name)
+--- Return the type of application (class name)
 -- @return string
 
 function Application:__tostring()

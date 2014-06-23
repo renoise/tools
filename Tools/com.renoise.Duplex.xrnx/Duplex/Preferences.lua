@@ -52,9 +52,9 @@ duplex_preferences = renoise.Document.create("ScriptingToolPreferences") {
   extrapolation_strength = 3,
 
   --- (table) theming support: specify the default button color
-  -- @field red
-  -- @field blue
-  -- @field green
+  -- @field red 0xc1
+  -- @field blue 0x34
+  -- @field green 0x11
   -- @table theme_color
   theme_color = {0xc1,0x34,0x11},
 
@@ -72,9 +72,10 @@ duplex_preferences = renoise.Document.create("ScriptingToolPreferences") {
   osc_server_host = "127.0.0.1",
 
   --- (int) the internal OSC port address
+  -- (set this to whatever the renoise OSC server is set to)
   osc_server_port = 8000,
 
-  --- (bool) when OSC is being run the first time
+  --- (bool) when OSC is being run the first time, display a message
   osc_first_run = true,
 
   --- list of user configuration settings (like MIDI device names, app configs)

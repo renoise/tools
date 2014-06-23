@@ -1,11 +1,10 @@
 --[[============================================================================
--- Duplex.Keyboard
--- Inheritance: Application > Keyboard
+-- Duplex.Application.Keyboard
 ============================================================================]]--
 
 --[[--
-
 A replacement of the standard Renoise keyboard, supporting for MIDI and OSC.
+Inheritance: @{Duplex.Application} > Duplex.Application.Keyboard 
 
 ### Features
 
@@ -40,6 +39,10 @@ Tool discussion is located on the [Renoise forum][1]
 
 ### Changes
 
+  0.99
+    - Adapted to UIKey changes 
+    - New mapping: mod_wheel
+
   0.98 - First release 
 
 
@@ -51,14 +54,21 @@ Tool discussion is located on the [Renoise forum][1]
 
 local VELOCITY_CLAMP = 1
 local VELOCITY_CLIP = 2
+
 local KEYBOARD_TRIGGER_RANGE = 1
 local KEYBOARD_TRIGGER_ALL = 2
 local KEYBOARD_TRIGGER_NONE = 3
-local RELEASE_TYPE_WAIT = 1
+
 local IGNORE_PRESSURE = 1
 local BROADCAST_PRESSURE = 2
+
+local IGNORE_MODWHEEL = 1
+local BROADCAST_MODWHEEL = 2
+
 local IGNORE_PITCHBEND = 2
 local BROADCAST_PITCHBEND = 2
+
+local RELEASE_TYPE_WAIT = 1
 local TRACK_FOLLOW = 1
 local INSTR_FOLLOW = 1
 local OCTAVE_FOLLOW = 1
@@ -157,6 +167,15 @@ Keyboard.default_options = {
     },
     value = 1,
   },
+  mod_wheel = {
+    label = "Pitch Bend",
+    description = "Determine how to treat incoming mod wheel messages",
+    items = {
+      "Ignore",
+      "Broadcast as MIDI",
+    },
+    value = 1,
+  },
   release_type = {
     label = "Key-release",
     description = "Determine how to respond when the same key is triggered"
@@ -236,6 +255,7 @@ for i = 0,127 do
   local str_val = ("Route to CC#%i"):format(i)
   Keyboard.default_options.channel_pressure.items[i+3] = str_val
   Keyboard.default_options.pitch_bend.items[i+3] = str_val
+  Keyboard.default_options.mod_wheel.items[i+3] = str_val
   local str_val = ("Set volume to %i"):format(i)
   Keyboard.default_options.base_volume.items[i+2] = str_val
 end
@@ -263,6 +283,9 @@ Keyboard.available_mappings = {
   },
   pitch_bend = {
     description = "Keyboard: pitch-bend wheel"
+  },
+  mod_wheel = {
+    description = "Keyboard: mod wheel"
   },
   pressure = {
     description = "Keyboard: channel pressure"
@@ -312,14 +335,12 @@ Keyboard.available_mappings = {
 }
 
 Keyboard.default_palette = {
-  -- keyboard (grid buttons)
   key_pressed           = { color = {0xFF,0xFF,0xFF}, val=true, text="·", },
   key_pressed_content   = { color = {0xFF,0xFF,0xFF}, val=true, text="·", },
-  key_released          = { color = {0x00,0x00,0x00}, val=true, text="·", },
+  key_released          = { color = {0x00,0x00,0x00}, val=false, text="·", },
   key_released_content  = { color = {0x40,0x40,0x40}, val=false,text="·", },
   key_released_selected = { color = {0x80,0x80,0x40}, val=false,text="·", },
   key_out_of_bounds     = { color = {0x00,0x00,0x00}, val=false,text="·", },
-  -- other buttons
   instr_sync_on         = { color = {0xFF,0xFF,0xFF}, val=true, text="■", },
   instr_sync_off        = { color = {0x00,0x00,0x00}, val=false,text="·", },
   track_sync_on         = { color = {0xFF,0xFF,0xFF}, val=true, text="■", },
@@ -332,7 +353,6 @@ Keyboard.default_palette = {
   octave_up_off         = { color = {0x00,0x00,0x00}, val=false,text="+12", },
   octave_sync_on        = { color = {0xFF,0xFF,0xFF}, val=true, text="■", },
   octave_sync_off       = { color = {0x00,0x00,0x00}, val=false,text="·", },
-  -- sliders
   slider_on             = { color = {0xFF,0xFF,0xFF}, val=true, text = "▪" },
   slider_off            = { color = {0x00,0x00,0x00}, val=false,text = "·" },
 
@@ -348,48 +368,40 @@ Keyboard.default_palette = {
 function Keyboard:__init(...)
   TRACE("Keyboard:__init()")
 
-  --- reference to BrowserProcess
-  -- (access the internal OSC server, modify options in realtime)
-  self._process = select(1,...)
-
   --- octave
   self.curr_octave = nil 
+
   --- volume
   self.curr_volume = nil 
+
   --- track index
   self.curr_track = nil  
+
   --- instrument index
   self.curr_instr = nil  
+
   --- lower note
   self.lower_note = nil  
+
   --- upper note
   self.upper_note = nil  
 
-  --- the various UIComponents
-  self._grid = table.create()
-  self._keymatcher = nil
-  self._channel_pressure = nil
-  self._pitch_bend = nil
-  self._octave_down = nil
-  self._octave_up = nil
-  self._octave_sync = nil
-  self._octave_set = nil
-  self._volume = nil
-  self._volume_sync = nil
-  self._track_sync = nil
-  self._track_set = nil
-
   --- control-map parameters
   self._key_args = nil
-
-  Application.__init(self,...)
 
   --- instrument observables
   self._instr_observables = table.create()
 
   self._grid_update_requested = false
   self._track_update_requested = false
-  self._boundary_update_requested = false
+
+  self.pressed_buttons = table.create()
+
+  --- the various UIComponents
+  self._controls = {}
+  self._controls.grid = table.create()
+
+  Application.__init(self,...)
 
 end
 
@@ -436,13 +448,13 @@ function Keyboard:trigger(note_on,pitch,velocity,grid_index)
 
   local key_min = nil
   local key_max = nil
-  local msg = self.display.device.message_stream.current_message
   if self._key_args and not grid_index then
     key_min = self._key_args.minimum
     key_max = self._key_args.maximum
   else
-    key_min = msg.min
-    key_max = msg.max
+    local msg = self.display.device.message_stream.current_msg
+    key_min = msg.xarg.minimum
+    key_max = msg.xarg.maximum
   end
 
   if velocity then
@@ -481,15 +493,11 @@ function Keyboard:trigger(note_on,pitch,velocity,grid_index)
   end
 
   -- update the keyboard's visual representation 
-  if self._keymatcher then
-    self._keymatcher.pressed_keys[pitch+transp+1] = note_on
-    if (transp~=0) then
-      -- note is in a different position, refresh entire keyboard
-      self._keymatcher:update_keys()
-    end
+  if self._controls.keyboard then
+    self._controls.keyboard:set_key_pressed(pitch,note_on)
   end
 
-  -- detect if we still have an active notes playing
+  -- detect if we still have active notes playing
   -- (to connect a button's lit state with the voice manager)
   --if not transp then
     if not note_on and keep then
@@ -616,10 +624,6 @@ function Keyboard:on_idle()
     self:update_track_controls()
   end
 
-  if self._boundary_update_requested then
-    self._boundary_update_requested = false
-    self:set_boundaries()
-  end
 
 end
 
@@ -635,35 +639,26 @@ function Keyboard:_build_app()
 
   local cm = self.display.device.control_map
 
-  -- keymatcher: a single UIKey for matching all notes...
+  -- a virtual keyboard on the screen
   
   if (self.mappings.keys.group_name) then
 
     local key_group = self.mappings.keys.group_name
     local key_index = self.mappings.keys.index or 1
-    self._key_args = cm:get_indexed_element(key_index,key_group)
+    local param = cm:get_param_by_index(key_index,key_group)
+    self._key_args = param.xarg
 
     local c = UIKey(self)
     c.group_name = self.mappings.keys.group_name
-    c.match_any_note = true
-    c.on_press = function(obj)
-      --print("*** Keyboard.build_app -obj...")
-      --rprint(obj)
-      local note_on = true
-      local msg = self.display.device.message_stream.current_message
-      local triggered = self:trigger(note_on,obj.pitch,obj.velocity)
-      --print("*** Keyboard: keys triggered",triggered)
+    c.on_press = function(obj,pitch,velocity)
+      local triggered = self:trigger(true,pitch,velocity)
       return triggered
     end
-    c.on_release = function(obj)
-      local note_on = false
-      local msg = self.display.device.message_stream.current_message
-      local released = self:trigger(note_on,obj.pitch,obj.velocity)
-      --print("*** Keyboard: keys released",released)
+    c.on_release = function(obj,pitch,velocity)
+      local released = self:trigger(false,pitch,velocity)
       return released
     end
-    self:_add_component(c)
-    self._keymatcher = c
+    self._controls.keyboard = c
 
   end
 
@@ -690,8 +685,8 @@ function Keyboard:_build_app()
       distributed_group = true
 
       -- determine size, columns from first group
-      group_size = cm:get_group_size(key_params[1].group_name)
-      col_count = cm:count_columns(key_params[1].group_name)
+      group_size = cm:get_group_size(key_params[1].xarg.group_name)
+      col_count = cm:count_columns(key_params[1].xarg.group_name)
 
       grid_w = #key_params
       grid_h = 1
@@ -713,8 +708,8 @@ function Keyboard:_build_app()
 
       -- standard grid layout
 
-      grid_w = cm:count_columns(key_params[1].group_name)
-      grid_h = cm:count_rows(key_params[1].group_name)
+      grid_w = cm:count_columns(key_params[1].xarg.group_name)
+      grid_h = cm:count_rows(key_params[1].xarg.group_name)
       if (orientation == ORIENTATION.HORIZONTAL) then
         grid_w,grid_h = grid_h,grid_w
       end
@@ -724,33 +719,30 @@ function Keyboard:_build_app()
     --print("*** Keyboard.build_app #B - unit_x,unit_y",unit_x,unit_y)
     --print("*** Keyboard.build_app - grid_w,grid_h",grid_w,grid_h)
 
-    local count = 1
     local skip = nil
 
     for x = 1,grid_w do
+
       skip = false
       if (unit_w>1) then
         skip = (x%unit_w)~=1
       end
-      if skip then
-        count = count + grid_w
-      else
+      if not skip then
         for y = 1,grid_h do
+
           skip = false
           if (unit_h>1) then
             skip = (y%unit_h)~=1
           end
+
           if not skip then
-            local ctrl_idx = #self._grid+1
+
+            local ctrl_idx = #self._controls.grid+1
             local param = key_params[ctrl_idx]
-            --print("*** Keyboard - build_app - key",ctrl_idx)
-            --local args = cm:get_indexed_element(ctrl_idx,map.group_name)
-            local c = UIKey(self)
-            c.group_name = param.group_name
-            c.ceiling = param.maximum
-            c.pitch = ctrl_idx
-            c.palette.pressed = self.palette.key_pressed
-            c.palette.released = self.palette.key_released
+            local c = UIButton(self)
+            c:set(self.palette.key_released)
+            c.group_name = param.xarg.group_name
+
             if distributed_group then
               if unit_x then
                 -- distr. group with index
@@ -758,11 +750,9 @@ function Keyboard:_build_app()
               else
                 -- distr. group without index
                 -- figure out the position within the current group
-                --local group_index = math.floor(x/group_size)
                 local ctrl_index = ((x-1)%group_size)+1
                 local ctrl_col = ((ctrl_index-1)%col_count)+1
                 local ctrl_row = math.floor((ctrl_index-1)/col_count)+1
-                --print("*** Keyboard - ctrl_index,ctrl_col,ctrl_row",ctrl_index,ctrl_col,ctrl_row)
                 if (orientation == ORIENTATION.HORIZONTAL) then
                   c:set_pos(ctrl_row,ctrl_col)
                 else
@@ -770,36 +760,48 @@ function Keyboard:_build_app()
                 end
               end
             else
+
               if (orientation == ORIENTATION.HORIZONTAL) then
                 c:set_pos(y,x)
               else
                 c:set_pos(x,y)
               end
               --print("*** Keyboard - build_app - x,y",x,y)
+
             end
+
             c:set_size(unit_w,unit_h)
-            c.on_press = function(obj)
-              local note_on = true
+            c.on_press = function(obj,msg)
               local pitch = ctrl_idx+(self.curr_octave*12)-1
-              local msg = self.display.device.message_stream.current_message
-              local velocity = obj.velocity
-              local triggered = self:trigger(note_on,pitch,velocity,ctrl_idx)
+              local velocity = nil
+              if msg.midi_msg then
+                velocity = msg.midi_msg[3] -- support pressure sensitive pads 
+              else
+                velocity = scale_value(msg.xarg.maximum,msg.xarg.minimum,msg.xarg.maximum,0,127)
+              end
+              local triggered = self:trigger(true,pitch,velocity,ctrl_idx)
               --print("*** Keyboard: key_grid triggered",triggered)
+              if triggered then
+                self.pressed_buttons[ctrl_idx] = true
+                self:visualize_sample_mappings()
+              end
               return triggered
             end
-            c.on_release = function(obj)
-              local note_on = false
+
+            c.on_release = function(obj,msg)
               local pitch = ctrl_idx+(self.curr_octave*12)-1
-              local msg = self.display.device.message_stream.current_message
-              local velocity = obj.velocity
-              local released = self:trigger(note_on,pitch,velocity,ctrl_idx)
+              local released = self:trigger(false,pitch,0,ctrl_idx)
               --print("*** Keyboard: key_grid released",released)
+              if released then
+                self.pressed_buttons[ctrl_idx] = false
+                self:visualize_sample_mappings()
+              end
               return released
             end
-            self:_add_component(c)
-            self._grid:insert(c)
+            self._controls.grid:insert(c)
+            --count = count + 1
+
           end
-          count = count + 1
         end
       end
     end
@@ -826,21 +828,17 @@ function Keyboard:_build_app()
         self:send_midi(msg)
       end
     end
-    self:_add_component(c)
-    self._channel_pressure = c
+    self._controls.ch_pressure = c
   end
 
 
   -- add pitch bend
 
-  local mapping = self.mappings.pitch_bend
-  if (mapping.group_name) then
-    local c = UIPitchBend(self)
-    local c_args = cm:get_indexed_element(mapping.index,mapping.group_name)
-    c.group_name = mapping.group_name
-    c.value = (c_args.maximum-c_args.minimum)/2
-    c.ceiling = c_args.maximum
-    c:set_pos(mapping.index or 1)
+  local map = self.mappings.pitch_bend
+  if (map.group_name) then
+    local c = UIPitchBend(self,map)
+    c.value = 64
+    c.ceiling = 127
     c.on_change = function(obj)
       local msg = nil
       --print(obj.value)
@@ -854,19 +852,37 @@ function Keyboard:_build_app()
         self:send_midi(msg)
       end
     end
-    self:_add_component(c)
-    self._pitch_bend = c
+    self._controls.pitch_bend = c
+  end
+
+  -- add mod wheel
+
+  local map = self.mappings.mod_wheel
+  if (map.group_name) then
+    local c = UIPitchBend(self,map)
+    c.ceiling = 127
+    c.on_change = function(obj)
+      local msg = nil
+      --print(obj.value)
+      if (self.options.mod_wheel.value == BROADCAST_MODWHEEL) then
+        --msg = {224,0,obj.value} -- TODO
+      elseif (self.options.mod_wheel.value > BROADCAST_MODWHEEL) then
+        local cc_num = self.options.mod_wheel.value-3
+        msg = {176,cc_num,obj.value}
+      end
+      if msg then
+        self:send_midi(msg)
+      end
+    end
+    self._controls.mod_wheel = c
   end
 
   -- octave down
 
   local map = self.mappings.octave_down
   if map.group_name then
-    local c = UIButton(self)
-    c.group_name = map.group_name
-    c.tooltip = map.description
+    local c = UIButton(self,map)
     c:set(self.palette.octave_down_off)
-    c:set_pos(map.index)
     c.on_press = function(obj)
       if (self.options.base_octave.value == OCTAVE_FOLLOW) then
         renoise.song().transport.octave = math.max(0,renoise.song().transport.octave - 1)
@@ -876,19 +892,15 @@ function Keyboard:_build_app()
         end
       end
     end
-    self:_add_component(c)
-    self._octave_down = c
+    self._controls.oct_down = c
   end
 
   -- octave up
 
   local map = self.mappings.octave_up
   if map.group_name then
-    local c = UIButton(self)
-    c.group_name = map.group_name
-    c.tooltip = map.description
+    local c = UIButton(self,map)
     c:set(self.palette.octave_up_off)
-    c:set_pos(map.index)
     c.on_press = function(obj)
       if (self.options.base_octave.value == OCTAVE_FOLLOW) then
         renoise.song().transport.octave = math.min(8,renoise.song().transport.octave + 1)
@@ -898,8 +910,7 @@ function Keyboard:_build_app()
         end
       end
     end
-    self:_add_component(c)
-    self._octave_up = c
+    self._controls.oct_up = c
   end
 
   -- octave set (slider, supports grid mode)
@@ -916,15 +927,9 @@ function Keyboard:_build_app()
         slider_size = cm:count_rows(map.group_name)
       end
     end
-    local c = UISlider(self)
-    c.group_name = map.group_name
-    c:set_pos(map.index)
-    c.flipped = map.flipped
-    c.toggleable = map.toggleable
+    local c = UISlider(self,map)
     c.ceiling = MAX_OCTAVE
     c:set_size(slider_size)
-    c:set_orientation(map.orientation)
-    c.tooltip = map.description
     c:set_palette({
       tip = self.palette.slider_on,
       track = self.palette.slider_off,
@@ -937,8 +942,7 @@ function Keyboard:_build_app()
         self:set_octave(obj.index)
       end
     end
-    self:_add_component(c)
-    self._octave_set = c
+    self._controls.oct_set = c
 
   end
 
@@ -946,10 +950,7 @@ function Keyboard:_build_app()
 
   local map = self.mappings.octave_sync
   if map.group_name then
-    local c = UIButton(self)
-    c.group_name = map.group_name
-    c.tooltip = map.description
-    c:set_pos(map.index)
+    local c = UIButton(self,map)
     c:set(self.palette.octave_sync_off)
     c.on_press = function()
       local val = nil
@@ -961,8 +962,7 @@ function Keyboard:_build_app()
       self:_set_option("base_octave",val,self._process)
       self:set_octave(renoise.song().transport.octave,true)
     end
-    self:_add_component(c)
-    self._octave_sync = c
+    self._controls.oct_sync = c
   end
 
 
@@ -980,14 +980,8 @@ function Keyboard:_build_app()
         slider_size = cm:count_rows(map.group_name)
       end
     end
-    local c = UISlider(self)
-    c.group_name = map.group_name
-    c:set_pos(map.index)
-    c.flipped = map.flipped
-    c.toggleable = map.toggleable
+    local c = UISlider(self,map)
     c:set_size(slider_size)
-    c:set_orientation(map.orientation)
-    c.tooltip = map.description
     c:set_palette({
       tip = self.palette.slider_on,
       track = self.palette.slider_off,
@@ -1000,8 +994,7 @@ function Keyboard:_build_app()
         self:set_track(obj.index)
       end
     end
-    self:_add_component(c)
-    self._track_set = c
+    self._controls.track_set = c
 
   end
 
@@ -1009,10 +1002,7 @@ function Keyboard:_build_app()
 
   local map = self.mappings.track_sync
   if map.group_name then
-    local c = UIButton(self)
-    c.group_name = map.group_name
-    c.tooltip = map.description
-    c:set_pos(map.index)
+    local c = UIButton(self,map)
     c:set(self.palette.track_sync_off)
     c.on_press = function()
       local val = nil
@@ -1024,8 +1014,7 @@ function Keyboard:_build_app()
       end
       self:_set_option("track_index",val,self._process)
     end
-    self:_add_component(c)
-    self._track_sync = c
+    self._controls.track_sync = c
   end
 
 
@@ -1043,14 +1032,8 @@ function Keyboard:_build_app()
         slider_size = cm:count_rows(map.group_name)
       end
     end
-    local c = UISlider(self)
-    c.group_name = map.group_name
-    c:set_pos(map.index)
-    c.flipped = map.flipped
-    c.toggleable = map.toggleable
+    local c = UISlider(self,map)
     c:set_size(slider_size)
-    c:set_orientation(map.orientation)
-    c.tooltip = map.description
     c:set_palette({
       tip = self.palette.slider_on,
       track = self.palette.slider_off,
@@ -1063,7 +1046,6 @@ function Keyboard:_build_app()
         self:set_instr(obj.index)
       end
     end
-    self:_add_component(c)
     self._instr_set = c
 
   end
@@ -1072,10 +1054,7 @@ function Keyboard:_build_app()
 
   local map = self.mappings.instr_sync
   if map.group_name then
-    local c = UIButton(self)
-    c.group_name = map.group_name
-    c.tooltip = map.description
-    c:set_pos(map.index)
+    local c = UIButton(self,map)
     c:set(self.palette.instr_sync_off)
     c.on_press = function()
       local val = nil
@@ -1087,7 +1066,6 @@ function Keyboard:_build_app()
       end
       self:_set_option("instr_index",val,self._process)
     end
-    self:_add_component(c)
     self._instr_sync = c
   end
 
@@ -1096,6 +1074,7 @@ function Keyboard:_build_app()
 
   local map = self.mappings.volume
   if map.group_name then
+
     -- check for pad/grid style mapping
     local slider_size = 1
     local grid_mode = cm:is_grid_group(map.group_name,map.index)
@@ -1106,20 +1085,17 @@ function Keyboard:_build_app()
         slider_size = cm:count_rows(map.group_name)
       end
     end
-    local c = UISlider(self)
-    c.group_name = map.group_name
-    c:set_pos(map.index)
-    c.flipped = map.flipped
-    c.toggleable = map.toggleable
-    c:set_orientation(map.orientation)
+    --print("self._controls.volume - slider_size",slider_size)
+    --print("self._controls.volume - map.orientation",map.orientation)
+
+    local c = UISlider(self,map)
     c:set_size(slider_size)
-    c.ceiling = KEYBOARD_VELOCITIES
-    c.tooltip = map.description
     c:set_palette({
       tip = self.palette.slider_on,
       track = self.palette.slider_off,
     })
     c.value = self.curr_volume
+    c.ceiling = KEYBOARD_VELOCITIES
     c.on_change = function(obj)
       if (self.options.base_volume.value == VOLUME_FOLLOW) then
         -- do not allow setting volume if velocity is disabled
@@ -1135,8 +1111,7 @@ function Keyboard:_build_app()
       end
 
     end
-    self:_add_component(c)
-    self._volume = c
+    self._controls.volume = c
 
   end
 
@@ -1144,10 +1119,7 @@ function Keyboard:_build_app()
 
   local map = self.mappings.volume_sync
   if map.group_name then
-    local c = UIButton(self)
-    c.group_name = map.group_name
-    c.tooltip = map.description
-    c:set_pos(map.index)
+    local c = UIButton(self,map)
     c:set(self.palette.volume_sync_off)
     c.on_press = function()
       local val = nil
@@ -1159,8 +1131,7 @@ function Keyboard:_build_app()
       end
       self:_set_option("base_volume",val,self._process)
     end
-    self:_add_component(c)
-    self._volume_sync = c
+    self._controls.volume_sync = c
   end
 
   -- attach to song at first run
@@ -1246,10 +1217,10 @@ function Keyboard:set_octave(val,skip_option)
 
   self.curr_octave = val
   
-  if self._keymatcher then
-    self._keymatcher.transpose = (self.curr_octave)*12 
-    self._keymatcher:update_keys()
+  if self._controls.keyboard then
+    self._controls.keyboard:set_octave(self.curr_octave)
   end
+
   self:update_octave_controls()
   if not skip_option and 
     (self.options.base_octave.value ~= OCTAVE_FOLLOW) 
@@ -1314,7 +1285,7 @@ function Keyboard:set_upper_boundary(pitch)
   TRACE("Keyboard:set_upper_boundary()",pitch)
 
   self.upper_note = pitch
-  self._boundary_update_requested = true
+  self:set_boundaries()
 
 end
 
@@ -1327,7 +1298,7 @@ function Keyboard:set_lower_boundary(pitch)
   TRACE("Keyboard:set_lower_boundary()",pitch)
 
   self.lower_note = pitch
-  self._boundary_update_requested = true
+  self:set_boundaries()
 
 end
 
@@ -1339,15 +1310,14 @@ function Keyboard:set_boundaries()
   TRACE("Keyboard:set_boundaries()")
 
   -- update keyboard
-  if self._keymatcher then
+  if self._controls.keyboard then
     for i=LOWER_NOTE, UPPER_NOTE do
       local disabled = false
       if (i > self.upper_note) or (i < self.lower_note) then
         disabled = true
       end
-      self._keymatcher.disabled_keys[i+13] = disabled
+      self._controls.keyboard:set_key_disabled(i,disabled)
     end
-    self._keymatcher:update_keys()
   end
 
   -- update grid
@@ -1369,9 +1339,9 @@ function Keyboard:set_volume(val,skip_option)
   end
 
   self.curr_volume = val
-  if self._volume then
+  if self._controls.volume then
     local skip_event = true
-    self._volume:set_value(self.curr_volume,skip_event)
+    self._controls.volume:set_value(self.curr_volume,skip_event)
   end
   if not skip_option and 
     (self.options.base_volume.value ~= OCTAVE_FOLLOW) 
@@ -1394,33 +1364,33 @@ function Keyboard:update_octave_controls()
     return
   end
 
-  if self._octave_down then
+  if self._controls.oct_down then
     --local lit = (renoise.song().transport.octave>0)
     local lit = (self.curr_octave>0)
     if lit then
-      self._octave_down:set(self.palette.octave_down_on)
+      self._controls.oct_down:set(self.palette.octave_down_on)
     else
-      self._octave_down:set(self.palette.octave_down_off)
+      self._controls.oct_down:set(self.palette.octave_down_off)
     end
   end
-  if self._octave_up then
+  if self._controls.oct_up then
     local lit = (self.curr_octave<8)
     if lit then
-      self._octave_up:set(self.palette.octave_up_on)
+      self._controls.oct_up:set(self.palette.octave_up_on)
     else
-      self._octave_up:set(self.palette.octave_up_off)
+      self._controls.oct_up:set(self.palette.octave_up_off)
     end
   end
-  if self._octave_set then
+  if self._controls.oct_set then
     local skip_event = true
-    self._octave_set:set_index(self.curr_octave,skip_event)
+    self._controls.oct_set:set_index(self.curr_octave,skip_event)
   end
-  if self._octave_sync then
+  if self._controls.oct_sync then
     local synced = (self.options.base_octave.value == OCTAVE_FOLLOW)
     if synced then
-      self._octave_sync:set(self.palette.octave_sync_on)
+      self._controls.oct_sync:set(self.palette.octave_sync_on)
     else
-      self._octave_sync:set(self.palette.octave_sync_off)
+      self._controls.oct_sync:set(self.palette.octave_sync_off)
     end
   end
 
@@ -1439,16 +1409,16 @@ function Keyboard:update_track_controls()
     return
   end
 
-  if self._track_set then
+  if self._controls.track_set then
     local skip_event = true
-    self._track_set:set_index(self.curr_track-1,skip_event)
+    self._controls.track_set:set_index(self.curr_track-1,skip_event)
   end
-  if self._track_sync then
+  if self._controls.track_sync then
     local synced = (self.options.track_index.value == TRACK_FOLLOW)
     if synced then
-      self._track_sync:set(self.palette.track_sync_on)
+      self._controls.track_sync:set(self.palette.track_sync_on)
     else
-      self._track_sync:set(self.palette.track_sync_off)
+      self._controls.track_sync:set(self.palette.track_sync_off)
     end
   end
 
@@ -1491,12 +1461,12 @@ function Keyboard:update_volume_controls()
     return
   end
 
-  if self._volume_sync then
+  if self._controls.volume_sync then
     local synced = (self.options.base_volume.value == VOLUME_FOLLOW)
     if synced then
-      self._volume_sync:set(self.palette.volume_sync_on)
+      self._controls.volume_sync:set(self.palette.volume_sync_on)
     else
-      self._volume_sync:set(self.palette.volume_sync_off)
+      self._controls.volume_sync:set(self.palette.volume_sync_off)
     end
   end
 
@@ -1514,41 +1484,53 @@ function Keyboard:visualize_sample_mappings()
     return
   end
 
-  if (#self._grid>0) then
+  --rprint(self.pressed_buttons)
+
+  if (#self._controls.grid>0) then
     local instr_idx = self:get_instrument_index()
     local instr = renoise.song().instruments[instr_idx]
-    for idx = 1,#self._grid do
-      local ui_obj = self._grid[idx]
+    --[[
+    ]]
+    for idx = 1,#self._controls.grid do
+      local palette = nil
+      local ui_obj = self._controls.grid[idx]
       local pitch = idx + (self.curr_octave*12)+11
       local inside_range = self:inside_note_range(pitch-12)
       if inside_range then
-        ui_obj.palette.pressed = self.palette.key_pressed
-        ui_obj.palette.released = self.palette.key_released
+        if self.pressed_buttons[idx] then
+          palette = self.palette.key_pressed
+          --print("key_pressed",palette.color[1],palette.color[2],palette.color[3])
+        else
+          palette = self.palette.key_released
+        end
       else
-        ui_obj.palette.released = self.palette.key_out_of_bounds
+        palette = self.palette.key_out_of_bounds
       end
-      ui_obj:invalidate()
+      ui_obj:set(palette)
     end
     for s_index,s_map in ipairs(instr.sample_mappings[1]) do
       --print("s_map",s_map)
       --rprint(s_map)
       --oprint(s_map)
-      for idx = 1,#self._grid do
-        local ui_obj = self._grid[idx]
+      for idx = 1,#self._controls.grid do
+
         local pitch = idx + (self.curr_octave*12)+11
         if (s_map.note_range[1]<=pitch) and
           (s_map.note_range[2]>=pitch) 
         then
           local inside_range = self:inside_note_range(pitch-12)
           if inside_range then
+            local palette = nil
+            local ui_obj = self._controls.grid[idx]
             local sample_index = renoise.song().selected_sample_index
-            ui_obj.palette.pressed = self.palette.key_pressed_content
-            if (sample_index == s_index) then
-              ui_obj.palette.released = self.palette.key_released_selected
+            if self.pressed_buttons[idx] then
+              palette = self.palette.key_pressed_content
+            elseif (sample_index == s_index) then
+              palette = self.palette.key_released_selected
             else
-              ui_obj.palette.released = self.palette.key_released_content
+              palette = self.palette.key_released_content
             end
-            ui_obj:invalidate()
+            ui_obj:set(palette)
           end
         end
       end
@@ -1650,7 +1632,6 @@ function Keyboard:_attach_to_song()
   renoise.song().selected_track_observable:add_notifier(
     function()
       if (self.options.track_index.value == TRACK_FOLLOW) then
-        --self._track_update_requested = true
         self:set_track(renoise.song().selected_track_index)
       end
     end
@@ -1670,10 +1651,8 @@ function Keyboard:_attach_to_song()
 
       if (self.options.base_volume.value == VOLUME_FOLLOW) then
         if enabled then
-          -- when enabled, set to current velocity
           self:set_volume(renoise.song().transport.keyboard_velocity)
         else
-          -- when disabled, we set volume to max
           self:set_volume(KEYBOARD_VELOCITIES)
         end
       end

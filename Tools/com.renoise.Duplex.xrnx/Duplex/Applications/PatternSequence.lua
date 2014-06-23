@@ -1,10 +1,10 @@
 --[[============================================================================
--- Duplex.PatternSequence
--- Inheritance: Application > PatternSequence
+-- Duplex.Application.PatternSequence 
 ============================================================================]]--
 
 --[[--
-Basic control of the Renoise pattern-sequence
+Basic control of the Renoise pattern-sequence.
+Inheritance: @{Duplex.Application} > Duplex.Application.PatternSequence 
 
 ### Changes
 
@@ -97,7 +97,6 @@ function PatternSequence:_build_app()
     c.on_hold = function(obj)
       self:_display_last()
     end
-    self:_add_component(c)
     self.controls.next = c
   end
 
@@ -112,7 +111,6 @@ function PatternSequence:_build_app()
     c.on_hold = function(obj)
       self:_display_first()
     end
-    self:_add_component(c)
     self.controls.previous = c
   end
 

@@ -30,6 +30,41 @@ end
 
 --------------------------------------------------------------------------------
 
+--- buttons
+
+function APC20:output_boolean(pt,xarg,ui_obj)
+
+
+  local value = nil
+
+  local color = self:quantize_color(pt.color)
+  -- use the local colorspace if it's available
+  local colorspace = xarg.colorspace or self.colorspace
+  if (colorspace[1]>1) then
+    -- clip launch buttons can have multiple colors
+    local red = (pt.color[1]==0xff)
+    local green = (pt.color[2]==0xff)
+    if red and green then
+      value = 5 -- yellow
+    elseif red then
+      value = 3 -- red
+    elseif green then
+      value = 1 -- green
+    else
+      value = 0 -- turned off
+    end
+  else
+    -- normal LED buttons are monochrome
+    value = (pt.val == true) and xarg.maximum or xarg.minimum
+  end
+
+  return value
+
+end
+
+--------------------------------------------------------------------------------
+
+--[[
 function APC20:point_to_value(pt,elm,ceiling)
   TRACE("APC20:point_to_value()",pt,elm,ceiling)
 
@@ -69,6 +104,6 @@ function APC20:point_to_value(pt,elm,ceiling)
   return value
 
 end
-
+]]
 
 

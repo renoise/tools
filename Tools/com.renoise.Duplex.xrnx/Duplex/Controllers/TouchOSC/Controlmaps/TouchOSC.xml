@@ -14,10 +14,10 @@
 					</Row>
 					<Row>
 						<Group name="1_Faders" >
-							<Param value="/1/fader1 %f"  type="fader" orientation="vertical" size="3.18" name="1_fader1" maximum="1" minimum="0"/>
-							<Param value="/1/fader2 %f"  type="fader" orientation="vertical" size="3.18" name="1_fader2" maximum="1" minimum="0"/>
-							<Param value="/1/fader3 %f"  type="fader" orientation="vertical" size="3.18" name="1_fader3" maximum="1" minimum="0"/>
-							<Param value="/1/fader4 %f"  type="fader" orientation="vertical" size="3.18" name="1_fader4" maximum="1" minimum="0"/>
+							<Param value="/1/fader1 %f"  type="fader" orientation="vertical" soft_echo="true" size="3.18" name="1_fader1" maximum="1" minimum="0"/>
+							<Param value="/1/fader2 %f"  type="fader" orientation="vertical" soft_echo="true" size="3.18" name="1_fader2" maximum="1" minimum="0"/>
+							<Param value="/1/fader3 %f"  type="fader" orientation="vertical" soft_echo="true" size="3.18" name="1_fader3" maximum="1" minimum="0"/>
+							<Param value="/1/fader4 %f"  type="fader" orientation="vertical" soft_echo="true" size="3.18" name="1_fader4" maximum="1" minimum="0"/>
 						</Group>
 					</Row>
 					<Row>
@@ -61,7 +61,7 @@
 			<Page>
 				<Column>
 					<Group name="3_XYPad" columns="1">
-						<Param value="/3/xy %f %f"  type="xypad" size="4" name="3_Xfader" invert_x="false" invert_y="true" maximum="1" minimum="0"/>
+						<Param value="/3/xy %f %f"  type="xypad" size="4" name="3_Xfader" soft_echo="true" invert_x="false" invert_y="true" maximum="1" minimum="0"/>
 					</Group>
 					<Group name="3_Buttons" >
 						<Param value="/3/toggle1 %i"  type="togglebutton" name="3_toggle1" maximum="1" minimum="0"/>

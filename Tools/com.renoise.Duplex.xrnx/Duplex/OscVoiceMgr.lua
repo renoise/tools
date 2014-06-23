@@ -32,7 +32,7 @@ end
 --------------------------------------------------------------------------------
 
 --- This is the main trigger function
--- @param app (Application) the calling application 
+-- @param app (@{Duplex.Application}) the calling application 
 -- @param instr (int) the Renoise instrument index
 -- @param track (int) the Renoise track index
 -- @param pitch (int) 0-120
@@ -48,7 +48,7 @@ function OscVoiceMgr:trigger(app,instr,track,pitch,velocity,keep,is_midi,channel
   assert(osc_client,"Internal Error. Please report: " ..
     "expected internal OSC client to be present")
 
-  local channel = 1 -- TODO
+  --local channel = 1 -- TODO
 
   if not is_midi then
     osc_client:trigger_instrument(true,instr,track,pitch,velocity) 
@@ -70,7 +70,7 @@ end
 
 --- The main release function. Will ensure that the right notes are released, 
 -- even when the keyboard has been transposed since the notes were triggered
--- @param app (Application) the calling application 
+-- @param app (@{Duplex.Application}) the calling application 
 -- @param instr (int) the Renoise instrument index
 -- @param track (int) the Renoise track index
 -- @param pitch (int) 0-120
@@ -86,7 +86,7 @@ function OscVoiceMgr:release(app,instr,track,pitch,velocity,is_midi,channel)
   local transp = 0
   local org_app = self:_get_originating_app(app)
 
-  channel = 1 -- TODO
+  --channel = 1 -- TODO
 
   for k,v in ripairs(self.playing) do
     local release_note = false
@@ -132,6 +132,7 @@ function OscVoiceMgr:release(app,instr,track,pitch,velocity,is_midi,channel)
       -- cut note only if "keep all until released" is false,
       -- or we have in fact released all keys 
       local is_active = self:note_is_active(app,instr,pitch)
+      --print("OscVoiceMgr:release - is_active,keep",is_active,keep)
       if not is_active or not keep then
         self:_release_note(app,instr,track,pitch+transp,velocity,is_midi,channel)
       end
@@ -146,7 +147,7 @@ end
 --------------------------------------------------------------------------------
 
 --- If OSC triggered this note, return true
--- @param org_app (Application), the originating application
+-- @param org_app (@{Duplex.Application}), the originating application
 -- @param pitch (int) 0-120
 -- @param channel (int) the MIDI channel, 1-16
 -- @return bool
@@ -169,7 +170,7 @@ end
 --------------------------------------------------------------------------------
 
 --- If MIDI triggered this note, return true
--- @param org_app (Application), the originating application
+-- @param org_app (@{Duplex.Application}), the originating application
 -- @param pitch (int) 0-120
 -- @param channel (int) the MIDI channel, 1-16
 -- @return bool
@@ -194,7 +195,7 @@ end
 --- Release a given note. We do not release notes directly,
 -- this method is called by the main release() method when it has been 
 -- determined that a note should be released
--- @param app (Application), the originating application
+-- @param app (@{Duplex.Application}), the originating application
 -- @param instr (int) the Renoise instrument index
 -- @param track (int) the Renoise track index
 -- @param pitch (int) 0-120
@@ -257,7 +258,8 @@ end
 --------------------------------------------------------------------------------
 
 --- Return a unique name for any running process/application
--- @param app (Duplex.Application)
+-- @param app (@{Duplex.Application})
+-- @return string, e.g. "Launchpad_MyMixer"
 
 function OscVoiceMgr:_get_originating_app(app)
   TRACE("OscVoiceMgr:_get_originating_app()",app._app_name)
@@ -270,9 +272,10 @@ end
 --------------------------------------------------------------------------------
 
 --- Check if a particular instrument-note is still playing, somewhere...
--- @param app (Application), check originating app
+-- @param app (@{Duplex.Application}), check originating app
 -- @param instr (int) instrument index
 -- @param pitch (int) note pitch
+-- @return bool
 
 function OscVoiceMgr:note_is_active(app,instr,pitch)
   TRACE("OscVoiceMgr:note_is_active()",app,instr,pitch)
@@ -317,7 +320,7 @@ end
 --------------------------------------------------------------------------------
 
 --- Remove application from active voices (release, then remove)
--- @param app (Duplex.Application)
+-- @param app (@{Duplex.Application})
 
 function OscVoiceMgr:remove_app(app)
   TRACE("OscVoiceMgr:remove_app()",app)
@@ -341,34 +344,38 @@ class 'OscVoiceMgrNote'
 
 function OscVoiceMgrNote:__init(org_app,instr,track,pitch,velocity,keep,is_midi,channel)
 
-  -- a unique identifier for the application that triggered this note
+  --- (@{Duplex.Application}) the application that triggered this note
   self.originating_app = org_app
 
-  -- decide whether a released key should wait for all other
+  --- (bool) decide whether a released key should wait for all other
   -- pressed keys before it is allowed to release
   -- (set this to false if you're triggering notes with a pad controller 
   -- that doesn't send release notes)
   self.keep_until_all_released = keep
 
-  -- the temporary transpose of the application
+  --- (int) the temporary transpose of the application
   self.temp_transpose = 0
 
-  -- whether or not the key is held
+  --- (bool) whether or not the key is held
   self.is_held = true
 
-  -- pitch/velocity
+  --- (int) pitch
   self.pitch = pitch
+
+  --- (int) velocity
   self.velocity = velocity
 
-  -- true when MIDI, false means OSC
+  --- (bool) true when MIDI, false means OSC
   self.is_midi = is_midi
 
-  -- for midi, but also helps to differentiate  
+  --- (int) for midi, but also helps to differentiate  
   -- (when looking for osc-triggered notes)
-  self.channel = 1 -- TODO
+  self.channel = 1
 
-  -- osc only
+  --- (int) the Renoise instrument index
   self.instr = instr
+
+  --- (int) the Renoise track index
   self.track = track
 
 

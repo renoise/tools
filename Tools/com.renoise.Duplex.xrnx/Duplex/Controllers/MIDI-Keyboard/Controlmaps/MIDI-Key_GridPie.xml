@@ -10,7 +10,7 @@ Use white keys in the lower four octaves to toggle slots, C#,D#,G#,A# to scroll<
       </Group>
 		<!--
 		<Group name="Keyboard" orientation="horizontal" >
-			<Param value="|Ch1" type="keyboard" name="" size="0.75" velocity_enabled="true" aspect="1.4" range="48" maximum="127" minimum="126"/>
+			<Param value="|Ch1" type="keyboard" name="" size="0.75" aspect="1.4" range="48" maximum="127" minimum="126"/>
 		</Group>
 		-->
 		<Row>

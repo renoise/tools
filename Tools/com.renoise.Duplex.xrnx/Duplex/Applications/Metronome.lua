@@ -1,10 +1,10 @@
 --[[============================================================================
--- Duplex.Metronome
--- Inheritance: Application > Metronome
+-- Duplex.Application.Metronome
 ============================================================================]]--
 
 --[[--
-Simple application aimed at taking control of the Renoise metronome (mapping that allows you to toggle it on and off)
+Take control of the Renoise metronome (tutorial).
+Inheritance: @{Duplex.Application} > Duplex.Application.Metronome
 
 Metronome is a sample application that is meant to demonstrate how to write an application with Duplex. It demonstrates how to listen for events within Renoise and produce a proper response on the controller (bi-directional communication). 
 
@@ -66,16 +66,13 @@ end
 
 function Metronome:_build_app()
 
-  local c = UIButton(self)
-  c.group_name = self.mappings.toggle.group_name
-  c:set_pos(self.mappings.toggle.index)
-  c.tooltip = self.mappings.toggle.description
+  local map = self.mappings.toggle
+  local c = UIButton(self,map)
   c.on_press = function(obj)
     local enabled = renoise.song().transport.metronome_enabled
     renoise.song().transport.metronome_enabled = not enabled
     self:update()
   end
-  self:_add_component(c)
   self._toggle = c
 
   -- attach to song at first run

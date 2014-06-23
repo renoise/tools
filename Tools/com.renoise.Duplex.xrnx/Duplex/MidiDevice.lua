@@ -16,10 +16,10 @@ class 'MidiDevice' (Device)
 --------------------------------------------------------------------------------
 
 --- Initialize MidiDevice class
--- @param display_name (String) the friendly name of the device
+-- @param display_name (string) the friendly name of the device
 -- @param message_stream (MessageStream) the msg-stream we should attach to
--- @param port_in (String) the MIDI input port 
--- @param port_out (String) the MIDI output port 
+-- @param port_in (string) the MIDI input port 
+-- @param port_out (string) the MIDI output port 
 
 function MidiDevice:__init(display_name, message_stream, port_in, port_out)
   TRACE("MidiDevice:__init()",display_name, message_stream, port_in, port_out)
@@ -30,23 +30,29 @@ function MidiDevice:__init(display_name, message_stream, port_in, port_out)
 
   Device.__init(self, display_name, message_stream, DEVICE_PROTOCOL.MIDI)
 
+  --- (string) the MIDI input port 
   self.port_in = port_in
+
+  --- (string) the MIDI output port
   self.port_out = port_out
 
+  --- (MidiInputDevice)
   self.midi_in = nil
+
+  --- (MidiOutputDevice)
   self.midi_out = nil
 
   -- (bool) specifies if the device dumps midi to the console
   self.dump_midi = false
 
-  -- when using the virtual control surface, and the control-map
+  -- (int) when using the virtual control surface, and the control-map
   -- doesn't specify a specific channel, we use this value: 
   self.default_midi_channel = 1
 
-  -- (int) used for quantized output and relative step size
+  --- (int) used for quantized output and relative step size
   self.default_midi_resolution = 127
 
-  -- enable this to quantize output to given resolution before
+  --- (bool) enable this to quantize output to given resolution before
   -- actually sending it to the MIDI controller (less traffic)
   self.output_quantize = true
 
@@ -180,18 +186,15 @@ function MidiDevice:midi_callback(message)
     value_str = string.format("%s|Ch%i",value_str,msg_channel)
 
     -- retrieve all matching parameters
-    local params = self.control_map:get_params_by_value(value_str,msg_context)
-    --print("#params",#params)
-
-    -- remember the current value, reset on each loop
-    -- (as send_message might change it)
+    local params = self.control_map:get_midi_params(value_str)
 
 
     for k,v in ipairs(params) do
 
       -- deep-copy the parameter table, so we can modify   
       -- it's values without changing the original 
-      local param = table.rcopy(v)
+      --local param = table.rcopy(v)
+      local param = v
       
       -- create the message
       local msg = Message()
@@ -201,19 +204,10 @@ function MidiDevice:midi_callback(message)
       msg.channel = msg_channel
       msg.is_note_off = msg_is_note_off
 
-      -- special case: if we have received input from a MIDI keyboard
-      -- by means of the "keyboard" input method, stick the note back on
-      if (msg.context == DEVICE_MESSAGE.MIDI_NOTE) and
-        (param["xarg"].value=="|Ch"..msg_channel) or
-        (param["xarg"].value=="|") 
-      then
-        param["xarg"].value = value_str
-      end
-
       if (duplex_preferences.nrpn_support.value == false) then
 
         if (param) then
-          self:_send_message(msg,param["xarg"])
+          self:_send_message(msg,param)
         end
 
       else
@@ -237,7 +231,7 @@ function MidiDevice:midi_callback(message)
             self.nrpn_message.fine2 = msg.value
             -- NRPN message (should be) completely received. Now, make a pseudo-CC-message out of it
             value_str = string.format("CC#%s|Ch%i",self.nrpn_message.msb,self.nrpn_message.channel)
-            local params2 = self.control_map:get_params_by_value(value_str)
+            local params2 = self.control_map:get_midi_params(value_str)
             param = table.rcopy(param2[1])
             if (param and self.nrpn_message.is_valid) then
               TRACE('MidiDevice: NRPN complete. value_str=',value_str,', param=',param)
@@ -245,7 +239,7 @@ function MidiDevice:midi_callback(message)
               msg.context = self.nrpn_message.context
               local track = renoise.song().tracks[renoise.song().selected_track_index]
               local device = track.devices[renoise.song().selected_device_index]
-              local parameter = device.parameters[param["xarg"].index]
+              local parameter = device.parameters[param.xarg.index]
               local quantum = (parameter.value_max - parameter.value_min)/127
               local value_norm = parameter.value - parameter.value_min --if value_min is negative, transpose value into positive range
               local value_midi = math.floor( value_norm / quantum )
@@ -308,7 +302,7 @@ function MidiDevice:midi_callback(message)
           for i=1, pace, 1 do
             if( self.nrpn_message.increment ) then msg.value = math.min(127, msg.value+1) end
             if( self.nrpn_message.decrement ) then msg.value = math.max(0,   msg.value-1) end
-            self:_send_message(msg,param["xarg"])
+            self:_send_message(msg,param)
           end
           -- as we have parsed the NRPNMessage (if there was one), we can reset it.
           self.nrpn_message = NRPNMessage()
@@ -416,7 +410,12 @@ end
 
 --------------------------------------------------------------------------------
 
---- Send Pitch-Bend message to device
+--- Send Pitch-Bend message to device.
+-- sending pitch-bend back to a device doesn't make sense when
+-- you're using a keyboard - it's generally recommended to tag 
+-- the parameter with the "skip_echo" attribute in such a case...
+-- however, some device setups are different (e.g. Mackie Control)
+--
 -- @param value (int) the pitch-bend value, 7 bit value
 -- @param channel (int) the MIDI channel, 1-16 (optional)
 
@@ -573,42 +572,6 @@ function MidiDevice:extract_midi_channel(str)
   return string.match(str, "|Ch([0-9]+)")
 end
 
-
---------------------------------------------------------------------------------
-
---- Convert the point to an output value
--- @param pt (CanvasPoint)
--- @param elm (Table), control-map parameter
--- @param ceiling (Number), the UIComponent ceiling value
--- @return (Number), the output value
-
-function MidiDevice:point_to_value(pt,elm,ceiling)
-  --TRACE("MidiDevice:point_to_value()",pt,elm,ceiling)
-
-  local ceiling = ceiling or 127
-  local value = nil
-  local val_type = type(pt.val)
-
-  if (elm.type == "label") then
-
-    return pt.text
-
-  elseif (val_type == "boolean") then
-    if (pt.val) then
-      value = elm.maximum
-    else
-      value = elm.minimum
-    end
-
-  else
-    -- scale the value from "local" to "external"
-    -- for instance, from Renoise dB range (1.4125375747681) 
-    -- to a 7-bit controller value (127)
-    value = math.floor((pt.val * (1 / ceiling)) * elm.maximum)
-  end
-
-  return value
-end
 
 
 -- ## NRPN

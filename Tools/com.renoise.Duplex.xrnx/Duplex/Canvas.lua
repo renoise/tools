@@ -98,7 +98,7 @@ end
 --------------------------------------------------------------------------------
 
 --- Write a single point to the canvas at the provided x/y coordinates
--- @param point (CanvasPoint)
+-- @param point (@{Duplex.CanvasPoint})
 -- @param x (int) 
 -- @param y (int)
 
@@ -114,7 +114,7 @@ end
 --------------------------------------------------------------------------------
 
 --- Fill/flood entire canvas with given point
--- @param point (CanvasPoint)
+-- @param point (@{Duplex.CanvasPoint})
 
 function Canvas:fill(point)
   for x = 1,self.width do
@@ -130,7 +130,7 @@ end
 
 --- If point is different from existing value, mark the canvas as changed 
 -- both color, text and value are considered when doing the comparison
--- @param point (CanvasPoint)
+-- @param point (@{Duplex.CanvasPoint})
 -- @param x (int) 
 -- @param y (int)
 
@@ -168,56 +168,4 @@ function Canvas:__tostring()
   return type(self)
 end  
 
-
---[[----------------------------------------------------------------------------
--- Duplex.CanvasPoint
-----------------------------------------------------------------------------]]--
-
---[[
-
-CanvasPoint represents a point in a canvas 
-- color (table of 8-bit r/g/b values)
-- text (replacement for color, for labelling buttons)
-- value (as defined by the UIComponent): note that boolean values true/false
-  is translated to their <param> max/min property counterparts, which should 
-  produce an enabled/disabled state in the controller
-
---]]
-
-
---==============================================================================
-
-class 'CanvasPoint' 
-
-function CanvasPoint:__init(text,color)
-  self.text = text or ""
-  self.color = color or {0x00,0x00,0x00}
-  self.val = false
-end
-
-
---------------------------------------------------------------------------------
-
--- apply(): apply values from external table
--- use this to quickly customize the look of a single point
-
-function CanvasPoint:apply(obj)
-  --TRACE("CanvasPoint:apply", obj)
-  
-  for k,v in pairs(obj) do
-    if (k=="text")then
-      self.text = v
-    end
-    if (k=="color")then
-      self.color = v
-    end
-  end
-end
-
-
---------------------------------------------------------------------------------
-
-function CanvasPoint:__tostring()
-  return type(self)
-end  
 

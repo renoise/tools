@@ -16,14 +16,14 @@ Pad CCs: 110-117, Knob CCs: 21-28. Preset file for LPD8 Editor included</Descrip
 		<Column>
 			<Row>
 				<Group name="Pads" columns="4">
-					<Param value="CC#110" type="key" name="PAD5"  maximum="127" minimum="0"/>
-					<Param value="CC#111" type="key" name="PAD6"  maximum="127" minimum="0"/>
-					<Param value="CC#112" type="key" name="PAD7"  maximum="127" minimum="0"/>
-					<Param value="CC#113" type="key" name="PAD8"  maximum="127" minimum="0"/>
-					<Param value="CC#114" type="key" name="PAD1"  maximum="127" minimum="0"/>
-					<Param value="CC#115" type="key" name="PAD2"  maximum="127" minimum="0"/>
-					<Param value="CC#116" type="key" name="PAD3"  maximum="127" minimum="0"/>
-					<Param value="CC#117" type="key" name="PAD4"  maximum="127" minimum="0"/>
+					<Param value="CC#110" type="button" name="PAD5"  maximum="127" minimum="0"/>
+					<Param value="CC#111" type="button" name="PAD6"  maximum="127" minimum="0"/>
+					<Param value="CC#112" type="button" name="PAD7"  maximum="127" minimum="0"/>
+					<Param value="CC#113" type="button" name="PAD8"  maximum="127" minimum="0"/>
+					<Param value="CC#114" type="button" name="PAD1"  maximum="127" minimum="0"/>
+					<Param value="CC#115" type="button" name="PAD2"  maximum="127" minimum="0"/>
+					<Param value="CC#116" type="button" name="PAD3"  maximum="127" minimum="0"/>
+					<Param value="CC#117" type="button" name="PAD4"  maximum="127" minimum="0"/>
 				</Group>
 				<Group name="Knobs" columns="4">
 					<Param value="CC#21" type="dial" name="K1"  maximum="127" minimum="0"/>

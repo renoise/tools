@@ -1,10 +1,10 @@
 --[[============================================================================
--- Duplex.TrackSelector
--- Inheritance: Application > TrackSelector
+-- Duplex.Application.TrackSelector
 ============================================================================]]--
 
 --[[--
-Select the active Renoise track, including shortcuts for master & send tracks
+Select the active Renoise track, including shortcuts for master & send tracks.
+Inheritance: @{Duplex.Application} > Duplex.Application.TrackSelector
 
 ### Changes
 
@@ -396,7 +396,6 @@ function TrackSelector:_build_app(song)
  
     end
     
-    self:_add_component(c)
     self._prev_next_track = c
   end
   ]]
@@ -414,7 +413,6 @@ function TrackSelector:_build_app(song)
     c.on_hold = function() 
       renoise.song().selected_track_index = 1
     end
-    self:_add_component(c)
     self._prev_track = c
   end
 
@@ -432,7 +430,6 @@ function TrackSelector:_build_app(song)
     c.on_hold = function() 
       renoise.song().selected_track_index = #renoise.song().tracks
     end
-    self:_add_component(c)
     self._next_track = c
   end
 
@@ -468,7 +465,6 @@ function TrackSelector:_build_app(song)
       -- the notifier will take care of the rest
       renoise.song().selected_track_index = track_idx
     end
-    self:_add_component(c)
     self._prev_next_page = c
   end
   ]]
@@ -515,7 +511,6 @@ function TrackSelector:_build_app(song)
       local track_idx = get_track_index(-1)
       renoise.song().selected_track_index = track_idx
     end
-    self:_add_component(c)
     self._prev_page = c
   end
 
@@ -529,7 +524,6 @@ function TrackSelector:_build_app(song)
       local track_idx = get_track_index(1)
       renoise.song().selected_track_index = track_idx
     end
-    self:_add_component(c)
     self._next_page = c
   end
 
@@ -587,7 +581,6 @@ function TrackSelector:_build_app(song)
 
     end
     
-    self:_add_component(c)
     self._select_track = c
   end
 
@@ -602,7 +595,6 @@ function TrackSelector:_build_app(song)
     c.on_press = function(obj)
       renoise.song().selected_track_index = 1
     end
-    self:_add_component(c)
     self._select_first = c
   end
 
@@ -618,7 +610,6 @@ function TrackSelector:_build_app(song)
       local track_idx = get_master_track_index()
       renoise.song().selected_track_index = track_idx
     end
-    self:_add_component(c)
     self._select_master = c
   end
 
@@ -638,7 +629,6 @@ function TrackSelector:_build_app(song)
       end
       renoise.song().selected_track_index = track_idx
     end
-    self:_add_component(c)
     self._select_sends = c
   end
 

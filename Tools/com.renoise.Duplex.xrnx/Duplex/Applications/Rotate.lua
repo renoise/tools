@@ -1,10 +1,10 @@
 --[[============================================================================
--- Duplex.Rotate
--- Inheritance: Application > Rotate
+-- Duplex.Application.Rotate 
 ============================================================================]]--
 
 --[[--
 Rotate a track/pattern upwards or downwards, optionally including automation.
+Inheritance: @{Duplex.Application} > Duplex.Application.Rotate 
 
 This application is an implementation of taktik's [Rotate tool][1]
 [1]: http://tools.renoise.com/tools/rotate-pattern
@@ -422,7 +422,6 @@ function Rotate:_build_app()
       obj:flash(
         0.1,self.palette.up_bright,self.palette.up_dimmed,self.palette.up_off)
     end
-    self:_add_component(c)
     self._track_in_pattern_up = c
   end
 
@@ -441,7 +440,6 @@ function Rotate:_build_app()
       obj:flash(
         0.1,self.palette.down_bright,self.palette.down_dimmed,self.palette.down_off)
     end
-    self:_add_component(c)
     self._track_in_pattern_down = c
   end
 
@@ -460,7 +458,6 @@ function Rotate:_build_app()
       obj:flash(
         0.1,self.palette.up_bright,self.palette.up_dimmed,self.palette.up_off)
     end
-    self:_add_component(c)
     self._whole_pattern_up = c
   end
 
@@ -479,7 +476,6 @@ function Rotate:_build_app()
       obj:flash(
         0.1,self.palette.down_bright,self.palette.down_dimmed,self.palette.down_off)
     end
-    self:_add_component(c)
     self._whole_pattern_down = c
   end
 

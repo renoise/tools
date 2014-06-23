@@ -90,10 +90,10 @@ duplex_configurations:insert {
           group_name = "Controls2",
           index = 7,
         },
-        follow_player = {
-          group_name= "Controls2",
-          index = 8,
-        },
+        --follow_player = {
+        --  group_name= "Controls2",
+        --  index = 8,
+        --},
       },
       options = {
         pattern_play = 3,
@@ -110,10 +110,10 @@ duplex_configurations:insert {
         master = {
           group_name = "Grid2",
         },
-        mode = {
-          group_name = "Controls2",
-          index = 8
-        },
+        --mode = {
+        --  group_name = "Controls2",
+        --  index = 8
+        --},
         --panning = {},
         --solo = {},
       },

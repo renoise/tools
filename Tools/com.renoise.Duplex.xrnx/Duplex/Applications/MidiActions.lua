@@ -1,15 +1,16 @@
 --[[============================================================================
--- Duplex.MidiActions
--- Inheritance: Application > MidiActions
+-- Duplex.Application.MidiActions
 ============================================================================]]--
 
 --[[--
 MidiActions will expose most of the standard Renoise mappings to Duplex. 
+Inheritance: @{Duplex.Application} > Duplex.Application.MidiActions 
 
 MidiActions will expose standard Renoise mappings as fully bi-directional mappings, with customizable scaling (exponential, logarithmic, linear) and range. 
 
 By parsing the GlobalMidiActions file, it literally provides access to hundreds of features inside Renoise, such as BPM, LPB, and even UI view presets. You will have to map each feature manually, but only once - once mapped, the target will remain accessible. 
 
+See also: @{Duplex.Applications.MidiActions.Bindings}
 --]]
 
 --==============================================================================
@@ -250,9 +251,6 @@ package.path = old_package_path
 
 function MidiActions:__init(...)
   TRACE("MidiActions:__init()")
-
-  --- BrowserProcess
-  self._process = select(1,...)
 
   --- List of UIComponents
   self._controls = {}
@@ -1121,11 +1119,10 @@ function MidiActions:_build_app()
   local map = self.mappings.control
   local grid_size = nil
   if map.group_name then
-    local args = cm:get_indexed_element(map.index,map.group_name)
-    if args then
-      if (args.type == "dial") or
-        --(args.type == "encoder") or
-        (args.type == "fader") 
+    local param = cm:get_param_by_index(map.index,map.group_name)
+    if param then
+      if (param.xarg.type == "dial") or
+        (param.xarg.type == "fader") 
       then
         input_method = "slider"
       else
@@ -1163,7 +1160,6 @@ function MidiActions:_build_app()
       c.on_press = function(obj)
         self:_update_control()
       end
-      self:_add_component(c)
       self._controls.button = c
     end
 
@@ -1185,7 +1181,6 @@ function MidiActions:_build_app()
       c.on_change = function(obj)
         self:_update_control()
       end
-      self:_add_component(c)
       self._controls.slider = c
 
     end

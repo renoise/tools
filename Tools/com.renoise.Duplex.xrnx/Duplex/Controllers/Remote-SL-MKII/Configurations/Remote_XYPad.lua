@@ -19,14 +19,10 @@ duplex_configurations:insert {
   applications = {
     XYPad = {
       mappings = {
-        x_slider = {
+        xy_pad = {
           group_name = "XYPad",
           index = 1
         },
-        y_slider = {
-          group_name = "XYPad",
-          index = 2
-        }
       }
     },
     Keyboard_PitchBend = {

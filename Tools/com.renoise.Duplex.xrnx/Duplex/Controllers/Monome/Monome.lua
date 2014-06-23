@@ -99,25 +99,6 @@ end
 
 
 --------------------------------------------------------------------------------
---[[
--- quantize value to determine lit/off state
-function Monome:point_to_value(pt,elm,ceiling)
-  TRACE("Monome:point_to_value",pt,elm,ceiling)
-
-  local value = OscDevice.point_to_value(self,pt,elm,ceiling)
-
-  if (type(pt.val) == "boolean") then
-    -- quantize value to determine lit/off state
-    local color = self:quantize_color(pt.color)
-    value = (color[1]==0xff) and 1 or 0
-  end
-
-  return value
-
-end
-]]
-
---------------------------------------------------------------------------------
 
 -- override default OscDevice method (comm protocol support)
 -- @return false when message was rejected 
@@ -147,6 +128,8 @@ end
 
 function Monome:receive_osc_message(value_str)
   --TRACE("Monome:receive_osc_message()",value_str)
+
+  --print("*** Monome.receive_osc_message - value_str",value_str)
 
   if (self.comm_protocol==self.MONOMESERIAL) then
 

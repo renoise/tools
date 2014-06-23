@@ -89,10 +89,10 @@ duplex_configurations:insert {
           group_name = "Controls2",
           index = 7,
         },
-        follow_player = {
-          group_name= "Controls2",
-          index = 8,
-        },
+        --follow_player = {
+        --  group_name= "Controls2",
+        --  index = 8,
+        --},
       },
       options = {
         pattern_play = 3,

@@ -1,11 +1,11 @@
 --[[============================================================================
--- Duplex.Matrix
--- Inheritance: Application > Matrix
+-- Duplex.Application.Matrix
 ============================================================================]]--
 
 --[[--
-Take control of the pattern matrix in Renoise with the unfinitely scrollable matrix application. It contains pattern-triggers, too
-  
+Take control of the pattern matrix in Renoise with the endlessly scrollable matrix application. 
+Inheritance: @{Duplex.Application} > Duplex.Application.Matrix 
+
 ### Demonstration video
 
 See a video demonstrating this application at [Youtube][1]
@@ -839,7 +839,6 @@ function Matrix:_build_app()
         end
       end
     end
-    self:_add_component(c)
     self._controls._next_seq_page = c
   end
 
@@ -861,7 +860,6 @@ function Matrix:_build_app()
         end
       end
     end
-    self:_add_component(c)
     self._controls._prev_seq_page = c
   end
 
@@ -881,7 +879,6 @@ function Matrix:_build_app()
         self:_update_slots()
       end
     end
-    self:_add_component(c)
     self._controls._next_track_page = c
   end
 
@@ -901,7 +898,6 @@ function Matrix:_build_app()
         self:_update_slots()
       end
     end
-    self:_add_component(c)
     self._controls._prev_track_page = c
   end
 
@@ -934,6 +930,8 @@ function Matrix:_build_app()
 
     c.on_index_change = function(obj)
       
+      TRACE("Matrix: on_index_change",obj)
+
       local obj_index = obj:get_index()
       local seq_index = obj_index + (self._height*self._edit_page)
       local seq_offset = self._playback_pos.sequence%self._height
@@ -1064,7 +1062,6 @@ function Matrix:_build_app()
       end
     end
 
-    self:_add_component(c)
     self._controls._trigger = c
 
   end
@@ -1119,7 +1116,6 @@ function Matrix:_build_app()
           end
 
         end
-        self:_add_component(c)
         self._controls._buttons[x][y] = c
       end  
     end
