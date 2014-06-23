@@ -34,6 +34,7 @@
 <ul>
 <li><a href="#Functions">Functions</a></li>
 <li><a href="#Tables">Tables</a></li>
+<li><a href="#Fields">Fields</a></li>
 </ul>
 
 
@@ -55,7 +56,6 @@
   <li><a href="../modules/Duplex.Applications.Mlrx.Mlrx_track.html">Duplex.Applications.Mlrx.Mlrx_track</a></li>
   <li><a href="../modules/Duplex.Applications.Mlrx.html">Duplex.Applications.Mlrx</a></li>
   <li><a href="../modules/Duplex.Applications.Navigator.html">Duplex.Applications.Navigator</a></li>
-  <li><a href="../modules/Duplex.Applications.NoComponent.html">Duplex.Applications.NoComponent</a></li>
   <li><a href="../modules/Duplex.Applications.NotesOnWheels.html">Duplex.Applications.NotesOnWheels</a></li>
   <li><a href="../modules/Duplex.Applications.PatternSequence.html">Duplex.Applications.PatternSequence</a></li>
   <li><a href="../modules/Duplex.Applications.Recorder.html">Duplex.Applications.Recorder</a></li>
@@ -63,6 +63,7 @@
   <li><a href="../modules/Duplex.Applications.Rotate.html">Duplex.Applications.Rotate</a></li>
   <li><a href="../modules/Duplex.Applications.StepSequencer.html">Duplex.Applications.StepSequencer</a></li>
   <li><a href="../modules/Duplex.Applications.SwitchConfiguration.html">Duplex.Applications.SwitchConfiguration</a></li>
+  <li><a href="../modules/Duplex.Applications.TestPad.html">Duplex.Applications.TestPad</a></li>
   <li><a href="../modules/Duplex.Applications.TrackSelector.html">Duplex.Applications.TrackSelector</a></li>
   <li><a href="../modules/Duplex.Applications.Transport.html">Duplex.Applications.Transport</a></li>
   <li><a href="../modules/Duplex.Applications.XYPad.html">Duplex.Applications.XYPad</a></li>
@@ -70,6 +71,7 @@
   <li><a href="../modules/Duplex.Browser.html">Duplex.Browser</a></li>
   <li><a href="../modules/Duplex.BrowserProcess.html">Duplex.BrowserProcess</a></li>
   <li><a href="../modules/Duplex.Canvas.html">Duplex.Canvas</a></li>
+  <li><a href="../modules/Duplex.CanvasPoint.html">Duplex.CanvasPoint</a></li>
   <li><a href="../modules/Duplex.ControlMap.html">Duplex.ControlMap</a></li>
   <li><a href="../modules/Duplex.Device.html">Duplex.Device</a></li>
   <li><a href="../modules/Duplex.Display.html">Duplex.Display</a></li>
@@ -94,6 +96,8 @@
   <li><a href="../modules/Duplex.UIPitchBend.html">Duplex.UIPitchBend</a></li>
   <li><a href="../modules/Duplex.UISlider.html">Duplex.UISlider</a></li>
   <li><a href="../modules/Duplex.UISpinner.html">Duplex.UISpinner</a></li>
+  <li><a href="../modules/Duplex.WidgetHooks.html">Duplex.WidgetHooks</a></li>
+  <li><a href="../modules/Duplex.WidgetKeyboard.html">Duplex.WidgetKeyboard</a></li>
   <li><a href="../modules/Duplex.html">Duplex</a></li>
   <li><a href="../modules/main.html">main</a></li>
 </ul>
@@ -103,10 +107,10 @@
 <div id="content">
 
 <h1>Module <code>Duplex.RoamingDSP</code></h1>
-<p>Extend this class if you want an application to lock onto a specific type of device, or navigate between similar devices</p>
+<p>Extend this class if you want an application to lock onto a specific type of device, or navigate between similar devices.</p>
+<p>Inheritance: <a href="../modules/Duplex.Application.html#">Duplex.Application</a> > Duplex.RoamingDSP</p>
 
-<p>The application can target any device that has been selected in Renoise, freely roaming the tracks.</p>
-<p> If the lock button starts to blink slowly, it is to remind you that the application is currently 'homeless', has no matching device to control. </p>
+<p>The application can target any device that has been selected in Renoise, freely roaming the tracks. If the lock button starts to blink slowly, it is to remind you that the application is currently 'homeless', has no matching device to control. </p>
 
 <p>Opposite to the "free-roaming mode" we have the "locked mode" which will lock to a single device. The locked mode can either be set by being mapped to a button, or via the options dialog. In either case, the application will 'tag' the device with a unique name. </p>
 
@@ -126,8 +130,89 @@
 	<td class="summary">inherited from Application</td>
 	</tr>
 	<tr>
+	<td class="name" nowrap><a href="#initial_select">initial_select ()</a></td>
+	<td class="summary">this search is performed on application start
+ if not in locked mode: use the currently focused track->device
+ if we are in locked mode: recognize any locked devices, but fall back
+  to the focused track->device if no locked device was found</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#goto_previous_device">goto_previous_device ()</a></td>
+	<td class="summary">goto previous device
+ search from locked device (if available), otherwise use the selected device</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#goto_next_device">goto_next_device ()</a></td>
+	<td class="summary">goto next device
+ search from locked device (if available), otherwise use the selected device</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#search_previous_device">search_previous_device (track_index, device_index)</a></td>
+	<td class="summary">locate the prior device</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#search_next_device">search_next_device (track_index, device_index)</a></td>
+	<td class="summary">locate the next device</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#goto_device">goto_device (track_index, device_index, device, skip_tag)</a></td>
+	<td class="summary">attach to a device, transferring the 'tag' if needed
+ this is the final step of a "previous/next device" operation,
+ or called during the initial search</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#update_prev_next">update_prev_next (track_index, device_index)</a></td>
+	<td class="summary">update the lit state of the previous/next device buttons</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#do_device_search">do_device_search ()</a></td>
+	<td class="summary">look for a device that match the provided name
+ it is called right after the target device has been removed,
+ or by initial_select()</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#get_unique_name">get_unique_name ()</a></td>
+	<td class="summary">get the unique name of the device, as specified in options</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#device_is_valid">device_is_valid (device)</a></td>
+	<td class="summary">test if the device is a valid target</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#tag_device">tag_device (device)</a></td>
+	<td class="summary">tag device (add unique identifier), clearing existing one(s)</td>
+	</tr>
+	<tr>
 	<td class="name" nowrap><a href="#on_idle">on_idle ()</a></td>
 	<td class="summary">inherited from Application</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#get_selected_device">get_selected_device ()</a></td>
+	<td class="summary">return the currently focused track->device in Renoise</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#attach_to_selected_device">attach_to_selected_device ()</a></td>
+	<td class="summary">attempt to select the current device
+ failing to do so will clear the target device</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#attach_to_device">attach_to_device (track_idx, device_idx, device)</a></td>
+	<td class="summary">attach notifier to the device
+ called when we use previous/next device, set the initial device
+ or are freely roaming the tracks</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#_attach_to_track_devices">_attach_to_track_devices (track)</a></td>
+	<td class="summary">keep track of devices (insert,remove,swap...)
+ invoked by <code>attach<em>to</em>device()</code></td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#follow_device_pos">follow_device_pos ()</a></td>
+	<td class="summary">select track + device, but only when follow_pos is enabled</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#update_lock_button">update_lock_button ()</a></td>
+	<td class="summary">update the state of the lock button</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#_build_app">_build_app ()</a></td>
@@ -141,6 +226,22 @@
 	<td class="name" nowrap><a href="#on_release_document">on_release_document ()</a></td>
 	<td class="summary">inherited from Application</td>
 	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#clear_device">clear_device ()</a></td>
+	<td class="summary">de-attach from the device</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#_update_record_mode">_update_record_mode ()</a></td>
+	<td class="summary">update the record mode (when editmode or record_method has changed)</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#_attach_to_song">_attach_to_song ()</a></td>
+	<td class="summary">attach notifier to the song, handle changes</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#_remove_notifiers">_remove_notifiers (observables)</a></td>
+	<td class="summary">"brute force" removal of registered notifiers</td>
+	</tr>
 </table>
 <h2><a href="#Tables">Tables</a></h2>
 <table class="function_list">
@@ -151,6 +252,46 @@
 	<tr>
 	<td class="name" nowrap><a href="#available_mappings">available_mappings</a></td>
 	<td class="summary">Mappings</td>
+	</tr>
+</table>
+<h2><a href="#Fields">Fields</a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#self.automation">self.automation</a></td>
+	<td class="summary">(<a href="../modules/Duplex.Automation.html#">Duplex.Automation</a>) used for recording movements</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#self._record_mode">self._record_mode</a></td>
+	<td class="summary">(bool) set while recording automation</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#self.target_device">self.target_device</a></td>
+	<td class="summary">(renoise.AudioDevice) the device we are currently controlling</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#self._blink">self._blink</a></td>
+	<td class="summary">(bool) current blink-state (lock button)</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#self.track_index">self.track_index</a></td>
+	<td class="summary">(int) the target track index</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#self.device_index">self.device_index</a></td>
+	<td class="summary">(int) the target device index</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#self.current_device_requested">self.current_device_requested</a></td>
+	<td class="summary">(bool), set when we should attempt to attach to
+ the current device (althought we might not succeed)</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#self._parameter_observables">self._parameter_observables</a></td>
+	<td class="summary">(table) list of observable parameters</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#self._device_observables">self._device_observables</a></td>
+	<td class="summary">(table) list of observable device parameters</td>
 	</tr>
 </table>
 
@@ -204,6 +345,253 @@
 
 </dd>
     <dt>
+    <a name = "initial_select"></a>
+    <strong>initial_select ()</strong>
+    </dt>
+    <dd>
+    this search is performed on application start
+ if not in locked mode: use the currently focused track->device
+ if we are in locked mode: recognize any locked devices, but fall back
+  to the focused track->device if no locked device was found
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "goto_previous_device"></a>
+    <strong>goto_previous_device ()</strong>
+    </dt>
+    <dd>
+    goto previous device
+ search from locked device (if available), otherwise use the selected device
+
+
+
+    <h3>Returns:</h3>
+    <ol>
+
+        bool
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "goto_next_device"></a>
+    <strong>goto_next_device ()</strong>
+    </dt>
+    <dd>
+    goto next device
+ search from locked device (if available), otherwise use the selected device
+
+
+
+    <h3>Returns:</h3>
+    <ol>
+
+        bool
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "search_previous_device"></a>
+    <strong>search_previous_device (track_index, device_index)</strong>
+    </dt>
+    <dd>
+    locate the prior device
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">track_index</span>
+         (int) start search from here
+        </li>
+        <li><span class="parameter">device_index</span>
+         (int) start search from here
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        table or nil
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "search_next_device"></a>
+    <strong>search_next_device (track_index, device_index)</strong>
+    </dt>
+    <dd>
+    locate the next device
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">track_index</span>
+         (int) start search from here
+        </li>
+        <li><span class="parameter">device_index</span>
+         (int) start search from here
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        table or nil
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "goto_device"></a>
+    <strong>goto_device (track_index, device_index, device, skip_tag)</strong>
+    </dt>
+    <dd>
+    attach to a device, transferring the 'tag' if needed
+ this is the final step of a "previous/next device" operation,
+ or called during the initial search
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">track_index</span>
+         (int) start search from here
+        </li>
+        <li><span class="parameter">device_index</span>
+         (int) start search from here
+        </li>
+        <li><span class="parameter">device</span>
+         (renoise.AudioDevice)
+        </li>
+        <li><span class="parameter">skip_tag</span>
+         (bool) don't tag device
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "update_prev_next"></a>
+    <strong>update_prev_next (track_index, device_index)</strong>
+    </dt>
+    <dd>
+    update the lit state of the previous/next device buttons
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">track_index</span>
+         (int)
+        </li>
+        <li><span class="parameter">device_index</span>
+         (int)
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "do_device_search"></a>
+    <strong>do_device_search ()</strong>
+    </dt>
+    <dd>
+    look for a device that match the provided name
+ it is called right after the target device has been removed,
+ or by initial_select()
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "get_unique_name"></a>
+    <strong>get_unique_name ()</strong>
+    </dt>
+    <dd>
+    get the unique name of the device, as specified in options
+
+
+
+    <h3>Returns:</h3>
+    <ol>
+
+        string
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "device_is_valid"></a>
+    <strong>device_is_valid (device)</strong>
+    </dt>
+    <dd>
+    test if the device is a valid target
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">device</span>
+         (renoise.AudioDevice)
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        bool
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "tag_device"></a>
+    <strong>tag_device (device)</strong>
+    </dt>
+    <dd>
+    tag device (add unique identifier), clearing existing one(s)
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">device</span>
+         (renoise.AudioDevice), leave out to simply clear
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
     <a name = "on_idle"></a>
     <strong>on_idle ()</strong>
     </dt>
@@ -218,6 +606,121 @@
     <ul>
          <a href="../modules/Duplex.Application.html#on_idle">Duplex.Application.on_idle</a>
     </ul>
+
+
+</dd>
+    <dt>
+    <a name = "get_selected_device"></a>
+    <strong>get_selected_device ()</strong>
+    </dt>
+    <dd>
+    return the currently focused track->device in Renoise
+
+
+
+    <h3>Returns:</h3>
+    <ol>
+
+        Device
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "attach_to_selected_device"></a>
+    <strong>attach_to_selected_device ()</strong>
+    </dt>
+    <dd>
+    attempt to select the current device
+ failing to do so will clear the target device
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "attach_to_device"></a>
+    <strong>attach_to_device (track_idx, device_idx, device)</strong>
+    </dt>
+    <dd>
+    attach notifier to the device
+ called when we use previous/next device, set the initial device
+ or are freely roaming the tracks
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">track_idx</span>
+
+
+
+        </li>
+        <li><span class="parameter">device_idx</span>
+
+
+
+        </li>
+        <li><span class="parameter">device</span>
+        clear the previous device references
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "_attach_to_track_devices"></a>
+    <strong>_attach_to_track_devices (track)</strong>
+    </dt>
+    <dd>
+    keep track of devices (insert,remove,swap...)
+ invoked by <code>attach<em>to</em>device()</code>
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">track</span>
+         (renoise.Track)
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "follow_device_pos"></a>
+    <strong>follow_device_pos ()</strong>
+    </dt>
+    <dd>
+    select track + device, but only when follow_pos is enabled
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "update_lock_button"></a>
+    <strong>update_lock_button ()</strong>
+    </dt>
+    <dd>
+    update the state of the lock button
+
+
+
+
+
 
 
 </dd>
@@ -280,6 +783,72 @@
 
 
 </dd>
+    <dt>
+    <a name = "clear_device"></a>
+    <strong>clear_device ()</strong>
+    </dt>
+    <dd>
+    de-attach from the device
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "_update_record_mode"></a>
+    <strong>_update_record_mode ()</strong>
+    </dt>
+    <dd>
+    update the record mode (when editmode or record_method has changed)
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "_attach_to_song"></a>
+    <strong>_attach_to_song ()</strong>
+    </dt>
+    <dd>
+    attach notifier to the song, handle changes
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "_remove_notifiers"></a>
+    <strong>_remove_notifiers (observables)</strong>
+    </dt>
+    <dd>
+    "brute force" removal of registered notifiers
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">observables</span>
+
+<ul>
+    <li>list of observables</li>
+</ul>
+
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
 </dl>
     <h2><a name="Tables"></a>Tables</h2>
     <dl class="function">
@@ -329,6 +898,136 @@
          used for locating a device across tracks
         </li>
     </ul>
+
+
+
+
+
+</dd>
+</dl>
+    <h2><a name="Fields"></a>Fields</h2>
+    <dl class="function">
+    <dt>
+    <a name = "self.automation"></a>
+    <strong>self.automation</strong>
+    </dt>
+    <dd>
+    (<a href="../modules/Duplex.Automation.html#">Duplex.Automation</a>) used for recording movements
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "self._record_mode"></a>
+    <strong>self._record_mode</strong>
+    </dt>
+    <dd>
+    (bool) set while recording automation
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "self.target_device"></a>
+    <strong>self.target_device</strong>
+    </dt>
+    <dd>
+    (renoise.AudioDevice) the device we are currently controlling
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "self._blink"></a>
+    <strong>self._blink</strong>
+    </dt>
+    <dd>
+    (bool) current blink-state (lock button)
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "self.track_index"></a>
+    <strong>self.track_index</strong>
+    </dt>
+    <dd>
+    (int) the target track index
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "self.device_index"></a>
+    <strong>self.device_index</strong>
+    </dt>
+    <dd>
+    (int) the target device index
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "self.current_device_requested"></a>
+    <strong>self.current_device_requested</strong>
+    </dt>
+    <dd>
+    (bool), set when we should attempt to attach to
+ the current device (althought we might not succeed)
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "self._parameter_observables"></a>
+    <strong>self._parameter_observables</strong>
+    </dt>
+    <dd>
+    (table) list of observable parameters
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "self._device_observables"></a>
+    <strong>self._device_observables</strong>
+    </dt>
+    <dd>
+    (table) list of observable device parameters
+
+
 
 
 

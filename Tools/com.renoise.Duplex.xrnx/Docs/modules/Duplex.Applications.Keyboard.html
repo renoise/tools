@@ -33,6 +33,7 @@
 <h2>Contents</h2>
 <ul>
 <li><a href="#Functions">Functions</a></li>
+<li><a href="#Tables">Tables</a></li>
 <li><a href="#Fields">Fields</a></li>
 </ul>
 
@@ -55,7 +56,6 @@
   <li><a href="../modules/Duplex.Applications.Mlrx.Mlrx_track.html">Duplex.Applications.Mlrx.Mlrx_track</a></li>
   <li><a href="../modules/Duplex.Applications.Mlrx.html">Duplex.Applications.Mlrx</a></li>
   <li><a href="../modules/Duplex.Applications.Navigator.html">Duplex.Applications.Navigator</a></li>
-  <li><a href="../modules/Duplex.Applications.NoComponent.html">Duplex.Applications.NoComponent</a></li>
   <li><a href="../modules/Duplex.Applications.NotesOnWheels.html">Duplex.Applications.NotesOnWheels</a></li>
   <li><a href="../modules/Duplex.Applications.PatternSequence.html">Duplex.Applications.PatternSequence</a></li>
   <li><a href="../modules/Duplex.Applications.Recorder.html">Duplex.Applications.Recorder</a></li>
@@ -63,6 +63,7 @@
   <li><a href="../modules/Duplex.Applications.Rotate.html">Duplex.Applications.Rotate</a></li>
   <li><a href="../modules/Duplex.Applications.StepSequencer.html">Duplex.Applications.StepSequencer</a></li>
   <li><a href="../modules/Duplex.Applications.SwitchConfiguration.html">Duplex.Applications.SwitchConfiguration</a></li>
+  <li><a href="../modules/Duplex.Applications.TestPad.html">Duplex.Applications.TestPad</a></li>
   <li><a href="../modules/Duplex.Applications.TrackSelector.html">Duplex.Applications.TrackSelector</a></li>
   <li><a href="../modules/Duplex.Applications.Transport.html">Duplex.Applications.Transport</a></li>
   <li><a href="../modules/Duplex.Applications.XYPad.html">Duplex.Applications.XYPad</a></li>
@@ -70,6 +71,7 @@
   <li><a href="../modules/Duplex.Browser.html">Duplex.Browser</a></li>
   <li><a href="../modules/Duplex.BrowserProcess.html">Duplex.BrowserProcess</a></li>
   <li><a href="../modules/Duplex.Canvas.html">Duplex.Canvas</a></li>
+  <li><a href="../modules/Duplex.CanvasPoint.html">Duplex.CanvasPoint</a></li>
   <li><a href="../modules/Duplex.ControlMap.html">Duplex.ControlMap</a></li>
   <li><a href="../modules/Duplex.Device.html">Duplex.Device</a></li>
   <li><a href="../modules/Duplex.Display.html">Duplex.Display</a></li>
@@ -94,6 +96,8 @@
   <li><a href="../modules/Duplex.UIPitchBend.html">Duplex.UIPitchBend</a></li>
   <li><a href="../modules/Duplex.UISlider.html">Duplex.UISlider</a></li>
   <li><a href="../modules/Duplex.UISpinner.html">Duplex.UISpinner</a></li>
+  <li><a href="../modules/Duplex.WidgetHooks.html">Duplex.WidgetHooks</a></li>
+  <li><a href="../modules/Duplex.WidgetKeyboard.html">Duplex.WidgetKeyboard</a></li>
   <li><a href="../modules/Duplex.html">Duplex</a></li>
   <li><a href="../modules/main.html">main</a></li>
 </ul>
@@ -104,8 +108,7 @@
 
 <h1>Module <code>Duplex.Applications.Keyboard</code></h1>
 <p>A replacement of the standard Renoise keyboard, supporting for MIDI and OSC.</p>
-<p>
-
+<p>Inheritance: <a href="../modules/Duplex.Application.html#">Duplex.Application</a> > Duplex.Application.Keyboard </p>
 
 <h3>Features</h3>
 
@@ -141,10 +144,12 @@ The default setting is identical to the standard behaviour in Renoise, and simpl
 
 <h3>Changes</h3>
 
+<p>  0.99</p>
+<pre><code>- Adapted to UIKey changes
+- New mapping: mod_wheel
+</code></pre>
+
 <p>  0.98 - First release </p>
-
-
-</p>
 
 
 <h2><a href="#Functions">Functions</a></h2>
@@ -276,13 +281,15 @@ The default setting is identical to the standard behaviour in Renoise, and simpl
 	<td class="summary">brute force method for removing observables</td>
 	</tr>
 </table>
-<h2><a href="#Fields">Fields</a></h2>
+<h2><a href="#Tables">Tables</a></h2>
 <table class="function_list">
 	<tr>
-	<td class="name" nowrap><a href="#self._process">self._process</a></td>
-	<td class="summary">reference to BrowserProcess
- (access the internal OSC server, modify options in realtime)</td>
+	<td class="name" nowrap><a href="#self._controls">self._controls</a></td>
+	<td class="summary">the various UIComponents</td>
 	</tr>
+</table>
+<h2><a href="#Fields">Fields</a></h2>
+<table class="function_list">
 	<tr>
 	<td class="name" nowrap><a href="#self.curr_octave">self.curr_octave</a></td>
 	<td class="summary">octave</td>
@@ -306,10 +313,6 @@ The default setting is identical to the standard behaviour in Renoise, and simpl
 	<tr>
 	<td class="name" nowrap><a href="#self.upper_note">self.upper_note</a></td>
 	<td class="summary">upper note</td>
-	</tr>
-	<tr>
-	<td class="name" nowrap><a href="#self._grid">self._grid</a></td>
-	<td class="summary">the various UIComponents</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#self._key_args">self._key_args</a></td>
@@ -884,15 +887,14 @@ The default setting is identical to the standard behaviour in Renoise, and simpl
 
 </dd>
 </dl>
-    <h2><a name="Fields"></a>Fields</h2>
+    <h2><a name="Tables"></a>Tables</h2>
     <dl class="function">
     <dt>
-    <a name = "self._process"></a>
-    <strong>self._process</strong>
+    <a name = "self._controls"></a>
+    <strong>self._controls</strong>
     </dt>
     <dd>
-    reference to BrowserProcess
- (access the internal OSC server, modify options in realtime)
+    the various UIComponents
 
 
 
@@ -901,6 +903,9 @@ The default setting is identical to the standard behaviour in Renoise, and simpl
 
 
 </dd>
+</dl>
+    <h2><a name="Fields"></a>Fields</h2>
+    <dl class="function">
     <dt>
     <a name = "self.curr_octave"></a>
     <strong>self.curr_octave</strong>
@@ -977,20 +982,6 @@ The default setting is identical to the standard behaviour in Renoise, and simpl
     </dt>
     <dd>
     upper note
-
-
-
-
-
-
-
-</dd>
-    <dt>
-    <a name = "self._grid"></a>
-    <strong>self._grid</strong>
-    </dt>
-    <dd>
-    the various UIComponents
 
 
 

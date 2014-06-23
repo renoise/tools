@@ -55,7 +55,6 @@
   <li><a href="../modules/Duplex.Applications.Mlrx.Mlrx_track.html">Duplex.Applications.Mlrx.Mlrx_track</a></li>
   <li><a href="../modules/Duplex.Applications.Mlrx.html">Duplex.Applications.Mlrx</a></li>
   <li><a href="../modules/Duplex.Applications.Navigator.html">Duplex.Applications.Navigator</a></li>
-  <li><a href="../modules/Duplex.Applications.NoComponent.html">Duplex.Applications.NoComponent</a></li>
   <li><a href="../modules/Duplex.Applications.NotesOnWheels.html">Duplex.Applications.NotesOnWheels</a></li>
   <li><a href="../modules/Duplex.Applications.PatternSequence.html">Duplex.Applications.PatternSequence</a></li>
   <li><a href="../modules/Duplex.Applications.Recorder.html">Duplex.Applications.Recorder</a></li>
@@ -63,6 +62,7 @@
   <li><a href="../modules/Duplex.Applications.Rotate.html">Duplex.Applications.Rotate</a></li>
   <li><a href="../modules/Duplex.Applications.StepSequencer.html">Duplex.Applications.StepSequencer</a></li>
   <li><a href="../modules/Duplex.Applications.SwitchConfiguration.html">Duplex.Applications.SwitchConfiguration</a></li>
+  <li><a href="../modules/Duplex.Applications.TestPad.html">Duplex.Applications.TestPad</a></li>
   <li><a href="../modules/Duplex.Applications.TrackSelector.html">Duplex.Applications.TrackSelector</a></li>
   <li><a href="../modules/Duplex.Applications.Transport.html">Duplex.Applications.Transport</a></li>
   <li><a href="../modules/Duplex.Applications.XYPad.html">Duplex.Applications.XYPad</a></li>
@@ -70,6 +70,7 @@
   <li><strong>Duplex.Browser</strong></li>
   <li><a href="../modules/Duplex.BrowserProcess.html">Duplex.BrowserProcess</a></li>
   <li><a href="../modules/Duplex.Canvas.html">Duplex.Canvas</a></li>
+  <li><a href="../modules/Duplex.CanvasPoint.html">Duplex.CanvasPoint</a></li>
   <li><a href="../modules/Duplex.ControlMap.html">Duplex.ControlMap</a></li>
   <li><a href="../modules/Duplex.Device.html">Duplex.Device</a></li>
   <li><a href="../modules/Duplex.Display.html">Duplex.Display</a></li>
@@ -94,6 +95,8 @@
   <li><a href="../modules/Duplex.UIPitchBend.html">Duplex.UIPitchBend</a></li>
   <li><a href="../modules/Duplex.UISlider.html">Duplex.UISlider</a></li>
   <li><a href="../modules/Duplex.UISpinner.html">Duplex.UISpinner</a></li>
+  <li><a href="../modules/Duplex.WidgetHooks.html">Duplex.WidgetHooks</a></li>
+  <li><a href="../modules/Duplex.WidgetKeyboard.html">Duplex.WidgetKeyboard</a></li>
   <li><a href="../modules/Duplex.html">Duplex</a></li>
   <li><a href="../modules/main.html">main</a></li>
 </ul>
@@ -285,51 +288,51 @@
 <table class="function_list">
 	<tr>
 	<td class="name" nowrap><a href="#self._available_configurations">self._available_configurations</a></td>
-	<td class="summary">list of duplex device configuration definitions</td>
+	<td class="summary">(table) list of duplex device configuration definitions</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#self._processes">self._processes</a></td>
-	<td class="summary">processes is a table containing BrowserProcess processes</td>
+	<td class="summary">(table) a table containing BrowserProcess processes</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#self._device_name">self._device_name</a></td>
-	<td class="summary">string, selected device display-name</td>
+	<td class="summary">(string) selected device display-name</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#self._configuration_name">self._configuration_name</a></td>
-	<td class="summary">string, selected configuration for the current device</td>
+	<td class="summary">(string) selected configuration for the current device</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#self._dump_midi">self._dump_midi</a></td>
-	<td class="summary">dump midi information to console (debug option)</td>
+	<td class="summary">(bool) dump midi information to console (debug option)</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#self._suppress_notifiers">self._suppress_notifiers</a></td>
-	<td class="summary">true while updating the GUI from within the internal browser functions,
+	<td class="summary">(bool) true while updating the GUI from within the internal browser functions,
  to avoid doubling updates when the changes are not fired from the GUI</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#self._requested_device">self._requested_device</a></td>
-	<td class="summary">set when we temporarily have selected "None" as device,
+	<td class="summary">(string) set when we temporarily have selected "None" as device,
  and want to revert the list choice</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#self._osc_client">self._osc_client</a></td>
-	<td class="summary">the OSC client takes care of sending internally routed notes
+	<td class="summary">(<a href="../modules/Duplex.OscClient.html#">Duplex.OscClient</a>) takes care of sending internally routed notes
  to Renoise (not created if host/port is not defined)</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#self._voice_mgr">self._voice_mgr</a></td>
-	<td class="summary">the voice manager is handling triggered note messages
+	<td class="summary">(<a href="../modules/Duplex.OscVoiceMgr.html#">Duplex.OscVoiceMgr</a>) the voice manager is handling triggered note messages
  (needs the osc_client)</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#self._vb">self._vb</a></td>
-	<td class="summary">view builder that we do use for all our views</td>
+	<td class="summary">(renoise.ViewBuilder) viewbuilder for all our views</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#self._dialog">self._dialog</a></td>
-	<td class="summary">referenc eto the main dialog that we create</td>
+	<td class="summary">(renoise.Dialog) referenc to the main dialog</td>
 	</tr>
 </table>
 
@@ -1094,12 +1097,16 @@
     <strong>self._available_configurations</strong>
     </dt>
     <dd>
-    list of duplex device configuration definitions
+    (table) list of duplex device configuration definitions
 
 
 
 
 
+    <h3>See also:</h3>
+    <ul>
+         <a href="../modules/Duplex.Preferences.html#">Duplex.Preferences</a>
+    </ul>
 
 
 </dd>
@@ -1108,7 +1115,7 @@
     <strong>self._processes</strong>
     </dt>
     <dd>
-    processes is a table containing BrowserProcess processes
+    (table) a table containing BrowserProcess processes
 
 
 
@@ -1122,7 +1129,7 @@
     <strong>self._device_name</strong>
     </dt>
     <dd>
-    string, selected device display-name
+    (string) selected device display-name
 
 
 
@@ -1136,7 +1143,7 @@
     <strong>self._configuration_name</strong>
     </dt>
     <dd>
-    string, selected configuration for the current device
+    (string) selected configuration for the current device
 
 
 
@@ -1150,7 +1157,7 @@
     <strong>self._dump_midi</strong>
     </dt>
     <dd>
-    dump midi information to console (debug option)
+    (bool) dump midi information to console (debug option)
 
 
 
@@ -1164,7 +1171,7 @@
     <strong>self._suppress_notifiers</strong>
     </dt>
     <dd>
-    true while updating the GUI from within the internal browser functions,
+    (bool) true while updating the GUI from within the internal browser functions,
  to avoid doubling updates when the changes are not fired from the GUI
 
 
@@ -1179,7 +1186,7 @@
     <strong>self._requested_device</strong>
     </dt>
     <dd>
-    set when we temporarily have selected "None" as device,
+    (string) set when we temporarily have selected "None" as device,
  and want to revert the list choice
 
 
@@ -1194,7 +1201,7 @@
     <strong>self._osc_client</strong>
     </dt>
     <dd>
-    the OSC client takes care of sending internally routed notes
+    (<a href="../modules/Duplex.OscClient.html#">Duplex.OscClient</a>) takes care of sending internally routed notes
  to Renoise (not created if host/port is not defined)
 
 
@@ -1209,7 +1216,7 @@
     <strong>self._voice_mgr</strong>
     </dt>
     <dd>
-    the voice manager is handling triggered note messages
+    (<a href="../modules/Duplex.OscVoiceMgr.html#">Duplex.OscVoiceMgr</a>) the voice manager is handling triggered note messages
  (needs the osc_client)
 
 
@@ -1224,7 +1231,7 @@
     <strong>self._vb</strong>
     </dt>
     <dd>
-    view builder that we do use for all our views
+    (renoise.ViewBuilder) viewbuilder for all our views
 
 
 
@@ -1238,7 +1245,7 @@
     <strong>self._dialog</strong>
     </dt>
     <dd>
-    referenc eto the main dialog that we create
+    (renoise.Dialog) referenc to the main dialog
 
 
 

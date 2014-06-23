@@ -56,7 +56,6 @@
   <li><a href="../modules/Duplex.Applications.Mlrx.Mlrx_track.html">Duplex.Applications.Mlrx.Mlrx_track</a></li>
   <li><a href="../modules/Duplex.Applications.Mlrx.html">Duplex.Applications.Mlrx</a></li>
   <li><a href="../modules/Duplex.Applications.Navigator.html">Duplex.Applications.Navigator</a></li>
-  <li><a href="../modules/Duplex.Applications.NoComponent.html">Duplex.Applications.NoComponent</a></li>
   <li><a href="../modules/Duplex.Applications.NotesOnWheels.html">Duplex.Applications.NotesOnWheels</a></li>
   <li><a href="../modules/Duplex.Applications.PatternSequence.html">Duplex.Applications.PatternSequence</a></li>
   <li><a href="../modules/Duplex.Applications.Recorder.html">Duplex.Applications.Recorder</a></li>
@@ -64,6 +63,7 @@
   <li><a href="../modules/Duplex.Applications.Rotate.html">Duplex.Applications.Rotate</a></li>
   <li><a href="../modules/Duplex.Applications.StepSequencer.html">Duplex.Applications.StepSequencer</a></li>
   <li><a href="../modules/Duplex.Applications.SwitchConfiguration.html">Duplex.Applications.SwitchConfiguration</a></li>
+  <li><a href="../modules/Duplex.Applications.TestPad.html">Duplex.Applications.TestPad</a></li>
   <li><a href="../modules/Duplex.Applications.TrackSelector.html">Duplex.Applications.TrackSelector</a></li>
   <li><a href="../modules/Duplex.Applications.Transport.html">Duplex.Applications.Transport</a></li>
   <li><a href="../modules/Duplex.Applications.XYPad.html">Duplex.Applications.XYPad</a></li>
@@ -71,6 +71,7 @@
   <li><a href="../modules/Duplex.Browser.html">Duplex.Browser</a></li>
   <li><a href="../modules/Duplex.BrowserProcess.html">Duplex.BrowserProcess</a></li>
   <li><a href="../modules/Duplex.Canvas.html">Duplex.Canvas</a></li>
+  <li><a href="../modules/Duplex.CanvasPoint.html">Duplex.CanvasPoint</a></li>
   <li><a href="../modules/Duplex.ControlMap.html">Duplex.ControlMap</a></li>
   <li><a href="../modules/Duplex.Device.html">Duplex.Device</a></li>
   <li><a href="../modules/Duplex.Display.html">Duplex.Display</a></li>
@@ -95,6 +96,8 @@
   <li><a href="../modules/Duplex.UIPitchBend.html">Duplex.UIPitchBend</a></li>
   <li><a href="../modules/Duplex.UISlider.html">Duplex.UISlider</a></li>
   <li><a href="../modules/Duplex.UISpinner.html">Duplex.UISpinner</a></li>
+  <li><a href="../modules/Duplex.WidgetHooks.html">Duplex.WidgetHooks</a></li>
+  <li><a href="../modules/Duplex.WidgetKeyboard.html">Duplex.WidgetKeyboard</a></li>
   <li><a href="../modules/Duplex.html">Duplex</a></li>
   <li><a href="../modules/main.html">main</a></li>
 </ul>
@@ -212,10 +215,8 @@
  (with a range of 0-127, a value of 150 will output 22</td>
 	</tr>
 	<tr>
-	<td class="name" nowrap><a href="#scale_value">scale_value (value, low_val, high_val, min_val, max_val)</a></td>
-	<td class="summary">scale_value: scale a value to a range within a range
- for example, we could have a range of 0-127, and want
- to distribute the numbers 1-8 evenly across that range</td>
+	<td class="name" nowrap><a href="#scale_value">scale_value (value, in_min, in_max, out_min, out_max)</a></td>
+	<td class="summary">scale_value: scale a value to a range within a range</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#log_scale">log_scale (ceiling, val)</a></td>
@@ -283,11 +284,11 @@
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#DEVICE_EVENT">DEVICE_EVENT</a></td>
-	<td class="summary">(Enum)</td>
+	<td class="summary">(Enum) the type of event (pressed, held etc.)</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#INPUT_TYPE">INPUT_TYPE</a></td>
-	<td class="summary">(Enum) valid attributes for <code>param</code> nodes in the control-map</td>
+	<td class="summary">(Enum) valid <a href="http://www.lua.org/manual/5.1/manual.html#pdf-type">type</a>  attributes for control-map params</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#ORIENTATION">ORIENTATION</a></td>
@@ -890,12 +891,10 @@
 </dd>
     <dt>
     <a name = "scale_value"></a>
-    <strong>scale_value (value, low_val, high_val, min_val, max_val)</strong>
+    <strong>scale_value (value, in_min, in_max, out_min, out_max)</strong>
     </dt>
     <dd>
     scale_value: scale a value to a range within a range
- for example, we could have a range of 0-127, and want
- to distribute the numbers 1-8 evenly across that range
 
 
     <h3>Parameters:</h3>
@@ -903,20 +902,25 @@
         <li><span class="parameter">value</span>
          (number) the value we wish to scale
         </li>
-        <li><span class="parameter">low_val</span>
-         (number) the lowest value in 'our' range
+        <li><span class="parameter">in_min</span>
+         (number)
         </li>
-        <li><span class="parameter">high_val</span>
-         (number) the highest value in 'our' range
+        <li><span class="parameter">in_max</span>
+         (number)
         </li>
-        <li><span class="parameter">min_val</span>
-         (number) the lowest possible value
+        <li><span class="parameter">out_min</span>
+         (number)
         </li>
-        <li><span class="parameter">max_val</span>
-         (number) the highest possible value
+        <li><span class="parameter">out_max</span>
+         (number)
         </li>
     </ul>
 
+    <h3>Returns:</h3>
+    <ol>
+
+        number
+    </ol>
 
 
 
@@ -1349,7 +1353,7 @@
     <strong>DEVICE_EVENT</strong>
     </dt>
     <dd>
-    (Enum)
+    (Enum) the type of event (pressed, held etc.)
 
 
     <h3>Fields:</h3>
@@ -1393,36 +1397,36 @@
     <strong>INPUT_TYPE</strong>
     </dt>
     <dd>
-    (Enum) valid attributes for <code>param</code> nodes in the control-map
+    (Enum) valid <a href="http://www.lua.org/manual/5.1/manual.html#pdf-type">type</a>  attributes for control-map params
 
 
     <h3>Fields:</h3>
     <ul>
-        <li><span class="parameter">BUTTON</span>
+        <li><span class="parameter">button</span>
         standard bidirectional button which output a value on press &amp; release, but does not control it's internal state
         </li>
-        <li><span class="parameter">TOGGLEBUTTON</span>
+        <li><span class="parameter">togglebutton</span>
         bidirectional button which toggles the state internally - this type of control does not support release &amp; hold events (examples are buttons on the BCF/BCR controller)
         </li>
-        <li><span class="parameter">PUSHBUTTON</span>
-        bidirectional button which will output values on press &amp; release while controlling it's state internally. Some examples are Automap "momentary" buttons, or TouchOSC pushbuttons ENCODER = 4,          -- relative/endless encoder
+        <li><span class="parameter">pushbutton</span>
+        bidirectional button which will output values on press &amp; release while controlling it's state internally. Some examples are Automap "momentary" buttons, or TouchOSC pushbuttons
         </li>
-        <li><span class="parameter">FADER</span>
+        <li><span class="parameter">fader</span>
         manual fader
         </li>
-        <li><span class="parameter">DIAL</span>
+        <li><span class="parameter">dial</span>
         basic rotary encoder
         </li>
-        <li><span class="parameter">XYPAD</span>
+        <li><span class="parameter">xypad</span>
         XY pad
         </li>
-        <li><span class="parameter">KEYBOARD</span>
+        <li><span class="parameter">keyboard</span>
         keyboard
         </li>
-        <li><span class="parameter">KEY</span>
+        <li><span class="parameter">key</span>
         key (drum-pad)
         </li>
-        <li><span class="parameter">LABEL</span>
+        <li><span class="parameter">label</span>
         text display
         </li>
     </ul>

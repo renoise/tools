@@ -56,7 +56,6 @@
   <li><a href="../modules/Duplex.Applications.Mlrx.Mlrx_track.html">Duplex.Applications.Mlrx.Mlrx_track</a></li>
   <li><a href="../modules/Duplex.Applications.Mlrx.html">Duplex.Applications.Mlrx</a></li>
   <li><a href="../modules/Duplex.Applications.Navigator.html">Duplex.Applications.Navigator</a></li>
-  <li><a href="../modules/Duplex.Applications.NoComponent.html">Duplex.Applications.NoComponent</a></li>
   <li><a href="../modules/Duplex.Applications.NotesOnWheels.html">Duplex.Applications.NotesOnWheels</a></li>
   <li><a href="../modules/Duplex.Applications.PatternSequence.html">Duplex.Applications.PatternSequence</a></li>
   <li><a href="../modules/Duplex.Applications.Recorder.html">Duplex.Applications.Recorder</a></li>
@@ -64,6 +63,7 @@
   <li><a href="../modules/Duplex.Applications.Rotate.html">Duplex.Applications.Rotate</a></li>
   <li><a href="../modules/Duplex.Applications.StepSequencer.html">Duplex.Applications.StepSequencer</a></li>
   <li><a href="../modules/Duplex.Applications.SwitchConfiguration.html">Duplex.Applications.SwitchConfiguration</a></li>
+  <li><a href="../modules/Duplex.Applications.TestPad.html">Duplex.Applications.TestPad</a></li>
   <li><a href="../modules/Duplex.Applications.TrackSelector.html">Duplex.Applications.TrackSelector</a></li>
   <li><a href="../modules/Duplex.Applications.Transport.html">Duplex.Applications.Transport</a></li>
   <li><a href="../modules/Duplex.Applications.XYPad.html">Duplex.Applications.XYPad</a></li>
@@ -71,6 +71,7 @@
   <li><a href="../modules/Duplex.Browser.html">Duplex.Browser</a></li>
   <li><a href="../modules/Duplex.BrowserProcess.html">Duplex.BrowserProcess</a></li>
   <li><a href="../modules/Duplex.Canvas.html">Duplex.Canvas</a></li>
+  <li><a href="../modules/Duplex.CanvasPoint.html">Duplex.CanvasPoint</a></li>
   <li><a href="../modules/Duplex.ControlMap.html">Duplex.ControlMap</a></li>
   <li><a href="../modules/Duplex.Device.html">Duplex.Device</a></li>
   <li><a href="../modules/Duplex.Display.html">Duplex.Display</a></li>
@@ -95,6 +96,8 @@
   <li><a href="../modules/Duplex.UIPitchBend.html">Duplex.UIPitchBend</a></li>
   <li><strong>Duplex.UISlider</strong></li>
   <li><a href="../modules/Duplex.UISpinner.html">Duplex.UISpinner</a></li>
+  <li><a href="../modules/Duplex.WidgetHooks.html">Duplex.WidgetHooks</a></li>
+  <li><a href="../modules/Duplex.WidgetKeyboard.html">Duplex.WidgetKeyboard</a></li>
   <li><a href="../modules/Duplex.html">Duplex</a></li>
   <li><a href="../modules/main.html">main</a></li>
 </ul>
@@ -105,13 +108,53 @@
 
 <h1>Module <code>Duplex.UISlider</code></h1>
 <p>The Slider supports different input methods: buttons or faders/dials</p>
+
+
+<h3>Dial mode / fader mode</h3>
+
+<p>  In most cases, you would specify a UISlider to take control of either a dial/encoder or fader.</p>
 <p>
+<p> </p>
+
+<pre><code> _    _______
+| |  |xxxx   | &lt;- UISlider, mapped to horizontally aligned fader
+| |   ¯¯¯¯¯¯¯  &lt;- UISlider, mapped to vertically aligned fader
+|x|   _
+|x|  ( )       &lt;- UISlider mapped to "dial"
+ ¯    ¯
+</code></pre>
+
+<p>  Specify an "on_change" function to handle events from the slider. </p>
+
+
+<h3>Button mode</h3>
+
+<p>  In button mode, each value-step of the slider is assigned to a separate button. The size of the resulting slider is determined by the size you specify when creating the slider (or, by using the set_size() after the slider has been created). </p>
+<pre><code> _    _______
+|_|  |x|x|x| | &lt;- horizontally aligned UISlider (mapped to 4 buttons)
+|_|   ¯¯¯¯¯¯¯  &lt;- vertically aligned UISlider (mapped to 4 buttons)
+|x|   _
+|x|  | |       &lt;- single-button UISlider (toggles min/max value)
+ ¯    ¯
+</code></pre>
+
+<p>  To map a slider onto button(s), you must also specify an "on_press" event handler. The method does not have to do anything special, but without it,
+  the slider will never receive any events from the device. </p>
+
+<p>  In "button mode", you also have an additional property called "toggleable". Setting this to true will enable you to toggle off any active button, and thus gain an extra value-step from any series of buttons. </p>
+
+<h3>Other features</h3>
+
 <ul>
-    <li>use multiple buttons to divide the value into discrete steps</li>
-    <li>built-in quantize for MIDI devices (only output when 7bit values change)</li>
-    <li>supports ORIENTATION.HORIZONTAL/vertical orientation and axis flipping</li>
-    <li>display as normal/dimmed version (if supported in hardware)</li>
+    <li>Built-in quantize for MIDI devices (only output when 7bit values change)</li>
+    <li>Built-in support for relative encoder/dials. Note that the type of relative encoder is specified in your control-map</li>
 </ul>
+
+<h3>Changelog</h3>
+
+<p>  0.99</p>
+<pre><code>- Got rid of "dimmed" method (just call set_palette instead)
+</code></pre>
 
 </p>
 
@@ -119,7 +162,7 @@
 <h2><a href="#Functions">Functions</a></h2>
 <table class="function_list">
 	<tr>
-	<td class="name" nowrap><a href="#__init">__init (app)</a></td>
+	<td class="name" nowrap><a href="#__init">__init (app, map)</a></td>
 	<td class="summary">Initialize the UISlider class</td>
 	</tr>
 	<tr>
@@ -132,12 +175,12 @@
  set index + precise value within the index</td>
 	</tr>
 	<tr>
-	<td class="name" nowrap><a href="#set_value">set_value (val, skip_event)</a></td>
-	<td class="summary">Set the value (will also update the index)</td>
-	</tr>
-	<tr>
 	<td class="name" nowrap><a href="#output_quantize">output_quantize (val)</a></td>
 	<td class="summary">Check if parameter-quantization is in force</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#set_value">set_value (val, skip_event)</a></td>
+	<td class="summary">Set the value (will also update the index)</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#set_index">set_index (idx, skip_event)</a></td>
@@ -145,11 +188,8 @@
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#force_update">force_update ()</a></td>
-	<td class="summary">Force-update controls that are handling their internal state by themselves</td>
-	</tr>
-	<tr>
-	<td class="name" nowrap><a href="#set_dimmed">set_dimmed (bool)</a></td>
-	<td class="summary">Display the slider as "dimmed" (use alternative palette)</td>
+	<td class="summary">Force-update controls that are handling their internal state by themselves
+ (only relevant when assigned to buttons)</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#set_orientation">set_orientation (value)</a></td>
@@ -173,6 +213,10 @@
 	<td class="summary">Update the appearance - inherited from UIComponent</td>
 	</tr>
 	<tr>
+	<td class="name" nowrap><a href="#set_pos">set_pos (x, y)</a></td>
+	<td class="summary">Set the position using x/y or index within group</td>
+	</tr>
+	<tr>
 	<td class="name" nowrap><a href="#add_listeners">add_listeners ()</a></td>
 	<td class="summary">
 <p>Add event listeners</p>
@@ -193,16 +237,24 @@ DEVICE_EVENT.VALUE_CHANGED
 	<td class="name" nowrap><a href="#_invoke_handler">_invoke_handler ()</a></td>
 	<td class="summary">Trigger the external handler method</td>
 	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#_detect_button_mode">_detect_button_mode ()</a></td>
+	<td class="summary">Detect if the control is assigned to button widget(s)</td>
+	</tr>
 </table>
 <h2><a href="#Tables">Tables</a></h2>
 <table class="function_list">
 	<tr>
 	<td class="name" nowrap><a href="#palette">palette</a></td>
-	<td class="summary">default palette</td>
+	<td class="summary">default palette (only relevant for button mode)</td>
 	</tr>
 </table>
 <h2><a href="#Fields">Fields</a></h2>
 <table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#self._button_mode">self._button_mode</a></td>
+	<td class="summary">(bool) this flag indicates that input method is a button</td>
+	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#self.value">self.value</a></td>
 	<td class="summary">current value, between 0 and .ceiling</td>
@@ -222,19 +274,6 @@ DEVICE_EVENT.VALUE_CHANGED
  only applies when input method is a button</td>
 	</tr>
 	<tr>
-	<td class="name" nowrap><a href="#self.dimmed">self.dimmed</a></td>
-	<td class="summary">(bool) paint a dimmed version
- only applies when input method is a button</td>
-	</tr>
-	<tr>
-	<td class="name" nowrap><a href="#self.button_mode">self.button_mode</a></td>
-	<td class="summary">(bool) set this mode to ensure that slider is always displayed
- correctly when using an array of buttons
- (normally, this is not a problem, but when a slider is
- resized to a single unit, this is the only way it will be
- able to tell that it's a button)</td>
-	</tr>
-	<tr>
 	<td class="name" nowrap><a href="#self.flipped">self.flipped</a></td>
 	<td class="summary">(bool) flip top/bottom direction</td>
 	</tr>
@@ -244,8 +283,8 @@ DEVICE_EVENT.VALUE_CHANGED
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#self._size">self._size</a></td>
-	<td class="summary">(int) the 'physical' size, should always be 1 for dials/faders
- (use set_size() method to set this value)</td>
+	<td class="summary">(int) the size in units (can be > 1 when input method is a button)
+ (always call set_size() method to set this value)</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#self._cached_index">self._cached_index</a></td>
@@ -261,7 +300,7 @@ DEVICE_EVENT.VALUE_CHANGED
     <dl class="function">
     <dt>
     <a name = "__init"></a>
-    <strong>__init (app)</strong>
+    <strong>__init (app, map)</strong>
     </dt>
     <dd>
     Initialize the UISlider class
@@ -271,6 +310,9 @@ DEVICE_EVENT.VALUE_CHANGED
     <ul>
         <li><span class="parameter">app</span>
          (<a href="../modules/Duplex.Application.html#">Duplex.Application</a>)
+        </li>
+        <li><span class="parameter">map</span>
+        [opt] (table) mapping properties
         </li>
     </ul>
 
@@ -331,29 +373,6 @@ DEVICE_EVENT.VALUE_CHANGED
 
 </dd>
     <dt>
-    <a name = "set_value"></a>
-    <strong>set_value (val, skip_event)</strong>
-    </dt>
-    <dd>
-    Set the value (will also update the index)
-
-
-    <h3>Parameters:</h3>
-    <ul>
-        <li><span class="parameter">val</span>
-         (float), a number between 0 and .ceiling
-        </li>
-        <li><span class="parameter">skip_event</span>
-         (bool) skip event handler
-        </li>
-    </ul>
-
-
-
-
-
-</dd>
-    <dt>
     <a name = "output_quantize"></a>
     <strong>output_quantize (val)</strong>
     </dt>
@@ -373,6 +392,29 @@ DEVICE_EVENT.VALUE_CHANGED
 
         (bool) true when the message can pass, false when not
     </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "set_value"></a>
+    <strong>set_value (val, skip_event)</strong>
+    </dt>
+    <dd>
+    Set the value (will also update the index)
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">val</span>
+         (float), a number between 0 and .ceiling
+        </li>
+        <li><span class="parameter">skip_event</span>
+         (bool) skip event handler
+        </li>
+    </ul>
+
 
 
 
@@ -407,28 +449,9 @@ DEVICE_EVENT.VALUE_CHANGED
     </dt>
     <dd>
     Force-update controls that are handling their internal state by themselves
+ (only relevant when assigned to buttons)
 
 
-
-
-
-
-
-</dd>
-    <dt>
-    <a name = "set_dimmed"></a>
-    <strong>set_dimmed (bool)</strong>
-    </dt>
-    <dd>
-    Display the slider as "dimmed" (use alternative palette)
-
-
-    <h3>Parameters:</h3>
-    <ul>
-        <li><span class="parameter">bool</span>
-         (bool) true for dimmed state, false for normal state
-        </li>
-    </ul>
 
 
 
@@ -486,7 +509,7 @@ DEVICE_EVENT.VALUE_CHANGED
     <h3>Parameters:</h3>
     <ul>
         <li><span class="parameter">size</span>
-         (Number)
+         (number)
         </li>
     </ul>
 
@@ -536,6 +559,37 @@ DEVICE_EVENT.VALUE_CHANGED
     Update the appearance - inherited from UIComponent
 
 
+
+
+
+    <h3>See also:</h3>
+    <ul>
+         <a href="../modules/Duplex.UIComponent.html#">Duplex.UIComponent</a>
+    </ul>
+
+
+</dd>
+    <dt>
+    <a name = "set_pos"></a>
+    <strong>set_pos (x, y)</strong>
+    </dt>
+    <dd>
+    Set the position using x/y or index within group
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">x</span>
+
+
+
+        </li>
+        <li><span class="parameter">y</span>
+
+
+
+        </li>
+    </ul>
 
 
 
@@ -629,6 +683,20 @@ DEVICE_EVENT.VALUE_CHANGED
 
 
 </dd>
+    <dt>
+    <a name = "_detect_button_mode"></a>
+    <strong>_detect_button_mode ()</strong>
+    </dt>
+    <dd>
+    Detect if the control is assigned to button widget(s)
+
+
+
+
+
+
+
+</dd>
 </dl>
     <h2><a name="Tables"></a>Tables</h2>
     <dl class="function">
@@ -637,7 +705,7 @@ DEVICE_EVENT.VALUE_CHANGED
     <strong>palette</strong>
     </dt>
     <dd>
-    default palette
+    default palette (only relevant for button mode)
 
 
     <h3>Fields:</h3>
@@ -648,14 +716,8 @@ DEVICE_EVENT.VALUE_CHANGED
         <li><span class="parameter">tip</span>
          The active point
         </li>
-        <li><span class="parameter">tip_dimmed</span>
-         The active point (when dimmed)
-        </li>
         <li><span class="parameter">track</span>
          The track color
-        </li>
-        <li><span class="parameter">track_dimmed</span>
-         The track color (when dimmed)
         </li>
     </ul>
 
@@ -667,6 +729,20 @@ DEVICE_EVENT.VALUE_CHANGED
 </dl>
     <h2><a name="Fields"></a>Fields</h2>
     <dl class="function">
+    <dt>
+    <a name = "self._button_mode"></a>
+    <strong>self._button_mode</strong>
+    </dt>
+    <dd>
+    (bool) this flag indicates that input method is a button
+
+
+
+
+
+
+
+</dd>
     <dt>
     <a name = "self.value"></a>
     <strong>self.value</strong>
@@ -726,39 +802,6 @@ DEVICE_EVENT.VALUE_CHANGED
 
 </dd>
     <dt>
-    <a name = "self.dimmed"></a>
-    <strong>self.dimmed</strong>
-    </dt>
-    <dd>
-    (bool) paint a dimmed version
- only applies when input method is a button
-
-
-
-
-
-
-
-</dd>
-    <dt>
-    <a name = "self.button_mode"></a>
-    <strong>self.button_mode</strong>
-    </dt>
-    <dd>
-    (bool) set this mode to ensure that slider is always displayed
- correctly when using an array of buttons
- (normally, this is not a problem, but when a slider is
- resized to a single unit, this is the only way it will be
- able to tell that it's a button)
-
-
-
-
-
-
-
-</dd>
-    <dt>
     <a name = "self.flipped"></a>
     <strong>self.flipped</strong>
     </dt>
@@ -792,8 +835,8 @@ DEVICE_EVENT.VALUE_CHANGED
     <strong>self._size</strong>
     </dt>
     <dd>
-    (int) the 'physical' size, should always be 1 for dials/faders
- (use set_size() method to set this value)
+    (int) the size in units (can be > 1 when input method is a button)
+ (always call set_size() method to set this value)
 
 
 

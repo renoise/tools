@@ -33,6 +33,7 @@
 <h2>Contents</h2>
 <ul>
 <li><a href="#Functions">Functions</a></li>
+<li><a href="#Fields">Fields</a></li>
 </ul>
 
 
@@ -54,7 +55,6 @@
   <li><a href="../modules/Duplex.Applications.Mlrx.Mlrx_track.html">Duplex.Applications.Mlrx.Mlrx_track</a></li>
   <li><a href="../modules/Duplex.Applications.Mlrx.html">Duplex.Applications.Mlrx</a></li>
   <li><a href="../modules/Duplex.Applications.Navigator.html">Duplex.Applications.Navigator</a></li>
-  <li><a href="../modules/Duplex.Applications.NoComponent.html">Duplex.Applications.NoComponent</a></li>
   <li><a href="../modules/Duplex.Applications.NotesOnWheels.html">Duplex.Applications.NotesOnWheels</a></li>
   <li><a href="../modules/Duplex.Applications.PatternSequence.html">Duplex.Applications.PatternSequence</a></li>
   <li><a href="../modules/Duplex.Applications.Recorder.html">Duplex.Applications.Recorder</a></li>
@@ -62,6 +62,7 @@
   <li><a href="../modules/Duplex.Applications.Rotate.html">Duplex.Applications.Rotate</a></li>
   <li><a href="../modules/Duplex.Applications.StepSequencer.html">Duplex.Applications.StepSequencer</a></li>
   <li><a href="../modules/Duplex.Applications.SwitchConfiguration.html">Duplex.Applications.SwitchConfiguration</a></li>
+  <li><a href="../modules/Duplex.Applications.TestPad.html">Duplex.Applications.TestPad</a></li>
   <li><a href="../modules/Duplex.Applications.TrackSelector.html">Duplex.Applications.TrackSelector</a></li>
   <li><a href="../modules/Duplex.Applications.Transport.html">Duplex.Applications.Transport</a></li>
   <li><a href="../modules/Duplex.Applications.XYPad.html">Duplex.Applications.XYPad</a></li>
@@ -69,6 +70,7 @@
   <li><a href="../modules/Duplex.Browser.html">Duplex.Browser</a></li>
   <li><a href="../modules/Duplex.BrowserProcess.html">Duplex.BrowserProcess</a></li>
   <li><a href="../modules/Duplex.Canvas.html">Duplex.Canvas</a></li>
+  <li><a href="../modules/Duplex.CanvasPoint.html">Duplex.CanvasPoint</a></li>
   <li><a href="../modules/Duplex.ControlMap.html">Duplex.ControlMap</a></li>
   <li><a href="../modules/Duplex.Device.html">Duplex.Device</a></li>
   <li><a href="../modules/Duplex.Display.html">Duplex.Display</a></li>
@@ -93,6 +95,8 @@
   <li><a href="../modules/Duplex.UIPitchBend.html">Duplex.UIPitchBend</a></li>
   <li><a href="../modules/Duplex.UISlider.html">Duplex.UISlider</a></li>
   <li><a href="../modules/Duplex.UISpinner.html">Duplex.UISpinner</a></li>
+  <li><a href="../modules/Duplex.WidgetHooks.html">Duplex.WidgetHooks</a></li>
+  <li><a href="../modules/Duplex.WidgetKeyboard.html">Duplex.WidgetKeyboard</a></li>
   <li><a href="../modules/Duplex.html">Duplex</a></li>
   <li><a href="../modules/main.html">main</a></li>
 </ul>
@@ -142,7 +146,7 @@
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#send_pitch_bend_message">send_pitch_bend_message (value, channel)</a></td>
-	<td class="summary">Send Pitch-Bend message to device</td>
+	<td class="summary">Send Pitch-Bend message to device.</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#send_note_message">send_note_message (key, velocity, channel)</a></td>
@@ -168,9 +172,33 @@
 	<td class="name" nowrap><a href="#extract_midi_channel">extract_midi_channel (str)</a></td>
 	<td class="summary">Determine channel for the given message (use default port if not specified)</td>
 	</tr>
+</table>
+<h2><a href="#Fields">Fields</a></h2>
+<table class="function_list">
 	<tr>
-	<td class="name" nowrap><a href="#point_to_value">point_to_value (pt, elm, ceiling)</a></td>
-	<td class="summary">Convert the point to an output value</td>
+	<td class="name" nowrap><a href="#self.port_in">self.port_in</a></td>
+	<td class="summary">(string) the MIDI input port</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#self.port_out">self.port_out</a></td>
+	<td class="summary">(string) the MIDI output port</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#self.midi_in">self.midi_in</a></td>
+	<td class="summary">(MidiInputDevice)</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#self.midi_out">self.midi_out</a></td>
+	<td class="summary">(MidiOutputDevice)</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#self.default_midi_resolution">self.default_midi_resolution</a></td>
+	<td class="summary">(int) used for quantized output and relative step size</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#self.output_quantize">self.output_quantize</a></td>
+	<td class="summary">(bool) enable this to quantize output to given resolution before
+ actually sending it to the MIDI controller (less traffic)</td>
 	</tr>
 </table>
 
@@ -191,16 +219,16 @@
     <h3>Parameters:</h3>
     <ul>
         <li><span class="parameter">display_name</span>
-         (String) the friendly name of the device
+         (string) the friendly name of the device
         </li>
         <li><span class="parameter">message_stream</span>
          (MessageStream) the msg-stream we should attach to
         </li>
         <li><span class="parameter">port_in</span>
-         (String) the MIDI input port
+         (string) the MIDI input port
         </li>
         <li><span class="parameter">port_out</span>
-         (String) the MIDI output port
+         (string) the MIDI output port
         </li>
     </ul>
 
@@ -330,7 +358,11 @@
     <strong>send_pitch_bend_message (value, channel)</strong>
     </dt>
     <dd>
-    Send Pitch-Bend message to device
+    Send Pitch-Bend message to device.
+ sending pitch-bend back to a device doesn't make sense when
+ you're using a keyboard - it's generally recommended to tag
+ the parameter with the "skip_echo" attribute in such a case...
+ however, some device setups are different (e.g. Mackie Control)
 
 
     <h3>Parameters:</h3>
@@ -489,32 +521,89 @@
 
 
 </dd>
+</dl>
+    <h2><a name="Fields"></a>Fields</h2>
+    <dl class="function">
     <dt>
-    <a name = "point_to_value"></a>
-    <strong>point_to_value (pt, elm, ceiling)</strong>
+    <a name = "self.port_in"></a>
+    <strong>self.port_in</strong>
     </dt>
     <dd>
-    Convert the point to an output value
+    (string) the MIDI input port
 
 
-    <h3>Parameters:</h3>
-    <ul>
-        <li><span class="parameter">pt</span>
-         (CanvasPoint)
-        </li>
-        <li><span class="parameter">elm</span>
-         (Table), control-map parameter
-        </li>
-        <li><span class="parameter">ceiling</span>
-         (Number), the UIComponent ceiling value
-        </li>
-    </ul>
 
-    <h3>Returns:</h3>
-    <ol>
 
-        (Number), the output value
-    </ol>
+
+
+
+</dd>
+    <dt>
+    <a name = "self.port_out"></a>
+    <strong>self.port_out</strong>
+    </dt>
+    <dd>
+    (string) the MIDI output port
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "self.midi_in"></a>
+    <strong>self.midi_in</strong>
+    </dt>
+    <dd>
+    (MidiInputDevice)
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "self.midi_out"></a>
+    <strong>self.midi_out</strong>
+    </dt>
+    <dd>
+    (MidiOutputDevice)
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "self.default_midi_resolution"></a>
+    <strong>self.default_midi_resolution</strong>
+    </dt>
+    <dd>
+    (int) used for quantized output and relative step size
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "self.output_quantize"></a>
+    <strong>self.output_quantize</strong>
+    </dt>
+    <dd>
+    (bool) enable this to quantize output to given resolution before
+ actually sending it to the MIDI controller (less traffic)
+
+
+
 
 
 

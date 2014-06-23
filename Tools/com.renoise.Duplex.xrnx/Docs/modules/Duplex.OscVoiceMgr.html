@@ -33,6 +33,7 @@
 <h2>Contents</h2>
 <ul>
 <li><a href="#Functions">Functions</a></li>
+<li><a href="#Fields">Fields</a></li>
 </ul>
 
 
@@ -54,7 +55,6 @@
   <li><a href="../modules/Duplex.Applications.Mlrx.Mlrx_track.html">Duplex.Applications.Mlrx.Mlrx_track</a></li>
   <li><a href="../modules/Duplex.Applications.Mlrx.html">Duplex.Applications.Mlrx</a></li>
   <li><a href="../modules/Duplex.Applications.Navigator.html">Duplex.Applications.Navigator</a></li>
-  <li><a href="../modules/Duplex.Applications.NoComponent.html">Duplex.Applications.NoComponent</a></li>
   <li><a href="../modules/Duplex.Applications.NotesOnWheels.html">Duplex.Applications.NotesOnWheels</a></li>
   <li><a href="../modules/Duplex.Applications.PatternSequence.html">Duplex.Applications.PatternSequence</a></li>
   <li><a href="../modules/Duplex.Applications.Recorder.html">Duplex.Applications.Recorder</a></li>
@@ -62,6 +62,7 @@
   <li><a href="../modules/Duplex.Applications.Rotate.html">Duplex.Applications.Rotate</a></li>
   <li><a href="../modules/Duplex.Applications.StepSequencer.html">Duplex.Applications.StepSequencer</a></li>
   <li><a href="../modules/Duplex.Applications.SwitchConfiguration.html">Duplex.Applications.SwitchConfiguration</a></li>
+  <li><a href="../modules/Duplex.Applications.TestPad.html">Duplex.Applications.TestPad</a></li>
   <li><a href="../modules/Duplex.Applications.TrackSelector.html">Duplex.Applications.TrackSelector</a></li>
   <li><a href="../modules/Duplex.Applications.Transport.html">Duplex.Applications.Transport</a></li>
   <li><a href="../modules/Duplex.Applications.XYPad.html">Duplex.Applications.XYPad</a></li>
@@ -69,6 +70,7 @@
   <li><a href="../modules/Duplex.Browser.html">Duplex.Browser</a></li>
   <li><a href="../modules/Duplex.BrowserProcess.html">Duplex.BrowserProcess</a></li>
   <li><a href="../modules/Duplex.Canvas.html">Duplex.Canvas</a></li>
+  <li><a href="../modules/Duplex.CanvasPoint.html">Duplex.CanvasPoint</a></li>
   <li><a href="../modules/Duplex.ControlMap.html">Duplex.ControlMap</a></li>
   <li><a href="../modules/Duplex.Device.html">Duplex.Device</a></li>
   <li><a href="../modules/Duplex.Display.html">Duplex.Display</a></li>
@@ -93,6 +95,8 @@
   <li><a href="../modules/Duplex.UIPitchBend.html">Duplex.UIPitchBend</a></li>
   <li><a href="../modules/Duplex.UISlider.html">Duplex.UISlider</a></li>
   <li><a href="../modules/Duplex.UISpinner.html">Duplex.UISpinner</a></li>
+  <li><a href="../modules/Duplex.WidgetHooks.html">Duplex.WidgetHooks</a></li>
+  <li><a href="../modules/Duplex.WidgetKeyboard.html">Duplex.WidgetKeyboard</a></li>
   <li><a href="../modules/Duplex.html">Duplex</a></li>
   <li><a href="../modules/main.html">main</a></li>
 </ul>
@@ -112,7 +116,7 @@
 
 <ul>
     <li>Notes are getting stuck when a keyboard octave is "virtually transposed", as the released key will transmit a different pitch than the pressed one. Solution: simply tell the voice-manager that your application's base octave has been changed with this &amp; that many semitones. </li>
-    <li>When the same note is triggered multiple times, once any key is released, the remaining voices are also stopped. Solution: Trigger notes with the <code>keep<em>until</em>all_released</code> flag, and the note is kept alive until all pressed notes are released</li>
+    <li>When the same note is triggered multiple times, once any key is released, the remaining voices are also stopped. Solution: Trigger notes with the <a href="../modules/Duplex.OscVoiceMgr.html#self.keep_until_all_released">keep_until_all_released</a>  flag, and the note is kept alive until all pressed notes are released</li>
 </ul>
 
 </p>
@@ -170,6 +174,53 @@
 	<td class="summary">Remove application from active voices (release, then remove)</td>
 	</tr>
 </table>
+<h2><a href="#Fields">Fields</a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#self.originating_app">self.originating_app</a></td>
+	<td class="summary">(<a href="../modules/Duplex.Application.html#">Duplex.Application</a>) the application that triggered this note</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#self.keep_until_all_released">self.keep_until_all_released</a></td>
+	<td class="summary">(bool) decide whether a released key should wait for all other
+ pressed keys before it is allowed to release
+ (set this to false if you're triggering notes with a pad controller
+ that doesn't send release notes)</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#self.temp_transpose">self.temp_transpose</a></td>
+	<td class="summary">(int) the temporary transpose of the application</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#self.is_held">self.is_held</a></td>
+	<td class="summary">(bool) whether or not the key is held</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#self.pitch">self.pitch</a></td>
+	<td class="summary">(int) pitch</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#self.velocity">self.velocity</a></td>
+	<td class="summary">(int) velocity</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#self.is_midi">self.is_midi</a></td>
+	<td class="summary">(bool) true when MIDI, false means OSC</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#self.channel">self.channel</a></td>
+	<td class="summary">(int) for midi, but also helps to differentiate <br/>
+ (when looking for osc-triggered notes)</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#self.instr">self.instr</a></td>
+	<td class="summary">(int) the Renoise instrument index</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#self.track">self.track</a></td>
+	<td class="summary">(int) the Renoise track index</td>
+	</tr>
+</table>
 
 <br/>
 <br/>
@@ -202,7 +253,7 @@
     <h3>Parameters:</h3>
     <ul>
         <li><span class="parameter">app</span>
-         (Application) the calling application
+         (<a href="../modules/Duplex.Application.html#">Duplex.Application</a>) the calling application
         </li>
         <li><span class="parameter">instr</span>
          (int) the Renoise instrument index
@@ -244,7 +295,7 @@
     <h3>Parameters:</h3>
     <ul>
         <li><span class="parameter">app</span>
-         (Application) the calling application
+         (<a href="../modules/Duplex.Application.html#">Duplex.Application</a>) the calling application
         </li>
         <li><span class="parameter">instr</span>
          (int) the Renoise instrument index
@@ -291,7 +342,7 @@
     <h3>Parameters:</h3>
     <ul>
         <li><span class="parameter">org_app</span>
-         (Application), the originating application
+         (<a href="../modules/Duplex.Application.html#">Duplex.Application</a>), the originating application
         </li>
         <li><span class="parameter">pitch</span>
          (int) 0-120
@@ -322,7 +373,7 @@
     <h3>Parameters:</h3>
     <ul>
         <li><span class="parameter">org_app</span>
-         (Application), the originating application
+         (<a href="../modules/Duplex.Application.html#">Duplex.Application</a>), the originating application
         </li>
         <li><span class="parameter">pitch</span>
          (int) 0-120
@@ -355,7 +406,7 @@
     <h3>Parameters:</h3>
     <ul>
         <li><span class="parameter">app</span>
-         (Application), the originating application
+         (<a href="../modules/Duplex.Application.html#">Duplex.Application</a>), the originating application
         </li>
         <li><span class="parameter">instr</span>
          (int) the Renoise instrument index
@@ -418,10 +469,15 @@
     <h3>Parameters:</h3>
     <ul>
         <li><span class="parameter">app</span>
-         (Duplex.Application)
+         (<a href="../modules/Duplex.Application.html#">Duplex.Application</a>)
         </li>
     </ul>
 
+    <h3>Returns:</h3>
+    <ol>
+
+        string, e.g. "Launchpad_MyMixer"
+    </ol>
 
 
 
@@ -438,7 +494,7 @@
     <h3>Parameters:</h3>
     <ul>
         <li><span class="parameter">app</span>
-         (Application), check originating app
+         (<a href="../modules/Duplex.Application.html#">Duplex.Application</a>), check originating app
         </li>
         <li><span class="parameter">instr</span>
          (int) instrument index
@@ -448,6 +504,11 @@
         </li>
     </ul>
 
+    <h3>Returns:</h3>
+    <ol>
+
+        bool
+    </ol>
 
 
 
@@ -490,9 +551,156 @@
     <h3>Parameters:</h3>
     <ul>
         <li><span class="parameter">app</span>
-         (Duplex.Application)
+         (<a href="../modules/Duplex.Application.html#">Duplex.Application</a>)
         </li>
     </ul>
+
+
+
+
+
+</dd>
+</dl>
+    <h2><a name="Fields"></a>Fields</h2>
+    <dl class="function">
+    <dt>
+    <a name = "self.originating_app"></a>
+    <strong>self.originating_app</strong>
+    </dt>
+    <dd>
+    (<a href="../modules/Duplex.Application.html#">Duplex.Application</a>) the application that triggered this note
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "self.keep_until_all_released"></a>
+    <strong>self.keep_until_all_released</strong>
+    </dt>
+    <dd>
+    (bool) decide whether a released key should wait for all other
+ pressed keys before it is allowed to release
+ (set this to false if you're triggering notes with a pad controller
+ that doesn't send release notes)
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "self.temp_transpose"></a>
+    <strong>self.temp_transpose</strong>
+    </dt>
+    <dd>
+    (int) the temporary transpose of the application
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "self.is_held"></a>
+    <strong>self.is_held</strong>
+    </dt>
+    <dd>
+    (bool) whether or not the key is held
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "self.pitch"></a>
+    <strong>self.pitch</strong>
+    </dt>
+    <dd>
+    (int) pitch
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "self.velocity"></a>
+    <strong>self.velocity</strong>
+    </dt>
+    <dd>
+    (int) velocity
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "self.is_midi"></a>
+    <strong>self.is_midi</strong>
+    </dt>
+    <dd>
+    (bool) true when MIDI, false means OSC
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "self.channel"></a>
+    <strong>self.channel</strong>
+    </dt>
+    <dd>
+    (int) for midi, but also helps to differentiate <br/>
+ (when looking for osc-triggered notes)
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "self.instr"></a>
+    <strong>self.instr</strong>
+    </dt>
+    <dd>
+    (int) the Renoise instrument index
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "self.track"></a>
+    <strong>self.track</strong>
+    </dt>
+    <dd>
+    (int) the Renoise track index
+
+
 
 
 

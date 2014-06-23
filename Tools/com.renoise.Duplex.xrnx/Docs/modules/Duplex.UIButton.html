@@ -33,6 +33,8 @@
 <h2>Contents</h2>
 <ul>
 <li><a href="#Functions">Functions</a></li>
+<li><a href="#Tables">Tables</a></li>
+<li><a href="#Fields">Fields</a></li>
 </ul>
 
 
@@ -54,7 +56,6 @@
   <li><a href="../modules/Duplex.Applications.Mlrx.Mlrx_track.html">Duplex.Applications.Mlrx.Mlrx_track</a></li>
   <li><a href="../modules/Duplex.Applications.Mlrx.html">Duplex.Applications.Mlrx</a></li>
   <li><a href="../modules/Duplex.Applications.Navigator.html">Duplex.Applications.Navigator</a></li>
-  <li><a href="../modules/Duplex.Applications.NoComponent.html">Duplex.Applications.NoComponent</a></li>
   <li><a href="../modules/Duplex.Applications.NotesOnWheels.html">Duplex.Applications.NotesOnWheels</a></li>
   <li><a href="../modules/Duplex.Applications.PatternSequence.html">Duplex.Applications.PatternSequence</a></li>
   <li><a href="../modules/Duplex.Applications.Recorder.html">Duplex.Applications.Recorder</a></li>
@@ -62,6 +63,7 @@
   <li><a href="../modules/Duplex.Applications.Rotate.html">Duplex.Applications.Rotate</a></li>
   <li><a href="../modules/Duplex.Applications.StepSequencer.html">Duplex.Applications.StepSequencer</a></li>
   <li><a href="../modules/Duplex.Applications.SwitchConfiguration.html">Duplex.Applications.SwitchConfiguration</a></li>
+  <li><a href="../modules/Duplex.Applications.TestPad.html">Duplex.Applications.TestPad</a></li>
   <li><a href="../modules/Duplex.Applications.TrackSelector.html">Duplex.Applications.TrackSelector</a></li>
   <li><a href="../modules/Duplex.Applications.Transport.html">Duplex.Applications.Transport</a></li>
   <li><a href="../modules/Duplex.Applications.XYPad.html">Duplex.Applications.XYPad</a></li>
@@ -69,6 +71,7 @@
   <li><a href="../modules/Duplex.Browser.html">Duplex.Browser</a></li>
   <li><a href="../modules/Duplex.BrowserProcess.html">Duplex.BrowserProcess</a></li>
   <li><a href="../modules/Duplex.Canvas.html">Duplex.Canvas</a></li>
+  <li><a href="../modules/Duplex.CanvasPoint.html">Duplex.CanvasPoint</a></li>
   <li><a href="../modules/Duplex.ControlMap.html">Duplex.ControlMap</a></li>
   <li><a href="../modules/Duplex.Device.html">Duplex.Device</a></li>
   <li><a href="../modules/Duplex.Display.html">Duplex.Display</a></li>
@@ -93,6 +96,8 @@
   <li><a href="../modules/Duplex.UIPitchBend.html">Duplex.UIPitchBend</a></li>
   <li><a href="../modules/Duplex.UISlider.html">Duplex.UISlider</a></li>
   <li><a href="../modules/Duplex.UISpinner.html">Duplex.UISpinner</a></li>
+  <li><a href="../modules/Duplex.WidgetHooks.html">Duplex.WidgetHooks</a></li>
+  <li><a href="../modules/Duplex.WidgetKeyboard.html">Duplex.WidgetKeyboard</a></li>
   <li><a href="../modules/Duplex.html">Duplex</a></li>
   <li><a href="../modules/main.html">main</a></li>
 </ul>
@@ -123,7 +128,7 @@
 <h2><a href="#Functions">Functions</a></h2>
 <table class="function_list">
 	<tr>
-	<td class="name" nowrap><a href="#__init">__init (app)</a></td>
+	<td class="name" nowrap><a href="#__init">__init (app, map)</a></td>
 	<td class="summary">Initialize the UIButton class</td>
 	</tr>
 	<tr>
@@ -179,6 +184,32 @@ DEVICE_EVENT.BUTTON_HELD
 	<td class="summary">Remove previously attached event listeners</td>
 	</tr>
 </table>
+<h2><a href="#Tables">Tables</a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#palette">palette</a></td>
+	<td class="summary">(table) the visual appearance, changed via <a href="../modules/Duplex.UIButton.html#set">set</a></td>
+	</tr>
+</table>
+<h2><a href="#Fields">Fields</a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#self.on_change">self.on_change</a></td>
+	<td class="summary">(func) event handler</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#self.on_hold">self.on_hold</a></td>
+	<td class="summary">(func) event handler</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#self.on_press">self.on_press</a></td>
+	<td class="summary">(func) event handler</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#self.on_release">self.on_release</a></td>
+	<td class="summary">(func) event handler</td>
+	</tr>
+</table>
 
 <br/>
 <br/>
@@ -188,7 +219,7 @@ DEVICE_EVENT.BUTTON_HELD
     <dl class="function">
     <dt>
     <a name = "__init"></a>
-    <strong>__init (app)</strong>
+    <strong>__init (app, map)</strong>
     </dt>
     <dd>
     Initialize the UIButton class
@@ -198,6 +229,9 @@ DEVICE_EVENT.BUTTON_HELD
     <ul>
         <li><span class="parameter">app</span>
          (<a href="../modules/Duplex.Application.html#">Duplex.Application</a>)
+        </li>
+        <li><span class="parameter">map</span>
+        [opt] (table) mapping properties
         </li>
     </ul>
 
@@ -450,6 +484,94 @@ DEVICE_EVENT.BUTTON_HELD
     <ul>
          <a href="../modules/Duplex.UIComponent.html#">Duplex.UIComponent</a>
     </ul>
+
+
+</dd>
+</dl>
+    <h2><a name="Tables"></a>Tables</h2>
+    <dl class="function">
+    <dt>
+    <a name = "palette"></a>
+    <strong>palette</strong>
+    </dt>
+    <dd>
+    (table) the visual appearance, changed via <a href="../modules/Duplex.UIButton.html#set">set</a>
+
+
+    <h3>Fields:</h3>
+    <ul>
+        <li><span class="parameter">foreground</span>
+
+<p> (table) </p>
+<pre><code>color (table) - {int,int,int}
+text (string)
+val (bool)
+</code></pre>
+
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+</dl>
+    <h2><a name="Fields"></a>Fields</h2>
+    <dl class="function">
+    <dt>
+    <a name = "self.on_change"></a>
+    <strong>self.on_change</strong>
+    </dt>
+    <dd>
+    (func) event handler
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "self.on_hold"></a>
+    <strong>self.on_hold</strong>
+    </dt>
+    <dd>
+    (func) event handler
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "self.on_press"></a>
+    <strong>self.on_press</strong>
+    </dt>
+    <dd>
+    (func) event handler
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "self.on_release"></a>
+    <strong>self.on_release</strong>
+    </dt>
+    <dd>
+    (func) event handler
+
+
+
+
+
 
 
 </dd>

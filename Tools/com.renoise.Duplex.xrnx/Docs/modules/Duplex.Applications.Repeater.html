@@ -56,7 +56,6 @@
   <li><a href="../modules/Duplex.Applications.Mlrx.Mlrx_track.html">Duplex.Applications.Mlrx.Mlrx_track</a></li>
   <li><a href="../modules/Duplex.Applications.Mlrx.html">Duplex.Applications.Mlrx</a></li>
   <li><a href="../modules/Duplex.Applications.Navigator.html">Duplex.Applications.Navigator</a></li>
-  <li><a href="../modules/Duplex.Applications.NoComponent.html">Duplex.Applications.NoComponent</a></li>
   <li><a href="../modules/Duplex.Applications.NotesOnWheels.html">Duplex.Applications.NotesOnWheels</a></li>
   <li><a href="../modules/Duplex.Applications.PatternSequence.html">Duplex.Applications.PatternSequence</a></li>
   <li><a href="../modules/Duplex.Applications.Recorder.html">Duplex.Applications.Recorder</a></li>
@@ -64,6 +63,7 @@
   <li><a href="../modules/Duplex.Applications.Rotate.html">Duplex.Applications.Rotate</a></li>
   <li><a href="../modules/Duplex.Applications.StepSequencer.html">Duplex.Applications.StepSequencer</a></li>
   <li><a href="../modules/Duplex.Applications.SwitchConfiguration.html">Duplex.Applications.SwitchConfiguration</a></li>
+  <li><a href="../modules/Duplex.Applications.TestPad.html">Duplex.Applications.TestPad</a></li>
   <li><a href="../modules/Duplex.Applications.TrackSelector.html">Duplex.Applications.TrackSelector</a></li>
   <li><a href="../modules/Duplex.Applications.Transport.html">Duplex.Applications.Transport</a></li>
   <li><a href="../modules/Duplex.Applications.XYPad.html">Duplex.Applications.XYPad</a></li>
@@ -71,6 +71,7 @@
   <li><a href="../modules/Duplex.Browser.html">Duplex.Browser</a></li>
   <li><a href="../modules/Duplex.BrowserProcess.html">Duplex.BrowserProcess</a></li>
   <li><a href="../modules/Duplex.Canvas.html">Duplex.Canvas</a></li>
+  <li><a href="../modules/Duplex.CanvasPoint.html">Duplex.CanvasPoint</a></li>
   <li><a href="../modules/Duplex.ControlMap.html">Duplex.ControlMap</a></li>
   <li><a href="../modules/Duplex.Device.html">Duplex.Device</a></li>
   <li><a href="../modules/Duplex.Display.html">Duplex.Display</a></li>
@@ -95,6 +96,8 @@
   <li><a href="../modules/Duplex.UIPitchBend.html">Duplex.UIPitchBend</a></li>
   <li><a href="../modules/Duplex.UISlider.html">Duplex.UISlider</a></li>
   <li><a href="../modules/Duplex.UISpinner.html">Duplex.UISpinner</a></li>
+  <li><a href="../modules/Duplex.WidgetHooks.html">Duplex.WidgetHooks</a></li>
+  <li><a href="../modules/Duplex.WidgetKeyboard.html">Duplex.WidgetKeyboard</a></li>
   <li><a href="../modules/Duplex.html">Duplex</a></li>
   <li><a href="../modules/main.html">main</a></li>
 </ul>
@@ -104,10 +107,8 @@
 <div id="content">
 
 <h1>Module <code>Duplex.Applications.Repeater</code></h1>
-<p>This is our sample Repeater application</p>
-<p>
-
-</p>
+<p>Take control of the native repeater DSP device.</p>
+<p>Inheritance: <a href="../modules/Duplex.Application.html#">Duplex.Application</a> > <a href="../modules/Duplex.RoamingDSP.html#">Duplex.RoamingDSP</a> > Duplex.Application.Repeater </p>
 
 
 <h2><a href="#Functions">Functions</a></h2>
@@ -117,12 +118,46 @@
 	<td class="summary">Constructor method</td>
 	</tr>
 	<tr>
+	<td class="name" nowrap><a href="#on_idle">on_idle ()</a></td>
+	<td class="summary">perform periodic updates</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#attach_to_device">attach_to_device (track_idx, device_idx, device)</a></td>
+	<td class="summary">attach notifier to the device
+ called when we use previous/next device, set the initial device
+ or are freely roaming the tracks</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#set_value_from_coords">set_value_from_coords (x, y)</a></td>
+	<td class="summary">(grid mode) update everything: the mode and/or divisor value is gained
+ and the grid cells are drawn accordingly.</td>
+	</tr>
+	<tr>
 	<td class="name" nowrap><a href="#set_divisor">set_divisor (divisor_val)</a></td>
 	<td class="summary">Update divisor (call without argument to use existing value)</td>
 	</tr>
 	<tr>
+	<td class="name" nowrap><a href="#divisor_from_linear_value">divisor_from_linear_value (divisor_val)</a></td>
+	<td class="summary">this method will calculate a the divisor from a linear value
+ (e.g.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#stop_repeating">stop_repeating ()</a></td>
+	<td class="summary">set device to OFF mode, update controller + automation</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#init_grid">init_grid ()</a></td>
+	<td class="summary">configure a map of mode/divisor values for the available buttons
+ even/triplet/dotted: update divisor value by quantized amount
+ free: update the divisor value by an exact amount</td>
+	</tr>
+	<tr>
 	<td class="name" nowrap><a href="#_build_app">_build_app ()</a></td>
 	<td class="summary">inherited from Application</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#update_grid">update_grid (x, y)</a></td>
+	<td class="summary">update controller grid (no impact on Renoise)</td>
 	</tr>
 </table>
 <h2><a href="#Tables">Tables</a></h2>
@@ -210,6 +245,82 @@ y=number
 
 </dd>
     <dt>
+    <a name = "on_idle"></a>
+    <strong>on_idle ()</strong>
+    </dt>
+    <dd>
+    perform periodic updates
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "attach_to_device"></a>
+    <strong>attach_to_device (track_idx, device_idx, device)</strong>
+    </dt>
+    <dd>
+    attach notifier to the device
+ called when we use previous/next device, set the initial device
+ or are freely roaming the tracks
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">track_idx</span>
+
+
+
+        </li>
+        <li><span class="parameter">device_idx</span>
+
+
+
+        </li>
+        <li><span class="parameter">device</span>
+
+
+
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "set_value_from_coords"></a>
+    <strong>set_value_from_coords (x, y)</strong>
+    </dt>
+    <dd>
+    (grid mode) update everything: the mode and/or divisor value is gained
+ and the grid cells are drawn accordingly.  Also, record automation.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">x</span>
+
+
+
+        </li>
+        <li><span class="parameter">y</span>
+
+
+
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
     <a name = "set_divisor"></a>
     <strong>set_divisor (divisor_val)</strong>
     </dt>
@@ -223,6 +334,57 @@ y=number
          (number) [optional] between 0 and 1
         </li>
     </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "divisor_from_linear_value"></a>
+    <strong>divisor_from_linear_value (divisor_val)</strong>
+    </dt>
+    <dd>
+    this method will calculate a the divisor from a linear value
+ (e.g.  0.5 will output 1/8 == 0.125)
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">divisor_val</span>
+         (number) between 0 and 1
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "stop_repeating"></a>
+    <strong>stop_repeating ()</strong>
+    </dt>
+    <dd>
+    set device to OFF mode, update controller + automation
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "init_grid"></a>
+    <strong>init_grid ()</strong>
+    </dt>
+    <dd>
+    configure a map of mode/divisor values for the available buttons
+ even/triplet/dotted: update divisor value by quantized amount
+ free: update the divisor value by an exact amount
+
+
 
 
 
@@ -249,6 +411,33 @@ y=number
     <ul>
          <a href="../modules/Duplex.Application.html#_build_app">Duplex.Application._build_app</a>
     </ul>
+
+
+</dd>
+    <dt>
+    <a name = "update_grid"></a>
+    <strong>update_grid (x, y)</strong>
+    </dt>
+    <dd>
+    update controller grid (no impact on Renoise)
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">x</span>
+
+
+
+        </li>
+        <li><span class="parameter">y</span>
+
+
+
+        </li>
+    </ul>
+
+
+
 
 
 </dd>

@@ -34,6 +34,7 @@
 <ul>
 <li><a href="#Functions">Functions</a></li>
 <li><a href="#Tables">Tables</a></li>
+<li><a href="#Fields">Fields</a></li>
 </ul>
 
 
@@ -55,7 +56,6 @@
   <li><a href="../modules/Duplex.Applications.Mlrx.Mlrx_track.html">Duplex.Applications.Mlrx.Mlrx_track</a></li>
   <li><a href="../modules/Duplex.Applications.Mlrx.html">Duplex.Applications.Mlrx</a></li>
   <li><a href="../modules/Duplex.Applications.Navigator.html">Duplex.Applications.Navigator</a></li>
-  <li><a href="../modules/Duplex.Applications.NoComponent.html">Duplex.Applications.NoComponent</a></li>
   <li><a href="../modules/Duplex.Applications.NotesOnWheels.html">Duplex.Applications.NotesOnWheels</a></li>
   <li><a href="../modules/Duplex.Applications.PatternSequence.html">Duplex.Applications.PatternSequence</a></li>
   <li><a href="../modules/Duplex.Applications.Recorder.html">Duplex.Applications.Recorder</a></li>
@@ -63,6 +63,7 @@
   <li><a href="../modules/Duplex.Applications.Rotate.html">Duplex.Applications.Rotate</a></li>
   <li><a href="../modules/Duplex.Applications.StepSequencer.html">Duplex.Applications.StepSequencer</a></li>
   <li><a href="../modules/Duplex.Applications.SwitchConfiguration.html">Duplex.Applications.SwitchConfiguration</a></li>
+  <li><a href="../modules/Duplex.Applications.TestPad.html">Duplex.Applications.TestPad</a></li>
   <li><a href="../modules/Duplex.Applications.TrackSelector.html">Duplex.Applications.TrackSelector</a></li>
   <li><a href="../modules/Duplex.Applications.Transport.html">Duplex.Applications.Transport</a></li>
   <li><strong>Duplex.Applications.XYPad</strong></li>
@@ -70,6 +71,7 @@
   <li><a href="../modules/Duplex.Browser.html">Duplex.Browser</a></li>
   <li><a href="../modules/Duplex.BrowserProcess.html">Duplex.BrowserProcess</a></li>
   <li><a href="../modules/Duplex.Canvas.html">Duplex.Canvas</a></li>
+  <li><a href="../modules/Duplex.CanvasPoint.html">Duplex.CanvasPoint</a></li>
   <li><a href="../modules/Duplex.ControlMap.html">Duplex.ControlMap</a></li>
   <li><a href="../modules/Duplex.Device.html">Duplex.Device</a></li>
   <li><a href="../modules/Duplex.Display.html">Duplex.Display</a></li>
@@ -94,6 +96,8 @@
   <li><a href="../modules/Duplex.UIPitchBend.html">Duplex.UIPitchBend</a></li>
   <li><a href="../modules/Duplex.UISlider.html">Duplex.UISlider</a></li>
   <li><a href="../modules/Duplex.UISpinner.html">Duplex.UISpinner</a></li>
+  <li><a href="../modules/Duplex.WidgetHooks.html">Duplex.WidgetHooks</a></li>
+  <li><a href="../modules/Duplex.WidgetKeyboard.html">Duplex.WidgetKeyboard</a></li>
   <li><a href="../modules/Duplex.html">Duplex</a></li>
   <li><a href="../modules/main.html">main</a></li>
 </ul>
@@ -105,24 +109,30 @@
 <h1>Module <code>Duplex.Applications.XYPad</code></h1>
 <p>Control any XYPad device in any Renoise DSP Chain.</p>
 <p>
-<p> The XYPad application can control and record movement via knobs, a MIDI keyboard's touchpad or an OSC device's accelerometer</p>
+<p>
+Inheritance: <a href="../modules/Duplex.Application.html#">Duplex.Application</a> > <a href="../modules/Duplex.RoamingDSP.html#">Duplex.RoamingDSP</a> > Duplex.Application.XYPad </p>
 
 <h3>Features</h3>
-
-<ul>
-    <li>Flexible mappings - many supported input methods </li>
-    <li>Free roaming - jump between different XYPad devices in the song</li>
-    <li>Device Lock - remember focused device between sessions</li>
-    <li>Built-in automation recording </li>
-</ul>
+<p>* Built-in automation recording
+* Supports knobs, a MIDI keyboard's touchpad or an OSC device's accelerometer
+* Free roaming - jump between different XYPad devices in the song
+* Device Lock - remember focused device between sessions</p>
 
 <h3>Usage</h3>
 
-<p>  For basic operation, you can map <em>either</em> <code>xy_pad</code>, <code>xy_grid</code> or <code>x_slider</code>/<code>y_slider</code> to your controller. Without any of these mappings, the application will refuse to start.</p>
+<p>  For basic operation, you can map <em>either</em> <code>xy_pad</code> or <code>xy_grid</code> to your controller. Without any of these mappings, the application will refuse to start.</p>
 
 <p>  To map an OSC device, add a <code>Param</code> node to the control-map which look like this:</p>
 
-<pre><code>&lt;Param name="MyDevicePad" type="xypad" invert_x="false" invert_y="true" minimum="-2" maximum="2"/&gt;
+<pre><code>&lt;Param name="MyDevicePad" type="xypad"  minimum="0" maximum="127"/&gt;
+</code></pre>
+
+<p>  To map a MIDI device, add a <code>Param</code> node to the control-map which look like this:</p>
+
+<pre><code>&lt;Param name="XYPad_X" type="xypad" size="4" skip_echo="true"&gt;
+  &lt;SubParam value="CC#56" orientation="vertical" minimum="0" maximum="127" /&gt;
+  &lt;SubParam value="CC#57" orientation="horizontal" minimum="0" maximum="127" /&gt;
+&lt;/Param&gt;
 </code></pre>
 
 <p>  Note: to enter the correct minimum and maximum values, it's important you know a bit about your device as the application will base it's min/max/axis values
@@ -134,6 +144,11 @@
 <p>Tool discussion is located on the <a href="http://forum.renoise.com/index.php?/topic/33154-new-tool-duplex-xypad/">Renoise forum</a></p>
 
 <h3>Changes</h3>
+
+<p>  0.99.12</p>
+<pre><code>- Supports &lt;SubParam&gt; nodes (proper support for MIDI devices)
+- Broadcasting of MIDI values
+</code></pre>
 
 <p>  0.98 </p>
 <pre><code>- First release
@@ -154,8 +169,35 @@
 	<td class="summary">inherited from Application</td>
 	</tr>
 	<tr>
+	<td class="name" nowrap><a href="#update_renoise">update_renoise ()</a></td>
+	<td class="summary">apply the value to the targeted DSP device</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#update_controller">update_controller ()</a></td>
+	<td class="summary">update display state of the various controls</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#get_xy_params">get_xy_params ()</a></td>
+	<td class="summary">return the X/Y axis parameter of the target device</td>
+	</tr>
+	<tr>
 	<td class="name" nowrap><a href="#_build_app">_build_app ()</a></td>
 	<td class="summary">inherited from Application</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#select_grid_cell">select_grid_cell (x, y)</a></td>
+	<td class="summary">set the quantized value based on input from xy_grid, but add a tiny
+ amount of noise afterwards, forcing the xypad device to send a signal</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#attach_to_device">attach_to_device (track_idx, device_idx, device)</a></td>
+	<td class="summary">attach notifier to the device
+ called when we use previous/next device, set the initial device
+ or are freely roaming the tracks</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#send_midi">send_midi (msg)</a></td>
+	<td class="summary">send MIDI message using the internal OSC server</td>
 	</tr>
 </table>
 <h2><a href="#Tables">Tables</a></h2>
@@ -165,8 +207,36 @@
 	<td class="summary">The XYPad application has no default options</td>
 	</tr>
 	<tr>
-	<td class="name" nowrap><a href="#available_mappings">available_mappings</a></td>
-	<td class="summary">These are the available mappings for the application</td>
+	<td class="name" nowrap><a href="#self.value">self.value</a></td>
+	<td class="summary">current value</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#self._controls">self._controls</a></td>
+	<td class="summary">controls
+ Note: RoamingDSP has some controls too</td>
+	</tr>
+</table>
+<h2><a href="#Fields">Fields</a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#self._instance_name">self._instance_name</a></td>
+	<td class="summary">the name of the device we are controlling</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#self.update_requested">self.update_requested</a></td>
+	<td class="summary">update display</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#self.suppress_value_observable">self.suppress_value_observable</a></td>
+	<td class="summary">(bool) set to temporarily skip value notifier</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#self.min_value">self.min_value</a></td>
+	<td class="summary">minimum/maximum value</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#self.grid_width">self.grid_width</a></td>
+	<td class="summary">the detected grid width/height</td>
 	</tr>
 </table>
 
@@ -219,6 +289,53 @@
 
 </dd>
     <dt>
+    <a name = "update_renoise"></a>
+    <strong>update_renoise ()</strong>
+    </dt>
+    <dd>
+    apply the value to the targeted DSP device
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "update_controller"></a>
+    <strong>update_controller ()</strong>
+    </dt>
+    <dd>
+    update display state of the various controls
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "get_xy_params"></a>
+    <strong>get_xy_params ()</strong>
+    </dt>
+    <dd>
+    return the X/Y axis parameter of the target device
+
+
+
+    <h3>Returns:</h3>
+    <ol>
+
+        DeviceParameter
+    </ol>
+
+
+
+
+</dd>
+    <dt>
     <a name = "_build_app"></a>
     <strong>_build_app ()</strong>
     </dt>
@@ -241,6 +358,88 @@
 
 
 </dd>
+    <dt>
+    <a name = "select_grid_cell"></a>
+    <strong>select_grid_cell (x, y)</strong>
+    </dt>
+    <dd>
+    set the quantized value based on input from xy_grid, but add a tiny
+ amount of noise afterwards, forcing the xypad device to send a signal
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">x</span>
+
+
+
+        </li>
+        <li><span class="parameter">y</span>
+
+
+
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "attach_to_device"></a>
+    <strong>attach_to_device (track_idx, device_idx, device)</strong>
+    </dt>
+    <dd>
+    attach notifier to the device
+ called when we use previous/next device, set the initial device
+ or are freely roaming the tracks
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">track_idx</span>
+
+
+
+        </li>
+        <li><span class="parameter">device_idx</span>
+
+
+
+        </li>
+        <li><span class="parameter">device</span>
+
+
+
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "send_midi"></a>
+    <strong>send_midi (msg)</strong>
+    </dt>
+    <dd>
+    send MIDI message using the internal OSC server
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">msg</span>
+         (table) MIDI message with three bytes
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
 </dl>
     <h2><a name="Tables"></a>Tables</h2>
     <dl class="function">
@@ -252,6 +451,24 @@
     The XYPad application has no default options
 
 
+    <h3>Fields:</h3>
+    <ul>
+        <li><span class="parameter">broadcast_x</span>
+
+
+
+        </li>
+        <li><span class="parameter">description</span>
+
+
+
+        </li>
+        <li><span class="parameter">items</span>
+
+
+
+        </li>
+    </ul>
 
 
 
@@ -263,35 +480,117 @@
 
 </dd>
     <dt>
-    <a name = "available_mappings"></a>
-    <strong>available_mappings</strong>
+    <a name = "self.value"></a>
+    <strong>self.value</strong>
     </dt>
     <dd>
-    These are the available mappings for the application
+    current value
 
 
     <h3>Fields:</h3>
     <ul>
-        <li><span class="parameter">xy_pad</span>
-         (UIPad) OSC-only mapping that accept both X and Y axis simultaneously
+        <li><span class="parameter">nil</span>
+
+
+
         </li>
-        <li><span class="parameter">xy_grid</span>
-         (UIButton,...) This is a multiple-button "emulation" of an XYPad on your grid controller. Minimum required resolution is 2x2
-        </li>
-        <li><span class="parameter">x_slider</span>
-         (UISlider) Map x axis to it's own fader/knob
-        </li>
-        <li><span class="parameter">y_slider</span>
-         (UISlider) Map y axis to it's own fader/knob
+        <li><span class="parameter">nil</span>
+
+
+
         </li>
     </ul>
 
 
 
-    <h3>See also:</h3>
-    <ul>
-         <a href="../modules/Duplex.RoamingDSP.html#">Duplex.RoamingDSP</a>
-    </ul>
+
+
+</dd>
+    <dt>
+    <a name = "self._controls"></a>
+    <strong>self._controls</strong>
+    </dt>
+    <dd>
+    controls
+ Note: RoamingDSP has some controls too
+
+
+
+
+
+
+
+</dd>
+</dl>
+    <h2><a name="Fields"></a>Fields</h2>
+    <dl class="function">
+    <dt>
+    <a name = "self._instance_name"></a>
+    <strong>self._instance_name</strong>
+    </dt>
+    <dd>
+    the name of the device we are controlling
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "self.update_requested"></a>
+    <strong>self.update_requested</strong>
+    </dt>
+    <dd>
+    update display
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "self.suppress_value_observable"></a>
+    <strong>self.suppress_value_observable</strong>
+    </dt>
+    <dd>
+    (bool) set to temporarily skip value notifier
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "self.min_value"></a>
+    <strong>self.min_value</strong>
+    </dt>
+    <dd>
+    minimum/maximum value
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "self.grid_width"></a>
+    <strong>self.grid_width</strong>
+    </dt>
+    <dd>
+    the detected grid width/height
+
+
+
+
+
 
 
 </dd>
