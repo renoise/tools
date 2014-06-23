@@ -16,11 +16,12 @@ class 'UIPitchBend' (UISlider)
 
 --- Initialize the UIPitchBend class
 -- @param app (@{Duplex.Application})
+-- @param map[opt] (table) mapping properties 
 
-function UIPitchBend:__init(app)
-  TRACE("UIPitchBend:__init()",app)
+function UIPitchBend:__init(app,map)
+  TRACE("UIPitchBend:__init()",app,map)
 
-	UISlider.__init(self,app)
+	UISlider.__init(self,app,map)
 
 end
 
@@ -33,10 +34,13 @@ end
 function UIPitchBend:add_listeners()
   TRACE("UIPitchBend:add_listeners()")
 
-  self.app.display.device.message_stream:add_listener(
-    self,DEVICE_EVENT.PITCH_CHANGED,
-    function(msg) return self:do_change(msg) end )
 	UISlider.add_listeners(self)
+
+  if self.on_change then
+    self.app.display.device.message_stream:add_listener(
+      self,DEVICE_EVENT.PITCH_CHANGED,
+      function(msg) return self:do_change(msg) end )
+  end
 
 end
 

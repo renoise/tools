@@ -2296,7 +2296,7 @@ end
 function Mlrx_track:sync_track_props(source,target)
   TRACE("Mlrx_track:sync_track_props(source,target)",source,target)
 
-  print("*** sync_track_props(source,target)",source,target)
+  --print("*** sync_track_props(source,target)",source,target)
 
   --target.number_of_lines = source.number_of_lines
   target.volume_column_visible = source.volume_column_visible
@@ -2558,7 +2558,12 @@ end
 function Mlrx_track:set_shuffle_amount(val)
   TRACE("Mlrx_track:set_shuffle_amount(val)",val)
 
-  self.shuffle_amount = math.floor(val)
+  local new_val = math.floor(val)
+  if (self.shuffle_amount == new_val) then
+    return false
+  end
+
+  self.shuffle_amount = new_val
   --print("*** self.shuffle_amount",self.shuffle_amount)
 
   if rns.transport.edit_mode and 
@@ -3369,7 +3374,7 @@ function Mlrx_track:trigger_release(trigger_idx,toggle_off)
 
 
   --print("*** A trigger_release - self._held_triggers...",#self._held_triggers)
-  rprint(self._held_triggers)
+  --rprint(self._held_triggers)
 
   -- revert to previous pressed button ?
   if not toggle_off and not self._held_triggers:is_empty() then

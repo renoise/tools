@@ -6,10 +6,45 @@
 --[[--
 The Slider supports different input methods: buttons or faders/dials
 
-- use multiple buttons to divide the value into discrete steps
-- built-in quantize for MIDI devices (only output when 7bit values change)
-- supports ORIENTATION.HORIZONTAL/vertical orientation and axis flipping
-- display as normal/dimmed version (if supported in hardware)
+
+### Dial mode / fader mode
+
+  In most cases, you would specify a UISlider to take control of either a dial/encoder or fader. 
+
+     _    _______   
+    | |  |xxxx   | <- UISlider, mapped to horizontally aligned fader
+    | |   ¯¯¯¯¯¯¯  <- UISlider, mapped to vertically aligned fader 
+    |x|   _         
+    |x|  ( )       <- UISlider mapped to "dial"
+     ¯    ¯
+  
+  Specify an "on_change" function to handle events from the slider. 
+  
+
+### Button mode
+
+  In button mode, each value-step of the slider is assigned to a separate button. The size of the resulting slider is determined by the size you specify when creating the slider (or, by using the set_size() after the slider has been created). 
+     _    _______   
+    |_|  |x|x|x| | <- horizontally aligned UISlider (mapped to 4 buttons)  
+    |_|   ¯¯¯¯¯¯¯  <- vertically aligned UISlider (mapped to 4 buttons)
+    |x|   _         
+    |x|  | |       <- single-button UISlider (toggles min/max value)
+     ¯    ¯
+
+  To map a slider onto button(s), you must also specify an "on_press" event handler. The method does not have to do anything special, but without it,
+  the slider will never receive any events from the device. 
+
+  In "button mode", you also have an additional property called "toggleable". Setting this to true will enable you to toggle off any active button, and thus gain an extra value-step from any series of buttons. 
+
+### Other features
+
+- Built-in quantize for MIDI devices (only output when 7bit values change)
+- Built-in support for relative encoder/dials. Note that the type of relative encoder is specified in your control-map
+
+### Changelog
+
+  0.99
+    - Got rid of "dimmed" method (just call set_palette instead)
 
 --]]
 
@@ -21,17 +56,18 @@ class 'UISlider' (UIComponent)
 
 --- Initialize the UISlider class
 -- @param app (@{Duplex.Application})
+-- @param map[opt] (table) mapping properties 
 
-function UISlider:__init(app)
+function UISlider:__init(app,map)
   TRACE('UISlider:__init')
 
-  UIComponent.__init(self,app)
+  --- (bool) this flag indicates that input method is a button
+  self._button_mode = false
+
+  UIComponent.__init(self,app,map)
 
   --- current value, between 0 and .ceiling
   self.value = 0
-
-  --- TODO the minimum value (the opposite of ceiling)
-  -- self.floor = 0
 
   --- (int), set the number of steps to quantize the value
   -- (this value is automatically set when we assign a size)
@@ -44,52 +80,44 @@ function UISlider:__init(app)
   -- only applies when input method is a button
   self.toggleable = false
 
-  --- (bool) paint a dimmed version
-  -- only applies when input method is a button
-  self.dimmed = false
-
-  --- (bool) set this mode to ensure that slider is always displayed 
-  -- correctly when using an array of buttons 
-  -- (normally, this is not a problem, but when a slider is 
-  -- resized to a single unit, this is the only way it will be 
-  -- able to tell that it's a button)
-  self.button_mode = false
-
   --- (bool) flip top/bottom direction 
   self.flipped = false
+
+  --- (bool) see @{Duplex.UIComponent}
+  --self.soft_echo = true
 
   --- slider is ORIENTATION.VERTICAL or ORIENTATION.HORIZONTAL?
   -- (use set_orientation() method to set this value)
   self._orientation = ORIENTATION.VERTICAL 
 
-  --- (int) the 'physical' size, should always be 1 for dials/faders
-  -- (use set_size() method to set this value)
+  --- (int) the size in units (can be > 1 when input method is a button)
+  -- (always call set_size() method to set this value)
   self._size = 1
 
-  -- apply size 
-  self:set_size(self._size)
-  
-  --- default palette
+  --- default palette (only relevant for button mode)
   -- @field background The background color 
   -- @field tip The active point
-  -- @field tip_dimmed The active point (when dimmed)
   -- @field track The track color
-  -- @field track_dimmed The track color (when dimmed)
   -- @table palette
   self.palette = {
     background    = {color = {0x00,0x00,0x00}, text = "·", val=false},
     tip           = {color = {0xFF,0xFF,0xFF}, text = "▪", val=true},
-    tip_dimmed    = {color = {0xD0,0xD0,0xD0}, text = "▫", val=true},
     track         = {color = {0xD0,0xD0,0xD0}, text = "▪", val=true},
-    track_dimmed  = {color = {0x80,0x80,0x80}, text = "▫", val=true},
   }
 
   --- internal values
   self._cached_index = self.index
   self._cached_value = self.value
 
-  -- attach ourself to the display message stream
-  self:add_listeners()
+  -- apply size 
+  self:set_size(self._size)
+  
+  -- apply UISlider-specific values from map
+  if map and map.group_name then
+    self.toggleable = map.toggleable or false
+    self.flipped = map.flipped or false
+    self._orientation = map.orientation or ORIENTATION.VERTICAL 
+  end
 
 end
 
@@ -107,12 +135,14 @@ function UISlider:do_press(msg)
     return 
   end
 
+  self.soft_echo = not msg.is_virtual and msg.xarg.soft_echo
+
   local idx = nil
 
   if (self._orientation == ORIENTATION.HORIZONTAL) or (self._orientation == ORIENTATION.VERTICAL) then
-    idx = self:_determine_index_by_pos(msg.column, msg.row)
+    idx = self:_determine_index_by_pos(msg.xarg.column, msg.xarg.row)
   else
-    idx = msg.index
+    idx = msg.xarg.index
   end
 
   if (self.toggleable and self.index == idx) then
@@ -135,9 +165,13 @@ end
 function UISlider:do_change(msg)
   TRACE("UISlider:do_change()",msg)
 
+  --print("got here B")
+
   if not self:test(msg) then
     return 
   end
+
+  self.soft_echo = not msg.is_virtual and msg.xarg.soft_echo
 
   if (self.on_change ~= nil) then
     
@@ -145,10 +179,10 @@ function UISlider:do_change(msg)
     
     local is_midi_device = (self.app.display.device.protocol == DEVICE_PROTOCOL.MIDI)
     
-    local is_relative_7 = ((msg.param.mode == "rel_7_signed") or 
-      (msg.param.mode == "rel_7_signed2") or
-      (msg.param.mode == "rel_7_offset") or
-      (msg.param.mode == "rel_7_twos_comp"))
+    local is_relative_7 = ((msg.xarg.mode == "rel_7_signed") or 
+      (msg.xarg.mode == "rel_7_signed2") or
+      (msg.xarg.mode == "rel_7_offset") or
+      (msg.xarg.mode == "rel_7_twos_comp"))
     
     if not msg.is_virtual and is_midi_device and is_relative_7 then
       -- check midi resolution
@@ -160,25 +194,25 @@ function UISlider:do_change(msg)
       -- treat as relative control
       new_val = self.value
       local step_size = self.ceiling/midi_res
-      if (msg.param.mode == "rel_7_signed") then
+      if (msg.xarg.mode == "rel_7_signed") then
         if (msg.midi_msg[3] < 64) then
           new_val = math.max(new_val-(step_size*msg.midi_msg[3]),0)
         elseif (msg.midi_msg[3] > 64) then
           new_val = math.min(new_val+(step_size*(msg.midi_msg[3]-64)),self.ceiling)
         end
-      elseif (msg.param.mode == "rel_7_signed2") then
+      elseif (msg.xarg.mode == "rel_7_signed2") then
         if (msg.midi_msg[3] > 64) then
           new_val = math.max(new_val-(step_size*(msg.midi_msg[3]-64)),0)
         elseif (msg.midi_msg[3] < 64) then
           new_val = math.min(new_val+(step_size*msg.midi_msg[3]),self.ceiling)
         end
-      elseif (msg.param.mode == "rel_7_offset") then
+      elseif (msg.xarg.mode == "rel_7_offset") then
         if (msg.midi_msg[3] < 64) then
           new_val = math.max(new_val-(step_size*(64-msg.midi_msg[3])),0)
         elseif (msg.midi_msg[3] > 64) then
           new_val = math.min(new_val+(step_size*(msg.midi_msg[3]-64)),self.ceiling)
         end
-      elseif (msg.param.mode == "rel_7_twos_comp") then
+      elseif (msg.xarg.mode == "rel_7_twos_comp") then
         if (msg.midi_msg[3] > 64) then
           new_val = math.max(new_val-(step_size*(128-msg.midi_msg[3])),0)
         elseif (msg.midi_msg[3] < 65) then
@@ -194,7 +228,7 @@ function UISlider:do_change(msg)
     else
       -- treat as absolute control:
       -- scale from the message range to the sliders range
-      new_val = (msg.value / msg.max) * self.ceiling
+      new_val = scale_value(msg.value,msg.xarg.minimum,msg.xarg.maximum,self.floor,self.ceiling)
     end
 
     if not self:output_quantize(new_val) then
@@ -209,29 +243,6 @@ function UISlider:do_change(msg)
 
 end
 
-
---------------------------------------------------------------------------------
-
---- Set the value (will also update the index)
--- @param val (float), a number between 0 and .ceiling
--- @param skip_event (bool) skip event handler
-
-function UISlider:set_value(val,skip_event)
-  TRACE("UISlider:set_value()",val,skip_event)
-
-  local idx = math.abs(math.ceil(((self.steps/self.ceiling)*val)-0.5))
-  self._cached_value = self.value
-  self._cached_index = self.index
-  self.value = val
-  self.index = idx
-
-  self:invalidate()
-
-  if not skip_event then
-    return self:_invoke_handler() 
-  end
-
-end
 
 --------------------------------------------------------------------------------
 
@@ -264,6 +275,34 @@ end
 
 --------------------------------------------------------------------------------
 
+--- Set the value (will also update the index)
+-- @param val (float), a number between 0 and .ceiling
+-- @param skip_event (bool) skip event handler
+
+function UISlider:set_value(val,skip_event)
+  TRACE("UISlider:set_value()",val,skip_event)
+
+  --if (self.value == val) then
+  --  print("*** UISlider:set_value - skip update, same value being set",val)
+  --  return
+  --end
+
+  local idx = math.abs(math.ceil(((self.steps/self.ceiling)*val)-0.5))
+  self._cached_value = self.value
+  self._cached_index = self.index
+  self.value = val
+  self.index = idx
+
+  self:invalidate()
+
+  if not skip_event then
+    return self:_invoke_handler() 
+  end
+
+end
+
+--------------------------------------------------------------------------------
+
 --- Set index (will also update the value)
 -- @param idx (integer) 
 -- @param skip_event (bool) skip event handler
@@ -271,8 +310,14 @@ end
 function UISlider:set_index(idx,skip_event)
   TRACE("UISlider:set_index()",idx,skip_event)
 
+  --if (self.index == idx) then
+  --  print("*** UISlider:set_index - skip update, same index being set",idx)
+  --  return
+  --end
+
   self._cached_index = self.index
   self._cached_value = self.value
+
   self.index = idx
   self.value = (idx~=0) and ((self.ceiling/self.steps)*idx) or 0
 
@@ -287,23 +332,12 @@ end
 --------------------------------------------------------------------------------
 
 --- Force-update controls that are handling their internal state by themselves
+-- (only relevant when assigned to buttons)
 
 function UISlider:force_update()
 
   self.canvas.delta = table.rcopy(self.canvas.buffer)
   self.canvas.has_changed = true
-  self:invalidate()
-
-end
-
---------------------------------------------------------------------------------
-
---- Display the slider as "dimmed" (use alternative palette)
--- @param bool (bool) true for dimmed state, false for normal state
-
-function UISlider:set_dimmed(bool)
-
-  self.dimmed = bool
   self:invalidate()
 
 end
@@ -344,7 +378,7 @@ end
 --------------------------------------------------------------------------------
 
 --- Override UIComponent with this method
--- @param size (Number)
+-- @param size (number)
 -- @see Duplex.UIComponent
 
 function UISlider:set_size(size)
@@ -371,7 +405,7 @@ end
 
 function UISlider:test(msg)
 
-  if not (self.group_name == msg.group_name) then
+  if not (self.group_name == msg.xarg.group_name) then
     return false
   end
 
@@ -382,7 +416,7 @@ function UISlider:test(msg)
   if (self._orientation == ORIENTATION.VERTICAL) or
     (self._orientation == ORIENTATION.HORIZONTAL)
   then
-    return UIComponent.test(self,msg.column,msg.row)
+    return UIComponent.test(self,msg.xarg.column,msg.xarg.row)
   end
 
   -- no-orientation, fill the entire group
@@ -399,13 +433,15 @@ end
 function UISlider:draw()
   TRACE("UISlider:draw() - self.value",self.value)
 
-  if (self._size==1) and not (self.button_mode) then
-    -- update dial/fader 
+  --print("*** UISlider:draw - self._button_mode",self._button_mode)
+
+  if not self._button_mode then
+
     local point = CanvasPoint()
     point.val = self.value
     self.canvas:write(point, 1, 1)
+
   else
-    -- update button array
 
     local idx = self.index
     if idx then
@@ -430,10 +466,8 @@ function UISlider:draw()
         local apply_track = false
 
         if (i == idx) then
-          -- update the tip of the slider
           point.val = self.palette.tip.val        
-          point:apply((self.dimmed) and 
-            self.palette.tip_dimmed or self.palette.tip)
+          point:apply(self.palette.tip)
         elseif (self.flipped) then
           if (i <= idx) then
             apply_track = true
@@ -444,8 +478,7 @@ function UISlider:draw()
         
         if(apply_track)then
           point.val = self.palette.track.val        
-          point:apply((self.dimmed) and 
-            self.palette.track_dimmed or self.palette.track)
+          point:apply(self.palette.track)
         end
 
         self.canvas:write(point, x, y)
@@ -461,6 +494,21 @@ end
 
 --------------------------------------------------------------------------------
 
+--- Set the position using x/y or index within group
+-- @see Duplex.UIComponent
+
+function UISlider:set_pos(x,y)
+  TRACE("UISlider:set_pos()")
+
+  self:_detect_button_mode()
+  --print("self._button_mode",self._button_mode)
+    
+  UIComponent.set_pos(self,x,y)
+
+end
+
+--------------------------------------------------------------------------------
+
 --- Add event listeners
 --    DEVICE_EVENT.BUTTON_PRESSED
 --    DEVICE_EVENT.VALUE_CHANGED
@@ -469,19 +517,19 @@ end
 function UISlider:add_listeners()
   TRACE("UISlider:add_listeners()")
 
-  self.app.display.device.message_stream:add_listener(
-    self,DEVICE_EVENT.BUTTON_PRESSED,
-    function(msg) return self:do_press(msg) end )
+  self:remove_listeners()
 
-  self.app.display.device.message_stream:add_listener(
-    self,DEVICE_EVENT.VALUE_CHANGED,
-    function(msg) return self:do_change(msg) end )
+  if self.on_press then
+    self.app.display.device.message_stream:add_listener(
+      self,DEVICE_EVENT.BUTTON_PRESSED,
+      function(msg) return self:do_press(msg) end )
+  end
 
-  --[[
-  self.app.display.device.message_stream:add_listener(
-    self,DEVICE_EVENT.BUTTON_RELEASED,
-    function(msg) self:do_release(msg) end )
-  ]]
+  if self.on_change then
+    self.app.display.device.message_stream:add_listener(
+      self,DEVICE_EVENT.VALUE_CHANGED,
+      function(msg) return self:do_change(msg) end )
+  end
 
 end
 
@@ -500,12 +548,9 @@ function UISlider:remove_listeners()
   self.app.display.device.message_stream:remove_listener(
     self,DEVICE_EVENT.VALUE_CHANGED)
 
-  --[[
-  self.app.display.device.message_stream:remove_listener(
-    self,DEVICE_EVENT.BUTTON_RELEASED)
-  ]]
 
 end
+
 
 
 --------------------------------------------------------------------------------
@@ -560,6 +605,32 @@ function UISlider:_invoke_handler()
     return false
   end
 
+
+end
+
+
+--------------------------------------------------------------------------------
+
+--- Detect if the control is assigned to button widget(s)
+
+function UISlider:_detect_button_mode()
+
+  local button_mode = false
+  local widgets = self:_get_widgets()
+  for k,v in ipairs(widgets) do
+    if (type(v) == "Button") then
+      button_mode = true
+      break
+    end
+  end
+
+  if button_mode and (self.on_press == nil) then
+    self.on_press = function()
+      -- dummy method, allowing us to receive "press" events
+    end
+  end
+
+  self._button_mode = button_mode
 
 end
 

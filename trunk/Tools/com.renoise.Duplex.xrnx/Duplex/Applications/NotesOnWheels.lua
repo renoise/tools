@@ -1,10 +1,10 @@
 --[[============================================================================
--- Duplex.NotesOnWheels (NOW)
--- Inheritance: Application > NotesOnWheels
+-- Duplex.Application.NotesOnWheels 
 ============================================================================]]--
 
 --[[--
-Notes On Wheels (N.O.W) is an arpeggiating (alternating between pressed keys) step sequencer. 
+Notes On Wheels (N.O.W) is an arpeggiating step sequencer. 
+Inheritance: @{Duplex.Application} > Duplex.Application.NotesOnWheels 
 
 ### Features
 N.O.W. allows you to create a sequence and control all aspects of each step (such as the pitch, velocity etc.) in realtime. 
@@ -1268,7 +1268,6 @@ function NotesOnWheels:_build_app()
         c.on_press = function() 
           -- TODO do "something"
         end
-        self:_add_component(c)
         self._controls.pos_buttons[control_index] = c    
       end
     end
@@ -1307,7 +1306,6 @@ function NotesOnWheels:_build_app()
           self.step_focus = control_index
           self.touched = true
         end 
-        self:_add_component(c)
         self._controls.pitch_sliders[control_index] = c
       end
     end
@@ -1334,7 +1332,6 @@ function NotesOnWheels:_build_app()
           self.step_focus = control_index
           self.touched = true
         end 
-        self:_add_component(c)
         self._controls.velocity_sliders[control_index] = c
       end
     end
@@ -1361,7 +1358,6 @@ function NotesOnWheels:_build_app()
           self.step_focus = control_index
           self.touched = true
         end 
-        self:_add_component(c)
         self._controls.offset_sliders[control_index] = c
       end
     end
@@ -1388,7 +1384,6 @@ function NotesOnWheels:_build_app()
           self.step_focus = control_index
           self.touched = true
         end 
-        self:_add_component(c)
         self._controls.gate_sliders[control_index] = c
       end
     end
@@ -1416,7 +1411,6 @@ function NotesOnWheels:_build_app()
           self.step_focus = control_index
           self.touched = true
         end 
-        self:_add_component(c)
         self._controls.retrig_sliders[control_index] = c
       end
     end
@@ -1467,7 +1461,6 @@ function NotesOnWheels:_build_app()
           self.step_focus = control_index
           self.touched = true
         end 
-        self:_add_component(c)
         self._controls.multi_sliders[control_index] = c
       end
     end
@@ -1498,7 +1491,6 @@ function NotesOnWheels:_build_app()
           set_multi(obj.value)
         end
       end 
-      self:_add_component(c)
       self._controls.pitch_adjust = c
     end
   end
@@ -1521,7 +1513,6 @@ function NotesOnWheels:_build_app()
           set_multi(obj.value)
         end
       end 
-      self:_add_component(c)
       self._controls.velocity_adjust = c
     end
   end
@@ -1544,7 +1535,6 @@ function NotesOnWheels:_build_app()
           set_multi(obj.value)
         end
       end 
-      self:_add_component(c)
       self._controls.offset_adjust = c
     end
   end
@@ -1567,7 +1557,6 @@ function NotesOnWheels:_build_app()
           set_multi(obj.value)
         end
       end 
-      self:_add_component(c)
       self._controls.gate_adjust = c
     end
   end
@@ -1590,7 +1579,6 @@ function NotesOnWheels:_build_app()
           set_multi(val_exp)
         end
       end 
-      self:_add_component(c)
       self._controls.retrig_adjust = c
     end
   end
@@ -1615,7 +1603,6 @@ function NotesOnWheels:_build_app()
         end
 
       end 
-      self:_add_component(c)
       self._controls.multi_adjust = c
     end
   end
@@ -1644,7 +1631,6 @@ function NotesOnWheels:_build_app()
           self:schedule_output(self.step,self.mode)
         end
       end 
-      self:_add_component(c)
       self._controls.num_steps = c
     end
   end
@@ -1666,7 +1652,6 @@ function NotesOnWheels:_build_app()
           self:schedule_output()
         end
       end 
-      self:_add_component(c)
       self._controls.step_spacing = c
     end
   end
@@ -1697,7 +1682,6 @@ function NotesOnWheels:_build_app()
         --obj:set(self.write_mode,true)
         update_button()
       end
-      self:_add_component(c)
       self._controls.write = c    
     end
   end
@@ -1735,7 +1719,6 @@ function NotesOnWheels:_build_app()
           self.just_entered_autolearn = false
         end
       end
-      self:_add_component(c)
       self._controls.learn = c    
     end
   end
@@ -1760,7 +1743,6 @@ function NotesOnWheels:_build_app()
         self.fill_mode = not self.fill_mode
         update_button()
       end
-      self:_add_component(c)
       self._controls.fill = c    
       update_button()
     end
@@ -1786,7 +1768,6 @@ function NotesOnWheels:_build_app()
         self.global_mode = not self.global_mode
         update_button()
       end
-      self:_add_component(c)
       self._controls.global = c    
       update_button()
     end
@@ -1809,7 +1790,6 @@ function NotesOnWheels:_build_app()
         self._controls.shift_up:flash(
           0.1,self.palette.shift_up_on,self.palette.shift_up_off)
       end
-      self:_add_component(c)
       self._controls.shift_up = c    
     end
   end
@@ -1831,7 +1811,6 @@ function NotesOnWheels:_build_app()
         self._controls.shift_down:flash(
           0.1,self.palette.shift_down_on,self.palette.shift_down_off)
       end
-      self:_add_component(c)
       self._controls.shift_down = c    
     end
   end
@@ -1852,7 +1831,6 @@ function NotesOnWheels:_build_app()
           self:output_sequence(self.step)
         end
       end
-      self:_add_component(c)
       self._controls.extend = c    
     end
   end
@@ -1873,7 +1851,6 @@ function NotesOnWheels:_build_app()
           self:output_sequence(self.step)
         end
       end
-      self:_add_component(c)
       self._controls.shrink = c    
     end
   end
@@ -1898,7 +1875,6 @@ function NotesOnWheels:_build_app()
         self:output_sequence(nil,MODE_PITCH,nil,true)
         self.fill_mode = false
       end
-      self:_add_component(c)
       self._controls.set_mode_pitch = c   
     end
   end
@@ -1923,7 +1899,6 @@ function NotesOnWheels:_build_app()
         self:output_sequence(nil,MODE_VELOCITY,nil,true)
         self.fill_mode = false
       end
-      self:_add_component(c)
       self._controls.set_mode_velocity = c    
     end
   end
@@ -1948,7 +1923,6 @@ function NotesOnWheels:_build_app()
         self:output_sequence(nil,MODE_OFFSET,nil,true)
         self.fill_mode = false
       end
-      self:_add_component(c)
       self._controls.set_mode_offset = c    
     end
   end
@@ -1973,7 +1947,6 @@ function NotesOnWheels:_build_app()
         self:output_sequence(nil,MODE_GATE,nil,true)
         self.fill_mode = false
       end
-      self:_add_component(c)
       self._controls.set_mode_gate = c    
     end
   end
@@ -1998,7 +1971,6 @@ function NotesOnWheels:_build_app()
         self:output_sequence(nil,MODE_RETRIG,nil,true)
         self.fill_mode = false
       end
-      self:_add_component(c)
       self._controls.set_mode_retrig = c    
     end
   end

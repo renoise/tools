@@ -155,8 +155,6 @@
 				<Group name="ADC">
 					<Param value="/tilt 0 %f %f %f" size="8" type="xypad" invert_y="true" invert_x="true" skip_echo="true" maximum="162" minimum="88"/>
 				</Group>
-				<!--
-				-->
 			</Row>
 		</Column>
 	</Parameters>

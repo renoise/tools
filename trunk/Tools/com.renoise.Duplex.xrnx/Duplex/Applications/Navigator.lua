@@ -1,11 +1,10 @@
 --[[============================================================================
--- Duplex.Navigator
--- Inheritance: Application > Navigator
+-- Duplex.Application.Navigator 
 ============================================================================]]--
 
 --[[--
-
 The "Navigator" application allows you to take control of the pattern/block-loop and playback position. 
+Inheritance: @{Duplex.Application} > Duplex.Application.Navigator 
 
 ### Usage 
 
@@ -249,7 +248,7 @@ function Navigator:_build_app()
       background = self.palette.blockpos_background
     })
     c.on_press = function(obj,idx)
-      --print("blockpos on_press",obj,idx)
+      print("blockpos on_press",obj,idx)
 
       local rns = renoise.song()
 
@@ -338,7 +337,6 @@ function Navigator:_build_app()
 
 
     end
-    self:_add_component(c)
     self._blockpos = c
 
   end
@@ -357,7 +355,6 @@ function Navigator:_build_app()
           self.palette.prev_block_off)
       end
     end
-    self:_add_component(c)
     self._prev_block = c
   end
 
@@ -376,7 +373,6 @@ function Navigator:_build_app()
           self.palette.next_block_off)
       end
     end
-    self:_add_component(c)
     self._next_block = c
   end
 
@@ -643,7 +639,7 @@ end
 -- @return int (0 to display "no index")
 
 function Navigator:_obtain_active_index()
-  TRACE("Navigator:_obtain_active_index()")
+  --TRACE("Navigator:_obtain_active_index()")
 
   local rns = renoise.song()
   if self._inside_pattern then
@@ -698,7 +694,7 @@ end
 -- @return int (lines per unit), number of lines in pattern
 
 function Navigator:_get_lines_per_unit(seq_idx)
-  TRACE("Navigator:_get_lines_per_unit(seq_idx)",seq_idx)
+  --TRACE("Navigator:_get_lines_per_unit(seq_idx)",seq_idx)
 
   local rns = renoise.song()
   seq_idx = seq_idx or rns.selected_sequence_index
@@ -716,7 +712,7 @@ end
 -- note: when not playing, this will always return true
 
 function Navigator:_is_inside_pattern()
-  TRACE("Navigator:_is_inside_pattern()")
+  --TRACE("Navigator:_is_inside_pattern()")
 
   if not self._playing then
     return true
@@ -755,7 +751,7 @@ function Navigator:_jump_to_index(ctrl_idx)
   if inside_range and (range_size == 0) and 
     (self._active_index == ctrl_idx) 
   then
-    --print("skip jump within single-unit range")
+    print("skip jump within single-unit range")
     return
   end
 

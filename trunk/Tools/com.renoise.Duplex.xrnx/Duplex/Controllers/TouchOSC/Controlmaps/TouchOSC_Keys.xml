@@ -6,10 +6,10 @@
 	<Parameters>
 		<Row>
 			<Group name="Keyboard1">
-				<Param value="/1/push* %i" type="keyboard" name="" size="1.1" velocity_enabled="false" aspect="1" range="12" maximum="1" minimum="0"/>
+				<Param value="/1/push* %i" type="keyboard" name="" size="1.1" aspect="1" range="12" maximum="1" minimum="0"/>
 			</Group>
 			<Group name="Keyboard2">
-				<Param value="/2/push* %i" type="keyboard" name="" size="1.1" velocity_enabled="false" aspect="1" range="12" maximum="1" minimum="0"/>
+				<Param value="/2/push* %i" type="keyboard" name="" size="1.1" aspect="1" range="12" maximum="1" minimum="0"/>
 			</Group>
 			<Row>
 				<Group name="Faders1">
@@ -45,7 +45,7 @@
 				</Column>
 			</Row>
 			<Group name="Extra" >
-				<Param value="/accxyz %f %f (%f)" type="fader" size="4.25" name="Accelerometer #1" orientation="vertical" skip_echo="true" maximum="1" minimum="0"/>
+				<Param value="/accxyz %f %f %f" type="fader" size="4.25" name="Accelerometer #1" orientation="vertical" skip_echo="true" maximum="1" minimum="0"/>
 			</Group>
 		</Row>
 	</Parameters>

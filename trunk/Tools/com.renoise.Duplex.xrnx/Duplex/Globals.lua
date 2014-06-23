@@ -49,7 +49,8 @@ DEVICE_MESSAGE = {
   MIDI_PROGRAM_CHANGE = 7,    --- Midi Program Change Event
 }
 
---- (Enum) 
+
+--- (Enum) the type of event (pressed, held etc.)
 DEVICE_EVENT = {
   BUTTON_PRESSED = 1,   -- button event
   BUTTON_RELEASED = 2,  -- button event
@@ -62,20 +63,18 @@ DEVICE_EVENT = {
   CHANNEL_PRESSURE = 9, -- key event               
 }
 
---- (Enum) valid attributes for `param` nodes in the control-map 
+--- (Enum) valid `type` attributes for control-map params 
 INPUT_TYPE = {
-  BUTTON = 1,           -- standard bidirectional button which output a value on press & release, but does not control it's internal state
-  TOGGLEBUTTON = 2,     -- bidirectional button which toggles the state internally - this type of control does not support release & hold events (examples are buttons on the BCF/BCR controller)
-  PUSHBUTTON = 3,       -- bidirectional button which will output values on press & release while controlling it's state internally. Some examples are Automap "momentary" buttons, or TouchOSC pushbuttons
---ENCODER = 4,          -- relative/endless encoder
-  FADER = 5,            -- manual fader
-  DIAL = 6,             -- basic rotary encoder 
-  XYPAD = 7,            -- XY pad 
-  KEYBOARD = 8,         -- keyboard
-  KEY = 9,              -- key (drum-pad)
-  LABEL = 10,            -- text display
+  "button",           -- standard bidirectional button which output a value on press & release, but does not control it's internal state
+  "togglebutton",     -- bidirectional button which toggles the state internally - this type of control does not support release & hold events (examples are buttons on the BCF/BCR controller)
+  "pushbutton",       -- bidirectional button which will output values on press & release while controlling it's state internally. Some examples are Automap "momentary" buttons, or TouchOSC pushbuttons
+  "fader",            -- manual fader
+  "dial",             -- basic rotary encoder 
+  "xypad",            -- XY pad 
+  "keyboard",         -- keyboard
+  "key",              -- key (drum-pad)
+  "label",            -- text display
 }
-
 --- (Enum) used for layout purposes
 ORIENTATION = {
   VERTICAL = 1,
@@ -154,6 +153,12 @@ function table_has_equal_values(t)
   end
   return true
 
+end
+
+-- pack arguments into table
+
+function pack_args(...)
+  return (#arg >0) and arg or nil
 end
 
 
@@ -334,31 +339,33 @@ function wrap_value(value, min_value, max_value)
 end
 
 --- scale_value: scale a value to a range within a range
--- for example, we could have a range of 0-127, and want
--- to distribute the numbers 1-8 evenly across that range
 -- @param value (number) the value we wish to scale
--- @param low_val (number) the lowest value in 'our' range
--- @param high_val (number) the highest value in 'our' range
--- @param min_val (number) the lowest possible value
--- @param max_val (number) the highest possible value
-function scale_value(value,low_val,high_val,min_val,max_val)
-  local incr1 = min_val/(high_val-low_val)
-  local incr2 = max_val/(high_val-low_val)-incr1
-  return(((value-low_val)*incr2)+min_val)
+-- @param in_min (number)
+-- @param in_max (number)
+-- @param out_min (number)
+-- @param out_max (number)
+-- @return number
+function scale_value(value,in_min,in_max,out_min,out_max)
+  --[[
+  -- (readable version)
+  local incr1 = out_min/(in_max-in_min)
+  local incr2 = out_max/(in_max-in_min)-incr1
+  return(((value-in_min)*incr2)+out_min)
+  ]]
+  return(((value-in_min)*(out_max/(in_max-in_min)-(out_min/(in_max-in_min))))+out_min)
+
 end
 
 --- logarithmic scaling within a fixed space
 -- @param ceiling (number) the upper boundary 
 -- @param val (number) the value to scale
 function log_scale(ceiling,val)
-  local log_const = ceiling/math.log(ceiling)
-  return math.log(val)*log_const
+  return math.log(val)*ceiling/math.log(ceiling)
 end
 
 --- inverse logarithmic scaling (exponential)
 function inv_log_scale(ceiling,val)
-  local ref_val = ceiling-val+1
-  return ceiling-log_scale(ceiling,ref_val)
+  return ceiling-log_scale(ceiling,ceiling-val+1)
 end
 
 --- return the fractional part of a number
@@ -424,8 +431,8 @@ end
 
 local _log_to_file = false
 local _trace_filters = nil
---local _trace_filters = {"^Mlrx"}
---local _trace_filters = {"^Mlrx*","^Browser*"}
+local _trace_filters = {"^Navigator"}
+--local _trace_filters = {"^Recorder*","^UISlider*"}
 --local _trace_filters = {".*"}
 
 --------------------------------------------------------------------------------

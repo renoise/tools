@@ -27,45 +27,49 @@ function Browser:__init(initial_configuration, start_configuration)
   TRACE("Browser:__init")
 
 
-  --- list of duplex device configuration definitions
+  --- (table) list of duplex device configuration definitions
+  -- @see Duplex.Preferences
   self._available_configurations = duplex_configurations
 
-  --- processes is a table containing BrowserProcess processes
+  --- (table) a table containing BrowserProcess processes
   self._processes = table.create()
   
-  --- string, selected device display-name 
+  --- (string) selected device display-name 
   self._device_name = nil 
-  --- string, selected configuration for the current device
+
+  --- (string) selected configuration for the current device
   self._configuration_name = nil
 
-  --- dump midi information to console (debug option)
+  --- (bool) dump midi information to console (debug option)
   self._dump_midi = false
 
-  --- true while updating the GUI from within the internal browser functions, 
+  --- (bool) true while updating the GUI from within the internal browser functions, 
   -- to avoid doubling updates when the changes are not fired from the GUI
   self._suppress_notifiers = false
 
-  --- set when we temporarily have selected "None" as device, 
+  --- (string) set when we temporarily have selected "None" as device, 
   -- and want to revert the list choice 
   self._requested_device = nil
   
-  --- cast these as standard types instead of Observable-X types,
+  --- (string) cast OSC host as standard types instead of Observable-X types,
   -- as the socket will only accept basic string & numbers as arguments
   local osc_host = duplex_preferences.osc_server_host.value
+
+  --- (int) OSC port address - cast as standard types instead of Observable-X types
   local osc_port = duplex_preferences.osc_server_port.value
 
-  --- the OSC client takes care of sending internally routed notes
+  --- (@{Duplex.OscClient}) takes care of sending internally routed notes
   -- to Renoise (not created if host/port is not defined)
   self._osc_client = OscClient(osc_host,osc_port)
   
-  --- the voice manager is handling triggered note messages
+  --- (@{Duplex.OscVoiceMgr}) the voice manager is handling triggered note messages
   -- (needs the osc_client)
   self._voice_mgr = OscVoiceMgr()
   
-  --- view builder that we do use for all our views
+  --- (renoise.ViewBuilder) viewbuilder for all our views
   self._vb = renoise.ViewBuilder()
   
-  --- referenc eto the main dialog that we create
+  --- (renoise.Dialog) referenc to the main dialog 
   self._dialog = nil
   
 
@@ -123,7 +127,7 @@ function Browser:show()
       "browser always needs a valid content view")
 
     local function keyhandler(dialog, key)
-      rprint(key)
+      --rprint(key)
       local fkey = (string.match(key.name,"f([%d]+)"))
       if (key.modifiers=="") and (fkey~=nil) then
         -- switch configuration using the function keys

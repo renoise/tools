@@ -1,11 +1,10 @@
 --[[============================================================================
--- Duplex.StepSequencer
--- Inheritance: Application > StepSequencer
+-- Duplex.Application.StepSequencer 
 ============================================================================]]--
 
 --[[--
-
-Use your grid controller as a basic step sequencer
+Use your grid controller as a basic step sequencer.
+Inheritance: @{Duplex.Application} > Duplex.Application.StepSequencer 
 
 Each button in the grid corresponds to a line in a track. The grid 
 is scrollable too - use the line/track mappings to access any part of the 
@@ -400,7 +399,6 @@ function StepSequencer:_build_line()
       return false
 
     end
-    self:_add_component(c)
     self._line_navigator = c
     ]]
 
@@ -412,7 +410,6 @@ function StepSequencer:_build_line()
     c.on_change = function(obj) 
       set_page(obj.index)
     end
-    self:_add_component(c)
     self._line_navigator = c
   
   end
@@ -429,7 +426,6 @@ function StepSequencer:_build_line()
     c.on_hold = function() 
       self:jump_to_top()
     end
-    self:_add_component(c)
     self._prev_line = c
   end
 
@@ -445,7 +441,6 @@ function StepSequencer:_build_line()
     c.on_hold = function()
       self:jump_to_bottom()
     end
-    self:_add_component(c)
     self._next_line = c
   end
 
@@ -481,7 +476,6 @@ function StepSequencer:_build_track()
       end
 
     end
-    self:_add_component(c)
     self._track_navigator = c
   end
 
@@ -560,7 +554,6 @@ function StepSequencer:_build_grid()
         end
 
       end
-      self:_add_component(c)
       self._buttons[x][y] = c
     end  
   end
@@ -620,7 +613,6 @@ function StepSequencer:_build_level()
       self:_draw_volume_slider(newval)
       return true
     end
-    self:_add_component(c)
     self._level = c
   end
 
@@ -678,7 +670,6 @@ function StepSequencer:_build_transpose()
         end
       end
       
-      self:_add_component(c)
       self._transpose[k] = c
       
     end
@@ -847,7 +838,7 @@ end
 --------------------------------------------------------------------------------
 
 --- set the current edit page
--- @param index (int)
+-- @param idx (int)
 
 function StepSequencer:set_page(idx)
   TRACE("StepSequencer:set_page(idx)",idx)

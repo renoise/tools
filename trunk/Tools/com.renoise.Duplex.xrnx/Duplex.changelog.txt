@@ -6,6 +6,62 @@ Duplex Changelog
 Done 0.99
 --------------------------------------------------------------------------------
 
+-- Duplex 0.99.2 -----------
+
+Duplex Core
+* Native viewbuilder widgets are now defined in a single place: WidgetHooks.lua
+  (this change has reduced complexity of the Display class in particular)
+* WidgetKeyboard is a "custom widget implemention", refactored from UIKey
+
+Core/ControlMap
+* Faster, more flexible parameter matching 
+  - all messages are processed on startup, cached/memoized where possible
+  - OSC patterns now support "captures", see get_osc_params() for more info
+  - get_osc_params(): when using wildcards, returns table of regexp-matches
+* <Param @invert> (new), allows inverting the value (flip min/max)
+* <Param @soft_echo> (new) update device only when changed via virtual UI
+* <Param @font> (new), specify the font type - relevant for @type=labels only
+* <Param @velocity_enabled> attribute has been retired
+* <Param @is_virtual> attribute has been retired, just enter a blank @value
+* <Param @type="key"> widget type has been retired (use @type="button")
+* <SubParam> new node type for combining several parameters into one
+  (finally, we can have a "proper" xypad control for MIDI devices)
+* <Group @visible> (new), set to false to hide the entire group 
+
+Core/Device
+* output_to_value now split into submethods (output_number/boolean/text)
+  (including ability to produce completely custom output to device)
+
+Core/OscDevice
+* strip non-ascii character from text before sending
+* "pattern captures" - reconstruct when sending outgoing OSC message
+
+Core/Message
+* "param" is renamed to "xarg"
+* removed properties derived from parameter: min,max,row,column etc.
+* "input_method" is gone, use "xarg.type" instead
+
+Core/UIComponent
+* floor and ceiling for numeric values (UISlider, UIPad etc.)
+* supply "map" argument when creating instance (saves typing)
+
+Core/UIPad
+* value now independant of control-map minimum/maximum value)
+* support for @soft_echo attribute (see ControlMap.lua)
+
+Core/UISlider
+* "dimmed" property/method has been retired (use set_palette)
+* "button_mode" is now auto-detected (when position is set)
+* support for @soft_echo attribute (see ControlMap.lua)
+ 
+Applications/XYPad
+* New option: broadcast MIDI CC from X/Y sliders
+
+Applications/Keyboard
+* Adapted to UIKey changes 
+* New mapping: mod_wheel
+
+
 -- Duplex 0.99.1 -----------
 
 Duplex Core
@@ -204,17 +260,17 @@ Grid Pie
  - Visualization of aliased slots, current track + pattern etc.
  - Configurable initialization and shutdown process (options)
  - Many smaller bug fixes, cleaner code ...
-* Feature: assign an alias by pressing and holding a slot button (source), and   
- then pressing another button in the same track. The procedure will only
- work when the source slot is already aliased or empty (to avoid accidents)
+* Feature: assign an alias by pressing and holding a slot button (source), and
+  then pressing another button in the same track. The procedure will only
+  work when the source slot is already aliased or empty (to avoid accidents)
 * Feature: to complement the assignment gesture just mentioned, you can hold
- the button pressed to “force-assign” slots that are empty, or unique
+  the button pressed to “force-assign” slots that are empty, or unique
 * Feature: resolve any aliased slots in the gridpie pattern to it’s master slot
- by pressing a slot in the gridpie pattern (the last pattern). Conceptually
- similar to the pattern-editor (arrow in the lower part of an aliased track)
+  by pressing a slot in the gridpie pattern (the last pattern). Conceptually
+  similar to the pattern-editor (arrow in the lower part of an aliased track)
 * Feature: quickly store “homeless” content (a track in the gridpie pattern with
- no master slot), either by creating a new pattern to hold the data or by
- assigning the content to an existing slot
+  no master slot), either by creating a new pattern to hold the data or by
+  assigning the content to an existing slot
 * Feature: hold a gridpie button to save the combination as a new pattern
 * Feature: make an alias unique (un-alias) by holding it, then it’s gridpie slot
 * Tweak: highlight the selected alias master slot (if any exists)
@@ -236,7 +292,8 @@ TrackSelector
 
 StepSequencer
 * Support line_notifier when slots are aliased (also when created and/or removed)
-* Workflow: when navigating from a long pattern into a shorter one, start from the top (IOW, always restrict to the actual pattern length)
+* Workflow: when navigating from a long pattern into a shorter one, start from 
+  the top (IOW, always restrict to the actual pattern length)
 * Fixed: update the volume-level display when base volume is changed
 * Fixed: selecting a group track could cause an error
 
@@ -254,7 +311,9 @@ GridPie
  - disable pattern loop to allow song to play, pattern-by-pattern (1)
 * Feature/workflow: ability to clone gridpie pattern while playing
 
-(1) This, and pattern scheduling via Renoise can be considered experimental as we can’t reliably detect a scheduled pattern. As a result, the first few note(s) might be skipped!
+  (1) This, and pattern scheduling via Renoise can be considered experimental as 
+  we can’t reliably detect a scheduled pattern. As a result, the first few 
+  note(s) might be skipped!
 
 Duplex Core
 * Fixed: bug when handling MIDI ports that are added/removed while running
@@ -280,7 +339,11 @@ PatternSequence
 StepSequencer
 * Fixed: focus bug when holding button
 
-(1) GridPie will attempt to retain as much information about the mute state of the song as possible, as this is restored when we exit GridPie. Note however that using drag-and-drop within the pattern sequence will cause the mute state to become lost for the rearranged patterns. Simple insert/clone and delete actions should not cause this to happen.
+(1) GridPie will attempt to retain as much information about the mute state of 
+the song as possible, as this is restored when we exit GridPie. Note however 
+that using drag-and-drop within the pattern sequence will cause the mute state 
+to become lost for the rearranged patterns. Simple insert/clone and delete 
+actions should not cause this to happen.
 
 
 -- Duplex 0.98.19 -----------
@@ -292,7 +355,8 @@ Effect application
 * Fixed: device-navigator now works after switching song/document
 
 Monome XYPad control-map
-* Fixed, corrected tilt-sensors to use floating-point values - was incorrectly labelled as integers
+* Fixed, corrected tilt-sensors to use floating-point values - was incorrectly 
+  labelled as integers
 
 Monome XYPad config
 * Fixed incorrect placement of “focus button”, improved layout
@@ -301,18 +365,21 @@ Launchpad Effect config
 * TrackSelector now using full width (8) as the default page-size
 
 XYPad application
-* Simplified setup: use unique, automatically-generated names to identify “managed” XYPads (no more need for manually specified id’s)
+* Simplified setup: use unique, automatically-generated names to identify 
+  “managed” XYPads (no more need for manually specified id’s)
 
 -- Duplex 0.98.18 -----------
 
 Duplex core API
 * Applications: all palettes standardized
 * For devices with mixed colorspaces (APC20/40), prefer “tinting” over “theming”
-* Fixed error when using #CC buttons on a virtual display as keyboard keys (the issue affected AKAI LPD8)
+* Fixed error when using #CC buttons on a virtual display as keyboard keys (the 
+  issue affected AKAI LPD8)
 * OSC buffering: all but float-based arguments are now buffered
 
 StepSequencer
-* Mappings track, level, line, transpose are now optional. This should fix an issue with the nano2K config that didn’t specify ‘track’
+* Mappings track, level, line, transpose are now optional. This should fix an 
+  issue with the nano2K config that didn’t specify ‘track’
 * Fixed: under certain conditions, could throw error on startup
 
 Grid Pie
@@ -329,9 +396,14 @@ Launchpad/Matrix config
 
 * Fixme: Metronome: wrong placement on launchpad? #5 lights up #7 ??
 * Refactor: UIButton (replaces UIPushButton, UIToggleButton, UIStepSeqButton)
-* UIComponent event handlers should always return “false” when actively rejecting an event (such as when the application is sleeping/inactive), allowing the MIDI message to be passed on to Renoise
+* UIComponent event handlers should always return “false” when actively 
+  rejecting an event (such as when the application is sleeping/inactive), 
+  allowing the MIDI message to be passed on to Renoise
 * Virtual control surface able to display text & color simultaneously
-* Theming support: specify the default button color (default is white). No UI is provided for changing the value, so in order to match Duplex with your own theme color, modify the value in Globals.lua (search for “theme”) and delete your preferences before restarting.
+* Theming support: specify the default button color (default is white). No UI is 
+  provided for changing the value, so in order to match Duplex with your own 
+  theme color, modify the value in Globals.lua (search for “theme”) and delete 
+  your preferences before restarting.
 
 SwitchConfiguration
 * Light up arrow only if next/previous config is available
@@ -343,14 +415,17 @@ Mixer
 * remove “invert” option in favor of customizable palette
 
 GridPie
-* fixed a bug in the “running start” feature (when switching away from Grid without having run the application)
+* fixed a bug in the “running start” feature (when switching away from Grid 
+  without having run the application)
 
 -- Duplex 0.98.16 -----------
 
 Duplex core API
 * Fixme: stuck notes when transposing into unhandled range
 * Fixme: stuck notes when transposing into handled range
- Solution: make the voice-manager support passed messages (differentiating between handled OSC notes and unhandled MIDI notes - detecting the active track & instruments for MIDI notes the moment they’re triggered)
+  Solution: make the voice-manager support passed messages (differentiating 
+  between handled OSC notes and unhandled MIDI notes - detecting the active 
+  track & instruments for MIDI notes the moment they’re triggered)
 * Fixme: UIPushButton double-fires press in virtual control surface
 
 Keyboard
@@ -396,19 +471,34 @@ Config: APC
  o See e.g. Launchpad XYPad configuration for an example
 * Automation class, for recording movements into automation envelopes
  o Touch and latch recording (latch is considered experimental)
-* New class: OscClient, a shared connection for sending internally routed messages (simple interface, accessible to all applications)
-* New class: OscVoiceMgr, for keeping the currently triggered notes in order (avoid stuck notes, problems with release). Requires OscClient.
-* New class: UIKey, a UIComponent designed to receive and represent note information (pitch & velocity). UIKeys can either be linked to individual keys, or process all incoming note messages from a keyboard (see Keyboard app).
-* New class: UIKeyPressure (UISlider), for receiving a continuous stream of velocity information from a keyboard
-* New class: UIPitchBend (UISlider), will enable an application to receive pitch-bend information from a keyboard
-* New class: UIPad (UIComponent), implemented as paired axes (for OSC) or independent X/Y axis (for MIDI devices)
-* ControlMap: New input method “xypad”, for creating XYPad controls in the virtual control surface (paired-value support, however only OSC devices can define this input method)
-* Control-map, new input method: “key” - for accepting note-input from individual buttons/pads
-* Control-map/virtual control surface: “keyboard” - a new input method for representing a keyboard (the control surface will draw a series of keys)
+* New class: OscClient, a shared connection for sending internally routed 
+  messages (simple interface, accessible to all applications)
+* New class: OscVoiceMgr, for keeping the currently triggered notes in order 
+  (avoid stuck notes, problems with release). Requires OscClient.
+* New class: UIKey, a UIComponent designed to receive and represent note 
+  information (pitch & velocity). UIKeys can either be linked to individual 
+  keys, or process all incoming note messages from a keyboard (see Keyboard).
+* New class: UIKeyPressure (UISlider), for receiving a continuous stream of 
+  velocity information from a keyboard
+* New class: UIPitchBend (UISlider), will enable an application to receive 
+  pitch-bend information from a keyboard
+* New class: UIPad (UIComponent), implemented as paired axes (for OSC) or 
+  independent X/Y axis (for MIDI devices)
+* ControlMap: New input method “xypad”, for creating XYPad controls in the 
+  virtual control surface (paired-value support, however only OSC devices can 
+  define this input method)
+* Control-map, new input method: “key” - for accepting note-input from 
+  individual buttons/pads
+* Control-map/virtual control surface: “keyboard” - a new input method for 
+  representing a keyboard (the control surface will draw a series of keys)
  o In the control-map, you can specify it’s range (number of keys)
 * Control-map/XML parsing:
  o Attribute names can now contain underscore
-* Control-map/note value syntax: octave wildcard - you can now put an asterisk in place of the octave to make mapping respond to the note only (e.g. “C-*”). Used in the Midi-keyboard Grid Pie configuration to make navigation buttons appear across all the black keys
+* Control-map/note value syntax: octave wildcard - you can now put an asterisk 
+  in place of the octave to make mapping respond to the note only (e.g. “C-*”). 
+  Used in the Midi-keyboard Grid Pie configuration to make navigation buttons 
+  appear across all the black keys
+
 Duplex browser/menu
 * Tool menu: devices organized into sub-menu’s
 * Tool menu: display on startup (only when active config)

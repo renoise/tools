@@ -27,11 +27,12 @@ class 'UISpinner' (UIComponent)
 
 --- Initialize the UISpinner class
 -- @param app (@{Duplex.Application})
+-- @param map[opt] (table) mapping properties 
 
-function UISpinner:__init(app)
-  TRACE('UISpinner:__init',app)
+function UISpinner:__init(app,map)
+  TRACE('UISpinner:__init',app,map)
 
-  UIComponent.__init(self,app)
+  UIComponent.__init(self,app,map)
 
   -- the current index (for buttons)
   self.index = 0
@@ -52,9 +53,9 @@ function UISpinner:__init(app)
   self.flipped = false
 
   self.palette = {
-    foreground_dec = {color=app.display.palette.color_1.color},
-    foreground_inc = {color=app.display.palette.color_1.color},
-    background = {color=app.display.palette.background.color},
+    foreground_dec = {color={0xff,0xff,0xff}},
+    foreground_inc = {color={0xff,0xff,0xff}},
+    background = {color={0x00,0x00,0x00}},
     up_arrow = {text="▲"},
     down_arrow = {text="▼"},
     left_arrow = {text="◄"},
@@ -70,8 +71,6 @@ function UISpinner:__init(app)
   self._size = 2
   self:set_size(self._size)
 
-  -- attach ourself to the display message stream
-  self:add_listeners()
 end
 
 
@@ -91,7 +90,7 @@ function UISpinner:do_change(msg)
   if (self.on_change ~= nil) then
 
     -- restrict the value to fit within the range 
-    self.value = (msg.value / ((msg.max-msg.min) /
+    self.value = (msg.value / ((msg.xarg.maximum-msg.xarg.minimum) /
       (self.maximum - self.minimum))) + self.minimum
 
     local index = math.floor(self.value+.5)
@@ -125,7 +124,7 @@ function UISpinner:do_press(msg)
   if (self.on_change ~= nil) then
     
     local changed = false
-    local idx = self:_determine_index_by_pos(msg.column,msg.row)
+    local idx = self:_determine_index_by_pos(msg.xarg.column,msg.xarg.row)
     -- increase/decrease index
     if (idx == 1) then
       if (self.index > self.minimum) then
@@ -164,7 +163,7 @@ function UISpinner:do_press(msg)
 
   end
 
-  if (msg.input_method == INPUT_TYPE.TOGGLEBUTTON) then
+  if (msg.xarg.type == "togglebutton") then
     -- force update togglebuttons...
     self.canvas.delta = table.rcopy(self.canvas.buffer)
     self.canvas.has_changed = true
@@ -186,7 +185,7 @@ end
 function UISpinner:test(msg)
   TRACE("UISpinner:test",msg)
 
-  if not (self.group_name == msg.group_name) then
+  if not (self.group_name == msg.xarg.group_name) then
     return false
   end
 
@@ -194,7 +193,7 @@ function UISpinner:test(msg)
     return false
   end
   
-  return UIComponent.test(self,msg.column,msg.row)
+  return UIComponent.test(self,msg.xarg.column,msg.xarg.row)
 
 end
 
@@ -420,13 +419,19 @@ end
 
 function UISpinner:add_listeners()
 
-  self.app.display.device.message_stream:add_listener(
-    self, DEVICE_EVENT.BUTTON_PRESSED,
-    function(msg) return self:do_press(msg) end )
+  self:remove_listeners()
 
-  self.app.display.device.message_stream:add_listener(
-    self,DEVICE_EVENT.VALUE_CHANGED,
-    function(msg) return self:do_change(msg) end )
+  if self.on_press then
+    self.app.display.device.message_stream:add_listener(
+      self, DEVICE_EVENT.BUTTON_PRESSED,
+      function(msg) return self:do_press(msg) end )
+  end
+
+  if self.on_change then
+    self.app.display.device.message_stream:add_listener(
+      self,DEVICE_EVENT.VALUE_CHANGED,
+      function(msg) return self:do_change(msg) end )
+  end
 
 end
 

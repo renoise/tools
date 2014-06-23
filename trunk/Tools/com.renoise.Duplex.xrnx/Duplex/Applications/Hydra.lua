@@ -1,10 +1,10 @@
 --[[============================================================================
--- Duplex.Hydra
--- Inheritance: Application > RoamingDSP > Hydra
+-- Duplex.Application.Hydra
 ============================================================================]]--
 
 --[[--
-Control any Hydra device in the current song
+Control any Hydra device in the current song.
+Inheritance: @{Duplex.Application} > @{Duplex.RoamingDSP} > Duplex.Application.Hydra 
 
 Assign it to a slider and you gain the features from the RoamingDSP class
 as well: device locking, navigation and automation recording
@@ -120,8 +120,8 @@ function Hydra:_build_app()
 
     -- locate the control-map "maximum" attribute,
     -- and make the slider use this range as "ceiling"
-    local args = cm:get_indexed_element(map.index,map.group_name)
-    
+    local param = cm:get_param_by_index(map.index,map.group_name)
+    local args = param.xarg
     --print("*** Hydra _build_app")
 
     local c = UISlider(self)
@@ -130,19 +130,8 @@ function Hydra:_build_app()
     c.ceiling = args.maximum
     c.tooltip = map.description
     c.on_change = function()
-
-      --print("*** Hydra on_change")
-
-      -- don't respond to user input when 
-      -- the application is paused
-      if not self.active then 
-        return false 
-      end
-
       self:update_device()
-
     end
-    self:_add_component(c)
     self._input_slider = c
   end
 
@@ -152,7 +141,6 @@ function Hydra:_build_app()
     local c = UILabel(self)
     c.group_name = map.group_name
     c:set_pos(map.index)
-    self:_add_component(c)
     self._value_display = c
 
   end

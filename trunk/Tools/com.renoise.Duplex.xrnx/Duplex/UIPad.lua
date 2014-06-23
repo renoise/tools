@@ -16,24 +16,24 @@ class 'UIPad' (UIComponent)
 
 --- Initialize the UIPad class
 -- @param app (@{Duplex.Application})
+-- @param map[opt] (table) mapping properties 
 
-function UIPad:__init(app)
-  TRACE('UIPad:__init')
+function UIPad:__init(app,map)
+  TRACE('UIPad:__init',app,map)
 
-  UIComponent.__init(self,app)
-
-  --- current values, between 0 and .ceiling
-  self.value = {nil,nil}
+  --- (table) current value
+  -- @field x
+  -- @field y
+  -- @table value
+  self.value = {0.5,0.5}
   
-  --- the second index, used when we specify each axis seperately
-  -- (assign the X to main index, and Y axis to this one)
-  self.secondary_index = nil
+  --- (table) copy of the most recent value
+  self._cached_value = nil
 
-  --- internal values
-  self._cached_value = self.value
+  --- (bool) see @{Duplex.UIComponent}
+  --self.soft_echo = true
 
-  --- attach ourself to the display message stream
-  self:add_listeners()
+  UIComponent.__init(self,app,map)
 
 end
 
@@ -46,34 +46,51 @@ end
 function UIPad:do_change(msg)
   TRACE("UIPad:do_change()",msg)
 
-  if not (self.group_name == msg.group_name) then
-    return
-  end
-
   if not self.app.active then
     return 
   end
   
-  if not self:test(msg.column,msg.row) then
+  if not (self.group_name == msg.xarg.group_name) then
     return
   end
 
-  if (self.on_change ~= nil) then
+  self.soft_echo = not msg.is_virtual and msg.xarg.soft_echo
 
-    local val_x,val_y = nil,nil
+  --print("*** UIPad.x_pos",self.x_pos)
+  --print("*** UIPad.y_pos",self.y_pos)
 
-    -- check if message was sent from a sub-parameter
-    if msg.param.parent_id then
-      val_x = (msg.param.index == 1) and msg.value or self.value[1]
-      val_y = (msg.param.index == 2) and msg.value or self.value[2]
-    else
-      val_x = msg.value[1]
-      val_y = msg.value[2]
-    end
-    
-    self:set_value(val_x,val_y)
-
+  if not self:test(msg.xarg.column,msg.xarg.row) then
+    return
   end
+
+  if not self.on_change then
+    return
+  end
+
+  local normalize = function(val)
+    return scale_value(val,msg.xarg.minimum,msg.xarg.maximum,self.floor,self.ceiling)
+  end
+
+  local val_x,val_y = nil,nil
+  if (type(msg.value) == "number") then
+    -- MIDI style message (each axis is separate)
+    if (msg.xarg.orientation == "vertical") then
+      val_x = self.value[1]
+      val_y = normalize(msg.value)
+    else
+      val_x = normalize(msg.value)
+      val_y = self.value[2]
+    end
+  else
+    --print("*** UIPad:do_change - pre normalize",msg.value[1],msg.value[2])
+    -- OSC style message (combined)
+    val_x = normalize(msg.value[1])
+    val_y = normalize(msg.value[2])
+    --print("*** UIPad:do_change - post normalize",val_x,val_y)
+  end
+
+  self:set_value(val_x,val_y)
+
 
   return self
 
@@ -90,7 +107,10 @@ end
 function UIPad:set_value(val_x,val_y,skip_event)
   TRACE("UIPad:set_value()",val_x,val_y,skip_event)
 
-  self._cached_value = {self.value[1],self.value[2]}
+  if self.value then
+    self._cached_value = table.rcopy(self.value)
+  end
+
   self.value = {val_x,val_y}
 
   --print("*** UIPad:set_value - val_x,val_y",val_x,val_y)
@@ -99,7 +119,7 @@ function UIPad:set_value(val_x,val_y,skip_event)
     self:invalidate()
   elseif (self.on_change) then 
     if (self:on_change()==false) then 
-      self._value = self._cached_value  
+      self.value = table.rcopy(self._cached_value)
     else
       self:invalidate()
     end
@@ -107,6 +127,7 @@ function UIPad:set_value(val_x,val_y,skip_event)
 
 
 end
+
 
 
 --------------------------------------------------------------------------------
@@ -134,9 +155,13 @@ end
 
 function UIPad:add_listeners()
 
-  self.app.display.device.message_stream:add_listener(
-    self,DEVICE_EVENT.VALUE_CHANGED,
-    function(msg) return self:do_change(msg) end )
+  self:remove_listeners()
+
+  if self.on_change then
+    self.app.display.device.message_stream:add_listener(
+      self,DEVICE_EVENT.VALUE_CHANGED,
+      function(msg) return self:do_change(msg) end )
+  end
 
 end
 

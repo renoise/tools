@@ -29,12 +29,19 @@ class 'UIButton' (UIComponent)
 
 --- Initialize the UIButton class
 -- @param app (@{Duplex.Application})
+-- @param map[opt] (table) mapping properties 
 
-function UIButton:__init(app)
+function UIButton:__init(app,map)
   TRACE('UIButton:__init')
 
-  UIComponent.__init(self,app)
+  UIComponent.__init(self,app,map)
 
+  --- (table) the visual appearance, changed via @{set}
+  -- @field foreground (table) 
+  --    color (table) - {int,int,int}
+  --    text (string)
+  --    val (bool)
+  -- @table palette
   self.palette = {
     foreground = {
       color = {0x00,0x00,0x80},
@@ -43,13 +50,18 @@ function UIButton:__init(app)
     }
   }
 
-  -- external event handlers
+  --- (func) event handler
   self.on_change = nil
+
+  --- (func) event handler
   self.on_hold = nil
+
+  --- (func) event handler
   self.on_press = nil
+
+  --- (func) event handler
   self.on_release = nil
 
-  self:add_listeners()
 
 end
 
@@ -70,10 +82,10 @@ function UIButton:do_press(msg)
   if (self.on_press ~= nil) then
     -- force-update controls that maintain their
     -- internal state (togglebutton, pushbutton)
-    if (msg.input_method ~= INPUT_TYPE.BUTTON) then
+    if (msg.xarg.type ~= "button") then
       self:force_update()
     end
-    self:on_press()
+    self:on_press(msg)
     return self
   end
 
@@ -86,7 +98,7 @@ end
 -- @return (bool), true when message was handled
 
 function UIButton:do_release(msg)
-  TRACE("UIButton:do_release()")
+  --TRACE("UIButton:do_release()")
 
   if not self:test(msg) then
     return
@@ -94,12 +106,12 @@ function UIButton:do_release(msg)
   
   -- force-update controls that maintain their
   -- internal state (togglebutton, pushbutton)
-  if (msg.input_method ~= INPUT_TYPE.BUTTON) then
+  if (msg.xarg.type ~= "button") then
     self:force_update()
   end
 
   if (self.on_release ~= nil) then
-    self:on_release()
+    self:on_release(msg)
     return self
   end
 
@@ -154,7 +166,7 @@ end
 
 function UIButton:test(msg)
 
-  if not (self.group_name == msg.group_name) then
+  if not (self.group_name == msg.xarg.group_name) then
     return false
   end
 
@@ -162,7 +174,7 @@ function UIButton:test(msg)
     return
   end
 
-  return UIComponent.test(self,msg.column,msg.row)
+  return UIComponent.test(self,msg.xarg.column,msg.xarg.row)
 
 end
 
@@ -234,6 +246,7 @@ function UIButton:draw()
   end
 
   self.canvas:fill(point)
+
   UIComponent.draw(self)
 
 end
@@ -265,22 +278,31 @@ end
 
 function UIButton:add_listeners()
 
-  self.app.display.device.message_stream:add_listener(
-    self, DEVICE_EVENT.BUTTON_PRESSED,
-    function(msg) return self:do_press(msg) end )
+  self:remove_listeners()
 
-  self.app.display.device.message_stream:add_listener(
-    self, DEVICE_EVENT.BUTTON_RELEASED,
-    function(msg) return self:do_release(msg) end )
+  if self.on_press then
+    self.app.display.device.message_stream:add_listener(
+      self, DEVICE_EVENT.BUTTON_PRESSED,
+      function(msg) return self:do_press(msg) end )
+  end
 
-  self.app.display.device.message_stream:add_listener(
-    self,DEVICE_EVENT.VALUE_CHANGED,
-    function(msg) return self:do_change(msg) end )
+  if self.on_release then
+    self.app.display.device.message_stream:add_listener(
+      self, DEVICE_EVENT.BUTTON_RELEASED,
+      function(msg) return self:do_release(msg) end )
+  end
 
-  self.app.display.device.message_stream:add_listener(
-    self,DEVICE_EVENT.BUTTON_HELD,
-    function(msg) self:do_hold(msg) end )
+  if self.on_hold then
+    self.app.display.device.message_stream:add_listener(
+      self,DEVICE_EVENT.BUTTON_HELD,
+      function(msg) self:do_hold(msg) end )
+  end
 
+  if self.on_change then
+    self.app.display.device.message_stream:add_listener(
+      self,DEVICE_EVENT.VALUE_CHANGED,
+      function(msg) return self:do_change(msg) end )  
+  end
 
 end
 

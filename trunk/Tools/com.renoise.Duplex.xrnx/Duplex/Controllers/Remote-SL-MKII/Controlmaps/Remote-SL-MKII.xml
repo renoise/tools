@@ -5,9 +5,17 @@
 Load the provided automap configuration before using (the file is located in Controllers/Remote-SL-MKII)</Description>
 	<Parameters>
 		<Row>
+			<!--
 			<Group name="XYPad" >
 				<Param value="CC#57" type="fader" name="XYPad_X" orientation="vertical" size="4" maximum="127" minimum="0" />
 				<Param value="CC#56" type="fader" name="XYPad_Y" orientation="vertical" size="4" maximum="127" minimum="0" />
+			</Group>
+			-->
+			<Group name="XYPad" >
+				<Param name="XYPad_X" type="xypad" size="4" invert_x="false" invert_y="false" swap_axes="false" skip_echo="false"  minimum="0" maximum="127">
+					<SubParam value="CC#56" field="y" />
+					<SubParam value="CC#57" field="x" />
+				</Param>
 			</Group>
 			<Group name="PB" >
 				<Param value="PB|Ch1" type="fader" size="4" orientation="vertical" name="" maximum="127" minimum="0"/>
@@ -54,14 +62,14 @@ Load the provided automap configuration before using (the file is located in Con
 					<Param value="CC#15" type="dial" name="CC# 15" maximum="127" minimum="0" />
 				</Group>
 				<Group name="Drumpads" orientation="horizontal">
-					<Param value="C-4" name="" type="key" skip_echo="true" maximum="127" minimum="0"/>
-					<Param value="C#4" name="" type="key" skip_echo="true" maximum="127" minimum="0"/>
-					<Param value="D-4" name="" type="key" skip_echo="true" maximum="127" minimum="0"/>
-					<Param value="D#4" name="" type="key" skip_echo="true" maximum="127" minimum="0"/>
-					<Param value="E-4" name="" type="key" skip_echo="true" maximum="127" minimum="0"/>
-					<Param value="F-4" name="" type="key" skip_echo="true" maximum="127" minimum="0"/>
-					<Param value="F#4" name="" type="key" skip_echo="true" maximum="127" minimum="0"/>
-					<Param value="G-4" name="" type="key" skip_echo="true" maximum="127" minimum="0"/>
+					<Param value="C-4" name="" type="button" skip_echo="true" maximum="127" minimum="0"/>
+					<Param value="C#4" name="" type="button" skip_echo="true" maximum="127" minimum="0"/>
+					<Param value="D-4" name="" type="button" skip_echo="true" maximum="127" minimum="0"/>
+					<Param value="D#4" name="" type="button" skip_echo="true" maximum="127" minimum="0"/>
+					<Param value="E-4" name="" type="button" skip_echo="true" maximum="127" minimum="0"/>
+					<Param value="F-4" name="" type="button" skip_echo="true" maximum="127" minimum="0"/>
+					<Param value="F#4" name="" type="button" skip_echo="true" maximum="127" minimum="0"/>
+					<Param value="G-4" name="" type="button" skip_echo="true" maximum="127" minimum="0"/>
 				</Group>
 			</Column>
 			<Column>

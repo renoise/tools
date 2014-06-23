@@ -17,7 +17,7 @@ class 'OscDevice' (Device)
 
 --- Initialize OSCDevice class
 -- @param name (string) the friendly name of the device
--- @param message_stream (MessageStream) the msg-stream we should attach to
+-- @param message_stream (@{Duplex.MessageStream}) the msg-stream we should attach to
 -- @param prefix (string) the OSC prefix to use
 -- @param address (string) the OSC address (can be an IP address)
 -- @param port_in (int) the OSC input port 
@@ -28,20 +28,44 @@ function OscDevice:__init(name, message_stream,prefix,address,port_in,port_out)
   
   Device.__init(self, name, message_stream, DEVICE_PROTOCOL.OSC)
 
+  --- (string) optional device prefix, e.g. "/duplex"
   self.prefix = prefix
+
+  --- (address) can be an IP address or a domain
   self.address = address
 
+  --- (int) the port where incoming messages arrive
   self.port_in = port_in
+
+  --- (int) the port where outgoing messages leave
   self.port_out = port_out
 
-  self.client = nil
-  self.server = nil
-
-  self.message_queue = nil
-
+  --- (bool) whether we should bundle OSC messages (true) or not (false).
+  -- Enable this feature if you experience lost packets, and/or is using
+  -- devices that communicate over wireless networks (see TouchOSC class)
   self.bundle_messages = false
 
+
+  ---- private
+
+  --- (renoise.Socket.SocketClient)
+  self.client = nil
+
+  --- (renoise.Socket.SocketServer)
+  self.server = nil
+
+  --- (table) containing queued messages.
+  --    [1] = {
+  --      message = (string) -- e.g. "/device/button %i"
+  --      value = (number or table) -- the current value
+  --    },...
+  self.message_queue = nil
+
+
+  ---- initialize
+
   self:open()
+
 
 end
 
@@ -95,7 +119,7 @@ end
 
 --------------------------------------------------------------------------------
 
---- En error happened in the servers background thread (this should not happen)
+--- An error happened in the servers background thread (this should not happen)
 
 function OscDevice:socket_error(error_message)
   TRACE("OscDevice:socket_error",error_message)
@@ -106,11 +130,11 @@ end
 
 --------------------------------------------------------------------------------
 
---- Receive/unpack incoming osc messages: largely identical to the 
--- MidiDevice implementation, except that we look for the control-map "action" 
--- instead of the "value" attribute
--- @param socket (
--- @param binary_data
+--- Receive/unpack osc messages - this is a low-level method which will receive 
+-- incoming messages and translate them into a text representation 
+-- @param socket (a "dummy" socket, contains socket.port and socket.address)
+-- @param binary_data (raw, packetized socket data)
+
 function OscDevice:socket_message(socket, binary_data)
   TRACE("OscDevice:socket_message",socket, binary_data)
 
@@ -122,9 +146,9 @@ function OscDevice:socket_message(socket, binary_data)
     self:_unpack_messages(message_or_bundle, messages)
 
     for _,msg in pairs(messages) do
-      local value_str = self:_msg_to_string(msg)
 
-      --print("incoming OSC",os.clock(),value_str)
+      local value_str = self:_msg_to_string(msg)
+      --print("*** socket_message - incoming OSC message",os.clock(),value_str)
 
       -- (only if defined) check the prefix:
       -- ignore messages that doesn't match our prefix
@@ -153,45 +177,51 @@ end
 --------------------------------------------------------------------------------
 
 --- Look up value, once we have unpacked the message
--- @param value_str (String), control-map string
+-- @param value_str (string), control-map string
 
 function OscDevice:receive_osc_message(value_str)
   TRACE("OscDevice:receive_message",value_str)
 
-  local param,val,w_idx,r_char = self.control_map:get_osc_param(value_str)
-
-  --print("*** OscDevice - receive_message: param,val,w_idx,r_char",param,val,w_idx,r_char)
-  --print("*** receive_osc_message - param")
-  --rprint(param)
-  --print("*** receive_osc_message - val")
-  --rprint(val)
-  --print("*** receive_osc_message - w_idx")
-  --rprint(w_idx)
-  --print("*** receive_osc_message - r_char")
-  --rprint(r_char)
+  -- block/ignore messages that appear to be feedback
+  if self.feedback_prevention_enabled then
+    for k,v in ipairs(self._feedback_buffer) do
+      if (value_str == v.value_str) then
+        --print("*** receive_osc_message - feedback prevention:",value_str)
+        return
+      end
+    end
+  end
 
 
-  if (param) then
+  -- retrieve the relevant control-map parameter(s)
+  local params = self.control_map:get_osc_params(value_str)
+
+  --print("*** OscDevice.receive_osc_message - value_str,#params",value_str,#params)
+
+  for k,v in ipairs(params) do
+
+    local param,val,regex = v[1],v[2],v[3]
+    --print("param,val,regex",param,"val",val,"regex",regex)
+    --print("param",rprint(param))
 
     -- take copy before modifying stuff
-    local xarg = table.rcopy(param["xarg"])
-    if w_idx then
-      -- insert the wildcard index
-      xarg["index"] = tonumber(r_char)
-      --print('*** OscDevice: wildcard replace param["xarg"]["value"]',xarg["value"])
-    end
-    local message = Message()
-    message.context = DEVICE_MESSAGE.OSC
-    message.is_osc_msg = true
+    --param = table.rcopy(param)
+    val = table.rcopy(val)
+    
+    local msg = Message()
+    msg.context = DEVICE_MESSAGE.OSC
+
     -- cap to the range specified in the control-map
     for k,v in pairs(val) do
-      val[k] = clamp_value(v,xarg.minimum,xarg.maximum)
+      val[k] = clamp_value(v,param.xarg.minimum,param.xarg.maximum)
     end
-    --rprint(xarg)
+
     -- multiple messages are tables, single value a number...
-    message.value = (#val>1) and val or val[1]
-    --print("*** OscDevice:receive_osc_message - message.value",message.value)
-    self:_send_message(message,xarg)
+    msg.value = (#val>1) and val or val[1]
+    
+    --print("*** OscDevice:receive_osc_msg - msg.value",msg.value)
+
+    self:_send_message(msg,param,regex)
   end
 
 end
@@ -222,7 +252,7 @@ end
 
 --- Set prefix for this device (a pattern which is appended to all outgoing 
 -- traffic, and also act as a filter for incoming messages)
--- @param prefix (String)
+-- @param prefix (string)
 
 function OscDevice:set_device_prefix(prefix)
   TRACE("OscDevice:set_device_prefix()",prefix)
@@ -240,7 +270,7 @@ end
 --- Queue a message instead of sending it right away. Some devices need data
 -- to arrive in fewer packets due to network conditions
 --  @param message (string) the message string
---  @param value (number or table) the value(s) to inject
+--  @param value (number, string or table) the value(s) to inject
 
 function OscDevice:queue_osc_message(message,value)
 
@@ -260,7 +290,7 @@ end
 
 --------------------------------------------------------------------------------
 
--- bundle & send queued messages
+--- Bundle & send queued messages
 
 function OscDevice:on_idle()
 
@@ -268,59 +298,24 @@ function OscDevice:on_idle()
     self:send_osc_bundle()
   end
 
-end
-
---------------------------------------------------------------------------------
-
--- construct_osc_message
-
-function OscDevice:construct_osc_message(message,value)
-  TRACE("OscDevice:construct_osc_message()",message,value)
-
-    -- split the message into non-whitespace chunks
-    local str_vars = string.gmatch(message,"[^%s]+")
-
-    -- construct the table of variables
-    local header = nil
-    local osc_vars = table.create()
-    local counter = 1
-    for vars in str_vars do
-      
-      if (string.sub(vars,0,1)=="/") then
-        -- the message part
-        header = vars
+  -- clear the feedback buffer after a certain time
+  if self.feedback_prevention_enabled then
+    local clk = os.clock()
+    for k,v in ripairs(self._feedback_buffer) do
+      if (clk-v.timestamp > 0.05) then
+        table.remove(self._feedback_buffer,k)
+        --print("cleared recent message, #self._feedback_buffer",#self._feedback_buffer)
       else
-        -- the variable part
-        local entry = table.create()
-        if (type(value)=="table") then
-	
-          local counter2 = 1
-          for k,v in pairs(value) do
-            if (counter==counter2) then
-              entry = self:produce_entry(vars,v)
-            end
-            counter2 = counter2+1
-          end
-        else
-          entry = self:produce_entry(vars,value)
-        end
-        if (entry.tag) then
-          osc_vars:insert(entry)
-        end
-        counter = counter+1
+        break
       end
-
     end
-
-    header = self.prefix and ("%s%s"):format(self.prefix,header) or header
-
-    return renoise.Osc.Message(header,osc_vars)
+  end
 
 end
 
 --------------------------------------------------------------------------------
 
----  Send a queued bundle of OSC messages 
+--- Send a queued bundle of OSC messages 
 -- @see OscDevice:queue_osc_message
 
 function OscDevice:send_osc_bundle()
@@ -328,9 +323,23 @@ function OscDevice:send_osc_bundle()
   if (self.client) and (self.client.is_open) then
     local msgs = table.create()
     for k,v in ipairs(self.message_queue) do
-      msgs:insert(self:construct_osc_message(v.message,v.value))
+
+      local value_str = nil
+      local osc_msg = self:_construct_osc_message(v.message,v.value)
+      msgs:insert(osc_msg)
+        value_str = self:_msg_to_string(osc_msg)
+
+      -- remember for later (feedback prevention)
+      if self.feedback_prevention_enabled then
+        value_str = self:_msg_to_string(osc_msg)
+        self._feedback_buffer[#self._feedback_buffer+1] = {
+          timestamp = os.clock(),
+          value_str = value_str
+        }
+      end
+      --print("*** send_osc_bundle",v,rprint(v.value),value_str)
+
     end
-    --rprint(msgs)
     local osc_bundle = renoise.Osc.Bundle(os.clock(),msgs)
     self.client:send(osc_bundle)
   end
@@ -343,93 +352,33 @@ end
 
 --------------------------------------------------------------------------------
 
----  Send a OSC message right away
---  @param message (string) the message string
---  @param value (number or table) the value(s) to inject
+--- Send a OSC message right away. This is the method being used by the 
+-- Display for updating the visual state of device 
+-- @param message (string) the message string, e.g. "/device/button %i"
+-- @param value (number or table) the value(s) to inject
 
 function OscDevice:send_osc_message(message,value)
   TRACE("OscDevice:send_osc_message()",message,value)
 
   if (self.client) and (self.client.is_open) then
-    --print("about to send osc message",message,value)
-    local osc_msg = self:construct_osc_message(message,value)
-    --rprint(osc_msg)
+
+    local osc_msg = self:_construct_osc_message(message,value)
+    local value_str = nil
+
+    -- remember for later (feedback prevention)
+    if self.feedback_prevention_enabled then
+      value_str = self:_msg_to_string(osc_msg)
+      self._feedback_buffer[#self._feedback_buffer+1] = {
+        timestamp = os.clock(),
+        value_str = value_str
+      }
+    end
+    --print("*** send_osc_message",message,value,value_str)
+
     self.client:send(osc_msg)
+
   end
 
-end
-
-
---------------------------------------------------------------------------------
-
---- Produce an OSC message value entry. If only "vars" is defined, it will 
---  be treated as a standalone floating-point value. Otherwise, "vars" will 
---  indicate the type of value - Integer is "%i", while floating-point is "%f"
--- @param vars (number or string), value or the type of value
--- @param value (number)
-
-function OscDevice:produce_entry(vars,value)
-  --TRACE("OscDevice:produce_entry()",vars,value)
-
-  local entry = table.create()
-  if (vars=="%i") then
-    entry.tag = "i"
-    entry.value = tonumber(value)
-  elseif (vars=="%f") then
-    entry.tag = "f"
-    entry.value = tonumber(value)
-  elseif (vars=="%s") then
-    entry.tag = "s"
-    entry.value = value
-  elseif (tonumber(vars)~=nil) then
-    entry.tag = "f"
-    entry.value = tonumber(vars)
-  end
-  return entry
-end
-
---------------------------------------------------------------------------------
-
---- Convert the point to an output value. If the point has multiple values, it
---  is describing a multidimensional value, such as a tilt sensor or XY-pad. In
---  such a case, the method will return a table of values
--- @param pt (CanvasPoint), point containing the current value
--- @param elm (table), control-map parameter
--- @param ceiling (number), the UIComponent ceiling value
--- @return value (number, or table of numbers)
-
-function OscDevice:point_to_value(pt,elm,ceiling)
-  --TRACE("OscDevice:point_to_value()",pt,elm,ceiling)
-
-  local value = nil
-  local val_type = type(pt.val)
-
-  if (elm.type == "label") then
-
-    return pt.text
-
-  elseif (val_type == "boolean") then
-
-    if (pt.val) then
-      value = elm.maximum
-    else
-      value = elm.minimum
-    end
-  elseif (val_type == "table") then
-    -- multiple-parameter: tilt sensors, xy-pad...
-    value = table.create()
-    for k,v in ipairs(pt.val) do
-      value:insert((v * (1 / ceiling)) * 1)
-    end
-
-  else
-    -- scale the value from "local" to "external"
-    -- for instance, from Renoise dB range (1.4125375747681) 
-    -- to a 7-bit controller value (127)
-    value = (pt.val * (1 / ceiling)) * elm.maximum
-  end
-
-  return value
 end
 
 
@@ -437,11 +386,137 @@ end
 -- Private
 --------------------------------------------------------------------------------
 
+
+--- Construct OSC message (used by @{send_osc_message} & @{send_osc_bundle})
+-- @param message (string) the message string, e.g. "/device/button %i"
+-- @param value (number or table) the value(s) to inject
+
+function OscDevice:_construct_osc_message(message,value)
+  TRACE("OscDevice:_construct_osc_message()",message,value)
+
+  -- typemap helps us detect if we have captures, tokens
+  local tmap = self.control_map.typemaps[message]
+  --print("tmap,message",tmap,message)
+
+  --print("value",rprint(value))
+  --print("table_vars",rprint(table_vars))
+  --print("has_captures",has_captures)
+  --print("tmap",rprint(tmap),#tmap)
+
+  local header = nil
+  local osc_vars = table.create()
+  local counter = 1
+
+  if tmap then
+
+    -- using the typemap we can assemble a message from captured parts,
+    -- however, not all messages have a typemap (raw messages being
+    -- sent to device will not have one, only control-map based ones)
+
+    for k = 1, #tmap do
+      
+      local t = tmap[k]
+      if t.is_header then
+        header = t.text
+      else
+        -- the variable part
+        local entry = table.create()
+        if (type(value)=="table") then
+          if t.is_token then
+            if tmap.has_captures then
+              if t.is_capture then
+                --print("table, insert captured value #",counter,"at pos",k)
+                entry = self:_produce_entry(v,value[counter])
+                if (entry.tag) then
+                  osc_vars:insert(entry)
+                end
+                counter = counter+1
+              else
+                --print("table, insert neutral value")
+                entry = self:_produce_entry(t.text,0)
+                if (entry.tag) then
+                  osc_vars:insert(entry)
+                end
+              end
+            else
+              --print("table, no captures, insert value#",counter)
+              entry = self:_produce_entry(t.text,value[counter])
+              if (entry.tag) then
+                osc_vars:insert(entry)
+              end
+              counter = counter+1
+            end
+          else
+            --print("table, no token, insert literal value")
+            entry = self:_produce_entry(t.text,t.text)
+            if (entry.tag) then
+              osc_vars:insert(entry)
+            end
+          end
+        else
+          -- single value
+          entry = self:_produce_entry(t.text,(t.is_token) and value or t.text)
+          if (entry.tag) then
+            osc_vars:insert(entry)
+          end
+        end
+
+      end --/variable part
+    end--/iterator
+
+  else
+
+    -- do basic osc output 
+
+    -- split the message into non-whitespace chunks
+    local str_vars = string.gmatch(message,"[^%s]+")
+
+    -- construct the table of variables
+    for vars in str_vars do
+      
+      if (string.sub(vars,0,1)=="/") then
+        -- the message part
+        header = vars
+      else
+        -- the variable part
+        local entry = table.create()
+        if (type(value)=="table") then
+  
+          local counter2 = 1
+          for k,v in pairs(value) do
+            if (counter==counter2) then
+              entry = self:_produce_entry(vars,v)
+            end
+            counter2 = counter2+1
+          end
+        else
+          entry = self:_produce_entry(vars,value)
+        end
+        if (entry.tag) then
+          osc_vars:insert(entry)
+        end
+        counter = counter+1
+      end
+
+    end
+
+
+  end
+
+  --print("self.prefix,header",self.prefix,header)
+  header = self.prefix and ("%s%s"):format(self.prefix,header) or header
+
+  return renoise.Osc.Message(header,osc_vars)
+
+end
+
+--------------------------------------------------------------------------------
+
 --- Recursively unpacks all OSC messages from the given bundle or message. 
 -- when message_or_bundle is a single message, only this one will be added
 -- to the given message list
 -- @param message_or_bundle (renoise.Osc.Message or renoise.Osc.Bundle) 
--- @param messages (Table) table to insert unpacked messages into
+-- @param messages (table) table to insert unpacked messages into
 
 function OscDevice:_unpack_messages(message_or_bundle, messages)
    --TRACE("OscDevice:_unpack_messages()",message_or_bundle)
@@ -465,6 +540,57 @@ end
 
 --------------------------------------------------------------------------------
 
+--- Produce an OSC message value entry (utilized by @{_construct_osc_message}).
+--
+-- Note that if only "vars" is defined, it will be treated as a standalone 
+-- floating-point value. Otherwise, "vars" will indicate the type of value
+--
+-- @param vars (number or string), value or the type of value
+--    "%i" = integer number 
+--    "%f" = floating-point 
+--    "%s" = string (ascii)
+-- @param value (number)
+
+function OscDevice:_produce_entry(vars,value)
+  TRACE("OscDevice:_produce_entry()",vars,value)
+
+  local entry = table.create()
+  if (vars=="%i") or (vars=="{%i}") then
+    entry.tag = "i"
+    entry.value = math.floor(value) or 0
+  elseif (vars=="%f") or (vars=="{%f}")then
+    entry.tag = "f"
+    entry.value = tonumber(value) or 0
+  elseif (vars=="%s") or (vars=="{%s}") then
+    entry.tag = "s"
+
+    -- remove control characters (linebreak, etc)
+    value = value and string.gsub(value,"%c"," ") or ""
+     
+    -- strip remaining non-ascii characters
+    local rslt = {}
+    for i = 1,#value do
+      local str_char = string.sub(value,i,i)
+      if (string.byte(str_char) <= 127) then
+        rslt[#rslt+1] = str_char -- .."("..string.byte(str_char)..")"
+      end
+    end
+    --print("rslt...")
+    --rprint(rslt)
+
+    entry.value = table.concat(rslt,"")
+
+  elseif (tonumber(vars)~=nil) then
+    entry.tag = "f"
+    entry.value = tonumber(vars)
+  end
+  --print("entry...")
+  --rprint(entry)
+  return entry
+end
+
+--------------------------------------------------------------------------------
+
 --- Create string representation of OSC message:
 -- e.g. "/this/is/the/pattern 1 2 3"
 -- @param msg (renoise.Osc.Message)
@@ -472,14 +598,13 @@ end
 function OscDevice:_msg_to_string(msg)
   TRACE("OscDevice:_msg_to_string()",msg)
 
-  local rslt = msg.pattern
+  local str_rslt = msg.pattern
   for k,v in ipairs(msg.arguments) do
-    rslt = ("%s %s"):format(rslt, tostring(v.value))
+    --print("*** OscDevice:_msg_to_string",k,v.value,type(v.value))
+    str_rslt = ("%s %s"):format(str_rslt, tostring(v.value))
   end
 
-  return rslt
+  return str_rslt
 
 end
-
-
 

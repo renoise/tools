@@ -107,11 +107,12 @@ UIButtonStrip.MODE_BASIC = 3
 
 --- Initialize the UIButtonStrip class
 -- @param app (@{Duplex.Application})
+-- @param map[opt] (table) mapping properties 
 
-function UIButtonStrip:__init(app)
+function UIButtonStrip:__init(app,map)
   --TRACE("UIButtonStrip:__init(",app,")")
 
-  UIComponent.__init(self,app)
+  UIComponent.__init(self,app,map)
 
 
   self.mode = UIButtonStrip.MODE_NORMAL
@@ -121,8 +122,6 @@ function UIButtonStrip:__init(app)
     range       = { color={0X80,0X80,0X80},  text="▫", val=true },
     background  = { color={0X00,0x00,0x00},  text="·", val=false },
   }
-
-  self.add_listeners(self)
   
   -- if true, press selected index to toggle on/off
   self.toggleable = false
@@ -178,7 +177,7 @@ function UIButtonStrip:do_press(msg)
     return 
   end
 
-  local idx = self:_determine_index_by_pos(msg.column, msg.row)
+  local idx = self:_determine_index_by_pos(msg.xarg.column, msg.xarg.row)
 
   if (self.mode == UIButtonStrip.MODE_NORMAL) then
     if not (self._pressed_idx) then
@@ -220,7 +219,7 @@ function UIButtonStrip:do_release(msg)
     return 
   end
 
-  local idx = self:_determine_index_by_pos(msg.column, msg.row)
+  local idx = self:_determine_index_by_pos(msg.xarg.column, msg.xarg.row)
   if (self.mode == UIButtonStrip.MODE_NORMAL) then
     -- set index when the first button is being released
 
@@ -236,7 +235,7 @@ function UIButtonStrip:do_release(msg)
     end
     -- force-update controls that are handling 
     -- their internal state automatically...
-    if (msg.input_method == INPUT_TYPE.PUSHBUTTON) then
+    if (msg.xarg.type == "pushbutton") then
       self.canvas.delta = table.rcopy(self.canvas.buffer)
       self.canvas.has_changed = true
       self:invalidate()
@@ -265,7 +264,7 @@ function UIButtonStrip:do_hold(msg)
     return
   end
 
-  local idx = self:_determine_index_by_pos(msg.column, msg.row)
+  local idx = self:_determine_index_by_pos(msg.xarg.column, msg.xarg.row)
   if (self.mode == UIButtonStrip.MODE_NORMAL) then
     -- toggle current range when held
     if (not self._range_set) then
@@ -650,17 +649,25 @@ end
 function UIButtonStrip:add_listeners()
   --TRACE("UIButtonStrip:add_listeners()")
 
-  self.app.display.device.message_stream:add_listener(
-    self, DEVICE_EVENT.BUTTON_PRESSED,
-    function(msg) return self:do_press(msg) end )
+  self:remove_listeners()
 
-  self.app.display.device.message_stream:add_listener(
-    self,DEVICE_EVENT.BUTTON_RELEASED,
-    function(msg) return self:do_release(msg) end )
+  if self.on_press 
+    or self.on_index_change
+    or self.on_range_change
+  then
+    self.app.display.device.message_stream:add_listener(
+      self, DEVICE_EVENT.BUTTON_PRESSED,
+      function(msg) return self:do_press(msg) end )
 
-  self.app.display.device.message_stream:add_listener(
-    self,DEVICE_EVENT.BUTTON_HELD,
-    function(msg) self:do_hold(msg) end )
+    self.app.display.device.message_stream:add_listener(
+      self,DEVICE_EVENT.BUTTON_RELEASED,
+      function(msg) return self:do_release(msg) end )
+
+    self.app.display.device.message_stream:add_listener(
+      self,DEVICE_EVENT.BUTTON_HELD,
+      function(msg) self:do_hold(msg) end )
+
+  end
 
 end
 
@@ -728,7 +735,7 @@ end
 
 function UIButtonStrip:test(msg)
   
-  if not (self.group_name == msg.group_name) then
+  if not (self.group_name == msg.xarg.group_name) then
     return false
   end
 
@@ -736,7 +743,7 @@ function UIButtonStrip:test(msg)
     return false
   end
   
-  return UIComponent.test(self,msg.column,msg.row)
+  return UIComponent.test(self,msg.xarg.column,msg.xarg.row)
 
 end
 

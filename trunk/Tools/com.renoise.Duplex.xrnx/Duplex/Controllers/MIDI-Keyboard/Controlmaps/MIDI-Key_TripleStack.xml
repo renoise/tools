@@ -28,7 +28,7 @@ The lower keyboard has custom velocity (full velocity, no matter how hard you pr
 					<Param value="CP|Ch1" type="fader" size="4" orientation="vertical" name="Master" maximum="127" minimum="0"/>
 				</Group>
 				<Group name="Keyboard1" orientation="horizontal" >
-					<Param value="|Ch1" type="keyboard" name="TwoOctaves" size="1" velocity_enabled="true" aspect="1" range="48" maximum="127" minimum="0"/>
+					<Param value="|Ch1" type="keyboard" name="TwoOctaves" size="1" aspect="1" range="48" maximum="127" minimum="0"/>
 				</Group>
 			</Row>
 			<Row>
@@ -76,7 +76,7 @@ The lower keyboard has custom velocity (full velocity, no matter how hard you pr
 					</Group>
 				</Column>
 				<Group name="Keyboard2" orientation="horizontal" >
-					<Param value="|Ch1" type="keyboard" name="TwoOctaves" size="2" velocity_enabled="true" aspect="0.4" range="24" maximum="127" minimum="60"/>
+					<Param value="|Ch1" type="keyboard" name="TwoOctaves" size="2" aspect="0.4" range="24" maximum="127" minimum="60"/>
 				</Group>
 			</Row>
 			<Row>
@@ -124,7 +124,7 @@ The lower keyboard has custom velocity (full velocity, no matter how hard you pr
 					</Group>
 				</Column>
 				<Group name="Keyboard3" orientation="horizontal" >
-					<Param value="|Ch1" type="keyboard" name="TwoOctaves" size="0.5" velocity_enabled="true" aspect="1.4" range="96" maximum="127" minimum="126"/>
+					<Param value="|Ch1" type="keyboard" name="TwoOctaves" size="0.5" aspect="1.4" range="96" maximum="127" minimum="126"/>
 				</Group>
 			</Row>
 		</Column>

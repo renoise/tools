@@ -2,39 +2,42 @@
 process_slicer.lua
 ============================================================================]]--
 
---[[
+--[[--
 
 ProcessSlicer allows you to slice up a function which takes a lot of 
 processing time into multiple calls via Lua coroutines. 
 
-* Example usage:
+### Example usage:
 
-local slicer = ProcessSlicer(my_process_func, argument1, argumentX)
+    local slicer = ProcessSlicer(my_process_func, argument1, argumentX)
 
--- This starts calling 'my_process_func' in idle, passing all arguments 
--- you've specified in the ProcessSlicer constructor.
-slicer:start() 
+This starts calling 'my_process_func' in idle, passing all arguments 
+you've specified in the ProcessSlicer constructor.
 
--- To abort a running sliced process, you can call "stop" at any time
--- from within your processing function of outside of it in the main thread. 
--- As soon as your process function returns, the slicer is automatically 
--- stopped.
-slicer:stop() 
+    slicer:start() 
 
--- To give processing time back to Renoise, call 'coroutine.yield()' 
--- anywhere in your process function to temporarily yield back to Renoise:
-function my_process_func()
-  for j=1,100 do
-    -- do something that needs a lot of time, and periodically call 
-    -- "coroutine.yield()" to give processing time back to Renoise. Renoise 
-    -- will switch back to this point of the function as soon as has done 
-    -- "its" job:
-    coroutine.yield()
-  end  
-end
+To abort a running sliced process, you can call "stop" at any time
+from within your processing function of outside of it in the main thread. 
+As soon as your process function returns, the slicer is automatically 
+stopped.
+
+    slicer:stop() 
+
+To give processing time back to Renoise, call 'coroutine.yield()' 
+anywhere in your process function to temporarily yield back to Renoise:
+
+    function my_process_func()
+      for j=1,100 do
+        -- do something that needs a lot of time, and periodically call 
+        -- "coroutine.yield()" to give processing time back to Renoise. Renoise 
+        -- will switch back to this point of the function as soon as has done 
+        -- "its" job:
+        coroutine.yield()
+      end  
+    end
 
 
-* Drawbacks:
+### Drawbacks:
 
 By slicing your processing function, you will also slice any changes that are 
 done to the Renoise song into multiple undo actions (one action per slice/yield).
@@ -44,14 +47,17 @@ It will even block your own process GUI when trying to show it modal.
 
 ]]
 
+--------------------------------------------------------------------------------
+
+--- Initialize the Automation class
+-- @param process_func (function)
+-- @param VarArg (...)
+
 class "ProcessSlicer"
 
 function ProcessSlicer:__init(process_func, ...)
   assert(type(process_func) == "function", 
     "expected a function as first argument")
-
-  print("coroutine __init...")
-  print("coroutine process_func",process_func)
 
   self.__process_func = process_func
   self.__process_func_args = arg
@@ -60,7 +66,7 @@ end
 
 
 --------------------------------------------------------------------------------
--- returns true when the current process currently is running
+--- @return true when the current process currently is running
 
 function ProcessSlicer:running()
   return (self.__process_thread ~= nil)
@@ -68,12 +74,12 @@ end
 
 
 --------------------------------------------------------------------------------
--- start a process
+--- start a process
 
 function ProcessSlicer:start()
   assert(not self:running(), "process already running")
-    print("coroutine start...")
-
+  
+  --print("coroutine start...")
   self.__process_thread = coroutine.create(self.__process_func)
   
   renoise.tool().app_idle_observable:add_notifier(
@@ -82,13 +88,12 @@ end
 
 
 --------------------------------------------------------------------------------
--- stop a running process
+--- stop a running process
 
 function ProcessSlicer:stop()
   assert(self:running(), "process not running")
 
-  print("coroutine stop...")
-
+  --print("coroutine stop...")
   renoise.tool().app_idle_observable:remove_notifier(
     ProcessSlicer.__on_idle, self)
 
@@ -98,7 +103,7 @@ end
 
 --------------------------------------------------------------------------------
 
--- function that gets called from Renoise to do idle stuff. switches back 
+--- function that gets called from Renoise to do idle stuff. switches back 
 -- into the processing function or detaches the thread
 
 function ProcessSlicer:__on_idle()

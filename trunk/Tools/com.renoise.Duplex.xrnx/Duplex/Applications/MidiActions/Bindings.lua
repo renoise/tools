@@ -1,5 +1,5 @@
 --[[============================================================================
--- Duplex.MidiActions.lua
+-- Duplex.Applications.MidiActions.Bindings
 ============================================================================]]--
 
 --[[--
@@ -29,6 +29,7 @@ If `param` is not defined (only a few entries are actual parameters), you can sp
 
 Specify an `observable` to respond to changes from Renoise. This is more efficient than polling the value (as value_func does), but it's not perfect: MidiActions will not able to tell the value, only that it has changed value since the last time it was polled. For this reason, it's optimal to specify both `observable` as well as `value_func` and/or `param` 
  
+See also @{Duplex.Applications.MidiActions}
 ]]
 
 

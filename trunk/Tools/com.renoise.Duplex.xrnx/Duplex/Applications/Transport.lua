@@ -1,10 +1,10 @@
 --[[============================================================================
--- Duplex.Transport
--- Inheritance: Application > Transport
+-- Duplex.Application.Transport
 ============================================================================]]--
 
 --[[--
-The Transport application offers transport controls for Renoise
+The Transport application offers transport controls for Renoise.
+Inheritance: @{Duplex.Application} > Duplex.Application.Transport
 
      _______ _______ ______ ______ ______ ______ ________ _______
     |       |       |      |      |      |      |        |       |
@@ -569,7 +569,6 @@ function Transport:_build_app()
         self.palette.stop_playback_on,
         self.palette.stop_playback_off)
     end
-    self:_add_component(c)
     self.controls.stop = c
   end
 
@@ -582,7 +581,6 @@ function Transport:_build_app()
     c.on_press = function(obj)
       self:_start_playback()
     end
-    self:_add_component(c)
     self.controls.play = c
   end
 
@@ -596,7 +594,6 @@ function Transport:_build_app()
       local loop_pattern = renoise.song().transport.loop_pattern
       renoise.song().transport.loop_pattern = not loop_pattern
     end
-    self:_add_component(c)
     self.controls.loop = c
   end
 
@@ -610,7 +607,6 @@ function Transport:_build_app()
       local edit_mode = renoise.song().transport.edit_mode
       renoise.song().transport.edit_mode = not edit_mode
     end
-    self:_add_component(c)
     self.controls.edit = c
   end
 
@@ -624,7 +620,6 @@ function Transport:_build_app()
     c.on_press = function(obj)
       self:_next()
     end
-    self:_add_component(c)
     self.controls.next = c
   end
 
@@ -638,7 +633,6 @@ function Transport:_build_app()
     c.on_press = function(obj)
       self:_previous()
     end
-    self:_add_component(c)
     self.controls.previous = c
   end
 
@@ -652,7 +646,6 @@ function Transport:_build_app()
       local block_enabled = renoise.song().transport.loop_block_enabled
       renoise.song().transport.loop_block_enabled = not block_enabled
     end
-    self:_add_component(c)
     self.controls.block = c
   end
 
@@ -666,7 +659,6 @@ function Transport:_build_app()
       local active = renoise.song().transport.follow_player
       renoise.song().transport.follow_player = not active
     end
-    self:_add_component(c)
     self.controls.follow_player = c
   end
 
@@ -680,7 +672,6 @@ function Transport:_build_app()
       local metronome_enabled = renoise.song().transport.metronome_enabled
       renoise.song().transport.metronome_enabled = not metronome_enabled
     end
-    self:_add_component(c)
     self.controls.metronome_toggle = c
   end
 
@@ -700,7 +691,6 @@ function Transport:_build_app()
           self.palette.bpm_increase_off)
       end
     end
-    self:_add_component(c)
     self.controls.bpm_increase = c
   end
 
@@ -720,7 +710,6 @@ function Transport:_build_app()
           self.palette.bpm_decrease_off)
       end
     end
-    self:_add_component(c)
     self.controls.bpm_decrease = c
   end
 
@@ -729,7 +718,6 @@ function Transport:_build_app()
     local c = UILabel(self)
     c.group_name = map.group_name
     c:set_pos(map.index)
-    self:_add_component(c)
     self.controls.bpm_display = c
   end
 
@@ -738,7 +726,6 @@ function Transport:_build_app()
     local c = UILabel(self)
     c.group_name = map.group_name
     c:set_pos(map.index)
-    self:_add_component(c)
     self.controls.songpos_display = c
   end
 

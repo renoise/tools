@@ -16,11 +16,12 @@ class 'UIKeyPressure' (UISlider)
 
 --- Initialize the UIKeyPressure class
 -- @param app (@{Duplex.Application})
+-- @param map[opt] (table) mapping properties 
 
-function UIKeyPressure:__init(app)
-  TRACE("UIKeyPressure:__init()",app)
+function UIKeyPressure:__init(app,map)
+  TRACE("UIKeyPressure:__init()",app,map)
 
-  UISlider.__init(self,app)
+  UISlider.__init(self,app,map)
 
 end
 
@@ -34,9 +35,14 @@ end
 function UIKeyPressure:add_listeners()
   TRACE("UIKeyPressure:add_listeners()")
 
-  self.app.display.device.message_stream:add_listener(
-    self, DEVICE_EVENT.CHANNEL_PRESSURE,
-    function(msg) return self:do_change(msg) end )
+	UISlider.add_listeners(self)
+
+
+  if self.on_change then
+    self.app.display.device.message_stream:add_listener(
+      self, DEVICE_EVENT.CHANNEL_PRESSURE,
+      function(msg) return self:do_change(msg) end )
+  end
 
 end
 

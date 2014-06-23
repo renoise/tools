@@ -1,10 +1,10 @@
 --[[============================================================================
 -- Duplex.Repeater
--- Inheritance: Application > RoamingDSP > Repeater
 ============================================================================]]--
 
 --[[--
-This is our sample Repeater application 
+Take control of the native repeater DSP device.
+Inheritance: @{Duplex.Application} > @{Duplex.RoamingDSP} > Duplex.Application.Repeater 
 
 --]]
 
@@ -215,7 +215,7 @@ end
 
 --------------------------------------------------------------------------------
 
--- perform periodic updates
+--- perform periodic updates
 
 function Repeater:on_idle()
 
@@ -243,7 +243,7 @@ end
 
 --------------------------------------------------------------------------------
 
--- attach notifier to the device 
+--- attach notifier to the device 
 -- called when we use previous/next device, set the initial device
 -- or are freely roaming the tracks
 
@@ -283,7 +283,7 @@ end
 
 --------------------------------------------------------------------------------
 
--- (grid mode) update everything: the mode and/or divisor value is gained
+--- (grid mode) update everything: the mode and/or divisor value is gained
 -- and the grid cells are drawn accordingly. Also, record automation. 
 
 function Repeater:set_value_from_coords(x,y)
@@ -443,7 +443,7 @@ end
 
 --------------------------------------------------------------------------------
 
--- this method will calculate a the divisor from a linear value
+--- this method will calculate a the divisor from a linear value
 -- (e.g. 0.5 will output 1/8 == 0.125)
 -- @param divisor_val (number) between 0 and 1
 
@@ -468,7 +468,7 @@ end
 
 --------------------------------------------------------------------------------
 
--- set device to OFF mode, update controller + automation
+--- set device to OFF mode, update controller + automation
 
 function Repeater:stop_repeating()
   TRACE("Repeater:stop_repeating()")
@@ -480,7 +480,7 @@ end
 
 --------------------------------------------------------------------------------
 
--- configure a map of mode/divisor values for the available buttons
+--- configure a map of mode/divisor values for the available buttons
 -- even/triplet/dotted: update divisor value by quantized amount
 -- free: update the divisor value by an exact amount
 
@@ -646,7 +646,6 @@ function Repeater:_build_app()
               end
             end
           end
-          self:_add_component(c)
           self._grid[x][y] = c
         end
       end
@@ -663,7 +662,6 @@ function Repeater:_build_app()
   local map = self.mappings.mode_slider
   if map.group_name then
     TRACE("Repeater - creating @mode_slider ")
-    --local args = cm:get_indexed_element(map.index,map.group_name)
     local c = UISlider(self)
     c.group_name = map.group_name
     c:set_pos(map.index)
@@ -672,7 +670,6 @@ function Repeater:_build_app()
       local mode_val = round_value(obj.value*4)
       self:set_mode(mode_val)
     end
-    self:_add_component(c)
     self._mode_slider = c
   end
 
@@ -690,7 +687,6 @@ function Repeater:_build_app()
       self.update_requested = true
 
     end
-    self:_add_component(c)
     self._divisor_slider = c
   end
 
@@ -705,7 +701,6 @@ function Repeater:_build_app()
     c.on_press = function(obj)
       self:set_mode(MODE_EVEN,true)
     end
-    self:_add_component(c)
     self._mode_even = c
   end
 
@@ -720,7 +715,6 @@ function Repeater:_build_app()
     c.on_press = function(obj)
       self:set_mode(MODE_TRIPLET,true)
     end
-    self:_add_component(c)
     self._mode_triplet = c
   end
 
@@ -735,7 +729,6 @@ function Repeater:_build_app()
     c.on_press = function(obj)
       self:set_mode(MODE_DOTTED,true)
     end
-    self:_add_component(c)
     self._mode_dotted = c
   end
 
@@ -750,7 +743,6 @@ function Repeater:_build_app()
     c.on_press = function(obj)
       self:set_mode(MODE_FREE,true)
     end
-    self:_add_component(c)
     self._mode_free = c
   end
 
@@ -763,7 +755,7 @@ end
 
 --------------------------------------------------------------------------------
 
--- update controller grid (no impact on Renoise)
+--- update controller grid (no impact on Renoise)
 
 function Repeater:update_grid(x,y)
   TRACE("Repeater:update_grid(x,y)",x,y)

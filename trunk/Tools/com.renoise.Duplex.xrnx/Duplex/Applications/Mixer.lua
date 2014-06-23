@@ -1,16 +1,14 @@
 --[[============================================================================
--- Duplex.Mixer
--- Inheritance: Application > Mixer
+-- Duplex.Application.Mixer
 ============================================================================]]--
 
 --[[--
-The Mixer is a generic class for controlling the Renoise mixer
-
+The Mixer is a generic class for controlling the Renoise mixer, featuring an endlessly scrollable number of tracks.
+Inheritance: @{Duplex.Application} > Duplex.Application.Mixer 
 
 ### Grid controller layout
 
-Assigning the levels, mute and/or solo mapping to the same group
-(the grid) will automaticaly produce the following layout:
+Assigning the levels, mute and/or solo mapping to the same group (the grid) will automaticaly produce the following layout:
 
     +---- - --- - --- - --- +    +---- +  The master track 
     |mute1|mute2|mute3|mute4| -> |  m  |  will, when specified, 
@@ -26,9 +24,21 @@ Assigning the levels, mute and/or solo mapping to the same group
     |  1  |  2  |  3  |  4  |    |     |
     +---- - --- - --- - --- +    +---- +
   
+  Note that you can have any number of tracks, but each group (levels, mute and/or solo) needs to contain the same number of parameters.
 
+
+### Other features
+
+- Parameter pick-up: when this feature is enabled, values will not be changed until you move a fader across the threshold point (the current value). This will make it possible to avoid sudden jumps in levels as you are scrolling between pages and adjusting levels.
 
 ### Changes
+
+  0.99
+    - UIComponent: when possible, supply mapping as construction argument
+    - UIComponent references stored within self._controls
+
+  0.98
+    - Track navigation removed (delegated to TrackSelector app)
 
   0.97  
     - Renoise's 2.7 multi-solo mode supported/visualized
@@ -136,12 +146,12 @@ Mixer.default_options = {
   },
   take_over_volumes = {
     label = "Soft takeover",
-    description = "Enables soft take-over for volume: useful if faders of the device are not motorized. "
-                .."\nThis feature will not take care of the position of the fader until"
-                .."\nthe volume value is reached. "
-                .."\nExample: you are playing a song A and you finish it by fading out the master volume."
-                .."\nWhen you load a song B, the master volume will not jump to 0 "
-                .."\nwhen you move again the fader of master volume.",
+    description = "Enables soft take-over for volume: useful if device-faders" 
+                .."\nare not motorized. This feature will not take care of the"
+                .."\nposition of the fader until the volume value is reached."
+                .."\nExample: you are playing a song A and you finish it by"
+                .."\nfading out the master volume. When you load a song B, the"
+                .."\nmaster volume will not jump to 0 when you move the fader",
     items = {
       "Disabled",
       "Enabled",
@@ -158,7 +168,8 @@ Mixer.default_options = {
     },
     value = 1,
     on_change = function(inst)
-      inst.automation.latch_record = (inst.options.record_method.value==RECORD_LATCH) 
+      inst.automation.latch_record = 
+        (inst.options.record_method.value==RECORD_LATCH) 
       inst:update_record_mode()
     end
   }
@@ -202,10 +213,6 @@ Mixer.available_mappings = {
     description = "Mixer: Solo track",
     greedy = true,
   },
-  --page = {
-  --  description = "Mixer: Track navigator",
-  --  orientation = ORIENTATION.HORIZONTAL,
-  --},
   next_page = {
     description = "Mixer: Next track page",
   },
@@ -261,13 +268,13 @@ function Mixer:__init(...)
   TRACE("Mixer:__init",...)
 
   -- the various controls
-  self._master = nil
-  self._volume = nil
-  self._panning = nil
-  self._mutes = nil
-  self._solos = nil
-  --self._page_control = nil
-  self._mode_control = nil
+  self._controls = {}
+  --  self._controls.master = nil
+  --  self._controls.volume = nil
+  --  self._controls.panning = nil
+  --  self._controls.mutes = nil
+  --  self._controls.solos = nil
+  --  self._controls.pre_post_mode = nil
 
   -- the observed width of the mixer, and the step size for
   -- scrolling tracks (the value is derived from one of the
@@ -304,20 +311,11 @@ function Mixer:__init(...)
   self._postfx_mode = (self.options.pre_post.value == MODE_POSTFX)
 
   -- possible after options have been set
-  self.automation.latch_record = (self.options.record_method.value==RECORD_LATCH)
+  self.automation.latch_record = 
+    (self.options.record_method.value==RECORD_LATCH)
 
 end
 
---------------------------------------------------------------------------------
-
--- set pre/post mode
---[[
-function Mixer:_set_pre_post(bool,skip_event)
-
-
-
-end
-]]
 
 --------------------------------------------------------------------------------
 
@@ -356,10 +354,10 @@ function Mixer:set_track_volume(control_index, value)
 
   local skip_event = true
 
-  if (self._volume ~= nil) then
+  if (self._controls.volume ~= nil) then
 
     -- update track control
-    self._volume[control_index]:set_value(value, skip_event)
+    self._controls.volume[control_index]:set_value(value, skip_event)
     
     -- reset the takeover hook (when not recording, as automation recording  
     -- output a stream of new values, and we would get caught in a "reset-loop")
@@ -370,10 +368,10 @@ function Mixer:set_track_volume(control_index, value)
     end
 
     -- update the master as well, if it has its own UI representation
-    if (self._master ~= nil) and 
+    if (self._controls.master ~= nil) and 
        (control_index + self._track_offset == get_master_track_index()) 
     then
-      self._master:set_value(value, skip_event)
+      self._controls.master:set_value(value, skip_event)
     end
   end
   
@@ -391,8 +389,8 @@ function Mixer:set_track_panning(control_index, value, skip_event_handler)
   if (not skip_event_handler) then
     skip_event_handler = true
   end
-  if (self.active and self._panning ~= nil) then
-    self._panning[control_index]:set_value(value, skip_event_handler)
+  if (self.active and self._controls.panning ~= nil) then
+    self._controls.panning[control_index]:set_value(value, skip_event_handler)
   end
 end
 
@@ -404,11 +402,11 @@ end
 function Mixer:set_track_mute(control_index, state)
   TRACE("Mixer:set_track_mute", control_index, state)
 
-  if (self.active and self._mutes ~= nil) then
+  if (self.active and self._controls.mutes ~= nil) then
     local muted = (state == renoise.Track.MUTE_STATE_ACTIVE)
     local master_track_index = get_master_track_index()
     local track_index = self._track_offset+control_index
-    local button = self._mutes[control_index]
+    local button = self._controls.mutes[control_index]
     if (track_index > master_track_index) then
       if muted then
         button:set(self.palette.send_mute_on)
@@ -438,11 +436,11 @@ function Mixer:set_track_solo(control_index, state, skip_event_handler)
   if (not skip_event_handler) then
     skip_event_handler = true
   end
-  if (self.active and self._solos ~= nil) then
+  if (self.active and self._controls.solos ~= nil) then
     if state then
-      self._solos[control_index]:set(self.palette.solo_on)
+      self._controls.solos[control_index]:set(self.palette.solo_on)
     else
-      self._solos[control_index]:set(self.palette.solo_off)
+      self._controls.solos[control_index]:set(self.palette.solo_off)
     end
   end
 end
@@ -471,13 +469,15 @@ end
 function Mixer:set_dimmed(control_index)
   TRACE("Mixer:set_dimmed()",control_index)
 
-
+  local rns = renoise.song()
   local track_index = self._track_offset + control_index
   local track = renoise.song().tracks[track_index]
   if (track) then
 
-    local dimmed = false
     local any_solo = self:_any_track_is_soloed()
+    local is_send_track = (track_index > rns.sequencer_track_count + 1)
+    local is_master_track = (track_index == rns.sequencer_track_count + 1)
+    local dimmed = false
 
     if any_solo then
       dimmed = (not track.solo_state)
@@ -487,16 +487,52 @@ function Mixer:set_dimmed(control_index)
 
     local monochrome = is_monochrome(self.display.device.colorspace)
     if not monochrome then
-      if self._volume and 
-        self._volume[control_index] 
+      if self._controls.volume and 
+        self._controls.volume[control_index] 
       then
-        self._volume[control_index]:set_dimmed(dimmed)
+        local palette = nil
+
+        if is_send_track then 
+          if dimmed then
+            palette = {
+              tip = self.palette.send_tip_dimmed,
+              track = self.palette.send_lane_dimmed,
+            }
+          else
+            palette = {
+              tip = self.palette.send_tip,
+              track = self.palette.send_lane,
+            }
+          end
+        elseif is_master_track then
+          -- do nothing
+        else
+          if dimmed then
+            palette = {
+              tip = self.palette.normal_tip_dimmed,
+              track = self.palette.normal_lane_dimmed,
+            }
+          else
+            palette = {
+              tip = self.palette.normal_tip,
+              track = self.palette.normal_lane,
+            }
+          end
+
+        end
+        
+        if palette then
+          self._controls.volume[control_index]:set_palette(palette)
+        end
+
       end
-      if self._panning and 
-        self._panning[control_index] 
+      --[[
+      if self._controls.panning and 
+        self._controls.panning[control_index] 
       then
-        self._panning[control_index]:set_dimmed(dimmed)
+        self._controls.panning[control_index]:set_dimmed(dimmed)
       end
+      ]]
     end
 
   end
@@ -521,46 +557,32 @@ function Mixer:update()
   -- track volume/panning/mute and solo
   for control_index = 1,self._width do
   
-    local track_index = self._track_offset+control_index
-    local track = tracks[track_index]
-    local track_type = determine_track_type(track_index)
-    local valid_level   = (self._volume  and (control_index<=#self._volume))
-    local valid_mute    = (self._mutes   and (control_index<=#self._mutes))
-    local valid_solo    = (self._solos   and (control_index<=#self._solos))
-    local valid_panning = (self._panning and (control_index<=#self._panning))
+    local track_index   = self._track_offset+control_index
+    local track         = tracks[track_index]
+    local track_type    = determine_track_type(track_index)
+    local valid_level   = (self._controls.volume  and 
+      (control_index<=#self._controls.volume))
+    local valid_mute    = (self._controls.mutes   and 
+      (control_index<=#self._controls.mutes))
+    local valid_solo    = (self._controls.solos   and 
+      (control_index<=#self._controls.solos))
+    local valid_panning = (self._controls.panning and 
+      (control_index<=#self._controls.panning))
     
-    -- define palette 
-    local track_palette = {}
-    if (track_type==renoise.Track.TRACK_TYPE_SEQUENCER) then
-      track_palette.tip           = self.palette.normal_tip
-      track_palette.tip_dimmed    = self.palette.normal_tip_dimmed
-      track_palette.track         = self.palette.normal_lane
-      track_palette.track_dimmed  = self.palette.normal_lane_dimmed
-    elseif (track_type==renoise.Track.TRACK_TYPE_MASTER) then
-      track_palette.tip           = self.palette.master_tip
-      track_palette.track         = self.palette.master_lane
-    elseif (track_type==renoise.Track.TRACK_TYPE_SEND) then
-      track_palette.tip           = self.palette.send_tip
-      track_palette.tip_dimmed    = self.palette.send_tip_dimmed
-      track_palette.track         = self.palette.send_lane
-      track_palette.track_dimmed  = self.palette.send_lane_dimmed
-    end
-
-    -- assign values, update appearance
+    -- assign values
     if (track_index <= #tracks) then
       
       if valid_level then
         local value = (self._postfx_mode) and
           track.postfx_volume.value or track.prefx_volume.value
         self:set_track_volume(control_index, value)
-        self._volume[control_index]:set_palette(track_palette)
+        --print("*** Mixer.update - got here",control_index,self._controls.volume[control_index]._size)
       end
 
       if valid_panning then
         local value = (self._postfx_mode) and 
           track.postfx_panning.value or track.prefx_panning.value
         self:set_track_panning(control_index, value)
-        self._panning[control_index]:set_palette(track_palette)
       end
 
       if valid_mute then
@@ -582,50 +604,41 @@ function Mixer:update()
 
     end
 
-    -- update the dimmed state 
+    -- update the visual appearance 
     self:set_dimmed(control_index)
 
   end
 
   -- master volume
-  if (self._master ~= nil) then
+  if (self._controls.master ~= nil) then
      if (self._postfx_mode) then
-       self._master:set_value(get_master_track().postfx_volume.value)
+       self._controls.master:set_value(get_master_track().postfx_volume.value)
      else
-       self._master:set_value(get_master_track().prefx_volume.value)
+       self._controls.master:set_value(get_master_track().prefx_volume.value)
      end
   end
   
-  -- page controls
-  --[[
-  if (self._page_control) then
-    local page_width = self:_get_page_width()
-    local page = math.floor(self._track_offset/page_width)
-    self._page_control:set_index(page,skip_event)
-  end
-  ]]
-
-  if self._prev_page then
+  if self._controls.prev_page then
     if (self._track_page > 0) then
-      self._prev_page:set(self.palette.prev_page_on)
+      self._controls.prev_page:set(self.palette.prev_page_on)
     else
-      self._prev_page:set(self.palette.prev_page_off)
+      self._controls.prev_page:set(self.palette.prev_page_off)
     end
   end
-  if self._next_page then
+  if self._controls.next_page then
     if (self._track_page < self._page_count) then
-      self._next_page:set(self.palette.next_page_on)
+      self._controls.next_page:set(self.palette.next_page_on)
     else
-      self._next_page:set(self.palette.next_page_off)
+      self._controls.next_page:set(self.palette.next_page_off)
     end
   end
 
   -- mode controls
-  if (self._mode_control) then
+  if (self._controls.pre_post_mode) then
     if self._postfx_mode then
-      self._mode_control:set(self.palette.mixer_mode_post)
+      self._controls.pre_post_mode:set(self.palette.mixer_mode_post)
     else
-      self._mode_control:set(self.palette.mixer_mode_pre)
+      self._controls.pre_post_mode:set(self.palette.mixer_mode_pre)
     end
   end
 
@@ -715,8 +728,6 @@ function Mixer:_build_app()
   if volume_group then
     if slider_grid_mode then
       grid_w,grid_h = cm:get_group_dimensions(self.mappings.levels.group_name)
-    end
-    if slider_grid_mode then
       volume_count = (embed_master) and grid_w-1 or grid_w
       volume_size = grid_h
     else
@@ -725,7 +736,9 @@ function Mixer:_build_app()
     end
   end
 
-  pannings_group = cm:get_params(self.mappings.panning.group_name,self.mappings.panning.index)
+  pannings_group = 
+    cm:get_params(self.mappings.panning.group_name,self.mappings.panning.index)
+
   if pannings_group then
     pannings_count = #pannings_group
   end
@@ -743,7 +756,9 @@ function Mixer:_build_app()
     end
   end
 
-  mutes_group = cm:get_params(self.mappings.mute.group_name,self.mappings.mute.index)
+  mutes_group = 
+    cm:get_params(self.mappings.mute.group_name,self.mappings.mute.index)
+
   if mutes_group then
     if slider_grid_mode then
       if embed_mutes then
@@ -808,41 +823,40 @@ function Mixer:_build_app()
 
   -- create tables to hold the controls
   
-  self._volume = (self.mappings.levels.group_name) and {} or nil
-  self._panning = (self.mappings.panning.group_name) and {} or nil
-  self._mutes = (self.mappings.mute.group_name) and {} or nil
-  self._solos = (self.mappings.solo.group_name) and {} or nil
+  self._controls.volume = (self.mappings.levels.group_name) and {} or nil
+  self._controls.panning = (self.mappings.panning.group_name) and {} or nil
+  self._controls.mutes = (self.mappings.mute.group_name) and {} or nil
+  self._controls.solos = (self.mappings.solo.group_name) and {} or nil
 
     -- volume --------------------------------------------
 
-  if self._volume then
+  if self._controls.volume then
     for control_index = 1,volume_count do
       local param = volume_group[control_index]
       local y_pos = (embed_mutes) and ((embed_solos) and 3 or 2) or 1
       local c = UISlider(self)
-      c.group_name = param.group_name
+      c.group_name = param.xarg.group_name
       c.tooltip = self.mappings.levels.description
       if (slider_grid_mode) then
-        c:set_pos(param.index,y_pos)
+        c:set_pos(param.xarg.index,y_pos)
       else
-        c:set_pos(param.index)
+        c:set_pos(param.xarg.index)
       end
       c.toggleable = true
-      c.flipped = false
+      --c.flipped = false
       c.ceiling = RENOISE_DECIBEL
-      c:set_orientation(ORIENTATION.VERTICAL)
       c:set_size(volume_size-(y_pos-1))
-      -- slider changed from controller
+      c:set_orientation(ORIENTATION.VERTICAL)
       c.on_change = function(obj) 
 
-        --print("*** volume changed from controller - obj.value",obj.value)
-
+        --print("*** self._controls.volume.on_change - obj.value",obj.value)
+        
         local track_index = self._track_offset + control_index
 
         if (track_index == get_master_track_index()) then
-          if (self._master) then
+          if (self._controls.master) then
             -- update separate master level
-            self._master:set_value(obj.value,true)
+            self._controls.master:set_value(obj.value,true)
           end
         elseif (track_index > #renoise.song().tracks) then
           -- track is outside bounds
@@ -856,9 +870,12 @@ function Mixer:_build_app()
         self:_set_volume(volume,track_index,obj)
 
       end
+
+      --c.on_press = function(obj)
+        -- define this, or button mode won't work
+      --end
       
-      self:_add_component(c)
-      self._volume[control_index] = c
+      self._controls.volume[control_index] = c
 
     end
 
@@ -868,18 +885,18 @@ function Mixer:_build_app()
 
     -- panning -------------------------------------------
 
-  if self._panning then
+  if self._controls.panning then
     for control_index = 1,pannings_count do
       local param = pannings_group[control_index]
       local c = UISlider(self)
-      c.group_name = param.group_name
+      c.group_name = param.xarg.group_name
       c.tooltip = self.mappings.panning.description
-      c:set_pos(param.index)
+      c:set_pos(param.xarg.index)
       c.toggleable = true
-      c.flipped = false
+      --c.flipped = false
       c.ceiling = 1.0
-      c:set_orientation(ORIENTATION.VERTICAL)
       c:set_size(1)
+      c:set_orientation(ORIENTATION.VERTICAL)
       
       -- slider changed from controller
       c.on_change = function(obj) 
@@ -905,8 +922,7 @@ function Mixer:_build_app()
         end
       end
       
-      self:_add_component(c)
-      self._panning[control_index] = c
+      self._controls.panning[control_index] = c
 
     end
   end
@@ -918,14 +934,14 @@ function Mixer:_build_app()
 
     end
     
-  if self._mutes then
+  if self._controls.mutes then
     for control_index = 1,mutes_count do
       TRACE("Mixer:adding mute#",control_index)
       local param = mutes_group[control_index]
       local c = UIButton(self)
-      c.group_name = param.group_name
+      c.group_name = param.xarg.group_name
       c.tooltip = self.mappings.mute.description
-      c:set_pos(param.index)
+      c:set_pos(param.xarg.index)
 
       -- value changed via button
       c.on_press = function(obj) 
@@ -1004,15 +1020,14 @@ function Mixer:_build_app()
       end
       ]]
       
-      self:_add_component(c)
-      self._mutes[control_index] = c    
+      self._controls.mutes[control_index] = c    
 
     end
   end
 
   -- solo buttons -----------------------------------
 
-  if self._solos then
+  if self._controls.solos then
     for control_index = 1,solos_count do
       TRACE("Mixer:adding solo#",control_index)
       local c = UIButton(self)
@@ -1040,8 +1055,7 @@ function Mixer:_build_app()
 
       end
       
-      self:_add_component(c)
-      self._solos[control_index] = c    
+      self._controls.solos[control_index] = c    
 
     end
 
@@ -1066,14 +1080,15 @@ function Mixer:_build_app()
       track=self.palette.master_lane,
     })
     c.on_change = function(obj) 
+      --print("*** master.on_change",obj.value)
       local track_index = get_master_track_index()
       local control_index = track_index - self._track_offset
-      if (self._volume and 
+      if (self._controls.volume and 
           control_index > 0 and 
           control_index <= volume_count) 
       then
         -- update visible master level slider
-        self._volume[control_index]:set_value(obj.value,true)
+        self._controls.volume[control_index]:set_value(obj.value,true)
       end
       local track = get_master_track()
 
@@ -1083,9 +1098,11 @@ function Mixer:_build_app()
       self:_set_volume(volume,track_index,obj)
         
     end 
-    
-    self:_add_component(c)
-    self._master = c
+    c.on_press = function(obj)
+      -- this needs to be defined, or button mode won't work
+    end
+
+    self._controls.master = c
 
   end
   
@@ -1101,8 +1118,7 @@ function Mixer:_build_app()
         self:_set_track_page(self._track_page-1)
       end
     end
-    self:_add_component(c)
-    self._prev_page = c
+    self._controls.prev_page = c
   end
 
   local map = self.mappings.next_page
@@ -1116,8 +1132,7 @@ function Mixer:_build_app()
         self:_set_track_page(self._track_page+1)
       end
     end
-    self:_add_component(c)
-    self._next_page = c
+    self._controls.next_page = c
   end
 
 
@@ -1146,8 +1161,7 @@ function Mixer:_build_app()
 
     end
     
-    self:_add_component(c)
-    self._mode_control = c
+    self._controls.pre_post_mode = c
 
   end
     
@@ -1378,8 +1392,8 @@ function Mixer:_attach_to_tracks(new_song)
   local master_done = false
   
   -- track volume level 
-  if self._volume then
-    for control_index = 1,math.min(#tracks, #self._volume) do
+  if self._controls.volume then
+    for control_index = 1,math.min(#tracks, #self._controls.volume) do
       local track_index = self._track_offset + control_index
       local track = tracks[track_index]
       if not track then
@@ -1395,8 +1409,9 @@ function Mixer:_attach_to_tracks(new_song)
           if (self.active) then
             local value = volume.value
             -- compensate for potential loss of precision 
-            if not self._record_mode and
-              not compare(self._volume[control_index].value, value, 1000) then
+            if not self._record_mode and not 
+              compare(self._controls.volume[control_index].value, value, 1000) 
+            then
               self:set_track_volume(control_index, value)
             end
           end
@@ -1409,8 +1424,8 @@ function Mixer:_attach_to_tracks(new_song)
   end
 
   -- track panning 
-  if self._panning then
-    for control_index = 1,math.min(#tracks, #self._panning) do
+  if self._controls.panning then
+    for control_index = 1,math.min(#tracks, #self._controls.panning) do
       local track_index = self._track_offset + control_index
       local track = tracks[track_index]
       if not track then
@@ -1428,7 +1443,9 @@ function Mixer:_attach_to_tracks(new_song)
           if (self.active) then
             local value = panning.value
             -- compensate for potential loss of precision 
-            if not compare(self._panning[control_index].value, value, 1000) then
+            if not 
+              compare(self._controls.panning[control_index].value, value, 1000) 
+            then
               self:set_track_panning(control_index, value)
             end
           end
@@ -1438,8 +1455,8 @@ function Mixer:_attach_to_tracks(new_song)
   end
 
   -- track mute-state 
-  if self._mutes then
-    for control_index = 1,math.min(#tracks, #self._mutes) do
+  if self._controls.mutes then
+    for control_index = 1,math.min(#tracks, #self._controls.mutes) do
       local track_index = self._track_offset + control_index
       local track = tracks[track_index]
       if not track then
@@ -1458,8 +1475,8 @@ function Mixer:_attach_to_tracks(new_song)
   end
 
   -- track solo-state 
-  if self._solos then
-    for control_index = 1,math.min(#tracks, #self._solos) do
+  if self._controls.solos then
+    for control_index = 1,math.min(#tracks, #self._controls.solos) do
       local track_index = self._track_offset + control_index
       local track = tracks[track_index]
       if not track then
@@ -1481,7 +1498,7 @@ function Mixer:_attach_to_tracks(new_song)
 
 
   -- if master wasn't already mapped just before
-  if (not master_done and self._master) then
+  if (not master_done and self._controls.master) then
     local track = renoise.song().tracks[master_idx]
     local volume = (self._postfx_mode) and 
       track.postfx_volume or track.prefx_volume
@@ -1495,8 +1512,8 @@ function Mixer:_attach_to_tracks(new_song)
         if (self.active) then
           local value = volume.value
           -- compensate for potential loss of precision 
-          if not compare(self._master.value, value, 1000) then
-            self._master:set_value(value)
+          if not compare(self._controls.master.value, value, 1000) then
+            self._controls.master:set_value(value)
           end
         end
       end 
