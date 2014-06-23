@@ -47,7 +47,6 @@
   <li><a href="modules/Duplex.Applications.Mlrx.Mlrx_track.html">Duplex.Applications.Mlrx.Mlrx_track</a></li>
   <li><a href="modules/Duplex.Applications.Mlrx.html">Duplex.Applications.Mlrx</a></li>
   <li><a href="modules/Duplex.Applications.Navigator.html">Duplex.Applications.Navigator</a></li>
-  <li><a href="modules/Duplex.Applications.NoComponent.html">Duplex.Applications.NoComponent</a></li>
   <li><a href="modules/Duplex.Applications.NotesOnWheels.html">Duplex.Applications.NotesOnWheels</a></li>
   <li><a href="modules/Duplex.Applications.PatternSequence.html">Duplex.Applications.PatternSequence</a></li>
   <li><a href="modules/Duplex.Applications.Recorder.html">Duplex.Applications.Recorder</a></li>
@@ -55,6 +54,7 @@
   <li><a href="modules/Duplex.Applications.Rotate.html">Duplex.Applications.Rotate</a></li>
   <li><a href="modules/Duplex.Applications.StepSequencer.html">Duplex.Applications.StepSequencer</a></li>
   <li><a href="modules/Duplex.Applications.SwitchConfiguration.html">Duplex.Applications.SwitchConfiguration</a></li>
+  <li><a href="modules/Duplex.Applications.TestPad.html">Duplex.Applications.TestPad</a></li>
   <li><a href="modules/Duplex.Applications.TrackSelector.html">Duplex.Applications.TrackSelector</a></li>
   <li><a href="modules/Duplex.Applications.Transport.html">Duplex.Applications.Transport</a></li>
   <li><a href="modules/Duplex.Applications.XYPad.html">Duplex.Applications.XYPad</a></li>
@@ -62,6 +62,7 @@
   <li><a href="modules/Duplex.Browser.html">Duplex.Browser</a></li>
   <li><a href="modules/Duplex.BrowserProcess.html">Duplex.BrowserProcess</a></li>
   <li><a href="modules/Duplex.Canvas.html">Duplex.Canvas</a></li>
+  <li><a href="modules/Duplex.CanvasPoint.html">Duplex.CanvasPoint</a></li>
   <li><a href="modules/Duplex.ControlMap.html">Duplex.ControlMap</a></li>
   <li><a href="modules/Duplex.Device.html">Duplex.Device</a></li>
   <li><a href="modules/Duplex.Display.html">Duplex.Display</a></li>
@@ -86,6 +87,8 @@
   <li><a href="modules/Duplex.UIPitchBend.html">Duplex.UIPitchBend</a></li>
   <li><a href="modules/Duplex.UISlider.html">Duplex.UISlider</a></li>
   <li><a href="modules/Duplex.UISpinner.html">Duplex.UISpinner</a></li>
+  <li><a href="modules/Duplex.WidgetHooks.html">Duplex.WidgetHooks</a></li>
+  <li><a href="modules/Duplex.WidgetKeyboard.html">Duplex.WidgetKeyboard</a></li>
   <li><a href="modules/Duplex.html">Duplex</a></li>
   <li><a href="modules/main.html">main</a></li>
 </ul>
@@ -106,15 +109,15 @@
 	</tr>
 	<tr>
 		<td class="name"  nowrap><a href="modules/Duplex.Applications.Effect.html">Duplex.Applications.Effect</a></td>
-		<td class="summary">The Effect application enables control of DSP chain parameters</td>
+		<td class="summary">The Effect application enables control of DSP chain parameters.</td>
 	</tr>
 	<tr>
 		<td class="name"  nowrap><a href="modules/Duplex.Applications.GridPie.html">Duplex.Applications.GridPie</a></td>
-		<td class="summary">Grid Pie lets you combine different parts of song, non-linearly, in real time</td>
+		<td class="summary">Grid Pie lets you combine different parts of song, non-linearly, in real time.</td>
 	</tr>
 	<tr>
 		<td class="name"  nowrap><a href="modules/Duplex.Applications.Hydra.html">Duplex.Applications.Hydra</a></td>
-		<td class="summary">Control any Hydra device in the current song</td>
+		<td class="summary">Control any Hydra device in the current song.</td>
 	</tr>
 	<tr>
 		<td class="name"  nowrap><a href="modules/Duplex.Applications.Keyboard.html">Duplex.Applications.Keyboard</a></td>
@@ -122,13 +125,11 @@
 	</tr>
 	<tr>
 		<td class="name"  nowrap><a href="modules/Duplex.Applications.Matrix.html">Duplex.Applications.Matrix</a></td>
-		<td class="summary">Take control of the pattern matrix in Renoise with the unfinitely scrollable matrix application.</td>
+		<td class="summary">Take control of the pattern matrix in Renoise with the endlessly scrollable matrix application.</td>
 	</tr>
 	<tr>
 		<td class="name"  nowrap><a href="modules/Duplex.Applications.Metronome.html">Duplex.Applications.Metronome</a></td>
-		<td class="summary">Simple application aimed at taking control of the Renoise metronome (mapping that allows you to toggle it on and off)</p>
-
-<p>Metronome is a sample application that is meant to demonstrate how to write an application with Duplex.</td>
+		<td class="summary">Take control of the Renoise metronome (tutorial).</td>
 	</tr>
 	<tr>
 		<td class="name"  nowrap><a href="modules/Duplex.Applications.MidiActions.Bindings.html">Duplex.Applications.MidiActions.Bindings</a></td>
@@ -140,7 +141,7 @@
 	</tr>
 	<tr>
 		<td class="name"  nowrap><a href="modules/Duplex.Applications.Mixer.html">Duplex.Applications.Mixer</a></td>
-		<td class="summary">The Mixer is a generic class for controlling the Renoise mixer</td>
+		<td class="summary">The Mixer is a generic class for controlling the Renoise mixer, featuring an endlessly scrollable number of tracks.</td>
 	</tr>
 	<tr>
 		<td class="name"  nowrap><a href="modules/Duplex.Applications.Mlrx.Mlrx_group.html">Duplex.Applications.Mlrx.Mlrx_group</a></td>
@@ -162,34 +163,30 @@
 	</tr>
 	<tr>
 		<td class="name"  nowrap><a href="modules/Duplex.Applications.Mlrx.html">Duplex.Applications.Mlrx</a></td>
-		<td class="summary">Mlrx is a comphrehensive live performance environment for Renoise</td>
+		<td class="summary">Mlrx is a comphrehensive live performance environment for Renoise.</td>
 	</tr>
 	<tr>
 		<td class="name"  nowrap><a href="modules/Duplex.Applications.Navigator.html">Duplex.Applications.Navigator</a></td>
 		<td class="summary">The "Navigator" application allows you to take control of the pattern/block-loop and playback position.</td>
 	</tr>
 	<tr>
-		<td class="name"  nowrap><a href="modules/Duplex.Applications.NoComponent.html">Duplex.Applications.NoComponent</a></td>
-		<td class="summary">Simple application aimed at taking control of the Renoise metronome (mapping that allows you to toggle it on and off)</p>
-
-<p>Metronome is a sample application that is meant to demonstrate how to write an application with Duplex.</td>
-	</tr>
-	<tr>
 		<td class="name"  nowrap><a href="modules/Duplex.Applications.NotesOnWheels.html">Duplex.Applications.NotesOnWheels</a></td>
-		<td class="summary">Notes On Wheels (N.O.W) is an arpeggiating (alternating between pressed keys) step sequencer.</td>
+		<td class="summary">Notes On Wheels (N.O.W) is an arpeggiating step sequencer.</td>
 	</tr>
 	<tr>
 		<td class="name"  nowrap><a href="modules/Duplex.Applications.PatternSequence.html">Duplex.Applications.PatternSequence</a></td>
-		<td class="summary">Basic control of the Renoise pattern-sequence</td>
+		<td class="summary">Basic control of the Renoise pattern-sequence.</td>
 	</tr>
 	<tr>
 		<td class="name"  nowrap><a href="modules/Duplex.Applications.Recorder.html">Duplex.Applications.Recorder</a></td>
-		<td class="summary">Looping sample-recorder that can capture recordings in real-time, using a simple and straight-forward interface
-Record any signal that you feed into Renoise, be that your voice, a guitar etc.</td>
+		<td class="summary">
+<hr/>
+<p>Record and loop any signal that you feed into Renoise, be that your voice, a guitar etc.</p>
+</td>
 	</tr>
 	<tr>
 		<td class="name"  nowrap><a href="modules/Duplex.Applications.Repeater.html">Duplex.Applications.Repeater</a></td>
-		<td class="summary">This is our sample Repeater application</td>
+		<td class="summary">Take control of the native repeater DSP device.</td>
 	</tr>
 	<tr>
 		<td class="name"  nowrap><a href="modules/Duplex.Applications.Rotate.html">Duplex.Applications.Rotate</a></td>
@@ -197,21 +194,23 @@ Record any signal that you feed into Renoise, be that your voice, a guitar etc.<
 	</tr>
 	<tr>
 		<td class="name"  nowrap><a href="modules/Duplex.Applications.StepSequencer.html">Duplex.Applications.StepSequencer</a></td>
-		<td class="summary">Use your grid controller as a basic step sequencer</p>
-
-<p>Each button in the grid corresponds to a line in a track.</td>
+		<td class="summary">Use your grid controller as a basic step sequencer.</td>
 	</tr>
 	<tr>
 		<td class="name"  nowrap><a href="modules/Duplex.Applications.SwitchConfiguration.html">Duplex.Applications.SwitchConfiguration</a></td>
-		<td class="summary">Switch between different configurations (next, previous and set)</td>
+		<td class="summary">Switch between different configurations (next, previous and set).</td>
+	</tr>
+	<tr>
+		<td class="name"  nowrap><a href="modules/Duplex.Applications.TestPad.html">Duplex.Applications.TestPad</a></td>
+		<td class="summary">An interactive demo of the various UIComponents.</td>
 	</tr>
 	<tr>
 		<td class="name"  nowrap><a href="modules/Duplex.Applications.TrackSelector.html">Duplex.Applications.TrackSelector</a></td>
-		<td class="summary">Select the active Renoise track, including shortcuts for master &amp; send tracks</td>
+		<td class="summary">Select the active Renoise track, including shortcuts for master &amp; send tracks.</td>
 	</tr>
 	<tr>
 		<td class="name"  nowrap><a href="modules/Duplex.Applications.Transport.html">Duplex.Applications.Transport</a></td>
-		<td class="summary">The Transport application offers transport controls for Renoise</td>
+		<td class="summary">The Transport application offers transport controls for Renoise.</td>
 	</tr>
 	<tr>
 		<td class="name"  nowrap><a href="modules/Duplex.Applications.XYPad.html">Duplex.Applications.XYPad</a></td>
@@ -237,6 +236,12 @@ Record any signal that you feed into Renoise, be that your voice, a guitar etc.<
 		<td class="summary">Employed by the UIComponents to represent their visual state</p>
 
 <p>The canvas is essentially an extra layer that we perform updates "through".</td>
+	</tr>
+	<tr>
+		<td class="name"  nowrap><a href="modules/Duplex.CanvasPoint.html">Duplex.CanvasPoint</a></td>
+		<td class="summary">
+
+</td>
 	</tr>
 	<tr>
 		<td class="name"  nowrap><a href="modules/Duplex.ControlMap.html">Duplex.ControlMap</a></td>
@@ -290,13 +295,12 @@ Record any signal that you feed into Renoise, be that your voice, a guitar etc.<
 	</tr>
 	<tr>
 		<td class="name"  nowrap><a href="modules/Duplex.ProcessSlicer.html">Duplex.ProcessSlicer</a></td>
-		<td class="summary">returns true when the current process currently is running</td>
+		<td class="summary">ProcessSlicer allows you to slice up a function which takes a lot of
+processing time into multiple calls via Lua coroutines.</td>
 	</tr>
 	<tr>
 		<td class="name"  nowrap><a href="modules/Duplex.RoamingDSP.html">Duplex.RoamingDSP</a></td>
-		<td class="summary">Extend this class if you want an application to lock onto a specific type of device, or navigate between similar devices</p>
-
-<p>The application can target any device that has been selected in Renoise, freely roaming the tracks.</td>
+		<td class="summary">Extend this class if you want an application to lock onto a specific type of device, or navigate between similar devices.</td>
 	</tr>
 	<tr>
 		<td class="name"  nowrap><a href="modules/Duplex.Scheduler.html">Duplex.Scheduler</a></td>
@@ -313,15 +317,11 @@ especially useful for controlling a sequence with an a looped region.</td>
 	</tr>
 	<tr>
 		<td class="name"  nowrap><a href="modules/Duplex.UIComponent.html">Duplex.UIComponent</a></td>
-		<td class="summary">The UIComponent is the basic building block from which you can create a Duplex application user interface </p>
-
-<p>All classes that extend this class are prefixed with 'UI': UIButton, UISlider etc.</td>
+		<td class="summary">UIComponent is the basic building block from which you create a user interface.</td>
 	</tr>
 	<tr>
 		<td class="name"  nowrap><a href="modules/Duplex.UIKey.html">Duplex.UIKey</a></td>
-		<td class="summary">A UIComponent designed to work with a standard keyboard, it responds to a <code>keyboard</code> or <code>key</code> type parameter</p>
-
-<p>Instead of a single numeric value, the UIKey can represent both pitch and velocity.</td>
+		<td class="summary">UIKey receives messages from a MIDI keyboard.</td>
 	</tr>
 	<tr>
 		<td class="name"  nowrap><a href="modules/Duplex.UIKeyPressure.html">Duplex.UIKeyPressure</a></td>
@@ -341,11 +341,26 @@ especially useful for controlling a sequence with an a looped region.</td>
 	</tr>
 	<tr>
 		<td class="name"  nowrap><a href="modules/Duplex.UISlider.html">Duplex.UISlider</a></td>
-		<td class="summary">The Slider supports different input methods: buttons or faders/dials</td>
+		<td class="summary">The Slider supports different input methods: buttons or faders/dials</p>
+
+
+<h3>Dial mode / fader mode</h3>
+
+<p>  In most cases, you would specify a UISlider to take control of either a dial/encoder or fader.</td>
 	</tr>
 	<tr>
 		<td class="name"  nowrap><a href="modules/Duplex.UISpinner.html">Duplex.UISpinner</a></td>
 		<td class="summary">UISpinner makes it possible to select among a list of options</td>
+	</tr>
+	<tr>
+		<td class="name"  nowrap><a href="modules/Duplex.WidgetHooks.html">Duplex.WidgetHooks</a></td>
+		<td class="summary">Provide hooks for controls in the virtual control surface (native &amp; custom)</td>
+	</tr>
+	<tr>
+		<td class="name"  nowrap><a href="modules/Duplex.WidgetKeyboard.html">Duplex.WidgetKeyboard</a></td>
+		<td class="summary">
+
+</td>
 	</tr>
 	<tr>
 		<td class="name"  nowrap><a href="modules/Duplex.html">Duplex</a></td>

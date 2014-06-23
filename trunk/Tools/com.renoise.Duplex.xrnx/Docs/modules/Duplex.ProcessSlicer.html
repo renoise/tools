@@ -33,6 +33,7 @@
 <h2>Contents</h2>
 <ul>
 <li><a href="#Functions">Functions</a></li>
+<li><a href="#Fields">Fields</a></li>
 </ul>
 
 
@@ -54,7 +55,6 @@
   <li><a href="../modules/Duplex.Applications.Mlrx.Mlrx_track.html">Duplex.Applications.Mlrx.Mlrx_track</a></li>
   <li><a href="../modules/Duplex.Applications.Mlrx.html">Duplex.Applications.Mlrx</a></li>
   <li><a href="../modules/Duplex.Applications.Navigator.html">Duplex.Applications.Navigator</a></li>
-  <li><a href="../modules/Duplex.Applications.NoComponent.html">Duplex.Applications.NoComponent</a></li>
   <li><a href="../modules/Duplex.Applications.NotesOnWheels.html">Duplex.Applications.NotesOnWheels</a></li>
   <li><a href="../modules/Duplex.Applications.PatternSequence.html">Duplex.Applications.PatternSequence</a></li>
   <li><a href="../modules/Duplex.Applications.Recorder.html">Duplex.Applications.Recorder</a></li>
@@ -62,6 +62,7 @@
   <li><a href="../modules/Duplex.Applications.Rotate.html">Duplex.Applications.Rotate</a></li>
   <li><a href="../modules/Duplex.Applications.StepSequencer.html">Duplex.Applications.StepSequencer</a></li>
   <li><a href="../modules/Duplex.Applications.SwitchConfiguration.html">Duplex.Applications.SwitchConfiguration</a></li>
+  <li><a href="../modules/Duplex.Applications.TestPad.html">Duplex.Applications.TestPad</a></li>
   <li><a href="../modules/Duplex.Applications.TrackSelector.html">Duplex.Applications.TrackSelector</a></li>
   <li><a href="../modules/Duplex.Applications.Transport.html">Duplex.Applications.Transport</a></li>
   <li><a href="../modules/Duplex.Applications.XYPad.html">Duplex.Applications.XYPad</a></li>
@@ -69,6 +70,7 @@
   <li><a href="../modules/Duplex.Browser.html">Duplex.Browser</a></li>
   <li><a href="../modules/Duplex.BrowserProcess.html">Duplex.BrowserProcess</a></li>
   <li><a href="../modules/Duplex.Canvas.html">Duplex.Canvas</a></li>
+  <li><a href="../modules/Duplex.CanvasPoint.html">Duplex.CanvasPoint</a></li>
   <li><a href="../modules/Duplex.ControlMap.html">Duplex.ControlMap</a></li>
   <li><a href="../modules/Duplex.Device.html">Duplex.Device</a></li>
   <li><a href="../modules/Duplex.Display.html">Duplex.Display</a></li>
@@ -93,6 +95,8 @@
   <li><a href="../modules/Duplex.UIPitchBend.html">Duplex.UIPitchBend</a></li>
   <li><a href="../modules/Duplex.UISlider.html">Duplex.UISlider</a></li>
   <li><a href="../modules/Duplex.UISpinner.html">Duplex.UISpinner</a></li>
+  <li><a href="../modules/Duplex.WidgetHooks.html">Duplex.WidgetHooks</a></li>
+  <li><a href="../modules/Duplex.WidgetKeyboard.html">Duplex.WidgetKeyboard</a></li>
   <li><a href="../modules/Duplex.html">Duplex</a></li>
   <li><a href="../modules/main.html">main</a></li>
 </ul>
@@ -102,14 +106,61 @@
 <div id="content">
 
 <h1>Module <code>Duplex.ProcessSlicer</code></h1>
-<p>returns true when the current process currently is running</p>
-<p>
+<p>ProcessSlicer allows you to slice up a function which takes a lot of
+processing time into multiple calls via Lua coroutines.</p>
+<p> </p>
 
-</p>
+<h3>Example usage:</h3>
+
+<pre><code>local slicer = ProcessSlicer(my_process_func, argument1, argumentX)
+</code></pre>
+
+<p>This starts calling 'my<em>process</em>func' in idle, passing all arguments
+you've specified in the ProcessSlicer constructor.</p>
+
+<pre><code>slicer:start()
+</code></pre>
+
+<p>To abort a running sliced process, you can call "stop" at any time
+from within your processing function of outside of it in the main thread.
+As soon as your process function returns, the slicer is automatically
+stopped.</p>
+
+<pre><code>slicer:stop()
+</code></pre>
+
+<p>To give processing time back to Renoise, call 'coroutine.yield()'
+anywhere in your process function to temporarily yield back to Renoise:</p>
+
+<pre><code>function my_process_func()
+  for j=1,100 do
+    -- do something that needs a lot of time, and periodically call
+    -- "coroutine.yield()" to give processing time back to Renoise. Renoise
+    -- will switch back to this point of the function as soon as has done
+    -- "its" job:
+    coroutine.yield()
+  end
+end
+</code></pre>
+
+
+<h3>Drawbacks:</h3>
+
+<p>By slicing your processing function, you will also slice any changes that are
+done to the Renoise song into multiple undo actions (one action per slice/yield).</p>
+
+<p>Modal dialogs will block the slicer, cause on_idle notifications are not fired then.
+It will even block your own process GUI when trying to show it modal.</p>
 
 
 <h2><a href="#Functions">Functions</a></h2>
 <table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#running">running ()</a></td>
+	<td class="summary">
+
+</td>
+	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#start">start ()</a></td>
 	<td class="summary">start a process</td>
@@ -117,6 +168,17 @@
 	<tr>
 	<td class="name" nowrap><a href="#stop">stop ()</a></td>
 	<td class="summary">stop a running process</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#__on_idle">__on_idle ()</a></td>
+	<td class="summary">function that gets called from Renoise to do idle stuff.</td>
+	</tr>
+</table>
+<h2><a href="#Fields">Fields</a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#process_func">process_func</a></td>
+	<td class="summary">Initialize the Automation class</td>
 	</tr>
 </table>
 
@@ -126,6 +188,25 @@
 
     <h2><a name="Functions"></a>Functions</h2>
     <dl class="function">
+    <dt>
+    <a name = "running"></a>
+    <strong>running ()</strong>
+    </dt>
+    <dd>
+
+
+
+
+    <h3>Returns:</h3>
+    <ol>
+
+        true when the current process currently is running
+    </ol>
+
+
+
+
+</dd>
     <dt>
     <a name = "start"></a>
     <strong>start ()</strong>
@@ -148,6 +229,46 @@
     stop a running process
 
 
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "__on_idle"></a>
+    <strong>__on_idle ()</strong>
+    </dt>
+    <dd>
+    function that gets called from Renoise to do idle stuff.  switches back
+ into the processing function or detaches the thread
+
+
+
+
+
+
+
+</dd>
+</dl>
+    <h2><a name="Fields"></a>Fields</h2>
+    <dl class="function">
+    <dt>
+    <a name = "process_func"></a>
+    <strong>process_func</strong>
+    </dt>
+    <dd>
+    Initialize the Automation class
+
+
+    <ul>
+        <li><span class="parameter">process_func</span>
+         (function)
+        </li>
+        <li><span class="parameter">VarArg</span>
+         (...)
+        </li>
+    </ul>
 
 
 

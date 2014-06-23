@@ -33,6 +33,7 @@
 <h2>Contents</h2>
 <ul>
 <li><a href="#Functions">Functions</a></li>
+<li><a href="#Fields">Fields</a></li>
 </ul>
 
 
@@ -54,7 +55,6 @@
   <li><a href="../modules/Duplex.Applications.Mlrx.Mlrx_track.html">Duplex.Applications.Mlrx.Mlrx_track</a></li>
   <li><a href="../modules/Duplex.Applications.Mlrx.html">Duplex.Applications.Mlrx</a></li>
   <li><a href="../modules/Duplex.Applications.Navigator.html">Duplex.Applications.Navigator</a></li>
-  <li><a href="../modules/Duplex.Applications.NoComponent.html">Duplex.Applications.NoComponent</a></li>
   <li><a href="../modules/Duplex.Applications.NotesOnWheels.html">Duplex.Applications.NotesOnWheels</a></li>
   <li><a href="../modules/Duplex.Applications.PatternSequence.html">Duplex.Applications.PatternSequence</a></li>
   <li><a href="../modules/Duplex.Applications.Recorder.html">Duplex.Applications.Recorder</a></li>
@@ -62,6 +62,7 @@
   <li><a href="../modules/Duplex.Applications.Rotate.html">Duplex.Applications.Rotate</a></li>
   <li><a href="../modules/Duplex.Applications.StepSequencer.html">Duplex.Applications.StepSequencer</a></li>
   <li><a href="../modules/Duplex.Applications.SwitchConfiguration.html">Duplex.Applications.SwitchConfiguration</a></li>
+  <li><a href="../modules/Duplex.Applications.TestPad.html">Duplex.Applications.TestPad</a></li>
   <li><a href="../modules/Duplex.Applications.TrackSelector.html">Duplex.Applications.TrackSelector</a></li>
   <li><a href="../modules/Duplex.Applications.Transport.html">Duplex.Applications.Transport</a></li>
   <li><a href="../modules/Duplex.Applications.XYPad.html">Duplex.Applications.XYPad</a></li>
@@ -69,6 +70,7 @@
   <li><a href="../modules/Duplex.Browser.html">Duplex.Browser</a></li>
   <li><a href="../modules/Duplex.BrowserProcess.html">Duplex.BrowserProcess</a></li>
   <li><a href="../modules/Duplex.Canvas.html">Duplex.Canvas</a></li>
+  <li><a href="../modules/Duplex.CanvasPoint.html">Duplex.CanvasPoint</a></li>
   <li><a href="../modules/Duplex.ControlMap.html">Duplex.ControlMap</a></li>
   <li><a href="../modules/Duplex.Device.html">Duplex.Device</a></li>
   <li><a href="../modules/Duplex.Display.html">Duplex.Display</a></li>
@@ -93,6 +95,8 @@
   <li><a href="../modules/Duplex.UIPitchBend.html">Duplex.UIPitchBend</a></li>
   <li><a href="../modules/Duplex.UISlider.html">Duplex.UISlider</a></li>
   <li><a href="../modules/Duplex.UISpinner.html">Duplex.UISpinner</a></li>
+  <li><a href="../modules/Duplex.WidgetHooks.html">Duplex.WidgetHooks</a></li>
+  <li><a href="../modules/Duplex.WidgetKeyboard.html">Duplex.WidgetKeyboard</a></li>
   <li><a href="../modules/Duplex.html">Duplex</a></li>
   <li><a href="../modules/main.html">main</a></li>
 </ul>
@@ -120,13 +124,12 @@
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#socket_error">socket_error (error_message)</a></td>
-	<td class="summary">En error happened in the servers background thread (this should not happen)</td>
+	<td class="summary">An error happened in the servers background thread (this should not happen)</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#socket_message">socket_message (socket, binary_data)</a></td>
-	<td class="summary">Receive/unpack incoming osc messages: largely identical to the
- MidiDevice implementation, except that we look for the control-map "action"
- instead of the "value" attribute</td>
+	<td class="summary">Receive/unpack osc messages - this is a low-level method which will receive
+ incoming messages and translate them into a text representation</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#receive_osc_message">receive_osc_message (value_str)</a></td>
@@ -146,29 +149,68 @@
 	<td class="summary">Queue a message instead of sending it right away.</td>
 	</tr>
 	<tr>
+	<td class="name" nowrap><a href="#on_idle">on_idle ()</a></td>
+	<td class="summary">Bundle &amp; send queued messages</td>
+	</tr>
+	<tr>
 	<td class="name" nowrap><a href="#send_osc_bundle">send_osc_bundle ()</a></td>
 	<td class="summary">Send a queued bundle of OSC messages</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#send_osc_message">send_osc_message (message, value)</a></td>
-	<td class="summary">Send a OSC message right away</td>
+	<td class="summary">Send a OSC message right away.</td>
 	</tr>
 	<tr>
-	<td class="name" nowrap><a href="#produce_entry">produce_entry (vars, value)</a></td>
-	<td class="summary">Produce an OSC message value entry.</td>
-	</tr>
-	<tr>
-	<td class="name" nowrap><a href="#point_to_value">point_to_value (pt, elm, ceiling)</a></td>
-	<td class="summary">Convert the point to an output value.</td>
+	<td class="name" nowrap><a href="#_construct_osc_message">_construct_osc_message (message, value)</a></td>
+	<td class="summary">Construct OSC message (used by <a href="../modules/Duplex.OscDevice.html#send_osc_message">send_osc_message</a> &amp; <a href="../modules/Duplex.OscDevice.html#send_osc_bundle">send_osc_bundle</a>)</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#_unpack_messages">_unpack_messages (message_or_bundle, messages)</a></td>
 	<td class="summary">Recursively unpacks all OSC messages from the given bundle or message.</td>
 	</tr>
 	<tr>
+	<td class="name" nowrap><a href="#_produce_entry">_produce_entry (vars, value)</a></td>
+	<td class="summary">Produce an OSC message value entry (utilized by <a href="../modules/Duplex.OscDevice.html#_construct_osc_message">_construct_osc_message</a>).</td>
+	</tr>
+	<tr>
 	<td class="name" nowrap><a href="#_msg_to_string">_msg_to_string (msg)</a></td>
 	<td class="summary">Create string representation of OSC message:
  e.g.</td>
+	</tr>
+</table>
+<h2><a href="#Fields">Fields</a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#self.prefix">self.prefix</a></td>
+	<td class="summary">(string) optional device prefix, e.g.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#self.address">self.address</a></td>
+	<td class="summary">(address) can be an IP address or a domain</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#self.port_in">self.port_in</a></td>
+	<td class="summary">(int) the port where incoming messages arrive</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#self.port_out">self.port_out</a></td>
+	<td class="summary">(int) the port where outgoing messages leave</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#self.bundle_messages">self.bundle_messages</a></td>
+	<td class="summary">(bool) whether we should bundle OSC messages (true) or not (false).</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#self.client">self.client</a></td>
+	<td class="summary">(renoise.Socket.SocketClient)</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#self.server">self.server</a></td>
+	<td class="summary">(renoise.Socket.SocketServer)</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#self.message_queue">self.message_queue</a></td>
+	<td class="summary">(table) containing queued messages.</td>
 	</tr>
 </table>
 
@@ -192,7 +234,7 @@
          (string) the friendly name of the device
         </li>
         <li><span class="parameter">message_stream</span>
-         (MessageStream) the msg-stream we should attach to
+         (<a href="../modules/Duplex.MessageStream.html#">Duplex.MessageStream</a>) the msg-stream we should attach to
         </li>
         <li><span class="parameter">prefix</span>
          (string) the OSC prefix to use
@@ -232,7 +274,7 @@
     <strong>socket_error (error_message)</strong>
     </dt>
     <dd>
-    En error happened in the servers background thread (this should not happen)
+    An error happened in the servers background thread (this should not happen)
 
 
     <h3>Parameters:</h3>
@@ -254,20 +296,17 @@
     <strong>socket_message (socket, binary_data)</strong>
     </dt>
     <dd>
-    Receive/unpack incoming osc messages: largely identical to the
- MidiDevice implementation, except that we look for the control-map "action"
- instead of the "value" attribute
+    Receive/unpack osc messages - this is a low-level method which will receive
+ incoming messages and translate them into a text representation
 
 
     <h3>Parameters:</h3>
     <ul>
         <li><span class="parameter">socket</span>
-         (
+         (a "dummy" socket, contains socket.port and socket.address)
         </li>
         <li><span class="parameter">binary_data</span>
-
-
-
+         (raw, packetized socket data)
         </li>
     </ul>
 
@@ -287,7 +326,7 @@
     <h3>Parameters:</h3>
     <ul>
         <li><span class="parameter">value_str</span>
-         (String), control-map string
+         (string), control-map string
         </li>
     </ul>
 
@@ -322,7 +361,7 @@
     <h3>Parameters:</h3>
     <ul>
         <li><span class="parameter">prefix</span>
-         (String)
+         (string)
         </li>
     </ul>
 
@@ -346,9 +385,23 @@
          (string) the message string
         </li>
         <li><span class="parameter">value</span>
-         (number or table) the value(s) to inject
+         (number, string or table) the value(s) to inject
         </li>
     </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "on_idle"></a>
+    <strong>on_idle ()</strong>
+    </dt>
+    <dd>
+    Bundle &amp; send queued messages
+
+
 
 
 
@@ -378,13 +431,14 @@
     <strong>send_osc_message (message, value)</strong>
     </dt>
     <dd>
-    Send a OSC message right away
+    Send a OSC message right away.  This is the method being used by the
+ Display for updating the visual state of device
 
 
     <h3>Parameters:</h3>
     <ul>
         <li><span class="parameter">message</span>
-         (string) the message string
+         (string) the message string, e.g. "/device/button %i"
         </li>
         <li><span class="parameter">value</span>
          (number or table) the value(s) to inject
@@ -397,58 +451,23 @@
 
 </dd>
     <dt>
-    <a name = "produce_entry"></a>
-    <strong>produce_entry (vars, value)</strong>
+    <a name = "_construct_osc_message"></a>
+    <strong>_construct_osc_message (message, value)</strong>
     </dt>
     <dd>
-    Produce an OSC message value entry.  If only "vars" is defined, it will
-  be treated as a standalone floating-point value. Otherwise, "vars" will
-  indicate the type of value - Integer is "%i", while floating-point is "%f"
+    Construct OSC message (used by <a href="../modules/Duplex.OscDevice.html#send_osc_message">send_osc_message</a> &amp; <a href="../modules/Duplex.OscDevice.html#send_osc_bundle">send_osc_bundle</a>)
 
 
     <h3>Parameters:</h3>
     <ul>
-        <li><span class="parameter">vars</span>
-         (number or string), value or the type of value
+        <li><span class="parameter">message</span>
+         (string) the message string, e.g. "/device/button %i"
         </li>
         <li><span class="parameter">value</span>
-         (number)
+         (number or table) the value(s) to inject
         </li>
     </ul>
 
-
-
-
-
-</dd>
-    <dt>
-    <a name = "point_to_value"></a>
-    <strong>point_to_value (pt, elm, ceiling)</strong>
-    </dt>
-    <dd>
-    Convert the point to an output value.  If the point has multiple values, it
-  is describing a multidimensional value, such as a tilt sensor or XY-pad. In
-  such a case, the method will return a table of values
-
-
-    <h3>Parameters:</h3>
-    <ul>
-        <li><span class="parameter">pt</span>
-         (CanvasPoint), point containing the current value
-        </li>
-        <li><span class="parameter">elm</span>
-         (table), control-map parameter
-        </li>
-        <li><span class="parameter">ceiling</span>
-         (number), the UIComponent ceiling value
-        </li>
-    </ul>
-
-    <h3>Returns:</h3>
-    <ol>
-
-        value (number, or table of numbers)
-    </ol>
 
 
 
@@ -470,7 +489,39 @@
          (renoise.Osc.Message or renoise.Osc.Bundle)
         </li>
         <li><span class="parameter">messages</span>
-         (Table) table to insert unpacked messages into
+         (table) table to insert unpacked messages into
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "_produce_entry"></a>
+    <strong>_produce_entry (vars, value)</strong>
+    </dt>
+    <dd>
+    Produce an OSC message value entry (utilized by <a href="../modules/Duplex.OscDevice.html#_construct_osc_message">_construct_osc_message</a>). </p>
+
+<p> Note that if only "vars" is defined, it will be treated as a standalone
+ floating-point value. Otherwise, "vars" will indicate the type of value
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">vars</span>
+
+<p> (number or string), value or the type of value</p>
+<pre><code>"%i" = integer number
+"%f" = floating-point
+"%s" = string (ascii)
+</code></pre>
+
+        </li>
+        <li><span class="parameter">value</span>
+         (number)
         </li>
     </ul>
 
@@ -494,6 +545,130 @@
          (renoise.Osc.Message)
         </li>
     </ul>
+
+
+
+
+
+</dd>
+</dl>
+    <h2><a name="Fields"></a>Fields</h2>
+    <dl class="function">
+    <dt>
+    <a name = "self.prefix"></a>
+    <strong>self.prefix</strong>
+    </dt>
+    <dd>
+    (string) optional device prefix, e.g.  "/duplex"
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "self.address"></a>
+    <strong>self.address</strong>
+    </dt>
+    <dd>
+    (address) can be an IP address or a domain
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "self.port_in"></a>
+    <strong>self.port_in</strong>
+    </dt>
+    <dd>
+    (int) the port where incoming messages arrive
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "self.port_out"></a>
+    <strong>self.port_out</strong>
+    </dt>
+    <dd>
+    (int) the port where outgoing messages leave
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "self.bundle_messages"></a>
+    <strong>self.bundle_messages</strong>
+    </dt>
+    <dd>
+    (bool) whether we should bundle OSC messages (true) or not (false).
+ Enable this feature if you experience lost packets, and/or is using
+ devices that communicate over wireless networks (see TouchOSC class)
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "self.client"></a>
+    <strong>self.client</strong>
+    </dt>
+    <dd>
+    (renoise.Socket.SocketClient)
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "self.server"></a>
+    <strong>self.server</strong>
+    </dt>
+    <dd>
+    (renoise.Socket.SocketServer)
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "self.message_queue"></a>
+    <strong>self.message_queue</strong>
+    </dt>
+    <dd>
+
+<p>(table) containing queued messages. </p>
+<pre><code>[1] = {
+  message = (string) -- e.g. "/device/button %i"
+  value = (number or table) -- the current value
+},...
+</code></pre>
+
+
+
 
 
 

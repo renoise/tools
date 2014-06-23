@@ -54,7 +54,6 @@
   <li><a href="../modules/Duplex.Applications.Mlrx.Mlrx_track.html">Duplex.Applications.Mlrx.Mlrx_track</a></li>
   <li><a href="../modules/Duplex.Applications.Mlrx.html">Duplex.Applications.Mlrx</a></li>
   <li><a href="../modules/Duplex.Applications.Navigator.html">Duplex.Applications.Navigator</a></li>
-  <li><a href="../modules/Duplex.Applications.NoComponent.html">Duplex.Applications.NoComponent</a></li>
   <li><a href="../modules/Duplex.Applications.NotesOnWheels.html">Duplex.Applications.NotesOnWheels</a></li>
   <li><a href="../modules/Duplex.Applications.PatternSequence.html">Duplex.Applications.PatternSequence</a></li>
   <li><a href="../modules/Duplex.Applications.Recorder.html">Duplex.Applications.Recorder</a></li>
@@ -62,6 +61,7 @@
   <li><a href="../modules/Duplex.Applications.Rotate.html">Duplex.Applications.Rotate</a></li>
   <li><a href="../modules/Duplex.Applications.StepSequencer.html">Duplex.Applications.StepSequencer</a></li>
   <li><a href="../modules/Duplex.Applications.SwitchConfiguration.html">Duplex.Applications.SwitchConfiguration</a></li>
+  <li><a href="../modules/Duplex.Applications.TestPad.html">Duplex.Applications.TestPad</a></li>
   <li><a href="../modules/Duplex.Applications.TrackSelector.html">Duplex.Applications.TrackSelector</a></li>
   <li><a href="../modules/Duplex.Applications.Transport.html">Duplex.Applications.Transport</a></li>
   <li><a href="../modules/Duplex.Applications.XYPad.html">Duplex.Applications.XYPad</a></li>
@@ -69,6 +69,7 @@
   <li><a href="../modules/Duplex.Browser.html">Duplex.Browser</a></li>
   <li><a href="../modules/Duplex.BrowserProcess.html">Duplex.BrowserProcess</a></li>
   <li><a href="../modules/Duplex.Canvas.html">Duplex.Canvas</a></li>
+  <li><a href="../modules/Duplex.CanvasPoint.html">Duplex.CanvasPoint</a></li>
   <li><a href="../modules/Duplex.ControlMap.html">Duplex.ControlMap</a></li>
   <li><a href="../modules/Duplex.Device.html">Duplex.Device</a></li>
   <li><a href="../modules/Duplex.Display.html">Duplex.Display</a></li>
@@ -93,6 +94,8 @@
   <li><a href="../modules/Duplex.UIPitchBend.html">Duplex.UIPitchBend</a></li>
   <li><a href="../modules/Duplex.UISlider.html">Duplex.UISlider</a></li>
   <li><a href="../modules/Duplex.UISpinner.html">Duplex.UISpinner</a></li>
+  <li><a href="../modules/Duplex.WidgetHooks.html">Duplex.WidgetHooks</a></li>
+  <li><a href="../modules/Duplex.WidgetKeyboard.html">Duplex.WidgetKeyboard</a></li>
   <li><a href="../modules/Duplex.html">Duplex</a></li>
   <li><a href="../modules/main.html">main</a></li>
 </ul>
@@ -102,13 +105,14 @@
 <div id="content">
 
 <h1>Module <code>Duplex.Applications.Mixer</code></h1>
-<p>The Mixer is a generic class for controlling the Renoise mixer</p>
+<p>The Mixer is a generic class for controlling the Renoise mixer, featuring an endlessly scrollable number of tracks.</p>
 <p>
+
+<p>Inheritance: <a href="../modules/Duplex.Application.html#">Duplex.Application</a> > Duplex.Application.Mixer </p>
 
 <h3>Grid controller layout</h3>
 
-<p>Assigning the levels, mute and/or solo mapping to the same group
-(the grid) will automaticaly produce the following layout:</p>
+<p>Assigning the levels, mute and/or solo mapping to the same group (the grid) will automaticaly produce the following layout:</p>
 
 <pre><code>+---- - --- - --- - --- +    +---- +  The master track
 |mute1|mute2|mute3|mute4| -&gt; |  m  |  will, when specified,
@@ -125,9 +129,25 @@
 +---- - --- - --- - --- +    +---- +
 </code></pre>
 
+<p>  Note that you can have any number of tracks, but each group (levels, mute and/or solo) needs to contain the same number of parameters.</p>
 
+
+<h3>Other features</h3>
+
+<ul>
+    <li>Parameter pick-up: when this feature is enabled, values will not be changed until you move a fader across the threshold point (the current value). This will make it possible to avoid sudden jumps in levels as you are scrolling between pages and adjusting levels.</li>
+</ul>
 
 <h3>Changes</h3>
+
+<p>  0.99</p>
+<pre><code>- UIComponent: when possible, supply mapping as construction argument
+- UIComponent references stored within self._controls
+</code></pre>
+
+<p>  0.98</p>
+<pre><code>- Track navigation removed (delegated to TrackSelector app)
+</code></pre>
 
 <p>  0.97  </p>
 <pre><code>- Renoise's 2.7 multi-solo mode supported/visualized

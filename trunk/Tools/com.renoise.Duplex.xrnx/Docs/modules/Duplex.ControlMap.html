@@ -33,6 +33,7 @@
 <h2>Contents</h2>
 <ul>
 <li><a href="#Functions">Functions</a></li>
+<li><a href="#Fields">Fields</a></li>
 </ul>
 
 
@@ -54,7 +55,6 @@
   <li><a href="../modules/Duplex.Applications.Mlrx.Mlrx_track.html">Duplex.Applications.Mlrx.Mlrx_track</a></li>
   <li><a href="../modules/Duplex.Applications.Mlrx.html">Duplex.Applications.Mlrx</a></li>
   <li><a href="../modules/Duplex.Applications.Navigator.html">Duplex.Applications.Navigator</a></li>
-  <li><a href="../modules/Duplex.Applications.NoComponent.html">Duplex.Applications.NoComponent</a></li>
   <li><a href="../modules/Duplex.Applications.NotesOnWheels.html">Duplex.Applications.NotesOnWheels</a></li>
   <li><a href="../modules/Duplex.Applications.PatternSequence.html">Duplex.Applications.PatternSequence</a></li>
   <li><a href="../modules/Duplex.Applications.Recorder.html">Duplex.Applications.Recorder</a></li>
@@ -62,6 +62,7 @@
   <li><a href="../modules/Duplex.Applications.Rotate.html">Duplex.Applications.Rotate</a></li>
   <li><a href="../modules/Duplex.Applications.StepSequencer.html">Duplex.Applications.StepSequencer</a></li>
   <li><a href="../modules/Duplex.Applications.SwitchConfiguration.html">Duplex.Applications.SwitchConfiguration</a></li>
+  <li><a href="../modules/Duplex.Applications.TestPad.html">Duplex.Applications.TestPad</a></li>
   <li><a href="../modules/Duplex.Applications.TrackSelector.html">Duplex.Applications.TrackSelector</a></li>
   <li><a href="../modules/Duplex.Applications.Transport.html">Duplex.Applications.Transport</a></li>
   <li><a href="../modules/Duplex.Applications.XYPad.html">Duplex.Applications.XYPad</a></li>
@@ -69,6 +70,7 @@
   <li><a href="../modules/Duplex.Browser.html">Duplex.Browser</a></li>
   <li><a href="../modules/Duplex.BrowserProcess.html">Duplex.BrowserProcess</a></li>
   <li><a href="../modules/Duplex.Canvas.html">Duplex.Canvas</a></li>
+  <li><a href="../modules/Duplex.CanvasPoint.html">Duplex.CanvasPoint</a></li>
   <li><strong>Duplex.ControlMap</strong></li>
   <li><a href="../modules/Duplex.Device.html">Duplex.Device</a></li>
   <li><a href="../modules/Duplex.Display.html">Duplex.Display</a></li>
@@ -93,6 +95,8 @@
   <li><a href="../modules/Duplex.UIPitchBend.html">Duplex.UIPitchBend</a></li>
   <li><a href="../modules/Duplex.UISlider.html">Duplex.UISlider</a></li>
   <li><a href="../modules/Duplex.UISpinner.html">Duplex.UISpinner</a></li>
+  <li><a href="../modules/Duplex.WidgetHooks.html">Duplex.WidgetHooks</a></li>
+  <li><a href="../modules/Duplex.WidgetKeyboard.html">Duplex.WidgetKeyboard</a></li>
   <li><a href="../modules/Duplex.html">Duplex</a></li>
   <li><a href="../modules/main.html">main</a></li>
 </ul>
@@ -109,25 +113,72 @@
 <h3>XML syntax:</h3>
 
 <ul>
-    <li>Supported elements are: <code>Row</code>, <code>Column</code>, <code>Group</code> and <code>Param</code></li>
-    <li><code>Group</code> nodes cannot be nested </li>
+    <li>Supported elements are: <code>Row</code>, <code>Column</code>, <code>Group</code>, <code>Param</code> and <code>SubParam</code> </li>
+    <li>Use <code>Row</code> and <code>Column</code> nodes for controlling the layout</li>
     <li>Only <code>Param</code> nodes are supported inside a <code>Group</code> node</li>
+    <li>Only <code>SubParam</code> nodes are supported inside a <code>Param</code> node</li>
 </ul>
 
 
-<h3>In more detail</h3>
+<h3>The <code>Row</code> and <code>Column</code> node</h3>
+
+<p> A pure layout node that accepts no attributes</p>
+
+<h3>The <code>Group</code> node</h3>
+
+<p> Accepts the following attributes</p>
 
 <ul>
-    <li>Use <code>Row</code> and <code>Column</code> nodes for controlling the layout
-    <ul>
-        <li>Use <code>orientation</code> attribute to control vertical/horizontal layout </li>
-    </ul></li>
-    <li>Indicate grid layout by supplying a <code>column</code> attribute for a <code>Group</code> node
-    <ul>
-        <li>Note that <code>orientation</code> is then ignored (using a grid layout)</li>
-    </ul></li>
-    <li>Use <code>size</code> attribute to control the unit size of certain controls like
-    sliders</li>
+    <li><code>name</code> - (string) the group name, this value is passed on to all members (Param nodes)</li>
+    <li><code>columns</code> - (int) optional, define how many parameters to create before creating a new row</li>
+    <li><code>colorspace</code> - (table) if not defined, inherited from parent or device</li>
+    <li><code>orientation</code> (enum) "horizontal" or "vertical" - determines the flow of elements</li>
+</ul>
+
+<h3>The <code>Param</code> node</h3>
+
+<p> Accepts the following attributes</p>
+
+<ul>
+    <li><a href="http://www.lua.org/manual/5.1/manual.html#pdf-type">type</a>   - (enum) lowercase version of <a href="../modules/Duplex.Globals.html#INPUT_TYPE">Duplex.Globals.INPUT_TYPE</a>, e.g. <code>dial</code></li>
+    <li><code>value</code> - (string) the pattern that we match messages against, e.g. "C#4|Ch2". </li>
+    <li><code>action</code> - (string) specify this attribute to use a different output than input pattern</li>
+    <li><code>name</code> - (string) give the parameter a descriptive name (optional)</li>
+    <li><code>size</code> - (int) the relative size of the UIComponent (2 = 200% size)</li>
+    <li><code>aspect</code> - (number) the relative aspect of the UIComponent (0.5 = half height)</li>
+    <li><code>minimum</code> - (number) the minimum value (e.g. to set a button to unlit state)</li>
+    <li><code>maximum</code> - (number) the maxmum value (e.g. to set a button to lit state)</li>
+    <li><code>skip_echo</code> - (bool) never send message back to device</li>
+    <li><code>soft_echo</code> - (bool) only send virtually generated messages back to device</li>
+    <li><code>invert</code> - (bool) swap the minimum and maximum values</li>
+    <li><code>invert_x</code> - (bool) for XYPad, swap the top and bottom values</li>
+    <li><code>invert_y</code> - (bool) for XYPad, swap the left and right values</li>
+    <li><code>swap_axes</code> - (bool) for XYPad, swap the horizontal and vertical axes</li>
+    <li><code>orientation</code> - (enum) specifies the orientation of a control - relevant for params of type=<code>fader</code></li>
+    <li><code>text</code> - (string) specify the text value, relevant for params of type=<code>label</code> </li>
+    <li><code>font</code> - (string) specify the font type, relevant for params of type=<code>label</code> </li>
+    <li><code>range</code> - (int) specify the range of an on-screen keyboard (number of keys)</li>
+</ul>
+
+<p> Some extra properties are added in runtime</p>
+
+<ul>
+    <li><a href="../modules/Duplex.ControlMap.html#self.id">id</a>  - (string) a unique, auto-generated name</li>
+    <li><code>index</code> - (int) the index (position) within the parent <code>Group</code> node</li>
+    <li><code>group_name</code> - (string) this value is passed on from the parent <code>Group</code> node</li>
+    <li><code>row</code> - (int) the row within the parent <code>Group</code></li>
+    <li><code>column</code> - the column within the parent <code>Group</code></li>
+    <li><code>has_subparams</code> - (bool) true when the parameter contains additional subparameters</li>
+    <li><code>regex_patt</code> - (string) preprocessed regular expression, created when <code>value</code> contains wildcards and/or captures</li>
+</ul>
+
+<h3>The <code>SubParam</code> node</h3>
+
+<p> Accepts the following attributes </p>
+
+<ul>
+    <li><code>value</code> - (string) same as the <code>Param</code> value attribute</li>
+    <li><code>field</code> - (string) what aspect of the parent parameters' value that is being stored (e.g. "x" for xypad x axis)</li>
 </ul>
 
 </p>
@@ -144,52 +195,47 @@
 	<td class="summary">Load_definition: load and parse xml</td>
 	</tr>
 	<tr>
-	<td class="name" nowrap><a href="#parse_definition">parse_definition (control_map_name, xml_string)</a></td>
+	<td class="name" nowrap><a href="#_parse_definition">_parse_definition (control_map_name, xml_string)</a></td>
 	<td class="summary">Parse the supplied xml string (reset the counter first)</td>
 	</tr>
 	<tr>
-	<td class="name" nowrap><a href="#get_indexed_element">get_indexed_element (index, group_name)</a></td>
-	<td class="summary">Retrieve <param> by position within group</td>
+	<td class="name" nowrap><a href="#get_param_by_index">get_param_by_index (index, group_name)</a></td>
+	<td class="summary">Retrieve <code>Param</code> node by position within group</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#get_param_by_pos">get_param_by_pos (x, y, group_name)</a></td>
+	<td class="summary">Retrieve <code>Param</code> node by x/y coordinates within group</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#get_params">get_params (group_name, index)</a></td>
-	<td class="summary">Retrieve <param> in indicated group, supporting wildcard syntax</p>
+	<td class="summary">Retrieve <code>Param</code> nodes from group(s), supporting wildcard syntax.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#memoize">memoize ()</a></td>
+	<td class="summary">Invoked after having loaded a new controlmap, this function will attempt
+ to memoize as much information as possible (update osc/midi buffers etc.)</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#get_midi_params">get_midi_params (str)</a></td>
+	<td class="summary">Retrieve parameters with a MIDI style pattern</p>
 
-<p> Collect the third parameter from Pad_1:</p>
-<pre><code>group_name="Pad_1", index=3
-</code></pre>
+<p> <code>CC#105|Ch1</code> will match both <code>CC#105|Ch1</code> and <code>CC#105</code>
+ (match values on the default channel)</p>
 
-<p> Collect all parameters from Pad_1</p>
-<pre><code>group_name="Pad_1", index=nil
-</code></pre>
-
-<p> Collect the third parameter from Pad<em>1,Pad</em>2, etc.</td>
+<p> <code>C#*|Ch1</code> will match both <code>C#1|Ch1</code> and <code>C#5</code>
+ (support for wildcard syntax)</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#create_typemap">create_typemap (str_message)</a></td>
+	<td class="summary">generate a map containing information about each OSC message pattern-part</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#get_osc_params">get_osc_params (osc_str)</a></td>
+	<td class="summary">Retrieve parameters with a OSC style pattern.</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#import_colorspace">import_colorspace (str)</a></td>
 	<td class="summary">Parse a string into a colorspace table</td>
-	</tr>
-	<tr>
-	<td class="name" nowrap><a href="#get_params_by_value">get_params_by_value (str, msg_context)</a></td>
-	<td class="summary">This function will match values on the default channel, if not defined:</p>
-
-<p> <code>CC#105|Ch1</code> will match both <code>CC#105|Ch1</code> and <code>CC#105</code></p>
-
-<p> Also, we have wildcard support:</p>
-
-<p> <code>C#*|Ch1</code> will match both <code>C#1|Ch1</code> and <code>C#5</code></td>
-	</tr>
-	<tr>
-	<td class="name" nowrap><a href="#get_osc_param">get_osc_param (str)</a></td>
-	<td class="summary">Retrieve a parameter by matching it's <code>value</code> or <code>action</code> attribute</p>
-
-<p> <code>/press 1 %i</code> matches <code>/press 1 1</code> but not <code>/press 1 A</code></p>
-
-<p> <code>/pre** 1 %f</code> matches <code>/press 1 1</code> and <code>/preff 10 1.42</code></p>
-
-<p> The method will match the action property if it's available, otherwise
- the <code>value</code> property (the <code>action</code> property is needed when a device
- transmit a different outgoing than incoming value)</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#count_columns">count_columns (group_name)</a></td>
@@ -217,6 +263,10 @@
 	<td class="summary">Test if the parameter describes a button</td>
 	</tr>
 	<tr>
+	<td class="name" nowrap><a href="#_read_file">_read_file (file_path)</a></td>
+	<td class="summary">Internal method for reading a file into a string</td>
+	</tr>
+	<tr>
 	<td class="name" nowrap><a href="#determine_type">determine_type (str)</a></td>
 	<td class="summary">Determine the type of message (OSC/Note/CC)</td>
 	</tr>
@@ -224,6 +274,50 @@
 	<td class="name" nowrap><a href="#_parse_xml">_parse_xml (str)</a></td>
 	<td class="summary">Parse the control-map into a table
  (add meta-info - such as unique ids - while parsing)</td>
+	</tr>
+</table>
+<h2><a href="#Fields">Fields</a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#self.groups">self.groups</a></td>
+	<td class="summary">(table) associative array - groups by name</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#self.file_path">self.file_path</a></td>
+	<td class="summary">(string) location of the control-map file</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#self.patterns">self.patterns</a></td>
+	<td class="summary">(table) table of parameter patterns
+ (key = pattern, value = list of parameters matching pattern)</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#self.osc_headers">self.osc_headers</a></td>
+	<td class="summary">(table) table of OSC headers
+ (like patterns, but OSC-only, and with no wildcards allowed)</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#self.osc_buffer">self.osc_buffer</a></td>
+	<td class="summary">(table) remember matched OSC patterns
+ (key = osc_str, value = output from <a href="../modules/Duplex.ControlMap.html#get_osc_params">get_osc_params</a>)</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#self.midi_buffer">self.midi_buffer</a></td>
+	<td class="summary">(table) remember matched MIDI patterns
+ (key = midi_str, value = output from <a href="../modules/Duplex.ControlMap.html#get_osc_params">get_osc_params</a>)</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#self.id">self.id</a></td>
+	<td class="summary">(int) unique id, reset each time a control-map is parsed</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#self.definition">self.definition</a></td>
+	<td class="summary">(table) parsed control-map</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#self.typemaps">self.typemaps</a></td>
+	<td class="summary">(table) associative array containing various parameter-patterns
+ see <a href="../modules/Duplex.ControlMap.html#create_typemap">create_typemap</a></td>
 	</tr>
 </table>
 
@@ -258,7 +352,7 @@
     <h3>Parameters:</h3>
     <ul>
         <li><span class="parameter">file_path</span>
-         (String) the name of the file, e.g. "my_map.xml"
+         (string), the name of the file, e.g. "my_map.xml"
         </li>
     </ul>
 
@@ -268,8 +362,8 @@
 
 </dd>
     <dt>
-    <a name = "parse_definition"></a>
-    <strong>parse_definition (control_map_name, xml_string)</strong>
+    <a name = "_parse_definition"></a>
+    <strong>_parse_definition (control_map_name, xml_string)</strong>
     </dt>
     <dd>
     Parse the supplied xml string (reset the counter first)
@@ -278,10 +372,10 @@
     <h3>Parameters:</h3>
     <ul>
         <li><span class="parameter">control_map_name</span>
-         (String) path to XML file
+         (string) path to XML file
         </li>
         <li><span class="parameter">xml_string</span>
-         (String) the XML string
+         (string) the XML string
         </li>
     </ul>
 
@@ -291,11 +385,11 @@
 
 </dd>
     <dt>
-    <a name = "get_indexed_element"></a>
-    <strong>get_indexed_element (index, group_name)</strong>
+    <a name = "get_param_by_index"></a>
+    <strong>get_param_by_index (index, group_name)</strong>
     </dt>
     <dd>
-    Retrieve <param> by position within group
+    Retrieve <code>Param</code> node by position within group
 
 
     <h3>Parameters:</h3>
@@ -311,7 +405,38 @@
     <h3>Returns:</h3>
     <ol>
 
-        the <param> attributes array
+        (table or nil) table of attributes
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "get_param_by_pos"></a>
+    <strong>get_param_by_pos (x, y, group_name)</strong>
+    </dt>
+    <dd>
+    Retrieve <code>Param</code> node by x/y coordinates within group
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">x</span>
+         (int) the horizontal position
+        </li>
+        <li><span class="parameter">y</span>
+         (int) the vertical position
+        </li>
+        <li><span class="parameter">group_name</span>
+         (string) the control-map group name
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        (table or nil) table of attributes
     </ol>
 
 
@@ -324,7 +449,7 @@
     </dt>
     <dd>
 
-<p>Retrieve <param> in indicated group, supporting wildcard syntax</p>
+<p>Retrieve <code>Param</code> nodes from group(s), supporting wildcard syntax. </p>
 
 <p> Collect the third parameter from Pad_1:</p>
 <pre><code>group_name="Pad_1", index=3
@@ -334,7 +459,7 @@
 <pre><code>group_name="Pad_1", index=nil
 </code></pre>
 
-<p> Collect the third parameter from Pad<em>1,Pad</em>2, etc. </p>
+<p> Collect the third parameter from Pad<em>1,Pad</em>2, etc.</p>
 <pre><code>group_name="Pad_*", index=3
 </code></pre>
 
@@ -358,7 +483,163 @@
     <h3>Returns:</h3>
     <ol>
 
-        the param> attributes array
+        (table or nil) the param attributes array
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "memoize"></a>
+    <strong>memoize ()</strong>
+    </dt>
+    <dd>
+    Invoked after having loaded a new controlmap, this function will attempt
+ to memoize as much information as possible (update osc/midi buffers etc.)
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "get_midi_params"></a>
+    <strong>get_midi_params (str)</strong>
+    </dt>
+    <dd>
+    Retrieve parameters with a MIDI style pattern</p>
+
+<p> <code>CC#105|Ch1</code> will match both <code>CC#105|Ch1</code> and <code>CC#105</code>
+ (match values on the default channel)</p>
+
+<p> <code>C#*|Ch1</code> will match both <code>C#1|Ch1</code> and <code>C#5</code>
+ (support for wildcard syntax)
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">str</span>
+         (string, control-map value attribute)
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        table containing matched parameters
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "create_typemap"></a>
+    <strong>create_typemap (str_message)</strong>
+    </dt>
+    <dd>
+    generate a map containing information about each OSC message pattern-part
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">str_message</span>
+        split the message into non-whitespace chunks
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+
+<p> (table) </p>
+
+<p>  each part can define the following possible entries:</p>
+
+<pre><code>[int] = {
+  text,        -- (string) the raw value
+  is_header,   -- (bool) when value is the header part
+  wildcard_pos,-- (int) position of first "*" (if any, in header text)
+  is_capture,  -- (bool) when token is surrounded by "{}"
+  is_token,    -- (bool) when "%f", "%i" or "%s" token
+  is_string,   -- (bool) when "%s" token
+  is_float,    -- (bool) when "%f" token
+  is_integer   -- (bool) when "%i" token
+}
+
+has_captures  -- (bool) when any part contains a capture
+</code></pre>
+
+<p>  in addition, the map will contain an entry specifying the order
+  of each possible item that can be matched with regular expressions:</p>
+
+<pre><code>order = {
+  [int] = {             -- position of character
+    method = [string]   -- "wildcard" or "capture"
+    type = [string]     -- "%f", "%i" or "%s"
+  }
+}
+</code></pre>
+
+
+
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "get_osc_params"></a>
+    <strong>get_osc_params (osc_str)</strong>
+    </dt>
+    <dd>
+    Retrieve parameters with a OSC style pattern. </p>
+
+<p> ### Match floats, integers and strings using <code>%f</code>, <code>%i</code> and <code>%s</code></p>
+
+<p> <code>/press 1 %i</code> matches <code>/press 1 1</code> but not <code>/press 1 A</code>      </p>
+
+<p> ### Specify wildcards using an asterisk</p>
+
+<p> <code>/<em>/pre</em> 1 %f</code> matches <code>/12/press 1 1</code> and <code>/a/prefs 1 1.42</code> </p>
+
+<p> ### Specify captures using curved brackets</p>
+
+<p> <code>/tilt {%f} %f {%f}</code> will capture the first and third number </p>
+
+<p> The method will match the action property if it's available, otherwise
+ the <code>value</code> property (the <code>action</code> property is needed when a device
+ transmit a different outgoing than incoming value)
+
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">osc_str</span>
+         (string), incoming OSC message
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+         (table) result of match:
+  {</p>
+<pre><code>(table),  -- Param/SubParam node
+(table),  -- resulting values
+(table)   -- regular expression match(es)
+  {
+    index = [int],      -- position of match
+    chars = [string],   -- matches characters
+    method = [string],  -- "wildcard" or "capture"
+    type = [string]     -- "%f", "%s" or "%i"
+  }
+</code></pre>
+<p>  }
     </ol>
 
 
@@ -383,80 +664,7 @@
     <h3>Returns:</h3>
     <ol>
 
-        Table
-    </ol>
-
-
-
-
-</dd>
-    <dt>
-    <a name = "get_params_by_value"></a>
-    <strong>get_params_by_value (str, msg_context)</strong>
-    </dt>
-    <dd>
-    This function will match values on the default channel, if not defined:</p>
-
-<p> <code>CC#105|Ch1</code> will match both <code>CC#105|Ch1</code> and <code>CC#105</code></p>
-
-<p> Also, we have wildcard support:</p>
-
-<p> <code>C#*|Ch1</code> will match both <code>C#1|Ch1</code> and <code>C#5</code>
-
-
-    <h3>Parameters:</h3>
-    <ul>
-        <li><span class="parameter">str</span>
-         (string, control-map value attribute)
-        </li>
-        <li><span class="parameter">msg_context</span>
-         (<a href="../modules/Duplex.Globals.html#DEVICE_MESSAGE">Duplex.Globals.DEVICE_MESSAGE</a>)
-        </li>
-    </ul>
-
-    <h3>Returns:</h3>
-    <ol>
-
-        table containing matched parameters
-    </ol>
-
-
-
-
-</dd>
-    <dt>
-    <a name = "get_osc_param"></a>
-    <strong>get_osc_param (str)</strong>
-    </dt>
-    <dd>
-    Retrieve a parameter by matching it's <code>value</code> or <code>action</code> attribute</p>
-
-<p> <code>/press 1 %i</code> matches <code>/press 1 1</code> but not <code>/press 1 A</code></p>
-
-<p> <code>/pre** 1 %f</code> matches <code>/press 1 1</code> and <code>/preff 10 1.42</code></p>
-
-<p> The method will match the action property if it's available, otherwise
- the <code>value</code> property (the <code>action</code> property is needed when a device
- transmit a different outgoing than incoming value)
-
-
-    <h3>Parameters:</h3>
-    <ul>
-        <li><span class="parameter">str</span>
-         (string, control-map value/action attribute)
-        </li>
-    </ul>
-
-    <h3>Returns:</h3>
-    <ol>
-
-
-<p>  Table (<code>Param</code> node),</p>
-<pre><code>      values (table), if matched against a wildcard,
-      wildcard_idx (integer), the matched index
-      replace_char (string), the characters to insert
-</code></pre>
-
+        table
     </ol>
 
 
@@ -481,7 +689,7 @@
     <h3>Returns:</h3>
     <ol>
 
-        int
+        int, or nil if group does not exist
     </ol>
 
 
@@ -506,7 +714,7 @@
     <h3>Returns:</h3>
     <ol>
 
-        int
+        int, or nil if group does not exist
     </ol>
 
 
@@ -531,7 +739,7 @@
     <h3>Returns:</h3>
     <ol>
 
-        int
+        int, or nil if group does not exist
     </ol>
 
 
@@ -556,9 +764,9 @@
     <h3>Returns:</h3>
     <ol>
         <li>
-        width (or nil if not matched)</li>
+        width, or nil if not matched</li>
         <li>
-        height (or nil if not matched)</li>
+        height, or nil if not matched</li>
     </ol>
 
 
@@ -620,6 +828,28 @@
 
 </dd>
     <dt>
+    <a name = "_read_file"></a>
+    <strong>_read_file (file_path)</strong>
+    </dt>
+    <dd>
+    Internal method for reading a file into a string
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">file_path</span>
+
+
+
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
     <a name = "determine_type"></a>
     <strong>determine_type (str)</strong>
     </dt>
@@ -630,7 +860,7 @@
     <h3>Parameters:</h3>
     <ul>
         <li><span class="parameter">str</span>
-         (String), supply a control-map <code>value</code> such as <code>C#4</code>
+         (string), supply a control-map <code>value</code> such as <code>C#4</code>
         </li>
     </ul>
 
@@ -665,6 +895,140 @@
 
         Table
     </ol>
+
+
+
+
+</dd>
+</dl>
+    <h2><a name="Fields"></a>Fields</h2>
+    <dl class="function">
+    <dt>
+    <a name = "self.groups"></a>
+    <strong>self.groups</strong>
+    </dt>
+    <dd>
+    (table) associative array - groups by name
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "self.file_path"></a>
+    <strong>self.file_path</strong>
+    </dt>
+    <dd>
+    (string) location of the control-map file
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "self.patterns"></a>
+    <strong>self.patterns</strong>
+    </dt>
+    <dd>
+    (table) table of parameter patterns
+ (key = pattern, value = list of parameters matching pattern)
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "self.osc_headers"></a>
+    <strong>self.osc_headers</strong>
+    </dt>
+    <dd>
+    (table) table of OSC headers
+ (like patterns, but OSC-only, and with no wildcards allowed)
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "self.osc_buffer"></a>
+    <strong>self.osc_buffer</strong>
+    </dt>
+    <dd>
+    (table) remember matched OSC patterns
+ (key = osc_str, value = output from <a href="../modules/Duplex.ControlMap.html#get_osc_params">get_osc_params</a>)
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "self.midi_buffer"></a>
+    <strong>self.midi_buffer</strong>
+    </dt>
+    <dd>
+    (table) remember matched MIDI patterns
+ (key = midi_str, value = output from <a href="../modules/Duplex.ControlMap.html#get_osc_params">get_osc_params</a>)
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "self.id"></a>
+    <strong>self.id</strong>
+    </dt>
+    <dd>
+    (int) unique id, reset each time a control-map is parsed
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "self.definition"></a>
+    <strong>self.definition</strong>
+    </dt>
+    <dd>
+    (table) parsed control-map
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "self.typemaps"></a>
+    <strong>self.typemaps</strong>
+    </dt>
+    <dd>
+    (table) associative array containing various parameter-patterns
+ see <a href="../modules/Duplex.ControlMap.html#create_typemap">create_typemap</a>
+
+
+
 
 
 

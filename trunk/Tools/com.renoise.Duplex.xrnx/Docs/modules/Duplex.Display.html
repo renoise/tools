@@ -33,6 +33,7 @@
 <h2>Contents</h2>
 <ul>
 <li><a href="#Functions">Functions</a></li>
+<li><a href="#Tables">Tables</a></li>
 <li><a href="#Fields">Fields</a></li>
 </ul>
 
@@ -55,7 +56,6 @@
   <li><a href="../modules/Duplex.Applications.Mlrx.Mlrx_track.html">Duplex.Applications.Mlrx.Mlrx_track</a></li>
   <li><a href="../modules/Duplex.Applications.Mlrx.html">Duplex.Applications.Mlrx</a></li>
   <li><a href="../modules/Duplex.Applications.Navigator.html">Duplex.Applications.Navigator</a></li>
-  <li><a href="../modules/Duplex.Applications.NoComponent.html">Duplex.Applications.NoComponent</a></li>
   <li><a href="../modules/Duplex.Applications.NotesOnWheels.html">Duplex.Applications.NotesOnWheels</a></li>
   <li><a href="../modules/Duplex.Applications.PatternSequence.html">Duplex.Applications.PatternSequence</a></li>
   <li><a href="../modules/Duplex.Applications.Recorder.html">Duplex.Applications.Recorder</a></li>
@@ -63,6 +63,7 @@
   <li><a href="../modules/Duplex.Applications.Rotate.html">Duplex.Applications.Rotate</a></li>
   <li><a href="../modules/Duplex.Applications.StepSequencer.html">Duplex.Applications.StepSequencer</a></li>
   <li><a href="../modules/Duplex.Applications.SwitchConfiguration.html">Duplex.Applications.SwitchConfiguration</a></li>
+  <li><a href="../modules/Duplex.Applications.TestPad.html">Duplex.Applications.TestPad</a></li>
   <li><a href="../modules/Duplex.Applications.TrackSelector.html">Duplex.Applications.TrackSelector</a></li>
   <li><a href="../modules/Duplex.Applications.Transport.html">Duplex.Applications.Transport</a></li>
   <li><a href="../modules/Duplex.Applications.XYPad.html">Duplex.Applications.XYPad</a></li>
@@ -70,6 +71,7 @@
   <li><a href="../modules/Duplex.Browser.html">Duplex.Browser</a></li>
   <li><a href="../modules/Duplex.BrowserProcess.html">Duplex.BrowserProcess</a></li>
   <li><a href="../modules/Duplex.Canvas.html">Duplex.Canvas</a></li>
+  <li><a href="../modules/Duplex.CanvasPoint.html">Duplex.CanvasPoint</a></li>
   <li><a href="../modules/Duplex.ControlMap.html">Duplex.ControlMap</a></li>
   <li><a href="../modules/Duplex.Device.html">Duplex.Device</a></li>
   <li><strong>Duplex.Display</strong></li>
@@ -94,6 +96,8 @@
   <li><a href="../modules/Duplex.UIPitchBend.html">Duplex.UIPitchBend</a></li>
   <li><a href="../modules/Duplex.UISlider.html">Duplex.UISlider</a></li>
   <li><a href="../modules/Duplex.UISpinner.html">Duplex.UISpinner</a></li>
+  <li><a href="../modules/Duplex.WidgetHooks.html">Duplex.WidgetHooks</a></li>
+  <li><a href="../modules/Duplex.WidgetKeyboard.html">Duplex.WidgetKeyboard</a></li>
   <li><a href="../modules/Duplex.html">Duplex</a></li>
   <li><a href="../modules/main.html">main</a></li>
 </ul>
@@ -127,54 +131,89 @@
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#apply_tooltips">apply_tooltips (group_name)</a></td>
-	<td class="summary">Apply<em>tooltips: set tooltips on the virtual display based on the
- tooltip property assigned to existing ui</em>objects</td>
+	<td class="summary">Apply tooltips to UIComponents, based on their "tooltip" property</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#apply_midi_mappings">apply_midi_mappings (group_name)</a></td>
+	<td class="summary">Apply MIDI mappings to UIComponents, based on the "midi_mapping" property</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#apply_to_objects">apply_to_objects (group_name, callback)</a></td>
+	<td class="summary">Apply callback function to UIComponents, using wildcard syntax
+ (e.g.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#set_active_state">set_active_state (state, group_name)</a></td>
+	<td class="summary">Disable an entire section of the display
+ (the enabled state of individual UIComponent is not affected)</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#apply_to_groups">apply_to_groups (group_name, callback)</a></td>
+	<td class="summary">Apply callback function to groups
+ (e.g.</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#update">update ()</a></td>
 	<td class="summary">Update any UIComponent that has been modified since the last update
- (this function is called continously)</td>
+ (called continously)</td>
 	</tr>
 	<tr>
-	<td class="name" nowrap><a href="#set_parameter">set_parameter (elm, obj, point, secondary)</a></td>
+	<td class="name" nowrap><a href="#set_parameter">set_parameter (param, ui_obj, point, skip_ui)</a></td>
 	<td class="summary">Set_parameter: apply parameter changes, update the display</td>
-	</tr>
-	<tr>
-	<td class="name" nowrap><a href="#update_key">update_key (key_idx, elm, obj)</a></td>
-	<td class="summary">Update special UI key widgets (pressed, normal, disabled)</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#build_control_surface">build_control_surface ()</a></td>
 	<td class="summary">Build the virtual control-surface (based on the parsed control-map)</td>
 	</tr>
 	<tr>
-	<td class="name" nowrap><a href="#generate_message">generate_message (value, metadata, released)</a></td>
-	<td class="summary">Generate message : used by virtual control-surface elements</td>
+	<td class="name" nowrap><a href="#generate_message">generate_message (value, param, released)</a></td>
+	<td class="summary">Generate messages for the virtual control-surface (creates a
+ <a href="../modules/Duplex.Message.html#">Duplex.Message</a> which is then passed into a <a href="../modules/Duplex.MessageStream.html#">Duplex.MessageStream</a>).</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#_walk_table">_walk_table (t, done, deep)</a></td>
 	<td class="summary">Walk control-map defition, and create the virtual control surface</td>
 	</tr>
 	<tr>
-	<td class="name" nowrap><a href="#_validate_group">_validate_group (xargs)</a></td>
+	<td class="name" nowrap><a href="#_validate_group">_validate_group (xarg)</a></td>
 	<td class="summary">Validate/fix groups and try to give the control map author some
  hints of what might be wrong with the control map</td>
 	</tr>
+</table>
+<h2><a href="#Tables">Tables</a></h2>
+<table class="function_list">
 	<tr>
-	<td class="name" nowrap><a href="#_validate_param">_validate_param (xargs)</a></td>
-	<td class="summary">Validate/fix parameters and try to give the control map author some
- hints of what might be wrong with the control map</td>
+	<td class="name" nowrap><a href="#canvas_background">canvas_background</a></td>
+	<td class="summary">(table) define the visual appearance of 'empty space', used e.g.</td>
 	</tr>
 </table>
 <h2><a href="#Fields">Fields</a></h2>
 <table class="function_list">
 	<tr>
-	<td class="name" nowrap><a href="#view_obj.view">view_obj.view</a></td>
-	<td class="summary">Column</td>
+	<td class="name" nowrap><a href="#self.device">self.device</a></td>
+	<td class="summary">(<a href="../modules/Duplex.Device.html#">Duplex.Device</a>)</td>
 	</tr>
 	<tr>
-	<td class="name" nowrap><a href="#view_obj.view">view_obj.view</a></td>
-	<td class="summary">Row</td>
+	<td class="name" nowrap><a href="#self.vb">self.vb</a></td>
+	<td class="summary">(renoise.ViewBuilder)</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#self.view">self.view</a></td>
+	<td class="summary">(renoise.Views.View)</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#self.ui_objects">self.ui_objects</a></td>
+	<td class="summary">(table) associated UIComponent instances</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#self.ui_notifiers">self.ui_notifiers</a></td>
+	<td class="summary">(table) each UI object notifier method is referenced by id,
+ so we can attach/detach the method on the fly (this is done
+ when we need to change the UI Object's value)</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#self.scheduler">self.scheduler</a></td>
+	<td class="summary">(<a href="../modules/Duplex.Scheduler.html#">Duplex.Scheduler</a>) use scheduler to perform periodic updates</td>
 	</tr>
 </table>
 
@@ -195,7 +234,7 @@
     <h3>Parameters:</h3>
     <ul>
         <li><span class="parameter">device</span>
-         (Device) associate the Display with this device
+         (<a href="../modules/Duplex.Device.html#">Duplex.Device</a>) associate the Display with this device
         </li>
     </ul>
 
@@ -215,7 +254,7 @@
     <h3>Parameters:</h3>
     <ul>
         <li><span class="parameter">obj_instance</span>
-         (UIComponent) a UIComponent class instance
+         (<a href="../modules/Duplex.UIComponent.html#">Duplex.UIComponent</a>)
         </li>
     </ul>
 
@@ -243,15 +282,105 @@
     <strong>apply_tooltips (group_name)</strong>
     </dt>
     <dd>
-    Apply<em>tooltips: set tooltips on the virtual display based on the
- tooltip property assigned to existing ui</em>objects
+    Apply tooltips to UIComponents, based on their "tooltip" property
 
 
     <h3>Parameters:</h3>
     <ul>
         <li><span class="parameter">group_name</span>
-         (String) optional, restrict to named control-map group
-  (note that this value support the use of wildcards, e.g. "Pads_*")
+        [opt] (string or nil), e.g. "Pads<em>1" or "Pads</em>*" (leave out to match all)
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "apply_midi_mappings"></a>
+    <strong>apply_midi_mappings (group_name)</strong>
+    </dt>
+    <dd>
+    Apply MIDI mappings to UIComponents, based on the "midi_mapping" property
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">group_name</span>
+        [opt] (string or nil), e.g. "Pads<em>1" or "Pads</em>*" (leave out to match all)
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "apply_to_objects"></a>
+    <strong>apply_to_objects (group_name, callback)</strong>
+    </dt>
+    <dd>
+    Apply callback function to UIComponents, using wildcard syntax
+ (e.g.  for specifying tooltips, midi mappings etc.)
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">group_name</span>
+        [opt] (string or nil), e.g. "Pads<em>1" or "Pads</em>*" (leave out to match all)
+        </li>
+        <li><span class="parameter">callback</span>
+         (func) function to apply to matched components
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "set_active_state"></a>
+    <strong>set_active_state (state, group_name)</strong>
+    </dt>
+    <dd>
+    Disable an entire section of the display
+ (the enabled state of individual UIComponent is not affected)
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">state</span>
+         (bool) enabled when true, disabled when false
+        </li>
+        <li><span class="parameter">group_name</span>
+        [opt] (string or nil), leave out to match all
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "apply_to_groups"></a>
+    <strong>apply_to_groups (group_name, callback)</strong>
+    </dt>
+    <dd>
+    Apply callback function to groups
+ (e.g.  for quickly disabling entire, or partial display)
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">group_name</span>
+        [opt] (string or nil), leave out to match all
+        </li>
+        <li><span class="parameter">callback</span>
+         (func) function to apply to matched groups
         </li>
     </ul>
 
@@ -266,7 +395,7 @@
     </dt>
     <dd>
     Update any UIComponent that has been modified since the last update
- (this function is called continously)
+ (called continously)
 
 
 
@@ -277,7 +406,7 @@
 </dd>
     <dt>
     <a name = "set_parameter"></a>
-    <strong>set_parameter (elm, obj, point, secondary)</strong>
+    <strong>set_parameter (param, ui_obj, point, skip_ui)</strong>
     </dt>
     <dd>
     Set_parameter: apply parameter changes, update the display
@@ -285,43 +414,17 @@
 
     <h3>Parameters:</h3>
     <ul>
-        <li><span class="parameter">elm</span>
-         (Table) control-map definition of the element
-        </li>
-        <li><span class="parameter">obj</span>
-         (UIComponent) instance of UIComponent
-        </li>
-        <li><span class="parameter">point</span>
-         (CanvasPoint) point containing text/value/color
-        </li>
-        <li><span class="parameter">secondary</span>
-         (bool), true when method call itself (value-pairs)
-        </li>
-    </ul>
-
-
-
-
-
-</dd>
-    <dt>
-    <a name = "update_key"></a>
-    <strong>update_key (key_idx, elm, obj)</strong>
-    </dt>
-    <dd>
-    Update special UI key widgets (pressed, normal, disabled)
-
-
-    <h3>Parameters:</h3>
-    <ul>
-        <li><span class="parameter">key_idx</span>
-         (int) the keys index
-        </li>
-        <li><span class="parameter">elm</span>
+        <li><span class="parameter">param</span>
          (table) control-map definition of the element
         </li>
-        <li><span class="parameter">obj</span>
-         (UIKey) instance of a UIKey component
+        <li><span class="parameter">ui_obj</span>
+         (<a href="../modules/Duplex.UIComponent.html#">Duplex.UIComponent</a>)
+        </li>
+        <li><span class="parameter">point</span>
+         (<a href="../modules/Duplex.CanvasPoint.html#">Duplex.CanvasPoint</a>) text/value/color
+        </li>
+        <li><span class="parameter">skip_ui</span>
+         (bool) true when we are sending subparameters
         </li>
     </ul>
 
@@ -342,7 +445,7 @@
     <h3>Returns:</h3>
     <ol>
 
-        ViewBuilder
+        renoise.Views.View
     </ol>
 
 
@@ -351,10 +454,14 @@
 </dd>
     <dt>
     <a name = "generate_message"></a>
-    <strong>generate_message (value, metadata, released)</strong>
+    <strong>generate_message (value, param, released)</strong>
     </dt>
     <dd>
-    Generate message : used by virtual control-surface elements
+    Generate messages for the virtual control-surface (creates a
+ <a href="../modules/Duplex.Message.html#">Duplex.Message</a> which is then passed into a <a href="../modules/Duplex.MessageStream.html#">Duplex.MessageStream</a>). </p>
+
+<p> Similar to <a href="../modules/Duplex.Device.html#_send_message">Duplex.Device._send_message</a>, except that here we
+ need to create everything (value, midi message, etc.) from scratch
 
 
     <h3>Parameters:</h3>
@@ -362,8 +469,8 @@
         <li><span class="parameter">value</span>
          (number or table) value, or table of values
         </li>
-        <li><span class="parameter">metadata</span>
-         (table) metadata, such as min/max etc.
+        <li><span class="parameter">param</span>
+         (table) <code>Param</code> node attributes, see <a href="../modules/Duplex.ControlMap.html#">Duplex.ControlMap</a>
         </li>
         <li><span class="parameter">released</span>
          (bool), true when button has been released
@@ -403,7 +510,7 @@
 </dd>
     <dt>
     <a name = "_validate_group"></a>
-    <strong>_validate_group (xargs)</strong>
+    <strong>_validate_group (xarg)</strong>
     </dt>
     <dd>
     Validate/fix groups and try to give the control map author some
@@ -412,8 +519,8 @@
 
     <h3>Parameters:</h3>
     <ul>
-        <li><span class="parameter">xargs</span>
-         (Table) the control-map attributes
+        <li><span class="parameter">xarg</span>
+         (table) the control-map attributes
         </li>
     </ul>
 
@@ -422,19 +529,28 @@
 
 
 </dd>
+</dl>
+    <h2><a name="Tables"></a>Tables</h2>
+    <dl class="function">
     <dt>
-    <a name = "_validate_param"></a>
-    <strong>_validate_param (xargs)</strong>
+    <a name = "canvas_background"></a>
+    <strong>canvas_background</strong>
     </dt>
     <dd>
-    Validate/fix parameters and try to give the control map author some
- hints of what might be wrong with the control map
+    (table) define the visual appearance of 'empty space', used e.g.
+  when we remove a given point due to resizing
 
 
-    <h3>Parameters:</h3>
+    <h3>Fields:</h3>
     <ul>
-        <li><span class="parameter">xargs</span>
-         (Table) the control-map attributes
+        <li><span class="parameter">text</span>
+         (string)
+        </li>
+        <li><span class="parameter">color</span>
+         (table)
+        </li>
+        <li><span class="parameter">val</span>
+         (bool)
         </li>
     </ul>
 
@@ -447,11 +563,11 @@
     <h2><a name="Fields"></a>Fields</h2>
     <dl class="function">
     <dt>
-    <a name = "view_obj.view"></a>
-    <strong>view_obj.view</strong>
+    <a name = "self.device"></a>
+    <strong>self.device</strong>
     </dt>
     <dd>
-    Column
+    (<a href="../modules/Duplex.Device.html#">Duplex.Device</a>)
 
 
 
@@ -461,11 +577,69 @@
 
 </dd>
     <dt>
-    <a name = "view_obj.view"></a>
-    <strong>view_obj.view</strong>
+    <a name = "self.vb"></a>
+    <strong>self.vb</strong>
     </dt>
     <dd>
-    Row
+    (renoise.ViewBuilder)
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "self.view"></a>
+    <strong>self.view</strong>
+    </dt>
+    <dd>
+    (renoise.Views.View)
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "self.ui_objects"></a>
+    <strong>self.ui_objects</strong>
+    </dt>
+    <dd>
+    (table) associated UIComponent instances
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "self.ui_notifiers"></a>
+    <strong>self.ui_notifiers</strong>
+    </dt>
+    <dd>
+    (table) each UI object notifier method is referenced by id,
+ so we can attach/detach the method on the fly (this is done
+ when we need to change the UI Object's value)
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "self.scheduler"></a>
+    <strong>self.scheduler</strong>
+    </dt>
+    <dd>
+    (<a href="../modules/Duplex.Scheduler.html#">Duplex.Scheduler</a>) use scheduler to perform periodic updates
 
 
 

@@ -55,7 +55,6 @@
   <li><a href="../modules/Duplex.Applications.Mlrx.Mlrx_track.html">Duplex.Applications.Mlrx.Mlrx_track</a></li>
   <li><a href="../modules/Duplex.Applications.Mlrx.html">Duplex.Applications.Mlrx</a></li>
   <li><a href="../modules/Duplex.Applications.Navigator.html">Duplex.Applications.Navigator</a></li>
-  <li><a href="../modules/Duplex.Applications.NoComponent.html">Duplex.Applications.NoComponent</a></li>
   <li><a href="../modules/Duplex.Applications.NotesOnWheels.html">Duplex.Applications.NotesOnWheels</a></li>
   <li><a href="../modules/Duplex.Applications.PatternSequence.html">Duplex.Applications.PatternSequence</a></li>
   <li><a href="../modules/Duplex.Applications.Recorder.html">Duplex.Applications.Recorder</a></li>
@@ -63,6 +62,7 @@
   <li><a href="../modules/Duplex.Applications.Rotate.html">Duplex.Applications.Rotate</a></li>
   <li><a href="../modules/Duplex.Applications.StepSequencer.html">Duplex.Applications.StepSequencer</a></li>
   <li><a href="../modules/Duplex.Applications.SwitchConfiguration.html">Duplex.Applications.SwitchConfiguration</a></li>
+  <li><a href="../modules/Duplex.Applications.TestPad.html">Duplex.Applications.TestPad</a></li>
   <li><a href="../modules/Duplex.Applications.TrackSelector.html">Duplex.Applications.TrackSelector</a></li>
   <li><a href="../modules/Duplex.Applications.Transport.html">Duplex.Applications.Transport</a></li>
   <li><a href="../modules/Duplex.Applications.XYPad.html">Duplex.Applications.XYPad</a></li>
@@ -70,6 +70,7 @@
   <li><a href="../modules/Duplex.Browser.html">Duplex.Browser</a></li>
   <li><a href="../modules/Duplex.BrowserProcess.html">Duplex.BrowserProcess</a></li>
   <li><a href="../modules/Duplex.Canvas.html">Duplex.Canvas</a></li>
+  <li><a href="../modules/Duplex.CanvasPoint.html">Duplex.CanvasPoint</a></li>
   <li><a href="../modules/Duplex.ControlMap.html">Duplex.ControlMap</a></li>
   <li><a href="../modules/Duplex.Device.html">Duplex.Device</a></li>
   <li><a href="../modules/Duplex.Display.html">Duplex.Display</a></li>
@@ -94,6 +95,8 @@
   <li><a href="../modules/Duplex.UIPitchBend.html">Duplex.UIPitchBend</a></li>
   <li><a href="../modules/Duplex.UISlider.html">Duplex.UISlider</a></li>
   <li><a href="../modules/Duplex.UISpinner.html">Duplex.UISpinner</a></li>
+  <li><a href="../modules/Duplex.WidgetHooks.html">Duplex.WidgetHooks</a></li>
+  <li><a href="../modules/Duplex.WidgetKeyboard.html">Duplex.WidgetKeyboard</a></li>
   <li><a href="../modules/Duplex.html">Duplex</a></li>
   <li><a href="../modules/main.html">main</a></li>
 </ul>
@@ -103,8 +106,11 @@
 <div id="content">
 
 <h1>Module <code>Duplex.Applications.Effect</code></h1>
-<p>The Effect application enables control of DSP chain parameters</p>
+<p>The Effect application enables control of DSP chain parameters.</p>
 <p>
+
+<p>Inheritance: <a href="../modules/Duplex.Application.html#">Duplex.Application</a> > Duplex.Application.Effect </p>
+
 <h3>Features</h3>
 
 <ul>
@@ -199,7 +205,7 @@
 	<td class="summary">inherited from Application</td>
 	</tr>
 	<tr>
-	<td class="name" nowrap><a href="#_get_parameter_by_index">_get_parameter_by_index (device_idx)</a></td>
+	<td class="name" nowrap><a href="#_get_parameter_by_index">_get_parameter_by_index (idx)</a></td>
 	<td class="summary">get specific effect parameter from current parameter-set</td>
 	</tr>
 	<tr>
@@ -528,7 +534,7 @@ ref (renoise.DeviceParameter)
 </dd>
     <dt>
     <a name = "_get_parameter_by_index"></a>
-    <strong>_get_parameter_by_index (device_idx)</strong>
+    <strong>_get_parameter_by_index (idx)</strong>
     </dt>
     <dd>
     get specific effect parameter from current parameter-set
@@ -536,7 +542,7 @@ ref (renoise.DeviceParameter)
 
     <h3>Parameters:</h3>
     <ul>
-        <li><span class="parameter">device_idx</span>
+        <li><span class="parameter">idx</span>
          (int)
         </li>
     </ul>

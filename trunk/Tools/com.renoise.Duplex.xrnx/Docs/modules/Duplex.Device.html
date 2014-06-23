@@ -33,6 +33,8 @@
 <h2>Contents</h2>
 <ul>
 <li><a href="#Functions">Functions</a></li>
+<li><a href="#Tables">Tables</a></li>
+<li><a href="#Fields">Fields</a></li>
 </ul>
 
 
@@ -54,7 +56,6 @@
   <li><a href="../modules/Duplex.Applications.Mlrx.Mlrx_track.html">Duplex.Applications.Mlrx.Mlrx_track</a></li>
   <li><a href="../modules/Duplex.Applications.Mlrx.html">Duplex.Applications.Mlrx</a></li>
   <li><a href="../modules/Duplex.Applications.Navigator.html">Duplex.Applications.Navigator</a></li>
-  <li><a href="../modules/Duplex.Applications.NoComponent.html">Duplex.Applications.NoComponent</a></li>
   <li><a href="../modules/Duplex.Applications.NotesOnWheels.html">Duplex.Applications.NotesOnWheels</a></li>
   <li><a href="../modules/Duplex.Applications.PatternSequence.html">Duplex.Applications.PatternSequence</a></li>
   <li><a href="../modules/Duplex.Applications.Recorder.html">Duplex.Applications.Recorder</a></li>
@@ -62,6 +63,7 @@
   <li><a href="../modules/Duplex.Applications.Rotate.html">Duplex.Applications.Rotate</a></li>
   <li><a href="../modules/Duplex.Applications.StepSequencer.html">Duplex.Applications.StepSequencer</a></li>
   <li><a href="../modules/Duplex.Applications.SwitchConfiguration.html">Duplex.Applications.SwitchConfiguration</a></li>
+  <li><a href="../modules/Duplex.Applications.TestPad.html">Duplex.Applications.TestPad</a></li>
   <li><a href="../modules/Duplex.Applications.TrackSelector.html">Duplex.Applications.TrackSelector</a></li>
   <li><a href="../modules/Duplex.Applications.Transport.html">Duplex.Applications.Transport</a></li>
   <li><a href="../modules/Duplex.Applications.XYPad.html">Duplex.Applications.XYPad</a></li>
@@ -69,6 +71,7 @@
   <li><a href="../modules/Duplex.Browser.html">Duplex.Browser</a></li>
   <li><a href="../modules/Duplex.BrowserProcess.html">Duplex.BrowserProcess</a></li>
   <li><a href="../modules/Duplex.Canvas.html">Duplex.Canvas</a></li>
+  <li><a href="../modules/Duplex.CanvasPoint.html">Duplex.CanvasPoint</a></li>
   <li><a href="../modules/Duplex.ControlMap.html">Duplex.ControlMap</a></li>
   <li><strong>Duplex.Device</strong></li>
   <li><a href="../modules/Duplex.Display.html">Duplex.Display</a></li>
@@ -93,6 +96,8 @@
   <li><a href="../modules/Duplex.UIPitchBend.html">Duplex.UIPitchBend</a></li>
   <li><a href="../modules/Duplex.UISlider.html">Duplex.UISlider</a></li>
   <li><a href="../modules/Duplex.UISpinner.html">Duplex.UISpinner</a></li>
+  <li><a href="../modules/Duplex.WidgetHooks.html">Duplex.WidgetHooks</a></li>
+  <li><a href="../modules/Duplex.WidgetKeyboard.html">Duplex.WidgetKeyboard</a></li>
   <li><a href="../modules/Duplex.html">Duplex</a></li>
   <li><a href="../modules/main.html">main</a></li>
 </ul>
@@ -114,33 +119,102 @@
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#get_protocol">get_protocol ()</a></td>
-	<td class="summary">Retrieve the protocol of this device</td>
+	<td class="summary">Retrieve the protocol of this device.</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#set_control_map">set_control_map (xml_file)</a></td>
-	<td class="summary">Set the device to the provided control-map</td>
-	</tr>
-	<tr>
-	<td class="name" nowrap><a href="#point_to_value">point_to_value ()</a></td>
-	<td class="summary">Convert a display/canvas point to an actual value, ready for output
- (always overridden with device-specific implementation, as the device will
- use MIDI or OSC-specific features at this stage)</td>
+	<td class="summary">Set the device to the provided control-map, including memoizing
+ of patterns (making pattern-matching a lot more efficient)</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#quantize_color">quantize_color (color, colorspace)</a></td>
-	<td class="summary">Function for quantizing RGB color values to a device color-space</td>
+	<td class="summary">Function for quantizing RGB color values to a device color-space.</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#show_settings_dialog">show_settings_dialog (process)</a></td>
-	<td class="summary">Open the device settings dialog</td>
+	<td class="summary">Open the device settings dialog.</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#_build_settings">_build_settings ()</a></td>
-	<td class="summary">Construct the device settings view (for both MIDI and OSC devices)</td>
+	<td class="summary">Construct the device settings view (for both MIDI and OSC devices).</td>
 	</tr>
 	<tr>
-	<td class="name" nowrap><a href="#_send_message">_send_message (message, xarg)</a></td>
-	<td class="summary">Construct &amp; send internal messages (for both MIDI and OSC devices)</td>
+	<td class="name" nowrap><a href="#_send_message">_send_message (msg, param, regex)</a></td>
+	<td class="summary">Construct &amp; send internal messages (for both MIDI and OSC devices).</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#output_value">output_value (pt, xarg, ui_obj)</a></td>
+	<td class="summary">Convert values into a something that the display &amp; device can understand.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#output_text">output_text (pt, xarg, ui_obj)</a></td>
+	<td class="summary">output a text-based value (e.g.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#output_boolean">output_boolean (pt, xarg, ui_obj)</a></td>
+	<td class="summary">represents a button's lit state and will output either min or max
+ (only relevant for basic, monochrome buttons)</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#output_number">output_number (pt, xarg, ui_obj)</a></td>
+	<td class="summary">scale a numeric value from our UIComponent range to the range of the
+ external device (for example, from decibel to 0-127)</td>
+	</tr>
+</table>
+<h2><a href="#Tables">Tables</a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#self._feedback_buffer">self._feedback_buffer</a></td>
+	<td class="summary">(table) indexed table of the most recent messages, stored as strings...</td>
+	</tr>
+</table>
+<h2><a href="#Fields">Fields</a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#self.name">self.name</a></td>
+	<td class="summary">this is the 'friendly name' of the device
+ (any/all characters are supported)</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#self.protocol">self.protocol</a></td>
+	<td class="summary">MIDI or OSC?</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#self.message_stream">self.message_stream</a></td>
+	<td class="summary">transmit messages through this stream</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#self.control_map">self.control_map</a></td>
+	<td class="summary">create our control-map</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#self.loopback_received_messages">self.loopback_received_messages</a></td>
+	<td class="summary">allow sending back the same messages we got from the device as answer
+ to the device.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#self.allow_zero_velocity_note_on">self.allow_zero_velocity_note_on</a></td>
+	<td class="summary">allow Duplex to transmit MIDI note-on messages with zero velocity
+ (normally, such a message is converted to note-off just before being sent)</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#self.feedback_prevention_enabled">self.feedback_prevention_enabled</a></td>
+	<td class="summary">(bool) feedback prevention: when connected to an external source that
+ simply echoes anything back, this will help us avoid getting bogged down
+ ignore messages that bounce back within a certain time window -
+ only applies to messages that can be reconstructed (no wildcards)</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#self.parameter_caching">self.parameter_caching</a></td>
+	<td class="summary">(bool) memoize previously matched parameters (more efficient)</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#self._vb">self._vb</a></td>
+	<td class="summary">renoise.Viewbuilder</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#self._settings_view">self._settings_view</a></td>
+	<td class="summary">renoise.Views.View</td>
 	</tr>
 </table>
 
@@ -181,7 +255,7 @@
     <strong>get_protocol ()</strong>
     </dt>
     <dd>
-    Retrieve the protocol of this device
+    Retrieve the protocol of this device.
 
 
 
@@ -200,7 +274,8 @@
     <strong>set_control_map (xml_file)</strong>
     </dt>
     <dd>
-    Set the device to the provided control-map
+    Set the device to the provided control-map, including memoizing
+ of patterns (making pattern-matching a lot more efficient)
 
 
     <h3>Parameters:</h3>
@@ -216,27 +291,11 @@
 
 </dd>
     <dt>
-    <a name = "point_to_value"></a>
-    <strong>point_to_value ()</strong>
-    </dt>
-    <dd>
-    Convert a display/canvas point to an actual value, ready for output
- (always overridden with device-specific implementation, as the device will
- use MIDI or OSC-specific features at this stage)
-
-
-
-
-
-
-
-</dd>
-    <dt>
     <a name = "quantize_color"></a>
     <strong>quantize_color (color, colorspace)</strong>
     </dt>
     <dd>
-    Function for quantizing RGB color values to a device color-space
+    Function for quantizing RGB color values to a device color-space.
 
 
     <h3>Parameters:</h3>
@@ -264,7 +323,7 @@
     <strong>show_settings_dialog (process)</strong>
     </dt>
     <dd>
-    Open the device settings dialog
+    Open the device settings dialog.
 
 
     <h3>Parameters:</h3>
@@ -284,7 +343,7 @@
     <strong>_build_settings ()</strong>
     </dt>
     <dd>
-    Construct the device settings view (for both MIDI and OSC devices)
+    Construct the device settings view (for both MIDI and OSC devices).
 
 
 
@@ -300,21 +359,341 @@
 </dd>
     <dt>
     <a name = "_send_message"></a>
-    <strong>_send_message (message, xarg)</strong>
+    <strong>_send_message (msg, param, regex)</strong>
     </dt>
     <dd>
-    Construct &amp; send internal messages (for both MIDI and OSC devices)
+    Construct &amp; send internal messages (for both MIDI and OSC devices).
+ this function is invoked by the device class when a new message is received,
+ and will populate the message with properties that are device-independent
+ before sending it off to the <a href="../modules/Duplex.MessageStream.html#">Duplex.MessageStream</a>
+
 
 
     <h3>Parameters:</h3>
     <ul>
-        <li><span class="parameter">message</span>
-         (<a href="../modules/Duplex.Message.html#">Duplex.Message</a>) the message to send
+        <li><span class="parameter">msg</span>
+         (<a href="../modules/Duplex.Message.html#">Duplex.Message</a>) passed on from the device class
         </li>
-        <li><span class="parameter">xarg</span>
-         (table) parameter attributes
+        <li><span class="parameter">param</span>
+         (table) <code>Param</code> node attributes, see <a href="../modules/Duplex.ControlMap.html#">Duplex.ControlMap</a>
+        </li>
+        <li><span class="parameter">regex</span>
+         (table) regex matches, see <a href="../modules/Duplex.ControlMap.html#get_osc_params">Duplex.ControlMap.get_osc_params</a>
         </li>
     </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "output_value"></a>
+    <strong>output_value (pt, xarg, ui_obj)</strong>
+    </dt>
+    <dd>
+    Convert values into a something that the display &amp; device can understand.  </p>
+
+<p> Each type of value (number, boolean or text) is handled by a specific
+ submethod: <a href="../modules/Duplex.Device.html#output_number">output_number</a>, <a href="../modules/Duplex.Device.html#output_boolean">output_boolean</a>, <a href="../modules/Duplex.Device.html#output_text">output_text</a></p>
+
+<p> Numbers are generally used for dials and faders, booleans are
+ used for objects with an on/off state (buttons), and text is used for
+ things like labels and segmented displays </p>
+
+<p> Depending on the device, you might want to override these submethods with
+ your own implementation. For example, the Launchpad has it's own method for
+ converting a value into a color </p>
+
+<p> Note: when the value is a table, we iterate through each value and call the
+ appropriate methods. </p>
+
+<p> You can also implement your own code for direct communication with the
+ device by overriding these methods - in such a case, adding an additional
+ boolean return value ("skip_hardware") will cause the Display to update the
+ virtual control surface, but skip the hardware part
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">pt</span>
+         (<a href="../modules/Duplex.CanvasPoint.html#">Duplex.CanvasPoint</a>)
+        </li>
+        <li><span class="parameter">xarg</span>
+         (table), control-map parameter
+        </li>
+        <li><span class="parameter">ui_obj</span>
+         (<a href="../modules/Duplex.UIComponent.html#">Duplex.UIComponent</a>)
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+        <li>
+        number, table or text (the value output to the display/device)</li>
+        <li>
+        bool (skip_hardware)</li>
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "output_text"></a>
+    <strong>output_text (pt, xarg, ui_obj)</strong>
+    </dt>
+    <dd>
+    output a text-based value (e.g.  for segmented text displays)
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">pt</span>
+         (<a href="../modules/Duplex.CanvasPoint.html#">Duplex.CanvasPoint</a>)
+        </li>
+        <li><span class="parameter">xarg</span>
+         (table), control-map parameter
+        </li>
+        <li><span class="parameter">ui_obj</span>
+         (<a href="../modules/Duplex.UIComponent.html#">Duplex.UIComponent</a>)
+        </li>
+    </ul>
+
+
+
+    <h3>See also:</h3>
+    <ul>
+         <a href="../modules/Duplex.Device.html#output_value">Device.output_value</a>
+    </ul>
+
+
+</dd>
+    <dt>
+    <a name = "output_boolean"></a>
+    <strong>output_boolean (pt, xarg, ui_obj)</strong>
+    </dt>
+    <dd>
+    represents a button's lit state and will output either min or max
+ (only relevant for basic, monochrome buttons)
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">pt</span>
+         (<a href="../modules/Duplex.CanvasPoint.html#">Duplex.CanvasPoint</a>)
+        </li>
+        <li><span class="parameter">xarg</span>
+         (table), control-map parameter
+        </li>
+        <li><span class="parameter">ui_obj</span>
+         (<a href="../modules/Duplex.UIComponent.html#">Duplex.UIComponent</a>)
+        </li>
+    </ul>
+
+
+
+    <h3>See also:</h3>
+    <ul>
+         <a href="../modules/Duplex.Device.html#output_value">Device.output_value</a>
+    </ul>
+
+
+</dd>
+    <dt>
+    <a name = "output_number"></a>
+    <strong>output_number (pt, xarg, ui_obj)</strong>
+    </dt>
+    <dd>
+    scale a numeric value from our UIComponent range to the range of the
+ external device (for example, from decibel to 0-127)
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">pt</span>
+         (<a href="../modules/Duplex.CanvasPoint.html#">Duplex.CanvasPoint</a>)
+        </li>
+        <li><span class="parameter">xarg</span>
+         (table), control-map parameter
+        </li>
+        <li><span class="parameter">ui_obj</span>
+         (<a href="../modules/Duplex.UIComponent.html#">Duplex.UIComponent</a>)
+        </li>
+    </ul>
+
+
+
+    <h3>See also:</h3>
+    <ul>
+         <a href="../modules/Duplex.Device.html#output_value">Device.output_value</a>
+    </ul>
+
+
+</dd>
+</dl>
+    <h2><a name="Tables"></a>Tables</h2>
+    <dl class="function">
+    <dt>
+    <a name = "self._feedback_buffer"></a>
+    <strong>self._feedback_buffer</strong>
+    </dt>
+    <dd>
+    (table) indexed table of the most recent messages, stored as strings...
+ (This is part of a simple mechanism for avoiding message feedback)
+
+
+
+
+
+
+
+</dd>
+</dl>
+    <h2><a name="Fields"></a>Fields</h2>
+    <dl class="function">
+    <dt>
+    <a name = "self.name"></a>
+    <strong>self.name</strong>
+    </dt>
+    <dd>
+    this is the 'friendly name' of the device
+ (any/all characters are supported)
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "self.protocol"></a>
+    <strong>self.protocol</strong>
+    </dt>
+    <dd>
+    MIDI or OSC?
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "self.message_stream"></a>
+    <strong>self.message_stream</strong>
+    </dt>
+    <dd>
+    transmit messages through this stream
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "self.control_map"></a>
+    <strong>self.control_map</strong>
+    </dt>
+    <dd>
+    create our control-map
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "self.loopback_received_messages"></a>
+    <strong>self.loopback_received_messages</strong>
+    </dt>
+    <dd>
+    allow sending back the same messages we got from the device as answer
+ to the device.  some controller which cannot deal with message feedback,
+ may want to disable this in its device class...(see also "skip_echo", which
+ is similar but per-parameter instead of being set for the whole device)
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "self.allow_zero_velocity_note_on"></a>
+    <strong>self.allow_zero_velocity_note_on</strong>
+    </dt>
+    <dd>
+    allow Duplex to transmit MIDI note-on messages with zero velocity
+ (normally, such a message is converted to note-off just before being sent)
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "self.feedback_prevention_enabled"></a>
+    <strong>self.feedback_prevention_enabled</strong>
+    </dt>
+    <dd>
+    (bool) feedback prevention: when connected to an external source that
+ simply echoes anything back, this will help us avoid getting bogged down
+ ignore messages that bounce back within a certain time window -
+ only applies to messages that can be reconstructed (no wildcards)
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "self.parameter_caching"></a>
+    <strong>self.parameter_caching</strong>
+    </dt>
+    <dd>
+    (bool) memoize previously matched parameters (more efficient)
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "self._vb"></a>
+    <strong>self._vb</strong>
+    </dt>
+    <dd>
+    renoise.Viewbuilder
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "self._settings_view"></a>
+    <strong>self._settings_view</strong>
+    </dt>
+    <dd>
+    renoise.Views.View
+
+
 
 
 

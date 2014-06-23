@@ -33,6 +33,7 @@
 <h2>Contents</h2>
 <ul>
 <li><a href="#Functions">Functions</a></li>
+<li><a href="#Tables">Tables</a></li>
 <li><a href="#Fields">Fields</a></li>
 </ul>
 
@@ -55,7 +56,6 @@
   <li><a href="../modules/Duplex.Applications.Mlrx.Mlrx_track.html">Duplex.Applications.Mlrx.Mlrx_track</a></li>
   <li><a href="../modules/Duplex.Applications.Mlrx.html">Duplex.Applications.Mlrx</a></li>
   <li><a href="../modules/Duplex.Applications.Navigator.html">Duplex.Applications.Navigator</a></li>
-  <li><a href="../modules/Duplex.Applications.NoComponent.html">Duplex.Applications.NoComponent</a></li>
   <li><a href="../modules/Duplex.Applications.NotesOnWheels.html">Duplex.Applications.NotesOnWheels</a></li>
   <li><a href="../modules/Duplex.Applications.PatternSequence.html">Duplex.Applications.PatternSequence</a></li>
   <li><a href="../modules/Duplex.Applications.Recorder.html">Duplex.Applications.Recorder</a></li>
@@ -63,6 +63,7 @@
   <li><a href="../modules/Duplex.Applications.Rotate.html">Duplex.Applications.Rotate</a></li>
   <li><a href="../modules/Duplex.Applications.StepSequencer.html">Duplex.Applications.StepSequencer</a></li>
   <li><a href="../modules/Duplex.Applications.SwitchConfiguration.html">Duplex.Applications.SwitchConfiguration</a></li>
+  <li><a href="../modules/Duplex.Applications.TestPad.html">Duplex.Applications.TestPad</a></li>
   <li><a href="../modules/Duplex.Applications.TrackSelector.html">Duplex.Applications.TrackSelector</a></li>
   <li><a href="../modules/Duplex.Applications.Transport.html">Duplex.Applications.Transport</a></li>
   <li><a href="../modules/Duplex.Applications.XYPad.html">Duplex.Applications.XYPad</a></li>
@@ -70,6 +71,7 @@
   <li><a href="../modules/Duplex.Browser.html">Duplex.Browser</a></li>
   <li><a href="../modules/Duplex.BrowserProcess.html">Duplex.BrowserProcess</a></li>
   <li><a href="../modules/Duplex.Canvas.html">Duplex.Canvas</a></li>
+  <li><a href="../modules/Duplex.CanvasPoint.html">Duplex.CanvasPoint</a></li>
   <li><a href="../modules/Duplex.ControlMap.html">Duplex.ControlMap</a></li>
   <li><a href="../modules/Duplex.Device.html">Duplex.Device</a></li>
   <li><a href="../modules/Duplex.Display.html">Duplex.Display</a></li>
@@ -94,6 +96,8 @@
   <li><a href="../modules/Duplex.UIPitchBend.html">Duplex.UIPitchBend</a></li>
   <li><a href="../modules/Duplex.UISlider.html">Duplex.UISlider</a></li>
   <li><a href="../modules/Duplex.UISpinner.html">Duplex.UISpinner</a></li>
+  <li><a href="../modules/Duplex.WidgetHooks.html">Duplex.WidgetHooks</a></li>
+  <li><a href="../modules/Duplex.WidgetKeyboard.html">Duplex.WidgetKeyboard</a></li>
   <li><a href="../modules/Duplex.html">Duplex</a></li>
   <li><a href="../modules/main.html">main</a></li>
 </ul>
@@ -104,14 +108,9 @@
 
 <h1>Module <code>Duplex.Application</code></h1>
 <p>The generic application class for Duplex.</p>
-<p> Supplies any class that extend it with
-basic methods like start, stop, idle time notifications.</p>
+<p> Supplies any class that extend it with basic methods like start, stop, idle time notifications.</p>
 
-<p>Applications are instantiated by the Duplex Browser, and all .lua files in the
-Duplex/Applications folder are included on startup. </p>
-
-<p>To create a new Duplex application, you must extend this class and put it in
-that folder. </p>
+<p>Applications are instantiated by the Duplex Browser, and all .lua files in the Duplex/Applications folder are included on startup. To create a new Duplex application, you must extend this class and put it in that folder. </p>
 
 
 <h2><a href="#Functions">Functions</a></h2>
@@ -189,18 +188,51 @@ that folder. </p>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#__tostring">__tostring ()</a></td>
-	<td class="summary">Prints the type of application (class name)</td>
+	<td class="summary">Return the type of application (class name)</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#__eq">__eq (other)</a></td>
 	<td class="summary">Compare application to another class instance (check for object identity)</td>
 	</tr>
 </table>
+<h2><a href="#Tables">Tables</a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#default_options">default_options</a></td>
+	<td class="summary">(table) the application default options, are overridden by any user-
+ specified choice (those are stored in Preferences.xml)</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#available_mappings">available_mappings</a></td>
+	<td class="summary">(table) the default mappings for this class
+ eacb named entry can contain the following fields</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#default_palette">default_palette</a></td>
+	<td class="summary">(table) specify custom colors, values and text for the application, e.g.</td>
+	</tr>
+</table>
 <h2><a href="#Fields">Fields</a></h2>
 <table class="function_list">
 	<tr>
+	<td class="name" nowrap><a href="#self._process">self._process</a></td>
+	<td class="summary">(<a href="../modules/Duplex.BrowserProcess.html#">Duplex.BrowserProcess</a>) where our application got instantiated</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#self.mappings">self.mappings</a></td>
+	<td class="summary">(table) imported from device-config</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#self.palette">self.palette</a></td>
+	<td class="summary">(table) imported from device-config</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#self.options">self.options</a></td>
+	<td class="summary">(table) imported from application default options</td>
+	</tr>
+	<tr>
 	<td class="name" nowrap><a href="#self.display">self.display</a></td>
-	<td class="summary">(<a href="../modules/Duplex.Display.html#">Duplex.Display</a>) instance of the display class</td>
+	<td class="summary">(<a href="../modules/Duplex.Display.html#">Duplex.Display</a>) the display associated with our process</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#self._app_name">self._app_name</a></td>
@@ -222,7 +254,7 @@ that folder. </p>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#self._settings_view">self._settings_view</a></td>
-	<td class="summary">(renoise.ViewBuilder) the settings view</td>
+	<td class="summary">(renoise.Views.View) the settings view</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#self._ui_components">self._ui_components</a></td>
@@ -252,10 +284,10 @@ that folder. </p>
 
 <ol>
     <li>process (<a href="../modules/Duplex.BrowserProcess.html#">Duplex.BrowserProcess</a>)</li>
-    <li>mappings (table, imported from device-config)</li>
-    <li>palette (table, imported from device-config)</li>
-    <li>options (table, imported from application default options)</li>
-    <li>config_name (string, imported from application default options)</li>
+    <li>mappings (table)</li>
+    <li>palette (table)</li>
+    <li>options (table)</li>
+    <li>config_name (string)</li>
 </ol>
 
         </li>
@@ -601,7 +633,7 @@ that folder. </p>
     <strong>__tostring ()</strong>
     </dt>
     <dd>
-    Prints the type of application (class name)
+    Return the type of application (class name)
 
 
 
@@ -643,14 +675,156 @@ that folder. </p>
 
 </dd>
 </dl>
+    <h2><a name="Tables"></a>Tables</h2>
+    <dl class="function">
+    <dt>
+    <a name = "default_options"></a>
+    <strong>default_options</strong>
+    </dt>
+    <dd>
+    (table) the application default options, are overridden by any user-
+ specified choice (those are stored in Preferences.xml)
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "available_mappings"></a>
+    <strong>available_mappings</strong>
+    </dt>
+    <dd>
+    (table) the default mappings for this class
+ eacb named entry can contain the following fields
+
+
+    <h3>Fields:</h3>
+    <ul>
+        <li><span class="parameter">description</span>
+
+
+
+        </li>
+        <li><span class="parameter">distributable</span>
+
+
+
+        </li>
+        <li><span class="parameter">flipped</span>
+
+
+
+        </li>
+        <li><span class="parameter">greedy</span>
+
+
+
+        </li>
+        <li><span class="parameter">orientation</span>
+
+
+
+        </li>
+        <li><span class="parameter">toggleable</span>
+
+
+
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "default_palette"></a>
+    <strong>default_palette</strong>
+    </dt>
+    <dd>
+
+<p>(table) specify custom colors, values and text for the application, e.g.  </p>
+<pre><code> button_on     = { color={0xFF,0x80,0x00}, text="▼", val=true  },
+ button_off    = { color={0x00,0x00,0x00}, text="▼", val=false },
+</code></pre>
+
+
+
+
+
+
+
+
+
+</dd>
+</dl>
     <h2><a name="Fields"></a>Fields</h2>
     <dl class="function">
+    <dt>
+    <a name = "self._process"></a>
+    <strong>self._process</strong>
+    </dt>
+    <dd>
+    (<a href="../modules/Duplex.BrowserProcess.html#">Duplex.BrowserProcess</a>) where our application got instantiated
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "self.mappings"></a>
+    <strong>self.mappings</strong>
+    </dt>
+    <dd>
+    (table) imported from device-config
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "self.palette"></a>
+    <strong>self.palette</strong>
+    </dt>
+    <dd>
+    (table) imported from device-config
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "self.options"></a>
+    <strong>self.options</strong>
+    </dt>
+    <dd>
+    (table) imported from application default options
+
+
+
+
+
+
+
+</dd>
     <dt>
     <a name = "self.display"></a>
     <strong>self.display</strong>
     </dt>
     <dd>
-    (<a href="../modules/Duplex.Display.html#">Duplex.Display</a>) instance of the display class
+    (<a href="../modules/Duplex.Display.html#">Duplex.Display</a>) the display associated with our process
 
 
 
@@ -723,7 +897,7 @@ that folder. </p>
     <strong>self._settings_view</strong>
     </dt>
     <dd>
-    (renoise.ViewBuilder) the settings view
+    (renoise.Views.View) the settings view
 
 
 

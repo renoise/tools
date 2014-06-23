@@ -56,7 +56,6 @@
   <li><a href="../modules/Duplex.Applications.Mlrx.Mlrx_track.html">Duplex.Applications.Mlrx.Mlrx_track</a></li>
   <li><a href="../modules/Duplex.Applications.Mlrx.html">Duplex.Applications.Mlrx</a></li>
   <li><a href="../modules/Duplex.Applications.Navigator.html">Duplex.Applications.Navigator</a></li>
-  <li><a href="../modules/Duplex.Applications.NoComponent.html">Duplex.Applications.NoComponent</a></li>
   <li><a href="../modules/Duplex.Applications.NotesOnWheels.html">Duplex.Applications.NotesOnWheels</a></li>
   <li><a href="../modules/Duplex.Applications.PatternSequence.html">Duplex.Applications.PatternSequence</a></li>
   <li><a href="../modules/Duplex.Applications.Recorder.html">Duplex.Applications.Recorder</a></li>
@@ -64,6 +63,7 @@
   <li><a href="../modules/Duplex.Applications.Rotate.html">Duplex.Applications.Rotate</a></li>
   <li><a href="../modules/Duplex.Applications.StepSequencer.html">Duplex.Applications.StepSequencer</a></li>
   <li><a href="../modules/Duplex.Applications.SwitchConfiguration.html">Duplex.Applications.SwitchConfiguration</a></li>
+  <li><a href="../modules/Duplex.Applications.TestPad.html">Duplex.Applications.TestPad</a></li>
   <li><a href="../modules/Duplex.Applications.TrackSelector.html">Duplex.Applications.TrackSelector</a></li>
   <li><a href="../modules/Duplex.Applications.Transport.html">Duplex.Applications.Transport</a></li>
   <li><a href="../modules/Duplex.Applications.XYPad.html">Duplex.Applications.XYPad</a></li>
@@ -71,6 +71,7 @@
   <li><a href="../modules/Duplex.Browser.html">Duplex.Browser</a></li>
   <li><a href="../modules/Duplex.BrowserProcess.html">Duplex.BrowserProcess</a></li>
   <li><a href="../modules/Duplex.Canvas.html">Duplex.Canvas</a></li>
+  <li><a href="../modules/Duplex.CanvasPoint.html">Duplex.CanvasPoint</a></li>
   <li><a href="../modules/Duplex.ControlMap.html">Duplex.ControlMap</a></li>
   <li><a href="../modules/Duplex.Device.html">Duplex.Device</a></li>
   <li><a href="../modules/Duplex.Display.html">Duplex.Display</a></li>
@@ -95,6 +96,8 @@
   <li><a href="../modules/Duplex.UIPitchBend.html">Duplex.UIPitchBend</a></li>
   <li><a href="../modules/Duplex.UISlider.html">Duplex.UISlider</a></li>
   <li><a href="../modules/Duplex.UISpinner.html">Duplex.UISpinner</a></li>
+  <li><a href="../modules/Duplex.WidgetHooks.html">Duplex.WidgetHooks</a></li>
+  <li><a href="../modules/Duplex.WidgetKeyboard.html">Duplex.WidgetKeyboard</a></li>
   <li><a href="../modules/Duplex.html">Duplex</a></li>
   <li><a href="../modules/main.html">main</a></li>
 </ul>
@@ -104,20 +107,22 @@
 <div id="content">
 
 <h1>Module <code>Duplex.UIComponent</code></h1>
-<p>The UIComponent is the basic building block from which you can create a Duplex application user interface </p>
+<p>UIComponent is the basic building block from which you create a user interface.</p>
+<p>All classes that extend this class are prefixed with 'UI': UIButton, UISlider etc. </p>
 
-<p>All classes that extend this class are prefixed with 'UI': UIButton, UISlider etc.</p>
-<p> </p>
+<p>This class, and all the classes extending it, are not to be confused with the Renoise viewbuilder API, which creates <em>actual</em> on-screen controls. The virtual control surface (the on-screen representation of your hardware) is a static representation of the device interface, as defined by the control-map. </p>
 
-<p>The UIComponent pretty much leaves it up to you how to specify events.
-For examples on how to create/handle events with UIComponents, see either
+<p>UIComponents, on the other hand, are a little more abstract. They can basically be created, moved around and resized while the application is running.
+Imagine creating an instance of a "UISlider" which you then assign a size of 8 vertical units, and assign to the middle of a Launchpad grid? For all that matters, you will think of this as being a slider, and operate it as such. But in reality, the slider is made from 8 different buttons that "know" about each other. </p>
+
+<p>For examples on how to create/handle events with UIComponents, see either
 the UISlider or the UIButton class (both extensions of this class).</p>
 
 
 <h2><a href="#Functions">Functions</a></h2>
 <table class="function_list">
 	<tr>
-	<td class="name" nowrap><a href="#__init">__init (app)</a></td>
+	<td class="name" nowrap><a href="#__init">__init (app, map)</a></td>
 	<td class="summary">Initialize the UIComponent class</td>
 	</tr>
 	<tr>
@@ -126,7 +131,15 @@ the UISlider or the UIButton class (both extensions of this class).</p>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#draw">draw ()</a></td>
-	<td class="summary">Update the control's visual appearance</td>
+	<td class="summary">Update the control's visual appearance.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#disable">disable ()</a></td>
+	<td class="summary">Make all associated viewbuilder widgets inactive</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#enable">enable ()</a></td>
+	<td class="summary">Make all associated viewbuilder widgets active</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#add_listeners">add_listeners ()</a></td>
@@ -148,12 +161,24 @@ the UISlider or the UIButton class (both extensions of this class).</p>
 	<td class="summary">Set the position using x/y or index within group</td>
 	</tr>
 	<tr>
+	<td class="name" nowrap><a href="#set_palette">set_palette (palette)</a></td>
+	<td class="summary">Set palette, invalidate if changed</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#set_group">set_group (group_name)</a></td>
+	<td class="summary">Set the group that this component belongs to</td>
+	</tr>
+	<tr>
 	<td class="name" nowrap><a href="#test">test (x_pos, y_pos)</a></td>
 	<td class="summary">Perform simple "inside square" hit test</td>
 	</tr>
 	<tr>
-	<td class="name" nowrap><a href="#set_palette">set_palette (palette)</a></td>
-	<td class="summary">Set palette, invalidate if changed</td>
+	<td class="name" nowrap><a href="#_get_widgets">_get_widgets ()</a></td>
+	<td class="summary">Retrieve the viewbuilder widgets that we are associated with</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#_get_ui_params">_get_ui_params ()</a></td>
+	<td class="summary">Retrieve the control-map <Param> nodes that we are associated with</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#__eq">__eq (other)</a></td>
@@ -183,11 +208,21 @@ the UISlider or the UIButton class (both extensions of this class).</p>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#self.x_pos">self.x_pos</a></td>
-	<td class="summary">(int) ORIENTATION.HORIZONTAL position within display</td>
+	<td class="summary">(int) position within display</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#self.floor">self.floor</a></td>
+	<td class="summary">(number) the minimum value for this component
+ when a value is output to the device, this is used for scaling
+ from our "local" value to the "external" one (only applies
+ to components that output a numeric value)</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#self.ceiling">self.ceiling</a></td>
-	<td class="summary">(number) the maximum value for this component</td>
+	<td class="summary">(number) the maximum value for this component
+ when a value is output to the device, this is used for scaling
+ from our "local" value to the "external" one (only applies
+ to components that output a numeric value)</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#self.width">self.width</a></td>
@@ -199,19 +234,29 @@ the UISlider or the UIButton class (both extensions of this class).</p>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#self.tooltip">self.tooltip</a></td>
-	<td class="summary">(string) text to display on the virtual UI</td>
+	<td class="summary">(string) tooltip, displayed in the virtual UI</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#self.midi_mapping">self.midi_mapping</a></td>
-	<td class="summary">(string) link to a renoise midi-mapping</td>
+	<td class="summary">(string) link to a renoise midi-mapping - don't forget to register a
+ similarly named mapping with renoise.tool():add<em>midi</em>mapping</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#self.dirty">self.dirty</a></td>
 	<td class="summary">(bool) request refresh on next update</td>
 	</tr>
 	<tr>
+	<td class="name" nowrap><a href="#self.soft_echo">self.soft_echo</a></td>
+	<td class="summary">(bool) when the message specifies this, hardware output is skipped
+ when the message was triggered from the hardware itself</td>
+	</tr>
+	<tr>
 	<td class="name" nowrap><a href="#self.app">self.app</a></td>
 	<td class="summary">(<a href="../modules/Duplex.Application.html#">Duplex.Application</a>) containing application</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#self._active">self._active</a></td>
+	<td class="summary">(bool) false if UIComponent state was changed - see (<a href="../modules/Duplex.UIComponent.html#disable">disable</a> or (<a href="../modules/Duplex.UIComponent.html#enable">enable</a></td>
 	</tr>
 </table>
 
@@ -223,7 +268,7 @@ the UISlider or the UIButton class (both extensions of this class).</p>
     <dl class="function">
     <dt>
     <a name = "__init"></a>
-    <strong>__init (app)</strong>
+    <strong>__init (app, map)</strong>
     </dt>
     <dd>
     Initialize the UIComponent class
@@ -233,6 +278,9 @@ the UISlider or the UIButton class (both extensions of this class).</p>
     <ul>
         <li><span class="parameter">app</span>
          (<a href="../modules/Duplex.Application.html#">Duplex.Application</a>)
+        </li>
+        <li><span class="parameter">map</span>
+        [opt] (table) mapping properties
         </li>
     </ul>
 
@@ -260,7 +308,37 @@ the UISlider or the UIButton class (both extensions of this class).</p>
     <strong>draw ()</strong>
     </dt>
     <dd>
-    Update the control's visual appearance
+    Update the control's visual appearance.  We are not communicating directly
+ with the device through this method, but rather perform modifications to
+ the Canvas (which is translated into something the device can understand)
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "disable"></a>
+    <strong>disable ()</strong>
+    </dt>
+    <dd>
+    Make all associated viewbuilder widgets inactive
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "enable"></a>
+    <strong>enable ()</strong>
+    </dt>
+    <dd>
+    Make all associated viewbuilder widgets active
 
 
 
@@ -337,7 +415,47 @@ the UISlider or the UIButton class (both extensions of this class).</p>
          (int)
         </li>
         <li><span class="parameter">y</span>
-         (int)
+         (int) optional, leave out to specify index via <code>x</code> parameter
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "set_palette"></a>
+    <strong>set_palette (palette)</strong>
+    </dt>
+    <dd>
+    Set palette, invalidate if changed
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">palette</span>
+         (table), e.g {foreground={color={0x00,0x00,0x00}}}
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "set_group"></a>
+    <strong>set_group (group_name)</strong>
+    </dt>
+    <dd>
+    Set the group that this component belongs to
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">group_name</span>
+         (string)
         </li>
     </ul>
 
@@ -375,20 +493,38 @@ the UISlider or the UIButton class (both extensions of this class).</p>
 
 </dd>
     <dt>
-    <a name = "set_palette"></a>
-    <strong>set_palette (palette)</strong>
+    <a name = "_get_widgets"></a>
+    <strong>_get_widgets ()</strong>
     </dt>
     <dd>
-    Set palette, invalidate if changed
+    Retrieve the viewbuilder widgets that we are associated with
 
 
-    <h3>Parameters:</h3>
-    <ul>
-        <li><span class="parameter">palette</span>
-         (table), e.g {foreground={color={0x00,0x00,0x00}}}
-        </li>
-    </ul>
 
+    <h3>Returns:</h3>
+    <ol>
+
+        (table) renoise.Views.Control,...
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "_get_ui_params"></a>
+    <strong>_get_ui_params ()</strong>
+    </dt>
+    <dd>
+    Retrieve the control-map <Param> nodes that we are associated with
+
+
+
+    <h3>Returns:</h3>
+    <ol>
+
+        (table)
+    </ol>
 
 
 
@@ -491,7 +627,24 @@ the UISlider or the UIButton class (both extensions of this class).</p>
     <strong>self.x_pos</strong>
     </dt>
     <dd>
-    (int) ORIENTATION.HORIZONTAL position within display
+    (int) position within display
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "self.floor"></a>
+    <strong>self.floor</strong>
+    </dt>
+    <dd>
+    (number) the minimum value for this component
+ when a value is output to the device, this is used for scaling
+ from our "local" value to the "external" one (only applies
+ to components that output a numeric value)
 
 
 
@@ -506,6 +659,9 @@ the UISlider or the UIButton class (both extensions of this class).</p>
     </dt>
     <dd>
     (number) the maximum value for this component
+ when a value is output to the device, this is used for scaling
+ from our "local" value to the "external" one (only applies
+ to components that output a numeric value)
 
 
 
@@ -547,7 +703,7 @@ the UISlider or the UIButton class (both extensions of this class).</p>
     <strong>self.tooltip</strong>
     </dt>
     <dd>
-    (string) text to display on the virtual UI
+    (string) tooltip, displayed in the virtual UI
 
 
 
@@ -561,7 +717,8 @@ the UISlider or the UIButton class (both extensions of this class).</p>
     <strong>self.midi_mapping</strong>
     </dt>
     <dd>
-    (string) link to a renoise midi-mapping
+    (string) link to a renoise midi-mapping - don't forget to register a
+ similarly named mapping with renoise.tool():add<em>midi</em>mapping
 
 
 
@@ -585,11 +742,40 @@ the UISlider or the UIButton class (both extensions of this class).</p>
 
 </dd>
     <dt>
+    <a name = "self.soft_echo"></a>
+    <strong>self.soft_echo</strong>
+    </dt>
+    <dd>
+    (bool) when the message specifies this, hardware output is skipped
+ when the message was triggered from the hardware itself
+
+
+
+
+
+
+
+</dd>
+    <dt>
     <a name = "self.app"></a>
     <strong>self.app</strong>
     </dt>
     <dd>
     (<a href="../modules/Duplex.Application.html#">Duplex.Application</a>) containing application
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "self._active"></a>
+    <strong>self._active</strong>
+    </dt>
+    <dd>
+    (bool) false if UIComponent state was changed - see (<a href="../modules/Duplex.UIComponent.html#disable">disable</a> or (<a href="../modules/Duplex.UIComponent.html#enable">enable</a>
 
 
 
