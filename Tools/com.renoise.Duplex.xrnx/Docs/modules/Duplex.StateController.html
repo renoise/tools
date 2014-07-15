@@ -33,6 +33,7 @@
 <h2>Contents</h2>
 <ul>
 <li><a href="#Functions">Functions</a></li>
+<li><a href="#Tables">Tables</a></li>
 <li><a href="#Fields">Fields</a></li>
 </ul>
 
@@ -42,7 +43,7 @@
   <li><a href="../modules/Duplex.Application.html">Duplex.Application</a></li>
   <li><a href="../modules/Duplex.Applications.Effect.html">Duplex.Applications.Effect</a></li>
   <li><a href="../modules/Duplex.Applications.GridPie.html">Duplex.Applications.GridPie</a></li>
-  <li><strong>Duplex.Applications.Hydra</strong></li>
+  <li><a href="../modules/Duplex.Applications.Hydra.html">Duplex.Applications.Hydra</a></li>
   <li><a href="../modules/Duplex.Applications.Keyboard.html">Duplex.Applications.Keyboard</a></li>
   <li><a href="../modules/Duplex.Applications.Matrix.html">Duplex.Applications.Matrix</a></li>
   <li><a href="../modules/Duplex.Applications.Metronome.html">Duplex.Applications.Metronome</a></li>
@@ -86,7 +87,7 @@
   <li><a href="../modules/Duplex.ProcessSlicer.html">Duplex.ProcessSlicer</a></li>
   <li><a href="../modules/Duplex.RoamingDSP.html">Duplex.RoamingDSP</a></li>
   <li><a href="../modules/Duplex.Scheduler.html">Duplex.Scheduler</a></li>
-  <li><a href="../modules/Duplex.StateController.html">Duplex.StateController</a></li>
+  <li><strong>Duplex.StateController</strong></li>
   <li><a href="../modules/Duplex.UIButton.html">Duplex.UIButton</a></li>
   <li><a href="../modules/Duplex.UIButtonStrip.html">Duplex.UIButtonStrip</a></li>
   <li><a href="../modules/Duplex.UIComponent.html">Duplex.UIComponent</a></li>
@@ -107,50 +108,99 @@
 
 <div id="content">
 
-<h1>Module <code>Duplex.Applications.Hydra</code></h1>
-<p>Control any Hydra device in the current song.</p>
-<p>Inheritance: <a href="../modules/Duplex.Application.html#">Duplex.Application</a> > <a href="../modules/Duplex.RoamingDSP.html#">Duplex.RoamingDSP</a> > Duplex.Application.Hydra </p>
+<h1>Module <code>Duplex.StateController</code></h1>
+<p>The StateController handles states within a display/controlmap</p>
 
-<p>Assign it to a slider and you gain the features from the RoamingDSP class
-as well: device locking, navigation and automation recording</p>
+<p>A state can toggle any part of a control-map on/off while a device configuration is running.</p>
+<p>
+<p> They represent a separate mapping layer, independantly of the device configuration, and are especially useful when you are running out of space on the controller - or when an application does not provide you with enough flexibility. </p>
 
-<p>Also comes with a label for displaying the current value</p>
+<p>Adding a state is done via the special <Stage> tag - however, a state will not do anything by itself. You still need to associate the state with one or more 'triggers', buttons that share their value with the state. </p>
+
+<p>Once a state has been defined, you can begin prefixing target nodes, using the state's name as the identifier - for example, <MyState:Param></p>
+
+<p>Most nodes can be prefixed: Group, Row, Column and Param (but not SubParam). For a detailed description of all supported attributes for <State> nodes, please refer to the ControlMap class</p>
+
+<h3>Examples</h3>
+
+
+
+
+</p>
 
 
 <h2><a href="#Functions">Functions</a></h2>
 <table class="function_list">
 	<tr>
-	<td class="name" nowrap><a href="#__init">__init (VarArg)</a></td>
-	<td class="summary">Constructor method</td>
+	<td class="name" nowrap><a href="#__init">__init (display)</a></td>
+	<td class="summary">Initialize the StateController class</td>
 	</tr>
 	<tr>
-	<td class="name" nowrap><a href="#attach_to_device">attach_to_device (track_idx, device_idx, device)</a></td>
-	<td class="summary">attach notifier to the device
- called when we use previous/next device, set the initial device,
- are freely roaming the tracks or inserting a new device</td>
+	<td class="name" nowrap><a href="#handle_message">handle_message (msg)</a></td>
+	<td class="summary">interpret an incoming message, update display accordingly
+ (this method is invoked when the MessageStream receive a message)</td>
 	</tr>
 	<tr>
-	<td class="name" nowrap><a href="#_build_app">_build_app ()</a></td>
-	<td class="summary">inherited from Application</td>
+	<td class="name" nowrap><a href="#add_state">add_state (xarg, t)</a></td>
+	<td class="summary">add a state</td>
 	</tr>
 	<tr>
-	<td class="name" nowrap><a href="#update_device">update_device ()</a></td>
-	<td class="summary">This method is called when the controller is changed</td>
+	<td class="name" nowrap><a href="#match">match (msg)</a></td>
+	<td class="summary">match states with message - discover if message is a trigger</td>
 	</tr>
 	<tr>
-	<td class="name" nowrap><a href="#update_controller">update_controller ()</a></td>
-	<td class="summary">This method is called when the device is changed from Renoise</td>
+	<td class="name" nowrap><a href="#initialize">initialize ()</a></td>
+	<td class="summary">called once the display has created the virtual control surface</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#add_view">add_view (state_id, view)</a></td>
+	<td class="summary">associate a parameter with a named state</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#toggle">toggle (state_id)</a></td>
+	<td class="summary">toggle a named state</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#enable">enable (state_id)</a></td>
+	<td class="summary">activate a named state</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#disable">disable (state_id)</a></td>
+	<td class="summary">deactivate a named state</td>
+	</tr>
+</table>
+<h2><a href="#Tables">Tables</a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#self.states">self.states</a></td>
+	<td class="summary">
+<p>associative array</p>
+<pre><code>[string] = {          -- state name/id
+  xarg = (table)      -- control-map attributes
+  active = (bool)     -- current state
+  triggers = [
+    param = (table)   -- control-map &lt;Param&gt;
+    ui_obj = (table)  -- instance of UIButton
+  ],...
+</code></pre>
+</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#self.registered_ids">self.registered_ids</a></td>
+	<td class="summary">(table) list of control-map elements
+ (used when initializing)</td>
 	</tr>
 </table>
 <h2><a href="#Fields">Fields</a></h2>
 <table class="function_list">
 	<tr>
-	<td class="name" nowrap><a href="#self.suppress_value_observable">self.suppress_value_observable</a></td>
-	<td class="summary">(bool) set to temporarily skip value notifier</td>
+	<td class="name" nowrap><a href="#self.display">self.display</a></td>
+	<td class="summary">(<a href="../modules/Duplex.Display.html#">Duplex.Display</a>)</td>
 	</tr>
 	<tr>
-	<td class="name" nowrap><a href="#self._input_slider">self._input_slider</a></td>
-	<td class="summary">the various UIComponents</td>
+	<td class="name" nowrap><a href="#self.app">self.app</a></td>
+	<td class="summary">(<a href="../modules/Duplex.Application.html#">Duplex.Application</a>)
+ handles our trigger-buttons</td>
 	</tr>
 </table>
 
@@ -162,52 +212,18 @@ as well: device locking, navigation and automation recording</p>
     <dl class="function">
     <dt>
     <a name = "__init"></a>
-    <strong>__init (VarArg)</strong>
+    <strong>__init (display)</strong>
     </dt>
     <dd>
-    Constructor method
+    Initialize the StateController class
 
 
     <h3>Parameters:</h3>
     <ul>
-        <li><span class="parameter">VarArg</span>
-        )
-        </li>
-    </ul>
+        <li><span class="parameter">display</span>
 
 
 
-    <h3>See also:</h3>
-    <ul>
-         <a href="../modules/Duplex.Application.html#">Duplex.Application</a>
-    </ul>
-
-
-</dd>
-    <dt>
-    <a name = "attach_to_device"></a>
-    <strong>attach_to_device (track_idx, device_idx, device)</strong>
-    </dt>
-    <dd>
-    attach notifier to the device
- called when we use previous/next device, set the initial device,
- are freely roaming the tracks or inserting a new device
-
-
-    <h3>Parameters:</h3>
-    <ul>
-        <li><span class="parameter">track_idx</span>
-
-
-
-        </li>
-        <li><span class="parameter">device_idx</span>
-
-
-
-        </li>
-        <li><span class="parameter">device</span>
-        clear observables, attach to track (if needed
         </li>
     </ul>
 
@@ -217,48 +233,223 @@ as well: device locking, navigation and automation recording</p>
 
 </dd>
     <dt>
-    <a name = "_build_app"></a>
-    <strong>_build_app ()</strong>
+    <a name = "handle_message"></a>
+    <strong>handle_message (msg)</strong>
     </dt>
     <dd>
-    inherited from Application
+    interpret an incoming message, update display accordingly
+ (this method is invoked when the MessageStream receive a message)
 
 
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">msg</span>
+
+
+
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "add_state"></a>
+    <strong>add_state (xarg, t)</strong>
+    </dt>
+    <dd>
+    add a state
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">xarg</span>
+
+
+
+        </li>
+        <li><span class="parameter">t</span>
+
+
+
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "match"></a>
+    <strong>match (msg)</strong>
+    </dt>
+    <dd>
+    match states with message - discover if message is a trigger
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">msg</span>
+        TRACE("StateController - match",msg)
+        </li>
+    </ul>
 
     <h3>Returns:</h3>
     <ol>
 
-        bool
+        table
     </ol>
 
 
-    <h3>See also:</h3>
+
+
+</dd>
+    <dt>
+    <a name = "initialize"></a>
+    <strong>initialize ()</strong>
+    </dt>
+    <dd>
+    called once the display has created the virtual control surface
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "add_view"></a>
+    <strong>add_view (state_id, view)</strong>
+    </dt>
+    <dd>
+    associate a parameter with a named state
+
+
+    <h3>Parameters:</h3>
     <ul>
-         <a href="../modules/Duplex.Application.html#_build_app">Duplex.Application._build_app</a>
+        <li><span class="parameter">state_id</span>
+
+
+
+        </li>
+        <li><span class="parameter">view</span>
+
+
+
+        </li>
     </ul>
 
 
-</dd>
-    <dt>
-    <a name = "update_device"></a>
-    <strong>update_device ()</strong>
-    </dt>
-    <dd>
-    This method is called when the controller is changed
-
-
-
-
 
 
 
 </dd>
     <dt>
-    <a name = "update_controller"></a>
-    <strong>update_controller ()</strong>
+    <a name = "toggle"></a>
+    <strong>toggle (state_id)</strong>
     </dt>
     <dd>
-    This method is called when the device is changed from Renoise
+    toggle a named state
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">state_id</span>
+
+
+
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "enable"></a>
+    <strong>enable (state_id)</strong>
+    </dt>
+    <dd>
+    activate a named state
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">state_id</span>
+
+
+
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "disable"></a>
+    <strong>disable (state_id)</strong>
+    </dt>
+    <dd>
+    deactivate a named state
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">state_id</span>
+
+
+
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+</dl>
+    <h2><a name="Tables"></a>Tables</h2>
+    <dl class="function">
+    <dt>
+    <a name = "self.states"></a>
+    <strong>self.states</strong>
+    </dt>
+    <dd>
+
+<p>associative array</p>
+<pre><code>[string] = {          -- state name/id
+  xarg = (table)      -- control-map attributes
+  active = (bool)     -- current state
+  triggers = [
+    param = (table)   -- control-map &lt;Param&gt;
+    ui_obj = (table)  -- instance of UIButton
+  ],...
+  params = (table)    -- table of control-map params
+},...
+</code></pre>
+
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "self.registered_ids"></a>
+    <strong>self.registered_ids</strong>
+    </dt>
+    <dd>
+    (table) list of control-map elements
+ (used when initializing)
 
 
 
@@ -271,11 +462,11 @@ as well: device locking, navigation and automation recording</p>
     <h2><a name="Fields"></a>Fields</h2>
     <dl class="function">
     <dt>
-    <a name = "self.suppress_value_observable"></a>
-    <strong>self.suppress_value_observable</strong>
+    <a name = "self.display"></a>
+    <strong>self.display</strong>
     </dt>
     <dd>
-    (bool) set to temporarily skip value notifier
+    (<a href="../modules/Duplex.Display.html#">Duplex.Display</a>)
 
 
 
@@ -285,11 +476,12 @@ as well: device locking, navigation and automation recording</p>
 
 </dd>
     <dt>
-    <a name = "self._input_slider"></a>
-    <strong>self._input_slider</strong>
+    <a name = "self.app"></a>
+    <strong>self.app</strong>
     </dt>
     <dd>
-    the various UIComponents
+    (<a href="../modules/Duplex.Application.html#">Duplex.Application</a>)
+ handles our trigger-buttons
 
 
 

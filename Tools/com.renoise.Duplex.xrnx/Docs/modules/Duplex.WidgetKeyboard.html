@@ -88,7 +88,7 @@
   <li><a href="../modules/Duplex.RoamingDSP.html">Duplex.RoamingDSP</a></li>
   <li><a href="../modules/Duplex.Scheduler.html">Duplex.Scheduler</a></li>
   <li><a href="../modules/Duplex.StateController.html">Duplex.StateController</a></li>
-  <li><strong>Duplex.UIButton</strong></li>
+  <li><a href="../modules/Duplex.UIButton.html">Duplex.UIButton</a></li>
   <li><a href="../modules/Duplex.UIButtonStrip.html">Duplex.UIButtonStrip</a></li>
   <li><a href="../modules/Duplex.UIComponent.html">Duplex.UIComponent</a></li>
   <li><a href="../modules/Duplex.UIKey.html">Duplex.UIKey</a></li>
@@ -99,7 +99,7 @@
   <li><a href="../modules/Duplex.UISlider.html">Duplex.UISlider</a></li>
   <li><a href="../modules/Duplex.UISpinner.html">Duplex.UISpinner</a></li>
   <li><a href="../modules/Duplex.WidgetHooks.html">Duplex.WidgetHooks</a></li>
-  <li><a href="../modules/Duplex.WidgetKeyboard.html">Duplex.WidgetKeyboard</a></li>
+  <li><strong>Duplex.WidgetKeyboard</strong></li>
   <li><a href="../modules/Duplex.html">Duplex</a></li>
   <li><a href="../modules/main.html">main</a></li>
 </ul>
@@ -108,99 +108,114 @@
 
 <div id="content">
 
-<h1>Module <code>Duplex.UIButton</code></h1>
-<p>The UIButton is a generic button.</p>
-<p> It is very flexible, as you can assign any button type, fader or dial to control it</p>
-<pre><code> __________ __________ _______________
-|   ____   |    __    |               |
-|  / __ \  |   |  |   |   ____        |
-| / /  \ \ |   |  |   |  |    |       |
-| \ \__/ / |   |__|   |  | // |       |
-|  \/___/  |   |__|   |  |____|       |
-|          |          |               |
-|  Dial    |  Fader   |  Button       |
-|          |          |  PushButton   |
-|          |          |  ToggleButton |
-|__________|__________|_______________|
-</code></pre>
+<h1>Module <code>Duplex.WidgetKeyboard</code></h1>
+<p>
 
-<p>It has no internal "active" or "enabled" state, it merely tells you when an event has occurred. Then, it is up to you to change it's visual state. </p>
+</p>
+<p>A custom widget for visualizing an on-screen keyboard </p>
 
 
 <h2><a href="#Functions">Functions</a></h2>
 <table class="function_list">
 	<tr>
-	<td class="name" nowrap><a href="#__init">__init (app, map)</a></td>
-	<td class="summary">Initialize the UIButton class</td>
+	<td class="name" nowrap><a href="#update_all_keys">update_all_keys ()</a></td>
+	<td class="summary">iterate through and update all visible keys</td>
 	</tr>
 	<tr>
-	<td class="name" nowrap><a href="#do_press">do_press (msg)</a></td>
-	<td class="summary">User pressed button</td>
+	<td class="name" nowrap><a href="#update_key">update_key (pitch)</a></td>
+	<td class="summary">update a given key's visual appearance
+ state is stored in keystates, also when not currently visible</td>
 	</tr>
 	<tr>
-	<td class="name" nowrap><a href="#do_release">do_release (msg)</a></td>
-	<td class="summary">User released button</td>
+	<td class="name" nowrap><a href="#index_to_midi_msg">index_to_midi_msg (key_idx, release)</a></td>
+	<td class="summary">generate output based on the pressed key</td>
 	</tr>
 	<tr>
-	<td class="name" nowrap><a href="#do_change">do_change (msg)</a></td>
-	<td class="summary">User changed value via fader, dial ...</td>
+	<td class="name" nowrap><a href="#index_to_note">index_to_note (key_idx)</a></td>
+	<td class="summary">convert a given index to midi note (on/off)</td>
 	</tr>
 	<tr>
-	<td class="name" nowrap><a href="#do_hold">do_hold (msg)</a></td>
-	<td class="summary">User held button for a while (exact time is specified in preferences).</td>
-	</tr>
-	<tr>
-	<td class="name" nowrap><a href="#set">set (val)</a></td>
-	<td class="summary">method for setting the palette</td>
-	</tr>
-	<tr>
-	<td class="name" nowrap><a href="#flash">flash (delay, ...)</a></td>
-	<td class="summary">Easy way to animate the appearance of the button</td>
-	</tr>
-	<tr>
-	<td class="name" nowrap><a href="#draw">draw ()</a></td>
-	<td class="summary">Update the appearance - inherited from UIComponent</td>
-	</tr>
-	<tr>
-	<td class="name" nowrap><a href="#add_listeners">add_listeners ()</a></td>
-	<td class="summary">
-<p>Add event listeners to the button</p>
-<pre><code>DEVICE_EVENT.BUTTON_PRESSED
-DEVICE_EVENT.BUTTON_RELEASED
-DEVICE_EVENT.VALUE_CHANGED
-DEVICE_EVENT.BUTTON_HELD
-</code></pre>
-</td>
-	</tr>
-	<tr>
-	<td class="name" nowrap><a href="#remove_listeners">remove_listeners ()</a></td>
-	<td class="summary">Remove previously attached event listeners</td>
+	<td class="name" nowrap><a href="#note_to_index">note_to_index (pitch)</a></td>
+	<td class="summary">convert a pitch to an index</td>
 	</tr>
 </table>
 <h2><a href="#Tables">Tables</a></h2>
 <table class="function_list">
 	<tr>
-	<td class="name" nowrap><a href="#palette">palette</a></td>
-	<td class="summary">(table) the visual appearance, changed via <a href="../modules/Duplex.UIButton.html#set">set</a></td>
+	<td class="name" nowrap><a href="#self.pressed_keys">self.pressed_keys</a></td>
+	<td class="summary">(table) list of pressed keys</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#self.disabled_keys">self.disabled_keys</a></td>
+	<td class="summary">(table) list of disabled keys</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#self.keystates">self.keystates</a></td>
+	<td class="summary">(table) visual state for each key, indexed by pitch
+ if not specified, defaults to KEYS<em>COLOR</em>WHITE etc.</td>
 	</tr>
 </table>
 <h2><a href="#Fields">Fields</a></h2>
 <table class="function_list">
 	<tr>
-	<td class="name" nowrap><a href="#self.on_change">self.on_change</a></td>
-	<td class="summary">(func) event handler</td>
+	<td class="name" nowrap><a href="#self.voicemgr">self.voicemgr</a></td>
+	<td class="summary">(OscVoiceMgr) this is where we get our active voices from</td>
 	</tr>
 	<tr>
-	<td class="name" nowrap><a href="#self.on_hold">self.on_hold</a></td>
-	<td class="summary">(func) event handler</td>
+	<td class="name" nowrap><a href="#self.param">self.param</a></td>
+	<td class="summary">(table) the control-map parameter that define this widget</td>
 	</tr>
 	<tr>
-	<td class="name" nowrap><a href="#self.on_press">self.on_press</a></td>
-	<td class="summary">(func) event handler</td>
+	<td class="name" nowrap><a href="#self.display">self.display</a></td>
+	<td class="summary">(Display) where we direct our messages</td>
 	</tr>
 	<tr>
-	<td class="name" nowrap><a href="#self.on_release">self.on_release</a></td>
-	<td class="summary">(func) event handler</td>
+	<td class="name" nowrap><a href="#self.id">self.id</a></td>
+	<td class="summary">viewbuilder id</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#self.oct_dn">self.oct_dn</a></td>
+	<td class="summary">transpose down</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#self.oct_up">self.oct_up</a></td>
+	<td class="summary">transpose up</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#self.range">self.range</a></td>
+	<td class="summary">(int) number of keys</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#self.show_octave">self.show_octave</a></td>
+	<td class="summary">(bool) add octave buttons on either side</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#self.upper_note">self.upper_note</a></td>
+	<td class="summary">(int) upper boundary</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#self.lower_note">self.lower_note</a></td>
+	<td class="summary">(int) lower boundary</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#self.octave">self.octave</a></td>
+	<td class="summary">(int) current octave (as seen in the left side)</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#self.width">self.width</a></td>
+	<td class="summary">(number) relative width</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#self.height">self.height</a></td>
+	<td class="summary">(number) relative height</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#self.tooltip">self.tooltip</a></td>
+	<td class="summary">(string)</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#self.channel">self.channel</a></td>
+	<td class="summary">(int) the channel used when generating output</td>
 	</tr>
 </table>
 
@@ -211,20 +226,32 @@ DEVICE_EVENT.BUTTON_HELD
     <h2><a name="Functions"></a>Functions</h2>
     <dl class="function">
     <dt>
-    <a name = "__init"></a>
-    <strong>__init (app, map)</strong>
+    <a name = "update_all_keys"></a>
+    <strong>update_all_keys ()</strong>
     </dt>
     <dd>
-    Initialize the UIButton class
+    iterate through and update all visible keys
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "update_key"></a>
+    <strong>update_key (pitch)</strong>
+    </dt>
+    <dd>
+    update a given key's visual appearance
+ state is stored in keystates, also when not currently visible
 
 
     <h3>Parameters:</h3>
     <ul>
-        <li><span class="parameter">app</span>
-         (<a href="../modules/Duplex.Application.html#">Duplex.Application</a>)
-        </li>
-        <li><span class="parameter">map</span>
-        [opt] (table) mapping properties
+        <li><span class="parameter">pitch</span>
+         (int) the key we wish to update
         </li>
     </ul>
 
@@ -234,203 +261,78 @@ DEVICE_EVENT.BUTTON_HELD
 
 </dd>
     <dt>
-    <a name = "do_press"></a>
-    <strong>do_press (msg)</strong>
+    <a name = "index_to_midi_msg"></a>
+    <strong>index_to_midi_msg (key_idx, release)</strong>
     </dt>
     <dd>
-    User pressed button
+    generate output based on the pressed key
 
 
     <h3>Parameters:</h3>
     <ul>
-        <li><span class="parameter">msg</span>
-         (<a href="../modules/Duplex.Message.html#">Duplex.Message</a>)
+        <li><span class="parameter">key_idx</span>
+
+
+
+        </li>
+        <li><span class="parameter">release</span>
+
+
+
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "index_to_note"></a>
+    <strong>index_to_note (key_idx)</strong>
+    </dt>
+    <dd>
+    convert a given index to midi note (on/off)
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">key_idx</span>
+
+
+
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "note_to_index"></a>
+    <strong>note_to_index (pitch)</strong>
+    </dt>
+    <dd>
+    convert a pitch to an index
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">pitch</span>
+
+
+
         </li>
     </ul>
 
     <h3>Returns:</h3>
     <ol>
 
-        (bool), true when message was handled
+        int when pitch is within view, nil when not
     </ol>
 
 
-
-
-</dd>
-    <dt>
-    <a name = "do_release"></a>
-    <strong>do_release (msg)</strong>
-    </dt>
-    <dd>
-    User released button
-
-
-    <h3>Parameters:</h3>
-    <ul>
-        <li><span class="parameter">msg</span>
-         (<a href="../modules/Duplex.Message.html#">Duplex.Message</a>)
-        </li>
-    </ul>
-
-    <h3>Returns:</h3>
-    <ol>
-
-        (bool), true when message was handled
-    </ol>
-
-
-
-
-</dd>
-    <dt>
-    <a name = "do_change"></a>
-    <strong>do_change (msg)</strong>
-    </dt>
-    <dd>
-    User changed value via fader, dial ...
-
-
-    <h3>Parameters:</h3>
-    <ul>
-        <li><span class="parameter">msg</span>
-         (<a href="../modules/Duplex.Message.html#">Duplex.Message</a>)
-        </li>
-    </ul>
-
-    <h3>Returns:</h3>
-    <ol>
-
-        (bool), true when message was handled
-    </ol>
-
-
-
-
-</dd>
-    <dt>
-    <a name = "do_hold"></a>
-    <strong>do_hold (msg)</strong>
-    </dt>
-    <dd>
-    User held button for a while (exact time is specified in preferences).
-  Note that this event is only supported by controllers that transmit the
-  "release" event
-
-
-    <h3>Parameters:</h3>
-    <ul>
-        <li><span class="parameter">msg</span>
-         (<a href="../modules/Duplex.Message.html#">Duplex.Message</a>)
-        </li>
-    </ul>
-
-
-
-
-
-</dd>
-    <dt>
-    <a name = "set"></a>
-    <strong>set (val)</strong>
-    </dt>
-    <dd>
-    method for setting the palette
-
-
-    <h3>Parameters:</h3>
-    <ul>
-        <li><span class="parameter">val</span>
-         (table), new color/text values
-        </li>
-    </ul>
-
-
-
-
-
-</dd>
-    <dt>
-    <a name = "flash"></a>
-    <strong>flash (delay, ...)</strong>
-    </dt>
-    <dd>
-    Easy way to animate the appearance of the button
-
-
-    <h3>Parameters:</h3>
-    <ul>
-        <li><span class="parameter">delay</span>
-         (number) number of seconds between updates
-        </li>
-        <li><span class="parameter">...</span>
-         (vararg) palette entries
-        </li>
-    </ul>
-
-
-
-
-
-</dd>
-    <dt>
-    <a name = "draw"></a>
-    <strong>draw ()</strong>
-    </dt>
-    <dd>
-    Update the appearance - inherited from UIComponent
-
-
-
-
-
-    <h3>See also:</h3>
-    <ul>
-         <a href="../modules/Duplex.UIComponent.html#">Duplex.UIComponent</a>
-    </ul>
-
-
-</dd>
-    <dt>
-    <a name = "add_listeners"></a>
-    <strong>add_listeners ()</strong>
-    </dt>
-    <dd>
-
-<p>Add event listeners to the button</p>
-<pre><code>DEVICE_EVENT.BUTTON_PRESSED
-DEVICE_EVENT.BUTTON_RELEASED
-DEVICE_EVENT.VALUE_CHANGED
-DEVICE_EVENT.BUTTON_HELD
-</code></pre>
-
-
-
-
-
-
-    <h3>See also:</h3>
-    <ul>
-         <a href="../modules/Duplex.UIComponent.html#add_listeners">Duplex.UIComponent.add_listeners</a>
-    </ul>
-
-
-</dd>
-    <dt>
-    <a name = "remove_listeners"></a>
-    <strong>remove_listeners ()</strong>
-    </dt>
-    <dd>
-    Remove previously attached event listeners
-
-
-
-
-
-    <h3>See also:</h3>
-    <ul>
-         <a href="../modules/Duplex.UIComponent.html#">Duplex.UIComponent</a>
-    </ul>
 
 
 </dd>
@@ -438,25 +340,50 @@ DEVICE_EVENT.BUTTON_HELD
     <h2><a name="Tables"></a>Tables</h2>
     <dl class="function">
     <dt>
-    <a name = "palette"></a>
-    <strong>palette</strong>
+    <a name = "self.pressed_keys"></a>
+    <strong>self.pressed_keys</strong>
     </dt>
     <dd>
-    (table) the visual appearance, changed via <a href="../modules/Duplex.UIButton.html#set">set</a>
+    (table) list of pressed keys
 
 
-    <h3>Fields:</h3>
-    <ul>
-        <li><span class="parameter">foreground</span>
 
-<p> (table) </p>
-<pre><code>color (table) - {int,int,int}
-text (string)
-val (bool)
-</code></pre>
 
-        </li>
-    </ul>
+
+
+
+</dd>
+    <dt>
+    <a name = "self.disabled_keys"></a>
+    <strong>self.disabled_keys</strong>
+    </dt>
+    <dd>
+    (table) list of disabled keys
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "self.keystates"></a>
+    <strong>self.keystates</strong>
+    </dt>
+    <dd>
+    (table) visual state for each key, indexed by pitch
+ if not specified, defaults to KEYS<em>COLOR</em>WHITE etc.
+ {
+  white           = {r,g,b},
+  white<em>pressed   = {r,g,b},
+  white</em>disabled  = {r,g,b},
+  black           = {r,g,b},
+  black<em>pressed   = {r,g,b},
+  black</em>disabled  = {r,g,b},
+ }
+
+
 
 
 
@@ -467,11 +394,11 @@ val (bool)
     <h2><a name="Fields"></a>Fields</h2>
     <dl class="function">
     <dt>
-    <a name = "self.on_change"></a>
-    <strong>self.on_change</strong>
+    <a name = "self.voicemgr"></a>
+    <strong>self.voicemgr</strong>
     </dt>
     <dd>
-    (func) event handler
+    (OscVoiceMgr) this is where we get our active voices from
 
 
 
@@ -481,11 +408,11 @@ val (bool)
 
 </dd>
     <dt>
-    <a name = "self.on_hold"></a>
-    <strong>self.on_hold</strong>
+    <a name = "self.param"></a>
+    <strong>self.param</strong>
     </dt>
     <dd>
-    (func) event handler
+    (table) the control-map parameter that define this widget
 
 
 
@@ -495,11 +422,11 @@ val (bool)
 
 </dd>
     <dt>
-    <a name = "self.on_press"></a>
-    <strong>self.on_press</strong>
+    <a name = "self.display"></a>
+    <strong>self.display</strong>
     </dt>
     <dd>
-    (func) event handler
+    (Display) where we direct our messages
 
 
 
@@ -509,11 +436,165 @@ val (bool)
 
 </dd>
     <dt>
-    <a name = "self.on_release"></a>
-    <strong>self.on_release</strong>
+    <a name = "self.id"></a>
+    <strong>self.id</strong>
     </dt>
     <dd>
-    (func) event handler
+    viewbuilder id
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "self.oct_dn"></a>
+    <strong>self.oct_dn</strong>
+    </dt>
+    <dd>
+    transpose down
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "self.oct_up"></a>
+    <strong>self.oct_up</strong>
+    </dt>
+    <dd>
+    transpose up
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "self.range"></a>
+    <strong>self.range</strong>
+    </dt>
+    <dd>
+    (int) number of keys
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "self.show_octave"></a>
+    <strong>self.show_octave</strong>
+    </dt>
+    <dd>
+    (bool) add octave buttons on either side
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "self.upper_note"></a>
+    <strong>self.upper_note</strong>
+    </dt>
+    <dd>
+    (int) upper boundary
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "self.lower_note"></a>
+    <strong>self.lower_note</strong>
+    </dt>
+    <dd>
+    (int) lower boundary
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "self.octave"></a>
+    <strong>self.octave</strong>
+    </dt>
+    <dd>
+    (int) current octave (as seen in the left side)
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "self.width"></a>
+    <strong>self.width</strong>
+    </dt>
+    <dd>
+    (number) relative width
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "self.height"></a>
+    <strong>self.height</strong>
+    </dt>
+    <dd>
+    (number) relative height
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "self.tooltip"></a>
+    <strong>self.tooltip</strong>
+    </dt>
+    <dd>
+    (string)
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "self.channel"></a>
+    <strong>self.channel</strong>
+    </dt>
+    <dd>
+    (int) the channel used when generating output
 
 
 

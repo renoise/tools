@@ -57,6 +57,7 @@
   <li><a href="../modules/Duplex.Applications.Mlrx.html">Duplex.Applications.Mlrx</a></li>
   <li><a href="../modules/Duplex.Applications.Navigator.html">Duplex.Applications.Navigator</a></li>
   <li><a href="../modules/Duplex.Applications.NotesOnWheels.html">Duplex.Applications.NotesOnWheels</a></li>
+  <li><a href="../modules/Duplex.Applications.PatternCursor.html">Duplex.Applications.PatternCursor</a></li>
   <li><a href="../modules/Duplex.Applications.PatternSequence.html">Duplex.Applications.PatternSequence</a></li>
   <li><a href="../modules/Duplex.Applications.Recorder.html">Duplex.Applications.Recorder</a></li>
   <li><a href="../modules/Duplex.Applications.Repeater.html">Duplex.Applications.Repeater</a></li>
@@ -86,6 +87,7 @@
   <li><a href="../modules/Duplex.ProcessSlicer.html">Duplex.ProcessSlicer</a></li>
   <li><a href="../modules/Duplex.RoamingDSP.html">Duplex.RoamingDSP</a></li>
   <li><a href="../modules/Duplex.Scheduler.html">Duplex.Scheduler</a></li>
+  <li><a href="../modules/Duplex.StateController.html">Duplex.StateController</a></li>
   <li><a href="../modules/Duplex.UIButton.html">Duplex.UIButton</a></li>
   <li><a href="../modules/Duplex.UIButtonStrip.html">Duplex.UIButtonStrip</a></li>
   <li><a href="../modules/Duplex.UIComponent.html">Duplex.UIComponent</a></li>
@@ -260,12 +262,13 @@
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#LOG">LOG (str)</a></td>
-	<td class="summary">call this to avoid using print() statements in source code</td>
+	<td class="summary">call this to avoid using "print" statements in source code</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#LOG_FILE">LOG_FILE (str)</a></td>
 	<td class="summary">append text to log.txt in the tool's root folder
- (warning: this is slow, only use when needed!)</td>
+ (warning: this is slow! only use when examining startup sequence,
+ before it is possible to view output in the console window)</td>
 	</tr>
 </table>
 <h2><a href="#Tables">Tables</a></h2>
@@ -287,8 +290,12 @@
 	<td class="summary">(Enum) the type of event (pressed, held etc.)</td>
 	</tr>
 	<tr>
+	<td class="name" nowrap><a href="#PARAM_MODE">PARAM_MODE</a></td>
+	<td class="summary">(Enum) valid <code>mode</code> attributes for <Param> nodes</td>
+	</tr>
+	<tr>
 	<td class="name" nowrap><a href="#INPUT_TYPE">INPUT_TYPE</a></td>
-	<td class="summary">(Enum) valid <a href="http://www.lua.org/manual/5.1/manual.html#pdf-type">type</a>  attributes for control-map params</td>
+	<td class="summary">(Enum) valid <a href="http://www.lua.org/manual/5.1/manual.html#pdf-type">type</a>  attributes for <Param> nodes</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#ORIENTATION">ORIENTATION</a></td>
@@ -1163,7 +1170,7 @@
     <strong>LOG (str)</strong>
     </dt>
     <dd>
-    call this to avoid using print() statements in source code
+    call this to avoid using "print" statements in source code
 
 
     <h3>Parameters:</h3>
@@ -1186,7 +1193,8 @@
     </dt>
     <dd>
     append text to log.txt in the tool's root folder
- (warning: this is slow, only use when needed!)
+ (warning: this is slow! only use when examining startup sequence,
+ before it is possible to view output in the console window)
 
 
     <h3>Parameters:</h3>
@@ -1393,11 +1401,46 @@
 
 </dd>
     <dt>
+    <a name = "PARAM_MODE"></a>
+    <strong>PARAM_MODE</strong>
+    </dt>
+    <dd>
+    (Enum) valid <code>mode</code> attributes for <Param> nodes
+
+
+    <h3>Fields:</h3>
+    <ul>
+        <li><span class="parameter">abs</span>
+        absolute value (the default)
+        </li>
+        <li><span class="parameter">abs_7</span>
+        7 bit absolute value
+        </li>
+        <li><span class="parameter">abs_14</span>
+        14 bit absolute value
+        </li>
+        <li><span class="parameter">rel_7_signed</span>
+        7 bit relative signed value
+        </li>
+        <li><span class="parameter">rel_7_offset</span>
+        7 bit relative value
+        </li>
+        <li><span class="parameter">rel_7_twos_comp</span>
+        7 bit relative value
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
     <a name = "INPUT_TYPE"></a>
     <strong>INPUT_TYPE</strong>
     </dt>
     <dd>
-    (Enum) valid <a href="http://www.lua.org/manual/5.1/manual.html#pdf-type">type</a>  attributes for control-map params
+    (Enum) valid <a href="http://www.lua.org/manual/5.1/manual.html#pdf-type">type</a>  attributes for <Param> nodes
 
 
     <h3>Fields:</h3>

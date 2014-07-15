@@ -33,6 +33,7 @@
 <h2>Contents</h2>
 <ul>
 <li><a href="#Functions">Functions</a></li>
+<li><a href="#Tables">Tables</a></li>
 <li><a href="#Fields">Fields</a></li>
 </ul>
 
@@ -56,6 +57,7 @@
   <li><a href="../modules/Duplex.Applications.Mlrx.html">Duplex.Applications.Mlrx</a></li>
   <li><a href="../modules/Duplex.Applications.Navigator.html">Duplex.Applications.Navigator</a></li>
   <li><a href="../modules/Duplex.Applications.NotesOnWheels.html">Duplex.Applications.NotesOnWheels</a></li>
+  <li><a href="../modules/Duplex.Applications.PatternCursor.html">Duplex.Applications.PatternCursor</a></li>
   <li><a href="../modules/Duplex.Applications.PatternSequence.html">Duplex.Applications.PatternSequence</a></li>
   <li><a href="../modules/Duplex.Applications.Recorder.html">Duplex.Applications.Recorder</a></li>
   <li><a href="../modules/Duplex.Applications.Repeater.html">Duplex.Applications.Repeater</a></li>
@@ -85,6 +87,7 @@
   <li><a href="../modules/Duplex.ProcessSlicer.html">Duplex.ProcessSlicer</a></li>
   <li><a href="../modules/Duplex.RoamingDSP.html">Duplex.RoamingDSP</a></li>
   <li><a href="../modules/Duplex.Scheduler.html">Duplex.Scheduler</a></li>
+  <li><a href="../modules/Duplex.StateController.html">Duplex.StateController</a></li>
   <li><a href="../modules/Duplex.UIButton.html">Duplex.UIButton</a></li>
   <li><a href="../modules/Duplex.UIButtonStrip.html">Duplex.UIButtonStrip</a></li>
   <li><a href="../modules/Duplex.UIComponent.html">Duplex.UIComponent</a></li>
@@ -145,12 +148,16 @@
 	<td class="summary">Send sysex message to device (adding the initial 0xF0 and 0xF7 values)</td>
 	</tr>
 	<tr>
-	<td class="name" nowrap><a href="#send_pitch_bend_message">send_pitch_bend_message (value, channel)</a></td>
+	<td class="name" nowrap><a href="#send_pitch_bend_message">send_pitch_bend_message (value, channel, mode)</a></td>
 	<td class="summary">Send Pitch-Bend message to device.</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#send_note_message">send_note_message (key, velocity, channel)</a></td>
 	<td class="summary">Send note message to device</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#pass_to_renoise">pass_to_renoise (message)</a></td>
+	<td class="summary">Pass unhandled/unmatched message to Renoise?</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#_note_to_string">_note_to_string (int)</a></td>
@@ -173,6 +180,20 @@
 	<td class="summary">Determine channel for the given message (use default port if not specified)</td>
 	</tr>
 </table>
+<h2><a href="#Tables">Tables</a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#self.composite_messages">self.composite_messages</a></td>
+	<td class="summary">
+<p>(table) table of multibyte messages</p>
+<pre><code>[int]{  -- channel
+ lsb = [int]
+ msb = {int]
+}
+</code></pre>
+</td>
+	</tr>
+</table>
 <h2><a href="#Fields">Fields</a></h2>
 <table class="function_list">
 	<tr>
@@ -192,13 +213,8 @@
 	<td class="summary">(MidiOutputDevice)</td>
 	</tr>
 	<tr>
-	<td class="name" nowrap><a href="#self.default_midi_resolution">self.default_midi_resolution</a></td>
-	<td class="summary">(int) used for quantized output and relative step size</td>
-	</tr>
-	<tr>
-	<td class="name" nowrap><a href="#self.output_quantize">self.output_quantize</a></td>
-	<td class="summary">(bool) enable this to quantize output to given resolution before
- actually sending it to the MIDI controller (less traffic)</td>
+	<td class="name" nowrap><a href="#self.default_parameter_mode">self.default_parameter_mode</a></td>
+	<td class="summary">(<a href="../modules/Duplex.Globals.html#PARAM_MODE">Duplex.Globals.PARAM_MODE</a>) the default parameter mode</td>
 	</tr>
 </table>
 
@@ -355,7 +371,7 @@
 </dd>
     <dt>
     <a name = "send_pitch_bend_message"></a>
-    <strong>send_pitch_bend_message (value, channel)</strong>
+    <strong>send_pitch_bend_message (value, channel, mode)</strong>
     </dt>
     <dd>
     Send Pitch-Bend message to device.
@@ -372,6 +388,9 @@
         </li>
         <li><span class="parameter">channel</span>
          (int) the MIDI channel, 1-16 (optional)
+        </li>
+        <li><span class="parameter">mode</span>
+         (string) specify sending mode, e.g. "abs" or "abs_14"
         </li>
     </ul>
 
@@ -401,6 +420,32 @@
         </li>
     </ul>
 
+
+
+
+
+</dd>
+    <dt>
+    <a name = "pass_to_renoise"></a>
+    <strong>pass_to_renoise (message)</strong>
+    </dt>
+    <dd>
+    Pass unhandled/unmatched message to Renoise? <br/>
+ (this is defined in the device settings panel)
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">message</span>
+         (MIDI message)
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        bool (true when message was passed)
+    </ol>
 
 
 
@@ -522,6 +567,30 @@
 
 </dd>
 </dl>
+    <h2><a name="Tables"></a>Tables</h2>
+    <dl class="function">
+    <dt>
+    <a name = "self.composite_messages"></a>
+    <strong>self.composite_messages</strong>
+    </dt>
+    <dd>
+
+<p>(table) table of multibyte messages</p>
+<pre><code>[int]{  -- channel
+ lsb = [int]
+ msb = {int]
+}
+</code></pre>
+
+
+
+
+
+
+
+
+</dd>
+</dl>
     <h2><a name="Fields"></a>Fields</h2>
     <dl class="function">
     <dt>
@@ -581,26 +650,11 @@
 
 </dd>
     <dt>
-    <a name = "self.default_midi_resolution"></a>
-    <strong>self.default_midi_resolution</strong>
+    <a name = "self.default_parameter_mode"></a>
+    <strong>self.default_parameter_mode</strong>
     </dt>
     <dd>
-    (int) used for quantized output and relative step size
-
-
-
-
-
-
-
-</dd>
-    <dt>
-    <a name = "self.output_quantize"></a>
-    <strong>self.output_quantize</strong>
-    </dt>
-    <dd>
-    (bool) enable this to quantize output to given resolution before
- actually sending it to the MIDI controller (less traffic)
+    (<a href="../modules/Duplex.Globals.html#PARAM_MODE">Duplex.Globals.PARAM_MODE</a>) the default parameter mode
 
 
 

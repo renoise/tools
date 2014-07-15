@@ -33,6 +33,7 @@
 <h2>Contents</h2>
 <ul>
 <li><a href="#Functions">Functions</a></li>
+<li><a href="#Tables">Tables</a></li>
 <li><a href="#Fields">Fields</a></li>
 </ul>
 
@@ -56,6 +57,7 @@
   <li><a href="../modules/Duplex.Applications.Mlrx.html">Duplex.Applications.Mlrx</a></li>
   <li><a href="../modules/Duplex.Applications.Navigator.html">Duplex.Applications.Navigator</a></li>
   <li><a href="../modules/Duplex.Applications.NotesOnWheels.html">Duplex.Applications.NotesOnWheels</a></li>
+  <li><a href="../modules/Duplex.Applications.PatternCursor.html">Duplex.Applications.PatternCursor</a></li>
   <li><a href="../modules/Duplex.Applications.PatternSequence.html">Duplex.Applications.PatternSequence</a></li>
   <li><a href="../modules/Duplex.Applications.Recorder.html">Duplex.Applications.Recorder</a></li>
   <li><a href="../modules/Duplex.Applications.Repeater.html">Duplex.Applications.Repeater</a></li>
@@ -85,6 +87,7 @@
   <li><a href="../modules/Duplex.ProcessSlicer.html">Duplex.ProcessSlicer</a></li>
   <li><a href="../modules/Duplex.RoamingDSP.html">Duplex.RoamingDSP</a></li>
   <li><a href="../modules/Duplex.Scheduler.html">Duplex.Scheduler</a></li>
+  <li><a href="../modules/Duplex.StateController.html">Duplex.StateController</a></li>
   <li><a href="../modules/Duplex.UIButton.html">Duplex.UIButton</a></li>
   <li><a href="../modules/Duplex.UIButtonStrip.html">Duplex.UIButtonStrip</a></li>
   <li><a href="../modules/Duplex.UIComponent.html">Duplex.UIComponent</a></li>
@@ -125,6 +128,11 @@
 	<td class="summary">The MessageStream idle time method, checks for held buttons</td>
 	</tr>
 	<tr>
+	<td class="name" nowrap><a href="#input_message">input_message (msg)</a></td>
+	<td class="summary">Here we receive a message from the device, and pass it to all the relevant
+ UIComponents.</td>
+	</tr>
+	<tr>
 	<td class="name" nowrap><a href="#add_listener">add_listener (obj, evt_type, handler)</a></td>
 	<td class="summary">Register an event listener</td>
 	</tr>
@@ -133,14 +141,17 @@
 	<td class="summary">Remove event listener from previously attached UIComponent</td>
 	</tr>
 	<tr>
-	<td class="name" nowrap><a href="#input_message">input_message (msg)</a></td>
-	<td class="summary">Here we receive a message from the device, and pass it to all the relevant
- UIComponents.</td>
-	</tr>
-	<tr>
 	<td class="name" nowrap><a href="#_handle_or_pass">_handle_or_pass (msg, listeners, evt_type)</a></td>
 	<td class="summary">Handle or pass: invoke event handlers or pass on to Renoise as MIDI
  (only valid msg context is DEVICE<em>MESSAGE.MIDI</em>NOTE)</td>
+	</tr>
+</table>
+<h2><a href="#Tables">Tables</a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#self._temp_cache">self._temp_cache</a></td>
+	<td class="summary">contains entries that should be cached once a series
+ of messages have been received</td>
 	</tr>
 </table>
 <h2><a href="#Fields">Fields</a></h2>
@@ -207,6 +218,10 @@
 </code></pre>
 </td>
 	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#self.queued_messages">self.queued_messages</a></td>
+	<td class="summary">how many messages a device is going to send</td>
+	</tr>
 </table>
 
 <br/>
@@ -243,6 +258,29 @@
     The MessageStream idle time method, checks for held buttons
 
 
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "input_message"></a>
+    <strong>input_message (msg)</strong>
+    </dt>
+    <dd>
+    Here we receive a message from the device, and pass it to all the relevant
+ UIComponents.  If a listener's handler method actively reject the message
+ (by explicitly returning false in the event-handling method), we instead
+ (can choose to) pass the message on to Renoise as a MIDI message
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">msg</span>
+         (<a href="../modules/Duplex.Message.html#">Duplex.Message</a>)
+        </li>
+    </ul>
 
 
 
@@ -304,29 +342,6 @@
 
 </dd>
     <dt>
-    <a name = "input_message"></a>
-    <strong>input_message (msg)</strong>
-    </dt>
-    <dd>
-    Here we receive a message from the device, and pass it to all the relevant
- UIComponents.  If a listener's handler method actively reject the message
- (by explicitly returning false in the event-handling method), we instead
- (can choose to) pass the message on to Renoise as a MIDI message
-
-
-    <h3>Parameters:</h3>
-    <ul>
-        <li><span class="parameter">msg</span>
-         (<a href="../modules/Duplex.Message.html#">Duplex.Message</a>)
-        </li>
-    </ul>
-
-
-
-
-
-</dd>
-    <dt>
     <a name = "_handle_or_pass"></a>
     <strong>_handle_or_pass (msg, listeners, evt_type)</strong>
     </dt>
@@ -347,6 +362,24 @@
          (<a href="../modules/Duplex.Globals.html#DEVICE_EVENT">Duplex.Globals.DEVICE_EVENT</a>)
         </li>
     </ul>
+
+
+
+
+
+</dd>
+</dl>
+    <h2><a name="Tables"></a>Tables</h2>
+    <dl class="function">
+    <dt>
+    <a name = "self._temp_cache"></a>
+    <strong>self._temp_cache</strong>
+    </dt>
+    <dd>
+    contains entries that should be cached once a series
+ of messages have been received
+
+
 
 
 
@@ -550,6 +583,20 @@
 },...
 </code></pre>
 
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "self.queued_messages"></a>
+    <strong>self.queued_messages</strong>
+    </dt>
+    <dd>
+    how many messages a device is going to send
 
 
 

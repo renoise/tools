@@ -56,6 +56,7 @@
   <li><a href="../modules/Duplex.Applications.Mlrx.html">Duplex.Applications.Mlrx</a></li>
   <li><a href="../modules/Duplex.Applications.Navigator.html">Duplex.Applications.Navigator</a></li>
   <li><a href="../modules/Duplex.Applications.NotesOnWheels.html">Duplex.Applications.NotesOnWheels</a></li>
+  <li><a href="../modules/Duplex.Applications.PatternCursor.html">Duplex.Applications.PatternCursor</a></li>
   <li><a href="../modules/Duplex.Applications.PatternSequence.html">Duplex.Applications.PatternSequence</a></li>
   <li><a href="../modules/Duplex.Applications.Recorder.html">Duplex.Applications.Recorder</a></li>
   <li><a href="../modules/Duplex.Applications.Repeater.html">Duplex.Applications.Repeater</a></li>
@@ -85,6 +86,7 @@
   <li><a href="../modules/Duplex.ProcessSlicer.html">Duplex.ProcessSlicer</a></li>
   <li><a href="../modules/Duplex.RoamingDSP.html">Duplex.RoamingDSP</a></li>
   <li><a href="../modules/Duplex.Scheduler.html">Duplex.Scheduler</a></li>
+  <li><a href="../modules/Duplex.StateController.html">Duplex.StateController</a></li>
   <li><a href="../modules/Duplex.UIButton.html">Duplex.UIButton</a></li>
   <li><a href="../modules/Duplex.UIButtonStrip.html">Duplex.UIButtonStrip</a></li>
   <li><a href="../modules/Duplex.UIComponent.html">Duplex.UIComponent</a></li>
@@ -187,6 +189,10 @@
 	<tr>
 	<td class="name" nowrap><a href="#set_dump_midi">set_dump_midi (dump)</a></td>
 	<td class="summary">Start/stop device midi dump</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#set_dump_osc">set_dump_osc (dump)</a></td>
+	<td class="summary">Start/stop device osc dump</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#on_idle">on_idle ()</a></td>
@@ -597,6 +603,26 @@
     <ul>
         <li><span class="parameter">dump</span>
          (bool), true to start dumping MIDI
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "set_dump_osc"></a>
+    <strong>set_dump_osc (dump)</strong>
+    </dt>
+    <dd>
+    Start/stop device osc dump
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">dump</span>
+         (bool), true to start dumping OSC
         </li>
     </ul>
 
