@@ -63,7 +63,17 @@ DEVICE_EVENT = {
   CHANNEL_PRESSURE = 9, -- key event               
 }
 
---- (Enum) valid `type` attributes for control-map params 
+--- (Enum) valid `mode` attributes for <Param> nodes
+PARAM_MODE = {
+  "abs",              -- absolute value (the default)
+  "abs_7",            -- 7 bit absolute value
+  "abs_14",           -- 14 bit absolute value
+  "rel_7_signed",     -- 7 bit relative signed value
+  "rel_7_offset",     -- 7 bit relative value
+  "rel_7_twos_comp",  -- 7 bit relative value
+}
+
+--- (Enum) valid `type` attributes for <Param> nodes
 INPUT_TYPE = {
   "button",           -- standard bidirectional button which output a value on press & release, but does not control it's internal state
   "togglebutton",     -- bidirectional button which toggles the state internally - this type of control does not support release & hold events (examples are buttons on the BCF/BCR controller)
@@ -99,14 +109,7 @@ end
 -- @return boolean, true if identical
 
 function table_compare(t1,t2)
-  local to_string = function(t)
-    local rslt = ""
-    for _,v in ipairs(table.values(t))do
-      rslt = rslt..tostring(v)..","
-    end
-    return rslt
-  end
-  return (to_string(t1)==to_string(t2))
+  return (table.concat(t1,",")==table.concat(t2,","))
 end
 
 --- count table entries, including mixed types
@@ -431,7 +434,7 @@ end
 
 local _log_to_file = false
 local _trace_filters = nil
-local _trace_filters = {"^Navigator"}
+--local _trace_filters = {"^StateController"}
 --local _trace_filters = {"^Recorder*","^UISlider*"}
 --local _trace_filters = {".*"}
 
@@ -511,7 +514,7 @@ else
 end
 
 
---- call this to avoid using print() statements in source code
+--- call this to avoid using "print" statements in source code
 function LOG(str)
   if _log_to_file then
     LOG_FILE(str)
@@ -520,7 +523,8 @@ function LOG(str)
 end
 
 --- append text to log.txt in the tool's root folder
--- (warning: this is slow, only use when needed!)
+-- (warning: this is slow! only use when examining startup sequence,
+-- before it is possible to view output in the console window)
 function LOG_FILE(str)
   str =  ("%f - %s"):format(os.clock(),str)
   local str_log = renoise.tool().bundle_path .. "log.txt"

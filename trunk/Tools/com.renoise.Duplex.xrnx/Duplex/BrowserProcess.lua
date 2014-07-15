@@ -242,7 +242,8 @@ function BrowserProcess:instantiate(configuration)
   self.device:set_control_map(
     configuration.device.control_map)
 
-  self.display = Display(self.device)
+  self.display = Display(self)
+  self.display.state_ctrl = StateController(self.display)
   self.device.display = self.display
 
 
@@ -667,6 +668,22 @@ function BrowserProcess:set_dump_midi(dump)
   if (self:instantiated()) then
     if (self.device.protocol == DEVICE_PROTOCOL.MIDI) then
       self.device.dump_midi = dump
+    end
+  end
+end
+
+
+--------------------------------------------------------------------------------
+
+--- Start/stop device osc dump
+-- @param dump (bool), true to start dumping OSC
+
+function BrowserProcess:set_dump_osc(dump)
+  TRACE("BrowserProcess:set_dump_midi", dump)
+
+  if (self:instantiated()) then
+    if (self.device.protocol == DEVICE_PROTOCOL.OSC) then
+      self.device.dump_osc = dump
     end
   end
 end

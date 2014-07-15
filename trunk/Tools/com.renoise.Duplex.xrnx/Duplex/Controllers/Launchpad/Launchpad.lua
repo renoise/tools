@@ -41,23 +41,37 @@ end
 
 --------------------------------------------------------------------------------
 
-function Launchpad:point_to_value(pt)
-  TRACE("Launchpad:point_to_value")
+--- override default Device method
+-- @see Device.output_value
 
-  -- default color is light/yellow
-  local rslt = 127
+function Launchpad:output_value(pt,xarg,ui_obj)
+  TRACE("Launchpad:output_value(pt,xarg,ui_obj)",pt,xarg,ui_obj)
+  
+  if xarg.skip_echo then
+    --- parameter only exist in the virtual ui
+    print("skip echo...")
+    return Device.output_value(self,pt,xarg,ui_obj)
+  else
 
-  local red = pt.color[1]
-  local green = pt.color[2]
+    print("launcpad output value...",rprint(pt.color))
+
+    -- default color is light/yellow
+    local rslt = 127
+
+    local red = pt.color[1]
+    local green = pt.color[2]
 
 
-  red = math.floor(red/64)
-  green = math.floor(green/64)
+    red = math.floor(red/64)
+    green = math.floor(green/64)
 
-  -- 12 for standard flags
-  rslt = 16*green+red+12
+    -- 12 for standard flags
+    rslt = 16*green+red+12
 
-  return rslt
+    return rslt
+
+  end
+
 
 end
 

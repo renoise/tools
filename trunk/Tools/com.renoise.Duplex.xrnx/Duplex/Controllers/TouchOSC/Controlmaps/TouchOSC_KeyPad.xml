@@ -1,0 +1,779 @@
+
+<Device>
+	<Name>TouchOSC</Name>
+	<Author>Danoise</Author>
+	<Description>Controlmap for TouchOSC (DiscoDSP - KeyPad)</Description>
+	<Parameters>
+		<Page>
+			<Row>
+				<!--
+					
+					sustain		/1/push1 0		(held)
+								/1/push1 1		(released)
+					octave		/1/octave 0		(held)
+								/1/octave 1		(released)
+					velocity	/1/velocity %f	(0-1)
+					pitch bend	/1/fader1 %f	(0-1)
+					mod wheel	/1/fader2 %		(0-1)
+					xy pad		/1/xy1 %f %f	(0-1)
+
+					pads		/1/beat* 0		(held, 1-9)	
+								/1/beat* 0		(released, 1-9)	
+
+				-->
+				<Column>
+					<Group name="Controls1" orientation="vertical" >
+						<Param value="/1/push1 %i" type="button" size="1" aspect="2" minimum="0" maximum="1" />
+						<Param value="/1/octave %i" type="pushbutton" size="1" aspect="2" minimum="0" maximum="1" />
+					</Group>
+				</Column>
+				<Group name="Controls2">
+					<Param value="/1/velocity %f" type="fader" size="4" soft_echo="true" orientation="vertical" minimum="0" maximum="1" />
+					<Param value="/1/fader1 %f" type="fader" size="4" soft_echo="true" orientation="vertical" minimum="0" maximum="1" />
+					<Param value="/1/fader2 %f" type="fader" size="4" soft_echo="true" orientation="vertical" minimum="0" maximum="1" />
+					<Param value="/1/xy1 %f %f" type="xypad" size="4" soft_echo="true" swap_axes="true" minimum="0" maximum="1" />
+				</Group>
+				<Group name="Pads" columns="3">
+					<Param value="/1/beat1 %i" type="button" size="1.3" minimum="0" maximum="1" />
+					<Param value="/1/beat2 %i" type="button" size="1.3" minimum="0" maximum="1" />
+					<Param value="/1/beat3 %i" type="button" size="1.3" minimum="0" maximum="1" />
+					<Param value="/1/beat4 %i" type="button" size="1.3" minimum="0" maximum="1" />
+					<Param value="/1/beat5 %i" type="button" size="1.3" minimum="0" maximum="1" />
+					<Param value="/1/beat6 %i" type="button" size="1.3" minimum="0" maximum="1" />
+					<Param value="/1/beat7 %i" type="button" size="1.3" minimum="0" maximum="1" />
+					<Param value="/1/beat8 %i" type="button" size="1.3" minimum="0" maximum="1" />
+					<Param value="/1/beat9 %i" type="button" size="1.3" minimum="0" maximum="1" />
+				</Group>
+			</Row>
+			<Row>
+				<Group name="Keyboard">
+					<Param value="/*/midi* %i" type="keyboard" name="" size="1.06" aspect="1" range="24" maximum="1" minimum="0"/>
+				</Group>
+			</Row>
+			<Group name="Fillers" columns="32">
+				<Param value="/1/beat1 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/1/beat2 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/1/beat3 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/1/beat4 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/1/beat5 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/1/beat6 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/1/beat7 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/1/beat8 %i" type="button" size=".3" minimum="0" maximum="1" />
+				
+				<Param value="/2/beat1 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/2/beat2 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/2/beat3 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/2/beat4 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/2/beat5 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/2/beat6 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/2/beat7 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/2/beat8 %i" type="button" size=".3" minimum="0" maximum="1" />
+				
+				<Param value="/3/beat1 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/3/beat2 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/3/beat3 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/3/beat4 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/3/beat5 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/3/beat6 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/3/beat7 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/3/beat8 %i" type="button" size=".3" minimum="0" maximum="1" />
+				
+				<Param value="/4/beat1 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/4/beat2 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/4/beat3 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/4/beat4 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/4/beat5 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/4/beat6 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/4/beat7 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/4/beat8 %i" type="button" size=".3" minimum="0" maximum="1" />
+
+				<Param value="/5/beat1 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/5/beat2 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/5/beat3 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/5/beat4 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/5/beat5 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/5/beat6 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/5/beat7 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/5/beat8 %i" type="button" size=".3" minimum="0" maximum="1" />
+
+				<Param value="/6/beat1 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/6/beat2 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/6/beat3 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/6/beat4 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/6/beat5 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/6/beat6 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/6/beat7 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/6/beat8 %i" type="button" size=".3" minimum="0" maximum="1" />
+
+				<Param value="/7/beat1 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/7/beat2 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/7/beat3 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/7/beat4 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/7/beat5 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/7/beat6 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/7/beat7 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/7/beat8 %i" type="button" size=".3" minimum="0" maximum="1" />
+
+				<Param value="/8/beat1 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/8/beat2 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/8/beat3 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/8/beat4 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/8/beat5 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/8/beat6 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/8/beat7 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/8/beat8 %i" type="button" size=".3" minimum="0" maximum="1" />
+
+				<Param value="/9/beat1 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/9/beat2 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/9/beat3 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/9/beat4 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/9/beat5 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/9/beat6 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/9/beat7 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/9/beat8 %i" type="button" size=".3" minimum="0" maximum="1" />
+
+				<Param value="/10/beat1 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/10/beat2 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/10/beat3 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/10/beat4 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/10/beat5 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/10/beat6 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/10/beat7 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/10/beat8 %i" type="button" size=".3" minimum="0" maximum="1" />
+
+				<Param value="/11/beat1 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/11/beat2 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/11/beat3 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/11/beat4 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/11/beat5 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/11/beat6 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/11/beat7 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/11/beat8 %i" type="button" size=".3" minimum="0" maximum="1" />
+
+				<Param value="/12/beat1 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/12/beat2 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/12/beat3 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/12/beat4 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/12/beat5 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/12/beat6 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/12/beat7 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/12/beat8 %i" type="button" size=".3" minimum="0" maximum="1" />
+
+				<Param value="/13/beat1 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/13/beat2 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/13/beat3 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/13/beat4 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/13/beat5 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/13/beat6 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/13/beat7 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/13/beat8 %i" type="button" size=".3" minimum="0" maximum="1" />
+
+				<Param value="/14/beat1 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/14/beat2 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/14/beat3 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/14/beat4 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/14/beat5 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/14/beat6 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/14/beat7 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/14/beat8 %i" type="button" size=".3" minimum="0" maximum="1" />
+
+				<Param value="/15/beat1 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/15/beat2 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/15/beat3 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/15/beat4 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/15/beat5 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/15/beat6 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/15/beat7 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/15/beat8 %i" type="button" size=".3" minimum="0" maximum="1" />
+
+				<Param value="/16/beat1 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/16/beat2 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/16/beat3 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/16/beat4 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/16/beat5 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/16/beat6 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/16/beat7 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/16/beat8 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/1/beat1 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/1/beat2 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/1/beat3 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/1/beat4 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/1/beat5 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/1/beat6 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/1/beat7 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/1/beat8 %i" type="button" size=".3" minimum="0" maximum="1" />
+				
+				<Param value="/2/beat1 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/2/beat2 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/2/beat3 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/2/beat4 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/2/beat5 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/2/beat6 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/2/beat7 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/2/beat8 %i" type="button" size=".3" minimum="0" maximum="1" />
+				
+				<Param value="/3/beat1 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/3/beat2 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/3/beat3 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/3/beat4 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/3/beat5 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/3/beat6 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/3/beat7 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/3/beat8 %i" type="button" size=".3" minimum="0" maximum="1" />
+				
+				<Param value="/4/beat1 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/4/beat2 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/4/beat3 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/4/beat4 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/4/beat5 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/4/beat6 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/4/beat7 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/4/beat8 %i" type="button" size=".3" minimum="0" maximum="1" />
+
+				<Param value="/5/beat1 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/5/beat2 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/5/beat3 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/5/beat4 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/5/beat5 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/5/beat6 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/5/beat7 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/5/beat8 %i" type="button" size=".3" minimum="0" maximum="1" />
+
+				<Param value="/6/beat1 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/6/beat2 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/6/beat3 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/6/beat4 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/6/beat5 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/6/beat6 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/6/beat7 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/6/beat8 %i" type="button" size=".3" minimum="0" maximum="1" />
+
+				<Param value="/7/beat1 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/7/beat2 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/7/beat3 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/7/beat4 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/7/beat5 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/7/beat6 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/7/beat7 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/7/beat8 %i" type="button" size=".3" minimum="0" maximum="1" />
+
+				<Param value="/8/beat1 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/8/beat2 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/8/beat3 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/8/beat4 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/8/beat5 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/8/beat6 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/8/beat7 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/8/beat8 %i" type="button" size=".3" minimum="0" maximum="1" />
+
+				<Param value="/9/beat1 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/9/beat2 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/9/beat3 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/9/beat4 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/9/beat5 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/9/beat6 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/9/beat7 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/9/beat8 %i" type="button" size=".3" minimum="0" maximum="1" />
+
+				<Param value="/10/beat1 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/10/beat2 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/10/beat3 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/10/beat4 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/10/beat5 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/10/beat6 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/10/beat7 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/10/beat8 %i" type="button" size=".3" minimum="0" maximum="1" />
+
+				<Param value="/11/beat1 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/11/beat2 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/11/beat3 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/11/beat4 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/11/beat5 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/11/beat6 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/11/beat7 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/11/beat8 %i" type="button" size=".3" minimum="0" maximum="1" />
+
+				<Param value="/12/beat1 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/12/beat2 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/12/beat3 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/12/beat4 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/12/beat5 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/12/beat6 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/12/beat7 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/12/beat8 %i" type="button" size=".3" minimum="0" maximum="1" />
+
+				<Param value="/13/beat1 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/13/beat2 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/13/beat3 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/13/beat4 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/13/beat5 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/13/beat6 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/13/beat7 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/13/beat8 %i" type="button" size=".3" minimum="0" maximum="1" />
+
+				<Param value="/14/beat1 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/14/beat2 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/14/beat3 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/14/beat4 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/14/beat5 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/14/beat6 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/14/beat7 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/14/beat8 %i" type="button" size=".3" minimum="0" maximum="1" />
+
+				<Param value="/15/beat1 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/15/beat2 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/15/beat3 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/15/beat4 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/15/beat5 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/15/beat6 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/15/beat7 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/15/beat8 %i" type="button" size=".3" minimum="0" maximum="1" />
+
+				<Param value="/16/beat1 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/16/beat2 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/16/beat3 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/16/beat4 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/16/beat5 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/16/beat6 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/16/beat7 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/16/beat8 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/1/beat1 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/1/beat2 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/1/beat3 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/1/beat4 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/1/beat5 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/1/beat6 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/1/beat7 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/1/beat8 %i" type="button" size=".3" minimum="0" maximum="1" />
+				
+				<Param value="/2/beat1 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/2/beat2 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/2/beat3 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/2/beat4 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/2/beat5 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/2/beat6 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/2/beat7 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/2/beat8 %i" type="button" size=".3" minimum="0" maximum="1" />
+				
+				<Param value="/3/beat1 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/3/beat2 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/3/beat3 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/3/beat4 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/3/beat5 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/3/beat6 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/3/beat7 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/3/beat8 %i" type="button" size=".3" minimum="0" maximum="1" />
+				
+				<Param value="/4/beat1 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/4/beat2 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/4/beat3 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/4/beat4 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/4/beat5 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/4/beat6 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/4/beat7 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/4/beat8 %i" type="button" size=".3" minimum="0" maximum="1" />
+
+				<Param value="/5/beat1 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/5/beat2 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/5/beat3 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/5/beat4 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/5/beat5 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/5/beat6 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/5/beat7 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/5/beat8 %i" type="button" size=".3" minimum="0" maximum="1" />
+
+				<Param value="/6/beat1 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/6/beat2 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/6/beat3 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/6/beat4 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/6/beat5 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/6/beat6 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/6/beat7 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/6/beat8 %i" type="button" size=".3" minimum="0" maximum="1" />
+
+				<Param value="/7/beat1 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/7/beat2 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/7/beat3 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/7/beat4 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/7/beat5 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/7/beat6 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/7/beat7 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/7/beat8 %i" type="button" size=".3" minimum="0" maximum="1" />
+
+				<Param value="/8/beat1 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/8/beat2 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/8/beat3 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/8/beat4 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/8/beat5 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/8/beat6 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/8/beat7 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/8/beat8 %i" type="button" size=".3" minimum="0" maximum="1" />
+
+				<Param value="/9/beat1 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/9/beat2 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/9/beat3 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/9/beat4 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/9/beat5 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/9/beat6 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/9/beat7 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/9/beat8 %i" type="button" size=".3" minimum="0" maximum="1" />
+
+				<Param value="/10/beat1 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/10/beat2 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/10/beat3 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/10/beat4 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/10/beat5 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/10/beat6 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/10/beat7 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/10/beat8 %i" type="button" size=".3" minimum="0" maximum="1" />
+
+				<Param value="/11/beat1 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/11/beat2 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/11/beat3 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/11/beat4 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/11/beat5 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/11/beat6 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/11/beat7 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/11/beat8 %i" type="button" size=".3" minimum="0" maximum="1" />
+
+				<Param value="/12/beat1 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/12/beat2 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/12/beat3 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/12/beat4 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/12/beat5 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/12/beat6 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/12/beat7 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/12/beat8 %i" type="button" size=".3" minimum="0" maximum="1" />
+
+				<Param value="/13/beat1 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/13/beat2 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/13/beat3 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/13/beat4 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/13/beat5 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/13/beat6 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/13/beat7 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/13/beat8 %i" type="button" size=".3" minimum="0" maximum="1" />
+
+				<Param value="/14/beat1 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/14/beat2 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/14/beat3 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/14/beat4 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/14/beat5 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/14/beat6 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/14/beat7 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/14/beat8 %i" type="button" size=".3" minimum="0" maximum="1" />
+
+				<Param value="/15/beat1 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/15/beat2 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/15/beat3 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/15/beat4 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/15/beat5 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/15/beat6 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/15/beat7 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/15/beat8 %i" type="button" size=".3" minimum="0" maximum="1" />
+
+				<Param value="/16/beat1 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/16/beat2 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/16/beat3 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/16/beat4 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/16/beat5 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/16/beat6 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/16/beat7 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/16/beat8 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/1/beat1 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/1/beat2 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/1/beat3 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/1/beat4 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/1/beat5 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/1/beat6 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/1/beat7 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/1/beat8 %i" type="button" size=".3" minimum="0" maximum="1" />
+				
+				<Param value="/2/beat1 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/2/beat2 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/2/beat3 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/2/beat4 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/2/beat5 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/2/beat6 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/2/beat7 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/2/beat8 %i" type="button" size=".3" minimum="0" maximum="1" />
+				
+				<Param value="/3/beat1 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/3/beat2 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/3/beat3 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/3/beat4 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/3/beat5 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/3/beat6 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/3/beat7 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/3/beat8 %i" type="button" size=".3" minimum="0" maximum="1" />
+				
+				<Param value="/4/beat1 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/4/beat2 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/4/beat3 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/4/beat4 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/4/beat5 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/4/beat6 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/4/beat7 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/4/beat8 %i" type="button" size=".3" minimum="0" maximum="1" />
+
+				<Param value="/5/beat1 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/5/beat2 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/5/beat3 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/5/beat4 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/5/beat5 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/5/beat6 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/5/beat7 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/5/beat8 %i" type="button" size=".3" minimum="0" maximum="1" />
+
+				<Param value="/6/beat1 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/6/beat2 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/6/beat3 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/6/beat4 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/6/beat5 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/6/beat6 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/6/beat7 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/6/beat8 %i" type="button" size=".3" minimum="0" maximum="1" />
+
+				<Param value="/7/beat1 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/7/beat2 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/7/beat3 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/7/beat4 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/7/beat5 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/7/beat6 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/7/beat7 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/7/beat8 %i" type="button" size=".3" minimum="0" maximum="1" />
+
+				<Param value="/8/beat1 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/8/beat2 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/8/beat3 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/8/beat4 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/8/beat5 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/8/beat6 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/8/beat7 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/8/beat8 %i" type="button" size=".3" minimum="0" maximum="1" />
+
+				<Param value="/9/beat1 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/9/beat2 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/9/beat3 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/9/beat4 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/9/beat5 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/9/beat6 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/9/beat7 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/9/beat8 %i" type="button" size=".3" minimum="0" maximum="1" />
+
+				<Param value="/10/beat1 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/10/beat2 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/10/beat3 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/10/beat4 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/10/beat5 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/10/beat6 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/10/beat7 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/10/beat8 %i" type="button" size=".3" minimum="0" maximum="1" />
+
+				<Param value="/11/beat1 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/11/beat2 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/11/beat3 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/11/beat4 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/11/beat5 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/11/beat6 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/11/beat7 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/11/beat8 %i" type="button" size=".3" minimum="0" maximum="1" />
+
+				<Param value="/12/beat1 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/12/beat2 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/12/beat3 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/12/beat4 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/12/beat5 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/12/beat6 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/12/beat7 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/12/beat8 %i" type="button" size=".3" minimum="0" maximum="1" />
+
+				<Param value="/13/beat1 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/13/beat2 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/13/beat3 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/13/beat4 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/13/beat5 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/13/beat6 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/13/beat7 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/13/beat8 %i" type="button" size=".3" minimum="0" maximum="1" />
+
+				<Param value="/14/beat1 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/14/beat2 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/14/beat3 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/14/beat4 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/14/beat5 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/14/beat6 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/14/beat7 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/14/beat8 %i" type="button" size=".3" minimum="0" maximum="1" />
+
+				<Param value="/15/beat1 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/15/beat2 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/15/beat3 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/15/beat4 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/15/beat5 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/15/beat6 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/15/beat7 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/15/beat8 %i" type="button" size=".3" minimum="0" maximum="1" />
+
+				<Param value="/16/beat1 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/16/beat2 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/16/beat3 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/16/beat4 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/16/beat5 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/16/beat6 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/16/beat7 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/16/beat8 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/1/beat1 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/1/beat2 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/1/beat3 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/1/beat4 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/1/beat5 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/1/beat6 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/1/beat7 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/1/beat8 %i" type="button" size=".3" minimum="0" maximum="1" />
+				
+				<Param value="/2/beat1 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/2/beat2 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/2/beat3 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/2/beat4 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/2/beat5 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/2/beat6 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/2/beat7 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/2/beat8 %i" type="button" size=".3" minimum="0" maximum="1" />
+				
+				<Param value="/3/beat1 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/3/beat2 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/3/beat3 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/3/beat4 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/3/beat5 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/3/beat6 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/3/beat7 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/3/beat8 %i" type="button" size=".3" minimum="0" maximum="1" />
+				
+				<Param value="/4/beat1 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/4/beat2 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/4/beat3 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/4/beat4 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/4/beat5 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/4/beat6 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/4/beat7 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/4/beat8 %i" type="button" size=".3" minimum="0" maximum="1" />
+
+				<Param value="/5/beat1 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/5/beat2 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/5/beat3 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/5/beat4 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/5/beat5 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/5/beat6 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/5/beat7 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/5/beat8 %i" type="button" size=".3" minimum="0" maximum="1" />
+
+				<Param value="/6/beat1 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/6/beat2 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/6/beat3 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/6/beat4 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/6/beat5 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/6/beat6 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/6/beat7 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/6/beat8 %i" type="button" size=".3" minimum="0" maximum="1" />
+
+				<Param value="/7/beat1 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/7/beat2 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/7/beat3 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/7/beat4 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/7/beat5 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/7/beat6 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/7/beat7 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/7/beat8 %i" type="button" size=".3" minimum="0" maximum="1" />
+
+				<Param value="/8/beat1 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/8/beat2 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/8/beat3 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/8/beat4 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/8/beat5 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/8/beat6 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/8/beat7 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/8/beat8 %i" type="button" size=".3" minimum="0" maximum="1" />
+
+				<Param value="/9/beat1 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/9/beat2 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/9/beat3 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/9/beat4 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/9/beat5 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/9/beat6 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/9/beat7 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/9/beat8 %i" type="button" size=".3" minimum="0" maximum="1" />
+
+				<Param value="/10/beat1 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/10/beat2 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/10/beat3 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/10/beat4 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/10/beat5 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/10/beat6 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/10/beat7 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/10/beat8 %i" type="button" size=".3" minimum="0" maximum="1" />
+
+				<Param value="/11/beat1 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/11/beat2 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/11/beat3 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/11/beat4 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/11/beat5 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/11/beat6 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/11/beat7 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/11/beat8 %i" type="button" size=".3" minimum="0" maximum="1" />
+
+				<Param value="/12/beat1 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/12/beat2 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/12/beat3 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/12/beat4 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/12/beat5 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/12/beat6 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/12/beat7 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/12/beat8 %i" type="button" size=".3" minimum="0" maximum="1" />
+
+				<Param value="/13/beat1 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/13/beat2 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/13/beat3 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/13/beat4 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/13/beat5 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/13/beat6 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/13/beat7 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/13/beat8 %i" type="button" size=".3" minimum="0" maximum="1" />
+
+				<Param value="/14/beat1 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/14/beat2 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/14/beat3 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/14/beat4 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/14/beat5 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/14/beat6 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/14/beat7 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/14/beat8 %i" type="button" size=".3" minimum="0" maximum="1" />
+
+				<Param value="/15/beat1 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/15/beat2 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/15/beat3 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/15/beat4 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/15/beat5 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/15/beat6 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/15/beat7 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/15/beat8 %i" type="button" size=".3" minimum="0" maximum="1" />
+
+				<Param value="/16/beat1 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/16/beat2 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/16/beat3 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/16/beat4 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/16/beat5 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/16/beat6 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/16/beat7 %i" type="button" size=".3" minimum="0" maximum="1" />
+				<Param value="/16/beat8 %i" type="button" size=".3" minimum="0" maximum="1" />
+			</Group>
+
+		</Page>
+		<Group name="TiltSensor" >
+			<Param value="/accxyz {%f} %f %f" type="fader" size="4" orientation="vertical" skip_echo="true" maximum="1" minimum="-1"/>
+			<Param value="/accxyz %f {%f} %f" type="fader" size="4" orientation="vertical" skip_echo="true" maximum="1" minimum="-1"/>
+			<Param value="/accxyz {%f} {%f} %f" type="xypad" size="4" orientation="vertical" skip_echo="true" swap_axes="true" maximum="1" minimum="-1"/>
+		</Group>
+	</Parameters>
+</Device>
+

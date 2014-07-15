@@ -83,7 +83,7 @@ function UIButton:do_press(msg)
     -- force-update controls that maintain their
     -- internal state (togglebutton, pushbutton)
     if (msg.xarg.type ~= "button") then
-      self:force_update()
+      self:force_refresh()
     end
     self:on_press(msg)
     return self
@@ -98,7 +98,7 @@ end
 -- @return (bool), true when message was handled
 
 function UIButton:do_release(msg)
-  --TRACE("UIButton:do_release()")
+  TRACE("UIButton:do_release()")
 
   if not self:test(msg) then
     return
@@ -107,7 +107,7 @@ function UIButton:do_release(msg)
   -- force-update controls that maintain their
   -- internal state (togglebutton, pushbutton)
   if (msg.xarg.type ~= "button") then
-    self:force_update()
+    self:force_refresh()
   end
 
   if (self.on_release ~= nil) then
@@ -157,26 +157,6 @@ function UIButton:do_hold(msg)
 
 end
 
---------------------------------------------------------------------------------
-
---- Expanded UIComponent test. Look for group name + standard test
--- @param msg (@{Duplex.Message})
--- @return (bool), false when criteria is not met
--- @see Duplex.UIComponent.test
-
-function UIButton:test(msg)
-
-  if not (self.group_name == msg.xarg.group_name) then
-    return false
-  end
-
-  if not self.app.active then
-    return
-  end
-
-  return UIComponent.test(self,msg.xarg.column,msg.xarg.row)
-
-end
 
 --------------------------------------------------------------------------------
 
@@ -228,7 +208,7 @@ end
 -- @see Duplex.UIComponent
 
 function UIButton:draw()
-  --TRACE("UIButton:draw()")
+  TRACE("UIButton:draw()")
 
   local point = CanvasPoint()
   point.color = self.palette.foreground.color
@@ -253,22 +233,6 @@ end
 
 --------------------------------------------------------------------------------
 
---- Force the button to update: some controllers handle their internal state 
--- by themselves, and as a result, we never know their actual state. For those
--- controls, we "force-update" them by changing the canvas so that it always 
--- get output the next time the display is updated
-
-function UIButton:force_update()
-  TRACE("UIButton:force_update()")
-
-  self.canvas.delta = table.rcopy(self.canvas.buffer)
-  self.canvas.has_changed = true
-  self:invalidate()
-
-end
-
---------------------------------------------------------------------------------
-
 --- Add event listeners to the button
 --    DEVICE_EVENT.BUTTON_PRESSED
 --    DEVICE_EVENT.BUTTON_RELEASED
@@ -277,6 +241,7 @@ end
 -- @see Duplex.UIComponent.add_listeners
 
 function UIButton:add_listeners()
+  TRACE("UIButton:add_listeners()")
 
   self:remove_listeners()
 
@@ -313,6 +278,7 @@ end
 -- @see Duplex.UIComponent
 
 function UIButton:remove_listeners()
+  TRACE("UIButton:remove_listeners()")
 
   self.app.display.device.message_stream:remove_listener(
     self,DEVICE_EVENT.BUTTON_PRESSED)

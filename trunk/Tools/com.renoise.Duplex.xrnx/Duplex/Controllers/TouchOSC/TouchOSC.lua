@@ -30,20 +30,3 @@ function TouchOSC:__init(name, message_stream,prefix,address,port_in,port_out)
 end
 
 
---------------------------------------------------------------------------------
---[[
-function TouchOSC:point_to_value(pt,elm,ceiling)
-  TRACE("TouchOSC:point_to_value()",pt,elm,ceiling)
-
-  local value = OscDevice.point_to_value(self,pt,elm,ceiling)
-
-  if (type(pt.val) == "boolean") then
-    -- quantize value to determine lit/off state
-    local color = self:quantize_color(pt.color)
-    value = (color[1]==0xff) and elm.maximum or elm.minimum
-  end
-
-  return value
-
-end
-]]

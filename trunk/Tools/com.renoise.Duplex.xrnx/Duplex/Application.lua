@@ -66,7 +66,7 @@ function Application:__init(...)
 
   --- (@{Duplex.Display}) the display associated with our process
   self.display = process.display
-  
+
   --- (string) this is the name of the application as it appears
   -- in the device configuration, e.g. "MySecondMixer" - used for looking 
   -- up the correct preferences-key when specifying custom options 
@@ -501,13 +501,27 @@ end
 --------------------------------------------------------------------------------
 
 --- Register a UIComponent so we can automatically remove it when exiting
--- note that the display might not be present, so use with caution
 -- @param c (@{Duplex.UIComponent})
 
 function Application:_add_component(c)
+  TRACE("Application:_add_component(c)",c)
   
   assert(self.display, "Internal Error. Please report: " ..
     "trying to add a UIComponent to an application without a display")
+
+  -- todo: refactor as table in UIComponent: 
+  -- disallowed_widget_types = {"MultiLineText"}, etc
+  local widgets = c:_get_widgets()
+  for k,v in ipairs(widgets) do
+    if (type(c) == "UISlider") then
+      if (type(v) == "MultiLineText") or
+        (type(v) == "XYPad") 
+      then
+        renoise.app():show_warning("Cannot assign UISlider to "..type(v)..", maybe the device configuration contain an invalid entry?")
+        return
+      end
+    end
+  end
 
   self._ui_components:insert(c)
   self.display:add(c)

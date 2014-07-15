@@ -34,9 +34,10 @@ function Monome:__init(name, message_stream,prefix,address,port_in,port_out)
   -- this device has a monochrome color-space 
   self.colorspace = {1, 1, 1}
 
-  
   OscDevice.__init(self, name, message_stream,prefix,address,port_in,port_out)
 
+  -- set our own defaults
+  self.feedback_prevention_enabled = true
   --self.bundle_messages = true
 
 

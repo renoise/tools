@@ -43,6 +43,9 @@ function Browser:__init(initial_configuration, start_configuration)
   --- (bool) dump midi information to console (debug option)
   self._dump_midi = false
 
+  --- (bool) dump osc information to console (debug option)
+  self._dump_osc = false
+
   --- (bool) true while updating the GUI from within the internal browser functions, 
   -- to avoid doubling updates when the changes are not fired from the GUI
   self._suppress_notifiers = false
@@ -677,6 +680,7 @@ function Browser:set_configuration(configuration, start_running)
           
           -- apply debug options
           new_process:set_dump_midi(self._dump_midi)
+          new_process:set_dump_osc(self._dump_osc)
           
           -- show it (add the control map GUI to the browser)
           new_process:show_control_surface(
@@ -811,6 +815,16 @@ end
 
 --------------------------------------------------------------------------------
 
+--- Check if we should write debug data to the std out (console)
+-- @return (bool) 
+
+function Browser:dump_osc()
+  return self._dump_osc
+end
+
+
+--------------------------------------------------------------------------------
+
 --- Set the MIDI dump status
 -- @param dump (bool)
 
@@ -818,6 +832,18 @@ function Browser:set_dump_midi(dump)
   self._dump_midi = dump
   for _,process in pairs(self._processes) do
     process:set_dump_midi(dump)
+  end
+end
+
+--------------------------------------------------------------------------------
+
+--- Set the OSC dump status
+-- @param dump (bool)
+
+function Browser:set_dump_osc(dump)
+  self._dump_osc = dump
+  for _,process in pairs(self._processes) do
+    process:set_dump_osc(dump)
   end
 end
 

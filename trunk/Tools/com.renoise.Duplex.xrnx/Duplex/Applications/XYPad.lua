@@ -394,7 +394,7 @@ function XYPad:_build_app()
     local c = UISlider(self,map)
     c.floor = self.min_value
     c.ceiling = self.max_value
-    c.on_change = function(obj,msg)
+    c.on_change = function(obj)
       --print("Slider X",obj.value)
       self.value[1] = obj.value
       self:do_broadcast_x()
@@ -409,7 +409,7 @@ function XYPad:_build_app()
     local c = UISlider(self,map)
     c.floor = self.min_value
     c.ceiling = self.max_value
-    c.on_change = function(obj,msg)
+    c.on_change = function(obj)
       --print("Slider Y",obj.value)
       self.value[2] = obj.value
       self:do_broadcast_y()

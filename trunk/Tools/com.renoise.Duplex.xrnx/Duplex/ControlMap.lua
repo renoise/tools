@@ -13,14 +13,31 @@ Load and parse XML based control-map files, add extra methods, handy accessors.
 - Only `Param` nodes are supported inside a `Group` node
 - Only `SubParam` nodes are supported inside a `Param` node
 
+### The `State` node
+
+ Define a state that the control-map can make use of (see also: @{Duplex.StateController})
+ Accepts the following attributes
+
+  - `name` - (string) a unique name for identifying the state, and for prefixing nodes
+  - `type` - (enum) "toggle", "momentary" or "trigger", determine how to respond to events
+  - `value` - (string) the incoming message that we want to match against, e.g. "C#4|Ch2". 
+  - `match` - (number) the exact value to match (e.g. CC number with value "5") 
+  - `exclusive` - (string) specify a(ny) name for states that should be mutually exclusive
+  - `invert` - (bool) when true, trigger will light up when state is inactive 
+  - `receive_when_inactive` - (bool) when/if to receive/send parameter messages 
+  - `hide_when_inactive` - (bool) when/if to show/hide parameters
+  - `disable_when_inactive` - (bool) when/if to enable/disable parameters
+  - `active` - (bool) set the initial state
 
 ### The `Row` and `Column` node
 
- A pure layout node that accepts no attributes
+ State prefixing: supported
+ A pure layout node that accepts no attributes 
 
 ### The `Group` node
 
- Accepts the following attributes
+ State prefixing: supported
+ Accepts the following attributes 
 
   - `name` - (string) the group name, this value is passed on to all members (Param nodes)
   - `visible` - (bool) optional, define if group should be visible or hidden (default is true)
@@ -30,6 +47,7 @@ Load and parse XML based control-map files, add extra methods, handy accessors.
 
 ### The `Param` node
 
+ State prefixing: supported
  Accepts the following attributes
 
   - `type`  - (enum) lowercase version of @{Duplex.Globals.INPUT_TYPE}, e.g. `dial`
@@ -40,6 +58,9 @@ Load and parse XML based control-map files, add extra methods, handy accessors.
   - `aspect` - (number) the relative aspect of the UIComponent (0.5 = half height)
   - `minimum` - (number) the minimum value (e.g. to set a button to unlit state)
   - `maximum` - (number) the maxmum value (e.g. to set a button to lit state)
+  - `match` - (number) the exact value to match (e.g. CC number with value "5")
+  - `match_from` - (number) a value range to match (require that you also specify match_to)
+  - `match_to` - (number) a value range to match (require that you also specify match_from)
   - `skip_echo` - (bool) never send message back to device
   - `soft_echo` - (bool) only send virtually generated messages back to device
   - `invert` - (bool) swap the minimum and maximum values
@@ -50,8 +71,10 @@ Load and parse XML based control-map files, add extra methods, handy accessors.
   - `text` - (string) specify the text value, relevant for params of type=`label` 
   - `font` - (string) specify the font type, relevant for params of type=`label` 
   - `range` - (int) specify the range of an on-screen keyboard (number of keys)
+  - `mode` - (enum) how to interpret incoming values (see @{Duplex.Globals.PARAM_MODE})
+  - `class` - (string) interpret control-map in the context of which (device) class? (default is to use the current device context, but you can enter any literal class name, e.g. "OscDevice" or "LaunchPad")
 
- Some extra properties are added in runtime
+  Some extra properties are added in runtime:
 
   - `id` - (string) a unique, auto-generated name
   - `index` - (int) the index (position) within the parent `Group` node
@@ -63,9 +86,10 @@ Load and parse XML based control-map files, add extra methods, handy accessors.
 
 ### The `SubParam` node
 
- Accepts the following attributes 
+  State prefixing: not supported
+  The accepted attributes depend on the type of widget
 
-  - `value` - (string) same as the `Param` value attribute
+  - `value` - (string) the pattern that we match messages against, e.g. "C#4|Ch2" (if not specified, will use parent node)
   - `field` - (string) what aspect of the parent parameters' value that is being stored (e.g. "x" for xypad x axis)
 
 --]]
@@ -111,7 +135,7 @@ function ControlMap:__init()
   self.midi_buffer = table.create()
 
   --- (int) unique id, reset each time a control-map is parsed
-  self.id = nil 
+  --self.id = nil 
 
   --- (table) parsed control-map 
   self.definition = nil 
@@ -128,9 +152,10 @@ end
 
 --- Load_definition: load and parse xml
 -- @param file_path (string), the name of the file, e.g. "my_map.xml"
+-- @param device_context (@{Duplex.Device}) used when parsing the xml
 
-function ControlMap:load_definition(file_path)
-  TRACE("ControlMap:load_definition",file_path)
+function ControlMap:load_definition(file_path,device_context)
+  TRACE("ControlMap:load_definition",file_path,device_context)
 
   self.file_path = file_path
   
@@ -159,7 +184,7 @@ function ControlMap:load_definition(file_path)
     TRACE("ControlMap:load_definition:", file_path)
     
     local xml_string = self._read_file(self, file_path)
-    self:_parse_definition(file_path, xml_string)
+    self:_parse_definition(file_path, xml_string, device_context)
     
   else
     renoise.app():show_error(
@@ -174,8 +199,9 @@ end
 --- Parse the supplied xml string (reset the counter first)
 -- @param control_map_name (string) path to XML file
 -- @param xml_string (string) the XML string
+-- @param device_context (@{Duplex.Device}) 
 
-function ControlMap:_parse_definition(control_map_name, xml_string)
+function ControlMap:_parse_definition(control_map_name, xml_string, device_context)
   --TRACE("ControlMap:_parse_definition",control_map_name, xml_string)
 
   self.id = 0
@@ -185,7 +211,7 @@ function ControlMap:_parse_definition(control_map_name, xml_string)
   local succeeded, result = pcall(function() 
     -- remove comments before parsing
     xml_string = string.gsub (xml_string, "(<!--.-->)", "")
-    return self:_parse_xml(xml_string) 
+    return self:_parse_xml(xml_string,device_context) 
   end)
   
   if (succeeded) then
@@ -331,6 +357,7 @@ function ControlMap:memoize()
     if not self.patterns[patt] then
       self.patterns[patt] = table.create()
     end
+    --print("*** ControlMap:memoize",rprint(param.xarg))
     self.patterns[patt]:insert(param)
   end
 
@@ -383,8 +410,8 @@ function ControlMap:memoize()
     end
   end
 
-  --print("patterns",rprint(cm.patterns))
-  --print("headers",rprint(cm.osc_headers))
+  --print("*** patterns",rprint(self.patterns))
+  --print("*** osc_headers",rprint(self.osc_headers))
 
 end
 
@@ -406,22 +433,21 @@ function ControlMap:get_midi_params(str)
 
   local matches = table.create()
 
-  --print("get_midi_params",str,msg_context)
 
   -- check if we have previously matched the pattern
   if (self.midi_buffer[str]) then
-    print("*** ControlMap:get_midi_params - retrieve buffered message",str)
+    --print("*** ControlMap:get_midi_params - retrieve buffered message",str,"#matches",#self.midi_buffer[str])
     return self.midi_buffer[str] 
   end
 
   local msg_context = self:determine_type(str)
-
   local str_no_channel = strip_channel_info(str)
 
   -- check if we are dealing with an octave wildcard
   -- (method will only work with range -1 to 9)
   local match_exact = function(param)
     local match_against = param.xarg.value
+    --print("match_against",str,match_against,rprint(param.xarg.state_ids))
     if (msg_context == DEVICE_MESSAGE.MIDI_NOTE) and 
       (param.xarg.value):find(ControlMap.WILDCARD_PATTERN) 
     then
@@ -439,15 +465,16 @@ function ControlMap:get_midi_params(str)
   -- first, look for an exact match
   -- iterate through <Param>, and possibly <SubParam> nodes 
   for _,group in pairs(self.groups) do
-    --print("got here..")
     for k,param in ipairs(group) do
       if (#param > 0) then
         for k2,subparam in ipairs(param) do
+          --print("*** ControlMap:get_midi_params - check subparameter..")
           if match_exact(subparam) then
             matches:insert(subparam)
           end
         end
       else
+        --print("*** ControlMap:get_midi_params - check parameter..")
         if match_exact(param) then
           matches:insert(param)
         end
@@ -480,6 +507,8 @@ function ControlMap:get_midi_params(str)
 
   -- remember match 
   self.midi_buffer[str] = matches
+  
+  --print("*** ControlMap:get_midi_params - #matches",#matches)
 
   return matches
 
@@ -938,13 +967,10 @@ function ControlMap:is_grid_group(group_name)
   local group = self.groups[group_name]
   if (group) then
     -- look for "columns" group attribute
-    -- check parameter type
+    -- check parameter type (only buttons allowed)
     for _, param in ipairs(group) do
       if (param.xarg and param.xarg.type) then
-        if not (param.xarg.type=="button") and
-           not (param.xarg.type=="togglebutton") and
-           not (param.xarg.type=="pushbutton") 
-        then
+        if not string.find(param.xarg.type,"button") then
           return false
         end
       end
@@ -972,10 +998,7 @@ function ControlMap:is_button(group_name,index)
   if (group) then
     local param = group[index]
     if (param.xarg and param.xarg.type) then
-      if not (param.xarg.type=="button") and
-         not (param.xarg.type=="togglebutton") and
-         not (param.xarg.type=="pushbutton") 
-      then
+      if not string.find(param.xarg.type,"button") then
         return false
       else
         return true
@@ -1057,15 +1080,20 @@ end
 --- Parse the control-map into a table
 -- (add meta-info - such as unique ids - while parsing)
 -- @param str (String) the xml string
+-- @param device_context (@{Duplex.Device}) 
 -- @return Table
 
-function ControlMap:_parse_xml(str)
+function ControlMap:_parse_xml(str,device_context)
   TRACE('ControlMap:_parse_xml(...)')
+
+  --print("*** ControlMap:_parse_xml - str,device_context",str,device_context)
 
   local stack = {}
   local top = {}
   table.insert(stack, top)
 
+  local state_ids = {}
+  local depth = 0
   local uid = 0
   local i, j = 1, 1
   local parameter_index = 1
@@ -1073,7 +1101,7 @@ function ControlMap:_parse_xml(str)
   -- helper function to extract attributes (xargs) from a given node,
   -- casting values to their respective type (number, bool) 
 
-  local function parseargs(str,empty_element)
+  local function parseargs(str,empty_element,label)
 
     --print("parseargs",str)
 
@@ -1086,9 +1114,9 @@ function ControlMap:_parse_xml(str)
       xarg[w] = a
     end)
 
-    -- add unique id for every node
-    xarg.id = string.format("%d", self.id)
-    self.id = self.id+1
+
+    --print("xarg.mode",xarg.mode)
+
 
     -- add size attribute to buttons
     if (xarg.type) and
@@ -1106,38 +1134,58 @@ function ControlMap:_parse_xml(str)
     if (xarg.minimum) then
       xarg.minimum = tonumber(xarg.minimum)
     end
-
     if (xarg.range) then
       xarg.range = tonumber(xarg.range)
     end
+    if (xarg.match) then
+      xarg.match = tonumber(xarg.match)
+    end
+    if (xarg.match_from) then
+      xarg.match_from = tonumber(xarg.match_from)
+    end
+    if (xarg.match_to) then
+      xarg.match_to = tonumber(xarg.match_to)
+    end
+    if not xarg.mode then
+      xarg.mode = device_context.default_parameter_mode
+    end
 
-    -- cast as booleans (default to false)
-    xarg.skip_echo = bool(xarg.skip_echo)
-    xarg.soft_echo = bool(xarg.soft_echo)
-    xarg.invert = bool(xarg.invert)
-    xarg.invert_x = bool(xarg.invert_x)
-    xarg.invert_y = bool(xarg.invert_y)
-    xarg.swap_axes = bool(xarg.swap_axes)
+    if (label == "Param") or (label == "SubParam") then
+
+      -- cast as booleans (default to false)
+      xarg.skip_echo = bool(xarg.skip_echo)
+      xarg.soft_echo = bool(xarg.soft_echo)
+      xarg.invert = bool(xarg.invert)
+      xarg.invert_x = bool(xarg.invert_x)
+      xarg.invert_y = bool(xarg.invert_y)
+      xarg.swap_axes = bool(xarg.swap_axes)
+
+    end
+
+    if (label == "State") then
+      --print("xarg.invert",xarg.invert,bool(xarg.invert))
+      xarg.invert = bool(xarg.invert)
+      xarg.disable_when_inactive = bool(xarg.disable_when_inactive)
+      xarg.receive_when_inactive = bool(xarg.receive_when_inactive)
+      xarg.hide_when_inactive = not xarg.hide_when_inactive and true or bool(xarg.hide_when_inactive)
+    end
 
     -- cast as booleans (default to true)
     xarg.visible = not xarg.visible and true or bool(xarg.visible) 
 
-    -- missing or empty value means virtual too, provide a unique value 
-    -- (but only do this when parameter does not have subparameters)
-    if not empty_element then
-      xarg.has_subparams = true
-    elseif not xarg.value or (xarg.value == "") then
-      xarg.skip_echo = true
-      xarg.value = ("/duplex_uid_%d"):format(uid)
-      uid = uid+1
-    end
 
     return xarg
 
   end
 
 
-
+  -- provide a unique value for virtual params
+  local mark_as_virtual = function(xarg)
+    xarg.value = ("/duplex_uid_%d"):format(uid)
+    xarg.skip_echo = true
+    uid = uid+1
+  end
+  
   -- helper function to preprocess values into regular expressions
 
   local create_regex_patt = function(xarg)
@@ -1177,6 +1225,7 @@ function ControlMap:_parse_xml(str)
 
   end
   
+
   while true do
     local ni,j,c,label,xarg, empty = string.find(
       str, "<(%/?)([%w:]+)(.-)(%/?)>", i)
@@ -1184,17 +1233,73 @@ function ControlMap:_parse_xml(str)
     if (not ni) then 
       break 
     end
-    
+
+    --print("ni,j,c,label,xarg, empty",ni,j,c,label,xarg, empty)
+
+    local is_empty_tag = (empty == "/") and true or false
+    local is_start_tag = (c == "") and true or false
+
+    if is_start_tag or is_empty_tag then
+      depth = depth+1
+      state_ids[depth] = {}
+    elseif not is_empty_tag then
+      state_ids[depth] = nil
+      depth = depth-1
+    end
+
+
+    -- break label by colon (states come first, label is last...)
+    local label_parts = {}
+    string.gsub(label, "([^\:]+)", function (w,_,a)
+      label_parts[#label_parts+1] = w
+    end)
+    label = label_parts[#label_parts]
+
+    --print("*** label_parts,label",rprint(label_parts),#label_parts)
+
+    -- carry existing states (if any) into new nodes,
+    -- and merge with the ones specified at that level 
+      
+    if is_empty_tag or is_start_tag then
+
+      if (state_ids[depth-1]) then
+        state_ids[depth] = table.rcopy(state_ids[depth-1])
+      end
+
+      if (#label_parts > 1) then
+        
+        -- one or more state ids, remove the label...
+        label_parts[#label_parts] = nil 
+
+        --print("depth",depth,"label",label,rprint(state_ids[depth]))
+        for k,v in ipairs(label_parts) do
+          if not (table.find(state_ids[depth],v)) then
+            table.insert(state_ids[depth],v)
+          end
+        end
+
+      end
+
+    end
+
+    --print("got here 3")
+    --print("*** state_ids",rprint(state_ids))
+
     local text = string.sub(str, i, ni - 1)
     
     if (not string.find(text, "^%s*$")) then
       table.insert(top, text)
     end
     
-    if (empty == "/") then  -- empty element tag
+    if is_empty_tag then  -- empty element tag
 
       --print("empty element tag - label",label)
-      local xargs = parseargs(xarg,true)
+      local xargs = parseargs(xarg,true,label)
+
+      if (label ~= "State") then
+        xargs.state_ids = table.rcopy(state_ids[depth])
+        --print("*** assigned state ids to label,param",label,table.concat(state_ids[depth],","))
+      end
 
       if (label == "Param") then
         xargs.index = parameter_index
@@ -1203,11 +1308,15 @@ function ControlMap:_parse_xml(str)
 
       table.insert(top, {label=label, xarg=xargs, empty=1})
     
-    elseif (c == "") then   -- start tag
+    elseif is_start_tag then   -- start tag
 
       --print("start tag - label",label)
+      local xargs = parseargs(xarg,false,label)
 
-      local xargs = parseargs(xarg)
+      if (label ~= "State") then
+        xargs.state_ids = table.rcopy(state_ids[depth])
+        --print("*** assigned state ids to label,param",label,table.concat(state_ids[depth],","))
+      end
 
       -- <Param> node containing <SubParam> nodes
       if (label == "Param") then
@@ -1237,6 +1346,11 @@ function ControlMap:_parse_xml(str)
       table.insert(top, toclose)
 
       if (label == "Group") then
+
+        -- required: name attribute
+        if not toclose.xarg.name then
+          error("all groups must specify a name attribute")
+        end
         
         -- import colorspace or create blank
         if (toclose.xarg.colorspace) then
@@ -1268,6 +1382,13 @@ function ControlMap:_parse_xml(str)
 
         for idx,val in ipairs(toclose) do
 
+          if not toclose[idx].xarg.value or (toclose[idx].xarg.value == "") 
+            --and table.is_empty(toclose[idx])
+          then
+            mark_as_virtual(toclose[idx].xarg)
+            --print("mark_as_virtual (parameter)",rprint(toclose[idx]))
+          end
+
           -- extend properties to parameters
           toclose[idx].xarg.group_name =  toclose.xarg.name
           --print("*** toclose["..idx.."].xarg.group_name",toclose[idx].xarg.group_name)
@@ -1279,33 +1400,60 @@ function ControlMap:_parse_xml(str)
 
           toclose[idx].xarg.regex_patt  =  create_regex_patt(toclose[idx].xarg)
 
-          counter = counter + 1
-          if (counter >= columns) then
-            counter = 0
-          end
-
           --print("loop through parameters",rprint(toclose[idx].xarg))
 
           -- loop through subparameters ...
           for idx2,_ in ipairs(toclose[idx]) do
 
+            toclose[idx].xarg.has_subparams = true
+
+            -- propagate certain attributes:
+            -- if not defined in subparam, use param
+
+            -- value
+            if not toclose[idx][idx2].xarg.value then
+              toclose[idx][idx2].xarg.value  =  toclose[idx].xarg.value
+              if not toclose[idx].xarg.value then
+                mark_as_virtual(toclose[idx][idx2].xarg)
+                --print("mark_as_virtual (subparameter)",rprint(toclose[idx][idx2]))
+              end
+            end
+
+            if not toclose[idx][idx2].xarg.type then
+              toclose[idx][idx2].xarg.type  =  toclose[idx].xarg.type
+            end
+
+            if not toclose[idx][idx2].xarg.minimum then
+              toclose[idx][idx2].xarg.minimum  =  toclose[idx].xarg.minimum
+            end
+
+            if not toclose[idx][idx2].xarg.maximum then
+              toclose[idx][idx2].xarg.maximum  =  toclose[idx].xarg.maximum
+            end
+  
+            -- copy internal attributes
             toclose[idx][idx2].xarg.group_name  =  toclose[idx].xarg.group_name
             toclose[idx][idx2].xarg.index       =  toclose[idx].xarg.index
             toclose[idx][idx2].xarg.column      =  toclose[idx].xarg.column
             toclose[idx][idx2].xarg.row         =  toclose[idx].xarg.row
-            toclose[idx][idx2].xarg.minimum     =  toclose[idx].xarg.minimum
-            toclose[idx][idx2].xarg.maximum     =  toclose[idx].xarg.maximum
 
             toclose[idx][idx2].xarg.regex_patt  =  create_regex_patt(toclose[idx][idx2].xarg)
 
             -- apply widget-specific attributes...
 
-            local process_subparams = widget_hooks[toclose[idx].xarg.type].process_subparams
-            if process_subparams then
-              process_subparams(toclose[idx],toclose[idx][idx2])
+            local widget_hook = widget_hooks[toclose[idx].xarg.type]
+            if widget_hook and widget_hook.process_subparams then
+              widget_hook.process_subparams(toclose[idx],toclose[idx][idx2])
             end
 
+            --print("loop through subparameters",toclose[idx][idx2].xarg.value,rprint(toclose[idx][idx2].xarg))
 
+          end
+
+          -- update/reset column count
+          counter = counter + 1
+          if (counter >= columns) then
+            counter = 0
           end
 
         end
@@ -1320,6 +1468,13 @@ function ControlMap:_parse_xml(str)
 
 
     end
+
+    if is_empty_tag then
+      state_ids[depth] = nil
+      depth = depth-1
+    end
+
+
     i = j + 1
   end
   

@@ -24,14 +24,20 @@ Display.UNIT_WIDTH = 32
 --- Initialize the Display class
 -- @param device (@{Duplex.Device}) associate the Display with this device
 
-function Display:__init(device)
+function Display:__init(process)
   TRACE('Display:__init')
 
-  assert(device, "Internal Error. Please report: " ..
+  assert(process, "Internal Error. Please report: " ..
+    "expected a valid BrowserProcess for a display")
+
+  assert(process.device, "Internal Error. Please report: " ..
     "expected a valid device for a display")
-  
+
+  --- (@{Duplex.BrowserProcess})
+  self.process = process
+
   --- (@{Duplex.Device})
-  self.device = device  
+  self.device = process.device  
 
   --- (renoise.ViewBuilder)
   self.vb = nil
@@ -59,9 +65,18 @@ function Display:__init(device)
   self.canvas_background = {text="",color={0x00,0x00,0x00},val=false}
   
   --  temp values (construction of control surface)
+  self._id = nil
   self._parents = nil
   self._grid_obj = nil    
   self._grid_count = nil
+  self._row_ids = nil
+
+  --- (@{Duplex.StateController}) handle display states
+  -- (this is added immediately after initializing the Display, as we
+  -- need a valid reference to ourselves - search for "StateApplication")
+  self.state_ctrl = nil
+
+
 
 end
 
@@ -92,9 +107,7 @@ function Display:clear()
   -- force-update entire canvas for the next update
   for _,obj in ipairs(self.ui_objects) do
     if (obj.group_name) then
-      obj.canvas.delta = table.rcopy(obj.canvas.buffer)
-      obj.canvas.has_changed = true
-      obj:invalidate()
+      obj:force_refresh()
     end
   end
 end
@@ -272,7 +285,8 @@ function Display:update()
       if (obj.canvas.has_changed) then
         for x = 1,obj.width do
           for y = 1, obj.height do
-            --print("*** obj.canvas.delta["..x.."]["..y.."]",obj.canvas.delta[x][y])
+            --print("*** Display.update - obj.group_name",obj.group_name)
+            --print("*** Display.update - obj.canvas.delta["..x.."]["..y.."]",obj.canvas.delta[x][y])
             if (obj.canvas.delta[x][y]) then
               local idx = (x+obj.x_pos-1)+((y+obj.y_pos-2)*columns)
               local param = cm:get_param_by_index(idx, obj.group_name)
@@ -331,8 +345,17 @@ function Display:set_parameter(param,ui_obj,point,skip_ui)
   -- at this stage, we might directly communicate with the hardware, 
   -- in which case the "skip_hardware" flag can be set to true
   local value,skip_hardware = nil,false
-  value,skip_hardware = self.device:output_value(point,param.xarg,ui_obj)
-  --print("*** set_parameter - value,point.val",value,point.val)
+  if (param.xarg.class) and
+    _G[param.xarg.class].output_value
+  then
+    -- produce output value using the specified device class
+    -- (this is useful when mixing a custom device class implementation
+    -- with features that make use of the standard osc/midi featureset)
+    value,skip_hardware = _G[param.xarg.class].output_value(self.device,point,param.xarg,ui_obj)
+  else -- output via current context (device-config class)
+    value,skip_hardware = self.device:output_value(point,param.xarg,ui_obj)
+  end
+  --print("*** set_parameter - value,point",rprint(value),rprint(point))
 
   if not skip_hardware then
     skip_hardware = (param.xarg.skip_echo or ui_obj.soft_echo or
@@ -385,8 +408,8 @@ function Display:set_parameter(param,ui_obj,point,skip_ui)
         -- Custom widgets (e.g. keyboard)
         --print("*** set_parameter - ui_obj",ui_obj)
 
-        if (param.xarg.type == "keyboard") then
-          local set_widget = widget_hooks["keyboard"].set_widget
+        local set_widget = widget_hooks[param.xarg.type].set_widget
+        if set_widget then
           set_widget(self,widget,param.xarg,ui_obj,point,value)
         end
 
@@ -403,6 +426,19 @@ function Display:set_parameter(param,ui_obj,point,skip_ui)
   ---------------------------------------------------------
 
   if not skip_hardware then
+
+
+    -- check states to see if we should produce output
+    for _,state_id in ipairs(param.xarg.state_ids) do
+      local state = self.state_ctrl.states[state_id]
+      if state and not state.active then
+        if not state.receive_when_inactive then
+          --print("*** set_parameter - inactive state prevents output",state_id)
+          --rprint(param.xarg)
+          return
+        end
+      end
+    end
 
     -- perform last-minute changes to output
     -- e.g. to swap axes on an xypad 
@@ -447,15 +483,19 @@ function Display:set_parameter(param,ui_obj,point,skip_ui)
 
         elseif (msg_type == DEVICE_MESSAGE.MIDI_PITCH_BEND) then
 
-          -- normally, you wouldn't send back pitch bend messages
+          -- normally, you wouldn't send back pitch bend messages (skip_echo)
           -- but under some circumstances (Mackie Control) it is needed
-          self.device:send_pitch_bend_message(math.floor(value),channel)
+          self.device:send_pitch_bend_message(math.floor(value),channel,param.xarg.mode)
 
         elseif (msg_type == DEVICE_MESSAGE.MIDI_CHANNEL_PRESSURE) then
 
           -- do nothing
 
         elseif (msg_type == DEVICE_MESSAGE.MIDI_KEY) then
+
+          -- do nothing
+
+        elseif (msg_type == DEVICE_MESSAGE.MIDI_PROGRAM_CHANGE) then
 
           -- do nothing
 
@@ -505,14 +545,19 @@ function Display:build_control_surface()
   if (cm.definition) then
   
     -- reset temp states from previous walks
+    self._id = 0
     self._parents = {}
     self._grid_obj = nil    
     self._grid_count = 0
+    self._row_ids = {}
 
     -- construct the control surface UI
     self:_walk_table(cm.definition)
 
     self:apply_tooltips()
+    self.state_ctrl:initialize()
+
+    --print("self.vb.views",rprint(self.vb.views))
 
   end
   
@@ -550,7 +595,6 @@ function Display:generate_message(value, param, released)
 
   -- include as copy 
   msg.xarg = table.rcopy(param.xarg)
-  --msg.xarg = param.xarg
 
   if released then
     msg.is_note_off = true
@@ -566,30 +610,33 @@ function Display:generate_message(value, param, released)
 
     -- if possible, create a "virtual" midi message 
 
-    msg.channel = 1
-    if self.device.extract_midi_channel then
-      msg.channel = self.device:extract_midi_channel(param.xarg.value) or 
-        self.device.default_midi_channel
-    end
+    if not (msg.context==DEVICE_MESSAGE.OSC) then
 
-    if (msg.context==DEVICE_MESSAGE.MIDI_NOTE) then
-      -- value specifies the velocity
-      local note_pitch = value_to_midi_pitch(param.xarg.value)+12
-      msg.midi_msg = {143+msg.channel,note_pitch,value[2]}
-    elseif (msg.context==DEVICE_MESSAGE.MIDI_CC) then
-      -- value specifies the CC value
-      local cc_num = extract_cc_num(param.xarg.value)
-      msg.midi_msg = {175+msg.channel,cc_num,math.floor(value)}
-    elseif (msg.context==DEVICE_MESSAGE.MIDI_CHANNEL_PRESSURE) then
-      -- value specifies the pressure amount
-      msg.midi_msg = {207+msg.channel,0,math.floor(value)}
-    elseif (msg.context==DEVICE_MESSAGE.MIDI_PITCH_BEND) then
-      -- value specifies the pitch bend amount
-      msg.midi_msg = {223+msg.channel,math.floor(value),0}
+      msg.channel = 1
+      if self.device.extract_midi_channel then
+        msg.channel = self.device:extract_midi_channel(param.xarg.value) or 
+          self.device.default_midi_channel
+      end
+
+      if (msg.context==DEVICE_MESSAGE.MIDI_NOTE) then
+        -- value specifies the velocity
+        local note_pitch = value_to_midi_pitch(param.xarg.value)+12
+        msg.midi_msg = {143+msg.channel,note_pitch,value[2]}
+      elseif (msg.context==DEVICE_MESSAGE.MIDI_CC) then
+        -- value specifies the CC value
+        local cc_num = extract_cc_num(param.xarg.value)
+        msg.midi_msg = {175+msg.channel,cc_num,math.floor(value)}
+      elseif (msg.context==DEVICE_MESSAGE.MIDI_CHANNEL_PRESSURE) then
+        -- value specifies the pressure amount
+        msg.midi_msg = {207+msg.channel,0,math.floor(value)}
+      elseif (msg.context==DEVICE_MESSAGE.MIDI_PITCH_BEND) then
+        -- value specifies the pitch bend amount
+        msg.midi_msg = {223+msg.channel,math.floor(value),0}
+      end
+      --print("*** Display: generate_message - virtually generated midi msg...")
+      --rprint(msg.midi_msg)
+      --print("msg.is_note_off",msg.is_note_off,released)
     end
-    --print("*** Display: generate_message - virtually generated midi msg...")
-    --rprint(msg.midi_msg)
-    --print("msg.is_note_off",msg.is_note_off,released)
 
   end
 
@@ -617,6 +664,14 @@ function Display:_walk_table(t, done, deep)
   deep = deep and deep + 1 or 1  --  
   done = done or {}
 
+
+  -- remember and increase id (all node types)
+  local register_param = function(param,id)
+    param.xarg.id = tostring(id)
+    self.state_ctrl.registered_ids[id] = param
+  end
+
+
   for key, value in pairs(t) do
     if (type(value) == "table" and not done[value]) then
       done [value] = true
@@ -625,12 +680,14 @@ function Display:_walk_table(t, done, deep)
       local view_obj = nil
       local param = t[key]
 
+      if (param.label == "State") then
+
+        self.state_ctrl:add_state(param.xarg)
   
-      if (param.label == "Param") then
+      elseif (param.label == "Param") then
   
         --- validate param properties
         local cm = self.device.control_map
-        widget_hooks.generic_type.validate(self,param,cm)
         widget_hooks[param.xarg.type].validate(self,param,cm)
 
         --- common properties
@@ -654,34 +711,46 @@ function Display:_walk_table(t, done, deep)
         end
 
         -- add widgets and notifiers 
+        --print("got here 3 Param")
+        register_param(param,self._id)
+
         view_obj = widget_hooks[param.xarg.type].build(
           self,param,adj_width,adj_height,tooltip)
 
 
-        
       elseif (param.label == "Column") then
     
         -- Column
-    
+
+        --print("got here 6 Column Create")
+
         view_obj = self.vb:column{
-          spacing = DEFAULT_SPACING
+          spacing = DEFAULT_SPACING,
+          id = tostring(self._id)
         }
+        register_param(param,self._id)
+        self._id = self._id+1
+
         self._parents[deep] = view_obj
         self._grid_obj = nil
   
       elseif (param.label == "Row") then
     
         -- Row
-    
+        --print("got here 7 Row Create")
+
         view_obj = self.vb:row{
           spacing = DEFAULT_SPACING,
+          id = tostring(self._id),
         }
+        register_param(param,self._id)
+        self._id = self._id+1
+
         self._parents[deep] = view_obj
         self._grid_obj = nil
+
       elseif (param.label == "Group") then
 
-        -- Group
-    
         self:_validate_group(param.xarg)
 
         -- the group
@@ -692,21 +761,26 @@ function Display:_walk_table(t, done, deep)
         grid_id = nil
 
         if (columns) then
+
           -- enter "grid mode": use current group as 
           -- base object for inserting multiple rows
+
           self._grid_count = self._grid_count+1
-          grid_id = string.format("grid_%i",self._grid_count)
+          grid_id = tostring(self._id)
           orientation = "vertical"
+
         else
-          -- exit "grid mode"
+          --print("exit grid mode")
           self._grid_obj = nil
+          register_param(param,self._id)
+
         end
           
         if (orientation == "vertical") then
           view_obj = self.vb:column{
             style = "group",
             visible = visible,
-            id = grid_id,
+            id = grid_id or tostring(self._id),
             margin = DEFAULT_MARGIN,
             spacing = DEFAULT_SPACING,
           }
@@ -715,17 +789,22 @@ function Display:_walk_table(t, done, deep)
           view_obj = self.vb:row{
             style = "group",
             visible = visible,
-            id = grid_id,
+            id = grid_id or tostring(self._id),
             width = 400,
             margin = DEFAULT_MARGIN,
             spacing = DEFAULT_SPACING,
           }
         end
-    
-        -- more grid mode stuff: remember the original view_obj
-        -- grid mode will otherwise loose this reference...
+        --print("got here 0.1 view_obj",view_obj,grid_id)
+
         if (grid_id) then
+
+          -- grid mode, remember the original view_obj
+          -- otherwise we loose this reference...
+
           self._grid_obj = view_obj
+          register_param(param,self._id)
+
         end
           
         self._parents[deep] = view_obj
@@ -737,18 +816,22 @@ function Display:_walk_table(t, done, deep)
         local row_id = nil
     
         if (param.xarg.row) then
-          row_id = string.format("grid_%i_row_%i",
-            self._grid_count,param.xarg.row)
+          row_id = string.format("grid_%i_row_%i",self._grid_count,param.xarg.row)
         end
     
         if (not grid_id and self._grid_obj and 
-          not self.vb.views[row_id]) then
+          --not self.vb.views[row_id]) then
+          not self._row_ids[row_id]) then
+
+          self._row_ids[row_id] = true
+          --print("got here 2 Param")
     
+          self._id = self._id+1
           local row_obj = self.vb:row{
-            id=row_id,
+            id = tostring(self._id),
             spacing=DEFAULT_SPACING,
           }
-          -- assign grid objects to this row
+
           self._grid_obj:add_child(row_obj)
           self._parents[deep-1] = row_obj
         end
@@ -758,7 +841,12 @@ function Display:_walk_table(t, done, deep)
     
         for i = deep-1, 1, -1 do
           if self._parents[i] then
+
+            --print("got here 8 Group Param Row")
+
             self._parents[i]:add_child(view_obj)
+            self._id = self._id+1
+
             added = true
             break
           end
@@ -766,7 +854,9 @@ function Display:_walk_table(t, done, deep)
           
         -- else, add to main view
         if (not added) then
+          --print("got here 4")
           self.view:add_child(view_obj)
+
         end
       end
       

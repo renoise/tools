@@ -46,15 +46,18 @@ function MidiDevice:__init(display_name, message_stream, port_in, port_out)
   self.dump_midi = false
 
   -- (int) when using the virtual control surface, and the control-map
-  -- doesn't specify a specific channel, we use this value: 
+  -- doesn't specify a specific channel, use this value: 
   self.default_midi_channel = 1
 
-  --- (int) used for quantized output and relative step size
-  self.default_midi_resolution = 127
+  --- (@{Duplex.Globals.PARAM_MODE}) the default parameter mode
+  self.default_parameter_mode = "abs_7"
 
-  --- (bool) enable this to quantize output to given resolution before
-  -- actually sending it to the MIDI controller (less traffic)
-  self.output_quantize = true
+  --- (table) table of multibyte messages
+  --    [int]{  -- channel
+  --     lsb = [int]
+  --     msb = {int]
+  --    }
+  self.composite_messages = {}
 
   -- ## NRPN
   self.nrpn_message = NRPNMessage()
@@ -168,15 +171,68 @@ function MidiDevice:midi_callback(message)
     value_str = "CP"
   elseif (message[1]>=224) and (message[1]<=239) then
     msg_context = DEVICE_MESSAGE.MIDI_PITCH_BEND
-    msg_value = message[3] -- todo: support LSB for higher resolution
     msg_channel = message[1]-223
+
+
+    if (message[2] >= 0) and (message[3] == 0) then
+
+      -- ### start multibyte message 
+      -- (14-bit pitch-bend)
+      -- check if     0xE0,0x00,0x00 (initiate)
+      -- followed by  0xE0,0xnn,0x00 (msb byte)
+      -- and          0xE0,0xnn,0x00 (msb byte, final value)
+
+      if (message[2] == 0) and (message[3] == 0) and
+        not self.composite_messages[msg_channel] 
+      then
+        -- possible LSB initiated
+        self.composite_messages[msg_channel] = {
+          timestamp = os.clock(),
+          lsb = nil,
+          msb = nil
+        }
+        return
+      else
+        -- check for previous LSB
+        local lsb_message = self.composite_messages[msg_channel]
+        if (lsb_message) then
+          -- too old - purge from list
+          if (lsb_message.timestamp < os.clock()-0.1) then
+            self.composite_messages[msg_channel] = nil
+            return
+          end
+          -- previous initiated, receive lsb 
+          if not lsb_message.lsb then
+            lsb_message.lsb = message[2]
+            return
+          end
+          -- receive msb and continue
+          lsb_message.msb = message[2]
+          msg_value = lsb_message.lsb + (lsb_message.msb*128)
+          self.composite_messages[msg_channel] = nil
+          --print("received 14 bit pitch bend message",msg_value)
+
+
+        end
+      end
+      -- ### end multibyte message
+
+    else
+      self.composite_messages[msg_channel] = nil
+      msg_value = message[3] 
+      --print("received 7 bit pitch bend message",msg_value)
+    end
     value_str = "PB"
-    --print("MidiDevice: - msg_value",msg_value)
   else
     -- ignore unsupported/unhandled messages...
     -- possible data include timing clock, active sensing etc.
   end
 
+  -- sometimes (under heavy CPU load), the message can become mangled
+  if not msg_is_note_off and not msg_value then
+    --print("*** received invalid MIDI message",msg_value)
+    return
+  end
 
   if (value_str) then
 
@@ -187,14 +243,28 @@ function MidiDevice:midi_callback(message)
 
     -- retrieve all matching parameters
     local params = self.control_map:get_midi_params(value_str)
+    --print("get_midi_params",#params)
 
+    -- pass unmatched messages to renoise?
+    if (#params == 0) then
+      if self:pass_to_renoise(message) then
+        return
+      end
+    end
 
-    for k,v in ipairs(params) do
-
-      -- deep-copy the parameter table, so we can modify   
-      -- it's values without changing the original 
-      --local param = table.rcopy(v)
-      local param = v
+    for k,param in ipairs(params) do
+      
+      -- roll 14 bit values back to 7 bit
+      --print("param.mode",param.mode)
+      --print("msg_value",msg_value,type(msg_value))
+      if (not param.xarg.mode 
+        or (param.xarg.mode ~= "abs_14"))
+        and (type(msg_value) == "number") 
+        and (msg_value > 127) 
+      then
+        --print("scale 14 bit values back to 7 bit - param.mode",param.xarg.mode,"type(msg_value)",type(msg_value))
+        msg_value = math.floor(msg_value/128)
+      end
       
       -- create the message
       local msg = Message()
@@ -206,9 +276,10 @@ function MidiDevice:midi_callback(message)
 
       if (duplex_preferences.nrpn_support.value == false) then
 
-        if (param) then
-          self:_send_message(msg,param)
-        end
+        -- tell message-stream how many messages it can expect to receive
+        -- (so it can memoize all relevant ui-objs)
+        self.message_stream.queued_messages = #params - k
+        self:_send_message(msg,param)
 
       else
 
@@ -331,6 +402,67 @@ function MidiDevice:sysex_callback(message)
       self.port_in, #message))
   end
   
+  -- the internal MIDI trigger functionality (via OscClient) does not support 
+  -- sysex messages, however the MMC functionality is emulated here:
+
+  if (#message == 6) then
+    if (message[2] == 127) and
+      -- (message[3]) device id is irrelevant
+      (message[4] == 6) then
+
+      local rns = renoise.song()
+
+      if (message[5] == 1) then 
+        --print("MMC Start")
+        rns.transport:start(renoise.Transport.PLAYMODE_RESTART_PATTERN)
+      elseif (message[5] == 2) then 
+        --print("MMC Stop")
+        rns.transport:stop()
+      elseif (message[5] == 3) then
+        --print("MMC Deferred play")
+        rns.transport:start(renoise.Transport.PLAYMODE_CONTINUE_PATTERN)
+      elseif (message[5] == 4) then
+        --print("MMC Fast Forward")
+        local play_pos = rns.transport.playback_pos
+        play_pos.sequence = play_pos.sequence + 1
+        local seq_len = #rns.sequencer.pattern_sequence
+        if (play_pos.sequence <= seq_len) then
+          local new_patt_idx = rns.sequencer.pattern_sequence[play_pos.sequence]
+          local new_patt = rns:pattern(new_patt_idx)
+          if (play_pos.line > new_patt.number_of_lines) then
+            play_pos.line = 1
+          end
+          rns.transport.playback_pos = play_pos
+        end
+      elseif (message[5] == 5) then
+        --print("MMC Rewind")
+        local play_pos = rns.transport.playback_pos
+        play_pos.sequence = play_pos.sequence - 1
+        if (play_pos.sequence < 1) then
+          play_pos.sequence = 1
+        end
+        local new_patt_idx = rns.sequencer.pattern_sequence[play_pos.sequence]
+        local new_patt = rns:pattern(new_patt_idx)
+        if (play_pos.line > new_patt.number_of_lines) then
+          play_pos.line = 1
+        end
+        rns.transport.playback_pos = play_pos
+      elseif (message[5] == 6) then
+        --print("MMC Record Strobe")
+        rns.transport.edit_mode = true
+      elseif (message[5] == 7) then
+        --print("MMC Record Exit")
+        rns.transport.edit_mode = false
+      elseif (message[5] == 9) then
+        --print("MMC Pause")
+        rns.transport:stop()
+      end
+    end
+  end
+
+
+  
+
 end
 
 
@@ -418,9 +550,10 @@ end
 --
 -- @param value (int) the pitch-bend value, 7 bit value
 -- @param channel (int) the MIDI channel, 1-16 (optional)
+-- @param mode (string) specify sending mode, e.g. "abs" or "abs_14"
 
-function MidiDevice:send_pitch_bend_message(value,channel)
-  TRACE("MidiDevice:send_pitch_bend_message()",value,channel)
+function MidiDevice:send_pitch_bend_message(value,channel,mode)
+  TRACE("MidiDevice:send_pitch_bend_message()",value,channel,mode)
 
   if (not self.midi_out or not self.midi_out.is_open) then
     return
@@ -429,17 +562,40 @@ function MidiDevice:send_pitch_bend_message(value,channel)
     channel = self.default_midi_channel
   end
 
-  local message = {223+channel, 0, value} -- todo: LSB for higher precision
-
-  TRACE(("MidiDevice: %s send MIDI %X %X %X"):format(
-    self.port_out, message[1], message[2], message[3]))
-    
-  if(self.dump_midi)then
-    LOG(("MidiDevice: %s send MIDI %X %X %X"):format(
-      self.port_out, message[1], message[2], message[3]))
+  local dump_midi = function(msg) 
+    if(self.dump_midi)then
+      LOG(("MidiDevice: %s send MIDI %X %X %X"):format(
+        self.port_out, msg[1], msg[2], msg[3]))
+    else
+      TRACE(("MidiDevice: %s send MIDI %X %X %X"):format(
+        self.port_out, msg[1], msg[2], msg[3]))
+    end
   end
 
-  self.midi_out:send(message) 
+  local message = nil
+
+  if (mode == "abs_14") then
+    
+    -- 14 bit value (two messages)
+    local third = math.floor(value/128)
+    local msb = value-(third*128)
+    message = {223+channel, 0, 0}
+    dump_midi(message)
+    self.midi_out:send(message) 
+    message = {223+channel, msb, third}
+    dump_midi(message)
+    self.midi_out:send(message) 
+
+    return
+  
+  else
+    -- standard 7 bit message
+    message = {223+channel, 0, value}
+    dump_midi(message)
+    self.midi_out:send(message) 
+
+  end
+
 
 end
 
@@ -484,6 +640,27 @@ function MidiDevice:send_note_message(key,velocity,channel)
   self.midi_out:send(message) 
 end
 
+--------------------------------------------------------------------------------
+
+--- Pass unhandled/unmatched message to Renoise? 
+-- (this is defined in the device settings panel)
+-- @param message (MIDI message)
+-- @return bool (true when message was passed)
+
+function MidiDevice:pass_to_renoise(message)
+  TRACE("MidiDevice:pass_to_renoise(message)",message)
+
+  local process = self.message_stream.process
+  local pass_setting = process.settings.pass_unhandled.value
+  if pass_setting then
+    local osc_client = process.browser._osc_client
+    osc_client:trigger_midi(message)
+    return true
+  end
+
+  return false
+
+end
 
 --------------------------------------------------------------------------------
 

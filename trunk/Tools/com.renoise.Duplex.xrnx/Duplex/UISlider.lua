@@ -149,7 +149,7 @@ function UISlider:do_press(msg)
     idx = 0
   end
 
-  self.set_index(self,idx)
+  self:set_index(idx)
 
   return self
 
@@ -165,8 +165,6 @@ end
 function UISlider:do_change(msg)
   TRACE("UISlider:do_change()",msg)
 
-  --print("got here B")
-
   if not self:test(msg) then
     return 
   end
@@ -179,21 +177,10 @@ function UISlider:do_change(msg)
     
     local is_midi_device = (self.app.display.device.protocol == DEVICE_PROTOCOL.MIDI)
     
-    local is_relative_7 = ((msg.xarg.mode == "rel_7_signed") or 
-      (msg.xarg.mode == "rel_7_signed2") or
-      (msg.xarg.mode == "rel_7_offset") or
-      (msg.xarg.mode == "rel_7_twos_comp"))
-    
-    if not msg.is_virtual and is_midi_device and is_relative_7 then
-      -- check midi resolution
-      local midi_res = self.app.display.device.default_midi_resolution
-      if not (midi_res == 127) then
-        LOG("UISlider: rel_7_signed2 mode expected '127' as the midi resolution")
-        return 
-      end
-      -- treat as relative control
+    if not msg.is_virtual and is_midi_device and msg.xarg.mode:find("rel_7") then
+      -- treat as 7 bit relative control
       new_val = self.value
-      local step_size = self.ceiling/midi_res
+      local step_size = self.ceiling/127
       if (msg.xarg.mode == "rel_7_signed") then
         if (msg.midi_msg[3] < 64) then
           new_val = math.max(new_val-(step_size*msg.midi_msg[3]),0)
@@ -220,18 +207,22 @@ function UISlider:do_change(msg)
         end
       end
       -- check if outside range
-      if ((new_val*midi_res) > midi_res) then
+      if ((new_val*127) > 127) then
         LOG("UISlider: trying to assign out-of-range value, probably due to"
           .."/na parameter which has been set to an incorrect 'mode'")
         return 
       end
     else
-      -- treat as absolute control:
-      -- scale from the message range to the sliders range
+      -- treat as absolute control: scale from message to component range
       new_val = scale_value(msg.value,msg.xarg.minimum,msg.xarg.maximum,self.floor,self.ceiling)
+      --print("msg.value,msg.xarg.minimum,msg.xarg.maximum,self.floor,self.ceiling",msg.value,msg.xarg.minimum,msg.xarg.maximum,self.floor,self.ceiling)
     end
 
-    if not self:output_quantize(new_val) then
+    --if new_val == self.value then
+    --  return
+    --end
+
+    if not self:output_quantize(new_val,msg.xarg.mode) then
       return 
     end
 
@@ -247,26 +238,29 @@ end
 --------------------------------------------------------------------------------
 
 --- Check if parameter-quantization is in force
+-- @param val (number) a value between floor and ceiling
+-- @param mode (enum) see @{Duplex.Globals.PARAM_MODE}
 -- @return (bool) true when the message can pass, false when not
 
-function UISlider:output_quantize(val)
+function UISlider:output_quantize(val,mode)
 
-  -- MIDI devices quantize their output by default
-  if not (self.app.display.device.protocol == DEVICE_PROTOCOL.MIDI) then
+  local value_res = nil
+  if (mode:find("7")) then
+    value_res = 127
+  elseif (mode:find("14")) then
+    value_res = 16383
+  else
     return true
   end
 
   local quantize_value = function(val)
-    local midi_res = self.app.display.device.default_midi_resolution
-    return math.floor((val/self.ceiling)*midi_res)
+    return math.floor((val/self.ceiling)*value_res)
   end
 
-  if self.app.display.device.output_quantize then
-    local cached_val = quantize_value(self.value)
-    local val = quantize_value(val)
-    if (cached_val == val) then
-      return false
-    end
+  local cached_val = quantize_value(self.value)
+  local val = quantize_value(val)
+  if (cached_val == val) then
+    return false
   end
 
   return true
@@ -283,8 +277,8 @@ function UISlider:set_value(val,skip_event)
   TRACE("UISlider:set_value()",val,skip_event)
 
   --if (self.value == val) then
-  --  print("*** UISlider:set_value - skip update, same value being set",val)
-  --  return
+    --print("*** UISlider:set_value - skip update, same value being set",val)
+    --return
   --end
 
   local idx = math.abs(math.ceil(((self.steps/self.ceiling)*val)-0.5))
@@ -311,8 +305,8 @@ function UISlider:set_index(idx,skip_event)
   TRACE("UISlider:set_index()",idx,skip_event)
 
   --if (self.index == idx) then
-  --  print("*** UISlider:set_index - skip update, same index being set",idx)
-  --  return
+    --print("*** UISlider:set_index - skip update, same index being set",idx)
+    --return
   --end
 
   self._cached_index = self.index
@@ -328,20 +322,6 @@ function UISlider:set_index(idx,skip_event)
   end
 
 end
-
---------------------------------------------------------------------------------
-
---- Force-update controls that are handling their internal state by themselves
--- (only relevant when assigned to buttons)
-
-function UISlider:force_update()
-
-  self.canvas.delta = table.rcopy(self.canvas.buffer)
-  self.canvas.has_changed = true
-  self:invalidate()
-
-end
-
 
 --------------------------------------------------------------------------------
 
@@ -404,20 +384,28 @@ end
 -- @see Duplex.UIComponent.test
 
 function UISlider:test(msg)
+  TRACE("UISlider:test()",msg)
 
-  if not (self.group_name == msg.xarg.group_name) then
-    return false
-  end
+  --print("*** UISlider:test - self.group_name,msg.xarg.group_name",self.group_name,msg.xarg.group_name)
+  --print("*** UISlider:test - self.state,msg.xarg.state_ids",self.state,rprint(msg.xarg.state_ids))
 
-  if not self.app.active then
-    return false
-  end
-  
   if (self._orientation == ORIENTATION.VERTICAL) or
     (self._orientation == ORIENTATION.HORIZONTAL)
   then
-    return UIComponent.test(self,msg.xarg.column,msg.xarg.row)
+    return UIComponent.test(self,msg)
   end
+
+  if not self.app.active then
+    --print("*** UISlider:test - not active")
+    return false
+  end
+  
+  if not (self.group_name == msg.xarg.group_name) then
+    --print("*** UISlider:test - wrong group...self.group_name,msg.xarg.group_name",self.group_name,msg.xarg.group_name)
+    return false
+  end
+
+  --print("*** UISlider:test - passed test...")
 
   -- no-orientation, fill the entire group
   return true

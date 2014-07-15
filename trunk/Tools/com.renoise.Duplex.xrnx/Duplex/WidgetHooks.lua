@@ -147,54 +147,24 @@ widget_hooks.generic_type = {
          'in one of its \'Param\' fields.\n\n'..
          'Please use one of: %s'):format(cm.file_path, 
          table.concat(table.values(INPUT_TYPE),", ")))
-
     end
 
-  end,
-
-}
-
--------------------------------------------------------------------------------
-
-widget_hooks.generic_value = {
-  
-  validate = function(...)
-  
-    local display,param,cm = select(1,...)
-
-    -- check for required value (labels don't need values, and neither does a 
-    -- <Param> node that contain subparameters...
-    if (param.xarg.type ~= "label") and 
-      (not param.xarg.has_subparams)
-    then
-      if (param.xarg.value == nil or 
-          cm:determine_type(param.xarg.value) == nil)
-      then
-        renoise.app():show_warning(
-          ('Whoops! The controlmap \'%s\' specifies no or an invalid \'value\' '..
-           'property in one of its \'Param\' fields: %s.\n\n'..
-           'You have to map a control to a MIDI message via the name property, '..
-           'i.e: value="CC#10" (control change number 10, any channel) or PB|1 '..
-           '(pitchbend on channel 1).'):format(
-           cm.file_path, param.xarg.value or "")
-        )
-      
-      end
+    if param.xarg.mode and (not table.find(table.values(PARAM_MODE), param.xarg.mode)) then
+      renoise.app():show_warning(
+        ('Whoops! The controlmap \'%s\' specifies an invalid \'mode\' property '..
+         'in one of its \'Param\' fields.\n\n'..
+         'Please use one of: %s'):format(cm.file_path, 
+         table.concat(table.values(PARAM_MODE),", ")))
     end
 
-  end,
-
-}
-
--------------------------------------------------------------------------------
-
-widget_hooks.generic_min_max = {
-  
-  validate = function(...)
+    if param.xarg.class and (not rawget(_G, param.xarg.class)) then
+      renoise.app():show_warning(
+        ('Whoops! The controlmap \'%s\' specifies an invalid \'class\' property '..
+         'in one of its \'Param\' fields.\n\n'..
+         '(the specified class \'%s\' does not exist)'):format(cm.file_path,param.xarg.class))
+    end
 
     -- minimum/maximum
-
-    local display,param,cm = select(1,...)
 
     if (display.device.protocol == DEVICE_PROTOCOL.OSC) then
       if (param.xarg.minimum == nil or
@@ -214,6 +184,7 @@ widget_hooks.generic_min_max = {
           param.xarg.minimum < 0 or 
           param.xarg.maximum < 0) 
       then
+        --print("cm.file_path, param.xarg.name, param.xarg.value",cm.file_path,param.xarg.name,param.xarg.value)
         renoise.app():show_warning(
           ('Whoops! The controlmap \'%s\' specifies no valid \'minimum\' '..
            'or \'maximum\' property in the \'Param\' field named \'%s\'.\n\n'..
@@ -227,6 +198,7 @@ widget_hooks.generic_min_max = {
   end,
 
 }
+
 
 -------------------------------------------------------------------------------
 -- function - fader widget 
@@ -264,8 +236,7 @@ widget_hooks.fader = {
 
   validate = function(...)
 
-    widget_hooks.generic_value.validate(...)
-    widget_hooks.generic_min_max.validate(...)
+    widget_hooks.generic_type.validate(...)
 
     local display,param,cm = select(1,...)
 
@@ -341,11 +312,7 @@ widget_hooks.dial = {
   
   validate = function(...)
 
-    -- minimum/maximum
-    widget_hooks.generic_value.validate(...)
-    widget_hooks.generic_min_max.validate(...)
-
-    --local display,param,cm = select(1,...)
+    widget_hooks.generic_type.validate(...)
 
   end,
 
@@ -376,19 +343,21 @@ widget_hooks.button = {
     -- check if we are sending a note message:
     local context = display.device.control_map:determine_type(param.xarg.value)
     
+
     local press_notifier = function(value) 
-      -- output the maximum value
       --print("*** Display: press_notifier - (context==DEVICE_MESSAGE.MIDI_NOTE):",(context==DEVICE_MESSAGE.MIDI_NOTE))
       if (context==DEVICE_MESSAGE.MIDI_NOTE) then
         local pitch = param.xarg.index
         local velocity = param.xarg.maximum
         display:generate_message({pitch,velocity},param)
       else
-        display:generate_message(param.xarg.maximum,param)
+        -- output @match or @maximum
+        display:generate_message(param.xarg.match or param.xarg.maximum,param)
       end
     end
+
+
     local release_notifier = function(value) 
-      -- output the minimum value
       local released = true
       --print("*** Display: release_notifier - (context==DEVICE_MESSAGE.MIDI_NOTE):",(context==DEVICE_MESSAGE.MIDI_NOTE))
       if (context==DEVICE_MESSAGE.MIDI_NOTE) then
@@ -396,16 +365,29 @@ widget_hooks.button = {
         local velocity = param.xarg.minimum
         display:generate_message({pitch,velocity},param,released)
       else
-        display:generate_message(
-          param.xarg.maximum,param,released)
-      end
 
+        -- don't output when togglebutton
+        -- (the hardware version only fires when pressed)
+        if param.xarg.type == "togglebutton" then
+          return
+        end
+
+        -- don't output when "match" is defined
+        -- (would fire the same value when pressed/released, not useful)
+        if param.xarg.match then
+          return
+        end
+
+        display:generate_message(param.xarg.minimum,param,released)
+
+      end
     end
       
     return display.vb:button{
       id = param.xarg.id,
       width = adj_width,
       height = adj_height,
+      text = param.xarg.text,
       tooltip = tooltip,
       pressed = press_notifier,
       released = release_notifier
@@ -415,7 +397,7 @@ widget_hooks.button = {
 
   validate = function(...)
 
-    --local display,param,cm = select(1,...)
+    widget_hooks.generic_type.validate(...)
 
   end,
 
@@ -683,7 +665,27 @@ widget_hooks.label = {
 
   validate = function(...)
 
-    --local display,param,cm = select(1,...)
+    local display,param,cm = select(1,...)
+
+    -- check for required value (labels don't need values, and neither does a 
+    -- <Param> node that contain subparameters...
+    if (param.xarg.type ~= "label") and 
+      (not param.xarg.has_subparams)
+    then
+      if (param.xarg.value == nil or 
+          cm:determine_type(param.xarg.value) == nil)
+      then
+        renoise.app():show_warning(
+          ('Whoops! The controlmap \'%s\' specifies no or an invalid \'value\' '..
+           'property in one of its \'Param\' fields: %s.\n\n'..
+           'You have to map a control to a MIDI message via the name property, '..
+           'i.e: value="CC#10" (control change number 10, any channel) or PB|1 '..
+           '(pitchbend on channel 1).'):format(
+           cm.file_path, param.xarg.value or "")
+        )
+      
+      end
+    end
 
   end,
 
@@ -760,7 +762,7 @@ widget_hooks.keyboard = {
 
   --[[
   set_widget = function(...)
-    print("widget_hooks.keyboard.set_widget()")
+    --print("widget_hooks.keyboard.set_widget()")
 
     local display,widget,xarg,ui_obj,point,value = select(1,...)
 
