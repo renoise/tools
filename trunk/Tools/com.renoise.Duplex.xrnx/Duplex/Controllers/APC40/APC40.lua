@@ -33,7 +33,7 @@ end
 --- override default Device method
 -- @see Device.output_boolean
 
-function APC20:output_boolean(pt,xarg,ui_obj)
+function APC40:output_boolean(pt,xarg,ui_obj)
 
   local value = nil
 
