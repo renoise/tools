@@ -1576,7 +1576,7 @@ function Recorder:_build_app()
     end
     c.on_change = function(obj) 
 
-      print("self._controls.sliders[",i,"].on_change")
+      --print("self._controls.sliders[",i,"].on_change")
 
       local track_idx = i+self._track_offset
       local track = self._tracks[track_idx]

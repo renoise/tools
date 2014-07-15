@@ -45,6 +45,7 @@ duplex_configurations:insert {
     },
     XYPad = {
       mappings = {
+        --[[
         y_slider = {
           group_name = "XYPad",
           index = 1,
@@ -53,6 +54,12 @@ duplex_configurations:insert {
           group_name = "XYPad",
           index = 2,
         },
+        ]]
+        xy_pad = {
+          group_name = "XYPad",
+          index = 1
+        },
+
       }
     },
     Transport = {

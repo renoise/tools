@@ -57,10 +57,9 @@ end
 
 --------------------------------------------------------------------------------
 
---- Print message (for debugging purposes)
+--- Return message (for debugging purposes)
 
 function Message:__tostring()
-  return string.format("message: context:%s, group_name:%s, value:%s",
-    tostring(self.context), tostring(self.param.group_name),self.value)
+  return type(self)
 end
 

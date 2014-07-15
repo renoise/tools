@@ -46,26 +46,11 @@ end
 function UIPad:do_change(msg)
   TRACE("UIPad:do_change()",msg)
 
-  if not self.app.active then
-    return 
-  end
-  
-  if not (self.group_name == msg.xarg.group_name) then
+  if not self:test(msg) then
     return
   end
 
   self.soft_echo = not msg.is_virtual and msg.xarg.soft_echo
-
-  --print("*** UIPad.x_pos",self.x_pos)
-  --print("*** UIPad.y_pos",self.y_pos)
-
-  if not self:test(msg.xarg.column,msg.xarg.row) then
-    return
-  end
-
-  if not self.on_change then
-    return
-  end
 
   local normalize = function(val)
     return scale_value(val,msg.xarg.minimum,msg.xarg.maximum,self.floor,self.ceiling)

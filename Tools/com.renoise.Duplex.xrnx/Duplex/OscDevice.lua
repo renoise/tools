@@ -148,7 +148,21 @@ function OscDevice:socket_message(socket, binary_data)
     for _,msg in pairs(messages) do
 
       local value_str = self:_msg_to_string(msg)
-      --print("*** socket_message - incoming OSC message",os.clock(),value_str)
+      if(self.dump_osc)then
+        LOG(("OscDevice: %i incoming OSC message %s"):format(
+          self.port_in, value_str))
+      end
+
+      -- block/ignore messages that appear to be feedback
+      --print("*** OscDevice.receive_osc_message - self.feedback_prevention_enabled",self.feedback_prevention_enabled,value_str)
+      if self.feedback_prevention_enabled then
+        for k,v in ipairs(self._feedback_buffer) do
+          if (value_str == v.value_str) then
+            --print("*** receive_osc_message - feedback prevention:",value_str)
+            return
+          end
+        end
+      end
 
       -- (only if defined) check the prefix:
       -- ignore messages that doesn't match our prefix
@@ -181,17 +195,6 @@ end
 
 function OscDevice:receive_osc_message(value_str)
   TRACE("OscDevice:receive_message",value_str)
-
-  -- block/ignore messages that appear to be feedback
-  if self.feedback_prevention_enabled then
-    for k,v in ipairs(self._feedback_buffer) do
-      if (value_str == v.value_str) then
-        --print("*** receive_osc_message - feedback prevention:",value_str)
-        return
-      end
-    end
-  end
-
 
   -- retrieve the relevant control-map parameter(s)
   local params = self.control_map:get_osc_params(value_str)
@@ -338,6 +341,10 @@ function OscDevice:send_osc_bundle()
         }
       end
       --print("*** send_osc_bundle",v,rprint(v.value),value_str)
+      if(self.dump_osc)then
+        LOG(("OscDevice: %i send message %s"):format(
+          self.port_out, value_str))
+      end
 
     end
     local osc_bundle = renoise.Osc.Bundle(os.clock(),msgs)
@@ -373,7 +380,12 @@ function OscDevice:send_osc_message(message,value)
         value_str = value_str
       }
     end
-    --print("*** send_osc_message",message,value,value_str)
+
+    if(self.dump_osc)then
+      LOG(("OscDevice: %i send message %s %s %s"):format(
+        self.port_out, message,tostring(value),tostring(value_str)))
+    end
+
 
     self.client:send(osc_msg)
 

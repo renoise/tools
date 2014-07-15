@@ -42,6 +42,9 @@ function Device:__init(name, message_stream, protocol)
   
   ---- configuration
   
+  --- (@{Duplex.Globals.PARAM_MODE}) the default parameter mode
+  self.default_parameter_mode = "abs"
+
   --- specify a color-space like this: (r, g, b) or empty
   --    example#1 : {4,4,0} - four degrees of red and green
   --    example#2 : {1,1,1} - monochrome display (black/white)
@@ -107,7 +110,7 @@ function Device:set_control_map(xml_file)
   TRACE("Device:set_control_map()",xml_file)
   
   local cm = self.control_map
-  cm.load_definition(self.control_map,xml_file)
+  cm.load_definition(self.control_map,xml_file,self)
   cm:memoize()
 
 end
@@ -532,9 +535,9 @@ function Device:_send_message(msg,param,regex)
   msg.device = self
   msg.xarg = param.xarg
 
-  local on_receive = widget_hooks[param.xarg.type].on_receive
-  if on_receive then
-    on_receive(self,param,msg,regex)
+  local widget_hook = widget_hooks[param.xarg.type]
+  if widget_hook and widget_hook.on_receive then
+    widget_hook.on_receive(self,param,msg,regex)
   end
 
   -- send the message
@@ -578,7 +581,11 @@ function Device:output_value(pt,xarg,ui_obj)
   local value,skip_hardware = nil,false
   local val_type = type(pt.val)
 
-  --print("*** val_type",val_type)
+  --print("*** Device:output_value - val_type",val_type)
+  --print("*** Device:output_value - self",self)
+  --print("*** Device:output_value - ui_obj",ui_obj)
+  --print("*** Device:output_value - pt.val",rprint(pt.val))
+  --print("*** Device:output_value - pt.val",rprint(xarg))
 
   if (val_type == "number") then
     value,skip_hardware = self:output_number(pt,xarg,ui_obj)
@@ -642,7 +649,7 @@ end
 -- @see Device.output_value
 
 function Device:output_text(pt,xarg,ui_obj)
-  --TRACE("Device:output_text(pt,xarg,ui_obj)",pt,xarg,ui_obj)
+  TRACE("Device:output_text(pt,xarg,ui_obj)",pt,xarg,ui_obj)
 
   return pt.val
 
@@ -658,6 +665,7 @@ end
 -- @see Device.output_value
 
 function Device:output_boolean(pt,xarg,ui_obj)
+  TRACE("Device:output_boolean(pt,xarg,ui_obj)",pt,xarg,ui_obj)
 
   if (pt.val==true) then
     return xarg.maximum
@@ -677,6 +685,8 @@ end
 -- @see Device.output_value
 
 function Device:output_number(pt,xarg,ui_obj)
+  TRACE("Device:output_number(pt,xarg,ui_obj)",pt,xarg,ui_obj)
+  --print("pt.val,ui_obj.floor,ui_obj.ceiling,xarg.minimum,xarg.maximum",pt.val,ui_obj.floor,ui_obj.ceiling,xarg.minimum,xarg.maximum)
 
   return scale_value(pt.val,ui_obj.floor,ui_obj.ceiling,xarg.minimum,xarg.maximum)
 

@@ -163,16 +163,16 @@ Keyboard.default_options = {
     description = "Determine how to treat incoming pitch bend messages",
     items = {
       "Ignore",
-      "Broadcast as MIDI",
+      "Broadcast as Pitch bend",
     },
     value = 1,
   },
   mod_wheel = {
-    label = "Pitch Bend",
+    label = "Mod Wheel",
     description = "Determine how to treat incoming mod wheel messages",
     items = {
       "Ignore",
-      "Broadcast as MIDI",
+      "Broadcast as Mod Wheel (CC#1)",
     },
     value = 1,
   },
@@ -771,7 +771,8 @@ function Keyboard:_build_app()
             end
 
             c:set_size(unit_w,unit_h)
-            c.on_press = function(obj,msg)
+            c.on_press = function(obj)
+              local msg = self.display.device.message_stream.current_msg
               local pitch = ctrl_idx+(self.curr_octave*12)-1
               local velocity = nil
               if msg.midi_msg then
@@ -788,7 +789,7 @@ function Keyboard:_build_app()
               return triggered
             end
 
-            c.on_release = function(obj,msg)
+            c.on_release = function(obj)
               local pitch = ctrl_idx+(self.curr_octave*12)-1
               local released = self:trigger(false,pitch,0,ctrl_idx)
               --print("*** Keyboard: key_grid released",released)

@@ -1648,7 +1648,7 @@ function GridPie:copy_and_expand(patt_idx,dest_patt_idx,track_idx,num_lines,offs
           if self.skip_line_updates[track_idx] and
             self.skip_line_updates[track_idx][to_line] 
           then
-            print("skipped this line",to_line)
+            --print("skipped this line",to_line)
             self.skip_line_updates[track_idx][to_line] = nil
             skipped_lines:insert(to_line)
           end
@@ -1673,7 +1673,7 @@ function GridPie:copy_and_expand(patt_idx,dest_patt_idx,track_idx,num_lines,offs
             for _,point in pairs(automation.points) do
               approx_line = math.floor(point.time)
               if approx_line == i then
-                print("automation:add_point_at()",to_line + point.time - approx_line, point.value)
+                --print("automation:add_point_at()",to_line + point.time - approx_line, point.value)
                 automation:add_point_at(to_line + point.time - approx_line, point.value)
               elseif approx_line > i then
                 break
@@ -2472,7 +2472,7 @@ function GridPie:_build_app()
 
           end
           c.on_hold = function(obj) 
-            print("grid pie - on_hold")
+            --print("grid pie - on_hold")
             local bt = self.held_buttons[x][y]
             local gp_seq_idx = self:get_gridpie_seq_pos()
             if (self.held_buttons[x][y].seq_idx == gp_seq_idx) then

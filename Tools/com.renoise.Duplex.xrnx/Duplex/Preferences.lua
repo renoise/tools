@@ -64,9 +64,11 @@ duplex_preferences = renoise.Document.create("ScriptingToolPreferences") {
   --- (bool) enable realtime NRPN message support (experimental)
   nrpn_support = false,
 
-  --- (bool) when enabled, dump MIDI messages received and send by duplex
-  -- to the sdt out (Renoise terminal)
+  --- (bool) dump MIDI messages to sdt out (Renoise terminal)
   dump_midi = false,
+  
+  --- (bool) dump OSC messages to sdt out (Renoise terminal)
+  dump_osc = false,
   
   --- (string) the internal OSC connection (disabled if no host/port is specified)
   osc_server_host = "127.0.0.1",

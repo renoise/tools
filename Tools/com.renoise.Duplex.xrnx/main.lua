@@ -30,6 +30,7 @@ local function create_browser(config, start_running)
   if (not browser) then
     browser = Browser()
     browser:set_dump_midi(duplex_preferences.dump_midi.value)
+    browser:set_dump_osc(duplex_preferences.dump_osc.value)
     waiting_to_show_browser = duplex_preferences.display_browser_on_start.value
 
   end
@@ -221,6 +222,27 @@ renoise.tool():add_menu_entry {
     end
     if duplex_preferences.dump_midi.value then
       local msg = "You have selected to dump MIDI data into the Renoise scripting console"
+                .."\nThis is useful when you want to identify some problem, or figure out"
+                .."\nwhich messages your device is transmitting."
+                .."\n"
+                .."\nNote that you have to enable scripting in Renoise before you can see"
+                .."\nthe scripting console (howto: http://code.google.com/p/xrnx/)"
+      renoise.app():show_message(msg)
+    end
+  end
+}
+renoise.tool():add_menu_entry {
+  name = "Main Menu:Tools:Duplex:Dump OSC to console",
+  selected = function()
+    return duplex_preferences.dump_osc.value
+  end,
+  invoke = function() 
+    duplex_preferences.dump_osc.value = not duplex_preferences.dump_osc.value
+    if (browser) then
+      browser:set_dump_osc(duplex_preferences.dump_osc.value)
+    end
+    if duplex_preferences.dump_osc.value then
+      local msg = "You have selected to dump OSC messages into the Renoise scripting console"
                 .."\nThis is useful when you want to identify some problem, or figure out"
                 .."\nwhich messages your device is transmitting."
                 .."\n"

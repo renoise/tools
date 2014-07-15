@@ -165,35 +165,10 @@ function UISpinner:do_press(msg)
 
   if (msg.xarg.type == "togglebutton") then
     -- force update togglebuttons...
-    self.canvas.delta = table.rcopy(self.canvas.buffer)
-    self.canvas.has_changed = true
-    self:invalidate()
+    self:force_refresh()
   end
 
   return self
-
-end
-
-
---------------------------------------------------------------------------------
-
---- Expanded UIComponent test
--- @param msg (@{Duplex.Message})
--- @return (bool), false when criteria is not met
--- @see Duplex.UIComponent.test
-
-function UISpinner:test(msg)
-  TRACE("UISpinner:test",msg)
-
-  if not (self.group_name == msg.xarg.group_name) then
-    return false
-  end
-
-  if not self.app.active then
-    return false
-  end
-  
-  return UIComponent.test(self,msg.xarg.column,msg.xarg.row)
 
 end
 

@@ -248,7 +248,7 @@ function Navigator:_build_app()
       background = self.palette.blockpos_background
     })
     c.on_press = function(obj,idx)
-      print("blockpos on_press",obj,idx)
+      --print("blockpos on_press",obj,idx)
 
       local rns = renoise.song()
 
@@ -751,7 +751,7 @@ function Navigator:_jump_to_index(ctrl_idx)
   if inside_range and (range_size == 0) and 
     (self._active_index == ctrl_idx) 
   then
-    print("skip jump within single-unit range")
+    --print("skip jump within single-unit range")
     return
   end
 

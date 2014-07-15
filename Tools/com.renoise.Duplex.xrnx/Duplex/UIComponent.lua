@@ -34,8 +34,14 @@ function UIComponent:__init(app,map)
   --- (@{Duplex.Canvas})
   self.canvas = Canvas()
 
-  --- (string) control-map group name
+  --- (string) required, control-map group name
   self.group_name = nil
+
+  --- (@{Duplex.Application}) required, containing application
+  self.app = app
+
+  --- (string) optional, name of associated state
+  --self.state = nil
 
   --- (table) default palette
   self.palette = {}
@@ -78,10 +84,7 @@ function UIComponent:__init(app,map)
   -- when the message was triggered from the hardware itself
   self.soft_echo = false
   
-  --- (@{Duplex.Application}) containing application
-  self.app = app
-
-  --- (bool) false if UIComponent state was changed - see (@{disable} or (@{enable}
+  --- (bool) false if enabled state was changed - see (@{disable} or (@{enable}
   self._active = true 
 
   -- do some preparation --
@@ -92,6 +95,7 @@ function UIComponent:__init(app,map)
   -- if map was specified, initialize with these properties
   if map and map.group_name then
     self.group_name = map.group_name
+    --self.state = map.state
     self.tooltip = map.description or ""
     self:set_pos(map.index or 1)
   end
@@ -131,32 +135,48 @@ end
 
 --------------------------------------------------------------------------------
 
---- Make all associated viewbuilder widgets inactive 
+--- Force a complete update (redraw entire canvas on next update)
+
+function UIComponent:force_refresh()
+  TRACE("UIComponent:force_refresh()")
+
+  self.canvas.delta = table.rcopy(self.canvas.buffer)
+  self.canvas.has_changed = true
+  self:invalidate()
+
+end
+
+--------------------------------------------------------------------------------
+
+--- Make associated viewbuilder widget(s) become inactive 
 
 function UIComponent:disable()
   TRACE("UIComponent:disable()")
 
   local widgets = self:_get_widgets()
   for k,v in ipairs(widgets) do
-    v.active = false
+    if (type(v) ~= "MultiLineText") then
+      v.active = false
+    end
   end
 
 end
 
 --------------------------------------------------------------------------------
 
---- Make all associated viewbuilder widgets active 
+--- Make associated viewbuilder widget(s) become active 
 
 function UIComponent:enable()
   TRACE("UIComponent:enable()")
 
   local widgets = self:_get_widgets()
   for k,v in ipairs(widgets) do
-    v.active = true
+    if (type(v) ~= "MultiLineText") then
+      v.active = true
+    end
   end
 
 end
-
 --------------------------------------------------------------------------------
 
 --- Attach listeners to the events 
@@ -225,6 +245,7 @@ function UIComponent:set_pos(x,y)
       x = idx-(cols*(y-1))
     end
   end
+
   if(x~=self.x_pos) or (y~=self.y_pos) then
     self:invalidate()
   end
@@ -292,27 +313,45 @@ end
 --------------------------------------------------------------------------------
 
 --- Perform simple "inside square" hit test
--- @param x_pos (int)
--- @param y_pos (int)
+-- @param msg (@{Duplex.Message})
 -- @return (bool), true if inside area
 
-function UIComponent:test(x_pos, y_pos)
-  --TRACE("UIComponent:test(",x_pos, y_pos,")")
+function UIComponent:test(msg)
+  TRACE("UIComponent:test(msg)",msg)
+
+  -- test for state (if defined)
+  --if self.state and not (table.find(msg.xarg.state_ids, self.state)) then
+    --print("*** UIComponent:test - wrong state, self.state is",self.state)
+    --return false
+  --end
+
+  if not self.app.active then
+    --print("*** UIComponent:test - not active")
+    return false
+  end
+  
+  if not (self.group_name == msg.xarg.group_name) then
+    --print("*** UIComponent:test - wrong group...self.group_name,msg.xarg.group_name",self.group_name,msg.xarg.group_name)
+    return false
+  end
 
   -- pressed to the left or above?
-  if (x_pos < self.x_pos) or 
-     (y_pos < self.y_pos) 
+  if (msg.xarg.column < self.x_pos) or 
+     (msg.xarg.row < self.y_pos) 
   then
+    --print("*** UIComponent:test - pressed to the left or above")
     return false
   end
   
   -- pressed to the right or below?
-  if (x_pos >= self.x_pos + self.width) or 
-     (y_pos >= self.y_pos + self.height) 
+  if (msg.xarg.column >= self.x_pos + self.width) or 
+     (msg.xarg.row >= self.y_pos + self.height) 
   then
+    --print("*** UIComponent:test - pressed to the right or below")
     return false
   end
   
+  --print("*** UIComponent:test - passed test...")
   return true
 end
 
@@ -328,7 +367,8 @@ function UIComponent:_get_widgets()
   local widgets = {}
   local params = self:_get_ui_params()
   for k,param in ipairs(params) do
-    widgets[#widgets+1] = self.app.display.vb.views[param.xarg.id]
+    --widgets[#widgets+1] = self.app.display.vb.views[param.xarg.id]
+    table.insert(widgets, self.app.display.vb.views[param.xarg.id])
   end
 
   return widgets
@@ -352,8 +392,8 @@ function UIComponent:_get_ui_params()
       if param then
         params[#params+1] = param
       else
-        local msg = "*** %s: failed to get parameter - pos %d,%d within group %s (%s)"
-        LOG(string.format(msg,type(self),x,y,self.group_name or "",self.tooltip))
+        --local msg = "*** %s: failed to get parameter - pos %d,%d within group %s (%s)"
+        --LOG(string.format(msg,type(self),x,y,self.group_name or "",self.tooltip))
       end
     end
   end

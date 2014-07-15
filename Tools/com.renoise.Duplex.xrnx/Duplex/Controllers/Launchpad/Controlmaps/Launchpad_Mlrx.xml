@@ -2,14 +2,21 @@
 	<Name>Novation Launchpad</Name>
 	<Author>Danoise</Author>
 	<Description>Mlrx for Launchpad (preview)</Description>
+	<States>
+		<State name="MatrixOn" value="CC#100" type="toggle" receive_when_inactive="false" hide_when_inactive="false" disable_when_inactive="false" />
+		<State name="MatrixOff" value="CC#100" type="toggle" receive_when_inactive="false" hide_when_inactive="true" disable_when_inactive="false" invert="true" active="true" />
+		<State name="MatrixOffShow" value="CC#100" type="toggle" receive_when_inactive="false" hide_when_inactive="true" disable_when_inactive="false"  />
+		<State name="MixerOn" value="CC#101" type="toggle" receive_when_inactive="false" hide_when_inactive="true" disable_when_inactive="false"  />
+		<State name="MixerOff" value="CC#101" type="toggle" receive_when_inactive="false" hide_when_inactive="true" disable_when_inactive="false" active="true" />
+	</States>
 	<Parameters>
 		<Column>
 			<Row>
 				<Group name="group_panning" >
-					<Param type="dial" size="1" maximum="127" minimum="0"/>
-					<Param type="dial" size="1" maximum="127" minimum="0"/>
-					<Param type="dial" size="1" maximum="127" minimum="0"/>
-					<Param type="dial" size="1" maximum="127" minimum="0"/>
+					<Param type="dial" value="CC#1" class="Device" size="1.2" maximum="127" minimum="0"/>
+					<Param type="dial" value="CC#2" class="Device" size="1.2" maximum="127" minimum="0"/>
+					<Param type="dial" value="CC#3" class="Device" size="1.2" maximum="127" minimum="0"/>
+					<Param type="dial" value="CC#4" class="Device" size="1.2" maximum="127" minimum="0"/>
 				</Group>
 				<Group name="controls" orientation="horizontal">
 					<Param value="CC#104" type="button" size="1.15" maximum="127" minimum="0"/>
@@ -26,106 +33,157 @@
 				<Group name="global" >
 					<Param size="2" aspect="0.56" type="button" maximum="1" minimum="0"/>
 					<Param size="2" aspect="0.56" type="button" maximum="1" minimum="0"/>
+					<Param size="2" aspect="0.56" type="button" maximum="127" minimum="0" value="CC#100" text="MATRIX"/>
+					<Param size="2" aspect="0.56" type="button" maximum="127" minimum="0" value="CC#101" text="MIXER"/>
 				</Group>
 
 			</Row>
 
 			<Row>
 
+				<MatrixOffShow:Group name="group_matrix" >
+					<Param type="label" size="4.6" aspect="1.84" text="Matrix mode enabled: \n\nControl the group matrix using the left half of the Launchpad grid"/>
+				</MatrixOffShow:Group>
+
 				<Group name="group_matrix" columns="4" >
-					<Param type="button" size="1" aspect="1.23" maximum="1" minimum="0"/>
-					<Param type="button" size="1" aspect="1.23" maximum="1" minimum="0"/>
-					<Param type="button" size="1" aspect="1.23" maximum="1" minimum="0"/>
-					<Param type="button" size="1" aspect="1.23" maximum="1" minimum="0"/>
+					<MatrixOn:Param value="C--1" type="button" size="1.2" maximum="127" minimum="0"/>
+					<MatrixOn:Param value="C#-1" type="button" size="1.2" maximum="127" minimum="0"/>
+					<MatrixOn:Param value="D--1" type="button" size="1.2" maximum="127" minimum="0"/>
+					<MatrixOn:Param value="D#-1" type="button" size="1.2" maximum="127" minimum="0"/>
+
+					<MatrixOn:Param value="E-0" type="button" size="1.2" maximum="127" minimum="0"/>
+					<MatrixOn:Param value="F-0" type="button" size="1.2" maximum="127" minimum="0"/>
+					<MatrixOn:Param value="F#0" type="button" size="1.2" maximum="127" minimum="0"/>
+					<MatrixOn:Param value="G-0" type="button" size="1.2" maximum="127" minimum="0"/>
 						   
-					<Param type="button" size="1" aspect="1.23" maximum="1" minimum="0"/>
-					<Param type="button" size="1" aspect="1.23" maximum="1" minimum="0"/>
-					<Param type="button" size="1" aspect="1.23" maximum="1" minimum="0"/>
-					<Param type="button" size="1" aspect="1.23" maximum="1" minimum="0"/>
+					<MatrixOn:Param value="G#1" type="button" size="1.2" maximum="1" minimum="0"/>
+					<MatrixOn:Param value="A-1" type="button" size="1.2" maximum="1" minimum="0"/>
+					<MatrixOn:Param value="A#1" type="button" size="1.2" maximum="1" minimum="0"/>
+					<MatrixOn:Param value="B-1" type="button" size="1.2" maximum="1" minimum="0"/>						
 						   
-					<Param type="button" size="1" aspect="1.23" maximum="1" minimum="0"/>
-					<Param type="button" size="1" aspect="1.23" maximum="1" minimum="0"/>
-					<Param type="button" size="1" aspect="1.23" maximum="1" minimum="0"/>
-					<Param type="button" size="1" aspect="1.23" maximum="1" minimum="0"/>						
+					<MatrixOn:Param value="C-3" type="button" size="1.2" maximum="1" minimum="0"/>
+					<MatrixOn:Param value="C#3" type="button" size="1.2" maximum="1" minimum="0"/>
+					<MatrixOn:Param value="D-3" type="button" size="1.2" maximum="1" minimum="0"/>
+					<MatrixOn:Param value="D#3" type="button" size="1.2" maximum="1" minimum="0"/>						
 						   
-					<Param type="button" size="1" aspect="1.23" maximum="1" minimum="0"/>
-					<Param type="button" size="1" aspect="1.23" maximum="1" minimum="0"/>
-					<Param type="button" size="1" aspect="1.23" maximum="1" minimum="0"/>
-					<Param type="button" size="1" aspect="1.23" maximum="1" minimum="0"/>						
+					<MatrixOn:Param value="E-4" type="button" size="1.2" maximum="1" minimum="0"/>
+					<MatrixOn:Param value="F-4" type="button" size="1.2" maximum="1" minimum="0"/>
+					<MatrixOn:Param value="F#4" type="button" size="1.2" maximum="1" minimum="0"/>
+					<MatrixOn:Param value="G-4" type="button" size="1.2" maximum="1" minimum="0"/>						
 						   
-					<Param type="button" size="1" aspect="1.23" maximum="1" minimum="0"/>
-					<Param type="button" size="1" aspect="1.23" maximum="1" minimum="0"/>
-					<Param type="button" size="1" aspect="1.23" maximum="1" minimum="0"/>
-					<Param type="button" size="1" aspect="1.23" maximum="1" minimum="0"/>						
+					<MatrixOn:Param value="G#5" type="button" size="1.2" maximum="1" minimum="0"/>
+					<MatrixOn:Param value="A-5" type="button" size="1.2" maximum="1" minimum="0"/>
+					<MatrixOn:Param value="A#5" type="button" size="1.2" maximum="1" minimum="0"/>
+					<MatrixOn:Param value="B-5" type="button" size="1.2" maximum="1" minimum="0"/>						
 						   
-					<Param type="button" size="1" aspect="1.23" maximum="1" minimum="0"/>
-					<Param type="button" size="1" aspect="1.23" maximum="1" minimum="0"/>
-					<Param type="button" size="1" aspect="1.23" maximum="1" minimum="0"/>
-					<Param type="button" size="1" aspect="1.23" maximum="1" minimum="0"/>						
-						   
-					<Param type="button" size="1" aspect="1.23" maximum="1" minimum="0"/>
-					<Param type="button" size="1" aspect="1.23" maximum="1" minimum="0"/>
-					<Param type="button" size="1" aspect="1.23" maximum="1" minimum="0"/>
-					<Param type="button" size="1" aspect="1.23" maximum="1" minimum="0"/>						
+					<MatrixOn:Param value="C-7" type="button" size="1.2" maximum="1" minimum="0"/>
+					<MatrixOn:Param value="C#7" type="button" size="1.2" maximum="1" minimum="0"/>
+					<MatrixOn:Param value="D-7" type="button" size="1.2" maximum="1" minimum="0"/>
+					<MatrixOn:Param value="D#7" type="button" size="1.2" maximum="1" minimum="0"/>						
 				</Group>
+
 				<Group name="grid" columns="8">
-					<Param value="C--1" type="button" name="" size="1.2" maximum="127" minimum="0"/>
-					<Param value="C#-1" type="button" name="" size="1.2" maximum="127" minimum="0"/>
-					<Param value="D--1" type="button" name="" size="1.2" maximum="127" minimum="0"/>
-					<Param value="D#-1" type="button" name="" size="1.2" maximum="127" minimum="0"/>
-					<Param value="E--1" type="button" name="" size="1.2" maximum="127" minimum="0"/>
-					<Param value="F--1" type="button" name="" size="1.2" maximum="127" minimum="0"/>
-					<Param value="F#-1" type="button" name="" size="1.2" maximum="127" minimum="0"/>
-					<Param value="G--1" type="button" name="" size="1.2" maximum="127" minimum="0"/>
-					<Param value="E-0" type="button" name="" size="1.2" maximum="127" minimum="0"/>
-					<Param value="F-0" type="button" name="" size="1.2" maximum="127" minimum="0"/>
-					<Param value="F#0" type="button" name="" size="1.2" maximum="127" minimum="0"/>
-					<Param value="G-0" type="button" name="" size="1.2" maximum="127" minimum="0"/>
-					<Param value="G#0" type="button" name="" size="1.2" maximum="127" minimum="0"/>
-					<Param value="A-0" type="button" name="" size="1.2" maximum="127" minimum="0"/>
-					<Param value="A#0" type="button" name="" size="1.2" maximum="127" minimum="0"/>
-					<Param value="B-0" type="button" name="" size="1.2" maximum="127" minimum="0"/>
-					<Param value="G#1" type="button" name="" size="1.2" maximum="127" minimum="0"/>
-					<Param value="A-1" type="button" name="" size="1.2" maximum="127" minimum="0"/>
-					<Param value="A#1" type="button" name="" size="1.2" maximum="127" minimum="0"/>
-					<Param value="B-1" type="button" name="" size="1.2" maximum="127" minimum="0"/>
-					<Param value="C-2" type="button" name="" size="1.2" maximum="127" minimum="0"/>
-					<Param value="C#2" type="button" name="" size="1.2" maximum="127" minimum="0"/>
-					<Param value="D-2" type="button" name="" size="1.2" maximum="127" minimum="0"/>
-					<Param value="D#2" type="button" name="" size="1.2" maximum="127" minimum="0"/>
-					<Param value="C-3" type="button" name="" size="1.2" maximum="127" minimum="0"/>
-					<Param value="C#3" type="button" name="" size="1.2" maximum="127" minimum="0"/>
-					<Param value="D-3" type="button" name="" size="1.2" maximum="127" minimum="0"/>
-					<Param value="D#3" type="button" name="" size="1.2" maximum="127" minimum="0"/>
-					<Param value="E-3" type="button" name="" size="1.2" maximum="127" minimum="0"/>
-					<Param value="F-3" type="button" name="" size="1.2" maximum="127" minimum="0"/>
-					<Param value="F#3" type="button" name="" size="1.2" maximum="127" minimum="0"/>
-					<Param value="G-3" type="button" name="" size="1.2" maximum="127" minimum="0"/>
-					<Param value="E-4" type="button" name="" size="1.2" maximum="127" minimum="0"/>
-					<Param value="F-4" type="button" name="" size="1.2" maximum="127" minimum="0"/>
-					<Param value="F#4" type="button" name="" size="1.2" maximum="127" minimum="0"/>
-					<Param value="G-4" type="button" name="" size="1.2" maximum="127" minimum="0"/>
-					<Param value="G#4" type="button" name="" size="1.2" maximum="127" minimum="0"/>
-					<Param value="A-4" type="button" name="" size="1.2" maximum="127" minimum="0"/>
-					<Param value="A#4" type="button" name="" size="1.2" maximum="127" minimum="0"/>
-					<Param value="B-4" type="button" name="" size="1.2" maximum="127" minimum="0"/>
-					<Param value="G#5" type="button" name="" size="1.2" maximum="127" minimum="0"/>
-					<Param value="A-5" type="button" name="" size="1.2" maximum="127" minimum="0"/>
-					<Param value="A#5" type="button" name="" size="1.2" maximum="127" minimum="0"/>
-					<Param value="B-5" type="button" name="" size="1.2" maximum="127" minimum="0"/>
-					<Param value="C-6" type="button" name="" size="1.2" maximum="127" minimum="0"/>
-					<Param value="C#6" type="button" name="" size="1.2" maximum="127" minimum="0"/>
-					<Param value="D-6" type="button" name="" size="1.2" maximum="127" minimum="0"/>
-					<Param value="D#6" type="button" name="" size="1.2" maximum="127" minimum="0"/>
-					<Param value="C-7" type="button" name="" size="1.2" maximum="127" minimum="0"/>
-					<Param value="C#7" type="button" name="" size="1.2" maximum="127" minimum="0"/>
-					<Param value="D-7" type="button" name="" size="1.2" maximum="127" minimum="0"/>
-					<Param value="D#7" type="button" name="" size="1.2" maximum="127" minimum="0"/>
-					<Param value="E-7" type="button" name="" size="1.2" maximum="127" minimum="0"/>
-					<Param value="F-7" type="button" name="" size="1.2" maximum="127" minimum="0"/>
-					<Param value="F#7" type="button" name="" size="1.2" maximum="127" minimum="0"/>
-					<Param value="G-7" type="button" name="" size="1.2" maximum="127" minimum="0"/>
-				</Group>									 
+					<MatrixOff:Param value="C--1" type="button" size="1.2" maximum="127" minimum="0" text="."/>
+					<MatrixOff:Param value="C#-1" type="button" size="1.2" maximum="127" minimum="0"/>
+					<MatrixOff:Param value="D--1" type="button" size="1.2" maximum="127" minimum="0"/>
+					<MatrixOff:Param value="D#-1" type="button" size="1.2" maximum="127" minimum="0"/>
+					<MixerOff:Param value="E--1" type="button" size="1.2" maximum="127" minimum="0" text="."/>
+					<MixerOff:Param value="F--1" type="button" size="1.2" maximum="127" minimum="0"/>
+					<MixerOff:Param value="F#-1" type="button" size="1.2" maximum="127" minimum="0"/>
+					<MixerOff:Param value="G--1" type="button" size="1.2" maximum="127" minimum="0"/>
+
+					<MatrixOff:Param value="E-0" type="button" size="1.2" maximum="127" minimum="0" text="."/>
+					<MatrixOff:Param value="F-0" type="button" size="1.2" maximum="127" minimum="0"/>
+					<MatrixOff:Param value="F#0" type="button" size="1.2" maximum="127" minimum="0"/>
+					<MatrixOff:Param value="G-0" type="button" size="1.2" maximum="127" minimum="0"/>
+					<MixerOff:Param value="G#0" type="button" size="1.2" maximum="127" minimum="0" text="."/>
+					<MixerOff:Param value="A-0" type="button" size="1.2" maximum="127" minimum="0"/>
+					<MixerOff:Param value="A#0" type="button" size="1.2" maximum="127" minimum="0"/>
+					<MixerOff:Param value="B-0" type="button" size="1.2" maximum="127" minimum="0"/>
+					
+					<MatrixOff:Param value="G#1" type="button" size="1.2" maximum="127" minimum="0"/>
+					<MatrixOff:Param value="A-1" type="button" size="1.2" maximum="127" minimum="0"/>
+					<MatrixOff:Param value="A#1" type="button" size="1.2" maximum="127" minimum="0"/>
+					<MatrixOff:Param value="B-1" type="button" size="1.2" maximum="127" minimum="0"/>
+					<MixerOff:Param value="C-2" type="button" size="1.2" maximum="127" minimum="0"/>
+					<MixerOff:Param value="C#2" type="button" size="1.2" maximum="127" minimum="0"/>
+					<MixerOff:Param value="D-2" type="button" size="1.2" maximum="127" minimum="0"/>
+					<MixerOff:Param value="D#2" type="button" size="1.2" maximum="127" minimum="0"/>
+					
+					<MatrixOff:Param value="C-3" type="button" size="1.2" maximum="127" minimum="0"/>
+					<MatrixOff:Param value="C#3" type="button" size="1.2" maximum="127" minimum="0"/>
+					<MatrixOff:Param value="D-3" type="button" size="1.2" maximum="127" minimum="0"/>
+					<MatrixOff:Param value="D#3" type="button" size="1.2" maximum="127" minimum="0"/>
+					<MixerOff:Param value="E-3" type="button" size="1.2" maximum="127" minimum="0"/>
+					<MixerOff:Param value="F-3" type="button" size="1.2" maximum="127" minimum="0"/>
+					<MixerOff:Param value="F#3" type="button" size="1.2" maximum="127" minimum="0"/>
+					<MixerOff:Param value="G-3" type="button" size="1.2" maximum="127" minimum="0"/>
+					
+					<MatrixOff:Param value="E-4" type="button" size="1.2" maximum="127" minimum="0"/>
+					<MatrixOff:Param value="F-4" type="button" size="1.2" maximum="127" minimum="0"/>
+					<MatrixOff:Param value="F#4" type="button" size="1.2" maximum="127" minimum="0"/>
+					<MatrixOff:Param value="G-4" type="button" size="1.2" maximum="127" minimum="0"/>
+					<MixerOff:Param value="G#4" type="button" size="1.2" maximum="127" minimum="0"/>
+					<MixerOff:Param value="A-4" type="button" size="1.2" maximum="127" minimum="0"/>
+					<MixerOff:Param value="A#4" type="button" size="1.2" maximum="127" minimum="0"/>
+					<MixerOff:Param value="B-4" type="button" size="1.2" maximum="127" minimum="0"/>
+					
+					<MatrixOff:Param value="G#5" type="button" size="1.2" maximum="127" minimum="0"/>
+					<MatrixOff:Param value="A-5" type="button" size="1.2" maximum="127" minimum="0"/>
+					<MatrixOff:Param value="A#5" type="button" size="1.2" maximum="127" minimum="0"/>
+					<MatrixOff:Param value="B-5" type="button" size="1.2" maximum="127" minimum="0"/>
+					<MixerOff:Param value="C-6" type="button" size="1.2" maximum="127" minimum="0"/>
+					<MixerOff:Param value="C#6" type="button" size="1.2" maximum="127" minimum="0"/>
+					<MixerOff:Param value="D-6" type="button" size="1.2" maximum="127" minimum="0"/>
+					<MixerOff:Param value="D#6" type="button" size="1.2" maximum="127" minimum="0"/>
+					
+					<MatrixOff:Param value="C-7" type="button" size="1.2" maximum="127" minimum="0"/>
+					<MatrixOff:Param value="C#7" type="button" size="1.2" maximum="127" minimum="0"/>
+					<MatrixOff:Param value="D-7" type="button" size="1.2" maximum="127" minimum="0"/>
+					<MatrixOff:Param value="D#7" type="button" size="1.2" maximum="127" minimum="0"/>
+					<MixerOff:Param value="E-7" type="button" size="1.2" maximum="127" minimum="0"/>
+					<MixerOff:Param value="F-7" type="button" size="1.2" maximum="127" minimum="0"/>
+					<MixerOff:Param value="F#7" type="button" size="1.2" maximum="127" minimum="0"/>
+					<MixerOff:Param value="G-7" type="button" size="1.2" maximum="127" minimum="0"/>
+
+				</Group>	
+
+				<MixerOn:Group name="mixer_grid" columns="4">
+					<Param value="E--1" type="button" size="1.2" maximum="127" minimum="0"/>
+					<Param value="F--1" type="button" size="1.2" maximum="127" minimum="0"/>
+					<Param value="F#-1" type="button" size="1.2" maximum="127" minimum="0"/>
+					<Param value="G--1" type="button" size="1.2" maximum="127" minimum="0"/>
+
+					<Param value="G#0" type="button" size="1.2" maximum="127" minimum="0"/>
+					<Param value="A-0" type="button" size="1.2" maximum="127" minimum="0"/>
+					<Param value="A#0" type="button" size="1.2" maximum="127" minimum="0"/>
+					<Param value="B-0" type="button" size="1.2" maximum="127" minimum="0"/>
+
+					<Param value="C-2" type="button" size="1.2" maximum="127" minimum="0"/>
+					<Param value="C#2" type="button" size="1.2" maximum="127" minimum="0"/>
+					<Param value="D-2" type="button" size="1.2" maximum="127" minimum="0"/>
+					<Param value="D#2" type="button" size="1.2" maximum="127" minimum="0"/>
+
+					<Param value="E-3" type="button" size="1.2" maximum="127" minimum="0"/>
+					<Param value="F-3" type="button" size="1.2" maximum="127" minimum="0"/>
+					<Param value="F#3" type="button" size="1.2" maximum="127" minimum="0"/>
+					<Param value="G-3" type="button" size="1.2" maximum="127" minimum="0"/>
+
+					<Param value="G#4" type="button" size="1.2" maximum="127" minimum="0"/>
+					<Param value="A-4" type="button" size="1.2" maximum="127" minimum="0"/>
+					<Param value="A#4" type="button" size="1.2" maximum="127" minimum="0"/>
+					<Param value="B-4" type="button" size="1.2" maximum="127" minimum="0"/>
+					
+					<Param value="C-6" type="button" size="1.2" maximum="127" minimum="0"/>
+					<Param value="C#6" type="button" size="1.2" maximum="127" minimum="0"/>
+					<Param value="D-6" type="button" size="1.2" maximum="127" minimum="0"/>
+					<Param value="D#6" type="button" size="1.2" maximum="127" minimum="0"/>
+					
+					<Param value="E-7" type="button" size="1.2" maximum="127" minimum="0"/>
+					<Param value="F-7" type="button" size="1.2" maximum="127" minimum="0"/>
+					<Param value="F#7" type="button" size="1.2" maximum="127" minimum="0"/>
+					<Param value="G-7" type="button" size="1.2" maximum="127" minimum="0"/>
+				</MixerOn:Group>
 				<Group name="track_select" orientation="vertical">
 					<Param value="G#-1" type="button" name="" size="1.2" maximum="127" minimum="0"/>
 					<Param value="C-1" type="button" name="" size="1.2" maximum="127" minimum="0"/>
@@ -153,7 +211,6 @@
 					<Param size="1.2" type="dial" maximum="1" minimum="0"/>
 					<Param size="1.2" type="dial" maximum="1" minimum="0"/>
 				</Group>
-
 				<Group name="labels" orientation="vertical" >
 					<Param type="label" size="5" aspect="0.23" text="01"/>
 					<Param type="label" size="5" aspect="0.23" text="02"/>
@@ -167,10 +224,10 @@
 
 			<Row>
 				<Group name="group_levels" columns="4">
-					<Param type="fader" size="3.6" orientation="vertical" maximum="4" minimum="0"/>
-					<Param type="fader" size="3.6" orientation="vertical" maximum="4" minimum="0"/>
-					<Param type="fader" size="3.6" orientation="vertical" maximum="4" minimum="0"/>
-					<Param type="fader" size="3.6" orientation="vertical" maximum="4" minimum="0"/>						
+					<Param value="PB|Ch1" type="fader" size="3." aspect="1.22" class="Device" skip_echo="true" orientation="vertical" maximum="16383" mode="abs_14" minimum="0" />
+					<Param value="PB|Ch2" type="fader" size="3." aspect="1.22" class="Device" skip_echo="true" orientation="vertical" maximum="16383" mode="abs_14" minimum="0"/>
+					<Param value="PB|Ch3" type="fader" size="3." aspect="1.22" class="Device" skip_echo="true" orientation="vertical" maximum="16383" mode="abs_14" minimum="0"/>
+					<Param value="PB|Ch4" type="fader" size="3." aspect="1.22" class="Device" skip_echo="true" orientation="vertical" maximum="16383" mode="abs_14" minimum="0"/>						
 				</Group>
 
 				<Column>

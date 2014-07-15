@@ -1,0 +1,70 @@
+<Device>
+	<Name>Oxygen 88</Name>
+	<Author></Author>
+	<Description></Description>
+	<Parameters>
+		<Row>
+			<Column>
+				<Group name="PrevNext" >
+					<Param value="CC#110" type="button" maximum="127" minimum="0"/>
+					<Param value="CC#111" type="button" maximum="127" minimum="0"/>
+				</Group>
+				<!-- Increase/decrease program (not implemented)
+				<Group name="PlusMinus" >
+					<Param value="" type="button" maximum="127" minimum="0"/>
+					<Param value="" type="button" maximum="127" minimum="0"/>
+				</Group>
+				-->
+			</Column>
+			<Column>
+				<Group name="Faders">
+					<Param orientation="vertical" size="4" aspect="0.66" value="CC#74" type="fader" maximum="127" minimum="0"/>
+					<Param orientation="vertical" size="4" aspect="0.66" value="CC#71" type="fader" maximum="127" minimum="0"/>
+					<Param orientation="vertical" size="4" aspect="0.66" value="CC#91" type="fader" maximum="127" minimum="0"/>
+					<Param orientation="vertical" size="4" aspect="0.66" value="CC#93" type="fader" maximum="127" minimum="0"/>
+					<Param orientation="vertical" size="4" aspect="0.66" value="CC#73" type="fader" maximum="127" minimum="0"/>
+					<Param orientation="vertical" size="4" aspect="0.66" value="CC#72" type="fader" maximum="127" minimum="0"/>
+					<Param orientation="vertical" size="4" aspect="0.66" value="CC#5" type="fader" maximum="127" minimum="0"/>
+					<Param orientation="vertical" size="4" aspect="0.66" value="CC#84" type="fader" maximum="127" minimum="0"/>
+					<Param orientation="vertical" size="4" aspect="0.66" value="CC#7" type="fader" maximum="127" minimum="0"/>
+				</Group>
+				<!-- Program Change, uncomment to enable
+				<Group name="Buttons">
+					<Param value="Prg#1" type="button" maximum="127" minimum="0"/>
+					<Param value="Prg#2" type="button" maximum="127" minimum="0"/>
+					<Param value="Prg#3" type="button" maximum="127" minimum="0"/>
+					<Param value="Prg#4" type="button" maximum="127" minimum="0"/>
+					<Param value="Prg#5" type="button" maximum="127" minimum="0"/>
+					<Param value="Prg#6" type="button" maximum="127" minimum="0"/>
+					<Param value="Prg#7" type="button" maximum="127" minimum="0"/>
+					<Param value="Prg#8" type="button" maximum="127" minimum="0"/>
+					<Param value="Prg#9" type="button" maximum="127" minimum="0"/>
+				</Group>
+				-->
+			</Column>
+			<Column>
+				<!-- MIDI Machine Control (SysEx, not implemented)
+				<Group name="Transport" >
+					<Param value="SYSEX#0xF0,0x7F,*,0x06,0x01,0xF7" type="button" maximum="127" minimum="0"/>
+					<Param value="" type="button" maximum="127" minimum="0"/>
+					<Param value="" type="button" maximum="127" minimum="0"/>
+					<Param value="" type="button" maximum="127" minimum="0"/>
+					<Param value="" type="button" maximum="127" minimum="0"/>
+					<Param value="" type="button" maximum="127" minimum="0"/>
+				</Group>
+				-->
+				<Group name="Knobs" columns="4">
+					<Param value="CC#75" type="dial" maximum="127" minimum="0"/>
+					<Param value="CC#76" type="dial" maximum="127" minimum="0"/>
+					<Param value="CC#92" type="dial" maximum="127" minimum="0"/>
+					<Param value="CC#95" type="dial" maximum="127" minimum="0"/>
+					<Param value="CC#10" type="dial" maximum="127" minimum="0"/>
+					<Param value="CC#77" type="dial" maximum="127" minimum="0"/>
+					<Param value="CC#78" type="dial" maximum="127" minimum="0"/>
+					<Param value="CC#79" type="dial" maximum="127" minimum="0"/>
+				</Group>
+			</Column>
+
+		</Row>
+	</Parameters>
+</Device>

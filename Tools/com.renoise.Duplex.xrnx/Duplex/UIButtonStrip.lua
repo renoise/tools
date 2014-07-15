@@ -236,9 +236,7 @@ function UIButtonStrip:do_release(msg)
     -- force-update controls that are handling 
     -- their internal state automatically...
     if (msg.xarg.type == "pushbutton") then
-      self.canvas.delta = table.rcopy(self.canvas.buffer)
-      self.canvas.has_changed = true
-      self:invalidate()
+      self:force_refresh()
     end
   end
 
@@ -724,26 +722,5 @@ function UIButtonStrip:_determine_index_by_pos(column,row)
   end
 
   return idx
-end
-
---------------------------------------------------------------------------------
-
---- Expanded UIComponent test
--- @param msg (@{Duplex.Message})
--- @return bool
--- @see Duplex.UIComponent.test
-
-function UIButtonStrip:test(msg)
-  
-  if not (self.group_name == msg.xarg.group_name) then
-    return false
-  end
-
-  if not self.app.active then
-    return false
-  end
-  
-  return UIComponent.test(self,msg.xarg.column,msg.xarg.row)
-
 end
 
