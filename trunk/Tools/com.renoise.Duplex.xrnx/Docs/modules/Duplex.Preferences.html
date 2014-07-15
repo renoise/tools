@@ -56,6 +56,7 @@
   <li><a href="../modules/Duplex.Applications.Mlrx.html">Duplex.Applications.Mlrx</a></li>
   <li><a href="../modules/Duplex.Applications.Navigator.html">Duplex.Applications.Navigator</a></li>
   <li><a href="../modules/Duplex.Applications.NotesOnWheels.html">Duplex.Applications.NotesOnWheels</a></li>
+  <li><a href="../modules/Duplex.Applications.PatternCursor.html">Duplex.Applications.PatternCursor</a></li>
   <li><a href="../modules/Duplex.Applications.PatternSequence.html">Duplex.Applications.PatternSequence</a></li>
   <li><a href="../modules/Duplex.Applications.Recorder.html">Duplex.Applications.Recorder</a></li>
   <li><a href="../modules/Duplex.Applications.Repeater.html">Duplex.Applications.Repeater</a></li>
@@ -85,6 +86,7 @@
   <li><a href="../modules/Duplex.ProcessSlicer.html">Duplex.ProcessSlicer</a></li>
   <li><a href="../modules/Duplex.RoamingDSP.html">Duplex.RoamingDSP</a></li>
   <li><a href="../modules/Duplex.Scheduler.html">Duplex.Scheduler</a></li>
+  <li><a href="../modules/Duplex.StateController.html">Duplex.StateController</a></li>
   <li><a href="../modules/Duplex.UIButton.html">Duplex.UIButton</a></li>
   <li><a href="../modules/Duplex.UIButtonStrip.html">Duplex.UIButtonStrip</a></li>
   <li><a href="../modules/Duplex.UIComponent.html">Duplex.UIComponent</a></li>
@@ -168,8 +170,11 @@
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#dump_midi">dump_midi</a></td>
-	<td class="summary">(bool) when enabled, dump MIDI messages received and send by duplex
- to the sdt out (Renoise terminal)</td>
+	<td class="summary">(bool) dump MIDI messages to sdt out (Renoise terminal)</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#dump_osc">dump_osc</a></td>
+	<td class="summary">(bool) dump OSC messages to sdt out (Renoise terminal)</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#osc_server_host">osc_server_host</a></td>
@@ -297,8 +302,21 @@
     <strong>dump_midi</strong>
     </dt>
     <dd>
-    (bool) when enabled, dump MIDI messages received and send by duplex
- to the sdt out (Renoise terminal)
+    (bool) dump MIDI messages to sdt out (Renoise terminal)
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "dump_osc"></a>
+    <strong>dump_osc</strong>
+    </dt>
+    <dd>
+    (bool) dump OSC messages to sdt out (Renoise terminal)
 
 
 

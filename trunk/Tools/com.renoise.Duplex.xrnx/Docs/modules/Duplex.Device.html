@@ -57,6 +57,7 @@
   <li><a href="../modules/Duplex.Applications.Mlrx.html">Duplex.Applications.Mlrx</a></li>
   <li><a href="../modules/Duplex.Applications.Navigator.html">Duplex.Applications.Navigator</a></li>
   <li><a href="../modules/Duplex.Applications.NotesOnWheels.html">Duplex.Applications.NotesOnWheels</a></li>
+  <li><a href="../modules/Duplex.Applications.PatternCursor.html">Duplex.Applications.PatternCursor</a></li>
   <li><a href="../modules/Duplex.Applications.PatternSequence.html">Duplex.Applications.PatternSequence</a></li>
   <li><a href="../modules/Duplex.Applications.Recorder.html">Duplex.Applications.Recorder</a></li>
   <li><a href="../modules/Duplex.Applications.Repeater.html">Duplex.Applications.Repeater</a></li>
@@ -86,6 +87,7 @@
   <li><a href="../modules/Duplex.ProcessSlicer.html">Duplex.ProcessSlicer</a></li>
   <li><a href="../modules/Duplex.RoamingDSP.html">Duplex.RoamingDSP</a></li>
   <li><a href="../modules/Duplex.Scheduler.html">Duplex.Scheduler</a></li>
+  <li><a href="../modules/Duplex.StateController.html">Duplex.StateController</a></li>
   <li><a href="../modules/Duplex.UIButton.html">Duplex.UIButton</a></li>
   <li><a href="../modules/Duplex.UIButtonStrip.html">Duplex.UIButtonStrip</a></li>
   <li><a href="../modules/Duplex.UIComponent.html">Duplex.UIComponent</a></li>
@@ -186,6 +188,10 @@
 	<tr>
 	<td class="name" nowrap><a href="#self.control_map">self.control_map</a></td>
 	<td class="summary">create our control-map</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#self.default_parameter_mode">self.default_parameter_mode</a></td>
+	<td class="summary">(<a href="../modules/Duplex.Globals.html#PARAM_MODE">Duplex.Globals.PARAM_MODE</a>) the default parameter mode</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#self.loopback_received_messages">self.loopback_received_messages</a></td>
@@ -403,15 +409,10 @@
 
 <p> Depending on the device, you might want to override these submethods with
  your own implementation. For example, the Launchpad has it's own method for
- converting a value into a color </p>
-
-<p> Note: when the value is a table, we iterate through each value and call the
- appropriate methods. </p>
-
-<p> You can also implement your own code for direct communication with the
- device by overriding these methods - in such a case, adding an additional
- boolean return value ("skip_hardware") will cause the Display to update the
- virtual control surface, but skip the hardware part
+ converting a value into a color. You can also implement your own code for
+ direct communication with the device by overriding these methods -
+ in such a case, adding an additional boolean return value ("skip_hardware")
+ will update the virtual display, but skip the hardware part
 
 
     <h3>Parameters:</h3>
@@ -601,6 +602,20 @@
     </dt>
     <dd>
     create our control-map
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "self.default_parameter_mode"></a>
+    <strong>self.default_parameter_mode</strong>
+    </dt>
+    <dd>
+    (<a href="../modules/Duplex.Globals.html#PARAM_MODE">Duplex.Globals.PARAM_MODE</a>) the default parameter mode
 
 
 

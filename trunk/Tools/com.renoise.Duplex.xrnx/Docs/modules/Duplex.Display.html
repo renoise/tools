@@ -57,6 +57,7 @@
   <li><a href="../modules/Duplex.Applications.Mlrx.html">Duplex.Applications.Mlrx</a></li>
   <li><a href="../modules/Duplex.Applications.Navigator.html">Duplex.Applications.Navigator</a></li>
   <li><a href="../modules/Duplex.Applications.NotesOnWheels.html">Duplex.Applications.NotesOnWheels</a></li>
+  <li><a href="../modules/Duplex.Applications.PatternCursor.html">Duplex.Applications.PatternCursor</a></li>
   <li><a href="../modules/Duplex.Applications.PatternSequence.html">Duplex.Applications.PatternSequence</a></li>
   <li><a href="../modules/Duplex.Applications.Recorder.html">Duplex.Applications.Recorder</a></li>
   <li><a href="../modules/Duplex.Applications.Repeater.html">Duplex.Applications.Repeater</a></li>
@@ -86,6 +87,7 @@
   <li><a href="../modules/Duplex.ProcessSlicer.html">Duplex.ProcessSlicer</a></li>
   <li><a href="../modules/Duplex.RoamingDSP.html">Duplex.RoamingDSP</a></li>
   <li><a href="../modules/Duplex.Scheduler.html">Duplex.Scheduler</a></li>
+  <li><a href="../modules/Duplex.StateController.html">Duplex.StateController</a></li>
   <li><a href="../modules/Duplex.UIButton.html">Duplex.UIButton</a></li>
   <li><a href="../modules/Duplex.UIButtonStrip.html">Duplex.UIButtonStrip</a></li>
   <li><a href="../modules/Duplex.UIComponent.html">Duplex.UIComponent</a></li>
@@ -118,7 +120,7 @@
 <h2><a href="#Functions">Functions</a></h2>
 <table class="function_list">
 	<tr>
-	<td class="name" nowrap><a href="#__init">__init (device)</a></td>
+	<td class="name" nowrap><a href="#__init">__init (process)</a></td>
 	<td class="summary">Initialize the Display class</td>
 	</tr>
 	<tr>
@@ -190,6 +192,10 @@
 <h2><a href="#Fields">Fields</a></h2>
 <table class="function_list">
 	<tr>
+	<td class="name" nowrap><a href="#self.process">self.process</a></td>
+	<td class="summary">(<a href="../modules/Duplex.BrowserProcess.html#">Duplex.BrowserProcess</a>)</td>
+	</tr>
+	<tr>
 	<td class="name" nowrap><a href="#self.device">self.device</a></td>
 	<td class="summary">(<a href="../modules/Duplex.Device.html#">Duplex.Device</a>)</td>
 	</tr>
@@ -215,6 +221,12 @@
 	<td class="name" nowrap><a href="#self.scheduler">self.scheduler</a></td>
 	<td class="summary">(<a href="../modules/Duplex.Scheduler.html#">Duplex.Scheduler</a>) use scheduler to perform periodic updates</td>
 	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#self.state_ctrl">self.state_ctrl</a></td>
+	<td class="summary">(<a href="../modules/Duplex.StateController.html#">Duplex.StateController</a>) handle display states
+ (this is added immediately after initializing the Display, as we
+ need a valid reference to ourselves - search for "StateApplication")</td>
+	</tr>
 </table>
 
 <br/>
@@ -225,7 +237,7 @@
     <dl class="function">
     <dt>
     <a name = "__init"></a>
-    <strong>__init (device)</strong>
+    <strong>__init (process)</strong>
     </dt>
     <dd>
     Initialize the Display class
@@ -233,8 +245,8 @@
 
     <h3>Parameters:</h3>
     <ul>
-        <li><span class="parameter">device</span>
-         (<a href="../modules/Duplex.Device.html#">Duplex.Device</a>) associate the Display with this device
+        <li><span class="parameter">process</span>
+         (<a href="../modules/Duplex.BrowserProcess.html#">Duplex.BrowserProcess</a>)
         </li>
     </ul>
 
@@ -563,6 +575,20 @@
     <h2><a name="Fields"></a>Fields</h2>
     <dl class="function">
     <dt>
+    <a name = "self.process"></a>
+    <strong>self.process</strong>
+    </dt>
+    <dd>
+    (<a href="../modules/Duplex.BrowserProcess.html#">Duplex.BrowserProcess</a>)
+
+
+
+
+
+
+
+</dd>
+    <dt>
     <a name = "self.device"></a>
     <strong>self.device</strong>
     </dt>
@@ -640,6 +666,22 @@
     </dt>
     <dd>
     (<a href="../modules/Duplex.Scheduler.html#">Duplex.Scheduler</a>) use scheduler to perform periodic updates
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "self.state_ctrl"></a>
+    <strong>self.state_ctrl</strong>
+    </dt>
+    <dd>
+    (<a href="../modules/Duplex.StateController.html#">Duplex.StateController</a>) handle display states
+ (this is added immediately after initializing the Display, as we
+ need a valid reference to ourselves - search for "StateApplication")
 
 
 

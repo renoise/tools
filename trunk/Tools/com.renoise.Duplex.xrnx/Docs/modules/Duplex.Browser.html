@@ -56,6 +56,7 @@
   <li><a href="../modules/Duplex.Applications.Mlrx.html">Duplex.Applications.Mlrx</a></li>
   <li><a href="../modules/Duplex.Applications.Navigator.html">Duplex.Applications.Navigator</a></li>
   <li><a href="../modules/Duplex.Applications.NotesOnWheels.html">Duplex.Applications.NotesOnWheels</a></li>
+  <li><a href="../modules/Duplex.Applications.PatternCursor.html">Duplex.Applications.PatternCursor</a></li>
   <li><a href="../modules/Duplex.Applications.PatternSequence.html">Duplex.Applications.PatternSequence</a></li>
   <li><a href="../modules/Duplex.Applications.Recorder.html">Duplex.Applications.Recorder</a></li>
   <li><a href="../modules/Duplex.Applications.Repeater.html">Duplex.Applications.Repeater</a></li>
@@ -85,6 +86,7 @@
   <li><a href="../modules/Duplex.ProcessSlicer.html">Duplex.ProcessSlicer</a></li>
   <li><a href="../modules/Duplex.RoamingDSP.html">Duplex.RoamingDSP</a></li>
   <li><a href="../modules/Duplex.Scheduler.html">Duplex.Scheduler</a></li>
+  <li><a href="../modules/Duplex.StateController.html">Duplex.StateController</a></li>
   <li><a href="../modules/Duplex.UIButton.html">Duplex.UIButton</a></li>
   <li><a href="../modules/Duplex.UIButtonStrip.html">Duplex.UIButtonStrip</a></li>
   <li><a href="../modules/Duplex.UIComponent.html">Duplex.UIComponent</a></li>
@@ -207,8 +209,16 @@
 	<td class="summary">Check if we should write debug data to the std out (console)</td>
 	</tr>
 	<tr>
+	<td class="name" nowrap><a href="#dump_osc">dump_osc ()</a></td>
+	<td class="summary">Check if we should write debug data to the std out (console)</td>
+	</tr>
+	<tr>
 	<td class="name" nowrap><a href="#set_dump_midi">set_dump_midi (dump)</a></td>
 	<td class="summary">Set the MIDI dump status</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#set_dump_osc">set_dump_osc (dump)</a></td>
+	<td class="summary">Set the OSC dump status</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#_strip_postfixes">_strip_postfixes (name)</a></td>
@@ -305,6 +315,10 @@
 	<tr>
 	<td class="name" nowrap><a href="#self._dump_midi">self._dump_midi</a></td>
 	<td class="summary">(bool) dump midi information to console (debug option)</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#self._dump_osc">self._dump_osc</a></td>
+	<td class="summary">(bool) dump osc information to console (debug option)</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#self._suppress_notifiers">self._suppress_notifiers</a></td>
@@ -750,11 +764,50 @@
 
 </dd>
     <dt>
+    <a name = "dump_osc"></a>
+    <strong>dump_osc ()</strong>
+    </dt>
+    <dd>
+    Check if we should write debug data to the std out (console)
+
+
+
+    <h3>Returns:</h3>
+    <ol>
+
+        (bool)
+    </ol>
+
+
+
+
+</dd>
+    <dt>
     <a name = "set_dump_midi"></a>
     <strong>set_dump_midi (dump)</strong>
     </dt>
     <dd>
     Set the MIDI dump status
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">dump</span>
+         (bool)
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "set_dump_osc"></a>
+    <strong>set_dump_osc (dump)</strong>
+    </dt>
+    <dd>
+    Set the OSC dump status
 
 
     <h3>Parameters:</h3>
@@ -1158,6 +1211,20 @@
     </dt>
     <dd>
     (bool) dump midi information to console (debug option)
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "self._dump_osc"></a>
+    <strong>self._dump_osc</strong>
+    </dt>
+    <dd>
+    (bool) dump osc information to console (debug option)
 
 
 

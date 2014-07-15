@@ -57,6 +57,7 @@
   <li><a href="../modules/Duplex.Applications.Mlrx.html">Duplex.Applications.Mlrx</a></li>
   <li><a href="../modules/Duplex.Applications.Navigator.html">Duplex.Applications.Navigator</a></li>
   <li><a href="../modules/Duplex.Applications.NotesOnWheels.html">Duplex.Applications.NotesOnWheels</a></li>
+  <li><a href="../modules/Duplex.Applications.PatternCursor.html">Duplex.Applications.PatternCursor</a></li>
   <li><a href="../modules/Duplex.Applications.PatternSequence.html">Duplex.Applications.PatternSequence</a></li>
   <li><a href="../modules/Duplex.Applications.Recorder.html">Duplex.Applications.Recorder</a></li>
   <li><a href="../modules/Duplex.Applications.Repeater.html">Duplex.Applications.Repeater</a></li>
@@ -86,6 +87,7 @@
   <li><a href="../modules/Duplex.ProcessSlicer.html">Duplex.ProcessSlicer</a></li>
   <li><a href="../modules/Duplex.RoamingDSP.html">Duplex.RoamingDSP</a></li>
   <li><a href="../modules/Duplex.Scheduler.html">Duplex.Scheduler</a></li>
+  <li><a href="../modules/Duplex.StateController.html">Duplex.StateController</a></li>
   <li><a href="../modules/Duplex.UIButton.html">Duplex.UIButton</a></li>
   <li><a href="../modules/Duplex.UIButtonStrip.html">Duplex.UIButtonStrip</a></li>
   <li><a href="../modules/Duplex.UIComponent.html">Duplex.UIComponent</a></li>
@@ -175,7 +177,7 @@
  set index + precise value within the index</td>
 	</tr>
 	<tr>
-	<td class="name" nowrap><a href="#output_quantize">output_quantize (val)</a></td>
+	<td class="name" nowrap><a href="#output_quantize">output_quantize (val, mode)</a></td>
 	<td class="summary">Check if parameter-quantization is in force</td>
 	</tr>
 	<tr>
@@ -185,11 +187,6 @@
 	<tr>
 	<td class="name" nowrap><a href="#set_index">set_index (idx, skip_event)</a></td>
 	<td class="summary">Set index (will also update the value)</td>
-	</tr>
-	<tr>
-	<td class="name" nowrap><a href="#force_update">force_update ()</a></td>
-	<td class="summary">Force-update controls that are handling their internal state by themselves
- (only relevant when assigned to buttons)</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#set_orientation">set_orientation (value)</a></td>
@@ -374,7 +371,7 @@ DEVICE_EVENT.VALUE_CHANGED
 </dd>
     <dt>
     <a name = "output_quantize"></a>
-    <strong>output_quantize (val)</strong>
+    <strong>output_quantize (val, mode)</strong>
     </dt>
     <dd>
     Check if parameter-quantization is in force
@@ -383,7 +380,10 @@ DEVICE_EVENT.VALUE_CHANGED
     <h3>Parameters:</h3>
     <ul>
         <li><span class="parameter">val</span>
-        MIDI devices quantize their output by default
+         (number) a value between floor and ceiling
+        </li>
+        <li><span class="parameter">mode</span>
+         (enum) see <a href="../modules/Duplex.Globals.html#PARAM_MODE">Duplex.Globals.PARAM_MODE</a>
         </li>
     </ul>
 
@@ -437,21 +437,6 @@ DEVICE_EVENT.VALUE_CHANGED
          (bool) skip event handler
         </li>
     </ul>
-
-
-
-
-
-</dd>
-    <dt>
-    <a name = "force_update"></a>
-    <strong>force_update ()</strong>
-    </dt>
-    <dd>
-    Force-update controls that are handling their internal state by themselves
- (only relevant when assigned to buttons)
-
-
 
 
 
