@@ -6,6 +6,52 @@ Duplex Changelog
 Done 0.99
 --------------------------------------------------------------------------------
 
+-- Duplex 0.99.3 -----------
+
+Core/StateController
+* New class, StateController (toggle parts of control-map in realtime)
+* See also ControlMap.lua and MessageStream for details
+
+Core/MidiDevice
+* Support for MMC (Midi Machine Control) messages over sysex
+* Support for 14-bit MIDI pitch bend messages 
+* Ability to pass unmatched (not just unhandled) messages to Renoise 
+
+Core/OscDevice
+* Ability to dump OSC message to console (just like MIDI messages)
+* Feedback prevention: optionally block messages that appear to be echoed back
+
+Core/ControlMap
+* <Param @match> (new), match a specific (CC) value 
+* <Param @match_from, @match_to> (new), match a (CC) value-range 
+* <Param @mode> (new), explicitly state the value resolution (e.g. 7 or 14 bit)
+* <Param @class> (new), interpret parameter in the context of a specific device class
+
+Core/MessageStream
+* Ability to cache multiple matched ui-components (implemented as queue)
+* Integration with StateController
+
+Core/UIComponents (all)
+* Refactored force_refresh method into base-class
+* UIComponent:test() now include test for active state and group-name
+
+Core/WidgetHooks
+* Improved validation methods
+
+Core/Applications
+* Removed some print statements that were overlooked
+
+Core/Controllers
+* All device classes should now be using output_number/boolean/text methods
+
+Applications/PatternCursor
+* New application, take control of the pattern cursor (preview release)
+
+Controllers/Oxygen88
+* Control-map / configuration for the M-Audio Oxygen88 controller
+
+
+
 -- Duplex 0.99.2 -----------
 
 Duplex Core
