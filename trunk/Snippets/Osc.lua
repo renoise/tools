@@ -13,7 +13,9 @@ local OscBundle = renoise.Osc.Bundle
 ---- Osc server (receive Osc from one or more clients)
 
 -- open a socket connection to the server
-local server, socket_error = renoise.Socket.create_server(
+-- should be global to avoid premature garbage collection 
+
+server, socket_error = renoise.Socket.create_server(
   "localhost", 8008, renoise.Socket.PROTOCOL_UDP)
    
 if (socket_error) then 
