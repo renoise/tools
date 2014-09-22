@@ -45,6 +45,12 @@ done to the Renoise song into multiple undo actions (one action per slice/yield)
 Modal dialogs will block the slicer, cause on_idle notifications are not fired then. 
 It will even block your own process GUI when trying to show it modal.
 
+
+### Changes
+
+  0.99.1
+    - First release
+
 ]]
 
 --------------------------------------------------------------------------------

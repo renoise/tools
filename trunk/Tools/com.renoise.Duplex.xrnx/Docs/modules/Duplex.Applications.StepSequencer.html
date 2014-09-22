@@ -44,6 +44,11 @@
   <li><a href="../modules/Duplex.Applications.Effect.html">Duplex.Applications.Effect</a></li>
   <li><a href="../modules/Duplex.Applications.GridPie.html">Duplex.Applications.GridPie</a></li>
   <li><a href="../modules/Duplex.Applications.Hydra.html">Duplex.Applications.Hydra</a></li>
+  <li><a href="../modules/Duplex.Applications.Instrument.html">Duplex.Applications.Instrument</a></li>
+  <li><a href="../modules/Duplex.Applications.Keyboard.GridLayout.html">Duplex.Applications.Keyboard.GridLayout</a></li>
+  <li><a href="../modules/Duplex.Applications.Keyboard.Layouts.HarmonicLayout.html">Duplex.Applications.Keyboard.Layouts.HarmonicLayout</a></li>
+  <li><a href="../modules/Duplex.Applications.Keyboard.Layouts.IsomorphicLayout.html">Duplex.Applications.Keyboard.Layouts.IsomorphicLayout</a></li>
+  <li><a href="../modules/Duplex.Applications.Keyboard.Layouts.PianoLayout.html">Duplex.Applications.Keyboard.Layouts.PianoLayout</a></li>
   <li><a href="../modules/Duplex.Applications.Keyboard.html">Duplex.Applications.Keyboard</a></li>
   <li><a href="../modules/Duplex.Applications.Matrix.html">Duplex.Applications.Matrix</a></li>
   <li><a href="../modules/Duplex.Applications.Metronome.html">Duplex.Applications.Metronome</a></li>
@@ -67,6 +72,7 @@
   <li><a href="../modules/Duplex.Applications.TestPad.html">Duplex.Applications.TestPad</a></li>
   <li><a href="../modules/Duplex.Applications.TrackSelector.html">Duplex.Applications.TrackSelector</a></li>
   <li><a href="../modules/Duplex.Applications.Transport.html">Duplex.Applications.Transport</a></li>
+  <li><a href="../modules/Duplex.Applications.UIButtonTest.html">Duplex.Applications.UIButtonTest</a></li>
   <li><a href="../modules/Duplex.Applications.XYPad.html">Duplex.Applications.XYPad</a></li>
   <li><a href="../modules/Duplex.Automation.html">Duplex.Automation</a></li>
   <li><a href="../modules/Duplex.Browser.html">Duplex.Browser</a></li>
@@ -138,11 +144,36 @@ pattern you're editing. </p>
 
 <h3>Changes</h3>
 
+
+
+<p>  0.98.21</p>
+<pre><code>- Support line_notifier when slots are aliased (also when created and/or removed)
+- Workflow: when navigating from a long pattern into a shorter one, start from
+  the top (IOW, always restrict to the actual pattern length)
+- Fixed: update the volume-level display when base volume is changed
+- Fixed: selecting a group track could cause an error
+</code></pre>
+
+<p>  0.98.20</p>
+<pre><code>- Fixed: focus bug when holding button
+</code></pre>
+
+<p>  0.98.18</p>
+<pre><code>- Mappings track, level, line, transpose are now optional. This should fix an
+  issue with the nano2K config that didn’t specify ‘track’
+- Fixed: under certain conditions, could throw error on startup
+</code></pre>
+
 <p>  0.98  </p>
 <pre><code>- Palette now uses the standard format (easier to customize)
 - Sequencer tracks can be linked with instruments, simply by assigning
   the same name to both.
   UISpinner (deprecated) control replaced with UISlider+UIButton(s)
+</code></pre>
+
+<p>  0.96</p>
+<pre><code>- Option: "follow_track", set to align to selected track in Renoise
+- Option: "track_increment", specify custom step size for track-switching
 </code></pre>
 
 <p>  0.95  </p>

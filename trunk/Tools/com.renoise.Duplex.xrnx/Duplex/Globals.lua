@@ -92,6 +92,44 @@ ORIENTATION = {
   NONE = 3,
 }
 
+HARMONIC_SCALES = {
+  ["None"] =                { index=1, keys={1,1,1,1,1,1,1,1,1,1,1,1}, count=12, },
+  ["Natural Major"] =       { index=2, keys={1,0,1,0,1,1,0,1,0,1,0,1}, count=7,  },
+  ["Natural Minor"] =       { index=3, keys={1,0,1,1,0,1,0,1,1,0,1,0}, count=7,  },
+  ["Pentatonic Major"] =    { index=4, keys={1,0,1,0,1,0,0,1,0,1,0,0}, count=5,  },
+  ["Pentatonic Minor"] =    { index=5, keys={1,0,0,1,0,1,0,1,0,0,1,0}, count=5,  },
+  ["Egyptian Pentatonic"] = { index=6, keys={1,0,1,0,0,1,0,1,0,0,1,0}, count=5,  },
+  ["Blues Major"] =         { index=7, keys={1,0,1,1,1,0,0,1,0,1,0,0}, count=6,  },
+  ["Blues Minor"] =         { index=8, keys={1,0,0,1,0,1,1,1,0,0,1,0}, count=6,  },
+  ["Whole Tone"] =          { index=9, keys={1,0,1,0,1,0,1,0,1,0,1,0}, count=6,  },
+  ["Augmented"] =           { index=10, keys={1,0,0,1,1,0,0,1,1,0,0,1}, count=6,  },
+  ["Prometheus"] =          { index=11, keys={1,0,1,0,1,0,1,0,0,1,1,0}, count=6,  },
+  ["Tritone"] =             { index=12, keys={1,1,0,0,1,0,1,1,0,0,1,0}, count=6,  },
+  ["Harmonic Major"] =      { index=13, keys={1,0,1,0,1,1,0,1,1,0,0,1}, count=7,  },
+  ["Harmonic Minor"] =      { index=14, keys={1,0,1,1,0,1,0,1,1,0,0,1}, count=7,  },
+  ["Melodic Minor"] =       { index=15, keys={1,0,1,1,0,1,0,1,0,1,0,1}, count=7,  },
+  ["All Minor"] =           { index=16, keys={1,0,1,1,0,1,0,1,1,1,1,1}, count=9,  },
+  ["Dorian"] =              { index=17, keys={1,0,1,1,0,1,0,1,0,1,1,0}, count=7,  },
+  ["Phrygian"] =            { index=18, keys={1,1,0,1,0,1,0,1,1,0,1,0}, count=7,  },
+  ["Phrygian Dominant"] =   { index=19, keys={1,1,0,0,1,1,0,1,1,0,1,0}, count=7,  },
+  ["Lydian"] =              { index=20, keys={1,0,1,0,1,0,1,1,0,1,0,1}, count=7,  },
+  ["Lydian Augmented"] =    { index=21, keys={1,0,1,0,1,0,1,0,1,1,0,1}, count=7,  },
+  ["Mixolydian"] =          { index=22, keys={1,0,1,0,1,1,0,1,0,1,1,0}, count=7,  },
+  ["Locrian"] =             { index=23, keys={1,1,0,1,0,1,1,0,1,0,1,0}, count=7,  },
+  ["Locrian Major"] =       { index=24, keys={1,0,1,0,1,1,1,0,1,0,1,0}, count=7,  },
+  ["Super Locrian"] =       { index=25, keys={1,1,0,1,1,0,1,0,1,0,1,0}, count=7,  },
+  ["Major Neapolitan"] =    { index=26, keys={1,1,0,1,0,1,0,1,0,1,0,1}, count=7,  },
+  ["Minor Neapolitan"] =    { index=27, keys={1,1,0,1,0,1,0,1,1,0,0,1}, count=7,  },
+  ["Romanian Minor"] =      { index=28, keys={1,0,1,1,0,0,1,1,0,1,1,0}, count=7,  },
+  ["Spanish Gypsy"] =       { index=29, keys={1,1,0,0,1,1,0,1,1,0,0,1}, count=7,  },
+  ["Hungarian Gypsy"] =     { index=30, keys={1,0,1,1,0,0,1,1,1,0,0,1}, count=7,  },
+  ["Enigmatic"] =           { index=31, keys={1,1,0,0,1,0,1,0,1,0,1,1}, count=7,  },
+  ["Overtone"] =            { index=32, keys={1,0,1,0,1,0,1,1,0,1,1,0}, count=7,  },
+  ["Diminished Half"] =     { index=33, keys={1,1,0,1,1,0,1,1,0,1,1,0}, count=8,  },
+  ["Diminished Whole"] =    { index=34, keys={1,0,1,1,0,1,1,0,1,1,0,1}, count=8,  },
+  ["Spanish Eight-Tone"] =  { index=35, keys={1,1,0,1,1,1,1,0,1,0,1,0}, count=8,  },
+  ["Nine-Tone Scale"] =     { index=36, keys={1,0,1,1,1,0,1,1,1,1,0,1}, count=9,  },
+}
 
 --------------------------------------------------------------------------------
 -- helper functions
@@ -278,12 +316,7 @@ function is_monochrome(colorspace)
   if table.is_empty(colorspace) then
     return true
   end
-  local val = math.max(colorspace[1],
-    math.max(colorspace[2],
-    math.max(colorspace[3])))
-  return (val==1)
 end
-
 
 --- remove channel info from value-string
 function strip_channel_info(str)
@@ -434,9 +467,10 @@ end
 
 local _log_to_file = false
 local _trace_filters = nil
---local _trace_filters = {"^StateController"}
+--local _trace_filters = {"^Keyboard*"}
+--local _trace_filters = {"^StateController*"}
 --local _trace_filters = {"^Recorder*","^UISlider*"}
---local _trace_filters = {".*"}
+local _trace_filters = {".*"}
 
 --------------------------------------------------------------------------------
 

@@ -4,7 +4,7 @@
 ============================================================================]]--
 
 --[[--
-The Slider supports different input methods: buttons or faders/dials
+The Slider supports different input methods: buttons or faders/dials.
 
 
 ### Dial mode / fader mode
@@ -23,28 +23,47 @@ The Slider supports different input methods: buttons or faders/dials
 
 ### Button mode
 
-  In button mode, each value-step of the slider is assigned to a separate button. The size of the resulting slider is determined by the size you specify when creating the slider (or, by using the set_size() after the slider has been created). 
+  In button mode, each value-step of the slider is assigned to a separate 
+  button. The size of the resulting slider is determined by the size you specify 
+  when creating the slider (or, by using the set_size() after the slider has 
+  been created). 
      _    _______   
     |_|  |x|x|x| | <- horizontally aligned UISlider (mapped to 4 buttons)  
     |_|   ¯¯¯¯¯¯¯  <- vertically aligned UISlider (mapped to 4 buttons)
     |x|   _         
     |x|  | |       <- single-button UISlider (toggles min/max value)
      ¯    ¯
+     _ _ _ _
+    |x|x|x|x|      <- two-dimensional UISlider, possible when 
+    |x|x|_|_|         orientation is set to ORIENTATION.NONE
+                      (minimum in upper-left, max in lower right corner)
 
-  To map a slider onto button(s), you must also specify an "on_press" event handler. The method does not have to do anything special, but without it,
+  To map a slider onto button(s), you must also specify an "on_press" event 
+  handler. The method does not have to do anything special, but without it,
   the slider will never receive any events from the device. 
 
-  In "button mode", you also have an additional property called "toggleable". Setting this to true will enable you to toggle off any active button, and thus gain an extra value-step from any series of buttons. 
+  In "button mode", you also have an additional property called "toggleable". 
+  Setting this to true will enable you to toggle off any active button, and thus 
+  gain an extra value-step from any series of buttons. 
 
 ### Other features
 
-- Built-in quantize for MIDI devices (only output when 7bit values change)
-- Built-in support for relative encoder/dials. Note that the type of relative encoder is specified in your control-map
+- Built-in quantize for MIDI devices (only output when values change)
+- Built-in support for relative encoder/dials. The actual type of relative encoder is specified in your control-map (see @{Duplex.Globals.PARAM_MODE})
+
+### Examples
+
+  Duplex comes with a sample configuration for the UISlider. Launch the
+  duplex browser and choose Custombuilt > UISlider Demo
 
 ### Changelog
 
   0.99
     - Got rid of "dimmed" method (just call set_palette instead)
+    - Support ORIENTATION.NONE for two-dimensional layout
+
+
+
 
 --]]
 
@@ -84,7 +103,7 @@ function UISlider:__init(app,map)
   self.flipped = false
 
   --- (bool) see @{Duplex.UIComponent}
-  --self.soft_echo = true
+  --self.virtual_event = true
 
   --- slider is ORIENTATION.VERTICAL or ORIENTATION.HORIZONTAL?
   -- (use set_orientation() method to set this value)
@@ -135,7 +154,7 @@ function UISlider:do_press(msg)
     return 
   end
 
-  self.soft_echo = not msg.is_virtual and msg.xarg.soft_echo
+  self.msg = msg
 
   local idx = nil
 
@@ -169,7 +188,7 @@ function UISlider:do_change(msg)
     return 
   end
 
-  self.soft_echo = not msg.is_virtual and msg.xarg.soft_echo
+  self.msg = msg
 
   if (self.on_change ~= nil) then
     
@@ -281,6 +300,15 @@ function UISlider:set_value(val,skip_event)
     --return
   --end
 
+  --[[
+  if (val > self.ceiling) or
+    (val < self.floor) 
+  then
+    LOG("Warning: attempted to set UISlider to a value outside range")
+    return
+  end
+  ]]
+
   local idx = math.abs(math.ceil(((self.steps/self.ceiling)*val)-0.5))
   self._cached_value = self.value
   self._cached_index = self.index
@@ -358,21 +386,26 @@ end
 --------------------------------------------------------------------------------
 
 --- Override UIComponent with this method
--- @param size (number)
+-- @param size (int)
+-- @param opt (int), optional height (only when using ORIENTATION.NONE)
 -- @see Duplex.UIComponent
 
-function UISlider:set_size(size)
-  TRACE("UISlider:set_size",size)
+function UISlider:set_size(size,opt)
+  TRACE("UISlider:set_size",size,opt)
 
-  self.steps = size
+  if not opt then
+    opt = 1
+  end
+
+  self.steps = size * opt
   self._size = size
 
   if (self._orientation == ORIENTATION.VERTICAL) then
     UIComponent.set_size(self, 1, size)
-  elseif (self._orientation == ORIENTATION.HORIZONTAL) or
-    (self._orientation == ORIENTATION.NONE)
-  then
+  elseif (self._orientation == ORIENTATION.HORIZONTAL) then
     UIComponent.set_size(self, size, 1)
+  elseif (self._orientation == ORIENTATION.NONE) then
+    UIComponent.set_size(self, size,opt)
   end
 end
 
@@ -392,6 +425,7 @@ function UISlider:test(msg)
   if (self._orientation == ORIENTATION.VERTICAL) or
     (self._orientation == ORIENTATION.HORIZONTAL)
   then
+    --print("*** UISlider:testing with orientation")
     return UIComponent.test(self,msg)
   end
 
@@ -438,13 +472,21 @@ function UISlider:draw()
         idx = self._size - idx + 1
       end
 
-      for i = 1,self._size do
+      local total_units = self.width * self.height
+
+      for i = 1,total_units do
 
         local x,y = 1,1
         if (self._orientation == ORIENTATION.VERTICAL) then 
           y = i
-        else
+        elseif (self._orientation == ORIENTATION.HORIZONTAL) then 
           x = i  
+        elseif (self._orientation == ORIENTATION.NONE) then 
+          x = i % self.width
+          if (x == 0) then
+            x = self.width
+          end
+          y = math.ceil(i/self.width)
         end
 
         local point = CanvasPoint()

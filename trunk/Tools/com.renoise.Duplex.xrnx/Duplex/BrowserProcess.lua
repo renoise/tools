@@ -327,8 +327,31 @@ function BrowserProcess:_available_device_ports_changed()
   -- so we don't have to bother updating them
   
   if (self:settings_dialog_visible()) then
-      self:close_settings_dialog()
+
+    if (self.device.protocol == DEVICE_PROTOCOL.MIDI) then
+      
+      local ports_in,ports_out = Device.collect_midi_ports()
+      self.device._vb.views["dpx_device_port_in"].items = ports_in
+      self.device._vb.views["dpx_device_port_out"].items = ports_out
+      
+      --[[
+      local device_port_in = (self.settings.device_port_in.value ~= "") and 
+        self.settings.device_port_in.value or self.configuration.device.device_port_in
+        
+      local device_port_out = (self.settings.device_port_out.value ~= "") and 
+        self.settings.device_port_out.value or self.configuration.device.device_port_out
+      
+      --print("*** device_port_in,device_port_out",device_port_in,device_port_out)
+      ]]
+
+    end
+
+    --self:close_settings_dialog()
+
   end
+
+  
+
 end
 
 --------------------------------------------------------------------------------
@@ -702,7 +725,7 @@ function BrowserProcess:on_idle()
     self._message_stream:on_idle()
     
     -- modify ui components
-    self.display:update()
+    self.display:update("idle")
   
     -- then refresh the display 
     for _,app in pairs(self._applications) do

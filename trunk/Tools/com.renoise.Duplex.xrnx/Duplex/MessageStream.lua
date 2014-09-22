@@ -10,6 +10,25 @@ After the type of event has been determined, the resulting Message is then direc
 
 A device can only belong to a single stream, but nothing stops the stream from recieving it's input from several devices.  
 
+
+### Changes
+
+  0.99.3
+    - Ability to cache multiple matched ui-components (implemented as queue)
+    - Integration with StateController
+
+  0.99.1
+    - FIXME Caching can break multiple UIComponents listening to the same signal
+
+  0.98.27
+    - Caching: improve performance when many controls are present
+
+  0.96
+    - New Message property: is_note_off - distinguish between note-on/note-off 
+     
+  0.9
+    - First release
+
 --]]
 
 --==============================================================================
@@ -429,12 +448,11 @@ function MessageStream:_handle_or_pass(msg,listeners,evt_type)
       --print("*** _handle_or_pass - #listeners",#listeners)
       for _,listener in ipairs(listeners) do 
 
-        --print("got here 2 - self.queued_messages",self.queued_messages)
-
         -- test the message, cache matches
         -- match when we determine that the message has the right x/y coords
 
         --print("msg.xarg",rprint(msg.xarg))
+
         if UIComponent.test(listener.obj,msg) then
           table.insert(self._temp_cache,listener.obj)
           --print("*** tested ui_obj",evt_type,msg.xarg.value,msg.xarg.group_name)

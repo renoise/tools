@@ -6,6 +6,13 @@
 --[[--
 UIKeyPressure is a UIComponent that respond to MIDI channel-pressure events.
 
+
+### Changes
+
+  0.98
+    - First release
+
+
 --]]
 
 --==============================================================================

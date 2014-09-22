@@ -42,6 +42,13 @@ Tool discussion is located on the [Renoise forum][1]
     - Supports <SubParam> nodes (proper support for MIDI devices)
     - Broadcasting of MIDI values
 
+  0.98.19
+    - Simplified setup: use unique, automatically-generated names to identify 
+      “managed” XYPads (no more need for manually specified id’s)
+
+  0.98.15
+    - Fixed: No longer looses focus when navigating to a new track
+
   0.98 
     - First release 
 

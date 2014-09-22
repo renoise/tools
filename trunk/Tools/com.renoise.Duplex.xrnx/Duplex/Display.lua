@@ -9,6 +9,25 @@ Display performs many duties; it manages UIComponents, as it will both send and 
 
 The Display will also build the control surface, an interactive representation of the device complete with native sliders, knobs etc. 
 
+
+
+### Changes
+
+  0.99.4
+    - "skip_echo" is checked here, no more need to do so in output_value()
+
+  0.99.3
+    - "soft_echo", will update the hardware only when a message is _not_ 
+      the result of a user action (a.k.a. a virtual event)
+
+  0.99
+    - Refactored 'UI widget' code into it's own Widget* classes
+    
+
+
+  0.98 
+    - First release 
+
 --]]
 
 --==============================================================================
@@ -22,7 +41,7 @@ Display.UNIT_WIDTH = 32
 --------------------------------------------------------------------------------
 
 --- Initialize the Display class
--- @param device (@{Duplex.Device}) associate the Display with this device
+-- @param process (@{Duplex.BrowserProcess}) 
 
 function Display:__init(process)
   TRACE('Display:__init')
@@ -253,7 +272,8 @@ end
 --- Update any UIComponent that has been modified since the last update
 -- (called continously)
 
-function Display:update()
+function Display:update(foo)
+  --TRACE("*** Display.update",foo)
 
   if (not self.view) then
     return
@@ -296,6 +316,7 @@ function Display:update()
             end
           end
         end
+        --print("*** Display.update - clear_delta")
         obj.canvas:clear_delta()
       end
 
@@ -341,27 +362,46 @@ function Display:set_parameter(param,ui_obj,point,skip_ui)
   -- reference to control-map
   local cm = self.device.control_map
 
-  -- create our output value 
+  -- @ create our output value 
   -- at this stage, we might directly communicate with the hardware, 
   -- in which case the "skip_hardware" flag can be set to true
-  local value,skip_hardware = nil,false
+  -- 
+
+  local value,skip_hardware = nil,nil
+
   if (param.xarg.class) and
     _G[param.xarg.class].output_value
   then
     -- produce output value using the specified device class
-    -- (this is useful when mixing a custom device class implementation
-    -- with features that make use of the standard osc/midi featureset)
     value,skip_hardware = _G[param.xarg.class].output_value(self.device,point,param.xarg,ui_obj)
-  else -- output via current context (device-config class)
+  elseif not self.device.loopback_received_messages or 
+    param.xarg.skip_echo 
+  then
+    -- output via the device base-class
+    value = Device.output_value(self.device,point,param.xarg,ui_obj)
+    skip_hardware = true
+  else
+    -- output via default device context (device-config)
     value,skip_hardware = self.device:output_value(point,param.xarg,ui_obj)
   end
-  --print("*** set_parameter - value,point",rprint(value),rprint(point))
+  --print("*** set_parameter - value,point",value,point)
 
-  if not skip_hardware then
-    skip_hardware = (param.xarg.skip_echo or ui_obj.soft_echo or
-      not self.device.loopback_received_messages) and true or false
+  if not skip_hardware 
+    and self.device.loopback_received_messages
+    and (param.xarg.soft_echo) 
+    and ui_obj.msg 
+  then
+    -- determine if we are responding to a user-generated event
+    -- (with "soft echo", only programmatic events are fed back)
+    local is_most_recent = (ui_obj.msg == self.process._message_stream.current_msg)
+    if is_most_recent then
+      skip_hardware = not ui_obj.msg.is_virtual  
+    end
+
   end  
-  --print("*** set_parameter - skip_hardware",skip_hardware)
+  --print("*** set_parameter - skip_hardware",skip_hardware,ui_obj)
+
+  --@
 
 
   -- update virtual control surface
@@ -401,7 +441,7 @@ function Display:set_parameter(param,ui_obj,point,skip_ui)
 
       elseif (widget_type == "MultiLineText") then
 
-        widget.text = value
+        widget.text = tostring(value)
 
       elseif (widget_type == "Rack") then
 
@@ -688,6 +728,7 @@ function Display:_walk_table(t, done, deep)
   
         --- validate param properties
         local cm = self.device.control_map
+        --print("param.xarg.type",param.xarg.type)
         widget_hooks[param.xarg.type].validate(self,param,cm)
 
         --- common properties
@@ -711,7 +752,7 @@ function Display:_walk_table(t, done, deep)
         end
 
         -- add widgets and notifiers 
-        --print("got here 3 Param")
+        --print("add param")
         register_param(param,self._id)
 
         view_obj = widget_hooks[param.xarg.type].build(
@@ -722,12 +763,11 @@ function Display:_walk_table(t, done, deep)
     
         -- Column
 
-        --print("got here 6 Column Create")
-
         view_obj = self.vb:column{
           spacing = DEFAULT_SPACING,
           id = tostring(self._id)
         }
+        --print("add column +")
         register_param(param,self._id)
         self._id = self._id+1
 
@@ -737,12 +777,11 @@ function Display:_walk_table(t, done, deep)
       elseif (param.label == "Row") then
     
         -- Row
-        --print("got here 7 Row Create")
-
         view_obj = self.vb:row{
           spacing = DEFAULT_SPACING,
           id = tostring(self._id),
         }
+        --print("add row + ")
         register_param(param,self._id)
         self._id = self._id+1
 
@@ -795,13 +834,12 @@ function Display:_walk_table(t, done, deep)
             spacing = DEFAULT_SPACING,
           }
         end
-        --print("got here 0.1 view_obj",view_obj,grid_id)
 
         if (grid_id) then
 
           -- grid mode, remember the original view_obj
           -- otherwise we loose this reference...
-
+          --print("grid mode")
           self._grid_obj = view_obj
           register_param(param,self._id)
 
@@ -824,8 +862,7 @@ function Display:_walk_table(t, done, deep)
           not self._row_ids[row_id]) then
 
           self._row_ids[row_id] = true
-          --print("got here 2 Param")
-    
+          --print("increased id (A)",self._id)
           self._id = self._id+1
           local row_obj = self.vb:row{
             id = tostring(self._id),
@@ -842,10 +879,9 @@ function Display:_walk_table(t, done, deep)
         for i = deep-1, 1, -1 do
           if self._parents[i] then
 
-            --print("got here 8 Group Param Row")
-
             self._parents[i]:add_child(view_obj)
             self._id = self._id+1
+            --print("increased id (B)",self._id)
 
             added = true
             break
@@ -854,7 +890,6 @@ function Display:_walk_table(t, done, deep)
           
         -- else, add to main view
         if (not added) then
-          --print("got here 4")
           self.view:add_child(view_obj)
 
         end

@@ -17,7 +17,6 @@ function BCF2000:__init(display_name, message_stream, port_in, port_out)
   -- sending back messages we got from the BCF, in order to break feedback loops...
   self.loopback_received_messages = false
 
-  self.colorspace = {1,1,1}
 
 end
 

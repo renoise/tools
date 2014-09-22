@@ -43,6 +43,11 @@
   <li><a href="../modules/Duplex.Applications.Effect.html">Duplex.Applications.Effect</a></li>
   <li><a href="../modules/Duplex.Applications.GridPie.html">Duplex.Applications.GridPie</a></li>
   <li><a href="../modules/Duplex.Applications.Hydra.html">Duplex.Applications.Hydra</a></li>
+  <li><a href="../modules/Duplex.Applications.Instrument.html">Duplex.Applications.Instrument</a></li>
+  <li><a href="../modules/Duplex.Applications.Keyboard.GridLayout.html">Duplex.Applications.Keyboard.GridLayout</a></li>
+  <li><a href="../modules/Duplex.Applications.Keyboard.Layouts.HarmonicLayout.html">Duplex.Applications.Keyboard.Layouts.HarmonicLayout</a></li>
+  <li><a href="../modules/Duplex.Applications.Keyboard.Layouts.IsomorphicLayout.html">Duplex.Applications.Keyboard.Layouts.IsomorphicLayout</a></li>
+  <li><a href="../modules/Duplex.Applications.Keyboard.Layouts.PianoLayout.html">Duplex.Applications.Keyboard.Layouts.PianoLayout</a></li>
   <li><a href="../modules/Duplex.Applications.Keyboard.html">Duplex.Applications.Keyboard</a></li>
   <li><a href="../modules/Duplex.Applications.Matrix.html">Duplex.Applications.Matrix</a></li>
   <li><a href="../modules/Duplex.Applications.Metronome.html">Duplex.Applications.Metronome</a></li>
@@ -66,6 +71,7 @@
   <li><a href="../modules/Duplex.Applications.TestPad.html">Duplex.Applications.TestPad</a></li>
   <li><a href="../modules/Duplex.Applications.TrackSelector.html">Duplex.Applications.TrackSelector</a></li>
   <li><a href="../modules/Duplex.Applications.Transport.html">Duplex.Applications.Transport</a></li>
+  <li><a href="../modules/Duplex.Applications.UIButtonTest.html">Duplex.Applications.UIButtonTest</a></li>
   <li><a href="../modules/Duplex.Applications.XYPad.html">Duplex.Applications.XYPad</a></li>
   <li><a href="../modules/Duplex.Automation.html">Duplex.Automation</a></li>
   <li><strong>Duplex.Browser</strong></li>
@@ -109,7 +115,53 @@
 
 <h1>Module <code>Duplex.Browser</code></h1>
 <p>The Browser class shows and instantiates registered device configurations and shows the virtual UI for them.</p>
+<p>
 <p> More than one configuration can be active and running for multiple devices.</p>
+
+<h3>Changes</h3>
+
+<p>  0.99.4</p>
+<pre><code>- Decorate open device dialogs when hardware is hot-swapped
+- Prevent notifier feedback
+</code></pre>
+
+<p>  0.99.1</p>
+<pre><code>- Button to show/hide virtual control surface (access with TAB key)
+</code></pre>
+
+<p>  0.98.28</p>
+<pre><code>- Expanded set of key/MIDI mappings
+  - [Next] / [Previous] configuration for the selected device
+  - [Set] the active configuration for the selected device
+  - [Show] / [Hide] the Duplex browser dialog
+</code></pre>
+
+<p>  0.98.14</p>
+<pre><code>- Tool menu: devices organized into sub-menu’s
+- Tool menu: display on startup (only when active config)
+- Tool menu: release all devices (useful shortcut)
+- Tool menu: enable NRPN support
+</code></pre>
+
+<p>  0.96</p>
+<pre><code>- Interactively change options while applications are running
+  - Application:_apply_options() and optional on_activate() has been removed
+- Fixed: hot-plugging devices caused an error (bug was introduced in 0.95)
+- More MIDI-mapping options: set,select previous/next configuration
+</code></pre>
+
+<p>  0.95</p>
+<pre><code>- Refactoring: moved the "settings" dialog into the Browser class, as the
+  dialog will eventually contain application settings etc. The device now
+  only contains the device-specific UI code, and not the dialog itself
+</code></pre>
+
+<p>  0.93</p>
+<pre><code>- Switch between device presets/configurations using function keys
+- Forward keypresses to Renoise (except those we use for switching)
+</code></pre>
+
+</p>
 
 
 <h2><a href="#Functions">Functions</a></h2>
@@ -197,11 +249,11 @@
 	<td class="summary">Activate a new configuration for the currently active device</td>
 	</tr>
 	<tr>
-	<td class="name" nowrap><a href="#start_current_configuration">start_current_configuration (start_running)</a></td>
+	<td class="name" nowrap><a href="#start_current_configuration">start_current_configuration (start_running, from_ui)</a></td>
 	<td class="summary">Start current configuration (and all apps within it)</td>
 	</tr>
 	<tr>
-	<td class="name" nowrap><a href="#stop_current_configuration">stop_current_configuration ()</a></td>
+	<td class="name" nowrap><a href="#stop_current_configuration">stop_current_configuration (from_ui)</a></td>
 	<td class="summary">Stop current configuration (and all apps within it)</td>
 	</tr>
 	<tr>
@@ -710,7 +762,7 @@
 </dd>
     <dt>
     <a name = "start_current_configuration"></a>
-    <strong>start_current_configuration (start_running)</strong>
+    <strong>start_current_configuration (start_running, from_ui)</strong>
     </dt>
     <dd>
     Start current configuration (and all apps within it)
@@ -719,6 +771,11 @@
     <h3>Parameters:</h3>
     <ul>
         <li><span class="parameter">start_running</span>
+
+
+
+        </li>
+        <li><span class="parameter">from_ui</span>
 
 
 
@@ -732,12 +789,20 @@
 </dd>
     <dt>
     <a name = "stop_current_configuration"></a>
-    <strong>stop_current_configuration ()</strong>
+    <strong>stop_current_configuration (from_ui)</strong>
     </dt>
     <dd>
     Stop current configuration (and all apps within it)
 
 
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">from_ui</span>
+
+
+
+        </li>
+    </ul>
 
 
 

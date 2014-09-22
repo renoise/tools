@@ -42,6 +42,11 @@
   <li><a href="../modules/Duplex.Applications.Effect.html">Duplex.Applications.Effect</a></li>
   <li><a href="../modules/Duplex.Applications.GridPie.html">Duplex.Applications.GridPie</a></li>
   <li><a href="../modules/Duplex.Applications.Hydra.html">Duplex.Applications.Hydra</a></li>
+  <li><a href="../modules/Duplex.Applications.Instrument.html">Duplex.Applications.Instrument</a></li>
+  <li><a href="../modules/Duplex.Applications.Keyboard.GridLayout.html">Duplex.Applications.Keyboard.GridLayout</a></li>
+  <li><a href="../modules/Duplex.Applications.Keyboard.Layouts.HarmonicLayout.html">Duplex.Applications.Keyboard.Layouts.HarmonicLayout</a></li>
+  <li><a href="../modules/Duplex.Applications.Keyboard.Layouts.IsomorphicLayout.html">Duplex.Applications.Keyboard.Layouts.IsomorphicLayout</a></li>
+  <li><a href="../modules/Duplex.Applications.Keyboard.Layouts.PianoLayout.html">Duplex.Applications.Keyboard.Layouts.PianoLayout</a></li>
   <li><a href="../modules/Duplex.Applications.Keyboard.html">Duplex.Applications.Keyboard</a></li>
   <li><a href="../modules/Duplex.Applications.Matrix.html">Duplex.Applications.Matrix</a></li>
   <li><a href="../modules/Duplex.Applications.Metronome.html">Duplex.Applications.Metronome</a></li>
@@ -65,6 +70,7 @@
   <li><a href="../modules/Duplex.Applications.TestPad.html">Duplex.Applications.TestPad</a></li>
   <li><a href="../modules/Duplex.Applications.TrackSelector.html">Duplex.Applications.TrackSelector</a></li>
   <li><a href="../modules/Duplex.Applications.Transport.html">Duplex.Applications.Transport</a></li>
+  <li><a href="../modules/Duplex.Applications.UIButtonTest.html">Duplex.Applications.UIButtonTest</a></li>
   <li><a href="../modules/Duplex.Applications.XYPad.html">Duplex.Applications.XYPad</a></li>
   <li><a href="../modules/Duplex.Automation.html">Duplex.Automation</a></li>
   <li><a href="../modules/Duplex.Browser.html">Duplex.Browser</a></li>
@@ -107,10 +113,7 @@
 <div id="content">
 
 <h1>Module <code>Duplex.Applications.Recorder</code></h1>
-<p>
-<hr/>
 <p>Record and loop any signal that you feed into Renoise, be that your voice, a guitar etc.</p>
-</p>
 <p>
 <p>
 Inheritance: <a href="../modules/Duplex.Application.html#">Duplex.Application</a> > Duplex.Application.Recorder </p>
@@ -221,8 +224,23 @@ Inheritance: <a href="../modules/Duplex.Application.html#">Duplex.Application</a
 
 <h3>Changes</h3>
 
-<p>  0.95  </p>
-<pre><code>- First release
+<p>  0.98.28</p>
+<pre><code>- Fixed issue with “autostart” option (broke the recording workflow)
+</code></pre>
+
+<p>  0.98.18</p>
+<pre><code>- Fixed: under certain conditions, could throw error on startup
+</code></pre>
+
+<p>  0.98</p>
+<pre><code>- First-run message explaining how to set up a recording
+- Detect v3 API and use alternate FX commands
+</code></pre>
+
+<p>  0.97</p>
+<pre><code>- Any number of tracks supported, option to follow current track
+- Supports paged navigation features (previous/next, page size)
+- Detect when tracks are inserted/removed/swapped, maintain references
 </code></pre>
 
 <p>  0.96  </p>
@@ -230,6 +248,10 @@ Inheritance: <a href="../modules/Duplex.Application.html#">Duplex.Application</a
 - Full undo support (tracks changes to pattern and recordings)
 - Unlimited number of tracks (paged navigation)
 - Option: page_size &amp; follow_track
+</code></pre>
+
+<p>  0.95  </p>
+<pre><code>- First release
 </code></pre>
 
 

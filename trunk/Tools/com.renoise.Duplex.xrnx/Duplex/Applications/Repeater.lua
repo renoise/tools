@@ -6,6 +6,12 @@
 Take control of the native repeater DSP device.
 Inheritance: @{Duplex.Application} > @{Duplex.RoamingDSP} > Duplex.Application.Repeater 
 
+
+### Changes 
+
+  0.98
+    - First release
+
 --]]
 
 --==============================================================================

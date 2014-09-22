@@ -4,7 +4,23 @@
 
 --[[--
 
-The Device class is the base class for any OSC or MIDI device. It also contains methods for managing basic device settings
+The Device class is the base class for any OSC or MIDI device. 
+It also contains methods for managing basic device settings
+
+
+### Changes
+
+  0.99.4
+    - Changed the interpretation of "colorspace": monochrome devices are 
+      now specified as {1} instead of {1,1,1}
+
+  0.99.2
+    - output_to_value now split into submethods (output_number/boolean/text)
+      (including ability to produce completely custom output to device)
+
+  0.9
+    - First release
+
 
 --]]
 
@@ -46,10 +62,11 @@ function Device:__init(name, message_stream, protocol)
   self.default_parameter_mode = "abs"
 
   --- specify a color-space like this: (r, g, b) or empty
-  --    example#1 : {4,4,0} - four degrees of red and green
-  --    example#2 : {1,1,1} - monochrome display (black/white)
-  --    example#3 : {0,0,1} - monochrome display (blue)
-  --    example#4 : {} - no colors, display as text
+  --    example#1 : {4,4,0} - four degrees of red and green (Launchpad)
+  --    example#3 : {1,1,1} - one degree of red/green/blue (Ohm RGB)
+  --    example#3 : {0,0,1} - monochrome display (with blue LEDs)
+  --    example#4 : {1} - monochrome (black and white)
+  --    example#4 : {} - none (using 'theme color' instead)
   if not self.colorspace then
     self.colorspace = {}
   end
@@ -124,7 +141,7 @@ end
 -- @return (table), the quantized color
 
 function Device:quantize_color(color,colorspace)
-  --TRACE("Device:quantize_color()",color,colorspace)
+  TRACE("Device:quantize_color()",color,colorspace)
 
   local function quantize_color(value, depth)
     if (depth and depth > 0) then
@@ -144,12 +161,13 @@ function Device:quantize_color(color,colorspace)
   end
 
 
-  -- check if monochrome, then apply the average value 
-  if (colorspace[1]) then
-    local range = math.max(colorspace[1],colorspace[2],colorspace[3])
-    if(range<2)then
-      local avg = (color[1]+color[2]+color[3])/3
-      color = {avg,avg,avg}
+  -- if monochrome, average color above 50% is considered lit
+  if ((#colorspace==1) and (colorspace[1] == 1)) then
+    local avg = (color[1]+color[2]+color[3])/3
+    if (avg > 0x80) then 
+      return {0xff,0xff,0xff}
+    else
+      return {0x00,0x00,0x00}
     end
   end
 
@@ -160,6 +178,28 @@ function Device:quantize_color(color,colorspace)
   } 
 end
 
+
+--------------------------------------------------------------------------------
+
+function Device:collect_midi_ports()
+
+  local ports_in = table.create{"None"}
+  local ports_out = table.create{"None"}
+
+  local input_devices = renoise.Midi.available_input_devices()
+  local output_devices = renoise.Midi.available_output_devices()
+
+  for k,v in ipairs(input_devices) do
+    ports_in:insert(v)
+  end
+
+  for k,v in ipairs(output_devices) do
+    ports_out:insert(v)
+  end
+
+  return ports_in,ports_out
+
+end
 
 --------------------------------------------------------------------------------
 
@@ -192,6 +232,9 @@ function Device:show_settings_dialog(process)
       
       -- collect MIDI ports
       
+      ports_in,ports_out = Device.collect_midi_ports()
+
+      --[[
       ports_in = table.create{"None"}
       ports_out = table.create{"None"}
 
@@ -205,6 +248,7 @@ function Device:show_settings_dialog(process)
       for k,v in ipairs(output_devices) do
         ports_out:insert(v)
       end
+      ]]
 
     end
       
@@ -546,7 +590,7 @@ function Device:_send_message(msg,param,regex)
   -- immediately update after having received a message,
   -- to improve the overall response time of the display
   if (self.display) then
-    self.display:update()
+    self.display:update("immediate")
   end
 
 end

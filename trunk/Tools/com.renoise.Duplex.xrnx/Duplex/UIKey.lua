@@ -24,6 +24,12 @@ to be displayed externally - instead, it is visualized by a WidgetKeyboard
 
     <Param type="keyboard">
 
+
+### Changes
+
+  0.98
+    - First release
+
 --]]
 
 --==============================================================================

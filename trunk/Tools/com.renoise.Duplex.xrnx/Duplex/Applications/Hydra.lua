@@ -12,6 +12,11 @@ as well: device locking, navigation and automation recording
 Also comes with a label for displaying the current value
 
 
+### Changes 
+
+  0.98
+    - First release
+
 --]]
 
 --==============================================================================

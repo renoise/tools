@@ -8,7 +8,7 @@ Inheritance: @{Duplex.Application} > Duplex.Application.PatternSequence
 
 ### Changes
 
-  0.98  
+  0.98.20 
     - Initial version
 
 

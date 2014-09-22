@@ -47,13 +47,12 @@ end
 function Launchpad:output_value(pt,xarg,ui_obj)
   TRACE("Launchpad:output_value(pt,xarg,ui_obj)",pt,xarg,ui_obj)
   
-  if xarg.skip_echo then
+  --if xarg.skip_echo then
     --- parameter only exist in the virtual ui
-    print("skip echo...")
-    return Device.output_value(self,pt,xarg,ui_obj)
-  else
+  --  return Device.output_value(self,pt,xarg,ui_obj)
+  --else
 
-    print("launcpad output value...",rprint(pt.color))
+    --print("launcpad output value...",rprint(pt.color))
 
     -- default color is light/yellow
     local rslt = 127
@@ -70,7 +69,7 @@ function Launchpad:output_value(pt,xarg,ui_obj)
 
     return rslt
 
-  end
+  --end
 
 
 end

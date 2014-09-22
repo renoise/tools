@@ -35,7 +35,7 @@ duplex_configurations:insert {
           color = {0x40,0x00,0x40}
         },
         key_released_content = {
-          color = {0xFF,0x40,0x40}
+          color = {0x80,0x40,0x40}
         },
         key_released_selected = {
           color = {0xFF,0x80,0x40}
@@ -63,7 +63,7 @@ duplex_configurations:insert {
           color = {0x00,0x40,0x40}
         },
         key_released_content = {
-          color = {0x40,0xFF,0x40}
+          color = {0x40,0x80,0x40}
         },
         key_released_selected = {
           color = {0x80,0xFF,0x40}
@@ -76,12 +76,12 @@ duplex_configurations:insert {
         "channel_pressure","pitch_bend","release_type","button_width","button_height"
       },
     },
-    KeyboardSplit1 = {
+    KeyboardLarge = {
       application = "Keyboard",
       mappings = {
         key_grid = {
           group_name = "LargeGrid",
-          orientation = ORIENTATION.HORIZONTAL,
+          --orientation = ORIENTATION.VERTICAL,
         },
         octave_down = {
           group_name = "Controls",
@@ -102,19 +102,21 @@ duplex_configurations:insert {
           color = {0xFF,0x00,0xFF}
         },
         key_released = {
-          color = {0x40,0x00,0x00}
+          color = {0x00,0x00,0x00}
         },
         key_released_content = {
-          color = {0x80,0x00,0x00}
+          color = {0x40,0x00,0x00}
         },
         key_released_selected = {
           color = {0xC0,0x00,0x00}
         },
       },
+      --[[
+      ]]
       options = {
       },
       hidden_options = {  -- display minimal set of options
-        "channel_pressure","pitch_bend","release_type","button_width","button_height"
+        "channel_pressure","pitch_bend","release_type","button_width","button_height","mod_wheel","velocity_mode","keyboard_mode"
       },
     },
 

@@ -1,0 +1,189 @@
+
+<Device>
+	<Name>Monome128</Name>
+	<Author>Danoise</Author>
+	<Description>Controlmap for Monome128</Description>
+  <States>
+		<State name="AltOn" value="/grid/led/set 12 0 %i" action="/grid/key 12 0 %i" type="toggle" receive_when_inactive="false" hide_when_inactive="true" disable_when_inactive="false"  />
+		<State name="AltOff" value="/grid/led/set 12 0 %i" action="/grid/key 12 0 %i" type="toggle" receive_when_inactive="false" hide_when_inactive="true" disable_when_inactive="false" text="⌘"  active="true" />
+  </States>
+	<Parameters>
+		<Column>
+			<Row>
+				<Column>
+          <Row>
+            <AltOff:Group name="ButtonRow" >
+              <Param value="/grid/led/set 0 0 %i"  action="/grid/key 0 0 %i"  type="button" maximum="1" minimum="0"/>
+              <Param value="/grid/led/set 1 0 %i"  action="/grid/key 1 0 %i"  type="button" maximum="1" minimum="0"/>
+              <Param value="/grid/led/set 2 0 %i"  action="/grid/key 2 0 %i"  type="button" maximum="1" minimum="0"/>
+              <Param value="/grid/led/set 3 0 %i"  action="/grid/key 3 0 %i"  type="button" maximum="1" minimum="0"/>
+              <Param value="/grid/led/set 4 0 %i"  action="/grid/key 4 0 %i"  type="button" maximum="1" minimum="0"/>
+              <Param value="/grid/led/set 5 0 %i"  action="/grid/key 5 0 %i"  type="button" maximum="1" minimum="0"/>
+              <Param value="/grid/led/set 6 0 %i"  action="/grid/key 6 0 %i"  type="button" maximum="1" minimum="0"/>
+              <Param value="/grid/led/set 7 0 %i"  action="/grid/key 7 0 %i"  type="button" maximum="1" minimum="0"/>
+              <Param value="/grid/led/set 8 0 %i"  action="/grid/key 8 0 %i"  type="button" maximum="1" minimum="0"/>
+              <Param value="/grid/led/set 9 0 %i"  action="/grid/key 9 0 %i"  type="button" maximum="1" minimum="0"/>
+              <Param value="/grid/led/set 10 0 %i" action="/grid/key 10 0 %i" type="button" maximum="1" minimum="0"/>
+              <Param value="/grid/led/set 11 0 %i" action="/grid/key 11 0 %i" type="button" maximum="1" minimum="0"/>
+            </Group>
+
+            <AltOn:Group name="AltControls" >
+              <Param value="/grid/led/set 0 0 %i"  action="/grid/key 0 0 %i"  type="button" maximum="1" minimum="0"/>
+              <Param value="/grid/led/set 1 0 %i"  action="/grid/key 1 0 %i"  type="button" maximum="1" minimum="0"/>
+              <Param value="/grid/led/set 2 0 %i"  action="/grid/key 2 0 %i"  type="button" maximum="1" minimum="0"/>
+              <Param value="/grid/led/set 3 0 %i"  action="/grid/key 3 0 %i"  type="button" maximum="1" minimum="0"/>
+              <Param value="/grid/led/set 4 0 %i"  action="/grid/key 4 0 %i"  type="button" maximum="1" minimum="0"/>
+              <Param value="/grid/led/set 5 0 %i"  action="/grid/key 5 0 %i"  type="button" maximum="1" minimum="0"/>
+              <Param value="/grid/led/set 6 0 %i"  action="/grid/key 6 0 %i"  type="button" maximum="1" minimum="0"/>
+              <Param value="/grid/led/set 7 0 %i"  action="/grid/key 7 0 %i"  type="button" maximum="1" minimum="0"/>
+              <Param value="/grid/led/set 8 0 %i"  action="/grid/key 8 0 %i"  type="button" maximum="1" minimum="0"/>
+              <Param value="/grid/led/set 9 0 %i"  action="/grid/key 9 0 %i"  type="button" maximum="1" minimum="0"/>
+              <Param value="/grid/led/set 10 0 %i" action="/grid/key 10 0 %i" type="button" maximum="1" minimum="0"/>
+              <Param value="/grid/led/set 11 0 %i" action="/grid/key 11 0 %i" type="button" maximum="1" minimum="0"/>
+            </Group>
+
+            <Group name="Controls" >
+              <Param value="/grid/led/set 12 0 %i" action="/grid/key 12 0 %i" type="button" size="0.9" maximum="1" minimum="0"/><!-- Alt state toogle -->
+              <Param value="/grid/led/set 13 0 %i" action="/grid/key 13 0 %i" type="button" size="0.9" maximum="1" minimum="0"/>
+              <Param value="/grid/led/set 14 0 %i" action="/grid/key 14 0 %i" type="button" size="0.9" maximum="1" minimum="0"/>
+            </Group>
+            <AltOff:Group name="Toggle" >
+              <Param value="/grid/led/set 15 0 %i" action="/grid/key 15 0 %i" type="button" size="0.9" maximum="1" minimum="0"/>
+            </Group>
+            <AltOn:Group name="AltToggle" >
+              <Param value="/grid/led/set 15 0 %i" action="/grid/key 15 0 %i" type="button" size="0.9" maximum="1" minimum="0"/> 
+            </Group>
+          </Row>
+          <Group name="Grid" columns="16">
+            <Param value="/grid/led/set 0 1 %i"  action="/grid/key 0 1 %i"  type="button" maximum="1" minimum="0"/>
+            <Param value="/grid/led/set 1 1 %i"  action="/grid/key 1 1 %i"  type="button" maximum="1" minimum="0"/>
+            <Param value="/grid/led/set 2 1 %i"  action="/grid/key 2 1 %i"  type="button" maximum="1" minimum="0"/>
+            <Param value="/grid/led/set 3 1 %i"  action="/grid/key 3 1 %i"  type="button" maximum="1" minimum="0"/>
+            <Param value="/grid/led/set 4 1 %i"  action="/grid/key 4 1 %i"  type="button" maximum="1" minimum="0"/>
+            <Param value="/grid/led/set 5 1 %i"  action="/grid/key 5 1 %i"  type="button" maximum="1" minimum="0"/>
+            <Param value="/grid/led/set 6 1 %i"  action="/grid/key 6 1 %i"  type="button" maximum="1" minimum="0"/>
+            <Param value="/grid/led/set 7 1 %i"  action="/grid/key 7 1 %i"  type="button" maximum="1" minimum="0"/>
+            <Param value="/grid/led/set 8 1 %i"  action="/grid/key 8 1 %i"  type="button" maximum="1" minimum="0"/>
+            <Param value="/grid/led/set 9 1 %i"  action="/grid/key 9 1 %i"  type="button" maximum="1" minimum="0"/>
+            <Param value="/grid/led/set 10 1 %i" action="/grid/key 10 1 %i" type="button" maximum="1" minimum="0"/>
+            <Param value="/grid/led/set 11 1 %i" action="/grid/key 11 1 %i" type="button" maximum="1" minimum="0"/>
+            <Param value="/grid/led/set 12 1 %i" action="/grid/key 12 1 %i" type="button" maximum="1" minimum="0"/>
+            <Param value="/grid/led/set 13 1 %i" action="/grid/key 13 1 %i" type="button" maximum="1" minimum="0"/>
+            <Param value="/grid/led/set 14 1 %i" action="/grid/key 14 1 %i" type="button" maximum="1" minimum="0"/>
+            <Param value="/grid/led/set 15 1 %i" action="/grid/key 15 1 %i" type="button" maximum="1" minimum="0"/>
+
+            <Param value="/grid/led/set 0 2 %i"  action="/grid/key 0 2 %i"  type="button" maximum="1" minimum="0"/>
+            <Param value="/grid/led/set 1 2 %i"  action="/grid/key 1 2 %i"  type="button" maximum="1" minimum="0"/>
+            <Param value="/grid/led/set 2 2 %i"  action="/grid/key 2 2 %i"  type="button" maximum="1" minimum="0"/>
+            <Param value="/grid/led/set 3 2 %i"  action="/grid/key 3 2 %i"  type="button" maximum="1" minimum="0"/>
+            <Param value="/grid/led/set 4 2 %i"  action="/grid/key 4 2 %i"  type="button" maximum="1" minimum="0"/>
+            <Param value="/grid/led/set 5 2 %i"  action="/grid/key 5 2 %i"  type="button" maximum="1" minimum="0"/>
+            <Param value="/grid/led/set 6 2 %i"  action="/grid/key 6 2 %i"  type="button" maximum="1" minimum="0"/>
+            <Param value="/grid/led/set 7 2 %i"  action="/grid/key 7 2 %i"  type="button" maximum="1" minimum="0"/>
+            <Param value="/grid/led/set 8 2 %i"  action="/grid/key 8 2 %i"  type="button" maximum="1" minimum="0"/>
+            <Param value="/grid/led/set 9 2 %i"  action="/grid/key 9 2 %i"  type="button" maximum="1" minimum="0"/>
+            <Param value="/grid/led/set 10 2 %i" action="/grid/key 10 2 %i" type="button" maximum="1" minimum="0"/>
+            <Param value="/grid/led/set 11 2 %i" action="/grid/key 11 2 %i" type="button" maximum="1" minimum="0"/>
+            <Param value="/grid/led/set 12 2 %i" action="/grid/key 12 2 %i" type="button" maximum="1" minimum="0"/>
+            <Param value="/grid/led/set 13 2 %i" action="/grid/key 13 2 %i" type="button" maximum="1" minimum="0"/>
+            <Param value="/grid/led/set 14 2 %i" action="/grid/key 14 2 %i" type="button" maximum="1" minimum="0"/>
+            <Param value="/grid/led/set 15 2 %i" action="/grid/key 15 2 %i" type="button" maximum="1" minimum="0"/>
+
+            <Param value="/grid/led/set 0 3 %i"  action="/grid/key 0 3 %i"  type="button" maximum="1" minimum="0"/>
+            <Param value="/grid/led/set 1 3 %i"  action="/grid/key 1 3 %i"  type="button" maximum="1" minimum="0"/>
+            <Param value="/grid/led/set 2 3 %i"  action="/grid/key 2 3 %i"  type="button" maximum="1" minimum="0"/>
+            <Param value="/grid/led/set 3 3 %i"  action="/grid/key 3 3 %i"  type="button" maximum="1" minimum="0"/>
+            <Param value="/grid/led/set 4 3 %i"  action="/grid/key 4 3 %i"  type="button" maximum="1" minimum="0"/>
+            <Param value="/grid/led/set 5 3 %i"  action="/grid/key 5 3 %i"  type="button" maximum="1" minimum="0"/>
+            <Param value="/grid/led/set 6 3 %i"  action="/grid/key 6 3 %i"  type="button" maximum="1" minimum="0"/>
+            <Param value="/grid/led/set 7 3 %i"  action="/grid/key 7 3 %i"  type="button" maximum="1" minimum="0"/>
+            <Param value="/grid/led/set 8 3 %i"  action="/grid/key 8 3 %i"  type="button" maximum="1" minimum="0"/>
+            <Param value="/grid/led/set 9 3 %i"  action="/grid/key 9 3 %i"  type="button" maximum="1" minimum="0"/>
+            <Param value="/grid/led/set 10 3 %i" action="/grid/key 10 3 %i" type="button" maximum="1" minimum="0"/>
+            <Param value="/grid/led/set 11 3 %i" action="/grid/key 11 3 %i" type="button" maximum="1" minimum="0"/>
+            <Param value="/grid/led/set 12 3 %i" action="/grid/key 12 3 %i" type="button" maximum="1" minimum="0"/>
+            <Param value="/grid/led/set 13 3 %i" action="/grid/key 13 3 %i" type="button" maximum="1" minimum="0"/>
+            <Param value="/grid/led/set 14 3 %i" action="/grid/key 14 3 %i" type="button" maximum="1" minimum="0"/>
+            <Param value="/grid/led/set 15 3 %i" action="/grid/key 15 3 %i" type="button" maximum="1" minimum="0"/>
+
+            <Param value="/grid/led/set 0 4 %i"  action="/grid/key 0 4 %i"  type="button" maximum="1" minimum="0"/>
+            <Param value="/grid/led/set 1 4 %i"  action="/grid/key 1 4 %i"  type="button" maximum="1" minimum="0"/>
+            <Param value="/grid/led/set 2 4 %i"  action="/grid/key 2 4 %i"  type="button" maximum="1" minimum="0"/>
+            <Param value="/grid/led/set 3 4 %i"  action="/grid/key 3 4 %i"  type="button" maximum="1" minimum="0"/>
+            <Param value="/grid/led/set 4 4 %i"  action="/grid/key 4 4 %i"  type="button" maximum="1" minimum="0"/>
+            <Param value="/grid/led/set 5 4 %i"  action="/grid/key 5 4 %i"  type="button" maximum="1" minimum="0"/>
+            <Param value="/grid/led/set 6 4 %i"  action="/grid/key 6 4 %i"  type="button" maximum="1" minimum="0"/>
+            <Param value="/grid/led/set 7 4 %i"  action="/grid/key 7 4 %i"  type="button" maximum="1" minimum="0"/>
+            <Param value="/grid/led/set 8 4 %i"  action="/grid/key 8 4 %i"  type="button" maximum="1" minimum="0"/>
+            <Param value="/grid/led/set 9 4 %i"  action="/grid/key 9 4 %i"  type="button" maximum="1" minimum="0"/>
+            <Param value="/grid/led/set 10 4 %i" action="/grid/key 10 4 %i" type="button" maximum="1" minimum="0"/>
+            <Param value="/grid/led/set 11 4 %i" action="/grid/key 11 4 %i" type="button" maximum="1" minimum="0"/>
+            <Param value="/grid/led/set 12 4 %i" action="/grid/key 12 4 %i" type="button" maximum="1" minimum="0"/>
+            <Param value="/grid/led/set 13 4 %i" action="/grid/key 13 4 %i" type="button" maximum="1" minimum="0"/>
+            <Param value="/grid/led/set 14 4 %i" action="/grid/key 14 4 %i" type="button" maximum="1" minimum="0"/>
+            <Param value="/grid/led/set 15 4 %i" action="/grid/key 15 4 %i" type="button" maximum="1" minimum="0"/>
+
+            <Param value="/grid/led/set 0 5 %i"  action="/grid/key 0 5 %i"  type="button" maximum="1" minimum="0"/>
+            <Param value="/grid/led/set 1 5 %i"  action="/grid/key 1 5 %i"  type="button" maximum="1" minimum="0"/>
+            <Param value="/grid/led/set 2 5 %i"  action="/grid/key 2 5 %i"  type="button" maximum="1" minimum="0"/>
+            <Param value="/grid/led/set 3 5 %i"  action="/grid/key 3 5 %i"  type="button" maximum="1" minimum="0"/>
+            <Param value="/grid/led/set 4 5 %i"  action="/grid/key 4 5 %i"  type="button" maximum="1" minimum="0"/>
+            <Param value="/grid/led/set 5 5 %i"  action="/grid/key 5 5 %i"  type="button" maximum="1" minimum="0"/>
+            <Param value="/grid/led/set 6 5 %i"  action="/grid/key 6 5 %i"  type="button" maximum="1" minimum="0"/>
+            <Param value="/grid/led/set 7 5 %i"  action="/grid/key 7 5 %i"  type="button" maximum="1" minimum="0"/>
+            <Param value="/grid/led/set 8 5 %i"  action="/grid/key 8 5 %i"  type="button" maximum="1" minimum="0"/>
+            <Param value="/grid/led/set 9 5 %i"  action="/grid/key 9 5 %i"  type="button" maximum="1" minimum="0"/>
+            <Param value="/grid/led/set 10 5 %i" action="/grid/key 10 5 %i" type="button" maximum="1" minimum="0"/>
+            <Param value="/grid/led/set 11 5 %i" action="/grid/key 11 5 %i" type="button" maximum="1" minimum="0"/>
+            <Param value="/grid/led/set 12 5 %i" action="/grid/key 12 5 %i" type="button" maximum="1" minimum="0"/>
+            <Param value="/grid/led/set 13 5 %i" action="/grid/key 13 5 %i" type="button" maximum="1" minimum="0"/>
+            <Param value="/grid/led/set 14 5 %i" action="/grid/key 14 5 %i" type="button" maximum="1" minimum="0"/>
+            <Param value="/grid/led/set 15 5 %i" action="/grid/key 15 5 %i" type="button" maximum="1" minimum="0"/>
+            
+            <Param value="/grid/led/set 0 6 %i"  action="/grid/key 0 6 %i"  type="button" maximum="1" minimum="0"/>
+            <Param value="/grid/led/set 1 6 %i"  action="/grid/key 1 6 %i"  type="button" maximum="1" minimum="0"/>
+            <Param value="/grid/led/set 2 6 %i"  action="/grid/key 2 6 %i"  type="button" maximum="1" minimum="0"/>
+            <Param value="/grid/led/set 3 6 %i"  action="/grid/key 3 6 %i"  type="button" maximum="1" minimum="0"/>
+            <Param value="/grid/led/set 4 6 %i"  action="/grid/key 4 6 %i"  type="button" maximum="1" minimum="0"/>
+            <Param value="/grid/led/set 5 6 %i"  action="/grid/key 5 6 %i"  type="button" maximum="1" minimum="0"/>
+            <Param value="/grid/led/set 6 6 %i"  action="/grid/key 6 6 %i"  type="button" maximum="1" minimum="0"/>
+            <Param value="/grid/led/set 7 6 %i"  action="/grid/key 7 6 %i"  type="button" maximum="1" minimum="0"/>
+            <Param value="/grid/led/set 8 6 %i"  action="/grid/key 8 6 %i"  type="button" maximum="1" minimum="0"/>
+            <Param value="/grid/led/set 9 6 %i"  action="/grid/key 9 6 %i"  type="button" maximum="1" minimum="0"/>
+            <Param value="/grid/led/set 10 6 %i" action="/grid/key 10 6 %i" type="button" maximum="1" minimum="0"/>
+            <Param value="/grid/led/set 11 6 %i" action="/grid/key 11 6 %i" type="button" maximum="1" minimum="0"/>
+            <Param value="/grid/led/set 12 6 %i" action="/grid/key 12 6 %i" type="button" maximum="1" minimum="0"/>
+            <Param value="/grid/led/set 13 6 %i" action="/grid/key 13 6 %i" type="button" maximum="1" minimum="0"/>
+            <Param value="/grid/led/set 14 6 %i" action="/grid/key 14 6 %i" type="button" maximum="1" minimum="0"/>
+            <Param value="/grid/led/set 15 6 %i" action="/grid/key 15 6 %i" type="button" maximum="1" minimum="0"/>
+            
+            <Param value="/grid/led/set 0 7 %i"  action="/grid/key 0 7 %i"  type="button" maximum="1" minimum="0"/>
+            <Param value="/grid/led/set 1 7 %i"  action="/grid/key 1 7 %i"  type="button" maximum="1" minimum="0"/>
+            <Param value="/grid/led/set 2 7 %i"  action="/grid/key 2 7 %i"  type="button" maximum="1" minimum="0"/>
+            <Param value="/grid/led/set 3 7 %i"  action="/grid/key 3 7 %i"  type="button" maximum="1" minimum="0"/>
+            <Param value="/grid/led/set 4 7 %i"  action="/grid/key 4 7 %i"  type="button" maximum="1" minimum="0"/>
+            <Param value="/grid/led/set 5 7 %i"  action="/grid/key 5 7 %i"  type="button" maximum="1" minimum="0"/>
+            <Param value="/grid/led/set 6 7 %i"  action="/grid/key 6 7 %i"  type="button" maximum="1" minimum="0"/>
+            <Param value="/grid/led/set 7 7 %i"  action="/grid/key 7 7 %i"  type="button" maximum="1" minimum="0"/>
+            <Param value="/grid/led/set 8 7 %i"  action="/grid/key 8 7 %i"  type="button" maximum="1" minimum="0"/>
+            <Param value="/grid/led/set 9 7 %i"  action="/grid/key 9 7 %i"  type="button" maximum="1" minimum="0"/>
+            <Param value="/grid/led/set 10 7 %i" action="/grid/key 10 7 %i" type="button" maximum="1" minimum="0"/>
+            <Param value="/grid/led/set 11 7 %i" action="/grid/key 11 7 %i" type="button" maximum="1" minimum="0"/>
+            <Param value="/grid/led/set 12 7 %i" action="/grid/key 12 7 %i" type="button" maximum="1" minimum="0"/>
+            <Param value="/grid/led/set 13 7 %i" action="/grid/key 13 7 %i" type="button" maximum="1" minimum="0"/>
+            <Param value="/grid/led/set 14 7 %i" action="/grid/key 14 7 %i" type="button" maximum="1" minimum="0"/>
+            <Param value="/grid/led/set 15 7 %i" action="/grid/key 15 7 %i" type="button" maximum="1" minimum="0"/>
+
+          </Group>
+        </Column>
+
+				<Group name="ADC">
+					<Param value="/tilt 0 {%f} %f %f" size="16" type="fader" invert="true" orientation="vertical" skip_echo="true" aspect="0.5" maximum="162" minimum="88"/>
+					<Param value="/tilt 0 %f {%f} %f" size="16" type="fader" orientation="vertical" skip_echo="true" invert="true" aspect="0.5" maximum="162" minimum="88"/>
+				</Group>
+			</Row>
+		</Column>
+
+	</Parameters>
+</Device>
+

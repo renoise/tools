@@ -44,6 +44,11 @@
   <li><a href="../modules/Duplex.Applications.Effect.html">Duplex.Applications.Effect</a></li>
   <li><a href="../modules/Duplex.Applications.GridPie.html">Duplex.Applications.GridPie</a></li>
   <li><a href="../modules/Duplex.Applications.Hydra.html">Duplex.Applications.Hydra</a></li>
+  <li><a href="../modules/Duplex.Applications.Instrument.html">Duplex.Applications.Instrument</a></li>
+  <li><a href="../modules/Duplex.Applications.Keyboard.GridLayout.html">Duplex.Applications.Keyboard.GridLayout</a></li>
+  <li><a href="../modules/Duplex.Applications.Keyboard.Layouts.HarmonicLayout.html">Duplex.Applications.Keyboard.Layouts.HarmonicLayout</a></li>
+  <li><a href="../modules/Duplex.Applications.Keyboard.Layouts.IsomorphicLayout.html">Duplex.Applications.Keyboard.Layouts.IsomorphicLayout</a></li>
+  <li><a href="../modules/Duplex.Applications.Keyboard.Layouts.PianoLayout.html">Duplex.Applications.Keyboard.Layouts.PianoLayout</a></li>
   <li><a href="../modules/Duplex.Applications.Keyboard.html">Duplex.Applications.Keyboard</a></li>
   <li><a href="../modules/Duplex.Applications.Matrix.html">Duplex.Applications.Matrix</a></li>
   <li><a href="../modules/Duplex.Applications.Metronome.html">Duplex.Applications.Metronome</a></li>
@@ -67,6 +72,7 @@
   <li><a href="../modules/Duplex.Applications.TestPad.html">Duplex.Applications.TestPad</a></li>
   <li><a href="../modules/Duplex.Applications.TrackSelector.html">Duplex.Applications.TrackSelector</a></li>
   <li><a href="../modules/Duplex.Applications.Transport.html">Duplex.Applications.Transport</a></li>
+  <li><a href="../modules/Duplex.Applications.UIButtonTest.html">Duplex.Applications.UIButtonTest</a></li>
   <li><a href="../modules/Duplex.Applications.XYPad.html">Duplex.Applications.XYPad</a></li>
   <li><a href="../modules/Duplex.Automation.html">Duplex.Automation</a></li>
   <li><a href="../modules/Duplex.Browser.html">Duplex.Browser</a></li>
@@ -110,6 +116,8 @@
 
 <h1>Module <code>Duplex.RoamingDSP</code></h1>
 <p>Extend this class if you want an application to lock onto a specific type of device, or navigate between similar devices.</p>
+<p>
+
 <p>Inheritance: <a href="../modules/Duplex.Application.html#">Duplex.Application</a> > Duplex.RoamingDSP</p>
 
 <p>The application can target any device that has been selected in Renoise, freely roaming the tracks. If the lock button starts to blink slowly, it is to remind you that the application is currently 'homeless', has no matching device to control. </p>
@@ -119,6 +127,16 @@
 <p>To complement the "lock" button, we also have a "focus" button. This button brings focus back to the locked device, whenever you have (manually) selected an un-locked device.</p>
 
 <p>Finally, we can navigate between devices by using the 'next' and 'previous' buttons. In case we have locked to a device, previous/next will "transfer" the lock to that device.</p>
+
+
+<h3>Changes</h3>
+
+<p>  0.98</p>
+<pre><code>- First release
+</code></pre>
+
+
+</p>
 
 
 <h2><a href="#Functions">Functions</a></h2>

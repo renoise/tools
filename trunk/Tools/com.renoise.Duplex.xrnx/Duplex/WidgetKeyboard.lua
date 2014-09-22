@@ -286,8 +286,6 @@ function WidgetKeyboard:update_all_keys()
     self:update_key(pitch)
   end
 
-  --print("got here")
-
 end
 
 
@@ -369,8 +367,6 @@ function WidgetKeyboard:update_key(pitch)
     key_widget.color = color
 
   end
-
-  --print("got here")
 
 end
 

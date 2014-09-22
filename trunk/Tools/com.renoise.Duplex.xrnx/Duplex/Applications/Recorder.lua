@@ -3,7 +3,6 @@
 ============================================================================]]--
 
 --[[--
-***
 Record and loop any signal that you feed into Renoise, be that your voice, a guitar etc. 
 Inheritance: @{Duplex.Application} > Duplex.Application.Recorder 
 
@@ -107,14 +106,29 @@ Note that when reading the following description, and using a controller with fa
 
 ### Changes
 
-  0.95  
-    - First release
+  0.98.28
+    - Fixed issue with “autostart” option (broke the recording workflow)
+
+  0.98.18
+    - Fixed: under certain conditions, could throw error on startup
+
+  0.98
+    - First-run message explaining how to set up a recording
+    - Detect v3 API and use alternate FX commands
+
+  0.97
+    - Any number of tracks supported, option to follow current track
+    - Supports paged navigation features (previous/next, page size)
+    - Detect when tracks are inserted/removed/swapped, maintain references
 
   0.96  
     - Detect when tracks are swapped/inserted/removed
     - Full undo support (tracks changes to pattern and recordings)
     - Unlimited number of tracks (paged navigation)
     - Option: page_size & follow_track
+
+  0.95  
+    - First release
 
 
 --]]

@@ -6,6 +6,42 @@
 
 The Browser class shows and instantiates registered device configurations and shows the virtual UI for them. More than one configuration can be active and running for multiple devices.
 
+### Changes
+
+  0.99.4
+    - Decorate open device dialogs when hardware is hot-swapped
+    - Prevent notifier feedback
+
+  0.99.1
+    - Button to show/hide virtual control surface (access with TAB key)
+
+  0.98.28
+    - Expanded set of key/MIDI mappings
+      - [Next] / [Previous] configuration for the selected device
+      - [Set] the active configuration for the selected device
+      - [Show] / [Hide] the Duplex browser dialog
+
+  0.98.14
+    - Tool menu: devices organized into sub-menu’s
+    - Tool menu: display on startup (only when active config)
+    - Tool menu: release all devices (useful shortcut)
+    - Tool menu: enable NRPN support
+
+  0.96
+    - Interactively change options while applications are running
+      - Application:_apply_options() and optional on_activate() has been removed
+    - Fixed: hot-plugging devices caused an error (bug was introduced in 0.95)
+    - More MIDI-mapping options: set,select previous/next configuration
+
+  0.95
+    - Refactoring: moved the "settings" dialog into the Browser class, as the
+      dialog will eventually contain application settings etc. The device now 
+      only contains the device-specific UI code, and not the dialog itself
+
+  0.93
+    - Switch between device presets/configurations using function keys
+    - Forward keypresses to Renoise (except those we use for switching)
+
 --]]
 
 --==============================================================================
@@ -755,25 +791,22 @@ end
 
 --- Start current configuration (and all apps within it)
 
-function Browser:start_current_configuration(start_running)
-  TRACE("Browser:start_configuration()",start_running)
+function Browser:start_current_configuration(start_running,from_ui)
+  TRACE("Browser:start_configuration()",start_running,from_ui)
   
   local process = self:_current_process()
   if (process and not process:running()) then
     process:start(start_running)
   end
-
-  -- adjust the GUI, in case this was not fired from the GUI
-  local suppress_notifiers = self._suppress_notifiers
-  self._suppress_notifiers = true
   
-  self._vb.views.dpx_browser_configuration_running_checkbox.value = 
-   (process and process:running()) or false
+  if not from_ui then
+    self._vb.views.dpx_browser_configuration_running_checkbox.value = 
+     (process and process:running()) or false
+  end
 
   self:_decorate_device_list()
   self:_decorate_configuration_list()
   
-  self._suppress_notifiers = suppress_notifiers
 end
   
   
@@ -781,25 +814,22 @@ end
 
 --- Stop current configuration (and all apps within it)
 
-function Browser:stop_current_configuration()
-  TRACE("Browser:stop_configuration()")
+function Browser:stop_current_configuration(from_ui)
+  TRACE("Browser:stop_configuration()",from_ui)
 
   local process = self:_current_process()
   if (process and process:running()) then
     process:stop()
   end
 
-   -- adjust the GUI, in case this was not fired from the GUI
-  local suppress_notifiers = self._suppress_notifiers
-  self._suppress_notifiers = true
-  
-  self._vb.views.dpx_browser_configuration_running_checkbox.value = 
-   (process and process:running()) or false
+  if not from_ui then
+    self._vb.views.dpx_browser_configuration_running_checkbox.value = 
+     (process and process:running()) or false
+  end
 
   self:_decorate_device_list()
   self:_decorate_configuration_list()
   
-  self._suppress_notifiers = suppress_notifiers
 end
 
 
@@ -1439,10 +1469,11 @@ function Browser:_create_content_view()
           tooltip = txt_running,
           notifier = function(v)
             if (not self._suppress_notifiers) then
+              local from_ui = true
               if (v == true) then
-                self:start_current_configuration()
+                self:start_current_configuration(nil,from_ui)
               else
-                self:stop_current_configuration()
+                self:stop_current_configuration(from_ui)
               end
             end
           end

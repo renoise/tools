@@ -44,6 +44,11 @@
   <li><a href="../modules/Duplex.Applications.Effect.html">Duplex.Applications.Effect</a></li>
   <li><a href="../modules/Duplex.Applications.GridPie.html">Duplex.Applications.GridPie</a></li>
   <li><a href="../modules/Duplex.Applications.Hydra.html">Duplex.Applications.Hydra</a></li>
+  <li><a href="../modules/Duplex.Applications.Instrument.html">Duplex.Applications.Instrument</a></li>
+  <li><a href="../modules/Duplex.Applications.Keyboard.GridLayout.html">Duplex.Applications.Keyboard.GridLayout</a></li>
+  <li><a href="../modules/Duplex.Applications.Keyboard.Layouts.HarmonicLayout.html">Duplex.Applications.Keyboard.Layouts.HarmonicLayout</a></li>
+  <li><a href="../modules/Duplex.Applications.Keyboard.Layouts.IsomorphicLayout.html">Duplex.Applications.Keyboard.Layouts.IsomorphicLayout</a></li>
+  <li><a href="../modules/Duplex.Applications.Keyboard.Layouts.PianoLayout.html">Duplex.Applications.Keyboard.Layouts.PianoLayout</a></li>
   <li><a href="../modules/Duplex.Applications.Keyboard.html">Duplex.Applications.Keyboard</a></li>
   <li><a href="../modules/Duplex.Applications.Matrix.html">Duplex.Applications.Matrix</a></li>
   <li><a href="../modules/Duplex.Applications.Metronome.html">Duplex.Applications.Metronome</a></li>
@@ -67,6 +72,7 @@
   <li><a href="../modules/Duplex.Applications.TestPad.html">Duplex.Applications.TestPad</a></li>
   <li><a href="../modules/Duplex.Applications.TrackSelector.html">Duplex.Applications.TrackSelector</a></li>
   <li><a href="../modules/Duplex.Applications.Transport.html">Duplex.Applications.Transport</a></li>
+  <li><a href="../modules/Duplex.Applications.UIButtonTest.html">Duplex.Applications.UIButtonTest</a></li>
   <li><a href="../modules/Duplex.Applications.XYPad.html">Duplex.Applications.XYPad</a></li>
   <li><a href="../modules/Duplex.Automation.html">Duplex.Automation</a></li>
   <li><a href="../modules/Duplex.Browser.html">Duplex.Browser</a></li>
@@ -110,6 +116,9 @@
 
 <h1>Module <code>Duplex.UIComponent</code></h1>
 <p>UIComponent is the basic building block from which you create a user interface.</p>
+<p>
+
+
 <p>All classes that extend this class are prefixed with 'UI': UIButton, UISlider etc. </p>
 
 <p>This class, and all the classes extending it, are not to be confused with the Renoise viewbuilder API, which creates <em>actual</em> on-screen controls. The virtual control surface (the on-screen representation of your hardware) is a static representation of the device interface, as defined by the control-map. </p>
@@ -119,6 +128,47 @@ Imagine creating an instance of a "UISlider" which you then assign a size of 8 v
 
 <p>For examples on how to create/handle events with UIComponents, see either
 the UISlider or the UIButton class (both extensions of this class).</p>
+
+<h3>Changes</h3>
+
+<p>  0.99.4</p>
+<pre><code>- Allow UIComponent instances to store last message in 'msg'
+  (this is optional, but can improve things in the output stage)
+</code></pre>
+
+<p>  0.99.3</p>
+<pre><code>- Refactored force_refresh method into base-class
+- UIComponent:test() now include test for active state and group-name
+</code></pre>
+
+<p>  0.99.2</p>
+<pre><code>- floor and ceiling for numeric values (UISlider, UIPad etc.)
+- supply "map" argument when creating instance (saves typing)
+</code></pre>
+
+<p>  0.98.17</p>
+<pre><code>- UIComponent event handlers should always return “false” when actively
+  rejecting an event (such as when the application is sleeping/inactive),
+  allowing the MIDI message to be passed on to Renoise
+</code></pre>
+
+<p>  0.98.14</p>
+<pre><code>- Message now sent directly to the UIComponents
+</code></pre>
+
+<p>  0.95</p>
+<pre><code>- When a UIComponent is resized, invalidate it
+- When a UIComponent is resized to a smaller size, remove canvas-points by
+  using an additional "clear" buffer from the Canvas class. The "clear" buffer
+  is then applied during the next Display refresh
+</code></pre>
+
+<p>  0.9</p>
+<pre><code>- First release
+</code></pre>
+
+
+</p>
 
 
 <h2><a href="#Functions">Functions</a></h2>
@@ -256,9 +306,8 @@ the UISlider or the UIButton class (both extensions of this class).</p>
 	<td class="summary">(bool) request refresh on next update</td>
 	</tr>
 	<tr>
-	<td class="name" nowrap><a href="#self.soft_echo">self.soft_echo</a></td>
-	<td class="summary">(bool) when the message specifies this, hardware output is skipped
- when the message was triggered from the hardware itself</td>
+	<td class="name" nowrap><a href="#self.msg">self.msg</a></td>
+	<td class="summary">(bool) most recent message</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#self._active">self._active</a></td>
@@ -773,12 +822,11 @@ the UISlider or the UIButton class (both extensions of this class).</p>
 
 </dd>
     <dt>
-    <a name = "self.soft_echo"></a>
-    <strong>self.soft_echo</strong>
+    <a name = "self.msg"></a>
+    <strong>self.msg</strong>
     </dt>
     <dd>
-    (bool) when the message specifies this, hardware output is skipped
- when the message was triggered from the hardware itself
+    (bool) most recent message
 
 
 

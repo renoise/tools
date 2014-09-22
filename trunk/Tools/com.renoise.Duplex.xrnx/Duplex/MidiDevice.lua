@@ -6,6 +6,24 @@
 --[[--
 A generic MIDI device class, providing the ability to send and receive MIDI
 
+### Changes
+
+  0.99
+    - Support for MMC (Midi Machine Control) messages over sysex
+    - Support for 14-bit MIDI pitch bend messages 
+    - Ability to pass unmatched (not just unhandled) messages to Renoise 
+
+  0.98.28
+    - FIXME MIDI pass-on got ignored when message was not handled by any controls
+
+  0.98.21
+    - Fixed: bug when handling MIDI ports that are added/removed while running
+
+  0.9
+    - First release 
+
+
+
 --]]
 
 --==============================================================================

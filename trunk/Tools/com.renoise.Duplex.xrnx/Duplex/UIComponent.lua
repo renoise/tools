@@ -16,6 +16,38 @@ Imagine creating an instance of a "UISlider" which you then assign a size of 8 v
 For examples on how to create/handle events with UIComponents, see either 
 the UISlider or the UIButton class (both extensions of this class).
 
+### Changes
+
+  0.99.4
+    - Allow UIComponent instances to store last message in 'msg'
+      (this is optional, but can improve things in the output stage)
+
+  0.99.3
+    - Refactored force_refresh method into base-class
+    - UIComponent:test() now include test for active state and group-name
+
+  0.99.2
+    - floor and ceiling for numeric values (UISlider, UIPad etc.)
+    - supply "map" argument when creating instance (saves typing)
+
+  0.98.17
+    - UIComponent event handlers should always return “false” when actively 
+      rejecting an event (such as when the application is sleeping/inactive), 
+      allowing the MIDI message to be passed on to Renoise
+
+  0.98.14
+    - Message now sent directly to the UIComponents
+
+  0.95
+    - When a UIComponent is resized, invalidate it
+    - When a UIComponent is resized to a smaller size, remove canvas-points by
+      using an additional "clear" buffer from the Canvas class. The "clear" buffer 
+      is then applied during the next Display refresh
+
+  0.9
+    - First release
+
+
 --]]
 
 --==============================================================================
@@ -80,9 +112,8 @@ function UIComponent:__init(app,map)
   --- (bool) request refresh on next update
   self.dirty = true 
   
-  --- (bool) when the message specifies this, hardware output is skipped
-  -- when the message was triggered from the hardware itself
-  self.soft_echo = false
+  --- (bool) most recent message
+  self.msg = nil
   
   --- (bool) false if enabled state was changed - see (@{disable} or (@{enable}
   self._active = true 
@@ -319,11 +350,9 @@ end
 function UIComponent:test(msg)
   TRACE("UIComponent:test(msg)",msg)
 
-  -- test for state (if defined)
-  --if self.state and not (table.find(msg.xarg.state_ids, self.state)) then
-    --print("*** UIComponent:test - wrong state, self.state is",self.state)
-    --return false
-  --end
+
+  --print("*** UIComponent:test - self.width",self.width)
+  --print("*** UIComponent:test - self.height",self.height)
 
   if not self.app.active then
     --print("*** UIComponent:test - not active")

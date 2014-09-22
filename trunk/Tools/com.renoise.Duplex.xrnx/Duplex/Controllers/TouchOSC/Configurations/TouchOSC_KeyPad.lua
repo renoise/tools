@@ -23,7 +23,8 @@ duplex_configurations:insert {
   applications = {
 
     ---- Global
-
+    --[[
+    ]]
     TiltSensor = {
       application = "XYPad",
       mappings = {

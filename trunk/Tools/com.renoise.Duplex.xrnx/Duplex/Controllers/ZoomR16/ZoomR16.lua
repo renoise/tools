@@ -20,8 +20,6 @@ function ZoomR16:__init(display_name, message_stream, port_in, port_out)
 
   MidiDevice.__init(self, display_name, message_stream, port_in, port_out)
 
-  -- setup a monochrome colorspace for the Zoom
-  self.colorspace = {1,1,1}
 end
 
 

@@ -57,6 +57,17 @@ end
 
 --------------------------------------------------------------------------------
 
+--- Compare with another instance (only check for object identity)
+-- @param other (@{Duplex.Message}) 
+-- @return bool
+
+function Message:__eq(other)
+  return rawequal(self, other)
+end  
+
+
+--------------------------------------------------------------------------------
+
 --- Return message (for debugging purposes)
 
 function Message:__tostring()
