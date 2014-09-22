@@ -13,10 +13,10 @@ Once a state has been defined, you can begin prefixing target nodes, using the s
 
 Most nodes can be prefixed: Group, Row, Column and Param (but not SubParam). For a detailed description of all supported attributes for <State> nodes, please refer to the ControlMap class
 
-### Examples
+### Changes
 
-
-
+  0.99.3
+    - First release
 
 --]]
 
@@ -69,6 +69,8 @@ function StateController:handle_message(msg)
   TRACE("StateController:handle_message",msg)
 
   local states = self:match(msg)
+  --print("states",rprint(states))
+
   for k,state in ipairs(states) do
 
     if (state.xarg.type == "toggle") then
@@ -76,16 +78,13 @@ function StateController:handle_message(msg)
       if state.xarg.match and 
         (state.xarg.match == msg.xarg.match) 
       then
-        --print("got here A")
         self:toggle(state.xarg.name,msg)
       elseif (msg.xarg.type == "togglebutton") and
         ((msg.value == msg.xarg.maximum) or 
         (msg.value == msg.xarg.minimum))
       then
-        --print("got here B")
         self:toggle(state.xarg.name,msg)
       elseif (msg.value == msg.xarg.maximum) then
-        --print("got here C")
         self:toggle(state.xarg.name,msg)
       end
 
@@ -129,7 +128,9 @@ function StateController:add_state(xarg,t)
   local cm = self.display.device.control_map
   for k,v in pairs(cm.patterns) do
     for k2,v2 in ipairs(v) do
-      if (xarg.value == k) and
+      --print("xarg.action,xarg.value,k",xarg.action,xarg.value,k)
+      if ((xarg.action == k) or (xarg.value == k))
+      and
         string.find(v2.xarg.type,"button") 
       then
         local ui_obj = UIButton(self.app)
@@ -161,7 +162,7 @@ function StateController:match(msg)
   --TRACE("StateController - match",msg)
 
 	local matches = {}
-  local msg_pattern = msg.xarg.action or msg.xarg.value
+  local msg_pattern = msg.xarg.value or msg.xarg.action
 
 	for _,state in pairs(self.states) do
     if (msg_pattern == state.xarg.value) then
@@ -303,23 +304,23 @@ function StateController:enable(state_id)
   local trigger_color = state.xarg.invert and
     {0x00,0x00,0x00} or {0xff,0xff,0xff}
 	for _,trigger in pairs(state.triggers) do
+    local update_trigger = false
     if trigger.param.xarg.match and 
       state.xarg.match  
     then 
       if (trigger.param.xarg.match == state.xarg.match) then
-        if (type(trigger.ui_obj) == "UIButton") then
-          trigger.ui_obj:set({color = trigger_color,val=true})
-          trigger.ui_obj:force_refresh()
-        end
-      else
-        --color = {0x00,0x00,0x00}
+        update_trigger = true
       end
     else
+      update_trigger = true
+    end
+    if update_trigger then
       if (type(trigger.ui_obj) == "UIButton") then
-        trigger.ui_obj:set({color = trigger_color,val=true})
+        local trigger_text = state.xarg.text and 
+          state.xarg.text or trigger.ui_obj.palette.foreground.text
+        trigger.ui_obj:set({color = trigger_color,text=trigger_text,val=true})
         trigger.ui_obj:force_refresh()
       end
-      --print("StateController - enabled color (other)",widget.text,table.concat(widget.color,","))
     end
 
   end
@@ -331,7 +332,7 @@ end
 --- deactivate a named state
 
 function StateController:disable(state_id)
-  TRACE("StateController:disable named state",state_id)
+  TRACE("StateController:disable",state_id)
   --print("StateController - #params",#self.states[state_id].params)
 
   local state = self.states[state_id]
@@ -349,12 +350,13 @@ function StateController:disable(state_id)
     end
   end
 
-  local trigger_color = state.xarg.invert and
-    {0xff,0xff,0xff} or {0x00,0x00,0x00} 
 	for _,trigger in pairs(state.triggers) do
-    --print("trigger.ui_obj",trigger.ui_obj,type(trigger.ui_obj),(trigger.ui_obj == "UIButton"))
     if (type(trigger.ui_obj) == "UIButton") then
-      trigger.ui_obj:set({color = trigger_color,val=false})
+      local trigger_color = state.xarg.invert and
+        {0xff,0xff,0xff} or {0x00,0x00,0x00} 
+      local trigger_text = state.xarg.text and 
+        state.xarg.text or trigger.ui_obj.palette.foreground.text
+      trigger.ui_obj:set({color = trigger_color,text=trigger_text,val=false})
       trigger.ui_obj:force_refresh()
     end
   end

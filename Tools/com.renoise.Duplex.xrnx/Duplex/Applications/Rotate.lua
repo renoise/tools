@@ -10,6 +10,11 @@ This application is an implementation of taktik's [Rotate tool][1]
 [1]: http://tools.renoise.com/tools/rotate-pattern
 
 
+### Changes
+
+  0.98
+    - First release
+
 
 --]]
 

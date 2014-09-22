@@ -23,11 +23,14 @@ Tool discussion is located on the [Renoise forum][1]
 
 ### Changes
 
+  0.99.1
+    - Realtime recording into phrases
+
   0.99
-    -- New features, better integration with Renoise
+    - Many new features, better integration with Renoise
 
   0.98
-    -- First release 
+    - First release 
 
 
 ]]
@@ -1460,7 +1463,6 @@ function Mlrx:_build_app()
     c.midi_mapping = midi_map_name
     c.ceiling = Mlrx.INT_8BIT
     c.on_change = function() 
-      --print("got here C")
       local trk = self.tracks[self.selected_track]
       trk:set_shuffle_amount(c.value)
     end

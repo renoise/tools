@@ -6,6 +6,36 @@ Duplex Changelog
 Done 0.99
 --------------------------------------------------------------------------------
 
+-- Duplex 0.99.4 -----------
+
+Core/Browser
+- Decorate open device dialogs when hardware is hot-swapped
+- Prevent notifier feedback in browser dialog
+
+Core/MessageStream
+- Better handling of "soft_echo", respond only to programmatic events
+
+Core/OscVoiceMgr
+- Support for trigger options (hold/mono modes)
+- Register_callback(), makes apps able to receive notifications
+
+Core/Device
+- Changed the interpretation of "colorspace" a little: monochrome devices
+  are now specified as {1} instead of {1,1,1}
+
+Applications/Keyboard
+- Support harmonic scales (scale and key)
+- Custom grid layouts (harmonic, isomorphic layout and piano emulation)
+- Support for trigger options (hold/mono modes)
+
+Applications/Instrument (new)
+- Control basic instrument options
+
+Documentation
+- More links and descriptions 
+
+
+
 -- Duplex 0.99.3 -----------
 
 Core/StateController

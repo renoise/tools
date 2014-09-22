@@ -31,7 +31,7 @@ function UIPad:__init(app,map)
   self._cached_value = nil
 
   --- (bool) see @{Duplex.UIComponent}
-  --self.soft_echo = true
+  --self.virtual_event = true
 
   UIComponent.__init(self,app,map)
 
@@ -50,7 +50,7 @@ function UIPad:do_change(msg)
     return
   end
 
-  self.soft_echo = not msg.is_virtual and msg.xarg.soft_echo
+  self.msg = msg
 
   local normalize = function(val)
     return scale_value(val,msg.xarg.minimum,msg.xarg.maximum,self.floor,self.ceiling)

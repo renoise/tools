@@ -44,6 +44,11 @@
   <li><a href="../modules/Duplex.Applications.Effect.html">Duplex.Applications.Effect</a></li>
   <li><a href="../modules/Duplex.Applications.GridPie.html">Duplex.Applications.GridPie</a></li>
   <li><a href="../modules/Duplex.Applications.Hydra.html">Duplex.Applications.Hydra</a></li>
+  <li><a href="../modules/Duplex.Applications.Instrument.html">Duplex.Applications.Instrument</a></li>
+  <li><a href="../modules/Duplex.Applications.Keyboard.GridLayout.html">Duplex.Applications.Keyboard.GridLayout</a></li>
+  <li><a href="../modules/Duplex.Applications.Keyboard.Layouts.HarmonicLayout.html">Duplex.Applications.Keyboard.Layouts.HarmonicLayout</a></li>
+  <li><a href="../modules/Duplex.Applications.Keyboard.Layouts.IsomorphicLayout.html">Duplex.Applications.Keyboard.Layouts.IsomorphicLayout</a></li>
+  <li><a href="../modules/Duplex.Applications.Keyboard.Layouts.PianoLayout.html">Duplex.Applications.Keyboard.Layouts.PianoLayout</a></li>
   <li><a href="../modules/Duplex.Applications.Keyboard.html">Duplex.Applications.Keyboard</a></li>
   <li><a href="../modules/Duplex.Applications.Matrix.html">Duplex.Applications.Matrix</a></li>
   <li><a href="../modules/Duplex.Applications.Metronome.html">Duplex.Applications.Metronome</a></li>
@@ -67,6 +72,7 @@
   <li><a href="../modules/Duplex.Applications.TestPad.html">Duplex.Applications.TestPad</a></li>
   <li><a href="../modules/Duplex.Applications.TrackSelector.html">Duplex.Applications.TrackSelector</a></li>
   <li><a href="../modules/Duplex.Applications.Transport.html">Duplex.Applications.Transport</a></li>
+  <li><a href="../modules/Duplex.Applications.UIButtonTest.html">Duplex.Applications.UIButtonTest</a></li>
   <li><a href="../modules/Duplex.Applications.XYPad.html">Duplex.Applications.XYPad</a></li>
   <li><a href="../modules/Duplex.Automation.html">Duplex.Automation</a></li>
   <li><a href="../modules/Duplex.Browser.html">Duplex.Browser</a></li>
@@ -109,14 +115,14 @@
 <div id="content">
 
 <h1>Module <code>Duplex.UISlider</code></h1>
-<p>The Slider supports different input methods: buttons or faders/dials</p>
+<p>The Slider supports different input methods: buttons or faders/dials.</p>
+<p>
+
 
 
 <h3>Dial mode / fader mode</h3>
 
-<p>  In most cases, you would specify a UISlider to take control of either a dial/encoder or fader.</p>
-<p>
-<p> </p>
+<p>  In most cases, you would specify a UISlider to take control of either a dial/encoder or fader. </p>
 
 <pre><code> _    _______
 | |  |xxxx   | &lt;- UISlider, mapped to horizontally aligned fader
@@ -131,32 +137,51 @@
 
 <h3>Button mode</h3>
 
-<p>  In button mode, each value-step of the slider is assigned to a separate button. The size of the resulting slider is determined by the size you specify when creating the slider (or, by using the set_size() after the slider has been created). </p>
+<p>  In button mode, each value-step of the slider is assigned to a separate
+  button. The size of the resulting slider is determined by the size you specify
+  when creating the slider (or, by using the set_size() after the slider has
+  been created). </p>
 <pre><code> _    _______
 |_|  |x|x|x| | &lt;- horizontally aligned UISlider (mapped to 4 buttons)
 |_|   ¯¯¯¯¯¯¯  &lt;- vertically aligned UISlider (mapped to 4 buttons)
 |x|   _
 |x|  | |       &lt;- single-button UISlider (toggles min/max value)
  ¯    ¯
+ _ _ _ _
+|x|x|x|x|      &lt;- two-dimensional UISlider, possible when
+|x|x|_|_|         orientation is set to ORIENTATION.NONE
+                  (minimum in upper-left, max in lower right corner)
 </code></pre>
 
-<p>  To map a slider onto button(s), you must also specify an "on_press" event handler. The method does not have to do anything special, but without it,
+<p>  To map a slider onto button(s), you must also specify an "on_press" event
+  handler. The method does not have to do anything special, but without it,
   the slider will never receive any events from the device. </p>
 
-<p>  In "button mode", you also have an additional property called "toggleable". Setting this to true will enable you to toggle off any active button, and thus gain an extra value-step from any series of buttons. </p>
+<p>  In "button mode", you also have an additional property called "toggleable".
+  Setting this to true will enable you to toggle off any active button, and thus
+  gain an extra value-step from any series of buttons. </p>
 
 <h3>Other features</h3>
 
 <ul>
-    <li>Built-in quantize for MIDI devices (only output when 7bit values change)</li>
-    <li>Built-in support for relative encoder/dials. Note that the type of relative encoder is specified in your control-map</li>
+    <li>Built-in quantize for MIDI devices (only output when values change)</li>
+    <li>Built-in support for relative encoder/dials. The actual type of relative encoder is specified in your control-map (see <a href="../modules/Duplex.Globals.html#PARAM_MODE">Duplex.Globals.PARAM_MODE</a>)</li>
 </ul>
+
+<h3>Examples</h3>
+
+<p>  Duplex comes with a sample configuration for the UISlider. Launch the
+  duplex browser and choose Custombuilt > UISlider Demo</p>
 
 <h3>Changelog</h3>
 
 <p>  0.99</p>
 <pre><code>- Got rid of "dimmed" method (just call set_palette instead)
+- Support ORIENTATION.NONE for two-dimensional layout
 </code></pre>
+
+
+
 
 </p>
 
@@ -198,7 +223,7 @@
 	<td class="summary">Get the orientation</td>
 	</tr>
 	<tr>
-	<td class="name" nowrap><a href="#set_size">set_size (size)</a></td>
+	<td class="name" nowrap><a href="#set_size">set_size (size, opt)</a></td>
 	<td class="summary">Override UIComponent with this method</td>
 	</tr>
 	<tr>
@@ -485,7 +510,7 @@ DEVICE_EVENT.VALUE_CHANGED
 </dd>
     <dt>
     <a name = "set_size"></a>
-    <strong>set_size (size)</strong>
+    <strong>set_size (size, opt)</strong>
     </dt>
     <dd>
     Override UIComponent with this method
@@ -494,7 +519,10 @@ DEVICE_EVENT.VALUE_CHANGED
     <h3>Parameters:</h3>
     <ul>
         <li><span class="parameter">size</span>
-         (number)
+         (int)
+        </li>
+        <li><span class="parameter">opt</span>
+         (int), optional height (only when using ORIENTATION.NONE)
         </li>
     </ul>
 

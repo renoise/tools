@@ -44,6 +44,11 @@
   <li><a href="../modules/Duplex.Applications.Effect.html">Duplex.Applications.Effect</a></li>
   <li><a href="../modules/Duplex.Applications.GridPie.html">Duplex.Applications.GridPie</a></li>
   <li><a href="../modules/Duplex.Applications.Hydra.html">Duplex.Applications.Hydra</a></li>
+  <li><a href="../modules/Duplex.Applications.Instrument.html">Duplex.Applications.Instrument</a></li>
+  <li><a href="../modules/Duplex.Applications.Keyboard.GridLayout.html">Duplex.Applications.Keyboard.GridLayout</a></li>
+  <li><a href="../modules/Duplex.Applications.Keyboard.Layouts.HarmonicLayout.html">Duplex.Applications.Keyboard.Layouts.HarmonicLayout</a></li>
+  <li><a href="../modules/Duplex.Applications.Keyboard.Layouts.IsomorphicLayout.html">Duplex.Applications.Keyboard.Layouts.IsomorphicLayout</a></li>
+  <li><a href="../modules/Duplex.Applications.Keyboard.Layouts.PianoLayout.html">Duplex.Applications.Keyboard.Layouts.PianoLayout</a></li>
   <li><a href="../modules/Duplex.Applications.Keyboard.html">Duplex.Applications.Keyboard</a></li>
   <li><a href="../modules/Duplex.Applications.Matrix.html">Duplex.Applications.Matrix</a></li>
   <li><a href="../modules/Duplex.Applications.Metronome.html">Duplex.Applications.Metronome</a></li>
@@ -67,6 +72,7 @@
   <li><a href="../modules/Duplex.Applications.TestPad.html">Duplex.Applications.TestPad</a></li>
   <li><a href="../modules/Duplex.Applications.TrackSelector.html">Duplex.Applications.TrackSelector</a></li>
   <li><a href="../modules/Duplex.Applications.Transport.html">Duplex.Applications.Transport</a></li>
+  <li><a href="../modules/Duplex.Applications.UIButtonTest.html">Duplex.Applications.UIButtonTest</a></li>
   <li><a href="../modules/Duplex.Applications.XYPad.html">Duplex.Applications.XYPad</a></li>
   <li><a href="../modules/Duplex.Automation.html">Duplex.Automation</a></li>
   <li><a href="../modules/Duplex.Browser.html">Duplex.Browser</a></li>
@@ -112,9 +118,35 @@
 <p>The Display is the base class for device displays and the virtual UI</p>
 
 <p>Display performs many duties; it manages UIComponents, as it will both send and recieve their messages, and take care of their visual updates on the idle time update.</p>
+<p>
 <p> </p>
 
 <p>The Display will also build the control surface, an interactive representation of the device complete with native sliders, knobs etc. </p>
+
+
+
+<h3>Changes</h3>
+
+<p>  0.99.4</p>
+<pre><code>- "skip_echo" is checked here, no more need to do so in output_value()
+</code></pre>
+
+<p>  0.99.3</p>
+<pre><code>- "soft_echo", will update the hardware only when a message is _not_
+  the result of a user action (a.k.a. a virtual event)
+</code></pre>
+
+<p>  0.99</p>
+<pre><code>- Refactored 'UI widget' code into it's own Widget* classes
+</code></pre>
+
+
+
+<p>  0.98 </p>
+<pre><code>- First release
+</code></pre>
+
+</p>
 
 
 <h2><a href="#Functions">Functions</a></h2>
@@ -155,7 +187,7 @@
  (e.g.</td>
 	</tr>
 	<tr>
-	<td class="name" nowrap><a href="#update">update ()</a></td>
+	<td class="name" nowrap><a href="#update">update (foo)</a></td>
 	<td class="summary">Update any UIComponent that has been modified since the last update
  (called continously)</td>
 	</tr>
@@ -403,13 +435,19 @@
 </dd>
     <dt>
     <a name = "update"></a>
-    <strong>update ()</strong>
+    <strong>update (foo)</strong>
     </dt>
     <dd>
     Update any UIComponent that has been modified since the last update
  (called continously)
 
 
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">foo</span>
+        TRACE("<em>*</em> Display.update",foo)
+        </li>
+    </ul>
 
 
 

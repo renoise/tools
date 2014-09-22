@@ -222,6 +222,8 @@ widget_hooks.fader = {
       adj_height = Display.UNIT_HEIGHT * (param.xarg.aspect or 1)
     end
 
+    --print("param.xarg.id",param.xarg.id)
+
     return display.vb:minislider {
       id  = param.xarg.id,
       min = param.xarg.minimum,

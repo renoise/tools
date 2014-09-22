@@ -101,7 +101,7 @@ Matrix.default_options = {
       "Follow track enabled",
       "Follow track disabled"
     },
-    value = 2,
+    value = 1,
   },
   --[[
   set_track = {

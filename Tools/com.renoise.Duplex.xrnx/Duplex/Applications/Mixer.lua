@@ -126,8 +126,11 @@ Mixer.default_options = {
     on_change = function(inst)
       inst:_follow_track()
     end,
-    items = {"Follow track enabled","Follow track disabled"},
-    value = 2,
+    items = {
+      "Follow track enabled",
+      "Follow track disabled"
+    },
+    value = 1,
   },
   page_size = {
     label = "Page size",
@@ -576,7 +579,6 @@ function Mixer:update()
         local value = (self._postfx_mode) and
           track.postfx_volume.value or track.prefx_volume.value
         self:set_track_volume(control_index, value)
-        --print("*** Mixer.update - got here",control_index,self._controls.volume[control_index]._size)
       end
 
       if valid_panning then

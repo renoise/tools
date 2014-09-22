@@ -6,8 +6,13 @@
 
 Navigate between lines and columns/tracks in the pattern editor.
 
-TODO refactor Mlrx_pos to make navigation across pattern boundaries more streamlined - currently, navigating with edit-step around very short patterns will not work - only when pattern contain more lines than editstep...
+### TODO 
+refactor Mlrx_pos to make navigation across pattern boundaries more streamlined - currently, navigating with edit-step around very short patterns will not work, only when pattern contain more lines than editstep...
 
+### Changes
+
+  0.99.3
+    - First release
 
 --]]
 
@@ -331,26 +336,4 @@ function PatternCursor:getStepSize()
   
 end
 
---------------------------------------------------------------------------------
 
---- inherited from Application
--- @see Duplex.Application.on_new_document
---[[
-function PatternCursor:on_new_document()
-  self:_attach_to_song()
-end
-]]
---------------------------------------------------------------------------------
-
---- attach notifier to the song, handle changes
---[[
-function PatternCursor:_attach_to_song()
-
-  renoise.song().transport.metronome_enabled_observable:add_notifier(
-    function()
-      --self:update()
-    end
-  )
-
-end
-]]

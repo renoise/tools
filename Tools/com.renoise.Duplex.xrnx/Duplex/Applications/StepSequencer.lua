@@ -28,11 +28,32 @@ Originally written by daxton.fleming@gmail.com
 
 ### Changes
 
+
+
+  0.98.21
+    - Support line_notifier when slots are aliased (also when created and/or removed)
+    - Workflow: when navigating from a long pattern into a shorter one, start from 
+      the top (IOW, always restrict to the actual pattern length)
+    - Fixed: update the volume-level display when base volume is changed
+    - Fixed: selecting a group track could cause an error
+
+  0.98.20
+    - Fixed: focus bug when holding button
+
+  0.98.18
+    - Mappings track, level, line, transpose are now optional. This should fix an 
+      issue with the nano2K config that didn’t specify ‘track’
+    - Fixed: under certain conditions, could throw error on startup
+
   0.98  
     - Palette now uses the standard format (easier to customize)
     - Sequencer tracks can be linked with instruments, simply by assigning 
       the same name to both. 
       UISpinner (deprecated) control replaced with UISlider+UIButton(s)
+
+  0.96
+    - Option: "follow_track", set to align to selected track in Renoise
+    - Option: "track_increment", specify custom step size for track-switching
 
   0.95  
     - The sequencer is now fully synchronized with the currently selected 

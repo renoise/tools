@@ -756,7 +756,6 @@ function MidiActions:_retrieve_assist_by_name(str_name)
     patt = "([^#]+#)*(.+)"
     local matches = string.gmatch(v.name,patt)
     for v1,v2 in matches do
-      --print("*** got here - v1,v2",v1,v2)
       if (v1==str_start) and (v2==str_end) then
 
         -- assign functions, using the extracted index as argument 
@@ -1117,7 +1116,7 @@ function MidiActions:_build_app()
   local input_method = nil
   local cm = self.display.device.control_map
   local map = self.mappings.control
-  local grid_size = nil
+  local grid_size,grid_size_x,grid_size_y = nil
   if map.group_name then
     local param = cm:get_param_by_index(map.index,map.group_name)
     if param then
@@ -1135,14 +1134,14 @@ function MidiActions:_build_app()
         grid_size = cm:count_columns(map.group_name)
       elseif map.orientation == ORIENTATION.VERTICAL then
         grid_size = cm:count_rows(map.group_name)
-      else
-        grid_size = cm:get_group_size(map.group_name)
+      elseif map.orientation == ORIENTATION.NONE then
+        grid_size_x = cm:count_columns(map.group_name)
+        grid_size_y = cm:count_rows(map.group_name)
       end
-      if grid_size then
-        input_method = "slider"
-      end
+      input_method = "slider"
     end
   end
+
   if not input_method then
     local msg = "Could not start Duplex MidiActions, the required "
               .."\nmapping 'control' has not been defined"
@@ -1172,7 +1171,11 @@ function MidiActions:_build_app()
       c.flipped = map.flipped
       c.toggleable = true
       c:set_orientation(map.orientation)
-      c:set_size(grid_size or 1)
+      if map.orientation == ORIENTATION.NONE then
+        c:set_size(grid_size_x,grid_size_y)
+      else
+        c:set_size(grid_size or 1)
+      end
       c.palette.background = table.rcopy(self.palette.inactive)
       c.palette.tip = table.rcopy(self.palette.active)
       c.palette.track = table.rcopy(self.palette.inactive)

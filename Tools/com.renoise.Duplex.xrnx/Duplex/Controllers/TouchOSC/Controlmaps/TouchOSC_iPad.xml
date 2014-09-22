@@ -207,15 +207,15 @@
 
 							<Column>
 								<Group name="EffectFaders" orientation="vertical">
-									<Param type="fader" orientation="horizontal" value="/1/EffectFader1 %f" size="7" aspect="1.4" maximum="1" minimum="0"/>
-									<Param type="fader" orientation="horizontal" value="/1/EffectFader2 %f" size="7" aspect="1.4" maximum="1" minimum="0"/>
-									<Param type="fader" orientation="horizontal" value="/1/EffectFader3 %f" size="7" aspect="1.4" maximum="1" minimum="0"/>
-									<Param type="fader" orientation="horizontal" value="/1/EffectFader4 %f" size="7" aspect="1.4" maximum="1" minimum="0"/>
-									<Param type="fader" orientation="horizontal" value="/1/EffectFader5 %f" size="7" aspect="1.4" maximum="1" minimum="0"/>
-									<Param type="fader" orientation="horizontal" value="/1/EffectFader6 %f" size="7" aspect="1.4" maximum="1" minimum="0"/>
-									<Param type="fader" orientation="horizontal" value="/1/EffectFader7 %f" size="7" aspect="1.4" maximum="1" minimum="0"/>
-									<Param type="fader" orientation="horizontal" value="/1/EffectFader8 %f" size="7" aspect="1.4" maximum="1" minimum="0"/>
-									<Param type="fader" orientation="horizontal" value="/1/EffectFader9 %f" size="7" aspect="1.4" maximum="1" minimum="0"/>
+									<Param type="fader" orientation="horizontal" value="/1/EffectFader1 %f" size="7" soft_echo="true" aspect="1.4" maximum="1" minimum="0"/>
+									<Param type="fader" orientation="horizontal" value="/1/EffectFader2 %f" size="7" soft_echo="true" aspect="1.4" maximum="1" minimum="0"/>
+									<Param type="fader" orientation="horizontal" value="/1/EffectFader3 %f" size="7" soft_echo="true" aspect="1.4" maximum="1" minimum="0"/>
+									<Param type="fader" orientation="horizontal" value="/1/EffectFader4 %f" size="7" soft_echo="true" aspect="1.4" maximum="1" minimum="0"/>
+									<Param type="fader" orientation="horizontal" value="/1/EffectFader5 %f" size="7" soft_echo="true" aspect="1.4" maximum="1" minimum="0"/>
+									<Param type="fader" orientation="horizontal" value="/1/EffectFader6 %f" size="7" soft_echo="true" aspect="1.4" maximum="1" minimum="0"/>
+									<Param type="fader" orientation="horizontal" value="/1/EffectFader7 %f" size="7" soft_echo="true" aspect="1.4" maximum="1" minimum="0"/>
+									<Param type="fader" orientation="horizontal" value="/1/EffectFader8 %f" size="7" soft_echo="true" aspect="1.4" maximum="1" minimum="0"/>
+									<Param type="fader" orientation="horizontal" value="/1/EffectFader9 %f" size="7" soft_echo="true" aspect="1.4" maximum="1" minimum="0"/>
 								</Group>
 							</Column>
 

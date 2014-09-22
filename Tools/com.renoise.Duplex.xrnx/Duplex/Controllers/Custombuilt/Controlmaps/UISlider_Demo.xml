@@ -32,7 +32,7 @@
 						<Param value="CC#7" type="button" size="1" minimum="0" maximum="127" />
 						<Param value="CC#8" type="button" size="1" minimum="0" maximum="127" />
 					</Group>
-					<Group name="UISlider_grid" orientation="horizontal" columns="6">
+					<Group name="UISlider_grid" columns="6">
 
 						<Param value="CC#3" type="button" size="1" minimum="0" maximum="127" />
 						<Param value="CC#4" type="button" size="1" minimum="0" maximum="127" />

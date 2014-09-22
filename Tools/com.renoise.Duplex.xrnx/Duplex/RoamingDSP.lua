@@ -14,6 +14,13 @@ To complement the "lock" button, we also have a "focus" button. This button brin
 
 Finally, we can navigate between devices by using the 'next' and 'previous' buttons. In case we have locked to a device, previous/next will "transfer" the lock to that device.
 
+
+### Changes
+
+  0.98
+    - First release
+
+
 ]]--
 
 ----------------------------------------------------------------------------]]--

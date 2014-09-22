@@ -32,7 +32,7 @@ function Monome:__init(name, message_stream,prefix,address,port_in,port_out)
   self.brightness = 10
 
   -- this device has a monochrome color-space 
-  self.colorspace = {1, 1, 1}
+  self.colorspace = {1}
 
   OscDevice.__init(self, name, message_stream,prefix,address,port_in,port_out)
 

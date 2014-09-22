@@ -167,7 +167,6 @@ duplex_configurations:insert {
           group_name = "toggle_loop",
           index = 2,
         },
-
         shuffle_amount = {
           group_name = "shuffle",
           index = 2,

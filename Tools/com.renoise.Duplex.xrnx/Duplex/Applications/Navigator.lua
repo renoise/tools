@@ -17,6 +17,34 @@ Inheritance: @{Duplex.Application} > Duplex.Application.Navigator
 
 To take advantage of this application, you need to assign a number of buttons to the "blockpos" - the more buttons, the higher precision you will get. Generally speaking, you want to map either 4, 8 or 16 buttons for music which is based on a 4/4 measure. 
 
+### Changes
+
+  0.98.32
+    - FIXME When jumping back in pattern, and briefly going to the previous pattern,
+      the navigator would break if the previous pattern hadn’t same number of lines
+  
+  0.98.27
+    - Should be more solid and support off-pattern updates
+    - New mappings: “prev_block”,”next_block”
+
+  0.98.21
+    - Fixed: issue when loading a new song while Navigator was displaying nothing
+     (playback happening in a different pattern)
+
+  0.98
+    - Reset on new song
+    - Listen for changes to block-loop size
+    - Follow block loop enable
+
+  0.96
+    - Fixed: holding button while playback is stopped cause error 
+
+  0.95
+    - Interactively control the blockloop position and size
+
+  0.9
+    - First release
+
 ]]
 
 --==============================================================================

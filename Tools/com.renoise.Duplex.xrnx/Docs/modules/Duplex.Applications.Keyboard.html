@@ -44,6 +44,11 @@
   <li><a href="../modules/Duplex.Applications.Effect.html">Duplex.Applications.Effect</a></li>
   <li><a href="../modules/Duplex.Applications.GridPie.html">Duplex.Applications.GridPie</a></li>
   <li><a href="../modules/Duplex.Applications.Hydra.html">Duplex.Applications.Hydra</a></li>
+  <li><a href="../modules/Duplex.Applications.Instrument.html">Duplex.Applications.Instrument</a></li>
+  <li><a href="../modules/Duplex.Applications.Keyboard.GridLayout.html">Duplex.Applications.Keyboard.GridLayout</a></li>
+  <li><a href="../modules/Duplex.Applications.Keyboard.Layouts.HarmonicLayout.html">Duplex.Applications.Keyboard.Layouts.HarmonicLayout</a></li>
+  <li><a href="../modules/Duplex.Applications.Keyboard.Layouts.IsomorphicLayout.html">Duplex.Applications.Keyboard.Layouts.IsomorphicLayout</a></li>
+  <li><a href="../modules/Duplex.Applications.Keyboard.Layouts.PianoLayout.html">Duplex.Applications.Keyboard.Layouts.PianoLayout</a></li>
   <li><strong>Duplex.Applications.Keyboard</strong></li>
   <li><a href="../modules/Duplex.Applications.Matrix.html">Duplex.Applications.Matrix</a></li>
   <li><a href="../modules/Duplex.Applications.Metronome.html">Duplex.Applications.Metronome</a></li>
@@ -67,6 +72,7 @@
   <li><a href="../modules/Duplex.Applications.TestPad.html">Duplex.Applications.TestPad</a></li>
   <li><a href="../modules/Duplex.Applications.TrackSelector.html">Duplex.Applications.TrackSelector</a></li>
   <li><a href="../modules/Duplex.Applications.Transport.html">Duplex.Applications.Transport</a></li>
+  <li><a href="../modules/Duplex.Applications.UIButtonTest.html">Duplex.Applications.UIButtonTest</a></li>
   <li><a href="../modules/Duplex.Applications.XYPad.html">Duplex.Applications.XYPad</a></li>
   <li><a href="../modules/Duplex.Automation.html">Duplex.Automation</a></li>
   <li><a href="../modules/Duplex.Browser.html">Duplex.Browser</a></li>
@@ -110,6 +116,8 @@
 
 <h1>Module <code>Duplex.Applications.Keyboard</code></h1>
 <p>A replacement of the standard Renoise keyboard, supporting for MIDI and OSC.</p>
+<p>
+
 <p>Inheritance: <a href="../modules/Duplex.Application.html#">Duplex.Application</a> > Duplex.Application.Keyboard </p>
 
 <h3>Features</h3>
@@ -146,12 +154,34 @@ The default setting is identical to the standard behaviour in Renoise, and simpl
 
 <h3>Changes</h3>
 
-<p>  0.99</p>
+<p>  0.99.4</p>
+<pre><code>- Support for Renoise 3 trigger options (hold/mono modes)
+- Custom grid layouts (harmonic, isomorphic layout and piano emulation)
+</code></pre>
+
+<p>  0.99.2</p>
 <pre><code>- Adapted to UIKey changes
 - New mapping: mod_wheel
 </code></pre>
 
-<p>  0.98 - First release </p>
+<p>  0.98.32</p>
+<pre><code>- TWEAK: velocity now is set to an explicit value, or synced to Renoise keyboard
+  velocity will output a fixed velocity (previously it was relative to messages)
+</code></pre>
+
+<p>  0.98.16</p>
+<pre><code>- Display message on how to enable OSC server (first time only)
+</code></pre>
+
+<p>  0.98.15</p>
+<pre><code>- New option: “Keyboard Mode”, choose which notes (if any) to trigger
+</code></pre>
+
+<p>  0.98 </p>
+<pre><code>- First release
+</code></pre>
+
+</p>
 
 
 <h2><a href="#Functions">Functions</a></h2>
@@ -161,12 +191,34 @@ The default setting is identical to the standard behaviour in Renoise, and simpl
 	<td class="summary">Constructor method</td>
 	</tr>
 	<tr>
-	<td class="name" nowrap><a href="#trigger">trigger (note_on, pitch, velocity, grid_index)</a></td>
-	<td class="summary">trigger notes using the internal voice manager (OSC server)</td>
+	<td class="name" nowrap><a href="#trigger">trigger (note_on, instr_idx, pitch, velocity, grid_index)</a></td>
+	<td class="summary">Trigger notes using the internal voice manager (OSC server)</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#inside_note_range">inside_note_range (pitch)</a></td>
-	<td class="summary">test whether a given pitch is inside the specified note-range</td>
+	<td class="summary">Test whether a given pitch is inside the specified note-range</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#get_nth_note">get_nth_note (idx)</a></td>
+	<td class="summary">Retrieve the number of semitones for the note in the current scale</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#restrict_pitch_to_scale">restrict_pitch_to_scale (pitch)</a></td>
+	<td class="summary">Restrict pitches to the ones allowed by the scale
+ (for example, when playing E in natural minor it becomes D#)</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#_maintain_held_notes">_maintain_held_notes (voice_count, instr_idx, grid_index, velocity)</a></td>
+	<td class="summary">Call this function immediately after triggering or releasing notes
+ it will keep a record of notes triggered with the "hold" option</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#voicemgr_callback">voicemgr_callback ()</a></td>
+	<td class="summary">Invoked by our voice manager</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#on_scale_change">on_scale_change ()</a></td>
+	<td class="summary">Rebuild &amp; retrigger (held) notes when changing the scale ...</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#send_midi">send_midi (msg)</a></td>
@@ -205,6 +257,10 @@ The default setting is identical to the standard behaviour in Renoise, and simpl
 	<td class="summary">called when application is first started</td>
 	</tr>
 	<tr>
+	<td class="name" nowrap><a href="#set_grid_layout">set_grid_layout (val)</a></td>
+	<td class="summary">set<em>grid</em>layout() - choose between available layout classes</td>
+	</tr>
+	<tr>
 	<td class="name" nowrap><a href="#set_octave">set_octave (val, skip_option)</a></td>
 	<td class="summary">set_octave() - sets the current octave</td>
 	</tr>
@@ -213,7 +269,7 @@ The default setting is identical to the standard behaviour in Renoise, and simpl
 	<td class="summary">switch to the selected track, optionally update options</td>
 	</tr>
 	<tr>
-	<td class="name" nowrap><a href="#set_instr">set_instr (val, skip_option)</a></td>
+	<td class="name" nowrap><a href="#set_instr">set_instr (instr_idx, skip_option)</a></td>
 	<td class="summary">switch to the selected instrument, optionally update options</td>
 	</tr>
 	<tr>
@@ -245,25 +301,30 @@ The default setting is identical to the standard behaviour in Renoise, and simpl
 	<td class="summary">update display of instrument controls</td>
 	</tr>
 	<tr>
+	<td class="name" nowrap><a href="#update_cycle_controls">update_cycle_controls ()</a></td>
+	<td class="summary">update display of layout cycler</td>
+	</tr>
+	<tr>
 	<td class="name" nowrap><a href="#update_volume_controls">update_volume_controls ()</a></td>
 	<td class="summary">update display of volume controls</td>
 	</tr>
 	<tr>
-	<td class="name" nowrap><a href="#visualize_sample_mappings">visualize_sample_mappings ()</a></td>
-	<td class="summary">visualize sample mappings in the grid
- called after switching octave, instrument</td>
+	<td class="name" nowrap><a href="#cache_grid">cache_grid ()</a></td>
+	<td class="summary">preprocess/cache the grid</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#get_instrument_index">get_instrument_index ()</a></td>
 	<td class="summary">obtain the current instrument
  this method should ALWAYS be able to produce an instrument
- (fall back on the currently selected instrument if none was matched)</td>
+ (fall back on the currently selected instrument if none was matched)
+ return int,bool</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#get_track_index">get_track_index ()</a></td>
 	<td class="summary">obtain the current track
  this method should ALWAYS be able to produce a valid track index
- (fall back on the currently selected track if none was matched)</td>
+ (fall back on the currently selected track if none was matched)
+ return int</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#on_new_document">on_new_document ()</a></td>
@@ -309,6 +370,14 @@ The default setting is identical to the standard behaviour in Renoise, and simpl
 	<td class="summary">instrument index</td>
 	</tr>
 	<tr>
+	<td class="name" nowrap><a href="#self.scale_mode">self.scale_mode</a></td>
+	<td class="summary">instrument scale</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#self.scale_key">self.scale_key</a></td>
+	<td class="summary">instrument scale</td>
+	</tr>
+	<tr>
 	<td class="name" nowrap><a href="#self.lower_note">self.lower_note</a></td>
 	<td class="summary">lower note</td>
 	</tr>
@@ -317,12 +386,32 @@ The default setting is identical to the standard behaviour in Renoise, and simpl
 	<td class="summary">upper note</td>
 	</tr>
 	<tr>
+	<td class="name" nowrap><a href="#self.grid_w">self.grid_w</a></td>
+	<td class="summary">grid width</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#self.grid_h">self.grid_h</a></td>
+	<td class="summary">grid height</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#self.voice_mgr">self.voice_mgr</a></td>
+	<td class="summary">voice manager</td>
+	</tr>
+	<tr>
 	<td class="name" nowrap><a href="#self._key_args">self._key_args</a></td>
 	<td class="summary">control-map parameters</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#self._instr_observables">self._instr_observables</a></td>
 	<td class="summary">instrument observables</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#self.held_notes">self.held_notes</a></td>
+	<td class="summary">table of currently playing, hold-mode triggered notes</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#self.pressed_buttons">self.pressed_buttons</a></td>
+	<td class="summary">table of pressed buttons</td>
 	</tr>
 </table>
 
@@ -358,16 +447,19 @@ The default setting is identical to the standard behaviour in Renoise, and simpl
 </dd>
     <dt>
     <a name = "trigger"></a>
-    <strong>trigger (note_on, pitch, velocity, grid_index)</strong>
+    <strong>trigger (note_on, instr_idx, pitch, velocity, grid_index)</strong>
     </dt>
     <dd>
-    trigger notes using the internal voice manager (OSC server)
+    Trigger notes using the internal voice manager (OSC server)
 
 
     <h3>Parameters:</h3>
     <ul>
         <li><span class="parameter">note_on</span>
-         (bool), whether to send trigger or release
+         (bool), whether to send note-on/off
+        </li>
+        <li><span class="parameter">instr_idx</span>
+         (int)
         </li>
         <li><span class="parameter">pitch</span>
          (int) 0-120
@@ -376,14 +468,16 @@ The default setting is identical to the standard behaviour in Renoise, and simpl
          (int) 0-127
         </li>
         <li><span class="parameter">grid_index</span>
-         (int), when using individual buttons as triggers
+         (bool), when triggered from grid (optional)
         </li>
     </ul>
 
     <h3>Returns:</h3>
     <ol>
-
-        true when originating control should update
+        <li>
+        true when note was triggered</li>
+        <li>
+        instr_idx the target instrument</li>
     </ol>
 
 
@@ -395,7 +489,7 @@ The default setting is identical to the standard behaviour in Renoise, and simpl
     <strong>inside_note_range (pitch)</strong>
     </dt>
     <dd>
-    test whether a given pitch is inside the specified note-range
+    Test whether a given pitch is inside the specified note-range
 
 
     <h3>Parameters:</h3>
@@ -404,6 +498,107 @@ The default setting is identical to the standard behaviour in Renoise, and simpl
          (int) note pitch
         </li>
     </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "get_nth_note"></a>
+    <strong>get_nth_note (idx)</strong>
+    </dt>
+    <dd>
+    Retrieve the number of semitones for the note in the current scale
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">idx</span>
+         (int)
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "restrict_pitch_to_scale"></a>
+    <strong>restrict_pitch_to_scale (pitch)</strong>
+    </dt>
+    <dd>
+    Restrict pitches to the ones allowed by the scale
+ (for example, when playing E in natural minor it becomes D#)
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">pitch</span>
+
+
+
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "_maintain_held_notes"></a>
+    <strong>_maintain_held_notes (voice_count, instr_idx, grid_index, velocity)</strong>
+    </dt>
+    <dd>
+    Call this function immediately after triggering or releasing notes
+ it will keep a record of notes triggered with the "hold" option
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">voice_count</span>
+         (int) the number of voices prior to the trigger/release
+        </li>
+        <li><span class="parameter">instr_idx</span>
+         (int)
+        </li>
+        <li><span class="parameter">grid_index</span>
+         (int, optional) remove only notes triggered by this button
+        </li>
+        <li><span class="parameter">velocity</span>
+         (int)
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "voicemgr_callback"></a>
+    <strong>voicemgr_callback ()</strong>
+    </dt>
+    <dd>
+    Invoked by our voice manager
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "on_scale_change"></a>
+    <strong>on_scale_change ()</strong>
+    </dt>
+    <dd>
+    Rebuild &amp; retrigger (held) notes when changing the scale ...
+
+
 
 
 
@@ -569,6 +764,31 @@ The default setting is identical to the standard behaviour in Renoise, and simpl
 
 </dd>
     <dt>
+    <a name = "set_grid_layout"></a>
+    <strong>set_grid_layout (val)</strong>
+    </dt>
+    <dd>
+    set<em>grid</em>layout() - choose between available layout classes
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">val</span>
+         (int), the index of the layout (as listed in options)
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        bool, false when initialization of class failed
+    </ol>
+
+
+
+
+</dd>
+    <dt>
     <a name = "set_octave"></a>
     <strong>set_octave (val, skip_option)</strong>
     </dt>
@@ -616,7 +836,7 @@ The default setting is identical to the standard behaviour in Renoise, and simpl
 </dd>
     <dt>
     <a name = "set_instr"></a>
-    <strong>set_instr (val, skip_option)</strong>
+    <strong>set_instr (instr_idx, skip_option)</strong>
     </dt>
     <dd>
     switch to the selected instrument, optionally update options
@@ -624,8 +844,8 @@ The default setting is identical to the standard behaviour in Renoise, and simpl
 
     <h3>Parameters:</h3>
     <ul>
-        <li><span class="parameter">val</span>
-         (int), track index
+        <li><span class="parameter">instr_idx</span>
+         (int)
         </li>
         <li><span class="parameter">skip_option</span>
          (bool) set this to skip setting option
@@ -757,6 +977,20 @@ The default setting is identical to the standard behaviour in Renoise, and simpl
 
 </dd>
     <dt>
+    <a name = "update_cycle_controls"></a>
+    <strong>update_cycle_controls ()</strong>
+    </dt>
+    <dd>
+    update display of layout cycler
+
+
+
+
+
+
+
+</dd>
+    <dt>
     <a name = "update_volume_controls"></a>
     <strong>update_volume_controls ()</strong>
     </dt>
@@ -771,17 +1005,20 @@ The default setting is identical to the standard behaviour in Renoise, and simpl
 
 </dd>
     <dt>
-    <a name = "visualize_sample_mappings"></a>
-    <strong>visualize_sample_mappings ()</strong>
+    <a name = "cache_grid"></a>
+    <strong>cache_grid ()</strong>
     </dt>
     <dd>
-    visualize sample mappings in the grid
- called after switching octave, instrument
+    preprocess/cache the grid
 
 
 
 
 
+    <h3>See also:</h3>
+    <ul>
+         <a href="../modules/Duplex.Applications.Keyboard.GridLayout.html#">Duplex.Applications.Keyboard.GridLayout</a>
+    </ul>
 
 
 </dd>
@@ -793,6 +1030,7 @@ The default setting is identical to the standard behaviour in Renoise, and simpl
     obtain the current instrument
  this method should ALWAYS be able to produce an instrument
  (fall back on the currently selected instrument if none was matched)
+ return int,bool
 
 
 
@@ -809,6 +1047,7 @@ The default setting is identical to the standard behaviour in Renoise, and simpl
     obtain the current track
  this method should ALWAYS be able to produce a valid track index
  (fall back on the currently selected track if none was matched)
+ return int
 
 
 
@@ -965,6 +1204,34 @@ The default setting is identical to the standard behaviour in Renoise, and simpl
 
 </dd>
     <dt>
+    <a name = "self.scale_mode"></a>
+    <strong>self.scale_mode</strong>
+    </dt>
+    <dd>
+    instrument scale
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "self.scale_key"></a>
+    <strong>self.scale_key</strong>
+    </dt>
+    <dd>
+    instrument scale
+
+
+
+
+
+
+
+</dd>
+    <dt>
     <a name = "self.lower_note"></a>
     <strong>self.lower_note</strong>
     </dt>
@@ -993,6 +1260,48 @@ The default setting is identical to the standard behaviour in Renoise, and simpl
 
 </dd>
     <dt>
+    <a name = "self.grid_w"></a>
+    <strong>self.grid_w</strong>
+    </dt>
+    <dd>
+    grid width
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "self.grid_h"></a>
+    <strong>self.grid_h</strong>
+    </dt>
+    <dd>
+    grid height
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "self.voice_mgr"></a>
+    <strong>self.voice_mgr</strong>
+    </dt>
+    <dd>
+    voice manager
+
+
+
+
+
+
+
+</dd>
+    <dt>
     <a name = "self._key_args"></a>
     <strong>self._key_args</strong>
     </dt>
@@ -1012,6 +1321,34 @@ The default setting is identical to the standard behaviour in Renoise, and simpl
     </dt>
     <dd>
     instrument observables
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "self.held_notes"></a>
+    <strong>self.held_notes</strong>
+    </dt>
+    <dd>
+    table of currently playing, hold-mode triggered notes
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "self.pressed_buttons"></a>
+    <strong>self.pressed_buttons</strong>
+    </dt>
+    <dd>
+    table of pressed buttons
 
 
 

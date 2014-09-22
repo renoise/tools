@@ -167,7 +167,7 @@ Transport.default_palette = {
   loop_block_off = {    color = {0x00,0x00,0x00}, text = "═", val = false,},
   loop_block_on = {     color = {0xff,0xff,0xff}, text = "═", val = true  },
   loop_pattern_off = {  color = {0x00,0x00,0x00}, text = "∞", val = false,},
-  loop_pattern_on = {   color = {0x80,0xD0,0x40}, text = "∞", val = true  },
+  loop_pattern_on = {   color = {0x80,0xff,0x40}, text = "∞", val = true  },
   metronome_off = {     color = {0x00,0x00,0x00}, text = "∆", val = false,},
   metronome_on = {      color = {0x80,0x80,0x80}, text = "∆", val = true, },
   next_patt_dimmed = {  color = {0x80,0x80,0x80}, text = "►|",val = false,},

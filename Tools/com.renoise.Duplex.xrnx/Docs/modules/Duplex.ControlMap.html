@@ -43,6 +43,11 @@
   <li><a href="../modules/Duplex.Applications.Effect.html">Duplex.Applications.Effect</a></li>
   <li><a href="../modules/Duplex.Applications.GridPie.html">Duplex.Applications.GridPie</a></li>
   <li><a href="../modules/Duplex.Applications.Hydra.html">Duplex.Applications.Hydra</a></li>
+  <li><a href="../modules/Duplex.Applications.Instrument.html">Duplex.Applications.Instrument</a></li>
+  <li><a href="../modules/Duplex.Applications.Keyboard.GridLayout.html">Duplex.Applications.Keyboard.GridLayout</a></li>
+  <li><a href="../modules/Duplex.Applications.Keyboard.Layouts.HarmonicLayout.html">Duplex.Applications.Keyboard.Layouts.HarmonicLayout</a></li>
+  <li><a href="../modules/Duplex.Applications.Keyboard.Layouts.IsomorphicLayout.html">Duplex.Applications.Keyboard.Layouts.IsomorphicLayout</a></li>
+  <li><a href="../modules/Duplex.Applications.Keyboard.Layouts.PianoLayout.html">Duplex.Applications.Keyboard.Layouts.PianoLayout</a></li>
   <li><a href="../modules/Duplex.Applications.Keyboard.html">Duplex.Applications.Keyboard</a></li>
   <li><a href="../modules/Duplex.Applications.Matrix.html">Duplex.Applications.Matrix</a></li>
   <li><a href="../modules/Duplex.Applications.Metronome.html">Duplex.Applications.Metronome</a></li>
@@ -66,6 +71,7 @@
   <li><a href="../modules/Duplex.Applications.TestPad.html">Duplex.Applications.TestPad</a></li>
   <li><a href="../modules/Duplex.Applications.TrackSelector.html">Duplex.Applications.TrackSelector</a></li>
   <li><a href="../modules/Duplex.Applications.Transport.html">Duplex.Applications.Transport</a></li>
+  <li><a href="../modules/Duplex.Applications.UIButtonTest.html">Duplex.Applications.UIButtonTest</a></li>
   <li><a href="../modules/Duplex.Applications.XYPad.html">Duplex.Applications.XYPad</a></li>
   <li><a href="../modules/Duplex.Automation.html">Duplex.Automation</a></li>
   <li><a href="../modules/Duplex.Browser.html">Duplex.Browser</a></li>
@@ -209,6 +215,69 @@
     <li><code>value</code> - (string) the pattern that we match messages against, e.g. "C#4|Ch2" (if not specified, will use parent node)</li>
     <li><code>field</code> - (string) what aspect of the parent parameters' value that is being stored (e.g. "x" for xypad x axis)</li>
 </ul>
+
+<h3>Changes</h3>
+
+<p>  0.99.3</p>
+<pre><code>- &lt;Param @match&gt; (new), match a specific (CC) value
+- &lt;Param @match_from, @match_to&gt; (new), match a (CC) value-range
+- &lt;Param @mode&gt; (new), explicitly state the value resolution (e.g. 7 or 14 bit)
+- &lt;Param @class&gt; (new), interpret parameter in the context of a specific device class
+</code></pre>
+
+<p>  0.99.2</p>
+<pre><code>- Faster, more flexible parameter matching
+  - all messages are processed on startup, cached/memoized where possible
+  - OSC patterns now support "captures", see get_osc_params() for more info
+  - get_osc_params(): when using wildcards, returns table of regexp-matches
+- &lt;Param @invert&gt; (new), allows inverting the value (flip min/max)
+- &lt;Param @soft_echo&gt; (new) update device only when changed via virtual UI
+- &lt;Param @font&gt; (new), specify the font type - relevant for @type=labels only
+- &lt;Param @velocity_enabled&gt; attribute has been retired
+- &lt;Param @is_virtual&gt; attribute has been retired, just enter a blank @value
+- &lt;Param @type="key"&gt; widget type has been retired (use @type="button")
+- &lt;SubParam&gt; new node type for combining several parameters into one
+  (finally, we can have a "proper" xypad control for MIDI devices)
+- &lt;Group @visible&gt; (new), set to false to hide the entire group
+</code></pre>
+
+<p>  0.99.1 </p>
+<pre><code>- TWEAK No more need to explicitly state "is_virtual" for parameters that only
+  exist in the virtual UI - just leave the value attribute blank
+</code></pre>
+
+<p>  0.98.14</p>
+<pre><code>- cache parameters
+   o Faster retrieval of MIDI parameters (put in cache once requested)
+- New input method “xypad”, for creating XYPad controls in the
+  virtual control surface (paired-value support, however only OSC devices can
+  define this input method)
+- new input method: “key” - for accepting note-input from
+  individual buttons/pads (Note: OBSOLETE)
+- Control-map/virtual control surface: “keyboard” - a new input method for
+  representing a keyboard (the control surface will draw a series of keys)
+   o In the control-map, you can specify it’s range (number of keys)
+- Control-map/XML parsing:
+   o Attribute names can now contain underscore
+- Control-map/note value syntax: octave wildcard - you can now put an asterisk
+  in place of the octave to make mapping respond to the note only (e.g. “C-*”).
+  Used in the Midi-keyboard Grid Pie configuration to make navigation buttons
+  appear across all the black keys
+</code></pre>
+
+<p>  0.95</p>
+<pre><code>- New button type: pushbutton (like togglebutton, has internal state control)
+  - UISlider, UIToggleButton made compatible with pushbutton (special case)
+  - We can now emulate sliders on the TouchOSC template (page 2)
+  - Nocturn and Remote will now be able to support hold/release events
+- "name" attribute now optional (excluded from validation)
+- "size" attribute now also applied to dials (see MPD24/32)
+- Streamlined methods for detecting group size, grid mode
+</code></pre>
+
+<p>  0.9</p>
+<pre><code>- First release
+</code></pre>
 
 </p>
 

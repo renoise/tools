@@ -35,6 +35,11 @@
   <li><a href="modules/Duplex.Applications.Effect.html">Duplex.Applications.Effect</a></li>
   <li><a href="modules/Duplex.Applications.GridPie.html">Duplex.Applications.GridPie</a></li>
   <li><a href="modules/Duplex.Applications.Hydra.html">Duplex.Applications.Hydra</a></li>
+  <li><a href="modules/Duplex.Applications.Instrument.html">Duplex.Applications.Instrument</a></li>
+  <li><a href="modules/Duplex.Applications.Keyboard.GridLayout.html">Duplex.Applications.Keyboard.GridLayout</a></li>
+  <li><a href="modules/Duplex.Applications.Keyboard.Layouts.HarmonicLayout.html">Duplex.Applications.Keyboard.Layouts.HarmonicLayout</a></li>
+  <li><a href="modules/Duplex.Applications.Keyboard.Layouts.IsomorphicLayout.html">Duplex.Applications.Keyboard.Layouts.IsomorphicLayout</a></li>
+  <li><a href="modules/Duplex.Applications.Keyboard.Layouts.PianoLayout.html">Duplex.Applications.Keyboard.Layouts.PianoLayout</a></li>
   <li><a href="modules/Duplex.Applications.Keyboard.html">Duplex.Applications.Keyboard</a></li>
   <li><a href="modules/Duplex.Applications.Matrix.html">Duplex.Applications.Matrix</a></li>
   <li><a href="modules/Duplex.Applications.Metronome.html">Duplex.Applications.Metronome</a></li>
@@ -58,6 +63,7 @@
   <li><a href="modules/Duplex.Applications.TestPad.html">Duplex.Applications.TestPad</a></li>
   <li><a href="modules/Duplex.Applications.TrackSelector.html">Duplex.Applications.TrackSelector</a></li>
   <li><a href="modules/Duplex.Applications.Transport.html">Duplex.Applications.Transport</a></li>
+  <li><a href="modules/Duplex.Applications.UIButtonTest.html">Duplex.Applications.UIButtonTest</a></li>
   <li><a href="modules/Duplex.Applications.XYPad.html">Duplex.Applications.XYPad</a></li>
   <li><a href="modules/Duplex.Automation.html">Duplex.Automation</a></li>
   <li><a href="modules/Duplex.Browser.html">Duplex.Browser</a></li>
@@ -120,6 +126,26 @@
 	<tr>
 		<td class="name"  nowrap><a href="modules/Duplex.Applications.Hydra.html">Duplex.Applications.Hydra</a></td>
 		<td class="summary">Control any Hydra device in the current song.</td>
+	</tr>
+	<tr>
+		<td class="name"  nowrap><a href="modules/Duplex.Applications.Instrument.html">Duplex.Applications.Instrument</a></td>
+		<td class="summary">Take control of the Renoise Instrument (tutorial).</td>
+	</tr>
+	<tr>
+		<td class="name"  nowrap><a href="modules/Duplex.Applications.Keyboard.GridLayout.html">Duplex.Applications.Keyboard.GridLayout</a></td>
+		<td class="summary">Custom grid layouts for the Keyboard application.</td>
+	</tr>
+	<tr>
+		<td class="name"  nowrap><a href="modules/Duplex.Applications.Keyboard.Layouts.HarmonicLayout.html">Duplex.Applications.Keyboard.Layouts.HarmonicLayout</a></td>
+		<td class="summary">Harmonic layout for the Keyboard application.</td>
+	</tr>
+	<tr>
+		<td class="name"  nowrap><a href="modules/Duplex.Applications.Keyboard.Layouts.IsomorphicLayout.html">Duplex.Applications.Keyboard.Layouts.IsomorphicLayout</a></td>
+		<td class="summary">Isomorphic layout for the Keyboard application.</td>
+	</tr>
+	<tr>
+		<td class="name"  nowrap><a href="modules/Duplex.Applications.Keyboard.Layouts.PianoLayout.html">Duplex.Applications.Keyboard.Layouts.PianoLayout</a></td>
+		<td class="summary">Piano-style layout for the Keyboard application.</td>
 	</tr>
 	<tr>
 		<td class="name"  nowrap><a href="modules/Duplex.Applications.Keyboard.html">Duplex.Applications.Keyboard</a></td>
@@ -185,10 +211,7 @@
 	</tr>
 	<tr>
 		<td class="name"  nowrap><a href="modules/Duplex.Applications.Recorder.html">Duplex.Applications.Recorder</a></td>
-		<td class="summary">
-<hr/>
-<p>Record and loop any signal that you feed into Renoise, be that your voice, a guitar etc.</p>
-</td>
+		<td class="summary">Record and loop any signal that you feed into Renoise, be that your voice, a guitar etc.</td>
 	</tr>
 	<tr>
 		<td class="name"  nowrap><a href="modules/Duplex.Applications.Repeater.html">Duplex.Applications.Repeater</a></td>
@@ -217,6 +240,10 @@
 	<tr>
 		<td class="name"  nowrap><a href="modules/Duplex.Applications.Transport.html">Duplex.Applications.Transport</a></td>
 		<td class="summary">The Transport application offers transport controls for Renoise.</td>
+	</tr>
+	<tr>
+		<td class="name"  nowrap><a href="modules/Duplex.Applications.UIButtonTest.html">Duplex.Applications.UIButtonTest</a></td>
+		<td class="summary">Constructor method</td>
 	</tr>
 	<tr>
 		<td class="name"  nowrap><a href="modules/Duplex.Applications.XYPad.html">Duplex.Applications.XYPad</a></td>
@@ -285,7 +312,7 @@
 	</tr>
 	<tr>
 		<td class="name"  nowrap><a href="modules/Duplex.OscDevice.html">Duplex.OscDevice</a></td>
-		<td class="summary">A generic OSC device class, providing the ability to send and receive OSC</td>
+		<td class="summary">A generic OSC device class, providing the ability to send and receive OSC.</td>
 	</tr>
 	<tr>
 		<td class="name"  nowrap><a href="modules/Duplex.OscVoiceMgr.html">Duplex.OscVoiceMgr</a></td>
@@ -353,12 +380,7 @@ especially useful for controlling a sequence with an a looped region.</td>
 	</tr>
 	<tr>
 		<td class="name"  nowrap><a href="modules/Duplex.UISlider.html">Duplex.UISlider</a></td>
-		<td class="summary">The Slider supports different input methods: buttons or faders/dials</p>
-
-
-<h3>Dial mode / fader mode</h3>
-
-<p>  In most cases, you would specify a UISlider to take control of either a dial/encoder or fader.</td>
+		<td class="summary">The Slider supports different input methods: buttons or faders/dials.</td>
 	</tr>
 	<tr>
 		<td class="name"  nowrap><a href="modules/Duplex.UISpinner.html">Duplex.UISpinner</a></td>

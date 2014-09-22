@@ -18,6 +18,14 @@ Inheritance: @{Duplex.Application} > Duplex.Application.Effect
 
 ### Changes
 
+  0.98.27
+    - New mapping: “device_name” (UILabel)
+    - New mappings: “param_names”,”param_values” (UILabels for parameters)
+    - New mappings: “param_next”,”param_next” (UIButtons, replaces UISpinner)
+
+  0.98.19
+    - Fixed: device-navigator now works after switching song/document
+
   0.98  
     - Support for automation recording
     - New mapping: select device via knob/slider

@@ -6,6 +6,13 @@
 --[[--
 UIPitchBend is able to receive pitch bend messages from MIDI devices
 
+
+### Changes
+
+  0.98
+    - First release
+
+
 --]]
 
 --==============================================================================

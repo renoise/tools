@@ -4,7 +4,29 @@
 ============================================================================]]--
 
 --[[--
-A generic OSC device class, providing the ability to send and receive OSC
+A generic OSC device class, providing the ability to send and receive OSC.
+
+
+### Changes
+
+  0.99.3
+    - Ability to dump OSC message to console (just like MIDI messages)
+    - Feedback prevention: optionally block messages that appear to be echoed back
+
+  0.99.2
+    - strip non-ascii character from text before sending
+    - "pattern captures" - reconstruct when sending outgoing OSC message
+
+  0.98.27
+    - support text values
+
+  0.98.14  
+    - optional, per-device message bundling (for example, TouchOSC)
+      ..no more lost messages on wireless devices?
+
+  0.9
+    - First release
+
 
 --]]
 
@@ -198,7 +220,6 @@ function OscDevice:receive_osc_message(value_str)
 
   -- retrieve the relevant control-map parameter(s)
   local params = self.control_map:get_osc_params(value_str)
-
   --print("*** OscDevice.receive_osc_message - value_str,#params",value_str,#params)
 
   for k,v in ipairs(params) do
