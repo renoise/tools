@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<RenoiseScriptingTool doc_version="0">
+  <Name>Noodletrap</Name>
+  <Id>com.renoise.Noodletrap</Id>
+  <Version>0.9</Version>
+  <ApiVersion>4</ApiVersion>
+  <Author>danoise (bjorn@renoise.com)</Author>
+  <AutoUpgraded>false</AutoUpgraded>
+  <Category>Recording</Category>
+  <Description>Noodletrap will allow you to record notes (a.k.a. 'noodlings') as you play them, while entirely bypassing the recording process in Renoise. Launch from the tool menu, or by using the supplied shortcuts</Description>
+  <Homepage/>
+  <Platform/>
+  <Icon/>
+</RenoiseScriptingTool>
