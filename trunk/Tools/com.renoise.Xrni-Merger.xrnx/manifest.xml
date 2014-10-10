@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<RenoiseScriptingTool doc_version="0">
+  <Name>XRNI-Merger</Name>
+  <Id>com.renoise.Xrni-Merger</Id>
+  <Version>0.9</Version>
+  <ApiVersion>4</ApiVersion>
+  <Author>danoise (bjorn@renoise.com)</Author>
+  <AutoUpgraded>false</AutoUpgraded>
+  <Category>Instrument Management</Category>
+  <Description>This tool will allow merging resources from two instruments. Invoke the tool by right-clicking an instrument, or by selecting it from the tools menu</Description>
+  <Homepage/>
+  <Platform/>
+  <Icon/>
+</RenoiseScriptingTool>
