@@ -14,7 +14,7 @@ require "classes/ProcessSlicer"
 --------------------------------------------------------------------------------
 
 TRACE = function(...)
-  print(...)
+  --print(...)
 end
 
 LOG = function(...)
