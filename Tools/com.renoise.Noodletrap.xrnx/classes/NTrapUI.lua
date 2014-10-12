@@ -18,12 +18,10 @@ local DIALOG_W = 405
 local LEFT_COL_W = 66     -- left side
 local MIDDLE_W = 180      -- middle (dropdowns)
 local RIGHT_W = 80        -- right side
-local RIGHT_COL_W = 320 --266   -- full minus left
+local RIGHT_COL_W = 320   -- full minus left
 local CONTENT_W = 390     -- full width
 local OPTION_H = 100
 
---local COLOR_PHRASE_NORMAL   = {0X6A,0X63,0X23}  -- dark yellow
---local COLOR_PHRASE_NORMAL   = {0x25,0x41,0x17} -- dark green
 local COLOR_PHRASE_NORMAL     = {0x41,0x72,0x29}
 local COLOR_PHRASE_SELECTED   = {0XFF,0XEA,0X15}
 local COLOR_PHRASE_DIMMED     = {0xA1,0xB2,0x20}
@@ -149,7 +147,9 @@ function NTrapUI:show()
 
           -- (1) cancel recording or (2) toggle edit mode
           if (key.name == "esc") then
-            if self._ntrap._record_armed then
+            if self._ntrap._record_armed or
+              self._ntrap._recording
+            then
               self._ntrap:cancel_recording()
             else
               renoise.song().transport.edit_mode = not renoise.song().transport.edit_mode
@@ -885,6 +885,7 @@ function NTrapUI:_build_record_buttons()
           id = "ntrap_record_button",
           text = "",
           tooltip = "Prepare or Stop recording\n[Return or Esc]",
+          midi_mapping = "Global:Tools:Noodletrap:Prepare/Record",
           width = 50,
           height = 35,
           notifier = function()
@@ -895,13 +896,13 @@ function NTrapUI:_build_record_buttons()
           id = "ntrap_split_button",
           text = "Split",
           tooltip = "Split recording\n[Return or Esc]",
+          midi_mapping = "Global:Tools:Noodletrap:Split Recording",
           width = 50,
           height = 35,
           notifier = function()
             if self._ntrap._recording then
               if (self._ntrap._settings.split_recording.value == NTrapPrefs.SPLIT_MANUAL) then
                 self._ntrap._split_requested_at = os.clock()
-                --self._ntrap:split_recording()
               end
             end
           end
@@ -923,6 +924,7 @@ function NTrapUI:_build_record_buttons()
       },
       vb:button {
         id = "ntrap_cancel_button",
+        midi_mapping = "Global:Tools:Noodletrap:Cancel Recording",
         text = "",
         width = 50,
         height = 35,
@@ -1376,7 +1378,14 @@ function NTrapUI:update_phrase_bar()
     local notifier = (v.phrase_idx) and function()
       local sel_instr_idx = renoise.song().selected_instrument_index
       if (self._ntrap._instr_idx == sel_instr_idx) then
-        renoise.song().selected_phrase_index = v.phrase_idx
+        -- check if phrase is still present (another instrument
+        -- might have been loaded, phrase becoming invalid...)
+        local instr = renoise.song().instruments[sel_instr_idx]
+        if (instr and instr.phrases[v.phrase_idx]) then
+          renoise.song().selected_phrase_index = v.phrase_idx
+        else
+          self:update_phrase_bar()
+        end
       else
         self._ntrap:_attach_to_phrase(false,v.phrase_idx)
       end
@@ -1564,25 +1573,22 @@ end
 --- Show the phrase editor UI
 
 function NTrapUI:_toggle_phrase_editor()
+  TRACE("NTrapUI:_toggle_phrase_editor()")
 
   local instr = self._ntrap:_get_instrument()
   if not renoise.app().window.instrument_editor_is_detached then
-    print("got here 1")
     if instr.phrase_editor_visible and self._middle_frame then
-      print("got here 2")
       -- show normal/previous middle frame
       renoise.app().window.active_middle_frame = self._middle_frame
       self._middle_frame = nil
       instr.phrase_editor_visible = false
     else
-      print("got here 3")
       self._middle_frame = renoise.app().window.active_middle_frame
       renoise.app().window.active_middle_frame = 
         renoise.ApplicationWindow.MIDDLE_FRAME_INSTRUMENT_SAMPLE_OVERVIEW
       instr.phrase_editor_visible = true
     end
   else
-    print("got here 4")
     instr.phrase_editor_visible = true
   end
   

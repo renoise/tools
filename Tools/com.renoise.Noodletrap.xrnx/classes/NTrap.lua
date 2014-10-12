@@ -105,6 +105,44 @@ function NTrap:__init()
   -- (ProcessSlicer) for dealing with CPU intensive tasks
   self.process_slicer = nil
 
+
+  -- Provide MIDI mappings
+
+  renoise.tool():add_midi_mapping({
+    name = "Global:Tools:Noodletrap:Prepare/Record",
+    invoke = function(msg)
+      if msg:is_trigger() then
+        self:toggle_recording()
+      end
+    end
+  })
+
+  renoise.tool():add_midi_mapping({
+    name = "Global:Tools:Noodletrap:Split Recording",
+    invoke = function(msg)
+      if msg:is_trigger() then
+        if self._recording then
+          if (self._settings.split_recording.value == NTrapPrefs.SPLIT_MANUAL) then
+            self._split_requested_at = os.clock()
+          end
+        end
+      end
+    end
+  })
+
+  renoise.tool():add_midi_mapping({
+    name = "Global:Tools:Noodletrap:Cancel Recording",
+    invoke = function(msg)
+      if msg:is_trigger() then
+        if self._recording or 
+          self._record_armed 
+        then
+          self:cancel_recording()
+        end
+      end
+    end
+  })
+
 end
 
 --==============================================================================
@@ -165,7 +203,8 @@ function NTrap:begin_recording()
       os.clock(),(bps*beat_fract)))
   else
     self._recording_begin = os.clock()
-    LOG("Beginning recording at %.4f",os.clock())
+    LOG(string.format(
+      "Beginning recording at %.4f",os.clock()))
   end
 
   self._recording_begin_patt_idx = renoise.song().selected_pattern_index
@@ -184,7 +223,14 @@ end
 function NTrap:split_recording()
   TRACE("NTrap:split_recording()")
 
-  LOG("Split recording at %d",self._split_requested_at)
+  if not self._recording or 
+     not self._split_requested_at 
+  then
+    return
+  end
+
+  LOG(string.format(
+    "Split recording at %d",self._split_requested_at))
 
   self._recording_stop = self._split_requested_at
 
@@ -216,7 +262,7 @@ end
 
 --------------------------------------------------------------------------------
 
---- Handle events triggered by the prepare/record button, or keyboard
+--- Handle events triggered by the user
 -- (might prepare a recording or stop the current one)
 
 function NTrap:toggle_recording()
@@ -256,6 +302,12 @@ function NTrap:stop_recording()
 
   LOG(string.format(
     "Recording was stopped at %.4f",os.clock()))
+
+  if (self._settings.start_recording.value == NTrapPrefs.START_NOTE) and
+    (self._settings.stop_recording.value == NTrapPrefs.STOP_NOTE)
+  then
+    self:prepare_recording()
+  end
 
 end
 
@@ -730,6 +782,12 @@ function NTrap:_attach_to_phrase(new_song,phrase_idx)
   local instr = self:_get_instrument()
   local phrase = instr.phrases[phrase_idx]
 
+  if not phrase then
+    self._phrase_idx = nil
+    self._update_requested = true
+    return
+  end
+
   self._phrase_notifiers:insert(phrase.mapping.key_tracking_observable)
   phrase.mapping.key_tracking_observable:add_notifier(self,
     function()
@@ -1108,7 +1166,7 @@ function NTrap:_get_virtual_phrase()
 
   end
   if not stop_at then
-    stop_at = begin_at + range
+    stop_at = begin_at + range - 1
   end
 
   if (stop_at-begin_at < range) then
