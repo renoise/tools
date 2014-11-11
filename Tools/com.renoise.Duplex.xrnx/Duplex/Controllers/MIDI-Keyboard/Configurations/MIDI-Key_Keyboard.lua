@@ -25,7 +25,11 @@ duplex_configurations:insert {
           group_name = "Keyboard",
         },
         pitch_bend = {
-          group_name = "MOD",
+          group_name = "PB",
+          index = 1,
+        },
+        mod_wheel = {
+          group_name = "MW",
           index = 1,
         },
         pressure = {
@@ -35,6 +39,7 @@ duplex_configurations:insert {
       },
       options = {
         pitch_bend = 2, -- broadcast as MIDI
+        mod_wheel = 2, -- broadcast as MIDI
         channel_pressure = 2, -- broadcast as MIDI
       },
       hidden_options = {

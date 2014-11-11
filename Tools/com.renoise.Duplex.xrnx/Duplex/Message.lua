@@ -41,13 +41,13 @@ function Message:__init(device)
   --- (bool) true when triggered from the virtual control surface
   self.is_virtual = false
 
-  --- (table) the MIDI message payload (3 bytes)
-  -- this is either a copy of the message we received from a MIDI controller,
+  --- (table) the MIDI message payload (each entry a table of 3 bytes)
+  -- this is either a copy of the message(s) we received from a MIDI controller,
   -- or a value being constructed by the virtual control surface
-  self.midi_msg = nil
+  self.midi_msgs = nil
 
   --- (number) set by os.clock() 
-  self.timestamp = nil 
+  self.timestamp = os.clock()  
 
   -- (bool) true once the button is held for a while
   self.held_event_fired = false

@@ -7,14 +7,14 @@ Select factory preset #1 on the BCR for this configuration</Description>
     <Page>
       <Column>
         <Group name="Encoders1" orientation="horizontal" columns="8">
-          <Param value="CC#1|Ch1" type="dial" name="Dial #1/1"  maximum="127" minimum="0"/>
-          <Param value="CC#2|Ch1" type="dial" name="Dial #1/2"  maximum="127" minimum="0"/>
-          <Param value="CC#3|Ch1" type="dial" name="Dial #1/3"  maximum="127" minimum="0"/>
-          <Param value="CC#4|Ch1" type="dial" name="Dial #1/4"  maximum="127" minimum="0"/>
-          <Param value="CC#5|Ch1" type="dial" name="Dial #1/5"  maximum="127" minimum="0"/>
-          <Param value="CC#6|Ch1" type="dial" name="Dial #1/6"  maximum="127" minimum="0"/>
-          <Param value="CC#7|Ch1" type="dial" name="Dial #1/7"  maximum="127" minimum="0"/>
-          <Param value="CC#8|Ch1" type="dial" name="Dial #1/8"  maximum="127" minimum="0"/>
+          <Param value="CC#1|Ch1" type="dial" soft_echo="true" name="Dial #1/1"  maximum="127" minimum="0"/>
+          <Param value="CC#2|Ch1" type="dial" soft_echo="true" name="Dial #1/2"  maximum="127" minimum="0"/>
+          <Param value="CC#3|Ch1" type="dial" soft_echo="true" name="Dial #1/3"  maximum="127" minimum="0"/>
+          <Param value="CC#4|Ch1" type="dial" soft_echo="true" name="Dial #1/4"  maximum="127" minimum="0"/>
+          <Param value="CC#5|Ch1" type="dial" soft_echo="true" name="Dial #1/5"  maximum="127" minimum="0"/>
+          <Param value="CC#6|Ch1" type="dial" soft_echo="true" name="Dial #1/6"  maximum="127" minimum="0"/>
+          <Param value="CC#7|Ch1" type="dial" soft_echo="true" name="Dial #1/7"  maximum="127" minimum="0"/>
+          <Param value="CC#8|Ch1" type="dial" soft_echo="true" name="Dial #1/8"  maximum="127" minimum="0"/>
         </Group>
         <Group name="DialPush1" orientation="horizontal" columns="8">  
           <Param value="CC#33|Ch1" type="togglebutton" name="Dial #1/1 PushButton" aspect="0.5"  maximum="127" minimum="0"/>
@@ -27,14 +27,14 @@ Select factory preset #1 on the BCR for this configuration</Description>
           <Param value="CC#40|Ch1" type="togglebutton" name="Dial #1/8 PushButton" aspect="0.5"  maximum="127" minimum="0"/>
         </Group>
         <Group name="Encoders2" orientation="horizontal" columns="8">
-          <Param value="CC#9|Ch1" type="dial" name="Dial #2/1"  maximum="127" minimum="0"/>
-          <Param value="CC#10|Ch1" type="dial" name="Dial #2/2"  maximum="127" minimum="0"/>
-          <Param value="CC#11|Ch1" type="dial" name="Dial #2/3"  maximum="127" minimum="0"/>
-          <Param value="CC#12|Ch1" type="dial" name="Dial #2/4"  maximum="127" minimum="0"/>
-          <Param value="CC#13|Ch1" type="dial" name="Dial #2/5"  maximum="127" minimum="0"/>
-          <Param value="CC#14|Ch1" type="dial" name="Dial #2/6"  maximum="127" minimum="0"/>
-          <Param value="CC#15|Ch1" type="dial" name="Dial #2/7"  maximum="127" minimum="0"/>
-          <Param value="CC#16|Ch1" type="dial" name="Dial #2/8"  maximum="127" minimum="0"/>
+          <Param value="CC#9|Ch1" type="dial" soft_echo="true" name="Dial #2/1"  maximum="127" minimum="0"/>
+          <Param value="CC#10|Ch1" type="dial" soft_echo="true" name="Dial #2/2"  maximum="127" minimum="0"/>
+          <Param value="CC#11|Ch1" type="dial" soft_echo="true" name="Dial #2/3"  maximum="127" minimum="0"/>
+          <Param value="CC#12|Ch1" type="dial" soft_echo="true" name="Dial #2/4"  maximum="127" minimum="0"/>
+          <Param value="CC#13|Ch1" type="dial" soft_echo="true" name="Dial #2/5"  maximum="127" minimum="0"/>
+          <Param value="CC#14|Ch1" type="dial" soft_echo="true" name="Dial #2/6"  maximum="127" minimum="0"/>
+          <Param value="CC#15|Ch1" type="dial" soft_echo="true" name="Dial #2/7"  maximum="127" minimum="0"/>
+          <Param value="CC#16|Ch1" type="dial" soft_echo="true" name="Dial #2/8"  maximum="127" minimum="0"/>
         </Group>
         <Group name="DialPush2" orientation="horizontal" columns="8">  
           <Param value="CC#41|Ch1" type="togglebutton" name="Dial #2/1 PushButton" aspect="0.5"  maximum="127" minimum="0"/>
@@ -47,14 +47,14 @@ Select factory preset #1 on the BCR for this configuration</Description>
           <Param value="CC#48|Ch1" type="togglebutton" name="Dial #2/8 PushButton" aspect="0.5"  maximum="127" minimum="0"/>
         </Group>
         <Group name="Encoders3" orientation="horizontal" columns="8">
-          <Param value="CC#17|Ch1" type="dial" name="Dial #3/1"  maximum="127" minimum="0"/>
-          <Param value="CC#18|Ch1" type="dial" name="Dial #3/2"  maximum="127" minimum="0"/>
-          <Param value="CC#19|Ch1" type="dial" name="Dial #3/3"  maximum="127" minimum="0"/>
-          <Param value="CC#20|Ch1" type="dial" name="Dial #3/4"  maximum="127" minimum="0"/>
-          <Param value="CC#21|Ch1" type="dial" name="Dial #3/5"  maximum="127" minimum="0"/>
-          <Param value="CC#22|Ch1" type="dial" name="Dial #3/6"  maximum="127" minimum="0"/>
-          <Param value="CC#23|Ch1" type="dial" name="Dial #3/7"  maximum="127" minimum="0"/>
-          <Param value="CC#24|Ch1" type="dial" name="Dial #3/8"  maximum="127" minimum="0"/>
+          <Param value="CC#17|Ch1" type="dial" soft_echo="true" name="Dial #3/1"  maximum="127" minimum="0"/>
+          <Param value="CC#18|Ch1" type="dial" soft_echo="true" name="Dial #3/2"  maximum="127" minimum="0"/>
+          <Param value="CC#19|Ch1" type="dial" soft_echo="true" name="Dial #3/3"  maximum="127" minimum="0"/>
+          <Param value="CC#20|Ch1" type="dial" soft_echo="true" name="Dial #3/4"  maximum="127" minimum="0"/>
+          <Param value="CC#21|Ch1" type="dial" soft_echo="true" name="Dial #3/5"  maximum="127" minimum="0"/>
+          <Param value="CC#22|Ch1" type="dial" soft_echo="true" name="Dial #3/6"  maximum="127" minimum="0"/>
+          <Param value="CC#23|Ch1" type="dial" soft_echo="true" name="Dial #3/7"  maximum="127" minimum="0"/>
+          <Param value="CC#24|Ch1" type="dial" soft_echo="true" name="Dial #3/8"  maximum="127" minimum="0"/>
         </Group>
         <Group name="DialPush3" orientation="horizontal" columns="8">  
           <Param value="CC#49|Ch1" type="togglebutton" name="Dial #3/1 PushButton" aspect="0.5"  maximum="127" minimum="0"/>
@@ -67,14 +67,14 @@ Select factory preset #1 on the BCR for this configuration</Description>
           <Param value="CC#56|Ch1" type="togglebutton" name="Dial #3/8 PushButton" aspect="0.5"  maximum="127" minimum="0"/>
         </Group>
         <Group name="Encoders4" orientation="horizontal" columns="8">
-          <Param value="CC#25|Ch1" type="dial" name="Dial #4/1"  maximum="127" minimum="0"/>
-          <Param value="CC#26|Ch1" type="dial" name="Dial #4/2"  maximum="127" minimum="0"/>
-          <Param value="CC#27|Ch1" type="dial" name="Dial #4/3"  maximum="127" minimum="0"/>
-          <Param value="CC#28|Ch1" type="dial" name="Dial #4/4"  maximum="127" minimum="0"/>
-          <Param value="CC#29|Ch1" type="dial" name="Dial #4/5"  maximum="127" minimum="0"/>
-          <Param value="CC#30|Ch1" type="dial" name="Dial #4/6"  maximum="127" minimum="0"/>
-          <Param value="CC#31|Ch1" type="dial" name="Dial #4/7"  maximum="127" minimum="0"/>
-          <Param value="CC#32|Ch1" type="dial" name="Dial #4/8"  maximum="127" minimum="0"/>
+          <Param value="CC#25|Ch1" type="dial" soft_echo="true" name="Dial #4/1"  maximum="127" minimum="0"/>
+          <Param value="CC#26|Ch1" type="dial" soft_echo="true" name="Dial #4/2"  maximum="127" minimum="0"/>
+          <Param value="CC#27|Ch1" type="dial" soft_echo="true" name="Dial #4/3"  maximum="127" minimum="0"/>
+          <Param value="CC#28|Ch1" type="dial" soft_echo="true" name="Dial #4/4"  maximum="127" minimum="0"/>
+          <Param value="CC#29|Ch1" type="dial" soft_echo="true" name="Dial #4/5"  maximum="127" minimum="0"/>
+          <Param value="CC#30|Ch1" type="dial" soft_echo="true" name="Dial #4/6"  maximum="127" minimum="0"/>
+          <Param value="CC#31|Ch1" type="dial" soft_echo="true" name="Dial #4/7"  maximum="127" minimum="0"/>
+          <Param value="CC#32|Ch1" type="dial" soft_echo="true" name="Dial #4/8"  maximum="127" minimum="0"/>
         </Group>
         <Group name="DialPush4" orientation="horizontal" columns="8">  
           <Param value="CC#57|Ch1" type="togglebutton" name="Dial #4/1 PushButton" aspect="0.5"  maximum="127" minimum="0"/>
@@ -115,36 +115,36 @@ Select factory preset #1 on the BCR for this configuration</Description>
         <Row>
           <Column>
           <Group name="EffectEncoders1" columns="8">
-            <Param value="CC#81|Ch1" type="dial" name="EffectDial #1/1"  maximum="127" minimum="0"/>
-            <Param value="CC#82|Ch1" type="dial" name="EffectDial #1/2"  maximum="127" minimum="0"/>
-            <Param value="CC#83|Ch1" type="dial" name="EffectDial #1/3"  maximum="127" minimum="0"/>
-            <Param value="CC#84|Ch1" type="dial" name="EffectDial #1/4"  maximum="127" minimum="0"/>
-            <Param value="CC#85|Ch1" type="dial" name="EffectDial #1/5"  maximum="127" minimum="0"/>
-            <Param value="CC#86|Ch1" type="dial" name="EffectDial #1/6"  maximum="127" minimum="0"/>
-            <Param value="CC#87|Ch1" type="dial" name="EffectDial #1/7"  maximum="127" minimum="0"/>
-            <Param value="CC#88|Ch1" type="dial" name="EffectDial #1/8"  maximum="127" minimum="0"/>
+            <Param value="CC#81|Ch1" type="dial" soft_echo="true" name="EffectDial #1/1"  maximum="127" minimum="0"/>
+            <Param value="CC#82|Ch1" type="dial" soft_echo="true" name="EffectDial #1/2"  maximum="127" minimum="0"/>
+            <Param value="CC#83|Ch1" type="dial" soft_echo="true" name="EffectDial #1/3"  maximum="127" minimum="0"/>
+            <Param value="CC#84|Ch1" type="dial" soft_echo="true" name="EffectDial #1/4"  maximum="127" minimum="0"/>
+            <Param value="CC#85|Ch1" type="dial" soft_echo="true" name="EffectDial #1/5"  maximum="127" minimum="0"/>
+            <Param value="CC#86|Ch1" type="dial" soft_echo="true" name="EffectDial #1/6"  maximum="127" minimum="0"/>
+            <Param value="CC#87|Ch1" type="dial" soft_echo="true" name="EffectDial #1/7"  maximum="127" minimum="0"/>
+            <Param value="CC#88|Ch1" type="dial" soft_echo="true" name="EffectDial #1/8"  maximum="127" minimum="0"/>
           </Group>
           
           <Group name="EffectEncoders2" columns="8">  
-            <Param value="CC#89|Ch1" type="dial" name="EffectDial #2/1"  maximum="127" minimum="0"/>
-            <Param value="CC#90|Ch1" type="dial" name="EffectDial #2/2"  maximum="127" minimum="0"/>
-            <Param value="CC#91|Ch1" type="dial" name="EffectDial #2/3"  maximum="127" minimum="0"/>
-            <Param value="CC#92|Ch1" type="dial" name="EffectDial #2/4"  maximum="127" minimum="0"/>
-            <Param value="CC#93|Ch1" type="dial" name="EffectDial #2/5"  maximum="127" minimum="0"/>
-            <Param value="CC#94|Ch1" type="dial" name="EffectDial #2/6"  maximum="127" minimum="0"/>
-            <Param value="CC#95|Ch1" type="dial" name="EffectDial #2/7"  maximum="127" minimum="0"/>
-            <Param value="CC#96|Ch1" type="dial" name="EffectDial #2/8"  maximum="127" minimum="0"/>
+            <Param value="CC#89|Ch1" type="dial" soft_echo="true" name="EffectDial #2/1"  maximum="127" minimum="0"/>
+            <Param value="CC#90|Ch1" type="dial" soft_echo="true" name="EffectDial #2/2"  maximum="127" minimum="0"/>
+            <Param value="CC#91|Ch1" type="dial" soft_echo="true" name="EffectDial #2/3"  maximum="127" minimum="0"/>
+            <Param value="CC#92|Ch1" type="dial" soft_echo="true" name="EffectDial #2/4"  maximum="127" minimum="0"/>
+            <Param value="CC#93|Ch1" type="dial" soft_echo="true" name="EffectDial #2/5"  maximum="127" minimum="0"/>
+            <Param value="CC#94|Ch1" type="dial" soft_echo="true" name="EffectDial #2/6"  maximum="127" minimum="0"/>
+            <Param value="CC#95|Ch1" type="dial" soft_echo="true" name="EffectDial #2/7"  maximum="127" minimum="0"/>
+            <Param value="CC#96|Ch1" type="dial" soft_echo="true" name="EffectDial #2/8"  maximum="127" minimum="0"/>
           </Group>
           
           <Group name="EffectEncoders3" columns="8">  
-            <Param value="CC#97|Ch1" type="dial" name="EffectDial #3/1"  maximum="127" minimum="0"/>
-            <Param value="CC#98|Ch1" type="dial" name="EffectDial #3/2"  maximum="127" minimum="0"/>
-            <Param value="CC#99|Ch1" type="dial" name="EffectDial #3/3"  maximum="127" minimum="0"/>
-            <Param value="CC#100|Ch1" type="dial" name="EffectDial #3/4"  maximum="127" minimum="0"/>
-            <Param value="CC#101|Ch1" type="dial" name="EffectDial #3/5"  maximum="127" minimum="0"/>
-            <Param value="CC#102|Ch1" type="dial" name="EffectDial #3/6"  maximum="127" minimum="0"/>
-            <Param value="CC#103|Ch1" type="dial" name="EffectDial #3/7"  maximum="127" minimum="0"/>
-            <Param value="CC#104|Ch1" type="dial" name="EffectDial #3/8"  maximum="127" minimum="0"/>
+            <Param value="CC#97|Ch1" type="dial" soft_echo="true" name="EffectDial #3/1"  maximum="127" minimum="0"/>
+            <Param value="CC#98|Ch1" type="dial" soft_echo="true" name="EffectDial #3/2"  maximum="127" minimum="0"/>
+            <Param value="CC#99|Ch1" type="dial" soft_echo="true" name="EffectDial #3/3"  maximum="127" minimum="0"/>
+            <Param value="CC#100|Ch1" type="dial" soft_echo="true" name="EffectDial #3/4"  maximum="127" minimum="0"/>
+            <Param value="CC#101|Ch1" type="dial" soft_echo="true" name="EffectDial #3/5"  maximum="127" minimum="0"/>
+            <Param value="CC#102|Ch1" type="dial" soft_echo="true" name="EffectDial #3/6"  maximum="127" minimum="0"/>
+            <Param value="CC#103|Ch1" type="dial" soft_echo="true" name="EffectDial #3/7"  maximum="127" minimum="0"/>
+            <Param value="CC#104|Ch1" type="dial" soft_echo="true" name="EffectDial #3/8"  maximum="127" minimum="0"/>
           </Group>
           </Column>
           

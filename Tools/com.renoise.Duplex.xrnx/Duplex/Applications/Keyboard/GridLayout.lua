@@ -28,6 +28,10 @@ GridLayout.HIGHLIGHT_NONE = 1
 GridLayout.HIGHLIGHT_BASEKEY = 2
 GridLayout.HIGHLIGHT_SAMPLE = 3
 
+GridLayout.SHOW_INFO_NONE = 1
+GridLayout.SHOW_INFO_NOTE_NAME = 2
+GridLayout.SHOW_INFO_MIDI_PITCH = 3
+
 function GridLayout:__init(kb)
   TRACE("GridLayout:__init(kb)",kb)
 
@@ -36,6 +40,7 @@ function GridLayout:__init(kb)
 
   self.kb = kb
   self.highlighting = GridLayout.HIGHLIGHT_BASEKEY
+  self.show_note_info = GridLayout.SHOW_INFO_MIDI_PITCH
 
   self._cached_indexes = nil
   self:cache()
@@ -107,10 +112,11 @@ function GridLayout:update_grid()
     local palette = nil
     local ui_obj = self.kb._controls.grid[idx]
     local pitch = get_pitch(idx)
+    local inside_range = false
     if not pitch then
       palette = self.kb.palette.key_out_of_bounds
     else
-      local inside_range = self.kb:inside_note_range(pitch-12)
+      inside_range = self.kb:inside_note_range(pitch-12)
       if inside_range then
         --print("idx, pitch, active",idx, pitch,self.kb.voice_mgr:note_is_active(instr_idx,pitch))
         if self.kb.voice_mgr:note_is_active(instr_idx,pitch) then
@@ -122,13 +128,17 @@ function GridLayout:update_grid()
         else
           palette = self.kb.palette.key_released
         end
+        --print("ui_obj",ui_obj)
+        if (self.show_note_info == GridLayout.SHOW_INFO_NONE) then
+          palette.text = ""
+        elseif (self.show_note_info == GridLayout.SHOW_INFO_NOTE_NAME) then
+          palette.text = note_pitch_to_value(pitch)
+        elseif (self.show_note_info == GridLayout.SHOW_INFO_MIDI_PITCH) then
+          palette.text = tostring(pitch+12)
+        end
       else
         palette = self.kb.palette.key_out_of_bounds
       end
-    end
-    --print("ui_obj",ui_obj)
-    if pitch then
-      palette.text = tostring(pitch)
     end
     ui_obj:set(palette)
   end

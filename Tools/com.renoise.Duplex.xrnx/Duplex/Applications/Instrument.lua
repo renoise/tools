@@ -40,10 +40,10 @@ Instrument.available_mappings = {
 }
 
 Instrument.default_palette = {
-  scale_prev_enabled  = { color = {0xFF,0xff,0xff}, text="❮", val=true  },
-  scale_prev_disabled = { color = {0x00,0x00,0x00}, text="❮", val=false },
-  scale_next_enabled  = { color = {0xFF,0xff,0xff}, text="❯", val=true  },
-  scale_next_disabled = { color = {0x00,0x00,0x00}, text="❯", val=false },
+  scale_prev_enabled  = { color = {0xFF,0xff,0xff}, text="-≣", val=true  },
+  scale_prev_disabled = { color = {0x00,0x00,0x00}, text="-≣", val=false },
+  scale_next_enabled  = { color = {0xFF,0xff,0xff}, text="+≣", val=true  },
+  scale_next_disabled = { color = {0x00,0x00,0x00}, text="+≣", val=false },
 
   key_select_enabled   = { color = {0xFF,0xff,0xff}, val=true  },
   key_select_disabled  = { color = {0x00,0x00,0x00}, text="·", val=false },

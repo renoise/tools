@@ -193,6 +193,7 @@ renoise.tool():add_menu_entry {
   end
 }
 
+--[[
 renoise.tool():add_menu_entry {
   name = "Main Menu:Tools:Duplex:Enable NRPN support",
   selected = function()
@@ -209,6 +210,7 @@ renoise.tool():add_menu_entry {
       end
   end
 }
+]]
 
 renoise.tool():add_menu_entry {
   name = "Main Menu:Tools:Duplex:Dump MIDI to console",

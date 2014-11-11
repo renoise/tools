@@ -92,10 +92,19 @@ duplex_configurations:insert {
           index = 1
         },
         volume = {
-          group_name = "Triggers",
+          group_name = "TriggersAlt",
           orientation = ORIENTATION.VERTICAL,
           index = 1
-        }
+        },
+        all_notes_off = {
+          group_name = "Controls",
+          index = 8
+        },
+        cycle_layout = {
+          group_name = "Controls",
+          index = 10
+        },
+
       },
       palette = {
         key_pressed = {
@@ -111,49 +120,47 @@ duplex_configurations:insert {
           color = {0xC0,0x00,0x00}
         },
       },
-      --[[
-      ]]
       options = {
       },
       hidden_options = {  -- display minimal set of options
         "channel_pressure","pitch_bend","release_type","button_width","button_height","mod_wheel","velocity_mode","keyboard_mode"
       },
     },
-
+    Instrument = {
+      mappings = {
+        prev_scale = {
+          group_name = "Controls",
+          index = 3,
+        },
+        next_scale = {
+          group_name = "Controls",
+          index = 4,
+        },
+        set_key = {
+          group_name = "Triggers",
+          orientation = ORIENTATION.VERTICAL
+        },
+      }
+    },
     TrackSelector = {
       mappings = {
         prev_track = {
           group_name = "Controls",
-          index = 3,
+          index = 5,
         },
         next_track = {
           group_name = "Controls",
-          index = 4,
+          index = 6,
         },
 
       }
     },
     Transport = {
       mappings = {
-        start_playback = {
+        edit_mode = {
           group_name = "Controls",
-          index = 5,
+          index = 9,
         },
-        loop_pattern = {
-          group_name = "Controls",
-          index = 6,
-        },
-        follow_player = {
-          group_name= "Controls",
-          index = 7,
-        },
-        block_loop = {
-          group_name = "Controls",
-          index = 8,
-        },
-      },
-      options = {
-        pattern_play = 3, -- toggle start/stop with single button
       },
     },
   }

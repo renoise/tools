@@ -1,11 +1,14 @@
 <Device>
   <Name>Basic MIDI-Keyboard layout</Name>
   <Author>Renoise Team</Author>
-  <Description>This is a generic four-octave MIDI-Keyboard with pitch-bend support</Description>
+  <Description>This is a generic four-octave MIDI-Keyboard with pitch-bend, mod-wheel and channel pressure support</Description>
   <Parameters>
 	<Row>
-		<Group name="MOD" >
+		<Group name="PB" >
 			<Param value="PB|Ch1" type="fader" size="6" aspect="0.5" orientation="vertical" name="" maximum="127" minimum="0"/>
+		</Group>
+		<Group name="MW" >
+			<Param value="CC#1|Ch1" type="fader" size="6" aspect="0.5" orientation="vertical" name="" maximum="127" minimum="0"/>
 		</Group>
 		<Group name="CP" >
 			<Param value="CP|Ch1" type="fader" size="6" aspect="0.5" orientation="vertical" name="" maximum="127" minimum="0"/>

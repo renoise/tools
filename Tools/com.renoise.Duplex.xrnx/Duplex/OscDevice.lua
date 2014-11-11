@@ -204,7 +204,7 @@ function OscDevice:socket_message(socket, binary_data)
     end
   
   else
-    TRACE(("OscDevice: Got invalid OSC data, or data which is not " .. 
+    LOG(("OscDevice: Got invalid OSC data, or data which is not " .. 
       "OSC data at all. Error: '%s'"):format(osc_error))    
   end
   

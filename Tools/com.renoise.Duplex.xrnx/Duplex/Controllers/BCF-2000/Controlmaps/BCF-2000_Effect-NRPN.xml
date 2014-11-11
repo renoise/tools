@@ -1,0 +1,135 @@
+<Device>
+  <Name>Behringer BCF-2000</Name>
+  <Author>taktik, satobox, danoise</Author>
+  <Description>Controlmap for Behringer BCF 2000
+Before using, please import the preset "BCF-2000-NRPN.syx" (located in the "Presets" folder)</Description>
+  <Parameters>
+    <Page>
+      <Column>
+        <Group name="Encoders1" orientation="horizontal" columns="8">
+          <Param value="NRPN#1|Ch1" type="dial" mode="rel_14_msb" maximum="500" minimum="0"/>
+          <Param value="NRPN#2|Ch1" type="dial" mode="rel_14_msb" maximum="500" minimum="0"/>
+          <Param value="NRPN#3|Ch1" type="dial" mode="rel_14_msb" maximum="500" minimum="0"/>
+          <Param value="NRPN#4|Ch1" type="dial" mode="rel_14_msb" maximum="500" minimum="0"/>
+          <Param value="NRPN#5|Ch1" type="dial" mode="rel_14_msb" maximum="500" minimum="0"/>
+          <Param value="NRPN#6|Ch1" type="dial" mode="rel_14_msb" maximum="500" minimum="0"/>
+          <Param value="NRPN#7|Ch1" type="dial" mode="rel_14_msb" maximum="500" minimum="0"/>
+          <Param value="NRPN#8|Ch1" type="dial" mode="rel_14_msb" maximum="500" minimum="0"/>
+        </Group>
+        <Group name="DialPush1" orientation="horizontal" columns="8">  
+          <Param value="CC#33|Ch1" type="togglebutton" aspect="0.5"  maximum="127" minimum="0"/>
+          <Param value="CC#34|Ch1" type="togglebutton" aspect="0.5"  maximum="127" minimum="0"/>
+          <Param value="CC#35|Ch1" type="togglebutton" aspect="0.5"  maximum="127" minimum="0"/>
+          <Param value="CC#36|Ch1" type="togglebutton" aspect="0.5"  maximum="127" minimum="0"/>
+          <Param value="CC#37|Ch1" type="togglebutton" aspect="0.5"  maximum="127" minimum="0"/>
+          <Param value="CC#38|Ch1" type="togglebutton" aspect="0.5"  maximum="127" minimum="0"/>
+          <Param value="CC#39|Ch1" type="togglebutton" aspect="0.5"  maximum="127" minimum="0"/>
+          <Param value="CC#40|Ch1" type="togglebutton" aspect="0.5"  maximum="127" minimum="0"/>
+        </Group>
+        <Group name="Encoders2" orientation="horizontal" columns="8">
+          <Param value="NRPN#9|Ch1"  type="dial" mode="rel_14_msb" maximum="500" minimum="0"/>
+          <Param value="NRPN#10|Ch1" type="dial" mode="rel_14_msb" maximum="500" minimum="0"/>
+          <Param value="NRPN#11|Ch1" type="dial" mode="rel_14_msb" maximum="500" minimum="0"/>
+          <Param value="NRPN#12|Ch1" type="dial" mode="rel_14_msb" maximum="500" minimum="0"/>
+          <Param value="NRPN#13|Ch1" type="dial" mode="rel_14_msb" maximum="500" minimum="0"/>
+          <Param value="NRPN#14|Ch1" type="dial" mode="rel_14_msb" maximum="500" minimum="0"/>
+          <Param value="NRPN#15|Ch1" type="dial" mode="rel_14_msb" maximum="500" minimum="0"/>
+          <Param value="NRPN#16|Ch1" type="dial" mode="rel_14_msb" maximum="500" minimum="0"/>
+        </Group>
+        <Group name="DialPush2" orientation="horizontal" columns="8">  
+          <Param value="CC#41|Ch1" type="togglebutton" aspect="0.5"  maximum="127" minimum="0"/>
+          <Param value="CC#42|Ch1" type="togglebutton" aspect="0.5"  maximum="127" minimum="0"/>
+          <Param value="CC#43|Ch1" type="togglebutton" aspect="0.5"  maximum="127" minimum="0"/>
+          <Param value="CC#44|Ch1" type="togglebutton" aspect="0.5"  maximum="127" minimum="0"/>
+          <Param value="CC#45|Ch1" type="togglebutton" aspect="0.5"  maximum="127" minimum="0"/>
+          <Param value="CC#46|Ch1" type="togglebutton" aspect="0.5"  maximum="127" minimum="0"/>
+          <Param value="CC#47|Ch1" type="togglebutton" aspect="0.5"  maximum="127" minimum="0"/>
+          <Param value="CC#48|Ch1" type="togglebutton" aspect="0.5"  maximum="127" minimum="0"/>
+        </Group>
+        <Group name="Encoders3" orientation="horizontal" columns="8">
+          <Param value="NRPN#17|Ch1" type="dial" mode="rel_14_msb" maximum="500" minimum="0"/>
+          <Param value="NRPN#18|Ch1" type="dial" mode="rel_14_msb" maximum="500" minimum="0"/>
+          <Param value="NRPN#19|Ch1" type="dial" mode="rel_14_msb" maximum="500" minimum="0"/>
+          <Param value="NRPN#20|Ch1" type="dial" mode="rel_14_msb" maximum="500" minimum="0"/>
+          <Param value="NRPN#21|Ch1" type="dial" mode="rel_14_msb" maximum="500" minimum="0"/>
+          <Param value="NRPN#22|Ch1" type="dial" mode="rel_14_msb" maximum="500" minimum="0"/>
+          <Param value="NRPN#23|Ch1" type="dial" mode="rel_14_msb" maximum="500" minimum="0"/>
+          <Param value="NRPN#24|Ch1" type="dial" mode="rel_14_msb" maximum="500" minimum="0"/>
+        </Group>
+        <Group name="DialPush3" orientation="horizontal" columns="8">  
+          <Param value="CC#49|Ch1" type="togglebutton" aspect="0.5"  maximum="127" minimum="0"/>
+          <Param value="CC#50|Ch1" type="togglebutton" aspect="0.5"  maximum="127" minimum="0"/>
+          <Param value="CC#51|Ch1" type="togglebutton" aspect="0.5"  maximum="127" minimum="0"/>
+          <Param value="CC#52|Ch1" type="togglebutton" aspect="0.5"  maximum="127" minimum="0"/>
+          <Param value="CC#53|Ch1" type="togglebutton" aspect="0.5"  maximum="127" minimum="0"/>
+          <Param value="CC#54|Ch1" type="togglebutton" aspect="0.5"  maximum="127" minimum="0"/>
+          <Param value="CC#55|Ch1" type="togglebutton" aspect="0.5"  maximum="127" minimum="0"/>
+          <Param value="CC#56|Ch1" type="togglebutton" aspect="0.5"  maximum="127" minimum="0"/>
+        </Group>
+        <Group name="Encoders4" orientation="horizontal" columns="8">
+          <Param value="NRPN#25|Ch1" type="dial" mode="rel_14_msb" maximum="500" minimum="0"/>
+          <Param value="NRPN#26|Ch1" type="dial" mode="rel_14_msb" maximum="500" minimum="0"/>
+          <Param value="NRPN#27|Ch1" type="dial" mode="rel_14_msb" maximum="500" minimum="0"/>
+          <Param value="NRPN#28|Ch1" type="dial" mode="rel_14_msb" maximum="500" minimum="0"/>
+          <Param value="NRPN#29|Ch1" type="dial" mode="rel_14_msb" maximum="500" minimum="0"/>
+          <Param value="NRPN#30|Ch1" type="dial" mode="rel_14_msb" maximum="500" minimum="0"/>
+          <Param value="NRPN#31|Ch1" type="dial" mode="rel_14_msb" maximum="500" minimum="0"/>
+          <Param value="NRPN#32|Ch1" type="dial" mode="rel_14_msb" maximum="500" minimum="0"/>
+        </Group>
+        <Group name="DialPush4" orientation="horizontal" columns="8">  
+          <Param value="CC#57|Ch1" type="togglebutton" aspect="0.5"  maximum="127" minimum="0"/>
+          <Param value="CC#58|Ch1" type="togglebutton" aspect="0.5"  maximum="127" minimum="0"/>
+          <Param value="CC#59|Ch1" type="togglebutton" aspect="0.5"  maximum="127" minimum="0"/>
+          <Param value="CC#60|Ch1" type="togglebutton" aspect="0.5"  maximum="127" minimum="0"/>
+          <Param value="CC#61|Ch1" type="togglebutton" aspect="0.5"  maximum="127" minimum="0"/>
+          <Param value="CC#62|Ch1" type="togglebutton" aspect="0.5"  maximum="127" minimum="0"/>
+          <Param value="CC#63|Ch1" type="togglebutton" aspect="0.5"  maximum="127" minimum="0"/>
+          <Param value="CC#64|Ch1" type="togglebutton" aspect="0.5"  maximum="127" minimum="0"/>
+        </Group>
+
+        <Group name="Buttons1" orientation="horizontal" columns="8">
+          <Param value="CC#65|Ch1" type="togglebutton" maximum="127" minimum="0"/>
+          <Param value="CC#66|Ch1" type="togglebutton" maximum="127" minimum="0"/>
+          <Param value="CC#67|Ch1" type="togglebutton" maximum="127" minimum="0"/>
+          <Param value="CC#68|Ch1" type="togglebutton" maximum="127" minimum="0"/>
+          <Param value="CC#69|Ch1" type="togglebutton" maximum="127" minimum="0"/>
+          <Param value="CC#70|Ch1" type="togglebutton" maximum="127" minimum="0"/>
+          <Param value="CC#71|Ch1" type="togglebutton" maximum="127" minimum="0"/>
+          <Param value="CC#72|Ch1" type="togglebutton" maximum="127" minimum="0"/>
+
+          <Param value="CC#73|Ch1" type="togglebutton" maximum="127" minimum="0"/>
+          <Param value="CC#74|Ch1" type="togglebutton" maximum="127" minimum="0"/>
+          <Param value="CC#75|Ch1" type="togglebutton" maximum="127" minimum="0"/>
+          <Param value="CC#76|Ch1" type="togglebutton" maximum="127" minimum="0"/>
+          <Param value="CC#77|Ch1" type="togglebutton" maximum="127" minimum="0"/>
+          <Param value="CC#78|Ch1" type="togglebutton" maximum="127" minimum="0"/>
+          <Param value="CC#79|Ch1" type="togglebutton" maximum="127" minimum="0"/>
+          <Param value="CC#80|Ch1" type="togglebutton" maximum="127" minimum="0"/>
+        </Group>
+        
+        <Row>
+          <Group name="Faders" orientation="horizontal">
+            <Param value="NRPN#81|Ch1" type="fader" orientation="vertical" size="3"  mode="abs_14" maximum="16383" minimum="0"/>
+            <Param value="NRPN#82|Ch1" type="fader" orientation="vertical" size="3"  mode="abs_14" maximum="16383" minimum="0"/>
+            <Param value="NRPN#83|Ch1" type="fader" orientation="vertical" size="3"  mode="abs_14" maximum="16383" minimum="0"/>
+            <Param value="NRPN#84|Ch1" type="fader" orientation="vertical" size="3"  mode="abs_14" maximum="16383" minimum="0"/>
+            <Param value="NRPN#85|Ch1" type="fader" orientation="vertical" size="3"  mode="abs_14" maximum="16383" minimum="0"/>
+            <Param value="NRPN#86|Ch1" type="fader" orientation="vertical" size="3"  mode="abs_14" maximum="16383" minimum="0"/>
+            <Param value="NRPN#87|Ch1" type="fader" orientation="vertical" size="3"  mode="abs_14" maximum="16383" minimum="0"/>
+            <Param value="NRPN#88|Ch1" type="fader" orientation="vertical" size="3"  mode="abs_14" maximum="16383" minimum="0"/>
+          </Group>
+          <Column>
+            <Group name="ControlButtonRow1" orientation="horizontal">
+              <Param value="CC#89|Ch1" type="togglebutton" maximum="127" minimum="0"/>
+              <Param value="CC#90|Ch1" type="togglebutton" maximum="127" minimum="0"/>
+            </Group>
+            <Group name="ControlButtonRow2" orientation="horizontal">
+              <Param value="CC#91|Ch1" type="togglebutton" maximum="127" minimum="0"/>
+              <Param value="CC#92|Ch1" type="togglebutton" maximum="127" minimum="0"/>
+            </Group>
+          </Column>
+        </Row>
+      </Column>
+    </Page>
+  </Parameters>
+</Device>

@@ -143,6 +143,7 @@ function Display:apply_tooltips(group_name)
     local params = ui_obj:_get_ui_params()
     for _,param in ipairs(params) do
       local widget = self.vb.views[param.xarg.id]
+      --print("param.xarg",rprint(param.xarg))
       if param.xarg.value then
         widget.tooltip = string.format("%s\nValue: %s",ui_obj.tooltip,param.xarg.value)
       else
@@ -221,7 +222,7 @@ end
 -- (the enabled state of individual UIComponent is not affected)
 -- @param state (bool) enabled when true, disabled when false
 -- @param group_name[opt] (string or nil), leave out to match all
-
+--[[
 function Display:set_active_state(state,group_name)
   TRACE("Display:set_active_state",state,group_name)
 
@@ -236,6 +237,8 @@ function Display:set_active_state(state,group_name)
   self:apply_to_groups(group_name,callback)
 
 end
+]]
+
 
 --------------------------------------------------------------------------------
 
@@ -269,6 +272,53 @@ end
 
 --------------------------------------------------------------------------------
 
+--- figure out the physical dimensions of a given group 
+-- @param group_name (string) control-map group name
+-- @return width (int)
+-- @return height (int)
+--[[
+function Display:get_group_dimensions(group_name)
+  TRACE("Display:resize_group(group_name)",group_name)
+
+  local cm = self.device.control_map
+  local group_params = cm:get_params(group_name)
+  if group_params then
+    local group = cm.groups[group_name]
+    local columns = group.columns
+    local row_count, col_count = 1,1
+    local total_height, total_width = 0,0
+    local row_width, row_height = 0,0
+    for k,grp_param in ipairs(group_params) do
+
+      local grp_widget = self.vb.views[grp_param.xarg.id]
+      if grp_widget.visible then
+        row_width = row_width + grp_widget.width
+        row_height = math.max(row_height,grp_widget.height)
+      end
+
+      col_count = col_count+1
+
+      if (col_count > columns) then
+        -- remember the width and height of this row
+        total_width = math.max(total_width,row_width)
+        total_height = total_height + row_height
+        row_width,row_height = 0,0
+        col_count = 1
+        row_count = row_count+1
+      end
+
+    end
+
+    return total_width,total_height
+
+  end
+
+
+end
+]]
+
+--------------------------------------------------------------------------------
+
 --- Update any UIComponent that has been modified since the last update
 -- (called continously)
 
@@ -284,6 +334,7 @@ function Display:update(foo)
   end
 
   -- OSC devices need this when sending message bundles
+  -- and MIDI devices when receiving NRPN messages
   if(self.device.on_idle)then
     self.device:on_idle()
   end
@@ -384,7 +435,10 @@ function Display:set_parameter(param,ui_obj,point,skip_ui)
     -- output via default device context (device-config)
     value,skip_hardware = self.device:output_value(point,param.xarg,ui_obj)
   end
-  --print("*** set_parameter - value,point",value,point)
+  --print("*** set_parameter - value,point,point.text",value,point,point.text)
+  --print("*** set_parameter - skip_hardware A",skip_hardware,ui_obj)
+  --print("*** set_parameter - self.device.loopback_received_messages",self.device.loopback_received_messages)
+  --print("*** set_parameter - param.xarg.soft_echo",param.xarg.soft_echo)
 
   if not skip_hardware 
     and self.device.loopback_received_messages
@@ -394,12 +448,13 @@ function Display:set_parameter(param,ui_obj,point,skip_ui)
     -- determine if we are responding to a user-generated event
     -- (with "soft echo", only programmatic events are fed back)
     local is_most_recent = (ui_obj.msg == self.process._message_stream.current_msg)
+    --print("soft_echo/loop_back - is_most_recent",is_most_recent)
     if is_most_recent then
       skip_hardware = not ui_obj.msg.is_virtual  
     end
 
   end  
-  --print("*** set_parameter - skip_hardware",skip_hardware,ui_obj)
+  --print("*** set_parameter - skip_hardware B",skip_hardware,ui_obj)
 
   --@
 
@@ -518,8 +573,9 @@ function Display:set_parameter(param,ui_obj,point,skip_ui)
 
         elseif (msg_type == DEVICE_MESSAGE.MIDI_CC) then
 
+          local send_multibyte = string.find(param.xarg.mode,"_14") and true or false
           local num = self.device:extract_midi_cc(param.xarg.value)
-          self.device:send_cc_message(num,math.floor(value),channel)
+          self.device:send_cc_message(num,math.floor(value),channel,send_multibyte)
 
         elseif (msg_type == DEVICE_MESSAGE.MIDI_PITCH_BEND) then
 
@@ -527,11 +583,17 @@ function Display:set_parameter(param,ui_obj,point,skip_ui)
           -- but under some circumstances (Mackie Control) it is needed
           self.device:send_pitch_bend_message(math.floor(value),channel,param.xarg.mode)
 
+        elseif (msg_type == DEVICE_MESSAGE.MIDI_NRPN) then
+
+          local send_only_msb = string.find(param.xarg.mode,"_7") and true or false
+          local num = self.device:extract_midi_nrpn(param.xarg.value)
+          self.device:send_nrpn_message(num,math.floor(value),channel,send_only_msb)
+
         elseif (msg_type == DEVICE_MESSAGE.MIDI_CHANNEL_PRESSURE) then
 
           -- do nothing
 
-        elseif (msg_type == DEVICE_MESSAGE.MIDI_KEY) then
+        --elseif (msg_type == DEVICE_MESSAGE.MIDI_KEY) then
 
           -- do nothing
 
@@ -625,30 +687,29 @@ function Display:generate_message(value, param, released)
   msg.value = value
 
   -- the type of message
+  -- ("action" is used when the device defines a different input
+  -- pattern than the one used for output - see e.g. monome)
   if param.xarg.action then
     msg.context = self.device.control_map:determine_type(param.xarg.action)
   else
     msg.context = self.device.control_map:determine_type(param.xarg.value)
   end
 
-  msg.timestamp = os.clock()
+  --msg.timestamp = os.clock()
 
-  -- include as copy 
+  -- include as copy (do not modify original)
   msg.xarg = table.rcopy(param.xarg)
 
   if released then
     msg.is_note_off = true
   end
 
+  -- if possible, create a "virtual" midi message 
+  -- (we might want to pass this on to Renoise)
+
   if (param.xarg.type == "keyboard") then
-    
-    -- if widget is keyboard, we have received a full midi-message
-    --print("*** generate_message - we have received a midi-message",rprint(value))
-    msg.midi_msg = value
-
+    msg.midi_msgs = {value}
   else
-
-    -- if possible, create a "virtual" midi message 
 
     if not (msg.context==DEVICE_MESSAGE.OSC) then
 
@@ -658,26 +719,47 @@ function Display:generate_message(value, param, released)
           self.device.default_midi_channel
       end
 
-      if (msg.context==DEVICE_MESSAGE.MIDI_NOTE) then
-        -- value specifies the velocity
-        local note_pitch = value_to_midi_pitch(param.xarg.value)+12
-        msg.midi_msg = {143+msg.channel,note_pitch,value[2]}
-      elseif (msg.context==DEVICE_MESSAGE.MIDI_CC) then
+      if (msg.context==DEVICE_MESSAGE.MIDI_CC) then
+
         -- value specifies the CC value
         local cc_num = extract_cc_num(param.xarg.value)
-        msg.midi_msg = {175+msg.channel,cc_num,math.floor(value)}
-      elseif (msg.context==DEVICE_MESSAGE.MIDI_CHANNEL_PRESSURE) then
-        -- value specifies the pressure amount
-        msg.midi_msg = {207+msg.channel,0,math.floor(value)}
+        msg.midi_msgs = {{175+msg.channel,cc_num,math.floor(value)}}
+
+      elseif (msg.context==DEVICE_MESSAGE.MIDI_NOTE) then
+
+        -- value specifies the velocity
+        local note_pitch = value_to_midi_pitch(param.xarg.value)+12
+        msg.midi_msgs = {{143+msg.channel,note_pitch,value[2]}}
+
       elseif (msg.context==DEVICE_MESSAGE.MIDI_PITCH_BEND) then
+
         -- value specifies the pitch bend amount
-        msg.midi_msg = {223+msg.channel,math.floor(value),0}
+        msg.midi_msgs = {{223+msg.channel,math.floor(value),0}}
+
+      elseif (msg.context==DEVICE_MESSAGE.MIDI_CHANNEL_PRESSURE) then
+
+        -- value specifies the pressure amount
+        msg.midi_msgs = {{207+msg.channel,0,math.floor(value)}}
+
+      elseif (msg.context==DEVICE_MESSAGE.MIDI_KEY) then
+
+        -- do nothing
+
+      elseif (msg.context==DEVICE_MESSAGE.MIDI_PROGRAM_CHANGE) then
+
+        -- do nothing
+
+      elseif (msg.context==DEVICE_MESSAGE.MIDI_NRPN) then
+
+        -- do nothing
+
       end
+
       --print("*** Display: generate_message - virtually generated midi msg...")
       --rprint(msg.midi_msg)
       --print("msg.is_note_off",msg.is_note_off,released)
-    end
 
+    end
   end
 
   -- flag as virtually generated message
@@ -758,6 +840,8 @@ function Display:_walk_table(t, done, deep)
         view_obj = widget_hooks[param.xarg.type].build(
           self,param,adj_width,adj_height,tooltip)
 
+        view_obj.visible = param.xarg.visible
+
 
       elseif (param.label == "Column") then
     
@@ -771,7 +855,7 @@ function Display:_walk_table(t, done, deep)
         register_param(param,self._id)
         self._id = self._id+1
 
-        self._parents[deep] = view_obj
+        self._parents[deep] = {view=view_obj,id=self._id}
         self._grid_obj = nil
   
       elseif (param.label == "Row") then
@@ -785,7 +869,7 @@ function Display:_walk_table(t, done, deep)
         register_param(param,self._id)
         self._id = self._id+1
 
-        self._parents[deep] = view_obj
+        self._parents[deep] = {view=view_obj,id=self._id}
         self._grid_obj = nil
 
       elseif (param.label == "Group") then
@@ -796,13 +880,17 @@ function Display:_walk_table(t, done, deep)
         local orientation = param.xarg.orientation
         local columns = param.xarg.columns
         local visible = param.xarg.visible
+        local assigned_id = nil
           
         grid_id = nil
+
 
         if (columns) then
 
           -- enter "grid mode": use current group as 
           -- base object for inserting multiple rows
+
+          --assigned_id = tostring(self._id)
 
           self._grid_count = self._grid_count+1
           grid_id = tostring(self._id)
@@ -814,12 +902,17 @@ function Display:_walk_table(t, done, deep)
           register_param(param,self._id)
 
         end
+
+        assigned_id = grid_id or tostring(self._id)
           
         if (orientation == "vertical") then
+
+
           view_obj = self.vb:column{
             style = "group",
             visible = visible,
-            id = grid_id or tostring(self._id),
+            tooltip = assigned_id,
+            id = assigned_id,
             margin = DEFAULT_MARGIN,
             spacing = DEFAULT_SPACING,
           }
@@ -828,7 +921,8 @@ function Display:_walk_table(t, done, deep)
           view_obj = self.vb:row{
             style = "group",
             visible = visible,
-            id = grid_id or tostring(self._id),
+            tooltip = assigned_id,
+            id = assigned_id,
             width = 400,
             margin = DEFAULT_MARGIN,
             spacing = DEFAULT_SPACING,
@@ -844,8 +938,8 @@ function Display:_walk_table(t, done, deep)
           register_param(param,self._id)
 
         end
-          
-        self._parents[deep] = view_obj
+         
+        self._parents[deep] = {view=view_obj,id=assigned_id}
       end
         
       -- something was matched
@@ -870,7 +964,7 @@ function Display:_walk_table(t, done, deep)
           }
 
           self._grid_obj:add_child(row_obj)
-          self._parents[deep-1] = row_obj
+          self._parents[deep-1] = {view=row_obj,id=self._id}
         end
           
         -- attach to parent object (if it exists)
@@ -879,7 +973,7 @@ function Display:_walk_table(t, done, deep)
         for i = deep-1, 1, -1 do
           if self._parents[i] then
 
-            self._parents[i]:add_child(view_obj)
+            self._parents[i].view:add_child(view_obj)
             self._id = self._id+1
             --print("increased id (B)",self._id)
 

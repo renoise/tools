@@ -72,6 +72,7 @@ Load and parse XML based control-map files, add extra methods, handy accessors.
   - `font` - (string) specify the font type, relevant for params of type=`label` 
   - `range` - (int) specify the range of an on-screen keyboard (number of keys)
   - `mode` - (enum) how to interpret incoming values (see @{Duplex.Globals.PARAM_MODE})
+  - `throttle` - (bool) whether we should throttle this parameter or not (overrides the device default)
   - `class` - (string) interpret control-map in the context of which (device) class? (default is to use the current device context, but you can enter any literal class name, e.g. "OscDevice" or "LaunchPad")
 
   Some extra properties are added in runtime:
@@ -93,11 +94,14 @@ Load and parse XML based control-map files, add extra methods, handy accessors.
   - `field` - (string) what aspect of the parent parameters' value that is being stored (e.g. "x" for xypad x axis)
 
 ### Changes
+  
+  0.99.5
+    - <Param @throttle> (new), enable/disable (MIDI) message throttling
 
   0.99.3
     - <Param @match> (new), match a specific (CC) value 
     - <Param @match_from, @match_to> (new), match a (CC) value-range 
-    - <Param @mode> (new), explicitly state the value resolution (e.g. 7 or 14 bit)
+    - <Param @mode> (new), specify resolution (7/14 bit) and operation (absolute/relative)
     - <Param @class> (new), interpret parameter in the context of a specific device class
 
   0.99.2
@@ -271,6 +275,12 @@ function ControlMap:_parse_definition(control_map_name, xml_string, device_conte
     return self:_parse_xml(xml_string,device_context) 
   end)
   
+  --[[
+  -- use this to see full error message when parsing
+  xml_string = string.gsub (xml_string, "(<!--.-->)", "")
+  self.definition = self:_parse_xml(xml_string,device_context) 
+  ]]
+
   if (succeeded) then
     self.definition = result
   else
@@ -1104,31 +1114,35 @@ end
 function ControlMap:determine_type(str)
   TRACE("ControlMap:determine_type",str)
 
-  -- osc messages begin with a slash
+  -- OSC messages begin with a slash
   if string.sub(str,0,1)=="/" then
     return DEVICE_MESSAGE.OSC
   
-  -- cc, if first two characters match "CC"
+  -- CC, if first two characters match "CC"
   elseif string.sub(str,1,2)=="CC" then
     return DEVICE_MESSAGE.MIDI_CC
 
-  -- note, if message has a "#" or "-" as the second character
+  -- Note, if message has a "#" or "-" as the second character
   elseif string.sub(str,2,2)=="#" or string.sub(str,2,2)=="-" then
     return DEVICE_MESSAGE.MIDI_NOTE
 
-  -- pitch bend
+  -- Pitch bend
   elseif string.sub(str,1,2)=="PB" then
     return DEVICE_MESSAGE.MIDI_PITCH_BEND
 
-  -- program change
+  -- NRPN, if first characters match "NRPN"
+  elseif string.sub(str,1,4)=="NRPN" then
+    return DEVICE_MESSAGE.MIDI_NRPN
+
+  -- Program change
   elseif string.sub(str,1,3)=="Prg" then
     return DEVICE_MESSAGE.MIDI_PROGRAM_CHANGE
 
-  -- channel pressure
+  -- Channel pressure
   elseif string.sub(str,1,2)=="CP" then
     return DEVICE_MESSAGE.MIDI_CHANNEL_PRESSURE
 
-  -- keyboard
+  -- Keyboard
   elseif string.sub(str,0,1)=="|" then
     return DEVICE_MESSAGE.MIDI_KEY
   
@@ -1179,9 +1193,13 @@ function ControlMap:_parse_xml(str,device_context)
       xarg[w] = a
     end)
 
-
-    --print("xarg.mode",xarg.mode)
-
+    -- resolve the 'class' attribute 
+    -- (we need a live instance in order to access it's methods)
+    -- TODO right now we supply a dummy OSC device - 
+    -- figure out the device protocol in a smarter way
+    -- (if we could look for the parent/super-class...)
+    local device_instance = (xarg.class) and
+      _G[xarg.class]("dummy_device",{},DEVICE_PROTOCOL.OSC) or device_context
 
     -- add size attribute to buttons
     if (xarg.type) and
@@ -1212,8 +1230,87 @@ function ControlMap:_parse_xml(str,device_context)
       xarg.match_to = tonumber(xarg.match_to)
     end
     if not xarg.mode then
-      xarg.mode = device_context.default_parameter_mode
+      --print("device_instance",device_instance)
+      xarg.mode = device_instance.default_parameter_mode
     end
+
+    -- when using one of the 7-bit modes, disallow values above 127
+    if xarg.maximum and (xarg.maximum > 127) 
+      and (device_instance.protocol == DEVICE_PROTOCOL.MIDI) 
+      and string.find(xarg.mode,"_7")
+    then
+      error(string.format("While in 7-bit mode, only values between 0 and 127 "
+                        .."can be specified as 'maximum'"))
+    end
+
+    -- disallow 14-bit modes for CC parameters above 31
+    -- (according to the MIDI spec, MSB is between 0-31)
+    if xarg.value and
+      (device_instance.protocol == DEVICE_PROTOCOL.MIDI) 
+    then
+      local msg_context = self:determine_type(xarg.value)
+      local msg_number = device_instance:extract_midi_cc(xarg.value)
+      if (msg_context == DEVICE_MESSAGE.MIDI_CC) and
+        string.find(xarg.mode,"_14") and (msg_number > 31)
+      then
+        error(string.format("MIDI specs forbid 14-bit (MSB/LSB) messages with "  
+          .."a larger number than 31 (parameter has been defined as %s)",xarg.value))
+      end
+    end
+
+    -- exempt parameters from being interpreted as multibyte if they don't
+    -- explicitly define a 14-bit mode attribute
+    if xarg.value and xarg.mode and not string.find(xarg.mode, "_14") then
+      if (device_instance.protocol == DEVICE_PROTOCOL.MIDI) then
+        local exempt_table, midi_msgs 
+        local msg_context = self:determine_type(xarg.value)
+        local msg_channel = device_instance:extract_midi_channel(xarg.value) or 
+          device_instance.default_midi_channel
+        if (msg_context == DEVICE_MESSAGE.MIDI_CC) then
+          exempt_table = device_instance._multibyte_exempted
+          local msg_number = device_instance:extract_midi_cc(xarg.value)
+          midi_msgs = {{0xAF+msg_channel,msg_number,0x00}}
+        elseif (msg_context == DEVICE_MESSAGE.MIDI_NRPN) then
+          exempt_table = device_instance._nrpn_msb_only
+          local msg_number = device_instance:extract_midi_nrpn(xarg.value)
+          midi_msgs = {
+            {0xAF+msg_channel,0x63,bit.rshift(msg_number,7)},
+            {0xAF+msg_channel,0x62,msg_number%128},
+          }
+        end
+        if midi_msgs then 
+          local fingerprint = device_instance:_create_fingerprint(msg_context,midi_msgs)
+          if not table.find(exempt_table,fingerprint) then
+            table.insert(exempt_table,fingerprint)
+            --print("added to exemption table - param.xarg.value",xarg.value,fingerprint)
+          end
+        end
+      end
+    end
+
+    -- exempt specific parameters from throttling
+    if xarg.value and (xarg.throttle == "false") then
+      if (device_instance.protocol == DEVICE_PROTOCOL.MIDI) then
+        local msg_context = self:determine_type(xarg.value)
+        local msg_channel = device_instance:extract_midi_channel(xarg.value) or 
+          device_instance.default_midi_channel
+        local midi_msg = nil
+        if (msg_context == DEVICE_MESSAGE.MIDI_CC) then
+          --print("exempt from throttling - param.xarg.value",xarg.value)
+          local msg_number = device_instance:extract_midi_cc(xarg.value)
+          midi_msg = {0xAF+msg_channel,msg_number,0x00}
+        elseif (msg_context == DEVICE_MESSAGE.MIDI_PITCH_BEND) then
+          midi_msg = {0xDF+msg_channel,0x00,0x00}
+        end
+        if midi_msg then 
+          local fingerprint = device_instance:_create_fingerprint(msg_context,{midi_msg})
+          if not table.find(device_instance._throttle_exempted,fingerprint) then
+            table.insert(device_instance._throttle_exempted,fingerprint)
+          end
+        end
+      end
+    end
+
 
     if (label == "Param") or (label == "SubParam") then
 
