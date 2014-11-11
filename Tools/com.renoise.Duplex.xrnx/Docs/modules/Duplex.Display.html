@@ -187,6 +187,10 @@
  (e.g.</td>
 	</tr>
 	<tr>
+	<td class="name" nowrap><a href="#get_group_dimensions">get_group_dimensions (group_name)</a></td>
+	<td class="summary">figure out the physical dimensions of a given group</td>
+	</tr>
+	<tr>
 	<td class="name" nowrap><a href="#update">update (foo)</a></td>
 	<td class="summary">Update any UIComponent that has been modified since the last update
  (called continously)</td>
@@ -401,6 +405,7 @@
         </li>
         <li><span class="parameter">group_name</span>
         [opt] (string or nil), leave out to match all
+[[
         </li>
     </ul>
 
@@ -428,6 +433,34 @@
         </li>
     </ul>
 
+
+
+
+
+</dd>
+    <dt>
+    <a name = "get_group_dimensions"></a>
+    <strong>get_group_dimensions (group_name)</strong>
+    </dt>
+    <dd>
+    figure out the physical dimensions of a given group
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">group_name</span>
+         (string) control-map group name
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+        <li>
+        width (int)</li>
+        <li>
+        height (int)
+[[</li>
+    </ol>
 
 
 

@@ -33,7 +33,6 @@
 <h2>Contents</h2>
 <ul>
 <li><a href="#Functions">Functions</a></li>
-<li><a href="#Tables">Tables</a></li>
 <li><a href="#Fields">Fields</a></li>
 </ul>
 
@@ -77,7 +76,7 @@
   <li><a href="../modules/Duplex.Automation.html">Duplex.Automation</a></li>
   <li><a href="../modules/Duplex.Browser.html">Duplex.Browser</a></li>
   <li><a href="../modules/Duplex.BrowserProcess.html">Duplex.BrowserProcess</a></li>
-  <li><strong>Duplex.Canvas</strong></li>
+  <li><a href="../modules/Duplex.Canvas.html">Duplex.Canvas</a></li>
   <li><a href="../modules/Duplex.CanvasPoint.html">Duplex.CanvasPoint</a></li>
   <li><a href="../modules/Duplex.ControlMap.html">Duplex.ControlMap</a></li>
   <li><a href="../modules/Duplex.Device.html">Duplex.Device</a></li>
@@ -94,6 +93,7 @@
   <li><a href="../modules/Duplex.RoamingDSP.html">Duplex.RoamingDSP</a></li>
   <li><a href="../modules/Duplex.Scheduler.html">Duplex.Scheduler</a></li>
   <li><a href="../modules/Duplex.StateController.html">Duplex.StateController</a></li>
+  <li><strong>Duplex.Supporting.NoodleTrap</strong></li>
   <li><a href="../modules/Duplex.UIButton.html">Duplex.UIButton</a></li>
   <li><a href="../modules/Duplex.UIButtonStrip.html">Duplex.UIButtonStrip</a></li>
   <li><a href="../modules/Duplex.UIComponent.html">Duplex.UIComponent</a></li>
@@ -114,78 +114,50 @@
 
 <div id="content">
 
-<h1>Module <code>Duplex.Canvas</code></h1>
-<p>Employed by the UIComponents to represent their visual state</p>
-
-<p>The canvas is a two-dimensional table of CanvasPoints which can be resized.</p>
+<h1>Module <code>Duplex.Supporting.NoodleTrap</code></h1>
 <p>
-Each CanvasPoint specifies both the visual appearance of a button (via color or text), as well as any sort of value that the UIComponent might define. </p>
+<h3>About</h3>
 
-<p>Also, the canvas is the layer we perform our updates "through". By checking the "delta", we can decide if something has <em>actually</em> changed before the update is performed. </p>
-
-<p>Think of it as pre-optimization - both cabled MIDI and wireless devices are capable of choking or skipping messages. </p>
+<p>NoodleTrap records notes as you play them, bypassing the recording process in Renoise.</p>
+</p>
+<p> Instead, your recordings ("noodlings") are stored into the instrument itself, using various criteria.</p>
 
 
 <h2><a href="#Functions">Functions</a></h2>
 <table class="function_list">
 	<tr>
-	<td class="name" nowrap><a href="#__init">__init (device)</a></td>
-	<td class="summary">Initialize the Canvas class</td>
+	<td class="name" nowrap><a href="#select_target_instrument">select_target_instrument (instr_idx)</a></td>
+	<td class="summary">
+
+</td>
 	</tr>
 	<tr>
-	<td class="name" nowrap><a href="#set_size">set_size (width, height)</a></td>
-	<td class="summary">Call whenever the size of the parent UIComponent changes</td>
+	<td class="name" nowrap><a href="#input_note">input_note (note, velocity)</a></td>
+	<td class="summary">Manually feed MIDI notes into this instance</td>
 	</tr>
 	<tr>
-	<td class="name" nowrap><a href="#write">write (point, x, y)</a></td>
-	<td class="summary">Write a single point to the canvas at the provided x/y coordinates</td>
-	</tr>
-	<tr>
-	<td class="name" nowrap><a href="#fill">fill (point)</a></td>
-	<td class="summary">Fill/flood entire canvas with given point</td>
-	</tr>
-	<tr>
-	<td class="name" nowrap><a href="#check_delta">check_delta (point, x, y)</a></td>
-	<td class="summary">If point is different from existing value, mark the canvas as changed
- both color, text and value are considered when doing the comparison</td>
-	</tr>
-	<tr>
-	<td class="name" nowrap><a href="#clear_delta">clear_delta ()</a></td>
-	<td class="summary">After the display has finished drawing the object, this is called
- to clear the delta buffer and mark the canvas as unchanged</td>
-	</tr>
-</table>
-<h2><a href="#Tables">Tables</a></h2>
-<table class="function_list">
-	<tr>
-	<td class="name" nowrap><a href="#self.delta">self.delta</a></td>
-	<td class="summary">(table) difference buffer, cleared on each update</td>
-	</tr>
-	<tr>
-	<td class="name" nowrap><a href="#self.buffer">self.buffer</a></td>
-	<td class="summary">(table) the current, complete representation</td>
-	</tr>
-	<tr>
-	<td class="name" nowrap><a href="#self.clear">self.clear</a></td>
-	<td class="summary">table of extraneous points that should be cleared on next update
- created when the canvas is reduced in size, and contains just a
- simple set of booleans (the Display class will create the empty
- points when needed)</td>
+	<td class="name" nowrap><a href="#register_callback">register_callback (evt, obj, func)</a></td>
+	<td class="summary">For keeping other applications or the user interface up to date,
+ you can register any of the callback methods here</td>
 	</tr>
 </table>
 <h2><a href="#Fields">Fields</a></h2>
 <table class="function_list">
 	<tr>
-	<td class="name" nowrap><a href="#self.has_changed">self.has_changed</a></td>
-	<td class="summary">(bool) flag when we need to update the display</td>
+	<td class="name" nowrap><a href="#self._instr_idx">self._instr_idx</a></td>
+	<td class="summary">(int) instrument context</td>
 	</tr>
 	<tr>
-	<td class="name" nowrap><a href="#self.width">self.width</a></td>
-	<td class="summary">(int) canvas width</td>
+	<td class="name" nowrap><a href="#self._track_idx">self._track_idx</a></td>
+	<td class="summary">(int) track context</td>
 	</tr>
 	<tr>
-	<td class="name" nowrap><a href="#self.height">self.height</a></td>
-	<td class="summary">(int) canvas height</td>
+	<td class="name" nowrap><a href="#self._midi_in">self._midi_in</a></td>
+	<td class="summary">(renoise.Midi.MidiInputDevice)</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#self._note_events">self._note_events</a></td>
+	<td class="summary">(table) list of note events, order of arrival</td>
 	</tr>
 </table>
 
@@ -196,40 +168,45 @@ Each CanvasPoint specifies both the visual appearance of a button (via color or 
     <h2><a name="Functions"></a>Functions</h2>
     <dl class="function">
     <dt>
-    <a name = "__init"></a>
-    <strong>__init (device)</strong>
+    <a name = "select_target_instrument"></a>
+    <strong>select_target_instrument (instr_idx)</strong>
     </dt>
     <dd>
-    Initialize the Canvas class
+
 
 
     <h3>Parameters:</h3>
     <ul>
-        <li><span class="parameter">device</span>
-         (Device)
+        <li><span class="parameter">instr_idx</span>
+         (int) the target instrument
         </li>
     </ul>
 
+    <h3>Returns:</h3>
+    <ol>
+
+        true when set
+    </ol>
 
 
 
 
 </dd>
     <dt>
-    <a name = "set_size"></a>
-    <strong>set_size (width, height)</strong>
+    <a name = "input_note"></a>
+    <strong>input_note (note, velocity)</strong>
     </dt>
     <dd>
-    Call whenever the size of the parent UIComponent changes
+    Manually feed MIDI notes into this instance
 
 
     <h3>Parameters:</h3>
     <ul>
-        <li><span class="parameter">width</span>
-         (int)
+        <li><span class="parameter">note</span>
+         (int) value between 0-120
         </li>
-        <li><span class="parameter">height</span>
-         (int)
+        <li><span class="parameter">velocity</span>
+         (int) value between 0-127
         </li>
     </ul>
 
@@ -239,151 +216,26 @@ Each CanvasPoint specifies both the visual appearance of a button (via color or 
 
 </dd>
     <dt>
-    <a name = "write"></a>
-    <strong>write (point, x, y)</strong>
+    <a name = "register_callback"></a>
+    <strong>register_callback (evt, obj, func)</strong>
     </dt>
     <dd>
-    Write a single point to the canvas at the provided x/y coordinates
+    For keeping other applications or the user interface up to date,
+ you can register any of the callback methods here
 
 
     <h3>Parameters:</h3>
     <ul>
-        <li><span class="parameter">point</span>
-         (<a href="../modules/Duplex.CanvasPoint.html#">Duplex.CanvasPoint</a>)
+        <li><span class="parameter">evt</span>
+         (string) one of the callback events, e.g. "note_received"
         </li>
-        <li><span class="parameter">x</span>
-         (int)
+        <li><span class="parameter">obj</span>
+         (object) the object (or context) of the function
         </li>
-        <li><span class="parameter">y</span>
-         (int)
-        </li>
-    </ul>
-
-
-
-
-
-</dd>
-    <dt>
-    <a name = "fill"></a>
-    <strong>fill (point)</strong>
-    </dt>
-    <dd>
-    Fill/flood entire canvas with given point
-
-
-    <h3>Parameters:</h3>
-    <ul>
-        <li><span class="parameter">point</span>
-         (<a href="../modules/Duplex.CanvasPoint.html#">Duplex.CanvasPoint</a>)
+        <li><span class="parameter">func</span>
+         (function) the function that our callback should invoke
         </li>
     </ul>
-
-
-
-
-
-</dd>
-    <dt>
-    <a name = "check_delta"></a>
-    <strong>check_delta (point, x, y)</strong>
-    </dt>
-    <dd>
-    If point is different from existing value, mark the canvas as changed
- both color, text and value are considered when doing the comparison
-
-
-    <h3>Parameters:</h3>
-    <ul>
-        <li><span class="parameter">point</span>
-         (<a href="../modules/Duplex.CanvasPoint.html#">Duplex.CanvasPoint</a>)
-        </li>
-        <li><span class="parameter">x</span>
-         (int)
-        </li>
-        <li><span class="parameter">y</span>
-         (int)
-        </li>
-    </ul>
-
-
-
-
-
-</dd>
-    <dt>
-    <a name = "clear_delta"></a>
-    <strong>clear_delta ()</strong>
-    </dt>
-    <dd>
-    After the display has finished drawing the object, this is called
- to clear the delta buffer and mark the canvas as unchanged
-
-
-
-
-
-
-
-</dd>
-</dl>
-    <h2><a name="Tables"></a>Tables</h2>
-    <dl class="function">
-    <dt>
-    <a name = "self.delta"></a>
-    <strong>self.delta</strong>
-    </dt>
-    <dd>
-    (table) difference buffer, cleared on each update
-
-
-    <h3>Fields:</h3>
-    <ul>
-        <li><span class="parameter">{</span>
-
-
-
-        </li>
-    </ul>
-
-
-
-
-
-</dd>
-    <dt>
-    <a name = "self.buffer"></a>
-    <strong>self.buffer</strong>
-    </dt>
-    <dd>
-    (table) the current, complete representation
-
-
-    <h3>Fields:</h3>
-    <ul>
-        <li><span class="parameter">{</span>
-
-
-
-        </li>
-    </ul>
-
-
-
-
-
-</dd>
-    <dt>
-    <a name = "self.clear"></a>
-    <strong>self.clear</strong>
-    </dt>
-    <dd>
-    table of extraneous points that should be cleared on next update
- created when the canvas is reduced in size, and contains just a
- simple set of booleans (the Display class will create the empty
- points when needed)
-
-
 
 
 
@@ -394,11 +246,11 @@ Each CanvasPoint specifies both the visual appearance of a button (via color or 
     <h2><a name="Fields"></a>Fields</h2>
     <dl class="function">
     <dt>
-    <a name = "self.has_changed"></a>
-    <strong>self.has_changed</strong>
+    <a name = "self._instr_idx"></a>
+    <strong>self._instr_idx</strong>
     </dt>
     <dd>
-    (bool) flag when we need to update the display
+    (int) instrument context
 
 
 
@@ -408,11 +260,11 @@ Each CanvasPoint specifies both the visual appearance of a button (via color or 
 
 </dd>
     <dt>
-    <a name = "self.width"></a>
-    <strong>self.width</strong>
+    <a name = "self._track_idx"></a>
+    <strong>self._track_idx</strong>
     </dt>
     <dd>
-    (int) canvas width
+    (int) track context
 
 
 
@@ -422,11 +274,25 @@ Each CanvasPoint specifies both the visual appearance of a button (via color or 
 
 </dd>
     <dt>
-    <a name = "self.height"></a>
-    <strong>self.height</strong>
+    <a name = "self._midi_in"></a>
+    <strong>self._midi_in</strong>
     </dt>
     <dd>
-    (int) canvas height
+    (renoise.Midi.MidiInputDevice)
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "self._note_events"></a>
+    <strong>self._note_events</strong>
+    </dt>
+    <dd>
+    (table) list of note events, order of arrival
 
 
 

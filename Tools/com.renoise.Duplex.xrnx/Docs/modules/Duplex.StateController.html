@@ -175,6 +175,10 @@
 	<td class="name" nowrap><a href="#disable">disable (state_id)</a></td>
 	<td class="summary">deactivate a named state</td>
 	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#update_trigger">update_trigger (ui_obj, color, text, val)</a></td>
+	<td class="summary">update the display of a trigger-button</td>
+	</tr>
 </table>
 <h2><a href="#Tables">Tables</a></h2>
 <table class="function_list">
@@ -339,14 +343,10 @@
     <h3>Parameters:</h3>
     <ul>
         <li><span class="parameter">state_id</span>
-
-
-
+         (string) unique name/id for the state
         </li>
         <li><span class="parameter">view</span>
-
-
-
+         (table) control-map parameter
         </li>
     </ul>
 
@@ -366,9 +366,7 @@
     <h3>Parameters:</h3>
     <ul>
         <li><span class="parameter">state_id</span>
-
-
-
+         (string) unique name/id for the state
         </li>
     </ul>
 
@@ -388,9 +386,7 @@
     <h3>Parameters:</h3>
     <ul>
         <li><span class="parameter">state_id</span>
-
-
-
+         (string) unique name/id for the state
         </li>
     </ul>
 
@@ -410,9 +406,36 @@
     <h3>Parameters:</h3>
     <ul>
         <li><span class="parameter">state_id</span>
+         (string) unique name/id for the state
+        </li>
+    </ul>
 
 
 
+
+
+</dd>
+    <dt>
+    <a name = "update_trigger"></a>
+    <strong>update_trigger (ui_obj, color, text, val)</strong>
+    </dt>
+    <dd>
+    update the display of a trigger-button
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">ui_obj</span>
+         (<a href="../modules/Duplex.UIButton.html#">Duplex.UIButton</a>)
+        </li>
+        <li><span class="parameter">color</span>
+         (table) 8-bit r/g/b values
+        </li>
+        <li><span class="parameter">text</span>
+         (string) button or label text
+        </li>
+        <li><span class="parameter">val</span>
+         (number or table) as defined by the UIComponent
         </li>
     </ul>
 
@@ -439,6 +462,9 @@
     ui_obj = (table)  -- instance of UIButton
   ],...
   params = (table)    -- table of control-map params
+    [1] = {
+      xarg = (table)
+    }
 },...
 </code></pre>
 

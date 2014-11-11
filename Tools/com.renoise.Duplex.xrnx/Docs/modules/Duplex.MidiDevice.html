@@ -119,6 +119,11 @@
 <p>
 <h3>Changes</h3>
 
+<p>  0.99.5</p>
+<pre><code>- Full NRPN support (14 bit messages, absolute and relative modes)
+- Input throttling
+</code></pre>
+
 <p>  0.99</p>
 <pre><code>- Support for MMC (Midi Machine Control) messages over sysex
 - Support for 14-bit MIDI pitch bend messages
@@ -137,6 +142,13 @@
 <pre><code>- First release
 </code></pre>
 
+
+<p>TODO</p>
+
+<p>  When loading a control-map, parse the parameters and tell this class
+  about "special parameter treatments" that we can't decide from here:
+  - exempt<em>from</em>throttling (when we want it as fast as possible)
+  - exempt<em>from</em>multibyte (when our 7-bit messages should be left alone)</p>
 
 
 </p>
@@ -157,18 +169,36 @@
 	<td class="summary">Attempt to release the device MIDI ports</td>
 	</tr>
 	<tr>
-	<td class="name" nowrap><a href="#midi_callback">midi_callback (message)</a></td>
+	<td class="name" nowrap><a href="#midi_callback">midi_callback (message, no_multibyte)</a></td>
 	<td class="summary">Invoked when we receive MIDI from device, construct a string identical
- to the <Param> value attribute, which is then used to locate the parameter
- in the control-map</td>
+ to the <Param> value attribute in order to locate the control-map parameter</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#build_message">build_message (value_str, msg_value, msg_context, msg_channel, msg_is_note_off, bit_depth, midi_msgs)</a></td>
+	<td class="summary">Following up on the midi_callback, this method will extract parameters
+ from the control-map and construct messages for each of them...</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#sysex_callback">sysex_callback (message)</a></td>
 	<td class="summary">Invoked when we receive sysex data from the device</td>
 	</tr>
 	<tr>
-	<td class="name" nowrap><a href="#send_cc_message">send_cc_message (number, value, channel)</a></td>
+	<td class="name" nowrap><a href="#send_midi">send_midi (msg)</a></td>
+	<td class="summary">Send raw MIDI message to device, optionally dump to console
+ (used by send<em>cc, send</em>pitch_bend etc.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#send_cc_message">send_cc_message (number, value, channel, multibyte)</a></td>
 	<td class="summary">Send CC message to device</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#send_nrpn_message">send_nrpn_message (number, value, channel, send_only_msb)</a></td>
+	<td class="summary">Send NRPN message to device</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#assemble_nrpn_message">assemble_nrpn_message (match_nrpn_num)</a></td>
+	<td class="summary">(Re)construct the table of MIDI messages that together form a complete
+ NRPN message (compares the provided number with the active NRPN messages)</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#send_sysex_message">send_sysex_message (...)</a></td>
@@ -183,8 +213,13 @@
 	<td class="summary">Send note message to device</td>
 	</tr>
 	<tr>
-	<td class="name" nowrap><a href="#pass_to_renoise">pass_to_renoise (message)</a></td>
+	<td class="name" nowrap><a href="#pass_to_renoise">pass_to_renoise (messages)</a></td>
 	<td class="summary">Pass unhandled/unmatched message to Renoise?</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#on_idle">on_idle ()</a></td>
+	<td class="summary">Idle loop implementation for the MidiDevice class
+ main purpose: process (or discard) NRPN messages</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#_note_to_string">_note_to_string (int)</a></td>
@@ -199,26 +234,90 @@
 	<td class="summary">Convert Program Change value to string, e.g.</td>
 	</tr>
 	<tr>
+	<td class="name" nowrap><a href="#_nrpn_to_string">_nrpn_to_string (num)</a></td>
+	<td class="summary">Convert NRPN value to string, e.g.</td>
+	</tr>
+	<tr>
 	<td class="name" nowrap><a href="#extract_midi_cc">extract_midi_cc (str)</a></td>
 	<td class="summary">Extract MIDI CC number (range 0-127)</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#extract_midi_nrpn">extract_midi_nrpn (str)</a></td>
+	<td class="summary">Extract MIDI NRPN number (range 0-16383)</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#extract_midi_channel">extract_midi_channel (str)</a></td>
 	<td class="summary">Determine channel for the given message (use default port if not specified)</td>
 	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#_create_fingerprint">_create_fingerprint (msg_context, midi_msgs)</a></td>
+	<td class="summary">Create MIDI 'fingerprint' for the provided message(s)
+ (just enough information to identify the CC/NRPN source)</td>
+	</tr>
 </table>
 <h2><a href="#Tables">Tables</a></h2>
 <table class="function_list">
 	<tr>
-	<td class="name" nowrap><a href="#self.composite_messages">self.composite_messages</a></td>
+	<td class="name" nowrap><a href="#self._mb_messages">self._mb_messages</a></td>
 	<td class="summary">
 <p>(table) table of multibyte messages</p>
-<pre><code>[int]{  -- channel
- lsb = [int]
- msb = {int]
+<pre><code>[fingerprint]{
+  type      = [enum] msg_context
+  timestamp = [number]
+  channel   = [int]
+  num       = [int] (only for CC messages)
+  lsb       = [int]
+  msb       = [int]
+  midi_msgs = [table]
 }
 </code></pre>
 </td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#self._multibyte_exempted">self._multibyte_exempted</a></td>
+	<td class="summary">(table) messages that should not be interpreted as multibyte
+ (table is created when parsing control-map)</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#self._nrpn_messages">self._nrpn_messages</a></td>
+	<td class="summary">
+<p>(table) table of NRPN messages</p>
+<pre><code>{
+  timestamp = [number]
+  terminated = [bool]
+  channel   = [int]
+  num_msb   = [int]
+  num_lsb   = [int]
+  data_msb  = {int]
+  data_lsb  = [int]
+}
+</code></pre>
+</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#self._nrpn_msb_only">self._nrpn_msb_only</a></td>
+	<td class="summary">(table) NRPN messages that only require the MSB part (7-bit)
+ (table is created when parsing control-map)</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#self._throttle_buffer">self._throttle_buffer</a></td>
+	<td class="summary">(table) most recently received messages
+  [fingerprint] = {</p>
+<pre><code>timestamp   = [number]
+msg_context = [enum]
+msg_channel = [int]
+value_str   = [string]
+msg_value   = [number]
+msg_is_note_off
+bit_depth   = [int]
+midi_msgs   = [table]
+</code></pre>
+<p>  }</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#self._throttle_exempted">self._throttle_exempted</a></td>
+	<td class="summary">(table) messages that should not be throttled
+ (table is created when parsing control-map)</td>
 	</tr>
 </table>
 <h2><a href="#Fields">Fields</a></h2>
@@ -242,6 +341,27 @@
 	<tr>
 	<td class="name" nowrap><a href="#self.default_parameter_mode">self.default_parameter_mode</a></td>
 	<td class="summary">(<a href="../modules/Duplex.Globals.html#PARAM_MODE">Duplex.Globals.PARAM_MODE</a>) the default parameter mode</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#self.throttling_enabled">self.throttling_enabled</a></td>
+	<td class="summary">(bool) decide whether to throttle incoming messages
+ (the actual threshold is defined in preferences)</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#self.multibyte_enabled">self.multibyte_enabled</a></td>
+	<td class="summary">(bool) decide if multibyte (14-bit) support is enabled</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#self.nrpn_enabled">self.nrpn_enabled</a></td>
+	<td class="summary">(bool) decide if NRPN support is enabled</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#self.terminate_nrpns">self.terminate_nrpns</a></td>
+	<td class="summary">(bool) true when we expect a Null value from the device
+ after receiving or transmitting a NRPN message
+ (enabling this feature will transmit Null values too)
+ important: only enable this feature if the device is known to transmit
+ these messages (midi bytes 2&amp;3: 0x65,0x7F followed by 0x64,0x7F)</td>
 	</tr>
 </table>
 
@@ -310,18 +430,59 @@
 </dd>
     <dt>
     <a name = "midi_callback"></a>
-    <strong>midi_callback (message)</strong>
+    <strong>midi_callback (message, no_multibyte)</strong>
     </dt>
     <dd>
     Invoked when we receive MIDI from device, construct a string identical
- to the <Param> value attribute, which is then used to locate the parameter
- in the control-map
+ to the <Param> value attribute in order to locate the control-map parameter
 
 
     <h3>Parameters:</h3>
     <ul>
         <li><span class="parameter">message</span>
          (Table/MIDIMessage)
+        </li>
+        <li><span class="parameter">no_multibyte</span>
+         (bool) temporarily disable multibyte support
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "build_message"></a>
+    <strong>build_message (value_str, msg_value, msg_context, msg_channel, msg_is_note_off, bit_depth, midi_msgs)</strong>
+    </dt>
+    <dd>
+    Following up on the midi_callback, this method will extract parameters
+ from the control-map and construct messages for each of them...
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">value_str</span>
+         (string) the control-map value to look for
+        </li>
+        <li><span class="parameter">msg_value</span>
+         (int) the value we recieved
+        </li>
+        <li><span class="parameter">msg_context</span>
+         (enum) (<a href="../modules/Duplex.Globals.html#DEVICE_MESSAGE">Duplex.Globals.DEVICE_MESSAGE</a>)
+        </li>
+        <li><span class="parameter">msg_channel</span>
+         (int) between 1 and 16
+        </li>
+        <li><span class="parameter">msg_is_note_off</span>
+         (bool)
+        </li>
+        <li><span class="parameter">bit_depth</span>
+         (int) 7 or 14 bits
+        </li>
+        <li><span class="parameter">midi_msgs</span>
+         (list of tables, each with three bytes)
         </li>
     </ul>
 
@@ -351,8 +512,31 @@
 
 </dd>
     <dt>
+    <a name = "send_midi"></a>
+    <strong>send_midi (msg)</strong>
+    </dt>
+    <dd>
+    Send raw MIDI message to device, optionally dump to console
+ (used by send<em>cc, send</em>pitch_bend etc.  methods)
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">msg</span>
+
+
+
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
     <a name = "send_cc_message"></a>
-    <strong>send_cc_message (number, value, channel)</strong>
+    <strong>send_cc_message (number, value, channel, multibyte)</strong>
     </dt>
     <dd>
     Send CC message to device
@@ -364,13 +548,73 @@
          (int) 7-bit control-number
         </li>
         <li><span class="parameter">value</span>
-         (int) 7-bit control-value
+         (int) 7 or 14-bit control-value
         </li>
         <li><span class="parameter">channel</span>
          (int) midi channel, between 1-16
         </li>
+        <li><span class="parameter">multibyte</span>
+         (bool) true when sending a 14-bit value
+        </li>
     </ul>
 
+
+
+
+
+</dd>
+    <dt>
+    <a name = "send_nrpn_message"></a>
+    <strong>send_nrpn_message (number, value, channel, send_only_msb)</strong>
+    </dt>
+    <dd>
+    Send NRPN message to device
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">number</span>
+         (int) 14-bit control-number
+        </li>
+        <li><span class="parameter">value</span>
+         (int) 14-bit control-value
+        </li>
+        <li><span class="parameter">channel</span>
+         (int) midi channel, between 1-16
+        </li>
+        <li><span class="parameter">send_only_msb</span>
+         (bool) when sending 7-bit messages
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "assemble_nrpn_message"></a>
+    <strong>assemble_nrpn_message (match_nrpn_num)</strong>
+    </dt>
+    <dd>
+    (Re)construct the table of MIDI messages that together form a complete
+ NRPN message (compares the provided number with the active NRPN messages)
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">match_nrpn_num</span>
+
+
+
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        table or nil
+    </ol>
 
 
 
@@ -454,7 +698,7 @@
 </dd>
     <dt>
     <a name = "pass_to_renoise"></a>
-    <strong>pass_to_renoise (message)</strong>
+    <strong>pass_to_renoise (messages)</strong>
     </dt>
     <dd>
     Pass unhandled/unmatched message to Renoise? <br/>
@@ -463,8 +707,8 @@
 
     <h3>Parameters:</h3>
     <ul>
-        <li><span class="parameter">message</span>
-         (MIDI message)
+        <li><span class="parameter">messages</span>
+         (table of MIDI messages)
         </li>
     </ul>
 
@@ -473,6 +717,21 @@
 
         bool (true when message was passed)
     </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "on_idle"></a>
+    <strong>on_idle ()</strong>
+    </dt>
+    <dd>
+    Idle loop implementation for the MidiDevice class
+ main purpose: process (or discard) NRPN messages
+
+
+
 
 
 
@@ -544,6 +803,26 @@
 
 </dd>
     <dt>
+    <a name = "_nrpn_to_string"></a>
+    <strong>_nrpn_to_string (num)</strong>
+    </dt>
+    <dd>
+    Convert NRPN value to string, e.g.  "NRPN#16383"
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">num</span>
+         (int) the parameter number (0-16383)
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
     <a name = "extract_midi_cc"></a>
     <strong>extract_midi_cc (str)</strong>
     </dt>
@@ -554,7 +833,7 @@
     <h3>Parameters:</h3>
     <ul>
         <li><span class="parameter">str</span>
-         (string), control-map value attribute
+         (string), control-map value attribute (e.g. "CC#10")
         </li>
     </ul>
 
@@ -562,6 +841,31 @@
     <ol>
 
         (int) the MIDI CC number, 0-127
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "extract_midi_nrpn"></a>
+    <strong>extract_midi_nrpn (str)</strong>
+    </dt>
+    <dd>
+    Extract MIDI NRPN number (range 0-16383)
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">str</span>
+         (string), control-map value attribute (e.g. "NRPN#16383")
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        (int) the MIDI NRPN number, 0-16383
     </ol>
 
 
@@ -593,22 +897,156 @@
 
 
 </dd>
+    <dt>
+    <a name = "_create_fingerprint"></a>
+    <strong>_create_fingerprint (msg_context, midi_msgs)</strong>
+    </dt>
+    <dd>
+    Create MIDI 'fingerprint' for the provided message(s)
+ (just enough information to identify the CC/NRPN source)
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">msg_context</span>
+
+
+
+        </li>
+        <li><span class="parameter">midi_msgs</span>
+
+
+
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        string
+    </ol>
+
+
+
+
+</dd>
 </dl>
     <h2><a name="Tables"></a>Tables</h2>
     <dl class="function">
     <dt>
-    <a name = "self.composite_messages"></a>
-    <strong>self.composite_messages</strong>
+    <a name = "self._mb_messages"></a>
+    <strong>self._mb_messages</strong>
     </dt>
     <dd>
 
 <p>(table) table of multibyte messages</p>
-<pre><code>[int]{  -- channel
- lsb = [int]
- msb = {int]
+<pre><code>[fingerprint]{
+  type      = [enum] msg_context
+  timestamp = [number]
+  channel   = [int]
+  num       = [int] (only for CC messages)
+  lsb       = [int]
+  msb       = [int]
+  midi_msgs = [table]
 }
 </code></pre>
 
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "self._multibyte_exempted"></a>
+    <strong>self._multibyte_exempted</strong>
+    </dt>
+    <dd>
+    (table) messages that should not be interpreted as multibyte
+ (table is created when parsing control-map)
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "self._nrpn_messages"></a>
+    <strong>self._nrpn_messages</strong>
+    </dt>
+    <dd>
+
+<p>(table) table of NRPN messages</p>
+<pre><code>{
+  timestamp = [number]
+  terminated = [bool]
+  channel   = [int]
+  num_msb   = [int]
+  num_lsb   = [int]
+  data_msb  = {int]
+  data_lsb  = [int]
+}
+</code></pre>
+
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "self._nrpn_msb_only"></a>
+    <strong>self._nrpn_msb_only</strong>
+    </dt>
+    <dd>
+    (table) NRPN messages that only require the MSB part (7-bit)
+ (table is created when parsing control-map)
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "self._throttle_buffer"></a>
+    <strong>self._throttle_buffer</strong>
+    </dt>
+    <dd>
+    (table) most recently received messages
+  [fingerprint] = {</p>
+<pre><code>timestamp   = [number]
+msg_context = [enum]
+msg_channel = [int]
+value_str   = [string]
+msg_value   = [number]
+msg_is_note_off
+bit_depth   = [int]
+midi_msgs   = [table]
+</code></pre>
+<p>  }
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "self._throttle_exempted"></a>
+    <strong>self._throttle_exempted</strong>
+    </dt>
+    <dd>
+    (table) messages that should not be throttled
+ (table is created when parsing control-map)
 
 
 
@@ -682,6 +1120,67 @@
     </dt>
     <dd>
     (<a href="../modules/Duplex.Globals.html#PARAM_MODE">Duplex.Globals.PARAM_MODE</a>) the default parameter mode
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "self.throttling_enabled"></a>
+    <strong>self.throttling_enabled</strong>
+    </dt>
+    <dd>
+    (bool) decide whether to throttle incoming messages
+ (the actual threshold is defined in preferences)
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "self.multibyte_enabled"></a>
+    <strong>self.multibyte_enabled</strong>
+    </dt>
+    <dd>
+    (bool) decide if multibyte (14-bit) support is enabled
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "self.nrpn_enabled"></a>
+    <strong>self.nrpn_enabled</strong>
+    </dt>
+    <dd>
+    (bool) decide if NRPN support is enabled
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "self.terminate_nrpns"></a>
+    <strong>self.terminate_nrpns</strong>
+    </dt>
+    <dd>
+    (bool) true when we expect a Null value from the device
+ after receiving or transmitting a NRPN message
+ (enabling this feature will transmit Null values too)
+ important: only enable this feature if the device is known to transmit
+ these messages (midi bytes 2&amp;3: 0x65,0x7F followed by 0x64,0x7F)
 
 
 
