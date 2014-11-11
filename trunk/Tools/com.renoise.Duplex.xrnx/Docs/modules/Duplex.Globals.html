@@ -280,6 +280,10 @@
 <h2><a href="#Tables">Tables</a></h2>
 <table class="function_list">
 	<tr>
+	<td class="name" nowrap><a href="#ORIENTATION">ORIENTATION</a></td>
+	<td class="summary">(Enum) used for layout purposes</td>
+	</tr>
+	<tr>
 	<td class="name" nowrap><a href="#NOTE_ARRAY">NOTE_ARRAY</a></td>
 	<td class="summary">Table of note names</td>
 	</tr>
@@ -302,10 +306,6 @@
 	<tr>
 	<td class="name" nowrap><a href="#INPUT_TYPE">INPUT_TYPE</a></td>
 	<td class="summary">(Enum) valid <a href="http://www.lua.org/manual/5.1/manual.html#pdf-type">type</a>  attributes for <Param> nodes</td>
-	</tr>
-	<tr>
-	<td class="name" nowrap><a href="#ORIENTATION">ORIENTATION</a></td>
-	<td class="summary">(Enum) used for layout purposes</td>
 	</tr>
 </table>
 <h2><a href="#Fields">Fields</a></h2>
@@ -1221,6 +1221,38 @@
     <h2><a name="Tables"></a>Tables</h2>
     <dl class="function">
     <dt>
+    <a name = "ORIENTATION"></a>
+    <strong>ORIENTATION</strong>
+    </dt>
+    <dd>
+    (Enum) used for layout purposes
+
+
+    <h3>Fields:</h3>
+    <ul>
+        <li><span class="parameter">VERTICAL</span>
+
+
+
+        </li>
+        <li><span class="parameter">HORIZONTAL</span>
+
+
+
+        </li>
+        <li><span class="parameter">NONE</span>
+
+
+
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
     <a name = "NOTE_ARRAY"></a>
     <strong>NOTE_ARRAY</strong>
     </dt>
@@ -1355,6 +1387,9 @@
         <li><span class="parameter">MIDI_PROGRAM_CHANGE</span>
         Midi Program Change Event
         </li>
+        <li><span class="parameter">MIDI_NRPN</span>
+        Midi Non-Registered Parameter Number
+        </li>
     </ul>
 
 
@@ -1417,22 +1452,34 @@
     <h3>Fields:</h3>
     <ul>
         <li><span class="parameter">abs</span>
-        absolute value (the default)
+        absolute value (the default, will accept floating point values)
         </li>
         <li><span class="parameter">abs_7</span>
-        7 bit absolute value
+        7 bit absolute value (quantize to 7 bit range before output)
         </li>
         <li><span class="parameter">abs_14</span>
         14 bit absolute value
         </li>
         <li><span class="parameter">rel_7_signed</span>
-        7 bit relative signed value
+        7 bit relative signed value <br> -- Increase at [065 - 127], decrease at [001 - 063] <br>
+        </li>
+        <li><span class="parameter">rel_7_signed2</span>
+        7 bit relative signed value <br> -- Increase at [001 - 063], decrease at [065 - 127] <br> -- <br>(known as "Relative 3" in the Behringer B-Control series)
         </li>
         <li><span class="parameter">rel_7_offset</span>
-        7 bit relative value
+        7 bit relative value <br>        -- Increase at [065 - 127], decrease at [063 - 000] <br> -- (known as "Relative 2" in the Behringer B-Control series)
         </li>
         <li><span class="parameter">rel_7_twos_comp</span>
-        7 bit relative value
+        7 bit relative value <br>        -- Increase at [001 - 64],  decrease at [127 - 065] <br> -- (known as "Relative 1" in the Behringer B-Control series)
+        </li>
+        <li><span class="parameter">rel_14_msb</span>
+        14 bit relative value <br>       -- CC increase at [0x01 - 0x7F] when MSB is 0x00, decrease at [0x7F - 0x01] when MSB is 0x7F <br> -- NRPN increase at [0x01 - 0x7F] when MSB is 0x00, decrease at [0x01 - 0x7F] when MSB is 0x40 <br> -- (known as "Relative 1" in the Behringer B-Control series)
+        </li>
+        <li><span class="parameter">rel_14_offset</span>
+        14 bit relative value <br>       -- CC increase at [0x01 - 0x7F] when MSB is 0x40, decrease at [0x7F - 0x01] when MSB is 0x3F <br> -- NRPN increase at [0x01 - 0x7F] when MSB is 0x40, decrease at [0x7F - 0x00] when MSB is 0x3F <br> -- (known as "Relative 2" in the Behringer B-Control series)
+        </li>
+        <li><span class="parameter">rel_14_twos_comp</span>
+        14 bit relative value <br>       -- CC increase at [0x01 - 0x7F] when MSB is 0x00, decrease at [0x01 - 0x7F] when MSB is 0x40 <br> -- NRPN increase at [0x01 - 0x7F] when MSB is 0x00, decrease at [0x7F - 0x00] when MSB is 0x7F <br> -- (known as "Relative 3" in the Behringer B-Control series)
         </li>
     </ul>
 
@@ -1477,38 +1524,6 @@
         </li>
         <li><span class="parameter">label</span>
         text display
-        </li>
-    </ul>
-
-
-
-
-
-</dd>
-    <dt>
-    <a name = "ORIENTATION"></a>
-    <strong>ORIENTATION</strong>
-    </dt>
-    <dd>
-    (Enum) used for layout purposes
-
-
-    <h3>Fields:</h3>
-    <ul>
-        <li><span class="parameter">VERTICAL</span>
-
-
-
-        </li>
-        <li><span class="parameter">HORIZONTAL</span>
-
-
-
-        </li>
-        <li><span class="parameter">NONE</span>
-
-
-
         </li>
     </ul>
 

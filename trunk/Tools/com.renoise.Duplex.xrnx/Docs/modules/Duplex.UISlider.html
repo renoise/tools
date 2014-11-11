@@ -175,6 +175,10 @@
 
 <h3>Changelog</h3>
 
+<p>  0.99.5</p>
+<pre><code>- Added support for 14-bit CC and NRPN (absolute/relative modes)
+</code></pre>
+
 <p>  0.99</p>
 <pre><code>- Got rid of "dimmed" method (just call set_palette instead)
 - Support ORIENTATION.NONE for two-dimensional layout
@@ -311,6 +315,10 @@ DEVICE_EVENT.VALUE_CHANGED
 	<tr>
 	<td class="name" nowrap><a href="#self._cached_index">self._cached_index</a></td>
 	<td class="summary">internal values</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#self.slider_acceleration">self.slider_acceleration</a></td>
+	<td class="summary">the amount of acceleration applied to relative motion</td>
 	</tr>
 </table>
 
@@ -834,7 +842,8 @@ DEVICE_EVENT.VALUE_CHANGED
     </dt>
     <dd>
     slider is ORIENTATION.VERTICAL or ORIENTATION.HORIZONTAL?
- (use set_orientation() method to set this value)
+ (use set<em>orientation() method to set this value)
+self.</em>orientation = ORIENTATION.VERTICAL
 
 
 
@@ -864,6 +873,20 @@ DEVICE_EVENT.VALUE_CHANGED
     </dt>
     <dd>
     internal values
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "self.slider_acceleration"></a>
+    <strong>self.slider_acceleration</strong>
+    </dt>
+    <dd>
+    the amount of acceleration applied to relative motion
 
 
 

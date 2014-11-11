@@ -201,8 +201,12 @@
  match the application as their originating_app)</td>
 	</tr>
 	<tr>
+	<td class="name" nowrap><a href="#remove_all_voices">remove_all_voices ()</a></td>
+	<td class="summary">remove all active voices</td>
+	</tr>
+	<tr>
 	<td class="name" nowrap><a href="#remove_voices">remove_voices (app, instr_idx)</a></td>
-	<td class="summary">remove active voices</td>
+	<td class="summary">remove active voices from a given application</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#purge_voices">purge_voices (app, instr_idx)</a></td>
@@ -670,11 +674,25 @@
 
 </dd>
     <dt>
+    <a name = "remove_all_voices"></a>
+    <strong>remove_all_voices ()</strong>
+    </dt>
+    <dd>
+    remove all active voices
+
+
+
+
+
+
+
+</dd>
+    <dt>
     <a name = "remove_voices"></a>
     <strong>remove_voices (app, instr_idx)</strong>
     </dt>
     <dd>
-    remove active voices
+    remove active voices from a given application
 
 
     <h3>Parameters:</h3>
@@ -683,7 +701,7 @@
          (<a href="../modules/Duplex.Application.html#">Duplex.Application</a>)
         </li>
         <li><span class="parameter">instr_idx</span>
-         (int, optional) only remove voices from this instrument
+         (int) this instrument only, optional
         </li>
     </ul>
 

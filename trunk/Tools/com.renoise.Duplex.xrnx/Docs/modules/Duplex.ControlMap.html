@@ -191,6 +191,7 @@
     <li><code>font</code> - (string) specify the font type, relevant for params of type=<code>label</code> </li>
     <li><code>range</code> - (int) specify the range of an on-screen keyboard (number of keys)</li>
     <li><code>mode</code> - (enum) how to interpret incoming values (see <a href="../modules/Duplex.Globals.html#PARAM_MODE">Duplex.Globals.PARAM_MODE</a>)</li>
+    <li><code>throttle</code> - (bool) whether we should throttle this parameter or not (overrides the device default)</li>
     <li><code>class</code> - (string) interpret control-map in the context of which (device) class? (default is to use the current device context, but you can enter any literal class name, e.g. "OscDevice" or "LaunchPad")</li>
 </ul>
 
@@ -218,10 +219,14 @@
 
 <h3>Changes</h3>
 
+<p>  0.99.5</p>
+<pre><code>- &lt;Param @throttle&gt; (new), enable/disable (MIDI) message throttling
+</code></pre>
+
 <p>  0.99.3</p>
 <pre><code>- &lt;Param @match&gt; (new), match a specific (CC) value
 - &lt;Param @match_from, @match_to&gt; (new), match a (CC) value-range
-- &lt;Param @mode&gt; (new), explicitly state the value resolution (e.g. 7 or 14 bit)
+- &lt;Param @mode&gt; (new), specify resolution (7/14 bit) and operation (absolute/relative)
 - &lt;Param @class&gt; (new), interpret parameter in the context of a specific device class
 </code></pre>
 

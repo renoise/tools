@@ -165,9 +165,9 @@
 	<td class="summary">(bool) true when triggered from the virtual control surface</td>
 	</tr>
 	<tr>
-	<td class="name" nowrap><a href="#self.midi_msg">self.midi_msg</a></td>
-	<td class="summary">(table) the MIDI message payload (3 bytes)
- this is either a copy of the message we received from a MIDI controller,
+	<td class="name" nowrap><a href="#self.midi_msgs">self.midi_msgs</a></td>
+	<td class="summary">(table) the MIDI message payload (each entry a table of 3 bytes)
+ this is either a copy of the message(s) we received from a MIDI controller,
  or a value being constructed by the virtual control surface</td>
 	</tr>
 	<tr>
@@ -330,12 +330,12 @@
 
 </dd>
     <dt>
-    <a name = "self.midi_msg"></a>
-    <strong>self.midi_msg</strong>
+    <a name = "self.midi_msgs"></a>
+    <strong>self.midi_msgs</strong>
     </dt>
     <dd>
-    (table) the MIDI message payload (3 bytes)
- this is either a copy of the message we received from a MIDI controller,
+    (table) the MIDI message payload (each entry a table of 3 bytes)
+ this is either a copy of the message(s) we received from a MIDI controller,
  or a value being constructed by the virtual control surface
 
 
