@@ -6,6 +6,52 @@ Duplex Changelog
 Done 0.99
 --------------------------------------------------------------------------------
 
+-- Duplex 0.99.5 -----------
+
+Core/MidiDevice
+- 14-bit CC + NRPN support (absolute/relative modes)
+- Input throttling (ignore input when above a certain threshold)
+
+Core/OscVoiceMgr
+- Method for stopping all active voices
+
+Core/Controlmap
+- <Param @throttle> (new), enable/disable (MIDI) message throttling
+- More thorough parsing of XML (additional error messages)
+
+Core/Message
+- Ability to hold multiple MIDI messages (midi_msg -> midi_msgs)
+
+Core/Display
+- Ability to send multibyte CC/NRPN messages to device
+
+Core/UISlider
+- 14-bit CC + NRPN support (absolute/relative modes)
+- Encoder acceleration (amount specified in Duplex prefs)
+
+Core/UIComponent
+- More thorough "is changed" check when updating palette
+
+Core/StateController
+- Dedicated method for updating trigger button
+
+Application/Keyboard
+- New mapping: All notes off
+- Broadcast ModWheel as CC#1 (according to MIDI standard)
+- Added keyboard cycle icons to palette
+- GridLayout: add note info (text) to buttons
+
+Controllers: BCF/BCR-2000
+- Now defaults to bi-directional communication
+- Added NRPN controlmap/configurations
+
+Controllers: Launchpad
+- Keyboard config: added "all notes off", "cycle layout" mappings, using States
+
+Controllers: MIDI Keyboard
+- Controlmap/configuration: added ModWheel mapping
+
+
 -- Duplex 0.99.4 -----------
 
 Core/Browser
