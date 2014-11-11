@@ -22,12 +22,13 @@ class 'CanvasPoint'
 --- Initialize the Canvas class
 -- @param text (string) 
 -- @param color (table)
+-- @param val (number or table)
 --    {int,int,int}
 
-function CanvasPoint:__init(text,color)
+function CanvasPoint:__init(text,color,val)
   self.text = text or ""
   self.color = color or {0x00,0x00,0x00}
-  self.val = false
+  self.val = val or false
 end
 
 

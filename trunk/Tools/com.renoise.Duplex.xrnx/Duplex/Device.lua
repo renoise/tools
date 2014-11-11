@@ -575,7 +575,7 @@ function Device:_send_message(msg,param,regex)
   --TRACE("Device:_send_message()",msg,param)
   --TRACE("Device:_send_message()",rprint(param.xarg))
 
-  msg.timestamp = os.clock()
+  --msg.timestamp = os.clock()
   msg.device = self
   msg.xarg = param.xarg
 

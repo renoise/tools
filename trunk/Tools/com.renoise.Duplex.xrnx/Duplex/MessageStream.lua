@@ -164,53 +164,36 @@ function MessageStream:input_message(msg)
       self:_handle_or_pass(msg,self.change_listeners,DEVICE_EVENT.VALUE_CHANGED)
     end
 
-  --elseif (msg.xarg.type == "key") or
-  --  (msg.xarg.type == "keyboard")
   elseif (msg.xarg.type == "keyboard") then
-
     -- keyboard input (note), check if key was pressed or released
-    --print("*** MessageStream: msg.context == INPUT_TYPE.KEYBOARD")
-    --if (msg.context == DEVICE_MESSAGE.MIDI_NOTE) then
-      --print("*** MessageStream: INPUT_TYPE.KEYBOARD + DEVICE_MESSAGE.MIDI_NOTE")
-      --if (msg.value[2] == msg.xarg.minimum) or (msg.is_note_off) then
-      if (msg.value == msg.xarg.minimum) or (msg.is_note_off) then
-        self:_handle_or_pass(msg,self.key_release_listeners,DEVICE_EVENT.KEY_RELEASED)
-      else
-        --print("MessageStream:_handle_or_pass - key_press_listeners")
-        self:_handle_or_pass(msg,self.key_press_listeners,DEVICE_EVENT.KEY_PRESSED)
-      end
-    --end
+    if (msg.value == msg.xarg.minimum) or (msg.is_note_off) then
+      self:_handle_or_pass(msg,self.key_release_listeners,DEVICE_EVENT.KEY_RELEASED)
+    else
+      --print("MessageStream:_handle_or_pass - key_press_listeners")
+      self:_handle_or_pass(msg,self.key_press_listeners,DEVICE_EVENT.KEY_PRESSED)
+    end
 
   elseif string.find(msg.xarg.type,"button") then
-
     --  "binary" input, value either max or min 
     --print("*** MessageStream: msg.context == CONTROLLER_XBUTTON")
     -- keyboard (note) input is supported as well, but it's a
     -- special case: note-on will need to be "maximixed" before
     -- it's able to trigger buttons)
     if (msg.context == DEVICE_MESSAGE.MIDI_NOTE) and (not msg.is_note_off) then
-      --print("MessageStream:  maximize value")
       msg.value = msg.xarg.maximum
     end
 
     if (msg.value == msg.xarg.maximum) and (not msg.is_note_off) then
-      -- interpret this as pressed
       --print("*** MessageStream:  interpret this as pressed")
       self.pressed_buttons:insert(msg)
-      -- broadcast to listeners
       self:_handle_or_pass(msg,self.press_listeners,DEVICE_EVENT.BUTTON_PRESSED)
 
     elseif (msg.value == msg.xarg.minimum) or (msg.is_note_off) then
-      -- interpret this as release
-
       --print("*** MessageStream:  interpret this as release")
-
       -- for toggle buttons, broadcast releases to listeners as well
       if (not msg.is_virtual) and
-        (msg.xarg.type == "togglebutton") --or
-        --(msg.xarg.type == "pushbutton") 
+        (msg.xarg.type == "togglebutton")
       then
-        --print("broadcast release to press listeners")
         self:_handle_or_pass(msg,self.press_listeners,DEVICE_EVENT.BUTTON_PRESSED)
       else
         self:_handle_or_pass(msg,self.release_listeners,DEVICE_EVENT.BUTTON_RELEASED)
@@ -500,12 +483,13 @@ function MessageStream:_handle_or_pass(msg,listeners,evt_type)
   --print("pass_msg",pass_msg)
 
   -- ensure that we have MIDI data before passing message
-  -- ??? do we need to filter out non-midi devices
-  if pass_msg and msg.midi_msg and
+  if pass_msg and msg.midi_msgs and
     (msg.device.protocol == DEVICE_PROTOCOL.MIDI) 
   then
     local osc_client = self.process.browser._osc_client
-    osc_client:trigger_midi(msg.midi_msg)
+    for _,midi_msg in ipairs(msg.midi_msgs) do
+      osc_client:trigger_midi(midi_msg)
+    end
   end
 
 end

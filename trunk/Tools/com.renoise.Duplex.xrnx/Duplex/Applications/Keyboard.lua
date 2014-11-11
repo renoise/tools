@@ -378,7 +378,10 @@ Keyboard.available_mappings = {
   },
   cycle_layout = {
     description = "Keyboard: cycle between available layouts"
-  }
+  },
+  all_notes_off = {
+    description = "Keyboard: stop all playing notes"
+  },
 }
 
 Keyboard.default_palette = {
@@ -402,8 +405,16 @@ Keyboard.default_palette = {
   octave_up_off         = { color = {0x00,0x00,0x00}, val=false,text="+12", },
   octave_sync_on        = { color = {0xFF,0xFF,0xFF}, val=true, text="■", },
   octave_sync_off       = { color = {0x00,0x00,0x00}, val=false,text="·", },
-  slider_on             = { color = {0xFF,0xFF,0xFF}, val=true, text = "▪" },
-  slider_off            = { color = {0x00,0x00,0x00}, val=false,text = "·" },
+  slider_on             = { color = {0xFF,0xC0,0xFF}, val=true, text = "▪" },
+  slider_off            = { color = {0xC0,0x80,0x80}, val=false,text = "·" },
+  cycle_layout_1        = { text = "⋮"},
+  cycle_layout_2        = { text = "⋰"},
+  cycle_layout_3        = { text = "⋯"},
+  cycle_layout_on       = { color = {0xFF,0xFF,0xFF}, val=true},
+  cycle_layout_off      = { color = {0x00,0x00,0x00}, val=false},
+  all_notes_on          = { color = {0xFF,0xFF,0xFF}, val=true, text = "⚡" },
+  all_notes_off         = { color = {0x00,0x00,0x00}, val=false,text = "⚡" },
+
 
 }
 
@@ -593,6 +604,17 @@ function Keyboard:trigger(note_on,instr_idx,pitch,velocity,grid_index)
   return true,instr_idx
 
 end
+
+--------------------------------------------------------------------------------
+
+--- stop all playing voices
+
+function Keyboard:all_notes_off()
+
+  self.voice_mgr:remove_all_voices()
+
+end
+
 
 --------------------------------------------------------------------------------
 
@@ -1038,8 +1060,8 @@ function Keyboard:_build_app()
               -- velocity either comes from the midi message itself, 
               -- or min/max values specified in the control-map 
               local velocity = nil
-              if msg.midi_msg then
-                velocity = msg.midi_msg[3] 
+              if msg.midi_msgs and msg.midi_msgs[1] then
+                velocity = msg.midi_msgs[1][3]
               else
                 velocity = scale_value(msg.xarg.maximum,msg.xarg.minimum,msg.xarg.maximum,0,127)
               end
@@ -1165,9 +1187,8 @@ function Keyboard:_build_app()
     c.ceiling = 127
     c.on_change = function(obj)
       local msg = nil
-      --print(obj.value)
       if (self.options.mod_wheel.value == BROADCAST_MODWHEEL) then
-        --msg = {224,0,obj.value} -- TODO
+        msg = {176,1,obj.value}
       elseif (self.options.mod_wheel.value > BROADCAST_MODWHEEL) then
         local cc_num = self.options.mod_wheel.value-3
         msg = {176,cc_num,obj.value}
@@ -1473,9 +1494,26 @@ function Keyboard:_build_app()
         layout_idx or 1
       self:set_grid_layout(layout_idx)
 
+
       self:_set_option("grid_layout",layout_idx,self._process)
+
     end
     self._controls.cycle_layout = c
+  end
+
+
+  -- all_notes_off
+
+  local map = self.mappings.all_notes_off
+  if map.group_name then
+    local c = UIButton(self,map)
+    c:set(self.palette.all_notes_off)
+    c.on_press = function()
+      self:all_notes_off()
+      c:flash(
+        0.1,self.palette.all_notes_on,self.palette.all_notes_off)
+    end
+    self._controls.all_notes_off = c
   end
 
 
@@ -1576,6 +1614,13 @@ function Keyboard:set_grid_layout(val)
   self._update_grid_requested = true
 
   self:update_cycle_controls()
+
+  -- momentarily flash button
+  if self._controls.cycle_layout then
+    self._controls.cycle_layout:flash(
+      0.1,self.palette.cycle_layout_on,self.palette.cycle_layout_off)
+  end
+
 
 end
 
@@ -1844,12 +1889,14 @@ function Keyboard:update_cycle_controls()
     return
   end
 
-  local symbols = {"⋮","⋰","⋯",}
+  --local symbols = {"⋮","⋰","⋯",}
   local ctrl = self._controls.cycle_layout
   if ctrl then
-    local symbol = symbols[self.options.grid_layout.value] 
-      or self.options.grid_layout.value
-    ctrl:set({text=symbol})
+    --local symbol = symbols[self.options.grid_layout.value] 
+    local symbol = self.palette[
+      string.format("cycle_layout_%s",self.options.grid_layout.value)]
+      or {text=self.options.grid_layout.value}
+    ctrl:set(symbol)
   end
   --print("*** update_cycle_controls - ctrl",ctrl)
 

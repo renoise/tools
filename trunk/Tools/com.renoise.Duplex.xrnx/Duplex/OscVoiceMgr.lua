@@ -453,12 +453,25 @@ function OscVoiceMgr:transpose(app,semitones)
 
 end
 
+--------------------------------------------------------------------------------
+
+--- remove all active voices 
+
+function OscVoiceMgr:remove_all_voices()
+  TRACE("OscVoiceMgr:remove_all_voices()")
+
+  for k,v in ripairs(self.playing) do
+    self:release(v.app,v.instr_idx,v.track_idx,v.pitch+v.temp_transpose,v.velocity,v.is_midi,v.channel,true)
+  end
+
+end
+
 
 --------------------------------------------------------------------------------
 
---- remove active voices 
+--- remove active voices from a given application
 -- @param app (@{Duplex.Application})
--- @param instr_idx (int, optional) only remove voices from this instrument
+-- @param instr_idx (int) this instrument only, optional
 
 function OscVoiceMgr:remove_voices(app,instr_idx)
   TRACE("OscVoiceMgr:remove_voices()",app,instr_idx)

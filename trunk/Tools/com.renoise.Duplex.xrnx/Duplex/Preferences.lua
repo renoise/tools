@@ -48,6 +48,10 @@ duplex_preferences = renoise.Document.create("ScriptingToolPreferences") {
   -- fractional values are supported, 0.5 is half a second
   button_hold_time = 0.5,
 
+  --- (number) the amount of acceleration applied to relative motion
+  -- higher values equal less acceleration (default is 10)
+  slider_acceleration = 10,
+
   --- (number) the amount of extrapolation applied to automation
   extrapolation_strength = 3,
 
@@ -62,7 +66,7 @@ duplex_preferences = renoise.Document.create("ScriptingToolPreferences") {
   display_browser_on_start = true,
 
   --- (bool) enable realtime NRPN message support (experimental)
-  nrpn_support = false,
+  --nrpn_support = false,
 
   --- (bool) dump MIDI messages to sdt out (Renoise terminal)
   dump_midi = false,

@@ -6,7 +6,12 @@
 
 Employed by the UIComponents to represent their visual state
 
-The canvas is essentially an extra layer that we perform updates "through". Think of it as pre-optimization before we output to a potentially slow protocol (MIDI), only if something has *actually* changed in the Display the update is performed. 
+The canvas is a two-dimensional table of CanvasPoints which can be resized. 
+Each CanvasPoint specifies both the visual appearance of a button (via color or text), as well as any sort of value that the UIComponent might define. 
+
+Also, the canvas is the layer we perform our updates "through". By checking the "delta", we can decide if something has *actually* changed before the update is performed. 
+
+Think of it as pre-optimization - both cabled MIDI and wireless devices are capable of choking or skipping messages. 
 
 --]]
 
@@ -42,7 +47,7 @@ function Canvas:__init(device)
   -- simple set of booleans (the Display class will create the empty
   -- points when needed)
   self.clear = {}
-          
+
 end
 
 
@@ -61,12 +66,10 @@ function Canvas:set_size(width,height)
   self.width = width
   self.height = height
   for x = 1,width do
-    --for y = 1, height do
-      if not self.buffer[x] then
-        self.buffer[x] = {}
-        self.delta[x] = {}
-      end
-    --end
+    if not self.buffer[x] then
+      self.buffer[x] = {}
+      self.delta[x] = {}
+    end
   end
 
   -- if size is reduced, update the "clear" buffer

@@ -297,8 +297,9 @@ function UIComponent:set_palette(palette)
 
   for i,_ in pairs(palette)do
     for k,v in pairs(palette[i])do
+      --print("UIComponent:set_palette",i,_,k,v)
       if self.palette[i] and (type(self.palette[i][k])~="nil") then
-        if(type(v)=="table")then -- color
+        if (k == "color") and (type(v)=="table") then 
           --print("comparing",rprint(self.palette[i][k]))
           --print("with",rprint(v))
           if (not table_compare(self.palette[i][k],v)) then
@@ -307,12 +308,16 @@ function UIComponent:set_palette(palette)
             changed = true
             --print("*** set_palette - component has changed (color)",i,k)
           end
-        elseif((type(v)=="string") or (type(v)=="boolean")) then 
+        elseif (k == "val" or k == "text") and
+          ((type(v)=="string") or (type(v)=="boolean")) 
+        then 
           if(self.palette[i][k] ~= v)then
             self.palette[i][k] = v
             changed = true
-            --print("*** set_palette - component has changed (text)")
+            --print("*** set_palette - component has changed (text)",v)
           end
+        else
+          error("Internal Error: unexpected entry in palette table")
         end
       end
     end

@@ -841,6 +841,7 @@ function Mixer:_build_app()
       c.tooltip = self.mappings.levels.description
       if (slider_grid_mode) then
         c:set_pos(param.xarg.index,y_pos)
+        c:set_orientation(ORIENTATION.VERTICAL)
       else
         c:set_pos(param.xarg.index)
       end
@@ -848,7 +849,6 @@ function Mixer:_build_app()
       --c.flipped = false
       c.ceiling = RENOISE_DECIBEL
       c:set_size(volume_size-(y_pos-1))
-      c:set_orientation(ORIENTATION.VERTICAL)
       c.on_change = function(obj) 
 
         --print("*** self._controls.volume.on_change - obj.value",obj.value)

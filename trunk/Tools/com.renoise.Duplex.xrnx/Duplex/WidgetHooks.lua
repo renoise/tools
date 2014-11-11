@@ -753,7 +753,6 @@ widget_hooks.keyboard = {
   validate = function(...)
 
     local display,param,cm = select(1,...)
-
     if (param.xarg.range == nil) then
       renoise.app():show_warning(
         ('Whoops! The controlmap \'%s\' needs to specify a \'range\''..
@@ -779,30 +778,21 @@ widget_hooks.keyboard = {
     -- when using a keyboard in OSC mode, we don't receive MIDI messages
     -- but rather, have to go through our keyboard widget to figure this out
 
-    if not msg.midi_msg and regex then
-      
+    if not msg.midi_msgs and regex then
       -- generate note by looking at the last wildcard index 
       -- (OSC keyboard whose pattern look like this: `/key1`, `/key2` etc.,
       -- which we then match using a wildcard pattern like `/key*`)
-      
       local kb_widget = widget_hooks._custom_widgets[param.xarg.id]
       if kb_widget then
-
         --print("widget_hooks.keyboard.on_receive - regex",rprint(regex))
-  
         for k,v in ripairs(regex) do
           local val = tonumber(v.chars)-1
-          --print("val",val)
           if (type(val) == "number") then
-            msg.midi_msg = kb_widget:index_to_midi_msg(val)
-            --print("msg.midi_msg",msg.midi_msg)
+            msg.midi_msgs = {kb_widget:index_to_midi_msg(val)}
             return
           end
         end
-
       end
-
-
     end
 
   end

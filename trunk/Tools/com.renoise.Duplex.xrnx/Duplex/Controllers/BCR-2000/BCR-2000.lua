@@ -15,7 +15,7 @@ function BCR2000:__init(display_name, message_stream, port_in, port_out)
 
   -- the BCR can not handle looped back messages correctly, so we disable 
   -- sending back messages we got from the BCR, in order to break feedback loops...
-  self.loopback_received_messages = false
+  --self.loopback_received_messages = false
 
 end
 

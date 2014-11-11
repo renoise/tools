@@ -113,9 +113,12 @@ function UIKey:do_press(msg)
 
   if (self.on_press ~= nil) then
     self.recent_msg = msg
-    local handled = self:on_press(msg.midi_msg[2],msg.midi_msg[3])
-    if (handled==true) then
-      self:invalidate()
+    local midi_msg = msg.midi_msgs[1] -- ??? assuming this exists
+    if midi_msg then
+      local handled = self:on_press(midi_msg[2],midi_msg[3])
+      if (handled==true) then
+        self:invalidate()
+      end
     end
   end
 
@@ -138,9 +141,12 @@ function UIKey:do_release(msg)
 
   if (self.on_release ~= nil) then
     self.recent_msg = msg
-    local handled = self:on_release(msg.midi_msg[2],msg.midi_msg[3])
-    if (handled==true) then
-      self:invalidate()
+    local midi_msg = msg.midi_msgs[1] -- ??? assuming this exists
+    if midi_msg then
+      local handled = self:on_release(midi_msg[2],midi_msg[3])
+      if (handled==true) then
+        self:invalidate()
+      end
     end
   end
 

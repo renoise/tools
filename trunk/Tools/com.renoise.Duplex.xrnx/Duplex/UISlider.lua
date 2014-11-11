@@ -58,6 +58,10 @@ The Slider supports different input methods: buttons or faders/dials.
 
 ### Changelog
 
+  0.99.5
+    - Added support for 14-bit CC and NRPN (absolute/relative modes)
+    - Encoder acceleration (amount specified in Duplex prefs)
+
   0.99
     - Got rid of "dimmed" method (just call set_palette instead)
     - Support ORIENTATION.NONE for two-dimensional layout
@@ -107,7 +111,8 @@ function UISlider:__init(app,map)
 
   --- slider is ORIENTATION.VERTICAL or ORIENTATION.HORIZONTAL?
   -- (use set_orientation() method to set this value)
-  self._orientation = ORIENTATION.VERTICAL 
+  --self._orientation = ORIENTATION.VERTICAL 
+  self._orientation = nil
 
   --- (int) the size in units (can be > 1 when input method is a button)
   -- (always call set_size() method to set this value)
@@ -137,6 +142,9 @@ function UISlider:__init(app,map)
     self.flipped = map.flipped or false
     self._orientation = map.orientation or ORIENTATION.VERTICAL 
   end
+
+  --- the amount of acceleration applied to relative motion
+  self.slider_acceleration = duplex_preferences.slider_acceleration.value
 
 end
 
@@ -194,52 +202,162 @@ function UISlider:do_change(msg)
     
     local new_val = nil
     
-    local is_midi_device = (self.app.display.device.protocol == DEVICE_PROTOCOL.MIDI)
-    
-    if not msg.is_virtual and is_midi_device and msg.xarg.mode:find("rel_7") then
-      -- treat as 7 bit relative control
+    if not msg.is_virtual 
+      and (self.app.display.device.protocol == DEVICE_PROTOCOL.MIDI) 
+      and msg.xarg.mode:find("rel_") 
+    then
+
       new_val = self.value
-      local step_size = self.ceiling/127
-      if (msg.xarg.mode == "rel_7_signed") then
-        if (msg.midi_msg[3] < 64) then
-          new_val = math.max(new_val-(step_size*msg.midi_msg[3]),0)
-        elseif (msg.midi_msg[3] > 64) then
-          new_val = math.min(new_val+(step_size*(msg.midi_msg[3]-64)),self.ceiling)
-        end
-      elseif (msg.xarg.mode == "rel_7_signed2") then
-        if (msg.midi_msg[3] > 64) then
-          new_val = math.max(new_val-(step_size*(msg.midi_msg[3]-64)),0)
-        elseif (msg.midi_msg[3] < 64) then
-          new_val = math.min(new_val+(step_size*msg.midi_msg[3]),self.ceiling)
-        end
-      elseif (msg.xarg.mode == "rel_7_offset") then
-        if (msg.midi_msg[3] < 64) then
-          new_val = math.max(new_val-(step_size*(64-msg.midi_msg[3])),0)
-        elseif (msg.midi_msg[3] > 64) then
-          new_val = math.min(new_val+(step_size*(msg.midi_msg[3]-64)),self.ceiling)
-        end
-      elseif (msg.xarg.mode == "rel_7_twos_comp") then
-        if (msg.midi_msg[3] > 64) then
-          new_val = math.max(new_val-(step_size*(128-msg.midi_msg[3])),0)
-        elseif (msg.midi_msg[3] < 65) then
-          new_val = math.min(new_val+(step_size*msg.midi_msg[3]),self.ceiling)
+
+      -- provide acceleration for relative encoders
+      -- (factor makes changes bigger when range is bigger)
+      local acc_factor = msg.xarg.maximum / 127
+      local accelerate = function(num)
+        if (num > 1) then
+          self.slider_acceleration = 5
+          local val_acc = num + (num/(self.slider_acceleration * acc_factor))
+          return val_acc
+        else
+          return num
         end
       end
-      -- check if outside range
-      if ((new_val*127) > 127) then
-        LOG("UISlider: trying to assign out-of-range value, probably due to"
-          .."/na parameter which has been set to an incorrect 'mode'")
-        return 
+
+      if msg.xarg.mode:find("rel_7") then
+
+        -- treat as 7 bit relative control
+
+        local midi_msg = msg.xarg.value:find("NRPN") and
+          msg.midi_msgs[3] or msg.midi_msgs[1]
+
+        if not midi_msg then
+          LOG("UISlider: wrong number of MIDI messages")
+        else
+
+          local num = midi_msg[3]
+          local step_size = self.ceiling/127
+          if (msg.xarg.mode == "rel_7_signed") then
+            if (num < 64) then
+              num = - accelerate(num)
+            elseif (num > 64) then
+              num = accelerate(num-64)
+            else
+              num = 0
+            end
+          elseif (msg.xarg.mode == "rel_7_signed2") then
+            if (num > 64) then
+              num = - accelerate(num-64)
+            elseif (num < 64) then
+              num = accelerate(num)
+            else
+              num = 0
+            end
+          elseif (msg.xarg.mode == "rel_7_offset") then
+            if (num < 64) then
+              num = - accelerate(64-num)
+            elseif (num > 64) then
+              num = accelerate(num-64)
+            else
+              num = 0
+            end
+          elseif (msg.xarg.mode == "rel_7_twos_comp") then
+            if (num > 64) then
+              num = - accelerate(128-num)
+            elseif (num < 65) then
+              num = accelerate(num)
+            else
+              num = 0
+            end
+          end
+          if (num > 0) then
+            new_val = math.min(new_val+(step_size*num),self.ceiling)
+          elseif (num < 0) then
+            new_val = math.max(new_val-(step_size*math.abs(num)),0)
+          end
+          --print("*** relative 7-bit - new_val",new_val)
+        end
+
+      elseif msg.xarg.mode:find("rel_14") then
+
+        -- treat as 14 bit relative control
+
+        local step_size = self.ceiling/msg.xarg.maximum
+        local num
+
+        if (msg.xarg.value:find("NRPN")) then
+
+          if not msg.midi_msgs or (#msg.midi_msgs < 4) then
+            LOG("UISlider: too few MIDI messages for a 14-bit NRPN")
+          else
+            local msb = msg.midi_msgs[3][3]
+            num = msg.midi_msgs[4][3]
+            if (msg.xarg.mode == "rel_14_msb") then
+              if (msb == 0x7F) then
+                num = - accelerate(0x80-num)
+              elseif (msb == 0x00) then
+                num = accelerate(num)
+              end
+            elseif (msg.xarg.mode == "rel_14_offset") then
+              if (msb == 0x3F) then
+                num = - accelerate(0x80-num)
+              elseif (msb == 0x40) then
+                num = accelerate(num)
+              end
+            elseif (msg.xarg.mode == "rel_14_twos_comp") then
+              if (msb == 0x40) then 
+                num = - accelerate(num)
+              elseif (msb == 0x00) then 
+                num = accelerate(num)
+              end
+            end
+          end
+
+        elseif (msg.xarg.value:find("CC")) then
+
+          if not msg.midi_msgs or (#msg.midi_msgs < 2) then
+            LOG("UISlider: too few MIDI messages for a 14-bit CC")
+          else
+            local msb = msg.midi_msgs[1][3]
+            num = msg.midi_msgs[2][3]
+            if (msg.xarg.mode == "rel_14_msb") then
+              if (msb == 0x7F) then 
+                num = - accelerate(0x80-num)
+              elseif (msb == 0x00) then 
+                num = accelerate(num)
+              end
+            elseif (msg.xarg.mode == "rel_14_offset") then
+              if (msb == 0x3F) then 
+                num = - accelerate(0x80-num)
+              elseif (msb == 0x40) then 
+                num = accelerate(num)
+              end
+            elseif (msg.xarg.mode == "rel_14_twos_comp") then
+              if (msb == 0x40) then 
+                num = - accelerate(num)
+              elseif (msb == 0x00) then 
+                num = accelerate(num)
+              end
+            end
+          end
+
+        end
+        if (num < 0) then
+          new_val = math.max(new_val-(step_size*math.abs(num)),0)
+        else
+          new_val = math.min(new_val+(step_size*num),self.ceiling)
+        end
+        --print("*** relative 14-bit - new_val",new_val)
       end
     else
       -- treat as absolute control: scale from message to component range
       new_val = scale_value(msg.value,msg.xarg.minimum,msg.xarg.maximum,self.floor,self.ceiling)
-      --print("msg.value,msg.xarg.minimum,msg.xarg.maximum,self.floor,self.ceiling",msg.value,msg.xarg.minimum,msg.xarg.maximum,self.floor,self.ceiling)
-    end
+      --print("*** absolute - new_val",new_val,self.ceiling)
+      if (new_val > self.ceiling) then
+        LOG("UISlider: trying to assign out-of-range value, probably due to an "
+          .."incorrect 'maximum' or 'mode' attribute (value capped to valid range)")
+        new_val = math.min(new_val,self.ceiling)
+      end
 
-    --if new_val == self.value then
-    --  return
-    --end
+    end
 
     if not self:output_quantize(new_val,msg.xarg.mode) then
       return 
@@ -295,20 +413,6 @@ end
 function UISlider:set_value(val,skip_event)
   TRACE("UISlider:set_value()",val,skip_event)
 
-  --if (self.value == val) then
-    --print("*** UISlider:set_value - skip update, same value being set",val)
-    --return
-  --end
-
-  --[[
-  if (val > self.ceiling) or
-    (val < self.floor) 
-  then
-    LOG("Warning: attempted to set UISlider to a value outside range")
-    return
-  end
-  ]]
-
   local idx = math.abs(math.ceil(((self.steps/self.ceiling)*val)-0.5))
   self._cached_value = self.value
   self._cached_index = self.index
@@ -331,11 +435,6 @@ end
 
 function UISlider:set_index(idx,skip_event)
   TRACE("UISlider:set_index()",idx,skip_event)
-
-  --if (self.index == idx) then
-    --print("*** UISlider:set_index - skip update, same index being set",idx)
-    --return
-  --end
 
   self._cached_index = self.index
   self._cached_value = self.value

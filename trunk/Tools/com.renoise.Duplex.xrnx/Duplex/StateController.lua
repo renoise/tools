@@ -51,6 +51,9 @@ function StateController:__init(display)
   --        ui_obj = (table)  -- instance of UIButton 
   --      ],...
   --      params = (table)    -- table of control-map params
+  --        [1] = {
+  --          xarg = (table)        
+  --        }
   --    },...
 	self.states = {}
 
@@ -201,11 +204,15 @@ end
 --------------------------------------------------------------------------------
 
 --- associate a parameter with a named state
+-- @param state_id (string) unique name/id for the state
+-- @param view (table) control-map parameter
 
 function StateController:add_view(state_id,view)
-  TRACE("StateController:add_view",state_id,view,view.xarg.id)
+  TRACE("StateController:add_view",state_id,view)
 
-  table.insert(self.states[state_id].params,view)
+  if self.states[state_id] then
+    table.insert(self.states[state_id].params,view)
+  end
 
 end
 
@@ -213,6 +220,7 @@ end
 --------------------------------------------------------------------------------
 
 --- toggle a named state
+-- @param state_id (string) unique name/id for the state
 
 function StateController:toggle(state_id)
   TRACE("StateController:toggle",state_id)
@@ -232,6 +240,7 @@ end
 --------------------------------------------------------------------------------
 
 --- activate a named state
+-- @param state_id (string) unique name/id for the state
 
 function StateController:enable(state_id)
   TRACE("StateController:enable",state_id)
@@ -261,6 +270,9 @@ function StateController:enable(state_id)
 
   state.active = true
 
+  local cm = self.display.device.control_map
+  local xargs = {}
+
   -- iterate through associated widgets
 	for _,v in pairs(state.params) do
 
@@ -275,15 +287,21 @@ function StateController:enable(state_id)
       if all_states_active then
         -- all types (Row, Column, Group etc.)
         widget.visible = true
+        if v.xarg.group_name then
+          xargs[v.xarg.group_name] = v.xarg
+        end
         if not (type(widget) == "Rack") then
           -- update control (Button etc.)
           if not (type(widget) == "MultiLineText") then
             widget.active = true  
           end
         end
+        --print("state enable - id,widget,value,name,visible",v.xarg.id,v.xarg.value,v.xarg.name,widget,widget.visible)
+
       end
-      --print("all_states_active,id,widget,widget.visible,widget.active",all_states_active,v.xarg.id,widget,widget.visible,widget.active)
     end
+
+    local widget = self.display.vb.views[v.xarg.id]
 
   end
 
@@ -317,9 +335,9 @@ function StateController:enable(state_id)
     if update_trigger then
       if (type(trigger.ui_obj) == "UIButton") then
         local trigger_text = state.xarg.text and 
-          state.xarg.text or trigger.ui_obj.palette.foreground.text
-        trigger.ui_obj:set({color = trigger_color,text=trigger_text,val=true})
-        trigger.ui_obj:force_refresh()
+          state.xarg.text or trigger.param.xarg.text
+          --trigger.ui_obj.palette.foreground.text
+        self:update_trigger(trigger.ui_obj,trigger_color,trigger_text,false)
       end
     end
 
@@ -330,23 +348,32 @@ end
 --------------------------------------------------------------------------------
 
 --- deactivate a named state
+-- @param state_id (string) unique name/id for the state
 
 function StateController:disable(state_id)
   TRACE("StateController:disable",state_id)
   --print("StateController - #params",#self.states[state_id].params)
 
   local state = self.states[state_id]
+  local cm = self.display.device.control_map
+  local xargs = {}
 
   state.active = false
 	for _,v in pairs(state.params) do
     local widget = self.display.vb.views[v.xarg.id]
     if widget then
       widget.visible = not (state.xarg.hide_when_inactive) and true or false
+      --print("v.xarg.group_name/v.xarg.value",v.xarg.group_name,v.xarg.value)
+      if v.xarg.group_name then
+        xargs[v.xarg.group_name] = v.xarg
+      end
       if not (type(widget) == "Rack") and
         not (type(widget) == "MultiLineText")
       then
         widget.active = not (state.xarg.disable_when_inactive) and true or false
       end
+      --print("state disable - id,widget,value,name,visible",v.xarg.id,v.xarg.value,v.xarg.name,widget,widget.visible)
+
     end
   end
 
@@ -355,11 +382,31 @@ function StateController:disable(state_id)
       local trigger_color = state.xarg.invert and
         {0xff,0xff,0xff} or {0x00,0x00,0x00} 
       local trigger_text = state.xarg.text and 
-        state.xarg.text or trigger.ui_obj.palette.foreground.text
-      trigger.ui_obj:set({color = trigger_color,text=trigger_text,val=false})
-      trigger.ui_obj:force_refresh()
+        state.xarg.text or trigger.param.xarg.text
+        --trigger.ui_obj.palette.foreground.text
+      self:update_trigger(trigger.ui_obj,trigger_color,trigger_text,false)
     end
   end
+
+
+
+end
+
+--------------------------------------------------------------------------------
+
+--- update the display of a trigger-button
+-- @param ui_obj (@{Duplex.UIButton})
+-- @color (table) 8-bit r/g/b values
+-- @text (string) button or label text 
+-- @value (number or table) as defined by the UIComponent
+
+function StateController:update_trigger(ui_obj,color,text,val)
+  TRACE("StateController:update_trigger(ui_obj,color,text,val)",ui_obj,color,text,val)
+
+  assert(ui_obj,"Error: trigger has no UIComponent")
+  ui_obj:set({color=color,text=text,val=val})
+  ui_obj:force_refresh()
+  --print("*** update_trigger - ui_obj.palette.text",ui_obj.palette.text)
 
 end
 

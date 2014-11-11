@@ -19,6 +19,13 @@ DEFAULT_MARGIN = renoise.ViewBuilder.DEFAULT_CONTROL_MARGIN
 DEFAULT_SPACING = renoise.ViewBuilder.DEFAULT_CONTROL_SPACING
 DEFAULT_CONTROL_HEIGHT = renoise.ViewBuilder.DEFAULT_CONTROL_HEIGHT
 
+--- (Enum) used for layout purposes
+ORIENTATION = {
+  VERTICAL = 1,
+  HORIZONTAL = 2,
+  NONE = 3,
+}
+
 --- Lowest possible note 
 LOWER_NOTE = -12                  
 
@@ -47,6 +54,7 @@ DEVICE_MESSAGE = {
   MIDI_CHANNEL_PRESSURE = 5,  --- Midi Channel Pressure
   MIDI_KEY = 6,               --- Midi Note Message (unspecific)
   MIDI_PROGRAM_CHANGE = 7,    --- Midi Program Change Event
+  MIDI_NRPN = 8,              --- Midi Non-Registered Parameter Number
 }
 
 
@@ -65,12 +73,39 @@ DEVICE_EVENT = {
 
 --- (Enum) valid `mode` attributes for <Param> nodes
 PARAM_MODE = {
-  "abs",              -- absolute value (the default)
-  "abs_7",            -- 7 bit absolute value
+  "abs",              -- absolute value (the default, will accept floating point values)
+  "abs_7",            -- 7 bit absolute value (quantize to 7 bit range before output)
   "abs_14",           -- 14 bit absolute value
-  "rel_7_signed",     -- 7 bit relative signed value
-  "rel_7_offset",     -- 7 bit relative value
-  "rel_7_twos_comp",  -- 7 bit relative value
+
+  "rel_7_signed",     -- 7 bit relative signed value 
+                      -- Increase at [065 - 127], decrease at [001 - 063]
+
+  "rel_7_signed2",    -- 7 bit relative signed value 
+                      -- Increase at [001 - 063], decrease at [065 - 127]
+                      -- (known as "Relative 3" in the Behringer B-Control series)
+
+  "rel_7_offset",     -- 7 bit relative value        
+                      -- Increase at [065 - 127], decrease at [063 - 000]
+                      -- (known as "Relative 2" in the Behringer B-Control series)
+
+  "rel_7_twos_comp",  -- 7 bit relative value        
+                      -- Increase at [001 - 64],  decrease at [127 - 065]
+                      -- (known as "Relative 1" in the Behringer B-Control series)
+
+  "rel_14_msb",       -- 14 bit relative value 
+                      -- CC: increase at [0x01 - 0x7F] when MSB is 0x00, decrease at [0x7F - 0x01] when MSB is 0x7F
+                      -- NRPN: increase at [0x01 - 0x7F] when MSB is 0x00, decrease at [0x01 - 0x7F] when MSB is 0x40
+                      -- (known as "Relative 1" in the Behringer B-Control series)
+
+  "rel_14_offset",    -- 14 bit relative value 
+                      -- CC: increase at [0x01 - 0x7F] when MSB is 0x40, decrease at [0x7F - 0x01] when MSB is 0x3F
+                      -- NRPN: increase at [0x01 - 0x7F] when MSB is 0x40, decrease at [0x7F - 0x00] when MSB is 0x3F 
+                      -- (known as "Relative 2" in the Behringer B-Control series)
+
+  "rel_14_twos_comp", -- 14 bit relative value 
+                      -- CC: increase at [0x01 - 0x7F] when MSB is 0x00, decrease at [0x01 - 0x7F] when MSB is 0x40
+                      -- NRPN: increase at [0x01 - 0x7F] when MSB is 0x00, decrease at [0x7F - 0x00] when MSB is 0x7F 
+                      -- (known as "Relative 3" in the Behringer B-Control series)
 }
 
 --- (Enum) valid `type` attributes for <Param> nodes
@@ -85,13 +120,6 @@ INPUT_TYPE = {
   "key",              -- key (drum-pad)
   "label",            -- text display
 }
---- (Enum) used for layout purposes
-ORIENTATION = {
-  VERTICAL = 1,
-  HORIZONTAL = 2,
-  NONE = 3,
-}
-
 HARMONIC_SCALES = {
   ["None"] =                { index=1, keys={1,1,1,1,1,1,1,1,1,1,1,1}, count=12, },
   ["Natural Major"] =       { index=2, keys={1,0,1,0,1,1,0,1,0,1,0,1}, count=7,  },
@@ -467,10 +495,10 @@ end
 
 local _log_to_file = false
 local _trace_filters = nil
---local _trace_filters = {"^Keyboard*"}
+--local _trace_filters = {"^UIButton*"}
 --local _trace_filters = {"^StateController*"}
 --local _trace_filters = {"^Recorder*","^UISlider*"}
-local _trace_filters = {".*"}
+--local _trace_filters = {".*"}
 
 --------------------------------------------------------------------------------
 
