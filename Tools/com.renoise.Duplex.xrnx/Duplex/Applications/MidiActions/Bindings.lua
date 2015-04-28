@@ -35,6 +35,11 @@ See also @{Duplex.Applications.MidiActions}
 
 MidiActions.assist_table = {
 
+  --------------------------------------------------------------------------------
+  -- Transport
+  --------------------------------------------------------------------------------
+
+
   {
     name = "Transport:Playback:Panic [Trigger]",  
     label = "Panic",
@@ -425,6 +430,46 @@ MidiActions.assist_table = {
     name = "Transport:Edit:Increase Octave [Trigger]",  
     label = "Oct+",
   },
+  --[[
+  {
+    name = "Transport:Edit:Keyboard Velocity Enabled [Toggle]",  
+    label = "KBVel",
+  },
+  ]]
+  {
+    name = "Transport:Edit:Keyboard Velocity Enabled [Set]",  
+    label = "KBVelEnabled",
+    is_boolean = true,
+    observable = function()
+      return renoise.song().transport.keyboard_velocity_enabled_observable
+    end,
+    value_func = function()
+      return renoise.song().transport.keyboard_velocity_enabled
+    end,
+  },
+  {
+    name = "Transport:Edit:Keyboard Velocity [Set]",  
+    label = "KBVel",
+    is_integer = true,
+    minimum = 0,
+    maximum = 127,
+    observable = function()
+      return renoise.song().transport.keyboard_velocity_enabled
+    end,
+    value_func = function()
+      return renoise.song().transport.keyboard_velocity
+    end,
+  },
+  {
+    name = "Transport:Edit:Decrease Keyboard Velocity [Trigger]",  
+    label = "KBVel-",
+  },
+  {
+    name = "Transport:Edit:Increase Keyboard Velocity [Trigger]",  
+    label = "KBVel+",
+  },
+
+
   {
     name = "Transport:Edit:Single Track Edit Mode [Set]",
     label = "Single",
@@ -471,6 +516,12 @@ MidiActions.assist_table = {
       return renoise.song().transport.wrapped_pattern_edit
     end,
   },
+
+  --------------------------------------------------------------------------------
+  -- Seq. Triggering
+  --------------------------------------------------------------------------------
+
+  
   {
     name = "Seq. Triggering:Trigger:Current [Trigger]",  
     label = "TrigCurr",
@@ -516,6 +567,12 @@ MidiActions.assist_table = {
     name = "Seq. Triggering:Add Scheduled:Sequence XX:Sequence #* [Trigger]",
     label = "AddSched",
   },
+
+  --------------------------------------------------------------------------------
+  -- Seq. Muting
+  --------------------------------------------------------------------------------
+
+
   --[[
   {
     name = "Seq. Muting:Selected Seq. [Toggle]:Mute Track #* [Toggle]",
@@ -535,8 +592,15 @@ MidiActions.assist_table = {
       end
     end,
   },
+
   --"Seq. Muting:Seq. XX [Toggle]:Seq. #%02d:Mute Track #%02d [Toggle]"
   --"Seq. Muting:Seq. XX [Set]:Seq. #%02d:Mute Track #%02d [Set]"
+
+  --------------------------------------------------------------------------------
+  -- Track Muting
+  --------------------------------------------------------------------------------
+
+
   {
     name = "Track Muting:Mute All [Trigger]",  
     label = "MuteAll",
@@ -641,6 +705,11 @@ MidiActions.assist_table = {
     name = "Track Muting:Solo:Send Track XX:Send Track #* [Trigger]",
     label = "SoloSendTrk",
   },
+
+  --------------------------------------------------------------------------------
+  -- Track Levels
+  --------------------------------------------------------------------------------
+
   {
     name = "Track Levels:Volume:Current Track (Pre) [Set]",
     label = "VolCurr",
@@ -816,6 +885,11 @@ MidiActions.assist_table = {
       end
     end,
   },
+
+  --------------------------------------------------------------------------------
+  -- Track DSP
+  --------------------------------------------------------------------------------
+
   --[[
   {
     name = "Track DSPs:Selected FX Active [Toggle]",
@@ -852,6 +926,11 @@ MidiActions.assist_table = {
     name = "Track DSPs:Selected FX (Mixer Subset):Parameter #* [Set]",
     label = "FXPrmSub",
   },
+
+  --------------------------------------------------------------------------------
+  -- Navigation
+  --------------------------------------------------------------------------------
+
   {
     name = "Navigation:Sequencer:Current Sequence Pos [Set]",
     label = "CurrSeq#",
@@ -1028,6 +1107,11 @@ MidiActions.assist_table = {
     name = "Navigation:Instruments:Capture From Pattern [Trigger]",  
     label = "Capture",
   },
+
+  --------------------------------------------------------------------------------
+  -- GUI
+  --------------------------------------------------------------------------------
+
   --[[
   {
     name = "GUI:Window:Fullscreen Mode [Toggle]",
@@ -1075,6 +1159,32 @@ MidiActions.assist_table = {
     name = "GUI:Presets:Activate Preset #* [Trigger]",
     label = "Preset",
   },
+  {
+    name = "GUI:Show Disk Browser [Trigger]",
+    label = "ShowBrowser",
+  },
+  {
+    name = "GUI:Show Disk Browser [Set]",
+    label = "ShowBrowser",
+    is_boolean = true,
+    value_func = function() 
+      return renoise.app().window.disk_browser_is_visible
+    end,
+  },
+  {
+    name = "GUI:Show Instrument Box [Trigger]",
+    label = "ShowInstrBox",
+  },
+  {
+    name = "GUI:Show Instrument Box [Set]",
+    label = "ShowInstrBox",
+    is_boolean = true,
+    value_func = function() 
+      return renoise.app().window.instrument_box_is_visible
+    end,
+  },
+
+
   --[[
   {
     name = "GUI:Upper Frame:Show Upper Frame [Toggle]",
@@ -1106,7 +1216,7 @@ MidiActions.assist_table = {
     label = "Upper#",
     is_integer = true,
     minimum = 1,
-    maximum = 4
+    maximum = 2
   },
   {
     name = "GUI:Show Disk Browser [Trigger]",  
@@ -1126,6 +1236,9 @@ MidiActions.assist_table = {
     name = "GUI:Upper Frame:Show Master Spectrum [Trigger]",  
     label = "Spectrum",
   },
+
+  -- GUI:Middle Frame
+
   {
     name = "GUI:Middle Frame:Select Previous [Trigger]",  
     label = "Middle-",
@@ -1139,16 +1252,42 @@ MidiActions.assist_table = {
     label = "Middle#",
     is_integer = true,
     minimum = 1,
-    maximum = 4
+    maximum = 9
   },
   {
     name = "GUI:Middle Frame:Show Pattern Editor [Trigger]",  
     label = "Pattern",
   },
   {
+    name = "GUI:Middle Frame:Show Instrument Sample Editor [Trigger]",  
+    label = "Waveform",
+  },
+  {
+    name = "GUI:Middle Frame:Show Instrument Sample Keyzones [Trigger]",  
+    label = "Keyzones",
+  },
+  {
+    name = "GUI:Middle Frame:Show Instrument Sample Modulation [Trigger]",  
+    label = "Modulation",
+  },
+  {
+    name = "GUI:Middle Frame:Show Instrument Sample Effects [Trigger]",  
+    label = "Effects",
+  },
+  {
+    name = "GUI:Middle Frame:Show Instrument Plugin Editor [Trigger]",  
+    label = "Plugin",
+  },
+  {
+    name = "GUI:Middle Frame:Show Instrument Midi Editor [Trigger]",  
+    label = "MIDI",
+  },
+
+  {
     name = "GUI:Middle Frame:Show Mixer [Trigger]",  
     label = "Mixer",
   },
+  --[[
   {
     name = "GUI:Middle Frame:Show Key-Zone Editor [Trigger]",  
     label = "KeyZone",
@@ -1157,6 +1296,7 @@ MidiActions.assist_table = {
     name = "GUI:Middle Frame:Show Sample Editor [Trigger]",  
     label = "Sampler",
   },
+  ]]
   {
     name = "GUI:Middle Frame:Show Pattern Matrix [Set]",
     label = "Matrix",
@@ -1222,7 +1362,7 @@ MidiActions.assist_table = {
     label = "Lower#",
     is_integer = true,
     minimum = 1,
-    maximum = 4
+    maximum = 2
   },
   {
     name = "GUI:Lower Frame:Show Track DSPs [Trigger]",  
@@ -1232,6 +1372,7 @@ MidiActions.assist_table = {
     name = "GUI:Lower Frame:Show Track Automation [Trigger]",  
     label = "Automation",
   },
+  --[[
   {
     name = "GUI:Lower Frame:Show Instrument Properties [Trigger]",  
     label = "Instrument",
@@ -1240,5 +1381,6 @@ MidiActions.assist_table = {
     name = "GUI:Lower Frame:Show Song Properties [Trigger]",  
     label = "Song",
   },
+  ]]
 }
 
