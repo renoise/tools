@@ -8,7 +8,7 @@ module("remdebug.session", package.seeall)
 
 require "remdebug.engine"
 
-_COPYRIGHT = "2010 - Renoise.com"
+_COPYRIGHT = "2011 - Renoise.com"
 _DESCRIPTION = "Remote Debugger for Renoise Lua " ..
   "scripts, based on the Kepler Project remdebug"
 _VERSION = "1.0"

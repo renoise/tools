@@ -73,18 +73,26 @@ To do so, use one of the specified categories in its name:
 + "Pattern Editor"
 + "Pattern Matrix"
 + "Pattern Matrix Header"
++ "Phrase Editor"
++ "Phrase Mappings"
++ "Sample Navigator"
 + "Sample Editor"
 + "Sample Editor Ruler"
++ "Sample Editor Slice Markers"
 + "Sample List"
 + "Sample Mappings"
++ "Sample FX Mixer"
++ "Sample Modulation Matrix"
 + "Mixer"
-+ "Track DSPs Chain"
-+ "Track DSPs Chain List"
 + "Track Automation"
 + "Track Automation List"
++ "DSP Chain"
++ "DSP Chain List"
 + "DSP Device"
 + "DSP Device Header"
 + "DSP Device Automation"
++ "Modulation Set"
++ "Modulation Set List"
 
 Separating entries:
 
@@ -230,7 +238,8 @@ The Lua table passed to 'add_file_import_hook' is defined as:
 
 * Required fields:
   + ["category"] = in which disk browser category the file type shows up. 
-      "song", "dsp chain", "instrument", "sample" or "theme"
+      "song", "instrument", "effect chain", "modulation set", "phrase", 
+      "sample" or "theme"
   + ["extensions"] = a list of strings, file extensions, that will invoke
       your hook, like for example {"txt", "swave"}
   + ["invoke"] = function that is called to do the import. return true when

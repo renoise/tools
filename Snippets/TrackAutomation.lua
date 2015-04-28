@@ -9,20 +9,20 @@ error("do not run this file. read and copy/paste from it only...")
 -- Access the selected parameters automation 
 -- (selected in the "Automation" tab in Renoise)
 
-local selected_parameter = renoise.song().selected_parameter
+local selected_track_parameter = renoise.song().selected_track_parameter
 local selected_pattern_track = renoise.song().selected_pattern_track
 
 -- is a parameter selected?.
-if (selected_parameter) then
+if (selected_track_parameter) then
   local selected_parameters_automation = selected_pattern_track:find_automation(
-    selected_parameter)
+    selected_track_parameter)
 
   -- is there automation for the seelcted parameter?
   if (not selected_parameters_automation) then
   
     -- if not, create a new automation for the currently selected pattern/track
     selected_parameters_automation = selected_pattern_track:create_automation(
-      selected_parameter)
+      selected_track_parameter)
   end
 
   ---- do something with existing automation
@@ -80,8 +80,8 @@ renoise.tool():add_menu_entry {
 
 function can_do_something_with_current_automation()
  -- is a parameter selected and automation present?
- return (renoise.song().selected_parameter ~= nil and 
-    selected_pattern_track:find_automation(selected_parameter))
+ return (renoise.song().selected_track_parameter ~= nil and 
+    selected_pattern_track:find_automation(selected_track_parameter))
 end
  
 function do_something_with_current_automation()

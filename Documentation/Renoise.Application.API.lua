@@ -125,21 +125,22 @@ renoise.app():save_song_as(filename)
 -- Access to the application's full log filename and path. Will already be opened 
 -- for writing, but you nevertheless should be able to read from it.
 renoise.app().log_filename
-  -> [string]
+  -> [read-only, string]
 
 -- Get the apps main document, the song. The global "renoise.song()" function 
 -- is, in fact, a shortcut to this property.
 renoise.app().current_song
-  -> [renoise.Song object]
+  -> [read-only, renoise.Song object]
 
 -- List of recently loaded/saved song files.
 renoise.app().recently_loaded_song_files 
-  -> [array of strings, filenames]
+  -> [read-only, array of strings, filenames]
 renoise.app().recently_saved_song_files 
-  -> [array of strings, filenames]
+  -> [read-only, array of strings, filenames]
 
 -- Returns information about all currently installed tools.
-renoise.app().installed_tools -> [table of tables with tool info]
+renoise.app().installed_tools 
+  -> [read-only, array of tables with tool info]
 
 -- Globally used clipboard "slots" in the application.
 renoise.app().active_clipboard_index 
@@ -156,20 +157,21 @@ renoise.app().window
 
 -------- Constants
 
-renoise.ApplicationWindow.UPPER_FRAME_DISK_BROWSER
 renoise.ApplicationWindow.UPPER_FRAME_TRACK_SCOPES
-renoise.ApplicationWindow.UPPER_FRAME_MASTER_SCOPES
 renoise.ApplicationWindow.UPPER_FRAME_MASTER_SPECTRUM
 
 renoise.ApplicationWindow.MIDDLE_FRAME_PATTERN_EDITOR
 renoise.ApplicationWindow.MIDDLE_FRAME_MIXER
-renoise.ApplicationWindow.MIDDLE_FRAME_KEYZONE_EDITOR
-renoise.ApplicationWindow.MIDDLE_FRAME_SAMPLE_EDITOR
+renoise.ApplicationWindow.MIDDLE_FRAME_INSTRUMENT_SAMPLE_OVERVIEW
+renoise.ApplicationWindow.MIDDLE_FRAME_INSTRUMENT_SAMPLE_EDITOR
+renoise.ApplicationWindow.MIDDLE_FRAME_INSTRUMENT_SAMPLE_KEYZONES
+renoise.ApplicationWindow.MIDDLE_FRAME_INSTRUMENT_SAMPLE_MODULATION
+renoise.ApplicationWindow.MIDDLE_FRAME_INSTRUMENT_SAMPLE_EFFECTS
+renoise.ApplicationWindow.MIDDLE_FRAME_INSTRUMENT_PLUGIN_EDITOR
+renoise.ApplicationWindow.MIDDLE_FRAME_INSTRUMENT_MIDI_EDITOR
 
 renoise.ApplicationWindow.LOWER_FRAME_TRACK_DSPS
 renoise.ApplicationWindow.LOWER_FRAME_TRACK_AUTOMATION
-renoise.ApplicationWindow.LOWER_FRAME_INSTRUMENT_PROPERTIES
-renoise.ApplicationWindow.LOWER_FRAME_SONG_PROPERTIES
 
 renoise.ApplicationWindow.MIXER_FADER_TYPE_24DB 
 renoise.ApplicationWindow.MIXER_FADER_TYPE_48DB
@@ -215,14 +217,23 @@ renoise.app().window.lock_keyboard_focus
 renoise.app().window.sample_record_dialog_is_visible
   -> [boolean]
 
+-- Diskbrowser Panel.
+renoise.app().window.disk_browser_is_visible, _observable
+  -> [boolean]
+  
+-- InstrumentBox.
+renoise.app().window.instrument_box_is_visible, _observable
+  -> [boolean]
 
--- Frame with the transport, disk browser, instrument box...
+-- Instrument Editor detaching.
+renoise.app().window.instrument_editor_is_detached, _observable
+  -> [boolean]
+
+-- Frame with the scopes/master spectrum...
 renoise.app().window.upper_frame_is_visible, _observable
   -> [boolean]
 renoise.app().window.active_upper_frame, _observable
   -> [enum = UPPER_FRAME]
-renoise.app().window.disk_browser_is_expanded, _observable
-  -> [boolean]
 
 -- Frame with the pattern editor, mixer...
 renoise.app().window.active_middle_frame, _observable

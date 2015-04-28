@@ -34,8 +34,8 @@ local pattern_index =  renoise.song().selected_pattern_index
 local track_index =  renoise.song().selected_track_index
 local instrument_index = renoise.song().selected_instrument_index
 
-local EMPTY_VOLUME = renoise.PatternTrackLine.EMPTY_VOLUME
-local EMPTY_INSTRUMENT = renoise.PatternTrackLine.EMPTY_INSTRUMENT
+local EMPTY_VOLUME = renoise.PatternLine.EMPTY_VOLUME
+local EMPTY_INSTRUMENT = renoise.PatternLine.EMPTY_INSTRUMENT
 
 local arp_sequence = {
   {note="C-4", instrument = instrument_index, volume = 0x20}, 
@@ -84,15 +84,15 @@ for track_index, track in pairs(renoise.song().tracks) do
         -- Check each column on the line
         for _,note_column in ipairs(line.note_columns) do
           -- Check for volume 
-          if  note_column.volume_value ~= renoise.PatternTrackLine.EMPTY_VOLUME then
+          if  note_column.volume_value ~= renoise.PatternLine.EMPTY_VOLUME then
             found_volume = true
           end
           -- Check for panning 
-          if note_column.panning_value ~= renoise.PatternTrackLine.EMPTY_PANNING then
+          if note_column.panning_value ~= renoise.PatternLine.EMPTY_PANNING then
             found_panning = true
           end
           -- Check for delay
-          if note_column.delay_value ~= renoise.PatternTrackLine.EMPTY_DELAY then
+          if note_column.delay_value ~= renoise.PatternLine.EMPTY_DELAY then
             found_delay = true
           end
         end

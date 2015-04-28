@@ -253,7 +253,6 @@ local function show_dialog(message)
           bind = options.CheckOnStartup,
           notifier = function(v) 
             vb.views.remind_row.visible = v
-            vb.views.options_rack:resize()
           end
         }, 
         vb:text{

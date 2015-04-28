@@ -119,10 +119,23 @@ end
 -- add_action
 
 local function add_action(name, func)
-  if (action_map[name] ~= nil) then
-    error(string.format("action '%s' was already added", name))
-  end
 
+  --[[ debug:
+  
+  if (name:match("%[Trigger%]$") == nil and 
+      name:match("%[Toggle%]$") == nil and 
+      name:match("%[Set%]$") == nil)
+  then
+    error(("action '%s' should be marked, " ..
+      "end with: [Trigger], [Toggle] or [Set]"):format(name))
+  end
+ 
+  if (action_map[name] ~= nil) then
+    error(("action '%s' was already added"):format(name))
+  end
+  
+  ]]
+  
   action_map[name] = func
   action_names:insert(name)
 end
@@ -178,12 +191,17 @@ local function selected_track()
 end
 
 
--- selected_device
+-- selected_track_device
 
-local function selected_device()
-  return song().selected_device
+local function selected_track_device()
+  return song().selected_track_device
 end
 
+-- selected_track_device_index
+
+local function selected_track_device_index()
+  return song().selected_track_device_index
+end
 
 
 --------------------------------------------------------------------------------
@@ -616,19 +634,6 @@ function(message)
 end)
 
 
-add_action("Transport:Record:Chord Mode Enabled [Set]",
-function(message)
-  song().transport.chord_mode_enabled = boolean_message_value(
-    message, song().transport.chord_mode_enabled)
-end)
-
-add_action("Transport:Record:Chord Mode Enabled [Toggle]",
-function(message)
-  song().transport.chord_mode_enabled = toggle_message_value(
-    message, song().transport.chord_mode_enabled)
-end)
-
-
 add_action("Transport:Record:Quantization Enabled [Set]",
 function(message)
   song().transport.record_quantize_enabled = boolean_message_value(
@@ -807,6 +812,37 @@ add_action("Transport:Edit:Increase Octave [Trigger]",
 function(message)
   song().transport.octave = inc_message_value(
     message, song().transport.octave, 0, 8)
+end)
+
+
+add_action("Transport:Edit:Keyboard Velocity Enabled [Toggle]",
+function(message)
+  song().transport.keyboard_velocity_enabled = toggle_message_value(
+    message, song().transport.keyboard_velocity_enabled)
+end)
+
+add_action("Transport:Edit:Keyboard Velocity Enabled [Set]",
+function(message)
+  song().transport.keyboard_velocity_enabled = boolean_message_value(
+    message, song().transport.keyboard_velocity_enabled)
+end)
+
+add_action("Transport:Edit:Keyboard Velocity [Set]",
+function(message)
+  song().transport.keyboard_velocity = message_value(
+    message, song().transport.keyboard_velocity, 0, 127)
+end)
+
+add_action("Transport:Edit:Decrease Keyboard Velocity [Trigger]",
+function(message)
+  song().transport.keyboard_velocity = dec_message_value(
+    message, song().transport.keyboard_velocity, 0, 127)
+end)
+
+add_action("Transport:Edit:Increase Keyboard Velocity [Trigger]",
+function(message)
+  song().transport.keyboard_velocity = inc_message_value(
+    message, song().transport.keyboard_velocity, 0, 127)
 end)
 
 
@@ -1389,8 +1425,10 @@ end
 
 add_action("Track DSPs:Selected FX Active [Toggle]",
 function(message)
-  local sel_device = selected_device()
-  if sel_device and sel_device.name ~= "TrackVolPan" then
+  local sel_device = selected_track_device()
+  local sel_device_index = selected_track_device_index()
+  -- can't bypass track devices at 1
+  if sel_device and sel_device_index > 1 then
     sel_device.is_active = toggle_message_value(
       message, sel_device.is_active)
   end
@@ -1398,8 +1436,10 @@ end)
 
 add_action("Track DSPs:Selected FX Active [Set]",
 function(message)
-  local sel_device = selected_device()
-  if sel_device and sel_device.name ~= "TrackVolPan" then
+  local sel_device = selected_track_device()
+  local sel_device_index = selected_track_device_index()
+  -- can't bypass track devices at 1
+  if sel_device and sel_device_index > 1 then
     sel_device.is_active = boolean_message_value(
       message, sel_device.is_active)
   end
@@ -1413,7 +1453,7 @@ for parameter_index = 1, MAX_GENERIC_PARAMETER_MAPPINGS do
     "Track DSPs:Selected FX:Parameter #%02d [Set]",
      parameter_index),
   function(message)
-    local sel_device = selected_device()
+    local sel_device = selected_track_device()
     if sel_device and parameter_index <= #sel_device.parameters then
       local parameter = sel_device.parameters[parameter_index]
       parameter:record_value(parameter_message_value(message, parameter))
@@ -1429,7 +1469,7 @@ for parameter_index = 1, MAX_GENERIC_PARAMETER_MAPPINGS do
     "Track DSPs:Selected FX (Mixer Subset):Parameter #%02d [Set]",
      parameter_index),
   function(message)
-    local sel_device = selected_device()
+    local sel_device = selected_track_device()
     if sel_device then
       local mixer_parameters = {}
       for _, parameter in pairs(sel_device.parameters) do
@@ -1811,12 +1851,12 @@ add_action("Navigation:Track DSPs:Current Track DSP [Set]",
 function(message)
 
   if message:is_abs_value() then
-    song().selected_device_index = clamp_value(
+    song().selected_track_device_index = clamp_value(
       message.int_value, 1, #selected_track().devices)
 
   elseif message:is_rel_value() then
-    song().selected_device_index = clamp_value(
-      song().selected_device_index + message.int_value,
+    song().selected_track_device_index = clamp_value(
+      song().selected_track_device_index + message.int_value,
       1, #selected_track().devices)
 
   end
@@ -1827,8 +1867,8 @@ add_action("Navigation:Track DSPs:Select Previous Track DSP [Trigger]",
 function(message)
 
   if message:is_trigger() then
-    song().selected_device_index = clamp_value(
-      song().selected_device_index - 1,
+    song().selected_track_device_index = clamp_value(
+      song().selected_track_device_index - 1,
       1, #selected_track().devices)
   end
 
@@ -1838,8 +1878,8 @@ add_action("Navigation:Track DSPs:Select Next Track DSP [Trigger]",
 function(message)
 
   if message:is_trigger() then
-    song().selected_device_index = clamp_value(
-      song().selected_device_index + 1,
+    song().selected_track_device_index = clamp_value(
+      song().selected_track_device_index + 1,
       1, #selected_track().devices)
   end
 
@@ -1957,16 +1997,45 @@ for preset_index = 1,8 do
   end)
 end
 
+-- GUI:Browser
+
+add_action("GUI:Show Disk Browser [Trigger]",
+function(message)
+  if message:is_trigger() then
+    app().window.disk_browser_is_visible =
+      not app().window.disk_browser_is_visible
+  end
+end)
+
+add_action("GUI:Show Disk Browser [Set]",
+function(message)
+  app().window.disk_browser_is_visible = boolean_message_value(
+    message, app().window.disk_browser_is_visible)
+end)
+
+
+-- GUI:Instrument Box
+
+add_action("GUI:Show Instrument Box [Trigger]",
+function(message)
+  if message:is_trigger() then
+    app().window.instrument_box_is_visible =
+      not app().window.instrument_box_is_visible
+  end
+end)
+
+add_action("GUI:Show Instrument Box [Set]",
+function(message)
+  app().window.instrument_box_is_visible = boolean_message_value(
+    message, app().window.instrument_box_is_visible )
+end)
+
 
 -- GUI:Upper Frame
 
 local upper_frame_views = {}
 table.insert(upper_frame_views,
-  renoise.ApplicationWindow.UPPER_FRAME_DISK_BROWSER)
-table.insert(upper_frame_views,
   renoise.ApplicationWindow.UPPER_FRAME_TRACK_SCOPES)
-table.insert(upper_frame_views,
-  renoise.ApplicationWindow.UPPER_FRAME_MASTER_SCOPES)
 table.insert(upper_frame_views,
   renoise.ApplicationWindow.UPPER_FRAME_MASTER_SPECTRUM)
 
@@ -2004,27 +2073,11 @@ function(message)
     message, app().window.active_upper_frame, 1, #upper_frame_views)
 end)
 
-add_action("GUI:Upper Frame:Show Disk Browser [Trigger]",
-function(message)
-  if message:is_trigger() then
-    app().window.active_upper_frame =
-      renoise.ApplicationWindow.UPPER_FRAME_DISK_BROWSER
-  end
-end)
-
 add_action("GUI:Upper Frame:Show Track Scopes [Trigger]",
 function(message)
   if message:is_trigger() then
     app().window.active_upper_frame =
       renoise.ApplicationWindow.UPPER_FRAME_TRACK_SCOPES
-  end
-end)
-
-add_action("GUI:Upper Frame:Show Master Scopes [Trigger]",
-function(message)
-  if message:is_trigger() then
-    app().window.active_upper_frame =
-      renoise.ApplicationWindow.UPPER_FRAME_MASTER_SCOPES
   end
 end)
 
@@ -2045,9 +2098,18 @@ table.insert(middle_frame_views,
 table.insert(middle_frame_views,
   renoise.ApplicationWindow.MIDDLE_FRAME_MIXER)
 table.insert(middle_frame_views,
-  renoise.ApplicationWindow.MIDDLE_FRAME_KEYZONE_EDITOR)
+  renoise.ApplicationWindow.MIDDLE_FRAME_INSTRUMENT_SAMPLE_EDITOR)
+-- skip MIDDLE_FRAME_INSTRUMENT_SAMPLE_OVERVIEW when cycling
 table.insert(middle_frame_views,
-  renoise.ApplicationWindow.MIDDLE_FRAME_SAMPLE_EDITOR)
+  renoise.ApplicationWindow.MIDDLE_FRAME_INSTRUMENT_SAMPLE_KEYZONES)
+table.insert(middle_frame_views,
+  renoise.ApplicationWindow.MIDDLE_FRAME_INSTRUMENT_SAMPLE_MODULATION)
+table.insert(middle_frame_views,
+  renoise.ApplicationWindow.MIDDLE_FRAME_INSTRUMENT_SAMPLE_EFFECTS)
+table.insert(middle_frame_views,
+  renoise.ApplicationWindow.MIDDLE_FRAME_INSTRUMENT_PLUGIN_EDITOR)
+table.insert(middle_frame_views,
+  renoise.ApplicationWindow.MIDDLE_FRAME_INSTRUMENT_MIDI_EDITOR)
 
 add_action("GUI:Middle Frame:Select Previous [Trigger]",
 function(message)
@@ -2087,22 +2149,6 @@ function(message)
   end
 end)
 
-add_action("GUI:Middle Frame:Show Key-Zone Editor [Trigger]",
-function(message)
-  if message:is_trigger() then
-    app().window.active_middle_frame =
-      renoise.ApplicationWindow.MIDDLE_FRAME_KEYZONE_EDITOR
-  end
-end)
-
-add_action("GUI:Middle Frame:Show Sample Editor [Trigger]",
-function(message)
-  if message:is_trigger() then
-    app().window.active_middle_frame =
-      renoise.ApplicationWindow.MIDDLE_FRAME_SAMPLE_EDITOR
-  end
-end)
-
 add_action("GUI:Middle Frame:Show Pattern Matrix [Set]",
 function(message)
   app().window.pattern_matrix_is_visible = boolean_message_value(
@@ -2127,6 +2173,54 @@ function(message)
     message, app().window.pattern_advanced_edit_is_visible)
 end)
 
+add_action("GUI:Middle Frame:Show Instrument Sample Editor [Trigger]",
+function(message)
+  if message:is_trigger() then
+    app().window.active_middle_frame =
+      renoise.ApplicationWindow.MIDDLE_FRAME_INSTRUMENT_SAMPLE_EDITOR
+  end
+end)
+
+add_action("GUI:Middle Frame:Show Instrument Sample Keyzones [Trigger]",
+function(message)
+  if message:is_trigger() then
+    app().window.active_middle_frame =
+      renoise.ApplicationWindow.MIDDLE_FRAME_INSTRUMENT_SAMPLE_KEYZONES
+  end
+end)
+
+add_action("GUI:Middle Frame:Show Instrument Sample Modulation [Trigger]",
+function(message)
+  if message:is_trigger() then
+    app().window.active_middle_frame =
+      renoise.ApplicationWindow.MIDDLE_FRAME_INSTRUMENT_SAMPLE_MODULATION
+  end
+end)
+
+add_action("GUI:Middle Frame:Show Instrument Sample Effects [Trigger]",
+function(message)
+  if message:is_trigger() then
+    app().window.active_middle_frame =
+      renoise.ApplicationWindow.MIDDLE_FRAME_INSTRUMENT_SAMPLE_EFFECTS
+  end
+end)
+
+add_action("GUI:Middle Frame:Show Instrument Plugin Editor [Trigger]",
+function(message)
+  if message:is_trigger() then
+    app().window.active_middle_frame =
+      renoise.ApplicationWindow.MIDDLE_FRAME_INSTRUMENT_PLUGIN_EDITOR
+  end
+end)
+
+add_action("GUI:Middle Frame:Show Instrument Midi Editor [Trigger]",
+function(message)
+  if message:is_trigger() then
+    app().window.active_middle_frame =
+      renoise.ApplicationWindow.MIDDLE_FRAME_INSTRUMENT_MIDI_EDITOR
+  end
+end)
+
 
 -- GUI:Lower Frame
 
@@ -2135,10 +2229,6 @@ table.insert(lower_frame_views,
   renoise.ApplicationWindow.LOWER_FRAME_TRACK_DSPS)
 table.insert(lower_frame_views,
   renoise.ApplicationWindow.LOWER_FRAME_TRACK_AUTOMATION)
-table.insert(lower_frame_views,
-  renoise.ApplicationWindow.LOWER_FRAME_INSTRUMENT_PROPERTIES)
-table.insert(lower_frame_views,
-  renoise.ApplicationWindow.LOWER_FRAME_SONG_PROPERTIES)
 
 add_action("GUI:Lower Frame:Show Lower Frame [Toggle]",
 function(message)
@@ -2189,21 +2279,4 @@ function(message)
       renoise.ApplicationWindow.LOWER_FRAME_TRACK_AUTOMATION
   end
 end)
-
-add_action("GUI:Lower Frame:Show Instrument Properties [Trigger]",
-function(message)
-  if message:is_trigger() then
-    app().window.active_lower_frame =
-      renoise.ApplicationWindow.LOWER_FRAME_INSTRUMENT_PROPERTIES
-  end
-end)
-
-add_action("GUI:Lower Frame:Show Song Properties [Trigger]",
-function(message)
-  if message:is_trigger() then
-    app().window.active_lower_frame =
-      renoise.ApplicationWindow.LOWER_FRAME_SONG_PROPERTIES
-  end
-end)
-
 

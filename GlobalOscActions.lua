@@ -303,10 +303,10 @@ local function selected_track_index()
 end
 
 
--- selected_device_index
+-- selected_track_device_index
 
-local function selected_device_index()
-  return song().selected_device_index
+local function selected_track_device_index()
+  return song().selected_track_device_index
 end
 
 
@@ -614,19 +614,6 @@ add_global_action {
   handler = function(step)
     song().transport.record_quantize_lines = clamp_value(step, 1, 32)
   end,
-}
-
-
--- /song/record/chord_mode
-
-add_global_action { 
-  pattern = "/song/record/chord_mode", 
-  description = "Enable or disable the global chord mode",
-  
-  arguments = { argument("enabled", "boolean") },
-  handler = function(enabled)
-    song().transport.chord_mode_enabled = enabled
-  end
 }
 
 
@@ -1081,7 +1068,7 @@ function process_message(pattern, arguments)
         if (device_index and device_pattern) then
           device_index = tonumber(device_index) or 0
           if (device_index == -1) then
-            device_index = selected_device_index() 
+            device_index = selected_track_device_index() 
           end
       
           action = device_action_pattern_map[device_pattern]

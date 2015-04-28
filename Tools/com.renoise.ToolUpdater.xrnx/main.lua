@@ -78,7 +78,7 @@ end
     [api_version] =>  2
     [author] =>  PeanutHead
     [auto_upgraded] => false
-    [bundle_path] =>  C:\Users\PeanutHead\AppData\Roaming\Renoise\V2.7.0\Scripts\Tools\se.peanuts.PeanutButter.xrnx\
+    [bundle_path] =>  C:\Users\PeanutHead\AppData\Roaming\Renoise\V2.7.0\Scripts\Framework\se.peanuts.PeanutButter.xrnx\
     [category] =>  Food
     [description] =>  Nice and sticky
     [enabled] =>  true
@@ -621,7 +621,6 @@ local function browser_init(autoclose, silent)
           page.visible = false
         end
         page_table["page_"..item].visible = true
-        pages:resize()
       end          
     }     
     

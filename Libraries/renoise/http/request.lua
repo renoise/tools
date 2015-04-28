@@ -89,7 +89,7 @@ read = function()
         request.sent_header = true
         if (not success) then          
           request.text_status = Request.ERROR
-          log:error(("%s failed: %s."):format(request.url,
+          log:error(("%s send header failed: %s."):format(request.url,
             (socket_error or "[unknown error]")))
           request:_do_callback(socket_error)  
           requests_pool:remove(k)
@@ -98,8 +98,15 @@ read = function()
       -- Read Header
       elseif (not request.header_received) then                  
         request.progress:_set_status(Progress.READING_HEADER)
-        request:_read_header()
-        
+        local success, socket_error = request:_read_header()
+        if (not success) then          
+          request.text_status = Request.ERROR
+          log:error(("%s read header failed: %s."):format(request.url,
+            (socket_error or "[unknown error]")))
+          request:_do_callback(socket_error)  
+          requests_pool:remove(k)
+        end          
+
       -- Paused        
       elseif (request.paused and request.progress.status ~= Progress.PAUSED) then
         -- stop polling when the only request in the pool is paused
@@ -756,15 +763,18 @@ end
 ---## read_header ##---
 -- Try to read a couple of response header lines
 function Request:_read_header()    
-   
+  
+  assert(self.client_socket, "need a valid socket connection")
+  
   local line, socket_error = nil
   
   -- Try to get a few lines at a time
   for i=1,self.lines_per_cycle do
     
-    if (not self.client_socket) then
-      break
-    end
+    if (not self.client_socket.is_open) then
+      self:_do_callback(socket_error or "Connection reset by peer.")      
+      return false
+    end  
     
     line, socket_error = self.client_socket:receive(
         "*l", self.settings.header_timeout)    
@@ -802,6 +812,8 @@ function Request:_read_header()
     self:_do_callback(socket_error)      
     return false
   end
+
+  return true
 end
 
 
@@ -863,8 +875,10 @@ function Request:_parse_header()
       self.header_received = false
       
       -- Flush socket buffer
-      self.client_socket:receive("*all", self.settings.timeout)
-      
+      if (self.client_socket.is_open) then
+        self.client_socket:receive("*all", self.settings.timeout)
+      end
+
       -- Suppress error callback. The idle handler will take over from here.
       return true, nil
     end
@@ -885,6 +899,11 @@ function Request:_read_content()
   self.progress:_set_status( Progress.BUSY )
   self.text_status = nil  
     
+  if (not self.client_socket.is_open) then
+    self:_do_callback("Connection reset by peer.")
+    return false
+  end
+  
   local buffer, socket_error = 
     self.client_socket:receive("*all", self.settings.timeout)
   
@@ -1207,7 +1226,7 @@ function Request:_do_callback(socket_error)
           if (cd and #cd > 0) then
             log:info("Content-Disposition: " .. cd)
             filename = cd:match('filename\s*=\s*(.+)$')
-            -- remove quotes, when present
+            -- remove surrounding quotes, when present
             if (filename and filename:match('^"(.+)"$')) then
               filename = filename:match('^"(.+)"$')
             end 
@@ -1219,7 +1238,9 @@ function Request:_do_callback(socket_error)
           
           -- add extension depending on content type
           local type = self:_get_header("Content-Type")
-          type = type:match("^[^;]+")
+          if (type and type:match("^[^;]+")) then
+            type = type:match("^[^;]+")
+          end
           local extension = Request:_get_ext_by_mime(type)
           filename = filename .. extension                     
           
