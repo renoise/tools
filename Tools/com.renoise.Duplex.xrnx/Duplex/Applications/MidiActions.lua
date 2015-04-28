@@ -30,7 +30,7 @@ if (os.platform() == "WINDOWS") then
 
   for str in iterator do
     if (string.sub(str,-34)=="\\Resources\\Scripts\\Libraries\\?.lua") then
-      default_location = string.sub(str,0,49)   
+      default_location = string.sub(str,0,#str-15)   
     end
   end
 
@@ -236,11 +236,7 @@ MidiActions.default_palette = {
 
 -- include the file with extra bindings info 
 -- (such as which observable values to look for, etc.)
-
-local old_package_path = package.path
-package.path = renoise.tool().bundle_path .. "Duplex/Applications/MidiActions/?.lua"
-require "Bindings"
-package.path = old_package_path
+require "Duplex/Applications/MidiActions/Bindings"
 
 
 --==============================================================================

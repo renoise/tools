@@ -109,14 +109,10 @@ Mlrx.SAMPLE_PREP_OFF = 2
 
 
 -- include the supporting classes
-
-local old_package_path = package.path
-package.path = renoise.tool().bundle_path .. "Duplex/Applications/Mlrx/?.lua"
-require "Mlrx_group"
-require "Mlrx_note"
-require "Mlrx_pos"
-require "Mlrx_track"
-package.path = old_package_path
+require "Duplex/Applications/Mlrx/Mlrx_group"
+require "Duplex/Applications/Mlrx/Mlrx_note"
+require "Duplex/Applications/Mlrx/Mlrx_pos"
+require "Duplex/Applications/Mlrx/Mlrx_track"
 
 
 Mlrx.default_options = {
