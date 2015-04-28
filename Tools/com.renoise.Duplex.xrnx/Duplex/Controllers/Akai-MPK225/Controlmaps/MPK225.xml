@@ -1,0 +1,78 @@
+<Device>
+  <Name>MPK225</Name>
+  <Author>mattnasty</Author>
+  <Description>Controlmap for MPK225</Description>
+  <Parameters>
+    <Row>
+      
+      <Column>
+
+          <Group name="Encoders" orientation="horizontal" columns="4">
+          <Param value="CC#14|Ch2" type="dial" name="Dial #1"  maximum="127" minimum="0"/>
+          <Param value="CC#15|Ch2" type="dial" name="Dial #2"  maximum="127" minimum="0"/>
+          <Param value="CC#16|Ch2" type="dial" name="Dial #3"  maximum="127" minimum="0"/>
+          <Param value="CC#17|Ch2" type="dial" name="Dial #4"  maximum="127" minimum="0"/>
+          <Param value="CC#18|Ch2" type="dial" name="Dial #5"  maximum="127" minimum="0"/>
+          <Param value="CC#19|Ch2" type="dial" name="Dial #6"  maximum="127" minimum="0"/>
+          <Param value="CC#20|Ch2" type="dial" name="Dial #7"  maximum="127" minimum="0"/>
+          <Param value="CC#21|Ch2" type="dial" name="Dial #8"  maximum="127" minimum="0"/>
+       
+        
+          <Param value="CC#14|Ch3" type="dial" name="Dial #9"  maximum="127" minimum="0"/>
+          <Param value="CC#15|Ch3" type="dial" name="Dial #10"  maximum="127" minimum="0"/>
+          <Param value="CC#16|Ch3" type="dial" name="Dial #11"  maximum="127" minimum="0"/>
+          <Param value="CC#17|Ch3" type="dial" name="Dial #12"  maximum="127" minimum="0"/>
+          <Param value="CC#18|Ch3" type="dial" name="Dial #13"  maximum="127" minimum="0"/>
+          <Param value="CC#19|Ch3" type="dial" name="Dial #14"  maximum="127" minimum="0"/>
+          <Param value="CC#20|Ch3" type="dial" name="Dial #15"  maximum="127" minimum="0"/>
+          <Param value="CC#21|Ch3" type="dial" name="Dial #16"  maximum="127" minimum="0"/>
+       
+      
+          <Param value="CC#14|Ch4" type="dial" name="Dial #17"  maximum="127" minimum="0"/>
+          <Param value="CC#15|Ch4" type="dial" name="Dial #18"  maximum="127" minimum="0"/>
+          <Param value="CC#16|Ch4" type="dial" name="Dial #19"  maximum="127" minimum="0"/>
+          <Param value="CC#17|Ch4" type="dial" name="Dial #20"  maximum="127" minimum="0"/>
+          <Param value="CC#18|Ch4" type="dial" name="Dial #21"  maximum="127" minimum="0"/>
+          <Param value="CC#19|Ch4" type="dial" name="Dial #22"  maximum="127" minimum="0"/>
+          <Param value="CC#20|Ch4" type="dial" name="Dial #23"  maximum="127" minimum="0"/>
+          <Param value="CC#21|Ch4" type="dial" name="Dial #24"  maximum="127" minimum="0"/>
+
+          </Group>
+       </Column> 
+        
+       <Column>
+         <Group name="Triggers" orientation="horizontal" columns="4">
+          <Param value="C-4|Ch2" type="button" name="Button #1"  maximum="127" minimum="0"/>
+          <Param value="D-4|Ch2" type="button" name="Button #2"  maximum="127" minimum="0"/>
+          <Param value="E-4|Ch2" type="button" name="Button #3"  maximum="127" minimum="0"/>
+          <Param value="F-4|Ch2" type="button" name="Button #4"  maximum="127" minimum="0"/>
+          <Param value="G-4|Ch2" type="button" name="Button #5"  maximum="127" minimum="0"/>
+          <Param value="A-4|Ch2" type="button" name="Button #6"  maximum="127" minimum="0"/>
+          <Param value="B-4|Ch2" type="button" name="Button #7"  maximum="127" minimum="0"/>
+          <Param value="C-5|Ch2" type="button" name="Button #8"  maximum="127" minimum="0"/>
+       
+          <Param value="D-6|Ch2" type="button" name="Button #9"  maximum="127" minimum="0"/>
+          <Param value="E-6|Ch2" type="button" name="Button #10"  maximum="127" minimum="0"/>
+          <Param value="F-6|Ch2" type="button" name="Button #11"  maximum="127" minimum="0"/>
+          <Param value="G-6|Ch2" type="button" name="Button #12"  maximum="127" minimum="0"/>
+          <Param value="A-6|Ch2" type="button" name="Button #13"  maximum="127" minimum="0"/>
+          <Param value="B-6|Ch2" type="button" name="Button #14"  maximum="127" minimum="0"/>
+          <Param value="C-7|Ch2" type="button" name="Button #15"  maximum="127" minimum="0"/>
+          <Param value="D-7|Ch2" type="button" name="Button #16"  maximum="127" minimum="0"/>
+       
+          <Param value="C-5|Ch3" type="button" name="Button #17"  maximum="127" minimum="0"/>
+          <Param value="D-5|Ch3" type="button" name="Button #18"  maximum="127" minimum="0"/>
+          <Param value="E-5|Ch3" type="button" name="Button #19"  maximum="127" minimum="0"/>
+          <Param value="F-5|Ch3" type="button" name="Button #20"  maximum="127" minimum="0"/>
+          <Param value="G-5|Ch3" type="button" name="Button #21"  maximum="127" minimum="0"/>
+          <Param value="A-5|Ch3" type="button" name="Button #22"  maximum="127" minimum="0"/>
+          <Param value="B-5|Ch3" type="button" name="Button #23"  maximum="127" minimum="0"/>
+          <Param value="C-6|Ch3" type="button" name="Button #24"  maximum="127" minimum="0"/>
+
+          </Group>
+
+      </Column>
+
+    </Row>
+  </Parameters>
+</Device>
