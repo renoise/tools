@@ -6,6 +6,9 @@ If you are only interested in downloading tools for Renoise, not developing your
 ###Getting Started
 We offer a scripting starter-pack, which is highly recommended for everyone who wants to start getting into all this Renoise scripting. Please download and read this first, in order to get an overview about all that's needed to develop tools for Renoise. It contains example tools, the full API documentation, an introduction text and some code snippets. The starter pack also contains a HTML version of the API reference which is not available here on github.
 
+Link: [XRNX Starter Packer for Renoise 3.0](http://files.renoise.com/xrnx/XrnxStarterPack300.zip)
+
+
 ###Documentation & API Reference
 The main documentation and API references can also be read online, on this site. You'll find them right here in the [XRNX code repository](https://github.com/renoise/xrnx/tree/master/Documentation).
 
