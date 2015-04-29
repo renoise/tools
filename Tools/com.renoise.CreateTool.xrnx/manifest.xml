@@ -1,11 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <RenoiseScriptingTool doc_version="0">
   <ApiVersion>4</ApiVersion>
-  <Id>com.renoise.ToolUpdater</Id>
-  <Version>6</Version>
-  <Author>Bantai | marvin@renoise.com  </Author>
-  <Name>Tool Updater</Name>
-  <Category>Tool Management</Category>
-  <Description>Looks for available updates of installed Tools, which will then be downloaded from the Renoise server and installed.</Description>
-  <Homepage>http://tools.renoise.com</Homepage>
+  <Id>com.renoise.CreateTool</Id>
+  <Version>11</Version>
+  <Author>Bantai</Author>
+  <Name>Create Tool</Name>
+  <Category>Development</Category>
+  <Description>A wizard to help you setup the basic structure for a new Tool. There is also an Export to XRNX file feature.
+
+Look in the File menu of the Scripting Editor.</Description>
+  <Homepage>http://tools.renoise.com/tools/create-tool</Homepage>
 </RenoiseScriptingTool>
