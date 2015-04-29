@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<RenoiseScriptingTool>
+  <ApiVersion>4</ApiVersion>
+  <Id>com.renoise.Soundcloud</Id>
+  <Version>0.4</Version>
+  <Name>Render Song to Soundcloud</Name>
+  <Author>Dac Chartrand [dac@renoise.com]</Author>
+  <Description>A simple interface to the SoundCloud Desktop Sharing Kit. Creates "Render Song to SoundCloud..." in the File menu. Renders a 32bit WAV with the same sample rate as your current settings, cubic interpolation.</Description>
+  <Homepage>http://www.renoise.com</Homepage>
+  <Platform>Windows, Mac</Platform>
+</RenoiseScriptingTool>
