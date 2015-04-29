@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <RenoiseScriptingTool>
-  <ApiVersion>3.0</ApiVersion>
+  <ApiVersion>4.0</ApiVersion>
   <Version>1.0</Version>
   <Id>com.renoise.ExampleToolSlicedProcess</Id>
   <Author>taktik [taktik@renoise.com]</Author>
@@ -8,4 +8,3 @@
   <Name>Renoise Scripting Tool Example</Name>
   <Description>Example tool that shows how to use coroutines to slice up processing functions.</Description>
 </RenoiseScriptingTool>
-

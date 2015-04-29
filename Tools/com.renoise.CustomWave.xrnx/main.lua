@@ -475,7 +475,7 @@ function generate()
   local int_sample_index = renoise.song().selected_sample_index
   local int_generated_samples = 0
 
-  while table.getn(instrument.samples) > 1 do
+  while table.getn(instrument.samples) > 0 do
     instrument:delete_sample_at(1)
   end
   
@@ -486,11 +486,8 @@ function generate()
   
   for int_note = int_start_note, int_end_note do
 
-    if(int_generated_samples == 0) then
-      sample_new = renoise.song().selected_sample
-    else
-      sample_new = instrument:insert_sample_at(int_generated_samples+1) 
-    end
+    sample_new = instrument:insert_sample_at(int_generated_samples+1) 
+
   
     buffer_new = sample_new.sample_buffer
   
@@ -546,15 +543,6 @@ function generate()
   instrument.name = "Generated instrument"
   
   --create key zones
-  local LAYER_NOTE_OFF = renoise.Instrument.LAYER_NOTE_OFF
-  while (#instrument.sample_mappings[LAYER_NOTE_OFF] > 0) do
-    instrument:delete_sample_mapping_at(LAYER_NOTE_OFF, 1)
-  end
-  
-  local LAYER_NOTE_ON = renoise.Instrument.LAYER_NOTE_ON
-  while (#instrument.sample_mappings[LAYER_NOTE_ON] > 0) do
-    instrument:delete_sample_mapping_at(LAYER_NOTE_ON, 1)
-  end
   
   for int_note = int_start_note, int_end_note do
     local sample_index = int_note - int_start_note + 1
@@ -569,9 +557,13 @@ function generate()
     if (int_note < int_end_note) then
       note_range[2] = int_note - 1
     end
-    
-    instrument:insert_sample_mapping(LAYER_NOTE_ON,
-      sample_index, base_note, note_range, {0, 0x7f})
+
+    local sample = instrument.samples[sample_index]
+
+    sample.sample_mapping.layer = renoise.Instrument.LAYER_NOTE_ON
+    sample.sample_mapping.note_range = note_range
+    sample.sample_mapping.base_note = base_note
+
   end
 end
 

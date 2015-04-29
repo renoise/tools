@@ -1,7 +1,5 @@
-<?xml version="1.0" encoding="UTF-8"?>
 <RenoiseScriptingTool doc_version="0">
-  <ApiVersion>3</ApiVersion>
-  <AutoUpgraded>false</AutoUpgraded>
+  <ApiVersion>4</ApiVersion>
   <Id>com.renoise.NotesStrum</Id>
   <Version>2.3999999999999999</Version>
   <Author>Vincent Voois [ http://tinyurl.com/vvrns ]</Author>

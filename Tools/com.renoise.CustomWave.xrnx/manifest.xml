@@ -3,7 +3,7 @@
   <Name>Custom Wave Synth</Name>
   <Id>com.renoise.CustomWave</Id>
   <Version>0.91</Version>
-  <ApiVersion>3.0</ApiVersion>
+  <ApiVersion>4.0</ApiVersion>
   <Author>Fabio Napodano | It-Alien (it-alien@renoise.com)</Author>
   <AutoUpgraded>false</AutoUpgraded>
   <Category>Sample Editor</Category>
