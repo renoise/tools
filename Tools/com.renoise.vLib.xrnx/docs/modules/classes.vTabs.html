@@ -1,0 +1,606 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+<head>
+    <title>Reference</title>
+    <link rel="stylesheet" href="../ldoc.css" type="text/css" />
+</head>
+<body>
+
+<div id="container">
+
+<div id="product">
+	<div id="product_logo"></div>
+	<div id="product_name"><big><b></b></big></div>
+	<div id="product_description"></div>
+</div> <!-- id="product" -->
+
+
+<div id="main">
+
+
+<!-- Menu -->
+
+<div id="navigation">
+<br/>
+<h1>ldoc</h1>
+
+<ul>
+  <li><a href="../index.html">Index</a></li>
+</ul>
+
+<h2>Contents</h2>
+<ul>
+<li><a href="#Functions">Functions</a></li>
+<li><a href="#Tables">Tables</a></li>
+<li><a href="#Fields">Fields</a></li>
+</ul>
+
+
+<h2>Modules</h2>
+<ul class="$(kind=='Topics' and '' or 'nowrap'">
+  <li><a href="../modules/classes.helpers.vBitmap.html">classes.helpers.vBitmap</a></li>
+  <li><a href="../modules/classes.helpers.vFilesys.html">classes.helpers.vFilesys</a></li>
+  <li><a href="../modules/classes.helpers.vSelection.html">classes.helpers.vSelection</a></li>
+  <li><a href="../modules/classes.helpers.vString.html">classes.helpers.vString</a></li>
+  <li><a href="../modules/classes.helpers.vVector.html">classes.helpers.vVector</a></li>
+  <li><a href="../modules/classes.parsers.vXML.html">classes.parsers.vXML</a></li>
+  <li><a href="../modules/classes.vCell.html">classes.vCell</a></li>
+  <li><a href="../modules/classes.vCellBitmap.html">classes.vCellBitmap</a></li>
+  <li><a href="../modules/classes.vCellButton.html">classes.vCellButton</a></li>
+  <li><a href="../modules/classes.vCellCheckBox.html">classes.vCellCheckBox</a></li>
+  <li><a href="../modules/classes.vCellPopup.html">classes.vCellPopup</a></li>
+  <li><a href="../modules/classes.vCellText.html">classes.vCellText</a></li>
+  <li><a href="../modules/classes.vCellValueBox.html">classes.vCellValueBox</a></li>
+  <li><a href="../modules/classes.vControl.html">classes.vControl</a></li>
+  <li><a href="../modules/classes.vFileBrowser.html">classes.vFileBrowser</a></li>
+  <li><a href="../modules/classes.vGraph.html">classes.vGraph</a></li>
+  <li><a href="../modules/classes.vLib.html">classes.vLib</a></li>
+  <li><a href="../modules/classes.vLogView.html">classes.vLogView</a></li>
+  <li><a href="../modules/classes.vScrollbar.html">classes.vScrollbar</a></li>
+  <li><a href="../modules/classes.vTable.html">classes.vTable</a></li>
+  <li><strong>classes.vTabs</strong></li>
+  <li><a href="../modules/classes.vTree.html">classes.vTree</a></li>
+  <li><a href="../modules/classes.vView.html">classes.vView</a></li>
+  <li><a href="../modules/classes.vWaveform.html">classes.vWaveform</a></li>
+  <li><a href="../modules/main.html">main</a></li>
+  <li><a href="../modules/support.debug.html">support.debug</a></li>
+</ul>
+
+</div>
+
+<div id="content">
+
+<h1>Module <code>classes.vTabs</code></h1>
+<p>Show/hide sub-views, using a switcher as the navigation interface</p>
+<p></p>
+
+
+<h2><a href="#Functions">Functions</a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#build_layout">build_layout (rmv)</a></td>
+	<td class="summary">call this after building, or when changing switcher layout</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#refresh_size">refresh_size ()</a></td>
+	<td class="summary">refresh the width/height using current settings
+ (refreshing the view like this allows us to "crop" the tab contents)</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#set_labels">set_labels (t)</a></td>
+	<td class="summary">update the tab labels for the current number of labels</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#set_content">set_content (t)</a></td>
+	<td class="summary">provide the tabs - this will (re)build the entire view</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#add_content">add_content (tab_idx, view)</a></td>
+	<td class="summary">add a view to the specified tab</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#set_index">set_index (idx)</a></td>
+	<td class="summary">show the selected tab</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#get_tab_id">get_tab_id (idx)</a></td>
+	<td class="summary"></td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#set_switcher_align">set_switcher_align (val)</a></td>
+	<td class="summary"></td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#get_largest_width_height">get_largest_width_height ()</a></td>
+	<td class="summary">retrieve the maximum size, when resizing to LARGEST</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#set_midi_mapping">set_midi_mapping (str)</a></td>
+	<td class="summary">add handler for MIDI messages, similar to the provided name</td>
+	</tr>
+</table>
+<h2><a href="#Tables">Tables</a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#LAYOUT">LAYOUT</a></td>
+	<td class="summary">vertical position</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#SWITCHER_ALIGN">SWITCHER_ALIGN</a></td>
+	<td class="summary">horizontal position</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#SIZE_METHOD">SIZE_METHOD</a></td>
+	<td class="summary">determine the size method</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#self.tabs">self.tabs</a></td>
+	<td class="summary">(table>renoise.Views.Rack)</td>
+	</tr>
+</table>
+<h2><a href="#Fields">Fields</a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#self.index">self.index</a></td>
+	<td class="summary">(int) the currently selected tab</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#self.switcher_width">self.switcher_width</a></td>
+	<td class="summary">(int or string)</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#self.switcher_align">self.switcher_align</a></td>
+	<td class="summary">(int or string)</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#self.switcher_height">self.switcher_height</a></td>
+	<td class="summary">(int or string)</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#self.layout">self.layout</a></td>
+	<td class="summary">(vTabs.LAYOUT)</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#self.size_method">self.size_method</a></td>
+	<td class="summary">(vTabs.SIZE_METHOD)</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#self._labels">self._labels</a></td>
+	<td class="summary">(table>strings)</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#self.on_resize">self.on_resize</a></td>
+	<td class="summary">(function) callback event</td>
+	</tr>
+</table>
+
+<br/>
+<br/>
+
+
+    <h2><a name="Functions"></a>Functions</h2>
+    <dl class="function">
+    <dt>
+    <a name = "build_layout"></a>
+    <strong>build_layout (rmv)</strong>
+    </dt>
+    <dd>
+    call this after building, or when changing switcher layout
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">rmv</span>
+         (bool) remove before adding
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "refresh_size"></a>
+    <strong>refresh_size ()</strong>
+    </dt>
+    <dd>
+    refresh the width/height using current settings
+ (refreshing the view like this allows us to "crop" the tab contents)
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "set_labels"></a>
+    <strong>set_labels (t)</strong>
+    </dt>
+    <dd>
+    update the tab labels for the current number of labels
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">t</span>
+         (table)
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "set_content"></a>
+    <strong>set_content (t)</strong>
+    </dt>
+    <dd>
+    provide the tabs - this will (re)build the entire view
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">t</span>
+         (table>renoise.Views.Rack)
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "add_content"></a>
+    <strong>add_content (tab_idx, view)</strong>
+    </dt>
+    <dd>
+    add a view to the specified tab
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">tab_idx</span>
+         (int)
+        </li>
+        <li><span class="parameter">view</span>
+         (renoise.Views.View)
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "set_index"></a>
+    <strong>set_index (idx)</strong>
+    </dt>
+    <dd>
+    show the selected tab
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">idx</span>
+         (int)
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "get_tab_id"></a>
+    <strong>get_tab_id (idx)</strong>
+    </dt>
+    <dd>
+
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">idx</span>
+         (int)
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "set_switcher_align"></a>
+    <strong>set_switcher_align (val)</strong>
+    </dt>
+    <dd>
+
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">val</span>
+         (vTabs.SWITCHER_ALIGN)
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "get_largest_width_height"></a>
+    <strong>get_largest_width_height ()</strong>
+    </dt>
+    <dd>
+    retrieve the maximum size, when resizing to LARGEST
+
+
+
+    <h3>Returns:</h3>
+    <ol>
+        <li>
+        number (width)</li>
+        <li>
+        number (height)</li>
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "set_midi_mapping"></a>
+    <strong>set_midi_mapping (str)</strong>
+    </dt>
+    <dd>
+    add handler for MIDI messages, similar to the provided name
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">str</span>
+
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+</dl>
+    <h2><a name="Tables"></a>Tables</h2>
+    <dl class="function">
+    <dt>
+    <a name = "LAYOUT"></a>
+    <strong>LAYOUT</strong>
+    </dt>
+    <dd>
+    vertical position
+
+
+    <h3>Fields:</h3>
+    <ul>
+        <li><span class="parameter">ABOVE</span>
+
+        </li>
+        <li><span class="parameter">BELOW</span>
+
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "SWITCHER_ALIGN"></a>
+    <strong>SWITCHER_ALIGN</strong>
+    </dt>
+    <dd>
+    horizontal position
+
+
+    <h3>Fields:</h3>
+    <ul>
+        <li><span class="parameter">LEFT</span>
+
+        </li>
+        <li><span class="parameter">CENTER</span>
+
+        </li>
+        <li><span class="parameter">RIGHT</span>
+
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "SIZE_METHOD"></a>
+    <strong>SIZE_METHOD</strong>
+    </dt>
+    <dd>
+    determine the size method
+
+
+    <h3>Fields:</h3>
+    <ul>
+        <li><span class="parameter">FIXED</span>
+        FIXED = set to fixed size (crop contents)
+        </li>
+        <li><span class="parameter">CURRENT</span>
+        CURRENT = fit to content of currently visible tab
+        </li>
+        <li><span class="parameter">LARGEST</span>
+        LARGEST = fit to tallest/widest tab
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "self.tabs"></a>
+    <strong>self.tabs</strong>
+    </dt>
+    <dd>
+    (table>renoise.Views.Rack)
+
+
+
+
+
+
+
+</dd>
+</dl>
+    <h2><a name="Fields"></a>Fields</h2>
+    <dl class="function">
+    <dt>
+    <a name = "self.index"></a>
+    <strong>self.index</strong>
+    </dt>
+    <dd>
+    (int) the currently selected tab
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "self.switcher_width"></a>
+    <strong>self.switcher_width</strong>
+    </dt>
+    <dd>
+    (int or string)
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "self.switcher_align"></a>
+    <strong>self.switcher_align</strong>
+    </dt>
+    <dd>
+    (int or string)
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "self.switcher_height"></a>
+    <strong>self.switcher_height</strong>
+    </dt>
+    <dd>
+    (int or string)
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "self.layout"></a>
+    <strong>self.layout</strong>
+    </dt>
+    <dd>
+    (vTabs.LAYOUT)
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "self.size_method"></a>
+    <strong>self.size_method</strong>
+    </dt>
+    <dd>
+    (vTabs.SIZE_METHOD)
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "self._labels"></a>
+    <strong>self._labels</strong>
+    </dt>
+    <dd>
+    (table>strings)
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "self.on_resize"></a>
+    <strong>self.on_resize</strong>
+    </dt>
+    <dd>
+    (function) callback event
+
+
+    <ul>
+        <li><span class="parameter">elm</span>
+         (vTabs)
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+</dl>
+
+
+</div> <!-- id="content" -->
+</div> <!-- id="main" -->
+<div id="about">
+<i>generated by <a href="http://github.com/stevedonovan/LDoc">LDoc 1.4.2</a></i>
+</div> <!-- id="about" -->
+</div> <!-- id="container" -->
+</body>
+</html>
