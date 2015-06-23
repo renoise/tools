@@ -1,0 +1,107 @@
+<Device>
+	<Name>Livid Base</Name>
+	<Author>danoise</Author>
+	<Description>Basic layout for the Livid Base controller</Description>
+	<Parameters>
+
+		<Row>
+			<Column>
+<!--
+-->
+        <Group name="LEDs">
+          <Param type="button" value="CC#68" aspect="0.5" minimum="0" maximum="127"/>
+          <Param type="button" value="CC#69" aspect="0.5" minimum="0" maximum="127"/>
+          <Param type="button" value="CC#70" aspect="0.5" minimum="0" maximum="127"/>
+          <Param type="button" value="CC#71" aspect="0.5" minimum="0" maximum="127"/>
+          <Param type="button" value="CC#72" aspect="0.5" minimum="0" maximum="127"/>
+          <Param type="button" value="CC#73" aspect="0.5" minimum="0" maximum="127"/>
+          <Param type="button" value="CC#74" aspect="0.5" minimum="0" maximum="127"/>
+          <Param type="button" value="CC#75" aspect="0.5" minimum="0" maximum="127"/>
+        </Group>
+        <Group name="TouchButtons">
+          <Param type="button" value="CC#10" minimum="0" maximum="127"/>
+          <Param type="button" value="CC#11" minimum="0" maximum="127"/>
+          <Param type="button" value="CC#12" minimum="0" maximum="127"/>
+          <Param type="button" value="CC#13" minimum="0" maximum="127"/>
+          <Param type="button" value="CC#14" minimum="0" maximum="127"/>
+          <Param type="button" value="CC#15" minimum="0" maximum="127"/>
+          <Param type="button" value="CC#16" minimum="0" maximum="127"/>
+          <Param type="button" value="CC#17" minimum="0" maximum="127"/>
+        </Group>
+
+        <Group name="TouchStrips">
+          <Param type="fader" orientation="vertical" size="3" value="CC#1" minimum="0" maximum="127"/>
+          <Param type="fader" orientation="vertical" size="3" value="CC#2" minimum="0" maximum="127"/>
+          <Param type="fader" orientation="vertical" size="3" value="CC#3" minimum="0" maximum="127"/>
+          <Param type="fader" orientation="vertical" size="3" value="CC#4" minimum="0" maximum="127"/>
+          <Param type="fader" orientation="vertical" size="3" value="CC#5" minimum="0" maximum="127"/>
+          <Param type="fader" orientation="vertical" size="3" value="CC#6" minimum="0" maximum="127"/>
+          <Param type="fader" orientation="vertical" size="3" value="CC#7" minimum="0" maximum="127"/>
+          <Param type="fader" orientation="vertical" size="3" value="CC#8" minimum="0" maximum="127"/>
+
+        </Group>
+        <Group name="Pads" columns="8" ><!-- colorspace="[1,1,1]" -->
+          <Param type="button" value="CC#60" aspect="1.25" minimum="0" maximum="127"/>
+          <Param type="button" value="CC#61" aspect="1.25" minimum="0" maximum="127"/>
+          <Param type="button" value="CC#62" aspect="1.25" minimum="0" maximum="127"/>
+          <Param type="button" value="CC#63" aspect="1.25" minimum="0" maximum="127"/>
+          <Param type="button" value="CC#64" aspect="1.25" minimum="0" maximum="127"/>
+          <Param type="button" value="CC#65" aspect="1.25" minimum="0" maximum="127"/>
+          <Param type="button" value="CC#66" aspect="1.25" minimum="0" maximum="127"/>
+          <Param type="button" value="CC#67" aspect="1.25" minimum="0" maximum="127"/>
+
+          <Param type="button" value="CC#52" aspect="1.25" minimum="0" maximum="127"/>
+          <Param type="button" value="CC#53" aspect="1.25" minimum="0" maximum="127"/>
+          <Param type="button" value="CC#54" aspect="1.25" minimum="0" maximum="127"/>
+          <Param type="button" value="CC#55" aspect="1.25" minimum="0" maximum="127"/>
+          <Param type="button" value="CC#56" aspect="1.25" minimum="0" maximum="127"/>
+          <Param type="button" value="CC#57" aspect="1.25" minimum="0" maximum="127"/>
+          <Param type="button" value="CC#58" aspect="1.25" minimum="0" maximum="127"/>
+          <Param type="button" value="CC#59" aspect="1.25" minimum="0" maximum="127"/>
+
+          <Param type="button" value="CC#44" aspect="1.25" minimum="0" maximum="127"/>
+          <Param type="button" value="CC#45" aspect="1.25" minimum="0" maximum="127"/>
+          <Param type="button" value="CC#46" aspect="1.25" minimum="0" maximum="127"/>
+          <Param type="button" value="CC#47" aspect="1.25" minimum="0" maximum="127"/>
+          <Param type="button" value="CC#48" aspect="1.25" minimum="0" maximum="127"/>
+          <Param type="button" value="CC#49" aspect="1.25" minimum="0" maximum="127"/>
+          <Param type="button" value="CC#50" aspect="1.25" minimum="0" maximum="127"/>
+          <Param type="button" value="CC#51" aspect="1.25" minimum="0" maximum="127"/>
+
+          <Param type="button" value="CC#36" aspect="1.25" minimum="0" maximum="127"/>
+          <Param type="button" value="CC#37" aspect="1.25" minimum="0" maximum="127"/>
+          <Param type="button" value="CC#38" aspect="1.25" minimum="0" maximum="127"/>
+          <Param type="button" value="CC#39" aspect="1.25" minimum="0" maximum="127"/>
+          <Param type="button" value="CC#40" aspect="1.25" minimum="0" maximum="127"/>
+          <Param type="button" value="CC#41" aspect="1.25" minimum="0" maximum="127"/>
+          <Param type="button" value="CC#42" aspect="1.25" minimum="0" maximum="127"/>
+          <Param type="button" value="CC#43" aspect="1.25" minimum="0" maximum="127"/>
+
+        </Group>
+
+			</Column>
+
+			<Column>
+        <Group name="TouchStrip">
+          <Param type="fader" orientation="vertical" size="3.75" value="CC#2" minimum="0" maximum="127"/>
+        </Group>
+        <Group name="SegmentedDisplay">
+          <Param type="label" text="88"/>
+        </Group>
+        <Group name="Buttons" orientation="vertical">
+          <Param type="button" value="CC#18" aspect="0.6" minimum="0" maximum="127"/>
+          <Param type="button" value="CC#19" aspect="0.6" minimum="0" maximum="127"/>
+          <Param type="button" value="CC#20" aspect="0.6" minimum="0" maximum="127"/>
+          <Param type="button" value="CC#21" aspect="0.6" minimum="0" maximum="127"/>
+          <Param type="button" value="CC#22" aspect="0.6" minimum="0" maximum="127"/>
+          <Param type="button" value="CC#23" aspect="0.6" minimum="0" maximum="127"/>
+          <Param type="button" value="CC#24" aspect="0.6" minimum="0" maximum="127"/>
+          <Param type="button" value="CC#25" aspect="0.6" minimum="0" maximum="127"/>
+        </Group>
+
+			</Column>
+<!--
+-->
+		</Row>
+	</Parameters>
+</Device>
