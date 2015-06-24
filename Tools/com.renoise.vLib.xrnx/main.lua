@@ -53,7 +53,7 @@ local function start()
   if not dialog or not dialog.visible then
     if not dialog_content then
       dialog_content = build()
-      attach_to_song()
+      --attach_to_song()
       vb.views.control_chooser.value = select_on_startup
     end
 
@@ -101,7 +101,7 @@ renoise.tool():add_keybinding{
 
 renoise.tool().app_new_document_observable:add_notifier(function()
   if dialog then
-    attach_to_song()
+    --attach_to_song()
   end
 end)
 
@@ -192,10 +192,6 @@ function build()
 
 end
 
-function attach_to_song()
-  --print("attach_to_song()")
-
-end
 
 -------------------------------------------------------------------------------
 

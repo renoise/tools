@@ -33,19 +33,10 @@ end
 local ntrap_preferences = NTrapPrefs()
 renoise.tool().preferences = ntrap_preferences
 
-ntrap = NTrap()
-ntrap:retrieve_settings(ntrap_preferences)
+ntrap = NTrap(ntrap_preferences)
 
 -- workaround for http://goo.gl/UnSDnw
 local waiting_to_show_dialog = true
-
-
-local function show_dialog()
-  if ntrap and ntrap._settings.autorun_enabled.value then
-    ntrap:show_dialog()
-  end
-end
-
 
 --------------------------------------------------------------------------------
 -- menu entries
@@ -81,11 +72,14 @@ renoise.tool():add_keybinding {
 
 renoise.tool().app_idle_observable:add_notifier(function()
   --TRACE("main:app_idle_observable fired...")
-  if (waiting_to_show_dialog) then
+  if ntrap 
+    and waiting_to_show_dialog 
+    and ntrap._settings.autorun_enabled.value 
+  then
     waiting_to_show_dialog = false
-    show_dialog()
+    ntrap:show_dialog()
   end
-  if (ntrap) then
+  if ntrap:is_running() then
     ntrap:_on_idle()
   end
 
@@ -93,16 +87,16 @@ end)
 
 renoise.tool().app_release_document_observable:add_notifier(function()
   TRACE("main:app_release_document_observable fired...")
-  if (ntrap) then
-    ntrap:_detach_from_song()
+  if ntrap:is_running() then
+    ntrap:detach_from_song()
   end
 
 end)
 
 renoise.tool().app_new_document_observable:add_notifier(function()
   TRACE("main:app_new_document_observable fired...")
-  if (ntrap) then
-    ntrap:_attach_to_song(true)
+  if ntrap:is_running() then
+    ntrap:attach_to_song(true)
   end
 
 end)

@@ -3011,7 +3011,7 @@ end
 --------------------------------------------------------------------------------
 
 renoise.tool().app_new_document_observable:add_notifier(function()
-  LOG("app_new_document_observable fired...")
+  --print("app_new_document_observable fired...")
 
   if not vb then
     return

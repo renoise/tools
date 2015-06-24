@@ -20,8 +20,14 @@ http://forum.renoise.com/index.php/topic/43047-new-tool-30-noodletrap/
 class 'NTrap'
 
 
-function NTrap:__init()
-  TRACE("NTrap:__init()")
+function NTrap:__init(prefs)
+  TRACE("NTrap:__init(prefs)",prefs)
+
+  assert(type(prefs) == "NTrapPrefs",
+    "Settings needs to be an instance of NTrapPrefs") 
+
+  --- (NTrapPrefs) current settings
+  self._settings = prefs
 
   --- (int) instrument index (set on attach)
   self._instr_idx = nil
@@ -54,9 +60,6 @@ function NTrap:__init()
 
   --- (NTrapUI) 
   self._ui = NTrapUI(self)
-
-  --- (NTrapPrefs) current settings
-  self._settings = nil
 
   --- (bool) when attached to a song
   self._active = false
@@ -266,6 +269,7 @@ end
 -- (might prepare a recording or stop the current one)
 
 function NTrap:toggle_recording()
+  TRACE("NTrap:toggle_recording()")
 
   if self._recording then
     if (self._settings.stop_recording.value == NTrapPrefs.STOP_PATTERN) then
@@ -283,6 +287,8 @@ function NTrap:toggle_recording()
     else
       self:stop_recording()
     end
+  elseif self._record_armed then
+    self:cancel_recording()
   else
     self:prepare_recording()
   end
@@ -348,7 +354,6 @@ end
 
 
 --------------------------------------------------------------------------------
-
 --- show the dialog (build ui if needed)
 
 function NTrap:show_dialog()
@@ -359,13 +364,26 @@ function NTrap:show_dialog()
 end
 
 --------------------------------------------------------------------------------
-
 --- hide the dialog 
 
 function NTrap:hide_dialog()
   TRACE("NTrap:hide_dialog()")
 
   self._ui:hide()
+
+end
+
+
+--------------------------------------------------------------------------------
+
+function NTrap:is_running()
+  --TRACE("NTrap:is_running()")
+  
+  if self._ui._dialog then
+    return self._ui._dialog.visible
+  else
+    return false
+  end
 
 end
 
@@ -386,9 +404,9 @@ end
 
 --- Feed MIDI notes in - when recording
 -- @param is_note_on (bool)
--- @param note (int) between 0-119
+-- @param pitch (int) between 0-119
 -- @param velocity (int) between 0-127
--- @param octave velocity (int) between 0-127
+-- @param octave (int) 
 -- @param quick (bool) quick repeats from PC keyboard - release + retrigger
 
 function NTrap:input_note(is_note_on,pitch,velocity,octave,quick)
@@ -419,10 +437,11 @@ function NTrap:input_note(is_note_on,pitch,velocity,octave,quick)
 
   self._ui:dump_note_info(note)
 
-  if self._record_armed then
-    if (self._settings.start_recording.value == NTrapPrefs.START_NOTE) then
-      self:begin_recording()
-    end
+  if is_note_on 
+    and self._record_armed 
+    and (self._settings.start_recording.value == NTrapPrefs.START_NOTE) 
+  then
+    self:begin_recording()
   end
 
   if not self._recording then
@@ -589,8 +608,8 @@ end
 
 --- Detach from song document (remove notifiers)
 
-function NTrap:_detach_from_song()
-  TRACE("NTrap:_detach_from_song()")
+function NTrap:detach_from_song()
+  TRACE("NTrap:detach_from_song()")
 
   local new_song = false
   self._active = false
@@ -605,8 +624,8 @@ end
 
 --- Connect to the song document (attach notifiers)
 
-function NTrap:_attach_to_song(new_song)
-  TRACE("NTrap:_attach_to_song(new_song)",new_song)
+function NTrap:attach_to_song(new_song)
+  TRACE("NTrap:attach_to_song(new_song)",new_song)
 
   local rns = renoise.song()
 
@@ -619,6 +638,10 @@ function NTrap:_attach_to_song(new_song)
   rns.transport.edit_mode_observable:add_notifier(self,
     function()
       --print("*** NTrap:edit_mode_observable fired...")
+      if not self:is_running() then 
+        return 
+      end
+
       if (self._settings.arm_recording.value == NTrapPrefs.ARM_EDITMODE) then
         if not rns.transport.edit_mode then
           if not self._recording then
@@ -635,6 +658,10 @@ function NTrap:_attach_to_song(new_song)
   rns.transport.playing_observable:add_notifier(self,
     function()
       --print("*** NTrap:playing_observable fired...")
+      if not self:is_running() then 
+        return 
+      end
+
       if rns.transport.playing then
         if not self._recording then
           if not self._record_armed then
@@ -668,6 +695,10 @@ function NTrap:_attach_to_song(new_song)
   rns.selected_instrument_index_observable:add_notifier(self,
     function()
       --print("*** NTrap:selected_instrument_index_observable fired...")
+      if not self:is_running() then 
+        return 
+      end
+
       if (self._settings.target_instr.value == NTrapPrefs.INSTR_FOLLOW) then
         local idx = rns.selected_instrument_index
         self:_attach_to_instrument(false,idx)
@@ -680,6 +711,10 @@ function NTrap:_attach_to_song(new_song)
   rns.selected_phrase_observable:add_notifier(self,
     function()
       --print("*** NTrap:selected_phrase_observable fired...")
+      if not self:is_running() then 
+        return 
+      end
+
       self:_obtain_selected_phrase()
       --print("*** self._phrase_idx",self._phrase_idx)
     end
@@ -689,6 +724,10 @@ function NTrap:_attach_to_song(new_song)
   rns.selected_sequence_index_observable:add_notifier(self,
     function()
       --print("*** NTrap:selected_sequence_index fired...")
+      if not self:is_running() then 
+        return 
+      end
+
       local idx = rns.selected_pattern_index
       self:_attach_to_pattern(false,idx)
     end
@@ -754,6 +793,10 @@ function NTrap:_attach_to_instrument(new_song,instr_idx)
   instr.phrases_observable:add_notifier(self,
     function()
       --print("*** NTrap:phrases_observable fired...")
+      if not self:is_running() then 
+        return 
+      end
+
       -- we lost the phrase somehow? 
       if (not instr.phrases[self._phrase_idx]) then
         self:_remove_notifiers(new_song,self._phrase_notifiers)
@@ -938,7 +981,7 @@ end
 -- @return bool, true when ready
 
 function NTrap:_recording_check()
-  TRACE("NTrap:_recording_check()")
+  --TRACE("NTrap:_recording_check()")
 
   if not self._instr_idx then
     LOG("No instrument has been targeted")
@@ -977,13 +1020,10 @@ end
 --- Retrieve and apply settings
 -- @param settings (renoise.Document) 
 
-function NTrap:retrieve_settings(settings)
-  TRACE("NTrap:retrieve_settings()",settings)
+function NTrap:apply_settings()
+  TRACE("NTrap:apply_settings()")
 
-  assert(type(settings) == "NTrapPrefs",
-    "Settings needs to be an instance of NTrapPrefs") 
-
-  self._settings = settings
+  --self._settings = settings
   self:_open_midi_port(self._settings.midi_in_port.value)
   self._update_requested = true
 
@@ -1038,16 +1078,25 @@ function NTrap:_midi_callback(message)
   TRACE(("NTrap: received MIDI %X %X %X"):format(
     message[1], message[2], message[3]))
 
-  local rns_octave = tonumber(renoise.song().transport.octave)
-  local rns_pitch,velocity
+  if not self:is_running() then 
+    return 
+  end
+
   local is_note_on = true
+  local rns_pitch,velocity
+  local rns_octave = renoise.song().transport.octave
 
   if (message[1]>=128) and (message[1]<=159) then
 
-    rns_pitch = message[2]-48
-    if (rns_pitch < 0) or
-      (rns_pitch > 119) 
+    -- when aligned, lower the pitch - the renoise 
+    -- octave is added on top once the note is written
+    rns_pitch = message[2] -48
+
+    -- ignore note if outside playable range 
+    if (rns_pitch+(rns_octave*12) < 0) 
+      or (rns_pitch+(rns_octave*12) > 119) 
     then
+      LOG("*** ignore note outside playable range",rns_pitch+(rns_octave*12))
       return
     end
 

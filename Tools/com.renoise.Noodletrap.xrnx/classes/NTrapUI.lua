@@ -73,6 +73,12 @@ function NTrapUI:__init(ntrap)
   --- (table<renoise.Views.View>)
   self._phrase_buttons = {}
 
+  --- (number) last time a "phrase bar button" was pressed
+  self.last_pressed_time = nil
+
+  --- (int) index of last pressed "phrase bar button" 
+  self.last_pressed_idx = nil
+
   --- (enum = renoise.ApplicationWindow.MIDDLE_FRAME)
   -- remember when we bring focus to the phrase editor
   -- (enable toggling back and forth between layouts)
@@ -100,6 +106,10 @@ function NTrapUI:show()
   if (not self._dialog or not self._dialog.visible) then
     assert(self._view, "Internal Error. Please report: " .. 
       "no valid content view")
+
+    self._ntrap:apply_settings()
+    self._ntrap:attach_to_song()
+
 
     -- the keyhandler does not report when keys are released
     -- instead, we maintain a list of triggered notes which are
@@ -461,6 +471,7 @@ function NTrapUI:_build_tab_inputs()
         width = MIDDLE_W,
         value = 1,
         notifier = function(idx)
+          --print("*** ntrap_midi_in_popup.notifier",idx)
           self._ntrap:_close_midi_port()
           local port_name = input_devices[idx]
           if (idx > 1) then
@@ -830,6 +841,25 @@ function NTrapUI:_build_tab_settings()
       width = CONTENT_W,
       margin = renoise.ViewBuilder.DEFAULT_CONTROL_MARGIN,
       vb:text{
+        text = "Octave",
+        width = LEFT_COL_W
+      },
+      vb:checkbox{
+        id = "ntrap_align_octaves",
+        active = false, -- TODO separate MIDI input to make this happen
+        value = NTrapPrefs.ALIGN_OCTAVES,
+        notifier = function(val)
+          self._ntrap:_save_setting("align_octaves",val)
+        end,
+      },
+      vb:text{
+        text = "Align MIDI keyboard with the octave in Renoise",
+      },
+    },
+    vb:row{
+      width = CONTENT_W,
+      margin = renoise.ViewBuilder.DEFAULT_CONTROL_MARGIN,
+      vb:text{
         text = "Startup",
         width = LEFT_COL_W
       },
@@ -966,10 +996,11 @@ function NTrapUI:update()
   local ui_widget = self._vb.views.ntrap_midi_in_popup
   local items = self:_create_midi_in_list()
   for k,v in ipairs(items) do
-    if (v == node.value) and
-      (#ui_widget.items <= k)
+    if (v == node.value) --and
+      --(#ui_widget.items <= k)
     then
       ui_widget.value = k
+
       break
     end
   end
@@ -1104,7 +1135,7 @@ end
 --- Provide some feedback on the current recording status
 
 function NTrapUI:update_record_status()
-  TRACE("NTrapUI:update_record_status()")
+  --TRACE("NTrapUI:update_record_status()")
 
   local settings = self._ntrap._settings
   local ui_record_status = self._vb.views.ntrap_record_status
@@ -1374,7 +1405,6 @@ function NTrapUI:update_phrase_bar()
   for k,v in ipairs(self._phrase_buttons) do
 
     -- what happens when pressed
-    local last_pressed = nil
     local notifier = (v.phrase_idx) and function()
       local sel_instr_idx = renoise.song().selected_instrument_index
       if (self._ntrap._instr_idx == sel_instr_idx) then
@@ -1389,10 +1419,25 @@ function NTrapUI:update_phrase_bar()
       else
         self._ntrap:_attach_to_phrase(false,v.phrase_idx)
       end
-      if last_pressed and (last_pressed < (os.clock() - 0.3)) then
-        self:_toggle_phrase_editor()
+      -- reset click time when a different
+      -- phrase button has been clicked 
+      if self.last_pressed_idx 
+        and (self.last_pressed_idx ~= v.phrase_idx) 
+      then
+        self.last_pressed_time = nil
+        self.last_pressed_idx = nil
       end
-      last_pressed = os.clock()
+      -- check if the phrase button has been
+      -- pressed two times within given period
+      if self.last_pressed_time then
+        if (self.last_pressed_time > (os.clock() - 0.3)) 
+        then
+          self.last_pressed_time = nil
+          self:_toggle_phrase_editor()
+        end
+      end
+      self.last_pressed_time = os.clock()
+      self.last_pressed_idx = v.phrase_idx
     end or nil
 
     local ui_button = self._vb:button{
@@ -1417,7 +1462,7 @@ end
 --- Update blinking elements...
 
 function NTrapUI:update_blinks()
-  TRACE("NTrapUI:update_blinks()")
+  --TRACE("NTrapUI:update_blinks()")
 
   local blink = (math.floor(os.clock()%2) == 0) and true or false
   if (blink ~= self._blink) then
@@ -1577,21 +1622,43 @@ function NTrapUI:_toggle_phrase_editor()
 
   local instr = self._ntrap:_get_instrument()
   if not renoise.app().window.instrument_editor_is_detached then
-    if instr.phrase_editor_visible and self._middle_frame then
-      -- show normal/previous middle frame
-      renoise.app().window.active_middle_frame = self._middle_frame
-      self._middle_frame = nil
-      instr.phrase_editor_visible = false
+    local sampler_visible = (renoise.app().window.active_middle_frame == 3) and true or false
+    if instr.phrase_editor_visible and sampler_visible then
+      self:_hide_phrase_editor()
     else
-      self._middle_frame = renoise.app().window.active_middle_frame
-      renoise.app().window.active_middle_frame = 
-        renoise.ApplicationWindow.MIDDLE_FRAME_INSTRUMENT_SAMPLE_OVERVIEW
-      instr.phrase_editor_visible = true
+      self:_show_phrase_editor()
     end
   else
     instr.phrase_editor_visible = true
   end
   
+end
+
+
+--------------------------------------------------------------------------------
+
+function NTrapUI:_show_phrase_editor()
+
+  -- remember middle frame, so we can bring it back
+  self._middle_frame = renoise.app().window.active_middle_frame
+
+  local instr = self._ntrap:_get_instrument()
+  local middle_frame_const = renoise.ApplicationWindow.MIDDLE_FRAME_INSTRUMENT_SAMPLE_OVERVIEW
+  renoise.app().window.active_middle_frame = middle_frame_const
+  instr.phrase_editor_visible = true
+
+end
+
+--------------------------------------------------------------------------------
+
+function NTrapUI:_hide_phrase_editor()
+
+  -- bring back previously store middle frame
+  renoise.app().window.active_middle_frame = self._middle_frame
+
+  local instr = self._ntrap:_get_instrument()
+  instr.phrase_editor_visible = false
+
 end
 
 
