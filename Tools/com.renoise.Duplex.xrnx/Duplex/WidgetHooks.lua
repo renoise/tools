@@ -433,7 +433,9 @@ widget_hooks.button = {
         --print("button set to color",rprint(color))
       end
     end
-    widget.text = point.text
+    if point.text then
+      widget.text = point.text
+    end
 
   end,
 

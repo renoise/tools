@@ -1,0 +1,87 @@
+<Device>
+  <Name>Launch Control XL</Name>
+  <Author>spktkpkt</Author>
+  <Description>Controlmap for Novation Launch Control XL</Description>
+  <Parameters>
+  <Page>
+    <Row>
+    <Column>
+    <Group name="DeviceEncoders" orientation="horizontal" columns="8">
+        <Param value="CC#13|Ch9" type="dial" name="DialSendA1" minimum="0" maximum="127" />
+        <Param value="CC#14|Ch9" type="dial" name="DialSendA2" minimum="0" maximum="127" />
+        <Param value="CC#15|Ch9" type="dial" name="DialSendA3" minimum="0" maximum="127" />
+        <Param value="CC#16|Ch9" type="dial" name="DialSendA4" minimum="0" maximum="127" />
+        <Param value="CC#17|Ch9" type="dial" name="DialSendA5" minimum="0" maximum="127" />
+        <Param value="CC#18|Ch9" type="dial" name="DialSendA6" minimum="0" maximum="127" />
+        <Param value="CC#19|Ch9" type="dial" name="DialSendA7" minimum="0" maximum="127" />
+        <Param value="CC#20|Ch9" type="dial" name="DialSendA8" minimum="0" maximum="127" />
+        <Param value="CC#29|Ch9" type="dial" name="DialSendB1" minimum="0" maximum="127" />
+        <Param value="CC#30|Ch9" type="dial" name="DialSendB2" minimum="0" maximum="127" />
+        <Param value="CC#31|Ch9" type="dial" name="DialSendB3" minimum="0" maximum="127" />
+        <Param value="CC#32|Ch9" type="dial" name="DialSendB4" minimum="0" maximum="127" />
+        <Param value="CC#33|Ch9" type="dial" name="DialSendB5" minimum="0" maximum="127" />
+        <Param value="CC#34|Ch9" type="dial" name="DialSendB6" minimum="0" maximum="127" />
+        <Param value="CC#35|Ch9" type="dial" name="DialSendB7" minimum="0" maximum="127" />
+        <Param value="CC#36|Ch9" type="dial" name="DialSendB8" minimum="0" maximum="127" />
+      </Group>
+      <Group name="PanEncoders" orientation="horizontal" columns="8">
+        <Param value="CC#49|Ch9" type="dial" name="DialPan1" minimum="0" maximum="127" />
+        <Param value="CC#50|Ch9" type="dial" name="DialPan2" minimum="0" maximum="127" />
+        <Param value="CC#51|Ch9" type="dial" name="DialPan3" minimum="0" maximum="127" />
+        <Param value="CC#52|Ch9" type="dial" name="DialPan4" minimum="0" maximum="127" />
+        <Param value="CC#53|Ch9" type="dial" name="DialPan5" minimum="0" maximum="127" />
+        <Param value="CC#54|Ch9" type="dial" name="DialPan6" minimum="0" maximum="127" />
+        <Param value="CC#55|Ch9" type="dial" name="DialPan7" minimum="0" maximum="127" />
+        <Param value="CC#56|Ch9" type="dial" name="DialPan8" minimum="0" maximum="127" />
+      </Group>
+      <Group name="VolumeFaders" orientation="horizontal" columns="8">
+        <Param value="CC#77|Ch9" type="fader" name="Fader1" orientation="vertical" size="4" aspect="1" minimum="0" maximum="127" />
+        <Param value="CC#78|Ch9" type="fader" name="Fader2" orientation="vertical" size="4" aspect="1" minimum="0" maximum="127" />
+        <Param value="CC#79|Ch9" type="fader" name="Fader3" orientation="vertical" size="4" aspect="1" minimum="0" maximum="127" />
+        <Param value="CC#80|Ch9" type="fader" name="Fader4" orientation="vertical" size="4" aspect="1" minimum="0" maximum="127" />
+        <Param value="CC#81|Ch9" type="fader" name="Fader5" orientation="vertical" size="4" aspect="1" minimum="0" maximum="127" />
+        <Param value="CC#82|Ch9" type="fader" name="Fader6" orientation="vertical" size="4" aspect="1" minimum="0" maximum="127" />
+        <Param value="CC#83|Ch9" type="fader" name="Fader7" orientation="vertical" size="4" aspect="1" minimum="0" maximum="127" />
+        <Param value="CC#84|Ch9" type="fader" name="Fader8" orientation="vertical" size="4" aspect="1" minimum="0" maximum="127" />
+      </Group>
+      <Group name="TrackSelection" orientation="horizontal" columns="8">
+        <Param value="F-2|Ch9" type="button" name="Track1" aspect="0.6" minimum="0" maximum="127" />
+        <Param value="F#2|Ch9" type="button" name="Track2" aspect="0.6" minimum="0" maximum="127" />
+        <Param value="G-2|Ch9" type="button" name="Track3" aspect="0.6" minimum="0" maximum="127" />
+        <Param value="G#2|Ch9" type="button" name="Track4" aspect="0.6" minimum="0" maximum="127" />
+        <Param value="A-3|Ch9" type="button" name="Track5" aspect="0.6" minimum="0" maximum="127" />
+        <Param value="A#3|Ch9" type="button" name="Track6" aspect="0.6" minimum="0" maximum="127" />
+        <Param value="B-3|Ch9" type="button" name="Track7" aspect="0.6" minimum="0" maximum="127" />
+        <Param value="C-4|Ch9" type="button" name="Track8" aspect="0.6" minimum="0" maximum="127" />
+      </Group>
+      <Group name="SoloButtons" orientation="horizontal">
+        <Param value="C#5|Ch9" type="button" name="ButtonSolo1" aspect="0.6" minimum="0" maximum="127" />
+        <Param value="D-5|Ch9" type="button" name="ButtonSolo2" aspect="0.6" minimum="0" maximum="127" />
+        <Param value="D#5|Ch9" type="button" name="ButtonSolo3" aspect="0.6" minimum="0" maximum="127" />
+        <Param value="E-5|Ch9" type="button" name="ButtonSolo4" aspect="0.6" minimum="0" maximum="127" />
+        <Param value="F-6|Ch9" type="button" name="ButtonSolo5" aspect="0.6" minimum="0" maximum="127" />
+        <Param value="F#6|Ch9" type="button" name="ButtonSolo6" aspect="0.6" minimum="0" maximum="127" />
+        <Param value="G-6|Ch9" type="button" name="ButtonSolo7" aspect="0.6" minimum="0" maximum="127" />
+        <Param value="G#6|Ch9" type="button" name="ButtonSolo8" aspect="0.6" minimum="0" maximum="127" />
+      </Group>
+      </Column>
+      <Column>
+      <Group name="DeviceSelect" orientation="horizontal" columns="2">
+        <Param value="CC#104|Ch9" type="button" name="PreviousDevice" size="0.6" minimum="0" maximum="127" />
+        <Param value="CC#105|Ch9" type="button" name="NextDevice" size="0.6" minimum="0" maximum="127" />
+      </Group>
+      <Group name="PageSelectors" orientation="horizontal" columns="2">
+        <Param value="CC#106|Ch9" type="button" name="PreviousPage" size="0.6" minimum="0" maximum="127" />
+        <Param value="CC#107|Ch9" type="button" name="NextPage" size="0.6" minimum="0" maximum="127" />
+      </Group>
+	  <Group name="Modes" orientation="vertical" columns="1">
+		<Param value="A-7|Ch9" type="button" name="EditMode" size="1.2" minimum="0" maximum="127" />
+		<Param value="A#7|Ch9" type="button" name="Transport" size="1.2" minimum="0" maximum="127" />
+		<Param value="B-7|Ch9" type="button" name="Mutes" size="1.2" minimum="0" maximum="127" />
+		<Param value="C-8|Ch9" type="button" name="Solos" size="1.2" minimum="0" maximum="127" />
+	  </Group>
+      </Column>
+      </Row>
+  </Page>
+  </Parameters>
+</Device>
