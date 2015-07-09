@@ -45,14 +45,11 @@ function NTrap:__init(prefs)
   self._midi_in = nil
 
   --- (table) note events 
-  -- [timestamp] = {
-  --  .timestamp  -- (number)
-  --  .is_note_on -- (bool)
-  --  .pitch      -- (int) between 0 and 119
-  --  .velocity   -- (int) between 0x00 and 0x7F
-  --  .octave     -- (int) renoise octave offset
-  --  .playpos    -- (renoise.SongPos) 
-  -- }
+  --  { 
+  --    [timestamp] = NTrapEvent,
+  --    [timestamp] = NTrapEvent,
+  --    etc
+  --  }
   self._events = table.create()
 
   --- (int) how many playing voices do we have
@@ -427,12 +424,13 @@ function NTrap:input_note(is_note_on,pitch,velocity,octave,quick)
   -- TODO handle 'quick notes' from PC keyboard
   -- self:_insert_at_previous_line
 
-  local note = {
+  local note = NTrapEvent{
     timestamp = os.clock(),
     is_note_on = is_note_on,
     pitch = pitch,
     velocity = velocity,
     octave = octave,
+    --playpos = 
   }
 
   self._ui:dump_note_info(note)
@@ -650,6 +648,31 @@ function NTrap:attach_to_song(new_song)
         elseif not self._recording then
           self:cancel_recording()
         end
+      end
+    end
+  )
+
+  self._song_notifiers:insert(rns.transport.record_quantize_enabled_observable)
+  rns.transport.record_quantize_enabled_observable:add_notifier(self,
+    function()
+      print("*** NTrap:record_quantize_enabled_observable fired...")
+      if not self:is_running() then 
+        return 
+      end
+      if (self._settings.record_quantize.value == NTrapPrefs.QUANTIZE_RENOISE) then
+        self._ui:update_quantize_popup()
+      end
+    end
+  )
+  self._song_notifiers:insert(rns.transport.record_quantize_lines_observable)
+  rns.transport.record_quantize_lines_observable:add_notifier(self,
+    function()
+      print("*** NTrap:record_quantize_lines_observable fired...")
+      if not self:is_running() then 
+        return 
+      end
+      if (self._settings.record_quantize.value == NTrapPrefs.QUANTIZE_RENOISE) then
+        self._ui:update_quantize_popup()
       end
     end
   )
@@ -1334,8 +1357,47 @@ function NTrap:_get_playing_pattern()
 end
 
 --------------------------------------------------------------------------------
+-- Are we quantizing the input? 
+-- @return bool
+--[[
+function NTrap:_get_quant_enabled()
+  TRACE("NTrap:_get_quant_enabled()")
 
---- Get number of lines remaning in the playing pattern
+  if (self._settings.record_quantize.value == NTrapPrefs.QUANTIZE_NONE) or
+    ((self._settings.record_quantize.value == NTrapPrefs.QUANTIZE_CUSTOM) and
+    (self._settings.record_quantize_custom.value == 1))
+  then
+    return false
+  elseif (self._settings.record_quantize.value == NTrapPrefs.QUANTIZE_RENOISE) then
+    return renoise.song().transport.record_quantize_enabled
+  end
+
+end
+]]
+--------------------------------------------------------------------------------
+-- How much are we quantizing the input (number or lines) 
+-- @return int or nil if no quantize
+
+function NTrap:_get_quant_amount()
+  TRACE("NTrap:_get_quant_amount()")
+
+  if (self._settings.record_quantize.value == NTrapPrefs.QUANTIZE_NONE) then
+    return nil
+  elseif (self._settings.record_quantize.value == NTrapPrefs.QUANTIZE_CUSTOM) then
+    if (self._settings.record_quantize_custom.value == 1) then
+      return nil
+    else
+      return self._settings.record_quantize_custom.value-1
+    end
+  elseif (self._settings.record_quantize.value == NTrapPrefs.QUANTIZE_RENOISE) then
+    return renoise.song().transport.record_quantize_enabled and
+      renoise.song().transport.record_quantize_lines or nil
+  end
+
+end
+
+--------------------------------------------------------------------------------
+-- Get number of lines remaning in the playing pattern
 -- @return int, lines remaining
 -- @return int, total lines
 
@@ -1433,6 +1495,7 @@ function NTrap:_process_recording(events)
     return
   end
   
+  local max_note_cols = renoise.InstrumentPhrase.MAX_NUMBER_OF_NOTE_COLUMNS
   local phrase_lps = get_phrase_lps(self._settings)
   local instr = self:_get_instrument()
   local phrase = instr:insert_phrase_at(vphrase_idx)
@@ -1476,25 +1539,29 @@ function NTrap:_process_recording(events)
 
   -- @}
 
+  --print("events",rprint(events))
+
   -- processing function, invoked by process-slicer
   -- (so only able to use static methods and properties)
   local parse_phrase_recording = function(
-    recording_begin,recording_stop,ntrap,phrase_idx)
+    recording_begin,recording_stop,ntrap,phrase_idx,quant_amount)
     
     -- this structure describes our voices
     -- table = 
     --  0 = {
     --    column = (int) 
-    --    event = (table)
-    --    line = (int)
-    --    offed = (int)
+    --    event = (table) -- NTrapEvent 
+    --    line = (int)  -- the line at which note-on occurred
+    --    offed = (int) -- the line at which the note is released
+    --                  -- (set when multiple notes arrive within a line)
     --  }
     local voices = table.create()
     local yield_counter = 0
     local max_voice_count = 1
 
     -- write notes into the phrase
-    local write_event = function(line,fraction,event,col_idx)
+    local write_event = function(line,fraction,event,col_idx,quantize)
+      print("write_event = function(line,fraction,event,col_idx)",line,fraction,event,col_idx)
       if (line > renoise.InstrumentPhrase.MAX_NUMBER_OF_LINES) then
         LOG("*** skipping event at line",line)
         return
@@ -1507,7 +1574,9 @@ function NTrap:_process_recording(events)
       else
         note_col.note_value = renoise.PatternLine.NOTE_OFF
       end
-      note_col.delay_value = fraction * 255
+      if not quantize then
+        note_col.delay_value = fraction * 255
+      end
       max_voice_count = math.max(max_voice_count, col_idx)
       --print("max_voice_count",max_voice_count)
     end
@@ -1518,61 +1587,100 @@ function NTrap:_process_recording(events)
       yield_counter = yield_counter - 1
       if (yield_counter < 0) then
         yield_counter = ntrap._settings.yield_counter.value
-        coroutine.yield()
+        --coroutine.yield()
       end
 
       --print("event",rprint(evt))
       --print("ntrap._recording_stop",recording_stop)
       if (evt.timestamp > recording_stop) then
         -- skip events that arrived after stop 
-        --print("*** skip events after stop",evt.timestamp)
+        --print("*** skip events after stop     ",evt.timestamp)
       else
         local line,fraction = resolve_line_in_phrase_by_timestamp(
           evt.timestamp,recording_begin,ntrap._settings)
+
+        -- quantize line? 
+        -- use the provided quantize amount, unless a note-off 
+        -- set to preserve its length...
+        local q_amount
+        local preserve = self._settings.quantize_preserve_length.value
+        --print("preserve,evt.is_note_on",preserve,evt.is_note_on)
+        if (not evt.is_note_on and preserve) then
+          q_amount = nil
+        else
+          q_amount = quant_amount
+        end
+
+        if q_amount then
+          line = quantize_line(line,fraction,q_amount)
+        end
+        
         -- purge 'offed' notes 
-        for k,v in ripairs(voices) do
-          if (v.offed == line) then
+        for k = max_note_cols, 1, -1 do
+          local v = voices[k]
+          if v and (v.offed == line) then
             --print("*** remove offed voice in line,column ",line,v.column,v.event.pitch)
-            voices:remove(k)
+            voices[k] = nil
           end
         end
         if (evt.is_note_on) then
-          --print("*** note-on at line",line)
-          local voice_column = #voices+1
-          if (voice_column <= renoise.InstrumentPhrase.MAX_NUMBER_OF_NOTE_COLUMNS) then
+          --print("*** note-on at line            ",line)
+          -- use the first/next available column
+          local voice_column = 0
+          local leftmost = 1000
+          local col_idx = 1
+          while col_idx <= max_note_cols do
+            if voices[col_idx] then
+              voice_column = math.max(voices[col_idx].column,voice_column)
+            else
+              leftmost =  math.min(col_idx,leftmost)
+            end
+            col_idx = col_idx+1
+          end
+          if leftmost < voice_column then 
+            -- first available column
+            voice_column = leftmost
+          else 
+            -- next available column 
+            voice_column = voice_column+1
+          end
+
+          if (voice_column <= max_note_cols) then
             voices[voice_column] = {
               column = voice_column,
               event = evt,
               line = line,
               offed = false,
             }
-            --print("*** voice sounded in column, pitch",voice_column,evt.pitch)
-            write_event(line,fraction,evt,voice_column)
+            --print("sounded in column, pitch   ",voice_column,evt.pitch)
+            write_event(line,fraction,evt,voice_column,q_amount)
           else
             LOG("*** skipping output, not enough note columns")
           end
         else
-          --print("*** note-off at line",line)
-          -- match pitch with playing notes
-          for k,v in ipairs(voices) do
-            if (v.event.pitch == evt.pitch) then
-              -- apply octave difference (transposing in renoise while playing)
-              local oct_diff = v.event.octave - evt.octave
+          --print("*** note-off at line, pitch    ",line,evt.pitch)
+          for k = 1, max_note_cols do
+
+            local v = voices[k]
+            if (v) and (v.event.pitch == evt.pitch) then
               if (v.line == line) then
                 if not v.offed then
                   -- if on same line as note-on, write note-off in the next line
-                  -- and flag the voice as being 'offed'
-                  write_event(line+1,fraction,evt,v.column)
+                  -- (as we can't note-off on the same line)
+                  write_event(line+1,fraction,evt,v.column,q_amount)
+                  -- flag the voice as being 'offed', so it won't be included
                   v.offed = line+1
-                  --print("*** voice offed in line,column,pitch ",v.offed,v.column,v.event.pitch)
                 end
               else
                 -- normal note-off
-                write_event(line,fraction,evt,v.column)
-                voices:remove(k)
-                --print("*** voice turned off in line,column,pitch ",line,v.column,v.event.pitch)
+                if not v.offed then
+                  write_event(line,fraction,evt,v.column,q_amount)
+                end
+                voices[k] = nil
+                --print("note-off line,column,pitch   ",line,v.column,v.event.pitch)
               end
             end
+
           end
         end
       end
@@ -1587,13 +1695,23 @@ function NTrap:_process_recording(events)
   end
 
   -- call the processing function...
+  --[[
   self.process_slicer = ProcessSlicer(
     parse_phrase_recording,
     self._recording_begin,
     self._recording_stop,
     self,
-    vphrase_idx)
+    vphrase_idx,
+    self:_get_quant_amount())
   self.process_slicer:start()
+  ]]
+
+  parse_phrase_recording(
+    self._recording_begin,
+    self._recording_stop,
+    self,
+    vphrase_idx,
+    self:_get_quant_amount())
 
 
 end
@@ -1670,3 +1788,28 @@ function resolve_timestamp_by_line_in_phrase(line,settings)
   return (line / get_phrase_lps(settings))
 
 end
+
+--------------------------------------------------------------------------------
+-- quantize line:  snap to nearest line, then quantize
+-- @param line (int) 
+-- @param fraction (number) between 0 and 1
+-- @param amount (int or nil) how many lines, nil to skip quantize
+-- @return line
+
+function quantize_line(line,fraction,quant_amount)
+
+  if not quant_amount then
+    return line
+  end
+
+  line = line-1 -- calculate with zero offset
+  if (fraction > 0.5) then
+    line = line+1
+  end
+  local quant_offset = (line%quant_amount)
+  line = line - quant_offset
+  return line+1  -- end zero offset
+
+end
+
+

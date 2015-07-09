@@ -399,9 +399,16 @@ function NTrapUI:_build_tab_inputs()
 
   local vb = self._vb
   local input_devices = self:_create_midi_in_list()
+
+  local quantize_items = {"No quantize", "1 line"}
+  for k = 2,32 do
+    quantize_items[k+1] = ("%d lines"):format(k)
+  end
+
   local view = vb:column{
     width = CONTENT_W,
     margin = renoise.ViewBuilder.DEFAULT_CONTROL_MARGIN,
+
     vb:row{
       --visible = false,
       vb:text{
@@ -442,24 +449,8 @@ function NTrapUI:_build_tab_inputs()
       },
 
     },
-    vb:row{
-      vb:text{
-        width = LEFT_COL_W,
-        text = "Quantize",
-      },
-      vb:popup{
-        id = "ntrap_record_quantize",
-        active = false,
-        width = MIDDLE_W,
-        items = NTrapPrefs.QUANTIZE,
-        notifier = function(idx)
-          self._ntrap:_save_setting("record_quantize",idx)
-        end,
-      },
-      vb:text{
-        text = "TODO",
-      },
-    },
+
+
     vb:row{
       vb:text{
         text = "MIDI Input",
@@ -483,6 +474,61 @@ function NTrapUI:_build_tab_inputs()
         end,
       }
     },
+
+
+    vb:row{
+      vb:text{
+        width = LEFT_COL_W,
+        text = "Quantize",
+      },
+      vb:popup{
+        id = "ntrap_record_quantize",
+        --active = false,
+        width = MIDDLE_W,
+        items = NTrapPrefs.QUANTIZE,
+        notifier = function(idx)
+          self._ntrap:_save_setting("record_quantize",idx)
+          self:_apply_quantize_from_option(idx)
+        end,
+      },
+      --[[
+      vb:text{
+        text = "TODO",
+      },
+      ]]
+      vb:popup{
+        id = "ntrap_record_quantize_custom",
+        items = quantize_items,
+        width = RIGHT_W,
+        value = 1,
+        notifier = function(idx)
+          self._ntrap:_save_setting("record_quantize_custom",idx)
+
+          local popup_preserve = self._vb.views.ntrap_quantize_preserve_length
+          local q_amount = self._ntrap:_get_quant_amount()
+          popup_preserve.active = q_amount and true or false
+
+        end,
+      }
+    },
+
+    vb:row{
+      vb:text{
+        text = " ",
+        width = LEFT_COL_W
+      },
+      vb:checkbox{
+        id = "ntrap_quantize_preserve_length",
+        value = true,
+        notifier = function(val)
+          self._ntrap:_save_setting("quantize_preserve_length",val)
+        end,
+      },
+      vb:text{
+        text = "Preserve length of quantized notes",
+      },
+    },
+
     vb:row{
       vb:text{
         text = "QWERTY",
@@ -496,7 +542,7 @@ function NTrapUI:_build_tab_inputs()
         end,
       },
       vb:text{
-        text = "Receive while dialog is focused",
+        text = "Receive key presses while dialog is focused",
       },
     },
   }
@@ -1023,6 +1069,17 @@ function NTrapUI:update()
 
   self:_apply_instrument_from_option(node.value)
 
+  -- quantize input
+  local node = settings:property("record_quantize_custom")
+  local ui_widget = self._vb.views.ntrap_record_quantize_custom
+  ui_widget.value = node.value
+
+  local node = settings:property("record_quantize")
+  local ui_widget = self._vb.views.ntrap_record_quantize
+  ui_widget.value = node.value
+
+  self:_apply_quantize_from_option(node.value)
+
 
   -- arm recording
   local node = settings:property("arm_recording")
@@ -1479,6 +1536,21 @@ end
 
 --------------------------------------------------------------------------------
 
+function NTrapUI:update_quantize_popup()
+
+  local rns = renoise.song()
+  local popup = self._vb.views.ntrap_record_quantize_custom
+  if not rns.transport.record_quantize_enabled then
+    popup.value = 1
+  else
+    popup.value = rns.transport.record_quantize_lines+1
+  end
+
+end
+
+
+--------------------------------------------------------------------------------
+
 --- Show warning for missing instrument
 -- @param val (bool), false to hide warning
 
@@ -1681,6 +1753,39 @@ function NTrapUI:_apply_instrument_from_option(idx)
   popup_custom.value = val_custom
 
 end
+
+
+--------------------------------------------------------------------------------
+
+--- Determine, based on the chosen option
+
+function NTrapUI:_apply_quantize_from_option(idx)
+  TRACE("NTrapUI:_apply_quantize_from_option(idx)",idx)
+
+  local popup_custom = self._vb.views.ntrap_record_quantize_custom
+  popup_custom.active = (idx == NTrapPrefs.QUANTIZE_CUSTOM) and true or false
+
+  local val_custom = nil
+  if (idx == NTrapPrefs.QUANTIZE_RENOISE) then
+    local quant_enabled = renoise.song().transport.record_quantize_enabled
+    if quant_enabled then
+      val_custom = renoise.song().transport.record_quantize_lines+1
+    else
+      val_custom = 1
+    end
+    
+  elseif (idx == NTrapPrefs.QUANTIZE_NONE) then
+    val_custom = 1
+  elseif (idx == NTrapPrefs.QUANTIZE_CUSTOM) then
+    val_custom = popup_custom.value
+  else
+    error("Unsupported quantize method")
+  end
+  popup_custom.value = val_custom
+
+
+end
+
 
 
 --------------------------------------------------------------------------------

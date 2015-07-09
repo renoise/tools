@@ -69,11 +69,13 @@ NTrapPrefs.STOP = {
 }
 
 NTrapPrefs.QUANTIZE_DEFAULT = 1
-NTrapPrefs.QUANTIZE_FORWARD = 1
-NTrapPrefs.QUANTIZE_BOTH = 2
+NTrapPrefs.QUANTIZE_NONE = 1
+NTrapPrefs.QUANTIZE_RENOISE = 2
+NTrapPrefs.QUANTIZE_CUSTOM = 3
 NTrapPrefs.QUANTIZE = {
-  "Renoise style",
-  "Both directions",
+  "No quantize",
+  "Sync with Renoise",
+  "Specify quantize", 
 }
 
 NTrapPrefs.PHRASE_LENGTH_DEFAULT = 32
@@ -134,10 +136,14 @@ function NTrapPrefs:__init()
   renoise.Document.DocumentNode.__init(self)
 
   -- general options
-  self:add_property("midi_in_port",         renoise.Document.ObservableString(NTrapPrefs.NO_INPUT))
-  self:add_property("keyboard_enabled",     renoise.Document.ObservableBoolean(true))
   self:add_property("target_instr",         renoise.Document.ObservableNumber(1))
   self:add_property("target_instr_custom",  renoise.Document.ObservableNumber(1))
+  self:add_property("record_quantize",      renoise.Document.ObservableNumber(NTrapPrefs.QUANTIZE_DEFAULT))
+  self:add_property("record_quantize_custom", renoise.Document.ObservableNumber(1))
+  self:add_property("quantize_preserve_length", renoise.Document.ObservableBoolean(true))
+  self:add_property("midi_in_port",         renoise.Document.ObservableString(NTrapPrefs.NO_INPUT))
+  self:add_property("keyboard_enabled",     renoise.Document.ObservableBoolean(true))
+  
 
   -- recording options
   self:add_property("arm_recording",        renoise.Document.ObservableNumber(1))
@@ -147,7 +153,6 @@ function NTrapPrefs:__init()
   self:add_property("stop_recording",       renoise.Document.ObservableNumber(1))
   self:add_property("stop_recording_beats", renoise.Document.ObservableNumber(NTrapPrefs.STOP_BEATS_DEFAULT))
   self:add_property("stop_recording_lines", renoise.Document.ObservableNumber(NTrapPrefs.STOP_LINES_DEFAULT))
-  self:add_property("record_quantize",      renoise.Document.ObservableNumber(NTrapPrefs.QUANTIZE_DEFAULT))
 
 
   -- phrase options

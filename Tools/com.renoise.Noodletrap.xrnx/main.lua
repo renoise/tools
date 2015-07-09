@@ -4,9 +4,10 @@ main.lua
 
 -- includes
 
+require "classes/NTrapEvent"
 require "classes/NTrap"
-require "classes/NTrapUI"
 require "classes/NTrapPrefs"
+require "classes/NTrapUI"
 require "classes/ProcessSlicer"
 
 --------------------------------------------------------------------------------
