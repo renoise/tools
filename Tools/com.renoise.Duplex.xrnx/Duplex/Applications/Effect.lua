@@ -18,6 +18,9 @@ Inheritance: @{Duplex.Application} > Duplex.Application.Effect
 
 ### Changes
 
+  0.99.xx
+    - New mapping: "param_active" (UILed, enabled/working parameters)
+
   0.98.27
     - New mapping: “device_name” (UILabel)
     - New mappings: “param_names”,”param_values” (UILabels for parameters)
@@ -116,51 +119,61 @@ Effect.default_options = {
 
 -- apply control-maps groups 
 Effect.available_mappings = {
+
   parameters = {
-    description = "Parameter value",
+    description = "(UISlider...) Parameter value",
     distributable = true,
     greedy = true,
+    -- grid support 
     orientation = ORIENTATION.HORIZONTAL,
     flipped = true,
     toggleable = true,
   },
   param_next = {
-    description = "Parameter page",
+    description = "(UIButton) Next Parameter page",
     distributable = true,
   },
   param_prev = {
-    description = "Parameter page",
+    description = "(UIButton) Previous Parameter page",
     distributable = true,
   },
   device = {
-    description = "Select device via buttons",
+    description = "(UIButton...) Select among devices via buttons",
     distributable = true,
     greedy = true,
   },
   device_select = {
-    description = "Select device via knob/slider",
+    description = "(UISlider) Select device via knob/slider",
     orientation = ORIENTATION.HORIZONTAL,
   },
   device_next = {
-    description = "Select next device",
+    description = "(UIButton) Select next device",
   },
   device_prev = {
-    description = "Select previous device",
+    description = "(UIButton) Select previous device",
   },
   preset_next = {
-    description = "Select next device preset",
+    description = "(UIButton) Select next device preset",
   },
   preset_prev = {
-    description = "Select previous device preset",
+    description = "(UIButton) Select previous device preset",
   },
   device_name = {
-    description = "Display device name",
+    description = "(UILabel) Display device name",
   },
   param_names = {
-    description = "Display parameter name",
+    description = "(UILabel...) Display parameter name",
+    greedy = true,
   },
   param_values = {
-    description = "Display parameter value",
+    description = "(UILabel...) Display parameter value",
+    greedy = true,
+  },
+  param_active = {
+    -- used with the Launchcontrol to illustrate which
+    -- encoders are actively controlling an effect-parameter
+    description = "(UILed...) Display active parameter",
+    greedy = true,
   },
 
 }
@@ -189,6 +202,9 @@ Effect.default_palette = {
   prev_param_off = {    color = {0x00,0x00,0x00}, text = "◄", val=false },
   next_param_on = {     color = {0xFF,0xFF,0xFF}, text = "►", val=true },
   next_param_off = {    color = {0x00,0x00,0x00}, text = "►", val=false },
+  -- parameter active 
+  parameter_on = {      color = {0xFF,0xFF,0xFF}, val=true },
+  parameter_off = {     color = {0x00,0x00,0x00}, val=false },
 
 }
 
@@ -240,6 +256,11 @@ function Effect:__init(...)
   self._device_observables = table.create()
   self._preset_observables = table.create()
   self._mixer_observables = table.create()
+
+  --- (table) references to various UI controls 
+  self._param_names  = {}
+  self._param_values = {}
+  self._param_active = {}
 
   --- (@{Duplex.Automation}) used for recording movements
   self.automation = Automation()
@@ -340,18 +361,30 @@ function Effect:update()
 
       param_value = parameter.value_string
 
+      if self._param_active[control_index] then
+        self._param_active[control_index]:set(self.palette.parameter_on)
+        print("set to on",self._param_active[control_index],control_index)
+      end
+
     else
       -- deactivate, reset controls which have no parameter assigned
       self:set_parameter(control_index, 0, skip_event)
       param_value = ""
 
+      if self._param_values[control_index] then
+        self._param_values[control_index]:set_text(param_value)
+      end
+
+      if self._param_active[control_index] then
+        self._param_active[control_index]:set(self.palette.parameter_off)
+        print("set to off",self._param_active[control_index],control_index)
+      end
+
     end
 
     --print("*** param_value",param_value)
     
-    if self._param_values and self._param_values[control_index] then
-      self._param_values[control_index]:set_text(param_value)
-    end
+
 
   end
   
@@ -770,9 +803,7 @@ function Effect:_build_app()
     local params = cm:get_params(map.group_name,map.index)
     for control_index = 1,#params do
       local c = UILabel(self)
-      --c.group_name = map.group_name
       c.group_name = params[control_index].xarg.group_name
-      --c.tooltip = map.description
       c:set_pos(map.index)
       self._param_names[control_index] = c
     end
@@ -784,11 +815,23 @@ function Effect:_build_app()
     local params = cm:get_params(map.group_name,map.index)
     for control_index = 1,#params do
       local c = UILabel(self)
-      --c.group_name = map.group_name
       c.group_name = params[control_index].xarg.group_name
-      --c.tooltip = map.description
       c:set_pos(map.index)
       self._param_values[control_index] = c
+    end
+  end
+
+  local map = self.mappings.param_active
+  if (map.group_name) then
+    self._param_active = {}
+    local params = cm:get_params(map.group_name,map.index)
+    print("params",#params)
+    for control_index = 1,#params do
+      local c = UILed(self)
+      c.group_name = params[control_index].xarg.group_name
+      --c:set_pos(map.index)
+      c:set_pos(control_index)
+      self._param_active[control_index] = c
     end
   end
 
