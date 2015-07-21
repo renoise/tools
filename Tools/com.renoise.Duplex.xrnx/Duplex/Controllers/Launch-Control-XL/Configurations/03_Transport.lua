@@ -25,7 +25,10 @@ duplex_configurations:insert {
     Effect = {
       mappings = {
         parameters = {
-            group_name = "DeviceEncoders"
+          group_name = "DeviceEncoders"
+        },
+        param_active = {
+          group_name = "DeviceEncoderLEDs"
         },
         device_prev = {
           group_name = "DeviceSelect",
@@ -35,28 +38,29 @@ duplex_configurations:insert {
           group_name = "DeviceSelect",
           index = 2
         },
-        param_active = {
-            group_name = "DeviceEncoderLEDs"
-        },
       },
       palette = {
+        parameter_on = {
+          color = {0xFF,0x80,0x00},
+        },
+        parameter_off = {
+          color = {0x00,0x00,0x00},
+        },
         prev_device_on = {
           color = {0xFF,0x00,0x00},
           text = "▴",
-          val = true
         },
         prev_device_off = {
+          color = {0x00,0x00,0x00},
           text = "▴",
-          val = false
         },
         next_device_on = {
           color = {0xFF,0x00,0x00},
           text = "▾",
-          val = true
         },
         next_device_off = {
+          color = {0x00,0x00,0x00},
           text = "▾",
-          val = false
         }
       }
     },
@@ -64,8 +68,15 @@ duplex_configurations:insert {
     Mixer = {
       application = "Mixer",
       mappings = {
-        panning = {group_name = "PanEncoders"},
-        levels = {group_name = "VolumeFaders"}
+        panning = {
+          group_name = "PanEncoders"
+        },
+        param_active = {
+          group_name = "PanEncoderLEDs"
+        },
+        levels = {
+          group_name = "VolumeFaders"
+        }
       },
       options = {
         pre_post = 2,
@@ -74,13 +85,17 @@ duplex_configurations:insert {
         page_size = 8
       },
       palette = {
+        parameter_on = {
+          color = {0x00,0xFF,0x00},
+        },
+        parameter_off = {
+          color = {0x00,0x00,0x00},
+        },
         normal_mute_on = {
           color = {0x00,0x00,0x00},
-          val = true
         },
         normal_mute_off = {
           color = {0xFF,0x00,0x00},
-          val = false
         }
       }
     },
@@ -104,30 +119,26 @@ duplex_configurations:insert {
         select_device_tip = {
             color = {0x00,0xFF,0x00},
             text = "▬",
-            val = true
         },
         select_device_back = {
             color = {0x00,0x00,0x00},
             text = "▬",
-            val = false
         },
         page_prev_on = {
             color = {0xFF,0x00,0x00},
             text = "◂",
-            val = true
         },
         page_prev_off = {
+            color = {0x00,0x00,0x00},
             text = "◂",
-            val = false
         },
         page_next_on = {
             color = {0xFF,0x00,0x00},
             text = "▸",
-            val = true
         },
         page_next_off = {
+            color = {0x00,0x00,0x00},
             text = "▸",
-            val = false
         }
       }
     },
@@ -173,26 +184,98 @@ duplex_configurations:insert {
         
       },
       palette = {
-        edit_mode_off = {     color = {0x00,0x00,0x00}, text = "●", val = false,},
-        edit_mode_on = {      color = {0xFF,0x80,0x00}, text = "●", val = true, },
-        follow_player_off = { color = {0x00,0x00,0x00}, text = "↓", val = false },
-        follow_player_on = {  color = {0xFF,0x80,0x00}, text = "↓", val = true  },
-        loop_block_off = {    color = {0x00,0x00,0x00}, text = "═", val = false,},
-        loop_block_on = {     color = {0xFF,0x80,0x00}, text = "═", val = true  },
-        loop_pattern_off = {  color = {0x00,0x00,0x00}, text = "∞", val = false,},
-        loop_pattern_on = {   color = {0xFF,0x80,0x00}, text = "∞", val = true  },
-        metronome_off = {     color = {0x00,0x00,0x00}, text = "∆", val = false,},
-        metronome_on = {      color = {0xFF,0x80,0x00}, text = "∆", val = true, },
-        next_patt_dimmed = {  color = {0x80,0x80,0x00}, text = "►|",val = false,},
-        next_patt_off = {     color = {0x00,0x00,0x00}, text = "►|",val = false,},
-        next_patt_on = {      color = {0xFF,0x80,0x00}, text = "►|",val = true, },
-        playing_off = {       color = {0x00,0x00,0x00}, text = "►", val = false,},
-        playing_on = {        color = {0xFF,0x80,0x00}, text = "►", val = true  },
-        prev_patt_dimmed = {  color = {0x80,0x80,0x00}, text = "|◄",val = false,},
-        prev_patt_off = {     color = {0x00,0x00,0x00}, text = "|◄",val = false,},
-        prev_patt_on = {      color = {0xFF,0x80,0x00}, text = "|◄",val = true, },
-        stop_playback_off = { color = {0x00,0x00,0x00}, text = "■", val = false,},
-        stop_playback_on = {  color = {0xFF,0x80,0x00}, text = "□", val = true, },
+        edit_mode_off = {     
+          color = {0x00,0x00,0x00}, 
+          text = "●", val = false
+        },
+        edit_mode_on = {      
+          color = {0xFF,0x80,0x00}, 
+          text = "●", 
+          val = true
+        },
+        follow_player_off = { 
+          color = {0x00,0x00,0x00}, 
+          text = "↓", 
+          val = false
+        },
+        follow_player_on = {  
+          color = {0xFF,0x80,0x00}, 
+          text = "↓", 
+          val = true
+        },
+        loop_block_off = {    
+          color = {0x00,0x00,0x00}, 
+          text = "═", 
+          val = false
+        },
+        loop_block_on = {     
+          color = {0xFF,0x80,0x00}, 
+          text = "═", 
+          val = true
+        },
+        loop_pattern_off = {  
+          color = {0x00,0x00,0x00}, 
+          text = "∞", 
+          val = false
+        },
+        loop_pattern_on = {   
+          color = {0xFF,0x80,0x00}, 
+          text = "∞", 
+          val = true
+        },
+        metronome_off = {     
+          color = {0x00,0x00,0x00}, 
+          text = "∆", 
+          val = false
+        },
+        metronome_on = {      
+          color = {0xFF,0x80,0x00}, 
+          text = "∆", 
+          val = true
+        },
+        next_patt_dimmed = {  
+          color = {0x80,0x80,0x00}, 
+          text = "►|",
+          val = false
+        },
+        next_patt_off = {     
+          color = {0x00,0x00,0x00}, 
+          text = "►|",
+          val = false
+        },
+        next_patt_on = {      
+          color = {0xFF,0x80,0x00}, 
+          text = "►|",
+          val = true
+        },
+        playing_off = {       
+          color = {0x00,0x00,0x00}, 
+          text = "►", 
+        },
+        playing_on = {        
+          color = {0xFF,0x80,0x00}, 
+          text = "►", 
+        },
+        prev_patt_dimmed = {  
+          color = {0x80,0x80,0x00}, 
+          text = "|◄",
+        },
+        prev_patt_off = {     
+          color = {0x00,0x00,0x00}, 
+          text = "|◄",
+        },
+        prev_patt_on = {      
+          color = {0xFF,0x80,0x00}, 
+          text = "|◄",
+        },
+        stop_playback_off = { 
+          color = {0x00,0x00,0x00}, 
+          text = "■", 
+        },
+        stop_playback_on = {  
+          color = {0xFF,0x80,0x00}, 
+          text = "□", 
+        },
       }
     },
     
@@ -215,12 +298,10 @@ duplex_configurations:insert {
         set_config_on = {
           color = {0xFF,0x80,0x00},
           text = "",
-          val = true
         },
         set_config_off = {
           color = {0x00,0x00,0x00},
           text = "",
-          val = false
         }
       }
     }
