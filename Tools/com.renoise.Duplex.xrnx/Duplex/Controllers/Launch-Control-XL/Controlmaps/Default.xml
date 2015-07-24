@@ -1,0 +1,142 @@
+<Device>
+  <Name>Launch Control XL</Name>
+  <Author>spktkpkt</Author>
+  <Description>Test controlmap - merging setups via "states"</Description>
+  
+  <States>
+    <State name="MutesMode" hide_when_inactive="true" disable_when_inactive="true" receive_when_inactive="false" value="A#7" type="trigger" exclusive="StateGroup" active="true" />
+    <State name="SolosMode" hide_when_inactive="true" disable_when_inactive="true" receive_when_inactive="false" value="B-7" type="trigger" exclusive="StateGroup" />
+    <State name="TransportMode" hide_when_inactive="true" disable_when_inactive="true" receive_when_inactive="false" value="C-8" type="trigger" exclusive="StateGroup" />
+  </States>
+  
+  <Parameters>
+  <Page>
+    <Row>
+    <Column>
+    <Group name="DeviceEncoders" orientation="horizontal" columns="8">
+        <Param value="CC#13" type="dial" name="DialSendA1" minimum="0" maximum="127" />
+        <Param value="CC#14" type="dial" name="DialSendA2" minimum="0" maximum="127" />
+        <Param value="CC#15" type="dial" name="DialSendA3" minimum="0" maximum="127" />
+        <Param value="CC#16" type="dial" name="DialSendA4" minimum="0" maximum="127" />
+        <Param value="CC#17" type="dial" name="DialSendA5" minimum="0" maximum="127" />
+        <Param value="CC#18" type="dial" name="DialSendA6" minimum="0" maximum="127" />
+        <Param value="CC#19" type="dial" name="DialSendA7" minimum="0" maximum="127" />
+        <Param value="CC#20" type="dial" name="DialSendA8" minimum="0" maximum="127" />
+        <Param value="CC#29" type="dial" name="DialSendB1" minimum="0" maximum="127" />
+        <Param value="CC#30" type="dial" name="DialSendB2" minimum="0" maximum="127" />
+        <Param value="CC#31" type="dial" name="DialSendB3" minimum="0" maximum="127" />
+        <Param value="CC#32" type="dial" name="DialSendB4" minimum="0" maximum="127" />
+        <Param value="CC#33" type="dial" name="DialSendB5" minimum="0" maximum="127" />
+        <Param value="CC#34" type="dial" name="DialSendB6" minimum="0" maximum="127" />
+        <Param value="CC#35" type="dial" name="DialSendB7" minimum="0" maximum="127" />
+        <Param value="CC#36" type="dial" name="DialSendB8" minimum="0" maximum="127" />
+      </Group>
+      <Group name="DeviceEncoderLEDs" orientation="horizontal" columns="8" colorspace="4,4,0">
+        <Param value="C#0" type="button" name="DeviceEncoderLEDA1" aspect="0.2" minimum="0" maximum="127" />
+        <Param value="F-1" type="button" name="DeviceEncoderLEDA2" aspect="0.2" minimum="0" maximum="127" />
+        <Param value="A-2" type="button" name="DeviceEncoderLEDA3" aspect="0.2" minimum="0" maximum="127" />
+        <Param value="C#4" type="button" name="DeviceEncoderLEDA4" aspect="0.2" minimum="0" maximum="127" />
+        <Param value="F-5" type="button" name="DeviceEncoderLEDA5" aspect="0.2" minimum="0" maximum="127" />
+        <Param value="A-6" type="button" name="DeviceEncoderLEDA6" aspect="0.2" minimum="0" maximum="127" />
+        <Param value="C#8" type="button" name="DeviceEncoderLEDA7" aspect="0.2" minimum="0" maximum="127" />
+        <Param value="F-9" type="button" name="DeviceEncoderLEDA8" aspect="0.2" minimum="0" maximum="127" />
+        <Param value="D-0" type="button" name="DeviceEncoderLEDB1" aspect="0.2" minimum="0" maximum="127" />
+        <Param value="F#1" type="button" name="DeviceEncoderLEDB2" aspect="0.2" minimum="0" maximum="127" />
+        <Param value="A#2" type="button" name="DeviceEncoderLEDB3" aspect="0.2" minimum="0" maximum="127" />
+        <Param value="D-4" type="button" name="DeviceEncoderLEDB4" aspect="0.2" minimum="0" maximum="127" />
+        <Param value="F#5" type="button" name="DeviceEncoderLEDB5" aspect="0.2" minimum="0" maximum="127" />
+        <Param value="A#6" type="button" name="DeviceEncoderLEDB6" aspect="0.2" minimum="0" maximum="127" />
+        <Param value="D-8" type="button" name="DeviceEncoderLEDB7" aspect="0.2" minimum="0" maximum="127" />
+        <Param value="F#9" type="button" name="DeviceEncoderLEDB8" aspect="0.2" minimum="0" maximum="127" />
+      </Group>
+      <Group name="PanEncoders" orientation="horizontal" columns="8">
+        <Param value="CC#49" type="dial" name="DialPan1" minimum="0" maximum="127" />
+        <Param value="CC#50" type="dial" name="DialPan2" minimum="0" maximum="127" />
+        <Param value="CC#51" type="dial" name="DialPan3" minimum="0" maximum="127" />
+        <Param value="CC#52" type="dial" name="DialPan4" minimum="0" maximum="127" />
+        <Param value="CC#53" type="dial" name="DialPan5" minimum="0" maximum="127" />
+        <Param value="CC#54" type="dial" name="DialPan6" minimum="0" maximum="127" />
+        <Param value="CC#55" type="dial" name="DialPan7" minimum="0" maximum="127" />
+        <Param value="CC#56" type="dial" name="DialPan8" minimum="0" maximum="127" />
+      </Group>
+      <Group name="PanEncoderLEDs" orientation="horizontal" columns="8" colorspace="4,4,0">
+          <Param value="D#0" type="button" name="PanEncoderLED1" aspect="0.2" minimum="0" maximum="127" />
+          <Param value="G-1" type="button" name="PanEncoderLED2" aspect="0.2" minimum="0" maximum="127" />
+          <Param value="B-2" type="button" name="PanEncoderLED3" aspect="0.2" minimum="0" maximum="127" />
+          <Param value="D#4" type="button" name="PanEncoderLED4" aspect="0.2" minimum="0" maximum="127" />
+          <Param value="G-5" type="button" name="PanEncoderLED5" aspect="0.2" minimum="0" maximum="127" />
+          <Param value="B-6" type="button" name="PanEncoderLED6" aspect="0.2" minimum="0" maximum="127" />
+          <Param value="D#8" type="button" name="PanEncoderLED7" aspect="0.2" minimum="0" maximum="127" />
+          <Param value="G-9" type="button" name="PanEncoderLED8" aspect="0.2" minimum="0" maximum="127" />
+      </Group>
+      <Group name="VolumeFaders" orientation="horizontal" columns="8">
+        <Param value="CC#77" type="fader" name="Fader1" orientation="vertical" size="4" aspect="1" minimum="0" maximum="127" />
+        <Param value="CC#78" type="fader" name="Fader2" orientation="vertical" size="4" aspect="1" minimum="0" maximum="127" />
+        <Param value="CC#79" type="fader" name="Fader3" orientation="vertical" size="4" aspect="1" minimum="0" maximum="127" />
+        <Param value="CC#80" type="fader" name="Fader4" orientation="vertical" size="4" aspect="1" minimum="0" maximum="127" />
+        <Param value="CC#81" type="fader" name="Fader5" orientation="vertical" size="4" aspect="1" minimum="0" maximum="127" />
+        <Param value="CC#82" type="fader" name="Fader6" orientation="vertical" size="4" aspect="1" minimum="0" maximum="127" />
+        <Param value="CC#83" type="fader" name="Fader7" orientation="vertical" size="4" aspect="1" minimum="0" maximum="127" />
+        <Param value="CC#84" type="fader" name="Fader8" orientation="vertical" size="4" aspect="1" minimum="0" maximum="127" />
+      </Group>
+      <Group name="TrackSelection" orientation="horizontal" columns="8" colorspace="4,4,0">
+        <Param value="F-2" type="button" name="Track1" aspect="0.6" minimum="0" maximum="127" />
+        <Param value="F#2" type="button" name="Track2" aspect="0.6" minimum="0" maximum="127" />
+        <Param value="G-2" type="button" name="Track3" aspect="0.6" minimum="0" maximum="127" />
+        <Param value="G#2" type="button" name="Track4" aspect="0.6" minimum="0" maximum="127" />
+        <Param value="A-3" type="button" name="Track5" aspect="0.6" minimum="0" maximum="127" />
+        <Param value="A#3" type="button" name="Track6" aspect="0.6" minimum="0" maximum="127" />
+        <Param value="B-3" type="button" name="Track7" aspect="0.6" minimum="0" maximum="127" />
+        <Param value="C-4" type="button" name="Track8" aspect="0.6" minimum="0" maximum="127" />
+      </Group>
+      <MutesMode:Group name="MuteButtons" orientation="horizontal" columns="8" colorspace="4,4,0">
+        <Param value="C#5|Ch1" type="button" name="ButtonMute1" aspect="0.6" minimum="0" maximum="127" />
+        <Param value="D-5|Ch1" type="button" name="ButtonMute2" aspect="0.6" minimum="0" maximum="127" />
+        <Param value="D#5|Ch1" type="button" name="ButtonMute3" aspect="0.6" minimum="0" maximum="127" />
+        <Param value="E-5|Ch1" type="button" name="ButtonMute4" aspect="0.6" minimum="0" maximum="127" />
+        <Param value="F-6|Ch1" type="button" name="ButtonMute5" aspect="0.6" minimum="0" maximum="127" />
+        <Param value="F#6|Ch1" type="button" name="ButtonMute6" aspect="0.6" minimum="0" maximum="127" />
+        <Param value="G-6|Ch1" type="button" name="ButtonMute7" aspect="0.6" minimum="0" maximum="127" />
+        <Param value="G#6|Ch1" type="button" name="ButtonMute8" aspect="0.6" minimum="0" maximum="127" />
+      </Group>
+      <SolosMode:Group name="SoloButtons" orientation="horizontal" columns="8" colorspace="4,4,0">
+        <Param value="C#5|Ch1" type="button" name="ButtonSolo1" aspect="0.6" minimum="0" maximum="127" />
+        <Param value="D-5|Ch1" type="button" name="ButtonSolo2" aspect="0.6" minimum="0" maximum="127" />
+        <Param value="D#5|Ch1" type="button" name="ButtonSolo3" aspect="0.6" minimum="0" maximum="127" />
+        <Param value="E-5|Ch1" type="button" name="ButtonSolo4" aspect="0.6" minimum="0" maximum="127" />
+        <Param value="F-6|Ch1" type="button" name="ButtonSolo5" aspect="0.6" minimum="0" maximum="127" />
+        <Param value="F#6|Ch1" type="button" name="ButtonSolo6" aspect="0.6" minimum="0" maximum="127" />
+        <Param value="G-6|Ch1" type="button" name="ButtonSolo7" aspect="0.6" minimum="0" maximum="127" />
+        <Param value="G#6|Ch1" type="button" name="ButtonSolo8" aspect="0.6" minimum="0" maximum="127" />
+      </Group>
+      <TransportMode:Group name="TransportButtons" orientation="horizontal" columns="8" colorspace="4,4,0">
+        <Param value="C#5" type="button" name="Play" aspect="0.6" minimum="0" maximum="127" />
+        <Param value="D-5" type="button" name="Stop" aspect="0.6" minimum="0" maximum="127" />
+        <Param value="D#5" type="button" name="Prev" aspect="0.6" minimum="0" maximum="127" />
+        <Param value="E-5" type="button" name="Next" aspect="0.6" minimum="0" maximum="127" />
+        <Param value="F-6" type="button" name="Follow" aspect="0.6" minimum="0" maximum="127" />
+        <Param value="F#6" type="button" name="PatternLoop" aspect="0.6" minimum="0" maximum="127" />
+        <Param value="G-6" type="button" name="BlockLoop" aspect="0.6" minimum="0" maximum="127" />
+        <Param value="G#6" type="button" name="Metro" aspect="0.6" minimum="0" maximum="127" />
+      </Group>
+      </Column>
+      <Column>
+      <Group name="DeviceSelect" orientation="horizontal" columns="2" colorspace="4,4,0">
+        <Param value="CC#104" type="button" name="PreviousDevice" size="0.6" minimum="0" maximum="127" />
+        <Param value="CC#105" type="button" name="NextDevice" size="0.6" minimum="0" maximum="127" />
+      </Group>
+      <Group name="PageSelectors" orientation="horizontal" columns="2" colorspace="4,4,0">
+        <Param value="CC#106" type="button" name="PreviousPage" size="0.6" minimum="0" maximum="127" />
+        <Param value="CC#107" type="button" name="NextPage" size="0.6" minimum="0" maximum="127" />
+      </Group>
+	  <Group name="Modes" orientation="vertical" columns="1" colorspace="4,4,0">
+		<Param value="A-7" type="button" name="EditMode" size="1.2" minimum="0" maximum="127" />
+		<Param value="A#7" type="button" name="Mutes" size="1.2" minimum="0" maximum="127" />
+		<Param value="B-7" type="button" name="Solos" size="1.2" minimum="0" maximum="127" />
+		<Param value="C-8" type="button" name="Transport" size="1.2" minimum="0" maximum="127" />
+	  </Group>
+      </Column>
+      </Row>
+  </Page>
+  </Parameters>
+</Device>
