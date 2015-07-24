@@ -54,6 +54,27 @@ function Message:__init(device)
 
 end
 
+--------------------------------------------------------------------------------
+
+--- This method is called when we need to match against a value 
+-- (for example, we might match a C#4 against a certain velocity level)
+-- @return number or nil
+
+function Message:get_numeric_value()
+
+  if (type(self.value) == "table") then
+    if (self.context == DEVICE_MESSAGE.MIDI_NOTE) then
+      return self.value[2] -- velocity
+    else
+      error("Not implemented")
+    end
+  else
+    return self.value 
+  end
+
+end  
+
+
 
 --------------------------------------------------------------------------------
 

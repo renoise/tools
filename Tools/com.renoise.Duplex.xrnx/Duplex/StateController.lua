@@ -74,6 +74,10 @@ function StateController:handle_message(msg)
   local states = self:match(msg)
   --print("states",rprint(states))
 
+  -- when comparing against min/max, or a specific value (match)
+  -- we need a single value - check the message context 
+  local msg_val = msg:get_numeric_value()
+
   for k,state in ipairs(states) do
 
     if (state.xarg.type == "toggle") then
@@ -83,31 +87,31 @@ function StateController:handle_message(msg)
       then
         self:toggle(state.xarg.name,msg)
       elseif (msg.xarg.type == "togglebutton") and
-        ((msg.value == msg.xarg.maximum) or 
-        (msg.value == msg.xarg.minimum))
+        ((msg_val == msg.xarg.maximum) or 
+        (msg_val == msg.xarg.minimum))
       then
         self:toggle(state.xarg.name,msg)
-      elseif (msg.value == msg.xarg.maximum) then
+      elseif (msg_val == msg.xarg.maximum) then
         self:toggle(state.xarg.name,msg)
       end
 
     elseif (state.xarg.type == "momentary") then
 
-      if (msg.value == msg.xarg.maximum) then
+      if (msg_val == msg.xarg.maximum) then
         self:enable(state.xarg.name,msg)
-      elseif (msg.value == msg.xarg.minimum) then
+      elseif (msg_val == msg.xarg.minimum) then
         self:disable(state.xarg.name,msg)
       end
 
     elseif (state.xarg.type == "trigger") then
 
       if state.xarg.match then
-        if (state.xarg.match == msg.value) then
+        if (state.xarg.match == msg_val) then
           self:enable(state.xarg.name,msg)
         else
           self:disable(state.xarg.name,msg)
         end
-      elseif (msg.value == msg.xarg.maximum) then
+      elseif (msg_val == msg.xarg.maximum) then
         -- respond to "press" events
         self:enable(state.xarg.name,msg)
       end
