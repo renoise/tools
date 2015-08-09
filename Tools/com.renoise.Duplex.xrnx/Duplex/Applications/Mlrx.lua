@@ -2351,7 +2351,7 @@ function Mlrx:retrieve_local_settings()
 
   --print("rns.comments",rns.comments)
 
-  for k,v in ipairs(rns.comments) do
+  for _,v in ipairs(rns.comments) do
     if (v == Mlrx.SETTINGS_TOKEN_START) then
       capture_line = true
     elseif (v == Mlrx.SETTINGS_TOKEN_END) then
@@ -2381,7 +2381,7 @@ function Mlrx:store_local_settings()
 
   -- start by clearing the current mlrx comment
   local capture_line = true
-  for k,v in ipairs(rns.comments) do
+  for _,v in ipairs(rns.comments) do
     if (v == Mlrx.SETTINGS_TOKEN_START) then
       capture_line = false
     end
@@ -3233,7 +3233,7 @@ end
 
 function Mlrx:decorate_tracks()
 
-  for i,trk in ipairs(self.tracks) do
+  for _,trk in ipairs(self.tracks) do
     trk:decorate_track_task()
   end
 
@@ -3408,7 +3408,7 @@ end
 function Mlrx:purge_instruments(first_run)
   TRACE("Mlrx:purge_instruments(first_run)",first_run)
 
-  for i,trk in ipairs(self.tracks) do
+  for _,trk in ipairs(self.tracks) do
     trk:attach_to_instr(first_run)
   end
 
@@ -3593,7 +3593,7 @@ end
 function Mlrx:on_host_tempo_change()
   TRACE("Mlrx:on_host_tempo_change()")
 
-  for k,v in ipairs(self.tracks) do
+  for _,v in ipairs(self.tracks) do
     if v.sample and not v.sample.beat_sync_enabled then
       v:set_transpose_task(0)
     elseif v.phrase and v.instr.phrase_playback_enabled then
@@ -3699,7 +3699,7 @@ function Mlrx:midi_callback(message)
 
       -- process tracks 
 
-      for k,v in ipairs(self.tracks) do
+      for _,v in ipairs(self.tracks) do
         for k2,v2 in pairs(v._held_keys) do
           if (v2 == message[2]) then
             -- only allow removing keys from selected track

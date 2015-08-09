@@ -1,7 +1,18 @@
+
+--[[
+
+-- Requirements
+require('/Duplex/Globals')
+require('/Duplex/Applications/Mlrx/Mlrx_pos')
+require('/Duplex/Applications/Mlrx/Mlrx_note')
+require('/Duplex/Applications/Mlrx/Mlrx_group')
+
+]]
+
+
 --==============================================================================
 
 --- Mlrx_track - this class represent a logical track in mlrx
-
 
 class 'Mlrx_track' 
 
@@ -261,7 +272,7 @@ end
 --- Output some debugging info
 
 function Mlrx_track:__tostring()
-  return "Mlrx_track - rns_track_idx",rns_track_idx,"rns_instr_idx",rns_instr_idx
+  return "Mlrx_track - rns_track_idx",self.rns_track_idx,"rns_instr_idx",self.rns_instr_idx
 
 end  
 
@@ -443,7 +454,7 @@ function Mlrx_track:write_note(rns_trk,line_idx,note_col,fxcol_1,fxcol_2,fxcol_3
     local note_pitch = self.note_pitch
     --if not first_note and (self.arp_mode == Mlrx_track.ARP_KEYS) then  
     if (self.arp_mode == Mlrx_track.ARP_KEYS) then  
-      local keys = self._held_keys
+      --local keys = self._held_keys
       --print("*** write_note - ARP_FORWARD - self._held_keys",keys)
       --rprint(keys)
       if not self._held_keys:is_empty() then
@@ -687,7 +698,7 @@ function Mlrx_track:track_output(writepos,writeahead,wraparound,on_idle)
 
   -- determine the rate at which notes repeat
   -- (if very fast, use alternative write method)
-  local fast_repeat = (self.cycle_lines <= self.writeahead)
+  --local fast_repeat = (self.cycle_lines <= self.writeahead)
 
 
   ---------------------------------------------------
@@ -1294,7 +1305,7 @@ function Mlrx_track:slice_mode_changed()
   --print("*** slice_mode_changed - self.is_sliced",self.is_sliced)
   --print("*** slice_mode_changed - #sample.slice_markers",#sample.slice_markers)
 
-  self.is_sliced = (#sample.slice_markers > 0)
+  --self.is_sliced = (#sample.slice_markers > 0)
   self.note_pitch = sample.sample_mapping.base_note
   if self.is_sliced then
     if not rawequal(sample,self.sample) then
@@ -1343,8 +1354,7 @@ end
 function Mlrx_track:attach_to_phrase()
   TRACE("Mlrx_track:attach_to_phrase")
 
-  local phrase,phrase_index = self:get_phrase_ref(self.note_pitch)
-  self.phrase = phrase
+  self.phrase,_phrase_index_ = self:get_phrase_ref(self.note_pitch)
   --print("*** attach_to_phrase - self.phrase",self.phrase,"self.note_pitch",self.note_pitch)
 
   if not self.phrase then
@@ -1399,7 +1409,7 @@ function Mlrx_track:attach_to_track()
   local obs,fn = nil,nil
 
   local param = rns_trk.prefx_panning
-  fn = function()
+  local fn = function()
     --TRACE("Mlrx_track:prefx_panning_observable fired...")
     self.group.panning = param.value * Mlrx.INT_8BIT
     self.main.group_panning_update_requested = true
@@ -1409,7 +1419,7 @@ function Mlrx_track:attach_to_track()
   self._track_observables:insert({obs,fn})
 
   local param = rns_trk.prefx_volume
-  fn = function()
+  local fn = function()
     --TRACE("Mlrx_track:prefx_volume_observable fired...",param.value)
     self.group.velocity = (param.value/RENOISE_DECIBEL) * Mlrx.INT_8BIT
     --print("self.group.velocity",self.group.velocity)
@@ -1448,7 +1458,7 @@ function Mlrx_track:attach_to_sample()
   local obs,fn = nil,nil
   self._sample_observables = table.create()
 
-  fn = function()
+  local fn = function()
     TRACE("Mlrx_track:sample.transpose_observable fired...")
     self:set_transpose_task(0)  
   end
@@ -1456,7 +1466,7 @@ function Mlrx_track:attach_to_sample()
   obs:add_notifier(fn)
   self._sample_observables:insert({obs,fn})
 
-  fn = function()
+  local fn = function()
     TRACE("Mlrx_track:sample.fine_tune_observable fired...")
     self:set_transpose_task(0)  
   end
@@ -1464,7 +1474,7 @@ function Mlrx_track:attach_to_sample()
   obs:add_notifier(fn)
   self._sample_observables:insert({obs,fn})
 
-  fn = function(param)
+  local fn = function(param)
     TRACE("Mlrx_track:sample.slice_markers_observable fired...",param)
     -- (workaround for a small issue with the scripting API: 
     -- called with a slight delay, as it seems that the number of 
@@ -1477,7 +1487,7 @@ function Mlrx_track:attach_to_sample()
   obs:add_notifier(fn)
   self._sample_observables:insert({obs,fn})
 
-  fn = function(param)
+  local fn = function(param)
     TRACE("Mlrx_track:sample.sample_buffer_observable fired...",param)
     -- this can be an indicator for when samples have started loading...
     self:set_transpose_task(0)  
@@ -1488,7 +1498,7 @@ function Mlrx_track:attach_to_sample()
 
   -- named notifiers (as they are attached, detached on the fly)
 
-  fn = function(param)
+  local fn = function(param)
     TRACE("Mlrx_track:sample.beat_sync_lines_observable fired...",param)
     self:update_summary_task()
   end
@@ -1499,7 +1509,7 @@ function Mlrx_track:attach_to_sample()
 
   --print("has notifier: self.beat_sync_lines_notifier",obs:has_notifier(self.beat_sync_lines_notifier))
 
-  fn = function(param)
+  local fn = function(param)
     TRACE("Mlrx_track:sample.beat_sync_enabled_observable fired...",param)
     self:set_transpose_task(0)  
     self.main:update_linesync(self)
@@ -1509,7 +1519,7 @@ function Mlrx_track:attach_to_sample()
   self._sample_observables:insert({obs,fn})
   self.beat_sync_enabled_notifier = fn
 
-  fn = function(param)
+  local fn = function(param)
     TRACE("Mlrx_track:sample.loop_mode_observable fired...",param,self.sample.loop_mode)
     -- if enabled, remember this value
     if (self.sample.loop_mode ~= renoise.Sample.LOOP_MODE_OFF) then
@@ -1577,29 +1587,28 @@ function Mlrx_track:attach_to_instr(first_run)
 
   -- now attach notifiers
 
-  local obs,fn = nil,nil
   self._instr_observables = table.create()
 
-  fn = function(param)
+  local fn = function(param)
     TRACE("Mlrx_track:instr.phrases_observable fired...")
     -- phrases might have gone entirely, or appeared for the first time
     self:attach_to_instr_task()
   end
-  obs = self.instr.phrases_observable
+  local obs = self.instr.phrases_observable
   obs:add_notifier(fn)
   self._instr_observables:insert({obs,fn})
 
-  fn = function(param)
+  local fn = function(param)
     TRACE("Mlrx_track:instr.phrase_playback_enabled_observable fired...")
 
 
     self:attach_to_instr_task()
   end
-  obs = self.instr.phrase_playback_enabled_observable
+  local obs = self.instr.phrase_playback_enabled_observable
   obs:add_notifier(fn)
   self._instr_observables:insert({obs,fn})
 
-  fn = function(param)
+  local fn = function(param)
     TRACE("Mlrx_track:instr.samples_observable fired...",param)
     -- figure out if it was our sample that got nicked
     local sample_matched = nil
@@ -1622,13 +1631,13 @@ function Mlrx_track:attach_to_instr(first_run)
     --print("*** self.sample",self.sample)
 
   end
-  obs = self.instr.samples_observable
+  local obs = self.instr.samples_observable
   obs:add_notifier(fn)
   self._instr_observables:insert({obs,fn})
 
-  fn = function(param)
+  local fn = function(param)
     TRACE("Mlrx_track:instr.name_observable fired...")
-    local sample = self:get_sample_ref(self.note_pitch)
+    --local sample = self:get_sample_ref(self.note_pitch)
     if self.sample then
       -- detect if a new sample has been loaded
       if self:sample_has_changed() then
@@ -1640,18 +1649,18 @@ function Mlrx_track:attach_to_instr(first_run)
     end
     self:decorate_track_task()
   end
-  obs = self.instr.name_observable
+  local obs = self.instr.name_observable
   obs:add_notifier(fn)
   self._instr_observables:insert({obs,fn})
 
   -- handle when keyzone mappings are moved around, resized
-  for k,v in ipairs(self.instr.samples) do
-    fn = function()
+  for _,v in ipairs(self.instr.samples) do
+    local fn = function()
       TRACE("Mlrx_track:sample.sample_mapping.note_range_observable fired...")
       if self.phrase then 
         return
       end
-      for k2,v2 in ipairs(self.instr.samples) do
+      for __,v2 in ipairs(self.instr.samples) do
         if not self.sample and rawequal(v,v2) then
           self:attach_to_sample()
         end
@@ -1661,16 +1670,16 @@ function Mlrx_track:attach_to_instr(first_run)
         end
       end
     end
-    obs = v.sample_mapping.note_range_observable
+    local obs = v.sample_mapping.note_range_observable
     obs:add_notifier(fn)
     self._instr_observables:insert({obs,fn})
   end
 
   -- handle when phrase mappings are moved around, resized
-  for k,v in ipairs(self.instr.phrases) do
-    fn = function(param)
+  for _,v in ipairs(self.instr.phrases) do
+    local fn = function(param)
       TRACE("Mlrx_track:phrase.mapping.note_range_observable fired...",param)
-      for k2,v2 in ipairs(self.instr.phrases) do
+      for __,v2 in ipairs(self.instr.phrases) do
         if rawequal(v,v2) and not self.phrase then
           self:attach_to_phrase()
         end
@@ -1680,7 +1689,7 @@ function Mlrx_track:attach_to_instr(first_run)
         end
       end
     end
-    obs = v.mapping.note_range_observable
+    local obs = v.mapping.note_range_observable
     obs:add_notifier(fn)
     self._instr_observables:insert({obs,fn})
   end
@@ -1853,7 +1862,7 @@ function Mlrx_track:get_restricted_beat_sync(val)
   TRACE("Mlrx_track:get_restricted_beat_sync(val)",val)
 
   local tmp = nil
-  for i,num_lines in ipairs(Mlrx_track.BEAT_SYNC_LINES) do
+  for i,_ in ipairs(Mlrx_track.BEAT_SYNC_LINES) do
     if (Mlrx_track.BEAT_SYNC_LINES[i]>=self.sync_to_lines) then
       tmp = i
       break
@@ -2024,7 +2033,7 @@ function Mlrx_track:toggle_slicing(force)
       renoise.app():show_status(msg)
     else
       -- remove existing slices
-      for i, m in ipairs(self.sample.slice_markers) do
+      for _, m in ipairs(self.sample.slice_markers) do
         self.sample:delete_slice_marker(m)
       end
     end
@@ -2656,7 +2665,7 @@ function Mlrx_track:set_transpose(val)
   TRACE("Mlrx_track:set_transpose(val)",val)
 
   --local new_transpose = clamp_value(self.note_pitch + val,0,119)
-  local old_pitch = self.note_pitch
+  --local old_pitch = self.note_pitch
   local new_pitch = clamp_value(self.note_pitch + val,0,119)
   --print("*** set_transpose - new_pitch",new_pitch)
 
@@ -2693,7 +2702,7 @@ function Mlrx_track:set_transpose(val)
 
     if not using_phrase then
 
-      local is_synced = (self.sample and self.sample.beat_sync_enabled)
+      --local is_synced = (self.sample and self.sample.beat_sync_enabled)
 
       -- check if we transposed out from/into a sample
       local sample,sample_index = self:get_sample_ref(new_pitch)
@@ -3418,7 +3427,6 @@ function Mlrx_track:trigger_release(trigger_idx,toggle_off)
   elseif self.note.startpos then
     --print("*** trigger_release - released before note-on, use held time as duration")
     pos = self.note.startpos
-    local time_diff = time_released - self.note.time_pressed
     line_count = math.ceil(self.lps * (time_released - self.note.time_pressed))
     line_count = math.min(1,line_count) -- duration should be at least one line
   end

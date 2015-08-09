@@ -194,7 +194,7 @@ function Mlrx_group:set_grp_automation(param_type)
     end
   end
 
-  local pos = Mlrx_pos()
+  --local pos = Mlrx_pos()
 
 
   -- record into envelope, uaing Automation class
@@ -349,10 +349,9 @@ function Mlrx_group:cancel_notes()
   --print("#self.tracks",#self.tracks)
   --rprint(self.tracks)
 
-  for trk_idx,trk in ipairs(self.tracks) do
+  for _,trk in ipairs(self.tracks) do
     if trk.note then
       trk.note = nil
-      --print(" nullified the note in track",trk_idx)
     end
     self.main:update_trigger_pos(trk.self_idx) -- clear the light
   end
