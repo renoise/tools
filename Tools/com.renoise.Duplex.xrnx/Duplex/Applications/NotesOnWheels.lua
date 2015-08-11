@@ -1699,21 +1699,19 @@ function NotesOnWheels:_build_app()
       c.on_press = function(obj) 
         self:reset_adjustments()
         self.seq:learn_sequence()
-        --obj:set_palette({background = {text=self.TEXT_LEARN_ON,color={0xFF,0xFF,0xFF}}})
-        obj:set(self.palette.learn_on)
+        obj:flash(
+          0.1,self.palette.learn_on,self.palette.learn_off)
       end
       c.on_hold = function(obj)
         self:disable_write_mode()
         self.autolearn = true
         self.just_entered_autolearn = true
+        print("on_hold() - self.just_entered_autolearn",self.just_entered_autolearn)
       end
       c.on_release = function()
+        print("on_release() - self.just_entered_autolearn",self.just_entered_autolearn)
         if not self.just_entered_autolearn then
           self.autolearn = false
-          --[[
-          obj:set_palette({background = {text=self.TEXT_LEARN_OFF,color={0x00,0x00,0x00}}})
-          obj:set(false,true)
-          ]]
           self._controls.learn:set(self.palette.learn_off)
         else
           self.just_entered_autolearn = false
