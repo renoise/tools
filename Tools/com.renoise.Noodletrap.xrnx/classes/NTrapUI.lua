@@ -86,7 +86,7 @@ function NTrapUI:__init(ntrap)
   renoise.app().window.active_middle_frame_observable:add_notifier(function()
     local middle_frame = renoise.app().window.active_middle_frame
     if self._middle_frame and
-      not (middle_frame == renoise.ApplicationWindow.MIDDLE_FRAME_INSTRUMENT_SAMPLE_OVERVIEW)
+      not (middle_frame == renoise.ApplicationWindow.MIDDLE_FRAME_INSTRUMENT_SAMPLE_EDITOR)
     then
       self._middle_frame = renoise.app().window.active_middle_frame
       --print("self._middle_frame via notifier",self._middle_frame)
@@ -1042,11 +1042,10 @@ function NTrapUI:update()
   local ui_widget = self._vb.views.ntrap_midi_in_popup
   local items = self:_create_midi_in_list()
   for k,v in ipairs(items) do
-    if (v == node.value) --and
-      --(#ui_widget.items <= k)
+    if (v == node.value) and
+      (#ui_widget.items >= k)
     then
       ui_widget.value = k
-
       break
     end
   end
@@ -1431,7 +1430,15 @@ function NTrapUI:update_phrase_bar()
 
     -- real, actual phrase (clickable)
     local is_selected = (k == self._ntrap._phrase_idx)
-    local is_disabled = not instr.phrase_playback_enabled
+
+    local is_disabled = nil
+    if (RNS_BETA) then
+      is_disabled = 
+        (instr.phrase_playback_mode == renoise.Instrument.PHRASES_OFF)
+    else
+      is_disabled = not instr.phrase_playback_enabled 
+    end
+
     local button_color = nil
     if is_selected then
       button_color = is_disabled and COLOR_PHRASE_DIMMED or COLOR_PHRASE_SELECTED
@@ -1715,7 +1722,7 @@ function NTrapUI:_show_phrase_editor()
   self._middle_frame = renoise.app().window.active_middle_frame
 
   local instr = self._ntrap:_get_instrument()
-  local middle_frame_const = renoise.ApplicationWindow.MIDDLE_FRAME_INSTRUMENT_SAMPLE_OVERVIEW
+  local middle_frame_const = renoise.ApplicationWindow.MIDDLE_FRAME_INSTRUMENT_SAMPLE_EDITOR
   renoise.app().window.active_middle_frame = middle_frame_const
   instr.phrase_editor_visible = true
 

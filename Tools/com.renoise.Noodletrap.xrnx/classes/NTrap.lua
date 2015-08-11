@@ -16,9 +16,11 @@ http://forum.renoise.com/index.php/topic/43047-new-tool-30-noodletrap/
 
 --==============================================================================
 
+-- TODI fix once API is raised to v5 
+RNS_BETA = (renoise.API_VERSION == 4) and
+  not (renoise.RENOISE_VERSION):find("3.0")
 
 class 'NTrap'
-
 
 function NTrap:__init(prefs)
   TRACE("NTrap:__init(prefs)",prefs)
@@ -160,7 +162,13 @@ function NTrap:prepare_recording()
   end
 
   local instr = self:_get_instrument()
-  instr.phrase_playback_enabled = false
+
+  if (RNS_BETA) then
+    instr.phrase_playback_mode = renoise.Instrument.PHRASES_OFF
+  else
+    instr.phrase_playback_enabled = false
+  end
+
   self._record_armed = true
   self._update_record_requested = true
   self._update_bar_requested = true
@@ -343,7 +351,13 @@ function NTrap:_reset_recording()
   self._recording_pattern_line_count = nil
 
   local instr = self:_get_instrument()
-  instr.phrase_playback_enabled = true
+
+  if (RNS_BETA) then
+    instr.phrase_playback_mode = renoise.Instrument.PHRASES_PLAY_KEYMAP
+  else
+    instr.phrase_playback_enabled = true
+  end
+
   self._update_record_requested = true
   self._update_bar_requested = true
 
