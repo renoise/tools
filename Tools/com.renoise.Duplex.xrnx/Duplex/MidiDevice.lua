@@ -926,7 +926,7 @@ function MidiDevice:pass_to_renoise(messages)
   local pass_setting = process.settings.pass_unhandled.value
   if pass_setting then
     local osc_client = process.browser._osc_client
-    for _,midi_msg in ipairs(message) do
+    for _,midi_msg in ipairs(messages) do
       osc_client:trigger_midi(midi_msg)
     end
     return true
