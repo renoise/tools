@@ -212,6 +212,7 @@ renoise.tool():add_menu_entry {
 }
 ]]
 
+
 renoise.tool():add_menu_entry {
   name = "Main Menu:Tools:Duplex:Dump MIDI to console",
   selected = function()
@@ -254,6 +255,21 @@ renoise.tool():add_menu_entry {
     end
   end
 }
+
+renoise.tool():add_menu_entry {
+  name = "--- Main Menu:Tools:Duplex:[Link] API Reference",
+  invoke = function() 
+    renoise.app():open_url("http://files.renoise.com/xrnx/duplex-docs/")
+  end
+}
+
+renoise.tool():add_menu_entry {
+  name = "Main Menu:Tools:Duplex:[Link] Supported Controllers",
+  invoke = function() 
+    renoise.app():open_url("https://docs.google.com/spreadsheets/d/1FNVvQQPAv51Rl0tZkhvLSLawJY3frvL4kvtobGaH9Fc/edit?usp=sharing")
+  end
+}
+
 
 --------------------------------------------------------------------------------
 -- keybindings
