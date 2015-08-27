@@ -137,7 +137,7 @@ StepSequencer.default_options = {
       "Follow line enabled",
       "Follow line disabled"
     },
-    value = 2,
+    value = 1,
   },
   page_size = {
     label = "Page size",
