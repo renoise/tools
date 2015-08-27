@@ -1625,26 +1625,35 @@ function NTrap:_process_recording(events)
         end
         if (evt.is_note_on) then
           --print("*** note-on at line            ",line)
-          -- use the first/next available column
-          local voice_column = 0
-          local leftmost = 1000
-          local col_idx = 1
-          while col_idx <= max_note_cols do
-            if voices[col_idx] then
-              voice_column = math.max(voices[col_idx].column,voice_column)
+          local voice_column = nil
+          if instr.trigger_options.monophonic then
+            voice_column = 1
+          else
+            local voice_column = nil
+            if instr.trigger_options.monophonic then
+              voice_column = 1
             else
-              leftmost =  math.min(col_idx,leftmost)
+              -- use the first/next available column
+              voice_column = 0
+              local leftmost = 1000
+              local col_idx = 1
+              while col_idx <= max_note_cols do
+                if voices[col_idx] then
+                  voice_column = math.max(voices[col_idx].column,voice_column)
+                else
+                  leftmost =  math.min(col_idx,leftmost)
+                end
+                col_idx = col_idx+1
+              end
+              if leftmost < voice_column then 
+                -- first available column
+                voice_column = leftmost
+              else 
+                -- next available column 
+                voice_column = voice_column+1
+              end
             end
-            col_idx = col_idx+1
           end
-          if leftmost < voice_column then 
-            -- first available column
-            voice_column = leftmost
-          else 
-            -- next available column 
-            voice_column = voice_column+1
-          end
-
           if (voice_column <= max_note_cols) then
             voices[voice_column] = {
               column = voice_column,
