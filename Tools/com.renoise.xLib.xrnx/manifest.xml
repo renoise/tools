@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<RenoiseScriptingTool>
+  <Name>xLib</Name>
+  <Id>com.renoise.xLib</Id>
+  <ApiVersion>4.0</ApiVersion>
+  <Version>1.0</Version>
+  <Author>danoise [bjorn.nesby@gmail.com]</Author>
+  <Category>Developers</Category>
+  <Description>The xLib library contains a number of extensions for the Renoise API</Description>
+  <Homepage>http://renoise.com/tools/vLib</Homepage>
+  <Platform/>
+  <Icon/>
+</RenoiseScriptingTool>
