@@ -19,13 +19,29 @@ arguments = {
   },
   {
       name = "interval",
-      value = 3,
+      value = 8,
       properties = {
           min = 1,
           quant = 1,
           max = 32,
       },
       description = "Specify the number of steps in the sequence",
+  },
+  {
+      name = "offset",
+      value = 4,
+      properties = {
+          min = -32,
+          quant = 1,
+          max = 32,
+      },
+      description = "Specify the sequence offset",
+  },
+  {
+      name = "produce_note_off",
+      value = true,
+      --properties = {},
+      description = "Decide if note is followed by a note-off",
   },
 },
 data = {
@@ -35,18 +51,21 @@ callback = [[
 -- Create notes with different intervals
 -------------------------------------------------------------------------------
 
-if (INCR % args.interval == 0) then
+local incr_offset = INCR + args.offset
+
+if (incr_offset % args.interval == 0) then
   line.note_columns[1] = {
-    note_value = math.random(24,48),
+    note_value = 36,
     instrument_value = args.instr_idx
   }
-elseif (INCR % args.interval == 1) then
+elseif args.produce_note_off and (incr_offset % args.interval == 1) then
   line.note_columns[1] = {
     note_value = 120
   }
 else
   line.note_columns[1] = {}
 end
+
 
 
 

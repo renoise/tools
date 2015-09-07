@@ -88,8 +88,8 @@ function xStreamModel:__init(xstream)
     ripairs = ripairs,
     rprint = rprint,
     -- constants
-    NOTE_OFF_VALUE = xLinePattern.NOTE_OFF_VALUE,
-    EMPTY_NOTE_VALUE = xLinePattern.EMPTY_NOTE_VALUE,
+    NOTE_OFF_VALUE = xNoteColumn.NOTE_OFF_VALUE,
+    EMPTY_NOTE_VALUE = xNoteColumn.EMPTY_NOTE_VALUE,
     EMPTY_VALUE = xLinePattern.EMPTY_VALUE,
     -- arrives from song
     rns = rns,
@@ -134,10 +134,12 @@ end
 -------------------------------------------------------------------------------
 
 function xStreamModel:get_callback_str()
+  --TRACE("xStreamModel:get_callback_str - ",self.callback_str_observable.value)
   return self.callback_str_observable.value
 end
 
 function xStreamModel:set_callback_str(str)
+  --TRACE("xStreamModel:set_callback_str - ",str)
   if (str ~= self.callback_str_observable.value) then
     self.modified = true
   end
@@ -222,10 +224,6 @@ function xStreamModel:load_definition(file_path)
     return false, err
   end
 
-  -- extract tokens for the output stage
-  self.output_tokens = self:extract_tokens(def.callback)
-  --print("*** tokens",rprint(tokens))
-
   
   return true
 
@@ -279,6 +277,11 @@ function xStreamModel:compile_method(str_fn)
   self.callback = def()
   setfenv(self.callback, self.env)
   self.callback_str = str_fn
+
+  -- extract tokens for the output stage
+  self.output_tokens = self:extract_tokens(str_fn)
+  --print("*** tokens",rprint(self.output_tokens))
+
 
   self.modified = false
 

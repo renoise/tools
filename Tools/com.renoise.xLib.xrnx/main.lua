@@ -23,7 +23,8 @@ require 'xLib/xStreamUI'
 -- required files (unit tests)
 --------------------------------------------------------------------------------
 
-require 'xLib/unit_tests/xSongPos_test'
+require 'xLib/unit_tests/xsongpos_test'
+require 'xLib/unit_tests/xnotecolumn_test'
 --require 'xLib/unit_tests/xStream_test'
 
 --------------------------------------------------------------------------------
@@ -40,6 +41,7 @@ local START_OPTION = {
 
 local options = renoise.Document.create("ScriptingToolPreferences"){}
 options:add_property("autostart", renoise.Document.ObservableBoolean(false))
+options:add_property("manage_gc", renoise.Document.ObservableBoolean(true))
 options:add_property("start_option", renoise.Document.ObservableNumber(START_OPTION.ON_PLAY_EDIT))
 options:add_property("launch_model", renoise.Document.ObservableString(""))
 renoise.tool().preferences = options
@@ -79,6 +81,8 @@ local waiting_to_show_dialog = options.autostart.value
 local function idle_notifier_actual()
   local view = vb.views["xStreamImplStats"]
   local str_stat = ("Memory usage: %.2f Mb"):format(collectgarbage("count")/1024)
+                ..("\nStream active: %s"):format(xstream.active and "true" or "false") 
+                ..("\nStream muted: %s"):format(xstream.muted and "true" or "false") 
                 ..("\nLines Travelled: %d"):format(xstream._writepos.lines_travelled)
   view.text = str_stat
 end
@@ -115,6 +119,29 @@ local function keyhandler(dlg, key)
 end
 
 -------------------------------------------------------------------------------
+
+function update_launch_models()
+  --print("models_observable fired...")
+  --print("xstream.models",rprint(xstream.models))
+  -- update popup with model names
+  local view = vb.views["xStreamImplLaunchModel"]
+  if not view then
+    return
+  end
+  local model_names = {"Select a model"}
+  local launch_model_index = 1
+  for k,v in ipairs(xstream.models) do
+    table.insert(model_names,v.name)
+    if (v.name == options.launch_model.value) then
+      launch_model_index = k
+    end
+  end
+  --print("launch_model_index",launch_model_index)
+  view.items = model_names
+  view.value = launch_model_index
+end
+
+-------------------------------------------------------------------------------
 -- invoked by menu entries, autostart - 
 -- first time around, the UI/class instances are created 
 
@@ -139,6 +166,13 @@ function show()
         width = 100,
         notifier = function()
           xsongpos_test()
+        end
+      },
+      vb:button{
+        text="xNoteColumn",
+        width = 100,
+        notifier = function()
+          xnotecolumn_test()
         end
       },
       --[[
@@ -188,121 +222,148 @@ function show()
   }
 
 
+  -- create class instances - but only once
 
-  -- create UI / class instances - but only once
 
-  if dialog and dialog.visible then
-    dialog:show() 
-  else
-
-    local tool_option_w = 140
-
-    dialog_content = vb:column{
-      unit_tests,
-      vb:row{
-        style = "group",
-        margin = 6,
-        width = tool_option_w,
-        vb:column{
-          vb:column{
-            style = "panel",
-            margin = 4,
-            width = "100%",
-            vb:text{
-              text="xStream",
-              font = "bold",
-            },
-          },
-          vb:column{
-            style = "panel",
-            margin = 4,
-            width = "100%",
-            vb:text{
-              text="Decide how to\n"
-                .."control streaming:"
-            },
-            vb:row{
-              vb:popup{
-                bind = options.start_option,
-                items = START_OPTIONS,
-                width = tool_option_w-10,
-              },
-            },
-          },
-
-          vb:column{
-            style = "panel",
-            margin = 4,
-            width = "100%",
-            vb:row{
-              vb:text{
-                text="Launch tool when\n"
-                  .."Renoise starts:",
-              },
-              vb:checkbox{
-                bind = options.autostart,
-              },
-              --[[
-              vb:text{
-                text="Autostart",
-              },
-              ]]
-            },
-          },
-          vb:column{
-            style = "panel",
-            margin = 4,
-            width = tool_option_w,
-            vb:text{
-              text= "Launch with the\n"
-                  .."chosen model"
-            },
-
-            vb:popup{
-              items = {"Select a model"},
-              id = "xStreamImplLaunchModel",
-              notifier = function(idx)
-                options.launch_model.value = xstream.models[idx].file_path
-                print("options.launch_model.value",options.launch_model.value)
-              end,
-              width = tool_option_w-10,
-
-            }
-          },
-          vb:column{
-            style = "panel",
-            margin = 4,
-            width = "100%",
-            vb:text{
-              text= "Stats",
-              font = "bold",
-
-            },
-            vb:text{
-              text= "Memory usage\n",
-              id = "xStreamImplStats",
-            },
-          },
-        },
-        id = "xStreamImplContainer"
-      }
-
-    }
-
+  if not xstream then
     xpos = xSongPos(rns.transport.edit_pos)
     xstream = xStream()
     local model_defs_path = "./xLib/Models/"
     --local model_defs_path = renoise.tool().bundle_path .. "/xLib/Models/" -- not working with junction
     xstream:load_models(model_defs_path)
     xstream.ui = xStreamUI(xstream,vb)
-    vb.views["xStreamImplContainer"]:add_child(xstream.ui.vb_content)
-    attach_to_xstream()
+    xstream.models_observable:add_notifier(update_launch_models)
+  end
+
+
+  if dialog and dialog.visible then    
+    -- bring to front
+    dialog:show() 
+  else
+    -- create, or re-create if hidden
+    
+    if not dialog_content then
+    
+      --vb.views["xStreamImplLaunchModel"] = nil
+      --vb.views["xStreamImplStats"] = nil
+
+      local tool_option_w = 140
+      dialog_content = vb:column{
+        unit_tests,
+        vb:row{
+          style = "group",
+          margin = 6,
+          width = tool_option_w,
+          vb:column{
+            vb:column{
+              style = "panel",
+              margin = 4,
+              width = "100%",
+              vb:text{
+                text="xStream",
+                font = "bold",
+              },
+            },
+            vb:column{
+              style = "panel",
+              margin = 4,
+              width = "100%",
+              vb:text{
+                text="Decide how to\n"
+                  .."control streaming:"
+              },
+              vb:row{
+                vb:popup{
+                  bind = options.start_option,
+                  items = START_OPTIONS,
+                  width = tool_option_w-10,
+                },
+              },
+            },
+            vb:column{
+              style = "panel",
+              margin = 4,
+              width = tool_option_w,
+              vb:text{
+                text= "Launch with the\n"
+                    .."chosen model"
+              },
+              vb:popup{
+                items = {"Select a model"},
+                id = "xStreamImplLaunchModel",
+                notifier = function(idx)
+                  options.launch_model.value = xstream.models[idx].file_path
+                  print("options.launch_model.value",options.launch_model.value)
+                end,
+                width = tool_option_w-10,
+              }
+            },
+
+            vb:column{
+              style = "panel",
+              margin = 4,
+              width = "100%",
+              vb:row{
+                vb:checkbox{
+                  bind = options.autostart,
+                },
+                vb:text{
+                  text="Launch tool when\n"
+                    .."Renoise starts:",
+                },
+
+              },
+            },
+            vb:column{
+              style = "panel",
+              margin = 4,
+              width = "100%",
+              vb:row{
+                vb:checkbox{
+                  id = "xStreamImplManageGarbage",
+                  notifier = function(checked)
+                    options.manage_gc.value = checked
+                    xstream.manage_gc = checked
+                    print("xstream.manage_gc",xstream.manage_gc)
+                  end,
+                },
+                vb:text{
+                  text="Bypass garbage\n"
+                    .." collection:",
+                },
+
+              },
+            },
+            vb:column{
+              style = "panel",
+              margin = 4,
+              width = "100%",
+              vb:text{
+                text= "Stats",
+                font = "bold",
+
+              },
+              vb:text{
+                text= "",
+                id = "xStreamImplStats",
+              },
+            },
+          },
+          xstream.ui.vb_content
+        }
+
+      }
+    end
 
     dialog = renoise.app():show_custom_dialog(
       TOOL_NAME, dialog_content, keyhandler)
 
+    update_launch_models()
+    vb.views["xStreamImplManageGarbage"].value = options.manage_gc.value
+    xstream.manage_gc = options.manage_gc.value
 
   end
+
 
   -- initialize -----------------------
 
@@ -324,7 +385,7 @@ end
 -- attach to song, once xstream is ready
 
 function attach_to_song()
-  print("attach_to_song()")
+  --print("attach_to_song()")
 
   xstream:attach_to_song()
 
@@ -338,25 +399,19 @@ function attach_to_song()
   -- playback (start option) ------------------------------
 
   local playing_notifier = function()
-    print("main - playing_notifier fired...")
+    --print("main - playing_notifier fired...")
     if not rns.transport.playing then -- autostop
-      print("main - got here -2")
       if (options.start_option.value ~= START_OPTION.MANUAL) then
-        print("main - got here -1")
         xstream:stop()
       end
     elseif not xstream.active then -- autostart
-      print("main - got here 0")
       if (options.start_option.value ~= START_OPTION.MANUAL) then
-        print("main - got here 1")
         if rns.transport.edit_mode then
           if (options.start_option.value == START_OPTION.ON_PLAY_EDIT) then
-           print("main - got here 2")
             xstream:start()
           end
         else
           if (options.start_option.value == START_OPTION.ON_PLAY) then
-            print("main - got here 3")
             xstream:start()
           end
         end
@@ -369,7 +424,7 @@ function attach_to_song()
   -- selected track ---------------------------------------
 
   local track_notifier = function ()
-    print("*** track_notifier fired...")
+    --print("*** track_notifier fired...")
     if (xstream) then
         xstream.track_index = rns.selected_track_index
     end
@@ -395,7 +450,7 @@ function attach_to_song()
   -- edit-mode --------------------------------------------
 
   local edit_notifier = function ()
-    print("*** edit_notifier fired...")
+    --print("*** edit_notifier fired...")
     if (xstream) then
         if rns.transport.edit_mode and rns.transport.playing and
           (options.start_option.value == START_OPTION.ON_PLAY_EDIT) 
@@ -438,33 +493,4 @@ renoise.tool():add_menu_entry{
     show() 
   end
 }
-
--------------------------------------------------------------------------------
-
-function attach_to_xstream()
-
-  local models_notifier = function()
-    print("models_observable fired...")
-    print("xstream.models",rprint(xstream.models))
-    -- update popup with model names
-    local view = vb.views["xStreamImplLaunchModel"]
-    local model_names = {"Select a model"}
-    local launch_model_index = 1
-    for k,v in ipairs(xstream.models) do
-      table.insert(model_names,v.name)
-      if (v.name == options.launch_model.value) then
-        launch_model_index = k
-      end
-    end
-    print("launch_model_index",launch_model_index)
-    view.items = model_names
-    view.value = launch_model_index
-  end
-
-  xstream.models_observable:add_notifier(models_notifier)
-  models_notifier()
-
-
-end
-
 

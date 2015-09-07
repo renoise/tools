@@ -123,7 +123,7 @@ function xStreamArgs:add(arg)
   -- can apply some properties to the result, i.e. to make zero based 
   self[arg.name] = property(function()  
     local val = self.doc["Arguments"][arg.name].value
-    if arg.properties.zero_based then
+    if arg.properties and arg.properties.zero_based then
       val = val - 1
     end
     return val
@@ -423,9 +423,7 @@ function xStreamArgs:attach_to_song()
   for k,arg in ipairs(self.args) do
     if (arg.bind_notifier) then
       arg.bind = xStreamArg.resolve_binding(arg.bind_str)
-      print("*** attach_to_song - arg.bind_str",arg.bind_str)
-      --print("*** attach_to_song - arg.bind",arg.bind)
-      --print("*** attach_to_song - arg.bind_notifier",arg.bind_notifier)
+      --print("*** attach_to_song - arg.bind_str",arg.bind_str)
       arg.bind:add_notifier(arg.bind_notifier)
       --print("*** arg.bind:add_notifier...")
     end
@@ -441,13 +439,10 @@ function xStreamArgs:detach_from_song()
 
   for k,arg in ipairs(self.args) do
     if (arg.bind_notifier) then
-      print("*** detach_from_song - arg.bind_str",arg.bind_str)
-      --print("*** detach_from_song - arg.bind_notifier",arg.bind_notifier)
-      --print("*** detach_from_song - arg.bind",arg.bind)
+      --print("*** detach_from_song - arg.bind_str",arg.bind_str)
       pcall(function()
         if arg.bind:has_notifier(arg.bind_notifier) then
           arg.bind:remove_notifier(arg.bind_notifier)
-          print("*** arg.bind:remove_notifier...")
         end
       end) 
     end
@@ -491,9 +486,12 @@ function xStreamArgs:serialize()
   for idx,arg in ipairs(self.args) do
 
     -- remove default values from properties
-    local props = table.rcopy(arg.properties)
-    if (props.impacts_buffer == true) then
-      props.impacts_buffer = nil
+    local props = {}
+    if arg.properties then
+      props = table.rcopy(arg.properties)
+      if (props.impacts_buffer == true) then
+        props.impacts_buffer = nil
+      end
     end
 
     table.insert(rslt,{

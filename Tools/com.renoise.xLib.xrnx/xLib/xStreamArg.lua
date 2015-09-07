@@ -92,7 +92,7 @@ function xStreamArg:__init(arg)
   if arg.bind then
     local bind_str_val = string.sub(arg.bind,1,#arg.bind-11)
     self.bind_notifier = function(val)
-      print("bind_notifier fired...",self.name)
+      --print("bind_notifier fired...",self.name)
       if val then
         xLib.set_obj_str_value(bind_str_val,val)
       else

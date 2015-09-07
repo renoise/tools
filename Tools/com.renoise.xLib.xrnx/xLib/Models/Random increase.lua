@@ -1,12 +1,12 @@
 --[[============================================================================
-UsingData.lua
+Random increase.lua
 ============================================================================]]--
 
 return {
 arguments = {
   {
       name = "instr_idx",
-      value = 1,
+      value = 2,
       properties = {
           min = 1,
           quant = 1,
@@ -19,24 +19,15 @@ arguments = {
   },
 },
 data = {
-  current_pitch = 36,
+  current_pitch = 14,
 },
 callback = [[
 -------------------------------------------------------------------------------
 -- Using user data in callbacks
 -------------------------------------------------------------------------------
-
--- Usually, any variables you define in a callback will only "live" for 
--- the duration of that single callback. This is why (user-)data are handy, 
--- as they can be freely specified (supports all basic lua types) and provide 
--- your callback with a storage mechanism. 
-
--- You need to specify your data in the definition, after which you can 
--- access it like this: 'data.name_of_your_data'
-
--- OK, now for an example implementation. We are going to add a 'counter' to
--- our callback, so we can increase the note pitch each time a note is being
--- written to the pattern (with random intervals to make it interesting). 
+-- In this example, a 'current_pitch' is defined in our user-data. 
+-- We increment this value each time a note is written to the pattern
+-- (using random intervals to make it more interesting). 
 
 -- First, let's decide if we are going to produce any output: 
 local produce_output = (math.random(0,5) == 0)
@@ -52,22 +43,13 @@ if (produce_output) then
   end
 
   -- Now, we are ready to produce output 
-  line = {
-    note_columns = {
-      {
-        note_value = data.current_pitch,
-        instrument_value = args.instr_idx,
-      },
-    },
+  line.note_columns[1] = {
+    note_value = data.current_pitch,
+    instrument_value = args.instr_idx,
   }
-
 else
-  -- Empty when no output
-  line = {}
-
+  line.note_columns[1] = {}
 end
-
-
 
 
 

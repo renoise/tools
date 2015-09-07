@@ -1,34 +1,9 @@
 --[[============================================================================
-ArgsExplained.lua
+API Reference.lua
 ============================================================================]]--
 
 return {
 arguments = {
-  {
-      name = "velocity",
-      value = 51,
-      properties = {
-          min = 0,
-          quant = 1,
-          max = 127,
-          display_as_hex = true,
-      },
-      bind = "rns.transport.keyboard_velocity_observable",
-      description = "Specify the keyboard velocity",
-  },
-  {
-      name = "instr_idx",
-      value = 1,
-      properties = {
-          min = 1,
-          quant = 1,
-          max = 255,
-          zero_based = true,
-          display_as_hex = true,
-      },
-      bind = "rns.selected_instrument_index_observable",
-      description = "Specify the instrument number to use",
-  },
 },
 data = {
 },
@@ -76,16 +51,6 @@ callback = [[
 --  control some aspect of Renoise that does not affect the output
 --  (in Automation.lua, for example, we change playmode on-the-fly)
 
-
-line = {
-  note_columns = {
-    {
-      note_value = math.random(36,60),
-      instrument_value = args.instr_idx,
-      volume_value = args.velocity,
-    }  
-  }
-}
 
 ]],
 }

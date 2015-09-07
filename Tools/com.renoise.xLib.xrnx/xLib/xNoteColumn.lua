@@ -3,15 +3,22 @@ xNoteColumn
 ============================================================================]]--
 --[[
 
-  This class is representing a single renoise.NoteColumn in xLib
-  Unlike the renoise.NoteColumn, this one can be freely defined, 
-  without the need to have the line present in an actual song 
+  This class is representing a single renoise.NoteColumn in xLib. 
+  Unlike the renoise.NoteColumn, this one can be freely defined, without 
+  the need to have the line present somewhere in an actual song 
 
-  TODO additional instructions: add, sub, mul, div... 
+  You create an instance by feeding it a descriptive table in the constructor.
+  All string-based values are automatically converted into their numeric
+  counterpart. 
 
 ]]
 
 class 'xNoteColumn'
+
+xNoteColumn.EMPTY_NOTE_VALUE = 121
+xNoteColumn.EMPTY_NOTE_STRING = "---"
+xNoteColumn.NOTE_OFF_VALUE = 120
+xNoteColumn.NOTE_OFF_STRING = "OFF"
 
 xNoteColumn.tokens = {
     "note_value","note_string", 
@@ -19,6 +26,10 @@ xNoteColumn.tokens = {
     "volume_value","volume_string",
     "panning_value","panning_string",
     "delay_value","delay_string",
+}
+
+xNoteColumn.NOTE_ARRAY = {
+  "C-","C#","D-","D#","E-","F-","F#","G-","G#","A-","A#","B-"
 }
 
 -------------------------------------------------------------------------------
@@ -29,32 +40,109 @@ function xNoteColumn:__init(args)
 
   for token,value in pairs(args) do
     if (table.find(xNoteColumn.tokens,token)) then
+      --print("token,value",token,value)
+      -- string values are converted into their value equivalent
+      if (string.sub(token,#token-6) == "_string") then
+        --print("*** xNoteColumn --> convert string into value",token,value)
+        if (token == "note_string") then
+          self["note_value"] = 
+            xNoteColumn.note_string_to_value(value)
+          --print("note_value",self["note_value"])
+        elseif (token == "instrument_string") then
+          self["instrument_value"] = 
+            xNoteColumn.column_string_to_value(value,xLinePattern.EMPTY_VALUE)
+        elseif (token == "volume_string") then
+          self["volume_value"] = 
+            xNoteColumn.column_string_to_value(value,xLinePattern.EMPTY_VALUE)
+        elseif (token == "panning_string") then
+          self["panning_value"] = 
+            xNoteColumn.column_string_to_value(value,xLinePattern.EMPTY_VALUE)
+        elseif (token == "delay_string") then
+          self["delay_value"] = 
+            xNoteColumn.column_string_to_value(value,0)
+        end        
+        --break
+      end
       self[token] = args[token]
+    else
+      LOG("WARNING - unsupported property name for xNoteColumn:"..token)
     end
+  end
+
+
+end
+
+-------------------------------------------------------------------------------
+-- convert note_string into a numeric value
+-- @param str_val (string), for example "C#4" or "---"
+-- @return value
+-- @return key or nil 
+-- @return octave or nil
+
+function xNoteColumn.note_string_to_value(str_val)
+  TRACE("xNoteColumn.note_string_to_value(str_val)",str_val)
+
+  local note = nil
+  local octave = nil
+
+  if (str_val == xNoteColumn.NOTE_OFF_STRING) then
+    return xNoteColumn.NOTE_OFF_VALUE
+  elseif (str_val == xNoteColumn.EMPTY_NOTE_STRING) then
+    return xNoteColumn.EMPTY_NOTE_VALUE
+  end
+
+  -- use first letter to match note
+  local note_part = str_val:sub(0,2)
+  for k,v in ipairs(xNoteColumn.NOTE_ARRAY) do
+    if (note_part==v) then
+      note = k-1
+      break
+    end
+  end
+  octave = tonumber((str_val):sub(3))
+  return note+(octave*12),note,octave
+
+end
+
+-------------------------------------------------------------------------------
+-- convert instr/vol/panning into a numeric value
+-- @param str_val (string), for example "40", "G5" or ".."
+-- @return value
+
+function xNoteColumn.column_string_to_value(str_val,empty)
+  TRACE("xNoteColumn.column_string_to_value(str_val)",str_val)
+
+  if (str_val == "..") then
+    return empty
+  end
+
+  local numeric = tonumber("0x"..str_val)
+  if numeric then
+    return numeric
+  else
+    return xNoteColumn.convert_fx_to_value(str_val)
   end
 
 end
 
 -------------------------------------------------------------------------------
--- @param note_col (renoise.NoteColumn), 
--- @param tokens (table<xStreamModel.output_tokens>)
--- @param clear_undefined (bool)
+-- convert two-character effect string into a numeric value
+-- @param str_val (string), for example "G5"
+-- @return value or nil
 
-function xNoteColumn:do_write(note_col,tokens,clear_undefined)
-  TRACE("xNoteColumn:do_write(note_col,tokens,clear_undefined)",note_col,tokens,clear_undefined)
+function xNoteColumn.convert_fx_to_value(str_val)
+  TRACE("xNoteColumn.convert_fx_to_value(str_val)",str_val)
 
-  for k,token in ipairs(tokens) do
-    if self["do_write_"..token] then
-      local success = pcall(function()
-        self["do_write_"..token](self,note_col,clear_undefined)
-      end)
-      if not success then
-        LOG("WARNING: Trying to write invalid value to note column:",token,note_col[token])
-      end
-    end
+  local fx_num = string.sub(str_val,1,1)
+  local fx_amt = string.sub(str_val,2,2)
+  local fx_val = table.find(xLinePattern.EFFECT_CHARS,fx_num)-1
+  --print("fx_num,fx_amt,fx_val",fx_num,fx_amt,fx_val)
+  if fx_val then
+    return fx_val*256 + tonumber(fx_amt)
   end
 
 end
+
 
 -------------------------------------------------------------------------------
 -- @param note_col (renoise.NoteColumn)
@@ -68,8 +156,38 @@ function xNoteColumn.do_read(note_col)
   for k,v in ipairs(xNoteColumn.tokens) do
     rslt[v] = note_col[v]
   end
-  --print(rslt.note_string,rslt.note_value)
+  --print("xNoteColumn.do_read",rprint(rslt))
   return rslt
+
+end
+
+-------------------------------------------------------------------------------
+-- @param note_col (renoise.NoteColumn), 
+-- @param tokens (table<xStreamModel.output_tokens>)
+-- @param clear_undefined (bool)
+
+function xNoteColumn:do_write(note_col,tokens,clear_undefined)
+  TRACE("xNoteColumn:do_write(note_col,tokens,clear_undefined)",note_col,tokens,clear_undefined)
+
+  for k,token in ipairs(tokens) do
+    --print("k,token",k,token)
+
+    -- convert token into a value version
+    -- (we converted into values in the constructor)
+    if (string.sub(token,#token-6) == "_string") then
+    end
+
+
+    if self["do_write_"..token] then
+      local success = pcall(function()
+        --print("xNoteColumn:do_write",token)
+        self["do_write_"..token](self,note_col,clear_undefined)
+      end)
+      if not success then
+        LOG("WARNING: Trying to write invalid value to note column:",token,note_col[token])
+      end
+    end
+  end
 
 end
 
@@ -78,17 +196,19 @@ end
 
 function xNoteColumn:do_write_note_value(note_col,clear_undefined)
   if self.note_value then 
+    --print("xNoteColumn:do_write_note_value - note_value",self.note_value)
     note_col.note_value = self.note_value
   elseif clear_undefined then
-    note_col.note_value = xLinePattern.EMPTY_NOTE_VALUE
+    note_col.note_value = xNoteColumn.EMPTY_NOTE_VALUE
   end
 end
 
 function xNoteColumn:do_write_note_string(note_col,clear_undefined)
   if self.note_string then 
+    --print("xNoteColumn:do_write_note_string - note_string",self.note_string)
     note_col.note_string = self.note_string
   elseif clear_undefined then
-    note_col.note_string = xLinePattern.EMPTY_NOTE_STRING
+    note_col.note_string = xNoteColumn.EMPTY_NOTE_STRING
   end
 end
 

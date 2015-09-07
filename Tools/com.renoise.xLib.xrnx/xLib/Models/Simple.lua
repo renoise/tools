@@ -21,8 +21,8 @@ arguments = {
       name = "volume",
       value = 128,
       properties = {
-          min = 0,
           max = 128,
+          min = 0,
       },
       description = "Specify the general volume level",
   },
@@ -32,7 +32,7 @@ data = {
 callback = [[
 -------------------------------------------------------------------------------
 -- A simple example, creating random notes in two columns
--- Tip: enable 'expand columns' for this example
+-- (enable 'expand columns' to reveal columns as they are written to)
 -------------------------------------------------------------------------------
 
 line.note_columns = {

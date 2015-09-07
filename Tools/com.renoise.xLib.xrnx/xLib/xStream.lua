@@ -115,7 +115,7 @@ function xStream:__init()
   self.writeahead = nil
 
   -- number, lines-per-second (approximate)
-  self.lps = nil
+  --self.lps = nil
 
   -- table<xLine>, output buffer
   self.buffer = {}
@@ -210,6 +210,9 @@ function xStream:__init()
   -- changes to the playback position, right after playback has started
   -- (the fuzziness is due to API living in separate thread)
   self.just_started_playback = nil
+
+  -- bool, true if we want xStream to manage garbage collection
+  self.manage_gc = true
 
   -- initialize -----------------------
 
@@ -332,7 +335,6 @@ function xStream:set_selected_model_index(idx)
   self.selected_model_index_observable.value = idx
   self:wipe_futures()
 
-  --print("*** self.args.length",self.args.length)
 
 end
 
@@ -413,7 +415,7 @@ function xStream:set_muted(val)
     local note_col_count = self:get_visible_note_cols()
     for i = 1,note_col_count do
       table.insert(note_cols,{
-        note_value = xLinePattern.NOTE_OFF_VALUE,
+        note_value = xNoteColumn.NOTE_OFF_VALUE,
         instrument_value = xLinePattern.EMPTY_VALUE,
         volume_value = xLinePattern.EMPTY_VALUE,
         panning_value = xLinePattern.EMPTY_VALUE,
@@ -455,7 +457,7 @@ end
 -- @param live_mode (bool), skip playpos when true
 
 function xStream:do_output(xpos,num_lines,live_mode)
-  print("xStream:do_output(xpos)",xpos,num_lines,live_mode)
+  TRACE("xStream:do_output(xpos)",xpos,num_lines,live_mode)
 
   if not num_lines then
     num_lines = rns.transport.playing and self.writeahead or 1
@@ -472,7 +474,7 @@ function xStream:do_output(xpos,num_lines,live_mode)
       self:has_content(xpos.lines_travelled,num_lines-1)
     if not has_content then
       self:get_content(
-        missing_from,num_lines-(missing_from-xpos.lines_travelled))
+        missing_from,num_lines-(missing_from-xpos.lines_travelled),xpos)
     end
   end
 
@@ -547,7 +549,7 @@ function xStream:do_output(xpos,num_lines,live_mode)
           end
         end
 
-        --print("*** xline",xline)
+        --print("*** do_write - pos_line,xline",pos_line,xline)
         if xline then
           xline:do_write(
             tmp_pos.sequence,
@@ -591,26 +593,24 @@ function xStream:has_content(pos,num_lines)
 end
 
 -------------------------------------------------------------------------------
--- retrieve content from our callback method
+-- retrieve content from our callback method + pattern
 -- @param pos (int), internal line count
 -- @param num_lines (int) 
 -- @return table<xLine>
 
-function xStream:get_content(pos,num_lines)
+function xStream:get_content(pos,num_lines,xpos)
   TRACE("xStream:get_content(pos,num_lines)",pos,num_lines)
 
   if not self.selected_model.callback then
     error("No callback method has been specified")
   end
 
-  -- read buffering 
   local read_pos = nil
   if self.next_read_pos then
     read_pos = self.next_read_pos
   else
     read_pos = xSongPos(self._writepos)
   end
-
 
   --print("BEGIN read_pos",read_pos)
   for i = 0, num_lines-1 do
@@ -621,10 +621,12 @@ function xStream:get_content(pos,num_lines)
     if not xline then 
       xline = xLine.do_read(
         read_pos.sequence,read_pos.line,self.include_hidden,self.track_index,phrase)
-      self.read_buffer[line_index] = xline
+      self.read_buffer[line_index] = table.rcopy(xline) -- 
     end
+    --print("read_buffer",rprint(self.read_buffer))
     --print("IN  ",line_index,read_pos,xline.note_columns[1].note_string)
 
+    --self.buffer[line_index] = xLine(self.selected_model.callback(line_index,xline))
     local success,err = pcall(function()
       self.buffer[line_index] = xLine(self.selected_model.callback(line_index,xline))
     end)
@@ -720,14 +722,16 @@ function xStream:resolve_automation(seq_idx)
 
 end
 
-
 -------------------------------------------------------------------------------
--- activate live streaming 
+-- clear various buffers, prepare for new output
 
-function xStream:start()
-  TRACE("xStream:start()")
+function xStream:reset()
 
-  --collectgarbage("stop")
+  if self.manage_gc then
+    collectgarbage("stop")
+  else
+    collectgarbage("restart")
+  end
 
   self.buffer = {}
   self.highest_buffer_idx = 0
@@ -735,6 +739,15 @@ function xStream:start()
   self.read_buffer = {}
   self.next_read_pos = nil
 
+end
+
+-------------------------------------------------------------------------------
+-- activate live streaming 
+
+function xStream:start()
+  TRACE("xStream:start()")
+
+  self:reset()
   self.active = true
 
   --self._playpos = rns.transport.playback_pos
@@ -792,8 +805,11 @@ function xStream:stop()
   --self:wipe_past()
   --print("self.buffer",rprint(self.buffer))
 
-  --collectgarbage("restart")
-  --collectgarbage()
+  if self.manage_gc then
+    collectgarbage("restart")
+    collectgarbage()
+  end
+
 end
 
 -------------------------------------------------------------------------------
@@ -889,20 +905,17 @@ function xStream:set_pos(pos)
         --print("*** same pattern, wrap around - loop block",block_num_lines,num_lines)
       else
         -- conclusion: user navigation
-        -- works differently, as it will rewind position
+        -- will repeat/rewind to earlier position 
         num_lines = self._playpos.line - pos.line
         self._writepos:decrease_by_lines(num_lines)
-
         --print("*** same pattern, wrap around - user - pos",pos)
         --print("*** same pattern, wrap around - user - self._playpos",self._playpos)
       end
 
     elseif (pos.line > self._playpos.line) then
       -- normal progression through pattern
-      --print("*** same pattern, self._playpos",self._playpos)
-      --self._writepos:increase_by_lines(pos.line - self._playpos.line)
       self._writepos:increase_by_lines(pos.line - self._playpos.line)
-      --print("*** same pattern, self._writepos POST",num_lines,self._writepos)
+      --print("*** same pattern, self._writepos POST",pos.line - self._playpos.line,self._writepos)
     end
   elseif (pos.sequence < self._playpos.sequence) then
     -- earlier pattern, usually caused by seq-loop or song boundary
@@ -913,7 +926,7 @@ function xStream:set_pos(pos)
     -- the old position is near the end of the pattern
     -- use the writeahead as the basis for this calculation
 
-    if (self._playpos.line >= (patt_num_lines-(self.writeahead/2))) then
+    if (self._playpos.line >= (patt_num_lines-near_lines_def)) then
       -- conclusion: we've reached the end of the former pattern 
       -- difference is the remaning lines in old position plus the current line 
       local num_lines = (patt_num_lines-self._playpos.line)+pos.line
@@ -985,21 +998,14 @@ function xStream:wipe_past()
   TRACE("xStream:wipe_past()")
 
   local from_idx = self._writepos.lines_travelled - 1
-  --[[
-  if rns.transport.playing then
-    -- when live streaming, exclude current line
-    from_idx = from_idx+1
-  end
-  ]]
-
   for i = from_idx,self.lowest_buffer_idx,-1 do
     self.buffer[i] = nil
     self.read_buffer[i] = nil
-    --print("cleared buffer at ",i)
+    --print("*** wipe_past - cleared buffers at ",i)
   end
 
   self.lowest_buffer_idx = from_idx
-  print("lowest_buffer_idx ",from_idx)
+  --print("lowest_buffer_idx ",from_idx)
 
 end
 
@@ -1015,9 +1021,10 @@ function xStream:determine_writeahead()
 
   local writeahead_factor = 400 
   self.writeahead = math.ceil(math.max(2,(bpm*lpb)/writeahead_factor))
+  self.writeahead = 4
   --print("xStream.writeahead",self.writeahead)
 
-  self.lps = 1 / (60/bpm/lpb)
+  --self.lps = 1 / (60/bpm/lpb)
   --print("xStream.lps",self.lps)
 
 
@@ -1060,11 +1067,6 @@ function xStream:on_idle()
   if not self.just_started_playback then
     self._playpos = playpos
     self._editpos = editpos
-    --[[
-    if rns.transport.playing then
-      print("idle - self._playpos",self._playpos)
-    end
-    ]]
   end
 
 end
@@ -1107,6 +1109,87 @@ function xStream:attach_to_song()
   end
   rns.transport.playing_observable:add_notifier(playing_notifier)
 
+
+end
+
+-------------------------------------------------------------------------------
+-- fill pattern-track in selected pattern
+ 
+function xStream:fill_track()
+  
+  local patt_num_lines = xSongPos.get_pattern_num_lines(rns.selected_sequence_index)
+  self:stream_to_track(1,patt_num_lines)
+
+end
+
+-------------------------------------------------------------------------------
+-- ensure that selection is valid (not spanning multiple tracks)
+-- @return bool
+ 
+function xStream:validate_selection()
+
+    local sel = rns.selection_in_pattern
+    if not sel then
+      return false,"Please create a (single-track) selection in the pattern"
+    end
+    if (sel.start_track ~= sel.end_track) then
+      return false,"Selection must start and end in the same track"
+    end
+
+    return true
+
+end
+
+-------------------------------------------------------------------------------
+-- fill pattern-track in selected pattern
+-- @param locally (bool) relative to the top of the pattern
+ 
+function xStream:fill_selection(locally)
+
+  local passed,err = self.validate_selection()
+  if not passed then
+    renoise.app():show_warning(err)
+    return
+  end
+
+  local num_lines = xSongPos.get_pattern_num_lines(rns.selected_sequence_index)
+  local from_line = rns.selection_in_pattern.start_line
+  local to_line = rns.selection_in_pattern.end_line
+  local travelled = (not locally) and (from_line-1) or 0 
+
+  local cached_track_index = self.track_index
+  self.track_index = rns.selection_in_pattern.start_track
+  self:stream_to_track(from_line,to_line,travelled)
+  self.track_index = cached_track_index
+
+end
+
+-------------------------------------------------------------------------------
+-- apply the callback to a range in the selected pattern
+-- (note: this will interrupt any current 
+-- @param from_line (int)
+-- @param to_line (int) 
+-- @param travelled (int) where the callback 'started', use from_line if nil
+
+function xStream:stream_to_track(from_line,to_line,travelled)
+  TRACE("xStream:stream_to_track(from_line,to_line,travelled)",from_line,to_line,travelled)
+
+  local xpos = xSongPos({
+    sequence = rns.transport.edit_pos.sequence,
+    line = from_line
+  })
+  if travelled then
+    xpos.lines_travelled = travelled
+  end
+
+  local cached_active = self.active
+  local live_mode = false -- start from first line
+  local num_lines = to_line-from_line+1
+
+  self:reset()
+  self.active = true
+  self:do_output(xpos,num_lines,live_mode)
+  self.active = cached_active
 
 end
 

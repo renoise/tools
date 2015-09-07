@@ -378,7 +378,9 @@ function xStreamUI:build()
         notifier = function(str)
           local model = self.xstream.selected_model
           if model then
-            model.callback_str = str
+            -- note: add extra line to avoid end of string being
+            -- truncated, one line at a time... 
+            model.callback_str = str .. "\n" 
           end
         end,
 
@@ -451,21 +453,21 @@ function xStreamUI:build()
           },
           vb:row{
             vb:button{
-              text = "start()",
+              text = "start",
               id = "xStreamStartButton",
               notifier = function(val)
                 self.xstream:start()
               end,
             },
             vb:button{
-              text = "start_and_play()",
+              text = "start_and_play",
               id = "xStreamStartPlayButton",
               notifier = function(val)
                 self.xstream:start_and_play()
               end,
             },
             vb:button{
-              text = "stop()",
+              text = "stop",
               notifier = function(val)
                 self.xstream:stop()
               end,
@@ -473,29 +475,48 @@ function xStreamUI:build()
           },
           vb:row{
             vb:button{
-              text = "mute()",
+              text = "mute",
               id = "xStreamMuteButton",
               notifier = function(val)
                 self.xstream:mute()
               end,
             },
             vb:button{
-              text = "unmute()",
+              text = "unmute",
               notifier = function(val)
                 self.xstream:unmute()
               end,
             },
           },
-
+          vb:row{
+            vb:button{
+              text = "fill_track",
+              notifier = function(val)
+                self.xstream:fill_track()
+              end,
+            },
+            vb:button{
+              text = "fill_selection",
+              notifier = function()
+                self.xstream:fill_selection()
+              end,
+            },
+            vb:button{
+              text = "locally",
+              notifier = function()
+                self.xstream:fill_selection(true)
+              end,
+            },
+          },
           vb:button{
-            text = "export_to_phrase()",
+            text = "export_to_phrase",
             notifier = function(val)
               local instr_idx = rns.selected_instrument_index
               self.xstream:export_to_phrase(instr_idx)
             end,
           },
           vb:button{
-            text = "export_to_file()",
+            text = "export_to_file",
             notifier = function(val)
               self.xstream:export_to_file()
             end,

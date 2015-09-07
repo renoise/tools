@@ -38,7 +38,7 @@ arguments = {
   },
   {
       name = "shuffle",
-      value = 0.608,
+      value = 0.26,
       properties = {
           max = 1,
           min = 0,

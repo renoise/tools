@@ -1,12 +1,12 @@
 --[[============================================================================
-ArgsBinding.lua
+API - Binding.lua
 ============================================================================]]--
 
 return {
 arguments = {
   {
       name = "velocity",
-      value = 51,
+      value = 127,
       properties = {
           min = 0,
           quant = 1,
@@ -55,15 +55,12 @@ callback = [[
 -- To see the actual how the binding is specified, open the model definition
 -- in a text editor (click 'reveal_in_browser' to locate the file)
 
-line = {
-  note_columns = {
-    {
-      note_value = math.random(36,60),
-      instrument_value = args.instr_idx,
-      volume_value = args.velocity,
-    }  
-  }
-}
+line.note_columns[1] = {
+  note_value = math.random(36,60),
+  instrument_value = args.instr_idx,
+  volume_value = args.velocity,
+}  
 
+  
 ]],
 }

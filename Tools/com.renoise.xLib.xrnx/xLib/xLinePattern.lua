@@ -12,12 +12,15 @@ xLinePattern
 
 class 'xLinePattern'
 
-xLinePattern.EMPTY_NOTE_VALUE = 121
-xLinePattern.EMPTY_NOTE_STRING = "---"
-xLinePattern.NOTE_OFF_VALUE = 120
-xLinePattern.NOTE_OFF_STRING = "OFF"
 xLinePattern.EMPTY_VALUE = 255     
 xLinePattern.EMPTY_STRING = "00"
+xLinePattern.EFFECT_CHARS = {
+  "0","1","2","3","4","5","6","7", 
+  "8","9","A","B","C","D","E","F", 
+  "G","H","I","J","K","L","M","N", 
+  "O","P","Q","R","S","T","U","V", 
+  "W","X","Y","Z"                  
+}
 
 -------------------------------------------------------------------------------
 -- constructor
@@ -53,6 +56,7 @@ function xLinePattern:__init(note_columns,effect_columns)
 end
 
 
+
 -------------------------------------------------------------------------------
 -- combined method for writing to pattern or phrase
 -- @param sequence (int)
@@ -79,13 +83,16 @@ function xLinePattern:do_write(sequence,line,track_idx,phrase,tokens,include_hid
     rns_track_or_phrase = phrase
   end
 
+  local is_seq_track = (rns_track.type == renoise.Track.TRACK_TYPE_SEQUENCER)
+  --print("is_seq_track",is_seq_track)
+
   local visible_note_cols = rns_track_or_phrase.visible_note_columns
   local visible_fx_cols = rns_track_or_phrase.visible_effect_columns
-  print("visible_note_cols",visible_note_cols)
+  --print("visible_note_cols",visible_note_cols)
 
   -- TODO optimize by moving this into a one-time track preparation
   -- (after the tokens have been extracted and streaming is active)
-  if expand_columns and not table.is_empty(self.note_columns) then
+  if is_seq_track and expand_columns and not table.is_empty(self.note_columns) then
     rns_track_or_phrase.volume_column_visible = rns_track_or_phrase.volume_column_visible or 
       (type(table.find(tokens,"volume_value") or table.find(tokens,"volume_string")) ~= 'nil')
     rns_track_or_phrase.panning_column_visible = rns_track_or_phrase.panning_column_visible or
@@ -93,30 +100,32 @@ function xLinePattern:do_write(sequence,line,track_idx,phrase,tokens,include_hid
     rns_track_or_phrase.delay_column_visible = rns_track_or_phrase.delay_column_visible or
       (type(table.find(tokens,"delay_value") or table.find(tokens,"delay_string")) ~= 'nil')
   end
-
-	for k,rns_col in ipairs(rns_line.note_columns) do
-    if not expand_columns and 
-      (include_hidden and (k > visible_note_cols)) 
-    then
-      break
-    end
-    local note_col = self.note_columns[k]
-    if note_col then
-      -- show columns, sub-columns
-      if expand_columns then
-        if (k > visible_note_cols) then
-          visible_note_cols = k
+  
+  if is_seq_track then
+    for k,rns_col in ipairs(rns_line.note_columns) do
+      if not expand_columns and 
+        (include_hidden and (k > visible_note_cols)) 
+      then
+        break
+      end
+      local note_col = self.note_columns[k]
+      if note_col then
+        -- show columns, sub-columns
+        if expand_columns then
+          if (k > visible_note_cols) then
+            visible_note_cols = k
+          end
+        end
+        note_col:do_write(
+          rns_col,tokens,clear_undefined)
+      else
+        --print("clear_undefined",clear_undefined)
+        if clear_undefined then
+          rns_col:clear()
         end
       end
-      note_col:do_write(
-        rns_col,tokens,clear_undefined)
-    else
-      --print("clear_undefined",clear_undefined)
-      if clear_undefined then
-        rns_col:clear()
-      end
     end
-	end
+  end
 
 	for k,rns_col in ipairs(rns_line.effect_columns) do
     if not include_hidden and (k > visible_fx_cols) then
@@ -215,6 +224,6 @@ end
 
 function xLinePattern:__tostring()
 
-  return "xLinePattern:"..tostring(self.note_columns[1])
+  return "xLinePattern "..tostring(self.note_columns[1])
 
 end
