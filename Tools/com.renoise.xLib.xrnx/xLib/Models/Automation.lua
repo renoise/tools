@@ -31,8 +31,8 @@ arguments = {
       name = "volume",
       value = 128,
       properties = {
-          max = 128,
           min = 0,
+          max = 128,
       },
       description = "Specify the general volume level",
   },
@@ -40,8 +40,8 @@ arguments = {
       name = "env_A",
       value = 0,
       properties = {
-          max = 1,
           min = 0,
+          max = 1,
       },
       description = "Control the first automation point in each line",
   },
@@ -49,8 +49,8 @@ arguments = {
       name = "env_B",
       value = 0.33,
       properties = {
-          max = 1,
           min = 0,
+          max = 1,
       },
       description = "Control the second automation point in each line",
   },
@@ -58,8 +58,8 @@ arguments = {
       name = "env_C",
       value = 0.66,
       properties = {
-          max = 1,
           min = 0,
+          max = 1,
       },
       description = "Control the third automation point in each line",
   },
@@ -67,8 +67,8 @@ arguments = {
       name = "shuffle",
       value = 0.1,
       properties = {
-          max = 1,
           min = 0,
+          max = 1,
       },
       description = "Control the amount of shuffle (delay on every second note)",
   },
@@ -94,8 +94,8 @@ callback = [[
 -------------------------------------------------------------------------------
 
 -- update automation interpolation in real-time -----------
-if (xstream.automation_playmode ~= args.playmode) then
-  xstream.automation_playmode = args.playmode
+if (automation_playmode ~= args.playmode) then
+  automation_playmode = args.playmode
 end
 
 xline = {
@@ -116,6 +116,8 @@ xline = {
 }
 
   
+
+
 
 ]],
 }

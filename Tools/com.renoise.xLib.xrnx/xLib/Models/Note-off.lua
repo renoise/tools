@@ -6,7 +6,7 @@ return {
 arguments = {
   {
       name = "instr_idx",
-      value = 1,
+      value = 6,
       properties = {
           min = 1,
           quant = 1,
@@ -20,7 +20,7 @@ arguments = {
   {
       poll = "rns.selected_note_column_index",
       name = "note_col_idx",
-      value = 1,
+      value = 4,
       properties = {
           min = 0,
           quant = 1,
@@ -67,18 +67,21 @@ callback = [[
 -------------------------------------------------------------------------------
 
 -- Let's improve on the API Polling example by adding note-offs.
--- Since we can jump from column to column we need to keep track
--- of where we want to write our OFF notes. This example demonstrates
--- how you could add such 'memory' to the callback 
+-- Since the output is written to an arbitrary column, we need to manage
+-- our OFF notes accordingly. 
 
 -- A particular quirk is that, in order to have a truly reliable OFF note
 -- we need to write it to the pattern _twice_. This is so, since the 
--- sequencer engine in Renoise could have progressed to the next line in
--- the (very little) time it takes to process the script. This makes the
--- script a bit more complex, but the result should be reliable. 
+-- playback engine in Renoise could have progressed to the next line in
+-- the time it takes to process the script (engine is a different thread). 
+-- This makes the script a little more complex, but reliable. 
 
--- Our data contains two tables: 'columns' and 'columns2'. 
--- Each one is a table with - surprise! - an entry for each note-column. 
+xline = {
+  note_columns = EMPTY_NOTE_COLUMNS,
+}
+
+-- First, we define two data tables: 'columns' and 'columns2'. 
+-- Each table contains 12 entries, one for each note-column. 
 -- In those tables, we _always_ save the current column index, like this:
 
 data.columns[args.note_col_idx] = true
@@ -110,10 +113,13 @@ check_columns(data.columns,data.columns2)
 -- Finally, we can output the note:
 
 xline.note_columns[args.note_col_idx] = {
-  --note_value = math.random(36,60),
-  note_string = "C-4",
+  note_value = math.random(36,60),
   instrument_value = args.instr_idx,
 }  
+
+rprint(xline)
+
+
 
 
 
