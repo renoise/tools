@@ -68,9 +68,14 @@ function xStreamArgs:add(arg)
   --print(type(arg.value))
   
   -- TODO validate as proper lua variable name
+  --[[
+    *** std::logic_error: 'observable and node names must not contain special characters. only alphanumerical characters and '_' are allowed (like XML keys).'
+  ]]
   if (type(arg.name)~='string') then
     return false,"Argument name '"..arg.name.."' needs to be a proper lua variable name - no special characters or number as the first character"
   end
+
+
 
   -- avoid using existing or RESERVED_NAMES
   --print("*** got here",arg.name,type(self[arg.name]))

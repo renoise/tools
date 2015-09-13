@@ -17,14 +17,10 @@ class 'xStreamArg'
 --  name
 --  description
 --  properties (table)
---    min,max
---    
 --  bind (string)
 --  poll (string)
 --  value (number/string/boolean)
 --  observable (ObservableXXX)
--- 
-
 
 function xStreamArg:__init(arg)
 
@@ -46,9 +42,11 @@ function xStreamArg:__init(arg)
   --  impacts_buffer (bool), refresh buffer when changed
   --  quant (int), value quantization - e.g. "1" for integer 
   --  min, max (number) 
-  --  display_as_hex (bool) 
+  --  display_as_hex (bool) when valuefield
+  --  display_as_note (bool) when slider
   --  zero_based (bool) also used in callback
-  --  items (table<string>) for Popup
+  --  items (table<string>) display as popup/chooser
+  --  display (string) "popup", "chooser" (default is popup)
   self.properties = arg.properties or {}
 
   -- function, polling functions (optional)
@@ -81,7 +79,7 @@ function xStreamArg:__init(arg)
     --print("notifier_fn fired...",self.name,self.observable.value)
     self.value = self.observable.value
     if self.properties.impacts_buffer then
-      self.xstream:wipe_futures()
+      --self.xstream:wipe_futures()
     end
     if self.bind_notifier then
       self.bind_notifier(self.observable.value)

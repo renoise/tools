@@ -39,6 +39,7 @@ function xLinePattern:__init(note_columns,effect_columns)
   -- display columns as they are written to
   --self.auto_expand = true
 
+
   -- initialize -----------------------
 
   if note_columns then
@@ -52,6 +53,8 @@ function xLinePattern:__init(note_columns,effect_columns)
       self.effect_columns:insert(xEffectColumn(v))
     end
   end
+
+  --print("xLinePattern.note_columns",rprint(self.note_columns))
 
 end
 
@@ -103,9 +106,7 @@ function xLinePattern:do_write(sequence,line,track_idx,phrase,tokens,include_hid
   
   if is_seq_track then
     for k,rns_col in ipairs(rns_line.note_columns) do
-      if not expand_columns and 
-        (include_hidden and (k > visible_note_cols)) 
-      then
+      if not include_hidden and (k > visible_note_cols) then
         break
       end
       local note_col = self.note_columns[k]
@@ -116,6 +117,14 @@ function xLinePattern:do_write(sequence,line,track_idx,phrase,tokens,include_hid
             visible_note_cols = k
           end
         end
+        --print("note_col",note_col,type(note_col))
+
+        -- a table can be the result of a redefined column
+        -- convert tables into a xNoteColumn instance
+        if (type(note_col) == "table") then
+          note_col = xNoteColumn(note_col)
+        end
+
         note_col:do_write(
           rns_col,tokens,clear_undefined)
       else
@@ -124,6 +133,10 @@ function xLinePattern:do_write(sequence,line,track_idx,phrase,tokens,include_hid
           rns_col:clear()
         end
       end
+    end
+  else
+    if self.note_columns then
+      LOG("Can only write note-columns to a sequencer track")
     end
   end
 

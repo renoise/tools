@@ -101,6 +101,8 @@ function xStreamUI:update_args()
     local fn_tostring = nil
     local fn_tonumber = nil
     
+    print("arg.properties",rprint(arg.properties))
+
     if arg.properties.display_as_hex then
       fn_tostring = function(val)
         val = arg.properties.zero_based and val-1 or val
@@ -110,6 +112,14 @@ function xStreamUI:update_args()
         local val = tonumber(str, 16)
         val = arg.properties.zero_based and val+1 or val
         return val
+      end
+    elseif arg.properties.display_as_note then
+      print("arg.properties.display_as_note")
+      fn_tostring = function(val)
+        return xNoteColumn.note_value_to_string(math.floor(val))
+      end 
+      fn_tonumber = function(str)
+        return xNoteColumn.note_string_to_value(str)
       end
     else
       fn_tostring = function(val)
@@ -127,20 +137,54 @@ function xStreamUI:update_args()
 
     if (type(arg.observable) == "ObservableNumber") then
 
+      local slider_width = 100
+      local full_width = 180
+
       if arg.properties.items then
-        -- popup 
-        view = vb:row{
-          tooltip = arg.description,
-          vb:text{
-            text = arg.name,
-          },
-          vb:popup{
-            items = arg.properties.items,
-            value = arg.value,
-            width = 100,
-            bind = arg.observable,
-          },
-        }
+        local display = arg.properties.display or "popup"
+        if (display == "popup") then
+          view = vb:row{
+            tooltip = arg.description,
+            vb:text{
+              text = arg.name,
+              font = "mono",
+            },
+            vb:popup{
+              items = arg.properties.items,
+              value = arg.value,
+              width = full_width,
+              bind = arg.observable,
+            },
+          }
+        elseif (display == "chooser") then
+          view = vb:row{
+            tooltip = arg.description,
+            vb:text{
+              text = arg.name,
+              font = "mono",
+            },
+            vb:chooser{
+              items = arg.properties.items,
+              value = arg.value,
+              width = full_width,
+              bind = arg.observable,
+            },
+          }
+        elseif (display == "switch") then
+          view = vb:row{
+            tooltip = arg.description,
+            vb:text{
+              text = arg.name,
+              font = "mono",
+            },
+            vb:switch{
+              items = arg.properties.items,
+              value = arg.value,
+              width = full_width,
+              bind = arg.observable,
+            },
+          }
+        end
 
       elseif (arg.properties.quant == 1) then
         -- integer value
@@ -148,6 +192,7 @@ function xStreamUI:update_args()
           tooltip = arg.description,
           vb:text{
             text = arg.name,
+            font = "mono",
           },
           vb:valuebox{
             tostring = fn_tostring,
@@ -161,27 +206,44 @@ function xStreamUI:update_args()
 
       else
         -- slider/number
+
         view = vb:row{
           tooltip = arg.description,
           vb:text{
             text = arg.name,
+            font = "mono",
           },
-          vb:minislider{
-            value = arg.value,
-            width = 100,
-            min = arg.properties.min or -99999,
-            max = arg.properties.max or 99999,
-            bind = arg.observable,
-          },
-          vb:valuefield{
-            tostring = fn_tostring,
-            tonumber = fn_tonumber,
-            value = arg.value,
-            min = arg.properties.min or -99999,
-            max = arg.properties.max or 99999,
-            bind = arg.observable,
-          }
         }
+
+        local display = arg.properties.display or "minislider"
+        if (display == "minislider") then
+          view:add_child(vb:minislider{
+            value = arg.value,
+            width = slider_width,
+            min = arg.properties.min or -99999,
+            max = arg.properties.max or 99999,
+            bind = arg.observable,
+          })
+        elseif (display == "rotary") then
+          view:add_child(vb:rotary{
+            value = arg.value,
+            --width = slider_width,
+            height = 24,
+            min = arg.properties.min or -99999,
+            max = arg.properties.max or 99999,
+            bind = arg.observable,
+          })
+        end
+
+        view:add_child(vb:valuefield{
+          tostring = fn_tostring,
+          tonumber = fn_tonumber,
+          value = arg.value,
+          min = arg.properties.min or -99999,
+          max = arg.properties.max or 99999,
+          bind = arg.observable,
+        })
+
       end
 
     elseif (type(arg.observable) == "ObservableBoolean") then
@@ -190,6 +252,7 @@ function xStreamUI:update_args()
         tooltip = arg.description,
         vb:text{
           text = arg.name,
+          font = "mono",
         },
         vb:checkbox{
           value = arg.value,
@@ -203,10 +266,11 @@ function xStreamUI:update_args()
         tooltip = arg.description,
         vb:text{
           text = arg.name,
+          font = "mono",
         },
         vb:textfield{
           text = arg.value,
-          width = 100,
+          width = full_width,
           bind = arg.observable,
         },
       }
@@ -403,49 +467,78 @@ function xStreamUI:build()
         end,
 
       },
-      vb:row{
-        vb:button{
-          text = "compile",
-          id = "xStreamCallbackCompile",
-          active = false,
-          notifier = function()
-            local model = self.xstream.selected_model
-            local view = vb.views["xStreamCallbackEditor"]
-            local passed,err = model:compile(view.text)
-            if not passed then
-              renoise.app():show_warning(err)
+      vb:horizontal_aligner{
+        mode = "justify",
+        vb:row{
+          vb:button{
+            text = "compile",
+            id = "xStreamCallbackCompile",
+            active = false,
+            notifier = function()
+              local model = self.xstream.selected_model
+              local view = vb.views["xStreamCallbackEditor"]
+              local passed,err = model:compile(view.text)
+              if not passed then
+                renoise.app():show_warning(err)
+                self.xstream.callback_status_observable.value = err
+              else
+                self.xstream.callback_status_observable.value = ""
+              end
+            end,
+          },
+          vb:button{
+            text = "save",
+            id = "xStreamModelSave",
+            notifier = function()
+              local passed,err = self.xstream.selected_model:save()
+              if not passed then
+                renoise.app():show_warning(err)
+              end 
+            end,
+          },
+          vb:button{
+            text = "save_as",
+            id = "xStreamModelSaveAs",
+            notifier = function()
+              local passed,err = self.xstream.selected_model:save_as()          
+              if not passed then
+                renoise.app():show_warning(err)
+              end 
+            end,
+          },
+          vb:button{
+            text = "reveal_location",
+            id = "xStreamRevealLocation",
+            notifier = function()
+              self.xstream.selected_model:reveal_location()          
+            end,
+          },
+          -- hackaround for clickable text
+          vb:checkbox{
+            value = false,
+            width = 1,
+            notifier = function()
+              renoise.app():show_warning(
+                "The callback returned the following error:\n"
+                ..self.xstream.callback_status_observable.value
+                .."\n\n(you can also see these messages in the scripting console)")
             end
-          end,
+          },
+          vb:text{
+            id = "xStreamCallbackStatus",
+            --bind = self.xstream.callback_status_observable
+            text = "",
+          }
         },
-        vb:button{
-          text = "save",
-          id = "xStreamModelSave",
-          notifier = function()
-            local passed,err = self.xstream.selected_model:save()
-            if not passed then
-              renoise.app():show_warning(err)
-            end 
-          end,
-        },
-        vb:button{
-          text = "save_as",
-          id = "xStreamModelSaveAs",
-          notifier = function()
-            local passed,err = self.xstream.selected_model:save_as()          
-            if not passed then
-              renoise.app():show_warning(err)
-            end 
-          end,
-        },
-        vb:button{
-          text = "reveal_location",
-          id = "xStreamRevealLocation",
-          notifier = function()
-            self.xstream.selected_model:reveal_location()          
-          end,
-        },
+        vb:row{
+          vb:checkbox{
+            bind = self.xstream.live_coding_observable
+          },
+          vb:text{
+            text = "live coding"
+          }
+        }
       }
-
     },    
     vb:row{
       vb:column{
@@ -474,6 +567,7 @@ function xStreamUI:build()
             end,
           },
         },
+
         vb:column{
           id = 'xStreamModelContainer',
         }
@@ -579,6 +673,37 @@ function xStreamUI:build()
             text = "properties",
             font = "bold",
           },
+          vb:row{
+            vb:text{
+              text = "track_index",
+            },
+            vb:valuebox{
+              min = 0,
+              max = 255,
+              bind = self.xstream.track_index_observable,
+            },
+          },
+          vb:row{
+            vb:text{
+              text = "device_index",
+            },
+            vb:valuebox{
+              min = 0,
+              max = 255,
+              bind = self.xstream.device_index_observable,
+            },
+          },
+          vb:row{
+            vb:text{
+              text = "param_index",
+            },
+            vb:valuebox{
+              min = 0,
+              max = 255,
+              bind = self.xstream.param_index_observable,
+            },
+          },
+
           vb:row{
             vb:text{
               text = "mute_mode",
@@ -748,6 +873,22 @@ function xStreamUI:build()
   },
   ]]
 
+  self.xstream.callback_status_observable:add_notifier(function()    
+    TRACE("*** callback_status_observable fired...",self.xstream.callback_status_observable.value)
+    
+    local str_err = self.xstream.callback_status_observable.value
+    local view = self.vb.views["xStreamCallbackStatus"]
+    if (str_err == "") then
+      view.text = "Syntax OK"
+      view.tooltip = ""
+    else
+      view.text = "⚠ Syntax Error"
+      view.tooltip = str_err
+    end 
+    
+
+  end)
+
 
   self.xstream.mute_mode_observable:add_notifier(function()    
     --print("*** mute_mode_observable fired...",self.xstream.mute_mode)
@@ -756,28 +897,23 @@ function xStreamUI:build()
 
   self.xstream.muted_observable:add_notifier(function()    
     --print("*** muted_observable fired...",self.xstream.muted)
-  
     local view = vb.views["xStreamMuteButton"]
     local color = self.xstream.muted 
       and xLib.COLOR_ENABLED or xLib.COLOR_DISABLED
     view.color = color
-
   end)
 
   self.xstream.active_observable:add_notifier(function()    
     --print("*** active_observable fired...",self.xstream.active)
-  
     local view = vb.views["xStreamStartButton"]
     local color = self.xstream.active 
       and xLib.COLOR_ENABLED or xLib.COLOR_DISABLED
     view.color = color
-
   end)
 
   self.xstream.models_observable:add_notifier(function()
     self:update_models()
   end)
-
 
   local model_name_notifier = function()
     --print("*** xstream.selected_model.name_observable fired...",self.xstream.selected_model.name)
@@ -792,7 +928,6 @@ function xStreamUI:build()
   
   local selected_model_index_notifier = function()
     --print("*** xstream.selected_model_index_observable fired...",self.xstream.selected_model_index)
-
     -- attach to model 
     local model = self.xstream.selected_model
     if model then
@@ -812,7 +947,6 @@ function xStreamUI:build()
   end
   self.xstream.selected_model_index_observable:add_notifier(selected_model_index_notifier)
   selected_model_index_notifier()
-
   self.vb_content = content
 
 end
@@ -824,7 +958,9 @@ function xStreamUI:disable_model_controls()
   local view
   view = self.vb.views["xStreamCallbackEditor"]
   view.text = ""
-  view.active = false
+  if (renoise.API_VERSION > 4) then
+    view.active = false
+  end
   for k,v in ipairs(xStreamUI.MODEL_CONTROLS) do
     self.vb.views[v].active = false
   end
@@ -841,9 +977,11 @@ function xStreamUI:enable_model_controls()
 
   local view
   view = self.vb.views["xStreamCallbackEditor"]
-  view.active = true
+  if (renoise.API_VERSION > 4) then
+    view.active = true
+  end
   for k,v in ipairs(xStreamUI.MODEL_CONTROLS) do
-    print("enable_model_controls",k,v)
+    --print("enable_model_controls",k,v)
     self.vb.views[v].active = true
   end
   self.vb.views["xStreamArgsContainer"].visible = true

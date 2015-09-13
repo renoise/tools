@@ -3,7 +3,7 @@ xReflection
 ============================================================================]]--
 --[[
 
-	lacking proper reflection, pull off some API tricks to a similar result
+	Lacking proper reflection, pull off some API tricks to a similar result
 
 ]]
 

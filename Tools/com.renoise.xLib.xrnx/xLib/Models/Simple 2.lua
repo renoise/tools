@@ -1,5 +1,5 @@
 --[[============================================================================
-Test.lua
+Simple 2.lua
 ============================================================================]]--
 
 return {
@@ -9,25 +9,23 @@ data = {
 },
 callback = [[
 -------------------------------------------------------------------------------
--- Testing
+-- Empty configuration
 -------------------------------------------------------------------------------
 
-xline.note_columns[1] = {
-  --note_string = "OFF",
-  --note_value = 60,
-  --note_string = "---",
-  --instrument_value = 0x0f,
-  --instrument_string = "1F",
-  --volume_string = "I7",
-  --volume_string = nil,
-  --volume_value = 0x25,
-  --panning_value = 255,
-  --panning_string = "G5",
-  --panning_string = nil
-  --delay_value = 0xff,
-  delay_string = "FF",
-  
-}
+-- Use this as a template for your own creations. 
+
+print("EMPTY_NOTE_COLUMNS",rprint(EMPTY_NOTE_COLUMNS))
+
+xline.note_columns = EMPTY_NOTE_COLUMNS
+--xline.note_columns[1].note_value = 60
+xline.note_columns[2].note_string = "C-4"
+
+
+
+
+
+
+
 
 
 ]],

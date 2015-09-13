@@ -96,17 +96,9 @@ function xStream:__init()
   -- xStreamUI, built-in user interface
   self.ui = nil
 
-  -- int, decide which track to target
-  self.track_index = nil
-
   -- int, for writing to instrument phrase
   --self.instr_index = nil
 
-  -- renoise.AudioDevice (for automation)
-  self.device = nil
-
-  -- int, device parameter (for automation)
-  self.param_index = nil
 
   -- xStream.SCHEDULING
   --self.scheduling = xStream.SCHEDULING.LINE
@@ -157,6 +149,34 @@ function xStream:__init()
   -- we keep the overall progression of the stream 
   self._writepos = xSongPos(rns.transport.playback_pos)
 
+
+  -- observable interface ---------------------------------
+
+  -- string, value depends on success/failure during last callback 
+  -- "" = no problem
+  -- "Some error occurred" = description of error 
+  self.callback_status_observable = renoise.Document.ObservableString("")
+
+  -- bool, when true we compile the callback on-the-fly
+  self.live_coding_observable = renoise.Document.ObservableBoolean(false)
+
+  -- int, decide which track to target (0 = none)
+  self.track_index = property(self.get_track_index,self.set_track_index)
+  self.track_index_observable = renoise.Document.ObservableNumber(0)
+
+  -- int, selected device in device chain (0 = none)
+  self.device_index = property(self.get_device_index,self.set_device_index)
+  self.device_index_observable = renoise.Document.ObservableNumber(0)
+
+  -- renoise.AudioDevice, selected in device chain (can be nil)
+  -- note: if you need observable, use device_index_observable
+  self.device = property(self.get_device)
+  self._device = nil 
+
+  -- int, selected device parameter in automation (0 = none)
+  self.param_index = property(self.get_param_index,self.set_param_index)
+  self.param_index_observable = renoise.Document.ObservableNumber(0)
+
   -- boolean, whether to include hidden (not visible) columns
   self.include_hidden = property(
     self.get_include_hidden,self.set_include_hidden)
@@ -174,7 +194,7 @@ function xStream:__init()
   self.fix_out_of_range_observable = renoise.Document.ObservableBoolean(true)
   ]]
 
-  -- boolean, whether to expand (show) columns when writing data
+  -- boolean, whether to expand (sub-)columns when writing data
   self.expand_columns = property(
     self.get_expand_columns,self.set_expand_columns)
   self.expand_columns_observable = renoise.Document.ObservableBoolean(true)
@@ -217,6 +237,9 @@ function xStream:__init()
 
   -- xStreamModel, read-only - nil when no model is selected
   self.selected_model = nil
+
+  -- xStreamProxy, provides callback with 'real' constant values
+  --self.proxy = xStreamProxy(self)
 
   -- number, or nil
   -- this is a short-lived timestamp indicating that we should ignore 
@@ -262,7 +285,7 @@ end
 -- remove all models
 
 function xStream:remove_models()
-  print("xStream:remove_models()")
+  TRACE("xStream:remove_models()")
 
   for k,v in ripairs(self.models) do
     self:remove_model(k)
@@ -274,7 +297,7 @@ end
 -- remove specific model
 
 function xStream:remove_model(model_idx)
-  print("xStream:remove_model(model_idx)",model_idx)
+  TRACE("xStream:remove_model(model_idx)",model_idx)
 
   if (model_idx == self.selected_model_index) then
     if self.active then
@@ -350,7 +373,7 @@ end
 -------------------------------------------------------------------------------
 
 function xStream:set_selected_model_index(idx)
-  print("xStream:set_selected_model_index(idx)",idx)
+  TRACE("xStream:set_selected_model_index(idx)",idx)
 
   if (#self.models == 0) then
     error("there are no available models")
@@ -380,6 +403,44 @@ function xStream:set_selected_model_index(idx)
   self:wipe_futures()
   self:reset()
 
+end
+
+-------------------------------------------------------------------------------
+
+function xStream:get_track_index()
+  return self.track_index_observable.value
+end
+
+function xStream:set_track_index(val)
+  self.track_index_observable.value = val
+end
+
+-------------------------------------------------------------------------------
+
+function xStream:get_device_index()
+  return self.device_index_observable.value
+end
+
+function xStream:set_device_index(val)
+  self.device_index_observable.value = val
+end
+
+-------------------------------------------------------------------------------
+
+function xStream:get_device()
+  if self.track_index then
+    return rns.tracks[self.track_index].devices[self.device_index]
+  end
+end
+
+-------------------------------------------------------------------------------
+
+function xStream:get_param_index()
+  return self.param_index_observable.value
+end
+
+function xStream:set_param_index(val)
+  self.param_index_observable.value = val
 end
 
 -------------------------------------------------------------------------------
@@ -548,7 +609,7 @@ function xStream:do_output(xpos,num_lines,live_mode)
 
   -- TODO decide this elsewhere (optimize)
   local able_to_write_automation = 
-    (self.device and self.param_index) and true or false
+    (self.device and (self.param_index) > 0) and true or false
   --print("*** able_to_write_automation",able_to_write_automation)
 
   for i = 0,num_lines-1 do
@@ -680,7 +741,7 @@ function xStream:get_content(pos,num_lines,xpos)
     --xpos.loop_boundary = xSongPos.LOOP_BOUNDARY.NONE
   end
 
-  --print("BEGIN read_pos",read_pos)
+  --print("*** xStream:get_content - BEGIN read_pos",read_pos)
   for i = 0, num_lines-1 do
     local line_index = pos+i
 
@@ -688,28 +749,45 @@ function xStream:get_content(pos,num_lines,xpos)
     local xline = self.read_buffer[line_index]
     if not xline then 
       -- read the line, dereference it 
+      -- TODO is rcopy even needed here? 
       xline = xLine.do_read(
         read_pos.sequence,read_pos.line,self.include_hidden,self.track_index,phrase)
       self.read_buffer[line_index] = table.rcopy(xline) 
-      --print("read from this line",read_pos,"line_index",line_index,xline.note_columns[1].note_string)
+      TRACE("*** xStream:get_content - this line got read",read_pos,"line_index",line_index,xline.note_columns[1].note_string)
     end
     --print("read_buffer",rprint(self.read_buffer))
     --print("IN  ",line_index,read_pos,xline.note_columns[1].note_string)
 
     local success,err = pcall(function()
-      self.buffer[line_index] = xLine(self.selected_model.callback(line_index,xline,xSongPos(read_pos)))
+      --self.buffer[line_index] = 
+      --  xLine(self.selected_model.callback(line_index,xline,xSongPos(read_pos)))
+      self.buffer[line_index] = 
+        self.selected_model.callback(line_index,xLine(xline),xSongPos(read_pos))
     end)
     if err then
       LOG("ERROR: please review callback function - "..err)
+      self.callback_status_observable.value = err
       self.buffer[line_index] = xLine({})
+    else
+      self.callback_status_observable.value = ""
+
+      -- check if we redefined the xline in the callback - 
+      -- convert back into an xLine instance
+      if (type(self.buffer[line_index]) == "table") then
+        print("*** get_content - convert xline into xLine at line_index",line_index)
+        self.buffer[line_index] = xLine(self.buffer[line_index])
+      end
+      --[[
+      ]]
     end
-    --print("callback evaluated for line_index",line_index,xline.note_columns[1].note_string)
+    --print("*** xStream:get_content - callback evaluated for line_index",line_index,self.buffer[line_index].note_columns[1].note_value)
     self.highest_buffer_idx = math.max(line_index,self.highest_buffer_idx)
 
     read_pos:increase_by_lines(1)
 
   end
 
+  --read_pos:decrease_by_lines(1)
   self.next_read_pos = read_pos
 
 
@@ -720,7 +798,7 @@ end
 -- set a target device-parameter, in order to write automation
 -- @param device (renoise.AudioDevice)
 -- @param param_idx (int)
-
+--[[
 function xStream:set_device_param(device,param_idx)
   TRACE("xStream:set_device_param(device,param_idx",device,param_idx)
 
@@ -731,6 +809,7 @@ function xStream:set_device_param(device,param_idx)
   self.param_index = idx
 
 end
+]]
 
 -------------------------------------------------------------------------------
 -- get visible note columns in the associated track
@@ -796,7 +875,7 @@ end
 -- clear various buffers, prepare for new output
 
 function xStream:reset()
-  print("xStream:reset()")
+  TRACE("xStream:reset()")
 
   if self.manage_gc then
     collectgarbage("stop")
@@ -971,7 +1050,7 @@ function xStream:set_pos(pos)
         -- conclusion: pattern loop
         num_lines = (patt_num_lines-self._playpos.line) + pos.line
         self._writepos:increase_by_lines(num_lines)
-        print("*** *** same pattern, wrap around - pattern loop",num_lines)
+        --print("*** *** same pattern, wrap around - pattern loop",num_lines)
       elseif rns.transport.loop_block_enabled and
         near_top(pos.line-xblock.start_line) and 
           near_end(xblock.end_line-xblock.start_line,block_num_lines)
@@ -980,13 +1059,13 @@ function xStream:set_pos(pos)
         num_lines = (xblock.end_line-self._playpos.line) + (pos.line-xblock.start_line) + 1
         self._writepos:increase_by_lines(num_lines)
 
-        print("*** same pattern, wrap around - loop block",block_num_lines,num_lines)
+        --print("*** same pattern, wrap around - loop block",block_num_lines,num_lines)
       else
         -- conclusion: user navigation
         -- will repeat/rewind to earlier position 
         num_lines = self._playpos.line - pos.line
         self._writepos:decrease_by_lines(num_lines)
-        print("*** same pattern, wrap around - user - pos",pos,"self._playpos",self._playpos)
+        --print("*** same pattern, wrap around - user - pos",pos,"self._playpos",self._playpos)
       end
 
     elseif (pos.line > self._playpos.line) then
@@ -1040,8 +1119,9 @@ function xStream:set_pos(pos)
 end
 
 -------------------------------------------------------------------------------
--- wipe all data ahead of our current write-position
--- method is automatically called when callback arguments have changed
+-- forget all output ahead of our current write-position
+-- method is automatically called when callback arguments have changed,
+-- and will cause fresh line(s) to be created in the next cycle
 -- (see also xStreamArgs)
 
 function xStream:wipe_futures()
@@ -1100,7 +1180,7 @@ function xStream:determine_writeahead()
 
   self.writeahead = math.ceil(math.max(2,(bpm*lpb)/writeahead_factor))
   --self.writeahead = 4
-  print("xStream.writeahead",self.writeahead)
+  --print("xStream.writeahead",self.writeahead)
   --self.lps = 1 / (60/bpm/lpb)
   --print("xStream.lps",self.lps)
 
@@ -1251,7 +1331,7 @@ end
 -- @param travelled (int) where the callback 'started', use from_line if nil
 
 function xStream:apply_to_range(from_line,to_line,travelled)
-  print("xStream:apply_to_range(from_line,to_line,travelled)",from_line,to_line,travelled)
+  TRACE("xStream:apply_to_range(from_line,to_line,travelled)",from_line,to_line,travelled)
 
   local xpos = xSongPos({
     sequence = rns.transport.edit_pos.sequence,

@@ -19,7 +19,7 @@ class 'xLine'
 --  automation
 
 function xLine:__init(args)
-  print("xLine:__init(args)",args)
+  TRACE("xLine:__init(args)",args)
 
   -- xLinePattern
   self.pattern_line = nil
@@ -31,6 +31,9 @@ function xLine:__init(args)
 
   if args.note_columns or args.effect_columns then
     self.pattern_line = xLinePattern(args.note_columns,args.effect_columns)
+    self.note_columns = self.pattern_line.note_columns
+    self.effect_columns = self.pattern_line.effect_columns
+
   end
 
   if args.automation then
@@ -142,7 +145,11 @@ function xLine.do_read(sequence,line,include_hidden,track_idx,phrase)
     rns_line = xLine.resolve_phrase_line(line,phrase)
   end
 
-  assert(type(rns_line)=="PatternLine","Failed to resolve PatternLine")
+  if (renoise.API_VERSION > 4) then
+    assert(type(rns_line)=="PatternLine","Failed to resolve PatternLine")
+  else
+    assert(type(rns_line)=="PatternTrackLine","Failed to resolve PatternLine")
+  end
 
   local note_cols,fx_cols,automation
 

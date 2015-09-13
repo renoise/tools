@@ -4,7 +4,6 @@
 
 require 'xLib/xLib'
 require 'xLib/xBlockLoop'
-require 'xLib/xScale'
 require 'xLib/xEffectColumn'
 require 'xLib/xFilesystem'
 require 'xLib/xLine'
@@ -25,8 +24,7 @@ require 'xLib/xStreamUI'
 
 require 'xLib/unit_tests/xsongpos_test'
 require 'xLib/unit_tests/xnotecolumn_test'
-require 'xLib/unit_tests/xeffectcolumn_test'
-require 'xLib/unit_tests/xstream_test'
+require 'xLib/unit_tests/xStream_test'
 
 --------------------------------------------------------------------------------
 -- preferences
@@ -80,7 +78,6 @@ local waiting_to_show_dialog = options.autostart.value
 
 -- post-launch notifier 
 local function idle_notifier_actual()
-  --print("*** idle_notifier_actual fired...")
   local view = vb.views["xStreamImplStats"]
   local str_stat = ("Memory usage: %.2f Mb"):format(collectgarbage("count")/1024)
                 ..("\nLines Travelled: %d"):format(xstream._writepos.lines_travelled)
@@ -95,7 +92,9 @@ local function idle_notifier()
   --print("*** idle_notifier fired...")
   if waiting_to_show_dialog then
     waiting_to_show_dialog = false
-    show() -- will change to idle_notifier_actual 
+    renoise.tool().app_idle_observable:remove_notifier(idle_notifier)
+    renoise.tool().app_idle_observable:add_notifier(idle_notifier_actual)
+    show()
   end
 end
 renoise.tool().app_idle_observable:add_notifier(idle_notifier)
@@ -122,7 +121,7 @@ end
 -------------------------------------------------------------------------------
 
 function update_launch_models()
-  --print("models_observable fired...")
+  print("models_observable fired...")
   --print("xstream.models",rprint(xstream.models))
   -- update popup with model names
   local view = vb.views["xStreamImplLaunchModel"]
@@ -178,13 +177,6 @@ function show()
         width = 100,
         notifier = function()
           xnotecolumn_test()
-        end
-      },
-      vb:button{
-        text="xEffectColumn",
-        width = 100,
-        notifier = function()
-          xeffectcolumn_test()
         end
       },
       vb:button{
@@ -312,7 +304,7 @@ function show()
                 id = "xStreamImplLaunchModel",
                 notifier = function(idx)
                   options.launch_model.value = xstream.models[idx].file_path
-                  --print("options.launch_model.value",options.launch_model.value)
+                  print("options.launch_model.value",options.launch_model.value)
                 end,
                 width = tool_option_w-10,
               }
@@ -343,7 +335,7 @@ function show()
                   notifier = function(checked)
                     options.manage_gc.value = checked
                     xstream.manage_gc = checked
-                    --print("xstream.manage_gc",xstream.manage_gc)
+                    print("xstream.manage_gc",xstream.manage_gc)
                   end,
                 },
                 vb:text{
@@ -380,11 +372,6 @@ function show()
     update_launch_models()
     vb.views["xStreamImplManageGarbage"].value = options.manage_gc.value
     xstream.manage_gc = options.manage_gc.value
-
-    -- switch to final idle notifier
-    renoise.tool().app_idle_observable:remove_notifier(idle_notifier)
-    renoise.tool().app_idle_observable:add_notifier(idle_notifier_actual)
-
 
   end
 
@@ -462,17 +449,11 @@ function attach_to_song()
   local device_param_notifier = function ()
     --print("*** device_param_notifier fired...")
     if (xstream) then
-      --xstream.device = rns.selected_device
-      xstream.device_index = rns.selected_device_index
-      if (renoise.API_VERSION > 4) then
-        -- subtract 1 due to special automation parameter "active/bypassed"
-        xstream.param_index = rns.selected_track_parameter_index-1 
-      end
+      xstream.device = rns.selected_device
+      xstream.param_index = rns.selected_track_parameter_index-1 -- FIXME bug in lua API? 
     end
   end
-  if (renoise.API_VERSION > 4) then
-    add_observable(rns.selected_track_parameter_observable,device_param_notifier)
-  end
+  add_observable(rns.selected_track_parameter_observable,device_param_notifier)
   add_observable(rns.selected_device_observable,device_param_notifier)
   device_param_notifier()
 

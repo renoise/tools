@@ -10,8 +10,9 @@ xStreamModel
 
 class 'xStreamModel'
 
+-- disallow the following lua methods/properties
 xStreamModel.UNTRUSTED = {
-  "_G",
+  --"_G",
   "collectgarbage",
   "coroutine",
   "dofile",
@@ -21,7 +22,32 @@ xStreamModel.UNTRUSTED = {
   "module",
   "os",
   "setfenv",
-  "class"
+  "class",
+  "rawset",
+  "rawget",
+}
+
+-- expose the following xstream properties (read/write) 
+xStreamModel.PROXY_PROPS = {
+  "clear_undefined",
+  "expand_columns",
+  "include_hidden",
+  "automation_playmode",
+  "track_index",
+  "device_index",
+  "param_index",
+  "mute_mode",
+
+}
+
+-- mark the following as read-only properties
+xStreamModel.PROXY_CONSTS = {
+  "EMPTY_XLINE",
+  "EMPTY_NOTE_COLUMNS",
+  "EMPTY_EFFECT_COLUMNS",
+  "NOTE_OFF_VALUE",
+  "EMPTY_NOTE_VALUE",
+  "EMPTY_VALUE",
 }
 
 -------------------------------------------------------------------------------
@@ -71,7 +97,8 @@ function xStreamModel:__init(xstream)
   self.output_tokens = {}
 
   -- define sandbox environment
-  self.env = {
+  local env = {
+    _G = _G,
     assert = assert,
     ipairs = ipairs,
     loadstring = loadstring,
@@ -90,28 +117,87 @@ function xStreamModel:__init(xstream)
     -- renoise extended
     ripairs = ripairs,
     rprint = rprint,
-    -- constants
-    NOTE_OFF_VALUE = xNoteColumn.NOTE_OFF_VALUE,
-    EMPTY_NOTE_VALUE = xNoteColumn.EMPTY_NOTE_VALUE,
-    EMPTY_VALUE = xLinePattern.EMPTY_VALUE,
+    -- selective xlib methods
+    note_column = xNoteColumn,
+    effect_column = xEffectColumn,
+    restrict_to_scale = xScale.restrict_to_scale,
+    xScale = {
+      SCALES = xScale.SCALES,
+    },
     -- arrives from song
     rns = rns,
     -- arrives with model
     args = {}, 
     data = {}, 
-    xstream = {},
-    --[[
-    clear_undefined = nil,
-    expand_columns = nil,
-    track_index = nil,
-    device_index = nil,
-    param_index = nil,
-    --refresh_buffer = nil,
-    ]]
   }
-  for k,v in ipairs(xStreamModel.UNTRUSTED) do
-    self.env[v] = nil
-  end
+
+  self.env = env
+
+  env = {}
+
+  -- unset untrusted members
+  --for k,v in ipairs(xStreamModel.UNTRUSTED) do
+  --  env[v] = nil
+  --end
+
+  -- metatable (constants and shorthands)
+  setmetatable(self.env,{
+    __index = function (t,k)
+      --print("metatable.__index",t,k)
+      if (k == "EMPTY_NOTE_COLUMNS") then
+        return {
+            {},{},{},{},
+            {},{},{},{},
+            {},{},{},{},
+          }
+      elseif (k == "EMPTY_EFFECT_COLUMNS") then
+        return {
+            {},{},{},{},
+            {},{},{},{},
+          }
+      elseif (k == "EMPTY_XLINE") then
+        return {
+          note_columns = {
+            {},{},{},{},
+            {},{},{},{},
+            {},{},{},{},
+          },
+          effect_columns = {
+            {},{},{},{},
+            {},{},{},{},
+          },
+        }
+      elseif (k == "NOTE_OFF_VALUE") then
+        return xNoteColumn.NOTE_OFF_VALUE
+      elseif (k == "EMPTY_NOTE_VALUE") then
+        return xNoteColumn.EMPTY_NOTE_VALUE
+      elseif (k == "EMPTY_VALUE") then
+        return xLinePattern.EMPTY_VALUE
+      elseif table.find(xStreamModel.PROXY_PROPS,k) then
+        return self.xstream[k]
+      elseif table.find(xStreamModel.UNTRUSTED,k) then
+        error("Property or method is not allowed in a callback:"..k)
+      else
+        --print("got here",t,k,env[k])
+        --print("*** access ",k)
+        return env[k]
+      end
+    end,
+    __newindex = function (t,k,v)
+      if table.find(xStreamModel.PROXY_CONSTS,k) then
+        error("Attempt to modify read-only member:"..k)
+      elseif table.find(xStreamModel.PROXY_PROPS,k) then
+        self.xstream[k] = v
+      --elseif type(env[k] == "nil") then
+        --error("Attempt to specify undefined :"..k)
+      else
+        --print("*** assign ",k,v)
+        env[k] = v
+      end
+    end,
+    __metatable = false -- prevent tampering
+  })
+
  
 end
 
@@ -145,6 +231,10 @@ function xStreamModel:set_callback_str(str)
   --TRACE("xStreamModel:set_callback_str - ",str)
   if (str ~= self.callback_str_observable.value) then
     self.modified = true
+    -- live syntax check
+    -- perform with a small time delay 
+    local passed,err = self:test_syntax(str)
+    self.xstream.callback_status_observable.value = passed and "" or err
   end
   self.callback_str_observable.value = str
 end
@@ -166,7 +256,7 @@ end
 -- return err, string containing error message
 
 function xStreamModel:load_definition(file_path)
-  print("xStreamModel:load_definition(file_path)",file_path)
+  TRACE("xStreamModel:load_definition(file_path)",file_path)
 
   assert(self.xstream,"No .xstream property was defined")
 
@@ -180,8 +270,8 @@ function xStreamModel:load_definition(file_path)
     xFilesystem.get_path_parts(file_path)
   local name = xFilesystem.file_strip_extension(str_filename,str_extension)
 
-  print("*** file_path",file_path)
-  print(io.exists(file_path))
+  --print("*** file_path",file_path)
+  --print(io.exists(file_path))
   --file_path = "C:\\Users\\Bjørn\\Desktop\\xLib test\\Note-shuffle.lua"
 
   -- check if we are able to load the definition
@@ -238,18 +328,10 @@ function xStreamModel:load_definition(file_path)
 end
 
 -------------------------------------------------------------------------------
--- Compilation of callback method is performed in a number of steps. It can
--- fail, but this should never render the model invalid. 
--- 1. check for syntax errors
--- 2. check for logic errors ("test-run") - TODO
--- 3. passed, extract tokens and update model
+-- wrap callback in function with variable run-time arguments 
 -- @param str_fn (string) function as string
--- @return boolean, true when method passed
 
-function xStreamModel:compile(str_fn)
-  TRACE("xStreamModel:compile(str_fn)",str_fn)
-
-  assert(type(str_fn) == "string", "Expected string as parameter")
+function xStreamModel:prepare_callback(str_fn)
 
   -- arguments are defined via vararg(...)
   -- @param line_index (int), current line index
@@ -260,20 +342,57 @@ function xStreamModel:compile(str_fn)
   return xline
   end]]
 
-  -- model
-  self.env.args = self.args 
-  self.env.data = self.data
-  -- xstream
-  self.env.xstream = self.xstream
+  return str_combined
 
-  -- check for syntax errors
-  -- wrap in assert for better-quality error messages
+end
+
+-------------------------------------------------------------------------------
+-- check for syntax errors within our sandbox environment
+-- wrap in assert for better-quality error messages
+-- @param str_fn (string) function as string
+-- @return boolean, true when method passed
+-- @return string, error message when failed
+
+function xStreamModel:test_syntax(str_fn)
+
   local function untrusted_fn()
-    assert(loadstring(str_combined))
+    assert(loadstring(str_fn))
   end
   setfenv(untrusted_fn, self.env)
   local pass,err = pcall(untrusted_fn)
   if not pass then
+    return false,err
+  else 
+    return true
+  end
+
+
+end
+
+-------------------------------------------------------------------------------
+-- Compilation of callback method is performed in a number of steps. It can
+-- fail, but this should never render the model invalid. 
+-- 1. check for syntax errors
+-- 2. check for logic errors ("test-run") - TODO
+-- 3. passed, extract tokens and update model
+-- @param str_fn (string) function as string
+-- @return boolean, true when method passed
+-- @return string, error message when failed
+
+function xStreamModel:compile(str_fn)
+  TRACE("xStreamModel:compile(str_fn)",str_fn)
+
+  assert(type(str_fn) == "string", "Expected string as parameter")
+
+  -- model
+  self.env.args = self.args 
+  self.env.data = self.data
+  -- xstream
+  --self.env.clear_undefined = self.xstream.proxy.clear_undefined
+
+  local str_combined = self:prepare_callback(str_fn)
+  local syntax_ok,err = self:test_syntax(str_combined)
+  if not syntax_ok then
     return false,err
   end
 
@@ -377,7 +496,7 @@ function xStreamModel:save()
   
   -- test compile, return if failed
   local compiled_fn,err = self:compile(self.callback_str)
-  print("compiled_fn,err",compiled_fn,err)
+  --print("compiled_fn,err",compiled_fn,err)
   if not compiled_fn then
     return false, "The callback contains errors that need to be "
                 .."fixed before you can save it to disk:\n"..err
