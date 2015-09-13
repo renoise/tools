@@ -55,12 +55,13 @@ callback = [[
 -- To see the actual how the binding is specified, open the model definition
 -- in a text editor (click 'reveal_in_browser' to locate the file)
 
-line.note_columns[1] = {
+xline.note_columns[1] = {
   note_value = math.random(36,60),
   instrument_value = args.instr_idx,
   volume_value = args.velocity,
 }  
 
   
+
 ]],
 }

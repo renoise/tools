@@ -132,8 +132,14 @@ function xStream:__init()
   self.highest_buffer_idx = 0
   self.lowest_buffer_idx = 0
 
-  -- xSongPos.OUT_OF_BOUNDS, determine how to handle boundaries
+  -- xSongPos.OUT_OF_BOUNDS, handle song boundaries
   self.bounds_mode = xSongPos.OUT_OF_BOUNDS.LOOP
+
+  -- xSongPos.BLOCK_BOUNDARY, handle block boundaries
+  self.block_mode = xSongPos.BLOCK_BOUNDARY.SOFT
+
+  -- xSongPos.LOOP_BOUNDARY, handle pattern/seq.loop boundaries
+  self.loop_mode = xSongPos.LOOP_BOUNDARY.SOFT
 
   -- (renoise.SongPos) monitor changes to playback 
   self._playpos = rns.transport.playback_pos
@@ -147,8 +153,8 @@ function xStream:__init()
   -- xStream.PLAYMODE (string-based enum)
   self.automation_playmode = xStream.PLAYMODE.LINEAR
 
-  -- (xSongPos) position for our 'lines_travelled' property
-  -- controlling the progression of content
+  -- (xSongPos) created by the start() method, this is where
+  -- we keep the overall progression of the stream 
   self._writepos = xSongPos(rns.transport.playback_pos)
 
   -- boolean, whether to include hidden (not visible) columns
@@ -160,6 +166,13 @@ function xStream:__init()
   self.clear_undefined = property(
     self.get_clear_undefined,self.set_clear_undefined)
   self.clear_undefined_observable = renoise.Document.ObservableBoolean(true)
+
+  -- boolean, attempt to fix invalid/out-of-range values
+  --[[
+  self.fix_out_of_range = property(
+    self.get_fix_out_of_range,self.set_fix_out_of_range)
+  self.fix_out_of_range_observable = renoise.Document.ObservableBoolean(true)
+  ]]
 
   -- boolean, whether to expand (show) columns when writing data
   self.expand_columns = property(
@@ -245,7 +258,38 @@ function xStream:add_model(model)
 
 end
 
--- TODO remove model
+-------------------------------------------------------------------------------
+-- remove all models
+
+function xStream:remove_models()
+  print("xStream:remove_models()")
+
+  for k,v in ripairs(self.models) do
+    self:remove_model(k)
+  end 
+
+end
+
+-------------------------------------------------------------------------------
+-- remove specific model
+
+function xStream:remove_model(model_idx)
+  print("xStream:remove_model(model_idx)",model_idx)
+
+  if (model_idx == self.selected_model_index) then
+    if self.active then
+      self:stop()
+    end 
+  end
+
+  table.remove(self.models,model_idx)
+  self.models_observable:remove(model_idx)
+
+  if (self.selected_model_index == model_idx) then
+    self.selected_model_index = 0
+  end
+
+end
 
 -------------------------------------------------------------------------------
 -- load all models (files ending with .lua) in a given folder
@@ -259,7 +303,7 @@ function xStream:load_models(str_path)
   local log_msg = ""
   for _, filename in pairs(os.filenames(str_path, "*.lua")) do
     local model = xStreamModel(self)
-    local model_file_path = str_path.."/"..filename
+    local model_file_path = str_path..filename
     local passed,err = model:load_definition(model_file_path)
     if not passed then
       log_msg = log_msg .. err .. "\n"
@@ -306,7 +350,7 @@ end
 -------------------------------------------------------------------------------
 
 function xStream:set_selected_model_index(idx)
-  TRACE("xStream:set_selected_model_index(idx)",idx)
+  print("xStream:set_selected_model_index(idx)",idx)
 
   if (#self.models == 0) then
     error("there are no available models")
@@ -334,7 +378,7 @@ function xStream:set_selected_model_index(idx)
 
   self.selected_model_index_observable.value = idx
   self:wipe_futures()
-
+  self:reset()
 
 end
 
@@ -348,6 +392,16 @@ function xStream:set_clear_undefined(val)
   self.clear_undefined_observable.value = val
 end
 
+-------------------------------------------------------------------------------
+--[[
+function xStream:get_fix_out_of_range()
+  return self.fix_out_of_range_observable.value
+end
+
+function xStream:set_fix_out_of_range(val)
+  self.fix_out_of_range_observable.value = val
+end
+]]
 -------------------------------------------------------------------------------
 
 function xStream:get_include_hidden()
@@ -459,6 +513,10 @@ end
 function xStream:do_output(xpos,num_lines,live_mode)
   TRACE("xStream:do_output(xpos)",xpos,num_lines,live_mode)
 
+  if not self.selected_model then
+    return
+  end
+
   if not num_lines then
     num_lines = rns.transport.playing and self.writeahead or 1
   end
@@ -498,22 +556,29 @@ function xStream:do_output(xpos,num_lines,live_mode)
     tmp_pos = xSongPos({sequence=xpos.sequence,line=xpos.line+i})
     tmp_pos.bounds_mode = self.bounds_mode
     if (tmp_pos.line > patt_num_lines) then
-      -- exceeded pattern, normalize the songpos and redial 
-      --print("*** exceeded pattern PRE",tmp_pos,num_lines-i)
-      tmp_pos.lines_travelled = xpos.lines_travelled + i - 1
-      tmp_pos:normalize()
-      --print("*** exceeded pattern POST",tmp_pos,num_lines-i)
-      self:do_output(tmp_pos,num_lines-i)
+      -- exceeded pattern
+      if (self.loop_mode ~= xSongPos.LOOP_BOUNDARY.NONE) then
+        -- normalize the songpos and redial 
+        --print("*** exceeded pattern PRE",tmp_pos,num_lines-i)
+        tmp_pos.lines_travelled = xpos.lines_travelled + i - 1
+        tmp_pos:normalize()
+        --print("*** exceeded pattern POST",tmp_pos,num_lines-i)
+        self:do_output(tmp_pos,num_lines-i)
+      end
       return
     else
       local cached_line = tmp_pos.line
-      tmp_pos.line = tmp_pos:enforce_block_boundary("increase",xpos.line,i)
-      if (cached_line ~= tmp_pos.line) then
-        -- exceeded block loop, redial with new position
-        tmp_pos.lines_travelled = xpos.lines_travelled + i
-        --print("*** exceeded block loop",tmp_pos,num_lines-i)
-        self:do_output(tmp_pos,num_lines-i)
-        return
+      if rns.transport.loop_block_enabled and 
+        (self.block_mode ~= xSongPos.BLOCK_BOUNDARY.NONE) 
+      then
+        tmp_pos.line = tmp_pos:enforce_block_boundary("increase",xpos.line,i)
+        if (cached_line ~= tmp_pos.line) then
+          -- exceeded block loop, redial with new position
+          tmp_pos.lines_travelled = xpos.lines_travelled + i
+          --print("*** exceeded block loop",tmp_pos,num_lines-i)
+          self:do_output(tmp_pos,num_lines-i)
+          return
+        end
       end
 
       if live_mode and (tmp_pos.line+1 == rns.transport.playback_pos.line) then
@@ -609,7 +674,10 @@ function xStream:get_content(pos,num_lines,xpos)
   if self.next_read_pos then
     read_pos = self.next_read_pos
   else
-    read_pos = xSongPos(self._writepos)
+    read_pos = xSongPos(xpos)
+    --xpos.out_of_bounds = xSongPos.OUT_OF_BOUNDS.CAP
+    --xpos.block_boundary = xSongPos.BLOCK_BOUNDARY.NONE
+    --xpos.loop_boundary = xSongPos.LOOP_BOUNDARY.NONE
   end
 
   --print("BEGIN read_pos",read_pos)
@@ -619,21 +687,23 @@ function xStream:get_content(pos,num_lines,xpos)
     local phrase = nil -- TODO associate a phrase 
     local xline = self.read_buffer[line_index]
     if not xline then 
+      -- read the line, dereference it 
       xline = xLine.do_read(
         read_pos.sequence,read_pos.line,self.include_hidden,self.track_index,phrase)
-      self.read_buffer[line_index] = table.rcopy(xline) -- 
+      self.read_buffer[line_index] = table.rcopy(xline) 
+      --print("read from this line",read_pos,"line_index",line_index,xline.note_columns[1].note_string)
     end
     --print("read_buffer",rprint(self.read_buffer))
     --print("IN  ",line_index,read_pos,xline.note_columns[1].note_string)
 
-    --self.buffer[line_index] = xLine(self.selected_model.callback(line_index,xline))
     local success,err = pcall(function()
-      self.buffer[line_index] = xLine(self.selected_model.callback(line_index,xline))
+      self.buffer[line_index] = xLine(self.selected_model.callback(line_index,xline,xSongPos(read_pos)))
     end)
     if err then
       LOG("ERROR: please review callback function - "..err)
       self.buffer[line_index] = xLine({})
     end
+    --print("callback evaluated for line_index",line_index,xline.note_columns[1].note_string)
     self.highest_buffer_idx = math.max(line_index,self.highest_buffer_idx)
 
     read_pos:increase_by_lines(1)
@@ -726,6 +796,7 @@ end
 -- clear various buffers, prepare for new output
 
 function xStream:reset()
+  print("xStream:reset()")
 
   if self.manage_gc then
     collectgarbage("stop")
@@ -738,6 +809,12 @@ function xStream:reset()
   self.lowest_buffer_idx = 0
   self.read_buffer = {}
   self.next_read_pos = nil
+
+  -- revert data to initial state
+  if self.selected_model then
+    self.selected_model.env.data = 
+      table.rcopy(self.selected_model.data_initial)
+  end
 
 end
 
@@ -855,7 +932,8 @@ end
 -- Update the write position as a result of a changed playback position.
 -- Most of the time we want the stream to continue smoothly forward - this is
 -- true for any kind of pattern, sequence or block loop. However, when we
--- detect 'user' events, the position can also jump backwards. 
+-- detect 'user' events, the position can also jump backwards (the detection
+-- of these events is not entirely reliable near loop boundaries)
 -- @param pos, renoise.SongPos
 
 function xStream:set_pos(pos)
@@ -893,7 +971,7 @@ function xStream:set_pos(pos)
         -- conclusion: pattern loop
         num_lines = (patt_num_lines-self._playpos.line) + pos.line
         self._writepos:increase_by_lines(num_lines)
-        --print("*** *** same pattern, wrap around - pattern loop",num_lines)
+        print("*** *** same pattern, wrap around - pattern loop",num_lines)
       elseif rns.transport.loop_block_enabled and
         near_top(pos.line-xblock.start_line) and 
           near_end(xblock.end_line-xblock.start_line,block_num_lines)
@@ -902,14 +980,13 @@ function xStream:set_pos(pos)
         num_lines = (xblock.end_line-self._playpos.line) + (pos.line-xblock.start_line) + 1
         self._writepos:increase_by_lines(num_lines)
 
-        --print("*** same pattern, wrap around - loop block",block_num_lines,num_lines)
+        print("*** same pattern, wrap around - loop block",block_num_lines,num_lines)
       else
         -- conclusion: user navigation
         -- will repeat/rewind to earlier position 
         num_lines = self._playpos.line - pos.line
         self._writepos:decrease_by_lines(num_lines)
-        --print("*** same pattern, wrap around - user - pos",pos)
-        --print("*** same pattern, wrap around - user - self._playpos",self._playpos)
+        print("*** same pattern, wrap around - user - pos",pos,"self._playpos",self._playpos)
       end
 
     elseif (pos.line > self._playpos.line) then
@@ -1010,8 +1087,7 @@ function xStream:wipe_past()
 end
 
 --------------------------------------------------------------------------------
-
--- called whenever tempo has changed
+-- decide the writeahead amount, depending on the song tempo
 
 function xStream:determine_writeahead()
   TRACE("xStream:determine_writeahead()")
@@ -1019,11 +1095,12 @@ function xStream:determine_writeahead()
   local bpm = rns.transport.bpm
   local lpb = rns.transport.lpb
 
-  local writeahead_factor = 400 
-  self.writeahead = math.ceil(math.max(2,(bpm*lpb)/writeahead_factor))
-  self.writeahead = 4
-  --print("xStream.writeahead",self.writeahead)
+  -- 400 is a reasonable value
+  local writeahead_factor = 400  
 
+  self.writeahead = math.ceil(math.max(2,(bpm*lpb)/writeahead_factor))
+  --self.writeahead = 4
+  print("xStream.writeahead",self.writeahead)
   --self.lps = 1 / (60/bpm/lpb)
   --print("xStream.lps",self.lps)
 
@@ -1118,7 +1195,7 @@ end
 function xStream:fill_track()
   
   local patt_num_lines = xSongPos.get_pattern_num_lines(rns.selected_sequence_index)
-  self:stream_to_track(1,patt_num_lines)
+  self:apply_to_range(1,patt_num_lines)
 
 end
 
@@ -1128,15 +1205,15 @@ end
  
 function xStream:validate_selection()
 
-    local sel = rns.selection_in_pattern
-    if not sel then
-      return false,"Please create a (single-track) selection in the pattern"
-    end
-    if (sel.start_track ~= sel.end_track) then
-      return false,"Selection must start and end in the same track"
-    end
+  local sel = rns.selection_in_pattern
+  if not sel then
+    return false,"Please create a (single-track) selection in the pattern"
+  end
+  if (sel.start_track ~= sel.end_track) then
+    return false,"Selection must start and end in the same track"
+  end
 
-    return true
+  return true
 
 end
 
@@ -1156,23 +1233,25 @@ function xStream:fill_selection(locally)
   local from_line = rns.selection_in_pattern.start_line
   local to_line = rns.selection_in_pattern.end_line
   local travelled = (not locally) and (from_line-1) or 0 
-
+  -- temporary settings
   local cached_track_index = self.track_index
+  -- write output
   self.track_index = rns.selection_in_pattern.start_track
-  self:stream_to_track(from_line,to_line,travelled)
+  self:apply_to_range(from_line,to_line,travelled)
+  -- restore settings
   self.track_index = cached_track_index
 
 end
 
 -------------------------------------------------------------------------------
--- apply the callback to a range in the selected pattern
--- (note: this will interrupt any current 
+-- apply the callback to a range in the selected pattern,  
+-- temporarily switching to a different set of buffers
 -- @param from_line (int)
 -- @param to_line (int) 
 -- @param travelled (int) where the callback 'started', use from_line if nil
 
-function xStream:stream_to_track(from_line,to_line,travelled)
-  TRACE("xStream:stream_to_track(from_line,to_line,travelled)",from_line,to_line,travelled)
+function xStream:apply_to_range(from_line,to_line,travelled)
+  print("xStream:apply_to_range(from_line,to_line,travelled)",from_line,to_line,travelled)
 
   local xpos = xSongPos({
     sequence = rns.transport.edit_pos.sequence,
@@ -1181,15 +1260,40 @@ function xStream:stream_to_track(from_line,to_line,travelled)
   if travelled then
     xpos.lines_travelled = travelled
   end
+  -- ignore any kind of loop (realtime only)
+  xpos.out_of_bounds = xSongPos.OUT_OF_BOUNDS.CAP
+  xpos.block_boundary = xSongPos.BLOCK_BOUNDARY.NONE
+  xpos.loop_boundary = xSongPos.LOOP_BOUNDARY.NONE
 
-  local cached_active = self.active
   local live_mode = false -- start from first line
   local num_lines = to_line-from_line+1
 
   self:reset()
+
+  -- temporary settings
+  local cached_active = self.active
+  local cached_buffer = self.buffer
+  local cached_read_buffer = self.read_buffer
+  local cached_next_read_pos = self.next_read_pos
+  local cached_bounds_mode = self.bounds_mode
+  local cached_block_mode = self.block_mode
+  local cached_loop_mode = self.loop_mode
+
+  -- write output
   self.active = true
+  self.bounds_mode = xpos.out_of_bounds
+  self.block_mode = xpos.block_boundary
+  self.loop_mode = xpos.loop_boundary
   self:do_output(xpos,num_lines,live_mode)
+
+  -- restore settings
   self.active = cached_active
+  self.buffer = cached_buffer
+  self.read_buffer = cached_read_buffer
+  self.next_read_pos = cached_next_read_pos
+  self.bounds_mode = cached_bounds_mode
+  self.block_mode = cached_block_mode
+  self.loop_mode = cached_loop_mode
 
 end
 

@@ -45,8 +45,27 @@ function xEffectColumn:do_write(fx_col,tokens,clear_undefined)
         self["do_write_"..token](self,fx_col,clear_undefined)
       end)
       if not success then
-        LOG("WARNING: Trying to write invalid value to effect column:",token,note_col[token])
+         LOG("WARNING: xEffectColumn - Trying to write invalid value to property:",token,self[token])
+       --[[
+        if not fix_out_of_range then
+          LOG("WARNING: xEffectColumn - Trying to write invalid value to property:",token,self[token])
+        else
+          -- restricting to range only works with values
+          -- let's just assume that out-of-range errors are unlikely
+          -- so we can avoid these expensive checks for every write
+          LOG("WARNING: xEffectColumn - Trying to write invalid value, attempting to fix")
+          success = pcall(function()
+            --print("xNoteColumn:do_write",token)
+            self["do_fix_"..token](self,fx_col)
+          end)
+          if not success then
+            LOG("WARNING: xEffectColumn - Failed to fix value for property:",token,self[token])
+          end
+        end
+        ]]
       end
+    --else
+    --  LOG("WARNING: xEffectColumn - Trying to assign value to non-existing property:",token)
     end
   end
 
@@ -63,6 +82,20 @@ function xEffectColumn:do_write_number_value(fx_col,clear_undefined)
   end
 end
 
+--[[
+function xEffectColumn:do_fix_number_value(fx_col)
+  if self.number_value < 0 then
+    fx_col.number_value = 0
+  elseif self.number_value > 291 then
+    fx_col.number_value = 291
+  elseif self.number_value < 256 then
+    fx_col.number_value = 256
+    -- allowed value are between 0-35, or 256-291
+    -- between 35 and 256 are a bit fuzzy here, but what to do? 
+  end
+end
+]]
+
 function xEffectColumn:do_write_number_string(fx_col,clear_undefined)
   if self.number_string then 
     fx_col.number_string = self.number_string
@@ -78,6 +111,15 @@ function xEffectColumn:do_write_amount_value(fx_col,clear_undefined)
     fx_col.amount_value = 0
   end
 end
+--[[
+function xEffectColumn:do_fix_amount_value(fx_col)
+  if self.amount_value > 255 then 
+    note_col.amount_value = 255
+  elseif self.amount_value < 0 then 
+    note_col.amount_value = 0
+  end
+end
+]]
 
 function xEffectColumn:do_write_amount_string(fx_col,clear_undefined)
   if self.amount_string then 

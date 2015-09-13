@@ -17,7 +17,6 @@ require 'xLib/xStreamArg'
 require 'xLib/xStreamArgs'
 require 'xLib/xStreamModel'
 require 'xLib/xStreamUI'
---require 'xLib/xStreamMgr'
 
 --------------------------------------------------------------------------------
 -- required files (unit tests)
@@ -25,7 +24,7 @@ require 'xLib/xStreamUI'
 
 require 'xLib/unit_tests/xsongpos_test'
 require 'xLib/unit_tests/xnotecolumn_test'
---require 'xLib/unit_tests/xStream_test'
+require 'xLib/unit_tests/xStream_test'
 
 --------------------------------------------------------------------------------
 -- preferences
@@ -81,9 +80,10 @@ local waiting_to_show_dialog = options.autostart.value
 local function idle_notifier_actual()
   local view = vb.views["xStreamImplStats"]
   local str_stat = ("Memory usage: %.2f Mb"):format(collectgarbage("count")/1024)
+                ..("\nLines Travelled: %d"):format(xstream._writepos.lines_travelled)
+                ..("\nSelected model: %s"):format(xstream.selected_model and xstream.selected_model.name or "N/A") 
                 ..("\nStream active: %s"):format(xstream.active and "true" or "false") 
                 ..("\nStream muted: %s"):format(xstream.muted and "true" or "false") 
-                ..("\nLines Travelled: %d"):format(xstream._writepos.lines_travelled)
   view.text = str_stat
 end
 
@@ -121,7 +121,7 @@ end
 -------------------------------------------------------------------------------
 
 function update_launch_models()
-  --print("models_observable fired...")
+  print("models_observable fired...")
   --print("xstream.models",rprint(xstream.models))
   -- update popup with model names
   local view = vb.views["xStreamImplLaunchModel"]
@@ -146,6 +146,10 @@ end
 -- first time around, the UI/class instances are created 
 
 function show()
+
+  -- app_new_document_observable is not called when script 
+  -- is launched the first time after being installed 
+  rns = renoise.song()
 
   if waiting_to_show_dialog then
     return
@@ -173,6 +177,13 @@ function show()
         width = 100,
         notifier = function()
           xnotecolumn_test()
+        end
+      },
+      vb:button{
+        text="xStream",
+        width = 100,
+        notifier = function()
+          xstream_test()
         end
       },
       --[[
@@ -228,7 +239,7 @@ function show()
   if not xstream then
     xpos = xSongPos(rns.transport.edit_pos)
     xstream = xStream()
-    local model_defs_path = "./xLib/Models/"
+    local model_defs_path = "./xLib/models/"
     --local model_defs_path = renoise.tool().bundle_path .. "/xLib/Models/" -- not working with junction
     xstream:load_models(model_defs_path)
     xstream.ui = xStreamUI(xstream,vb)
@@ -451,11 +462,15 @@ function attach_to_song()
 
   local edit_notifier = function ()
     --print("*** edit_notifier fired...")
-    if (xstream) then
-        if rns.transport.edit_mode and rns.transport.playing and
-          (options.start_option.value == START_OPTION.ON_PLAY_EDIT) 
-        then
-          xstream.active = rns.transport.edit_mode
+    if xstream then
+        if rns.transport.edit_mode then
+          if rns.transport.playing and
+            (options.start_option.value == START_OPTION.ON_PLAY_EDIT) 
+          then
+            xstream:start()
+          end
+        elseif (options.start_option.value == START_OPTION.ON_PLAY_EDIT) then
+          xstream:stop()
         end
     end
   end

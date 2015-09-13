@@ -98,8 +98,8 @@ function xBlockLoop.exiting(seq_idx,line_idx,line_delta,end_pos)
   assert(type(line_delta),"number")
 
   local exited = false
-  if rns.transport.loop_block_enabled 
-    and (rns.transport.loop_block_start_pos.sequence == seq_idx)
+  if rns.transport.loop_block_enabled and
+    (rns.transport.loop_block_start_pos.sequence == seq_idx)
   then
     local loop_block_end_pos = end_pos or xBlockLoop.get_end()
     local within_block = 

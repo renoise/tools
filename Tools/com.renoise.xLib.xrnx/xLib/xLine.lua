@@ -19,7 +19,7 @@ class 'xLine'
 --  automation
 
 function xLine:__init(args)
-  TRACE("xLine:__init(args)",args)
+  print("xLine:__init(args)",args)
 
   -- xLinePattern
   self.pattern_line = nil

@@ -12,16 +12,14 @@ callback = [[
 -- The most important globals 
 -------------------------------------------------------------------------------
 
--- Constants
-
--- INCR -- internal line count (ever-increasing)
 -- NOTE_OFF_VALUE = 121 ("OFF")
 -- EMPTY_NOTE_VALUE = 120 ("---")
 -- EMPTY_VALUE = 255
 
--- Variables 
-
 -- rns  -- shorthand syntax for renoise.song()
+-- xinc -- internal line count (ever-increasing)
+-- xline -- read/writeable model of renoise.PatternLine
+-- xpos -- the position in the song (sequence, line)
 -- args -- (table, ObservableXXX) access to model arguments 
 -- data -- (table, various) read/write access to user-data
 -- xstream -- (xStream) access to certain flags

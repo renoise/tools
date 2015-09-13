@@ -64,6 +64,9 @@ function xStreamModel:__init(xstream)
   -- table<vararg>, variables, can be any basic type 
   self.data = nil
 
+  -- table<vararg>, copy of data - revert to this when stopping/exporting
+  self.data_initial = nil
+
   -- table<string> limit to these tokens during output
   self.output_tokens = {}
 
@@ -163,12 +166,13 @@ end
 -- return err, string containing error message
 
 function xStreamModel:load_definition(file_path)
-  TRACE("xStreamModel:load_definition(file_path)",file_path)
+  print("xStreamModel:load_definition(file_path)",file_path)
 
   assert(self.xstream,"No .xstream property was defined")
 
   if not file_path then
     file_path = renoise.app():prompt_for_filename_to_read({"*.lua"},"Load model definition")
+    file_path = xFilesystem.unixslashes(file_path)
   end
 
   -- use the filename as the name for the model
@@ -176,7 +180,9 @@ function xStreamModel:load_definition(file_path)
     xFilesystem.get_path_parts(file_path)
   local name = xFilesystem.file_strip_extension(str_filename,str_extension)
 
-  --print("*** file_path",file_path)
+  print("*** file_path",file_path)
+  print(io.exists(file_path))
+  --file_path = "C:\\Users\\Bjørn\\Desktop\\xLib test\\Note-shuffle.lua"
 
   -- check if we are able to load the definition
   local passed,err = pcall(function()
@@ -215,11 +221,13 @@ function xStreamModel:load_definition(file_path)
       self.data[k] = v
     end
   end
-  --print("self.data",rprint(self.data))
+
+  -- restore initial state with this
+  self.data_initial = table.rcopy(self.data)
 
   -- process the callback method
   --print("about to compile - file_path",file_path)
-  local compiled_fn,err = self:compile_method(def.callback)
+  local compiled_fn,err = self:compile(def.callback)
   if not compiled_fn then
     return false, err
   end
@@ -230,12 +238,16 @@ function xStreamModel:load_definition(file_path)
 end
 
 -------------------------------------------------------------------------------
--- run in lua sandbox, check for illegal function calls
+-- Compilation of callback method is performed in a number of steps. It can
+-- fail, but this should never render the model invalid. 
+-- 1. check for syntax errors
+-- 2. check for logic errors ("test-run") - TODO
+-- 3. passed, extract tokens and update model
 -- @param str_fn (string) function as string
 -- @return boolean, true when method passed
 
-function xStreamModel:compile_method(str_fn)
-  TRACE("xStreamModel:compile_method(str_fn)",str_fn)
+function xStreamModel:compile(str_fn)
+  TRACE("xStreamModel:compile(str_fn)",str_fn)
 
   assert(type(str_fn) == "string", "Expected string as parameter")
 
@@ -243,9 +255,9 @@ function xStreamModel:compile_method(str_fn)
   -- @param line_index (int), current line index
   -- @return table<xLine>
   local str_combined = [[return function(...)
-  local INCR,line = select(1, ...),select(2, ...)
+  local xinc,xline,xpos = select(1, ...),select(2, ...),select(3, ...)
   ]]..str_fn..[[
-  return line
+  return xline
   end]]
 
   -- model
@@ -253,14 +265,8 @@ function xStreamModel:compile_method(str_fn)
   self.env.data = self.data
   -- xstream
   self.env.xstream = self.xstream
-  --[[
-  self.env.refresh_buffer = function()
-    self.xstream:wipe_futures()
-  end
-  ]]
 
   -- check for syntax errors
-  --print("check for syntax errors")
   -- wrap in assert for better-quality error messages
   local function untrusted_fn()
     assert(loadstring(str_combined))
@@ -268,7 +274,6 @@ function xStreamModel:compile_method(str_fn)
   setfenv(untrusted_fn, self.env)
   local pass,err = pcall(untrusted_fn)
   if not pass then
-    --print("pass,err",pass,err)
     return false,err
   end
 
@@ -281,7 +286,6 @@ function xStreamModel:compile_method(str_fn)
   -- extract tokens for the output stage
   self.output_tokens = self:extract_tokens(str_fn)
   --print("*** tokens",rprint(self.output_tokens))
-
 
   self.modified = false
 
@@ -338,7 +342,7 @@ function xStreamModel:serialize()
   ..self.args:serialize()
   ..","
 	.."\ndata = "
-  ..xLib.serialize_table(self.data)
+  ..xLib.serialize_table(self.data_initial)
   ..","
 	.."\ncallback = [[\n"
   ..self.callback_str
@@ -353,6 +357,8 @@ end
 
 -------------------------------------------------------------------------------
 -- save model (prompt for file path if not already defined)
+-- @return bool, true when saved
+-- @return string, error message when problem was encountered
 
 function xStreamModel:save()
   TRACE("xStreamModel:save()")
@@ -361,50 +367,61 @@ function xStreamModel:save()
   if not self.file_path then
     file_path,name = self.prompt_for_location("Save as")
     if not file_path then
-      LOG("No filename specified, not able to save model to disk")
-      return
+      return false,"No filename specified, not able to save model to disk"
     end
+    file_path = xFilesystem.unixslashes(file_path)
     self.file_path = file_path
     self.name = name
   end
   --print("save() - name",name)
+  
+  -- test compile, return if failed
+  local compiled_fn,err = self:compile(self.callback_str)
+  print("compiled_fn,err",compiled_fn,err)
+  if not compiled_fn then
+    return false, "The callback contains errors that need to be "
+                .."fixed before you can save it to disk:\n"..err
+  end
 
-  local str_def = self:serialize()
-  --print("save() - str_def",str_def)
-
-  xFilesystem.write_string_to_file(self.file_path,str_def)
+  xFilesystem.write_string_to_file(self.file_path,self:serialize())
 
   self.modified = false
+
+  return true
 
 end
 
 -------------------------------------------------------------------------------
 -- "save model as"
--- always prompt for file path, rename current model and saved
+-- always prompt for file path, rename current model and save
+-- @return bool, true when saved
+-- @return string, error message when problem was encountered
 
 function xStreamModel:save_as()
   TRACE("xStreamModel:save_as()")
 
   local file_path,name = self.prompt_for_location("Save as")
   if not file_path then
-    LOG("No filename specified, not able to save model to disk")
-    return
+    return false,"No filename specified, not able to save model to disk"
   end
-  --print("*** save_as() - file_path",file_path)
-  --print("*** save_as() - name",name)
+  file_path = xFilesystem.unixslashes(file_path)
 
   self.file_path = file_path
   self.name = name
   
-  self:save()
+  local passed,err = self:save()
+  if not passed then
+    return false, err
+  end
 
+  return true
 
 end
 
 -------------------------------------------------------------------------------
 
-function xStreamModel:reveal_in_browser()
-  TRACE("xStreamModel:reveal_in_browser()")
+function xStreamModel:reveal_location()
+  TRACE("xStreamModel:reveal_location()")
 
   if self.file_path then
     renoise.app():open_path(self.file_path)
@@ -427,6 +444,7 @@ function xStreamModel.prompt_for_location(str_title)
     return 
   end
   --print("*** prompt_for_location() - file_path",file_path,type(file_path))
+  file_path = xFilesystem.unixslashes(file_path)
 
   local str_folder,str_filename,str_extension = 
     xFilesystem.get_path_parts(file_path)
@@ -436,6 +454,7 @@ function xStreamModel.prompt_for_location(str_title)
   return file_path,name
 
 end
+
 
 -------------------------------------------------------------------------------
 -- invoked when song or model has changed

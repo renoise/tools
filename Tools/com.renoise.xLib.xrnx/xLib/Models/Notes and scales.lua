@@ -1,22 +1,67 @@
 --[[============================================================================
-HarmonicScale.lua
+Notes and scales.lua
 ============================================================================]]--
 
 return {
 arguments = {
   {
-    name = "current_scale",
-    properties = {items = {"None","Natural Major","Natural Minor"}},
-    value = 2,
-    description = "Specify which scale to use",
-  }
+      name = "current_scale",
+      value = 2,
+      properties = {
+          items = {
+              "None",
+              "Natural Major",
+              "Natural Minor",
+          },
+      },
+      description = "Specify which scale to use",
+  },
 },
 data = {
   harmonic_scales = {
-    {1,1,1,1,1,1,1,1,1,1,1,1},
-    {1,0,1,0,1,1,0,1,0,1,0,1},
-    {1,0,1,1,0,1,0,1,1,0,1,0},
-  }
+      {
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+      },
+      {
+          1,
+          0,
+          1,
+          0,
+          1,
+          1,
+          0,
+          1,
+          0,
+          1,
+          0,
+          1,
+      },
+      {
+          1,
+          0,
+          1,
+          1,
+          0,
+          1,
+          0,
+          1,
+          1,
+          0,
+          1,
+          0,
+      },
+  },
 },
 callback = [[
 -------------------------------------------------------------------------------
@@ -37,10 +82,10 @@ local restrict_to_scale = function(note)
   return (note - (key-tmp_key))
 end
 
-line.note_columns[1] = {
-  note_value = restrict_to_scale(line.note_columns[1].note_value),
+xline.note_columns[1] = {
+  note_value = restrict_to_scale(xline.note_columns[1].note_value),
 }
+
 
 ]],
 }
-  

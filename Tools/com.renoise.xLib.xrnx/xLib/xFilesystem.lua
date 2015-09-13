@@ -106,6 +106,16 @@ function xFilesystem.validate_filename(file_path)
 end
 
 --------------------------------------------------------------------------------
+-- convert windows-style paths to unix-style 
+
+function xFilesystem.unixslashes(file_path)
+  print("xFilesystem.unixslashes(file_path)",file_path)
+
+  return file_path:gsub("\\","/")
+
+end
+
+--------------------------------------------------------------------------------
 --- remove illegal characters
 
 function xFilesystem.sanitize_filename(file_path)

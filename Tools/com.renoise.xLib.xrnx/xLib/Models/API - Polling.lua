@@ -1,5 +1,5 @@
 --[[============================================================================
-ArgsPolling.lua
+API - Polling.lua
 ============================================================================]]--
 
 return {
@@ -20,7 +20,7 @@ arguments = {
   {
       poll = "rns.selected_note_column_index",
       name = "note_col_idx",
-      value = 2,
+      value = 1,
       properties = {
           min = 0,
           quant = 1,
@@ -49,10 +49,12 @@ callback = [[
 -- In this example, we are polling the non-observable note-column index,
 -- directing our output into that note column. 
 
-line.note_columns[args.note_col_idx] = {
+xline.note_columns[args.note_col_idx] = {
   note_value = math.random(36,60),
   instrument_value = args.instr_idx,
 }  
+
+
 
 
 ]],

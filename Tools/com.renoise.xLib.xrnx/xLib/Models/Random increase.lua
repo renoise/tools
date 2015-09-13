@@ -6,7 +6,7 @@ return {
 arguments = {
   {
       name = "instr_idx",
-      value = 2,
+      value = 1,
       properties = {
           min = 1,
           quant = 1,
@@ -43,13 +43,14 @@ if (produce_output) then
   end
 
   -- Now, we are ready to produce output 
-  line.note_columns[1] = {
+  xline.note_columns[1] = {
     note_value = data.current_pitch,
     instrument_value = args.instr_idx,
   }
 else
-  line.note_columns[1] = {}
+  xline.note_columns[1] = {}
 end
+
 
 
 

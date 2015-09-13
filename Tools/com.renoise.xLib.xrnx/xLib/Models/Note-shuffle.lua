@@ -53,13 +53,13 @@ callback = [[
 -- Control the amount of shuffle (delay on every second note)
 -- Don't forget to enable the delay column 
 -------------------------------------------------------------------------------
-local arp_index = (INCR)%args.num_steps
-line.note_columns[1] = 
+local arp_index = (xinc)%args.num_steps
+xline.note_columns[1] = 
 {
   note_value = arp_index + (arp_index%2 == 1 and 36 or 24),
   instrument_value = args.instr_idx,
   volume_value = args.volume,
-  delay_value = (INCR%2 == 1) and math.floor(255*args.shuffle) or 0,
+  delay_value = (xinc%2 == 1) and math.floor(255*args.shuffle) or 0,
 }
 
 ]],

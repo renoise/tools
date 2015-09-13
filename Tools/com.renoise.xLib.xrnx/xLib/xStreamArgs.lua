@@ -302,7 +302,6 @@ function xStreamArgs:remove_preset(idx)
 
 end
 
-
 -------------------------------------------------------------------------------
 -- import a preset from disk
 -- @param file_path (string), if not specified show file browser

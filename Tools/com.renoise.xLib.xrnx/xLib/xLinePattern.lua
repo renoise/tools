@@ -62,11 +62,11 @@ end
 -- @param sequence (int)
 -- @param line (int)
 -- @param track_index (int), when writing to pattern
--- @param phrase (renoise.InstrumentPhrase)
--- @param tokens (table<string>)
--- @param include_hidden (bool)
--- @param expand_columns (bool)
--- @param clear_undefined (bool)
+-- @param phrase (renoise.InstrumentPhrase), when writing to phrase
+-- @param tokens (table<string>) process these tokens ("note_value", etc)
+-- @param include_hidden (bool) apply to hidden columns as well
+-- @param expand_columns (bool) reveal columns as they are written to
+-- @param clear_undefined (bool) clear existing data when ours is nil
 
 function xLinePattern:do_write(sequence,line,track_idx,phrase,tokens,include_hidden,expand_columns,clear_undefined)
   TRACE("xLinePattern:do_write(sequence,line,track_idx,phrase,tokens,include_hidden,expand_columns,clear_undefined)",sequence,line,track_idx,phrase,tokens,include_hidden,expand_columns,clear_undefined)

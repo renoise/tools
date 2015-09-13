@@ -38,6 +38,10 @@ xNoteColumn.NOTE_ARRAY = {
 
 function xNoteColumn:__init(args)
 
+  -- if set, attempt to provide a reasonable value
+  -- in those cases where a direct assign fails 
+  --self.fix_out_of_range_values = true
+
   for token,value in pairs(args) do
     if (table.find(xNoteColumn.tokens,token)) then
       --print("token,value",token,value)
@@ -65,7 +69,7 @@ function xNoteColumn:__init(args)
       end
       self[token] = args[token]
     else
-      LOG("WARNING - unsupported property name for xNoteColumn:"..token)
+      --LOG("WARNING - unsupported property name for xNoteColumn:"..token)
     end
   end
 
@@ -75,9 +79,9 @@ end
 -------------------------------------------------------------------------------
 -- convert note_string into a numeric value
 -- @param str_val (string), for example "C#4" or "---"
--- @return value
--- @return key or nil 
--- @return octave or nil
+-- @return int (value, xNoteColumn.EMPTY_NOTE_VALUE when not matched)
+-- @return int (key) or nil 
+-- @return int (octave) or nil
 
 function xNoteColumn.note_string_to_value(str_val)
   TRACE("xNoteColumn.note_string_to_value(str_val)",str_val)
@@ -100,7 +104,11 @@ function xNoteColumn.note_string_to_value(str_val)
     end
   end
   octave = tonumber((str_val):sub(3))
-  return note+(octave*12),note,octave
+  if not octave then
+    return xNoteColumn.EMPTY_NOTE_VALUE
+  else
+    return note+(octave*12),note,octave
+  end
 
 end
 
@@ -164,7 +172,7 @@ end
 -------------------------------------------------------------------------------
 -- @param note_col (renoise.NoteColumn), 
 -- @param tokens (table<xStreamModel.output_tokens>)
--- @param clear_undefined (bool)
+-- @param clear_undefined (bool) clear existing data when ours is nil
 
 function xNoteColumn:do_write(note_col,tokens,clear_undefined)
   TRACE("xNoteColumn:do_write(note_col,tokens,clear_undefined)",note_col,tokens,clear_undefined)
@@ -174,8 +182,8 @@ function xNoteColumn:do_write(note_col,tokens,clear_undefined)
 
     -- convert token into a value version
     -- (we converted into values in the constructor)
-    if (string.sub(token,#token-6) == "_string") then
-    end
+    --if (string.sub(token,#token-6) == "_string") then
+    --end
 
 
     if self["do_write_"..token] then
@@ -184,8 +192,26 @@ function xNoteColumn:do_write(note_col,tokens,clear_undefined)
         self["do_write_"..token](self,note_col,clear_undefined)
       end)
       if not success then
-        LOG("WARNING: Trying to write invalid value to note column:",token,note_col[token])
+        LOG("WARNING: xNoteColumn - Trying to write invalid value to property:",token,self[token])
+        --[[
+        if not fix_out_of_range then
+          LOG("WARNING: xNoteColumn - Trying to write invalid value to property:",token,self[token])
+        else
+          -- let's just assume that out-of-range errors are unlikely
+          -- so we can avoid these expensive checks for every write
+          LOG("WARNING: xNoteColumn - Trying to write invalid value, attempting to fix",token,self[token])
+          success = pcall(function()
+            --print("xNoteColumn:do_write",token)
+            self["do_fix_"..token](self,note_col)
+          end)
+          if not success then
+            LOG("WARNING: xNoteColumn - Failed to fix value for property:",token,self[token])
+          end
+        end
+        ]]
       end
+    --else
+    --  LOG("WARNING: xNoteColumn - Trying to assign value to non-existing property:",token)
     end
   end
 
@@ -196,13 +222,22 @@ end
 
 function xNoteColumn:do_write_note_value(note_col,clear_undefined)
   if self.note_value then 
-    --print("xNoteColumn:do_write_note_value - note_value",self.note_value)
     note_col.note_value = self.note_value
   elseif clear_undefined then
     note_col.note_value = xNoteColumn.EMPTY_NOTE_VALUE
   end
 end
-
+--[[
+function xNoteColumn:do_fix_note_value(note_col,clear_undefined)
+  if self.note_safe_mode and (self.note_value > 119) then
+    note_col.note_value = 119
+  elseif (self.note_value > 121) then 
+    note_col.note_value = xNoteColumn.EMPTY_NOTE_VALUE
+  elseif (self.note_value < 0) then 
+    note_col.note_value = 0
+  end
+end
+]]
 function xNoteColumn:do_write_note_string(note_col,clear_undefined)
   if self.note_string then 
     --print("xNoteColumn:do_write_note_string - note_string",self.note_string)
@@ -219,7 +254,15 @@ function xNoteColumn:do_write_instrument_value(note_col,clear_undefined)
     note_col.instrument_value = xLinePattern.EMPTY_VALUE
   end
 end
-
+--[[
+function xNoteColumn:do_fix_instrument_value(note_col)
+  if self.instrument_value > 121 then 
+    note_col.instrument_value = xNoteColumn.EMPTY_NOTE_VALUE
+  elseif self.instrument_value < 0 then 
+    note_col.instrument_value = 0
+  end
+end
+]]
 function xNoteColumn:do_write_instrument_string(note_col,clear_undefined)
   if self.instrument_string then 
     note_col.instrument_string = self.instrument_string
@@ -235,7 +278,15 @@ function xNoteColumn:do_write_volume_value(note_col,clear_undefined)
     note_col.volume_value = xLinePattern.EMPTY_VALUE
   end
 end
-
+--[[
+function xNoteColumn:do_fix_volume_value(note_col)
+  if self.volume_value > 128 then 
+    note_col.volume_value = 128
+  elseif self.volume_value < 0 then 
+    note_col.volume_value = 0
+  end
+end
+]]
 function xNoteColumn:do_write_volume_string(note_col,clear_undefined)
   if self.volume_string then 
     note_col.volume_string = self.volume_string
@@ -251,7 +302,15 @@ function xNoteColumn:do_write_panning_value(note_col,clear_undefined)
     note_col.panning_value = xLinePattern.EMPTY_VALUE
   end
 end
-
+--[[
+function xNoteColumn:do_fix_panning_value(note_col)
+  if self.panning_value > 128 then 
+    note_col.panning_value = 128
+  elseif self.panning_value < 0 then 
+    note_col.panning_value = 0
+  end
+end
+]]
 function xNoteColumn:do_write_panning_string(note_col,clear_undefined)
   if self.panning_string then 
     note_col.panning_string = self.panning_string
@@ -267,7 +326,15 @@ function xNoteColumn:do_write_delay_value(note_col,clear_undefined)
     note_col.delay_value = 0
   end
 end
-
+--[[
+function xNoteColumn:do_fix_delay_value(note_col)
+  if self.delay_value > 255 then 
+    note_col.delay_value = 255
+  elseif self.delay_value < 0 then 
+    note_col.delay_value = 0
+  end
+end
+]]
 function xNoteColumn:do_write_delay_string(note_col,clear_undefined)
   if self.delay_value then 
     note_col.delay_string = self.delay_string

@@ -1,5 +1,7 @@
 function xnotecolumn_test()
 
+  print("xNoteColumn: starting unit-test...")
+
 	assert(xNoteColumn.note_string_to_value("C-0") == 0)
 	assert(xNoteColumn.note_string_to_value("C-4") == 48)
 	assert(xNoteColumn.note_string_to_value("C-9") == 108)
@@ -24,5 +26,6 @@ function xnotecolumn_test()
 	assert(xNoteColumn.column_string_to_value("..",0) == 0)
 	assert(xNoteColumn.column_string_to_value("80") == 128)
 
+  print("xNoteColumn: OK - passed all tests")
 
 end

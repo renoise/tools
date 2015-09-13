@@ -49,11 +49,14 @@ xSongPos.BLOCK_BOUNDARY = {
 }
 
 -------------------------------------------------------------------------------
--- constructor - create new position using different arguments
+-- constructor - create new position 
 -- at the very least, you need to specify a table containing {sequence,line}
 -- @param pos[opt] (renoise.SongPos, xSongPos or {sequence,line} )
 
 function xSongPos:__init(pos)
+
+	-- renoise.SongPos, get/set interface
+	self.pos = property(self.get_pos,self.set_pos)
 
 	-- position in the pattern sequence.
 	self.sequence = pos and pos.sequence or nil
@@ -61,22 +64,26 @@ function xSongPos:__init(pos)
 	-- position in the pattern at the given pattern sequence.
 	self.line = pos and pos.line or nil
 
+  local is_xpos = (type(pos) == "xSongPos")
+
   -- int, travelled distance (in lines)
   -- note: this is not reliable unless you are (exclusively) using 
   -- the increase/decrease methods to control the position! 
-  self.lines_travelled = 0
-
-	-- renoise.SongPos 
-	self.pos = property(self.get_pos,self.set_pos)
+  self.lines_travelled = is_xpos and 
+    pos.lines_travelled or 0
 
   -- xSongPos.OUT_OF_BOUNDS, deal with sequence (song) boundaries
-  self.bounds_mode = xSongPos.OUT_OF_BOUNDS.LOOP
+  self.bounds_mode = is_xpos and 
+    pos.bounds_mode or xSongPos.OUT_OF_BOUNDS.LOOP
 
   -- xSongPos.LOOP_BOUNDARY, deals with patt-loop boundaries
-  self.loop_boundary = xSongPos.LOOP_BOUNDARY.SOFT
+  self.loop_boundary = is_xpos and 
+    pos.loop_boundary or xSongPos.LOOP_BOUNDARY.SOFT
 
   -- xSongPos.BLOCK_BOUNDARY, deals with block-loop boundaries
-  self.block_boundary = xSongPos.BLOCK_BOUNDARY.SOFT
+  self.block_boundary = is_xpos and 
+    pos.block_boundary or xSongPos.BLOCK_BOUNDARY.SOFT
+
 
 end
 
@@ -339,9 +346,11 @@ function xSongPos:increase_by_lines(num_lines)
 
   -- even when we are supposedly spanning multiple 
   -- patterns, block looping might prevent this
-  local exiting_blockloop = 
-    (self.block_boundary < xSongPos.BLOCK_BOUNDARY.NONE) and
+  local exiting_blockloop = false
+  if rns.transport.loop_block_enabled then
+    exiting_blockloop = (self.block_boundary < xSongPos.BLOCK_BOUNDARY.NONE) and
       xBlockLoop.exiting(seq_idx,line_idx,num_lines) or false
+  end
 
   local patt_num_lines = xSongPos.get_pattern_num_lines(seq_idx)
   if (line_idx+num_lines <= patt_num_lines) or exiting_blockloop then
@@ -601,10 +610,11 @@ function xSongPos:enforce_block_boundary(direction,line_idx,line_delta)
   assert(type(direction),"string")
   assert(type(line_idx),"line_idx")
 
-  if (self.block_boundary == xSongPos.BLOCK_BOUNDARY.NONE) then
-    return line_idx + line_delta
-  end
   if rns.transport.loop_block_enabled then
+
+    if (self.block_boundary == xSongPos.BLOCK_BOUNDARY.NONE) then
+      return line_idx + line_delta
+    end
 
     local block_pos = rns.transport.loop_block_start_pos
     if (self.sequence ~= block_pos.sequence) then

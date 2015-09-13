@@ -3,17 +3,35 @@ xStreamUI
 ============================================================================]]--
 --[[
 
-	Light-weight user-interface for xStream. Provides controls for most of 
-  the class properties and methods
-
-  + Methods
-  + Models
-  + Arguments
-  + Presets
+	Basic user-interface for xStream. Provides controls for most of 
+  the class properties and methods, and built entirely around the 
+  available xStream notifiers.
 
 ]]
 
 class 'xStreamUI'
+
+xStreamUI.MODEL_CONTROLS = {
+  "xStreamStartButton",
+  "xStreamStartPlayButton",
+  "xStreamStopButton",
+  "xStreamMuteButton",
+  "xStreamUnmuteButton",
+  "xStreamApplyTrackButton",
+  "xStreamApplyTrackButton",
+  "xStreamApplySelectionButton",
+  "xStreamApplyLocallyButton",
+  "xStreamExportPhraseButton",
+  "xStreamExportFileButton",
+  "xStreamCallbackCompile",
+  "xStreamModelSave",
+  "xStreamModelSaveAs",
+  "xStreamRevealLocation",
+  "xStreamImportPreset",
+  "xStreamAddPreset",
+
+
+}
 
 -------------------------------------------------------------------------------
 -- constructor
@@ -387,37 +405,43 @@ function xStreamUI:build()
       },
       vb:row{
         vb:button{
-          text = "compile_method()",
+          text = "compile",
           id = "xStreamCallbackCompile",
           active = false,
           notifier = function()
             local model = self.xstream.selected_model
             local view = vb.views["xStreamCallbackEditor"]
-            local passed,err = model:compile_method(view.text)
+            local passed,err = model:compile(view.text)
             if not passed then
               renoise.app():show_warning(err)
-            else
-              --self.xstream:update_model()
             end
-
           end,
         },
         vb:button{
-          text = "save()",
+          text = "save",
+          id = "xStreamModelSave",
           notifier = function()
-            self.xstream.selected_model:save()
+            local passed,err = self.xstream.selected_model:save()
+            if not passed then
+              renoise.app():show_warning(err)
+            end 
           end,
         },
         vb:button{
-          text = "save_as()",
+          text = "save_as",
+          id = "xStreamModelSaveAs",
           notifier = function()
-            self.xstream.selected_model:save_as()          
+            local passed,err = self.xstream.selected_model:save_as()          
+            if not passed then
+              renoise.app():show_warning(err)
+            end 
           end,
         },
         vb:button{
-          text = "reveal_in_browser()",
+          text = "reveal_location",
+          id = "xStreamRevealLocation",
           notifier = function()
-            self.xstream.selected_model:reveal_in_browser()          
+            self.xstream.selected_model:reveal_location()          
           end,
         },
       }
@@ -430,6 +454,25 @@ function xStreamUI:build()
         vb:text{
           text = "models",
           font = "bold",
+        },
+        vb:row{
+          vb:button{
+            text = "load_models",
+            notifier = function()
+              local str_path = renoise.app():prompt_for_path("Select folder containing models")
+              if (str_path ~= "") then
+                self.xstream:load_models(str_path)
+              end
+            end,
+          },
+          vb:button{
+            text = "remove",
+            id = "xStreamModelRemove",
+            notifier = function()
+              local model_idx = self.xstream.selected_model_index
+              self.xstream:remove_model(model_idx)
+            end,
+          },
         },
         vb:column{
           id = 'xStreamModelContainer',
@@ -468,6 +511,7 @@ function xStreamUI:build()
             },
             vb:button{
               text = "stop",
+              id = "xStreamStopButton",
               notifier = function(val)
                 self.xstream:stop()
               end,
@@ -483,6 +527,7 @@ function xStreamUI:build()
             },
             vb:button{
               text = "unmute",
+              id = "xStreamUnmuteButton",
               notifier = function(val)
                 self.xstream:unmute()
               end,
@@ -491,18 +536,21 @@ function xStreamUI:build()
           vb:row{
             vb:button{
               text = "fill_track",
+              id = "xStreamApplyTrackButton",
               notifier = function(val)
                 self.xstream:fill_track()
               end,
             },
             vb:button{
               text = "fill_selection",
+              id = "xStreamApplySelectionButton",
               notifier = function()
                 self.xstream:fill_selection()
               end,
             },
             vb:button{
               text = "locally",
+              id = "xStreamApplyLocallyButton",
               notifier = function()
                 self.xstream:fill_selection(true)
               end,
@@ -510,6 +558,7 @@ function xStreamUI:build()
           },
           vb:button{
             text = "export_to_phrase",
+            id = "xStreamExportPhraseButton",
             notifier = function(val)
               local instr_idx = rns.selected_instrument_index
               self.xstream:export_to_phrase(instr_idx)
@@ -517,6 +566,7 @@ function xStreamUI:build()
           },
           vb:button{
             text = "export_to_file",
+            id = "xStreamExportFileButton",
             notifier = function(val)
               self.xstream:export_to_file()
             end,
@@ -600,6 +650,7 @@ function xStreamUI:build()
         },
         vb:button{
           text = "import_preset()",
+          id = "xStreamImportPreset",
           notifier = function(val)
             self.xstream.selected_model.args:import_preset()
             self:update_presets()
@@ -607,6 +658,7 @@ function xStreamUI:build()
         },
         vb:button{
           text = "add_preset()",
+          id = "xStreamAddPreset",
           notifier = function(val)
             self.xstream.selected_model.args:add_preset()
             self:update_presets()
@@ -722,6 +774,11 @@ function xStreamUI:build()
 
   end)
 
+  self.xstream.models_observable:add_notifier(function()
+    self:update_models()
+  end)
+
+
   local model_name_notifier = function()
     --print("*** xstream.selected_model.name_observable fired...",self.xstream.selected_model.name)
     self:update_models()
@@ -739,19 +796,17 @@ function xStreamUI:build()
     -- attach to model 
     local model = self.xstream.selected_model
     if model then
-
+      self:enable_model_controls()
       if model.name_observable:has_notifier(model_name_notifier) then
         model.name_observable:remove_notifier(model_name_notifier)
       end
       model.name_observable:add_notifier(model_name_notifier)
-
       if model.modified_observable:has_notifier(model_modified_notifier) then
         model.modified_observable:remove_notifier(model_modified_notifier)
       end
       model.modified_observable:add_notifier(model_modified_notifier)
-
     else
-      -- de-activate user interface? 
+      self:disable_model_controls()
     end
     self:update()
   end
@@ -763,4 +818,40 @@ function xStreamUI:build()
 end
 
 --------------------------------------------------------------------------------
+
+function xStreamUI:disable_model_controls()
+
+  local view
+  view = self.vb.views["xStreamCallbackEditor"]
+  view.text = ""
+  view.active = false
+  for k,v in ipairs(xStreamUI.MODEL_CONTROLS) do
+    self.vb.views[v].active = false
+  end
+
+  self.vb.views["xStreamArgsContainer"].visible = false
+  self.vb.views["xStreamArgPresetContainer"].visible = false
+
+end
+
+
+--------------------------------------------------------------------------------
+
+function xStreamUI:enable_model_controls()
+
+  local view
+  view = self.vb.views["xStreamCallbackEditor"]
+  view.active = true
+  for k,v in ipairs(xStreamUI.MODEL_CONTROLS) do
+    print("enable_model_controls",k,v)
+    self.vb.views[v].active = true
+  end
+  self.vb.views["xStreamArgsContainer"].visible = true
+  self.vb.views["xStreamArgPresetContainer"].visible = true
+
+end
+
+
+
+
 

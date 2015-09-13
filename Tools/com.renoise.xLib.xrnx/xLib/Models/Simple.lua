@@ -35,7 +35,7 @@ callback = [[
 -- (enable 'expand columns' to reveal columns as they are written to)
 -------------------------------------------------------------------------------
 
-line.note_columns = {
+xline.note_columns = {
   {
     note_value = math.random(36,48),
     instrument_value = args.instr_idx,

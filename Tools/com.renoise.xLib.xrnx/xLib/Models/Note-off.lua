@@ -90,7 +90,7 @@ data.columns2[args.note_col_idx] = true
 local check_columns = function (t,t2)
   for k,v in ipairs(t) do
     if (v) and (k ~= args.note_col_idx) then
-      line.note_columns[k] = {
+      xline.note_columns[k] = {
         note_string = "OFF",
       }
       t[k] = false
@@ -109,11 +109,12 @@ check_columns(data.columns,data.columns2)
 
 -- Finally, we can output the note:
 
-line.note_columns[args.note_col_idx] = {
+xline.note_columns[args.note_col_idx] = {
   --note_value = math.random(36,60),
   note_string = "C-4",
   instrument_value = args.instr_idx,
 }  
+
 
 
 ]],
