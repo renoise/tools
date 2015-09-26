@@ -6,7 +6,7 @@ return {
 arguments = {
   {
       name = "instr_idx",
-      value = 2,
+      value = 5,
       properties = {
           min = 1,
           quant = 1,
@@ -63,9 +63,9 @@ presets = {
 data = {
 },
 callback = [[
--------------------------------------------------------------------------------
+-----------------------------------------------------------------------------
 -- Control the amount of shuffle (delay on every second note)
--------------------------------------------------------------------------------
+-----------------------------------------------------------------------------
 
 local produce_note = (xinc%2==0) and true or false
 if not produce_note then
@@ -82,5 +82,7 @@ else
 end  
   
   
+
+
 ]],
 }

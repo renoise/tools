@@ -3,12 +3,12 @@ xFilesystem
 ============================================================================]]--
 --[[
 
+  Static methods for dealing with the file-system
 
 ]]
 
 class 'xFilesystem'
 
---- Static methods for dealing with the file-system
 
 
 --------------------------------------------------------------------------------
@@ -185,6 +185,8 @@ end
 
 --------------------------------------------------------------------------------
 -- save string to disk
+-- @param file_path (string)
+-- @param str (string)
 -- @return bool, true when successful, false when not
 -- @erturn err, error message if failed
 
@@ -210,3 +212,5 @@ function xFilesystem.write_string_to_file(file_path,str)
   end
 
 end
+
+

@@ -145,7 +145,7 @@ end
 
 function xNoteColumn:set_instrument_value(val)
   self._instrument_value = val
-  self._instrument_string = xNoteColumn.instr_delay_value_to_string(val) 
+  self._instrument_string = xNoteColumn.instr_value_to_string(val) 
 end
 
 function xNoteColumn:get_instrument_string()
@@ -154,7 +154,7 @@ end
 
 function xNoteColumn:set_instrument_string(str)
   self._instrument_string = str
-  self._instrument_value = xNoteColumn.instr_delay_string_to_value(str)
+  self._instrument_value = xNoteColumn.instr_string_to_value(str)
 end
 
 -------------------------------------------------------------------------------
@@ -206,7 +206,7 @@ end
 
 function xNoteColumn:set_delay_value(val)
   self._delay_value = val
-  self._delay_string = xNoteColumn.instr_delay_value_to_string(val,"..") 
+  self._delay_string = xNoteColumn.delay_value_to_string(val,"..") 
 end
 
 function xNoteColumn:get_delay_string()
@@ -215,7 +215,7 @@ end
 
 function xNoteColumn:set_delay_string(str)
   self._delay_string = str
-  self._delay_value = xNoteColumn.instr_delay_string_to_value(str,xLinePattern.EMPTY_VALUE)
+  self._delay_value = xNoteColumn.delay_string_to_value(str,xLinePattern.EMPTY_VALUE)
 end
 
 -------------------------------------------------------------------------------
@@ -288,21 +288,31 @@ end
 -- @param str_val (string), e.g. ".." or "1F"
 -- @return int (0-255)
 
-function xNoteColumn.instr_delay_string_to_value(str)
+function xNoteColumn.instr_string_to_value(str)
+  TRACE("xNoteColumn.instr_string_to_value(str)",str)
+  return (str == "..") and 255 or tonumber(str)
+end
+
+function xNoteColumn.instr_value_to_string(val)
+  TRACE("xNoteColumn.instr_value_to_string(val)",val)
+  return (val == 255) and ".." or ("%.2X"):format(val)
+end
+
+-------------------------------------------------------------------------------
+-- @param str_val (string), e.g. ".." or "1F"
+-- @return int (0-255)
+
+function xNoteColumn.delay_string_to_value(str)
   TRACE("xNoteColumn.instr_delay_string_to_value(str)",str)
-
-  return (str == "..") and xLinePattern.EMPTY_VALUE or tonumber(str)
-
+  return (str == "..") and 0 or tonumber(str)
 end
 -------------------------------------------------------------------------------
 -- @param val (int), between 0-255
 -- @return string
 
-function xNoteColumn.instr_delay_value_to_string(val)
-  TRACE("xNoteColumn.instr_delay_value_to_string(val)",val)
-
+function xNoteColumn.delay_value_to_string(val)
+  TRACE("xNoteColumn.delay_value_to_string(val)",val)
   return (val == 255) and ".." or ("%.2X"):format(val)
-
 end
 
 -------------------------------------------------------------------------------
@@ -394,6 +404,7 @@ function xNoteColumn.do_read(note_col)
   for k,v in ipairs(xNoteColumn.tokens) do
     rslt[v] = note_col[v]
   end
+  print("*** xNoteColumn.do_read",rprint(rslt))
   return rslt
 
 end
@@ -411,7 +422,7 @@ function xNoteColumn:do_write(note_col,tokens,clear_undefined)
   for k,token in ipairs(tokens) do
     if self["do_write_"..token] then
       local success = pcall(function()
-        --print("xNoteColumn:do_write",token,self[token])
+        print("xNoteColumn:do_write",token,self[token])
         self["do_write_"..token](self,note_col,clear_undefined)
       end)
       if not success then
@@ -487,7 +498,7 @@ end
 
 function xNoteColumn:do_write_delay_value(note_col,clear_undefined)
   TRACE("xNoteColumn:do_write_delay_value",note_col,clear_undefined)
-  --print("*** xNoteColumn:do_write_delay_value - self.delay_value",self.delay_value)
+  print("*** xNoteColumn:do_write_delay_value - self.delay_value",self.delay_value)
   if self.delay_value then 
     note_col.delay_value = self.delay_value
   elseif clear_undefined then
@@ -495,6 +506,7 @@ function xNoteColumn:do_write_delay_value(note_col,clear_undefined)
   end
 end
 function xNoteColumn:do_write_delay_string(note_col,clear_undefined)
+  print("*** xNoteColumn:do_write_delay_string - self.delay_string",self.delay_string)
   if self.delay_string then 
     note_col.delay_string = self.delay_string
   elseif clear_undefined then

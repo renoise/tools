@@ -3,11 +3,7 @@ xBlockLoop
 ============================================================================]]--
 --[[
 	
-	Methods for working with the renoise loop_block
-
-
-  TODO ability to observe renoise blockloop, automatically maintain 
-  properties that otherwise are expensive to look up (end line)
+	Static methods for working with the renoise loop_block
 
 ]]
 

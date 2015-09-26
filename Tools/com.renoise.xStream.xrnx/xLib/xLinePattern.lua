@@ -145,11 +145,11 @@ function xLinePattern:do_write(sequence,line,track_idx,phrase,tokens,include_hid
     --print("got here")
     for k,rns_col in ipairs(rns_line.note_columns) do
 
-      if not expand_columns or 
-        (not include_hidden and (k > visible_note_cols)) 
-      then
-        --print("skip this column",k)
-        break
+      if not expand_columns then
+        if not include_hidden and (k > visible_note_cols) then
+          print("skip hidden column",k)
+          break
+        end
       end
 
       local note_col = self.note_columns[k]
@@ -164,10 +164,16 @@ function xLinePattern:do_write(sequence,line,track_idx,phrase,tokens,include_hid
         then
           if (k > visible_note_cols) then
             visible_note_cols = k
-            --print("expand note cols to",k)
+            print("expand note cols to",k)
           end
         end
-        --print("*** xLinePattern:do_write - note_col",note_col,type(note_col),note_col.note_value)
+
+        if not include_hidden and (k > visible_note_cols) then
+          print("skip hidden column",k)
+          break
+        end
+
+        print("*** xLinePattern:do_write - note_col",k,note_col,type(note_col),note_col.note_value)
 
         -- include all tokens 
         tokens = xNoteColumn.output_tokens

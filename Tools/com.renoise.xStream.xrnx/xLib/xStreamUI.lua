@@ -12,24 +12,27 @@ xStreamUI
 class 'xStreamUI'
 
 xStreamUI.MODEL_CONTROLS = {
+  "xStreamAddPreset",
+  "xStreamApplyLocallyButton",
+  "xStreamApplySelectionButton",
+  "xStreamApplyTrackButton",
+  "xStreamApplyTrackButton",
+  "xStreamCallbackCompile",
+  "xStreamCallbackEdit",
+  "xStreamExportPresetBank",
+  "xStreamImportPresetBank",
+  "xStreamModelRemove",
+  "xStreamModelRename",
+  "xStreamModelSave",
+  "xStreamModelSaveAs",
+  "xStreamMuteButton",
+  "xStreamRevealLocation",
   "xStreamStartButton",
   "xStreamStartPlayButton",
   "xStreamStopButton",
-  "xStreamMuteButton",
   "xStreamUnmuteButton",
-  "xStreamApplyTrackButton",
-  "xStreamApplyTrackButton",
-  "xStreamApplySelectionButton",
-  "xStreamApplyLocallyButton",
-  "xStreamExportPhraseButton",
-  "xStreamExportFileButton",
-  "xStreamCallbackCompile",
-  "xStreamModelSave",
-  "xStreamModelSaveAs",
-  "xStreamRevealLocation",
-  "xStreamImportPresetBank",
-  "xStreamExportPresetBank",
-  "xStreamAddPreset",
+  --"xStreamExportFileButton",
+  --"xStreamExportPhraseButton",
 }
 
 -------------------------------------------------------------------------------
@@ -46,12 +49,15 @@ function xStreamUI:__init(xstream,vb,midi_prefix)
 
   self.vb_content = nil
 
+  self.show_editor = property(self.get_show_editor,self.set_show_editor)
+  self.show_editor_observable = renoise.Document.ObservableBoolean(true)
+
   self.preset_views = {}
   self.model_views = {}
   self.arg_views = {}
   
   self:build()
-  self:update()
+  --self:update()
 
 end
 
@@ -92,12 +98,8 @@ function xStreamUI:update_args()
     return
   end
 
+  -- add a custom control for each argument
   for k,arg in ipairs(args.args) do
-
-    -- add a custom control for each argument
-    --print("k,arg.name",k,arg.name)
-    --print("k,arg.observable",arg.observable,type(arg.observable))
-    --print("k,arg.properties.zero_based",arg.properties.zero_based)
 
     -- custom number/string converters 
     local fn_tostring = nil
@@ -134,18 +136,25 @@ function xStreamUI:update_args()
         return val
       end
     end
-
-    local view
+    local model_name = self.xstream.selected_model.name
+    local view = vb:row{
+      vb:checkbox{
+        bind = arg.locked_observable,
+        tooltip = "Lock value - can still be changed manually," 
+                .."\nbut prevents changes when switching presets"
+                .."\nor receiving values from the Renoise API.",
+      }
+    }
 
     if (type(arg.observable) == "ObservableNumber") then
 
       local slider_width = 100
-      local full_width = 180
+      local full_width = 160
 
       if arg.properties.items then
         local display = arg.properties.display or "popup"
         if (display == "popup") then
-          view = vb:row{
+          view:add_child(vb:row{
             tooltip = arg.description,
             vb:text{
               text = arg.name,
@@ -157,9 +166,9 @@ function xStreamUI:update_args()
               width = full_width,
               bind = arg.observable,
             },
-          }
+          })
         elseif (display == "chooser") then
-          view = vb:row{
+          view:add_child(vb:row{
             tooltip = arg.description,
             vb:text{
               text = arg.name,
@@ -171,9 +180,9 @@ function xStreamUI:update_args()
               width = full_width,
               bind = arg.observable,
             },
-          }
+          })
         elseif (display == "switch") then
-          view = vb:row{
+          view:add_child(vb:row{
             tooltip = arg.description,
             vb:text{
               text = arg.name,
@@ -185,12 +194,12 @@ function xStreamUI:update_args()
               width = full_width,
               bind = arg.observable,
             },
-          }
+          })
         end
 
       elseif (arg.properties.quant == 1) then
         -- integer value
-        view = vb:row{
+        view:add_child(vb:row{
           tooltip = arg.description,
           vb:text{
             text = arg.name,
@@ -204,18 +213,18 @@ function xStreamUI:update_args()
             max = arg.properties.max or 99999,
             bind = arg.observable,
           }
-        }
+        })
 
       else
         -- slider/number
 
-        view = vb:row{
+        view:add_child(vb:row{
           tooltip = arg.description,
           vb:text{
             text = arg.name,
             font = "mono",
           },
-        }
+        })
 
         local display = arg.properties.display or "minislider"
         if (display == "minislider") then
@@ -250,7 +259,7 @@ function xStreamUI:update_args()
 
     elseif (type(arg.observable) == "ObservableBoolean") then
 
-      view = vb:row{
+      view:add_child(vb:row{
         tooltip = arg.description,
         vb:checkbox{
           value = arg.value,
@@ -260,11 +269,11 @@ function xStreamUI:update_args()
           text = arg.name,
           font = "mono",
         },
-      }
+      })
 
     elseif (type(arg.observable) == "ObservableString") then
 
-      view = vb:row{
+      view:add_child(vb:row{
         tooltip = arg.description,
         vb:text{
           text = arg.name,
@@ -275,11 +284,12 @@ function xStreamUI:update_args()
           width = full_width,
           bind = arg.observable,
         },
-      }
+      })
 
     end
 
     if view then
+  
       table.insert(self.arg_views,view)
       vb_container:add_child(view)
     end
@@ -295,14 +305,6 @@ function xStreamUI:update_models()
   TRACE("xStreamUI:update_models()")
 
   local vb = self.vb
-  --[[
-  local vb_chooser = vb.views["xStreamModelChooser"]
-  local items = {"None"}
-  for k,model in ipairs(self.xstream.models) do
-    table.insert(items,model.name)
-  end
-  vb_chooser.items = items
-  ]]
 
   local vb_container = vb.views["xStreamModelContainer"]
   for k,v in ipairs(self.model_views) do
@@ -355,11 +357,8 @@ function xStreamUI:update_presets()
   end
 
   local preset_node = args.doc["Presets"]
-  --print("preset_node",preset_node)
   
   for k = 1,#preset_node do
-    
-    --print("k,preset_node[k]",k,preset_node[k],args.presets_observable[k])
     
     local preset_name = args.get_suggested_preset_name(k)
 
@@ -405,22 +404,12 @@ function xStreamUI:update_presets()
       vb:button{
         text = "Update",
         tooltip = "Update this preset with the current settings",
-        --color = color,
         notifier = function()
           args:update_preset(k)
           self:update_presets()
         end
       },
-      --[[
-      vb:button{
-        text = "Export",
-        --color = color,
-        notifier = function()
-          args:export_preset(k)
-          self:update_presets()
-        end
-      },
-      ]]
+
     }
     vb_container:add_child(row)
     table.insert(self.preset_views,row)
@@ -440,11 +429,15 @@ function xStreamUI:update_editor()
     return
   end
 
-  local vb = self.vb
-  local view = vb.views["xStreamCallbackEditor"]
   local model = self.xstream.selected_model
+  local vb = self.vb
+
+  local view = vb.views["xStreamCallbackEditor"]
   local str_fn = model.callback_str or "Undefined"
   view.text = str_fn
+
+  local view_name = vb.views["xStreamCallbackName"]
+  view_name.text = model.file_path
 
 end
 
@@ -458,7 +451,6 @@ function xStreamUI:build()
     return
   end
 
-
   local vb = self.vb
 
   local content = vb:column{
@@ -467,27 +459,38 @@ function xStreamUI:build()
       margin = 4,
       vb:text{
         text = "callback/definition",
+        id = "xStreamCallbackName",
         font = "bold",
+        width = "100%",
       },
       vb:multiline_textfield{
         text = "Here be lua...",
         font = "mono",
         height = 200,
-        width = 500,
+        width = 500, -- 80 characters
         id = "xStreamCallbackEditor",
         notifier = function(str)
           local model = self.xstream.selected_model
           if model then
             -- note: add extra line to avoid end of string being
-            -- truncated, one line at a time... 
+            -- truncated, one line at a time... API bug? 
             model.callback_str = str .. "\n" 
           end
         end,
 
       },
-      vb:horizontal_aligner{
-        mode = "justify",
+      vb:row{
+        vb:button{
+          text = "⌨ edit callback",
+          tooltip = "Toggle the code editor",
+          id = "xStreamCallbackEdit",
+          active = false,
+          notifier = function()
+            self:toggle_code_editor()
+          end,
+        },
         vb:row{
+
           vb:button{
             text = "compile",
             tooltip = "Compile the callback (will check for error)",
@@ -505,6 +508,78 @@ function xStreamUI:build()
               end
             end,
           },
+
+          -- hackaround for clickable text
+          vb:checkbox{
+            value = false,
+            visible = false,  
+            notifier = function()
+              if (self.xstream.callback_status_observable.value ~= "") then
+                renoise.app():show_warning(
+                  "The callback returned the following error:\n"
+                  ..self.xstream.callback_status_observable.value
+                  .."\n\n(you can also see these messages in the scripting console)")
+              end
+            end
+          },
+          vb:text{
+            id = "xStreamCallbackStatus",
+            text = "",
+          }
+        },
+        vb:row{
+          tooltip = "Compile the callback as you type",
+          id = "xStreamLiveCoding",
+          vb:checkbox{
+            bind = self.xstream.live_coding_observable
+          },
+          vb:text{
+            text = "live coding"
+          },
+        },
+      },
+    },    
+    vb:row{
+      vb:column{
+        style = "panel",
+        margin = 4,
+        vb:text{
+          text = "models",
+          font = "bold",
+        },
+        vb:row{
+          vb:button{
+            text = "new",
+            tooltip = "Create a new model",
+            id = "xStreamModelCreate",
+            notifier = function()
+              local passed,err = self:create_model()
+              if not passed and err then
+                renoise.app():show_warning(err)
+              end 
+            end,
+          },
+          vb:button{
+            text = "load",
+            tooltip = "Import model definitions from a folder",
+            notifier = function()
+              local str_path = renoise.app():prompt_for_path("Select folder containing models")
+              if (str_path ~= "") then
+                self.xstream:load_models(str_path)
+              end
+            end,
+          },
+          vb:button{
+            text = "rename",
+            tooltip = "Assign a new name to the selected definition",
+            id = "xStreamModelRename",
+            notifier = function()
+              self:rename_model()          
+            end,
+          },
+        },
+        vb:row{
+
           vb:button{
             text = "save",
             tooltip = "Overwrite the existing definition",
@@ -526,7 +601,18 @@ function xStreamUI:build()
                 renoise.app():show_warning(err)
               end 
             end,
+          },        
+          vb:button{
+            text = "delete",
+            tooltip = "Delete the selected definition",
+            id = "xStreamModelRemove",
+            notifier = function()
+              self:delete_model()
+            end,
           },
+
+        },
+        vb:row{
           vb:button{
             text = "reveal_location",
             tooltip = "Reveal the folder in which the definition is located",
@@ -534,78 +620,16 @@ function xStreamUI:build()
             notifier = function()
               self.xstream.selected_model:reveal_location()          
             end,
-          },
-          -- hackaround for clickable text
-          vb:checkbox{
-            value = false,
-            visible = false,  
-            --width = 1,
-            notifier = function()
-              if (self.xstream.callback_status_observable.value ~= "") then
-                renoise.app():show_warning(
-                  "The callback returned the following error:\n"
-                  ..self.xstream.callback_status_observable.value
-                  .."\n\n(you can also see these messages in the scripting console)")
-              end
-            end
-          },
-          vb:text{
-            id = "xStreamCallbackStatus",
-            --bind = self.xstream.callback_status_observable
-            text = "",
-          }
-        },
-        vb:row{
-          tooltip = "Compile the callback as you type",
-          vb:checkbox{
-            bind = self.xstream.live_coding_observable
-          },
-          vb:text{
-            text = "live coding"
-          }
-        }
-      }
-    },    
-    vb:row{
-      vb:column{
-        style = "panel",
-        margin = 4,
-        vb:text{
-          text = "models",
-          font = "bold",
-        },
-        vb:row{
-          vb:button{
-            text = "load",
-            tooltip = "Import model definitions from a folder",
-            notifier = function()
-              local str_path = renoise.app():prompt_for_path("Select folder containing models")
-              if (str_path ~= "") then
-                self.xstream:load_models(str_path)
-              end
-            end,
-          },
-          vb:button{
-            text = "remove",
-            tooltip = "Remove the selected definition (not permanent)",
-            id = "xStreamModelRemove",
-            notifier = function()
-              local model_idx = self.xstream.selected_model_index
-              self.xstream:remove_model(model_idx)
-            end,
-          },
+          },        
         },
         vb:space{
           height = 6,
         },
-
         vb:column{
           id = 'xStreamModelContainer',
           tooltip = "Click to activate a model",
         }
-
       },
-
       vb:column{
         vb:column{
           style = "panel",
@@ -684,6 +708,7 @@ function xStreamUI:build()
               end,
             },
           },
+          --[[
           vb:button{
             text = "export_to_phrase",
               tooltip = "Create a new phrase in the selected instrument, write output there (automation is ignored)",
@@ -702,6 +727,7 @@ function xStreamUI:build()
               self.xstream:export_to_file()
             end,
           },
+          ]]
         },
         vb:column{
           style = "panel",
@@ -790,10 +816,20 @@ function xStreamUI:build()
         margin = 4,
         id = 'xStreamArgsContainer',
         height = 100,
-        vb:text{
-          text = "args",
-          font = "bold",
-        },
+        vb:horizontal_aligner{
+          mode = "justify",
+          vb:text{
+            text = "args",
+            font = "bold",
+          },
+          vb:button{
+            text = "randomize",
+            notifier = function()
+              self.xstream.selected_model.args:randomize()
+            end
+          },
+
+        }
       },
       vb:column{
         style = "panel",
@@ -827,97 +863,19 @@ function xStreamUI:build()
             local model = self.xstream.selected_model
             model.args:add_preset()
             self.xstream.selected_model.args.selected_preset_index = model.args:get_number_of_presets()
-            --print("model.args.selected_preset_index",model.args.selected_preset_index)
             self:update_presets()
           end,
         },
         vb:column{
-          -- add buttons here
           tooltip = "Available presets for this model",
           id = 'xStreamArgPresetContainer',
-        
+          -- add buttons here..
         }
       },    
     }
   }
 
-  --[[
-  vb:column{
-    style = "panel",
-    vb:text{
-      text = "scheduling",
-    },
-    vb:button{
-      text = "LINE",
-      notifier = function(val)
-        xstream.scheduling = xStream.SCHEDULING.LINE
-      end,
-    },
-    vb:button{
-      text = "BEAT",
-      notifier = function(val)
-        xstream.scheduling = xStream.SCHEDULING.BEAT
-      end,
-    },
-    vb:button{
-      text = "BAR",
-      notifier = function(val)
-        xstream.scheduling = xStream.SCHEDULING.BAR
-      end,
-    },
-    vb:button{
-      text = "BLOCK",
-      notifier = function(val)
-        xstream.scheduling = xStream.SCHEDULING.BLOCK
-      end,
-    },
-    vb:button{
-      text = "PATTERN",
-      notifier = function(val)
-        xstream.scheduling = xStream.SCHEDULING.PATTERN
-      end,
-    },
-  },
-  vb:column{
-    style = "panel",
-    vb:text{
-      text = "trigger",
-    },
-    vb:button{
-      text = "LINE",
-      notifier = function(val)
-        xstream.scheduling = xStream.SCHEDULING.LINE
-      end,
-    },
-    vb:button{
-      text = "BEAT",
-      notifier = function(val)
-        xstream.scheduling = xStream.SCHEDULING.BEAT
-      end,
-    },
-    vb:button{
-      text = "BAR",
-      notifier = function(val)
-        xstream.scheduling = xStream.SCHEDULING.BAR
-      end,
-    },
-    vb:button{
-      text = "BLOCK",
-      notifier = function(val)
-        xstream.scheduling = xStream.SCHEDULING.BLOCK
-      end,
-    },
-    vb:button{
-      text = "PATTERN",
-      notifier = function(val)
-        xstream.scheduling = xStream.SCHEDULING.PATTERN
-      end,
-    },
-  },
-  ]]
-
   self.xstream.callback_status_observable:add_notifier(function()    
-    TRACE("*** callback_status_observable fired...",self.xstream.callback_status_observable.value)
     
     local str_err = self.xstream.callback_status_observable.value
     local view = self.vb.views["xStreamCallbackStatus"]
@@ -928,18 +886,15 @@ function xStreamUI:build()
       view.text = "⚠ Syntax Error"
       view.tooltip = str_err
     end 
-    
 
   end)
 
 
   self.xstream.mute_mode_observable:add_notifier(function()    
-    --print("*** mute_mode_observable fired...",self.xstream.mute_mode)
 
   end)
 
   self.xstream.muted_observable:add_notifier(function()    
-    --print("*** muted_observable fired...",self.xstream.muted)
     local view = vb.views["xStreamMuteButton"]
     local color = self.xstream.muted 
       and xLib.COLOR_ENABLED or xLib.COLOR_DISABLED
@@ -947,7 +902,6 @@ function xStreamUI:build()
   end)
 
   self.xstream.active_observable:add_notifier(function()    
-    --print("*** active_observable fired...",self.xstream.active)
     local view = vb.views["xStreamStartButton"]
     local color = self.xstream.active 
       and xLib.COLOR_ENABLED or xLib.COLOR_DISABLED
@@ -959,12 +913,10 @@ function xStreamUI:build()
   end)
 
   local model_name_notifier = function()
-    --print("*** xstream.selected_model.name_observable fired...",self.xstream.selected_model.name)
     self:update_models()
   end
   
   local model_modified_notifier = function()
-    --print("*** xstream.selected_model.callback_str_observable fired...")
     local view = vb.views["xStreamCallbackCompile"]
     view.active = self.xstream.selected_model.modified
   end
@@ -975,9 +927,6 @@ function xStreamUI:build()
   end
   
   local selected_model_index_notifier = function()
-    --print("*** xstream.selected_model_index_observable fired...",self.xstream.selected_model_index)
-
-    -- attach to model 
 
     local model = self.xstream.selected_model
     if model then
@@ -1050,7 +999,135 @@ function xStreamUI:enable_model_controls()
 
 end
 
+--------------------------------------------------------------------------------
 
+function xStreamUI:get_show_editor()
+  return self.show_editor_observable.value 
+end
 
+function xStreamUI:set_show_editor(val)
+  TRACE("xStreamUI:set_show_editor(val)",val)
 
+  assert(type(val) == "boolean", "Wrong argument type")
+  self.show_editor_observable.value = val
 
+  local view = self.vb.views["xStreamCallbackEditor"]
+  local view_bt = self.vb.views["xStreamCallbackEdit"]
+  local view_compile = self.vb.views["xStreamCallbackCompile"]
+  local view_live_coding = self.vb.views["xStreamLiveCoding"]
+  if val then
+    view.visible = true
+    view_bt.color = xLib.COLOR_ENABLED 
+    view_compile.visible = true
+    view_live_coding.visible = true
+  else
+    view.visible = false
+    view_bt.color = xLib.COLOR_DISABLED 
+    view_compile.visible = false
+    view_live_coding.visible = false
+  end
+
+end
+
+--------------------------------------------------------------------------------
+
+function xStreamUI:toggle_code_editor()
+  local view = self.vb.views["xStreamCallbackEditor"]
+  if view.visible then
+    self.show_editor = false
+  else
+    self.show_editor = true
+  end
+end
+
+--------------------------------------------------------------------------------
+-- present the user with a popup containing a text editor, fill it with
+-- a blank model template and pass it on to xStream 
+
+function xStreamUI:delete_model()
+
+  local choice = renoise.app():show_prompt("Delete model",
+      "Are you sure you want to delete this model \n"
+    .."(this action can not be undone)?",
+    {"OK","Cancel"})
+  
+  if (choice == "OK") then
+    local model_idx = self.xstream.selected_model_index
+    local success,err = self.xstream:delete_model(model_idx)
+    if not success then
+      renoise.app():show_error(err)
+    end
+  end
+
+end
+
+--------------------------------------------------------------------------------
+-- present the user with a popup containing a text editor, fill it with
+-- a blank model template and pass it on to xStream 
+
+function xStreamUI:create_model()
+  TRACE("xStreamUI:create_model()")
+
+  local model = xStreamModel(self.xstream)
+  local str_name,err = xDialog.prompt_for_string(model.name,
+    "Enter a name for the model","Create Model")
+  if not str_name then
+    return
+  end
+
+  model.modified = true
+  model.name = str_name
+  model.file_path = ("%s%s.lua"):format(self.xstream.last_models_path,str_name)
+  model:parse_definition({
+    callback = [[-------------------------------------------------------------------------------
+-- Empty configuration
+-------------------------------------------------------------------------------
+
+-- Use this as a template for your own creations. 
+--xline.note_columns[1].note_string = "C-4"
+    
+]],
+  })
+
+  local model_str = model:serialize()
+
+  self.xstream:add_model(model)
+  self.xstream.selected_model_index = #self.xstream.models
+
+end
+
+--------------------------------------------------------------------------------
+
+function xStreamUI:rename_model()
+  TRACE("xStreamUI:rename_model()")
+
+  local model = self.xstream.selected_model
+
+  local str_name,err = xDialog.prompt_for_string(model.name,
+    "Enter a new name","Rename Model")
+  if not str_name then
+    return
+  end
+
+  local str_from = model.file_path
+  local folder,filename,ext = xFilesystem.get_path_parts(str_from)
+
+  if not xFilesystem.validate_filename(str_name) then
+    renoise.app():show_error("Please avoid using special characters in the name")
+    return 
+  end
+
+  local str_to = ("%s%s.lua"):format(folder,str_name)
+  print("str_from,str_to",str_from,str_to)
+
+  if not os.rename(str_from,str_to) then
+    renoise.app():show_error("Failed to rename, perhaps the file is in use by another application?")
+    return 
+  end
+
+  model.name = str_name
+  model.file_path = str_to
+  
+  self:update()
+
+end

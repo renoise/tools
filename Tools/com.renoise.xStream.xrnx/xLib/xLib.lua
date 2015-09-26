@@ -88,6 +88,28 @@ function xLib.match_table_key(t,key)
 end
 
 --------------------------------------------------------------------------------
+-- attempt to create a valid identifier (variable name) from string
+-- (strip special chars, do not allow names beginning with numbers, etc.)
+-- @return boolean - when not possible
+--[[
+function xLib.format_as_identifier(str)
+
+  str = string.gsub(str, "%s+", "")
+  str = string.gsub(str, "-+", "")
+  return str
+
+end
+]]
+--------------------------------------------------------------------------------
+
+--- scale_value: scale a value to a range within a range
+-- @param value (number) the value we wish to scale
+-- @return number
+function xLib.scale_value(value,in_min,in_max,out_min,out_max)
+  return(((value-in_min)*(out_max/(in_max-in_min)-(out_min/(in_max-in_min))))+out_min)
+end
+
+--------------------------------------------------------------------------------
 -- Split string 
 -- @param str_input (string)
 -- @param sep (string) separator

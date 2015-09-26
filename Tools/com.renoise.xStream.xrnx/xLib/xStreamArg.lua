@@ -69,6 +69,11 @@ function xStreamArg:__init(arg)
 
   -- everything below is runtime only ---------------------
 
+  -- boolean, when true only user can set value
+  -- (preset recalls and observed properties are ignored)
+  self.locked = property(self.get_locked,self.set_locked)
+  self.locked_observable = renoise.Document.ObservableBoolean(false)
+
   -- xStream, reference to owner
   self.xstream = arg.xstream
 
@@ -93,32 +98,48 @@ function xStreamArg:__init(arg)
     end
   end
 
-  -- notifier for argument
+  -- notifier for argument (== user events) 
   self.notifier = function()
     --print("notifier_fn fired...",self.name,self.observable.value)
     self.value = self.observable.value
-    --if self.properties.impacts_buffer then
-      --self.xstream:wipe_futures()
-    --end
     if self.bind_notifier then
+      -- update renoise
       self.bind_notifier(self.observable.value)
     end
+    if self.properties.impacts_buffer then
+      self.xstream:wipe_futures()
+    end
+
   end
 
-  -- notifier for bound target
+  -- notifier for bound target (== renoise events)
   if arg.bind then
     local bind_str_val = string.sub(arg.bind,1,#arg.bind-11)
     self.bind_notifier = function(val)
+
+      -- @param val (string,number or boolean) set when user event
       --print("bind_notifier fired...self.name,val",self.name,val,type(val),bind_str_val)
       if (type(val) ~= "nil") then
+        
         local success,err = xLib.set_obj_str_value(bind_str_val,val)
+        --print("*** self.bind_notifier - success,err",success,err)
         if not success then
           LOG("ERROR: xStreamArg.bind_notifier - "..err)
         end
       else
+        -- nil, retrieve from Renoise? 
+        if self.locked then
+          return
+        end
         local new_value,err = xLib.parse_str(bind_str_val)
         if not err then
-          self.observable.value = new_value
+          print("*** self.bind_notifier - parsed bind_str_val",bind_str_val,", new_value = ",new_value,"self.value",self.value)
+          self.value = new_value
+          -- hackaround: avoid notifier feedback by scheduling the update
+          -- note: feedback will occur if we are not able to set the target 
+          -- this can occur e.g. with keyboard_velocity, when velocity is not
+          -- enabled (it will remain at maximum velocity in such cases)
+          self.value_update_requested = new_value
         else
           LOG(err)
         end
@@ -126,9 +147,17 @@ function xStreamArg:__init(arg)
     end
   end
 
-
 end
 
+-------------------------------------------------------------------------------
+
+function xStreamArg:get_locked()
+  return self.locked_observable.value
+end
+
+function xStreamArg:set_locked(val)
+  self.locked_observable.value = val
+end
 
 -------------------------------------------------------------------------------
 -- resolve the 'bind string' into an ObservableXXX object

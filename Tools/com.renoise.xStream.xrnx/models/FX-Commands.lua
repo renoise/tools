@@ -1,12 +1,12 @@
 --[[============================================================================
-FX-Commands.lua
+FX-Commands - Copy.lua
 ============================================================================]]--
 
 return {
 arguments = {
   {
       name = "instr_idx",
-      value = 4,
+      value = 2,
       properties = {
           min = 1,
           quant = 1,
@@ -19,7 +19,7 @@ arguments = {
   },
   {
       name = "interval",
-      value = 8,
+      value = 3,
       properties = {
           min = 1,
           quant = 1,
@@ -29,7 +29,7 @@ arguments = {
   },
   {
       name = "fx_number",
-      value = 3,
+      value = 1,
       properties = {
           display = "popup",
           items = "xEffectColumn.SUPPORTED_EFFECTS",
@@ -49,7 +49,7 @@ arguments = {
   },
   {
       name = "fx_amt__y",
-      value = 5,
+      value = 8,
       properties = {
           min = 0,
           max = 15,
@@ -95,21 +95,44 @@ presets = {
       instr_idx = 4,
       fx_amt_x_ = 3,
   },
+  {
+      fx_number = 2,
+      interval = 3,
+      fx_amt__y = 0,
+      instr_idx = 2,
+      fx_amt_x_ = 0,
+  },
+  {
+      fx_number = 1,
+      interval = 3,
+      fx_amt__y = 8,
+      instr_idx = 2,
+      fx_amt_x_ = 3,
+  },
 },
 data = {
 },
 callback = [[
--------------------------------------------------------------------------------
+-----------------------------------------------------------------------------
 -- FX-Commands 
--- Output to effect column, leave everything else intact
--------------------------------------------------------------------------------
+-- Output to effect column, pass everything else through
+-----------------------------------------------------------------------------
 
 if (xinc%args.interval == 0) then
     xline.effect_columns[1] = {
       number_value = SUPPORTED_EFFECT_CHARS[args.fx_number],
       amount_value = args.fx_amt_x_ *16 + args.fx_amt__y,
     }
+else
+  xline.effect_columns[1] = {}
 end  
+
+
+
+
+
+
+
 
 
 

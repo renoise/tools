@@ -6,7 +6,7 @@ return {
 arguments = {
   {
       name = "instr_idx",
-      value = 1,
+      value = 2,
       properties = {
           min = 1,
           quant = 1,
@@ -19,7 +19,7 @@ arguments = {
   },
   {
       name = "interval",
-      value = 8,
+      value = 4,
       properties = {
           min = 1,
           quant = 1,
@@ -29,7 +29,7 @@ arguments = {
   },
   {
       name = "offset",
-      value = 4,
+      value = 0,
       properties = {
           min = -32,
           quant = 1,
@@ -40,16 +40,30 @@ arguments = {
   {
       name = "produce_note_off",
       value = true,
-      --properties = {},
+      properties = {},
       description = "Decide if note is followed by a note-off",
+  },
+},
+presets = {
+  {
+      interval = 8,
+      instr_idx = 2,
+      offset = 4,
+      produce_note_off = true,
+  },
+  {
+      interval = 4,
+      instr_idx = 2,
+      offset = 0,
+      produce_note_off = true,
   },
 },
 data = {
 },
 callback = [[
--------------------------------------------------------------------------------
+-----------------------------------------------------------------------------
 -- Create notes with different intervals
--------------------------------------------------------------------------------
+-----------------------------------------------------------------------------
 
 local incr_offset = xinc + args.offset
 
@@ -65,6 +79,9 @@ elseif args.produce_note_off and (incr_offset % args.interval == 1) then
 else
   xline.note_columns[1] = {}
 end
+
+
+
 
 
 

@@ -31,15 +31,11 @@ function xStreamArgs:__init(model)
   -- table<xStreamArg>
   self.args = {}
 
-  -- read-only copy of current values (used by callback)
-  --self.values = property(self.get_values)
-
   -- int, read-only - number of registered arguments
   self.length = property(
     self.get_length)
 
-  -- table<string>, index of presets
-  --self.presets_observable = renoise.Document.ObservableList(0)
+  -- ObservableNumberList, notifier fired when items are added/removed 
   self.presets_observable = renoise.Document.ObservableNumberList()
 
   -- int, active preset (0 when none is active)
@@ -79,14 +75,10 @@ function xStreamArgs:add(arg)
     return false,"Argument name '"..arg.name.."' needs to be a proper lua variable name - no special characters or number as the first character"
   end
 
-
-
   -- avoid using existing or RESERVED_NAMES
-  --print("*** got here",arg.name,type(self[arg.name]))
   if (type(self[arg.name]) ~= 'nil') or 
     (table.find(xStreamArgs.RESERVED_NAMES,arg.name)) 
   then
-    --print("*** got here 2")
     return false,"The argument "..arg.name.." is already defined. Please choose another name"
   end
 
@@ -122,9 +114,7 @@ function xStreamArgs:add(arg)
   arg.xstream = self.model.xstream
 
   local xarg = xStreamArg(arg)
-
   table.insert(self.args,xarg)
-  --print("xarg.notifier",xarg.notifier)
  
   self.doc["Arguments"][arg.name]:add_notifier(xarg.notifier)
 
@@ -162,45 +152,7 @@ function xStreamArgs:get_values()
   --print("xStreamArgs:get_values - rslt",rprint(rslt))
   return rslt
 end
--------------------------------------------------------------------------------
--- prompt user for a name 
--- @param str_name (string), suggested name
--- @param str_title (string), title of dialog
--- @return string
 
-function xStreamArgs:prompt_for_name(str_name,str_title)
-  TRACE("xStreamArgs:prompt_for_name(str_name,str_title)",str_name,str_title)
-
-  local vb = renoise.ViewBuilder()
-  local content_view = vb:column{
-    margin = 8,
-    vb:text{
-      text = "Please enter a name",
-    },
-    vb:textfield{
-      text = str_name,
-      width = 100,
-      notifier = function(str)
-        str_name = str
-      end,
-    }
-  }
-  local key_handler = nil
-  local title = str_title
-  local button_labels = {"OK","Cancel"}
-
-  local choice = renoise.app():show_custom_prompt(title, content_view, button_labels, key_handler)
-
-  if (choice == "Cancel") then
-    return
-  end
-
-  -- TODO validate that this name is without special characters
-  -- needs to be able to save to disk
-
-  return str_name
-
-end
 
 -------------------------------------------------------------------------------
 -- add current/supplied values as new preset 
@@ -281,7 +233,9 @@ function xStreamArgs:recall_preset(idx)
   local failed_args = {}
   for _,arg in ipairs(self.args) do
     if preset[arg.name] then
-      self.doc["Arguments"][arg.name].value = preset[arg.name].value
+      if not arg.locked then
+        self.doc["Arguments"][arg.name].value = preset[arg.name].value
+      end
     else
       table.insert(failed_args,arg.name)
     end
@@ -296,6 +250,46 @@ function xStreamArgs:recall_preset(idx)
     return false,msg
   else
     return true
+  end
+
+end
+
+-------------------------------------------------------------------------------
+
+function xStreamArgs:randomize()
+
+  for _,arg in ipairs(self.args) do
+
+    if not arg.locked then
+
+      local val
+
+      if (type(arg.value) == "boolean") then
+        val = (math.random(0,1) == 1) and true or false
+        print("*** boolean random",val)
+      elseif (type(arg.value) == "number") then
+        if arg.properties then
+          if (arg.properties.items) then
+            -- popup or switch
+            val = math.random(0,#arg.properties.items)
+          elseif arg.properties.min and arg.properties.max then
+            if (arg.properties.quant == 1) then
+              -- integer
+              val = math.random(arg.properties.min,arg.properties.max)
+            else
+              -- float
+              val = xLib.scale_value(math.random(),0,1,arg.properties.min,arg.properties.max)
+            end
+          end
+        end
+      end
+
+      if (type(val) ~= "nil") then
+        self.doc["Arguments"][arg.name].value = val
+      end
+
+    end
+
   end
 
 end
@@ -341,63 +335,7 @@ function xStreamArgs:remove_preset(idx)
 
 end
 
--------------------------------------------------------------------------------
--- import a preset from disk
--- @param file_path (string), if not specified show file browser
--- @return bool, true when preset was imported
---[[
-function xStreamArgs:import_preset(file_path)
 
-  if not file_path then
-    file_path = renoise.app():prompt_for_filename_to_read({"*.xml"},"Import Preset")
-  end
-  if not file_path then
-    return false
-  end
-
-  local folder,fname,ext = xFilesystem.get_path_parts(file_path)
-  self:add_preset(fname) 
-
-  local preset = self.doc["Presets"][self.selected_preset_index]
-  preset:load_from(file_path)
-
-end
-]]
-
--------------------------------------------------------------------------------
--- export a preset with the given name or index
--- @param idx (int), index of preset
--- @param name (string), provide a name (prompt user if not defined)
--- @return bool, true when export was successful
---[[
-function xStreamArgs:export_preset(idx,name)
-  TRACE("xStreamArgs:export_preset(idx,name)",idx,name)
-
-  local preset = self:get_preset_by_index(idx)
-  if not preset then
-    return
-  end
-  
-  if not name then 
-    name = self:prompt_for_name(
-      self.get_suggested_preset_name(idx),"Choose Preset Name")
-  end
-
-  if not name then
-    renoise.app():show_message("The preset needs a name before it can be saved")
-    return false
-  end
-
-  name = xFilesystem.sanitize_filename(name)
-  self.presets_observable[idx].value = name
-
-  name = xFilesystem.file_add_extension(name,"xml")
-  self.doc["Presets"][idx]:save_as(name)
-
-  return true
-
-end
-]]
 -------------------------------------------------------------------------------
 -- TODO same as import, but without clearing existing presets
 
@@ -576,9 +514,7 @@ function xStreamArgs:attach_to_song()
   for k,arg in ipairs(self.args) do
     if (arg.bind_notifier) then
       arg.bind = xStreamArg.resolve_binding(arg.bind_str)
-      --print("*** attach_to_song - arg.bind_str",arg.bind_str)
       arg.bind:add_notifier(arg.bind_notifier)
-      --print("*** arg.bind:add_notifier...")
       -- call it once, to initialize value
       arg.bind_notifier()
     end
@@ -606,21 +542,22 @@ function xStreamArgs:detach_from_song()
 end
 
 -------------------------------------------------------------------------------
--- here we execute any associated polls
+-- execute running tasks for all registered arguments
 
 function xStreamArgs:on_idle()
   --TRACE("xStreamArgs:on_idle()")
 
-  --rprint(self.polls)
-
   for k,arg in ipairs(self.args) do
     if (type(arg.poll)=="function") then
-      -- execute and update argument accordingly
+      -- 'poll' - get current value 
       local rslt = arg.poll()
       if rslt then
-        --print("xStreamArgs:on_idle - ",arg.name,rslt)
         arg.observable.value = rslt
       end
+    elseif (type(arg.value_update_requested) ~= "nil") then
+      -- 'bind' requested an update
+      arg.observable.value = arg.value_update_requested
+      arg.value_update_requested = nil
     end
   end
 
@@ -640,15 +577,12 @@ function xStreamArgs:serialize()
 
     local props = {}
     if arg.properties then
-
       -- remove default values from properties
       props = table.rcopy(arg.properties_initial)
       if (props.impacts_buffer == true) then
         props.impacts_buffer = nil
       end
-
     end
-
 
     table.insert(args,{
       name = arg.name,
@@ -658,8 +592,8 @@ function xStreamArgs:serialize()
       bind = arg.bind_str,
       poll = arg.poll_str
     })
-  end
 
+  end
 
   local presets = {}
   for i = 1,self:get_number_of_presets() do
@@ -673,7 +607,6 @@ function xStreamArgs:serialize()
   local str_args = xLib.serialize_table(args)
   local str_presets = xLib.serialize_table(presets)
 
-  --print("xStreamArgs:serialize() - str_args",str_args)
   return str_args,str_presets
 
 end

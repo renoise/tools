@@ -58,19 +58,11 @@ function xLine.apply_descriptor(xline)
 
   --print("xLine.apply_descriptor - PRE",rprint(xline.note_columns))
 
-  --print("type(self.buffer[",line_index,"])",type(xline))
-  if (type(xline) == "table") then
-    -- entire xline redefined
-    --print("*** get_content - convert entire xline into xLine")
-    rprint(xline)
+  if (type(xline) == "table") then -- entire xline redefined
     xline = xLine(xline)
-
-  elseif (type(xline) == "xLine") then
-
+  elseif (type(xline) == "xLine") then -- check xLine content
     xline.pattern_line:apply_descriptor(xline.note_columns,xline.effect_columns)
-
     -- TODO automation
-    
   else
     error("Unexpected xline type")
   end
@@ -106,9 +98,6 @@ function xLine:do_write(
   expand_columns,
   clear_undefined)
 
-  --print("xLine:do_write - self.pattern_line",self.pattern_line)
-  --print("xLine:do_write - clear_undefined",clear_undefined)
-  
   -- pattern/phrase
   if self.pattern_line then
     self.pattern_line.note_columns = self.note_columns
