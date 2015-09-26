@@ -6,7 +6,7 @@ return {
 arguments = {
   {
       name = "instr_idx",
-      value = 5,
+      value = 1,
       properties = {
           min = 1,
           quant = 1,
@@ -86,8 +86,6 @@ arguments = {
       description = "Specify interpolation type for automation",
   },
 },
-presets = {
-},
 data = {
 },
 callback = [[
@@ -95,9 +93,9 @@ callback = [[
 -- High-res automation 
 -------------------------------------------------------------------------------
 
--- The tool will lock to the selected device in the DSP chain, 
--- and selected parameter in the automation editor (API5 only)
--- For API4 you need to set the param_index manually... 
+-- The tool will automatically lock to the selected device in the DSP chain, 
+-- and selected parameter in the automation editor - but you can change 
+-- these values manually too (device_index, param_index). 
 
 xline = {
   automation = {
@@ -122,8 +120,6 @@ if (automation_playmode ~= args.playmode) then
 end
 
   
-
-
 
 ]],
 }

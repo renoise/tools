@@ -13,7 +13,7 @@ arguments = {
   },
   {
       name = "velocity",
-      value = 45,
+      value = 70,
       properties = {
           min = 0,
           max = 127,
@@ -25,7 +25,7 @@ arguments = {
   },
   {
       name = "instr_idx",
-      value = 5,
+      value = 1,
       properties = {
           min = 1,
           quant = 1,
@@ -63,6 +63,20 @@ xline.note_columns[1] = {
   instrument_value = args.instr_idx,
   volume_value = args.velocity_enabled and args.velocity or EMPTY_VOLUME_VALUE,
 }  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 ]],

@@ -20,7 +20,7 @@ arguments = {
   {
       poll = "rns.selected_note_column_index",
       name = "note_col_idx",
-      value = 2,
+      value = 3,
       properties = {
           min = 0,
           quant = 1,
@@ -34,7 +34,7 @@ presets = {
 data = {
   columns = {
       false,
-      false,
+      true,
       false,
       false,
       false,
@@ -48,7 +48,7 @@ data = {
   },
   columns2 = {
       false,
-      false,
+      true,
       false,
       false,
       false,
@@ -94,7 +94,7 @@ local check_columns = function (t,t2)
       if clear_undefined or (not clear_undefined and 
         xline.note_columns[k])
       then
-        xline.note_columns[k] = {
+        xline.note_columns[k] = xnote_column{
           note_string = "OFF",
         }
       end
@@ -118,7 +118,6 @@ xline.note_columns[args.note_col_idx] = {
   note_value = math.random(36,60),
   instrument_value = args.instr_idx,
 }  
-
 
 
 

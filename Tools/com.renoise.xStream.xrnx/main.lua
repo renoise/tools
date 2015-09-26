@@ -1,20 +1,9 @@
---[[============================================================================
-com.renoise.xStream.xrnx (main.lua)
-============================================================================]]--
---[[
-
-  Create an instance of xStream, monitor the selected track/device/param,
-  and manage preferences. 
-
-]]
-
 --------------------------------------------------------------------------------
 -- required files (framework)
 --------------------------------------------------------------------------------
 
 require 'xLib/xLib'
 require 'xLib/xBlockLoop'
-require 'xLib/xDialog'
 require 'xLib/xScale'
 require 'xLib/xEffectColumn'
 require 'xLib/xFilesystem'
@@ -36,13 +25,11 @@ require 'xLib/xParseXML'
 -- required files (unit tests)
 --------------------------------------------------------------------------------
 
---[[
 require 'xLib/unit_tests/xsongpos_test'
 require 'xLib/unit_tests/xnotecolumn_test'
 require 'xLib/unit_tests/xeffectcolumn_test'
 require 'xLib/unit_tests/xstream_test'
 require 'xLib/unit_tests/xparsexml_test'
-]]
 
 --------------------------------------------------------------------------------
 -- preferences
@@ -59,12 +46,10 @@ local START_OPTION = {
 local options = renoise.Document.create("ScriptingToolPreferences"){}
 options:add_property("autostart", renoise.Document.ObservableBoolean(false))
 options:add_property("suspend_when_hidden", renoise.Document.ObservableBoolean(true))
-options:add_property("manage_gc", renoise.Document.ObservableBoolean(false))
+options:add_property("manage_gc", renoise.Document.ObservableBoolean(true))
 options:add_property("start_option", renoise.Document.ObservableNumber(START_OPTION.ON_PLAY_EDIT))
 options:add_property("launch_model", renoise.Document.ObservableString(""))
-options:add_property("live_coding", renoise.Document.ObservableBoolean(true))
-options:add_property("show_editor", renoise.Document.ObservableBoolean(true))
-options:add_property("writeahead_factor", renoise.Document.ObservableNumber(175))
+options:add_property("writeahead_factor", renoise.Document.ObservableNumber(200))
 renoise.tool().preferences = options
 
 --------------------------------------------------------------------------------
@@ -81,9 +66,6 @@ local xpos,xstream
 local vb = renoise.ViewBuilder()
 local dialog,dialog_content
 
-local waiting_to_show_dialog = options.autostart.value
-local cached_active 
-
 -------------------------------------------------------------------------------
 -- remote-control via xSongPos 
 
@@ -96,45 +78,15 @@ function follow_pos()
   end
 end
 
-
--------------------------------------------------------------------------------
--- @return boolean, true if we should suspend
-
-function dialog_is_suspended()
-  return (options.suspend_when_hidden.value) and
-    dialog and not dialog.visible
-end
-
 -------------------------------------------------------------------------------
 -- wait with launch until tool has a renoise document to work on
 -- workaround for http://goo.gl/UnSDnw
 
-local function idle_notifier()
-  if waiting_to_show_dialog then
-    waiting_to_show_dialog = false
-    show() -- will change to idle_notifier_actual 
-  end
-end
-renoise.tool().app_idle_observable:add_notifier(idle_notifier)
+local waiting_to_show_dialog = options.autostart.value
 
--------------------------------------------------------------------------------
--- post-launch notifier, providing some statistics and checking 
--- if the xStream dialog has been hidden, should suspend...
-
+-- post-launch notifier 
 local function idle_notifier_actual()
   --print("*** idle_notifier_actual fired...")
-  
-  local is_suspended = dialog_is_suspended()
-  if is_suspended then
-    print("got here 1")
-    cached_active = xstream.active
-    xstream.active = false
-    return
-  elseif cached_active then
-    print("got here 2")
-    xstream.active = cached_active
-  end
-
   local view = vb.views["xStreamImplStats"]
   local str_stat = ("Memory usage: %.2f Mb"):format(collectgarbage("count")/1024)
                 ..("\nLines Travelled: %d"):format(xstream._writepos.lines_travelled)
@@ -142,15 +94,22 @@ local function idle_notifier_actual()
                 ..("\nStream active: %s"):format(xstream.active and "true" or "false") 
                 ..("\nStream muted: %s"):format(xstream.muted and "true" or "false") 
   view.text = str_stat
-
 end
 
+-- pre-launch notifier 
+local function idle_notifier()
+  --print("*** idle_notifier fired...")
+  if waiting_to_show_dialog then
+    waiting_to_show_dialog = false
+    show() -- will change to idle_notifier_actual 
+  end
+end
+renoise.tool().app_idle_observable:add_notifier(idle_notifier)
 
 
 -------------------------------------------------------------------------------
 -- handle keys in dialog
 
---[[
 local function keyhandler(dlg, key)
   --rprint(key)
   local shift_pressed = string.find(key.modifiers,"shift") and true or false
@@ -165,7 +124,6 @@ local function keyhandler(dlg, key)
     return key
   end
 end
-]]
 
 -------------------------------------------------------------------------------
 -- update popup with model names
@@ -205,7 +163,6 @@ function show()
     return
   end
 
-  --[[
   local unit_tests = vb:column{
     margin = 6,
     vb:row{
@@ -254,7 +211,6 @@ function show()
 
     },
   }
-  ]]
 
 
   -- create class instances - but only once
@@ -265,21 +221,7 @@ function show()
     local model_defs_path = "./models/"
     xstream:load_models(model_defs_path)
     xstream.ui = xStreamUI(xstream,vb,MIDI_PREFIX)
-    xstream.ui.show_editor = options.show_editor.value
-    xstream.live_coding_observable.value = options.live_coding.value
     xstream.models_observable:add_notifier(update_launch_models)
-
-    -- observe things within the xStream class(es)
-    xstream.live_coding_observable:add_notifier(function()
-      --print("live_coding_observable fired...")
-      options.live_coding.value = xstream.live_coding_observable.value
-    end)
-
-    xstream.ui.show_editor_observable:add_notifier(function()
-      --print("show_editor_observable fired...")
-      options.show_editor.value = xstream.ui.show_editor_observable.value
-    end)
-
   end
 
 
@@ -296,7 +238,7 @@ function show()
 
       local tool_option_w = 140
       dialog_content = vb:column{
-        --unit_tests,
+        unit_tests,
         vb:row{
           style = "group",
           margin = 6,
@@ -437,13 +379,13 @@ function show()
     end
 
     dialog = renoise.app():show_custom_dialog(
-      TOOL_NAME, dialog_content) --, keyhandler)
+      TOOL_NAME, dialog_content, keyhandler)
 
     update_launch_models()
     vb.views["xStreamImplManageGarbage"].value = options.manage_gc.value
     xstream.manage_gc = options.manage_gc.value
 
-    -- idle notifier: remove pre-launch, switch to actual one
+    -- switch to final idle notifier
     local idle_obs = renoise.tool().app_idle_observable
     if idle_obs:has_notifier(idle_notifier) then
       idle_obs:remove_notifier(idle_notifier)
@@ -496,10 +438,10 @@ function attach_to_song()
         xstream:stop()
       end
     elseif not xstream.active then -- autostart
-
-      if dialog_is_suspended() then
-        print("got here 3")
-        return
+      if (options.suspend_when_hidden.value) and
+        dialog and not dialog.visible
+      then
+        print("do not start, hidden dialog")
       end
 
       if (options.start_option.value ~= START_OPTION.MANUAL) then
@@ -556,12 +498,6 @@ function attach_to_song()
     --print("*** edit_notifier fired...")
     if xstream then
         if rns.transport.edit_mode then
-
-          if dialog_is_suspended() then
-            print("got here 4")
-            return
-          end
-
           if rns.transport.playing and
             (options.start_option.value == START_OPTION.ON_PLAY_EDIT) 
           then

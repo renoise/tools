@@ -12,6 +12,7 @@ class 'xStreamModel'
 
 -- disallow the following lua methods/properties
 xStreamModel.UNTRUSTED = {
+  --"_G",
   "collectgarbage",
   "coroutine",
   "dofile",
@@ -80,13 +81,8 @@ function xStreamModel:__init(xstream)
   self.callback_str_observable = renoise.Document.ObservableString("")
 
   -- boolean, true when user has edited the callback method 
-  -- or in any other way changed the definition (renamed, etc.)
   self.modified = property(self.get_modified,self.set_modified)
   self.modified_observable = renoise.Document.ObservableBoolean(false)
-
-  -- boolean, true when callback has been modified via live coding
-  -- (this is checked in idle notifier for the parent xstream class...)
-  self.compile_requested = false
 
   -- xStreamArgs, class with it's own preset import/export mechanism
   self.args = nil
@@ -94,14 +90,13 @@ function xStreamModel:__init(xstream)
   -- table<vararg>, variables, can be any basic type 
   self.data = nil
 
-  -- table<vararg>, copy of data - revert when stopping/exporting
+  -- table<vararg>, copy of data - revert to this when stopping/exporting
   self.data_initial = nil
 
   -- bool, when true we have redefined the xline (checked during compile)
   self.user_redefined_xline = nil
 
   -- table<string> limit to these tokens during output
-  -- (derived from the code specified in the callback)
   self.output_tokens = {}
 
   -- define sandbox environment
@@ -125,7 +120,9 @@ function xStreamModel:__init(xstream)
     -- renoise extended
     ripairs = ripairs,
     rprint = rprint,
-    -- access xlib methods/classes
+    -- selective xlib methods/classes
+    xnote_column = xNoteColumn,
+    xeffect_column = xEffectColumn,
     restrict_to_scale = xScale.restrict_to_scale,
     xScale = {
       SCALES = xScale.SCALES,
@@ -138,7 +135,13 @@ function xStreamModel:__init(xstream)
   }
 
   self.env = env
+
   env = {}
+
+  -- unset untrusted members
+  --for k,v in ipairs(xStreamModel.UNTRUSTED) do
+  --  env[v] = nil
+  --end
 
   -- metatable (constants and shorthands)
   setmetatable(self.env,{
@@ -182,6 +185,7 @@ function xStreamModel:__init(xstream)
       elseif table.find(xStreamModel.UNTRUSTED,k) then
         error("Property or method is not allowed in a callback:"..k)
       else
+        --print("got here",t,k,env[k])
         --print("*** access ",k)
         return env[k]
       end
@@ -235,16 +239,9 @@ function xStreamModel:set_callback_str(str)
   if (str ~= self.callback_str_observable.value) then
     self.modified = true
     -- live syntax check
+    -- perform with a small time delay 
     local passed,err = self:test_syntax(str)
     self.xstream.callback_status_observable.value = passed and "" or err
-    
-    if not err and
-      self.xstream.live_coding_observable.value
-    then
-      -- compile in next idle loop
-      self.compile_requested = true
-    end
-
   end
   self.callback_str_observable.value = str
 end
@@ -297,24 +294,12 @@ function xStreamModel:load_definition(file_path)
   self.file_path = file_path
   self.name = name
 
-  local success,err = self:parse_definition(def)
-  return success,err
-
-end
-
--------------------------------------------------------------------------------
--- @param def (table) definition table
--- return bool, true when model was succesfully loaded
--- return err, string containing error message
-
-function xStreamModel:parse_definition(def)
-
   -- create arguments
   self.args = xStreamArgs(self)
   if not table.is_empty(def.arguments) then
     for _,arg in ipairs(def.arguments) do
       --print("*** arg",rprint(arg))
-      local passed,err = self.args:add(arg)
+      passed,err = self.args:add(arg)
       if not passed then
         err = "ERROR: Failed to load the definition '"..name.."' - "..err
         return false,err
@@ -346,6 +331,7 @@ function xStreamModel:parse_definition(def)
   if not compiled_fn then
     return false, err
   end
+
   
   return true
 
@@ -408,9 +394,11 @@ function xStreamModel:compile(str_fn)
 
   assert(type(str_fn) == "string", "Expected string as parameter")
 
-  -- access to model arguments/user-data
+  -- model
   self.env.args = self.args 
   self.env.data = self.data
+  -- xstream
+  --self.env.clear_undefined = self.xstream.proxy.clear_undefined
 
   local str_combined = self:prepare_callback(str_fn)
   local syntax_ok,err = self:test_syntax(str_combined)
@@ -447,7 +435,8 @@ function xStreamModel:extract_tokens(str_fn)
 
   local rslt = {}
 
-  -- combined note/effect-column tokens
+  -- extract tokens
+  -- TODO "note_add","note_sub","note_set", etc
   local all_tokens = {
     "note_value","note_string", 
     "instrument_value","instrument_string",
@@ -536,15 +525,20 @@ function xStreamModel:save()
     self.file_path = file_path
     self.name = name
   end
+  --print("save() - name",name)
   
+  -- test compile, return if failed
   local compiled_fn,err = self:compile(self.callback_str)
+  --print("compiled_fn,err",compiled_fn,err)
   if not compiled_fn then
     return false, "The callback contains errors that need to be "
                 .."fixed before you can save it to disk:\n"..err
   end
 
   xFilesystem.write_string_to_file(self.file_path,self:serialize())
+
   self.modified = false
+
   return true
 
 end
@@ -601,11 +595,14 @@ function xStreamModel.prompt_for_location(str_title)
   if (file_path == "") then
     return 
   end
+  --print("*** prompt_for_location() - file_path",file_path,type(file_path))
   file_path = xFilesystem.unixslashes(file_path)
 
   local str_folder,str_filename,str_extension = 
     xFilesystem.get_path_parts(file_path)
+  --print("str_filename",str_filename)
   local name = xFilesystem.file_strip_extension(str_filename,str_extension)
+
   return file_path,name
 
 end

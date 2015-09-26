@@ -13,6 +13,33 @@ xStream
   should ensure that there's actually something to play as playback
   progresses through the song, across patterns or within loops.
 
+
+  ## How do you change the stream?
+
+  As we have just a single method, changing the implementation is really 
+  simple. You just register all the variables ('arguments') that you are 
+  planning to change during playback - once this is done, changing one 
+  of the arguments from anywhere will immediately cause the stream to 
+  correct itself. 
+
+
+  ## Working with presets
+
+  xStream has built-in support for presets (see xStreamArgs.lua for details,
+  or the demonstration tool for an implementation)
+
+  + Preset: contain values for all arguments 
+  + State: contain all presets plus the current state 
+
+  ## What are the limitations?
+
+  To keep the implementation simple, xStream works on a single track. 
+  Still, a single track means that you can simultaneously output:
+  + Any kind of pattern data, 12 note columns, 8 effect columns
+  + Any kind of phrase data, 12 note columns, 16 effect columns
+  + Automation data, single parameter*, high-res/time offset
+    (planning to expand this to multiple parameters)
+
   ## Pitfalls, things that might not work as expected
 
   + Changing position near the end of a pattern might throw the offset off
@@ -23,9 +50,23 @@ xStream
   + Can under some circumstances fail in creating automation lanes. 
     This is why the current implementation supports only a single parameter.
 
+
+  -----------------------------------------------------------------------------
+
+
 ]]
 
 class 'xStream'
+
+--[[
+xStream.SCHEDULING = {
+  LINE = 1,
+  BEAT = 2,
+  BAR = 3,
+  BLOCK = 4,
+  PATTERN = 5
+}
+]]
 
 xStream.PLAYMODE = {
   POINTS = 1,
@@ -55,8 +96,18 @@ function xStream:__init()
   -- xStreamUI, built-in user interface
   self.ui = nil
 
+  -- int, for writing to instrument phrase
+  --self.instr_index = nil
+
+
+  -- xStream.SCHEDULING
+  --self.scheduling = xStream.SCHEDULING.LINE
+
   -- int, writeahead amount
   self.writeahead = nil
+
+  -- number, lines-per-second (approximate)
+  --self.lps = nil
 
   -- table<xLine>, output buffer
   self.buffer = {}
@@ -103,6 +154,7 @@ function xStream:__init()
   
   -- int, decrease this if you are experiencing dropouts during heavy UI
   -- operations in Renoise (such as opening a plugin GUI) 
+  -- recommended range: between 200 and 400 
   self.writeahead_factor = 300
 
   -- string, value depends on success/failure during last callback 
@@ -139,6 +191,13 @@ function xStream:__init()
   self.clear_undefined = property(
     self.get_clear_undefined,self.set_clear_undefined)
   self.clear_undefined_observable = renoise.Document.ObservableBoolean(true)
+
+  -- boolean, attempt to fix invalid/out-of-range values
+  --[[
+  self.fix_out_of_range = property(
+    self.get_fix_out_of_range,self.set_fix_out_of_range)
+  self.fix_out_of_range_observable = renoise.Document.ObservableBoolean(true)
+  ]]
 
   -- boolean, whether to expand (sub-)columns when writing data
   self.expand_columns = property(
@@ -184,9 +243,6 @@ function xStream:__init()
   -- xStreamModel, read-only - nil when no model is selected
   self.selected_model = nil
 
-  -- string, last file path from where we imported models ('load_models')
-  self.last_models_path = nil
-
   -- xStreamProxy, provides callback with 'real' constant values
   --self.proxy = xStreamProxy(self)
 
@@ -197,7 +253,7 @@ function xStream:__init()
   self.just_started_playback = nil
 
   -- bool, true if we want xStream to manage garbage collection
-  self.manage_gc = false
+  self.manage_gc = true
 
   -- initialize -----------------------
 
@@ -226,6 +282,7 @@ function xStream:add_model(model)
   end
 
   self.models_observable:insert(#self.models)
+  --table.insert(self.models_observable,#self.models)
 
 end
 
@@ -242,8 +299,7 @@ function xStream:remove_models()
 end
 
 -------------------------------------------------------------------------------
--- remove specific model from list
--- @param model_idx (int)
+-- remove specific model
 
 function xStream:remove_model(model_idx)
   TRACE("xStream:remove_model(model_idx)",model_idx)
@@ -264,36 +320,13 @@ function xStream:remove_model(model_idx)
 end
 
 -------------------------------------------------------------------------------
--- delete from disk, the remove from list
--- @param model_idx (int)
--- @return bool, true when we deleted the file
--- @return string, error message when failed
-
-function xStream:delete_model(model_idx)
-  TRACE("xStream:delete_model(model_idx)",model_idx)
-
-  local model = self.models[model_idx]
-  print("model",model,"model.file_path",model.file_path)
-  local success,err = os.remove(model.file_path)
-  if not success then
-    return false,err
-  end
-
-  self:remove_model(model_idx)
-
-  return true
-
-end
-
-
-
-
--------------------------------------------------------------------------------
 -- load all models (files ending with .lua) in a given folder
 -- log potential errors during parsing
 
 function xStream:load_models(str_path)
   TRACE("xStream:load_models(str_path)",str_path)
+
+  --rprint(os.filenames(str_path, "*.lua"))
 
   local log_msg = ""
   for _, filename in pairs(os.filenames(str_path, "*.lua")) do
@@ -303,7 +336,7 @@ function xStream:load_models(str_path)
     if not passed then
       log_msg = log_msg .. err .. "\n"
     else
-      print("Add model",filename)
+      --print("Add model",filename)
       self:add_model(model)
     end
   end
@@ -314,10 +347,6 @@ function xStream:load_models(str_path)
 
   -- select the first model, if any
   self.selected_model_index = (#self.models > 0) and 1 or 0
-
-  -- save the path for later use
-  -- (when creating 'virtual' models, this is where they will be saved)
-  self.last_models_path = str_path
 
 end
 
@@ -430,6 +459,16 @@ function xStream:set_clear_undefined(val)
 end
 
 -------------------------------------------------------------------------------
+--[[
+function xStream:get_fix_out_of_range()
+  return self.fix_out_of_range_observable.value
+end
+
+function xStream:set_fix_out_of_range(val)
+  self.fix_out_of_range_observable.value = val
+end
+]]
+-------------------------------------------------------------------------------
 
 function xStream:get_include_hidden()
   return self.include_hidden_observable.value
@@ -466,7 +505,6 @@ function xStream:get_muted()
 end
 
 function xStream:set_muted(val)
-  TRACE("xStream:set_muted(val)",val)
 
   local changed = (val ~= self.muted_observable.value)
   self.muted_observable.value = val
@@ -489,6 +527,8 @@ function xStream:set_muted(val)
     line = line+2
   end
   self.mute_pos = line
+  --print("self.mute_pos",self.mute_pos)
+
 
   local function produce_note_off()
     local note_cols = {}
@@ -548,7 +588,9 @@ function xStream:do_output(xpos,num_lines,live_mode)
   end
 
   -- purge old content from buffers
+  --print("do_output - xpos.lines_travelled,xpos",xpos.lines_travelled,xpos)
   self:wipe_past()
+  --print("self.buffer",rprint(self.buffer))
 
   -- generate new content as needed
   if not self.muted then
@@ -573,6 +615,7 @@ function xStream:do_output(xpos,num_lines,live_mode)
   -- TODO decide this elsewhere (optimize)
   local able_to_write_automation = 
     (self.device and (self.param_index) > 0) and true or false
+  --print("*** able_to_write_automation",able_to_write_automation)
 
   -- expand columns only when we have manually defined them
   -- (existing pattern-data is a full 12 note columns...)
@@ -580,6 +623,7 @@ function xStream:do_output(xpos,num_lines,live_mode)
     self.selected_model.user_redefined_xline
 
   for i = 0,num_lines-1 do
+  --for i = line_offset,num_lines-1+line_offset do
     tmp_pos = xSongPos({sequence=xpos.sequence,line=xpos.line+i})
     tmp_pos.bounds_mode = self.bounds_mode
     if (tmp_pos.line > patt_num_lines) then
@@ -632,6 +676,7 @@ function xStream:do_output(xpos,num_lines,live_mode)
             end
           end
           --print("*** ptrack_auto",ptrack_auto)
+
           if ptrack_auto then
             --print("param.value_quantum",param.value_quantum)
             if (param.value_quantum == 0) then
@@ -675,7 +720,6 @@ function xStream:has_content(pos,num_lines)
 
   for i = pos,pos+num_lines do
     if not (self.buffer[i]) then
-      print("*** has_content - missing from",i)
       return false,i
     end
   end
@@ -688,7 +732,6 @@ end
 -- retrieve content from our callback method + pattern
 -- @param pos (int), internal line count
 -- @param num_lines (int) 
--- @param xpos (xSongPos) read from this position (when not previously read)
 -- @return table<xLine>
 
 function xStream:get_content(pos,num_lines,xpos)
@@ -701,27 +744,21 @@ function xStream:get_content(pos,num_lines,xpos)
   local read_pos = nil
   if self.next_read_pos then
     read_pos = self.next_read_pos
-    print("*** read_pos - self.next_read_pos",self.next_read_pos)
   else
     read_pos = xSongPos(xpos)
-    print("*** read_pos - xSongPos(xpos)",xpos)
   end
 
   for i = 0, num_lines-1 do
     local line_index = pos+i
     local phrase = nil -- TODO associate a phrase 
-    -- pattern data can be written multiple times due to arguments 
-    -- being changed, but reading from the pattern should only
-    -- be performed once - 
-    local xline
-    local has_read_buffer = self.read_buffer[line_index]
-    if has_read_buffer then 
-      xline = self.read_buffer[line_index]
-    else
+    local xline = self.read_buffer[line_index]
+    if not xline then 
+      -- read the line, dereference it 
+      -- TODO is rcopy even needed here? 
       xline = xLine.do_read(
         read_pos.sequence,read_pos.line,self.include_hidden,self.track_index,phrase)
-      self.read_buffer[line_index] = table.rcopy(xline) -- TODO rcopy needed ?
-      print("*** xStream:get_content - read_pos",read_pos,"line_index",line_index,"note_cols...",rprint(xline.note_columns))
+      self.read_buffer[line_index] = table.rcopy(xline) 
+      --print("*** xStream:get_content - this line got read",read_pos,"line_index",line_index,rprint(xline.note_columns))
     end
     --print("IN  ",line_index,read_pos,xline.note_columns[1].note_string)
 
@@ -735,29 +772,44 @@ function xStream:get_content(pos,num_lines,xpos)
       self.callback_status_observable.value = err
       self.buffer[line_index] = xLine({})
     else
-      -- we might have redefined the xline (or parts of it) in our  
-      -- callback method - convert everything into class instances...
-      self.buffer[line_index] = xLine.apply_descriptor(self.buffer[line_index])
+      -- check if we redefined the xline in the callback
+      -- (and convert affected parts back into class instances)
+      --if self.selected_model.user_redefined_xline then
+        self.buffer[line_index] = xLine.apply_descriptor(self.buffer[line_index])
+      --end
     end
     --print("*** xStream:get_content - callback evaluated for line_index",line_index,rprint(self.buffer[line_index].note_columns),rprint(self.buffer[line_index].pattern_line.note_columns))
     self.highest_buffer_idx = math.max(line_index,self.highest_buffer_idx)
-
-    if not has_read_buffer then
-      read_pos:increase_by_lines(1)
-    end
-
+    read_pos:increase_by_lines(1)
   end
 
   self.next_read_pos = read_pos
 
 end
 
+
+-------------------------------------------------------------------------------
+-- set a target device-parameter, in order to write automation
+-- @param device (renoise.AudioDevice)
+-- @param param_idx (int)
+--[[
+function xStream:set_device_param(device,param_idx)
+  TRACE("xStream:set_device_param(device,param_idx",device,param_idx)
+
+  local param = device.parameters[param_index]
+  assert(param,"Could not locate device parameter")
+
+  self.device = device
+  self.param_index = idx
+
+end
+]]
+
 -------------------------------------------------------------------------------
 -- get visible note columns in the associated track
 -- @return int
 
 function xStream:get_visible_note_cols()
-  TRACE("xStream:get_visible_note_cols()")
 
   local track = rns.tracks[self.track_index]
   assert(track,"Trying to access a non-existing track")
@@ -771,7 +823,6 @@ end
 -- @return int
 
 function xStream:get_visible_effect_cols()
-  TRACE("xStream:get_visible_effect_cols()")
 
   local track = rns.tracks[self.track_index]
   assert(track,"Trying to access a non-existing track")
@@ -823,8 +874,7 @@ function xStream:reset()
   if self.manage_gc then
     collectgarbage("stop")
   else
-    --collectgarbage("restart")
-    --collectgarbage()
+    collectgarbage("restart")
   end
 
   self.buffer = {}
@@ -850,6 +900,8 @@ function xStream:start()
   self:reset()
   self.active = true
 
+  --self._playpos = rns.transport.playback_pos
+
   if rns.transport.playing then
     if not self.just_started_playback then
       -- when already playing, start from next line
@@ -863,7 +915,13 @@ function xStream:start()
   else
     self._writepos = xSongPos(rns.transport.edit_pos)
     self:do_output(self._writepos)
+    if (rns.transport.edit_pos ~= rns.transport.playback_pos) then
+      --self._writepos:increase_by_lines(1)
+      --self._writepos.lines_travelled = -1
+    end
   end
+  --print("*** rns.transport.playing",rns.transport.playing)
+  --print("*** start - self._writepos",self._writepos,self._writepos.lines_travelled)
 
 end
 
@@ -892,6 +950,10 @@ function xStream:stop()
   TRACE("xStream:stop()")
 
   self.active = false
+
+  -- purge old content from buffers
+  --self:wipe_past()
+  --print("self.buffer",rprint(self.buffer))
 
   if self.manage_gc then
     collectgarbage("restart")
@@ -1072,16 +1134,15 @@ function xStream:wipe_futures()
 
   for i = from_idx,self.highest_buffer_idx do
     self.buffer[i] = nil
-    print("*** wiped buffer at",i)
   end
 
   self.highest_buffer_idx = self._writepos.lines_travelled
-  print("*** self.highest_buffer_idx",self.highest_buffer_idx)
 
 end
 
 -------------------------------------------------------------------------------
 -- wipe all data behind our current write-position
+-- method is automatically called when callback arguments have changed
 -- (see also xStreamArgs)
 
 function xStream:wipe_past()
@@ -1111,6 +1172,8 @@ function xStream:determine_writeahead()
   self.writeahead = math.ceil(math.max(2,(bpm*lpb)/self.writeahead_factor))
   --self.writeahead = 4
   --print("xStream.writeahead",self.writeahead)
+  --self.lps = 1 / (60/bpm/lpb)
+  --print("xStream.lps",self.lps)
 
 
 end
@@ -1120,22 +1183,9 @@ end
 function xStream:on_idle()
   --TRACE("xStream:on_idle()")
 
+  -- update argument polling
   if self.selected_model then
-    local model = self.selected_model
-
-    -- argument polling
-    model.args:on_idle()
-
-    -- compile (live coding)
-    if model.compile_requested then
-      model.compile_requested = false
-      local passed,err = model:compile(model.callback_str)
-      if err then -- should not happen! 
-        LOG(err)
-      end
-
-    end
-
+    self.selected_model.args:on_idle()
   end
 
   -- track the current play/edit position
@@ -1155,6 +1205,7 @@ function xStream:on_idle()
     end
   else
     -- paused playback, do not output 
+
   end
   if not self.just_started_playback then
     self._playpos = playpos
@@ -1177,6 +1228,7 @@ function xStream:attach_to_song()
     local playpos = rns.transport.playback_pos
     self:set_pos(playpos)
     self._playpos = playpos
+    --print("*** pattern_index_notifier - set self._playpos",self._playpos)
   end
   rns.selected_pattern_index_observable:add_notifier(pattern_index_notifier)
 
@@ -1187,12 +1239,15 @@ function xStream:attach_to_song()
   rns.transport.bpm_observable:add_notifier(tempo_notifier)
   rns.transport.lpb_observable:add_notifier(tempo_notifier)
 
+
   -- track when song is started and stopped
   local playing_notifier = function()
     --print("xStream playing_notifier fired...")
     if rns.transport.playing then
       self.just_started_playback = os.clock()
       self._playpos = rns.transport.playback_pos
+      --print("*** started playback - self._playpos",self._playpos)
+      --print("*** started playback - rns.transport.playback_pos",rns.transport.playback_pos)
     end
   end
   rns.transport.playing_observable:add_notifier(playing_notifier)
@@ -1204,7 +1259,6 @@ end
 -- fill pattern-track in selected pattern
  
 function xStream:fill_track()
-  TRACE("xStream:fill_track()")
   
   local patt_num_lines = xSongPos.get_pattern_num_lines(rns.selected_sequence_index)
   self:apply_to_range(1,patt_num_lines)
@@ -1216,7 +1270,6 @@ end
 -- @return bool
  
 function xStream:validate_selection()
-  TRACE("xStream:validate_selection()")
 
   local sel = rns.selection_in_pattern
   if not sel then
@@ -1235,7 +1288,6 @@ end
 -- @param locally (bool) relative to the top of the pattern
  
 function xStream:fill_selection(locally)
-  TRACE("xStream:fill_selection(locally)",locally)
 
   local passed,err = self.validate_selection()
   if not passed then
@@ -1247,14 +1299,11 @@ function xStream:fill_selection(locally)
   local from_line = rns.selection_in_pattern.start_line
   local to_line = rns.selection_in_pattern.end_line
   local travelled = (not locally) and (from_line-1) or 0 
-
-  -- backup settings
+  -- temporary settings
   local cached_track_index = self.track_index
-
   -- write output
   self.track_index = rns.selection_in_pattern.start_track
   self:apply_to_range(from_line,to_line,travelled)
-
   -- restore settings
   self.track_index = cached_track_index
 
@@ -1287,7 +1336,7 @@ function xStream:apply_to_range(from_line,to_line,travelled)
 
   self:reset()
 
-  -- backup settings
+  -- temporary settings
   local cached_active = self.active
   local cached_buffer = self.buffer
   local cached_read_buffer = self.read_buffer

@@ -6,7 +6,7 @@ return {
 arguments = {
   {
       name = "instr_idx",
-      value = 5,
+      value = 2,
       properties = {
           min = 1,
           quant = 1,
@@ -37,8 +37,8 @@ arguments = {
       name = "note1",
       value = 56.654347826087,
       properties = {
-          min = 0,
           max = 119,
+          min = 0,
           display_as_note = true,
       },
   },
@@ -46,8 +46,8 @@ arguments = {
       name = "note2",
       value = 37.614347826087,
       properties = {
-          min = 0,
           max = 119,
+          min = 0,
           display_as_note = true,
       },
   },
@@ -55,8 +55,8 @@ arguments = {
       name = "note3",
       value = 89.25,
       properties = {
-          min = 0,
           max = 119,
+          min = 0,
           display_as_note = true,
       },
   },
@@ -64,8 +64,8 @@ arguments = {
       name = "note4",
       value = 65.967391304348,
       properties = {
-          min = 0,
           max = 119,
+          min = 0,
           display_as_note = true,
       },
   },
@@ -80,7 +80,7 @@ arguments = {
   },
   {
       name = "vol2",
-      value = 86.194347826087,
+      value = 60.07652173913,
       properties = {
           min = 0,
           max = 127,
@@ -89,7 +89,7 @@ arguments = {
   },
   {
       name = "vol3",
-      value = 42.79347826087,
+      value = 74.101739130435,
       properties = {
           min = 0,
           max = 127,
@@ -98,7 +98,7 @@ arguments = {
   },
   {
       name = "vol4",
-      value = 15.792173913044,
+      value = 99.777826086957,
       properties = {
           min = 0,
           max = 127,
@@ -107,8 +107,10 @@ arguments = {
   },
   {
       name = "trig1",
-      value = 3,
+      value = 5,
       properties = {
+          max = 4,
+          min = 1,
           display = "switch",
           items = {
               "ON",
@@ -125,6 +127,8 @@ arguments = {
       name = "trig2",
       value = 5,
       properties = {
+          max = 4,
+          min = 1,
           display = "switch",
           items = {
               "ON",
@@ -139,8 +143,10 @@ arguments = {
   },
   {
       name = "trig3",
-      value = 4,
+      value = 5,
       properties = {
+          max = 4,
+          min = 1,
           display = "switch",
           items = {
               "ON",
@@ -157,6 +163,8 @@ arguments = {
       name = "trig4",
       value = 4,
       properties = {
+          max = 4,
+          min = 1,
           display = "switch",
           items = {
               "ON",
@@ -171,7 +179,7 @@ arguments = {
   },
   {
       name = "repeat_ticks",
-      value = 6,
+      value = 4,
       properties = {
           max = 16,
           quant = 1,
@@ -180,7 +188,7 @@ arguments = {
   },
   {
       name = "fx1_number",
-      value = 4,
+      value = 15,
       properties = {
           display = "popup",
           items = "xEffectColumn.SUPPORTED_EFFECTS",
@@ -189,7 +197,7 @@ arguments = {
   },
   {
       name = "fx1_amt_x_",
-      value = 12,
+      value = 8,
       properties = {
           min = 0,
           max = 15,
@@ -200,7 +208,7 @@ arguments = {
   },
   {
       name = "fx1_amt__y",
-      value = 3,
+      value = 10,
       properties = {
           min = 0,
           max = 15,
@@ -253,20 +261,20 @@ presets = {
   },
   {
       vol4 = 99.777826086957,
-      fx1_amt_x_ = 11,
+      fx1_amt_x_ = 8,
       note4 = 65.967391304348,
-      trig4 = 5,
+      trig4 = 4,
       space = 2,
-      fx1_number = 15,
+      fx1_number = 14,
       fx1_amt__y = 10,
       instr_idx = 2,
       note1 = 56.654347826087,
-      trig3 = 1,
+      trig3 = 5,
       note3 = 89.25,
       repeat_ticks = 4,
       vol1 = 89.28652173913,
       vol3 = 74.101739130435,
-      trig1 = 1,
+      trig1 = 5,
       vol2 = 60.07652173913,
       note2 = 37.614347826087,
       trig2 = 5,
@@ -339,7 +347,7 @@ presets = {
       space = 2,
       fx1_number = 20,
       fx1_amt__y = 0,
-      instr_idx = 3,
+      instr_idx = 2,
       note1 = 53.498260869565,
       trig3 = 3,
       note3 = 73.159130434783,
@@ -359,7 +367,7 @@ presets = {
       space = 2,
       fx1_number = 20,
       fx1_amt__y = 0,
-      instr_idx = 3,
+      instr_idx = 2,
       note1 = 46.358260869565,
       trig3 = 3,
       note3 = 73.159130434783,
@@ -391,48 +399,17 @@ presets = {
       note2 = 82,
       trig2 = 4,
   },
-  {
-      vol4 = 120.57383953368,
-      fx1_amt_x_ = 5,
-      note4 = 70.255287331767,
-      trig4 = 5,
-      space = 1,
-      fx1_number = 15,
-      fx1_amt__y = 6,
-      instr_idx = 5,
-      note1 = 27.085238196966,
-      trig3 = 7,
-      note3 = 91.52652173913,
-      repeat_ticks = 15,
-      vol1 = 82.199041718802,
-      vol3 = 99.954313791314,
-      trig1 = 1,
-      vol2 = 78.985961485641,
-      note2 = 56.974150822474,
-      trig2 = 3,
-  },
-  {
-      vol4 = 28.588274788659,
-      fx1_amt_x_ = 10,
-      note4 = 19.244392223884,
-      trig4 = 3,
-      space = 2,
-      fx1_number = 15,
-      fx1_amt__y = 9,
-      instr_idx = 5,
-      note1 = 72.049348429823,
-      trig3 = 0,
-      note3 = 79.955565050203,
-      repeat_ticks = 12,
-      vol1 = 58.304422132023,
-      vol3 = 11.988006225776,
-      trig1 = 3,
-      vol2 = 83.86953337199,
-      note2 = 25.316599017304,
-      trig2 = 0,
-  },
 },
 data = {
+  trig_modes = {
+      BLANK = 6,
+      CHORD = 3,
+      OFF = 2,
+      ON = 1,
+      EFFECT = 5,
+      REPEAT = 4,
+      SKIP = 7,
+  },
   intervals = {
       1,
       2,
@@ -441,15 +418,6 @@ data = {
       16,
       32,
       64,
-  },
-  trig_modes = {
-      BLANK = 6,
-      CHORD = 3,
-      OFF = 2,
-      REPEAT = 4,
-      EFFECT = 5,
-      SKIP = 7,
-      ON = 1,
   },
 },
 callback = [[
@@ -578,7 +546,6 @@ if produce_output then
 else
   xline = EMPTY_XLINE
 end  
-
 
 
 
