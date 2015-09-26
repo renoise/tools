@@ -78,9 +78,9 @@ presets = {
 data = {
 },
 callback = [[
--------------------------------------------------------------------------------
+-----------------------------------------------------------------------------
 -- Restricting to a harmonic scale
--------------------------------------------------------------------------------
+-----------------------------------------------------------------------------
 
 -- In this example we will harmonize existing notes within the first 
 -- note-column, according to the selected scale. The actual work is being
@@ -90,6 +90,8 @@ local existing_note = xline.note_columns[1].note_value
 
 xline.note_columns[1].note_value =
   restrict_to_scale(existing_note,args.curr_scale,args.curr_key)
+
+
 
 
 ]],
