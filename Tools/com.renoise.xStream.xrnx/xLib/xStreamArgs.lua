@@ -527,7 +527,7 @@ end
 -- when we switch away from the model using these argument
 
 function xStreamArgs:detach_from_song()
-  TRACE("xStreamArgs:attach_from_song()")
+  TRACE("xStreamArgs:detach_from_song()")
 
   for k,arg in ipairs(self.args) do
     if (arg.bind_notifier) then

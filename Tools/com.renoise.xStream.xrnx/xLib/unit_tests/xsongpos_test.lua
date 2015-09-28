@@ -6,7 +6,22 @@ function xsongpos_test()
 
   print("xSongPos: starting unit-test...")
 
-  -- TODO create three temporary patterns
+
+
+  -- create temporary patterns
+  if (#renoise.song().sequencer.pattern_sequence < 3) then
+    local str_msg = "The xSongPos unit-test requires three patterns to be"
+                  .."created during the test - do you want to proceed?"
+    local choice = renoise.app():show_prompt("Create patterns",str_msg,{"OK","Cancel"})
+    if (choice == "OK") then
+      print("xSongPos: creating patterns...")
+      renoise.song().sequencer:insert_new_pattern_at(1)
+      renoise.song().sequencer:insert_new_pattern_at(1)
+    else
+      print("xSongPos: aborted unit-test...")
+    end
+
+  end
 
   local seq1_num_lines = xSongPos.get_pattern_num_lines(1)
   local seq2_num_lines = xSongPos.get_pattern_num_lines(2)

@@ -221,9 +221,11 @@ function xStream:add_model(model)
   table.insert(self.models,model)
 
   -- if first model, select it
+  --[[
   if (#self.models == 1) then
     self.selected_model_index = 1
   end
+  ]]
 
   self.models_observable:insert(#self.models)
 
@@ -1116,26 +1118,19 @@ function xStream:determine_writeahead()
 end
 
 -------------------------------------------------------------------------------
+-- perform periodic updates
 
 function xStream:on_idle()
   --TRACE("xStream:on_idle()")
 
+  -- user interface 
+  if self.ui then
+    self.ui:on_idle()
+  end
+
+  -- track changes to callback, poll arguments
   if self.selected_model then
-    local model = self.selected_model
-
-    -- argument polling
-    model.args:on_idle()
-
-    -- compile (live coding)
-    if model.compile_requested then
-      model.compile_requested = false
-      local passed,err = model:compile(model.callback_str)
-      if err then -- should not happen! 
-        LOG(err)
-      end
-
-    end
-
+    self.selected_model:on_idle()
   end
 
   -- track the current play/edit position

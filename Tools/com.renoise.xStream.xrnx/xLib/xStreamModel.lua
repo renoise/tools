@@ -79,14 +79,17 @@ function xStreamModel:__init(xstream)
   self.callback_str = property(self.get_callback_str,self.set_callback_str)
   self.callback_str_observable = renoise.Document.ObservableString("")
 
+  -- string, compare against this to learn if modified
+  -- (set whenver the callback is saved or loaded...)
+  self.callback_str_source = nil
+
   -- boolean, true when user has edited the callback method 
-  -- or in any other way changed the definition (renamed, etc.)
   self.modified = property(self.get_modified,self.set_modified)
   self.modified_observable = renoise.Document.ObservableBoolean(false)
 
-  -- boolean, true when callback has been modified via live coding
-  -- (this is checked in idle notifier for the parent xstream class...)
-  self.compile_requested = false
+  -- boolean, true when callback has been compiled 
+  self.compiled = property(self.get_compiled,self.set_compiled)
+  self.compiled_observable = renoise.Document.ObservableBoolean(false)
 
   -- xStreamArgs, class with it's own preset import/export mechanism
   self.args = nil
@@ -231,23 +234,30 @@ function xStreamModel:get_callback_str()
 end
 
 function xStreamModel:set_callback_str(str)
-  --TRACE("xStreamModel:set_callback_str - ",str)
-  if (str ~= self.callback_str_observable.value) then
-    self.modified = true
-    -- live syntax check
-    local passed,err = self:test_syntax(str)
-    self.xstream.callback_status_observable.value = passed and "" or err
-    
-    if not err and
-      self.xstream.live_coding_observable.value
-    then
-      -- compile in next idle loop
-      self.compile_requested = true
-    end
+  TRACE("xStreamModel:set_callback_str - ",#str)
 
-  end
+  self.modified = (str ~= self.callback_str_source) 
   self.callback_str_observable.value = str
+
+  -- live syntax check
+  local passed,err = self:test_syntax(str)
+  self.xstream.callback_status_observable.value = passed and "" or err
+  
+  if not err and
+    self.xstream.live_coding_observable.value
+  then
+    -- compile right away
+    local passed,err = self:compile(str)
+    if err then -- should not happen! 
+      LOG(err)
+    end
+  else
+    LOG(err)
+  end
+
+
 end
+
 
 -------------------------------------------------------------------------------
 
@@ -257,6 +267,16 @@ end
 
 function xStreamModel:set_modified(val)
   self.modified_observable.value = val
+end
+
+-------------------------------------------------------------------------------
+
+function xStreamModel:get_compiled()
+  return self.compiled_observable.value
+end
+
+function xStreamModel:set_compiled(val)
+  self.compiled_observable.value = val
 end
 
 -------------------------------------------------------------------------------
@@ -297,6 +317,8 @@ function xStreamModel:load_definition(file_path)
   self.file_path = file_path
   self.name = name
 
+  self.callback_str_source = def.callback
+
   local success,err = self:parse_definition(def)
   return success,err
 
@@ -308,6 +330,7 @@ end
 -- return err, string containing error message
 
 function xStreamModel:parse_definition(def)
+  TRACE("xStreamModel:parse_definition(def)",def)
 
   -- create arguments
   self.args = xStreamArgs(self)
@@ -356,6 +379,7 @@ end
 -- @param str_fn (string) function as string
 
 function xStreamModel:prepare_callback(str_fn)
+  TRACE("xStreamModel:prepare_callback(str_fn)",#str_fn)
 
   -- arguments are defined via vararg(...)
   -- @param line_index (int), current line index
@@ -378,6 +402,7 @@ end
 -- @return string, error message when failed
 
 function xStreamModel:test_syntax(str_fn)
+  TRACE("xStreamModel:test_syntax(str_fn)",#str_fn)
 
   local function untrusted_fn()
     assert(loadstring(str_fn))
@@ -404,7 +429,7 @@ end
 -- @return string, error message when failed
 
 function xStreamModel:compile(str_fn)
-  TRACE("xStreamModel:compile(str_fn)",str_fn)
+  TRACE("xStreamModel:compile(str_fn)",#str_fn)
 
   assert(type(str_fn) == "string", "Expected string as parameter")
 
@@ -422,7 +447,7 @@ function xStreamModel:compile(str_fn)
   local def = loadstring(str_combined)
   self.callback = def()
   setfenv(self.callback, self.env)
-  self.callback_str = str_fn
+  self.callback_str_observable.value = str_fn
 
   -- extract tokens for the output stage
   self.output_tokens = self:extract_tokens(str_fn)
@@ -431,7 +456,8 @@ function xStreamModel:compile(str_fn)
   self.user_redefined_xline = self.check_if_redefined(str_fn)
   --print("self.user_redefined_xline",self.user_redefined_xline)
 
-  self.modified = false
+  self.compiled = true
+  --self.modified = false
 
   return true
 
@@ -443,7 +469,7 @@ end
 -- @return table
 
 function xStreamModel:extract_tokens(str_fn)
-  TRACE("xStreamModel:extract_tokens(str_fn)",str_fn)
+  TRACE("xStreamModel:extract_tokens(str_fn)",#str_fn)
 
   local rslt = {}
 
@@ -519,12 +545,28 @@ function xStreamModel:serialize()
 end
 
 -------------------------------------------------------------------------------
--- save model (prompt for file path if not already defined)
+-- revert to last saved model ()
 -- @return bool, true when saved
 -- @return string, error message when problem was encountered
 
-function xStreamModel:save()
-  TRACE("xStreamModel:save()")
+function xStreamModel:revert()
+
+  self.callback_str = self.callback_str_source
+  
+  if self.xstream.ui then
+    self.xstream.ui:update_editor()
+  end
+
+end
+
+-------------------------------------------------------------------------------
+-- save model (prompt for file path if not already defined)
+-- @param as_copy (bool), when invoked by 'save_as'
+-- @return bool, true when saved
+-- @return string, error message when problem was encountered
+
+function xStreamModel:save(as_copy)
+  TRACE("xStreamModel:save(as_copy)",as_copy)
 
   local file_path,name
   if not self.file_path then
@@ -544,7 +586,12 @@ function xStreamModel:save()
   end
 
   xFilesystem.write_string_to_file(self.file_path,self:serialize())
-  self.modified = false
+
+  if not as_copy then
+    self.modified = false
+    self.callback_str_source = self.callback_str
+  end
+
   return true
 
 end
@@ -633,5 +680,14 @@ function xStreamModel:detach_from_song()
 
 end
 
+-------------------------------------------------------------------------------
+-- perform periodic updates
+
+function xStreamModel:on_idle()
+
+  -- argument polling
+  self.args:on_idle()
+
+end
 
 

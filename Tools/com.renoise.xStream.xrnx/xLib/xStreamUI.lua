@@ -31,6 +31,7 @@ xStreamUI.MODEL_CONTROLS = {
   "xStreamStartPlayButton",
   "xStreamStopButton",
   "xStreamUnmuteButton",
+  "xStreamRevertCallback",
   --"xStreamExportFileButton",
   --"xStreamExportPhraseButton",
 }
@@ -316,7 +317,7 @@ function xStreamUI:update_models()
   for k,v in ipairs(self.xstream.models) do
     local row = vb:row{
       vb:button{
-        text = v.name,
+        text = ("%s%s"):format(v.name,(v.modified) and "*" or ""),
         color = (self.xstream.selected_model_index == k)
           and xLib.COLOR_ENABLED or xLib.COLOR_DISABLED,
         notifier = function()
@@ -470,12 +471,16 @@ function xStreamUI:build()
         width = 500, -- 80 characters
         id = "xStreamCallbackEditor",
         notifier = function(str)
+          --[[
           local model = self.xstream.selected_model
           if model then
             -- note: add extra line to avoid end of string being
             -- truncated, one line at a time... API bug? 
             model.callback_str = str .. "\n" 
           end
+          ]]
+          self.callback_is_modified = true
+          --print("self.callback_is_modified")
         end,
 
       },
@@ -619,6 +624,19 @@ function xStreamUI:build()
             id = "xStreamRevealLocation",
             notifier = function()
               self.xstream.selected_model:reveal_location()          
+            end,
+          },        
+          vb:button{
+            text = "revert",
+            tooltip = "Revert to the last saved state",
+            id = "xStreamRevertCallback",
+            notifier = function()
+              local str_msg = "Reverting to the last saved state"
+                            .."\nmeans loosing all changes - are you sure?"
+              local choice = renoise.app():show_prompt("Revert to saved",str_msg,{"OK","Cancel"})
+              if (choice == "OK") then
+                self.xstream.selected_model:revert()
+              end
             end,
           },        
         },
@@ -917,8 +935,18 @@ function xStreamUI:build()
   end
   
   local model_modified_notifier = function()
+    TRACE("*** xstream.selected_model.args.model_modified_notifier fired...")
+    local save_bt = vb.views["xStreamModelSave"]
+    save_bt.active = self.xstream.selected_model.modified
+    local revert_bt = vb.views["xStreamRevertCallback"]
+    revert_bt.active = self.xstream.selected_model.modified
+    self:update_models()
+  end
+  
+  local model_compiled_notifier = function()
+    TRACE("*** xstream.selected_model.args.model_compiled_notifier fired...")
     local view = vb.views["xStreamCallbackCompile"]
-    view.active = self.xstream.selected_model.modified
+    view.active = self.xstream.selected_model.compiled
   end
   
   local presets_modified_notifier = function()
@@ -927,6 +955,7 @@ function xStreamUI:build()
   end
   
   local selected_model_index_notifier = function()
+    TRACE("*** selected_model_index_notifier fired...")
 
     local model = self.xstream.selected_model
     if model then
@@ -943,6 +972,11 @@ function xStreamUI:build()
       end
       model.modified_observable:add_notifier(model_modified_notifier)
 
+      if model.compiled_observable:has_notifier(model_compiled_notifier) then
+        model.compiled_observable:remove_notifier(model_compiled_notifier)
+      end
+      model.compiled_observable:add_notifier(model_compiled_notifier)
+
       if model.args.presets_observable:has_notifier(presets_modified_notifier) then
         model.args.presets_observable:remove_notifier(presets_modified_notifier)
       end
@@ -956,8 +990,9 @@ function xStreamUI:build()
     self:update()
   end
   self.xstream.selected_model_index_observable:add_notifier(selected_model_index_notifier)
-  selected_model_index_notifier()
   self.vb_content = content
+
+  selected_model_index_notifier()
 
 end
 
@@ -992,7 +1027,14 @@ function xStreamUI:enable_model_controls()
   end
   for k,v in ipairs(xStreamUI.MODEL_CONTROLS) do
     --print("enable_model_controls",k,v)
-    self.vb.views[v].active = true
+    local model = self.xstream.selected_model
+    if (v == "xStreamModelSave") then
+      self.vb.views[v].active = model.modified
+    elseif (v == "xStreamRevertCallback") then
+      self.vb.views[v].active = model.modified
+    else
+      self.vb.views[v].active = true
+    end
   end
   self.vb.views["xStreamArgsContainer"].visible = true
   self.vb.views["xStreamArgPresetContainer"].visible = true
@@ -1131,3 +1173,21 @@ function xStreamUI:rename_model()
   self:update()
 
 end
+
+--------------------------------------------------------------------------------
+
+function xStreamUI:on_idle()
+
+  if self.callback_is_modified then
+    self.callback_is_modified = false
+    local model = self.xstream.selected_model
+    if model then
+      --print("*** xStreamUI:on_idle - callback modified")
+      local view = self.vb.views["xStreamCallbackEditor"]
+      model.callback_str = view.text --.. "\n"
+    end
+
+  end
+
+end
+
