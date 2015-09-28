@@ -36,13 +36,11 @@ require 'xLib/xParseXML'
 -- required files (unit tests)
 --------------------------------------------------------------------------------
 
---[[
 require 'xLib/unit_tests/xsongpos_test'
 require 'xLib/unit_tests/xnotecolumn_test'
 require 'xLib/unit_tests/xeffectcolumn_test'
 require 'xLib/unit_tests/xstream_test'
 require 'xLib/unit_tests/xparsexml_test'
-]]
 
 --------------------------------------------------------------------------------
 -- preferences
@@ -64,6 +62,7 @@ options:add_property("start_option", renoise.Document.ObservableNumber(START_OPT
 options:add_property("launch_model", renoise.Document.ObservableString(""))
 options:add_property("live_coding", renoise.Document.ObservableBoolean(true))
 options:add_property("show_editor", renoise.Document.ObservableBoolean(true))
+options:add_property("show_unit_tests", renoise.Document.ObservableBoolean(false))
 options:add_property("writeahead_factor", renoise.Document.ObservableNumber(175))
 renoise.tool().preferences = options
 
@@ -203,7 +202,6 @@ function show()
     return
   end
 
-  --[[
   local unit_tests = vb:column{
     margin = 6,
     vb:row{
@@ -252,7 +250,6 @@ function show()
 
     },
   }
-  ]]
 
 
   -- create class instances - but only once
@@ -294,7 +291,7 @@ function show()
 
       local tool_option_w = 140
       dialog_content = vb:column{
-        --unit_tests,
+        unit_tests,
         vb:row{
           style = "group",
           margin = 6,
@@ -432,6 +429,9 @@ function show()
         }
 
       }
+
+      unit_tests.visible = options.show_unit_tests.value
+
     end
 
     dialog = renoise.app():show_custom_dialog(
