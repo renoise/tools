@@ -58,7 +58,6 @@ function xStreamUI:__init(xstream,vb,midi_prefix)
   self.arg_views = {}
   
   self:build()
-  --self:update()
 
 end
 
@@ -315,24 +314,52 @@ function xStreamUI:update_models()
   self.model_views = {}
 
   for k,v in ipairs(self.xstream.models) do
-    local row = vb:row{
-      vb:button{
-        text = ("%s%s"):format(v.name,(v.modified) and "*" or ""),
-        color = (self.xstream.selected_model_index == k)
-          and xLib.COLOR_ENABLED or xLib.COLOR_DISABLED,
-        notifier = function()
-          self.xstream.selected_model_index = k
-        end,
-      },
+    local bt = vb:button{
+      text = "", 
+      notifier = function()
+        self.xstream.selected_model_index = k
+      end,
     }
-    vb_container:add_child(row)
-    table.insert(self.model_views,row)
+    vb_container:add_child(bt)
+    table.insert(self.model_views,bt)
+    self:update_model_button(k)
 
   end
 
 end
 
 --------------------------------------------------------------------------------
+
+function xStreamUI:update_selected_model()
+  TRACE("xStreamUI:update_selected_model()")
+  
+  if not self.xstream.selected_model then
+    --print("*** No model selected")
+    return
+  end
+
+  self:update_model_button(self.xstream.selected_model_index)
+
+end
+
+
+--------------------------------------------------------------------------------
+
+function xStreamUI:update_model_button(model_idx)
+  TRACE("xStreamUI:update_model_button(model_idx)",model_idx)
+
+  local view_bt = self.model_views[model_idx]
+  local model = self.xstream.models[model_idx]
+  if view_bt and model then
+    view_bt.text = ("%s%s"):format(model.name,(model.modified) and "*" or "")
+    view_bt.color = (self.xstream.selected_model_index == model_idx)
+      and xLib.COLOR_ENABLED or xLib.COLOR_DISABLED
+  end
+
+end
+
+--------------------------------------------------------------------------------
+-- (re-)build preset buttons
 
 function xStreamUI:update_presets()
   TRACE("xStreamUI:update_presets()")
@@ -341,17 +368,31 @@ function xStreamUI:update_presets()
     --print("*** No model selected")
     return
   end
-
+  
   local vb = self.vb
   local args = self.xstream.selected_model.args
 
   local vb_container = vb.views["xStreamArgPresetContainer"]
+
+  -- remove any & all preset buttons left 
+  -- from the previously active model
+
+  local count = 1
+  while(vb.views["xStreamModelPresetRecall"..count]) do
+    if self.preset_views[count] then
+      self.preset_views[count]:remove_child(
+        vb.views["xStreamModelPresetRecall"..count])
+      vb.views["xStreamModelPresetRecall"..count] = nil
+    end
+    count = count + 1
+  end
+
   for k,v in ipairs(self.preset_views) do
     vb_container:remove_child(v)
   end
 
-  self.preset_views = {}
 
+  self.preset_views = {}
 
   if (args.length == 0) then
     return
@@ -362,18 +403,13 @@ function xStreamUI:update_presets()
   for k = 1,#preset_node do
     
     local preset_name = args.get_suggested_preset_name(k)
-
     local midi_mapping = self.midi_prefix..
       ("Set Preset (%.2X)"):format(k)
-
-    local color = (args.selected_preset_index == k)
-      and xLib.COLOR_ENABLED or xLib.COLOR_DISABLED
 
     local row = vb:row{
       vb:button{
         text = "-",
         tooltip = "Remove this preset",
-        --color = color,
         notifier = function()
           args:remove_preset(k)
           self:update_presets()
@@ -381,14 +417,14 @@ function xStreamUI:update_presets()
       },
       vb:button{
         text = preset_name,
+        id = "xStreamModelPresetRecall"..k,
         tooltip = "Activate this preset",
-        color = color,
         notifier = function()
           local success,err = args:recall_preset(k)
           if not success then
             LOG(err)
           end
-          self:update_presets()
+          self:update_preset_states()
         end,
         midi_mapping = midi_mapping
       },
@@ -414,8 +450,34 @@ function xStreamUI:update_presets()
     }
     vb_container:add_child(row)
     table.insert(self.preset_views,row)
+    self:update_preset_button(k)
+  end
 
+end
 
+--------------------------------------------------------------------------------
+-- update visual state of preset buttons
+
+function xStreamUI:update_preset_states()
+
+  local vb = self.vb
+  for k = 1, #self.preset_views do
+    if (vb.views["xStreamModelPresetRecall"..k]) then
+      self:update_preset_button(k)
+    end
+  end
+
+end
+
+--------------------------------------------------------------------------------
+
+function xStreamUI:update_preset_button(idx)
+
+  local view_bt = self.vb.views["xStreamModelPresetRecall"..idx]
+  local model = self.xstream.selected_model
+  if view_bt and model then
+    view_bt.color = (model.args.selected_preset_index == idx)
+      and xLib.COLOR_ENABLED or xLib.COLOR_DISABLED
   end
 
 end
@@ -426,7 +488,6 @@ function xStreamUI:update_editor()
   TRACE("xStreamUI:update_editor()")
 
   if not self.xstream.selected_model then
-    --print("*** No model selected")
     return
   end
 
@@ -443,7 +504,8 @@ function xStreamUI:update_editor()
 end
 
 --------------------------------------------------------------------------------
--- 
+-- create user interface 
+
 function xStreamUI:build()
   TRACE("xStreamUI:build()")
 
@@ -471,18 +533,8 @@ function xStreamUI:build()
         width = 500, -- 80 characters
         id = "xStreamCallbackEditor",
         notifier = function(str)
-          --[[
-          local model = self.xstream.selected_model
-          if model then
-            -- note: add extra line to avoid end of string being
-            -- truncated, one line at a time... API bug? 
-            model.callback_str = str .. "\n" 
-          end
-          ]]
           self.callback_is_modified = true
-          --print("self.callback_is_modified")
         end,
-
       },
       vb:row{
         vb:button{
@@ -940,7 +992,7 @@ function xStreamUI:build()
     save_bt.active = self.xstream.selected_model.modified
     local revert_bt = vb.views["xStreamRevertCallback"]
     revert_bt.active = self.xstream.selected_model.modified
-    self:update_models()
+    self:update_selected_model()
   end
   
   local model_compiled_notifier = function()
