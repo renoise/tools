@@ -2519,9 +2519,11 @@ function xStreamUI:build()
                     width = xStreamUI.BITMAP_BUTTON_W,
                     height = xStreamUI.BITMAP_BUTTON_H,
                     notifier = function()
-                      local success = self.xstream.selected_model:refresh()
+                      local success,err = self.xstream.selected_model:refresh()
                       if success then
                         self:update()
+                      else
+                        renoise.app():show_warning(err)
                       end
 
                     end,
