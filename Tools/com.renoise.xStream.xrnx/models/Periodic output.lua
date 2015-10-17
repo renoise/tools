@@ -9,10 +9,10 @@ arguments = {
       value = 1,
       properties = {
           min = 1,
-          quant = 1,
+          --quant = 1,
           max = 255,
           zero_based = true,
-          display_as_hex = true,
+          display_as = "hex",
       },
       bind = "rns.selected_instrument_index_observable",
       description = "Specify the instrument number",
@@ -22,7 +22,7 @@ arguments = {
       value = 8,
       properties = {
           min = 1,
-          quant = 1,
+          display_as = "integer",
           max = 32,
       },
       description = "Specify the number of steps in the sequence",
@@ -32,7 +32,7 @@ arguments = {
       value = 4,
       properties = {
           min = -32,
-          quant = 1,
+          display_as = "integer",
           max = 32,
       },
       description = "Specify the sequence offset",
@@ -40,15 +40,23 @@ arguments = {
   {
       name = "produce_note_off",
       value = true,
-      --properties = {},
+      properties = {},
       description = "Decide if note is followed by a note-off",
   },
 },
+presets = {
+},
 data = {
+},
+options = {
+ color = 0x505552,
 },
 callback = [[
 -------------------------------------------------------------------------------
--- Create notes with different intervals
+-- Repeating notes (intervals)
+-- An example of how to create repeating notes with a custom interval. 
+-- You could use this for rhythmic purposes by creating various presets 
+-- for kick, snare, hihat and so on... 
 -------------------------------------------------------------------------------
 
 local incr_offset = xinc + args.offset
@@ -65,6 +73,8 @@ elseif args.produce_note_off and (incr_offset % args.interval == 1) then
 else
   xline.note_columns[1] = {}
 end
+
+
 
 
 

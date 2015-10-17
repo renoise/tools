@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <RenoiseScriptingTool doc_version="0">
-  <ApiVersion>4</ApiVersion>
-  <Id>com.renoise.xStream</Id>
-  <Version>1.02</Version>
-  <Author>danoise [bjorn.nesby@gmail.com]</Author>
   <Name>xStream</Name>
+  <Id>com.renoise.xStream</Id>
+  <ApiVersion>4</ApiVersion>
+  <Version>1.31</Version>
+  <Author>danoise [bjorn.nesby@gmail.com]</Author>
   <Category>Renoise Team</Category>
   <Description>xStream is a live coding environment for Renoise which can generate or transform existing song data. Launch by using the shortcut in the Tools menu</Description>
   <Homepage>http://renoise.com/tools/xStream</Homepage>

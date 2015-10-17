@@ -4,7 +4,16 @@ xLib
 --[[
 
   The xLib library is a suite of classes that extend the standard Renoise API
-  The core is comprised of a number of static properties and methods
+  
+  ## Conventions
+
+  Each class aims to be implemented with static methods, this should make it 
+  possible to use xLib with most programming styles. 
+
+  However, some of the more advanced classes do contain class methods 
+  and properties. This includes xSongPos and xLine (+related)
+
+  
 
 ]]
 
@@ -53,7 +62,7 @@ xLib.PRESET_TYPES = {
 }
 
 
-xLib.COLOR_ENABLED = {0xD0,0x40,0x40}
+xLib.COLOR_ENABLED = {0xD0,0xD8,0xD4}
 xLib.COLOR_DISABLED = {0x00,0x00,0x00}
 xLib.LARGE_BUTTON_H = 22
 xLib.SWITCHER_H = 22
@@ -68,6 +77,36 @@ function xLib.unpack_args(...)
   else
     return args[1]
   end
+end
+
+--------------------------------------------------------------------------------
+-- Add notifier, while checking for / removing existing one
+-- supports all three combinations of arguments:
+-- function or (object, function) or (function, object)
+-- @param obs (renoise.Document.ObservableXXX)
+-- @param arg1 (function or object)
+-- @param arg2 (function or object)
+
+function xLib.attach_to_observable(obs,arg1,arg2)
+  TRACE("xLib.attach_to_observable(obs,arg1,arg2)",obs,arg1,arg2)
+  
+  if type(arg1)=="function" then
+    local fn,obj = arg1,arg2
+    if obj then
+      if obs:has_notifier(fn,obj) then obs:remove_notifier(fn,obj) end
+      obs:add_notifier(fn,obj)
+    else
+      if obs:has_notifier(fn) then obs:remove_notifier(fn) end
+      obs:add_notifier(fn)
+    end
+  elseif type(arg2)=="function" then
+    local obj,fn = arg1,arg2
+    if obs:has_notifier(obj,fn) then obs:remove_notifier(obj,fn) end
+    obs:add_notifier(obj,fn)
+  else
+    error("Unsupported arguments")
+  end
+
 end
 
 --------------------------------------------------------------------------------
@@ -88,19 +127,6 @@ function xLib.match_table_key(t,key)
 end
 
 --------------------------------------------------------------------------------
--- attempt to create a valid identifier (variable name) from string
--- (strip special chars, do not allow names beginning with numbers, etc.)
--- @return boolean - when not possible
---[[
-function xLib.format_as_identifier(str)
-
-  str = string.gsub(str, "%s+", "")
-  str = string.gsub(str, "-+", "")
-  return str
-
-end
-]]
---------------------------------------------------------------------------------
 
 --- scale_value: scale a value to a range within a range
 -- @param value (number) the value we wish to scale
@@ -110,21 +136,52 @@ function xLib.scale_value(value,in_min,in_max,out_min,out_max)
 end
 
 --------------------------------------------------------------------------------
--- Split string 
+-- split string - original script: http://lua-users.org/wiki/SplitJoin 
 -- @param str_input (string)
--- @param sep (string) separator
+-- @param pat (string) pattern
 
-function xLib.split_string(str_input, sep)
-  TRACE("xLib.split_string(str_input, sep)",str_input, sep)
+function xLib.split(str, pat)
 
-  if sep == nil then
-    sep = "%s"
-  end
-  local t={} 
-  for str in string.gmatch(str_input, "([^"..sep.."]+)") do
-    table.insert(t,str)
-  end
-  return t
+   local t = {}  -- NOTE: use {n = 0} in Lua-5.0
+   local fpat = "(.-)" .. pat
+   local last_end = 1
+   local s, e, cap = str:find(fpat, 1)
+   while s do
+      if s ~= 1 or cap ~= "" then
+   table.insert(t,cap)
+      end
+      last_end = e+1
+      s, e, cap = str:find(fpat, last_end)
+   end
+   if last_end <= #str then
+      cap = str:sub(last_end)
+      table.insert(t, cap)
+   end
+   return t
+
+end
+
+-------------------------------------------------------------------------------
+-- insert return code whenever we encounter dashes or spaces in a string
+-- TODO keep dashes, and allow a certain length per line
+-- @param str (string)
+-- @return string
+
+function xLib.soft_wrap(str)
+
+  local t = xLib.split(str,"[-%s]")
+  return table.concat(t,"\n")  
+
+end
+
+-------------------------------------------------------------------------------
+-- find number of hex digits needed to represent a number (e.g. 255 = 2)
+-- @param val (int)
+-- @return int
+
+function xLib.get_hex_digits(val)
+
+  return 8-#string.match(bit.tohex(val),"0*")
 
 end
 
@@ -174,47 +231,6 @@ function xLib.set_obj_str_value(str,value)
   else
     return true
   end
-
-end
-
---------------------------------------------------------------------------------
--- @return table
-
-function xLib.get_thirdparty_libraries()
-
-  local lib_path = xLib._renoise_library_path
-  if (type(lib_path) == "nil") then
-    error("You need to define xLib._renoise_library_path")
-  end
-
-  --print("lib_path",lib_path)
-
-  local thirdparty_names = os.dirnames(lib_path.."/Installed Libraries")
-  --rprint(thirdparty_names)
-
-  return thirdparty_names
-
-end
-
---------------------------------------------------------------------------------
--- @return table
-
-function xLib.get_instrument_list()
-
-  local zero_pad = function(str,count)
-    return ("%0"..count.."s"):format(str) 
-  end
-
-  local rslt = table.create()
-  for k,v in ipairs(rns.instruments) do
-    local display_num = zero_pad(tostring(k-1),2)
-    local display_name = v.name
-    if (display_name == "") then
-      display_name = "(Untitled Instrument)"
-    end
-    rslt:insert(("%s:%s"):format(display_num,display_name))
-  end
-  return rslt
 
 end
 
@@ -281,34 +297,10 @@ function xLib.serialize_table(t,max_depth)
     return result
   end
 
-  --[[
-  if( type(obj) == 'table') then
-    result = result .. rdump(obj)
-  else
-    result = result .. serialize(select(i, ...))
-    if (i ~= n) then 
-      result = result .. "\t"
-    end
-  end
-  ]]
-
   rslt = rslt .. rdump(t) .. "}"
   --print(rslt)
 
   return rslt
 
 end
-
---------------------------------------------------------------------------------
---- determine if ordered table (unequal amount of keys/indices)
--- @return bool
---[[
-function xLib.table_is_ordered(t)
-
-  local t_len = #t
-  local t_keys = table.keys(t)
-  return  ((t_len > 0) and (t_keys ~= t_len))
-
-end
-]]
 

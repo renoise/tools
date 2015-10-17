@@ -5,56 +5,44 @@ FX-Commands.lua
 return {
 arguments = {
   {
-      name = "instr_idx",
-      value = 4,
-      properties = {
-          min = 1,
-          quant = 1,
-          max = 255,
-          zero_based = true,
-          display_as_hex = true,
-      },
-      bind = "rns.selected_instrument_index_observable",
-      description = "Instrument number (bound to selected instrument)",
-  },
-  {
       name = "interval",
-      value = 8,
+      value = 2,
       properties = {
           min = 1,
-          quant = 1,
+          --quant = 1,
           max = 255,
+          display_as = "integer",
       },
       description = "Output for every X line",
   },
   {
       name = "fx_number",
-      value = 3,
+      value = 15,
       properties = {
-          display = "popup",
+          --display_as = "popup",
           items = "xEffectColumn.SUPPORTED_EFFECTS",
       },
       description = "Choose among available FX commands",
   },
   {
       name = "fx_amt_x_",
-      value = 3,
+      value = 4,
       properties = {
           min = 0,
           max = 15,
-          quant = 1,
-          display_as_hex = true,
+          --quant = 1,
+          display_as = "hex",
       },
       description = "Choose FX amount (first digit)",
   },
   {
       name = "fx_amt__y",
-      value = 5,
+      value = 0,
       properties = {
           min = 0,
           max = 15,
-          quant = 1,
-          display_as_hex = true,
+          --quant = 1,
+          display_as ="hex",
       },
       description = "Choose FX amount (second digit)",
   },
@@ -98,10 +86,13 @@ presets = {
 },
 data = {
 },
+options = {
+ color = 0xD77A4B,
+},
 callback = [[
 -------------------------------------------------------------------------------
 -- FX-Commands 
--- Output to effect column, leave everything else intact
+-- Output to first effect column, leave everything else intact
 -------------------------------------------------------------------------------
 
 if (xinc%args.interval == 0) then
@@ -110,6 +101,8 @@ if (xinc%args.interval == 0) then
       amount_value = args.fx_amt_x_ *16 + args.fx_amt__y,
     }
 end  
+
+
 
 
 

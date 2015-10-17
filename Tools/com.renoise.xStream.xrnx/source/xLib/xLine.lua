@@ -63,6 +63,9 @@ function xLine.apply_descriptor(xline)
   elseif (type(xline) == "xLine") then -- check xLine content
     xline.pattern_line:apply_descriptor(xline.note_columns,xline.effect_columns)
     -- TODO automation
+    --xline.automation:apply_descriptor(xline.automation)
+    xline.automation = xLineAutomation(xline.automation)
+
   else
     error("Unexpected xline type")
   end

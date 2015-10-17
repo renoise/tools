@@ -6,13 +6,13 @@ return {
 arguments = {
   {
       name = "instr_idx",
-      value = 5,
+      value = 1,
       properties = {
           min = 1,
-          quant = 1,
+          --quant = 1,
           max = 255,
           zero_based = true,
-          display_as_hex = true,
+          display_as = "hex",
       },
       bind = "rns.selected_instrument_index_observable",
       description = "Specify the instrument number",
@@ -30,43 +30,43 @@ arguments = {
               "32",
               "64",
           },
-          display = "switch",
+          display_as = "switch",
       },
   },
   {
       name = "note1",
       value = 56.654347826087,
       properties = {
-          min = 0,
           max = 119,
-          display_as_note = true,
+          min = 0,
+          display_as = "note",
       },
   },
   {
       name = "note2",
       value = 37.614347826087,
       properties = {
-          min = 0,
           max = 119,
-          display_as_note = true,
+          min = 0,
+          display_as = "note",
       },
   },
   {
       name = "note3",
       value = 89.25,
       properties = {
-          min = 0,
           max = 119,
-          display_as_note = true,
+          min = 0,
+          display_as = "note",
       },
   },
   {
       name = "note4",
       value = 65.967391304348,
       properties = {
-          min = 0,
           max = 119,
-          display_as_note = true,
+          min = 0,
+          display_as = "note",
       },
   },
   {
@@ -75,7 +75,7 @@ arguments = {
       properties = {
           min = 0,
           max = 127,
-          display_as_hex = true,
+          display_as = "hex",
       },
   },
   {
@@ -84,7 +84,7 @@ arguments = {
       properties = {
           min = 0,
           max = 127,
-          display_as_hex = true,
+          display_as = "hex",
       },
   },
   {
@@ -93,7 +93,7 @@ arguments = {
       properties = {
           min = 0,
           max = 127,
-          display_as_hex = true,
+          display_as = "hex",
       },
   },
   {
@@ -102,14 +102,14 @@ arguments = {
       properties = {
           min = 0,
           max = 127,
-          display_as_hex = true,
+          display_as = "hex",
       },
   },
   {
       name = "trig1",
       value = 3,
       properties = {
-          display = "switch",
+          display_as = "switch",
           items = {
               "ON",
               "OFF",
@@ -125,7 +125,7 @@ arguments = {
       name = "trig2",
       value = 5,
       properties = {
-          display = "switch",
+          display_as = "switch",
           items = {
               "ON",
               "OFF",
@@ -141,7 +141,7 @@ arguments = {
       name = "trig3",
       value = 4,
       properties = {
-          display = "switch",
+          display_as = "switch",
           items = {
               "ON",
               "OFF",
@@ -157,7 +157,7 @@ arguments = {
       name = "trig4",
       value = 4,
       properties = {
-          display = "switch",
+          display_as = "switch",
           items = {
               "ON",
               "OFF",
@@ -174,15 +174,16 @@ arguments = {
       value = 6,
       properties = {
           max = 16,
-          quant = 1,
+          --quant = 1,
           min = 1,
+          display_as = "integer",
       },
   },
   {
       name = "fx1_number",
       value = 4,
       properties = {
-          display = "popup",
+          display_as = "popup",
           items = "xEffectColumn.SUPPORTED_EFFECTS",
       },
       description = "Choose among available FX commands",
@@ -193,8 +194,8 @@ arguments = {
       properties = {
           min = 0,
           max = 15,
-          quant = 1,
-          display_as_hex = true,
+          --quant = 1,
+          display_as = "hex",
       },
       description = "Choose FX amount (first digit)",
   },
@@ -204,8 +205,8 @@ arguments = {
       properties = {
           min = 0,
           max = 15,
-          quant = 1,
-          display_as_hex = true,
+          --quant = 1,
+          display_as = "hex",
       },
       description = "Choose FX amount (second digit)",
   },
@@ -223,13 +224,13 @@ presets = {
       note1 = 56.654347826087,
       trig3 = 5,
       note3 = 89.25,
-      repeat_ticks = 1,
-      vol1 = 89.28652173913,
-      vol3 = 74.101739130435,
-      trig1 = 3,
       vol2 = 5.5217391304348,
-      note2 = 37.614347826087,
+      vol1 = 89.28652173913,
       trig2 = 4,
+      trig1 = 3,
+      repeat_ticks = 1,
+      note2 = 37.614347826087,
+      vol3 = 74.101739130435,
   },
   {
       vol4 = 15.792173913044,
@@ -243,13 +244,13 @@ presets = {
       note1 = 56.654347826087,
       trig3 = 4,
       note3 = 89.25,
-      repeat_ticks = 6,
-      vol1 = 89.28652173913,
-      vol3 = 42.79347826087,
-      trig1 = 3,
       vol2 = 86.194347826087,
-      note2 = 37.614347826087,
+      vol1 = 89.28652173913,
       trig2 = 5,
+      trig1 = 3,
+      repeat_ticks = 6,
+      note2 = 37.614347826087,
+      vol3 = 42.79347826087,
   },
   {
       vol4 = 99.777826086957,
@@ -263,13 +264,13 @@ presets = {
       note1 = 56.654347826087,
       trig3 = 1,
       note3 = 89.25,
-      repeat_ticks = 4,
-      vol1 = 89.28652173913,
-      vol3 = 74.101739130435,
-      trig1 = 1,
       vol2 = 60.07652173913,
-      note2 = 37.614347826087,
+      vol1 = 89.28652173913,
       trig2 = 5,
+      trig1 = 1,
+      repeat_ticks = 4,
+      note2 = 37.614347826087,
+      vol3 = 74.101739130435,
   },
   {
       vol4 = 88.071739130435,
@@ -283,13 +284,13 @@ presets = {
       note1 = 53.498260869565,
       trig3 = 3,
       note3 = 73.159130434783,
-      repeat_ticks = 9,
-      vol1 = 127,
-      vol3 = 96.52,
-      trig1 = 7,
       vol2 = 54.057826086957,
-      note2 = 82.782608695652,
+      vol1 = 127,
       trig2 = 4,
+      trig1 = 7,
+      repeat_ticks = 9,
+      note2 = 82.782608695652,
+      vol3 = 96.52,
   },
   {
       vol4 = 88.071739130435,
@@ -303,13 +304,13 @@ presets = {
       note1 = 49.928260869565,
       trig3 = 3,
       note3 = 85.059130434783,
-      repeat_ticks = 6,
-      vol1 = 127,
-      vol3 = 97.127391304348,
-      trig1 = 7,
       vol2 = 47.818260869565,
-      note2 = 82.782608695652,
+      vol1 = 127,
       trig2 = 4,
+      trig1 = 7,
+      repeat_ticks = 6,
+      note2 = 82.782608695652,
+      vol3 = 97.127391304348,
   },
   {
       vol4 = 88.071739130435,
@@ -323,13 +324,13 @@ presets = {
       note1 = 54.688260869565,
       trig3 = 3,
       note3 = 81.489130434783,
-      repeat_ticks = 6,
-      vol1 = 89.28652173913,
-      vol3 = 97.127391304348,
-      trig1 = 7,
       vol2 = 34.510869565217,
-      note2 = 82.782608695652,
+      vol1 = 89.28652173913,
       trig2 = 4,
+      trig1 = 7,
+      repeat_ticks = 6,
+      note2 = 82.782608695652,
+      vol3 = 97.127391304348,
   },
   {
       vol4 = 88.071739130435,
@@ -343,13 +344,13 @@ presets = {
       note1 = 53.498260869565,
       trig3 = 3,
       note3 = 73.159130434783,
-      repeat_ticks = 6,
-      vol1 = 127,
-      vol3 = 96.52,
-      trig1 = 7,
       vol2 = 54.057826086957,
-      note2 = 82.782608695652,
+      vol1 = 127,
       trig2 = 4,
+      trig1 = 7,
+      repeat_ticks = 6,
+      note2 = 82.782608695652,
+      vol3 = 96.52,
   },
   {
       vol4 = 127,
@@ -363,13 +364,13 @@ presets = {
       note1 = 46.358260869565,
       trig3 = 3,
       note3 = 73.159130434783,
-      repeat_ticks = 6,
-      vol1 = 122.25130434783,
-      vol3 = 104.14,
-      trig1 = 7,
       vol2 = 78.022173913044,
-      note2 = 82.782608695652,
+      vol1 = 122.25130434783,
       trig2 = 4,
+      trig1 = 7,
+      repeat_ticks = 6,
+      note2 = 82.782608695652,
+      vol3 = 104.14,
   },
   {
       vol4 = 94.200869565217,
@@ -383,13 +384,13 @@ presets = {
       note1 = 46.358260869565,
       trig3 = 3,
       note3 = 73.159130434783,
-      repeat_ticks = 3,
-      vol1 = 85.145217391304,
-      vol3 = 89.617826086957,
-      trig1 = 1,
       vol2 = 127,
-      note2 = 82,
+      vol1 = 85.145217391304,
       trig2 = 4,
+      trig1 = 1,
+      repeat_ticks = 3,
+      note2 = 82,
+      vol3 = 89.617826086957,
   },
   {
       vol4 = 120.57383953368,
@@ -403,13 +404,13 @@ presets = {
       note1 = 27.085238196966,
       trig3 = 7,
       note3 = 91.52652173913,
-      repeat_ticks = 15,
-      vol1 = 82.199041718802,
-      vol3 = 99.954313791314,
-      trig1 = 1,
       vol2 = 78.985961485641,
-      note2 = 56.974150822474,
+      vol1 = 82.199041718802,
       trig2 = 3,
+      trig1 = 1,
+      repeat_ticks = 15,
+      note2 = 56.974150822474,
+      vol3 = 99.954313791314,
   },
   {
       vol4 = 28.588274788659,
@@ -423,16 +424,25 @@ presets = {
       note1 = 72.049348429823,
       trig3 = 0,
       note3 = 79.955565050203,
-      repeat_ticks = 12,
-      vol1 = 58.304422132023,
-      vol3 = 11.988006225776,
-      trig1 = 3,
       vol2 = 83.86953337199,
-      note2 = 25.316599017304,
+      vol1 = 58.304422132023,
       trig2 = 0,
+      trig1 = 3,
+      repeat_ticks = 12,
+      note2 = 25.316599017304,
+      vol3 = 11.988006225776,
   },
 },
 data = {
+  trig_modes = {
+      BLANK = 6,
+      CHORD = 3,
+      OFF = 2,
+      ON = 1,
+      EFFECT = 5,
+      REPEAT = 4,
+      SKIP = 7,
+  },
   intervals = {
       1,
       2,
@@ -442,22 +452,16 @@ data = {
       32,
       64,
   },
-  trig_modes = {
-      BLANK = 6,
-      CHORD = 3,
-      OFF = 2,
-      REPEAT = 4,
-      EFFECT = 5,
-      SKIP = 7,
-      ON = 1,
-  },
+},
+options = {
+ color = 0x505552,
 },
 callback = [[
 -------------------------------------------------------------------------------
--- A small step sequencer 
--- Will output between 1-4 note columns and 1 effect column
+-- A simple-ish step sequencer 
+-- This sequencer is limited to four steps, but does some rather clever
+-- things nevertheless. Outputs between 1-4 note columns and 1 effect column
 -------------------------------------------------------------------------------
-
 -- ## Trigger options
 -- ON (normal note)
 -- OFF (note-off)
@@ -466,13 +470,11 @@ callback = [[
 -- EFFECT (apply effect to note)
 -- BLANK ("---", blank line)
 -- SKIP ("↷" skip this step)
-
--- Some global variables -----------------------
-
+-------------------------------------------------------------------------------
+-- Now the code: 
 local spacing = data.intervals[args.space]
 local seq_pos = xinc%spacing
 local produce_output = (seq_pos == 0)
-
 if produce_output then
   local global_step = math.floor(xinc/spacing)
   local num_steps = 0
@@ -497,7 +499,6 @@ if produce_output then
       }
     }    
   elseif (trig_value == data.trig_modes.OFF) then
-  
     xline = {
       note_columns = {
         {
@@ -506,9 +507,7 @@ if produce_output then
         }
       }
     }
-    
   elseif (trig_value == data.trig_modes.CHORD) then
-  
     xline = {
       note_columns = {
         {
@@ -534,7 +533,6 @@ if produce_output then
       }
     }
   elseif (trig_value == data.trig_modes.REPEAT) then    
-  
       xline = {
           note_columns = {
           {
@@ -546,7 +544,6 @@ if produce_output then
         } 
       }
   elseif (trig_value == data.trig_modes.EFFECT) then
-  
     xline = {
       note_columns = {
         {
@@ -562,9 +559,7 @@ if produce_output then
         }
       }
     }
-        
   elseif (trig_value == data.trig_modes.BLANK) then  
-  
     xline = {
       note_columns = {
         {
@@ -572,12 +567,14 @@ if produce_output then
         }
       }
     }
-    
   end  
-  
 else
   xline = EMPTY_XLINE
 end  
+
+
+
+
 
 
 

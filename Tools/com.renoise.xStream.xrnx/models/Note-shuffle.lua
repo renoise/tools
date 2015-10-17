@@ -6,13 +6,13 @@ return {
 arguments = {
   {
       name = "instr_idx",
-      value = 2,
+      value = 1,
       properties = {
           min = 1,
-          quant = 1,
+          --quant = 1,
           max = 255,
           zero_based = true,
-          display_as_hex = true,
+          display_as = "hex",
       },
       bind = "rns.selected_instrument_index_observable",
       description = "Specify the instrument number",
@@ -22,8 +22,9 @@ arguments = {
       value = 5,
       properties = {
           min = 1,
-          quant = 1,
+          --quant = 1,
           max = 32,
+          display_as = "integer",
       },
       description = "Specify the number of steps in the sequence",
   },
@@ -33,6 +34,7 @@ arguments = {
       properties = {
           max = 128,
           min = 0,
+          display_as = "hex",
       },
       description = "Specify the general volume level",
   },
@@ -62,9 +64,14 @@ presets = {
 },
 data = {
 },
+options = {
+ color = 0x9ED68C,
+},
 callback = [[
 -------------------------------------------------------------------------------
--- Control the amount of shuffle (delay on every second note)
+-- Notes & Shuffle
+-- Control the amount of 'shuffle' (delay on every second note),
+-- with a semi-complex note-sequence based on 'num_steps'
 -------------------------------------------------------------------------------
 
 local produce_note = (xinc%2==0) and true or false
@@ -82,5 +89,7 @@ else
 end  
   
   
+
+
 ]],
 }

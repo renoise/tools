@@ -6,13 +6,13 @@ return {
 arguments = {
   {
       name = "instr_idx",
-      value = 3,
+      value = 1,
       properties = {
           min = 1,
-          quant = 1,
+          --quant = 1,
           max = 255,
           zero_based = true,
-          display_as_hex = true,
+          display_as = "hex",
       },
       bind = "rns.selected_instrument_index_observable",
       description = "Specify the instrument number",
@@ -20,11 +20,12 @@ arguments = {
   {
       poll = "rns.selected_note_column_index",
       name = "note_col_idx",
-      value = 2,
+      value = 1,
       properties = {
           min = 0,
-          quant = 1,
+          --quant = 1,
           max = 12,
+          display_as = "integer",
       },
       description = "Tracking the selected note-column via polling",
   },
@@ -61,21 +62,14 @@ data = {
       false,
   },
 },
+options = {
+ color = 0x60AACA,
+},
 callback = [[
 -------------------------------------------------------------------------------
 -- Using polling for non-observable values
--- (previous example, but with note-offs)
--------------------------------------------------------------------------------
-
--- Let's improve on the API Polling example by adding note-offs.
--- Since the output is written to an arbitrary column, we need to manage
--- our OFF notes accordingly. 
-
--- A particular quirk is that, in order to have a truly reliable OFF note
--- we need to write it to the pattern _twice_. This is so, since the 
--- playback engine in Renoise could have progressed to the next line in
--- the time it takes to process the script (engine is a different thread). 
--- This makes the script a little more complex, but reliable. 
+-- Let's improve on 'Args-Polling' by adding note-offs.
+---------------------------------------------=========-------------------------
 
 xline = {
   note_columns = EMPTY_NOTE_COLUMNS,
@@ -106,9 +100,13 @@ local check_columns = function (t,t2)
   end
 end
 
--- We then call this function twice, first time to insert the second 
--- note-off and second time to insert the first one. 
-
+-- We then call this function twice, to insert 1st and 2nd OFF. Why two times? 
+-- Has to do with the Renoise playback engine - it could have progressed to 
+-- the next line in the time it takes for us to process the script. The result 
+-- could be a hanging - even if rare, a definite possibility. 
+-- Essentially, 'double OFFs' makes the script more complex, but also reliable
+-- xStream TODO: xline scheduling - a better way to handle this 
+-------------------------------------------------------------------------------
 check_columns(data.columns2)
 check_columns(data.columns,data.columns2)
 
@@ -118,20 +116,6 @@ xline.note_columns[args.note_col_idx] = {
   note_value = math.random(36,60),
   instrument_value = args.instr_idx,
 }  
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 

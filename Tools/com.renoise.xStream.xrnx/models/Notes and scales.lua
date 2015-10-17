@@ -77,19 +77,22 @@ presets = {
 },
 data = {
 },
+options = {
+ color = 0x69997A,
+},
 callback = [[
 -----------------------------------------------------------------------------
 -- Restricting to a harmonic scale
+-- Try running this example on some existing notes. You will see that 
+-- notes are being transformed into the selected key & scale. 
+-- The actual work is being done by 'restrict_to_scale()', a helper 
+-- method for xStream (OK, a little bit like cheating...)
 -----------------------------------------------------------------------------
 
--- In this example we will harmonize existing notes within the first 
--- note-column, according to the selected scale. The actual work is being
--- done by a method called 'restrict_to_scale' in the xScale class. 
-
 local existing_note = xline.note_columns[1].note_value
-
 xline.note_columns[1].note_value =
   restrict_to_scale(existing_note,args.curr_scale,args.curr_key)
+
 
 
 

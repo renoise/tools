@@ -45,6 +45,10 @@ function xLineAutomation:do_write(sequence,line,ptrack_auto,patt_num_lines)
   
   assert(ptrack_auto,"Required argument 'ptrack_auto' not defined")
 
+  if table.is_empty(self.automation) then
+    return
+  end
+
   -- TODO clear existing, but how? API suggestion: clear_line_at(line_index)
 
   local time_offset 

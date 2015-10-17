@@ -12,6 +12,11 @@ xLinePattern
 
 class 'xLinePattern'
 
+xLinePattern.COLUMN_TYPES = {
+  NOTE_COLUMN = 1,
+  EFFECT_COLUMN = 2,
+}
+
 xLinePattern.MAX_NOTE_COLUMNS = 12
 xLinePattern.MAX_EFFECT_COLUMNS = 8
 xLinePattern.EMPTY_VALUE = 255     
@@ -130,6 +135,7 @@ function xLinePattern:do_write(sequence,line,track_idx,phrase,tokens,include_hid
   local visible_fx_cols = rns_track_or_phrase.visible_effect_columns
   --print("visible_note_cols",visible_note_cols)
 
+  -- figure out which sub-columns to display (VOL/PAN/DLY)
   -- TODO optimize by moving this into a one-time track preparation
   -- (after the tokens have been extracted and streaming is active)
   if is_seq_track and expand_columns and not table.is_empty(self.note_columns) then
@@ -142,87 +148,94 @@ function xLinePattern:do_write(sequence,line,track_idx,phrase,tokens,include_hid
   end
   
   if is_seq_track then
-    --print("got here")
-    for k,rns_col in ipairs(rns_line.note_columns) do
-
-      if not expand_columns then
-        if not include_hidden and (k > visible_note_cols) then
-          --print("skip hidden column",k)
-          break
-        end
-      end
-
-      local note_col = self.note_columns[k]
-      --print("note_col",k,note_col,type(note_col))
-
-      --if (type(note_col)=="xNoteColumn") then
-      if note_col then
-
-        -- show columns, sub-columns when instance of xNoteColumn
-        if expand_columns and
-          (type(note_col)=="xNoteColumn")
-        then
-          if (k > visible_note_cols) then
-            visible_note_cols = k
-            --print("expand note cols to",k)
-          end
-        end
-
-        if not include_hidden and (k > visible_note_cols) then
-          --print("skip hidden column",k)
-          break
-        end
-
-        --print("*** xLinePattern:do_write - note_col",k,note_col,type(note_col),note_col.note_value)
-
-        -- include all tokens 
-        tokens = xNoteColumn.output_tokens
-
-        -- a table can be the result of a redefined column
-        -- convert tables into a xNoteColumn instance
-        if (type(note_col) == "table") then
-          --print("convert tables into a xNoteColumn instance",k,note_col)
-          note_col = xNoteColumn(note_col)
-        end
-
-        note_col:do_write(
-          rns_col,tokens,clear_undefined)
-      else
-        --print("clear_undefined",clear_undefined,"column#",k)
-        if clear_undefined then
-          rns_col:clear()
-        end
-      end
-    end
+    self:process_columns(rns_line.note_columns,
+      rns_track_or_phrase,
+      self.note_columns,
+      include_hidden,
+      expand_columns,
+      visible_note_cols,
+      xNoteColumn.output_tokens,
+      clear_undefined,
+      xLinePattern.COLUMN_TYPES.NOTE_COLUMN)
   else
     if self.note_columns then
       LOG("Can only write note-columns to a sequencer track")
     end
   end
 
-	for k,rns_col in ipairs(rns_line.effect_columns) do
-    if not include_hidden and (k > visible_fx_cols) then
-      break
+  self:process_columns(rns_line.effect_columns,
+    rns_track_or_phrase,
+    self.effect_columns,
+    include_hidden,
+    expand_columns,
+    visible_fx_cols,
+    xEffectColumn.output_tokens,
+    clear_undefined,
+    xLinePattern.COLUMN_TYPES.EFFECT_COLUMN)
+
+end
+
+-------------------------------------------------------------------------------
+-- write to either note or effect column
+-- @param rns_columns (array<renoise.NoteColumn>) 
+-- @param rns_track_or_phrase (renoise.Track or renoise.InstrumentPhrase) 
+-- @param xline_columns (table<xNoteColumn or xEffectColumn>)
+-- @param include_hidden (bool) apply to hidden columns as well
+-- @param expand_columns (bool) reveal columns as they are written to
+-- @param visible_cols (int) number of visible note/effect columns
+-- @param tokens (table<string>) process these tokens ("note_value", etc)
+-- @param clear_undefined (bool) clear existing data when ours is nil
+-- @param col_type (xLinePattern.COLUMN_TYPES)
+
+function xLinePattern:process_columns(
+  rns_columns,
+  rns_track_or_phrase,
+  xline_columns,
+  include_hidden,
+  expand_columns,
+  visible_cols,
+  tokens,
+  clear_undefined,
+  col_type)
+
+	for k,rns_col in ipairs(rns_columns) do
+    
+    if not expand_columns then
+      if not include_hidden and (k > visible_cols) then
+        --print("skip hidden column",k)
+        break
+      end
     end
-    local fx_col = self.effect_columns[k]
-    --if (type(note_col)=="xEffectColumn") then
-    if fx_col then
+
+    local col = xline_columns[k]
+    
+    if col then
+
       if expand_columns and
-        (k > visible_fx_cols)
+        (type(col)=="xNoteColumn") or 
+        (type(col)=="xEffectColumn") 
       then
-        visible_fx_cols = k
+        if (k > visible_cols) then
+          visible_cols = k
+          --print("expand cols to",k)
+        end
       end
 
-      -- include all tokens 
-      tokens = xEffectColumn.output_tokens
+      if not include_hidden and (k > visible_cols) then
+        --print("skip hidden column",k)
+        break
+      end
 
       -- a table can be the result of a redefined column
-      if (type(fx_col) == "table") 
-      then
-        fx_col = xEffectColumn(fx_col)
+      if (type(col) == "table") then
+        if (col_type == xLinePattern.COLUMN_TYPES.NOTE_COLUMN) then
+          col = xNoteColumn(col)
+        elseif (col_type == xLinePattern.COLUMN_TYPES.EFFECT_COLUMN) then
+          col = xEffectColumn(col)
+        end
       end
 
-      fx_col:do_write(
+      col:do_write(
         rns_col,tokens,clear_undefined)
     else
       if clear_undefined then
@@ -231,9 +244,11 @@ function xLinePattern:do_write(sequence,line,track_idx,phrase,tokens,include_hid
     end
 	end
 
-  rns_track_or_phrase.visible_note_columns = visible_note_cols
-  rns_track_or_phrase.visible_effect_columns = visible_fx_cols
-
+  if (col_type == xLinePattern.COLUMN_TYPES.NOTE_COLUMN) then
+    rns_track_or_phrase.visible_note_columns = visible_cols
+  elseif (col_type == xLinePattern.COLUMN_TYPES.EFFECT_COLUMN) then
+    rns_track_or_phrase.visible_effect_columns = visible_cols
+  end
 
 end
 

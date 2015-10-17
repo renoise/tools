@@ -61,12 +61,16 @@ function xStreamModel:__init(xstream)
   -- xStream, required
   self.xstream = xstream
 
+  -- string, file location (if saved to, loaded from disk...)
+  self.file_path = nil
+
   -- string 
   self.name = property(self.get_name,self.set_name)
   self.name_observable = renoise.Document.ObservableString("")
 
-  -- string, file location (if saved to, loaded from disk...)
-  self.file_path = nil
+  -- number, valid 8-bit RGB representation (0xRRGGBB)
+  self.color = property(self.get_color,self.set_color)
+  self.color_observable = renoise.Document.ObservableNumber(0)
 
   -- function, provides us with content
   -- @param pos (int), 0 is first line
@@ -91,8 +95,21 @@ function xStreamModel:__init(xstream)
   self.compiled = property(self.get_compiled,self.set_compiled)
   self.compiled_observable = renoise.Document.ObservableBoolean(false)
 
-  -- xStreamArgs, class with it's own preset import/export mechanism
+  -- xStreamArgs, describing the available arguments
   self.args = nil
+
+  -- table<xStreamPresets>, list of active preset banks
+  self.preset_banks = {}
+
+  -- ObservableNumberList, notifier fired when banks are added/removed 
+  self.preset_banks_observable = renoise.Document.ObservableNumberList()
+
+  -- int, index of selected preset bank (0 = none)
+  self.selected_preset_bank_index = property(self.get_preset_bank_index,self.set_preset_bank_index)
+  self.selected_preset_bank_index_observable = renoise.Document.ObservableNumber(0)
+
+  -- xStreamPresets, reference to selected preset bank (please set via index)
+  self.selected_preset_bank = property(self.get_selected_preset_bank)
 
   -- table<vararg>, variables, can be any basic type 
   self.data = nil
@@ -204,9 +221,17 @@ function xStreamModel:__init(xstream)
     __metatable = false -- prevent tampering
   })
 
- 
+  -- initialize -----------------------
+
+  self:add_preset_bank(xStreamPresets.DEFAULT_BANK_NAME)
+  self.selected_preset_bank_index = 1
+
+  --self:load_preset_banks()
+
 end
 
+-------------------------------------------------------------------------------
+-- Get/set methods
 -------------------------------------------------------------------------------
 
 function xStreamModel:get_suggested_name()
@@ -228,6 +253,20 @@ end
 
 -------------------------------------------------------------------------------
 
+function xStreamModel:get_color()
+  return self.color_observable.value
+end
+
+function xStreamModel:set_color(val)
+  --print("val",val,"type",type(val))
+  if (self.color_observable.value ~= val) then
+    self.color_observable.value = val
+    self.modified = true
+  end
+end
+
+-------------------------------------------------------------------------------
+
 function xStreamModel:get_callback_str()
   --TRACE("xStreamModel:get_callback_str - ",self.callback_str_observable.value)
   return self.callback_str_observable.value
@@ -236,7 +275,9 @@ end
 function xStreamModel:set_callback_str(str)
   TRACE("xStreamModel:set_callback_str - ",#str)
 
-  self.modified = (str ~= self.callback_str_source) 
+  local modified = (str ~= self.callback_str_source) 
+  self.modified = modified and true or self.modified
+
   self.callback_str_observable.value = str
 
   -- live syntax check
@@ -280,6 +321,39 @@ function xStreamModel:set_compiled(val)
 end
 
 -------------------------------------------------------------------------------
+
+function xStreamModel:get_preset_bank_index()
+  return self.selected_preset_bank_index_observable.value
+end
+
+function xStreamModel:set_preset_bank_index(idx)
+  if not self.preset_banks[idx] then
+    LOG("Attempted to set out-of-range value for preset bank index")
+    return
+  end
+  self.selected_preset_bank_index_observable.value = idx
+
+  -- attach_to_preset_bank
+  local obs = self.selected_preset_bank.modified_observable
+  xLib.attach_to_observable(obs,self,self.handle_preset_changes)
+
+end
+
+-------------------------------------------------------------------------------
+
+function xStreamModel:get_selected_preset_bank()
+  return self.preset_banks[self.selected_preset_bank_index]
+end
+
+-------------------------------------------------------------------------------
+
+function xStreamModel:get_preset_bank_by_name(str_name)
+  return table.find(self:get_preset_bank_names(),str_name)
+end
+
+-------------------------------------------------------------------------------
+-- Class methods
+-------------------------------------------------------------------------------
 -- load external model definition - will validate the function in a sandbox
 -- @param file_path (string), prompt for file if not defined
 -- return bool, true when model was succesfully loaded
@@ -316,11 +390,20 @@ function xStreamModel:load_definition(file_path)
 
   self.file_path = file_path
   self.name = name
-
   self.callback_str_source = def.callback
 
-  local success,err = self:parse_definition(def)
-  return success,err
+  local passed,err = self:parse_definition(def)
+  if not passed then
+    err = "ERROR: Failed to load the definition '"..name.."' - "..err
+    return false,err
+  end
+
+  self:load_preset_banks()
+
+  -- model might have been set as "modified", revert this:
+  self.modified = false
+
+  return true
 
 end
 
@@ -332,23 +415,41 @@ end
 function xStreamModel:parse_definition(def)
   TRACE("xStreamModel:parse_definition(def)",def)
 
+  -- default model options
+  local color = xColor.color_table_to_value(xLib.COLOR_DISABLED)
+  
+  if not table.is_empty(def.options) then
+    if (def.options.color) then
+      --print("def.options.color",def.options.color)
+      color = def.options.color
+    end
+  end
+
+  self.color_observable.value = color
+
   -- create arguments
   self.args = xStreamArgs(self)
   if not table.is_empty(def.arguments) then
     for _,arg in ipairs(def.arguments) do
       --print("*** arg",rprint(arg))
       local passed,err = self.args:add(arg)
+      --print("passed,err",passed,err)
       if not passed then
-        err = "ERROR: Failed to load the definition '"..name.."' - "..err
+        err = "*** ERROR: xStreamModel:parse_definition - encountered errors: '"..err
+        LOG(err)
         return false,err
       end
     end
   end
 
+  -- clear existing presets
+  self.selected_preset_bank_index = 1
+  self.selected_preset_bank:remove_all_presets()
+
   -- create presets 
   if not table.is_empty(def.presets) then
     for _,v in ipairs(def.presets) do
-      self.args:add_preset(v)
+      self.selected_preset_bank:add_preset(v)
     end
   end
 
@@ -521,6 +622,7 @@ function xStreamModel:serialize()
   local rslt = ""
   .."--[[============================================================================"
   .."\n" .. self.name .. ".lua"
+  .."\n File generated by xStream - please see documentation for details"
   .."\n============================================================================]]--"
   .."\n"
   .."\nreturn {"
@@ -533,6 +635,9 @@ function xStreamModel:serialize()
 	.."\ndata = "
   ..xLib.serialize_table(self.data_initial)
   ..","
+	.."\noptions = {"
+  .."\n color = "..xColor.value_to_hex_string(self.color)..","
+  .."\n},"
 	.."\ncallback = [[\n"
   ..self.callback_str
   .."\n]],"
@@ -548,7 +653,7 @@ end
 -- revert to last saved model ()
 -- @return bool, true when saved
 -- @return string, error message when problem was encountered
-
+--[[
 function xStreamModel:revert()
 
   self.callback_str = self.callback_str_source
@@ -556,6 +661,37 @@ function xStreamModel:revert()
   if self.xstream.ui then
     self.xstream.ui:update_editor()
   end
+
+end
+]]
+
+-------------------------------------------------------------------------------
+-- refresh - (re-)load model from disk
+-- @return bool, true when refreshed
+-- @return string, error message when problem was encountered
+
+function xStreamModel:refresh()
+  TRACE("xStreamModel:refresh()")
+
+  if self.modified then
+    local str_msg = "Are you sure you want to (re-)load the model from disk?"
+                  .."(this change cannot be undone)"
+    local choice = renoise.app():show_prompt("Refresh model", str_msg, {"OK","Cancel"})
+    if (choice == "Cancel") then
+      return
+    end
+  end
+
+  self:detach_from_song()
+
+  local success,err = self:load_definition(self.file_path)
+  if not success then
+    return false,err
+  end
+
+  self:attach_to_song()
+
+  return true
 
 end
 
@@ -569,14 +705,16 @@ function xStreamModel:save(as_copy)
   TRACE("xStreamModel:save(as_copy)",as_copy)
 
   local file_path,name
-  if not self.file_path then
+
+  if not self.file_path or as_copy then
     file_path,name = self.prompt_for_location("Save as")
     if not file_path then
       return false
     end
     file_path = xFilesystem.unixslashes(file_path)
-    self.file_path = file_path
-    self.name = name
+  else
+    file_path = self.file_path
+    name = self.name
   end
   
   local compiled_fn,err = self:compile(self.callback_str)
@@ -585,9 +723,11 @@ function xStreamModel:save(as_copy)
                 .."fixed before you can save it to disk:\n"..err
   end
 
-  xFilesystem.write_string_to_file(self.file_path,self:serialize())
+  xFilesystem.write_string_to_file(file_path,self:serialize())
 
   if not as_copy then
+    self.file_path = file_path
+    self.name = name
     self.modified = false
     self.callback_str_source = self.callback_str
   end
@@ -598,26 +738,62 @@ end
 
 -------------------------------------------------------------------------------
 -- "save model as"
--- always prompt for file path, rename current model and save
 -- @return bool, true when saved
 -- @return string, error message when problem was encountered
 
 function xStreamModel:save_as()
   TRACE("xStreamModel:save_as()")
-
-  local file_path,name = self.prompt_for_location("Save as")
-  if not file_path then
-    return false
-  end
-  file_path = xFilesystem.unixslashes(file_path)
-
-  self.file_path = file_path
-  self.name = name
   
-  local passed,err = self:save()
+  local as_copy = true
+  local passed,err = self:save(as_copy)
   if not passed then
     return false, err
   end
+
+  return true
+
+end
+
+--------------------------------------------------------------------------------
+-- rename model 
+
+function xStreamModel:rename()
+  TRACE("xStreamModel:rename()")
+
+  --local model = self.xstream.selected_model
+
+  local str_name,err = xDialog.prompt_for_string(self.name,
+    "Enter a new name","Rename Model")
+  if not str_name then
+    return true
+  end
+
+  local str_from = self.file_path
+  local folder,filename,ext = xFilesystem.get_path_parts(str_from)
+
+  if not xFilesystem.validate_filename(str_name) then
+    return false,"Please avoid using special characters in the name"
+  end
+
+  local str_to = ("%s%s.lua"):format(folder,str_name)
+  --print("str_from,str_to",str_from,str_to)
+
+  -- we might not yet have saved the model - skip in these cases...
+  if io.exists(str_from) then
+    if not io.exists(str_to) then
+      if not os.rename(str_from,str_to) then
+        return false,"Failed to rename, perhaps the file is in use by another application?"
+      end
+    else
+      LOG("Warning: a model definition already exists at this location: "..str_to)
+    end
+  end
+
+  -- update favorites to reflect new name
+  self.xstream.favorites:rename_model(self.name,str_name)
+
+  self.name = str_name
+  self.file_path = str_to
 
   return true
 
@@ -669,6 +845,14 @@ function xStreamModel:attach_to_song()
 
 end
 
+-------------------------------------------------------------------------------
+
+function xStreamModel:handle_preset_changes()
+  TRACE("handle_preset_changes")
+  if self:is_default_bank() then
+    self.modified = true
+  end
+end
 
 -------------------------------------------------------------------------------
 -- invoked when song or model has changed
@@ -690,4 +874,167 @@ function xStreamModel:on_idle()
 
 end
 
+-------------------------------------------------------------------------------
+-- load all preset banks available to us
+-- if problems occur, they are logged...
+
+function xStreamModel:load_preset_banks()
+  TRACE("xStreamModel:load_preset_banks()")
+
+  local str_folder = xStream.PRESET_BANK_FOLDER..self.name.."/"
+  --print("str_folder",str_folder)
+  if io.exists(str_folder) then
+    for __, filename in pairs(os.filenames(str_folder, "*.xml")) do
+      --print("filename",filename)
+      local filename_no_ext = xFilesystem.file_strip_extension(filename,"xml")
+      local success,err = self:load_preset_bank(filename_no_ext)
+      if not success then
+        LOG("Failed while trying to load this preset bank: "..filename..", "..err)
+      end
+    end
+  end
+
+end
+
+
+-------------------------------------------------------------------------------
+-- load preset bank from our 'special' folder
+-- @param str_name (string), the name of the bank
+-- @return bool, true when loaded
+-- @return string, error message when failed
+
+function xStreamModel:load_preset_bank(str_name)
+  TRACE("xStreamModel:load_preset_bank(str_name)",str_name)
+
+  local preset_bank = xStreamPresets(self)
+  preset_bank.name = str_name
+  local file_path = preset_bank:path_to_xml(str_name)
+  --print("file_path",file_path)
+
+  if not io.exists(file_path) then
+    return false, "Could not find a preset bank in the specified location"
+  end
+
+  local success,err = preset_bank:import(file_path,false)
+  if not success then
+    return false,err
+  end
+
+  table.insert(self.preset_banks,preset_bank)
+  self.preset_banks_observable:insert(#self.preset_banks)
+
+  return true
+
+end
+
+-------------------------------------------------------------------------------
+-- @param str_name (string), prompt user if not defined
+-- @return bool, true when created
+-- @return string, error message
+
+function xStreamModel:add_preset_bank(str_name)
+  TRACE("xStreamModel:add_preset_bank(str_name)",str_name)
+
+  if not str_name then
+
+    -- supply a unique preset bank name (filename)
+    local preset_folder = ("%s%s/Untitled.xml"):format(xStream.PRESET_BANK_FOLDER,self.name)
+    local str_path = xFilesystem.ensure_unique_filename(preset_folder)
+    str_name = xFilesystem.get_raw_filename(str_path)
+
+    str_name = xDialog.prompt_for_string(str_name,
+      "Enter a name for the preset bank","Add Preset Bank")
+    if not str_name then
+      return false
+    end
+    if not xFilesystem.validate_filename(str_name) then
+      local err = "Please avoid using special characters in the name"
+      renoise.app():show_warning(err)
+      return false
+    end
+  end
+
+  local preset_bank = xStreamPresets(self)
+  preset_bank.name = str_name
+  table.insert(self.preset_banks,preset_bank)
+  self.preset_banks_observable:insert(#self.preset_banks)
+
+  return true
+
+end
+
+-------------------------------------------------------------------------------
+
+function xStreamModel:remove_preset_bank(idx)
+  TRACE("xStreamModel:remove_preset_bank(idx)",idx)
+
+  local bank = self.preset_banks[idx]
+  if not bank then
+    LOG("Tried to remove non-existing preset bank")
+    return
+  end
+
+  -- delete xml file
+  bank:remove_xml()
+
+  local old_name = bank.name
+
+  if (idx <= self.selected_preset_bank_index) then
+    self.selected_preset_bank_index = self.selected_preset_bank_index - 1
+  end
+
+
+  table.remove(self.preset_banks,idx)
+  self.preset_banks_observable:remove(idx)
+
+  -- favorites might be affected
+  local favorites = self.xstream.favorites:get_by_preset_bank(old_name)
+  if (#favorites > 0) then
+    self.xstream.favorites.update_requested = true
+  end
+
+
+end
+
+-------------------------------------------------------------------------------
+-- retrieve preset from current bank by index
+-- return table or nil
+
+function xStreamModel:get_preset_by_index(idx)
+  TRACE("xStreamModel:get_preset_by_index(idx)",idx)
+
+  local preset_bank = self.selected_preset_bank
+  local preset = preset_bank.presets[idx]
+  if not preset then
+    LOG("Tried to access a non-existing preset")
+    return
+  end
+
+  return preset
+
+end
+
+
+-------------------------------------------------------------------------------
+-- return table<string>
+
+function xStreamModel:get_preset_bank_names()
+  TRACE("xStreamModel:get_preset_bank_names()")
+
+  local t = {}
+  for k,v in ipairs(self.preset_banks) do
+    table.insert(t,v.name)
+  end
+  return t
+
+end
+
+-------------------------------------------------------------------------------
+
+function xStreamModel:is_default_bank()
+  TRACE("xStreamModel:is_default_bank()")
+
+  return (self.selected_preset_bank.name == xStreamPresets.DEFAULT_BANK_NAME)
+
+end
 

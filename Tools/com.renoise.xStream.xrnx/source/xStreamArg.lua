@@ -10,6 +10,22 @@ xEffectColumn
 
 class 'xStreamArg'
 
+-- string constants, saved into definitions 
+xStreamArg.DISPLAY_AS = {
+  FLOAT = "float",
+  HEX = "hex",
+  INTEGER = "integer",
+  PERCENT = "percent",
+  NOTE = "note",
+  POPUP = "popup",
+  CHOOSER = "chooser",
+  SWITCH = "switch",
+  MINISLIDER = "minislider",
+  ROTARY = "rotary",
+  BOOLEAN = "boolean",
+  STRING = "string",
+}
+
 -------------------------------------------------------------------------------
 -- constructor
 -- @param args (table), 
@@ -33,17 +49,16 @@ function xStreamArg:__init(arg)
   self.name = arg.name 
 
   -- number/boolean/string
-  self.value = arg.value
+  self.value = property(self.get_value,self.set_value)
+  self.observable = arg.observable
 
   -- string, description of argument (optional)
   self.description = arg.description 
 
   -- table, extra properties (all optional)
   --  impacts_buffer (bool), refresh buffer when changed
-  --  quant (int), value quantization - e.g. "1" for integer 
   --  min, max (number) 
-  --  display_as_hex (bool) when valuefield
-  --  display_as_note (bool) when slider
+  --  display_as (xStreamArg.DISPLAY_AS) 
   --  zero_based (bool) also used in callback
   --  items (table<string>) display as popup/chooser
   --    note: you can also specify a string for this value, 
@@ -64,10 +79,11 @@ function xStreamArg:__init(arg)
   -- observableXXX, external bindings (optional)
   -- (re-bound on app_new_document_observable)
   self.bind = xStreamArg.resolve_binding(arg.bind)
-  self.bind_str = arg.bind
-  self.bind_notifier = nil
+  self.bind_str = arg.bind 
+  self.bind_str_val = arg.bind and string.sub(arg.bind,1,#arg.bind-11) 
 
-  -- everything below is runtime only ---------------------
+  -- function, update renoise (when bound to API)
+  self.bind_notifier = nil
 
   -- boolean, when true only user can set value
   -- (preset recalls and observed properties are ignored)
@@ -76,9 +92,6 @@ function xStreamArg:__init(arg)
 
   -- xStream, reference to owner
   self.xstream = arg.xstream
-
-  -- ObservableXXX
-  self.observable = arg.observable
 
   -- function, fires when observable has changed
   self.notifier = nil
@@ -98,55 +111,59 @@ function xStreamArg:__init(arg)
     end
   end
 
-  -- notifier for argument (== user events) 
-  self.notifier = function()
-    --print("notifier_fn fired...",self.name,self.observable.value)
-    self.value = self.observable.value
-    if self.bind_notifier then
-      -- update renoise
-      self.bind_notifier(self.observable.value)
-    end
-    if self.properties.impacts_buffer then
-      self.xstream:wipe_futures()
-    end
+  -- hook into our own observable
+  self.observable:add_notifier(self,self.notifier)
 
+
+end
+
+-------------------------------------------------------------------------------
+-- notifier for argument (== user events) 
+
+function xStreamArg:notifier()
+  TRACE("xStreamArg:notifier()")
+
+  if self.bind then
+    -- update renoise
+    self:bind_notifier(self.observable.value)
+  end
+  if self.properties.impacts_buffer then
+    self.xstream:wipe_futures()
   end
 
-  -- notifier for bound target (== renoise events)
-  if arg.bind then
-    local bind_str_val = string.sub(arg.bind,1,#arg.bind-11)
-    self.bind_notifier = function(val)
+end
 
-      -- @param val (string,number or boolean) set when user event
-      --print("bind_notifier fired...self.name,val",self.name,val,type(val),bind_str_val)
-      if (type(val) ~= "nil") then
-        
-        local success,err = xLib.set_obj_str_value(bind_str_val,val)
-        --print("*** self.bind_notifier - success,err",success,err)
-        if not success then
-          LOG("ERROR: xStreamArg.bind_notifier - "..err)
-        end
-      else
-        -- nil, retrieve from Renoise? 
-        if self.locked then
-          return
-        end
-        local new_value,err = xLib.parse_str(bind_str_val)
-        if not err then
-          --print("*** self.bind_notifier - parsed bind_str_val",bind_str_val,", new_value = ",new_value,"self.value",self.value)
-          self.value = new_value
-          -- hackaround: avoid notifier feedback by scheduling the update
-          -- note: feedback will occur if we are not able to set the target 
-          -- this can occur e.g. with keyboard_velocity, when velocity is not
-          -- enabled (it will remain at maximum velocity in such cases)
-          self.value_update_requested = new_value
-        else
-          LOG(err)
-        end
-      end
+-------------------------------------------------------------------------------
+-- update renoise (when bound to API)
+-- @param val (string,number or boolean) set when user event
+
+function xStreamArg:bind_notifier(val)
+  TRACE("xStreamArg:bind_notifier",val)
+
+  if (type(val) ~= "nil") then
+    local success,err = xLib.set_obj_str_value(self.bind_str_val,val)
+    --print("*** self.bind_notifier - success,err",success,err)
+    if not success then
+      LOG("ERROR: xStreamArg.bind_notifier - "..err)
+    end
+  else 
+    if self.locked then
+      return
+    end
+    -- retrieve from Renoise
+    local new_value,err = xLib.parse_str(self.bind_str_val)
+    if not err then
+      --print("*** self.bind_notifier - parsed self.bind_str",self.bind_str,", new_value = ",new_value,"self.value",self.value)
+      --self.value = new_value
+      -- hackaround: avoid notifier feedback by scheduling the update
+      -- note: feedback will occur if we are not able to set the target -
+      -- this can occur e.g. with keyboard_velocity, when velocity is not
+      -- enabled (it will remain at maximum velocity in such cases)
+      self.value_update_requested = new_value
+    else
+      LOG(err)
     end
   end
-
 end
 
 -------------------------------------------------------------------------------
@@ -196,7 +213,6 @@ function xStreamArg.create_fn(str)
   local fn = function()
     local new_value,err = xLib.parse_str(str)
     if not err and (new_value ~= old_value) then
-      --print("create_bind_fn - old_value,new_value",old_value,new_value)    
       old_value = new_value
       return new_value
     end
@@ -204,5 +220,16 @@ function xStreamArg.create_fn(str)
 
   return fn
 
+end
+
+
+-------------------------------------------------------------------------------
+
+function xStreamArg:get_value()
+  return self.observable.value
+end
+
+function xStreamArg:set_value(val)
+  self.observable.value = val
 end
 

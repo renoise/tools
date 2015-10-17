@@ -123,7 +123,11 @@ end
 -- @return bool, true when a valid lua indentifier 
 
 function xReflection.is_valid_identifier(str)
-  local p = "[_%w]*"
-  local match = string.match(str,p)
+  TRACE("xReflection.is_valid_identifier(str)",str)
+  if string.match(str,"^%d+") then
+    return false -- numeric_first
+  end
+  local match = string.match(str,"[_%w]*")
+  --print("match",match and (#match == #str))
   return match and (#match == #str)
 end

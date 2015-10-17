@@ -33,6 +33,17 @@ function xBlockLoop.get()
 
 end
 
+--------------------------------------------------------------------------------
+-- retrive number of lines in a block for a given pattern 
+
+function xBlockLoop.get_block_lines(seq_idx)
+
+  local patt_num_lines = xSongPos.get_pattern_num_lines(seq_idx)
+  return math.max(1,patt_num_lines/rns.transport.loop_block_range_coeff)
+
+end
+
+
 -------------------------------------------------------------------------------
 -- calculates end line of the block loop 
 -- @return int, line index or nil
@@ -45,9 +56,10 @@ function xBlockLoop.get_end()
   end
 
   local loop_pos = rns.transport.loop_block_start_pos
-  local patt_num_lines = xSongPos.get_pattern_num_lines(loop_pos.sequence)
-  local loop_lines = math.max(1,patt_num_lines/rns.transport.loop_block_range_coeff)
-  return math.floor(loop_pos.line + loop_lines - 1)
+  --local patt_num_lines = xSongPos.get_pattern_num_lines(loop_pos.sequence)
+  --local loop_lines = math.max(1,patt_num_lines/rns.transport.loop_block_range_coeff)
+  local block_lines = xBlockLoop.get_block_lines(loop_pos.sequence)
+  return math.floor(loop_pos.line + block_lines - 1)
 
 end
 

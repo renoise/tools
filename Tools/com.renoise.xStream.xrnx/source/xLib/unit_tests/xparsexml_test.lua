@@ -25,7 +25,7 @@ function xparsexml_test()
       </A2>
     </RootNode>
   ]]    
-  print("x...",rprint(x))
+  --print("x...",rprint(x))
 
   assert(type(x)=="table")
   assert(x[1].label == "RootNode")

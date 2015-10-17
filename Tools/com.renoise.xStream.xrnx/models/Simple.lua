@@ -9,10 +9,9 @@ arguments = {
       value = 3,
       properties = {
           min = 1,
-          quant = 1,
           max = 255,
           zero_based = true,
-          display_as_hex = true,
+          display_as = "hex",
       },
       bind = "rns.selected_instrument_index_observable",
       description = "Specify the instrument number",
@@ -23,7 +22,7 @@ arguments = {
       properties = {
           max = 128,
           min = 0,
-          display_as_hex = true,
+          display_as = "hex",
       },
       description = "Specify the general volume level",
   },
@@ -31,6 +30,9 @@ arguments = {
 presets = {
 },
 data = {
+},
+options = {
+ color = 0x505552,
 },
 callback = [[
 -------------------------------------------------------------------------------
@@ -52,6 +54,7 @@ xline.note_columns = {
     panning_value = 0x10,
   }
 }
+
 
 
 

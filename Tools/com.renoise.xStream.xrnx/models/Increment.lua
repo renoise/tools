@@ -5,21 +5,26 @@ Increment.lua
 return {
 arguments = {
 },
+presets = {
+},
 data = {
+},
+options = {
+ color = 0xF2D984,
 },
 callback = [[
 -------------------------------------------------------------------------------
--- Increment
+-- Increment (xinc)
+-- The global incrementor, 'xinc', is an ever-increasing line counter,
+-- and essential if you want to produce movement over time
 -------------------------------------------------------------------------------
 
--- The global incrementor, 'xinc', is an ever-increasing line counter.
--- The longer you keep streaming, the higher this value will get. Not to 
--- be confused with the pattern line-number, a callback has no such thing.
--- Note: the counter is reset when you invoke xStream.start()
-
+-- write looping values (0x10-0x30) into the volume column ... 
 xline.note_columns[1] = {
-  volume_value = xinc -- will output until max. volume (0x80) is reached
+  volume_value = xinc % 0x20 + 0x10  
 }
+
+
 
 
 

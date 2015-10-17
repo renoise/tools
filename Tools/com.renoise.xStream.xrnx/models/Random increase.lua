@@ -6,13 +6,13 @@ return {
 arguments = {
   {
       name = "instr_idx",
-      value = 2,
+      value = 1,
       properties = {
           min = 1,
-          quant = 1,
+          --quant = 1,
           max = 255,
           zero_based = true,
-          display_as_hex = true,
+          display_as = "hex",
       },
       bind = "rns.selected_instrument_index_observable",
       description = "Specify the instrument number",
@@ -23,13 +23,16 @@ presets = {
 data = {
   current_pitch = 14,
 },
+options = {
+ color = 0x505552,
+},
 callback = [[
 -------------------------------------------------------------------------------
 -- Using user data in callbacks
--------------------------------------------------------------------------------
 -- In this example, a 'current_pitch' is defined in our user-data. 
 -- We increment this value each time a note is written to the pattern
--- (using random intervals to make it more interesting). 
+-- Tip: loop, and disable 'clear_undefined' to make it more interesting!!
+-------------------------------------------------------------------------------
 
 local produce_output = (math.random(0,5) == 0)
 if (produce_output) then
@@ -47,10 +50,6 @@ if (produce_output) then
 else
   xline.note_columns[1] = {}
 end
-
-
-
-
 
 
 ]],

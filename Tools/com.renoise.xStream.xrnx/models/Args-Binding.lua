@@ -13,57 +13,62 @@ arguments = {
   },
   {
       name = "velocity",
-      value = 45,
+      value = 83,
       properties = {
           min = 0,
           max = 127,
-          quant = 1,
-          display_as_hex = true,
+          --quant = 1,
+          display_as = "hex",
       },
       bind = "rns.transport.keyboard_velocity_observable",
       description = "Specify the keyboard velocity",
   },
   {
       name = "instr_idx",
-      value = 5,
+      value = 1,
       properties = {
           min = 1,
-          quant = 1,
+          --quant = 1,
           max = 255,
           zero_based = true,
-          display_as_hex = true,
+          display_as = "hex",
       },
       bind = "rns.selected_instrument_index_observable",
       description = "Specify the instrument number",
   },
 },
 presets = {
+  {
+      velocity_enabled = true,
+      velocity = 84,
+      instr_idx = 1,
+  },
+  {
+      velocity_enabled = true,
+      velocity = 84,
+      instr_idx = 1,
+  },
 },
 data = {
 },
+options = {
+ color = 0x60AACA,
+},
 callback = [[
 -------------------------------------------------------------------------------
--- Binding arguments to observable properties 
--------------------------------------------------------------------------------
-
--- In the lua code for this example (the model defition), we have specified
--- that our arguments are bound to these observable properties:
---
---   velocity_enabled  => rns.keyboard_velocity_enabled_observable
---   velocity         => rns.keyboard_velocity_observable
---   instr_idx        => rns.selected_instrument_index
---
--- To see how the binding is specified, open the model definition in a 
--- text editor by clicking the 'reveal_location' button just below.
--- Apart from keeping the renoise property and argument values in sync, 
--- bind has the advantage that buffers are automatically refreshed 
+-- Binding to (observable) properties 
+-- Output notes that go from C-3 to B-5 while using the selected instrument
+-- in Renoise, and the currently specified keyboard velocity. 
+-- Arguments will update value in Renoise and vice versa
+---=====================================================-----------------------
+-- Bindings are specified in the .lua model definition - reveal this file  
+-- by clicking the 'magnifying glass' in the models menu below...
 
 xline.note_columns[1] = {
   note_value = (xinc%36)+36,
   instrument_value = args.instr_idx,
   volume_value = args.velocity_enabled and args.velocity or EMPTY_VOLUME_VALUE,
 }  
-
 
 ]],
 }

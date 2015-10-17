@@ -261,7 +261,7 @@ function xSongPos.get_line_diff(pos1,pos2)
   pos2 = xSongPos(pos2)
   
   local early,late
-  if (pos1 < pos2) then
+  if (pos1 > pos2) then
     early,late = pos2,pos1
   else
     early,late = pos1,pos2 
@@ -653,8 +653,69 @@ function xSongPos:enforce_block_boundary(direction,line_idx,line_delta)
 
 end
 
+--------------------------------------------------------------------------------
+-- return the next beat position
+
+function xSongPos:next_beat()
+
+  local lines_beat = rns.transport.lpb
+
+  local next_beat = math.floor(self.line/lines_beat)+1
+  local next_line = 1 + next_beat*lines_beat
+
+  --print("*** xSongPos:next_beat - about to jump #lines",next_line - self.line)
+  self:increase_by_lines(next_line - self.line)
+
+end
+
+--------------------------------------------------------------------------------
+-- return the next bar position
+
+function xSongPos:next_bar()
+
+  local lines_beat = rns.transport.lpb
+  local lines_bar = lines_beat * renoise.song().transport.metronome_beats_per_bar
+
+  local next_beat = math.floor(self.line/lines_bar)+1
+  local next_line = 1 + next_beat*lines_bar
+
+  --print("*** xSongPos.get_next_bar - about to jump #lines",self.pos,next_line - self.line)
+  self:increase_by_lines(next_line - self.line)
+
+end
+
+--------------------------------------------------------------------------------
+-- return the next block position
+
+function xSongPos:next_block()
+
+  local lines_block = xBlockLoop.get_block_lines(self.sequence)
+
+  local next_beat = math.floor(self.line/lines_block)+1
+  local next_line = 1 + next_beat*lines_block
+
+  --print("*** xSongPos.get_next_block - about to jump #lines",next_line - self.line)
+  self:increase_by_lines(next_line - self.line)
+
+end
+
+--------------------------------------------------------------------------------
+-- return the beginning of next pattern 
+
+function xSongPos:next_pattern()
+
+  local patt_num_lines = xSongPos.get_pattern_num_lines(self.sequence)
+  local next_line = 1 + patt_num_lines
+
+  --print("*** xSongPos.get_next_pattern - about to jump #lines",next_line - self.line)
+  self:increase_by_lines(next_line - self.line)
+
+end
+
+
+
 -------------------------------------------------------------------------------
--- Metamethods (use renoise.SongPos operators when possible)
+-- Metamethods (operators)
 -------------------------------------------------------------------------------
 
 -- sets handler for '==', '~='
@@ -665,14 +726,31 @@ end
 
 -- sets handler for '<=', '>='
 function xSongPos:__le(other)
+  if (self.sequence == other.sequence) then
+    if (self.line == other.line) then
+      return true
+    else
+      return (self.line < other.line)
+    end
+  else
+    return (self.sequence < other.sequence)
+  end
+  --[[
   return (self.pos == other.pos) or 
     (self.pos > other.pos)
+  ]]
 end
 
 -- sets handler for '<', '>' 
 function xSongPos:__lt(other)
-  --TRACE("xSongPos:__lt(other)",other)
+  if (self.sequence == other.sequence) then
+    return (self.line < other.line)
+  else
+    return (self.sequence < other.sequence)
+  end
+  --[[
 	return (self.pos > other.pos)
+  ]]
 end
 
 function xSongPos:__tostring()

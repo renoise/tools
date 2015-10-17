@@ -3,75 +3,79 @@ com.renoise.xStream.xrnx (main.lua)
 ============================================================================]]--
 --[[
 
-  Create an instance of xStream, monitor the selected track/device/param,
-  and manage preferences. 
+  Create an instance of xStream, add options and manage preferences. 
 
 ]]
 
 --------------------------------------------------------------------------------
--- required files (framework)
+-- required files
 --------------------------------------------------------------------------------
 
-require 'xLib/xLib'
-require 'xLib/xBlockLoop'
-require 'xLib/xDialog'
-require 'xLib/xScale'
-require 'xLib/xEffectColumn'
-require 'xLib/xFilesystem'
-require 'xLib/xLine'
-require 'xLib/xLineAutomation'
-require 'xLib/xLinePattern'
-require 'xLib/xNoteColumn'
-require 'xLib/xPhraseMgr'
-require 'xLib/xReflection'
-require 'xLib/xSongPos'
-require 'xLib/xStream'
-require 'xLib/xStreamArg'
-require 'xLib/xStreamArgs'
-require 'xLib/xStreamModel'
-require 'xLib/xStreamUI'
-require 'xLib/xParseXML'
+local app_dir = 'source/'
+local xLib_dir = 'source/xLib/'
 
---------------------------------------------------------------------------------
--- required files (unit tests)
---------------------------------------------------------------------------------
+require (xLib_dir..'xLib')
+require (xLib_dir..'xAudioDevice')
+require (xLib_dir..'xBlockLoop')
+require (xLib_dir..'xColor')
+require (xLib_dir..'xDialog')
+require (xLib_dir..'xEffectColumn')
+require (xLib_dir..'xFilesystem')
+require (xLib_dir..'xLine')
+require (xLib_dir..'xLineAutomation')
+require (xLib_dir..'xLinePattern')
+require (xLib_dir..'xNoteColumn')
+require (xLib_dir..'xParseXML')
+require (xLib_dir..'xPhraseMgr')
+require (xLib_dir..'xReflection')
+require (xLib_dir..'xScale')
+require (xLib_dir..'xSongPos')
 
-require 'xLib/unit_tests/xsongpos_test'
-require 'xLib/unit_tests/xnotecolumn_test'
-require 'xLib/unit_tests/xeffectcolumn_test'
-require 'xLib/unit_tests/xstream_test'
-require 'xLib/unit_tests/xparsexml_test'
+require (app_dir..'xStream')
+require (app_dir..'xStreamArg')
+require (app_dir..'xStreamArgs')
+require (app_dir..'xStreamFavorite')
+require (app_dir..'xStreamFavorites')
+require (app_dir..'xStreamModel')
+require (app_dir..'xStreamPresets')
+require (app_dir..'xStreamUI')
 
+require (xLib_dir..'unit_tests/xsongpos_test')
+require (xLib_dir..'unit_tests/xnotecolumn_test')
+require (xLib_dir..'unit_tests/xeffectcolumn_test')
+require (xLib_dir..'unit_tests/xstream_test')
+require (xLib_dir..'unit_tests/xparsexml_test')
+require (xLib_dir..'unit_tests/xfilesystem_test')
+        
 --------------------------------------------------------------------------------
 -- preferences
 --------------------------------------------------------------------------------
 
-local START_OPTIONS = {"Manual","On Play","On Play + Edit"}
-local START_OPTION = {
-  MANUAL = 1,
-  ON_PLAY = 2,
-  ON_PLAY_EDIT = 3,
-}
-
 
 local options = renoise.Document.create("ScriptingToolPreferences"){}
 options:add_property("autostart", renoise.Document.ObservableBoolean(false))
-options:add_property("suspend_when_hidden", renoise.Document.ObservableBoolean(true))
-options:add_property("manage_gc", renoise.Document.ObservableBoolean(false))
-options:add_property("start_option", renoise.Document.ObservableNumber(START_OPTION.ON_PLAY_EDIT))
+options:add_property("editor_visible_lines", renoise.Document.ObservableNumber(16))
+options:add_property("favorites_visible", renoise.Document.ObservableBoolean(true))
 options:add_property("launch_model", renoise.Document.ObservableString(""))
 options:add_property("live_coding", renoise.Document.ObservableBoolean(true))
+options:add_property("manage_gc", renoise.Document.ObservableBoolean(false))
+options:add_property("model_args_visible", renoise.Document.ObservableBoolean(false))
+options:add_property("model_browser_visible", renoise.Document.ObservableBoolean(false))
+options:add_property("presets_visible", renoise.Document.ObservableBoolean(false))
 options:add_property("show_editor", renoise.Document.ObservableBoolean(true))
 options:add_property("show_unit_tests", renoise.Document.ObservableBoolean(false))
+options:add_property("suspend_when_hidden", renoise.Document.ObservableBoolean(false))
+options:add_property("start_option", renoise.Document.ObservableNumber(xStreamUI.START_OPTION.ON_PLAY_EDIT))
+options:add_property("tool_options_visible", renoise.Document.ObservableBoolean(false))
 options:add_property("writeahead_factor", renoise.Document.ObservableNumber(175))
+
 renoise.tool().preferences = options
 
 --------------------------------------------------------------------------------
 -- variables/instances
 --------------------------------------------------------------------------------
 
--- global song accessor
-rns = nil
+rns = nil 
 
 local TOOL_NAME = "xStream"
 local MIDI_PREFIX = "Tools:"..TOOL_NAME..":"
@@ -82,19 +86,6 @@ local dialog,dialog_content
 
 local waiting_to_show_dialog = options.autostart.value
 local cached_active 
-
--------------------------------------------------------------------------------
--- remote-control via xSongPos 
-
-function follow_pos()
-  if xpos.pos then
-    rns.transport.edit_pos = xpos.pos
-    local msg = tostring(xpos).."lines_travelled:"..xpos.lines_travelled
-    renoise.app():show_status(msg)
-    --print(msg)
-  end
-end
-
 
 -------------------------------------------------------------------------------
 -- @return boolean, true if we should suspend
@@ -121,7 +112,7 @@ renoise.tool().app_idle_observable:add_notifier(idle_notifier)
 -- if the xStream dialog has been hidden, should suspend...
 
 local function idle_notifier_actual()
-  --print("*** idle_notifier_actual fired...")
+  --TRACE("*** idle_notifier_actual fired...")
   
   local is_suspended = dialog_is_suspended()
   if is_suspended then
@@ -132,61 +123,9 @@ local function idle_notifier_actual()
     xstream.active = cached_active
   end
 
-  local view = vb.views["xStreamImplStats"]
-  local str_stat = ("Memory usage: %.2f Mb"):format(collectgarbage("count")/1024)
-                ..("\nLines Travelled: %d"):format(xstream._writepos.lines_travelled)
-                ..("\nSelected model: %s"):format(xstream.selected_model and xstream.selected_model.name or "N/A") 
-                ..("\nStream active: %s"):format(xstream.active and "true" or "false") 
-                ..("\nStream muted: %s"):format(xstream.muted and "true" or "false") 
-  view.text = str_stat
 
 end
 
-
-
--------------------------------------------------------------------------------
--- handle keys in dialog
-
---[[
-local function keyhandler(dlg, key)
-  --rprint(key)
-  local shift_pressed = string.find(key.modifiers,"shift") and true or false
-  --print("shift_pressed",shift_pressed)
-  if (key.name == "up") then
-    xpos:decrease_by_lines(shift_pressed and 10 or 1)
-    follow_pos()
-  elseif (key.name == "down") then
-    xpos:increase_by_lines(shift_pressed and 10 or 1)
-    follow_pos()
-  else
-    return key
-  end
-end
-]]
-
--------------------------------------------------------------------------------
--- update popup with model names
-
-function update_launch_models()
-
-  local view = vb.views["xStreamImplLaunchModel"]
-  if not view then
-    return
-  end
-
-  local model_names = {"Select a model"}
-  local launch_model_index = 1
-  for k,v in ipairs(xstream.models) do
-    table.insert(model_names,v.name)
-    if (v.name == options.launch_model.value) then
-      launch_model_index = k
-    end
-  end
-  --print("launch_model_index",launch_model_index)
-  view.items = model_names
-  view.value = launch_model_index
-
-end
 
 -------------------------------------------------------------------------------
 -- invoked by menu entries, autostart - 
@@ -233,6 +172,7 @@ function show()
           xeffectcolumn_test()
         end
       },
+      --[[
       vb:button{
         text="xStream",
         width = 100,
@@ -240,6 +180,7 @@ function show()
           xstream_test()
         end
       },
+      ]]
       vb:button{
         text="xParseXML",
         width = 100,
@@ -247,33 +188,117 @@ function show()
           xparsexml_test()
         end
       },
+      vb:button{
+        text="xFilesystem",
+        width = 100,
+        notifier = function()
+          xfilesystem_test()
+        end
+      },
 
     },
   }
 
 
-  -- create class instances - but only once
+  -- initialize classes (once)
 
   if not xstream then
+
     xpos = xSongPos(rns.transport.edit_pos)
     xstream = xStream()
-    local model_defs_path = "./models/"
-    xstream:load_models(model_defs_path)
     xstream.ui = xStreamUI(xstream,vb,MIDI_PREFIX)
-    xstream.ui.show_editor = options.show_editor.value
-    xstream.live_coding_observable.value = options.live_coding.value
-    xstream.models_observable:add_notifier(update_launch_models)
+    xstream:load_models(xStream.MODELS_FOLDER)
 
-    -- observe things within the xStream class(es)
-    xstream.live_coding_observable:add_notifier(function()
-      --print("live_coding_observable fired...")
-      options.live_coding.value = xstream.live_coding_observable.value
+    -- apply options ------------------
+
+    xstream.ui.start_option = options.start_option.value
+    xstream.ui.launch_model = options.launch_model.value
+    xstream.ui.autostart = options.autostart.value
+    xstream.ui.suspend_when_hidden = options.suspend_when_hidden.value
+    xstream.ui.manage_gc = options.manage_gc.value
+    xstream.ui.show_editor = options.show_editor.value
+    xstream.ui.tool_options_visible = options.tool_options_visible.value
+    xstream.ui.model_browser_visible = options.model_browser_visible.value
+    xstream.ui.model_args_visible = options.model_args_visible.value
+    xstream.ui.presets_visible = options.presets_visible.value
+    xstream.ui.favorites_visible = options.favorites_visible.value
+    xstream.ui.editor_visible_lines = options.editor_visible_lines.value
+    xstream.live_coding = options.live_coding.value
+    xstream.writeahead_factor = options.writeahead_factor.value
+
+    -- add notifiers ------------------
+
+    xstream.ui.start_option_observable:add_notifier(function()
+      TRACE("*** main.lua - ui.start_option_observable fired...")
+      options.start_option.value = xstream.ui.start_option_observable.value
+    end)
+
+    xstream.ui.launch_model_observable:add_notifier(function()
+      TRACE("*** main.lua - ui.launch_model_observable fired...")
+      options.launch_model.value = xstream.ui.launch_model_observable.value
+    end)
+
+    xstream.ui.autostart_observable:add_notifier(function()
+      TRACE("*** main.lua - ui.autostart_observable fired...")
+      options.autostart.value = xstream.ui.autostart_observable.value
+    end)
+
+    xstream.ui.suspend_when_hidden_observable:add_notifier(function()
+      TRACE("*** main.lua - ui.suspend_when_hidden_observable fired...")
+      options.suspend_when_hidden.value = xstream.ui.suspend_when_hidden_observable.value
+    end)
+
+    xstream.ui.manage_gc_observable:add_notifier(function()
+      TRACE("*** main.lua - ui.manage_gc_observable fired...")
+      options.manage_gc.value = xstream.ui.manage_gc_observable.value
     end)
 
     xstream.ui.show_editor_observable:add_notifier(function()
-      --print("show_editor_observable fired...")
+      TRACE("*** main.lua - ui.show_editor_observable fired...")
       options.show_editor.value = xstream.ui.show_editor_observable.value
     end)
+
+    xstream.ui.tool_options_visible_observable:add_notifier(function()
+      TRACE("*** main.lua - ui.tool_options_visible_observable fired...")
+      options.tool_options_visible.value = xstream.ui.tool_options_visible_observable.value
+    end)
+
+    xstream.ui.model_browser_visible_observable:add_notifier(function()
+      TRACE("*** main.lua - ui.model_browser_visible_observable fired...")
+      options.model_browser_visible.value = xstream.ui.model_browser_visible
+    end)
+
+    xstream.ui.model_args_visible_observable:add_notifier(function()
+      TRACE("*** main.lua - ui.model_args_visible_observable fired...")
+      options.model_args_visible.value = xstream.ui.model_args_visible
+    end)
+
+    xstream.ui.presets_visible_observable:add_notifier(function()
+      TRACE("*** main.lua - ui.presets_visible_observable fired...")
+      options.presets_visible.value = xstream.ui.presets_visible
+    end)
+
+    xstream.ui.favorites_visible_observable:add_notifier(function()
+      TRACE("*** main.lua - ui.favorites_visible_observable fired...")
+      options.favorites_visible.value = xstream.ui.favorites_visible
+    end)
+
+    xstream.ui.editor_visible_lines_observable:add_notifier(function()
+      TRACE("*** main.lua - ui.editor_visible_lines_observable fired...")
+      options.editor_visible_lines.value = xstream.ui.editor_visible_lines
+    end)
+
+
+    xstream.live_coding_observable:add_notifier(function()
+      TRACE("*** main.lua - live_coding_observable fired...")
+      options.live_coding.value = xstream.live_coding_observable.value
+    end)
+
+    xstream.writeahead_factor_observable:add_notifier(function()
+      TRACE("*** main.lua - writeahead_factor_observable fired...")
+      options.writeahead_factor.value = xstream.writeahead_factor_observable.value
+    end)
+
 
   end
 
@@ -283,163 +308,49 @@ function show()
     dialog:show() 
   else
     -- create, or re-create if hidden
-    
     if not dialog_content then
-    
-      --vb.views["xStreamImplLaunchModel"] = nil
-      --vb.views["xStreamImplStats"] = nil
-
-      local tool_option_w = 140
       dialog_content = vb:column{
         unit_tests,
-        vb:row{
-          style = "group",
-          margin = 6,
-          width = tool_option_w,
-          vb:column{
-            vb:column{
-              style = "panel",
-              margin = 4,
-              width = "100%",
-              vb:text{
-                text="xStream",
-                font = "bold",
-              },
-            },
-            vb:column{
-              style = "panel",
-              margin = 4,
-              width = "100%",
-              vb:text{
-                text="Decide how to\n"
-                  .."control streaming:"
-              },
-              vb:row{
-                vb:popup{
-                  bind = options.start_option,
-                  items = START_OPTIONS,
-                  width = tool_option_w-10,
-                },
-              },
-            },
-            vb:column{
-              style = "panel",
-              margin = 4,
-              width = tool_option_w,
-              vb:text{
-                text= "Launch with the\n"
-                    .."chosen model"
-              },
-              vb:popup{
-                items = {"Select a model"},
-                id = "xStreamImplLaunchModel",
-                notifier = function(idx)
-                  options.launch_model.value = xstream.models[idx].file_path
-                  --print("options.launch_model.value",options.launch_model.value)
-                end,
-                width = tool_option_w-10,
-              }
-            },
-
-            vb:column{
-              style = "panel",
-              margin = 4,
-              width = "100%",
-              vb:row{
-                vb:checkbox{
-                  bind = options.autostart,
-                },
-                vb:text{
-                  text="Launch tool when\n"
-                    .."Renoise starts:",
-                },
-
-              },
-              vb:row{
-                vb:checkbox{
-                  id = "xStreamImplSuspend",
-                  notifier = function(checked)
-                    options.suspend_when_hidden.value = checked
-                    --print("xstream.manage_gc",xstream.manage_gc)
-                  end,
-                },
-                vb:text{
-                  text="Suspend while\n"
-                    .." dialog is hidden:",
-                },
-
-              },
-              vb:row{
-                vb:checkbox{
-                  id = "xStreamImplManageGarbage",
-                  notifier = function(checked)
-                    options.manage_gc.value = checked
-                    xstream.manage_gc = checked
-                    --print("xstream.manage_gc",xstream.manage_gc)
-                  end,
-                },
-                vb:text{
-                  text="Bypass garbage\n"
-                    .." collection:",
-                },
-
-              },
-            },
-
-            vb:column{
-              style = "panel",
-              margin = 4,
-              width = "100%",
-              vb:text{
-                text="Writeahead factor\n"
-                  .."(decrease if dropouts\n"
-                  .."occur during heavy UI\n"
-                  .."activity in Renoise)",
-              },
-              vb:valuebox{
-                id = "xStreamImplWriteAheadFactor",
-                min = 125,
-                max = 400,
-                value = options.writeahead_factor.value,
-                notifier = function(val)
-                  --print("xStreamImplWriteAheadFactor",val)
-                  options.writeahead_factor.value = val
-                  xstream.writeahead_factor = val
-                  xstream:determine_writeahead()
-                end,
-              },
-
-            },
-            vb:column{
-              style = "panel",
-              margin = 4,
-              width = "100%",
-              vb:text{
-                text= "Stats",
-                font = "bold",
-
-              },
-              vb:text{
-                text= "",
-                id = "xStreamImplStats",
-              },
-            },
-          },
-          xstream.ui.vb_content
-        }
-
+        xstream.ui.vb_content,
       }
-
       unit_tests.visible = options.show_unit_tests.value
+
+      -- initialize -----------------------
+
+      xstream.ui:select_launch_model()
+      xstream.favorites:import("./favorites.xml")
+      xstream.autosave_enabled = true
 
     end
 
-    dialog = renoise.app():show_custom_dialog(
-      TOOL_NAME, dialog_content) --, keyhandler)
+    local keyhandler = function (dialog,key)
+      TRACE("xStreamUI:keyhandler(dialog,key)",dialog,key)
+      --rprint(key)
+      local handled = false
+      if (key.modifiers=="") and 
+        not key.repeated
+      then
+        if (key.name == "tab") then
+          xstream.ui.show_editor = not xstream.ui.show_editor
+          handled = true
+        elseif (key.name == "space") then
+          xstream:start_and_play()
+          handled = true
+        elseif (key.name == "'") then
+          xstream.muted = not xstream.muted
+          handled = true
+        elseif (key.name == "esc") then
+          rns.transport.edit_mode = not rns.transport.edit_mode
+          handled = true
+        end 
+      end
+      if not handled then
+        return key
+      end
+    end
 
-    update_launch_models()
-    vb.views["xStreamImplManageGarbage"].value = options.manage_gc.value
-    xstream.manage_gc = options.manage_gc.value
+    dialog = renoise.app():show_custom_dialog(
+      TOOL_NAME, dialog_content, keyhandler)
 
     -- idle notifier: remove pre-launch, switch to actual one
     local idle_obs = renoise.tool().app_idle_observable
@@ -451,19 +362,7 @@ function show()
     end
     idle_obs:add_notifier(idle_notifier_actual)
 
-  end
 
-
-  -- initialize -----------------------
-
-  local view = vb.views["xStreamImplLaunchModel"]
-  for k,v in ipairs(xstream.models) do
-    if (v.file_path == options.launch_model.value) then
-      view.value = k
-    end
-  end
-  if (view.value > 1) then
-    xstream.selected_model_index = view.value-1
   end
 
   attach_to_song()
@@ -471,117 +370,91 @@ function show()
 end
 
 -------------------------------------------------------------------------------
--- attach to song, once xstream is ready
 
-function attach_to_song()
-  --print("attach_to_song()")
-
-  xstream:attach_to_song()
-
-  local add_observable = function(obs,fn)
-    if obs:has_notifier(fn) then
-      obs:remove_notifier(fn)
-    end
-    obs:add_notifier(fn)
+function selected_track_index_notifier()
+  TRACE("*** selected_track_index_notifier fired...")
+  if (xstream) then
+      xstream.track_index = rns.selected_track_index
   end
+end
 
-  -- playback (start option) ------------------------------
+-------------------------------------------------------------------------------
 
-  local playing_notifier = function()
-    --print("main - playing_notifier fired...")
-    if not rns.transport.playing then -- autostop
-      if (options.start_option.value ~= START_OPTION.MANUAL) then
-        xstream:stop()
-      end
-    elseif not xstream.active then -- autostart
+function device_param_notifier()
+  TRACE("*** xStream - device_param_notifier fired...")
+  xstream.device_param = rns.selected_parameter
+end
 
+-------------------------------------------------------------------------------
+
+function edit_notifier()
+  TRACE("*** edit_notifier fired...")
+  if xstream then
+    if rns.transport.edit_mode then
       if dialog_is_suspended() then
         return
       end
+      if rns.transport.playing and
+        (options.start_option.value == xStreamUI.START_OPTION.ON_PLAY_EDIT) 
+      then
+        xstream:start()
+      end
+    elseif (options.start_option.value == xStreamUI.START_OPTION.ON_PLAY_EDIT) then
+      xstream:stop()
+    end
+  end
+end
 
-      if (options.start_option.value ~= START_OPTION.MANUAL) then
-        if rns.transport.edit_mode then
-          if (options.start_option.value == START_OPTION.ON_PLAY_EDIT) then
-            xstream:start()
-          end
-        else
-          if (options.start_option.value == START_OPTION.ON_PLAY) then
-            xstream:start()
-          end
+-------------------------------------------------------------------------------
+
+function playing_notifier()
+  TRACE("main - playing_notifier fired...")
+  if not rns.transport.playing then -- autostop
+    if (options.start_option.value ~= xStreamUI.START_OPTION.MANUAL) then
+      xstream:stop()
+    end
+  elseif not xstream.active then -- autostart
+
+    if dialog_is_suspended() then
+      return
+    end
+
+    if (options.start_option.value ~= xStreamUI.START_OPTION.MANUAL) then
+      if rns.transport.edit_mode then
+        if (options.start_option.value == xStreamUI.START_OPTION.ON_PLAY_EDIT) then
+          xstream:start()
+        end
+      else
+        if (options.start_option.value == xStreamUI.START_OPTION.ON_PLAY) then
+          xstream:start()
         end
       end
     end
   end
-  add_observable(rns.transport.playing_observable,playing_notifier)
+end
 
+-------------------------------------------------------------------------------
 
-  -- selected track ---------------------------------------
+function attach_to_song()
+  TRACE("attach_to_song()")
+  
+  xLib.attach_to_observable(rns.transport.playing_observable,playing_notifier)
+  xLib.attach_to_observable(rns.selected_track_index_observable,selected_track_index_notifier)
+  xLib.attach_to_observable(rns.selected_parameter_observable,device_param_notifier) 
+  xLib.attach_to_observable(rns.transport.edit_mode_observable,edit_notifier)
 
-  local track_notifier = function ()
-    --print("*** track_notifier fired...")
-    if (xstream) then
-        xstream.track_index = rns.selected_track_index
-    end
-  end
-  add_observable(rns.selected_track_index_observable,track_notifier)
-  track_notifier()
-
-
-  -- device parameters ------------------------------------
-
-  local device_param_notifier = function ()
-    --print("*** device_param_notifier fired...")
-    if (xstream) then
-      --xstream.device = rns.selected_device
-      xstream.device_index = rns.selected_device_index
-      if (renoise.API_VERSION > 4) then
-        -- subtract 1 due to special automation parameter "active/bypassed"
-        xstream.param_index = rns.selected_track_parameter_index-1 
-      end
-    end
-  end
-  if (renoise.API_VERSION > 4) then
-    add_observable(rns.selected_track_parameter_observable,device_param_notifier)
-  end
-  add_observable(rns.selected_device_observable,device_param_notifier)
+  selected_track_index_notifier()
   device_param_notifier()
-
-
-  -- edit-mode --------------------------------------------
-
-  local edit_notifier = function ()
-    --print("*** edit_notifier fired...")
-    if xstream then
-        if rns.transport.edit_mode then
-
-          if dialog_is_suspended() then
-            return
-          end
-
-          if rns.transport.playing and
-            (options.start_option.value == START_OPTION.ON_PLAY_EDIT) 
-          then
-            xstream:start()
-          end
-        elseif (options.start_option.value == START_OPTION.ON_PLAY_EDIT) then
-          xstream:stop()
-        end
-    end
-  end
-  add_observable(rns.transport.edit_mode_observable,edit_notifier)
   edit_notifier()
 
 end
 
-
--------------------------------------------------------------------------------
--- tool-specific 
 --------------------------------------------------------------------------------
+-- on new document 
 
 renoise.tool().app_new_document_observable:add_notifier(function()
-  --print("*** app_new_document_observable fired...")
+  TRACE("*** app_new_document_observable fired...")
 
-  -- global song accessor
   rns = renoise.song()
 
   if options.autostart.value then
@@ -590,6 +463,9 @@ renoise.tool().app_new_document_observable:add_notifier(function()
 
 end)
 
+--------------------------------------------------------------------------------
+-- tool menu entry
+
 renoise.tool():add_menu_entry{
   name = "Main Menu:Tools:"..TOOL_NAME,
   invoke = function() 
@@ -597,22 +473,30 @@ renoise.tool():add_menu_entry{
   end
 }
 
-for i = 1,16 do
+--------------------------------------------------------------------------------
+-- keyboard/midi mappings
 
+for i = 1,128 do
   local midi_mapping = MIDI_PREFIX..
-    ("Set Preset (%.2X)"):format(i)
-
+    ("Favorite #%.2d [Trigger]"):format(i)
   renoise.tool():add_midi_mapping{
     name = midi_mapping,
     invoke = function() 
-      if xstream and xstream.selected_model then
-        local success,err = xstream.selected_model.args:recall_preset(i)
-        if not success then
-          LOG(err)
+      if xstream then
+        xstream.favorites:trigger(i)
+      end
+    end
+  }
+  local key_mapping = "Global:"..TOOL_NAME..":"..
+    ("Favorite #%.2d [Trigger]"):format(i)
+  renoise.tool():add_keybinding{
+    name = key_mapping,
+    invoke = function(repeated) 
+      if not repeated then
+        if xstream then
+          xstream.favorites:trigger(i)
         end
-        xstream.ui:update_presets()
       end
     end
   }
 end
-
