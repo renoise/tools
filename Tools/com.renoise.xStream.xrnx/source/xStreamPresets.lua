@@ -201,7 +201,7 @@ function xStreamPresets:recall_preset(idx)
   
   local failed_args = {}
   for _,arg in ipairs(self.model.args.args) do
-    if preset[arg.name] then
+    if type(preset[arg.name]) ~= "nil" then
       if not arg.locked then
         --print("recalling value - preset[arg.name].value",arg.name,preset[arg.name])
         arg.value = preset[arg.name]
