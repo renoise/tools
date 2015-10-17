@@ -678,7 +678,7 @@ function xStreamModel:refresh()
                   .."(this change cannot be undone)"
     local choice = renoise.app():show_prompt("Refresh model", str_msg, {"OK","Cancel"})
     if (choice == "Cancel") then
-      return
+      return true
     end
   end
 
