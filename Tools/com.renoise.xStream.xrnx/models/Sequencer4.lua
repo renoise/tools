@@ -18,6 +18,17 @@ arguments = {
       description = "Specify the instrument number",
   },
   {
+      name = "velocity",
+      value = 83,
+      properties = {
+          min = 0,
+          max = 127,
+          display_as = "hex",
+      },
+      bind = "rns.transport.keyboard_velocity_observable",
+      description = "Specify the keyboard velocity",
+  },
+  {
       name = "space",
       value = 2,
       properties = {
@@ -422,11 +433,9 @@ presets = {
       fx1_amt__y = 9,
       instr_idx = 5,
       note1 = 72.049348429823,
-      trig3 = 0,
       note3 = 79.955565050203,
       vol2 = 83.86953337199,
       vol1 = 58.304422132023,
-      trig2 = 0,
       trig1 = 3,
       repeat_ticks = 12,
       note2 = 25.316599017304,
@@ -476,6 +485,7 @@ local spacing = data.intervals[args.space]
 local seq_pos = xinc%spacing
 local produce_output = (seq_pos == 0)
 if produce_output then
+  local vol_factor = args.velocity/0x80
   local global_step = math.floor(xinc/spacing)
   local num_steps = 0
   local skip_table = {}
@@ -494,7 +504,7 @@ if produce_output then
         {
           note_value = args[("note%d"):format(step)],
           instrument_value = args.instr_idx,
-          volume_value = args[("vol%d"):format(step)],
+          volume_value = vol_factor*args[("vol%d"):format(step)],
         }
       }
     }    
@@ -513,22 +523,22 @@ if produce_output then
         {
           note_value = args.note1,
           instrument_value = args.instr_idx,
-          volume_value = args.vol1,
+          volume_value = vol_factor*args.vol1,
         },
         {
           note_value = args.note2,
           instrument_value = args.instr_idx,
-          volume_value = args.vol2,
+          volume_value = vol_factor*args.vol2,
         },
         {
           note_value = args.note3,
           instrument_value = args.instr_idx,
-          volume_value = args.vol3,
+          volume_value = vol_factor*args.vol3,
         },
         {
           note_value = args.note4,
           instrument_value = args.instr_idx,
-          volume_value = args.vol4,
+          volume_value = vol_factor*args.vol4,
         }
       }
     }
@@ -538,7 +548,7 @@ if produce_output then
           {
             note_value = args[("note%d"):format(step)],
             instrument_value = args.instr_idx,
-            volume_value = args[("vol%d"):format(step)],
+            volume_value = vol_factor*args[("vol%d"):format(step)],
             panning_string = ("R%X"):format(args.repeat_ticks),
           }
         } 
@@ -549,7 +559,7 @@ if produce_output then
         {
           note_value = args[("note%d"):format(step)],
           instrument_value = args.instr_idx,
-          volume_value = args[("vol%d"):format(step)],
+          volume_value = vol_factor*args[("vol%d"):format(step)],
         }
       },
       effect_columns = {
