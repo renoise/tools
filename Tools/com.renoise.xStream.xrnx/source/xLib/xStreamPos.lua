@@ -22,6 +22,10 @@ function xStreamPos:__init()
   -- we keep the overall progression of the stream 
   self.writepos = xSongPos(rns.transport.playback_pos)
 
+  -- (int) supply this number - it's used for deciding when we are
+  -- approaching the boundary of a pattern/block 
+  self.writeahead = nil
+
   -- number, or 0 if undefined
   -- this is a short-lived timestamp indicating that we should ignore 
   -- changes to the playback position, right after playback has started
@@ -86,10 +90,6 @@ end
 
 function xStreamPos:set_pos(pos)
   TRACE("xStreamPos:set_pos(pos)",pos)
-
-  --if not self.active then
-  --  return
-  --end
 
   local num_lines = 0
   local near_lines_def = self.writeahead
@@ -186,10 +186,8 @@ function xStreamPos:set_pos(pos)
   
   -- call output function - i.e. do_output(self.writepos,nil,true)
   if self.callback_fn then
-    print("self.callback_fn",self.callback_fn)
     self.callback_fn()
   end
-
 
 end
 

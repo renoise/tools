@@ -1419,8 +1419,7 @@ function xStream:determine_writeahead()
   local lpb = rns.transport.lpb
 
   self.writeahead = math.ceil(math.max(2,(bpm*lpb)/self.writeahead_factor))
-  --self.writeahead = 4
-  --print("xStream.writeahead",self.writeahead)
+  self.stream.writeahead = self.writeahead
 
 end
 
