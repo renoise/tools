@@ -1294,8 +1294,8 @@ end
 function xStreamUI:update_favorite_edit_rack()
   TRACE("xStreamUI:update_favorite_edit_rack()")
 
-  local favorite = self.xstream.favorites.last_selected or 
-    self.xstream.favorites.last_triggered
+  local favorite = self.xstream.favorites.last_selected --or 
+    --self.xstream.favorites.last_triggered
 
   local vb = self.vb
   local launch_rack = vb.views["xStreamFavoritesLaunchRack"]
@@ -1337,8 +1337,14 @@ function xStreamUI:update_favorite_edit_rack()
   -- update selectors -------------------------------------
 
   self:update_favorite_selector()
-  self:update_edit_rack_model_bank_selectors()
+  self:update_edit_rack_model_selector()
+  self:update_edit_rack_bank_selector()
   self:update_edit_rack_preset_selector()
+
+  -- update warnings --------------------------------------
+
+  --self:update_edit_rack_status(self.xstream.favorites.last_selected_index)
+
 
   --print("*** update_favorite_edit_rack - got here")
 
@@ -1346,19 +1352,46 @@ end
 
 --------------------------------------------------------------------------------
 
-function xStreamUI:update_edit_rack_model_bank_selectors()
-  TRACE("xStreamUI:update_edit_rack_model_bank_selectors()")
+function xStreamUI:update_edit_rack_model_selector()
+  TRACE("xStreamUI:update_edit_rack_model_selector()")
 
   local favorite_idx = self.xstream.favorites.last_selected_index
   local favorite = self.xstream.favorites.items[favorite_idx]
 
   local model_selector = self.vb.views["xStreamFavoriteModelSelector"]
   local model_status = self.vb.views["xStreamFavoriteModelStatus"]
+  
+  if type(favorite) ~= "xStreamFavorite" then
+    model_selector.value = 1
+    return
+  end
+
+  local model_idx,model = self.xstream:get_model_by_name(favorite.model_name)
+  --print("model_idx,model",model_idx,model)
+  if not model then
+    model_status.text = xStreamUI.EDIT_RACK_WARNING
+    model_status.tooltip = "This model is not available"
+  else
+    model_status.text = ""
+    model_status.tooltip = ""
+    model_selector.value = model_idx+1
+    model_selector.width = xStreamUI.EDIT_SELECTOR_W
+  end
+
+end
+
+--------------------------------------------------------------------------------
+
+function xStreamUI:update_edit_rack_bank_selector()
+  TRACE("xStreamUI:update_edit_rack_bank_selector()")
+
+  local favorite_idx = self.xstream.favorites.last_selected_index
+  local favorite = self.xstream.favorites.items[favorite_idx]
+
   local bank_selector = self.vb.views["xStreamFavoriteBankSelector"]
   local bank_status = self.vb.views["xStreamFavoriteBankStatus"]
   
   if type(favorite) ~= "xStreamFavorite" then
-    model_selector.value = 1
     bank_selector.value = 1
     bank_selector.active = false
     return
@@ -1370,13 +1403,9 @@ function xStreamUI:update_edit_rack_model_bank_selectors()
   --print("model_idx,model",model_idx,model)
 
   if not model then
-    model_status.text = xStreamUI.EDIT_RACK_WARNING
     bank_status.text = xStreamUI.EDIT_RACK_WARNING
     bank_selector.items = {xStreamUI.NO_PRESET_BANKS_AVAILABLE}
   else
-    model_status.text = ""
-    model_selector.value = model_idx+1
-    model_selector.width = xStreamUI.EDIT_SELECTOR_W
     bank_selector.items = model:get_preset_bank_names()
     --print("favorite.preset_bank_name",favorite.preset_bank_name)
     local preset_bank_index = model:get_preset_bank_by_name(favorite.preset_bank_name)
@@ -1384,14 +1413,14 @@ function xStreamUI:update_edit_rack_model_bank_selectors()
       bank_selector.value = preset_bank_index
       bank_selector.width = xStreamUI.EDIT_SELECTOR_W
       bank_status.text = ""
+      bank_status.tooltip = ""
     else
       bank_status.text = xStreamUI.EDIT_RACK_WARNING
+      bank_status.tooltip = "This preset bank is not available"
     end
   end
 
-
 end
-
 --------------------------------------------------------------------------------
 
 function xStreamUI:update_edit_rack_preset_selector()
@@ -1448,14 +1477,75 @@ function xStreamUI:update_edit_rack_preset_selector()
 end
 
 --------------------------------------------------------------------------------
+-- check for missing model/preset/bank and display warning(s)
+--[[
+function xStreamUI:update_edit_rack_status(favorite_idx,prop_name,prop_value)
+  print("xStreamUI:update_edit_rack_status(favorite_idx,prop_name,prop_value)",favorite_idx,prop_name,prop_value)
+
+  local favorite = self.xstream.favorites.items[favorite_idx]
+  if not favorite then
+    return
+  end
+
+  -- if no particular property/value is defined, use the most
+  -- specific level (bank name will tell us everything)
+  if not prop_name then
+    prop_name = "preset_bank_name"
+    prop_value = favorite.preset_bank_name
+  end
+  
+  local model_status = self.vb.views["xStreamFavoriteModelStatus"]
+  local bank_status = self.vb.views["xStreamFavoriteBankStatus"]
+  local preset_status = self.vb.views["xStreamFavoritePresetStatus"]
+
+  local existing = false
+  if (prop_name == "model_name") then
+    existing = self.xstream.favorites:get(prop_value,favorite.preset_index,favorite.preset_bank_name)
+  elseif (prop_name == "preset_index") then
+    existing = self.xstream.favorites:get(favorite.model_name,prop_value,favorite.preset_bank_name)
+  elseif (prop_name == "preset_bank_name") then
+    existing = self.xstream.favorites:get(favorite.model_name,favorite.preset_index,prop_value)
+  end
+
+  print("existing",existing)
+
+  if existing and (existing ~= favorite_idx) then
+    local str_msg = ("Please choose a model/preset combination which has not been assigned\n"
+                  .."(the combination you chose is already stored as favorite #%d"):format(existing)
+    if (prop_name == "model_name") then
+      model_status.text = xStreamUI.EDIT_RACK_WARNING
+      model_status.tooltip = str_msg
+    elseif (prop_name == "preset_index") then
+      preset_status.text = xStreamUI.EDIT_RACK_WARNING
+      preset_status.tooltip = str_msg
+    elseif (prop_name == "preset_bank_name") then
+      bank_status.text = xStreamUI.EDIT_RACK_WARNING
+      bank_status.tooltip = str_msg
+    end
+
+    --self:update_edit_rack_bank_selector()
+    --self:update_edit_rack_preset_selector()
+
+  else
+    
+    model_status.text = ""
+    model_status.tooltip = ""
+    preset_status.text = ""
+    preset_status.tooltip = ""
+    bank_status.text = ""
+    bank_status.tooltip = ""
+
+  end
+
+end
+]]
+--------------------------------------------------------------------------------
 -- apply a single property to a favorite (existing or empty)
 
 function xStreamUI:apply_property_to_favorite(favorite_idx,prop_name,prop_value)
   TRACE("xStreamUI:apply_property_to_favorite(favorite_idx,prop_name,prop_value)",favorite_idx,prop_name,prop_value)
 
   local favorite = self.xstream.favorites.items[favorite_idx]
-  --print("self.xstream.favorites...",rprint(self.xstream.favorites))
-
   if not favorite then
     return
   end
@@ -1470,59 +1560,23 @@ function xStreamUI:apply_property_to_favorite(favorite_idx,prop_name,prop_value)
     return
   end
 
-  local model_status = self.vb.views["xStreamFavoriteModelStatus"]
-  local bank_status = self.vb.views["xStreamFavoriteBankStatus"]
-  local preset_status = self.vb.views["xStreamFavoritePresetStatus"]
+  --self:update_edit_rack_status(favorite_idx,prop_name,prop_value)
 
-  local existing = false
-  if (prop_name == "model_name") then
-    existing = self.xstream.favorites:get(prop_value,favorite.preset_index,favorite.preset_bank_name)
-  elseif (prop_name == "preset_index") then
-    existing = self.xstream.favorites:get(favorite.model_name,prop_value,favorite.preset_bank_name)
-  elseif (prop_name == "preset_bank_name") then
-    existing = self.xstream.favorites:get(favorite.model_name,favorite.preset_index,prop_value)
-  end
+  favorite[prop_name] = prop_value
+  self.xstream.favorites.modified = true
+  self.favorite_edit_rack_requested = true
 
-  if existing then
-    local str_msg = ("Please choose a model/preset combination which has not been assigned\n"
-                  .."(the combination you chose is already stored as favorite #%d"):format(existing)
-    if (prop_name == "model_name") then
-      model_status.text = xStreamUI.EDIT_RACK_WARNING
-      model_status.tooltip = str_msg
-    elseif (prop_name == "preset_index") then
-      preset_status.text = xStreamUI.EDIT_RACK_WARNING
-      preset_status.tooltip = str_msg
-    elseif (prop_name == "preset_bank_name") then
-      bank_status.text = xStreamUI.EDIT_RACK_WARNING
-      bank_status.tooltip = str_msg
-    end
-
-  else
-    
-    model_status.text = ""
-    model_status.tooltip = ""
-    preset_status.text = ""
-    preset_status.tooltip = ""
-    bank_status.text = ""
-    bank_status.tooltip = ""
-
-    favorite[prop_name] = prop_value
-    self.xstream.favorites.modified = true
-    self.favorite_edit_rack_requested = true
-
-    -- update controls (favorite icon)
-    if self.xstream.selected_model then
-      if (favorite.model_name == self.xstream.selected_model.name) then
-        self:update_model_controls() 
-        self:update_preset_list() 
-        if (favorite.preset_bank_name == self.xstream.selected_model.selected_preset_bank.name) then
-          self:update_preset_controls() 
-        end
+  -- update controls (favorite icon)
+  if self.xstream.selected_model then
+    if (favorite.model_name == self.xstream.selected_model.name) then
+      self:update_model_controls() 
+      self:update_preset_list() 
+      if (favorite.preset_bank_name == self.xstream.selected_model.selected_preset_bank.name) then
+        self:update_preset_controls() 
       end
     end
-
   end
-  --print("favorite",favorite)
+
   if (favorite.model_name ~= "") and 
     (favorite.model_name ~= xStreamUI.NO_MODEL_SELECTED) 
   then
@@ -2888,7 +2942,7 @@ function xStreamUI:build()
   local preset_bank_notifier = function()
     TRACE("*** xStreamUI - model.preset_banks/name_observable fired...")
     self:update_preset_controls()
-    self:update_edit_rack_model_bank_selectors()
+    self:update_edit_rack_bank_selector()
   end
 
   local presets_modified_notifier = function()
@@ -3011,6 +3065,7 @@ function xStreamUI:build()
     TRACE("*** xStreamUI - favorites.last_selected_index_observable fired...")
     local idx = self.xstream.favorites.last_selected_index
     self:update_favorite_edit_rack()
+
     self:do_select_favorite(idx)
 
     if self.previous_selected_index then
