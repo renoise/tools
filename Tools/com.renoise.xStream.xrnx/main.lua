@@ -30,6 +30,7 @@ require (xLib_dir..'xPhraseMgr')
 require (xLib_dir..'xReflection')
 require (xLib_dir..'xScale')
 require (xLib_dir..'xSongPos')
+require (xLib_dir..'xStreamPos')
 
 require (app_dir..'xStream')
 require (app_dir..'xStreamArg')
