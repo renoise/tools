@@ -2685,8 +2685,12 @@ function xStreamUI:build()
                   height = xStreamUI.BITMAP_BUTTON_H,
                   notifier = function(val)
                     local model = self.xstream.selected_model
-                    model.selected_preset_bank:add_preset()
-                    self.xstream.selected_model.selected_preset_bank.selected_preset_index = #model.selected_preset_bank.presets
+                    local added,err = model.selected_preset_bank:add_preset()
+                    if not added then
+                      renoise.app():show_warning(err)
+                    else
+                      self.xstream.selected_model.selected_preset_bank.selected_preset_index = #model.selected_preset_bank.presets
+                    end
                   end,
                 },
                 vb:button{

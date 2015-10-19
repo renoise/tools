@@ -101,9 +101,15 @@ end
 -------------------------------------------------------------------------------
 -- add current/supplied values as new preset 
 -- @param t (table) use these values 
+-- @return bool, true when preset was added
+-- @return err, message when preset was not added 
 
 function xStreamPresets:add_preset(t)
   TRACE("xStreamPresets:add_preset(t)",t)
+
+  if (#self.model.args.args == 0) then
+    return false, "Please add one or more arguments to the model - otherwise, a preset have no values to represent!"
+  end
 
   local preset = {}
   if not t then
@@ -120,6 +126,8 @@ function xStreamPresets:add_preset(t)
   self.presets_observable:insert(#self.presets)
 
   self.modified = true
+
+  return true
 
 end
 
