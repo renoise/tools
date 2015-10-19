@@ -2839,10 +2839,11 @@ function xStreamUI:build()
     view.color = color
   end)
 
-  self.xstream.just_started_playback_observable:add_notifier(function()    
-    TRACE("*** xStreamUI - xstream.just_started_playback_observable fired...")
+  self.xstream.stream.just_started_playback_observable:add_notifier(function()    
+    TRACE("*** xStreamUI - xstream.stream.just_started_playback_observable fired...")
+    -- briefly flash play button when playback was triggered programatically
     local view = vb.views["xStreamStartPlayButton"]
-    view.color = (self.xstream.just_started_playback > 0)
+    view.color = (self.xstream.stream.just_started_playback > 0)
       and xLib.COLOR_ENABLED or xLib.COLOR_DISABLED
   end)
 
@@ -3525,7 +3526,7 @@ function xStreamUI:on_idle()
 
   local view = self.vb.views["xStreamImplStats"]
   local str_stat = ("Memory usage: %.2f Mb"):format(collectgarbage("count")/1024)
-    ..("\nLines Travelled: %d"):format(self.xstream._writepos.lines_travelled)
+    ..("\nLines Travelled: %d"):format(self.xstream.stream.writepos.lines_travelled)
     ..("\nWriteahead: %d lines"):format(self.xstream.writeahead)
     ..("\nSelected model: %s"):format(self.xstream.selected_model and self.xstream.selected_model.name or "N/A") 
     ..("\nStream active: %s"):format(self.xstream.active and "true" or "false") 
