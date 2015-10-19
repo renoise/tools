@@ -19,7 +19,7 @@ return {
       description = "Name needs to be a string"
     },
 		{
-      value = "bar", 
+      name = "bar", 
       description = "Need a default value, or type would be ambiguous"
     },
 		
