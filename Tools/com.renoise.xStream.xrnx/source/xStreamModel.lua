@@ -126,25 +126,23 @@ function xStreamModel:__init(xstream)
 
   -- define sandbox environment
   local env = {
-    _G = _G,
-    assert = assert,
-    ipairs = ipairs,
-    loadstring = loadstring,
-    math = math,
-    next = next,
-    pairs = pairs,
-    print = print,
-    select = select,
-    string = string,
-    table = table,
-    tonumber = tonumber,
-    tostring = tostring,
-    type = type,
-    type = type,
-    unpack = unpack,
+    assert = _G.assert,
+    ipairs = _G.ipairs,
+    loadstring = _G.loadstring,
+    math = _G.math,
+    next = _G.next,
+    pairs = _G.pairs,
+    print = _G.print,
+    select = _G.select,
+    string = _G.string,
+    table = _G.table,
+    tonumber = _G.tonumber,
+    tostring = _G.tostring,
+    type = _G.type,
+    unpack = _G.unpack,
     -- renoise extended
-    ripairs = ripairs,
-    rprint = rprint,
+    ripairs = _G.ripairs,
+    rprint = _G.rprint,
     -- access xlib methods/classes
     restrict_to_scale = xScale.restrict_to_scale,
     xScale = {
@@ -289,7 +287,7 @@ function xStreamModel:set_callback_str(str)
   then
     -- compile right away
     local passed,err = self:compile(str)
-    if err then -- should not happen! 
+    if not passed then -- should not happen! 
       LOG(err)
     end
   else
@@ -466,8 +464,8 @@ function xStreamModel:parse_definition(def)
 
   -- process the callback method
   --print("about to compile - file_path",file_path)
-  local compiled_fn,err = self:compile(def.callback)
-  if not compiled_fn then
+  local passed,err = self:compile(def.callback)
+  if not passed then
     return false, err
   end
   
@@ -841,6 +839,10 @@ function xStreamModel:attach_to_song()
   TRACE("xStreamModel:attach_to_song()")
 
   self.env.rns = rns
+  local compiled_fn,err = self:compile(self.callback_str)
+  if not compiled_fn then
+    LOG("The callback contains errors: "..err)
+  end
   self.args:attach_to_song()
 
 end
