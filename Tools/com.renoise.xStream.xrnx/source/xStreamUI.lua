@@ -73,9 +73,11 @@ xStreamUI.START_OPTION = {
   ON_PLAY_EDIT = 3,
 }
 
+--[[
 xStreamUI.OPTIONS_ICON = (renoise.API_VERSION <= 4)
   and "Icons/Edit.bmp"
   or  "Icons/Options.bmp"
+]]
 
 xStreamUI.EMPTY_FAVORITE_TXT = "-"
 xStreamUI.EDIT_RACK_WARNING = "⚠ Warning"
@@ -94,7 +96,8 @@ xStreamUI.TRANSPORT_BUTTON_W = 28
 xStreamUI.PRESET_SELECTOR_W = 100
 xStreamUI.ARGS_SELECTOR_W = 136
 xStreamUI.MODEL_SELECTOR_W = 119
-xStreamUI.FAVORITE_SELECTOR_W = 222
+xStreamUI.MODEL_SELECTOR_COMPACT_W = 127
+xStreamUI.FAVORITE_SELECTOR_W = 223
 xStreamUI.FLASH_TIME = 0.2
 xStreamUI.LINE_HEIGHT = 14
 xStreamUI.MAX_BRIGHT_COLOR = 1
@@ -1633,7 +1636,8 @@ function xStreamUI:build()
         vb:row{
           vb:button{
             tooltip = "Toggle xStream options",
-            bitmap = xStreamUI.OPTIONS_ICON,
+            --bitmap = xStreamUI.OPTIONS_ICON,
+            text = "☰",
             width = xStreamUI.BITMAP_BUTTON_W,
             height = xStreamUI.BITMAP_BUTTON_H,
             notifier = function()
@@ -1850,13 +1854,13 @@ function xStreamUI:build()
             id = "xStreamTransportRow",
             vb:row{
               vb:button{
-                bitmap = "Icons/Transport_Record.bmp",
+                bitmap = "./source/icons/Transport_Record.bmp",
                 active = false,
                 width = xStreamUI.TRANSPORT_BUTTON_W,
                 height = xStreamUI.BITMAP_BUTTON_H,
               },
               vb:button{
-                bitmap = "Icons/Transport_Play.bmp",
+                bitmap = "./source/icons/Transport_Play.bmp",
                 tooltip = "Activate streaming and (re-)start playback [Space]",
                 id = "xStreamStartPlayButton",
                 width = xStreamUI.TRANSPORT_BUTTON_W,
@@ -1866,7 +1870,8 @@ function xStreamUI:build()
                 end,
               },
               vb:button{
-                bitmap = "Icons/Browser_RenoisePhraseFile.bmp",
+                --bitmap = "Icons/Browser_RenoisePhraseFile.bmp",
+                text = "≣↴",
                 tooltip = "Toggle whether streaming is active",
                 id = "xStreamToggleStreaming",
                 width = xStreamUI.TRANSPORT_BUTTON_W,
@@ -1882,7 +1887,8 @@ function xStreamUI:build()
               vb:button{
                 --text = "mute",
                 --bitmap = "Icons/TrackIsMuted.bmp",
-                bitmap = "Icons/Mixer_ShowMute.bmp",
+                --bitmap = "Icons/Mixer_ShowMute.bmp",
+                text = "M",
                 tooltip = "Mute stream (output empty/undefined notes) ",
                 id = "xStreamMuteButton",
                 width = xStreamUI.TRANSPORT_BUTTON_W,
@@ -1964,7 +1970,7 @@ function xStreamUI:build()
           tooltip = "Choose between models",
           items = self.xstream:get_model_names(),
           id = "xStreamCompactModelSelector",
-          width = 120,
+          width = xStreamUI.MODEL_SELECTOR_COMPACT_W,
           height = xStreamUI.BITMAP_BUTTON_H,
           notifier = function(val)
             self.xstream.selected_model_index = val-1
@@ -2477,8 +2483,9 @@ function xStreamUI:build()
 
                 vb:row{
                   vb:button{
-                    bitmap = "Icons/Minus.bmp",
-                    tooltip = "Delete the selected definition",
+                    --bitmap = "Icons/Minus.bmp",
+                    text = "‒",
+                    tooltip = "Delete the selected model",
                     id = "xStreamModelRemove",
                     width = xStreamUI.BITMAP_BUTTON_W,
                     height = xStreamUI.BITMAP_BUTTON_H,
@@ -2487,7 +2494,8 @@ function xStreamUI:build()
                     end,
                   },
                   vb:button{
-                    bitmap = "Icons/Plus.bmp",
+                    --bitmap = "Icons/Plus.bmp",
+                    text = "+",
                     tooltip = "Create a new model",
                     id = "xStreamModelCreate",
                     width = xStreamUI.BITMAP_BUTTON_W,
@@ -2515,7 +2523,8 @@ function xStreamUI:build()
                   },
                   ]]
                   vb:button{
-                    bitmap = "Icons/Zoom.bmp",
+                    bitmap = "./source/icons/Zoom.bmp",
+                    --bitmap = "Icons/Browser_Search.bmp",
                     tooltip = "Reveal the folder in which the definition is located",
                     id = "xStreamRevealLocation",
                     width = xStreamUI.BITMAP_BUTTON_W,
@@ -2526,7 +2535,8 @@ function xStreamUI:build()
                   },        
 
                   vb:button{
-                    bitmap = "Icons/Save.bmp",
+                    bitmap = "./source/icons/Save.bmp",
+                    --bitmap = "Icons/Browser_ScriptFile.bmp",
                     tooltip = "Overwrite the existing definition",
                     id = "xStreamModelSave",
                     width = xStreamUI.BITMAP_BUTTON_W,
@@ -2539,7 +2549,7 @@ function xStreamUI:build()
                     end,
                   },
                   vb:button{
-                    bitmap = "Icons/PluginBrowser_Rename.bmp",
+                    bitmap = "./source/icons/PluginBrowser_Rename.bmp",
                     tooltip = "Assign a new name to the selected model",
                     id = "xStreamModelRename",
                     width = xStreamUI.BITMAP_BUTTON_W,
@@ -2554,7 +2564,7 @@ function xStreamUI:build()
                     end,
                   },
                   vb:button{
-                    bitmap = "Icons/Clone.bmp",
+                    bitmap = "./source/icons/Clone.bmp",
                     tooltip = "Save definition under a new name",
                     id = "xStreamModelSaveAs",
                     width = xStreamUI.BITMAP_BUTTON_W,
@@ -2567,7 +2577,7 @@ function xStreamUI:build()
                     end,
                   },        
                   vb:button{
-                    bitmap = "Icons/Browser_Rescan.bmp",
+                    bitmap = "./source/icons/Browser_Rescan.bmp",
                     tooltip = "(Re-)load the selected model from disk",
                     id = "xStreamModelRefresh",
                     width = xStreamUI.BITMAP_BUTTON_W,
@@ -2615,7 +2625,7 @@ function xStreamUI:build()
               },
               vb:row{
                 vb:bitmap{
-                  bitmap = "Icons/Browser_Library.bmp",
+                  bitmap = "./source/icons/Browser_Library.bmp",
                   mode = "body_color",
                   width = xStreamUI.BITMAP_BUTTON_W,
                   height = xStreamUI.BITMAP_BUTTON_H,
@@ -2633,7 +2643,8 @@ function xStreamUI:build()
                 },
                 vb:row{
                   vb:button{
-                    bitmap = "Icons/Minus.bmp",
+                    --bitmap = "Icons/Minus.bmp",
+                    text = "‒",
                     id = "xStreamPresetBankRemove",
                     width = xStreamUI.BITMAP_BUTTON_W,
                     height = xStreamUI.BITMAP_BUTTON_H,
@@ -2649,7 +2660,8 @@ function xStreamUI:build()
                   },
 
                   vb:button{
-                    bitmap = "Icons/Plus.bmp",
+                    --bitmap = "Icons/Plus.bmp",
+                    text = "+",
                     id = "xStreamPresetBankCreate",
                     width = xStreamUI.BITMAP_BUTTON_W,
                     height = xStreamUI.BITMAP_BUTTON_H,
@@ -2663,7 +2675,7 @@ function xStreamUI:build()
                     end,
                   },
                   vb:button{
-                    bitmap = "Icons/Folder_open.bmp",
+                    bitmap = "./source/icons/Folder_open.bmp",
                     tooltip = "Import preset bank (unsupported values are logged)",
                     id = "xStreamImportPresetBank",
                     width = xStreamUI.BITMAP_BUTTON_W,
@@ -2673,7 +2685,7 @@ function xStreamUI:build()
                     end,
                   },
                   vb:button{
-                    bitmap = "Icons/Save.bmp",
+                    bitmap = "./source/icons/Save.bmp",
                     tooltip = "Export selected preset bank",
                     id = "xStreamExportPresetBank",
                     width = xStreamUI.BITMAP_BUTTON_W,
@@ -2686,7 +2698,7 @@ function xStreamUI:build()
                     end
                   },
                   vb:button{
-                    bitmap = "Icons/PluginBrowser_Rename.bmp",
+                    bitmap = "./source/icons/PluginBrowser_Rename.bmp",
                     id = "xStreamPresetBankRename",
                     active = false,
                     width = xStreamUI.BITMAP_BUTTON_W,
@@ -2703,7 +2715,7 @@ function xStreamUI:build()
               },
               vb:row{
                 vb:bitmap{
-                  bitmap = "Icons/MiddleFrame_Mix.bmp",
+                  bitmap = "./source/icons/MiddleFrame_Mix.bmp",
                   mode = "body_color",
                   width = xStreamUI.BITMAP_BUTTON_W,
                   height = xStreamUI.BITMAP_BUTTON_H,
@@ -2720,7 +2732,8 @@ function xStreamUI:build()
                   end
                 },
                 vb:button{
-                  bitmap = "Icons/Minus.bmp",
+                  text = "‒",
+                  --bitmap = "Icons/Minus.bmp",
                   tooltip = "Remove the selected preset",
                   id = "xStreamRemovePreset",
                   width = xStreamUI.BITMAP_BUTTON_W,
@@ -2732,7 +2745,8 @@ function xStreamUI:build()
                   end,
                 },
                 vb:button{
-                  bitmap = "Icons/Plus.bmp",
+                  text = "+",
+                  --bitmap = "Icons/Plus.bmp",
                   tooltip = "Add new preset with the current settings",
                   id = "xStreamAddPreset",
                   width = xStreamUI.BITMAP_BUTTON_W,
@@ -2748,7 +2762,7 @@ function xStreamUI:build()
                   end,
                 },
                 vb:button{
-                  bitmap = "Icons/Attach.bmp",
+                  bitmap = "./source/icons/Attach.bmp",
                   tooltip = "Update the selected preset with current settings",
                   id = "xStreamUpdatePreset",
                   width = xStreamUI.BITMAP_BUTTON_W,
@@ -2809,7 +2823,9 @@ function xStreamUI:build()
                 },
                 vb:button{
                   id = "xStreamArgsRandomize",
-                  text = "randomize",
+                  --text = "randomize",
+                  text = "☢ RND",
+                  tooltip = "Randomize all unlocked parameters in the preset",
                   height = xStreamUI.BITMAP_BUTTON_H,
                   notifier = function()
                     self.xstream.selected_model.args:randomize()
@@ -3253,7 +3269,7 @@ function xStreamUI:set_show_editor(val)
   end
 
   local view_expand = self.vb.views["xStreamToggleExpand"]
-  view_expand.bitmap = val and "Icons/Minimize.bmp" or "Icons/Maximize.bmp"
+  view_expand.bitmap = val and "./source/icons/Minimize.bmp" or "./source/icons/Maximize.bmp"
 
   self.vb.views["xStreamPanel"].height = val 
     and self:get_expanded_height() 
