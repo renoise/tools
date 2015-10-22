@@ -594,6 +594,30 @@ function xStreamModel:extract_tokens(str_fn)
 end
 
 -------------------------------------------------------------------------------
+-- rename an argument within the callback - 
+-- @param old_name (string)
+-- @param new_name (string)
+
+function xStreamModel:rename_argument(old_name,new_name)
+  TRACE("xStreamModel:rename_argument(old_name,new_name)",old_name,new_name)
+
+  local str_search = "args."..old_name
+  local str_replace = "args."..new_name
+  local str_patt = "(.?)("..str_search..")([^%w])"
+
+  self.callback_str = string.gsub(self.callback_str,str_patt,function(...)
+    local c1,c2,c3 = select(1,...),select(2,...),select(3,...)
+    --print("c1,c2,c3",c1,c2,c3)
+    local patt = "[%w_]" 
+    if string.match(c1,patt) or string.match(c3,patt) then
+      return c1..c2..c3
+    end
+    return c1..str_replace..c3
+  end)
+
+end
+
+-------------------------------------------------------------------------------
 -- check if we have redefined the xline in the callback function
 -- @param str_fn (string)
 -- @return bool
