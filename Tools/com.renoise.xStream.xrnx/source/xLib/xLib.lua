@@ -162,6 +162,14 @@ function xLib.split(str, pat)
 end
 
 -------------------------------------------------------------------------------
+-- remove trailing and leading whitespace from string.
+-- http://en.wikipedia.org/wiki/Trim_(8programming)
+
+function xLib.trim(s)
+  return (s:gsub("^%s*(.-)%s*$", "%1"))
+end
+
+-------------------------------------------------------------------------------
 -- insert return code whenever we encounter dashes or spaces in a string
 -- TODO keep dashes, and allow a certain length per line
 -- @param str (string)
