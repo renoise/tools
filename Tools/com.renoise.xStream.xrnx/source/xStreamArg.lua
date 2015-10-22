@@ -11,19 +11,69 @@ xEffectColumn
 class 'xStreamArg'
 
 -- string constants, saved into definitions 
+xStreamArg.DISPLAYS = {"float","hex","integer","percent","note","popup","chooser","switch","minislider","rotary","boolean","string"}
 xStreamArg.DISPLAY_AS = {
-  FLOAT = "float",
-  HEX = "hex",
-  INTEGER = "integer",
-  PERCENT = "percent",
-  NOTE = "note",
-  POPUP = "popup",
-  CHOOSER = "chooser",
-  SWITCH = "switch",
-  MINISLIDER = "minislider",
-  ROTARY = "rotary",
-  BOOLEAN = "boolean",
-  STRING = "string",
+  FLOAT = 1,
+  HEX = 2,
+  INTEGER = 3,
+  PERCENT = 4,
+  NOTE = 5,
+  POPUP = 6,
+  CHOOSER = 7,
+  SWITCH = 8,
+  MINISLIDER = 9,
+  ROTARY = 10,
+  BOOLEAN = 11,
+  STRING = 12,
+}
+
+xStreamArg.BASE_TYPES = {"number","boolean","string"}
+xStreamArg.BASE_TYPE = {
+  NUMBER = 1,
+  BOOLEAN = 2,
+  STRING = 3
+}
+
+xStreamArg.SUPPORTS_MIN_MAX = {
+  xStreamArg.DISPLAY_AS.FLOAT,
+  xStreamArg.DISPLAY_AS.HEX,
+  xStreamArg.DISPLAY_AS.INTEGER,
+  xStreamArg.DISPLAY_AS.PERCENT,
+  xStreamArg.DISPLAY_AS.NOTE,
+  xStreamArg.DISPLAY_AS.MINISLIDER,
+  xStreamArg.DISPLAY_AS.ROTARY,
+}
+
+xStreamArg.SUPPORTS_ZERO_BASED = {
+  xStreamArg.DISPLAY_AS.HEX,
+  xStreamArg.DISPLAY_AS.INTEGER,
+}
+
+xStreamArg.REQUIRES_ITEMS = {
+  xStreamArg.DISPLAY_AS.POPUP,
+  xStreamArg.DISPLAY_AS.CHOOSER,
+  xStreamArg.DISPLAY_AS.SWITCH,
+}
+
+xStreamArg.NUMBER_DISPLAYS = {
+  xStreamArg.DISPLAY_AS.FLOAT,
+  xStreamArg.DISPLAY_AS.HEX,
+  xStreamArg.DISPLAY_AS.INTEGER,
+  xStreamArg.DISPLAY_AS.PERCENT,
+  xStreamArg.DISPLAY_AS.NOTE,
+  xStreamArg.DISPLAY_AS.POPUP,
+  xStreamArg.DISPLAY_AS.CHOOSER,
+  xStreamArg.DISPLAY_AS.SWITCH,
+  xStreamArg.DISPLAY_AS.MINISLIDER,
+  xStreamArg.DISPLAY_AS.ROTARY,
+}
+
+xStreamArg.BOOLEAN_DISPLAYS = {
+  xStreamArg.DISPLAY_AS.BOOLEAN,
+}
+
+xStreamArg.STRING_DISPLAYS = {
+  xStreamArg.DISPLAY_AS.STRING,
 }
 
 -------------------------------------------------------------------------------
@@ -42,6 +92,10 @@ function xStreamArg:__init(arg)
 
 	assert(type(arg.name == "string"),"Expected name argument as string")
 	assert(type(arg.name ~= "nil"),"Expected value argument (number,string or boolean")
+
+  -- TODO more validation
+
+
 
   -- serializable properties  -----------------------------
 
@@ -153,8 +207,6 @@ function xStreamArg:bind_notifier(val)
     -- retrieve from Renoise
     local new_value,err = xLib.parse_str(self.bind_str_val)
     if not err then
-      --print("*** self.bind_notifier - parsed self.bind_str",self.bind_str,", new_value = ",new_value,"self.value",self.value)
-      --self.value = new_value
       -- hackaround: avoid notifier feedback by scheduling the update
       -- note: feedback will occur if we are not able to set the target -
       -- this can occur e.g. with keyboard_velocity, when velocity is not
@@ -195,6 +247,17 @@ function xStreamArg.resolve_binding(bind_str)
     LOG(err)
   end
 
+end
+
+-------------------------------------------------------------------------------
+-- quickly decide if argument is bound or polling 
+
+function xStreamArg:get_bop()
+  if type(self.poll_str)=="string" then
+    return self.poll_str 
+  elseif type(self.bind_str)=="string" then
+    return self.bind_str 
+  end
 end
 
 -------------------------------------------------------------------------------

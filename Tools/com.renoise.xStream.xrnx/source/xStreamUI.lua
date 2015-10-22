@@ -21,6 +21,14 @@ xStreamUI.MODEL_CONTROLS = {
   "xStreamApplyTrackButton",
   "xStreamCallbackCompile",
   "xStreamExportPresetBank",
+  "xStreamArgsAddButton",
+  --"xStreamArgsRenameButton",
+  --"xStreamArgsRemoveButton",
+  "xStreamModelArgsToggle",
+  "xStreamPresetsToggle",
+  "xStreamArgsMoveUpButton",
+  "xStreamArgsMoveDownButton",
+  "xStreamArgsEditButton",
   "xStreamArgsRandomize",
   "xStreamFavoriteModel",
   "xStreamImportPresetBank",
@@ -84,17 +92,25 @@ xStreamUI.EDIT_RACK_WARNING = "⚠ Warning"
 xStreamUI.NO_MODEL_SELECTED = "No model selected"
 xStreamUI.NO_PRESETS_AVAILABLE = "None"
 xStreamUI.NO_PRESET_BANKS_AVAILABLE = "None"
+xStreamUI.NO_ARGS_AVAILABLE = "No arguments"
 xStreamUI.NO_FAVORITE_SELECTED = "No favorite selected"
+
+xStreamUI.ARROW_UP = "▴"
+xStreamUI.ARROW_DOWN = "▾"
+xStreamUI.ARROW_LEFT = "◂"
+xStreamUI.ARROW_RIGHT = "▸"
 
 xStreamUI.FAVORITE_GRID_W = 66
 xStreamUI.FAVORITE_GRID_H = 44
-xStreamUI.BITMAP_BUTTON_W = 20
+xStreamUI.BITMAP_BUTTON_W = 21
 xStreamUI.BITMAP_BUTTON_H = 19
 xStreamUI.CALLBACK_EDITOR_W = 500 -- 80 characters
 xStreamUI.MONO_CHAR_W = 7 -- single character 
 xStreamUI.TRANSPORT_BUTTON_W = 28
-xStreamUI.PRESET_SELECTOR_W = 100
-xStreamUI.ARGS_SELECTOR_W = 136
+xStreamUI.PRESET_SELECTOR_W = 110
+xStreamUI.ARGS_SELECTOR_W = 201
+xStreamUI.ARGS_SLIDER_W = 90
+--xStreamUI.ARG_CONTROL_POPUP_W = 141
 xStreamUI.MODEL_SELECTOR_W = 119
 xStreamUI.MODEL_SELECTOR_COMPACT_W = 127
 xStreamUI.FAVORITE_SELECTOR_W = 223
@@ -165,11 +181,15 @@ function xStreamUI:__init(xstream,vb,midi_prefix)
   self.update_color_requested = false
   self.update_model_requested = false
   self.update_launch_model_requested = false
+  self.build_args_requested = false
+  self.update_args_requested = false
 
   self.favorite_views = {}
   self.preset_views = {}
   self.model_views = {}
+  self.arg_labels = {}
   self.arg_views = {}
+  self.arg_bops = {}
   
   self.scheduled_model_index = nil
   self.scheduled_preset_index = nil
@@ -222,6 +242,14 @@ function xStreamUI:__init(xstream,vb,midi_prefix)
   self.editor_visible_lines = property(self.get_editor_visible_lines,self.set_editor_visible_lines)
   self.editor_visible_lines_observable = renoise.Document.ObservableNumber(16)
 
+  self.args_editor_visible = property(self.get_args_editor_visible,self.set_args_editor_visible)
+  self.args_editor_visible_observable = renoise.Document.ObservableBoolean(false)
+
+  self.cached_model_args_visible = nil
+
+  -- bool, set immediately after changing the callback string
+  self.user_modified_callback = false
+
   -- initialize -----------------------
 
   self:build()
@@ -243,12 +271,621 @@ function xStreamUI:update()
   self:update_model_selector()
   self:update_model_title()
   self:build_args()
+  self:update_args()
   self:update_args_selector()
   self:update_args_visibility()
   self:build_preset_list()
   self:update_editor()
   self:update_preset_controls()
   self:update_color()
+
+end
+
+-------------------------------------------------------------------------------
+
+function xStreamUI:build_args_editor()
+
+  local vb = self.vb
+  local label_w = 75
+  local control_w = 165
+  local control_short_w = 80
+  local display_as_items = table.copy(xStreamArg.DISPLAYS)
+  table.insert(display_as_items,1,"(select)")
+  local content = vb:column{
+    vb:space{
+      height = 6,
+    },
+    vb:column{
+      style = "group",
+      margin = 4,
+      spacing = 1,
+      vb:row{
+        tooltip = "Enter a name for the argument - it will be accessed in the"
+                .."\ncallback using this syntax: 'args.your_name_here'"
+                .."\n(note: xStream will offer to update the callback when you"
+                .."\nare assigning a new name to an existing argument)",
+        vb:text{
+          text = "name",
+          font = "mono",
+          width = label_w,
+        },
+        vb:textfield{
+          id = "xStreamArgsEditorName",
+          value = "...",
+          width = control_w,
+        },
+      },
+      vb:row{
+        tooltip = "Enter a description for the argument (this will appear"
+                .."\nas a tooltip when you hover the mouse over the control)",
+        vb:text{
+          text = "description",
+          font = "mono",
+          width = label_w,
+        },
+        vb:multiline_textfield{
+          id = "xStreamArgsEditorDescription",
+          text = "...",
+          width = control_w,
+          height = 34,
+        }
+      },
+      vb:column{ -- bind or poll
+        vb:row{
+          tooltip = "Determine if the argument is bound to, or polling some"
+                  .."\nvalue in Renoise. Choosing either option will cause"
+                  .."\nthe value to be automatically set/synchronized"
+                  .."\n(note: can restrict min/max to a valid range)",
+          vb:text{
+            text = "poll/bind",
+            font = "mono",
+            width = label_w,
+          },
+          vb:popup{
+            id = "xStreamArgsEditorPollOrBind",
+            width = 50,
+            items = {
+              "off",
+              "bind",
+              "poll",
+            },
+            notifier = function(idx)
+              local view_text = vb.views["xStreamArgsEditorPollOrBindValue"]
+              local view_min = vb.views["xStreamArgsEditorMinValue"]
+              local view_max = vb.views["xStreamArgsEditorMaxValue"]
+              view_text.active = (idx > 1) 
+              view_min.active = (idx ~= 2) 
+              view_max.active = (idx ~= 2) 
+              --if (idx > 1) then
+              --  view_min.value = 1
+              --end
+            end,
+          },
+          vb:textfield{
+            id = "xStreamArgsEditorPollOrBindValue",
+            text = "...",
+            --font = "mono",
+            width = control_w-50,
+          },
+        },
+
+      },
+
+      vb:column{ -- impacts_buffer
+        vb:row{
+          tooltip = "When this is enabled, the buffer is recalculated each time"
+                  .."\nthe argument value has changed. This ensures that changes"
+                  .."\nare written to the pattern as fast as possible"
+                  .."\nDefault value is 'enabled'",
+          vb:text{
+            text = "re-buffer",
+            font = "mono",
+            width = label_w,
+          },
+          vb:checkbox{
+            id = "xStreamArgsEditorImpactsBuffer",
+            value = false,
+          },
+
+        },
+
+      },
+
+
+      vb:row{ -- value-type
+        tooltip = "Determine the basic type of value",
+        vb:text{
+          text = "value-type",
+          font = "mono",
+          width = label_w,
+        },
+        vb:popup{
+          id = "xStreamArgsEditorType",
+          items = xStreamArg.BASE_TYPES,
+          notifier = function()
+            local view_props = self.vb.views["xStreamArgsEditorPropControls"]
+            local view_popup = self.vb.views["xStreamArgsEditorDisplayAs"]
+            local view_bop = self.vb.views["xStreamArgsEditorPollOrBind"]
+            local view_bop_value = self.vb.views["xStreamArgsEditorPollOrBindValue"]
+            view_props.visible = false
+            view_popup.value = 1
+            view_bop.value = 1
+            view_bop_value.text = ""
+          end,
+        },
+      },
+      vb:row{ -- display as
+        tooltip = "Choose a supported display/edit control",
+        vb:text{
+          text = "display_as",
+          font = "mono",
+          width = label_w,
+        },
+        vb:popup{
+          id = "xStreamArgsEditorDisplayAs",
+          items = display_as_items,
+          notifier = function(idx)
+            --print("idx",idx)
+            self:show_relevant_arg_edit_controls(idx-1)
+            local view_props = self.vb.views["xStreamArgsEditorPropControls"]
+            view_props.visible = true
+          end
+        },
+      },
+      vb:column{
+        id = "xStreamArgsEditorPropControls",
+        vb:row{
+          tooltip = "Specify the minimum value",
+          id = "xStreamArgsEditorMinValueRow",
+          vb:text{
+            text = "min",
+            font = "mono",
+            width = label_w,
+          },
+          vb:row{
+            style = "plain",
+            vb:valuefield{
+              id = "xStreamArgsEditorMinValue",
+              value = 0,
+              min = xStreamUI.ARGS_MIN_VALUE,
+              max = xStreamUI.ARGS_MAX_VALUE,
+              width = control_short_w,
+            },
+          },
+        },
+        vb:row{
+          id = "xStreamArgsEditorMaxValueRow",
+          tooltip = "Specify the maximum value",
+          vb:text{
+            text = "max",
+            font = "mono",
+            width = label_w,
+          },
+          vb:row{
+            style = "plain",
+            vb:valuefield{
+              id = "xStreamArgsEditorMaxValue",
+              value = 0,
+              min = xStreamUI.ARGS_MIN_VALUE,
+              max = xStreamUI.ARGS_MAX_VALUE,
+              width = control_short_w,
+            },
+          },
+        },
+        vb:row{
+          tooltip = "Specify if value is zero-based",
+          id = "xStreamArgsEditorZeroBasedRow",
+          vb:text{
+            text = "zero-based",
+            font = "mono",
+            width = label_w,
+          },
+          vb:checkbox{
+            id = "xStreamArgsEditorZeroBased",
+            value = false,
+          },
+        },
+        vb:row{
+          id = "xStreamArgsEditorItemsRow",
+          tooltip = "Specify items for a popup/chooser/switch",
+          vb:text{
+            text = "items",
+            font = "mono",
+            width = label_w,
+          },
+          vb:multiline_textfield{
+            id = "xStreamArgsEditorItems",
+            value = "...",
+            width = control_w,
+            height = 60,
+          },
+        },
+      },
+      vb:column{
+        vb:space{
+          height = 6,
+        },
+        vb:row{
+          vb:button{
+            tooltip = "Remove this argument",
+            text = "Remove",
+            notifier = function()
+              local str_msg = "Are you sure you want to remove this argument?"
+                            .."\n(the model might stop working if it's in use...)"
+              local choice = renoise.app():show_prompt("Remove argument",str_msg,{"OK","Cancel"})
+              if (choice == "OK") then
+                local idx = self.xstream.selected_model.args.selected_index
+                self.xstream.selected_model.args:remove(idx)
+                self.args_editor_visible = false
+              end
+            end
+          },
+          vb:button{
+            tooltip = "Update the argument with current settings",
+            text = "Apply changes",
+            notifier = function()
+              local applied,err = self:apply_arg_settings()
+              if not applied and err then
+                renoise.app():show_warning(err)
+              elseif applied then
+                --self.args_editor_visible = false
+              end
+            end
+          }
+        }
+      }
+    },
+  }
+
+  return content
+
+end
+
+
+--------------------------------------------------------------------------------
+
+function xStreamUI:update_args_editor()
+  TRACE("xStreamUI:update_args_editor()")
+
+  if not self.xstream.selected_model then
+    --print("*** xStreamUI:update_args_editor - no model selected...")
+    return
+  end
+
+  local arg = self.xstream.selected_model.args.selected_arg
+  if not arg then
+    --print("*** xStreamUI:update_args_editor - no arg selected...")
+    return
+  end
+  
+  if not self.args_editor_visible then
+    --print("*** xStreamUI:update_args_editor - editor not visible")
+    return
+  end
+
+  --local view_locked         = self.vb.views["xStreamArgsEditorLocked"]
+  local view_name           = self.vb.views["xStreamArgsEditorName"]
+  local view_description    = self.vb.views["xStreamArgsEditorDescription"]
+  local view_type           = self.vb.views["xStreamArgsEditorType"]
+  local view_display_as     = self.vb.views["xStreamArgsEditorDisplayAs"]
+  local view_buffer         = self.vb.views["xStreamArgsEditorImpactsBuffer"]
+  local view_props          = self.vb.views["xStreamArgsEditorPropControls"]
+  local view_min_value      = self.vb.views["xStreamArgsEditorMinValue"]
+  local view_max_value      = self.vb.views["xStreamArgsEditorMaxValue"]
+  local view_zero_based     = self.vb.views["xStreamArgsEditorZeroBased"]
+  local view_items          = self.vb.views["xStreamArgsEditorItems"]
+  local view_poll_or_bind   = self.vb.views["xStreamArgsEditorPollOrBind"]
+  local view_poll_or_bind_value = self.vb.views["xStreamArgsEditorPollOrBindValue"]
+
+  -- TODO deduce valid range from all known renoise observables (xObservable)
+  if (view_poll_or_bind.value == 1) then
+    view_min_value.active = true
+  else
+    view_min_value.active = false
+    view_min_value.value = 1
+  end
+
+  --view_locked.value = arg.locked
+  view_name.text = arg.name
+  view_description.text = arg.description or ""
+  
+  local base_type
+  if (type(arg.observable) == "ObservableNumber") then
+    base_type = xStreamArg.BASE_TYPE.NUMBER
+  elseif (type(arg.observable) == "ObservableBoolean") then
+    base_type = xStreamArg.BASE_TYPE.BOOLEAN
+  elseif (type(arg.observable) == "ObservableString") then
+    base_type = xStreamArg.BASE_TYPE.STRING
+  else
+    --print("unexpected base type",arg.observable,type(arg.observable))
+    return
+  end
+  view_type.value = base_type
+
+  view_props.visible = true
+
+  local display_as = table.find(xStreamArg.DISPLAYS,arg.properties.display_as)
+  if not display_as then
+    if (base_type == xStreamArg.BASE_TYPE.NUMBER) then
+      display_as = arg.properties.items and xStreamArg.DISPLAY_AS.POPUP
+        or xStreamArg.DISPLAY_AS.FLOAT
+    elseif (base_type == xStreamArg.BASE_TYPE.BOOLEAN) then
+      display_as = xStreamArg.DISPLAY_AS.BOOLEAN
+    elseif (base_type == xStreamArg.BASE_TYPE.STRING) then
+      display_as = xStreamArg.DISPLAY_AS.STRING
+    end
+  end
+  --print("display_as",display_as)
+  view_display_as.value = display_as+1
+
+  local bop_value,bop_str
+  if (arg.bind_str) then
+    bop_value = 2
+    bop_str = arg.bind_str
+  elseif (arg.poll_str) then
+    bop_value = 3
+    bop_str = arg.poll_str
+  else
+    bop_value = 1
+    bop_str = ""
+  end
+  view_poll_or_bind.value = bop_value
+  view_poll_or_bind_value.active = (bop_value > 1)
+  view_poll_or_bind_value.text = bop_str
+
+  view_buffer.value = arg.properties.impacts_buffer
+
+  self:show_relevant_arg_edit_controls(display_as)
+  
+  view_min_value.value = arg.properties.min or xStreamUI.ARGS_MIN_VALUE
+  view_max_value.value = arg.properties.max or xStreamUI.ARGS_MAX_VALUE
+  view_zero_based.value = arg.properties.zero_based or false
+  view_items.text = arg.properties.items and table.concat(arg.properties.items,"\n") or ""
+
+end
+
+--------------------------------------------------------------------------------
+
+function xStreamUI:show_relevant_arg_edit_controls(display_as)
+  TRACE("xStreamUI:show_relevant_arg_edit_controls(display_as)",display_as)
+
+  local view_min_value_row  = self.vb.views["xStreamArgsEditorMinValueRow"]
+  local view_max_value_row  = self.vb.views["xStreamArgsEditorMaxValueRow"]
+  local view_zero_based_row = self.vb.views["xStreamArgsEditorZeroBasedRow"]
+  local view_items_row      = self.vb.views["xStreamArgsEditorItemsRow"]
+
+  local supports_min_max = table.find(xStreamArg.SUPPORTS_MIN_MAX,display_as) and true or false
+  view_min_value_row.visible = supports_min_max
+  view_max_value_row.visible = supports_min_max
+  
+  local supports_zero_based = table.find(xStreamArg.SUPPORTS_ZERO_BASED,display_as) and true or false
+  view_zero_based_row.visible = supports_zero_based
+
+  local items_required = table.find(xStreamArg.REQUIRES_ITEMS,display_as) and true or false
+  view_items_row.visible = items_required 
+
+  --print("supports_min_max",supports_min_max)
+  --print("supports_zero_based",supports_zero_based)
+  --print("items_required",items_required)
+
+end
+
+--------------------------------------------------------------------------------
+-- create arg from the current state of the argument editor 
+-- @param arg_index
+-- @return table or false 
+-- @return string, error message when failed
+
+function xStreamUI:create_arg_descriptor(arg_index,arg_value)
+
+  local view_name           = self.vb.views["xStreamArgsEditorName"]
+  local view_description    = self.vb.views["xStreamArgsEditorDescription"]
+  local view_type           = self.vb.views["xStreamArgsEditorType"]
+  local view_display_as     = self.vb.views["xStreamArgsEditorDisplayAs"]
+  local view_buffer         = self.vb.views["xStreamArgsEditorImpactsBuffer"]
+  local view_min_value      = self.vb.views["xStreamArgsEditorMinValue"]
+  local view_max_value      = self.vb.views["xStreamArgsEditorMaxValue"]
+  local view_zero_based     = self.vb.views["xStreamArgsEditorZeroBased"]
+  local view_items          = self.vb.views["xStreamArgsEditorItems"]
+  local view_bind_or_poll   = self.vb.views["xStreamArgsEditorPollOrBind"]
+  local view_poll_or_bind_value = self.vb.views["xStreamArgsEditorPollOrBindValue"]
+
+  local args = self.xstream.selected_model.args
+  local str_type = xStreamArg.BASE_TYPES[view_type.value]
+
+  local supported_types = function(t)
+    local rslt = {}
+    for k,v in ipairs(t) do
+      table.insert(rslt,xStreamArg.DISPLAYS[v])
+    end
+    return ("Unsupported 'display_as' value - please change the value-type."
+      .."\nSupported: %s"):format(table.concat(rslt,","))
+  end
+
+  -- if we have changed value type, set to default value
+  if type(arg_value) ~= str_type then
+    if (str_type == "number") then
+      arg_value = view_min_value.value
+    elseif (str_type == "boolean") then
+      arg_value = false
+    elseif (str_type == "string") then
+      arg_value = ""
+    end
+  end
+
+  --print("*** xStreamUI:apply_arg_settings - arg_value",arg_value)
+
+  -- *enabled* bind/poll should not contain blank lines
+
+  local arg_bind,arg_poll
+  if (view_bind_or_poll.value == 2) then
+    arg_bind = view_poll_or_bind_value.text
+    if (arg_bind == "") then
+      local keys = table.concat(xObservable.get_keys_by_type(str_type,"rns."),"\n")
+      return false, ("Error: 'bind' needs an observable property, try one of these: \n%s"):format(keys)
+    end
+  elseif (view_bind_or_poll.value == 3) then
+    arg_poll = view_poll_or_bind_value.text
+    if (arg_poll == "") then
+      return false, "Error: 'poll' should reference a property that match the type of value, e.g."
+                  .."\n'rns.selected_instrument_index' for a number, or "
+                  .."\n'rns.transport.edit_mode' for a boolean value"
+    end
+  end
+
+  --print("arg_bind,arg_poll",arg_bind,arg_poll)
+
+  -- check if observable property is supported (xObservable)
+  --[[
+  local str_type = xStreamArg.BASE_TYPES[view_type.value]
+  if arg_bind then
+    local is_valid,err = args:is_valid_bind_value(arg_bind,str_type)
+    if not is_valid then
+      return false,err
+    end
+  end
+  ]]
+
+  local arg_props = {}
+  
+  -- validate display_as (correct type)
+
+  local base_type = view_type.value
+  local display_as = view_display_as.value-1
+  local err
+  if (base_type == xStreamArg.BASE_TYPE.NUMBER) then
+    if not table.find(xStreamArg.NUMBER_DISPLAYS,display_as) then
+      err =  supported_types(xStreamArg.NUMBER_DISPLAYS)
+    else
+      if table.find(xStreamArg.SUPPORTS_MIN_MAX,display_as) then
+        arg_props.min = view_min_value.value
+        arg_props.max = view_max_value.value
+        if (arg_props.max < arg_props.min) then
+          return false, "Error: 'max' needs to be higher than 'min'"
+        end
+      end
+      if table.find(xStreamArg.SUPPORTS_ZERO_BASED,display_as) then
+        arg_props["zero_based"] = view_zero_based.value
+      end
+      if table.find(xStreamArg.REQUIRES_ITEMS,display_as) then
+        local arg_items = {}
+        for k,v in ipairs(view_items.paragraphs) do
+          if (v == "") then
+            return false, "Error: 'items' should not contain blank lines"
+          end
+          table.insert(arg_items,xLib.trim(v))
+        end
+        --arg_value = math.min(#arg_items,arg_value)
+        --arg_value = math.max(1,arg_value)
+        arg_props.min = 1
+        arg_props.max = #arg_items
+        arg_props.items = arg_items
+      end
+    end
+  elseif (base_type == xStreamArg.BASE_TYPE.BOOLEAN) then
+    if not table.find(xStreamArg.BOOLEAN_DISPLAYS,display_as) then
+      err = supported_types(xStreamArg.BOOLEAN_DISPLAYS)
+    end
+  elseif (base_type == xStreamArg.BASE_TYPE.STRING) then
+    if not table.find(xStreamArg.STRING_DISPLAYS,display_as) then
+      err =  supported_types(xStreamArg.STRING_DISPLAYS)
+    end
+  end
+  if err then
+    return false, err
+  end
+
+  arg_props.display_as = xStreamArg.DISPLAYS[display_as]
+
+  -- validate bind + poll
+
+  if arg_bind then
+    local is_valid,err = args:is_valid_bind_value(arg_bind,str_type)
+    if not is_valid then
+      return false,err
+    end
+  end
+
+  if arg_poll then
+    local is_valid,err = args:is_valid_poll_value(arg_poll)
+    if not is_valid then
+      return false,err
+    end
+  end
+
+
+  -- props: min,max
+  --print("arg_value pre",arg_value)
+
+  if type(arg_value)=="number" and arg_props.min and arg_props.max then
+    arg_value = math.min(arg_props.max,arg_value)
+    arg_value = math.max(arg_props.min,arg_value)
+  end
+
+  arg_props.impacts_buffer = view_buffer.value
+
+  -- return table 
+
+  --print("... arg_props",rprint(arg_props))
+  --print("arg_value post",arg_value)
+
+  local descriptor = {
+    name = view_name.value,
+    description = view_description.text,
+    value = arg_value,
+    bind = arg_bind,
+    poll = arg_poll,
+    properties = arg_props,
+  }
+
+  return descriptor
+
+end
+
+--------------------------------------------------------------------------------
+-- @return bool, true when applied
+-- @return string, error message when failed
+
+function xStreamUI:apply_arg_settings()
+  TRACE("xStreamUI:apply_arg_settings()")
+
+  local model = self.xstream.selected_model
+  local arg_idx = model.args.selected_index
+
+  -- changed value type? 
+  local old_value = model.args.args[arg_idx].value
+  local arg_descriptor,err = self:create_arg_descriptor(arg_idx,old_value)
+  if not arg_descriptor then
+    return false,err
+  end
+
+  --print(">>> arg_descriptor...",rprint(arg_descriptor))
+  local arg_index = model.args.selected_index
+  --print("args",args)
+  --print("args:replace",args.replace)
+  local replaced,err = model.args:replace(arg_index,arg_descriptor)
+  if not replaced and err then
+    return false,err
+  end
+
+  return true
+
+end
+
+--------------------------------------------------------------------------------
+
+function xStreamUI:get_args_label_w()
+
+  if not self.xstream.selected_model then
+    return 1
+  end
+
+  local args = self.xstream.selected_model.args
+  local arg_max_length = 0
+  for k,arg in ipairs(args.args) do
+    arg_max_length = math.max(arg_max_length,#arg.name)
+  end
+  return (arg_max_length > 0) and arg_max_length*xStreamUI.MONO_CHAR_W or 30
 
 end
 
@@ -271,21 +908,19 @@ function xStreamUI:build_args()
     vb_container:remove_child(v)
   end
 
+  self.arg_labels = {}
+  self.arg_bops = {}
   self.arg_views = {}
 
   if (args.length == 0) then
     return
   end
 
-  -- figure out the argument column-width 
-  local arg_max_length = 0
-  for k,arg in ipairs(args.args) do
-    arg_max_length = math.max(arg_max_length,#arg.name)
-  end
-  local args_left_col_w = (arg_max_length > 0) and arg_max_length*xStreamUI.MONO_CHAR_W or 30
+  local args_label_w = self:get_args_label_w()
 
-  local slider_width = 100
-  local full_width = 160
+  local slider_width = xStreamUI.ARGS_SLIDER_W
+  local full_width = xStreamUI.ARGS_SELECTOR_W
+  local items_width = xStreamUI.ARGS_SELECTOR_W-60
 
   -- add a custom control for each argument
   for k,arg in ipairs(args.args) do
@@ -295,8 +930,9 @@ function xStreamUI:build_args()
     local fn_tonumber = nil
     
     --print("arg.properties",rprint(arg.properties))
+    local display_as = table.find(xStreamArg.DISPLAYS,arg.properties.display_as) 
 
-    if arg.properties.display_as == xStreamArg.DISPLAY_AS.HEX then
+    if display_as == xStreamArg.DISPLAY_AS.HEX then
       fn_tostring = function(val)
         local hex_digits = xLib.get_hex_digits(arg.properties.max) 
         val = arg.properties.zero_based and val-1 or val
@@ -307,21 +943,21 @@ function xStreamUI:build_args()
         val = arg.properties.zero_based and val+1 or val
         return val
       end
-    elseif arg.properties.display_as == xStreamArg.DISPLAY_AS.PERCENT then
+    elseif display_as == xStreamArg.DISPLAY_AS.PERCENT then
       fn_tostring = function(val)
         return ("%.3f %%"):format(val)
       end 
       fn_tonumber = function(str)
         return tonumber(string.sub(str,1,#str-1))
       end
-    elseif arg.properties.display_as == xStreamArg.DISPLAY_AS.NOTE then
+    elseif display_as == xStreamArg.DISPLAY_AS.NOTE then
       fn_tostring = function(val)
         return xNoteColumn.note_value_to_string(math.floor(val))
       end 
       fn_tonumber = function(str)
         return xNoteColumn.note_string_to_value(str)
       end
-    elseif arg.properties.display_as == xStreamArg.DISPLAY_AS.INTEGER then
+    elseif display_as == xStreamArg.DISPLAY_AS.INTEGER then
       fn_tostring = function(val)
         return ("%d"):format(val)
       end 
@@ -340,7 +976,39 @@ function xStreamUI:build_args()
       end
     end
     local model_name = self.xstream.selected_model.name
+
+    local view_label = vb:text{
+      text = arg.name,
+      width = args_label_w,
+      font = "mono",
+    }
+
+    local view_bop = vb:bitmap{
+      bitmap = "./source/icons/bind_or_poll.bmp",
+      mode = "body_color",
+      --width = xStreamUI.BITMAP_BUTTON_W,
+      height = xStreamUI.BITMAP_BUTTON_H,
+    }
+
+    local view_label_rack = vb:row{
+      vb:checkbox{
+        visible = false,
+        notifier = function()
+          self.xstream.selected_model.args.selected_index = k
+        end,
+      },
+      view_label,
+    }
+
     local view = vb:row{
+      --[[
+      vb:button{
+        bitmap = "./source/icons/delete_small.bmp",
+        notifier = function()
+          self.xstream.selected_model.args:remove(k)
+        end,
+      },
+      ]]
       vb:checkbox{
         bind = arg.locked_observable,
         tooltip = "Lock value - can still be changed manually," 
@@ -349,67 +1017,68 @@ function xStreamUI:build_args()
       }
     }
 
-    local view_label = vb:text{
-      text = arg.name,
-      width = args_left_col_w,
-      font = "mono",
-    }
-
     if (type(arg.observable) == "ObservableNumber") then
 
-
       if arg.properties.items then -- selector
-        local display_as = arg.properties.display_as or xStreamArg.DISPLAY_AS.POPUP
+        display_as = display_as or xStreamArg.DISPLAY_AS.POPUP
 
         if (display_as == xStreamArg.DISPLAY_AS.POPUP) then
+          --print("display_as popup",arg.name)
           view:add_child(vb:row{
             tooltip = arg.description,
-            view_label,
+            view_label_rack,
             vb:popup{
               items = arg.properties.items,
               value = arg.value,
-              width = full_width,
+              width = items_width,
               bind = arg.observable,
             },
+            view_bop,
           })
         elseif (display_as == xStreamArg.DISPLAY_AS.CHOOSER) then
           view:add_child(vb:row{
             tooltip = arg.description,
-            view_label,
+            view_label_rack,
             vb:chooser{
               items = arg.properties.items,
               value = arg.value,
-              width = full_width,
+              width = items_width,
               bind = arg.observable,
             },
+            view_bop,
           })
         elseif (display_as == xStreamArg.DISPLAY_AS.SWITCH) then
           view:add_child(vb:row{
             tooltip = arg.description,
-            view_label,
+            view_label_rack,
             vb:switch{
               items = arg.properties.items,
               value = arg.value,
-              width = full_width,
+              width = items_width,
               bind = arg.observable,
             },
+            view_bop,
           })
         else -- float, value
-          vb:value{
-            --tostring = fn_tostring,
-            --tonumber = fn_tonumber,
-            value = arg.value,
-            min = arg.properties.min or xStreamUI.ARGS_MIN_VALUE,
-            max = arg.properties.max or xStreamUI.ARGS_MAX_VALUE,
-            bind = arg.observable,
-          }
+          --rprint(arg.properties)
+          view:add_child(vb:row{
+            tooltip = arg.description,
+            view_label_rack,
+            vb:value{
+              value = arg.value,
+              --min = arg.properties.min or xStreamUI.ARGS_MIN_VALUE,
+              --max = arg.properties.max or xStreamUI.ARGS_MAX_VALUE,
+              bind = arg.observable,
+            },
+            view_bop,
+          })
         end
-      elseif (arg.properties.display_as == xStreamArg.DISPLAY_AS.INTEGER) 
-        or (arg.properties.display_as == xStreamArg.DISPLAY_AS.HEX) 
+      elseif (display_as == xStreamArg.DISPLAY_AS.INTEGER) 
+        or (display_as == xStreamArg.DISPLAY_AS.HEX) 
       then
         view:add_child(vb:row{
           tooltip = arg.description,
-          view_label,
+          view_label_rack,
           vb:valuebox{
             tostring = fn_tostring,
             tonumber = fn_tonumber,
@@ -417,35 +1086,42 @@ function xStreamUI:build_args()
             min = arg.properties.min or xStreamUI.ARGS_MIN_VALUE,
             max = arg.properties.max or xStreamUI.ARGS_MAX_VALUE,
             bind = arg.observable,
-          }
+          },
+          view_bop,
         })
       else -- floating point
         view:add_child(vb:row{
           tooltip = arg.description,
-          view_label,
+          view_label_rack,
         })
 
-        local display_as = arg.properties.display_as or xStreamArg.DISPLAY_AS.MINISLIDER
+        display_as = display_as or xStreamArg.DISPLAY_AS.MINISLIDER
 
         if (display_as == xStreamArg.DISPLAY_AS.MINISLIDER) 
           or (display_as == xStreamArg.DISPLAY_AS.PERCENT) 
           or (display_as == xStreamArg.DISPLAY_AS.NOTE) 
         then
-          view:add_child(vb:minislider{
-            value = arg.value,
-            width = slider_width,
-            min = arg.properties.min or xStreamUI.ARGS_MIN_VALUE,
-            max = arg.properties.max or xStreamUI.ARGS_MAX_VALUE,
-            bind = arg.observable,
+          view:add_child(vb:row{
+            vb:minislider{
+              value = arg.value,
+              width = slider_width,
+              height = 17,
+              min = arg.properties.min or xStreamUI.ARGS_MIN_VALUE,
+              max = arg.properties.max or xStreamUI.ARGS_MAX_VALUE,
+              bind = arg.observable,
+            },
+            view_bop,
           })
         elseif (display_as == xStreamArg.DISPLAY_AS.ROTARY) then
-          view:add_child(vb:rotary{
-            value = arg.value,
-            --width = slider_width,
-            height = 24,
-            min = arg.properties.min or xStreamUI.ARGS_MIN_VALUE,
-            max = arg.properties.max or xStreamUI.ARGS_MAX_VALUE,
-            bind = arg.observable,
+          view:add_child(vb:row{
+            vb:rotary{
+              value = arg.value,
+              height = 24,
+              min = arg.properties.min or xStreamUI.ARGS_MIN_VALUE,
+              max = arg.properties.max or xStreamUI.ARGS_MAX_VALUE,
+              bind = arg.observable,
+            },
+            view_bop,
           })
         end
 
@@ -461,29 +1137,65 @@ function xStreamUI:build_args()
     elseif (type(arg.observable) == "ObservableBoolean") then
       view:add_child(vb:row{
         tooltip = arg.description,
-        view_label,
+        view_label_rack,
         vb:checkbox{
           value = arg.value,
           bind = arg.observable,
         },
+        view_bop,
       })
     elseif (type(arg.observable) == "ObservableString") then
       view:add_child(vb:row{
         tooltip = arg.description,
-        view_label,
+        view_label_rack,
         vb:textfield{
           text = arg.value,
           width = full_width,
           bind = arg.observable,
         },
+        view_bop,
       })
     end
 
     if view then
+      table.insert(self.arg_bops,view_bop)
+      table.insert(self.arg_labels,view_label)
       table.insert(self.arg_views,view)
       vb_container:add_child(view)
     end
 
+  end
+
+end
+
+
+--------------------------------------------------------------------------------
+
+function xStreamUI:update_args()
+
+  local model = self.xstream.selected_model
+
+  -- show message if not args
+  local view_msg = self.vb.views["xStreamArgsNoneMessage"]
+  if model then
+    view_msg.visible = self.model_args_visible 
+      and (#model.args.args == 0) 
+  else
+    view_msg.visible = self.model_args_visible and true or false
+  end
+
+  -- update labels
+  for k,v in ipairs(self.arg_labels) do
+    v.text = model and model.args.args[k].name or ""
+    v.font = model and (k == model.args.selected_index) 
+      and "bold" or "mono"
+  end
+
+  -- update bops
+  for k,v in ipairs(self.arg_bops) do
+    local bop = model and model.args.args[k]:get_bop()
+    v.visible = (model and bop) and true or false
+    v.tooltip = (model and bop) and "This argument is bound to/polling '"..bop.."'" or ""
   end
 
 end
@@ -495,9 +1207,12 @@ function xStreamUI:update_args_selector()
 
   local model = self.xstream.selected_model
   local view_popup = self.vb.views["xStreamArgsSelector"]
-  if model then
-    view_popup.items = self.xstream.selected_model.args:get_names()
-    view_popup.value = self.xstream.selected_model.args.selected_index
+  if model and (#model.args.args > 0) then
+    view_popup.items = model.args:get_names()
+    view_popup.value = model.args.selected_index
+  else
+    view_popup.items = {xStreamUI.NO_ARGS_AVAILABLE}
+    view_popup.value = 1
   end
 
 end
@@ -511,13 +1226,22 @@ function xStreamUI:update_args_visibility()
   for k,v in ipairs(self.arg_views) do
     if not self.xstream.selected_model then
       v.visible = false
-    elseif self.model_args_visible then 
+    elseif self.model_args_visible 
+      and not self.args_editor_visible
+    then 
       v.visible = true
     else
       v.visible = (k == self.xstream.selected_model.args.selected_index)
     end
   end
-  self.vb.views["xStreamArgsPanel"].width = xStreamUI.ARGS_SELECTOR_W
+
+  local args_label_w = self:get_args_label_w()
+  for k,v in ipairs(self.arg_labels) do
+    v.width = (self.model_args_visible and not self.args_editor_visible) and args_label_w or 2
+    v.visible = self.model_args_visible
+  end
+
+  --self.vb.views["xStreamArgsPanel"].width = xStreamUI.ARGS_SELECTOR_W
 
 end
 
@@ -848,6 +1572,12 @@ function xStreamUI:build_preset_list()
       vb.views["xStreamModelPresetUpdate"..count])
     vb.views["xStreamModelPresetUpdate"..count] = nil
     self.preset_views[count]:remove_child(
+      vb.views["xStreamPresetListMoveUpButton"..count])
+    vb.views["xStreamPresetListMoveUpButton"..count] = nil
+    self.preset_views[count]:remove_child(
+      vb.views["xStreamPresetListMoveDownButton"..count])
+    vb.views["xStreamPresetListMoveDownButton"..count] = nil
+    self.preset_views[count]:remove_child(
       vb.views["xStreamModelPresetFavorite"..count])
     vb.views["xStreamModelPresetFavorite"..count] = nil
     count = count + 1
@@ -872,9 +1602,11 @@ function xStreamUI:build_preset_list()
 
     local row = vb:row{
       vb:button{
-        text = "-",
+        --text = "-",
+        bitmap = "./source/icons/delete_small.bmp",
         id = "xStreamModelPresetDelete"..k,
         tooltip = "Remove this preset",
+        width = xStreamUI.BITMAP_BUTTON_W,
         height = xStreamUI.BITMAP_BUTTON_H,
         notifier = function()
           model.selected_preset_bank:remove_preset(k)
@@ -894,16 +1626,50 @@ function xStreamUI:build_preset_list()
         text = preset_name,
         id = "xStreamModelPresetRecall"..k,
         tooltip = "Activate this preset",
-        width = 80,
+        width = xStreamUI.PRESET_SELECTOR_W-xStreamUI.BITMAP_BUTTON_W+1,
         height = xStreamUI.BITMAP_BUTTON_H,
         notifier = function()
           model.selected_preset_bank.selected_preset_index = k
         end,
       },
       vb:button{
-        text = "Update",
+        id = "xStreamPresetListMoveUpButton"..k,
+        bitmap = "./source/icons/move_up.bmp",
+        tooltip = "Move preset up in list",
+        width = xStreamUI.BITMAP_BUTTON_W,
+        height = xStreamUI.BITMAP_BUTTON_H,
+        notifier = function()
+          --[[
+          local args = self.xstream.selected_model.args
+          local got_moved,_ = args:swap_index(args.selected_index,args.selected_index-1)
+          if got_moved then
+            args.selected_index = args.selected_index - 1
+          end
+          ]]
+        end
+      },
+      vb:button{
+        id = "xStreamPresetListMoveDownButton"..k,
+        bitmap = "./source/icons/move_down.bmp",
+        tooltip = "Move preset down in list",
+        width = xStreamUI.BITMAP_BUTTON_W,
+        height = xStreamUI.BITMAP_BUTTON_H,
+        notifier = function()
+          --[[
+          local args = self.xstream.selected_model.args
+          local got_moved,_ = args:swap_index(args.selected_index,args.selected_index+1)
+          if got_moved then
+            args.selected_index = args.selected_index + 1
+          end
+          ]]
+        end
+      },
+      vb:button{
+        --text = "Update",
+        bitmap = "./source/icons/update.bmp",
         id = "xStreamModelPresetUpdate"..k,
         tooltip = "Update this preset with the current settings",
+        width = xStreamUI.BITMAP_BUTTON_W,
         height = xStreamUI.BITMAP_BUTTON_H,
         notifier = function()
           model.selected_preset_bank:update_preset(k)
@@ -1480,69 +2246,6 @@ function xStreamUI:update_edit_rack_preset_selector()
 end
 
 --------------------------------------------------------------------------------
--- check for missing model/preset/bank and display warning(s)
---[[
-function xStreamUI:update_edit_rack_status(favorite_idx,prop_name,prop_value)
-  print("xStreamUI:update_edit_rack_status(favorite_idx,prop_name,prop_value)",favorite_idx,prop_name,prop_value)
-
-  local favorite = self.xstream.favorites.items[favorite_idx]
-  if not favorite then
-    return
-  end
-
-  -- if no particular property/value is defined, use the most
-  -- specific level (bank name will tell us everything)
-  if not prop_name then
-    prop_name = "preset_bank_name"
-    prop_value = favorite.preset_bank_name
-  end
-  
-  local model_status = self.vb.views["xStreamFavoriteModelStatus"]
-  local bank_status = self.vb.views["xStreamFavoriteBankStatus"]
-  local preset_status = self.vb.views["xStreamFavoritePresetStatus"]
-
-  local existing = false
-  if (prop_name == "model_name") then
-    existing = self.xstream.favorites:get(prop_value,favorite.preset_index,favorite.preset_bank_name)
-  elseif (prop_name == "preset_index") then
-    existing = self.xstream.favorites:get(favorite.model_name,prop_value,favorite.preset_bank_name)
-  elseif (prop_name == "preset_bank_name") then
-    existing = self.xstream.favorites:get(favorite.model_name,favorite.preset_index,prop_value)
-  end
-
-  print("existing",existing)
-
-  if existing and (existing ~= favorite_idx) then
-    local str_msg = ("Please choose a model/preset combination which has not been assigned\n"
-                  .."(the combination you chose is already stored as favorite #%d"):format(existing)
-    if (prop_name == "model_name") then
-      model_status.text = xStreamUI.EDIT_RACK_WARNING
-      model_status.tooltip = str_msg
-    elseif (prop_name == "preset_index") then
-      preset_status.text = xStreamUI.EDIT_RACK_WARNING
-      preset_status.tooltip = str_msg
-    elseif (prop_name == "preset_bank_name") then
-      bank_status.text = xStreamUI.EDIT_RACK_WARNING
-      bank_status.tooltip = str_msg
-    end
-
-    --self:update_edit_rack_bank_selector()
-    --self:update_edit_rack_preset_selector()
-
-  else
-    
-    model_status.text = ""
-    model_status.tooltip = ""
-    preset_status.text = ""
-    preset_status.tooltip = ""
-    bank_status.text = ""
-    bank_status.tooltip = ""
-
-  end
-
-end
-]]
---------------------------------------------------------------------------------
 -- apply a single property to a favorite (existing or empty)
 
 function xStreamUI:apply_property_to_favorite(favorite_idx,prop_name,prop_value)
@@ -1702,7 +2405,7 @@ function xStreamUI:build()
             vb:checkbox{
               id = "xStreamImplSuspend",
               notifier = function(checked)
-                self.suspend_when_hidden.value = checked
+                self.suspend_when_hidden = checked
               end,
             },
             vb:text{
@@ -1854,13 +2557,13 @@ function xStreamUI:build()
             id = "xStreamTransportRow",
             vb:row{
               vb:button{
-                bitmap = "./source/icons/Transport_Record.bmp",
+                bitmap = "./source/icons/transport_record.bmp",
                 active = false,
                 width = xStreamUI.TRANSPORT_BUTTON_W,
                 height = xStreamUI.BITMAP_BUTTON_H,
               },
               vb:button{
-                bitmap = "./source/icons/Transport_Play.bmp",
+                bitmap = "./source/icons/transport_play.bmp",
                 tooltip = "Activate streaming and (re-)start playback [Space]",
                 id = "xStreamStartPlayButton",
                 width = xStreamUI.TRANSPORT_BUTTON_W,
@@ -2057,7 +2760,8 @@ function xStreamUI:build()
                 id = "xStreamCallbackEditor",
                 notifier = function(str)
                   if self.xstream.selected_model then
-                    self.callback_is_modified = true
+                    --print("*** changed callback via textfield...")
+                    self.user_modified_callback = true
                   end
                 end,
               },
@@ -2443,7 +3147,7 @@ function xStreamUI:build()
               margin = 4,
               vb:row{ -- header
                 vb:button{
-                  text="▾",
+                  text=xStreamUI.ARROW_DOWN,
                   id = "xStreamModelBrowserToggle",
                   tooltip = "Toggle visibility of model list",
                   width = xStreamUI.BITMAP_BUTTON_W,
@@ -2483,8 +3187,9 @@ function xStreamUI:build()
 
                 vb:row{
                   vb:button{
-                    --bitmap = "Icons/Minus.bmp",
-                    text = "‒",
+                    --text = "‒",
+                    --bitmap = "./source/icons/delete.bmp",
+                    bitmap = "./source/icons/delete_small.bmp",
                     tooltip = "Delete the selected model",
                     id = "xStreamModelRemove",
                     width = xStreamUI.BITMAP_BUTTON_W,
@@ -2494,8 +3199,7 @@ function xStreamUI:build()
                     end,
                   },
                   vb:button{
-                    --bitmap = "Icons/Plus.bmp",
-                    text = "+",
+                    bitmap = "./source/icons/add.bmp",
                     tooltip = "Create a new model",
                     id = "xStreamModelCreate",
                     width = xStreamUI.BITMAP_BUTTON_W,
@@ -2510,7 +3214,7 @@ function xStreamUI:build()
                   --[[
                   vb:button{
                     --text = "load",
-                    bitmap = "Icons/Folder_open.bmp",
+                    bitmap = "./source/icons/open.bmp",
                     tooltip = "Import model definitions from a folder",
                     width = xStreamUI.BITMAP_BUTTON_W,
                     height = xStreamUI.BITMAP_BUTTON_H,
@@ -2523,7 +3227,7 @@ function xStreamUI:build()
                   },
                   ]]
                   vb:button{
-                    bitmap = "./source/icons/Zoom.bmp",
+                    bitmap = "./source/icons/reveal_folder.bmp",
                     --bitmap = "Icons/Browser_Search.bmp",
                     tooltip = "Reveal the folder in which the definition is located",
                     id = "xStreamRevealLocation",
@@ -2535,7 +3239,7 @@ function xStreamUI:build()
                   },        
 
                   vb:button{
-                    bitmap = "./source/icons/Save.bmp",
+                    bitmap = "./source/icons/save.bmp",
                     --bitmap = "Icons/Browser_ScriptFile.bmp",
                     tooltip = "Overwrite the existing definition",
                     id = "xStreamModelSave",
@@ -2549,8 +3253,8 @@ function xStreamUI:build()
                     end,
                   },
                   vb:button{
-                    bitmap = "./source/icons/PluginBrowser_Rename.bmp",
-                    tooltip = "Assign a new name to the selected model",
+                    bitmap = "./source/icons/rename.bmp",
+                    tooltip = "Rename the selected model",
                     id = "xStreamModelRename",
                     width = xStreamUI.BITMAP_BUTTON_W,
                     height = xStreamUI.BITMAP_BUTTON_H,
@@ -2564,8 +3268,8 @@ function xStreamUI:build()
                     end,
                   },
                   vb:button{
-                    bitmap = "./source/icons/Clone.bmp",
-                    tooltip = "Save definition under a new name",
+                    bitmap = "./source/icons/save_as.bmp",
+                    tooltip = "Save model under a new name",
                     id = "xStreamModelSaveAs",
                     width = xStreamUI.BITMAP_BUTTON_W,
                     height = xStreamUI.BITMAP_BUTTON_H,
@@ -2577,7 +3281,7 @@ function xStreamUI:build()
                     end,
                   },        
                   vb:button{
-                    bitmap = "./source/icons/Browser_Rescan.bmp",
+                    bitmap = "./source/icons/refresh.bmp",
                     tooltip = "(Re-)load the selected model from disk",
                     id = "xStreamModelRefresh",
                     width = xStreamUI.BITMAP_BUTTON_W,
@@ -2609,7 +3313,7 @@ function xStreamUI:build()
               margin = 4,
               vb:row{
                 vb:button{
-                  text="▾",
+                  text=xStreamUI.ARROW_DOWN,
                   id = "xStreamPresetsToggle",
                   tooltip = "Toggle visibility of preset list",
                   width = xStreamUI.BITMAP_BUTTON_W,
@@ -2625,7 +3329,7 @@ function xStreamUI:build()
               },
               vb:row{
                 vb:bitmap{
-                  bitmap = "./source/icons/Browser_Library.bmp",
+                  bitmap = "./source/icons/preset_bank.bmp",
                   mode = "body_color",
                   width = xStreamUI.BITMAP_BUTTON_W,
                   height = xStreamUI.BITMAP_BUTTON_H,
@@ -2643,8 +3347,9 @@ function xStreamUI:build()
                 },
                 vb:row{
                   vb:button{
-                    --bitmap = "Icons/Minus.bmp",
-                    text = "‒",
+                    --text = "‒",
+                    --bitmap = "./source/icons/delete.bmp",
+                    bitmap = "./source/icons/delete_small.bmp",
                     id = "xStreamPresetBankRemove",
                     width = xStreamUI.BITMAP_BUTTON_W,
                     height = xStreamUI.BITMAP_BUTTON_H,
@@ -2660,8 +3365,7 @@ function xStreamUI:build()
                   },
 
                   vb:button{
-                    --bitmap = "Icons/Plus.bmp",
-                    text = "+",
+                    bitmap = "./source/icons/add.bmp",
                     id = "xStreamPresetBankCreate",
                     width = xStreamUI.BITMAP_BUTTON_W,
                     height = xStreamUI.BITMAP_BUTTON_H,
@@ -2675,7 +3379,7 @@ function xStreamUI:build()
                     end,
                   },
                   vb:button{
-                    bitmap = "./source/icons/Folder_open.bmp",
+                    bitmap = "./source/icons/open.bmp",
                     tooltip = "Import preset bank (unsupported values are logged)",
                     id = "xStreamImportPresetBank",
                     width = xStreamUI.BITMAP_BUTTON_W,
@@ -2685,7 +3389,7 @@ function xStreamUI:build()
                     end,
                   },
                   vb:button{
-                    bitmap = "./source/icons/Save.bmp",
+                    bitmap = "./source/icons/save.bmp",
                     tooltip = "Export selected preset bank",
                     id = "xStreamExportPresetBank",
                     width = xStreamUI.BITMAP_BUTTON_W,
@@ -2698,7 +3402,7 @@ function xStreamUI:build()
                     end
                   },
                   vb:button{
-                    bitmap = "./source/icons/PluginBrowser_Rename.bmp",
+                    bitmap = "./source/icons/rename.bmp",
                     id = "xStreamPresetBankRename",
                     active = false,
                     width = xStreamUI.BITMAP_BUTTON_W,
@@ -2715,7 +3419,8 @@ function xStreamUI:build()
               },
               vb:row{
                 vb:bitmap{
-                  bitmap = "./source/icons/MiddleFrame_Mix.bmp",
+                  bitmap = "./source/icons/presets.bmp",
+                  --bitmap = "./source/icons/InstrumentBox.bmp",
                   mode = "body_color",
                   width = xStreamUI.BITMAP_BUTTON_W,
                   height = xStreamUI.BITMAP_BUTTON_H,
@@ -2732,8 +3437,9 @@ function xStreamUI:build()
                   end
                 },
                 vb:button{
-                  text = "‒",
-                  --bitmap = "Icons/Minus.bmp",
+                  --text = "‒",
+                  --bitmap = "./source/icons/delete.bmp",
+                  bitmap = "./source/icons/delete_small.bmp",
                   tooltip = "Remove the selected preset",
                   id = "xStreamRemovePreset",
                   width = xStreamUI.BITMAP_BUTTON_W,
@@ -2745,8 +3451,7 @@ function xStreamUI:build()
                   end,
                 },
                 vb:button{
-                  text = "+",
-                  --bitmap = "Icons/Plus.bmp",
+                  bitmap = "./source/icons/add.bmp",
                   tooltip = "Add new preset with the current settings",
                   id = "xStreamAddPreset",
                   width = xStreamUI.BITMAP_BUTTON_W,
@@ -2762,7 +3467,7 @@ function xStreamUI:build()
                   end,
                 },
                 vb:button{
-                  bitmap = "./source/icons/Attach.bmp",
+                  bitmap = "./source/icons/update.bmp",
                   tooltip = "Update the selected preset with current settings",
                   id = "xStreamUpdatePreset",
                   width = xStreamUI.BITMAP_BUTTON_W,
@@ -2803,11 +3508,11 @@ function xStreamUI:build()
               id = "xStreamArgsPanel",
               margin = 4,
               height = 100,
-              vb:horizontal_aligner{
-                mode = "justify",
+              vb:row{
+                --mode = "justify",
                 vb:row{
                   vb:button{
-                    text="▾",
+                    text=xStreamUI.ARROW_DOWN,
                     id = "xStreamModelArgsToggle",
                     tooltip = "Toggle visibility of argument list",
                     width = xStreamUI.BITMAP_BUTTON_W,
@@ -2821,19 +3526,84 @@ function xStreamUI:build()
                     font = "bold",
                   },
                 },
-                vb:button{
-                  id = "xStreamArgsRandomize",
-                  --text = "randomize",
-                  text = "☢ RND",
-                  tooltip = "Randomize all unlocked parameters in the preset",
-                  height = xStreamUI.BITMAP_BUTTON_H,
-                  notifier = function()
-                    self.xstream.selected_model.args:randomize()
-                  end
+                vb:space{
+                  width = 6,
+                },
+                vb:row{
+                  vb:button{
+                    bitmap = "./source/icons/add.bmp",
+                    id = "xStreamArgsAddButton",
+                    width = xStreamUI.BITMAP_BUTTON_W,
+                    height = xStreamUI.BITMAP_BUTTON_H,
+                    notifier = function()
+                      local idx = self.xstream.selected_model.args.selected_index+1
+                      local added,err = self.xstream.selected_model.args:add(nil,idx)
+                      if not added and err then
+                        renoise.app():show_warning(err)
+                      else 
+                        self.xstream.selected_model.args.selected_index = idx
+                        self.args_editor_visible = true
+                      end
+                    end,
+                  },
+                  vb:button{
+                    id = "xStreamArgsMoveUpButton",
+                    bitmap = "./source/icons/move_up.bmp",
+                    tooltip = "Move argument up in list",
+                    height = xStreamUI.BITMAP_BUTTON_H,
+                    notifier = function()
+                      local args = self.xstream.selected_model.args
+                      local got_moved,_ = args:swap_index(args.selected_index,args.selected_index-1)
+                      if got_moved then
+                        args.selected_index = args.selected_index - 1
+                      end
+                    end
+                  },
+                  vb:button{
+                    id = "xStreamArgsMoveDownButton",
+                    bitmap = "./source/icons/move_down.bmp",
+                    tooltip = "Move argument down in list",
+                    height = xStreamUI.BITMAP_BUTTON_H,
+                    notifier = function()
+                      local args = self.xstream.selected_model.args
+                      local got_moved,_ = args:swap_index(args.selected_index,args.selected_index+1)
+                      if got_moved then
+                        args.selected_index = args.selected_index + 1
+                      end
+                    end
+                  },
+                  vb:button{
+                    id = "xStreamArgsEditButton",
+                    text = "Edit",
+                    tooltip = "Edit selected argument",
+                    height = xStreamUI.BITMAP_BUTTON_H,
+                    notifier = function()
+                      self.args_editor_visible = not self.args_editor_visible
+                    end
+                  },
+                  vb:button{
+                    id = "xStreamArgsRandomize",
+                    text = "Random",--"☢ Rnd",
+                    tooltip = "Apply randomization to all unlocked parameters",
+                    height = xStreamUI.BITMAP_BUTTON_H,
+                    notifier = function()
+                      if self.xstream.selected_model then
+                        self.xstream.selected_model.args:randomize()
+                      end
+                    end
+                  },
                 },
               },
               vb:row{
                 id = "xStreamArgsSelectorRack",
+                --[[
+                vb:bitmap{
+                  bitmap = "./source/icons/bind_or_poll.bmp",
+                  mode = "body_color",
+                  width = xStreamUI.BITMAP_BUTTON_W,
+                  height = xStreamUI.BITMAP_BUTTON_H,
+                },
+                ]]
                 vb:popup{
                   items = {},
                   id = "xStreamArgsSelector",
@@ -2845,12 +3615,24 @@ function xStreamUI:build()
                   end,
                 },
               },
+              vb:text{
+                id = "xStreamArgsNoneMessage",
+                text = "There are no arguments to display",
+              },
               vb:column{
                 id = 'xStreamArgsContainer',
               },
               vb:space{
-                height = 8,
+                id = 'xStreamArgsVerticalSpacer',
+                height = 7,
               },
+              vb:column{
+                id = 'xStreamArgsEditorRack',
+                visible = self.args_editor_visible,
+                self:build_args_editor(),
+              },
+              --[[
+              ]]
             },
 
           },
@@ -2949,11 +3731,34 @@ function xStreamUI:build()
     self.update_color_requested = true
   end
 
+  local callback_notifier = function()
+    TRACE("*** xStreamUI - callback_notifier fired...")
+    if not self.user_modified_callback then
+      --print("... got here")
+      self:update_editor()
+    end
+  end
+
   local selected_arg_notifier = function()
     TRACE("*** xStreamUI - model.args.selected_index fired...")
-    self:update_args_selector()
-    self:update_args_visibility()
+    self.update_args_requested = true
   end
+
+  local args_modified_notifier = function()
+    TRACE("*** xStreamUI - model.args.selected_index fired...")
+    self.build_args_requested = true
+  end
+
+  --[[
+  local args_modified_notifier = function()
+    TRACE("*** xStreamUI - args_modified_notifier fired...")
+    self:build_args()
+    --self:update_args()
+    --self:update_args_selector()
+    --self:update_args_visibility()
+    self.update_args_requested = true
+  end
+  ]]
 
   local preset_bank_notifier = function()
     TRACE("*** xStreamUI - model.preset_banks/name_observable fired...")
@@ -2992,6 +3797,8 @@ function xStreamUI:build()
       xLib.attach_to_observable(model.compiled_observable,model_compiled_notifier)
       xLib.attach_to_observable(model.color_observable,model_color_notifier)
       xLib.attach_to_observable(model.args.selected_index_observable,selected_arg_notifier)
+      xLib.attach_to_observable(model.args.args_observable,args_modified_notifier)
+      xLib.attach_to_observable(model.callback_str_observable,callback_notifier)
       xLib.attach_to_observable(model.preset_banks_observable,preset_bank_notifier)
       xLib.attach_to_observable(model.selected_preset_bank_index_observable,preset_bank_index_notifier)
       preset_bank_index_notifier()
@@ -3139,6 +3946,8 @@ function xStreamUI:disable_model_controls()
     self.vb.views[v].active = false
   end
 
+  self.args_editor_visible = false
+
 end
 
 --------------------------------------------------------------------------------
@@ -3151,8 +3960,8 @@ function xStreamUI:enable_model_controls()
     view.active = true
   end
 
-  local args_container = self.vb.views["xStreamArgPresetContainer"]
-  args_container.visible = true
+  --local args_container = self.vb.views["xStreamArgPresetContainer"]
+  --args_container.visible = true
 
   for k,v in ipairs(xStreamUI.MODEL_CONTROLS) do
     local model = self.xstream.selected_model
@@ -3269,7 +4078,7 @@ function xStreamUI:set_show_editor(val)
   end
 
   local view_expand = self.vb.views["xStreamToggleExpand"]
-  view_expand.bitmap = val and "./source/icons/Minimize.bmp" or "./source/icons/Maximize.bmp"
+  view_expand.bitmap = val and "./source/icons/minimize.bmp" or "./source/icons/maximize.bmp"
 
   self.vb.views["xStreamPanel"].height = val 
     and self:get_expanded_height() 
@@ -3314,7 +4123,7 @@ function xStreamUI:set_tool_options_visible(val)
   local view_arrow = self.vb.views["xStreamModelBrowserToggle"]
 
   view_browser.visible = val
-  view_arrow.text = val and "▴" or "▾"
+  view_arrow.text = val and xStreamUI.ARROW_UP or xStreamUI.ARROW_DOWN
   ]]
 
   self.tool_options_visible_observable.value = val
@@ -3334,7 +4143,7 @@ function xStreamUI:set_model_browser_visible(val)
   local view_arrow = self.vb.views["xStreamModelBrowserToggle"]
 
   view_browser.visible = val
-  view_arrow.text = val and "▴" or "▾"
+  view_arrow.text = val and xStreamUI.ARROW_UP or xStreamUI.ARROW_DOWN
 
   self.model_browser_visible_observable.value = val
 
@@ -3347,14 +4156,65 @@ function xStreamUI:get_model_args_visible()
 end
 
 function xStreamUI:set_model_args_visible(val)
+  TRACE("xStreamUI:set_model_args_visible(val)",val)
+
+  -- compacting is another way of hiding the args editor
+  --if not val then
+    self.args_editor_visible = false
+  --end
 
   local view_arrow = self.vb.views["xStreamModelArgsToggle"]
   local view_popup = self.vb.views["xStreamArgsSelectorRack"]
+  local view_spacer = self.vb.views["xStreamArgsVerticalSpacer"]
 
+  view_arrow.text = val and xStreamUI.ARROW_UP or xStreamUI.ARROW_DOWN
   view_popup.visible = not val
-  view_arrow.text = val and "▴" or "▾"
 
   self.model_args_visible_observable.value = val
+  self:update_args()
+  self:update_args_visibility()
+  view_spacer.visible = not val 
+
+
+end
+
+--------------------------------------------------------------------------------
+
+function xStreamUI:get_args_editor_visible()
+  return self.args_editor_visible_observable.value
+end
+
+function xStreamUI:set_args_editor_visible(val)
+  TRACE("xStreamUI:set_args_editor_visible(val)",val)
+
+  --local view_arrow = self.vb.views["xStreamModelArgsToggle"]
+  --local view = self.vb.views["xStreamArgsContainer"]
+  local view_button = self.vb.views["xStreamArgsEditButton"]
+  local view_popup = self.vb.views["xStreamArgsSelectorRack"]
+  local view_editor = self.vb.views["xStreamArgsEditorRack"]
+  local view_spacer = self.vb.views["xStreamArgsVerticalSpacer"]
+  local view_arrow = self.vb.views["xStreamModelArgsToggle"]
+
+  if val and not self.model_args_visible then
+    view_arrow.text = xStreamUI.ARROW_UP 
+  elseif not self.model_args_visible then
+    view_arrow.text = xStreamUI.ARROW_DOWN
+  end
+
+  --view.visible = not val
+  view_button.color = val and xLib.COLOR_ENABLED or xLib.COLOR_DISABLED
+  if val and self.model_args_visible then
+    view_popup.visible = true
+  elseif not val and self.model_args_visible then
+    view_popup.visible = false
+  end
+  view_editor.visible = val
+
+  view_spacer.visible = not val 
+
+  self.args_editor_visible_observable.value = val
+
+  self:update_args_editor()
   self:update_args_visibility()
 
 end
@@ -3372,7 +4232,7 @@ function xStreamUI:set_presets_visible(val)
   local view_arrow = self.vb.views["xStreamPresetsToggle"]
 
   view_browser.visible = val
-  view_arrow.text = val and "▴" or "▾"
+  view_arrow.text = val and xStreamUI.ARROW_UP or xStreamUI.ARROW_DOWN
 
   self.presets_visible_observable.value = val
 
@@ -3397,7 +4257,7 @@ function xStreamUI:set_favorites_visible(val)
   end
 
   local view_toggle = self.vb.views["xStreamFavoritesToggle"]
-  view_toggle.text = val and "◂" or "▸"
+  view_toggle.text = val and xStreamUI.ARROW_LEFT or xStreamUI.ARROW_RIGHT
 
   self.favorites_visible_observable.value = val
 
@@ -3427,18 +4287,6 @@ function xStreamUI:set_favorites_visible(val)
 
 end
 
---------------------------------------------------------------------------------
---[[
-function xStreamUI:get_xstream_options_visible()
-  return self.xstream_options_visible_observable.value
-end
-
-function xStreamUI:set_xstream_options_visible(val)
-  local view_browser = self.vb.views["xStreamPropertiesContainer"]
-  view_browser.visible = val
-  self.xstream_options_visible_observable.value = val
-end
-]]
 --------------------------------------------------------------------------------
 
 function xStreamUI:delete_model()
@@ -3488,18 +4336,18 @@ function xStreamUI:on_idle()
 
   -- delayed update of callback string --------------------
 
-  if self.callback_is_modified then
-    self.callback_is_modified = false
+  if self.user_modified_callback then
     local model = self.xstream.selected_model
     if model then
       --print("*** xStreamUI:on_idle - callback modified")
       local view = self.vb.views["xStreamCallbackEditor"]
       model.callback_str = view.text --.. "\n"
     end
+    self.user_modified_callback = false
   end
 
   -- delayed display updates ------------------------------
-  -- TODO turn into mini-scheduling system
+  -- TODO optimize by turning into mini-scheduling system
 
   if self.build_favorites_requested then
     self.build_favorites_requested = false
@@ -3540,14 +4388,32 @@ function xStreamUI:on_idle()
       self:disable_model_controls()
     end
     self.update_model_requested = false
-    self:update_model_controls()
-    self:update_model_list()
+    self.update_models_requested = true
+    --self:update_model_controls()
+    --self:update_model_title()
+    --self:update_model_list()
     self:update_model_selector()
-    self:update_model_title()
+    self.build_args_requested = true
+    --self:build_args()
+    --self:update_args()
+    --self:update_args_selector()
+    --self:update_args_visibility()
+    self.update_args_requested = true
+    self:update_color()
+  end
+
+  if self.build_args_requested then
+    self.build_args_requested = false
+    self.update_args_requested = true
     self:build_args()
+  end
+
+  if self.update_args_requested then
+    self.update_args_requested = false
+    self:update_args()
+    self:update_args_editor()
     self:update_args_selector()
     self:update_args_visibility()
-    self:update_color()
   end
 
   if self.update_launch_model_requested then
