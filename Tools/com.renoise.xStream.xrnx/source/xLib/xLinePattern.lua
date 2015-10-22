@@ -43,13 +43,13 @@ function xLinePattern:__init(note_columns,effect_columns)
   -- initialize -----------------------
 
   if note_columns then
-    for k,v in ipairs(note_columns) do
+    for _,v in ipairs(note_columns) do
       self.note_columns:insert(v)
     end
   end
 
   if effect_columns then
-    for k,v in ipairs(effect_columns) do
+    for _,v in ipairs(effect_columns) do
       self.effect_columns:insert(v)
     end
   end

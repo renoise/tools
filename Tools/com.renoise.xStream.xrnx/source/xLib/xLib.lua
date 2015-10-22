@@ -119,7 +119,7 @@ function xLib.match_table_key(t,key)
   --TRACE("xLib.match_table_key(t,key)",t,key)
   
   local rslt = table.create()
-  for k,v in pairs(t) do
+  for _,v in pairs(t) do
     rslt:insert(v[key])
   end
   return rslt

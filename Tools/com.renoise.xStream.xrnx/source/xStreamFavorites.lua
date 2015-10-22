@@ -101,13 +101,13 @@ function xStreamFavorites:toggle_item(model_name,preset_index,preset_bank_name)
 
   -- off
   local matched = false
-  for k,v in ipairs(self.items) do
+  --for _,v in ipairs(self.items) do
     local favorite_index = self:get(model_name,preset_index,preset_bank_name)
     if favorite_index then
       self:clear(favorite_index)
       matched = true
     end
-  end
+  --end
 
   -- on
   if not matched then
@@ -197,7 +197,7 @@ function xStreamFavorites:add(index,favorite)
 
   -- pad with empty slots
   if (index > #self.items) then
-    for i = #self.items+1,index-1 do 
+    for _ = #self.items+1,index-1 do 
       table.insert(self.items,{})  
       self.favorites_observable:insert(#self.items)
     end
@@ -293,7 +293,7 @@ function xStreamFavorites:remove_by_name_index(model_name,preset_index,preset_ba
 
   -- update other preset indices
   local modified = false
-  for k,v in ipairs(self.items) do
+  for _,v in ipairs(self.items) do
     if (v.model_name == model_name) and
       (v.preset_bank_name == preset_bank_name) 
     then
@@ -428,7 +428,7 @@ function xStreamFavorites:rename_model(str_old,str_new)
 
   local items_renamed = false
 
-  for k,v in ipairs(self.items) do
+  for _,v in ipairs(self.items) do
     if (v.model_name == str_old) then
       v.model_name = str_new
       items_renamed = true
@@ -483,7 +483,7 @@ function xStreamFavorites:launch(idx)
     return
   end
 
-  local model_idx,model = self.xstream:get_model_by_name(favorite.model_name)
+  local _,model = self.xstream:get_model_by_name(favorite.model_name)
   if not model then
     status_msg = ("*** xStream #%.2d [Trigger] - could not launch, model not found"):format(idx)
     --print("status_msg",status_msg)
@@ -565,7 +565,7 @@ function xStreamFavorites:export(file_path)
 	local doc_list = renoise.Document.DocumentList()
   doc:add_property("Favorites",doc_list)
   local node_favorite 
-  for k,v in ipairs(self.items) do
+  for _,v in ipairs(self.items) do
     --print("export",k,rprint(v))
     --print("v.model_name",v.model_name)
     node_favorite = renoise.Document.create("xStreamFavorite"){}

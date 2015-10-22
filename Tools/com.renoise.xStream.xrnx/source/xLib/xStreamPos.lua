@@ -91,7 +91,6 @@ end
 function xStreamPos:set_pos(pos)
   TRACE("xStreamPos:set_pos(pos)",pos)
 
-  local num_lines = 0
   local near_lines_def = self.writeahead
 
   local near_top = function(line)
@@ -198,7 +197,6 @@ function xStreamPos:track_pos()
   TRACE("xStreamPos:track_pos()")
 
   local playpos = rns.transport.playback_pos
-  local editpos = rns.transport.edit_pos
   if rns.transport.playing then
     if (self.just_started_playback > 0) then
       if (0.2 > (os.clock() - self.just_started_playback)) then

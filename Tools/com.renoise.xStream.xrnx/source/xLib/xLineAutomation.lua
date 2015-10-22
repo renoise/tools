@@ -24,7 +24,7 @@ function xLineAutomation:__init(automation)
   -- initialize -----------------------
 
   if automation then
-    for k,v in ipairs(automation) do
+    for _,v in ipairs(automation) do
       self.automation:insert(v)
     end
   end
@@ -51,7 +51,6 @@ function xLineAutomation:do_write(sequence,line,ptrack_auto,patt_num_lines)
 
   -- TODO clear existing, but how? API suggestion: clear_line_at(line_index)
 
-  local time_offset 
   for k,v in ipairs(self.automation) do
     ptrack_auto:add_point_at(line+v.time_offset or 0,v.value or 0)
   end

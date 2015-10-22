@@ -396,7 +396,7 @@ function xNoteColumn.do_read(note_col)
   TRACE("xNoteColumn.do_read(note_col)")
 
   local rslt = {}
-  for k,v in ipairs(xNoteColumn.tokens) do
+  for _,v in ipairs(xNoteColumn.tokens) do
     rslt[v] = note_col[v]
   end
   return rslt
@@ -413,7 +413,7 @@ end
 function xNoteColumn:do_write(note_col,tokens,clear_undefined)
   TRACE("xNoteColumn:do_write(note_col,tokens,clear_undefined)",note_col,tokens,clear_undefined)
 
-  for k,token in ipairs(tokens) do
+  for _,token in ipairs(tokens) do
     if self["do_write_"..token] then
       local success = pcall(function()
         self["do_write_"..token](self,note_col,clear_undefined)

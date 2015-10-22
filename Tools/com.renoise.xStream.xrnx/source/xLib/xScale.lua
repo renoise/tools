@@ -64,7 +64,7 @@ xScale.SCALES = {
 
 
 xScale.SCALE_NAMES = {}
-for k,v in ipairs(xScale.SCALES) do
+for _,v in ipairs(xScale.SCALES) do
   table.insert(xScale.SCALE_NAMES,v.name)
 end
 

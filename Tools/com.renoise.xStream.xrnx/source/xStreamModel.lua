@@ -583,7 +583,7 @@ function xStreamModel:extract_tokens(str_fn)
     "amount_value","amount_string",
   }
 
-  for k,v in ipairs(all_tokens) do
+  for _,v in ipairs(all_tokens) do
     if string.find(str_fn,v) then
       table.insert(rslt,v)
     end
@@ -760,7 +760,7 @@ function xStreamModel:rename()
 
   --local model = self.xstream.selected_model
 
-  local str_name,err = xDialog.prompt_for_string(self.name,
+  local str_name,_ = xDialog.prompt_for_string(self.name,
     "Enter a new name","Rename Model")
   if not str_name then
     return true
@@ -1024,7 +1024,7 @@ function xStreamModel:get_preset_bank_names()
   TRACE("xStreamModel:get_preset_bank_names()")
 
   local t = {}
-  for k,v in ipairs(self.preset_banks) do
+  for _,v in ipairs(self.preset_banks) do
     table.insert(t,v.name)
   end
   return t

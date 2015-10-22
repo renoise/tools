@@ -172,7 +172,7 @@ end
 function xStreamArgs:get_values()
   TRACE("xStreamArgs:get_values()")
   local rslt = {}
-  for k,arg in ipairs(self.args) do
+  for _,arg in ipairs(self.args) do
     rslt[arg.name] = arg.value
   end
   --print("xStreamArgs:get_values - rslt",rprint(rslt))
@@ -186,7 +186,7 @@ function xStreamArgs:get_names()
   TRACE("xStreamArgs:get_names()")
 
   local t = {}
-  for k,v in ipairs(self.args) do
+  for _,v in ipairs(self.args) do
     table.insert(t,v.name)
   end
   return t
@@ -242,7 +242,7 @@ function xStreamArgs:attach_to_song()
 
   self:detach_from_song()
 
-  for k,arg in ipairs(self.args) do
+  for _,arg in ipairs(self.args) do
     if (arg.bind) then
       arg.bind = xStreamArg.resolve_binding(arg.bind_str)
       arg.bind:add_notifier(arg,arg.bind_notifier)
@@ -259,7 +259,7 @@ end
 function xStreamArgs:detach_from_song()
   TRACE("xStreamArgs:detach_from_song()")
 
-  for k,arg in ipairs(self.args) do
+  for _,arg in ipairs(self.args) do
     if (arg.bind_notifier) then
       --print("*** detach_from_song - arg.bind_str",arg.bind_str)
       pcall(function()
@@ -278,7 +278,7 @@ end
 function xStreamArgs:on_idle()
   --TRACE("xStreamArgs:on_idle()")
 
-  for k,arg in ipairs(self.args) do
+  for _,arg in ipairs(self.args) do
     if (type(arg.poll)=="function") then
       -- 'poll' - get current value 
       local rslt = arg.poll()
@@ -306,7 +306,7 @@ function xStreamArgs:serialize()
   TRACE("xStreamArgs:serialize()")
 
   local args = {}
-  for idx,arg in ipairs(self.args) do
+  for _,arg in ipairs(self.args) do
 
     local props = {}
     if arg.properties then

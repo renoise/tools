@@ -217,27 +217,11 @@ end
 function xSongPos.within_bounds(seq_idx,line_idx)
   TRACE("xSongPos.within_bounds(seq_idx,line_idx)",seq_idx,line_idx)
 
-  local within_bounds = false
   if (seq_idx > #rns.sequencer.pattern_sequence) then
     return false
   elseif (seq_idx < 1) then
     return false
   else
-    --[[
-    -- first pattern, line number too low?
-    if (seq_idx == 1) and (line_idx < 1) then
-      return false
-    end
-      
-    -- last pattern, line number too high? 
-    local seq_count = #rns.sequencer.pattern_sequence
-    if (seq_idx == seq_count) then
-      local patt_num_lines = xSongPos.get_pattern_num_lines(seq_idx)
-      if (line_idx > patt_num_lines) then
-        return false
-      end
-    end
-    ]]
     return true
   end
 

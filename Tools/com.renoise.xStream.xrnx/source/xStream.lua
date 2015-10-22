@@ -268,7 +268,7 @@ function xStream:create_model()
   local str_path = xFilesystem.ensure_unique_filename(model_file_path)
   local str_name = xFilesystem.get_raw_filename(str_path)
 
-  local str_name,err = xDialog.prompt_for_string(str_name,
+  str_name,err = xDialog.prompt_for_string(str_name,
     "Enter a name for the model","Create Model")
   if not str_name then
     return
@@ -290,10 +290,8 @@ function xStream:create_model()
 ]],
   })
 
-  local model_str = model:serialize()
   self:add_model(model)
   self.selected_model_index = #self.models
-
   model:save()
 
   return true
@@ -317,7 +315,7 @@ end
 function xStream:remove_models()
   TRACE("xStream:remove_models()")
 
-  for k,v in ripairs(self.models) do
+  for k,_ in ripairs(self.models) do
     self:remove_model(k)
   end 
 
@@ -407,7 +405,7 @@ function xStream:get_model_names()
   TRACE("xStream:get_model_names()")
 
   local t = {}
-  for k,v in ipairs(self.models) do
+  for _,v in ipairs(self.models) do
     table.insert(t,v.name)
   end
   return t
@@ -848,7 +846,7 @@ function xStream:set_muted(val)
   local function produce_note_off()
     local note_cols = {}
     local note_col_count = self:get_visible_note_cols()
-    for i = 1,note_col_count do
+    for _ = 1,note_col_count do
       table.insert(note_cols,{
         note_value = xNoteColumn.NOTE_OFF_VALUE,
         instrument_value = xLinePattern.EMPTY_VALUE,
@@ -968,15 +966,15 @@ function xStream:do_output(xpos,num_lines,live_mode)
   -- TODO decide this elsewhere (optimize)
   local patt_num_lines = xSongPos.get_pattern_num_lines(xpos.sequence)
 
-  local param = nil
+  --local param = nil
   local phrase = nil
   local ptrack_auto = nil
   local last_auto_seq_idx = nil
 
   -- expand columns only when we have manually defined them
   -- (existing pattern-data is a full 12 note columns...)
-  local expand_columns = self.expand_columns and
-    self.selected_model.user_redefined_xline
+  --local expand_columns = self.expand_columns and
+  --  self.selected_model.user_redefined_xline
 
   for i = 0,num_lines-1 do
     tmp_pos = xSongPos({sequence=xpos.sequence,line=xpos.line+i})
@@ -1167,19 +1165,19 @@ function xStream:get_content(pos,num_lines,xpos)
     local success,err = pcall(function()
       self.buffer[line_index] = callback(line_index,xLine(xline),xSongPos(read_pos))
     end)
-    if err then
+    if not success and err then
       LOG("ERROR: please review the callback function - "..err)
       -- TODO display runtime errors separately (runtime_status)
       self.callback_status_observable.value = err
       self.buffer[line_index] = xLine({})
-    else
+    elseif success then
       -- we might have redefined the xline (or parts of it) in our  
       -- callback method - convert everything into class instances...
       -- TODO check against 'user_redefined_xline'
       local success,err = pcall(function()
         self.buffer[line_index] = xLine.apply_descriptor(self.buffer[line_index])
       end)
-      if err then
+      if not success and err then
         LOG("ERROR: an error occurred while converting xline - "..err)
         self.buffer[line_index] = self.empty_xline
       end
@@ -1534,7 +1532,7 @@ function xStream:fill_selection(locally)
     return
   end
 
-  local num_lines = xSongPos.get_pattern_num_lines(rns.selected_sequence_index)
+  --local num_lines = xSongPos.get_pattern_num_lines(rns.selected_sequence_index)
   local from_line = rns.selection_in_pattern.start_line
   local to_line = rns.selection_in_pattern.end_line
   local travelled = (not locally) and (from_line-1) or 0 
