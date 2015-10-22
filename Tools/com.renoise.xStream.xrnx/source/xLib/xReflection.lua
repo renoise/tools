@@ -121,13 +121,19 @@ end
 --------------------------------------------------------------------------------
 -- @param str (string), name of indentifier 
 -- @return bool, true when a valid lua indentifier 
+-- @return string, error message describing what went wrong
 
 function xReflection.is_valid_identifier(str)
   TRACE("xReflection.is_valid_identifier(str)",str)
+
   if string.match(str,"^%d+") then
-    return false -- numeric_first
+    return false, ("'%s' is not a valid identifier (avoid using number as the first character)"):format(str)
   end
   local match = string.match(str,"[_%w]*")
-  --print("match",match and (#match == #str))
-  return match and (#match == #str)
+  if match and (#match == #str) then
+    return true
+  else
+    return false, ("'%s' is not a valid identifier (avoid using special characters)"):format(str)
+  end
+
 end
