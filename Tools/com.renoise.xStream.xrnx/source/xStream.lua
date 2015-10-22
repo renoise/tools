@@ -685,6 +685,11 @@ function xStream:set_selected_model_index(idx)
 
   -- attach notifiers -------------------------------------
 
+  local args_observable_notifier = function()
+    TRACE("*** xStream - args.args_observable_notifier fired...")
+    self.selected_model.modified = true
+  end
+
   local preset_index_notifier = function()
     TRACE("*** xStream - preset_bank.selected_preset_index_observable fired...")
     local preset_idx = self.selected_model.selected_preset_bank.selected_preset_index
@@ -1437,7 +1442,9 @@ function xStream:on_idle()
     self.selected_model:on_idle()
   end
 
-  self.stream:track_pos()
+  if rns.transport.playing then
+    self.stream:track_pos()
+  end
 
   -- track when blockloop changes (update scheduling)
   if (self._loop_block_enabled ~= rns.transport.loop_block_enabled) then
