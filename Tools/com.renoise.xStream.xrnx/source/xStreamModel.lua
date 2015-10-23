@@ -118,7 +118,7 @@ function xStreamModel:__init(xstream)
   self.data_initial = nil
 
   -- bool, when true we have redefined the xline (checked during compile)
-  self.user_redefined_xline = nil
+  self.user_redefined_xline = false
 
   -- table<string> limit to these tokens during output
   -- (derived from the code specified in the callback)
@@ -510,10 +510,28 @@ function xStreamModel:test_syntax(str_fn)
   local pass,err = pcall(untrusted_fn)
   if not pass then
     return false,err
-  else 
-    return true
   end
 
+  return true
+
+end
+
+-------------------------------------------------------------------------------
+-- nested block comments/longstrings are depricated in lua and will fail
+-- to load if we save a model using these features
+-- unfortunately, lua does not seem to agree with plain strings
+-- that contains double brackets - instead, use brute-force 
+
+function xStreamModel.get_comment_blocks(str_fn)
+  print("xStreamModel.get_comment_blocks(str_fn)",#str_fn)
+
+  if string.find(str_fn,"%[%[") then
+    return false
+  elseif string.find(str_fn,"%]%]") then
+    return false
+  else
+    return true
+  end
 
 end
 
@@ -743,6 +761,15 @@ function xStreamModel:save(as_copy)
   if not compiled_fn then
     return false, "The callback contains errors that need to be "
                 .."fixed before you can save it to disk:\n"..err
+  end
+
+  local comments = xStreamModel.get_comment_blocks(self.callback_str)
+  if not comments then
+    local str_msg = "Warning: the callback contains [[double brackets]], which need to"
+                  .."\nbe removed from the code before the file can be saved"
+                  .."\n(avoid using block comments and longstrings)"
+    renoise.app():show_prompt("Strip comments",str_msg,{"OK"})
+    return false
   end
 
   xFilesystem.write_string_to_file(file_path,self:serialize())
