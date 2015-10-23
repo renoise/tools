@@ -268,7 +268,7 @@ function xStream:create_model()
   local str_path = xFilesystem.ensure_unique_filename(model_file_path)
   local str_name = xFilesystem.get_raw_filename(str_path)
 
-  str_name,err = xDialog.prompt_for_string(str_name,
+  str_name = xDialog.prompt_for_string(str_name,
     "Enter a name for the model","Create Model")
   if not str_name then
     return
