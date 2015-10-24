@@ -652,9 +652,13 @@ function xStreamUI:build_args_editor()
               local view_text = vb.views["xStreamArgsEditorBindOrPollValue"]
               local view_min = vb.views["xStreamArgsEditorMinValue"]
               local view_max = vb.views["xStreamArgsEditorMaxValue"]
-              view_text.active = (idx > 1) 
               view_min.active = (idx ~= 2) 
               view_max.active = (idx ~= 2) 
+              if (renoise.API_VERSION > 4) then
+                view_text.active = (idx > 1) 
+              else
+                view_text.visible = (idx > 1) 
+              end
             end,
           },
           vb:textfield{
@@ -805,6 +809,7 @@ function xStreamUI:build_args_editor()
         },
         vb:row{
           vb:button{
+            id = "xStreamArgsEditorRemoveButton",
             tooltip = "Remove this argument",
             text = "Remove",
             notifier = function()
@@ -819,6 +824,7 @@ function xStreamUI:build_args_editor()
             end
           },
           vb:button{
+            id = "xStreamArgsEditorApplyButton",
             tooltip = "Update the argument with current settings",
             text = "Apply changes",
             notifier = function()
@@ -1542,11 +1548,23 @@ function xStreamUI:update_args_editor()
   local view_items        = self.vb.views["xStreamArgsEditorItems"]
   local view_poll_or_bind = self.vb.views["xStreamArgsEditorBindOrPoll"]
   local view_bop_value    = self.vb.views["xStreamArgsEditorBindOrPollValue"]
+  local view_remove_bt    = self.vb.views["xStreamArgsEditorRemoveButton"]
+  local view_apply_bt     = self.vb.views["xStreamArgsEditorApplyButton"]
 
   local has_selected = (self.xstream.selected_model.args.selected_index > 0)
 
-  view_name.active = has_selected
-  view_description.active = has_selected
+  if (renoise.API_VERSION > 4) then
+    view_name.active = has_selected
+    view_description.active = has_selected
+    view_items.active = has_selected
+    --view_bop_value.active = has_selected
+  else
+    view_name.visible = has_selected
+    view_description.visible = has_selected
+    view_items.visible = has_selected
+  end
+  view_apply_bt.active = has_selected
+  view_remove_bt.active = has_selected
   view_type.active = has_selected
   view_display_as.active = has_selected
   view_buffer.active = has_selected
@@ -1554,9 +1572,7 @@ function xStreamUI:update_args_editor()
   view_min_value.active = has_selected
   view_max_value.active = has_selected
   view_zero_based.active = has_selected
-  view_items.active = has_selected
   view_poll_or_bind.active = has_selected
-  view_bop_value.active = has_selected
 
   local arg = self.xstream.selected_model.args.selected_arg
   if not arg then
@@ -1618,8 +1634,12 @@ function xStreamUI:update_args_editor()
     bop_str = ""
   end
   view_poll_or_bind.value = bop_value
-  view_bop_value.active = (bop_value > 1)
   view_bop_value.text = bop_str
+  if (renoise.API_VERSION > 4) then
+    view_bop_value.active = (bop_value > 1)
+  else
+    view_bop_value.visible = (bop_value > 1)
+  end
 
   view_buffer.value = arg.properties.impacts_buffer
 
