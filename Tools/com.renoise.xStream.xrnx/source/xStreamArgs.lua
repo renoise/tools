@@ -52,7 +52,7 @@ function xStreamArgs:__init(model)
 
   -- int, selected argument (0 = none) 
   self.selected_index = property(self.get_selected_index,self.set_selected_index)
-  self.selected_index_observable = renoise.Document.ObservableNumber(1)
+  self.selected_index_observable = renoise.Document.ObservableNumber(0)
 
   self.selected_arg = property(self.get_selected_arg)
 
@@ -94,8 +94,6 @@ end
 
 function xStreamArgs:add(arg,index,do_replace)
   TRACE("xStreamArgs:add(arg,index)",arg,index)
-  --rprint(arg)
-  --print(">>> Add (descriptor)",rprint(arg))
 
   if not arg then
     -- provide default argument
@@ -110,9 +108,9 @@ function xStreamArgs:add(arg,index,do_replace)
       name = str_name,
       value = 42,
       properties = {
-          display_as = "integer",
-          min = 0,
-          max = 100,
+        display_as = xStreamArg.DISPLAYS[xStreamArg.DISPLAY_AS.INTEGER],
+        min = 0,
+        max = 100,
       },
     }
   end
@@ -171,8 +169,6 @@ function xStreamArgs:add(arg,index,do_replace)
     end
   end
 
-
-
   -- Observable needs a value in order to determine it's type.
   -- Try to evaluate the bind/poll string in order to get the 
   -- current value. If that fails, provide the default value
@@ -210,8 +206,8 @@ function xStreamArgs:add(arg,index,do_replace)
   end
   arg.xstream = self.model.xstream
 
-  --print("*** type(arg.value)",type(arg.value))
-  --print("*** create xStreamArg...",rprint(arg))
+  --print(">>> type(arg.value)",type(arg.value))
+  --print(">>> create xStreamArg...",rprint(arg))
 
   local xarg = xStreamArg(arg)
 
@@ -222,7 +218,7 @@ function xStreamArgs:add(arg,index,do_replace)
   end
   self.args_observable:insert(#self.args)
 
-  --local arg_index = index or #self.args
+  --print(">>> inserted at index",index,"args length",#self.args)
 
   -- read-only access, used by the callback method
   -- NB: added only once, reused 
@@ -245,6 +241,12 @@ function xStreamArgs:add(arg,index,do_replace)
         end
       end
       return val
+    end,function(_,val)
+      -- callback has specified a new value
+      local xarg = self:get_arg_by_name(arg.name)
+      if xarg then
+        xarg.value = val
+      end
     end)
   end
 
@@ -458,7 +460,7 @@ function xStreamArgs:randomize()
 
       if (type(arg.value) == "boolean") then
         val = (math.random(0,1) == 1) and true or false
-        --print("*** boolean random",val)
+        --print(">>> boolean random",val)
       elseif (type(arg.value) == "number") then
         if arg.properties then
           if (arg.properties.items) then
@@ -513,7 +515,7 @@ function xStreamArgs:detach_from_song()
 
   for k,arg in ipairs(self.args) do
     if (arg.bind_notifier) then
-      --print("*** detach_from_song - arg.bind_str",arg.bind_str)
+      --print(">>> detach_from_song - arg.bind_str",arg.bind_str)
       pcall(function()
         if arg.bind:has_notifier(arg,arg.bind_notifier) then
           arg.bind:remove_notifier(arg,arg.bind_notifier)
@@ -583,7 +585,11 @@ function xStreamArgs:serialize()
 
   local presets = {}
   if self.model.selected_preset_bank then
-    presets = self.model.selected_preset_bank.presets
+    presets = table.rcopy(self.model.selected_preset_bank.presets)
+    -- add names
+    for k,v in ipairs(presets) do
+      v.name = self.model.selected_preset_bank.preset_names[k]
+    end
   end
 
   local str_args = xLib.serialize_table(args)

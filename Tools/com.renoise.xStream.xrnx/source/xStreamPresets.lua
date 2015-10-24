@@ -33,6 +33,9 @@ function xStreamPresets:__init(model)
   -- table<table>, the actual entries
 	self.presets = {}
 
+  -- table<table>, name of each preset
+	self.preset_names = {}
+
   -- string, name of this preset bank (needs to be valid filename)
 	self.name = property(self.get_name,self.set_name)
   self.name_observable = renoise.Document.ObservableString(xStreamPresets.DEFAULT_BANK_NAME)
@@ -97,7 +100,8 @@ function xStreamPresets:set_selected_preset_index(idx)
 
 end
 
-
+-------------------------------------------------------------------------------
+-- Class methods
 -------------------------------------------------------------------------------
 -- add current/supplied values as new preset 
 -- @param t (table) use these values 
@@ -112,17 +116,27 @@ function xStreamPresets:add_preset(t)
   end
 
   local preset = {}
+  local preset_name = ""
   if not t then
+    -- add current values
     for _,arg in ipairs(self.model.args.args) do
       preset[arg.name] = arg.observable.value
     end
   else
+    -- add supplied values
     for k,v in pairs(t) do
-      preset[k] = v
+      if (k == "name") then
+        preset_name = v
+      else
+        preset[k] = v
+      end
     end
   end
 
+  --preset_name = preset_name or "Preset #"..#self.presets
+
   table.insert(self.presets,preset)
+  table.insert(self.preset_names,preset_name)
   self.presets_observable:insert(#self.presets)
 
   self.modified = true
@@ -155,6 +169,7 @@ function xStreamPresets:remove_preset(idx)
   end
 
   table.remove(self.presets,idx)
+  table.remove(self.preset_names,idx)
   self.presets_observable:remove(idx)
 
   -- remove from favorites
@@ -167,6 +182,29 @@ function xStreamPresets:remove_preset(idx)
   end
 
   self.modified = true
+
+end
+
+-------------------------------------------------------------------------------
+
+function xStreamPresets:swap_index(idx1,idx2)
+
+  if (idx1 < 1 and idx2 > 1) then
+    return false,"Cannot swap entries - either index is too low"
+  elseif (idx1 > #self.presets or idx2 > #self.presets) then
+    return false,"Cannot swap entries - either index is too high"
+  end
+
+  self.preset_names[idx1],self.preset_names[idx2] = 
+    self.preset_names[idx2],self.preset_names[idx1]
+
+  self.presets[idx1],self.presets[idx2] = 
+    self.presets[idx2],self.presets[idx1]
+
+  self.presets_observable:swap(idx1,idx2)
+
+  return true
+
 
 end
 
@@ -192,6 +230,25 @@ function xStreamPresets:update_preset(idx)
 
 end
 
+-------------------------------------------------------------------------------
+-- get preset "display name" - for use in lists, selectors etc.
+-- @return string 
+
+function xStreamPresets:get_preset_display_name(idx)
+  TRACE("xStreamPresets:get_preset_display_name(idx)",idx)
+
+  if (idx < 1) or (idx > #self.presets) then
+    return ""
+  end
+
+  if not self.preset_names[idx] or (self.preset_names[idx] == "") then
+    return "Preset #"..idx
+  else
+    return self.preset_names[idx]
+  end
+
+end
+  
 
 -------------------------------------------------------------------------------
 -- recall/activate preset 
@@ -285,6 +342,36 @@ function xStreamPresets:rename(str_name)
 
 end
 
+-------------------------------------------------------------------------------
+-- @param idx (int)
+-- @param str_name (string)
+-- @return bool, true when successful
+-- @return string, error message when failed
+
+
+function xStreamPresets:rename_preset(idx,str_name)
+  TRACE("xStreamPresets:rename_preset(idx,str_name)",idx,str_name)
+
+  if (idx < 1) or (idx > #self.presets) then
+    return false,"Can't rename preset - index is too low or high"
+  end
+
+  if not str_name then
+    str_name = xDialog.prompt_for_string(self.preset_names[idx],
+      "Enter a name","Rename Preset")
+    if not str_name then
+      return false
+    end
+  end
+
+  str_name = xLib.sanitize_string(str_name)
+
+  self.preset_names[idx] = str_name
+  self.modified = true
+
+  return true
+
+end
 
 -------------------------------------------------------------------------------
 -- import presets from xml file, preserving existing presets
@@ -354,25 +441,31 @@ function xStreamPresets:import(file_path,clear_existing)
             --print("v3",v3)
             if (v3.label == "Preset") then
               local preset = {}
+              local preset_name = ""
               for ____,v4 in ipairs(v3) do
-                --print("v4",v4)
-                local arg_index = table.find(arg_names,v4.label)
-                if arg_index then
-                  -- make sure we cast to right type, 
-                  -- as XML are always defined as strings
-                  local arg_type = type(self.model.args.args[arg_index].value)
-                  if (arg_type == "number") then
-                    preset[v4.label] = tonumber(v4[1])
-                  elseif (arg_type == "boolean") then
-                    preset[v4.label] = (v4[1] == "true") and true or false
-                  else 
-                    preset[v4.label] = v4[1]
-                  end
+                --print("v4",v4.label)
+                if (v4.label == "name") then
+                  -- name is a special entry
+                  preset_name = v4[1]
+                  --print("preset_name",preset_name)
                 else
-                  --print("*** reject - ",v4.label)
+                  local arg_index = table.find(arg_names,v4.label)
+                  if arg_index then
+                    -- make sure we cast to right type, 
+                    -- as XML are always defined as strings
+                    local arg_type = type(self.model.args.args[arg_index].value)
+                    if (arg_type == "number") then
+                      preset[v4.label] = tonumber(v4[1])
+                    elseif (arg_type == "boolean") then
+                      preset[v4.label] = (v4[1] == "true") and true or false
+                    else 
+                      preset[v4.label] = v4[1]
+                    end
+                  end
                 end
               end
               table.insert(self.presets,preset)
+              table.insert(self.preset_names,preset_name)
               self.presets_observable:insert(k3)
               last_inserted_preset_index = k3
             end
@@ -454,6 +547,8 @@ function xStreamPresets:export(file_path)
     for k2,v2 in pairs(v) do
       node:add_property(k2,v2)
     end
+    --print("add name property",self.preset_names[k])
+    node:add_property("name",self.preset_names[k] or "")
     doc_list:insert(#doc_list+1,node)
   end
 

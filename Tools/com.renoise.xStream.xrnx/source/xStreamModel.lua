@@ -33,10 +33,10 @@ xStreamModel.PROXY_PROPS = {
   "include_hidden",
   "automation_playmode",
   "track_index",
-  "device_index",
-  "param_index",
+  --"device_index", 
+  --"param_index",
   "mute_mode",
-
+  "output_mode",
 }
 
 -- mark the following as read-only properties
@@ -48,6 +48,9 @@ xStreamModel.PROXY_CONSTS = {
   "EMPTY_NOTE_VALUE",
   "EMPTY_VALUE",
 }
+
+xStreamModel.DEFAULT_NAME = "Untitled model"
+
 
 -------------------------------------------------------------------------------
 -- constructor
@@ -118,7 +121,7 @@ function xStreamModel:__init(xstream)
   self.data_initial = nil
 
   -- bool, when true we have redefined the xline (checked during compile)
-  self.user_redefined_xline = false
+  --self.user_redefined_xline = false
 
   -- table<string> limit to these tokens during output
   -- (derived from the code specified in the callback)
@@ -232,15 +235,9 @@ end
 -- Get/set methods
 -------------------------------------------------------------------------------
 
-function xStreamModel:get_suggested_name()
-  return "Untitled model"
-end
-
--------------------------------------------------------------------------------
-
 function xStreamModel:get_name()
   if (self.name_observable.value == "") then
-    return self:get_suggested_name()
+    return xStreamModel.DEFAULT_NAME
   end
   return self.name_observable.value
 end
@@ -372,6 +369,15 @@ function xStreamModel:load_definition(file_path)
     xFilesystem.get_path_parts(file_path)
   local name = xFilesystem.file_strip_extension(str_filename,str_extension)
 
+  -- confirm that file is likely a model definition
+  -- (without parsing any code)
+  local str_def,err = xFilesystem.load_string(file_path)
+  --print(">>> load_definition - load_string - str_def,err",str_def,err)
+  local passed = xStreamModel.looks_like_definition(str_def)
+  if not passed then
+    return false,"The string does not look like a model definition"
+  end
+
   -- check if we are able to load the definition
   local passed,err = pcall(function()
     assert(loadfile(file_path))
@@ -386,9 +392,9 @@ function xStreamModel:load_definition(file_path)
 
   -- succesfully loaded, import and apply settings --------
 
+  self.callback_str_source = def.callback
   self.file_path = file_path
   self.name = name
-  self.callback_str_source = def.callback
 
   local passed,err = self:parse_definition(def)
   if not passed then
@@ -397,11 +403,51 @@ function xStreamModel:load_definition(file_path)
   end
 
   self:load_preset_banks()
-
-  -- model might have been set as "modified", revert this:
   self.modified = false
-
   return true
+
+end
+
+-------------------------------------------------------------------------------
+-- same as 'load_definition', but passing a string instead of file
+-- @param str_def (string)
+-- @return bool, true when model got loaded
+-- @return string, error message on failure
+
+function xStreamModel:load_from_string(str_def)
+  TRACE("xStreamModel:load_from_string(str_def)",#str_def)
+
+  local passed = xStreamModel.looks_like_definition(str_def)
+  if not passed then
+    return false,"The string does not look like a model definition"
+  end
+
+  local passed,err = pcall(function()
+    assert(loadstring(str_def))
+  end) 
+  if not passed then
+    err = "ERROR: Failed to load the definition - "..err
+    return false,err
+  end
+
+  local def = assert(loadstring(str_def))()
+
+  -- succesfully parsed, now apply settings...
+
+  self.callback_str_source = def.callback
+  self.name = xStreamModel.get_suggested_name(xStreamModel.DEFAULT_NAME)
+  self.file_path = xStreamModel.get_normalized_file_path(self.name)
+  
+  local passed,err = self:parse_definition(def)
+  if not passed then
+    err = "ERROR: Failed to load the definition - "..err
+    return false,err
+  end
+
+  self:load_preset_banks()
+  self.modified = false
+  return true
+
 
 end
 
@@ -523,7 +569,7 @@ end
 -- that contains double brackets - instead, use brute-force 
 
 function xStreamModel.get_comment_blocks(str_fn)
-  print("xStreamModel.get_comment_blocks(str_fn)",#str_fn)
+  TRACE("xStreamModel.get_comment_blocks(str_fn)",#str_fn)
 
   if string.find(str_fn,"%[%[") then
     return false
@@ -570,7 +616,7 @@ function xStreamModel:compile(str_fn)
   self.output_tokens = self:extract_tokens(str_fn)
   --print("*** tokens",rprint(self.output_tokens))
 
-  self.user_redefined_xline = self.check_if_redefined(str_fn)
+  --self.user_redefined_xline = self.check_if_redefined(str_fn)
   --print("self.user_redefined_xline",self.user_redefined_xline)
 
   self.compiled = true
@@ -639,7 +685,7 @@ end
 -- check if we have redefined the xline in the callback function
 -- @param str_fn (string)
 -- @return bool
-
+--[[
 function xStreamModel.check_if_redefined(str_fn)
 
   local matched = (string.match(str_fn,"xline%s?=%s?") or
@@ -650,7 +696,7 @@ function xStreamModel.check_if_redefined(str_fn)
   return matched and true or false
 
 end
-
+]]
 -------------------------------------------------------------------------------
 -- return the model (arguments, callback) as valid lua string
 
@@ -660,10 +706,9 @@ function xStreamModel:serialize()
   local args,presets = self.args:serialize()
 
   local rslt = ""
-  .."--[[============================================================================"
-  .."\n" .. self.name .. ".lua"
-  .."\n File generated by xStream - please see documentation for details"
-  .."\n============================================================================]]--"
+  .."--[[==========================================================================="
+  .."\n".. self.name .. ".lua"
+  .."\n===========================================================================]]--"
   .."\n"
   .."\nreturn {"
 	.."\narguments = "
@@ -772,7 +817,10 @@ function xStreamModel:save(as_copy)
     return false
   end
 
-  xFilesystem.write_string_to_file(file_path,self:serialize())
+  local got_saved,err = xFilesystem.write_string_to_file(file_path,self:serialize())
+  if not got_saved then
+    return false,err
+  end
 
   if not as_copy then
     self.file_path = file_path
@@ -1091,3 +1139,48 @@ function xStreamModel:is_default_bank()
 
 end
 
+-------------------------------------------------------------------------------
+-- ensure that the name is unique (e.g. when creating new models)
+-- @param str_name (string)
+-- @return string
+
+function xStreamModel.get_suggested_name(str_name)
+  TRACE("xStreamModel.get_suggested_name(str_name)",str_name)
+
+  local model_file_path = xStreamModel.get_normalized_file_path(str_name)
+  local str_path = xFilesystem.ensure_unique_filename(model_file_path)
+  local suggested_name = xFilesystem.get_raw_filename(str_path)
+  return suggested_name
+
+end
+
+-------------------------------------------------------------------------------
+-- return the path to the internal models 
+
+function xStreamModel.get_normalized_file_path(str_name)
+
+  return ("%s%s.lua"):format(xStream.MODELS_FOLDER,str_name)
+
+end
+
+-------------------------------------------------------------------------------
+-- look for certain "things" to confirm that this is a valid definition
+-- before actually parsing the string
+-- @param str_def (string)
+-- @return bool
+
+function xStreamModel.looks_like_definition(str_def)
+
+  if not string.find(str_def,"return[%s]*{") or
+    not string.find(str_def,"arguments[%s]*=[%s]*{") or
+    not string.find(str_def,"presets[%s]*=[%s]*{") or
+    not string.find(str_def,"data[%s]*=[%s]*{") or
+    not string.find(str_def,"options[%s]*=[%s]*{") or
+    not string.find(str_def,"callback[%s]*=") 
+  then
+    return false
+  else
+    return true
+  end
+
+end

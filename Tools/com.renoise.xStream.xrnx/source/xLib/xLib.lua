@@ -64,6 +64,7 @@ xLib.PRESET_TYPES = {
 
 xLib.COLOR_ENABLED = {0xD0,0xD8,0xD4}
 xLib.COLOR_DISABLED = {0x00,0x00,0x00}
+xLib.COLOR_BASE = {0x5A,0x5A,0x5A}
 xLib.LARGE_BUTTON_H = 22
 xLib.SWITCHER_H = 22
 
@@ -188,9 +189,17 @@ end
 -- @return int
 
 function xLib.get_hex_digits(val)
-
   return 8-#string.match(bit.tohex(val),"0*")
+end
 
+-------------------------------------------------------------------------------
+-- prepare a string so it can be stored in XML attributes
+-- (strip illegal characters instead of trying to fix them)
+
+function xLib.sanitize_string(str)
+  str=str:gsub('"','')  
+  str=str:gsub("'",'')  
+  return str
 end
 
 -------------------------------------------------------------------------------

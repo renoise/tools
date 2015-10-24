@@ -6,10 +6,10 @@ Args-Controls.lua
 return {
 arguments = {
   {
-      name = "value",
+      name = "float",
       value = 99999,
       properties = {
-          display_as = "value",
+          display_as = "float",
       },
   },
   {
@@ -97,17 +97,17 @@ arguments = {
       },
   },
   {
-      name = "boolean",
+      name = "checkbox",
       value = false,
       properties = {
-          display_as = "boolean",
+          display_as = "checkbox",
       },
   },
   {
-      name = "string",
+      name = "textfield",
       value = "this is a string",
       properties = {
-          display_as = "string",
+          display_as = "textfield",
       },
   },
 },
@@ -116,29 +116,29 @@ presets = {
       hex = 1,
       note = 48,
       integer = 11,
-      string = "this is a string",
-      boolean = false,
+      textfield = "this is a string",
+      checkbox = false,
       popup = 2,
       chooser = 1,
       minislider = 35999.64,
-      switch = 1,
+      value = 4,
       rotary = -39999.6,
       percent = 7.2,
-      value = 4,
+      switch = 1,
   },
   {
       hex = 48,
       note = 70.74688372093,
       integer = 34,
-      string = "this is another string",
-      boolean = false,
+      textfield = "this is another string",
+      checkbox = false,
       popup = 2,
       chooser = 2,
       minislider = -44222.813581395,
-      switch = 2,
+      value = 3.154,
       rotary = -39999.6,
       percent = 67.441860465116,
-      value = 3.154,
+      switch = 2,
   },
 },
 data = {
@@ -151,10 +151,9 @@ callback = [[
 -- How to define arguments
 -- A demonstration of the various visual components you can use for
 -- controlling arguments. Expand the arguments panel below to see them all
--- at the same time, or click [models > magnifying glass] to reveal the 
--- location of the .lua file in which the actual arguments are defined)
+-- at the same time (click the arrow button)
 -------------------------------------------------------------------------------
--- Name       Type      Supports      Supports  Requires  Restrict  
+-- Display    Type      Supports      Supports  Requires  Restrict  
 --                      'zero_based'  min/max   property  to range
 -- VALUE      number                  yes                 
 -- HEX        number    yes           yes                 
@@ -168,6 +167,7 @@ callback = [[
 -- ROTARY     number                  yes                 
 -- BOOLEAN    boolean                                     
 -- STRING     string                                      
+
 
 
 

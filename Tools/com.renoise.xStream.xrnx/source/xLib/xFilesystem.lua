@@ -314,6 +314,34 @@ function xFilesystem.assert_string(str,str_name)
 end
 
 --------------------------------------------------------------------------------
+-- load string from disk
+
+function xFilesystem.load_string(file_path)
+  TRACE("xFilesystem.load_string(file_path)",file_path)
+
+  local handle,err = io.open(file_path,"r")
+  if not handle then
+    return false,err
+  end
+
+  local finfo = io.stat(file_path)
+  if (finfo.type ~= "file") then
+    handle:close()
+    return false, "Attempting to load string from a non-file"
+  end
+
+  local str = handle:read("*a") 
+  if not str then
+    handle:close()
+    return false, "Failed to read from file"
+  end
+
+  handle:close()
+  return str
+
+end
+
+--------------------------------------------------------------------------------
 -- save string to disk
 -- @param file_path (string)
 -- @param str (string)
@@ -328,7 +356,10 @@ function xFilesystem.write_string_to_file(file_path,str)
 
   local success = true
 
+  --print("io.exists",io.exists(file_path))
+
   local handle,err = io.open(file_path,"w")
+  --print(">>> write_string_to_file - handle,err",handle,err)
   if not handle then
     -- often triggered by a folder that does not exist
     return false,err
@@ -336,6 +367,7 @@ function xFilesystem.write_string_to_file(file_path,str)
   if not handle:write(str) then
     success = false
   end
+
   handle:close()
 
   if not success then

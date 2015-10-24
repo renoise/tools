@@ -1,17 +1,16 @@
---[[============================================================================
+--[[===========================================================================
 FX-Commands.lua
-============================================================================]]--
+===========================================================================]]--
 
 return {
 arguments = {
   {
       name = "interval",
-      value = 2,
+      value = 4,
       properties = {
           min = 1,
-          --quant = 1,
-          max = 255,
           display_as = "integer",
+          max = 255,
       },
       description = "Output for every X line",
   },
@@ -19,19 +18,17 @@ arguments = {
       name = "fx_number",
       value = 15,
       properties = {
-          --display_as = "popup",
           items = "xEffectColumn.SUPPORTED_EFFECTS",
       },
       description = "Choose among available FX commands",
   },
   {
       name = "fx_amt_x_",
-      value = 4,
+      value = 8,
       properties = {
           min = 0,
-          max = 15,
-          --quant = 1,
           display_as = "hex",
+          max = 15,
       },
       description = "Choose FX amount (first digit)",
   },
@@ -40,9 +37,8 @@ arguments = {
       value = 0,
       properties = {
           min = 0,
+          display_as = "hex",
           max = 15,
-          --quant = 1,
-          display_as ="hex",
       },
       description = "Choose FX amount (second digit)",
   },
@@ -50,6 +46,7 @@ arguments = {
 presets = {
   {
       fx_number = 15,
+      name = "",
       interval = 8,
       fx_amt__y = 0,
       instr_idx = 4,
@@ -57,6 +54,7 @@ presets = {
   },
   {
       fx_number = 15,
+      name = "",
       interval = 4,
       fx_amt__y = 0,
       instr_idx = 4,
@@ -64,6 +62,7 @@ presets = {
   },
   {
       fx_number = 15,
+      name = "",
       interval = 2,
       fx_amt__y = 0,
       instr_idx = 4,
@@ -71,6 +70,7 @@ presets = {
   },
   {
       fx_number = 4,
+      name = "",
       interval = 8,
       fx_amt__y = 0,
       instr_idx = 4,
@@ -78,6 +78,7 @@ presets = {
   },
   {
       fx_number = 3,
+      name = "",
       interval = 8,
       fx_amt__y = 5,
       instr_idx = 4,
@@ -87,7 +88,7 @@ presets = {
 data = {
 },
 options = {
- color = 0xD77A4B,
+ color = 0xCA8759,
 },
 callback = [[
 -------------------------------------------------------------------------------
@@ -101,6 +102,7 @@ if (xinc%args.interval == 0) then
       amount_value = args.fx_amt_x_ *16 + args.fx_amt__y,
     }
 end  
+
 
 
 

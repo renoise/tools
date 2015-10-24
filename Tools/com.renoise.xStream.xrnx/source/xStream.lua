@@ -20,6 +20,13 @@ xStream.PLAYMODE = {
   CUBIC = 3,
 }
 
+-- accessible to callback
+xStream.OUTPUT_MODE = {
+  STREAMING = 1,
+  TRACK = 2,
+  SELECTION = 3,
+}
+
 -- model/preset scheduling 
 xStream.SCHEDULES = {"NONE","BEAT","BAR","BLOCK","PATTERN"}
 xStream.SCHEDULE = {
@@ -88,6 +95,11 @@ function xStream:__init()
 
   -- (xSongPos) where we most recently read from the pattern
   self.next_read_pos = nil
+
+  -- enum, one of xStream.OUTPUT_MODE
+  -- usually STREAMING, but temporarily set to a different
+  -- value while applying output to TRACK/SELECTION
+  self.output_mode = xStream.OUTPUT_MODE.STREAMING
 
   -- xStream.PLAYMODE (string-based enum)
   self.automation_playmode = xStream.PLAYMODE.LINEAR
@@ -255,26 +267,32 @@ end
 -------------------------------------------------------------------------------
 -- class methods
 -------------------------------------------------------------------------------
--- present the user with a popup containing a text editor, fill it with
--- a blank model template and pass it on to xStream 
+-- create new model from scratch
+-- @param str_name (string)
+-- @return bool, true when model got created
+-- @return string, error message on failure
 
-function xStream:create_model()
-  TRACE("xStream:create_model()")
+function xStream:create_model(str_name)
+  TRACE("xStream:create_model(str_name)",str_name)
+
+  assert(type(str_name) == "string")
 
   local model = xStreamModel(self)
-  
-  -- TODO provide a unique filename 
-  local model_file_path = ("%s%s.lua"):format(xStream.MODELS_FOLDER,model.name)
-  local str_path = xFilesystem.ensure_unique_filename(model_file_path)
-  local str_name = xFilesystem.get_raw_filename(str_path)
-
-  str_name = xDialog.prompt_for_string(str_name,
+  model.name = str_name
+  --[[
+  xStreamModel.get_suggested_name(model.name)       
+  local str_name,err = xDialog.prompt_for_string(str_name,
     "Enter a name for the model","Create Model")
   if not str_name then
     return
   end
+  ]]
 
-  -- TODO ensure unique filename
+  local str_name_validate = xStreamModel.get_suggested_name(str_name)
+  --print(">>> str_name,str_name_validate",str_name,str_name_validate)
+  if (str_name ~= str_name_validate) then
+    return false,"Error: a model already exists with this name."
+  end
 
   model.modified = true
   model.name = str_name
@@ -292,7 +310,11 @@ function xStream:create_model()
 
   self:add_model(model)
   self.selected_model_index = #self.models
-  model:save()
+  
+  local got_saved,err = model:save()
+  if not got_saved and err then
+    return false,err
+  end
 
   return true
 
@@ -715,6 +737,7 @@ function xStream:set_selected_model_index(idx)
     xLib.attach_to_observable(preset_bank.selected_preset_index_observable,preset_index_notifier)
   end
   if self.selected_model then
+    xLib.attach_to_observable(self.selected_model.args.args_observable,args_observable_notifier)
     xLib.attach_to_observable(self.selected_model.selected_preset_bank_index_observable,preset_bank_notifier)
     preset_bank_notifier()
   end
@@ -1503,7 +1526,10 @@ function xStream:fill_track()
   TRACE("xStream:fill_track()")
   
   local patt_num_lines = xSongPos.get_pattern_num_lines(rns.selected_sequence_index)
+  self.output_mode = xStream.OUTPUT_MODE.TRACK
   self:apply_to_range(1,patt_num_lines)
+
+  self.output_mode = xStream.OUTPUT_MODE.STREAMING
 
 end
 
@@ -1549,10 +1575,12 @@ function xStream:fill_selection(locally)
 
   -- write output
   self.track_index = rns.selection_in_pattern.start_track
+  self.output_mode = xStream.OUTPUT_MODE.SELECTION
   self:apply_to_range(from_line,to_line,travelled)
 
   -- restore settings
   self.track_index = cached_track_index
+  self.output_mode = xStream.OUTPUT_MODE.STREAMING
 
 end
 
