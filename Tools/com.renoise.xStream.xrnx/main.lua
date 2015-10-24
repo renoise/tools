@@ -26,6 +26,7 @@ require (xLib_dir..'xLineAutomation')
 require (xLib_dir..'xLinePattern')
 require (xLib_dir..'xNoteColumn')
 require (xLib_dir..'xParseXML')
+require (xLib_dir..'xObservable')
 require (xLib_dir..'xPhraseMgr')
 require (xLib_dir..'xReflection')
 require (xLib_dir..'xScale')
@@ -127,6 +128,33 @@ local function idle_notifier_actual()
 
 end
 
+--------------------------------------------------------------------------------
+-- tool menu entry
+
+function register_tool_menu()
+
+  local str_name = "Main Menu:Tools:"..TOOL_NAME
+  local str_name_active = "Main Menu:Tools:"..TOOL_NAME.." (active)"
+
+  if renoise.tool():has_menu_entry(str_name) then
+    renoise.tool():remove_menu_entry(str_name)
+  elseif renoise.tool():has_menu_entry(str_name_active) then
+    renoise.tool():remove_menu_entry(str_name_active)
+  end
+
+  if xstream then
+    str_name = (xstream.active) and str_name_active or str_name
+  end
+
+  renoise.tool():add_menu_entry{
+    name = str_name,
+    invoke = function() 
+      show() 
+    end
+  }
+end
+
+register_tool_menu()
 
 -------------------------------------------------------------------------------
 -- invoked by menu entries, autostart - 
@@ -230,76 +258,79 @@ function show()
     -- add notifiers ------------------
 
     xstream.ui.start_option_observable:add_notifier(function()
-      TRACE("*** main.lua - ui.start_option_observable fired...")
+      TRACE("*** main.lua - xstream.ui.start_option_observable fired...")
       options.start_option.value = xstream.ui.start_option_observable.value
     end)
 
     xstream.ui.launch_model_observable:add_notifier(function()
-      TRACE("*** main.lua - ui.launch_model_observable fired...")
+      TRACE("*** main.lua - xstream.ui.launch_model_observable fired...")
       options.launch_model.value = xstream.ui.launch_model_observable.value
     end)
 
     xstream.ui.autostart_observable:add_notifier(function()
-      TRACE("*** main.lua - ui.autostart_observable fired...")
+      TRACE("*** main.lua - xstream.ui.autostart_observable fired...")
       options.autostart.value = xstream.ui.autostart_observable.value
     end)
 
     xstream.ui.suspend_when_hidden_observable:add_notifier(function()
-      TRACE("*** main.lua - ui.suspend_when_hidden_observable fired...")
+      TRACE("*** main.lua - xstream.ui.suspend_when_hidden_observable fired...")
       options.suspend_when_hidden.value = xstream.ui.suspend_when_hidden_observable.value
     end)
 
     xstream.ui.manage_gc_observable:add_notifier(function()
-      TRACE("*** main.lua - ui.manage_gc_observable fired...")
+      TRACE("*** main.lua - xstream.ui.manage_gc_observable fired...")
       options.manage_gc.value = xstream.ui.manage_gc_observable.value
     end)
 
     xstream.ui.show_editor_observable:add_notifier(function()
-      TRACE("*** main.lua - ui.show_editor_observable fired...")
+      TRACE("*** main.lua - xstream.ui.show_editor_observable fired...")
       options.show_editor.value = xstream.ui.show_editor_observable.value
     end)
 
     xstream.ui.tool_options_visible_observable:add_notifier(function()
-      TRACE("*** main.lua - ui.tool_options_visible_observable fired...")
+      TRACE("*** main.lua - xstream.ui.tool_options_visible_observable fired...")
       options.tool_options_visible.value = xstream.ui.tool_options_visible_observable.value
     end)
 
     xstream.ui.model_browser_visible_observable:add_notifier(function()
-      TRACE("*** main.lua - ui.model_browser_visible_observable fired...")
+      TRACE("*** main.lua - xstream.ui.model_browser_visible_observable fired...")
       options.model_browser_visible.value = xstream.ui.model_browser_visible
     end)
 
     xstream.ui.model_args_visible_observable:add_notifier(function()
-      TRACE("*** main.lua - ui.model_args_visible_observable fired...")
+      TRACE("*** main.lua - xstream.ui.model_args_visible_observable fired...")
       options.model_args_visible.value = xstream.ui.model_args_visible
     end)
 
     xstream.ui.presets_visible_observable:add_notifier(function()
-      TRACE("*** main.lua - ui.presets_visible_observable fired...")
+      TRACE("*** main.lua - xstream.ui.presets_visible_observable fired...")
       options.presets_visible.value = xstream.ui.presets_visible
     end)
 
     xstream.ui.favorites_visible_observable:add_notifier(function()
-      TRACE("*** main.lua - ui.favorites_visible_observable fired...")
+      TRACE("*** main.lua - xstream.ui.favorites_visible_observable fired...")
       options.favorites_visible.value = xstream.ui.favorites_visible
     end)
 
     xstream.ui.editor_visible_lines_observable:add_notifier(function()
-      TRACE("*** main.lua - ui.editor_visible_lines_observable fired...")
+      TRACE("*** main.lua - xstream.ui.editor_visible_lines_observable fired...")
       options.editor_visible_lines.value = xstream.ui.editor_visible_lines
     end)
 
-
     xstream.live_coding_observable:add_notifier(function()
-      TRACE("*** main.lua - live_coding_observable fired...")
+      TRACE("*** main.lua - xstream.live_coding_observable fired...")
       options.live_coding.value = xstream.live_coding_observable.value
     end)
 
     xstream.writeahead_factor_observable:add_notifier(function()
-      TRACE("*** main.lua - writeahead_factor_observable fired...")
+      TRACE("*** main.lua - xstream.writeahead_factor_observable fired...")
       options.writeahead_factor.value = xstream.writeahead_factor_observable.value
     end)
 
+    xstream.active_observable:add_notifier(function()
+      TRACE("*** main.lua - xstream.active_observable fired...")
+      register_tool_menu()
+    end)
 
   end
 
@@ -383,7 +414,9 @@ end
 
 function device_param_notifier()
   TRACE("*** xStream - device_param_notifier fired...")
-  xstream.device_param = rns.selected_parameter
+  if xstream then
+    xstream.device_param = rns.selected_parameter
+  end
 end
 
 -------------------------------------------------------------------------------
@@ -410,24 +443,26 @@ end
 
 function playing_notifier()
   TRACE("main - playing_notifier fired...")
-  if not rns.transport.playing then -- autostop
-    if (options.start_option.value ~= xStreamUI.START_OPTION.MANUAL) then
-      xstream:stop()
-    end
-  elseif not xstream.active then -- autostart
+  if xstream then
+    if not rns.transport.playing then -- autostop
+      if (options.start_option.value ~= xStreamUI.START_OPTION.MANUAL) then
+        xstream:stop()
+      end
+    elseif not xstream.active then -- autostart
 
-    if dialog_is_suspended() then
-      return
-    end
+      if dialog_is_suspended() then
+        return
+      end
 
-    if (options.start_option.value ~= xStreamUI.START_OPTION.MANUAL) then
-      if rns.transport.edit_mode then
-        if (options.start_option.value == xStreamUI.START_OPTION.ON_PLAY_EDIT) then
-          xstream:start()
-        end
-      else
-        if (options.start_option.value == xStreamUI.START_OPTION.ON_PLAY) then
-          xstream:start()
+      if (options.start_option.value ~= xStreamUI.START_OPTION.MANUAL) then
+        if rns.transport.edit_mode then
+          if (options.start_option.value == xStreamUI.START_OPTION.ON_PLAY_EDIT) then
+            xstream:start()
+          end
+        else
+          if (options.start_option.value == xStreamUI.START_OPTION.ON_PLAY) then
+            xstream:start()
+          end
         end
       end
     end
@@ -463,16 +498,6 @@ renoise.tool().app_new_document_observable:add_notifier(function()
   end
 
 end)
-
---------------------------------------------------------------------------------
--- tool menu entry
-
-renoise.tool():add_menu_entry{
-  name = "Main Menu:Tools:"..TOOL_NAME,
-  invoke = function() 
-    show() 
-  end
-}
 
 --------------------------------------------------------------------------------
 -- keyboard/midi mappings
