@@ -1164,7 +1164,7 @@ function xStreamUI:build_args()
       bitmap = "./source/icons/bind_or_poll.bmp",
       mode = "body_color",
       --width = xStreamUI.BITMAP_BUTTON_W,
-      height = xStreamUI.BITMAP_BUTTON_H,
+      height = xStreamUI.BITMAP_BUTTON_H-1,
     }
 
     local view_label_rack = vb:row{
