@@ -1189,21 +1189,21 @@ function xStream:get_content(pos,num_lines,xpos)
     end
 
     -- process the callback -------------------------------
-
+    local buffer_content = nil
     local success,err = pcall(function()
-      self.buffer[line_index] = callback(line_index,xLine(xline),xSongPos(read_pos))
+      buffer_content = callback(line_index,xLine(xline),xSongPos(read_pos))
     end)
     if not success and err then
       LOG("ERROR: please review the callback function - "..err)
       -- TODO display runtime errors separately (runtime_status)
       self.callback_status_observable.value = err
-      self.buffer[line_index] = xLine({})
+      --self.buffer[line_index] = xLine({})
     elseif success then
       -- we might have redefined the xline (or parts of it) in our  
       -- callback method - convert everything into class instances...
       -- TODO check against 'user_redefined_xline'
       local success,err = pcall(function()
-        self.buffer[line_index] = xLine.apply_descriptor(self.buffer[line_index])
+        self.buffer[line_index] = xLine.apply_descriptor(buffer_content)
       end)
       if not success and err then
         LOG("ERROR: an error occurred while converting xline - "..err)
