@@ -11,7 +11,7 @@ xEffectColumn
 class 'xStreamArg'
 
 -- string constants, saved into definitions 
-xStreamArg.DISPLAYS = {"float","hex","integer","percent","note","popup","chooser","switch","minislider","rotary","checkbox","textfield"}
+xStreamArg.DISPLAYS = {"float","hex","integer","percent","note","popup","chooser","switch","minislider","rotary","checkbox","textfield","value"}
 xStreamArg.DISPLAY_AS = {
   FLOAT = 1,
   HEX = 2,
@@ -25,6 +25,7 @@ xStreamArg.DISPLAY_AS = {
   ROTARY = 10,
   CHECKBOX = 11,
   TEXTFIELD = 12,
+  VALUE = 13,
 }
 
 xStreamArg.BASE_TYPES = {"number","boolean","string"}
@@ -66,6 +67,7 @@ xStreamArg.NUMBER_DISPLAYS = {
   xStreamArg.DISPLAY_AS.SWITCH,
   xStreamArg.DISPLAY_AS.MINISLIDER,
   xStreamArg.DISPLAY_AS.ROTARY,
+  xStreamArg.DISPLAY_AS.VALUE,
 }
 
 xStreamArg.BOOLEAN_DISPLAYS = {

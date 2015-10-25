@@ -1269,10 +1269,20 @@ function xStreamUI:build_args()
           view_bop,
         })
       else -- floating point (default to minislider)
+        
         view:add_child(vb:row{
           tooltip = arg.description,
           view_label_rack,
         })
+
+        local readout = vb:valuefield{
+          tostring = fn_tostring,
+          tonumber = fn_tonumber,
+          value = arg.value,
+          min = arg.properties.min or xStreamUI.ARGS_MIN_VALUE,
+          max = arg.properties.max or xStreamUI.ARGS_MAX_VALUE,
+          bind = arg.observable,
+        }
 
         display_as = display_as or xStreamArg.DISPLAY_AS.MINISLIDER
 
@@ -1290,6 +1300,7 @@ function xStreamUI:build_args()
               bind = arg.observable,
             },
             view_bop,
+            readout,
           })
         elseif (display_as == xStreamArg.DISPLAY_AS.ROTARY) then
           view:add_child(vb:row{
@@ -1301,18 +1312,22 @@ function xStreamUI:build_args()
               bind = arg.observable,
             },
             view_bop,
+            readout,
+          })
+        elseif (display_as == xStreamArg.DISPLAY_AS.FLOAT) then
+          view:add_child(vb:row{
+            style = "plain",
+            readout,
+            view_bop,
+          })
+        elseif (display_as == xStreamArg.DISPLAY_AS.VALUE) then
+          view:add_child(vb:value{
+            tostring = fn_tostring,
+            value = arg.value,
+            bind = arg.observable,
           })
         end
 
-        -- add value readout after control
-        view:add_child(vb:valuefield{
-          tostring = fn_tostring,
-          tonumber = fn_tonumber,
-          value = arg.value,
-          min = arg.properties.min or xStreamUI.ARGS_MIN_VALUE,
-          max = arg.properties.max or xStreamUI.ARGS_MAX_VALUE,
-          bind = arg.observable,
-        })
       end
     elseif (type(arg.observable) == "ObservableBoolean") then
       display_as = display_as or xStreamArg.DISPLAY_AS.CHECKBOX
