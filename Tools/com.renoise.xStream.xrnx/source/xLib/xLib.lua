@@ -271,6 +271,8 @@ function xLib.serialize_table(t,max_depth)
   local function serialize(obj)
     local succeeded, result = pcall(tostring, obj)
     if succeeded then
+      -- replace return codes
+      result=string.gsub(result,"\n","\\n") 
       return result 
     else
      return "???"
