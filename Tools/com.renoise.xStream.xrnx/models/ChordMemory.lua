@@ -397,7 +397,6 @@ if (args.mode == 1) then
 
   -- initialize data
   if not data.recent_col_idx then
-    print("initialize data")
     data.notes = {} -- note pitches
     data.lines = {} -- note xinc-value
     data.columns = {} -- note column indices
@@ -406,8 +405,6 @@ if (args.mode == 1) then
   local least_vol,most_vol = 0x80,0x00
   local least_pan,most_pan = 0x80,0x00
   local least_dly,most_dly = 0xFF,0x00
-  
-  print("xinc",xinc)
   
   for col_idx = 1,12 do
     local xcol = xline.note_columns[col_idx]
@@ -459,7 +456,6 @@ if (args.mode == 1) then
       going_upwards = (data.notes[k] > data.notes[k-1])
     end
   end
-  print("line_spacing",line_spacing)
   
   -- update arguments as information is received...
   
