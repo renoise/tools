@@ -1432,7 +1432,7 @@ function NTrapUI:update_phrase_bar()
     local is_selected = (k == self._ntrap._phrase_idx)
 
     local is_disabled = nil
-    if (RNS_BETA) then
+    if (renoise.API_VERSION > 4) then
       is_disabled = 
         (instr.phrase_playback_mode == renoise.Instrument.PHRASES_OFF)
     else

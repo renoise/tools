@@ -16,10 +16,6 @@ http://forum.renoise.com/index.php/topic/43047-new-tool-30-noodletrap/
 
 --==============================================================================
 
--- TODI fix once API is raised to v5 
-RNS_BETA = (renoise.API_VERSION == 4) and
-  not (renoise.RENOISE_VERSION):find("3.0")
-
 class 'NTrap'
 
 function NTrap:__init(prefs)
@@ -163,7 +159,7 @@ function NTrap:prepare_recording()
 
   local instr = self:_get_instrument()
 
-  if (RNS_BETA) then
+  if (renoise.API_VERSION >= 5) then
     instr.phrase_playback_mode = renoise.Instrument.PHRASES_OFF
   else
     instr.phrase_playback_enabled = false
@@ -352,7 +348,7 @@ function NTrap:_reset_recording()
 
   local instr = self:_get_instrument()
 
-  if (RNS_BETA) then
+  if (renoise.API_VERSION > 4) then
     instr.phrase_playback_mode = renoise.Instrument.PHRASES_PLAY_KEYMAP
   else
     instr.phrase_playback_enabled = true
@@ -868,32 +864,49 @@ function NTrap:_attach_to_phrase(new_song,phrase_idx)
     return
   end
 
-  self._phrase_notifiers:insert(phrase.mapping.key_tracking_observable)
-  phrase.mapping.key_tracking_observable:add_notifier(self,
+  self:attach_to_phrase_mapping()
+
+  self._phrase_idx = phrase_idx
+  self._update_requested = true
+
+end
+
+--------------------------------------------------------------------------------
+
+function NTrap:attach_to_phrase_mapping(phrase_mapping)
+
+  if not phrase_mapping then
+    phrase_mapping = self:_get_phrase_mapping()
+  end
+
+  if not phrase_mapping then
+    LOG("NTrap: could not attach to phrase mapping")
+    return
+  end
+
+  self._phrase_notifiers:insert(phrase_mapping.key_tracking_observable)
+  phrase_mapping.key_tracking_observable:add_notifier(self,
     function()
       --print("*** NTrap:key_tracking_observable fired...")
       self._update_requested = true
     end
   )
 
-  self._phrase_notifiers:insert(phrase.mapping.looping_observable)
-  phrase.mapping.looping_observable:add_notifier(self,
+  self._phrase_notifiers:insert(phrase_mapping.looping_observable)
+  phrase_mapping.looping_observable:add_notifier(self,
     function()
       --print("*** NTrap:looping_observable fired...")
       self._update_requested = true
     end
   )
 
-  self._phrase_notifiers:insert(phrase.mapping.note_range_observable)
-  phrase.mapping.note_range_observable:add_notifier(self,
+  self._phrase_notifiers:insert(phrase_mapping.note_range_observable)
+  phrase_mapping.note_range_observable:add_notifier(self,
     function()
       --print("*** NTrap:note_range_observable fired...")
       self._update_requested = true
     end
   )
-
-  self._phrase_idx = phrase_idx
-  self._update_requested = true
 
 end
 
@@ -1191,8 +1204,8 @@ end
 
 
 --------------------------------------------------------------------------------
-
 --- Create a virtual phrase object based on current criteria
+-- TODO (refactor) use the xPhraseMgr class 
 -- @return table or nil (if not able to find room)
 -- @return int, the index where we can insert
 
@@ -1292,6 +1305,32 @@ function NTrap:_get_phrase_length()
 end
 
 --------------------------------------------------------------------------------
+-- @return renoise.InstrumentPhrase or nil
+
+function NTrap:_get_phrase_mapping()
+  TRACE("NTrap:_get_phrase_mapping()")
+
+  local phrase = self:_get_phrase()
+  if phrase then
+    if (renoise.API_VERSION < 5) then
+      return phrase.mapping
+    else
+      -- a workaround: we can't probe a phrase for 
+      -- mappings without throwing an error...
+      local instr = self:_get_instrument()
+      if not table.is_empty(instr.phrase_mappings) then
+        for k,v in ipairs(instr.phrase_mappings) do
+          if (v.phrase == phrase) then
+            return v
+          end
+        end
+      end
+    end
+  end
+
+end
+
+--------------------------------------------------------------------------------
 
 -- @return int
 
@@ -1308,15 +1347,14 @@ function NTrap:_get_phrase_lpb()
 end
 
 --------------------------------------------------------------------------------
-
 -- @return bool
 
 function NTrap:_get_phrase_loop()
   TRACE("NTrap:_get_phrase_loop()")
 
-  local phrase = self:_get_phrase()
-  if phrase then
-    return phrase.mapping.looping
+  local phrase_mapping = self:_get_phrase_mapping()
+  if phrase_mapping then
+    return phrase_mapping.looping
   end
   
   return NTrapPrefs.LOOP_DEFAULT 
@@ -1330,9 +1368,9 @@ end
 function NTrap:_get_phrase_range()
   TRACE("NTrap:_get_phrase_range()")
 
-  local phrase = self:_get_phrase()
-  if phrase then
-    local range = phrase.mapping.note_range
+  local phrase_mapping = self:_get_phrase_mapping()
+  if phrase_mapping then
+    local range = phrase_mapping.note_range
     return range[2]-range[1]+1
   end
   
@@ -1347,9 +1385,9 @@ end
 function NTrap:_get_phrase_tracking()
   TRACE("NTrap:_get_phrase_tracking()")
 
-  local phrase = self:_get_phrase()
-  if phrase then
-    return phrase.mapping.key_tracking
+  local phrase_mapping = self:_get_phrase_mapping()
+  if phrase_mapping then
+    return phrase_mapping.key_tracking
   end
   
   return NTrapPrefs.PHRASE_TRACKING_DEFAULT
@@ -1513,6 +1551,12 @@ function NTrap:_process_recording(events)
   local phrase_lps = get_phrase_lps(self._settings)
   local instr = self:_get_instrument()
   local phrase = instr:insert_phrase_at(vphrase_idx)
+  if (renoise.API_VERSION > 4) then
+    -- need to create mapping
+    print("phrase",phrase)
+    local pmap = instr:insert_phrase_mapping_at(#instr.phrase_mappings+1,phrase)
+    self:attach_to_phrase_mapping(pmap)
+  end
   phrase.mapping.note_range = {
     vphrase.mapping.note_range[1],
     vphrase.mapping.note_range[2]
