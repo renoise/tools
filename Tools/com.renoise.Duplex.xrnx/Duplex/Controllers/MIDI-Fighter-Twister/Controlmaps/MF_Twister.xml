@@ -1,0 +1,104 @@
+<Device>
+  <Name>MIDI Fighter Twister</Name>
+  <Author>danoise</Author>
+  <Description>Controlmap for MIDI Fighter Twister (Bank 1, factory settings)</Description>
+	<Parameters>
+		<Row>
+			<Column>
+				<Group name="LeftButtons" orientation="vertical">
+					<Param value="CC#8|Ch4" type="button" maximum="127" minimum="0"/>
+					<Param value="CC#9|Ch4" type="button" maximum="127" minimum="0"/>
+					<Param value="CC#10|Ch4" type="button" maximum="127" minimum="0"/>
+				</Group>
+			</Column>
+			<Column>
+				<Row>
+					<Group name="Encoder1" orientation="vertical" columns="1">
+					  <Param value="CC#0|Ch0" maximum="127" minimum="0" type="dial" size="1.5" />
+					  <Param value="CC#1|Ch1" maximum="127" minimum="0" type="button" size="1.5" aspect="0.2" />
+					</Group>
+
+					<Group name="Encoder2" orientation="vertical" columns="1">
+					  <Param value="CC#1|Ch0" maximum="127" minimum="0" type="dial" size="1.5" />
+					  <Param value="CC#1|Ch1" maximum="127" minimum="0" type="button" size="1.5" aspect="0.2" />
+					</Group>
+
+					<Group name="Encoder3" orientation="vertical" columns="1">
+					  <Param value="CC#2|Ch0" maximum="127" minimum="0" type="dial" size="1.5" />
+					  <Param value="CC#2|Ch1" maximum="127" minimum="0" type="button" size="1.5" aspect="0.2" />
+					</Group>
+
+					<Group name="Encoder4" orientation="vertical" columns="1">
+					  <Param value="CC#3|Ch0" maximum="127" minimum="0" type="dial" size="1.5" />
+					  <Param value="CC#3|Ch1" maximum="127" minimum="0" type="button" size="1.5" aspect="0.2" />
+					</Group>
+				</Row>
+
+				<Row>
+					<Group name="Encoder5" orientation="vertical" columns="1">
+					  <Param value="CC#4|Ch0" maximum="127" minimum="0" type="dial" size="1.5"/>
+					  <Param value="CC#4|Ch1" maximum="127" minimum="0" type="button" size="1.5" aspect="0.2"/>
+					</Group>
+					<Group name="Encoder6" orientation="vertical" columns="1">
+					  <Param value="CC#5|Ch0" maximum="127" minimum="0" type="dial" size="1.5" />
+					  <Param value="CC#5|Ch1" maximum="127" minimum="0" type="button" size="1.5" aspect="0.2"/>
+					</Group>
+					<Group name="Encoder7" orientation="vertical" columns="1">
+					  <Param value="CC#6|Ch0" maximum="127" minimum="0" type="dial" size="1.5" />
+					  <Param value="CC#6|Ch1" maximum="127" minimum="0" type="button" size="1.5" aspect="0.2"/>
+					</Group>
+					<Group name="Encoder8" orientation="vertical" columns="1">
+					  <Param value="CC#7|Ch0" maximum="127" minimum="0" type="dial" size="1.5" />
+					  <Param value="CC#7|Ch1" maximum="127" minimum="0" type="button" size="1.5" aspect="0.2"/>
+					</Group>
+				</Row>
+
+				<Row>
+					<Group name="Encoder9" orientation="vertical" columns="1">
+					  <Param value="CC#8|Ch0" maximum="127" minimum="0" type="dial" size="1.5" />
+					  <Param value="CC#8|Ch1" maximum="127" minimum="0" type="button" size="1.5" aspect="0.2"/>
+					</Group>
+					<Group name="Encoder10" orientation="vertical" columns="1">
+					  <Param value="CC#9|Ch0" maximum="127" minimum="0" type="dial" size="1.5" />
+					  <Param value="CC#9|Ch1" maximum="127" minimum="0" type="button" size="1.5" aspect="0.2"/>
+					</Group>
+					<Group name="Encoder11" orientation="vertical" columns="1">
+					  <Param value="CC#10|Ch0" maximum="127" minimum="0" type="dial" size="1.5" />
+					  <Param value="CC#10|Ch1" maximum="127" minimum="0" type="button" size="1.5" aspect="0.2"/>
+					</Group>
+					<Group name="Encoder12" orientation="vertical" columns="1">
+					  <Param value="CC#11|Ch0" maximum="127" minimum="0" type="dial" size="1.5" />
+					  <Param value="CC#11|Ch1" maximum="127" minimum="0" type="button" size="1.5" aspect="0.2"/>
+					</Group>
+				</Row>
+
+				<Row>
+					<Group name="Encoder13" orientation="vertical" columns="1">
+					  <Param value="CC#12|Ch0" maximum="127" minimum="0" type="dial" size="1.5" />
+					  <Param value="CC#12|Ch1" maximum="127" minimum="0" type="button" size="1.5" aspect="0.2"/>
+					</Group>
+					<Group name="Encoder14" orientation="vertical" columns="1">
+					  <Param value="CC#13|Ch0" maximum="127" minimum="0" type="dial" size="1.5" />
+					  <Param value="CC#13|Ch1" maximum="127" minimum="0" type="button" size="1.5" aspect="0.2"/>
+					</Group>
+					<Group name="Encoder15" orientation="vertical" columns="1">
+					  <Param value="CC#14|Ch0" maximum="127" minimum="0" type="dial" size="1.5" />
+					  <Param value="CC#14|Ch1" maximum="127" minimum="0" type="button" size="1.5" aspect="0.2"/>
+					</Group>
+					<Group name="Encoder16" orientation="vertical" columns="1">
+					  <Param value="CC#15|Ch0" maximum="127" minimum="0" type="dial" size="1.5" />
+					  <Param value="CC#15|Ch1" maximum="127" minimum="0" type="button" size="1.5" aspect="0.2"/>
+					</Group>
+				</Row>
+			</Column>
+			<Column>
+				<Group name="RightButtons" orientation="vertical">
+					<Param value="CC#11|Ch4" type="button" maximum="127" minimum="0"/>
+					<Param value="CC#12|Ch4" type="button" maximum="127" minimum="0"/>
+					<Param value="CC#13|Ch4" type="button" maximum="127" minimum="0"/>
+				</Group>
+			</Column>
+		</Row>
+
+	</Parameters>
+</Device>
