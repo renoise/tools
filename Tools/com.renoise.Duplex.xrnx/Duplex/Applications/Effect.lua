@@ -363,7 +363,7 @@ function Effect:update()
 
       if self._param_active[control_index] then
         self._param_active[control_index]:set(self.palette.parameter_on)
-        print("set to on",self._param_active[control_index],control_index)
+        --print("set to on",self._param_active[control_index],control_index)
       end
 
     else
@@ -377,7 +377,7 @@ function Effect:update()
 
       if self._param_active[control_index] then
         self._param_active[control_index]:set(self.palette.parameter_off)
-        print("set to off",self._param_active[control_index],control_index)
+        --print("set to off",self._param_active[control_index],control_index)
       end
 
     end
@@ -515,7 +515,7 @@ function Effect:_build_app()
       c.palette.tip = table.rcopy(self.palette.slider_tip)
       c.palette.track = table.rcopy(self.palette.slider_track)
     elseif distributed_group then
-      c.group_name = params[control_index].group_name
+      c.group_name = params[control_index].xarg.group_name
       c:set_pos(map.index)
       c:set_size(1)
       c.toggleable = false
@@ -825,7 +825,6 @@ function Effect:_build_app()
   if (map.group_name) then
     self._param_active = {}
     local params = cm:get_params(map.group_name,map.index)
-    print("params",#params)
     for control_index = 1,#params do
       local c = UILed(self)
       c.group_name = params[control_index].xarg.group_name
