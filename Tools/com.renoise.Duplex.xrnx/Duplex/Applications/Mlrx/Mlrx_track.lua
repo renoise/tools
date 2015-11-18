@@ -1354,7 +1354,8 @@ end
 function Mlrx_track:attach_to_phrase()
   TRACE("Mlrx_track:attach_to_phrase")
 
-  self.phrase,_phrase_index_ = self:get_phrase_ref(self.note_pitch)
+  local phrase_index = nil
+  self.phrase,phrase_index = self:get_phrase_ref(self.note_pitch)
   --print("*** attach_to_phrase - self.phrase",self.phrase,"self.note_pitch",self.note_pitch)
 
   if not self.phrase then
@@ -1572,9 +1573,11 @@ function Mlrx_track:attach_to_instr(first_run)
   -- attach to instrument only when there is something to attach to
   self.instr = rns.instruments[self.rns_instr_idx]
 
+  local playback_enabled = get_phrase_playback_enabled(self.instr)
+
   local has_phrases,has_samples = nil,nil
   if self.instr then
-    has_phrases = self.instr.phrase_playback_enabled and 
+    has_phrases = playback_enabled and 
       not table.is_empty(self.instr.phrases)
     has_samples = not table.is_empty(self.instr.samples)
   else
@@ -1598,15 +1601,25 @@ function Mlrx_track:attach_to_instr(first_run)
   obs:add_notifier(fn)
   self._instr_observables:insert({obs,fn})
 
-  local fn = function(param)
-    TRACE("Mlrx_track:instr.phrase_playback_enabled_observable fired...")
+  -- depends on API version
+  if (renoise.API_VERSION < 5) then
+    local fn = function(param)
+      TRACE("Mlrx_track:instr.phrase_playback_enabled_observable fired...")
+      self:attach_to_instr_task()
+    end
+    local obs = self.instr.phrase_playback_enabled_observable
+    obs:add_notifier(fn)
+    self._instr_observables:insert({obs,fn})
+  else
+    local fn = function(param)
+      TRACE("Mlrx_track:instr.phrase_playback_mode_observable fired...")
+      self:attach_to_instr_task()
+    end
+    local obs = self.instr.phrase_playback_mode_observable
+    obs:add_notifier(fn)
+    self._instr_observables:insert({obs,fn})
 
-
-    self:attach_to_instr_task()
   end
-  local obs = self.instr.phrase_playback_enabled_observable
-  obs:add_notifier(fn)
-  self._instr_observables:insert({obs,fn})
 
   local fn = function(param)
     TRACE("Mlrx_track:instr.samples_observable fired...",param)
@@ -1677,21 +1690,27 @@ function Mlrx_track:attach_to_instr(first_run)
 
   -- handle when phrase mappings are moved around, resized
   for _,v in ipairs(self.instr.phrases) do
-    local fn = function(param)
-      TRACE("Mlrx_track:phrase.mapping.note_range_observable fired...",param)
-      for __,v2 in ipairs(self.instr.phrases) do
-        if rawequal(v,v2) and not self.phrase then
-          self:attach_to_phrase()
-        end
-        if rawequal(v,v2) and rawequal(v,self.phrase) then
-          self:set_transpose_task(0)
-          self.main:update_linesync(self)
+    if (renoise.API_VERSION > 4) and (#self.instr.phrase_mappings == 0) then
+      -- API v5 can have unmapped phrases
+      -- TODO when API is fixed, allow quering each phrase for mapping
+      -- (right now, calling v.mapping will throw an error)
+    else
+      local fn = function(param)
+        TRACE("Mlrx_track:phrase.mapping.note_range_observable fired...",param)
+        for __,v2 in ipairs(self.instr.phrases) do
+          if rawequal(v,v2) and not self.phrase then
+            self:attach_to_phrase()
+          end
+          if rawequal(v,v2) and rawequal(v,self.phrase) then
+            self:set_transpose_task(0)
+            self.main:update_linesync(self)
+          end
         end
       end
+      local obs = v.mapping.note_range_observable
+      obs:add_notifier(fn)
+      self._instr_observables:insert({obs,fn})
     end
-    local obs = v.mapping.note_range_observable
-    obs:add_notifier(fn)
-    self._instr_observables:insert({obs,fn})
   end
 
   --print("*** self.instr.phrase_playback_enabled",self.instr.phrase_playback_enabled)
@@ -1985,7 +2004,8 @@ function Mlrx_track:toggle_sync()
   end
 
   --print("*** toggle_sync - self.phrase",self.phrase)
-  if self.phrase and self.instr.phrase_playback_enabled then
+  --if self.phrase and self.instr.phrase_playback_enabled then
+  if self.phrase and get_phrase_playback_enabled(self.instr) then
     return
   end
   
@@ -2286,7 +2306,7 @@ end
 
 function Mlrx_track:select_phrase(phrase)
 
-  self.instr.phrase_playback_enabled = true
+  set_phrase_playback_enabled(self.instr,true)
   if rawequal(self.instr,rns.selected_instrument) then
     rns.selected_phrase_index = #self.instr.phrases
   end
@@ -2356,11 +2376,10 @@ function Mlrx_track:toggle_phrase_mode()
 
   if self.instr then
 
-    local mode = self.instr.phrase_playback_enabled
-    self.instr.phrase_playback_enabled = not mode
-
-    if not self.instr.phrase_playback_enabled then
-      -- phrase disabled, transpose into basenote of sample 
+    local phrase_enabled = get_phrase_playback_enabled(self.instr)
+    set_phrase_playback_enabled(self.instr,not phrase_enabled)
+    if not phrase_enabled then
+      --print("phrase disabled, transpose into basenote of sample")
       local sample_ref = self:get_sample_ref(self.note_pitch)
       if sample_ref then -- adjust to basenote
         local new_pitch = sample_ref.sample_mapping.base_note
@@ -2371,7 +2390,7 @@ function Mlrx_track:toggle_phrase_mode()
         end
       end
     else
-      -- phrase enabled, but does the instrument have any phrases?
+      --print("phrase enabled, but does the instrument have any phrases?")
       if table.is_empty(self.instr.phrases) then
         local msg = "Message from mlrx: this instrument does not contain any phrases. "
                   .."Press and hold the PHRASE button to record the phrase (when playing), "
@@ -2386,11 +2405,16 @@ function Mlrx_track:toggle_phrase_mode()
         phrase_ref = self.instr.phrases[#self.instr.phrases]
       end
       if phrase_ref then -- adjust to basenote
-        local new_pitch = phrase_ref.mapping.base_note
-        --print("new_pitch",new_pitch,"self.note_pitch",self.note_pitch)
-        if (new_pitch ~= self.note_pitch) then
-          self.note_pitch = new_pitch
-          --self:set_transpose(0)
+
+        if (renoise.API_VERSION > 4) and (#self.instr.phrase_mappings == 0) then
+          -- TODO support un/mapped phrases in API v5
+        else
+          local new_pitch = phrase_ref.mapping.base_note
+          --print("new_pitch",new_pitch,"self.note_pitch",self.note_pitch)
+          if (new_pitch ~= self.note_pitch) then
+            self.note_pitch = new_pitch
+            --self:set_transpose(0)
+          end
         end
       end
       
@@ -2670,7 +2694,8 @@ function Mlrx_track:set_transpose(val)
   --print("*** set_transpose - new_pitch",new_pitch)
 
   if self.instr then
-    if self.instr.phrase_playback_enabled then
+    local phrase_enabled = get_phrase_playback_enabled(self.instr)
+    if phrase_enabled then
       -- check if we transposed "into" a phrase
       local phrase,phrase_index = self:get_phrase_ref(new_pitch)
       if not phrase and self.phrase then
@@ -2696,7 +2721,8 @@ function Mlrx_track:set_transpose(val)
     end
 
     local using_phrase = self.phrase
-    if not self.instr.phrase_playback_enabled then
+    local phrase_enabled = get_phrase_playback_enabled(self.instr)
+    if not phrase_enabled then
       using_phrase = false
     end
 

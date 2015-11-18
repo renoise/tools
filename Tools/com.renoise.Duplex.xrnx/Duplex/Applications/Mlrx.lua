@@ -1717,7 +1717,7 @@ function Mlrx:_build_app()
     end
     c.on_hold = function()
       local trk = self.tracks[self.selected_track]
-      if trk.phrase and trk.instr.phrase_playback_enabled then
+      if trk.phrase and get_phrase_playback_enabled(trk.instr) then
         -- align transpose with phrase basenote 
         trk.note_pitch = trk.phrase.mapping.base_note
       elseif trk.sample then
@@ -3596,7 +3596,7 @@ function Mlrx:on_host_tempo_change()
   for _,v in ipairs(self.tracks) do
     if v.sample and not v.sample.beat_sync_enabled then
       v:set_transpose_task(0)
-    elseif v.phrase and v.instr.phrase_playback_enabled then
+    elseif v.phrase and get_phrase_playback_enabled(v.instr) then
       v:set_transpose_task(0)
     end
     v:determine_writeahead()

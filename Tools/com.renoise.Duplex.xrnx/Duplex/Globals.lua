@@ -126,7 +126,8 @@ HARMONIC_SCALES = {
   ["Natural Minor"] =       { index=3, keys={1,0,1,1,0,1,0,1,1,0,1,0}, count=7,  },
   ["Pentatonic Major"] =    { index=4, keys={1,0,1,0,1,0,0,1,0,1,0,0}, count=5,  },
   ["Pentatonic Minor"] =    { index=5, keys={1,0,0,1,0,1,0,1,0,0,1,0}, count=5,  },
-  ["Egyptian Pentatonic"] = { index=6, keys={1,0,1,0,0,1,0,1,0,0,1,0}, count=5,  },
+  ["Egyptian Pentatonic"] = { index=6, keys={1,0,1,0,0,1,0,1,0,0,1,0}, count=5,  }, -- obsolete since API v5
+  ["Pentatonic Egyptian"] = { index=6, keys={1,0,1,0,0,1,0,1,0,0,1,0}, count=5,  }, 
   ["Blues Major"] =         { index=7, keys={1,0,1,1,1,0,0,1,0,1,0,0}, count=6,  },
   ["Blues Minor"] =         { index=8, keys={1,0,0,1,0,1,1,1,0,0,1,0}, count=6,  },
   ["Whole Tone"] =          { index=9, keys={1,0,1,0,1,0,1,0,1,0,1,0}, count=6,  },
@@ -146,8 +147,9 @@ HARMONIC_SCALES = {
   ["Locrian"] =             { index=23, keys={1,1,0,1,0,1,1,0,1,0,1,0}, count=7,  },
   ["Locrian Major"] =       { index=24, keys={1,0,1,0,1,1,1,0,1,0,1,0}, count=7,  },
   ["Super Locrian"] =       { index=25, keys={1,1,0,1,1,0,1,0,1,0,1,0}, count=7,  },
-  ["Major Neapolitan"] =    { index=26, keys={1,1,0,1,0,1,0,1,0,1,0,1}, count=7,  },
-  ["Minor Neapolitan"] =    { index=27, keys={1,1,0,1,0,1,0,1,1,0,0,1}, count=7,  },
+  ["Major Neapolitan"] =    { index=26, keys={1,1,0,1,0,1,0,1,0,1,0,1}, count=7,  }, -- obsolete since API v5
+  ["Minor Neapolitan"] =    { index=27, keys={1,1,0,1,0,1,0,1,1,0,0,1}, count=7,  }, -- obsolete since API v5
+  ["Neapolitan Minor"] =    { index=27, keys={1,1,0,1,0,1,0,1,1,0,0,1}, count=7,  },
   ["Romanian Minor"] =      { index=28, keys={1,0,1,1,0,0,1,1,0,1,1,0}, count=7,  },
   ["Spanish Gypsy"] =       { index=29, keys={1,1,0,0,1,1,0,1,1,0,0,1}, count=7,  },
   ["Hungarian Gypsy"] =     { index=30, keys={1,0,1,1,0,0,1,1,1,0,0,1}, count=7,  },
@@ -158,6 +160,15 @@ HARMONIC_SCALES = {
   ["Spanish Eight-Tone"] =  { index=35, keys={1,1,0,1,1,1,1,0,1,0,1,0}, count=8,  },
   ["Nine-Tone Scale"] =     { index=36, keys={1,0,1,1,1,0,1,1,1,1,0,1}, count=9,  },
 }
+
+if (renoise.API_VERSION > 4) then
+  HARMONIC_SCALES["Pentatonic Egyptian"] = table.rcopy(HARMONIC_SCALES["Egyptian Pentatonic"])  
+  HARMONIC_SCALES["Neapolitan Major"] = table.rcopy(HARMONIC_SCALES["Major Neapolitan"])  
+  HARMONIC_SCALES["Neapolitan Minor"] = table.rcopy(HARMONIC_SCALES["Minor Neapolitan"])  
+  HARMONIC_SCALES["Egyptian Pentatonic"] = nil
+  HARMONIC_SCALES["Major Neapolitan"] = nil
+  HARMONIC_SCALES["Minor Neapolitan"] = nil
+end
 
 --------------------------------------------------------------------------------
 -- helper functions
@@ -374,6 +385,26 @@ function determine_track_type(track_index)
     return renoise.Track.TRACK_TYPE_MASTER
   elseif (track_index <= #tracks) then
     return renoise.Track.TRACK_TYPE_SEND
+  end
+end
+
+--- implementation depends on API version
+function get_phrase_playback_enabled(instr)
+  if (renoise.API_VERSION > 4) then
+    return not (instr.phrase_playback_mode == renoise.Instrument.PHRASES_OFF)
+  else
+    return instr.phrase_playback_enabled 
+  end
+end
+
+function set_phrase_playback_enabled(instr,bool)
+  if (renoise.API_VERSION > 4) then
+    -- this is a v4 method, so we assume Keymap trigger mode 
+    local enum = bool and renoise.Instrument.PHRASES_PLAY_KEYMAP
+      or renoise.Instrument.PHRASES_OFF
+    instr.phrase_playback_mode = enum
+  else
+    instr.phrase_playback_enabled = bool
   end
 end
 

@@ -712,7 +712,9 @@ function Keyboard:_maintain_held_notes(voice_count,instr_idx,grid_index,velocity
   local rns = renoise.song()
 
   -- if hold mode, compare number of voices
-  local hold_mode = rns.instruments[instr_idx].trigger_options.hold
+  local hold_mode = (renoise.API_VERSION < 5) and
+    rns.instruments[instr_idx].trigger_options.hold or false
+
   if hold_mode then 
     local voice_diff = #self.voice_mgr.playing - voice_count
     --print("*** Keyboard:trigger - held notes PRE",rprint(self.held_notes))
@@ -2170,24 +2172,26 @@ function Keyboard:attach_to_instrument()
   self.scale_key = instr.trigger_options.scale_key
 
   -- update when scale mode is enabled/disabled
-  instr.trigger_options.hold_observable:add_notifier(
-    function(notifier)
-      --print("hold_observable fired...")
-      if not instr.trigger_options.hold then
-        -- turn off held voices 
-        local instr_idx = self:get_instrument_index() 
-        for k,v in ipairs(self.held_notes) do
-          local grid_notes = self._layout:get_pitches_from_index(v.grid_index)
-          for k2,v2 in ipairs(grid_notes) do
-            self:trigger(false,instr_idx,v2,v.velocity,v.grid_index)
+  if (renoise.API_VERSION < 5) then
+    instr.trigger_options.hold_observable:add_notifier(
+      function(notifier)
+        --print("hold_observable fired...")
+        if not instr.trigger_options.hold then
+          -- turn off held voices 
+          local instr_idx = self:get_instrument_index() 
+          for k,v in ipairs(self.held_notes) do
+            local grid_notes = self._layout:get_pitches_from_index(v.grid_index)
+            for k2,v2 in ipairs(grid_notes) do
+              self:trigger(false,instr_idx,v2,v.velocity,v.grid_index)
+            end
           end
-        end
-        self.held_notes = table.create()
+          self.held_notes = table.create()
 
-        self._update_grid_requested = true
+          self._update_grid_requested = true
+        end
       end
-    end
-  )
+    )
+  end
 
   self:set_grid_layout(self.options.grid_layout.value)
 

@@ -71,21 +71,23 @@ function OscVoiceMgr:trigger(app,instr_idx,track_idx,pitch,velocity,keep,is_midi
 
   -- if the instrument is set to hold mode, toggle the note 
   --print("hold_trigger_enabled,#self.playing",hold_trigger_enabled,#self.playing)
-  if instr.trigger_options.hold then
-  	for k,v in ipairs(self.playing) do
-      --print("v.instr_idx,instr_idx",v.instr_idx,instr_idx)
-      --print("v.pitch,pitch.v.pitch",pitch)
-  		if (v.instr_idx == instr_idx) and
-        (v.pitch == pitch)
-      then
-        local force_release = true
-  			--self:release(app,instr_idx,v.track_idx,v.pitch,v.velocity,v.is_midi,v.channel,force_release)
-        self:_notify_applications("remove",v,k)
-        self.playing:remove(k)
-  			--print("*** OscVoiceMgr cancel a voice due to hold - number of voices remaining: #",#self.playing)
-        hold_toggled_off = true
-  		end
-  	end
+  if (renoise.API_VERSION < 5) then
+    if instr.trigger_options.hold then
+      for k,v in ipairs(self.playing) do
+        --print("v.instr_idx,instr_idx",v.instr_idx,instr_idx)
+        --print("v.pitch,pitch.v.pitch",pitch)
+        if (v.instr_idx == instr_idx) and
+          (v.pitch == pitch)
+        then
+          local force_release = true
+          --self:release(app,instr_idx,v.track_idx,v.pitch,v.velocity,v.is_midi,v.channel,force_release)
+          self:_notify_applications("remove",v,k)
+          self.playing:remove(k)
+          --print("*** OscVoiceMgr cancel a voice due to hold - number of voices remaining: #",#self.playing)
+          hold_toggled_off = true
+        end
+      end
+    end
   end
 
   -- if instrument is set to solo, cancel the previous note for that instrument
@@ -105,7 +107,10 @@ function OscVoiceMgr:trigger(app,instr_idx,track_idx,pitch,velocity,keep,is_midi
   if not hold_toggled_off then
     -- register the note with the voice-manager
     local note = OscVoiceMgrNote(app,instr_idx,track_idx,pitch,velocity,keep,is_midi,channel)
-    note.triggered_with_hold_mode = instr.trigger_options.hold and true or false
+    if (renoise.API_VERSION < 5) then
+      note.triggered_with_hold_mode = instr.trigger_options.hold and true or 
+      false
+    end
     self:_notify_applications("insert",note)
     self.playing:insert(note)
   end
@@ -142,7 +147,8 @@ function OscVoiceMgr:release(app,instr_idx,track_idx,pitch,velocity,is_midi,chan
   assert(rns.instruments[instr_idx],string.format("Internal Error. Please report: " ..
     "expected instrument to be present at index %d",instr_idx))
 
-  local hold_trigger_enabled = rns.instruments[instr_idx].trigger_options.hold
+  local hold_trigger_enabled = (renoise.API_VERSION < 5) and 
+    rns.instruments[instr_idx].trigger_options.hold or false
 
   -- if the instrument is set to hold mode, do not release 
   if not force then
