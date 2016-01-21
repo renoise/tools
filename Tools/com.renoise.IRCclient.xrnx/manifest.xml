@@ -1,7 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
 <RenoiseScriptingTool doc_version="0">
-  <ApiVersion>4</ApiVersion>
+  <ApiVersion>5</ApiVersion>
   <Id>com.renoise.IRCclient</Id>
-  <Version>1.21</Version>
+  <Version>1.22</Version>
   <Author>Vincent Voois ( http://tinyurl.com/vvrns )</Author>
   <Name>Simple IRC Client</Name>
   <Category>Tools</Category>

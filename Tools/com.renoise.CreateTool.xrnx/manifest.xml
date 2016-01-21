@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <RenoiseScriptingTool doc_version="0">
-  <ApiVersion>4</ApiVersion>
+  <ApiVersion>5</ApiVersion>
   <Id>com.renoise.CreateTool</Id>
-  <Version>11</Version>
+  <Version>11.02</Version>
   <Author>Bantai</Author>
   <Name>Create Tool</Name>
   <Category>Development</Category>

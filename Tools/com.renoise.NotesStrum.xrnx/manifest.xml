@@ -1,7 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
 <RenoiseScriptingTool doc_version="0">
-  <ApiVersion>4</ApiVersion>
+  <ApiVersion>5</ApiVersion>
+  <AutoUpgraded>true</AutoUpgraded>
   <Id>com.renoise.NotesStrum</Id>
-  <Version>2.3999999999999999</Version>
+  <Version>2.41</Version>
   <Author>Vincent Voois [ http://tinyurl.com/vvrns ]</Author>
   <Name>Strum Notes</Name>
   <Category>Pattern Editor</Category>

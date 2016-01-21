@@ -1,13 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<RenoiseScriptingTool>
-  <Name>vLib</Name>
+<RenoiseScriptingTool doc_version="0">
+  <ApiVersion>5</ApiVersion>
   <Id>com.renoise.vLib</Id>
-  <ApiVersion>4.0</ApiVersion>
   <Version>1.0</Version>
   <Author>danoise [bjorn.nesby@gmail.com]</Author>
+  <Name>vLib</Name>
   <Category>UI Library</Category>
-  <Description>The vLib library contains some useful enhancements to the Renoise ViewBuilder API. Launch a demo from Tools > vLib Demo</Description>
+  <Description>The vLib library contains some useful enhancements to the Renoise ViewBuilder API. Launch a demo from Tools &gt; vLib Demo</Description>
   <Homepage>http://renoise.com/tools/vLib</Homepage>
-  <Platform/>
-  <Icon/>
 </RenoiseScriptingTool>

@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<RenoiseScriptingTool>
-  <ApiVersion>4</ApiVersion>
+<RenoiseScriptingTool doc_version="0">
+  <ApiVersion>5</ApiVersion>
   <Id>com.renoise.Nibbles</Id>
-  <Version>2.2</Version>
-  <Name>Nibbles</Name>
+  <Version>2.21</Version>
   <Author>4Tey, KMaki, Dac Chartrand [dac@renoise.com]</Author>
-  <Description>Nibbles, what else?</Description>
+  <Name>Nibbles</Name>
   <Category>Game</Category>
+  <Description>Nibbles, what else?</Description>
 </RenoiseScriptingTool>

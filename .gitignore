@@ -11,3 +11,7 @@ desktop.ini
 # Tool generated files
 preferences.xml
 Libraries/remdebug/Win32/controller_gui.ini
+
+# Binary files 
+Tools/com.renoise.Soundcloud.xrnx/bin/osx/Share on SoundCloud.app/
+Tools/com.renoise.Soundcloud.xrnx/bin/win/Share on SoundCloud.exe

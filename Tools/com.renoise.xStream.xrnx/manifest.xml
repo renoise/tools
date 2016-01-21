@@ -2,7 +2,7 @@
 <RenoiseScriptingTool doc_version="0">
   <Name>xStream</Name>
   <Id>com.renoise.xStream</Id>
-  <ApiVersion>4</ApiVersion>
+  <ApiVersion>5</ApiVersion>
   <Version>1.41</Version>
   <Author>danoise [bjorn.nesby@gmail.com]</Author>
   <Category>Renoise Team</Category>

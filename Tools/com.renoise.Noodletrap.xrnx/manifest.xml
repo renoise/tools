@@ -3,7 +3,7 @@
   <Name>Noodletrap</Name>
   <Id>com.renoise.Noodletrap</Id>
   <Version>0.96</Version>
-  <ApiVersion>4</ApiVersion>
+  <ApiVersion>5</ApiVersion>
   <Author>danoise (bjorn@renoise.com)</Author>
   <Category>Recording</Category>
   <Description>Noodletrap will allow you to record notes (a.k.a. 'noodlings') into the selected instrument via automatically allocated phrases. Launch from the tool menu, or by using the supplied keyboard/MIDI shortcuts</Description>
