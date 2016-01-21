@@ -28,6 +28,8 @@ local note_column_properties = {
   "volume_value",
   "panning_value",
   "delay_value",
+  "effect_number_value",
+  "effect_amount_value",
 }
 
 function copy_note_column(src_column, dest_column)
@@ -62,35 +64,4 @@ function copy_line(src_line, dest_line)
   end
 end
 
-
---------------------------------------------------------------------------------
-
--- queries the selection range start and end lines
-
-function selection_line_range(pattern_index)
-
-  local line_start, line_end
-  
-  if (pattern_index == renoise.song().selected_pattern_index) then
-    local iter = renoise.song().pattern_iterator:lines_in_pattern(pattern_index)
-    
-    for pos,line in iter do
-      for _,note_column in pairs(line.note_columns) do
-        if (note_column.is_selected) then
-          line_start = line_start or pos.line
-          line_end = line_end and math.max(line_end, pos.line) or pos.line
-        end
-      end
-      
-      for _,effect_column in pairs(line.effect_columns) do
-        if (effect_column.is_selected) then
-          line_start = line_start or pos.line
-          line_end = line_end and math.max(line_end, pos.line) or pos.line
-        end
-      end
-    end
-  end
-    
-  return line_start, line_end
-end
 

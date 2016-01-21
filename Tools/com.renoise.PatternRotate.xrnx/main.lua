@@ -13,17 +13,22 @@ local song = renoise.song
 
 local RANGE_WHOLE_SONG = 1
 local RANGE_WHOLE_PATTERN = 2
-local RANGE_TRACK_IN_SONG = 3
-local RANGE_TRACK_IN_PATTERN = 4
-local RANGE_SELECTION_IN_PATTERN = 5
+local RANGE_WHOLE_PHRASE = 3
+local RANGE_TRACK_IN_SONG = 4
+local RANGE_TRACK_IN_PATTERN = 5
+local RANGE_SELECTION_IN_PATTERN = 6
+local RANGE_SELECTION_IN_PHRASE = 7
 
 local range_names = {
   "Whole Song",
   "Whole Pattern",
+  "Whole Phrase",
   "Track in Song",
   "Track in Pattern",
-  "Selection in Pattern"
+  "Selection in Pattern",
+  "Selection in Phrase"
 }
+
 
 
 --------------------------------------------------------------------------------
@@ -82,15 +87,18 @@ function rotate(shift_amount, range_mode, shift_automation)
   
   local selected_track_index = song().selected_track_index
   local selected_pattern_index = song().selected_pattern_index
-    
+  local selected_phrase_index = song().selected_phrase_index
   
   ----- get the processing pattern & track range
 
-  local process_selection = (range_mode == RANGE_SELECTION_IN_PATTERN)
+  local process_selection = (range_mode == RANGE_SELECTION_IN_PATTERN or
+    range_mode == RANGE_SELECTION_IN_PHRASE)
+
 
   local pattern_start, pattern_end
   local track_start, track_end
-  
+  local phrase_index  
+
   if (range_mode == RANGE_WHOLE_SONG) then
     pattern_start, pattern_end = 1, #patterns
     track_start, track_end = 1, #tracks
@@ -98,7 +106,11 @@ function rotate(shift_amount, range_mode, shift_automation)
   elseif (range_mode == RANGE_WHOLE_PATTERN) then
     pattern_start, pattern_end = selected_pattern_index, selected_pattern_index
     track_start, track_end = 1, #tracks
-  
+
+  elseif (range_mode == RANGE_WHOLE_PHRASE) then
+    phrase_index = selected_phrase_index
+    track_start, track_end = 1, 1
+
   elseif (range_mode == RANGE_TRACK_IN_SONG) then
     pattern_start, pattern_end = 1, #patterns
     track_start, track_end = selected_track_index, selected_track_index
@@ -111,126 +123,225 @@ function rotate(shift_amount, range_mode, shift_automation)
     pattern_start, pattern_end = selected_pattern_index, selected_pattern_index
     track_start, track_end = 1, #tracks
   
+  elseif (range_mode == RANGE_SELECTION_IN_PHRASE) then
+    phrase_index = selected_phrase_index
+    track_start, track_end = 1, 1
   else
     error("Internal error: unexpected rotate range mode")
   end
   
-  
-  ----- rotate each pattern in the processing range
-          
-  for pattern_index = pattern_start,pattern_end do
-    local pattern = patterns[pattern_index] 
-      
+  if (range_mode == RANGE_WHOLE_PHRASE or 
+      range_mode == RANGE_SELECTION_IN_PHRASE)
+  then  
+    ----- rotate selected phrase in the processing range
+
+
+    local instrument = song().selected_instrument
+    local phrase = instrument.phrases[phrase_index] 
+    if not phrase then
+      -- no phrase to work on...
+      return
+    end
+
+    local visible_note_columns = phrase.visible_note_columns
+
     -- get the processing line range for the pattern
-    local line_start, line_end, line_range
+    local line_start, line_end, col_start, col_end --, line_range
+    if (process_selection) then
+      local selection = renoise.song().selection_in_phrase
+      line_start = selection.start_line
+      line_end = selection.end_line
+      col_start = selection.start_column
+      col_end = selection.end_column    
+    else
+      line_start, line_end = 1, phrase.number_of_lines
+    end
+
+    rotate_lines(
+      phrase,
+      line_start,
+      line_end,
+      col_start,
+      col_end,      
+      process_selection,
+      visible_note_columns,
+      false, -- shift_automation doesn't apply to phrases
+      shift_amount)
+
+  else  
+    ----- rotate each pattern in the processing range
+            
+    for pattern_index = pattern_start,pattern_end do
+      local pattern = patterns[pattern_index] 
+        
+      -- get the processing line range for the pattern
+      local line_start, line_end, col_start, col_end --, line_range
+      
+      if (process_selection) then
+        local selection = renoise.song().selection_in_pattern
+        line_start = selection.start_line
+        line_end = selection.end_line
+        col_start = selection.start_column
+        col_end = selection.end_column
+        track_start = selection.start_track
+        track_end = selection.end_track
+      else
+        line_start, line_end = 1, pattern.number_of_lines
+      end 
+      
+      for track_index = track_start,track_end do
+
+        local tmp_col_start,tmp_col_end
+        local track = pattern:track(track_index) 
+        local visible_note_columns = tracks[track_index].visible_note_columns
+        local inbetween_track = 
+          ((track_index > track_start) and 
+          (track_index < track_end))
+
+        if (track_start == track_end) then
+          tmp_col_start,tmp_col_end = col_start,col_end
+        elseif inbetween_track then
+          tmp_col_start,tmp_col_end = 1,12
+        elseif (track_index == track_start) then
+          tmp_col_start,tmp_col_end = col_start,12
+        elseif (track_index == track_end) then
+          tmp_col_start,tmp_col_end = 1,col_end
+        end
+
+        rotate_lines(track,
+          line_start,
+          line_end,
+          tmp_col_start,
+          tmp_col_end,          
+          process_selection,
+          visible_note_columns,
+          shift_automation,
+          shift_amount)
+
+      end
+
+    end
+  
+  end
+
+end
+
+--------------------------------------------------------------------------------
+
+-- rotate track (phrase or pattern-track) in the processing range
+
+function rotate_lines(track,
+  line_start,
+  line_end,
+  col_start,
+  col_end,
+  process_selection,
+  visible_note_columns,
+  shift_automation,
+  shift_amount)
+  
+
+  if not line_start or not line_end then
+    -- no lines to rotate. bail out...
+    return   
+  end   
+
+  -- copy relevant lines to a temp array first (pattern lines are references)
+
+  local temp_lines = {}
+
+  for line_index = line_start,line_end do
+    local src_line = track:line(line_index)
+    
+    if (process_selection or not src_line.is_empty) then
+    
+      -- will copy later on, empty or not...
+      temp_lines[line_index] = { 
+        is_empty = src_line.is_empty, 
+        note_columns = {}, 
+        effect_columns = {} 
+      }
+
+      copy_line(src_line, temp_lines[line_index])
+    
+    else
+
+      -- will skip those lines later on...
+      temp_lines[line_index] = { is_empty = true }
+    end
+  end
+  
+  -- check if col is between start/stop column
+  local is_selected_col = function(index) 
+    return ((index >= col_start) and
+      (index <= col_end)) and true or false
+  end
+  
+  -- rotate pattern lines or selected columns
+  
+  for line_index = line_start,line_end do
+    local dest_line_index = rotate_index(line_index, 
+      shift_amount, line_start, line_end)
+
+    local src_line = temp_lines[line_index]
+    local dest_line = track:line(dest_line_index)
     
     if (process_selection) then
-      line_start, line_end = selection_line_range(pattern_index)
-    else
-      line_start, line_end = 1, pattern.number_of_lines
-    end
-       
-    if (line_start and line_end) then
-      line_range = line_end - line_start + 1
-    else
-      -- no lines to rotate. bail out...
-      break   
-    end    
-  
-  
-    ---- rotate each track in the pattern in the processing range
-    
-    for track_index = track_start,track_end do
-      local track = pattern:track(track_index) 
-      
-      -- copy relevant lines to a temp array first (pattern lines are references)
-
-      local temp_lines = {}
-  
-      for line_index = line_start,line_end do
-        local src_line = track:line(line_index)
+      -- copy column by column, checking the selection state
+      for index,note_column in pairs(src_line.note_columns) do
         
-        if (process_selection or not src_line.is_empty) then
-        
-          -- will copy later on, empty or not...
-          temp_lines[line_index] = { 
-            is_empty = src_line.is_empty, 
-            note_columns = {}, 
-            effect_columns = {} 
-          }
-  
-          copy_line(src_line, temp_lines[line_index])
-        
-        else
-  
-          -- will skip those lines later on...
-          temp_lines[line_index] = { is_empty = true }
-        end
-      end
-      
-      
-      -- rotate pattern lines or selected columns
-      
-      for line_index = line_start,line_end do
-        local dest_line_index = rotate_index(line_index, 
-          shift_amount, line_start, line_end)
-  
-        local src_line = temp_lines[line_index]
-        local dest_line = track:line(dest_line_index)
-        
-        if (process_selection) then
-          -- copy column by column, checking the selection state
-          for index,note_column in pairs(src_line.note_columns) do
+        if (index <= visible_note_columns) then
+          if (is_selected_col(index)) then
             local dest_note_column = dest_line:note_column(index)
-            
-            if (dest_note_column.is_selected) then
-              copy_note_column(note_column, dest_note_column)
-            end
-          end
-          
-          for index,effect_column in pairs(src_line.effect_columns) do
-            local dest_effect_column = dest_line:effect_column(index)
-            
-            if (dest_effect_column.is_selected) then
-              copy_effect_column(effect_column, dest_effect_column)
-            end
-          end
-        
-        else
-          -- copy whole lines or clear in one batch (just to speed up things)
-          if (src_line.is_empty) then
-            dest_line:clear()
-          else
-            copy_line(src_line, dest_line)
+            copy_note_column(note_column, dest_note_column)
           end
         end
       end
-                
-                
-      -- rotate automation (not for pattern selections)
       
-      if (shift_automation and not process_selection) then
-        for _,automation in pairs(track.automation) do
-          local rotated_points = table.create(
-            table.rcopy(automation.points))
-          
-          for _,point in pairs(rotated_points) do            
-            if (point.time >= line_start and point.time < line_end + 1) then
-              point.time = rotate_index(point.time, 
-                shift_amount, line_start, line_end)
-            end
-          end
-          
-          rotated_points:sort(function(a,b) 
-            return (a.time < b.time) 
-          end)
-          
-          automation.points = rotated_points
+      for index,effect_column in pairs(src_line.effect_columns) do
+        
+        local fxcol_index = visible_note_columns + index
+        if (is_selected_col(fxcol_index)) then
+          local dest_effect_column = dest_line:effect_column(index)
+          copy_effect_column(effect_column, dest_effect_column)
         end
+      end
+    
+    else
+      -- copy whole lines or clear in one batch (just to speed up things)
+      if (src_line.is_empty) then
+        dest_line:clear()
+      else
+        copy_line(src_line, dest_line)
       end
     end
   end
-end
+            
+            
+  -- rotate automation (not for pattern selections)
+  
+  if (shift_automation and not process_selection) then
+    for _,automation in pairs(track.automation) do
+      local rotated_points = table.create(
+        table.rcopy(automation.points))
+      
+      for _,point in pairs(rotated_points) do            
+        if (point.time >= line_start and point.time < line_end + 1) then
+          point.time = rotate_index(point.time, 
+            shift_amount, line_start, line_end)
+        end
+      end
+      
+      rotated_points:sort(function(a,b) 
+        return (a.time < b.time) 
+      end)
+      
+      automation.points = rotated_points
+    end
+  end
+
+
+end      
 
 
 --------------------------------------------------------------------------------
@@ -242,7 +353,7 @@ local dialog = nil
 
 -- show_dialog
 
-function show_dialog()
+function show_dialog(options)
 
   if (dialog and dialog.visible) then
     -- bring an existing dialog to front
@@ -278,11 +389,12 @@ function show_dialog()
       vb:popup {
         width = POPUP_WIDTH,
         items = range_names, 
+        value = options.range or RANGE_WHOLE_PATTERN,       
         bind = preferences.range_mode,
         notifier = function()
           vb.views.automation_column.visible = 
-            (preferences.range_mode.value ~= RANGE_SELECTION_IN_PATTERN)
-          
+            (preferences.range_mode.value ~= RANGE_SELECTION_IN_PATTERN and
+              preferences.range_mode.value ~= RANGE_SELECTION_IN_PHRASE)
           vb.views.dialog_content:resize()
         end 
       },
@@ -342,7 +454,6 @@ function show_dialog()
   -- dialog key handler
 
   local function key_handler(dialog, key)
-    print(key.name)
     
     if (key.name == "esc") then
       dialog:close()        
@@ -395,7 +506,16 @@ end
 
 renoise.tool():add_menu_entry {
   name = "Pattern Editor:Rotate...",
-  invoke = show_dialog
+  invoke = function()
+    show_dialog({range = RANGE_WHOLE_PATTERN})
+  end
+}
+
+renoise.tool():add_menu_entry {
+  name = "Phrase Editor:Rotate...",
+  invoke = function()
+    show_dialog({range = RANGE_WHOLE_PHRASE})
+  end
 }
 
 -- keybindings
@@ -404,10 +524,21 @@ renoise.tool():add_keybinding {
   name = "Pattern Editor:Tools:Rotate...",
   invoke = function(repeated) 
     if (not repeated) then 
-      show_dialog()
+      show_dialog({range = RANGE_WHOLE_PATTERN})
     end
   end
 }
+
+
+renoise.tool():add_keybinding {
+  name = "Phrase Editor:Tools:Rotate...",
+  invoke = function(repeated) 
+    if (not repeated) then 
+      show_dialog({range = RANGE_WHOLE_PHRASE})
+    end
+  end
+}
+
 
 renoise.tool():add_keybinding {
   name = "Pattern Editor:Pattern Operations:Rotate Pattern up",
@@ -429,6 +560,25 @@ renoise.tool():add_keybinding {
   invoke = function(repeated) rotate(1, RANGE_SELECTION_IN_PATTERN) end
 }
 
+renoise.tool():add_keybinding {
+  name = "Phrase Editor:Phrase Operations:Rotate Phrase up",
+  invoke = function(repeated) rotate(-1, RANGE_WHOLE_PHRASE) end
+}
+
+renoise.tool():add_keybinding {
+  name = "Phrase Editor:Phrase Operations:Rotate Phrase down",
+ invoke = function(repeated) rotate(1, RANGE_WHOLE_PHRASE) end
+}
+
+renoise.tool():add_keybinding {
+  name = "Phrase Editor:Selection:Rotate Selection up",
+  invoke = function(repeated) rotate(-1, RANGE_SELECTION_IN_PHRASE) end
+}
+
+renoise.tool():add_keybinding {
+  name = "Phrase Editor:Selection:Rotate Selection down",
+  invoke = function(repeated) rotate(1, RANGE_SELECTION_IN_PHRASE) end
+}
 
 -- notifications
 
