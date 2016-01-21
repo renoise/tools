@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<RenoiseScriptingTool doc_version="0">
+  <ApiVersion>5</ApiVersion>
+  <Id>com.renoise.PhraseMate</Id>
+  <Version>1.0</Version>
+  <Author>danoise [bjorn.nesby@gmail.com]</Author>
+  <Name>PhraseMate</Name>
+  <Category>Pattern Editor, Phrase Editor</Category>
+  <Description>A tool for writing instrument phrases into the pattern editor. Shows up as shortcut in the Tool menu, and the content menu of the Pattern Editor (the Selection/Track submenus).</Description>
+</RenoiseScriptingTool>
