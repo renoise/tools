@@ -34,11 +34,7 @@ local song_scope = {}
 
 song_scope.name = "Whole Song"
 song_scope.iter = function(note_mode, visible_only)
-  if note_mode then
-    return renoise.song().pattern_iterator:note_columns_in_song(visible_only)
-  else
-    return renoise.song().pattern_iterator:effect_columns_in_song(visible_only)
-  end
+  return renoise.song().pattern_iterator:lines_in_song(visible_only)
 end
 
 local pattern_scope = {}
@@ -46,13 +42,8 @@ local pattern_scope = {}
 pattern_scope.name = "Whole Pattern"
 pattern_scope.iter = function(note_mode, visible_only)
   local pattern_index = renoise.song().selected_pattern_index
-  if note_mode then
-    return renoise.song().pattern_iterator:note_columns_in_pattern(
-      pattern_index, visible_only)
-  else
-    return renoise.song().pattern_iterator:effect_columns_in_pattern(
-      pattern_index, visible_only)
-  end
+  return renoise.song().pattern_iterator:lines_in_pattern(
+    pattern_index)
 end
 
 local song_track_scope = {}
@@ -60,14 +51,8 @@ local song_track_scope = {}
 song_track_scope.name = "Track in Song"
 song_track_scope.iter = function(note_mode, visible_only)
   local track_index = renoise.song().selected_track_index
-  
-  if note_mode then
-    return renoise.song().pattern_iterator:note_columns_in_track(
-      track_index, visible_only)
-  else
-    return renoise.song().pattern_iterator:effect_columns_in_track(
-      track_index, visible_only)
-  end
+  return renoise.song().pattern_iterator:lines_in_track(
+    track_index)
 end
 
 local pattern_track_scope = {}
@@ -76,14 +61,8 @@ pattern_track_scope.name = "Track in Pattern"
 pattern_track_scope.iter = function(note_mode, visible_only)
   local pattern_index = renoise.song().selected_pattern_index  
   local track_index = renoise.song().selected_track_index
-  
-  if note_mode then
-    return renoise.song().pattern_iterator:note_columns_in_pattern_track(
-      pattern_index, track_index, visible_only)
-  else
-    return renoise.song().pattern_iterator:effect_columns_in_pattern_track(
-      pattern_index, track_index, visible_only)
-  end
+  return renoise.song().pattern_iterator:lines_in_pattern_track(
+    pattern_index, track_index)
 end
 
 local scopes = table.create {
@@ -198,6 +177,7 @@ end
 
 local current_mode_index = 1
 local current_scope_index = 1
+local notefx_iter_mode = false
 
 local current_position = {
   pattern = 1,
@@ -239,6 +219,13 @@ local function effect_mode()
   return (current_mode_index == 2)
 end
 
+--------------------------------------------------------------------------------
+-- notefx_mode
+
+local function notefx_mode()
+  return (current_mode_index == 2 and  notefx_iter_mode) and true or false
+end
+
 
 --------------------------------------------------------------------------------
 -- current_property_set
@@ -267,7 +254,7 @@ local function current_pos_is_valid()
     if (pos.line <= pattern.number_of_lines) then
       local columns = nil 
       
-      if note_mode() then
+      if note_mode() or notefx_mode() then
         columns = pattern.tracks[pos.track].lines[pos.line].note_columns
       elseif effect_mode() then
         columns = pattern.tracks[pos.track].lines[pos.line].effect_columns
@@ -298,6 +285,7 @@ end
 -- jump_to_current_pos
 
 local function jump_to_current_pos()
+
   local pos = current_position
 
   local found_pattern = false
@@ -318,7 +306,7 @@ local function jump_to_current_pos()
 
     local selected_track = renoise.song().selected_track
 
-    if note_mode() then
+    if note_mode() or notefx_mode() then
       if (pos.column <= selected_track.visible_note_columns) then
         renoise.song().selected_note_column_index = pos.column
       end
@@ -405,6 +393,7 @@ end
 -- find_next
 
 function find_next(visible_content_only)
+
   if (visible_content_only == nil) then 
     visible_content_only = true
   end
@@ -416,9 +405,17 @@ function find_next(visible_content_only)
       return false
     end
 
+    local notefx_mode = notefx_mode()    
+
     for _,property in pairs(properties) do
+
+      -- special case: notefx properties differ from the values 
+      -- specified in the user interface (prefix with "effect_")
+      local col_property = notefx_mode and
+        "effect_"..property or property
+
       if (find_set[property] ~= "*") then
-        local column_value = column[tostring(property).."_string"]
+        local column_value = column[tostring(col_property).."_string"]
         local find_value = find_set[property]
         if (column_value:lower() ~= find_value:lower()) then
           return false
@@ -455,8 +452,9 @@ function find_next(visible_content_only)
   -- start or contine the search...
   
   local found_match = false
+  local note_mode = note_mode()
 
-  for pos, column in current_iter do
+  local do_search = function(column,pos,properties)
 
     -- reset to the iters start position when the search was (re)started
     if initial_match then
@@ -465,12 +463,59 @@ function find_next(visible_content_only)
     end
 
     -- find a matching column
-    if column_match(column, current_property_set()) then
+    if column_match(column, properties) then
       found_match = true
       current_column = column
       set_current_pos(pos)
+      return true
+    end
+
+  end
+
+  for pos, line in current_iter do
+
+    if note_mode then
+
+      -- if note mode, search just note columns
+      notefx_iter_mode = false
+      for col_idx,column in ipairs(line.note_columns) do
+        local tmp_pos = table.copy(pos)
+        tmp_pos.column = col_idx
+        if (do_search(column,tmp_pos,current_property_set())) then
+          break
+        end
+      end
+
+    else
+
+      -- if fx mode, search note fx-column + master fx-columns
+      if not found_match then
+        notefx_iter_mode = true
+        for col_idx,column in ipairs(line.note_columns) do
+          local tmp_pos = table.copy(pos)
+          tmp_pos.column = col_idx
+          if (do_search(column,tmp_pos,current_property_set())) then
+            break
+          end
+        end
+      end
+      if not found_match then
+        notefx_iter_mode = false
+        for col_idx,column in ipairs(line.effect_columns) do
+          local tmp_pos = table.copy(pos)
+          tmp_pos.column = col_idx
+          if (do_search(column,tmp_pos,current_property_set())) then
+            break
+          end
+        end
+      end      
+
+    end
+
+    if found_match then
       break
     end
+
   end
 
   if found_match then
@@ -485,8 +530,8 @@ function find_next(visible_content_only)
     reset_status()
     return false
   end
-end
 
+end
 
 --------------------------------------------------------------------------------
 -- replace_next
@@ -508,14 +553,16 @@ function replace_next(visible_content_only)
 
   for _,property in pairs(current_property_set()) do
     if (replace_set[property] ~= "") then
-       local column_property = tostring(property).."_string"
-       current_column[column_property] = replace_set[property]
+      local column_property = tostring(property).."_string"
+      if notefx_mode() then
+        column_property = "effect_"..column_property
+      end
+      current_column[column_property] = string.upper(replace_set[property])
     end
   end
 
   return find_next(visible_content_only)
 end
-
 
 --------------------------------------------------------------------------------
 -- replace_all
@@ -529,8 +576,6 @@ function replace_all()
   repeat until(not replace_next(visible_content_only))
 
 end
-
-
 
 --------------------------------------------------------------------------------
 -- show_help
