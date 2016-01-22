@@ -149,7 +149,13 @@ foreach ($files as $file) {
     $markdown = preg_replace('/^--\s{0,1}(.*?)$/sm', '$1', $markdown);
 
     // Transform ==== header ==== or ---- header ---- to Markdown equivilant
-    $markdown = preg_replace('/(={4,}|-{4,})\n(.*?)(={4,}|-{4,})\n/se', "header_transform('$1', '$2')", $markdown);
+    $markdown = preg_replace_callback(
+        '/(={4,}|-{4,})\n(.*?)(={4,}|-{4,})\n/s',
+        function ($m) {
+            return header_transform('$m[1]', '$m[2]');
+        },
+        $markdown
+    );
 
     // Find `---- Foo` and replace with Markdown equivilant
     $markdown = preg_replace('/-{4,}\s{1}(.*?)\n/s', "### $1\n", $markdown);
@@ -217,6 +223,4 @@ $tmp = trim(
     $footer
     );
 file_put_contents($CONFIG['OUT_DIR'] . '/index.html', $tmp);
-
-
-?>
+/
