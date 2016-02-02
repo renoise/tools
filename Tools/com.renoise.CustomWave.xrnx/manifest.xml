@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <RenoiseScriptingTool doc_version="0">
   <ApiVersion>5</ApiVersion>
-  <AutoUpgraded>true</AutoUpgraded>
   <Id>com.renoise.CustomWave</Id>
   <Version>0.92</Version>
   <Author>Fabio Napodano | It-Alien (it-alien@renoise.com)</Author>
