@@ -36,7 +36,7 @@ function vCellValueBox:__init(...)
   self.view = args.vb:valuebox{
     notifier = function()
       if self.notifier and not self._suppress_notifier then
-        self.notifier(self)
+        self.notifier(self,self.view.value)
       end
     end
   }
@@ -55,7 +55,7 @@ end
 function vCellValueBox:set_value(val,skip_event)
 
   if (type(val) == "nil") then
-   val = vCellPopup.DEFAULT_VALUE
+   val = vCellValueBox.DEFAULT_VALUE
   end
 
   if (type(val) ~= "number") then

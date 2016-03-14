@@ -14,9 +14,9 @@ Debug.lua
 --    {"^ControlMap:", "^Display:"} -> show "Display:" and "ControlMap:"
 ]]
 
-local _trace_filters = nil
+--local _trace_filters = nil
 --local _trace_filters = {"^Recorder*","^UISlider*"}
---local _trace_filters = {".*"}
+local _trace_filters = {".*"}
 
 --------------------------------------------------------------------------------
 

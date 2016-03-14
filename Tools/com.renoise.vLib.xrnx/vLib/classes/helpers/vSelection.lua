@@ -14,6 +14,9 @@ vSelection
     - next/previous item
     - orientation (in which direction is next?)
 
+  CHANGELOG
+  * added double-press support
+  * changed index into observable number
 
 ]]
 
@@ -42,7 +45,7 @@ function vSelection:__init(...)
   -- note: setting this property while in multi-select mode will "collapse" 
   -- the selection to a single item, while getting will return the first item
   self.index = property(self.get_index,self.set_index)
-  self._index = 0
+  self.index_observable = renoise.Document.ObservableNumber(0)
 
   --- (table)
   -- note: the sequence reflects the order in which the items were selected: 
@@ -57,14 +60,26 @@ function vSelection:__init(...)
   self.num_items = property(self.get_num_items,self.set_num_items)
   self._num_items = nil
 
-  -- initialize -----------------------
+  --- (int) each time a single index is set, the index/time is saved
+  -- this makes it possible to detect a double-press event
+  self.last_selected_index = nil
+  self.last_selected_time = nil
+
+  --- (number) the timeout for detecting double-presses (in seconds)
+  self.doublepress_timeout = 0.3
+
+  --- (ObservableBang), fired on double-press 
+  -- note: use "self.last_selected_index" to obtain the item
+  self.doublepress_observable = renoise.Document.ObservableBang()
+
+  -- initialize --
 
   if args.require_selection then
     self._require_selection = args.require_selection
   end
 
   if self._require_selection then
-    self._index = 1
+    self.index_observable.value = 1
   end
 
 end
@@ -103,7 +118,7 @@ function vSelection:clear_selection()
     end
   end
 
-  self._index = (self._require_selection) 
+  self.index_observable.value = (self._require_selection) 
     and self._indices[1] or 1
 
   return changed,removed
@@ -133,7 +148,7 @@ function vSelection:select_all()
     end
   end
 
-  self._index = self._indices[1]
+  self.index_observable.value = self._indices[1]
 
   return changed,added
 
@@ -152,7 +167,7 @@ function vSelection:toggle_index(idx)
   local changed = false
 
   if (idx > self.num_items) then
-    print("*** vSelection:toggle_index - value is outside range")
+    LOG("*** vSelection:toggle_index - value is outside range")
     return false
   end
 
@@ -173,15 +188,29 @@ function vSelection:toggle_index(idx)
   end
 
   if table.is_empty(self._indices) then
-    self._index = 0
+    self.index_observable.value = 0
   else
-    self._index = self._indices[1]
+    self.index_observable.value = self._indices[1]
   end
 
   return changed,added,removed
 
 end
 
+
+--------------------------------------------------------------------------------
+-- avoid that the selection picks up a double-press, e.g. when displaying
+-- a new set of data 
+
+function vSelection:reset()
+  TRACE("vSelection:reset()")
+
+  self.index_observable.value = 0
+  self._indices = {}
+  self.last_selected_index = nil
+  self.last_selected_time = nil
+
+end
 
 --------------------------------------------------------------------------------
 --- check if a given index is selected
@@ -196,14 +225,14 @@ function vSelection:contains_index(idx)
 end
 
 --------------------------------------------------------------------------------
--- GETTERS & SETTERS
+-- Getters and setters 
 --------------------------------------------------------------------------------
 -- @return bool (true when changed, false on invalid index or mode)
 -- @return table>int (added_items)
 -- @return table>int (removed_items)
 
 function vSelection:set_indices(t)
-  TRACE("vSelection:set_indices(t)",t)
+  --TRACE("vSelection:set_indices(t)",t)
 
   local added,removed = {},{}
   local changed = false
@@ -227,7 +256,7 @@ function vSelection:set_indices(t)
         changed = true
       end
     end
-    self._index = t[1]
+    self.index_observable.value = t[1]
   end
 
   return changed,added,removed
@@ -235,7 +264,7 @@ function vSelection:set_indices(t)
 end
 
 function vSelection:get_indices()
-  TRACE("vSelection:get_indices()",self._indices)
+  --TRACE("vSelection:get_indices()",self._indices)
   return self._indices
 end
 
@@ -252,9 +281,9 @@ function vSelection:set_require_selection(val)
   local changed = (val ~= self._require_selection)
 
   self._require_selection = val
-  if val and not self._index then
+  if val and (self.index_observable.value == 0) then
     self._indices = {1}
-    self._index = 1
+    self.index_observable.value = 1
     changed = true
   end
 
@@ -277,7 +306,7 @@ function vSelection:set_index(idx)
   TRACE("vSelection:set_index(idx)",idx)
 
   local added,removed = {},{}
-  local changed = (self._index ~= idx)
+  local changed = (self.index_observable.value ~= idx)
 
   -- turn off previously selected
   for k,v in ripairs(self._indices) do
@@ -288,19 +317,41 @@ function vSelection:set_index(idx)
     end
   end
 
-  self._index = idx
+  self.index_observable.value = idx
   if (idx > 0) then
     self._indices = {idx}
     table.insert(added,idx)
   end
+
+  -- handle double-pressed items
+  if self.last_selected_index 
+    and (self.last_selected_index == idx) 
+  then
+    if (os.clock() < self.last_selected_time + self.doublepress_timeout) then
+      --print(">>> vSelection:set_index - doublepress")
+      self.doublepress_observable:bang()
+      self.last_selected_index = nil
+      self.last_selected_time = nil
+    else
+      --print(">>> vSelection:set_index - additional press (too slow)")
+      self.last_selected_index = idx
+      self.last_selected_time = os.clock()
+    end
+  elseif not self.last_selected_index 
+    or (self.last_selected_index ~= idx) 
+  then
+    self.last_selected_index = idx
+    self.last_selected_time = os.clock()
+    --print(">>> vSelection:set_index - first press @",self.last_selected_time)
+  end
+  --print(">>> vSelection:set_index - self._indices",rprint(self._indices))
 
   return changed,added,removed
 
 end
 
 function vSelection:get_index()
-  TRACE("vSelection:get_index()",self,self._index)
-  return self._index
+  return self.index_observable.value
 end
 
 --------------------------------------------------------------------------------
@@ -327,7 +378,7 @@ function vSelection:set_mode(val)
       and table.is_empty(self._indices) 
     then
       self._indices = {1}
-      self._index = 1
+      self.index_observable.value = 1
     end
   end
 

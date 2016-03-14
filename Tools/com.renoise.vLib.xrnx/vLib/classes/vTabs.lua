@@ -1,11 +1,19 @@
 --[[============================================================================
 vTabs
 ============================================================================]]--
+--[[
+
+  Show/hide sub-views, using a switcher as the navigation interface
+
+  CHANGELOG
+  * Index made observable 
+
+--]]
+
 
 class 'vTabs' (vControl)
 
 --------------------------------------------------------------------------------
---- Show/hide sub-views, using a switcher as the navigation interface
 
 --- vertical position
 vTabs.LAYOUT = {
@@ -28,7 +36,9 @@ vTabs.SIZE_METHOD = {
 }
 
 
-vTabs.MINIMUM_H = 20
+vTabs.MINIMUM_H = 21
+vTabs.SWITCHER_DEFAULT_W = "100%"
+vTabs.SWITCHER_DEFAULT_H = 20
 
 
 function vTabs:__init(...)
@@ -42,13 +52,13 @@ function vTabs:__init(...)
 
   -- public properties ----------------
 
-	--- (int) the currently selected tab
+	--- (int) the currently selected tab (1 or higher)
   self.index = property(self.get_index,self.set_index)
-  self._index = args.index or 1
+  self.index_observable = renoise.Document.ObservableNumber (args.index or 1)
 
   --- (int or string)
   self.switcher_width = property(self.get_switcher_width,self.set_switcher_width)
-  self._switcher_width = args.switcher_width or "100%"
+  self._switcher_width = args.switcher_width or vTabs.SWITCHER_DEFAULT_W
 
   --- (int or string)
   self.switcher_align = property(self.get_switcher_align,self.set_switcher_align)
@@ -56,7 +66,7 @@ function vTabs:__init(...)
 
   --- (int or string)
   self.switcher_height = property(self.get_switcher_height,self.set_switcher_height)
-  self._switcher_height = args.switcher_height or nil
+  self._switcher_height = args.switcher_height or vTabs.SWITCHER_DEFAULT_H
 
   --- (vTabs.LAYOUT) 
   self.layout = property(self.get_layout,self.set_layout)
@@ -104,7 +114,8 @@ function vTabs:__init(...)
   vControl.__init(self,...)
   self:build()
 
-  self:set_index(self._index)
+  --self:set_index(self._index)
+  self:set_switcher_width(self.width)
   self:set_switcher_align(self._switcher_align)
 
 
@@ -127,7 +138,7 @@ function vTabs:build()
     width = self._switcher_width,
     height = self._switcher_height,
     notifier = function()
-      self:set_index(self.switcher.value)
+      self.index = self.switcher.value
       if self.notifier then
         self.notifier(self)
       end
@@ -161,6 +172,7 @@ end
 -- @param rmv (bool) remove before adding
 
 function vTabs:build_layout(rmv)
+  TRACE("vTabs:build_layout(rmv)",rmv)
 
   if rmv then
     self.view:remove_child(self.switch_aligner)
@@ -186,6 +198,7 @@ end
 -- (refreshing the view like this allows us to "crop" the tab contents)
 
 function vTabs:refresh_size()
+  TRACE("vTabs:refresh_size()")
 
   self:set_width(self._width)
   self:set_height(self._height)
@@ -245,6 +258,7 @@ end
 -- @param view (renoise.Views.View)
 
 function vTabs:add_content(tab_idx,view)
+  TRACE("vTabs:add_content(tab_idx,view)",tab_idx,view)
 
   assert(self.tabs[tab_idx],"No tab with this index")
 
@@ -270,7 +284,7 @@ function vTabs:set_index(idx)
   end
 
   self.switcher.value = idx
-  self._index = idx
+  self.index_observable.value = idx
 
   local vb = self.vb
   for k,v in ipairs(self.tabs) do
@@ -283,7 +297,7 @@ function vTabs:set_index(idx)
 end
 
 function vTabs:get_index()
-  return self._index
+  return self.index_observable.value
 end
 
 --------------------------------------------------------------------------------
@@ -301,8 +315,10 @@ end
 function vTabs:set_switcher_width(val)
   TRACE("vTabs:set_switcher_width(val)",val)
   self._switcher_width = val
-  self.switcher.width = val
-  self.switch_aligner.width = val
+  if val then
+    self.switcher.width = val
+    self.switch_aligner.width = val
+  end
 end
 
 function vTabs:get_switcher_width()
@@ -415,9 +431,13 @@ function vTabs:set_width(val)
 
   -- never smaller than switcher
   -- TODO resize switcher as well
-  val = math.max(val,self.switcher.width)
+  if val and self.switcher.width then
+    val = math.max(val,self.switcher.width)
+  end
 
-  self.switch_aligner.width = val
+  if val then
+    self.switch_aligner.width = val
+  end
 
   vControl.set_width(self,val)
 
@@ -454,6 +474,9 @@ function vTabs:set_height(val)
   end
 
   val = math.max(val,vTabs.MINIMUM_H)
+
+  --print("val",val)
+  --print("self._switcher_height",self._switcher_height)
 
   self.spacer_h.height = val - self._switcher_height
 
@@ -514,7 +537,7 @@ function vTabs:set_midi_mapping(str)
       name = str,
       invoke = function(msg)
         if msg:is_abs_value() then
-          self:set_index(msg.int_value)
+          self.index = msg.int_value
         end
       end
     })

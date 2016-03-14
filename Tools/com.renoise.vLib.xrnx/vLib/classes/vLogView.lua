@@ -2,7 +2,9 @@
 vLogView
 ============================================================================]]--
 
-class 'vLogView' (vControl)
+require (_vlibroot.."vCompositeControl")
+
+class 'vLogView' (vCompositeControl)
 
 --------------------------------------------------------------------------------
 --- Simple log display with add() and replace() methods
@@ -10,11 +12,16 @@ class 'vLogView' (vControl)
 vLogView.DEFAULT_W = 100
 vLogView.DEFAULT_H = 60
 
+vLogView.VIEWS = {
+  'clear_button',
+}
+
 function vLogView:__init(...)
 
   local args = vLib.unpack_args(...)
-  
-  -- properties -----------------------
+  --print("args",rprint(args))
+
+  -- properties --
 
   --- (string) all text in the log 
   self.text = property(self.get_text,self.set_text)
@@ -22,15 +29,29 @@ function vLogView:__init(...)
   --- (bool) when true, scroll to bottom when adding text
   self.autoscroll = args.autoscroll or true
 
-  -- internal -------------------------
+  --- number, purge lines when total is higher than this
+  self.max_lines = 50
 
-	vControl.__init(self,...)
+  -- initialize --
 
-  self.view = args.vb:multiline_textfield{
+	vCompositeControl.__init(self,...)
+  local vb = self.vb
+
+  self.view = vb:multiline_textfield{
     id = self.id,
     font = "mono",
   }
 
+  -- views --
+
+  self.clear_button = vb:button{
+    text = "Clear",
+    notifier = function()
+      self:clear()
+    end,
+  }
+
+  self:register_views(vLogView.VIEWS)
 
   self.width = args.width or vLogView.DEFAULT_H
   self.height = args.height or vLogView.DEFAULT_W
@@ -47,7 +68,6 @@ end
 --- clear all text in log
 
 function vLogView:clear()
-  TRACE("vLogView:clear()")
 
   self.view.text = ""
 
@@ -58,15 +78,22 @@ end
 -- @param txt (string)
 
 function vLogView:add(txt)
-  TRACE("vLogView:add(txt)",txt)
 
-  txt = vString.strip_leading_trailing_chars(txt,"\n",true,true)
+  txt = vString.strip_leading_trailing_chars(tostring(txt),"\n",true,true)
 
   if (self.view.text == nil) or (self.view.text == "") then
     self.view.text = txt
   else
     local paras = self.view.paragraphs
     table.insert(paras,txt) 
+    if (self.max_lines > 0) 
+      and (#paras > self.max_lines) 
+    then
+      -- purge some paragraphs
+      while(#paras > self.max_lines) do
+        table.remove(paras,1)
+      end
+    end
     self.view.paragraphs = paras
   end
 
@@ -81,7 +108,6 @@ end
 -- @param txt (string)
 
 function vLogView:replace(txt)
-  TRACE("vLogView:replace(txt)",txt)
 
   txt = vString.strip_leading_trailing_chars(txt,"\n",true,true)
   local paras = self.view.paragraphs

@@ -12,8 +12,13 @@ function vCellButton:__init(...)
   local args = vLib.unpack_args(...)
 
   -- (string)
-  self.text = property(self.get_text,self.set_text)
   self._text = args.text or ""
+  self.text = property(self.get_text,self.set_text)
+
+  -- (function) Handle mouse-press + release
+  -- @param elm (vCellValueBox)
+  self._notifier = args.notifier or nil
+  self.notifier = property(self.get_notifier,self.set_notifier)
 
   -- (function) Handle mouse-pressed events
   -- @param elm (vCellButton)
@@ -22,12 +27,12 @@ function vCellButton:__init(...)
 
   -- (function) Handle mouse-released events
   -- @param elm (vCellButton)
-  self.released = property(self.get_released,self.set_released)
   self._released = args.released or nil
+  self.released = property(self.get_released,self.set_released)
 
   -- (table) Table of R,G,B colors 
-  self.color = property(self.get_color,self.set_color)
   self._color = args.color or {0,0,0}
+  self.color = property(self.get_color,self.set_color)
 
   -- internal -------------------------
 
@@ -38,12 +43,17 @@ function vCellButton:__init(...)
     text = self._text,
     pressed = function() 
       if self._pressed then
-        self._pressed(self)
+        self._pressed(self,self.view.text)
       end
     end,
     released = function() 
       if self._released then
-        self._released(self)
+        self._released(self,self.view.text)
+      end
+    end,
+    notifier = function() 
+      if self._notifier then
+        self._notifier(self,self.view.text)
       end
     end,
     color = self._color,
@@ -114,14 +124,13 @@ function vCellButton:get_released()
 end
 
 --------------------------------------------------------------------------------
--- synonymous for 'released'
 
 function vCellButton:set_notifier(fn)
-  self.view.released = fn
+  self._notifier = fn
 end
 
 function vCellButton:get_notifier()
-  return self._released
+  return self._notifier
 end
 
 --------------------------------------------------------------------------------

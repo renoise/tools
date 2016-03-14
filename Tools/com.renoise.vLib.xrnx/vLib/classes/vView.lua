@@ -86,8 +86,9 @@ end
 --------------------------------------------------------------------------------
 
 function vView:set_width(val)
+  --print("vView:set_width(val)",val)
   self._width = val
-  if self.view then
+  if val and self.view then
     self.view.width = val
   end
 end
@@ -100,7 +101,7 @@ end
 
 function vView:set_height(val)
   self._height = val
-  if self.view then
+  if val and self.view then
     self.view.height = val
   end
 end

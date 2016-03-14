@@ -33,6 +33,8 @@ vLib.BITMAP_STYLES = {
   "main_color",   -- same as 'button_back' but with main text/back colors     
 }
 
+vLib.LARGE_BUTTON_H = 22
+vLib.SUBMIT_BT_W = 82
 
 --------------------------------------------------------------------------------
 --- generate a unique string that you is used as viewbuilder id for widgets

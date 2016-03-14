@@ -15,7 +15,7 @@ function vCellText:__init(...)
 
   -- (variant) usually string, but any type is accepted
   -- note: the text cell supports both "transform" and "formatting"
-  self._text = nil
+  self._text = args.text or nil
   self.text = property(self.get_text,self.set_text)
 
   -- (string)

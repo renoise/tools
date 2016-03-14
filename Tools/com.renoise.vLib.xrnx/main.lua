@@ -2,21 +2,20 @@
 main.lua
 ============================================================================]]--
 
-_vlibroot = "/classes/"
-_vlib_img = "/classes/images/"
+require ("vLib/support/debug")
 
-require ("/support/debug")
+_xlibroot = "xLib/classes/"
+_vlibroot = "vLib/classes/"
+_vlib_img = _vlibroot.."images/"
 
 require (_vlibroot.."vLib")
 
-require (_vlibroot.."helpers/vFilesys")
+--require (_vlibroot.."helpers/vFilesys")
 require (_vlibroot.."helpers/vSelection")
 require (_vlibroot.."helpers/vString")
-require (_vlibroot.."helpers/vVector")
-
+--require (_vlibroot.."helpers/vVector")
 require (_vlibroot.."parsers/vXML")
 require (_vlibroot.."parsers/vJSON")
-
 require (_vlibroot.."vTable")
 require (_vlibroot.."vTabs")
 require (_vlibroot.."vFileBrowser")
@@ -525,37 +524,9 @@ end
 -------------------------------------------------------------------------------
 
 function build_vtable()
-  print("build_vtable()")
+  print(">>> build_vtable()")
 
-  --[[
 
-  vb.views.controls_col:add_child(vb:column{
-    style = "plain",
-    vb:button{
-      width = 340,
-      text = "340px"
-    },
-    vb:horizontal_aligner{
-      --width = 400,
-      vb:button{
-        width = "25%",
-        text = "25%"
-      },
-      vb:button{
-        width = "10%",
-        text = "10%",
-      },
-      vb:button{
-        width = "25%",
-        text = "25%",
-      },
-      vb:button{
-        width = "25%",
-        text = "25%",
-      },
-    }
-  })
-  ]]
   vb.views.props_row:add_child(vb:column{
     id = "vTable_properties",
     style = "panel",
@@ -803,7 +774,7 @@ function build_vtable()
   end
 
   local handle_table_valuebox = function(elm,val)
-    --print("handle_table_valuebox",elm,val)
+    print("handle_table_valuebox",elm,val)
     local item = elm.owner:get_item_by_id(elm.item_id)
     if item then
       --elm.owner.data[elm.item_id].VALUEBOX = val
@@ -857,8 +828,8 @@ function build_vtable()
     end,
   }
   vb.views.controls_col:add_child(vtable.view)
-  --print("vtable.data",rprint(vtable.data))
-  vtable:update()
+  print(">>> vtable.data",rprint(vtable.data))
+  --vtable:update()
   table.insert(vlib_controls_ref,vtable)
 
 end
@@ -866,6 +837,7 @@ end
 -------------------------------------------------------------------------------
 
 function build_vbrowser()
+  print("build_vbrowser()")
 
   -- class properties and methods
   vb.views.props_row:add_child(vb:column{
@@ -893,6 +865,18 @@ function build_vbrowser()
         value = 1,
         notifier = function(val)
           set_control_property("num_rows",val)
+        end
+      },
+    },
+    vb:row{
+      vb:text{
+        text = "show_header"
+      },
+      vb:checkbox{
+        id = "vFileBrowser_show_header",
+        value = true,
+        notifier = function(val)
+          set_control_property("show_header",val)
         end
       },
     },

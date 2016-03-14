@@ -2,6 +2,8 @@
 vTree
 ============================================================================]]--
 
+require (_xlibroot.."xFilesystem")
+
 class 'vTree' (vControl)
 
 vTree.MAX_ROWS = 42
@@ -590,7 +592,7 @@ function vTree:load_file(file_path)
   end
 
   local data = nil
-  local folder,filename,ext = vFilesys.get_path_parts(file_path)
+  local folder,filename,ext = xFilesystem.get_path_parts(file_path)
   for k,v in ipairs(vTree.file_formats) do
 
     if (v.extension == ext) then
@@ -657,7 +659,7 @@ function vTree:selection_handler(changed,added,removed)
 end
 
 --------------------------------------------------------------------------------
--- GETTERS & SETTERS
+-- Getters and setters 
 --------------------------------------------------------------------------------
 
 function vTree:set_data(data)

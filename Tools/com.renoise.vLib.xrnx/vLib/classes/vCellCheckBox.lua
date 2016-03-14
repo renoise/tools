@@ -1,42 +1,38 @@
 --[[============================================================================
-vCellPopup
+vCellCheckBox
 ============================================================================]]--
 
-class 'vCellPopup' (vCell)
+class 'vCellCheckBox' (vCell)
 
 --------------------------------------------------------------------------------
----	Popup support for vCell. See also renoise.Views.Popup
+--- CheckBox support for vCell. See also renoise.Views.CheckBox
 
-vCellPopup.DEFAULT_VALUE = 1
+vCellCheckBox.DEFAULT_VALUE = false
 
-function vCellPopup:__init(...)
+function vCellCheckBox:__init(...)
 
   local args = vLib.unpack_args(...)
 
-  -- (table>string)
-  self.items = property(self.get_items,self.set_items)
-
-  -- (int)
+  -- (bool) checked state
+  self._value = args.value or vCellCheckBox.DEFAULT_VALUE
   self.value = property(self.get_value,self.set_value)
-  self._value = args.value or nil
 
-  -- (function) handle when popup value has changed
-  -- @param elm (vCellPopup)
-  self.notifier = property(self.get_notifier,self.set_notifier)
+  -- (function) callback when state has changed
+  -- @param elm (vCellCheckBox)
   self._notifier = args.notifier or nil
+  self.notifier = property(self.get_notifier,self.set_notifier)
 
-  -- initialize
+  -- internal -------------------------
 
 	vCell.__init(self,...)
-  self.view = args.vb:popup{
-    items = args.items or {},
+  self.view = args.vb:checkbox{
     value = self._value,
     notifier = function()
-      self._value = self.view.value
+      
       if self._notifier and not self._suppress_notifier then
-        self._notifier(self,self._value)
+        self._notifier(self,self.view.value)
       end
-    end,
+    end
   }
 
 	vCell.update(self)
@@ -45,52 +41,41 @@ end
 
 --------------------------------------------------------------------------------
 
-function vCellPopup:set_value(val,skip_event)
-  TRACE("vCellPopup:set_value(val)",val)
-
+function vCellCheckBox:set_value(val,skip_event)
+  
   if (type(val) == "nil") then
-   val = vCellPopup.DEFAULT_VALUE
+   val = vCellCheckBox.DEFAULT_VALUE
   end
 
   self._value = val
 
   if not skip_event then
     self._suppress_notifier = true
-    self.view.value = val
+    self.view.value = self.value
     self._suppress_notifier = false
   end
 
-	vCell.update(self)
-
 end
 
-function vCellPopup:get_value()
+function vCellCheckBox:get_value()
   return self._value
 end
 
 --------------------------------------------------------------------------------
 
-function vCellPopup:set_items(tbl)
-  self.view.items = tbl
-end
-
-function vCellPopup:get_items()
-  return self.view.items
-end
-
---------------------------------------------------------------------------------
-
-function vCellPopup:set_notifier(fn)
+function vCellCheckBox:set_notifier(fn)
   self._notifier = fn
 end
 
-function vCellPopup:get_notifier()
+function vCellCheckBox:get_notifier()
   return self._notifier
 end
 
+
 --------------------------------------------------------------------------------
 
-function vCellPopup:set_active(val)
+function vCellCheckBox:set_active(val)
+  TRACE("vCellCheckBox:set_active(val)",val)
 
   self.view.active = val
 	vControl.set_active(self,val)

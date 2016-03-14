@@ -8,16 +8,15 @@ class 'vVector'
 ---  Static methods for tables whose elements all have the same data type
 
 --------------------------------------------------------------------------------
+--[[
 -- TODO execute a test function on each item 
 -- @param t (table)
 -- @param fn_callback (function)
 -- @return table
 
 function vVector.filter(t,fn_callback)
-
   -- callback: item:t, index:int, vector:vector.<T>
   return rslt
-
 end
 
 --------------------------------------------------------------------------------
@@ -27,13 +26,11 @@ end
 -- @return table
 
 function vVector.sort(t,fn_compare)
-
   return rslt
-
 end
 
 --------------------------------------------------------------------------------
--- TODO merge two vectors, using the specified key to identify matching items
+-- merge two vectors, using the specified key to identify matching items
 -- used for joining a temporary/filtered set with the original 
 -- note: t1 overwrites matches in t2
 -- @param t1 (table)
@@ -41,19 +38,17 @@ end
 -- @return table
 
 function vVector.merge(t1,t2)
-
-
   return rslt
-
 end
 
-
+]]
 --------------------------------------------------------------------------------
 -- Match entry in an array (provide key + value)
 -- @param t (table) 
 -- @param key (string) 
 -- @param val (variant) 
 -- @return variant or nil
+-- @return int (index)
 
 function vVector.match_by_key_value(t,key,val)
   TRACE("vVector.match_by_key_value(t,key,val)",t,key,val)
@@ -61,7 +56,7 @@ function vVector.match_by_key_value(t,key,val)
   local rslt = table.create()
   for k,v in pairs(t) do
     if v[key] and (v[key] == val) then
-      return v
+      return v,k
     end
   end
 
