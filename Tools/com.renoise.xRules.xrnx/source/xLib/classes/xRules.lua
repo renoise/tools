@@ -1,0 +1,744 @@
+--[[============================================================================
+xRules
+============================================================================]]--
+--[[
+
+## About
+
+	xRules can rewrite MIDI/OSC messages on-the-fly using generated code
+  It does this by applying "rules" to the input, using specific conditions as 
+  triggers. Rule can then change the input in a number of different ways. 
+
+  An implementation of this class (also called xRules) is available from the 
+  Renoise tools page (http://www.renoise.com/tools/xrules). The tool adds a 
+  visual interface, device management and more. 
+
+
+## See also
+  xRuleset  - (supporting class)
+  xRule     - (supporting class)
+
+
+]]
+
+
+class 'xRules'
+
+xRules.RULESET_FOLDER = "./rulesets/"
+
+xRules.OUTPUT_OPTIONS = {
+  INTERNAL_AUTO = "internal_auto",  -- output routed notes, others are raw
+  INTERNAL_RAW  = "internal_raw",   -- always output as raw
+  EXTERNAL_MIDI = "external_midi",  -- using PORT_NAME
+  EXTERNAL_OSC  = "external_osc",   -- using OSC_DEVICE_NAME
+}
+
+--------------------------------------------------------------------------------
+
+function xRules:__init(...)
+
+	local args = xLib.unpack_args(...)
+
+  self.active = property(self.get_active,self.set_active)
+  self.active_observable = renoise.Document.ObservableBoolean(false)
+
+  -- table<xRuleset>
+  self.rulesets = {}
+
+  -- define a function to display matched messages
+  -- @param xmsg_in (xMessage)
+  -- @param ruleset_idx (int)
+  -- @param rule_idx (int)
+  self.callback = nil
+
+  --  xMidiInput
+  self.midi_input = xMidiInput{
+    multibyte_enabled = args.multibyte_enabled,
+    nrpn_enabled = args.nrpn_enabled,
+    terminate_nrpns = args.terminate_nrpns,
+  }
+
+  --- table<xOscDevice>
+  self.osc_devices = table.create()
+  self.osc_devices_observable = renoise.Document.ObservableNumberList()
+
+  --- table<renoise.Midi.MidiInputDevice>
+  self.midi_inputs = {}
+
+  --- table<renoise.Midi.MidiOutputDevice>
+  self.midi_outputs = {}
+
+  -- xOscClient, used for internal routing 
+  self.osc_client = xOscClient()
+
+  -- xOscRouter, incoming OSC is passed here
+  self.osc_router = xOscRouter()
+
+  -- table, relations between osc-patterns and osc router
+  -- {rule_index=int,ruleset_index=int,router_index=int}
+  self.osc_pattern_map = {}
+
+  -- observable, track when rulesets are added/swapped/removed
+  self.ruleset_observable = renoise.Document.ObservableNumberList()
+
+  -- int, 0 = no selection
+  self.selected_ruleset_index = property(self.get_selected_ruleset_index,self.set_selected_ruleset_index)
+  self.selected_ruleset_index_observable = renoise.Document.ObservableNumber(0)
+  self.selected_rule_index = property(self.get_selected_rule_index,self.set_selected_rule_index)
+  self.selected_ruleset = property(self.get_selected_ruleset)
+  self.selected_rule = property(self.get_selected_rule)
+
+  -- table<function> rules associated with aspects
+  self.aspect_handlers = {}
+
+  -- table<function> rules associated with channels
+  self.channel_handlers = {}
+
+  -- initialize --
+
+  self.midi_input.callback_fn = function(xmsg)
+    -- TODO how to obtain ruleset, rule index? 
+    self:match_message(xmsg)
+  end
+
+
+end
+
+--==============================================================================
+-- Getters/Setters 
+--==============================================================================
+
+function xRules:get_active()
+  return self.active_observable.value
+end
+
+function xRules:set_active(val)
+  self.active_observable.value = val
+end
+
+--------------------------------------------------------------------------------
+
+function xRules:get_selected_ruleset_index()
+  return self.selected_ruleset_index_observable.value
+end
+
+function xRules:set_selected_ruleset_index(val)
+  --print("xRules:set_selected_ruleset_index(val)",val)
+  self.selected_ruleset_index_observable.value = val
+end
+
+--------------------------------------------------------------------------------
+
+function xRules:get_selected_ruleset()
+  return self.rulesets[self.selected_ruleset_index]
+end
+
+--------------------------------------------------------------------------------
+
+function xRules:get_selected_rule()
+  --TRACE("xRules:get_selected_rule()")
+  local xruleset = self.selected_ruleset
+  if xruleset then
+    return xruleset.rules[xruleset.selected_rule_index]
+  end
+end
+
+--------------------------------------------------------------------------------
+
+function xRules:get_selected_rule_index()
+  --TRACE("xRulesUI:get_selected_rule_index()")
+  local xruleset = self.selected_ruleset
+  if xruleset then
+    return xruleset.selected_rule_index
+  else
+    return 0
+  end
+end
+
+function xRules:set_selected_rule_index(val)
+  --TRACE(">>> xRulesUI:set_selected_rule_index(val)")
+  local xruleset = self.selected_ruleset
+  if xruleset then
+    xruleset.selected_rule_index = val
+  end
+end
+
+--==============================================================================
+-- Class Methods
+--==============================================================================
+
+-- input raw midi messages here (will invoke the internal callback)
+-- @param msg (table), midi message
+
+function xRules:input_midi(midi_msg,port_name)
+
+  assert(type(midi_msg),"table","Expected midi_msg to be a table")
+  assert(type(midi_msg),"string","Expected port_name to be a string")
+
+  self.midi_input:input(midi_msg,port_name)
+
+end
+
+--------------------------------------------------------------------------------
+--- pass osc message into router
+-- @param osc_msg, renoise.Osc.Message
+-- @param device, xOscDevice
+
+function xRules:input_osc(osc_msg,device)
+
+  assert(type(osc_msg),"Message","Expected osc_msg to be an instance of renoise.Osc.Message")
+  assert(type(device),"xOscDevice","Expected device to be an instance of xOscDevice")
+
+  local matches = self.osc_router:input(osc_msg)
+  --print("*** router callback - #matches",#matches)
+
+  -- look up osc_pattern_map 
+  for k,v in ipairs(matches) do
+    if (self.osc_pattern_map[v.uid]) then
+      local map = self.osc_pattern_map[v.uid]
+      --print(">>> found entry in osc_pattern_map",rprint(map))
+      local xrule = self.rulesets[map.ruleset_index].rules[map.rule_index]
+      --print("xrule",xrule)
+      local values = {}
+      for k,v in ipairs(osc_msg.arguments) do
+        table.insert(values,v.value)
+      end
+      --print("values",rprint(values))
+      local xmsg = xOscMessage{
+        values = values,
+        device_name = device.name,
+        pattern = xrule.osc_pattern,
+        osc_msg = osc_msg,
+      }        
+      -- match against ruleset/rule
+      self:match_message(xmsg,map.ruleset_index,map.rule_index)
+    end
+  end
+
+end
+
+--------------------------------------------------------------------------------
+-- pass message into our (active) rulesets
+-- @param xmsg (xMidiMessage or xOscMessage)
+-- @param ruleset_idx (int) optional (set to match against specific ruleset)
+-- @param rule_idx (int) optional (set to match against specific rule)
+-- @return matches (table)
+--  {
+--    ruleset: index
+--    rules: {index,index,index}
+--  },
+
+function xRules:match_message(xmsg,ruleset_idx,rule_idx)
+
+  local function do_match(ruleset,ruleset_idx)
+    if ruleset.active then
+      if not ruleset.osc_enabled 
+        and (type(xmsg) == "xOscMessage")
+      then
+        --LOG("This ruleset is set to ignore OSC messages")
+      else
+        ruleset:match_message(xmsg,ruleset_idx,rule_idx)
+      end
+    end
+  end
+
+  if ruleset_idx then
+    do_match(self.rulesets[ruleset_idx],ruleset_idx)
+  else
+    for k,ruleset in ipairs(self.rulesets) do
+      do_match(ruleset,k)
+    end
+  end
+
+end
+
+--------------------------------------------------------------------------------
+-- transmit matched message - either internally or externally
+-- @param output (table) {target=xRules.OUTPUT_OPTIONS,xmsg=xMessage}
+-- @param xmsg_in (xMessage)
+-- @param ruleset_idx (int)
+-- @param rule_idx (int)
+
+function xRules:transmit(out,xmsg_in,ruleset_idx,rule_idx)
+
+  local rns = renoise.song()
+
+  local target = out.target
+  local xmsg = out.xmsg
+  local str_msg -- log message
+
+  --print("*** transmit - target",target)
+
+  if (target == xRules.OUTPUT_OPTIONS.INTERNAL_AUTO) then
+    str_msg = self:transmit_auto(xmsg)
+  elseif (target == xRules.OUTPUT_OPTIONS.INTERNAL_RAW) then
+    str_msg = self:transmit_raw(xmsg)
+  elseif (target == xRules.OUTPUT_OPTIONS.EXTERNAL_MIDI) then
+    str_msg = self:transmit_midi(xmsg)
+  elseif (target == xRules.OUTPUT_OPTIONS.EXTERNAL_OSC) then
+    str_msg = self:transmit_osc(xmsg)
+  else
+    -- here for compability reasons (v0.5 did not have output options)
+    str_msg = self:transmit_auto(xmsg)
+  end
+
+  -- TODO register with voice-manager
+  -- (need incoming as well as outgoing messages)
+
+
+  -- invoke callback, i.e. to provide visual feedback
+  if self.callback then
+    self.callback(xmsg_in,ruleset_idx,rule_idx,str_msg)
+  end
+
+end
+
+--------------------------------------------------------------------------------
+-- trigger 'automatic MIDI' using the internal OSC client
+-- if notes, route to specified track + instrument - else, pass as raw MIDI
+-- @param transmit_auto (xMidiMessage or xOscMessage)
+
+function xRules:transmit_auto(xmsg)
+
+  local is_note_on = (xmsg.message_type == xMidiMessage.TYPE.NOTE_ON)
+  local is_note_off = (xmsg.message_type == xMidiMessage.TYPE.NOTE_OFF)
+  --print("is_note_on, is_note_off",is_note_on,is_note_off)
+
+  if is_note_on or is_note_off then
+    local str_msg = "Renoise ↩ " .. tostring(xmsg)
+    local instr_idx = xmsg.instrument_index or rns.selected_instrument_index
+    local track_idx = xmsg.track_index or rns.selected_track_index
+    self.osc_client:trigger_instrument(is_note_on,instr_idx,track_idx,xmsg.values[1],xmsg.values[2])
+    return str_msg
+  else
+    if (type(xmsg)~="xMidiMessage") then
+      xmsg = xMidiMessage(xmsg.__def)
+    end
+    return self:transmit_raw(xmsg)
+  end
+
+end
+
+--------------------------------------------------------------------------------
+-- trigger 'raw MIDI' using the internal OSC client
+
+function xRules:transmit_raw(xmsg)
+
+  assert(type(xmsg)=="xMidiMessage","Expected xMidiMessage as argument")
+
+  local str_msg = "Renoise ↩ " .. tostring(xmsg)
+  local midi_msgs = xmsg:create_raw_message()
+  for k,v in ipairs(midi_msgs) do
+    self.osc_client:trigger_midi(v)
+  end
+  return str_msg
+end
+
+--------------------------------------------------------------------------------
+-- send MIDI on the port specified in the message
+
+function xRules:transmit_midi(xmsg)
+
+  assert(type(xmsg)=="xMidiMessage","Expected xMidiMessage as argument")
+
+  local midi_out
+  for k,midi_output in pairs(self.midi_outputs) do
+    if (k == xmsg.port_name) then
+      local str_msg = "MIDI ↪ " .. tostring(xmsg)
+      local midi_msgs = xmsg:create_raw_message()
+      --print("*** midi_msgs",rprint(midi_msgs))
+      for _,midi_msg in ipairs(midi_msgs) do
+        midi_output:send(midi_msg)
+      end
+      return str_msg
+    end
+  end
+
+end
+
+--------------------------------------------------------------------------------
+-- send message to OSC device specified in the message
+
+function xRules:transmit_osc(xmsg)
+
+  assert(type(xmsg)=="xOscMessage","Expected xOscMessage as argument")
+
+  for k,osc_device in pairs(self.osc_devices) do
+    if (xmsg.device_name == osc_device.name) then
+      local str_msg = "OSC ↪ " .. tostring(xmsg)
+      local osc_msg = xmsg:create_raw_message()
+      osc_device:send(osc_msg)
+      return str_msg
+    end
+  end
+
+end
+
+--------------------------------------------------------------------------------
+-- remove pattern from the osc_router 
+
+function xRules:remove_osc_patterns(ruleset_idx,rule_idx)
+
+  local rslt = {}
+  for k,v in ripairs(self.osc_pattern_map) do
+    if (v.ruleset_index == ruleset_idx) then
+      local match_rule_idx
+      if not rule_idx then
+        match_rule_idx = v.rule_index
+      elseif not match_rule_idx then
+        match_rule_idx = rule_idx
+      end
+      if (v.rule_index == match_rule_idx) then        
+        table.insert(rslt,v.router_index)      
+        table.remove(self.osc_pattern_map,k)
+      end
+    end
+  end
+
+  table.sort(rslt)
+  for k,v in ripairs(rslt) do
+    self.osc_router:remove_pattern(v)
+  end
+
+end
+
+--------------------------------------------------------------------------------
+-- add/replace patterns in the osc_router
+
+function xRules:add_osc_patterns(ruleset_idx)
+  
+  local ruleset = self.rulesets[ruleset_idx]
+  for k,v in ipairs(ruleset.rules) do
+    local router_index = self.osc_router:add_pattern(v.osc_pattern)
+    self.osc_pattern_map[v.osc_pattern.uid] = {
+      router_index = router_index,
+      ruleset_index = ruleset_idx,
+      rule_index = k,
+    }
+
+  end
+
+end
+
+--------------------------------------------------------------------------------
+-- @return boolean,string
+
+function xRules:load_ruleset(file_path,idx)
+  
+  if(type(file_path)~="string") then
+    return false, "Expected file_path to be a string"
+  end
+  if(file_path == "") then
+    return false, "Expected file_path to be a non-empty string"
+  end
+  if idx and (type(idx)~="number") then
+    return false, "Expected idx to be a number"
+  elseif not idx then
+    idx = #self.rulesets + 1
+  end
+
+  local xruleset = self:add_ruleset({},idx)
+  local passed,err = xruleset:load_definition(file_path)
+  if not passed then
+    local xruleset = self:remove_ruleset(idx)
+    return false,err
+  end
+  xruleset.modified = false
+
+  -- activate the osc patterns
+  for k,v in ipairs(self.rulesets) do
+    self:add_osc_patterns(k)
+  end
+
+  return true
+
+end
+
+
+--------------------------------------------------------------------------------
+-- toggle active state of ruleset
+
+function xRules:toggle_ruleset(ruleset_idx)
+
+  local ruleset = self.rulesets[ruleset_idx]
+  if ruleset then
+    ruleset.active = not ruleset.active
+  end
+
+end
+
+--------------------------------------------------------------------------------
+-- add ruleset, attach notifiers
+-- @param ruleset_def (table)
+-- @param ruleset_idx (int), specify index at which to insert (optional)
+-- @return xRuleset
+
+function xRules:add_ruleset(ruleset_def,ruleset_idx)
+
+  -- TODO implement better validation, return boolean on failure
+  assert(type(ruleset_def)=="table","Expected ruleset_def to be a table")
+
+  local ruleset = xRuleset(self,ruleset_def)
+
+  if not ruleset_idx then
+    ruleset_idx = #self.rulesets+1
+  end
+
+  table.insert(self.rulesets,ruleset_idx,ruleset)
+  self.ruleset_observable:insert(ruleset_idx,1)
+
+  ruleset.osc_enabled_observable:add_notifier(function()
+    --print(">>> ruleset.osc_enabled_observable fired...")
+    local xruleset = self.selected_ruleset
+    if xruleset then
+      local ruleset_idx = self.selected_ruleset_index
+      if xruleset.osc_enabled then
+        self:add_osc_patterns(ruleset_idx)
+      else
+        self:remove_osc_patterns(ruleset_idx)
+      end
+    end
+  end)
+
+  ruleset.rules_observable:add_notifier(function(args)
+    --print(">>> ruleset.rules_observable fired...",rprint(args))
+    if (args.type == "remove") then
+      -- assume selected ruleset (but it _could_ be another one)
+      local ruleset_idx = self.selected_ruleset_index
+      self:remove_osc_patterns(ruleset_idx,args.index)
+    end
+  end)
+
+  ruleset:compile()
+  return ruleset
+
+end
+
+--------------------------------------------------------------------------------
+-- @param idx (int)
+-- @return boolean,string
+
+function xRules:remove_ruleset(idx)
+
+  local ruleset = self.rulesets[idx]
+  if not ruleset then
+    local err = ("Could not remove ruleset with index #%d- it doesn't exist"):format(idx)
+    return false,err
+  end
+
+  table.remove(self.rulesets,idx)
+  self.ruleset_observable:remove(idx)
+
+  return true
+
+end
+
+--------------------------------------------------------------------------------
+-- @return boolean,string
+
+function xRules:replace_ruleset(file_path,idx)
+
+  assert(type(file_path)=="string","Expected file_path to be a string")
+  assert(type(idx)=="number","Expected idx to be a string")
+
+  self:remove_ruleset(idx)  
+  local passed,err = self:load_ruleset(file_path,idx)
+
+  return passed,err
+
+end
+
+--------------------------------------------------------------------------------
+-- save current ruleset to file
+-- @return boolean,string
+
+function xRules:save_ruleset()
+
+  local xruleset = self.selected_ruleset
+  local passed,err = xruleset:save_definition()
+  if not passed then
+    return false,err
+  end
+  xruleset.modified = false
+  return true
+
+end
+
+
+--------------------------------------------------------------------------------
+-- revert changes (reload file)
+-- @return boolean,string
+
+function xRules:revert_ruleset()
+
+  local xruleset = self.selected_ruleset
+  local xruleset_idx = self.selected_ruleset_index
+  local passed,err = self:replace_ruleset(xruleset.file_path,xruleset_idx)
+  if not passed then
+    return false,err
+  end
+  return true
+
+end
+
+--------------------------------------------------------------------------------
+
+function xRules:open_midi_input(port_name)
+
+  local input_devices = renoise.Midi.available_input_devices()
+  if table.find(input_devices, port_name) then
+    self.midi_inputs[port_name] = renoise.Midi.create_input_device(port_name,
+      function(midi_msg)
+        if not self.active then 
+          return 
+        end
+        self:input_midi(midi_msg,port_name)
+      end
+    )
+  else
+    LOG("*** Could not create MIDI input device " .. port_name)
+  end
+
+end
+
+
+--------------------------------------------------------------------------------
+
+function xRules:close_midi_input(port_name)
+
+  local midi_input = self.midi_inputs[port_name] 
+  if (midi_input and midi_input.is_open) 
+  then
+    midi_input:close()
+  end
+
+  self.midi_inputs[port_name] = nil
+
+end
+
+--------------------------------------------------------------------------------
+
+function xRules:open_midi_output(port_name)
+
+  local output_devices = renoise.Midi.available_output_devices()
+
+  if table.find(output_devices, port_name) then
+    self.midi_outputs[port_name] = renoise.Midi.create_output_device(port_name)
+  else
+    LOG("*** Could not create MIDI output device " .. port_name)
+  end
+
+end
+
+
+--------------------------------------------------------------------------------
+
+function xRules:close_midi_output(port_name)
+
+  local midi_output = self.midi_outputs[port_name] 
+  if (midi_output and midi_output.is_open) 
+  then
+    midi_output:close()
+  end
+
+  self.midi_outputs[port_name] = nil
+
+end
+
+-------------------------------------------------------------------------------
+-- add device, or replace existing with same name
+-- @param device, xOscDevice (if not defined, create from scratch)
+--  avoid triggering the 
+
+function xRules:add_osc_device(device)
+
+  if not device then
+    local unique_name = self:get_unique_osc_device_name("Untitled device")
+    device = xOscDevice{
+      active = false,
+      name = unique_name,
+      address = "127.0.0.1",
+      port_in = 8000,
+      port_out = 8080,
+    }
+  end
+
+  device.callback = function(osc_msg)
+    self:input_osc(osc_msg,device)
+  end
+
+  local device_idx
+  for k,v in ipairs(self.osc_devices) do
+    if (v.name == device.name) then
+      device_idx = k
+      break
+    end
+  end
+
+  if device_idx then
+    local existing = self.osc_devices[device_idx]
+    --print(">>> xRules:add_osc_device - replace existing device",existing)
+    self.osc_devices[device_idx]:import(device:export())
+  else
+    --print(">>> xRules:add_osc_device - add new device",device)
+    self.osc_devices:insert(device)
+    self.osc_devices_observable:insert(#self.osc_devices)
+  end
+
+  --[[
+  if device.active then
+    device:on_idle()
+  end
+  ]]
+
+
+end
+
+-------------------------------------------------------------------------------
+-- @param device_idx, integer
+
+function xRules:remove_osc_device(device_idx)
+
+  local device = self.osc_devices[device_idx]
+  device:close()
+  self.osc_devices:remove(device_idx)
+  self.osc_devices_observable:remove(device_idx)
+
+end
+
+--------------------------------------------------------------------------------
+
+function xRules:set_osc_device_property(device_name,key,value)
+
+  for k,v in ipairs(self.osc_devices) do
+    if (v.name == device_name) then
+      v[key] = value
+    end
+  end
+
+end
+
+-------------------------------------------------------------------------------
+
+function xRules:get_unique_osc_device_name(str_name,count)
+
+  local device_name_exists = function(str_name)
+    for k,v in ipairs(self.osc_devices) do
+      if (v.name == str_name) then
+        return true
+      end
+    end
+  end
+
+  local count = 1
+  local new_name = str_name
+  while device_name_exists(new_name) do
+    new_name = ("%s (%d)"):format(str_name,count)
+    count = count+1
+  end
+  
+  return new_name
+
+end
+
+

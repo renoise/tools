@@ -1,0 +1,2 @@
+-- This is not a valid ruleset
+-- (needs to have at least some kind of 'return' statement)

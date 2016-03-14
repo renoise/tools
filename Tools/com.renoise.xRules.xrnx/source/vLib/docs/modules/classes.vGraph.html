@@ -1,0 +1,687 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+<head>
+    <title>Reference</title>
+    <link rel="stylesheet" href="../ldoc.css" type="text/css" />
+</head>
+<body>
+
+<div id="container">
+
+<div id="product">
+	<div id="product_logo"></div>
+	<div id="product_name"><big><b></b></big></div>
+	<div id="product_description"></div>
+</div> <!-- id="product" -->
+
+
+<div id="main">
+
+
+<!-- Menu -->
+
+<div id="navigation">
+<br/>
+<h1>ldoc</h1>
+
+<ul>
+  <li><a href="../index.html">Index</a></li>
+</ul>
+
+<h2>Contents</h2>
+<ul>
+<li><a href="#Functions">Functions</a></li>
+<li><a href="#Fields">Fields</a></li>
+</ul>
+
+
+<h2>Modules</h2>
+<ul class="$(kind=='Topics' and '' or 'nowrap'">
+  <li><a href="../modules/classes.helpers.vBitmap.html">classes.helpers.vBitmap</a></li>
+  <li><a href="../modules/classes.helpers.vFilesys.html">classes.helpers.vFilesys</a></li>
+  <li><a href="../modules/classes.helpers.vSelection.html">classes.helpers.vSelection</a></li>
+  <li><a href="../modules/classes.helpers.vString.html">classes.helpers.vString</a></li>
+  <li><a href="../modules/classes.helpers.vVector.html">classes.helpers.vVector</a></li>
+  <li><a href="../modules/classes.parsers.vXML.html">classes.parsers.vXML</a></li>
+  <li><a href="../modules/classes.vCell.html">classes.vCell</a></li>
+  <li><a href="../modules/classes.vCellBitmap.html">classes.vCellBitmap</a></li>
+  <li><a href="../modules/classes.vCellButton.html">classes.vCellButton</a></li>
+  <li><a href="../modules/classes.vCellCheckBox.html">classes.vCellCheckBox</a></li>
+  <li><a href="../modules/classes.vCellPopup.html">classes.vCellPopup</a></li>
+  <li><a href="../modules/classes.vCellText.html">classes.vCellText</a></li>
+  <li><a href="../modules/classes.vCellValueBox.html">classes.vCellValueBox</a></li>
+  <li><a href="../modules/classes.vControl.html">classes.vControl</a></li>
+  <li><a href="../modules/classes.vFileBrowser.html">classes.vFileBrowser</a></li>
+  <li><strong>classes.vGraph</strong></li>
+  <li><a href="../modules/classes.vLib.html">classes.vLib</a></li>
+  <li><a href="../modules/classes.vLogView.html">classes.vLogView</a></li>
+  <li><a href="../modules/classes.vScrollbar.html">classes.vScrollbar</a></li>
+  <li><a href="../modules/classes.vTable.html">classes.vTable</a></li>
+  <li><a href="../modules/classes.vTabs.html">classes.vTabs</a></li>
+  <li><a href="../modules/classes.vTree.html">classes.vTree</a></li>
+  <li><a href="../modules/classes.vView.html">classes.vView</a></li>
+  <li><a href="../modules/classes.vWaveform.html">classes.vWaveform</a></li>
+  <li><a href="../modules/main.html">main</a></li>
+  <li><a href="../modules/support.debug.html">support.debug</a></li>
+</ul>
+
+</div>
+
+<div id="content">
+
+<h1>Module <code>classes.vGraph</code></h1>
+<p>vGraph is a class for creating histograms, envelope plots and such things</p>
+<p></p>
+
+
+<h2><a href="#Functions">Functions</a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#compute_peak_value">compute_peak_value ()</a></td>
+	<td class="summary">return the maximum value in our set</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#update">update ()</a></td>
+	<td class="summary">complete display update, use sparingly</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#handle_bar_clicked">handle_bar_clicked (idx)</a></td>
+	<td class="summary">determine response when clicking bar (invoke click_notifier)</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#value_to_bitmap">value_to_bitmap (val, part)</a></td>
+	<td class="summary">retrieve the matching for a value between 0-self._height</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#apply_to_bar">apply_to_bar (idx, fn)</a></td>
+	<td class="summary">do "something" to the bitmaps that make up a single bar
+ this method allows us to avoid having to update the entire graph</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#get_bitmap_ids">get_bitmap_ids (idx, rpt)</a></td>
+	<td class="summary">return the two bitmaps that together form a single line</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#add_line_elements">add_line_elements (lower_id, middle_id, upper_id, line_id, idx, val, is_selected)</a></td>
+	<td class="summary">add the elements that together form a single line</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#remove_line_elements">remove_line_elements (lower_id, middle_id, upper_id, line_id)</a></td>
+	<td class="summary">remove the elements that together form a single line</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#decide_bitmap_size">decide_bitmap_size (val)</a></td>
+	<td class="summary">for a line, compute how large bitmaps we are going to use</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#selection_handler">selection_handler (changed, added, removed)</a></td>
+	<td class="summary">update display after having called the selection class</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#get_data">get_data ()</a></td>
+	<td class="summary">GETTERS & SETTERS</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#get_value_quant">get_value_quant ()</a></td>
+	<td class="summary">[[</td>
+	</tr>
+</table>
+<h2><a href="#Fields">Fields</a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#self.selection">self.selection</a></td>
+	<td class="summary">(vSelection)</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#self._data">self._data</a></td>
+	<td class="summary">(table>number) the numeric data to operate on</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#self._draw_mode">self._draw_mode</a></td>
+	<td class="summary">(vGraph.DRAW_MODE)</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#self._value_max">self._value_max</a></td>
+	<td class="summary">(number) the maximum possible value</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#self._value_min">self._value_min</a></td>
+	<td class="summary">(number) the minimum possible value</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#self._select_mode">self._select_mode</a></td>
+	<td class="summary">(vSelection.SELECT_MODE)</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#self.selected_index">self.selected_index</a></td>
+	<td class="summary">(int) the index of the (first) selected item</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#self.selected_indices">self.selected_indices</a></td>
+	<td class="summary">(table > int) return indices of selected items</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#self.require_selection">self.require_selection</a></td>
+	<td class="summary">(bool) enforce that at least one item remains selected at all times</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#self.style_normal">self.style_normal</a></td>
+	<td class="summary">(vLib.BITMAP_STYLES)</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#self.style_selected">self.style_selected</a></td>
+	<td class="summary">(vLib.BITMAP_STYLES)</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#self._click_notifier">self._click_notifier</a></td>
+	<td class="summary">(function) callback function for when a bar is clicked</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#self._selection_notifier">self._selection_notifier</a></td>
+	<td class="summary">(function) callback function for when selection has changed</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#self.uid">self.uid</a></td>
+	<td class="summary">(string) unique identifier for views</td>
+	</tr>
+</table>
+
+<br/>
+<br/>
+
+
+    <h2><a name="Functions"></a>Functions</h2>
+    <dl class="function">
+    <dt>
+    <a name = "compute_peak_value"></a>
+    <strong>compute_peak_value ()</strong>
+    </dt>
+    <dd>
+    return the maximum value in our set
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "update"></a>
+    <strong>update ()</strong>
+    </dt>
+    <dd>
+    complete display update, use sparingly
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "handle_bar_clicked"></a>
+    <strong>handle_bar_clicked (idx)</strong>
+    </dt>
+    <dd>
+    determine response when clicking bar (invoke click_notifier)
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">idx</span>
+
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "value_to_bitmap"></a>
+    <strong>value_to_bitmap (val, part)</strong>
+    </dt>
+    <dd>
+    retrieve the matching for a value between 0-self._height
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">val</span>
+         (number)
+        </li>
+        <li><span class="parameter">part</span>
+         (string) "upper" or "lower"
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "apply_to_bar"></a>
+    <strong>apply_to_bar (idx, fn)</strong>
+    </dt>
+    <dd>
+    do "something" to the bitmaps that make up a single bar
+ this method allows us to avoid having to update the entire graph
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">idx</span>
+
+        </li>
+        <li><span class="parameter">fn</span>
+
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "get_bitmap_ids"></a>
+    <strong>get_bitmap_ids (idx, rpt)</strong>
+    </dt>
+    <dd>
+    return the two bitmaps that together form a single line
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">idx</span>
+
+        </li>
+        <li><span class="parameter">rpt</span>
+
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "add_line_elements"></a>
+    <strong>add_line_elements (lower_id, middle_id, upper_id, line_id, idx, val, is_selected)</strong>
+    </dt>
+    <dd>
+    add the elements that together form a single line
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">lower_id</span>
+
+        </li>
+        <li><span class="parameter">middle_id</span>
+
+        </li>
+        <li><span class="parameter">upper_id</span>
+
+        </li>
+        <li><span class="parameter">line_id</span>
+
+        </li>
+        <li><span class="parameter">idx</span>
+
+        </li>
+        <li><span class="parameter">val</span>
+
+        </li>
+        <li><span class="parameter">is_selected</span>
+
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "remove_line_elements"></a>
+    <strong>remove_line_elements (lower_id, middle_id, upper_id, line_id)</strong>
+    </dt>
+    <dd>
+    remove the elements that together form a single line
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">lower_id</span>
+
+        </li>
+        <li><span class="parameter">middle_id</span>
+
+        </li>
+        <li><span class="parameter">upper_id</span>
+
+        </li>
+        <li><span class="parameter">line_id</span>
+
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "decide_bitmap_size"></a>
+    <strong>decide_bitmap_size (val)</strong>
+    </dt>
+    <dd>
+    for a line, compute how large bitmaps we are going to use
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">val</span>
+         (number)
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+        <li>
+        val_lower</li>
+        <li>
+        val_middle</li>
+        <li>
+        val_upper</li>
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "selection_handler"></a>
+    <strong>selection_handler (changed, added, removed)</strong>
+    </dt>
+    <dd>
+    update display after having called the selection class
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">changed</span>
+
+        </li>
+        <li><span class="parameter">added</span>
+
+        </li>
+        <li><span class="parameter">removed</span>
+
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "get_data"></a>
+    <strong>get_data ()</strong>
+    </dt>
+    <dd>
+    GETTERS & SETTERS
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "get_value_quant"></a>
+    <strong>get_value_quant ()</strong>
+    </dt>
+    <dd>
+    [[
+
+
+
+
+
+
+
+</dd>
+</dl>
+    <h2><a name="Fields"></a>Fields</h2>
+    <dl class="function">
+    <dt>
+    <a name = "self.selection"></a>
+    <strong>self.selection</strong>
+    </dt>
+    <dd>
+    (vSelection)
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "self._data"></a>
+    <strong>self._data</strong>
+    </dt>
+    <dd>
+    (table>number) the numeric data to operate on
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "self._draw_mode"></a>
+    <strong>self._draw_mode</strong>
+    </dt>
+    <dd>
+    (vGraph.DRAW_MODE)
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "self._value_max"></a>
+    <strong>self._value_max</strong>
+    </dt>
+    <dd>
+    (number) the maximum possible value
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "self._value_min"></a>
+    <strong>self._value_min</strong>
+    </dt>
+    <dd>
+    (number) the minimum possible value
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "self._select_mode"></a>
+    <strong>self._select_mode</strong>
+    </dt>
+    <dd>
+    (vSelection.SELECT_MODE)
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "self.selected_index"></a>
+    <strong>self.selected_index</strong>
+    </dt>
+    <dd>
+    (int) the index of the (first) selected item
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "self.selected_indices"></a>
+    <strong>self.selected_indices</strong>
+    </dt>
+    <dd>
+    (table > int) return indices of selected items
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "self.require_selection"></a>
+    <strong>self.require_selection</strong>
+    </dt>
+    <dd>
+    (bool) enforce that at least one item remains selected at all times
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "self.style_normal"></a>
+    <strong>self.style_normal</strong>
+    </dt>
+    <dd>
+    (vLib.BITMAP_STYLES)
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "self.style_selected"></a>
+    <strong>self.style_selected</strong>
+    </dt>
+    <dd>
+    (vLib.BITMAP_STYLES)
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "self._click_notifier"></a>
+    <strong>self._click_notifier</strong>
+    </dt>
+    <dd>
+    (function) callback function for when a bar is clicked
+
+
+    <ul>
+        <li><span class="parameter">elm</span>
+         (vGraph)
+        </li>
+        <li><span class="parameter">index</span>
+         (int) the bar index
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "self._selection_notifier"></a>
+    <strong>self._selection_notifier</strong>
+    </dt>
+    <dd>
+    (function) callback function for when selection has changed
+
+
+    <ul>
+        <li><span class="parameter">elm</span>
+         (vGraph)
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "self.uid"></a>
+    <strong>self.uid</strong>
+    </dt>
+    <dd>
+    (string) unique identifier for views
+
+
+
+
+
+
+
+</dd>
+</dl>
+
+
+</div> <!-- id="content" -->
+</div> <!-- id="main" -->
+<div id="about">
+<i>generated by <a href="http://github.com/stevedonovan/LDoc">LDoc 1.4.2</a></i>
+</div> <!-- id="about" -->
+</div> <!-- id="container" -->
+</body>
+</html>

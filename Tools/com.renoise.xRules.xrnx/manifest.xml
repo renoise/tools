@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<RenoiseScriptingTool doc_version="0">
+  <Name>xRules</Name>
+  <Id>com.renoise.xRules</Id>
+  <Version>0.61</Version>
+  <ApiVersion>5</ApiVersion>
+  <Author>danoise (bjorn@renoise.com)</Author>
+  <Category>MIDI</Category>
+  <Description>xRules will allow you to rewrite and route incoming MIDI messages, using the built-in OSC server in Renoise. Launch from the tool menu, or by using the supplied keyboard/MIDI shortcuts</Description>
+  <Homepage/>
+  <Platform/>
+  <Icon/>
+</RenoiseScriptingTool>
