@@ -17,6 +17,7 @@ com.renoise.PhraseMate.xrnx/main.lua
 local initialized = false
 local modified_lines = {}
 local suppress_line_notifier = false
+local suppress_phrase_notifier = false
 local user_set_program = nil
 
 function invoke_task(rslt,err)
@@ -37,9 +38,6 @@ options:add_property("expand_columns", renoise.Document.ObservableBoolean(true))
 options:add_property("expand_subcolumns", renoise.Document.ObservableBoolean(true))
 options:add_property("mix_paste", renoise.Document.ObservableBoolean(false))
 options:add_property("zxx_mode", renoise.Document.ObservableBoolean(false))
---options:add_property("hide_columns", renoise.Document.ObservableBoolean(false))
---options:add_property("hide_subcolumns", renoise.Document.ObservableBoolean(false))
---options:add_property("sync_program", renoise.Document.ObservableBoolean(false))
 
 renoise.tool().preferences = options
 
@@ -145,29 +143,7 @@ function show_preferences()
             invoke_task(apply_phrase_to_track())
           end
         },
-        --[[
-        vb:row{
-          vb:button{
-            text = "Prev",
-            notifier = function()
-              invoke_task(select_previous_phrase())
-            end
-          },
-          vb:button{
-            text = "Next",
-            notifier = function()
-              invoke_task(select_next_phrase())
-            end
-          },
-          vb:switch{
-            width = 80,
-            items = {"Off","Prg","Map"},
-            notifier = function(val)
-              invoke_task(set_mode(val))
-            end
-          },
-        },
-        ]]
+
       },
       vb:column{
         vb:row{
@@ -206,14 +182,14 @@ renoise.tool():add_menu_entry {
 } 
 
 renoise.tool():add_menu_entry {
-  name = "Pattern Editor:Selection:Write phrase to selection (PhraseMate)...",
+  name = "Pattern Editor:Selection:Write Phrase to Selection (PhraseMate)...",
   invoke = function() 
     invoke_task(apply_phrase_to_selection())
   end
 } 
 
 renoise.tool():add_menu_entry {
-  name = "Pattern Editor:Track:Write phrase to track (PhraseMate)...",
+  name = "Pattern Editor:Track:Write Phrase to Track (PhraseMate)...",
   invoke = function() 
     invoke_task(apply_phrase_to_track())
   end
@@ -228,7 +204,7 @@ renoise.tool():add_keybinding {
   end
 }
 renoise.tool():add_keybinding {
-  name = "Global:PhraseMate:Write phrase to track...",
+  name = "Global:PhraseMate:Write Phrase to Track...",
   invoke = function(repeated)
     if (not repeated) then 
       invoke_task(apply_phrase_to_track())
@@ -236,19 +212,25 @@ renoise.tool():add_keybinding {
   end
 }
 renoise.tool():add_keybinding {
-  name = "Global:PhraseMate:Select previous phrase",
+  name = "Global:PhraseMate:Select Previous Phrase",
   invoke = function()
     invoke_task(select_previous_phrase())
   end
 }
 renoise.tool():add_keybinding {
-  name = "Global:PhraseMate:Select next phrase",
+  name = "Global:PhraseMate:Select Next Phrase",
   invoke = function()
     invoke_task(select_next_phrase())
   end
 }
 renoise.tool():add_keybinding {
-  name = "Global:PhraseMate:Disable phrases",
+  name = "Global:PhraseMate:Capture Phrase From Pattern",
+  invoke = function()
+    invoke_task(capture_phrase_index())
+  end
+}
+renoise.tool():add_keybinding {
+  name = "Global:PhraseMate:Disable Phrases",
   invoke = function(repeated)
     if (not repeated) then 
       invoke_task(set_mode(renoise.Instrument.PHRASES_OFF))
@@ -256,7 +238,7 @@ renoise.tool():add_keybinding {
   end
 }
 renoise.tool():add_keybinding {
-  name = "Global:PhraseMate:Set to program mode",
+  name = "Global:PhraseMate:Set to Program Mode",
   invoke = function(repeated)
     if (not repeated) then 
       invoke_task(set_mode(renoise.Instrument.PHRASES_PLAY_SELECTIVE))
@@ -264,7 +246,7 @@ renoise.tool():add_keybinding {
   end
 }
 renoise.tool():add_keybinding {
-  name = "Global:PhraseMate:Set to keymap mode",
+  name = "Global:PhraseMate:Set to Keymap Mode",
   invoke = function(repeated)
     if (not repeated) then 
       invoke_task(set_mode(renoise.Instrument.PHRASES_PLAY_KEYMAP))
@@ -513,6 +495,41 @@ function apply_phrase_to_selection()
 end
 
 --------------------------------------------------------------------------------
+-- capture the phrase index specified at the selected line
+
+function capture_phrase_index()
+
+  local rns = renoise.song()
+  local line = rns.selected_line
+  local track = rns.selected_track
+  local ptrack = rns.selected_pattern_track
+
+  local search_line = function(ptrack,line) 
+    for k,fx_col in ipairs(line.effect_columns) do
+      if (k <= track.visible_effect_columns) then
+        if (fx_col.number_string == "0Z") then
+          local num_phrases = #rns.selected_instrument.phrases
+          return math.min(num_phrases,fx_col.amount_value)
+        end
+      else
+        break
+      end
+    end
+  end
+
+  -- start search at current line, then move backwards
+  for line_idx = rns.selected_line_index, 1, -1 do
+    local line = ptrack:line(line_idx)
+    local matched_index = search_line(ptrack,line) 
+    if matched_index then
+      rns.selected_phrase_index = matched_index
+      return
+    end
+  end
+
+end
+
+--------------------------------------------------------------------------------
 
 function select_next_phrase()
 
@@ -636,7 +653,9 @@ function handle_modified_line(pos)
         local where_we_were = rns.transport.edit_pos.line - rns.transport.edit_step
         if (pos.line == where_we_were) then
           local num_phrases = #rns.selected_instrument.phrases
+          suppress_phrase_notifier = true
           rns.selected_phrase_index = user_set_program or math.min(num_phrases,fx_col.amount_value)
+          suppress_phrase_notifier = false
           fx_col.number_string = "0Z"
           fx_col.amount_value = rns.selected_phrase_index
         end
@@ -653,8 +672,7 @@ function handle_modified_line(pos)
     -- clear Zxx command
 
     if zxx_command.note_column_index then
-      --line.note_columns[zxx_command.note_column_index].effect_amount_value = 0
-      --line.note_columns[zxx_command.note_column_index].effect_number_value = 0
+      -- do nothing
     elseif zxx_command.effect_column_index then
       line.effect_columns[zxx_command.effect_column_index].amount_value = 0
       line.effect_columns[zxx_command.effect_column_index].number_value = 0
@@ -662,40 +680,6 @@ function handle_modified_line(pos)
   end
 
 end
-
---------------------------------------------------------------------------------
---[[
-function phrase_playback_mode_handler()
-  print("phrase_playback_mode_handler")
-
-end
-
---------------------------------------------------------------------------------
-
-function attach_to_instrument()
-
-  local rns = renoise.song()
-  local instr = rns.selected_instrument
-
-  if not instr.phrase_playback_mode_observable:has_notifier(phrase_playback_mode_handler) then
-    instr.phrase_playback_mode_observable:add_notifier(phrase_playback_mode_handler)
-  end
-
-end
-
---------------------------------------------------------------------------------
-
-function detach_from_instrument()
-
-  local rns = renoise.song()
-  local instr = rns.selected_instrument
-
-  if instr.phrase_playback_mode_observable:has_notifier(phrase_playback_mode_handler) then
-    instr.phrase_playback_mode_observable:remove_notifier(phrase_playback_mode_handler)
-  end
-
-end
-]]
 
 --------------------------------------------------------------------------------
 
@@ -725,13 +709,19 @@ function detach_from_pattern()
 
 end
 
+
 --------------------------------------------------------------------------------
 
 function phrase_notifier()
 
+  if suppress_phrase_notifier then
+    return
+  end
+
   local rns = renoise.song()
   user_set_program = rns.selected_phrase_index
-
+  --print(">>> user_set_program",user_set_program)
+  
 end
 
 --------------------------------------------------------------------------------
@@ -744,14 +734,11 @@ function attach_to_song()
     rns.selected_pattern_observable:add_notifier(attach_to_pattern)
   end
   attach_to_pattern()
-  
-  --[[
-  if not rns.selected_instrument_observable:has_notifier(attach_to_instrument) then
-    rns.selected_instrument_observable:add_notifier(attach_to_instrument)
-  end
-  attach_to_instrument()
-  ]]
 
+  if not rns.selected_phrase_observable:has_notifier(phrase_notifier) then
+    rns.selected_phrase_observable:add_notifier(phrase_notifier)
+  end
+  
 end
 
 
@@ -765,12 +752,9 @@ function detach_from_song()
   end
   detach_from_pattern()
 
-  --[[
-  if rns.selected_instrument_observable:has_notifier(attach_to_instrument) then
-    rns.selected_instrument_observable:remove_notifier(attach_to_instrument)
+  if not rns.selected_phrase_observable:has_notifier(phrase_notifier) then
+    rns.selected_phrase_observable:add_notifier(phrase_notifier)
   end
-  detach_from_instrument()
-  ]]
 
 end
 
@@ -796,6 +780,7 @@ renoise.tool().app_idle_observable:add_notifier(function()
   local rns = renoise.song()
   if not initialized and rns then
     zxx_mode_handler()
+    user_set_program = rns.selected_phrase_index
     initialized = true
   end
 
@@ -806,7 +791,6 @@ renoise.tool().app_idle_observable:add_notifier(function()
       end
     end
     modified_lines = {}
-    user_set_program = nil
   end
 
 end)
