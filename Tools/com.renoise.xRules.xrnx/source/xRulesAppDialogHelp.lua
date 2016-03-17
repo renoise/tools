@@ -13,6 +13,7 @@ xRulesAppDialogHelp
 class 'xRulesAppDialogHelp' (vDialog)
 
 function xRulesAppDialogHelp:__init(ui)
+  TRACE("xRulesAppDialogHelp:__init()",ui)
 
   vDialog.__init(self)
 
@@ -29,6 +30,7 @@ end
 -- @return renoise.Views.Rack
 
 function xRulesAppDialogHelp:create_dialog()
+  TRACE("xRulesAppDialogHelp:create_dialog()")
 
   local vb = self.vb
 

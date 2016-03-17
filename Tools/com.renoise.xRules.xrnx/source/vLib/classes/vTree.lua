@@ -40,6 +40,7 @@ vTree.file_formats = {
 --- Tree view, used for displaying hierarchical data
 
 function vTree:__init(...)
+  TRACE("vTree:__init(...)")
 
   local args = vLib.unpack_args(...)
 
@@ -173,12 +174,14 @@ end
 --------------------------------------------------------------------------------
 
 function vTree:get_elm_id(str,idx)
+  TRACE("vTree:get_elm_id(str,idx)",str,idx)
   return ("vtree_%s_%d_%s"):format(str,idx,self.uid)
 end
 
 --------------------------------------------------------------------------------
 
 function vTree:build()
+  TRACE("vTree:build()")
 
   self.rebuild_requested = false
 
@@ -313,6 +316,7 @@ end
 --------------------------------------------------------------------------------
 
 function vTree:remove_rows()
+  TRACE("vTree:remove_rows()")
   
   local vb = self.vb
   local table_elm = vb.views[self.tree_id]
@@ -351,6 +355,7 @@ end
 -- update table using current settings (rebuild if needed)
 
 function vTree:update()
+  TRACE("vTree:update()")
 
   if self.rebuild_requested then
     self:build()
@@ -378,6 +383,7 @@ end
 -- recursive method, will iterate through table and update each row
 
 function vTree:update_tree(t,depth)
+  TRACE("vTree:update_tree(t,depth)",t,depth)
 
   if not depth then
     depth = 1
@@ -471,6 +477,7 @@ end
 --------------------------------------------------------------------------------
 
 function vTree:update_scrollbar(maintain_index)
+  TRACE("vTree:update_scrollbar(maintain_index)",maintain_index)
 
   self.visible_row_count = 0
   self:get_visible_row_count(self._data)
@@ -490,6 +497,7 @@ end
 -- (used for determining range of the scrollbar)
 
 function vTree:get_visible_row_count(t)
+  TRACE("vTree:get_visible_row_count(t)",t)
 
   if not t.expanded then
     return
@@ -516,6 +524,7 @@ end
 -- + initialize the "expanded" attribute
 
 function vTree:parse_data(t)
+  TRACE("vTree:parse_data(t)",t)
 
   if not t.item_id then
     t.item_id = self.item_id
@@ -538,6 +547,7 @@ end
 -- if resized, the external resize handler is invoked
 
 function vTree:autosize_to_contents()
+  TRACE("vTree:autosize_to_contents()")
 
   if not self.autosize then
     return
@@ -561,6 +571,7 @@ end
 -- @param file_path (string) source file - if undefined, file browser is shown
 
 function vTree:load_file(file_path)
+  TRACE("vTree:load_file(file_path)")
 
   local function get_supported_extensions()
     local rslt = {}
@@ -597,6 +608,7 @@ end
 --------------------------------------------------------------------------------
 
 function vTree:get_row_by_id(item_id)
+  TRACE("vTree:get_row_by_id(item_id)",item_id)
 
   for row_idx = 1, self._num_rows do
     local hidden_id = self:get_elm_id("hidden",row_idx)
@@ -613,6 +625,7 @@ end
 --- update display after having called the selection class
 
 function vTree:selection_handler(changed,added,removed)
+  TRACE("vTree:selection_handler(changed,added,removed)",changed,added,removed)
   --print("added",rprint(added))
   --print("removed",rprint(removed))
 
@@ -650,6 +663,7 @@ end
 --------------------------------------------------------------------------------
 
 function vTree:set_data(data)
+  TRACE("vTree:set_data(data)",data)
 
   if (type(data)~="table") then
     --print("*** vTree.set_data() - only tables are accepted as data")
@@ -679,6 +693,7 @@ end
 --------------------------------------------------------------------------------
 
 function vTree:set_num_rows(num)
+  TRACE("vTree:set_num_rows(num)",num)
 
   num = math.min(num,vTree.MAX_ROWS)
   if (self._num_rows ~= num) then
@@ -785,6 +800,7 @@ end
 --------------------------------------------------------------------------------
 
 function vTree:set_selected_index(idx)
+  TRACE("vTree:set_selected_index(idx)",idx)
   local changed,added,removed = self.selection:set_index(idx)
   self:selection_handler(changed,added,removed)
 end
@@ -809,6 +825,7 @@ end
 --------------------------------------------------------------------------------
 
 function vTree:set_select_mode(val,skip_event)
+  TRACE("vTree:set_select_mode(val)",val)
   local changed,added,removed = self.selection:set_mode(val)
   if not skip_event then
     self:selection_handler(changed,added,removed)
@@ -823,6 +840,7 @@ end
 --------------------------------------------------------------------------------
 
 function vTree:set_require_selection(val,skip_event)
+  TRACE("vTree:set_require_selection(val)",val)
   local changed,added,removed = self.selection:set_require_selection(val)
   if not skip_event then
     self:selection_handler(changed,added,removed)

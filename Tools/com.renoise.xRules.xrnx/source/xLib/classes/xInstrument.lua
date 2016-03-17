@@ -5,6 +5,7 @@ class 'xInstrument'
 -- @return bool
 
 function xInstrument.is_sliced(instr)
+  TRACE("xInstrument.is_sliced(instr)",instr)
 
   if (#instr.samples > 0) then
     return (instr.sample_mappings[1][1].read_only)
@@ -20,6 +21,7 @@ end
 -- @return bool 
 
 function xInstrument.is_keyzone_available(instr)
+  TRACE("xInstrument.is_keyzone_available(instr)",instr)
 
   if (#instr.phrases == 0) then
     return true

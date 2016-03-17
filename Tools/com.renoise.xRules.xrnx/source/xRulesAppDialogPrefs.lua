@@ -23,6 +23,7 @@ local OSC_LABEL_W = 70
 local OSC_CONTROL_W = 90
 
 function xRulesAppDialogPrefs:__init(ui)
+  TRACE("xRulesAppDialogPrefs:__init()",ui)
 
   vDialog.__init(self)
 
@@ -30,7 +31,7 @@ function xRulesAppDialogPrefs:__init(ui)
   self.ui = ui
 
   -- xRulesApp
-  --self.owner = self.ui.owner
+  self.owner = self.ui.owner
 
   -- xRules
   self.xrules = self.ui.owner.xrules
@@ -54,6 +55,7 @@ end
 -- @return int or nil
 
 function xRulesAppDialogPrefs:match_in_list(list,value)
+  TRACE("xRulesAppDialogPrefs:match_in_list(list,value)",list,value)
 
   local matched = false
   for k = 1, #list do
@@ -69,78 +71,161 @@ end
 -- @return renoise.Views.Rack
 
 function xRulesAppDialogPrefs:create_dialog()
+  TRACE("xRulesAppDialogPrefs:create_dialog()")
 
   local vb = self.vb
   local vtable
 
+  --print(">>> self.owner.xprefs",self.owner.xprefs)
+  local profiles = self.owner.xprefs:get_profile_names()
+  table.insert(profiles,1,"No profile selected")
+
   local content = vb:column{
     margin = 6,
     spacing = 3,
-    vb:column{
-      width = DIALOG_W,
-      style = "group",
-      margin = 6,
-      vb:text{
-        text = "General options",
-        font = "bold",
+    vb:row{
+      --width = DIALOG_W,
+      spacing = 6,
+      vb:column{ -- general settings
+        style = "group",
+        margin = 6,
+        vb:text{
+          text = "General options",
+          font = "bold",
+        },
+        vb:row{ -- autorun/show on startup
+          vb:checkbox{
+            id = "mrules_autorun_enabled",
+            value = self.prefs.autorun_enabled.value,
+            notifier = function(val)
+              self.prefs:property("autorun_enabled").value = val
+              if self.prefs:property("show_on_startup").value then
+                vb.views["mrules_show_on_startup"].value = val
+                --self.prefs:property("show_on_startup").value = val
+              end
+              vb.views["mrules_show_on_startup"].active = val
+            end,
+          },
+          vb:text{
+            text = "Autostart tool",
+          },  
+        },
+        vb:row{
+          vb:checkbox{
+            id = "mrules_show_on_startup",
+            value = self.prefs.show_on_startup.value,
+            notifier = function(val)
+              self.prefs:property("show_on_startup").value = val
+            end,
+          },
+          vb:text{
+            text = "Display user-interface on startup",
+          },    
+        
+        },
+        vb:row{ -- ruleset folder
+          vb:text{
+            text = "Rulesets",
+          },
+          vb:textfield{
+            width = DIALOG_W - 354,
+            bind = self.prefs:property("ruleset_folder"),
+          },
+          vb:button{
+            text = "Browse",
+            notifier = function()
+              local new_path = renoise.app():prompt_for_path("Specify ruleset folder")
+              if (new_path ~= "") then
+                self.prefs:property("ruleset_folder").value = new_path
+              end
+            end,
+          },
+          vb:button{
+            text = "Reset",
+            notifier = function()
+              self.prefs:property("ruleset_folder").value = xRulesAppPrefs.RULESET_FOLDER
+            end,
+          }
+        },
       },
-      vb:row{
-        vb:checkbox{
-          id = "mrules_autorun_enabled",
-          value = self.prefs.autorun_enabled.value,
-          notifier = function(val)
-            self.prefs:property("autorun_enabled").value = val
-            if self.prefs:property("show_on_startup").value then
-              vb.views["mrules_show_on_startup"].value = val
-              --self.prefs:property("show_on_startup").value = val
+      vb:column{ -- profiles
+        style = "group",
+        margin = 6,
+
+        vb:text{
+          text = "Configurations",
+          font = "bold",
+        },
+        vb:row{
+          tooltip = "Enable or disable configuration switching",
+          vb:checkbox{
+            value = self.owner.xprefs.profiles_enabled,
+            notifier = function(val)
+              self.owner.xprefs.profiles_enabled = val
+              if (val == false) then
+                vb.views.xprefs_always_choose_cb.value = false
+              end
+              self:update_profile_switcher()
+            end          
+          },
+          vb:text{
+            text = "Enable profile switching"
+          }
+        },
+        vb:row{
+          tooltip = "Enable this feature to choose or manage profiles at startup",
+          vb:checkbox{
+            id = "xprefs_always_choose_cb",
+            value = self.owner.xprefs.always_choose,
+            notifier = function(val)
+              self.owner.xprefs.always_choose = val
+              if val then
+                self.owner.xprefs.recall_profile = ""
+              end
+              self:update_profile_switcher()
             end
-            vb.views["mrules_show_on_startup"].active = val
-          end,
+          },
+          vb:text{
+            text = "Choose profile on startup",
+          },
         },
-        vb:text{
-          text = "Autostart tool",
-        },    
-      },
-      vb:row{
-        vb:checkbox{
-          id = "mrules_show_on_startup",
-          value = self.prefs.show_on_startup.value,
-          notifier = function(val)
-            self.prefs:property("show_on_startup").value = val
-          end,
-        },
-        vb:text{
-          text = "Display user-interface on startup",
-        },    
-      },
-      vb:row{
-        --width = DIALOG_W,
-        spacing = 2,
-        vb:space{
-          width = 16,
-        },
-        vb:text{
-          text = "Ruleset folder",
-        },
-        vb:textfield{
-          --text = self.prefs:property("ruleset_folder").value,
-          width = DIALOG_W - 200,
-          bind = self.prefs:property("ruleset_folder"),
-        },
-        vb:button{
-          text = "Browse",
-          notifier = function()
-            local new_path = renoise.app():prompt_for_path("Specify ruleset folder")
-            if (new_path ~= "") then
-              self.prefs:property("ruleset_folder").value = new_path
+        vb:row{
+          vb:popup{
+            id = "xprefs_profile_selector",
+            items = profiles,
+            width = 140,
+            --active = not self.owner.xprefs.always_choose,
+            value = self.owner.xprefs.selected_profile and
+              table.find(profiles,self.owner.xprefs.selected_profile.name) or 1,
+            notifier = function(idx)
+              if (idx == 1) then
+                self.owner.xprefs.recall_profile = ""
+              else
+                local profile_name = self.owner.xprefs.profiles[idx-1].name
+                self.owner.xprefs.recall_profile = profile_name
+              end
+              self:update_profile_switcher()
+              local msg = "This change will take effect the next time the tool is launched" 
+              renoise.app():show_message(msg)
+            end,
+          },
+          vb:button{
+            text = "Update",
+            id = "xprefs_update_profile_bt",
+            --active = self.owner.xprefs.selected_profile and true or false,
+            tooltip = "Update the currently selected profile with the current settings",
+            notifier = function()
+              local passed,err = self.owner.xprefs:update_profile()
+              --print("passed,err",passed,err)
+              if passed then
+                local msg = "Profile was updated with the current settings"
+                renoise.app():show_message(msg)
+              else
+                local msg = ("A problem occurred while saving profile: %s"):format(err)
+                renoise.app():show_warning(msg)
+              end
             end
-          end,
-        },
-        vb:button{
-          text = "Reset",
-          notifier = function()
-            self.prefs:property("ruleset_folder").value = xRulesAppPrefs.RULESET_FOLDER
-          end,
+          }
         }
       },
     },
@@ -204,9 +289,6 @@ function xRulesAppDialogPrefs:create_dialog()
       },
       vb:row{
         vb:column{
-          --margin = 6,
-          --width = TABLE_W,
-          --style = "group",
           id = "xRulesPrefsMidiInputRack",
           vb:text{
             text = "MIDI Inputs",
@@ -215,9 +297,6 @@ function xRulesAppDialogPrefs:create_dialog()
           
         },
         vb:column{
-          --margin = 6,
-          --width = TABLE_W,
-          --style = "group",
           id = "xRulesPrefsMidiOutputRack",
           vb:text{
             text = "MIDI Outputs",
@@ -229,10 +308,8 @@ function xRulesAppDialogPrefs:create_dialog()
 
     },
     vb:column{
-      --style = "group",
       id = "xRulesPrefsOscRack",
       visible = false,
-      --margin = 6,
       width = DIALOG_W,
       vb:column{
         width = DIALOG_W,
@@ -283,7 +360,6 @@ function xRulesAppDialogPrefs:create_dialog()
       },
 
       vb:horizontal_aligner{
-        --width = DIALOG_W,
         mode = "justify",
 
         vb:text{
@@ -297,8 +373,6 @@ function xRulesAppDialogPrefs:create_dialog()
             self:update_dialog()
           end
         },
-        --[[ TODO
-        ]]
       },     
 
     },
@@ -323,7 +397,6 @@ function xRulesAppDialogPrefs:create_dialog()
   -- midi inputs --
 
   local toggle_midi_input = function(elm,checked)
-    --print("toggle_midi_input(elm,checked)",elm,checked)
     local item = elm.owner:get_item_by_id(elm.item_id)
     if item then
       item.CHECKBOX = checked
@@ -342,11 +415,7 @@ function xRulesAppDialogPrefs:create_dialog()
     id = "vtable_midi_inputs",
     vb = vb,
     width = TABLE_W,
-    --height = 200,
-    --scrollbar_width = 20,
     row_height = TABLE_ROW_H,
-    --header_height = 30,
-    --show_header = false,
     num_rows = MIDI_ROWS,
     column_defs = {
       {key = "CHECKBOX", col_width=20, col_type=vTable.CELLTYPE.CHECKBOX, notifier=toggle_midi_input},
@@ -360,7 +429,6 @@ function xRulesAppDialogPrefs:create_dialog()
   -- midi outputs --
 
   local toggle_midi_output = function(elm,checked)
-    --print("toggle_midi_output(elm,checked)",elm,checked)
     local item = elm.owner:get_item_by_id(elm.item_id)
     if item then
       item.CHECKBOX = checked
@@ -379,11 +447,7 @@ function xRulesAppDialogPrefs:create_dialog()
     id = "vtable_midi_outputs",
     vb = vb,
     width = TABLE_W,
-    --height = 200,
-    --scrollbar_width = 20,
     row_height = TABLE_ROW_H,
-    --header_height = 30,
-    --show_header = false,
     num_rows = MIDI_ROWS,
     column_defs = {
       {key = "CHECKBOX", col_width=20, col_type=vTable.CELLTYPE.CHECKBOX, notifier=toggle_midi_output},
@@ -496,6 +560,7 @@ function xRulesAppDialogPrefs:create_dialog()
 
 
   self:update_dialog()
+  self:update_profile_switcher()
 
   return vb:column{
     content,
@@ -506,11 +571,33 @@ end
 
 -------------------------------------------------------------------------------
 
-function xRulesAppDialogPrefs:update_dialog()
+function xRulesAppDialogPrefs:update_profile_switcher()
+  TRACE("xRulesAppDialogPrefs:update_profile_switcher()")
 
   local vb = self.vb
+  local xprefs = self.owner.xprefs
+  local profile_idx = vb.views.xprefs_profile_selector.value
+  --print("profile_idx",profile_idx)
+  
+  if not xprefs.profiles_enabled then
+    vb.views.xprefs_always_choose_cb.active = false
+    vb.views.xprefs_profile_selector.active = false
+    vb.views.xprefs_update_profile_bt.active = true
+  else
+    vb.views.xprefs_always_choose_cb.active = true
+    vb.views.xprefs_profile_selector.active = not xprefs.always_choose and true or false
+    vb.views.xprefs_update_profile_bt.active = (profile_idx > 1) and true or false
+  end
 
-  --print("xRulesAppDialogPrefs:update_dialog - vb.views PRE",rprint(vb.views))
+
+end
+
+-------------------------------------------------------------------------------
+
+function xRulesAppDialogPrefs:update_dialog()
+  print("xRulesAppDialogPrefs:update_dialog()")
+
+  local vb = self.vb
 
   -- midi inputs --
 
@@ -526,6 +613,7 @@ function xRulesAppDialogPrefs:update_dialog()
       TEXT = v,
     }
   end
+  rprint("midi_inputs data",rprint(data))
   vtable.data = data
   vtable.show_header = false
   vtable:update()

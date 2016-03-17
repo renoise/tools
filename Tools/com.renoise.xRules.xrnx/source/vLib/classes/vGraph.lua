@@ -64,6 +64,7 @@ vGraph.HORIZONTAL_FIT = {
 vGraph.BITMAP_MAX_H = 400
 
 function vGraph:__init(...)
+  TRACE("vGraph:__init(...)",...)
 
   local args = vLib.unpack_args(...)
   
@@ -179,6 +180,7 @@ end
 --- return the maximum value in our set
 
 function vGraph:compute_peak_value()
+  TRACE("vGraph:compute_peak_value()")
 
   local peak = 0
   for k,v in ipairs(self._data) do
@@ -192,6 +194,7 @@ end
 --- complete display update, use sparingly
 
 function vGraph:update()
+  TRACE("vGraph:update()")
 
 	local vb = self.vb
 
@@ -296,6 +299,7 @@ end
 -- determine response when clicking bar (invoke click_notifier)
 
 function vGraph:handle_bar_clicked(idx)
+  TRACE("vGraph:handle_bar_clicked(idx)",idx)
 
   if self._click_notifier then
     self._click_notifier(self,idx)
@@ -309,6 +313,7 @@ end
 -- @param part (string) "upper" or "lower"
 
 function vGraph:value_to_bitmap(val,part)
+  TRACE("vGraph:value_to_bitmap(val,part)",val,part)
 
   local str_bitmap = nil
 
@@ -330,6 +335,7 @@ end
 -- this method allows us to avoid having to update the entire graph
 
 function vGraph:apply_to_bar(idx,fn)
+  TRACE("vGraph:apply_to_bar(idx,fn)",idx,fn)
 
   local repeat_count = 1
   local lower_id,middle_id,upper_id,line_id = self:get_bitmap_ids(idx,repeat_count)
@@ -361,6 +367,7 @@ end
 -- return the two bitmaps that together form a single line
 
 function vGraph:get_bitmap_ids(idx,rpt)
+  TRACE("vGraph:get_bitmap_id(idx,rpt)",idx,rpt)
 
   local line_id = ("vgraph_%s_bar_%d_%d"):format(self.uid,idx,rpt)
   local upper_id = line_id.."_upper"
@@ -418,6 +425,7 @@ end
 -- remove the elements that together form a single line
 
 function vGraph:remove_line_elements(lower_id,middle_id,upper_id,line_id)
+  TRACE("vGraph:remove_line_elements(lower_id,middle_id,upper_id,line_id)",lower_id,middle_id,upper_id,line_id)
 
 	local vb = self.vb
 
@@ -445,6 +453,7 @@ end
 --------------------------------------------------------------------------------
 
 function vGraph:set_bar_style(idx,style)
+  TRACE("vGraph:set_bar_style(idx,style)",idx,style)
   
   self:apply_to_bar(idx,function(bitmap)
     bitmap.mode = style
@@ -528,6 +537,7 @@ end
 --------------------------------------------------------------------------------
 
 function vGraph:set_value(idx,val)
+  TRACE("vGraph:set_value(idx,val)",idx,val)
 
   if (self._data[idx]) then
     self._data[idx] = val
@@ -573,6 +583,7 @@ end
 --------------------------------------------------------------------------------
 
 function vGraph:clear_selection()
+  TRACE("vGraph:clear_selection()")
 
   local changed, removed = self.selection:clear_selection()
   self:selection_handler(changed,{},removed)
@@ -582,6 +593,7 @@ end
 --------------------------------------------------------------------------------
 
 function vGraph:select_all()
+  TRACE("vGraph:select_all()")
 
   local changed,added = self.selection:select_all()
   self:selection_handler(changed,added,{})
@@ -592,6 +604,7 @@ end
 --- update display after having called the selection class
 
 function vGraph:selection_handler(changed,added,removed)
+  TRACE("vGraph:selection_handler(changed,added,removed)",changed,added,removed)
   --print("added",rprint(added))
   --print("removed",rprint(removed))
 
@@ -618,6 +631,7 @@ end
 --------------------------------------------------------------------------------
 
 function vGraph:get_item(idx)
+  TRACE("vGraph:get_selected_item(idx)",idx)
   
   return self._data[idx]
 
@@ -626,6 +640,7 @@ end
 --------------------------------------------------------------------------------
 
 function vGraph:toggle_index(idx)
+  TRACE("vGraph:toggle_index(idx)",idx)
   
   local changed,added,removed = self.selection:toggle_index(idx)
   self:selection_handler(changed,added,removed)
@@ -642,6 +657,7 @@ function vGraph:get_data()
 end
 
 function vGraph:set_data(t)
+  TRACE("vGraph:set_data(t)",t)
 
   self._data = t
   self.selection.num_items = #t
@@ -660,6 +676,7 @@ function vGraph:get_draw_mode()
 end
 
 function vGraph:set_draw_mode(val)
+  TRACE("vGraph:set_draw_mode(val)",val)
   local has_changed = (val ~= self._draw_mode)
   self._draw_mode = val
   if has_changed then
@@ -806,6 +823,7 @@ end
 --------------------------------------------------------------------------------
 
 function vGraph:set_select_mode(val,skip_event)
+  TRACE("vGraph:set_select_mode(val)",val)
   local changed,added,removed = self.selection:set_mode(val)
   if not skip_event then
     self:selection_handler(changed,added,removed)
@@ -820,6 +838,7 @@ end
 --------------------------------------------------------------------------------
 
 function vGraph:set_require_selection(val,skip_event)
+  TRACE("vGraph:set_require_selection(val)",val)
   local changed,added,removed = self.selection:set_require_selection(val)
   if not skip_event then
     self:selection_handler(changed,added,removed)

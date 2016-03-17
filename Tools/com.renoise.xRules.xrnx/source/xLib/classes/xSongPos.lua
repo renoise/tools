@@ -138,6 +138,7 @@ end
 -- @return int or nil 
 
 function xSongPos.get_pattern_num_lines(seq_idx)
+  TRACE("xSongPos:get_pattern_num_lines(seq_idx)",seq_idx)
 	
   assert(type(seq_idx) == "number")
 
@@ -154,6 +155,7 @@ end
 -- @return int, sequence index or nil
 
 function xSongPos.end_of_sequence_loop(seq_idx)
+  TRACE("xSongPos.end_of_sequence_loop(seq_idx)",seq_idx)
 
   assert(type(seq_idx) == "number")
 
@@ -168,6 +170,7 @@ end
 -- @return int, sequence index or nil
 
 function xSongPos.start_of_sequence_loop(seq_idx)
+  TRACE("xSongPos.start_of_sequence_loop(seq_idx)",seq_idx)
 
   assert(type(seq_idx) == "number")
 
@@ -183,6 +186,7 @@ end
 -- @return int, line index or nil
 --[[
 function xSongPos.end_of_blockloop(line_idx)
+  TRACE("xSongPos.end_of_blockloop(line_idx)",line_idx)
 
   assert(type(line_idx) == "number")
 
@@ -198,6 +202,7 @@ end
 -- @return int, line index or nil
 
 function xSongPos.start_of_blockloop(line_idx)
+  TRACE("xSongPos.start_of_blockloop(line_idx)",line_idx)
 
   assert(type(line_idx) == "number")
 
@@ -214,6 +219,7 @@ end
 -- @return bool
 
 function xSongPos.within_bounds(seq_idx,line_idx)
+  TRACE("xSongPos.within_bounds(seq_idx,line_idx)",seq_idx,line_idx)
 
   if (seq_idx > #rns.sequencer.pattern_sequence) then
     return false
@@ -231,6 +237,7 @@ end
 -- @return int
 
 function xSongPos.get_line_diff(pos1,pos2)
+  TRACE("xSongPos.get_line_diff(pos1,pos2)",pos1,pos2)
 
   local num_lines = 0
 
@@ -275,6 +282,7 @@ end
 -- that respect the actual pattern length/sequence plus loops
 
 function xSongPos:normalize()
+  TRACE("xSongPos:normalize()")
 
   local seq_idx = self.sequence
   local line_idx = self.line
@@ -306,6 +314,7 @@ end
 -- increase the position by X number of lines
 
 function xSongPos:increase_by_lines(num_lines)
+  TRACE("xSongPos:increase_by_lines(num_lines)",num_lines)
 
   assert(type(num_lines) == "number")
 
@@ -385,6 +394,7 @@ end
 -- @param num_lines, int
 
 function xSongPos:decrease_by_lines(num_lines)
+  TRACE("xSongPos:decrease_by_lines(num_lines)",num_lines)
 
   assert(type(num_lines) == "number")
 
@@ -477,6 +487,7 @@ end
 --  done (bool), true when no further action needed (capped/nullified)
 
 function xSongPos:enforce_boundary(direction,seq_idx,line_idx)
+  TRACE("xSongPos:enforce_boundary(direction,seq_idx,line_idx)",direction,seq_idx,line_idx)
 
   assert(type(direction),"string")
   assert(type(seq_idx),"number")
@@ -581,6 +592,7 @@ end
 -- @return line (int)
 
 function xSongPos:enforce_block_boundary(direction,line_idx,line_delta)
+  TRACE("xSongPos:enforce_block_boundary(direction,line_idx)",direction,line_idx,line_delta)
 
   assert(type(direction),"string")
   assert(type(line_idx),"line_idx")

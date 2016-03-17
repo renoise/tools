@@ -46,6 +46,7 @@ end
 -- @return int, #stripped lines 
 
 function vString.strip_line(str,patt)
+  TRACE("vString.strip_line(str,patt)",str,patt)
   
   local rslt = table.create()
   local captures = string.gmatch(str,"([^\n]*)\n")
@@ -67,6 +68,7 @@ end
 -- @param str (string), e.g. "33.3%"
 
 function vString.string_to_percentage(str)
+  TRACE("vString.string_to_percentage(str)",str)
   return tonumber(string.sub(str,1,#str-1))
 end
 
@@ -103,6 +105,7 @@ end
 -- @return string
 
 function vString.table_to_string(t,args)
+  TRACE("vString.table_to_string(t,args)",t,args)
 
   args = args or {}
   args.multiline = args.multiline or false

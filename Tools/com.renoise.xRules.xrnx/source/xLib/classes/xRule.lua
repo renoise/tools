@@ -22,6 +22,7 @@ xRule
 class 'xRule'
 
 xRule.ASPECT = {
+  SYSEX = "sysex",
   PORT_NAME = "port_name",
   DEVICE_NAME = "device_name",
   CHANNEL = "channel",
@@ -54,7 +55,8 @@ xRule.VALUES = {
 }
 
 xRule.ASPECT_DEFAULTS = {
-  PORT_NAME = {},
+  SYSEX = "F0 * F7",
+  PORT_NAME = renoise.Midi.available_input_devices(),
   CHANNEL = {},
   TRACK_INDEX = {},
   INSTRUMENT_INDEX = {},
@@ -70,8 +72,6 @@ xRule.ASPECT_DEFAULTS = {
   VALUE_9 = 1,
 }
 
--- TODO update whenever ports change
-xRule.ASPECT_DEFAULTS.PORT_NAME = renoise.Midi.available_input_devices()
 
 for i = 1,16 do
   table.insert(xRule.ASPECT_DEFAULTS.CHANNEL,i)
@@ -85,6 +85,7 @@ end
 -- provide the expected value type for aspects
 -- (assume integer when not listed)
 xRule.ASPECT_BASETYPE = {
+  SYSEX = "string",
   PORT_NAME = "string",
   DEVICE_NAME = "string",
   MESSAGE_TYPE = "string",
@@ -92,6 +93,7 @@ xRule.ASPECT_BASETYPE = {
 
 -- list aspects restricted to TYPE_OPERATORS
 xRule.ASPECT_TYPE_OPERATORS = {
+  xRule.ASPECT.SYSEX,
   xRule.ASPECT.PORT_NAME,
   xRule.ASPECT.DEVICE_NAME,
   xRule.ASPECT.MESSAGE_TYPE,
@@ -129,12 +131,14 @@ xRule.VALUE_OPERATORS = {
 xRule.ACTIONS = {
   CALL_FUNCTION = "call_function",
   OUTPUT_MESSAGE = "output_message",  
+  ROUTE_MESSAGE = "route_message",  
   SET_CHANNEL = "set_channel",
   SET_INSTRUMENT = "set_instrument",
   SET_MESSAGE_TYPE = "set_message_type",
   SET_PORT_NAME = "set_port_name",
   SET_DEVICE_NAME = "set_device_name",
   SET_TRACK = "set_track",
+  --SET_SYSEX = "set_sysex",
   SET_VALUE = "set_value",
   INCREASE_INSTRUMENT = "increase_instrument",
   INCREASE_TRACK = "increase_track",
@@ -151,6 +155,7 @@ xRule.ACTIONS = {
 xRule.ACTIONS_FULL = {
   CALL_FUNCTION = xRule.ACTIONS.CALL_FUNCTION,
   OUTPUT_MESSAGE = xRule.ACTIONS.OUTPUT_MESSAGE,  
+  ROUTE_MESSAGE = xRule.ACTIONS.ROUTE_MESSAGE,  
   SET_CHANNEL = xRule.ACTIONS.SET_CHANNEL,
   SET_INSTRUMENT = xRule.ACTIONS.SET_INSTRUMENT,
   SET_PORT_NAME = xRule.ACTIONS.SET_PORT_NAME,
@@ -193,6 +198,7 @@ xRule.ACTIONS_FULL = {
 }
 
 -- when a given action is relating to an aspect
+-- (used for providing sensible defaults)
 xRule.ACTIONS_TO_ASPECT_MAP = {
   SET_INSTRUMENT = xRule.ASPECT.INSTRUMENT_INDEX,
   SET_TRACK = xRule.ASPECT.TRACK_INDEX,
@@ -237,6 +243,8 @@ xRule.ACTIONS_TO_ASPECT_MAP = {
 xRule.ACTION_BASETYPE = {
   CALL_FUNCTION = "string",
   OUTPUT_MESSAGE = "string",
+  ROUTE_MESSAGE = "string",
+  SEND_MESSAGE = "string",
 }
 
 
@@ -244,6 +252,7 @@ xRule.ACTION_BASETYPE = {
 -------------------------------------------------------------------------------
 
 function xRule:__init(def)
+  TRACE("xRule:__init(def)",def)
 
   if not def then
     def = {}
@@ -298,16 +307,6 @@ function xRule:__init(def)
   -- tracking the generated function to detect changes
   self.modified_observable = renoise.Document.ObservableBang()
 
-  -- TODO table<xVoiceMgr> each instance keeps track of active voices 
-  -- that has been sent via an output_message() statement/action
-  --self.voice_mgrs = {}
-
-  -- TODO lists 'explicitly set aspects' for messages (e.g., a rule that 
-  -- only processes messages from channel #10). Can speed up the matching 
-  -- when dealing with a large number of rules
-  -- self.profile = {}
-
-
   --== initialize ==--
 
   -- osc pattern 
@@ -334,26 +333,30 @@ function xRule:__init(def)
   self.sandbox.compile_at_once = true
   self.sandbox.str_prefix = [[
     __xmsg = select(1, ...)
+    __xrules = select(2, ...)
+    __xruleset_index = select(3, ...)
+
+    -- add/clone message into the output queue
+    -- @param val (string), one of xRules.OUTPUT_OPTIONS
     local output_message = function(val)
       local xmsg_out
       --print(">>> type(__xmsg)",type(__xmsg))
       local def = __xmsg.__def
       if (val == xRules.OUTPUT_OPTIONS.EXTERNAL_OSC)
         and (type(__xmsg)=='xMidiMessage') 
-      then -- convert from MIDI -> OSC
+      then 
+        -- convert from MIDI -> OSC
         --print(">>> MIDI message def:",rprint(def))
         xmsg_out = xOscMessage(def)
         xmsg_out.pattern = __xrule.osc_pattern
-        -- dynamically created OSC properties 
         xmsg_out.device_name = tostring(__xmsg.device_name)
-        --print("xmsg_out.device_name",xmsg_out.device_name,type(xmsg_out.device_name))
-        --print("convert from MIDI -> OSC",xmsg_out)
+
       elseif (type(__xmsg)=='xOscMessage') 
         and ((val == xRules.OUTPUT_OPTIONS.EXTERNAL_MIDI)
         or (val == xRules.OUTPUT_OPTIONS.INTERNAL_RAW))
-      then -- convert from OSC -> MIDI
+      then 
+        -- convert from OSC -> MIDI
         xmsg_out = xMidiMessage(def)
-        -- dynamically created MIDI properties 
         xmsg_out.message_type = __xmsg.message_type
         xmsg_out.channel = __xmsg.channel
         xmsg_out.bit_depth = __xmsg.bit_depth
@@ -374,6 +377,32 @@ function xRule:__init(def)
       })
 
     end
+
+    -- pass message on to a different rule/set
+    -- @param val (string), "ruleset_name:rule_name"
+    local route_message = function(val)
+      --print("route_message - val",val)
+      local routing_values = xLib.split(val,":")
+      local rule,ruleset,rule_idx,ruleset_idx
+      if (routing_values[1] == xRuleset.CURRENT_RULESET) then
+        ruleset = __xrules.rulesets[__xruleset_index]
+        ruleset_idx = __xruleset_index
+      else
+        ruleset,ruleset_idx = __xrules:get_ruleset_by_name(routing_values[1])
+      end
+      if ruleset then
+        rule,rule_idx = ruleset:get_rule_by_name(routing_values[2])
+        --ruleset,ruleset_idx = __xrules:get_ruleset_by_name(routing_values[1])
+      else
+        --print("*** failed to locate ruleset: "..routing_values[1])
+      end
+      --print(">>> route_message - ruleset,rule", ruleset,rule)
+      if ruleset and rule then
+        --print(">>> passing message from one rule to another", ruleset_idx,rule_idx)
+        __xrules:match_message(__xmsg,ruleset_idx,rule_idx,true)
+      end
+    end
+
   ]]
   self.sandbox.str_suffix = [[
     return __output,__evaluated
@@ -381,12 +410,26 @@ function xRule:__init(def)
 
   local props_table = {
 
+    -- Global
+
+    ["renoise"] = {
+      access = function(env) return renoise end,
+    },
+
     ["__xrule"] = {
       access = function(env) return self end,
     },
 
+    -- Static access to xLib classes 
+
+    ["xLib"] = {
+      access = function(env) return xLib end,
+    },
     ["xRules"] = {
       access = function(env) return xRules end,
+    },
+    ["xRuleset"] = {
+      access = function(env) return xRuleset end,
     },
     ["xMidiMessage"] = {
       access = function(env) return xMidiMessage end,
@@ -469,6 +512,8 @@ function xRule:get_name()
 end
 
 function xRule:set_name(val)
+  assert(type(val)=="string","Expected name to be a string")
+  val = val:gsub(":","") -- colons not allowed (used to indicate routings)
   local modified = (val ~= self.name_observable.value) and true or false
   self.name_observable.value = val
   if modified then
@@ -483,6 +528,7 @@ function xRule:get_midi_enabled()
 end
 
 function xRule:set_midi_enabled(val)
+  assert(type(val)=="boolean","Expected midi_enabled to be a boolean")
   local modified = (val ~= self.midi_enabled) and true or false
   self.midi_enabled_observable.value = val
   if modified then
@@ -497,6 +543,7 @@ function xRule:get_match_any()
 end
 
 function xRule:set_match_any(val)
+  assert(type(val)=="boolean","Expected match_any to be a boolean")
   local modified = (val ~= self.match_any) and true or false
   self.match_any_observable.value = val
   if modified then
@@ -542,7 +589,8 @@ end
 -- @param xmsg (xMessage or implementation thereof)
 -- @return table<xMessage>
 
-function xRule:match(xmsg)
+function xRule:match(xmsg,xrules,ruleset_idx)
+  TRACE("xRule:match(xmsg,xrules,ruleset_idx)",xmsg,xrules,ruleset_idx)
 
   if not self.sandbox.callback then
     LOG("*** no sandbox callback, aborting..." )
@@ -556,7 +604,7 @@ function xRule:match(xmsg)
 
   local xmsgs,evaluated
   local success,err = pcall(function()
-    xmsgs,evaluated = self.sandbox.callback(xmsg)
+    xmsgs,evaluated = self.sandbox.callback(xmsg,xrules,ruleset_idx)
   end)
   if not success and err then
     LOG("*** ERROR: please review the callback function - "..err)
@@ -575,6 +623,7 @@ end
 -- * consecutive logic statements
 
 function xRule:fix_conditions()
+  TRACE("xRule:fix_conditions()")
 
   local last_was_logic = false
   local yet_to_encounter_first_row = true
@@ -633,6 +682,7 @@ end
 -- @return string, error message
 
 function xRule:compile()
+  TRACE("xRule:compile()")
 
   if (#self.conditions == 0) 
     and not self.match_any
@@ -640,11 +690,40 @@ function xRule:compile()
     self.sandbox.callback = nil
     return false,"Can't compile - no conditions were defined"
   end
+
+  local build_sysex_condition = function(k,v)
+    --print("build_sysex_condition",k,v)
+
+    local t = xLib.split(v," ")
+    rprint(t)
+
+    local str_fn = ""
+    local last_was_wildcard = false
+    for k,v in ipairs(t) do
+      if (k > 1) and not last_was_wildcard then
+        str_fn = str_fn .. "and "
+      end
+      -- skip wildcards 
+      if (v ~= "*") then
+        str_fn = str_fn .. "(values["..k.."] == 0x"..v..") "
+        last_was_wildcard = false
+      else
+        last_was_wildcard = true
+      end
+    end
+    str_fn = str_fn .. " \n"
+
+    return str_fn
+
+  end
   
   local build_comparison = function(k,v)
     local str_fn = ""
     local count = 0
     for k2,v2 in pairs(v) do
+      
+      --print("k,v,k2,v2",k,v,k2,v2)
+
       if (count > 0) then
         str_fn = str_fn .. "and "
       end
@@ -661,12 +740,19 @@ function xRule:compile()
           val = val[1]
         end
         -- wrap strings in quotes
-        local basetype = xRule.ASPECT_BASETYPE[string.upper(k)]
-        val = (basetype == "string") and "'"..val.."'" or val
+        -- (except sysex, which is interpreted seperately)
+        if (k ~= xMidiMessage.TYPE.SYSEX) then
+          local basetype = xRule.ASPECT_BASETYPE[string.upper(k)]
+          val = (basetype == "string") and "'"..val.."'" or val
+        end
       end
 
       if (k2 == xRule.OPERATOR.EQUAL_TO) then
-        str_fn = str_fn .. "("..k.." == "..val..") \n"
+        if (k == xMidiMessage.TYPE.SYSEX) then
+          str_fn = str_fn .. build_sysex_condition(k,val)
+        else
+          str_fn = str_fn .. "("..k.." == "..val..") \n"
+        end
       elseif (k2 == xRule.OPERATOR.NOT_EQUAL_TO) then
         str_fn = str_fn .. "("..k.." ~= "..val..") \n"
       elseif (k2 == xRule.OPERATOR.LESS_THAN) then
@@ -680,6 +766,7 @@ function xRule:compile()
       end
       count = count+1
     end
+    --print("str_fn",str_fn)
     return str_fn
   end
 
@@ -727,6 +814,8 @@ function xRule:compile()
     for k2,v2 in pairs(v) do
       if (k2 == xRule.ACTIONS.OUTPUT_MESSAGE) then
         str_fn = str_fn .. string.format("output_message('%s') \n",v2)
+      elseif (k2 == xRule.ACTIONS.ROUTE_MESSAGE) then
+        str_fn = str_fn .. string.format("route_message('%s') \n",v2)
       elseif (k2 == xRule.ACTIONS.SET_INSTRUMENT) then
         str_fn = str_fn .. string.format("instrument = %d \n",v2)
       elseif (k2 == xRule.ACTIONS.SET_TRACK) then
@@ -776,10 +865,11 @@ function xRule:compile()
 
   --print(">>> lua string:\n",str_fn)
 
-  if self.sandbox:test_syntax(str_fn) then
+  local passed,err = self.sandbox:test_syntax(str_fn) 
+  if passed then
     self.sandbox.callback_str = str_fn
   else
-    return false,"Invalid syntax when checking rule"
+    return false,"Invalid syntax when checking rule:"..err
   end
 
 end

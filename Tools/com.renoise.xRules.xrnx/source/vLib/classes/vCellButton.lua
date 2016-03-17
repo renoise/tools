@@ -78,6 +78,7 @@ end
 --------------------------------------------------------------------------------
 
 function vCellButton:set_text(str)
+  TRACE("vCellButton:set_text(str)",str)
 
   if not self._display_text or (str ~= self._text) then
     self._text = str

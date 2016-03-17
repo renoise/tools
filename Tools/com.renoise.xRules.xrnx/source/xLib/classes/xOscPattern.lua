@@ -42,6 +42,7 @@ xOscPattern.uid_counter = 0
 --------------------------------------------------------------------------------
 
 function xOscPattern:__init(...)
+  TRACE("xOscPattern:__init(...)")
 
 	local args = xLib.unpack_args(...) 
   --print("*** args",rprint(args))
@@ -125,6 +126,7 @@ function xOscPattern:get_pattern_in()
 end
 
 function xOscPattern:set_pattern_in(val)
+  TRACE("xOscPattern:set_pattern_in(val)",val)
   local modified = (val ~= self.pattern_in_observable.value) and true or false
   if modified then
     self.before_modified_observable:bang()
@@ -143,6 +145,7 @@ function xOscPattern:get_pattern_out()
 end
 
 function xOscPattern:set_pattern_out(val)
+  TRACE("xOscPattern:set_pattern_out(val)",val)
   local modified = (val ~= self.pattern_out_observable.value) and true or false
   if modified then
     self.before_modified_observable:bang()
@@ -197,6 +200,7 @@ end
 -- @return boolean,string
 
 function xOscPattern:match(msg)
+  TRACE("xOscPattern:match(msg)",msg)
 
   -- check if same header
   if not (msg.pattern == self.osc_pattern_in) then
@@ -259,6 +263,7 @@ end
 -- + also determines if pattern is cacheable
 
 function xOscPattern:parse_input_pattern()
+  TRACE("xOscPattern:parse_input_pattern()")
   
   self.arguments = {}
   local parts = {}
@@ -325,6 +330,7 @@ end
 -- + rearrange the order of values via "$n" tokens
 
 function xOscPattern:parse_output_pattern()
+  TRACE("xOscPattern:parse_output_pattern()")
 
   local rslt = {}
 
@@ -363,6 +369,7 @@ end
 -- @return string, message when failed
 
 function xOscPattern:generate(args)
+  TRACE("xOscPattern:generate(args)",args)
 
   if (self.osc_pattern_out == "") then
     error("Can't generate message without an output pattern")
@@ -399,6 +406,7 @@ end
 -- @return string or number 
 
 function xOscPattern:interpret_literal(str,force_strict)
+  TRACE("xOscPattern:interpret_literal(str,force_strict)",str,force_strict)
 
   local as_number = tonumber(str)
   if as_number then
@@ -436,6 +444,7 @@ end
 -- @return boolean,string
 
 function xOscPattern.test_pattern(str_pattern)
+  TRACE("xOscPattern.test_pattern(str_pattern)",str_pattern)
 
   -- check for initial forward slash
   if (string.sub(str_pattern,0,1) ~= "/") then

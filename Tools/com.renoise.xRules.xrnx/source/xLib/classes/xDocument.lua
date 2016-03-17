@@ -27,6 +27,7 @@ class 'xDocument'
 -- @return table 
 
 function xDocument:serialize()
+  TRACE("xDocument:serialize()")
 
   local t = {}
   for k,v in pairs(self.DOC_PROPS) do
@@ -46,10 +47,11 @@ end
 -- @param str (string) serialized values 
 
 function xDocument:import(str)
+  TRACE("xDocument:import(str)",str)
 
   local t = loadstring("return "..str)
   local deserialized = t()
-  --print("deserialized",deserialized,type(deserialized))
+  --print("xDocument:import deserialized",deserialized,type(deserialized))
   if not deserialized then
     return
   end
@@ -74,15 +76,46 @@ end
 -- @return string, serialized values
 
 function xDocument:export()
+  TRACE("xDocument:export()")
   local t = self:serialize()
   return xLib.serialize_table(t)
 end
+
+--------------------------------------------------------------------------------
+-- @param node, renoise.DocumentNode
+
+function xDocument:import_node(node)
+  TRACE("xDocument:import_node(node)",node)
+
+  for k,v in pairs(self.DOC_PROPS) do
+    --print("import_node - k,v",k,v)
+    self[k] = node:property(k)
+  end
+
+end
+
+
+--------------------------------------------------------------------------------
+-- @param node, renoise.DocumentNode
+
+function xDocument:export_node()
+
+  local node = renoise.Document.create(type(self)){}
+  for k,v in pairs(self.DOC_PROPS) do
+    --print("export_node - k,v",k,v)
+    node:add_property(k,self[k])
+  end
+  return node
+
+end
+
 
 --------------------------------------------------------------------------------
 -- populate the class with values from document-node or table (xParseXML)
 -- @param arg, DocumentNode or table 
 --[[
 function xDocument:import(arg)
+  TRACE("xDocument:import(arg)",arg)
   
   --print("xDocument:import - arg type",type(arg))
 
@@ -107,6 +140,7 @@ end
 -- @return renoise.Document
 
 function xDocument:export()
+  TRACE("xDocument:export()")
 
   local t = self:serialize()
   local doc = renoise.Document.create(type(self)){}

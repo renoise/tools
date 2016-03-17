@@ -50,6 +50,7 @@ end
 -- @return table<xOscPattern>
 
 function xOscRouter:input(osc_msg)
+  TRACE("xOscRouter:input(osc_msg)",osc_msg)
 
   local fingerprint = tostring(osc_msg)
   local rslt = {}
@@ -95,6 +96,7 @@ end
 -- @return int, index in patterns
 
 function xOscRouter:add_pattern(patt)
+  TRACE("xOscRouter:add_pattern(patt)",patt)
 
   table.insert(self.patterns,patt)
   local patt_idx = #self.patterns
@@ -115,6 +117,7 @@ end
 -- @param idx (int), pattern index
 
 function xOscRouter:replace_pattern(patt,idx)
+  TRACE("xOscRouter:replace_pattern(patt,idx)",patt,idx)
 
   self.patterns[idx] = patt
 
@@ -126,6 +129,7 @@ end
 -- @param idx (int), pattern index
 
 function xOscRouter:remove_pattern(idx)
+  TRACE("xOscRouter:remove_pattern(idx)",idx)
 
   self:remove_from_cache(idx)
 
@@ -139,6 +143,7 @@ end
 -- @param idx (int), pattern index
 
 function xOscRouter:remove_from_cache(idx)
+  TRACE("xOscRouter:remove_from_cache(idx)",idx)
 
   --print(">>> xOscRouter:remove_from_cache - cache PRE",self.cache)
 

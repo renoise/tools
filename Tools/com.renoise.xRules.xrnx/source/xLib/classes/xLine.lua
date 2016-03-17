@@ -19,6 +19,7 @@ class 'xLine'
 --  automation
 
 function xLine:__init(args)
+  TRACE("xLine:__init(args)",args)
 
   -- xLinePattern
   self.pattern_line = nil
@@ -53,6 +54,7 @@ end
 -- @return xLine 
 
 function xLine.apply_descriptor(xline)
+  TRACE("xLine.apply_descriptor(xline)",xline)
 
   --print("xLine.apply_descriptor - PRE",rprint(xline.note_columns))
 
@@ -139,6 +141,7 @@ end
 -- @param phrase (renoise.InstrumentPhrase)
 
 function xLine:clear_pattern_line(sequence,line,track_idx,phrase)
+  TRACE("xLine:clear_pattern_line(sequence,line,track_idx,phrase)",sequence,line,track_idx,phrase)
 
   local rns_line
   if track_idx then
@@ -165,6 +168,7 @@ end
 -- @return table
 
 function xLine.do_read(sequence,line,include_hidden,track_idx,phrase)
+  TRACE("xLine.do_read(sequence,line,include_hidden,track_idx,phrase)",sequence,line,include_hidden,track_idx,phrase)
 
   local rns_line,patt_idx,rns_patt,rns_track,rns_ptrack
   if track_idx then
@@ -221,6 +225,7 @@ end
 -- @return rns_ptrack (renoise.PatternTrack)
 
 function xLine.resolve_pattern_line(sequence,line,track_idx)
+  TRACE("xLine.resolve_pattern_line(sequence,line,track_idx)",sequence,line,track_idx)
 
   local patt_idx = xSongPos.get_pattern_index(sequence)
   local rns_patt = rns.patterns[patt_idx] 

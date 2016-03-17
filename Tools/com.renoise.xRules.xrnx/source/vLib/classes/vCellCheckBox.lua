@@ -75,6 +75,7 @@ end
 --------------------------------------------------------------------------------
 
 function vCellCheckBox:set_active(val)
+  TRACE("vCellCheckBox:set_active(val)",val)
 
   self.view.active = val
 	vControl.set_active(self,val)

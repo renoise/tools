@@ -76,6 +76,7 @@ xRulesUI.VALUE_COUNT = 15
 --------------------------------------------------------------------------------
 
 function xRulesUI:__init(owner)
+  TRACE("xRulesUI:__init(owner)",owner)
 
   --- xRulesApp, instance of main class
   self.owner = owner
@@ -97,9 +98,7 @@ function xRulesUI:__init(owner)
   self._export_dialog = xRulesAppDialogExport(self)
   self._help_dialog   = xRulesAppDialogHelp(self)
   self._log_dialog    = xRulesAppDialogLog(self)
-
-  --- xRulesPrefsUI
-  self._prefs_dialog = xRulesAppDialogPrefs(self)
+  self._prefs_dialog  = xRulesAppDialogPrefs(self)
 
   --- xRulesUIEditor
   self.editor = nil
@@ -201,6 +200,7 @@ end
 --- Show the dialog
 
 function xRulesUI:show()
+  TRACE("xRulesUI:show()")
 
   if (not self._dialog or not self._dialog.visible) then
     assert(self._view, "Internal Error. Please report: " .. 
@@ -235,6 +235,7 @@ end
 --------------------------------------------------------------------------------
 
 function xRulesUI:toggle_minimized()
+  TRACE("xRulesUI:toggle_minimized()")
 
   self.minimized = not self.minimized
   self:update_minimized()
@@ -277,7 +278,7 @@ function xRulesUI:build()
           margin = 2,
           vb:text{
             id = "xrules_status_text",
-            text = "- MIDI+OSC-rewriting utility v0.61",
+            text = "", 
             font = "italic",
           },
         },
@@ -362,6 +363,7 @@ end
 --------------------------------------------------------------------------------
 
 function xRulesUI:clear_rulesets()
+  TRACE("xRulesUI:clear_rulesets()")
 
   local vb = self._vb
   local vb_container = vb.views["xrules_ruleset_container"]
@@ -397,6 +399,7 @@ end
 -- switch rule and set in a one go
 
 function xRulesUI:select_rule_within_set(ruleset_idx,rule_idx)
+  TRACE("xRulesUI:select_rule_within_set(ruleset_idx,rule_idx)",ruleset_idx,rule_idx)
   
   if not ruleset_idx then
     ruleset_idx = 1
@@ -435,6 +438,7 @@ end
 -- create entry for a single ruleset
 
 function xRulesUI:build_ruleset(ruleset_idx,xruleset)
+  TRACE("xRulesUI:build_ruleset(ruleset_idx,xruleset)",ruleset_idx,xruleset)
 
   local vb = self._vb
 
@@ -508,7 +512,7 @@ function xRulesUI:build_ruleset(ruleset_idx,xruleset)
     }
 
     local vb_rule_name = vb:text{
-      text = self:get_rule_name(rule_idx,xruleset),
+      text = xruleset:get_rule_name(rule_idx),
       font = selected and "bold" or "normal"
     }
     self:fit_element_width(vb_ruleset_name,xRulesUI.SIDE_PANEL_W)
@@ -540,6 +544,7 @@ end
 -- clear selected rule 
 
 function xRulesUI:clear_rule()
+  TRACE("xRulesUI:clear_rule()")
 
   local vb = self._vb
   if self.vb_rule then
@@ -553,6 +558,7 @@ end
 --------------------------------------------------------------------------------
 
 function xRulesUI:disable_indicator(ruleset_idx,rule_idx,str_key)
+  TRACE("xRulesUI:disable_indicator(ruleset_idx,rule_idx)",ruleset_idx,rule_idx,str_key)
   local indicator = self.vb_rulesets[ruleset_idx][rule_idx][str_key]
   if indicator then
     indicator.mode = "body_color"
@@ -562,6 +568,7 @@ end
 --------------------------------------------------------------------------------
 
 function xRulesUI:match_indicator(ruleset_idx,rule_idx,type)
+  TRACE("xRulesUI:match_indicator(ruleset_idx,rule_idx,type)",ruleset_idx,rule_idx,type)
 
   local indicator,indicators
   if (type == "osc") then
@@ -601,6 +608,7 @@ end
 --  when UI is hidden: message in status bar
 
 function xRulesUI:enable_indicator(ruleset_idx,rule_idx,type)
+  TRACE("xRulesUI:enable_indicator(ruleset_idx,rule_idx)",ruleset_idx,rule_idx,type)
 
   local xruleset = self.xrules.rulesets[ruleset_idx]
   if xruleset.active then
@@ -633,10 +641,11 @@ end
 -- update top row + minimized state
 
 function xRulesUI:update_minimized()
+  TRACE("xRulesUI:update_minimized()")
 
   local vb = self._vb
   local vb_panels = vb.views["xrules_panels"]
-  --local vb_status_text = vb.views["xrules_status_text"]
+  local vb_status_text = vb.views["xrules_status_text"]
   local vb_compact_button = vb.views["xrules_compact_button"]
   local vb_export_button = vb.views["xrules_export_button"]
 
@@ -650,7 +659,14 @@ function xRulesUI:update_minimized()
     vb_compact_button.text = xRulesUI.TXT_CONTRACT
   end
 
-  --vb_status_text.text = "- MIDI rewriting utility, v0.5"
+  --print("self.owner.xprefs",self.owner.xprefs)
+  --print("selected_profile",self.owner.xprefs.selected_profile)
+  local str_profile = self.owner.xprefs.selected_profile
+    and "("..self.owner.xprefs.selected_profile.name..")" or ""
+  --print("str_profile",str_profile)
+
+  vb_status_text.text = ("- MIDI+OSC utility v%s %s"):format(
+    self.owner.version,str_profile)
 
   vb_compact_button.active = (num_rulesets > 0) and true or false
   if (num_rulesets > 0) then
@@ -667,6 +683,7 @@ end
 -- sync height of sidepanel 
 
 function xRulesUI:update_sidepanel()
+  TRACE("xRulesUI:update_sidepanel()")
 
   local min_size = 100
   local padding = 20
@@ -815,6 +832,7 @@ end
 -- @return string, a name such as "Untitled Ruleset (1)"
 
 function xRulesUI:get_ruleset_name(ruleset_idx)
+  TRACE("xRulesUI:get_ruleset_name(ruleset_idx)",ruleset_idx)
 
   assert(type(ruleset_idx)=="number", "Expected number as argument")
 
@@ -827,29 +845,11 @@ function xRulesUI:get_ruleset_name(ruleset_idx)
 
 end
 
--------------------------------------------------------------------------------
--- @return string, a display name such as "Rule #01"
-
-function xRulesUI:get_rule_name(rule_idx,xruleset)
-
-  assert(type(rule_idx)=="number", "Expected number as argument")
-
-  if not xruleset then
-    xruleset = self.xrules.selected_ruleset
-  end
-  local xrule = xruleset.rules[rule_idx]
-  if (xrule.name == "") then
-    return string.format("Rule #%.2d",rule_idx)
-  else
-    return xrule.name
-  end
-
-end
-
 --------------------------------------------------------------------------------
 -- @param xruleset (xRuleset)
 
 function xRulesUI:rename_selected_ruleset(str_name)
+  TRACE("xRulesUI:rename_selected_ruleset(str_name)",str_name)
 
   local xruleset = self.xrules.selected_ruleset
   str_name = str_name or xruleset.name
@@ -873,9 +873,10 @@ end
 -- @param xruleset (xRuleset)
 
 function xRulesUI:rename_selected_rule(str_name)
+  TRACE("xRulesUI:rename_selected_rule(str_name)",str_name)
 
   local xrule = self.xrules.selected_rule
-  str_name = str_name or self:get_rule_name(self.xrules.selected_rule_index)
+  str_name = str_name or self.xrules.selected_ruleset:get_rule_name(self.xrules.selected_rule_index)
   local new_name = vPrompt.prompt_for_string(str_name,"Enter new name","Rename rule") 
   if new_name then
     xrule.name = new_name

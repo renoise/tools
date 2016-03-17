@@ -38,6 +38,7 @@ end
 -- at a later time (lazy_updates, a vLib static property) 
 
 function vControl:request_update()
+  TRACE("vControl:request_update()")
   
   if not self.update then
     return
@@ -57,6 +58,7 @@ end
 --- perform a scheduled update and clear the timer
 
 function vControl:perform_update()
+  TRACE("vControl:perform_update(self)",self)
 
   if renoise.tool():has_timer({self,self.perform_update}) then
     renoise.tool():remove_timer({self,self.perform_update})
@@ -69,6 +71,7 @@ end
 --------------------------------------------------------------------------------
 
 function vControl:update()
+  TRACE("Unimplemented method")
 end
 
 --------------------------------------------------------------------------------

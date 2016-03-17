@@ -104,6 +104,7 @@ end
 
 --[[
 function xParseXML.to_document(t)
+  TRACE("xParseXML.to_document(t)",t)
 
   if (#t ~= 2) then
     error("Unexpected document format, cannot continue")
@@ -129,6 +130,7 @@ end
 -- @param t, table
 
 function xParseXML.process_list(t)
+  TRACE("xParseXML.process_list(t)",t)
 
   local rslt, list_type
 
@@ -172,6 +174,7 @@ end
 -- @param t, table
 
 function xParseXML.process_document(t)
+  TRACE("xParseXML.process_document(t)",t)
 
   local model_name 
   if (t.xarg.type) then

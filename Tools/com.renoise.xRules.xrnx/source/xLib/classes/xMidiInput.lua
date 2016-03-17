@@ -131,14 +131,17 @@ end
 -- @param port_name (string), where message originated from
 
 function xMidiInput:input(msg,port_name)
+  TRACE("xMidiInput:input(msg,port_name)",msg,port_name)
 
-  if (#msg ~= 3) then
-    error("Malformed MIDI message, expected 3 parts")
-  end
+   assert(type(msg)=="table","Expected MIDI message to be a table")
+   assert(#msg==3,"Malformed MIDI message, expected 3 parts")
+   assert(type(port_name)=="string","Expected port_name to be a string")
 
+  --[[
   if not self.callback_fn then
     error("Expected a callback function")
   end
+  ]]
 
   local msg_type,
         msg_channel,
@@ -448,13 +451,17 @@ function xMidiInput:input(msg,port_name)
       --print("received 7 bit pitch bend message",msg_values[1],msg_values[2])
     end
 
+  elseif (msg[1]==0xF1) then
+    msg_type = xMidiMessage.TYPE.MTC_QUARTER_FRAME
+    msg_values[1] = msg[2] -- time code
+
   elseif (msg[1]==0xF2) then
     msg_type = xMidiMessage.TYPE.SONG_POSITION
     msg_values[1] = msg[2] -- LSB
     msg_values[2] = msg[3] -- MSB
 
   else
-    error("Unrecognized MIDI message")
+    error("Unrecognized MIDI message: "..xLib.serialize_table(msg))
   end
 
   --print("xMidiInput - msg_values[1]",msg_values[1])
