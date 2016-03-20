@@ -39,6 +39,7 @@ end
 -- @param xrule (xRule)
 
 function xRulesUIEditor:build_rule()
+  TRACE("xRulesUIEditor:build_rule()")
 
   local vb = self.vb
 
@@ -378,7 +379,7 @@ function xRulesUIEditor:build_rule()
   }
 
   local vb_rule_name = vb:text{
-    text = self.ui:get_rule_name(rule_idx),
+    text = self.xrules.selected_ruleset:get_rule_name(rule_idx),
     font = "italic",
   }
 
@@ -729,6 +730,7 @@ end
 --- Hide the dialog
 
 function xRulesUIEditor:toggle_options()
+  TRACE("xRulesUIEditor:toggle_options()")
 
   self.ui.show_rule_options = not self.ui.show_rule_options  
   self.ui._update_rule_options_requested = true
@@ -740,6 +742,7 @@ end
 -- update the options for this rule
 
 function xRulesUIEditor:update_rule_options()
+  TRACE("xRulesUIEditor:update_rule_options()")
 
   self.vb_rule_options.visible = self.ui.show_rule_options
   
@@ -786,6 +789,7 @@ end
 -- @param row_idx (int)
 
 function xRulesUIEditor:add_action(row_idx)
+  TRACE("xRulesUIEditor:add_action(row_idx)",row_idx)
 
   local xrule = self.xrule
   if row_idx then
@@ -839,6 +843,7 @@ end
 -- @return table, list of names
 
 function xRulesUIEditor:get_contextual_labels()
+  TRACE("xRulesUIEditor:get_contextual_labels")
 
   local midi_labels,osc_labels 
   --print("self.last_msg_type",self.last_msg_type)
@@ -877,6 +882,7 @@ end
 -- @return table
 
 function xRulesUIEditor:add_context(t)
+  TRACE("xRulesUIEditor:add_context()")
 
   local rslt = table.copy(t)
   local labels = self:get_contextual_labels()
@@ -940,6 +946,7 @@ end
 -- @param basetype, table 
 
 function xRulesUIEditor.change_value_assist(val,key,val_type)
+  TRACE("xRulesUIEditor.change_value_assist",val,key,val_type)
 
   local basetypes
   if (val_type == "aspect") then
@@ -983,6 +990,7 @@ end
 -- @return function,function
 
 function xRulesUIEditor.get_custom_converters(msg_type,value_idx)
+  TRACE("xRulesUIEditor.get_custom_converters(msg_type,value_idx)",msg_type,value_idx)
 
   local fn_tostring = nil
   local fn_tonumber = nil
@@ -1010,6 +1018,7 @@ end
 -- @return function,function
 
 function xRulesUIEditor.get_maximum_value(msg_type,value_idx)
+  TRACE("xRulesUIEditor.get_maximum_value(msg_type,value_idx)",msg_type,value_idx)
 
   if (msg_type == xMidiMessage.TYPE.NOTE_ON) 
     or (msg_type == xMidiMessage.TYPE.NOTE_OFF)
@@ -1024,4 +1033,58 @@ function xRulesUIEditor.get_maximum_value(msg_type,value_idx)
   end
 
 end
+
+--------------------------------------------------------------------------------
+-- validate sysex string: a row of strings, separated by space, in which
+--  each part is either an asterisk or a value between 0x00 - 0xFF
+-- @param str (string), e.g. "F0 01 * 06 F7"
+-- @return boolean,string
+
+function xRulesUIEditor.validate_sysex_string(str)
+  TRACE("xRulesUIEditor.validate_sysex_string(str)",str)
+
+  local t = xLib.split(str," ")
+  if (t[1] ~= "F0") then
+    return false, "Sysex string must begin with 'F0'"
+  end
+  if (t[#t] ~= "F7") then
+    return false, "Sysex string must end with 'F7'"
+  end
+
+  for k = 2,#t-1 do
+    local part = t[k]
+    if (part == "*") then
+      -- wildcard
+    else
+      local num = tonumber("0x"..tostring(t[k]))
+      if not num then
+        return false, "Each sysex value must be either a hexadecimal value (e.g. 7F) or a wildcard (* asterisk)"
+      end
+      if (num > 0xFF) then
+        return false, "Sysex values cannot be higher than FF (decimal 255)"
+      end
+    end
+  end
+
+  return true
+
+end
+
+--------------------------------------------------------------------------------
+-- "inject" missing port names into list of midi devices
+-- @param devices (table<string>)
+-- @param str_name (string)
+-- @return table<string>
+
+function xRulesUIEditor:inject_port_name(devices,str_name)
+  print("xRulesUIEditor:inject_port_names(devices,str_name)",devices,str_name)
+
+  if not table.find(devices,str_name) then
+    table.insert(devices,1,str_name.." (N/A)")
+  end
+
+  return devices
+
+end
+
 

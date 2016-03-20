@@ -30,6 +30,7 @@ require (_vlibroot.."vControl")
 class 'vCompositeControl' (vControl)
 
 function vCompositeControl:__init(...)
+  TRACE("vCompositeControl:__init(t)")
 
   -- table<string> viewbuilder/vLib component names
   self.views = {}
@@ -46,6 +47,7 @@ end
 -- @param t (table), 
 
 function vCompositeControl:register_views(t)
+  TRACE("vCompositeControl:register_views(t)",t,rprint(t))
 
   for k,v in ipairs(t) do
     if not table.is_empty(self.views) 
@@ -66,6 +68,7 @@ end
 -- @param view ()
 
 function vCompositeControl:add_view(view,vb_owner)
+  TRACE("vCompositeControl:add_view(view,vb_owner)",view,vb_owner)
 
   local idx = table.find(self.views,view)
   local view = self.views[idx]
@@ -83,6 +86,7 @@ end
 -- @param view ()
 
 function vCompositeControl:remove_view(vb_owner,view)
+  TRACE("vCompositeControl:remove_view(vb_owner,view)",vb_owner,view)
 
   local idx = table.find(self.views,view)
   local view = self.views[idx]

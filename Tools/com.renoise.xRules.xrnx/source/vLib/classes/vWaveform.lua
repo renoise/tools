@@ -36,6 +36,7 @@ class 'vWaveform' (vGraph)
 
 
 function vWaveform:__init(...)
+  TRACE("vWaveform:__init()")
 
   local rns = renoise.song()
   local args = vLib.unpack_args(...)
@@ -63,6 +64,7 @@ end
 --------------------------------------------------------------------------------
 
 function vWaveform:collect_frames()
+  TRACE("vWaveform:collect_frames()")
 
   self:clear_selection()
   self._data = {}
@@ -114,6 +116,7 @@ end
 --------------------------------------------------------------------------------
 
 function vWaveform:set_instr_index(val)
+  TRACE("vWaveform:set_instr_index(val)",val)
 
   local changed = (val ~= self._instr_index)
   if not changed then
@@ -132,6 +135,7 @@ end
 --------------------------------------------------------------------------------
 
 function vWaveform:set_sample_index(val)
+  TRACE("vWaveform:set_sample_index(val)",val)
 
   local changed = (val ~= self._sample_index)
   if not changed then

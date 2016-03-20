@@ -29,6 +29,7 @@ vSelection.SELECT_MODE = {
 }
 
 function vSelection:__init(...)
+  TRACE("vSelection:__init(...)",...)
 
   local args = vLib.unpack_args(...)
 
@@ -88,6 +89,7 @@ end
 -- @return table (removed_items)
 
 function vSelection:clear_selection()
+  TRACE("vSelection:clear_selection()")
 
   if (self._mode == vSelection.SELECT_MODE.SINGLE) 
     and self._require_selection 
@@ -128,6 +130,7 @@ end
 -- @return table (added_items)
 
 function vSelection:select_all()
+  TRACE("vSelection:select_all()")
 
   if (self._mode == vSelection.SELECT_MODE.SINGLE) then
     return false
@@ -158,6 +161,7 @@ end
 -- @return table (removed_items)
 
 function vSelection:toggle_index(idx)
+  TRACE("vSelection:toggle_index(idx)",idx)
 
   local added,removed = {},{}
   local changed = false
@@ -199,6 +203,7 @@ end
 -- a new set of data 
 
 function vSelection:reset()
+  TRACE("vSelection:reset()")
 
   self.index_observable.value = 0
   self._indices = {}
@@ -270,6 +275,7 @@ end
 -- @return table (removed_items)
 
 function vSelection:set_require_selection(val)
+  TRACE("vSelection:set_require_selection(val)",val)
 
   local added,removed = {},{}
   local changed = (val ~= self._require_selection)
@@ -286,6 +292,7 @@ function vSelection:set_require_selection(val)
 end
 
 function vSelection:get_require_selection()
+  TRACE("vSelection:get_require_selection()",self._require_selection)
 
   return self._require_selection
 end
@@ -296,6 +303,7 @@ end
 -- @return table (removed_items)
 
 function vSelection:set_index(idx)
+  TRACE("vSelection:set_index(idx)",idx)
 
   local added,removed = {},{}
   local changed = (self.index_observable.value ~= idx)
@@ -381,12 +389,14 @@ function vSelection:set_mode(val)
 end
 
 function vSelection:get_mode()
+  TRACE("vSelection:get_mode()",self._mode)
   return self._mode
 end
 
 --------------------------------------------------------------------------------
 
 function vSelection:set_num_items(val)
+  TRACE("vSelection:set_num_items(val)",val)
 
   -- remove indices that are out-of-bounds
   if self._num_items and (val > self._num_items) then
@@ -402,6 +412,7 @@ function vSelection:set_num_items(val)
 end
 
 function vSelection:get_num_items()
+  TRACE("vSelection:get_num_items()",self._num_items)
   return self._num_items
 end
 

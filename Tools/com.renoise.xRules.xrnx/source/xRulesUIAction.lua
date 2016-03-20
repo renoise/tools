@@ -31,6 +31,9 @@ function xRulesUIAction:__init(...)
 
   self.str_syntax_error = nil
 
+  self.vb_ruleset_routing = nil
+  self.vb_rule_routing = nil
+
 end
 
 --------------------------------------------------------------------------------
@@ -40,6 +43,7 @@ end
 -- @return view
 
 function xRulesUIAction:build_action_row(row_idx,def,label)
+  TRACE("xRulesUIAction:build_action_row(row_idx,def,label)",row_idx,def,label)
 
   self.row_idx = row_idx
   for k,v in pairs(def) do
@@ -80,6 +84,14 @@ function xRulesUIAction:build_action_row(row_idx,def,label)
         label_text = "to",
       })
     end,
+    [xRule.ACTIONS.ROUTE_MESSAGE] = function(k,v)
+      local args = {}
+      return self:create_row(k,v,{
+        show_route_message = true,
+        show_label = true,
+        label_text = "to",
+      })
+    end,
     [xRule.ACTIONS.SET_INSTRUMENT] = function(k,v)
       return self:create_row(k,v,{
         show_valuebox = true,
@@ -97,7 +109,7 @@ function xRulesUIAction:build_action_row(row_idx,def,label)
     [xRule.ACTIONS.SET_PORT_NAME] = function(k,v)
       return self:create_row(k,v,{
         show_popup = true,
-        popup_items = renoise.Midi.available_output_devices(),
+        popup_items = self.editor:inject_port_name(renoise.Midi.available_output_devices(),v),
         show_label = true,
         label_text = "to",
       })
@@ -282,6 +294,7 @@ end
 -- @param args - show/hide specific parts 
 --  show_value_idx = integer
 --  show_output_message = boolean
+--  show_route_message = boolean
 --  show_popup = boolean (for enumerated string values)
 --  show_valuebox = boolean (for integer values)
 --  show_valuefield = boolean (for floating points)
@@ -302,7 +315,7 @@ function xRulesUIAction:create_row(k,v,args)
     args = {}
   end
 
-
+  -- ensure there is content for the popup
   args.popup_items = table.is_empty(args.popup_items) and {} or args.popup_items
 
   self.vb_status_elm = vb:text{
@@ -399,6 +412,46 @@ function xRulesUIAction:create_row(k,v,args)
     end
   }
 
+  -- prepare routings --
+
+  if args.show_route_message then
+
+    local change_routing = function()
+      local ruleset_name = self.vb_ruleset_routing.items[self.vb_ruleset_routing.value]
+      local rule_name = self.vb_rule_routing.items[self.vb_rule_routing.value]
+      --print(">>> change_routing - ruleset_name,rule_name",ruleset_name,rule_name)
+      self:change_value(("%s:%s"):format(ruleset_name,rule_name))
+    end
+
+    local routing_values = xLib.split(v,":")
+    local ruleset_routings = self:gather_ruleset_routings()
+    local rule_routings = self:gather_rule_routings()
+    --print(">>> routing_values",rprint(routing_values))
+
+    self.vb_ruleset_routing = vb:popup{
+      items = ruleset_routings,
+      value = table.find(ruleset_routings,routing_values[1]) or 1,
+      width = xRulesUI.VALUE_SELECT_W,
+      height = xRulesUI.CONTROL_H,
+      notifier = function()
+        change_routing()
+      end
+    }
+
+    self.vb_rule_routing = vb:popup{
+      items = rule_routings,
+      value = table.find(rule_routings,routing_values[2]) or 1,
+      width = xRulesUI.VALUE_SELECT_W,
+      height = xRulesUI.CONTROL_H,
+      notifier = function()
+        change_routing()
+      end
+    }
+
+  end
+
+  -- build the view --
+
   return vb:column{
     vb:horizontal_aligner{
       mode = "justify",
@@ -468,6 +521,12 @@ function xRulesUIAction:create_row(k,v,args)
             end
           },
         },  
+        -- @ROUTE_MESSAGE
+        vb:row{
+          visible = args.show_route_message or false,
+          self.vb_ruleset_routing,
+          self.vb_rule_routing,
+        },  
       },
       -- (right side)
       vb:button{
@@ -500,6 +559,7 @@ end
 -- @param action, xRule.ACTIONS
 
 function xRulesUIAction:change_action_key(action)
+  TRACE("xRulesUIAction:change_action_key",action)
 
   local xrule = self.xrule
   local new_action = {}
@@ -517,6 +577,7 @@ end
 --------------------------------------------------------------------------------
 
 function xRulesUIAction:change_value(val)
+  TRACE("xRulesUIAction:change_value",val)
 
   local xrule = self.xrule
   for k,v in pairs(xrule.actions[self.row_idx]) do
@@ -532,6 +593,7 @@ end
 --------------------------------------------------------------------------------
 
 function xRulesUIAction:change_function_value(val)
+  TRACE("xRulesUIAction:change_function_value(val)",val)
 
   local xrule = self.xrule
   local success
@@ -549,6 +611,7 @@ end
 --------------------------------------------------------------------------------
 
 function xRulesUIAction:remove_action()
+  TRACE("xRulesUIAction:remove_action()")
 
   local str_msg = "Are you sure you want to remove this action"
   local choice = renoise.app():show_prompt("Remove action", str_msg, {"OK","Cancel"})
@@ -563,6 +626,39 @@ function xRulesUIAction:remove_action()
     LOG(err)
   end
   self.ui._build_rule_requested = true
+
+end
+
+--------------------------------------------------------------------------------
+-- list ruleset names *after* the current one
+-- @return table<string>
+
+function xRulesUIAction:gather_ruleset_routings()
+  local rslt = {xRuleset.CURRENT_RULESET}
+  for k = self.xrules.selected_ruleset_index+1,#self.xrules.rulesets do
+    local ruleset = self.xrules.rulesets[k]
+    table.insert(rslt,ruleset.name)
+  end
+
+  return rslt
+
+end
+
+--------------------------------------------------------------------------------
+-- list rule names *after* the current one
+-- @return table<string>
+
+function xRulesUIAction:gather_rule_routings()
+
+  local ruleset = self.xrules.selected_ruleset
+  local rslt = {"Current rule (N/A)"}
+  for k = ruleset.selected_rule_index+1,#ruleset.rules do
+    local rule = ruleset.rules[k]
+    local rule_name = ruleset:get_rule_name(k)
+    table.insert(rslt,rule_name)
+  end
+
+  return rslt
 
 end
 

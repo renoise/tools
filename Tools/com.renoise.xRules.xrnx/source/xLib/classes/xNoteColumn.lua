@@ -47,6 +47,7 @@ xNoteColumn.NOTE_ARRAY = {
 -- @param args (table), a xline descriptor - any of the properties below
 
 function xNoteColumn:__init(args)
+  TRACE("xNoteColumn:__init(args)",args,type(args))
 
   -- note_value [number, 0-119, 120=Off, 121=Empty]
   self.note_value = property(self.get_note_value,self.set_note_value)
@@ -223,6 +224,7 @@ end
 -- @return int (octave) or nil
 
 function xNoteColumn.note_string_to_value(str_val)
+  TRACE("xNoteColumn.note_string_to_value(str_val)",str_val)
 
   str_val = string.upper(str_val)
 
@@ -256,6 +258,7 @@ end
 -------------------------------------------------------------------------------
 
 function xNoteColumn.note_value_to_string(val)
+  TRACE("xNoteColumn.note_value_to_string(val)",val)
 
   -- renoise accepts floats
   val = math.floor(val)
@@ -281,10 +284,12 @@ end
 -- @return int (0-255)
 
 function xNoteColumn.instr_string_to_value(str)
+  TRACE("xNoteColumn.instr_string_to_value(str)",str)
   return (str == "..") and 255 or tonumber(str)
 end
 
 function xNoteColumn.instr_value_to_string(val)
+  TRACE("xNoteColumn.instr_value_to_string(val)",val)
   return (val == 255) and ".." or ("%.2X"):format(val)
 end
 
@@ -293,6 +298,7 @@ end
 -- @return int (0-255)
 
 function xNoteColumn.delay_string_to_value(str)
+  TRACE("xNoteColumn.instr_delay_string_to_value(str)",str)
   return (str == "..") and 0 or tonumber(str)
 end
 -------------------------------------------------------------------------------
@@ -300,6 +306,7 @@ end
 -- @return string
 
 function xNoteColumn.delay_value_to_string(val)
+  TRACE("xNoteColumn.delay_value_to_string(val)",val)
   return (val == 255) and ".." or ("%.2X"):format(val)
 end
 
@@ -310,6 +317,7 @@ end
 -- @return int
 
 function xNoteColumn.column_string_to_value(str_val,empty)
+  TRACE("xNoteColumn.column_string_to_value(str_val)",str_val)
 
   if (str_val == "..") then
     return empty
@@ -331,6 +339,7 @@ end
 -- @return value
 
 function xNoteColumn.column_value_to_string(val,empty)
+  TRACE("xNoteColumn.column_string_to_value(val)",val)
 
   if (val == xLinePattern.EMPTY_VALUE) then
     return empty
@@ -351,6 +360,7 @@ end
 -- @return value or nil
 
 function xNoteColumn.convert_fx_to_value(str_val)
+  TRACE("xNoteColumn.convert_fx_to_value(str_val)",str_val)
 
   local fx_num = string.sub(str_val,1,1)
   local fx_amt = string.sub(str_val,2,2)
@@ -368,6 +378,7 @@ end
 -- @return string
 
 function xNoteColumn.convert_fx_to_string(val)
+  TRACE("xNoteColumn.convert_fx_to_string(val)",val)
 
   local first = math.floor(val/256)
   local second = val-(first*256)
@@ -382,6 +393,7 @@ end
 -- @return table 
 
 function xNoteColumn.do_read(note_col)
+  TRACE("xNoteColumn.do_read(note_col)")
 
   local rslt = {}
   for _,v in ipairs(xNoteColumn.tokens) do
@@ -399,6 +411,7 @@ end
 -- @param clear_undefined (bool) clear existing data when ours is nil
 
 function xNoteColumn:do_write(note_col,tokens,clear_undefined)
+  TRACE("xNoteColumn:do_write(note_col,tokens,clear_undefined)",note_col,tokens,clear_undefined)
 
   for _,token in ipairs(tokens) do
     if self["do_write_"..token] then
@@ -414,6 +427,7 @@ function xNoteColumn:do_write(note_col,tokens,clear_undefined)
 end
 
 function xNoteColumn:do_write_note_value(note_col,clear_undefined)
+  TRACE("xNoteColumn:do_write_note_value(note_col,clear_undefined)",note_col,clear_undefined)
   if self.note_value then 
     note_col.note_value = self.note_value
   elseif clear_undefined then
@@ -421,6 +435,7 @@ function xNoteColumn:do_write_note_value(note_col,clear_undefined)
   end
 end
 function xNoteColumn:do_write_note_string(note_col,clear_undefined)
+  TRACE("xNoteColumn:do_write_note_string - note_string",self.note_string)
   if self.note_string then 
     note_col.note_string = self.note_string
   elseif clear_undefined then

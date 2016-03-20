@@ -25,6 +25,7 @@ class 'xMidiMessage' (xMessage)
 
 -- register
 xMidiMessage.TYPE = {
+  SYSEX = "sysex",
   NRPN = "nrpn",
   NOTE_ON = "note_on",
   NOTE_OFF = "note_off",
@@ -33,16 +34,15 @@ xMidiMessage.TYPE = {
   PROGRAM_CHANGE = "program_change",
   CH_AFTERTOUCH = "ch_aftertouch",
   PITCH_BEND = "pitch_bend",
+  MTC_QUARTER_FRAME = "mtc_quarter_frame",
   SONG_POSITION = "song_position",
   --RPN = "rpn",
-  --START = "mmc_start",
-  --CONTINUE = "mmc_continue",
-  --STOP = "mmc_stop",
 }
 
--- for display 
+-- for display, first two bytes
 xMidiMessage.VALUE_LABELS = {
-  DISCARD = {"-","-"},
+  --SYSEX = {"sysex","not_used"}, -- can be any number of bytes... 
+  NRPN = {"number","value"},
   NOTE_ON = {"note","velocity"},
   NOTE_OFF = {"note","velocity"},
   KEY_AFTERTOUCH = {"note","pressure"},
@@ -50,12 +50,9 @@ xMidiMessage.VALUE_LABELS = {
   PROGRAM_CHANGE = {"number","not_used"},
   CH_AFTERTOUCH = {"number","not_used"},
   PITCH_BEND = {"fine","coarse"},
-  NRPN = {"number","value"},
   SONG_POSITION = {"fine","coarse"},
+  MTC_QUARTER_FRAME = {"mtc_time_code","not_used"},
   --RPN = "rpn",
-  --START = "mmc_start",
-  --CONTINUE = "mmc_continue",
-  --STOP = "mmc_stop",
 }
 
 xMidiMessage.BIT_DEPTH = {
@@ -68,6 +65,7 @@ xMidiMessage.BIT_DEPTH = {
 -------------------------------------------------------------------------------
 
 function xMidiMessage:__init(...)
+  TRACE("xMidiMessage:__init(...)")
 
 	local args = xLib.unpack_args(...)
   --print("args",rprint(args))
@@ -105,6 +103,7 @@ function xMidiMessage:get_message_type()
 end
 
 function xMidiMessage:set_message_type(val)
+  TRACE("xMidiMessage:set_message_type",val)
   -- TODO check if one of the allowed types
   self._message_type = val
   self._raw_cache = nil
@@ -310,6 +309,14 @@ function xMidiMessage:create_raw_message()
 
       end,
 
+      [xMidiMessage.TYPE.MTC_QUARTER_FRAME] = function()
+        return {{
+          0xF2,
+          self.values[1],  -- time_code
+          0
+        }}
+      end,
+
       [xMidiMessage.TYPE.SONG_POSITION] = function()
         return {{
           0xF2,
@@ -318,22 +325,25 @@ function xMidiMessage:create_raw_message()
         }}
       end,
 
+      [xMidiMessage.TYPE.SYSEX] = function()
+
+        local sysex_msg = table.create()
+        sysex_msg:insert(0xF0)
+        for _, e in ipairs(self.values) do
+          sysex_msg:insert(e)
+        end
+        sysex_msg:insert(0xF7)
+        return sysex_msg
+
+      end,
+
+
       --[[
+
       [xMidiMessage.TYPE.RPN] = function()
         error("Not implemented")
       end,
 
-      [xMidiMessage.TYPE.START] = function()
-        error("Not implemented")
-      end,
-
-      [xMidiMessage.TYPE.CONTINUE] = function()
-        error("Not implemented")
-      end,
-
-      [xMidiMessage.TYPE.STOP] = function()
-        error("Not implemented")
-      end,
       ]]
 
     }

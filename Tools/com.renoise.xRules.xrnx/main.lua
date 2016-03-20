@@ -11,8 +11,6 @@ main.lua
 
 --==============================================================================
 
---remdebug.engine.start()
-
 _trace_filters = {".*"}
 _trace_filters = nil
 
@@ -34,6 +32,7 @@ require (_xlibroot.."xOscDevice")
 require (_xlibroot.."xNoteColumn")
 require (_xlibroot.."xSandbox")
 require (_xlibroot.."xParseXML")
+require (_xlibroot.."xPreferences")
 require (_xlibroot.."xObservable")
 require (_xlibroot.."xReflection")
 require (_xlibroot.."xRule")
@@ -69,19 +68,56 @@ require "source/xRulesAppDialogLog"
 --------------------------------------------------------------------------------
 
 rns = nil
+app = nil
 
+-- pre-launch configuration
 local preferences = xRulesAppPrefs()
-renoise.tool().preferences = preferences
+--renoise.tool().preferences = preferences
 
---print("main.lua - #midi_inputs",#preferences.midi_inputs)
---print("main.lua - #osc_devices",#preferences.osc_devices)
+local xprefs = xPreferences{
+  tool_name = "xRules",
+  doc_class_name = "xRulesAppPrefs",
+}
 
--- issue: DocumentList (osc_devices) is not accessible 
--- workaround: manually import preferences
---preferences:import("./preferences.xml")
+local launch_with_profile = function(doc)
+  renoise.tool().preferences = doc
+  app = xRulesApp(xprefs)
+end
 
-app = xRulesApp(preferences)
+local show_dialog = function()
+  if app then
+    app:show_dialog()
+  else
+    xprefs.launch_callback = function(doc)
+      launch_with_profile(doc)
+      app:show_dialog()
+    end
+    xprefs.default_callback = function()
+      renoise.tool().preferences = preferences
+      app = xRulesApp(xprefs)
+      app:show_dialog()
+    end
+    xprefs:attempt_launch()
+  end
+end
 
+local launch = function()
+  if app then
+    app:launch()
+  else
+    xprefs.launch_callback = function(doc)
+      --print(">>> launch_callback (launch)...")
+      launch_with_profile(doc)
+      app:launch()
+    end
+    xprefs.default_callback = function()
+      renoise.tool().preferences = preferences
+      app = xRulesApp(xprefs)
+      app:launch()
+    end
+    xprefs:attempt_launch()
+  end
+end
 
 
 --------------------------------------------------------------------------------
@@ -91,9 +127,7 @@ app = xRulesApp(preferences)
 renoise.tool():add_menu_entry {
   name = "Main Menu:Tools:xRules",
   invoke = function()
-    if app then
-      app:show_dialog()
-    end
+    show_dialog()
   end  
 }
 
@@ -105,9 +139,7 @@ renoise.tool():add_keybinding {
   name = "Global:xRules:Show Dialog...",
   invoke = function(repeated) 
     if (not repeated) then 
-      if app then
-        app:show_dialog()
-      end
+      app:show_dialog()
     end
   end
 }
@@ -120,18 +152,16 @@ renoise.tool():add_keybinding {
 -- (workaround for http://goo.gl/UnSDnw)
 local waiting_to_show_dialog = true
 local function app_idle_notifier()
-  --print("*** app_idle_notifier")
-  if app 
-    and waiting_to_show_dialog 
-    or renoise.song() -- app:is_running()
+  if waiting_to_show_dialog 
+    and renoise.song()
   then
     rns = renoise.song()
     waiting_to_show_dialog = false
-    if app.prefs.autorun_enabled.value then
-      app:launch()
+    if preferences.autorun_enabled.value then
+      launch()
     end
-    if app.prefs.show_on_startup.value then
-      app:show_dialog()
+    if preferences.show_on_startup.value then
+      show_dialog()
     end
     renoise.tool().app_idle_observable:remove_notifier(app_idle_notifier)
   end
@@ -142,14 +172,4 @@ renoise.tool().app_new_document_observable:add_notifier(function()
   rns = renoise.song()
 
 end)
-
---[[
-renoise.tool().app_release_document_observable:add_notifier(function()
-  if app:is_running() then
-    app:detach_from_song()
-  end
-
-end)
-
-]]
 

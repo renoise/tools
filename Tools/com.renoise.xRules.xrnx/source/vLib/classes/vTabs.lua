@@ -42,6 +42,7 @@ vTabs.SWITCHER_DEFAULT_H = 20
 
 
 function vTabs:__init(...)
+  TRACE("vTabs:__init(...)",...)
 
   local args = vLib.unpack_args(...)
   self.vb = args.vb
@@ -123,6 +124,7 @@ end
 --------------------------------------------------------------------------------
 
 function vTabs:build()
+  TRACE("vTabs:build()")
   
   local vb = self.vb
 
@@ -170,6 +172,7 @@ end
 -- @param rmv (bool) remove before adding
 
 function vTabs:build_layout(rmv)
+  TRACE("vTabs:build_layout(rmv)",rmv)
 
   if rmv then
     self.view:remove_child(self.switch_aligner)
@@ -195,6 +198,7 @@ end
 -- (refreshing the view like this allows us to "crop" the tab contents)
 
 function vTabs:refresh_size()
+  TRACE("vTabs:refresh_size()")
 
   self:set_width(self._width)
   self:set_height(self._height)
@@ -206,6 +210,7 @@ end
 -- @param t (table)
 
 function vTabs:set_labels(t)
+  TRACE("vTabs:set_labels(t)",t)
 
   local labels = {}
   for i = 1,#self._labels do
@@ -221,6 +226,7 @@ end
 -- @param t (table>renoise.Views.Rack)
 
 function vTabs:set_content(t)
+  TRACE("vTabs:set_content(t)",t)
 
   self.tab_contents = {}
   local tab_views = {}
@@ -252,6 +258,7 @@ end
 -- @param view (renoise.Views.View)
 
 function vTabs:add_content(tab_idx,view)
+  TRACE("vTabs:add_content(tab_idx,view)",tab_idx,view)
 
   assert(self.tabs[tab_idx],"No tab with this index")
 
@@ -264,6 +271,7 @@ end
 -- @param idx (int)
 
 function vTabs:set_index(idx)
+  TRACE("vTabs:set_index(idx)",idx)
 
   if (idx < 1) then
     --print("*** Index needs to be > 0")
@@ -296,6 +304,7 @@ end
 -- @param idx (int)
 
 function vTabs:get_tab_id(idx)
+  TRACE("vTabs:get_tab_id(idx)",idx)
 
   return ("tab_%i%s"):format(idx,self.uid)
 
@@ -304,6 +313,7 @@ end
 --------------------------------------------------------------------------------
 
 function vTabs:set_switcher_width(val)
+  TRACE("vTabs:set_switcher_width(val)",val)
   self._switcher_width = val
   if val then
     self.switcher.width = val
@@ -319,6 +329,7 @@ end
 -- @param val (vTabs.SWITCHER_ALIGN)
 
 function vTabs:set_switcher_align(val)
+  TRACE("vTabs:set_switcher_align(val)",val)
 
   self._switcher_align = val
   local str_mode 
@@ -343,6 +354,7 @@ end
 --------------------------------------------------------------------------------
 
 function vTabs:set_switcher_height(val)
+  TRACE("vTabs:set_switcher_height(val)",val)
 
   self._switcher_height = val
   self.switcher.height = val
@@ -361,6 +373,7 @@ end
 --------------------------------------------------------------------------------
 
 function vTabs:set_layout(val)
+  TRACE("vTabs:set_layout(val)",val)
 
   self._layout = val
   self:build_layout(true)
@@ -374,6 +387,7 @@ end
 --------------------------------------------------------------------------------
 
 function vTabs:set_size_method(val)
+  TRACE("vTabs:set_size_method(val)",val)
 
   local old_method = self._size_method
   self._size_method = val
@@ -391,6 +405,7 @@ end
 --------------------------------------------------------------------------------
 
 function vTabs:set_active(val)
+  TRACE("vTabs:set_active(val)",val)
 
   self.switcher.active = val
   vControl.set_active(self,val)
@@ -400,6 +415,7 @@ end
 --------------------------------------------------------------------------------
 
 function vTabs:set_width(val)
+  TRACE("vTabs:set_width(val)",val)
 
   local new_w = val
 
@@ -436,6 +452,7 @@ end
 --------------------------------------------------------------------------------
 
 function vTabs:set_height(val)
+  TRACE("vTabs:set_height(val)",val)
 
   -- undefined height (do not set)
   if not val then
@@ -489,6 +506,7 @@ end
 -- @return number (height) 
 
 function vTabs:get_largest_width_height()
+  TRACE("vTabs:get_largest_width_height()")
 
   local max_w = 0
   local max_h = 0
@@ -506,6 +524,7 @@ end
 -- add handler for MIDI messages, similar to the provided name
 
 function vTabs:set_midi_mapping(str)
+  TRACE("vControl:set_midi_mapping(str)",str)
 
   self.switcher.midi_mapping = str
   vControl.set_midi_mapping(self,str)

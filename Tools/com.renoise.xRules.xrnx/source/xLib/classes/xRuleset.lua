@@ -18,6 +18,7 @@ xRuleset
 class 'xRuleset'
 
 xRuleset.DEFAULT_NAME = "Untitled ruleset"
+xRuleset.CURRENT_RULESET = "Current Ruleset"
 
 -------------------------------------------------------------------------------
 -- @param ruleset_def, table (optional)
@@ -29,6 +30,7 @@ xRuleset.DEFAULT_NAME = "Untitled ruleset"
 --  }
 
 function xRuleset:__init(xrules,ruleset_def)
+  TRACE("xRuleset:__init(xrules,ruleset_def)")
 
   if not ruleset_def then
     ruleset_def = {{}} -- add empty rule
@@ -189,6 +191,7 @@ end
 --==============================================================================
 
 function xRuleset:add_rule(rule_def,idx)
+  TRACE("xRuleset:add_rule(rule_def,idx)",rule_def,idx)
 
   if not idx then
     idx = #self.rules + 1
@@ -237,6 +240,7 @@ end
 -- remove a rule from this set
 
 function xRuleset:remove_rule(idx)
+  TRACE("xRuleset:remove_rule(idx)",idx)
 
   local rule = self.rules[idx]
   if not rule then
@@ -254,29 +258,71 @@ function xRuleset:remove_rule(idx)
 end
 
 -------------------------------------------------------------------------------
+-- @return string, a display name such as "Rule #01"
+
+function xRuleset:get_rule_name(rule_idx)
+
+  assert(type(rule_idx)=="number", "Expected number as argument")
+
+  local xrule = self.rules[rule_idx]
+  if (xrule.name == "") then
+    return string.format("Rule #%.2d",rule_idx)
+  else
+    return xrule.name
+  end
+
+end
+
+-------------------------------------------------------------------------------
+-- get rule by name, including display names
+-- @return xRule,int(index) or nil
+
+function xRuleset:get_rule_by_name(str_name)
+
+  for k,v in ipairs(self.rules) do
+    local rule_name = self:get_rule_name(k)
+    if (rule_name == str_name) then
+      return v,k
+    end
+
+  end
+
+end
+
+-------------------------------------------------------------------------------
 -- pass message into rules, invoke callback when matched
 -- @param xmsg (xMidiMessage or xOscMessage)
 -- @param ruleset_idx (int), passed back to callback
--- @param rule_idx (int), only check this rule (TODO) - passed back
+-- @param rule_idx (int), only check this rule (optional) 
+-- @param force_midi (boolean) force match (used by routings)
 -- @return 
 --  table<xMidiMessage or xOscMessage>
 --  xMidiMessage or xOscMessage (original message)
 
-function xRuleset:match_message(xmsg,ruleset_idx,rule_idx)
+function xRuleset:match_message(xmsg,ruleset_idx,rule_idx,force_midi)
+  TRACE("xRuleset:match_message()",xmsg,ruleset_idx,rule_idx,force_midi)
 
+  assert(type(ruleset_idx)=="number","Expected ruleset_idx to be a number")
+  --assert(type(rule_idx)=="number","Expected rule_idx to be a number")
+  --assert(self.xrules.callback,"xRules has not defined a callback method")
+
+  --print(">>> xRuleset:match_message - force_midi",force_midi)
+
+  --[[
   if not self.xrules.callback then
     LOG("*** Warning: xRules has no callback, message has nowhere to go...")
     return
   end
+  ]]
 
   local function do_match(rule,rule_idx)
-    if not rule.midi_enabled 
-      and (type(xmsg)=="xMidiMessage")
+    if not force_midi and (not rule.midi_enabled 
+      and (type(xmsg)=="xMidiMessage"))
     then
-      --print("*** midi not enabled for this rule")
+      --print("*** midi not enabled for this rule",rule.name,force_midi)
       return
     end
-    local output,evaluated = rule:match(xmsg)
+    local output,evaluated = rule:match(xmsg,self.xrules,ruleset_idx)
     --print("*** #output,evaluated",#output,evaluated)
     if evaluated then
       --print("*** output",rprint(output))
@@ -317,6 +363,7 @@ end
 -- @return string, error message when failed
 
 function xRuleset:parse_definition(ruleset_def)
+  TRACE("xRuleset:parse_definition(ruleset_def)",ruleset_def)
 
   --print("xRuleset def...",rprint(ruleset_def))
 
@@ -347,6 +394,7 @@ end
 -- @return err, string containing error message
 
 function xRuleset:load_definition(file_path)
+  TRACE("xRuleset:load_definition(file_path)",file_path)
 
   assert(type(file_path) == "string","Expected a string as argument")
   assert(file_path ~= "","Expected a non-empty string as argument")
@@ -389,6 +437,7 @@ end
 -- @return string
 
 function xRuleset:serialize()
+  TRACE("xRuleset:serialize()")
 
   local str = ""
   str = "-----------------------------------------------------------"
@@ -442,6 +491,7 @@ end
 -------------------------------------------------------------------------------
 
 function xRuleset:attach_to_rule(rule_idx)
+  TRACE("xRuleset:attach_to_rule(rule_idx)",rule_idx)
 
   local xrule = self.rules[rule_idx]
   xrule.modified_observable:add_notifier(function()
@@ -474,6 +524,7 @@ end
 -- @return boolean
 
 function xRuleset.looks_like_definition(str_def)
+  TRACE("xRuleset.looks_like_definition(str_def)",str_def)
 
   if not string.find(str_def,"return[%s]*{") or
     not string.find(str_def,"actions[%s]*=[%s]*{") or
@@ -490,6 +541,7 @@ end
 -- ensure that the name is unique (among the saved files)
 
 function xRuleset.get_suggested_name(str_name)
+  TRACE("xRuleset.get_suggested_name(str_name)",str_name,type(str_name))
 
   if not str_name then
     str_name = xRuleset.DEFAULT_NAME
@@ -506,6 +558,7 @@ end
 -- return the path to the internal models 
 
 function xRuleset.get_normalized_file_path(str_name)
+  TRACE("xRuleset:get_normalized_file_path(str_name)",str_name)
 
   return ("%s%s.lua"):format(xRules.RULESET_FOLDER,str_name)
 

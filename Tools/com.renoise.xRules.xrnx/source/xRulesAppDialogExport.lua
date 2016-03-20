@@ -288,6 +288,7 @@ end
 -- @return boolean,string
 
 function xRulesAppDialogExport:save_ruleset()
+  TRACE("xRulesAppDialogExport:save_ruleset()")
 
   local xruleset = self.xrules.selected_ruleset
   assert(xruleset,"Expected a ruleset to be present")

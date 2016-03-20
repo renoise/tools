@@ -16,6 +16,7 @@ class 'vColor'
 -- @return table
 
 function vColor.adjust_brightness(rgb,amt)
+  TRACE("vColor.adjust_brightness(rgb,amt)",rgb,amt)
 
   rgb = table.rcopy(rgb)
 

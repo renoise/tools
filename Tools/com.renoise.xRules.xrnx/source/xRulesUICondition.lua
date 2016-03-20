@@ -28,7 +28,10 @@ function xRulesUICondition:__init(...)
   self.row_idx = nil
   self.aspect = nil
   self.operator = nil
-  self.value = nil
+  self.value = nil 
+
+  self.vb_status_elm = nil
+  self.str_syntax_error = nil
 
 end
 
@@ -40,6 +43,7 @@ end
 -- @return view
 
 function xRulesUICondition:build_condition_row(row_idx,def,logic_label)
+  TRACE("xRulesUICondition:build_condition_row(row_idx,def,logic_label)",row_idx,def,logic_label)
 
   self.row_idx = row_idx
 
@@ -90,8 +94,14 @@ function xRulesUICondition:build_condition_row(row_idx,def,logic_label)
     }
   end
 
+  self.vb_status_elm = vb:text{
+    text = "",
+    align = "right",
+  }
+
   -- for aspects that support only equal/not equal operators
   local create_type_row = function(items)
+    TRACE("create_type_row - self.last_msg_type",self.editor.last_msg_type)
 
     -- refactor into xRule "fix"
     local valid_operator = self:get_valid_operator(self.aspect,self.operator)
@@ -115,10 +125,12 @@ function xRulesUICondition:build_condition_row(row_idx,def,logic_label)
       },
       vb_remove_condition_bt,
     }
+
   end
 
   -- for aspects that support the full range of operators
   local create_value_row = function(items,val_min,val_max)
+    TRACE("create_value_row",items,val_min,val_max)
 
     local use_popup = type(items)=="table" 
     local val = self.value
@@ -197,10 +209,36 @@ function xRulesUICondition:build_condition_row(row_idx,def,logic_label)
     }
   end
 
+  -- special case: sysex requires a separate layout
+  local create_sysex_row = function()
+    --print("create_sysex_row")
+
+    local valid_operator = self:get_valid_operator(self.aspect,self.operator)
+
+    return vb:column{
+      vb:row{
+        vb_aspect_chooser,
+        create_operator_chooser(xRulesUI.TYPE_OPERATOR_ITEMS,valid_operator),
+        self.vb_status_elm,
+      },
+      vb:row{
+        vb:multiline_textfield{
+          text = tostring(self.value),
+          width = xRulesUI.TEXTAREA_W,
+          notifier = function(val)
+            self:change_sysex_value(val)
+          end
+        }
+      },
+    }
+
+  end
+
 
   local aspect_views = {
     [xRule.ASPECT.PORT_NAME] = function()
-      return create_type_row(renoise.Midi.available_input_devices())    
+      local devices = self.editor:inject_port_name(renoise.Midi.available_input_devices(),self.value)
+      return create_type_row(devices)    
     end,
     [xRule.ASPECT.DEVICE_NAME] = function()
       return create_type_row(self.ui:get_osc_device_names())    
@@ -223,6 +261,9 @@ function xRulesUICondition:build_condition_row(row_idx,def,logic_label)
     [xRule.ASPECT.MESSAGE_TYPE] = function()
       return create_type_row(xRulesUI.TYPE_ITEMS)    
     end,
+    [xRule.ASPECT.SYSEX] = function()
+      return create_sysex_row()    
+    end,
   }
 
   -- build active values, assign default value
@@ -231,6 +272,7 @@ function xRulesUICondition:build_condition_row(row_idx,def,logic_label)
       local str_label = ("VALUE_%X"):format(k)
       --print("str_label",str_label)
       aspect_views[xRule.ASPECT[str_label]] = function()
+        -- TODO assign min/max based on message context
         local val_min = 0
         local val_max = 16383
         return create_value_row(xRule.ASPECT_DEFAULTS[str_label],val_min,val_max)
@@ -285,8 +327,11 @@ function xRulesUICondition:build_condition_row(row_idx,def,logic_label)
 
 end
 
-  -- change logic: update, rebuild rule
+--------------------------------------------------------------------------------
+-- change logic: update, rebuild rule
+
 function xRulesUICondition:change_logic()
+  TRACE("xRulesUICondition:change_logic()")
 
   local xrule = self.xrule
   -- any logic would be defined in the previous entry
@@ -311,10 +356,13 @@ function xRulesUICondition:change_logic()
 
 end
 
-
+--------------------------------------------------------------------------------
 -- always use a supported operator
 -- e.g. MESSAGE_TYPE does not support "less than"
+
 function xRulesUICondition:get_valid_operator(aspect,operator) 
+  TRACE("xRulesUICondition:get_valid_operator(aspect,operator)",aspect,operator)
+
   if table.find(xRule.ASPECT_TYPE_OPERATORS,aspect) and
     not table.find(xRule.TYPE_OPERATORS,operator)
   then
@@ -323,12 +371,14 @@ function xRulesUICondition:get_valid_operator(aspect,operator)
   return operator
 end
 
-
+--------------------------------------------------------------------------------
 -- maintain value after the operator has changed
 -- @param value, vararg
 -- @param operator, xRule.OPERATOR
+
 function xRulesUICondition:change_operator_assist(value,operator)
-  --print("change_operator_assist",value,operator)
+  TRACE("xRulesUICondition:change_operator_assist(value,operator)",value,operator)
+
   if (type(value) ~= "table") 
     and (operator == xRule.OPERATOR.BETWEEN)
   then
@@ -344,10 +394,12 @@ function xRulesUICondition:change_operator_assist(value,operator)
   return value
 end
 
-
+--------------------------------------------------------------------------------
 -- change aspect: update, rebuild rule
+
 function xRulesUICondition:change_aspect(new_aspect)
-  --print("change_aspect",new_aspect)
+  TRACE("xRulesUICondition:change_aspect(new_aspect)",new_aspect)
+
   local xrule = self.xrule
   local new_condition = {[new_aspect] = {}}
   for k,v in pairs(xrule.conditions[self.row_idx]) do
@@ -363,6 +415,7 @@ function xRulesUICondition:change_aspect(new_aspect)
       new_condition[new_aspect][operator] = default
     end
   end
+  --print("*** new_condition",rprint(new_condition))
   xrule.conditions[self.row_idx] = new_condition
   local success,err = xrule:compile()
   if err then
@@ -372,11 +425,14 @@ function xRulesUICondition:change_aspect(new_aspect)
 
 end
 
-
+--------------------------------------------------------------------------------
 -- change operator: update, rebuild rule
 -- @param new_operator, xRule.OPERATOR
 -- @param only_set: do not compile, build
+
 function xRulesUICondition:change_operator(new_operator,only_set)
+  TRACE("xRulesUICondition:change_operator(new_operator,only_set)",new_operator,only_set)
+
   local xrule = self.xrule
   local new_condition = {}
   for k,v in pairs(xrule.conditions[self.row_idx]) do
@@ -397,7 +453,7 @@ function xRulesUICondition:change_operator(new_operator,only_set)
   end
 end
 
-
+--------------------------------------------------------------------------------
 -- provide a table where values go from low -> high,
 --  when using a 'between' operator... 
 -- @param val, the new value (string/number/table)
@@ -405,7 +461,8 @@ end
 -- @param val_index, 1 or 2
 
 function xRulesUICondition:between_value_assist(val,old_val,val_index)
-  --TRACE("between_value_assist(val,old_val,val_index)",val,old_val,val_index)
+  TRACE("xRulesUICondition:between_value_assist(val,old_val,val_index)",val,old_val,val_index)
+
   if val_index then
     if (val_index == 1) then
       if (val > old_val[2]) then
@@ -424,13 +481,15 @@ function xRulesUICondition:between_value_assist(val,old_val,val_index)
   return val
 end
 
-
+--------------------------------------------------------------------------------
 -- change value: update rule with selected value
--- @param val, the new value (number, table)
--- @param val_index, 1 or 2 -- implies 'between' operator
+-- @param val (number,table,string) the new value 
+-- @param val_index (int), 1 or 2 -- implies 'between' operator
+-- @param only_set (boolean), 
 
 function xRulesUICondition:change_value(val,val_index,only_set)
-  --print(">>> change_value",val,val_index,only_set)
+  TRACE("xRulesUICondition:change_value",val,val_index,only_set)
+
   local xrule = self.xrule
   local xcondition = xrule.conditions[self.row_idx]
   for k,v in pairs(xcondition) do
@@ -468,8 +527,11 @@ function xRulesUICondition:change_value(val,val_index,only_set)
 
 end
 
+--------------------------------------------------------------------------------
 
 function xRulesUICondition:remove_condition()
+  TRACE("xRulesUICondition:remove_condition()")
+
   local str_msg = "Are you sure you want to remove this condition?"
   local choice = renoise.app():show_prompt("Remove condition", str_msg, {"OK","Cancel"})
   if (choice == "OK") then
@@ -491,3 +553,27 @@ function xRulesUICondition:remove_condition()
 
   end
 end
+
+--------------------------------------------------------------------------------
+
+function xRulesUICondition:change_sysex_value(val)
+  TRACE("xRulesUICondition:change_sysex_value(val)",val)
+
+  local success,err = self.editor.validate_sysex_string(val)
+  if success then
+    self.vb_status_elm.text = "✔ Syntax is OK"
+    local condition = self.xrule.conditions[self.row_idx]
+    self.xrule.conditions[self.row_idx] = {
+      sysex = {
+        [self.operator] = val
+      }
+    }
+    success,self.str_syntax_error = self.xrule:compile()
+
+  else
+    self.vb_status_elm.text = "⚠ Syntax error"
+  end
+
+
+end
+

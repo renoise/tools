@@ -69,6 +69,7 @@ xObservable.SONG_BY_TYPE = {}
 -------------------------------------------------------------------------------
 
 function xObservable.get_by_type(str_type,array)
+  TRACE("xObservable.get_by_type(str_type)",str_type)
 
   if xObservable.SONG_BY_TYPE[str_type] then
     return xObservable.SONG_BY_TYPE[str_type]
@@ -103,6 +104,7 @@ xObservable.SONG_BY_TYPE["string"] = xObservable.get_by_type("string")
 -- @param obs (string), e.g. "transport.keyboard_velocity_enabled_observable"
 
 function xObservable.get_by_type_and_name(str_type,str_obs,str_prefix)
+  TRACE("xObservable.get_by_type_and_name(str_type,str_obs,str_prefix)",str_type,str_obs,str_prefix)
 
   -- strip away prefix
   if str_prefix then
@@ -179,6 +181,7 @@ end
 -- @param arg2 (function or object)
 
 function xObservable.attach(obs,arg1,arg2)
+  TRACE("xObservable.attach(obs,arg1,arg2)",obs,arg1,arg2)
   
   if type(arg1)=="function" then
     local fn,obj = arg1,arg2

@@ -13,6 +13,7 @@ xRulesAppDialogLog
 class 'xRulesAppDialogLog' (vDialog)
 
 function xRulesAppDialogLog:__init(ui)
+  TRACE("xRulesAppDialogLog:__init()",ui)
 
   vDialog.__init(self)
 
@@ -32,6 +33,7 @@ end
 -- @return renoise.Views.Rack
 
 function xRulesAppDialogLog:create_dialog()
+  TRACE("xRulesAppDialogLog:create_dialog()")
 
   local vb = self.vb
 
@@ -48,13 +50,13 @@ function xRulesAppDialogLog:create_dialog()
         id = "clear_button_container",
       }
     },
+    --[[
     vb:button{
       text = "remove traces",
       notifier = function()
-        xDebug.remove_trace_statements()
+        remove_trace_statements()
       end
     }
-    --[[
     ]]
   }
 

@@ -75,6 +75,7 @@ end
 -- @param scale_idx (int), 1=C, 2=C#, 3=D, ...
 
 function xScale.restrict_to_scale(note_value,scale_idx,scale_key)
+  TRACE("xScale.restrict_to_scale(note_value,scale_idx,scale_key)",note_value,scale_idx,scale_key)
 
   if (note_value > 119) then
     return note_value

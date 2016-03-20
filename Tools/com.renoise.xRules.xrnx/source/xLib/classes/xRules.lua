@@ -36,6 +36,7 @@ xRules.OUTPUT_OPTIONS = {
 --------------------------------------------------------------------------------
 
 function xRules:__init(...)
+  TRACE("xRules:__init()")
 
 	local args = xLib.unpack_args(...)
 
@@ -97,7 +98,6 @@ function xRules:__init(...)
   -- initialize --
 
   self.midi_input.callback_fn = function(xmsg)
-    -- TODO how to obtain ruleset, rule index? 
     self:match_message(xmsg)
   end
 
@@ -167,15 +167,36 @@ end
 -- Class Methods
 --==============================================================================
 
--- input raw midi messages here (will invoke the internal callback)
+-- input raw midi messages here and pass them into xMidiInput
 -- @param msg (table), midi message
 
 function xRules:input_midi(midi_msg,port_name)
+  TRACE("xRules:input_midi(midi_msg)",midi_msg,port_name)
 
   assert(type(midi_msg),"table","Expected midi_msg to be a table")
-  assert(type(midi_msg),"string","Expected port_name to be a string")
+  assert(type(port_name),"string","Expected port_name to be a string")
 
   self.midi_input:input(midi_msg,port_name)
+
+end
+
+--------------------------------------------------------------------------------
+-- input raw sysex messages here (immediately matched)
+-- @param msg (table), sysex message
+
+function xRules:input_sysex(sysex_msg,port_name)
+  TRACE("xRules:input_sysex(sysex_msg)",sysex_msg,port_name)
+
+  assert(type(sysex_msg),"table","Expected sysex_msg to be a table")
+  assert(type(port_name),"string","Expected port_name to be a string")
+
+  --print("sysex_msg",rprint(sysex_msg))
+
+  self:match_message(xMidiMessage{
+    message_type = xMidiMessage.TYPE.SYSEX,
+    values = sysex_msg,
+    port_name = port_name,
+  })
 
 end
 
@@ -185,6 +206,7 @@ end
 -- @param device, xOscDevice
 
 function xRules:input_osc(osc_msg,device)
+  TRACE("xRules:input_osc(osc_msg,device)",osc_msg,device)
 
   assert(type(osc_msg),"Message","Expected osc_msg to be an instance of renoise.Osc.Message")
   assert(type(device),"xOscDevice","Expected device to be an instance of xOscDevice")
@@ -222,13 +244,15 @@ end
 -- @param xmsg (xMidiMessage or xOscMessage)
 -- @param ruleset_idx (int) optional (set to match against specific ruleset)
 -- @param rule_idx (int) optional (set to match against specific rule)
+-- @param force_midi (boolean) force match (used by routings)
 -- @return matches (table)
 --  {
 --    ruleset: index
 --    rules: {index,index,index}
 --  },
 
-function xRules:match_message(xmsg,ruleset_idx,rule_idx)
+function xRules:match_message(xmsg,ruleset_idx,rule_idx,force_midi)
+  TRACE("xRules:match_message(xmsg,ruleset_idx,rule_idx)",xmsg,ruleset_idx,rule_idx,force_midi)
 
   local function do_match(ruleset,ruleset_idx)
     if ruleset.active then
@@ -237,7 +261,8 @@ function xRules:match_message(xmsg,ruleset_idx,rule_idx)
       then
         --LOG("This ruleset is set to ignore OSC messages")
       else
-        ruleset:match_message(xmsg,ruleset_idx,rule_idx)
+        --print(">>> xRules:match_message - force_midi",force_midi)
+        ruleset:match_message(xmsg,ruleset_idx,rule_idx,force_midi)
       end
     end
   end
@@ -260,6 +285,7 @@ end
 -- @param rule_idx (int)
 
 function xRules:transmit(out,xmsg_in,ruleset_idx,rule_idx)
+  TRACE("xRules:transmit(out,xmsg_in,ruleset_idx,rule_idx)",out,xmsg_in,ruleset_idx,rule_idx)
 
   local rns = renoise.song()
 
@@ -299,6 +325,7 @@ end
 -- @param transmit_auto (xMidiMessage or xOscMessage)
 
 function xRules:transmit_auto(xmsg)
+  TRACE("xRules:transmit_auto(xmsg)",xmsg)
 
   local is_note_on = (xmsg.message_type == xMidiMessage.TYPE.NOTE_ON)
   local is_note_off = (xmsg.message_type == xMidiMessage.TYPE.NOTE_OFF)
@@ -312,7 +339,7 @@ function xRules:transmit_auto(xmsg)
     return str_msg
   else
     if (type(xmsg)~="xMidiMessage") then
-      xmsg = xMidiMessage(xmsg.__def)
+      xmsg = xMidiMessage(xmsg.__def) -- on-the-fly conversion
     end
     return self:transmit_raw(xmsg)
   end
@@ -320,11 +347,17 @@ function xRules:transmit_auto(xmsg)
 end
 
 --------------------------------------------------------------------------------
--- trigger 'raw MIDI' using the internal OSC client
+-- trigger 'raw MIDI' using the internal OSC 
 
 function xRules:transmit_raw(xmsg)
+  print("xRules:transmit_raw(xmsg)",xmsg)
 
   assert(type(xmsg)=="xMidiMessage","Expected xMidiMessage as argument")
+
+  if (xmsg.message_type == xMidiMessage.TYPE.SYSEX) then
+    LOG("Warning: the internal OSC server does not support sysex messages")
+    return
+  end
 
   local str_msg = "Renoise ↩ " .. tostring(xmsg)
   local midi_msgs = xmsg:create_raw_message()
@@ -338,6 +371,7 @@ end
 -- send MIDI on the port specified in the message
 
 function xRules:transmit_midi(xmsg)
+  print("xRules:transmit_midi(xmsg)",xmsg)
 
   assert(type(xmsg)=="xMidiMessage","Expected xMidiMessage as argument")
 
@@ -360,6 +394,7 @@ end
 -- send message to OSC device specified in the message
 
 function xRules:transmit_osc(xmsg)
+  TRACE("xRules:transmit_osc(xmsg)",xmsg)
 
   assert(type(xmsg)=="xOscMessage","Expected xOscMessage as argument")
 
@@ -378,6 +413,7 @@ end
 -- remove pattern from the osc_router 
 
 function xRules:remove_osc_patterns(ruleset_idx,rule_idx)
+  TRACE("xRules:remove_osc_patterns(ruleset_idx)",ruleset_idx,rule_idx)
 
   local rslt = {}
   for k,v in ripairs(self.osc_pattern_map) do
@@ -406,6 +442,7 @@ end
 -- add/replace patterns in the osc_router
 
 function xRules:add_osc_patterns(ruleset_idx)
+  TRACE("xRules:add_osc_patterns(ruleset_idx)")
   
   local ruleset = self.rulesets[ruleset_idx]
   for k,v in ipairs(ruleset.rules) do
@@ -424,6 +461,7 @@ end
 -- @return boolean,string
 
 function xRules:load_ruleset(file_path,idx)
+  TRACE("xRules:load_ruleset(file_path,idx)",file_path,idx)
   
   if(type(file_path)~="string") then
     return false, "Expected file_path to be a string"
@@ -459,6 +497,7 @@ end
 -- toggle active state of ruleset
 
 function xRules:toggle_ruleset(ruleset_idx)
+  TRACE("xRules:toggle_ruleset(ruleset_idx)",ruleset_idx)
 
   local ruleset = self.rulesets[ruleset_idx]
   if ruleset then
@@ -474,6 +513,7 @@ end
 -- @return xRuleset
 
 function xRules:add_ruleset(ruleset_def,ruleset_idx)
+  TRACE("xRules:add_ruleset(ruleset_def,ruleset_idx)",ruleset_def,ruleset_idx)
 
   -- TODO implement better validation, return boolean on failure
   assert(type(ruleset_def)=="table","Expected ruleset_def to be a table")
@@ -519,6 +559,7 @@ end
 -- @return boolean,string
 
 function xRules:remove_ruleset(idx)
+  TRACE("xRules:remove_ruleset(idx)",idx)
 
   local ruleset = self.rulesets[idx]
   if not ruleset then
@@ -537,6 +578,7 @@ end
 -- @return boolean,string
 
 function xRules:replace_ruleset(file_path,idx)
+  TRACE("xRules:replace_ruleset(file_path,idx)",file_path,idx)
 
   assert(type(file_path)=="string","Expected file_path to be a string")
   assert(type(idx)=="number","Expected idx to be a string")
@@ -553,6 +595,7 @@ end
 -- @return boolean,string
 
 function xRules:save_ruleset()
+  TRACE("xRules:save_ruleset()")
 
   local xruleset = self.selected_ruleset
   local passed,err = xruleset:save_definition()
@@ -570,6 +613,7 @@ end
 -- @return boolean,string
 
 function xRules:revert_ruleset()
+  TRACE("xRules:revert_ruleset()")
 
   local xruleset = self.selected_ruleset
   local xruleset_idx = self.selected_ruleset_index
@@ -582,17 +626,35 @@ function xRules:revert_ruleset()
 end
 
 --------------------------------------------------------------------------------
+-- open access to midi port 
 
 function xRules:open_midi_input(port_name)
+  TRACE("xRules:open_midi_input(port_name)",port_name)
 
   local input_devices = renoise.Midi.available_input_devices()
   if table.find(input_devices, port_name) then
+
+    local port_available = (self.midi_inputs[port_name] ~= nil)
+    local port_open = port_available and self.midi_inputs[port_name].is_open
+    if port_available and port_open then
+      -- don't create/open if already active
+      return
+    elseif port_available and not port_open then
+      self.midi_inputs[port_name]:close()
+    end
+
     self.midi_inputs[port_name] = renoise.Midi.create_input_device(port_name,
       function(midi_msg)
         if not self.active then 
           return 
         end
         self:input_midi(midi_msg,port_name)
+      end,
+      function(sysex_msg)
+        if not self.active then
+          return
+        end
+        self:input_sysex(sysex_msg,port_name)
       end
     )
   else
@@ -605,6 +667,7 @@ end
 --------------------------------------------------------------------------------
 
 function xRules:close_midi_input(port_name)
+  TRACE("xRules:close_midi_input(port_name)",port_name)
 
   local midi_input = self.midi_inputs[port_name] 
   if (midi_input and midi_input.is_open) 
@@ -619,6 +682,7 @@ end
 --------------------------------------------------------------------------------
 
 function xRules:open_midi_output(port_name)
+  TRACE("xRules:open_midi_output(port_name)",port_name)
 
   local output_devices = renoise.Midi.available_output_devices()
 
@@ -634,6 +698,7 @@ end
 --------------------------------------------------------------------------------
 
 function xRules:close_midi_output(port_name)
+  TRACE("xRules:close_midi_output(port_name)",port_name)
 
   local midi_output = self.midi_outputs[port_name] 
   if (midi_output and midi_output.is_open) 
@@ -651,6 +716,7 @@ end
 --  avoid triggering the 
 
 function xRules:add_osc_device(device)
+  TRACE("xRules:add_osc_device(device)",device)
 
   if not device then
     local unique_name = self:get_unique_osc_device_name("Untitled device")
@@ -685,12 +751,6 @@ function xRules:add_osc_device(device)
     self.osc_devices_observable:insert(#self.osc_devices)
   end
 
-  --[[
-  if device.active then
-    device:on_idle()
-  end
-  ]]
-
 
 end
 
@@ -698,6 +758,7 @@ end
 -- @param device_idx, integer
 
 function xRules:remove_osc_device(device_idx)
+  TRACE("xRules:remove_osc_device(device_idx)",device_idx)
 
   local device = self.osc_devices[device_idx]
   device:close()
@@ -709,6 +770,7 @@ end
 --------------------------------------------------------------------------------
 
 function xRules:set_osc_device_property(device_name,key,value)
+  TRACE("xRules:set_osc_device_property(device_name)",device_name,key,value)
 
   for k,v in ipairs(self.osc_devices) do
     if (v.name == device_name) then
@@ -721,6 +783,7 @@ end
 -------------------------------------------------------------------------------
 
 function xRules:get_unique_osc_device_name(str_name,count)
+  TRACE("xRules:get_unique_osc_device_name(str_name,count)",str_name,count)
 
   local device_name_exists = function(str_name)
     for k,v in ipairs(self.osc_devices) do
@@ -738,6 +801,20 @@ function xRules:get_unique_osc_device_name(str_name,count)
   end
   
   return new_name
+
+end
+
+-------------------------------------------------------------------------------
+-- @return xRuleset,int(index) or nil
+
+function xRules:get_ruleset_by_name(str_name)
+  TRACE("xRules:get_ruleset_by_name(str_name)",str_name)
+
+  for k,v in ipairs(self.rulesets) do
+    if (v.name == str_name) then
+      return v,k
+    end
+  end
 
 end
 

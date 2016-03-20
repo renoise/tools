@@ -38,6 +38,7 @@ end
 -- @return int, index 
 
 function vDataProvider:get(item_id)
+  TRACE("vDataProvider:get(item_id)",item_id)
 
   if self.map[item_id] then
     return self.map[item_id].item,self.map[item_id].index

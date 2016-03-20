@@ -86,6 +86,7 @@ end
 -- @param str (vCellBitmap.mode)
 
 function vCellBitmap:set_mode(str)
+  TRACE("vCellBitmap:set_mode(str)",str)
   self._mode = str
   self.view.mode = str
 	vCell.update(self)
@@ -109,6 +110,7 @@ end
 --------------------------------------------------------------------------------
 
 function vCellBitmap:set_active(val)
+  TRACE("vCellBitmap:set_active(val)",val)
 
   self.view.active = val
 	vControl.set_active(self,val)

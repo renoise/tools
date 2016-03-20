@@ -103,7 +103,7 @@ function xDebug.remove_trace_statements()
         return false
       end
       local str_new = string.gsub(str_text,"\n%s*TRACE([^\n]*","")
-      local passed,err = xFilesystem.write_string_to_file(file_path,str_new)
+      local passed,err = xFilesystem.write_string_to_file(str_path_new,str_new)
       if not passed then
         if err then
           renoise.app():show_warning(err)

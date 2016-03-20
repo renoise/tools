@@ -121,6 +121,7 @@ end
 -- @param pos, renoise.SongPos
 
 function xStreamPos:set_pos(pos)
+  TRACE("xStreamPos:set_pos(pos)",pos)
 
   -- TODO refactor
   local near_top = function(line)
@@ -241,6 +242,7 @@ end
 -- This function is designed to be called in an idle loop
 
 function xStreamPos:track_pos()
+  TRACE("xStreamPos:track_pos()")
 
   local playpos = rns.transport.playback_pos
 

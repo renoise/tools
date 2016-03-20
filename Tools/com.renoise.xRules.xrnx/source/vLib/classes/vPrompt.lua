@@ -22,6 +22,7 @@ vPrompt.color_prompt = {}
 -- @return string or nil if user aborted
 
 function vPrompt.prompt_for_string(str_default,str_description,str_title)
+  TRACE("vPrompt.prompt_for_string(str_default,str_description,str_title)",str_default,str_title)
 
   local vb = renoise.ViewBuilder()
   local str_value = str_default
@@ -62,6 +63,7 @@ end
 -- @param palette (table<table{r,g,b}>) predefined palette entries (max. 8)
 
 function vPrompt.prompt_for_color(callback,active_color,palette)
+  TRACE("vPrompt.prompt_for_color(callback,active_color,palette)",callback,active_color,palette)
 
   local t = vColor.value_to_color_table(active_color)
   local red = renoise.Document.ObservableNumber(t[1])

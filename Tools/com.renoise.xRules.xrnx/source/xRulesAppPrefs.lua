@@ -55,6 +55,7 @@ function xRulesAppPrefs:__init()
   --print("xRulesAppPrefs:__init - osc_devices",self.osc_devices)
 
   self:add_property("osc_devices", renoise.Document.ObservableStringList())
+  --self:add_property("osc_devices", renoise.Document.DocumentList())
   --print("xRulesAppPrefs:__init - #osc_devices",#self.osc_devices)
 
   self:property("ruleset_folder"):add_notifier(function()
