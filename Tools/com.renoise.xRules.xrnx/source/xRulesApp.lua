@@ -38,10 +38,10 @@ function xRulesApp:__init(xprefs)
   --- xRulesUI
   self.ui = xRulesUI(self)
 
-  -- boolean, temporarily ignore changes
+  -- boolean, don't synchronize preferences while true
   self.suppress_osc_device_notifier = false
 
-  -- boolean, temporarily ignore changes
+  -- boolean, don't synchronize preferences while true
   self.suppress_ruleset_notifier = false
 
   --== initialize ==--
@@ -73,30 +73,21 @@ function xRulesApp:__init(xprefs)
   end
 
   self.xrules.osc_devices_observable:add_notifier(function(args)
-    --print(">>> xRulesApp:xrules.osc_devices_observable fired...",rprint(args))
-
-    local device = self.xrules.osc_devices[args.index]
-    --print("#self.xrules.osc_devices",#self.xrules.osc_devices)
-    --print("device",device)
-
+    --print("xrules.osc_devices_observable fired...")
     if (args.type == "insert") then
-      self:attach_to_osc_device(device)
-    --else
-    --  self:detach_from_osc_device(device)
+      local device = self.xrules.osc_devices[args.index]
+      xObservable.attach(device.modified_observable,self,self.export_osc_devices)
+    --elseif (args.type == "remove") then
     end
-
     self:export_osc_devices()
-
     -- rebuild to include device-name selectors
     self.ui._build_rule_requested = true
-
   end)
 
   -- MIDI port setup changed
   renoise.Midi.devices_changed_observable():add_notifier(function()
     self:available_midi_ports_changed()
   end)
-
 
   self:import_profile()
   self.ui:select_rule_within_set(1,1)
@@ -171,25 +162,37 @@ function xRulesApp:shutdown()
 
   self.xrules.active = false
 
-  -- TODO
+  -- shutdown all devices
+
+  for k = 1, #self.prefs.midi_inputs do
+    local port_name = self.prefs.midi_inputs[k].value
+    self.xrules:close_midi_input(port_name)
+  end
+
+  for k = 1, #self.prefs.midi_outputs do
+    local port_name = self.prefs.midi_outputs[k].value
+    self.xrules:close_midi_output(port_name)
+  end
+
+  self.suppress_osc_device_notifier = true
+  for k,v in ripairs(self.xrules.osc_devices) do
+    self.xrules:remove_osc_device(k)
+  end
+  self.suppress_osc_device_notifier = false
 
 end
 
 --------------------------------------------------------------------------------
 
 function xRulesApp:available_midi_ports_changed()
-  print("xRules:available_midi_ports_changed()")
+  TRACE("xRulesApp:available_midi_ports_changed()")
 
   self:initialize_midi_devices()
 
-  xRule.ASPECT_DEFAULTS.PORT_NAME = renoise.Midi.available_input_devices()
   self.ui._build_rule_requested = true
 
   local prefs_dialog = self.ui._prefs_dialog
-  print("prefs_dialog",prefs_dialog)
-  print("prefs_dialog.dialog",prefs_dialog.dialog)
   if prefs_dialog.dialog and prefs_dialog.dialog.visible then
-    print("prefs_dialog.dialog.visible",prefs_dialog.dialog.visible)
     prefs_dialog:update_dialog()
   end
 
@@ -199,6 +202,9 @@ end
 -- open the MIDI inputs & outputs specified in preferences 
 
 function xRulesApp:initialize_midi_devices()
+  TRACE("xRulesApp:initialize_midi_devices()")
+
+  --xRule.ASPECT_DEFAULTS.PORT_NAME = renoise.Midi.available_input_devices()
 
   for k = 1, #self.prefs.midi_inputs do
     local port_name = self.prefs.midi_inputs[k].value
@@ -224,62 +230,50 @@ function xRulesApp:apply_settings()
   --print("got here 1 - self.prefs.osc_devices",self.prefs.osc_devices)
   for k = 1, #self.prefs.osc_devices do
     --print(">>> self.prefs.osc_devices[",k,"]",self.prefs.osc_devices[k],type(self.prefs.osc_devices[k]))
-    local osc_device = self.prefs.osc_devices[k].value
-    local device = xOscDevice()
-    device:import(osc_device)
-    --device:import_node(osc_device)
-    self.xrules:add_osc_device(device)
+    local device_def = self.prefs.osc_devices[k].value
+    self:add_osc_device(device_def)
   end
   self.suppress_osc_device_notifier = false
 
 end
 
 --------------------------------------------------------------------------------
--- when something has changed, export osc_devices to preferences
+-- when some device property has changed, export osc_devices to preferences
+-- (skip while application is disabled, starting up or shutting down...)
 
 function xRulesApp:export_osc_devices()
   TRACE("xRulesApp:export_osc_devices()")
 
-  if self.suppress_device_notifier then
+  if self.suppress_osc_device_notifier then
+    return
+  end
+
+  if not self.xrules.active then
     return
   end
 
   self.prefs:remove_property(self.prefs.osc_devices)
   self.prefs:add_property("osc_devices",renoise.Document.ObservableStringList())
-  --self.prefs:add_property("osc_devices",renoise.Document.create("OscDevices"){})
 
   for k,v in ipairs(self.xrules.osc_devices) do
     self.prefs.osc_devices:insert(v:export())
-    --self.prefs.osc_devices:add_property(v:export_node())
-    --v:export_node(self.prefs.osc_devices)
   end
 
 end
 
 --------------------------------------------------------------------------------
+-- add new OSC device from definition
+-- @param device_def (table)
 
-function xRulesApp:attach_to_osc_device(device)
-  TRACE("xRulesApp:attach_to_osc_device(device)",device)
+function xRulesApp:add_osc_device(device_def)
+  TRACE("xRulesApp:add_osc_device(device_def)",device_def)
 
-  local obs = device.modified_observable
-  local handler = self.export_osc_devices
-  xObservable.attach(obs,self,handler)
-
-end
-
---------------------------------------------------------------------------------
---[[
-function xRulesApp:detach_from_osc_device(device)
-  TRACE("xRulesApp:detach_from_osc_device(device)",device)
-
-  local obs = device.modified_observable
-  local handler = self.export_osc_devices
-  if obs:has_notifier(handler) then 
-    obs:remove_notifier(handler) 
-  end
+  local device = xOscDevice()
+  device:import(device_def)
+  self.xrules:add_osc_device(device)
+  --print(">>> add_osc_device - device.active",device.active)
 
 end
-]]
 
 --------------------------------------------------------------------------------
 -- import rulesets, offer to 'fix' missing/invalid definitions

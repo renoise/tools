@@ -31,6 +31,7 @@ require (_xlibroot.."xOscClient")
 require (_xlibroot.."xOscDevice")
 require (_xlibroot.."xNoteColumn")
 require (_xlibroot.."xSandbox")
+require (_xlibroot.."xTrack")
 require (_xlibroot.."xParseXML")
 require (_xlibroot.."xPreferences")
 require (_xlibroot.."xObservable")
@@ -38,6 +39,7 @@ require (_xlibroot.."xReflection")
 require (_xlibroot.."xRule")
 require (_xlibroot.."xRuleset")
 require (_xlibroot.."xRules")
+--require (_xlibroot.."xScale")
 
 _vlibroot = "source/vLib/classes/"
 _vlib_img = _vlibroot .. "images/"

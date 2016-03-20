@@ -4,7 +4,7 @@
 
 --[[--
 
-  xOscMessage is a higher-level OSC message 
+  A higher-level OSC message 
 
   See also:
     xMessage
@@ -29,7 +29,7 @@ function xOscMessage:__init(...)
 
   -- string, name of source/target device
   self.device_name = property(self.get_device_name,self.set_device_name)
-  self.device_name_observable = renoise.Document.ObservableString(args.device_name or "")
+  self.device_name_observable = renoise.Document.ObservableString(args.device_name or xOscDevice.DEFAULT_DEVICE_NAME)
 
   -- xOscPattern, decides how to interpret messages
   self.pattern = args.pattern 
@@ -74,15 +74,17 @@ end
 function xOscMessage:create_raw_message()
   TRACE("xOscMessage:create_raw_message()")
 
-  -- apply values to pattern arguments
-  -- ...it's quicker that way
+  -- use pattern arguments as blueprint
+  --print(">>> create_raw_message - self.pattern",self.pattern)
+  --print(">>> create_raw_message - self.pattern.arguments",self.pattern.arguments)
+  local arguments = table.rcopy(self.pattern.arguments)
   for k,v in ipairs(self.values) do
-    if self.pattern.arguments[k] then
-      self.pattern.arguments[k].value = v
+    if arguments[k] then
+      arguments[k].value = v
     end
   end
 
-  local osc_msg = self.pattern:generate(self.pattern.arguments)
+  local osc_msg = self.pattern:generate(arguments)
   --print("*** create_raw_message - osc_msg",osc_msg)
 
   return osc_msg
@@ -96,6 +98,9 @@ function xOscMessage:get_definition()
 
   local def = xMessage.get_definition(self)
   def.device_name = self.device_name
+  def.pattern = self.pattern
+  
+  return def
 
 end
 

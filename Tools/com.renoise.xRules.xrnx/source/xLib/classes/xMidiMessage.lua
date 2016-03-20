@@ -60,6 +60,10 @@ xMidiMessage.BIT_DEPTH = {
   FOURTEEN = 14,
 }
 
+xMidiMessage.DEFAULT_BIT_DEPTH = xMidiMessage.BIT_DEPTH.SEVEN
+xMidiMessage.DEFAULT_CHANNEL = 1
+xMidiMessage.DEFAULT_PORT_NAME = "Unknown port"
+
 -------------------------------------------------------------------------------
 -- Class Methods
 -------------------------------------------------------------------------------
@@ -70,24 +74,22 @@ function xMidiMessage:__init(...)
 	local args = xLib.unpack_args(...)
   --print("args",rprint(args))
 
-  -- TODO feed raw MIDI message as argument (same as OscMessage)
-
-  -- xMidiMessage.TYPE
+  -- xMidiMessage.TYPE (required)
   self.message_type = property(self.get_message_type,self.set_message_type)
   self._message_type = args.message_type
 
   -- int, between 0-16 
   -- 0 should be interpreted as 'undefined' 
   self.channel = property(self.get_channel,self.set_channel)
-  self._channel = args.channel 
+  self._channel = args.channel or xMidiMessage.DEFAULT_CHANNEL
 
   -- xMidiMessage.BIT_DEPTH, indicates a multibyte message
   --  (only relevant for CC messages, as they can otherwise be ambivalent)
   self.bit_depth = property(self.get_bit_depth,self.set_bit_depth)
-  self._bit_depth = args.bit_depth or xMidiMessage.BIT_DEPTH.SEVEN
+  self._bit_depth = args.bit_depth or xMidiMessage.DEFAULT_BIT_DEPTH
 
   -- string, source/target port
-  self.port_name = args.port_name or "Unknown port"
+  self.port_name = args.port_name or xMidiMessage.DEFAULT_PORT_NAME
 
   -- initialize --
 
@@ -349,7 +351,8 @@ function xMidiMessage:create_raw_message()
     }
 
     if not converters[self.message_type] then
-      error("Cound not convert message, unrecognized type")
+      error("Cound not convert message, unrecognized type"
+        ..tostring(self.message_type))
     else
       local raw_midi = converters[self.message_type]()
       self._raw_midi_cache = raw_midi

@@ -26,6 +26,8 @@ xOscDevice.DOC_PROPS = {
   port_out = "number",
 }
 
+xOscDevice.DEFAULT_DEVICE_NAME = "Untitled device"
+
 --------------------------------------------------------------------------------
 
 function xOscDevice:__init(...)
@@ -62,6 +64,8 @@ function xOscDevice:__init(...)
   self.port_out_observable = renoise.Document.ObservableNumber(args.port_out or 0)
 
   -- function, where to pass received messages
+  -- @param renoise.Osc.Message
+  -- @param pattern (without prefix)
   self.callback = property(self.get_callback,self.set_callback)
   self._callback = args.callback 
 
@@ -364,6 +368,11 @@ end
 
 function xOscDevice:socket_message(socket, binary_data)
 
+  if not self.active then
+    LOG("*** xOscDevice - ignoring messages while inactive")
+    return
+  end
+
   local message_or_bundle, osc_error = 
     renoise.Osc.from_binary_data(binary_data)
   
@@ -371,11 +380,28 @@ function xOscDevice:socket_message(socket, binary_data)
     local messages = table.create()
     self:_unpack_messages(message_or_bundle, messages)
 
-    --print("socket_message",messages)
+    --print("socket_message - #messages",#messages)
 
     for _,msg in pairs(messages) do
       --print("msg.arguments",rprint(msg.arguments))
       if self.callback then
+
+        -- ignore messages that doesn't match our prefix
+        if (self.prefix ~= "") then
+          local prefix_str = string.sub(msg.pattern,0,string.len(self.prefix))
+          if (prefix_str ~= self.prefix) then 
+            LOG("*** xOscDevice - ignoring message with invalid prefix",msg.pattern)
+            return 
+          end
+          -- strip the prefix before continuing
+          -- (we need to create a new osc message)
+          local msg_pattern = string.sub(msg.pattern,string.len(self.prefix)+1)
+          --print("stripped prefix - msg_pattern is now",msg_pattern)
+
+          msg = renoise.Osc.Message(msg_pattern,msg.arguments)
+
+        end
+
         self.callback(msg)
       end
     end
@@ -387,20 +413,34 @@ function xOscDevice:socket_message(socket, binary_data)
 end
 
 --------------------------------------------------------------------------------
--- @param osc_msg, renoise.Osc.Message
+-- build raw message, send or add to queue
+-- @param xmsg, xOscMessage
 
-function xOscDevice:send(osc_msg)
-  TRACE("xOscDevice:send(osc_msg)",osc_msg)
+function xOscDevice:send(xmsg)
+  TRACE("xOscDevice:send(xmsg)",xmsg)
 
   if not self.client or not self.client.is_open then
     LOG("Could not send OSC message - device is not ready")
     return false
   end
 
+  -- add prefix , if not already added
+  --print("self.prefix",self.prefix,type(self.prefix))
+  --print("xmsg.pattern",xmsg.pattern,type(xmsg.pattern))
+  --print("xmsg.pattern.osc_pattern_out",xmsg.pattern.osc_pattern_out,type(xmsg.pattern.osc_pattern_out))
+  local prefix_str = string.sub(xmsg.pattern.osc_pattern_out,0,string.len(self.prefix))
+  --print(">>> xOscDevice:send - prefix_str",prefix_str)
+  if (prefix_str ~= self.prefix) then 
+    xmsg.pattern.osc_pattern_out = self.prefix .. xmsg.pattern.osc_pattern_out
+  end
+
+  local msg = xmsg:create_raw_message()
+
   if not self.bundling_enabled then
-    self.client:send(osc_msg)
+    --print(">>> xOscDevice:send - ",msg.pattern,rprint(msg.arguments))
+    self.client:send(msg)
   else
-    table.insert(self.message_queue,osc_msg)
+    table.insert(self.message_queue,msg)
     -- send immediately? 
     if (self.bundle_limit > 0) 
       and (#self.message_queue > self.bundle_limit)

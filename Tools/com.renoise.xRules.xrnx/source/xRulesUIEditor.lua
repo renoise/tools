@@ -1077,7 +1077,11 @@ end
 -- @return table<string>
 
 function xRulesUIEditor:inject_port_name(devices,str_name)
-  print("xRulesUIEditor:inject_port_names(devices,str_name)",devices,str_name)
+  TRACE("xRulesUIEditor:inject_port_names(devices,str_name)",devices,str_name)
+
+  if not str_name then
+    return devices -- why do we end up here ?? 
+  end
 
   if not table.find(devices,str_name) then
     table.insert(devices,1,str_name.." (N/A)")

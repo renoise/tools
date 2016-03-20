@@ -109,6 +109,7 @@ function xSandbox:__init()
     -- renoise extended
     ripairs = _G.ripairs,
     rprint = _G.rprint,
+    oprint = _G.oprint,
   }
 
   self.env = env

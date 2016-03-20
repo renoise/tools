@@ -24,52 +24,17 @@ class 'xDocument'
 
 
 --------------------------------------------------------------------------------
--- @return table 
-
-function xDocument:serialize()
-  TRACE("xDocument:serialize()")
-
-  local t = {}
-  for k,v in pairs(self.DOC_PROPS) do
-    local property_type = self.DOC_PROPS[k]
-    if property_type then
-      t[k] = xReflection.cast_value(self[k],property_type)
-    else
-      t[k] = self[k]
-    end
-  end
-  return t
-
-end
-
---------------------------------------------------------------------------------
 -- import serialized values that match one of our DOC_PROPS
 -- @param str (string) serialized values 
 
 function xDocument:import(str)
   TRACE("xDocument:import(str)",str)
 
-  local t = loadstring("return "..str)
-  local deserialized = t()
-  --print("xDocument:import deserialized",deserialized,type(deserialized))
-  if not deserialized then
-    return
+  local t = xDocument.deserialize(str,self.DOC_PROPS)
+  for k,v in pairs(t) do
+    self[k] = v
   end
 
-  for k,v in pairs(self.DOC_PROPS) do
-    --print("DOC_PROPS",k,v)
-    if deserialized[k] then
-      --print("xDocument:import - about to set",k,v,deserialized[k])
-      local property_type = v
-      if property_type then
-        self[k] = xReflection.cast_value(deserialized[k],property_type)
-      else
-        self[k] = deserialized[k]
-      end
-      --print(">>> xDocument:import - set",k,v,self[k],type(self[k]))
-
-    end
-  end
 end
 
 --------------------------------------------------------------------------------
@@ -77,78 +42,62 @@ end
 
 function xDocument:export()
   TRACE("xDocument:export()")
-  local t = self:serialize()
+
+  local t = xDocument.serialize(self,self.DOC_PROPS)
   return xLib.serialize_table(t)
-end
-
---------------------------------------------------------------------------------
--- @param node, renoise.DocumentNode
-
-function xDocument:import_node(node)
-  TRACE("xDocument:import_node(node)",node)
-
-  for k,v in pairs(self.DOC_PROPS) do
-    --print("import_node - k,v",k,v)
-    self[k] = node:property(k)
-  end
 
 end
 
-
 --------------------------------------------------------------------------------
--- @param node, renoise.DocumentNode
+-- collect properties from object
+-- @param obj (class instance)
+-- @param props (table) DOC_PROPS
+-- @return table 
 
-function xDocument:export_node()
+function xDocument.serialize(obj,props)
+  TRACE("xDocument.serialize(obj,props)",obj,props)
 
-  local node = renoise.Document.create(type(self)){}
-  for k,v in pairs(self.DOC_PROPS) do
-    --print("export_node - k,v",k,v)
-    node:add_property(k,self[k])
-  end
-  return node
-
-end
-
-
---------------------------------------------------------------------------------
--- populate the class with values from document-node or table (xParseXML)
--- @param arg, DocumentNode or table 
---[[
-function xDocument:import(arg)
-  TRACE("xDocument:import(arg)",arg)
-  
-  --print("xDocument:import - arg type",type(arg))
-
-  if (type(arg) == "DocumentNode") then
-    for k,v in pairs(self.DOC_PROPS) do
-      --print("importing property:",k,arg[k],type(arg[k]))
-      self[k] = arg[k].value
+  local t = {}
+  for k,v in pairs(props) do
+    local property_type = props[k]
+    if property_type then
+      t[k] = xReflection.cast_value(obj[k],property_type)
+    else
+      t[k] = obj[k]
     end
-  elseif (type(arg) == "table") then 
-    -- convert to node, then import
-    local node = xParseXML.to_document(arg)
-    self:import(node)
-    
-  else
-    error("Unexpected format, please supply a DocumentNode or table")
   end
+  return t
 
 end
 
 --------------------------------------------------------------------------------
--- export properties to a document-node
--- @return renoise.Document
+-- deserialize string 
+-- @param str (str) serialized string
+-- @param props (table) DOC_PROPS
+-- @return table or nil
 
-function xDocument:export()
-  TRACE("xDocument:export()")
+function xDocument.deserialize(str,props)
+  TRACE("xDocument.deserialize(str,props)",str,props)
 
-  local t = self:serialize()
-  local doc = renoise.Document.create(type(self)){}
-  for k,v in pairs(t) do
-    --print("export property",k,v,type(v))
-    doc:add_property(k,v)
+  local t = loadstring("return "..str)
+  local deserialized = t()
+  if not deserialized then
+    return
   end
-  return doc
+  
+  t = {}
+  for k,v in pairs(props) do
+    if deserialized[k] then
+      local property_type = v
+      if property_type then
+        t[k] = xReflection.cast_value(deserialized[k],property_type)
+      else
+        t[k] = deserialized[k]
+      end
+    end
+  end
+
+  return t
 
 end
-]]
+

@@ -379,6 +379,8 @@ end
 function xRulesUICondition:change_operator_assist(value,operator)
   TRACE("xRulesUICondition:change_operator_assist(value,operator)",value,operator)
 
+  print("value",rprint(value))
+
   if (type(value) ~= "table") 
     and (operator == xRule.OPERATOR.BETWEEN)
   then
@@ -390,7 +392,7 @@ function xRulesUICondition:change_operator_assist(value,operator)
     -- reduce to single value 
     value = value[1]
   end
-  --print("change_operator_assist - resulting value",value,type(value))
+  print("change_operator_assist - resulting value",value,type(value))
   return value
 end
 
@@ -406,7 +408,15 @@ function xRulesUICondition:change_aspect(new_aspect)
     for k2,v2 in pairs(v) do
       -- apply default values 
       local value = v2
-      local defaults = xRule.ASPECT_DEFAULTS[string.upper(new_aspect)]
+      local defaults
+      -- special case: always pull a fresh list for OSC/MIDI devices
+      if (new_aspect == "device_name") then
+        defaults = self.ui:get_osc_device_names()
+      elseif (new_aspect == "port_name") then
+        defaults = renoise.Midi.available_input_devices()
+      else
+        defaults = xRule.ASPECT_DEFAULTS[string.upper(new_aspect)]
+      end
       local default = (type(defaults) == "table") and defaults[1] or defaults
       -- use a supported operator
       local operator = self:get_valid_operator(new_aspect,k2)
@@ -415,7 +425,7 @@ function xRulesUICondition:change_aspect(new_aspect)
       new_condition[new_aspect][operator] = default
     end
   end
-  --print("*** new_condition",rprint(new_condition))
+  print("*** new_condition",rprint(new_condition))
   xrule.conditions[self.row_idx] = new_condition
   local success,err = xrule:compile()
   if err then

@@ -89,10 +89,10 @@ function xOscPattern:__init(...)
   self.arg_names = property(self.get_arg_names,self.set_arg_names)
   self._arg_names = renoise.Document.ObservableStringList()
 
-  -- string, input pattern
+  -- string, input pattern (set via 'pattern_in')
   self.osc_pattern_in = nil
 
-  -- string, output pattern
+  -- string, output pattern (set via 'pattern_in' or 'pattern_out')
   self.osc_pattern_out = nil
 
   -- table<int> output arguments/order
@@ -205,7 +205,6 @@ function xOscPattern:match(msg)
   -- check if same header
   if not (msg.pattern == self.osc_pattern_in) then
     --return false,"Pattern didn't match"
-
     return false,"Pattern didn't match:"..tostring(msg.pattern)..","..tostring(self.osc_pattern_in)
   else
     
@@ -222,7 +221,7 @@ function xOscPattern:match(msg)
       -- check if argument types match
       for k,v in ipairs(self.arguments) do
         local arg = self.arguments[k]
-        if arg.value then
+        if (arg.value~=nil) then
           -- literal value match
           local value_match = false
           local val1,val2 = msg.arguments[k].value,arg.value
@@ -273,6 +272,7 @@ function xOscPattern:parse_input_pattern()
   for var,_ in str_vars do
     if (count == 0) then
       self.osc_pattern_in = var
+      --print("self.osc_pattern_in",self.osc_pattern_in)
     else
       if not string.match(var,"^%%%a") then
         -- literal value
@@ -432,6 +432,8 @@ function xOscPattern:__tostring()
   return type(self) .. ": "
     .. "pattern_in="..self.pattern_in
     .. ", pattern_out="..self.pattern_out
+    .. ", osc_pattern_in="..self.osc_pattern_in
+    .. ", osc_pattern_out="..self.osc_pattern_out
     .. ", callback_fn="..tostring(self.callback_fn)
     .. ", strict="..tostring(self.strict)
 

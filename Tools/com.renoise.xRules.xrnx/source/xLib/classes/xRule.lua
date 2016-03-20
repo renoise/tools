@@ -5,7 +5,8 @@ xRule
 
 ## About
 
-	This class decides when & how to rewrite MIDI messages
+	This class defines the logic for when & how to rewrite MIDI messages,
+  plus the sandbox environment in which the code is running
 
   A rule contains two main elements: 
     conditions - criteria that the message has to match
@@ -56,7 +57,8 @@ xRule.VALUES = {
 
 xRule.ASPECT_DEFAULTS = {
   SYSEX = "F0 * F7",
-  PORT_NAME = renoise.Midi.available_input_devices(),
+  DEVICE_NAME = {}, -- list of OSC devices
+  PORT_NAME = {}, -- renoise.Midi.available_input_devices()
   CHANNEL = {},
   TRACK_INDEX = {},
   INSTRUMENT_INDEX = {},
@@ -301,6 +303,12 @@ function xRule:__init(def)
   self.midi_enabled_observable = renoise.Document.ObservableBoolean(
     (type(def.midi_enabled) ~= "boolean") and true or def.midi_enabled)
 
+  -- xMessage, or implementation thereof
+  self.last_received_message = nil
+
+
+  -- easy access to values in last message (might be nil)
+  self.values = property(self.get_values)
 
   -- internal --
 
@@ -339,37 +347,43 @@ function xRule:__init(def)
     -- add/clone message into the output queue
     -- @param val (string), one of xRules.OUTPUT_OPTIONS
     local output_message = function(val)
+
       local xmsg_out
-      --print(">>> type(__xmsg)",type(__xmsg))
+      local xmsg_type = type(__xmsg)
+
+      if not (xmsg_type=='xMidiMessage') 
+        and not (xmsg_type=='xOscMessage')
+      then
+        error("Expected implementation of xMessage")
+      end
+
       local def = __xmsg.__def
       if (val == xRules.OUTPUT_OPTIONS.EXTERNAL_OSC)
         and (type(__xmsg)=='xMidiMessage') 
       then 
         -- convert from MIDI -> OSC
-        --print(">>> MIDI message def:",rprint(def))
+        def.pattern = __xrule.osc_pattern
+        def.device_name = __xmsg.device_name
         xmsg_out = xOscMessage(def)
-        xmsg_out.pattern = __xrule.osc_pattern
-        xmsg_out.device_name = tostring(__xmsg.device_name)
 
       elseif (type(__xmsg)=='xOscMessage') 
         and ((val == xRules.OUTPUT_OPTIONS.EXTERNAL_MIDI)
         or (val == xRules.OUTPUT_OPTIONS.INTERNAL_RAW))
       then 
         -- convert from OSC -> MIDI
+        def.message_type = __xmsg.message_type
+        def.channel = __xmsg.channel
+        def.bit_depth = __xmsg.bit_depth
+        def.port_name = __xmsg.port_name
         xmsg_out = xMidiMessage(def)
-        xmsg_out.message_type = __xmsg.message_type
-        xmsg_out.channel = __xmsg.channel
-        xmsg_out.bit_depth = __xmsg.bit_depth
-        xmsg_out.port_name = __xmsg.port_name
 
       else -- internal can be both
         if (type(__xmsg)=='xOscMessage') then
           xmsg_out = xOscMessage(def)
-        else
+        elseif (type(__xmsg)=='xMidiMessage') then
           xmsg_out = xMidiMessage(def)
         end
       end
-      --print("val,xmsg_out",val,xmsg_out)
 
       table.insert(__output,{
         target = val,
@@ -403,6 +417,7 @@ function xRule:__init(def)
       end
     end
 
+
   ]]
   self.sandbox.str_suffix = [[
     return __output,__evaluated
@@ -412,12 +427,20 @@ function xRule:__init(def)
 
     -- Global
 
+    ["rns"] = {
+      access = function(env) return rns end,
+    },
     ["renoise"] = {
       access = function(env) return renoise end,
     },
-
     ["__xrule"] = {
       access = function(env) return self end,
+    },
+    ["rules"] = {
+      access = function(env)         
+        local ruleset = env.__xrules.rulesets[env.__xruleset_index]
+        return ruleset.rules
+      end,
     },
 
     -- Static access to xLib classes 
@@ -427,6 +450,12 @@ function xRule:__init(def)
     },
     ["xRules"] = {
       access = function(env) return xRules end,
+    },
+    ["xTrack"] = {
+      access = function(env) return xTrack end,
+    },
+    ["xScale"] = {
+      access = function(env) return xScale end,
     },
     ["xRuleset"] = {
       access = function(env) return xRuleset end,
@@ -538,6 +567,15 @@ end
 
 -------------------------------------------------------------------------------
 
+function xRule:get_values()
+  --TRACE("xRule:get_values()")
+  if self.last_received_message then
+    return self.last_received_message.values
+  end
+end
+
+-------------------------------------------------------------------------------
+
 function xRule:get_match_any()
   return self.match_any_observable.value
 end
@@ -597,6 +635,10 @@ function xRule:match(xmsg,xrules,ruleset_idx)
     return {}
   end
 
+  -- remember the last message to be matched, 
+  -- make it inspectable by other rules
+  self.last_received_message = xmsg
+
   -- prepare environment
   self.sandbox.env.__xmsg = {}
   self.sandbox.env.__output = {}
@@ -612,6 +654,7 @@ function xRule:match(xmsg,xrules,ruleset_idx)
     return {}
   else
     --print("callback result - xmsgs,evaluated",xmsgs,evaluated)
+   
     return xmsgs,evaluated
   end
 

@@ -267,7 +267,7 @@ function xPreferences:launch_profile(idx)
     --print("doc",doc)
 
     local prefs_path = xPreferences.PROFILE_FOLDER.."/"..profile.name.."/preferences.xml"
-    print("prefs_path",prefs_path)
+    --print("prefs_path",prefs_path)
     doc:load_from(prefs_path)
 
     -- backup existing preferences 

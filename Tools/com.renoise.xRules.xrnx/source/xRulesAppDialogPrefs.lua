@@ -46,6 +46,27 @@ function xRulesAppDialogPrefs:__init(ui)
   self.vtable_midi_outputs = nil
   self.vtable_osc_devices = nil
   
+  -- initialize --
+
+  -- prevent device editing while inactive
+  -- (as we are exporting actual devices to the preferences,
+  -- and no devices are present while disabled...)
+  self.xrules.active_observable:add_notifier(function()
+    if self.vtable_osc_devices then
+      self.vtable_osc_devices.active = self.xrules.active
+    end
+    if self.vtable_midi_inputs then
+      self.vtable_midi_inputs.active = self.xrules.active
+    end
+    if self.vtable_midi_outputs then
+      self.vtable_midi_outputs.active = self.xrules.active
+    end
+    local bt = self.vb.views.xRulesPrefsAddOscDevice
+    if bt then
+      bt.active = self.xrules.active
+    end
+  end)
+
 
 end
 
@@ -367,9 +388,21 @@ function xRulesAppDialogPrefs:create_dialog()
           font = "bold",
         },
         vb:button{
+          id = "xRulesPrefsAddOscDevice",
           text = xRulesUI.TXT_ADD.." Add device",
           notifier = function()
-            self.xrules:add_osc_device()
+            -- insert new device
+            -- (the main app will attach and monitor changes)
+            local device_name = xOscDevice.DEFAULT_DEVICE_NAME
+            device_name = self.xrules:get_unique_osc_device_name(device_name)
+            local device = xOscDevice{
+              active = false,
+              name = device_name,
+              address = "127.0.0.1",
+              port_in = 8000,
+              port_out = 8080,
+            }
+            self.xrules:add_osc_device(device)
             self:update_dialog()
           end
         },
@@ -519,6 +552,7 @@ function xRulesAppDialogPrefs:create_dialog()
     --print("remove_device",elm,val)
     local item,index = elm.owner:get_item_by_id(elm.item_id)
     if index then
+      
       self.xrules:remove_osc_device(index)
       self:update_dialog()
     end
@@ -595,7 +629,7 @@ end
 -------------------------------------------------------------------------------
 
 function xRulesAppDialogPrefs:update_dialog()
-  print("xRulesAppDialogPrefs:update_dialog()")
+  TRACE("xRulesAppDialogPrefs:update_dialog()")
 
   local vb = self.vb
 
@@ -613,7 +647,7 @@ function xRulesAppDialogPrefs:update_dialog()
       TEXT = v,
     }
   end
-  rprint("midi_inputs data",rprint(data))
+  --rprint("midi_inputs data",rprint(data))
   vtable.data = data
   vtable.show_header = false
   vtable:update()

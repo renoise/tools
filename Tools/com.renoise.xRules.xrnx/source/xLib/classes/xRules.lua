@@ -229,7 +229,11 @@ function xRules:input_osc(osc_msg,device)
       local xmsg = xOscMessage{
         values = values,
         device_name = device.name,
-        pattern = xrule.osc_pattern,
+        -- we _could_ supply the original osc pattern, but it's risky - 
+        -- if we e.g. supply values to the arguments, the rule will 
+        -- start treating wildcards as literal values
+        --pattern = xrule.osc_pattern,
+        pattern = xOscPattern(xrule.osc_pattern),
         osc_msg = osc_msg,
       }        
       -- match against ruleset/rule
@@ -339,7 +343,14 @@ function xRules:transmit_auto(xmsg)
     return str_msg
   else
     if (type(xmsg)~="xMidiMessage") then
-      xmsg = xMidiMessage(xmsg.__def) -- on-the-fly conversion
+      -- on-the-fly conversion, include MIDI properties 
+      -- that has been specified in the function
+      local def = xmsg.__def
+      def.message_type = __xmsg.message_type
+      def.channel = __xmsg.channel
+      def.bit_depth = __xmsg.bit_depth
+      def.port_name = __xmsg.port_name
+      xmsg = xMidiMessage(def) 
     end
     return self:transmit_raw(xmsg)
   end
@@ -350,7 +361,7 @@ end
 -- trigger 'raw MIDI' using the internal OSC 
 
 function xRules:transmit_raw(xmsg)
-  print("xRules:transmit_raw(xmsg)",xmsg)
+  TRACE("xRules:transmit_raw(xmsg)",xmsg)
 
   assert(type(xmsg)=="xMidiMessage","Expected xMidiMessage as argument")
 
@@ -371,7 +382,7 @@ end
 -- send MIDI on the port specified in the message
 
 function xRules:transmit_midi(xmsg)
-  print("xRules:transmit_midi(xmsg)",xmsg)
+  TRACE("xRules:transmit_midi(xmsg)",xmsg)
 
   assert(type(xmsg)=="xMidiMessage","Expected xMidiMessage as argument")
 
@@ -400,9 +411,11 @@ function xRules:transmit_osc(xmsg)
 
   for k,osc_device in pairs(self.osc_devices) do
     if (xmsg.device_name == osc_device.name) then
+      --print(">>> transmit_osc - xmsg.values",xmsg.pattern.osc_pattern_out,xmsg.values[1],xmsg.values[2],xmsg.values[3])
       local str_msg = "OSC ↪ " .. tostring(xmsg)
-      local osc_msg = xmsg:create_raw_message()
-      osc_device:send(osc_msg)
+      --local osc_msg = xmsg:create_raw_message()
+      --print("osc_msg",osc_msg)
+      osc_device:send(xmsg)
       return str_msg
     end
   end
@@ -417,6 +430,7 @@ function xRules:remove_osc_patterns(ruleset_idx,rule_idx)
 
   local rslt = {}
   for k,v in ripairs(self.osc_pattern_map) do
+    print(">>> remove_osc_patterns - k,v",k,v)
     if (v.ruleset_index == ruleset_idx) then
       local match_rule_idx
       if not rule_idx then
@@ -718,18 +732,12 @@ end
 function xRules:add_osc_device(device)
   TRACE("xRules:add_osc_device(device)",device)
 
-  if not device then
-    local unique_name = self:get_unique_osc_device_name("Untitled device")
-    device = xOscDevice{
-      active = false,
-      name = unique_name,
-      address = "127.0.0.1",
-      port_in = 8000,
-      port_out = 8080,
-    }
-  end
+  assert(type(device)=="xOscDevice","Expected xOscDevice as argument")
 
   device.callback = function(osc_msg)
+    if not self.active then 
+      return 
+    end
     self:input_osc(osc_msg,device)
   end
 

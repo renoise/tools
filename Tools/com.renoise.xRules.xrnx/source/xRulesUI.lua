@@ -69,9 +69,6 @@ table.sort(xRulesUI.TYPE_OPERATOR_ITEMS)
 table.sort(xRulesUI.VALUE_OPERATOR_ITEMS)
 table.sort(xRulesUI.ACTION_ITEMS)
 
--- total number of assignable values
-xRulesUI.VALUE_COUNT = 15
-
 
 --------------------------------------------------------------------------------
 
@@ -147,7 +144,7 @@ function xRulesUI:__init(owner)
     self:on_idle()
   end)
 
-  -- when active state has changed
+  -- when active state has changed, update logo 
   self.xrules.active_observable:add_notifier(function()
     self:update_logo()
     local msg = "Message from xRules: active = ".. tostring(self.xrules.active)
@@ -157,30 +154,36 @@ function xRulesUI:__init(owner)
   -- when rulesets are added/removed/swapped
   self.xrules.ruleset_observable:add_notifier(function(args)
     --print(">>> xrules.ruleset_observable fired...",rprint(args))
+
     self:clear_rulesets()
+
     if (args.type == "remove") then
       table.remove(self.vb_rulesets,args.index)
-      --print(">>> remove from self.vb_rulesets",args.index)
       for k,v in ripairs(self.midi_indicators) do
         if (v.ruleset_idx == args.index) then
           table.remove(self.midi_indicators,k)
-          --print(">>> remove from midi_indicators,k",self.midi_indicators,k)
         end
       end 
       for k,v in ripairs(self.osc_indicators) do
         if (v.ruleset_idx == args.index) then
           table.remove(self.osc_indicators,k)
-          --print(">>> remove from osc_indicators,k",self.midi_indicators,k)
         end
       end 
+      
+      -- select previous/first ruleset 
+      local ruleset_idx = self.xrules.selected_ruleset_index - 1
+      self.xrules.selected_ruleset_index = math.max(1,ruleset_idx)
+
     elseif (args.type == "insert") then
       local xruleset = self.xrules.rulesets[args.index]
       self:attach_to_ruleset(xruleset)
       self:update_minimized()
     end
+
     self:update_minimized()
     self._build_rulesets_requested = true
     self._build_rule_requested = true
+
   end)
 
   -- attach to selected ruleset
@@ -571,12 +574,16 @@ function xRulesUI:match_indicator(ruleset_idx,rule_idx,type)
   TRACE("xRulesUI:match_indicator(ruleset_idx,rule_idx,type)",ruleset_idx,rule_idx,type)
 
   local indicator,indicators
-  if (type == "osc") then
-    indicator = self.vb_rulesets[ruleset_idx][rule_idx].osc_indicator
-    indicators = self.osc_indicators
-  elseif (type == "midi") then
-    indicator = self.vb_rulesets[ruleset_idx][rule_idx].midi_indicator
-    indicators = self.midi_indicators
+  if self.vb_rulesets[ruleset_idx] 
+    and self.vb_rulesets[ruleset_idx][rule_idx]
+  then
+    if (type == "osc") then
+      indicator = self.vb_rulesets[ruleset_idx][rule_idx].osc_indicator
+      indicators = self.osc_indicators
+    elseif (type == "midi") then
+      indicator = self.vb_rulesets[ruleset_idx][rule_idx].midi_indicator
+      indicators = self.midi_indicators
+    end
   end
 
   if indicator then
@@ -784,8 +791,6 @@ function xRulesUI:remove_selected_ruleset()
     renoise.app():show_warning(err)
     return
   end
-  -- notifier should take care of the rest
-  self.xrules.selected_ruleset_index = self.xrules.selected_ruleset_index - 1
 end
 
 --------------------------------------------------------------------------------

@@ -619,16 +619,23 @@ function xMidiInput:on_idle()
         self.callback_fn(xMidiMessage{
           message_type = xMidiMessage.TYPE.CONTROLLER_CHANGE,
           channel   = mb_msg.channel,
-          values = {
-            mb_msg.num,
-            mb_msg.msb,
-          },
+          values = {mb_msg.num,mb_msg.msb},
           port_name = v.port_name,
           bit_depth = xMidiMessage.BIT_DEPTH.SEVEN,
+        })
+      elseif (v.type == xMidiMessage.TYPE.PITCH_BEND) then
+        --print("timed-out: treat possible multibyte pitch-bend message as 7bit ")
+        self.callback_fn(xMidiMessage{
+          message_type = v.type,
+          channel = v.channel,
+          values = {0,0},
+          bit_depth = xMidiMessage.BIT_DEPTH.SEVEN,
+          port_name = v.port_name,
         })
 
       else
         -- other message types?
+        LOG("*** timed out multibyte message with no handler",v)
       end
       --print("cleared this mb-entry:",k)
     end
