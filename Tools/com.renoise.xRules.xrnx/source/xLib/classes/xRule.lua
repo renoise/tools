@@ -1,21 +1,21 @@
 --[[============================================================================
 xRule
 ============================================================================]]--
---[[
 
-## About
+--[[--
 
-	This class defines the logic for when & how to rewrite MIDI messages,
-  plus the sandbox environment in which the code is running
+This class defines logic rewriting MIDI messages, plus a sandbox environment 
+.
+#
 
-  A rule contains two main elements: 
-    conditions - criteria that the message has to match
-    actions - actions to take when message got matched
+A rule contains two main elements: 
+  conditions - criteria that the message has to match
+  actions - actions to take when message got matched
 
 
 ## See also: 
-    xRules
-    xSandbox
+@{xRules}
+@{xSandbox}
 
 ]]
 
@@ -270,7 +270,7 @@ function xRule:__init(def)
 
   -- public -----------------------
 
-  -- table, indexed
+  --- table, indexed
   --[[
     {xRule.ASPECT = {
       xRule.OPERATOR.EQUAL_TO = [some_value],
@@ -282,38 +282,41 @@ function xRule:__init(def)
   ]]
   self.conditions = def.conditions or {}
 
-  -- table, indexed
+  --- table, indexed
   self.actions = def.actions or {}
 
-  -- xOscPattern - see initialize()
+  --- xOscPattern - see initialize()
   self.osc_pattern = nil
 
-  -- string
+  --- string
   self.name = property(self.get_name,self.set_name)
   self.name_observable = renoise.Document.ObservableString(def.name or "")
 
-  -- boolean, when true, we match *any* incoming message 
+  --- boolean, when true, we match *any* incoming message 
   -- (applied when the rule contains no conditions)
   self.match_any = property(self.get_match_any,self.set_match_any)
   self.match_any_observable = renoise.Document.ObservableBoolean(
     (type(def.match_any) ~= "boolean") and true or def.match_any)
 
-  -- boolean, if set to false we ignore midi messages
+  --- boolean, if set to false we ignore midi messages
   self.midi_enabled = property(self.get_midi_enabled,self.set_midi_enabled)
   self.midi_enabled_observable = renoise.Document.ObservableBoolean(
     (type(def.midi_enabled) ~= "boolean") and true or def.midi_enabled)
 
-  -- xMessage, or implementation thereof
+  --- xMessage, or implementation thereof
   self.last_received_message = nil
 
 
-  -- easy access to values in last message (might be nil)
+  --- easy access to values in last message (might be nil)
   self.values = property(self.get_values)
 
   -- internal --
 
-  -- tracking the generated function to detect changes
+  --- tracking the generated function to detect changes
   self.modified_observable = renoise.Document.ObservableBang()
+
+  --- xSandbox
+  self.sandbox = nil
 
   --== initialize ==--
 
@@ -335,7 +338,7 @@ function xRule:__init(def)
     self.modified_observable:bang()
   end)
 
-  -- sandbox 
+  --- configure sandbox
 
   self.sandbox = xSandbox()
   self.sandbox.compile_at_once = true
@@ -625,6 +628,8 @@ end
 
 -------------------------------------------------------------------------------
 -- @param xmsg (xMessage or implementation thereof)
+-- @param xrules (xRules) owner
+-- @param ruleset_idx (int)
 -- @return table<xMessage>
 
 function xRule:match(xmsg,xrules,ruleset_idx)

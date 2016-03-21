@@ -1,16 +1,16 @@
 --[[============================================================================
 xRuleset
 ============================================================================]]--
---[[
 
-  This is a supporting class for xRules
-	Represents a collection of xRule instances
-  
-  TODO: provide import/export functionality
+--[[--
 
+This is a supporting class for xRules
+.
+#
 
-## See also
-  xRule
+### See also
+@{xRules}
+@{xRule}
 
 ]]
 
@@ -21,7 +21,8 @@ xRuleset.DEFAULT_NAME = "Untitled ruleset"
 xRuleset.CURRENT_RULESET = "Current Ruleset"
 
 -------------------------------------------------------------------------------
--- @param ruleset_def, table (optional)
+-- @param xrules (xRules) owner
+-- @param ruleset_def (table), optional
 --  {
 --    name = "Name of Ruleset",
 --    active = false,
@@ -39,41 +40,41 @@ function xRuleset:__init(xrules,ruleset_def)
   --- xRules
   self.xrules = xrules
 
-  -- string, name of this ruleset (derived from file_path)
+  --- string, name of this ruleset (derived from file_path)
   self.name = property(self.get_name,self.set_name)
   self.name_observable = renoise.Document.ObservableString("")
 
-  -- string, description of this ruleset
+  --- string, description of this ruleset
   self.description = property(self.get_description,self.set_description)
   self.description_observable = renoise.Document.ObservableString("")
 
-  -- boolean, make rules able to specify an osc pattern
+  --- boolean, make rules able to specify an osc pattern
   self.osc_enabled = property(self.get_osc_enabled,self.set_osc_enabled)
   self.osc_enabled_observable = renoise.Document.ObservableBoolean(false)
 
-  -- boolean, when true the voice-manager is enabled for this set
+  --- boolean, when true the voice-manager is enabled for this set
   self.manage_voices = property(self.get_manage_voices,self.set_manage_voices)
   self.manage_voices_observable = renoise.Document.ObservableBoolean(false)
 
-  -- array containing xRule instances
+  --- array containing xRule instances
   self.rules = {}
   self.rules_observable = renoise.Document.ObservableNumberList()
 
   -- runtime properties --
 
-  -- boolean
+  --- boolean
   self.modified = property(self.get_modified,self.set_modified)
   self.modified_observable = renoise.Document.ObservableBoolean(false)
 
-  -- boolean, when false the ruleset should be ignored
+  --- boolean, when false the ruleset should be ignored
   self.active = property(self.get_active,self.set_active)
   self.active_observable = renoise.Document.ObservableBoolean(true)
 
-  -- int, selected rule (0 = no selection)
+  --- int, selected rule (0 = no selection)
   self.selected_rule_index = property(self.get_selected_rule_index,self.set_selected_rule_index)
   self.selected_rule_index_observable = renoise.Document.ObservableNumber(0)
 
-  -- string, full path to location on disk
+  --- string, full path to location on disk
   self.file_path = property(self.get_file_path,self.set_file_path)
   self.file_path_observable = renoise.Document.ObservableString("")
 
@@ -468,7 +469,7 @@ end
 -- note: saving the definition will NOT update the file_path property,
 --  so you can safely use this method to export a ruleset 
 -- 
--- @param string, path to file (optional)
+-- @param file_path, path to file (optional)
 -- @return boolean, true when succesfully saved
 -- @return string, error message when failed
 

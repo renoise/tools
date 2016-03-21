@@ -379,7 +379,7 @@ end
 function xRulesUICondition:change_operator_assist(value,operator)
   TRACE("xRulesUICondition:change_operator_assist(value,operator)",value,operator)
 
-  print("value",rprint(value))
+  --print("value",rprint(value))
 
   if (type(value) ~= "table") 
     and (operator == xRule.OPERATOR.BETWEEN)
@@ -392,7 +392,7 @@ function xRulesUICondition:change_operator_assist(value,operator)
     -- reduce to single value 
     value = value[1]
   end
-  print("change_operator_assist - resulting value",value,type(value))
+  --print("change_operator_assist - resulting value",value,type(value))
   return value
 end
 
@@ -425,7 +425,7 @@ function xRulesUICondition:change_aspect(new_aspect)
       new_condition[new_aspect][operator] = default
     end
   end
-  print("*** new_condition",rprint(new_condition))
+  --print("*** new_condition",rprint(new_condition))
   xrule.conditions[self.row_idx] = new_condition
   local success,err = xrule:compile()
   if err then

@@ -1,19 +1,22 @@
 --[[============================================================================
 xMidiMessage
 ============================================================================]]--
---[[
 
-	A higher-level MIDI message, as employed by various xLib classes
+--[[--
 
-  The syntax expands upon the standard 3 bytes of a MIDI message, 
-  making it possible to pass around data with higher resolution 
+A higher-level MIDI message, as employed by various xLib classes
+.
+#
 
-  # Test
-    ability to cache a message once turned into raw MIDI, 
-    (change it only as message properties are modified via setters)
+The syntax expands upon the standard 3 bytes of a MIDI message, 
+making it possible to pass around data with higher resolution 
 
-  # See also:
-    xMidiInput (for creating xMidiMessages)
+### Test
+  ability to cache a message once turned into raw MIDI, 
+  (change it only as message properties are modified via setters)
+
+### See also
+@{xMidiInput} 
 
 ]]
 
@@ -74,21 +77,21 @@ function xMidiMessage:__init(...)
 	local args = xLib.unpack_args(...)
   --print("args",rprint(args))
 
-  -- xMidiMessage.TYPE (required)
+  --- xMidiMessage.TYPE (required)
   self.message_type = property(self.get_message_type,self.set_message_type)
   self._message_type = args.message_type
 
-  -- int, between 0-16 
+  --- int, between 0-16 
   -- 0 should be interpreted as 'undefined' 
   self.channel = property(self.get_channel,self.set_channel)
   self._channel = args.channel or xMidiMessage.DEFAULT_CHANNEL
 
-  -- xMidiMessage.BIT_DEPTH, indicates a multibyte message
+  --- xMidiMessage.BIT_DEPTH, indicates a multibyte message
   --  (only relevant for CC messages, as they can otherwise be ambivalent)
   self.bit_depth = property(self.get_bit_depth,self.set_bit_depth)
   self._bit_depth = args.bit_depth or xMidiMessage.DEFAULT_BIT_DEPTH
 
-  -- string, source/target port
+  --- string, source/target port
   self.port_name = args.port_name or xMidiMessage.DEFAULT_PORT_NAME
 
   -- initialize --

@@ -4,7 +4,12 @@
 
 --[[--
 
-  xOscClient is a simple OSC client that connect to the built-in OSC server in Renoise, producing realtime messages that trigger notes or send MIDI messages
+xOscClient is a simple OSC client 
+.
+#
+
+* Connects to the built-in OSC server in Renoise, 
+* Produce realtime messages (notes or MIDI messages)
 
 
 --]]
@@ -18,15 +23,19 @@ class 'xOscClient'
 
 function xOscClient:__init(osc_host,osc_port,prefs)
 
-  -- ScriptingToolPreferences, set this to specify global "preferences"
+  --- ScriptingToolPreferences, set this to specify global "preferences"
   -- (will display a message the first time a note message is sent)
   self.preferences = prefs 
 
   -- private --------------------------
 
-  -- the socket connection, nil if not established
+  --- the socket connection, nil if not established
   self._connection = nil
+
+  --- string
   self._osc_host = nil
+
+  --- int
   self._osc_port = nil
 
   -- initialize -----------------------

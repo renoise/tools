@@ -1,22 +1,27 @@
 --[[============================================================================
 xPhraseMgr
 ============================================================================]]--
---[[
 
-	This class will assist in managing phrases, phrase mappings
+--[[--
 
-  TODO turn into static class
+This class will assist in managing phrases, phrase mappings
+.
+#
 
-]]
+--]]
+
+--==============================================================================
 
 class 'xPhraseMgr'
 
+-------------------------------------------------------------------------------
+
 function xPhraseMgr:__init()
 
-  -- int, default key-range size when creating new phrases
+  --- int, default key-range size when creating new phrases
 	self.default_range = 1
 
-  -- int, our instrument 
+  --- int, our instrument 
 	self.instr_idx = nil
 
 end

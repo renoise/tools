@@ -1,13 +1,18 @@
 --[[============================================================================
-xMidiInput
+xMidiRouter
 ============================================================================]]--
+--[[--
 
---[[
+A simple MIDI router using xMidiMessage instances to describe routes
+.
+#
 
-  A simple MIDI router using xMidiMessage instances to describe routes
-  (provides simple caching for messages that support it)
+### Notes
 
-  Undefined properties will make a pattern less specific (catch all messages)
+* Undefined properties will make a pattern less specific (catch all)
+* The class provides caching for messages that support it
+
+### Examples
 
   -- match all notes on channel one:
   {message_type = "note_on", channel = 1, value1 = nil}

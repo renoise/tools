@@ -1,7 +1,20 @@
+--[[============================================================================
+xPhrase
+============================================================================]]--
+
+--[[--
+
+Static methods for dealing with renoise.Phrase objects
+.
+#
+
+]]
+
 class 'xPhrase'
 
---------------------------------------------------------------------------------
--- replace sample indices in the provided phrase 
+--==============================================================================
+
+--- replace sample indices in the provided phrase 
 -- @param phrase (renoise.InstrumentPhrase)
 -- @param idx_from (int)
 -- @param idx_to (int)

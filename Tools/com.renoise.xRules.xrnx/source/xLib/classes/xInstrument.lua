@@ -1,3 +1,15 @@
+--[[============================================================================
+xInstrument
+============================================================================]]--
+
+--[[--
+
+Static methods for dealing with renoise.Instrument
+.
+#
+
+--]]
+
 class 'xInstrument'
 
 --------------------------------------------------------------------------------
@@ -17,7 +29,7 @@ end
 -- test whether the keyzone can be reached with the instrument
 -- (running in program mode + sample columns, or TODO: having the entire 
 -- keyzone filled with phrases using sample columns)
--- @param device (renoise.Instrument)
+-- @param instr (renoise.Instrument)
 -- @return bool 
 
 function xInstrument.is_keyzone_available(instr)

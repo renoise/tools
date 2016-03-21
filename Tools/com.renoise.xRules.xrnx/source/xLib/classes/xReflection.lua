@@ -1,9 +1,12 @@
 --[[============================================================================
 xReflection
 ============================================================================]]--
---[[
 
-	Lacking proper reflection, pull off some API tricks to a similar result
+--[[--
+
+Pull off some API tricks to achieve reflection-alike abilities
+.
+#
 
 ]]
 
@@ -13,6 +16,7 @@ class 'xReflection'
 -- Copy properties from one class instance to another
 -- @param from_class (userdata)
 -- @param to_class (userdata)
+-- @param level (int) for internal use
 -- @return bool, true when copied
 
 function xReflection.copy_object_properties(from_class,to_class,level)
@@ -94,6 +98,7 @@ end
 --------------------------------------------------------------------------------
 -- get properties from class instance 
 -- @param class (userdata)
+-- @param level (int) internal counter
 -- @return table
 
 function xReflection.get_object_properties(class,level)

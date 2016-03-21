@@ -1,23 +1,24 @@
 --[[============================================================================
 xLib
 ============================================================================]]--
---[[
+
+--[[--
+
+This is the core xLib class, containing a bunch of static helper methods
+.
+#
 
 ### About xLib
 
-  The xLib library is a suite of classes that extend the standard Renoise API. Each class aims to be implemented with static methods as widely as possible -  this should make xLib compatible with most programming styles. 
-
-### About this file
-
-  This is the core xLib class, containing a bunch of static helper methods as well defining the global "TRACE/LOG" methods. 
+The xLib library is a suite of classes that extend the standard Renoise API. Each class aims to be implemented with static methods as widely as possible -  this should make xLib compatible with most programming styles. 
 
 ### How to use 
 
-  If you are planning to use xLib in your own project, you need to include this file or define the TRACE/LOG methods yourself (note: including xDebug will replace them with a more sophisticated version). 
+If you are planning to use xLib in your own project, you need to include this file or define the TRACE/LOG methods yourself (note: including xDebug will replace them with a more sophisticated version). 
 
-  The recommended practice is to require any classes you need in the main.lua of your tool (as this also documents the exact requirements). Only interdependent classes are automatically resolved when you include them. To document this, they are located in their own folder - this keeps the project tidy.
+The recommended practice is to require any classes you need in the main.lua of your tool (as this also documents the exact requirements). Only interdependent classes are automatically resolved when you include them. To document this, they are located in their own folder - this keeps the project tidy.
 
-  Finally, to improve the performance of xLib, the entire library is using a single variable to reference the Renoise song object - called "rns". You will need to define/maintain this variable yourself (see below)
+Finally, to improve the performance of xLib, the entire library is using a single variable to reference the Renoise song object - called "rns". You will need to define/maintain this variable yourself (see below)
 
 
 ]]
@@ -57,6 +58,23 @@ function xLib.unpack_args(...)
 end
 
 --------------------------------------------------------------------------------
+-- Detect if we have a renoise song: in rare cases it can briefly go missing,
+-- mostly while loading a song or creating a new document...
+
+function xLib.is_song_available()
+
+  local pass,err = pcall(function()
+    rns.selected_instrument_index = rns.selected_instrument_index
+  end)
+  if not pass then
+    return false
+  end
+
+  return true
+
+end
+
+--------------------------------------------------------------------------------
 -- Match item(s) in an associative array (provide key)
 -- @param t (table) 
 -- @param key (string) 
@@ -74,16 +92,23 @@ function xLib.match_table_key(t,key)
 end
 
 --------------------------------------------------------------------------------
-
---- scale_value: scale a value to a range within a range
+-- scale_value: scale a value to a range within a range
 -- @param value (number) the value we wish to scale
+-- @param in_min (number) 
+-- @param in_max (number) 
+-- @param out_min (number) 
+-- @param out_max (number) 
 -- @return number
 function xLib.scale_value(value,in_min,in_max,out_min,out_max)
   return(((value-in_min)*(out_max/(in_max-in_min)-(out_min/(in_max-in_min))))+out_min)
 end
 
 --------------------------------------------------------------------------------
---- clamp_value: ensure value is within min/max
+-- clamp_value: ensure value is within min/max
+-- @param value (number) 
+-- @param min_value (number) 
+-- @param max_value (number) 
+-- @return number
 
 function xLib.clamp_value(value, min_value, max_value)
   return math.min(max_value, math.max(value, min_value))
@@ -91,8 +116,9 @@ end
 
 --------------------------------------------------------------------------------
 -- split string - original script: http://lua-users.org/wiki/SplitJoin 
--- @param str_input (string)
+-- @param str (string)
 -- @param pat (string) pattern
+-- @return table
 
 function xLib.split(str, pat)
 
@@ -118,6 +144,8 @@ end
 -------------------------------------------------------------------------------
 -- remove trailing and leading whitespace from string.
 -- http://en.wikipedia.org/wiki/Trim_(8programming)
+-- @param s (string)
+-- @return string
 
 function xLib.trim(s)
   return (s:gsub("^%s*(.-)%s*$", "%1"))
@@ -148,6 +176,8 @@ end
 -------------------------------------------------------------------------------
 -- prepare a string so it can be stored in XML attributes
 -- (strip illegal characters instead of trying to fix them)
+-- @param str (string)
+-- @return string
 
 function xLib.sanitize_string(str)
   str=str:gsub('"','')  
@@ -158,6 +188,8 @@ end
 -------------------------------------------------------------------------------
 -- take a table and convert into strings - useful e.g. for viewbuilder popup 
 -- (if table is associative, will use values)
+-- @param t (table)
+-- @return table<string>
 
 function xLib.stringify_table(t)
 
@@ -193,14 +225,15 @@ function xLib.parse_str(str)
 end
 
 --------------------------------------------------------------------------------
---- round_value (from http://lua-users.org/wiki/SimpleRound)
+-- round_value (from http://lua-users.org/wiki/SimpleRound)
+
 function xLib.round_value(num) 
   if num >= 0 then return math.floor(num+.5) 
   else return math.ceil(num-.5) end
 end
 
 --------------------------------------------------------------------------------
---- compare two numbers with variable precision
+-- compare two numbers with variable precision
 
 function xLib.float_compare(val1,val2,precision)
   --val1 = math.floor(val1 * precision)

@@ -1,3 +1,9 @@
+--[[ 
+
+  Testcase for xSongPos
+
+--]]
+
 do
 
   print("xSongPos: starting unit-test...")

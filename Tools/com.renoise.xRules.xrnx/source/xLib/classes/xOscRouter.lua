@@ -2,13 +2,13 @@
 xOscRouter
 ============================================================================]]--
 
---[[
+--[[--
 
-  A simple OSC router with caching
-  The router is using instances of xOscPattern to match messages. 
+A simple OSC router with caching
+The router is using instances of xOscPattern to match messages. 
 
-  Caching works only when patterns does not define captures of float values. 
-  Should this be the case, _all matched patterns_ will not be cached. 
+Caching works only when patterns does not define captures of float values. 
+Should this be the case, _all matched patterns_ will not be cached. 
 
 ]]
 
@@ -20,13 +20,13 @@ function xOscRouter:__init(...)
 
 	local args = xLib.unpack_args(...) 
 
-  -- table<xOscPattern>
+  --- table<xOscPattern>
   self.patterns = property(self.get_patterns,self.set_patterns)
   self._patterns = args.patterns or {}
 
   -- internal --
 
-  -- {pattern_in=string,osc_msg=renoise.Osc.Message}
+  --- {pattern_in=string,osc_msg=renoise.Osc.Message}
   self.cache = {}
 
 end
@@ -92,7 +92,7 @@ function xOscRouter:input(osc_msg)
 end
 
 -------------------------------------------------------------------------------
--- @patt xOscPattern
+-- @param patt xOscPattern
 -- @return int, index in patterns
 
 function xOscRouter:add_pattern(patt)

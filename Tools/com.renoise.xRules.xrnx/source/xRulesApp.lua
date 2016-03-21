@@ -20,7 +20,7 @@ function xRulesApp:__init(xprefs)
   TRACE("xRulesApp:__init()",xprefs)
 
   --- string, current tool version (for display)
-  self.version = "0.68"
+  self.version = "0.69"
 
   --- xRulesAppPrefs, current settings
   self.prefs = renoise.tool().preferences

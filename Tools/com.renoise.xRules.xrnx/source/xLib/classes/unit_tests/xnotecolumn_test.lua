@@ -1,3 +1,9 @@
+--[[ 
+
+  Testcase for xNoteColumn
+
+--]]
+
 do
 
   print("xNoteColumn: starting unit-test...")

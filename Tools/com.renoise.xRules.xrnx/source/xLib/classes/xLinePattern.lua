@@ -1,11 +1,14 @@
 --[[============================================================================
 xLinePattern
 ============================================================================]]--
---[[
 
-  This class is roughly equivalent to renoise.PatternLine, but not bound to 
-  any particular pattern or phrase. Instead, you create instances as needed, 
-  through the constructor method 
+--[[--
+
+This class represents a 'virtual' renoise.PatternLine
+.
+#
+
+Create instances as needed, through the constructor method 
 
 ]]
 
@@ -37,7 +40,10 @@ xLinePattern.EFFECT_CHARS = {
 function xLinePattern:__init(note_columns,effect_columns)
   TRACE("xLinePattern:__init(note_columns,effect_columns)",note_columns,effect_columns)
 
+  --- table
   self.note_columns = table.create()
+
+  --- table
   self.effect_columns = table.create()
 
   -- initialize -----------------------
@@ -104,7 +110,7 @@ end
 -- combined method for writing to pattern or phrase
 -- @param sequence (int)
 -- @param line (int)
--- @param track_index (int), when writing to pattern
+-- @param track_idx (int), when writing to pattern
 -- @param phrase (renoise.InstrumentPhrase), when writing to phrase
 -- @param tokens (table<string>) process these tokens ("note_value", etc)
 -- @param include_hidden (bool) apply to hidden columns as well

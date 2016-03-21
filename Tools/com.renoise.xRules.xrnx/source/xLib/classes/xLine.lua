@@ -1,10 +1,15 @@
 --[[============================================================================
 xLine
 ============================================================================]]--
---[[
 
-	This class is used to describe a single line in the song - including
-  patterns, phrases or automation (limited to a single track at a time)
+--[[--
+
+This class is used to describe a single line in the song
+.
+#
+
+* Includes patterns, phrases or automation 
+* Limited to a single track at a time
 
 
 ]]
@@ -13,18 +18,15 @@ class 'xLine'
 
 -------------------------------------------------------------------------------
 -- constructor method
--- @param args (table), descriptor, can contain the following entries 
---  note_columns
---  effect_columns
---  automation
+-- @param args (table)
 
 function xLine:__init(args)
   TRACE("xLine:__init(args)",args)
 
-  -- xLinePattern
+  --- xLinePattern
   self.pattern_line = nil
 
-  -- xLineAutomation
+  --- xLineAutomation
   self.automation = nil
 
   -- initialize -----------------------
@@ -80,7 +82,7 @@ end
 -- write to pattern/phrase/automation - all defined types of data 
 -- @param sequence (int)
 -- @param line (int)
--- @param track_index (int)
+-- @param track_idx (int)
 -- @param phrase (renoise.InstrumentPhrase)
 -- @param ptrack_auto (renoise.PatternTrackAutomation)
 -- @param patt_num_lines (int), length of the playpos pattern 
@@ -137,7 +139,7 @@ end
 -------------------------------------------------------------------------------
 -- @param sequence (int)
 -- @param line (int)
--- @param track_index (int), when writing to pattern
+-- @param track_idx (int), when writing to pattern
 -- @param phrase (renoise.InstrumentPhrase)
 
 function xLine:clear_pattern_line(sequence,line,track_idx,phrase)
@@ -161,10 +163,10 @@ end
 -- @param sequence (int)
 -- @param line (int)
 -- @param include_hidden (bool),
--- @param track_index (int), when reading from pattern
+-- @param track_idx (int), when reading from pattern
 -- @param phrase (renoise.InstrumentPhrase)
--- @param device_index (int), TODO include automation
--- @param param_index (int), TODO include automation
+-- TODO @param device_index (int),  include automation
+-- TODO @param param_index (int),  include automation
 -- @return table
 
 function xLine.do_read(sequence,line,include_hidden,track_idx,phrase)
@@ -243,6 +245,7 @@ end
 -------------------------------------------------------------------------------
 -- resolve_phrase_line: MUST be valid 
 -- @param line (int)
+-- @param phrase (renoise.Phrase)
 -- @return rns_line (renoise.PatternLine)
 
 function xLine.resolve_phrase_line(line,phrase)

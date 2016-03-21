@@ -4,7 +4,9 @@
 
 --[[--
 
-  Static Methods for working with tracks
+Static Methods for working with renoise.Tracks objects
+.
+#
 
 --]]
 

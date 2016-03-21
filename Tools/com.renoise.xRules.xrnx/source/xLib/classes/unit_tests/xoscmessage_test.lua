@@ -1,3 +1,9 @@
+--[[ 
+
+  Testcase for xOscMessage
+
+--]]
+
 do
 
   print("xOscMessage: starting unit-test...")

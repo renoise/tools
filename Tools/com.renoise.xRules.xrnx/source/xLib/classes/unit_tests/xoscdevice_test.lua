@@ -1,3 +1,9 @@
+--[[ 
+
+  Testcase for xOscDevice
+
+--]]
+
 do
 
   print("xOscDevice: starting unit-test...")

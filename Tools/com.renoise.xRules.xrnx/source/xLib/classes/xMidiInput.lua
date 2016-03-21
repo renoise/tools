@@ -1,22 +1,22 @@
 --[[============================================================================
 xMidiInput
 ============================================================================]]--
---[[
 
-### About
+--[[--
 
-	xMidiInput is a class for interpreting MIDI messages 
-  
+Use xMidiInput to interpret MIDI messages
+.
+#
+
+, support all common MIDI messages (including 14-bit)
+
   Note that the multibyte/NRPN features require an extra bit of processing, and can delay the processing of "normal" (7-bit) messages - for this reason, the 14-bit processing is disabled by default. 
 
-### Features
-
-  * Implemented with a callback (so, can be used asynchroneously)
-  * Support for all common 7-bit MIDI messages as well as 14-bit ones
-  
 ### How to use
 
-    -- First, define a callback method which will recieve xMidiMessages:
+The class is implemented with a callback, which will recieve xMidiMessages
+
+    -- define our callback
     myCallback = function(msg)
       -- do something with the message
     end
@@ -27,8 +27,10 @@ xMidiInput
     -- Now you can feed it with raw midi messages:
     myMidiInput:input({0x90,0x45,0x6F}) 
 
-### See also:
-    xMidiMessage 
+
+### See also
+     
+@{xMidiMessage}
 
 ]]
 
@@ -43,7 +45,7 @@ function xMidiInput:__init(...)
 
   --assert(args.callback_fn,"You need to provide a callback function")
 
-  -- (function) specify where messages should go
+  --- (function) specify where messages should go
   self.callback_fn = args.callback_fn or nil
 
   --- (bool) decide if multibyte (14-bit) support is enabled
@@ -62,7 +64,7 @@ function xMidiInput:__init(...)
   -- these messages (midi bytes 2&3: 0x65,0x7F followed by 0x64,0x7F)
   self.terminate_nrpns = args.terminate_nrpns or false
 
-  -- number, the amount of time that should pass before we consider a 
+  --- number, the amount of time that should pass before we consider a 
   -- multibyte message obsolete (0.1 = tenth of a second)
   self.timeout = args.timeout or 0.1
 
@@ -79,7 +81,7 @@ function xMidiInput:__init(...)
   --- (table) messages that should not be throttled
   --self._throttle_exempted = {}
 
-  --- (table) table of multibyte messages
+  --- table of multibyte messages
   --    [fingerprint]{      
   --      type      = [enum] msg_type
   --      timestamp = [number]
@@ -91,7 +93,7 @@ function xMidiInput:__init(...)
   --    }
   self._mb_messages = {}
 
-  --- (table) table of NRPN messages
+  --- table of NRPN messages
   --    {
   --      timestamp = [number] 
   --      channel   = [int]     
@@ -103,7 +105,7 @@ function xMidiInput:__init(...)
   --    }
   self._nrpn_messages = {}
 
-  --- (table) most recently received messages
+  --- table of most recently received messages
   --  [fingerprint] = {
   --    timestamp   = [number]
   --    msg_context = [enum] 

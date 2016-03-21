@@ -1,5 +1,20 @@
+--[[============================================================================
+xSample
+============================================================================]]--
 
--- require xReflection, xSampleMapping, xPhrase
+--[[--
+
+Static methods for working with renoise.Sample objects
+.
+#
+
+Requires 
+@{xReflection}
+@{xSampleMapping}
+@{xPhrase}
+
+]]
+
 
 class 'xSample'
 

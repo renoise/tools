@@ -1,20 +1,20 @@
 --[[============================================================================
 xSongPos
 ============================================================================]]--
---[[
 
-	Describes a position within the project timeline
+--[[--
 
-  Three options are designed to deal with song boundaries, pattern-loop and 
-  block-loop boundaries. By default, they are set to settings which mimic
-  the behavior in Renoise when playing/manipulating the playback position:
+Describes a position within the project timeline
+.
+#
 
-  self.bounds_mode = xSongPos.OUT_OF_BOUNDS.LOOP
-  self.loop_boundary = xSongPos.LOOP_BOUNDARY.SOFT
-  self.block_boundary = xSongPos.BLOCK_BOUNDARY.SOFT
+Three options are designed to deal with song boundaries, pattern-loop and 
+block-loop boundaries. By default, they are set to settings which mimic
+the behavior in Renoise when playing/manipulating the playback position:
 
-  Requirements
-  * "rns" - a global reference to the renoise.song() object 
+self.bounds_mode = xSongPos.OUT_OF_BOUNDS.LOOP
+self.loop_boundary = xSongPos.LOOP_BOUNDARY.SOFT
+self.block_boundary = xSongPos.BLOCK_BOUNDARY.SOFT
 
 ]]
 
@@ -57,34 +57,34 @@ xSongPos.BLOCK_BOUNDARY = {
 
 function xSongPos:__init(pos)
 
-	-- renoise.SongPos, get/set interface
+	--- renoise.SongPos, get/set interface
 	self.pos = property(self.get_pos,self.set_pos)
 
-	-- position in the pattern sequence.
+	--- position in the pattern sequence.
   -- TODO make property
 	self.sequence = pos and pos.sequence or nil
 
-	-- position in the pattern at the given pattern sequence.
+	--- position in the pattern at the given pattern sequence.
   -- TODO make property
 	self.line = pos and pos.line or nil
 
   local is_xpos = (type(pos) == "xSongPos")
 
-  -- int, travelled distance (in lines)
+  --- int, travelled distance (in lines)
   -- note: this is not reliable unless you are (exclusively) using 
   -- the increase/decrease methods to control the position! 
   self.lines_travelled = is_xpos and 
     pos.lines_travelled or 0
 
-  -- xSongPos.OUT_OF_BOUNDS, deal with sequence (song) boundaries
+  --- xSongPos.OUT_OF_BOUNDS, deal with sequence (song) boundaries
   self.bounds_mode = is_xpos and 
     pos.bounds_mode or xSongPos.OUT_OF_BOUNDS.LOOP
 
-  -- xSongPos.LOOP_BOUNDARY, deals with patt-loop boundaries
+  --- xSongPos.LOOP_BOUNDARY, deals with patt-loop boundaries
   self.loop_boundary = is_xpos and 
     pos.loop_boundary or xSongPos.LOOP_BOUNDARY.SOFT
 
-  -- xSongPos.BLOCK_BOUNDARY, deals with block-loop boundaries
+  --- xSongPos.BLOCK_BOUNDARY, deals with block-loop boundaries
   self.block_boundary = is_xpos and 
     pos.block_boundary or xSongPos.BLOCK_BOUNDARY.SOFT
 

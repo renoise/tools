@@ -1,7 +1,6 @@
-
 --[[
 
-  Testcase for xOscRouter/xOscPattern
+  Testcase for xOscPattern/xOscRouter
 
 --]]
 

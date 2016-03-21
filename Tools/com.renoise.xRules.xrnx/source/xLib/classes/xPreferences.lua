@@ -2,19 +2,21 @@
 -- xPreferences
 ============================================================================]]--
 
---[[
+--[[--
 
-  Maintain multiple sets of preferences ('profiles') for a tool.
-  Each profile is basically a copy of the preferences.xml stored in the
-  special 'profiles' folder. 
+Maintain multiple preferences for a tool and switch between them
+.
+#
 
-  Note: xPreferences stores it's own settings in the root of the this folder
+Each profile is basically a copy of the preferences.xml stored in the
+special 'profiles' folder. 
+
+Note: xPreferences stores it's own settings in the root of the this folder
 
 
 ]]
 
 --==============================================================================
-
 
 class 'xPreferences'
 
@@ -26,61 +28,68 @@ xPreferences.DEFAULT_NAME = "Untitled Profile"
 xPreferences.PROFILE_FOLDER = "./profiles/"
 xPreferences.BUTTON_H = 26
 
+-------------------------------------------------------------------------------
+
 function xPreferences:__init(...)
 
   local args = xLib.unpack_args(...)
 
-  -- string, supply to make the launch dialog feel more familiar
+  --- string, supply to make the launch dialog feel more familiar
   self.tool_name = args.tool_name or "Tool Name"
 
-  -- string, provide name if preferences is based on a class
+  --- string, provide name if preferences is based on a class
   self.doc_class_name = args.doc_class_name
 
-  -- number of active instances (read-only)
+  --- number of active instances (read-only)
   self.active_instances = property(self.get_active_instances)
 
-  -- number, the profile we're running
+  --- number, the profile we're running
   self.selected_profile_index = nil
 
+  --- table
   self.selected_profile = property(self.get_selected_profile)
 
   --== callbacks ==--
 
-  -- function, deliver a custom profile to the tool
+  --- function, deliver a custom profile to the tool
   -- @param doc, renoise.DocumentNode
   self.launch_callback = args.launch_callback
 
-  -- function, ask the tool to load standard prefs
+  --- function, ask the tool to load standard prefs
   self.default_callback = args.default_callback
 
-  -- function, ask the tool not to start
+  --- function, ask the tool not to start
   self.abort_callback = args.abort_callback
 
   --== self-managed ==--
 
-  -- boolean, if true: detect active instances and choose a profile
+  --- boolean, if true: detect active instances and choose a profile
   --  (an active instance is a profile launched within the cutoff time)
   --  if false: use the preferences.xml in the bundle path
   --  (in other words, act as a normal tool)
   self.profiles_enabled = property(self.get_profiles_enabled,self.set_profiles_enabled)
   self.profiles_enabled_observable = renoise.Document.ObservableBoolean(xPreferences.PROFILES_ENABLED)
 
-  -- boolean, if true we always show the chooser
+  --- boolean, if true we always show the chooser
   self.always_choose = property(self.get_always_choose,self.set_always_choose)
   self.always_choose_observable = renoise.Document.ObservableBoolean(xPreferences.ALWAYS_CHOOSE)
 
-  -- string, the profile to recall on startup
+  --- string, the profile to recall on startup
   self.recall_profile = property(self.get_recall_profile,self.set_recall_profile)
   self.recall_profile_observable = renoise.Document.ObservableString("")
 
   --== internal ==--
 
-  -- table<string> 
+  --- table<string> 
   self.profiles = {}
 
+  --- renoise.Dialog
   self.dialog = nil
+
+  --- renoise.Views.View
   self.dialog_contents = nil
 
+  --- boolean
   self.suppress_saving = false
 
   --== initialize ==--

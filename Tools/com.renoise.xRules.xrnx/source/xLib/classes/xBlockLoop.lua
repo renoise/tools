@@ -1,10 +1,12 @@
 --[[============================================================================
 xBlockLoop
 ============================================================================]]--
---[[
 
-	Static methods for working with the renoise loop_block
+--[[--
 
+Static methods for working with the renoise loop_block
+.
+#
 
 ]]
 

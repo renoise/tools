@@ -1,9 +1,12 @@
 --[[============================================================================
 xOscValue
 ============================================================================]]--
---[[
 
-	A single value within a xOscMessage
+--[[--
+
+A single value within a xOscMessage
+.
+#
 
 ]]
 
@@ -40,7 +43,7 @@ function xOscValue:__init(...)
   xValue.__init(self,...)
 	local args = xLib.unpack_args(...)
 
-  -- xOscValue.TAG
+  --- xOscValue.TAG
   self.tag = property(self.get_tag,self.set_tag)
   self.tag_observable = renoise.Document.ObservableString(args.tag or "")
 

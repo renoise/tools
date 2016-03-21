@@ -1,3 +1,9 @@
+--[[
+
+  Testcase for xDocument
+
+--]]
+
 do
 
   print("xDocument: starting unit-test...")

@@ -4,11 +4,13 @@
 
 --[[--
 
-  Extend xDocument to create classes with basic import/export features
+Extend xDocument to create classes with basic import/export features
+.
+#
 
-  For the xDocument to work, you need to define a static DOC_PROPS property, which will define the properties which should be included in exports/imports as well as their type (number,boolean,string)
+For the xDocument to work, you need to define a static DOC_PROPS property, which will define the properties which should be included in exports/imports as well as their type (number,boolean,string)
 
-  For example: 
+For example: 
 
     MyClass.DOC_PROPS = {
       active = "boolean",

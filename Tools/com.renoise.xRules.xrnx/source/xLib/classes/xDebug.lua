@@ -1,13 +1,22 @@
---------------------------------------------------------------------------------
---- Debug tracing & logging
---
--- set one or more expressions to either show all or only a few messages 
--- from TRACE calls.
--- 
--- Some examples: 
---    {".*"} -> show all traces
---    {"^Display:"} " -> show traces, starting with "Display:" only
---    {"^ControlMap:", "^Display:"} -> show "Display:" and "ControlMap:"
+--[[============================================================================
+xDebug
+============================================================================]]--
+
+--[[--
+
+Debug tracing & logging
+.
+#
+
+Set one or more expressions to either show all or only a few messages 
+from `TRACE` calls.
+
+Some examples: 
+     {".*"} -> show all traces
+     {"^Display:"} " -> show traces, starting with "Display:" only
+     {"^ControlMap:", "^Display:"} -> show "Display:" and "ControlMap:"
+
+]]
 
 --==============================================================================
 
@@ -103,7 +112,7 @@ function xDebug.remove_trace_statements()
         return false
       end
       local str_new = string.gsub(str_text,"\n%s*TRACE([^\n]*","")
-      local passed,err = xFilesystem.write_string_to_file(str_path_new,str_new)
+      local passed,err = xFilesystem.write_string_to_file(file_path,str_new)
       if not passed then
         if err then
           renoise.app():show_warning(err)

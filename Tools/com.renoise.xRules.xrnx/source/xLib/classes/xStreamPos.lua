@@ -1,10 +1,16 @@
 --[[============================================================================
 xStream
 ============================================================================]]--
---[[
 
-  This class can track playback progression in a song simply by supplying 
-  a steady flow of song-position changes (idle loop)
+--[[--
+
+This class can track playback progression in a song
+.
+#
+
+### How to use
+
+Create an instance, and supply it with a steady flow of song-position changes (idle loop). 
 
 ]]
 
@@ -15,41 +21,41 @@ class 'xStreamPos'
 
 function xStreamPos:__init()
 
-  -- (renoise.SongPos) monitor changes to playback 
+  --- (renoise.SongPos) monitor changes to playback 
   self.playpos = rns.transport.playback_pos
 
-  -- (xSongPos) overall progression of the stream 
+  --- (xSongPos) overall progression of the stream 
   self.writepos = xSongPos(rns.transport.playback_pos)
 
-  -- (xBlockLoop)
+  --- (xBlockLoop)
   self.xblock = nil
 
-  -- (xSongPos) where we most recently read from the pattern
+  --- (xSongPos) where we most recently read from the pattern
   self.readpos = nil
 
-  -- bool, track changes to loop_block_enabled
+  --- bool, track changes to loop_block_enabled
   -- TODO refactor into xBlockloop
   self.block_enabled = rns.transport.loop_block_enabled
   self.block_start_pos = rns.transport.loop_block_start_pos
   self.block_range_coeff = rns.transport.loop_block_range_coeff
 
-  -- (int) 0 if undefined
+  --- (int) 0 if undefined
   -- implementation should supply this number - used for deciding when 
   -- we are approaching the boundary of a pattern/block 
   self.writeahead = property(self.get_writeahead,self.set_writeahead)
   self.writeahead_observable = renoise.Document.ObservableNumber(0)
 
-  -- number, or 0 if undefined
+  --- number, or 0 if undefined
   -- this is a short-lived timestamp indicating that we should ignore 
   -- changes to the playback position, right after playback has started
   -- (the fuzziness is due to API living in separate thread)
   self.just_started_playback = property(self.get_just_started_playback,self.set_just_started_playback)
   self.just_started_playback_observable = renoise.Document.ObservableNumber(0)
 
-  -- function, define a function to call when it's time for output
+  --- function, define a function to call when it's time for output
   self.callback_fn = nil
 
-  -- TODO function, define a function to call when we need fresh content
+  --- TODO function, define a function to call when we need fresh content
   -- (i.e. when the position has been changed by the user, and 
   -- previously produced content no longer would be valid...)
   self.refresh_fn = nil

@@ -2,12 +2,14 @@
 xLib.xVoiceManager
 ============================================================================]]--
 
---[[
+--[[--
 
-	This class keeps track of active, playing voices
+This class keeps track of active, playing voices
+.
+#
 
-  When releasing a voice, the class triggers the provided callback method.
-  So, you can use this with external MIDI devices or the internal OSC server - it's basically up to the callback method to decide what happens. 
+When releasing a voice, the class triggers the provided callback method.
+So, you can use this with external MIDI devices or the internal OSC server - it's basically up to the callback method to decide what happens. 
 
 ]]
 
@@ -18,7 +20,7 @@ class 'xVoiceManager'
 function xVoiceManager:__init()
   TRACE("xVoiceManager:__init()")
 
-  -- table<xMidiMessage>, active voices
+  --- table<xMidiMessage>, active voices
   self.voices = {}
   self.voices_observable = renoise.Document.ObservableNumberList()
 

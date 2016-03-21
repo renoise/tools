@@ -1,15 +1,17 @@
 --[[============================================================================
 xScale
 ============================================================================]]--
---[[
 
-  A representation of instrument scales, with methods for 
-  transforming notes according to the given scale, key
+--[[--
+
+Methods for working with notes & harmonic scales
+.
+#
 
 ]]
 
-
 class 'xScale'
+
 
 xScale.PENTATONIC_EGYPTIAN = "Egyptian Pentatonic"
 xScale.NEAPOLITAN_MAJOR = "Major Neapolitan"
@@ -69,10 +71,10 @@ for _,v in ipairs(xScale.SCALES) do
 end
 
 --------------------------------------------------------------------------------
--- restricting notes to a specific scale and key 
+--- restricting notes to a specific scale and key 
 -- @param note_value (0-119), notes outside this range are returned as-is 
--- @param scale_key (int), the scale to apply (see xScale.SCALES) 
 -- @param scale_idx (int), 1=C, 2=C#, 3=D, ...
+-- @param scale_key (int), the scale to apply (see xScale.SCALES) 
 
 function xScale.restrict_to_scale(note_value,scale_idx,scale_key)
   TRACE("xScale.restrict_to_scale(note_value,scale_idx,scale_key)",note_value,scale_idx,scale_key)

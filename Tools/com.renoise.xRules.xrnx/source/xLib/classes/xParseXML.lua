@@ -1,14 +1,15 @@
 --[[============================================================================
 xParseXML
 ============================================================================]]--
---[[
 
-  Parsing is based on the implementation by Roberto Ierusalimschy, modified to support underscores in attribute names.
+--[[--
 
-  (TODO) In addition to the raw XML parsing, the class can also convert a XML document into a native renoise.Document instance (particularly optimized for renoise-generated documents). 
+Parsing is based on the implementation by Roberto Ierusalimschy, modified to support underscores in attribute names.
 
-  See also 
-    http://lua-users.org/wiki/LuaXml 
+(TODO) In addition to the raw XML parsing, the class can also convert a XML document into a native renoise.Document instance (particularly optimized for renoise-generated documents). 
+
+See also 
+@{http://lua-users.org/wiki/LuaXml}
   
 
 ]]

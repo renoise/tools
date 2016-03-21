@@ -1,13 +1,15 @@
 --[[============================================================================
 xValue
 ============================================================================]]--
---[[
 
-	Abstract 'value' class. Use it to represent a value which fit into a 
-  particular range, or is of a particular type (e.g. integer/float)
+--[[--
 
-  PLANNED 
-    custom tostring, tonumber converters
+Abstract 'value' class. Extend to create a value with a specific range or type 
+.
+#
+
+PLANNED 
+  custom tostring, tonumber converters
 
 ]]
 
@@ -20,12 +22,15 @@ function xValue:__init(...)
 
 	local args = xLib.unpack_args(...)
 
+  --- variable
   self.value = property(self.get_value,self.set_value)
   self._value = args.value
 
+  --- number
   self.max = property(self.get_max,self.set_max)
   self._max = args.max
 
+  --- number
   self.min = property(self.get_min,self.set_min)
   self._min = args.min
 

@@ -1,50 +1,50 @@
 --[[============================================================================
 xSandbox
 ============================================================================]]--
---[[
 
-## About
+--[[--
 
-  xSandbox allows you to execute code in a controlled environment
-
+xSandbox allows you to execute code in a controlled environment
+.
+#
 
 ## How to use
 
-  -- create instance 
-  sandbox = xSandbox()
+    -- create instance 
+    sandbox = xSandbox()
 
-  -- supply function
-  sandbox.callback_str = 
-    "print('hello world')"
+    -- supply function
+    sandbox.callback_str = 
+      "print('hello world')"
 
-  -- and call it...
-  sandback.callback()
+    -- and call it...
+    sandback.callback()
 
 
 ## Arguments and return values
 
-  -- if you need to supply arguments and define return value, 
-  -- one approach is to define a 'prefix' and 'suffix' 
-  -- (always added to the generated code)
+    -- if you need to supply arguments and define return value, 
+    -- one approach is to define a 'prefix' and 'suffix' 
+    -- (always added to the generated code)
 
-  -- define arguments 
-  sandbox.str_prefix = "local some_arg = select(1, ...)"
-  
-  -- define return value
-  sandbox.str_suffix = "return some_arg"
+    -- define arguments 
+    sandbox.str_prefix = "local some_arg = select(1, ...)"
     
-  -- supply function
-  sandbox.callback_str = 
-    "some_arg = some_arg + 'foo'"..
-    "print(some_arg)"
+    -- define return value
+    sandbox.str_suffix = "return some_arg"
+      
+    -- supply function
+    sandbox.callback_str = 
+      "some_arg = some_arg + 'foo'"..
+      "print(some_arg)"
 
-  -- now call the function like this:
-  local result = sandback.callback('my_arg')
+    -- now call the function like this:
+    local result = sandback.callback('my_arg')
 
 
 ## Custom properties
 
-  -- TODO how to ... 
+TODO how to ... 
 
 ]]
 
@@ -69,28 +69,32 @@ xSandbox.UNTRUSTED = {
 function xSandbox:__init()
 
 
-  -- function, compiled function (when set, always valid)
+  --- function, compiled function (when set, always valid)
   self.callback = nil
 
-  -- string, code to insert into all generated functions
+  --- string, code to insert into all generated functions
   self.str_prefix = ""
   self.str_suffix = "return"
 
-  -- boolean, set to true for instant compilation of callback string
+  --- boolean, set to true for instant compilation of callback string
   self.compile_at_once = true
 
-  -- string, text representation of the function 
+  --- string, text representation of the function 
   self.callback_str = property(self.get_callback_str,self.set_callback_str)
   self.callback_str_observable = renoise.Document.ObservableString("")
 
-  -- properties can contain custom get/set methods
+  --- properties can contain custom get/set methods
   self.properties = property(self.get_properties,self.set_properties)
   self._properties = {}
 
-  -- invoked when callback has changed
+  --- invoked when callback has changed
   self.modified_observable = renoise.Document.ObservableBang()
 
-  -- define sandbox environment
+  --- table, sandbox environment
+  self.env = nil
+
+  -- initialize --
+
   local env = {
     assert = _G.assert,
     ipairs = _G.ipairs,

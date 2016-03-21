@@ -1,22 +1,24 @@
 --[[============================================================================
 xRules
 ============================================================================]]--
---[[
 
-## About
+--[[--
 
-	xRules can rewrite MIDI/OSC messages on-the-fly using generated code
-  It does this by applying "rules" to the input, using specific conditions as 
-  triggers. Rule can then change the input in a number of different ways. 
+Rewrite MIDI/OSC messages on-the-fly using generated code
+.
+#
 
-  An implementation of this class (also called xRules) is available from the 
-  Renoise tools page (http://www.renoise.com/tools/xrules). The tool adds a 
-  visual interface, device management and more. 
+xRules works by applying "rules" to the input, using specific conditions as 
+triggers. Each rule can then change the input in a number of different ways. 
+
+An implementation of this class (also called xRules) is available from the 
+Renoise tools page (http://www.renoise.com/tools/xrules). The tool adds a 
+visual interface, device management and more. 
 
 
 ## See also
-  xRuleset  - (supporting class)
-  xRule     - (supporting class)
+@{xRuleset}  - (supporting class)
+@{xRule}     - (supporting class)
 
 
 ]]
@@ -40,19 +42,20 @@ function xRules:__init(...)
 
 	local args = xLib.unpack_args(...)
 
+  --- boolean
   self.active = property(self.get_active,self.set_active)
   self.active_observable = renoise.Document.ObservableBoolean(false)
 
-  -- table<xRuleset>
+  --- table<xRuleset>
   self.rulesets = {}
 
-  -- define a function to display matched messages
+  --- define a function to display matched messages
   -- @param xmsg_in (xMessage)
   -- @param ruleset_idx (int)
   -- @param rule_idx (int)
   self.callback = nil
 
-  --  xMidiInput
+  ---  xMidiInput
   self.midi_input = xMidiInput{
     multibyte_enabled = args.multibyte_enabled,
     nrpn_enabled = args.nrpn_enabled,
@@ -69,30 +72,30 @@ function xRules:__init(...)
   --- table<renoise.Midi.MidiOutputDevice>
   self.midi_outputs = {}
 
-  -- xOscClient, used for internal routing 
+  --- xOscClient, used for internal routing 
   self.osc_client = xOscClient()
 
-  -- xOscRouter, incoming OSC is passed here
+  --- xOscRouter, incoming OSC is passed here
   self.osc_router = xOscRouter()
 
-  -- table, relations between osc-patterns and osc router
+  --- table, relations between osc-patterns and osc router
   -- {rule_index=int,ruleset_index=int,router_index=int}
   self.osc_pattern_map = {}
 
-  -- observable, track when rulesets are added/swapped/removed
+  --- observable, track when rulesets are added/swapped/removed
   self.ruleset_observable = renoise.Document.ObservableNumberList()
 
-  -- int, 0 = no selection
+  --- int, 0 = no selection
   self.selected_ruleset_index = property(self.get_selected_ruleset_index,self.set_selected_ruleset_index)
   self.selected_ruleset_index_observable = renoise.Document.ObservableNumber(0)
   self.selected_rule_index = property(self.get_selected_rule_index,self.set_selected_rule_index)
   self.selected_ruleset = property(self.get_selected_ruleset)
   self.selected_rule = property(self.get_selected_rule)
 
-  -- table<function> rules associated with aspects
+  --- table<function> rules associated with aspects
   self.aspect_handlers = {}
 
-  -- table<function> rules associated with channels
+  --- table<function> rules associated with channels
   self.channel_handlers = {}
 
   -- initialize --
@@ -182,7 +185,8 @@ end
 
 --------------------------------------------------------------------------------
 -- input raw sysex messages here (immediately matched)
--- @param msg (table), sysex message
+-- @param sysex_msg (table), sysex message
+-- @param port_name (string)
 
 function xRules:input_sysex(sysex_msg,port_name)
   TRACE("xRules:input_sysex(sysex_msg)",sysex_msg,port_name)
@@ -283,7 +287,7 @@ end
 
 --------------------------------------------------------------------------------
 -- transmit matched message - either internally or externally
--- @param output (table) {target=xRules.OUTPUT_OPTIONS,xmsg=xMessage}
+-- @param out (table) {target=xRules.OUTPUT_OPTIONS,xmsg=xMessage}
 -- @param xmsg_in (xMessage)
 -- @param ruleset_idx (int)
 -- @param rule_idx (int)
@@ -326,7 +330,7 @@ end
 --------------------------------------------------------------------------------
 -- trigger 'automatic MIDI' using the internal OSC client
 -- if notes, route to specified track + instrument - else, pass as raw MIDI
--- @param transmit_auto (xMidiMessage or xOscMessage)
+-- @param xmsg (xMidiMessage or xOscMessage)
 
 function xRules:transmit_auto(xmsg)
   TRACE("xRules:transmit_auto(xmsg)",xmsg)
@@ -659,14 +663,18 @@ function xRules:open_midi_input(port_name)
 
     self.midi_inputs[port_name] = renoise.Midi.create_input_device(port_name,
       function(midi_msg)
-        if not self.active then 
+        if not xLib.is_song_available()
+          or not self.active 
+        then 
           return 
         end
         self:input_midi(midi_msg,port_name)
       end,
       function(sysex_msg)
-        if not self.active then
-          return
+        if not xLib.is_song_available()
+          or not self.active 
+        then 
+          return 
         end
         self:input_sysex(sysex_msg,port_name)
       end
@@ -735,7 +743,9 @@ function xRules:add_osc_device(device)
   assert(type(device)=="xOscDevice","Expected xOscDevice as argument")
 
   device.callback = function(osc_msg)
-    if not self.active then 
+    if not xLib.is_song_available()
+      or not self.active 
+    then 
       return 
     end
     self:input_osc(osc_msg,device)

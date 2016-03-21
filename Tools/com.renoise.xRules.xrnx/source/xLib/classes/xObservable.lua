@@ -1,14 +1,17 @@
 --[[============================================================================
 xObservable
 ============================================================================]]--
---[[
 
-  Offer 'inside knowledge' about observable properties in the Renoise API
-  (for example, the valid range of a "selected_instrument_index" is an 
-  integer with a minimum of 1). 
+--[[--
 
-  For now, we only care about the "first level" properties - the ones that
-  belong to the song object. 
+Be 'smart' about observable properties in the Renoise API
+.
+#
+
+This class tries to be clever and provide 'inside knowledge' about properties.
+For example, the valid range of a "selected_instrument_index" is an integer with a minimum of 1
+
+For now, we only care about the "first level" properties - the ones that belong to the song object. 
 
 ]]
 
@@ -101,7 +104,8 @@ xObservable.SONG_BY_TYPE["string"] = xObservable.get_by_type("string")
 -------------------------------------------------------------------------------
 -- combine the above search with a match for a given name
 -- @param str_type (string), one of xStreamArg.BASE_TYPES
--- @param obs (string), e.g. "transport.keyboard_velocity_enabled_observable"
+-- @param str_obs (string), e.g. "transport.keyboard_velocity_enabled_observable"
+-- @param str_prefix (string), e.g. "rns."
 
 function xObservable.get_by_type_and_name(str_type,str_obs,str_prefix)
   TRACE("xObservable.get_by_type_and_name(str_type,str_obs,str_prefix)",str_type,str_obs,str_prefix)
@@ -141,6 +145,8 @@ end
 -- return a 'flattened' list of observable names, e.g.
 -- "transport.keyboard_velocity_enabled_observable"
 -- @param str_type (string), one of xStreamArg.BASE_TYPES
+-- @param prefix (string), e.g. "rns."
+-- @param arr (table) supply observables (when we got them)
 -- @return table<string>
 
 function xObservable.get_keys_by_type(str_type,prefix,arr)

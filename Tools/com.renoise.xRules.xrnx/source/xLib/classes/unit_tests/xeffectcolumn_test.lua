@@ -1,3 +1,9 @@
+--[[
+
+  Testcase for xEffectColumn
+
+--]]
+
 do
 
   print("xEffectColumn: starting unit-test...")

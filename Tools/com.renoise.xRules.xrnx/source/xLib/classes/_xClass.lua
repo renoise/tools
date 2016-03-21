@@ -1,7 +1,7 @@
 --[[============================================================================
 xClass
 ============================================================================]]--
---[[
+--[[--
 
   Implement this class to easily "clone" your objects
   Note that a static table containing property names must be defined

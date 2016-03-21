@@ -1,3 +1,9 @@
+--[[
+
+  Testcase for xParseXML
+
+--]]
+
 do
 
   print("xParseXML: starting unit-test...")

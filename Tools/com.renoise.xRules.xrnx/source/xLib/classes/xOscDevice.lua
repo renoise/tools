@@ -4,11 +4,13 @@
 
 --[[--
 
-  xOscDevice describes a networked location which is able to send and/or
-  receive OSC messages 
+xOscDevice represents a networked location which is able to send and/or
+receive OSC messages
+.
+#
 
-  The class defines certain methods, according to the Renoise Socket API:
-  socket_error(),socket_message()
+The class defines certain methods, according to the Renoise Socket API:
+socket_error(),socket_message()
 
 --]]
 
@@ -36,61 +38,62 @@ function xOscDevice:__init(...)
 	local args = xLib.unpack_args(...) 
   --print("args",rprint(args))
 
-  -- string, the state of the device
+  --- string, the state of the device
   self.active = property(self.get_active,self.set_active)
   self.active_observable = renoise.Document.ObservableBoolean(args.active or false)
 
-  -- string, the device name (for display purposes)
+  --- string, the device name (for display purposes)
   self.name = property(self.get_name,self.set_name)
   --print("args.name",args.name,type(args.name))
   self.name_observable = renoise.Document.ObservableString(args.name or "")
 
-  -- string, the 'prefix' part 
+  --- string, the 'prefix' part 
   -- when defined, only messages which begin with the prefix are matched
   -- also, the prefix is appended to any outgoing messages
   self.prefix = property(self.get_prefix,self.set_prefix)
   self.prefix_observable = renoise.Document.ObservableString(args.prefix or "")
 
-  -- string, the 'address' part (IP or hostname)
+  --- string, the 'address' part (IP or hostname)
   self.address = property(self.get_address,self.set_address)
   self.address_observable = renoise.Document.ObservableString(args.address or "")
 
-  -- integer, the input port 
+  --- integer, the input port 
   self.port_in = property(self.get_port_in,self.set_port_in)
   self.port_in_observable = renoise.Document.ObservableNumber(args.port_in or 0)
 
-  -- integer, the output port
+  --- integer, the output port
   self.port_out = property(self.get_port_out,self.set_port_out)
   self.port_out_observable = renoise.Document.ObservableNumber(args.port_out or 0)
 
-  -- function, where to pass received messages
+  --- function, where to pass received messages
   -- @param renoise.Osc.Message
   -- @param pattern (without prefix)
   self.callback = property(self.get_callback,self.set_callback)
   self._callback = args.callback 
 
-  -- boolean, when true we queue messages and send them on idle time 
+  --- boolean, when true we queue messages and send them on idle time 
   self.bundling_enabled = property(self.get_bundling_enabled,self.set_bundling_enabled)
   self.bundling_enabled_observable = renoise.Document.ObservableBoolean(args.bundling_enabled or false)
 
-  -- int, output when reaching this number of queued messages (0 = disable)
+  --- int, output when reaching this number of queued messages (0 = disable)
   self.bundle_limit = property(self.get_bundle_limit,self.set_bundle_limit)
   self.bundle_limit_observable = renoise.Document.ObservableNumber(args.bundle_limit or 0)
 
-  -- set when properties have changed which require re-initialize
+  --- set when properties have changed which require re-initialize
   self.modified_observable = renoise.Document.ObservableBang()
 
   -- private --
 
+  --- function
   self.idle_notifier = nil
 
-  -- renoise.Osc.Message, the last recieved message 
+  --- renoise.Osc.Message, the last recieved message 
   --self.last_input_message = nil
 
-  -- renoise.Osc.Message, the last generated message 
+  --- renoise.Osc.Message, the last generated message 
   --self.last_output_message = nil
 
-  -- table, used when bundling is enabled
+  --- table, used when bundling is enabled
   self.message_queue = {}
 
   --- (renoise.Socket.SocketClient)

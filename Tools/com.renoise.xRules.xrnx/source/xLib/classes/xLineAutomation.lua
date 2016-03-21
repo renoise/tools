@@ -1,11 +1,14 @@
 --[[============================================================================
 xLineAutomation
 ============================================================================]]--
---[[
 
-  A representation of automation data within a single line
+--[[--
 
-  You can specify multiple values across the line, by supplying 'time' 
+A representation of automation data within a single line
+.
+#
+
+Specify multiple values across the line, by supplying 'time' 
 
 
 ]]
@@ -19,6 +22,7 @@ class 'xLineAutomation'
 
 function xLineAutomation:__init(automation)
 
+  --- table
   self.automation = table.create()
 
   -- initialize -----------------------
@@ -36,7 +40,7 @@ end
 -------------------------------------------------------------------------------
 -- @param sequence (int)
 -- @param line (int)
--- @param automation (renoise.PatternTrackAutomation)
+-- @param ptrack_auto (renoise.PatternTrackAutomation)
 -- @param patt_num_lines (int), length of the playpos pattern
 
 function xLineAutomation:do_write(sequence,line,ptrack_auto,patt_num_lines)

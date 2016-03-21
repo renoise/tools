@@ -1,11 +1,15 @@
 --[[============================================================================
 xEffectColumn
 ============================================================================]]--
---[[
 
-  This class is representing renoise.EffectColumn
-  Unlike the renoise.EffectColumn, this one can be freely defined, 
-  without the need to have the line present in an actual song 
+--[[--
+
+Use xEffectColumn to create 'virtual' renoise.EffectColumn objects
+.
+#
+
+Unlike the renoise.EffectColumn, this one can be freely defined, 
+without the need to have the line present in an actual song 
 
 ]]
 
@@ -76,13 +80,19 @@ xEffectColumn.SUPPORTED_EFFECT_CHARS = {
 
 function xEffectColumn:__init(args)
 
+  --- int
   self.number_value = property(self.get_number_value,self.set_number_value)
   self._number_value = nil
+
+  --- string
   self.number_string = property(self.get_number_string,self.set_number_string)
   self._number_string = nil
 
+  --- int
   self.amount_value = property(self.get_amount_value,self.set_amount_value)
   self._amount_value = nil
+
+  --- string
   self.amount_string = property(self.get_amount_string,self.set_amount_string)
   self._amount_string = nil
 
@@ -95,7 +105,6 @@ function xEffectColumn:__init(args)
 
 end
 
--------------------------------------------------------------------------------
 -- Get/set methods
 -------------------------------------------------------------------------------
 
@@ -138,7 +147,6 @@ function xEffectColumn:set_amount_string(str)
 end
 
 
--------------------------------------------------------------------------------
 -- Converter methods (static implementation)
 -------------------------------------------------------------------------------
 

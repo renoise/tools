@@ -4,11 +4,13 @@
 
 --[[--
 
-  A higher-level OSC message 
+A higher-level OSC message 
+.
+#
 
-  See also:
-    xMessage
-    xOscDevice
+See also:
+@{xMessage}
+@{xOscDevice}
 
 --]]
 

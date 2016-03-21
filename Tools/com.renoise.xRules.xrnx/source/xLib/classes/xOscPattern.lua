@@ -4,31 +4,31 @@
 
 --[[--
 
-  This class defines a simple syntax for matching/extracting and generating OSC messages.
+This class defines a simple syntax for matching/extracting and generating OSC messages.
   
-  To start with, you define an "input pattern" for matching values - either a literal value (number or string), or a "wildcard". For example:
+To start with, you define an "input pattern" for matching values - either a literal value (number or string), or a "wildcard". For example:
 
-  -- Match message with four integers, third one equal to 48
-  "/renoise/trigger/note_on %i %i 48 %i"
+      -- Match message with four integers, third one equal to 48
+      "/renoise/trigger/note_on %i %i 48 %i"
 
-  ## Wildcard and literal values
+## Wildcard and literal values
 
-  A wildcard is one of the supported OSC tags preceded by a percent sign. For example, the wildcard "%f" will match any floating point value. It's possible to mix literal values and wildcards. 
+A wildcard is one of the supported OSC tags preceded by a percent sign. For example, the wildcard `%f` will match any floating point value. It's possible to mix literal values and wildcards. 
 
-  Depending on how literal values are specified, and whether 'strict' is set to true, they are interpreted as specific types:
+Depending on how literal values are specified, and whether `strict` is set to true, they are interpreted as specific types:
 
-  "/some/integer 1"   <-- integer(strict)/number
-  "/some/integer 0x1" <-- integer(strict)/number
-  "/some/float 1.0"   <-- float(strict)/number
-  "/some/string true" <-- string
+    "/some/integer 1"   <-- integer(strict)/number
+    "/some/integer 0x1" <-- integer(strict)/number
+    "/some/float 1.0"   <-- float(strict)/number
+    "/some/string true" <-- string
 
-  ## Strict mode and caching
+## Strict mode and caching
 
-  Strict mode will look "more closely" at the literal values. This makes it possible to define a more restrictive/precise pattern and by default, is turned on. 
+Strict mode will look "more closely" at the literal values. This makes it possible to define a more restrictive/precise pattern and by default, is turned on. 
 
-  A special tag (NUMBER) exists, which can accept any type of value which can be translated into a number. An example would be if you have a device which transmit integers as floating point, or vice versa. 
+A special tag (NUMBER) exists, which can accept any type of value which can be translated into a number. An example would be if you have a device which transmit integers as floating point, or vice versa. 
 
-  Disabling strict interpretation will basically set all numeric tags to NUMBER instead of their more 'strict' counterpart. The downside is that using a NUMBER will make the pattern unable to use caching.
+Disabling strict interpretation will basically set all numeric tags to NUMBER instead of their more `strict` counterpart. The downside is that using a NUMBER will make the pattern unable to use caching.
 
 
 --]]
@@ -47,55 +47,55 @@ function xOscPattern:__init(...)
 	local args = xLib.unpack_args(...) 
   --print("*** args",rprint(args))
 
-  -- string, pattern used for matching the input
+  --- string, pattern used for matching the input
   self.pattern_in = property(self.get_pattern_in,self.set_pattern_in)
   self.pattern_in_observable = renoise.Document.ObservableString("")
 
-  -- string, pattern for constructing new messages
+  --- string, pattern for constructing new messages
   self.pattern_out = property(self.get_pattern_out,self.set_pattern_out)
   self.pattern_out_observable = renoise.Document.ObservableString("")
 
-  -- boolean, true when message contain functioning patterns
+  --- boolean, true when message contain functioning patterns
   self.complete = property(self.get_complete)
 
-  -- function, where to output message to
+  --- function, where to output message to
   self.callback_fn = args.callback_fn
 
-  -- called when patterns are changed
+  --- called when patterns are changed
   self.before_modified_observable = renoise.Document.ObservableBang()
 
-  -- boolean, whether to interpret literal values strictly or not
+  --- boolean, whether to interpret literal values strictly or not
   --  (if false, use xOscValue.TAG.NUMBER to represent all numbers)
   self.strict = (type(args.strict)~="boolean") and true or args.strict 
 
-  -- number, avoid rounding errors when comparing floats
+  --- number, avoid rounding errors when comparing floats
   self.precision = (type(args.precision)=="number") and args.precision or 10000
 
   -- internal --
 
-  -- int, unique identifier for the pattern 
+  --- int, unique identifier for the pattern 
   xOscPattern.uid_counter = xOscPattern.uid_counter + 1
   self.uid = xOscPattern.uid_counter 
 
-  -- boolean, true when we can cache the incoming message
+  --- boolean, true when we can cache the incoming message
   self.cacheable = false
 
-  -- table<xOscValue>, value is undefined when wildcard
+  --- table<xOscValue>, value is undefined when wildcard
   self.arguments = {}
 
-  -- renoise.Document.ObservableStringList
+  --- renoise.Document.ObservableStringList
   -- (this is just a convenience method for getting/setting the
   --  'name' part of our xOscValues)
   self.arg_names = property(self.get_arg_names,self.set_arg_names)
   self._arg_names = renoise.Document.ObservableStringList()
 
-  -- string, input pattern (set via 'pattern_in')
+  --- string, input pattern (set via 'pattern_in')
   self.osc_pattern_in = nil
 
-  -- string, output pattern (set via 'pattern_in' or 'pattern_out')
+  --- string, output pattern (set via 'pattern_in' or 'pattern_out')
   self.osc_pattern_out = nil
 
-  -- table<int> output arguments/order
+  --- table<int> output arguments/order
   -- e.g. "/some/pattern $3 $1 $2" --> {3,1,2}
   self.output_args = nil
 

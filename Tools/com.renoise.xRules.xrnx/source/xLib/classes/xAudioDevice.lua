@@ -1,9 +1,12 @@
 --[[============================================================================
 xLib
 ============================================================================]]--
---[[
 
-  Static methods for dealing with Audio Devices
+--[[--
+
+Static methods for dealing with Audio Devices
+.
+#
 
 ]]
 
@@ -14,7 +17,7 @@ class 'xAudioDevice'
 -- Static Methods
 --==============================================================================
 
--- Resolve the device/parameter indices based on a parameter
+--- Resolve the device/parameter indices based on a parameter
 -- (TODO: API5 has built-in functionality)
 -- @param param, renoise.DeviceParameter 
 -- @param track_idx, restrict search to this track

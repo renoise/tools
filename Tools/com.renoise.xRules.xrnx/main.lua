@@ -171,7 +171,12 @@ end
 renoise.tool().app_idle_observable:add_notifier(app_idle_notifier)
 
 renoise.tool().app_new_document_observable:add_notifier(function()
+  --print(">>> app_new_document_observable fired...",rns,renoise.song())
   rns = renoise.song()
+end)
 
+renoise.tool().app_release_document_observable:add_notifier(function()
+  --print(">>> app_release_document_observable fired...",rns,renoise.song())
+  rns = renoise.song()
 end)
 

@@ -1,9 +1,24 @@
+--[[============================================================================
+xSampleMapping
+============================================================================]]--
+
+--[[--
+
+Static methods for working with renoise sample mappings
+.
+#
+
+### See also
+@{xInstrument}
+
+--]]
+
 class 'xSampleMapping'
 
 --------------------------------------------------------------------------------
--- Shift samples by amount of semitones, starting from the sample index 
+--- Shift samples by amount of semitones, starting from the sample index 
 -- @param instr (renoise.Instrument)
--- @param sample_idx (int)
+-- @param sample_idx_from (int)
 -- @param amt (int)
 
 function xSampleMapping.shift_keyzone_by_semitones(instr,sample_idx_from,amt)

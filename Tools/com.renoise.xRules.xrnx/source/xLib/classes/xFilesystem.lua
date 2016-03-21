@@ -1,9 +1,12 @@
 --[[============================================================================
 xFilesystem
 ============================================================================]]--
---[[
 
-  Static methods for dealing with the file-system
+--[[--
+
+Static methods for dealing with the file-system
+.
+#
 
 ]]
 
@@ -240,7 +243,7 @@ end
 -- rename a file or folder
 -- @param old_f (string)
 -- @param new_f (string)
--- @options (table) TODO
+-- TODO @param options (table) 
 --    "replace" - for existing files/folders
 --    "merge" - for existing folders
 
@@ -468,6 +471,8 @@ end
 -- iterate through folders, starting from the provided path
 -- @param str_path (string)
 -- @param callback_fn (function) return false to stop recursion
+-- @param file_ext (string) 
+-- @param level (int) 
 
 function xFilesystem.recurse(str_path,callback_fn,file_ext,level)
   TRACE("xFilesystem.recurse(str_path,callback_fn,file_ext,level)",str_path,callback_fn,file_ext,level)

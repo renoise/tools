@@ -1,13 +1,15 @@
 --[[============================================================================
 xMessage
 ============================================================================]]--
---[[
 
-  A class which can represent an incoming/outgoing message
+--[[--
 
-  # See also:
-    xOscMessage 
-    xMidiMessage 
+Abstract message class (extend to create your own type)
+.
+#
+
+### See also 
+@{xOscMessage},@{xMidiMessage} 
 
 ]]
 
@@ -26,26 +28,26 @@ function xMessage:__init(...)
 	local args = xLib.unpack_args(...)
   --print("args",rprint(args))
 
-  -- table<xValue or implementation thereof>
+  --- table<xValue or implementation thereof>
   self.values = property(self.get_values,self.set_values)
   self._values = args.values or {}
 
-  -- int, 1-num_tracks (can be nil)
+  --- int, 1-num_tracks (can be nil)
   self.track_index = property(self.get_track_index,self.set_track_index)
   self._track_index = args.track_index or rns.selected_track_index
 
-  -- int, 1-num_instruments (can be nil)
+  --- int, 1-num_instruments (can be nil)
   self.instrument_index = property(self.get_instrument_index,self.set_instrument_index)
   self._instrument_index = args.instrument_index or rns.selected_instrument_index
 
-  -- the raw message, as received (or ready to send)
+  --- the raw message, as received (or ready to send)
   self.raw_message = property(self.get_raw_message,self.set_raw_message)
   self._raw_message = args.raw_message
 
-  -- number, when message got created
+  --- number, when message got created
   self.timestamp = os.clock()
   
-  -- table, constructor 
+  --- table, constructor 
   self.__def = property(self.get_definition)
 
   -- private --

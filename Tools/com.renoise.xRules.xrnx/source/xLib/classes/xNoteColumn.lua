@@ -1,15 +1,19 @@
 --[[============================================================================
 xNoteColumn
 ============================================================================]]--
---[[
 
-  This class is representing a single renoise.NoteColumn in xLib. 
-  Unlike the renoise.NoteColumn, this one can be freely defined, without 
-  the need to have the line present somewhere in an actual song 
+--[[--
 
-  You create an instance by feeding it a descriptive table in the constructor.
-  All string-based values are automatically converted into their numeric
-  counterparts. 
+This class is representing a single renoise.NoteColumn in xLib
+.
+#
+
+Unlike the renoise.NoteColumn, this one can be freely defined, without 
+the need to have the line present somewhere in an actual song 
+
+You create an instance by feeding it a descriptive table in the constructor.
+All string-based values are automatically converted into their numeric
+counterparts. 
 
 ]]
 
@@ -49,23 +53,23 @@ xNoteColumn.NOTE_ARRAY = {
 function xNoteColumn:__init(args)
   TRACE("xNoteColumn:__init(args)",args,type(args))
 
-  -- note_value [number, 0-119, 120=Off, 121=Empty]
+  --- note_value [number, 0-119, 120=Off, 121=Empty]
   self.note_value = property(self.get_note_value,self.set_note_value)
   self._note_value = nil
 
-  -- note_string [string, 'C-0'-'G-9', 'OFF' or '---']
+  --- note_string [string, 'C-0'-'G-9', 'OFF' or '---']
   self.note_string = property(self.get_note_string,self.set_note_string)
   self._note_string = nil
 
-  -- instrument_value [number, 0-254, 255==Empty]
+  --- instrument_value [number, 0-254, 255==Empty]
   self.instrument_value = property(self.get_instrument_value,self.set_instrument_value)
   self._instrument_value = nil
 
-  -- instrument_string [string, '00'-'FE' or '..']
+  --- instrument_string [string, '00'-'FE' or '..']
   self.instrument_string = property(self.get_instrument_string,self.set_instrument_string)
   self._instrument_string = nil
 
-  -- volume_value
+  --- volume_value
   --  [number, 0-127, 255==Empty when column value is <= 0x80 or is 0xFF,
   --    i.e. is used to specify volume]
   --  [number, 0-65535 in the form 0x0000xxyy where
@@ -74,11 +78,11 @@ function xNoteColumn:__init(args)
   self.volume_value = property(self.get_volume_value,self.set_volume_value)
   self._volume_value = nil
 
-  -- volume string [string, '00'-'ZF' or '..']
+  --- volume string [string, '00'-'ZF' or '..']
   self.volume_string = property(self.get_volume_string,self.set_volume_string)
   self._volume_string = nil
   
-  -- panning_value
+  --- panning_value
   --  [number, 0-127, 255==Empty when column value is <= 0x80 or is 0xFF,
   --    i.e. is used to specify pan]
   --  [number, 0-65535 in the form 0x0000xxyy where
@@ -87,15 +91,15 @@ function xNoteColumn:__init(args)
   self.panning_value = property(self.get_panning_value,self.set_panning_value)
   self._panning_value = nil
 
-  -- panning_string [string, '00'-'ZF' or '..']
+  --- panning_string [string, '00'-'ZF' or '..']
   self.panning_string = property(self.get_panning_string,self.set_panning_string)
   self._panning_string = nil
 
-  -- delay_value [number, 0-255]
+  --- delay_value [number, 0-255]
   self.delay_value = property(self.get_delay_value,self.set_delay_value)
   self._delay_value = nil
 
-  -- delay_string [string, '00'-'FF' or '..']
+  --- delay_string [string, '00'-'FF' or '..']
   self.delay_string = property(self.get_delay_string,self.set_delay_string)
   self._delay_string = nil
 
@@ -280,7 +284,7 @@ function xNoteColumn.note_value_to_string(val)
 end
 
 -------------------------------------------------------------------------------
--- @param str_val (string), e.g. ".." or "1F"
+-- @param str (string), e.g. ".." or "1F"
 -- @return int (0-255)
 
 function xNoteColumn.instr_string_to_value(str)
@@ -294,7 +298,7 @@ function xNoteColumn.instr_value_to_string(val)
 end
 
 -------------------------------------------------------------------------------
--- @param str_val (string), e.g. ".." or "1F"
+-- @param str (string), e.g. ".." or "1F"
 -- @return int (0-255)
 
 function xNoteColumn.delay_string_to_value(str)
