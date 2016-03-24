@@ -15,8 +15,8 @@ making it possible to pass around data with higher resolution
   ability to cache a message once turned into raw MIDI, 
   (change it only as message properties are modified via setters)
 
-### See also
-@{xMidiInput} 
+### Requires
+@{xMessage} 
 
 ]]
 
@@ -78,8 +78,9 @@ function xMidiMessage:__init(...)
   --print("args",rprint(args))
 
   --- xMidiMessage.TYPE (required)
+  -- default to sysex - a neutral default when converting from OSC
   self.message_type = property(self.get_message_type,self.set_message_type)
-  self._message_type = args.message_type
+  self._message_type = args.message_type or xMidiMessage.TYPE.SYSEX
 
   --- int, between 0-16 
   -- 0 should be interpreted as 'undefined' 

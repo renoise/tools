@@ -15,6 +15,40 @@ Static methods for working with the renoise loop_block
 class 'xBlockLoop'
 
 --------------------------------------------------------------------------------
+
+function xBlockLoop:__init(...)
+
+  local args = xLib.unpack_args(...)
+
+  -- properties --
+
+  --- int
+  self.writeahead = args.writeahead or 1
+
+  --- int
+  self.start_line = args.start_line or nil
+
+  --- int
+  self.end_line = args.end_line or nil
+
+  --- int, read-only
+  self.length = property(self.get_length)
+  
+  -- initialize --
+
+  if not self.start_line then
+    self.start_line = xBlockLoop.get_start()
+  end
+
+  if not self.end_line then
+    self.end_line = xBlockLoop.get_end()
+  end
+
+
+end
+
+
+--------------------------------------------------------------------------------
 -- retrieve 'expanded' block loop info (resolving the end point)
 -- @return table or nil
 --  sequence
@@ -43,31 +77,50 @@ end
 ]]
 -------------------------------------------------------------------------------
 
-function xBlockLoop.get_length(start_line,end_line)
-  return end_line - start_line + 1
+function xBlockLoop:get_length()
+  return self.end_line - self.start_line + 1
 end
 
 -------------------------------------------------------------------------------
 
-function xBlockLoop.pos_near_top(line,start_line,writeahead)
-  return (line <= start_line+writeahead) 
+function xBlockLoop:pos_near_top(line)
+  return (line <= self.start_line+self.writeahead) 
 end
 
 -------------------------------------------------------------------------------
 
-function xBlockLoop.pos_near_end(line,end_line,writeahead)
+function xBlockLoop:pos_near_end(line)
   
-  return (line >= (end_line-writeahead))
+  return (line >= (self.end_line-self.writeahead))
     
 end
 
 --------------------------------------------------------------------------------
--- retrive number of lines in a block for a given pattern 
+-- Static Methods
+--------------------------------------------------------------------------------
+
+--- retrive number of lines in a block for a given pattern 
 
 function xBlockLoop.get_block_lines(seq_idx)
 
   local patt_num_lines = xSongPos.get_pattern_num_lines(seq_idx)
   return math.max(1,patt_num_lines/rns.transport.loop_block_range_coeff)
+
+end
+
+-------------------------------------------------------------------------------
+-- return start line of the block loop 
+-- @return int, line index or nil
+
+function xBlockLoop.get_start()
+  TRACE("xBlockLoop.get_start()")
+
+  if not rns.transport.loop_block_enabled then
+    return 
+  end
+
+  local loop_pos = rns.transport.loop_block_start_pos
+  return loop_pos.line
 
 end
 

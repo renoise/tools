@@ -16,6 +16,7 @@ _trace_filters = nil
 
 _xlibroot = "source/xLib/classes/"
 require (_xlibroot.."xLib")
+require (_xlibroot.."xAutomation")
 require (_xlibroot.."xDebug")
 require (_xlibroot.."xDocument")
 require (_xlibroot.."xFilesystem")
@@ -33,6 +34,9 @@ require (_xlibroot.."xNoteColumn")
 require (_xlibroot.."xSandbox")
 require (_xlibroot.."xTrack")
 require (_xlibroot.."xParseXML")
+require (_xlibroot.."xBlockLoop")
+require (_xlibroot.."xSongPos")
+require (_xlibroot.."xPlayPos")
 require (_xlibroot.."xPreferences")
 require (_xlibroot.."xObservable")
 require (_xlibroot.."xReflection")

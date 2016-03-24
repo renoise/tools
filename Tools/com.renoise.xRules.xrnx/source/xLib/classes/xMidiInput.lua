@@ -8,28 +8,28 @@ Use xMidiInput to interpret MIDI messages
 .
 #
 
-, support all common MIDI messages (including 14-bit)
-
-  Note that the multibyte/NRPN features require an extra bit of processing, and can delay the processing of "normal" (7-bit) messages - for this reason, the 14-bit processing is disabled by default. 
+### Features
+Supports all common MIDI messages (including 14-bit). Note that the multibyte/NRPN features require an extra bit of processing, and can delay the processing of "normal" (7-bit) messages - for this reason, the 14-bit processing is disabled by default. 
 
 ### How to use
 
 The class is implemented with a callback, which will recieve xMidiMessages
 
     -- define our callback
-    myCallback = function(msg)
+    myCallback = function(xmsg)
       -- do something with the message
     end
 
     -- Then, instantiate this class with the callback as argument:
-    myMidiInput = xMidiInput(myCallback)
+    myMidiInput = xMidiInput{
+      callback_fn = myCallback
+    }
 
     -- Now you can feed it with raw midi messages:
     myMidiInput:input({0x90,0x45,0x6F}) 
 
 
-### See also
-     
+### Requires
 @{xMidiMessage}
 
 ]]
@@ -38,6 +38,13 @@ The class is implemented with a callback, which will recieve xMidiMessages
 class 'xMidiInput'
 
 --------------------------------------------------------------------------------
+--- Constructor
+-- @param args, table
+--  callback_fn 
+--  multibyte_enabled
+--  nrpn_enabled
+--  terminate_nrpns
+--  timeout
 
 function xMidiInput:__init(...)
 

@@ -12,6 +12,11 @@ This class can track playback progression in a song
 
 Create an instance, and supply it with a steady flow of song-position changes (idle loop). 
 
+### Requires
+@{xPlayPos}
+@{xSongPos}
+@{xBlockLoop}
+
 ]]
 
 
@@ -22,16 +27,17 @@ class 'xStreamPos'
 function xStreamPos:__init()
 
   --- (renoise.SongPos) monitor changes to playback 
-  self.playpos = rns.transport.playback_pos
+  --self.playpos = rns.transport.playback_pos
+  self.playpos = xPlayPos()
 
   --- (xSongPos) overall progression of the stream 
   self.writepos = xSongPos(rns.transport.playback_pos)
 
+  --- (xSongPos) where we most recently read from the pattern
+  self.readpos = xSongPos(rns.transport.playback_pos)
+
   --- (xBlockLoop)
   self.xblock = nil
-
-  --- (xSongPos) where we most recently read from the pattern
-  self.readpos = nil
 
   --- bool, track changes to loop_block_enabled
   -- TODO refactor into xBlockloop
@@ -190,7 +196,8 @@ function xStreamPos:set_pos(pos)
     -- we re-initialize the cached playpos to the current position
     if not rns.sequencer.pattern_sequence[self.playpos.sequence] then
       LOG("Missing pattern sequence - was removed from song?")
-      self.playpos = rns.transport.playback_pos
+      --self.playpos = rns.transport.playback_pos
+      self.playpos:set(rns.transport.playback_pos)
     end
 
     local patt_num_lines = xSongPos.get_pattern_num_lines(self.playpos.sequence)
@@ -222,7 +229,7 @@ function xStreamPos:set_pos(pos)
   else
     -- later pattern
     --print("next pattern, pos,self.playpos",pos,self.playpos)
-    local num_lines = xSongPos.get_line_diff(pos,self.playpos)
+    local num_lines = xSongPos.get_line_diff(pos,self.playpos:get())
     self.writepos:increase_by_lines(num_lines)
     --print("next pattern, calculate num_lines",num_lines)
 
@@ -239,8 +246,9 @@ end
 
 function xStreamPos:create_xblock()
 
-  self.xblock = xBlockLoop()
-  self.xblock.writeahead = self.writeahead
+  self.xblock = xBlockLoop{
+    writeahead = self.writeahead
+  }
 
 end
 
@@ -364,8 +372,8 @@ function xStreamPos:track_pos()
         --print("just_started_playback gone...")
       end
     else
-      if (playpos ~= self.playpos) then
-        --print("on_idle - playpos changed...",playpos,self.playpos)
+      if (playpos ~= self.playpos:get()) then
+      --if not self.playpos:__eq(playpos) then -- ?? why no operator working ??
         self:set_pos(playpos)
       end
     end
@@ -374,7 +382,8 @@ function xStreamPos:track_pos()
   end
 
   if (self.just_started_playback == 0) then
-    self.playpos = playpos
+    --self.playpos = playpos
+    self.playpos:set(playpos)
   end
 
 
@@ -390,7 +399,8 @@ function xStreamPos:attach_to_song()
     --print("pattern_index_notifier fired...")
     local playpos = rns.transport.playback_pos
     self:set_pos(playpos)
-    self.playpos = playpos
+    --self.playpos = playpos
+    self.playpos:set(playpos)
   end)
 
   -- track when song is started and stopped
@@ -398,10 +408,21 @@ function xStreamPos:attach_to_song()
     --print("xStream playing_notifier fired...")
     if rns.transport.playing then
       self.just_started_playback = os.clock()
-      self.playpos = rns.transport.playback_pos
+      --self.playpos = rns.transport.playback_pos
+      self.playpos:set(rns.transport.playback_pos,true)
     end
   end)
 
 end
 
 
+-------------------------------------------------------------------------------
+
+function xStreamPos:__tostring()
+
+  return type(self)
+    .. ", playpos=" ..tostring(self.playpos)
+    .. ", writepos="..tostring(self.writepos)
+    .. ", readpos=" ..tostring(self.readpos)
+
+end

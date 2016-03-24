@@ -101,6 +101,12 @@ function xRulesAppDialogPrefs:create_dialog()
   local profiles = self.owner.xprefs:get_profile_names()
   table.insert(profiles,1,"No profile selected")
 
+  local automation_write_items = xLib.stringify_table(xAutomation.WRITE_MODE)
+  local automation_follow_items = xLib.stringify_table(xAutomation.FOLLOW_MODE)
+  local automation_playmode_items = xAutomation.PLAYMODE_NAMES
+
+  print(">>> automation_playmode_items",rprint(automation_playmode_items))
+
   local content = vb:column{
     margin = 6,
     spacing = 3,
@@ -251,14 +257,16 @@ function xRulesAppDialogPrefs:create_dialog()
       },
     },
     vb:switch{
-      width = 200,
+      width = 300,
       items = {
         "MIDI",
         "OSC",
+        "Automation",
       },
       notifier = function(val)
         vb.views["xRulesPrefsMidiRack"].visible = (val == 1)
         vb.views["xRulesPrefsOscRack"].visible = (val == 2)
+        vb.views["xRulesPrefsAutomationRack"].visible = (val == 3)
       end
     },
     vb:column{
@@ -407,6 +415,99 @@ function xRulesAppDialogPrefs:create_dialog()
           end
         },
       },     
+
+    },
+    vb:column{
+      id = "xRulesPrefsAutomationRack",
+      visible = false,
+      width = DIALOG_W,
+      vb:column{
+        width = DIALOG_W,
+        style = "group",
+        margin = 6,
+        vb:text{
+          text = "Automation recording",
+          font = "bold",
+        },
+        vb:row{
+          vb:checkbox{
+            value = self.prefs.automation_highres_mode.value,
+            notifier = function(val)
+              self.prefs.automation_highres_mode.value = val
+              self.xrules.automation.highres_mode = val
+            end,
+          },
+          vb:text{
+            text = "High-res mode (between lines)",
+            width = OSC_LABEL_W,
+          },
+
+        },
+        vb:row{
+          vb:text{
+            text = "Follow mode",
+            width = OSC_LABEL_W,
+          },
+          vb:popup{
+            items = automation_follow_items,
+            value = table.find(automation_follow_items,self.prefs.automation_follow_mode),
+            width = OSC_CONTROL_W,
+            notifier = function(val)
+              local str_val = automation_follow_items[val]
+              print("follow mode",str_val)
+              self.prefs.automation_follow_mode.value = str_val
+              self.xrules.automation.follow_mode = str_val
+            end,
+          },
+          vb:text{
+            text = "→ where to insert automation data",
+            width = OSC_LABEL_W,
+          },
+        },
+        vb:row{
+          vb:text{
+            text = "Write mode",
+            width = OSC_LABEL_W,
+          },
+          vb:popup{
+            items = automation_write_items,
+            value = table.find(automation_write_items,self.prefs.automation_write_mode.value),
+            width = OSC_CONTROL_W,
+            notifier = function(val)
+              local str_val = automation_write_items[val]
+              self.prefs.automation_write_mode.value = str_val
+              self.xrules.automation.write_mode = str_val
+            end,
+          },
+          vb:text{
+            text = "→ how to write data to envelope",
+            width = OSC_LABEL_W,
+          },
+
+        },
+        vb:row{
+          vb:text{
+            text = "Interpolation",
+            width = OSC_LABEL_W,
+          },
+          vb:popup{
+            items = automation_playmode_items,
+            value = table.find(automation_playmode_items,self.prefs.automation_playmode.value),
+            width = OSC_CONTROL_W,
+            notifier = function(val)
+              local idx = table.find(xAutomation.PLAYMODE_NAMES,automation_playmode_items[val])
+              print("idx",automation_playmode_items[val])
+              self.prefs.automation_playmode.value = idx
+              self.xrules.automation.playmode = idx-1
+            end,
+          },
+          vb:text{
+            text = "→ envelope interpolation mode",
+            width = OSC_LABEL_W,
+          },
+
+        },
+      },
 
     },
 

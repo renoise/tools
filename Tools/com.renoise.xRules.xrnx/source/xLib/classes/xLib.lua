@@ -234,17 +234,30 @@ end
 
 --------------------------------------------------------------------------------
 -- compare two numbers with variable precision
+-- @param val1 
+-- @param val2 
+-- @param precision
+-- @return boolean
 
 function xLib.float_compare(val1,val2,precision)
-  --val1 = math.floor(val1 * precision)
-  --val2 = math.floor(val2 * precision)
   val1 = xLib.round_value(val1 * precision)
   val2 = xLib.round_value(val2 * precision)
   return val1 == val2 
 end
 
 --------------------------------------------------------------------------------
+--- return the fractional part of a number
+-- @param val 
+-- @return number
+
+function xLib.fraction(val)
+  return val-math.floor(val)
+end
+
+--------------------------------------------------------------------------------
 --- quick'n'dirty table compare (values in first level only)
+-- @param t1 (table)
+-- @param t2 (table)
 -- @return boolean, true if identical
 
 function xLib.table_compare(t1,t2)

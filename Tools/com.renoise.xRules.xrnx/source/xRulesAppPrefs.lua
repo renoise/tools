@@ -12,20 +12,19 @@
 
 class 'xRulesAppPrefs'(renoise.Document.DocumentNode)
 
--- general 
 xRulesAppPrefs.AUTORUN_ENABLED = true
 xRulesAppPrefs.SHOW_ON_STARTUP = true
 xRulesAppPrefs.SHOW_MINIMIZED = false
 xRulesAppPrefs.RULESET_FOLDER = renoise.tool().bundle_path .. "/rulesets/"
-
--- midi options
 xRulesAppPrefs.MULTIBYTE_ENABLED = true
 xRulesAppPrefs.NRPN_ENABLED = true
 xRulesAppPrefs.TERMINATE_NRPNS = false
-
--- osc options
 xRulesAppPrefs.OSC_CLIENT_HOST = "127.0.0.1"
 xRulesAppPrefs.OSC_CLIENT_PORT = 8000
+xRulesAppPrefs.AUTOMATION_FOLLOW_MODE = xAutomation.FOLLOW_MODE.AUTOMATIC
+xRulesAppPrefs.AUTOMATION_WRITE_MODE = xAutomation.WRITE_MODE.PUNCH_IN
+xRulesAppPrefs.AUTOMATION_PLAYMODE = xAutomation.PLAYMODE.AUTOMATIC
+xRulesAppPrefs.AUTOMATION_HIGHRES_MODE = true
 
 
 function xRulesAppPrefs:__init()
@@ -57,6 +56,11 @@ function xRulesAppPrefs:__init()
   self:add_property("osc_devices", renoise.Document.ObservableStringList())
   --self:add_property("osc_devices", renoise.Document.DocumentList())
   --print("xRulesAppPrefs:__init - #osc_devices",#self.osc_devices)
+
+  self:add_property("automation_follow_mode", renoise.Document.ObservableString(xRulesAppPrefs.AUTOMATION_FOLLOW_MODE))
+  self:add_property("automation_write_mode", renoise.Document.ObservableString(xRulesAppPrefs.AUTOMATION_WRITE_MODE))
+  self:add_property("automation_highres_mode", renoise.Document.ObservableBoolean(xRulesAppPrefs.AUTOMATION_HIGHRES_MODE))
+  self:add_property("automation_playmode", renoise.Document.ObservableNumber(xRulesAppPrefs.AUTOMATION_PLAYMODE))
 
   self:property("ruleset_folder"):add_notifier(function()
     self:property("ruleset_folder").value = xFilesystem.unixslashes(self:property("ruleset_folder").value)

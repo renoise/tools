@@ -78,6 +78,11 @@ function xRules:__init(...)
   --- xOscRouter, incoming OSC is passed here
   self.osc_router = xOscRouter()
 
+  --- xAutomation, built-in automation recording
+  self.automation = xAutomation{
+    highres_mode = true
+  }
+
   --- table, relations between osc-patterns and osc router
   -- {rule_index=int,ruleset_index=int,router_index=int}
   self.osc_pattern_map = {}
@@ -350,10 +355,10 @@ function xRules:transmit_auto(xmsg)
       -- on-the-fly conversion, include MIDI properties 
       -- that has been specified in the function
       local def = xmsg.__def
-      def.message_type = __xmsg.message_type
-      def.channel = __xmsg.channel
-      def.bit_depth = __xmsg.bit_depth
-      def.port_name = __xmsg.port_name
+      def.message_type = xmsg.message_type
+      def.channel = xmsg.channel
+      def.bit_depth = xmsg.bit_depth
+      def.port_name = xmsg.port_name
       xmsg = xMidiMessage(def) 
     end
     return self:transmit_raw(xmsg)

@@ -13,6 +13,7 @@ Static methods for dealing with renoise.Instrument
 class 'xInstrument'
 
 --------------------------------------------------------------------------------
+-- test whether the instrument contain sample slices
 -- @param instr (renoise.Instrument)
 -- @return bool
 

@@ -420,6 +420,15 @@ function xRule:__init(def)
       end
     end
 
+    -- (alias for xAutomation:record)
+    local record_automation = function(track_idx,param,value,playmode)
+      __xrules.automation:record(track_idx,param,value,playmode)
+    end
+
+    -- (alias for xAutomation:has_automation)
+    local has_automation = function(track_idx,param)
+      return __xrules.automation:has_automation(track_idx,param)
+    end
 
   ]]
   self.sandbox.str_suffix = [[
@@ -468,6 +477,12 @@ function xRule:__init(def)
     },
     ["xOscMessage"] = {
       access = function(env) return xOscMessage end,
+    },
+    ["xAutomation"] = {
+      access = function(env) return xAutomation end,
+    },
+    ["xPlayPos"] = {
+      access = function(env) return xPlayPos end,
     },
 
     -- xMessage 
