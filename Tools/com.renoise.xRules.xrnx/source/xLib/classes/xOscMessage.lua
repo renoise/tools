@@ -21,7 +21,6 @@ class 'xOscMessage' (xMessage)
 --------------------------------------------------------------------------------
 
 function xOscMessage:__init(...)
-  TRACE("xOscMessage:__init(...)")
 
 	local args = xLib.unpack_args(...) 
 
@@ -74,7 +73,6 @@ end
 -- @return renoise.Osc.Message
 
 function xOscMessage:create_raw_message()
-  TRACE("xOscMessage:create_raw_message()")
 
   -- use pattern arguments as blueprint
   --print(">>> create_raw_message - self.pattern",self.pattern)

@@ -30,7 +30,6 @@ class 'xDocument'
 -- @param str (string) serialized values 
 
 function xDocument:import(str)
-  TRACE("xDocument:import(str)",str)
 
   local t = xDocument.deserialize(str,self.DOC_PROPS)
   for k,v in pairs(t) do
@@ -43,7 +42,6 @@ end
 -- @return string, serialized values
 
 function xDocument:export()
-  TRACE("xDocument:export()")
 
   local t = xDocument.serialize(self,self.DOC_PROPS)
   return xLib.serialize_table(t)
@@ -57,7 +55,6 @@ end
 -- @return table 
 
 function xDocument.serialize(obj,props)
-  TRACE("xDocument.serialize(obj,props)",obj,props)
 
   local t = {}
   for k,v in pairs(props) do
@@ -79,7 +76,6 @@ end
 -- @return table or nil
 
 function xDocument.deserialize(str,props)
-  TRACE("xDocument.deserialize(str,props)",str,props)
 
   local t = loadstring("return "..str)
   local deserialized = t()

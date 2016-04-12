@@ -1,6 +1,6 @@
 -----------------------------------------------------------
 -- Ruleset definition for xRules
--- Visit http://www.renoise.com/tools/xrules for more info
+-- More info @ http://www.renoise.com/tools/xrules
 -----------------------------------------------------------
 return {
 osc_enabled = true,
@@ -38,13 +38,7 @@ description = "",
           output_message = 1,
       },
   },
-  conditions = {
-      {
-          message_type = {
-              equal_to = "note_on",
-          },
-      },
-  },
+  conditions = {},
   match_any = true,
   midi_enabled = false,
 },
@@ -56,22 +50,13 @@ description = "",
   name = "Float",
   actions = {
       {
-          set_value_1 = -42,
+          call_function = "print(\">>> Float\",__xmsg)",
       },
       {
-          set_message_type = "note_on",
-      },
-      {
-          set_value_1 = -10,
+          output_message = 1,
       },
   },
-  conditions = {
-      {
-          message_type = {
-              equal_to = "note_on",
-          },
-      },
-  },
+  conditions = {},
   match_any = true,
   midi_enabled = false,
 },
@@ -83,13 +68,34 @@ description = "",
   name = "String",
   actions = {
       {
-          set_value_1 = "MyBrat",
+          call_function = "print(\">>> String\",rprint(values))",
       },
       {
           output_message = 1,
       },
   },
   conditions = {},
+  match_any = true,
+  midi_enabled = false,
+},
+{
+  osc_pattern = {
+      pattern_in = "/some/pattern %s:my_string",
+      pattern_out = "",
+  },
+  name = "String (hello!)",
+  actions = {
+      {
+          output_message = 1,
+      },
+  },
+  conditions = {
+      {
+          value_1 = {
+              equal_to = 1,
+          },
+      },
+  },
   match_any = true,
   midi_enabled = false,
 },
@@ -101,6 +107,9 @@ description = "",
   name = "Pattern only",
   actions = {
       {
+          call_function = "print(\">>> Pattern only\",rprint(values))",
+      },
+      {
           output_message = 1,
       },
   },
@@ -110,22 +119,28 @@ description = "",
 },
 {
   osc_pattern = {
-      pattern_in = "/foo/bar/baz %i:foo %n:bar %f:baz",
+      pattern_in = "/some/pattern",
       pattern_out = "",
   },
-  name = "Pattern + values",
+  name = "Pattern only #2",
   actions = {
       {
-          set_value_2 = 4,
+          output_message = 1,
       },
+  },
+  conditions = {},
+  match_any = true,
+  midi_enabled = false,
+},
+{
+  osc_pattern = {
+      pattern_in = "/foo/bar/baz %n:foo %n:bar %n:baz",
+      pattern_out = "",
+  },
+  name = "Patt + values (1,2,3)",
+  actions = {
       {
-          set_value_2 = 5,
-      },
-      {
-          set_value_3 = 6,
-      },
-      {
-          output_message = "external_osc",
+          output_message = "internal_auto",
       },
   },
   conditions = {
@@ -145,6 +160,21 @@ description = "",
           },
       },
   },
+  match_any = true,
+  midi_enabled = false,
+},
+{
+  osc_pattern = {
+      pattern_in = "/foo/bar/baz %n:foo %n:bar %n:baz",
+      pattern_out = "",
+  },
+  name = "Patt + values",
+  actions = {
+      {
+          output_message = 1,
+      },
+  },
+  conditions = {},
   match_any = true,
   midi_enabled = false,
 }

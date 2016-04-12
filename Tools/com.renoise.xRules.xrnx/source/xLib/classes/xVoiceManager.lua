@@ -18,7 +18,6 @@ So, you can use this with external MIDI devices or the internal OSC server - it'
 class 'xVoiceManager'
 
 function xVoiceManager:__init()
-  TRACE("xVoiceManager:__init()")
 
   --- table<xMidiMessage>, active voices
   self.voices = {}
@@ -30,7 +29,6 @@ end
 -- pass any message here - only note-on/off messages are processed
 
 function xVoiceManager:input_message(xmsg)
-  TRACE("xVoiceManager:input_message(xmsg)",xmsg)
 
   -- TODO
 
@@ -40,7 +38,6 @@ end
 -- register a voice
 
 function xVoiceManager:register(xmsg)
-  TRACE("xVoiceManager:register(xmsg)",xmsg)
 
   table.insert(self.voices,xmsg)
   self.voices_observable:insert(#self.voices)
@@ -51,7 +48,6 @@ end
 -- release all active voices
 
 function xVoiceManager:release_all()
-  TRACE("xVoiceManager:release_all()")
 
   for k,v in ipairs(self.voices) do
     self:release(k)
@@ -63,7 +59,6 @@ end
 -- release specific voice
 
 function xVoiceManager:release(voice_idx)
-  TRACE("xVoiceManager:release(voice_idx)",voice_idx)
 
   -- TODO trigger callback, which 
   table.remove(self.voices,voice_idx)
@@ -76,7 +71,6 @@ end
 -- @return boolean, true when matched
 
 function xVoiceManager:is_active(xmsg)
-  TRACE("xVoiceManager:is_active(xmsg)",xmsg)
 
   -- TODO
 

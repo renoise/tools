@@ -224,7 +224,6 @@ end
 -------------------------------------------------------------------------------
 
 function vBitmap:save_bmp(file_path)
-  TRACE("vBitmap.save_bmp(file_path)",file_path)
 
   local fh = io.open(file_path,'wb')
   if not fh then

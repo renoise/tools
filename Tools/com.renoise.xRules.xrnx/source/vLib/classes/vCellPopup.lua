@@ -46,7 +46,6 @@ end
 --------------------------------------------------------------------------------
 
 function vCellPopup:set_value(val,skip_event)
-  TRACE("vCellPopup:set_value(val)",val)
 
   if (type(val) == "nil") then
    val = vCellPopup.DEFAULT_VALUE

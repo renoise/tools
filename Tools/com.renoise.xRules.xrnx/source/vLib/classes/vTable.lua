@@ -77,7 +77,6 @@ vTable.META = {
 
 
 function vTable:__init(...)
-  TRACE("vTable:__init(...)",...)
 
   local args = vLib.unpack_args(...)
   --print("args",rprint(args))
@@ -194,7 +193,6 @@ end
 -- @param data (table), indexed array
 
 function vTable:set_data(data)
-  TRACE("vTable:set_data(data)",data)
 
   self.dataprovider:set_data(data)
 
@@ -219,7 +217,6 @@ end
 -- @param reserved_keys (table) TODO skip reserved keys 
 
 function vTable.assign_members(cell,defs,col_key,reserved_keys)
-  TRACE("vTable.assign_members(cell,defs,col_key,reserved_keys)",cell,#defs,col_key,#reserved_keys)
 
   --print("*** assign_members",cell,defs,col_key)
   if cell and defs[col_key] then
@@ -234,7 +231,6 @@ end
 -- (re)build the actual view, using the current column/row count
 
 function vTable:build()
-  TRACE("vTable:build()")
 
   local vb = self.vb
   
@@ -340,7 +336,6 @@ end
 -- produce a cell of the given type
 
 function vTable:cell_factory(ctype)
-  TRACE("vTable:cell_factory(ctype)",ctype)
 
   local vb = self.vb
   local cell = nil
@@ -393,7 +388,6 @@ end
 -- (using the maximum possible table size)
 
 function vTable:remove_table()
-  TRACE("vTable:remove_table()")
 
   local vb = self.vb
   local table_elm = vb.views[self.table_id]
@@ -443,7 +437,6 @@ end
 --------------------------------------------------------------------------------
 
 function vTable:update()
-  TRACE("vTable:update()")
 
   local vb = self.vb
 
@@ -598,7 +591,6 @@ end
 -- @param num (int)
 
 function vTable:set_num_rows(num)
-  TRACE("vTable:set_num_rows(num)",num)
 
   num = math.min(num,vTable.MAX_ROWS)
   if (self._num_rows ~= num) then
@@ -799,7 +791,6 @@ end
 -- @param value (variant), e.g. a callback function or other type
 
 function vTable:set_header_def(key,member,value)
-  TRACE("vTable:set_header_def(key,member,value)",key,member,value)
 
   self.header_defs[key][member] = value
   local cell = self.header_cells[key]
@@ -813,7 +804,6 @@ end
 -- @param value (variant), e.g. a callback function or other type
 
 function vTable:set_column_def(key,member,value)
-  TRACE("vTable:set_column_def(key,member,value)",key,member,value)
 
   for k,v in ipairs(self.column_defs) do
     if (v.key == key) then   
@@ -834,7 +824,6 @@ end
 -- handler is invoked, giving the host application a chance to respond
 
 function vTable:autosize_to_contents()
-  TRACE("vTable:autosize_to_contents()")
 
   if not self.autosize then
     return
@@ -854,7 +843,6 @@ end
 --------------------------------------------------------------------------------
 
 function vTable:set_width(val)
-  TRACE("vTable:set_width(val)",val)
 
   local table_w = math.max(val,self:get_content_width())
   local spacer = self.vb.views[self.spacer_w_id]
@@ -866,7 +854,6 @@ end
 --------------------------------------------------------------------------------
 
 function vTable:set_height(val)
-  TRACE("vTable:set_height(val)",val)
 
   local new_h = val
   local spacer_h = self.vb.views[self.spacer_h_id]
@@ -898,7 +885,6 @@ end
 --------------------------------------------------------------------------------
 
 function vTable:set_scrollbar_width(val)
-  TRACE("vTable:set_scrollbar_width(val)",val)
 
   self._scrollbar_width = val
   if self.scrollbar then
@@ -913,7 +899,6 @@ end
 --------------------------------------------------------------------------------
 
 function vTable:set_row_height(val)
-  TRACE("vTable:set_row_height(val)",val)
 
   self._row_height = val
   self:autosize_to_contents()
@@ -927,7 +912,6 @@ end
 --------------------------------------------------------------------------------
 
 function vTable:set_header_height(val)
-  TRACE("vTable:set_header_height(val)",val)
 
   self._header_height = math.max(vTable.HEADER_HEIGHT_MIN,val)
   self:autosize_to_contents()
@@ -941,7 +925,6 @@ end
 --------------------------------------------------------------------------------
 
 function vTable:set_show_header(val)
-  TRACE("vTable:set_show_header(val)",val)
 
   self._show_header = val
   self:autosize_to_contents()
@@ -955,7 +938,6 @@ end
 --------------------------------------------------------------------------------
 
 function vTable:set_autosize(val)
-  TRACE("vTable:set_autosize(val)",val)
 
   self._autosize = val
   self:autosize_to_contents()
@@ -969,7 +951,6 @@ end
 --------------------------------------------------------------------------------
 
 function vTable:set_row_offset(val)
-  TRACE("vTable:set_row_offset(val)",val)
 
   self._row_offset = math.max(0,val) 
   self:request_update()
@@ -982,7 +963,6 @@ end
 --------------------------------------------------------------------------------
 
 function vTable:set_active(val)
-  TRACE("vTable:set_active(val)",val)
 
   for row,_ in ipairs(self.cells) do
     for col,__ in ipairs(self.cells[row]) do
@@ -996,7 +976,6 @@ end
 --------------------------------------------------------------------------------
 
 function vTable:update_scrollbar()
-  TRACE("vTable:update_scrollbar()")
 
   self.scrollbar.step_count = math.max(0,#self.data - self._num_rows)
   self.scrollbar.active =  (#self.data > self._num_rows) 

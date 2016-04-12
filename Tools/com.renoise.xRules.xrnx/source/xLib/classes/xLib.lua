@@ -29,7 +29,6 @@ Finally, to improve the performance of xLib, the entire library is using a singl
 
 -- reference to song document 
 -- rns = renoise.song()
-
 TRACE = function(...)
   --print(...)
 end

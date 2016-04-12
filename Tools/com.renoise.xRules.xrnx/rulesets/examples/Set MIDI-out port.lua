@@ -11,27 +11,23 @@ description = "",
       pattern_in = "",
       pattern_out = "",
   },
-  conditions = {
-      {
-          channel = {
-              between = {
-                  1,
-                  16,
-              },
-          },
-      },
-  },
-  match_any = true,
+  name = "",
   actions = {
       {
-          set_channel = 1,
+          set_port_name = "LoopBe Internal MIDI",
       },
       {
-          call_function = "port_name = \"LoopBe Internal MIDI\"",
+          output_message = "external_midi",
+      },
+      {
+          set_port_name = "loopMIDI Port",
       },
       {
           output_message = "external_midi",
       },
   },
+  conditions = {},
+  match_any = true,
+  midi_enabled = true,
 }
 }

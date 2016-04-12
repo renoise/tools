@@ -31,7 +31,6 @@ xRuleset.CURRENT_RULESET = "Current Ruleset"
 --  }
 
 function xRuleset:__init(xrules,ruleset_def)
-  TRACE("xRuleset:__init(xrules,ruleset_def)")
 
   if not ruleset_def then
     ruleset_def = {{}} -- add empty rule
@@ -60,6 +59,9 @@ function xRuleset:__init(xrules,ruleset_def)
   self.rules = {}
   self.rules_observable = renoise.Document.ObservableNumberList()
 
+  --- boolean, suppress while adding/removing/swapping
+  self.suppress_notifier = false
+
   -- runtime properties --
 
   --- boolean
@@ -70,18 +72,23 @@ function xRuleset:__init(xrules,ruleset_def)
   self.active = property(self.get_active,self.set_active)
   self.active_observable = renoise.Document.ObservableBoolean(true)
 
-  --- int, selected rule (0 = no selection)
+  --- int, selected rule 
   self.selected_rule_index = property(self.get_selected_rule_index,self.set_selected_rule_index)
-  self.selected_rule_index_observable = renoise.Document.ObservableNumber(0)
+  self.selected_rule_index_observable = renoise.Document.ObservableNumber(1)
 
   --- string, full path to location on disk
   self.file_path = property(self.get_file_path,self.set_file_path)
   self.file_path_observable = renoise.Document.ObservableString("")
 
+  --- int, last inserted rule (when registering with router/map)
+  -- 
+  --self.last_inserted = nil
+
   -- initialize --
 
   self:parse_definition(ruleset_def)
 
+  --print(">>> self.selected_rule_index",self.selected_rule_index)
 
 end
 
@@ -192,16 +199,22 @@ end
 --==============================================================================
 
 function xRuleset:add_rule(rule_def,idx)
-  TRACE("xRuleset:add_rule(rule_def,idx)",rule_def,idx)
 
   if not idx then
     idx = #self.rules + 1
   end
 
-  table.insert(self.rules,idx,xRule(rule_def))
+  --self.suppress_notifier = true
+
+  local xrule = xRule(rule_def)
+  table.insert(self.rules,idx,xrule)
   self.rules_observable:insert(idx,1)
+  --self.last_inserted = idx
+  --self.xrules.osc_router:add_pattern(xrule.osc_pattern)
   self:attach_to_rule(idx)
   self.modified = true
+
+  --self.suppress_notifier = false
 
 end
 
@@ -241,7 +254,6 @@ end
 -- remove a rule from this set
 
 function xRuleset:remove_rule(idx)
-  TRACE("xRuleset:remove_rule(idx)",idx)
 
   local rule = self.rules[idx]
   if not rule then
@@ -301,7 +313,6 @@ end
 --  xMidiMessage or xOscMessage (original message)
 
 function xRuleset:match_message(xmsg,ruleset_idx,rule_idx,force_midi)
-  TRACE("xRuleset:match_message()",xmsg,ruleset_idx,rule_idx,force_midi)
 
   assert(type(ruleset_idx)=="number","Expected ruleset_idx to be a number")
   --assert(type(rule_idx)=="number","Expected rule_idx to be a number")
@@ -364,7 +375,6 @@ end
 -- @return string, error message when failed
 
 function xRuleset:parse_definition(ruleset_def)
-  TRACE("xRuleset:parse_definition(ruleset_def)",ruleset_def)
 
   --print("xRuleset def...",rprint(ruleset_def))
 
@@ -373,6 +383,9 @@ function xRuleset:parse_definition(ruleset_def)
   for k = #self.rules_observable,1,-1 do
     self.rules_observable:remove(k)
   end
+
+  --print("self.suppress_notifier",self.suppress_notifier)
+  self.suppress_notifier = true
 
   self.osc_enabled_observable.value = ruleset_def.osc_enabled or false
   self.manage_voices_observable.value = ruleset_def.manage_voices or false
@@ -386,6 +399,8 @@ function xRuleset:parse_definition(ruleset_def)
     self:add_rule(v)
   end
 
+  self.suppress_notifier = false
+
   return true
 
 end
@@ -395,7 +410,6 @@ end
 -- @return err, string containing error message
 
 function xRuleset:load_definition(file_path)
-  TRACE("xRuleset:load_definition(file_path)",file_path)
 
   assert(type(file_path) == "string","Expected a string as argument")
   assert(file_path ~= "","Expected a non-empty string as argument")
@@ -438,12 +452,11 @@ end
 -- @return string
 
 function xRuleset:serialize()
-  TRACE("xRuleset:serialize()")
 
   local str = ""
   str = "-----------------------------------------------------------"
       .."\n-- Ruleset definition for xRules"
-      .."\n-- Visit http://www.renoise.com/tools/xrules for more info"
+      .."\n-- More info @ http://www.renoise.com/tools/xrules"
       .."\n-----------------------------------------------------------"
       .."\nreturn {"
       .."\nosc_enabled = "..tostring(self.osc_enabled).. ","
@@ -492,7 +505,6 @@ end
 -------------------------------------------------------------------------------
 
 function xRuleset:attach_to_rule(rule_idx)
-  TRACE("xRuleset:attach_to_rule(rule_idx)",rule_idx)
 
   local xrule = self.rules[rule_idx]
   xrule.modified_observable:add_notifier(function()
@@ -525,7 +537,6 @@ end
 -- @return boolean
 
 function xRuleset.looks_like_definition(str_def)
-  TRACE("xRuleset.looks_like_definition(str_def)",str_def)
 
   if not string.find(str_def,"return[%s]*{") or
     not string.find(str_def,"actions[%s]*=[%s]*{") or
@@ -542,7 +553,6 @@ end
 -- ensure that the name is unique (among the saved files)
 
 function xRuleset.get_suggested_name(str_name)
-  TRACE("xRuleset.get_suggested_name(str_name)",str_name,type(str_name))
 
   if not str_name then
     str_name = xRuleset.DEFAULT_NAME
@@ -559,7 +569,6 @@ end
 -- return the path to the internal models 
 
 function xRuleset.get_normalized_file_path(str_name)
-  TRACE("xRuleset:get_normalized_file_path(str_name)",str_name)
 
   return ("%s%s.lua"):format(xRules.RULESET_FOLDER,str_name)
 

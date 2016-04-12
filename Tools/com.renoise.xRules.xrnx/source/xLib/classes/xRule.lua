@@ -111,7 +111,9 @@ xRule.OPERATOR = {
   EQUAL_TO = "equal_to",
   NOT_EQUAL_TO = "not_equal_to",
   LESS_THAN = "less_than",
+  LESS_THAN_OR_EQUAL_TO = "less_than_or_equal_to",
   GREATER_THAN = "greater_than",
+  GREATER_THAN_OR_EQUAL_TO = "greater_than_or_equal_to",
 }
 
 -- applies to xMidiMessage.TYPE, 
@@ -125,7 +127,9 @@ xRule.VALUE_OPERATORS = {
   xRule.OPERATOR.EQUAL_TO,
   xRule.OPERATOR.NOT_EQUAL_TO,
   xRule.OPERATOR.LESS_THAN,
+  xRule.OPERATOR.LESS_THAN_OR_EQUAL_TO,
   xRule.OPERATOR.GREATER_THAN,
+  xRule.OPERATOR.GREATER_THAN_OR_EQUAL_TO,
   xRule.OPERATOR.BETWEEN,
 }
 
@@ -254,7 +258,6 @@ xRule.ACTION_BASETYPE = {
 -------------------------------------------------------------------------------
 
 function xRule:__init(def)
-  TRACE("xRule:__init(def)",def)
 
   if not def then
     def = {}
@@ -339,6 +342,7 @@ function xRule:__init(def)
   end)
 
   --- configure sandbox
+  -- (add basic variables and a few utility methods)
 
   self.sandbox = xSandbox()
   self.sandbox.compile_at_once = true
@@ -347,6 +351,45 @@ function xRule:__init(def)
     __xrules = select(2, ...)
     __xruleset_index = select(3, ...)
 
+    ---------------------------------------------------------------------------
+    -- comparing numbers with variable precision
+    -- @param val1 (number)
+    -- @param val2 (number)
+    -- @param operator (xRule.OPERATOR)
+    local compare_numbers = function(val1,val2,operator,precision)
+      if precision then
+        local is_equal = xLib.float_compare(val1,val2,precision)
+        local operators_table = {
+          ["equal_to"] = function()
+            return is_equal
+          end,
+          ["not_equal_to"] = function()
+            return not is_equal
+          end,
+          ["less_than"] = function(val1,val2)
+            return not is_equal and (val1 < val2)
+          end,
+          ["less_than_or_equal_to"] = function()
+            return is_equal or (val1 < val2)
+          end,
+          ["greater_than"] = function()
+            return not is_equal and (val1 > val2)
+          end,
+          ["greater_than_or_equal_to"] = function()
+            return is_equal or (val1 > val2)
+          end,
+        }
+        if not operators_table[operator] then
+          error("Could not find operator")
+        else
+          return operators_table[operator]()
+        end
+      else
+        return k..operator..val
+      end
+    end
+
+    ---------------------------------------------------------------------------
     -- add/clone message into the output queue
     -- @param val (string), one of xRules.OUTPUT_OPTIONS
     local output_message = function(val)
@@ -395,6 +438,7 @@ function xRule:__init(def)
 
     end
 
+    ---------------------------------------------------------------------------
     -- pass message on to a different rule/set
     -- @param val (string), "ruleset_name:rule_name"
     local route_message = function(val)
@@ -420,15 +464,20 @@ function xRule:__init(def)
       end
     end
 
+    ---------------------------------------------------------------------------
     -- (alias for xAutomation:record)
     local record_automation = function(track_idx,param,value,playmode)
       __xrules.automation:record(track_idx,param,value,playmode)
     end
 
+    ---------------------------------------------------------------------------
     -- (alias for xAutomation:has_automation)
     local has_automation = function(track_idx,param)
       return __xrules.automation:has_automation(track_idx,param)
     end
+
+    ---------------------------------------------------------------------------
+    -- generated code...
 
   ]]
   self.sandbox.str_suffix = [[
@@ -463,14 +512,17 @@ function xRule:__init(def)
     ["xRules"] = {
       access = function(env) return xRules end,
     },
+    ["xRuleset"] = {
+      access = function(env) return xRuleset end,
+    },
     ["xTrack"] = {
       access = function(env) return xTrack end,
     },
+    ["xTransport"] = {
+      access = function(env) return xTransport end,
+    },
     ["xScale"] = {
       access = function(env) return xScale end,
-    },
-    ["xRuleset"] = {
-      access = function(env) return xRuleset end,
     },
     ["xMidiMessage"] = {
       access = function(env) return xMidiMessage end,
@@ -480,6 +532,9 @@ function xRule:__init(def)
     },
     ["xAutomation"] = {
       access = function(env) return xAutomation end,
+    },
+    ["xParameter"] = {
+      access = function(env) return xParameter end,
     },
     ["xPlayPos"] = {
       access = function(env) return xPlayPos end,
@@ -648,7 +703,6 @@ end
 -- @return table<xMessage>
 
 function xRule:match(xmsg,xrules,ruleset_idx)
-  TRACE("xRule:match(xmsg,xrules,ruleset_idx)",xmsg,xrules,ruleset_idx)
 
   if not self.sandbox.callback then
     LOG("*** no sandbox callback, aborting..." )
@@ -686,7 +740,6 @@ end
 -- * consecutive logic statements
 
 function xRule:fix_conditions()
-  TRACE("xRule:fix_conditions()")
 
   local last_was_logic = false
   local yet_to_encounter_first_row = true
@@ -745,7 +798,6 @@ end
 -- @return string, error message
 
 function xRule:compile()
-  TRACE("xRule:compile()")
 
   if (#self.conditions == 0) 
     and not self.match_any
@@ -758,7 +810,7 @@ function xRule:compile()
     --print("build_sysex_condition",k,v)
 
     local t = xLib.split(v," ")
-    rprint(t)
+    --rprint(t)
 
     local str_fn = ""
     local last_was_wildcard = false
@@ -779,12 +831,15 @@ function xRule:compile()
     return str_fn
 
   end
-  
+
+  -- @param k, key (e.g. 'value_1')
+  -- @param v, table (e.g. [equal_to] =>  440.4)
   local build_comparison = function(k,v)
+    --print("build_comparison(k,v)",k,rprint(v))
+
     local str_fn = ""
     local count = 0
     for k2,v2 in pairs(v) do
-      
       --print("k,v,k2,v2",k,v,k2,v2)
 
       if (count > 0) then
@@ -792,8 +847,9 @@ function xRule:compile()
       end
 
       local val = v2
+      local precision = nil
 
-      -- 'between' operator has a table with two values - others don't
+      -- 'between' operator has a table with two values
       if (k2 == xRule.OPERATOR.BETWEEN) then
         if (type(val)~="table") then
           val = {val,val}
@@ -805,27 +861,53 @@ function xRule:compile()
         -- wrap strings in quotes
         -- (except sysex, which is interpreted seperately)
         if (k ~= xMidiMessage.TYPE.SYSEX) then
+          if (type(val)=="string") then
+            val = "'"..val.."'"
+          elseif (type(val)=="number") then
+            -- always use variable-precision matching when osc-enabled
+            -- (MIDI is always integer, but OSC can be floating point)
+            if self.osc_pattern.complete then
+              precision = self.osc_pattern.precision
+            end
+          end
+          --[[
           local basetype = xRule.ASPECT_BASETYPE[string.upper(k)]
-          val = (basetype == "string") and "'"..val.."'" or val
+          val = (basetype == "string") and "'"..val.."'" or 
+            (type(val)=="string") and "'"..val.."'" or val
+          ]]
+
         end
       end
 
-      if (k2 == xRule.OPERATOR.EQUAL_TO) then
-        if (k == xMidiMessage.TYPE.SYSEX) then
-          str_fn = str_fn .. build_sysex_condition(k,val)
-        else
+      precision = tostring(precision)
+
+      if (k == xMidiMessage.TYPE.SYSEX) then
+        str_fn = str_fn .. build_sysex_condition(k,val)
+      elseif (type(val)=="string") then
+        if (k2 == xRule.OPERATOR.EQUAL_TO) then
           str_fn = str_fn .. "("..k.." == "..val..") \n"
+        else
+          str_fn = str_fn .. "("..k.." ~= "..val..") \n"
         end
+        --[[
       elseif (k2 == xRule.OPERATOR.NOT_EQUAL_TO) then
-        str_fn = str_fn .. "("..k.." ~= "..val..") \n"
+        str_fn = str_fn .. "("..compare_numbers(k,val,xRule.OPERATOR.NOT_EQUAL_TO)..") \n"
       elseif (k2 == xRule.OPERATOR.LESS_THAN) then
-        str_fn = str_fn .. "("..k.." < "..val..") \n"
+        str_fn = str_fn .. "("..compare_numbers(k,val,xRule.OPERATOR.LESS_THAN)..") \n"
       elseif (k2 == xRule.OPERATOR.GREATER_THAN) then
-        str_fn = str_fn .. "("..k.." > "..val..") \n"
+        str_fn = str_fn .. "("..compare_numbers(k,val,xRule.OPERATOR.GREATER_THAN)..") \n"
+        ]]
       elseif (k2 == xRule.OPERATOR.BETWEEN) then
-        str_fn = str_fn .. "("..k.." >= "..val[1]..") and ("..k.." <= "..val[2]..") \n"
+        str_fn = str_fn 
+          .. "("
+          .. "compare_numbers("..k..","..val[1]..",'"..xRule.OPERATOR.LESS_THAN_OR_EQUAL_TO.."',"..precision..") and "
+          .. "compare_numbers("..k..","..val[2]..",'"..xRule.OPERATOR.GREATER_THAN_OR_EQUAL_TO.."',"..precision..")"
+          .. ") \n"
       else
-        error("Unknown operator")
+        -- TODO confirm that k2 is found in xRule.OPERATOR
+        --error("Unknown operator")
+        str_fn = str_fn .. "(compare_numbers("..k..","..val..",'"..k2.."',"..precision..")) \n"
+
       end
       count = count+1
     end

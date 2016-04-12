@@ -35,7 +35,6 @@ end
 
 
 function vScrollbar:__init(...)
-  TRACE("vScrollbar:__init()")
 
   local args = vLib.unpack_args(...)
 
@@ -88,7 +87,6 @@ end
 --------------------------------------------------------------------------------
 
 function vScrollbar:build()
-  TRACE("vScrollbar:build()")
 
   local vb = self.vb
 
@@ -153,7 +151,6 @@ end
 --------------------------------------------------------------------------------
 
 function vScrollbar:set_width(val)
-  TRACE("vScrollbar:set_width(val)",val)
 
   self.track.width = val
   self.bt1.width = val
@@ -166,7 +163,6 @@ end
 --------------------------------------------------------------------------------
 
 function vScrollbar:set_height(val)
-  TRACE("vScrollbar:set_height(val)",val)
 
   local track_h = val
   if (self.button_layout ~= vScrollbar.BUTTON_LAYOUT.NONE) then
@@ -191,7 +187,6 @@ end
 --------------------------------------------------------------------------------
 
 function vScrollbar:set_button_height(val)
-  TRACE("vScrollbar:disable()")
 
   self._button_height = val
   if self.bt1 then
@@ -212,7 +207,6 @@ end
 --------------------------------------------------------------------------------
 
 function vScrollbar:set_position(num)
-  TRACE("vScrollbar:set_position(num)",num)
 
   self._position = math.max(0,math.min(1,num))
   self.track.value = flip(self._position)
@@ -226,7 +220,6 @@ end
 --------------------------------------------------------------------------------
 
 function vScrollbar:on_arrow_up()
-  TRACE("vScrollbar:on_arrow_up()")
 
   local step_increment = 1 / self.step_count
   local pos = self._position - (step_increment*self.step_size)
@@ -238,7 +231,6 @@ end
 --------------------------------------------------------------------------------
 
 function vScrollbar:on_arrow_down()
-  TRACE("vScrollbar:on_arrow_down()")
 
   local step_increment = 1 / self.step_count
   local pos = self._position + (step_increment*self.step_size)
@@ -250,7 +242,6 @@ end
 --------------------------------------------------------------------------------
 
 function vScrollbar:on_track_change()
-  TRACE("vScrollbar:on_track_change()")
 
   self._position = flip(self.track.value)
 
@@ -263,7 +254,6 @@ end
 --------------------------------------------------------------------------------
 
 function vScrollbar:set_active(val)
-  TRACE("vScrollbar:disable()")
 
   self.track.visible = val
   --self.track.active = val
@@ -278,7 +268,6 @@ end
 
 
 function vScrollbar:set_index(idx)
-  TRACE("vScrollbar:set_index(idx)",idx)
 
   local val = idx/self.step_count
   self:set_position(val)
@@ -286,7 +275,6 @@ function vScrollbar:set_index(idx)
 end
 
 function vScrollbar:get_index()
-  TRACE("vScrollbar:get_index()")
   
   local inc = 1 / self.step_count
   return math.max(0,math.floor((self._position/inc)+0.5))

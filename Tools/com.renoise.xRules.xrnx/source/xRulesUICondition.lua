@@ -23,7 +23,6 @@ function xRulesUICondition:__init(...)
   self.ui = args.ui
   self.xrule = args.xrule
   self.editor = args.editor
-
   
   self.row_idx = nil
   self.aspect = nil
@@ -43,7 +42,6 @@ end
 -- @return view
 
 function xRulesUICondition:build_condition_row(row_idx,def,logic_label)
-  TRACE("xRulesUICondition:build_condition_row(row_idx,def,logic_label)",row_idx,def,logic_label)
 
   self.row_idx = row_idx
 
@@ -100,8 +98,8 @@ function xRulesUICondition:build_condition_row(row_idx,def,logic_label)
   }
 
   -- for aspects that support only equal/not equal operators
+  -- @param items, table<string> - show as popup (else text input)
   local create_type_row = function(items)
-    TRACE("create_type_row - self.last_msg_type",self.editor.last_msg_type)
 
     -- refactor into xRule "fix"
     local valid_operator = self:get_valid_operator(self.aspect,self.operator)
@@ -110,10 +108,10 @@ function xRulesUICondition:build_condition_row(row_idx,def,logic_label)
       self:change_operator(valid_operator,true)
     end
 
-    return vb:row{
-      vb_aspect_chooser,
-      create_operator_chooser(xRulesUI.TYPE_OPERATOR_ITEMS,valid_operator),
-      vb:popup{
+    local vb_control = nil
+    if items then
+      -- string values with predefined choices
+      vb_control = vb:popup{
         tooltip = "Choose a value",
         items = items,
         value = table.find(items,tostring(self.value)),
@@ -122,7 +120,24 @@ function xRulesUICondition:build_condition_row(row_idx,def,logic_label)
         notifier = function(idx)
           self:change_value(items[idx])
         end
-      },
+      }
+    else  
+      -- freely editable string values 
+      vb_control = vb:textfield{
+        tooltip = "Enter a value",
+        value = tostring(self.value),
+        height = xRulesUI.CONTROL_H,
+        width = xRulesUI.VALUE_POPUP_W,
+        notifier = function(str)
+          self:change_value(str)
+        end
+      }
+    end
+
+    return vb:row{
+      vb_aspect_chooser,
+      create_operator_chooser(xRulesUI.TYPE_OPERATOR_ITEMS,valid_operator),
+      vb_control,
       vb_remove_condition_bt,
     }
 
@@ -130,7 +145,6 @@ function xRulesUICondition:build_condition_row(row_idx,def,logic_label)
 
   -- for aspects that support the full range of operators
   local create_value_row = function(items,val_min,val_max)
-    TRACE("create_value_row",items,val_min,val_max)
 
     local use_popup = type(items)=="table" 
     local val = self.value
@@ -148,41 +162,76 @@ function xRulesUICondition:build_condition_row(row_idx,def,logic_label)
       xLib.clamp_value(val,val_min,val_max)
     end
 
-    -- custom number/string converters 
-    local val_idx = xRule.get_value_index(self.aspect)
-    local fn_tostring,fn_tonumber = 
-      xRulesUIEditor.get_custom_converters(self.editor.last_msg_type,val_idx)
+    if self.editor.last_osc_type 
+      and self.editor.last_osc_type == xOscValue.TAG.FLOAT
+    then
 
+      self.vb_condition_valuebox1 = vb:valuefield{
+        tooltip = "Specify a value",
+        value = is_between_operator and val[1] or val,
+        min = val_min,
+        max = val_max,
+        --tostring = fn_tostring,
+        --tonumber = fn_tonumber,
+        visible = valuebox_visible,
+        height = xRulesUI.CONTROL_H,
+        width = xRulesUI.VALUEBOX_W,
+        notifier = function(val)
+          self:change_value(val,is_between_operator and 1 or nil,true)
+        end
+      }
+      self.vb_condition_valuebox2 = vb:valuefield{
+        tooltip = "Specify a value",
+        visible = valuebox2_visible,
+        value = is_between_operator and val[2] or val,
+        min = val_min,
+        max = val_max,
+        --tostring = fn_tostring,
+        --tonumber = fn_tonumber,
+        height = xRulesUI.CONTROL_H,
+        width = xRulesUI.VALUEBOX_W,
+        notifier = function(val)
+          self:change_value(val,is_between_operator and 2 or nil,true)
+        end
+      }
 
-    self.vb_condition_valuebox1 = vb:valuebox{
-      tooltip = "Specify a value",
-      value = is_between_operator and val[1] or val,
-      min = val_min,
-      max = val_max,
-      tostring = fn_tostring,
-      tonumber = fn_tonumber,
-      visible = valuebox_visible,
-      height = xRulesUI.CONTROL_H,
-      width = xRulesUI.VALUEBOX_W,
-      notifier = function(val)
-        self:change_value(val,is_between_operator and 1 or nil,true)
-      end
-    }
+    else
 
-    self.vb_condition_valuebox2 = vb:valuebox{
-      tooltip = "Specify a value",
-      visible = valuebox2_visible,
-      value = is_between_operator and val[2] or val,
-      min = val_min,
-      max = val_max,
-      tostring = fn_tostring,
-      tonumber = fn_tonumber,
-      height = xRulesUI.CONTROL_H,
-      width = xRulesUI.VALUEBOX_W,
-      notifier = function(val)
-        self:change_value(val,is_between_operator and 2 or nil,true)
-      end
-    }
+      -- custom number/string converters 
+      local val_idx = xRule.get_value_index(self.aspect)
+      local fn_tostring,fn_tonumber = 
+        xRulesUIEditor.get_custom_converters(self.editor.last_msg_type,val_idx)
+
+      self.vb_condition_valuebox1 = vb:valuebox{
+        tooltip = "Specify a value",
+        value = is_between_operator and val[1] or val,
+        min = val_min,
+        max = val_max,
+        tostring = fn_tostring,
+        tonumber = fn_tonumber,
+        visible = valuebox_visible,
+        height = xRulesUI.CONTROL_H,
+        width = xRulesUI.VALUEBOX_W,
+        notifier = function(val)
+          self:change_value(val,is_between_operator and 1 or nil,true)
+        end
+      }
+
+      self.vb_condition_valuebox2 = vb:valuebox{
+        tooltip = "Specify a value",
+        visible = valuebox2_visible,
+        value = is_between_operator and val[2] or val,
+        min = val_min,
+        max = val_max,
+        tostring = fn_tostring,
+        tonumber = fn_tonumber,
+        height = xRulesUI.CONTROL_H,
+        width = xRulesUI.VALUEBOX_W,
+        notifier = function(val)
+          self:change_value(val,is_between_operator and 2 or nil,true)
+        end
+      }
+    end
 
     return vb:row{
       vb_aspect_chooser,
@@ -266,17 +315,50 @@ function xRulesUICondition:build_condition_row(row_idx,def,logic_label)
     end,
   }
 
+  -- provide context, depending on message type
+  local contextual_aspect,idx = self.editor:get_contextual_aspect(self.aspect)
+  --print(">>> contextual_aspect,idx",contextual_aspect,idx)
+  if (self.aspect == xRule.ASPECT.MESSAGE_TYPE) then
+    self.editor.last_msg_type = self.value
+    --print(">>> last_msg_type",self.editor.last_msg_type)
+  elseif contextual_aspect and (contextual_aspect:sub(1,1) == "$") then
+    -- osc message (beginning with $ sign)
+    -- check if we are expecting a string value (osc pattern)
+    local osc_patt = self.xrule.osc_pattern
+    --print("osc_patt",osc_patt)
+    --print("osc_patt.complete",osc_patt.complete)
+    --print("osc_patt.arguments",rprint(osc_patt.arguments))
+    if osc_patt.complete then
+      if (osc_patt.arguments[idx]) then
+        self.editor.last_osc_type = osc_patt.arguments[idx].tag
+        --print(">>> last_osc_type",self.editor.last_osc_type)
+      end
+    end
+  end 
+
   -- build active values, assign default value
   if self.editor.active_value_count then
     for k = 1, self.editor.active_value_count do
       local str_label = ("VALUE_%X"):format(k)
-      --print("str_label",str_label)
-      aspect_views[xRule.ASPECT[str_label]] = function()
-        -- TODO assign min/max based on message context
-        local val_min = 0
-        local val_max = 16383
-        return create_value_row(xRule.ASPECT_DEFAULTS[str_label],val_min,val_max)
+      --print(">>> str_label",str_label)
+      --print(">>> self.editor.last_osc_type",self.editor.last_osc_type)
+
+      if self.editor.last_osc_type 
+        and self.editor.last_osc_type == xOscValue.TAG.STRING
+      then      
+        aspect_views[xRule.ASPECT[str_label]] = function()       
+          return create_type_row()
+        end
+      else 
+        -- numeric value (float,integer,number)
+        aspect_views[xRule.ASPECT[str_label]] = function()
+          -- TODO assign min/max based on message context
+          local val_min = 0
+          local val_max = 16383
+          return create_value_row(xRule.ASPECT_DEFAULTS[str_label],val_min,val_max)
+        end
       end
+
     end
   end
 
@@ -316,11 +398,28 @@ function xRulesUICondition:build_condition_row(row_idx,def,logic_label)
       aspect_views[self.aspect]()
     }
 
+    --[[
     -- provide context, depending on message type
+    local contextual_aspect,idx = self.editor:get_contextual_aspect(self.aspect)
+    print(">>> contextual_aspect,idx",contextual_aspect,idx)
     if (self.aspect == xRule.ASPECT.MESSAGE_TYPE) then
       self.editor.last_msg_type = self.value
-      --print(">>> last_msg_type",self.editor.last_msg_type)
+      print(">>> last_msg_type",self.editor.last_msg_type)
+    elseif contextual_aspect and (contextual_aspect:sub(1,1) == "$") then
+      -- osc message (beginning with $ sign)
+      -- check if we are expecting a string value (osc pattern)
+      local osc_patt = self.xrule.osc_pattern
+      print("osc_patt",osc_patt)
+      print("osc_patt.complete",osc_patt.complete)
+      print("osc_patt.arguments",rprint(osc_patt.arguments))
+      if osc_patt.complete then
+        if (osc_patt.arguments[idx]) then
+          self.editor.last_osc_type = osc_patt.arguments[idx].tag
+          print(">>> last_osc_type",self.editor.last_osc_type)
+        end
+      end
     end 
+    ]]
 
     return view
   end
@@ -331,7 +430,6 @@ end
 -- change logic: update, rebuild rule
 
 function xRulesUICondition:change_logic()
-  TRACE("xRulesUICondition:change_logic()")
 
   local xrule = self.xrule
   -- any logic would be defined in the previous entry
@@ -361,7 +459,6 @@ end
 -- e.g. MESSAGE_TYPE does not support "less than"
 
 function xRulesUICondition:get_valid_operator(aspect,operator) 
-  TRACE("xRulesUICondition:get_valid_operator(aspect,operator)",aspect,operator)
 
   if table.find(xRule.ASPECT_TYPE_OPERATORS,aspect) and
     not table.find(xRule.TYPE_OPERATORS,operator)
@@ -377,7 +474,6 @@ end
 -- @param operator, xRule.OPERATOR
 
 function xRulesUICondition:change_operator_assist(value,operator)
-  TRACE("xRulesUICondition:change_operator_assist(value,operator)",value,operator)
 
   --print("value",rprint(value))
 
@@ -400,7 +496,6 @@ end
 -- change aspect: update, rebuild rule
 
 function xRulesUICondition:change_aspect(new_aspect)
-  TRACE("xRulesUICondition:change_aspect(new_aspect)",new_aspect)
 
   local xrule = self.xrule
   local new_condition = {[new_aspect] = {}}
@@ -441,7 +536,6 @@ end
 -- @param only_set: do not compile, build
 
 function xRulesUICondition:change_operator(new_operator,only_set)
-  TRACE("xRulesUICondition:change_operator(new_operator,only_set)",new_operator,only_set)
 
   local xrule = self.xrule
   local new_condition = {}
@@ -471,7 +565,6 @@ end
 -- @param val_index, 1 or 2
 
 function xRulesUICondition:between_value_assist(val,old_val,val_index)
-  TRACE("xRulesUICondition:between_value_assist(val,old_val,val_index)",val,old_val,val_index)
 
   if val_index then
     if (val_index == 1) then
@@ -498,7 +591,6 @@ end
 -- @param only_set (boolean), 
 
 function xRulesUICondition:change_value(val,val_index,only_set)
-  TRACE("xRulesUICondition:change_value",val,val_index,only_set)
 
   local xrule = self.xrule
   local xcondition = xrule.conditions[self.row_idx]
@@ -508,7 +600,13 @@ function xRulesUICondition:change_value(val,val_index,only_set)
       if val_index then  
         val = self:between_value_assist(val,old_val,val_index)
       else
-        val = xRulesUIEditor.change_value_assist(val,self.aspect,"aspect")
+        if self.editor.last_osc_type 
+          and self.editor.last_osc_type == xOscValue.TAG.STRING
+        then
+          -- leave as-is
+        else
+          val = xRulesUIEditor.change_value_assist(val,self.aspect,"aspect")
+        end
       end
       xcondition[k][k2] = val
     end
@@ -540,7 +638,6 @@ end
 --------------------------------------------------------------------------------
 
 function xRulesUICondition:remove_condition()
-  TRACE("xRulesUICondition:remove_condition()")
 
   local str_msg = "Are you sure you want to remove this condition?"
   local choice = renoise.app():show_prompt("Remove condition", str_msg, {"OK","Cancel"})
@@ -567,7 +664,6 @@ end
 --------------------------------------------------------------------------------
 
 function xRulesUICondition:change_sysex_value(val)
-  TRACE("xRulesUICondition:change_sysex_value(val)",val)
 
   local success,err = self.editor.validate_sysex_string(val)
   if success then

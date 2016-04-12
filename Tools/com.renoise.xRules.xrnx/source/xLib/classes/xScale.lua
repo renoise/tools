@@ -77,7 +77,6 @@ end
 -- @param scale_key (int), the scale to apply (see xScale.SCALES) 
 
 function xScale.restrict_to_scale(note_value,scale_idx,scale_key)
-  TRACE("xScale.restrict_to_scale(note_value,scale_idx,scale_key)",note_value,scale_idx,scale_key)
 
   if (note_value > 119) then
     return note_value

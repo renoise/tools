@@ -20,7 +20,6 @@ class 'xReflection'
 -- @return bool, true when copied
 
 function xReflection.copy_object_properties(from_class,to_class,level)
-  TRACE("xReflection.copy_object_properties(from_class,to_class)",from_class,to_class)
 
   if (type(from_class) ~= type(to_class))then
     LOG("*** Classes need to be of an identical type:",
@@ -64,7 +63,6 @@ end
 -- cast variable as basic datatype (boolean,number,string)
 
 function xReflection.cast_value(val,val_type)
-  TRACE("xReflection.cast_value(val,val_type)",val,val_type)
 
   if (val_type == "boolean") then
     if (type(val) == "boolean") then
@@ -102,7 +100,6 @@ end
 -- @return table
 
 function xReflection.get_object_properties(class,level)
-  TRACE("xReflection.get_object_properties(class,level)",class,level)
 
   local level = level or 0
   local max_level = 1
@@ -164,7 +161,6 @@ end
 -- @return boolean, string (error message when failed)
 
 function xReflection.set_property(str,value)
-  TRACE("xReflection.set_property(str,value)",str,value)
 
   -- wrap strings in quotes
   value = (type(value)=="string") and '"'..value..'"' or value
@@ -188,7 +184,6 @@ end
 -- @return boolean, string (error message when failed)
 
 function xReflection.is_valid_identifier(str)
-  TRACE("xReflection.is_valid_identifier(str)",str)
 
   if string.match(str,"^%d+") then
     return false, ("'%s' is not a valid identifier (avoid using number as the first character)"):format(str)

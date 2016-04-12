@@ -27,7 +27,6 @@ xFilesystem.FILETYPE = {
 -- @return string, extension
 
 function xFilesystem.get_path_parts(file_path)
-  TRACE("xFilesystem.get_path_parts(file_path)",file_path)
 
   xFilesystem.assert_string(file_path,"file_path")
 
@@ -53,7 +52,6 @@ end
 -- @return string or nil
 
 function xFilesystem.get_raw_filename(file_path)
-  TRACE("xFilesystem.get_raw_filename(file_path)",file_path)
 
   xFilesystem.assert_string(file_path,"file_path")
 
@@ -100,7 +98,6 @@ end
 -- @return int, error code
 
 function xFilesystem.get_parent_directory(file_path)
-  TRACE("xFilesystem.get_parent_directory(file_path)",file_path)
 
   xFilesystem.assert_string(file_path,"file_path")
 
@@ -123,7 +120,6 @@ end
 -- @return boolean,string
 
 function xFilesystem.copy_file(file_in,file_out)
-  TRACE("xFilesystem.copy_file(file_in,file_out)",file_in,file_out)
 
   local infile = io.open(file_in, "r")
   local instr = infile:read("*a")
@@ -141,7 +137,6 @@ end
 -- @param file_path (string)
 
 function xFilesystem.ensure_unique_filename(file_path)
-  TRACE("xFilesystem.ensure_unique_filename(file_path)",file_path)
 
   xFilesystem.assert_string(file_path,"file_path")
 
@@ -207,7 +202,6 @@ end
 -- @return string, error message when failed
 
 function xFilesystem.makedir(file_path)
-  TRACE("xFilesystem.makedir(file_path)",file_path)
 
   xFilesystem.assert_string(file_path,"file_path")
 
@@ -248,7 +242,6 @@ end
 --    "merge" - for existing folders
 
 function xFilesystem.rename(old_f,new_f)
-  TRACE("xFilesystem.rename(old_f,new_f)",old_f,new_f)
 
   xFilesystem.assert_string(old_f,"old_f")
   xFilesystem.assert_string(new_f,"new_f")
@@ -266,7 +259,6 @@ end
 -- @return string, error message when failed
 
 function xFilesystem.rmdir(folder_path)
-  TRACE("xFilesystem.rmdir(folder_path)",folder_path)
 
   xFilesystem.assert_string(folder_path,"folder_path")
 
@@ -299,7 +291,6 @@ end
 -- @return bool,string
 
 function xFilesystem.validate_filename(file_path)
-  TRACE("xFilesystem.validate_filename(file_path)",file_path)
 
   xFilesystem.assert_string(file_path,"file_path")
 
@@ -322,7 +313,6 @@ end
 -- @return string
 
 function xFilesystem.unixslashes(file_path)
-  TRACE("xFilesystem.unixslashes(file_path)",file_path)
 
   local str = file_path:gsub("\\","/")
   return str:gsub("/+","/")
@@ -335,7 +325,6 @@ end
 -- @return string
 
 function xFilesystem.sanitize_filename(file_path)
-  TRACE("xFilesystem.sanitize_filename(file_path)",file_path)
 
   xFilesystem.assert_string(file_path,"file_path")
 
@@ -351,7 +340,6 @@ end
 -- @return string
 
 function xFilesystem.file_add_extension(file_path,extension)
-  TRACE("xFilesystem.file_add_extension(file_path,extension)",file_path,extension)
 
   xFilesystem.assert_string(file_path,"file_path")
   xFilesystem.assert_string(extension,"extension")
@@ -373,7 +361,6 @@ end
 -- @return string
 
 function xFilesystem.file_strip_extension(file_path,extension)
-  TRACE("xFilesystem.file_strip_extension(file_path,extension)",file_path,extension)
 
   xFilesystem.assert_string(file_path,"file_path")
   xFilesystem.assert_string(extension,"extension")
@@ -405,7 +392,6 @@ end
 -- load string from disk
 
 function xFilesystem.load_string(file_path)
-  TRACE("xFilesystem.load_string(file_path)",file_path)
 
   local handle,err = io.open(file_path,"r")
   if not handle then
@@ -437,7 +423,6 @@ end
 -- @return string, error message when failed
 
 function xFilesystem.write_string_to_file(file_path,str)
-  TRACE("xFilesystem.write_string_to_file(file_path,str)",file_path,#str)
   --print("file_path",file_path)
 
   xFilesystem.assert_string(file_path,"file_path")
@@ -475,7 +460,6 @@ end
 -- @param level (int) 
 
 function xFilesystem.recurse(str_path,callback_fn,file_ext,level)
-  TRACE("xFilesystem.recurse(str_path,callback_fn,file_ext,level)",str_path,callback_fn,file_ext,level)
 
   if not file_ext then
     file_ext = {"*.*"}

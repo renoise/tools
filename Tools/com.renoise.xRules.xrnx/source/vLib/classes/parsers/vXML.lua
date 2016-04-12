@@ -43,7 +43,6 @@ end
 -- recursively parse the slaxml and return a vLib-friendly representation 
 
 function vXML:parse(xml_doc)
-  TRACE('vXML:parse(xml_doc)',xml_doc.name)
 
   local function is_single_element(t)
     local depth = 0 
@@ -82,7 +81,6 @@ end
 --- load and parse XML from disk
 
 function vXML:load_and_parse(file_path)
-  TRACE('vXML:parse_to_dom(str_xml)')
 
   local str_xml = io.open(file_path):read('*all')
   local xml_doc = SLAXML:dom(str_xml,{ simple=true,stripWhitespace=true })
@@ -98,7 +96,6 @@ end
 --- retrieve named attribute
 
 function vXML:get_attribute(doc,attr_name)
-  TRACE('vXML:get_attribute(doc)')
 
   if not table.is_empty(doc.attr) then
     for k,v in ipairs(doc.attr) do
@@ -114,7 +111,6 @@ end
 --- retrieve value of first child
 
 function vXML:get_first_value(doc,attr_name)
-  TRACE('vXML:get_first_value(doc)')
 
   for k,v in pairs(doc.kids[1]) do
     if (k == "value") then

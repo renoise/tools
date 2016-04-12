@@ -13,7 +13,15 @@
 
 class 'xRulesUIEditor'
 
+xRulesUIEditor.TAB = {
+  DESCRIPTION = 1,
+  VOICE_MGR = 2,
+  MIDI_ENABLED = 3,
+  OSC_ENABLED = 4,
+}
+
 --------------------------------------------------------------------------------
+--- constructor, called whenever we refresh the rule editor 
 
 function xRulesUIEditor:__init(...)
 
@@ -25,11 +33,40 @@ function xRulesUIEditor:__init(...)
   self.xrules = args.ui.owner.xrules
   self.xrule = args.xrule
 
-  -- xMidiMessage.TYPE
+  -- xMidiMessage.TYPE - set as we encounter MIDI message aspects
   self.last_msg_type = nil
+
+  -- xOscValue.tag - set as we encounter OSC message aspects
+  self.last_osc_type = nil
 
   -- int, how many values to display (set when building rule)
   self.active_value_count = #xRule.VALUES
+
+  -- viewbuilder elements...
+  self.vb_revert_ruleset_button = nil
+  self.vb_save_ruleset_button = nil
+  self.vb_osc_input_pattern = nil
+  self.vb_osc_output_pattern = nil
+  self.vb_osc_input_warning = nil
+  self.vb_osc_output_warning = nil
+  self.vb_rule_description_button = nil
+  self.vb_rule_description_input = nil
+  self.vb_rule_description_row = nil
+  self.vb_rule_description_toggle = nil
+  self.vb_osc_options = nil
+  self.vb_voice_options = nil
+  self.vb_toggle_options_button = nil
+  self.vb_rule_options_midi_row = nil
+  self.vb_rule_options_switch = nil
+  self.vb_rule_options_tab_description = nil
+  self.vb_rule_options_tab_voice = nil
+  self.vb_rule_options_tab_midi = nil
+  self.vb_rule_options_tab_osc = nil
+  self.vb_rule_options = nil
+  self.vb_action_label_elm = nil
+  self.vb_action_buttons = nil
+  self.vb_action_missing_output = nil
+  self.vb_rule = nil
 
 end
 
@@ -39,7 +76,6 @@ end
 -- @param xrule (xRule)
 
 function xRulesUIEditor:build_rule()
-  TRACE("xRulesUIEditor:build_rule()")
 
   local vb = self.vb
 
@@ -350,23 +386,25 @@ function xRulesUIEditor:build_rule()
     end
   }
 
+  self.vb_rule_options_switch = vb:switch{
+    items = {
+      "Description",
+      "Voice Manager",
+      "MIDI Input",
+      "OSC Features",
+    },
+    value = self.ui.rule_options_tab_index,
+    width = option_row_w,
+    notifier = function(idx)
+      self:set_rule_options_tab(idx)
+    end
+  }
+
   self.vb_rule_options = vb:column{
     vb:space{
       height = 4,
     },
-    vb:switch{
-      items = {
-        "Description",
-        "Voice Manager",
-        "MIDI Input",
-        "OSC Features",
-      },
-      value = self.ui.rule_options_tab_index,
-      width = option_row_w,
-      notifier = function(idx)
-        self:set_rule_options_tab(idx)
-      end
-    },
+    self.vb_rule_options_switch,
     self.vb_rule_options_tab_description,
     self.vb_rule_options_tab_voice,
     self.vb_rule_options_tab_midi,
@@ -710,13 +748,13 @@ function xRulesUIEditor:set_rule_options_tab(idx)
   self.vb_rule_options_tab_voice.visible = false
   self.vb_rule_options_tab_midi.visible = false
   self.vb_rule_options_tab_osc.visible = false
-  if (idx == 1) then
+  if (idx == xRulesUIEditor.TAB.DESCRIPTION) then
     self.vb_rule_options_tab_description.visible = true
-  elseif (idx == 2) then
+  elseif (idx == xRulesUIEditor.TAB.VOICEMGR_ENABLED) then
     self.vb_rule_options_tab_voice.visible = true
-  elseif (idx == 3) then
+  elseif (idx == xRulesUIEditor.TAB.MIDI_ENABLED) then
     self.vb_rule_options_tab_midi.visible = true
-  elseif (idx == 4) then
+  elseif (idx == xRulesUIEditor.TAB.OSC_ENABLED) then
     self.vb_rule_options_tab_osc.visible = true
   end
 
@@ -730,10 +768,23 @@ end
 --- Hide the dialog
 
 function xRulesUIEditor:toggle_options()
-  TRACE("xRulesUIEditor:toggle_options()")
 
   self.ui.show_rule_options = not self.ui.show_rule_options  
   self.ui._update_rule_options_requested = true
+
+  -- select the first "defined" tab 
+  local xruleset = self.xrules.selected_ruleset
+  local has_description = (xruleset.description ~= "")
+  if has_description then
+    self:set_rule_options_tab(xRulesUIEditor.TAB.DESCRIPTION)
+  elseif xruleset.manage_voices then
+    self:set_rule_options_tab(xRulesUIEditor.TAB.VOICEMGR_ENABLED)
+  elseif self.xrule.midi_enabled then
+    self:set_rule_options_tab(xRulesUIEditor.TAB.MIDI_ENABLED)
+  elseif xruleset.osc_enabled then
+    self:set_rule_options_tab(xRulesUIEditor.TAB.OSC_ENABLED)
+  end
+
 
 end
 
@@ -742,7 +793,6 @@ end
 -- update the options for this rule
 
 function xRulesUIEditor:update_rule_options()
-  TRACE("xRulesUIEditor:update_rule_options()")
 
   self.vb_rule_options.visible = self.ui.show_rule_options
   
@@ -781,6 +831,7 @@ function xRulesUIEditor:update_rule_options()
   self.vb_toggle_options_button.text = ("More %s"):format(self.ui.show_rule_options and
     xRulesUI.TXT_ARROW_UP or xRulesUI.TXT_ARROW_DOWN)
 
+  self.vb_rule_options_switch.value = self.ui.rule_options_tab_index
 
 end
 
@@ -789,7 +840,6 @@ end
 -- @param row_idx (int)
 
 function xRulesUIEditor:add_action(row_idx)
-  TRACE("xRulesUIEditor:add_action(row_idx)",row_idx)
 
   local xrule = self.xrule
   if row_idx then
@@ -843,7 +893,6 @@ end
 -- @return table, list of names
 
 function xRulesUIEditor:get_contextual_labels()
-  TRACE("xRulesUIEditor:get_contextual_labels")
 
   local midi_labels,osc_labels 
   --print("self.last_msg_type",self.last_msg_type)
@@ -875,6 +924,19 @@ function xRulesUIEditor:get_contextual_labels()
 end
 
 --------------------------------------------------------------------------------
+-- provided with a string (e.g. "value_1"), return the contextual value
+-- @param aspect (string)
+-- @return string,int
+
+function xRulesUIEditor:get_contextual_aspect(aspect)
+
+  local context_labels = self:get_contextual_labels()
+  local value_idx = xRule.get_value_index(aspect)
+  return context_labels[value_idx],value_idx
+
+end
+
+--------------------------------------------------------------------------------
 -- go through, and replace 'certain values' in a table of strings
 -- we look for a name such as "value_1" or "decrease_value_1", and replace
 -- the "value_x" part with the contextual name
@@ -882,7 +944,6 @@ end
 -- @return table
 
 function xRulesUIEditor:add_context(t)
-  TRACE("xRulesUIEditor:add_context()")
 
   local rslt = table.copy(t)
   local labels = self:get_contextual_labels()
@@ -946,7 +1007,6 @@ end
 -- @param basetype, table 
 
 function xRulesUIEditor.change_value_assist(val,key,val_type)
-  TRACE("xRulesUIEditor.change_value_assist",val,key,val_type)
 
   local basetypes
   if (val_type == "aspect") then
@@ -959,6 +1019,7 @@ function xRulesUIEditor.change_value_assist(val,key,val_type)
 
   local new_type = basetypes[string.upper(key)]
   new_type = new_type and new_type or "number"
+  --print("new_type",new_type)
   local untranslateable = xRulesUI.ACTION_UNTRANSLATEABLE[string.upper(key)]
   if (val_type == "action") and untranslateable then
     return untranslateable
@@ -990,7 +1051,6 @@ end
 -- @return function,function
 
 function xRulesUIEditor.get_custom_converters(msg_type,value_idx)
-  TRACE("xRulesUIEditor.get_custom_converters(msg_type,value_idx)",msg_type,value_idx)
 
   local fn_tostring = nil
   local fn_tonumber = nil
@@ -1018,7 +1078,6 @@ end
 -- @return function,function
 
 function xRulesUIEditor.get_maximum_value(msg_type,value_idx)
-  TRACE("xRulesUIEditor.get_maximum_value(msg_type,value_idx)",msg_type,value_idx)
 
   if (msg_type == xMidiMessage.TYPE.NOTE_ON) 
     or (msg_type == xMidiMessage.TYPE.NOTE_OFF)
@@ -1041,7 +1100,6 @@ end
 -- @return boolean,string
 
 function xRulesUIEditor.validate_sysex_string(str)
-  TRACE("xRulesUIEditor.validate_sysex_string(str)",str)
 
   local t = xLib.split(str," ")
   if (t[1] ~= "F0") then
@@ -1077,7 +1135,6 @@ end
 -- @return table<string>
 
 function xRulesUIEditor:inject_port_name(devices,str_name)
-  TRACE("xRulesUIEditor:inject_port_names(devices,str_name)",devices,str_name)
 
   if not str_name then
     return devices -- why do we end up here ?? 

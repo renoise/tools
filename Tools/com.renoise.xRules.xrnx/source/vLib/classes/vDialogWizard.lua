@@ -21,7 +21,6 @@ vDialogWizard
 class 'vDialogWizard' (vDialog)
 
 function vDialogWizard:__init()
-  TRACE("vDialogWizard:__init()")
 
   self.dialog_page = nil
   self.dialog_option = nil

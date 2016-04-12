@@ -44,7 +44,6 @@ end
 -- @param patt_num_lines (int), length of the playpos pattern
 
 function xLineAutomation:do_write(sequence,line,ptrack_auto,patt_num_lines)
-  TRACE("xLineAutomation:do_write(sequence,line,ptrack_auto,patt_num_lines)",
     sequence,line,ptrack_auto,patt_num_lines)
   
   assert(ptrack_auto,"Required argument 'ptrack_auto' not defined")

@@ -43,7 +43,6 @@ end
 -- @return view
 
 function xRulesUIAction:build_action_row(row_idx,def,label)
-  TRACE("xRulesUIAction:build_action_row(row_idx,def,label)",row_idx,def,label)
 
   self.row_idx = row_idx
   for k,v in pairs(def) do
@@ -559,7 +558,6 @@ end
 -- @param action, xRule.ACTIONS
 
 function xRulesUIAction:change_action_key(action)
-  TRACE("xRulesUIAction:change_action_key",action)
 
   local xrule = self.xrule
   local new_action = {}
@@ -577,7 +575,6 @@ end
 --------------------------------------------------------------------------------
 
 function xRulesUIAction:change_value(val)
-  TRACE("xRulesUIAction:change_value",val)
 
   local xrule = self.xrule
   for k,v in pairs(xrule.actions[self.row_idx]) do
@@ -593,7 +590,6 @@ end
 --------------------------------------------------------------------------------
 
 function xRulesUIAction:change_function_value(val)
-  TRACE("xRulesUIAction:change_function_value(val)",val)
 
   local xrule = self.xrule
   local success
@@ -611,7 +607,6 @@ end
 --------------------------------------------------------------------------------
 
 function xRulesUIAction:remove_action()
-  TRACE("xRulesUIAction:remove_action()")
 
   local str_msg = "Are you sure you want to remove this action"
   local choice = renoise.app():show_prompt("Remove action", str_msg, {"OK","Cancel"})

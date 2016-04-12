@@ -51,7 +51,6 @@ end
 -- @return int (index)
 
 function vVector.match_by_key_value(t,key,val)
-  TRACE("vVector.match_by_key_value(t,key,val)",t,key,val)
   
   local rslt = table.create()
   for k,v in pairs(t) do
@@ -69,7 +68,6 @@ end
 -- @return int
 
 function vVector.count_checked(t)
-  TRACE("vVector.count_checked(t)",t)
 
   if (table.is_empty(t)) then
     return 0

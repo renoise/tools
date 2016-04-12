@@ -23,7 +23,6 @@ local OSC_LABEL_W = 70
 local OSC_CONTROL_W = 90
 
 function xRulesAppDialogPrefs:__init(ui)
-  TRACE("xRulesAppDialogPrefs:__init()",ui)
 
   vDialog.__init(self)
 
@@ -76,7 +75,6 @@ end
 -- @return int or nil
 
 function xRulesAppDialogPrefs:match_in_list(list,value)
-  TRACE("xRulesAppDialogPrefs:match_in_list(list,value)",list,value)
 
   local matched = false
   for k = 1, #list do
@@ -92,7 +90,6 @@ end
 -- @return renoise.Views.Rack
 
 function xRulesAppDialogPrefs:create_dialog()
-  TRACE("xRulesAppDialogPrefs:create_dialog()")
 
   local vb = self.vb
   local vtable
@@ -105,7 +102,7 @@ function xRulesAppDialogPrefs:create_dialog()
   local automation_follow_items = xLib.stringify_table(xAutomation.FOLLOW_MODE)
   local automation_playmode_items = xAutomation.PLAYMODE_NAMES
 
-  print(">>> automation_playmode_items",rprint(automation_playmode_items))
+  --print(">>> automation_playmode_items",rprint(automation_playmode_items))
 
   local content = vb:column{
     margin = 6,
@@ -454,7 +451,7 @@ function xRulesAppDialogPrefs:create_dialog()
             width = OSC_CONTROL_W,
             notifier = function(val)
               local str_val = automation_follow_items[val]
-              print("follow mode",str_val)
+              --print("follow mode",str_val)
               self.prefs.automation_follow_mode.value = str_val
               self.xrules.automation.follow_mode = str_val
             end,
@@ -496,7 +493,7 @@ function xRulesAppDialogPrefs:create_dialog()
             width = OSC_CONTROL_W,
             notifier = function(val)
               local idx = table.find(xAutomation.PLAYMODE_NAMES,automation_playmode_items[val])
-              print("idx",automation_playmode_items[val])
+              --print("idx",automation_playmode_items[val])
               self.prefs.automation_playmode.value = idx
               self.xrules.automation.playmode = idx-1
             end,
@@ -707,7 +704,6 @@ end
 -------------------------------------------------------------------------------
 
 function xRulesAppDialogPrefs:update_profile_switcher()
-  TRACE("xRulesAppDialogPrefs:update_profile_switcher()")
 
   local vb = self.vb
   local xprefs = self.owner.xprefs
@@ -730,7 +726,6 @@ end
 -------------------------------------------------------------------------------
 
 function xRulesAppDialogPrefs:update_dialog()
-  TRACE("xRulesAppDialogPrefs:update_dialog()")
 
   local vb = self.vb
 

@@ -13,7 +13,6 @@ vDialog
 class 'vDialog'
 
 function vDialog:__init()
-  TRACE("vDialog:__init()")
 
   -- renoise.ViewBuilder
   self.vb = renoise.ViewBuilder()
@@ -35,7 +34,6 @@ end
 -- create/re-use existing dialog 
 
 function vDialog:show()
-  TRACE("vDialog:show()")
 
   if not self.dialog or not self.dialog.visible then
     if not self.dialog_content then
@@ -53,7 +51,6 @@ end
 -- @return renoise.Views.Rack
 
 function vDialog:create_dialog()
-  TRACE("vDialog:create_dialog()")
 
   local vb = self.vb
 

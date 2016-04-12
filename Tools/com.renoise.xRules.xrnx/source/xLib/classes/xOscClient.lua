@@ -55,7 +55,6 @@ end
 -- @return string, error message when failed
 
 function xOscClient:create(osc_host,osc_port)
-  TRACE("xOscClient:create(osc_host,osc_port)",osc_host,osc_port)
 
   --assert(osc_host and osc_port,"Expected osc_host and osc_port as arguments")
   if not osc_host and not osc_port then
@@ -85,7 +84,6 @@ end
 -- @param velocity (int), the desired velocity, 0-127
 
 function xOscClient:trigger_instrument(note_on,instr,track,note,velocity)
-  TRACE("xOscClient:trigger_instrument()",note_on,instr,track,note,velocity)
   
   if not self._connection then
     return false
@@ -119,7 +117,6 @@ end
 -- @param t (table), a ready-to-send MIDI message
 
 function xOscClient:trigger_midi(t)
-  TRACE("xOscClient:trigger_midi()",t)
   
   if not self._connection then
     return false

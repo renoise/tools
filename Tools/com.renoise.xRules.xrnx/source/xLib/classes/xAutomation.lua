@@ -143,7 +143,7 @@ function xAutomation:record(track_idx,param,value,playmode)
   end
 
   if (self.playmode ~= xAutomation.PLAYMODE.AUTOMATIC) then
-    print("self.playmode",self.playmode)
+    --print("self.playmode",self.playmode)
     ptrack_auto.playmode = self.playmode
   end
 
@@ -177,7 +177,6 @@ end
 -- @param ptrack_auto (renoise.PatternTrackAutomation)
 
 function xAutomation:clear_range(pos_from,length,ptrack_auto)
-  TRACE("xAutomation:clear_range(pos_from,length,ptrack_auto)",pos_from,length,ptrack_auto)
   
   if rns.transport.playing 
     and (self.write_mode == xAutomation.WRITE_MODE.INTERLEAVE) 

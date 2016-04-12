@@ -33,7 +33,6 @@ xOscDevice.DEFAULT_DEVICE_NAME = "Untitled device"
 --------------------------------------------------------------------------------
 
 function xOscDevice:__init(...)
-  TRACE("xOscDevice:__init(...)")
 
 	local args = xLib.unpack_args(...) 
   --print("args",rprint(args))
@@ -260,7 +259,6 @@ end
 --==============================================================================
 
 function xOscDevice:open()
-  TRACE("xOscDevice:open()")
 
   if self.active then
     self:close()
@@ -310,7 +308,6 @@ end
 --------------------------------------------------------------------------------
 
 function xOscDevice:close()
-  TRACE("xOscDevice:close()")
 
   if (self.client) and (self.client.is_open) then
     self.client:close()
@@ -335,7 +332,6 @@ end
 -- @param messages (table) table to insert unpacked messages into
 
 function xOscDevice:_unpack_messages(message_or_bundle, messages)
-  TRACE("xOscDevice:_unpack_messages()",message_or_bundle)
    
   if (type(message_or_bundle) == "Message") then
     messages:insert(message_or_bundle)
@@ -358,7 +354,6 @@ end
 --- An error happened in the servers background thread (this should not happen)
 
 function xOscDevice:socket_error(error_message)
-  TRACE("xOscDevice:socket_error",error_message)
 
   LOG(("xOscDevice: socket error: '%s'"):format(osc_error))    
 
@@ -386,7 +381,9 @@ function xOscDevice:socket_message(socket, binary_data)
     --print("socket_message - #messages",#messages)
 
     for _,msg in pairs(messages) do
+
       --print("msg.arguments",rprint(msg.arguments))
+
       if self.callback then
 
         -- ignore messages that doesn't match our prefix
@@ -420,7 +417,6 @@ end
 -- @param xmsg, xOscMessage
 
 function xOscDevice:send(xmsg)
-  TRACE("xOscDevice:send(xmsg)",xmsg)
 
   if not self.client or not self.client.is_open then
     LOG("Could not send OSC message - device is not ready")
@@ -457,7 +453,6 @@ end
 --------------------------------------------------------------------------------
 
 function xOscDevice:send_bundle()
-  TRACE("xOscDevice:send_bundle()")
 
   if not self.client or not self.client.is_open then
     LOG("Could not send OSC message - device is not ready")

@@ -66,7 +66,6 @@ vFileBrowser.VIEWS = {
 --------------------------------------------------------------------------------
 
 function vFileBrowser:__init(...)
-  TRACE("vFileBrowser:__init(...)",...)
 
   local args = vLib.unpack_args(...)
 
@@ -364,7 +363,6 @@ end
 --------------------------------------------------------------------------------
 
 function vFileBrowser:build()
-  TRACE("vFileBrowser:build()")
 
   local vb = self.vb
   local prompt_w = 300
@@ -448,7 +446,6 @@ end
 -- return bool
 
 function vFileBrowser:create_path(str)
-  TRACE("vFileBrowser:create_path(str)",str)
   -- TODO proper sanitize of string
   return os.mkdir(str)
 end
@@ -546,7 +543,6 @@ end
 --------------------------------------------------------------------------------
 
 function vFileBrowser:browse_path()
-  TRACE("vFileBrowser:browse_path()")
 
   local str_path = renoise.app():prompt_for_path("Select a folder")
   --print("str_path",str_path)
@@ -559,14 +555,12 @@ end
 --------------------------------------------------------------------------------
 
 function vFileBrowser:refresh()
-  TRACE("vFileBrowser:refresh()")
   self:set_path(self.path_observable.value)
 end
 
 --------------------------------------------------------------------------------
 
 function vFileBrowser:parent_directory()
-  TRACE("vFileBrowser:parent_directory()")
 
   local file_path = xFilesystem.get_parent_directory(self.path_observable.value)
   self:set_path(file_path)
@@ -581,7 +575,6 @@ end
 --
 
 function vFileBrowser:create_directory()
-  TRACE("vFileBrowser:create_directory()")
 
   local vb = self.vb
 
@@ -629,7 +622,6 @@ end
 -- rename the currently selected file (single item)
 
 function vFileBrowser:rename_file()
-  TRACE("vFileBrowser:rename_file()")
 
   local vb = self.vb
 
@@ -669,7 +661,6 @@ end
 --------------------------------------------------------------------------------
 
 function vFileBrowser:delete_files()
-  TRACE("vFileBrowser:delete_files()")
 
   local num_checked_files = self:count_checked()
   if (num_checked_files == 0) then
@@ -694,7 +685,6 @@ end
 -- display the indicated path
 
 function vFileBrowser:set_path(str)
-  TRACE("vFileBrowser:set_path(str)",str)
 
   -- TODO proper sanitize of string
   -- * strip filenames from path
@@ -819,12 +809,10 @@ end
 --------------------------------------------------------------------------------
 
 function vFileBrowser:get_num_rows()
-  TRACE("vTable:get_num_rows()")
   return self._num_rows
 end
 
 function vFileBrowser:set_num_rows(val)
-  TRACE("vTable:set_num_rows(val)",val)
   if self.vtable then
     self.vtable.num_rows = val
   end
@@ -834,12 +822,10 @@ end
 --------------------------------------------------------------------------------
 
 function vFileBrowser:get_file_ext()
-  TRACE("vTable:get_file_ext()")
   return self._file_ext
 end
 
 function vFileBrowser:set_file_ext(val)
-  TRACE("vTable:set_file_ext(val)",val)
   self._file_ext = val
   self:refresh()
 end
@@ -847,12 +833,10 @@ end
 --------------------------------------------------------------------------------
 
 function vFileBrowser:get_file_types()
-  TRACE("vTable:get_file_types()")
   return self._file_types
 end
 
 function vFileBrowser:set_file_types(t)
-  TRACE("vTable:set_file_types(t)",t)
   self._file_types = t
   self:refresh()
 end
@@ -860,12 +844,10 @@ end
 --------------------------------------------------------------------------------
 
 function vFileBrowser:get_show_columns()
-  TRACE("vTable:get_show_columns()")
   return self._show_columns
 end
 
 function vFileBrowser:set_show_columns(t)
-  TRACE("vTable:set_show_columns(t)",t)
   self._show_columns = t
   -- TODO need to rebuild table when defining this value
 end

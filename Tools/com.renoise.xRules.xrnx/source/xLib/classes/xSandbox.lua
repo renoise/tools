@@ -97,6 +97,7 @@ function xSandbox:__init()
 
   local env = {
     assert = _G.assert,
+    error = _G.error,
     ipairs = _G.ipairs,
     loadstring = _G.loadstring,
     math = _G.math,
@@ -161,7 +162,6 @@ end
 --  otherwise you get no feedback if it failed
 
 function xSandbox:set_callback_str(str_fn)
-  TRACE("xSandbox:set_callback_str - ",str_fn)
 
   assert(type(str_fn) == "string", "Expected string as parameter")
 
@@ -226,7 +226,6 @@ end
 -- @return string, error message when failed
 
 function xSandbox:compile()
-  TRACE("xSandbox:compile()")
 
   if (self.callback_str == "") then
     LOG("xSandbox: no function was provided")

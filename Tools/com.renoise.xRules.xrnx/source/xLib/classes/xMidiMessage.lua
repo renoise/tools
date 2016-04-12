@@ -30,6 +30,8 @@ class 'xMidiMessage' (xMessage)
 xMidiMessage.TYPE = {
   SYSEX = "sysex",
   NRPN = "nrpn",
+  NRPN_INCREMENT = "nrpn_increment",
+  NRPN_DECREMENT = "nrpn_decrement",
   NOTE_ON = "note_on",
   NOTE_OFF = "note_off",
   KEY_AFTERTOUCH = "key_aftertouch",
@@ -40,6 +42,24 @@ xMidiMessage.TYPE = {
   MTC_QUARTER_FRAME = "mtc_quarter_frame",
   SONG_POSITION = "song_position",
   --RPN = "rpn",
+}
+
+xMidiMessage.BIT_DEPTH = {
+  SEVEN = 7,
+  FOURTEEN = 14,
+}
+
+xMidiMessage.MODE = {
+  ABS = "abs",
+  ABS_7 = "abs_7",
+  ABS_14 = "abs_14",
+  REL_7_SIGNED = "rel_7_signed",
+  REL_7_SIGNED2 = "rel_7_signed2",
+  REL_7_OFFSET = "rel_7_offset",
+  REL_7_TWOS_COMP = "rel_7_twos_comp",
+  REL_14_MSB = "rel_14_msb",
+  REL_14_OFFSET = "rel_14_offset",
+  REL_14_TWOS_COMP = "rel_14_twos_comp",
 }
 
 -- for display, first two bytes
@@ -58,11 +78,6 @@ xMidiMessage.VALUE_LABELS = {
   --RPN = "rpn",
 }
 
-xMidiMessage.BIT_DEPTH = {
-  SEVEN = 7,
-  FOURTEEN = 14,
-}
-
 xMidiMessage.DEFAULT_BIT_DEPTH = xMidiMessage.BIT_DEPTH.SEVEN
 xMidiMessage.DEFAULT_CHANNEL = 1
 xMidiMessage.DEFAULT_PORT_NAME = "Unknown port"
@@ -72,7 +87,6 @@ xMidiMessage.DEFAULT_PORT_NAME = "Unknown port"
 -------------------------------------------------------------------------------
 
 function xMidiMessage:__init(...)
-  TRACE("xMidiMessage:__init(...)")
 
 	local args = xLib.unpack_args(...)
   --print("args",rprint(args))
@@ -92,6 +106,10 @@ function xMidiMessage:__init(...)
   self.bit_depth = property(self.get_bit_depth,self.set_bit_depth)
   self._bit_depth = args.bit_depth or xMidiMessage.DEFAULT_BIT_DEPTH
 
+  --- xMidiMessage.MODE, more detailed information about message
+  -- (this property can be set, TODO: auto-detect)
+  --self.mode = args.mode
+
   --- string, source/target port
   self.port_name = args.port_name or xMidiMessage.DEFAULT_PORT_NAME
 
@@ -109,7 +127,6 @@ function xMidiMessage:get_message_type()
 end
 
 function xMidiMessage:set_message_type(val)
-  TRACE("xMidiMessage:set_message_type",val)
   -- TODO check if one of the allowed types
   self._message_type = val
   self._raw_cache = nil
@@ -314,6 +331,33 @@ function xMidiMessage:create_raw_message()
         return rslt
 
       end,
+
+      [xMidiMessage.TYPE.NRPN_DECREMENT] = function()
+
+        local num_msb,num_lsb = xMidiMessage.split_mb(self.values[1])
+        local val_msb = xMidiMessage.split_mb(self.values[2])
+
+        return {{
+          {0xAF + self.channel,0x63,num_msb},
+          {0xAF + self.channel,0x62,num_msb},
+          {0xAF + self.channel,0x61,val_msb},
+        }}
+
+      end,
+
+      [xMidiMessage.TYPE.NRPN_INCREMENT] = function()
+
+        local num_msb,num_lsb = xMidiMessage.split_mb(self.values[1])
+        local val_msb = xMidiMessage.split_mb(self.values[2])
+
+        return {{
+          {0xAF + self.channel,0x63,num_msb},
+          {0xAF + self.channel,0x62,num_msb},
+          {0xAF + self.channel,0x60,val_msb},
+        }}
+
+      end,
+
 
       [xMidiMessage.TYPE.MTC_QUARTER_FRAME] = function()
         return {{

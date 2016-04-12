@@ -56,7 +56,6 @@ end
 --  end_line
 --[[
 function xBlockLoop:get()
-  TRACE("xBlockLoop:get()")
 
   if not rns.transport.loop_block_enabled then
     return 
@@ -113,7 +112,6 @@ end
 -- @return int, line index or nil
 
 function xBlockLoop.get_start()
-  TRACE("xBlockLoop.get_start()")
 
   if not rns.transport.loop_block_enabled then
     return 
@@ -129,7 +127,6 @@ end
 -- @return int, line index or nil
 
 function xBlockLoop.get_end()
-  TRACE("xBlockLoop.get_end()")
 
   if not rns.transport.loop_block_enabled then
     return 
@@ -151,7 +148,6 @@ end
 -- @return bool
 
 function xBlockLoop.within(seq_idx,line_idx,end_pos)
-  TRACE("xBlockLoop.within(seq_idx,line_idx,end_pos)",seq_idx,line_idx,end_pos)
 
   assert(type(seq_idx),"number")
   assert(type(line_idx),"number")
@@ -179,7 +175,6 @@ end
 -- @return line (int)
 
 function xBlockLoop.exiting(seq_idx,line_idx,line_delta,end_pos)
-  TRACE("xBlockLoop.exiting(seq_idx,line_idx,line_delta,end_pos)",seq_idx,line_idx,line_delta,end_pos)
 
   assert(type(seq_idx),"number")
   assert(type(line_idx),"number")

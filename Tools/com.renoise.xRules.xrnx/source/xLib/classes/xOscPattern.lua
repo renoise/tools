@@ -42,7 +42,6 @@ xOscPattern.uid_counter = 0
 --------------------------------------------------------------------------------
 
 function xOscPattern:__init(...)
-  TRACE("xOscPattern:__init(...)")
 
 	local args = xLib.unpack_args(...) 
   --print("*** args",rprint(args))
@@ -58,9 +57,6 @@ function xOscPattern:__init(...)
   --- boolean, true when message contain functioning patterns
   self.complete = property(self.get_complete)
 
-  --- function, where to output message to
-  self.callback_fn = args.callback_fn
-
   --- called when patterns are changed
   self.before_modified_observable = renoise.Document.ObservableBang()
 
@@ -71,11 +67,15 @@ function xOscPattern:__init(...)
   --- number, avoid rounding errors when comparing floats
   self.precision = (type(args.precision)=="number") and args.precision or 10000
 
+  --- string, unique identifier for the pattern
+  self.uid = nil
+
   -- internal --
 
-  --- int, unique identifier for the pattern 
   xOscPattern.uid_counter = xOscPattern.uid_counter + 1
-  self.uid = xOscPattern.uid_counter 
+  self.uid = "uid_"..tostring(xOscPattern.uid_counter)
+
+  --print(">>> uid",self.uid)
 
   --- boolean, true when we can cache the incoming message
   self.cacheable = false
@@ -126,7 +126,6 @@ function xOscPattern:get_pattern_in()
 end
 
 function xOscPattern:set_pattern_in(val)
-  TRACE("xOscPattern:set_pattern_in(val)",val)
   local modified = (val ~= self.pattern_in_observable.value) and true or false
   if modified then
     self.before_modified_observable:bang()
@@ -145,7 +144,6 @@ function xOscPattern:get_pattern_out()
 end
 
 function xOscPattern:set_pattern_out(val)
-  TRACE("xOscPattern:set_pattern_out(val)",val)
   local modified = (val ~= self.pattern_out_observable.value) and true or false
   if modified then
     self.before_modified_observable:bang()
@@ -156,8 +154,7 @@ function xOscPattern:set_pattern_out(val)
 end
 
 --------------------------------------------------------------------------------
-
--- get/set "display name" for each captured part, e.g. {"x","y","z"}
+--- get/set "display name" for each captured part, e.g. {"x","y","z"}
 -- (always matching the number of arguments - undefined names are left empty)
 -- @return table<string>
 
@@ -179,8 +176,7 @@ function xOscPattern:set_arg_names(val)
 end
 
 --------------------------------------------------------------------------------
-
--- test the input/output pattern and return the result
+--- test the input/output pattern and return the result (validate)
 
 function xOscPattern:get_complete()
   local is_complete = xOscPattern.test_pattern(self.pattern_in)
@@ -200,18 +196,15 @@ end
 -- @return boolean,string
 
 function xOscPattern:match(msg)
-  TRACE("xOscPattern:match(msg)",msg)
+
+  if not self.osc_pattern_in then
+    return false, "No pattern defined"
+  end
 
   -- check if same header
   if not (msg.pattern == self.osc_pattern_in) then
-    --return false,"Pattern didn't match"
     return false,"Pattern didn't match:"..tostring(msg.pattern)..","..tostring(self.osc_pattern_in)
   else
-    
-    if (#self.arguments == 0) then
-      -- the message was matched
-      return true
-    end
 
     -- check if same number of values
     if not (#msg.arguments == #self.arguments) then
@@ -262,7 +255,6 @@ end
 -- + also determines if pattern is cacheable
 
 function xOscPattern:parse_input_pattern()
-  TRACE("xOscPattern:parse_input_pattern()")
   
   self.arguments = {}
   local parts = {}
@@ -330,7 +322,6 @@ end
 -- + rearrange the order of values via "$n" tokens
 
 function xOscPattern:parse_output_pattern()
-  TRACE("xOscPattern:parse_output_pattern()")
 
   local rslt = {}
 
@@ -363,19 +354,40 @@ function xOscPattern:parse_output_pattern()
 end
 
 --------------------------------------------------------------------------------
+--- Check if the pattern contains only literal values (no wildcards/tokens)
+--- return boolean
+
+function xOscPattern:purely_literal()
+
+  if (self.arguments == 0) then
+    return true
+  end
+
+  for k,v in ipairs(self.arguments) do
+    if (type(v.value)=="nil") then
+      return false
+    end
+  end
+
+  return true
+
+end
+
+--------------------------------------------------------------------------------
 --- Create a new OSC message from internal or provided values
 -- @param args (table<xOscValue>)
 -- @return renoise.Osc.Message or nil when failed
 -- @return string, message when failed
 
 function xOscPattern:generate(args)
-  TRACE("xOscPattern:generate(args)",args)
 
-  if (self.osc_pattern_out == "") then
-    error("Can't generate message without an output pattern")
+  if not self.osc_pattern_out then
+    return nil, "Can't generate message without an output pattern"
   end
 
   args = args or self.arguments
+
+  -- TODO check if all values are defined
 
   local osc_args = {}
   for k,v in ipairs(self.output_args) do
@@ -391,6 +403,7 @@ function xOscPattern:generate(args)
     })
   end
 
+  --print("osc_pattern_out",self.osc_pattern_out)
   --print("osc_args",rprint(osc_args))
 
   return renoise.Osc.Message(self.osc_pattern_out,osc_args)
@@ -406,7 +419,6 @@ end
 -- @return string or number 
 
 function xOscPattern:interpret_literal(str,force_strict)
-  TRACE("xOscPattern:interpret_literal(str,force_strict)",str,force_strict)
 
   local as_number = tonumber(str)
   if as_number then
@@ -434,8 +446,9 @@ function xOscPattern:__tostring()
     .. ", pattern_out="..self.pattern_out
     .. ", osc_pattern_in="..self.osc_pattern_in
     .. ", osc_pattern_out="..self.osc_pattern_out
-    .. ", callback_fn="..tostring(self.callback_fn)
     .. ", strict="..tostring(self.strict)
+    .. ", precision="..tostring(self.precision)
+    .. ", uid="..tostring(self.uid)
 
 end
 
@@ -446,7 +459,6 @@ end
 -- @return boolean,string
 
 function xOscPattern.test_pattern(str_pattern)
-  TRACE("xOscPattern.test_pattern(str_pattern)",str_pattern)
 
   -- check for initial forward slash
   if (string.sub(str_pattern,0,1) ~= "/") then
@@ -470,6 +482,38 @@ function xOscPattern.test_pattern(str_pattern)
     end
   end
   
+  return true
+
+end
+
+--------------------------------------------------------------------------------
+--- Check if pattern is matching same type of values as another pattern,
+-- disregarding any literal values being set - only look for the type/tag. 
+-- For example, "/test %i" would match "/test 42" as they have the same path
+-- and are both matching an integer value...
+-- @param this (xOscPattern)
+-- @param that (xOscPattern)
+-- @return boolean,string
+
+function xOscPattern.types_are_matching(this,that)
+
+  if not (#this.arguments == #that.arguments) then
+    return false, "Number of arguments does not match:"
+      ..tostring(#this.arguments)..","..#that.arguments
+  end
+
+  if (this.osc_pattern_in ~= that.osc_pattern_in) then
+    return false, "Pattern does not match:"
+      ..tostring(this.osc_pattern_in)..","..that.osc_pattern_in
+  end
+
+  for k,v in ipairs(this.arguments) do
+    if not (v.tag == that.arguments[k].tag) then
+      return false, "Tags does not match:"
+        ..tostring(v.tag)..","..tostring(that.arguments[k].tag)
+    end
+  end
+
   return true
 
 end

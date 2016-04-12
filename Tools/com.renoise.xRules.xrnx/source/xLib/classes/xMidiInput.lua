@@ -4,12 +4,18 @@ xMidiInput
 
 --[[--
 
-Use xMidiInput to interpret MIDI messages
+Asynchroneous interpretation of MIDI messages
 .
 #
 
 ### Features
-Supports all common MIDI messages (including 14-bit). Note that the multibyte/NRPN features require an extra bit of processing, and can delay the processing of "normal" (7-bit) messages - for this reason, the 14-bit processing is disabled by default. 
+Supports all common MIDI messages (including 14-bit). 
+
+### Notes
+
+About 14-bit multibyte CC messages: when this feature is enabled, the class will wait for the extra messages to arrive, which can delay the processing of "normal" 7-bit messages. So - if you don't need to support multibyte message, you can disable this feature, or exempt certain CC messages from being interpreted as multibyte messages (multibyte_exempted)
+
+About Data Increment and Data Decrement: the value portion of these messages is sometimes given a value or step size, but the transmitted value byte is commonly set to zero. This class will preserve the value, but whether it is used or not depends on the application. 
 
 ### How to use
 
@@ -85,10 +91,7 @@ function xMidiInput:__init(...)
   -- we need to wait for the idle mode to determine that no LSB part arrived
   self._nrpn_msb_only = {} 
 
-  --- (table) messages that should not be throttled
-  --self._throttle_exempted = {}
-
-  --- table of multibyte messages
+  --- table of pending multibyte messages
   --    [fingerprint]{      
   --      type      = [enum] msg_type
   --      timestamp = [number]
@@ -100,7 +103,7 @@ function xMidiInput:__init(...)
   --    }
   self._mb_messages = {}
 
-  --- table of NRPN messages
+  --- table of pending NRPN messages
   --    {
   --      timestamp = [number] 
   --      channel   = [int]     
@@ -111,6 +114,9 @@ function xMidiInput:__init(...)
   --      port_name = [string]
   --    }
   self._nrpn_messages = {}
+
+  --- (table) messages that should not be throttled
+  --self._throttle_exempted = {}
 
   --- table of most recently received messages
   --  [fingerprint] = {
@@ -140,7 +146,6 @@ end
 -- @param port_name (string), where message originated from
 
 function xMidiInput:input(msg,port_name)
-  TRACE("xMidiInput:input(msg,port_name)",msg,port_name)
 
    assert(type(msg)=="table","Expected MIDI message to be a table")
    assert(#msg==3,"Malformed MIDI message, expected 3 parts")
@@ -193,9 +198,14 @@ function xMidiInput:input(msg,port_name)
     then
 
       -- ### initiate/build NRPN message
-      -- check if     0xBX,0x63,0xYY  (X = Channel, Y = NRPN Number MSB)
-      -- followed by  0xBX,0x62,0xYY  (X = Channel, Y = NRPN Number LSB)
-      -- and          0xBX,0x06,0xYY  (X = Channel, Y = Data Entry MSB)
+      -- check if     0xBX,0x63,0xYY  (X = Channel, Y = NRPN Number MSB)  99
+      -- followed by  0xBX,0x62,0xYY  (X = Channel, Y = NRPN Number LSB)  98
+      -- (if inc/dec mode - note that multiple of these messages can be 
+      --  sent after the header has been received)
+      -- and          0xBX,0x61,0xYY  Decrement #97
+      -- or           0xBX,0x60,0xYY  Increment #96
+      -- (else)
+      -- and          0xBX,0x06,0xYY  (X = Channel, Y = Data Entry MSB)   
       -- (if 7bit NRPN, it stops here)
       -- and          0xBX,0x26,0xYY  (X = Channel, Y = Data Entry LSB)
       -- (optionally, when 'terminate_nrpn' is specified...)
@@ -224,7 +234,7 @@ function xMidiInput:input(msg,port_name)
           -- @return bool (false when message requires termination)
 
           local process_nrpn = function(nrpn_msg_idx,nrpn_msg)
-            --print(">>> process_nrpn - nrpn_msg_idx,nrpn_msg",nrpn_msg_idx,nrpn_msg)
+            --print(">>> process_nrpn - nrpn_msg_idx,nrpn_msg",nrpn_msg_idx,rprint(nrpn_msg))
             --print(">>> process_nrpn - self.terminate_nrpns",self.terminate_nrpns,type(self.terminate_nrpns))
             msg_type = xMidiMessage.TYPE.NRPN
             msg_values[1] = xMidiMessage.merge_mb(nrpn_msg.num_msb,nrpn_msg.num_lsb)
@@ -247,26 +257,58 @@ function xMidiInput:input(msg,port_name)
               --print("*** Second part of NRPN message header")
               v.num_lsb = msg[3]
               return
-            elseif v.num_lsb and not v.data_msb and (msg[2] == 0x06) then
-              --print("*** First part of NRPN data (MSB)")
-              v.data_msb = msg[3]
-              -- if MSB-only, transmit the message without waiting for LSB
-              local fingerprint = self:_create_fingerprint(xMidiMessage.TYPE.NRPN,{
-                {0xAF+msg_channel,0x63,v.num_msb},
-                {0xAF+msg_channel,0x62,v.num_lsb},
-              })
-              if table.find(self._nrpn_msb_only,fingerprint) then
-                --print("*** MSB-only - send immediately?")
-                v.data_lsb = 0x00
-                if not process_nrpn(k,v) then
-                  --print("*** no, wait for termination in idle time")
+            elseif v.num_lsb and not v.data_msb 
+              and (msg[2] == 0x06)  -- NRPN Data
+              or (msg[2] == 0x61)   -- NRPN Decrement
+              or (msg[2] == 0x60)   -- NRPN Increment
+            then
+              if (msg[2] == 0x06) then
+                --print("*** First part of NRPN data (MSB)")
+                v.data_msb = msg[3]
+                -- if MSB-only, transmit the message without waiting for LSB
+                local fingerprint = self:_create_fingerprint(xMidiMessage.TYPE.NRPN,{
+                  {0xAF+msg_channel,0x63,v.num_msb},
+                  {0xAF+msg_channel,0x62,v.num_lsb},
+                })
+                if table.find(self._nrpn_msb_only,fingerprint) then
+                  --print("*** MSB-only - send immediately?")
+                  v.data_lsb = 0x00
+                  if not process_nrpn(k,v) then
+                    --print("*** no, wait for termination in idle time")
+                    return
+                  end
+                else
+                  -- if we don't receive the LSB part, this message
+                  -- is sent as-is once the idle loop detects it...
+                  --print("*** MSB-only - wait for idle loop or new NRPN message with same number (7bit)")
                   return
                 end
               else
-                -- if we don't receive the LSB part, this message
-                -- is sent as-is once the idle loop detects it...
-                --print("*** MSB-only - wait for idle loop or new NRPN message with same number (7bit)")
+
+                --print("*** NRPN increment/decrement")
+
+                local msg_type = nil
+                if (msg[2] == 0x61) then
+                  msg_type = xMidiMessage.TYPE.NRPN_DECREMENT
+                elseif (msg[2] == 0x60) then
+                  msg_type = xMidiMessage.TYPE.NRPN_INCREMENT
+                end
+
+                self.callback_fn(xMidiMessage{
+                  message_type = msg_type,
+                  channel = msg_channel,
+                  values = {
+                    xMidiMessage.merge_mb(v.num_msb,v.num_lsb),
+                    msg[3]
+                  },
+                  bit_depth = xMidiMessage.BIT_DEPTH.SEVEN,
+                  port_name = port_name,
+                })
+                -- don't remove the nrpn message - let us receive 
+                -- multiple inc/dec messages after the NRPN header
+                --table.remove(self._nrpn_messages,k)
                 return
+
               end
             elseif v.data_msb and (msg[2] == 0x026) then
               --print("*** Second part of NRPN data (LSB)")
@@ -307,7 +349,7 @@ function xMidiInput:input(msg,port_name)
       -- ### end NRPN message
     elseif self.multibyte_enabled and
     --if self.multibyte_enabled and
-      (msg[2] > 0 and msg[2] < 65) 
+      (msg[2] >= 0 and msg[2] < 65) 
     then
 
       -- ### multibyte (14-bit) CC message 
@@ -470,7 +512,7 @@ function xMidiInput:input(msg,port_name)
     msg_values[2] = msg[3] -- MSB
 
   else
-    error("Unrecognized MIDI message: "..xLib.serialize_table(msg))
+    LOG("Unrecognized MIDI message: "..xLib.serialize_table(msg))
   end
 
   --print("xMidiInput - msg_values[1]",msg_values[1])
@@ -517,35 +559,6 @@ function xMidiInput:_create_fingerprint(msg_type,midi_msgs)
 end
 
 --------------------------------------------------------------------------------
---- (Re)construct the table of MIDI messages that together form a complete 
--- NRPN message (compares the provided number with the active NRPN messages)
--- @param match_nrpn_num
--- @return table or nil
---[[
-function xMidiInput:assemble_nrpn_message(match_nrpn_num)
-
-  local rslt = nil
-
-  for k,v in ipairs(self._nrpn_messages) do
-    local nrpn_num = bit.rshift(v.num_msb,7) + v.num_lsb
-    if (match_nrpn_num == nrpn_num) then
-      local num_channel = 0xAF+v.channel
-      rslt = {
-        {num_channel, 0x63, v.num_msb},
-        {num_channel, 0x62, v.num_lsb}, 
-        {num_channel, 0x06, v.data_msb},
-        {num_channel, 0x26, v.data_lsb},
-      }
-      break
-    end
-  end
-
-  return rslt
-
-end
-]]
-
---------------------------------------------------------------------------------
 -- convenience method for adding messages to the exempt list
 
 function xMidiInput:add_multibyte_exempt(msg_type,msgs)
@@ -575,7 +588,7 @@ function xMidiInput:on_idle()
             message_type = xMidiMessage.TYPE.NRPN,
             channel   = v.channel,
             values = {
-              v.num_msb,
+              xMidiMessage.merge_mb(v.num_msb,v.num_lsb),
               v.data_msb,
             },
             bit_depth = xMidiMessage.BIT_DEPTH.SEVEN,
@@ -595,12 +608,7 @@ function xMidiInput:on_idle()
             port_name = v.port_name,
           })
           table.remove(self._nrpn_messages,k)
-          --[[
-          -- (create message and let midi_callback handle it)
-          self.nrpn_enabled = false
-          self:midi_callback({0xAF+v.channel,0x63,v.num_msb})
-          self.nrpn_enabled = true
-          ]]
+
         else
           --print("discarding old message")
           table.remove(self._nrpn_messages,k)

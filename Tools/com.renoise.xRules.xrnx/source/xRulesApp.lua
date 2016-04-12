@@ -17,10 +17,9 @@
 class 'xRulesApp'
 
 function xRulesApp:__init(xprefs)
-  TRACE("xRulesApp:__init()",xprefs)
 
   --- string, current tool version (for display)
-  self.version = "0.72"
+  self.version = "0.75"
 
   --- xRulesAppPrefs, current settings
   self.prefs = renoise.tool().preferences
@@ -98,7 +97,6 @@ end
 --- show the dialog (build ui if needed)
 
 function xRulesApp:show_dialog()
-  TRACE("xRulesApp:show_dialog()")
   self.ui:show()
   
   if not self.xrules.active then
@@ -111,7 +109,6 @@ end
 --- hide the dialog 
 
 function xRulesApp:hide_dialog()
-  TRACE("xRulesApp:hide_dialog()")
   self.ui:hide()
 end
 
@@ -119,7 +116,6 @@ end
 -- store active rulesets in preferences
 
 function xRulesApp:store_ruleset_prefs()
-  TRACE("*** xRulesApp:store_ruleset_prefs()")
 
   if self.suppress_ruleset_notifier then 
     return 
@@ -144,7 +140,6 @@ end
 -- open devices, start listening
 
 function xRulesApp:launch()
-  TRACE("xRulesApp:launch()")
 
   self.xrules.osc_client:create(self.prefs.osc_client_host.value,self.prefs.osc_client_port.value)
   self:apply_settings()
@@ -158,7 +153,6 @@ end
 -- close devices, ignore messages
 
 function xRulesApp:shutdown()
-  TRACE("xRulesApp:shutdown()")
 
   self.xrules.active = false
 
@@ -185,7 +179,6 @@ end
 --------------------------------------------------------------------------------
 
 function xRulesApp:available_midi_ports_changed()
-  TRACE("xRulesApp:available_midi_ports_changed()")
 
   self:initialize_midi_devices()
 
@@ -202,7 +195,6 @@ end
 -- open the MIDI inputs & outputs specified in preferences 
 
 function xRulesApp:initialize_midi_devices()
-  TRACE("xRulesApp:initialize_midi_devices()")
 
   --xRule.ASPECT_DEFAULTS.PORT_NAME = renoise.Midi.available_input_devices()
 
@@ -222,7 +214,6 @@ end
 --- activate devices & rulesets
 
 function xRulesApp:apply_settings()
-  TRACE("xRulesApp:apply_settings()")
 
   self:initialize_midi_devices()
 
@@ -242,7 +233,6 @@ end
 -- (skip while application is disabled, starting up or shutting down...)
 
 function xRulesApp:export_osc_devices()
-  TRACE("xRulesApp:export_osc_devices()")
 
   if self.suppress_osc_device_notifier then
     return
@@ -266,7 +256,6 @@ end
 -- @param device_def (table)
 
 function xRulesApp:add_osc_device(device_def)
-  TRACE("xRulesApp:add_osc_device(device_def)",device_def)
 
   local device = xOscDevice()
   device:import(device_def)
@@ -279,7 +268,6 @@ end
 -- import rulesets, offer to 'fix' missing/invalid definitions
 
 function xRulesApp:import_profile()
-  TRACE("xRulesApp:import_profile()")
 
   --self.xrules.active = self.prefs.autorun_enabled.value
 

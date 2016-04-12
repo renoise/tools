@@ -81,7 +81,6 @@ function vCellValueBox:get_min()
 end
 
 function vCellValueBox:set_min(val)
-  TRACE("vCellValueBox:set_active(val)",val)
   self._min = val
   self.view.min = val
 	vCell.update(self)
@@ -94,7 +93,6 @@ function vCellValueBox:get_max()
 end
 
 function vCellValueBox:set_max(val)
-  TRACE("vCellValueBox:set_active(val)",val)
   self._max = val
   self.view.max = val
 	vCell.update(self)

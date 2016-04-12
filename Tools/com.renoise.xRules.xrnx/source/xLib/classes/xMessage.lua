@@ -121,7 +121,6 @@ end
 -------------------------------------------------------------------------------
 
 function xMessage:get_definition()
-  TRACE("xMessage:get_definition() - #self.values",#self.values)
 
   return {
     values = table.copy(self.values),

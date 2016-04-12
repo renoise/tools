@@ -137,7 +137,6 @@ function xPreferences:get_recall_profile()
 end
 
 function xPreferences:set_recall_profile(val)
-  TRACE("xPreferences:set_recall_profile(val)",val)
   self.recall_profile_observable.value = val
   self:save_settings()
 end
@@ -174,7 +173,6 @@ end
 -- + create folders when missing
 
 function xPreferences:scan_profiles()
-  TRACE("xPreferences:scan_profiles()")
 
   self.profiles = {}
 
@@ -229,7 +227,6 @@ end
 -------------------------------------------------------------------------------
 
 function xPreferences:attempt_launch()
-  TRACE("xPreferences:attempt_launch()")
 
   local profile,profile_idx = self:get_profile_by_name(self.recall_profile)
 
@@ -249,7 +246,6 @@ end
 -------------------------------------------------------------------------------
 
 function xPreferences:close_dialog()
-  TRACE("xPreferences:close_dialog()")
 
   if (self.dialog and self.dialog.visible) then
     self.dialog:close()
@@ -261,7 +257,6 @@ end
 -------------------------------------------------------------------------------
 
 function xPreferences:launch_profile(idx)
-  TRACE("xPreferences:launch_profile(idx)",idx)
 
   local profile = self.profiles[idx]
   if profile then
@@ -302,7 +297,6 @@ end
 -- @return boolean,string
 
 function xPreferences:remove_profile(idx)
-  TRACE("xPreferences:remove_profile(idx)",idx)
 
   local profile = self.profiles[idx]
   if not profile then
@@ -329,7 +323,6 @@ end
 -- @return boolean,string
 
 function xPreferences:add_profile(str_name)
-  TRACE("xPreferences:add_profile(str_name)",str_name)
 
   local str_path = xPreferences.PROFILE_FOLDER.."/"..str_name
   local str_path = xFilesystem.ensure_unique_filename(str_path)
@@ -356,7 +349,6 @@ end
 -- @return boolean,string
 
 function xPreferences:rename_profile(idx,str_name)
-  TRACE("xPreferences:rename_profile(idx,str_name)",idx,str_name)
 
   local profile = self.profiles[idx]
   if not profile then
@@ -384,7 +376,6 @@ end
 -- @return boolean,string
 
 function xPreferences:update_profile()
-  TRACE("xPreferences:update_profile()")
   
   local profile = self.selected_profile
   if not profile then
@@ -408,7 +399,6 @@ end
 -------------------------------------------------------------------------------
 
 function xPreferences:show_dialog()
-  TRACE("xPreferences:show_dialog()")
 
   if (not self.dialog or not self.dialog.visible) then
     self.dialog = renoise.app():show_custom_dialog(
@@ -643,7 +633,6 @@ end
 -------------------------------------------------------------------------------
 
 function xPreferences:load_settings()
-  TRACE("xPreferences:load_settings()")
 
   local doc = renoise.Document.create("xPreferencesSettings"){}
   doc:add_property("profiles_enabled", renoise.Document.ObservableBoolean(xPreferences.PROFILES_ENABLED))
@@ -665,7 +654,6 @@ end
 -------------------------------------------------------------------------------
 
 function xPreferences:save_settings()
-  TRACE("xPreferences:save_settings()")
   
   if self.suppress_saving then
     return 

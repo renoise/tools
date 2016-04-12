@@ -38,7 +38,6 @@ xLinePattern.EFFECT_CHARS = {
 -- @param effect_columns (table<xEffectColumn descriptor>)
 
 function xLinePattern:__init(note_columns,effect_columns)
-  TRACE("xLinePattern:__init(note_columns,effect_columns)",note_columns,effect_columns)
 
   --- table
   self.note_columns = table.create()
@@ -72,7 +71,6 @@ end
 -- @param effect_columns (xEffectColumn or table)
 
 function xLinePattern:apply_descriptor(note_columns,effect_columns)
-  TRACE("xLinePattern:apply_descriptor(note_columns,effect_columns)",note_columns,effect_columns)
 
   if note_columns then
     --print("apply_descriptor - note_columns PRE",rprint(note_columns))
@@ -118,7 +116,6 @@ end
 -- @param clear_undefined (bool) clear existing data when ours is nil
 
 function xLinePattern:do_write(sequence,line,track_idx,phrase,tokens,include_hidden,expand_columns,clear_undefined)
-  TRACE("xLinePattern:do_write(sequence,line,track_idx,phrase,tokens,include_hidden,expand_columns,clear_undefined)",sequence,line,track_idx,phrase,tokens,include_hidden,expand_columns,clear_undefined)
 
   --print("xLinePattern:do_write - self.note_columns",rprint(self.note_columns))
 
@@ -266,7 +263,6 @@ end
 -- @return table, effect columns
 
 function xLinePattern.do_read(rns_line,max_note_cols,max_fx_cols) 
-  TRACE("xLinePattern.do_read(rns_line,max_note_cols,max_fx_cols)",rns_line,max_note_cols,max_fx_cols)
 
   local note_cols = {}
   local fx_cols = {}
