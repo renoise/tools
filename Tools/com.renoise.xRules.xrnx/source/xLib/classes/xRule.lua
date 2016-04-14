@@ -357,35 +357,33 @@ function xRule:__init(def)
     -- @param val2 (number)
     -- @param operator (xRule.OPERATOR)
     local compare_numbers = function(val1,val2,operator,precision)
-      if precision then
-        local is_equal = xLib.float_compare(val1,val2,precision)
-        local operators_table = {
-          ["equal_to"] = function()
-            return is_equal
-          end,
-          ["not_equal_to"] = function()
-            return not is_equal
-          end,
-          ["less_than"] = function(val1,val2)
-            return not is_equal and (val1 < val2)
-          end,
-          ["less_than_or_equal_to"] = function()
-            return is_equal or (val1 < val2)
-          end,
-          ["greater_than"] = function()
-            return not is_equal and (val1 > val2)
-          end,
-          ["greater_than_or_equal_to"] = function()
-            return is_equal or (val1 > val2)
-          end,
-        }
-        if not operators_table[operator] then
-          error("Could not find operator")
-        else
-          return operators_table[operator]()
-        end
+      print("compare_numbers - val1,val2,operator,precision",val1,val2,operator,precision)
+      local is_equal = precision and xLib.float_compare(val1,val2,precision) 
+        or val1 == val2
+      local operators_table = {
+        ["equal_to"] = function()
+          return is_equal
+        end,
+        ["not_equal_to"] = function()
+          return not is_equal
+        end,
+        ["less_than"] = function()
+          return not is_equal and (val1 < val2)
+        end,
+        ["less_than_or_equal_to"] = function()
+          return is_equal or (val1 < val2)
+        end,
+        ["greater_than"] = function()
+          return not is_equal and (val1 > val2)
+        end,
+        ["greater_than_or_equal_to"] = function()
+          return is_equal or (val1 > val2)
+        end,
+      }
+      if not operators_table[operator] then
+        error("Could not find operator")
       else
-        return k..operator..val
+        return operators_table[operator]()
       end
     end
 
@@ -692,7 +690,8 @@ function xRule:serialize()
       --precision = self.osc_pattern.precision,
     },
   }
-  return xLib.serialize_table(t)
+  local max_depth,longstring = nil,true
+  return xLib.serialize_table(t,max_depth,longstring)
 
 end
 
@@ -900,8 +899,8 @@ function xRule:compile()
       elseif (k2 == xRule.OPERATOR.BETWEEN) then
         str_fn = str_fn 
           .. "("
-          .. "compare_numbers("..k..","..val[1]..",'"..xRule.OPERATOR.LESS_THAN_OR_EQUAL_TO.."',"..precision..") and "
-          .. "compare_numbers("..k..","..val[2]..",'"..xRule.OPERATOR.GREATER_THAN_OR_EQUAL_TO.."',"..precision..")"
+          .. "compare_numbers("..k..","..val[1]..",'"..xRule.OPERATOR.GREATER_THAN_OR_EQUAL_TO.."',"..precision..") and "
+          .. "compare_numbers("..k..","..val[2]..",'"..xRule.OPERATOR.LESS_THAN_OR_EQUAL_TO.."',"..precision..")  "
           .. ") \n"
       else
         -- TODO confirm that k2 is found in xRule.OPERATOR
@@ -1008,7 +1007,7 @@ function xRule:compile()
   end
   str_fn = str_fn .. "end \n"
 
-  --print(">>> lua string:\n",str_fn)
+  print(">>> lua string:\n",str_fn)
 
   local passed,err = self.sandbox:test_syntax(str_fn) 
   if passed then

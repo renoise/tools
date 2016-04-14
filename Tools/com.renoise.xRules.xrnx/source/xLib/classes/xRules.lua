@@ -627,7 +627,9 @@ function xRules:add_ruleset(ruleset_def,ruleset_idx)
       local ruleset_idx = self.selected_ruleset_index
       route_idx = self:register_with_osc_router(xrule.osc_pattern,ruleset_idx,args.index)
     end
-    self:maintain_osc_pattern_map(args,route_idx)
+    if route_idx then
+      self:maintain_osc_pattern_map(args,route_idx)
+    end
   end)
 
   ruleset:compile()

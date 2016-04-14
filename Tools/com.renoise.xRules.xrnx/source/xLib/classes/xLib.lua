@@ -80,7 +80,6 @@ end
 -- @return table
 
 function xLib.match_table_key(t,key)
-  --TRACE("xLib.match_table_key(t,key)",t,key)
   
   local rslt = table.create()
   for _,v in pairs(t) do
@@ -207,7 +206,6 @@ end
 -- @return string, error message when failed
 
 function xLib.parse_str(str)
-  --TRACE("xLib.parse_str(str)",str)
 
   local rslt
   local success,err = pcall(function()
@@ -285,14 +283,14 @@ end
 -- serialize table into string, with some formatting options
 -- @param t (table)
 -- @param max_depth (int), determine how many levels to process - optional
+-- @param longstring (boolean), use longstring format for multiline text
 -- @return table
 
-function xLib.serialize_table(t,max_depth)
+function xLib.serialize_table(t,max_depth,longstring)
 
   assert(type(t) == "table", "this method accepts only a table as argument")
 
   local rslt = "{\n"
-  --local max_depth = 3
   if not max_depth then
     max_depth = 9999
   end
@@ -325,8 +323,12 @@ function xLib.serialize_table(t,max_depth)
           result = result .. indent .. '},\n'
         end
       else
-        local str_quote = (type(value) == "string") and '"' or ""
-        result = result .. indent .. str_key .. str_quote .. xLib.serialize_object(value) .. str_quote .. ',\n'
+        if longstring and type(value)=="string" and string.find(value,"\n") then
+          result = result .. indent .. str_key .. '[[' .. value .. ']]' .. ',\n'
+        else
+          local str_quote = (type(value) == "string") and '"' or ""
+          result = result .. indent .. str_key .. str_quote .. xLib.serialize_object(value) .. str_quote .. ',\n'
+        end
       end
     end
     
