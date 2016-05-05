@@ -141,6 +141,7 @@ function NTrap:__init(prefs)
     end
   })
 
+
 end
 
 --==============================================================================
@@ -1060,6 +1061,11 @@ function NTrap:_save_setting(key,value)
 
   assert(type(self._settings) == "NTrapPrefs",
     "Please instantiate NTrapPrefs before saving preferences") 
+
+  -- a property can never be nil 
+  if (type(value)=="nil") then
+    return
+  end
 
   self._settings:property(key).value = value
 

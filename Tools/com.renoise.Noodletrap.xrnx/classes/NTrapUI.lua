@@ -94,6 +94,11 @@ function NTrapUI:__init(ntrap)
   end)
 
 
+  -- MIDI port setup changed
+  renoise.Midi.devices_changed_observable():add_notifier(function()
+    self:update()
+  end)
+
 end
 
 --------------------------------------------------------------------------------
@@ -1030,7 +1035,7 @@ function NTrapUI:update()
   TRACE("NTrapUI:update()")
 
   if not self._ntrap._active then
-    --print("skip update...")
+    --print("not active, skip update...")
     return
   end
 
@@ -1041,6 +1046,7 @@ function NTrapUI:update()
   local node = settings:property("midi_in_port")
   local ui_widget = self._vb.views.ntrap_midi_in_popup
   local items = self:_create_midi_in_list()
+  ui_widget.items = items
   for k,v in ipairs(items) do
     if (v == node.value) and
       (#ui_widget.items >= k)
