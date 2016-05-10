@@ -4,13 +4,20 @@
 
 --[[--
 
-### About
+# Noodletrap
 
-This is a supporting class for NTrap, takes care of the user interface. 
+Noodletrap lets you record notes while bypassing the recording process in Renoise. Instead, your recordings ("noodlings") are stored into the instrument itself, using phrases as the storage mechanism.
+
+## Links
+
+Renoise: [Tool page](http://www.renoise.com/tools/noodletrap/)
+
+Renoise Forum: [Feedback and bugs](http://forum.renoise.com/index.php/topic/43047-new-tool-30-noodletrap/)
+
+Github: [Documentation and source](https://github.com/renoise/xrnx/tree/master/Tools/com.renoise.Noodletrap.xrnx) 
+
 
 --]]
-
-
 
 --==============================================================================
 
@@ -50,7 +57,7 @@ function NTrapUI:__init(ntrap)
   self._dialog = nil
 
   --- (renoise.Views.View) 
-  self._view = self:build()
+  self._view = nil -- self:build()
 
   --- (table) currently held keys on the PC keyboard
   -- [key_note] = {
@@ -109,12 +116,11 @@ function NTrapUI:show()
   TRACE("NTrapUI:show()")
 
   if (not self._dialog or not self._dialog.visible) then
-    assert(self._view, "Internal Error. Please report: " .. 
-      "no valid content view")
 
-    self._ntrap:apply_settings()
+    if not self._view then
+      self._view = self:build()
+    end
     self._ntrap:attach_to_song()
-
 
     -- the keyhandler does not report when keys are released
     -- instead, we maintain a list of triggered notes which are
@@ -135,11 +141,11 @@ function NTrapUI:show()
 
         -- select previous/next phrase
         if (key.name == "left") then
-          self._ntrap:select_previous_phrase()
+          xPhraseManager.select_previous_phrase_mapping()
           return
         end
         if (key.name == "right") then
-          self._ntrap:select_next_phrase()
+          xPhraseManager.select_next_phrase_mapping()
           return
         end
 
@@ -156,7 +162,7 @@ function NTrapUI:show()
             and not key.repeated 
             and self._ntrap._phrase_idx) 
           then
-            self._ntrap:_delete_selected_phrase()
+            xPhraseManager.delete_selected_phrase_mapping()
             return 
           end
 
@@ -167,7 +173,7 @@ function NTrapUI:show()
             then
               self._ntrap:cancel_recording()
             else
-              renoise.song().transport.edit_mode = not renoise.song().transport.edit_mode
+              rns.transport.edit_mode = not rns.transport.edit_mode
             end
             return
           end
@@ -199,8 +205,8 @@ function NTrapUI:show()
         return key
       end
 
-      local velocity = renoise.song().transport.keyboard_velocity
-      local octave = renoise.song().transport.octave
+      local velocity = rns.transport.keyboard_velocity
+      local octave = rns.transport.octave
 
       if not self._live_keys[key.note] then
         
@@ -404,6 +410,7 @@ function NTrapUI:_build_tab_inputs()
 
   local vb = self._vb
   local input_devices = self:_create_midi_in_list()
+  TRACE("input_devices",input_devices)
 
   local quantize_items = {"No quantize", "1 line"}
   for k = 2,32 do
@@ -414,6 +421,7 @@ function NTrapUI:_build_tab_inputs()
     width = CONTENT_W,
     margin = renoise.ViewBuilder.DEFAULT_CONTROL_MARGIN,
 
+    --[[
     vb:row{
       --visible = false,
       vb:text{
@@ -454,7 +462,7 @@ function NTrapUI:_build_tab_inputs()
       },
 
     },
-
+    ]]
 
     vb:row{
       vb:text{
@@ -467,7 +475,8 @@ function NTrapUI:_build_tab_inputs()
         width = MIDDLE_W,
         value = 1,
         notifier = function(idx)
-          --print("*** ntrap_midi_in_popup.notifier",idx)
+          TRACE("*** ntrap_midi_in_popup.notifier",idx)
+          TRACE("*** input_devices",input_devices)
           self._ntrap:_close_midi_port()
           local port_name = input_devices[idx]
           if (idx > 1) then
@@ -835,7 +844,7 @@ function NTrapUI:_build_log_window()
       vb:multiline_text {
         id = widget_id,
         width = CONTENT_W,
-        text = "No events to display",
+        text = "",
         font = "mono",
         height = 60,
       },
@@ -859,7 +868,7 @@ function NTrapUI:_build_tab_settings()
   local view = vb:column{  
     vb:row{
       width = CONTENT_W,
-      margin = renoise.ViewBuilder.DEFAULT_CONTROL_MARGIN,
+      --margin = renoise.ViewBuilder.DEFAULT_CONTROL_MARGIN,
       vb:text{
         text = "Process\n#notes",
         width = LEFT_COL_W
@@ -890,7 +899,7 @@ function NTrapUI:_build_tab_settings()
     },
     vb:row{
       width = CONTENT_W,
-      margin = renoise.ViewBuilder.DEFAULT_CONTROL_MARGIN,
+      --margin = renoise.ViewBuilder.DEFAULT_CONTROL_MARGIN,
       vb:text{
         text = "Octave",
         width = LEFT_COL_W
@@ -909,7 +918,7 @@ function NTrapUI:_build_tab_settings()
     },
     vb:row{
       width = CONTENT_W,
-      margin = renoise.ViewBuilder.DEFAULT_CONTROL_MARGIN,
+      --margin = renoise.ViewBuilder.DEFAULT_CONTROL_MARGIN,
       vb:text{
         text = "Startup",
         width = LEFT_COL_W
@@ -927,7 +936,7 @@ function NTrapUI:_build_tab_settings()
     },
     vb:row{
       width = CONTENT_W,
-      margin = renoise.ViewBuilder.DEFAULT_CONTROL_MARGIN,
+      --margin = renoise.ViewBuilder.DEFAULT_CONTROL_MARGIN,
       vb:text{
         text = "Phrases",
         width = LEFT_COL_W
@@ -1064,6 +1073,7 @@ function NTrapUI:update()
 
 
   -- follow instrument / specific instrument
+  --[[
   local node = settings:property("target_instr_custom")
   local ui_widget = self._vb.views.ntrap_target_instr_custom
   ui_widget.value = node.value
@@ -1073,6 +1083,7 @@ function NTrapUI:update()
   ui_widget.value = node.value
 
   self:_apply_instrument_from_option(node.value)
+  ]]
 
   -- quantize input
   local node = settings:property("record_quantize_custom")
@@ -1225,7 +1236,7 @@ function NTrapUI:update_record_status()
       ui_record_slider.visible = false
 
     elseif (node.value == NTrapPrefs.START_PATTERN) then
-      if not renoise.song().transport.playing then
+      if not rns.transport.playing then
         ui_record_status.text = "Waiting for playback to start" 
                             --.."\n(phrases are disabled during recording)"
         ui_record_slider.visible = false
@@ -1347,18 +1358,23 @@ function NTrapUI:update_phrase_bar()
   local ui_mapping_info = self._vb.views.ntrap_phrase_mapping_info
   local ui_phrase_bar   = self._vb.views.ntrap_phrase_bar
 
-  local vphrase = self._ntrap:_get_virtual_phrase()
-  local instr = self._ntrap:_get_instrument()
+  --local vphrase = self._ntrap:_get_virtual_phrase()
+  local instr = rns.selected_instrument
+  local instr_idx = rns.selected_instrument_index
+  
+  local sel_range = self._ntrap:_get_phrase_range()
+
+  local vrange = xPhraseManager.get_available_slot(instr_idx,sel_range)
   local instr_name = (instr and instr.name ~= "") and instr.name or "(empty)"
   ui_target_instr.text = string.format(
     "Target instrument: %02d - %.30s", 
-    self._ntrap._instr_idx-1,instr_name)
+    instr_idx-1,instr_name)
 
-  if vphrase then
+  if vrange then
     ui_mapping_info.text = string.format(
       "The next recording will be mapped to %s - %s",
-      self:_pitch_to_string(vphrase.mapping.note_range[1]),
-      self:_pitch_to_string(vphrase.mapping.note_range[2]))
+      self:_pitch_to_string(vrange[1]),
+      self:_pitch_to_string(vrange[2]))
   else
     ui_mapping_info.text = 
         "⚠ There is not enough room for a new recording."
@@ -1398,9 +1414,9 @@ function NTrapUI:update_phrase_bar()
   local function build_empty_or_virtual(from,to)
     --print("build_empty_or_virtual(from,to)",from,to)
 
-    if vphrase and (from == vphrase.mapping.note_range[1]) then
+    if vrange and (from == vrange[1]) then
       -- virtual phrase first
-      local vrange = vphrase.mapping.note_range
+      --local vrange = vphrase.mapping.note_range
       local button = build_button(vrange[1],vrange[2],COLOR_PHRASE_VIRTUAL,"New phrase mapping",false)
       self._phrase_buttons:insert(button)
       self._blink_phrase_button = obtain_button_id_by_index(#self._phrase_buttons)
@@ -1422,6 +1438,7 @@ function NTrapUI:update_phrase_bar()
 
   self._phrase_buttons = table.create()
   local prev_end
+  local selected_map_idx = xPhraseManager.get_selected_mapping_index()
   for k,v in ipairs(instr.phrase_mappings) do
 
     -- room before mappings
@@ -1435,7 +1452,7 @@ function NTrapUI:update_phrase_bar()
     end
 
     -- real, actual phrase (clickable)
-    local is_selected = (k == self._ntrap._phrase_idx)
+    local is_selected = (k == selected_map_idx)
 
     local is_disabled = nil
     if (renoise.API_VERSION > 4) then
@@ -1476,18 +1493,16 @@ function NTrapUI:update_phrase_bar()
 
     -- what happens when pressed
     local notifier = (v.phrase_idx) and function()
-      local sel_instr_idx = renoise.song().selected_instrument_index
-      if (self._ntrap._instr_idx == sel_instr_idx) then
-        -- check if phrase is still present (another instrument
-        -- might have been loaded, phrase becoming invalid...)
-        local instr = renoise.song().instruments[sel_instr_idx]
-        if (instr and instr.phrases[v.phrase_idx]) then
-          renoise.song().selected_phrase_index = v.phrase_idx
-        else
-          self:update_phrase_bar()
-        end
+      local instr_idx = rns.selected_instrument_index
+      -- check if phrase is still present (another instrument
+      -- might have been loaded, phrase becoming invalid...)
+      local instr = rns.instruments[instr_idx]
+      --if (instr and instr.phrases[v.phrase_idx]) then
+      if (instr and instr.phrase_mappings[v.phrase_idx]) then
+        xPhraseManager.set_selected_phrase_by_mapping_index(v.phrase_idx)
+        --rns.selected_phrase_index = v.phrase_idx
       else
-        self._ntrap:_attach_to_phrase(false,v.phrase_idx)
+        self:update_phrase_bar()
       end
       -- reset click time when a different
       -- phrase button has been clicked 
@@ -1551,7 +1566,7 @@ end
 
 function NTrapUI:update_quantize_popup()
 
-  local rns = renoise.song()
+  --local rns = renoise.song()
   local popup = self._vb.views.ntrap_record_quantize_custom
   if not rns.transport.record_quantize_enabled then
     popup.value = 1
@@ -1570,7 +1585,9 @@ end
 function NTrapUI:show_instrument_warning(val)
 
   local ui_widget = self._vb.views.ntrap_target_instr_warning
-  ui_widget.visible = val
+  if ui_widget then
+    ui_widget.visible = val
+  end
 
 end
 
@@ -1578,12 +1595,16 @@ end
 
 --- Add string to the log window
 
-function NTrapUI:log_string(str)
-  TRACE("NTrapUI:log_string(str)",str)
+function NTrapUI:log_string(...)
+  --TRACE("NTrapUI:log_string(str)",str)
+
 
   local ui_widget = self._vb.views.ntrap_log_window
-  ui_widget:add_line(str)
-  ui_widget:scroll_to_last_line()
+  if ui_widget then
+    local str = xDebug.concat_args(...)
+    ui_widget:add_line(str)
+    ui_widget:scroll_to_last_line()
+  end
 
 end
 
@@ -1705,7 +1726,7 @@ end
 function NTrapUI:_toggle_phrase_editor()
   TRACE("NTrapUI:_toggle_phrase_editor()")
 
-  local instr = self._ntrap:_get_instrument()
+  local instr = rns.selected_instrument
   if not renoise.app().window.instrument_editor_is_detached then
     local sampler_visible = (renoise.app().window.active_middle_frame == 3) and true or false
     if instr.phrase_editor_visible and sampler_visible then
@@ -1727,7 +1748,7 @@ function NTrapUI:_show_phrase_editor()
   -- remember middle frame, so we can bring it back
   self._middle_frame = renoise.app().window.active_middle_frame
 
-  local instr = self._ntrap:_get_instrument()
+  local instr = rns.selected_instrument
   local middle_frame_const = renoise.ApplicationWindow.MIDDLE_FRAME_INSTRUMENT_SAMPLE_EDITOR
   renoise.app().window.active_middle_frame = middle_frame_const
   instr.phrase_editor_visible = true
@@ -1741,7 +1762,7 @@ function NTrapUI:_hide_phrase_editor()
   -- bring back previously store middle frame
   renoise.app().window.active_middle_frame = self._middle_frame
 
-  local instr = self._ntrap:_get_instrument()
+  local instr = rns.selected_instrument
   instr.phrase_editor_visible = false
 
 end
@@ -1750,7 +1771,7 @@ end
 --------------------------------------------------------------------------------
 
 --- Determine, based on the chosen option
-
+--[[
 function NTrapUI:_apply_instrument_from_option(idx)
   TRACE("NTrapUI:_apply_instrument_from_option(idx)",idx)
 
@@ -1758,7 +1779,7 @@ function NTrapUI:_apply_instrument_from_option(idx)
   local val_custom = nil
   if (idx == NTrapPrefs.INSTR_FOLLOW) then
     popup_custom.active = false
-    val_custom = renoise.song().selected_instrument_index
+    val_custom = rns.selected_instrument_index
   else 
     popup_custom.active = true
     val_custom = popup_custom.value
@@ -1766,7 +1787,7 @@ function NTrapUI:_apply_instrument_from_option(idx)
   popup_custom.value = val_custom
 
 end
-
+]]
 
 --------------------------------------------------------------------------------
 
@@ -1780,9 +1801,9 @@ function NTrapUI:_apply_quantize_from_option(idx)
 
   local val_custom = nil
   if (idx == NTrapPrefs.QUANTIZE_RENOISE) then
-    local quant_enabled = renoise.song().transport.record_quantize_enabled
+    local quant_enabled = rns.transport.record_quantize_enabled
     if quant_enabled then
-      val_custom = renoise.song().transport.record_quantize_lines+1
+      val_custom = rns.transport.record_quantize_lines+1
     else
       val_custom = 1
     end
@@ -1820,7 +1841,7 @@ function NTrapUI:_apply_phrase_lpb_from_option(idx)
     end
   elseif (idx == NTrapPrefs.LPB_FROM_SONG) then
     popup_custom.active = false
-    val_custom = renoise.song().transport.lpb
+    val_custom = rns.transport.lpb
     -- TODO complain when using old timing model
   elseif (idx == NTrapPrefs.LPB_CUSTOM) then
     popup_custom.active = true

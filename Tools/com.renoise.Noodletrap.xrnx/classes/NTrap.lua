@@ -4,12 +4,18 @@
 
 --[[--
 
-### About
+# Noodletrap
 
 Noodletrap lets you record notes while bypassing the recording process in Renoise. Instead, your recordings ("noodlings") are stored into the instrument itself, using phrases as the storage mechanism.
 
-### Forum Topic 
-http://forum.renoise.com/index.php/topic/43047-new-tool-30-noodletrap/
+## Links
+
+Renoise: [Tool page](http://www.renoise.com/tools/noodletrap/)
+
+Renoise Forum: [Feedback and bugs](http://forum.renoise.com/index.php/topic/43047-new-tool-30-noodletrap/)
+
+Github: [Documentation and source](https://github.com/renoise/xrnx/tree/master/Tools/com.renoise.Noodletrap.xrnx) 
+
 
 
 --]]
@@ -28,7 +34,7 @@ function NTrap:__init(prefs)
   self._settings = prefs
 
   --- (int) instrument index (set on attach)
-  self._instr_idx = nil
+  --self._instr_idx = nil
 
   --- (int) track context
   self._track_idx = nil
@@ -74,7 +80,7 @@ function NTrap:__init(prefs)
   --- (int) the pattern in which recording was initiated
   self._recording_begin_patt_idx = nil
 
-  --- (int) count the total length of patterns while recording
+  --- (int) count the total length of patterenoise.song while recording
   self._recording_pattern_line_count = nil
 
   --- (number) the time when recording should be split
@@ -158,7 +164,7 @@ function NTrap:prepare_recording()
     return
   end
 
-  local instr = self:_get_instrument()
+  local instr = rns.selected_instrument
 
   if (renoise.API_VERSION >= 5) then
     instr.phrase_playback_mode = renoise.Instrument.PHRASES_OFF
@@ -199,7 +205,7 @@ function NTrap:begin_recording()
   then
     -- when recording is initiated during an idle loop,
     -- apply offset to the beginning time
-    local playpos_beats = renoise.song().transport.playback_pos_beats
+    local playpos_beats = rns.transport.playback_pos_beats
     local bps = get_bps()
     local beat_fract = playpos_beats - math.floor(playpos_beats)
     self._recording_begin = os.clock() - (bps*beat_fract)
@@ -212,7 +218,7 @@ function NTrap:begin_recording()
       "Beginning recording at %.4f",os.clock()))
   end
 
-  self._recording_begin_patt_idx = renoise.song().selected_pattern_index
+  self._recording_begin_patt_idx = rns.selected_pattern_index
   self._recording_pattern_line_count = 0
   self._ui:update_record_status()
 
@@ -275,7 +281,7 @@ function NTrap:toggle_recording()
 
   if self._recording then
     if (self._settings.stop_recording.value == NTrapPrefs.STOP_PATTERN) then
-      if renoise.song().transport.playing then
+      if rns.transport.playing then
         self._stop_requested = true
         -- do not split the pattern 
         if (self._settings.split_recording.value == 
@@ -347,7 +353,7 @@ function NTrap:_reset_recording()
   self._stop_requested = false
   self._recording_pattern_line_count = nil
 
-  local instr = self:_get_instrument()
+  local instr = rns.selected_instrument
 
   if (renoise.API_VERSION > 4) then
     instr.phrase_playback_mode = renoise.Instrument.PHRASES_PLAY_KEYMAP
@@ -400,10 +406,10 @@ end
 
 --- log string
 
-function NTrap:log_string(str)
-  TRACE("NTrap:log_string()",str)
+function NTrap:log_string(...)
+  --TRACE("NTrap:log_string()",str)
 
-  self._ui:log_string(str)
+  self._ui:log_string(...)
 
 end
 
@@ -481,7 +487,7 @@ function NTrap:_on_idle()
   self._ui:_purge_live_keys()
 
   -- when playback enter a new pattern, or wrap around the current
-  local playpos = renoise.song().transport.playback_pos
+  local playpos = rns.transport.playback_pos
   local wrapped = (playpos.line < self._playpos.line) and true or false
   if wrapped then
     if self._recording then
@@ -494,7 +500,7 @@ function NTrap:_on_idle()
         self._recording_pattern_line_count = 
           self._recording_pattern_line_count + patt.number_of_lines
         LOG(string.format("Entered pattern %d at %d, line count is %d",
-          renoise.song().selected_pattern_index,os.clock(),
+          rns.selected_pattern_index,os.clock(),
           self._recording_pattern_line_count))
       end
     end
@@ -533,7 +539,7 @@ function NTrap:_on_idle()
 
     elseif (self._settings.stop_recording.value == NTrapPrefs.STOP_PATTERN) then
       -- stop when reaching end of pattern
-      local playpos = renoise.song().transport.playback_pos
+      local playpos = rns.transport.playback_pos
       if self._stop_requested and wrapped
       then
         self:stop_recording()
@@ -552,7 +558,7 @@ function NTrap:_on_idle()
 
     -- ## split
     local rec_lines = self:_get_recorded_lines()
-    local playpos = renoise.song().transport.playback_pos
+    local playpos = rns.transport.playback_pos
 
     if (self._settings.split_recording.value == NTrapPrefs.SPLIT_PATTERN) and
       (playpos.line < self._playpos.line) 
@@ -609,7 +615,7 @@ function NTrap:_on_idle()
     self._ui:update_phrase_bar()
   end
 
-  self._playpos = renoise.song().transport.playback_pos
+  self._playpos = rns.transport.playback_pos
 
 end
 
@@ -636,7 +642,7 @@ end
 function NTrap:attach_to_song(new_song)
   TRACE("NTrap:attach_to_song(new_song)",new_song)
 
-  local rns = renoise.song()
+  --local rns = renoise.song()
 
   self._playpos = rns.transport.playback_pos
 
@@ -666,7 +672,7 @@ function NTrap:attach_to_song(new_song)
   self._song_notifiers:insert(rns.transport.record_quantize_enabled_observable)
   rns.transport.record_quantize_enabled_observable:add_notifier(self,
     function()
-      print("*** NTrap:record_quantize_enabled_observable fired...")
+      --print("*** NTrap:record_quantize_enabled_observable fired...")
       if not self:is_running() then 
         return 
       end
@@ -678,7 +684,7 @@ function NTrap:attach_to_song(new_song)
   self._song_notifiers:insert(rns.transport.record_quantize_lines_observable)
   rns.transport.record_quantize_lines_observable:add_notifier(self,
     function()
-      print("*** NTrap:record_quantize_lines_observable fired...")
+      --print("*** NTrap:record_quantize_lines_observable fired...")
       if not self:is_running() then 
         return 
       end
@@ -733,11 +739,11 @@ function NTrap:attach_to_song(new_song)
         return 
       end
 
-      if (self._settings.target_instr.value == NTrapPrefs.INSTR_FOLLOW) then
+      --if (self._settings.target_instr.value == NTrapPrefs.INSTR_FOLLOW) then
         local idx = rns.selected_instrument_index
         self:_attach_to_instrument(false,idx)
         self._update_requested = true
-      end
+      --end
     end
   )
 
@@ -791,7 +797,7 @@ end
 function NTrap:_attach_to_pattern(new_song,patt_idx)
   TRACE("NTrap:_attach_to_pattern(new_song,patt_idx)",new_song,patt_idx)
 
-  local rns = renoise.song()
+  --local rns = renoise.song()
 
   self:_remove_notifiers(new_song,self._patt_notifiers)
   local patt = rns.patterns[patt_idx]
@@ -816,17 +822,17 @@ function NTrap:_attach_to_instrument(new_song,instr_idx)
 
   self:_remove_notifiers(new_song,self._instr_notifiers)
   self:_remove_notifiers(new_song,self._phrase_notifiers)
-  local instr = renoise.song().instruments[instr_idx]
+  local instr = rns.instruments[instr_idx]
   self._ui:show_instrument_warning(not instr)
   if not instr then
-    instr_idx = renoise.song().selected_instrument_index
-    instr = renoise.song().instruments[instr_idx]
+    instr_idx = rns.selected_instrument_index
+    instr = rns.instruments[instr_idx]
   end
 
   self._instr_notifiers:insert(instr.phrases_observable)
   instr.phrases_observable:add_notifier(self,
-    function()
-      --print("*** NTrap:phrases_observable fired...")
+    function(arg)
+      --print("*** NTrap:phrases_observable fired...",arg)
       if not self:is_running() then 
         return 
       end
@@ -840,7 +846,23 @@ function NTrap:_attach_to_instrument(new_song,instr_idx)
     end
   )
 
-  self._instr_idx = instr_idx
+  instr.phrase_mappings_observable:add_notifier(self,
+    function(arg)
+      --print("*** NTrap:phrase_mappings_observable fired...",arg)
+      if not self:is_running() then 
+        return 
+      end
+
+      -- we lost the phrase somehow? 
+      if (not instr.phrases[self._phrase_idx]) then
+        self:_remove_notifiers(new_song,self._phrase_notifiers)
+        self._phrase_idx = nil
+      end
+      self._update_requested = true
+    end
+  )
+
+  --self._instr_idx = instr_idx
   self:_obtain_selected_phrase()
   self._update_requested = true
 
@@ -853,10 +875,8 @@ end
 function NTrap:_attach_to_phrase(new_song,phrase_idx)
   TRACE("NTrap:_attach_to_phrase(new_song,phrase_idx)",new_song,phrase_idx)
 
-  local rns = renoise.song()
-
   self:_remove_notifiers(new_song,self._phrase_notifiers)
-  local instr = self:_get_instrument()
+  local instr = rns.selected_instrument
   local phrase = instr.phrases[phrase_idx]
 
   if not phrase then
@@ -875,9 +895,11 @@ end
 --------------------------------------------------------------------------------
 
 function NTrap:attach_to_phrase_mapping(phrase_mapping)
+  TRACE("NTrap:attach_to_phrase_mapping(phrase_mapping)",phrase_mapping)
 
   if not phrase_mapping then
-    phrase_mapping = self:_get_phrase_mapping()
+    --phrase_mapping = self:_get_phrase_mapping()
+    phrase_mapping = xPhraseManager.get_selected_mapping()
   end
 
   if not phrase_mapping then
@@ -912,8 +934,7 @@ function NTrap:attach_to_phrase_mapping(phrase_mapping)
 end
 
 --------------------------------------------------------------------------------
-
---- detach all attached notifiers in list, but don't even try to detach 
+-- Detach all attached notifiers in list, but don't even try to detach 
 -- when a new song arrived - old observables will no longer be alive then...
 -- @param new_song (bool), true to leave existing notifiers alone
 -- @param observables (table) 
@@ -932,99 +953,47 @@ function NTrap:_remove_notifiers(new_song,observables)
 end
 
 --------------------------------------------------------------------------------
-
---- Since the selected_phrase_index is a global property of the song,
+-- Since the selected_phrase_index is a global property of the song,
 -- we check when switching instrument if we can eavesdrop on that value
 -- (otherwise, we use the UI dialog for selecting a specific phrase)
 
 function NTrap:_obtain_selected_phrase()
   TRACE("NTrap:_obtain_selected_phrase()")
 
-  if (renoise.song().selected_instrument_index == self._instr_idx) then
-    local phrase_idx = renoise.song().selected_phrase_index
-    if (phrase_idx > 0) then 
-      self:_attach_to_phrase(false,phrase_idx)
-    end
+  local phrase_idx = rns.selected_phrase_index
+  if (phrase_idx > 0) then 
+    self:_attach_to_phrase(false,phrase_idx)
   end
 
 end
 
 --------------------------------------------------------------------------------
+-- Set previous/next phrase 
+--[[
 
---- Delete the currently selected phrase
-
-function NTrap:_delete_selected_phrase()
-  TRACE("NTrap:_delete_selected_phrase()")
-
-  local instr = self:_get_instrument()
-  if (self._phrase_idx and instr.phrases[self._phrase_idx]) then
-    instr:delete_phrase_at(self._phrase_idx)
-  end
-
-end
-
---------------------------------------------------------------------------------
-
---- Only possible when instrument is the selected one
-
-function NTrap:_set_selected_phrase(idx)
-  TRACE("NTrap:_set_selected_phrase()")
-
-  if (renoise.song().selected_instrument_index == self._instr_idx) then
-    local instr = self:_get_instrument()
-    if instr.phrases[idx] then
-      renoise.song().selected_phrase_index = idx
-    end
-  end
-
-end
-
---------------------------------------------------------------------------------
-
---- Set previous/next phrase 
-
-function NTrap:select_previous_phrase(idx)
+function NTrap:select_previous_phrase()
   TRACE("NTrap:select_previous_phrase()")
 
-  if not self._phrase_idx then
-    LOG("No phrase have been selected")
-    return
+  local phrase,phrase_idx = xPhraseManager.select_previous_phrase()
+  if phrase and phrase_idx then
+    self:_attach_to_phrase(false,phrase_idx)
   end
-
-  local phrase_idx = self._phrase_idx
-  if phrase_idx then
-    phrase_idx = math.max(1,phrase_idx-1)
-  end
-  
-  self:_attach_to_phrase(false,phrase_idx)
-  self:_set_selected_phrase(phrase_idx)
-
 
 end
 
 --------------------------------------------------------------------------------
 
 --- Set previous/next phrase 
-
-function NTrap:select_next_phrase(idx)
+function NTrap:select_next_phrase()
   TRACE("NTrap:select_next_phrase()")
 
-  if not self._phrase_idx then
-    LOG("No phrase have been selected")
-    return
+  local phrase,phrase_idx = xPhraseManager.select_next_phrase()
+  if phrase and phrase_idx then
+    self:_attach_to_phrase(false,phrase_idx)
   end
-
-  local phrase_idx = self._phrase_idx
-  if phrase_idx then
-    local instr = self:_get_instrument()
-    phrase_idx = math.min(#instr.phrases,phrase_idx+1)
-  end
-  
-  self:_attach_to_phrase(false,phrase_idx)
-  self:_set_selected_phrase(phrase_idx)
 
 end
-
+]]
 --------------------------------------------------------------------------------
 
 --- Check if we can actually record
@@ -1034,12 +1003,14 @@ end
 function NTrap:_recording_check()
   --TRACE("NTrap:_recording_check()")
 
+  -- TODO could this actually be false? 
+
+  --[[
   if not self._instr_idx then
     LOG("No instrument has been targeted")
     return false
   end
 
-  --[[
   if renoise.song().transport.edit_mode then
     print("Can't record while edit mode is enabled")
     return false
@@ -1070,21 +1041,6 @@ function NTrap:_save_setting(key,value)
   self._settings:property(key).value = value
 
 end
-
---------------------------------------------------------------------------------
-
---- Retrieve and apply settings
--- @param settings (renoise.Document) 
-
-function NTrap:apply_settings()
-  TRACE("NTrap:apply_settings()")
-
-  --self._settings = settings
-  self:_open_midi_port(self._settings.midi_in_port.value)
-  self._update_requested = true
-
-end
-
 
 --------------------------------------------------------------------------------
 
@@ -1140,7 +1096,7 @@ function NTrap:_midi_callback(message)
 
   local is_note_on = true
   local rns_pitch,velocity
-  local rns_octave = renoise.song().transport.octave
+  local rns_octave = rns.transport.octave
 
   if (message[1]>=128) and (message[1]<=159) then
 
@@ -1175,164 +1131,18 @@ end
 
 --------------------------------------------------------------------------------
 
---- TODO Given the current time, insert note event at previous line
---[[
-function NTrap:_insert_at_previous_line()
-
-end
-]]
-
---------------------------------------------------------------------------------
-
--- @return renoise.Instrument
-
-function NTrap:_get_instrument()
-  TRACE("NTrap:_get_instrument()")
-
-  return renoise.song().instruments[self._instr_idx]
-
-end
-
---------------------------------------------------------------------------------
-
---- Retrieve reference to the currently selected phrase, if any
--- @return renoise.InstrumentPhrase or nil
-
-function NTrap:_get_phrase()
-  TRACE("NTrap:_get_phrase()")
-
-  local instr = self:_get_instrument()
-  if instr then
-    return instr.phrases[self._phrase_idx]
-  end
-
-end
-
-
---------------------------------------------------------------------------------
---- Create a virtual phrase object based on current criteria
--- TODO (refactor) use the xPhraseMgr class 
--- @return table or nil (if not able to find room)
--- @return int, the index where we can insert
-
-function NTrap:_get_virtual_phrase()
-  TRACE("NTrap:_get_phrase()")
-
-  --[[
-  if not self._phrase_idx then
-    LOG("No phrase have been selected")
-    return
-  end
-  ]]
-
-  local vphrase = {
-    mapping = {}
-  }
-  local vphrase_idx = nil
-  local instr = self:_get_instrument()
-  local phrase = self:_get_phrase()
-  local max_note = 119
-  local prev_end = nil
-
-  local range = self._settings.phrase_range_custom.value
-  if phrase and (self._settings.phrase_range.value == 1) then
-    range = self:_get_phrase_range()
-  end
-
-  -- find empty space from the selected phrase and upwards
-  local begin_at, stop_at
-  if self._phrase_idx then
-    for k,v in ipairs(instr.phrase_mappings) do
-      if (k >= self._phrase_idx) then
-        if not prev_end then
-          prev_end = v.note_range[1]-1
-        end
-        if not begin_at and
-          (v.note_range[1] > prev_end+1) 
-        then
-          begin_at = prev_end+1
-          stop_at = v.note_range[1]-1
-          --print("found room between",begin_at,stop_at)
-          vphrase_idx = k
-          break
-        end
-        prev_end = v.note_range[2]
-      end
-    end
-  end
-  
-  if not begin_at then
-    begin_at = (prev_end) and prev_end+1 or 0
-    if table.is_empty(instr.phrase_mappings) then
-      vphrase_idx = 1
-    else
-      vphrase_idx = #instr.phrase_mappings+1
-    end
-
-  end
-  if not stop_at then
-    stop_at = begin_at + range - 1
-  end
-
-  if (stop_at-begin_at < range) then
-    -- another phrase appears within our range
-    range = stop_at-begin_at
-  end
-  if (stop_at > max_note) then
-    -- there isn't enough room on the piano
-    range = max_note-prev_end-1
-  end
-
-  -- if not room for the start, return
-  if (begin_at > 119) then
-    return 
-  end
-
-  vphrase.mapping.note_range = {begin_at,begin_at+range}
-  return vphrase,vphrase_idx
-
-end
-
-
---------------------------------------------------------------------------------
-
 -- @return int
 
 function NTrap:_get_phrase_length()
   TRACE("NTrap:_get_phrase_length()")
 
-  local phrase = self:_get_phrase()
+  --local phrase = self:_get_phrase()
+  local phrase = xPhraseManager.get_selected_phrase()
   if phrase then
     return phrase.number_of_lines
   end
  
   return NTrapPrefs.PHRASE_LENGTH_DEFAULT
-
-end
-
---------------------------------------------------------------------------------
--- @return renoise.InstrumentPhrase or nil
-
-function NTrap:_get_phrase_mapping()
-  TRACE("NTrap:_get_phrase_mapping()")
-
-  local phrase = self:_get_phrase()
-  if phrase then
-    if (renoise.API_VERSION < 5) then
-      return phrase.mapping
-    else
-      -- a workaround: we can't probe a phrase for 
-      -- mappings without throwing an error...
-      local instr = self:_get_instrument()
-      if not table.is_empty(instr.phrase_mappings) then
-        for k,v in ipairs(instr.phrase_mappings) do
-          if (v.phrase == phrase) then
-            return v
-          end
-        end
-      end
-    end
-  end
 
 end
 
@@ -1343,7 +1153,8 @@ end
 function NTrap:_get_phrase_lpb()
   TRACE("NTrap:_get_phrase_lpb()")
 
-  local phrase = self:_get_phrase()
+  --local phrase = self:_get_phrase()
+  local phrase = xPhraseManager.get_selected_phrase()
   if phrase then
     return phrase.lpb
   end
@@ -1358,7 +1169,8 @@ end
 function NTrap:_get_phrase_loop()
   TRACE("NTrap:_get_phrase_loop()")
 
-  local phrase_mapping = self:_get_phrase_mapping()
+  --local phrase_mapping = self:_get_phrase_mapping()
+  local phrase_mapping = xPhraseManager.get_selected_mapping()
   if phrase_mapping then
     return phrase_mapping.looping
   end
@@ -1374,7 +1186,8 @@ end
 function NTrap:_get_phrase_range()
   TRACE("NTrap:_get_phrase_range()")
 
-  local phrase_mapping = self:_get_phrase_mapping()
+  --local phrase_mapping = self:_get_phrase_mapping()
+  local phrase_mapping = xPhraseManager.get_selected_mapping()
   if phrase_mapping then
     local range = phrase_mapping.note_range
     return range[2]-range[1]+1
@@ -1391,7 +1204,8 @@ end
 function NTrap:_get_phrase_tracking()
   TRACE("NTrap:_get_phrase_tracking()")
 
-  local phrase_mapping = self:_get_phrase_mapping()
+  --local phrase_mapping = self:_get_phrase_mapping()
+  local phrase_mapping = xPhraseManager.get_selected_mapping()
   if phrase_mapping then
     return phrase_mapping.key_tracking
   end
@@ -1408,30 +1222,12 @@ end
 function NTrap:_get_playing_pattern()
   TRACE("NTrap:_get_playing_pattern()")
 
-  local playback_pos = renoise.song().transport.playback_pos
-  local patt_idx = renoise.song().sequencer:pattern(playback_pos.sequence)
-  return renoise.song().patterns[patt_idx]
+  local playback_pos = rns.transport.playback_pos
+  local patt_idx = rns.sequencer:pattern(playback_pos.sequence)
+  return rns.patterns[patt_idx]
 
 end
 
---------------------------------------------------------------------------------
--- Are we quantizing the input? 
--- @return bool
---[[
-function NTrap:_get_quant_enabled()
-  TRACE("NTrap:_get_quant_enabled()")
-
-  if (self._settings.record_quantize.value == NTrapPrefs.QUANTIZE_NONE) or
-    ((self._settings.record_quantize.value == NTrapPrefs.QUANTIZE_CUSTOM) and
-    (self._settings.record_quantize_custom.value == 1))
-  then
-    return false
-  elseif (self._settings.record_quantize.value == NTrapPrefs.QUANTIZE_RENOISE) then
-    return renoise.song().transport.record_quantize_enabled
-  end
-
-end
-]]
 --------------------------------------------------------------------------------
 -- How much are we quantizing the input (number or lines) 
 -- @return int or nil if no quantize
@@ -1448,8 +1244,8 @@ function NTrap:_get_quant_amount()
       return self._settings.record_quantize_custom.value-1
     end
   elseif (self._settings.record_quantize.value == NTrapPrefs.QUANTIZE_RENOISE) then
-    return renoise.song().transport.record_quantize_enabled and
-      renoise.song().transport.record_quantize_lines or nil
+    return rns.transport.record_quantize_enabled and
+      rns.transport.record_quantize_lines or nil
   end
 
 end
@@ -1463,7 +1259,7 @@ function NTrap:_get_pattern_lines_remaining()
   TRACE("NTrap:_get_pattern_lines_remaining()")
 
   local patt = self:_get_playing_pattern()
-  local playback_pos = renoise.song().transport.playback_pos
+  local playback_pos = rns.transport.playback_pos
 
   return patt.number_of_lines - playback_pos.line,patt.number_of_lines
 
@@ -1547,28 +1343,16 @@ function NTrap:_process_recording(events)
     return
   end
 
-  local vphrase,vphrase_idx = self:_get_virtual_phrase()
-  if not vphrase then
-    LOG("Failed to allocate a phrase (no more room left?)")
-    return
-  end
-  
   local max_note_cols = renoise.InstrumentPhrase.MAX_NUMBER_OF_NOTE_COLUMNS
-  local phrase_lps = get_phrase_lps(self._settings)
-  local instr = self:_get_instrument()
-  local phrase = instr:insert_phrase_at(vphrase_idx)
-  if (renoise.API_VERSION > 4) then
-    -- need to create mapping
-    print("phrase",phrase)
-    local pmap = instr:insert_phrase_mapping_at(#instr.phrase_mappings+1,phrase)
-    self:attach_to_phrase_mapping(pmap)
+
+  --local phrase_lps = get_phrase_lps(self._settings)
+  local instr = rns.selected_instrument
+  local instr_idx = rns.selected_instrument_index
+
+  local phrase,phrase_idx,pmap = xPhraseManager.auto_insert_phrase(instr_idx)
+  if phrase and phrase.mapping then
+    self:attach_to_phrase_mapping(phrase.mapping)
   end
-  phrase.mapping.note_range = {
-    vphrase.mapping.note_range[1],
-    vphrase.mapping.note_range[2]
-  }
-  phrase.mapping.base_note = vphrase.mapping.note_range[1]
-  phrase:clear() -- remove the default C-4 note
 
   -- @{ turn length into a "neat" value when using settings such as
   -- 'start at beginning of pattern' + 'after number of lines'
@@ -1581,14 +1365,14 @@ function NTrap:_process_recording(events)
         self._split_requested_at,self._recording_begin,self._settings)
     elseif (self._settings.split_recording.value == NTrapPrefs.SPLIT_PATTERN) then
       local patt = self:_get_playing_pattern()
-      local lpb_factor = self._settings.phrase_lpb_custom.value / renoise.song().transport.lpb
+      local lpb_factor = self._settings.phrase_lpb_custom.value / rns.transport.lpb
       total_lines = patt.number_of_lines * lpb_factor
       --print("*** split #3 - lpb_factor,self._recording_pattern_line_count",lpb_factor,self._recording_pattern_line_count)
     end
   elseif (self._settings.start_recording.value == NTrapPrefs.START_PATTERN) and
     (self._settings.stop_recording.value == NTrapPrefs.STOP_PATTERN) 
   then
-    local lpb_factor = self._settings.phrase_lpb_custom.value / renoise.song().transport.lpb
+    local lpb_factor = self._settings.phrase_lpb_custom.value / rns.transport.lpb
     total_lines = self._recording_pattern_line_count * lpb_factor
   elseif (self._settings.stop_recording.value == NTrapPrefs.STOP_LINES) then
     total_lines = self._settings.stop_recording_lines.value
@@ -1625,7 +1409,7 @@ function NTrap:_process_recording(events)
 
     -- write notes into the phrase
     local write_event = function(line,fraction,event,col_idx,quantize)
-      print("write_event = function(line,fraction,event,col_idx)",line,fraction,event,col_idx)
+      --print("write_event = function(line,fraction,event,col_idx)",line,fraction,event,col_idx)
       if (line > renoise.InstrumentPhrase.MAX_NUMBER_OF_LINES) then
         LOG("*** skipping event at line",line)
         return
@@ -1760,7 +1544,7 @@ function NTrap:_process_recording(events)
     phrase.delay_column_visible = true
     phrase.mapping.looping = ntrap._settings.phrase_loop_custom.value
     phrase.visible_note_columns = max_voice_count
-    ntrap._set_selected_phrase(ntrap,phrase_idx)
+    xPhraseManager.set_selected_phrase(phrase_idx)
 
   end
 
@@ -1780,7 +1564,7 @@ function NTrap:_process_recording(events)
     self._recording_begin,
     self._recording_stop,
     self,
-    vphrase_idx,
+    phrase_idx,
     self:_get_quant_amount())
 
 
@@ -1794,7 +1578,7 @@ end
 
 function get_bps()
 
-  local bpm = renoise.song().transport.bpm
+  local bpm = rns.transport.bpm
   return (60/bpm)
 
 end
@@ -1815,7 +1599,7 @@ end
 
 function get_song_lps()
 
-  return renoise.song().transport.lpb / get_bps()
+  return rns.transport.lpb / get_bps()
 
 end
 
@@ -1840,7 +1624,7 @@ end
 
 function resolve_timestamp_by_line_in_pattern(line)
   
-  local playpos = renoise.song().transport.playback_pos
+  local playpos = rns.transport.playback_pos
   if (playpos.line > line) then
     return os.clock() - (line / get_song_lps())
   else

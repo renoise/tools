@@ -2,6 +2,17 @@
 main.lua
 ============================================================================]]--
 
+-- variables
+
+--_trace_filters = {".*"}
+_trace_filters = nil
+_xlibroot = "classes/xLib/classes/"
+rns = nil
+
+local ntrap = nil
+local ntrap_preferences = nil
+local waiting_to_show_dialog = true
+
 -- includes
 
 require "classes/NTrapEvent"
@@ -9,13 +20,20 @@ require "classes/NTrap"
 require "classes/NTrapPrefs"
 require "classes/NTrapUI"
 require "classes/ProcessSlicer"
+require (_xlibroot.."xDebug")
+require (_xlibroot.."xPhraseManager")
 
 --------------------------------------------------------------------------------
 -- debug
 --------------------------------------------------------------------------------
 
+--[[
 TRACE = function(...)
-  --print(...)
+  if ntrap then
+    ntrap:log_string(...)
+  else
+    print(...)
+  end
 end
 
 LOG = function(...)
@@ -25,19 +43,15 @@ LOG = function(...)
     print(...)
   end
 end
-
+]]
 
 --------------------------------------------------------------------------------
--- main
+-- initialize
 --------------------------------------------------------------------------------
 
-local ntrap_preferences = NTrapPrefs()
+ntrap_preferences = NTrapPrefs()
 renoise.tool().preferences = ntrap_preferences
-
 ntrap = NTrap(ntrap_preferences)
-
--- workaround for http://goo.gl/UnSDnw
-local waiting_to_show_dialog = true
 
 --------------------------------------------------------------------------------
 -- menu entries
@@ -96,6 +110,9 @@ end)
 
 renoise.tool().app_new_document_observable:add_notifier(function()
   TRACE("main:app_new_document_observable fired...")
+
+  rns = renoise.song()
+
   if ntrap:is_running() then
     ntrap:attach_to_song(true)
   end
