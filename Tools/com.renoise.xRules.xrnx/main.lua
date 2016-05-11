@@ -3,19 +3,30 @@ main.lua
 ============================================================================]]--
 --[[--
 
-## About
+# xRules
 
-  xLib-based tool, boilerplate code
+xRules lets you rewrite and transform incoming MIDI/OSC messages on-the-fly, using a visual programming interface. Outgoing messages can be routed into Renoise, or passed on to external devices. 
+
+## Links
+
+Renoise: [Tool page](http://www.renoise.com/tools/xrules/)
+
+Renoise Forum: [Feedback and bugs](http://forum.renoise.com/index.php/topic/47224-new-tool-31-xrules/)
+
+Github: [Documentation and source](https://github.com/renoise/xrnx/blob/master/Tools/com.renoise.xRules.xrnx/) 
+
+
 
 --]]
 
 --==============================================================================
 
-_trace_filters = {".*"}
+--_trace_filters = {".*"}
 _trace_filters = nil
 
 _xlibroot = "source/xLib/classes/"
 require (_xlibroot.."xLib")
+require (_xlibroot.."xAudioDevice")
 require (_xlibroot.."xAutomation")
 require (_xlibroot.."xDebug")
 require (_xlibroot.."xDocument")
@@ -39,6 +50,7 @@ require (_xlibroot.."xBlockLoop")
 require (_xlibroot.."xSongPos")
 require (_xlibroot.."xPlayPos")
 require (_xlibroot.."xParameter")
+require (_xlibroot.."xPhraseManager")
 require (_xlibroot.."xPreferences")
 require (_xlibroot.."xObservable")
 require (_xlibroot.."xReflection")

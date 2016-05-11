@@ -2,7 +2,7 @@
 <RenoiseScriptingTool doc_version="0">
   <Name>xRules</Name>
   <Id>com.renoise.xRules</Id>
-  <Version>0.76</Version>
+  <Version>0.77</Version>
   <ApiVersion>5</ApiVersion>
   <Author>danoise (bjorn@renoise.com)</Author>
   <Category>MIDI</Category>
