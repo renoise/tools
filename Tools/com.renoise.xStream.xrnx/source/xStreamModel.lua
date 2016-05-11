@@ -330,7 +330,7 @@ function xStreamModel:set_preset_bank_index(idx)
 
   -- attach_to_preset_bank
   local obs = self.selected_preset_bank.modified_observable
-  xLib.attach_to_observable(obs,self,self.handle_preset_changes)
+  xObservable.attach(obs,self,self.handle_preset_changes)
 
 end
 
@@ -351,8 +351,8 @@ end
 -------------------------------------------------------------------------------
 -- load external model definition - will validate the function in a sandbox
 -- @param file_path (string), prompt for file if not defined
--- return bool, true when model was succesfully loaded
--- return err, string containing error message
+-- @return bool, true when model was succesfully loaded
+-- @return err, string containing error message
 
 function xStreamModel:load_definition(file_path)
   TRACE("xStreamModel:load_definition(file_path)",file_path)
@@ -460,7 +460,7 @@ function xStreamModel:parse_definition(def)
   TRACE("xStreamModel:parse_definition(def)",def)
 
   -- default model options
-  local color = xColor.color_table_to_value(xLib.COLOR_DISABLED)
+  local color = vColor.color_table_to_value(xLib.COLOR_DISABLED)
   
   if not table.is_empty(def.options) then
     if (def.options.color) then
@@ -721,7 +721,7 @@ function xStreamModel:serialize()
   ..xLib.serialize_table(self.data_initial)
   ..","
 	.."\noptions = {"
-  .."\n color = "..xColor.value_to_hex_string(self.color)..","
+  .."\n color = "..vColor.value_to_hex_string(self.color)..","
   .."\n},"
 	.."\ncallback = [[\n"
   ..self.callback_str
@@ -859,7 +859,7 @@ function xStreamModel:rename()
 
   --local model = self.xstream.selected_model
 
-  local str_name,_ = xDialog.prompt_for_string(self.name,
+  local str_name,_ = vPrompt.prompt_for_string(self.name,
     "Enter a new name","Rename Model")
   if not str_name then
     return true
@@ -1043,7 +1043,7 @@ function xStreamModel:add_preset_bank(str_name)
     local str_path = xFilesystem.ensure_unique_filename(preset_folder)
     str_name = xFilesystem.get_raw_filename(str_path)
 
-    str_name = xDialog.prompt_for_string(str_name,
+    str_name = vPrompt.prompt_for_string(str_name,
       "Enter a name for the preset bank","Add Preset Bank")
     if not str_name then
       return false

@@ -5,6 +5,10 @@ xStream
 
   The main xStream class - where it all comes together
 
+  TODO refactor the blockloop tracking into the xStreamPos class
+  and implement a "refresh_fn" handler for recalculating the read buffer
+  (see idle method for a partial implementation of this)
+
 ]]
 
 class 'xStream'
@@ -65,6 +69,11 @@ function xStream:__init()
       self:do_output(self.stream.writepos,nil,true)
     end
   end
+  self.stream.refresh_fn = function()
+    if self.active then
+      self:update_read_buffer()
+    end
+  end
 
   -- int, writeahead amount
   self.writeahead = 0
@@ -84,6 +93,8 @@ function xStream:__init()
   self.highest_buffer_idx = 0
   self.lowest_buffer_idx = 0
 
+  --self.highest_read_buffer_idx = 0
+
   -- xSongPos.OUT_OF_BOUNDS, handle song boundaries
   self.bounds_mode = xSongPos.OUT_OF_BOUNDS.LOOP
 
@@ -93,9 +104,6 @@ function xStream:__init()
   -- xSongPos.LOOP_BOUNDARY, handle pattern/seq.loop boundaries
   self.loop_mode = xSongPos.LOOP_BOUNDARY.SOFT
 
-  -- (xSongPos) where we most recently read from the pattern
-  self.next_read_pos = nil
-
   -- enum, one of xStream.OUTPUT_MODE
   -- usually STREAMING, but temporarily set to a different
   -- value while applying output to TRACK/SELECTION
@@ -104,8 +112,8 @@ function xStream:__init()
   -- xStream.PLAYMODE (string-based enum)
   self.automation_playmode = xStream.PLAYMODE.LINEAR
 
-  -- bool, track changes to loop_block_enabled
-  self._loop_block_enabled = rns.transport.loop_block_enabled
+  -- (bool) keep track of loop block state
+  self.block_enabled = rns.transport.loop_block_enabled
 
   -- string, last file path from where we imported models ('load_models')
   self.last_models_path = nil
@@ -281,7 +289,7 @@ function xStream:create_model(str_name)
   model.name = str_name
   --[[
   xStreamModel.get_suggested_name(model.name)       
-  local str_name,err = xDialog.prompt_for_string(str_name,
+  local str_name,err = vDialog.prompt_for_string(str_name,
     "Enter a name for the model","Create Model")
   if not str_name then
     return
@@ -562,7 +570,6 @@ function xStream:schedule_item(model_name,preset_index,preset_bank_name)
   if self._scheduled_pos then
     local happening_in_lines = self._scheduled_pos.lines_travelled
       - (self.stream.writepos.lines_travelled)
-      -- (self.next_read_pos.lines_travelled - self.writeahead)
     --print("happening_in_lines",happening_in_lines)
     if (happening_in_lines <= self.writeahead) then
       --print("wipe the buffer")
@@ -732,13 +739,13 @@ function xStream:set_selected_model_index(idx)
   local preset_bank_notifier = function()
     TRACE("*** xStream - selected_preset_bank_index_observable fired..")
     local preset_bank = self.selected_model.selected_preset_bank
-    xLib.attach_to_observable(preset_bank.presets_observable,preset_observable_notifier)
-    xLib.attach_to_observable(preset_bank.modified_observable,presets_modified_notifier)
-    xLib.attach_to_observable(preset_bank.selected_preset_index_observable,preset_index_notifier)
+    xObservable.attach(preset_bank.presets_observable,preset_observable_notifier)
+    xObservable.attach(preset_bank.modified_observable,presets_modified_notifier)
+    xObservable.attach(preset_bank.selected_preset_index_observable,preset_index_notifier)
   end
   if self.selected_model then
-    xLib.attach_to_observable(self.selected_model.args.args_observable,args_observable_notifier)
-    xLib.attach_to_observable(self.selected_model.selected_preset_bank_index_observable,preset_bank_notifier)
+    xObservable.attach(self.selected_model.args.args_observable,args_observable_notifier)
+    xObservable.attach(self.selected_model.selected_preset_bank_index_observable,preset_bank_notifier)
     preset_bank_notifier()
   end
 
@@ -999,11 +1006,6 @@ function xStream:do_output(xpos,num_lines,live_mode)
   local ptrack_auto = nil
   local last_auto_seq_idx = nil
 
-  -- expand columns only when we have manually defined them
-  -- (existing pattern-data is a full 12 note columns...)
-  --local expand_columns = self.expand_columns and
-  --  self.selected_model.user_redefined_xline
-
   for i = 0,num_lines-1 do
     tmp_pos = xSongPos({sequence=xpos.sequence,line=xpos.line+i})
     tmp_pos.bounds_mode = self.bounds_mode
@@ -1038,16 +1040,16 @@ function xStream:do_output(xpos,num_lines,live_mode)
       else
         --print("*** write output",xpos.lines_travelled+i,tmp_pos)
         
-        local pos_line = xpos.lines_travelled+i
+        local travelled = xpos.lines_travelled+i
         local xline = nil
 
-        if self.muted and (pos_line > self.mute_pos+1) then
-          --print("*** mute output - pos_line",pos_line)
+        if self.muted and (travelled > self.mute_pos+1) then
+          --print("*** mute output - travelled",travelled)
           xline = self.empty_xline
         else
           -- normal output
-          --print("*** normal output - pos_line,tmp_pos",pos_line,tmp_pos)
-          xline = self.buffer[pos_line]
+          --print("*** normal output - travelled,tmp_pos",travelled,tmp_pos)
+          xline = self.buffer[travelled]
 
           -- check if we can/need to resolve automation
           if type(xline)=="xLine" then
@@ -1069,7 +1071,7 @@ function xStream:do_output(xpos,num_lines,live_mode)
 
         end
 
-        --print("*** do_write - pos_line,xline",pos_line,xline) --,xline.note_columns[1].note_value)
+        --print("*** do_write - travelled,line,xline",travelled,tmp_pos.line,xline.effect_columns[1].amount_value)
         if type(xline)=="xLine" then
           local success,err = pcall(function()
             xline:do_write(
@@ -1133,42 +1135,45 @@ function xStream:get_content(pos,num_lines,xpos)
   end
 
   local read_pos = nil
-  if self.next_read_pos then
-    read_pos = self.next_read_pos
-    --print("*** read_pos - self.next_read_pos",self.next_read_pos)
+  if self.stream.readpos then
+    read_pos = self.stream.readpos
+    --print("*** read_pos - self.readpos",self.stream.readpos)
+    --print("*** read_pos - self.stream.writepos",self.stream.writepos)
   else
     read_pos = xSongPos(xpos)
-    --print("*** read_pos - xSongPos(xpos)",xpos)
+    print("*** read_pos - xSongPos(xpos)",xpos)
+  end
+
+  -- special case: if the pattern was deleted from the song, the read_pos
+  -- might be referring to a non-existing pattern - in such a case,
+  -- we re-initialize to the current position
+  -- TODO "proper" align of readpos via patt-seq notifications in xStreamPos 
+  if not rns.sequencer.pattern_sequence[read_pos.sequence] then
+    LOG("Missing pattern sequence - was removed from song?")
+    read_pos = xSongPos(rns.transport.playback_pos)
   end
 
   for i = 0, num_lines-1 do
 
-    local line_index = pos+i
-    local phrase = nil 
+    local buffer_idx = pos+i
     local xline
 
     -- retrieve existing content --------------------------
 
-    local has_read_buffer = self.read_buffer[line_index]
+    local has_read_buffer = self.read_buffer[buffer_idx]
     if has_read_buffer then 
-      xline = self.read_buffer[line_index]
+      --print("*** xStream:get_content - retrieve from read buffer",buffer_idx)
+      xline = self.read_buffer[buffer_idx]
+      --rprint(xline)
+      print("*** xStream:get_content - retrieved from read buffer",buffer_idx,"=",xline.effect_columns[1].amount_value)
     else
-
-      -- special case: if the pattern was deleted from the song, the read_pos
-      -- might be referring to a non-existing pattern - in such a case,
-      -- we re-initialize to the current position
-      -- TODO "proper" align of readpos via patt-seq notifications
-      if not rns.sequencer.pattern_sequence[read_pos.sequence] then
-        LOG("Missing pattern sequence - was removed from song?")
-        read_pos.sequence = rns.transport.playback_pos.sequence
-      end
-
       xline = xLine.do_read(
-        read_pos.sequence,read_pos.line,self.include_hidden,self.track_index,phrase)
-      self.read_buffer[line_index] = table.rcopy(xline) -- TODO rcopy needed ?
-      --print("*** xStream:get_content - read_pos",read_pos,"line_index",line_index,"note_cols...",rprint(xline.note_columns))
+        read_pos.sequence,read_pos.line,self.include_hidden,self.track_index)
+      self.read_buffer[buffer_idx] = table.rcopy(xline) -- TODO rcopy needed ?
+      print("*** xStream:get_content - fresh fetch - read_pos",read_pos,"buffer_idx",buffer_idx,"fx-col amount_value",xline.effect_columns[1].amount_value)
     end
-    --print("IN  ",line_index,read_pos,xline.note_columns[1].note_string)
+    --self.highest_read_buffer_idx = math.max(buffer_idx,self.highest_read_buffer_idx)
+    --print("IN  ",buffer_idx,read_pos,xline.note_columns[1].note_string)
 
     -- handle scheduling ----------------------------------
 
@@ -1191,27 +1196,27 @@ function xStream:get_content(pos,num_lines,xpos)
     -- process the callback -------------------------------
     local buffer_content = nil
     local success,err = pcall(function()
-      buffer_content = callback(line_index,xLine(xline),xSongPos(read_pos))
+      buffer_content = callback(buffer_idx,xLine(xline),xSongPos(read_pos))
     end)
     if not success and err then
       LOG("ERROR: please review the callback function - "..err)
       -- TODO display runtime errors separately (runtime_status)
       self.callback_status_observable.value = err
-      --self.buffer[line_index] = xLine({})
+      --self.buffer[buffer_idx] = xLine({})
     elseif success then
       -- we might have redefined the xline (or parts of it) in our  
       -- callback method - convert everything into class instances...
       -- TODO check against 'user_redefined_xline'
       local success,err = pcall(function()
-        self.buffer[line_index] = xLine.apply_descriptor(buffer_content)
+        self.buffer[buffer_idx] = xLine.apply_descriptor(buffer_content)
       end)
       if not success and err then
         LOG("ERROR: an error occurred while converting xline - "..err)
-        self.buffer[line_index] = self.empty_xline
+        self.buffer[buffer_idx] = self.empty_xline
       end
 
     end
-    self.highest_buffer_idx = math.max(line_index,self.highest_buffer_idx)
+    self.highest_buffer_idx = math.max(buffer_idx,self.highest_buffer_idx)
 
     if not has_read_buffer then
       read_pos:increase_by_lines(1)
@@ -1219,7 +1224,8 @@ function xStream:get_content(pos,num_lines,xpos)
 
   end
 
-  self.next_read_pos = read_pos
+  self.stream.readpos = read_pos
+  print("*** POST-get-content readpos",self.stream.readpos)
 
 end
 
@@ -1302,8 +1308,9 @@ function xStream:reset()
   self.buffer = {}
   self.highest_buffer_idx = 0
   self.lowest_buffer_idx = 0
+
   self.read_buffer = {}
-  self.next_read_pos = nil
+  self.stream.readpos = nil
 
   -- revert data to initial state
   if self.selected_model then
@@ -1387,6 +1394,31 @@ function xStream:unmute()
 end
 
 -------------------------------------------------------------------------------
+-- update all content ahead of our position
+-- method is called when xStreamPos is changing position 'abruptly'
+
+function xStream:update_read_buffer()
+  print("xStream:update_read_buffer()")
+
+  if self.stream.readpos then
+    
+    print(">>> xStream:update_read_buffer - self.stream.readpos",self.stream.readpos)
+    print(">>> xStream:update_read_buffer - self.stream.playpos",self.stream.playpos)
+    for k = 0,self.writeahead-1 do
+      local buffer_idx = self.stream.readpos.lines_travelled
+      self.read_buffer[buffer_idx] = xLine.do_read(
+        self.stream.readpos.sequence,self.stream.readpos.line,self.include_hidden,self.track_index)
+      print(">>> xStream:update_read_buffer -- ",buffer_idx,"line in pattern",self.stream.readpos,self.read_buffer[buffer_idx].effect_columns[1].amount_value)
+      self.stream.readpos:increase_by_lines(1)
+    end
+
+    --self.stream.readpos.lines_travelled = self.stream.readpos.lines_travelled - self.writeahead
+    self:wipe_futures()
+  end
+
+end
+
+-------------------------------------------------------------------------------
 -- forget all output ahead of our current write-position
 -- method is automatically called when callback arguments have changed,
 -- and will cause fresh line(s) to be created in the next cycle
@@ -1444,7 +1476,8 @@ function xStream:determine_writeahead()
   local bpm = rns.transport.bpm
   local lpb = rns.transport.lpb
 
-  self.writeahead = math.ceil(math.max(2,(bpm*lpb)/self.writeahead_factor))
+  --self.writeahead = math.ceil(math.max(2,(bpm*lpb)/self.writeahead_factor))
+  self.writeahead = 5
   self.stream.writeahead = self.writeahead
 
 end
@@ -1469,15 +1502,6 @@ function xStream:on_idle()
     self.stream:track_pos()
   end
 
-  -- track when blockloop changes (update scheduling)
-  if (self._loop_block_enabled ~= rns.transport.loop_block_enabled) then
-    --print("loop_block_notifier fired...")
-    self._loop_block_enabled = rns.transport.loop_block_enabled
-    if rns.transport.playing then
-      self:compute_scheduling_pos()
-    end
-  end
-
   -- TODO optimize this by exporting only while not playing
   if self.preset_bank_export_requested then
     self.preset_bank_export_requested = false
@@ -1489,6 +1513,15 @@ function xStream:on_idle()
     self.favorite_export_requested = false
     if self.autosave_enabled then
       self.favorites:save()
+    end
+  end
+
+  -- track when blockloop changes (update scheduling)
+  if (self.block_enabled ~= rns.transport.loop_block_enabled) then
+    print("*** xStream - block_enabled changed...")
+    self.block_enabled = rns.transport.loop_block_enabled
+    if rns.transport.playing then
+      self:compute_scheduling_pos()
     end
   end
 
@@ -1615,7 +1648,7 @@ function xStream:apply_to_range(from_line,to_line,travelled)
   local cached_active = self.active
   local cached_buffer = self.buffer
   local cached_read_buffer = self.read_buffer
-  local cached_next_read_pos = self.next_read_pos
+  local cached_readpos = self.stream.readpos
   local cached_bounds_mode = self.bounds_mode
   local cached_block_mode = self.block_mode
   local cached_loop_mode = self.loop_mode
@@ -1631,7 +1664,7 @@ function xStream:apply_to_range(from_line,to_line,travelled)
   self.active = cached_active
   self.buffer = cached_buffer
   self.read_buffer = cached_read_buffer
-  self.next_read_pos = cached_next_read_pos
+  self.stream.readpos = cached_readpos
   self.bounds_mode = cached_bounds_mode
   self.block_mode = cached_block_mode
   self.loop_mode = cached_loop_mode

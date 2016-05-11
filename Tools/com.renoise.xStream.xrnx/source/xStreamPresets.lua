@@ -299,7 +299,7 @@ function xStreamPresets:rename(str_name)
   TRACE("xStreamPresets:rename(str_name)",str_name)
 
   if not str_name then
-    str_name = xDialog.prompt_for_string(self.name,
+    str_name = vPrompt.prompt_for_string(self.name,
       "Enter a new name","Rename Preset Bank")
     if not str_name then
       return true
@@ -357,7 +357,7 @@ function xStreamPresets:rename_preset(idx,str_name)
   end
 
   if not str_name then
-    str_name = xDialog.prompt_for_string(self.preset_names[idx],
+    str_name = vPrompt.prompt_for_string(self.preset_names[idx],
       "Enter a name","Rename Preset")
     if not str_name then
       return false

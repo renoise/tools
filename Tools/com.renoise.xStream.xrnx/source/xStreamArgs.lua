@@ -99,7 +99,7 @@ function xStreamArgs:add(arg,index,do_replace)
     -- provide default argument
     local str_name = self:get_unique_name()
     --print("str_name",str_name)
-    str_name = xDialog.prompt_for_string(str_name,
+    str_name = vPrompt.prompt_for_string(str_name,
       "Enter a name to be used as identifier","Argument Name")
     if not str_name then
       return false

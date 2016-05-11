@@ -12,26 +12,29 @@ com.renoise.xStream.xrnx (main.lua)
 --------------------------------------------------------------------------------
 
 local app_dir = 'source/'
-local xLib_dir = 'source/xLib/'
+local vlib_root = 'source/vLib/classes/'
+require (vlib_root..'helpers/vColor')
+require (vlib_root..'vPrompt')
 
-require (xLib_dir..'xLib')
-require (xLib_dir..'xAudioDevice')
-require (xLib_dir..'xBlockLoop')
-require (xLib_dir..'xColor')
-require (xLib_dir..'xDialog')
-require (xLib_dir..'xEffectColumn')
-require (xLib_dir..'xFilesystem')
-require (xLib_dir..'xLine')
-require (xLib_dir..'xLineAutomation')
-require (xLib_dir..'xLinePattern')
-require (xLib_dir..'xNoteColumn')
-require (xLib_dir..'xParseXML')
-require (xLib_dir..'xObservable')
-require (xLib_dir..'xPhraseMgr')
-require (xLib_dir..'xReflection')
-require (xLib_dir..'xScale')
-require (xLib_dir..'xSongPos')
-require (xLib_dir..'xStreamPos')
+local xlib_root = 'source/xLib/classes/'
+
+require (xlib_root..'xLib')
+require (xlib_root..'xAudioDevice')
+require (xlib_root..'xBlockLoop')
+require (xlib_root..'xEffectColumn')
+require (xlib_root..'xFilesystem')
+require (xlib_root..'xLine')
+require (xlib_root..'xLineAutomation')
+require (xlib_root..'xLinePattern')
+require (xlib_root..'xNoteColumn')
+require (xlib_root..'xParseXML')
+require (xlib_root..'xObservable')
+require (xlib_root..'xPhraseManager')
+require (xlib_root..'xReflection')
+require (xlib_root..'xScale')
+require (xlib_root..'xSongPos')
+require (xlib_root..'xPlayPos')
+require (xlib_root..'xStreamPos')
 
 require (app_dir..'xStream')
 require (app_dir..'xStreamArg')
@@ -42,13 +45,6 @@ require (app_dir..'xStreamModel')
 require (app_dir..'xStreamPresets')
 require (app_dir..'xStreamUI')
 
-require (xLib_dir..'unit_tests/xsongpos_test')
-require (xLib_dir..'unit_tests/xnotecolumn_test')
-require (xLib_dir..'unit_tests/xeffectcolumn_test')
-require (xLib_dir..'unit_tests/xstream_test')
-require (xLib_dir..'unit_tests/xparsexml_test')
-require (xLib_dir..'unit_tests/xfilesystem_test')
-        
 --------------------------------------------------------------------------------
 -- preferences
 --------------------------------------------------------------------------------
@@ -474,10 +470,10 @@ end
 function attach_to_song()
   TRACE("attach_to_song()")
   
-  xLib.attach_to_observable(rns.transport.playing_observable,playing_notifier)
-  xLib.attach_to_observable(rns.selected_track_index_observable,selected_track_index_notifier)
-  xLib.attach_to_observable(rns.selected_parameter_observable,device_param_notifier) 
-  xLib.attach_to_observable(rns.transport.edit_mode_observable,edit_notifier)
+  xObservable.attach(rns.transport.playing_observable,playing_notifier)
+  xObservable.attach(rns.selected_track_index_observable,selected_track_index_notifier)
+  xObservable.attach(rns.selected_parameter_observable,device_param_notifier) 
+  xObservable.attach(rns.transport.edit_mode_observable,edit_notifier)
 
   selected_track_index_notifier()
   device_param_notifier()

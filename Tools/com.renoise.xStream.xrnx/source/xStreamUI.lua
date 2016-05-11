@@ -12,6 +12,10 @@ xStreamUI
 
 class 'xStreamUI'
 
+xStreamUI.COLOR_ENABLED = {0xD0,0xD8,0xD4}
+xStreamUI.COLOR_DISABLED = {0x00,0x00,0x00}
+xStreamUI.COLOR_BASE = {0x5A,0x5A,0x5A}
+
 xStreamUI.MODEL_CONTROLS = {
   "xStreamAddPreset",
   "xStreamRemovePreset",
@@ -261,7 +265,7 @@ function xStreamUI:__init(xstream,vb,midi_prefix)
   self.model_dialog_page = nil
   self.model_dialog_option = nil
 
-  self.base_color_highlight = xColor.adjust_brightness(xLib.COLOR_BASE,xStreamUI.HIGHLIGHT_AMOUNT)
+  self.base_color_highlight = vColor.adjust_brightness(xStreamUI.COLOR_BASE,xStreamUI.HIGHLIGHT_AMOUNT)
 
 
   -- initialize -----------------------
@@ -1733,9 +1737,9 @@ function xStreamUI:update_model_list_row(model_idx)
     view_bt.text = ("%s%s"):format(model.name,(model.modified) and "*" or "")
     local model_color = selected and xLib.COLOR_ENABLED or xLib.COLOR_DISABLED
     if (model.color > 0) then
-      model_color = xColor.value_to_color_table(model.color)
+      model_color = vColor.value_to_color_table(model.color)
       if selected then
-        model_color = xColor.adjust_brightness(model_color,xStreamUI.BRIGHTEN_AMOUNT)
+        model_color = vColor.adjust_brightness(model_color,xStreamUI.BRIGHTEN_AMOUNT)
       end
     end
     view_bt.color = model_color
@@ -2142,9 +2146,9 @@ function xStreamUI:update_preset_list_row(idx)
   view_bt = self.vb.views["xStreamModelPresetRecall"..idx]
   local preset_color = base_color
   if (model.color > 0) then
-    preset_color = xColor.value_to_color_table(model.color)
+    preset_color = vColor.value_to_color_table(model.color)
     if selected then
-      preset_color = xColor.adjust_brightness(preset_color,xStreamUI.BRIGHTEN_AMOUNT)
+      preset_color = vColor.adjust_brightness(preset_color,xStreamUI.BRIGHTEN_AMOUNT)
     end
   end
   view_bt.color = preset_color
@@ -2284,7 +2288,7 @@ function xStreamUI:update_favorite_button(idx,brightness)
       -- 
       str_txt = ("%s %s"):format(na_prefix,xLib.soft_wrap(favorite.model_name))
     else
-      color = xColor.value_to_color_table(model.color)
+      color = vColor.value_to_color_table(model.color)
       local str_launch_mode = xStreamFavorites.LAUNCH_MODES_SHORT[favorite.launch_mode]
       --print("favorite.launch_mode",favorite.launch_mode)
       --print("str_launch_mode",str_launch_mode)
@@ -2338,12 +2342,12 @@ function xStreamUI:update_favorite_button(idx,brightness)
   end
 
   if brightness then
-    color = xColor.adjust_brightness(color,brightness)
+    color = vColor.adjust_brightness(color,brightness)
   else
     if (idx == self.selected_favorite_index) then
-      color = xColor.adjust_brightness(color,xStreamUI.SELECTED_COLOR) -- dark
+      color = vColor.adjust_brightness(color,xStreamUI.SELECTED_COLOR) -- dark
     elseif (idx == self.xstream.favorites.last_selected_index) then
-      color = xColor.adjust_brightness(color,xStreamUI.BRIGHTEN_AMOUNT) -- light
+      color = vColor.adjust_brightness(color,xStreamUI.BRIGHTEN_AMOUNT) -- light
     end
   end
 
@@ -2362,7 +2366,7 @@ function xStreamUI:update_color()
   local model = self.xstream.selected_model
   local view = self.vb.views["xStreamModelColorPreview"]
   if model then
-    view.color = xColor.value_to_color_table(model.color)
+    view.color = vColor.value_to_color_table(model.color)
     view.visible = true
   else
     view.color = {0,0,0}
@@ -2809,7 +2813,7 @@ function xStreamUI:build()
           height = xStreamUI.BITMAP_BUTTON_H,
           notifier = function()
             local model_color = self.xstream.selected_model.color
-            xDialog.prompt_for_color(color_callback,model_color,xStreamUI.DEFAULT_PALETTE)
+            vPrompt.prompt_for_color(color_callback,model_color,xStreamUI.DEFAULT_PALETTE)
           end,
         },
         vb:text{
@@ -3012,10 +3016,10 @@ function xStreamUI:build()
     self.build_presets_requested = true
     self.update_presets_requested = true
     local preset_bank = self.xstream.selected_model.selected_preset_bank
-    xLib.attach_to_observable(preset_bank.presets_observable,presets_modified_notifier)
-    xLib.attach_to_observable(preset_bank.modified_observable,presets_modified_notifier)
-    xLib.attach_to_observable(preset_bank.selected_preset_index_observable,preset_index_notifier)
-    xLib.attach_to_observable(preset_bank.name_observable,preset_bank_notifier)
+    xObservable.attach(preset_bank.presets_observable,presets_modified_notifier)
+    xObservable.attach(preset_bank.modified_observable,presets_modified_notifier)
+    xObservable.attach(preset_bank.selected_preset_index_observable,preset_index_notifier)
+    xObservable.attach(preset_bank.name_observable,preset_bank_notifier)
   end
 
   local selected_model_index_notifier = function()
@@ -3023,15 +3027,15 @@ function xStreamUI:build()
 
     local model = self.xstream.selected_model
     if model then
-      xLib.attach_to_observable(model.name_observable,model_name_notifier)
-      xLib.attach_to_observable(model.modified_observable,model_modified_notifier)
-      xLib.attach_to_observable(model.compiled_observable,model_compiled_notifier)
-      xLib.attach_to_observable(model.color_observable,model_color_notifier)
-      xLib.attach_to_observable(model.args.selected_index_observable,selected_arg_notifier)
-      xLib.attach_to_observable(model.args.args_observable,args_modified_notifier)
-      xLib.attach_to_observable(model.callback_str_observable,callback_notifier)
-      xLib.attach_to_observable(model.preset_banks_observable,preset_bank_notifier)
-      xLib.attach_to_observable(model.selected_preset_bank_index_observable,preset_bank_index_notifier)
+      xObservable.attach(model.name_observable,model_name_notifier)
+      xObservable.attach(model.modified_observable,model_modified_notifier)
+      xObservable.attach(model.compiled_observable,model_compiled_notifier)
+      xObservable.attach(model.color_observable,model_color_notifier)
+      xObservable.attach(model.args.selected_index_observable,selected_arg_notifier)
+      xObservable.attach(model.args.args_observable,args_modified_notifier)
+      xObservable.attach(model.callback_str_observable,callback_notifier)
+      xObservable.attach(model.preset_banks_observable,preset_bank_notifier)
+      xObservable.attach(model.selected_preset_bank_index_observable,preset_bank_index_notifier)
       preset_bank_index_notifier()
       -- select first argument
       if (#model.args.args > 0) then
@@ -3041,8 +3045,8 @@ function xStreamUI:build()
     self.update_model_requested = true
     self:update_editor()
 
-    if xDialog.color_prompt.dialog and xDialog.color_prompt.dialog.visible then
-      xDialog.prompt_for_color(color_callback,model.color)
+    if vPrompt.color_prompt.dialog and vPrompt.color_prompt.dialog.visible then
+      vPrompt.prompt_for_color(color_callback,model.color)
     end
 
   end
@@ -3179,7 +3183,7 @@ function xStreamUI:build_callback_panel()
           height = xStreamUI.BITMAP_BUTTON_H,
           notifier = function()
             local model_color = self.xstream.selected_model.color
-            xDialog.prompt_for_color(color_callback,model_color,xStreamUI.DEFAULT_PALETTE)
+            vPrompt.prompt_for_color(color_callback,model_color,xStreamUI.DEFAULT_PALETTE)
           end,
         },
         vb:text{
