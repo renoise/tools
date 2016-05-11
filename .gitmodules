@@ -2,3 +2,6 @@
 	path = Tools/com.renoise.xRules.xrnx/source/xLib
 	url = F:/github/xrnx_tools/libraries/xLib
 	branch = master
+[submodule "Tools/com.renoise.xLib.xrnx/source/xLib"]
+	path = Tools/com.renoise.xLib.xrnx/source/xLib
+	url = https://github.com/bjorn-nesby/xLib.git
