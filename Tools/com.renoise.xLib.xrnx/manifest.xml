@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<RenoiseScriptingTool doc_version="0">
+  <ApiVersion>5</ApiVersion>
+  <Id>com.renoise.xLib</Id>
+  <Version>0.1</Version>
+  <Author>danoise [bjorn.nesby@gmail.com]</Author>
+  <Name>xLib</Name>
+  <Category></Category>
+  <Description>Unit tests for the xLib library</Description>
+</RenoiseScriptingTool>
