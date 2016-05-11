@@ -17,3 +17,6 @@
 [submodule "Tools/com.renoise.xStream.xrnx/source/vLib"]
 	path = Tools/com.renoise.xStream.xrnx/source/vLib
 	url = https://github.com/bjorn-nesby/vLib
+[submodule "Tools/com.renoise.vLib.xrnx/xLib"]
+	path = Tools/com.renoise.vLib.xrnx/xLib
+	url = https://github.com/bjorn-nesby/xLib.git
