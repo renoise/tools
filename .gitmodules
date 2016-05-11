@@ -1,4 +1,0 @@
-[submodule "Tools/com.renoise.xRules.xrnx/source/vLib"]
-	path = Tools/com.renoise.xRules.xrnx/source/vLib
-	url = F:/github/xrnx_tools/libraries/vLib
-	branch = master
