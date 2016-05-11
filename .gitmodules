@@ -20,3 +20,6 @@
 [submodule "Tools/com.renoise.vLib.xrnx/xLib"]
 	path = Tools/com.renoise.vLib.xrnx/xLib
 	url = https://github.com/bjorn-nesby/xLib.git
+[submodule "Tools/com.renoise.Noodletrap.xrnx/classes/xLib"]
+	path = Tools/com.renoise.Noodletrap.xrnx/classes/xLib
+	url = https://github.com/bjorn-nesby/xLib.git
