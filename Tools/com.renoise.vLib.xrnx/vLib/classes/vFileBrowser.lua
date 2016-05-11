@@ -704,6 +704,14 @@ function vFileBrowser:set_path(str)
   local dirnames = {}
   local filenames = {}
 
+  -- check if provided string is a valid location
+  -- (if not, use the tool bundle path as fallback)
+
+  if not io.exists(str) then
+    str = renoise.tool().bundle_path
+    LOG("vFileBrowser: failed to set path (location doesn't exist)")
+  end
+
   local dirnames = os.dirnames(str)
   local filenames = os.filenames(str,self._file_ext)
 
