@@ -8,6 +8,8 @@ xStreamFavorite
 
 ]]
 
+--==============================================================================
+
 class 'xStreamFavorite'
 
 function xStreamFavorite:__init(args)

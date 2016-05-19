@@ -7,6 +7,7 @@ xStreamModel
 
 ]]
 
+--==============================================================================
 
 class 'xStreamModel'
 
@@ -111,7 +112,7 @@ function xStreamModel:__init(xstream)
   self.selected_preset_bank_index = property(self.get_preset_bank_index,self.set_preset_bank_index)
   self.selected_preset_bank_index_observable = renoise.Document.ObservableNumber(0)
 
-  -- xStreamPresets, reference to selected preset bank (please set via index)
+  -- xStreamPresets, reference to selected preset bank (set via index)
   self.selected_preset_bank = property(self.get_selected_preset_bank)
 
   -- table<vararg>, variables, can be any basic type 

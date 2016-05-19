@@ -13,12 +13,18 @@ com.renoise.xStream.xrnx (main.lua)
 
 local app_dir = 'source/'
 local vlib_root = 'source/vLib/classes/'
+local xlib_root = 'source/xLib/classes/'
+_trace_filters = nil
+--_trace_filters = {".*"}
+--_trace_filters = {"^xStreamUIFavorites"}
+
+
 require (vlib_root..'helpers/vColor')
 require (vlib_root..'vPrompt')
-
-local xlib_root = 'source/xLib/classes/'
+require (vlib_root..'vDialog')
 
 require (xlib_root..'xLib')
+require (xlib_root..'xDebug')
 require (xlib_root..'xAudioDevice')
 require (xlib_root..'xBlockLoop')
 require (xlib_root..'xEffectColumn')
@@ -44,28 +50,44 @@ require (app_dir..'xStreamFavorites')
 require (app_dir..'xStreamModel')
 require (app_dir..'xStreamPresets')
 require (app_dir..'xStreamUI')
+require (app_dir..'xStreamUIOptions')
+require (app_dir..'xStreamUIFavorites')
+require (app_dir..'xStreamUIPresetPanel')
+require (app_dir..'xStreamUIArgsPanel')
+require (app_dir..'xStreamUIArgsEditor')
 
 --------------------------------------------------------------------------------
 -- preferences
 --------------------------------------------------------------------------------
 
-
+-- TODO refactor as xStreamPrefs
 local options = renoise.Document.create("ScriptingToolPreferences"){}
+
+-- general
 options:add_property("autostart", renoise.Document.ObservableBoolean(false))
-options:add_property("editor_visible_lines", renoise.Document.ObservableNumber(16))
-options:add_property("favorites_visible", renoise.Document.ObservableBoolean(true))
 options:add_property("launch_model", renoise.Document.ObservableString(""))
-options:add_property("live_coding", renoise.Document.ObservableBoolean(true))
 options:add_property("manage_gc", renoise.Document.ObservableBoolean(false))
+-- user interface
+options:add_property("editor_visible_lines", renoise.Document.ObservableNumber(16))
+options:add_property("favorites_pinned", renoise.Document.ObservableBoolean(false))
+options:add_property("live_coding", renoise.Document.ObservableBoolean(true))
 options:add_property("model_args_visible", renoise.Document.ObservableBoolean(false))
 options:add_property("model_browser_visible", renoise.Document.ObservableBoolean(false))
 options:add_property("presets_visible", renoise.Document.ObservableBoolean(false))
 options:add_property("show_editor", renoise.Document.ObservableBoolean(true))
-options:add_property("show_unit_tests", renoise.Document.ObservableBoolean(false))
-options:add_property("suspend_when_hidden", renoise.Document.ObservableBoolean(false))
-options:add_property("start_option", renoise.Document.ObservableNumber(xStreamUI.START_OPTION.ON_PLAY_EDIT))
 options:add_property("tool_options_visible", renoise.Document.ObservableBoolean(false))
+-- streaming
+options:add_property("suspend_when_hidden", renoise.Document.ObservableBoolean(false))
+options:add_property("start_option", renoise.Document.ObservableNumber(xStreamUIOptions.START_OPTION.ON_PLAY_EDIT))
+options:add_property("scheduling", renoise.Document.ObservableNumber(xStreamUIOptions.START_OPTION.ON_PLAY_EDIT))
+options:add_property("mute_mode", renoise.Document.ObservableNumber(xStream.MUTE_MODE.OFF))
 options:add_property("writeahead_factor", renoise.Document.ObservableNumber(175))
+-- output
+options:add_property("automation_playmode", renoise.Document.ObservableNumber(xStream.PLAYMODE.POINTS))
+options:add_property("include_hidden", renoise.Document.ObservableBoolean(false))
+options:add_property("clear_undefined", renoise.Document.ObservableBoolean(true))
+options:add_property("expand_columns", renoise.Document.ObservableBoolean(true))
+
 
 renoise.tool().preferences = options
 
@@ -89,7 +111,7 @@ local cached_active
 -- @return boolean, true if we should suspend
 
 function dialog_is_suspended()
-  return (options.suspend_when_hidden.value) and
+  return (xstream.suspend_when_hidden) and
     dialog and not dialog.visible
 end
 
@@ -166,156 +188,55 @@ function show()
     return
   end
 
-  local unit_tests = vb:column{
-    margin = 6,
-    vb:row{
-      vb:text{
-        text="Click class name to run unit-test",
-      },
-    },
-    vb:row{
-      style = "group",
-      margin = 6,
-      vb:button{
-        text="xSongPos",
-        width = 100,
-        notifier = function()
-          xsongpos_test()
-        end
-      },
-      vb:button{
-        text="xNoteColumn",
-        width = 100,
-        notifier = function()
-          xnotecolumn_test()
-        end
-      },
-      vb:button{
-        text="xEffectColumn",
-        width = 100,
-        notifier = function()
-          xeffectcolumn_test()
-        end
-      },
-      --[[
-      vb:button{
-        text="xStream",
-        width = 100,
-        notifier = function()
-          xstream_test()
-        end
-      },
-      ]]
-      vb:button{
-        text="xParseXML",
-        width = 100,
-        notifier = function()
-          xparsexml_test()
-        end
-      },
-      vb:button{
-        text="xFilesystem",
-        width = 100,
-        notifier = function()
-          xfilesystem_test()
-        end
-      },
-
-    },
-  }
-
-
   -- initialize classes (once)
 
   if not xstream then
 
     xpos = xSongPos(rns.transport.edit_pos)
     xstream = xStream()
-    xstream.ui = xStreamUI(xstream,vb,MIDI_PREFIX)
+    xstream.ui = xStreamUI(xstream,vb,MIDI_PREFIX,options)
     xstream:load_models(xStream.MODELS_FOLDER)
 
     -- apply options ------------------
 
-    xstream.ui.start_option = options.start_option.value
-    xstream.ui.launch_model = options.launch_model.value
-    xstream.ui.autostart = options.autostart.value
-    xstream.ui.suspend_when_hidden = options.suspend_when_hidden.value
-    xstream.ui.manage_gc = options.manage_gc.value
-    xstream.ui.show_editor = options.show_editor.value
-    xstream.ui.tool_options_visible = options.tool_options_visible.value
-    xstream.ui.model_browser_visible = options.model_browser_visible.value
-    xstream.ui.model_args_visible = options.model_args_visible.value
-    xstream.ui.presets_visible = options.presets_visible.value
-    xstream.ui.favorites_visible = options.favorites_visible.value
-    xstream.ui.editor_visible_lines = options.editor_visible_lines.value
+
+    -- general options
+    xstream.ui.options.autostart = options.autostart.value
+    xstream.ui.options.launch_model = options.launch_model.value
+    xstream.ui.options.manage_gc = options.manage_gc.value
+
+    -- user interface options
     xstream.live_coding = options.live_coding.value
+    xstream.ui.show_editor = options.show_editor.value
+    xstream.ui.args.visible = options.model_args_visible.value
+    xstream.ui.presets.visible = options.presets_visible.value
+    xstream.ui.favorites.pinned = options.favorites_pinned.value
+    xstream.ui.editor_visible_lines = options.editor_visible_lines.value
+
+    -- streaming options
+    xstream.ui.options.start_option = options.start_option.value
+    xstream.scheduling = options.scheduling.value
+    xstream.mute_mode = options.mute_mode.value
+    xstream.suspend_when_hidden = options.suspend_when_hidden.value
     xstream.writeahead_factor = options.writeahead_factor.value
 
-    -- add notifiers ------------------
+    -- output outputs
+    xstream.automation_playmode = options.automation_playmode.value
+    xstream.include_hidden = options.include_hidden.value
+    xstream.clear_undefined = options.clear_undefined.value
+    xstream.expand_columns = options.expand_columns.value
 
-    xstream.ui.start_option_observable:add_notifier(function()
-      TRACE("*** main.lua - xstream.ui.start_option_observable fired...")
-      options.start_option.value = xstream.ui.start_option_observable.value
-    end)
 
-    xstream.ui.launch_model_observable:add_notifier(function()
-      TRACE("*** main.lua - xstream.ui.launch_model_observable fired...")
-      options.launch_model.value = xstream.ui.launch_model_observable.value
-    end)
-
-    xstream.ui.autostart_observable:add_notifier(function()
-      TRACE("*** main.lua - xstream.ui.autostart_observable fired...")
-      options.autostart.value = xstream.ui.autostart_observable.value
-    end)
-
-    xstream.ui.suspend_when_hidden_observable:add_notifier(function()
-      TRACE("*** main.lua - xstream.ui.suspend_when_hidden_observable fired...")
-      options.suspend_when_hidden.value = xstream.ui.suspend_when_hidden_observable.value
-    end)
-
-    xstream.ui.manage_gc_observable:add_notifier(function()
-      TRACE("*** main.lua - xstream.ui.manage_gc_observable fired...")
-      options.manage_gc.value = xstream.ui.manage_gc_observable.value
-    end)
-
-    xstream.ui.show_editor_observable:add_notifier(function()
-      TRACE("*** main.lua - xstream.ui.show_editor_observable fired...")
-      options.show_editor.value = xstream.ui.show_editor_observable.value
-    end)
-
-    xstream.ui.tool_options_visible_observable:add_notifier(function()
-      TRACE("*** main.lua - xstream.ui.tool_options_visible_observable fired...")
-      options.tool_options_visible.value = xstream.ui.tool_options_visible_observable.value
-    end)
-
-    xstream.ui.model_browser_visible_observable:add_notifier(function()
-      TRACE("*** main.lua - xstream.ui.model_browser_visible_observable fired...")
-      options.model_browser_visible.value = xstream.ui.model_browser_visible
-    end)
-
-    xstream.ui.model_args_visible_observable:add_notifier(function()
-      TRACE("*** main.lua - xstream.ui.model_args_visible_observable fired...")
-      options.model_args_visible.value = xstream.ui.model_args_visible
-    end)
-
-    xstream.ui.presets_visible_observable:add_notifier(function()
-      TRACE("*** main.lua - xstream.ui.presets_visible_observable fired...")
-      options.presets_visible.value = xstream.ui.presets_visible
-    end)
-
-    xstream.ui.favorites_visible_observable:add_notifier(function()
-      TRACE("*** main.lua - xstream.ui.favorites_visible_observable fired...")
-      options.favorites_visible.value = xstream.ui.favorites_visible
-    end)
-
-    xstream.ui.editor_visible_lines_observable:add_notifier(function()
-      TRACE("*** main.lua - xstream.ui.editor_visible_lines_observable fired...")
-      options.editor_visible_lines.value = xstream.ui.editor_visible_lines
-    end)
+    -- notifiers --
 
     xstream.live_coding_observable:add_notifier(function()
       TRACE("*** main.lua - xstream.live_coding_observable fired...")
       options.live_coding.value = xstream.live_coding_observable.value
+    end)
+
+    xstream.automation_playmode_observable:add_notifier(function()
+      TRACE("*** main.lua - xstream.automation_playmode_observable fired...")
+      options.automation_playmode.value = xstream.automation_playmode_observable.value
     end)
 
     xstream.writeahead_factor_observable:add_notifier(function()
@@ -323,9 +244,94 @@ function show()
       options.writeahead_factor.value = xstream.writeahead_factor_observable.value
     end)
 
+    xstream.include_hidden_observable:add_notifier(function()
+      TRACE("*** main.lua - xstream.include_hidden_observable fired...")
+      options.include_hidden.value = xstream.include_hidden_observable.value
+    end)
+
+    xstream.clear_undefined_observable:add_notifier(function()
+      TRACE("*** main.lua - xstream.clear_undefined_observable fired...")
+      options.clear_undefined.value = xstream.clear_undefined_observable.value
+    end)
+
+    xstream.expand_columns_observable:add_notifier(function()
+      TRACE("*** main.lua - xstream.expand_columns_observable fired...")
+      options.expand_columns.value = xstream.expand_columns_observable.value
+    end)
+
     xstream.active_observable:add_notifier(function()
       TRACE("*** main.lua - xstream.active_observable fired...")
       register_tool_menu()
+    end)
+
+    xstream.ui.options.start_option_observable:add_notifier(function()
+      TRACE("*** xStreamUI - xstream.ui.options.start_option_observable fired...")
+      options.start_option.value = xstream.ui.options.start_option_observable.value
+    end)
+
+    xstream.ui.options.launch_model_observable:add_notifier(function()
+      TRACE("*** xStreamUI - xstream.ui.options.launch_model_observable fired...")
+      options.launch_model.value = xstream.ui.options.launch_model_observable.value
+    end)
+
+    xstream.ui.options.autostart_observable:add_notifier(function()
+      TRACE("*** xStreamUI - xstream.ui.options.autostart_observable fired...")
+      options.autostart.value = xstream.ui.options.autostart_observable.value
+    end)
+
+    xstream.suspend_when_hidden_observable:add_notifier(function()
+      TRACE("*** xStreamUI - xstream.suspend_when_hidden_observable fired...")
+      options.suspend_when_hidden.value = xstream.suspend_when_hidden_observable.value
+    end)
+
+    xstream.scheduling_observable:add_notifier(function()
+      TRACE("*** xStreamUI - xstream.scheduling_observable fired...")
+      options.scheduling.value = xstream.scheduling_observable.value
+    end)
+
+    xstream.mute_mode_observable:add_notifier(function()
+      TRACE("*** xStreamUI - xstream.mute_mode_observable fired...")
+      options.mute_mode.value = xstream.mute_mode_observable.value
+    end)
+
+    xstream.ui.options.manage_gc_observable:add_notifier(function()
+      TRACE("*** xStreamUI - xstream.ui.options.manage_gc_observable fired...")
+      options.manage_gc.value = xstream.ui.options.manage_gc_observable.value
+    end)
+
+    xstream.ui.show_editor_observable:add_notifier(function()
+      TRACE("*** xStreamUI - xstream.ui.show_editor_observable fired...")
+      options.show_editor.value = xstream.ui.show_editor_observable.value
+    end)
+
+    xstream.ui.tool_options_visible_observable:add_notifier(function()
+      TRACE("*** xStreamUI - xstream.ui.tool_options_visible_observable fired...")
+      options.tool_options_visible.value = xstream.ui.tool_options_visible_observable.value
+    end)
+
+    xstream.ui.model_browser_visible_observable:add_notifier(function()
+      TRACE("*** xStreamUI - xstream.ui.model_browser_visible_observable fired...")
+      options.model_browser_visible.value = xstream.ui.model_browser_visible
+    end)
+
+    xstream.ui.args.visible_observable:add_notifier(function()
+      TRACE("*** xStreamUI - xstream.ui.args.visible_observable fired...")
+      options.model_args_visible.value = xstream.ui.args.visible
+    end)
+
+    xstream.ui.presets.visible_observable:add_notifier(function()
+      TRACE("*** xStreamUI - xstream.ui.presets.visible_observable fired...")
+      options.presets_visible.value = xstream.ui.presets.visible
+    end)
+
+    xstream.ui.favorites.pinned_observable:add_notifier(function()
+      TRACE("*** xStreamUI - xstream.ui.favorites.pinned_observable fired...")
+      options.favorites_pinned.value = xstream.ui.favorites.pinned
+    end)
+
+    xstream.ui.editor_visible_lines_observable:add_notifier(function()
+      TRACE("*** xStreamUI - xstream.ui.editor_visible_lines_observable fired...")
+      options.editor_visible_lines.value = xstream.ui.editor_visible_lines
     end)
 
   end
@@ -338,14 +344,12 @@ function show()
     -- create, or re-create if hidden
     if not dialog_content then
       dialog_content = vb:column{
-        unit_tests,
         xstream.ui.vb_content,
       }
-      unit_tests.visible = options.show_unit_tests.value
 
       -- initialize -----------------------
 
-      xstream.ui:select_launch_model()
+      xstream.ui.options:select_launch_model()
       xstream.favorites:import("./favorites.xml")
       xstream.autosave_enabled = true
 
@@ -390,6 +394,10 @@ function show()
     end
     idle_obs:add_notifier(idle_notifier_actual)
 
+    if xstream.ui.favorites.pinned then
+      print(">>> open pinned favorites")
+      xstream.ui.favorites:show()
+    end
 
   end
 
@@ -402,7 +410,7 @@ end
 function selected_track_index_notifier()
   TRACE("*** selected_track_index_notifier fired...")
   if (xstream) then
-      xstream.track_index = rns.selected_track_index
+    xstream.track_index = rns.selected_track_index
   end
 end
 
@@ -425,11 +433,11 @@ function edit_notifier()
         return
       end
       if rns.transport.playing and
-        (options.start_option.value == xStreamUI.START_OPTION.ON_PLAY_EDIT) 
+        (options.start_option.value == xStreamUIOptions.START_OPTION.ON_PLAY_EDIT) 
       then
         xstream:start()
       end
-    elseif (options.start_option.value == xStreamUI.START_OPTION.ON_PLAY_EDIT) then
+    elseif (options.start_option.value == xStreamUIOptions.START_OPTION.ON_PLAY_EDIT) then
       xstream:stop()
     end
   end
@@ -441,7 +449,7 @@ function playing_notifier()
   TRACE("main - playing_notifier fired...")
   if xstream then
     if not rns.transport.playing then -- autostop
-      if (options.start_option.value ~= xStreamUI.START_OPTION.MANUAL) then
+      if (options.start_option.value ~= xStreamUIOptions.START_OPTION.MANUAL) then
         xstream:stop()
       end
     elseif not xstream.active then -- autostart
@@ -450,13 +458,13 @@ function playing_notifier()
         return
       end
 
-      if (options.start_option.value ~= xStreamUI.START_OPTION.MANUAL) then
+      if (options.start_option.value ~= xStreamUIOptions.START_OPTION.MANUAL) then
         if rns.transport.edit_mode then
-          if (options.start_option.value == xStreamUI.START_OPTION.ON_PLAY_EDIT) then
+          if (options.start_option.value == xStreamUIOptions.START_OPTION.ON_PLAY_EDIT) then
             xstream:start()
           end
         else
-          if (options.start_option.value == xStreamUI.START_OPTION.ON_PLAY) then
+          if (options.start_option.value == xStreamUIOptions.START_OPTION.ON_PLAY) then
             xstream:start()
           end
         end

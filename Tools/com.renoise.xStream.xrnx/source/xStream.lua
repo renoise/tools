@@ -11,6 +11,8 @@ xStream
 
 ]]
 
+--==============================================================================
+
 class 'xStream'
 
 xStream.FAVORITES_FILE_PATH = "./favorites.xml"
@@ -18,6 +20,7 @@ xStream.MODELS_FOLDER       = "./models/"
 xStream.PRESET_BANK_FOLDER  = "./presets/"
 
 -- automation interpolation mode
+xStream.PLAYMODES = {"Points","Linear","Cubic"}
 xStream.PLAYMODE = {
   POINTS = 1,
   LINEAR = 2,
@@ -32,7 +35,7 @@ xStream.OUTPUT_MODE = {
 }
 
 -- model/preset scheduling 
-xStream.SCHEDULES = {"NONE","BEAT","BAR","BLOCK","PATTERN"}
+xStream.SCHEDULES = {"None","Beat","Bar","Block","Pattern"}
 xStream.SCHEDULE = {
   NONE = 1,
   BEAT = 2,
@@ -48,7 +51,7 @@ xStream.SCHEDULE = {
 -- OFF = insert OFF across columns, then nothing
 --    TODO when 'clear_undefined' is true, OFF is only written when
 --    there is not an existing note at that position
-xStream.MUTE_MODES = {"NONE","OFF"}
+xStream.MUTE_MODES = {"None","Off"}
 xStream.MUTE_MODE = {
   NONE = 1,
   OFF = 2,
@@ -109,9 +112,6 @@ function xStream:__init()
   -- value while applying output to TRACK/SELECTION
   self.output_mode = xStream.OUTPUT_MODE.STREAMING
 
-  -- xStream.PLAYMODE (string-based enum)
-  self.automation_playmode = xStream.PLAYMODE.LINEAR
-
   -- (bool) keep track of loop block state
   self.block_enabled = rns.transport.loop_block_enabled
 
@@ -130,6 +130,10 @@ function xStream:__init()
   -- bool, when true we automatically save favorites/presets
   self.autosave_enabled = false
   
+  -- xStream.PLAYMODE (string-based enum)
+  self.automation_playmode = property(self.get_automation_playmode,self.set_automation_playmode)
+  self.automation_playmode_observable = renoise.Document.ObservableNumber(xStream.PLAYMODE.LINEAR)
+
   -- int, decrease this if you are experiencing dropouts during heavy UI
   -- operations in Renoise (such as opening a plugin GUI) 
   self.writeahead_factor = property(self.get_writeahead_factor,self.set_writeahead_factor)
@@ -156,33 +160,27 @@ function xStream:__init()
   self.device_param_index_observable = renoise.Document.ObservableNumber(0)
 
   -- boolean, whether to include hidden (not visible) columns
-  self.include_hidden = property(
-    self.get_include_hidden,self.set_include_hidden)
+  self.include_hidden = property(self.get_include_hidden,self.set_include_hidden)
   self.include_hidden_observable = renoise.Document.ObservableBoolean(false)
 
   -- boolean, determine how to respond to 'undefined' content
-  self.clear_undefined = property(
-    self.get_clear_undefined,self.set_clear_undefined)
+  self.clear_undefined = property(self.get_clear_undefined,self.set_clear_undefined)
   self.clear_undefined_observable = renoise.Document.ObservableBoolean(true)
 
   -- boolean, whether to expand (sub-)columns when writing data
-  self.expand_columns = property(
-    self.get_expand_columns,self.set_expand_columns)
+  self.expand_columns = property(self.get_expand_columns,self.set_expand_columns)
   self.expand_columns_observable = renoise.Document.ObservableBoolean(true)
 
   -- xStream.MUTE_MODE, controls how muting is done
-  self.mute_mode = property(
-    self.get_mute_mode,self.set_mute_mode)
+  self.mute_mode = property(self.get_mute_mode,self.set_mute_mode)
   self.mute_mode_observable = renoise.Document.ObservableNumber(xStream.MUTE_MODE.OFF)
 
   -- bool, set to true to silence output
-  self.muted = property(
-    self.get_muted,self.set_muted)
+  self.muted = property(self.get_muted,self.set_muted)
   self.muted_observable = renoise.Document.ObservableBoolean(false)
 
   -- xStream.SCHEDULE, active scheduling mode
-  self.scheduling = property(
-    self.get_scheduling,self.set_scheduling)
+  self.scheduling = property(self.get_scheduling,self.set_scheduling)
   self.scheduling_observable = renoise.Document.ObservableNumber(xStream.SCHEDULE.BEAT)
 
   -- int, read-only - set via schedule_item(), 0 means none 
@@ -204,14 +202,15 @@ function xStream:__init()
   self._scheduled_pos = nil
 
   -- int, read-only - set via schedule_item()
-  self.scheduled_preset_index = property(
-    self.get_scheduled_preset_index)
+  self.scheduled_preset_index = property(self.get_scheduled_preset_index)
   self.scheduled_preset_index_observable = renoise.Document.ObservableNumber(0)
 
   -- int, read-only - set via schedule_item()
-  self.scheduled_preset_bank_index = property(
-    self.get_scheduled_preset_bank_index)
+  self.scheduled_preset_bank_index = property(self.get_scheduled_preset_bank_index)
   self.scheduled_preset_bank_index_observable = renoise.Document.ObservableNumber(0)
+
+  self.suspend_when_hidden = property(self.get_suspend_when_hidden,self.set_suspend_when_hidden)
+  self.suspend_when_hidden_observable = renoise.Document.ObservableBoolean(true)
 
     -- int, the line at which output got muted
   self.mute_pos = nil
@@ -223,8 +222,7 @@ function xStream:__init()
   })
 
   -- bool, true when we should output during live streaming 
-  self.active = property(
-    self.get_active,self.set_active)
+  self.active = property(self.get_active,self.set_active)
   self.active_observable = renoise.Document.ObservableBoolean(false)
 
   -- table<xStreamModel>, registered models 
@@ -238,8 +236,7 @@ function xStream:__init()
   self.models_observable = renoise.Document.ObservableNumberList()
 
   -- int, the model index, 1-#models or 0 when none are available
-  self.selected_model_index = property(
-    self.get_selected_model_index,self.set_selected_model_index)
+  self.selected_model_index = property(self.get_selected_model_index,self.set_selected_model_index)
   self.selected_model_index_observable = renoise.Document.ObservableNumber(0)
 
   -- xStreamModel, read-only - nil when none are available
@@ -436,7 +433,7 @@ function xStream:get_model_names()
 
   local t = {}
   for _,v in ipairs(self.models) do
-    table.insert(t,v.name)
+    table.insert(t,v.modified and v.name.."*" or v.name)
   end
   return t
 
@@ -814,6 +811,16 @@ end
 
 -------------------------------------------------------------------------------
 
+function xStream:get_automation_playmode()
+  return self.automation_playmode_observable.value
+end
+
+function xStream:set_automation_playmode(val)
+  self.automation_playmode_observable.value = val
+end
+
+-------------------------------------------------------------------------------
+
 function xStream:get_writeahead_factor()
   return self.writeahead_factor_observable.value
 end
@@ -915,6 +922,7 @@ function xStream:get_scheduling()
 end
 
 function xStream:set_scheduling(val)
+  TRACE("xStream:set_scheduling(val)",val)
   self.scheduling_observable.value = val
 end
 
@@ -946,6 +954,16 @@ end
 
 function xStream:get_scheduled_preset_bank_index()
   return self.scheduled_preset_bank_index_observable.value
+end
+
+-------------------------------------------------------------------------------
+
+function xStream:get_suspend_when_hidden()
+  return self.suspend_when_hidden_observable.value
+end
+
+function xStream:set_suspend_when_hidden(val)
+  self.suspend_when_hidden_observable.value = val
 end
 
 -------------------------------------------------------------------------------

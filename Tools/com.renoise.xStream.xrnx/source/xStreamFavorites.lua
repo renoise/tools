@@ -13,6 +13,8 @@ xStreamFavorites
 
 ]]
 
+--==============================================================================
+
 class 'xStreamFavorites'
 
 xStreamFavorites.LAUNCH_MODES = {"AUTOMATIC","→ STREAMING","↓ TRACK","↓ SELECTION"}
