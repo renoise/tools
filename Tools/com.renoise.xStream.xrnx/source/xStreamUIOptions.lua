@@ -220,6 +220,15 @@ function xStreamUIOptions:create_dialog()
             end,
           },
         },
+        --[[
+        vb:button{
+          text = "remove trace statements",
+          notifier = function()
+            xDebug.remove_trace_statements()
+          end
+        }
+        ]]
+
       },
       vb:column{ -- stats
         margin = 4,
