@@ -95,7 +95,7 @@ function xStreamUIFavorites:get_pinned()
 end
 
 function xStreamUIFavorites:set_pinned(val)
-  print("set pinned",val)
+  --print("set pinned",val)
   self.pinned_observable.value = val
 end
 
@@ -818,10 +818,10 @@ function xStreamUIFavorites:update_edit_model_selector()
     return
   end
 
-  print(">>> model_selector.items",rprint(model_selector.items))
+  --print(">>> model_selector.items",rprint(model_selector.items))
 
   local model_idx,model = self.xstream:get_model_by_name(favorite.model_name)
-  print("model_idx,model",model_idx,model)
+  --print("model_idx,model",model_idx,model)
   if not model then
     model_status.text = xStreamUIFavorites.EDIT_RACK_WARNING
     model_status.tooltip = "This model is not available"
@@ -1025,7 +1025,7 @@ end
 -------------------------------------------------------------------------------
 
 function xStreamUIFavorites:update_pinned_state()
-  print("xStreamUIFavorites:update_pinned_state()")
+  TRACE("xStreamUIFavorites:update_pinned_state()")
 
   local view = self.vb.views["xStreamFavoritesPinnedButton"]
   if view then
@@ -1061,7 +1061,7 @@ function xStreamUIFavorites:on_idle()
   end
 
   if self.update_requested then
-    print("favorites self.update_requested")
+    --print("favorites self.update_requested")
     self.update_requested = false
     self:update_buttons()
     self:update_favorite_selector()

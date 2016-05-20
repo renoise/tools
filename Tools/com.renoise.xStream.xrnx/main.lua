@@ -402,7 +402,7 @@ function show()
     idle_obs:add_notifier(idle_notifier_actual)
 
     if xstream.ui.favorites.pinned then
-      print(">>> open pinned favorites")
+      --print(">>> open pinned favorites")
       xstream.ui.favorites:show()
     end
 

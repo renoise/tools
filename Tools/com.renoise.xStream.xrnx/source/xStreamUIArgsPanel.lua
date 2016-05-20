@@ -238,7 +238,7 @@ function xStreamUIArgsPanel:build_args()
     local arg_control = nil
     local model_name = self.xstream.selected_model.name
     local midi_mapping = ("Tools:xStream:%s:%s [Set]"):format(model_name,arg.name)
-    print(">>> midi_mapping",midi_mapping)
+    --print(">>> midi_mapping",midi_mapping)
 
     if (type(arg.observable) == "ObservableNumber") then
 

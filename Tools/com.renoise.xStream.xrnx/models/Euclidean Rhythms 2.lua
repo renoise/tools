@@ -236,7 +236,7 @@ local generate = function(steps,pulses,offset,pitch,instrument,velocity,column,l
     table.insert(pulses_full,pulse_mod + pulse_fract)
   end
   local do_output = table.find(pulses_table,position)
-  print("do_output",do_output)  
+  --print("do_output",do_output)  
   if invert then 
     do_output = not do_output 
   end

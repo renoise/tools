@@ -25,7 +25,7 @@ function xOscMessage:__init(...)
   -- native OSC message
 	local args = xLib.unpack_args(...) 
 
-  print("args",type(args),rprint(args))
+  --print("args",type(args),rprint(args))
 
   xMessage.__init(self,...)
 

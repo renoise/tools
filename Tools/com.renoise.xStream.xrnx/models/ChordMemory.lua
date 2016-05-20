@@ -505,7 +505,7 @@ else
       local range = max-min
       local random = (math.random(0,range) * (var/100))-(var/2)
       val = math.floor(math.min(max,math.max(min,val+random)))
-      print(val)
+      --print(val)
       return val
     end
     

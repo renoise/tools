@@ -157,7 +157,7 @@ function xVoiceManager:release_all()
 
   for k,v in ripairs(self.voices) do
     self:release(k)
-    print("released voice #",k)
+    --print("released voice #",k)
   end
 
 end
@@ -212,7 +212,7 @@ function xVoiceManager:check_expired()
   for k,v in ripairs(self.voices) do
     local age = os.clock() - v.timestamp
     if (age > self.duration) then
-      print("release expired voice with age",age)
+      --print("release expired voice with age",age)
       self:release(k)
     end
   end
@@ -265,12 +265,12 @@ function xVoiceManager:attach_to_song()
       for k,v in ipairs(self.voices) do
         if (v.track_index >= arg.index) then
           v.track_index = v.track_index + 1
-          print("raise track index by 1")
+          --print("raise track index by 1")
         end
       end
     end
 
-    print("instruments_observable - self.voices...",rprint(self.voices))
+    --print("instruments_observable - self.voices...",rprint(self.voices))
 
   end)
 
@@ -283,12 +283,12 @@ function xVoiceManager:attach_to_song()
       for k,v in ipairs(self.voices) do
         if (v.track_index >= arg.index) then
           v.track_index = v.track_index + 1
-          print("raise track index by 1")
+          --print("raise track index by 1")
         end
       end
     end
 
-    print("tracks_observable - self.voices...",rprint(self.voices))
+    --print("tracks_observable - self.voices...",rprint(self.voices))
 
   end)
 

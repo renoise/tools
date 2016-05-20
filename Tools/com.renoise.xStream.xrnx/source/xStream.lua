@@ -1205,7 +1205,7 @@ function xStream:get_content(pos,num_lines,xpos)
     --print("*** read_pos - self.stream.writepos",self.stream.writepos)
   else
     read_pos = xSongPos(xpos)
-    print("*** read_pos - xSongPos(xpos)",xpos)
+    --print("*** read_pos - xSongPos(xpos)",xpos)
   end
 
   -- special case: if the pattern was deleted from the song, the read_pos
@@ -1229,12 +1229,12 @@ function xStream:get_content(pos,num_lines,xpos)
       --print("*** xStream:get_content - retrieve from read buffer",buffer_idx)
       xline = self.read_buffer[buffer_idx]
       --rprint(xline)
-      print("*** xStream:get_content - retrieved from read buffer",buffer_idx,"=",xline.effect_columns[1].amount_value)
+      --print("*** xStream:get_content - retrieved from read buffer",buffer_idx,"=",xline.effect_columns[1].amount_value)
     else
       xline = xLine.do_read(
         read_pos.sequence,read_pos.line,self.include_hidden,self.track_index)
       self.read_buffer[buffer_idx] = table.rcopy(xline) -- TODO rcopy needed ?
-      print("*** xStream:get_content - fresh fetch - read_pos",read_pos,"buffer_idx",buffer_idx,"fx-col amount_value",xline.effect_columns[1].amount_value)
+      --print("*** xStream:get_content - fresh fetch - read_pos",read_pos,"buffer_idx",buffer_idx,"fx-col amount_value",xline.effect_columns[1].amount_value)
     end
     --self.highest_read_buffer_idx = math.max(buffer_idx,self.highest_read_buffer_idx)
     --print("IN  ",buffer_idx,read_pos,xline.note_columns[1].note_string)
@@ -1289,7 +1289,7 @@ function xStream:get_content(pos,num_lines,xpos)
   end
 
   self.stream.readpos = read_pos
-  print("*** POST-get-content readpos",self.stream.readpos)
+  --print("*** POST-get-content readpos",self.stream.readpos)
 
 end
 
@@ -1462,17 +1462,17 @@ end
 -- method is called when xStreamPos is changing position 'abruptly'
 
 function xStream:update_read_buffer()
-  print("xStream:update_read_buffer()")
+  TRACE("xStream:update_read_buffer()")
 
   if self.stream.readpos then
     
-    print(">>> xStream:update_read_buffer - self.stream.readpos",self.stream.readpos)
-    print(">>> xStream:update_read_buffer - self.stream.playpos",self.stream.playpos)
+    --print(">>> xStream:update_read_buffer - self.stream.readpos",self.stream.readpos)
+    --print(">>> xStream:update_read_buffer - self.stream.playpos",self.stream.playpos)
     for k = 0,self.writeahead-1 do
       local buffer_idx = self.stream.readpos.lines_travelled
       self.read_buffer[buffer_idx] = xLine.do_read(
         self.stream.readpos.sequence,self.stream.readpos.line,self.include_hidden,self.track_index)
-      print(">>> xStream:update_read_buffer -- ",buffer_idx,"line in pattern",self.stream.readpos,self.read_buffer[buffer_idx].effect_columns[1].amount_value)
+      --print(">>> xStream:update_read_buffer -- ",buffer_idx,"line in pattern",self.stream.readpos,self.read_buffer[buffer_idx].effect_columns[1].amount_value)
       self.stream.readpos:increase_by_lines(1)
     end
 
@@ -1582,7 +1582,7 @@ function xStream:on_idle()
 
   -- track when blockloop changes (update scheduling)
   if (self.block_enabled ~= rns.transport.loop_block_enabled) then
-    print("*** xStream - block_enabled changed...")
+    --print("*** xStream - block_enabled changed...")
     self.block_enabled = rns.transport.loop_block_enabled
     if rns.transport.playing then
       self:compute_scheduling_pos()

@@ -56,11 +56,11 @@ function xStreamUIOptions:__init(xstream)
 
   self.xstream.selected_model_index_observable:add_notifier(function()    
     if self.xstream.launch_selected_model then
-      print(">>> self.xstream.selected_model_index",self.xstream.selected_model_index)
+      --print(">>> self.xstream.selected_model_index",self.xstream.selected_model_index)
       if (self.xstream.selected_model_index > 0) then
         local model = self.xstream.models[self.xstream.selected_model_index]
         self.xstream.launch_model = model.file_path
-        print("model.file_path",model,model.file_path)
+        --print("model.file_path",model,model.file_path)
       end
       self.update_model_requested = true
     end

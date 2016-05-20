@@ -42,7 +42,7 @@ callback = [[
 -------------------------------------------------------------------------------
 local fx_col_idx = (args.fx_column_idx == 0) and
   rns.selected_effect_column_index or args.fx_column_idx
-print(fx_col_idx)
+--print(fx_col_idx)
 if (fx_col_idx > 0) -- when a note column is focused
   and (xinc%2 ~= 0)
 then
