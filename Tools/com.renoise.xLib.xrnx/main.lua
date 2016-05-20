@@ -4,7 +4,16 @@ main.lua
 
 --[[
 
-  Unit-tests for the xLib library
+Unit-tests for the xLib library
+.
+#
+
+TODO 
+* capture results from asynchroneous test methods
+
+PLANNED 
+* turn tool into simple testrunner framework (class)
+
 
 ]]
 
@@ -24,26 +33,41 @@ rns = nil
 local view = nil
 local vb = renoise.ViewBuilder()
 
+TEST_STATUS = {
+  RUNNING = "Running...",
+  PASSED = "Passed",
+  FAILED = "Failed",
+}
+
 --------------------------------------------------------------------------------
 
-local execute_test = function(idx,fn)
+local execute_test = function(idx,test)
 
   local status_elm = vb.views["test_status_"..idx]
   local status_elm_err = vb.views["test_status_err_"..idx]
 
-  local passed,err = pcall(fn) 
+  test.status = TEST_STATUS.RUNNING
+  status_elm.text = test.status
+
+  local passed,err = pcall(test.fn) 
   --local passed = true
   --fn()
   if passed then
-    status_elm.text = "Passed"
-    status_elm_err.text = ""
+    test.status = TEST_STATUS.PASSED
+    test.error = ""
   else
-    status_elm.text = "An error occurred"
-    status_elm_err.text = err
+    test.status = TEST_STATUS.FAILED
+    test.error = err
     print("*** "..err)
   end
 
+  status_elm.text = test.status
+  status_elm_err.text = test.error
+
+
 end
+
+
 
 --------------------------------------------------------------------------------
 
@@ -124,7 +148,7 @@ local initialize = function()
         text = "Run tests",
         width = RUN_TEST_BT_W,
         notifier = function()
-          execute_test(k,v.fn)
+          execute_test(k,v)
         end
       },
       vb:checkbox{
@@ -155,6 +179,7 @@ local initialize = function()
 
   view:add_child(vb:row{
     vb:button{
+      id = "test_all_bt",
       text = "Run all selected tests",
       width = 100,
       height = 24,
@@ -162,7 +187,7 @@ local initialize = function()
         for k = 1,#_xlib_tests do
           local cb_elm = vb.views["test_cb_"..k]
           if cb_elm.value then
-            execute_test(k,_xlib_tests[k].fn)
+            execute_test(k,_xlib_tests[k])
           end
         end
       end
