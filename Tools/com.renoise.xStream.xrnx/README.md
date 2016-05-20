@@ -65,7 +65,7 @@ The model toolbar is located just beneath the global toolbar, and provides acces
 <img src="./manual/model_toolbar.png"> 
 
 1. **Color** - color makes it easier to recognize the model among favorites (click for color picker)
-2. **Favorite** - add (or remove) the selected model to the [Favorites]()
+2. **Favorite** - add (or remove) the selected model to the [Favorites](#favorites-dialog)
 3. **Selector** - choose any of the registered models
 4. **Delete** - remove the model (delete the file from disk)
 5. **Create/Import** - press this button to bring up the create & import dialog 
@@ -105,7 +105,7 @@ The model toolbar is located just beneath the global toolbar, and provides acces
 * **Add preset** - click to add a new preset, based on the current argument settings
 * **Rename preset** - click to assign a name/change the name of the preset
 * **Update preset** - click to update the preset with the current argument settings
-* **Favorite preset** - click to add the preset to the [Favorites]()   
+* **Favorite preset** - click to add the preset to the [Favorites](#favorites-dialog)   
 
 #### Preset list
 
