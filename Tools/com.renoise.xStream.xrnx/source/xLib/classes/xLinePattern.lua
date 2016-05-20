@@ -201,11 +201,13 @@ function xLinePattern:process_columns(
   clear_undefined,
   col_type)
 
+  rprint(xline_columns)
+
 	for k,rns_col in ipairs(rns_columns) do
     
     if not expand_columns then
       if not include_hidden and (k > visible_cols) then
-        --print("skip hidden column",k)
+        --print("skip hidden column #1",k)
         break
       end
     end
@@ -214,9 +216,9 @@ function xLinePattern:process_columns(
     
     if col then
 
-      if expand_columns and
-        (type(col)=="xNoteColumn") or 
-        (type(col)=="xEffectColumn") 
+      if expand_columns --and
+        --(type(col)=="xNoteColumn") or 
+        --(type(col)=="xEffectColumn") 
       then
         if (k > visible_cols) then
           visible_cols = k
@@ -225,7 +227,7 @@ function xLinePattern:process_columns(
       end
 
       if not include_hidden and (k > visible_cols) then
-        --print("skip hidden column",k)
+        --print("skip hidden column #2",k,visible_cols)
         break
       end
 
@@ -252,6 +254,8 @@ function xLinePattern:process_columns(
   elseif (col_type == xLinePattern.COLUMN_TYPES.EFFECT_COLUMN) then
     rns_track_or_phrase.visible_effect_columns = visible_cols
   end
+  --print("rns_track_or_phrase",rns_track_or_phrase)
+  --print("rns_track_or_phrase.visible_note_columns",rns_track_or_phrase.visible_note_columns)
 
 end
 
