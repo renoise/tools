@@ -27,9 +27,10 @@ xStreamUIArgsPanel.NO_ARG_SELECTED = "(Select argument)"
 xStreamUIArgsPanel.ARGS_SELECTOR_W = 201
 xStreamUIArgsPanel.ARGS_SLIDER_W = 90
 
-function xStreamUIArgsPanel:__init(xstream,vb,ui)
+function xStreamUIArgsPanel:__init(xstream,midi_prefix,vb,ui)
 
   self.xstream = xstream
+  self.midi_prefix = midi_prefix
   self.vb = vb
   self.ui = ui
 
@@ -146,8 +147,10 @@ function xStreamUIArgsPanel:build_args()
     
     --print("arg.properties",rprint(arg.properties))
     local display_as = table.find(xStreamArg.DISPLAYS,arg.properties.display_as) 
+    local integered = false
 
     if display_as == xStreamArg.DISPLAY_AS.HEX then
+      integered = true
       fn_tostring = function(val)
         local hex_digits = xLib.get_hex_digits(arg.properties.max) 
         val = arg.properties.zero_based and val-1 or val
@@ -166,6 +169,7 @@ function xStreamUIArgsPanel:build_args()
         return tonumber(string.sub(str,1,#str-1))
       end
     elseif display_as == xStreamArg.DISPLAY_AS.NOTE then
+      integered = true
       fn_tostring = function(val)
         return xNoteColumn.note_value_to_string(math.floor(val))
       end 
@@ -173,6 +177,7 @@ function xStreamUIArgsPanel:build_args()
         return xNoteColumn.note_string_to_value(str)
       end
     elseif display_as == xStreamArg.DISPLAY_AS.INTEGER then
+      integered = true
       fn_tostring = function(val)
         return ("%d"):format(val)
       end 
@@ -190,7 +195,6 @@ function xStreamUIArgsPanel:build_args()
         return val
       end
     end
-    local model_name = self.xstream.selected_model.name
 
     local view_label = vb:text{
       text = arg.name,
@@ -231,46 +235,59 @@ function xStreamUIArgsPanel:build_args()
       }
     }
 
+    local arg_control = nil
+    local model_name = self.xstream.selected_model.name
+    local midi_mapping = ("Tools:xStream:%s:%s [Set]"):format(model_name,arg.name)
+    print(">>> midi_mapping",midi_mapping)
+
     if (type(arg.observable) == "ObservableNumber") then
 
       if arg.properties.items then -- select (default to popup)
         display_as = display_as or xStreamArg.DISPLAY_AS.POPUP
+        integered = true
 
         if (display_as == xStreamArg.DISPLAY_AS.POPUP) then
           --print("display_as popup",arg.name)
+          arg_control = vb:popup{
+            items = arg.properties.items,
+            value = arg.value,
+            width = items_width,
+            bind = arg.observable,
+            midi_mapping = midi_mapping,
+          }
           view:add_child(vb:row{
             tooltip = arg.description,
             view_label_rack,
-            vb:popup{
-              items = arg.properties.items,
-              value = arg.value,
-              width = items_width,
-              bind = arg.observable,
-            },
+            arg_control,
             view_bop,
           })
         elseif (display_as == xStreamArg.DISPLAY_AS.CHOOSER) then
+          arg_control = vb:chooser{
+            items = arg.properties.items,
+            value = arg.value,
+            width = items_width,
+            bind = arg.observable,
+            midi_mapping = midi_mapping,
+          }
+
           view:add_child(vb:row{
             tooltip = arg.description,
             view_label_rack,
-            vb:chooser{
-              items = arg.properties.items,
-              value = arg.value,
-              width = items_width,
-              bind = arg.observable,
-            },
+            arg_control,
             view_bop,
           })
         elseif (display_as == xStreamArg.DISPLAY_AS.SWITCH) then
+          arg_control = vb:switch{
+            items = arg.properties.items,
+            value = arg.value,
+            width = items_width,
+            bind = arg.observable,
+            midi_mapping = midi_mapping,
+          }
           view:add_child(vb:row{
             tooltip = arg.description,
             view_label_rack,
-            vb:switch{
-              items = arg.properties.items,
-              value = arg.value,
-              width = items_width,
-              bind = arg.observable,
-            },
+            arg_control,
             view_bop,
           })
         else    
@@ -279,17 +296,20 @@ function xStreamUIArgsPanel:build_args()
       elseif (display_as == xStreamArg.DISPLAY_AS.INTEGER) 
         or (display_as == xStreamArg.DISPLAY_AS.HEX) 
       then -- whole numbers
+        integered = true
+        arg_control = vb:valuebox{
+          tostring = fn_tostring,
+          tonumber = fn_tonumber,
+          value = arg.value,
+          min = arg.properties.min or xStreamUI.ARGS_MIN_VALUE,
+          max = arg.properties.max or xStreamUI.ARGS_MAX_VALUE,
+          bind = arg.observable,
+          midi_mapping = midi_mapping,
+        }
         view:add_child(vb:row{
           tooltip = arg.description,
           view_label_rack,
-          vb:valuebox{
-            tostring = fn_tostring,
-            tonumber = fn_tonumber,
-            value = arg.value,
-            min = arg.properties.min or xStreamUI.ARGS_MIN_VALUE,
-            max = arg.properties.max or xStreamUI.ARGS_MAX_VALUE,
-            bind = arg.observable,
-          },
+          arg_control,
           view_bop,
         })
       else -- floating point (default to minislider)
@@ -314,27 +334,31 @@ function xStreamUIArgsPanel:build_args()
           or (display_as == xStreamArg.DISPLAY_AS.PERCENT) 
           or (display_as == xStreamArg.DISPLAY_AS.NOTE) 
         then
+          arg_control = vb:minislider{
+            value = arg.value,
+            width = slider_width,
+            height = 17,
+            min = arg.properties.min or xStreamUI.ARGS_MIN_VALUE,
+            max = arg.properties.max or xStreamUI.ARGS_MAX_VALUE,
+            bind = arg.observable,
+            midi_mapping = midi_mapping,
+          }
           view:add_child(vb:row{
-            vb:minislider{
-              value = arg.value,
-              width = slider_width,
-              height = 17,
-              min = arg.properties.min or xStreamUI.ARGS_MIN_VALUE,
-              max = arg.properties.max or xStreamUI.ARGS_MAX_VALUE,
-              bind = arg.observable,
-            },
+            arg_control,
             view_bop,
             readout,
           })
         elseif (display_as == xStreamArg.DISPLAY_AS.ROTARY) then
+          arg_control = vb:rotary{
+            value = arg.value,
+            height = 24,
+            min = arg.properties.min or xStreamUI.ARGS_MIN_VALUE,
+            max = arg.properties.max or xStreamUI.ARGS_MAX_VALUE,
+            bind = arg.observable,
+            midi_mapping = midi_mapping,
+          }
           view:add_child(vb:row{
-            vb:rotary{
-              value = arg.value,
-              height = 24,
-              min = arg.properties.min or xStreamUI.ARGS_MIN_VALUE,
-              max = arg.properties.max or xStreamUI.ARGS_MAX_VALUE,
-              bind = arg.observable,
-            },
+            arg_control,
             view_bop,
             readout,
           })
@@ -349,6 +373,7 @@ function xStreamUIArgsPanel:build_args()
             tostring = fn_tostring,
             value = arg.value,
             bind = arg.observable,
+            midi_mapping = midi_mapping,
           })
         end
 
@@ -356,13 +381,15 @@ function xStreamUIArgsPanel:build_args()
     elseif (type(arg.observable) == "ObservableBoolean") then
       display_as = display_as or xStreamArg.DISPLAY_AS.CHECKBOX
       if (display_as == xStreamArg.DISPLAY_AS.CHECKBOX) then
+        arg_control = vb:checkbox{
+          value = arg.value,
+          bind = arg.observable,
+          midi_mapping = midi_mapping,
+        }
         view:add_child(vb:row{
           tooltip = arg.description,
           view_label_rack,
-          vb:checkbox{
-            value = arg.value,
-            bind = arg.observable,
-          },
+          arg_control,
           view_bop,
         })
       end
@@ -376,6 +403,7 @@ function xStreamUIArgsPanel:build_args()
             text = arg.value,
             width = full_width,
             bind = arg.observable,
+            midi_mapping = midi_mapping,
           },
           view_bop,
         })
@@ -386,6 +414,47 @@ function xStreamUIArgsPanel:build_args()
       table.insert(self.arg_bops,view_bop)
       table.insert(self.arg_labels,view_label)
       table.insert(self.arg_views,view)
+      if arg_control 
+        and not renoise.tool():has_midi_mapping(midi_mapping)
+      then
+        renoise.tool():add_midi_mapping{
+          name = midi_mapping,
+          invoke = function(a) 
+            if (type(arg.observable)=="ObservableNumber") then
+              local range,offset,max = nil,0,nil
+              if (arg.properties.items) then
+                range = #arg.properties.items
+                offset = 1
+                max = #arg.properties.items
+              elseif (arg.properties.min and arg.properties.max) then
+                range = arg.properties.max - arg.properties.min
+                offset = arg.properties.min
+                max = arg.properties.max
+              end
+              if a:is_abs_value() then
+                local steps = 0x7F -- 7bit
+                local step_size = range/steps
+                arg.value = math.min(max,offset + ((a.int_value*step_size)))
+              elseif a:is_rel_value() then
+                local val = nil
+                if integered then 
+                  -- offer precise control of 'integered' controls
+                  val = arg.value+a.int_value
+                else
+                  -- allow finer control than with absolute 
+                  val = arg.value+(a.int_value*(range/0xFF))
+                end
+                arg.value = xLib.clamp_value(val,arg.properties.min,arg.properties.max)
+              end
+            elseif (type(arg.observable)=="ObservableBoolean") then
+              arg.value = a.boolean_value
+            else
+              LOG("Unsupported type:"..type(arg.observable))
+            end
+
+          end
+        }
+      end
       vb_container:add_child(view)
     end
 

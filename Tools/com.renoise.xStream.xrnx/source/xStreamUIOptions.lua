@@ -35,17 +35,8 @@ function xStreamUIOptions:__init(xstream)
 
   self.title = "xStream options"
 
-  --self.view = nil
-  --self.dialog = nil
-
-  -- implementation-specific options --
-  -- (relevant for the tool, not xStream itself)
-
   self.start_option = property(self.get_start_option,self.set_start_option)
   self.start_option_observable = renoise.Document.ObservableNumber(xStreamUIOptions.START_OPTION.ON_PLAY_EDIT)
-
-  self.launch_model = property(self.get_launch_model,self.set_launch_model)
-  self.launch_model_observable = renoise.Document.ObservableString("")
 
   self.autostart = property(self.get_autostart,self.set_autostart)
   self.autostart_observable = renoise.Document.ObservableBoolean(false)
@@ -63,8 +54,27 @@ function xStreamUIOptions:__init(xstream)
     self:on_idle()
   end)
 
-  self:show_tab(self.selected_tab_index)
+  self.xstream.selected_model_index_observable:add_notifier(function()    
+    if self.xstream.launch_selected_model then
+      print(">>> self.xstream.selected_model_index",self.xstream.selected_model_index)
+      if (self.xstream.selected_model_index > 0) then
+        local model = self.xstream.models[self.xstream.selected_model_index]
+        self.xstream.launch_model = model.file_path
+        print("model.file_path",model,model.file_path)
+      end
+      self.update_model_requested = true
+    end
+  end)
 
+  self.xstream.launch_selected_model_observable:add_notifier(function()
+    self.update_model_requested = true
+  end)
+
+  self.xstream.models_observable:add_notifier(function()
+    self.update_model_requested = true
+  end)
+
+  self:show_tab(self.selected_tab_index)
 
 end
 
@@ -79,17 +89,6 @@ end
 function xStreamUIOptions:set_start_option(val)
   self.start_option_observable.value = val
 
-end
-
---------------------------------------------------------------------------------
-
-function xStreamUIOptions:get_launch_model()
-  return self.launch_model_observable.value 
-end
-
-function xStreamUIOptions:set_launch_model(val)
-  self.launch_model_observable.value = val
-  self.update_model_requested = true
 end
 
 --------------------------------------------------------------------------------
@@ -120,6 +119,7 @@ function xStreamUIOptions:show()
 
   vDialog.show(self)
 
+  self.update_model_requested = true
   self:show_tab(self.selected_tab_index)
 
 end
@@ -127,33 +127,6 @@ end
 --------------------------------------------------------------------------------
 -- Class methods
 --------------------------------------------------------------------------------
--- activate the launch model
-
-function xStreamUIOptions:select_launch_model()
-
-  for k,v in ipairs(self.xstream.models) do
-    if (v.file_path == self.launch_model) then
-      self.xstream.selected_model_index = k
-    end
-  end
-
-end
-
---------------------------------------------------------------------------------
-
-function xStreamUIOptions:update_model_selector()
-
-  local view_launch_models = self.vb.views["xStreamImplLaunchModel"]
-  view_launch_models.items = self.xstream:get_model_names()
-  for k,v in ipairs(self.xstream.models) do
-    if (v.file_path == self.launch_model) then
-      view_launch_models.value = k
-    end
-  end
-
-end
-
--------------------------------------------------------------------------------
 
 function xStreamUIOptions:show_tab(idx)
   TRACE("xStreamUIOptions:show_tab(idx)",idx)
@@ -233,17 +206,17 @@ function xStreamUIOptions:create_dialog()
           },
         },
         vb:row{
-          vb:checkbox{
-            --bind = self.autostart_observable,
+          vb:checkbox{            
+            bind = self.xstream.launch_selected_model_observable,
           },
           vb:text{
-            text= "Launch with last selected model"
+            text= "Remember selected model, or choose"
           },
           vb:popup{
             items = {xStreamUI.NO_MODEL_SELECTED},
             id = "xStreamImplLaunchModel",
             notifier = function(idx)
-              self.launch_model = self.xstream.models[idx].file_path
+              self.xstream.launch_model = self.xstream.models[idx].file_path
             end,
           },
         },
@@ -440,19 +413,29 @@ end
 
 function xStreamUIOptions:update_model_selector(model_names)
 
-  local view_popup = self.vb.views["xStreamModelSelector"]
-  if view_popup then
-    view_popup.items = model_names
-    view_popup.value = (self.xstream.selected_model_index == 0) 
-      and 1 or self.xstream.selected_model_index+1
+  local model_popup = self.vb.views["xStreamImplLaunchModel"]
+  if model_popup then
+    local model_names = self.xstream:get_model_names(true)
+    table.insert(model_names,1,xStreamUI.NO_MODEL_SELECTED)
+    model_popup.items = model_names
+    model_popup.active = not self.xstream.launch_selected_model
+    if self.xstream.launch_selected_model then
+      model_popup.value = (self.xstream.selected_model_index == 0) 
+        and 1 or self.xstream.selected_model_index+1
+    else
+      for k,v in ipairs(self.xstream.models) do
+        if (v.file_path == self.xstream.launch_model) then
+          model_popup.value = k
+        end
+      end
+    end
   end
-
 end
 
 --------------------------------------------------------------------------------
 
 function xStreamUIOptions:on_idle()
-
+  
   if self.update_model_requested then
     self.update_model_requested = false
     self:update_model_selector()

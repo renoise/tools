@@ -118,7 +118,7 @@ function xStreamUI:__init(xstream,vb,midi_prefix,options)
   self.midi_prefix = midi_prefix
 
   self.presets = xStreamUIPresetPanel(xstream,vb,self)
-  self.args  = xStreamUIArgsPanel(xstream,vb,self)
+  self.args  = xStreamUIArgsPanel(xstream,midi_prefix,vb,self)
   self.args_editor = xStreamUIArgsEditor(xstream,vb)
 
   self.options = xStreamUIOptions(xstream)

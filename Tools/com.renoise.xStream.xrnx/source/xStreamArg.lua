@@ -108,6 +108,8 @@ function xStreamArg:__init(arg)
 
   -- number/boolean/string
   self.value = property(self.get_value,self.set_value)
+
+  -- ObservableXXX (number/boolean/string)
   self.observable = arg.observable
 
   -- string, description of argument (optional)

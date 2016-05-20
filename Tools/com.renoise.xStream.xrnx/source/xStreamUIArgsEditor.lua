@@ -39,18 +39,18 @@ function xStreamUIArgsEditor:set_visible(val)
   local view_spacer = self.vb.views["xStreamArgsVerticalSpacer"]
   local view_arrow = self.vb.views["xStreamModelArgsToggle"]
 
-  local ui = self.xstream.ui
+  local args = self.xstream.ui.args
 
-  if val and not ui.args.visible then
+  if val and not args.visible then
     view_arrow.text = xStreamUI.ARROW_UP 
-  elseif not ui.args.visible then
+  elseif not args.visible then
     view_arrow.text = xStreamUI.ARROW_DOWN
   end
 
   view_button.color = val and xLib.COLOR_ENABLED or xLib.COLOR_DISABLED
-  if val and self.args.visible then
+  if val and args.visible then
     view_popup.visible = true
-  elseif not val and ui.args.visible then
+  elseif not val and args.visible then
     view_popup.visible = false
   end
   view_editor.visible = val
@@ -60,7 +60,7 @@ function xStreamUIArgsEditor:set_visible(val)
   self.visible_observable.value = val
 
   self:update()
-  self.xstream.ui.args:update_visibility()
+  args:update_visibility()
 
 end
 

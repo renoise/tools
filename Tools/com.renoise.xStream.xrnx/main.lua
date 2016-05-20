@@ -66,6 +66,7 @@ local options = renoise.Document.create("ScriptingToolPreferences"){}
 -- general
 options:add_property("autostart", renoise.Document.ObservableBoolean(false))
 options:add_property("launch_model", renoise.Document.ObservableString(""))
+options:add_property("launch_selected_model", renoise.Document.ObservableBoolean(true))
 options:add_property("manage_gc", renoise.Document.ObservableBoolean(false))
 -- user interface
 options:add_property("editor_visible_lines", renoise.Document.ObservableNumber(16))
@@ -202,7 +203,8 @@ function show()
 
     -- general options
     xstream.ui.options.autostart = options.autostart.value
-    xstream.ui.options.launch_model = options.launch_model.value
+    xstream.launch_model = options.launch_model.value
+    xstream.launch_selected_model = options.launch_selected_model.value
     xstream.ui.options.manage_gc = options.manage_gc.value
 
     -- user interface options
@@ -269,9 +271,14 @@ function show()
       options.start_option.value = xstream.ui.options.start_option_observable.value
     end)
 
-    xstream.ui.options.launch_model_observable:add_notifier(function()
-      TRACE("*** xStreamUI - xstream.ui.options.launch_model_observable fired...")
-      options.launch_model.value = xstream.ui.options.launch_model_observable.value
+    xstream.launch_model_observable:add_notifier(function()
+      TRACE("*** xStreamUI - xstream.launch_model_observable fired...")
+      options.launch_model.value = xstream.launch_model_observable.value
+    end)
+
+    xstream.launch_selected_model_observable:add_notifier(function()
+      TRACE("*** xStreamUI - xstream.launch_selected_model_observable fired...")
+      options.launch_selected_model.value = xstream.launch_selected_model_observable.value
     end)
 
     xstream.ui.options.autostart_observable:add_notifier(function()
@@ -349,7 +356,7 @@ function show()
 
       -- initialize -----------------------
 
-      xstream.ui.options:select_launch_model()
+      xstream:select_launch_model()
       xstream.favorites:import("./favorites.xml")
       xstream.autosave_enabled = true
 
@@ -508,7 +515,7 @@ end)
 
 for i = 1,128 do
   local midi_mapping = MIDI_PREFIX..
-    ("Favorite #%.2d [Trigger]"):format(i)
+    ("Favorites:Favorite #%.2d [Trigger]"):format(i)
   renoise.tool():add_midi_mapping{
     name = midi_mapping,
     invoke = function() 

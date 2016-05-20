@@ -407,7 +407,7 @@ end
 function xStreamArgs:swap_index(idx1,idx2)
   TRACE("xStreamArgs:swap_index(idx1,idx2)",idx1,idx2)
 
-  if (idx1 < 1 and idx2 > 1) then
+  if (idx1 < 1 or idx2 < 1) then
     return false,"Cannot swap entries - either index is too low"
   elseif (idx1 > #self.args or idx2 > #self.args) then
     return false,"Cannot swap entries - either index is too high"
@@ -419,21 +419,6 @@ function xStreamArgs:swap_index(idx1,idx2)
   return true
 
 end
-
--------------------------------------------------------------------------------
--- return copy of all current values (requested by e.g. callback)
--- TODO optimize by keeping this up to date when values change
---[[
-function xStreamArgs:get_values()
-  TRACE("xStreamArgs:get_values()")
-  local rslt = {}
-  for k,arg in ipairs(self.args) do
-    rslt[arg.name] = arg.value
-  end
-  --print("xStreamArgs:get_values - rslt",rprint(rslt))
-  return rslt
-end
-]]
 
 -------------------------------------------------------------------------------
 -- return table<string>

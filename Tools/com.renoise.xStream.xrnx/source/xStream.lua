@@ -212,6 +212,12 @@ function xStream:__init()
   self.suspend_when_hidden = property(self.get_suspend_when_hidden,self.set_suspend_when_hidden)
   self.suspend_when_hidden_observable = renoise.Document.ObservableBoolean(true)
 
+  self.launch_model = property(self.get_launch_model,self.set_launch_model)
+  self.launch_model_observable = renoise.Document.ObservableString("")
+
+  self.launch_selected_model = property(self.get_launch_selected_model,self.set_launch_selected_model)
+  self.launch_selected_model_observable = renoise.Document.ObservableBoolean(true)
+
     -- int, the line at which output got muted
   self.mute_pos = nil
 
@@ -426,14 +432,19 @@ function xStream:load_models(str_path)
 end
 
 -------------------------------------------------------------------------------
+-- @param no_asterisk (bool), don't add asterisk to modified models
 -- return table<string>
 
-function xStream:get_model_names()
-  TRACE("xStream:get_model_names()")
+function xStream:get_model_names(no_asterisk)
+  TRACE("xStream:get_model_names(no_asterisk)",no_asterisk)
 
   local t = {}
   for _,v in ipairs(self.models) do
-    table.insert(t,v.modified and v.name.."*" or v.name)
+    if no_asterisk then
+      table.insert(t,v.name)
+    else
+      table.insert(t,v.modified and v.name.."*" or v.name)
+    end
   end
   return t
 
@@ -966,6 +977,26 @@ function xStream:set_suspend_when_hidden(val)
   self.suspend_when_hidden_observable.value = val
 end
 
+--------------------------------------------------------------------------------
+
+function xStream:get_launch_model()
+  return self.launch_model_observable.value 
+end
+
+function xStream:set_launch_model(val)
+  self.launch_model_observable.value = val
+end
+
+--------------------------------------------------------------------------------
+
+function xStream:get_launch_selected_model()
+  return self.launch_selected_model_observable.value 
+end
+
+function xStream:set_launch_selected_model(val)
+  self.launch_selected_model_observable.value = val
+end
+
 -------------------------------------------------------------------------------
 
 function xStream:get_active()
@@ -974,6 +1005,21 @@ end
 
 function xStream:set_active(val)
   self.active_observable.value = val
+end
+
+--------------------------------------------------------------------------------
+-- Class methods
+--------------------------------------------------------------------------------
+-- activate the launch model
+
+function xStream:select_launch_model()
+
+  for k,v in ipairs(self.models) do
+    if (v.file_path == self.launch_model) then
+      self.selected_model_index = k
+    end
+  end
+
 end
 
 -------------------------------------------------------------------------------
