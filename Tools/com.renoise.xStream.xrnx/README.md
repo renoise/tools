@@ -247,11 +247,3 @@ xStream is using a subset of the Renoise Lua API. If you are not familiar with L
 `restrict_to_scale(note_value,scale_index,key_index)` - harmonize a note (see xScale)
 
 
-### Supporting classes 
-
-xStream provides access not only the Renoise API, but  also some other useful classes that extend the Renoise API - visit the [xLib documentation](http://example.net/) for more details 
-
- 
-## Changelog
-
-#### Done vX.X
