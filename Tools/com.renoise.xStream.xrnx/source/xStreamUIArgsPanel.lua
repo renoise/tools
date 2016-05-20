@@ -363,6 +363,7 @@ function xStreamUIArgsPanel:build_args()
             readout,
           })
         elseif (display_as == xStreamArg.DISPLAY_AS.FLOAT) then
+          readout.midi_mapping = midi_mapping,
           view:add_child(vb:row{
             style = "plain",
             readout,
@@ -403,7 +404,6 @@ function xStreamUIArgsPanel:build_args()
             text = arg.value,
             width = full_width,
             bind = arg.observable,
-            midi_mapping = midi_mapping,
           },
           view_bop,
         })
