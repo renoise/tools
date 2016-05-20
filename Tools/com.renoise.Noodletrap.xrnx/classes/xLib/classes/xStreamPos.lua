@@ -133,6 +133,7 @@ end
 -- @param pos, renoise.SongPos
 
 function xStreamPos:set_pos(pos)
+  TRACE("xStreamPos:set_pos(pos)",pos)
 
   -- TODO refactor
   local near_top = function(line)
@@ -194,7 +195,7 @@ function xStreamPos:set_pos(pos)
     -- playpos is referring to a non-existing pattern - in such a case,
     -- we re-initialize the cached playpos to the current position
     if not rns.sequencer.pattern_sequence[self.playpos.sequence] then
-      LOG("Missing pattern sequence - was removed from song?")
+      LOG("*** xStreamPos - missing pattern sequence - was removed from song?")
       --self.playpos = rns.transport.playback_pos
       self.playpos:set(rns.transport.playback_pos)
     end
@@ -217,6 +218,11 @@ function xStreamPos:set_pos(pos)
       local num_lines = pos.line-self.playpos.line
       self.writepos:increase_by_lines(num_lines)
       self.writepos.sequence = pos.sequence
+      if not self.readpos then
+        -- ?? why does this happen 
+        LOG("*** xStreamPos - missing readpos in set_pos()")
+        self.readpos = xSongPos(rns.transport.playback_pos)
+      end
       self.readpos.sequence = pos.sequence
       self.readpos.lines_travelled = self.readpos.lines_travelled-self.writeahead
       --print("earlier pattern - changed manually - increase by lines",num_lines,pos,self.playpos)

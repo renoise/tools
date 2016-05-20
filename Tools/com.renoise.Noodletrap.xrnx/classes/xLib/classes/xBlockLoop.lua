@@ -101,6 +101,7 @@ end
 --- retrive number of lines in a block for a given pattern 
 
 function xBlockLoop.get_block_lines(seq_idx)
+  print("xBlockLoop.get_block_lines(seq_idx)",seq_idx)
 
   local patt_num_lines = xSongPos.get_pattern_num_lines(seq_idx)
   return math.max(1,patt_num_lines/rns.transport.loop_block_range_coeff)
@@ -132,7 +133,21 @@ function xBlockLoop.get_end()
     return 
   end
 
-  local loop_pos = rns.transport.loop_block_start_pos
+  local loop_pos = {
+    sequence = rns.transport.loop_block_start_pos.sequence,
+    line = rns.transport.loop_block_start_pos.line,
+  }
+
+  -- in special cases, the loop_pos might report an invalid sequence index
+  -- (such as when the loop is positioned on the last pattern,
+  -- and we then cut a previous pattern. In this case, check the length)
+  --print("loop_pos.sequence",loop_pos.sequence)
+  --print("#rns.sequencer.pattern_sequence",#rns.sequencer.pattern_sequence)
+  if (loop_pos.sequence > #rns.sequencer.pattern_sequence) then
+    LOG("*** xBlockLoop - fixing out-of-bounds value for end sequence",loop_pos.sequence,#rns.sequencer.pattern_sequence)
+    loop_pos.sequence = #rns.sequencer.pattern_sequence
+  end
+
   --local patt_num_lines = xSongPos.get_pattern_num_lines(loop_pos.sequence)
   --local loop_lines = math.max(1,patt_num_lines/rns.transport.loop_block_range_coeff)
   local block_lines = xBlockLoop.get_block_lines(loop_pos.sequence)

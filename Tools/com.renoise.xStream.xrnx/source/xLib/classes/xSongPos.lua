@@ -138,6 +138,7 @@ end
 -- @return int or nil 
 
 function xSongPos.get_pattern_num_lines(seq_idx)
+  --print("xSongPos.get_pattern_num_lines(seq_idx)",seq_idx)
 	
   assert(type(seq_idx) == "number")
 
