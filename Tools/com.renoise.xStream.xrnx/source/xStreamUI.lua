@@ -635,6 +635,21 @@ function xStreamUI:build()
           vb:row{
             id = "xStreamTransportRow",
             vb:row{
+              vb:column{
+                margin = 2,
+                vb:bitmap{
+                  bitmap = "./source/icons/logo.png",
+                  width = 100,
+                  mode = "main_color",
+                  tooltip = "Read the xStream documentation",
+                  notifier = function()
+                    renoise.app():open_url("https://github.com/renoise/xrnx/tree/master/Tools/com.renoise.xStream.xrnx")
+                  end,
+                },
+              },
+              vb:space{
+                width = 6,
+              },
               --[[
               vb:button{
                 bitmap = "./source/icons/transport_record.bmp",
