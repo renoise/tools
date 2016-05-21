@@ -1,0 +1,1042 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+<head>
+    <title>Reference</title>
+    <link rel="stylesheet" href="../ldoc.css" type="text/css" />
+</head>
+<body>
+
+<div id="container">
+
+<div id="product">
+	<div id="product_logo"></div>
+	<div id="product_name"><big><b></b></big></div>
+	<div id="product_description"></div>
+</div> <!-- id="product" -->
+
+
+<div id="main">
+
+
+<!-- Menu -->
+
+<div id="navigation">
+<br/>
+<h1>ldoc</h1>
+
+<ul>
+  <li><a href="../index.html">Index</a></li>
+</ul>
+
+<h2>Contents</h2>
+<ul>
+<li><a href="#Functions">Functions</a></li>
+<li><a href="#Tables">Tables</a></li>
+<li><a href="#Fields">Fields</a></li>
+</ul>
+
+
+<h2>Modules</h2>
+<ul class="$(kind=='Topics' and '' or 'nowrap'">
+  <li><a href="../modules/main.html">main</a></li>
+  <li><a href="../modules/vlib.helpers.vFilesys.html">vlib.helpers.vFilesys</a></li>
+  <li><a href="../modules/vlib.helpers.vString.html">vlib.helpers.vString</a></li>
+  <li><a href="../modules/vlib.helpers.vVector.html">vlib.helpers.vVector</a></li>
+  <li><a href="../modules/vlib.table.vTableCell.html">vlib.table.vTableCell</a></li>
+  <li><a href="../modules/vlib.table.vTableCellBitmap.html">vlib.table.vTableCellBitmap</a></li>
+  <li><a href="../modules/vlib.table.vTableCellButton.html">vlib.table.vTableCellButton</a></li>
+  <li><a href="../modules/vlib.table.vTableCellText.html">vlib.table.vTableCellText</a></li>
+  <li><a href="../modules/vlib.table.vTableCellValueBox.html">vlib.table.vTableCellValueBox</a></li>
+  <li><a href="../modules/vlib.vControl.html">vlib.vControl</a></li>
+  <li><a href="../modules/vlib.vFileBrowser.html">vlib.vFileBrowser</a></li>
+  <li><a href="../modules/vlib.vLib.html">vlib.vLib</a></li>
+  <li><a href="../modules/vlib.vLogView.html">vlib.vLogView</a></li>
+  <li><a href="../modules/vlib.vScrollbar.html">vlib.vScrollbar</a></li>
+  <li><strong>vlib.vTable</strong></li>
+  <li><a href="../modules/vlib.vTabs.html">vlib.vTabs</a></li>
+  <li><a href="../modules/vlib.vTree.html">vlib.vTree</a></li>
+  <li><a href="../modules/vlib.vView.html">vlib.vView</a></li>
+</ul>
+
+</div>
+
+<div id="content">
+
+<h1>Module <code>vlib.vTable</code></h1>
+<p>vTable, or ViewBuilder Table, is a class that makes it easy to create
+	a virtual "table widget" using the Renoise ViewBuilder API.</p>
+<p></p>
+
+
+<h2><a href="#Functions">Functions</a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#set_data">set_data (data, preserve_pos)</a></td>
+	<td class="summary">set the dataprovider, while adding an internal id</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#assign_members">assign_members (cell, defs, col_key, reserved_keys)</a></td>
+	<td class="summary">assign additional properties to cells -
+ TODO @param reserved_keys (table) skip reserved keys (col_width, etc.)</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#build">build ()</a></td>
+	<td class="summary">(re)build the actual view, using the current column/row count</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#cell_factory">cell_factory (ctype, cell_elm)</a></td>
+	<td class="summary">produce a cell of the given type</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#remove_table">remove_table ()</a></td>
+	<td class="summary">remove existing viewbuilder before rebuilding the table
+ (using the maximum possible table size)</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#get_cell">get_cell (row_idx, col_idx)</a></td>
+	<td class="summary">retrieve direct reference to cell object</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#get_item_by_key">get_item_by_key (key, val)</a></td>
+	<td class="summary">obtain an item by a specific key/value</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#get_content_width">get_content_width ()</a></td>
+	<td class="summary">get computed width of table, all (absolute) column widths put together</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#set_num_rows">set_num_rows (num)</a></td>
+	<td class="summary">set visible column count, rebuild if needed</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#get_col_type">get_col_type (idx)</a></td>
+	<td class="summary"></td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#get_col_key">get_col_key (idx)</a></td>
+	<td class="summary">retrieve the key of a column definition</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#get_col_idx">get_col_idx (key)</a></td>
+	<td class="summary">retrieve the idx of a column definition by its key</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#get_col_width">get_col_width (idx, abs_only)</a></td>
+	<td class="summary">retrieve the absolute width in pixels for a given column</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#compute_auto_width">compute_auto_width (idx)</a></td>
+	<td class="summary">compute automatic width of column</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#get_col_margin">get_col_margin (idx)</a></td>
+	<td class="summary"></td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#get_header_data">get_header_data (key)</a></td>
+	<td class="summary"></td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#set_header_data">set_header_data (key, val)</a></td>
+	<td class="summary"></td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#get_header_ctype">get_header_ctype (key)</a></td>
+	<td class="summary">retrieve a header type by key</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#set_column_def">set_column_def (key, member, value)</a></td>
+	<td class="summary">specify a single column definition by it's key</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#autosize_to_contents">autosize_to_contents ()</a></td>
+	<td class="summary">call this whenever something has changed that will affect the computed
+ height of the table - if resized (changed size), the external resize
+ handler is invoked, giving the host application a chance to respond</td>
+	</tr>
+</table>
+<h2><a href="#Tables">Tables</a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#self.header_cells">self.header_cells</a></td>
+	<td class="summary">(table>vTableCell) header cells (by key)</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#self.cells">self.cells</a></td>
+	<td class="summary">(table>row>col:vTableCell) table cells
+ accessed like this: cells[row][col]</td>
+	</tr>
+</table>
+<h2><a href="#Fields">Fields</a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#self.header_defs">self.header_defs</a></td>
+	<td class="summary">(table>table) header definition (by key)
+ Required values: vTable.HEADER_DEF_KEYS
+ + any cell members</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#self.column_defs">self.column_defs</a></td>
+	<td class="summary">(table>table>table) columns definition
+ Required keys: vTable.COLUMN_DEF_KEYS</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#self.data">self.data</a></td>
+	<td class="summary">(table>row>col:variant) the data
+ an extra property, _id, is added runtime</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#self.show_header">self.show_header</a></td>
+	<td class="summary">(bool) show_header</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#self.scrollbar_width">self.scrollbar_width</a></td>
+	<td class="summary">(int) TODO pass as separate constructor args</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#self.autosize">self.autosize</a></td>
+	<td class="summary">(bool) automatically resize to fit number of rows</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#self.num_rows">self.num_rows</a></td>
+	<td class="summary">(int) number of visible rows</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#self.row_height">self.row_height</a></td>
+	<td class="summary">(int) row height</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#self.header_height">self.header_height</a></td>
+	<td class="summary">(int) header height</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#self.table_style">self.table_style</a></td>
+	<td class="summary">(string) styles</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#self.row_offset">self.row_offset</a></td>
+	<td class="summary">(int) offset, vertical position in table
+ use set_row_offset() to synchronize with scrollbar</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#self.on_update_complete">self.on_update_complete</a></td>
+	<td class="summary">(function) define this to perform post-update actions,
+ such as custom row highlighting, tooltips etc.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#self.on_resize">self.on_resize</a></td>
+	<td class="summary">(function) when table changed size (automatic resize)</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#self.scrollbar">self.scrollbar</a></td>
+	<td class="summary">(vScrollbar)</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#self.rebuild_requested">self.rebuild_requested</a></td>
+	<td class="summary">(bool) when table dimensions have changed
+ this will rebuild the table as part of the next update</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#self.update_requested">self.update_requested</a></td>
+	<td class="summary">(bool) TODO lazy updates</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#self.uid">self.uid</a></td>
+	<td class="summary">(string) unique identifier for views</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#self._width">self._width</a></td>
+	<td class="summary">(int) width</td>
+	</tr>
+</table>
+
+<br/>
+<br/>
+
+
+    <h2><a name="Functions"></a>Functions</h2>
+    <dl class="function">
+    <dt>
+    <a name = "set_data"></a>
+    <strong>set_data (data, preserve_pos)</strong>
+    </dt>
+    <dd>
+    set the dataprovider, while adding an internal id
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">data</span>
+         (table), indexed array
+        </li>
+        <li><span class="parameter">preserve_pos</span>
+         (bool) TODO
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "assign_members"></a>
+    <strong>assign_members (cell, defs, col_key, reserved_keys)</strong>
+    </dt>
+    <dd>
+    assign additional properties to cells -
+ TODO @param reserved_keys (table) skip reserved keys (col_width, etc.)
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">cell</span>
+
+        </li>
+        <li><span class="parameter">defs</span>
+
+        </li>
+        <li><span class="parameter">col_key</span>
+
+        </li>
+        <li><span class="parameter">reserved_keys</span>
+
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "build"></a>
+    <strong>build ()</strong>
+    </dt>
+    <dd>
+    (re)build the actual view, using the current column/row count
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "cell_factory"></a>
+    <strong>cell_factory (ctype, cell_elm)</strong>
+    </dt>
+    <dd>
+    produce a cell of the given type
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">ctype</span>
+
+        </li>
+        <li><span class="parameter">cell_elm</span>
+
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "remove_table"></a>
+    <strong>remove_table ()</strong>
+    </dt>
+    <dd>
+    remove existing viewbuilder before rebuilding the table
+ (using the maximum possible table size)
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "get_cell"></a>
+    <strong>get_cell (row_idx, col_idx)</strong>
+    </dt>
+    <dd>
+    retrieve direct reference to cell object
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">row_idx</span>
+
+        </li>
+        <li><span class="parameter">col_idx</span>
+
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        vTableCell or nil
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "get_item_by_key"></a>
+    <strong>get_item_by_key (key, val)</strong>
+    </dt>
+    <dd>
+    obtain an item by a specific key/value
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">key</span>
+
+        </li>
+        <li><span class="parameter">val</span>
+
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+        <li>
+        table or nil (the matched item, if any)</li>
+        <li>
+        int or nil (index in the data table)</li>
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "get_content_width"></a>
+    <strong>get_content_width ()</strong>
+    </dt>
+    <dd>
+    get computed width of table, all (absolute) column widths put together
+
+
+
+    <h3>Returns:</h3>
+    <ol>
+
+        int
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "set_num_rows"></a>
+    <strong>set_num_rows (num)</strong>
+    </dt>
+    <dd>
+    set visible column count, rebuild if needed
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">num</span>
+         (int)
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        vTable.CELLTYPE
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "get_col_type"></a>
+    <strong>get_col_type (idx)</strong>
+    </dt>
+    <dd>
+
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">idx</span>
+         (int)
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        vTable.CELLTYPE
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "get_col_key"></a>
+    <strong>get_col_key (idx)</strong>
+    </dt>
+    <dd>
+    retrieve the key of a column definition
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">idx</span>
+         (int)
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        string or nil
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "get_col_idx"></a>
+    <strong>get_col_idx (key)</strong>
+    </dt>
+    <dd>
+    retrieve the idx of a column definition by its key
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">key</span>
+         (string)
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        int or nil
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "get_col_width"></a>
+    <strong>get_col_width (idx, abs_only)</strong>
+    </dt>
+    <dd>
+    retrieve the absolute width in pixels for a given column
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">idx</span>
+         (int)
+        </li>
+        <li><span class="parameter">abs_only</span>
+         (bool) only check for absolute values
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        int
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "compute_auto_width"></a>
+    <strong>compute_auto_width (idx)</strong>
+    </dt>
+    <dd>
+    compute automatic width of column
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">idx</span>
+
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        int
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "get_col_margin"></a>
+    <strong>get_col_margin (idx)</strong>
+    </dt>
+    <dd>
+
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">idx</span>
+         (int)
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+        <li>
+        int</li>
+        <li>
+        variant or nil</li>
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "get_header_data"></a>
+    <strong>get_header_data (key)</strong>
+    </dt>
+    <dd>
+
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">key</span>
+         (string)
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        variant or nil
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "set_header_data"></a>
+    <strong>set_header_data (key, val)</strong>
+    </dt>
+    <dd>
+
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">key</span>
+         (string)
+        </li>
+        <li><span class="parameter">val</span>
+         (variant)
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "get_header_ctype"></a>
+    <strong>get_header_ctype (key)</strong>
+    </dt>
+    <dd>
+    retrieve a header type by key
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">key</span>
+         (string)
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        vLib.vTable.CELLTYPE ???
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "set_column_def"></a>
+    <strong>set_column_def (key, member, value)</strong>
+    </dt>
+    <dd>
+    specify a single column definition by it's key
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">key</span>
+         (string), the column key
+        </li>
+        <li><span class="parameter">member</span>
+         (string), e.g.'notifier'
+        </li>
+        <li><span class="parameter">value</span>
+         (variant), e.g. a callback function or other type
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "autosize_to_contents"></a>
+    <strong>autosize_to_contents ()</strong>
+    </dt>
+    <dd>
+    call this whenever something has changed that will affect the computed
+ height of the table - if resized (changed size), the external resize
+ handler is invoked, giving the host application a chance to respond
+
+
+
+
+
+
+
+</dd>
+</dl>
+    <h2><a name="Tables"></a>Tables</h2>
+    <dl class="function">
+    <dt>
+    <a name = "self.header_cells"></a>
+    <strong>self.header_cells</strong>
+    </dt>
+    <dd>
+    (table>vTableCell) header cells (by key)
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "self.cells"></a>
+    <strong>self.cells</strong>
+    </dt>
+    <dd>
+    (table>row>col:vTableCell) table cells
+ accessed like this: cells[row][col]
+
+
+
+
+
+
+
+</dd>
+</dl>
+    <h2><a name="Fields"></a>Fields</h2>
+    <dl class="function">
+    <dt>
+    <a name = "self.header_defs"></a>
+    <strong>self.header_defs</strong>
+    </dt>
+    <dd>
+    (table>table) header definition (by key)
+ Required values: vTable.HEADER_DEF_KEYS
+ + any cell members
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "self.column_defs"></a>
+    <strong>self.column_defs</strong>
+    </dt>
+    <dd>
+    (table>table>table) columns definition
+ Required keys: vTable.COLUMN_DEF_KEYS
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "self.data"></a>
+    <strong>self.data</strong>
+    </dt>
+    <dd>
+    (table>row>col:variant) the data
+ an extra property, _id, is added runtime
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "self.show_header"></a>
+    <strong>self.show_header</strong>
+    </dt>
+    <dd>
+    (bool) show_header
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "self.scrollbar_width"></a>
+    <strong>self.scrollbar_width</strong>
+    </dt>
+    <dd>
+    (int) TODO pass as separate constructor args
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "self.autosize"></a>
+    <strong>self.autosize</strong>
+    </dt>
+    <dd>
+    (bool) automatically resize to fit number of rows
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "self.num_rows"></a>
+    <strong>self.num_rows</strong>
+    </dt>
+    <dd>
+    (int) number of visible rows
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "self.row_height"></a>
+    <strong>self.row_height</strong>
+    </dt>
+    <dd>
+    (int) row height
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "self.header_height"></a>
+    <strong>self.header_height</strong>
+    </dt>
+    <dd>
+    (int) header height
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "self.table_style"></a>
+    <strong>self.table_style</strong>
+    </dt>
+    <dd>
+    (string) styles
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "self.row_offset"></a>
+    <strong>self.row_offset</strong>
+    </dt>
+    <dd>
+    (int) offset, vertical position in table
+ use set_row_offset() to synchronize with scrollbar
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "self.on_update_complete"></a>
+    <strong>self.on_update_complete</strong>
+    </dt>
+    <dd>
+    (function) define this to perform post-update actions,
+ such as custom row highlighting, tooltips etc.
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "self.on_resize"></a>
+    <strong>self.on_resize</strong>
+    </dt>
+    <dd>
+    (function) when table changed size (automatic resize)
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "self.scrollbar"></a>
+    <strong>self.scrollbar</strong>
+    </dt>
+    <dd>
+    (vScrollbar)
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "self.rebuild_requested"></a>
+    <strong>self.rebuild_requested</strong>
+    </dt>
+    <dd>
+    (bool) when table dimensions have changed
+ this will rebuild the table as part of the next update
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "self.update_requested"></a>
+    <strong>self.update_requested</strong>
+    </dt>
+    <dd>
+    (bool) TODO lazy updates
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "self.uid"></a>
+    <strong>self.uid</strong>
+    </dt>
+    <dd>
+    (string) unique identifier for views
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "self._width"></a>
+    <strong>self._width</strong>
+    </dt>
+    <dd>
+    (int) width
+
+
+
+
+
+
+
+</dd>
+</dl>
+
+
+</div> <!-- id="content" -->
+</div> <!-- id="main" -->
+<div id="about">
+<i>generated by <a href="http://github.com/stevedonovan/LDoc">LDoc 1.4.2</a></i>
+</div> <!-- id="about" -->
+</div> <!-- id="container" -->
+</body>
+</html>

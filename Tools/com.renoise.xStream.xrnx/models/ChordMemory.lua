@@ -8,8 +8,8 @@ arguments = {
       name = "mode",
       value = 2,
       properties = {
-          max = 2,
           min = 1,
+          max = 2,
           display_as = "switch",
           items = {
               "read",
@@ -22,8 +22,8 @@ arguments = {
       name = "num_keys",
       value = 3,
       properties = {
-          max = 6,
           min = 1,
+          max = 6,
           display_as = "switch",
           items = {
               "2",
@@ -38,7 +38,7 @@ arguments = {
   },
   {
       name = "interval_2",
-      value = 3,
+      value = 4,
       properties = {
           max = 119,
           display_as = "integer",
@@ -48,7 +48,7 @@ arguments = {
   },
   {
       name = "interval_3",
-      value = 4,
+      value = 3,
       properties = {
           max = 119,
           display_as = "integer",
@@ -58,7 +58,7 @@ arguments = {
   },
   {
       name = "interval_4",
-      value = 2,
+      value = 3,
       properties = {
           max = 119,
           display_as = "integer",
@@ -80,8 +80,8 @@ arguments = {
       name = "interval_6",
       value = 0,
       properties = {
-          max = 119,
           min = 0,
+          max = 119,
           display_as = "integer",
           zero_based = false,
       },
@@ -91,8 +91,8 @@ arguments = {
       name = "interval_7",
       value = 0,
       properties = {
-          max = 119,
           min = 0,
+          max = 119,
           display_as = "integer",
           zero_based = false,
       },
@@ -100,10 +100,10 @@ arguments = {
   },
   {
       name = "note_order",
-      value = 2,
+      value = 1,
       properties = {
-          max = 3,
           min = 1,
+          max = 3,
           display_as = "switch",
           items = {
               "low > high",
@@ -114,10 +114,10 @@ arguments = {
   },
   {
       name = "line_space",
-      value = 2,
+      value = 0,
       properties = {
-          max = 8,
           min = 0,
+          max = 8,
           display_as = "integer",
           zero_based = false,
       },
@@ -161,7 +161,7 @@ presets = {
       interval_4 = 0,
       interval_5 = 0,
       human_pan = 0,
-      interval_7 = 0,
+      line_space = 0,
       interval_3 = 3,
       human_dly = 0,
       name = "Major",
@@ -169,7 +169,7 @@ presets = {
       human_vol = 0,
       mode = 2,
       note_order = 1,
-      line_space = 0,
+      interval_7 = 0,
   },
   {
       num_keys = 2,
@@ -177,7 +177,7 @@ presets = {
       interval_4 = 0,
       interval_5 = 0,
       human_pan = 0,
-      interval_7 = 0,
+      line_space = 0,
       interval_3 = 4,
       human_dly = 0,
       name = "Minor",
@@ -185,7 +185,7 @@ presets = {
       human_vol = 0,
       mode = 2,
       note_order = 1,
-      line_space = 0,
+      interval_7 = 0,
   },
   {
       num_keys = 3,
@@ -193,7 +193,7 @@ presets = {
       interval_4 = 3,
       interval_5 = 0,
       human_pan = 0,
-      interval_7 = 0,
+      line_space = 0,
       interval_3 = 3,
       human_dly = 0,
       name = "Seventh",
@@ -201,7 +201,7 @@ presets = {
       human_vol = 0,
       mode = 2,
       note_order = 1,
-      line_space = 0,
+      interval_7 = 0,
   },
   {
       num_keys = 4,
@@ -209,7 +209,7 @@ presets = {
       interval_4 = 3,
       interval_5 = 4,
       human_pan = 0,
-      interval_7 = 0,
+      line_space = 0,
       interval_3 = 3,
       human_dly = 0,
       name = "Ninth",
@@ -217,7 +217,7 @@ presets = {
       human_vol = 0,
       mode = 2,
       note_order = 1,
-      line_space = 0,
+      interval_7 = 0,
   },
   {
       num_keys = 5,
@@ -225,7 +225,7 @@ presets = {
       interval_4 = 3,
       interval_5 = 4,
       human_pan = 0,
-      interval_7 = 0,
+      line_space = 0,
       interval_3 = 3,
       human_dly = 0,
       name = "Eleventh",
@@ -233,7 +233,7 @@ presets = {
       human_vol = 0,
       mode = 2,
       note_order = 1,
-      line_space = 0,
+      interval_7 = 0,
   },
   {
       num_keys = 3,
@@ -241,7 +241,7 @@ presets = {
       interval_4 = 4,
       interval_5 = 0,
       human_pan = 0,
-      interval_7 = 0,
+      line_space = 0,
       interval_3 = 3,
       human_dly = 0,
       name = "Major7th",
@@ -249,7 +249,7 @@ presets = {
       human_vol = 0,
       mode = 2,
       note_order = 1,
-      line_space = 0,
+      interval_7 = 0,
   },
   {
       num_keys = 4,
@@ -257,7 +257,7 @@ presets = {
       interval_4 = 4,
       interval_5 = 3,
       human_pan = 0,
-      interval_7 = 0,
+      line_space = 0,
       interval_3 = 3,
       human_dly = 0,
       name = "Major9th",
@@ -265,7 +265,7 @@ presets = {
       human_vol = 0,
       mode = 2,
       note_order = 1,
-      line_space = 0,
+      interval_7 = 0,
   },
   {
       num_keys = 5,
@@ -273,7 +273,7 @@ presets = {
       interval_4 = 4,
       interval_5 = 3,
       human_pan = 0,
-      interval_7 = 0,
+      line_space = 0,
       interval_3 = 3,
       human_dly = 0,
       name = "Major11th",
@@ -281,7 +281,7 @@ presets = {
       human_vol = 0,
       mode = 2,
       note_order = 1,
-      line_space = 0,
+      interval_7 = 0,
   },
   {
       num_keys = 4,
@@ -289,7 +289,7 @@ presets = {
       interval_4 = 4,
       interval_5 = 3,
       human_pan = 0,
-      interval_7 = 0,
+      line_space = 0,
       interval_3 = 1,
       human_dly = 0,
       name = "Minor9th",
@@ -297,7 +297,7 @@ presets = {
       human_vol = 0,
       mode = 2,
       note_order = 1,
-      line_space = 0,
+      interval_7 = 0,
   },
   {
       num_keys = 3,
@@ -305,7 +305,7 @@ presets = {
       interval_4 = 2,
       interval_5 = 0,
       human_pan = 0,
-      interval_7 = 0,
+      line_space = 0,
       interval_3 = 4,
       human_dly = 0,
       name = "Minor6th",
@@ -313,7 +313,7 @@ presets = {
       human_vol = 0,
       mode = 2,
       note_order = 1,
-      line_space = 0,
+      interval_7 = 0,
   },
   {
       num_keys = 3,
@@ -321,7 +321,7 @@ presets = {
       interval_4 = 3,
       interval_5 = 0,
       human_pan = 0,
-      interval_7 = 0,
+      line_space = 0,
       interval_3 = 4,
       human_dly = 0,
       name = "Minor7th",
@@ -329,7 +329,7 @@ presets = {
       human_vol = 0,
       mode = 2,
       note_order = 1,
-      line_space = 0,
+      interval_7 = 0,
   },
   {
       num_keys = 3,
@@ -337,7 +337,7 @@ presets = {
       interval_4 = 3,
       interval_5 = 0,
       human_pan = 0,
-      interval_7 = 0,
+      line_space = 0,
       interval_3 = 2,
       human_dly = 0,
       name = "Sustained",
@@ -345,7 +345,7 @@ presets = {
       human_vol = 0,
       mode = 2,
       note_order = 1,
-      line_space = 0,
+      interval_7 = 0,
   },
   {
       num_keys = 3,
@@ -353,7 +353,7 @@ presets = {
       interval_4 = 3,
       interval_5 = 0,
       human_pan = 0,
-      interval_7 = 0,
+      line_space = 0,
       interval_3 = 3,
       human_dly = 0,
       name = "Diminished",
@@ -361,7 +361,7 @@ presets = {
       human_vol = 0,
       mode = 2,
       note_order = 1,
-      line_space = 0,
+      interval_7 = 0,
   },
   {
       num_keys = 3,
@@ -369,7 +369,7 @@ presets = {
       interval_4 = 2,
       interval_5 = 0,
       human_pan = 0,
-      interval_7 = 0,
+      line_space = 0,
       interval_3 = 4,
       human_dly = 0,
       name = "Augmented",
@@ -377,13 +377,13 @@ presets = {
       human_vol = 0,
       mode = 2,
       note_order = 1,
-      line_space = 0,
+      interval_7 = 0,
   },
 },
 data = {
 },
 options = {
- color = 0x000000,
+ color = 0x505552,
 },
 callback = [[
 -------------------------------------------------------------------------------
@@ -576,6 +576,7 @@ else
   end
   
 end
+
 
 
 

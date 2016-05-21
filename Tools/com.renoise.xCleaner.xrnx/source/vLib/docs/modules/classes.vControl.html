@@ -1,0 +1,186 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+<head>
+    <title>Reference</title>
+    <link rel="stylesheet" href="../ldoc.css" type="text/css" />
+</head>
+<body>
+
+<div id="container">
+
+<div id="product">
+	<div id="product_logo"></div>
+	<div id="product_name"><big><b></b></big></div>
+	<div id="product_description"></div>
+</div> <!-- id="product" -->
+
+
+<div id="main">
+
+
+<!-- Menu -->
+
+<div id="navigation">
+<br/>
+<h1>ldoc</h1>
+
+<ul>
+  <li><a href="../index.html">Index</a></li>
+</ul>
+
+<h2>Contents</h2>
+<ul>
+<li><a href="#Functions">Functions</a></li>
+<li><a href="#Fields">Fields</a></li>
+</ul>
+
+
+<h2>Modules</h2>
+<ul class="$(kind=='Topics' and '' or 'nowrap'">
+  <li><a href="../modules/classes.helpers.vBitmap.html">classes.helpers.vBitmap</a></li>
+  <li><a href="../modules/classes.helpers.vFilesys.html">classes.helpers.vFilesys</a></li>
+  <li><a href="../modules/classes.helpers.vSelection.html">classes.helpers.vSelection</a></li>
+  <li><a href="../modules/classes.helpers.vString.html">classes.helpers.vString</a></li>
+  <li><a href="../modules/classes.helpers.vVector.html">classes.helpers.vVector</a></li>
+  <li><a href="../modules/classes.parsers.vXML.html">classes.parsers.vXML</a></li>
+  <li><a href="../modules/classes.vCell.html">classes.vCell</a></li>
+  <li><a href="../modules/classes.vCellBitmap.html">classes.vCellBitmap</a></li>
+  <li><a href="../modules/classes.vCellButton.html">classes.vCellButton</a></li>
+  <li><a href="../modules/classes.vCellCheckBox.html">classes.vCellCheckBox</a></li>
+  <li><a href="../modules/classes.vCellPopup.html">classes.vCellPopup</a></li>
+  <li><a href="../modules/classes.vCellText.html">classes.vCellText</a></li>
+  <li><a href="../modules/classes.vCellValueBox.html">classes.vCellValueBox</a></li>
+  <li><strong>classes.vControl</strong></li>
+  <li><a href="../modules/classes.vFileBrowser.html">classes.vFileBrowser</a></li>
+  <li><a href="../modules/classes.vGraph.html">classes.vGraph</a></li>
+  <li><a href="../modules/classes.vLib.html">classes.vLib</a></li>
+  <li><a href="../modules/classes.vLogView.html">classes.vLogView</a></li>
+  <li><a href="../modules/classes.vScrollbar.html">classes.vScrollbar</a></li>
+  <li><a href="../modules/classes.vTable.html">classes.vTable</a></li>
+  <li><a href="../modules/classes.vTabs.html">classes.vTabs</a></li>
+  <li><a href="../modules/classes.vTree.html">classes.vTree</a></li>
+  <li><a href="../modules/classes.vView.html">classes.vView</a></li>
+  <li><a href="../modules/classes.vWaveform.html">classes.vWaveform</a></li>
+  <li><a href="../modules/main.html">main</a></li>
+  <li><a href="../modules/support.debug.html">support.debug</a></li>
+</ul>
+
+</div>
+
+<div id="content">
+
+<h1>Module <code>classes.vControl</code></h1>
+<p>Control is the base class for all views which let the user change a
+ value or some "state" from the UI</p>
+<p></p>
+
+
+<h2><a href="#Functions">Functions</a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#request_update">request_update ()</a></td>
+	<td class="summary">request update() - either the control will update immediately, or
+ at a later time (lazy_updates, a vLib static property)</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#perform_update">perform_update ()</a></td>
+	<td class="summary">perform a scheduled update and clear the timer</td>
+	</tr>
+</table>
+<h2><a href="#Fields">Fields</a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#self.active">self.active</a></td>
+	<td class="summary">(bool, r/w) active property of this control
+ note: implemented differently from class to class...</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#self.midi_mapping">self.midi_mapping</a></td>
+	<td class="summary">(string) define name of the midi-mapping
+ note: supply a similarly-named function to establish
+ actual handling of midi messages in your tool...</td>
+	</tr>
+</table>
+
+<br/>
+<br/>
+
+
+    <h2><a name="Functions"></a>Functions</h2>
+    <dl class="function">
+    <dt>
+    <a name = "request_update"></a>
+    <strong>request_update ()</strong>
+    </dt>
+    <dd>
+    request update() - either the control will update immediately, or
+ at a later time (lazy_updates, a vLib static property)
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "perform_update"></a>
+    <strong>perform_update ()</strong>
+    </dt>
+    <dd>
+    perform a scheduled update and clear the timer
+
+
+
+
+
+
+
+</dd>
+</dl>
+    <h2><a name="Fields"></a>Fields</h2>
+    <dl class="function">
+    <dt>
+    <a name = "self.active"></a>
+    <strong>self.active</strong>
+    </dt>
+    <dd>
+    (bool, r/w) active property of this control
+ note: implemented differently from class to class...
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "self.midi_mapping"></a>
+    <strong>self.midi_mapping</strong>
+    </dt>
+    <dd>
+    (string) define name of the midi-mapping
+ note: supply a similarly-named function to establish
+ actual handling of midi messages in your tool...
+
+
+
+
+
+
+
+</dd>
+</dl>
+
+
+</div> <!-- id="content" -->
+</div> <!-- id="main" -->
+<div id="about">
+<i>generated by <a href="http://github.com/stevedonovan/LDoc">LDoc 1.4.2</a></i>
+</div> <!-- id="about" -->
+</div> <!-- id="container" -->
+</body>
+</html>

@@ -1,0 +1,309 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+<head>
+    <title>Reference</title>
+    <link rel="stylesheet" href="../ldoc.css" type="text/css" />
+</head>
+<body>
+
+<div id="container">
+
+<div id="product">
+	<div id="product_logo"></div>
+	<div id="product_name"><big><b></b></big></div>
+	<div id="product_description"></div>
+</div> <!-- id="product" -->
+
+
+<div id="main">
+
+
+<!-- Menu -->
+
+<div id="navigation">
+<br/>
+<h1>ldoc</h1>
+
+<ul>
+  <li><a href="../index.html">Index</a></li>
+</ul>
+
+<h2>Contents</h2>
+<ul>
+<li><a href="#Functions">Functions</a></li>
+<li><a href="#Fields">Fields</a></li>
+</ul>
+
+
+<h2>Modules</h2>
+<ul class="$(kind=='Topics' and '' or 'nowrap'">
+  <li><a href="../modules/xAudioDevice.html">xAudioDevice</a></li>
+  <li><a href="../modules/xBlockLoop.html">xBlockLoop</a></li>
+  <li><a href="../modules/xDebug.html">xDebug</a></li>
+  <li><a href="../modules/xDocument.html">xDocument</a></li>
+  <li><a href="../modules/xEffectColumn.html">xEffectColumn</a></li>
+  <li><a href="../modules/xFilesystem.html">xFilesystem</a></li>
+  <li><a href="../modules/xInstrument.html">xInstrument</a></li>
+  <li><a href="../modules/xLib.html">xLib</a></li>
+  <li><a href="../modules/xLine.html">xLine</a></li>
+  <li><a href="../modules/xLineAutomation.html">xLineAutomation</a></li>
+  <li><a href="../modules/xLinePattern.html">xLinePattern</a></li>
+  <li><a href="../modules/xMessage.html">xMessage</a></li>
+  <li><a href="../modules/xMidiInput.html">xMidiInput</a></li>
+  <li><strong>xMidiMessage</strong></li>
+  <li><a href="../modules/xNoteColumn.html">xNoteColumn</a></li>
+  <li><a href="../modules/xObservable.html">xObservable</a></li>
+  <li><a href="../modules/xOscClient.html">xOscClient</a></li>
+  <li><a href="../modules/xOscDevice.html">xOscDevice</a></li>
+  <li><a href="../modules/xOscMessage.html">xOscMessage</a></li>
+  <li><a href="../modules/xOscPattern.html">xOscPattern</a></li>
+  <li><a href="../modules/xOscRouter.html">xOscRouter</a></li>
+  <li><a href="../modules/xOscValue.html">xOscValue</a></li>
+  <li><a href="../modules/xParseXML.html">xParseXML</a></li>
+  <li><a href="../modules/xPhrase.html">xPhrase</a></li>
+  <li><a href="../modules/xPhraseMgr.html">xPhraseMgr</a></li>
+  <li><a href="../modules/xPreferences.html">xPreferences</a></li>
+  <li><a href="../modules/xReflection.html">xReflection</a></li>
+  <li><a href="../modules/xRule.html">xRule</a></li>
+  <li><a href="../modules/xRules.html">xRules</a></li>
+  <li><a href="../modules/xRuleset.html">xRuleset</a></li>
+  <li><a href="../modules/xSample.html">xSample</a></li>
+  <li><a href="../modules/xSampleMapping.html">xSampleMapping</a></li>
+  <li><a href="../modules/xSandbox.html">xSandbox</a></li>
+  <li><a href="../modules/xScale.html">xScale</a></li>
+  <li><a href="../modules/xSongPos.html">xSongPos</a></li>
+  <li><a href="../modules/xStreamPos.html">xStreamPos</a></li>
+  <li><a href="../modules/xTrack.html">xTrack</a></li>
+  <li><a href="../modules/xValue.html">xValue</a></li>
+  <li><a href="../modules/xVoice.html">xVoice</a></li>
+  <li><a href="../modules/xVoiceManager.html">xVoiceManager</a></li>
+</ul>
+
+</div>
+
+<div id="content">
+
+<h1>Module <code>xMidiMessage</code></h1>
+<p>A higher-level MIDI message, as employed by various xLib classes
+.</p>
+<p>
+
+<h1></h1>
+
+<p>The syntax expands upon the standard 3 bytes of a MIDI message,
+making it possible to pass around data with higher resolution </p>
+
+<h3>Test</h3>
+<p>  ability to cache a message once turned into raw MIDI,
+  (change it only as message properties are modified via setters)</p>
+
+<h3>See also</h3>
+<p><a href="../modules/xMidiInput.html#">xMidiInput</a> </p>
+
+</p>
+
+
+<h2><a href="#Functions">Functions</a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#__init">__init (...)</a></td>
+	<td class="summary">Class Methods</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#get_value1">get_value1 ()</a></td>
+	<td class="summary">[[</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#split_mb">split_mb (val)</a></td>
+	<td class="summary">Static Methods</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#merge_mb">merge_mb (msb, lsb)</a></td>
+	<td class="summary">provided with a 14-bit value, we return the MSB/LSB parts</td>
+	</tr>
+</table>
+<h2><a href="#Fields">Fields</a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#self.message_type">self.message_type</a></td>
+	<td class="summary">xMidiMessage.TYPE (required)</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#self.channel">self.channel</a></td>
+	<td class="summary">int, between 0-16
+ 0 should be interpreted as 'undefined'</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#self.bit_depth">self.bit_depth</a></td>
+	<td class="summary">xMidiMessage.BIT_DEPTH, indicates a multibyte message
+  (only relevant for CC messages, as they can otherwise be ambivalent)</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#self.port_name">self.port_name</a></td>
+	<td class="summary">string, source/target port</td>
+	</tr>
+</table>
+
+<br/>
+<br/>
+
+
+    <h2><a name="Functions"></a>Functions</h2>
+    <dl class="function">
+    <dt>
+    <a name = "__init"></a>
+    <strong>__init (...)</strong>
+    </dt>
+    <dd>
+    Class Methods
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">...</span>
+
+
+
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "get_value1"></a>
+    <strong>get_value1 ()</strong>
+    </dt>
+    <dd>
+    [[
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "split_mb"></a>
+    <strong>split_mb (val)</strong>
+    </dt>
+    <dd>
+    Static Methods  provided with a 14-bit value, we return the MSB/LSB parts
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">val</span>
+
+
+
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "merge_mb"></a>
+    <strong>merge_mb (msb, lsb)</strong>
+    </dt>
+    <dd>
+    provided with a 14-bit value, we return the MSB/LSB parts
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">msb</span>
+
+
+
+        </li>
+        <li><span class="parameter">lsb</span>
+        return bit.rshift(msb,7) + lsb
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+</dl>
+    <h2><a name="Fields"></a>Fields</h2>
+    <dl class="function">
+    <dt>
+    <a name = "self.message_type"></a>
+    <strong>self.message_type</strong>
+    </dt>
+    <dd>
+    xMidiMessage.TYPE (required)
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "self.channel"></a>
+    <strong>self.channel</strong>
+    </dt>
+    <dd>
+    int, between 0-16
+ 0 should be interpreted as 'undefined'
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "self.bit_depth"></a>
+    <strong>self.bit_depth</strong>
+    </dt>
+    <dd>
+    xMidiMessage.BIT_DEPTH, indicates a multibyte message
+  (only relevant for CC messages, as they can otherwise be ambivalent)
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "self.port_name"></a>
+    <strong>self.port_name</strong>
+    </dt>
+    <dd>
+    string, source/target port
+
+
+
+
+
+
+
+</dd>
+</dl>
+
+
+</div> <!-- id="content" -->
+</div> <!-- id="main" -->
+<div id="about">
+<i>generated by <a href="http://github.com/stevedonovan/LDoc">LDoc 1.4.2</a></i>
+</div> <!-- id="about" -->
+</div> <!-- id="container" -->
+</body>
+</html>
