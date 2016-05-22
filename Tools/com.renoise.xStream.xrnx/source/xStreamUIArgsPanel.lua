@@ -300,12 +300,16 @@ function xStreamUIArgsPanel:build_args()
     }
 
     local view_lock = vb:checkbox{
-        bind = arg.locked_observable,
+        --bind = arg.locked_observable,
+        value = arg.locked,
         width = 14,
         height = 14,
         tooltip = "Lock value - can still be changed manually," 
                 .."\nbut prevents changes when switching presets"
                 .."\nor receiving values from the Renoise API.",
+        notifier = function(val)
+          arg.locked = val
+        end
       }
 
     local view = vb:row{

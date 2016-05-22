@@ -830,85 +830,71 @@ function xStreamUI:build()
     self.build_models_requested = true
   end)
 
-  local model_name_notifier = function()
-    TRACE("*** xStreamUI - model.name_observable fired...")
-    self.build_models_requested = true
-  end
-  
-  local model_modified_notifier = function()
-    TRACE("*** xStreamUI - model.modified_observable fired...")
-    self.update_models_requested = true
-  end
-  
-  local model_compiled_notifier = function()
-    TRACE("*** xStreamUI - model.compiled_observable fired...")
-    local view = vb.views["xStreamCallbackCompile"]
-    view.active = self.xstream.selected_model.compiled
-  end
-
-  local model_color_notifier = function()    
-    TRACE("*** xStreamUI - model.color_observable fired...")
-    self.update_color_requested = true
-  end
-
-  local callback_notifier = function()
-    TRACE("*** xStreamUI - callback_notifier fired...")
-    if not self.user_modified_callback then
-      --print("... got here")
-      self:update_editor()
-    end
-  end
-
-  local selected_arg_notifier = function()
-    TRACE("*** xStreamUI - model.args.selected_index fired...")
-    self.update_args_requested = true
-  end
-
-  local args_modified_notifier = function()
-    TRACE("*** xStreamUI - model.args.selected_index fired...")
-    self.build_args_requested = true
-  end
-
   local preset_bank_notifier = function()
-    TRACE("*** xStreamUI - model.preset_banks/name_observable fired...")
+    TRACE("*** xStreamUI - preset_bank_notifier fired...")
     self.presets:update_controls()
     self.favorites:update_bank_selector()
   end
 
-  local presets_modified_notifier = function()
-    TRACE("*** xStreamUI - preset_bank.presets_observable fired...")
-    self.build_presets_requested = true
-    self.favorites:update_preset_selector()
-  end
-
-  local preset_index_notifier = function()    
-    TRACE("*** xStreamUI - preset_bank.selected_preset_index_observable fired...")
-    self.update_presets_requested = true
-  end
-
   local preset_bank_index_notifier = function()
     TRACE("*** xStreamUI - model.selected_preset_bank_index_observable fired...")
+    local presets_modified_notifier = function()
+      TRACE("*** xStreamUI - presets_modified_notifier fired...")
+      self.build_presets_requested = true
+      self.favorites:update_preset_selector()
+    end
     self.build_presets_requested = true
     self.update_presets_requested = true
     local preset_bank = self.xstream.selected_model.selected_preset_bank
     xObservable.attach(preset_bank.presets_observable,presets_modified_notifier)
     xObservable.attach(preset_bank.modified_observable,presets_modified_notifier)
-    xObservable.attach(preset_bank.selected_preset_index_observable,preset_index_notifier)
+    xObservable.attach(preset_bank.selected_preset_index_observable,function()    
+      TRACE("*** xStreamUI - preset_bank.selected_preset_index_observable fired...")
+      self.update_presets_requested = true
+    end)
     xObservable.attach(preset_bank.name_observable,preset_bank_notifier)
   end
 
   local selected_model_index_notifier = function()
     TRACE("*** xStreamUI - selected_model_index_notifier fired...",self.xstream.selected_model_index)
-
     local model = self.xstream.selected_model
     if model then
-      xObservable.attach(model.name_observable,model_name_notifier)
-      xObservable.attach(model.modified_observable,model_modified_notifier)
-      xObservable.attach(model.compiled_observable,model_compiled_notifier)
-      xObservable.attach(model.color_observable,model_color_notifier)
-      xObservable.attach(model.args.selected_index_observable,selected_arg_notifier)
-      xObservable.attach(model.args.args_observable,args_modified_notifier)
-      xObservable.attach(model.callback_str_observable,callback_notifier)
+      print(">>> #model.args.args",#model.args.args)
+      xObservable.attach(model.name_observable,function()
+        TRACE("*** xStreamUI - model.name_observable fired...")
+        self.build_models_requested = true
+      end)
+      xObservable.attach(model.modified_observable,function()
+        TRACE("*** xStreamUI - model.modified_observable fired...")
+        self.update_models_requested = true
+      end)
+      xObservable.attach(model.compiled_observable,function()
+        TRACE("*** xStreamUI - model.compiled_observable fired...")
+        vb.views["xStreamCallbackCompile"].active = self.xstream.selected_model.compiled
+      end)
+      xObservable.attach(model.color_observable,function()    
+        TRACE("*** xStreamUI - model.color_observable fired...")
+        self.update_color_requested = true
+      end)
+      xObservable.attach(model.args.selected_index_observable,function()
+        TRACE("*** xStreamUI - selected_arg_notifier fired...")
+        self.update_args_requested = true
+      end)
+      xObservable.attach(model.args.args_observable,function()
+        TRACE("*** xStreamUI - args_observable_notifier fired...")
+        self.build_args_requested = true
+      end)
+      xObservable.attach(model.args.modified_observable,function()
+        TRACE("*** xStreamUI - args_modified_notifier fired...")
+        self.xstream.selected_model.modified = true
+      end)
+      xObservable.attach(model.callback_str_observable,function()
+        TRACE("*** xStreamUI - callback_notifier fired...")
+        if not self.user_modified_callback then
+          --print("... got here")
+          self:update_editor()
+        end
+      end)
       xObservable.attach(model.preset_banks_observable,preset_bank_notifier)
       xObservable.attach(model.selected_preset_bank_index_observable,preset_bank_index_notifier)
       preset_bank_index_notifier()

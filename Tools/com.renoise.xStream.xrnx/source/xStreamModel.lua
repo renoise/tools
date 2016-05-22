@@ -91,7 +91,7 @@ function xStreamModel:__init(xstream)
   -- (set whenver the callback is saved or loaded...)
   self.callback_str_source = nil
 
-  -- boolean, true when user has edited the callback method 
+  -- boolean, true when the model definition has been changed
   self.modified = property(self.get_modified,self.set_modified)
   self.modified_observable = renoise.Document.ObservableBoolean(false)
 

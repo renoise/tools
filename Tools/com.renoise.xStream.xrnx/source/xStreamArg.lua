@@ -170,6 +170,9 @@ function xStreamArg:__init(arg)
   -- function, fires when observable has changed
   self.notifier = nil
 
+  -- function, fires when argument definition has changed
+  self.modified_observable = renoise.Document.ObservableBang()
+
   -- add default properties
   if (type(self.properties.impacts_buffer) == "nil") then
     self.properties.impacts_buffer = true
@@ -261,7 +264,12 @@ function xStreamArg:get_locked()
 end
 
 function xStreamArg:set_locked(val)
+  print("xStreamArg:set_locked(val)",val)
+  local modified = (val ~= self.locked_observable.value) and true or false
   self.locked_observable.value = val
+  if modified then
+    self.modified_observable:bang()
+  end
 end
 
 -------------------------------------------------------------------------------
@@ -271,7 +279,11 @@ function xStreamArg:get_linked()
 end
 
 function xStreamArg:set_linked(val)
+  local modified = (val ~= self.linked_observable.value) and true or false
   self.linked_observable.value = val
+  if modified then
+    self.modified_observable:bang()
+  end
 end
 
 -------------------------------------------------------------------------------

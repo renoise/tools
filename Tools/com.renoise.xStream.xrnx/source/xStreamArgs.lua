@@ -55,6 +55,9 @@ function xStreamArgs:__init(model)
   -- table<xStreamArg>
   self.args_observable = renoise.Document.ObservableNumberList()
 
+  -- monitor arguments and report changes 
+  self.modified_observable = renoise.Document.ObservableBang()
+
   -- int, read-only - number of registered arguments
   self.length = property(self.get_length)
 
@@ -326,7 +329,13 @@ function xStreamArgs:add(arg,index,do_replace)
     end
   end
 
-  --print("adding arg",arg.name)
+  -- detect changes to definition
+  xarg.modified_observable:add_notifier(function()
+    print("xarg.modified_observable fired...",self.modified_observable)
+    self.modified_observable:bang()
+  end)
+
+  print(">>> added arg",arg.name)
   return true
 
 end
@@ -494,6 +503,9 @@ function xStreamArgs:replace(idx,arg)
   if not added and err then
     return false,err
   end
+
+  --local xarg = self.args[idx]
+  --xarg.modified_observable:bang()
 
   self.selected_index = cached_index
 
@@ -678,9 +690,7 @@ function xStreamArgs:set_linked(arg)
 
   for k,v in ipairs(self.args) do
     --print("v.linked,name,equal",v.linked,v.name,rawequal(arg,v))
-    if (v.linked and arg.name == v.name) 
-    --  and not (arg.tab_name == v.tab_name)
-    then
+    if v.linked and not v.locked and (arg.name == v.name) then
       v.observable.value = arg.value
     --  print("set linked param to ",arg.value,arg.full_name)
     end
@@ -759,7 +769,9 @@ function xStreamArgs:serialize()
       properties = props,
       description = arg.description,
       bind = arg.bind_str,
-      poll = arg.poll_str
+      poll = arg.poll_str,
+      linked = arg.linked,
+      locked = arg.locked,
     })
 
   end
