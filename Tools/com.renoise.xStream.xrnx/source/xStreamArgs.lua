@@ -47,7 +47,10 @@ function xStreamArgs:__init(model)
   self.args = {}
   
   -- table<string>
-  self.tab_names = {}
+  self._tab_names = {}
+
+  -- table<name={},name={},etc>
+  self._linked = {}
 
   -- table<xStreamArg>
   self.args_observable = renoise.Document.ObservableNumberList()
@@ -144,7 +147,9 @@ function xStreamArgs:add(arg,index,do_replace)
   --print("arg_tab_name",arg_tab_name)
   --print("arg_name",arg_name)
 
-  -- validate as string, proper identifier
+
+  -- validate --
+
   if (type(arg_name)~='string') then
     return false,"Argument name '"..arg_name.."' needs to be a string"
   end
@@ -153,16 +158,36 @@ function xStreamArgs:add(arg,index,do_replace)
     return false,err
   end
 
+  if arg_tab_name then
+    if (type(arg_tab_name)~='string') then
+      return false,"Argument tab_name '"..arg_tab_name.."' needs to be a string"
+    end
+    local is_valid,err = xReflection.is_valid_identifier(arg_tab_name) 
+    if not is_valid then
+      return false,err
+    end
+  end
+
   -- avoid using existing or RESERVED_NAMES
   if not do_replace then
     --print("type(self[arg_name])",type(self[arg_name]))
     --if (type(self[arg_name]) ~= 'nil') or 
     --  (table.find(xStreamArgs.RESERVED_NAMES,arg_name)) 
-    if table.find(self:get_names(),arg.name) then
-      return false,"The name '"..arg.name.."' is already taken. Please choose another name"
+    local full_name = nil
+    if arg.tab_name then
+      full_name = arg.tab_name.."."..arg.name
+    else
+      full_name = arg.name
     end
-    if table.find(xStreamArgs.RESERVED_NAMES,arg.name) then
-      return false,"The name '"..arg.name.."' is reserved. Please choose another name"
+    --print(">>> full_name",full_name)
+
+    if table.find(self:get_names(),full_name) then
+      return false,"The name '"..full_name.."' is already taken. Please choose another name"
+    end
+    if not arg.tab_name then
+      if table.find(xStreamArgs.RESERVED_NAMES,arg.name) then
+        return false,"The name '"..arg.name.."' is reserved. Please choose another name"
+      end
     end
   end
 
@@ -235,6 +260,7 @@ function xStreamArgs:add(arg,index,do_replace)
   end
   arg.model = self.model
   arg.tab_name = arg_tab_name
+  arg.name = arg_name
 
   --print(">>> type(arg.value)",type(arg.value))
   --print(">>> create xStreamArg...",rprint(arg))
@@ -250,6 +276,7 @@ function xStreamArgs:add(arg,index,do_replace)
 
   --print(">>> inserted at index",index,"args length",#self.args)
 
+
   -- getter/setter methods --------------------------------
   -- as used by the callback method
 
@@ -257,7 +284,7 @@ function xStreamArgs:add(arg,index,do_replace)
     -- index can change as arguments are rearranged
     -- so we always fetch by the name...
     --print("self:get_arg_by_name(arg.name)",arg.name,self:get_arg_by_name(arg.name))
-    local val = self:get_arg_by_name(arg.name).value
+    local val = self:get_arg_by_name(arg.name,arg.tab_name).value
     if arg.properties then
       -- apply transformation 
       if type(val)=="number" and arg.properties.zero_based then
@@ -274,7 +301,7 @@ function xStreamArgs:add(arg,index,do_replace)
 
   local setter = function(_,val)
     -- callback has specified a new value
-    local xarg = self:get_arg_by_name(arg.name)
+    local xarg = self:get_arg_by_name(arg.name,arg.tab_name)
     if xarg then
       xarg.value = val
     end
@@ -285,16 +312,16 @@ function xStreamArgs:add(arg,index,do_replace)
     --print("self[arg_tab_name]",self[arg_tab_name],arg_tab_name,type(self[arg_tab_name]))
     if (type(self[arg_tab_name]) == "nil") then
       self[arg_tab_name] = xStreamArgsTab()
-      table.insert(self.tab_names,arg_tab_name)
+      table.insert(self._tab_names,arg_tab_name)
       --print(">>> creating xStreamArgsTab for this arg",arg.name)
     end
     if (type(self[arg_tab_name][arg_name]) == "nil") then
-      --print(">>> adding property to args",arg.name)
+      --print(">>> adding tabbed arg",arg_name)
       self[arg_tab_name][arg_name] = property(getter,setter)
     end
   else
     if (type(self[arg.name]) == "nil") then
-      --print(">>> adding property to args",arg.name)
+      --print(">>> adding untabbed arg",arg.name)
       self[arg.name] = property(getter,setter)
     end
   end
@@ -394,12 +421,12 @@ function xStreamArgs:remove(idx)
     end
     if (arg_count == 1) then
       self[arg.tab_name] = nil
-      for k,v in ipairs(self.tab_names) do
+      for k,v in ipairs(self._tab_names) do
         if (v == arg.tab_name) then
-          table.remove(self.tab_names,k)
+          table.remove(self._tab_names,k)
         end
       end
-      print("xStreamArgs.remove() - removed tab group",arg.tab_name,rprint(self.tab_names))
+      --print("xStreamArgs.remove() - removed tab group",arg.tab_name,rprint(self._tab_names))
     end
   end
 
@@ -507,7 +534,7 @@ function xStreamArgs:get_names()
 
   local t = {}
   for k,v in ipairs(self.args) do
-    if (v.tab) then
+    if (v.tab_name) then
       table.insert(t,v.tab_name.."."..v.name)
     else
       table.insert(t,v.name)
@@ -572,6 +599,91 @@ function xStreamArgs:attach_to_song()
       arg.bind:add_notifier(arg,arg.bind_notifier)
       -- call it once, to initialize value
       arg:bind_notifier()
+    end
+  end
+
+end
+
+-------------------------------------------------------------------------------
+
+function xStreamArgs:toggle_link(arg)
+
+  arg.properties.linked = not arg.properties.linked
+  --local args = self.model.xstream.selected_model.args
+  if not arg.properties.linked then
+    self:unset_link(arg.name)
+  else
+    self:set_link(arg.name)
+  end
+
+end
+
+-------------------------------------------------------------------------------
+-- @param name - set link property for all tabbed args matching this name
+
+function xStreamArgs:set_link(name)
+
+  self._linked[name] = {}
+
+  for k,arg in ipairs(self.args) do
+    if arg.tab_name and (arg.name == name) then
+      arg.properties.linked = true
+      table.insert(self._linked[name],arg)
+    end
+  end
+
+  --print(">>> post set_link",name,rprint(self._linked))
+
+end
+
+-------------------------------------------------------------------------------
+-- @param name - unset link property for all tabbed args matching this name
+
+function xStreamArgs:unset_link(name)
+
+  for k,arg in ipairs(self.args) do
+    if arg.tab_name and (arg.name == name) then
+      arg.properties.linked = false
+    end
+  end
+
+  self._linked[name] = nil
+
+  --print(">>> post unset_link",name,rprint(self._linked))
+
+end
+
+-------------------------------------------------------------------------------
+-- @return true if the provided argument can be linked 
+-- (has other tabbed arguments with the same name)
+
+function xStreamArgs:count_linkable(name)
+  TRACE("xStreamArgs:count_linkable(name)",name)
+
+  local count = 0
+  for k,v in ipairs(self.args) do
+    if v.tab_name and (name == v.name) then
+      count = count+1
+    end
+  end
+  return count
+
+end
+
+-------------------------------------------------------------------------------
+-- directly update linked argument values 
+-- @param arg (xStreamArg)
+
+function xStreamArgs:set_linked(arg)
+  TRACE("xStreamArgs:set_linked(arg)",arg)
+
+  for k,v in ipairs(self.args) do
+    --print("v.linked,name,equal",v.properties.linked,v.name,rawequal(arg,v))
+    if (v.properties.linked and arg.name == v.name) 
+    --  and not (arg.tab_name == v.tab_name)
+    then
+      v.observable.value = arg.value
+    --  print("set linked param to ",arg.value,arg.full_name)
     end
   end
 
@@ -643,7 +755,7 @@ function xStreamArgs:serialize()
     end
 
     table.insert(args,{
-      name = arg.name,
+      name = arg.full_name,
       value = arg.value,
       properties = props,
       description = arg.description,

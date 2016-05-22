@@ -272,6 +272,32 @@ function xStreamUIArgsEditor:build()
           },
         },
         vb:row{
+          tooltip = "Link with similarly-named arguments",
+          id = "xStreamArgsEditorLinkedRow",
+          vb:text{
+            text = "linked",
+            font = "mono",
+            width = label_w,
+          },
+          vb:checkbox{
+            id = "xStreamArgsEditorLinked",
+            value = false,
+          },
+        },
+        vb:row{
+          tooltip = "Lock - prevent changes to value",
+          id = "xStreamArgsEditorLockedRow",
+          vb:text{
+            text = "locked",
+            font = "mono",
+            width = label_w,
+          },
+          vb:checkbox{
+            id = "xStreamArgsEditorLocked",
+            value = false,
+          },
+        },
+        vb:row{
           id = "xStreamArgsEditorItemsRow",
           tooltip = "Specify items for a popup/chooser/switch",
           vb:text{
@@ -368,6 +394,8 @@ function xStreamUIArgsEditor:create_arg_descriptor(arg_index,arg_value)
   local view_min_value      = self.vb.views["xStreamArgsEditorMinValue"]
   local view_max_value      = self.vb.views["xStreamArgsEditorMaxValue"]
   local view_zero_based     = self.vb.views["xStreamArgsEditorZeroBased"]
+  local view_linked         = self.vb.views["xStreamArgsEditorLinked"]
+  local view_locked         = self.vb.views["xStreamArgsEditorLocked"]
   local view_items          = self.vb.views["xStreamArgsEditorItems"]
   local view_bop   = self.vb.views["xStreamArgsEditorBindOrPoll"]
   local view_bop_value = self.vb.views["xStreamArgsEditorBindOrPollValue"]
@@ -434,8 +462,10 @@ function xStreamUIArgsEditor:create_arg_descriptor(arg_index,arg_value)
         end
       end
       if table.find(xStreamArg.SUPPORTS_ZERO_BASED,display_as) then
-        arg_props["zero_based"] = view_zero_based.value
+        arg_props.zero_based = view_zero_based.value
       end
+      arg_props.linked = view_linked.value
+      arg_props.locked = view_locked.value
       if table.find(xStreamArg.REQUIRES_ITEMS,display_as) then
         local arg_items = {}
         for k,v in ipairs(view_items.paragraphs) do
@@ -556,6 +586,8 @@ function xStreamUIArgsEditor:update()
   local view_min_value    = self.vb.views["xStreamArgsEditorMinValue"]
   local view_max_value    = self.vb.views["xStreamArgsEditorMaxValue"]
   local view_zero_based   = self.vb.views["xStreamArgsEditorZeroBased"]
+  local view_linked       = self.vb.views["xStreamArgsEditorLinked"]
+  local view_locked       = self.vb.views["xStreamArgsEditorLocked"]
   local view_items        = self.vb.views["xStreamArgsEditorItems"]
   local view_poll_or_bind = self.vb.views["xStreamArgsEditorBindOrPoll"]
   local view_bop_value    = self.vb.views["xStreamArgsEditorBindOrPollValue"]
@@ -582,6 +614,8 @@ function xStreamUIArgsEditor:update()
   view_min_value.active = has_selected
   view_max_value.active = has_selected
   view_zero_based.active = has_selected
+  view_linked.active = has_selected
+  view_locked.active = has_selected
   view_poll_or_bind.active = has_selected
 
   local arg = self.xstream.selected_model.args.selected_arg
@@ -599,7 +633,7 @@ function xStreamUIArgsEditor:update()
   end
 
   --view_locked.value = arg.locked
-  view_name.text = arg.name
+  view_name.text = arg.tab_name and arg.tab_name.."."..arg.name or arg.name
   view_description.text = arg.description or ""
   
   local base_type
@@ -658,6 +692,8 @@ function xStreamUIArgsEditor:update()
   view_min_value.value = arg.properties.min or xStreamUI.ARGS_MIN_VALUE
   view_max_value.value = arg.properties.max or xStreamUI.ARGS_MAX_VALUE
   view_zero_based.value = arg.properties.zero_based or false
+  view_linked.value = arg.properties.linked or false
+  view_locked.value = arg.properties.locked or false
   view_items.text = arg.properties.items and table.concat(arg.properties.items,"\n") or ""
   
 end

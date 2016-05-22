@@ -5,6 +5,24 @@ Args-Tabbed.lua
 return {
 arguments = {
   {
+      name = "arg1",
+      value = 3,
+      properties = {
+          min = 0,
+          display_as = "integer",
+          max = 100,
+      },
+  },
+  {
+      name = "arg2",
+      value = 75,
+      properties = {
+          min = 0,
+          display_as = "integer",
+          max = 100,
+      },
+  },
+  {
       name = "foo.arg1",
       value = 1,
       properties = {
@@ -16,7 +34,7 @@ arguments = {
       description = "",
   },
   {
-      name = "foo.arg2",
+      name = "foo.argX",
       value = 2,
       properties = {
           min = 0,
@@ -38,7 +56,7 @@ arguments = {
       description = "",
   },
   {
-      name = "bar.arg2",
+      name = "bar.argY",
       value = 4,
       properties = {
           min = 0,
@@ -50,6 +68,13 @@ arguments = {
   },
 },
 presets = {
+  {
+      arg2 = 75,
+      argX = 2,
+      arg1 = 3,
+      name = "",
+      argY = 4,
+  },
 },
 data = {
 },
@@ -69,6 +94,8 @@ callback = [[
 -- print the first value (arg1) of each tab
 print(args.foo.arg1)
 print(args.bar.arg1)
+
+
 
 
 ]],

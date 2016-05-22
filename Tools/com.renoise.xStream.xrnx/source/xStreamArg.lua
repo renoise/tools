@@ -109,6 +109,9 @@ function xStreamArg:__init(arg)
   -- string, name of argument tab (optional)
   self.tab_name = arg.tab_name
 
+  -- string, full name is [tab_name +] name
+  self.full_name = property(self.get_full_name)
+
   -- number/boolean/string
   self.value = property(self.get_value,self.set_value)
 
@@ -123,6 +126,7 @@ function xStreamArg:__init(arg)
   --  min, max (number) 
   --  display_as (xStreamArg.DISPLAY_AS) 
   --  zero_based (bool) also used in callback
+  --  linked (bool) 
   --  items (table<string>) display as popup/chooser
   --    note: you can also specify a string for this value, 
   --    which will then be evaluated during activation
@@ -189,6 +193,11 @@ end
 function xStreamArg:notifier()
   TRACE("xStreamArg:notifier()")
 
+  if self.properties.linked then
+    -- directly update argument value 
+    self.model.args:set_linked(self)
+  end
+
   if self.bind then
     -- update renoise
     self:bind_notifier(self.observable.value)
@@ -227,6 +236,17 @@ function xStreamArg:bind_notifier(val)
     else
       LOG(err)
     end
+  end
+end
+
+-------------------------------------------------------------------------------
+-- get name, including tab (if present)
+
+function xStreamArg:get_full_name()
+  if self.tab_name then
+    return self.tab_name.."."..self.name
+  else
+    return self.name
   end
 end
 
@@ -308,3 +328,14 @@ function xStreamArg:set_value(val)
   self.observable.value = val
 end
 
+
+-------------------------------------------------------------------------------
+
+function xStreamArg:__tostring()
+
+  return type(self)
+    ..",name="..tostring(self.name)
+    ..",tab_name="..tostring(self.tab_name)
+    ..",value="..tostring(self.value)
+
+end
