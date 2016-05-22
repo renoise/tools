@@ -283,7 +283,6 @@ function xStreamUIArgsPanel:build_args()
       bitmap = "./source/icons/lock.bmp",
       height = xStreamUI.BITMAP_BUTTON_H-1,
       notifier = function()
-        --arg.properties.linked = not arg.properties.linked
         local args = self.xstream.selected_model.args
         args:toggle_link(arg)
         self:update_visibility()
@@ -300,19 +299,21 @@ function xStreamUIArgsPanel:build_args()
       view_label,
     }
 
+    local view_lock = vb:checkbox{
+        bind = arg.locked_observable,
+        width = 14,
+        height = 14,
+        tooltip = "Lock value - can still be changed manually," 
+                .."\nbut prevents changes when switching presets"
+                .."\nor receiving values from the Renoise API.",
+      }
+
     local view = vb:row{
       vb:column{
         vb:space{
           height = 2,
         },
-        vb:checkbox{
-          bind = arg.locked_observable,
-          width = 14,
-          height = 14,
-          tooltip = "Lock value - can still be changed manually," 
-                  .."\nbut prevents changes when switching presets"
-                  .."\nor receiving values from the Renoise API.",
-        },
+        view_lock,
       }
     }
 
@@ -549,6 +550,7 @@ function xStreamUIArgsPanel:build_args()
         name = arg.name,
         tab_name = arg.tab_name,
         view = view,
+        view_lock = view_lock,
         view_label = view_label,
         view_link = view_link,
         view_bop = view_bop,
@@ -834,26 +836,29 @@ function xStreamUIArgsPanel:update_visibility()
     v.view_bop.visible = v.view.visible and 
       arg:get_bop() and true or false
 
+    -- disable lock & link while in editor
+    v.view_link.active = not self.editor_visible
+    v.view_lock.active = not self.editor_visible
+
     -- update link
-    v.view_link.mode = arg.properties.linked and 
+    v.view_link.mode = arg.linked and 
       "transparent" or "body_color"
     v.view_link.visible = v.view.visible and arg.tab_name and
       (args:count_linkable(arg.name) > 1) or false
-
-
   end
 
-  self.vb_tab_switcher.visible = not self.editor_visible and self.visible
 
   if self.editor_visible or not self.visible then
     -- single argument display
     self.vb_tabbed.visible = args.selected_arg.tab_name and true or false
     self.vb_untabbed.visible = not args.selected_arg.tab_name and true or false
     self.vb_tabbed.style = "invisible"
+    self.vb_tab_switcher.visible =  false
   elseif self.visible then
-    self.vb_tabbed.visible = true
+    self.vb_tabbed.visible = selected_tab_name and true or false
     self.vb_untabbed.visible = true
     self.vb_tabbed.style = "group"
+    self.vb_tab_switcher.visible =  selected_tab_name and true or false
   end
 
 

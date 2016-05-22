@@ -460,12 +460,11 @@ function xStreamArgs:replace(idx,arg)
   end
 
   -- name has changed, update callback? 
-  local existing_arg = self.args[idx]
-  if (arg.name ~= self.args[idx].name) then
+  if (arg.name ~= self.args[idx].full_name) then
     local str_msg = "Do you want to update the callback with the new name?"
     local choice = renoise.app():show_prompt("Renamed argument",str_msg,{"Go ahead!","Skip this step"})
     if (choice == "Go ahead!") then
-      self.model:rename_argument(self.args[idx].name,arg.name)
+      self.model:rename_argument(self.args[idx].full_name,arg.name)
     end
   end
 
@@ -608,9 +607,9 @@ end
 
 function xStreamArgs:toggle_link(arg)
 
-  arg.properties.linked = not arg.properties.linked
+  arg.linked = not arg.linked
   --local args = self.model.xstream.selected_model.args
-  if not arg.properties.linked then
+  if not arg.linked then
     self:unset_link(arg.name)
   else
     self:set_link(arg.name)
@@ -627,7 +626,7 @@ function xStreamArgs:set_link(name)
 
   for k,arg in ipairs(self.args) do
     if arg.tab_name and (arg.name == name) then
-      arg.properties.linked = true
+      arg.linked = true
       table.insert(self._linked[name],arg)
     end
   end
@@ -643,7 +642,7 @@ function xStreamArgs:unset_link(name)
 
   for k,arg in ipairs(self.args) do
     if arg.tab_name and (arg.name == name) then
-      arg.properties.linked = false
+      arg.linked = false
     end
   end
 
@@ -678,8 +677,8 @@ function xStreamArgs:set_linked(arg)
   TRACE("xStreamArgs:set_linked(arg)",arg)
 
   for k,v in ipairs(self.args) do
-    --print("v.linked,name,equal",v.properties.linked,v.name,rawequal(arg,v))
-    if (v.properties.linked and arg.name == v.name) 
+    --print("v.linked,name,equal",v.linked,v.name,rawequal(arg,v))
+    if (v.linked and arg.name == v.name) 
     --  and not (arg.tab_name == v.tab_name)
     then
       v.observable.value = arg.value

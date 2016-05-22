@@ -464,8 +464,6 @@ function xStreamUIArgsEditor:create_arg_descriptor(arg_index,arg_value)
       if table.find(xStreamArg.SUPPORTS_ZERO_BASED,display_as) then
         arg_props.zero_based = view_zero_based.value
       end
-      arg_props.linked = view_linked.value
-      arg_props.locked = view_locked.value
       if table.find(xStreamArg.REQUIRES_ITEMS,display_as) then
         local arg_items = {}
         for k,v in ipairs(view_items.paragraphs) do
@@ -529,6 +527,8 @@ function xStreamUIArgsEditor:create_arg_descriptor(arg_index,arg_value)
     value = arg_value,
     bind = arg_bind,
     poll = arg_poll,
+    linked = view_linked.value,
+    locked = view_locked.value,
     properties = arg_props,
   }
 
@@ -692,8 +692,8 @@ function xStreamUIArgsEditor:update()
   view_min_value.value = arg.properties.min or xStreamUI.ARGS_MIN_VALUE
   view_max_value.value = arg.properties.max or xStreamUI.ARGS_MAX_VALUE
   view_zero_based.value = arg.properties.zero_based or false
-  view_linked.value = arg.properties.linked or false
-  view_locked.value = arg.properties.locked or false
+  view_linked.value = arg.linked or false
+  view_locked.value = arg.locked or false
   view_items.text = arg.properties.items and table.concat(arg.properties.items,"\n") or ""
   
 end

@@ -126,7 +126,6 @@ function xStreamArg:__init(arg)
   --  min, max (number) 
   --  display_as (xStreamArg.DISPLAY_AS) 
   --  zero_based (bool) also used in callback
-  --  linked (bool) 
   --  items (table<string>) display as popup/chooser
   --    note: you can also specify a string for this value, 
   --    which will then be evaluated during activation
@@ -155,7 +154,12 @@ function xStreamArg:__init(arg)
   -- boolean, when true only user can set value
   -- (preset recalls and observed properties are ignored)
   self.locked = property(self.get_locked,self.set_locked)
-  self.locked_observable = renoise.Document.ObservableBoolean(false)
+  self.locked_observable = renoise.Document.ObservableBoolean(arg.locked or false)
+
+  -- boolean, when true only user can set value
+  -- (preset recalls and observed properties are ignored)
+  self.linked = property(self.get_linked,self.set_linked)
+  self.linked_observable = renoise.Document.ObservableBoolean(arg.linked or false)
 
   -- xStream, reference to owner
   --self.xstream = arg.xstream
@@ -193,7 +197,7 @@ end
 function xStreamArg:notifier()
   TRACE("xStreamArg:notifier()")
 
-  if self.properties.linked then
+  if self.linked then
     -- directly update argument value 
     self.model.args:set_linked(self)
   end
@@ -258,6 +262,16 @@ end
 
 function xStreamArg:set_locked(val)
   self.locked_observable.value = val
+end
+
+-------------------------------------------------------------------------------
+
+function xStreamArg:get_linked()
+  return self.linked_observable.value
+end
+
+function xStreamArg:set_linked(val)
+  self.linked_observable.value = val
 end
 
 -------------------------------------------------------------------------------
