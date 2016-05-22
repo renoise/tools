@@ -106,6 +106,9 @@ function xStreamArg:__init(arg)
   -- string, name of argument (required)
   self.name = arg.name 
 
+  -- string, name of argument tab (optional)
+  self.tab_name = arg.tab_name
+
   -- number/boolean/string
   self.value = property(self.get_value,self.set_value)
 
@@ -151,7 +154,10 @@ function xStreamArg:__init(arg)
   self.locked_observable = renoise.Document.ObservableBoolean(false)
 
   -- xStream, reference to owner
-  self.xstream = arg.xstream
+  --self.xstream = arg.xstream
+
+  -- xStream, reference to the owning model 
+  self.model = arg.model
 
   -- function, fires when observable has changed
   self.notifier = nil
@@ -188,7 +194,7 @@ function xStreamArg:notifier()
     self:bind_notifier(self.observable.value)
   end
   if self.properties.impacts_buffer then
-    self.xstream:wipe_futures()
+    self.model.xstream:wipe_futures()
   end
 
 end

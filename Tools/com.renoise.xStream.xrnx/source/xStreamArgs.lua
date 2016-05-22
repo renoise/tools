@@ -45,6 +45,9 @@ function xStreamArgs:__init(model)
 
   -- table<xStreamArg>
   self.args = {}
+  
+  -- table<string>
+  self.tab_names = {}
 
   -- table<xStreamArg>
   self.args_observable = renoise.Document.ObservableNumberList()
@@ -116,21 +119,45 @@ function xStreamArgs:add(arg,index,do_replace)
       },
     }
   end
-  
-  -- validate as string, proper identifier
-  if (type(arg.name)~='string') then
-    return false,"Argument name '"..arg.name.."' needs to be a string"
+
+  -- extract tab name from arg (only one is allowed)
+  local match = string.gmatch(arg.name,"[^.]*")
+  local count = 0
+  local arg_tab_name,arg_name
+  for k in match do
+    if (k ~= "") then
+      count = count+1
+      if (count == 1) then
+        arg_name = k
+        arg_tab_name = k
+      elseif (count == 2) then
+        arg_name = k
+      elseif (count > 2) then
+        return false,"Argument name '"..arg.name.."' can only contain one .dot"
+      end  
+    end
   end
-  local is_valid,err = xReflection.is_valid_identifier(arg.name) 
+  if (count == 1) then
+    arg_tab_name = nil
+  end
+
+  --print("arg_tab_name",arg_tab_name)
+  --print("arg_name",arg_name)
+
+  -- validate as string, proper identifier
+  if (type(arg_name)~='string') then
+    return false,"Argument name '"..arg_name.."' needs to be a string"
+  end
+  local is_valid,err = xReflection.is_valid_identifier(arg_name) 
   if not is_valid then
     return false,err
   end
 
   -- avoid using existing or RESERVED_NAMES
   if not do_replace then
-    --print("type(self[arg.name])",type(self[arg.name]))
-    --if (type(self[arg.name]) ~= 'nil') or 
-    --  (table.find(xStreamArgs.RESERVED_NAMES,arg.name)) 
+    --print("type(self[arg_name])",type(self[arg_name]))
+    --if (type(self[arg_name]) ~= 'nil') or 
+    --  (table.find(xStreamArgs.RESERVED_NAMES,arg_name)) 
     if table.find(self:get_names(),arg.name) then
       return false,"The name '"..arg.name.."' is already taken. Please choose another name"
     end
@@ -206,7 +233,8 @@ function xStreamArgs:add(arg,index,do_replace)
   elseif (type(arg.value) == "boolean") then
     arg.observable = renoise.Document.ObservableBoolean(arg.value)
   end
-  arg.xstream = self.model.xstream
+  arg.model = self.model
+  arg.tab_name = arg_tab_name
 
   --print(">>> type(arg.value)",type(arg.value))
   --print(">>> create xStreamArg...",rprint(arg))
@@ -222,34 +250,53 @@ function xStreamArgs:add(arg,index,do_replace)
 
   --print(">>> inserted at index",index,"args length",#self.args)
 
-  -- read-only access, used by the callback method
+  -- getter/setter methods --------------------------------
+  -- as used by the callback method
+
+  local getter = function()  
+    -- index can change as arguments are rearranged
+    -- so we always fetch by the name...
+    --print("self:get_arg_by_name(arg.name)",arg.name,self:get_arg_by_name(arg.name))
+    local val = self:get_arg_by_name(arg.name).value
+    if arg.properties then
+      -- apply transformation 
+      if type(val)=="number" and arg.properties.zero_based then
+        val = val - 1
+      end
+      if type(val)=="number" and 
+        (arg.properties.display_as == xStreamArg.DISPLAYS[xStreamArg.DISPLAY_AS.INTEGER]) 
+      then
+        val = math.floor(val)
+      end
+    end
+    return val
+  end
+
+  local setter = function(_,val)
+    -- callback has specified a new value
+    local xarg = self:get_arg_by_name(arg.name)
+    if xarg then
+      xarg.value = val
+    end
+  end
+
   -- NB: added only once, reused 
-  if type(self[arg.name]) == "nil" then
-    --print(">>> adding property to args",arg.name)
-    self[arg.name] = property(function()  
-      -- index can change as arguments are rearranged
-      -- so we always fetch by the name...
-      --print("self:get_arg_by_name(arg.name)",arg.name,self:get_arg_by_name(arg.name))
-      local val = self:get_arg_by_name(arg.name).value
-      if arg.properties then
-        -- apply transformation 
-        if type(val)=="number" and arg.properties.zero_based then
-          val = val - 1
-        end
-        if type(val)=="number" and 
-          (arg.properties.display_as == xStreamArg.DISPLAYS[xStreamArg.DISPLAY_AS.INTEGER]) 
-        then
-          val = math.floor(val)
-        end
-      end
-      return val
-    end,function(_,val)
-      -- callback has specified a new value
-      local xarg = self:get_arg_by_name(arg.name)
-      if xarg then
-        xarg.value = val
-      end
-    end)
+  if arg_tab_name then
+    --print("self[arg_tab_name]",self[arg_tab_name],arg_tab_name,type(self[arg_tab_name]))
+    if (type(self[arg_tab_name]) == "nil") then
+      self[arg_tab_name] = xStreamArgsTab()
+      table.insert(self.tab_names,arg_tab_name)
+      --print(">>> creating xStreamArgsTab for this arg",arg.name)
+    end
+    if (type(self[arg_tab_name][arg_name]) == "nil") then
+      --print(">>> adding property to args",arg.name)
+      self[arg_tab_name][arg_name] = property(getter,setter)
+    end
+  else
+    if (type(self[arg.name]) == "nil") then
+      --print(">>> adding property to args",arg.name)
+      self[arg.name] = property(getter,setter)
+    end
   end
 
   --print("adding arg",arg.name)
@@ -258,12 +305,24 @@ function xStreamArgs:add(arg,index,do_replace)
 end
 
 -------------------------------------------------------------------------------
+-- return argument by it's name/tab
+-- @param str_name (string)
+-- @param str_tab_name (string), optional
 
-function xStreamArgs:get_arg_by_name(str_name)
+function xStreamArgs:get_arg_by_name(str_name,str_tab_name)
+  TRACE("xStreamArgs:get_arg_by_name(str_name)",str_name)
 
   for _,v in ipairs(self.args) do
-    if (v.name == str_name) then
-      return v
+    if str_tab_name then
+      if (v.name == str_name) and
+        (v.tab_name == str_tab_name)
+      then
+        return v
+      end
+    else
+      if (v.name == str_name) then
+        return v
+      end
     end
   end
 
@@ -323,6 +382,25 @@ function xStreamArgs:remove(idx)
   local arg = self.args[idx]
   if not arg then
     return
+  end
+
+  -- remove tab group if only member 
+  if arg.tab_name then
+    local arg_count = 0
+    for k,v in ipairs(self.args) do
+      if (v.tab_name == arg.tab_name) then
+        arg_count = arg_count+1
+      end
+    end
+    if (arg_count == 1) then
+      self[arg.tab_name] = nil
+      for k,v in ipairs(self.tab_names) do
+        if (v == arg.tab_name) then
+          table.remove(self.tab_names,k)
+        end
+      end
+      print("xStreamArgs.remove() - removed tab group",arg.tab_name,rprint(self.tab_names))
+    end
   end
 
   --self[arg.name] = nil
@@ -421,6 +499,7 @@ function xStreamArgs:swap_index(idx1,idx2)
 end
 
 -------------------------------------------------------------------------------
+-- return a list of arguments, prefixed by tab (if any)
 -- return table<string>
 
 function xStreamArgs:get_names()
@@ -428,7 +507,11 @@ function xStreamArgs:get_names()
 
   local t = {}
   for k,v in ipairs(self.args) do
-    table.insert(t,v.name)
+    if (v.tab) then
+      table.insert(t,v.tab_name.."."..v.name)
+    else
+      table.insert(t,v.name)
+    end
   end
   return t
 
