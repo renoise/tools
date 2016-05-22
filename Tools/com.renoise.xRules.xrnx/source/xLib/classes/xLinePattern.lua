@@ -201,7 +201,7 @@ function xLinePattern:process_columns(
   clear_undefined,
   col_type)
 
-  rprint(xline_columns)
+  --rprint(xline_columns)
 
 	for k,rns_col in ipairs(rns_columns) do
     
