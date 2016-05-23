@@ -41,9 +41,6 @@ function xStreamUIOptions:__init(xstream)
   self.autostart = property(self.get_autostart,self.set_autostart)
   self.autostart_observable = renoise.Document.ObservableBoolean(false)
 
-  self.manage_gc = property(self.get_manage_gc,self.set_manage_gc)
-  self.manage_gc_observable = renoise.Document.ObservableBoolean(false)
-
   self.update_model_requested = false
 
   self.selected_tab_index = 1
@@ -101,15 +98,6 @@ function xStreamUIOptions:set_autostart(val)
   self.autostart_observable.value = val
 end
 
---------------------------------------------------------------------------------
-
-function xStreamUIOptions:get_manage_gc()
-  return self.manage_gc_observable.value 
-end
-
-function xStreamUIOptions:set_manage_gc(val)
-  self.manage_gc_observable.value = val
-end
 
 -------------------------------------------------------------------------------
 -- Overridden methods
@@ -451,15 +439,16 @@ function xStreamUIOptions:on_idle()
   end
 
   -- display some stats 
-
+  local xs = self.xstream 
   local view = self.vb.views["xStreamImplStats"]
   if view then
     local str_stat = ("Memory usage: %.2f Mb"):format(collectgarbage("count")/1024)
-      ..("\nLines Travelled: %d"):format(self.xstream.stream.writepos.lines_travelled)
-      ..("\nWriteahead: %d lines"):format(self.xstream.writeahead)
-      ..("\nSelected model: %s"):format(self.xstream.selected_model and self.xstream.selected_model.name or "N/A") 
-      ..("\nStream active: %s"):format(self.xstream.active and "true" or "false") 
-      ..("\nStream muted: %s"):format(self.xstream.muted and "true" or "false") 
+      ..("\nLines Travelled: %d"):format(xs.stream.writepos.lines_travelled)
+      ..("\nWritePosition: %d,%d"):format(xs.stream.writepos.sequence,xs.stream.writepos.line)
+      ..("\nWriteahead: %d lines"):format(xs.writeahead)
+      ..("\nSelected model: %s"):format(xs.selected_model and xs.selected_model.name or "N/A") 
+      ..("\nStream active: %s"):format(xs.active and "true" or "false") 
+      ..("\nStream muted: %s"):format(xs.muted and "true" or "false") 
     view.text = str_stat
   end
 

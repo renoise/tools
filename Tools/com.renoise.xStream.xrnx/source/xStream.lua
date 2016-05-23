@@ -118,9 +118,6 @@ function xStream:__init()
   -- string, last file path from where we imported models ('load_models')
   self.last_models_path = nil
 
-  -- bool, true if we want xStream to manage garbage collection
-  self.manage_gc = false
-
   -- bool, flag raised when preset bank is eligible for export
   self.preset_bank_export_requested = false
 
@@ -1362,13 +1359,6 @@ end
 function xStream:reset()
   TRACE("xStream:reset()")
 
-  if self.manage_gc then
-    collectgarbage("stop")
-  else
-    --collectgarbage("restart")
-    --collectgarbage()
-  end
-
   self.buffer = {}
   self.highest_buffer_idx = 0
   self.lowest_buffer_idx = 0
@@ -1423,11 +1413,6 @@ function xStream:stop()
 
   self.active = false
   self:clear_schedule()
-
-  if self.manage_gc then
-    collectgarbage("restart")
-    collectgarbage()
-  end
 
 end
 
