@@ -10,8 +10,8 @@ arguments = {
       ["linked"] = false,
       ["value"] = 75,
       ["properties"] = {
-          ["min"] = 0,
           ["max"] = 100,
+          ["min"] = 0,
           ["display_as"] = "integer",
           ["zero_based"] = false,
       },
@@ -23,8 +23,8 @@ arguments = {
       ["linked"] = false,
       ["value"] = 10,
       ["properties"] = {
-          ["min"] = 0,
           ["max"] = 100,
+          ["min"] = 0,
           ["display_as"] = "integer",
           ["zero_based"] = false,
       },
@@ -36,8 +36,8 @@ arguments = {
       ["linked"] = false,
       ["value"] = 2,
       ["properties"] = {
-          ["min"] = 0,
           ["max"] = 100,
+          ["min"] = 0,
           ["display_as"] = "integer",
           ["zero_based"] = false,
       },
@@ -49,8 +49,8 @@ arguments = {
       ["linked"] = true,
       ["value"] = 10,
       ["properties"] = {
-          ["min"] = 0,
           ["max"] = 100,
+          ["min"] = 0,
           ["display_as"] = "integer",
           ["zero_based"] = false,
       },
@@ -62,8 +62,8 @@ arguments = {
       ["linked"] = false,
       ["value"] = 4,
       ["properties"] = {
-          ["min"] = 0,
           ["max"] = 100,
+          ["min"] = 0,
           ["display_as"] = "integer",
           ["zero_based"] = false,
       },
@@ -71,13 +71,6 @@ arguments = {
   },
 },
 presets = {
-  {
-      ["arg2"] = 75,
-      ["argX"] = 2,
-      ["arg1"] = 3,
-      ["name"] = "",
-      ["argY"] = 4,
-  },
 },
 data = {
 },
@@ -88,13 +81,14 @@ callback = [[
 -------------------------------------------------------------------------------
 -- This model demonstrates how arguments can be grouped in tabs
 -- The tabs are created by assigning a name to the argument which is
--- prefixed with the tab name - in this case, "foo" or "bar"
+-- prefixed with the tab name - in this case, "one" or "two"
 -- A special feature of tabbed arguments is the ability to synchronize
 -- values between tabs, when arguments share the same name - this is 
 -- indicated by the small "chain" button - enable to sync values
 -------------------------------------------------------------------------------
 -- print values
 print(args.one.foo,args.two.foo)
+
 
 ]],
 }
