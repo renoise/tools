@@ -40,7 +40,7 @@ require (xlib_root..'xReflection')
 require (xlib_root..'xScale')
 require (xlib_root..'xSongPos')
 require (xlib_root..'xPlayPos')
-require (xlib_root..'xPreferences')
+--require (xlib_root..'xPreferences')
 require (xlib_root..'xStreamPos')
 
 require (app_dir..'xStream')
@@ -63,10 +63,12 @@ require (app_dir..'xStreamUIArgsEditor')
 
 local prefs = xStreamPrefs()
 
+--[[
 local xprefs = xPreferences{
   tool_name = "xStream",
   doc_class_name = "xStreamPrefs",
 }
+]]
 
 renoise.tool().preferences = prefs
 
@@ -167,7 +169,7 @@ function show()
 
   if not xstream then
     xpos = xSongPos(rns.transport.edit_pos)
-    xstream = xStream(xprefs)
+    xstream = xStream()
     xstream.ui = xStreamUI(xstream,vb,MIDI_PREFIX)
     xstream:load_models(prefs.user_folder.value..xStream.MODELS_FOLDER)
     prefs:apply(xstream)

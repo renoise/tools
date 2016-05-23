@@ -61,13 +61,13 @@ xStream.MUTE_MODE = {
 -------------------------------------------------------------------------------
 -- constructor
 
-function xStream:__init(xprefs)
+function xStream:__init()
 
   --- xStreamPrefs, current settings
   self.prefs = renoise.tool().preferences
 
   --- xPreferences
-  self.xprefs = xprefs
+  --self.xprefs = xprefs
 
   -- xStreamUI, built-in user interface
   self.ui = nil
