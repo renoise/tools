@@ -156,12 +156,15 @@ function xStreamUIArgsPanel:build_args()
   local vb_container = vb.views["xStreamArgsContainer"]
   if self.vb_untabbed then
     vb_container:remove_child(self.vb_untabbed)
+    self.vb_untabbed = nil
   end
   if self.vb_tabbed then
     vb_container:remove_child(self.vb_tabbed)
+    self.vb_tabbed = nil
   end
   if self.vb_tab_switcher then
     vb_container:remove_child(self.vb_tab_switcher)
+    self.vb_tab_switcher = nil
   end
 
   self.arg_views = {}
@@ -591,7 +594,7 @@ function xStreamUIArgsPanel:build()
     style = "panel",
     id = "xStreamArgsPanel",
     margin = 4,
-    height = 100,
+    --height = 100,
     vb:space{
       width = xStreamUI.RIGHT_PANEL_W-4,    
     },
@@ -728,8 +731,22 @@ function xStreamUIArgsPanel:update()
     view_msg.visible = self.visible 
       and (#model.args.args == 0) 
   else
-    view_msg.visible = self.visible and true or false
+    view_msg.visible = true
   end
+
+  if view_msg.visible then
+    local view_msg = self.vb.views["xStreamArgsPanel"]
+    view_msg.height = 72
+  end
+
+  if self.vb_tabbed then
+    self.vb_tabbed.visible = not view_msg.visible
+    self.vb_untabbed.visible = not view_msg.visible
+    self.vb_tab_switcher.visible = not view_msg.visible
+  end
+
+
+  print(">>> view_msg.visible",view_msg.visible)
 
   for k,v in ipairs(self.arg_views) do
     --print("v.view",v.view)
@@ -836,6 +853,9 @@ function xStreamUIArgsPanel:update_visibility()
       (args:count_linkable(arg.name) > 1) or false
   end
 
+  if not self.vb_tabbed then
+    return
+  end
 
   if self.editor_visible or not self.visible then
     -- single argument display
