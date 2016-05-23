@@ -1371,7 +1371,7 @@ end
 -- clear various buffers, prepare for new output
 
 function xStream:reset()
-  print("xStream:reset()")
+  TRACE("xStream:reset()")
 
   self.buffer = {}
   self.highest_buffer_idx = 0
@@ -1394,7 +1394,7 @@ end
 -- activate live streaming 
 
 function xStream:start()
-  print("xStream:start()")
+  TRACE("xStream:start()")
 
   self:reset()
   self.active = true

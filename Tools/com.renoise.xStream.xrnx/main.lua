@@ -281,7 +281,7 @@ end
 -------------------------------------------------------------------------------
 
 function playing_notifier()
-  print("main - playing_notifier fired...")
+  --TRACE("main - playing_notifier fired...")
   if xstream then
     if not rns.transport.playing then -- autostop
       if (prefs.start_option.value ~= xStreamPrefs.START_OPTION.MANUAL) then

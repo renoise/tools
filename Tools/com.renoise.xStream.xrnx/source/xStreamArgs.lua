@@ -692,7 +692,7 @@ function xStreamArgs:set_linked(arg)
     --print("v.linked,name,equal",v.linked,v.name,rawequal(arg,v))
     if v.linked and not v.locked and (arg.name == v.name) then
       v.observable.value = arg.value
-    --  print("set linked param to ",arg.value,arg.full_name)
+      --print("set linked param to ",arg.value,arg.full_name)
     end
   end
 

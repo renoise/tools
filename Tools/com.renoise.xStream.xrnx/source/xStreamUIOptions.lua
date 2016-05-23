@@ -430,7 +430,7 @@ end
 --------------------------------------------------------------------------------
 
 function xStreamUIOptions:update_model_selector(model_names)
-  print("xStreamUIOptions:update_model_selector(model_names)",model_names)
+  TRACE("xStreamUIOptions:update_model_selector(model_names)",model_names)
 
   local model_popup = self.vb.views["xStreamImplLaunchModel"]
   if model_popup then
