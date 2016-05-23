@@ -14,8 +14,8 @@ com.renoise.xStream.xrnx (main.lua)
 local app_dir = 'source/'
 local vlib_root = 'source/vLib/classes/'
 local xlib_root = 'source/xLib/classes/'
-_trace_filters = nil
---_trace_filters = {".*"}
+--_trace_filters = nil
+_trace_filters = {".*"}
 --_trace_filters = {"^xStreamUIFavorites"}
 
 
@@ -68,7 +68,6 @@ local options = renoise.Document.create("ScriptingToolPreferences"){}
 options:add_property("autostart", renoise.Document.ObservableBoolean(false))
 options:add_property("launch_model", renoise.Document.ObservableString(""))
 options:add_property("launch_selected_model", renoise.Document.ObservableBoolean(true))
-options:add_property("manage_gc", renoise.Document.ObservableBoolean(false))
 -- user interface
 options:add_property("editor_visible_lines", renoise.Document.ObservableNumber(16))
 options:add_property("favorites_pinned", renoise.Document.ObservableBoolean(false))
@@ -206,7 +205,6 @@ function show()
     xstream.ui.options.autostart = options.autostart.value
     xstream.launch_model = options.launch_model.value
     xstream.launch_selected_model = options.launch_selected_model.value
-    xstream.ui.options.manage_gc = options.manage_gc.value
 
     -- user interface options
     xstream.live_coding = options.live_coding.value
@@ -300,11 +298,6 @@ function show()
     xstream.mute_mode_observable:add_notifier(function()
       TRACE("*** xStreamUI - xstream.mute_mode_observable fired...")
       options.mute_mode.value = xstream.mute_mode_observable.value
-    end)
-
-    xstream.ui.options.manage_gc_observable:add_notifier(function()
-      TRACE("*** xStreamUI - xstream.ui.options.manage_gc_observable fired...")
-      options.manage_gc.value = xstream.ui.options.manage_gc_observable.value
     end)
 
     xstream.ui.show_editor_observable:add_notifier(function()
