@@ -121,7 +121,7 @@ function xStreamPresets:add_preset(t)
   if not t then
     -- add current values
     for _,arg in ipairs(self.model.args.args) do
-      preset[arg.name] = arg.observable.value
+      preset[arg.full_name] = arg.observable.value
     end
   else
     -- add supplied values
@@ -223,7 +223,7 @@ function xStreamPresets:update_preset(idx)
   end
 
   for _,arg in ipairs(self.model.args.args) do
-    preset[arg.name] = arg.value
+    preset[arg.full_name] = arg.value
   end
 
   --rprint(preset)
@@ -267,11 +267,11 @@ function xStreamPresets:recall_preset(idx)
   
   local failed_args = {}
   for _,arg in ipairs(self.model.args.args) do
-    if type(preset[arg.name]) ~= "nil" then
+    if type(preset[arg.full_name]) ~= "nil" then
       if not arg.locked then
         --print("recalling value - preset[arg.name].value",arg.name,preset[arg.name])
-        arg.value = preset[arg.name]
-        arg.observable.value = preset[arg.name]
+        arg.value = preset[arg.full_name]
+        arg.observable.value = preset[arg.full_name]
       end
     else
       table.insert(failed_args,arg.name)
