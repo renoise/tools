@@ -880,8 +880,11 @@ function xStreamUI:build()
         TRACE("*** xStreamUI - selected_arg_notifier fired...")
         self.update_args_requested = true
       end)
-      xObservable.attach(model.args.args_observable,function()
-        TRACE("*** xStreamUI - args_observable_notifier fired...")
+      xObservable.attach(model.args.args_observable,function(arg)
+        TRACE("*** xStreamUI - args_observable_notifier fired...",rprint(arg))
+        if (arg.type == "remove") then
+          self.args:purge_arg_views()
+        end
         self.build_args_requested = true
       end)
       xObservable.attach(model.args.modified_observable,function()
