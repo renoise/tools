@@ -321,6 +321,12 @@ function xSongPos:increase_by_lines(num_lines)
   local seq_idx = self.sequence
   local line_idx = self.line
 
+  -- sanity check: sequence within song boundaries?
+  if (seq_idx > #rns.sequencer.pattern_sequence) then
+    LOG("*** xSongPos - ignore out-of-bounds sequence index")
+    return
+  end
+
   -- even when we are supposedly spanning multiple 
   -- patterns, block looping might prevent this
   local exiting_blockloop = false

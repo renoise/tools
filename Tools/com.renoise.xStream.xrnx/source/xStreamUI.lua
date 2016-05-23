@@ -103,15 +103,13 @@ xStreamUI.WELCOME_MSG = [[
 -- @param xstream (xStream)
 -- @param vb (renoise.ViewBuilder)
 -- @param midi_prefix (string)
--- @param options (tool prefs)
 
-function xStreamUI:__init(xstream,vb,midi_prefix,options)
-  TRACE("xStreamUI:__init(xstream,vb,midi_prefix,options)",xstream,vb,midi_prefix,options)
+function xStreamUI:__init(xstream,vb,midi_prefix)
+  TRACE("xStreamUI:__init(xstream,vb,midi_prefix)",xstream,vb,midi_prefix)
 
   assert(type(xstream)=="xStream","Expected 'xStream' to be a class instance")
   assert(type(vb)=="ViewBuilder","Expected 'vb' to be a class instance")
   assert(type(midi_prefix)=="string","Expected 'midi_prefix' to be a string")
-  assert(type(options)=="DocumentNode","Expected 'options' to be a DocumentNode")
 
   self.xstream = xstream
   self.vb = vb
@@ -525,12 +523,6 @@ function xStreamUI:update_model_selector()
 
   self.favorites:update_model_selector(model_names)
   self.options:update_model_selector(model_names)
-
-  --> launch models
-  --local view_launch_models = self.vb.views["xStreamImplLaunchModel"]
-  --view_launch_models.items = view_popup.items
-  --view_launch_models.value = view_popup.value
-  --self:set_launch_model(self.launch_model)
 
 end
 

@@ -15,9 +15,10 @@ xStream
 
 class 'xStream'
 
-xStream.FAVORITES_FILE_PATH = "./favorites.xml"
-xStream.MODELS_FOLDER       = "./models/"
-xStream.PRESET_BANK_FOLDER  = "./presets/"
+-- all userdata
+xStream.FAVORITES_FILE_PATH = "favorites.xml"
+xStream.MODELS_FOLDER       = "models/"
+xStream.PRESET_BANK_FOLDER  = "presets/"
 
 -- automation interpolation mode
 xStream.PLAYMODES = {"Points","Linear","Cubic"}
@@ -60,7 +61,13 @@ xStream.MUTE_MODE = {
 -------------------------------------------------------------------------------
 -- constructor
 
-function xStream:__init()
+function xStream:__init(xprefs)
+
+  --- xStreamPrefs, current settings
+  self.prefs = renoise.tool().preferences
+
+  --- xPreferences
+  self.xprefs = xprefs
 
   -- xStreamUI, built-in user interface
   self.ui = nil
@@ -206,14 +213,14 @@ function xStream:__init()
   self.scheduled_preset_bank_index = property(self.get_scheduled_preset_bank_index)
   self.scheduled_preset_bank_index_observable = renoise.Document.ObservableNumber(0)
 
-  self.suspend_when_hidden = property(self.get_suspend_when_hidden,self.set_suspend_when_hidden)
-  self.suspend_when_hidden_observable = renoise.Document.ObservableBoolean(true)
+  --self.suspend_when_hidden = property(self.get_suspend_when_hidden,self.set_suspend_when_hidden)
+  --self.suspend_when_hidden_observable = renoise.Document.ObservableBoolean(true)
 
-  self.launch_model = property(self.get_launch_model,self.set_launch_model)
-  self.launch_model_observable = renoise.Document.ObservableString("")
+  --self.launch_model = property(self.get_launch_model,self.set_launch_model)
+  --self.launch_model_observable = renoise.Document.ObservableString("")
 
-  self.launch_selected_model = property(self.get_launch_selected_model,self.set_launch_selected_model)
-  self.launch_selected_model_observable = renoise.Document.ObservableBoolean(true)
+  --self.launch_selected_model = property(self.get_launch_selected_model,self.set_launch_selected_model)
+  --self.launch_selected_model_observable = renoise.Document.ObservableBoolean(true)
 
     -- int, the line at which output got muted
   self.mute_pos = nil
@@ -402,6 +409,13 @@ end
 
 function xStream:load_models(str_path)
   TRACE("xStream:load_models(str_path)",str_path)
+
+  assert(type(str_path)=="string","Expected string as argument")
+
+  if not io.exists(str_path) then
+    LOG("*** Could not open model, folder does not exist:"..str_path)
+    return
+  end
 
   local log_msg = ""
   for _, filename in pairs(os.filenames(str_path, "*.lua")) do
@@ -965,7 +979,7 @@ function xStream:get_scheduled_preset_bank_index()
 end
 
 -------------------------------------------------------------------------------
-
+--[[
 function xStream:get_suspend_when_hidden()
   return self.suspend_when_hidden_observable.value
 end
@@ -973,9 +987,9 @@ end
 function xStream:set_suspend_when_hidden(val)
   self.suspend_when_hidden_observable.value = val
 end
-
+]]
 --------------------------------------------------------------------------------
-
+--[[
 function xStream:get_launch_model()
   return self.launch_model_observable.value 
 end
@@ -983,9 +997,9 @@ end
 function xStream:set_launch_model(val)
   self.launch_model_observable.value = val
 end
-
+]]
 --------------------------------------------------------------------------------
-
+--[[
 function xStream:get_launch_selected_model()
   return self.launch_selected_model_observable.value 
 end
@@ -993,7 +1007,7 @@ end
 function xStream:set_launch_selected_model(val)
   self.launch_selected_model_observable.value = val
 end
-
+]]
 -------------------------------------------------------------------------------
 
 function xStream:get_active()
@@ -1012,7 +1026,7 @@ end
 function xStream:select_launch_model()
 
   for k,v in ipairs(self.models) do
-    if (v.file_path == self.launch_model) then
+    if (v.file_path == self.prefs.launch_model.value) then
       self.selected_model_index = k
     end
   end
@@ -1357,7 +1371,7 @@ end
 -- clear various buffers, prepare for new output
 
 function xStream:reset()
-  TRACE("xStream:reset()")
+  print("xStream:reset()")
 
   self.buffer = {}
   self.highest_buffer_idx = 0
@@ -1380,7 +1394,7 @@ end
 -- activate live streaming 
 
 function xStream:start()
-  TRACE("xStream:start()")
+  print("xStream:start()")
 
   self:reset()
   self.active = true

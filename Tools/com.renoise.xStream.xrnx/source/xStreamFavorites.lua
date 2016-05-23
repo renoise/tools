@@ -549,7 +549,10 @@ end
 function xStreamFavorites:save()
   TRACE("xStreamFavorites:save()")
 
-  self:export(xStream.FAVORITES_FILE_PATH)
+  local prefs = renoise.tool().preferences
+  local fpath = prefs.user_folder.value .. xStream.FAVORITES_FILE_PATH
+
+  self:export(fpath)
 
 end
 

@@ -983,7 +983,9 @@ end
 function xStreamModel:load_preset_banks()
   TRACE("xStreamModel:load_preset_banks()")
 
-  local str_folder = xStream.PRESET_BANK_FOLDER..self.name.."/"
+  local prefs = renoise.tool().preferences
+  local preset_bank_folder = prefs.user_folder.value..xStream.PRESET_BANK_FOLDER
+  local str_folder = preset_bank_folder..self.name.."/"
   --print("str_folder",str_folder)
   if io.exists(str_folder) then
     for __, filename in pairs(os.filenames(str_folder, "*.xml")) do
@@ -1040,7 +1042,9 @@ function xStreamModel:add_preset_bank(str_name)
   if not str_name then
 
     -- supply a unique preset bank name (filename)
-    local preset_folder = ("%s%s/Untitled.xml"):format(xStream.PRESET_BANK_FOLDER,self.name)
+    local prefs = renoise.tool().preferences
+    local preset_bank_folder = prefs.user_folder.value..xStream.PRESET_BANK_FOLDER
+    local preset_folder = ("%s%s/Untitled.xml"):format(preset_bank_folder,self.name)
     local str_path = xFilesystem.ensure_unique_filename(preset_folder)
     str_name = xFilesystem.get_raw_filename(str_path)
 
@@ -1159,9 +1163,9 @@ end
 -- return the path to the internal models 
 
 function xStreamModel.get_normalized_file_path(str_name)
-
-  return ("%s%s.lua"):format(xStream.MODELS_FOLDER,str_name)
-
+  local prefs = renoise.tool().preferences
+  local models_folder = prefs.user_folder.value .. xStream.MODELS_FOLDER
+  return ("%s%s.lua"):format(models_folder,str_name)
 end
 
 -------------------------------------------------------------------------------

@@ -494,7 +494,9 @@ end
 -------------------------------------------------------------------------------
 
 function xStreamPresets:path_to_xml_folder()
-  return ("%s%s"):format(xStream.PRESET_BANK_FOLDER,self.model.name)
+  local prefs = renoise.tool().preferences
+  local preset_bank_folder = prefs.user_folder.value..xStream.PRESET_BANK_FOLDER
+  return ("%s%s"):format(preset_bank_folder,self.model.name)
 end
 
 -------------------------------------------------------------------------------

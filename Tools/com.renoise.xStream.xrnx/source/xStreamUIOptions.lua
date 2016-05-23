@@ -11,13 +11,6 @@ xStreamUIOptions
 
 class 'xStreamUIOptions' (vDialog)
 
-xStreamUIOptions.START_OPTIONS = {"Manual control","Auto - Play","Auto - Play+Edit"}
-xStreamUIOptions.START_OPTION = {
-  MANUAL = 1,
-  ON_PLAY = 2,
-  ON_PLAY_EDIT = 3,
-}
-
 xStreamUIOptions.DLG_W = 130
 xStreamUIOptions.TXT_W = 70
 
@@ -31,15 +24,17 @@ function xStreamUIOptions:__init(xstream)
 
   self.xstream = xstream
 
+  self.prefs = renoise.tool().preferences
+
   vDialog.__init(self)
 
   self.title = "xStream options"
 
-  self.start_option = property(self.get_start_option,self.set_start_option)
-  self.start_option_observable = renoise.Document.ObservableNumber(xStreamUIOptions.START_OPTION.ON_PLAY_EDIT)
+  --self.start_option = property(self.get_start_option,self.set_start_option)
+  --self.start_option_observable = renoise.Document.ObservableNumber(xStreamUIOptions.START_OPTION.ON_PLAY_EDIT)
 
-  self.autostart = property(self.get_autostart,self.set_autostart)
-  self.autostart_observable = renoise.Document.ObservableBoolean(false)
+  --self.autostart = property(self.get_autostart,self.set_autostart)
+  --self.autostart_observable = renoise.Document.ObservableBoolean(false)
 
   self.update_model_requested = false
 
@@ -52,18 +47,18 @@ function xStreamUIOptions:__init(xstream)
   end)
 
   self.xstream.selected_model_index_observable:add_notifier(function()    
-    if self.xstream.launch_selected_model then
+    if self.prefs.launch_selected_model.value then
       --print(">>> self.xstream.selected_model_index",self.xstream.selected_model_index)
       if (self.xstream.selected_model_index > 0) then
         local model = self.xstream.models[self.xstream.selected_model_index]
-        self.xstream.launch_model = model.file_path
+        self.prefs.launch_model.value = model.file_path
         --print("model.file_path",model,model.file_path)
       end
       self.update_model_requested = true
     end
   end)
 
-  self.xstream.launch_selected_model_observable:add_notifier(function()
+  self.prefs.launch_selected_model:add_notifier(function()
     self.update_model_requested = true
   end)
 
@@ -78,7 +73,7 @@ end
 --------------------------------------------------------------------------------
 -- Get/set methods
 --------------------------------------------------------------------------------
-
+--[[
 function xStreamUIOptions:get_start_option()
   return self.start_option_observable.value 
 end
@@ -87,9 +82,9 @@ function xStreamUIOptions:set_start_option(val)
   self.start_option_observable.value = val
 
 end
-
+]]
 --------------------------------------------------------------------------------
-
+--[[
 function xStreamUIOptions:get_autostart()
   return self.autostart_observable.value 
 end
@@ -97,7 +92,7 @@ end
 function xStreamUIOptions:set_autostart(val)
   self.autostart_observable.value = val
 end
-
+]]
 
 -------------------------------------------------------------------------------
 -- Overridden methods
@@ -187,7 +182,7 @@ function xStreamUIOptions:create_dialog()
         --margin = 6,
         vb:row{
           vb:checkbox{
-            bind = self.autostart_observable,
+            bind = self.prefs.autostart,
           },
           vb:text{
             text="Autostart tool when Renoise launches",
@@ -195,7 +190,7 @@ function xStreamUIOptions:create_dialog()
         },
         vb:row{
           vb:checkbox{            
-            bind = self.xstream.launch_selected_model_observable,
+            bind = self.prefs.launch_selected_model,
           },
           vb:text{
             text= "Remember selected model, or choose"
@@ -204,13 +199,36 @@ function xStreamUIOptions:create_dialog()
             items = {xStreamUI.NO_MODEL_SELECTED},
             id = "xStreamImplLaunchModel",
             notifier = function(idx)
-              local model = self.xstream.models[idx]
+              local model = self.xstream.models[idx-1]
               if model then
-                self.xstream.launch_model = model.file_path
+                self.prefs.launch_model.value = model.file_path
               end
             end,
           },
         },
+        vb:row{
+          vb:text{
+            text= "Userdata"
+          },
+          vb:textfield{
+            width = 160,
+            bind = self.prefs.user_folder,
+          },
+          vb:button{
+            text = "Browse",
+            notifier = function()
+              local new_path = renoise.app():prompt_for_path("Specify folder for models, preset and favorites")
+              if (new_path ~= "") then
+                self.prefs.user_folder.value = new_path
+              end
+            end,
+          },
+          vb:button{
+            text = "Reset",
+            notifier = function()
+              self.prefs.user_folder.value = xStreamPrefs.USER_FOLDER
+            end,
+          }        },
         --[[
         vb:button{
           text = "remove trace statements",
@@ -247,7 +265,7 @@ function xStreamUIOptions:create_dialog()
       vb:row{
         vb:checkbox{
           id = "xStreamImplSuspend",
-          bind = self.xstream.suspend_when_hidden_observable,
+          bind = self.prefs.suspend_when_hidden,
         },
         vb:text{
           text="Suspend streaming while interface is hidden",
@@ -265,8 +283,8 @@ function xStreamUIOptions:create_dialog()
           },
           vb:row{
             vb:popup{
-              bind = self.start_option_observable,
-              items = xStreamUIOptions.START_OPTIONS,
+              bind = self.prefs.start_option,
+              items = xStreamPrefs.START_OPTIONS,
               width = STREAMING_CTRL_W,
             },
           },
@@ -279,7 +297,7 @@ function xStreamUIOptions:create_dialog()
           },
           vb:popup{
             items = xStream.SCHEDULES,
-            bind = self.xstream.scheduling_observable,
+            bind = self.prefs.scheduling,
             width = STREAMING_CTRL_W,
           },
         },
@@ -412,14 +430,15 @@ end
 --------------------------------------------------------------------------------
 
 function xStreamUIOptions:update_model_selector(model_names)
+  print("xStreamUIOptions:update_model_selector(model_names)",model_names)
 
   local model_popup = self.vb.views["xStreamImplLaunchModel"]
   if model_popup then
     local model_names = self.xstream:get_model_names(true)
     table.insert(model_names,1,xStreamUI.NO_MODEL_SELECTED)
     model_popup.items = model_names
-    model_popup.active = not self.xstream.launch_selected_model
-    if self.xstream.launch_selected_model then
+    model_popup.active = not self.prefs.launch_selected_model.value
+    if self.prefs.launch_selected_model.value then
       model_popup.value = (self.xstream.selected_model_index == 0) 
         and 1 or self.xstream.selected_model_index+1
     else
