@@ -204,7 +204,10 @@ function xStreamUIOptions:create_dialog()
             items = {xStreamUI.NO_MODEL_SELECTED},
             id = "xStreamImplLaunchModel",
             notifier = function(idx)
-              self.xstream.launch_model = self.xstream.models[idx].file_path
+              local model = self.xstream.models[idx]
+              if model then
+                self.xstream.launch_model = model.file_path
+              end
             end,
           },
         },
