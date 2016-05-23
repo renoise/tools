@@ -5,89 +5,78 @@ Args-Tabbed.lua
 return {
 arguments = {
   {
-      locked = false,
-      name = "argXYZ",
-      linked = false,
-      value = 3,
-      properties = {
-          max = 100,
-          min = 0,
-          display_as = "integer",
-          zero_based = false,
+      ["locked"] = false,
+      ["name"] = "baz",
+      ["linked"] = false,
+      ["value"] = 75,
+      ["properties"] = {
+          ["min"] = 0,
+          ["max"] = 100,
+          ["display_as"] = "integer",
+          ["zero_based"] = false,
       },
-      description = "",
+      ["description"] = "",
   },
   {
-      locked = false,
-      name = "arg2",
-      linked = false,
-      value = 75,
-      properties = {
-          min = 0,
-          display_as = "integer",
-          max = 100,
+      ["locked"] = false,
+      ["name"] = "one.foo",
+      ["linked"] = false,
+      ["value"] = 10,
+      ["properties"] = {
+          ["min"] = 0,
+          ["max"] = 100,
+          ["display_as"] = "integer",
+          ["zero_based"] = false,
       },
+      ["description"] = "",
   },
   {
-      locked = true,
-      name = "foo.arg1",
-      linked = false,
-      value = 10,
-      properties = {
-          min = 0,
-          max = 100,
-          display_as = "integer",
-          zero_based = false,
+      ["locked"] = false,
+      ["name"] = "one.bar",
+      ["linked"] = false,
+      ["value"] = 2,
+      ["properties"] = {
+          ["min"] = 0,
+          ["max"] = 100,
+          ["display_as"] = "integer",
+          ["zero_based"] = false,
       },
-      description = "",
+      ["description"] = "",
   },
   {
-      locked = true,
-      name = "foo.argX",
-      linked = false,
-      value = 2,
-      properties = {
-          min = 0,
-          max = 100,
-          display_as = "integer",
-          zero_based = false,
+      ["locked"] = false,
+      ["name"] = "two.foo",
+      ["linked"] = true,
+      ["value"] = 10,
+      ["properties"] = {
+          ["min"] = 0,
+          ["max"] = 100,
+          ["display_as"] = "integer",
+          ["zero_based"] = false,
       },
-      description = "",
+      ["description"] = "",
   },
   {
-      locked = false,
-      name = "bar.arg1",
-      linked = false,
-      value = 10,
-      properties = {
-          max = 100,
-          min = 0,
-          display_as = "integer",
-          zero_based = false,
+      ["locked"] = false,
+      ["name"] = "two.bar",
+      ["linked"] = false,
+      ["value"] = 4,
+      ["properties"] = {
+          ["min"] = 0,
+          ["max"] = 100,
+          ["display_as"] = "integer",
+          ["zero_based"] = false,
       },
-      description = "",
-  },
-  {
-      locked = false,
-      name = "bar.argYY",
-      linked = false,
-      value = 4,
-      properties = {
-          max = 100,
-          min = 0,
-          display_as = "integer",
-          zero_based = false,
-      },
-      description = "",
+      ["description"] = "",
   },
 },
 presets = {
   {
-      arg2 = 75,
-      argX = 2,
-      arg1 = 3,
-      name = "",
-      argY = 4,
+      ["arg2"] = 75,
+      ["argX"] = 2,
+      ["arg1"] = 3,
+      ["name"] = "",
+      ["argY"] = 4,
   },
 },
 data = {
@@ -104,15 +93,8 @@ callback = [[
 -- values between tabs, when arguments share the same name - this is 
 -- indicated by the small "chain" button - enable to sync values
 -------------------------------------------------------------------------------
-
--- print the first value (arg1) of each tab
-print(args.foo.arg1)
-print(args.bar.arg1)
-
-
-
-
-
+-- print values
+print(args.one.foo,args.two.foo)
 
 ]],
 }
