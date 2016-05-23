@@ -264,7 +264,7 @@ function xStreamArg:get_locked()
 end
 
 function xStreamArg:set_locked(val)
-  print("xStreamArg:set_locked(val)",val)
+  --print("xStreamArg:set_locked(val)",val)
   local modified = (val ~= self.locked_observable.value) and true or false
   self.locked_observable.value = val
   if modified then

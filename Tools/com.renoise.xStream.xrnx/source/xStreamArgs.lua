@@ -331,11 +331,11 @@ function xStreamArgs:add(arg,index,do_replace)
 
   -- detect changes to definition
   xarg.modified_observable:add_notifier(function()
-    print("xarg.modified_observable fired...",self.modified_observable)
+    --print("xarg.modified_observable fired...",self.modified_observable)
     self.modified_observable:bang()
   end)
 
-  print(">>> added arg",arg.name)
+  --print(">>> added arg",arg.name)
   return true
 
 end

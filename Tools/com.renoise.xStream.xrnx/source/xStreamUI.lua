@@ -859,7 +859,7 @@ function xStreamUI:build()
     TRACE("*** xStreamUI - selected_model_index_notifier fired...",self.xstream.selected_model_index)
     local model = self.xstream.selected_model
     if model then
-      print(">>> #model.args.args",#model.args.args)
+      --print(">>> #model.args.args",#model.args.args)
       xObservable.attach(model.name_observable,function()
         TRACE("*** xStreamUI - model.name_observable fired...")
         self.build_models_requested = true

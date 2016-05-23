@@ -101,7 +101,7 @@ end
 --- retrive number of lines in a block for a given pattern 
 
 function xBlockLoop.get_block_lines(seq_idx)
-  print("xBlockLoop.get_block_lines(seq_idx)",seq_idx)
+  --TRACE("xBlockLoop.get_block_lines(seq_idx)",seq_idx)
 
   local patt_num_lines = xSongPos.get_pattern_num_lines(seq_idx)
   return math.max(1,patt_num_lines/rns.transport.loop_block_range_coeff)
