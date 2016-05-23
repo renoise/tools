@@ -344,7 +344,7 @@ function xLib.serialize_table(t,max_depth,longstring)
     local next_indent
     for key, value in pairs(t) do
       --print("key, value",key,type(key),value)
-      local str_key = (type(key) == "number") and "" or xLib.serialize_object(key) .. ' = ' 
+      local str_key = (type(key) == 'number') and '' or '["'..xLib.serialize_object(key) .. '"] = ' 
       if (type(value) == 'table') then
         if table.is_empty(value) then
           result = result .. indent .. str_key .. '{},\n'      
