@@ -38,7 +38,7 @@ function xStreamUIArgsPanel:__init(xstream,midi_prefix,vb,ui)
   self.vb_untabbed = nil
   self.vb_tabbed = nil
 
-  -- table<{name=string,tab_name=string,view=View}> tabbed argument views
+  -- table<{}> tabbed argument views
   self.arg_views = {}
 
   -- View
@@ -190,7 +190,9 @@ function xStreamUIArgsPanel:build_args()
 
   -- add a custom control for tabs, if any
   --print(">>> args._tab_names",rprint(args._tab_names))
-  if not table.is_empty(args._tab_names) then
+  if not table.is_empty(args._tab_names) 
+    and (#args._tab_names > 1)
+  then
     self.vb_tab_switcher = vb:switch{
       width = xStreamUI.RIGHT_PANEL_W-6,    
       items = args._tab_names or {},
@@ -201,11 +203,7 @@ function xStreamUIArgsPanel:build_args()
       end,
     }
   else
-    self.vb_tab_switcher = vb:column{
-      vb:text{
-        text = "hello world"
-      }
-    }
+    self.vb_tab_switcher = vb:column{}
   end
 
   -- add a custom control for each argument
@@ -282,6 +280,7 @@ function xStreamUIArgsPanel:build_args()
     local view_link = vb:bitmap{
       bitmap = "./source/icons/lock.bmp",
       height = xStreamUI.BITMAP_BUTTON_H-1,
+      tooltip = "Link all arguments in tabs that share the same name",
       notifier = function()
         local args = self.xstream.selected_model.args
         args:toggle_link(arg)
@@ -323,7 +322,7 @@ function xStreamUIArgsPanel:build_args()
 
     local arg_control = nil
     local model_name = self.xstream.selected_model.name
-    local midi_mapping = ("Tools:xStream:%s:%s [Set]"):format(model_name,arg.name)
+    local midi_mapping = ("Tools:xStream:%s:%s [Set]"):format(model_name,arg.full_name)
     --print(">>> midi_mapping",midi_mapping)
 
     if (type(arg.observable) == "ObservableNumber") then
@@ -344,8 +343,8 @@ function xStreamUIArgsPanel:build_args()
           view:add_child(vb:row{
             tooltip = arg.description,
             view_label_rack,
-            arg_control,
             view_link,
+            arg_control,
             view_bop,
           })
         elseif (display_as == xStreamArg.DISPLAY_AS.CHOOSER) then
@@ -360,8 +359,8 @@ function xStreamUIArgsPanel:build_args()
           view:add_child(vb:row{
             tooltip = arg.description,
             view_label_rack,
-            arg_control,
             view_link,
+            arg_control,
             view_bop,
           })
         elseif (display_as == xStreamArg.DISPLAY_AS.SWITCH) then
@@ -375,8 +374,8 @@ function xStreamUIArgsPanel:build_args()
           view:add_child(vb:row{
             tooltip = arg.description,
             view_label_rack,
-            arg_control,
             view_link,
+            arg_control,
             view_bop,
           })
         else    
@@ -398,8 +397,8 @@ function xStreamUIArgsPanel:build_args()
         view:add_child(vb:row{
           tooltip = arg.description,
           view_label_rack,
-          arg_control,
           view_link,
+          arg_control,
           view_bop,
         })
       else -- floating point (default to minislider)
@@ -434,8 +433,8 @@ function xStreamUIArgsPanel:build_args()
             midi_mapping = midi_mapping,
           }
           view:add_child(vb:row{
-            arg_control,
             view_link,
+            arg_control,
             view_bop,
             readout,
           })
@@ -449,8 +448,8 @@ function xStreamUIArgsPanel:build_args()
             midi_mapping = midi_mapping,
           }
           view:add_child(vb:row{
-            arg_control,
             view_link,
+            arg_control,
             view_bop,
             readout,
           })
@@ -458,8 +457,8 @@ function xStreamUIArgsPanel:build_args()
           readout.midi_mapping = midi_mapping,
           view:add_child(vb:row{
             style = "plain",
-            readout,
             view_link,
+            readout,
             view_bop,
           })
         elseif (display_as == xStreamArg.DISPLAY_AS.VALUE) then
@@ -483,8 +482,8 @@ function xStreamUIArgsPanel:build_args()
         view:add_child(vb:row{
           tooltip = arg.description,
           view_label_rack,
-          arg_control,
           view_link,
+          arg_control,
           view_bop,
         })
       end
@@ -494,12 +493,12 @@ function xStreamUIArgsPanel:build_args()
         view:add_child(vb:row{
           tooltip = arg.description,
           view_label_rack,
+          view_link,
           vb:textfield{
             text = arg.value,
             width = full_width,
             bind = arg.observable,
           },
-          view_link,
           view_bop,
         })
       end
@@ -790,20 +789,6 @@ function xStreamUIArgsPanel:update_selector()
 end
 
 --------------------------------------------------------------------------------
--- locate tabbed argument view 
---[[
-function xStreamUIArgsPanel:get_tabbed_view(arg_name,tab_name)
-
-  for k,arg in ipairs(self.untabbed_view) do
-    if arg.tab_name then
-      if arg
-    else
-    end
-  end
-
-end
-]]
---------------------------------------------------------------------------------
 -- display untabbed arguments + arguments from active tab
 
 function xStreamUIArgsPanel:update_visibility()
@@ -825,7 +810,7 @@ function xStreamUIArgsPanel:update_visibility()
 
   for k,v in ipairs(self.arg_views) do
     local arg = args:get_arg_by_name(v.name,v.tab_name)
-    --print(">>> arg",v,arg)
+    print(">>> arg",v,arg)
     if not self.xstream.selected_model then
       v.view.visible = false
     elseif self.editor_visible or not self.visible then 
@@ -865,6 +850,22 @@ function xStreamUIArgsPanel:update_visibility()
     self.vb_tab_switcher.visible =  selected_tab_name and true or false
   end
 
+
+end
+
+--------------------------------------------------------------------------------
+-- maintain the arg_views table as arguments are removed
+
+function xStreamUIArgsPanel:purge_arg_views()
+  TRACE("xStreamUIArgsPanel:purge_arg_views()")
+
+  local args = self.xstream.selected_model.args
+  for k,v in ripairs(self.arg_views) do
+    local arg = args:get_arg_by_name(v.name,v.tab_name)
+    if not arg then
+      self.arg_views[k] = nil
+    end
+  end
 
 end
 
