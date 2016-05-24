@@ -73,10 +73,10 @@ end
 --------------------------------------------------------------------------------
 --- restricting notes to a specific scale and key 
 -- @param note_value (0-119), notes outside this range are returned as-is 
--- @param scale_idx (int), 1=C, 2=C#, 3=D, ...
--- @param scale_key (int), the scale to apply (see xScale.SCALES) 
+-- @param scale_idx_or_name (int/string), the scale to apply (xScale.SCALES) 
+-- @param scale_key (int), 1=C, 2=C#, 3=D, ...
 
-function xScale.restrict_to_scale(note_value,scale_idx,scale_key)
+function xScale.restrict_to_scale(note_value,scale_idx_or_name,scale_key)
 
   if (note_value > 119) then
     return note_value
@@ -86,7 +86,19 @@ function xScale.restrict_to_scale(note_value,scale_idx,scale_key)
     scale_key = 1
   end
 
-  local scale = xScale.SCALES[scale_idx]
+  local scale,scale_idx = nil,nil
+
+  if (type(scale_idx_or_name)=="string") then
+    scale = xScale.get_scale_by_name(scale_idx_or_name)
+  else
+    scale = xScale.SCALES[scale_idx_or_name]
+  end
+
+  if not scale then
+    LOG("xScale - could not locate scale")
+    return note_value 
+  end
+
   local key = note_value%12
 
   -- scale key means shifting the keys
@@ -119,3 +131,14 @@ function xScale.restrict_to_scale(note_value,scale_idx,scale_key)
 
 end
 
+--------------------------------------------------------------------------------
+
+function xScale.get_scale_by_name(name)
+
+  for k,v in pairs(xScale.SCALES) do
+    if (v.name == name) then
+      return v
+    end 
+  end
+
+end
