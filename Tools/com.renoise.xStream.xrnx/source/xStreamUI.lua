@@ -562,10 +562,10 @@ function xStreamUI:update_color()
   local view = self.vb.views["xStreamModelColorPreview"]
   if model then
     view.color = vColor.value_to_color_table(model.color)
-    view.visible = true
+    view.active = true
   else
     view.color = {0,0,0}
-    view.visible = false
+    view.active = false
   end
 
 end
