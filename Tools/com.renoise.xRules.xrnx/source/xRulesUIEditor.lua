@@ -145,6 +145,7 @@ function xRulesUIEditor:build_rule()
   self.vb_rule_description_input = vb:multiline_textfield{
     text = xruleset.description,
     width = xRulesUI.MAIN_PANEL_W-66,
+    font = "mono",
     height = 40,
     notifier = function()
       self.vb_rule_description_button.active = true
