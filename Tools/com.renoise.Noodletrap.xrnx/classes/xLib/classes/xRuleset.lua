@@ -533,14 +533,14 @@ end
 -------------------------------------------------------------------------------
 -- Static methods
 -------------------------------------------------------------------------------
--- ensure that a definition is "likely" valid before loading it
+-- ensure that a definition is "likely" valid before loading 
 -- @return boolean
 
 function xRuleset.looks_like_definition(str_def)
 
   if not string.find(str_def,"return[%s]*{") or
-    not string.find(str_def,"actions[%s]*=[%s]*{") or
-    not string.find(str_def,"conditions[%s]*=[%s]*{") 
+    not string.find(str_def,"\[?\"?actions\]?\"?[%s]*=[%s]*{") or
+    not string.find(str_def,"\[?\"?conditions\]?\"?[%s]*=[%s]*{") 
   then
     return false
   else
