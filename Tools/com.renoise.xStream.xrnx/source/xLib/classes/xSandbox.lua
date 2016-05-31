@@ -162,17 +162,19 @@ end
 --  otherwise you get no feedback if it failed
 
 function xSandbox:set_callback_str(str_fn)
+  TRACE("xSandbox:set_callback_str(str_fn)",#str_fn)
 
   assert(type(str_fn) == "string", "Expected string as parameter")
 
+  local modified = (str_fn ~= self.callback_str_observable.value)
+
   local str_combined = self:prepare_callback(str_fn)
-  local modified = (str_combined ~= self.callback_str_observable.value)
   local passed,err = self:test_syntax(str_combined)
   
-  self.callback_str_observable.value = str_combined
+  self.callback_str_observable.value = str_fn
 
   if not err and self.compile_at_once then
-    local passed,err = self:compile(str_combined)
+    local passed,err = self:compile()
     if not passed then -- should not happen! 
       LOG(err)
     end
@@ -232,13 +234,31 @@ function xSandbox:compile()
     return true
   end
 
-  local def = loadstring(self.callback_str)
+  local str_combined = self:prepare_callback(self.callback_str)
+  local def = loadstring(str_combined)
   self.callback = def()
   setfenv(self.callback, self.env)
 
   return true
 
 end
+
+-------------------------------------------------------------------------------
+-- nested block comments/longstrings are depricated and will fail
+
+function xSandbox.contains_comment_blocks(str)
+  TRACE("xSandbox.contains_comment_blocks(str)")
+
+  if string.find(str,"%[%[") then
+    return true
+  elseif string.find(str,"%]%]") then
+    return true
+  else
+    return false
+  end
+
+end
+
 
 -------------------------------------------------------------------------------
 -- check for syntax errors

@@ -148,10 +148,6 @@ function xStream:__init()
   -- "Some error occurred" = description of error 
   self.callback_status_observable = renoise.Document.ObservableString("")
 
-  -- bool, when true we compile the callback on-the-fly
-  self.live_coding = property(self.get_live_coding,self.set_live_coding)
-  self.live_coding_observable = renoise.Document.ObservableBoolean(false)
-
   -- int, decide which track to target (0 = none)
   self.track_index = property(self.get_track_index,self.set_track_index)
   self.track_index_observable = renoise.Document.ObservableNumber(0)
@@ -212,15 +208,6 @@ function xStream:__init()
   -- int, read-only - set via schedule_item()
   self.scheduled_preset_bank_index = property(self.get_scheduled_preset_bank_index)
   self.scheduled_preset_bank_index_observable = renoise.Document.ObservableNumber(0)
-
-  --self.suspend_when_hidden = property(self.get_suspend_when_hidden,self.set_suspend_when_hidden)
-  --self.suspend_when_hidden_observable = renoise.Document.ObservableBoolean(true)
-
-  --self.launch_model = property(self.get_launch_model,self.set_launch_model)
-  --self.launch_model_observable = renoise.Document.ObservableString("")
-
-  --self.launch_selected_model = property(self.get_launch_selected_model,self.set_launch_selected_model)
-  --self.launch_selected_model_observable = renoise.Document.ObservableBoolean(true)
 
     -- int, the line at which output got muted
   self.mute_pos = nil
@@ -294,14 +281,6 @@ function xStream:create_model(str_name)
 
   local model = xStreamModel(self)
   model.name = str_name
-  --[[
-  xStreamModel.get_suggested_name(model.name)       
-  local str_name,err = vDialog.prompt_for_string(str_name,
-    "Enter a name for the model","Create Model")
-  if not str_name then
-    return
-  end
-  ]]
 
   local str_name_validate = xStreamModel.get_suggested_name(str_name)
   --print(">>> str_name,str_name_validate",str_name,str_name_validate)
@@ -498,9 +477,6 @@ function xStream:focus_to_favorite(idx)
   else
     LOG("Focus failed - Missing model")
   end
-
-
-
 
 end
 
@@ -772,16 +748,6 @@ end
 
 -------------------------------------------------------------------------------
 
-function xStream:get_live_coding()
-  return self.live_coding_observable.value
-end
-
-function xStream:set_live_coding(val)
-  self.live_coding_observable.value = val
-end
-
--------------------------------------------------------------------------------
-
 function xStream:get_track_index()
   return self.track_index_observable.value
 end
@@ -979,36 +945,6 @@ function xStream:get_scheduled_preset_bank_index()
 end
 
 -------------------------------------------------------------------------------
---[[
-function xStream:get_suspend_when_hidden()
-  return self.suspend_when_hidden_observable.value
-end
-
-function xStream:set_suspend_when_hidden(val)
-  self.suspend_when_hidden_observable.value = val
-end
-]]
---------------------------------------------------------------------------------
---[[
-function xStream:get_launch_model()
-  return self.launch_model_observable.value 
-end
-
-function xStream:set_launch_model(val)
-  self.launch_model_observable.value = val
-end
-]]
---------------------------------------------------------------------------------
---[[
-function xStream:get_launch_selected_model()
-  return self.launch_selected_model_observable.value 
-end
-
-function xStream:set_launch_selected_model(val)
-  self.launch_selected_model_observable.value = val
-end
-]]
--------------------------------------------------------------------------------
 
 function xStream:get_active()
   return self.active_observable.value
@@ -1205,7 +1141,7 @@ end
 function xStream:get_content(pos,num_lines,xpos)
   TRACE("xStream:get_content(pos,num_lines)",pos,num_lines)
 
-  if not self.selected_model.callback then
+  if not self.selected_model.sandbox.callback then
     error("No callback method has been specified")
   end
 
@@ -1262,10 +1198,10 @@ function xStream:get_content(pos,num_lines,xpos)
       end
     end
     if change_to_scheduled then
-      callback = self._scheduled_model.callback
+      callback = self._scheduled_model.sandbox.callback
       -- TODO apply preset arguments 
     else
-      callback = self.selected_model.callback
+      callback = self.selected_model.sandbox.callback
     end
 
     -- process the callback -------------------------------
@@ -1380,10 +1316,8 @@ function xStream:reset()
   self.read_buffer = {}
   self.stream.readpos = nil
 
-  -- revert data to initial state
   if self.selected_model then
-    self.selected_model.env.data = 
-      table.rcopy(self.selected_model.data_initial)
+    self.selected_model:reset()
   end
 
   self:clear_schedule()
@@ -1734,81 +1668,4 @@ function xStream:apply_to_range(from_line,to_line,travelled)
 
 end
 
--------------------------------------------------------------------------------
--- take the current buffer and create an instrument phrase from it
--- instrument numbers are treated as sample indices - this might not be what
--- you expect, if you enable sample columns in the resulting phrase
---[[
-function xStream:export_to_phrase(instr_idx)
-  TRACE("xStream:export_to_phrase(instr_idx)",instr_idx)
-
-  if table.is_empty(self.buffer) then
-    renoise.app():show_message("There is no recording to export")
-    return
-  end
-
-  local xphrase_mgr = xPhraseMgr()
-  xphrase_mgr.default_range = 6
-  xphrase_mgr.instr_idx = instr_idx
-
-  local note_range,phrase_idx = xphrase_mgr:get_available_slot()
-  --print("note_range,phrase_idx",rprint(note_range),phrase_idx)
-  if not note_range then
-    LOG("Failed to allocate a phrase (no more room left?)")
-  end
-
-  local num_lines = math.min(512,self.highest_buffer_idx)
-  TRACE("num_lines",num_lines)
-
-  local instr = rns.instruments[xphrase_mgr.instr_idx]
-  local phrase = instr:insert_phrase_at(phrase_idx)
-  assert(phrase,"Failed to create phrase")
-  phrase.mapping.note_range = {
-    note_range[1],
-    note_range[2]
-  }
-  phrase.mapping.base_note = note_range[1]
-  phrase:clear() -- remove the default C-4 note
-
-  for i = 0,num_lines-1 do
-    if (self.buffer[i]) then
-      self.buffer[i]:do_write(
-        {line = i+1},
-        nil, -- track_index
-        phrase,
-        nil, -- ptrack_auto
-        nil,  -- patt_num_lines
-        self.selected_model.output_tokens,
-        self.include_hidden,
-        self.expand_columns,
-        self.clear_undefined)
-    end
-  end
-
-  phrase.number_of_lines = num_lines
-  rns.selected_phrase_index = phrase_idx
-
-end
-
-
--------------------------------------------------------------------------------
--- save to file, using an internal representation of the recording
--- will prompt you for a location & file name
-
-function xStream:export_to_file()
-  TRACE("xStream:export_to_file()")
-
-  if table.is_empty(self.buffer) then
-    renoise.app():show_message("There is no recording to export")
-    return
-  end
-
-  local file_path = renoise.app():prompt_for_filename_to_write("xml", "Export stream as...")
-  --print("file_path",file_path)
-
-  -- TODO export session to file
-
-
-end
-]]
 

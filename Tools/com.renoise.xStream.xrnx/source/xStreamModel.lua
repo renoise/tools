@@ -11,45 +11,6 @@ xStreamModel
 
 class 'xStreamModel'
 
--- disallow the following lua methods/properties
-xStreamModel.UNTRUSTED = {
-  "collectgarbage",
-  "coroutine",
-  "dofile",
-  "io",
-  "load",
-  "loadfile",
-  "module",
-  "os",
-  "setfenv",
-  "class",
-  "rawset",
-  "rawget",
-}
-
--- expose the following xstream properties (read/write) 
-xStreamModel.PROXY_PROPS = {
-  "clear_undefined",
-  "expand_columns",
-  "include_hidden",
-  "automation_playmode",
-  "track_index",
-  --"device_index", 
-  --"param_index",
-  "mute_mode",
-  "output_mode",
-}
-
--- mark the following as read-only properties
-xStreamModel.PROXY_CONSTS = {
-  "EMPTY_XLINE",
-  "EMPTY_NOTE_COLUMNS",
-  "EMPTY_EFFECT_COLUMNS",
-  "NOTE_OFF_VALUE",
-  "EMPTY_NOTE_VALUE",
-  "EMPTY_VALUE",
-}
-
 xStreamModel.DEFAULT_NAME = "Untitled model"
 
 
@@ -65,6 +26,175 @@ function xStreamModel:__init(xstream)
   -- xStream, required
   self.xstream = xstream
 
+  --- configure sandbox
+  -- (add basic variables and a few utility methods)
+
+  self.sandbox = xSandbox()
+  self.sandbox.compile_at_once = true
+  self.sandbox.str_prefix = [[
+    xinc = select(1, ...)
+    xline = select(2, ...)
+    xpos = select(3, ...)
+  ]]
+  self.sandbox.str_suffix = [[
+    return xline
+  ]]
+
+  local props_table = {
+
+    -- Global
+
+    ["rns"] = {
+      access = function(env) 
+        return rns 
+      end,
+    },
+    ["renoise"] = {
+      access = function(env) 
+        return renoise 
+      end,
+    },
+
+    -- Constants
+
+    ["EMPTY_NOTE_COLUMNS"] = {
+      access = function(env) 
+        return {
+          {},{},{},{},
+          {},{},{},{},
+          {},{},{},{},
+        } 
+      end,
+    },
+    ["EMPTY_EFFECT_COLUMNS"] = {
+      access = function(env) 
+        return {
+          {},{},{},{},
+          {},{},{},{},
+        } 
+      end,
+    },
+    ["EMPTY_XLINE"] = {
+      access = function(env) 
+        return {
+          note_columns = {
+            {},{},{},{},
+            {},{},{},{},
+            {},{},{},{},
+          },
+          effect_columns = {
+            {},{},{},{},
+            {},{},{},{},
+          },
+        } 
+      end,
+    },
+    ["NOTE_OFF_VALUE"] = {
+      access = function(env)
+        return xNoteColumn.NOTE_OFF_VALUE
+      end
+    },
+    ["EMPTY_NOTE_VALUE"] = {
+      access = function(env)
+        return xNoteColumn.EMPTY_NOTE_VALUE
+      end
+    },
+    ["EMPTY_VOLUME_VALUE"] = {
+      access = function(env)
+        return xNoteColumn.EMPTY_VOLUME_VALUE
+      end
+    },
+    ["EMPTY_VALUE"] = {
+      access = function(env)
+        return xLinePattern.EMPTY_VALUE
+      end
+    },
+    ["SUPPORTED_EFFECT_CHARS"] = {
+      access = function(env)
+        return xEffectColumn.SUPPORTED_EFFECT_CHARS
+      end
+    },
+
+    -- Model properties
+
+    ["args"] = {
+      access = function(env) return self.args end,
+    },
+    ["data"] = {
+      access = function(env) return self.data end,
+    },
+
+    -- xStream properties
+
+    ["clear_undefined"] = {
+      access = function(env) return self.xstream.clear_undefined end,
+      assign = function(env,v) self.xstream.clear_undefined = v end,
+    },
+    ["expand_columns"] = {
+      access = function(env) return self.xstream.expand_columns end,
+      assign = function(env,v) self.xstream.expand_columns = v end,
+    },
+    ["include_hidden"] = {
+      access = function(env) return self.xstream.include_hidden end,
+      assign = function(env,v) self.xstream.include_hidden = v end,
+    },
+    ["automation_playmode"] = {
+      access = function(env) return self.xstream.automation_playmode end,
+      assign = function(env,v) self.xstream.automation_playmode = v end,
+    },
+    ["track_index"] = {
+      access = function(env) return self.xstream.track_index end,
+      --assign = function(env,v) self.xstream.track_index = v end,
+    },
+    ["mute_mode"] = {
+      access = function(env) return self.xstream.mute_mode end,
+      --assign = function(env,v) self.xstream.mute_mode = v end,
+    },
+    ["output_mode"] = {
+      access = function(env) return self.xstream.output_mode end,
+      --assign = function(env,v) self.xstream.output_mode = v end,
+    },
+
+    -- Static classes 
+
+    ["xLib"] = {
+      access = function(env) return xLib end,
+    },
+    ["xTrack"] = {
+      access = function(env) return xTrack end,
+    },
+    ["xTransport"] = {
+      access = function(env) return xTransport end,
+    },
+    ["xScale"] = {
+      access = function(env) return xScale end,
+    },
+    ["xMidiMessage"] = {
+      access = function(env) return xMidiMessage end,
+    },
+    ["xOscMessage"] = {
+      access = function(env) return xOscMessage end,
+    },
+    ["xAutomation"] = {
+      access = function(env) return xAutomation end,
+    },
+    ["xParameter"] = {
+      access = function(env) return xParameter end,
+    },
+    ["xPlayPos"] = {
+      access = function(env) return xPlayPos end,
+    },
+    ["xAudioDevice"] = {
+      access = function(env) return xAudioDevice end,
+    },
+    ["xPhraseManager"] = {
+      access = function(env) return xAudioDevice end,
+    },
+
+  }
+
+  self.sandbox.properties = props_table
+
   -- string, file location (if saved to, loaded from disk...)
   self.file_path = nil
 
@@ -76,28 +206,13 @@ function xStreamModel:__init(xstream)
   self.color = property(self.get_color,self.set_color)
   self.color_observable = renoise.Document.ObservableNumber(0)
 
-  -- function, provides us with content
-  -- @param pos (int), 0 is first line
-  -- @param num_lines (int), amount of lines to output
-  -- @param xstr (xStream), reference to this class
-  -- @return table<xLine>
-  self.callback = nil
-
   -- string, text representation of the function 
   self.callback_str = property(self.get_callback_str,self.set_callback_str)
   self.callback_str_observable = renoise.Document.ObservableString("")
 
-  -- string, compare against this to learn if modified
-  -- (set whenver the callback is saved or loaded...)
-  self.callback_str_source = nil
-
   -- boolean, true when the model definition has been changed
   self.modified = property(self.get_modified,self.set_modified)
   self.modified_observable = renoise.Document.ObservableBoolean(false)
-
-  -- boolean, true when callback has been compiled 
-  self.compiled = property(self.get_compiled,self.set_compiled)
-  self.compiled_observable = renoise.Document.ObservableBoolean(false)
 
   -- xStreamArgs, describing the available arguments
   self.args = nil
@@ -121,114 +236,18 @@ function xStreamModel:__init(xstream)
   -- table<vararg>, copy of data - revert when stopping/exporting
   self.data_initial = nil
 
-  -- bool, when true we have redefined the xline (checked during compile)
-  --self.user_redefined_xline = false
-
   -- table<string> limit to these tokens during output
   -- (derived from the code specified in the callback)
   self.output_tokens = {}
 
-  -- define sandbox environment
-  local env = {
-    assert = _G.assert,
-    ipairs = _G.ipairs,
-    loadstring = _G.loadstring,
-    math = _G.math,
-    next = _G.next,
-    pairs = _G.pairs,
-    print = _G.print,
-    select = _G.select,
-    string = _G.string,
-    table = _G.table,
-    tonumber = _G.tonumber,
-    tostring = _G.tostring,
-    type = _G.type,
-    unpack = _G.unpack,
-    -- renoise extended
-    ripairs = _G.ripairs,
-    rprint = _G.rprint,
-    -- access xlib methods/classes
-    restrict_to_scale = xScale.restrict_to_scale,
-    xScale = {
-      SCALES = xScale.SCALES,
-    },
-    -- arrives from song
-    rns = rns,
-    -- arrives with model
-    args = {}, 
-    data = {}, 
-  }
-
-  self.env = env
-  env = {}
-
-  -- metatable (constants and shorthands)
-  setmetatable(self.env,{
-    __index = function (t,k)
-      --print("metatable.__index",t,k)
-      if (k == "EMPTY_NOTE_COLUMNS") then
-        return {
-            {},{},{},{},
-            {},{},{},{},
-            {},{},{},{},
-          }
-      elseif (k == "EMPTY_EFFECT_COLUMNS") then
-        return {
-            {},{},{},{},
-            {},{},{},{},
-          }
-      elseif (k == "EMPTY_XLINE") then
-        return {
-          note_columns = {
-            {},{},{},{},
-            {},{},{},{},
-            {},{},{},{},
-          },
-          effect_columns = {
-            {},{},{},{},
-            {},{},{},{},
-          },
-        }
-      elseif (k == "NOTE_OFF_VALUE") then
-        return xNoteColumn.NOTE_OFF_VALUE
-      elseif (k == "EMPTY_NOTE_VALUE") then
-        return xNoteColumn.EMPTY_NOTE_VALUE
-      elseif (k == "EMPTY_VOLUME_VALUE") then
-        return xNoteColumn.EMPTY_VOLUME_VALUE
-      elseif (k == "EMPTY_VALUE") then
-        return xLinePattern.EMPTY_VALUE
-      elseif (k == "SUPPORTED_EFFECT_CHARS") then
-        return xEffectColumn.SUPPORTED_EFFECT_CHARS
-      elseif table.find(xStreamModel.PROXY_PROPS,k) then
-        return self.xstream[k]
-      elseif table.find(xStreamModel.UNTRUSTED,k) then
-        error("Property or method is not allowed in a callback:"..k)
-      else
-        --print("*** access ",k)
-        return env[k]
-      end
-    end,
-    __newindex = function (t,k,v)
-      if table.find(xStreamModel.PROXY_CONSTS,k) then
-        error("Attempt to modify read-only member:"..k)
-      elseif table.find(xStreamModel.PROXY_PROPS,k) then
-        self.xstream[k] = v
-      --elseif type(env[k] == "nil") then
-        --error("Attempt to specify undefined :"..k)
-      else
-        --print("*** assign ",k,v)
-        env[k] = v
-      end
-    end,
-    __metatable = false -- prevent tampering
-  })
-
   -- initialize -----------------------
+
+  self.sandbox.modified_observable:add_notifier(function()
+    self.modified = true
+  end)
 
   self:add_preset_bank(xStreamPresets.DEFAULT_BANK_NAME)
   self.selected_preset_bank_index = 1
-
-  --self:load_preset_banks()
 
 end
 
@@ -265,26 +284,27 @@ end
 
 function xStreamModel:get_callback_str()
   --TRACE("xStreamModel:get_callback_str - ",self.callback_str_observable.value)
-  return self.callback_str_observable.value
+  return self.sandbox.callback_str_observable.value
 end
 
 function xStreamModel:set_callback_str(str)
-  TRACE("xStreamModel:set_callback_str - ",#str)
+  print("xStreamModel:set_callback_str - ",#str)
 
-  local modified = (str ~= self.callback_str_source) 
+  local modified = (str ~= self.sandbox.callback_str) 
   self.modified = modified and true or self.modified
+  print("self.modified",self.modified,self.name)
 
-  self.callback_str_observable.value = str
+  self.sandbox.callback_str_observable.value = str
 
   -- live syntax check
-  local passed,err = self:test_syntax(str)
+  local passed,err = self.sandbox:test_syntax(str)
   self.xstream.callback_status_observable.value = passed and "" or err
   
   if not err and
-    self.xstream.live_coding_observable.value
+    self.xstream.prefs.live_coding.value
   then
     -- compile right away
-    local passed,err = self:compile(str)
+    local passed,err = self.sandbox:compile(str)
     if not passed then -- should not happen! 
       LOG(err)
     end
@@ -295,7 +315,6 @@ function xStreamModel:set_callback_str(str)
 
 end
 
-
 -------------------------------------------------------------------------------
 
 function xStreamModel:get_modified()
@@ -304,16 +323,6 @@ end
 
 function xStreamModel:set_modified(val)
   self.modified_observable.value = val
-end
-
--------------------------------------------------------------------------------
-
-function xStreamModel:get_compiled()
-  return self.compiled_observable.value
-end
-
-function xStreamModel:set_compiled(val)
-  self.compiled_observable.value = val
 end
 
 -------------------------------------------------------------------------------
@@ -350,6 +359,18 @@ end
 -------------------------------------------------------------------------------
 -- Class methods
 -------------------------------------------------------------------------------
+-- reset to initial state
+
+function xStreamModel:reset()
+
+  -- revert user data 
+  self.sandbox.env.data = 
+    table.rcopy(self.data_initial)
+
+end
+
+-------------------------------------------------------------------------------
+
 -- load external model definition - will validate the function in a sandbox
 -- @param file_path (string), prompt for file if not defined
 -- @return bool, true when model was succesfully loaded
@@ -376,7 +397,7 @@ function xStreamModel:load_definition(file_path)
   --print(">>> load_definition - load_string - str_def,err",str_def,err)
   local passed = xStreamModel.looks_like_definition(str_def)
   if not passed then
-    return false,"The string does not look like a model definition"
+    return false,("The file '%s' does not look like a model definition"):format(file_path)
   end
 
   -- check if we are able to load the definition
@@ -393,7 +414,7 @@ function xStreamModel:load_definition(file_path)
 
   -- succesfully loaded, import and apply settings --------
 
-  self.callback_str_source = def.callback
+  self.callback_str = def.callback
   self.file_path = file_path
   self.name = name
 
@@ -435,7 +456,7 @@ function xStreamModel:load_from_string(str_def)
 
   -- succesfully parsed, now apply settings...
 
-  self.callback_str_source = def.callback
+  self.callback_str = def.callback
   self.name = xStreamModel.get_suggested_name(xStreamModel.DEFAULT_NAME)
   self.file_path = xStreamModel.get_normalized_file_path(self.name)
   
@@ -499,8 +520,8 @@ function xStreamModel:parse_definition(def)
   end
 
   -- create user-data
-  self.data = {}
-  if not table.is_empty(def.data) then
+  self.data = {}  
+  if (type(def.data)=="table") and not table.is_empty(def.data) then
     for k,v in pairs(def.data) do
       self.data[k] = v
     end
@@ -511,7 +532,8 @@ function xStreamModel:parse_definition(def)
 
   -- process the callback method
   --print("about to compile - file_path",file_path)
-  local passed,err = self:compile(def.callback)
+  self.callback_str = def.callback
+  local passed,err = self.sandbox:compile()
   if not passed then
     return false, err
   end
@@ -521,117 +543,10 @@ function xStreamModel:parse_definition(def)
 end
 
 -------------------------------------------------------------------------------
--- wrap callback in function with variable run-time arguments 
--- @param str_fn (string) function as string
-
-function xStreamModel:prepare_callback(str_fn)
-  TRACE("xStreamModel:prepare_callback(str_fn)",#str_fn)
-
-  -- arguments are defined via vararg(...)
-  -- @param line_index (int), current line index
-  -- @return table<xLine>
-  local str_combined = [[return function(...)
-  local xinc,xline,xpos = select(1, ...),select(2, ...),select(3, ...)
-  ]]..str_fn..[[
-  return xline
-  end]]
-
-  return str_combined
-
-end
-
--------------------------------------------------------------------------------
--- check for syntax errors within our sandbox environment
--- wrap in assert for better-quality error messages
--- @param str_fn (string) function as string
--- @return boolean, true when method passed
--- @return string, error message when failed
-
-function xStreamModel:test_syntax(str_fn)
-  TRACE("xStreamModel:test_syntax(str_fn)",#str_fn)
-
-  local function untrusted_fn()
-    assert(loadstring(str_fn))
-  end
-  setfenv(untrusted_fn, self.env)
-  local pass,err = pcall(untrusted_fn)
-  if not pass then
-    return false,err
-  end
-
-  return true
-
-end
-
--------------------------------------------------------------------------------
--- nested block comments/longstrings are depricated in lua and will fail
--- to load if we save a model using these features
--- unfortunately, lua does not seem to agree with plain strings
--- that contains double brackets - instead, use brute-force 
-
-function xStreamModel.get_comment_blocks(str_fn)
-  TRACE("xStreamModel.get_comment_blocks(str_fn)",#str_fn)
-
-  if string.find(str_fn,"%[%[") then
-    return false
-  elseif string.find(str_fn,"%]%]") then
-    return false
-  else
-    return true
-  end
-
-end
-
--------------------------------------------------------------------------------
--- Compilation of callback method is performed in a number of steps. It can
--- fail, but this should never render the model invalid. 
--- 1. check for syntax errors
--- 2. check for logic errors ("test-run") - TODO
--- 3. passed, extract tokens and update model
--- @param str_fn (string) function as string
--- @return boolean, true when method passed
--- @return string, error message when failed
-
-function xStreamModel:compile(str_fn)
-  TRACE("xStreamModel:compile(str_fn)",#str_fn)
-
-  assert(type(str_fn) == "string", "Expected string as parameter")
-
-  -- access to model arguments/user-data
-  self.env.args = self.args 
-  self.env.data = self.data
-
-  local str_combined = self:prepare_callback(str_fn)
-  local syntax_ok,err = self:test_syntax(str_combined)
-  if not syntax_ok then
-    return false,err
-  end
-
-  -- safe to run 
-  local def = loadstring(str_combined)
-  self.callback = def()
-  setfenv(self.callback, self.env)
-  self.callback_str_observable.value = str_fn
-
-  -- extract tokens for the output stage
-  self.output_tokens = self:extract_tokens(str_fn)
-  --print("*** tokens",rprint(self.output_tokens))
-
-  --self.user_redefined_xline = self.check_if_redefined(str_fn)
-  --print("self.user_redefined_xline",self.user_redefined_xline)
-
-  self.compiled = true
-  --self.modified = false
-
-  return true
-
-end
-
--------------------------------------------------------------------------------
 -- extract functions (tokens), result is used in the output stage
 -- @param str_fn (string)
 -- @return table
-
+--[[
 function xStreamModel:extract_tokens(str_fn)
   TRACE("xStreamModel:extract_tokens(str_fn)",#str_fn)
 
@@ -657,7 +572,7 @@ function xStreamModel:extract_tokens(str_fn)
   return rslt
 
 end
-
+]]
 -------------------------------------------------------------------------------
 -- rename an argument within the callback - 
 -- @param old_name (string)
@@ -682,22 +597,6 @@ function xStreamModel:rename_argument(old_name,new_name)
 
 end
 
--------------------------------------------------------------------------------
--- check if we have redefined the xline in the callback function
--- @param str_fn (string)
--- @return bool
---[[
-function xStreamModel.check_if_redefined(str_fn)
-
-  local matched = (string.match(str_fn,"xline%s?=%s?") or
-    string.match(str_fn,"xline.note_columns%s?=%s?") or
-    string.match(str_fn,"xline.effect_columns%s?=%s?") or
-    string.match(str_fn,"xline.automation%s?=%s?"))
-
-  return matched and true or false
-
-end
-]]
 -------------------------------------------------------------------------------
 -- return the model (arguments, callback) as valid lua string
 
@@ -734,22 +633,6 @@ function xStreamModel:serialize()
   return rslt
 
 end
-
--------------------------------------------------------------------------------
--- revert to last saved model ()
--- @return bool, true when saved
--- @return string, error message when problem was encountered
---[[
-function xStreamModel:revert()
-
-  self.callback_str = self.callback_str_source
-  
-  if self.xstream.ui then
-    self.xstream.ui:update_editor()
-  end
-
-end
-]]
 
 -------------------------------------------------------------------------------
 -- refresh - (re-)load model from disk
@@ -802,15 +685,15 @@ function xStreamModel:save(as_copy)
     file_path = self.file_path
     name = self.name
   end
-  
-  local compiled_fn,err = self:compile(self.callback_str)
+
+  local compiled_fn,err = self.sandbox:test_syntax(self.callback_str)
   if not compiled_fn then
     return false, "The callback contains errors that need to be "
                 .."fixed before you can save it to disk:\n"..err
   end
 
-  local comments = xStreamModel.get_comment_blocks(self.callback_str)
-  if not comments then
+  local comments = xSandbox.contains_comment_blocks(self.callback_str)
+  if comments then
     local str_msg = "Warning: the callback contains [[double brackets]], which need to"
                   .."\nbe removed from the code before the file can be saved"
                   .."\n(avoid using block comments and longstrings)"
@@ -827,7 +710,7 @@ function xStreamModel:save(as_copy)
     self.file_path = file_path
     self.name = name
     self.modified = false
-    self.callback_str_source = self.callback_str
+    --self.callback_str_source = self.sandbox.callback_str
   end
 
   return true
@@ -938,11 +821,14 @@ end
 function xStreamModel:attach_to_song()
   TRACE("xStreamModel:attach_to_song()")
 
+  --[[
   self.env.rns = rns
+
   local compiled_fn,err = self:compile(self.callback_str)
   if not compiled_fn then
     LOG("The callback contains errors: "..err)
   end
+  ]]
   self.args:attach_to_song()
 
 end
@@ -1176,12 +1062,17 @@ end
 
 function xStreamModel.looks_like_definition(str_def)
 
+  local pre = '\[?\"?'
+  local post = '\]?\"?[%s]*=[%s]*{'
+
+  --print(pre.."arguments"..post)
+
   if not string.find(str_def,"return[%s]*{") or
-    not string.find(str_def,"arguments[%s]*=[%s]*{") or
-    not string.find(str_def,"presets[%s]*=[%s]*{") or
-    not string.find(str_def,"data[%s]*=[%s]*{") or
-    not string.find(str_def,"options[%s]*=[%s]*{") or
-    not string.find(str_def,"callback[%s]*=") 
+    not string.find(str_def,pre.."arguments"..post) or
+    not string.find(str_def,pre.."presets"..post) or
+    not string.find(str_def,pre.."data"..post) or
+    not string.find(str_def,pre.."options"..post) or
+    not string.find(str_def,pre.."callback"..post) 
   then
     return false
   else

@@ -157,9 +157,6 @@ function xStreamUI:__init(xstream,vb,midi_prefix)
   self.model_browser_visible = property(self.get_model_browser_visible,self.set_model_browser_visible)
   self.model_browser_visible_observable = renoise.Document.ObservableBoolean(false)
 
-  --self.favorites_visible = property(self.get_favorites_visible,self.set_favorites_visible)
-  --self.favorites_visible_observable = renoise.Document.ObservableBoolean(false)
-
   self.editor_visible_lines = property(self.get_editor_visible_lines,self.set_editor_visible_lines)
   self.editor_visible_lines_observable = renoise.Document.ObservableNumber(16)
 
@@ -573,7 +570,7 @@ end
 --------------------------------------------------------------------------------
 
 function xStreamUI:update_editor()
-  TRACE("xStreamUI:update_editor()")
+  print("xStreamUI:update_editor()")
 
   local view_lines = self.vb.views["xStreamModelEditorNumLines"]
   local view = self.vb.views["xStreamCallbackEditor"]
@@ -582,7 +579,7 @@ function xStreamUI:update_editor()
   view.height = self.editor_visible_lines * xStreamUI.LINE_HEIGHT - 6
 
   view.text = self.xstream.selected_model 
-    and self.xstream.selected_model.callback_str or xStreamUI.WELCOME_MSG
+    and self.xstream.selected_model.sandbox.callback_str or xStreamUI.WELCOME_MSG
 
 end
 
@@ -642,15 +639,6 @@ function xStreamUI:build()
               vb:space{
                 width = 6,
               },
-              --[[
-              vb:button{
-                bitmap = "./source/icons/transport_record.bmp",
-                tooltip = "Record streaming (not yet implemented)",
-                active = false,
-                width = xStreamUI.TRANSPORT_BUTTON_W,
-                height = xStreamUI.BITMAP_BUTTON_H,
-              },
-              ]]
               vb:button{
                 bitmap = "./source/icons/transport_play.bmp",
                 tooltip = "Activate streaming and (re-)start playback [Space]",
@@ -662,7 +650,6 @@ function xStreamUI:build()
                 end,
               },
               vb:button{
-                --bitmap = "Icons/Browser_RenoisePhraseFile.bmp",
                 text = "≣↴",
                 tooltip = "Toggle whether streaming is active",
                 id = "xStreamToggleStreaming",
@@ -737,17 +724,6 @@ function xStreamUI:build()
                 self.tool_options_visible = not self.tool_options_visible
               end
             },
-            --[[
-            vb:button{
-              tooltip = "Toggle compact/full mode [Tab]",
-              id = "xStreamToggleExpand",
-              width = xStreamUI.BITMAP_BUTTON_W,
-              height = xStreamUI.BITMAP_BUTTON_H,
-              notifier = function()
-                self.show_editor = not self.show_editor
-              end,
-            },  
-            ]]
           },
         },
       },
@@ -860,10 +836,6 @@ function xStreamUI:build()
         TRACE("*** xStreamUI - model.modified_observable fired...")
         self.update_models_requested = true
       end)
-      xObservable.attach(model.compiled_observable,function()
-        TRACE("*** xStreamUI - model.compiled_observable fired...")
-        vb.views["xStreamCallbackCompile"].active = self.xstream.selected_model.compiled
-      end)
       xObservable.attach(model.color_observable,function()    
         TRACE("*** xStreamUI - model.color_observable fired...")
         self.update_color_requested = true
@@ -883,8 +855,8 @@ function xStreamUI:build()
         TRACE("*** xStreamUI - args_modified_notifier fired...")
         self.xstream.selected_model.modified = true
       end)
-      xObservable.attach(model.callback_str_observable,function()
-        TRACE("*** xStreamUI - callback_notifier fired...")
+      xObservable.attach(model.sandbox.callback_str_observable,function()
+        TRACE("*** xStreamUI - sandbox.callback_notifier fired...")
         if not self.user_modified_callback then
           --print("... got here")
           self:update_editor()
@@ -1013,8 +985,6 @@ function xStreamUI:build_callback_panel()
         },
 
         vb:button{
-          --text = "‒",
-          --bitmap = "./source/icons/delete.bmp",
           bitmap = "./source/icons/delete_small.bmp",
           tooltip = "Delete the selected model",
           id = "xStreamModelRemove",
@@ -1039,7 +1009,6 @@ function xStreamUI:build_callback_panel()
         },
         vb:button{
           bitmap = "./source/icons/reveal_folder.bmp",
-          --bitmap = "Icons/Browser_Search.bmp",
           tooltip = "Reveal the folder in which the definition is located",
           id = "xStreamRevealLocation",
           width = xStreamUI.BITMAP_BUTTON_W,
@@ -1051,7 +1020,6 @@ function xStreamUI:build_callback_panel()
 
         vb:button{
           bitmap = "./source/icons/save.bmp",
-          --bitmap = "Icons/Browser_ScriptFile.bmp",
           tooltip = "Overwrite the existing definition",
           id = "xStreamModelSave",
           width = xStreamUI.BITMAP_BUTTON_W,
@@ -1135,8 +1103,10 @@ function xStreamUI:build_callback_panel()
       id = "xStreamCallbackEditor",
       notifier = function(str)
         if self.xstream.selected_model then
-          --print("*** changed callback via textfield...")
-          self.user_modified_callback = true
+          print("*** changed callback via textfield...",self.xstream.selected_model.name)
+          if self.xstream.prefs.live_coding.value then
+            self.user_modified_callback = true
+          end
         end
       end,
     },
@@ -1147,7 +1117,7 @@ function xStreamUI:build_callback_panel()
           tooltip = "Compile the callback as you type",
           id = "xStreamLiveCoding",
           vb:checkbox{
-            bind = self.xstream.live_coding_observable
+            bind = self.xstream.prefs.live_coding
           },
           vb:text{
             text = "live coding"
@@ -1161,6 +1131,10 @@ function xStreamUI:build_callback_panel()
           height = xStreamUI.BITMAP_BUTTON_H,
           notifier = function()
             local model = self.xstream.selected_model
+            if model then
+              self.user_modified_callback = true
+            end
+            --[[
             local view = vb.views["xStreamCallbackEditor"]
             local passed,err = model:compile(view.text)
             if not passed then
@@ -1169,6 +1143,7 @@ function xStreamUI:build_callback_panel()
             else
               self.xstream.callback_status_observable.value = ""
             end
+            ]]
           end,
         },
         -- hackaround for clickable text
@@ -1310,16 +1285,6 @@ function xStreamUI:set_tool_options_visible(val)
 end
 
 --------------------------------------------------------------------------------
---[[
-function xStreamUI:get_favorites_visible()
-  return self.favorites_visible_observable.value
-end
-
-function xStreamUI:set_favorites_visible(val)
-  self.favorites_visible_observable.value = val
-end
-]]
---------------------------------------------------------------------------------
 
 function xStreamUI:delete_model()
 
@@ -1366,9 +1331,9 @@ function xStreamUI:on_idle()
   if self.user_modified_callback then
     local model = self.xstream.selected_model
     if model then
-      --print("*** xStreamUI:on_idle - callback modified")
+      print("*** xStreamUI:on_idle - callback modified")
       local view = self.vb.views["xStreamCallbackEditor"]
-      model.callback_str = view.text --.. "\n"
+      model.callback_str = view.text 
     end
     self.user_modified_callback = false
   end

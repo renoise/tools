@@ -38,9 +38,9 @@ function xStreamPrefs:__init()
   self:add_property("user_folder", renoise.Document.ObservableString(xStreamPrefs.USER_FOLDER))
 
   -- user interface
+  self:add_property("live_coding", renoise.Document.ObservableBoolean(true))
   self:add_property("editor_visible_lines", renoise.Document.ObservableNumber(xStreamPrefs.VISIBLE_CODE_LINES))
   self:add_property("favorites_pinned", renoise.Document.ObservableBoolean(false))
-  self:add_property("live_coding", renoise.Document.ObservableBoolean(true))
   self:add_property("model_args_visible", renoise.Document.ObservableBoolean(false))
   self:add_property("model_browser_visible", renoise.Document.ObservableBoolean(false))
   self:add_property("presets_visible", renoise.Document.ObservableBoolean(false))
@@ -68,7 +68,6 @@ end
 function xStreamPrefs:apply(xstream)
 
   -- ui options
-  xstream.live_coding = self.live_coding.value
   xstream.ui.show_editor = self.show_editor.value
   xstream.ui.args.visible = self.model_args_visible.value
   xstream.ui.presets.visible = self.presets_visible.value
@@ -95,11 +94,6 @@ function xStreamPrefs:apply(xstream)
   end)
 
   -- application --> prefs
-
-  xstream.live_coding_observable:add_notifier(function()
-    TRACE("*** main.lua - xstream.live_coding_observable fired...")
-    self.live_coding.value = xstream.live_coding_observable.value
-  end)
 
   xstream.automation_playmode_observable:add_notifier(function()
     TRACE("*** main.lua - xstream.automation_playmode_observable fired...")

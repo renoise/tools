@@ -55,8 +55,7 @@ end
 -- @return xLine 
 
 function xLine.apply_descriptor(xline)
-
-  --print("xLine.apply_descriptor - PRE",rprint(xline.note_columns))
+  --TRACE("xLine.apply_descriptor(xline)",xline)
 
   if (type(xline) == "table") then -- entire xline redefined
     xline = xLine(xline)
