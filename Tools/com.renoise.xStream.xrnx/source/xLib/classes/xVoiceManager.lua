@@ -125,7 +125,7 @@ function xVoiceManager:input_message(xmsg)
 
   -- check if the voice is already active
   local voice_idx = self:get_voice_index(xmsg)
-  print("voice_idx",voice_idx)
+  --print("voice_idx",voice_idx)
   if voice_idx then
     if (xmsg.message_type == xMidiMessage.TYPE.NOTE_OFF) then
       self:release(voice_idx)

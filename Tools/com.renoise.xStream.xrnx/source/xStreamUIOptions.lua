@@ -548,7 +548,7 @@ function xStreamUIOptions:create_dialog()
     },
     data = {},
   }
-  print("vtable",vtable)
+  --print("vtable",vtable)
   vb.views["xStreamPrefsMidiInputRack"]:add_child(vtable.view)
   self.vtable_midi_inputs = vtable
 

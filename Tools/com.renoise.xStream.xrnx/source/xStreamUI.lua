@@ -160,17 +160,15 @@ function xStreamUI:__init(xstream,vb,midi_prefix)
   self.editor_visible_lines = property(self.get_editor_visible_lines,self.set_editor_visible_lines)
   self.editor_visible_lines_observable = renoise.Document.ObservableNumber(16)
 
-  -- bool, set immediately after changing the callback string
+  -- bool, set when user has changed one of the callbacks
   self.user_modified_callback = false
 
-  -- renoise.Dialog, wizard-style dialog for creating models
-  --self.model_dialog = nil
+  -- bool, suppress editor notifications 
+  self.suppress_editor_notifier = false
 
-  -- renoise.View
-  --self.model_dialog_content = nil
-
-  --self.model_dialog_page = nil
-  --self.model_dialog_option = nil
+  -- string, tells us the type of content in the editor 
+  -- valid values are "main", "data" or a registered event (xMidiMessage.TYPE)
+  self.editor_view = "main"
 
   self.base_color_highlight = vColor.adjust_brightness(xStreamUI.COLOR_BASE,xStreamUI.HIGHLIGHT_AMOUNT)
 
@@ -288,14 +286,30 @@ end
 function xStreamUI:update_editor()
   TRACE("xStreamUI:update_editor()")
 
+  local model = self.xstream.selected_model
   local view_lines = self.vb.views["xStreamModelEditorNumLines"]
   local view = self.vb.views["xStreamCallbackEditor"]
 
   view_lines.value = self.editor_visible_lines
   view.height = self.editor_visible_lines * xStreamUI.LINE_HEIGHT - 6
 
-  view.text = self.xstream.selected_model 
-    and self.xstream.selected_model.sandbox.callback_str or xStreamUI.WELCOME_MSG
+  -- type popup: include defined userdata + events 
+  local vb_type_popup = self.vb.views["xStreamCallbackType"]
+  local items = {}
+  if model then
+    table.insert(items,"main")
+    for k,v in pairs(model.data) do
+      table.insert(items,("data.%s"):format(k))
+    end
+    for k,v in pairs(model.events) do
+      table.insert(items,("events.%s"):format(k))
+    end
+    --print("table.find(items,self.editor_view)",self.editor_view,table.find(items,self.editor_view),rprint(items))
+    vb_type_popup.value = table.find(items,self.editor_view)
+  end
+  vb_type_popup.items = items
+
+  self:set_editor_content()
 
 end
 
@@ -587,6 +601,7 @@ function xStreamUI:build()
       end
     end
     self.update_model_requested = true
+    self.editor_view = "main"
     self:update_editor()
 
     if vPrompt.color_prompt.dialog and vPrompt.color_prompt.dialog.visible then
@@ -821,6 +836,9 @@ function xStreamUI:build_callback_panel()
       width = xStreamUI.CALLBACK_EDITOR_W, 
       id = "xStreamCallbackEditor",
       notifier = function(str)
+        if self.suppress_editor_notifier then
+          return
+        end
         if self.xstream.selected_model then
           --print("*** changed callback via textfield...",self.xstream.selected_model.name)
           if self.xstream.prefs.live_coding.value then
@@ -829,8 +847,10 @@ function xStreamUI:build_callback_panel()
         end
       end,
     },
-    vb:row{
+    vb:horizontal_aligner{
       id = "xStreamCallbackEditorToolbar",
+      width = xStreamUI.CALLBACK_EDITOR_W, 
+      mode = "justify",
       vb:row{
         vb:row{
           tooltip = "Compile the callback as you type",
@@ -839,20 +859,17 @@ function xStreamUI:build_callback_panel()
             bind = self.xstream.prefs.live_coding
           },
           vb:text{
-            text = "live coding"
+            text = "Live coding"
           },
         },
         vb:button{
-          text = "compile",
+          text = "Compile",
           tooltip = "Compile the callback (will check for errors)",
           id = "xStreamCallbackCompile",
           active = false,
           height = xStreamUI.BITMAP_BUTTON_H,
           notifier = function()
-            local model = self.xstream.selected_model
-            if model then
-              self.user_modified_callback = true
-            end
+            self.user_modified_callback = true
             --[[
             local view = vb.views["xStreamCallbackEditor"]
             local passed,err = model:compile(view.text)
@@ -883,11 +900,59 @@ function xStreamUI:build_callback_panel()
           text = "",
         }
       },
+      vb:row{
+        vb:text{
+          text = "View",
+        },
+        vb:popup{
+          id = "xStreamCallbackType",
+          --items = {"main","data","note_on","note_off"},
+          notifier = function(idx)
+            local vb_elm = vb.views["xStreamCallbackType"]
+            self.editor_view = vb_elm.items[idx]
+            self:set_editor_content()
+          end,
+        },
+      },
     },
   }
 
 end
 
+--------------------------------------------------------------------------------
+-- update editor with the relevant callback 
+
+function xStreamUI:set_editor_content()
+  TRACE("xStreamUI:set_editor_content()")
+
+  local text = nil
+  local model = self.xstream.selected_model
+
+  if not model then
+    text = xStreamUI.WELCOME_MSG
+  else
+    if (self.editor_view == "main") then
+      text = model.sandbox.callback_str 
+    elseif (self.editor_view:sub(0,5) == "data.") then
+      local key = self.editor_view:sub(6)
+      --print("data key",key)
+      text = model.data_initial[key]
+    elseif (self.editor_view:sub(0,7) == "events.") then
+      local key = self.editor_view:sub(8)
+      --print("event key",key)
+      text = model.events[key]
+    end
+  end
+
+  rprint(text)
+
+  -- prevent notifier from firing
+  local view = self.vb.views["xStreamCallbackEditor"]
+  self.suppress_editor_notifier = true
+  view.text = text
+  self.suppress_editor_notifier = false
+
+end
 
 --------------------------------------------------------------------------------
 
@@ -1052,13 +1117,16 @@ function xStreamUI:on_idle()
     if model then
       --print("*** xStreamUI:on_idle - callback modified")
       local view = self.vb.views["xStreamCallbackEditor"]
-      model.callback_str = view.text 
+      if (self.editor_view == "main") then
+        model.callback_str = view.text 
+      elseif (self.editor_view == "data") then
+        model:parse_userdata(view.text)
+      end
     end
     self.user_modified_callback = false
   end
 
   -- delayed display updates ------------------------------
-  -- TODO optimize by turning into mini-scheduling system
 
   if self.build_presets_requested then
     self.build_presets_requested = false

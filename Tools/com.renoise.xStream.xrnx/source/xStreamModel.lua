@@ -577,19 +577,21 @@ function xStreamModel:parse_userdata(data_def)
   TRACE("xStreamModel:parse_userdata(data_def)",data_def)
   
   self.data = {}
+  self.data_initial = {}
 
   if (type(data_def)=="table") then
     for k,v in pairs(data_def) do
+      -- 1.48+ stores values as serialized string
+      self.data_initial[k] = (type(data_def[k])=="table") 
+        and xLib.serialize_table(data_def[k]) or data_def[k]
       if (type(v)=="table") then
-        -- old (pre-1.48) syntax used tables 
-        self.data[k] = v
-        --data_def[k] = xLib.serialize_table(v)
+        self.data[k] = v -- prior to 1.48
       elseif (type(v)=="string") then
-        local passed,err = self.sandbox:test_syntax(v)
-        print("userdata - k,v,passed,err",k,v,passed,err)
+        local str_fn = ("return %s"):format(v)
+        local passed,err = self.sandbox:test_syntax(str_fn)
+        --print("userdata - k,str_fn,passed,err",k,str_fn,passed,err)
         if passed then
-          -- 1.48+
-          local fn = loadstring(v)
+          local fn = loadstring(str_fn)
           self.data[k] = fn()
           if (type(self.data[k])=="function") then
             setfenv(self.data[k], self.sandbox.env)
@@ -598,12 +600,12 @@ function xStreamModel:parse_userdata(data_def)
           LOG("*** Failed to include userdata (bad syntax)",k)
         end
       end
+
     end
   end
 
-  self.data_initial = table.rcopy(data_def)
-
-  print(">>> parse_userdata - self.data",rprint(self.data))
+  --print(">>> parse_userdata - self.data",rprint(self.data))
+  --print(">>> parse_userdata - self.data_initial",rprint(self.data_initial))
 
 end
 
@@ -621,7 +623,7 @@ function xStreamModel:parse_events(event_def)
     end
   end
 
-  print(">>> parse_events - self.events",rprint(self.events))
+  --print(">>> parse_events - self.events",rprint(self.events))
 
 end
 
