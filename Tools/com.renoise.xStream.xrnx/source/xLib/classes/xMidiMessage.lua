@@ -439,10 +439,10 @@ end
 
 function xMidiMessage:__tostring()
   return type(self)
-  ..": "..tostring(self.message_type)
+  ..": message_type="..tostring(self.message_type)
   ..", ch="..tostring(self.channel)
-  ..", data1="..tostring(self.values[1])
-  ..", data2="..tostring(self.values[2])
+  ..", values[1]="..tostring(self.values[1])
+  ..", values[2]="..tostring(self.values[2])
   ..", bits="..tostring(self.bit_depth)
   ..", port="..tostring(self.port_name)
   ..", track="..tostring(self.track_index)

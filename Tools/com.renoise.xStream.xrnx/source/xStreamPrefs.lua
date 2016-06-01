@@ -37,6 +37,14 @@ function xStreamPrefs:__init()
   self:add_property("launch_selected_model", renoise.Document.ObservableBoolean(true))
   self:add_property("user_folder", renoise.Document.ObservableString(xStreamPrefs.USER_FOLDER))
 
+  -- input
+  self:add_property("midi_multibyte_enabled", renoise.Document.ObservableBoolean(false))
+  self:add_property("midi_nrpn_enabled", renoise.Document.ObservableBoolean(false))
+  self:add_property("midi_terminate_nrpns", renoise.Document.ObservableBoolean(false))
+  self:add_property("midi_inputs", renoise.Document.ObservableStringList())
+  self:add_property("midi_outputs", renoise.Document.ObservableStringList())
+
+
   -- user interface
   self:add_property("live_coding", renoise.Document.ObservableBoolean(true))
   self:add_property("editor_visible_lines", renoise.Document.ObservableNumber(xStreamPrefs.VISIBLE_CODE_LINES))

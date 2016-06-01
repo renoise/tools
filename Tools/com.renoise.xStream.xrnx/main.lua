@@ -12,16 +12,19 @@ com.renoise.xStream.xrnx (main.lua)
 --------------------------------------------------------------------------------
 
 local app_dir = 'source/'
-local vlib_root = 'source/vLib/classes/'
+_vlibroot = 'source/vLib/classes/'
 local xlib_root = 'source/xLib/classes/'
 _trace_filters = nil
 --_trace_filters = {".*"}
 --_trace_filters = {"^xStreamUIFavorites"}
 
 
-require (vlib_root..'helpers/vColor')
-require (vlib_root..'vPrompt')
-require (vlib_root..'vDialog')
+require (_vlibroot..'vLib')
+require (_vlibroot..'vPrompt')
+require (_vlibroot..'vDialog')
+require (_vlibroot..'vDialogWizard')
+require (_vlibroot..'vTable')
+require (_vlibroot..'helpers/vColor')
 
 require (xlib_root..'xLib')
 require (xlib_root..'xDebug')
@@ -33,6 +36,9 @@ require (xlib_root..'xLine')
 require (xlib_root..'xLineAutomation')
 require (xlib_root..'xLinePattern')
 require (xlib_root..'xNoteColumn')
+require (xlib_root..'xMidiInput')
+require (xlib_root..'xMessage')
+require (xlib_root..'xMidiMessage')
 require (xlib_root..'xParseXML')
 require (xlib_root..'xObservable')
 require (xlib_root..'xPhraseManager')
@@ -40,6 +46,7 @@ require (xlib_root..'xReflection')
 require (xlib_root..'xSandbox')
 require (xlib_root..'xScale')
 require (xlib_root..'xSongPos')
+require (xlib_root..'xVoiceManager')
 require (xlib_root..'xPlayPos')
 require (xlib_root..'xStreamPos')
 
@@ -53,6 +60,7 @@ require (app_dir..'xStreamModel')
 require (app_dir..'xStreamPresets')
 require (app_dir..'xStreamPrefs')
 require (app_dir..'xStreamUI')
+require (app_dir..'xStreamUIModelCreate')
 require (app_dir..'xStreamUIOptions')
 require (app_dir..'xStreamUIFavorites')
 require (app_dir..'xStreamUIPresetPanel')

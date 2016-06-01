@@ -14,6 +14,9 @@ class 'xStreamUIOptions' (vDialog)
 xStreamUIOptions.DLG_W = 130
 xStreamUIOptions.TXT_W = 70
 
+local TABLE_W = 145
+local TABLE_ROW_H = 19
+local MIDI_ROWS = 5
 
 -------------------------------------------------------------------------------
 
@@ -39,6 +42,10 @@ function xStreamUIOptions:__init(xstream)
   self.update_model_requested = false
 
   self.selected_tab_index = 1
+
+  -- vLib components
+  self.vtable_midi_inputs = nil
+  self.vtable_midi_outputs = nil
 
   -- initialize
 
@@ -67,6 +74,19 @@ function xStreamUIOptions:__init(xstream)
   end)
 
   self:show_tab(self.selected_tab_index)
+
+  -- prevent device editing while inactive
+  self.xstream.active_observable:add_notifier(function()
+    if self.vtable_osc_devices then
+      self.vtable_osc_devices.active = self.xrules.active
+    end
+    if self.vtable_midi_inputs then
+      self.vtable_midi_inputs.active = self.xrules.active
+    end
+    if self.vtable_midi_outputs then
+      self.vtable_midi_outputs.active = self.xrules.active
+    end
+  end)
 
 end
 
@@ -117,6 +137,7 @@ function xStreamUIOptions:show_tab(idx)
   local tabs = {
     "xStreamOptionsGeneral",
     "xStreamOptionsStreaming",
+    "xStreamOptionsMIDI",
     "xStreamOptionsOutput",
   }
 
@@ -150,7 +171,7 @@ function xStreamUIOptions:create_dialog()
   local STREAMING_CTRL_W = 100
 
   local vb = self.vb
-  return vb:column{ -- options 
+  local vb_tab_content = vb:column{ -- options 
     margin = 6,
     vb:switch{
       id = "xStreamOptionsTab",
@@ -158,6 +179,7 @@ function xStreamUIOptions:create_dialog()
       items = {
         "General",
         "Streaming",
+        "MIDI",
         "Output",
       },
       width = 300,
@@ -338,6 +360,79 @@ function xStreamUIOptions:create_dialog()
 
     },
 
+    -- MIDI OPTIONS ----------------------------------
+
+    vb:column{
+      id = "xStreamOptionsMIDI",
+      width = "100%",
+      visible = false,
+      spacing = 6,
+      vb:row{
+        spacing = 6,
+        vb:column{
+          --margin = 6,
+          id = "xStreamPrefsMidiInputRack",
+          vb:text{
+            text = "MIDI Inputs",
+            font = "bold",
+          },
+        },
+        vb:column{
+          --margin = 6,
+          id = "xStreamPrefsMidiOutputRack",
+          vb:text{
+            text = "MIDI Outputs",
+            font = "bold",
+          },
+          
+        },
+      },
+
+      vb:column{
+        style = "group",
+        margin = 6,
+        width = "100%",
+        vb:row{
+          vb:checkbox{
+            value = self.prefs.midi_multibyte_enabled.value,
+            notifier = function(val)
+              self.prefs.midi_multibyte_enabled.value = val
+              self.xstream.midi_input.multibyte_enabled = val
+            end,
+          },
+          vb:text{
+            text = "Enable multi-byte support (14bit control-change)"
+          },
+        },
+        vb:row{
+          vb:checkbox{
+            value = self.prefs.midi_nrpn_enabled.value,
+            notifier = function(val)
+              self.prefs.midi_nrpn_enabled.value = val
+              self.xstream.midi_input.nrpn_enabled = val
+            end,
+          },
+          vb:text{
+            text = "Enable NRPN support (14bit messages)"
+          },
+        },
+        vb:row{
+          vb:checkbox{
+            value = self.prefs.midi_terminate_nrpns.value,
+            notifier = function(val)
+              self.prefs.midi_terminate_nrpns.value = val
+              self.xstream.midi_input.terminate_nrpns = val
+            end,
+          },
+          vb:text{
+            text = "Require NRPN messages to be terminated"
+          },
+        },
+      },
+
+    },
+
+
     -- OUTPUT OPTIONS ----------------------------------
 
     vb:column{ -- panel
@@ -423,7 +518,75 @@ function xStreamUIOptions:create_dialog()
       },
 
     },
+
   }
+
+  local toggle_midi_input = function(elm,checked)
+    local item = elm.owner:get_item_by_id(elm.item_id)
+    if item then
+      item.CHECKBOX = checked
+      local matched = self:match_in_list(self.prefs.midi_inputs,item.TEXT)
+      if checked and not matched then
+        self.prefs.midi_inputs:insert(item.TEXT)
+        self.xstream:open_midi_input(item.TEXT)
+      elseif not checked and matched then
+        self.prefs.midi_inputs:remove(matched)
+        self.xstream:close_midi_input(item.TEXT)
+      end
+    end
+  end
+
+  local vtable = vTable{
+    id = "vtable_midi_inputs",
+    vb = vb,
+    width = TABLE_W,
+    row_height = TABLE_ROW_H,
+    num_rows = MIDI_ROWS,
+    column_defs = {
+      {key = "CHECKBOX", col_width=20, col_type=vTable.CELLTYPE.CHECKBOX, notifier=toggle_midi_input},
+      {key = "TEXT",    col_width="auto"},
+    },
+    data = {},
+  }
+  print("vtable",vtable)
+  vb.views["xStreamPrefsMidiInputRack"]:add_child(vtable.view)
+  self.vtable_midi_inputs = vtable
+
+  -- midi outputs --
+
+  local toggle_midi_output = function(elm,checked)
+    local item = elm.owner:get_item_by_id(elm.item_id)
+    if item then
+      item.CHECKBOX = checked
+      local matched = self:match_in_list(self.prefs.midi_outputs,item.TEXT)
+      if checked and not matched then
+        self.prefs.midi_outputs:insert(item.TEXT)
+        self.xstream:open_midi_output(item.TEXT)
+      elseif not checked and matched then
+        self.prefs.midi_outputs:remove(matched)
+        self.xstream:close_midi_output(item.TEXT)
+      end
+    end
+  end
+
+  vtable = vTable{
+    id = "vtable_midi_outputs",
+    vb = vb,
+    width = TABLE_W,
+    row_height = TABLE_ROW_H,
+    num_rows = MIDI_ROWS,
+    column_defs = {
+      {key = "CHECKBOX", col_width=20, col_type=vTable.CELLTYPE.CHECKBOX, notifier=toggle_midi_output},
+      {key = "TEXT",    col_width="auto"},
+    },
+    data = {},
+  }
+  vb.views["xStreamPrefsMidiOutputRack"]:add_child(vtable.view)
+  self.vtable_midi_outputs = vtable
+
+  self:update_input_tab()
+
+  return vb_tab_content
 
 end
 
@@ -475,3 +638,61 @@ function xStreamUIOptions:on_idle()
   end
 
 end
+
+--------------------------------------------------------------------------------
+-- [xMIDIApplication] 
+
+function xStreamUIOptions:update_input_tab()
+
+  -- midi inputs --
+
+  local midi_inputs = renoise.Midi.available_input_devices()
+  local midi_outputs = renoise.Midi.available_output_devices()
+  local data,vtable
+
+  data = {}
+  vtable = self.vtable_midi_inputs
+  for k,v in ipairs(midi_inputs) do
+    data[k] = {
+      CHECKBOX = (self:match_in_list(self.prefs.midi_inputs,v)) and true or false,
+      TEXT = v,
+    }
+  end
+  --rprint("midi_inputs data",rprint(data))
+  vtable.data = data
+  vtable.show_header = false
+  vtable:update()
+
+  -- midi outputs --
+
+  data = {}
+  vtable = self.vtable_midi_outputs
+  for k,v in ipairs(midi_inputs) do
+    data[k] = {
+      CHECKBOX = (self:match_in_list(self.prefs.midi_outputs,v)) and true or false,
+      TEXT = v,
+    }
+  end
+  vtable.data = data
+  vtable.show_header = false
+  vtable:update()
+
+end
+
+
+-------------------------------------------------------------------------------
+-- [xMIDIApplication] find among midi inputs/outputs
+-- @param port_name (string)
+-- @return int or nil
+
+function xStreamUIOptions:match_in_list(list,value)
+
+  local matched = false
+  for k = 1, #list do
+    if (list[k].value == value) then
+      return k
+    end
+  end
+
+end
+

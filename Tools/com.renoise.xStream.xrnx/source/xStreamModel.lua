@@ -126,6 +126,10 @@ function xStreamModel:__init(xstream)
 
     -- xStream properties
 
+    ["voices"] = {
+      access = function(env) return self.xstream.voicemgr.voices end,
+    },
+
     ["clear_undefined"] = {
       access = function(env) return self.xstream.clear_undefined end,
       assign = function(env,v) self.xstream.clear_undefined = v end,
@@ -233,8 +237,14 @@ function xStreamModel:__init(xstream)
   -- table<vararg>, variables, can be any basic type 
   self.data = nil
 
-  -- table<vararg>, copy of data - revert when stopping/exporting
+  -- string, userdata definition - revert when stopping/exporting
   self.data_initial = nil
+
+  -- table<xMidiMessage.TYPE=function>, event handlers
+  self.events = nil
+
+  -- table<function>
+  self.events_compiled = nil
 
   -- table<string> limit to these tokens during output
   -- (derived from the code specified in the callback)
@@ -288,26 +298,32 @@ function xStreamModel:get_callback_str()
 end
 
 function xStreamModel:set_callback_str(str)
-  print("xStreamModel:set_callback_str - ",#str)
+  TRACE("xStreamModel:set_callback_str - ",#str)
 
   local modified = (str ~= self.sandbox.callback_str) 
   self.modified = modified and true or self.modified
-  print("self.modified",self.modified,self.name)
+  --print("self.modified",self.modified,self.name)
 
-  self.sandbox.callback_str_observable.value = str
+  -- inject events
+  self:create_events()
+  --str =  + str
 
   -- live syntax check
   local passed,err = self.sandbox:test_syntax(str)
   self.xstream.callback_status_observable.value = passed and "" or err
   
-  if not err and
-    self.xstream.prefs.live_coding.value
-  then
-    -- compile right away
-    local passed,err = self.sandbox:compile(str)
-    if not passed then -- should not happen! 
-      LOG(err)
+  if not err then
+
+    self.sandbox.callback_str_observable.value = str
+
+    -- compile right away? 
+    if self.xstream.prefs.live_coding.value then
+      local passed,err = self.sandbox:compile()
+      if not passed then -- should not happen! 
+        LOG(err)
+      end
     end
+
   else
     LOG(err)
   end
@@ -363,9 +379,7 @@ end
 
 function xStreamModel:reset()
 
-  -- revert user data 
-  self.sandbox.env.data = 
-    table.rcopy(self.data_initial)
+  self:parse_userdata(self.data_initial)
 
 end
 
@@ -481,22 +495,52 @@ end
 function xStreamModel:parse_definition(def)
   TRACE("xStreamModel:parse_definition(def)",def)
 
-  -- default model options
-  local color = vColor.color_table_to_value(xLib.COLOR_DISABLED)
+  self:parse_options(def.options)
+  self:parse_arguments(def.arguments)
+  self:parse_presets(def.presets)
+  self:parse_userdata(def.data)
+  self:parse_events(def.events)
+
+  -- process the callback method ------
+
+  --print("about to compile - file_path",file_path)
+  self.callback_str = def.callback
+  local passed,err = self.sandbox:compile()
+  if not passed then
+    return false, err
+  end
   
-  if not table.is_empty(def.options) then
-    if (def.options.color) then
-      --print("def.options.color",def.options.color)
-      color = def.options.color
+  return true
+
+end
+
+-------------------------------------------------------------------------------
+-- parse model options (color etc.)
+
+function xStreamModel:parse_options(options_def)
+
+  local color = vColor.color_table_to_value(xLib.COLOR_DISABLED)
+  if not table.is_empty(options_def) then
+    if (options_def.color) then
+      --print("options_def.color",options_def.color)
+      color = options_def.color
     end
   end
 
   self.color_observable.value = color
 
-  -- create arguments
+
+end
+
+-------------------------------------------------------------------------------
+-- create arguments
+
+function xStreamModel:parse_arguments(args_def)
+  TRACE("xStreamModel:parse_arguments(def)")
+  
   self.args = xStreamArgs(self)
-  if not table.is_empty(def.arguments) then
-    for _,arg in ipairs(def.arguments) do
+  if not table.is_empty(args_def) then
+    for _,arg in ipairs(args_def) do
       --print("*** arg",rprint(arg))
       local passed,err = self.args:add(arg)
       --print("passed,err",passed,err)
@@ -508,37 +552,76 @@ function xStreamModel:parse_definition(def)
     end
   end
 
-  -- clear existing presets
+end
+
+-------------------------------------------------------------------------------
+-- model presets: clear existing, add new ones...
+
+function xStreamModel:parse_presets(preset_def)
+  TRACE("xStreamModel:parse_presets(def)")
+  
   self.selected_preset_bank_index = 1
   self.selected_preset_bank:remove_all_presets()
 
-  -- create presets 
-  if not table.is_empty(def.presets) then
-    for _,v in ipairs(def.presets) do
+  if not table.is_empty(preset_def) then
+    for _,v in ipairs(preset_def) do
       self.selected_preset_bank:add_preset(v)
     end
   end
 
-  -- create user-data
-  self.data = {}  
-  if (type(def.data)=="table") and not table.is_empty(def.data) then
-    for k,v in pairs(def.data) do
-      self.data[k] = v
+end
+
+-------------------------------------------------------------------------------
+
+function xStreamModel:parse_userdata(data_def)
+  TRACE("xStreamModel:parse_userdata(data_def)",data_def)
+  
+  self.data = {}
+
+  if (type(data_def)=="table") then
+    for k,v in pairs(data_def) do
+      if (type(v)=="table") then
+        -- old (pre-1.48) syntax used tables 
+        self.data[k] = v
+        --data_def[k] = xLib.serialize_table(v)
+      elseif (type(v)=="string") then
+        local passed,err = self.sandbox:test_syntax(v)
+        print("userdata - k,v,passed,err",k,v,passed,err)
+        if passed then
+          -- 1.48+
+          local fn = loadstring(v)
+          self.data[k] = fn()
+          if (type(self.data[k])=="function") then
+            setfenv(self.data[k], self.sandbox.env)
+          end
+        else
+          LOG("*** Failed to include userdata (bad syntax)",k)
+        end
+      end
     end
   end
 
-  -- restore initial state with this
-  self.data_initial = table.rcopy(self.data)
+  self.data_initial = table.rcopy(data_def)
 
-  -- process the callback method
-  --print("about to compile - file_path",file_path)
-  self.callback_str = def.callback
-  local passed,err = self.sandbox:compile()
-  if not passed then
-    return false, err
+  print(">>> parse_userdata - self.data",rprint(self.data))
+
+end
+
+
+-------------------------------------------------------------------------------
+
+function xStreamModel:parse_events(event_def)
+  TRACE("xStreamModel:parse_events(def)")
+
+  self.events = {}
+
+  if (type(event_def)=="table") and not table.is_empty(event_def) then
+    for k,v in pairs(event_def) do
+      self.events[k] = v
+    end
   end
-  
-  return true
+
+  print(">>> parse_events - self.events",rprint(self.events))
 
 end
 
@@ -604,6 +687,7 @@ function xStreamModel:serialize()
   TRACE("xStreamModel:serialize()")
 
   local args,presets = self.args:serialize()
+  local max_depth,longstring = nil,true
 
   local rslt = ""
   .."--[[==========================================================================="
@@ -618,7 +702,10 @@ function xStreamModel:serialize()
   ..presets
   ..","
 	.."\ndata = "
-  ..xLib.serialize_table(self.data_initial)
+  ..xLib.serialize_table(self.data_initial,max_depth,longstring)
+  ..","
+	.."\nevents = "
+  ..xLib.serialize_table(self.events,max_depth,longstring)
   ..","
 	.."\noptions = {"
   .."\n color = "..vColor.value_to_hex_string(self.color)..","
@@ -1080,3 +1167,52 @@ function xStreamModel.looks_like_definition(str_def)
   end
 
 end
+
+-------------------------------------------------------------------------------
+-- maintain working set of event handlers 
+
+function xStreamModel:create_events()
+  TRACE("xStreamModel:create_events()")
+
+  self.events_compiled = {}
+
+  if not (type(self.events)=="table") then
+    return
+  end
+
+  for k,v in pairs(self.events) do
+
+    --print("inject_events - k,v",k,v)
+
+    -- test syntax before adding
+    local passed,err = self.sandbox:test_syntax(v)
+    --self.xstream.callback_status_observable.value = passed and "" or err
+    --print("inject_events - passed,err",passed,err)
+
+    if passed then
+
+      self.events_compiled[k] = loadstring(v)
+      --print("self.events_compiled[k]",self.events_compiled[k])
+      --print("self.sandbox.env",self.sandbox.env)
+      setfenv(self.events_compiled[k], self.sandbox.env)
+    end
+
+
+  end
+
+  --print(">>> self.events",rprint(self.events))
+  --print(">>> self.events_compiled",rprint(self.events_compiled))
+
+end
+
+-------------------------------------------------------------------------------
+-- @param key (xMidiMessage.TYPE)
+-- return function or nil
+
+function xStreamModel:get_event_handler(key)
+  TRACE("xStreamModel:get_event_handler(key)",key)
+
+  return self.events_compiled[key]
+
+end
+

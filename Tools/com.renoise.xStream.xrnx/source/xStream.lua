@@ -69,10 +69,26 @@ function xStream:__init()
   --- xPreferences
   --self.xprefs = xprefs
 
-  -- xStreamUI, built-in user interface
+  --- xStreamUI, built-in user interface
   self.ui = nil
 
-  -- xStreamPos, set up our streaming handler
+  ---  xMidiInput
+  self.midi_input = xMidiInput{
+    multibyte_enabled = self.prefs.multibyte_enabled,
+    nrpn_enabled = self.prefs.nrpn_enabled,
+    terminate_nrpns = self.prefs.terminate_nrpns,
+  }
+
+  ---  xVoiceManager
+  self.voicemgr = xVoiceManager{}
+
+  --- table<renoise.Midi.MidiInputDevice>
+  self.midi_inputs = {}
+
+  --- table<renoise.Midi.MidiOutputDevice>
+  self.midi_outputs = {}
+
+  --- xStreamPos, set up our streaming handler
   self.stream = xStreamPos()
   self.stream.callback_fn = function()
     if self.active then
@@ -85,13 +101,13 @@ function xStream:__init()
     end
   end
 
-  -- int, writeahead amount
+  --- int, writeahead amount
   self.writeahead = 0
 
-  -- table<xLine>, output buffer
+  --- table<xLine>, output buffer
   self.buffer = {}
 
-  -- Content is read from the pattern as new content is requested from the 
+  --- Content is read from the pattern as new content is requested from the 
   -- callback method - this ensures that the callback always has a
   -- fully populated line to work on. But unlike the output buffer, the
   -- read buffer is not cleared when arguments change - it should be read
@@ -99,144 +115,144 @@ function xStream:__init()
   -- table<xLine descriptor>, input buffer
   self.read_buffer = {}
 
-  -- int, keep track of the highest/lowest line in our buffers
+  --- int, keep track of the highest/lowest line in our buffers
   self.highest_buffer_idx = 0
   self.lowest_buffer_idx = 0
 
   --self.highest_read_buffer_idx = 0
 
-  -- xSongPos.OUT_OF_BOUNDS, handle song boundaries
+  --- xSongPos.OUT_OF_BOUNDS, handle song boundaries
   self.bounds_mode = xSongPos.OUT_OF_BOUNDS.LOOP
 
-  -- xSongPos.BLOCK_BOUNDARY, handle block boundaries
+  --- xSongPos.BLOCK_BOUNDARY, handle block boundaries
   self.block_mode = xSongPos.BLOCK_BOUNDARY.SOFT
 
-  -- xSongPos.LOOP_BOUNDARY, handle pattern/seq.loop boundaries
+  --- xSongPos.LOOP_BOUNDARY, handle pattern/seq.loop boundaries
   self.loop_mode = xSongPos.LOOP_BOUNDARY.SOFT
 
-  -- enum, one of xStream.OUTPUT_MODE
+  --- enum, one of xStream.OUTPUT_MODE
   -- usually STREAMING, but temporarily set to a different
   -- value while applying output to TRACK/SELECTION
   self.output_mode = xStream.OUTPUT_MODE.STREAMING
 
-  -- (bool) keep track of loop block state
+  --- (bool) keep track of loop block state
   self.block_enabled = rns.transport.loop_block_enabled
 
-  -- string, last file path from where we imported models ('load_models')
+  --- string, last file path from where we imported models ('load_models')
   self.last_models_path = nil
 
-  -- bool, flag raised when preset bank is eligible for export
+  --- bool, flag raised when preset bank is eligible for export
   self.preset_bank_export_requested = false
 
-  -- bool, flag raised when favorites are eligible for export
+  --- bool, flag raised when favorites are eligible for export
   self.favorite_export_requested = false
 
-  -- bool, when true we automatically save favorites/presets
+  --- bool, when true we automatically save favorites/presets
   self.autosave_enabled = false
   
-  -- xStream.PLAYMODE (string-based enum)
+  --- xStream.PLAYMODE (string-based enum)
   self.automation_playmode = property(self.get_automation_playmode,self.set_automation_playmode)
   self.automation_playmode_observable = renoise.Document.ObservableNumber(xStream.PLAYMODE.LINEAR)
 
-  -- int, decrease this if you are experiencing dropouts during heavy UI
+  --- int, decrease this if you are experiencing dropouts during heavy UI
   -- operations in Renoise (such as opening a plugin GUI) 
   self.writeahead_factor = property(self.get_writeahead_factor,self.set_writeahead_factor)
   self.writeahead_factor_observable = renoise.Document.ObservableNumber(300)
 
-  -- string, value depends on success/failure during last callback 
+  --- string, value depends on success/failure during last callback 
   -- "" = no problem
   -- "Some error occurred" = description of error 
   self.callback_status_observable = renoise.Document.ObservableString("")
 
-  -- int, decide which track to target (0 = none)
+  --- int, decide which track to target (0 = none)
   self.track_index = property(self.get_track_index,self.set_track_index)
   self.track_index_observable = renoise.Document.ObservableNumber(0)
 
-  -- renoise.DeviceParameter, selected automation parameter (can be nil)
+  --- renoise.DeviceParameter, selected automation parameter (can be nil)
   self.device_param = property(self.get_device_param,self.set_device_param)
   self._device_param = nil
 
-  -- int, derived from device_param (0 = none)
+  --- int, derived from device_param (0 = none)
   self.device_param_index_observable = renoise.Document.ObservableNumber(0)
 
-  -- boolean, whether to include hidden (not visible) columns
+  --- boolean, whether to include hidden (not visible) columns
   self.include_hidden = property(self.get_include_hidden,self.set_include_hidden)
   self.include_hidden_observable = renoise.Document.ObservableBoolean(false)
 
-  -- boolean, determine how to respond to 'undefined' content
+  --- boolean, determine how to respond to 'undefined' content
   self.clear_undefined = property(self.get_clear_undefined,self.set_clear_undefined)
   self.clear_undefined_observable = renoise.Document.ObservableBoolean(true)
 
-  -- boolean, whether to expand (sub-)columns when writing data
+  --- boolean, whether to expand (sub-)columns when writing data
   self.expand_columns = property(self.get_expand_columns,self.set_expand_columns)
   self.expand_columns_observable = renoise.Document.ObservableBoolean(true)
 
-  -- xStream.MUTE_MODE, controls how muting is done
+  --- xStream.MUTE_MODE, controls how muting is done
   self.mute_mode = property(self.get_mute_mode,self.set_mute_mode)
   self.mute_mode_observable = renoise.Document.ObservableNumber(xStream.MUTE_MODE.OFF)
 
-  -- bool, set to true to silence output
+  --- bool, set to true to silence output
   self.muted = property(self.get_muted,self.set_muted)
   self.muted_observable = renoise.Document.ObservableBoolean(false)
 
-  -- xStream.SCHEDULE, active scheduling mode
+  --- xStream.SCHEDULE, active scheduling mode
   self.scheduling = property(self.get_scheduling,self.set_scheduling)
   self.scheduling_observable = renoise.Document.ObservableNumber(xStream.SCHEDULE.BEAT)
 
-  -- int, read-only - set via schedule_item(), 0 means none 
+  --- int, read-only - set via schedule_item(), 0 means none 
   self.scheduled_favorite_index = property(self.get_scheduled_favorite_index)
   self.scheduled_favorite_index_observable  = renoise.Document.ObservableNumber(0)
 
-  -- int, read-only - set via schedule_item(), 0 means none
+  --- int, read-only - set via schedule_item(), 0 means none
   self.scheduled_model_index = property(self.get_scheduled_model_index)
   self.scheduled_model_index_observable = renoise.Document.ObservableNumber(0)
 
-  -- int, read-only - set via schedule_item()
+  --- int, read-only - set via schedule_item()
   self.scheduled_model = property(self.get_scheduled_model)
   self._scheduled_model = nil
 
-  -- xSongPos, tells us when/if a scheduled event will occur
+  --- xSongPos, tells us when/if a scheduled event will occur
   -- updated as external conditions change: for example, if we had 
   -- scheduled something to happen at the 'next pattern' and in 
   -- the meantime, pattern loop was enabled 
   self._scheduled_pos = nil
 
-  -- int, read-only - set via schedule_item()
+  --- int, read-only - set via schedule_item()
   self.scheduled_preset_index = property(self.get_scheduled_preset_index)
   self.scheduled_preset_index_observable = renoise.Document.ObservableNumber(0)
 
-  -- int, read-only - set via schedule_item()
+  --- int, read-only - set via schedule_item()
   self.scheduled_preset_bank_index = property(self.get_scheduled_preset_bank_index)
   self.scheduled_preset_bank_index_observable = renoise.Document.ObservableNumber(0)
 
-    -- int, the line at which output got muted
+  --- int, the line at which output got muted
   self.mute_pos = nil
 
-  -- int, 'undefined' line to insert after output got muted 
+  --- int, 'undefined' line to insert after output got muted 
   self.empty_xline = xLine({
     note_columns = {},
     effect_columns = {},
   })
 
-  -- bool, true when we should output during live streaming 
+  --- bool, true when we should output during live streaming 
   self.active = property(self.get_active,self.set_active)
   self.active_observable = renoise.Document.ObservableBoolean(false)
 
-  -- table<xStreamModel>, registered models 
+  --- table<xStreamModel>, registered models 
   self.models = {}
 
-  -- xStreamFavorites, favorited model+preset combinations
+  --- xStreamFavorites, favorited model+preset combinations
   self.favorites = xStreamFavorites(self)
 
-  -- table<int>, receive notification when models are added/removed
+  --- table<int>, receive notification when models are added/removed
   -- the table itself contains just the model indices
   self.models_observable = renoise.Document.ObservableNumberList()
 
-  -- int, the model index, 1-#models or 0 when none are available
+  --- int, the model index, 1-#models or 0 when none are available
   self.selected_model_index = property(self.get_selected_model_index,self.set_selected_model_index)
   self.selected_model_index_observable = renoise.Document.ObservableNumber(0)
 
-  -- xStreamModel, read-only - nil when none are available
+  --- xStreamModel, read-only - nil when none are available
   self.selected_model = nil
 
   -- initialize -----------------------
@@ -248,7 +264,21 @@ function xStream:__init()
     self:on_idle()
   end)
 
-  -- automatic saving of favorites
+  -- [app] handle midi input
+  self.midi_input.callback_fn = function(xmsg)
+    --print("self.midi_input.callback_fn",xmsg)
+    self:handle_midi_input(xmsg)
+  end
+
+  -- [app] MIDI port setup changed
+  renoise.Midi.devices_changed_observable():add_notifier(function()
+    self:available_midi_ports_changed()
+  end)
+
+  -- [app] initialize devices
+  self:initialize_midi_devices()
+
+  -- [app] automatic saving of favorites
   local favorites_notifier = function()    
     TRACE("*** xStream - favorites.favorites/grid_columns/grid_rows/modified_observable fired..")
     self.favorite_export_requested = true
@@ -1668,4 +1698,199 @@ function xStream:apply_to_range(from_line,to_line,travelled)
 
 end
 
+
+--------------------------------------------------------------------------------
+-- open access to midi port 
+
+function xStream:open_midi_input(port_name)
+  TRACE("xStream:open_midi_input(port_name)")
+
+  local input_devices = renoise.Midi.available_input_devices()
+  if table.find(input_devices, port_name) then
+
+    local port_available = (self.midi_inputs[port_name] ~= nil)
+    local port_open = port_available and self.midi_inputs[port_name].is_open
+    if port_available and port_open then
+      -- don't create/open if already active
+      return
+    elseif port_available and not port_open then
+      self.midi_inputs[port_name]:close()
+    end
+
+    self.midi_inputs[port_name] = renoise.Midi.create_input_device(port_name,
+      function(midi_msg)
+        --print("received midi",midi_msg)
+        if not xLib.is_song_available()
+          --or not self.active 
+        then 
+          return 
+        end
+        self:input_midi(midi_msg,port_name)
+      end,
+      function(sysex_msg)
+        --print("received sysex",sysex_msg)
+        if not xLib.is_song_available()
+          --or not self.active 
+        then 
+          return 
+        end
+        self:input_sysex(sysex_msg,port_name)
+      end
+    )
+  else
+    LOG("*** Could not create MIDI input device " .. port_name)
+  end
+
+end
+
+--------------------------------------------------------------------------------
+-- input raw midi messages here and pass them into xMidiInput
+-- @param msg (table), midi message
+
+function xStream:input_midi(midi_msg,port_name)
+  TRACE("xStream:input_midi(midi_msg,port_name)",midi_msg,port_name)
+
+  assert(type(midi_msg),"table","Expected midi_msg to be a table")
+  assert(type(port_name),"string","Expected port_name to be a string")
+
+  self.midi_input:input(midi_msg,port_name)
+
+end
+
+--------------------------------------------------------------------------------
+-- input raw sysex messages here (immediately matched)
+-- @param sysex_msg (table), sysex message
+-- @param port_name (string)
+
+function xStream:input_sysex(sysex_msg,port_name)
+
+  assert(type(sysex_msg),"table","Expected sysex_msg to be a table")
+  assert(type(port_name),"string","Expected port_name to be a string")
+
+  --print("sysex_msg",rprint(sysex_msg))
+
+  self:match_message(xMidiMessage{
+    message_type = xMidiMessage.TYPE.SYSEX,
+    values = sysex_msg,
+    port_name = port_name,
+  })
+
+end
+
+
+--------------------------------------------------------------------------------
+
+function xStream:close_midi_input(port_name)
+  TRACE("xStream:close_midi_input(port_name)")
+
+  local midi_input = self.midi_inputs[port_name] 
+  if (midi_input and midi_input.is_open) 
+  then
+    midi_input:close()
+  end
+
+  self.midi_inputs[port_name] = nil
+
+end
+
+--------------------------------------------------------------------------------
+
+function xStream:open_midi_output(port_name)
+  TRACE("xStream:open_midi_output(port_name)")
+
+  local output_devices = renoise.Midi.available_output_devices()
+
+  if table.find(output_devices, port_name) then
+    self.midi_outputs[port_name] = renoise.Midi.create_output_device(port_name)
+  else
+    LOG("*** Could not create MIDI output device " .. port_name)
+  end
+
+end
+
+
+--------------------------------------------------------------------------------
+
+function xStream:close_midi_output(port_name)
+  TRACE("xStream:close_midi_output(port_name)")
+
+  local midi_output = self.midi_outputs[port_name] 
+  if (midi_output and midi_output.is_open) 
+  then
+    midi_output:close()
+  end
+
+  self.midi_outputs[port_name] = nil
+
+end
+
+-------------------------------------------------------------------------------
+
+function xStream:handle_midi_input(xmsg)
+  TRACE("xStream:handle_midi_input(xmsg)")
+
+  --[[
+  if not self.active then
+    LOG("Stream not active - ignore MIDI input")
+    return
+  end
+  ]]
+
+  if not self.selected_model then
+    return
+  end
+
+  --print("got here - xmsg",xmsg)
+
+  -- first step: pass to voicemanager 
+  local rslt,idx = self.voicemgr:input_message(xmsg)
+  --print("rslt,idx",rslt,idx)
+  --print("voices...",rprint(self.voicemgr.voices))
+
+  -- find handler
+  local handler = self.selected_model:get_event_handler(xmsg.message_type)
+  --print("handler",handler)
+
+  if handler then
+    handler()
+  end
+
+
+end
+
+--------------------------------------------------------------------------------
+
+function xStream:available_midi_ports_changed()
+  TRACE("xStream:available_midi_ports_changed()")
+
+  self:initialize_midi_devices()
+
+  --[[
+  -- TODO
+  self.ui._build_rule_requested = true
+  local prefs_dialog = self.ui._prefs_dialog
+  if prefs_dialog.dialog and prefs_dialog.dialog.visible then
+    prefs_dialog:update_dialog()
+  end
+  ]]
+
+end
+
+--------------------------------------------------------------------------------
+-- open the MIDI inputs & outputs specified in preferences 
+
+function xStream:initialize_midi_devices()
+  TRACE("xStream:initialize_midi_devices()")
+
+  for k = 1, #self.prefs.midi_inputs do
+    local port_name = self.prefs.midi_inputs[k].value
+    self:open_midi_input(port_name)
+  end
+
+  for k = 1, #self.prefs.midi_outputs do
+    local port_name = self.prefs.midi_outputs[k].value
+    self:open_midi_output(port_name)
+  end
+
+end
 

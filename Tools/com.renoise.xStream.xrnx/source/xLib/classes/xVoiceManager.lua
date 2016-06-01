@@ -116,8 +116,16 @@ function xVoiceManager:input_message(xmsg)
 
   assert(type(xmsg)=="xMidiMessage","Expected xmsg to be xMidiMessage")
 
+  if (xmsg.message_type ~= xMidiMessage.TYPE.NOTE_ON) 
+    and (xmsg.message_type ~= xMidiMessage.TYPE.NOTE_OFF) 
+  then
+    LOG("xVoiceManager accepts note messages only ")
+    return
+  end
+
   -- check if the voice is already active
   local voice_idx = self:get_voice_index(xmsg)
+  print("voice_idx",voice_idx)
   if voice_idx then
     if (xmsg.message_type == xMidiMessage.TYPE.NOTE_OFF) then
       self:release(voice_idx)
