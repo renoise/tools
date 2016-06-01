@@ -32,6 +32,12 @@ function xVoiceManager:__init(...)
   self.voices = {}
   self.voices_observable = renoise.Document.ObservableNumberList()
 
+  --- TODO table<xMidiMessage>, voice messages (such as aftertouch)
+  self.voice_msgs = {}
+
+  --- TODO table<xMidiMessage>, channel messages (such as pitchbend)
+  self.channel_msgs = {}
+
   --- voice about to be released (0 = none)
   self.released_index = renoise.Document.ObservableNumber(0)
   self.released_observable = renoise.Document.ObservableBang()

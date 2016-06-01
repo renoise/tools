@@ -283,3 +283,67 @@ function xSandbox:test_syntax(str_fn)
 
 end
 
+-------------------------------------------------------------------------------
+-- automatically insert a return statement into a code snippet
+
+function xSandbox.insert_return(str_fn)
+  TRACE("xSandbox.insert_return(str_fn)",str_fn)
+  
+  local inserted = false
+  local t = xLib.split(str_fn,"\n")
+  for k,v in ipairs(t) do
+    if not inserted then
+      local ln = xLib.trim(v)
+      --print("ln",ln)
+
+      -- skip initial comment blocks and single minus 
+      -- minus can be added while --commenting out, live coding style
+      if (ln:sub(0,2) ~= "--") then
+        if (ln ~= "-") then
+          -- only insert if not already present
+          if (ln:sub(0,6) ~= "return") then
+            t[k] = ("return %s"):format(ln)
+            inserted = true
+          end
+        end
+      end
+
+    end
+  end
+
+  --print("t",rprint(t))
+
+  return table.concat(t,"\n")
+
+end
+
+-------------------------------------------------------------------------------
+-- "safer" renaming of a string token (for example, a variable name)
+-- @param old_name (string)
+-- @param new_name (string)
+
+function xSandbox.rename_string_token(str_fn,old_name,new_name,prefix)
+
+  local str_search = old_name
+  local str_replace = new_name
+  local str_patt = "(.?)("..str_search..")([^%w])"
+
+  if prefix then
+    str_search = prefix..str_search
+    str_replace = prefix..str_replace
+  end
+
+  str_fn = string.gsub(str_fn,str_patt,function(...)
+    local c1,c2,c3 = select(1,...),select(2,...),select(3,...)
+    --print("c1,c2,c3",c1,c2,c3)
+    local patt = "[%w_]" 
+    if string.match(c1,patt) or string.match(c3,patt) then
+      return c1..c2..c3
+    end
+    return c1..str_replace..c3
+  end)
+
+  return str_fn
+
+end
+

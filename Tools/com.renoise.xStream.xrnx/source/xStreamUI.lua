@@ -16,12 +16,13 @@ xStreamUI.COLOR_ENABLED = {0xD0,0xD8,0xD4}
 xStreamUI.COLOR_DISABLED = {0x00,0x00,0x00}
 xStreamUI.COLOR_BASE = {0x5A,0x5A,0x5A}
 
+-- disable along with model
 xStreamUI.MODEL_CONTROLS = {
   "xStreamApplyLocallyButton",
   "xStreamApplySelectionButton",
   "xStreamApplyTrackButton",
   "xStreamApplyTrackButton",
-  "xStreamCallbackCompile",
+  --"xStreamCallbackCompile",
   "xStreamFavoriteModel",
   "xStreamModelColorPreview",
   "xStreamModelRefresh",
@@ -33,6 +34,8 @@ xStreamUI.MODEL_CONTROLS = {
   "xStreamRevealLocation",
   "xStreamStartPlayButton",
   "xStreamToggleStreaming",
+  "xStreamCallbackType",
+  "xStreamCallbackCreate",
 }
 
 
@@ -88,8 +91,6 @@ xStreamUI.DEFAULT_PALETTE = {
 xStreamUI.WELCOME_MSG = [[
 
 
-
-
           ██╗  ██╗███████╗████████╗██████╗ ███████╗ █████╗ ███╗   ███╗
           ╚██╗██╔╝██╔════╝╚══██╔══╝██╔══██╗██╔════╝██╔══██╗████╗ ████║
            ╚███╔╝ ███████╗   ██║   ██████╔╝█████╗  ███████║██╔████╔██║
@@ -121,6 +122,7 @@ function xStreamUI:__init(xstream,vb,midi_prefix)
   self.options = xStreamUIOptions(xstream)
   self.favorites = xStreamUIFavorites(xstream,midi_prefix)
   self.create_model_dialog = xStreamUIModelCreate(self)
+  self.create_callback_dialog = xStreamUICallbackCreate(self)
 
   self.vb_content = nil
 
@@ -136,6 +138,7 @@ function xStreamUI:__init(xstream,vb,midi_prefix)
   self.update_model_requested = false
   self.build_args_requested = false
   self.update_args_requested = false
+  --self.update_editor_view_popup = false
 
   --self.favorite_views = {}
   self.model_views = {}
@@ -304,8 +307,8 @@ function xStreamUI:update_editor()
     for k,v in pairs(model.events) do
       table.insert(items,("events.%s"):format(k))
     end
-    --print("table.find(items,self.editor_view)",self.editor_view,table.find(items,self.editor_view),rprint(items))
-    vb_type_popup.value = table.find(items,self.editor_view)
+    print(">>> items...",rprint(items))
+    vb_type_popup.value = table.find(items,self.editor_view) or 1
   end
   vb_type_popup.items = items
 
@@ -557,7 +560,10 @@ function xStreamUI:build()
     TRACE("*** xStreamUI - selected_model_index_notifier fired...",self.xstream.selected_model_index)
     local model = self.xstream.selected_model
     if model then
-      --print(">>> #model.args.args",#model.args.args)
+      print(">>> #model.args.args",#model.args.args)
+      print(">>> model.data_observable",model.data_observable)
+      print(">>> model.events_observable",model.events_observable)
+
       xObservable.attach(model.name_observable,function()
         TRACE("*** xStreamUI - model.name_observable fired...")
         self.build_models_requested = true
@@ -584,6 +590,14 @@ function xStreamUI:build()
       xObservable.attach(model.args.modified_observable,function()
         TRACE("*** xStreamUI - args_modified_notifier fired...")
         self.xstream.selected_model.modified = true
+      end)
+      xObservable.attach(model.data_observable,function()
+        TRACE("*** xStreamUI - data_observable fired...")
+        self:update_editor()
+      end)
+      xObservable.attach(model.events_observable,function()
+        TRACE("*** xStreamUI - events_observable fired...")
+        self:update_editor()
       end)
       xObservable.attach(model.sandbox.callback_str_observable,function()
         TRACE("*** xStreamUI - sandbox.callback_notifier fired...")
@@ -852,6 +866,7 @@ function xStreamUI:build_callback_panel()
       width = xStreamUI.CALLBACK_EDITOR_W, 
       mode = "justify",
       vb:row{
+        --[[
         vb:row{
           tooltip = "Compile the callback as you type",
           id = "xStreamLiveCoding",
@@ -870,16 +885,6 @@ function xStreamUI:build_callback_panel()
           height = xStreamUI.BITMAP_BUTTON_H,
           notifier = function()
             self.user_modified_callback = true
-            --[[
-            local view = vb.views["xStreamCallbackEditor"]
-            local passed,err = model:compile(view.text)
-            if not passed then
-              renoise.app():show_warning(err)
-              self.xstream.callback_status_observable.value = err
-            else
-              self.xstream.callback_status_observable.value = ""
-            end
-            ]]
           end,
         },
         -- hackaround for clickable text
@@ -895,6 +900,7 @@ function xStreamUI:build_callback_panel()
             end
           end
         },
+        ]]
         vb:text{
           id = "xStreamCallbackStatus",
           text = "",
@@ -907,12 +913,45 @@ function xStreamUI:build_callback_panel()
         vb:popup{
           id = "xStreamCallbackType",
           --items = {"main","data","note_on","note_off"},
+          width = 120,
           notifier = function(idx)
             local vb_elm = vb.views["xStreamCallbackType"]
             self.editor_view = vb_elm.items[idx]
             self:set_editor_content()
           end,
         },
+        vb:button{
+          bitmap = "./source/icons/add.bmp",
+          tooltip = "Create a new callback",
+          id = "xStreamCallbackCreate",
+          width = xStreamUI.BITMAP_BUTTON_W,
+          height = xStreamUI.BITMAP_BUTTON_H,
+          notifier = function()
+            self.create_callback_dialog:show()
+          end,
+        },
+
+        vb:button{
+          bitmap = "./source/icons/rename.bmp",
+          tooltip = "Rename the selected callback",
+          id = "xStreamCallbackRename",
+          width = xStreamUI.BITMAP_BUTTON_W,
+          height = xStreamUI.BITMAP_BUTTON_H,
+          notifier = function()
+            self:rename_callback()
+          end,
+        },
+        vb:button{
+          bitmap = "./source/icons/delete_small.bmp",
+          tooltip = "Delete the selected callback",
+          id = "xStreamCallbackRemove",
+          width = xStreamUI.BITMAP_BUTTON_W,
+          height = xStreamUI.BITMAP_BUTTON_H,
+          notifier = function()
+            self:delete_callback()
+          end,
+        },
+
       },
     },
   }
@@ -927,30 +966,72 @@ function xStreamUI:set_editor_content()
 
   local text = nil
   local model = self.xstream.selected_model
+  local vb = self.vb
+
+  local vb_remove = vb.views["xStreamCallbackRemove"]
+  local vb_rename = vb.views["xStreamCallbackRename"]
+  --local vb_create = vb.views["xStreamCallbackCreate"]
+
+  local function set_button_state(state)
+    local ctrls = {vb_remove,vb_rename}
+    for k,v in ipairs(ctrls) do
+      v.active = state
+    end
+  end
+
 
   if not model then
     text = xStreamUI.WELCOME_MSG
   else
-    if (self.editor_view == "main") then
+    local cb_type,cb_key = xStreamUI.get_editor_type(self.editor_view)
+    if (cb_type == "main") then
       text = model.sandbox.callback_str 
-    elseif (self.editor_view:sub(0,5) == "data.") then
-      local key = self.editor_view:sub(6)
-      --print("data key",key)
-      text = model.data_initial[key]
-    elseif (self.editor_view:sub(0,7) == "events.") then
-      local key = self.editor_view:sub(8)
-      --print("event key",key)
-      text = model.events[key]
+      set_button_state(false)
+    elseif (cb_type == "data") then
+      text = model.data_initial[cb_key]
+      set_button_state(true)
+    elseif (cb_type == "events") then
+      text = model.events[cb_key]
+      set_button_state(true)
     end
   end
 
-  rprint(text)
+  --rprint(text)
 
   -- prevent notifier from firing
   local view = self.vb.views["xStreamCallbackEditor"]
   self.suppress_editor_notifier = true
-  view.text = text
+  view.text = text --xLib.trim(text).."\n"
   self.suppress_editor_notifier = false
+
+end
+
+--------------------------------------------------------------------------------
+-- apply editor text to the relevant callback/data/event
+
+function xStreamUI:apply_editor_content()
+  TRACE("xStreamUI:apply_editor_content()")
+
+  local model = self.xstream.selected_model
+  if model then
+    --print("*** xStreamUI:on_idle - callback modified")
+    local view = self.vb.views["xStreamCallbackEditor"]
+    local cb_type,cb_key = xStreamUI.get_editor_type(self.editor_view)
+    if (cb_type == "main") then
+      model.callback_str = view.text 
+    elseif (cb_type == "data") then
+      local def = table.rcopy(model.data_initial)
+      def[cb_key] = view.text
+      local str_status = model:parse_userdata(def)
+      self.xstream.callback_status_observable.value = str_status
+    elseif (cb_type == "events") then
+      local def = table.rcopy(model.events)
+      def[cb_key] = view.text
+      local str_status = model:parse_events(def)
+      self.xstream.callback_status_observable.value = str_status
+    end
+
+  end
 
 end
 
@@ -1089,6 +1170,45 @@ end
 
 --------------------------------------------------------------------------------
 
+function xStreamUI:delete_callback()
+
+  local choice = renoise.app():show_prompt("Delete callback",
+      "Are you sure you want to delete this callback",{"OK","Cancel"})
+  
+  if (choice == "OK") then
+    -- TODO
+  end
+
+end
+
+--------------------------------------------------------------------------------
+
+function xStreamUI:rename_callback(new_name)
+  TRACE("xStreamUI:rename_callback(new_name)",new_name)
+
+  local model = self.xstream.selected_model
+  if not model then
+    return
+  end
+
+  local cb_type,cb_key = xStreamUI.get_editor_type(self.editor_view)
+  if not new_name then
+    new_name = vPrompt.prompt_for_string(cb_key,
+      "Enter a new name","Rename callback")
+    if not new_name then
+      return true
+    end
+  end
+
+  model:rename_callback(cb_key,new_name,cb_type)
+
+  self.user_modified_callback = true
+
+
+end
+
+--------------------------------------------------------------------------------
+
 function xStreamUI:on_idle()
 
   -- scheduling: blinking stuff ---------------------------
@@ -1113,16 +1233,7 @@ function xStreamUI:on_idle()
   -- delayed update of callback string --------------------
 
   if self.user_modified_callback then
-    local model = self.xstream.selected_model
-    if model then
-      --print("*** xStreamUI:on_idle - callback modified")
-      local view = self.vb.views["xStreamCallbackEditor"]
-      if (self.editor_view == "main") then
-        model.callback_str = view.text 
-      elseif (self.editor_view == "data") then
-        model:parse_userdata(view.text)
-      end
-    end
+    self:apply_editor_content()
     self.user_modified_callback = false
   end
 
@@ -1189,6 +1300,35 @@ function xStreamUI:on_idle()
     self:update_color()
   end
 
+  --[[
+  if self.update_editor_view_popup then
+    self.update_editor_view_popup = false
+    local vb_popup = self.vb.views["xStreamCallbackType"]
+    local idx = table.find(vb_popup.items,self.editor_view
+  end
+  ]]
+
 
 end
+
+--------------------------------------------------------------------------------
+-- Static methods
+--------------------------------------------------------------------------------
+-- @return string, "main","data" or "events"
+-- @return string, callback name (not when first string is "main")
+
+function xStreamUI.get_editor_type(str_name)
+
+  if (str_name == "main") then
+    return xStreamModel.CB_TYPE.MAIN
+  elseif (str_name:sub(0,5) == "data.") then
+    local key = str_name:sub(6)
+    return xStreamModel.CB_TYPE.DATA,key
+  elseif (str_name:sub(0,7) == "events.") then
+    local key = str_name:sub(8)
+    return xStreamModel.CB_TYPE.EVENTS,key
+  end
+
+end
+
 

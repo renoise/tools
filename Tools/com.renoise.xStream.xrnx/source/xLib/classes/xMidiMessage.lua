@@ -142,14 +142,6 @@ function xMidiMessage:set_message_type(val)
   self._raw_cache = nil
 end
 
---[[
-function xMidiMessage:convert_type(val)
-  -- TODO same as 'set' but will reinterpret values 
-  -- complex stuff!! 
-end
-]]
-
-
 -------------------------------------------------------------------------------
 
 function xMidiMessage:get_channel()

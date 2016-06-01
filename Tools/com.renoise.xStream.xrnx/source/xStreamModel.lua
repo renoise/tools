@@ -13,6 +13,11 @@ class 'xStreamModel'
 
 xStreamModel.DEFAULT_NAME = "Untitled model"
 
+xStreamModel.CB_TYPE = {
+  MAIN = "main",
+  DATA = "data",
+  EVENTS = "events",
+}
 
 -------------------------------------------------------------------------------
 -- constructor
@@ -25,6 +30,63 @@ function xStreamModel:__init(xstream)
 
   -- xStream, required
   self.xstream = xstream
+
+  -- string, file location (if saved to, loaded from disk...)
+  self.file_path = nil
+
+  -- string 
+  self.name = property(self.get_name,self.set_name)
+  self.name_observable = renoise.Document.ObservableString("")
+
+  -- number, valid 8-bit RGB representation (0xRRGGBB)
+  self.color = property(self.get_color,self.set_color)
+  self.color_observable = renoise.Document.ObservableNumber(0)
+
+  -- string, text representation of the function 
+  self.callback_str = property(self.get_callback_str,self.set_callback_str)
+  self.callback_str_observable = renoise.Document.ObservableString("")
+
+  -- boolean, true when the model definition has been changed
+  self.modified = property(self.get_modified,self.set_modified)
+  self.modified_observable = renoise.Document.ObservableBoolean(false)
+
+  -- xStreamArgs, describing the available arguments
+  self.args = nil
+
+  -- table<xStreamPresets>, list of active preset banks
+  self.preset_banks = {}
+
+  -- ObservableNumberList, notifier fired when banks are added/removed 
+  self.preset_banks_observable = renoise.Document.ObservableNumberList()
+
+  -- int, index of selected preset bank (0 = none)
+  self.selected_preset_bank_index = property(self.get_preset_bank_index,self.set_preset_bank_index)
+  self.selected_preset_bank_index_observable = renoise.Document.ObservableNumber(0)
+
+  -- xStreamPresets, reference to selected preset bank (set via index)
+  self.selected_preset_bank = property(self.get_selected_preset_bank)
+
+  -- table<vararg>, variables, can be any basic type 
+  self.data = nil
+
+  -- ObservableBang, when data change somehow (remove, delete, rename...)
+  self.data_observable = renoise.Document.ObservableBang()
+
+  -- string, userdata definition - revert when stopping/exporting
+  self.data_initial = nil
+
+  -- table<xMidiMessage.TYPE=function>, event handlers
+  self.events = nil
+
+  -- ObservableBang, when events change somehow (remove, delete, rename...)
+  self.events_observable = renoise.Document.ObservableBang()
+
+  -- table<function>
+  self.events_compiled = nil
+
+  -- table<string> limit to these tokens during output
+  -- (derived from the code specified in the callback)
+  self.output_tokens = {}
 
   --- configure sandbox
   -- (add basic variables and a few utility methods)
@@ -199,57 +261,6 @@ function xStreamModel:__init(xstream)
 
   self.sandbox.properties = props_table
 
-  -- string, file location (if saved to, loaded from disk...)
-  self.file_path = nil
-
-  -- string 
-  self.name = property(self.get_name,self.set_name)
-  self.name_observable = renoise.Document.ObservableString("")
-
-  -- number, valid 8-bit RGB representation (0xRRGGBB)
-  self.color = property(self.get_color,self.set_color)
-  self.color_observable = renoise.Document.ObservableNumber(0)
-
-  -- string, text representation of the function 
-  self.callback_str = property(self.get_callback_str,self.set_callback_str)
-  self.callback_str_observable = renoise.Document.ObservableString("")
-
-  -- boolean, true when the model definition has been changed
-  self.modified = property(self.get_modified,self.set_modified)
-  self.modified_observable = renoise.Document.ObservableBoolean(false)
-
-  -- xStreamArgs, describing the available arguments
-  self.args = nil
-
-  -- table<xStreamPresets>, list of active preset banks
-  self.preset_banks = {}
-
-  -- ObservableNumberList, notifier fired when banks are added/removed 
-  self.preset_banks_observable = renoise.Document.ObservableNumberList()
-
-  -- int, index of selected preset bank (0 = none)
-  self.selected_preset_bank_index = property(self.get_preset_bank_index,self.set_preset_bank_index)
-  self.selected_preset_bank_index_observable = renoise.Document.ObservableNumber(0)
-
-  -- xStreamPresets, reference to selected preset bank (set via index)
-  self.selected_preset_bank = property(self.get_selected_preset_bank)
-
-  -- table<vararg>, variables, can be any basic type 
-  self.data = nil
-
-  -- string, userdata definition - revert when stopping/exporting
-  self.data_initial = nil
-
-  -- table<xMidiMessage.TYPE=function>, event handlers
-  self.events = nil
-
-  -- table<function>
-  self.events_compiled = nil
-
-  -- table<string> limit to these tokens during output
-  -- (derived from the code specified in the callback)
-  self.output_tokens = {}
-
   -- initialize -----------------------
 
   self.sandbox.modified_observable:add_notifier(function()
@@ -303,10 +314,6 @@ function xStreamModel:set_callback_str(str)
   local modified = (str ~= self.sandbox.callback_str) 
   self.modified = modified and true or self.modified
   --print("self.modified",self.modified,self.name)
-
-  -- inject events
-  self:create_events()
-  --str =  + str
 
   -- live syntax check
   local passed,err = self.sandbox:test_syntax(str)
@@ -380,6 +387,7 @@ end
 function xStreamModel:reset()
 
   self:parse_userdata(self.data_initial)
+  self.modified = false
 
 end
 
@@ -572,12 +580,16 @@ function xStreamModel:parse_presets(preset_def)
 end
 
 -------------------------------------------------------------------------------
+-- @param data_def (table)
+-- @return string, containing potential error message 
 
 function xStreamModel:parse_userdata(data_def)
-  TRACE("xStreamModel:parse_userdata(data_def)",data_def)
+  print("xStreamModel:parse_userdata(data_def)",data_def)
   
   self.data = {}
   self.data_initial = {}
+
+  local str_status = ""
 
   if (type(data_def)=="table") then
     for k,v in pairs(data_def) do
@@ -587,7 +599,8 @@ function xStreamModel:parse_userdata(data_def)
       if (type(v)=="table") then
         self.data[k] = v -- prior to 1.48
       elseif (type(v)=="string") then
-        local str_fn = ("return %s"):format(v)
+        local str_fn = xSandbox.insert_return(v)
+        --print(">>> str_fn",str_fn)
         local passed,err = self.sandbox:test_syntax(str_fn)
         --print("userdata - k,str_fn,passed,err",k,str_fn,passed,err)
         if passed then
@@ -597,33 +610,131 @@ function xStreamModel:parse_userdata(data_def)
             setfenv(self.data[k], self.sandbox.env)
           end
         else
-          LOG("*** Failed to include userdata (bad syntax)",k)
+          LOG("*** Failed to include userdata (bad syntax)",k,err)
+          str_status = str_status..err
         end
       end
 
     end
   end
 
-  --print(">>> parse_userdata - self.data",rprint(self.data))
-  --print(">>> parse_userdata - self.data_initial",rprint(self.data_initial))
+  self.modified = true
+
+  print(">>> parse_userdata - self.data",rprint(self.data))
+  print(">>> parse_userdata - self.data_initial",rprint(self.data_initial))
+
+  return str_status
 
 end
 
+-------------------------------------------------------------------------------
+-- rename event (update main callback)
+-- @param old_name (string)
+-- @param new_name (string)
+-- @param cb_type (xStreamModel.CB_TYPE)
+
+function xStreamModel:rename_callback(old_name,new_name,cb_type)
+
+  local str_fn = self.callback_str
+  self.callback_str = xSandbox.rename_string_token(str_fn,old_name,new_name,cb_type..".")
+  self.modified = true
+
+  if (cb_type == xStreamModel.CB_TYPE.DATA) then
+    self.data[new_name] = self.data[old_name]
+    self.data[old_name] = nil
+    self.data_initial[new_name] = self.data_initial[old_name]
+    self.data_initial[old_name] = nil
+    self.data_observable:bang()
+    print("self.data...",rprint(self.data))
+  elseif (cb_type == xStreamModel.CB_TYPE.EVENTS) then
+    self.events[new_name] = self.events[old_name]
+    self.events[old_name] = nil
+    self.events_compiled[new_name] = self.events_compiled[old_name]
+    self.events_compiled[old_name] = nil
+    self.events_observable:bang()
+  else
+    error("Unexpected callback type")
+  end
+
+end
 
 -------------------------------------------------------------------------------
 
-function xStreamModel:parse_events(event_def)
-  TRACE("xStreamModel:parse_events(def)")
+function xStreamModel:add_userdata(str_name,str_fn)
+  TRACE("xStreamModel:add_userdata(str_name)",str_name,str_fn)
 
-  self.events = {}
+  if not str_fn then
+    str_fn = [[-- provide a return value of some kind
+return {"some_value"}
+]]
+  end
+
+  self.data[str_name] = str_fn
+  self.data_initial[str_name] = str_fn
+
+  self.modified = true
+  self.data_observable:bang()
+
+end
+
+-------------------------------------------------------------------------------
+
+function xStreamModel:add_event(str_name,str_fn)
+  TRACE("xStreamModel:add_event(str_name,str_fn)",str_name,str_fn)
+
+  if not str_fn then
+    str_fn = [[-- respond to external input
+-- @param xmsg, the xMidiMessage we have received
+]]
+  end
+
+  self.events[str_name] = str_fn
+  self.events_compiled[str_name] = nil
+
+  self:parse_events()
+
+  self.modified = true
+  self.events_observable:bang()
+
+end
+
+-------------------------------------------------------------------------------
+-- parse and refresh event handlers
+-- TODO return string, like parse_userdata
+-- @param event_def (table)
+
+function xStreamModel:parse_events(event_def)
+  print("xStreamModel:parse_events(def)")
+
+  self.events_compiled = {}
+  local str_status = ""
 
   if (type(event_def)=="table") and not table.is_empty(event_def) then
+    self.events = {}
     for k,v in pairs(event_def) do
       self.events[k] = v
     end
   end
 
-  --print(">>> parse_events - self.events",rprint(self.events))
+  if not (type(self.events)=="table") then
+    return
+  end
+
+  -- maintain event handlers (broken ones are skipped)
+  for k,v in pairs(self.events) do
+    local passed,err = self.sandbox:test_syntax(v)
+    if passed then
+      self.events_compiled[k] = loadstring(v)
+      setfenv(self.events_compiled[k], self.sandbox.env)
+    else
+      LOG("*** Failed to include event (bad syntax)",k,err)
+      str_status = str_status .. err
+    end
+  end
+
+  print(">>> parse_events - self.events",rprint(self.events))
+
+  return str_status
 
 end
 
@@ -658,30 +769,6 @@ function xStreamModel:extract_tokens(str_fn)
 
 end
 ]]
--------------------------------------------------------------------------------
--- rename an argument within the callback - 
--- @param old_name (string)
--- @param new_name (string)
-
-function xStreamModel:rename_argument(old_name,new_name)
-  TRACE("xStreamModel:rename_argument(old_name,new_name)",old_name,new_name)
-
-  local str_search = "args."..old_name
-  local str_replace = "args."..new_name
-  local str_patt = "(.?)("..str_search..")([^%w])"
-
-  self.callback_str = string.gsub(self.callback_str,str_patt,function(...)
-    local c1,c2,c3 = select(1,...),select(2,...),select(3,...)
-    --print("c1,c2,c3",c1,c2,c3)
-    local patt = "[%w_]" 
-    if string.match(c1,patt) or string.match(c3,patt) then
-      return c1..c2..c3
-    end
-    return c1..str_replace..c3
-  end)
-
-end
-
 -------------------------------------------------------------------------------
 -- return the model (arguments, callback) as valid lua string
 
@@ -1135,6 +1222,57 @@ function xStreamModel.get_suggested_name(str_name)
 end
 
 -------------------------------------------------------------------------------
+-- produce a valid, unique data/event key (name)
+-- @param str_name (string), preferred name
+-- @param type (string, "events" or "data")
+-- @return string, a unique name for the callback
+
+function xStreamModel:get_suggested_callback_name(str_name,cb_type)
+  TRACE("xStreamModel:get_suggested_callback_name(str_name,cb_type)",str_name,cb_type)
+
+  local passed,err = xReflection.is_valid_identifier(str_name)
+  if not passed then
+    -- TODO strip illegal characters
+    return false, err
+  end
+
+  local key_exists = function(key,cb_type)
+    if (cb_type==xStreamModel.CB_TYPE.DATA) then
+      --print("key,type(self.data[key]",key,type(self.data[key]))
+      return (type(self.data[key]) ~= "nil")
+    elseif (cb_type==xStreamModel.CB_TYPE.EVENTS) then
+      return (type(self.events[key]) ~= "nil")
+    else
+      error("Unexpected callback type")
+    end
+  end
+
+  local count = xLib.detect_counter_in_str(str_name)
+  --print("count",count)
+
+  local rslt = str_name
+  
+  if (cb_type==xStreamModel.CB_TYPE.DATA) then
+    -- keep increasing count 
+    while (key_exists(rslt,cb_type)) do
+      rslt = ("%s_%d"):format(str_name,count)
+      count = count + 1
+    end
+  elseif (cb_type==xStreamModel.CB_TYPE.EVENTS) then
+    -- fail when name exists
+    if (key_exists(rslt,cb_type)) then
+      return false, "This event is already defined"
+    end
+  else
+    error("Unexpected callback type")
+  end
+
+  return rslt
+
+end
+
+
+-------------------------------------------------------------------------------
 -- return the path to the internal models 
 
 function xStreamModel.get_normalized_file_path(str_name)
@@ -1167,43 +1305,6 @@ function xStreamModel.looks_like_definition(str_def)
   else
     return true
   end
-
-end
-
--------------------------------------------------------------------------------
--- maintain working set of event handlers 
-
-function xStreamModel:create_events()
-  TRACE("xStreamModel:create_events()")
-
-  self.events_compiled = {}
-
-  if not (type(self.events)=="table") then
-    return
-  end
-
-  for k,v in pairs(self.events) do
-
-    --print("inject_events - k,v",k,v)
-
-    -- test syntax before adding
-    local passed,err = self.sandbox:test_syntax(v)
-    --self.xstream.callback_status_observable.value = passed and "" or err
-    --print("inject_events - passed,err",passed,err)
-
-    if passed then
-
-      self.events_compiled[k] = loadstring(v)
-      --print("self.events_compiled[k]",self.events_compiled[k])
-      --print("self.sandbox.env",self.sandbox.env)
-      setfenv(self.events_compiled[k], self.sandbox.env)
-    end
-
-
-  end
-
-  --print(">>> self.events",rprint(self.events))
-  --print(">>> self.events_compiled",rprint(self.events_compiled))
 
 end
 

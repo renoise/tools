@@ -198,6 +198,19 @@ function xLib.soft_wrap(str)
 end
 
 -------------------------------------------------------------------------------
+-- detect counter in string (used for incrementing, unique names)
+
+function xLib.detect_counter_in_str(str)
+  local count = string.match(str,"%((%d)%)$")
+  if count then 
+    str = string.gsub(str,"%s*%(%d%)$","")
+  else
+    count = 1
+  end
+  return count
+end
+
+-------------------------------------------------------------------------------
 -- find number of hex digits needed to represent a number (e.g. 255 = 2)
 -- @param val (int)
 -- @return int
