@@ -118,9 +118,9 @@ function xStreamUI:__init(xstream,vb,midi_prefix)
   self.presets = xStreamUIPresetPanel(xstream,vb,self)
   self.args  = xStreamUIArgsPanel(xstream,midi_prefix,vb,self)
   self.args_editor = xStreamUIArgsEditor(xstream,vb)
-
   self.options = xStreamUIOptions(xstream)
   self.favorites = xStreamUIFavorites(xstream,midi_prefix)
+  self.create_model_dialog = xStreamUIModelCreate(self)
 
   self.vb_content = nil
 
@@ -164,13 +164,13 @@ function xStreamUI:__init(xstream,vb,midi_prefix)
   self.user_modified_callback = false
 
   -- renoise.Dialog, wizard-style dialog for creating models
-  self.model_dialog = nil
+  --self.model_dialog = nil
 
   -- renoise.View
-  self.model_dialog_content = nil
+  --self.model_dialog_content = nil
 
-  self.model_dialog_page = nil
-  self.model_dialog_option = nil
+  --self.model_dialog_page = nil
+  --self.model_dialog_option = nil
 
   self.base_color_highlight = vColor.adjust_brightness(xStreamUI.COLOR_BASE,xStreamUI.HIGHLIGHT_AMOUNT)
 
@@ -193,290 +193,6 @@ function xStreamUI:update()
   self.build_presets_requested = true
 
   self:update_color()
-
-end
-
---------------------------------------------------------------------------------
--- create new model - create/re-use existing dialog 
-
-function xStreamUI:create_model()
-
-  self.model_dialog_page = 1
-  self.model_dialog_option = 1
-
-  if not self.model_dialog or not self.model_dialog.visible then
-    if not self.model_dialog_content then
-      self.model_dialog_content = self:create_model_dialog()
-    end
-    self:update_model_dialog()
-    self.model_dialog = renoise.app():show_custom_dialog(
-        "Create model", self.model_dialog_content)
-  else
-    self.model_dialog:show()
-  end
-
-end
-
--------------------------------------------------------------------------------
--- @return renoise.Views.Rack
-
-function xStreamUI:create_model_dialog()
-
-  local vb = self.vb
-
-  local PAGE_W = 250
-  local PAGE_H = 70
-  local TEXT_H = 150
-
-  local add_save_and_close = function(model)
-    self.xstream:add_model(model)
-    local got_saved,err = model:save()
-    if not got_saved and err then
-      renoise.app():show_warning(err)
-    end
-    self.xstream.selected_model_index = #self.xstream.models
-    self.model_dialog:close()
-    self.model_dialog = nil
-  end
-
-  local validate_model_name = function(str_name)
-    local str_name_validate = xStreamModel.get_suggested_name(str_name)
-    --print("str_name,str_name_validate",str_name,str_name_validate)
-    return (str_name == str_name_validate) 
-  end
-
-  local navigate_to_model = function()
-    local file_path = renoise.app():prompt_for_filename_to_read({"*.lua"},"Open model definition")
-    --print("file_path",file_path)
-    if (file_path ~= "") then
-      -- attempt to load model
-      local model = xStreamModel(self.xstream)
-      local passed,err = model:load_definition(file_path)
-      --print("passed,err",passed,err)
-      if not passed and err then
-        renoise.app():show_warning(err)
-        return
-      end
-      model.file_path = xStreamModel.get_normalized_file_path(model.name)
-      if not validate_model_name(model.name) then
-        renoise.app():show_warning("Error: a model already exists with this name")
-        return
-      end
-      add_save_and_close(model)
-    end
-  end
-
-  local show_prev_page = function()
-    if (self.model_dialog_page > 1) then
-      self.model_dialog_page = self.model_dialog_page - 1
-    end
-    self:update_model_dialog()
-  end
-
-  local show_next_page = function()
-
-    if (self.model_dialog_page == 1) then
-
-      if (self.model_dialog_option == 2) then -- paste string (clear)
-        local view_definition = vb.views["xStreamNewModelDialogDefinition"]
-        view_definition.text = ""
-      elseif (self.model_dialog_option == 3) then -- locate file (...)
-        navigate_to_model()
-      end
-
-    elseif (self.model_dialog_page == 2) then
-
-      if (self.model_dialog_option == 1) then -- create from scratch
-        -- ensure unique name
-        local view_name = vb.views["xStreamNewModelDialogName"]
-        if not validate_model_name(view_name.text) then
-          renoise.app():show_warning("Error: a model already exists with this name")
-          return
-        else
-          -- we are done - 
-          local passed,err = self.xstream:create_model(view_name.text)
-          if not passed and err then
-            renoise.app():show_warning(err)
-            return
-          end 
-          self.model_dialog:close()
-          self.model_dialog = nil
-        end
-      elseif (self.model_dialog_option == 2) then -- paste string
-        -- check for syntax errors
-        local view_textfield = vb.views["xStreamNewModelDialogDefinition"]
-        local model = xStreamModel(self.xstream)
-        local passed,err = model:load_from_string(view_textfield.text)
-        if not passed and err then
-          renoise.app():show_warning(err)
-          model = nil
-          return
-        else
-          add_save_and_close(model)
-        end
-      elseif (self.model_dialog_option == 3) then -- locate file
-        self.model_dialog:close()
-        self.model_dialog = nil
-      end
-
-    end
-
-    self.model_dialog_page = self.model_dialog_page + 1
-    self:update_model_dialog()
-  end
-
-  local content = vb:column{
-    vb:space{
-      width = PAGE_W,
-    },
-    vb:row{
-      margin = 6,
-      vb:row{
-        vb:space{
-          height = PAGE_H,
-        },
-        vb:column{
-          id = "xStreamNewModelDialogPage1",
-          vb:text{
-            text = "Please choose an option",
-          },
-          vb:chooser{
-            id = "xStreamNewModelDialogOptionChooser",
-            value = self.model_dialog_option,
-            items = {
-              "Create from scratch (empty)",
-              "Paste from clipboard",
-              "Locate a file on disk",
-            },
-            notifier = function(idx)
-              self.model_dialog_option = idx
-            end
-          },
-        },
-        vb:column{
-          visible = false,
-          id = "xStreamNewModelDialogPage2",
-          vb:column{
-            id = "xStreamNewModelDialogPage2Option1",
-            vb:text{
-              text = "Please specify a (unique) name for the model",
-            },
-            vb:textfield{
-              id = "xStreamNewModelDialogName",
-              text = "",
-              width = PAGE_W-20,
-            },
-          },
-          vb:column{
-            id = "xStreamNewModelDialogPage2Option2",
-            vb:text{
-              text = "Please paste the lua string here",
-            },
-            vb:multiline_textfield{
-              text = "",
-              font = "mono",
-              id = "xStreamNewModelDialogDefinition",
-              height = TEXT_H,
-              width = xStreamUI.CALLBACK_EDITOR_W,
-            },
-          },
-          vb:column{
-            id = "xStreamNewModelDialogPage2Option3",
-            vb:row{
-              vb:text{
-                text = "Please choose a file",
-              },
-              vb:button{
-                text = "Browse",
-                notifier = function()
-                  navigate_to_model()
-                end
-              }
-            },
-
-          },
-        }
-      },
-    }
-  }
-  local navigation = vb:row{
-    margin = 6,
-    vb:button{
-      id = "xStreamNewModelDialogPrevButton",
-      text = "Previous",
-      active = false,
-      notifier = function()
-        show_prev_page()
-      end
-    },
-    vb:button{
-      id = "xStreamNewModelDialogNextButton",
-      text = "Next",
-      notifier = function()
-        show_next_page()
-      end
-    },
-    vb:button{
-      id = "xStreamNewModelDialogCancelButton",
-      text = "Cancel",
-      notifier = function()
-        self.model_dialog:close()
-        self.model_dialog = nil
-      end
-    },
-  }
-
-  return vb:column{
-    content,
-    navigation,
-  }
-
-end
-
--------------------------------------------------------------------------------
-
-function xStreamUI:update_model_dialog()
-
-  local vb = self.vb
-
-  -- update page
-
-  local view_page_1       = vb.views["xStreamNewModelDialogPage1"]
-  local view_page_2       = vb.views["xStreamNewModelDialogPage2"]
-  local view_page_2_opt1  = vb.views["xStreamNewModelDialogPage2Option1"]
-  local view_page_2_opt2  = vb.views["xStreamNewModelDialogPage2Option2"]
-  local view_page_2_opt3  = vb.views["xStreamNewModelDialogPage2Option3"]
-  local view_opt_chooser  = vb.views["xStreamNewModelDialogOptionChooser"]
-
-  view_page_1.visible = false
-  view_page_2.visible = false
-  view_page_2_opt1.visible = false
-  view_page_2_opt2.visible = false
-  view_page_2_opt3.visible = false
-
-  if (self.model_dialog_page == 1) then
-    view_page_1.visible = true
-    view_opt_chooser.value = self.model_dialog_option
-  elseif (self.model_dialog_page == 2) then
-    view_page_2.visible = true
-    if (self.model_dialog_option == 1) then
-      view_page_2_opt1.visible = true
-      local str_name = xStreamModel.get_suggested_name(xStreamModel.DEFAULT_NAME)       
-      local view_name = vb.views["xStreamNewModelDialogName"]
-      view_name.text = str_name
-    elseif (self.model_dialog_option == 2) then
-      view_page_2_opt2.visible = true
-    elseif (self.model_dialog_option == 3) then
-      view_page_2_opt3.visible = true
-    end
-  end
-
-  -- update navigation
-
-  local view_prev_button  = vb.views["xStreamNewModelDialogPrevButton"]
-  local view_next_button  = vb.views["xStreamNewModelDialogNextButton"]
-  view_prev_button.active = (self.model_dialog_page > 1) and true or false
-  view_next_button.text = (self.model_dialog_page == 2) and "Done" or "Next"
 
 end
 
@@ -570,7 +286,7 @@ end
 --------------------------------------------------------------------------------
 
 function xStreamUI:update_editor()
-  print("xStreamUI:update_editor()")
+  TRACE("xStreamUI:update_editor()")
 
   local view_lines = self.vb.views["xStreamModelEditorNumLines"]
   local view = self.vb.views["xStreamCallbackEditor"]
@@ -1001,10 +717,13 @@ function xStreamUI:build_callback_panel()
           width = xStreamUI.BITMAP_BUTTON_W,
           height = xStreamUI.BITMAP_BUTTON_H,
           notifier = function()
+            self.create_model_dialog:show()
+            --[[
             local passed,err = self:create_model()
             if not passed and err then
               renoise.app():show_warning(err)
             end 
+            ]]
           end,
         },
         vb:button{
@@ -1103,7 +822,7 @@ function xStreamUI:build_callback_panel()
       id = "xStreamCallbackEditor",
       notifier = function(str)
         if self.xstream.selected_model then
-          print("*** changed callback via textfield...",self.xstream.selected_model.name)
+          --print("*** changed callback via textfield...",self.xstream.selected_model.name)
           if self.xstream.prefs.live_coding.value then
             self.user_modified_callback = true
           end
@@ -1331,7 +1050,7 @@ function xStreamUI:on_idle()
   if self.user_modified_callback then
     local model = self.xstream.selected_model
     if model then
-      print("*** xStreamUI:on_idle - callback modified")
+      --print("*** xStreamUI:on_idle - callback modified")
       local view = self.vb.views["xStreamCallbackEditor"]
       model.callback_str = view.text 
     end
