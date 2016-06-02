@@ -268,7 +268,7 @@ end
 -- @return string, when failed
 
 function xSandbox:test_syntax(str_fn)
-  --TRACE("xSandbox:test_syntax(str_fn)",#str_fn)
+  print("xSandbox:test_syntax(str_fn)",str_fn)
 
   local function untrusted_fn()
     assert(loadstring(str_fn))
@@ -289,10 +289,10 @@ end
 function xSandbox.insert_return(str_fn)
   TRACE("xSandbox.insert_return(str_fn)",str_fn)
   
-  local inserted = false
+  local present = false
   local t = xLib.split(str_fn,"\n")
   for k,v in ipairs(t) do
-    if not inserted then
+    if not present then
       local ln = xLib.trim(v)
       --print("ln",ln)
 
@@ -300,10 +300,12 @@ function xSandbox.insert_return(str_fn)
       -- minus can be added while --commenting out, live coding style
       if (ln:sub(0,2) ~= "--") then
         if (ln ~= "-") then
+          present = true
           -- only insert if not already present
           if (ln:sub(0,6) ~= "return") then
             t[k] = ("return %s"):format(ln)
-            inserted = true
+          else
+            print("*** skip return statement, already present")
           end
         end
       end

@@ -67,7 +67,7 @@ function xStreamModel:__init(xstream)
   self.selected_preset_bank = property(self.get_selected_preset_bank)
 
   -- table<vararg>, variables, can be any basic type 
-  self.data = nil
+  self.data = {}
 
   -- ObservableBang, when data change somehow (remove, delete, rename...)
   self.data_observable = renoise.Document.ObservableBang()
@@ -76,7 +76,7 @@ function xStreamModel:__init(xstream)
   self.data_initial = nil
 
   -- table<xMidiMessage.TYPE=function>, event handlers
-  self.events = nil
+  self.events = {}
 
   -- ObservableBang, when events change somehow (remove, delete, rename...)
   self.events_observable = renoise.Document.ObservableBang()
@@ -605,11 +605,15 @@ function xStreamModel:parse_userdata(data_def)
         --print("userdata - k,str_fn,passed,err",k,str_fn,passed,err)
         if passed then
           local fn = loadstring(str_fn)
-          self.data[k] = fn()
-          if (type(self.data[k])=="function") then
-            setfenv(self.data[k], self.sandbox.env)
+          local passed,err = pcall(fn)
+          if passed then
+            self.data[k] = fn()
+            if (type(self.data[k])=="function") then
+              setfenv(self.data[k], self.sandbox.env)
+            end
           end
-        else
+        end
+        if not passed then
           LOG("*** Failed to include userdata (bad syntax)",k,err)
           str_status = str_status..err
         end
@@ -651,6 +655,30 @@ function xStreamModel:rename_callback(old_name,new_name,cb_type)
     self.events[old_name] = nil
     self.events_compiled[new_name] = self.events_compiled[old_name]
     self.events_compiled[old_name] = nil
+    self.events_observable:bang()
+  else
+    error("Unexpected callback type")
+  end
+
+end
+
+-------------------------------------------------------------------------------
+-- rename event (update main callback)
+-- @param cb_type (xStreamModel.CB_TYPE)
+-- @param cb_key (string)
+
+function xStreamModel:remove_callback(cb_type,cb_key)
+  print("xStreamModel:remove_callback(cb_type,cb_key)",cb_type,cb_key)
+
+  self.modified = true
+
+  if (cb_type == xStreamModel.CB_TYPE.DATA) then
+    self.data[cb_key] = nil
+    self.data_initial[cb_key] = nil
+    self.data_observable:bang()
+  elseif (cb_type == xStreamModel.CB_TYPE.EVENTS) then
+    self.events[cb_key] = nil
+    self.events_compiled[cb_key] = nil
     self.events_observable:bang()
   else
     error("Unexpected callback type")
@@ -731,6 +759,8 @@ function xStreamModel:parse_events(event_def)
       str_status = str_status .. err
     end
   end
+
+  self.modified = true
 
   print(">>> parse_events - self.events",rprint(self.events))
 

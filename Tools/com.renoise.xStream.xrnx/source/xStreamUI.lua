@@ -36,6 +36,8 @@ xStreamUI.MODEL_CONTROLS = {
   "xStreamToggleStreaming",
   "xStreamCallbackType",
   "xStreamCallbackCreate",
+  "xStreamCallbackRename",
+  "xStreamCallbackRemove",
 }
 
 
@@ -138,7 +140,7 @@ function xStreamUI:__init(xstream,vb,midi_prefix)
   self.update_model_requested = false
   self.build_args_requested = false
   self.update_args_requested = false
-  --self.update_editor_view_popup = false
+  self.update_editor_requested = false
 
   --self.favorite_views = {}
   self.model_views = {}
@@ -593,17 +595,20 @@ function xStreamUI:build()
       end)
       xObservable.attach(model.data_observable,function()
         TRACE("*** xStreamUI - data_observable fired...")
-        self:update_editor()
+        --self:update_editor()
+        self.update_editor_requested = true
       end)
       xObservable.attach(model.events_observable,function()
         TRACE("*** xStreamUI - events_observable fired...")
-        self:update_editor()
+        --self:update_editor()
+        self.update_editor_requested = true
       end)
       xObservable.attach(model.sandbox.callback_str_observable,function()
         TRACE("*** xStreamUI - sandbox.callback_notifier fired...")
         if not self.user_modified_callback then
           --print("... got here")
-          self:update_editor()
+          --self:update_editor()
+          self.update_editor_requested = true
         end
       end)
       xObservable.attach(model.preset_banks_observable,preset_bank_notifier)
@@ -616,7 +621,8 @@ function xStreamUI:build()
     end
     self.update_model_requested = true
     self.editor_view = "main"
-    self:update_editor()
+    --self:update_editor()
+    self.update_editor_requested = true
 
     if vPrompt.color_prompt.dialog and vPrompt.color_prompt.dialog.visible then
       vPrompt.prompt_for_color(color_callback,model.color)
@@ -948,7 +954,7 @@ function xStreamUI:build_callback_panel()
           width = xStreamUI.BITMAP_BUTTON_W,
           height = xStreamUI.BITMAP_BUTTON_H,
           notifier = function()
-            self:delete_callback()
+            self:remove_callback()
           end,
         },
 
@@ -1023,6 +1029,7 @@ function xStreamUI:apply_editor_content()
       local def = table.rcopy(model.data_initial)
       def[cb_key] = view.text
       local str_status = model:parse_userdata(def)
+      print("str_status",str_status)
       self.xstream.callback_status_observable.value = str_status
     elseif (cb_type == "events") then
       local def = table.rcopy(model.events)
@@ -1132,7 +1139,8 @@ end
 
 function xStreamUI:set_editor_visible_lines(val)
   self.editor_visible_lines_observable.value = val
-  self:update_editor()
+  --self:update_editor()
+  self.update_editor_requested = true
 end
 
 --------------------------------------------------------------------------------
@@ -1204,6 +1212,29 @@ function xStreamUI:rename_callback(new_name)
 
   self.user_modified_callback = true
 
+
+end
+
+--------------------------------------------------------------------------------
+
+function xStreamUI:remove_callback()
+  print("xStreamUI:remove_callback()")
+
+  local model = self.xstream.selected_model
+  if not model then
+    return
+  end
+
+  local choice = renoise.app():show_prompt("Remove callback",
+      "Are you sure you want to remove this callback?",
+    {"OK","Cancel"})
+  
+  if (choice == "OK") then
+    local cb_type,cb_key = xStreamUI.get_editor_type(self.editor_view)
+    model:remove_callback(cb_type,cb_key)
+    --self:update_editor()
+    self.update_editor_requested = true
+  end
 
 end
 
@@ -1300,13 +1331,10 @@ function xStreamUI:on_idle()
     self:update_color()
   end
 
-  --[[
-  if self.update_editor_view_popup then
-    self.update_editor_view_popup = false
-    local vb_popup = self.vb.views["xStreamCallbackType"]
-    local idx = table.find(vb_popup.items,self.editor_view
+  if self.update_editor_requested then
+    self.update_editor_requested = false
+    self:update_editor()
   end
-  ]]
 
 
 end
