@@ -268,7 +268,7 @@ end
 -- @return string, when failed
 
 function xSandbox:test_syntax(str_fn)
-  print("xSandbox:test_syntax(str_fn)",str_fn)
+  TRACE("xSandbox:test_syntax(str_fn)",str_fn)
 
   local function untrusted_fn()
     assert(loadstring(str_fn))
@@ -285,6 +285,7 @@ end
 
 -------------------------------------------------------------------------------
 -- automatically insert a return statement into a code snippet
+-- step 1: detect if return statement is present
 
 function xSandbox.insert_return(str_fn)
   TRACE("xSandbox.insert_return(str_fn)",str_fn)
@@ -295,17 +296,16 @@ function xSandbox.insert_return(str_fn)
     if not present then
       local ln = xLib.trim(v)
       --print("ln",ln)
-
-      -- skip initial comment blocks and single minus 
-      -- minus can be added while --commenting out, live coding style
-      if (ln:sub(0,2) ~= "--") then
-        if (ln ~= "-") then
-          present = true
-          -- only insert if not already present
-          if (ln:sub(0,6) ~= "return") then
-            t[k] = ("return %s"):format(ln)
-          else
-            print("*** skip return statement, already present")
+      
+      if (ln ~= "") then -- skip empty lines
+        if (ln:sub(0,2) ~= "--") then -- skip initial comment blocks
+          if (ln ~= "-") then -- single minus (can be the result
+            -- of commenting out, live coding style...)
+            present = true
+            -- only insert if not already present
+            if (ln:sub(0,6) ~= "return") then
+              t[k] = ("return %s"):format(ln)
+            end
           end
         end
       end
@@ -313,7 +313,7 @@ function xSandbox.insert_return(str_fn)
     end
   end
 
-  --print("t",rprint(t))
+  --print(">>> insert_return t",rprint(t))
 
   return table.concat(t,"\n")
 

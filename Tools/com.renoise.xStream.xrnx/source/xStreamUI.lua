@@ -10,7 +10,7 @@ xStreamUI
 
 --==============================================================================
 
-class 'xStreamUI'
+class 'xStreamUI' (vDialog)
 
 xStreamUI.COLOR_ENABLED = {0xD0,0xD8,0xD4}
 xStreamUI.COLOR_DISABLED = {0x00,0x00,0x00}
@@ -104,27 +104,33 @@ xStreamUI.WELCOME_MSG = [[
 -------------------------------------------------------------------------------
 -- constructor
 -- @param xstream (xStream)
--- @param vb (renoise.ViewBuilder)
 -- @param midi_prefix (string)
 
-function xStreamUI:__init(xstream,vb,midi_prefix)
-  TRACE("xStreamUI:__init(xstream,vb,midi_prefix)",xstream,vb,midi_prefix)
+function xStreamUI:__init(xstream,midi_prefix)
+  TRACE("xStreamUI:__init(xstream,midi_prefix)",xstream,midi_prefix)
 
   assert(type(xstream)=="xStream","Expected 'xStream' to be a class instance")
-  assert(type(vb)=="ViewBuilder","Expected 'vb' to be a class instance")
   assert(type(midi_prefix)=="string","Expected 'midi_prefix' to be a string")
 
+  vDialog.__init(self)
+
   self.xstream = xstream
-  self.vb = vb
   self.midi_prefix = midi_prefix
 
-  self.presets = xStreamUIPresetPanel(xstream,vb,self)
-  self.args  = xStreamUIArgsPanel(xstream,midi_prefix,vb,self)
-  self.args_editor = xStreamUIArgsEditor(xstream,vb)
+  -- supporting classes --
+
+  -- views
+  self.presets = xStreamUIPresetPanel(xstream,self.vb,self)
+  self.args  = xStreamUIArgsPanel(xstream,midi_prefix,self.vb,self)
+  self.args_editor = xStreamUIArgsEditor(xstream,self.vb)
+
+  -- dialogs
   self.options = xStreamUIOptions(xstream)
   self.favorites = xStreamUIFavorites(xstream,midi_prefix)
   self.create_model_dialog = xStreamUIModelCreate(self)
   self.create_callback_dialog = xStreamUICallbackCreate(self)
+
+  -- content --
 
   self.vb_content = nil
 
@@ -182,8 +188,32 @@ function xStreamUI:__init(xstream,vb,midi_prefix)
 
   self:build()
 
+  -- vDialog --
+
+  self.dialog_visible_observable:add_notifier(function()
+    self.xstream:select_launch_model()
+    self.xstream.favorites:import("./favorites.xml")
+    self.xstream.autosave_enabled = true
+  end)
+
+
 end
 
+-------------------------------------------------------------------------------
+-- vDialog
+-------------------------------------------------------------------------------
+
+function xStreamUI:create_dialog()
+
+  return self.vb:column{
+    self.vb_content,
+  }
+
+end
+
+
+--------------------------------------------------------------------------------
+-- xStreamUI
 --------------------------------------------------------------------------------
 -- build, update everything
 
@@ -309,7 +339,7 @@ function xStreamUI:update_editor()
     for k,v in pairs(model.events) do
       table.insert(items,("events.%s"):format(k))
     end
-    print(">>> items...",rprint(items))
+    --print(">>> items...",rprint(items))
     vb_type_popup.value = table.find(items,self.editor_view) or 1
   end
   vb_type_popup.items = items
@@ -562,9 +592,9 @@ function xStreamUI:build()
     TRACE("*** xStreamUI - selected_model_index_notifier fired...",self.xstream.selected_model_index)
     local model = self.xstream.selected_model
     if model then
-      print(">>> #model.args.args",#model.args.args)
-      print(">>> model.data_observable",model.data_observable)
-      print(">>> model.events_observable",model.events_observable)
+      --print(">>> #model.args.args",#model.args.args)
+      --print(">>> model.data_observable",model.data_observable)
+      --print(">>> model.events_observable",model.events_observable)
 
       xObservable.attach(model.name_observable,function()
         TRACE("*** xStreamUI - model.name_observable fired...")
@@ -1029,7 +1059,7 @@ function xStreamUI:apply_editor_content()
       local def = table.rcopy(model.data_initial)
       def[cb_key] = view.text
       local str_status = model:parse_userdata(def)
-      print("str_status",str_status)
+      --print("str_status",str_status)
       self.xstream.callback_status_observable.value = str_status
     elseif (cb_type == "events") then
       local def = table.rcopy(model.events)
@@ -1218,7 +1248,7 @@ end
 --------------------------------------------------------------------------------
 
 function xStreamUI:remove_callback()
-  print("xStreamUI:remove_callback()")
+  TRACE("xStreamUI:remove_callback()")
 
   local model = self.xstream.selected_model
   if not model then

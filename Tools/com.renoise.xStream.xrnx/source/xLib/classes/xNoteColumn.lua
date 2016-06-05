@@ -495,9 +495,12 @@ end
 -------------------------------------------------------------------------------
 
 function xNoteColumn:__tostring()
-  return note_string
-  ..instrument_string
-  ..volume_string
-  ..panning_string
-  ..delay_string
+
+  return type(self)
+    ..", note="..tostring(self.note_string)
+    ..", instrument="..self.instrument_string
+    ..", volume_string="..self.volume_string
+    ..", panning="..self.panning_string
+    ..", delay="..self.delay_string
+
 end

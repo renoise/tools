@@ -256,7 +256,9 @@ end
 
 function xLine:__tostring()
 
-  return "xLine:"..tostring(self.pattern_line)..","..tostring(self.automation)
+  return type(self)
+       ..", line="..tostring(self.pattern_line)
+       ..", automation="..tostring(self.automation)
 
 end
 

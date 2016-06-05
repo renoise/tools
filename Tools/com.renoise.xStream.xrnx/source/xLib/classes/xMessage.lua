@@ -32,25 +32,29 @@ function xMessage:__init(...)
     args = {}
   end
 
+  --- number, when message got created
+  self.timestamp = os.clock()
+  
   --- table<xValue or implementation thereof>
   self.values = property(self.get_values,self.set_values)
   self._values = args.values or {}
 
-  --- int, 1-num_tracks (can be nil)
+  --- int, 1-num_tracks 
   self.track_index = property(self.get_track_index,self.set_track_index)
   self._track_index = args.track_index or rns.selected_track_index
 
-  --- int, 1-num_instruments (can be nil)
+  --- int, 1-num_instruments
   self.instrument_index = property(self.get_instrument_index,self.set_instrument_index)
   self._instrument_index = args.instrument_index or rns.selected_instrument_index
+
+  --- int, 1-12 
+  self.note_column_index = property(self.get_note_column_index,self.set_note_column_index)
+  self._note_column_index = args.note_column_index or rns.selected_note_column_index
 
   --- the raw message, as received (or ready to send)
   self.raw_message = property(self.get_raw_message,self.set_raw_message)
   self._raw_message = args.raw_message
 
-  --- number, when message got created
-  self.timestamp = os.clock()
-  
   --- table, constructor 
   self.__def = property(self.get_definition)
 
@@ -106,6 +110,17 @@ function xMessage:set_instrument_index(val)
   self._instrument_index = val
 end
 
+--------------------------------------------------------------------------------
+
+function xMessage:get_note_column_index()
+  return self._note_column_index
+end
+
+function xMessage:set_note_column_index(val)
+  assert(type(val)=="number","Expected note_column_index to be a number")
+  self._note_column_index = val
+end
+
 -------------------------------------------------------------------------------
 -- produce a raw message (retrieve from cache if possible)
 -- @return 
@@ -139,8 +154,11 @@ end
 
 function xMessage:__tostring()
   return type(self)..": "
-    .."track="..self.track_index
-    ..", instr.index="..self.instrument_index
+    ..", timestamp="..tostring(self.timestamp)
+    ..", track_index="..tostring(self.track_index)
+    ..", instrument_index="..tostring(self.instrument_index)
+    ..", note_column_index="..tostring(self.note_column_index)
+    ..", #values="..tostring(#self.values)
 
 end
 

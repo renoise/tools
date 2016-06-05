@@ -77,14 +77,11 @@ function xStreamUIOptions:__init(xstream)
 
   -- prevent device editing while inactive
   self.xstream.active_observable:add_notifier(function()
-    if self.vtable_osc_devices then
-      self.vtable_osc_devices.active = self.xrules.active
-    end
     if self.vtable_midi_inputs then
-      self.vtable_midi_inputs.active = self.xrules.active
+      self.vtable_midi_inputs.active = self.xstream.active
     end
     if self.vtable_midi_outputs then
-      self.vtable_midi_outputs.active = self.xrules.active
+      self.vtable_midi_outputs.active = self.xstream.active
     end
   end)
 
@@ -397,7 +394,6 @@ function xStreamUIOptions:create_dialog()
             value = self.prefs.midi_multibyte_enabled.value,
             notifier = function(val)
               self.prefs.midi_multibyte_enabled.value = val
-              self.xstream.midi_input.multibyte_enabled = val
             end,
           },
           vb:text{
@@ -409,7 +405,6 @@ function xStreamUIOptions:create_dialog()
             value = self.prefs.midi_nrpn_enabled.value,
             notifier = function(val)
               self.prefs.midi_nrpn_enabled.value = val
-              self.xstream.midi_input.nrpn_enabled = val
             end,
           },
           vb:text{
@@ -421,7 +416,6 @@ function xStreamUIOptions:create_dialog()
             value = self.prefs.midi_terminate_nrpns.value,
             notifier = function(val)
               self.prefs.midi_terminate_nrpns.value = val
-              self.xstream.midi_input.terminate_nrpns = val
             end,
           },
           vb:text{
@@ -527,11 +521,11 @@ function xStreamUIOptions:create_dialog()
       item.CHECKBOX = checked
       local matched = self:match_in_list(self.prefs.midi_inputs,item.TEXT)
       if checked and not matched then
-        self.prefs.midi_inputs:insert(item.TEXT)
-        self.xstream:open_midi_input(item.TEXT)
+        --self.prefs.midi_inputs:insert(item.TEXT)
+        self.xstream.midi_io:open_midi_input(item.TEXT)
       elseif not checked and matched then
-        self.prefs.midi_inputs:remove(matched)
-        self.xstream:close_midi_input(item.TEXT)
+        --self.prefs.midi_inputs:remove(matched)
+        self.xstream.midi_io:close_midi_input(item.TEXT)
       end
     end
   end
@@ -561,10 +555,10 @@ function xStreamUIOptions:create_dialog()
       local matched = self:match_in_list(self.prefs.midi_outputs,item.TEXT)
       if checked and not matched then
         self.prefs.midi_outputs:insert(item.TEXT)
-        self.xstream:open_midi_output(item.TEXT)
+        --self.xstream:open_midi_output(item.TEXT)
       elseif not checked and matched then
         self.prefs.midi_outputs:remove(matched)
-        self.xstream:close_midi_output(item.TEXT)
+        --self.xstream:close_midi_output(item.TEXT)
       end
     end
   end

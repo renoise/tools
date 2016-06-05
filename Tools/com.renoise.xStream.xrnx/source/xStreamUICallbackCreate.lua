@@ -305,7 +305,7 @@ function xStreamUICallbackCreate:show_next_page()
 
       local vb_chooser = self.vb.views["xStreamDialogEventChooser"]
       local str_name = vb_chooser.items[vb_chooser.value]
-      print("str_name",str_name)
+      --print("str_name",str_name)
 
       if not self:validate_callback_name(str_name) then
         renoise.app():show_warning("Error: a callback already exists with this name, or you provided an invalid name")
@@ -390,13 +390,13 @@ function xStreamUICallbackCreate:get_available_event_names()
   local model = self.xstream.selected_model
   for k,v in pairs(model.events) do 
     local cb_type,cb_key = xStreamUI.get_editor_type("events."..k)
-    print(">>> get_available_event_names - cb_type,cb_key",cb_type,cb_type,"events."..k)
+    --print(">>> get_available_event_names - cb_type,cb_key",cb_type,cb_type,"events."..k)
     local event_idx = table.find(rslt,cb_key)
     if not event_idx then
       rslt[cb_key] = nil
     end
   end
-  print(">>> rslt",rprint(rslt))
+  --print(">>> rslt",rprint(rslt))
   return rslt
 
 end

@@ -439,6 +439,7 @@ function xMidiMessage:__tostring()
   ..", port="..tostring(self.port_name)
   ..", track="..tostring(self.track_index)
   ..", instr="..tostring(self.instrument_index)
+  ..", column="..tostring(self.note_column_index)
 
 end
 

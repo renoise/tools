@@ -61,45 +61,14 @@ xStream.MUTE_MODE = {
 -------------------------------------------------------------------------------
 -- constructor
 
-function xStream:__init()
+function xStream:__init(...)
+
+  local args = xLib.unpack_args(...)
+
+  assert(type(args.midi_prefix)=="string","Expected argument 'midi_prefix' (string)")
 
   --- xStreamPrefs, current settings
   self.prefs = renoise.tool().preferences
-
-  --- xPreferences
-  --self.xprefs = xprefs
-
-  --- xStreamUI, built-in user interface
-  self.ui = nil
-
-  ---  xMidiInput
-  self.midi_input = xMidiInput{
-    multibyte_enabled = self.prefs.multibyte_enabled,
-    nrpn_enabled = self.prefs.nrpn_enabled,
-    terminate_nrpns = self.prefs.terminate_nrpns,
-  }
-
-  ---  xVoiceManager
-  self.voicemgr = xVoiceManager{}
-
-  --- table<renoise.Midi.MidiInputDevice>
-  self.midi_inputs = {}
-
-  --- table<renoise.Midi.MidiOutputDevice>
-  self.midi_outputs = {}
-
-  --- xStreamPos, set up our streaming handler
-  self.stream = xStreamPos()
-  self.stream.callback_fn = function()
-    if self.active then
-      self:do_output(self.stream.writepos,nil,true)
-    end
-  end
-  self.stream.refresh_fn = function()
-    if self.active then
-      self:update_read_buffer()
-    end
-  end
 
   --- int, writeahead amount
   self.writeahead = 0
@@ -116,10 +85,10 @@ function xStream:__init()
   self.read_buffer = {}
 
   --- int, keep track of the highest/lowest line in our buffers
-  self.highest_buffer_idx = 0
-  self.lowest_buffer_idx = 0
+  self.highest_xinc = 0
+  self.lowest_xinc = 0
 
-  --self.highest_read_buffer_idx = 0
+  --self.highest_read_xinc = 0
 
   --- xSongPos.OUT_OF_BOUNDS, handle song boundaries
   self.bounds_mode = xSongPos.OUT_OF_BOUNDS.LOOP
@@ -255,30 +224,45 @@ function xStream:__init()
   --- xStreamModel, read-only - nil when none are available
   self.selected_model = nil
 
-  -- initialize -----------------------
+  -- supporting classes --
+
+  --- xStreamPos, set up our streaming handler
+  self.stream = xStreamPos()
+  self.stream.callback_fn = function()
+    if self.active then
+      self:do_output(self.stream.writepos,nil,true)
+    end
+  end
+  self.stream.refresh_fn = function()
+    if self.active then
+      self:update_read_buffer()
+    end
+  end
+
+  --- xStreamUI, built-in user interface
+  self.ui = nil
+  self.ui = xStreamUI(self,args.midi_prefix)
+
+  --- xMidiIO, generic MIDI input/output handler
+  self.midi_io = xMidiIO{
+    midi_inputs = self.prefs.midi_inputs,
+    midi_outputs = self.prefs.midi_outputs,
+    midi_callback_fn = self.handle_midi_input,
+    multibyte_enabled = self.prefs.multibyte_enabled,
+    nrpn_enabled = self.prefs.nrpn_enabled,
+    terminate_nrpns = self.prefs.terminate_nrpns,
+  }
+
+  ---  xVoiceManager
+  self.voicemgr = xVoiceManager{}
+
+  -- initialize --
 
   self:determine_writeahead()
 
-  -- always run during idle
-  renoise.tool().app_idle_observable:add_notifier(function()
-    self:on_idle()
-  end)
 
-  -- [app] handle midi input
-  self.midi_input.callback_fn = function(xmsg)
-    --print("self.midi_input.callback_fn",xmsg)
-    self:handle_midi_input(xmsg)
-  end
+  -- [app] favorites
 
-  -- [app] MIDI port setup changed
-  renoise.Midi.devices_changed_observable():add_notifier(function()
-    self:available_midi_ports_changed()
-  end)
-
-  -- [app] initialize devices
-  self:initialize_midi_devices()
-
-  -- [app] automatic saving of favorites
   local favorites_notifier = function()    
     TRACE("*** xStream - favorites.favorites/grid_columns/grid_rows/modified_observable fired..")
     self.favorite_export_requested = true
@@ -288,10 +272,132 @@ function xStream:__init()
   self.favorites.grid_rows_observable:add_notifier(favorites_notifier)
   self.favorites.modified_observable:add_notifier(favorites_notifier)
 
+  --vDialog.__init(self,...)
+
+  self:load_models(self.prefs.user_folder.value..xStream.MODELS_FOLDER)
+
+
+  -- apply preferences --
+
+  -- ui options
+  self.ui.show_editor = self.prefs.show_editor.value
+  self.ui.args.visible = self.prefs.model_args_visible.value
+  self.ui.presets.visible = self.prefs.presets_visible.value
+  self.ui.favorites.pinned = self.prefs.favorites_pinned.value
+  self.ui.editor_visible_lines = self.prefs.editor_visible_lines.value
+
+  -- streaming options
+  self.scheduling = self.prefs.scheduling.value
+  self.mute_mode = self.prefs.mute_mode.value
+  self.suspend_when_hidden = self.prefs.suspend_when_hidden.value
+  self.writeahead_factor = self.prefs.writeahead_factor.value
+
+  -- output outputs
+  self.automation_playmode = self.prefs.automation_playmode.value
+  self.include_hidden = self.prefs.include_hidden.value
+  self.clear_undefined = self.prefs.clear_undefined.value
+  self.expand_columns = self.prefs.expand_columns.value
+
+  -- sync preferences --> app (when changed via options dialog...)
+  self.prefs.midi_multibyte_enabled:add_notifier(function()
+    self.midi_io.interpretor.multibyte_enabled = self.prefs.midi_multibyte_enabled.value
+  end)
+  self.prefs.midi_nrpn_enabled:add_notifier(function()
+    self.midi_io.interpretor.nrpn_enabled = self.prefs.midi_nrpn_enabled.value
+  end)
+  self.prefs.midi_terminate_nrpns:add_notifier(function()
+    self.midi_io.interpretor.terminate_nrpns = self.prefs.midi_terminate_nrpns.value
+  end)
+  self.prefs.midi_terminate_nrpns:add_notifier(function()
+    self.midi_io.interpretor.terminate_nrpns = self.prefs.midi_terminate_nrpns.value
+  end)
+  self.prefs.scheduling:add_notifier(function()
+    self.scheduling_observable.value = self.prefs.scheduling.value
+  end)
+
+  -- sync app > prefs 
+
+  self.midi_io.midi_inputs_observable:add_notifier(function(arg)
+    print("self.midi_io.midi_inputs_observable",self.midi_io.midi_inputs_observable)
+    self.prefs.midi_inputs = self.midi_io.midi_inputs_observable
+  end)
+
+  self.midi_io.midi_outputs_observable:add_notifier(function(arg)
+    self.prefs.midi_outputs = self.midi_io.midi_outputs_observable
+  end)
+
+  self.automation_playmode_observable:add_notifier(function()
+    TRACE("*** main.lua - self.automation_playmode_observable fired...")
+    self.prefs.automation_playmode.value = self.automation_playmode_observable.value
+  end)
+
+  self.writeahead_factor_observable:add_notifier(function()
+    TRACE("*** main.lua - self.writeahead_factor_observable fired...")
+    self.prefs.writeahead_factor.value = self.writeahead_factor_observable.value
+  end)
+
+  self.include_hidden_observable:add_notifier(function()
+    TRACE("*** main.lua - self.include_hidden_observable fired...")
+    self.prefs.include_hidden.value = self.include_hidden_observable.value
+  end)
+
+  self.clear_undefined_observable:add_notifier(function()
+    TRACE("*** main.lua - self.clear_undefined_observable fired...")
+    self.prefs.clear_undefined.value = self.clear_undefined_observable.value
+  end)
+
+  self.expand_columns_observable:add_notifier(function()
+    TRACE("*** main.lua - self.expand_columns_observable fired...")
+    self.prefs.expand_columns.value = self.expand_columns_observable.value
+  end)
+
+  self.mute_mode_observable:add_notifier(function()
+    TRACE("*** selfUI - self.mute_mode_observable fired...")
+    self.prefs.mute_mode.value = self.mute_mode_observable.value
+  end)
+
+  self.ui.show_editor_observable:add_notifier(function()
+    TRACE("*** selfUI - self.ui.show_editor_observable fired...")
+    self.prefs.show_editor.value = self.ui.show_editor_observable.value
+  end)
+
+  self.ui.tool_options_visible_observable:add_notifier(function()
+    TRACE("*** selfUI - self.ui.tool_options_visible_observable fired...")
+    self.prefs.tool_options_visible.value = self.ui.tool_options_visible_observable.value
+  end)
+
+  self.ui.model_browser_visible_observable:add_notifier(function()
+    TRACE("*** selfUI - self.ui.model_browser_visible_observable fired...")
+    self.prefs.model_browser_visible.value = self.ui.model_browser_visible
+  end)
+
+  self.ui.args.visible_observable:add_notifier(function()
+    TRACE("*** selfUI - self.ui.args.visible_observable fired...")
+    self.prefs.model_args_visible.value = self.ui.args.visible
+  end)
+
+  self.ui.presets.visible_observable:add_notifier(function()
+    TRACE("*** selfUI - self.ui.presets.visible_observable fired...")
+    self.prefs.presets_visible.value = self.ui.presets.visible
+  end)
+
+  self.ui.favorites.pinned_observable:add_notifier(function()
+    TRACE("*** selfUI - self.ui.favorites.pinned_observable fired...")
+    self.prefs.favorites_pinned.value = self.ui.favorites.pinned
+  end)
+
+  self.ui.editor_visible_lines_observable:add_notifier(function()
+    TRACE("*** selfUI - self.ui.editor_visible_lines_observable fired...")
+    self.prefs.editor_visible_lines.value = self.ui.editor_visible_lines
+  end)
+
   renoise.tool().app_new_document_observable:add_notifier(function()
     TRACE("*** xStream - app_new_document_observable fired...")
     self:attach_to_song()
   end)
+
+
+
   self:attach_to_song()
 
 end
@@ -299,7 +405,7 @@ end
 -------------------------------------------------------------------------------
 -- class methods
 -------------------------------------------------------------------------------
--- create new model from scratch
+-- [app] create new model from scratch
 -- @param str_name (string)
 -- @return bool, true when model got created
 -- @return string, error message on failure
@@ -315,7 +421,7 @@ function xStream:create_model(str_name)
   local str_name_validate = xStreamModel.get_suggested_name(str_name)
   --print(">>> str_name,str_name_validate",str_name,str_name_validate)
   if (str_name ~= str_name_validate) then
-    return false,"Error: a model already exists with this name."
+    return false,"*** Error: a model already exists with this name."
   end
 
   model.modified = true
@@ -345,6 +451,7 @@ function xStream:create_model(str_name)
 end
 
 -------------------------------------------------------------------------------
+-- [app] 
 
 function xStream:add_model(model)
   TRACE("xStream:add_model(model)")
@@ -356,7 +463,7 @@ function xStream:add_model(model)
 end
 
 -------------------------------------------------------------------------------
--- remove all models
+-- [app] remove all models
 
 function xStream:remove_models()
   TRACE("xStream:remove_models()")
@@ -368,7 +475,7 @@ function xStream:remove_models()
 end
 
 -------------------------------------------------------------------------------
--- remove specific model from list
+-- [app] remove specific model from list
 -- @param model_idx (int)
 
 function xStream:remove_model(model_idx)
@@ -391,7 +498,7 @@ function xStream:remove_model(model_idx)
 end
 
 -------------------------------------------------------------------------------
--- delete from disk, the remove from list
+-- [app] delete from disk, the remove from list
 -- @param model_idx (int)
 -- @return bool, true when we deleted the file
 -- @return string, error message when failed
@@ -413,7 +520,7 @@ function xStream:delete_model(model_idx)
 end
 
 -------------------------------------------------------------------------------
--- load all models (files ending with .lua) in a given folder
+-- [app] load all models (files ending with .lua) in a given folder
 -- log potential errors during parsing
 
 function xStream:load_models(str_path)
@@ -452,6 +559,7 @@ function xStream:load_models(str_path)
 end
 
 -------------------------------------------------------------------------------
+-- [app] 
 -- @param no_asterisk (bool), don't add asterisk to modified models
 -- return table<string>
 
@@ -471,6 +579,7 @@ function xStream:get_model_names(no_asterisk)
 end
 
 -------------------------------------------------------------------------------
+-- [app] 
 -- bring focus to the relevant model/preset/bank, 
 -- following a selection/trigger in the favorites grid
 
@@ -511,6 +620,7 @@ function xStream:focus_to_favorite(idx)
 end
 
 -------------------------------------------------------------------------------
+-- [app] 
 -- @param model_name (string)
 -- @return int (index) or nil
 -- @return xStreamModel or nil
@@ -531,6 +641,7 @@ function xStream:get_model_by_name(model_name)
 end
 
 -------------------------------------------------------------------------------
+-- [process]
 -- schedule model or model+preset
 -- @param model_name (string), unique name of model
 -- @param preset_index (int),  preset to dial in - optional
@@ -605,6 +716,7 @@ function xStream:schedule_item(model_name,preset_index,preset_bank_name)
 end
 
 -------------------------------------------------------------------------------
+-- [process]
 -- schedule, or re-schedule (when external conditions change)
 
 function xStream:compute_scheduling_pos()
@@ -654,6 +766,7 @@ function xStream:compute_scheduling_pos()
 end
 
 -------------------------------------------------------------------------------
+-- [process]
 -- invoked when cancelling schedule, or scheduled event has happened
 
 function xStream:clear_schedule()
@@ -669,6 +782,7 @@ function xStream:clear_schedule()
 end
 
 -------------------------------------------------------------------------------
+-- [process]
 -- switch to scheduled model/preset
 
 function xStream:apply_schedule()
@@ -905,7 +1019,8 @@ function xStream:set_muted(val)
 
   local function produce_note_off()
     local note_cols = {}
-    local note_col_count = self:get_visible_note_cols()
+    local track = rns.tracks[self.track_index]
+    local note_col_count = track.visible_note_columns
     for _ = 1,note_col_count do
       table.insert(note_cols,{
         note_value = xNoteColumn.NOTE_OFF_VALUE,
@@ -927,7 +1042,7 @@ function xStream:set_muted(val)
   local mute_xline = xLine(xline)
   self.buffer[self.mute_pos] = mute_xline
   self.buffer[self.mute_pos+1] = mute_xline
-  self.highest_buffer_idx = math.max(self.mute_pos+1,self.highest_buffer_idx)
+  self.highest_xinc = math.max(self.mute_pos+1,self.highest_xinc)
 
   self:do_output(self.stream.writepos)
 
@@ -987,7 +1102,7 @@ end
 --------------------------------------------------------------------------------
 -- Class methods
 --------------------------------------------------------------------------------
--- activate the launch model
+-- [process] activate the launch model
 
 function xStream:select_launch_model()
 
@@ -1000,7 +1115,7 @@ function xStream:select_launch_model()
 end
 
 -------------------------------------------------------------------------------
--- will produce output for the next number of lines
+-- [process] will produce output for the next number of lines
 -- @param xpos (xSongPos), needs to be a valid position in the song
 -- @param num_lines (int), use writeahead if not defined
 -- @param live_mode (bool), skip playpos when true
@@ -1141,7 +1256,7 @@ function xStream:do_output(xpos,num_lines,live_mode)
 end
 
 -------------------------------------------------------------------------------
--- check if buffer has content for the specified range
+-- [process] check if buffer has content for the specified range
 -- @param pos (int), index in buffer 
 -- @param num_lines (int)
 -- @return bool, true when all content is present
@@ -1162,7 +1277,7 @@ function xStream:has_content(pos,num_lines)
 end
 
 -------------------------------------------------------------------------------
--- retrieve content from our callback method + pattern
+-- [process] retrieve content from our callback method + pattern
 -- @param pos (int), internal line count
 -- @param num_lines (int) 
 -- @param xpos (xSongPos) read from this position (when not previously read)
@@ -1196,25 +1311,25 @@ function xStream:get_content(pos,num_lines,xpos)
 
   for i = 0, num_lines-1 do
 
-    local buffer_idx = pos+i
+    local xinc = pos+i
     local xline
 
     -- retrieve existing content --------------------------
 
-    local has_read_buffer = self.read_buffer[buffer_idx]
+    local has_read_buffer = self.read_buffer[xinc]
     if has_read_buffer then 
-      --print("*** xStream:get_content - retrieve from read buffer",buffer_idx)
-      xline = self.read_buffer[buffer_idx]
+      --print("*** xStream:get_content - retrieve from read buffer",xinc)
+      xline = self.read_buffer[xinc]
       --rprint(xline)
-      --print("*** xStream:get_content - retrieved from read buffer",buffer_idx,"=",xline.effect_columns[1].amount_value)
+      --print("*** xStream:get_content - retrieved from read buffer",xinc,"=",xline.effect_columns[1].amount_value)
     else
       xline = xLine.do_read(
         read_pos.sequence,read_pos.line,self.include_hidden,self.track_index)
-      self.read_buffer[buffer_idx] = table.rcopy(xline) -- TODO rcopy needed ?
-      --print("*** xStream:get_content - fresh fetch - read_pos",read_pos,"buffer_idx",buffer_idx,"fx-col amount_value",xline.effect_columns[1].amount_value)
+      self.read_buffer[xinc] = table.rcopy(xline) -- TODO rcopy needed ?
+      --print("*** xStream:get_content - fresh fetch - read_pos",read_pos,"xinc",xinc,"fx-col amount_value",xline.effect_columns[1].amount_value)
     end
-    --self.highest_read_buffer_idx = math.max(buffer_idx,self.highest_read_buffer_idx)
-    --print("IN  ",buffer_idx,read_pos,xline.note_columns[1].note_string)
+    --self.highest_read_xinc = math.max(xinc,self.highest_read_xinc)
+    --print("IN  ",xinc,read_pos,xline.note_columns[1].note_string)
 
     -- handle scheduling ----------------------------------
 
@@ -1237,27 +1352,28 @@ function xStream:get_content(pos,num_lines,xpos)
     -- process the callback -------------------------------
     local buffer_content = nil
     local success,err = pcall(function()
-      buffer_content = callback(buffer_idx,xLine(xline),xSongPos(read_pos))
+      buffer_content = callback(xinc,xLine(xline),xSongPos(read_pos))
     end)
+    --print("processed callback - xinc,read_pos",xinc,read_pos)
     if not success and err then
-      LOG("ERROR: please review the callback function - "..err)
+      LOG("*** Error: please review the callback function - "..err)
       -- TODO display runtime errors separately (runtime_status)
       self.callback_status_observable.value = err
-      --self.buffer[buffer_idx] = xLine({})
+      --self.buffer[xinc] = xLine({})
     elseif success then
       -- we might have redefined the xline (or parts of it) in our  
       -- callback method - convert everything into class instances...
       -- TODO check against 'user_redefined_xline'
       local success,err = pcall(function()
-        self.buffer[buffer_idx] = xLine.apply_descriptor(buffer_content)
+        self.buffer[xinc] = xLine.apply_descriptor(buffer_content)
       end)
       if not success and err then
-        LOG("ERROR: an error occurred while converting xline - "..err)
-        self.buffer[buffer_idx] = self.empty_xline
+        LOG("*** Error: could not convert xline - "..err)
+        self.buffer[xinc] = self.empty_xline
       end
 
     end
-    self.highest_buffer_idx = math.max(buffer_idx,self.highest_buffer_idx)
+    self.highest_xinc = math.max(xinc,self.highest_xinc)
 
     if not has_read_buffer then
       read_pos:increase_by_lines(1)
@@ -1271,35 +1387,7 @@ function xStream:get_content(pos,num_lines,xpos)
 end
 
 -------------------------------------------------------------------------------
--- get visible note columns in the associated track
--- @return int
-
-function xStream:get_visible_note_cols()
-  TRACE("xStream:get_visible_note_cols()")
-
-  local track = rns.tracks[self.track_index]
-  assert(track,"Trying to access a non-existing track")
-
-  return track.visible_note_columns
-
-end
-
--------------------------------------------------------------------------------
--- get visible note columns in the associated track
--- @return int
-
-function xStream:get_visible_effect_cols()
-  TRACE("xStream:get_visible_effect_cols()")
-
-  local track = rns.tracks[self.track_index]
-  assert(track,"Trying to access a non-existing track")
-
-  return track.visible_effect_columns
-
-end
-
--------------------------------------------------------------------------------
--- resolve (or create) automation for parameter in the provided seq-index
+-- [app] resolve (or create) automation for parameter in the provided seq-index
 -- can return nil if trying to create automation on non-automateable parameter
 -- note: automation is per-pattern, changes as we move through the sequence
 -- @param seq_idx (int)
@@ -1322,26 +1410,19 @@ function xStream:resolve_automation(seq_idx)
   local ptrack = patt.tracks[self.track_index]
   assert(ptrack,"Could not find pattern-track")
 
-  local automation = ptrack:find_automation(self.device_param)
-  
-  -- create if not present 
-  if not automation then
-    automation = ptrack:create_automation(self.device_param)
-  end
-
-  return automation
+  return xAutomation:get_or_create_automation(ptrack,self.device_param)
 
 end
 
 -------------------------------------------------------------------------------
--- clear various buffers, prepare for new output
+-- [process] clear various buffers, prepare for new output
 
 function xStream:reset()
   TRACE("xStream:reset()")
 
   self.buffer = {}
-  self.highest_buffer_idx = 0
-  self.lowest_buffer_idx = 0
+  self.highest_xinc = 0
+  self.lowest_xinc = 0
 
   self.read_buffer = {}
   self.stream.readpos = nil
@@ -1355,7 +1436,7 @@ function xStream:reset()
 end
 
 -------------------------------------------------------------------------------
--- activate live streaming 
+-- [process] activate live streaming 
 
 function xStream:start()
   TRACE("xStream:start()")
@@ -1367,7 +1448,7 @@ function xStream:start()
 end
 
 -------------------------------------------------------------------------------
--- activate live streaming and begin playback
+-- [process] activate live streaming and begin playback
 -- (use this method instead of the native Renoise functionality in order 
 -- to make the first line play back - otherwise it's too late...)
 
@@ -1384,7 +1465,7 @@ function xStream:start_and_play()
 end
 
 -------------------------------------------------------------------------------
--- stop live streaming
+-- [process] stop live streaming
 
 function xStream:stop()
   TRACE("xStream:stop()")
@@ -1395,7 +1476,7 @@ function xStream:stop()
 end
 
 -------------------------------------------------------------------------------
--- mute output, but continue progression in the background
+-- [process] mute output, but continue progression in the background
 -- @param mute_mode (xStream.MUTE_MODE)
 
 function xStream:mute(mute_mode)
@@ -1411,7 +1492,7 @@ function xStream:mute(mute_mode)
 end
 
 -------------------------------------------------------------------------------
--- unmute output, when already muted
+-- [process] unmute output, when already muted
 
 function xStream:unmute()
 
@@ -1421,7 +1502,7 @@ function xStream:unmute()
 end
 
 -------------------------------------------------------------------------------
--- update all content ahead of our position
+-- [process] update all content ahead of our position
 -- method is called when xStreamPos is changing position 'abruptly'
 
 function xStream:update_read_buffer()
@@ -1432,10 +1513,10 @@ function xStream:update_read_buffer()
     --print(">>> xStream:update_read_buffer - self.stream.readpos",self.stream.readpos)
     --print(">>> xStream:update_read_buffer - self.stream.playpos",self.stream.playpos)
     for k = 0,self.writeahead-1 do
-      local buffer_idx = self.stream.readpos.lines_travelled
-      self.read_buffer[buffer_idx] = xLine.do_read(
+      local xinc = self.stream.readpos.lines_travelled
+      self.read_buffer[xinc] = xLine.do_read(
         self.stream.readpos.sequence,self.stream.readpos.line,self.include_hidden,self.track_index)
-      --print(">>> xStream:update_read_buffer -- ",buffer_idx,"line in pattern",self.stream.readpos,self.read_buffer[buffer_idx].effect_columns[1].amount_value)
+      --print(">>> xStream:update_read_buffer -- ",xinc,"line in pattern",self.stream.readpos,self.read_buffer[xinc].effect_columns[1].amount_value)
       self.stream.readpos:increase_by_lines(1)
     end
 
@@ -1446,7 +1527,7 @@ function xStream:update_read_buffer()
 end
 
 -------------------------------------------------------------------------------
--- forget all output ahead of our current write-position
+-- [process] forget all output ahead of our current write-position
 -- method is automatically called when callback arguments have changed,
 -- and will cause fresh line(s) to be created in the next cycle
 -- (see also xStreamArgs)
@@ -1465,37 +1546,37 @@ function xStream:wipe_futures()
     from_idx = from_idx+1
   end
 
-  for i = from_idx,self.highest_buffer_idx do
+  for i = from_idx,self.highest_xinc do
     self.buffer[i] = nil
     --print("*** wiped buffer at",i)
   end
 
-  self.highest_buffer_idx = self.stream.writepos.lines_travelled
-  --print("*** self.highest_buffer_idx",self.highest_buffer_idx)
+  self.highest_xinc = self.stream.writepos.lines_travelled
+  --print("*** self.highest_xinc",self.highest_xinc)
 
 end
 
 -------------------------------------------------------------------------------
--- wipe all data behind our current write-position
+-- [process] wipe all data behind our current write-position
 -- (see also xStreamArgs)
 
 function xStream:wipe_past()
   TRACE("xStream:wipe_past()")
 
   local from_idx = self.stream.writepos.lines_travelled - 1
-  for i = from_idx,self.lowest_buffer_idx,-1 do
+  for i = from_idx,self.lowest_xinc,-1 do
     self.buffer[i] = nil
     self.read_buffer[i] = nil
     --print("*** wipe_past - cleared buffers at ",i)
   end
 
-  self.lowest_buffer_idx = from_idx
-  --print("lowest_buffer_idx ",from_idx)
+  self.lowest_xinc = from_idx
+  --print("lowest_xinc ",from_idx)
 
 end
 
 --------------------------------------------------------------------------------
--- decide the writeahead amount, depending on the song tempo
+-- [app] decide the writeahead amount, depending on the song tempo
 
 function xStream:determine_writeahead()
   TRACE("xStream:determine_writeahead()")
@@ -1510,7 +1591,7 @@ function xStream:determine_writeahead()
 end
 
 -------------------------------------------------------------------------------
--- perform periodic updates
+-- [app] perform periodic updates
 
 function xStream:on_idle()
   --TRACE("xStream:on_idle()")
@@ -1555,8 +1636,10 @@ function xStream:on_idle()
 
 end
 
+
+
 -------------------------------------------------------------------------------
--- call when a new document becomes available
+-- [app] call when a new document becomes available
 
 function xStream:attach_to_song()
   TRACE("xStream:attach_to_song()")
@@ -1568,8 +1651,71 @@ function xStream:attach_to_song()
     self:determine_writeahead()
   end
 
+  local selected_track_index_notifier = function()
+    TRACE("*** selected_track_index_notifier fired...")
+    self.track_index = rns.selected_track_index
+  end
+
+  local device_param_notifier = function()
+    self.device_param = rns.selected_parameter  
+  end
+
+  local playing_notifier = function()
+    TRACE("playing_notifier()")
+
+    if not rns.transport.playing then -- autostop
+      if (self.prefs.start_option.value ~= xStreamPrefs.START_OPTION.MANUAL) then
+        self:stop()
+      end
+    elseif not self.active then -- autostart
+
+      if self.ui:dialog_is_suspended() then
+        return
+      end
+
+      if (self.prefs.start_option.value ~= xStreamPrefs.START_OPTION.MANUAL) then
+        if rns.transport.edit_mode then
+          if (self.prefs.start_option.value == xStreamPrefs.START_OPTION.ON_PLAY_EDIT) then
+            self:start()
+          end
+        else
+          if (self.prefs.start_option.value == xStreamPrefs.START_OPTION.ON_PLAY) then
+            self:start()
+          end
+        end
+      end
+    end
+
+  end
+
+  local edit_notifier = function()
+    TRACE("edit_notifier()")
+
+    if rns.transport.edit_mode then
+      if self.ui:dialog_is_suspended() then
+        return
+      end
+      if rns.transport.playing and
+        (self.prefs.start_option.value == xStreamPrefs.START_OPTION.ON_PLAY_EDIT) 
+      then
+        self:start()
+      end
+    elseif (self.prefs.start_option.value == xStreamPrefs.START_OPTION.ON_PLAY_EDIT) then
+      self:stop()
+    end
+
+  end
+
   rns.transport.bpm_observable:add_notifier(tempo_notifier)
-  rns.transport.lpb_observable:add_notifier(tempo_notifier)
+  xObservable.attach(rns.transport.playing_observable,playing_notifier)
+  xObservable.attach(rns.transport.edit_mode_observable,edit_notifier)
+  xObservable.attach(rns.selected_track_index_observable,selected_track_index_notifier)
+  xObservable.attach(rns.selected_parameter_observable,device_param_notifier) 
+
+  playing_notifier()
+  edit_notifier()
+  selected_track_index_notifier()
+  device_param_notifier()
 
   self.stream:attach_to_song()
 
@@ -1580,7 +1726,7 @@ function xStream:attach_to_song()
 end
 
 -------------------------------------------------------------------------------
--- fill pattern-track in selected pattern
+-- [process] fill pattern-track in selected pattern
  
 function xStream:fill_track()
   TRACE("xStream:fill_track()")
@@ -1594,7 +1740,7 @@ function xStream:fill_track()
 end
 
 -------------------------------------------------------------------------------
--- ensure that selection is valid (not spanning multiple tracks)
+-- [app] ensure that selection is valid (not spanning multiple tracks)
 -- @return bool
  
 function xStream:validate_selection()
@@ -1613,7 +1759,7 @@ function xStream:validate_selection()
 end
 
 -------------------------------------------------------------------------------
--- fill pattern-track in selected pattern
+-- [process] fill pattern-track in selected pattern
 -- @param locally (bool) relative to the top of the pattern
  
 function xStream:fill_selection(locally)
@@ -1645,7 +1791,7 @@ function xStream:fill_selection(locally)
 end
 
 -------------------------------------------------------------------------------
--- apply the callback to a range in the selected pattern,  
+-- [process] apply the callback to a range in the selected pattern,  
 -- temporarily switching to a different set of buffers
 -- @param from_line (int)
 -- @param to_line (int) 
@@ -1699,132 +1845,8 @@ function xStream:apply_to_range(from_line,to_line,travelled)
 end
 
 
---------------------------------------------------------------------------------
--- open access to midi port 
-
-function xStream:open_midi_input(port_name)
-  TRACE("xStream:open_midi_input(port_name)")
-
-  local input_devices = renoise.Midi.available_input_devices()
-  if table.find(input_devices, port_name) then
-
-    local port_available = (self.midi_inputs[port_name] ~= nil)
-    local port_open = port_available and self.midi_inputs[port_name].is_open
-    if port_available and port_open then
-      -- don't create/open if already active
-      return
-    elseif port_available and not port_open then
-      self.midi_inputs[port_name]:close()
-    end
-
-    self.midi_inputs[port_name] = renoise.Midi.create_input_device(port_name,
-      function(midi_msg)
-        --print("received midi",midi_msg)
-        if not xLib.is_song_available()
-          --or not self.active 
-        then 
-          return 
-        end
-        self:input_midi(midi_msg,port_name)
-      end,
-      function(sysex_msg)
-        --print("received sysex",sysex_msg)
-        if not xLib.is_song_available()
-          --or not self.active 
-        then 
-          return 
-        end
-        self:input_sysex(sysex_msg,port_name)
-      end
-    )
-  else
-    LOG("*** Could not create MIDI input device " .. port_name)
-  end
-
-end
-
---------------------------------------------------------------------------------
--- input raw midi messages here and pass them into xMidiInput
--- @param msg (table), midi message
-
-function xStream:input_midi(midi_msg,port_name)
-  TRACE("xStream:input_midi(midi_msg,port_name)",midi_msg,port_name)
-
-  assert(type(midi_msg),"table","Expected midi_msg to be a table")
-  assert(type(port_name),"string","Expected port_name to be a string")
-
-  self.midi_input:input(midi_msg,port_name)
-
-end
-
---------------------------------------------------------------------------------
--- input raw sysex messages here (immediately matched)
--- @param sysex_msg (table), sysex message
--- @param port_name (string)
-
-function xStream:input_sysex(sysex_msg,port_name)
-
-  assert(type(sysex_msg),"table","Expected sysex_msg to be a table")
-  assert(type(port_name),"string","Expected port_name to be a string")
-
-  --print("sysex_msg",rprint(sysex_msg))
-
-  self:match_message(xMidiMessage{
-    message_type = xMidiMessage.TYPE.SYSEX,
-    values = sysex_msg,
-    port_name = port_name,
-  })
-
-end
-
-
---------------------------------------------------------------------------------
-
-function xStream:close_midi_input(port_name)
-  TRACE("xStream:close_midi_input(port_name)")
-
-  local midi_input = self.midi_inputs[port_name] 
-  if (midi_input and midi_input.is_open) 
-  then
-    midi_input:close()
-  end
-
-  self.midi_inputs[port_name] = nil
-
-end
-
---------------------------------------------------------------------------------
-
-function xStream:open_midi_output(port_name)
-  TRACE("xStream:open_midi_output(port_name)")
-
-  local output_devices = renoise.Midi.available_output_devices()
-
-  if table.find(output_devices, port_name) then
-    self.midi_outputs[port_name] = renoise.Midi.create_output_device(port_name)
-  else
-    LOG("*** Could not create MIDI output device " .. port_name)
-  end
-
-end
-
-
---------------------------------------------------------------------------------
-
-function xStream:close_midi_output(port_name)
-  TRACE("xStream:close_midi_output(port_name)")
-
-  local midi_output = self.midi_outputs[port_name] 
-  if (midi_output and midi_output.is_open) 
-  then
-    midi_output:close()
-  end
-
-  self.midi_outputs[port_name] = nil
-
-end
-
 -------------------------------------------------------------------------------
+--- [app+process]
 
 function xStream:handle_midi_input(xmsg)
   TRACE("xStream:handle_midi_input(xmsg)")
@@ -1844,53 +1866,23 @@ function xStream:handle_midi_input(xmsg)
 
   -- first step: pass to voicemanager 
   local rslt,idx = self.voicemgr:input_message(xmsg)
+
   --print("rslt,idx",rslt,idx)
   --print("voices...",rprint(self.voicemgr.voices))
 
-  -- find handler
   local handler = self.selected_model:get_event_handler(xmsg.message_type)
-  --print("handler",handler)
-
   if handler then
-    handler()
+    --print("about to handle xmsg",xmsg)
+    local passed,err = pcall(function()
+      local rslt = handler(xmsg)
+      --print("handler rslt",rslt)
+    end)
+    if not passed then
+      LOG("*** Error while handling MIDI event",err)
+    end
   end
 
 
 end
 
---------------------------------------------------------------------------------
-
-function xStream:available_midi_ports_changed()
-  TRACE("xStream:available_midi_ports_changed()")
-
-  self:initialize_midi_devices()
-
-  --[[
-  -- TODO
-  self.ui._build_rule_requested = true
-  local prefs_dialog = self.ui._prefs_dialog
-  if prefs_dialog.dialog and prefs_dialog.dialog.visible then
-    prefs_dialog:update_dialog()
-  end
-  ]]
-
-end
-
---------------------------------------------------------------------------------
--- open the MIDI inputs & outputs specified in preferences 
-
-function xStream:initialize_midi_devices()
-  TRACE("xStream:initialize_midi_devices()")
-
-  for k = 1, #self.prefs.midi_inputs do
-    local port_name = self.prefs.midi_inputs[k].value
-    self:open_midi_input(port_name)
-  end
-
-  for k = 1, #self.prefs.midi_outputs do
-    local port_name = self.prefs.midi_outputs[k].value
-    self:open_midi_output(port_name)
-  end
-
-end
 

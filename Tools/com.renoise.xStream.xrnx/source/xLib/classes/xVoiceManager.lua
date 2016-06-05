@@ -21,6 +21,7 @@ function xVoiceManager:__init(...)
   local args = xLib.unpack_args(...)
 
   --- the maximum number of voices (0 = 'unlimited')
+  -- TODO not yet implemented
   self.voice_limit = property(self.get_voice_limit,self.set_voice_limit)
   self.voice_limit_observable = renoise.Document.ObservableNumber()
 
@@ -31,6 +32,10 @@ function xVoiceManager:__init(...)
   --- table<xMidiMessage>, active voices
   self.voices = {}
   self.voices_observable = renoise.Document.ObservableNumberList()
+
+  --- bool, whether to use automatic column allocation or not
+  self.column_allocation = property(self.get_column_allocation,self.set_column_allocation)
+  self.column_allocation_observable = renoise.Document.ObservableBoolean(false)
 
   --- TODO table<xMidiMessage>, voice messages (such as aftertouch)
   self.voice_msgs = {}
@@ -95,6 +100,16 @@ function xVoiceManager:set_duration(val)
 end
 
 -------------------------------------------------------------------------------
+
+function xVoiceManager:get_column_allocation()
+  return self.column_allocation_observable.value
+end
+
+function xVoiceManager:set_column_allocation(val)
+  self.column_allocation_observable.value = val
+end
+
+-------------------------------------------------------------------------------
 --- @return table<int> containing all active MIDI-pitches
 --[[
 function xVoiceManager:get_active_notes()
@@ -129,7 +144,6 @@ function xVoiceManager:input_message(xmsg)
     return
   end
 
-  -- check if the voice is already active
   local voice_idx = self:get_voice_index(xmsg)
   --print("voice_idx",voice_idx)
   if voice_idx then
@@ -152,6 +166,22 @@ end
 
 function xVoiceManager:register(xmsg)
   TRACE("xVoiceManager:register(xmsg)",xmsg)
+
+  if self.column_allocation then
+    --print(">>> register - xmsg.note_column_index PRE",xmsg.note_column_index)
+    local available_columns = self:get_available_columns(xmsg.track_index)
+    if not table.is_empty(available_columns) then
+      local is_available = xmsg.note_column_index 
+        and table.find(available_columns,xmsg.note_column_index) or false
+      if not is_available then
+        xmsg.note_column_index = available_columns[1]
+      end
+    else
+      LOG("No more note columns available, using the last one")
+      xmsg.note_column_index = 12
+    end
+    --print(">>> register - xmsg.note_column_index POST",xmsg.note_column_index)
+  end
 
   table.insert(self.voices,xmsg)
   self.voices_observable:insert(#self.voices)
@@ -266,6 +296,24 @@ function xVoiceManager:get_voice_index(xmsg)
 
 end
 
+-------------------------------------------------------------------------------
+-- @param track_idx
+-- @return table
+
+function xVoiceManager:get_available_columns(track_idx)
+
+  local available_indices = {1,2,3,4,5,6,7,8,9,10,11,12}
+  for k,v in ipairs(self.voices) do
+    if (v.track_index == track_idx) then
+      if (table.find(available_indices,v.note_column_index)) then
+        table.remove(available_indices,v.note_column_index)
+      end
+    end
+  end
+  table.sort(available_indices)
+  return available_indices
+
+end
 -------------------------------------------------------------------------------
 -- Monitor changes to tracks and instruments
 

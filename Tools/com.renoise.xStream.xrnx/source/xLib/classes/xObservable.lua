@@ -205,3 +205,16 @@ function xObservable.attach(obs,arg1,arg2)
 
 end
 
+--------------------------------------------------------------------------------
+-- "safe" removal of entry from ObservableXXXList
+
+function xObservable.list_remove(obs,val)
+  print("xObservable.list_remove",obs,val)
+  for k = 1,#obs do
+    if (val == obs[k].value) then
+      obs:remove(k)
+      return
+    end
+  end
+end
+

@@ -188,10 +188,6 @@ function xStreamModel:__init(xstream)
 
     -- xStream properties
 
-    ["voices"] = {
-      access = function(env) return self.xstream.voicemgr.voices end,
-    },
-
     ["clear_undefined"] = {
       access = function(env) return self.xstream.clear_undefined end,
       assign = function(env,v) self.xstream.clear_undefined = v end,
@@ -210,15 +206,28 @@ function xStreamModel:__init(xstream)
     },
     ["track_index"] = {
       access = function(env) return self.xstream.track_index end,
-      --assign = function(env,v) self.xstream.track_index = v end,
     },
     ["mute_mode"] = {
       access = function(env) return self.xstream.mute_mode end,
-      --assign = function(env,v) self.xstream.mute_mode = v end,
     },
     ["output_mode"] = {
       access = function(env) return self.xstream.output_mode end,
-      --assign = function(env,v) self.xstream.output_mode = v end,
+    },
+
+    -- xStream 
+
+    ["xstream"] = {
+      access = function(env) return self.xstream end,
+    },
+
+
+    -- xVoiceManager
+
+    ["voices"] = {
+      access = function(env) return self.xstream.voicemgr.voices end,
+    },
+    ["voicemgr"] = {
+      access = function(env) return self.xstream.voicemgr end,
     },
 
     -- Static classes 
@@ -427,7 +436,7 @@ function xStreamModel:load_definition(file_path)
     assert(loadfile(file_path))
   end) 
   if not passed then
-    err = "ERROR: Failed to load the definition '"..name.."' - "..err
+    err = "*** Error: Failed to load the definition '"..name.."' - "..err
     return false,err
   end
 
@@ -442,7 +451,7 @@ function xStreamModel:load_definition(file_path)
 
   local passed,err = self:parse_definition(def)
   if not passed then
-    err = "ERROR: Failed to load the definition '"..name.."' - "..err
+    err = "*** Error: Failed to load the definition '"..name.."' - "..err
     return false,err
   end
 
@@ -470,7 +479,7 @@ function xStreamModel:load_from_string(str_def)
     assert(loadstring(str_def))
   end) 
   if not passed then
-    err = "ERROR: Failed to load the definition - "..err
+    err = "*** Error: Failed to load the definition - "..err
     return false,err
   end
 
@@ -484,7 +493,7 @@ function xStreamModel:load_from_string(str_def)
   
   local passed,err = self:parse_definition(def)
   if not passed then
-    err = "ERROR: Failed to load the definition - "..err
+    err = "*** Error: Failed to load the definition - "..err
     return false,err
   end
 
@@ -553,7 +562,7 @@ function xStreamModel:parse_arguments(args_def)
       local passed,err = self.args:add(arg)
       --print("passed,err",passed,err)
       if not passed then
-        err = "*** ERROR: xStreamModel:parse_definition - encountered errors: '"..err
+        err = "*** Error: xStreamModel:parse_definition - encountered errors: '"..err
         LOG(err)
         return false,err
       end
@@ -584,7 +593,7 @@ end
 -- @return string, containing potential error message 
 
 function xStreamModel:parse_userdata(data_def)
-  print("xStreamModel:parse_userdata(data_def)",data_def)
+  TRACE("xStreamModel:parse_userdata(data_def)",data_def)
   
   self.data = {}
   self.data_initial = {}
@@ -624,8 +633,8 @@ function xStreamModel:parse_userdata(data_def)
 
   self.modified = true
 
-  print(">>> parse_userdata - self.data",rprint(self.data))
-  print(">>> parse_userdata - self.data_initial",rprint(self.data_initial))
+  --print(">>> parse_userdata - self.data",rprint(self.data))
+  --print(">>> parse_userdata - self.data_initial",rprint(self.data_initial))
 
   return str_status
 
@@ -649,7 +658,7 @@ function xStreamModel:rename_callback(old_name,new_name,cb_type)
     self.data_initial[new_name] = self.data_initial[old_name]
     self.data_initial[old_name] = nil
     self.data_observable:bang()
-    print("self.data...",rprint(self.data))
+    --print("self.data...",rprint(self.data))
   elseif (cb_type == xStreamModel.CB_TYPE.EVENTS) then
     self.events[new_name] = self.events[old_name]
     self.events[old_name] = nil
@@ -668,7 +677,7 @@ end
 -- @param cb_key (string)
 
 function xStreamModel:remove_callback(cb_type,cb_key)
-  print("xStreamModel:remove_callback(cb_type,cb_key)",cb_type,cb_key)
+  TRACE("xStreamModel:remove_callback(cb_type,cb_key)",cb_type,cb_key)
 
   self.modified = true
 
@@ -728,11 +737,10 @@ end
 
 -------------------------------------------------------------------------------
 -- parse and refresh event handlers
--- TODO return string, like parse_userdata
 -- @param event_def (table)
 
 function xStreamModel:parse_events(event_def)
-  print("xStreamModel:parse_events(def)")
+  TRACE("xStreamModel:parse_events(def)")
 
   self.events_compiled = {}
   local str_status = ""
@@ -748,11 +756,13 @@ function xStreamModel:parse_events(event_def)
     return
   end
 
-  -- maintain event handlers (broken ones are skipped)
   for k,v in pairs(self.events) do
-    local passed,err = self.sandbox:test_syntax(v)
+    local str_fn = [[
+local xmsg = select(1,...)
+]]..v
+    local passed,err = self.sandbox:test_syntax(str_fn)
     if passed then
-      self.events_compiled[k] = loadstring(v)
+      self.events_compiled[k] = loadstring(str_fn)
       setfenv(self.events_compiled[k], self.sandbox.env)
     else
       LOG("*** Failed to include event (bad syntax)",k,err)
@@ -762,7 +772,7 @@ function xStreamModel:parse_events(event_def)
 
   self.modified = true
 
-  print(">>> parse_events - self.events",rprint(self.events))
+  --print(">>> parse_events - self.events",rprint(self.events))
 
   return str_status
 
