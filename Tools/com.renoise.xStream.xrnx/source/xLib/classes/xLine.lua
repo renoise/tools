@@ -44,7 +44,7 @@ function xLine:__init(args)
     self.automation = xLineAutomation(args.automation)
   end
 
-  --print("created xLine...")
+  --print("created xLine...",self)
 
 end
 
@@ -60,10 +60,12 @@ function xLine.apply_descriptor(xline)
   if (type(xline) == "table") then -- entire xline redefined
     xline = xLine(xline)
   elseif (type(xline) == "xLine") then -- check xLine content
+
     xline.pattern_line:apply_descriptor(xline.note_columns,xline.effect_columns)
-    -- TODO automation
-    --xline.automation:apply_descriptor(xline.automation)
-    xline.automation = xLineAutomation(xline.automation)
+
+    if not table.is_empty(xline.automation) then
+      xline.automation = xLineAutomation(xline.automation)
+    end
 
   else
     error("Unexpected xline type")

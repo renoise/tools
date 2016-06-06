@@ -39,7 +39,7 @@ function xStreamUIArgsEditor:set_visible(val)
   local view_spacer = self.vb.views["xStreamArgsVerticalSpacer"]
   local view_arrow = self.vb.views["xStreamModelArgsToggle"]
 
-  local args = self.xstream.ui.args
+  local args = self.xstream.ui.args_panel
 
   if val and not args.visible then
     view_arrow.text = xStreamUI.ARROW_UP 

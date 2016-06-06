@@ -106,27 +106,29 @@ xStreamUI.WELCOME_MSG = [[
 -- @param xstream (xStream)
 -- @param midi_prefix (string)
 
-function xStreamUI:__init(xstream,midi_prefix)
-  TRACE("xStreamUI:__init(xstream,midi_prefix)",xstream,midi_prefix)
+function xStreamUI:__init(...)
+  TRACE("xStreamUI:__init()")
 
-  assert(type(xstream)=="xStream","Expected 'xStream' to be a class instance")
-  assert(type(midi_prefix)=="string","Expected 'midi_prefix' to be a string")
+  local args = xLib.unpack_args(...)
 
-  vDialog.__init(self)
+  assert(type(args.xstream)=="xStream","Expected 'xStream' to be a class instance")
+  assert(type(args.midi_prefix)=="string","Expected 'midi_prefix' to be a string")
 
-  self.xstream = xstream
-  self.midi_prefix = midi_prefix
+  vDialog.__init(self,...)
+
+  self.xstream = args.xstream
+  self.midi_prefix = args.midi_prefix
 
   -- supporting classes --
 
   -- views
-  self.presets = xStreamUIPresetPanel(xstream,self.vb,self)
-  self.args  = xStreamUIArgsPanel(xstream,midi_prefix,self.vb,self)
-  self.args_editor = xStreamUIArgsEditor(xstream,self.vb)
+  self.presets = xStreamUIPresetPanel(self.xstream,self.vb,self)
+  self.args_panel  = xStreamUIArgsPanel(self.xstream,self.midi_prefix,self.vb,self)
+  self.args_editor = xStreamUIArgsEditor(self.xstream,self.vb)
 
   -- dialogs
-  self.options = xStreamUIOptions(xstream)
-  self.favorites = xStreamUIFavorites(xstream,midi_prefix)
+  self.options = xStreamUIOptions(self.xstream)
+  self.favorites = xStreamUIFavorites(self.xstream,self.midi_prefix)
   self.create_model_dialog = xStreamUIModelCreate(self)
   self.create_callback_dialog = xStreamUICallbackCreate(self)
 
@@ -191,9 +193,7 @@ function xStreamUI:__init(xstream,midi_prefix)
   -- vDialog --
 
   self.dialog_visible_observable:add_notifier(function()
-    self.xstream:select_launch_model()
-    self.xstream.favorites:import("./favorites.xml")
-    self.xstream.autosave_enabled = true
+    TRACE(">>> xStreamUI.dialog_visible_observable fired...")
   end)
 
 
@@ -204,10 +204,24 @@ end
 -------------------------------------------------------------------------------
 
 function xStreamUI:create_dialog()
+  TRACE("xStreamUI:create_dialog()")
 
   return self.vb:column{
     self.vb_content,
   }
+
+end
+
+-------------------------------------------------------------------------------
+
+function xStreamUI:show()
+  TRACE("xStreamUI:show()")
+
+  vDialog.show(self)
+
+  if self.xstream.prefs.favorites_pinned.value then
+    self.favorites:show()
+  end
 
 end
 
@@ -372,7 +386,7 @@ function xStreamUI:build()
   local view_callback_panel = self:build_callback_panel()
   --local view_models_panel = self:build_models_panel()
   local view_presets_panel = self.presets:build_panel()
-  local view_args_panel = self.args:build()
+  local view_args_panel = self.args_panel:build()
 
   local content = vb:row{
     --view_options_panel,
@@ -615,7 +629,7 @@ function xStreamUI:build()
       xObservable.attach(model.args.args_observable,function(arg)
         TRACE("*** xStreamUI - args_observable_notifier fired...",rprint(arg))
         if (arg.type == "remove") then
-          self.args:purge_arg_views()
+          self.args_panel:purge_arg_views()
         end
         self.build_args_requested = true
       end)
@@ -1097,7 +1111,7 @@ function xStreamUI:disable_model_controls()
   end
 
   self.presets.disabled = true
-  self.args.disabled = true
+  self.args_panel.disabled = true
   self.args_editor.visible = false
 
 end
@@ -1125,7 +1139,7 @@ function xStreamUI:enable_model_controls()
   end
 
   self.presets.disabled = false
-  self.args.disabled = false
+  self.args_panel.disabled = false
 
 end
 
@@ -1269,7 +1283,8 @@ function xStreamUI:remove_callback()
 end
 
 --------------------------------------------------------------------------------
-
+-- only called while visible
+ 
 function xStreamUI:on_idle()
 
   -- scheduling: blinking stuff ---------------------------
@@ -1329,16 +1344,16 @@ function xStreamUI:on_idle()
   if self.build_args_requested then
     self.build_args_requested = false
     self.update_args_requested = true
-    self.args:build_args()
+    self.args_panel:build_args()
   end
 
   if self.update_args_requested then
     self.update_args_requested = false
-    self.args:update()
+    self.args_panel:update()
     self.args_editor:update()
-    self.args:update_selector()
-    self.args:update_controls()
-    self.args:update_visibility()
+    self.args_panel:update_selector()
+    self.args_panel:update_controls()
+    self.args_panel:update_visibility()
   end
 
   if self.update_models_requested then

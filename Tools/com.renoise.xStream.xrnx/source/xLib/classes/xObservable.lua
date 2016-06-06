@@ -206,15 +206,36 @@ function xObservable.attach(obs,arg1,arg2)
 end
 
 --------------------------------------------------------------------------------
--- "safe" removal of entry from ObservableXXXList
+-- remove all entries from ObservableXXXList with specified value 
 
 function xObservable.list_remove(obs,val)
-  print("xObservable.list_remove",obs,val)
+  TRACE("xObservable.list_remove",obs,val)
+
   for k = 1,#obs do
-    if (val == obs[k].value) then
+    if obs[k] and (val == obs[k].value) then
+      --print(">>> list_remove - obs[k].value",obs[k].value)
       obs:remove(k)
-      return
     end
   end
+  return obs
+
 end
 
+--------------------------------------------------------------------------------
+-- add to ObservableXXXList when not already present
+
+function xObservable.list_add(obs,val)
+  TRACE("xObservable.list_add",obs,val)
+
+  local exists = false
+  for k = 1,#obs do
+    if obs[k] and (val == obs[k].value) then
+      exists = true
+    end
+  end
+  if not exists then
+    obs:insert(val)
+  end
+  return obs
+
+end

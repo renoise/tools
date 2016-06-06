@@ -73,22 +73,12 @@ function xStream:__init(...)
   --- int, writeahead amount
   self.writeahead = 0
 
-  --- table<xLine>, output buffer
-  self.buffer = {}
-
-  --- Content is read from the pattern as new content is requested from the 
-  -- callback method - this ensures that the callback always has a
-  -- fully populated line to work on. But unlike the output buffer, the
-  -- read buffer is not cleared when arguments change - it should be read
-  -- only *once*. 
-  -- table<xLine descriptor>, input buffer
-  self.read_buffer = {}
+  self.buffer = xStreamBuffer(self)
 
   --- int, keep track of the highest/lowest line in our buffers
-  self.highest_xinc = 0
-  self.lowest_xinc = 0
+  --self.highest_xinc = 0
+  --self.lowest_xinc = 0
 
-  --self.highest_read_xinc = 0
 
   --- xSongPos.OUT_OF_BOUNDS, handle song boundaries
   self.bounds_mode = xSongPos.OUT_OF_BOUNDS.LOOP
@@ -235,31 +225,38 @@ function xStream:__init(...)
   end
   self.stream.refresh_fn = function()
     if self.active then
-      self:update_read_buffer()
+      self.buffer:update_read_buffer(self.stream.readpos,self.track_index,self.include_hidden)
     end
   end
-
-  --- xStreamUI, built-in user interface
-  self.ui = nil
-  self.ui = xStreamUI(self,args.midi_prefix)
-
-  --- xMidiIO, generic MIDI input/output handler
-  self.midi_io = xMidiIO{
-    midi_inputs = self.prefs.midi_inputs,
-    midi_outputs = self.prefs.midi_outputs,
-    midi_callback_fn = self.handle_midi_input,
-    multibyte_enabled = self.prefs.multibyte_enabled,
-    nrpn_enabled = self.prefs.nrpn_enabled,
-    terminate_nrpns = self.prefs.terminate_nrpns,
-  }
-
-  ---  xVoiceManager
-  self.voicemgr = xVoiceManager{}
 
   -- initialize --
 
   self:determine_writeahead()
 
+  --- xStreamUI, built-in user interface
+  self.ui = xStreamUI{
+    xstream = self,
+    waiting_to_show_dialog = self.prefs.autostart.value,
+    midi_prefix = args.midi_prefix,
+  }
+
+  --- xMidiIO, generic MIDI input/output handler
+  self.midi_io = xMidiIO{
+    midi_inputs = self.prefs.midi_inputs,
+    midi_outputs = self.prefs.midi_outputs,
+    multibyte_enabled = self.prefs.midi_multibyte_enabled.value,
+    nrpn_enabled = self.prefs.midi_nrpn_enabled.value,
+    terminate_nrpns = self.prefs.midi_terminate_nrpns.value,
+    midi_callback_fn = function(xmsg)
+      self:handle_midi_input(xmsg)
+    end,
+  }
+
+  ---  xVoiceManager
+  self.voicemgr = xVoiceManager{}
+
+  --- xStreamScheduler
+  --self.scheduler = xStreamScheduler(self)
 
   -- [app] favorites
 
@@ -281,7 +278,7 @@ function xStream:__init(...)
 
   -- ui options
   self.ui.show_editor = self.prefs.show_editor.value
-  self.ui.args.visible = self.prefs.model_args_visible.value
+  self.ui.args_panel.visible = self.prefs.model_args_visible.value
   self.ui.presets.visible = self.prefs.presets_visible.value
   self.ui.favorites.pinned = self.prefs.favorites_pinned.value
   self.ui.editor_visible_lines = self.prefs.editor_visible_lines.value
@@ -318,11 +315,12 @@ function xStream:__init(...)
   -- sync app > prefs 
 
   self.midi_io.midi_inputs_observable:add_notifier(function(arg)
-    print("self.midi_io.midi_inputs_observable",self.midi_io.midi_inputs_observable)
+    TRACE("*** self.midi_io.midi_inputs_observable",#self.midi_io.midi_inputs_observable,rprint(self.midi_io.midi_inputs_observable))
     self.prefs.midi_inputs = self.midi_io.midi_inputs_observable
   end)
 
   self.midi_io.midi_outputs_observable:add_notifier(function(arg)
+    TRACE("*** self.midi_io.midi_outputs_observable",#self.midi_io.midi_inputs_observable,rprint(self.midi_io.midi_inputs_observable))
     self.prefs.midi_outputs = self.midi_io.midi_outputs_observable
   end)
 
@@ -371,9 +369,9 @@ function xStream:__init(...)
     self.prefs.model_browser_visible.value = self.ui.model_browser_visible
   end)
 
-  self.ui.args.visible_observable:add_notifier(function()
-    TRACE("*** selfUI - self.ui.args.visible_observable fired...")
-    self.prefs.model_args_visible.value = self.ui.args.visible
+  self.ui.args_panel.visible_observable:add_notifier(function()
+    TRACE("*** selfUI - self.ui.args_panel.visible_observable fired...")
+    self.prefs.model_args_visible.value = self.ui.args_panel.visible
   end)
 
   self.ui.presets.visible_observable:add_notifier(function()
@@ -396,6 +394,29 @@ function xStream:__init(...)
     self:attach_to_song()
   end)
 
+  renoise.tool().app_release_document_observable:add_notifier(function()
+    TRACE("*** xStream - app_release_document_observable fired...")
+    self:stop()
+  end)
+
+  self.ui.dialog_visible_observable:add_notifier(function()
+    TRACE("*** xStream - ui.dialog_visible_observable fired...")
+    self:select_launch_model()
+    self.favorites:import("./favorites.xml")
+    self.autosave_enabled = true
+  end)
+
+  self.ui.dialog_became_active_observable:add_notifier(function()
+    TRACE("*** xStream - ui.dialog_became_active_observable fired...")
+  end)
+
+  self.ui.dialog_resigned_active_observable:add_notifier(function()
+    TRACE("*** xStream - ui.dialog_resigned_active_observable fired...")
+  end)
+
+  renoise.tool().app_idle_observable:add_notifier(function()    
+    self:on_idle()
+  end)
 
 
   self:attach_to_song()
@@ -709,7 +730,7 @@ function xStream:schedule_item(model_name,preset_index,preset_bank_name)
     --print("happening_in_lines",happening_in_lines)
     if (happening_in_lines <= self.writeahead) then
       --print("wipe the buffer")
-      self:wipe_futures()
+      self.buffer:wipe_futures()
     end
   end
 
@@ -848,7 +869,7 @@ function xStream:set_selected_model_index(idx)
   end
   --print("set_selected_model_index - selected_model_index =",idx)
   self.selected_model_index_observable.value = idx
-  self:wipe_futures()
+  self.buffer:wipe_futures()
   self:reset()
 
   -- attach notifiers -------------------------------------
@@ -1009,7 +1030,7 @@ function xStream:set_muted(val)
   -- we have muted the track 
   -- stop output and (optionally) write OFF across columns
 
-  self:wipe_futures()
+  self.buffer:wipe_futures()
 
   local line = self.stream.writepos.lines_travelled
   if rns.transport.playing then
@@ -1039,10 +1060,11 @@ function xStream:set_muted(val)
     xline.note_columns = produce_note_off()
   end
 
+  -- TODO use xStreamBuffer methods
   local mute_xline = xLine(xline)
-  self.buffer[self.mute_pos] = mute_xline
-  self.buffer[self.mute_pos+1] = mute_xline
-  self.highest_xinc = math.max(self.mute_pos+1,self.highest_xinc)
+  self.buffer.output_buffer[self.mute_pos] = mute_xline
+  self.buffer.output_buffer[self.mute_pos+1] = mute_xline
+  self.buffer.highest_xinc = math.max(self.mute_pos+1,self.buffer.highest_xinc)
 
   self:do_output(self.stream.writepos)
 
@@ -1105,6 +1127,7 @@ end
 -- [process] activate the launch model
 
 function xStream:select_launch_model()
+  TRACE("xStream:select_launch_model()")
 
   for k,v in ipairs(self.models) do
     if (v.file_path == self.prefs.launch_model.value) then
@@ -1140,7 +1163,7 @@ function xStream:do_output(xpos,num_lines,live_mode)
   end
 
   -- purge old content from buffers
-  self:wipe_past()
+  self.buffer:wipe_past()
 
   -- generate new content as needed
   if not self.muted then
@@ -1205,11 +1228,12 @@ function xStream:do_output(xpos,num_lines,live_mode)
         else
           -- normal output
           --print("*** normal output - travelled,tmp_pos",travelled,tmp_pos)
-          xline = self.buffer[travelled]
+          xline = self.buffer.output_buffer[travelled]
 
           -- check if we can/need to resolve automation
           if type(xline)=="xLine" then
             if self.device_param and xline.automation then
+              --print("*** xline.automation",xline.automation)
               if (tmp_pos.sequence ~= last_auto_seq_idx) then
                 last_auto_seq_idx = tmp_pos.sequence
                 --print("*** last_auto_seq_idx",last_auto_seq_idx)
@@ -1266,7 +1290,7 @@ function xStream:has_content(pos,num_lines)
   TRACE("xStream:has_content(pos,num_lines)",pos,num_lines)
 
   for i = pos,pos+num_lines do
-    if not (self.buffer[i]) then
+    if not (self.buffer.output_buffer[i]) then
       --print("*** has_content - missing from",i)
       return false,i
     end
@@ -1293,7 +1317,6 @@ function xStream:get_content(pos,num_lines,xpos)
   local read_pos = nil
   if self.stream.readpos then
     read_pos = self.stream.readpos
-    --print("*** read_pos - self.readpos",self.stream.readpos)
     --print("*** read_pos - self.stream.writepos",self.stream.writepos)
   else
     read_pos = xSongPos(xpos)
@@ -1315,21 +1338,8 @@ function xStream:get_content(pos,num_lines,xpos)
     local xline
 
     -- retrieve existing content --------------------------
-
-    local has_read_buffer = self.read_buffer[xinc]
-    if has_read_buffer then 
-      --print("*** xStream:get_content - retrieve from read buffer",xinc)
-      xline = self.read_buffer[xinc]
-      --rprint(xline)
-      --print("*** xStream:get_content - retrieved from read buffer",xinc,"=",xline.effect_columns[1].amount_value)
-    else
-      xline = xLine.do_read(
-        read_pos.sequence,read_pos.line,self.include_hidden,self.track_index)
-      self.read_buffer[xinc] = table.rcopy(xline) -- TODO rcopy needed ?
-      --print("*** xStream:get_content - fresh fetch - read_pos",read_pos,"xinc",xinc,"fx-col amount_value",xline.effect_columns[1].amount_value)
-    end
-    --self.highest_read_xinc = math.max(xinc,self.highest_read_xinc)
-    --print("IN  ",xinc,read_pos,xline.note_columns[1].note_string)
+    
+    local xline,has_read_buffer = self.buffer:read_pos(xinc,read_pos,self.track_index,self.include_hidden)
 
     -- handle scheduling ----------------------------------
 
@@ -1350,6 +1360,7 @@ function xStream:get_content(pos,num_lines,xpos)
     end
 
     -- process the callback -------------------------------
+
     local buffer_content = nil
     local success,err = pcall(function()
       buffer_content = callback(xinc,xLine(xline),xSongPos(read_pos))
@@ -1365,15 +1376,15 @@ function xStream:get_content(pos,num_lines,xpos)
       -- callback method - convert everything into class instances...
       -- TODO check against 'user_redefined_xline'
       local success,err = pcall(function()
-        self.buffer[xinc] = xLine.apply_descriptor(buffer_content)
+        self.buffer.output_buffer[xinc] = xLine.apply_descriptor(buffer_content)
       end)
       if not success and err then
         LOG("*** Error: could not convert xline - "..err)
-        self.buffer[xinc] = self.empty_xline
+        self.buffer.output_buffer[xinc] = self.empty_xline
       end
 
     end
-    self.highest_xinc = math.max(xinc,self.highest_xinc)
+    self.buffer.highest_xinc = math.max(xinc,self.buffer.highest_xinc)
 
     if not has_read_buffer then
       read_pos:increase_by_lines(1)
@@ -1410,7 +1421,7 @@ function xStream:resolve_automation(seq_idx)
   local ptrack = patt.tracks[self.track_index]
   assert(ptrack,"Could not find pattern-track")
 
-  return xAutomation:get_or_create_automation(ptrack,self.device_param)
+  return xAutomation.get_or_create_automation(ptrack,self.device_param)
 
 end
 
@@ -1420,12 +1431,8 @@ end
 function xStream:reset()
   TRACE("xStream:reset()")
 
-  self.buffer = {}
-  self.highest_xinc = 0
-  self.lowest_xinc = 0
-
-  self.read_buffer = {}
-  self.stream.readpos = nil
+  self.buffer:clear()
+  --self.stream.readpos = nil
 
   if self.selected_model then
     self.selected_model:reset()
@@ -1501,80 +1508,6 @@ function xStream:unmute()
 
 end
 
--------------------------------------------------------------------------------
--- [process] update all content ahead of our position
--- method is called when xStreamPos is changing position 'abruptly'
-
-function xStream:update_read_buffer()
-  TRACE("xStream:update_read_buffer()")
-
-  if self.stream.readpos then
-    
-    --print(">>> xStream:update_read_buffer - self.stream.readpos",self.stream.readpos)
-    --print(">>> xStream:update_read_buffer - self.stream.playpos",self.stream.playpos)
-    for k = 0,self.writeahead-1 do
-      local xinc = self.stream.readpos.lines_travelled
-      self.read_buffer[xinc] = xLine.do_read(
-        self.stream.readpos.sequence,self.stream.readpos.line,self.include_hidden,self.track_index)
-      --print(">>> xStream:update_read_buffer -- ",xinc,"line in pattern",self.stream.readpos,self.read_buffer[xinc].effect_columns[1].amount_value)
-      self.stream.readpos:increase_by_lines(1)
-    end
-
-    --self.stream.readpos.lines_travelled = self.stream.readpos.lines_travelled - self.writeahead
-    self:wipe_futures()
-  end
-
-end
-
--------------------------------------------------------------------------------
--- [process] forget all output ahead of our current write-position
--- method is automatically called when callback arguments have changed,
--- and will cause fresh line(s) to be created in the next cycle
--- (see also xStreamArgs)
-
-function xStream:wipe_futures()
-  TRACE("xStream:wipe_futures()")
-
-  -- do not wipe while muted
-  if self.muted then
-    return
-  end
-
-  local from_idx = self.stream.writepos.lines_travelled
-  if rns.transport.playing then
-    -- when live streaming, exclude current line
-    from_idx = from_idx+1
-  end
-
-  for i = from_idx,self.highest_xinc do
-    self.buffer[i] = nil
-    --print("*** wiped buffer at",i)
-  end
-
-  self.highest_xinc = self.stream.writepos.lines_travelled
-  --print("*** self.highest_xinc",self.highest_xinc)
-
-end
-
--------------------------------------------------------------------------------
--- [process] wipe all data behind our current write-position
--- (see also xStreamArgs)
-
-function xStream:wipe_past()
-  TRACE("xStream:wipe_past()")
-
-  local from_idx = self.stream.writepos.lines_travelled - 1
-  for i = from_idx,self.lowest_xinc,-1 do
-    self.buffer[i] = nil
-    self.read_buffer[i] = nil
-    --print("*** wipe_past - cleared buffers at ",i)
-  end
-
-  self.lowest_xinc = from_idx
-  --print("lowest_xinc ",from_idx)
-
-end
-
 --------------------------------------------------------------------------------
 -- [app] decide the writeahead amount, depending on the song tempo
 
@@ -1596,8 +1529,14 @@ end
 function xStream:on_idle()
   --TRACE("xStream:on_idle()")
 
-  -- user interface 
-  if self.ui then
+  local dialog_visible = self.ui:dialog_is_visible()
+  if self.suspend_when_hidden and not dialog_visible then
+    --LOG("suspended - prevent idle update")
+    return
+  end
+
+  -- update user-interface
+  if dialog_visible then
     self.ui:on_idle()
   end
 
@@ -1633,9 +1572,7 @@ function xStream:on_idle()
     end
   end
 
-
 end
-
 
 
 -------------------------------------------------------------------------------
@@ -1663,20 +1600,26 @@ function xStream:attach_to_song()
   local playing_notifier = function()
     TRACE("playing_notifier()")
 
-    if not rns.transport.playing then -- autostop
-      if (self.prefs.start_option.value ~= xStreamPrefs.START_OPTION.MANUAL) then
+    if not rns.transport.playing then 
+      --if (self.prefs.start_option.value ~= xStreamPrefs.START_OPTION.MANUAL) then
         self:stop()
-      end
-    elseif not self.active then -- autostart
+      --end
+    elseif not self.active then 
 
-      if self.ui:dialog_is_suspended() then
+      -- playback started 
+
+      local dialog_visible = self.ui:dialog_is_visible() 
+      if not dialog_visible and self.suspend_when_hidden then
+        LOG("Suspended - don't stream")
         return
       end
 
-      if (self.prefs.start_option.value ~= xStreamPrefs.START_OPTION.MANUAL) then
+      if (self.prefs.start_option.value == xStreamPrefs.START_OPTION.MANUAL) then
+        self:start()
+      else
         if rns.transport.edit_mode then
           if (self.prefs.start_option.value == xStreamPrefs.START_OPTION.ON_PLAY_EDIT) then
-            self:start()
+            self:start() 
           end
         else
           if (self.prefs.start_option.value == xStreamPrefs.START_OPTION.ON_PLAY) then
@@ -1692,7 +1635,9 @@ function xStream:attach_to_song()
     TRACE("edit_notifier()")
 
     if rns.transport.edit_mode then
-      if self.ui:dialog_is_suspended() then
+      local dialog_visible = self.ui:dialog_is_visible() 
+      if not dialog_visible and self.suspend_when_hidden then
+        LOG("Suspended - don't stream")
         return
       end
       if rns.transport.playing and
@@ -1819,8 +1764,8 @@ function xStream:apply_to_range(from_line,to_line,travelled)
 
   -- backup settings
   local cached_active = self.active
-  local cached_buffer = self.buffer
-  local cached_read_buffer = self.read_buffer
+  local cached_buffer = self.buffer.output_buffer
+  local cached_read_buffer = self.buffer.line_descriptors
   local cached_readpos = self.stream.readpos
   local cached_bounds_mode = self.bounds_mode
   local cached_block_mode = self.block_mode
@@ -1835,8 +1780,8 @@ function xStream:apply_to_range(from_line,to_line,travelled)
 
   -- restore settings
   self.active = cached_active
-  self.buffer = cached_buffer
-  self.read_buffer = cached_read_buffer
+  self.buffer.output_buffer = cached_buffer
+  self.buffer.line_descriptors = cached_read_buffer
   self.stream.readpos = cached_readpos
   self.bounds_mode = cached_bounds_mode
   self.block_mode = cached_block_mode
@@ -1849,7 +1794,7 @@ end
 --- [app+process]
 
 function xStream:handle_midi_input(xmsg)
-  TRACE("xStream:handle_midi_input(xmsg)")
+  TRACE("xStream:handle_midi_input(xmsg)",xmsg,self)
 
   --[[
   if not self.active then
@@ -1859,6 +1804,7 @@ function xStream:handle_midi_input(xmsg)
   ]]
 
   if not self.selected_model then
+    LOG("No model selected, ignore MIDI input")
     return
   end
 

@@ -20,6 +20,7 @@ xMidiInput
 class 'xMidiIO' 
 
 function xMidiIO:__init(...)
+  TRACE("xMidiIO:__init(...)")
 
   --xApplication.__init(self,...)
 
@@ -28,8 +29,8 @@ function xMidiIO:__init(...)
   assert(type(args.midi_callback_fn)=="function",
     "Required argument 'midi_callback_fn' missing")
 
-  --print("args",rprint(args))
-  print("args.midi_inputs",args.midi_inputs)
+  --print("xMidiIO args",rprint(args))
+  --print("args.midi_inputs",args.midi_inputs)
 
   --- table<string> the ports to open 
   self.midi_inputs = property(self.get_midi_input,self.set_midi_inputs)
@@ -62,7 +63,7 @@ function xMidiIO:__init(...)
   end
 
   self.interpretor.callback_fn = function(xmsg)
-    print("self.interpretor.callback_fn",xmsg)
+    --print("self.interpretor.callback_fn",args.midi_callback_fn,xmsg)
     args.midi_callback_fn(xmsg)
   end
 
@@ -80,7 +81,7 @@ end
 -- open access to midi port 
 
 function xMidiIO:open_midi_input(port_name)
-  print("xMidiIO:open_midi_input(port_name)")
+  TRACE("xMidiIO:open_midi_input(port_name)",port_name)
 
   local input_devices = renoise.Midi.available_input_devices()
   if table.find(input_devices, port_name) then
@@ -116,9 +117,10 @@ function xMidiIO:open_midi_input(port_name)
     )
 
     --self.midi_inputs_observable[#self.midi_inputs_observable] = port_name
-    self.midi_inputs_observable:insert(port_name)
+    self.midi_inputs_observable = xObservable.list_add(self.midi_inputs_observable,port_name)
+    --self.midi_inputs_observable:insert(port_name)
 
-    print(">>> obs got added...")
+    --print(">>> obs got added...")
 
   else
     LOG("*** Could not create MIDI input device " .. port_name)
@@ -131,7 +133,7 @@ end
 -- @param msg (table), midi message
 
 function xMidiIO:input_midi(midi_msg,port_name)
-  print("xMidiIO:input_midi(midi_msg,port_name)",midi_msg,port_name)
+  TRACE("xMidiIO:input_midi(midi_msg,port_name)",midi_msg,port_name)
 
   assert(type(midi_msg),"table","Expected midi_msg to be a table")
   assert(type(port_name),"string","Expected port_name to be a string")
@@ -146,6 +148,7 @@ end
 -- @param port_name (string)
 
 function xMidiIO:input_sysex(sysex_msg,port_name)
+  TRACE("xMidiIO:input_sysex(sysex_msg,port_name)")
 
   assert(type(sysex_msg),"table","Expected sysex_msg to be a table")
   assert(type(port_name),"string","Expected port_name to be a string")
@@ -172,14 +175,14 @@ function xMidiIO:close_midi_input(port_name)
   end
 
   self._midi_input_ports[port_name] = nil
-  xObservable.list_remove(self.midi_inputs_observable,port_name)
+  self.midi_inputs_observable = xObservable.list_remove(self.midi_inputs_observable,port_name)
 
 end
 
 --------------------------------------------------------------------------------
 
 function xMidiIO:open_midi_output(port_name)
-  print("xMidiIO:open_midi_output(port_name)")
+  TRACE("xMidiIO:open_midi_output(port_name)")
 
   local output_devices = renoise.Midi.available_output_devices()
   if table.find(output_devices, port_name) then
@@ -202,8 +205,7 @@ function xMidiIO:close_midi_output(port_name)
   end
 
   self._midi_output_ports[port_name] = nil
-  xObservable.list_remove(self.midi_outputs_observable,port_name)
-
+  self.midi_outputs_observable = xObservable.list_remove(self.midi_outputs_observable,port_name)
 
 end
 
@@ -245,7 +247,7 @@ function xMidiIO:get_midi_inputs()
 end
 
 function xMidiIO:set_midi_inputs(val)
-  print("xMidiIO:set_midi_inputs(val)",val)
+  --print("xMidiIO:set_midi_inputs(val)",val)
   self.midi_inputs_observable = val
 end
 

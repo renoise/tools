@@ -18,6 +18,7 @@ function vDialog:__init(...)
   TRACE("vDialog:__init()")
 
   local args = vLib.unpack_args(...)
+  --print("vDialog.args",rprint(args))
 
   -- string
   self.dialog_title = args.dialog_title or vDialog.DEFAULT_DIALOG_TITLE
@@ -34,8 +35,6 @@ function vDialog:__init(...)
 
   --- bool, set to true to wait until Renoise has a document
   self.waiting_to_show_dialog = args.waiting_to_show_dialog or false
-
-  self.suspend_when_hidden = args.suspend_when_hidden or false
 
   -- events --
 
@@ -64,10 +63,7 @@ function vDialog:__init(...)
 
   -- initialize --
 
-  renoise.tool().app_idle_observable:add_notifier(function()
-    self:idle_notifier_waiting()
-  end)
-
+  renoise.tool().app_idle_observable:add_notifier(self,self.idle_notifier_waiting)
 
 end
 
@@ -82,28 +78,14 @@ function vDialog:show()
   end
 
   if not self.dialog or not self.dialog.visible then
+
     -- create, or re-create if hidden
     if not self.dialog_content then
       self.dialog_content = self:create_dialog()
     end
-    print("self.dialog_content",self.dialog_content)
     self.dialog = renoise.app():show_custom_dialog(
-        self.dialog_title, self.dialog_content,self.dialog_keyhandler)
-
-    -- notifier: remove pre-launch
-    local idle_obs = renoise.tool().app_idle_observable
-    if idle_obs:has_notifier(self.idle_notifier_waiting) then
-      idle_obs:remove_notifier(self.idle_notifier_waiting)
-    end
+      self.dialog_title, self.dialog_content,self.dialog_keyhandler)
   
-    -- notifier: switch to actual
-    if self.on_idle_notifier then
-      if idle_obs:has_notifier(self.on_idle_notifier) then
-        idle_obs:remove_notifier(self.on_idle_notifier)
-      end
-      idle_obs:add_notifier(self.on_idle_notifier)
-    end
-
     self.dialog_visible_observable:bang()
 
   else
@@ -131,11 +113,12 @@ function vDialog:create_dialog()
 end
 
 -------------------------------------------------------------------------------
--- @return boolean, true if we should suspend
 
-function vDialog:dialog_is_suspended()
-  return (self.suspend_when_hidden) and
-    self.dialog and not self.dialog.visible
+function vDialog:dialog_is_visible()
+  --TRACE("vDialog:dialog_is_visible()")
+
+  return self.dialog and self.dialog.visible or false
+
 end
 
 -------------------------------------------------------------------------------
@@ -143,10 +126,24 @@ end
 -- workaround for http://goo.gl/UnSDnw
 
 function vDialog:idle_notifier_waiting()
-  --print(">>> vDialog:idle_notifier_waiting()")
+  TRACE("vDialog:idle_notifier_waiting()")
+
+  local remove_notifier = false
   if self.waiting_to_show_dialog then
-    self.waiting_to_show_dialog = false
-    self:show() 
+    if renoise.song() then --xLib.is_song_available() 
+      self.waiting_to_show_dialog = false
+      self:show() 
+      remove_notifier = true
+    end
+  else
+    remove_notifier = true
   end  
 
+  local idle_obs = renoise.tool().app_idle_observable
+  if remove_notifier and idle_obs:has_notifier(self,vDialog.idle_notifier_waiting) then
+    idle_obs:remove_notifier(self,vDialog.idle_notifier_waiting)
+  end
+
+
 end
+

@@ -516,6 +516,7 @@ function xStreamUIOptions:create_dialog()
   }
 
   local toggle_midi_input = function(elm,checked)
+    --print("toggle_midi_input",elm,checked)
     local item = elm.owner:get_item_by_id(elm.item_id)
     if item then
       item.CHECKBOX = checked
@@ -623,6 +624,7 @@ function xStreamUIOptions:on_idle()
   if view then
     local str_stat = ("Memory usage: %.2f Mb"):format(collectgarbage("count")/1024)
       ..("\nLines Travelled: %d"):format(xs.stream.writepos.lines_travelled)
+      ..("\nReadPosition: %d,%d"):format(xs.stream.readpos.sequence,xs.stream.readpos.line)
       ..("\nWritePosition: %d,%d"):format(xs.stream.writepos.sequence,xs.stream.writepos.line)
       ..("\nWriteahead: %d lines"):format(xs.writeahead)
       ..("\nSelected model: %s"):format(xs.selected_model and xs.selected_model.name or "N/A") 

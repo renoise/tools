@@ -210,7 +210,7 @@ function xStreamArg:notifier()
     self:bind_notifier(self.observable.value)
   end
   if self.properties.impacts_buffer then
-    self.model.xstream:wipe_futures()
+    self.model.xstream.buffer:wipe_futures()
   end
 
 end

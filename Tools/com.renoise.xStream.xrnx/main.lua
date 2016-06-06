@@ -16,7 +16,7 @@ _xlibroot = 'source/xLib/classes/'
 _vlibroot = 'source/vLib/classes/'
 _trace_filters = nil
 --_trace_filters = {".*"}
---_trace_filters = {"^xVoiceManager"}
+--_trace_filters = {"^vDialog"}
 
 
 require (_vlibroot..'vLib')
@@ -27,6 +27,7 @@ require (_vlibroot..'vTable')
 require (_vlibroot..'helpers/vColor')
 
 require (_xlibroot..'xLib')
+require (_xlibroot..'xAutomation')
 require (_xlibroot..'xDebug')
 require (_xlibroot..'xAudioDevice')
 require (_xlibroot..'xBlockLoop')
@@ -55,6 +56,7 @@ require (app_dir..'xStream')
 require (app_dir..'xStreamArg')
 require (app_dir..'xStreamArgs')
 require (app_dir..'xStreamArgsTab')
+require (app_dir..'xStreamBuffer')
 require (app_dir..'xStreamFavorite')
 require (app_dir..'xStreamFavorites')
 require (app_dir..'xStreamModel')
@@ -124,12 +126,7 @@ function show()
   if not xstream then
     xstream = xStream{
       midi_prefix = MIDI_PREFIX,
-      waiting_to_show_dialog = true
     }
-    xstream.ui.on_idle_notifier = function()
-      xstream:on_idle()
-    end
-
     xstream.active_observable:add_notifier(function()
       TRACE("*** main.lua - self.active_observable fired...")
       register_tool_menu()
@@ -142,21 +139,11 @@ function show()
 end
 
 --------------------------------------------------------------------------------
-
-renoise.tool().app_release_document_observable:add_notifier(function()
-  TRACE("*** app_release_document_observable fired...")
-  rns = renoise.song()
-  if xstream then
-    xstream:stop()
-  end
-end)
-
+-- notifications
 --------------------------------------------------------------------------------
 
 renoise.tool().app_new_document_observable:add_notifier(function()
   TRACE("*** app_new_document_observable fired...")
-
-  rns = renoise.song()
 
   if prefs.autostart.value then
     show()

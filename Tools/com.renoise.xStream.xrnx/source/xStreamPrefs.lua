@@ -4,7 +4,8 @@
 
 --[[
 
-  This is a supporting class for xStream
+This is a supporting class for xStream
+
 
 ]]
 
