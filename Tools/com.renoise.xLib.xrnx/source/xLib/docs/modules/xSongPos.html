@@ -1,0 +1,853 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+<head>
+    <title>Reference</title>
+    <link rel="stylesheet" href="../ldoc.css" type="text/css" />
+</head>
+<body>
+
+<div id="container">
+
+<div id="product">
+	<div id="product_logo"></div>
+	<div id="product_name"><big><b></b></big></div>
+	<div id="product_description"></div>
+</div> <!-- id="product" -->
+
+
+<div id="main">
+
+
+<!-- Menu -->
+
+<div id="navigation">
+<br/>
+<h1>ldoc</h1>
+
+<ul>
+  <li><a href="../index.html">Index</a></li>
+</ul>
+
+<h2>Contents</h2>
+<ul>
+<li><a href="#Functions">Functions</a></li>
+<li><a href="#Tables">Tables</a></li>
+<li><a href="#Fields">Fields</a></li>
+</ul>
+
+
+<h2>Modules</h2>
+<ul class="$(kind=='Topics' and '' or 'nowrap'">
+  <li><a href="../modules/xAudioDevice.html">xAudioDevice</a></li>
+  <li><a href="../modules/xBlockLoop.html">xBlockLoop</a></li>
+  <li><a href="../modules/xDebug.html">xDebug</a></li>
+  <li><a href="../modules/xDocument.html">xDocument</a></li>
+  <li><a href="../modules/xEffectColumn.html">xEffectColumn</a></li>
+  <li><a href="../modules/xFilesystem.html">xFilesystem</a></li>
+  <li><a href="../modules/xInstrument.html">xInstrument</a></li>
+  <li><a href="../modules/xLib.html">xLib</a></li>
+  <li><a href="../modules/xLine.html">xLine</a></li>
+  <li><a href="../modules/xLineAutomation.html">xLineAutomation</a></li>
+  <li><a href="../modules/xLinePattern.html">xLinePattern</a></li>
+  <li><a href="../modules/xMessage.html">xMessage</a></li>
+  <li><a href="../modules/xMidiInput.html">xMidiInput</a></li>
+  <li><a href="../modules/xMidiMessage.html">xMidiMessage</a></li>
+  <li><a href="../modules/xNoteColumn.html">xNoteColumn</a></li>
+  <li><a href="../modules/xObservable.html">xObservable</a></li>
+  <li><a href="../modules/xOscClient.html">xOscClient</a></li>
+  <li><a href="../modules/xOscDevice.html">xOscDevice</a></li>
+  <li><a href="../modules/xOscMessage.html">xOscMessage</a></li>
+  <li><a href="../modules/xOscPattern.html">xOscPattern</a></li>
+  <li><a href="../modules/xOscRouter.html">xOscRouter</a></li>
+  <li><a href="../modules/xOscValue.html">xOscValue</a></li>
+  <li><a href="../modules/xParseXML.html">xParseXML</a></li>
+  <li><a href="../modules/xPhrase.html">xPhrase</a></li>
+  <li><a href="../modules/xPhraseMgr.html">xPhraseMgr</a></li>
+  <li><a href="../modules/xPreferences.html">xPreferences</a></li>
+  <li><a href="../modules/xReflection.html">xReflection</a></li>
+  <li><a href="../modules/xRule.html">xRule</a></li>
+  <li><a href="../modules/xRules.html">xRules</a></li>
+  <li><a href="../modules/xRuleset.html">xRuleset</a></li>
+  <li><a href="../modules/xSample.html">xSample</a></li>
+  <li><a href="../modules/xSampleMapping.html">xSampleMapping</a></li>
+  <li><a href="../modules/xSandbox.html">xSandbox</a></li>
+  <li><a href="../modules/xScale.html">xScale</a></li>
+  <li><strong>xSongPos</strong></li>
+  <li><a href="../modules/xStreamPos.html">xStreamPos</a></li>
+  <li><a href="../modules/xTrack.html">xTrack</a></li>
+  <li><a href="../modules/xValue.html">xValue</a></li>
+  <li><a href="../modules/xVoice.html">xVoice</a></li>
+  <li><a href="../modules/xVoiceManager.html">xVoiceManager</a></li>
+</ul>
+
+</div>
+
+<div id="content">
+
+<h1>Module <code>xSongPos</code></h1>
+<p>Describes a position within the project timeline
+.</p>
+<p>
+
+<h1></h1>
+
+<p>Three options are designed to deal with song boundaries, pattern-loop and
+block-loop boundaries. By default, they are set to settings which mimic
+the behavior in Renoise when playing/manipulating the playback position:</p>
+
+<p>self.bounds<em>mode = xSongPos.OUT</em>OF<em>BOUNDS.LOOP
+self.loop</em>boundary = xSongPos.LOOP<em>BOUNDARY.SOFT
+self.block</em>boundary = xSongPos.BLOCK_BOUNDARY.SOFT</p>
+
+</p>
+
+
+<h2><a href="#Functions">Functions</a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#__init">__init (pos)</a></td>
+	<td class="summary">constructor - create new position
+ at the very least, you need to specify a table containing {sequence,line}</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#get_pattern_index">get_pattern_index (seq_idx)</a></td>
+	<td class="summary">Static methods</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#get_pattern_num_lines">get_pattern_num_lines (seq_idx)</a></td>
+	<td class="summary">Retrieve the pattern index
+ OPTIMIZE how to implement a caching mechanism?</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#end_of_sequence_loop">end_of_sequence_loop (seq_idx)</a></td>
+	<td class="summary">
+
+</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#start_of_sequence_loop">start_of_sequence_loop (seq_idx)</a></td>
+	<td class="summary">
+
+</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#end_of_blockloop">end_of_blockloop (line_idx)</a></td>
+	<td class="summary">check if line is equal to, or beyond end of block-loop</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#start_of_blockloop">start_of_blockloop (line_idx)</a></td>
+	<td class="summary">check if line is equal to, or before start of block-loop</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#within_bounds">within_bounds (seq_idx, line_idx)</a></td>
+	<td class="summary">check if position is within actual song boundaries</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#get_line_diff">get_line_diff (pos1, pos2)</a></td>
+	<td class="summary">
+
+</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#increase_by_lines">increase_by_lines (num_lines)</a></td>
+	<td class="summary">increase the position by X number of lines</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#decrease_by_lines">decrease_by_lines (num_lines)</a></td>
+	<td class="summary">subtract a number of lines from position</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#enforce_boundary">enforce_boundary (direction, seq_idx, line_idx)</a></td>
+	<td class="summary">restrict the position to boundaries (sequence, loop)</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#enforce_block_boundary">enforce_block_boundary (direction, line_idx, line_delta)</a></td>
+	<td class="summary">restrict the position to boundaries (block-loop)</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#next_beat">next_beat ()</a></td>
+	<td class="summary">return the next beat position</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#next_bar">next_bar ()</a></td>
+	<td class="summary">return the next bar position</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#next_block">next_block ()</a></td>
+	<td class="summary">return the next block position</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#next_pattern">next_pattern ()</a></td>
+	<td class="summary">return the beginning of next pattern</td>
+	</tr>
+</table>
+<h2><a href="#Tables">Tables</a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#OUT_OF_BOUNDS">OUT_OF_BOUNDS</a></td>
+	<td class="summary">How to deal with sequence (song) boundaries
+ CAP: do not exceed, cap at beginning/end
+ LOOP: going past the end will take us to the start, and vice versa
+ NULL: going past the end or start will return nil</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#LOOP_BOUNDARY">LOOP_BOUNDARY</a></td>
+	<td class="summary">How to deal with loop boundaries
+ HARD: always stay within loop, no matter the position
+ SOFT: only stay within loop when playback takes us there
+ NONE: continue past loop boundary (ignore)</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#BLOCK_BOUNDARY">BLOCK_BOUNDARY</a></td>
+	<td class="summary">How to deal with block-loop boundaries
+ HARD: always stay within loop, no matter the position
+ SOFT: only stay within loop when playback takes us there
+ NONE: continue past loop boundary (ignore)</td>
+	</tr>
+</table>
+<h2><a href="#Fields">Fields</a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#self.sequence">self.sequence</a></td>
+	<td class="summary">position in the pattern sequence.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#self.line">self.line</a></td>
+	<td class="summary">position in the pattern at the given pattern sequence.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#self.lines_travelled">self.lines_travelled</a></td>
+	<td class="summary">int, travelled distance (in lines)
+ note: this is not reliable unless you are (exclusively) using
+ the increase/decrease methods to control the position!</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#self.bounds_mode">self.bounds_mode</a></td>
+	<td class="summary">xSongPos.OUT<em>OF</em>BOUNDS, deal with sequence (song) boundaries</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#self.loop_boundary">self.loop_boundary</a></td>
+	<td class="summary">xSongPos.LOOP_BOUNDARY, deals with patt-loop boundaries</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#self.block_boundary">self.block_boundary</a></td>
+	<td class="summary">xSongPos.BLOCK_BOUNDARY, deals with block-loop boundaries</td>
+	</tr>
+</table>
+
+<br/>
+<br/>
+
+
+    <h2><a name="Functions"></a>Functions</h2>
+    <dl class="function">
+    <dt>
+    <a name = "__init"></a>
+    <strong>__init (pos)</strong>
+    </dt>
+    <dd>
+    constructor - create new position
+ at the very least, you need to specify a table containing {sequence,line}
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">pos</span>
+        [opt] (renoise.SongPos, xSongPos or {sequence,line} )
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "get_pattern_index"></a>
+    <strong>get_pattern_index (seq_idx)</strong>
+    </dt>
+    <dd>
+    Static methods  Retrieve the pattern index while respecting the OUT<em>OF</em>BOUNDS mode
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">seq_idx</span>
+        , sequence index
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        int or nil
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "get_pattern_num_lines"></a>
+    <strong>get_pattern_num_lines (seq_idx)</strong>
+    </dt>
+    <dd>
+    Retrieve the pattern index
+ OPTIMIZE how to implement a caching mechanism?
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">seq_idx</span>
+        , sequence index
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+        <li>
+        int or nil</li>
+        <li>
+        int, sequence index or nil</li>
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "end_of_sequence_loop"></a>
+    <strong>end_of_sequence_loop (seq_idx)</strong>
+    </dt>
+    <dd>
+
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">seq_idx</span>
+        , sequence index
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+        <li>
+        int, sequence index or nil</li>
+        <li>
+        int, sequence index or nil</li>
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "start_of_sequence_loop"></a>
+    <strong>start_of_sequence_loop (seq_idx)</strong>
+    </dt>
+    <dd>
+
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">seq_idx</span>
+        , sequence index
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        int, sequence index or nil
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "end_of_blockloop"></a>
+    <strong>end_of_blockloop (line_idx)</strong>
+    </dt>
+    <dd>
+    check if line is equal to, or beyond end of block-loop
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">line_idx</span>
+        , line index
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        int, line index or nil
+[[
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "start_of_blockloop"></a>
+    <strong>start_of_blockloop (line_idx)</strong>
+    </dt>
+    <dd>
+    check if line is equal to, or before start of block-loop
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">line_idx</span>
+        , line index
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        int, line index or nil
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "within_bounds"></a>
+    <strong>within_bounds (seq_idx, line_idx)</strong>
+    </dt>
+    <dd>
+    check if position is within actual song boundaries
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">seq_idx</span>
+        , int
+        </li>
+        <li><span class="parameter">line_idx</span>
+        , int
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+        <li>
+        bool</li>
+        <li>
+        int</li>
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "get_line_diff"></a>
+    <strong>get_line_diff (pos1, pos2)</strong>
+    </dt>
+    <dd>
+
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">pos1</span>
+         (SongPos)
+        </li>
+        <li><span class="parameter">pos2</span>
+         (SongPos)
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        int
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "increase_by_lines"></a>
+    <strong>increase_by_lines (num_lines)</strong>
+    </dt>
+    <dd>
+    increase the position by X number of lines
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">num_lines</span>
+
+
+
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "decrease_by_lines"></a>
+    <strong>decrease_by_lines (num_lines)</strong>
+    </dt>
+    <dd>
+    subtract a number of lines from position
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">num_lines</span>
+        , int
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "enforce_boundary"></a>
+    <strong>enforce_boundary (direction, seq_idx, line_idx)</strong>
+    </dt>
+    <dd>
+    restrict the position to boundaries (sequence, loop)
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">direction</span>
+        , string ("increase" or "decrease")
+        </li>
+        <li><span class="parameter">seq_idx</span>
+        , int
+        </li>
+        <li><span class="parameter">line_idx</span>
+        , int
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+         sequence,line,done
+  sequence (int)
+  line (int)
+  done (bool), true when no further action needed (capped/nullified)
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "enforce_block_boundary"></a>
+    <strong>enforce_block_boundary (direction, line_idx, line_delta)</strong>
+    </dt>
+    <dd>
+    restrict the position to boundaries (block-loop)
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">direction</span>
+        , string ("increase" or "decrease")
+        </li>
+        <li><span class="parameter">line_idx</span>
+         (int)
+        </li>
+        <li><span class="parameter">line_delta</span>
+         (int), #lines to add/subtract, negative when decreasing
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        line (int)
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "next_beat"></a>
+    <strong>next_beat ()</strong>
+    </dt>
+    <dd>
+    return the next beat position
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "next_bar"></a>
+    <strong>next_bar ()</strong>
+    </dt>
+    <dd>
+    return the next bar position
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "next_block"></a>
+    <strong>next_block ()</strong>
+    </dt>
+    <dd>
+    return the next block position
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "next_pattern"></a>
+    <strong>next_pattern ()</strong>
+    </dt>
+    <dd>
+    return the beginning of next pattern
+
+
+
+
+
+
+
+</dd>
+</dl>
+    <h2><a name="Tables"></a>Tables</h2>
+    <dl class="function">
+    <dt>
+    <a name = "OUT_OF_BOUNDS"></a>
+    <strong>OUT_OF_BOUNDS</strong>
+    </dt>
+    <dd>
+    How to deal with sequence (song) boundaries
+ CAP: do not exceed, cap at beginning/end
+ LOOP: going past the end will take us to the start, and vice versa
+ NULL: going past the end or start will return nil
+
+
+    <h3>Fields:</h3>
+    <ul>
+        <li><span class="parameter">CAP</span>
+
+
+
+        </li>
+        <li><span class="parameter">LOOP</span>
+
+
+
+        </li>
+        <li><span class="parameter">NULL</span>
+
+
+
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "LOOP_BOUNDARY"></a>
+    <strong>LOOP_BOUNDARY</strong>
+    </dt>
+    <dd>
+    How to deal with loop boundaries
+ HARD: always stay within loop, no matter the position
+ SOFT: only stay within loop when playback takes us there
+ NONE: continue past loop boundary (ignore)
+
+
+    <h3>Fields:</h3>
+    <ul>
+        <li><span class="parameter">HARD</span>
+
+
+
+        </li>
+        <li><span class="parameter">SOFT</span>
+
+
+
+        </li>
+        <li><span class="parameter">NONE</span>
+
+
+
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "BLOCK_BOUNDARY"></a>
+    <strong>BLOCK_BOUNDARY</strong>
+    </dt>
+    <dd>
+    How to deal with block-loop boundaries
+ HARD: always stay within loop, no matter the position
+ SOFT: only stay within loop when playback takes us there
+ NONE: continue past loop boundary (ignore)
+
+
+    <h3>Fields:</h3>
+    <ul>
+        <li><span class="parameter">HARD</span>
+
+
+
+        </li>
+        <li><span class="parameter">SOFT</span>
+
+
+
+        </li>
+        <li><span class="parameter">NONE</span>
+
+
+
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+</dl>
+    <h2><a name="Fields"></a>Fields</h2>
+    <dl class="function">
+    <dt>
+    <a name = "self.sequence"></a>
+    <strong>self.sequence</strong>
+    </dt>
+    <dd>
+    position in the pattern sequence.
+ TODO make property
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "self.line"></a>
+    <strong>self.line</strong>
+    </dt>
+    <dd>
+    position in the pattern at the given pattern sequence.
+ TODO make property
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "self.lines_travelled"></a>
+    <strong>self.lines_travelled</strong>
+    </dt>
+    <dd>
+    int, travelled distance (in lines)
+ note: this is not reliable unless you are (exclusively) using
+ the increase/decrease methods to control the position!
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "self.bounds_mode"></a>
+    <strong>self.bounds_mode</strong>
+    </dt>
+    <dd>
+    xSongPos.OUT<em>OF</em>BOUNDS, deal with sequence (song) boundaries
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "self.loop_boundary"></a>
+    <strong>self.loop_boundary</strong>
+    </dt>
+    <dd>
+    xSongPos.LOOP_BOUNDARY, deals with patt-loop boundaries
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "self.block_boundary"></a>
+    <strong>self.block_boundary</strong>
+    </dt>
+    <dd>
+    xSongPos.BLOCK_BOUNDARY, deals with block-loop boundaries
+
+
+
+
+
+
+
+</dd>
+</dl>
+
+
+</div> <!-- id="content" -->
+</div> <!-- id="main" -->
+<div id="about">
+<i>generated by <a href="http://github.com/stevedonovan/LDoc">LDoc 1.4.2</a></i>
+</div> <!-- id="about" -->
+</div> <!-- id="container" -->
+</body>
+</html>
