@@ -1033,7 +1033,7 @@ function xStreamUI:set_editor_content()
   if not model then
     text = xStreamUI.WELCOME_MSG
   else
-    local cb_type,cb_key = xStreamUI.get_editor_type(self.editor_view)
+    local cb_type,cb_key,cb_subtype = xStreamUI.get_editor_type(self.editor_view)
     if (cb_type == "main") then
       text = model.sandbox.callback_str 
       set_button_state(false)
@@ -1041,7 +1041,7 @@ function xStreamUI:set_editor_content()
       text = model.data_initial[cb_key]
       set_button_state(true)
     elseif (cb_type == "events") then
-      text = model.events[cb_key]
+      text = model.events[cb_key.."."..cb_subtype]
       set_button_state(true)
     end
   end
@@ -1066,7 +1066,7 @@ function xStreamUI:apply_editor_content()
   if model then
     --print("*** xStreamUI:on_idle - callback modified")
     local view = self.vb.views["xStreamCallbackEditor"]
-    local cb_type,cb_key = xStreamUI.get_editor_type(self.editor_view)
+    local cb_type,cb_key,cb_subtype = xStreamUI.get_editor_type(self.editor_view)
     if (cb_type == "main") then
       model.callback_str = view.text 
     elseif (cb_type == "data") then
@@ -1077,7 +1077,8 @@ function xStreamUI:apply_editor_content()
       self.xstream.callback_status_observable.value = str_status
     elseif (cb_type == "events") then
       local def = table.rcopy(model.events)
-      def[cb_key] = view.text
+      def[cb_key.."."..cb_subtype] = view.text
+      --print("apply content",cb_key.."."..cb_subtype)
       local str_status = model:parse_events(def)
       self.xstream.callback_status_observable.value = str_status
     end
@@ -1243,16 +1244,19 @@ function xStreamUI:rename_callback(new_name)
     return
   end
 
-  local cb_type,cb_key = xStreamUI.get_editor_type(self.editor_view)
+  local cb_type,cb_key,cb_subtype = xStreamUI.get_editor_type(self.editor_view)
   if not new_name then
-    new_name = vPrompt.prompt_for_string(cb_key,
+    new_name = vPrompt.prompt_for_string(cb_subtype or cb_key,
       "Enter a new name","Rename callback")
     if not new_name then
       return true
     end
   end
 
-  model:rename_callback(cb_key,new_name,cb_type)
+  -- events contain two parts
+  local old_name = cb_subtype and cb_key.."."..cb_subtype or cb_key
+
+  model:rename_callback(old_name,new_name,cb_type)
 
   self.user_modified_callback = true
 
@@ -1274,8 +1278,8 @@ function xStreamUI:remove_callback()
     {"OK","Cancel"})
   
   if (choice == "OK") then
-    local cb_type,cb_key = xStreamUI.get_editor_type(self.editor_view)
-    model:remove_callback(cb_type,cb_key)
+    local cb_type,cb_key,cb_subtype = xStreamUI.get_editor_type(self.editor_view)
+    model:remove_callback(cb_type,cb_subtype and cb_key.."."..cb_subtype or cb_key)
     --self:update_editor()
     self.update_editor_requested = true
   end
@@ -1387,8 +1391,10 @@ end
 --------------------------------------------------------------------------------
 -- Static methods
 --------------------------------------------------------------------------------
--- @return string, "main","data" or "events"
+-- @param str_name (string), e.g. "events.midi.note_on" or "main"
+-- @return string, type - "main","data" or "events"
 -- @return string, callback name (not when first string is "main")
+-- @return string, subtype (only for events), e.g. "midi" or "voice"
 
 function xStreamUI.get_editor_type(str_name)
 
@@ -1398,8 +1404,9 @@ function xStreamUI.get_editor_type(str_name)
     local key = str_name:sub(6)
     return xStreamModel.CB_TYPE.DATA,key
   elseif (str_name:sub(0,7) == "events.") then
-    local key = str_name:sub(8)
-    return xStreamModel.CB_TYPE.EVENTS,key
+    local key = str_name:sub(8)    
+    local parts = xLib.split(key,"%.") -- split at dot
+    return xStreamModel.CB_TYPE.EVENTS,parts[1],parts[2]
   end
 
 end

@@ -227,7 +227,7 @@ function xStream:__init(...)
   self.stream.refresh_fn = function()
     -- on abrupt position-changes
     if self.active then
-      self.buffer:update_read_buffer(self.track_index,self.include_hidden)
+      self.buffer:update_read_buffer()
     end
   end
 
@@ -1345,7 +1345,7 @@ function xStream:get_content(pos,num_lines,xpos)
 
     -- retrieve existing content --------------------------
     
-    local xline,has_read_buffer = self.buffer:read_pos(xinc,read_pos,self.track_index,self.include_hidden)
+    local xline,has_read_buffer = self.buffer:read_pos(xinc,read_pos)
 
     -- handle scheduling ----------------------------------
 
@@ -1822,7 +1822,10 @@ function xStream:handle_midi_input(xmsg)
   --print("rslt,idx",rslt,idx)
   --print("voices...",rprint(self.voicemgr.voices))
 
-  local handler = self.selected_model:get_event_handler(xmsg.message_type)
+  local event_key = "midi."..tostring(xmsg.message_type)
+  --print("event_key",event_key)
+  --print("self.selected_model.events_compiled",rprint(self.selected_model.events_compiled))
+  local handler = self.selected_model.events_compiled[event_key]
   if handler then
     --print("about to handle xmsg",xmsg)
     local passed,err = pcall(function()
@@ -1832,6 +1835,8 @@ function xStream:handle_midi_input(xmsg)
     if not passed then
       LOG("*** Error while handling MIDI event",err)
     end
+  else
+    LOG("*** could not locate handler for event",event_key)
   end
 
 

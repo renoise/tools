@@ -40,29 +40,6 @@ function xStreamUICallbackCreate:show()
 
 end
 
---------------------------------------------------------------------------------
--- create new callback
---[[
-function xStreamUICallbackCreate:create_callback()
-  TRACE("xStreamUICallbackCreate:create_callback()")
-
-  self.dialog_page = 1
-  self.dialog_option = 1
-
-  if not self.dialog or not self.dialog.visible then
-    if not self.model_dialog_content then
-      self.model_dialog_content = self:create_model_dialog()
-    end
-    self:update_dialog()
-    self.dialog = renoise.app():show_custom_dialog(
-        "Create callback", self.model_dialog_content)
-  else
-    self.dialog:show()
-  end
-
-end
-]]
-
 -------------------------------------------------------------------------------
 -- (overridden method)
 -- @return renoise.Views.Rack
@@ -95,8 +72,8 @@ function xStreamUICallbackCreate:create_dialog()
             id = "xStreamNewModelDialogOptionChooser",
             value = self.dialog_option,
             items = {
-              "Create userdata",
-              "Create (MIDI-)event",
+              "Add userdata",
+              "Add event handler",
             },
             notifier = function(idx)
               self.dialog_option = idx
@@ -125,36 +102,7 @@ function xStreamUICallbackCreate:create_dialog()
               value = 1,
             }
           },
-          --[[
-          vb:column{
-            id = "xStreamNewModelDialogPage2Option2",
-            vb:text{
-              text = "Please paste the lua string here",
-            },
-            vb:multiline_textfield{
-              text = "",
-              font = "mono",
-              id = "xStreamNewModelDialogDefinition",
-              height = TEXT_H,
-              width = xStreamUI.CALLBACK_EDITOR_W,
-            },
-          },
-          vb:column{
-            id = "xStreamNewModelDialogPage2Option3",
-            vb:row{
-              vb:text{
-                text = "Please choose a file",
-              },
-              vb:button{
-                text = "Browse",
-                notifier = function()
-                  self:navigate_to_model()
-                end
-              }
-            },
 
-          },
-          ]]
         }
       },
     }
@@ -328,46 +276,6 @@ function xStreamUICallbackCreate:show_next_page()
 
 end
 
--------------------------------------------------------------------------------
---[[
-function xStreamUICallbackCreate:navigate_to_model()
-
-  local file_path = renoise.app():prompt_for_filename_to_read({"*.lua"},"Open model definition")
-  --print("file_path",file_path)
-  if (file_path ~= "") then
-    -- attempt to load model
-    local model = xStreamModel(self.xstream)
-    local passed,err = model:load_definition(file_path)
-    --print("passed,err",passed,err)
-    if not passed and err then
-      renoise.app():show_warning(err)
-      return
-    end
-    model.file_path = xStreamModel.get_normalized_file_path(model.name)
-    if not self:validate_callback_name(model.name) then
-      renoise.app():show_warning("Error: a model already exists with this name")
-      return
-    end
-    self:add_save_and_close(model)
-  end
-
-end
-
--------------------------------------------------------------------------------
-
-function xStreamUICallbackCreate:add_save_and_close(model)
-
-  self.xstream:add_model(model)
-  local got_saved,err = model:save()
-  if not got_saved and err then
-    renoise.app():show_warning(err)
-  end
-  self.xstream.selected_model_index = #self.xstream.models
-  self.dialog:close()
-  self.dialog = nil
-
-end
-]]
 
 -------------------------------------------------------------------------------
 
@@ -384,16 +292,29 @@ end
 -------------------------------------------------------------------------------
 
 function xStreamUICallbackCreate:get_available_event_names()
+  TRACE("xStreamUICallbackCreate:get_available_event_names()")
 
-  local rslt = xLib.stringify_table(xMidiMessage.TYPE)
+  local rslt = {}
+
+  local midi_events = xLib.stringify_table(xMidiMessage.TYPE,"midi.")
+  local voice_events = xLib.stringify_table(xVoiceManager.EVENTS,"voice.")
+
+  for k,v in pairs(midi_events) do 
+    rslt[k] = v 
+  end
+  for k,v in pairs(voice_events) do 
+    rslt[k] = v 
+  end
 
   local model = self.xstream.selected_model
   for k,v in pairs(model.events) do 
-    local cb_type,cb_key = xStreamUI.get_editor_type("events."..k)
-    --print(">>> get_available_event_names - cb_type,cb_key",cb_type,cb_type,"events."..k)
-    local event_idx = table.find(rslt,cb_key)
+    local cb_type,cb_key,cb_subtype = xStreamUI.get_editor_type("events."..k)
+    --print(">>> get_available_event_names - cb_type,cb_key,cb_subtype",cb_type,cb_key,cb_subtype)
+    local event_key = cb_subtype and cb_key.."."..cb_subtype or cb_key
+    local event_idx = table.find(rslt,event_key)
+    --print(">>> event_idx",event_idx)
     if not event_idx then
-      rslt[cb_key] = nil
+      rslt[event_key] = nil
     end
   end
   --print(">>> rslt",rprint(rslt))

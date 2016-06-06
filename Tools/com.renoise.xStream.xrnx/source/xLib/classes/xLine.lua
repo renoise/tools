@@ -16,6 +16,22 @@ This class is used to describe a single line in the song
 
 class 'xLine'
 
+xLine.EMPTY_NOTE_COLUMNS = {
+  {},{},{},{},
+  {},{},{},{},
+  {},{},{},{},
+}
+
+xLine.EMPTY_EFFECT_COLUMNS = {
+  {},{},{},{},
+  {},{},{},{},
+}
+
+xLine.EMPTY_XLINE = {
+  note_columns = xLine.EMPTY_NOTE_COLUMNS,
+  effect_columns = xLine.EMPTY_EFFECT_COLUMNS,
+} 
+
 -------------------------------------------------------------------------------
 -- constructor method
 -- @param args (table)

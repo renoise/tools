@@ -27,41 +27,55 @@ function xStreamBuffer:__init(xstream)
 
   self.xstream = xstream
 
-  --- table<xLine descriptor> content read from pattern 
+  --- table<xLine or descriptor> content read from pattern 
   self.line_descriptors = {}
 
   --- table<xLine> the output buffer
   self.output_buffer = {}
 
+  --- table<xLine or descriptor>, scheduled events
+  self.events = {}
+
   --- int, keep track of the highest/lowest line in our buffers
   self.highest_xinc = 0
   self.lowest_xinc = 0
 
-  --- table<xLine>, scheduled events
-  self.events = {}
-
 end
 
 -------------------------------------------------------------------------------
--- read a line into the buffer from a pattern somewhere...
+-- read a line from the buffer or pattern
+-- content can come from (a) scheduled lines (if any), or (b) buffered data
+-- if neither exist, and pos is defined, we proceed to read from song
+-- @param xinc (int), the buffer position
+-- @param pos (SongPos), where to read from song
+-- @return xLine, xline descriptor or nil
+-- @return bool (true when content comes from buffer)
 
-function xStreamBuffer:read_pos(xinc,pos,track_idx,include_hidden,include_events)
-  TRACE("xStreamBuffer:read_pos()",xinc,pos,track_idx,include_hidden,include_events)
-
-  local seq_idx,line_idx = pos.sequence,pos.line
+function xStreamBuffer:read_pos(xinc,pos)
+  TRACE("xStreamBuffer:read_pos(xinc,pos)",xinc,pos)
 
   local xline = nil
   if self.events[xinc] then
     print(">>> read_pos - read from event buffer",xinc)
     xline = self.events[xinc]
   else
-    print(">>> read_pos - read from pattern",xinc)
+    print(">>> read_pos - read from pattern buffer",xinc)
     xline = self.line_descriptors[xinc]
   end
   local buffered = xline and true or false
   if not buffered then 
-    xline = xLine.do_read(seq_idx,line_idx,include_hidden,track_idx)
-    self.line_descriptors[xinc] = table.rcopy(xline) 
+    if pos then
+      print(">>> read_pos - read from pattern",xinc,pos.sequence,pos.line)
+      local seq_idx,line_idx = pos.sequence,pos.line
+      xline = xLine.do_read(
+        seq_idx,line_idx,self.xstream.include_hidden,self.xstream.track_index)
+      self.line_descriptors[xinc] = table.rcopy(xline) 
+    end
+  end
+
+  if not xline then
+    print(">>> read_pos - return empty xline")
+    xline = table.rcopy(xLine.EMPTY_XLINE)
   end
 
   return xline,buffered
@@ -72,7 +86,7 @@ end
 -- update all content ahead of our position
 -- method is called when xStreamPos is changing position 'abruptly'
 
-function xStreamBuffer:update_read_buffer(track_idx,include_hidden)
+function xStreamBuffer:update_read_buffer()
   TRACE("xStreamBuffer:update_read_buffer()")
 
   local pos = self.stream.readpos
@@ -83,7 +97,7 @@ function xStreamBuffer:update_read_buffer(track_idx,include_hidden)
         self.line_descriptors[xinc] = self.events[xinc]
       else
         self.line_descriptors[xinc] = xLine.do_read(
-          pos.sequence,pos.line,include_hidden,track_idx)
+          pos.sequence,pos.line,self.xstream.include_hidden,self.xstream.track_index)
       end
       pos:increase_by_lines(1)
     end
@@ -148,7 +162,7 @@ end
 --- clear when preparing to stream
 
 function xStreamBuffer:clear()
-  TRACE("xStreamBuffer:clear()")
+  print("xStreamBuffer:clear()")
 
   self.highest_xinc = 0
   self.lowest_xinc = 0
@@ -165,8 +179,8 @@ end
 -- @return int (buffer position)
 -- @return int (delta, difference from current position)
 
-function xStreamBuffer:get_buffer_pos(schedule)
-  print("xStreamBuffer:get_buffer_pos(schedule)",schedule)
+function xStreamBuffer:get_scheduled_pos(schedule)
+  TRACE("xStreamBuffer:get_scheduled_pos(schedule)",schedule)
 
   local live_mode = rns.transport.playing
   local writepos = self.xstream.stream.writepos
@@ -194,8 +208,8 @@ function xStreamBuffer:get_buffer_pos(schedule)
 
   if schedules[schedule] then
     local delta = schedules[schedule]()
-    local buffer_pos = writepos.lines_travelled + delta
-    return buffer_pos,delta
+    local xinc = writepos.lines_travelled + delta
+    return xinc,delta
   else
     error("Unsupported schedule type, please use NONE/BEAT/BAR")
   end
@@ -212,22 +226,47 @@ end
 -- @param xline (table, xline descriptor)
 
 function xStreamBuffer:schedule_line(schedule,xline)
-  print("xStreamBuffer:schedule_line(schedule,xline)",schedule,xline)
+  TRACE("xStreamBuffer:schedule_line(schedule,xline)",schedule,xline)
 
   assert(type(schedule)=="number")
   assert(type(xline)=="table")
 
-  local xinc = nil
-  local writepos = self.xstream.stream.writepos
-  local live_mode = rns.transport.playing
+  local xinc,delta = self:get_scheduled_pos(schedule)
+  --print("xinc,delta",xinc,delta)
+  self:add_line(xinc,xline)
 
-  local buffer_pos,delta = self:get_buffer_pos(schedule)
-  print("buffer_pos,delta",buffer_pos,delta)
+end
+
+-------------------------------------------------------------------------------
+-- TODO Unregister a scheduled xline - 
+
+function xStreamBuffer:unschedule_line(xinc)
+  TRACE("xStreamBuffer:unschedule_line(xinc)",xinc)
+
+
+  -- when within output range, wipe output buffer
+
+    -- if output is imminent, clear 
+
+  self.events[xinc] = nil
+
+end
+
+-------------------------------------------------------------------------------
+-- add 
+
+function xStreamBuffer:add_line(xinc,xline)
+  TRACE("xStreamBuffer:add_line(xinc,xline)",xinc,xline)
+
+  local live_mode = rns.transport.playing
+  local writepos = self.xstream.stream.writepos
+  local delta = writepos.lines_travelled - xinc
+
   if (delta <= self.xstream.writeahead) then
     -- within output range - insert into output_buffer
-    print("insert into output_buffer at position",buffer_pos)
-    self.output_buffer[buffer_pos] = xLine.apply_descriptor(xline)
-    self.highest_xinc = math.max(buffer_pos,self.highest_xinc)
+    --print("insert into output_buffer at position",xinc)
+    self.output_buffer[xinc] = xLine.apply_descriptor(xline)
+    self.highest_xinc = math.max(xinc,self.highest_xinc)
     if (delta == 1) then
       -- immediate output!
       self.xstream:do_output(writepos,2,live_mode)
@@ -235,86 +274,8 @@ function xStreamBuffer:schedule_line(schedule,xline)
   end
 
   -- any range: insert into events table 
-  --print("self.events",delta,type(self.events),rprint(self.events))
-  --self.events[delta] = xline
-
-
-end
-
--------------------------------------------------------------------------------
--- Unregister a scheduled xline - 
-
-function xStreamBuffer:unschedule_line(xinc)
-  print("xStreamBuffer:unschedule_line(xinc)",xinc)
-
-  -- when within output range, wipe output buffer
-
-    -- if output is imminent, clear 
-
-  -- remove from events table
-
+  print("insert xline into self.events at position",xinc)
+  self.events[xinc] = xline
 
 end
-
--------------------------------------------------------------------------------
---[[
-
-function xStreamBuffer:add_line(pos)
-
-end
-
--------------------------------------------------------------------------------
--- clear single line (all events)
-
-function xStreamBuffer:clear_line(pos)
-
-end
-
--------------------------------------------------------------------------------
--- clear all lines ahead from given point in time
-
-function xStreamBuffer:clear_lines(pos)
-
-end
-
-
--------------------------------------------------------------------------------
-
-function xStreamBuffer:add_note_column(pos,note_col)
-
-end
-
--------------------------------------------------------------------------------
-
-function xStreamBuffer:clear_note_column(pos,col_idx)
-
-end
-
--------------------------------------------------------------------------------
-
-function xStreamBuffer:clear_note_columns(pos)
-
-end
-
--------------------------------------------------------------------------------
-
-function xStreamBuffer:add_effect_column(pos,fx_col)
-
-end
-
--------------------------------------------------------------------------------
-
-function xStreamBuffer:clear_effect_column(pos,col_idx)
-
-end
-
--------------------------------------------------------------------------------
-
-function xStreamBuffer:clear_effect_columns(pos)
-
-end
-
-
-]]
-
 

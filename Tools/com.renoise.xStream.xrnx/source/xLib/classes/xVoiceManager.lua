@@ -16,6 +16,8 @@ When releasing a voice, the class triggers the provided callback method. So, you
 
 class 'xVoiceManager'
 
+xVoiceManager.EVENTS = {"released","triggered"}
+
 function xVoiceManager:__init(...)
 
   local args = xLib.unpack_args(...)

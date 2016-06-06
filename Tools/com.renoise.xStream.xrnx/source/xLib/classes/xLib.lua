@@ -225,11 +225,11 @@ end
 -- @param t (table)
 -- @return table<string>
 
-function xLib.stringify_table(t)
+function xLib.stringify_table(t,prefix,suffix)
 
   local rslt = {}
   for k,v in ipairs(table.values(t)) do
-    table.insert(rslt,tostring(v))
+    table.insert(rslt,("%s%s%s"):format(prefix or "",tostring(v),suffix or ""))
   end
   return rslt
 

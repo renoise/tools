@@ -121,60 +121,43 @@ function xStreamModel:__init(xstream)
 
     ["EMPTY_NOTE_COLUMNS"] = {
       access = function(env) 
-        return {
-          {},{},{},{},
-          {},{},{},{},
-          {},{},{},{},
-        } 
+        return xLine.EMPTY_NOTE_COLUMNS 
       end,
     },
     ["EMPTY_EFFECT_COLUMNS"] = {
       access = function(env) 
-        return {
-          {},{},{},{},
-          {},{},{},{},
-        } 
+        return xLine.EMPTY_EFFECT_COLUMNS
       end,
     },
     ["EMPTY_XLINE"] = {
       access = function(env) 
-        return {
-          note_columns = {
-            {},{},{},{},
-            {},{},{},{},
-            {},{},{},{},
-          },
-          effect_columns = {
-            {},{},{},{},
-            {},{},{},{},
-          },
-        } 
+        return xLine.EMPTY_XLINE
       end,
     },
     ["NOTE_OFF_VALUE"] = {
       access = function(env)
         return xNoteColumn.NOTE_OFF_VALUE
-      end
+      end,
     },
     ["EMPTY_NOTE_VALUE"] = {
       access = function(env)
         return xNoteColumn.EMPTY_NOTE_VALUE
-      end
+      end,
     },
     ["EMPTY_VOLUME_VALUE"] = {
       access = function(env)
         return xNoteColumn.EMPTY_VOLUME_VALUE
-      end
+      end,
     },
     ["EMPTY_VALUE"] = {
       access = function(env)
         return xLinePattern.EMPTY_VALUE
-      end
+      end,
     },
     ["SUPPORTED_EFFECT_CHARS"] = {
       access = function(env)
         return xEffectColumn.SUPPORTED_EFFECT_CHARS
-      end
+      end,
     },
 
     -- Model properties
@@ -650,6 +633,7 @@ end
 -- @param cb_type (xStreamModel.CB_TYPE)
 
 function xStreamModel:rename_callback(old_name,new_name,cb_type)
+  TRACE("xStreamModel:rename_callback(old_name,new_name,cb_type)",old_name,new_name,cb_type)
 
   local str_fn = self.callback_str
   self.callback_str = xSandbox.rename_string_token(str_fn,old_name,new_name,cb_type..".")
@@ -677,7 +661,7 @@ end
 -------------------------------------------------------------------------------
 -- rename event (update main callback)
 -- @param cb_type (xStreamModel.CB_TYPE)
--- @param cb_key (string)
+-- @param cb_key (string), e.g. "midi.note_off"
 
 function xStreamModel:remove_callback(cb_type,cb_key)
   TRACE("xStreamModel:remove_callback(cb_type,cb_key)",cb_type,cb_key)
@@ -718,14 +702,30 @@ return {"some_value"}
 end
 
 -------------------------------------------------------------------------------
+-- @param str_name (string), event key - e.g. "midi.note_on"
+-- @param str_fn (string) the function as text
 
 function xStreamModel:add_event(str_name,str_fn)
   TRACE("xStreamModel:add_event(str_name,str_fn)",str_name,str_fn)
 
   if not str_fn then
-    str_fn = [[-- respond to external input
+    local parts = xLib.split(str_name,"%.") -- split at dot
+    if (parts[1] == "midi") then
+      str_fn = [[--------------------------------------------------------------------------------
+-- respond to MIDI ]] .. parts[2] .. [[ messages
 -- @param xmsg, the xMidiMessage we have received
+--------------------------------------------------------------------------------
 ]]
+    elseif (parts[1] == "voice") then
+      str_fn = [[--------------------------------------------------------------------------------
+-- respond to voice-manager events
+-- @param arg (table) {type = xVoiceManager.EVENTS, index = int}
+--------------------------------------------------------------------------------
+]]
+    else 
+      error("Unexpected event type")
+    end
+
   end
 
   self.events[str_name] = str_fn
@@ -760,9 +760,28 @@ function xStreamModel:parse_events(event_def)
   end
 
   for k,v in pairs(self.events) do
-    local str_fn = [[
+    
+    local str_fn = nil
+    local parts = xLib.split(k,"%.") -- split at dot
+
+    if (parts[1] == "midi") then
+      -- arguments for midi event
+      str_fn = [[
 local xmsg = select(1,...)
 ]]..v
+
+    elseif (parts[1] == "voice") then
+      -- arguments for voice event
+      str_fn = [[
+local arg = {
+  type = select(1,...),
+  index = select(2,...),
+}]]..v
+
+    else 
+      error("Unexpected event type")
+    end
+
     local passed,err = self.sandbox:test_syntax(str_fn)
     if passed then
       self.events_compiled[k] = loadstring(str_fn)
@@ -775,7 +794,7 @@ local xmsg = select(1,...)
 
   self.modified = true
 
-  --print(">>> parse_events - self.events",rprint(self.events))
+  --print(">>> parse_events - self.events",str_status,rprint(self.events))
 
   return str_status
 
@@ -1273,7 +1292,15 @@ end
 function xStreamModel:get_suggested_callback_name(str_name,cb_type)
   TRACE("xStreamModel:get_suggested_callback_name(str_name,cb_type)",str_name,cb_type)
 
-  local passed,err = xReflection.is_valid_identifier(str_name)
+  -- for events, check the part after the dot 
+  local key_name = str_name
+  if (cb_type==xStreamModel.CB_TYPE.EVENTS) then
+    local parts = xLib.split(str_name,"%.") -- split at dot
+    key_name = parts[1]
+  end
+  --print("get_suggested_callback_name - key_name",key_name)
+
+  local passed,err = xReflection.is_valid_identifier(key_name)
   if not passed then
     -- TODO strip illegal characters
     return false, err
@@ -1348,17 +1375,6 @@ function xStreamModel.looks_like_definition(str_def)
   else
     return true
   end
-
-end
-
--------------------------------------------------------------------------------
--- @param key (xMidiMessage.TYPE)
--- return function or nil
-
-function xStreamModel:get_event_handler(key)
-  TRACE("xStreamModel:get_event_handler(key)",key)
-
-  return self.events_compiled[key]
 
 end
 
