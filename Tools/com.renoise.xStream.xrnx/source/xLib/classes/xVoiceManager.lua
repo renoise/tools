@@ -20,28 +20,34 @@ function xVoiceManager:__init(...)
 
   local args = xLib.unpack_args(...)
 
+  -- configurable --
+
   --- the maximum number of voices (0 = 'unlimited')
   -- TODO not yet implemented
   self.voice_limit = property(self.get_voice_limit,self.set_voice_limit)
-  self.voice_limit_observable = renoise.Document.ObservableNumber()
+  self.voice_limit_observable = renoise.Document.ObservableNumber(args.voice_limit or 0)
 
   --- number, note duration in seconds (0 = infinite)
   self.duration = property(self.get_duration,self.set_duration)
-  self.duration_observable = renoise.Document.ObservableNumber(0)
+  self.duration_observable = renoise.Document.ObservableNumber(args.duration or 0)
+
+  --- bool, whether to use automatic column allocation or not
+  self.column_allocation = property(self.get_column_allocation,self.set_column_allocation)
+  self.column_allocation_observable = renoise.Document.ObservableBoolean(args.column_allocation or false)
+
+  -- class --
 
   --- table<xMidiMessage>, active voices
   self.voices = {}
   self.voices_observable = renoise.Document.ObservableNumberList()
 
-  --- bool, whether to use automatic column allocation or not
-  self.column_allocation = property(self.get_column_allocation,self.set_column_allocation)
-  self.column_allocation_observable = renoise.Document.ObservableBoolean(false)
-
   --- TODO table<xMidiMessage>, voice messages (such as aftertouch)
-  self.voice_msgs = {}
+  --self.voice_msgs = {}
 
   --- TODO table<xMidiMessage>, channel messages (such as pitchbend)
-  self.channel_msgs = {}
+  --self.channel_msgs = {}
+
+  -- events --
 
   --- voice about to be released (0 = none)
   self.released_index = renoise.Document.ObservableNumber(0)
@@ -167,14 +173,27 @@ end
 function xVoiceManager:register(xmsg)
   TRACE("xVoiceManager:register(xmsg)",xmsg)
 
+  --print("self.column_allocation",self.column_allocation)
+
   if self.column_allocation then
     --print(">>> register - xmsg.note_column_index PRE",xmsg.note_column_index)
     local available_columns = self:get_available_columns(xmsg.track_index)
+    --print("available_columns",rprint(available_columns))
     if not table.is_empty(available_columns) then
+      -- use the incoming message's column if available
       local is_available = xmsg.note_column_index 
-        and table.find(available_columns,xmsg.note_column_index) or false
-      if not is_available then
-        xmsg.note_column_index = available_columns[1]
+        and available_columns[xmsg.note_column_index] or false
+      if is_available then
+        --print("use the incoming message column",xmsg.note_column_index)
+      else
+        -- use the first available column, starting from current
+        for k = xmsg.note_column_index,12 do
+          if available_columns[k] then
+            xmsg.note_column_index = k
+            --print("first available column",k)
+            break
+          end
+        end
       end
     else
       LOG("No more note columns available, using the last one")
@@ -302,18 +321,15 @@ end
 
 function xVoiceManager:get_available_columns(track_idx)
 
-  local available_indices = {1,2,3,4,5,6,7,8,9,10,11,12}
+  local available_indices = {true,true,true,true,true,true,true,true,true,true,true,true}
   for k,v in ipairs(self.voices) do
     if (v.track_index == track_idx) then
-      if (table.find(available_indices,v.note_column_index)) then
-        table.remove(available_indices,v.note_column_index)
-      end
+      available_indices[v.note_column_index] = false
     end
   end
-  table.sort(available_indices)
   return available_indices
-
 end
+
 -------------------------------------------------------------------------------
 -- Monitor changes to tracks and instruments
 

@@ -390,6 +390,7 @@ function xStreamPos:track_pos()
     end
   else
     -- paused playback, do not output 
+    --self:set_pos(rns.transport.edit_pos)
   end
 
   if (self.just_started_playback == 0) then

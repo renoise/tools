@@ -220,12 +220,14 @@ function xStream:__init(...)
   self.stream = xStreamPos()
   self.stream.callback_fn = function()
     if self.active then
-      self:do_output(self.stream.writepos,nil,true)
+      local live_mode = true
+      self:do_output(self.stream.writepos,nil,live_mode)
     end
   end
   self.stream.refresh_fn = function()
+    -- on abrupt position-changes
     if self.active then
-      self.buffer:update_read_buffer(self.stream.readpos,self.track_index,self.include_hidden)
+      self.buffer:update_read_buffer(self.track_index,self.include_hidden)
     end
   end
 
@@ -253,7 +255,9 @@ function xStream:__init(...)
   }
 
   ---  xVoiceManager
-  self.voicemgr = xVoiceManager{}
+  self.voicemgr = xVoiceManager{
+    column_allocation = true,
+  }
 
   --- xStreamScheduler
   --self.scheduler = xStreamScheduler(self)
@@ -1060,7 +1064,7 @@ function xStream:set_muted(val)
     xline.note_columns = produce_note_off()
   end
 
-  -- TODO use xStreamBuffer methods
+  -- TODO use xStreamBuffer scheduling methods
   local mute_xline = xLine(xline)
   self.buffer.output_buffer[self.mute_pos] = mute_xline
   self.buffer.output_buffer[self.mute_pos+1] = mute_xline
@@ -1164,6 +1168,8 @@ function xStream:do_output(xpos,num_lines,live_mode)
 
   -- purge old content from buffers
   self.buffer:wipe_past()
+  --print("line_descriptors",rprint(self.buffer.line_descriptors))
+  --print("output_buffer",rprint(self.buffer.output_buffer))
 
   -- generate new content as needed
   if not self.muted then
@@ -1545,9 +1551,9 @@ function xStream:on_idle()
     self.selected_model:on_idle()
   end
 
-  if rns.transport.playing then
+  --if rns.transport.playing then
     self.stream:track_pos()
-  end
+  --end
 
   -- TODO optimize this by exporting only while not playing
   if self.preset_bank_export_requested then

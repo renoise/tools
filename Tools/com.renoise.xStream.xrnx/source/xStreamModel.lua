@@ -235,6 +235,9 @@ function xStreamModel:__init(xstream)
     ["xLib"] = {
       access = function(env) return xLib end,
     },
+    ["xStream"] = {
+      access = function(env) return xStream end,
+    },
     ["xTrack"] = {
       access = function(env) return xTrack end,
     },
