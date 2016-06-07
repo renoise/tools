@@ -89,7 +89,7 @@ end
 function xStreamBuffer:update_read_buffer()
   TRACE("xStreamBuffer:update_read_buffer()")
 
-  local pos = self.stream.readpos
+  local pos = self.xstream.stream.readpos
   if pos then
     for k = 0,self.xstream.writeahead-1 do
       local xinc = pos.lines_travelled
@@ -186,7 +186,7 @@ function xStreamBuffer:get_scheduled_pos(schedule)
   local writepos = self.xstream.stream.writepos
 
   local schedules = {
-    [xStream.SCHEDULE.NONE] = function()
+    [xStream.SCHEDULE.LINE] = function()
       local pos = xSongPos(writepos)
       if live_mode then
         pos:increase_by_lines(1)

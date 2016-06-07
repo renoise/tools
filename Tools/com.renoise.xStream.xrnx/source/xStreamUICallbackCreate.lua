@@ -329,16 +329,11 @@ function xStreamUICallbackCreate:show_next_page()
         -- pick a template
         local vb_arg_types = vb.views["xStreamDialogArgumentTypes"]
         local arg_type = vb_arg_types.items[vb_arg_types.value]
-        print(">>> vb_arg_types",vb_arg_types)
-        print(">>> vb_arg_types",vb_arg_types)
-        print(">>> arg_type",arg_type)
         local str_fn = self:get_userdata_template(arg_type)
-        print(">>> str_fn",str_fn)
 
         model:add_userdata(view_name.text,str_fn)
         self.ui.editor_view = ("data.%s"):format(view_name.text)
         self.ui:update_editor()
-        --self.ui.update_editor_view_popup = true
         self.dialog:close()
         self.dialog = nil
       end
@@ -356,7 +351,7 @@ function xStreamUICallbackCreate:show_next_page()
         local vb_chooser = self.vb.views["xStreamDialogEventChooser"]
         str_name = vb_chooser.items[vb_chooser.value]
       end
-      print("str_name",str_name)
+      --print("str_name",str_name)
 
       if not self:validate_callback_name(str_name) then
         renoise.app():show_warning("Error: a callback already exists with this name, or you provided an invalid name")
@@ -429,7 +424,7 @@ end
 -- update on switching
 
 function xStreamUICallbackCreate:event_switcher(evt)
-  print("xStreamUICallbackCreate:event_switcher()",evt)
+  TRACE("xStreamUICallbackCreate:event_switcher()",evt)
   
   local vb = self.vb
   

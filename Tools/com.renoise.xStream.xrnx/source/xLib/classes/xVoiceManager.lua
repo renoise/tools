@@ -213,7 +213,6 @@ function xVoiceManager:register(xmsg)
 
   -- trigger observable after adding
   self.triggered_index = #self.voices
-  print("triggered_observable")
   self.triggered_observable:bang()
 
 
@@ -267,7 +266,6 @@ function xVoiceManager:release(voice_idx)
   -- trigger observable before removing 
   -- (or we would not have access to voice details)
   self.released_index = voice_idx
-  print("released_observable")
   self.released_observable:bang()
 
   table.remove(self.voices,voice_idx)

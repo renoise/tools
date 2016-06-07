@@ -26,7 +26,7 @@ class 'xStreamPos'
 
 function xStreamPos:__init()
 
-  --- (renoise.SongPos) monitor changes to playback 
+  --- (xPlayPos) monitor changes to playback 
   --self.playpos = rns.transport.playback_pos
   self.playpos = xPlayPos()
 

@@ -203,6 +203,12 @@ function xStreamModel:__init(xstream)
 
     -- xStream objects
 
+    ["playpos"] = {
+      access = function(env) return self.xstream.stream.playpos end,
+    },
+    ["writepos"] = {
+      access = function(env) return self.xstream.stream.writepos end,
+    },
     ["buffer"] = {
       access = function(env) return self.xstream.buffer end,
     },
@@ -685,7 +691,7 @@ end
 -------------------------------------------------------------------------------
 
 function xStreamModel:add_userdata(str_name,str_fn)
-  print("xStreamModel:add_userdata(str_name)",str_name,str_fn)
+  TRACE("xStreamModel:add_userdata(str_name)",str_name,str_fn)
 
   if not str_fn then
     str_fn = [[-- provide a return value of some kind
@@ -706,7 +712,7 @@ end
 -- @param str_fn (string) the function as text
 
 function xStreamModel:add_event(str_name,str_fn)
-  print("xStreamModel:add_event(str_name,str_fn)",str_name,str_fn)
+  TRACE("xStreamModel:add_event(str_name,str_fn)",str_name,str_fn)
 
   if not str_fn then
     local parts = xLib.split(str_name,"%.") -- split at dot

@@ -36,9 +36,9 @@ xStream.OUTPUT_MODE = {
 }
 
 -- model/preset scheduling 
-xStream.SCHEDULES = {"None","Beat","Bar","Block","Pattern"}
+xStream.SCHEDULES = {"Line","Beat","Bar","Block","Pattern"}
 xStream.SCHEDULE = {
-  NONE = 1,
+  LINE = 1,
   BEAT = 2,
   BAR = 3,
   BLOCK = 4,
@@ -423,11 +423,11 @@ function xStream:__init(...)
   end)
 
   self.voicemgr.released_observable:add_notifier(function(arg)
-    print("voicemgr.released_observable fired...")
+    TRACE("*** voicemgr.released_observable fired...")
     self:handle_voice_events(xVoiceManager.EVENT.RELEASED)
   end)
   self.voicemgr.triggered_observable:add_notifier(function()
-    print("voicemgr.triggered_observable fired...")
+    TRACE("*** voicemgr.triggered_observable fired...")
     self:handle_voice_events(xVoiceManager.EVENT.TRIGGERED)
   end)
 
@@ -726,11 +726,11 @@ function xStream:schedule_item(model_name,preset_index,preset_bank_name)
   -- now figure out the time
   self._scheduled_pos = nil
 
-  if (self.scheduling == xStream.SCHEDULE.NONE) then
+  if (self.scheduling == xStream.SCHEDULE.LINE) then
     if self._scheduled_model then
       self:apply_schedule() -- set immediately 
     end
-    --print("*** xStream.SCHEDULE.NONE - applied preset,model...")
+    --print("*** xStream.SCHEDULE.LINE - applied preset,model...")
   else
     self:compute_scheduling_pos()
   end
@@ -768,7 +768,7 @@ function xStream:compute_scheduling_pos()
     --print("*** xStream.SCHEDULE.PATTERN - PRE self._scheduled_pos.lines_travelled",self._scheduled_pos.lines_travelled)
   end
 
-  if (self.scheduling == xStream.SCHEDULE.NONE) then
+  if (self.scheduling == xStream.SCHEDULE.LINE) then
     error("Scheduling should already have been applied")
   elseif (self.scheduling == xStream.SCHEDULE.BEAT) then
     self._scheduled_pos:next_beat()
@@ -1807,6 +1807,7 @@ end
 
 -------------------------------------------------------------------------------
 --- [app+process]
+-- @param xmsg (xMidiMessage)
 
 function xStream:handle_midi_input(xmsg)
   TRACE("xStream:handle_midi_input(xmsg)",xmsg,self)
@@ -1837,7 +1838,7 @@ end
 -- @param evt (xVoiceManager.EVENT)
 
 function xStream:handle_voice_events(evt)
-  print("xStream:handle_voice_events(evt)",evt)
+  TRACE("xStream:handle_voice_events(evt)",evt)
 
   local index = nil
   if (evt == xVoiceManager.EVENT.TRIGGERED) then
@@ -1849,9 +1850,9 @@ function xStream:handle_voice_events(evt)
   end
 
   local voice = self.voicemgr.voices[index]
-  print("handle_voice_events - voice",voice,index)
+  --print("handle_voice_events - voice",voice,index)
 
-  -- only pass to model when track is right
+  -- only pass when track is right
   if not (voice.track_index == self.track_index) then
     LOG("Ignore voice events from other tracks")
     return
@@ -1872,7 +1873,7 @@ end
 -- @param val (number/boolean/string)
 
 function xStream:handle_arg_events(arg_name,val)
-  print("xStream:handle_arg_events(arg_name,val)",arg_name,val)
+  TRACE("xStream:handle_arg_events(arg_name,val)",arg_name,val)
 
   -- pass to event handlers (if any)
   local event_key = "args."..arg_name
@@ -1882,9 +1883,11 @@ end
 
 -------------------------------------------------------------------------------
 -- [process]
+-- @param event_key (string), e.g. "midi.note_on"
+-- @param arg (number/boolean/string/table) value to pass 
 
 function xStream:handle_event(event_key,arg)
-  print("xStream:handle_event(event_key,arg)",event_key,arg)
+  TRACE("xStream:handle_event(event_key,arg)",event_key,arg)
 
   local handler = self.selected_model.events_compiled[event_key]
   if handler then
@@ -1894,8 +1897,8 @@ function xStream:handle_event(event_key,arg)
     if not passed then
       LOG("*** Error while handling event",err)
     end
-  else
-    LOG("*** could not locate handler for event",event_key)
+  --else
+  --  LOG("*** could not locate handler for event",event_key)
   end
 
 end

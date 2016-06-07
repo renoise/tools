@@ -1039,7 +1039,6 @@ function xStreamUI:set_editor_content()
   else
     local cb_type,cb_key,cb_subtype_or_tab,cb_arg_name = 
       xStream.parse_callback_type(self.editor_view)
-    print("cb_type,cb_key,cb_subtype_or_tab,cb_arg_name",cb_type,cb_key,cb_subtype_or_tab,cb_arg_name)
     if (cb_type == "main") then
       text = model.sandbox.callback_str 
       set_button_state(false)
@@ -1075,19 +1074,21 @@ function xStreamUI:apply_editor_content()
     --print("*** xStreamUI:on_idle - callback modified")
     local view = self.vb.views["xStreamCallbackEditor"]
     local cb_type,cb_key,cb_subtype_or_tab,cb_arg_name = xStream.parse_callback_type(self.editor_view)
+    local trimmed_text = xLib.trim(view.text)
+
     if (cb_type == "main") then
-      model.callback_str = view.text 
+      model.callback_str = trimmed_text
     elseif (cb_type == "data") then
       local def = table.rcopy(model.data_initial)
-      def[cb_key] = view.text
+      def[cb_key] = trimmed_text
       local str_status = model:parse_userdata(def)
       --print("str_status",str_status)
       self.xstream.callback_status_observable.value = str_status
     elseif (cb_type == "events") then
       local def = table.rcopy(model.events)
       local cb_name = cb_arg_name and cb_subtype_or_tab.."."..cb_arg_name or cb_subtype_or_tab
-      def[cb_key.."."..cb_name] = view.text
-      print("apply content",cb_key.."."..cb_name)
+      def[cb_key.."."..cb_name] = trimmed_text
+      --print("apply content",cb_key.."."..cb_name)
       local str_status = model:parse_events(def)
       self.xstream.callback_status_observable.value = str_status
     end

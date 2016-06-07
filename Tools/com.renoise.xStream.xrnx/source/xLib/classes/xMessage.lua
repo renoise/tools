@@ -51,6 +51,10 @@ function xMessage:__init(...)
   self.note_column_index = property(self.get_note_column_index,self.set_note_column_index)
   self._note_column_index = args.note_column_index or rns.selected_note_column_index
 
+  --- int, 1-512 - 
+  self.line_index = property(self.get_line_index,self.set_line_index)
+  self._line_index = args.line_index or rns.selected_line_index
+
   --- the raw message, as received (or ready to send)
   self.raw_message = property(self.get_raw_message,self.set_raw_message)
   self._raw_message = args.raw_message
@@ -121,6 +125,17 @@ function xMessage:set_note_column_index(val)
   self._note_column_index = val
 end
 
+--------------------------------------------------------------------------------
+
+function xMessage:get_line_index()
+  return self._line_index
+end
+
+function xMessage:set_line_index(val)
+  assert(type(val)=="number","Expected line_index to be a number")
+  self._line_index = val
+end
+
 -------------------------------------------------------------------------------
 -- produce a raw message (retrieve from cache if possible)
 -- @return 
@@ -158,6 +173,7 @@ function xMessage:__tostring()
     ..", track_index="..tostring(self.track_index)
     ..", instrument_index="..tostring(self.instrument_index)
     ..", note_column_index="..tostring(self.note_column_index)
+    ..", line_index="..tostring(self.line_index)
     ..", #values="..tostring(#self.values)
 
 end
