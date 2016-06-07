@@ -18,6 +18,11 @@ class 'xVoiceManager'
 
 xVoiceManager.EVENTS = {"released","triggered"}
 
+xVoiceManager.EVENT = {
+  RELEASED = "released",
+  TRIGGERED = "triggered",
+}
+
 function xVoiceManager:__init(...)
 
   local args = xLib.unpack_args(...)
@@ -52,11 +57,11 @@ function xVoiceManager:__init(...)
   -- events --
 
   --- voice about to be released (0 = none)
-  self.released_index = renoise.Document.ObservableNumber(0)
+  self.released_index = 0
   self.released_observable = renoise.Document.ObservableBang()
 
   --- newly triggered voice (0 = none)
-  self.triggered_index = renoise.Document.ObservableNumber(0)
+  self.triggered_index = 0
   self.triggered_observable = renoise.Document.ObservableBang()
 
   -- initialize
@@ -135,9 +140,8 @@ end
 --==============================================================================
 -- Class Methods
 --==============================================================================
--- pass any message here - only note-on/off messages are processed
 -- @param xmsg (xMidiMessage)
--- @return bool (true=added/removed, false=active) or nil 
+-- @return bool (true=added/removed, false=ignore, already active) or nil 
 -- @return int (voice index), when added or active
 
 function xVoiceManager:input_message(xmsg)
@@ -208,7 +212,8 @@ function xVoiceManager:register(xmsg)
   self.voices_observable:insert(#self.voices)
 
   -- trigger observable after adding
-  self.triggered_index.value = #self.voices
+  self.triggered_index = #self.voices
+  print("triggered_observable")
   self.triggered_observable:bang()
 
 
@@ -260,7 +265,9 @@ function xVoiceManager:release(voice_idx)
   TRACE("xVoiceManager:release(voice_idx)",voice_idx)
 
   -- trigger observable before removing 
-  self.released_index.value = voice_idx
+  -- (or we would not have access to voice details)
+  self.released_index = voice_idx
+  print("released_observable")
   self.released_observable:bang()
 
   table.remove(self.voices,voice_idx)

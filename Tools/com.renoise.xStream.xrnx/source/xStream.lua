@@ -422,6 +422,15 @@ function xStream:__init(...)
     self:on_idle()
   end)
 
+  self.voicemgr.released_observable:add_notifier(function(arg)
+    print("voicemgr.released_observable fired...")
+    self:handle_voice_events(xVoiceManager.EVENT.RELEASED)
+  end)
+  self.voicemgr.triggered_observable:add_notifier(function()
+    print("voicemgr.triggered_observable fired...")
+    self:handle_voice_events(xVoiceManager.EVENT.TRIGGERED)
+  end)
+
 
   self:attach_to_song()
 
@@ -1814,31 +1823,104 @@ function xStream:handle_midi_input(xmsg)
     return
   end
 
-  --print("got here - xmsg",xmsg)
-
-  -- first step: pass to voicemanager 
+  -- pass to voicemanager 
   local rslt,idx = self.voicemgr:input_message(xmsg)
 
-  --print("rslt,idx",rslt,idx)
-  --print("voices...",rprint(self.voicemgr.voices))
-
+  -- pass to event handlers (if any)
   local event_key = "midi."..tostring(xmsg.message_type)
-  --print("event_key",event_key)
-  --print("self.selected_model.events_compiled",rprint(self.selected_model.events_compiled))
+  self:handle_event(event_key,xmsg)
+
+end
+
+-------------------------------------------------------------------------------
+-- [process]
+-- @param evt (xVoiceManager.EVENT)
+
+function xStream:handle_voice_events(evt)
+  print("xStream:handle_voice_events(evt)",evt)
+
+  local index = nil
+  if (evt == xVoiceManager.EVENT.TRIGGERED) then
+    index = self.voicemgr.triggered_index
+  elseif (evt == xVoiceManager.EVENT.RELEASED) then
+    index = self.voicemgr.released_index
+  else
+    error("Unknown xVoiceManager.EVENT")
+  end
+
+  local voice = self.voicemgr.voices[index]
+  print("handle_voice_events - voice",voice,index)
+
+  -- only pass to model when track is right
+  if not (voice.track_index == self.track_index) then
+    LOG("Ignore voice events from other tracks")
+    return
+  end
+
+  -- pass to event handlers (if any)
+  local event_key = "voice."..evt
+  self:handle_event(event_key,{
+    index = index,
+    type = evt
+  })
+
+end
+
+-------------------------------------------------------------------------------
+-- [process]
+-- @param arg_name (string), e.g. "tab.my_arg" or "my_arg"
+-- @param val (number/boolean/string)
+
+function xStream:handle_arg_events(arg_name,val)
+  print("xStream:handle_arg_events(arg_name,val)",arg_name,val)
+
+  -- pass to event handlers (if any)
+  local event_key = "args."..arg_name
+  self:handle_event(event_key,val)
+
+end
+
+-------------------------------------------------------------------------------
+-- [process]
+
+function xStream:handle_event(event_key,arg)
+  print("xStream:handle_event(event_key,arg)",event_key,arg)
+
   local handler = self.selected_model.events_compiled[event_key]
   if handler then
-    --print("about to handle xmsg",xmsg)
     local passed,err = pcall(function()
-      local rslt = handler(xmsg)
-      --print("handler rslt",rslt)
+      handler(arg)
     end)
     if not passed then
-      LOG("*** Error while handling MIDI event",err)
+      LOG("*** Error while handling event",err)
     end
   else
     LOG("*** could not locate handler for event",event_key)
   end
 
+end
+
+--------------------------------------------------------------------------------
+-- Static methods
+--------------------------------------------------------------------------------
+-- @param str_name (string), e.g. "events.midi.note_on" or "main"
+-- @return string, type - "main","data" or "events"
+-- @return string, depends on context 
+-- @return string, -//-
+-- @return string, -//-
+
+function xStream.parse_callback_type(str_name)
+
+  if (str_name == "main") then
+    return xStreamModel.CB_TYPE.MAIN
+  elseif (str_name:sub(0,5) == "data.") then
+    local key = str_name:sub(6)
+    return xStreamModel.CB_TYPE.DATA,key
+  elseif (str_name:sub(0,7) == "events.") then
+    local key = str_name:sub(8)    
+    local parts = xLib.split(key,"%.") -- split at dot
+    return xStreamModel.CB_TYPE.EVENTS,parts[1],parts[2],parts[3]
+  end
 
 end
 

@@ -117,6 +117,10 @@ function xStreamModel:__init(xstream)
       end,
     },
 
+    ["xstream"] = {
+      access = function(env) return self.xstream end,
+    },
+
     -- Constants
 
     ["EMPTY_NOTE_COLUMNS"] = {
@@ -197,15 +201,11 @@ function xStreamModel:__init(xstream)
       access = function(env) return self.xstream.output_mode end,
     },
 
-    -- xStream 
+    -- xStream objects
 
-    ["xstream"] = {
-      access = function(env) return self.xstream end,
+    ["buffer"] = {
+      access = function(env) return self.xstream.buffer end,
     },
-
-
-    -- xVoiceManager
-
     ["voices"] = {
       access = function(env) return self.xstream.voicemgr.voices end,
     },
@@ -685,7 +685,7 @@ end
 -------------------------------------------------------------------------------
 
 function xStreamModel:add_userdata(str_name,str_fn)
-  TRACE("xStreamModel:add_userdata(str_name)",str_name,str_fn)
+  print("xStreamModel:add_userdata(str_name)",str_name,str_fn)
 
   if not str_fn then
     str_fn = [[-- provide a return value of some kind
@@ -702,25 +702,31 @@ return {"some_value"}
 end
 
 -------------------------------------------------------------------------------
--- @param str_name (string), event key - e.g. "midi.note_on"
+-- @param str_name (string), event key - e.g. "midi.note_on" or "args.tab.arg"
 -- @param str_fn (string) the function as text
 
 function xStreamModel:add_event(str_name,str_fn)
-  TRACE("xStreamModel:add_event(str_name,str_fn)",str_name,str_fn)
+  print("xStreamModel:add_event(str_name,str_fn)",str_name,str_fn)
 
   if not str_fn then
     local parts = xLib.split(str_name,"%.") -- split at dot
     if (parts[1] == "midi") then
-      str_fn = [[--------------------------------------------------------------------------------
--- respond to MIDI ]] .. parts[2] .. [[ messages
+      str_fn = [[------------------------------------------------------------------------------
+-- respond to MIDI ']] .. parts[2] .. [[' messages
 -- @param xmsg, the xMidiMessage we have received
---------------------------------------------------------------------------------
+------------------------------------------------------------------------------
 ]]
     elseif (parts[1] == "voice") then
-      str_fn = [[--------------------------------------------------------------------------------
+      str_fn = [[------------------------------------------------------------------------------
 -- respond to voice-manager events
 -- @param arg (table) {type = xVoiceManager.EVENTS, index = int}
---------------------------------------------------------------------------------
+------------------------------------------------------------------------------
+]]
+    elseif (parts[1] == "args") then
+      str_fn = [[------------------------------------------------------------------------------
+-- respond to argument ']] .. parts[2] .. [[' changes
+-- @param val (number/boolean/string)}
+------------------------------------------------------------------------------
 ]]
     else 
       error("Unexpected event type")
@@ -769,15 +775,16 @@ function xStreamModel:parse_events(event_def)
       str_fn = [[
 local xmsg = select(1,...)
 ]]..v
-
     elseif (parts[1] == "voice") then
       -- arguments for voice event
       str_fn = [[
-local arg = {
-  type = select(1,...),
-  index = select(2,...),
-}]]..v
-
+local arg = select(1,...)
+]]..v
+    elseif (parts[1] == "args") then
+      -- value for args event
+      str_fn = [[
+local val = select(1,...)
+]]..v
     else 
       error("Unexpected event type")
     end

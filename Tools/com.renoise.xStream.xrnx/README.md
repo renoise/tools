@@ -243,6 +243,7 @@ xStream is using a subset of the Renoise Lua API. If you are not familiar with L
 ### Properties 
 
 `rns` - shorthand for renoise.song()  
+`renoise` - access to the global renoise object
 `xinc` - (number) an ever-increasing counter, initialized when output is started  
 `xline` - (table) the current line, containing the following entries  
 `xline.note_columns[]` - (table) access note columns in the xline  
@@ -266,7 +267,12 @@ xStream is using a subset of the Renoise Lua API. If you are not familiar with L
 `xpos.sequence (number)` -> pattern sequence index  
 `xpos.lines_travelled (number)` -> lines travelled since output started   
 `args (table, ObservableXXX)` -> access to model arguments  
-`data (table)` -> optional user-data  
+`args (table, ObservableXXX)` -> access to model arguments  
+`xstream (xStream)` -> access to the xStream instance
+`buffer (xStreamBuffer)` -> access to the stream buffer (shorthand for xstream.buffer)
+`voices (table<xMidiMessage>)` -> access the active voices (shorthand for voicemgr.voices)
+`voicemgr (xVoiceManager)` -> access the voice-manager
+`data (table)` -> optional user-data, access via "data.my_value"
 `clear_undefined (boolean)` -> how to treat empty lines (see Options dialog for more details)  
 `expand_columns (boolean)` -> whether to automatically show columns as data is written  
 `include_hidden (boolean)` -> whether to include hidden columns when reading & writing  
@@ -286,8 +292,18 @@ xStream is using a subset of the Renoise Lua API. If you are not familiar with L
 	EMPTY_XLINE = (table)
 	SUPPORTED_EFFECT_CHARS = (table)
 
-### Methods
+### Classes
 
-`restrict_to_scale(note_value,scale_index,key_index)` - harmonize a note (see xScale)
-
+	xLib
+	xStream
+	xTrack
+	xTransport
+	xScale
+	xMidiMessage
+	xOscMessage
+	xAutomation
+	xParameter
+	xPlayPos
+	xAudioDevice
+	xPhraseManager
 

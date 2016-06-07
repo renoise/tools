@@ -63,7 +63,9 @@ function vDialog:__init(...)
 
   -- initialize --
 
-  renoise.tool().app_idle_observable:add_notifier(self,self.idle_notifier_waiting)
+  if self.waiting_to_show_dialog then
+    renoise.tool().app_idle_observable:add_notifier(self,self.idle_notifier_waiting)
+  end
 
 end
 

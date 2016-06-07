@@ -10,6 +10,13 @@ Supporting UI class for xStream
 
 --==============================================================================
 
+local EVENT_TYPE = {
+  ARGUMENT = 1,
+  OTHER = 2,
+}
+
+local ARG_TYPES = {"number","table","boolean","string","function"}
+
 class 'xStreamUICallbackCreate' (vDialogWizard)
 
 function xStreamUICallbackCreate:__init(ui)
@@ -25,6 +32,22 @@ function xStreamUICallbackCreate:__init(ui)
   -- xStreamModel.CB_TYPE
   self.cb_type = nil
 
+  -- EVENT_TYPE.xxx
+  self.event_type = nil
+
+end
+
+--------------------------------------------------------------------------------
+-- as a consequence of dialog option being changed
+
+function xStreamUICallbackCreate:update_cb_type()
+
+  if (self.dialog_option == 1) then 
+    self.cb_type = xStreamModel.CB_TYPE.EVENTS
+  elseif (self.dialog_option == 2) then 
+    self.cb_type = xStreamModel.CB_TYPE.DATA
+  end
+
 end
 
 --------------------------------------------------------------------------------
@@ -36,6 +59,7 @@ function xStreamUICallbackCreate:show()
 
   self.dialog_page = 1
   self.dialog_option = 1
+  self:update_cb_type()
   self:update_dialog()
 
 end
@@ -66,17 +90,18 @@ function xStreamUICallbackCreate:create_dialog()
         vb:column{
           id = "xStreamNewModelDialogPage1",
           vb:text{
-            text = "Please choose an option",
+            text = "Please choose:",
           },
           vb:chooser{
             id = "xStreamNewModelDialogOptionChooser",
             value = self.dialog_option,
             items = {
-              "Add userdata",
               "Add event handler",
+              "Add userdata (value or function)",
             },
             notifier = function(idx)
               self.dialog_option = idx
+              self:update_cb_type()
             end
           },
         },
@@ -86,20 +111,64 @@ function xStreamUICallbackCreate:create_dialog()
           vb:column{
             id = "xStreamNewModelDialogPage2Option1",
             vb:text{
-              text = "Please specify a (unique) name",
+              text = "Specify a name for the argument",
             },
             vb:textfield{
               id = "xStreamDialogName",
               text = "",
               width = PAGE_W-20,
             },
+            vb:text{
+              text = "Choose a type (template)",
+            },
+            vb:chooser{
+              id = "xStreamDialogArgumentTypes",
+              items = ARG_TYPES,
+            }
           },
           vb:column{
             id = "xStreamNewModelDialogPage2Option2",
+            vb:column{
+              id = "xStreamDialogArguments",
+              vb:row{
+                vb:checkbox{
+                  id = "xStreamDialogEventSwitcherArgs",
+                  value = true,
+                  notifier = function(val)
+                    if val then
+                      self:event_switcher(EVENT_TYPE.ARGUMENT)
+                    end
+                  end,
+                },
+                vb:text{
+                  text = "Attach to argument",
+                },
+                vb:popup{
+                  id = "xStreamDialogArgumentsPopup",
+                  --items = vb_argument_items,
+                }
+              }
+            },
+            vb:row{
+              vb:checkbox{
+                id = "xStreamDialogEventSwitcherOther",
+                value = false,
+                notifier = function(val)
+                  if val then
+                    self:event_switcher(EVENT_TYPE.OTHER)
+                  end
+                end
+              },
+              vb:text{
+                text = "Or choose from the available events",
+              },
+            },
+
             vb:chooser{
               id = "xStreamDialogEventChooser",
               items = self:get_available_event_names(),
               value = 1,
+              active = false
             }
           },
 
@@ -148,37 +217,53 @@ function xStreamUICallbackCreate:update_dialog()
 
   local vb = self.vb
   local model = self.xstream.selected_model
+  local vb_argument_items = model.args:get_names()
 
   -- update page
+
+  local args = vb.views["xStreamDialogArguments"]
+  local args_popup = vb.views["xStreamDialogArgumentsPopup"]
+  args.visible = false
 
   local view_page_1       = vb.views["xStreamNewModelDialogPage1"]
   local view_page_2       = vb.views["xStreamNewModelDialogPage2"]
   local view_page_2_opt1  = vb.views["xStreamNewModelDialogPage2Option1"]
   local view_page_2_opt2  = vb.views["xStreamNewModelDialogPage2Option2"]
-  --local view_page_2_opt3  = vb.views["xStreamNewModelDialogPage2Option3"]
   local view_opt_chooser  = vb.views["xStreamNewModelDialogOptionChooser"]
 
   view_page_1.visible = false
   view_page_2.visible = false
   view_page_2_opt1.visible = false
   view_page_2_opt2.visible = false
-  --view_page_2_opt3.visible = false
 
   if (self.dialog_page == 1) then
+    
     view_page_1.visible = true
+    
     view_opt_chooser.value = self.dialog_option
+    self.event_type = not table.is_empty(vb_argument_items) 
+      and EVENT_TYPE.ARGUMENT or EVENT_TYPE.OTHER
+
   elseif (self.dialog_page == 2) then
+    
     view_page_2.visible = true
-    if (self.dialog_option == 1) then
+    
+    if (self.cb_type == xStreamModel.CB_TYPE.DATA) then
+      
       view_page_2_opt1.visible = true
-      --local str_name = xStreamModel.get_suggested_name(xStreamModel.DEFAULT_NAME)    
+      
       local str_name = model:get_suggested_callback_name("my_userdata",self.cb_type)
       local view_name = vb.views["xStreamDialogName"]
       view_name.text = str_name
-    elseif (self.dialog_option == 2) then
+
+    elseif (self.cb_type == xStreamModel.CB_TYPE.EVENTS) then
+
       view_page_2_opt2.visible = true
-    --elseif (self.dialog_option == 3) then
-    --  view_page_2_opt3.visible = true
+
+      self:event_switcher(self.event_type)
+      args_popup.items = vb_argument_items
+      args.visible = true
+
     end
   end
 
@@ -216,32 +301,41 @@ function xStreamUICallbackCreate:show_next_page()
   local vb = self.vb
   local model = self.xstream.selected_model
 
+  --[[
   if (self.dialog_option == 1) then 
     self.cb_type = xStreamModel.CB_TYPE.DATA
   elseif (self.dialog_option == 2) then 
     self.cb_type = xStreamModel.CB_TYPE.EVENTS
   end
+  ]]
   --print("self.cb_type",self.cb_type)
 
   if (self.dialog_page == 1) then
 
-    if (self.dialog_option == 2) then -- paste string (clear)
-      --local view_definition = vb.views["xStreamNewModelDialogDefinition"]
-      --view_definition.text = ""
-    --elseif (self.dialog_option == 3) then -- locate file (...)
-    --  self:navigate_to_model()
-    end
+    -- wait for user choise
 
   elseif (self.dialog_page == 2) then
 
-    if (self.dialog_option == 1) then -- userdata
+    if (self.cb_type == xStreamModel.CB_TYPE.DATA) then 
+    
+      -- create userdata 
 
       local view_name = vb.views["xStreamDialogName"]
       if not self:validate_callback_name(view_name.text) then
         renoise.app():show_warning("Error: a callback already exists with this name, or you provided an invalid name")
         return
       else
-        model:add_userdata(view_name.text)
+
+        -- pick a template
+        local vb_arg_types = vb.views["xStreamDialogArgumentTypes"]
+        local arg_type = vb_arg_types.items[vb_arg_types.value]
+        print(">>> vb_arg_types",vb_arg_types)
+        print(">>> vb_arg_types",vb_arg_types)
+        print(">>> arg_type",arg_type)
+        local str_fn = self:get_userdata_template(arg_type)
+        print(">>> str_fn",str_fn)
+
+        model:add_userdata(view_name.text,str_fn)
         self.ui.editor_view = ("data.%s"):format(view_name.text)
         self.ui:update_editor()
         --self.ui.update_editor_view_popup = true
@@ -249,11 +343,20 @@ function xStreamUICallbackCreate:show_next_page()
         self.dialog = nil
       end
 
-    elseif (self.dialog_option == 2) then -- event
+    elseif (self.cb_type == xStreamModel.CB_TYPE.EVENTS) then 
+    
+      -- create event
 
-      local vb_chooser = self.vb.views["xStreamDialogEventChooser"]
-      local str_name = vb_chooser.items[vb_chooser.value]
-      --print("str_name",str_name)
+      local str_name = nil
+      
+      if (self.event_type == EVENT_TYPE.ARGUMENT) then
+        local vb_popup = self.vb.views["xStreamDialogArgumentsPopup"]
+        str_name = "args."..vb_popup.items[vb_popup.value]
+      else
+        local vb_chooser = self.vb.views["xStreamDialogEventChooser"]
+        str_name = vb_chooser.items[vb_chooser.value]
+      end
+      print("str_name",str_name)
 
       if not self:validate_callback_name(str_name) then
         renoise.app():show_warning("Error: a callback already exists with this name, or you provided an invalid name")
@@ -308,7 +411,7 @@ function xStreamUICallbackCreate:get_available_event_names()
 
   local model = self.xstream.selected_model
   for k,v in pairs(model.events) do 
-    local cb_type,cb_key,cb_subtype = xStreamUI.get_editor_type("events."..k)
+    local cb_type,cb_key,cb_subtype = xStream.parse_callback_type("events."..k)
     --print(">>> get_available_event_names - cb_type,cb_key,cb_subtype",cb_type,cb_key,cb_subtype)
     local event_key = cb_subtype and cb_key.."."..cb_subtype or cb_key
     local event_idx = table.find(rslt,event_key)
@@ -319,5 +422,53 @@ function xStreamUICallbackCreate:get_available_event_names()
   end
   --print(">>> rslt",rprint(rslt))
   return rslt
+
+end
+
+-------------------------------------------------------------------------------
+-- update on switching
+
+function xStreamUICallbackCreate:event_switcher(evt)
+  print("xStreamUICallbackCreate:event_switcher()",evt)
+  
+  local vb = self.vb
+  
+  local args_popup = vb.views["xStreamDialogArgumentsPopup"]
+  local event_chooser = vb.views["xStreamDialogEventChooser"]
+  local event_switcher_other = vb.views["xStreamDialogEventSwitcherOther"]
+  local event_switcher_args = vb.views["xStreamDialogEventSwitcherArgs"]
+  args_popup.active = false
+  event_chooser.active = false
+
+  if (evt == EVENT_TYPE.ARGUMENT) then
+    args_popup.active = true
+    event_switcher_other.value = false
+  elseif (evt == EVENT_TYPE.OTHER) then
+    event_chooser.active = true
+    event_switcher_args.value = false
+  end
+
+  self.event_type = evt
+
+end
+
+-------------------------------------------------------------------------------
+-- @param arg_type (int)
+
+function xStreamUICallbackCreate:get_userdata_template(arg_type)
+
+  local arg_types = {
+    ["number"]   = '-- return a value of some kind \nreturn 42',
+    ["table"]    = '-- return a value of some kind \nreturn {"some_value"}',
+    ["boolean"]  = '-- return a value of some kind \nreturn true',
+    ["string"]   = '-- return a value of some kind \nreturn "hello world"',
+    ["function"] = [[-- return a value of some kind
+return function(arg)
+  return "you provided this value: "..tostring(arg)
+end
+]],
+  }
+
+  return arg_types[arg_type]
 
 end

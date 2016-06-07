@@ -213,6 +213,9 @@ function xStreamArg:notifier()
     self.model.xstream.buffer:wipe_futures()
   end
 
+  -- invoke event callbacks (if any)
+  self.model.xstream:handle_arg_events(self.full_name,self.value)
+
 end
 
 -------------------------------------------------------------------------------

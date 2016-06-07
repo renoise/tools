@@ -34,7 +34,7 @@ xStreamUI.MODEL_CONTROLS = {
   "xStreamRevealLocation",
   "xStreamStartPlayButton",
   "xStreamToggleStreaming",
-  "xStreamCallbackType",
+  --"xStreamCallbackType",
   "xStreamCallbackCreate",
   "xStreamCallbackRename",
   "xStreamCallbackRemove",
@@ -67,7 +67,7 @@ xStreamUI.FULL_PANEL_W = xStreamUI.LEFT_PANEL_W + xStreamUI.RIGHT_PANEL_W + 4
 xStreamUI.CALLBACK_EDITOR_W = 500 -- 80 characters
 xStreamUI.MONO_CHAR_W = 7 -- single character 
 xStreamUI.TRANSPORT_BUTTON_W = 28
-xStreamUI.MODEL_SELECTOR_W = 165
+xStreamUI.MODEL_SELECTOR_W = 145
 --xStreamUI.MODEL_SELECTOR_COMPACT_W = 127
 xStreamUI.FLASH_TIME = 0.2
 xStreamUI.LINE_HEIGHT = 14
@@ -346,17 +346,20 @@ function xStreamUI:update_editor()
   local vb_type_popup = self.vb.views["xStreamCallbackType"]
   local items = {}
   if model then
-    table.insert(items,"main")
     for k,v in pairs(model.data) do
       table.insert(items,("data.%s"):format(k))
     end
     for k,v in pairs(model.events) do
       table.insert(items,("events.%s"):format(k))
     end
-    --print(">>> items...",rprint(items))
-    vb_type_popup.value = table.find(items,self.editor_view) or 1
+  end
+  table.sort(items)
+  if model then
+    table.insert(items,1,"main")
   end
   vb_type_popup.items = items
+  vb_type_popup.value = table.find(items,self.editor_view) or 1
+  vb_type_popup.active = (#items > 1)
 
   self:set_editor_content()
 
@@ -730,7 +733,8 @@ function xStreamUI:build_callback_panel()
     vb:space{
       width = xStreamUI.FULL_PANEL_W,
     },
-    vb:row{
+    vb:horizontal_aligner{
+      mode = "justify",
       vb:row{
         id = "xStreamCallbackHeader",
         vb:button{
@@ -880,7 +884,7 @@ function xStreamUI:build_callback_panel()
           tooltip = "Number of lines",
           vb:text{
             id = "xStreamEditorNumLinesTitle",
-            text = "lines",
+            text = "Lines",
           },
           vb:valuebox{
             min = 12,
@@ -1033,7 +1037,9 @@ function xStreamUI:set_editor_content()
   if not model then
     text = xStreamUI.WELCOME_MSG
   else
-    local cb_type,cb_key,cb_subtype = xStreamUI.get_editor_type(self.editor_view)
+    local cb_type,cb_key,cb_subtype_or_tab,cb_arg_name = 
+      xStream.parse_callback_type(self.editor_view)
+    print("cb_type,cb_key,cb_subtype_or_tab,cb_arg_name",cb_type,cb_key,cb_subtype_or_tab,cb_arg_name)
     if (cb_type == "main") then
       text = model.sandbox.callback_str 
       set_button_state(false)
@@ -1041,12 +1047,14 @@ function xStreamUI:set_editor_content()
       text = model.data_initial[cb_key]
       set_button_state(true)
     elseif (cb_type == "events") then
-      text = model.events[cb_key.."."..cb_subtype]
+      -- when argument, we can have four parts
+      local cb_name = cb_arg_name and cb_subtype_or_tab.."."..cb_arg_name or cb_subtype_or_tab
+      text = model.events[cb_key.."."..cb_name]
       set_button_state(true)
     end
   end
 
-  --rprint(text)
+  rprint(text)
 
   -- prevent notifier from firing
   local view = self.vb.views["xStreamCallbackEditor"]
@@ -1066,7 +1074,7 @@ function xStreamUI:apply_editor_content()
   if model then
     --print("*** xStreamUI:on_idle - callback modified")
     local view = self.vb.views["xStreamCallbackEditor"]
-    local cb_type,cb_key,cb_subtype = xStreamUI.get_editor_type(self.editor_view)
+    local cb_type,cb_key,cb_subtype_or_tab,cb_arg_name = xStream.parse_callback_type(self.editor_view)
     if (cb_type == "main") then
       model.callback_str = view.text 
     elseif (cb_type == "data") then
@@ -1077,8 +1085,9 @@ function xStreamUI:apply_editor_content()
       self.xstream.callback_status_observable.value = str_status
     elseif (cb_type == "events") then
       local def = table.rcopy(model.events)
-      def[cb_key.."."..cb_subtype] = view.text
-      --print("apply content",cb_key.."."..cb_subtype)
+      local cb_name = cb_arg_name and cb_subtype_or_tab.."."..cb_arg_name or cb_subtype_or_tab
+      def[cb_key.."."..cb_name] = view.text
+      print("apply content",cb_key.."."..cb_name)
       local str_status = model:parse_events(def)
       self.xstream.callback_status_observable.value = str_status
     end
@@ -1244,7 +1253,7 @@ function xStreamUI:rename_callback(new_name)
     return
   end
 
-  local cb_type,cb_key,cb_subtype = xStreamUI.get_editor_type(self.editor_view)
+  local cb_type,cb_key,cb_subtype = xStream.parse_callback_type(self.editor_view)
   if not new_name then
     new_name = vPrompt.prompt_for_string(cb_subtype or cb_key,
       "Enter a new name","Rename callback")
@@ -1278,7 +1287,7 @@ function xStreamUI:remove_callback()
     {"OK","Cancel"})
   
   if (choice == "OK") then
-    local cb_type,cb_key,cb_subtype = xStreamUI.get_editor_type(self.editor_view)
+    local cb_type,cb_key,cb_subtype = xStream.parse_callback_type(self.editor_view)
     model:remove_callback(cb_type,cb_subtype and cb_key.."."..cb_subtype or cb_key)
     --self:update_editor()
     self.update_editor_requested = true
@@ -1387,28 +1396,4 @@ function xStreamUI:on_idle()
 
 
 end
-
---------------------------------------------------------------------------------
--- Static methods
---------------------------------------------------------------------------------
--- @param str_name (string), e.g. "events.midi.note_on" or "main"
--- @return string, type - "main","data" or "events"
--- @return string, callback name (not when first string is "main")
--- @return string, subtype (only for events), e.g. "midi" or "voice"
-
-function xStreamUI.get_editor_type(str_name)
-
-  if (str_name == "main") then
-    return xStreamModel.CB_TYPE.MAIN
-  elseif (str_name:sub(0,5) == "data.") then
-    local key = str_name:sub(6)
-    return xStreamModel.CB_TYPE.DATA,key
-  elseif (str_name:sub(0,7) == "events.") then
-    local key = str_name:sub(8)    
-    local parts = xLib.split(key,"%.") -- split at dot
-    return xStreamModel.CB_TYPE.EVENTS,parts[1],parts[2]
-  end
-
-end
-
 
