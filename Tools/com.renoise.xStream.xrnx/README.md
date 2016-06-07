@@ -7,12 +7,10 @@ xStream is a [Renoise tool](http://www.renoise.com/tools/xStream) that allows yo
 * **Two output modes**: real-time/streaming (on-line) or offline 
 * **Streaming mode** works across patterns, and even across pattern/block-loops
 * **Offline mode** can apply output to the currently selected track, or a selection in the track 
-* **Instant access** - trigger models & presets via MIDI and keyboard mappings
-* **Simple scripting** - easily transform & access pattern data via the code editor  
-* **Sandboxed code** protects you against syntax errors while the tool is running
-* **Modify behavior in real-time** - attach arguments to sliders, knobs etc.
-* **Lock and randomize arguments** - retain control, locked arguments remain unchanged  
-* **Convenient import & export** using plain text/clipboard snippets
+* **MIDI Mappable** - trigger models & presets via MIDI and keyboard mappings
+* **Live coding** the sandbox protects you against syntax errors while the tool is running
+* **Lock and randomize** - retain control: locked arguments remain unaltered, can be linked too  
+* **Preset Exchange** files are stored as plain text in a location of your choice 
 
 ## How it works
 
@@ -22,13 +20,12 @@ The heart of xStream is lies in it's ability to create and transform pattern/aut
 
 Here are a few examples to give you a taste of what xStream can be used for:
 
-**Sequencer** - a demonstration of how to create a basic repeating pattern in xStream. 
-
-**Exponential Delay** - this model can be used for 'bouncing ball' simulations, among other things. The controls correspond to physical aspects such as 'gravity', 'energy' and more. Mostly suitable for percussive sounds. 
-
-**Euclidean Rhythms** - ever since someone discovered that Euclidean number ratios can generate useful rhythms, the theory of the famous greek mathematician got applied to music as well    
-
-**Granular** - this model will generate swarms of chopped-up small sounds. Works best on ambient and atmospheric sounds.  
+* **Step Sequencer** - a highly configurable step sequencer with a pattern-FX module for some more unusual effects.  
+* **Voice Recorder** - a demonstration of how the built-in voice manager makes it possible to record live MIDI on the fly, much like how Renoise does it.  
+* **Exponential Delay** - create 'bouncing ball' simulations, among other things. The controls correspond to physical aspects such as 'gravity', 'energy' and can create a wide variety of rhythms.      
+* **Euclidean Rhythms** - ever since it was discovered that Euclidean number ratios can generate useful rhythms, the theory of the famous greek mathematician got applied to music as well.      
+* **Granular** - this model generates swervy swarms of chopped-up sounds, using pitch and sample offset commands én masse. Works best on ambient and atmospheric sounds.
+* **Chord Memory** - this model can read chords from the pattern and apply them anywhere. Useful to create shapshots of chord progressions, comes loaded with standard chord presets.       
 
 ### Limitations
 
@@ -40,13 +37,14 @@ Here are a few examples to give you a taste of what xStream can be used for:
 
 ## The user interface
 
-xStream is deep! But once you get familiar with the interface it will seem a lot less intimidating.
+xStream is deep! But once you get familiar with the interface it will seem a lot less intimidating. Also, the state is saved between sessions, to make it easy to pick up where you left off. 
  
 <img src="./manual/screenshot.png"> 
 
-Note that each major part of the user interface (code editor, presets, arguments) contain a small arrow in the top-left corner. This allows you to expand or contract that particular part of the interface, making the tool take up much less space on your screen. 
 
-_The state of the interface is saved between sessions, to make it easy to pick up where you left off_  
+Each major part of the user interface (code editor, presets, arguments) contain a small arrow in the top-left corner. This allows you to expand or contract that particular part of the interface, making the tool take up much less space on your screen. 
+
+
 
 
 ### Global toolbar 
@@ -243,7 +241,7 @@ xStream is using a subset of the Renoise Lua API. If you are not familiar with L
 ### Properties 
 
 `rns` - shorthand for renoise.song()  
-`renoise` - access to the global renoise object
+`renoise` - access to the global renoise object  
 `xinc` - (number) an ever-increasing counter, initialized when output is started  
 `xline` - (table) the current line, containing the following entries  
 `xline.note_columns[]` - (table) access note columns in the xline  
@@ -254,7 +252,7 @@ xStream is using a subset of the Renoise Lua API. If you are not familiar with L
 `xline.note_columns[].volume_value` -> [number, 0-127, or number, 0-65535]  
 `xline.note_columns[].volume_string` -> [string, '00'-'ZF' or '..']  
 `xline.note_columns[].panning_value` -> [number, 0-127 or number, 0-65535]  
-`xline.note_columns[].panning_string` -> [string, '00'-'ZF' or '..']
+`xline.note_columns[].panning_string` -> [string, '00'-'ZF' or '..']  
 `xline.note_columns[].delay_value` -> [number, 0-255]  
 `xline.note_columns[].delay_string` -> [string, '00'-'FF' or '..']  
 `xline.effect_columns[]` - (table) access effect columns in the xline  
@@ -267,12 +265,11 @@ xStream is using a subset of the Renoise Lua API. If you are not familiar with L
 `xpos.sequence (number)` -> pattern sequence index  
 `xpos.lines_travelled (number)` -> lines travelled since output started   
 `args (table, ObservableXXX)` -> access to model arguments  
-`args (table, ObservableXXX)` -> access to model arguments  
-`xstream (xStream)` -> access to the xStream instance
-`buffer (xStreamBuffer)` -> access to the stream buffer (shorthand for xstream.buffer)
-`voices (table<xMidiMessage>)` -> access the active voices (shorthand for voicemgr.voices)
-`voicemgr (xVoiceManager)` -> access the voice-manager
-`data (table)` -> optional user-data, access via "data.my_value"
+`xstream (xStream)` -> access to the xStream instance  
+`buffer (xStreamBuffer)` -> access to the stream buffer (shorthand for xstream.buffer)  
+`voices (table<xMidiMessage>)` -> access the active voices (shorthand for voicemgr.voices)  
+`voicemgr (xVoiceManager)` -> access the voice-manager  
+`data (table)` -> optional user-data, access via "data.my_value"  
 `clear_undefined (boolean)` -> how to treat empty lines (see Options dialog for more details)  
 `expand_columns (boolean)` -> whether to automatically show columns as data is written  
 `include_hidden (boolean)` -> whether to include hidden columns when reading & writing  
