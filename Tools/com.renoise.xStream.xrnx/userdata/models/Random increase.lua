@@ -1,27 +1,30 @@
---[[============================================================================
+--[[===========================================================================
 Random increase.lua
-============================================================================]]--
+===========================================================================]]--
 
 return {
 arguments = {
   {
-      name = "instr_idx",
-      value = 1,
-      properties = {
-          min = 1,
-          --quant = 1,
-          max = 255,
-          zero_based = true,
-          display_as = "hex",
+      ["locked"] = false,
+      ["name"] = "instr_idx",
+      ["linked"] = false,
+      ["value"] = 1,
+      ["properties"] = {
+          ["max"] = 255,
+          ["min"] = 1,
+          ["display_as"] = "hex",
+          ["zero_based"] = true,
       },
-      bind = "rns.selected_instrument_index_observable",
-      description = "Specify the instrument number",
+      ["bind"] = "rns.selected_instrument_index_observable",
+      ["description"] = "Specify the instrument number",
   },
 },
 presets = {
 },
 data = {
-  current_pitch = 14,
+  ["current_pitch"] = 14,
+},
+events = {
 },
 options = {
  color = 0x505552,
@@ -50,7 +53,5 @@ if (produce_output) then
 else
   xline.note_columns[1] = {}
 end
-
-
 ]],
 }

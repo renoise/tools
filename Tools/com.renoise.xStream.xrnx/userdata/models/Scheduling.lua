@@ -21,7 +21,5 @@ callback = [[
 
 -- Use this as a template for your own creations. 
 --xline.note_columns[1].note_string = "C-4"
-    
-
 ]],
 }

@@ -5,31 +5,37 @@ Qxx Shuffle.lua
 return {
 arguments = {
   {
-      name = "fx_column_idx",
-      value = 0,
-      properties = {
-          min = 0,
-          max = 8,
-          display_as = "integer",
-          zero_based = false,
+      ["locked"] = false,
+      ["name"] = "fx_column_idx",
+      ["linked"] = false,
+      ["value"] = 0,
+      ["properties"] = {
+          ["max"] = 8,
+          ["min"] = 0,
+          ["display_as"] = "integer",
+          ["zero_based"] = false,
       },
-      description = "The FX column where we write Qxx commands (0 = selected)",
+      ["description"] = "The FX column where we write Qxx commands (0 = selected)",
   },
   {
-      name = "shuffle_amount",
-      value = 14,
-      properties = {
-          min = 0,
-          max = 15,
-          display_as = "integer",
-          zero_based = false,
+      ["locked"] = false,
+      ["name"] = "shuffle_amount",
+      ["linked"] = false,
+      ["value"] = 14,
+      ["properties"] = {
+          ["max"] = 15,
+          ["min"] = 0,
+          ["display_as"] = "integer",
+          ["zero_based"] = false,
       },
-      description = "The shuffle amount (in ticks)",
+      ["description"] = "The shuffle amount (in ticks)",
   },
 },
 presets = {
 },
 data = {
+},
+events = {
 },
 options = {
  color = 0x000000,
@@ -49,6 +55,5 @@ then
   xline.effect_columns[fx_col_idx].number_string = "0Q"
   xline.effect_columns[fx_col_idx].amount_value = args.shuffle_amount
 end
-
 ]],
 }

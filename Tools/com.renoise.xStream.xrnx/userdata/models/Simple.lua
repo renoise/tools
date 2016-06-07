@@ -1,35 +1,41 @@
---[[============================================================================
+--[[===========================================================================
 Simple.lua
-============================================================================]]--
+===========================================================================]]--
 
 return {
 arguments = {
   {
-      name = "instr_idx",
-      value = 3,
-      properties = {
-          min = 1,
-          max = 255,
-          zero_based = true,
-          display_as = "hex",
+      ["locked"] = false,
+      ["name"] = "instr_idx",
+      ["linked"] = false,
+      ["value"] = 1,
+      ["properties"] = {
+          ["max"] = 255,
+          ["min"] = 1,
+          ["display_as"] = "hex",
+          ["zero_based"] = true,
       },
-      bind = "rns.selected_instrument_index_observable",
-      description = "Specify the instrument number",
+      ["bind"] = "rns.selected_instrument_index_observable",
+      ["description"] = "Specify the instrument number",
   },
   {
-      name = "volume",
-      value = 63.944347826087,
-      properties = {
-          max = 128,
-          min = 0,
-          display_as = "hex",
+      ["locked"] = false,
+      ["name"] = "volume",
+      ["linked"] = false,
+      ["value"] = 63.944347826087,
+      ["properties"] = {
+          ["max"] = 128,
+          ["display_as"] = "hex",
+          ["min"] = 0,
       },
-      description = "Specify the general volume level",
+      ["description"] = "Specify the general volume level",
   },
 },
 presets = {
 },
 data = {
+},
+events = {
 },
 options = {
  color = 0x505552,
@@ -39,7 +45,7 @@ callback = [[
 -- Simple example
 -- Creates random notes in two columns, leave the rest intact
 -------------------------------------------------------------------------------
-
+ 
 xline.note_columns = {
   {
     note_value = math.random(36,48),
@@ -54,14 +60,5 @@ xline.note_columns = {
     panning_value = 0x10,
   }
 }
-
-
-
-
-
-
-
-
-
 ]],
 }

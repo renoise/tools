@@ -1,66 +1,70 @@
---[[============================================================================
+--[[===========================================================================
 Args-PollingBetter.lua
-============================================================================]]--
+===========================================================================]]--
 
 return {
 arguments = {
   {
-      name = "instr_idx",
-      value = 1,
-      properties = {
-          min = 1,
-          --quant = 1,
-          max = 255,
-          zero_based = true,
-          display_as = "hex",
+      ["locked"] = false,
+      ["name"] = "instr_idx",
+      ["linked"] = false,
+      ["value"] = 1,
+      ["properties"] = {
+          ["max"] = 255,
+          ["min"] = 1,
+          ["display_as"] = "hex",
+          ["zero_based"] = true,
       },
-      bind = "rns.selected_instrument_index_observable",
-      description = "Specify the instrument number",
+      ["bind"] = "rns.selected_instrument_index_observable",
+      ["description"] = "Specify the instrument number",
   },
   {
-      poll = "rns.selected_note_column_index",
-      name = "note_col_idx",
-      value = 1,
-      properties = {
-          min = 0,
-          --quant = 1,
-          max = 12,
-          display_as = "integer",
+      ["poll"] = "rns.selected_note_column_index",
+      ["locked"] = false,
+      ["name"] = "note_col_idx",
+      ["linked"] = false,
+      ["value"] = 1,
+      ["properties"] = {
+          ["min"] = 0,
+          ["display_as"] = "integer",
+          ["max"] = 12,
       },
-      description = "Tracking the selected note-column via polling",
+      ["description"] = "Tracking the selected note-column via polling",
   },
 },
 presets = {
 },
 data = {
-  columns = {
-      false,
-      false,
-      false,
-      false,
-      false,
-      false,
-      false,
-      false,
-      false,
-      false,
-      false,
-      false,
-  },
-  columns2 = {
-      false,
-      false,
-      false,
-      false,
-      false,
-      false,
-      false,
-      false,
-      false,
-      false,
-      false,
-      false,
-  },
+  ["columns"] = [[{
+  false,
+  false,
+  false,
+  false,
+  false,
+  false,
+  false,
+  false,
+  false,
+  false,
+  false,
+  false,
+}]],
+  ["columns2"] = [[{
+  false,
+  false,
+  false,
+  false,
+  false,
+  false,
+  false,
+  false,
+  false,
+  false,
+  false,
+  false,
+}]],
+},
+events = {
 },
 options = {
  color = 0x60AACA,
@@ -115,11 +119,6 @@ check_columns(data.columns,data.columns2)
 xline.note_columns[args.note_col_idx] = {
   note_value = math.random(36,60),
   instrument_value = args.instr_idx,
-}  
-
-
-
-
-
+}
 ]],
 }

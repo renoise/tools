@@ -1,14 +1,16 @@
---[[============================================================================
+--[[===========================================================================
 Notes and scales.lua
-============================================================================]]--
+===========================================================================]]--
 
 return {
 arguments = {
   {
-      name = "curr_key",
-      value = 5,
-      properties = {
-          items = {
+      ["locked"] = false,
+      ["name"] = "curr_key",
+      ["linked"] = false,
+      ["value"] = 5,
+      ["properties"] = {
+          ["items"] = {
               "C",
               "C#",
               "D",
@@ -23,13 +25,15 @@ arguments = {
               "B",
           },
       },
-      description = "Select a key for the scale",
+      ["description"] = "Select a key for the scale",
   },
   {
-      name = "curr_scale",
-      value = 4,
-      properties = {
-          items = {
+      ["locked"] = false,
+      ["name"] = "curr_scale",
+      ["linked"] = false,
+      ["value"] = 4,
+      ["properties"] = {
+          ["items"] = {
               "None",
               "Natural Major",
               "Natural Minor",
@@ -70,12 +74,14 @@ arguments = {
               "Nine-Tone Scale",
           },
       },
-      description = "Specify which scale to use",
+      ["description"] = "Specify which scale to use",
   },
 },
 presets = {
 },
 data = {
+},
+events = {
 },
 options = {
  color = 0x69997A,
@@ -92,10 +98,5 @@ callback = [[
 local existing_note = xline.note_columns[1].note_value
 xline.note_columns[1].note_value =
   restrict_to_scale(existing_note,args.curr_scale,args.curr_key)
-
-
-
-
-
 ]],
 }

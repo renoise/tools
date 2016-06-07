@@ -5,64 +5,74 @@ Note-shuffle.lua
 return {
 arguments = {
   {
-      name = "instr_idx",
-      value = 2,
-      properties = {
-          max = 255,
-          min = 1,
-          display_as = "hex",
-          zero_based = true,
+      ["locked"] = false,
+      ["name"] = "instr_idx",
+      ["linked"] = false,
+      ["value"] = 1,
+      ["properties"] = {
+          ["min"] = 1,
+          ["max"] = 255,
+          ["display_as"] = "hex",
+          ["zero_based"] = true,
       },
-      bind = "rns.selected_instrument_index_observable",
-      description = "Specify the instrument number",
+      ["bind"] = "rns.selected_instrument_index_observable",
+      ["description"] = "Specify the instrument number",
   },
   {
-      name = "num_steps",
-      value = 3,
-      properties = {
-          min = 1,
-          display_as = "integer",
-          max = 32,
+      ["locked"] = false,
+      ["name"] = "num_steps",
+      ["linked"] = false,
+      ["value"] = 3,
+      ["properties"] = {
+          ["min"] = 1,
+          ["display_as"] = "integer",
+          ["max"] = 32,
       },
-      description = "Specify the number of steps in the sequence",
+      ["description"] = "Specify the number of steps in the sequence",
   },
   {
-      name = "volume",
-      value = 128,
-      properties = {
-          max = 128,
-          display_as = "hex",
-          min = 0,
+      ["locked"] = false,
+      ["name"] = "volume",
+      ["linked"] = false,
+      ["value"] = 128,
+      ["properties"] = {
+          ["max"] = 128,
+          ["display_as"] = "hex",
+          ["min"] = 0,
       },
-      description = "Specify the general volume level",
+      ["description"] = "Specify the general volume level",
   },
   {
-      name = "shuffle",
-      value = 0.22,
-      properties = {
-          max = 1,
-          min = 0,
+      ["locked"] = false,
+      ["name"] = "shuffle",
+      ["linked"] = false,
+      ["value"] = 0.22,
+      ["properties"] = {
+          ["max"] = 1,
+          ["min"] = 0,
       },
-      description = "Control the amount of shuffle",
+      ["description"] = "Control the amount of shuffle",
   },
 },
 presets = {
   {
-      instr_idx = 2,
-      shuffle = 0.22,
-      volume = 128,
-      name = "!#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmnopqrstuvwxyz{|}~€‚ƒ„…†‡ˆ‰Š‹ŒŽ‘’“”•–—˜™š›œžŸ ¡¢£¤¥¦§¨©ª«¬­®¯°±²³´µ¶·¸¹º»¼½¾¿ÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖ×ØÙÚÛÜÝÞßàáâãäåæçèéêëìíîïðñòóôõö÷øùúûüýþÿ",
-      num_steps = 3,
+      ["instr_idx"] = 2,
+      ["shuffle"] = 0.22,
+      ["volume"] = 128,
+      ["name"] = "!#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[]^_`abcdefghijklmnopqrstuvwxyz{|}~€‚ƒ„…†‡ˆ‰Š‹ŒŽ‘’“”•–—˜™š›œžŸ ¡¢£¤¥¦§¨©ª«¬­®¯°±²³´µ¶·¸¹º»¼½¾¿ÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖ×ØÙÚÛÜÝÞßàáâãäåæçèéêëìíîïðñòóôõö÷øùúûüýþÿ",
+      ["num_steps"] = 3,
   },
   {
-      instr_idx = 2,
-      shuffle = 0.6895652173913,
-      volume = 128,
-      name = "",
-      num_steps = 5,
+      ["instr_idx"] = 2,
+      ["shuffle"] = 0.6895652173913,
+      ["volume"] = 128,
+      ["name"] = "",
+      ["num_steps"] = 5,
   },
 },
 data = {
+},
+events = {
 },
 options = {
  color = 0x9ED68C,
@@ -86,11 +96,6 @@ else
     volume_value = args.volume,
     delay_value = (xinc%4 == 0) and math.floor(255*args.shuffle) or 0,
   }
-end  
-  
-  
-
-
-
+end
 ]],
 }

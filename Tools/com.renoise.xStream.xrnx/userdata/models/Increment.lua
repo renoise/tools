@@ -9,6 +9,8 @@ presets = {
 },
 data = {
 },
+events = {
+},
 options = {
  color = 0xC9B36D,
 },
@@ -23,15 +25,5 @@ callback = [[
 xline.note_columns[1] = {
   volume_value = xinc % 0x20 + 0x10  
 }
-
-
-
-
-
-
-
-
-
-
 ]],
 }
