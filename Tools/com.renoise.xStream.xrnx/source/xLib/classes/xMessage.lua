@@ -47,13 +47,17 @@ function xMessage:__init(...)
   self.instrument_index = property(self.get_instrument_index,self.set_instrument_index)
   self._instrument_index = args.instrument_index or rns.selected_instrument_index
 
-  --- int, 1-12 
+  --- int, 1-12 - the note column index
   self.note_column_index = property(self.get_note_column_index,self.set_note_column_index)
   self._note_column_index = args.note_column_index or rns.selected_note_column_index
 
-  --- int, 1-512 - 
+  --- int, 1-512 - the pattern-line number
   self.line_index = property(self.get_line_index,self.set_line_index)
   self._line_index = args.line_index or rns.selected_line_index
+
+  --- int, 0-8 - the octave 
+  self.octave = property(self.get_octave,self.set_octave)
+  self._line_index = args.octave or rns.transport.octave
 
   --- the raw message, as received (or ready to send)
   self.raw_message = property(self.get_raw_message,self.set_raw_message)
@@ -136,6 +140,17 @@ function xMessage:set_line_index(val)
   self._line_index = val
 end
 
+--------------------------------------------------------------------------------
+
+function xMessage:get_octave()
+  return self._octave
+end
+
+function xMessage:set_octave(val)
+  assert(type(val)=="number","Expected octave to be a number")
+  self._octave = val
+end
+
 -------------------------------------------------------------------------------
 -- produce a raw message (retrieve from cache if possible)
 -- @return 
@@ -174,6 +189,7 @@ function xMessage:__tostring()
     ..", instrument_index="..tostring(self.instrument_index)
     ..", note_column_index="..tostring(self.note_column_index)
     ..", line_index="..tostring(self.line_index)
+    ..", octave="..tostring(self.octave)
     ..", #values="..tostring(#self.values)
 
 end

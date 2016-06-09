@@ -180,7 +180,7 @@ function xStreamUI:__init(...)
   self.suppress_editor_notifier = false
 
   -- string, tells us the type of content in the editor 
-  -- valid values are "main", "data" or a registered event (xMidiMessage.TYPE)
+  -- valid values are "main", "data.[xStreamArg.full_name]" or "event.[xMidiMessage.TYPE]"
   self.editor_view = "main"
 
   self.base_color_highlight = vColor.adjust_brightness(xStreamUI.COLOR_BASE,xStreamUI.HIGHLIGHT_AMOUNT)
@@ -992,7 +992,10 @@ function xStreamUI:build_callback_panel()
           width = xStreamUI.BITMAP_BUTTON_W,
           height = xStreamUI.BITMAP_BUTTON_H,
           notifier = function()
-            self:rename_callback()
+            local passed,err = self:rename_callback()
+            if err then
+              renoise.app():show_warning(err)
+            end
           end,
         },
         vb:button{
@@ -1026,14 +1029,6 @@ function xStreamUI:set_editor_content()
   local vb_rename = vb.views["xStreamCallbackRename"]
   --local vb_create = vb.views["xStreamCallbackCreate"]
 
-  local function set_button_state(state)
-    local ctrls = {vb_remove,vb_rename}
-    for k,v in ipairs(ctrls) do
-      v.active = state
-    end
-  end
-
-
   if not model then
     text = xStreamUI.WELCOME_MSG
   else
@@ -1041,19 +1036,22 @@ function xStreamUI:set_editor_content()
       xStream.parse_callback_type(self.editor_view)
     if (cb_type == "main") then
       text = model.sandbox.callback_str 
-      set_button_state(false)
+      vb_rename.active = false
+      vb_remove.active = false
     elseif (cb_type == "data") then
       text = model.data_initial[cb_key]
-      set_button_state(true)
+      vb_rename.active = true
+      vb_remove.active = true
     elseif (cb_type == "events") then
       -- when argument, we can have four parts
       local cb_name = cb_arg_name and cb_subtype_or_tab.."."..cb_arg_name or cb_subtype_or_tab
       text = model.events[cb_key.."."..cb_name]
-      set_button_state(true)
+      vb_rename.active = false
+      vb_remove.active = true
     end
   end
 
-  rprint(text)
+  --rprint(text)
 
   -- prevent notifier from firing
   local view = self.vb.views["xStreamCallbackEditor"]
@@ -1255,6 +1253,11 @@ function xStreamUI:rename_callback(new_name)
   end
 
   local cb_type,cb_key,cb_subtype = xStream.parse_callback_type(self.editor_view)
+
+  if (cb_type ~= xStreamModel.CB_TYPE.DATA) then
+    return
+  end
+
   if not new_name then
     new_name = vPrompt.prompt_for_string(cb_subtype or cb_key,
       "Enter a new name","Rename callback")
@@ -1266,8 +1269,13 @@ function xStreamUI:rename_callback(new_name)
   -- events contain two parts
   local old_name = cb_subtype and cb_key.."."..cb_subtype or cb_key
 
-  model:rename_callback(old_name,new_name,cb_type)
+  local passed,err = model:rename_callback(old_name,new_name,cb_type)
+  if not passed then
+    return false,err
+  end
 
+  self.editor_view = cb_type.."."..new_name
+  --print(">>> self.editor_view",self.editor_view)
   self.user_modified_callback = true
 
 

@@ -10,9 +10,13 @@ Supporting UI class for xStream
 
 --==============================================================================
 
+local EVENTS_LABEL_W = 80
+local EVENTS_POPUP_W = 175
+
 local EVENT_TYPE = {
   ARGUMENT = 1,
-  OTHER = 2,
+  RENOISE = 2,
+  OTHER = 3,
 }
 
 local ARG_TYPES = {"number","table","boolean","string","function"}
@@ -141,10 +145,12 @@ function xStreamUICallbackCreate:create_dialog()
                   end,
                 },
                 vb:text{
-                  text = "Attach to argument",
+                  text = "Arguments",
+                  width = EVENTS_LABEL_W,
                 },
                 vb:popup{
                   id = "xStreamDialogArgumentsPopup",
+                  width = EVENTS_POPUP_W,
                   --items = vb_argument_items,
                 }
               }
@@ -160,15 +166,38 @@ function xStreamUICallbackCreate:create_dialog()
                 end
               },
               vb:text{
-                text = "Or choose from the available events",
+                text = "Model events",
+                width = EVENTS_LABEL_W,
+              },
+              vb:popup{
+                id = "xStreamDialogEventChooser",
+                width = EVENTS_POPUP_W,
+                --items = self:get_available_event_names(),
+                --value = 1,
+                active = false
               },
             },
 
-            vb:chooser{
-              id = "xStreamDialogEventChooser",
-              items = self:get_available_event_names(),
-              value = 1,
-              active = false
+            vb:row{
+              vb:checkbox{
+                id = "xStreamDialogEventSwitcherRenoise",
+                value = false,
+                notifier = function(val)
+                  if val then
+                    self:event_switcher(EVENT_TYPE.RENOISE)
+                  end
+                end
+              },
+
+              vb:text{
+                text = "Renoise events",
+                width = EVENTS_LABEL_W,
+              },
+              vb:popup{
+                id = "xStreamDialogRenoiseEvents",
+                width = EVENTS_POPUP_W,
+                active = false,
+              }
             }
           },
 
@@ -225,6 +254,12 @@ function xStreamUICallbackCreate:update_dialog()
   local args_popup = vb.views["xStreamDialogArgumentsPopup"]
   args.visible = false
 
+  local vb_chooser = self.vb.views["xStreamDialogEventChooser"]
+  vb_chooser.items = self:get_available_event_names()
+
+  local vb_renoise_events = self.vb.views["xStreamDialogRenoiseEvents"]
+  vb_renoise_events.items = xObservable.get_song_names()
+
   local view_page_1       = vb.views["xStreamNewModelDialogPage1"]
   local view_page_2       = vb.views["xStreamNewModelDialogPage2"]
   local view_page_2_opt1  = vb.views["xStreamNewModelDialogPage2Option1"]
@@ -241,6 +276,8 @@ function xStreamUICallbackCreate:update_dialog()
     view_page_1.visible = true
     
     view_opt_chooser.value = self.dialog_option
+
+    -- enable arguments as default when present
     self.event_type = not table.is_empty(vb_argument_items) 
       and EVENT_TYPE.ARGUMENT or EVENT_TYPE.OTHER
 
@@ -273,6 +310,8 @@ function xStreamUICallbackCreate:update_dialog()
   local view_next_button  = vb.views["xStreamDialogNextButton"]
   view_prev_button.active = (self.dialog_page > 1) and true or false
   view_next_button.text = (self.dialog_page == 2) and "Done" or "Next"
+
+  -- 
 
 end
 
@@ -347,9 +386,12 @@ function xStreamUICallbackCreate:show_next_page()
       if (self.event_type == EVENT_TYPE.ARGUMENT) then
         local vb_popup = self.vb.views["xStreamDialogArgumentsPopup"]
         str_name = "args."..vb_popup.items[vb_popup.value]
-      else
+      elseif (self.event_type == EVENT_TYPE.OTHER) then
         local vb_chooser = self.vb.views["xStreamDialogEventChooser"]
         str_name = vb_chooser.items[vb_chooser.value]
+      elseif (self.event_type == EVENT_TYPE.RENOISE) then
+        local vb_renoise = self.vb.views["xStreamDialogRenoiseEvents"]
+        str_name = vb_renoise.items[vb_renoise.value]
       end
       --print("str_name",str_name)
 
@@ -388,6 +430,7 @@ function xStreamUICallbackCreate:validate_callback_name(str_name)
 end
 
 -------------------------------------------------------------------------------
+-- get list of 'model events' 
 
 function xStreamUICallbackCreate:get_available_event_names()
   TRACE("xStreamUICallbackCreate:get_available_event_names()")
@@ -430,17 +473,26 @@ function xStreamUICallbackCreate:event_switcher(evt)
   
   local args_popup = vb.views["xStreamDialogArgumentsPopup"]
   local event_chooser = vb.views["xStreamDialogEventChooser"]
+  local renoise_events = vb.views["xStreamDialogRenoiseEvents"]
+  local event_switcher_renoise = vb.views["xStreamDialogEventSwitcherRenoise"]
   local event_switcher_other = vb.views["xStreamDialogEventSwitcherOther"]
   local event_switcher_args = vb.views["xStreamDialogEventSwitcherArgs"]
   args_popup.active = false
   event_chooser.active = false
+  renoise_events.active = false
 
   if (evt == EVENT_TYPE.ARGUMENT) then
     args_popup.active = true
     event_switcher_other.value = false
+    event_switcher_renoise.value = false
   elseif (evt == EVENT_TYPE.OTHER) then
     event_chooser.active = true
     event_switcher_args.value = false
+    event_switcher_renoise.value = false
+  elseif (evt == EVENT_TYPE.RENOISE) then
+    renoise_events.active = true
+    event_switcher_args.value = false
+    event_switcher_other.value = false
   end
 
   self.event_type = evt

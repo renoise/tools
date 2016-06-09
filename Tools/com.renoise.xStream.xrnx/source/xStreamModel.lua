@@ -13,6 +13,7 @@ class 'xStreamModel'
 
 xStreamModel.DEFAULT_NAME = "Untitled model"
 
+-- available callback types
 xStreamModel.CB_TYPE = {
   MAIN = "main",
   DATA = "data",
@@ -82,7 +83,7 @@ function xStreamModel:__init(xstream)
   self.events_observable = renoise.Document.ObservableBang()
 
   -- table<function>
-  self.events_compiled = nil
+  self.events_compiled = {}
 
   -- table<string> limit to these tokens during output
   -- (derived from the code specified in the callback)
@@ -328,7 +329,7 @@ function xStreamModel:set_callback_str(str)
     if self.xstream.prefs.live_coding.value then
       local passed,err = self.sandbox:compile()
       if not passed then -- should not happen! 
-        LOG(err)
+        LOG("*** "..tostring(err))
       end
     end
 
@@ -357,7 +358,7 @@ end
 
 function xStreamModel:set_preset_bank_index(idx)
   if not self.preset_banks[idx] then
-    LOG("Attempted to set out-of-range value for preset bank index")
+    LOG("*** Attempted to set out-of-range value for preset bank index")
     return
   end
   self.selected_preset_bank_index_observable.value = idx
@@ -637,13 +638,22 @@ end
 -- @param old_name (string)
 -- @param new_name (string)
 -- @param cb_type (xStreamModel.CB_TYPE)
+-- @return bool, true when renamed
+-- @return string, error message when problem was encountered
 
 function xStreamModel:rename_callback(old_name,new_name,cb_type)
   TRACE("xStreamModel:rename_callback(old_name,new_name,cb_type)",old_name,new_name,cb_type)
 
-  local str_fn = self.callback_str
-  self.callback_str = xSandbox.rename_string_token(str_fn,old_name,new_name,cb_type..".")
-  self.modified = true
+  -- check if name is valid lua identifier
+  if (type(new_name)~='string') then
+    return false,"The callback '"..new_name.."' needs to be a string value"
+  end
+  local is_valid,err = xReflection.is_valid_identifier(new_name) 
+  if not is_valid then
+    return false,err
+  end
+
+  self:rename_token(old_name,new_name,cb_type)
 
   if (cb_type == xStreamModel.CB_TYPE.DATA) then
     self.data[new_name] = self.data[old_name]
@@ -651,7 +661,6 @@ function xStreamModel:rename_callback(old_name,new_name,cb_type)
     self.data_initial[new_name] = self.data_initial[old_name]
     self.data_initial[old_name] = nil
     self.data_observable:bang()
-    --print("self.data...",rprint(self.data))
   elseif (cb_type == xStreamModel.CB_TYPE.EVENTS) then
     self.events[new_name] = self.events[old_name]
     self.events[old_name] = nil
@@ -660,6 +669,61 @@ function xStreamModel:rename_callback(old_name,new_name,cb_type)
     self.events_observable:bang()
   else
     error("Unexpected callback type")
+  end
+
+  return true
+
+end
+
+-------------------------------------------------------------------------------
+-- rename occurrences of provided token in all callbacks (main,data,events)
+-- @param old_name (string)
+-- @param new_name (string)
+-- @param cb_type (xStreamModel.CB_TYPE)
+
+function xStreamModel:rename_token(old_name,new_name,cb_type)
+  TRACE("xStreamModel:rename_token(old_name,new_name,cb_type)",old_name,new_name,cb_type)
+
+  local str_old,str_new
+  local cb_type = cb_type.."."
+
+  local main_modified = false
+  str_old = self.callback_str
+  str_new = xSandbox.rename_string_token(str_old,old_name,new_name,cb_type)
+  if (str_old ~= str_new) then
+    self.callback_str = str_new
+    main_modified = true
+  end
+
+  local data_modified = false
+  for k,v in ipairs(self.data_initial) do
+    str_old = v
+    str_new = xSandbox.rename_string_token(str_old,old_name,new_name,cb_type)
+    if (str_old ~= str_new) then
+      self.data[k] = str_new
+      self.data_initial[k] = str_new
+      data_modified = true
+    end
+  end
+  if data_modified then
+    self.parse_userdata()
+  end
+
+  local events_modified = false
+  for k,v in ipairs(self.events) do
+    str_old = v
+    str_new = xSandbox.rename_string_token(str_old,old_name,new_name,cb_type)
+    if (str_old ~= str_new) then
+      self.events[k] = str_new
+      events_modified = true
+    end
+  end
+  if events_modified then
+    self:parse_events()
+  end
+
+  if main_modified or data_modified or events_modified then
+    self.modified = true
   end
 
 end
@@ -728,6 +792,12 @@ function xStreamModel:add_event(str_name,str_fn)
 -- @param arg (table) {type = xVoiceManager.EVENTS, index = int}
 ------------------------------------------------------------------------------
 ]]
+    elseif (parts[1] == "rns") then
+      str_fn = [[------------------------------------------------------------------------------
+-- respond to events in renoise 
+-- @param arg, depends on the notifier (see Renoise API docs)
+------------------------------------------------------------------------------
+]]
     elseif (parts[1] == "args") then
       str_fn = [[------------------------------------------------------------------------------
 -- respond to argument ']] .. parts[2] .. [[' changes
@@ -757,7 +827,7 @@ end
 function xStreamModel:parse_events(event_def)
   TRACE("xStreamModel:parse_events(def)")
 
-  self.events_compiled = {}
+  --self.events_compiled = {}
   local str_status = ""
 
   if (type(event_def)=="table") and not table.is_empty(event_def) then
@@ -775,6 +845,7 @@ function xStreamModel:parse_events(event_def)
     
     local str_fn = nil
     local parts = xLib.split(k,"%.") -- split at dot
+    --print("parts",rprint(parts))
 
     if (parts[1] == "midi") then
       -- arguments for midi event
@@ -791,14 +862,37 @@ local arg = select(1,...)
       str_fn = [[
 local val = select(1,...)
 ]]..v
+    elseif (parts[1] == "rns") then
+      -- value for renoise event
+      str_fn = [[
+--local arg = select(1,...)
+]]..v
     else 
       error("Unexpected event type")
     end
 
     local passed,err = self.sandbox:test_syntax(str_fn)
     if passed then
+
+      if (parts[1] == "rns") and self.events_compiled[k] then
+        --print(">>> about to remove notifier",k)
+        local detached,err = xObservable.detach(k,self.events_compiled[k])
+        if not detached then
+          LOG("*** Something went wrong while parsing notifier",k,err)
+        end
+      end
+
       self.events_compiled[k] = loadstring(str_fn)
       setfenv(self.events_compiled[k], self.sandbox.env)
+
+      if (parts[1] == "rns") then
+        --print(">>> about to attach notifier",k)
+        local attached,err = xObservable.attach(k,self.events_compiled[k])
+        if not attached then
+          LOG("*** Something went wrong while parsing notifier",k,err)
+        end
+      end
+
     else
       LOG("*** Failed to include event (bad syntax)",k,err)
       str_status = str_status .. err
@@ -1017,7 +1111,7 @@ function xStreamModel:rename()
         return false,"Failed to rename, perhaps the file is in use by another application?"
       end
     else
-      LOG("Warning: a model definition already exists at this location: "..str_to)
+      LOG("*** Warning: a model definition already exists at this location: "..str_to)
     end
   end
 
@@ -1080,6 +1174,10 @@ function xStreamModel:attach_to_song()
     LOG("The callback contains errors: "..err)
   end
   ]]
+
+  -- maintain renoise event bindings 
+  self:parse_events()
+
   self.args:attach_to_song()
 
 end
@@ -1130,7 +1228,7 @@ function xStreamModel:load_preset_banks()
       local filename_no_ext = xFilesystem.file_strip_extension(filename,"xml")
       local success,err = self:load_preset_bank(filename_no_ext)
       if not success then
-        LOG("Failed while trying to load this preset bank: "..filename..", "..err)
+        LOG("*** Failed while trying to load this preset bank: "..filename..", "..err)
       end
     end
   end
@@ -1213,7 +1311,7 @@ function xStreamModel:remove_preset_bank(idx)
 
   local bank = self.preset_banks[idx]
   if not bank then
-    LOG("Tried to remove non-existing preset bank")
+    LOG("*** Tried to remove non-existing preset bank")
     return
   end
 
@@ -1249,7 +1347,7 @@ function xStreamModel:get_preset_by_index(idx)
   local preset_bank = self.selected_preset_bank
   local preset = preset_bank.presets[idx]
   if not preset then
-    LOG("Tried to access a non-existing preset")
+    LOG("*** Tried to access a non-existing preset")
     return
   end
 

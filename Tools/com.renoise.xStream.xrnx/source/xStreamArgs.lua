@@ -52,7 +52,7 @@ function xStreamArgs:__init(model)
   -- table<name={},name={},etc>
   self._linked = {}
 
-  -- table<xStreamArg>
+  -- ObservableNumberList
   self.args_observable = renoise.Document.ObservableNumberList()
 
   -- monitor arguments and report changes 
