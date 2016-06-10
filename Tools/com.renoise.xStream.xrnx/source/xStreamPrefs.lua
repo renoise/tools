@@ -24,6 +24,8 @@ xStreamPrefs.START_OPTION = {
   ON_PLAY_EDIT = 3,
 }
 
+xStreamPrefs.OSC_CLIENT_HOST = "127.0.0.1"
+xStreamPrefs.OSC_CLIENT_PORT = 8000
 
 -------------------------------------------------------------------------------
 -- constructor, initialize with default values
@@ -45,6 +47,10 @@ function xStreamPrefs:__init()
   self:add_property("midi_inputs", renoise.Document.ObservableStringList())
   self:add_property("midi_outputs", renoise.Document.ObservableStringList())
 
+  -- internal OSC
+  self:add_property("osc_client_host", renoise.Document.ObservableString(xStreamPrefs.OSC_CLIENT_HOST))
+  self:add_property("osc_client_port", renoise.Document.ObservableNumber(xStreamPrefs.OSC_CLIENT_PORT))
+  self:add_property("osc_client_first_run", renoise.Document.ObservableBoolean(true))
 
   -- user interface
   self:add_property("live_coding", renoise.Document.ObservableBoolean(true))

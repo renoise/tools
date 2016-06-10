@@ -87,30 +87,6 @@ function xStreamUIOptions:__init(xstream)
 
 end
 
---------------------------------------------------------------------------------
--- Get/set methods
---------------------------------------------------------------------------------
---[[
-function xStreamUIOptions:get_start_option()
-  return self.start_option_observable.value 
-end
-
-function xStreamUIOptions:set_start_option(val)
-  self.start_option_observable.value = val
-
-end
-]]
---------------------------------------------------------------------------------
---[[
-function xStreamUIOptions:get_autostart()
-  return self.autostart_observable.value 
-end
-
-function xStreamUIOptions:set_autostart(val)
-  self.autostart_observable.value = val
-end
-]]
-
 -------------------------------------------------------------------------------
 -- Overridden methods
 -------------------------------------------------------------------------------
@@ -382,6 +358,53 @@ function xStreamUIOptions:create_dialog()
             font = "bold",
           },
           
+        },
+      },
+
+      vb:column{
+        style = "group",
+        margin = 6,
+        width = "100%",
+        vb:text{
+          text = "Internal OSC server",
+          font = "bold",
+        },
+        vb:row{
+          vb:text{
+            text = "IP/address",
+            --width = OSC_LABEL_W,
+          },
+          vb:textfield{
+            value = self.xstream.osc_client.osc_host,
+            --width = OSC_CONTROL_W,
+            notifier = function(val)
+              -- TODO check if valid 'address'
+              self.xstream.osc_client.osc_host = val
+            end,
+          },
+          vb:text{
+            text = "→ default is 127.0.0.1",
+            --width = OSC_LABEL_W,
+          },
+        },
+        vb:row{
+          vb:text{
+            text = "Port number",
+            --width = OSC_LABEL_W,
+          },
+          vb:valuebox{
+            value = self.xstream.osc_client.osc_port,
+            --width = OSC_CONTROL_W,
+            min = 0,
+            max = 65535,
+            notifier = function(val)
+              self.xstream.osc_client.osc_port = val
+            end,
+          },
+          vb:text{
+            text = "→ same as Renoise OSC prefs!",
+            --width = OSC_LABEL_W,
+          },
         },
       },
 

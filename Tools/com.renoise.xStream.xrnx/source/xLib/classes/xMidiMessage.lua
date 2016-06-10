@@ -157,31 +157,6 @@ function xMidiMessage:set_channel(val)
 end
 
 -------------------------------------------------------------------------------
---[[
-function xMidiMessage:get_value1()
-  return self._value1
-end
-
-function xMidiMessage:set_value1(val)
-  --TRACE("xMidiMessage:set_value1",val)
-  -- TODO fit within bit depth
-  self._value1 = val
-  self._raw_midi_cache = nil
-end
-
--------------------------------------------------------------------------------
-
-function xMidiMessage:get_value2()
-  return self._value2
-end
-
-function xMidiMessage:set_value2(val)
-  -- TODO fit within bit depth
-  self._value2 = val
-  self._raw_midi_cache = nil
-end
-]]
--------------------------------------------------------------------------------
 
 function xMidiMessage:get_bit_depth()
   return self._bit_depth
@@ -192,18 +167,12 @@ function xMidiMessage:set_bit_depth(val)
   self._raw_midi_cache = nil
 end
 
---[[
-function xMidiMessage:convert_bit_depth(val)
-  -- TODO same as 'set' but will keep/scale the current value
-end
-]]
-
 -------------------------------------------------------------------------------
 -- Class Methods
 -------------------------------------------------------------------------------
-
 -- produce a raw MIDI message from an xMidiMessage (cached)
 -- @return table<table> (table, as we might return a multi-byte message)
+
 function xMidiMessage:create_raw_message()
   --TRACE("xMidiMessage:create_raw_message()")
 

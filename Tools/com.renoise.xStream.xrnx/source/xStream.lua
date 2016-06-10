@@ -58,6 +58,14 @@ xStream.MUTE_MODE = {
   OFF = 2,
 }
 
+-- options for internal/external MIDI output
+xStream.OUTPUT_OPTIONS = {
+  INTERNAL_AUTO = "internal_auto",  -- output routed notes, others are raw
+  INTERNAL_RAW  = "internal_raw",   -- always output as raw
+  --EXTERNAL_MIDI = "external_midi",  -- using PORT_NAME
+  --EXTERNAL_OSC  = "external_osc",   -- using OSC_DEVICE_NAME
+}
+
 -------------------------------------------------------------------------------
 -- constructor
 
@@ -231,18 +239,35 @@ function xStream:__init(...)
     end
   end
 
+  --- xStreamUI, built-in user interface
+  self.ui = nil
+  
+  --- xMidiIO, generic MIDI input/output handler
+  self.midi_io = nil
+
+  -- xOscClient, internal MIDI routing
+  self.osc_client = nil
+
+  ---  xVoiceManager
+  self.voicemgr = nil
+
+
   -- initialize --
 
   self:determine_writeahead()
 
-  --- xStreamUI, built-in user interface
+  self.osc_client = xOscClient{
+    osc_host = self.prefs.osc_client_host.value,
+    osc_port = self.prefs.osc_client_port.value,
+    first_run = self.prefs.osc_client_first_run.value,
+  }
+
   self.ui = xStreamUI{
     xstream = self,
     waiting_to_show_dialog = self.prefs.autostart.value,
     midi_prefix = args.midi_prefix,
   }
 
-  --- xMidiIO, generic MIDI input/output handler
   self.midi_io = xMidiIO{
     midi_inputs = self.prefs.midi_inputs,
     midi_outputs = self.prefs.midi_outputs,
@@ -254,13 +279,9 @@ function xStream:__init(...)
     end,
   }
 
-  ---  xVoiceManager
   self.voicemgr = xVoiceManager{
     column_allocation = true,
   }
-
-  --- xStreamScheduler
-  --self.scheduler = xStreamScheduler(self)
 
   -- [app] favorites
 
@@ -299,7 +320,8 @@ function xStream:__init(...)
   self.clear_undefined = self.prefs.clear_undefined.value
   self.expand_columns = self.prefs.expand_columns.value
 
-  -- sync preferences --> app (when changed via options dialog...)
+  -- preferences -> app --
+
   self.prefs.midi_multibyte_enabled:add_notifier(function()
     self.midi_io.interpretor.multibyte_enabled = self.prefs.midi_multibyte_enabled.value
   end)
@@ -316,17 +338,7 @@ function xStream:__init(...)
     self.scheduling_observable.value = self.prefs.scheduling.value
   end)
 
-  -- sync app > prefs 
-
-  self.midi_io.midi_inputs_observable:add_notifier(function(arg)
-    TRACE("*** self.midi_io.midi_inputs_observable",#self.midi_io.midi_inputs_observable,rprint(self.midi_io.midi_inputs_observable))
-    self.prefs.midi_inputs = self.midi_io.midi_inputs_observable
-  end)
-
-  self.midi_io.midi_outputs_observable:add_notifier(function(arg)
-    TRACE("*** self.midi_io.midi_outputs_observable",#self.midi_io.midi_inputs_observable,rprint(self.midi_io.midi_inputs_observable))
-    self.prefs.midi_outputs = self.midi_io.midi_outputs_observable
-  end)
+  -- xStream app --
 
   self.automation_playmode_observable:add_notifier(function()
     TRACE("*** main.lua - self.automation_playmode_observable fired...")
@@ -357,6 +369,8 @@ function xStream:__init(...)
     TRACE("*** selfUI - self.mute_mode_observable fired...")
     self.prefs.mute_mode.value = self.mute_mode_observable.value
   end)
+
+  -- xStream UI --
 
   self.ui.show_editor_observable:add_notifier(function()
     TRACE("*** selfUI - self.ui.show_editor_observable fired...")
@@ -393,16 +407,6 @@ function xStream:__init(...)
     self.prefs.editor_visible_lines.value = self.ui.editor_visible_lines
   end)
 
-  renoise.tool().app_new_document_observable:add_notifier(function()
-    TRACE("*** xStream - app_new_document_observable fired...")
-    self:attach_to_song()
-  end)
-
-  renoise.tool().app_release_document_observable:add_notifier(function()
-    TRACE("*** xStream - app_release_document_observable fired...")
-    self:stop()
-  end)
-
   self.ui.dialog_visible_observable:add_notifier(function()
     TRACE("*** xStream - ui.dialog_visible_observable fired...")
     self:select_launch_model()
@@ -418,9 +422,19 @@ function xStream:__init(...)
     TRACE("*** xStream - ui.dialog_resigned_active_observable fired...")
   end)
 
-  renoise.tool().app_idle_observable:add_notifier(function()    
-    self:on_idle()
+  -- midi I/O --
+
+  self.midi_io.midi_inputs_observable:add_notifier(function(arg)
+    TRACE("*** self.midi_io.midi_inputs_observable",#self.midi_io.midi_inputs_observable,rprint(self.midi_io.midi_inputs_observable))
+    self.prefs.midi_inputs = self.midi_io.midi_inputs_observable
   end)
+
+  self.midi_io.midi_outputs_observable:add_notifier(function(arg)
+    TRACE("*** self.midi_io.midi_outputs_observable",#self.midi_io.midi_inputs_observable,rprint(self.midi_io.midi_inputs_observable))
+    self.prefs.midi_outputs = self.midi_io.midi_outputs_observable
+  end)
+
+  -- voicemgr --
 
   self.voicemgr.released_observable:add_notifier(function(arg)
     TRACE("*** voicemgr.released_observable fired...")
@@ -429,6 +443,37 @@ function xStream:__init(...)
   self.voicemgr.triggered_observable:add_notifier(function()
     TRACE("*** voicemgr.triggered_observable fired...")
     self:handle_voice_events(xVoiceManager.EVENT.TRIGGERED)
+  end)
+
+  -- osc client --
+
+  self.osc_client.first_run_observable:add_notifier(function()
+    TRACE("*** osc_client.first_run_observable fired...")
+    self.prefs.osc_client_first_run.value = osc_client.first_run_observable.value
+  end)
+  self.osc_client.osc_host_observable:add_notifier(function()
+    TRACE("*** osc_client.osc_host_observable fired...")
+    self.prefs.osc_client_host.value = osc_client.osc_host_observable.value
+  end)
+  self.osc_client.osc_port_observable:add_notifier(function()
+    TRACE("*** osc_client.osc_port_observable fired...")
+    self.prefs.osc_client_port.value = osc_client.osc_port_observable.value
+  end)
+
+  -- tool --
+
+  renoise.tool().app_new_document_observable:add_notifier(function()
+    TRACE("*** xStream - app_new_document_observable fired...")
+    self:attach_to_song()
+  end)
+
+  renoise.tool().app_release_document_observable:add_notifier(function()
+    TRACE("*** xStream - app_release_document_observable fired...")
+    self:stop()
+  end)
+
+  renoise.tool().app_idle_observable:add_notifier(function()    
+    self:on_idle()
   end)
 
 
@@ -1899,6 +1944,22 @@ function xStream:handle_event(event_key,arg)
     end
   --else
   --  LOG("*** could not locate handler for event",event_key)
+  end
+
+end
+
+-------------------------------------------------------------------------------
+-- this method is meant to be accessible from callbacks
+
+function xStream:output_message(xmsg,mode)
+  TRACE("xStream:output_message(xmsg,mode)",xmsg,mode)
+
+  if (mode == xStream.OUTPUT_OPTIONS.INTERNAL_AUTO) then
+    return self.osc_client:trigger_auto(xmsg)
+  elseif (mode == xStream.OUTPUT_OPTIONS.INTERNAL_RAW) then
+    return self.osc_client:trigger_raw(xmsg)
+  else
+    return false
   end
 
 end
