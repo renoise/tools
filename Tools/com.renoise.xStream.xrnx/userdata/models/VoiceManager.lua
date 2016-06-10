@@ -56,9 +56,9 @@ return function(trigger_type)
   then
     return 0
   else
-    local playpos = playpos:get_fractional()  
+    local fract_playpos = xplaypos:get_fractional()  
     return (args.schedule == xStream.SCHEDULE.LINE)
-      and math.floor(playpos.fraction * 255) or 0
+      and math.floor(fract_playpos.fraction * 255) or 0
   end
 end]],
 },
@@ -68,9 +68,9 @@ events = {
 -- @param arg (table) {type = xVoiceManager.EVENTS, index = int}
 ------------------------------------------------------------------------------
  
-local voice = voices[arg.index]
-local pos = buffer:get_scheduled_pos(args.schedule)
-buffer:schedule_note_column(pos,{
+local voice = xvoices[arg.index]
+local pos = xbuffer:get_scheduled_pos(args.schedule)
+xbuffer:schedule_note_column(pos,{
   note_value = voice.values[1],
   volume_value = voice.values[2],
   instrument_value = rns.selected_instrument_index,
@@ -81,9 +81,9 @@ buffer:schedule_note_column(pos,{
 -- @param arg (table) {type = xVoiceManager.EVENTS, index = int}
 --------------------------------------------------------------------------------
 
-local voice = voices[arg.index]
-local pos = buffer:get_scheduled_pos(args.schedule)
-buffer:schedule_note_column(pos,{
+local voice = xvoices[arg.index]
+local pos = xbuffer:get_scheduled_pos(args.schedule)
+xbuffer:schedule_note_column(pos,{
   note_string = "OFF",
   delay_value = data.get_delay_value("release"),
 },voice.note_column_index)]],

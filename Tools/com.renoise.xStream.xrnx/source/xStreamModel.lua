@@ -204,19 +204,19 @@ function xStreamModel:__init(xstream)
 
     -- xStream objects
 
-    ["playpos"] = {
+    ["xplaypos"] = {
       access = function(env) return self.xstream.stream.playpos end,
     },
-    ["writepos"] = {
+    ["xwritepos"] = {
       access = function(env) return self.xstream.stream.writepos end,
     },
-    ["buffer"] = {
+    ["xbuffer"] = {
       access = function(env) return self.xstream.buffer end,
     },
-    ["voices"] = {
+    ["xvoices"] = {
       access = function(env) return self.xstream.voicemgr.voices end,
     },
-    ["voicemgr"] = {
+    ["xvoicemgr"] = {
       access = function(env) return self.xstream.voicemgr end,
     },
 

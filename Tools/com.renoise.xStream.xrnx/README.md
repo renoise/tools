@@ -264,11 +264,13 @@ xStream is using a subset of the Renoise Lua API. If you are not familiar with L
 `xpos.line (number)` -> line in pattern  
 `xpos.sequence (number)` -> pattern sequence index  
 `xpos.lines_travelled (number)` -> lines travelled since output started   
-`args (table, ObservableXXX)` -> access to model arguments  
 `xstream (xStream)` -> access to the xStream instance  
-`buffer (xStreamBuffer)` -> access to the stream buffer (shorthand for xstream.buffer)  
-`voices (table<xMidiMessage>)` -> access the active voices (shorthand for voicemgr.voices)  
-`voicemgr (xVoiceManager)` -> access the voice-manager  
+`xbuffer (xStreamBuffer)` -> access to the stream buffer (shorthand for xstream.buffer)  
+`xvoicemgr (xVoiceManager)` -> access the voice-manager (shorthand for xstream.voicemgr)
+`xvoices (table<xMidiMessage>)` -> access the active voices (shorthand for xstream.voicemgr.voices)
+`xplaypos (xPlayPos)` -> access the 'precise' playback position (shorthand for xstream.stream.playpos)   
+`xwritepos (xSongPos)` -> track the stream progression (shorthand for xstream.stream.writepos)   
+`args (table, ObservableXXX)` -> access to model arguments  
 `data (table)` -> optional user-data, access via "data.my_value"  
 `clear_undefined (boolean)` -> how to treat empty lines (see Options dialog for more details)  
 `expand_columns (boolean)` -> whether to automatically show columns as data is written  
